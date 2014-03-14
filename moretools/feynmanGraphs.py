@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-.. module:: FeynmanGraphs
+.. module:: feynmanGraphs
     :synopsis: This unit contains two simple routines that draw feynman graphs.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
@@ -210,65 +210,3 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
     import os
     os.system ( "convert %s %s" % ( pdffile, filename ) )
   # print "[FeynmanGraphs.py] %s created." % ( filename )
-
-def drawBranch_ ( branch, upwards, labels, html, border, L ):
-  """ draws a single branch, should only be used via .asciidraw, 
-      not directly """
-  length=0
-  lines=["   ","----"]
-  labels="   "
-  if border and upwards:
-    lines=[" |    "," | ----"]
-    labels=" |    "
-  if border and not upwards:
-    lines=[" |    "," | ----"]
-    labels=" |    "
-
-  for insertions in branch.particles:
-    if len(insertions)==0: 
-      lines[0]+=" "
-      lines[1]+="*"
-      continue
-    lines[1]+="*----"
-    if len(insertions)==1: 
-      labels+=" "+printParticle_(insertions[0])+"  "
-      lines[0]+=" |   "
-    if len(insertions)==2: 
-      labels+=printParticle_(insertions[0])+" "+printParticle_(insertions[1])
-      if upwards:
-        lines[0]+="\\ /  "
-      else:
-        lines[0]+="/ \\  "
-    if len(insertions)>2:
-      print "[SMSFeynmanGraphs.py] case for n-body decay, n>3 not yet. implemented. Please implement."
-      sys.exit(0)
-
-  order=[0,1]
-  if not upwards: order=[1,0]
-  HTML="<br>"
-  lengthdiff=L-len(lines[0])/5
-  if border: 
-    if L==2:
-      lines[0]+=" "
-      lines[1]+=" "
-      labels+=" "
-    labels+=" "+" "*(5*lengthdiff)+" |"
-    lines[0]+=" "*(5*lengthdiff+0)+"  |"
-    lines[1]+=" "*(5*lengthdiff+0)+" |"
-  if border and upwards: print " /"+"-"*(4*L+4)+"\\"
-  if html: print HTML
-  if upwards and labels: print labels
-  if html: print HTML
-  for i in order: print lines[i]
-  if html: print HTML
-  if not upwards and labels: print labels
-  if html: print HTML
-  if border and not upwards: print " \\"+"-"*(4*L+4)+"/"
-
-def asciidraw ( element, labels=True, html=False, border=False ):
-  """ draw a simple ascii graph on the screen """
-  L=[]
-  for (ct,branch) in enumerate(element.B):
-    L.append ( int( str(branch).count("[") ) )
-  for (ct,branch) in enumerate(element.B):
-    drawBranch_ ( branch, upwards=(ct==0), labels=labels, html=html, border=border, L=max(L) )

@@ -23,7 +23,7 @@ else:
   sys.path.append(smodelsdir)
 
 from theory import LHEReader, lheDecomposer, crossSection
-import FeynmanGraphs
+from moretools import feynmanGraphs
 
 filename="%s/lhe/%s_1.lhe" % (smodelsdir, args.T )
 if args.lhe!="": filename=args.lhe
@@ -32,4 +32,4 @@ reader = LHEReader.LHEReader( filename )
 Event = reader.next()
 SMSTop = lheDecomposer.elementFromEvent( Event, crossSection.XSectionList() )
 
-FeynmanGraphs.draw ( SMSTop[0].leadingElement(), args.output, straight=args.straight, inparts=False, verbose=args.verbose )
+feynmanGraphs.draw ( SMSTop[0].leadingElement(), args.output, straight=args.straight, inparts=False, verbose=args.verbose )
