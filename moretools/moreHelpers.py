@@ -8,7 +8,7 @@
 
 def nCPUs():
   """ obtain the number of CPU cores on the machine, for several
-      platforms and python version """
+      platforms and python version. FIXME currently not used. """
   try:
     import multiprocessing                                                                return multiprocessing.cpu_count()
   except Exception,e:                                                                     pass
