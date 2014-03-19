@@ -25,7 +25,7 @@ def addSModelSPath():
     """ adds the path of where smodels is installed to the search  path """
     try:
         import SModelS
-        I=SModelS.installdir()
+        I=SModelS.installDirectory()
         sys.path.append ( I )
         return
     except ImportError,e:
@@ -34,13 +34,30 @@ def addSModelSPath():
     O=commands.getoutput("smodels-config --installdir")
     if O.find("not found")==-1:
       import sys
-#      print "O=",O
       sys.path.append(O)
+      return O
+    return ""
+
+def printHelp():
+    print "usage: smodels-tools-config [--help] [--installdir] [--smodelsdir]"
+    print ""
+    print "optional arguments:"
+    print "  --help          show this help message and exit"
+    print "  --installdir    print installation directory of smodels-tools"
+    print "  --smodelsdir    print installation directory of smodels"
+    import sys
+    sys.exit(0)
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv)<2: help()
+    if len(sys.argv)<2: printHelp()
     for i in sys.argv[1:]:
-        if i=="--help": help()
-        if i=="--installdir": print installDirectory()
+        if i=="--help": printHelp()
+        if i=="--installdir": 
+            print installDirectory()
+            sys.exit(0)
+        if i=="--smodelsdir": 
+            print addSModelSPath()
+            sys.exist(0)
+    printHelp()
 
