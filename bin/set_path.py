@@ -12,7 +12,7 @@ def addSModelSPath():
     O=commands.getoutput("smodels-config --installdir")
     if O.find("not found")==-1:
       import sys
-      print "O=",O
+      print "[smodels-tools.set_path] appending ",O
       sys.path.append(O)
 
 

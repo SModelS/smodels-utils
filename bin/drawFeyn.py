@@ -30,6 +30,6 @@ if args.lhe!="": filename=args.lhe
 
 reader = LHEReader.LHEReader( filename )
 Event = reader.next()
-SMSTop = lheDecomposer.elementFromEvent( Event, crossSection.XSectionList() )
+E = lheDecomposer.elementFromEvent( Event, crossSection.XSectionList() )
 
-feynmanGraphs.draw ( SMSTop[0].leadingElement(), args.output, straight=args.straight, inparts=False, verbose=args.verbose )
+feynmanGraphs.draw ( E, args.output, straight=args.straight, inparts=False, verbose=args.verbose )
