@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-.. module:: feynmanGraphs
+.. module:: feynmanGraph
     :synopsis: This unit contains two simple routines that draw feynman graphs.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
@@ -76,13 +76,13 @@ def connect ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=Tr
   a=random.gauss ( 0, 1 )
   if a<0.: b=-b
   segs=[]
-  if verbose: print "[FeynmanGraphs.py] "
+  if verbose: print "[feynmanGraph.py] "
   for i in range(n):
     br=b * (-1)**i
     if not bend: br=None
     segs.append ( segment(points[i],points[i+1],spin, Bend=br ) )
     if verbose:
-      print "[FeynmanGraphs.py] draw line from (%f,%f) to (%f,%f)" % ( points[i].x(), points[i].y(), points[i+1].x(), points[i+1].y() )
+      print "[feynmanGraph.py] draw line from (%f,%f) to (%f,%f)" % ( points[i].x(), points[i].y(), points[i+1].x(), points[i+1].y() )
   if displace==None: displace=-.08
   # if label: segs[-1].addLabel ( label, pos=0.7, displace=displace )
   if label:
@@ -116,7 +116,7 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
       WHITE, Fermion
     sys.stdout=copy
   except ImportError,e:
-    print "[FeynmanGraphs.py] cannot draw, pyfeyn not installed?",e
+    print "[feynmanGraph.py] cannot draw, pyfeyn not installed?",e
     return
   # from Tools import VariousHelpers
   #import os
@@ -209,7 +209,7 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
   if pdffile!=filename:
     import os
     os.system ( "convert %s %s" % ( pdffile, filename ) )
-  # print "[FeynmanGraphs.py] %s created." % ( filename )
+  # print "[feynmanGraph.py] %s created." % ( filename )
 
 if __name__ == "__main__":
     import set_path, argparse, types
@@ -223,7 +223,6 @@ if __name__ == "__main__":
     args=argparser.parse_args()
 
     from theory import LHEReader, lheDecomposer, crossSection
-    from moretools import feynmanGraphs
     import SModelSTools
 
     filename="%s/lhe/%s_1.lhe" % (SModelSTools.installDirectory(), args.T )
