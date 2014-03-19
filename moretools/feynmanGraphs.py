@@ -15,10 +15,10 @@ def printParticle_ ( label ):
   if label=="jet": label="q"
   label=label+"   "
   return label[:2]
-  
+
 def segment ( p1, p2, spin, Bend=None ):
   from pyfeyn.user import NamedLine
-  l=NamedLine[spin](p1,p2)# 
+  l=NamedLine[spin](p1,p2)#
   if Bend: l.bend(Bend)
   return l
 
@@ -31,7 +31,7 @@ def zero ():
 
 def connect ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=True, \
               verbose=False, nspec=None, displace=None ):
-  """ simple: draw a line from p1 to p2 
+  """ simple: draw a line from p1 to p2
 
       :param canvas: the pyx canvas to draw on
       :param p1: starting point
@@ -40,20 +40,20 @@ def connect ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=Tr
       :param label: add a label?
       :param nspec: specify the number of segments, None is draw the number randomly
       :param displace: displace at fixed distance?
-     
+
       :returns: array of all line segments
   """
   import math, random, os
   from pyfeyn.user import NamedLine, Fermion, Scalar, WHITE
   from pyx import bitmap
-  from tools import VariousHelpers
+  import SModelSTools
 
   if spin=="scalar" and not NamedLine.has_key ( spin ) and NamedLine.has_key ( "higgs" ):
     spin="higgs"
   if straight:
     fl=NamedLine[spin](p1,p2)
     if displace==None: displace=.05
-    if label: 
+    if label:
       label=label.replace("nu",r"$\nu$").replace("+","$^{+}$").replace("-","$^{-}$")
       label=label.replace("tau",r"$\tau$").replace("mu",r"$\mu$")
       fl.addLabel ( label, pos=0.9, displace=displace )
@@ -86,23 +86,23 @@ def connect ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=Tr
   if displace==None: displace=-.08
   # if label: segs[-1].addLabel ( label, pos=0.7, displace=displace )
   if label:
-    filename="%s/plots/%s.jpg" % ( VariousHelpers.getInstallationBase(), label.replace(" ","").replace("_","").replace("$","").upper().replace("+","").replace("-","") )
+    filename="%s/icons/%s.jpg" % ( SModelSTools.installDirectory(), label.replace(" ","").replace("_","").replace("$","").upper().replace("+","").replace("-","") )
     #print "filename=",filename
     if not os.path.exists ( filename ):
-      filename="%s/plots/questionmark.jpg"  %  VariousHelpers.getInstallationBase()
+      filename="%s/icons/questionmark.jpg"  %  SModelSTools.installDirectory()
     jpg = bitmap.jpegimage( filename )
     y1=segs[-1].fracpoint(1.0).y()
     y2=segs[-1].fracpoint(0.0).y()
     fp=0.90
     if y2>y1: fp=1.545
     pt=segs[-1].fracpoint(fp)
-    
+
     # fd.currentCanvas.insert(bitmap.bitmap(0, 0, jpg, compressmode=None))
     canvas.insert(bitmap.bitmap(pt.x()+displace, pt.y(), jpg, compressmode=None))
   return segs
 
 def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=False ):
-  """ plot a lessagraph, write into pdf/eps/png file called <filename> 
+  """ plot a lessagraph, write into pdf/eps/png file called <filename>
     :param straight: draw straight lines, or xkcd style
     :param inparts: draw the incoming lines and the big production blob?
   """
@@ -131,7 +131,7 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
   import os
   f=1.0
 
-  
+
   in1  = Point(-1*f, -.75*f)
   in2  = Point(-1*f, 1.75*f)
   vtx1 = Circle(0,.5*f, radius=0.3*f).setFillStyle(HATCHED135)
@@ -146,14 +146,14 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
       P1a.addParallelArrow( pos=.44,displace=-.0003,length=unit.length(1.75*f), size=.0001)
     else:
       P1a = connect ( c, vtx1, in1, straight=straight, label="P$_1$", displace=.42 )
-  
+
       for i in P1a:
         a1=i.addParallelArrow( pos=.44,displace=.0003,length=unit.length(1.60*f / float(len(P1a))), size=.0001)
         a2=i.addParallelArrow( pos=.44,displace=-.0003,length=unit.length(1.60*f / float(len(P1a))), size=.0001)
     if straight:
       P2a = Fermion(in2, vtx1 ).addLabel("P$_2$",displace=.3)
       P2a.addParallelArrow( pos=.44,displace=.0003,length=unit.length(1.75*f), size=.0001)
-      P2a.addParallelArrow( pos=.44,displace=-.0003,length=unit.length(1.75*f), size=.0001) 
+      P2a.addParallelArrow( pos=.44,displace=-.0003,length=unit.length(1.75*f), size=.0001)
     else:
       P2a = connect ( c, vtx1, in2, straight=straight, label="P$_2$", displace=.3 )
       for i in P2a:
@@ -162,16 +162,16 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
 
   # nbranches=len(element.B)
 
-  for (ct,branch) in enumerate(element.B):
+  for (ct,branch) in enumerate(element.branches):
     # print "branch",ct,branch,"with",branch.vertnumb,"vertices"
     # p1 = Point(0, ct)
     lastVertex=vtx1
     nvtx=0
     for ( nvtx,insertions) in enumerate(branch.particles):
       mark=None
-      if len(insertions)>0: 
+      if len(insertions)>0:
         #mark=None
-        #jpg = bitmap.jpegimage( "%s/plots/blob2.jpg" % VariousHelpers.getInstallationBase() )
+        #jpg = bitmap.jpegimage( "%s/plots/blob2.jpg" % SModelS.installDirectory() )
         #c.insert(bitmap.bitmap( f*(nvtx+1)-.1,f*ct-.14 , jpg, compressmode=None))
         mark=CIRCLE
       # mark=None
@@ -187,21 +187,21 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
       # print "particles",particles,"ct=",ct
       y=-1.0*f ## y of end point of SM particle
       if ct==1: y=2.*f
-      dx=(len(insertions)-1)*(-.25)*f ## delta_x 
-      #dx=(particles-1)*(-.5)*f ## delta_x 
+      dx=(len(insertions)-1)*(-.25)*f ## delta_x
+      #dx=(particles-1)*(-.5)*f ## delta_x
       for (i,insertion) in enumerate(insertions):
         p=Point ( f*(nvtx + 1 +  dx + 0.5*i), f*y )
         ## print "branch=",branch
         label=printParticle_ ( insertion )
         ## ff=Fermion(v1,p).addLabel ( label )
         connect ( c, v1, p, straight=straight, label=label )
-         
+
     pl = Point ( nvtx+2,ct )
     # fl = Scalar ( lastVertex,pl ) ## .addLabel( "lsp" )
     connect ( c, lastVertex,pl, straight=straight, spin="scalar" )
-    
 
-  #jpg = bitmap.jpegimage("%s/plots/blob1.jpg" % VariousHelpers.getInstallationBase() )
+
+  #jpg = bitmap.jpegimage("%s/plots/blob1.jpg" % SModelS.installDirectory() )
   #fd.currentCanvas.insert(bitmap.bitmap(0-.5, 0.5-.5, jpg, compressmode=None))
   # zero()
   pdffile=filename.replace("png","pdf")
@@ -210,3 +210,27 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
     import os
     os.system ( "convert %s %s" % ( pdffile, filename ) )
   # print "[FeynmanGraphs.py] %s created." % ( filename )
+
+if __name__ == "__main__":
+    import set_path, argparse, types
+
+    argparser = argparse.ArgumentParser(description='simple tool that is meant to draw lessagraphs, as a pdf feynman plot')
+    argparser.add_argument ( '-T', nargs='?', help='Tx name, will look up lhe file in ../regression/Tx_1.lhe. Will be overriden by the "--lhe" argument', type=types.StringType, default='T1' )
+    argparser.add_argument ( '-l', '--lhe', nargs='?', help='lhe file name, supplied directly. Takes precedence over "-T" argument.', type=types.StringType, default='' )
+    argparser.add_argument ( '-o', '--output', nargs='?', help='output file, can be pdf or eps or png (via convert)', type=types.StringType, default='out.pdf' )
+    argparser.add_argument ( '-s', '--straight', help='straight, not xkcd style', action='store_true' )
+    argparser.add_argument ( '-v', '--verbose', help='be verbose', action='store_true' )
+    args=argparser.parse_args()
+
+    from theory import LHEReader, lheDecomposer, crossSection
+    from moretools import feynmanGraphs
+    import SModelS
+
+    filename="%s/lhe/%s_1.lhe" % (SModelS.installDirectory(), args.T )
+    if args.lhe!="": filename=args.lhe
+
+    reader = LHEReader.LHEReader( filename )
+    Event = reader.next()
+    E = lheDecomposer.elementFromEvent( Event, crossSection.XSectionList() )
+
+    draw ( E, args.output, straight=args.straight, inparts=False, verbose=args.verbose )
