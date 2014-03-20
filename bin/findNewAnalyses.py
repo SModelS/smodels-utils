@@ -3,7 +3,7 @@
 import urllib2 as u
 import set_path
 import sys
-from Experiment import SMSResults
+from experiment import smsResults
 
 exceptions=[
 "SUS13003", #rpv
@@ -63,7 +63,7 @@ while i<10:
         pas=line[line.find("PAPERS")+7:line.find("target")-2]
       else: continue
       pas=pas.replace("-","_")
-      if not SMSResults.exists(pas, None) and not pas in exceptions: print "Analysis %s not in database" %pas
+      if not smsResults.exists(pas, None) and not pas in exceptions: print "Analysis %s not in database" %pas
   if bottom: break
   i+=1
 
@@ -94,7 +94,7 @@ while i<10:
       break
     if readtable and "twikiTableCol1" in line and "SUS1" in line:
       pas=line[line.find("SUS1"):line.find("SUS1")+8]
-      if not SMSResults.exists(pas, None) and not pas in exceptions: print "Analysis %s not in database" %pas
+      if not smsResults.exists(pas, None) and not pas in exceptions: print "Analysis %s not in database" %pas
   if bottom: break
   i+=1
 
