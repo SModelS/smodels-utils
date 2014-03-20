@@ -58,6 +58,6 @@ if __name__ == "__main__":
             sys.exit(0)
         if i=="--smodelsdir": 
             print addSModelSPath()
-            sys.exist(0)
+            sys.exit(0)
     printHelp()
 
