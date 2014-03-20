@@ -1,6 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
-import ROOT, pickle, os, math, sys, tempfile
+""" 
+.. module:: rulerPlot
+    :synopsis: Draws a ruler plot, like http://smodels.hephy.at/images/example_ruler.png.
+
+.. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
+"""
+
+import ROOT, os, math, sys, tempfile
 
 def squarkname ( Type, postfix ):
   ret="#tilde{%s}" % Type
@@ -8,27 +15,26 @@ def squarkname ( Type, postfix ):
     ret+="_{%s}" % postfix
   return ret
 
-def draw ( input, output, keys, Range, formats, printmass=False ):
+def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1], 
+           formats={ "png": True }, printmass=False ):
+  """ entry point: draw the masses 
+      :param inputfile: the inputfilename, must contain a simple dictionary. 
+      :param output: the output filename, without the extension.
+      :param Range:  the range of the ruler, [min,max], given in GeV. -1 is for automatic mode (the script decides by itself).
+      :param formats: the formats, as a dictionary. Supported are: eps, pdf, png.
+      :param printmass: draw also mass values (in GeV)?
+  """
 
-  f=open( input )
-  #pmasses=pickle.load(f)
+  f=open( inputfile )
   pmasses=eval(f.readline())
   f.close()
 
-  keys=keys.split(":")
-  masses=pmasses
-  #print "masses=",masses,"<br>"
-  for (key,value) in masses.items():
-    #print "key,value=",key,value,"<br>"
-    masses[key]=abs(value)
-  for k in keys:
-    if len(k): 
-      if not masses.has_key(int(k)):
-        print "[ruler.py] we dont have masses for key",k
-        sys.exit(0)
-      else:
-        masses=masses[int(k)]
-
+  masses={}
+  # masses=pmasses
+  for (key,value) in pmasses.items():
+    if key.find("width")==-1:
+      masses[key]=abs(value)
+  print "[ruler.py] masses=",masses
   maxvalue=max(masses.values())*1.05
   if maxvalue>3100: maxvalue=3100.
   minvalue=min(masses.values())*0.80
@@ -187,36 +193,39 @@ def draw ( input, output, keys, Range, formats, printmass=False ):
   tmpf=tempfile.mkstemp()[1]
 
   c1.Print(tmpf+".eps")
+  for i in [ "pdf", "png", "eps" ]: if not formats.has_key[i]: formats[i]=False
 
   if formats["pdf"]:
-    #print "[ruler.py] creating %s.pdf" % output
-    os.system ( "epspdf %s.eps %s.pdf" % ( tmpf, output ) )
+    #print "[ruler.py] creating %s.pdf" % outputfile
+    os.system ( "epspdf %s.eps %s.pdf" % ( tmpf, outputfile ) )
   if formats["png"]:
     formats["eps"]=True
-    # print "[ruler.py] creating and cropping %s.png" % output
+    # print "[ruler.py] creating and cropping %s.png" % outputfile
     crop=""
     if True and not printmass:
       crop="-crop 270x1200+0+0"
-    os.system ( "convert %s %s.eps %s.png" % ( crop, tmpf, output ) )
+    os.system ( "convert %s %s.eps %s.png" % ( crop, tmpf, outputfile ) )
   if formats["eps"]:
     #print "[ruler.py] creating %s.eps" % output
-    os.system ( "cp %s.eps %s.eps" % (tmpf, output) )
+    os.system ( "cp %s.eps %s.eps" % (tmpf, outputfile ) )
 
   os.unlink ( tmpf )
   
 if __name__ == "__main__":
   import argparse, types
-  argparser = argparse.ArgumentParser(description='Draws a "ruler", particles arranged by their masses')
-  argparser.add_argument ( '-i', '--input',
-          help='input masses text file name', type=types.StringType, default='' )
+  import set_path
+  import SModelSTools
+  argparser = argparse.ArgumentParser(description='Draws a "ruler-plot", i.e. particles arranged by their masses. See http://smodels.hephy.at/images/example_ruler.png.')
+  #argparser.add_argument ( '-i', '--input',
+  #        help='input masses text file name', type=types.StringType, default='@@installdir@@etc/example_masses.txt' )
+  argparser.add_argument('inputfile', type=types.StringType, nargs=1,
+                    help='input masses text file name, for an example see "etc/example_masses.txt". "@@installdir@@" will be replaced with the installation directory of smodels-tools.')
   argparser.add_argument ( '-m', '--min',
-          help='minimal mass, -1 for auto mode', type=types.IntType, default=-1 )
+          help='minimal mass, -1 for automatic mode', type=types.IntType, default=-1 )
   argparser.add_argument ( '-M', '--max',
-          help='maximum mass, -1 for auto mode', type=types.IntType, default=-1 )
+          help='maximum mass, -1 for automatic mode', type=types.IntType, default=-1 )
   argparser.add_argument ( '-o', '--output',
           help='output file name', type=types.StringType, default='ruler' )
-  argparser.add_argument ( '-k', '--keys',
-          help='input pickle file name', type=types.StringType, default='' )
   argparser.add_argument ( '-p', '--pdf', help='produce pdf', action='store_true' )
   argparser.add_argument ( '-e', '--eps', help='produce (=keep) eps', action='store_true' )
   argparser.add_argument ( '-P', '--png', help='produce png', action='store_true' )
@@ -225,4 +234,5 @@ if __name__ == "__main__":
   Range=[args.min,args.max]
   formats= { "pdf":args.pdf, "eps":args.eps, "png":args.png }
 
-  draw ( args.input, args.output, args.keys, Range, formats, args.masses )
+  inputfile=args.inputfile[0].replace("@@installdir@@",SModelSTools.installDirectory() )
+  draw ( inputfile, args.output, Range, formats, args.masses )
