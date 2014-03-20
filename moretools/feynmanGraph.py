@@ -89,6 +89,7 @@ def connect ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=Tr
     filename="%s/icons/%s.jpg" % ( SModelSTools.installDirectory(), label.replace(" ","").replace("_","").replace("$","").upper().replace("+","").replace("-","") )
     #print "filename=",filename
     if not os.path.exists ( filename ):
+      print "[feynmanGraph.py] error:",filename,"not found."
       filename="%s/icons/questionmark.jpg"  %  SModelSTools.installDirectory()
     jpg = bitmap.jpegimage( filename )
     y1=segs[-1].fracpoint(1.0).y()
