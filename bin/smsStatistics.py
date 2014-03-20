@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
-""" A simple tool that prints out statistics """
+""" A simple tool that prints out results statistics.
+
+.. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com> 
+
+"""
 
 import set_path
 from experiment import smsResults

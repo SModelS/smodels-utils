@@ -1,5 +1,11 @@
 #!/usr/bin/python
 
+""" Searches  on the experiments twiki pages for new analyses.  
+
+.. moduleauthor:: Ursula Laa <Ursula.Laa@assoc.oeaw.ac.at> 
+                                                                                      
+"""          
+
 import urllib2 as u
 import set_path
 import sys

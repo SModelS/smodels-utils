@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+""" Draw a random "topology of the day", as an ascii graph.
+
+.. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
+"""
+
 def drawRandom ( lhedir ):
     import set_path
     import sys, os, random, argparse
@@ -21,7 +26,7 @@ def drawRandom ( lhedir ):
     while T.find("_")!=-1:
       T=T[:T.find("_")]
 
-    print 
+    print
     print "Today's Random Topology is ``%s'':" % T
     print
 
@@ -31,10 +36,10 @@ def drawRandom ( lhedir ):
     asciiGraph.asciidraw ( E, border=True )
 
 
-if __name__ == '__main__': 
+if __name__ == '__main__':
     import argparse, types
     import set_path
-    argparser = argparse.ArgumentParser(description='simple tool that is meant to draw lessagraphs, as a pdf feynman plot')                                     
+    argparser = argparse.ArgumentParser(description='simple tool that is meant to draw lessagraphs, as a pdf feynman plot')
     argparser.add_argument ( '-d', '--dir', nargs='?', help='name of directory that contains the lhe files to draw from', type=types.StringType, default='@@installpath@@lhe/' )
     args=argparser.parse_args()
     Dir=args.dir
