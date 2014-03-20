@@ -6,11 +6,15 @@ def drawRandom ( lhedir ):
     from theory import LHEReader, lheDecomposer
     from tools import asciiGraph
     """ just one random lhe file from <lhedir>, and draw it """
-    Files=os.listdir( lhedir )
+    files=os.listdir( lhedir )
+    Files=[]
+    for File in files:
+      if File[-4:]==".lhe": Files.append(File)
+    if len(Files)==0:
+      print "[drawRandomT.py] error, did not find any files in",lhedir
+      sys.exit(1)
 
-    File=""
-    while File[-4:]!=".lhe":
-      File=random.choice ( Files )
+    File=random.choice ( Files )
 
     filename=lhedir+"/"+File
     T=File.replace(".lhe","")
@@ -29,7 +33,11 @@ def drawRandom ( lhedir ):
 
 if __name__ == '__main__': 
     import argparse, types
+    import set_path
     argparser = argparse.ArgumentParser(description='simple tool that is meant to draw lessagraphs, as a pdf feynman plot')                                     
-    argparser.add_argument ( '-d', '--dir', nargs='?', help='name of directory that contains the lhe files to draw from', type=types.StringType, default='/usr/local/smodels/lhe/' )
+    argparser.add_argument ( '-d', '--dir', nargs='?', help='name of directory that contains the lhe files to draw from', type=types.StringType, default='@@installpath@@lhe/' )
     args=argparser.parse_args()
-    drawRandom ( args.dir )
+    Dir=args.dir
+    import SModelSTools
+    Dir=Dir.replace("@@installpath@@",SModelSTools.installDirectory() )
+    drawRandom ( Dir )
