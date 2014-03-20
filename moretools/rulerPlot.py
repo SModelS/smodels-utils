@@ -9,11 +9,84 @@
 
 import ROOT, os, math, sys, tempfile
 
+def printCanvas ( c1, filename ):
+  #print "start redirect"
+  #Tmp=sys.stdout
+  #f=open("/dev/null","w")
+  #sys.stderr=f
+  #sys.stdout=f
+  #print "!dhufdhuf"
+  c1.Print(filename )
+  #sys.stdout=Tmp
+  #sys.stderr=Tmp
+  #f.close()
+  #print "end redirect"
+
+def execute ( command ):
+    import commands
+    out=commands.getoutput ( command )
+    if len(out)!=0:
+      print "[rulerPlot.py] errror",out
+      return False
+    return True
+
 def squarkname ( Type, postfix ):
-  ret="#tilde{%s}" % Type
-  if len(postfix)>0:
-    ret+="_{%s}" % postfix
-  return ret
+    """ create the ROOT.TLatex squark name """
+    ret="#tilde{%s}" % Type
+    if len(postfix)>0:
+        ret+="_{%s}" % postfix
+    return ret
+
+def color ( name ):
+    """ different colors for different particle types """
+    from ROOT import kGreen,kOrange,kRed,kBlue
+    Dict={ "~chi":kGreen+2,"~tau":kOrange+2,"~mu":kOrange+2,"~nu":kOrange+2,
+        "~g":kRed,"~q":kBlue+2,"~u":kBlue+2,"~d":kBlue+2,"~c":kBlue+2,
+        "~s":kBlue+2,"~t":kBlue+1,"~b":kBlue+1,"~e":kOrange+2,"~l":kOrange+2 }
+    for (mname,color) in Dict.items():
+        if name.find(mname)==0: return color 
+    return ROOT.kBlack
+
+def pprint ( name ):
+  """ find ROOT.TLatex names for various common names used in
+      the comments in slha files  """
+  Dict={ "A0":"a^{0}", "A1":"a^{1}", "H+":"h^{#pm}", "Hp":"h^{#pm}", 
+    "H2":"h^{3}", "H":"h^{2}", "h":"h^{1}", "~e":"#tilde{e}", 
+    "~g":"#tilde{g}", "~mu":"#tilde{#mu}", "~mu_L":"#tilde{#mu}_{L}",
+    "~mu_R":"#tilde{#mu}_{R}", "~e_L":"#tilde{e}_{L}","~e_R":"#tilde{e}_{R}",
+    "~tau_L":"#tilde{#tau}_{L}","~tau_R":"#tilde{#tau}_{R}",
+    "~chi20":"#tilde{#chi}^{0}_{2}", "~chi30":"#tilde{#chi}^{0}_{3}",
+    "~chi40":"#tilde{#chi}^{0}_{4}", "~chi50":"#tilde{#chi}^{0}_{5}",
+    "~chi10":"#tilde{#chi}^{0}_{1}", "~chi1+":"#tilde{#chi}^{+}_{1}",
+    "~chi2+":"#tilde{#chi}^{+}_{2}", "~chi3+":"#tilde{#chi}^{+}_{3}",
+    "~chi4+":"#tilde{#chi}^{+}_{4}" }
+  if Dict.has_key ( name ): return Dict[name]
+
+  if name.find("~nu_e")==0: return "#tilde{#nu}_{e}"
+  if name.find("~nu_mu")==0: return "#tilde{#nu}_{#mu}"
+  if name.find("~nu_tau")==0: return "#tilde{#nu}_{#tau}"
+  if name.find("~d")==0: return squarkname("d",name[2:])
+  if name.find("~u")==0: return squarkname("u",name[2:])
+  if name.find("~s")==0: return squarkname("s",name[2:])
+  if name.find("~c")==0: return squarkname("c",name[2:])
+  if name.find("~t")==0: return squarkname("t",name[2:])
+  if name.find("~b")==0: return squarkname("b",name[2:])
+
+  if name.find("~")>-1:
+      w=name.replace("~","#tilde{")
+      w=w.replace("chi40", "chi^{0}_{4}" )
+      w=w.replace("chi30", "chi^{0}_{3}" )
+      w=w.replace("chi20", "chi^{0}_{2}" )
+      w=w.replace("chi10", "chi^{0}_{1}" )
+      w=w.replace("chi1+", "chi^{+}_{1}" )
+      w=w.replace("chi2+", "chi^{+}_{2}" )
+      w=w.replace("L", "_{L}" )
+      w=w.replace("R", "_{R}" )
+      w=w.replace("1", "_{1}" )
+      w=w.replace("2", "_{2}" )
+      w=w.replace("chi", "#chi" )
+      name=w+"}"
+  return name
 
 def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1], 
            formats={ "png": True }, printmass=False ):
@@ -34,7 +107,6 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
   for (key,value) in pmasses.items():
     if key.find("width")==-1:
       masses[key]=abs(value)
-  print "[ruler.py] masses=",masses
   maxvalue=max(masses.values())*1.05
   if maxvalue>3100: maxvalue=3100.
   minvalue=min(masses.values())*0.80
@@ -64,78 +136,6 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
     xline0=0.23
     xline1=0.40
     xtext=0.42
-
-  ## print masses
-
-  def color ( name ):
-    if name[:4]=="~chi": return ROOT.kGreen+2
-    if name[:4]=="~tau": return ROOT.kOrange+2
-    if name[:3]=="~mu": return ROOT.kOrange+2
-    if name[:3]=="~nu": return ROOT.kOrange+2
-    if name=="~g": return ROOT.kRed
-    if name[:2]=="~q": return ROOT.kBlue+2
-    if name[:2]=="~u": return ROOT.kBlue+2
-    if name[:2]=="~d": return ROOT.kBlue+2
-    if name[:2]=="~c": return ROOT.kBlue+2
-    if name[:2]=="~s": return ROOT.kBlue+2
-    if name[:2]=="~t": return ROOT.kBlue+1
-    if name[:2]=="~b": return ROOT.kBlue+1
-    if name[:2]=="~e": return ROOT.kOrange+2
-    if name[:2]=="~l": return ROOT.kOrange+2
-    return ROOT.kBlack
-
-  def pprint ( name ):
-    if name=="A0": return "a^{0}"
-    if name=="A1": return "a^{1}"
-    if name=="H+": return "h^{#pm}"
-    if name=="Hp": return "h^{#pm}"
-    if name=="H2": return "h^{3}"
-    if name=="H": return "h^{2}"
-    if name=="h": return "h^{1}"
-    if name.find("~")>=0:
-      if name=="~e": return "#tilde{e}"
-      if name=="~g": return "#tilde{g}"
-      if name=="~mu": return "#tilde{#mu}"
-      if name=="~mu_L": return "#tilde{#mu}_{L}"
-      if name=="~mu_R": return "#tilde{#mu}_{R}"
-      if name=="~e_L": return "#tilde{e}_{L}"
-      if name=="~e_R": return "#tilde{e}_{R}"
-      if name=="~tau_L": return "#tilde{#tau}_{L}"
-      if name=="~tau_R": return "#tilde{#tau}_{R}"
-      if name=="~chi20": return "#tilde{#chi}^{0}_{2}"
-      if name=="~chi30": return "#tilde{#chi}^{0}_{3}"
-      if name=="~chi40": return "#tilde{#chi}^{0}_{4}"
-      if name=="~chi50": return "#tilde{#chi}^{0}_{5}"
-      if name=="~chi10": return "#tilde{#chi}^{0}_{1}"
-      if name=="~chi1+": return "#tilde{#chi}^{+}_{1}"
-      if name=="~chi2+": return "#tilde{#chi}^{+}_{2}"
-      if name=="~chi3+": return "#tilde{#chi}^{+}_{3}"
-      if name=="~chi4+": return "#tilde{#chi}^{+}_{4}"
-      if name.find("~nu_e")==0: return "#tilde{#nu}_{e}"
-      if name.find("~nu_mu")==0: return "#tilde{#nu}_{#mu}"
-      if name.find("~nu_tau")==0: return "#tilde{#nu}_{#tau}"
-      if name.find("~d")==0: return squarkname("d",name[2:])
-      if name.find("~u")==0: return squarkname("u",name[2:])
-      if name.find("~s")==0: return squarkname("s",name[2:])
-      if name.find("~c")==0: return squarkname("c",name[2:])
-      if name.find("~t")==0: return squarkname("t",name[2:])
-      if name.find("~b")==0: return squarkname("b",name[2:])
-
-      w=name.replace("~","#tilde{")
-      w=w.replace("chi40", "chi^{0}_{4}" )
-      w=w.replace("chi30", "chi^{0}_{3}" )
-      w=w.replace("chi20", "chi^{0}_{2}" )
-      w=w.replace("chi10", "chi^{0}_{1}" )
-      w=w.replace("chi1+", "chi^{+}_{1}" )
-      w=w.replace("chi2+", "chi^{+}_{2}" )
-      w=w.replace("L", "_{L}" )
-      w=w.replace("R", "_{R}" )
-      w=w.replace("1", "_{1}" )
-      w=w.replace("2", "_{2}" )
-      w=w.replace("chi", "#chi" )
-      name=w+"}"
-      return name
-    return name
 
   ylist=[]
   for (name,m) in masses.items():
@@ -192,22 +192,23 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
 
   tmpf=tempfile.mkstemp()[1]
 
-  c1.Print(tmpf+".eps")
-  for i in [ "pdf", "png", "eps" ]: if not formats.has_key[i]: formats[i]=False
+  printCanvas ( c1, tmpf+".eps" )
+  for i in [ "pdf", "png", "eps" ]: 
+    if not formats.has_key(i): formats[i]=False
 
   if formats["pdf"]:
     #print "[ruler.py] creating %s.pdf" % outputfile
-    os.system ( "epspdf %s.eps %s.pdf" % ( tmpf, outputfile ) )
+    execute ( "epspdf %s.eps %s.pdf" % ( tmpf, outputfile ) )
   if formats["png"]:
     formats["eps"]=True
     # print "[ruler.py] creating and cropping %s.png" % outputfile
     crop=""
     if True and not printmass:
       crop="-crop 270x1200+0+0"
-    os.system ( "convert %s %s.eps %s.png" % ( crop, tmpf, outputfile ) )
+    execute ( "convert %s %s.eps %s.png" % ( crop, tmpf, outputfile ) )
   if formats["eps"]:
     #print "[ruler.py] creating %s.eps" % output
-    os.system ( "cp %s.eps %s.eps" % (tmpf, outputfile ) )
+    execute ( "cp %s.eps %s.eps" % (tmpf, outputfile ) )
 
   os.unlink ( tmpf )
   
