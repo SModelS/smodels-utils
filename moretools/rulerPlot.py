@@ -9,7 +9,7 @@
 
 import ROOT, os, math, sys, tempfile
 
-def printCanvas ( c1, filename ):
+def _printCanvas ( c1, filename ):
   #print "start redirect"
   #Tmp=sys.stdout
   #f=open("/dev/null","w")
@@ -22,7 +22,7 @@ def printCanvas ( c1, filename ):
   #f.close()
   #print "end redirect"
 
-def execute ( command ):
+def _execute ( command ):
     import commands
     out=commands.getoutput ( command )
     if len(out)!=0:
@@ -30,14 +30,14 @@ def execute ( command ):
       return False
     return True
 
-def squarkname ( Type, postfix ):
+def _squarkname ( Type, postfix ):
     """ create the ROOT.TLatex squark name """
     ret="#tilde{%s}" % Type
     if len(postfix)>0:
         ret+="_{%s}" % postfix
     return ret
 
-def color ( name ):
+def _color ( name ):
     """ different colors for different particle types """
     from ROOT import kGreen,kOrange,kRed,kBlue
     Dict={ "~chi":kGreen+2,"~tau":kOrange+2,"~mu":kOrange+2,"~nu":kOrange+2,
@@ -47,7 +47,7 @@ def color ( name ):
         if name.find(mname)==0: return color 
     return ROOT.kBlack
 
-def pprint ( name ):
+def _pprint ( name ):
   """ find ROOT.TLatex names for various common names used in
       the comments in slha files  """
   Dict={ "A0":"a^{0}", "A1":"a^{1}", "H+":"h^{#pm}", "Hp":"h^{#pm}", 
@@ -65,12 +65,12 @@ def pprint ( name ):
   if name.find("~nu_e")==0: return "#tilde{#nu}_{e}"
   if name.find("~nu_mu")==0: return "#tilde{#nu}_{#mu}"
   if name.find("~nu_tau")==0: return "#tilde{#nu}_{#tau}"
-  if name.find("~d")==0: return squarkname("d",name[2:])
-  if name.find("~u")==0: return squarkname("u",name[2:])
-  if name.find("~s")==0: return squarkname("s",name[2:])
-  if name.find("~c")==0: return squarkname("c",name[2:])
-  if name.find("~t")==0: return squarkname("t",name[2:])
-  if name.find("~b")==0: return squarkname("b",name[2:])
+  if name.find("~d")==0: return _squarkname("d",name[2:])
+  if name.find("~u")==0: return _squarkname("u",name[2:])
+  if name.find("~s")==0: return _squarkname("s",name[2:])
+  if name.find("~c")==0: return _squarkname("c",name[2:])
+  if name.find("~t")==0: return _squarkname("t",name[2:])
+  if name.find("~b")==0: return _squarkname("b",name[2:])
 
   if name.find("~")>-1:
       w=name.replace("~","#tilde{")
@@ -155,7 +155,7 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
     if name[:5]=="width":
       continue
     y=(abs(m)-minvalue)/(maxvalue-minvalue)
-    col=color (name )
+    col=_color (name )
     l=ROOT.TLine(xline0,y,xline1,y)
     l.SetLineColor(col)
     if ydic[y]<4:
@@ -176,7 +176,7 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
         x=coord[1]+offset
         xm=coord[2]+2*offset
     t.SetTextColor(col)
-    t.DrawLatex(x,y-.01,pprint(name))
+    t.DrawLatex(x,y-.01,_pprint(name))
     if printmass: t.DrawLatex(xm,y-.01,str(int(round(m,0))))
     written.append((y,x,xm))
 
@@ -192,23 +192,23 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
 
   tmpf=tempfile.mkstemp()[1]
 
-  printCanvas ( c1, tmpf+".eps" )
+  _printCanvas ( c1, tmpf+".eps" )
   for i in [ "pdf", "png", "eps" ]: 
     if not formats.has_key(i): formats[i]=False
 
   if formats["pdf"]:
     #print "[ruler.py] creating %s.pdf" % outputfile
-    execute ( "epspdf %s.eps %s.pdf" % ( tmpf, outputfile ) )
+    _execute ( "epspdf %s.eps %s.pdf" % ( tmpf, outputfile ) )
   if formats["png"]:
     formats["eps"]=True
     # print "[ruler.py] creating and cropping %s.png" % outputfile
     crop=""
     if True and not printmass:
       crop="-crop 270x1200+0+0"
-    execute ( "convert %s %s.eps %s.png" % ( crop, tmpf, outputfile ) )
+    _execute ( "convert %s %s.eps %s.png" % ( crop, tmpf, outputfile ) )
   if formats["eps"]:
     #print "[ruler.py] creating %s.eps" % output
-    execute ( "cp %s.eps %s.eps" % (tmpf, outputfile ) )
+    _execute ( "cp %s.eps %s.eps" % (tmpf, outputfile ) )
 
   os.unlink ( tmpf )
   
