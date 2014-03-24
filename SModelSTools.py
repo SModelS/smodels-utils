@@ -26,6 +26,7 @@ def addSModelSPath():
     try:
         import SModelS
         I=SModelS.installDirectory()
+        import sys
         sys.path.append ( I )
         return
     except ImportError,e:
