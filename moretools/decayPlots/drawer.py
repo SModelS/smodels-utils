@@ -19,7 +19,6 @@ class Drawer:
     self.html=html
 
   def draw ( self, out ):
-    print "[drawer.py] draw!!"
     prog=sys.argv[0]
     if prog.rfind("/")>0:
       prog=prog[prog.rfind("/")+1:]
@@ -44,7 +43,7 @@ class Drawer:
     if self.options["dot"]:
       # wout=out+".dot"
       wout=out+".dot"
-      print "[drawer.py] write to",wout
+      # print "[drawer.py] write to",wout
       self.G.write(wout)
       if self.verbose:
         print "[Drawer.py] %s created with dot." % ( wout )

@@ -20,7 +20,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
   out=os.path.basename ( slhafile ).replace(".slha","")
   if outfile!="":
     out=outfile
-  print "out=",out
+  # print "out=",out
 
   for i in [ "leptons", "integratesquarks", "separatecharm", "verbose",
              "dot", "neato", "pdf", "nopng", "nopercentage", "simple", "squarks",\
