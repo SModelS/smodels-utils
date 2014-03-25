@@ -1,6 +1,6 @@
 from pyparsing import Word, nums, ParseException, Optional, alphanums 
 import types
-import pyslha2 as pyslha
+from tools import modpyslha as pyslha
 
 class SPhenoReader:
   """ a class that parses a spheno file """
@@ -37,7 +37,7 @@ class SPhenoReader:
   def parseNamesAndMasses( self ):
     try:
       self.setIds()
-      masses=self.pyslha[1]
+      masses=self.pyslha.blocks["MASS"] ## pyslha[1]
       for pdgid in masses.keys():
         if masses[pdgid].mass: self.masses[pdgid]=float(masses[pdgid].mass)
     except Exception,e:
