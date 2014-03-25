@@ -104,10 +104,12 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
         first=False
       if len(l)>0:
         extra[reader.name ( i ) ] = l
+  htmlbegin="<font size=-2 color='green'>"
+  htmlend="</font>"
   if options["verbose"]:
-    if options["html"]: print "<br><font color='green'>"
-    print "[decayPlotter.py] We start from",starters
-    if options["html"]: print "</font><br>"
+    if options["html"]: print "<br>",htmlbegin
+    print "[decayPlotter] We start from",starters
+    if options["html"]: print htmlend,"<br>"
   drawer=decayPlots.Drawer ( options, ps, offset, extra )
 
   if options["tex"]:
@@ -133,12 +135,12 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
 
   if options["verbose"] and options["html"]:
     sout=out
-    print "<font color='green'>[decayPlotter.py] now we draw!",sout,"</font><br>"
+    print htmlbegin,"[decayPlotter] now we draw!",sout,htmlend,"<br>"
   drawer.draw ( out )
 
   if options["dot"] and options["tex"]:
     if options["verbose"] and options["html"]:
-      print "<font color='green'>[decayPlotter.py] calling dot2tex!</font><br>"
+      print htmlbegin,"[decayPlotter] calling dot2tex.<br>",htmlend
     drawer.dot2tex ( out )
 
 

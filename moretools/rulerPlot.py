@@ -50,8 +50,18 @@ def _color ( name ):
 def _pprint ( name ):
   """ find ROOT.TLatex names for various common names used in
       the comments in slha files  """
-  Dict={ "A0":"a^{0}", "A1":"a^{1}", "H+":"h^{#pm}", "Hp":"h^{#pm}", 
-    "H2":"h^{3}", "H":"h^{2}", "h":"h^{1}", "~e":"#tilde{e}", 
+  #Dict={ "A0":"a^{0}", "A1":"a^{1}", "H+":"h^{#pm}", "Hp":"h^{#pm}", 
+  #  "H2":"h^{3}", "H":"h^{2}", "h":"h^{1}", "~e":"#tilde{e}", 
+  #  "~g":"#tilde{g}", "~mu":"#tilde{#mu}", "~mu_L":"#tilde{#mu}_{L}",
+  #  "~mu_R":"#tilde{#mu}_{R}", "~e_L":"#tilde{e}_{L}","~e_R":"#tilde{e}_{R}",
+  #  "~tau_L":"#tilde{#tau}_{L}","~tau_R":"#tilde{#tau}_{R}",
+  #  "~chi20":"#tilde{#chi}^{0}_{2}", "~chi30":"#tilde{#chi}^{0}_{3}",
+  #  "~chi40":"#tilde{#chi}^{0}_{4}", "~chi50":"#tilde{#chi}^{0}_{5}",
+  #  "~chi10":"#tilde{#chi}^{0}_{1}", "~chi1+":"#tilde{#chi}^{+}_{1}",
+  #  "~chi2+":"#tilde{#chi}^{+}_{2}", "~chi3+":"#tilde{#chi}^{+}_{3}",
+  #  "~chi4+":"#tilde{#chi}^{+}_{4}" }
+  Dict={ "A0":"A", "A1":"A^{1}", "H+":"H^{#pm}", "Hp":"H^{#pm}", 
+    "H2":"H^{2}", "H":"H", "h":"h", "~e":"#tilde{e}", 
     "~g":"#tilde{g}", "~mu":"#tilde{#mu}", "~mu_L":"#tilde{#mu}_{L}",
     "~mu_R":"#tilde{#mu}_{R}", "~e_L":"#tilde{e}_{L}","~e_R":"#tilde{e}_{R}",
     "~tau_L":"#tilde{#tau}_{L}","~tau_R":"#tilde{#tau}_{R}",
