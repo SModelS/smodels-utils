@@ -21,6 +21,10 @@ def addInstallDirectory():
     base=os.path.dirname ( os.path.realpath ( inspect.getabsfile(addInstallDirectory) ) )
     sys.path.append ( base )
 
+def version():
+    """ smodels-tools has a version, also """
+    return "0.1"
+
 def addSModelSPath():
     """ adds the path of where smodels is installed to the search  path """
     try:
