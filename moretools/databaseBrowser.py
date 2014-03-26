@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-.. module:: summaryplots
+.. module:: databaseBrowser
    :synopsis: Centralized facility to access smodels-database in order to produce summaryplots.
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
@@ -131,7 +131,7 @@ class Analysis(object):
 	def getExtendedTopologyNames(self):
 		return getExtendedTopologies(self._name, self._run)
 		
-	#def getRestOfInfo => contact, arxiv, publisheddata, ### check something missing?
+	#def getRestOfInfo => contact, arxiv, publisheddata ### check something missing?
 
 class Topology(object):
 	"""contains all topology-specific information (e.g. particles resp. productionmode, ...)
@@ -165,7 +165,7 @@ class Topology(object):
 		"""
 		if not run:
 			anas = {}
-			log.error('no run was given, therefore trying all available runs %s and returning dictionary!' %self._runs)
+			log.warning('no run was given, therefore trying all available runs %s and returning dictionary!' %self._runs)
 			for r in self._runs:
 				if getAllAnalyses(run = r, topology = self._name):
 					anas[r] = [a for a in getAllAnalyses(run = r, topology = self._name)]
@@ -185,7 +185,7 @@ class Topology(object):
 		if dictionaries.decay.has_key(self._slackTopologyName()):
 			log.info('found decay for topology %s with slack name %s' %(self._name, self._slackTopologyName()))
 			return dictionaries.decay[self._slackTopologyName()]
-		log.error('no decay found for topology %s' %self._name)
+		log.warning('no decay found for topology %s' %self._name)
 		return None
 		
 	#def getPrettyName       # particles resp. productionmode
@@ -249,10 +249,11 @@ class Pair (object):
 		else:
 			log.error('no exclusionlines available for sigma = %s' % sigma)
 			return None
-		return exLines # ### FIX ME list can be longer than just one element => function should be able to handel precise requests ###
+		return exLines
 		
 	def selectExclusionLine(self, expected = False, sigma = 0, condition = 'xvalue', value = 050):
 		"""Selects one exclusionline (out of all exclusionLines for this topology) corresponding to a specified case of mass proportions (e.g. x-value = 050, mass of LSP = 50 GeV, ...)
+		### FIX ME: maybe define a standard configuration for other conditions as xvalues
 		
 		"""
 		exLines = self.selectTypeOfExclusionLine(expected, sigma)
@@ -274,7 +275,8 @@ class Pair (object):
 		
 	def getExclusions(self):
 		"""Retrieves all exclusions stored in info.txt.
-		### FIX ME maybe it's better not to do it the same way it is done for exclusionlines! ###
+		### FIX ME maybe it's better not to do it the same way it is done for exclusionlines!
+		
 		"""
 		exclusions = {}
 		info = getInfo(self._run, self._ana, 'exclusions')
@@ -301,7 +303,7 @@ class Pair (object):
 #def loadTopology
 
 def getDatabase():
-	"""Creates a dictionary containing all runs as keys and all subdirectories rsp. analyses as entries.
+	"""Creates a dictionary containing all runs as keys and all subdirectories resp. analyses as entries.
 	
 	"""
 	
@@ -383,8 +385,8 @@ def preprocessAxes(infoLine):
 	return infoLine
 
 def getAllRuns(analysis = None, topology = None, current = True):
-	#### FIX ME check if current still works resp. do I have to sort hits??!!!  ### maybe drop the topology-option?
 	"""Retrieves all runs a given analysis or topology or analysis-topology pair is available for. Returns a list containing all runs or just a string when current = True 
+	### FIX ME check if current still works resp. do I have to sort hits??!!!  ### FIX ME: maybe drop the topology-option?
 	
 	"""
 	database = getDatabase()
@@ -448,7 +450,7 @@ def getAllAnalyses(run = None, topology = None):
 
 def getAllTopologies(analysis = None, run = None):
 	"""Retrieves all topologies existing for given run or analysis-run-pair
-	### maybe all topologies with given characteristics like existing exclusionlines?
+	### FIX ME: maybe all topologies with given characteristics like existing exclusionlines?
 	
 	"""
 	topos = []
@@ -494,7 +496,8 @@ def getAllTopologies(analysis = None, run = None):
 	return topos
 		
 def getExtendedTopologies(analysis, run, topology = None):
-	"""Checks if the topologies for one given analysis-run are tainted with any kind of mass requirements and returns dictionary with extended topologies. Can be reduced to given topology (returns list). ### FIX ME: maybe use in class Pair only?
+	"""Checks if the topologies for one given analysis-run are tainted with any kind of mass requirements and returns dictionary with extended topologies. Can be reduced to given topology (returns list).
+	### FIX ME: maybe use in class Pair only?
 	
 	"""
 	topos = {}
@@ -543,7 +546,7 @@ def getExtendedTopologies(analysis, run, topology = None):
 	return None
 	
 def massProportions(axesLine):
-	"""Reads out all the conditions for intermediate masses (e.g. masssplitting-xvalues 025, 050, 075) implicitely stored in axes-lines of info.txt and returns the information as dictionary.
+	"""Reads out all the conditions for intermediate masses (e.g. masssplitting-xvalues 025, 050, 075) implicitly stored in axes-lines of info.txt and returns the information as dictionary.
 	
 	"""
 	massdic = {}
