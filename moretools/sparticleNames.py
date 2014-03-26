@@ -14,11 +14,15 @@ class SParticleNames:
     def __init__ ( self ):
         """ Defines the ids and the names """
         self.ids={
-            1: "u", 2: "d", 3: "s", 4: "c", 5: "b", 6: "t", 11: "e", 13: "mu", 
-            15: "tau", 12: "nu", 14: "nu", 16:"nu", 21: "g", 22: "gamma", 
+            1: "u", 2: "d", 3: "s", 4: "c", 5: "b", 6: "t", 11: "e-", 13: "mu-", 
+            15: "tau-", 12: "nu", 14: "nu", 16:"nu", 21: "g", 22: "gamma", 
             24: "W", 23:"Z", 25:"h1", 35: "h2", 36: "a0", 37: "h+", 
+            -15: "tau+", -13: "mu+", -11: "e:", -37: "h-", -24: "W-",
+            -23: "Z", -25: "h1", -35: "h2", -36: "a0", -22: "gamma",
+            -21: "g", -16: "nu", -14: "nu", -12: "nu", -1: "u",
+            -2: "d", -3: "s", -4: "c", -5: "b", -6: "t",
             1000001: "~d_L", 2000001: "~d_R",
-            1000002: "~d_L", 2000002: "~u_R",
+            1000002: "~u_L", 2000002: "~u_R",
             1000003: "~s_L", 2000003: "~s_R",
             1000004: "~c_L", 2000004: "~c_R",
             1000005: "~b_1", 2000005: "~b_2",
@@ -32,7 +36,22 @@ class SParticleNames:
             1000021: "~g", 1000022: "~chi10",
             1000024: "~chi1+", 1000023: "~chi20",
             1000037: "~chi2+", 1000025: "~chi30",
-            1000035: "~chi40"
+            1000035: "~chi40",
+            -1000001: "~d_L^*", -2000001: "~d_R^*",
+            -1000002: "~u_L^*", -2000002: "~u_R^*",
+            -1000003: "~s_L^*", -2000003: "~s_R^*",
+            -1000004: "~c_L^*", -2000004: "~c_R^*",
+            -1000005: "~b_1^*", -2000005: "~b_2^*",
+            -1000006: "~t_1^*", -2000006: "~t_2^*",
+            -1000011: "~e_L^*", -1000012: "~nu_eL",
+            -1000013: "~mu_L^*", -1000014: "~nu_muL",
+            -1000015: "~tau_L^*",- 1000016: "~nu_tauL",
+            -2000011: "~e_R^*", -2000012: "~nu_eR",
+            -2000013: "~mu_R^*", -2000014: "~nu_muR",
+            -2000015: "~tau_R^*", -2000016: "~nu_tauR",
+            -1000021: "~g", -1000022: "~chi10",
+            -1000024: "~chi1-", -1000023: "~chi20",
+            -1000037: "~chi2-",- 1000025: "~chi30",
         }
         self.names={}
         for (key,value) in self.ids.items():
@@ -40,9 +59,10 @@ class SParticleNames:
 
     def name ( self, pid ):
         """ get the name for a particle id """
-        pid=abs(pid)
-        if not pid in self.ids:
+        if not pid in self.ids and not abs(pid) in self.ids:
             return str(pid)
+        if not pid in self.ids:
+            return self.ids[abs(pid)]
         return self.ids[pid]
 
     def pid ( self, name ):
@@ -81,6 +101,7 @@ class SParticleNames:
     def shortName ( self, productiontuple ):
         """ assign a particle category to a tuple of two particle pids """
         p1,p2=abs( productiontuple[0] ),abs( productiontuple[1] )
+        # p1,p2= productiontuple
         q1,q2=self.particleType ( p1 ), self.particleType ( p2 )
         if q1>q2: q1,q2=q2,q1 ## swap, give a canonical order
         return q1+q2
@@ -122,6 +143,9 @@ class SParticleNames:
         name=name.replace("chi1+","chi<sub>1</sub><sup>+</sup>")
         name=name.replace("chi2+","chi<sub>2</sub><sup>+</sup>")
         name=name.replace("chi3+","chi<sub>3</sub><sup>+</sup>")
+        name=name.replace("chi1-","chi<sub>1</sub><sup>-</sup>")
+        name=name.replace("chi2-","chi<sub>2</sub><sup>-</sup>")
+        name=name.replace("chi3-","chi<sub>3</sub><sup>-</sup>")
         name=name.replace("chi","&chi;")
         name=name.replace("nu","&nu;")
         name=name.replace("mu","&mu;")
@@ -144,6 +168,7 @@ class SParticleNames:
         name=name.replace("b2","b<sub>2</sub>")
         name=name.replace("t1","t<sub>1</sub>")
         name=name.replace("t2","t<sub>2</sub>")
+        name=name.replace("^*","t<sup>*</sup>")
         #name=name.replace("+","<sup>+</sup>")
         if name.find("~")==0: 
             if name.find("<su")==-1: 
@@ -155,7 +180,6 @@ class SParticleNames:
         return "<nobr>"+name+"</nobr>"
 
 
-
 if __name__ == "__main__":
     """ as a script, we simply print out the paths """
     print "sparticle names"
@@ -163,7 +187,7 @@ if __name__ == "__main__":
     ctr=0
     for (key,value) in namer.ids.items():
        ctr+=1
-       print "%7d %8s   |" % (key,value),
+       print "%8d %8s   |" % (key,value),
        if ctr==3:
          print
          ctr=0
