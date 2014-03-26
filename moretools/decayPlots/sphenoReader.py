@@ -39,7 +39,8 @@ class SPhenoReader:
       self.setIds()
       masses=self.pyslha.blocks["MASS"] ## pyslha[1]
       for pdgid in masses.keys():
-        if masses[pdgid].mass: self.masses[pdgid]=float(masses[pdgid].mass)
+        self.masses[pdgid]=float(masses[pdgid])
+        # if masses[pdgid].mass: self.masses[pdgid]=float(masses[pdgid].mass)
     except Exception,e:
         print "[SPhenoReader.py] exception in ``parseNamesAndMasses'':",e
 

@@ -8,7 +8,7 @@
 def drawRandom ( lhedir ):
     import set_path
     import sys, os, random, argparse
-    from theory import LHEReader, lheDecomposer
+    from theory import lheReader, lheDecomposer
     from tools import asciiGraph
     """ just one random lhe file from <lhedir>, and draw it """
     files=os.listdir( lhedir )
@@ -30,7 +30,7 @@ def drawRandom ( lhedir ):
     print "Today's Random Topology is ``%s'':" % T
     print
 
-    reader = LHEReader.LHEReader( filename )
+    reader = lheReader.lheReader( filename )
     Event = reader.next()
     E = lheDecomposer.elementFromEvent(Event )
     asciiGraph.asciidraw ( E, border=True )
