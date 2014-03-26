@@ -49,6 +49,50 @@ class SParticleNames:
             return 0
         return self.names[name]
 
+    def has ( self, i ):
+        """ do we have particle? can be pid or name """
+        if i in self.names: return True
+        if i in self.ids: return True
+        return False
+
+    def particleType ( self, q ):
+        q=abs(q)
+        if q>1000000 and q<1000005:
+            return "q"
+        if q>2000000 and q<2000005:
+            return "q"
+        if q in [ 1000005, 2000005 ]:
+            return "b"
+        if q in [ 1000006, 2000006 ]:
+            return "t"
+        if q==1000021:
+            return "g"
+        if q in [ 1000022, 1000023, 1000025, 1000035, 1000024, 1000037 ]:
+            return "n"
+        if q in [ 1000011, 1000013, 1000015, 2000011, 2000013, 2000015 ]:
+            return "l"
+        if q in [ 1000012, 1000014, 1000016, 2000012, 2000014, 2000016 ]:
+            return "l"
+        return str(q)
+
+    def shortName ( self, productiontuple ):
+        p1,p2=abs( productiontuple[0] ),abs( productiontuple[1] )
+        q1,q2=self.particleType ( p1 ), self.particleType ( p2 )
+        if q1>q2: q1,q2=q2,q1 ## swap, give a canonical order
+        return q1+q2
+
+    def longName ( self, letter ):
+        if letter=="l": return "slepton"
+        if letter=="n": return "weakino"
+        if letter=="q": return "squark"
+        if letter=="t": return "stop"
+        if letter=="b": return "sbottom"
+        if letter=="g": return "gluino"
+        return "?"
+
+
+
+
 if __name__ == "__main__":
     """ as a script, we simply print out the paths """
     print "sparticle names"
