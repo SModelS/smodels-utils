@@ -2,7 +2,8 @@
 
 """
 .. module:: sparticleNames
-        :synopsis: assign sparticle names to pids ( 1000021 <-> ~g, ... )
+        :synopsis: assign sparticle names to pids ( 1000021 <-> ~g, ... ),
+        pids to names, categorizes particles, etc.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
@@ -39,8 +40,9 @@ class SParticleNames:
 
     def name ( self, pid ):
         """ get the name for a particle id """
+        pid=abs(pid)
         if not pid in self.ids:
-            return "?"
+            return str(pid)
         return self.ids[pid]
 
     def pid ( self, name ):
@@ -55,8 +57,9 @@ class SParticleNames:
         if i in self.ids: return True
         return False
 
-    def particleType ( self, q ):
-        q=abs(q)
+    def particleType ( self, pid ):
+        """ categorizes sparticles """
+        q=abs(pid)
         if q>1000000 and q<1000005:
             return "q"
         if q>2000000 and q<2000005:
@@ -76,12 +79,14 @@ class SParticleNames:
         return str(q)
 
     def shortName ( self, productiontuple ):
+        """ assign a particle category to a tuple of two particle pids """
         p1,p2=abs( productiontuple[0] ),abs( productiontuple[1] )
         q1,q2=self.particleType ( p1 ), self.particleType ( p2 )
         if q1>q2: q1,q2=q2,q1 ## swap, give a canonical order
         return q1+q2
 
     def longName ( self, letter ):
+        """ gives long names to particle categories """
         if letter=="l": return "slepton"
         if letter=="n": return "weakino"
         if letter=="q": return "squark"
@@ -90,6 +95,64 @@ class SParticleNames:
         if letter=="g": return "gluino"
         return "?"
 
+    def tilde ( self, text ):
+        """ put a tilde over text """
+        return "<math display='inline'><mover><mi>%s</mi><mo stretchy='true'>~</mo></mover></math>" % text
+
+    def sub ( self, text ):
+        return "<sub>"+text+"</sub>"
+
+    def sup ( self, text ):
+        return "<sup>"+text+"</sup>"
+
+    def toHtml ( self, name ):
+        """ translate particle names to html code """
+        #if name=="~chi2+": 
+        #    name=self.tilde("&chi;")+"xxx" ## sup("+")+"2"#+sub("2")
+        #if name=="~chi1+": return self.tilde("&chi;")+"1+" ## sup("+")+"2"#+sub("2")
+        #if name=="~chi30": return self.tilde("&chi;")+sup("0")#+sub("2")
+        name=name.replace("_eL","<sub>eL</sub>")
+        name=name.replace("_muL","<sub>muL</sub>")
+        name=name.replace("_tauL","<sub>tauL</sub>")
+        name=name.replace("chi10","chi<sub>1</sub><sup>0</sup>")
+        name=name.replace("chi20","chi<sub>2</sub><sup>0</sup>")
+        name=name.replace("chi30","chi<sub>3</sub><sup>0</sup>")
+        name=name.replace("chi40","chi<sub>4</sub><sup>0</sup>")
+        name=name.replace("chi50","chi<sub>5</sub><sup>0</sup>")
+        name=name.replace("chi1+","chi<sub>1</sub><sup>+</sup>")
+        name=name.replace("chi2+","chi<sub>2</sub><sup>+</sup>")
+        name=name.replace("chi3+","chi<sub>3</sub><sup>+</sup>")
+        name=name.replace("chi","&chi;")
+        name=name.replace("nu","&nu;")
+        name=name.replace("mu","&mu;")
+        name=name.replace("tau","&tau;")
+        name=name.replace("_L","<sub>L</sub>")
+        name=name.replace("uL","u<sub>L</sub>")
+        name=name.replace("dL","d<sub>L</sub>")
+        name=name.replace("cL","c<sub>L</sub>")
+        name=name.replace("sL","s<sub>L</sub>")
+        name=name.replace("uR","u<sub>R</sub>")
+        name=name.replace("dR","d<sub>R</sub>")
+        name=name.replace("cR","c<sub>R</sub>")
+        name=name.replace("sR","s<sub>R</sub>")
+        name=name.replace("_R","<sub>R</sub>")
+        name=name.replace("_1","<sub>1</sub>")
+        name=name.replace("A0","A<sup>0</sup>")
+        name=name.replace("H+","H<sup>+</sup>")
+        name=name.replace("_2","<sub>2</sub>")
+        name=name.replace("b1","b<sub>1</sub>")
+        name=name.replace("b2","b<sub>2</sub>")
+        name=name.replace("t1","t<sub>1</sub>")
+        name=name.replace("t2","t<sub>2</sub>")
+        #name=name.replace("+","<sup>+</sup>")
+        if name.find("~")==0: 
+            if name.find("<su")==-1: 
+                name=self.tilde(name[1:])
+            else:
+                pos=name.find("<su")
+                name=self.tilde(name[1:pos])+name[pos:]
+        # print name,"<br>"
+        return "<nobr>"+name+"</nobr>"
 
 
 
