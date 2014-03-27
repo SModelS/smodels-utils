@@ -168,7 +168,7 @@ class SParticleNames:
         name=name.replace("b2","b<sub>2</sub>")
         name=name.replace("t1","t<sub>1</sub>")
         name=name.replace("t2","t<sub>2</sub>")
-        name=name.replace("^*","t<sup>*</sup>")
+        name=name.replace("^*","<sup>*</sup>")
         #name=name.replace("+","<sup>+</sup>")
         if name.find("~")==0: 
             if name.find("<su")==-1: 
