@@ -12,7 +12,7 @@
 import ROOT
 import logging, os, types
 import dictionaries
-from Tools import PhysicsUnits
+
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 log = logging.getLogger(__name__)
@@ -28,8 +28,8 @@ def setLogLevel(level = 'error'):
 		pass
 		
 
-Base = '/afs/hephy.at/user/w/walten/public/sms/'
-#Base = '/home/vroni/Documents/Diplomarbeit/smodels-database/'
+#Base = '/afs/hephy.at/user/w/walten/public/sms/'
+Base = '../../smodels-database/'
 allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
 artifacts = ['old', 'bad', 'missing', 'TODO', 'readme'] 
 currentRun = '8TeV'
@@ -113,7 +113,11 @@ class Analysis(object):
 		
 	def getChecked(self):
 		if self.checkChecked() == True:
-			return getInfo(self._run, self._name, 'checked')
+			infoLine = getInfo(self._run, self._name, 'checked')
+			infoLine = infoLine[0].split(',')
+			infoLine[0] = infoLine[0].replace('checked: ','')
+			infoLine = [ch.strip() for ch in infoLine]
+			return infoLine
 		return None
 		
 	def getName(self):
@@ -210,6 +214,19 @@ class Pair (object):
 		
 	def getTopology(self):
 		return Topology(self._topo)
+		
+	def checkedBy(self):
+		"""Retrieves checked_by entry from info.txt.
+		
+		"""
+		infoLine = self.getAnalysis().getChecked()
+		if len(infoLine) == 1:
+			log.warning('there is no information about singel topologies')
+			return infoLine[0]
+		else:
+			infoLine = [ch for ch in infoLine is self._topo in ch]
+			infoLine = [ch.split(':') for ch in infoLine]
+			return infoLine[1].strip()
 		
 	def getExclusionLines(self):
 		"""Retrieves all the exclusionlines stored in sms.root as a python dictionary.
