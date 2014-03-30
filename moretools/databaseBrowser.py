@@ -30,6 +30,8 @@ def setLogLevel(level = 'error'):
 
 #Base = '/afs/hephy.at/user/w/walten/public/sms/'
 Base = '../../smodels-database/'
+#Base = '../smodels-database/'
+
 allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
 artifacts = ['old', 'bad', 'missing', 'TODO', 'readme'] 
 currentRun = '8TeV'
@@ -220,13 +222,21 @@ class Pair (object):
 		
 		"""
 		infoLine = self.getAnalysis().getChecked()
-		if len(infoLine) == 1:
+		log.debug('got infoLine from Analysis-object: %s' %infoLine)
+		if not infoLine: return None
+		if 'AL' in infoLine: # ### FIX ME: this if will be obsolet when the checked flag is fixed in every info.txt
 			log.warning('there is no information about singel topologies')
 			return infoLine[0]
-		else:
-			infoLine = [ch for ch in infoLine is self._topo in ch]
-			infoLine = [ch.split(':') for ch in infoLine]
-			return infoLine[1].strip()
+		infoLine = [ch for ch in infoLine if self._topo in ch]
+		log.debug('first preprocessed infoLine: %s' %infoLine)
+		if not infoLine:
+			log.warning('This Pair is not checked!')
+			return None
+		infoLine = [ch.split(':') for ch in infoLine]
+		log.debug('second preprocessed infoLine: %s' %infoLine)
+		infoLine = infoLine[0]
+		log.debug('return value of infoLine: %s' %infoLine)
+		return infoLine[1].strip()
 		
 	def getExclusionLines(self):
 		"""Retrieves all the exclusionlines stored in sms.root as a python dictionary.
@@ -350,7 +360,7 @@ def checkResults(run = None, analysis = None, requested = 'info.txt'):
 	path = Base + run + '/' + analysis + '/' + requested
 	log.debug('check path: %s' %path)
 	if not os.path.exists(path):
-		log.error('for run %s and analyses %s no %s was found' %(run, analysis, requested))
+		log.warning('for run %s and analyses %s no %s was found' %(run, analysis, requested))
 		return None
 		
 	return path
@@ -388,7 +398,7 @@ def getInfo(run = None, analysis = None, requested = 'constraint'):
 	content = readInfo(run, analysis)
 	content = [string.strip() for string in content if requested in string]
 	if not content == []: return content
-	log.info('requested keyword %s could not be found for %s-%s!' %(requested, run, analysis))
+	log.warning('requested keyword %s could not be found for %s-%s!' %(requested, run, analysis))
 	return None
 	
 def preprocessAxes(infoLine):
