@@ -59,7 +59,6 @@ def connect ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=Tr
             label=label.replace("nu",r"$\nu$").replace("+","$^{+}$").replace("-","$^{-}$")
             label=label.replace("tau",r"$\tau$").replace("mu",r"$\mu$")
             fl.addLabel ( label, pos=0.9, displace=displace )
-        logger.error ( "/connect " )
         return [ fl ]
 
     fl=Fermion(p1,p2)
@@ -88,9 +87,7 @@ def connect ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=Tr
             print "[feynmanGraph.py] draw line from (%f,%f) to (%f,%f)" % ( points[i].x(), points[i].y(), points[i+1].x(), points[i+1].y() )
     if displace==None: displace=-.08
     # if label: segs[-1].addLabel ( label, pos=0.7, displace=displace )
-    logger.error ( "connect E" )
     if label:
-        logger.error ( "connect F" )
         filename="%s/icons/%s.jpg" % ( SModelSTools.installDirectory(), label.replace(" ","").replace("_","").replace("$","").upper().replace("+","").replace("-","") )
         #print "filename=",filename
         if not os.path.exists ( filename ):
@@ -104,19 +101,14 @@ def connect ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=Tr
             sys.error(0)
  
         jpg = bitmap.jpegimage( filename )
-        logger.error ( "connect G2" )
         y1=segs[-1].fracpoint(1.0).y()
         y2=segs[-1].fracpoint(0.0).y()
-        logger.error ( "connect H" )
         fp=0.90
         if y2>y1: fp=1.545
         pt=segs[-1].fracpoint(fp)
-        logger.error ( "connect I" )
 
         # fd.currentCanvas.insert(bitmap.bitmap(0, 0, jpg, compressmode=None))
         canvas.insert(bitmap.bitmap(pt.x()+displace, pt.y(), jpg, compressmode=None))
-        logger.error ( "connect J" )
-    logger.error ( "/connect " )
     return segs
 
 def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=False ):
