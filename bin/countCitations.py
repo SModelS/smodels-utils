@@ -6,7 +6,11 @@ N=1269436
 
 import urllib2
 
-f=urllib2.urlopen("http://inspirehep.net/record/%d/citations" % N )
+U="http://inspirehep.net/record/%d/citations" % N
+
+print U
+
+f=urllib2.urlopen( U )
 lines=f.readlines()
 f.close()
 
