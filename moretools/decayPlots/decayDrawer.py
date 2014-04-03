@@ -170,100 +170,80 @@ class DecayDrawer:
             node.attr['color']='#FFFFFF'
             node.attr['label']=str(m)+' GeV'
 
+    def simpleName ( self, name ):
+        """ simple names for slha names """
+        reps = { "~g":"G", "~chi_10":"N", "~chi_1+":"C", "~t_2":"T", "~t_1":"T", 
+                 "~b_2":"B", "~b_1":"B", "~nu_muL":"xx {dot m}", "~nu":"NU" }
+        for (From,To) in reps.items(): name=name.replace(From,To)
+        return name
+
+    def texName ( self, name ):
+        """ map slha particle names to latex names """
+        def huge(x):
+            return "\\\\Huge{\\\\textbf{%s}}" % x
+        def large(x):
+            return "\\\\large{%s}" % x
+        def math(x): return "$%s$" % x
+        def tilde(x): ## x is in tilde
+            return "\\\\tilde{\\\\mathrm{%s}}" % (x)
+        name=name.replace("_","")
+        tsup=name[-1:]
+        tsub=name[-2:-1]
+        second=name[1:2]
+        first=name[:1]
+        if first=="~" and name.find("chi")>-1: # weakinos
+            sup,sub="",""
+            if tsup in [ "+", "-", "0" ]: sup="^{%s}" % tsup
+            if tsub in [ "1", "2", "3", "4", "5" ]: sub="_{%s}" % tsub
+            return huge ( math ( tilde ( "\\\\chi" ) + sup + sub )  )
+
+        squarks = [ "u", "d", "c", "s", "t", "b", "e" ]
+        if first=="~" and second in squarks: # squarks and selectron
+            sub=""
+            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup 
+            return huge ( math ( tilde ( second ) + sub ) )
+        if name[:3]=="~mu": # smuon
+            sub=""
+            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup 
+            return huge ( math ( tilde ( "\\\\mu" ) + sub ) )
+        if name[:4]=="~tau": # stau
+            sub=""
+            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup 
+            return huge ( math ( tilde ( "\\\\tau" ) + sub ) )
+        if name=="~g": return huge ( math ( tilde ( "g" ) ) )
+        if name[:3]=="~nu": # sneutrinos:
+            flavor=name[3:-1]
+            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
+            if flavor in [ "mu", "tau" ]: sub="_{\\\\%s%s}" % (flavor,sub)
+            if flavor in [ "e" ]: sub="_{%s%s}" % (flavor,sub)
+            return huge ( math ( tilde ( "\\\\nu" ) + sub ) ) 
+        if first=="~": return huge ( math ( tilde ( name[1:] ) ) )
+        if name=="gamma": return large ( math ( "\gamma" ) )
+        if name=="nu": return large ( math ( "\\\\nu" ) )
+        return large ( name )
+
+    def htmlName ( self, name ):
+        ### name=name.replace ( "+", "" )
+        reps= { "chi10":"chi&#8321;&#8304;", "chi1+":"chi&#8321;+", 
+           "chi2+":"chi&#8322;+", "chi3+":"chi&#8323;+", "chi20":"chi&#8322;&#8304;",
+           "chi30":"chi&#8323;&#8304;", "chi40":"chi&#8324;&#8304;", 
+           "t_1":"t&#8321;", "t_2":"t&#8322;", "b_1":"b&#8321;", "b_2":"b&#8322;", 
+           "t1":"t&#8321;", "t2":"t&#8322;", "b1":"b&#8321;", "b2":"b&#8322;", 
+           "chi":"&Chi;", "gamma":"&gamma;", "nu":"&nu;", 
+           "mu":"&mu;", "tau":"&tau;" }
+        for (From,To) in reps.items(): name=name.replace(From,To)
+        return name
+
     def prettyName ( self, mname ):
-        n2=mname
-        if n2=="W+":
-            n2="W"
+        """ find pretty names for the slha names """
+        name=mname
+        if name=="W+":
+            name="W"
         if self.options["simple"]:
-            n2=n2.replace("~g","G" )
-            n2=n2.replace("~chi_10","N" )
-            n2=n2.replace("~chi_1+","C" )
-            n2=n2.replace("~t_2","T" )
-            n2=n2.replace("~t_1","T" )
-            n2=n2.replace("~b_2","B" )
-            n2=n2.replace("~b_1","B" )
-            n2=n2.replace("~nu_muL","xx {dot m}" )
-            n2=n2.replace("~nu","NU" )
-            return n2
+            return self.simpleName ( name )
         if self.tex:
-            def tilde(x,y=""):
-                return "$\\\\tilde{\\\\mathrm{%s}}%s$" % (x,y)
-            if n2=="nu": return "$\\\\nu$"
-            n2=n2.replace("~chi_10", tilde("\\\\chi","_{1}^{0}" ) )
-            n2=n2.replace("~chi10", tilde("\\\\chi","_{1}^{0}" ) )
-            n2=n2.replace("~chi_1+","$\\\\tilde{\\\\chi}_{1}^{+}$" )
-            n2=n2.replace("~chi1+","$\\\\tilde{\\\\chi}_{1}^{+}$" )
-            n2=n2.replace("~chi_2+","$\\\\tilde{\\\\chi}_{2}^{+}$" )
-            n2=n2.replace("~chi2+","$\\\\tilde{\\\\chi}_{2}^{+}$" )
-            n2=n2.replace("~chi_20","$\\\\tilde{\\\\chi}_{2}^{0}$" )
-            n2=n2.replace("~chi20","$\\\\tilde{\\\\chi}_{2}^{0}$" )
-            n2=n2.replace("~chi30","$\\\\tilde{\\\\chi}_{3}^{0}$" )
-            n2=n2.replace("~chi_30","$\\\\tilde{\\\\chi}_{3}^{0}$" )
-            n2=n2.replace("~chi40","$\\\\tilde{\\\\chi}_{4}^{0}$" )
-            n2=n2.replace("~chi_40","$\\\\tilde{\\\\chi}_{4}^{0}$" )
-            n2=n2.replace("~nu_muL",tilde("\\\\nu","_{\\\\mu L}" ) )
-            n2=n2.replace("~nu_tauL",tilde("\\\\nu","_{\\\\tau L}" ) )
-            n2=n2.replace("~nu_eL",tilde("\\\\nu","_{eL}" ) )
-            n2=n2.replace("~tau_L",tilde("\\\\tau","_{L}" ) )
-            n2=n2.replace("~tau_R",tilde("\\\\tau","_{R}" ) )
-            n2=n2.replace("~mu_L",tilde("\\\\mu","_{L}" ) )
-            n2=n2.replace("~mu_R",tilde("\\\\mu","_{R}" ) )
-            n2=n2.replace("~mu",tilde("\\\\mu","" ) )
-            n2=n2.replace("~t_1",tilde("t","_{1}" ) )
-            n2=n2.replace("~b_1",tilde("b","_{1}" ) )
-            n2=n2.replace("~q_1",tilde("q","_{1}" ) )
-            n2=n2.replace("~u_1",tilde("u","_{1}" ) )
-            n2=n2.replace("~u_L",tilde("u","_{L}" ) )
-            n2=n2.replace("~u_R",tilde("u","_{R}" ) )
-            n2=n2.replace("~d_1",tilde("d","_{1}" ) )
-            n2=n2.replace("~c_1",tilde("c","_{1}" ) )
-            n2=n2.replace("~c_L",tilde("c","_{L}" ) )
-            n2=n2.replace("~c_R",tilde("c","_{R}" ) )
-            n2=n2.replace("~s_1",tilde("s","_{1}" ) )
-            n2=n2.replace("~t_2",tilde("t","_{2}" ) )
-            n2=n2.replace("~b_2",tilde("b","_{2}" ) )
-            n2=n2.replace("~q_2",tilde("q","_{2}" ) )
-            n2=n2.replace("~u_2",tilde("u","_{2}" ) )
-            n2=n2.replace("~d_L",tilde("d","_{L}" ) )
-            n2=n2.replace("~d_R",tilde("d","_{R}" ) )
-            n2=n2.replace("~d_2",tilde("d","_{2}" ) )
-            n2=n2.replace("~c_2",tilde("c","_{2}" ) )
-            n2=n2.replace("~s_2",tilde("s","_{2}" ) )
-            n2=n2.replace("~s_L",tilde("s","_{L}" ) )
-            n2=n2.replace("~s_R",tilde("s","_{R}" ) )
-            n2=n2.replace("~e_L",tilde("e","_{L}" ) )
-            n2=n2.replace("gamma","$\\\\gamma$" )
-            n2=n2.replace("~g",tilde("g") )
-            ## if n2[:2]=="nu": n2="\\nu"+n2[2:]## if n2=n2.replace ( "nu", "\\nu" )
-            #n2=n2.replace("~nu","\\tilde{\\nu}" )
-            # n2=n2.replace("nu","\\\\nu" )
-            #print "n2=",n2
-            #if n2.find("~")>-1: n2=n2.replace("~","tilde")
-            ## n2=n2.replace("\\","\\" )
-            return n2
-        ### n2=n2.replace ( "+", "" )
-        n2=n2.replace ( "chi10", "chi&#8321;&#8304;" )
-        n2=n2.replace ( "chi1+", "chi&#8321;+" )
-        n2=n2.replace ( "chi2+", "chi&#8322;+" )
-        n2=n2.replace ( "chi3+", "chi&#8323;+" )
-        n2=n2.replace ( "chi20", "chi&#8322;&#8304;" )
-        n2=n2.replace ( "chi30", "chi&#8323;&#8304;" )
-        n2=n2.replace ( "chi40", "chi&#8324;&#8304;" )
-        n2=n2.replace ( "t_1", "t&#8321;" )
-        n2=n2.replace ( "t_2", "t&#8322;" )
-        n2=n2.replace ( "b_1", "b&#8321;" )
-        n2=n2.replace ( "b_2", "b&#8322;" )
-        n2=n2.replace ( "t1", "t&#8321;" )
-        n2=n2.replace ( "t2", "t&#8322;" )
-        n2=n2.replace ( "b1", "b&#8321;" )
-        n2=n2.replace ( "b2", "b&#8322;" )
-        n2=n2.replace ( "chi", "&Chi;" )
-        n2=n2.replace ( "gamma", "&gamma;" )
-        n2=n2.replace ( "nu", "&nu;" )
-        n2=n2.replace ( "mu", "&mu;" )
-        n2=n2.replace ( "tau", "&tau;" )
-        #n2=n2.replace ( "~g", "gluino" )
-        return n2
+            return self.texName ( name )
+        return self.htmlName ( name )
 
     def meddleWithTexFile ( self,out ):
         """ this changes the tex file! """
@@ -290,6 +270,8 @@ class DecayDrawer:
         #longcmd="%s --preproc %s.dot | %s -o %s.tex" % ( cmd, out, cmd, out )
         logger.info (  "cmd=%s " % cmd )
         output=commands.getoutput( cmd )
+        logger.info ( output )
         pdfcmd="pdflatex -interaction nonstopmode %s.tex " % ( out )
         logger.info (  "pdfcmd=%s" % pdfcmd )
         output=commands.getoutput(pdfcmd )
+        logger.info ( output )

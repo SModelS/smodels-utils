@@ -1,6 +1,16 @@
+"""
+.. module: sphenoReader
+        :synopsis: Module for reading and parsing the input slha files.
+
+.. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
+
+"""
+
 from pyparsing import Word, nums, ParseException, Optional, alphanums 
 import types
 from tools import modpyslha as pyslha
+import logging
+logger = logging.getLogger(__name__)
 
 class SPhenoReader:
   """ a class that parses a spheno file """
@@ -42,7 +52,7 @@ class SPhenoReader:
         self.masses[pdgid]=float(masses[pdgid])
         # if masses[pdgid].mass: self.masses[pdgid]=float(masses[pdgid].mass)
     except Exception,e:
-        print "[SPhenoReader.py] exception in ``parseNamesAndMasses'':",e
+        logger.error ( "exception in ``parseNamesAndMasses'': %s" % e )
 
   def parseNamesAndMassesOld( self ):
     self.setIds()
@@ -80,8 +90,8 @@ class SPhenoReader:
           mass=float(parsed[1])
           if mass > 100000:
             if self.verbose:
-              print "[SPhenoReader] %s has a mass of %d, not considering!" \
-                % ( name, mass )
+              logger.info ( "%s has a mass of %d, not considering!" \
+                % ( name, mass ) )
             continue
         except:
           pass
@@ -91,11 +101,11 @@ class SPhenoReader:
           for i in [ "L", "R", "1", "2" ]:
             name=name.replace("~q_%s" % i,"~q");
         if self.verbose:
-          print "[SPhenoReader] adding %s pdg=%d m=%s" % ( name, pdgid, str(mass) )
+          logger.info ( "adding %s pdg=%d m=%s" % ( name, pdgid, str(mass) ) )
         self.masses[pdgid]=mass
       except ParseException,e:
-        print "[SPhenoReader] exception caught with ``%s'': %s" % (line,e)
-        print "[SPhenoReader] tried to interpret it as a mass line"
+        logger.error ( "exception caught with ``%s'': %s" % (line,e) )
+        logger.info ( "tried to interpret it as a mass line" )
 
     f.close()
   
@@ -182,7 +192,7 @@ class SPhenoReader:
     n1=self.ids[p1]
     n2=self.ids[p2]
     if math.fabs ( m2 - m1 ) > 25:
-      print "[SPhenoReader] cannot merge %s with %s" % ( n1,n2 )
+      logger.error ( "cannot merge %s with %s" % ( n1,n2 ) )
       return
     self.masses[p1]=(m1+m2)/2.
     self.masses.pop(p2)
@@ -200,14 +210,14 @@ class SPhenoReader:
   def printDecay ( self, mother, rmin=0.0 ):
       m=self.pdgId ( mother )
       if not self.decays.has_key ( m ):
-        print "[printDecay] no decays for ",self.name (m )
+        logger.error ( "[printDecay] no decays for %s" % self.name (m ) )
         return
       rtotal=0.
       for (daughter,right) in self.decays[m].items():
         for ( radiator, r ) in right.items():
           if r>rmin:
-            print "%8s -> %8s %8s: %.2f" % \
-              ( self.name(m), str(daughter), radiator, r )
+            logger.info ( "%8s -> %8s %8s: %.2f" % \
+              ( self.name(m), str(daughter), radiator, r ) )
           rtotal+=r
 
   def printDecays ( self ):
@@ -228,7 +238,7 @@ class SPhenoReader:
           #  return
           rtotal+=r
       if rtotal < 0.99 or rtotal > 1.01:
-        print "Error: %s branchings add up to %.2f" % ( self.name ( mother ), rtotal )
+        logger.error ( "%s branchings add up to %.2f" % ( self.name ( mother ), rtotal ) )
 
   def integratePdgs ( self, pdgid ):
     """ for branching ratios, we dont want to differentiate
@@ -289,9 +299,9 @@ class SPhenoReader:
             fradiate+=" "+self.fullName(self.integratePdgs(ps[2]),integrated=True)
           if self.verbose:
             if len(parsed)<=4:
-              print "[SPhenoReader] %d -> %d  %d   (%s)" % ( pdgIdMother, ps[0], ps[1], r )
+              logger.info ( "%d -> %d  %d   (%s)" % ( pdgIdMother, ps[0], ps[1], r ) )
             else:
-              print "[SPhenoReader] %d -> %d  %d  %d  (%s) radiate=%s fradiate=%s" % ( pdgIdMother, ps[0], ps[1], ps[2], r, radiate, fradiate )
+              logger.info ( "%d -> %d  %d  %d  (%s) radiate=%s fradiate=%s" % ( pdgIdMother, ps[0], ps[1], ps[2], r, radiate, fradiate ) )
           if not self.decays[pdgIdMother].has_key ( ps[0] ):
             self.decays[pdgIdMother][ps[0]]={}
             self.fulldecays[pdgIdMother][ps[0]]={}
@@ -301,21 +311,19 @@ class SPhenoReader:
               self.fulldecays[pdgIdMother][ps[0]][fradiate]=0.
           self.decays[pdgIdMother][ps[0]][radiate]+=r
           self.fulldecays[pdgIdMother][ps[0]][fradiate]+=r
-        except ParseException:
-          print "[SPhenoReader] error, failed while trying to interpret "\
-                "the following line as a decay line"
-          print "line >>%s<<" % line
+        except ParseException,e:
+          logger.error ( "error, failed while trying to interpret "\
+                "the following line as a decay line" )
+          logger.info ( "line >>%s<<" % line )
       self.checkDecayTable()
     except Exception,e:
-      print "[SPhenoReader.py] exception in ``parseBranchings'': ",e,"<br>"
+      logger.error ( "exception in ``parseBranchings'': %s" %e )
 
   def pdgId ( self, name ):
     if type(name)==type(3):
       return name
     if self.ids.has_key ( name ):
       return self.ids[name]
-    ## print "[SPhenoReader::pdgId] cannot find",name
-    ## print self.ids
     return 0
 
   def exists ( self, name ):
@@ -356,14 +364,14 @@ class SPhenoReader:
   def hasLeptonicSignature ( self, particle, fraction=False ):
      """ if any particle in the string <particle> has leptonic signature,
          return true """
-     print "Lacks implementation"
+     logger.error ( "Lacks implementation" )
      if not fraction:
        ret=False
        while particle.find(" ")!=-1:
          pos=particle.find(" ")
          p=particle[:pos]
          particle=particle[pos:]
-         print "p=->%s<- pp=->%s<=" % ( p, particle )
+         logger.info ( "p=->%s<- pp=->%s<=" % ( p, particle ) )
        return ret
      return 0.0
 
