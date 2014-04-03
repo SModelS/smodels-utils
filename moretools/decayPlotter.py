@@ -10,6 +10,9 @@
 
 """
 
+import logging
+logger = logging.getLogger(__name__)
+
 def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
     """ draw a decay plot from an slhafile
             :param offset: FIXME what does that one do?
@@ -20,7 +23,6 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
     out=os.path.basename ( slhafile ).replace(".slha","")
     if outfile!="":
         out=outfile
-    # print "out=",out
 
     for i in [ "leptons", "integratesquarks", "separatecharm", "verbose",
                          "dot", "neato", "pdf", "nopng", "nopercentage", "simple", "squarks",\
@@ -37,7 +39,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
 
     if options["verbose"]==True and not options["html"]:
         reader.printDecay("~g")
-        print reader.getDecays("~g",0.9)
+        logger.info ( "%s" % reader.getDecays("~g",0.9) )
 
     #tmp=[ "~g" ]
     #tmp.append ("~q" )
@@ -53,15 +55,13 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
                 tmp.append ("~%s_%s" % ( i, c) )
 
     if options["weakinos"]:
-        tmp.append ("~chi_1+")
-        tmp.append ("~chi_2+")
-        tmp.append ("~chi_20")
-        tmp.append ("~chi_30")
+        map ( tmp.append, [ "~chi_1+", "~chi_2+", "~chi_20", "~chi_30" ] )
 
     starters=[]
 
     for i in tmp:
-        if type ( reader.getMass(i) ) == type ( 5.0 ) or type ( reader.getMass(i) ) == type ( 5 ):
+        if type ( reader.getMass(i) ) == type ( 5.0 ) or \
+           type ( reader.getMass(i) ) == type ( 5 ):
             if reader.getMass(i)<100000:
                 starters.append ( i )
         else:
@@ -108,7 +108,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
     htmlend="</font>"
     if options["verbose"]:
         if options["html"]: print "<br>",htmlbegin
-        print "[decayPlotter] We start from",starters
+        logger.info ( "We start from %s" % starters )
         if options["html"]: print htmlend,"<br>"
     drawer=decayPlots.DecayDrawer ( options, ps, offset, extra )
 
@@ -139,8 +139,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
     drawer.draw ( out )
 
     if options["dot"] and options["tex"]:
-        if options["verbose"]:
-            print htmlbegin,"[decayPlotter] calling dot2tex.<br>",htmlend
+        logger.info ( "calling dot2tex." )
         drawer.dot2tex ( out )
 
 
