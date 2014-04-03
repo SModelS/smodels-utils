@@ -255,6 +255,7 @@ class DecayDrawer:
         for line in lines:
             if "enlargethispage" in line:
                 continue
+            f.write ( line )
         f.close()
 
     def dot2tex ( self, out ):
@@ -263,7 +264,6 @@ class DecayDrawer:
         logger.info ( "calling dot2tex now" )
         #    if self.html: print "<br>"
         cmd="dot2tex --autosize --nominsize --crop %s.dot -traw -o %s.tex" % (out, out )
-        self.meddleWithTexFile(out)
         # cmd="dot2tex -c -traw"
         #cmd+=" --docpreamble '\\usepackage{scrextend}\n\\changefontsizes[12pt]{14pt}' "
         #cmd+="    --figpreamble '\\begin{Large}' --figpostamble '\\end{Large}'"
@@ -271,6 +271,8 @@ class DecayDrawer:
         logger.info (  "cmd=%s " % cmd )
         output=commands.getoutput( cmd )
         logger.info ( output )
+        logger.info ( "now meddle with tex file" )
+        self.meddleWithTexFile(out)
         pdfcmd="pdflatex -interaction nonstopmode %s.tex " % ( out )
         logger.info (  "pdfcmd=%s" % pdfcmd )
         output=commands.getoutput(pdfcmd )
