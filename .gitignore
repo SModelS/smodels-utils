@@ -1,3 +1,11 @@
 *.pyc
-smodels.log
-*/smodels.log
+*.dot
+*.eps
+*.png
+*.ps
+*.aux
+*.swp
+*.tex
+*.pdf
+*.log
+*.dvi

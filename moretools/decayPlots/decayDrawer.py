@@ -1,8 +1,19 @@
 import pygraphviz, sys, math
 ##    # -*- coding: UTF-8 -*-
 
-class Drawer:
-    """ a class that encapsulates the drawing 
+"""
+.. module:: decayDrawer
+        :synopsis: Module that contains the decay plotting
+        "DecayDrawer" class.
+
+.. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
+
+"""
+import logging
+logger = logging.getLogger(__name__)
+
+class DecayDrawer:
+    """ a class that encapsulates the decay plot drawing
     """
     def __init__ ( self, options, ps, offset, extra={}, verbose=False, html=False ):
         self.options=options
@@ -37,16 +48,14 @@ class Drawer:
             if self.options["pdf"]:
                 wout=out+".neato.pdf"
         self.G.draw(wout,prog=dprog,args=dargs)
-        if self.verbose:
-            print "[Drawer.py] %s created with %s." % ( wout, prog )
+        logger.info ( "%s created with %s." % ( wout, prog ) )
 
         if self.options["dot"]:
             # wout=out+".dot"
             wout=out+".dot"
             # print "[drawer.py] write to",wout
             self.G.write(wout)
-            if self.verbose:
-                print "[Drawer.py] %s created with dot." % ( wout )
+            logger.info ( "%s created with dot." % ( wout ) )
 
         #if not self.options["nopng"]:
             ## wout=out+".dot.png"
@@ -54,10 +63,10 @@ class Drawer:
         if self.options["pdf"]:
             # wout=out+".dot.pdf"
             wout=out+".pdf"
-            
+
             self.G.draw(wout,prog='dot')
             if self.verbose:
-                print "[Drawer.py] %s created with dot." % ( wout )
+                logger.log ( "%s created with dot." % ( wout ) )
 
     def xvalue ( self, mass, ctr, n_relevant, name ):
         """ where on the axis should particle with mass <mass> go? """
@@ -83,10 +92,10 @@ class Drawer:
         llabel=self.prettyName ( name )
         if include_masses:
             try:
-                llabel+=" (%d)" % mass 
+                llabel+=" (%d)" % mass
             except:
                 llabel+=" (%s)" % str( mass )
-        
+
         label=llabel
         ## massctr+=1
         if mass < self.minmass:
@@ -258,23 +267,20 @@ class Drawer:
 
     def meddleWithTexFile ( self,out ):
         """ this changes the tex file! """
-        print "[drawer.meddleWithTexFile] rewriting tex file!"
+        logger.info ( "[meddleWithTexFile] rewriting tex file!" )
         f=open("%s.tex"%out)
         lines=f.readlines()
         f.close()
         f=open("%s.tex"%out,"w")
         for line in lines:
-            if "enlargethispage" in line: 
+            if "enlargethispage" in line:
                 continue
-            #print line
         f.close()
 
     def dot2tex ( self, out ):
         # import os
         import commands, os
-        # self.verbose=True
-        #if self.verbose:
-        print "calling dot2tex now"
+        logger.info ( "calling dot2tex now" )
         #    if self.html: print "<br>"
         cmd="dot2tex --autosize --nominsize --crop %s.dot -traw -o %s.tex" % (out, out )
         self.meddleWithTexFile(out)
@@ -282,37 +288,8 @@ class Drawer:
         #cmd+=" --docpreamble '\\usepackage{scrextend}\n\\changefontsizes[12pt]{14pt}' "
         #cmd+="    --figpreamble '\\begin{Large}' --figpostamble '\\end{Large}'"
         #longcmd="%s --preproc %s.dot | %s -o %s.tex" % ( cmd, out, cmd, out )
-        print "cmd=",cmd
+        logger.info (  "cmd=%s " % cmd )
         output=commands.getoutput( cmd )
-        # print output
-        if self.verbose:
-            print "<font color='green'>[Drawer.py] ",cmd,"<br>"
-        #    print "<font color='green'>[Drawer.py] dot2tex",output,"</font><br>"
         pdfcmd="pdflatex -interaction nonstopmode %s.tex " % ( out )
-        print "pdfcmd=",pdfcmd
-        #if self.verbose:
-        #    print "call pdflatex now: %s" % pdfcmd
-        #    if self.html: print "<br>"
+        logger.info (  "pdfcmd=%s" % pdfcmd )
         output=commands.getoutput(pdfcmd )
-        # print output
-        #if self.verbose:
-        #    print "<font color='green'>[Drawer.py]",output,"</font><br>"
-
-    def ladot ( self, out ):
-        import os
-        print "[vis.py] employ ladot on %s.dot" % out
-        os.system("cp %s.dot %s.ladot" % ( out, out ) )
-        os.system("ladot %s.ladot" % out )
-        doc=open("doc.%s.tex" % out ,"w")
-        doc.write ( "\\documentclass[11pt]{article}\n" )
-        doc.write ( "\\usepackage{psfrag}\n" )
-        doc.write ( "\\begin{document}\n" )
-        doc.write ( "\\begin{Large}\n" )
-        doc.write ( "\\input{%s.tex}\n" % out )
-        doc.write ( "\\includegraphics{%s.ps}\n" % out )
-        doc.write ( "\\end{Large}\n" )
-        doc.write ( "\\end{document}\n" )
-        doc.close()
-        os.system ("latex doc.%s.tex" % out )
-        os.system ("dvips doc.%s" % out )
-

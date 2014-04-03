@@ -110,7 +110,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
         if options["html"]: print "<br>",htmlbegin
         print "[decayPlotter] We start from",starters
         if options["html"]: print htmlend,"<br>"
-    drawer=decayPlots.Drawer ( options, ps, offset, extra )
+    drawer=decayPlots.DecayDrawer ( options, ps, offset, extra )
 
     if options["tex"]:
         drawer.tex=True
