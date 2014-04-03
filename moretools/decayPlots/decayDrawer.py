@@ -273,7 +273,9 @@ class DecayDrawer:
         logger.info ( output )
         logger.info ( "now meddle with tex file" )
         self.meddleWithTexFile(out)
-        pdfcmd="pdflatex -interaction nonstopmode %s.tex " % ( out )
+        outdir=os.path.dirname ( out ) 
+        pdfcmd="pdflatex -interaction nonstopmode -output-directory %s %s.tex " % \
+                ( outdir, out )
         logger.info (  "pdfcmd=%s" % pdfcmd )
         output=commands.getoutput(pdfcmd )
         logger.info ( output )
