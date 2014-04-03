@@ -24,6 +24,8 @@ def setLogLevel(level = 'error'):
 		log.setLevel(level=logging.DEBUG)
 	if level == 'info':
 		log.setLevel(level=logging.INFO)
+	if level == 'warning':
+		log.setLevel(level=logging.WARNING)
 	if level == 'error':
 		pass
 		
@@ -99,6 +101,22 @@ class Analysis(object):
 	def getArxiv(self):
 		if self._parsInfo('arxiv'): return self._parsInfo('arxiv')
 		return None
+		
+	def checkJournal(self):
+		if self._parsInfo('journal'): return True
+		return False
+		
+	def getJournal(self):
+		if self._parsInfo('journal'): return self._parsInfo('journal')
+		return None
+		
+	def checkPublication(self):
+		if self._parsInfo('publication'): return True
+		return False
+	
+	def getPublication(self):
+		if self._parsInfo('publication'): return self._parsInfo('publication')
+		return None	
 		
 	def checkAxes(self):
 		if self._parsInfo('axes'): return True

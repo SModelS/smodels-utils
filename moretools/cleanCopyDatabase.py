@@ -15,39 +15,64 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s(): %(message)s'
 logging.basicConfig(format=FORMAT)
 log = logging.getLogger(__name__)
 
-log.setLevel(level=logging.DEBUG)
+log.setLevel(level=logging.ERROR)
 databaseBrowser.setLogLevel()
 
-argparser = argparse.ArgumentParser(description = 'Make a cleaned up copy of smodels-database')
-#argparser.add_argument ('-h', '--help', nargs = '?', help = 'target folder', type = types.StringType, default = '../clean-database/')
-#argparser.add_argument('-d', '--default', help = 'use default settings') 
-argparser.add_argument ('-t', '--target', nargs = '?', help = 'target folder - default: ./clean-database', type = types.StringType, default = './clean-database/')
-argparser.add_argument ('-rex', '--runExclusions', nargs = '?', help = 'runs that should be totally excluded - default: RPV7 and RPV8', type = types.StringType, default = 'RPV7 RPV8')
-argparser.add_argument ('-aex', '--analysisExclusions', nargs = '?', help = 'analyses that should be totally excluded - default: DileptonicStop8TeV, RazorMono8TeV and T1ttttCombination8TeV', type = types.StringType, default = 'DileptonicStop8TeV RazorMono8TeV T1ttttCombination8TeV')
-argparser.add_argument ('-rm', '--remove', help = 'remove old local copy, if exists - default: False', action = 'store_true')
-argparser.add_argument ('-scp', '--secureCopy', help = 'use scp to smodels instead of local copy from afs - default: False', action = 'store_true')
-args = argparser.parse_args()
+def setLogLevel(level):
+	if level == 'debug':
+		log.setLevel(level=logging.DEBUG)
+	if level == 'info':
+		log.setLevel(level=logging.INFO)
+	if level == 'warning':
+		log.setLevel(level=logging.WARNING)
+	if level == 'error':
+		log.setLevel(level=logging.ERROR)
+	
+def main():
+	argparser = argparse.ArgumentParser(description = 'Make a cleaned up copy of smodels-database')
+	#argparser.add_argument ('-h', '--help', nargs = '?', help = 'target folder', type = types.StringType, default = '../clean-database/')
+	#argparser.add_argument('-d', '--default', help = 'use default settings') 
+	argparser.add_argument ('-t', '--target', nargs = '?', help = 'target folder - default: ./clean-database', type = types.StringType, default = './clean-database/')
+	argparser.add_argument ('-rex', '--runExclusions', nargs = '?', help = 'runs that should be totally excluded - default: RPV7', type = types.StringType, default = 'RPV7')
+	argparser.add_argument ('-aex', '--analysisExclusions', nargs = '?', help = 'analyses that should be totally excluded - default: DileptonicStop8TeV, RazorMono8TeV and T1ttttCombination8TeV', type = types.StringType, default = 'DileptonicStop8TeV RazorMono8TeV T1ttttCombination8TeV')
+	argparser.add_argument ('-rm', '--remove', help = 'remove old local copy, if exists - default: False', action = 'store_true')
+	argparser.add_argument ('-scp', '--secureCopy', help = 'use scp to smodels instead of local copy from afs - default: False', action = 'store_true')
+	argparser.add_argument ('-log', '--loggingLevel', nargs = '?', help = 'set verbosity - default: WARNING', type = types.StringType, default = 'warning')
+	args = argparser.parse_args()
 
-targetPath = args.target
-log.debug('copying database to %s' %targetPath)
+	
+	targetPath = args.target
+	log.info('copying database to %s' %targetPath)
+	
+	requestedLines = ['pas', 'checked']	# ### FIX ME: maybe make this scwitchable
+	setLogLevel(level = args.loggingLevel)
+	
+	runExclusions = []
+	for r in args.runExclusions.split():
+		runExclusions.append(r)
+	log.info('runs that are excluded: %s' %runExclusions)
 
-runExclusions = []
-for r in args.runExclusions.split():
-	runExclusions.append(r)
-log.debug('runs that are excluded: %s' %runExclusions)
+	analysisExclusions = []
+	for a in args.analysisExclusions.split():
+		analysisExclusions.append(a)
+	log.info('analyses that are excluded: %s' %analysisExclusions)
 
-analysisExclusions = []
-for a in args.analysisExclusions.split():
-	analysisExclusions.append(a)
-log.debug('analyses that are excluded: %s' %analysisExclusions)
-
-infoLines = ['sqrts', 'lumi', 'pas', 'journal', 'constraint', 'condition', 'axes', 'superseded_by']
-remove = args.remove
-log.debug('removal is set to: %s' %remove)
-scp = args.secureCopy
-log.debug('secure copy option is set to: %s' %scp)
-
-def getTarget(path = targetPath, rmv = remove):
+	infoLines = ['sqrts', 'lumi', 'pas', 'publication', 'constraint', 'condition', 'axes', 'superseded_by']
+	remove = args.remove
+	log.info('removal is set to: %s' %remove)
+	scp = args.secureCopy
+	log.info('secure copy option is set to: %s' %scp)
+	
+	cleanedDatabase = getCleanedDatabase(runExclusions, analysisExclusions, requestedLines)
+	
+	if scp == False and getTarget(targetPath, remove):
+		log.debug('calling localCopy')
+		localCopy(targetPath, remove, cleanedDatabase, infoLines)
+	
+	if scp == True and getTarget(targetPath, remove):
+		remoteCopy(targetPath, remove, cleanedDatabase, infoLines)
+	
+def getTarget(path, rmv):
 	if os.path.exists(path):
 		if rmv == False:
 			log.warning('Target %s already exists! To replace it use option -rm' %path)
@@ -58,20 +83,25 @@ def getTarget(path = targetPath, rmv = remove):
 			return path
 	else: return path
 
-def getCleanedDatabase(runExclusions = runExclusions, analysisExclusions = analysisExclusions):
+def getCleanedDatabase(runExclusions, analysisExclusions, requestedLines):
 	db = databaseBrowser.getDatabase()
 	database = {}
 	keys = [key for key in db if not key in runExclusions]
 	for key in keys:
 		database[key] = [a for a in db[key] if not a in analysisExclusions]
-	log.debug('cleaned database: %s' %database) 
-	return database
+		for requ in requestedLines:
+			database[key] = [a for a in database[key] if databaseBrowser.getInfo(key, a, requ)]
+	keys = [key for key in keys if not database[key] == []]
+	clean = {}
+	for key in keys:
+		clean[key] = database[key]
+	log.info('cleaned database will contain: %s' %clean) 
+	return clean
 	
 	
-def localCopy():
+def localCopy(targetPath, rmv, cleanedDatabase, infoLines):
 	Base = databaseBrowser.Base
-	target = getTarget()
-	cleanedDatabase = getCleanedDatabase()
+	target = getTarget(targetPath, rmv)
 	os.mkdir(target)
 	log.debug('created folder for cleaned database: %s' %target) 
 	for key in cleanedDatabase:
@@ -85,17 +115,18 @@ def localCopy():
 				if databaseBrowser.checkResults(key, a, f):
 					log.debug('copying file %s from %s to %s' %(f, Base + path, target + path))
 					os.system('cp %s %s' %(Base + path + f, target + path + f))
-					print 'cp %s %s' %(Base + path + f, target + path + f)
-			createInfo(target, key, a)
+					log.debug( 'command looks like: cp %s %s' %(Base + path + f, target + path + f))
+			createInfo(target, key, a, infoLines)
 			
 def remoteCopy():
 	# ### FIX ME: how to? Is there a copy of smodels-database on smodels.hephy.at and can I use it here?
-	target = getTarget()
+	#target = getTarget()
+	pass
 	
-def createInfo(target, run, ana, infoLines = infoLines):
+def createInfo(target, run, ana, infoLines):
 	path = target + '/' + run + '/' + ana
 	info = open('%s/info.txt' %path, 'w')
-	print info
+	log.debug('creating info.txt file %s' %info)
 	log.debug('created info.txt in %s' %path)
 	for requ in infoLines:
 		log.debug('try to get line for run %s, ana %s and keyword %s' %(run, ana, requ))
@@ -105,84 +136,14 @@ def createInfo(target, run, ana, infoLines = infoLines):
 			for i in line:
 				print >> info, i.strip()
 	
-if scp == False and getTarget():
-	log.debug('calling localCopy')
-	localCopy()
-	
-if scp == True and getTarget():
-	remoteCopy()
+
 			
 	
-	
+if __name__ == '__main__':
+    main()	
 	
 ##-----------------------------------------------------------------------------------
-#import os, sys
 
-#def usage():
-  #print "Usage:",sys.argv[0]," [-h] [-r] [-scp] <destination_directory>"
-  #print "        -scp: use scp to smodels instead of local cp (from afs)"
-  #print "        -h: show this help"
-  #print "        -r: remove old local database, if exists"
-  #sys.exit(0)
-
-#def localCopy ( dest, Dirs, force ):
-  #cmd="cp -r"
-  #for Dir in Dirs:
-    #Target="%s/%s" % (dest, Dir)
-    #print "Dir",Target
-    #if os.path.exists ( Target ):
-      #print "Warning:",Target,"exists already."
-      #if force:
-        #print "Requested removal of",Target
-        #os.system ( "rm -rf %s" % Target )
-  ##  if not os.path.exists ( Target ):
-  ##    os.mkdir ( Target )
-    #cmd+=" %s/%s " % ( DB, Dir )
-  #cmd+= dest
-  #print cmd
-  #os.system ( cmd )
-  #stripDatabase ( dest, Dirs )
-
-#def stripAnalysis ( path ):
-  #Files=os.listdir ( path )
-  #print "stripping",path,Files
-  #for F in Files:
-    #if not F in [ "sms.py", "sms.root", "info.txt" ]:
-    ### if F in [ "orig", "old", "convert.py", "draw.py", "Standardizer.py", "convert.py~", "#Standardizer.py#", "info.txt_", "info.old", "Standardizer.pyc", "#convert.py#", "results" ]:
-      #cmd="rm -rf %s/%s" % ( path, F )
-      #print cmd
-      #os.system ( cmd )
-
-#def stripDatabase ( dest, Dirs ):
-  #for Dir in Dirs:
-    #path=dest + "/" + Dir
-    #anas= os.listdir ( path )
-    #for ana in anas:
-      #if ana.lower() in ['old', 'bad', 'missing', 'todo', 'readme']: continue
-      #if ana[0]==".": continue
-      #if ana[-3:] in [ ".py", ".sh" ]: continue
-      #stripAnalysis ( path+"/"+ana )
-
-#if len(sys.argv)<2:
-  #usage()
-
-#useScp=False
-#force=False
-
-#for i in sys.argv[1:]:
-  #if i=="-scp": useScp=True
-  #if i=="-h": usage()
-  #if i=="-r": force=True
-
-#dest=sys.argv[-1]
-#print "Installing the database to %s:" % dest
-
-#if not os.path.exists ( dest ):
-  #os.mkdir ( dest )
-
-#DB="/afs/hephy.at/user/w/walten/public/sms"
-
-#Dirs=[ "2011", "2012", "RPV7", "RPV8", "ATLAS8TeV","8TeV" ]
 
 #if useScp:
   #for Dir in Dirs:
