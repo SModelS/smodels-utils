@@ -28,8 +28,8 @@ def setLogLevel(level = 'error'):
 		pass
 		
 
-#Base = '/afs/hephy.at/user/w/walten/public/sms/'
-Base = '../../smodels-database/'
+Base = '/afs/hephy.at/user/w/walten/public/sms/'
+#Base = '../../smodels-database/'
 #Base = '../smodels-database/'
 
 allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
