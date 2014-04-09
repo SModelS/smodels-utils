@@ -33,6 +33,7 @@ def setLogLevel(level = 'error'):
 Base = '/afs/hephy.at/user/w/walten/public/sms/'
 #Base = '../../smodels-database/'
 #Base = '../smodels-database/'
+#Base = 'clean-database/'
 
 allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
 artifacts = ['old', 'bad', 'missing', 'TODO', 'readme'] 
@@ -354,7 +355,10 @@ def getDatabase():
 	
 	data = {}
 	for r in allruns:
-		data[r] = os.listdir("%s/%s" % (Base, r))
+		if not os.path.exists('%s/%s' % (Base, r)):
+			log.warning('Using an uncomplete version of the database!')
+			continue
+		data[r] = os.listdir('%s/%s' % (Base, r))
 		data[r] = [directory for directory in data[r] if not '.' in directory]
 		# exclude all files (e.g. create.sh) from list of directories 
 		data[r] = [directory for directory in data[r] if not directory in artifacts]
