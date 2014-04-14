@@ -2,12 +2,14 @@
 
 '''
 .. module:: dictionaries
-   :synopsis: Module contains all hard coded dictionaries needed for several descriptions
+   :synopsis: Module to provide some latex-coded strings needed for summaryplots.
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
 
 
 '''
+# ### FIX ME: this is very preliminary => maybe can be replaced completely by functionality located in other modules
+
 # topologies linked to motherparticle:
 
 motherparticle = {

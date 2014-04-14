@@ -24,6 +24,8 @@ def setLogLevel(level = 'error'):
 		log.setLevel(level=logging.DEBUG)
 	if level == 'info':
 		log.setLevel(level=logging.INFO)
+	if level == 'warning':
+		log.setLevel(level=logging.WARNING)
 	if level == 'error':
 		pass
 		
@@ -31,6 +33,7 @@ def setLogLevel(level = 'error'):
 Base = '/afs/hephy.at/user/w/walten/public/sms/'
 #Base = '../../smodels-database/'
 #Base = '../smodels-database/'
+#Base = 'clean-database/'
 
 allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
 artifacts = ['old', 'bad', 'missing', 'TODO', 'readme'] 
@@ -99,6 +102,22 @@ class Analysis(object):
 	def getArxiv(self):
 		if self._parsInfo('arxiv'): return self._parsInfo('arxiv')
 		return None
+		
+	def checkJournal(self):
+		if self._parsInfo('journal'): return True
+		return False
+		
+	def getJournal(self):
+		if self._parsInfo('journal'): return self._parsInfo('journal')
+		return None
+		
+	def checkPublication(self):
+		if self._parsInfo('publication'): return True
+		return False
+	
+	def getPublication(self):
+		if self._parsInfo('publication'): return self._parsInfo('publication')
+		return None	
 		
 	def checkAxes(self):
 		if self._parsInfo('axes'): return True
@@ -336,7 +355,10 @@ def getDatabase():
 	
 	data = {}
 	for r in allruns:
-		data[r] = os.listdir("%s/%s" % (Base, r))
+		if not os.path.exists('%s/%s' % (Base, r)):
+			log.warning('Using an uncomplete version of the database!')
+			continue
+		data[r] = os.listdir('%s/%s' % (Base, r))
 		data[r] = [directory for directory in data[r] if not '.' in directory]
 		# exclude all files (e.g. create.sh) from list of directories 
 		data[r] = [directory for directory in data[r] if not directory in artifacts]

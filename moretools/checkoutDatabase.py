@@ -39,24 +39,29 @@ for r in databaseBrowser.getAllRuns():
 	table3extended.align['ANALYSIS'] = 'l'
 	table3 = PT.PrettyTable(['ANALYSIS', 'PAS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY'])
 	table3.align['ANALYSIS'] = 'l'
+	table10 = PT.PrettyTable(['ANALYSIS', 'PAS', 'PUBLICATION?', 'JOURNAL?', 'ARXIV?'])
+	table10.align['ANALYSIS'] = 'l'
 	table4 = PT.PrettyTable(['ANALYSIS', 'TOPOLOGIES'])
 	table4.align['ANALYSIS'] = 'l'
 	table8 = PT.PrettyTable(['ANALYSIS', 'AXES'])
 	table8.align['ANALYSIS'] = 'l'
 	table9 = PT.PrettyTable(['ANALYSIS', 'CHECKED?', 'CHECKED'])
 	table9.align['ANALYSIS'] = 'l'
-	table5 = PT.PrettyTable(['ANALYSIS', 'PAS', 'PUBLICATION', 'ARXIV'])
+	table5 = PT.PrettyTable(['ANALYSIS', 'PAS', 'PUBLICATION', 'ARXIV', 'JOURNAL'])
 	table5.align['ANALYSIS'] = 'l'
 	table6 = PT.PrettyTable(['ANALYSIS', 'EXTENDED TOPOLOGIES FOR'])
 	table6.align['ANALYSIS'] = 'l'
 	table7 = PT.PrettyTable(['TOPOLOGY', 'EXTENDED TOPOLOGIES'])
 	table7.align['TOPOLOGY'] = 'l'
+	
 	for a in databaseBrowser.getAllAnalyses(r):
 		pas = 'not available'
 		con = 'not available'
 		ipu = 'not available'
 		pr = 'not available'
 		iarx = 'not available'
+		jou = 'not available'
+		publication = 'not available'
 		axes = ['not available']
 		Ana = databaseBrowser.Analysis(a, r)
 		if Ana:
@@ -68,6 +73,10 @@ for r in databaseBrowser.getAllRuns():
 			ipu = Ana.checkPublic()
 			gpu = Ana.getPublic()
 			iarx = Ana.checkArxiv()
+			ijou = Ana.checkJournal()
+			gjou = Ana.getJournal()
+			isPublication = Ana.checkPublication()
+			getPublication = Ana.getPublication()
 			garx = Ana.getArxiv()
 			axes = Ana.getAxes()
 			check = Ana.getChecked()
@@ -76,11 +85,12 @@ for r in databaseBrowser.getAllRuns():
 		if databaseBrowser.checkResults(r, a): i = True
 		if databaseBrowser.checkResults(r, a, 'sms.root'): sr = True
 		if databaseBrowser.checkResults(r, a, 'sms.py'): sp = True
-		table3extended.add_row([a, pas, i, sr, sp, con, ax, ipu, pr, iarx])
+		#table3extended.add_row([a, pas, i, sr, sp, con, ax, ipu, pr, iarx])
 		table3.add_row([a, pas, i, sr, sp])
 		table4.add_row([a, top])
 		table9.add_row([a, check2, check])
-		table5.add_row([a, pas, gpu, garx])
+		table5.add_row([a, pas, gpu, garx, gjou])
+		table10.add_row([a, pas, isPublication, ijou, iarx])
 		if axes:
 			print axes
 			for axe in axes:
@@ -98,6 +108,7 @@ for r in databaseBrowser.getAllRuns():
 	print >> outfile, table3	
 	#print >> outfile, table5
 	print >> outfile, table9
+	print >> outfile, table10
 	print >> outfile, table8
 	print >> outfile, '\n,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, \n'
 	print >> outfile, table4
