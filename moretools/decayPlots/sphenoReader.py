@@ -237,8 +237,13 @@ class SPhenoReader:
           #  """ simplified models, no need to check """
           #  return
           rtotal+=r
-      if rtotal < 0.99 or rtotal > 1.01:
+      absdiff = abs ( rtotal - 1.0 )
+      if absdiff > 0.03:
         logger.error ( "%s branchings add up to %.2f" % ( self.name ( mother ), rtotal ) )
+        return
+      if absdiff > 0.01:
+        logger.warn ( "%s branchings add up to %.2f" % ( self.name ( mother ), rtotal ) )
+        return
 
   def integratePdgs ( self, pdgid ):
     """ for branching ratios, we dont want to differentiate
