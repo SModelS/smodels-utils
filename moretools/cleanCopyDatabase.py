@@ -82,18 +82,29 @@ def main():
 		remoteCopy(targetPath, remove, cleanedDatabase, infoLines)
 	
 def getTarget(path, rmv):
-	"""Checks if the target directory already exists. Removes the target, when requested.
+	"""Checks if the target directory already exists, if its empty or not and removes every old content if requested.
 	
 	"""
+	
 	if os.path.exists(path):
-		if rmv == False:
-			log.warning('Target %s already exists! To replace it use option -rm' %path)
-			return None
-		else:
-			os.system('rm -rf %s' %path)
-			log.warning('Requested removal of %s!' %path)
+		subdirs = os.listdir(path)
+		subdirs = [d for d in subdirs if not '.' in d]
+		if subdirs == []:
+			log.info('Target %s already exists but is empty.' %path)
 			return path
-	else: return path
+		if subdirs != [] and rmv == False:
+			log.warning('Target %s contents old version! To replace it use option -rm' %path)
+			log.info('Target contents %s: ' %subdirs) 
+			return None
+		if subdirs != [] and rmv == True:
+			for d in subdirs:
+				os.system('rm -rf %s' %path+d)
+			log.warning('Requested removal of old version in %s!' %path)
+			return path
+	else:
+		os.mkdir(target)
+		log.debug('created folder for cleaned database: %s' %target) 
+		return path
 
 def getCleanedDatabase(runExclusions, analysisExclusions, requestedLines):
 	"""Excludes all runs and analyses, that should not be copied.
@@ -120,8 +131,7 @@ def localCopy(targetPath, rmv, cleanedDatabase, infoLines):
 	"""
 	Base = databaseBrowser.Base
 	target = getTarget(targetPath, rmv)
-	os.mkdir(target)
-	log.debug('created folder for cleaned database: %s' %target) 
+	
 	for key in cleanedDatabase:
 		os.mkdir(target + key)
 		log.debug('created folder for run: %s' %key) 

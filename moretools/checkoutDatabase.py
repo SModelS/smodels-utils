@@ -85,7 +85,7 @@ for r in databaseBrowser.getAllRuns():
 		if databaseBrowser.checkResults(r, a): i = True
 		if databaseBrowser.checkResults(r, a, 'sms.root'): sr = True
 		if databaseBrowser.checkResults(r, a, 'sms.py'): sp = True
-		table3extended.add_row([a, pas, i, sr, sp, con, ax, ipu, pr, iarx])
+		#table3extended.add_row([a, pas, i, sr, sp, con, ax, ipu, pr, iarx])
 		table3.add_row([a, pas, i, sr, sp])
 		table4.add_row([a, top])
 		table9.add_row([a, check2, check])
@@ -107,7 +107,7 @@ for r in databaseBrowser.getAllRuns():
 	#print >> outfile, table3extended
 	print >> outfile, table3	
 	#print >> outfile, table5
-	#print >> outfile, table9
+	print >> outfile, table9
 	print >> outfile, table10
 	print >> outfile, table8
 	print >> outfile, '\n,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, \n'

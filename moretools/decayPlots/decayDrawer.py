@@ -181,6 +181,12 @@ class DecayDrawer:
 
     def texName ( self, name ):
         """ map slha particle names to latex names """
+        if name.find(" ")>-1:
+            names=name.split()
+            texed=[]
+            for n in names:
+                texed.append ( self.texName ( n ) )
+            return " ".join ( texed )
         def huge(x):
             return "\\\\Huge{\\\\textbf{%s}}" % x
         def large(x):
@@ -222,6 +228,9 @@ class DecayDrawer:
         if first=="~": return huge ( math ( tilde ( name[1:] ) ) )
         if name=="gamma": return large ( math ( "\gamma" ) )
         if name=="nu": return large ( math ( "\\\\nu" ) )
+        #if name=="nu nu": return large ( math ( "\\\\nu \\\\nu" ) )
+        #if name=="nu l": return large ( math ( "\\\\nu l" ) )
+        #if name=="l nu": return large ( math ( "l \\\\nu" ) )
         return large ( name )
 
     def htmlName ( self, name ):
