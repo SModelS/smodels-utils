@@ -47,8 +47,10 @@ class DecayDrawer:
             args='-x -Ln10 -LT1000 -LO -Lg -v'
             if self.options["pdf"]:
                 wout=out+".neato.pdf"
-        self.G.draw(wout,prog=dprog,args=dargs)
-        logger.info ( "%s created with %s." % ( wout, prog ) )
+        # print "wout=",wout,"dprog=",dprog,"args=",dargs
+        if self.options["nopng"]==False:
+            self.G.draw(wout,prog=dprog,args=dargs)
+            logger.info ( "%s created with %s." % ( wout, prog ) )
 
         if self.options["dot"]:
             # wout=out+".dot"
