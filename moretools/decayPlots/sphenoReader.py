@@ -90,7 +90,7 @@ class SPhenoReader:
           mass=float(parsed[1])
           if mass > 100000:
             if self.verbose:
-              logger.info ( "%s has a mass of %d, not considering!" \
+              logger.debug ( "%s has a mass of %d, not considering!" \
                 % ( name, mass ) )
             continue
         except:
@@ -101,11 +101,11 @@ class SPhenoReader:
           for i in [ "L", "R", "1", "2" ]:
             name=name.replace("~q_%s" % i,"~q");
         if self.verbose:
-          logger.info ( "adding %s pdg=%d m=%s" % ( name, pdgid, str(mass) ) )
+          logger.debug ( "adding %s pdg=%d m=%s" % ( name, pdgid, str(mass) ) )
         self.masses[pdgid]=mass
       except ParseException,e:
         logger.error ( "exception caught with ``%s'': %s" % (line,e) )
-        logger.info ( "tried to interpret it as a mass line" )
+        logger.debug ( "tried to interpret it as a mass line" )
 
     f.close()
   
@@ -216,7 +216,7 @@ class SPhenoReader:
       for (daughter,right) in self.decays[m].items():
         for ( radiator, r ) in right.items():
           if r>rmin:
-            logger.info ( "%8s -> %8s %8s: %.2f" % \
+            logger.debug ( "%8s -> %8s %8s: %.2f" % \
               ( self.name(m), str(daughter), radiator, r ) )
           rtotal+=r
 
@@ -304,9 +304,9 @@ class SPhenoReader:
             fradiate+=" "+self.fullName(self.integratePdgs(ps[2]),integrated=True)
           if self.verbose:
             if len(parsed)<=4:
-              logger.info ( "%d -> %d  %d   (%s)" % ( pdgIdMother, ps[0], ps[1], r ) )
+              logger.debug ( "%d -> %d  %d   (%s)" % ( pdgIdMother, ps[0], ps[1], r ) )
             else:
-              logger.info ( "%d -> %d  %d  %d  (%s) radiate=%s fradiate=%s" % ( pdgIdMother, ps[0], ps[1], ps[2], r, radiate, fradiate ) )
+              logger.debug ( "%d -> %d  %d  %d  (%s) radiate=%s fradiate=%s" % ( pdgIdMother, ps[0], ps[1], ps[2], r, radiate, fradiate ) )
           if not self.decays[pdgIdMother].has_key ( ps[0] ):
             self.decays[pdgIdMother][ps[0]]={}
             self.fulldecays[pdgIdMother][ps[0]]={}
@@ -319,7 +319,7 @@ class SPhenoReader:
         except ParseException,e:
           logger.error ( "error, failed while trying to interpret "\
                 "the following line as a decay line" )
-          logger.info ( "line >>%s<<" % line )
+          logger.debug ( "line >>%s<<" % line )
       self.checkDecayTable()
     except Exception,e:
       logger.error ( "exception in ``parseBranchings'': %s" %e )
@@ -376,7 +376,7 @@ class SPhenoReader:
          pos=particle.find(" ")
          p=particle[:pos]
          particle=particle[pos:]
-         logger.info ( "p=->%s<- pp=->%s<=" % ( p, particle ) )
+         logger.debug ( "p=->%s<- pp=->%s<=" % ( p, particle ) )
        return ret
      return 0.0
 

@@ -50,14 +50,14 @@ class DecayDrawer:
         # print "wout=",wout,"dprog=",dprog,"args=",dargs
         if self.options["nopng"]==False:
             self.G.draw(wout,prog=dprog,args=dargs)
-            logger.info ( "%s created with %s." % ( wout, prog ) )
+            logger.debug ( "%s created with %s." % ( wout, prog ) )
 
         if self.options["dot"]:
             # wout=out+".dot"
             wout=out+".dot"
             # print "[drawer.py] write to",wout
             self.G.write(wout)
-            logger.info ( "%s created with dot." % ( wout ) )
+            logger.debug ( "%s created with dot." % ( wout ) )
 
         #if not self.options["nopng"]:
             ## wout=out+".dot.png"
@@ -258,7 +258,7 @@ class DecayDrawer:
 
     def meddleWithTexFile ( self,out ):
         """ this changes the tex file! """
-        logger.info ( "[meddleWithTexFile] rewriting tex file!" )
+        logger.debug ( "[meddleWithTexFile] rewriting tex file!" )
         f=open("%s.tex"%out)
         lines=f.readlines()
         f.close()
@@ -272,21 +272,21 @@ class DecayDrawer:
     def dot2tex ( self, out ):
         # import os
         import commands, os
-        logger.info ( "calling dot2tex now" )
+        logger.debug ( "calling dot2tex now" )
         #    if self.html: print "<br>"
         cmd="dot2tex --autosize --nominsize --crop %s.dot -traw -o %s.tex" % (out, out )
         # cmd="dot2tex -c -traw"
         #cmd+=" --docpreamble '\\usepackage{scrextend}\n\\changefontsizes[12pt]{14pt}' "
         #cmd+="    --figpreamble '\\begin{Large}' --figpostamble '\\end{Large}'"
         #longcmd="%s --preproc %s.dot | %s -o %s.tex" % ( cmd, out, cmd, out )
-        logger.info (  "cmd=%s " % cmd )
+        logger.debug (  "cmd=%s " % cmd )
         output=commands.getoutput( cmd )
-        logger.info ( output )
-        logger.info ( "now meddle with tex file" )
+        logger.debug ( output )
+        logger.debug ( "now meddle with tex file" )
         self.meddleWithTexFile(out)
         outdir=os.path.dirname ( out ) 
         pdfcmd="pdflatex -interaction nonstopmode -output-directory %s %s.tex " % \
                 ( outdir, out )
-        logger.info (  "pdfcmd=%s" % pdfcmd )
+        logger.debug (  "pdfcmd=%s" % pdfcmd )
         output=commands.getoutput(pdfcmd )
-        logger.info ( output )
+        logger.debug ( output )

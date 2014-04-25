@@ -139,7 +139,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
     drawer.draw ( out )
 
     if options["dot"] and options["tex"]:
-        logger.info ( "calling dot2tex." )
+        logger.debug ( "calling dot2tex." )
         drawer.dot2tex ( out )
 
 
