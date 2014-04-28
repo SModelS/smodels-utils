@@ -30,8 +30,8 @@ def setLogLevel(level = 'error'):
 		pass
 		
 
-Base = '/afs/hephy.at/user/w/walten/public/sms/'
-#Base = '../../smodels-database/'
+#Base = '/afs/hephy.at/user/w/walten/public/sms/'
+Base = '../../smodels-database/'
 #Base = '../smodels-database/'
 #Base = 'clean-database/'
 
@@ -48,9 +48,11 @@ class Analysis(object):
 	
 	"""contains all analysis-specific information (e.g. PAS, lumi, publication-url, ...)
 		can handle specified run
-		
+
 	"""
-	def __new__(self, analysis, run = currentRun):
+	def __new__(self, analysis, run = None):
+		if not run:
+			run = getAllRuns(analysis)
 		info = readInfo(run, analysis)
 		if info:
 			log.info('found info.txt in %s-%s.' %(run, analysis))
@@ -71,9 +73,21 @@ class Analysis(object):
 	def getLumi(self):
 		return self._parsInfo('lumi')
 		
+	def getSqrts(self):
+		return self._parsInfo('sqrts')
+		
 	def getPAS(self):
 		return self._parsInfo('pas')
 		
+	def getURL(self):
+		return self._parsInfo('URL')
+		
+	def getExperiment(self):
+		return self._parsInfo('experiment')	
+		
+	def getComment(self):
+		return self._parsInfo('comment')	
+	
 	def getPrettyName(self):
 		return self._parsInfo('prettyname')
 		
@@ -143,7 +157,10 @@ class Analysis(object):
 		
 	def getName(self):
 		return self._name
-		
+	
+	def getRun(self):
+		return self._run
+	
 	def getTopologyNames(self):
 		return getAllTopologies(self._name, self._run)
 		
