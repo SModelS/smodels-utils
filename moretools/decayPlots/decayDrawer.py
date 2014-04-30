@@ -230,6 +230,8 @@ class DecayDrawer:
         if name=="nu": return large ( math ( "\\\\nu" ) )
         if name=="h1": return large ( "h" )
         if name=="h2": return large ( "H" )
+        if name=="a0": return large ( math("A") )
+        if name=="a1": return large ( math("A^{1}") )
         #if name=="nu nu": return large ( math ( "\\\\nu \\\\nu" ) )
         #if name=="nu l": return large ( math ( "\\\\nu l" ) )
         #if name=="l nu": return large ( math ( "l \\\\nu" ) )
@@ -243,7 +245,8 @@ class DecayDrawer:
            "t_1":"t&#8321;", "t_2":"t&#8322;", "b_1":"b&#8321;", "b_2":"b&#8322;", 
            "t1":"t&#8321;", "t2":"t&#8322;", "b1":"b&#8321;", "b2":"b&#8322;", 
            "chi":"&Chi;", "gamma":"&gamma;", "nu":"&nu;", 
-           "mu":"&mu;", "tau":"&tau;", "h1":"h", "h2":"H" }
+           "mu":"&mu;", "tau":"&tau;", "h1":"h", "h2":"H", "a0": "A",
+           "a1": "A<sup>1</sup>" }
         for (From,To) in reps.items(): name=name.replace(From,To)
         return name
 
