@@ -30,10 +30,9 @@ def setLogLevel(level = 'error'):
 		pass
 		
 
-#Base = '/afs/hephy.at/user/w/walten/public/sms/'
-Base = '../../smodels-database/'
-#Base = '../smodels-database/'
-#Base = 'clean-database/'
+Base = '/afs/hephy.at/user/w/walten/public/sms/'
+#Base = '../../smodels-database/'
+
 
 allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
 artifacts = ['old', 'bad', 'missing', 'TODO', 'readme'] 
@@ -47,7 +46,7 @@ currentRun = '8TeV'
 class Analysis(object):
 	
 	"""contains all analysis-specific information (e.g. PAS, lumi, publication-url, ...)
-		can handle specified run
+		can handle specified run ### FIX ME: handeling of runs is not very elegant at the moment => think of a better way!
 
 	"""
 	def __new__(self, analysis, run = None):
@@ -59,9 +58,11 @@ class Analysis(object):
 			return object.__new__(self)
 		log.error('Cannot build Analysis %s for run %s.' %(analysis, run))
 		
-	def __init__(self, analysis, run = currentRun):
+	def __init__(self, analysis, run = None):
 		self._name = analysis
 		self._info = readInfo(run, self._name)
+		if not run:
+			run = getAllRuns(analysis)
 		self._run = run
 		
 	def _parsInfo(self, requested):

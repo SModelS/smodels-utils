@@ -87,31 +87,31 @@ for r in databaseBrowser.getAllRuns():
 		if databaseBrowser.checkResults(r, a, 'sms.py'): sp = True
 		#table3extended.add_row([a, pas, i, sr, sp, con, ax, ipu, pr, iarx])
 		table3.add_row([a, pas, i, sr, sp])
-		table4.add_row([a, top])
-		table9.add_row([a, check2, check])
-		table5.add_row([a, pas, gpu, garx, gjou])
-		table10.add_row([a, pas, isPublication, ijou, iarx])
-		if axes:
-			print axes
-			for axe in axes:
-				table8.add_row([a, axe])
-				print a, axe
-			table8.add_row(['----------------------', '----------------------'])
-		if extop:
-			table6.add_row([a, extop.keys()])
-			for key in extop:
-				table7.add_row([a, extop[key]])
-			table7.add_row(['----------------------', '----------------------'])
-		else: table6.add_row([a, extop])
+		#table4.add_row([a, top])
+		#table9.add_row([a, check2, check])
+		#table5.add_row([a, pas, gpu, garx, gjou])
+		#table10.add_row([a, pas, isPublication, ijou, iarx])
+		#if axes:
+			#print axes
+			#for axe in axes:
+				#table8.add_row([a, axe])
+				#print a, axe
+			#table8.add_row(['----------------------', '----------------------'])
+		#if extop:
+			#table6.add_row([a, extop.keys()])
+			#for key in extop:
+				#table7.add_row([a, extop[key]])
+			#table7.add_row(['----------------------', '----------------------'])
+		#else: table6.add_row([a, extop])
 		
 	#print >> outfile, table3extended
 	print >> outfile, table3	
 	#print >> outfile, table5
-	print >> outfile, table9
+	#print >> outfile, table9
 	print >> outfile, table10
 	print >> outfile, table8
 	print >> outfile, '\n,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, \n'
-	print >> outfile, table4
+	#print >> outfile, table4
 	#print >> outfile, table6
 	print >> outfile, '\n,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT EXTENDED TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, \n'
 	print >> outfile, table7
