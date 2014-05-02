@@ -142,7 +142,12 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
         logger.debug ( "calling dot2tex." )
         drawer.dot2tex ( out )
 
-
+    if options["nopng"]==False and options["pdf"]==True:
+        cmd="convert %s.pdf %s.png" % ( outfile, outfile ) 
+        import commands
+        logger.debug ( "call: %s" % cmd )
+        Out=commands.getoutput ( cmd ) 
+        logger.debug ( "output: %s" % Out )
 
 if __name__ == "__main__":
     """ the script calls the drawing routine """
