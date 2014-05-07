@@ -6,11 +6,11 @@
 
 """
 
-import set_path
-from experiment import smsResults
+import setPath
+from smodels.experiment import smsResults
 
 #smsResults.ResultsForSqrts ( 0 )
-smsResults.considerRuns()#if not all runs should be considered, give list of runs to be considered as argument
+# smsResults.considerRuns()#if not all runs should be considered, give list of runs to be considered as argument
 
 All=smsResults.getAllResults()
 

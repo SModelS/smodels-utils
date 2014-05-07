@@ -225,7 +225,7 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
         logger.error ( "[draw] exception %s" % e )
 
 if __name__ == "__main__":
-        import set_path, argparse, types
+        import setPath, argparse, types
 
         argparser = argparse.ArgumentParser(description='simple tool that is meant to draw lessagraphs, as a pdf feynman plot')
         argparser.add_argument ( '-T', nargs='?', help='Tx name, will look up lhe file in ../regression/Tx_1.lhe. Will be overriden by the "--lhe" argument', type=types.StringType, default='T1' )

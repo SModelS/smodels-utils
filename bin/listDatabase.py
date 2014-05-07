@@ -3,9 +3,9 @@
 """ This is a simple tool that I (WW) need to work out with the CMS susy group
 what digitized results are not yet published """
 
-import set_path
-from experiment import smsResults, smsHelpers
-from tools.physicsUnits import rmvunit
+import setPath
+from smodels.experiment import smsResults, smsHelpers
+from smodels.tools.physicsUnits import rmvunit
   
 Fields= [ "analysis", "sqrts", "lumi", "topologies", "constraints" ]
 NiceName= { "nick name": "nick name", "analysis": "analysis", "sqrts":"$\sqrt{s}$", "topologies": "topologies", "constraints":"constraints", "lumi": "lumi" }

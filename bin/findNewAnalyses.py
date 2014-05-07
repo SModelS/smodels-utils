@@ -7,9 +7,9 @@
 """          
 
 import urllib2 as u
-import set_path
+import setPath
 import sys
-from experiment import smsResults
+from smodels.experiment import smsResults
 
 exceptions=[
 "SUS13003", #rpv

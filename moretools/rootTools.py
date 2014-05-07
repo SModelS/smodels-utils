@@ -15,8 +15,8 @@ def getRootVersion ( astuple=False, useimport=False ):
         :returns: ROOT version
     """
     if useimport: return getRootVersionFromImport_(astuple)
-    import set_path
-    from tools import logger
+    import setPath
+    from smodels.tools import logger
     try:
         import commands
         S=commands.getoutput("root-config --version")

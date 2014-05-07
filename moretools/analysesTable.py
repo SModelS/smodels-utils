@@ -94,7 +94,7 @@ def printAnalysisGraphs(Analysis,pdf_prefix=None):
   return topdic   #Return dictionary
 
 if __name__ == "__main__":
-    import set_path, argparse, types, os
+    import setPath, argparse, types, os
 
     argparser = argparse.ArgumentParser(description='simple tool to generate a latex table with all analysis used')
     argparser.add_argument ( '-o', '--output', nargs='?', help='output file', type=types.StringType, default='tab.tex')

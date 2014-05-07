@@ -28,15 +28,17 @@ def version():
 def addSModelSPath():
     """ adds the path of where smodels is installed to the search  path """
     try:
-        import SModelS
-        I=SModelS.installDirectory()
+        from smodels import SModelS
+        # I=SModelS.installDirectory()
+        J=SModelS.pythonDirectory()
         import sys
-        sys.path.append ( I )
+        # sys.path.append ( I )
+        sys.path.append ( J )
         return
     except ImportError,e:
         pass
     import commands
-    O=commands.getoutput("smodels-config --installdir")
+    O=commands.getoutput("smodels-config --pythondir")
     if O.find("not found")==-1:
       import sys
       sys.path.append(O)
