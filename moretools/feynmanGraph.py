@@ -235,13 +235,13 @@ if __name__ == "__main__":
         argparser.add_argument ( '-v', '--verbose', help='be verbose', action='store_true' )
         args=argparser.parse_args()
 
-        from theory import lheReader, lheDecomposer, crossSection
+        from smodels.theory import lheReader, lheDecomposer, crossSection
         import SModelSTools
 
         filename="%s/lhe/%s_1.lhe" % (SModelSTools.installDirectory(), args.T )
         if args.lhe!="": filename=args.lhe
 
-        reader = lheReader.lheReader( filename )
+        reader = lheReader.LheReader( filename )
         Event = reader.next()
         E = lheDecomposer.elementFromEvent( Event, crossSection.XSectionList() )
 

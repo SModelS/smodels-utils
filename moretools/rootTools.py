@@ -35,7 +35,7 @@ def getRootVersionFromImport_ ( astuple=False ):
         :param astuple: false returns string, true returns tuple of integers.
         :returns: ROOT version
     """
-    from VariousHelpers import logging
+    import logging
     log = logging.getLogger(__name__)
     try:
         import ROOT

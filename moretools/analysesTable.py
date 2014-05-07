@@ -70,9 +70,9 @@ def generateAnalysisTable(ListOfAnalyses, texfile=None, wd=0.15, fig_dir=None):
 def printAnalysisGraphs(Analysis,pdf_prefix=None):
   """ Generateres pdf files with the graph for the SMS Topologies being constrained by the analysis.
   If pdf_prefix=None, uses the analysis label as a prefix for the files."""
-  from theory.auxiliaryFunctions import getelements
+  from smodels.theory.auxiliaryFunctions import getelements
+  from smodels.theory.SMSDataObjects import EElement
   from moretools import feynmanGraph
-  from theory.SMSDataObjects import EElement
 
 #Get topologies (in string format)
   consts = Analysis.results.keys()
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     argparser.add_argument ( '-o', '--output', nargs='?', help='output file', type=types.StringType, default='tab.tex')
     argparser.add_argument ( '-D', '--Dir', nargs='?', help='figure folder', type=types.StringType, default='figures/')
     args=argparser.parse_args()
-    from experiment import smsAnalysisFactory
+    from smodels.experiment import smsAnalysisFactory
     #Creat analyses list:
     ListOfAnalyses = smsAnalysisFactory.load()
     if not os.path.isdir(args.Dir):
