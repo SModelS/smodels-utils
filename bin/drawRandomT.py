@@ -43,6 +43,7 @@ if __name__ == '__main__':
     argparser.add_argument ( '-d', '--dir', nargs='?', help='name of directory that contains the lhe files to draw from', type=types.StringType, default='@@installpath@@lhe/' )
     args=argparser.parse_args()
     Dir=args.dir
+    import setPath
     import SModelSTools
     Dir=Dir.replace("@@installpath@@",SModelSTools.installDirectory() )
     drawRandom ( Dir )
