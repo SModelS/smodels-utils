@@ -26,7 +26,9 @@ def removeXSecs ( In, Out=None ):
             continue
         if inXSecBlock==True:
             tokens=line.split()
-            if token[0].isalpha():
+            if len(tokens)==0:
+                continue
+            if tokens[0].isalpha():
                 inXSecBlock=False
             continue
     f.close()
