@@ -1,4 +1,4 @@
-""" this sets the path so we can write e.g. "from moretools import blahblah """
+""" this sets the path so we can write e.g. "from smodels_tools.tools import blah """
 
 def configure():
     """ get the path name of this file, remove setPath.py,

@@ -10,20 +10,35 @@
 
 def installDirectory():
     """ return the software installation directory, by looking at location of this method """
-    import os, inspect
+    import os
+    import inspect
     ret=os.path.realpath ( inspect.getabsfile(installDirectory) )
     ret=ret.replace("SModelSTools.py","")
     return ret
 
 def addInstallDirectory():
     """ add this directory to search path """
-    import sys, inspect, os
-    base=os.path.dirname ( os.path.realpath ( inspect.getabsfile(addInstallDirectory) ) )
+    import sys
+    import inspect
+    import os
+    fname=inspect.getabsfile(addInstallDirectory)
+    base=os.path.dirname ( os.path.realpath ( fname ) )
     sys.path.append ( base )
 
-def version():
-    """ smodels-tools has a version, also """
-    return "0.1"
+def version(astuple=False):
+    """
+    Print version number of smodels-tools
+
+    """
+    f = open("%s/version" % installDirectory())
+    l = f.readline()
+    f.close()
+    l = l.replace("\n", "")
+    l.strip()
+    if not astuple:
+        return l
+    a, b = l.split(".")
+    return (int(a), int(b))
 
 def addSModelSPath():
     """ adds the path of where smodels is installed to the search  path """
@@ -60,10 +75,10 @@ if __name__ == "__main__":
     if len(sys.argv)<2: printHelp()
     for i in sys.argv[1:]:
         if i=="--help": printHelp()
-        if i=="--installdir": 
+        if i=="--installdir":
             print installDirectory()
             sys.exit(0)
-        if i=="--smodelsdir": 
+        if i=="--smodelsdir":
             print addSModelSPath()
             sys.exit(0)
     printHelp()
