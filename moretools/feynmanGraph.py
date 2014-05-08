@@ -225,7 +225,7 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
         logger.error ( "[draw] exception %s" % e )
 
 if __name__ == "__main__":
-        import set_path, argparse, types
+        import setPath, argparse, types
 
         argparser = argparse.ArgumentParser(description='simple tool that is meant to draw lessagraphs, as a pdf feynman plot')
         argparser.add_argument ( '-T', nargs='?', help='Tx name, will look up lhe file in ../regression/Tx_1.lhe. Will be overriden by the "--lhe" argument', type=types.StringType, default='T1' )
@@ -235,13 +235,13 @@ if __name__ == "__main__":
         argparser.add_argument ( '-v', '--verbose', help='be verbose', action='store_true' )
         args=argparser.parse_args()
 
-        from theory import lheReader, lheDecomposer, crossSection
+        from smodels.theory import lheReader, lheDecomposer, crossSection
         import SModelSTools
 
         filename="%s/lhe/%s_1.lhe" % (SModelSTools.installDirectory(), args.T )
         if args.lhe!="": filename=args.lhe
 
-        reader = lheReader.lheReader( filename )
+        reader = lheReader.LheReader( filename )
         Event = reader.next()
         E = lheDecomposer.elementFromEvent( Event, crossSection.XSectionList() )
 

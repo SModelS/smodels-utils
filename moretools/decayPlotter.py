@@ -17,7 +17,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
     """ draw a decay plot from an slhafile
             :param offset: FIXME what does that one do?
     """
-    import set_path
+    import setPath
     from moretools import decayPlots
     import os
     out=os.path.basename ( slhafile ).replace(".slha","")

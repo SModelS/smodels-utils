@@ -224,7 +224,7 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
   
 if __name__ == "__main__":
   import argparse, types
-  import set_path
+  import setPath
   import SModelSTools
   argparser = argparse.ArgumentParser(description='Draws a "ruler-plot", i.e. particles arranged by their masses. See http://smodels.hephy.at/images/example_ruler.png.')
   #argparser.add_argument ( '-i', '--input',

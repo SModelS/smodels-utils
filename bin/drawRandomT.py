@@ -4,12 +4,13 @@
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 """
+    
+import setPath
 
 def drawRandom ( lhedir ):
-    import set_path
     import sys, os, random, argparse
-    from theory import lheReader, lheDecomposer
-    from tools import asciiGraph
+    from smodels.theory import lheReader, lheDecomposer
+    from smodels.tools import asciiGraph
     """ just one random lhe file from <lhedir>, and draw it """
     files=os.listdir( lhedir )
     Files=[]
@@ -30,19 +31,19 @@ def drawRandom ( lhedir ):
     print "Today's Random Topology is ``%s'':" % T
     print
 
-    reader = lheReader.lheReader( filename )
+    reader = lheReader.LheReader( filename )
     Event = reader.next()
     E = lheDecomposer.elementFromEvent(Event )
-    asciiGraph.asciidraw ( E, border=True )
+    print asciiGraph.asciidraw ( E, border=True )
 
 
 if __name__ == '__main__':
     import argparse, types
-    import set_path
     argparser = argparse.ArgumentParser(description='simple tool that is meant to draw lessagraphs, as a pdf feynman plot')
     argparser.add_argument ( '-d', '--dir', nargs='?', help='name of directory that contains the lhe files to draw from', type=types.StringType, default='@@installpath@@lhe/' )
     args=argparser.parse_args()
     Dir=args.dir
+    import setPath
     import SModelSTools
     Dir=Dir.replace("@@installpath@@",SModelSTools.installDirectory() )
     drawRandom ( Dir )
