@@ -11,7 +11,13 @@
 """
 
 def removeXSecs ( In, Out=None ):
-    """ removes all XSECTION blocks """
+    """ 
+        removes all XSECTION blocks 
+        :params In: name of input filename
+        :params Out: name of output filename. If None, In is overwritten.
+        :params In: name of input filename
+
+    """
     f=open(In)
     lines=f.readlines()
     f.close()
@@ -36,6 +42,9 @@ def removeXSecs ( In, Out=None ):
 def removeDupes ( In, Out=None ):
     """ removes multiple identical xsection entries,
         always keeping the first entry.
+        :params In: name of input filename
+        :params Out: name of output filename. If None, In is overwritten.
+
     """
     f=open(In)
     lines=f.readlines()
