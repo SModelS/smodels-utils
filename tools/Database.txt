@@ -1,0 +1,265 @@
++-------------------------------------------------------+
+| ALL RUNS IN DATABASE                                  |
++-------------------------------------------------------+
+| ['8TeV', 'RPV8', 'ATLAS8TeV', '2012', '2011', 'RPV7'] |
++-------------------------------------------------------+
+
+********************* ANALYSES FOR EACH RUN *********************
+
+----------------- 8TeV -----------------
+['DileptonicStop8TeV', 'SUS13011', 'SUS13009', 'SUS12026', 'SUS12018', 'SUS13012', 'SUS12024', 'SUS13004', 'SUS12017', 'SUS12022', 'SUS13007LS', 'SUS13018', 'SUS12028', 'SUS13007', 'RazorMono8TeV', 'SUS13002', 'SUS13006', 'SUS13008', 'SUS13013', 'SUS13016', 'SUS13017', 'T1ttttCombination8TeV', 'SUS13021', 'SUS13014', 'SUS13019', 'SUS13022', 'SUS13024', 'SUS13015']
+
+----------------- RPV8 -----------------
+['EXO12049', 'SUS12027', 'SUS13003', 'SUS13013']
+
+----------------- ATLAS8TeV -----------------
+['ATLAS_CONF_2012_105', 'ATLAS_CONF_2012_166', 'ATLAS_CONF_2013_001', 'ATLAS_CONF_2013_007', 'ATLAS_CONF_2013_024', 'ATLAS_CONF_2013_025', 'ATLAS_CONF_2013_028', 'ATLAS_CONF_2013_035', 'ATLAS_CONF_2013_036', 'ATLAS_CONF_2013_037', 'ATLAS_CONF_2013_047', 'ATLAS_CONF_2013_048', 'ATLAS_CONF_2013_049', 'ATLAS_CONF_2013_053', 'ATLAS_CONF_2013_061', 'ATLAS_CONF_2013_062', 'ATLAS_CONF_2013_065', 'ATLAS_CONF_2013_068', 'ATLAS_CONF_2013_089', 'ATLAS_CONF_2013_093', 'SUSY_2013_04', 'SUSY_2013_05', 'SUSY_2013_11']
+
+----------------- 2012 -----------------
+['SUS11030', 'SUS12004', 'SUS12006MET', 'SUS11013', 'SUS12006MT', 'SUS12006ML', 'SUS12006SS', 'SUS12002b', 'SUS11011edge', 'SUS11018', 'SUS11021ZMET', 'SUS11011shape', 'SUS12001MET', 'SUS12001JETS', 'SUS12010ANN', 'SUS12010LS', 'SUS12003', 'SUS11027', 'SUS12010LP', 'SUS12006COMB', 'SUS11021JZB', 'SUS11028', 'SUS12005', 'SUS11024', 'SUS12009', 'SUS11010', 'SUS11020', 'SUS11022', 'SUS12002', 'SUS12011', 'SUS11011counting']
+
+----------------- 2011 -----------------
+['SUS11004', 'SUS11006', 'SUS11010', 'SUS11003', 'SUS11005']
+
+----------------- RPV7 -----------------
+['EXO11060', 'EXO12002', 'SUS13005']
+
+*************** ANALYSIS INFORMATION FOR EACH RUN ***************
+
+------------------------ 8TeV ------------------------
++-----------------------+------------+----------+----------+--------+
+| ANALYSIS              |    PAS     | INFO.TXT | SMS.ROOT | SMS.PY |
++-----------------------+------------+----------+----------+--------+
+| DileptonicStop8TeV    | SUS-xx-yyy |   True   |   True   |  True  |
+| SUS13011              | SUS-13-011 |   True   |   True   |  True  |
+| SUS13009              | SUS-13-009 |   True   |   True   |  True  |
+| SUS12026              | SUS-12-026 |   True   |   True   |  True  |
+| SUS12018              | SUS-12-018 |   True   |  False   | False  |
+| SUS13012              | SUS-13-012 |   True   |   True   |  True  |
+| SUS12024              | SUS-12-024 |   True   |   True   |  True  |
+| SUS13004              | SUS-13-004 |   True   |   True   |  True  |
+| SUS12017              | SUS-12-017 |   True   |   True   |  True  |
+| SUS12022              | SUS-12-022 |   True   |   True   |  True  |
+| SUS13007LS            | SUS-13-007 |   True   |   True   |  True  |
+| SUS13018              | SUS-13-018 |   True   |   True   |  True  |
+| SUS12028              | SUS-12-028 |   True   |   True   |  True  |
+| SUS13007              | SUS-13-007 |   True   |   True   |  True  |
+| RazorMono8TeV         | SUS-xx-yyy |   True   |   True   |  True  |
+| SUS13002              | SUS-13-002 |   True   |   True   |  True  |
+| SUS13006              | SUS-13-006 |   True   |   True   |  True  |
+| SUS13008              | SUS-13-008 |   True   |   True   |  True  |
+| SUS13013              | SUS-13-013 |   True   |   True   |  True  |
+| SUS13016              | SUS-13-016 |   True   |   True   |  True  |
+| SUS13017              | SUS-13-017 |   True   |   True   |  True  |
+| T1ttttCombination8TeV |            |   True   |   True   |  True  |
+| SUS13021              | SUS-13-021 |   True   |   True   |  True  |
+| SUS13014              | SUS-13-014 |   True   |   True   |  True  |
+| SUS13019              | SUS-13-019 |   True   |   True   |  True  |
+| SUS13022              | SUS-13-022 |   True   |   True   | False  |
+| SUS13024              | SUS-13-024 |   True   |   True   |  True  |
+| SUS13015              | SUS-13-015 |   True   |   True   |  True  |
++-----------------------+------------+----------+----------+--------+
++----------+-----+--------------+----------+--------+
+| ANALYSIS | PAS | PUBLICATION? | JOURNAL? | ARXIV? |
++----------+-----+--------------+----------+--------+
++----------+-----+--------------+----------+--------+
++----------+------+
+| ANALYSIS | AXES |
++----------+------+
++----------+------+
+
+,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, 
+
+
+,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT EXTENDED TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, 
+
++----------+---------------------+
+| TOPOLOGY | EXTENDED TOPOLOGIES |
++----------+---------------------+
++----------+---------------------+
+
+------------------------ RPV8 ------------------------
++----------+------------+----------+----------+--------+
+| ANALYSIS |    PAS     | INFO.TXT | SMS.ROOT | SMS.PY |
++----------+------------+----------+----------+--------+
+| EXO12049 | EXO-12-049 |   True   |  False   | False  |
+| SUS12027 | SUS-12-027 |   True   |  False   | False  |
+| SUS13003 | SUS-13-003 |   True   |  False   | False  |
+| SUS13013 | SUS-13-013 |   True   |  False   | False  |
++----------+------------+----------+----------+--------+
++----------+-----+--------------+----------+--------+
+| ANALYSIS | PAS | PUBLICATION? | JOURNAL? | ARXIV? |
++----------+-----+--------------+----------+--------+
++----------+-----+--------------+----------+--------+
++----------+------+
+| ANALYSIS | AXES |
++----------+------+
++----------+------+
+
+,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, 
+
+
+,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT EXTENDED TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, 
+
++----------+---------------------+
+| TOPOLOGY | EXTENDED TOPOLOGIES |
++----------+---------------------+
++----------+---------------------+
+
+------------------------ ATLAS8TeV ------------------------
++---------------------+---------------------+----------+----------+--------+
+| ANALYSIS            |         PAS         | INFO.TXT | SMS.ROOT | SMS.PY |
++---------------------+---------------------+----------+----------+--------+
+| ATLAS_CONF_2012_105 | ATLAS-CONF-2012-105 |   True   |   True   |  True  |
+| ATLAS_CONF_2012_166 | ATLAS-CONF-2012-166 |   True   |  False   |  True  |
+| ATLAS_CONF_2013_001 | ATLAS-CONF-2013-001 |   True   |  False   |  True  |
+| ATLAS_CONF_2013_007 | ATLAS-CONF-2013-007 |   True   |   True   |  True  |
+| ATLAS_CONF_2013_024 | ATLAS-CONF-2013-024 |   True   |   True   |  True  |
+| ATLAS_CONF_2013_025 | ATLAS-CONF-2013-025 |   True   |   True   |  True  |
+| ATLAS_CONF_2013_028 | ATLAS-CONF-2013-028 |   True   |  False   |  True  |
+| ATLAS_CONF_2013_035 | ATLAS-CONF-2013-035 |   True   |   True   |  True  |
+| ATLAS_CONF_2013_036 | ATLAS-CONF-2013-036 |   True   |  False   |  True  |
+| ATLAS_CONF_2013_037 | ATLAS-CONF-2013-037 |   True   |   True   |  True  |
+| ATLAS_CONF_2013_047 | ATLAS-CONF-2013-047 |   True   |   True   |  True  |
+| ATLAS_CONF_2013_048 | ATLAS-CONF-2013-048 |   True   |  False   |  True  |
+| ATLAS_CONF_2013_049 | ATLAS-CONF-2013-049 |   True   |   True   |  True  |
+| ATLAS_CONF_2013_053 | ATLAS-CONF-2013-053 |   True   |  False   |  True  |
+| ATLAS_CONF_2013_061 | ATLAS-CONF-2013-061 |   True   |   True   |  True  |
+| ATLAS_CONF_2013_062 | ATLAS-CONF-2013-062 |   True   |  False   |  True  |
+| ATLAS_CONF_2013_065 | ATLAS-CONF-2013-065 |   True   |  False   |  True  |
+| ATLAS_CONF_2013_068 | ATLAS-CONF-2013-068 |   True   |  False   | False  |
+| ATLAS_CONF_2013_089 | ATLAS-CONF-2013-089 |   True   |  False   |  True  |
+| ATLAS_CONF_2013_093 | ATLAS-CONF-2013-093 |   True   |   True   |  True  |
+| SUSY_2013_04        |     SUSY-2013-04    |   True   |  False   |  True  |
+| SUSY_2013_05        |     SUSY-2013-05    |   True   |   True   |  True  |
+| SUSY_2013_11        |     SUSY-2013-11    |   True   |  False   |  True  |
++---------------------+---------------------+----------+----------+--------+
++----------+-----+--------------+----------+--------+
+| ANALYSIS | PAS | PUBLICATION? | JOURNAL? | ARXIV? |
++----------+-----+--------------+----------+--------+
++----------+-----+--------------+----------+--------+
++----------+------+
+| ANALYSIS | AXES |
++----------+------+
++----------+------+
+
+,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, 
+
+
+,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT EXTENDED TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, 
+
++----------+---------------------+
+| TOPOLOGY | EXTENDED TOPOLOGIES |
++----------+---------------------+
++----------+---------------------+
+
+------------------------ 2012 ------------------------
++------------------+------------+----------+----------+--------+
+| ANALYSIS         |    PAS     | INFO.TXT | SMS.ROOT | SMS.PY |
++------------------+------------+----------+----------+--------+
+| SUS11030         | SUS-11-030 |   True   |   True   |  True  |
+| SUS12004         | SUS-12-004 |   True   |  False   | False  |
+| SUS12006MET      | SUS-12-006 |   True   |   True   |  True  |
+| SUS11013         | SUS-11-013 |   True   |   True   |  True  |
+| SUS12006MT       | SUS-12-006 |   True   |   True   |  True  |
+| SUS12006ML       | SUS-12-006 |   True   |   True   |  True  |
+| SUS12006SS       | SUS-12-006 |   True   |   True   |  True  |
+| SUS12002b        | SUS-12-002 |   True   |   True   |  True  |
+| SUS11011edge     | SUS-11-011 |   True   |   True   |  True  |
+| SUS11018         | SUS-11-018 |   True   |   True   |  True  |
+| SUS11021ZMET     | SUS-11-021 |   True   |   True   |  True  |
+| SUS11011shape    | SUS-11-011 |   True   |   True   |  True  |
+| SUS12001MET      | SUS-12-001 |   True   |   True   |  True  |
+| SUS12001JETS     | SUS-12-001 |   True   |   True   | False  |
+| SUS12010ANN      | SUS-12-010 |   True   |   True   |  True  |
+| SUS12010LS       | SUS-12-010 |   True   |   True   |  True  |
+| SUS12003         | SUS-12-003 |   True   |   True   |  True  |
+| SUS11027         | SUS-11-027 |   True   |   True   |  True  |
+| SUS12010LP       | SUS-12-010 |   True   |   True   |  True  |
+| SUS12006COMB     | SUS-12-006 |   True   |   True   |  True  |
+| SUS11021JZB      | SUS-11-021 |   True   |   True   |  True  |
+| SUS11028         | SUS-11-028 |   True   |   True   |  True  |
+| SUS12005         | SUS-12-005 |   True   |   True   |  True  |
+| SUS11024         | SUS-11-024 |   True   |   True   |  True  |
+| SUS12009         | SUS-12-009 |   True   |   True   |  True  |
+| SUS11010         | SUS-11-010 |   True   |   True   |  True  |
+| SUS11020         | SUS-11-020 |   True   |   True   |  True  |
+| SUS11022         | SUS-11-022 |   True   |   True   |  True  |
+| SUS12002         | SUS-12-002 |   True   |   True   |  True  |
+| SUS12011         | SUS-12-011 |   True   |   True   |  True  |
+| SUS11011counting | SUS-11-011 |   True   |   True   |  True  |
++------------------+------------+----------+----------+--------+
++----------+-----+--------------+----------+--------+
+| ANALYSIS | PAS | PUBLICATION? | JOURNAL? | ARXIV? |
++----------+-----+--------------+----------+--------+
++----------+-----+--------------+----------+--------+
++----------+------+
+| ANALYSIS | AXES |
++----------+------+
++----------+------+
+
+,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, 
+
+
+,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT EXTENDED TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, 
+
++----------+---------------------+
+| TOPOLOGY | EXTENDED TOPOLOGIES |
++----------+---------------------+
++----------+---------------------+
+
+------------------------ 2011 ------------------------
++----------+------------+----------+----------+--------+
+| ANALYSIS |    PAS     | INFO.TXT | SMS.ROOT | SMS.PY |
++----------+------------+----------+----------+--------+
+| SUS11004 | SUS-11-004 |   True   |   True   |  True  |
+| SUS11006 | SUS-11-006 |   True   |   True   |  True  |
+| SUS11010 | SUS-11-010 |   True   |   True   |  True  |
+| SUS11003 | SUS-11-003 |   True   |   True   |  True  |
+| SUS11005 | SUS-11-005 |   True   |   True   |  True  |
++----------+------------+----------+----------+--------+
++----------+-----+--------------+----------+--------+
+| ANALYSIS | PAS | PUBLICATION? | JOURNAL? | ARXIV? |
++----------+-----+--------------+----------+--------+
++----------+-----+--------------+----------+--------+
++----------+------+
+| ANALYSIS | AXES |
++----------+------+
++----------+------+
+
+,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, 
+
+
+,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT EXTENDED TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, 
+
++----------+---------------------+
+| TOPOLOGY | EXTENDED TOPOLOGIES |
++----------+---------------------+
++----------+---------------------+
+
+------------------------ RPV7 ------------------------
++----------+------------+----------+----------+--------+
+| ANALYSIS |    PAS     | INFO.TXT | SMS.ROOT | SMS.PY |
++----------+------------+----------+----------+--------+
+| EXO11060 | EXO-11-060 |   True   |  False   | False  |
+| EXO12002 | EXO-12-002 |   True   |  False   | False  |
+| SUS13005 | SUS-13-005 |   True   |  False   | False  |
++----------+------------+----------+----------+--------+
++----------+-----+--------------+----------+--------+
+| ANALYSIS | PAS | PUBLICATION? | JOURNAL? | ARXIV? |
++----------+-----+--------------+----------+--------+
++----------+-----+--------------+----------+--------+
++----------+------+
+| ANALYSIS | AXES |
++----------+------+
++----------+------+
+
+,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, 
+
+
+,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT EXTENDED TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, 
+
++----------+---------------------+
+| TOPOLOGY | EXTENDED TOPOLOGIES |
++----------+---------------------+
++----------+---------------------+
