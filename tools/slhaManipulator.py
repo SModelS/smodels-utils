@@ -3,8 +3,8 @@
 """
 .. module:: slhaManipulator
         :synopsis: all sorts of manipulations of SLHA files.
-                   FIXME we also want total removal of XSECTION blocks
-                   and also removal of dupes, keeping the last entry.
+                   FIXME we also want removal of dupes, 
+                   keeping the last entry.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
