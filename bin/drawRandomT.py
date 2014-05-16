@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 
-""" Draw a random "topology of the day", as an ascii graph.
+"""
+.. module:: drawRandomT
+   :synopsis: Draw a random "topology of the day", as an ascii graph.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
+
 """
     
 import setPath
