@@ -174,10 +174,14 @@ class DecayDrawer:
 
     def simpleName ( self, name ):
         """ simple names for slha names """
-        reps = { "~g":"G", "~chi_10":"N", "~chi_1+":"C", "~t_2":"T", "~t_1":"T", 
-                 "~b_2":"B", "~b_1":"B", "~nu_muL":"xx {dot m}", "~nu":"NU" }
-        for (From,To) in reps.items(): name=name.replace(From,To)
-        return name
+        reps = { "~g":"G", "~chi_10":"N", "~chi1+":"C", "~t_2":"T", "~t_1":"T", 
+                 "~b_2":"B", "~b_1":"B", "~nu_muL":"xx {dot m}", "~nu":"NU",
+                 "~d_R":"DR", "~s_R": "SR", "~chi2+":"C2", "~chi40":"C4",
+                 "~chi2+":"C2", "~chi10":"C1", "~chi30":"C3" }
+        nname=name
+        for (From,To) in reps.items(): nname=nname.replace(From,To)
+        # print name,"->",nname
+        return nname
 
     def texName ( self, name ):
         """ map slha particle names to latex names """
@@ -258,6 +262,7 @@ class DecayDrawer:
         if self.options["simple"]:
             return self.simpleName ( name )
         if self.tex:
+            # return self.simpleName ( name )
             return self.texName ( name )
         return self.htmlName ( name )
 
@@ -284,9 +289,9 @@ class DecayDrawer:
         #cmd+=" --docpreamble '\\usepackage{scrextend}\n\\changefontsizes[12pt]{14pt}' "
         #cmd+="    --figpreamble '\\begin{Large}' --figpostamble '\\end{Large}'"
         #longcmd="%s --preproc %s.dot | %s -o %s.tex" % ( cmd, out, cmd, out )
-        logger.debug (  "cmd=%s " % cmd )
+        logger.error (  "cmd=%s " % cmd )
         output=commands.getoutput( cmd )
-        logger.debug ( output )
+        logger.error ( output )
         logger.debug ( "now meddle with tex file" )
         self.meddleWithTexFile(out)
         outdir=os.path.dirname ( out ) 
