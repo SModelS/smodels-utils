@@ -8,7 +8,7 @@
 
 from pyparsing import Word, nums, ParseException, Optional, alphanums 
 import types
-from tools import modpyslha as pyslha
+from smodels.tools import modpyslha as pyslha
 import logging
 logger = logging.getLogger(__name__)
 
