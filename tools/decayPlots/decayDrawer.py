@@ -303,6 +303,6 @@ class DecayDrawer:
         logger.debug ( output )
 
         if self.options["nopng"]==False:
-            cmd="convert %s.pdf %s.png" % ( out, out )
+            cmd="convert -antialias -density 300x300 %s.pdf %s.png" % ( out, out )
             import commands
             commands.getoutput ( cmd )
