@@ -290,9 +290,9 @@ class DecayDrawer:
         #cmd+=" --docpreamble '\\usepackage{scrextend}\n\\changefontsizes[12pt]{14pt}' "
         #cmd+="    --figpreamble '\\begin{Large}' --figpostamble '\\end{Large}'"
         #longcmd="%s --preproc %s.dot | %s -o %s.tex" % ( cmd, out, cmd, out )
-        logger.error (  "cmd=%s " % cmd )
+        logger.debug (  "cmd=%s " % cmd )
         output=commands.getoutput( cmd )
-        logger.error ( output )
+        logger.debug ( output )
         logger.debug ( "now meddle with tex file" )
         self.meddleWithTexFile(out)
         outdir=os.path.dirname ( out ) 
