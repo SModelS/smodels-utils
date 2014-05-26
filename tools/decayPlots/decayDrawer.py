@@ -122,12 +122,13 @@ class DecayDrawer:
         if color=="#009900": fillcolor="#eeffee"
         if color=="#0000cc": fillcolor="#eeeeff"
         if color=="#d57f28": fillcolor="#ffeedd"
-        node.attr['fillcolor']=fillcolor
+        #node.attr['fillcolor']=fillcolor
         node.attr['fontcolor']=color
-        node.attr['fillstyle']=3
-        node.attr['style']='filled'
-        if not isFermionic:
-            node.attr['shape']='hexagon' # 'egg'
+        #node.attr['fillstyle']=3
+        # node.attr['style']='filled'
+        node.attr['shape']='none' # 'egg'
+        #if not isFermionic:
+        #    node.attr['shape']="box" # 'egg'
         node.attr['label']="%s" % label
 
     def addOneEdge ( self, name, daughter, percentage, label ):
@@ -300,3 +301,8 @@ class DecayDrawer:
         logger.debug (  "pdfcmd=%s" % pdfcmd )
         output=commands.getoutput(pdfcmd )
         logger.debug ( output )
+
+        if self.options["nopng"]==False:
+            cmd="convert %s.pdf %s.png" % ( out, out )
+            import commands
+            commands.getoutput ( cmd )
