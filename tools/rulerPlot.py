@@ -7,27 +7,25 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 """
 
-import ROOT, os, math, sys, tempfile
+import os, math, sys, tempfile, ROOT
+import logging
 
 def _printCanvas ( c1, filename ):
-  #print "start redirect"
-  #Tmp=sys.stdout
-  #f=open("/dev/null","w")
-  #sys.stderr=f
-  #sys.stdout=f
-  #print "!dhufdhuf"
-  c1.Print(filename )
-  #sys.stdout=Tmp
-  #sys.stderr=Tmp
-  #f.close()
-  #print "end redirect"
+    """ tried to redirect stdout """
+    logger=logging.getLogger(__name__)
+    logger.debug ( "printing canvas to %s" % filename )
+    ROOT.gErrorIgnoreLevel=2000
+    c1.Print(filename )
+    ROOT.gErrorIgnoreLevel=-1
 
 def _execute ( command ):
     import commands
+    logger=logging.getLogger(__name__)
+    logger.debug ( "now running %s" % command )
     out=commands.getoutput ( command )
     if len(out)!=0:
-      print "[rulerPlot.py] errror",out
-      return False
+        logger.error( out )
+        return False
     return True
 
 def _squarkname ( Type, postfix ):
@@ -39,13 +37,13 @@ def _squarkname ( Type, postfix ):
 
 def _color ( name ):
     """ different colors for different particle types """
-    from ROOT import kGreen,kOrange,kRed,kBlue
+    from ROOT import kGreen,kOrange,kRed,kBlue,kBlack
     Dict={ "~chi":kGreen+2,"~tau":kOrange+2,"~mu":kOrange+2,"~nu":kOrange+2,
         "~g":kRed,"~q":kBlue+2,"~u":kBlue+2,"~d":kBlue+2,"~c":kBlue+2,
         "~s":kBlue+2,"~t":kBlue+1,"~b":kBlue+1,"~e":kOrange+2,"~l":kOrange+2 }
     for (mname,color) in Dict.items():
         if name.find(mname)==0: return color 
-    return ROOT.kBlack
+    return kBlack
 
 def _pprint ( name ):
   """ find ROOT.TLatex names for various common names used in
@@ -108,6 +106,8 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
       :param printmass: draw also mass values (in GeV)?
   """
 
+    
+  logger=logging.getLogger(__name__)
   f=open( inputfile )
   pmasses=eval(f.readline())
   f.close()
@@ -115,17 +115,18 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
   masses={}
   # masses=pmasses
   for (key,value) in pmasses.items():
-    if key.find("width")==-1:
-      masses[key]=abs(value)
-  maxvalue=max(masses.values())*1.05
-  if maxvalue>3100: maxvalue=3100.
+      if key.find("width")==-1:
+          masses[key]=abs(value)
+  hmasses= [ m for m in masses.values() if m<3000. ]
+  maxvalue=max (hmasses)*1.05 #  max(masses.values())*1.05
+  if maxvalue>3100:
+      maxvalue=3100.
   minvalue=min(masses.values())*0.80
-  #print "[ruler.py] user wanted",Range[0],"<br>"
-  #print "[ruler.py] masses want",minvalue,"<br>"
+  logger.info ( "range is [%d,%d]" % ( minvalue, maxvalue ) )
   if Range[0] >=0:
-    minvalue=Range[0]
+      minvalue=Range[0]
   if Range[1] >=0:
-    maxvalue=Range[1]
+      maxvalue=Range[1]
 
   ROOT.gROOT.SetBatch()
   ROOT.gROOT.SetStyle("Plain")
@@ -139,52 +140,52 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
 
   ##set positions of lines & captions
   if printmass:
-    xline0=0.20 #start of line
-    xline1=0.35 #end of line
-    xtext=0.37  #start of caption
+      xline0=0.20 #start of line
+      xline1=0.35 #end of line
+      xtext=0.37  #start of caption
   else:
-    xline0=0.23
-    xline1=0.40
-    xtext=0.42
+      xline0=0.23
+      xline1=0.40
+      xtext=0.42
 
   ylist=[]
   for (name,m) in masses.items():
-    y=(abs(m)-minvalue)/(maxvalue-minvalue)
-    ylist.append(y)  
+      y=(abs(m)-minvalue)/(maxvalue-minvalue)
+      ylist.append(y)  
 
   ydic={}
   for y in ylist:
-    n=0
-    for y2 in ylist:
-      if math.fabs(y2-y)<0.02: n+=1
-    ydic[y]=n
+      n=0
+      for y2 in ylist:
+          if math.fabs(y2-y)<0.02: n+=1
+      ydic[y]=n
 
   written=[]
 
   for (name,m) in masses.items():
     if name[:5]=="width":
-      continue
+        continue
     y=(abs(m)-minvalue)/(maxvalue-minvalue)
     col=_color (name )
     l=ROOT.TLine(xline0,y,xline1,y)
     l.SetLineColor(col)
     if ydic[y]<4:
-      offset=0.07
-      t.SetTextSize(0.05)
+        offset=0.07
+        t.SetTextSize(0.05)
     elif ydic[y]==4:
-      offset=0.05
-      t.SetTextSize(0.04)
+        offset=0.05
+        t.SetTextSize(0.04)
     else:
-      offset=0.04
-      t.SetTextSize(0.03)
+        offset=0.04
+        t.SetTextSize(0.03)
     l.Draw()
     lines.append(l)
     x=xtext
     xm=0.6
     for coord in written:
       if math.fabs(coord[0]-y)<0.02:
-        x=coord[1]+offset
-        xm=coord[2]+2*offset
+          x=coord[1]+offset
+          xm=coord[2]+2*offset
     t.SetTextColor(col)
     t.DrawLatex(x,y-.01,_pprint(name))
     if printmass: t.DrawLatex(xm,y-.01,str(int(round(m,0))))
@@ -204,46 +205,50 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
 
   _printCanvas ( c1, tmpf+".eps" )
   for i in [ "pdf", "png", "eps" ]: 
-    if not formats.has_key(i): formats[i]=False
+      if not i in formats: formats[i]=False
 
   if formats["pdf"]:
-    #print "[ruler.py] creating %s.pdf" % outputfile
-    _execute ( "epspdf %s.eps %s.pdf" % ( tmpf, outputfile ) )
+      logger.info ( "producing %s.pdf" % outputfile )
+      _execute ( "epspdf %s.eps %s.pdf" % ( tmpf, outputfile ) )
   if formats["png"]:
-    formats["eps"]=True
-    # print "[ruler.py] creating and cropping %s.png" % outputfile
-    crop=""
-    if True and not printmass:
-      crop="-crop 270x1200+0+0"
-    _execute ( "convert %s %s.eps %s.png" % ( crop, tmpf, outputfile ) )
+      formats["eps"]=True
+      crop=""
+      if True and not printmass:
+        crop="-crop 270x1200+0+0"
+      logger.info ( "producing %s.png" % outputfile )
+      _execute ( "convert %s %s.eps %s.png" % ( crop, tmpf, outputfile ) )
   if formats["eps"]:
-    #print "[ruler.py] creating %s.eps" % output
-    _execute ( "cp %s.eps %s.eps" % (tmpf, outputfile ) )
+      logger.info ( "producing %s.eps" % outputfile )
+      _execute ( "cp %s.eps %s.eps" % (tmpf, outputfile ) )
 
   os.unlink ( tmpf )
   
 if __name__ == "__main__":
-  import argparse, types
-  import setPath
-  from smodels_tools import SModelSTools
-  argparser = argparse.ArgumentParser(description='Draws a "ruler-plot", i.e. particles arranged by their masses. See http://smodels.hephy.at/images/example_ruler.png.')
-  #argparser.add_argument ( '-i', '--input',
-  #        help='input masses text file name', type=types.StringType, default='@@installdir@@etc/example_masses.txt' )
-  argparser.add_argument('inputfile', type=types.StringType, nargs=1,
+    import argparse, types
+    import setPath
+    from smodels_tools import SModelSTools
+    argparser = argparse.ArgumentParser(description='Draws a "ruler-plot", i.e. particles arranged by their masses. See http://smodels.hephy.at/images/example_ruler.png.')
+    argparser.add_argument('inputfile', type=types.StringType, nargs=1,
                     help='input masses text file name, for an example see "etc/example_masses.txt". "@@installdir@@" will be replaced with the installation directory of smodels-tools.')
-  argparser.add_argument ( '-m', '--min',
+    argparser.add_argument ( '-m', '--min',
           help='minimal mass, -1 for automatic mode', type=types.IntType, default=-1 )
-  argparser.add_argument ( '-M', '--max',
+    argparser.add_argument ( '-M', '--max',
           help='maximum mass, -1 for automatic mode', type=types.IntType, default=-1 )
-  argparser.add_argument ( '-o', '--output',
+    argparser.add_argument ( '-o', '--output',
           help='output file name', type=types.StringType, default='ruler' )
-  argparser.add_argument ( '-p', '--pdf', help='produce pdf', action='store_true' )
-  argparser.add_argument ( '-e', '--eps', help='produce (=keep) eps', action='store_true' )
-  argparser.add_argument ( '-P', '--png', help='produce png', action='store_true' )
-  argparser.add_argument ( '-mass', '--masses', help='write masses', action='store_true' )
-  args=argparser.parse_args()
-  Range=[args.min,args.max]
-  formats= { "pdf":args.pdf, "eps":args.eps, "png":args.png }
+    argparser.add_argument ( '-p', '--pdf', help='produce pdf', action='store_true' )
+    argparser.add_argument ( '-e', '--eps', help='produce (=keep) eps', 
+                             action='store_true' )
+    argparser.add_argument ( '-P', '--png', help='produce png', action='store_true' )
+    argparser.add_argument ( '-mass', '--masses', help='write masses', 
+                             action='store_true' )
+    args=argparser.parse_args()
+    Range=[args.min,args.max]
+    formats= { "pdf":args.pdf, "eps":args.eps, "png":args.png }
 
-  inputfile=args.inputfile[0].replace("@@installdir@@",SModelSTools.installDirectory() )
-  draw ( inputfile, args.output, Range, formats, args.masses )
+    inputfile=args.inputfile[0].replace("@@installdir@@",
+                                        SModelSTools.installDirectory() )
+    import logging.config
+    logging.config.fileConfig ( 
+            SModelSTools.installDirectory()+"/etc/commandline.conf" )
+    draw ( inputfile, args.output, Range, formats, args.masses )

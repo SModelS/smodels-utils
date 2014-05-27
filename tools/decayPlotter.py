@@ -48,11 +48,13 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
         for i in [ "u", "d", "c", "s", "b", "t", "q" ]:
             for c in ["L", "R", "1", "2" ]:
                 tmp.append ("~%s_%s" % ( i, c) )
+                tmp.append ("~%s%s" % ( i, c) )
 
     if options["sleptons"]:
         for i in [ "l", "e", "mu", "tau", "nu", "nu_e", "nu_mu", "nu_tau" ]:
             for c in ["L", "R", "1", "2" ]:
                 tmp.append ("~%s_%s" % ( i, c) )
+                tmp.append ("~%s%s" % ( i, c) )
 
     if options["weakinos"]:
         map ( tmp.append, [ "~chi_1+", "~chi_2+", "~chi_20", "~chi_30" ] )
