@@ -16,17 +16,17 @@ import dictionaries
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
-log.setLevel(level=logging.ERROR)
+logger.setLevel(level=logging.ERROR)
 
 def setLogLevel(level = 'error'):
 	if level == 'debug':
-		log.setLevel(level=logging.DEBUG)
+		logger.setLevel(level=logging.DEBUG)
 	if level == 'info':
-		log.setLevel(level=logging.INFO)
+		logger.setLevel(level=logging.INFO)
 	if level == 'warning':
-		log.setLevel(level=logging.WARNING)
+		logger.setLevel(level=logging.WARNING)
 	if level == 'error':
 		pass
 		
@@ -55,9 +55,9 @@ class Analysis(object):
 			run = getAllRuns(analysis)
 		info = readInfo(run, analysis)
 		if info:
-			log.info('found info.txt in %s-%s.' %(run, analysis))
+			logger.info('found info.txt in %s-%s.' %(run, analysis))
 			return object.__new__(self)
-		log.error('Cannot build Analysis %s for run %s.' %(analysis, run))
+		logger.error('Cannot build Analysis %s for run %s.' %(analysis, run))
 		
 	def __init__(self, analysis, run = None):
 		self._name = analysis
@@ -69,7 +69,7 @@ class Analysis(object):
 	def _parsInfo(self, requested):
 		content = [string for string in self._info if requested in string]
 		if content:
-			log.info('found %s: %s' %(requested,content[0].split(' ')[1]))
+			logger.info('found %s: %s' %(requested,content[0].split(' ')[1]))
 			return content[0].split(' ')[1].strip()
 		
 	def getLumi(self):
@@ -186,9 +186,9 @@ class Topology(object):
 	def __new__(self, topology):
 		alltopos = getAllTopologies()
 		if topology in alltopos:
-			log.info('found topology %s' %topology)
+			logger.info('found topology %s' %topology)
 			return object.__new__(self)
-		log.error('Cannot build Topology %s' %topology)
+		logger.error('Cannot build Topology %s' %topology)
 		
 	def __init__ (self, topology):
 		self._name = topology
@@ -209,7 +209,7 @@ class Topology(object):
 		"""
 		if not run:
 			anas = {}
-			log.warning('no run was given, therefore trying all available runs %s and returning dictionary!' %self._runs)
+			logger.warning('no run was given, therefore trying all available runs %s and returning dictionary!' %self._runs)
 			for r in self._runs:
 				if getAllAnalyses(run = r, topology = self._name):
 					anas[r] = [a for a in getAllAnalyses(run = r, topology = self._name)]
@@ -224,12 +224,12 @@ class Topology(object):
 
 	def getDecay(self):
 		if dictionaries.decay.has_key(self._name):
-			log.info('found decay for topology %s' %self._name)
+			logger.info('found decay for topology %s' %self._name)
 			return dictionaries.decay[self._name]
 		if dictionaries.decay.has_key(self._slackTopologyName()):
-			log.info('found decay for topology %s with slack name %s' %(self._name, self._slackTopologyName()))
+			logger.info('found decay for topology %s with slack name %s' %(self._name, self._slackTopologyName()))
 			return dictionaries.decay[self._slackTopologyName()]
-		log.warning('no decay found for topology %s' %self._name)
+		logger.warning('no decay found for topology %s' %self._name)
 		return None
 		
 	#def getPrettyName       # particles resp. productionmode
@@ -247,7 +247,7 @@ class Pair (object):
 		self._topo = pair[2]
 		self._ana = pair[1]
 		self._run = pair[0]
-		log.info('creating pair-object for %s-%s!' %(self._ana, self._topo))
+		logger.info('creating pair-object for %s-%s!' %(self._ana, self._topo))
 		
 	def getAnalysis(self):
 		return Analysis(self._ana, self._run)
@@ -260,20 +260,20 @@ class Pair (object):
 		
 		"""
 		infoLine = self.getAnalysis().getChecked()
-		log.debug('got infoLine from Analysis-object: %s' %infoLine)
+		logger.debug('got infoLine from Analysis-object: %s' %infoLine)
 		if not infoLine: return None
 		if 'AL' in infoLine: # ### FIX ME: this if will be obsolet when the checked flag is fixed in every info.txt
-			log.warning('there is no information about singel topologies')
+			logger.warning('there is no information about singel topologies')
 			return infoLine[0]
 		infoLine = [ch for ch in infoLine if self._topo in ch]
-		log.debug('first preprocessed infoLine: %s' %infoLine)
+		logger.debug('first preprocessed infoLine: %s' %infoLine)
 		if not infoLine:
-			log.warning('This Pair is not checked!')
+			logger.warning('This Pair is not checked!')
 			return None
 		infoLine = [ch.split(':') for ch in infoLine]
-		log.debug('second preprocessed infoLine: %s' %infoLine)
+		logger.debug('second preprocessed infoLine: %s' %infoLine)
 		infoLine = infoLine[0]
-		log.debug('return value of infoLine: %s' %infoLine)
+		logger.debug('return value of infoLine: %s' %infoLine)
 		return infoLine[1].strip()
 		
 	def getExclusionLines(self):
@@ -299,6 +299,7 @@ class Pair (object):
 		
 		"""
 		allLines = self.getExclusionLines()
+		logger.debug('all exclusionlines: %s' %allLines)
 		if not allLines: return None
 		keys = allLines.keys()
 		
@@ -308,11 +309,13 @@ class Pair (object):
 			keys = [k for k in keys if 'observed' in k]
 			
 		exLines = allLines[keys[0]]
+		exLines = [l for l in exLines if l]
+		logger.debug('selected exclusionlines: %s' %exLines)
 		if sigma == 0: exLines = [l for l in exLines if not 'p1' in l.GetName() and not 'm1' in l.GetName()]
 		elif sigma == 1: exLines = [l for l in exLines if 'p1' in l.GetName()]
 		elif sigma == -1: exLines = [l for l in exLines if 'm1' in l.GetName()]
 		else:
-			log.error('no exclusionlines available for sigma = %s' % sigma)
+			logger.error('no exclusionlines available for sigma = %s' % sigma)
 			return None
 		return exLines
 		
@@ -324,11 +327,11 @@ class Pair (object):
 		exLines = self.selectTypeOfExclusionLine(expected, sigma)
 		if not exLines: return None
 		if len(exLines) == 1:
-			log.info('there is just one exclusionline of this type!')
+			logger.info('there is just one exclusionline of this type!')
 			return exLines[0]
 			
 		if not condition in ['D', 'x', 'LSP', 'C', 'M', 'xvalue']:
-			log.error('%s is no valid type of condition for intermediate masses' %condition)
+			logger.error('%s is no valid type of condition for intermediate masses' %condition)
 			return None
 			
 		if condition == 'xvalue': topoextention = str(value)
@@ -375,7 +378,7 @@ def getDatabase():
 	data = {}
 	for r in allruns:
 		if not os.path.exists('%s/%s' % (Base, r)):
-			log.warning('Using an uncomplete version of the database!')
+			logger.warning('Using an uncomplete version of the database!')
 			continue
 		data[r] = os.listdir('%s/%s' % (Base, r))
 		data[r] = [directory for directory in data[r] if not '.' in directory]
@@ -392,16 +395,16 @@ def checkResults(run = None, analysis = None, requested = 'info.txt'):
 		return None
 		
 	if not analysis:
-		log.error('no results without analysis!')
+		logger.error('no results without analysis!')
 		return None
 		
 	if not run:
 		run = getAllRuns(analysis)
 		
 	path = Base + run + '/' + analysis + '/' + requested
-	log.debug('check path: %s' %path)
+	logger.debug('check path: %s' %path)
 	if not os.path.exists(path):
-		log.warning('for run %s and analyses %s no %s was found' %(run, analysis, requested))
+		logger.warning('for run %s and analyses %s no %s was found' %(run, analysis, requested))
 		return None
 		
 	return path
@@ -423,7 +426,7 @@ def readInfo(run = None, analysis = None):
 		infoFile = open(path)
 		content = infoFile.readlines()
 		infoFile.close()
-		log.debug('found info.txt for run %s and analysis %s' %(run, analysis))
+		logger.debug('found info.txt for run %s and analysis %s' %(run, analysis))
 		return content 
 		
 def getInfo(run = None, analysis = None, requested = 'constraint'):
@@ -439,7 +442,7 @@ def getInfo(run = None, analysis = None, requested = 'constraint'):
 	content = readInfo(run, analysis)
 	content = [string.strip() for string in content if requested in string]
 	if not content == []: return content
-	log.warning('requested keyword %s could not be found for %s-%s!' %(requested, run, analysis))
+	logger.warning('requested keyword %s could not be found for %s-%s!' %(requested, run, analysis))
 	return None
 	
 def preprocessAxes(infoLine):
@@ -449,7 +452,7 @@ def preprocessAxes(infoLine):
 	infoLine = infoLine[0].split(',')
 	infoLine[0] = infoLine[0].replace('axes: ','')
 	infoLine = [ax.strip() for ax in infoLine]
-	log.debug('axes- information: %s' %infoLine)
+	logger.debug('axes- information: %s' %infoLine)
 	return infoLine
 
 def getAllRuns(analysis = None, topology = None, current = True):
@@ -465,12 +468,12 @@ def getAllRuns(analysis = None, topology = None, current = True):
 	runs = [key for key in database if analysis in database[key]]
 				
 	if runs == []:
-		log.error('no valid analysis %s' %analysis)
+		logger.error('no valid analysis %s' %analysis)
 		return None
 	
 	if current == True:
-		log.info('for %s collected runs: %s' %(analysis,runs))
-		log.info('returning: %s' %runs[0])
+		logger.info('for %s collected runs: %s' %(analysis,runs))
+		logger.info('returning: %s' %runs[0])
 		return runs[0]
 		
 	if current == False:
@@ -481,7 +484,7 @@ def checkRun(run):
 	
 	"""
 	if not run in getDatabase().keys():
-		log.error('no valid run %s' %run)
+		logger.error('no valid run %s' %run)
 		return False
 		
 	return True
@@ -501,17 +504,17 @@ def getAllAnalyses(run = None, topology = None):
 		analyses = [ana for anas in analyses for ana in anas]
 		
 	if not topology:
-		log.info('found %s analyses for %s' %(len(database[run]), run))
+		logger.info('found %s analyses for %s' %(len(database[run]), run))
 		return database[run]
 
 	for a in database[run]:
 		topologies = getAllTopologies(a, run)
 		if topologies and topology in topologies:
-			log.info('found %s in %s-%s' %(topology,run,a))
+			logger.info('found %s in %s-%s' %(topology,run,a))
 			analyses.append(a)
 		
 	if analyses == []:
-		log.error('%s is no valid topology for given run %s' %(topology, run))
+		logger.error('%s is no valid topology for given run %s' %(topology, run))
 		return None
 		
 	return analyses
@@ -545,11 +548,11 @@ def getAllTopologies(analysis = None, run = None):
 		runs = getAllRuns()
 		nono = True
 					
-	log.debug('searching topologies for runs %s and analyses %s' %(runs,analyses))
+	logger.debug('searching topologies for runs %s and analyses %s' %(runs,analyses))
 	for r in runs:
 		if nono == True:
 			analyses = getAllAnalyses(r)
-			log.info('no analysis was given, therefore took all analyses for run %s: %s' %(r, analyses))
+			logger.info('no analysis was given, therefore took all analyses for run %s: %s' %(r, analyses))
 		for a in analyses:
 			content = getInfo(r, a)
 			if not content: continue
@@ -558,7 +561,7 @@ def getAllTopologies(analysis = None, run = None):
 					topos.append(c.split(' ')[1])
 				
 	if topos == []:
-		log.error('for runs %s and analyses %s no topology could be found' %(runs, analyses))
+		logger.error('for runs %s and analyses %s no topology could be found' %(runs, analyses))
 		return None
 		
 	return topos
@@ -569,23 +572,23 @@ def getExtendedTopologies(analysis, run, topology = None):
 	
 	"""
 	topos = {}
-	log.debug('got analysis: %s and run %s!' %(analysis, run))
+	logger.debug('got analysis: %s and run %s!' %(analysis, run))
 	if not getInfo(run, analysis, 'axes'):
-		log.info('No additional information about axes was found for %s-%s!' %(run, analysis))
+		logger.info('No additional information about axes was found for %s-%s!' %(run, analysis))
 		if not getAllTopologies(analysis, run): return None
 		for t in getAllTopologies(analysis, run):
 			topos[t]=[t]
 		if not topology: return topos
 		if topos.has_key(topology): return topos[topology]
-		log.error('for %s-%s there is no topology %s' %(run, analysis, topology))
+		logger.error('for %s-%s there is no topology %s' %(run, analysis, topology))
 		return None
 	
 	infoLine = getInfo(run, analysis, 'axes')
 	axes = preprocessAxes(infoLine)
-	log.info('for %s-%s there is additional mass information!' %(run, analysis)) 
+	logger.info('for %s-%s there is additional mass information!' %(run, analysis)) 
 	
 	for ax in axes:
-		log.debug('axesline is:%s' %ax)
+		logger.debug('axesline is:%s' %ax)
 		massdic = massProportions(ax)
 		topo = massdic.keys()[0]
 		topos[topo] = []
@@ -602,15 +605,15 @@ def getExtendedTopologies(analysis, run, topology = None):
 						topos[topo].append(topo + 'D' + D)
 					elif 'LSP' or 'x' or 'C' or 'M' in case[2]: topos[topo].append(topo + case[2])
 			if len(case) > 3:
-				log.info('topology is: %s => more then one additional condition is too much at the moment' %topo)
+				logger.info('topology is: %s => more then one additional condition is too much at the moment' %topo)
 				continue
 	
 	if topos == {'':[]}:
-		log.error('Something is wrong with the axes line in the info.txt for %s-%s!' %(run, analysis))
+		logger.error('Something is wrong with the axes line in the info.txt for %s-%s!' %(run, analysis))
 		return None
 	if not topology: return topos
 	if topos.has_key(topology): return topos[topology]
-	log.error('for %s-%s there is no topology %s' %(run, analysis, topology))
+	logger.error('for %s-%s there is no topology %s' %(run, analysis, topology))
 	return None
 	
 def massProportions(axesLine):
@@ -621,7 +624,7 @@ def massProportions(axesLine):
 	topo = axesLine.split(' ')[0].replace(':', '').strip()
 	massdic[topo] = axesLine.replace(topo + ':', '').split('-')
 	massdic[topo] = [c.strip() for c in massdic[topo]]
-	log.info('for %s there are %s different cases of mass proportions' %(topo, len(massdic[topo])))
+	logger.info('for %s there are %s different cases of mass proportions' %(topo, len(massdic[topo])))
 	massdic[topo]=[c.split(' ') for c in massdic[topo]]
 	return massdic
 	
@@ -633,22 +636,22 @@ def linkPair(analysis, topology, current = True):
 		runs = getAllRuns(analysis, current = False)
 		pair = {}
 		if not runs: return None
-		log.debug('try to link pair %s-%s for all available runs!' %(analysis, topology))
+		logger.debug('try to link pair %s-%s for all available runs!' %(analysis, topology))
 		for r in runs:
 			topologies = getAllTopologies(analysis, run)
 			if topologies and topology in topologies:
 				pair[r]=[analysis, topology]
-				log.debug('found pair %s-%s for run %s!' %(analysis, topology, run))
+				logger.debug('found pair %s-%s for run %s!' %(analysis, topology, run))
 		return pair
 	
 	run = getAllRuns(analysis)
 	if not run: return None
 	topologies = getAllTopologies(analysis, run)
 	if not topologies:
-		log.info('there are no topologies for %s-%s' %(run, analysis))
+		logger.info('there are no topologies for %s-%s' %(run, analysis))
 		return None
 		
-	log.debug('try to link pair %s-%s for run %s!' %(analysis, topology, run))
+	logger.debug('try to link pair %s-%s for run %s!' %(analysis, topology, run))
 	if topologies and topology in topologies:
 		return [run, analysis, topology]
 	
