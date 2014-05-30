@@ -561,7 +561,7 @@ def getAllTopologies(analysis = None, run = None):
 					topos.append(c.split(' ')[1])
 				
 	if topos == []:
-		logger.error('for runs %s and analyses %s no topology could be found' %(runs, analyses))
+		logger.warning('for runs %s and analyses %s no topology could be found' %(runs, analyses))
 		return None
 		
 	return topos
@@ -580,7 +580,7 @@ def getExtendedTopologies(analysis, run, topology = None):
 			topos[t]=[t]
 		if not topology: return topos
 		if topos.has_key(topology): return topos[topology]
-		logger.error('for %s-%s there is no topology %s' %(run, analysis, topology))
+		logger.warning('for %s-%s there is no topology %s' %(run, analysis, topology))
 		return None
 	
 	infoLine = getInfo(run, analysis, 'axes')
@@ -609,11 +609,11 @@ def getExtendedTopologies(analysis, run, topology = None):
 				continue
 	
 	if topos == {'':[]}:
-		logger.error('Something is wrong with the axes line in the info.txt for %s-%s!' %(run, analysis))
+		logger.warning('Something is wrong with the axes line in the info.txt for %s-%s!' %(run, analysis))
 		return None
 	if not topology: return topos
 	if topos.has_key(topology): return topos[topology]
-	logger.error('for %s-%s there is no topology %s' %(run, analysis, topology))
+	logger.warning('for %s-%s there is no topology %s' %(run, analysis, topology))
 	return None
 	
 def massProportions(axesLine):
