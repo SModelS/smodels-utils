@@ -37,7 +37,11 @@ def setLogLevel(level):
 		logger.setLevel(level=logging.ERROR)
 
 def main():
-	"""Handles all command line options. Calls all functions.
+	"""Handles all command line options, as:
+	enable/disable checks if the requested information exists (e.g. are there any constraints?) gives only True or False 
+	enable/disable extended information (e.g. all topologies for an analysis) gives the whole line from the info.txt file in the database 
+	set level of information to preset the list of queries
+	manually define a list of queries or add such a list to the preselection 
 	
 	"""
 	argparser = argparse.ArgumentParser(description = 'Summarizes the content of smodels-database')
@@ -56,6 +60,10 @@ def main():
 	args = argparser.parse_args()
 	setLogLevel(level = args.loggingLevel)
 	
+	
+	allExtendedInfos = ['ANALYSIS', 'ARXIV', 'CONSTRAINTS', 'CHECKED', 'PUBLICATION', 'JOURNAL', 'AXES', 'PAS', 'PRETTYNAME', 'TOPOLOGIES', 'EXTENDEDTOPOLOGIES']
+	allFlagInfos = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY', 'CONSTRAINTS', 'AXES', 'PUBLIC', 'JOURNAL', 'PUBLICATION', 'ARXIV', 'CHECKED']
+	
 	flagLevel = setInfoLevel(args.flagLevel)
 	if args.flags:
 		logger.info('set flag level to %s' %flagLevel)
@@ -69,7 +77,10 @@ def main():
 	
 	if extendedLevel == 'manual':
 		if args.extendedList:
-			extendedList = [el.strip() for el in args.extendedList.split()] 
+			for el in args.extendedList.split():
+				if not el.strip() in allExtendedInfos:
+					log.error('%s is no valid query!' %el.srtip())
+			extendedList = [el.strip() for el in args.extendedList.split() if el.strip() in allExtendedInfos] 
 			extendedList.insert(0, 'ANALYSIS')
 			logger.info('Manually set list of queries: %s' %extendedList)
 		else:
@@ -77,7 +88,10 @@ def main():
 			
 	if flagLevel == 'manual':
 		if args.flagList:
-			flagList = [el.strip() for el in args.flagList.split()] 
+			for el in args.flagList.split():
+				if not el.strip in allFlagInfos:
+					log.error('%s is no valid query!' %el.srtip())
+			flagList = [el.strip() for el in args.flagList.split() if el.strip() in allFlagInfos] 
 			flagList.insert(0, 'ANALYSIS')
 			logger.info('Manually set List of queries: %s' %flagList)
 		else:
@@ -122,9 +136,6 @@ def builtInfoList(level, add, flag = False):
 	
 	"""
 	
-	allExtendedInfos = ['ANALYSIS', 'ARXIV', 'CONSTRAINTS', 'CHECKED', 'PUBLICATION', 'JOURNAL', 'AXES', 'PAS', 'PRETTYNAME', 'TOPOLOGIES', 'EXTENDEDTOPOLOGIES']
-	allFlagInfos = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY', 'CONSTRAINTS', 'AXES', 'PUBLIC', 'JOURNAL', 'PUBLICATION', 'ARXIV', 'CHECKED']
-	
 	if level == 'reduced':
 		extendedList = ['ANALYSIS', 'CHECKED']
 		flagList = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY']
@@ -133,7 +144,7 @@ def builtInfoList(level, add, flag = False):
 		flagList = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY', 'JOURNAL', 'PUBLICATION', 'ARXIV', 'CHECKED']
 	if level == 'fully':
 		extendedList = ['ANALYSIS', 'PAS','CHECKED', 'TOPOLOGIES', 'EXTENDEDTOPOLOGIES', 'AXES', 'ARXIV']
-		flagList = allFlagInfos
+		flagList = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY', 'CONSTRAINTS', 'AXES', 'PUBLIC', 'JOURNAL', 'PUBLICATION', 'ARXIV', 'CHECKED']
 	if level == 'manual':
 		extendedList = []
 		flagList = []
