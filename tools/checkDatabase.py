@@ -45,24 +45,37 @@ def main():
 	
 	"""
 	argparser = argparse.ArgumentParser(description = 'Summarizes the content of smodels-database')
-	argparser.add_argument ('-f', '--flags', help = 'enables checks of existence - default: False', action = 'store_true')
-	argparser.add_argument ('-e', '--extended', help = 'enables detailed information - default: True', action = 'store_false')
-	argparser.add_argument ('-fl', '--flagList', nargs = '?', help = 'list of requested information (gives only True or False) - default: INFO.TXT SMS.ROOT SMS.PY', type = types.StringType, default = 'INFO.TXT SMS.ROOT SMS.PY')
-	argparser.add_argument ('-el', '--extendedList', nargs = '?', help = 'list of requested extended information - default: "PAS TOPOLOGIES"', type = types.StringType, default = 'PAS TOPOLOGIES')
-	argparser.add_argument ('-fle', '--flagLevel', nargs = '?', help = 'set information level for checks only (0 - manual, 1 - reduced, 2 - standard, 3 - fully) - default: standard', type = types.StringType, default = '2')
-	argparser.add_argument ('-ele', '--extendedLevel', nargs = '?', help = 'set information level for extended requests (0 - manual, 1 - reduced, 2 - standard, 3 - fully)- default: reduced', type = types.StringType, default = '1')
-	argparser.add_argument ('-log', '--loggingLevel', nargs = '?', help = 'set verbosity - default: WARNING', type = types.StringType, default = 'warning')
-	argparser.add_argument ('-af', '--addFlagList', nargs = '?', help = 'list of requested information added to preset list (gives only True or False) - no default', type = types.StringType, default = '')
-	argparser.add_argument ('-ae', '--addExtendedList', nargs = '?', help = 'list of requested extended information added to preset list- no default', type = types.StringType, default = '')
-	argparser.add_argument ('-at', '--axesTable', help = 'enables separated table for the axes lines - default: False', action = 'store_true')
-	argparser.add_argument ('-ett', '--extendedTopologyTable', help = 'enables separated table for all topologies - default: False', action = 'store_true')
+	argparser.add_argument ('-f', '--flags', help = 'enables checks of existence', action = 'store_true')
+	argparser.add_argument ('-e', '--extended', help = 'disables detailed information', action = 'store_false')
+	argparser.add_argument ('-fle', '--flagLevel', nargs = 1, help = 'set information\
+	level for checks only (0 - manual, 1 - reduced, 2 - standard, 3 - fully) - default: standard', type = types.StringType, default = '2')
+	argparser.add_argument ('-ele', '--extendedLevel', nargs = 1, help = 'set information \
+	level for extended requests (0 - manual, 1 - reduced, 2 - standard, 3 - fully)- \
+	default: reduced', type = types.StringType, default = '1')
+	argparser.add_argument ('-log', '--loggingLevel', nargs = 1, help = 'set verbosity - default: WARNING', type = types.StringType, default = 'warning')
+	argparser.add_argument ('-fl', '--flagList', nargs = '?', help = 'if level is manual, \
+	select list of requested information (gives only True or False) - \
+	default: INFO.TXT SMS.ROOT SMS.PY', type = types.StringType, default = 'INFO.TXT SMS.ROOT SMS.PY')
+	argparser.add_argument ('-el', '--extendedList', nargs = '?', help = 'if level is manual, \
+	select list of requested extended information - default: "PAS TOPOLOGIES"', \
+	type = types.StringType, default = 'PAS TOPOLOGIES')
+	argparser.add_argument ('-af', '--addFlagList', nargs = '?', help = 'list of requested\
+	information added to preset list (gives only True or False)', type = types.StringType, default = '')
+	argparser.add_argument ('-ae', '--addExtendedList', nargs = '?', help = 'list of requested\
+	extended information added to preset list', type = types.StringType, default = '')
+	argparser.add_argument ('-at', '--axesTable', help = 'enables separated table \
+	for the axes lines', action = 'store_true')
+	argparser.add_argument ('-tt', '--extendedTopologyTable', help = 'enables \
+	separated table for all topologies', action = 'store_true')
 	
 	args = argparser.parse_args()
 	setLogLevel(level = args.loggingLevel)
 	
 	
-	allExtendedInfos = ['ANALYSIS', 'ARXIV', 'CONSTRAINTS', 'CHECKED', 'PUBLICATION', 'JOURNAL', 'AXES', 'PAS', 'PRETTYNAME', 'TOPOLOGIES', 'EXTENDEDTOPOLOGIES']
-	allFlagInfos = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY', 'CONSTRAINTS', 'AXES', 'PUBLIC', 'JOURNAL', 'PUBLICATION', 'ARXIV', 'CHECKED']
+	allExtendedInfos = ['ANALYSIS', 'ARXIV', 'CONSTRAINTS', 'CHECKED', 'PUBLICATION', \
+	'JOURNAL', 'AXES', 'PAS', 'PRETTYNAME', 'TOPOLOGIES', 'EXTENDEDTOPOLOGIES']
+	allFlagInfos = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY', 'CONSTRAINTS', \
+	'AXES', 'PUBLIC', 'JOURNAL', 'PUBLICATION', 'ARXIV', 'CHECKED']
 	
 	flagLevel = setInfoLevel(args.flagLevel)
 	if args.flags:
@@ -104,7 +117,7 @@ def main():
 	
 	print >> outfile, '\n************************************* ANALYSES FOR EACH RUN *************************************'
 	for run in databaseBrowser.getAllRuns():
-		print >> outfile,'\n~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ %s ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~' %run
+		print >> outfile,'\n~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ %s ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\n' %run
 		print >> outfile, databaseBrowser.getAllAnalyses(run)
 
 	print >> outfile, '\n************************************* ANALYSIS INFORMATION FOR EACH RUN *************************************'
@@ -171,7 +184,7 @@ def builtInfoList(level, add, flag = False):
 def createTable(infoList, flag = False, axesT = False, topologiesT = False):
 	
 	for run in databaseBrowser.getAllRuns():
-		print >> outfile,'\n~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ %s ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~' %run
+		print >> outfile,'\n~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ %s ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\n' %run
 		table = prettytable.PrettyTable(infoList)
 		table.align['ANALYSIS'] = 'l'
 		
@@ -215,9 +228,32 @@ def createTable(infoList, flag = False, axesT = False, topologiesT = False):
 			if databaseBrowser.checkResults(run, analysis, 'sms.root'): rootFlag = True
 			if databaseBrowser.checkResults(run, analysis, 'sms.py'): pyFlag = True
 		
-			infoDict = {'ANALYSIS':analysis, 'ARXIV':arxiv, 'CHECKED':checked, 'PUBLICATION': publication, 'JOURNAL':journal, 'AXES':axes, 'PAS':pas, 'PRETTYNAME':prettyName, 'TOPOLOGIES':topologyNames, 'EXTENDEDTOPOLOGIES':extendedTopologyNames}
+			infoDict = {
+				'ANALYSIS':analysis, 
+				'ARXIV':arxiv, 
+				'CHECKED':checked, 
+				'PUBLICATION': publication, 
+				'JOURNAL':journal, 
+				'AXES':axes, 
+				'PAS':pas, 
+				'PRETTYNAME':prettyName, 
+				'TOPOLOGIES':topologyNames, 
+				'EXTENDEDTOPOLOGIES':extendedTopologyNames
+				}
 			if flag:
-				infoDict = {'ANALYSIS': analysis, 'INFO.TXT': infoFlag, 'SMS.ROOT': rootFlag, 'SMS.PY': pyFlag, 'CONSTRAINTS': constraintsFlag, 'AXES': axesFlag, 'PUBLIC': public, 'JOURNAL':journalFlag, 'PUBLICATION': publicationFlag, 'ARXIV': arxivFlag,'CHECKED': checkedFlag}
+				infoDict = {
+					'ANALYSIS': analysis, 
+					'INFO.TXT': infoFlag, 
+					'SMS.ROOT': rootFlag, 
+					'SMS.PY': pyFlag, 
+					'CONSTRAINTS': constraintsFlag, 
+					'AXES': axesFlag, 
+					'PUBLIC': public, 
+					'JOURNAL':journalFlag, 
+					'PUBLICATION': publicationFlag, 
+					'ARXIV': arxivFlag,
+					'CHECKED': checkedFlag
+					}
 			tableList = [infoDict[key] for key in infoList]
 			logger.debug('Feeding into table: %s' %tableList)
 			table.add_row(tableList)
@@ -232,7 +268,7 @@ def createTable(infoList, flag = False, axesT = False, topologiesT = False):
 				
 			if topologiesT:
 				if not extendedTopologyNames:
-					topologiesTable.add_row([analysis, '', 'not available'])
+					topologiesTable.add_row([analysis, 'not available', 'not available'])
 					topologiesTable.add_row(['----------------------', '----------------------', '----------------------'])
 
 					continue
@@ -240,44 +276,15 @@ def createTable(infoList, flag = False, axesT = False, topologiesT = False):
 					topologiesTable.add_row([analysis, key, extendedTopologyNames[key]])
 				topologiesTable.add_row(['----------------------', '----------------------', '----------------------'])
 
-		print >> outfile, table		
+		print >> outfile, table
 		if axesT:
 			print >> outfile, axesTable
 		if topologiesT:
 			print >> outfile, topologiesTable
-			
-		#table3.add_row([a, pas, i, sr, sp])
-		#table4.add_row([a, top])
-		#table9.add_row([a, check2, check])
-		#table5.add_row([a, pas, gpu, garx, gjou])
-		#table10.add_row([a, pas, isPublication, ijou, iarx])
-		#if axes:
-			#print axes
-			#for axe in axes:
-				#table8.add_row([a, axe])
-				#print a, axe
-			#table8.add_row(['----------------------', '----------------------'])
-		#if extop:
-			#table6.add_row([a, extop.keys()])
-			#for key in extop:
-				#table7.add_row([a, extop[key]])
-			#table7.add_row(['----------------------', '----------------------'])
-		#else: table6.add_row([a, extop])
-		
-	#print >> outfile, tableFlag
-	##print >> outfile, table3	
-	##print >> outfile, table5
-	##print >> outfile, table9
-	#print >> outfile, tableDetailed
-	##print >> outfile, table8
-	#print >> outfile, '\n,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, \n'
-	##print >> outfile, table4
-	##print >> outfile, table6
-	#print >> outfile, '\n,,,,,,,,,,,,,,,,,,,, INFORMATION ABOUT EXTENDED TOPOLOGIES ,,,,,,,,,,,,,,,,,,,, \n'
-	##print >> outfile, table7
 
 	
 outfile = open('Database.txt', 'w')
+
 if __name__ == '__main__':
     main()	
     
