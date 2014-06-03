@@ -270,7 +270,6 @@ def createTable(infoList, flag = False, axesT = False, topologiesT = False):
 				if not extendedTopologyNames:
 					topologiesTable.add_row([analysis, 'not available', 'not available'])
 					topologiesTable.add_row(['----------------------', '----------------------', '----------------------'])
-
 					continue
 				for key in extendedTopologyNames:
 					topologiesTable.add_row([analysis, key, extendedTopologyNames[key]])

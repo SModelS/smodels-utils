@@ -71,26 +71,9 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
             # print i,reader.getMass(i)
             starters.append ( i )
 
-    ### we always go for the pickle file now
-    #if False: ## xsecpickle!="" and xsecpickle!=None:
-    #    ##print "[visualisePheno] xsecpickle=",xsecpickle
-    #    colorizer=decayPlots.XSecFromPickleFile ( xsecpickle )
-    #    ## if we got the xsecs from a file, then we can also
-    #    ## find the relevant production mechanisms from there
-    #    starters=colorizer.relevantProductionParticles
-    #else:
-    #    colorizer=decayPlots.XSecCalculator ( reader.getMasses() )
     colorizer=decayPlots.ByNameColorizer ( )
 
- # if options["verbose"]:
- #     if options["html"]: print "<br>"
-    #    print "[decayPlotter.py] We start from",starters
-    #    if options["html"]: print "<br>"
-    ## starters=[ "~q" ]
-
     ps=reader.getRelevantParticles ( reader.filterNames(starters) )
-
-    ## reader.printDecay ("~g")
 
     extra={}
     if options["zconstraints"]:
@@ -117,13 +100,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
     if options["tex"]:
         drawer.tex=True
 
-    #print "Relevant particles:"
-    #for name in ps:
-    #    print name
-    #import sys
-    #sys.exit(0)
-
-    #    now construct the nodes and the edges
+    # now construct the nodes and the edges
     for name in ps:
         color="#000000"
         if options["color"]:
