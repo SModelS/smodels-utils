@@ -554,7 +554,9 @@ def getAllTopologies(analysis = None, run = None):
 			analyses = getAllAnalyses(r)
 			logger.info('no analysis was given, therefore took all analyses for run %s: %s' %(r, analyses))
 		for a in analyses:
-			content = getInfo(r, a)
+			const = getInfo(r, a)
+			unconst = getInfo(r, a, requested = 'unconstraint')
+			content = const + unconst
 			if not content: continue
 			for c in content:
 				if topos.count(c.split(' ')[1]) == 0:
