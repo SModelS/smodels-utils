@@ -247,6 +247,7 @@ class Pair (object):
 		self._topo = pair[2]
 		self._ana = pair[1]
 		self._run = pair[0]
+		self._extendedTopos = getExtendedTopologies(self._ana, self._run, self._topo) #added Michi
 		logger.info('creating pair-object for %s-%s!' %(self._ana, self._topo))
 		
 	def getAnalysis(self):
@@ -254,6 +255,10 @@ class Pair (object):
 		
 	def getTopology(self):
 		return Topology(self._topo)
+		
+	@property
+	def extendedTopologies(self):
+	    return self._extendedTopos
 		
 	def checkedBy(self):
 		"""Retrieves checked_by entry from info.txt.
@@ -285,8 +290,10 @@ class Pair (object):
 		exclusionLines = {}
 		expected = []
 		observed = []
-		if not getExtendedTopologies(self._ana, self._run, self._topo): return None
-		for t in getExtendedTopologies(self._ana, self._run, self._topo): 
+		#if not getExtendedTopologies(self._ana, self._run, self._topo): return None # added Michi
+		if not self._extendedTopos: return None # added Michi
+		#for t in getExtendedTopologies(self._ana, self._run, self._topo):# added Michi
+		for t in self._extendedTopos: # added Michi
 			for sigma in ['p1', '', 'm1']:
 				expected.append(rootFile.Get('expectedexclusion' + sigma + '_' + t))
 				observed.append(rootFile.Get('exclusion' + sigma + '_' + t))
@@ -352,8 +359,10 @@ class Pair (object):
 		expected = [line for line in info if 'expected' in line] 
 		observed = [line for line in info if not 'expected' in line]
 		
-		if not getExtendedTopologies(self._ana, self._run, self._topo): return None
-		for t in getExtendedTopologies(self._ana, self._run, self._topo):
+		#if not getExtendedTopologies(self._ana, self._run, self._topo): return None # added Michi
+		if not self._extendedTopos: return None # added Michi
+		#for t in getExtendedTopologies(self._ana, self._run, self._topo):# added Michi
+		for t in self._extendedTopos: # added Michi
 			expected = [line.split() for line in expected]
 			observed = [line.split() for line in observed]
 			expected = [line for line in expected if line[1] == t]
