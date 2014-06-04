@@ -100,10 +100,17 @@ class Analysis(object):
 		return self._parsInfo('URL')
 		
 	def getExperiment(self):
-		return self._parsInfo('experiment')	
+		if 'ATALS' in self._run:
+			return 'ATLAS'
+		return 'CMS' 
 		
 	def getComment(self):
-		return self._parsInfo('comment')	
+		''' ### FIX ME: this is not very nice
+		
+		'''
+		if getInfo(run = self._run, analysis = self._name, requested = 'comment'):
+			com = getInfo(run = self._run, analysis = self._name, requested = 'comment')[0].split(':')[1]
+			return com.strip() 
 	
 	def getPrettyName(self):
 		return self._parsInfo('prettyname')

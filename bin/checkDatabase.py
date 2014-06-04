@@ -79,7 +79,7 @@ def main():
 	logger.info('Set base for database to: %s' %args.Base)
 	
 	allExtendedInfos = ['ANALYSIS', 'ARXIV', 'CONSTRAINTS', 'CHECKED', 'PUBLICATION', \
-	'JOURNAL', 'AXES', 'PAS', 'PRETTYNAME', 'TOPOLOGIES', 'EXTENDEDTOPOLOGIES', 'PRIVATE']
+	'JOURNAL', 'AXES', 'PAS', 'PRETTYNAME', 'TOPOLOGIES', 'EXTENDEDTOPOLOGIES', 'PRIVATE', 'COMMENT']
 	allFlagInfos = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY', 'CONSTRAINTS', \
 	'AXES', 'JOURNAL', 'PUBLICATION', 'ARXIV', 'CHECKED']
 	
@@ -206,6 +206,7 @@ def createTable(infoList, flag = False, axesT = False, topologiesT = False):
 			arxiv = 'not available'
 			journal = 'not available'
 			publication = 'not available'
+			comment = 'not available'
 			checked = 'not available'
 			topologyNames = 'not available'
 			extendedTopologyNames = 'not available'
@@ -230,6 +231,7 @@ def createTable(infoList, flag = False, axesT = False, topologiesT = False):
 				checkedFlag = Analysis.checkChecked()
 				prettyName = Analysis.getPrettyName()
 				private = Analysis.getPrivate()
+				comment = Analysis.getComment()
 			if databaseBrowser.checkResults(run, analysis): infoFlag = True
 			if databaseBrowser.checkResults(run, analysis, 'sms.root'): rootFlag = True
 			if databaseBrowser.checkResults(run, analysis, 'sms.py'): pyFlag = True
@@ -245,7 +247,8 @@ def createTable(infoList, flag = False, axesT = False, topologiesT = False):
 				'PRETTYNAME':prettyName, 
 				'TOPOLOGIES':topologyNames, 
 				'EXTENDEDTOPOLOGIES':extendedTopologyNames,
-				'PRIVATE': private
+				'PRIVATE': private,
+				'COMMENT': comment
 				}
 			if flag:
 				infoDict = {
