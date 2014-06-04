@@ -291,7 +291,7 @@ class Pair (object):
 		expected = []
 		observed = []
 		if not self._extendedTopos: return None
-		for t in self._extendedTopos: # added Michi
+		for t in self._extendedTopos:
 			for sigma in ['p1', '', 'm1']:
 				expected.append(rootFile.Get('expectedexclusion' + sigma + '_' + t))
 				observed.append(rootFile.Get('exclusion' + sigma + '_' + t))
@@ -560,7 +560,9 @@ def getAllTopologies(analysis = None, run = None):
 		for a in analyses:
 			const = getInfo(r, a)
 			unconst = getInfo(r, a, requested = 'unconstraint')
-			content = const + unconst
+			if not const: content = unconst
+			if not unconst: content = const
+			if const and unconst: content = const + unconst
 			if not content: continue
 			for c in content:
 				if topos.count(c.split(' ')[1]) == 0:

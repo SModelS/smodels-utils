@@ -10,7 +10,8 @@
 #import sys
 #sys.path.append('../smodels-tools/tools')
 #from smodels_tools.tools import databaseBrowser
-import databaseBrowser
+import setPath
+from tools import databaseBrowser
 import logging
 import prettytable
 import argparse
@@ -41,18 +42,19 @@ def main():
 	enable/disable checks if the requested information exists (e.g. are there any constraints?) gives only True or False 
 	enable/disable extended information (e.g. all topologies for an analysis) gives the whole line from the info.txt file in the database 
 	set level of information to preset the list of queries
-	manually define a list of queries or add such a list to the preselection 
+	manually define a list of queries or add such a list to the preselection
+	enable/disable additional table for topologies or axes
 	
 	"""
 	argparser = argparse.ArgumentParser(description = 'Summarizes the content of smodels-database')
 	argparser.add_argument ('-f', '--flags', help = 'enables checks of existence', action = 'store_true')
 	argparser.add_argument ('-e', '--extended', help = 'disables detailed information', action = 'store_false')
-	argparser.add_argument ('-fle', '--flagLevel', nargs = 1, help = 'set information\
+	argparser.add_argument ('-fle', '--flagLevel', help = 'set information\
 	level for checks only (0 - manual, 1 - reduced, 2 - standard, 3 - fully) - default: standard', type = types.StringType, default = '2')
-	argparser.add_argument ('-ele', '--extendedLevel', nargs = 1, help = 'set information \
+	argparser.add_argument ('-ele', '--extendedLevel', help = 'set information \
 	level for extended requests (0 - manual, 1 - reduced, 2 - standard, 3 - fully)- \
 	default: reduced', type = types.StringType, default = '1')
-	argparser.add_argument ('-log', '--loggingLevel', nargs = 1, help = 'set verbosity - default: WARNING', type = types.StringType, default = 'warning')
+	argparser.add_argument ('-log', '--loggingLevel', help = 'set verbosity - default: WARNING', type = types.StringType, default = 'warning')
 	argparser.add_argument ('-fl', '--flagList', nargs = '?', help = 'if level is manual, \
 	select list of requested information (gives only True or False) - \
 	default: INFO.TXT SMS.ROOT SMS.PY', type = types.StringType, default = 'INFO.TXT SMS.ROOT SMS.PY')
@@ -69,6 +71,7 @@ def main():
 	separated table for all topologies', action = 'store_true')
 	
 	args = argparser.parse_args()
+	print 'log' , args.loggingLevel
 	setLogLevel(level = args.loggingLevel)
 	
 	
@@ -80,12 +83,11 @@ def main():
 	flagLevel = setInfoLevel(args.flagLevel)
 	if args.flags:
 		logger.info('set flag level to %s' %flagLevel)
-	
+		
 	extendedLevel = setInfoLevel(args.extendedLevel)
 	logger.info('set extended level to %s' %extendedLevel)
 	
-	
-	extendedList = builtInfoList(extendedLevel, args.addExtendedList.split())
+	extendedList = builtInfoList(extendedLevel, add = args.addExtendedList.split())
 	flagList = builtInfoList(flagLevel, args.addFlagList.split(), args.flags)
 	
 	if extendedLevel == 'manual':
@@ -133,7 +135,6 @@ def setInfoLevel(level):
 	"""Makes the level of information requested more readable.
 	
 	"""
-	
 	if level == '0':
 		level = 'manual'
 	if level == '1':
@@ -144,7 +145,7 @@ def setInfoLevel(level):
 		level = 'fully'
 	return level
 	
-def builtInfoList(level, add, flag = False):
+def builtInfoList(level, add = [], flag = False):
 	"""Builds a list containing all the requested keywords due to level of information and if flag or extended.
 	
 	"""
