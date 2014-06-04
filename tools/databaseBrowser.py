@@ -13,6 +13,9 @@
 import ROOT
 import logging, os, types
 import dictionaries
+import setPath
+import sys
+
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -29,15 +32,27 @@ def setLogLevel(level = 'error'):
 		logger.setLevel(level=logging.WARNING)
 	if level == 'error':
 		pass
-		
-
-Base = '/afs/hephy.at/user/w/walten/public/sms/'
-#Base = '../../smodels-database/'
-
 
 allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
 artifacts = ['old', 'bad', 'missing', 'TODO', 'readme'] 
 currentRun = '8TeV'
+
+base = '/afs/hephy.at/user/w/walten/public/sms/'
+
+def validateBase(Base):
+	"""Validates the base directory to locate the database. Exits the script if something is wrong with the path
+	
+	"""
+	#if not Base: Base = "/afs/hephy.at/user/w/walten/public/sms/"
+	logger.debug('Try to set the path for the database to: %s' %Base)
+	if not os.path.exists(Base):
+		logger.error('%s is no valid Path!' %Base)
+		sys.exit()
+	if not [run for run in os.listdir(Base) if run in allruns]:
+		logger.error('There is no valid database at %s' %Base)
+		sys.exit()
+	logger.info('Set base to %s' %Base)
+	return Base
 
 # ### FIX ME: should I use these? Improves performance? 
 #allTopologies = []
@@ -99,15 +114,7 @@ class Analysis(object):
 		"""
 		if self._parsInfo('constraint'): return True
 		return False
-		
-	def checkPublic(self):
-		if self._parsInfo('public'): return True
-		return False
-	
-	def getPublic(self):
-		if self._parsInfo('public'): return self._parsInfo('public')
-		return None
-	
+
 	def getPrivate(self):
 		return self._parsInfo('private')
 	
@@ -380,6 +387,7 @@ def getDatabase():
 	"""
 	
 	data = {}
+	Base = validateBase(base)
 	for r in allruns:
 		if not os.path.exists('%s/%s' % (Base, r)):
 			logger.warning('Using an uncomplete version of the database!')
@@ -395,6 +403,8 @@ def checkResults(run = None, analysis = None, requested = 'info.txt'):
 	"""Checks if results are available in form of info.txt, sms.root and sms.py.
 	
 	"""
+	Base = validateBase(base)
+	
 	if run and checkRun(run) == False:
 		return None
 		
@@ -446,7 +456,7 @@ def getInfo(run = None, analysis = None, requested = 'constraint'):
 	content = readInfo(run, analysis)
 	content = [string.strip() for string in content if requested in string]
 	if not content == []: return content
-	logger.warning('requested keyword %s could not be found for %s-%s!' %(requested, run, analysis))
+	logger.info('requested keyword %s could not be found for %s-%s!' %(requested, run, analysis))
 	return None
 	
 def preprocessAxes(infoLine):
@@ -569,7 +579,7 @@ def getAllTopologies(analysis = None, run = None):
 					topos.append(c.split(' ')[1])
 				
 	if topos == []:
-		logger.warning('for runs %s and analyses %s no topology could be found' %(runs, analyses))
+		logger.info('for runs %s and analyses %s no topology could be found' %(runs, analyses))
 		return None
 		
 	return topos

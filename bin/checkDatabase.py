@@ -47,6 +47,9 @@ def main():
 	
 	"""
 	argparser = argparse.ArgumentParser(description = 'Summarizes the content of smodels-database')
+	argparser.add_argument ('-b', '--Base', help = 'set path\
+	to base-directory of smodels-database - default: /afs/hephy.at/user/w/walten/public/sms/', \
+	type = types.StringType, default = '/afs/hephy.at/user/w/walten/public/sms/')
 	argparser.add_argument ('-f', '--flags', help = 'enables checks of existence', action = 'store_true')
 	argparser.add_argument ('-e', '--extended', help = 'disables detailed information', action = 'store_false')
 	argparser.add_argument ('-fle', '--flagLevel', help = 'set information\
@@ -71,14 +74,14 @@ def main():
 	separated table for all topologies', action = 'store_true')
 	
 	args = argparser.parse_args()
-	print 'log' , args.loggingLevel
 	setLogLevel(level = args.loggingLevel)
-	
+	databaseBrowser.base = args.Base
+	logger.info('Set base for database to: %s' %args.Base)
 	
 	allExtendedInfos = ['ANALYSIS', 'ARXIV', 'CONSTRAINTS', 'CHECKED', 'PUBLICATION', \
-	'JOURNAL', 'AXES', 'PAS', 'PRETTYNAME', 'TOPOLOGIES', 'EXTENDEDTOPOLOGIES']
+	'JOURNAL', 'AXES', 'PAS', 'PRETTYNAME', 'TOPOLOGIES', 'EXTENDEDTOPOLOGIES', 'PRIVATE']
 	allFlagInfos = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY', 'CONSTRAINTS', \
-	'AXES', 'PUBLIC', 'JOURNAL', 'PUBLICATION', 'ARXIV', 'CHECKED']
+	'AXES', 'JOURNAL', 'PUBLICATION', 'ARXIV', 'CHECKED']
 	
 	flagLevel = setInfoLevel(args.flagLevel)
 	if args.flags:
@@ -94,7 +97,7 @@ def main():
 		if args.extendedList:
 			for el in args.extendedList.split():
 				if not el.strip() in allExtendedInfos:
-					log.error('%s is no valid query!' %el.srtip())
+					logger.error('%s is no valid query!' %el.strip())
 			extendedList = [el.strip() for el in args.extendedList.split() if el.strip() in allExtendedInfos] 
 			extendedList.insert(0, 'ANALYSIS')
 			logger.info('Manually set list of queries: %s' %extendedList)
@@ -105,7 +108,7 @@ def main():
 		if args.flagList:
 			for el in args.flagList.split():
 				if not el.strip in allFlagInfos:
-					log.error('%s is no valid query!' %el.srtip())
+					logger.error('%s is no valid query!' %el.strip())
 			flagList = [el.strip() for el in args.flagList.split() if el.strip() in allFlagInfos] 
 			flagList.insert(0, 'ANALYSIS')
 			logger.info('Manually set List of queries: %s' %flagList)
@@ -158,7 +161,7 @@ def builtInfoList(level, add = [], flag = False):
 		flagList = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY', 'JOURNAL', 'PUBLICATION', 'ARXIV', 'CHECKED']
 	if level == 'fully':
 		extendedList = ['ANALYSIS', 'PAS','CHECKED', 'TOPOLOGIES', 'EXTENDEDTOPOLOGIES', 'AXES', 'ARXIV']
-		flagList = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY', 'CONSTRAINTS', 'AXES', 'PUBLIC', 'JOURNAL', 'PUBLICATION', 'ARXIV', 'CHECKED']
+		flagList = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY', 'CONSTRAINTS', 'AXES', 'JOURNAL', 'PUBLICATION', 'ARXIV', 'CHECKED']
 	if level == 'manual':
 		extendedList = []
 		flagList = []
@@ -199,12 +202,15 @@ def createTable(infoList, flag = False, axesT = False, topologiesT = False):
 		for analysis in databaseBrowser.getAllAnalyses(run):
 			pas = 'not available'
 			constraints = 'not available'
-			public = 'not available'
 			prettyName = 'not available'
 			arxiv = 'not available'
 			journal = 'not available'
 			publication = 'not available'
+			checked = 'not available'
+			topologyNames = 'not available'
+			extendedTopologyNames = 'not available'
 			axes = ['not available']
+			private = 'not available'
 			infoFlag, rootFlag, pyFlag = False, False, False
 			Analysis = databaseBrowser.Analysis(analysis, run)
 			if Analysis:
@@ -214,8 +220,6 @@ def createTable(infoList, flag = False, axesT = False, topologiesT = False):
 				axes = Analysis.getAxes()
 				topologyNames = Analysis.getTopologyNames()
 				extendedTopologyNames = Analysis.getExtendedTopologyNames()
-				publicFLag = Analysis.checkPublic()
-				public = Analysis.getPublic()
 				arxivFlag = Analysis.checkArxiv()
 				arxiv = Analysis.getArxiv()
 				journalFlag = Analysis.checkJournal()
@@ -225,6 +229,7 @@ def createTable(infoList, flag = False, axesT = False, topologiesT = False):
 				checked = Analysis.getChecked()
 				checkedFlag = Analysis.checkChecked()
 				prettyName = Analysis.getPrettyName()
+				private = Analysis.getPrivate()
 			if databaseBrowser.checkResults(run, analysis): infoFlag = True
 			if databaseBrowser.checkResults(run, analysis, 'sms.root'): rootFlag = True
 			if databaseBrowser.checkResults(run, analysis, 'sms.py'): pyFlag = True
@@ -239,7 +244,8 @@ def createTable(infoList, flag = False, axesT = False, topologiesT = False):
 				'PAS':pas, 
 				'PRETTYNAME':prettyName, 
 				'TOPOLOGIES':topologyNames, 
-				'EXTENDEDTOPOLOGIES':extendedTopologyNames
+				'EXTENDEDTOPOLOGIES':extendedTopologyNames,
+				'PRIVATE': private
 				}
 			if flag:
 				infoDict = {
@@ -249,7 +255,6 @@ def createTable(infoList, flag = False, axesT = False, topologiesT = False):
 					'SMS.PY': pyFlag, 
 					'CONSTRAINTS': constraintsFlag, 
 					'AXES': axesFlag, 
-					'PUBLIC': public, 
 					'JOURNAL':journalFlag, 
 					'PUBLICATION': publicationFlag, 
 					'ARXIV': arxivFlag,
