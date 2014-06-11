@@ -802,7 +802,7 @@ class databaseBrowser(object):
 		### FIX ME: maybe better not exit the script, but set analysis to default?
 		
 		"""
-		if type(consideredAnalysis) != types.StringType:
+		if isinstance(consideredAnalysis, object):
 			return consideredAnalysis
 			
 		runs = [key for key in self._database if consideredAnalysis in database[key]]
@@ -828,7 +828,7 @@ class databaseBrowser(object):
 		### FIX ME: maybe better not exit the script, but set topology to default?
 		
 		"""
-		if type(consideredTopology) != types.StringType:
+		if isinstance(consideredTopology, object):
 			return consideredTopology
 			
 		runs = [key for key in self._database if consideredTopology in database[key]]
