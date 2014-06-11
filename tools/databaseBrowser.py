@@ -223,7 +223,8 @@ class ExpTopology(object):
 		self._name = topology
 		self._runs = getAllRuns()
 	
-	def getName(self):
+	@property	
+	def name(self):
 		return self._name
 		
 	def getAnalyses(self):
@@ -232,7 +233,7 @@ class ExpTopology(object):
 			return anas
 		return None
 	
-	def getExpAnalysisNames(self, run = None):
+	def getAnalysisNames(self, run = None):
 		"""Retrieves the names (as strings) of all analyses existing for this topology. Returns a list of names for one given run, or a dictionary with runs as keys.
 		
 		"""
@@ -289,6 +290,7 @@ class Result (object):
 	def extendedTopologies(self):
 	    return self._extendedTopos
 		
+	@property
 	def checkedBy(self):
 		"""Retrieves checked_by entry from info.txt.
 		
@@ -699,6 +701,7 @@ class databaseBrowser(object):
 	
 	"""Locates and browses the database, can be set to specified run or experiment.
 	### FIX ME: docstring???
+	### FIX ME: be aware of using some functions from the outside with specified runs or analysis, when inside these remain unset!
 	
 	"""
 	def __init__(self):
@@ -852,4 +855,108 @@ class databaseBrowser(object):
 			sys.exit()
 		logger.info('Restricted to topology %s.' %consideredTopology)
 		return ExpTopology(consideredTopology)
+	
+#	@property
+	def allRuns(self):
+	"""Retrieves all runs a given analysis or topology or analysis-topology pair is available for. Returns a list containing all runs or just a string when analysis is given 
+	### FIX ME: maybe drop the topology-option?
+	
+	"""
+	
+	if not self._analysis:
+		return self._database.keys()
+	
+	if self._run:
+		logger.warning('Cannot get all runs because browser is restricted to %s!' %self._run)
+		return self._run
 		
+	runs = [key for key in self._database if self._analysis in self._database[key]]
+	return runs[0]
+	
+	# ### FIX ME: obsolete by now?
+	#if current == True:
+		#logger.debug('for %s collected runs: %s' %(self._analysis, runs))
+		#logger.debug('returning: %s' %runs[0])
+		#return runs[0]
+		
+	#if current == False:
+		#return runs
+	
+	def allAnalyses(self):
+	"""Retrieves all analyses existing for given run or run-topology-pair
+	
+	"""
+	
+	_analyses = []
+		
+	if not self._run:
+		_analyses.append(self._database[key] for key in self.allRuns())
+		_analyses = [ana for anas in _analyses for ana in anas]
+		
+	if not self._topology:
+		logger.info('found %s analyses for %s' %(len(self._database[self._run]), self._run))
+		return self._database[self._run]
+
+	for a in self._database[self._run]:
+		_topologies = self.allTopologies(a)
+		if _topologies and self._topology in _topologies:
+			logger.debug('found %s in %s-%s' %(self._topology, self._run, a))
+			_analyses.append(a)
+		
+	if not _analyses:
+		logger.warning('%s is no valid topology for given run %s' %(self._topology, self._run))
+		return None
+		
+	return _analyses
+	
+	
+	# ### Do the rest below!!! ### 
+	
+#	@property
+	def allTopologies(self):
+		"""Retrieves all topologies existing for given run or analysis-run-pair
+	### FIX ME: maybe all topologies with given characteristics like existing exclusionlines?
+	
+		"""
+	_topos = []
+	_runs = []
+	_analyses = []
+	nono = False
+	
+	if self._analysis and not self._run:
+		analyses.append(analysis)
+		runs.append(self.allRuns())
+
+	if run and not analysis:
+		runs.append(run)
+		analyses = getAllAnalyses(run)
+			
+	if run and analysis:
+		runs.append(run)
+		analyses.append(analysis)
+		
+	if not run and not analysis:
+		runs = getAllRuns()
+		nono = True
+					
+	logger.debug('searching topologies for runs %s and analyses %s' %(runs,analyses))
+	for r in runs:
+		if nono == True:
+			analyses = getAllAnalyses(r)
+			logger.info('no analysis was given, therefore took all analyses for run %s: %s' %(r, analyses))
+		for a in analyses:
+			const = getInfo(r, a)
+			unconst = getInfo(r, a, requested = 'unconstraint')
+			if not const: content = unconst
+			if not unconst: content = const
+			if const and unconst: content = const + unconst
+			if not content: continue
+			for c in content:
+				if topos.count(c.split(' ')[1]) == 0:
+					topos.append(c.split(' ')[1])
+				
+	if topos == []:
+		logger.info('for runs %s and analyses %s no topology could be found' %(runs, analyses))
+		return None
+		
+	return topos
