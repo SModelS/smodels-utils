@@ -59,7 +59,7 @@ def validateBase(Base):
 #allAnalyses = []
 #allPairs = []
 
-class Analysis(object):
+class ExpAnalysis(object):
 	
 	"""contains all analysis-specific information (e.g. PAS, lumi, publication-url, ...)
 		can handle specified run ### FIX ME: handeling of runs is not very elegant at the moment => think of a better way!
@@ -72,7 +72,7 @@ class Analysis(object):
 		if info:
 			logger.info('found info.txt in %s-%s.' %(run, analysis))
 			return object.__new__(self)
-		logger.error('Cannot build Analysis %s for run %s.' %(analysis, run))
+		logger.error('Cannot build ExpAnalysis %s for run %s.' %(analysis, run))
 		
 	def __init__(self, analysis, run = None):
 		self._name = analysis
@@ -177,21 +177,21 @@ class Analysis(object):
 	def getRun(self):
 		return self._run
 	
-	def getTopologyNames(self):
+	def getExpTopologyNames(self):
 		return getAllTopologies(self._name, self._run)
 		
 	def getTopologies(self):
-		if self.getTopologyNames():
-			topos = [Topology(t) for t in self.getTopologyNames()]
+		if self.getExpTopologyNames():
+			topos = [ExpTopology(t) for t in self.getExpTopologyNames()]
 			return topos
 		return None
 		
-	def getExtendedTopologyNames(self):
+	def getExtendedExpTopologyNames(self):
 		return getExtendedTopologies(self._name, self._run)
 		
 	#def getRestOfInfo => contact, arxiv, publisheddata ### check something missing?
 
-class Topology(object):
+class ExpTopology(object):
 	"""contains all topology-specific information (e.g. particles resp. productionmode, ...)
 	### masssplitting? => move to pair object
 	
@@ -202,7 +202,7 @@ class Topology(object):
 		if topology in alltopos:
 			logger.info('found topology %s' %topology)
 			return object.__new__(self)
-		logger.error('Cannot build Topology %s' %topology)
+		logger.error('Cannot build ExpTopology %s' %topology)
 		
 	def __init__ (self, topology):
 		self._name = topology
@@ -212,12 +212,12 @@ class Topology(object):
 		return self._name
 		
 	def getAnalyses(self):
-		if self.getAnalysisNames():
-			anas = [Analysis(a) for a in self.getAnalysisNames()]
+		if self.getExpAnalysisNames():
+			anas = [ExpAnalysis(a) for a in self.getExpAnalysisNames()]
 			return anas
 		return None
 	
-	def getAnalysisNames(self, run = None):
+	def getExpAnalysisNames(self, run = None):
 		"""Retrieves the names (as strings) of all analyses existing for this topology. Returns a list of names for one given run, or a dictionary with runs as keys.
 		
 		"""
@@ -230,7 +230,7 @@ class Topology(object):
 			return anas
 		return getAllAnalyses(run = run, topology = self._name)
 	
-	def _slackTopologyName(self):
+	def _slackExpTopologyName(self):
 		"""Bypassing case sensitivity
 		
 		"""
@@ -240,9 +240,9 @@ class Topology(object):
 		if dictionaries.decay.has_key(self._name):
 			logger.info('found decay for topology %s' %self._name)
 			return dictionaries.decay[self._name]
-		if dictionaries.decay.has_key(self._slackTopologyName()):
-			logger.info('found decay for topology %s with slack name %s' %(self._name, self._slackTopologyName()))
-			return dictionaries.decay[self._slackTopologyName()]
+		if dictionaries.decay.has_key(self._slackExpTopologyName()):
+			logger.info('found decay for topology %s with slack name %s' %(self._name, self._slackExpTopologyName()))
+			return dictionaries.decay[self._slackExpTopologyName()]
 		logger.warning('no decay found for topology %s' %self._name)
 		return None
 		
@@ -251,11 +251,11 @@ class Topology(object):
 	#def setAnalyses
 	#def refreshAnalyses
 	
-class Pair (object):
+class Result (object):
 	"""Contains all pair-specific informations and objects (e.g. exclusionlines, histograms, ...).
 
 	"""
-	# Best to call through function linkPairs()!
+	# Best to call through function linkResults()!
 	
 	def __init__ (self, pair):
 		self._topo = pair[2]
@@ -264,11 +264,11 @@ class Pair (object):
 		self._extendedTopos = getExtendedTopologies(self._ana, self._run, self._topo) 
 		logger.info('creating pair-object for %s-%s!' %(self._ana, self._topo))
 		
-	def getAnalysis(self):
-		return Analysis(self._ana, self._run)
+	def getExpAnalysis(self):
+		return ExpAnalysis(self._ana, self._run)
 		
-	def getTopology(self):
-		return Topology(self._topo)
+	def getExpTopology(self):
+		return ExpTopology(self._topo)
 		
 	@property
 	def extendedTopologies(self):
@@ -278,8 +278,8 @@ class Pair (object):
 		"""Retrieves checked_by entry from info.txt.
 		
 		"""
-		infoLine = self.getAnalysis().getChecked()
-		logger.debug('got infoLine from Analysis-object: %s' %infoLine)
+		infoLine = self.getExpAnalysis().getChecked()
+		logger.debug('got infoLine from ExpAnalysis-object: %s' %infoLine)
 		if not infoLine: return None
 		if 'AL' in infoLine: # ### FIX ME: this if will be obsolet when the checked flag is fixed in every info.txt
 			logger.warning('there is no information about singel topologies')
@@ -287,7 +287,7 @@ class Pair (object):
 		infoLine = [ch for ch in infoLine if self._topo in ch]
 		logger.debug('first preprocessed infoLine: %s' %infoLine)
 		if not infoLine:
-			logger.warning('This Pair is not checked!')
+			logger.warning('This Result is not checked!')
 			return None
 		infoLine = [ch.split(':') for ch in infoLine]
 		logger.debug('second preprocessed infoLine: %s' %infoLine)
@@ -593,7 +593,7 @@ def getAllTopologies(analysis = None, run = None):
 		
 def getExtendedTopologies(analysis, run, topology = None):
 	"""Checks if the topologies for one given analysis-run are tainted with any kind of mass requirements and returns dictionary with extended topologies. Can be reduced to given topology (returns list).
-	### FIX ME: maybe use in class Pair only?
+	### FIX ME: maybe use in class Result only?
 	
 	"""
 	topos = {}
@@ -653,7 +653,7 @@ def massProportions(axesLine):
 	massdic[topo]=[c.split(' ') for c in massdic[topo]]
 	return massdic
 	
-def linkPair(analysis, topology, current = True):
+def linkResult(analysis, topology, current = True):
 	"""Inter couples analysis and topology creating a specified pair. Either for all runs (returns dictionary) or for first run the given analysis appears for in the database (returns list)
 	
 	"""
@@ -679,5 +679,86 @@ def linkPair(analysis, topology, current = True):
 	logger.debug('try to link pair %s-%s for run %s!' %(analysis, topology, run))
 	if topologies and topology in topologies:
 		return [run, analysis, topology]
-	
 
+class databaseBrowser(object):
+	
+	"""Locates and browses the database, can be set to specified run or experiment.
+	### FIX ME:docstring???
+	
+	"""
+	def __init__(self, analysis, topology):
+		self._base = '/afs/hephy.at/user/w/walten/public/sms/'
+		self._database = self.getDatabase()
+		self._allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
+		self._artifacts = ['old', 'bad', 'missing', 'TODO', 'readme']
+		self._experiment = None
+		
+	@property
+	def base(self):
+		"""This is the path to the base directory where to find the database.
+		
+		"""
+		return self._base
+		
+	@base.setter
+	def base(self, path):
+		self._base = self.validateBase(path)
+		
+	def validateBase(self, path):
+		"""Validates the base directory to locate the database. Exits the script if something is wrong with the path.
+	
+		"""
+		logger.debug('Try to set the path for the database to: %s' %path)
+		if not os.path.exists(path):
+			logger.error('%s is no valid path!' %path)
+			sys.exit()
+		if not [run for run in os.listdir(path) if run in self.allruns]:
+			logger.error('There is no valid database at %s' %path)
+			sys.exit()
+		logger.info('Set base to %s' %path)
+		return path
+		
+	@property
+	def experiment(self):
+		"""Restricts the browser to either CMS or ATLAS.
+		
+		"""
+		return self._experiment
+		
+	@experiment.setter
+	def experiment(self, detector):
+		self._experiment = self.validateExperiment(detector)
+		
+	def validateExperiment(self, detector):
+		"""Validates the given experiment. Exits the script if the given experiment is unknown.
+		### FIX ME: maybe better not exit the script, but set experiment to default?
+		
+		"""
+		if not detector in ['CMS', 'ATLAS']:
+			logger.error('%s is no valid experiment!' %detector)
+			sys.exit()
+		logger.info('Focusing on experiment %s.' %detector)
+		return detector
+
+	def getDatabase(self):
+		"""Creates a dictionary containing all runs as keys and all subdirectories resp. analyses as entries.
+	
+		"""
+		data = {}
+		_allruns = self.allruns
+		if self._experiment == 'ATLAS':
+			_allruns = [r for r in _allruns if 'ATLAS' in r]
+		if self._experiment == 'CMS':
+			_allruns = [r for r in _allruns if not 'ATLAS' in r]
+		for r in _allruns:
+			if not os.path.exists('%s/%s' % (self._base, r)):
+				logger.warning('Using an uncomplete version of the database! Run %s is missing' %r)
+				continue
+			data[r] = os.listdir('%s/%s' % (self._base, r))
+			data[r] = [directory for directory in data[r] if not '.' in directory]
+			# exclude all files (e.g. create.sh) from list of directories 
+			data[r] = [directory for directory in data[r] if not directory in self.artifacts]
+			# exclude every file and directory specified by list of artifacts
+		return data
+		
+			
