@@ -9,4 +9,4 @@
 *.pdf
 *.log
 *.dvi
-Database.txt
+tools/Database.txt
