@@ -683,15 +683,18 @@ def linkResult(analysis, topology, current = True):
 class databaseBrowser(object):
 	
 	"""Locates and browses the database, can be set to specified run or experiment.
-	### FIX ME:docstring???
+	### FIX ME: docstring???
 	
 	"""
-	def __init__(self, analysis, topology):
+	def __init__(self):
 		self._base = '/afs/hephy.at/user/w/walten/public/sms/'
-		self._database = self.getDatabase()
 		self._allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
 		self._artifacts = ['old', 'bad', 'missing', 'TODO', 'readme']
 		self._experiment = None
+		self._database = self.getDatabase()
+		self._run = None
+		self._analysis = None
+		self._topology = None
 		
 	@property
 	def base(self):
@@ -702,9 +705,9 @@ class databaseBrowser(object):
 		
 	@base.setter
 	def base(self, path):
-		self._base = self.validateBase(path)
+		self._base = self._validateBase(path)
 		
-	def validateBase(self, path):
+	def _validateBase(self, path):
 		"""Validates the base directory to locate the database. Exits the script if something is wrong with the path.
 	
 		"""
@@ -727,9 +730,9 @@ class databaseBrowser(object):
 		
 	@experiment.setter
 	def experiment(self, detector):
-		self._experiment = self.validateExperiment(detector)
+		self._experiment = self._validateExperiment(detector)
 		
-	def validateExperiment(self, detector):
+	def _validateExperiment(self, detector):
 		"""Validates the given experiment. Exits the script if the given experiment is unknown.
 		### FIX ME: maybe better not exit the script, but set experiment to default?
 		
@@ -761,4 +764,77 @@ class databaseBrowser(object):
 			# exclude every file and directory specified by list of artifacts
 		return data
 		
+	@property
+	def run(self):
+		"""Restricts the Browser to one specified run.
+		
+		"""
+		return self._run
+		
+	@run.setter
+	def run(self, consideredRun):
+		self._run = self._validateRun(consideredRun)
+		
+	def _validateRun(self, consideredRun):
+		"""Validates the given run. Exits the script if the given run is unknown.
+		### FIX ME: maybe better not exit the script, but set run to default?
+		
+		"""
+		if not consideredRun in self._database.keys():
+			logger.error('%s is no valid run!' %consideredRun)
+			sys.exit()
+		logger.info('Restricted to run %s.' %consideredRun)
+		return consideredRun
+		
+	@property
+	def analysis(self):
+		"""Restricts the Browser to one specified analysis.
+		
+		"""
+		return self._analysis
+		
+	@analysis.setter
+	def analysis(self, consideredAnalysis):
+		self._analysis = self._validateAnalysis(consideredAnalysis)
+		
+	def _validateAnalysis(self, consideredAnalysis):
+		"""Validates the given analysis. Exits the script if the given analysis is unknown. Builds the Analysis-object if value given is just a string.
+		### FIX ME: maybe better not exit the script, but set analysis to default?
+		
+		"""
+		if type(consideredAnalysis) != types.StringType:
+			return consideredAnalysis
 			
+		runs = [key for key in self._database if consideredAnalysis in database[key]]
+		if not runs:
+			logger.error('%s is no valid analysis!' %consideredAnalysis)
+			sys.exit()
+		logger.info('Restricted to analysis %s.' %consideredAnalysis)
+		return ExpAnalysis(consideredAnalysis)
+		
+	@property
+	def topology(self):
+		"""Restricts the Browser to one specified topology.
+		
+		"""
+		return self._topology
+		
+	@topology.setter
+	def topology(self, consideredTopology):
+		self._topology = self._validateTopology(consideredTopology)
+		
+	def _validateTopology(self, consideredTopology):
+		"""Validates the given topology. Exits the script if the given topology is unknown. Builds the Topology-object if value given is just a string.
+		### FIX ME: maybe better not exit the script, but set topology to default?
+		
+		"""
+		if type(consideredTopology) != types.StringType:
+			return consideredTopology
+			
+		runs = [key for key in self._database if consideredTopology in database[key]]
+		if not runs:
+			logger.error('%s is no valid topology!' %consideredTopology)
+			sys.exit()
+		logger.info('Restricted to topology %s.' %consideredTopology)
+		return ExpTopology(consideredTopology)
+		
