@@ -86,25 +86,31 @@ class ExpAnalysis(object):
 		if content:
 			logger.info('found %s: %s' %(requested,content[0].split(' ')[1]))
 			return content[0].split(' ')[1].strip()
-		
-	def getLumi(self):
+	
+	@property
+	def lumi(self):
 		return self._parsInfo('lumi')
 		
-	def getSqrts(self):
+	@property
+	def sqrts(self):
 		return self._parsInfo('sqrts')
 		
-	def getPAS(self):
+	@property	
+	def pas(self):
 		return self._parsInfo('pas')
 		
-	def getURL(self):
+	@property	
+	def url(self):
 		return self._parsInfo('URL')
 		
-	def getExperiment(self):
+	@property	
+	def experiment(self):
 		if 'ATALS' in self._run:
 			return 'ATLAS'
 		return 'CMS' 
 		
-	def getComment(self):
+	@property	
+	def comment(self):
 		''' ### FIX ME: this is not very nice
 		
 		'''
@@ -112,7 +118,8 @@ class ExpAnalysis(object):
 			com = getInfo(run = self._run, analysis = self._name, requested = 'comment')[0].split(':')[1]
 			return com.strip() 
 	
-	def getPrettyName(self):
+	@property
+	def prettyName(self):
 		return self._parsInfo('prettyname')
 		
 	def checkConstraints(self):
@@ -122,6 +129,7 @@ class ExpAnalysis(object):
 		if self._parsInfo('constraint'): return True
 		return False
 
+	@property	
 	def getPrivate(self):
 		return self._parsInfo('private')
 	
@@ -755,7 +763,7 @@ class databaseBrowser(object):
 			_allruns = [r for r in _allruns if not 'ATLAS' in r]
 		for r in _allruns:
 			if not os.path.exists('%s/%s' % (self._base, r)):
-				logger.warning('Using an uncomplete version of the database! Run %s is missing' %r)
+				logger.warning('Using an incomplete version of the database! Run %s is missing' %r)
 				continue
 			data[r] = os.listdir('%s/%s' % (self._base, r))
 			data[r] = [directory for directory in data[r] if not '.' in directory]
