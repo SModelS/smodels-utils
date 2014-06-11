@@ -130,30 +130,33 @@ class ExpAnalysis(object):
 		return False
 
 	@property	
-	def getPrivate(self):
-		return self._parsInfo('private')
+	def private(self):
+		"""States if the analysis is private (1) or public (0).
+		### FIX ME: chenge to True and False?
+		
+		"""
+		_priv = self._parsInfo('private')
+			if _priv:
+				_priv = _priv[0].split()[-1].strip()
+		return _priv
 	
+	@property	
 	def checkArxiv(self):
 		if self._parsInfo('arxiv'): return True
 		return False
 		
-	def getArxiv(self):
+	@property		
+	def arxiv(self):
 		if self._parsInfo('arxiv'): return self._parsInfo('arxiv')
 		return None
-		
-	def checkJournal(self):
-		if self._parsInfo('journal'): return True
-		return False
-		
-	def getJournal(self):
-		if self._parsInfo('journal'): return self._parsInfo('journal')
-		return None
-		
+	
+	@property	
 	def checkPublication(self):
 		if self._parsInfo('publication'): return True
 		return False
 	
-	def getPublication(self):
+	@property	
+	def publication(self):
 		if self._parsInfo('publication'): return self._parsInfo('publication')
 		return None	
 		
@@ -166,11 +169,13 @@ class ExpAnalysis(object):
 			return preprocessAxes(getInfo(self._run, self._name, 'axes'))
 		return None
 	
+	@property	
 	def checkChecked(self):
 		if self._parsInfo('checked'): return True
 		return False
 		
-	def getChecked(self):
+	@property		
+	def checked(self):
 		if self.checkChecked() == True:
 			infoLine = getInfo(self._run, self._name, 'checked')
 			infoLine = infoLine[0].split(',')
@@ -178,23 +183,25 @@ class ExpAnalysis(object):
 			infoLine = [ch.strip() for ch in infoLine]
 			return infoLine
 		return None
-		
-	def getName(self):
+	
+	@property	
+	def name(self):
 		return self._name
 	
-	def getRun(self):
+	@property	
+	def run(self):
 		return self._run
 	
-	def getExpTopologyNames(self):
+	def getTopologyNames(self):
 		return getAllTopologies(self._name, self._run)
 		
-	def getTopologies(self):
-		if self.getExpTopologyNames():
+	def getExpTopologies(self):
+		if self.getTopologyNames():
 			topos = [ExpTopology(t) for t in self.getExpTopologyNames()]
 			return topos
 		return None
 		
-	def getExtendedExpTopologyNames(self):
+	def getExtendedTopologyNames(self):
 		return getExtendedTopologies(self._name, self._run)
 		
 	#def getRestOfInfo => contact, arxiv, publisheddata ### check something missing?
