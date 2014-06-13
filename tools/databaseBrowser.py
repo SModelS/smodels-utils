@@ -784,77 +784,60 @@ class databaseBrowser(object):
 		
 	@property
 	def run(self):
-		"""Restricts the Browser to one specified run.
+		"""Tells if the browser is restricted to a speciefied run. Gives None if all runs are allowed.
 		
 		"""
 		return self._run
 		
 	@run.setter
 	def run(self, consideredRun):
+		"""Restricts the Browser to one specified run.
+		
+		"""
 		self._run = self._validateRun(consideredRun)
+		if self._run == None:
+			logger.error('Failed to restrict browser to run: %s is not valid!' %consideredRun)
+			sys.exit()
+		logger.info('Browser restricted to run %s.' %consideredRun)
+		self._database = {key: self._database[key] for key in self._database if key == self._run}
 		
-	def _validateRun(self, consideredRun):
+	def _validateRun(self, run):
 		"""Validates the given run. Exits the script if the given run is unknown.
-		### FIX ME: maybe better not exit the script, but set run to default?
 		
 		"""
-		if not consideredRun in self._database.keys():
-			logger.error('%s is no valid run!' %consideredRun)
-			sys.exit()
-		logger.info('Restricted to run %s.' %consideredRun)
-		return consideredRun
+		if not run in self._database.keys():
+			logger.warning('%s is no valid run!' %run)
+			return None
+
+		return run
 		
-	#@property
-	#def analysis(self):
-		#"""Restricts the Browser to one specified analysis.
-		
-		#"""
-		#return self._analysis
-		
-	#@analysis.setter
-	#def analysis(self, consideredAnalysis):
-		#self._analysis = self._validateAnalysis(consideredAnalysis)
-		
-	def _validateAnalysis(self, consideredAnalysis):
-		"""Validates the given analysis. Exits the script if the given analysis is unknown. Builds the Analysis-object if value given is just a string.
-		### FIX ME: maybe better not exit the script, but set analysis to default?
+	def _validateAnalysis(self, analysis):
+		"""Validates the given analysis. Returns None if the given analysis is unknown.
 		
 		"""
-		if isinstance(consideredAnalysis, ExpAnalysis):
-			return consideredAnalysis
 			
-		runs = [key for key in self._database if consideredAnalysis in database[key]]
+		runs = [key for key in self._database if analysis in self._database[key]]
 		if not runs:
-			logger.error('%s is no valid analysis!' %consideredAnalysis)
-			sys.exit()
-		logger.info('Restricted to analysis %s.' %consideredAnalysis)
-		return ExpAnalysis(consideredAnalysis)
+			logger.error('%s is no valid analysis!' %analysis)
+			return None
 		
-	#@property
-	#def topology(self):
-		#"""Restricts the Browser to one specified topology.
+		return analysis
 		
-		#"""
-		#return self._topology
 		
-	#@topology.setter
-	#def topology(self, consideredTopology):
-		#self._topology = self._validateTopology(consideredTopology)
-		
-	def _validateTopology(self, consideredTopology):
-		"""Validates the given topology. Exits the script if the given topology is unknown. Builds the Topology-object if value given is just a string.
-		### FIX ME: maybe better not exit the script, but set topology to default?
+	def _validateTopology(self, topology):
+		"""Validates the given topology. Returns None if the given topology is unknown.
 		
 		"""
-		if isinstance(consideredTopology, ExpTopology):
-			return consideredTopology
+		
+		_analyses = []
+		for a in self.allAnalyses():
+			if topology in self.expAnalysis(a).allTopologiesNames:
+				_analyses.append(a)
+		if not _analyses:
+			logger.warning('%s is no valid topology!' %topology)
+			return None
 			
-		runs = [key for key in self._database if consideredTopology in database[key]]
-		if not runs:
-			logger.error('%s is no valid topology!' %consideredTopology)
-			sys.exit()
-		logger.info('Restricted to topology %s.' %consideredTopology)
-		return ExpTopology(consideredTopology)
+		return topology
 	
 	@property
 	def allRuns(self, analysis = None, topology = None):
@@ -873,21 +856,17 @@ class databaseBrowser(object):
 	if self._experiment:
 		logger.warning('Browser is restricted to experiment %s' %self._experiment)
 		
-	if analysis:
-		return _validateAnalysis(analysis).run
+	_analysis = self._validateAnalysis(analysis)
+	if _analysis:
+		runs = [key for key in self._database if _analysis in self._database[key]]
+		return runs
 		
+	# ### FIX ME
 	if topology and not analysis:
 		runs = [key for key in self._database if _validateTopology(topology).analysesNames in self._database[key]]
 	return runs
 	
-	# ### FIX ME: obsolete by now?
-	#if current == True:
-		#logger.debug('for %s collected runs: %s' %(self._analysis, runs))
-		#logger.debug('returning: %s' %runs[0])
-		#return runs[0]
-		
-	#if current == False:
-		#return runs
+
 	@property
 	def allAnalyses(self, run = None, topology = None):
 	"""Retrieves all analyses or all analyses existing for given run or run-topology-pair
@@ -895,24 +874,22 @@ class databaseBrowser(object):
 	"""
 	
 	_analyses = []
-		
+	topologyName = _validateTopology(topology)
+	
 	if self._run:
 		logger.warnig('Browser is restricted to run %s!' %self._run)
 		
-	if not self._run and not run:
+	if not run:
 		_analyses.append(self._database[key] for key in self.allRuns())
 		_analyses = [ana for anas in _analyses for ana in anas]
 		
-	if not topology and self._run and not run:
-		logger.info('found %s analyses for %s' %(len(self._database[self._run]), self._run))
-		return self._database[self._run]
-		
-	if not topology and not self._run and run:
+	if not topologyName and run:
 		logger.info('found %s analyses for %s' %(len(self._database[run]), run))
-		return self._database[self._run]
+		return self._database[run]
 
-		
-	for a in self._database[self._run]:
+		# ### FIX ME
+	if topologyName:	
+	for a in self._database[run]:
 		_topologies = self.allTopologies(a)
 		if _topologies and self._topology in _topologies:
 			logger.debug('found %s in %s-%s' %(self._topology, self._run, a))
@@ -972,3 +949,45 @@ class databaseBrowser(object):
 		return None
 		
 	return topos
+	
+	def _checkResults(analysis, requested = 'info.txt'):
+	"""Checks if results are available in form of info.txt, sms.root and sms.py, returns path to these files.
+	
+	"""
+	
+	_analysis = _validateAnalysis(analysis)
+			
+	run = self.allRuns(analysis)
+		
+	path = self._base + run + '/' + analysis + '/' + requested
+	logger.debug('check path: %s' %path)
+	if not os.path.exists(path):
+		logger.warning('for run %s and analysis %s no %s was found' %(run, analysis, requested))
+		return None
+		
+	return path
+	
+	def expAnalysis(self, analysisName):
+		"""This is the factory for the experimental Analysis object.
+		
+		"""
+		analysis = _validateAnalysis(analysisName)
+		
+		if isinstance(analysis, ExpAnalysis):
+			return analysis
+			
+		if not _checkResults(analysis):
+			logger.info('Skipped building of ExpAnalysis-object for %s!' %analysis)
+			return None
+			
+		return ExpAnalysis(consideredAnalysis)
+		
+	def expTopology(self, topologyName):
+		"""This is the factory for the experimental Topology object.
+		
+		"""
+		consideredTopology = _validateTopology(topologyName)
+		
+		if isinstance(consideredTopology, ExpTopology):
+			return consideredTopology
+		return ExpTopology(consideredTopology)
