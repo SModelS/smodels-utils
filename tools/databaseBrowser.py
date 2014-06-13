@@ -61,200 +61,7 @@ def validateBase(Base):
 #allPairs = []
 
 
-class ExpTopology(object):
-	"""contains all topology-specific information (e.g. particles resp. productionmode, ...)
-	### masssplitting? => move to pair object
 	
-	"""
-	
-	def __new__(self, topology):
-		alltopos = getAllTopologies()
-		if topology in alltopos:
-			logger.info('found topology %s' %topology)
-			return object.__new__(self)
-		logger.error('Cannot build ExpTopology %s' %topology)
-		
-	def __init__ (self, topology):
-		self._name = topology
-		self._runs = getAllRuns()
-	
-	@property	
-	def name(self):
-		return self._name
-		
-	def getAnalyses(self):
-		if self.getExpAnalysisNames():
-			anas = [ExpAnalysis(a) for a in self.getExpAnalysisNames()]
-			return anas
-		return None
-	@property
-	def analysesNames(self, run = None):
-		"""Retrieves the names (as strings) of all analyses existing for this topology. Returns a list of names for one given run, or a dictionary with runs as keys.
-		
-		"""
-		if not run:
-			anas = {}
-			logger.warning('no run was given, therefore trying all available runs %s and returning dictionary!' %self._runs)
-			for r in self._runs:
-				if getAllAnalyses(run = r, topology = self._name):
-					anas[r] = [a for a in getAllAnalyses(run = r, topology = self._name)]
-			return anas
-		return getAllAnalyses(run = run, topology = self._name)
-	
-	def _slackExpTopologyName(self):
-		"""Bypassing case sensitivity
-		
-		"""
-		return self._name.replace("W","w").replace("Z","z" )
-
-	def getDecay(self):
-		if dictionaries.decay.has_key(self._name):
-			logger.info('found decay for topology %s' %self._name)
-			return dictionaries.decay[self._name]
-		if dictionaries.decay.has_key(self._slackExpTopologyName()):
-			logger.info('found decay for topology %s with slack name %s' %(self._name, self._slackExpTopologyName()))
-			return dictionaries.decay[self._slackExpTopologyName()]
-		logger.warning('no decay found for topology %s' %self._name)
-		return None
-		
-	#def getPrettyName       # particles resp. productionmode
-	#def treatMasssplitting
-	#def setAnalyses
-	#def refreshAnalyses
-	
-class Result (object):
-	"""Contains all pair-specific informations and objects (e.g. exclusionlines, histograms, ...).
-
-	"""
-	# Best to call through function linkResults()!
-	
-	def __init__ (self, pair):
-		self._topo = pair[2]
-		self._ana = pair[1]
-		self._run = pair[0]
-		self._extendedTopos = getExtendedTopologies(self._ana, self._run, self._topo) 
-		logger.info('creating pair-object for %s-%s!' %(self._ana, self._topo))
-		
-	def getExpAnalysis(self):
-		return ExpAnalysis(self._ana, self._run)
-		
-	def getExpTopology(self):
-		return ExpTopology(self._topo)
-		
-	@property
-	def extendedTopologies(self):
-	    return self._extendedTopos
-		
-	@property
-	def checkedBy(self):
-		"""Retrieves checked_by entry from info.txt.
-		
-		"""
-		infoLine = self.getExpAnalysis().getChecked()
-		logger.debug('got infoLine from ExpAnalysis-object: %s' %infoLine)
-		if not infoLine: return None
-		if 'AL' in infoLine: # ### FIX ME: this if will be obsolet when the checked flag is fixed in every info.txt
-			logger.warning('there is no information about singel topologies')
-			return infoLine[0]
-		infoLine = [ch for ch in infoLine if self._topo in ch]
-		logger.debug('first preprocessed infoLine: %s' %infoLine)
-		if not infoLine:
-			logger.warning('This Result is not checked!')
-			return None
-		infoLine = [ch.split(':') for ch in infoLine]
-		logger.debug('second preprocessed infoLine: %s' %infoLine)
-		infoLine = infoLine[0]
-		logger.debug('return value of infoLine: %s' %infoLine)
-		return infoLine[1].strip()
-		
-	def getExclusionLines(self):
-		"""Retrieves all the exclusionlines stored in sms.root as a python dictionary.
-		
-		"""
-		if not checkResults(self._run, self._ana, 'sms.root'): return None
-		rootFile = ROOT.TFile(checkResults(self._run, self._ana, 'sms.root'))
-		exclusionLines = {}
-		expected = []
-		observed = []
-		if not self._extendedTopos: return None
-		for t in self._extendedTopos:
-			for sigma in ['p1', '', 'm1']:
-				expected.append(rootFile.Get('expectedexclusion' + sigma + '_' + t))
-				observed.append(rootFile.Get('exclusion' + sigma + '_' + t))
-			exclusionLines[t + '_expected'] = expected
-			exclusionLines[t + '_observed'] = observed
-		return exclusionLines
-	
-	def selectTypeOfExclusionLine(self, expected = False, sigma = 0):
-		"""Picks one specified type of exclusionline as ROOT.TGraph.
-		
-		"""
-		allLines = self.getExclusionLines()
-		logger.debug('all exclusionlines: %s' %allLines)
-		if not allLines: return None
-		keys = allLines.keys()
-		
-		if expected == True:
-			keys = [k for k in keys if 'expected' in k]
-		if expected == False:
-			keys = [k for k in keys if 'observed' in k]
-			
-		exLines = allLines[keys[0]]
-		exLines = [l for l in exLines if l]
-		logger.debug('selected exclusionlines: %s' %exLines)
-		if sigma == 0: exLines = [l for l in exLines if not 'p1' in l.GetName() and not 'm1' in l.GetName()]
-		elif sigma == 1: exLines = [l for l in exLines if 'p1' in l.GetName()]
-		elif sigma == -1: exLines = [l for l in exLines if 'm1' in l.GetName()]
-		else:
-			logger.error('no exclusionlines available for sigma = %s' % sigma)
-			return None
-		return exLines
-		
-	def selectExclusionLine(self, expected = False, sigma = 0, condition = 'xvalue', value = 050):
-		"""Selects one exclusionline (out of all exclusionLines for this topology) corresponding to a specified case of mass proportions (e.g. x-value = 050, mass of LSP = 50 GeV, ...)
-		### FIX ME: maybe define a standard configuration for other conditions as xvalues
-		
-		"""
-		exLines = self.selectTypeOfExclusionLine(expected, sigma)
-		if not exLines: return None
-		if len(exLines) == 1:
-			logger.info('there is just one exclusionline of this type!')
-			return exLines[0]
-			
-		if not condition in ['D', 'x', 'LSP', 'C', 'M', 'xvalue']:
-			logger.error('%s is no valid type of condition for intermediate masses' %condition)
-			return None
-			
-		if condition == 'xvalue': topoextention = str(value)
-		else:
-			topoextention = condition + str(value)
-			
-		for line in exLines:
-			if topoextension in line.GetName(): return line
-		
-	def getExclusions(self):
-		"""Retrieves all exclusions stored in info.txt.
-		### FIX ME maybe it's better not to do it the same way it is done for exclusionlines!
-		
-		"""
-		exclusions = {}
-		info = getInfo(self._run, self._ana, 'exclusions')
-		if not info: return None
-		expected = [line for line in info if 'expected' in line] 
-		observed = [line for line in info if not 'expected' in line]
-		if not self._extendedTopos: return None 
-		for t in self._extendedTopos: 
-			expected = [line.split() for line in expected]
-			observed = [line.split() for line in observed]
-			expected = [line for line in expected if line[1] == t]
-			observed = [line for line in observed if line[1] == t]
-			
-			print expected
-			print observed
-			exclusions[t + '_expected'] = expected
-			exclusions[t + '_observed'] = observed
-		return exclusions
-	#def getLimitHistograms
 	
 #def loadAnalysis
 
@@ -567,9 +374,9 @@ class databaseBrowser(object):
 		self._base = self._validateBase(base)
 		self._allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
 		self._artifacts = ['old', 'bad', 'missing', 'TODO', 'readme']
-		self._experiment = None
+		self._experimentRestriction = None
 		self._database = self.getDatabase()
-		self._run = None
+		self._runRestriction = None
 		#self._analysis = None
 		#self._topology = None
 		
@@ -595,15 +402,15 @@ class databaseBrowser(object):
 		return path
 		
 	@property
-	def experiment(self):
+	def experimentRestriction(self):
 		"""Restricts the browser to either CMS or ATLAS.
 		
 		"""
-		return self._experiment
+		return self._experimentRestriction
 		
 	@experiment.setter
-	def experiment(self, detector):
-		self._experiment = self._validateExperiment(detector)
+	def experimentRestriction(self, detector):
+		self._experimentRestriction = self._validateExperiment(detector)
 		
 	def _validateExperiment(self, detector):
 		"""Validates the given experiment. Exits the script if the given experiment is unknown.
@@ -622,9 +429,9 @@ class databaseBrowser(object):
 		"""
 		data = {}
 		_allruns = self.allruns
-		if self._experiment == 'ATLAS':
+		if self._experimentRestriction == 'ATLAS':
 			_allruns = [r for r in _allruns if 'ATLAS' in r]
-		if self._experiment == 'CMS':
+		if self._experimentRestriction == 'CMS':
 			_allruns = [r for r in _allruns if not 'ATLAS' in r]
 		for r in _allruns:
 			if not os.path.exists('%s/%s' % (self._base, r)):
@@ -633,7 +440,7 @@ class databaseBrowser(object):
 			data[r] = os.listdir('%s/%s' % (self._base, r))
 			data[r] = [directory for directory in data[r] if not '.' in directory]
 			# exclude all files (e.g. create.sh) from list of directories 
-			data[r] = [directory for directory in data[r] if not directory in self.artifacts]
+			data[r] = [directory for directory in data[r] if not directory in self._artifacts]
 			# exclude every file and directory specified by list of artifacts
 		return data
 		
@@ -642,19 +449,19 @@ class databaseBrowser(object):
 		"""Tells if the browser is restricted to a speciefied run. Gives None if all runs are allowed.
 		
 		"""
-		return self._run
+		return self._runRestriction
 		
 	@run.setter
-	def run(self, consideredRun):
+	def runRestriction(self, run):
 		"""Restricts the Browser to one specified run.
 		
 		"""
-		self._run = self._validateRun(consideredRun)
-		if self._run == None:
-			logger.error('Failed to restrict browser to run: %s is not valid!' %consideredRun)
+		self._runRestriction = self._validateRun(run)
+		if self._runRestriction == None:
+			logger.error('Failed to restrict browser to run: %s is not valid!' %run)
 			sys.exit()
-		logger.info('Browser restricted to run %s.' %consideredRun)
-		self._database = {key: self._database[key] for key in self._database if key == self._run}
+		logger.info('Browser restricted to run %s.' %run)
+		self._database = {key: self._database[key] for key in self._database if key == self._runRestriction}
 		
 	def _validateRun(self, run):
 		"""Validates the given run. Exits the script if the given run is unknown.
@@ -704,12 +511,12 @@ class databaseBrowser(object):
 	if not analysis and not topology:
 		return self._database.keys()
 	
-	if self._run:
-		logger.warning('Cannot get all runs because browser is restricted to %s!' %self._run)
-		return self._run
+	if self._runRestriction:
+		logger.warning('Cannot get all runs because browser is restricted to %s!' %self._runRestriction)
+		return self._runRestriction
 	
-	if self._experiment:
-		logger.warning('Browser is restricted to experiment %s' %self._experiment)
+	if self._experimentRestriction:
+		logger.warning('Browser is restricted to experiment %s' %self._experimentRestriction)
 		
 	_analysis = self._validateAnalysis(analysis)
 	if _analysis:
@@ -731,8 +538,8 @@ class databaseBrowser(object):
 	_analyses = []
 	topologyName = _validateTopology(topology)
 	
-	if self._run:
-		logger.warnig('Browser is restricted to run %s!' %self._run)
+	if self._runRestriction:
+		logger.warnig('Browser is restricted to run %s!' %self._runRestriction)
 		
 	if not run:
 		_analyses.append(self._database[key] for key in self.allRuns())
@@ -756,48 +563,44 @@ class databaseBrowser(object):
 		
 	return _analyses
 	
-#	@property
-	def allTopologies(self):
+	@property
+	def allTopologies(self, run = None, analysis = None):
 		"""Retrieves all topologies existing for given run or analysis-run-pair
-	### FIX ME: maybe all topologies with given characteristics like existing exclusionlines?
 	
 		"""
-	_topos = []
-	_runs = []
-	_analyses = []
+	topos = []
+	runs = []
+	analyses = []
 	nono = False
+	_analysis = self._validateAnalysis(analysis)
+	_run = self._validateRun(run)
 	
-	if self._analysis and not self._run:
-		analyses.append(analysis)
-		runs.append(self.allRuns())
+	if _analysis and not _run:
+		analyses.append(_analysis)
+		runs.append(self.allRuns(_analysis))
 
-	if run and not analysis:
-		runs.append(run)
-		analyses = getAllAnalyses(run)
+	if _run and not _analysis:
+		runs.append(_run)
+		analyses = self.allAnalyses(_run)
 			
-	if run and analysis:
-		runs.append(run)
-		analyses.append(analysis)
+	if _run and _analysis:
+		runs.append(_run)
+		analyses.append(_analysis)
 		
-	if not run and not analysis:
-		runs = getAllRuns()
+	if not _run and not _analysis:
+		runs = self.allRuns()
 		nono = True
 					
-	logger.debug('searching topologies for runs %s and analyses %s' %(runs,analyses))
+	logger.debug('Searching topologies for runs %s and analyses %s' %(runs,analyses))
+	
 	for r in runs:
 		if nono == True:
-			analyses = getAllAnalyses(r)
-			logger.info('no analysis was given, therefore took all analyses for run %s: %s' %(r, analyses))
+			analyses = self.allAnalyses(r)
+			logger.info('No analysis was given, therefore took all analyses for run %s: %s' %(r, analyses))
 		for a in analyses:
-			const = getInfo(r, a)
-			unconst = getInfo(r, a, requested = 'unconstraint')
-			if not const: content = unconst
-			if not unconst: content = const
-			if const and unconst: content = const + unconst
-			if not content: continue
-			for c in content:
-				if topos.count(c.split(' ')[1]) == 0:
-					topos.append(c.split(' ')[1])
+			for t in self.expAnalysis(a).allTopologiesNames:
+				if topos.count(t) == 0:
+					topos.append(t)
 				
 	if topos == []:
 		logger.info('for runs %s and analyses %s no topology could be found' %(runs, analyses))
