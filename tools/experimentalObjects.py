@@ -15,6 +15,7 @@ import logging, os, types
 import dictionaries
 import setPath
 import sys
+import databaseBrowser
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -35,21 +36,32 @@ def setLogLevel(level = 'error'):
 class ExpAnalysis(object):
 	
 	"""contains all analysis-specific information (e.g. PAS, lumi, publication-url, ...)
-		can handle specified run ### FIX ME: handeling of runs is not very elegant at the moment => think of a better way!
-
+	
 	"""
 		
-	def __init__(self, analysis):
+	def __init__(self, analysis, path):
 		self._name = analysis
-		self._info = self._readInfo(run, self._name)
+		self._info = self._readInfo()
 		self._run = databaseBrowser.allRuns(analysis)
+		self._path = path
+	
+	def _readInfo(self):
+		"""Reads the whole info.txt file, returns a dictionary.
+	
+		"""
+		infoFile = open(path)
+		_content = infoFile.readlines()
+		infoFile.close()
+		logger.debug('Found info.txt for run %s and analysis %s.' %(run, analysis))
+		_infoDict = {line.split(':', 1)[0].strip(): line.split(':', 1)[1].strip() for line in _content }
+		return _infoDict
 		
 	def _parsInfo(self, requested):
-		content = [string for string in self._info if requested in string]
-		if content:
-			logger.info('found %s: %s' %(requested,content[0].split(' ')[1]))
-			return content[0].split(' ')[1].strip()
-	
+		if not requested in self._info:
+			logger.warning('Requested keyword %s could not be found for %s!' %(requested, self._name))
+			return None
+		return self._info[requested][0]
+		
 	@property
 	def lumi(self):
 		return self._parsInfo('lumi')
@@ -74,18 +86,14 @@ class ExpAnalysis(object):
 		
 	@property	
 	def comment(self):
-		''' ### FIX ME: this is not very nice
-		
-		'''
-		if getInfo(run = self._run, analysis = self._name, requested = 'comment'):
-			com = getInfo(run = self._run, analysis = self._name, requested = 'comment')[0].split(':')[1]
-			return com.strip() 
+		return self._parsInfo('comment')
 	
 	@property
 	def prettyName(self):
 		return self._parsInfo('prettyname')
 		
-	def checkConstraints(self):
+	@property	
+	def hasConstraints(self):
 		"""Checks if there are any constraints for this Analysis.
 		
 		"""
@@ -95,57 +103,55 @@ class ExpAnalysis(object):
 	@property	
 	def private(self):
 		"""States if the analysis is private (1) or public (0).
-		### FIX ME: chenge to True and False?
+		### FIX ME: change to True and False?
 		
 		"""
-		_priv = self._parsInfo('private')
-			if _priv:
-				_priv = _priv[0].split()[-1].strip()
-		return _priv
+		return self._parsInfo('private')
 	
 	@property	
-	def checkArxiv(self):
+	def hasArxiv(self):
 		if self._parsInfo('arxiv'): return True
 		return False
 		
 	@property		
 	def arxiv(self):
-		if self._parsInfo('arxiv'): return self._parsInfo('arxiv')
-		return None
+		return self._parsInfo('arxiv')
 	
 	@property	
-	def checkPublication(self):
+	def isPublication(self):
 		if self._parsInfo('publication'): return True
 		return False
 
 	@property	
 	def publication(self):
-		if self._parsInfo('publication'): return self._parsInfo('publication')
-		return None	
-		
-	def checkAxes(self):
+		return self._parsInfo('publication')
+	
+	@property
+	def hasAxes(self):
 		if self._parsInfo('axes'): return True
 		return False
 		
-	def getAxes(self):
-		if self.checkAxes() == True:
-			return preprocessAxes(getInfo(self._run, self._name, 'axes'))
-		return None
+	@property
+	def axes(self):
+		"""Retrieves the information stored in the axes-labeled line of info.txt.
+	
+		"""
+		return self._parsInfo('axes')
 	
 	@property	
-	def checkChecked(self):
+	def isChecked(self):
 		if self._parsInfo('checked'): return True
 		return False
 		
 	@property		
 	def checked(self):
-		if self.checkChecked() == True:
-			infoLine = getInfo(self._run, self._name, 'checked')
-			infoLine = infoLine[0].split(',')
-			infoLine[0] = infoLine[0].replace('checked: ','')
-			infoLine = [ch.strip() for ch in infoLine]
-			return infoLine
-		return None
+		return self._parsInfo('checked')
+	
+	@property
+	def isPublished(self):
+		if self._parsInfo('arxiv') or self._parsInfo('publication'):
+			return True
+		return False
 	
 	@property	
 	def name(self):
@@ -154,7 +160,10 @@ class ExpAnalysis(object):
 	@property	
 	def run(self):
 		return self._run
+		
 	
+	
+	# ### FIX ME: below
 	def getTopologyNames(self):
 		return getAllTopologies(self._name, self._run)
 		
