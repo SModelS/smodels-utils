@@ -164,16 +164,10 @@ class ExpAnalysis(object):
 		
 	@property
 	def allTopologyNames(self):
-		_topos = []
-		infoFile = open(path)
-		_content = infoFile.readlines()
-		infoFile.close()
-		_keys = ['constraint', 'unconstraint']
-		_content = [string.strip() for string in _content if 'constraint' in string or if 'unconstraint' in string]
-		for c in _content:
-				if _topos.count(c.split(' ')[1]) == 0:
-					_topos.append(c.split(' ')[1])
-		return _topos
+		"""Retrieves all the topologies this analysis has results for as strings.
+		
+		"""
+		return databaseBrowser.allTopologies(self._run, self._name)
 		
 	def getExpTopologies(self):
 		if self.getTopologyNames():
