@@ -347,7 +347,7 @@ class Browser(object):
 		self._base = self._validateBase(base)
 		self._experimentRestriction = None
 		self._verbosity = 'error'
-		self._database = self.getDatabase
+		self.database = self._getDatabase
 		self._runRestriction = None
 		self._infos = {}
 		#self._analysis = None
@@ -388,14 +388,14 @@ class Browser(object):
 		"""
 		self._experimentRestriction = self._validateExperiment(detector)
 		if self._experimentRestriction == 'ATLAS':
-			self._database = {key: self._database[key] for key in self._database if 'ATLAS' in key}
+			self.database = {key: self.database[key] for key in self.database if 'ATLAS' in key}
 		if self._experimentRestriction == 'CMS':
-			self._database = {key: self._database[key] for key in self._database if not 'ATLAS' in key}
+			self.database = {key: self.database[key] for key in self.database if not 'ATLAS' in key}
 		
 	@experimentRestriction.deleter
 	def experimentRestriction(self):
 		self._experimentRestriction = None
-		self._database = self.getDatabase
+		self.database = self._getDatabase
 	
 	def _validateExperiment(self, detector):
 		"""Validates the given experiment. Exits the script if the given experiment is unknown.
@@ -434,7 +434,7 @@ class Browser(object):
 			pass
 
 	@property
-	def getDatabase(self):
+	def _getDatabase(self):
 		"""Creates a dictionary containing all runs as keys and all subdirectories resp. analyses as entries.
 	
 		"""
@@ -467,18 +467,18 @@ class Browser(object):
 			logger.error('Failed to restrict browser to run: %s is not valid!' %run)
 			sys.exit()
 		logger.info('Browser restricted to run %s.' %run)
-		self._database = {key: self._database[key] for key in self._database if key == self._runRestriction}
+		self.database = {key: self.database[key] for key in self.database if key == self._runRestriction}
 	
 	@runRestriction.deleter
 	def runRestriction(self):
 		self._runRestriction = None
-		self._database = self.getDatabase
+		self.database = self._getDatabase
 		
 	def _validateRun(self, run):
 		"""Validates the given run. Exits the script if the given run is unknown.
 		
 		"""
-		if not run in self._database.keys():
+		if not run in self.database.keys():
 			logger.warning('%s is no valid run!' %run)
 			return None
 
@@ -489,7 +489,7 @@ class Browser(object):
 		
 		"""
 			
-		runs = [key for key in self._database if analysis in self._database[key]]
+		runs = [key for key in self.database if analysis in self.database[key]]
 		if not runs:
 			logger.error('%s is no valid analysis!' %analysis)
 			return None
@@ -514,7 +514,7 @@ class Browser(object):
 		"""
 	# ### FIX ME: maybe return only list?
 		if not analysis and not topology:
-			return self._database.keys()
+			return self.database.keys()
 	
 		if self._runRestriction:
 			logger.warning('Cannot get all runs because browser is restricted to %s!' %self._runRestriction)
@@ -525,7 +525,7 @@ class Browser(object):
 		
 		analysis = self._validateAnalysis(analysis)
 		if analysis and not topology:
-			runs = [key for key in self._database if analysis in self._database[key]]
+			runs = [key for key in self.database if analysis in self.database[key]]
 			if len(runs) == 1:
 				return runs[0]
 			logger.error('%s appears in %s runs! Please check the database for ambiguities!' %(analysis, len(runs)))
@@ -533,21 +533,21 @@ class Browser(object):
 		
 		topology = self._validateTopology(topology)	
 		if not analysis and topology:
-			runs = [key for key in self._database if topology in self.allTopologies(run = key)]
+			runs = [key for key in self.database if topology in self.allTopologies(run = key)]
 			if not runs:
 				return None
 			logger.warning('No analysis was given. There are %s runs for given topology %s. Returnvalue will be list!' %(len(runs), topology))
 			return runs
 		
 		if analysis and topology:
-			runs = [key for key in self._database if analysis in self._database[key] and topology in self.allTopologies(run = key)]
+			runs = [key for key in self.database if analysis in self.database[key] and topology in self.allTopologies(run = key)]
 			if len(runs) == 1:
 				return runs[0]
 			logger.error('%s appears in %s runs! Please check the database for ambiguities!' %(analysis, len(runs)))
 			return None
 
 	def allAnalyses(self, run = None, topology = None):
-		"""Retrieves all analyses or all analyses existing for given run or run-topology-pair
+		"""Retrieves all analyses or all analyses existing for given run or run-topology-pair.
 	
 		"""
 	
@@ -558,16 +558,21 @@ class Browser(object):
 			logger.warnig('Browser is restricted to run %s!' %self._runRestriction)
 		
 		if not run:
-			analyses.append(self._database[key] for key in self.allRuns())
-			analyses = [ana for anas in analyses for ana in anas]
-		
+			analyses.append(self.database[key] for key in self.allRuns())  # creates a generator object
+			analyses = [ana for anas in analyses for ana in anas]  # flattens out the generator object to nested list
+			analyses = [ana for anas in analyses for ana in anas]  # flattens out the nested list to a simple list
+			# ### FIX ME: check how this works 8-o
+			
+		if not topology and not run:
+			return analyses
+			
 		if not topology and run:
-			logger.debug('Found %s analyses for %s.' %(len(self._database[run]), run))
-			return self._database[run]
+			logger.debug('Found %s analyses for %s.' %(len(self.database[run]), run))
+			return self.database[run]
 
-		topology = _validateTopology(topology)
+		topology = self._validateTopology(topology)
 		if topology and run:
-			for a in self._database[run]:
+			for a in self.database[run]:
 				if topology in self.allTopologies(a):
 					logger.debug('Found %s in %s-%s.' %(topology, run, a))
 					analyses.append(a)
@@ -632,7 +637,7 @@ class Browser(object):
 	
 		"""
 	
-		analysis = _validateAnalysis(analysis)
+		analysis = self._validateAnalysis(analysis)
 		run = self.allRuns(analysis)
 		
 		path = self._base + run + '/' + analysis + '/' + requested
@@ -665,7 +670,7 @@ class Browser(object):
 		if isinstance(topology, ExpTopology):
 			return consideredTopology
 		
-		topology = _validateTopology(topologyName)
+		topology = self._validateTopology(topologyName)
 		return ExpTopology(consideredTopology)
 		
 	def expResult(self, analysis, topology, run = None):
@@ -675,7 +680,7 @@ class Browser(object):
 		analysis = self._validateAnalysis(analysis)
 		topology = self._validateTopology(topology)
 		if run:
-			run = _validateRun(run)
+			run = self._validateRun(run)
 		if not run:
 			run = self.allRuns(analysis, topology)
 			
