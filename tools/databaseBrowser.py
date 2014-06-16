@@ -347,7 +347,7 @@ class Browser(object):
 		self._base = self._validateBase(base)
 		self._experimentRestriction = None
 		self._verbosity = 'error'
-		self._database = self.getDatabase()
+		self._database = self.getDatabase
 		self._runRestriction = None
 		self._infos = {}
 		#self._analysis = None
@@ -387,10 +387,15 @@ class Browser(object):
 		
 		"""
 		self._experimentRestriction = self._validateExperiment(detector)
-	
+		if self._experimentRestriction == 'ATLAS':
+			self._database = {key: self._database[key] for key in self._database if 'ATLAS' in key}
+		if self._experimentRestriction == 'CMS':
+			self._database = {key: self._database[key] for key in self._database if not 'ATLAS' in key}
+		
 	@experimentRestriction.deleter
 	def experimentRestriction(self):
 		self._experimentRestriction = None
+		self._database = self.getDatabase
 	
 	def _validateExperiment(self, detector):
 		"""Validates the given experiment. Exits the script if the given experiment is unknown.
@@ -428,20 +433,15 @@ class Browser(object):
 		if level == 'error':
 			pass
 
-
+	@property
 	def getDatabase(self):
 		"""Creates a dictionary containing all runs as keys and all subdirectories resp. analyses as entries.
 	
 		"""
 		data = {}
-		allruns = self._allruns
-		if self._experimentRestriction == 'ATLAS':
-			allruns = [r for r in allruns if 'ATLAS' in r]
-		if self._experimentRestriction == 'CMS':
-			allruns = [r for r in allruns if not 'ATLAS' in r]
-		for r in allruns:
+		for r in self._allruns:
 			if not os.path.exists('%s/%s' % (self._base, r)):
-				logger.warning('Using an incomplete version of the database! Run %s is missing' %r)
+				logger.info('Using an incomplete version of the database! Run %s is missing' %r)
 				continue
 			data[r] = os.listdir('%s/%s' % (self._base, r))
 			data[r] = [directory for directory in data[r] if not '.' in directory]
@@ -469,12 +469,10 @@ class Browser(object):
 		logger.info('Browser restricted to run %s.' %run)
 		self._database = {key: self._database[key] for key in self._database if key == self._runRestriction}
 	
-	@property.deleter
+	@runRestriction.deleter
 	def runRestriction(self):
-		"""Sets restriction to None.
-		
-		"""
 		self._runRestriction = None
+		self._database = self.getDatabase
 		
 	def _validateRun(self, run):
 		"""Validates the given run. Exits the script if the given run is unknown.
