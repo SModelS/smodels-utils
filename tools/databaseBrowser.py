@@ -342,9 +342,9 @@ class Browser(object):
 	
 	"""
 	def __init__(self, base = '/afs/hephy.at/user/w/walten/public/sms/'):
-		self._base = self._validateBase(base)
 		self._allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
 		self._artifacts = ['old', 'bad', 'missing', 'TODO', 'readme']
+		self._base = self._validateBase(base)
 		self._experimentRestriction = None
 		self._verbosity = 'error'
 		self._database = self.getDatabase()
@@ -368,7 +368,7 @@ class Browser(object):
 		if not os.path.exists(path):
 			logger.error('%s is no valid path!' %path)
 			sys.exit()
-		if not [run for run in os.listdir(path) if run in self.allruns]:
+		if not [run for run in os.listdir(path) if run in self._allruns]:
 			logger.error('There is no valid database at %s' %path)
 			sys.exit()
 		logger.info('Set base to %s' %path)
@@ -387,7 +387,11 @@ class Browser(object):
 		
 		"""
 		self._experimentRestriction = self._validateExperiment(detector)
-		
+	
+	@experimentRestriction.deleter
+	def experimentRestriction(self):
+		self._experimentRestriction = None
+	
 	def _validateExperiment(self, detector):
 		"""Validates the given experiment. Exits the script if the given experiment is unknown.
 		### FIX ME: maybe better not exit the script, but set experiment to default?
@@ -430,12 +434,12 @@ class Browser(object):
 	
 		"""
 		data = {}
-		_allruns = self.allruns
+		allruns = self._allruns
 		if self._experimentRestriction == 'ATLAS':
-			_allruns = [r for r in _allruns if 'ATLAS' in r]
+			allruns = [r for r in allruns if 'ATLAS' in r]
 		if self._experimentRestriction == 'CMS':
-			_allruns = [r for r in _allruns if not 'ATLAS' in r]
-		for r in _allruns:
+			allruns = [r for r in allruns if not 'ATLAS' in r]
+		for r in allruns:
 			if not os.path.exists('%s/%s' % (self._base, r)):
 				logger.warning('Using an incomplete version of the database! Run %s is missing' %r)
 				continue
@@ -464,6 +468,13 @@ class Browser(object):
 			sys.exit()
 		logger.info('Browser restricted to run %s.' %run)
 		self._database = {key: self._database[key] for key in self._database if key == self._runRestriction}
+	
+	@property.deleter
+	def runRestriction(self):
+		"""Sets restriction to None.
+		
+		"""
+		self._runRestriction = None
 		
 	def _validateRun(self, run):
 		"""Validates the given run. Exits the script if the given run is unknown.
