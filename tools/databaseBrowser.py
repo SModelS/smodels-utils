@@ -342,12 +342,13 @@ class Browser(object):
 	
 	"""
 	def __init__(self, base = '/afs/hephy.at/user/w/walten/public/sms/'):
-		self._allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
+		#self._allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
+		self._allruns = ["8TeV", "ATLAS8TeV", "2012", "RPV7"]
 		self._artifacts = ['old', 'bad', 'missing', 'TODO', 'readme']
 		self._base = self._validateBase(base)
 		self._experimentRestriction = None
 		self._verbosity = 'error'
-		self.database = self._getDatabase
+		self.database = self._getDatabase()
 		self._runRestriction = None
 		self._infos = {}
 		#self._analysis = None
@@ -395,7 +396,7 @@ class Browser(object):
 	@experimentRestriction.deleter
 	def experimentRestriction(self):
 		self._experimentRestriction = None
-		self.database = self._getDatabase
+		self.database = self._getDatabase()
 	
 	def _validateExperiment(self, detector):
 		"""Validates the given experiment. Exits the script if the given experiment is unknown.
@@ -417,7 +418,7 @@ class Browser(object):
 		
 	@verbosity.setter
 	def verbosity(self, level):
-		"""Restricts the browser to either CMS or ATLAS.
+		"""Set the logger to specified level.
 		
 		"""
 		self._verbosity = level
@@ -433,7 +434,6 @@ class Browser(object):
 		if level == 'error':
 			pass
 
-	@property
 	def _getDatabase(self):
 		"""Creates a dictionary containing all runs as keys and all subdirectories resp. analyses as entries.
 	
@@ -472,7 +472,7 @@ class Browser(object):
 	@runRestriction.deleter
 	def runRestriction(self):
 		self._runRestriction = None
-		self.database = self._getDatabase
+		self.database = self._getDatabase()
 		
 	def _validateRun(self, run):
 		"""Validates the given run. Exits the script if the given run is unknown.
@@ -617,11 +617,12 @@ class Browser(object):
 	
 		for r in runs:
 			for a in analyses:
-				if a in self._info:
-					content = self._info.info
+				if a in self._infos:
+					content = self._infos[a].info
 				else:
 					content = Infotxt(a, self._base).info
-					self._info[a] = Infotxt(a, self._base)
+					self._infos[a] = Infotxt(a, self._base)
+				content = [line for lines in content for line in lines]
 				content = [string.strip() for string in content if 'constraint' in string or 'unconstraint' in string]
 				for c in content:
 					if topos.count(c.split(' ')[1]) == 0:
@@ -693,24 +694,28 @@ class Infotxt(object):
 	"""Holds all the lines, stored in the info.txt file. Provides the required information about topologies, results and all the meta-information needed for the experimental objects.
 	
 	"""
-	def __init__(self, analysis, path):
+	def __init__(self, analysis, base):
 		self._analysis = analysis
-		self._run = databaseBrowser.allRuns(analysis)
-		self._path = path
+		logger.debug('Got analysis %s.' %analysis)
+		self._run = Browser().allRuns(self._analysis)
+		logger.debug('Got run %s.' % self._run)
+		self._path = base + '/' + self._run + '/' + self._analysis + '/info.txt'
 		
 	def _readInfo(self):
 		"""Reads the whole info.txt file, returns a tuple containing a dictionary holding the meta-information (e.g. PAS, lumi, comment, ...) and a list holding all the lines with keywords that show up several times (e.g. 'constraint', 'condition', 'exclusions', ...).
 	
 		"""
 		info = []
-		infoFile = open(path)
+		infoFile = open(self._path)
 		content = infoFile.readlines()
 		infoFile.close()
 		exceptions = ['constraint', 'condition', 'fuzzycondition', 'unconstraint', 'exclusions', 'expectedexclusions', 'category']
 		logger.debug('Found info.txt for run %s and analysis %s.' %(self._run, self._analysis))
 		metaInfo = {line.split(':', 1)[0].strip(): line.split(':', 1)[1].strip() for line in content if not line.split(':')[0].strip() in exceptions}
+		logger.debug('Meta info is %s' %metaInfo)
 		for key in exceptions:
 			info.append(string.strip() for string in content if key in string)
+		logger.debug('Info is %s' %info)	
 		return [metaInfo, info]
 	
 	@property
