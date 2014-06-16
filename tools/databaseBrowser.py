@@ -335,7 +335,10 @@ logger.setLevel(level=logging.ERROR)
 
 		
 	## ### Do the rest below!!! ### 
-	
+# ###	FIX ME: go back to old run handling ability there are still ambiguities!
+# ###	FIX ME: move some of the topology functionality to Infotxt object
+# ###	FIX ME: fix the list comprehensions in Infotxt
+
 class Browser(object):
 	
 	"""Browses the database, exits if given path does not point to a valid smodels-database. Browser can be restricted to specified run or experiment. Verbosity can be set to specified level.
@@ -709,12 +712,12 @@ class Infotxt(object):
 		infoFile = open(self._path)
 		content = infoFile.readlines()
 		infoFile.close()
-		exceptions = ['constraint', 'condition', 'fuzzycondition', 'unconstraint', 'exclusions', 'expectedexclusions', 'category']
+		exceptions = ['constraint', 'condition', 'fuzzycondition', 'unconstraint', 'exclusions', 'expectedexclusions', 'exclusionsp1', 'expectedexclusionsp1','exclusionsm1', 'expectedexclusionsm1', 'category']
 		logger.debug('Found info.txt for run %s and analysis %s.' %(self._run, self._analysis))
 		metaInfo = {line.split(':', 1)[0].strip(): line.split(':', 1)[1].strip() for line in content if not line.split(':')[0].strip() in exceptions}
 		logger.debug('Meta info is %s' %metaInfo)
-		for key in exceptions:
-			info.append(string.strip() for string in content if key in string)
+		#for key in exceptions:
+			#info.append(string.strip() for string in content if key in string)
 		logger.debug('Info is %s' %info)	
 		return [metaInfo, info]
 	
