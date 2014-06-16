@@ -241,8 +241,8 @@ class ExpTopology(object):
 	#def setAnalyses
 	#def refreshAnalyses
 	
-class Result (object):
-	"""Contains all result-specific informations and objects (e.g. exclusionlines, histograms, ...).
+class ExpResult (object):
+	"""Contains all result-specific informations and objects (e.g. exclusionlines, histograms, ...). A result denotes a specified pair of topology and analysis.
 
 	"""
 	def __init__ (self, pair):
