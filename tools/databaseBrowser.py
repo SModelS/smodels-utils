@@ -12,7 +12,6 @@
 
 import ROOT
 import logging, os, types
-import dictionaries
 import setPath
 import sys
 import experimentalObjects
@@ -24,350 +23,322 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
 
-def setLogLevel(level = 'error'):
-	if level == 'debug':
-		logger.setLevel(level=logging.DEBUG)
-	if level == 'info':
-		logger.setLevel(level=logging.INFO)
-	if level == 'warning':
-		logger.setLevel(level=logging.WARNING)
-	if level == 'error':
-		pass
 
-allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
-artifacts = ['old', 'bad', 'missing', 'TODO', 'readme'] 
-currentRun = '8TeV'
+#allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
+#artifacts = ['old', 'bad', 'missing', 'TODO', 'readme'] 
+#currentRun = '8TeV'
 
-base = '/afs/hephy.at/user/w/walten/public/sms/'
+#base = '/afs/hephy.at/user/w/walten/public/sms/'
 
-def validateBase(Base):
-	"""Validates the base directory to locate the database. Exits the script if something is wrong with the path
+#def validateBase(Base):
+	#"""Validates the base directory to locate the database. Exits the script if something is wrong with the path
 	
-	"""
-	#if not Base: Base = "/afs/hephy.at/user/w/walten/public/sms/"
-	logger.debug('Try to set the path for the database to: %s' %Base)
-	if not os.path.exists(Base):
-		logger.error('%s is no valid Path!' %Base)
-		sys.exit()
-	if not [run for run in os.listdir(Base) if run in allruns]:
-		logger.error('There is no valid database at %s' %Base)
-		sys.exit()
-	logger.info('Set base to %s' %Base)
-	return Base
+	#"""
+	##if not Base: Base = "/afs/hephy.at/user/w/walten/public/sms/"
+	#logger.debug('Try to set the path for the database to: %s' %Base)
+	#if not os.path.exists(Base):
+		#logger.error('%s is no valid Path!' %Base)
+		#sys.exit()
+	#if not [run for run in os.listdir(Base) if run in allruns]:
+		#logger.error('There is no valid database at %s' %Base)
+		#sys.exit()
+	#logger.info('Set base to %s' %Base)
+	#return Base
 
-# ### FIX ME: should I use these? Improves performance? 
-#allTopologies = []
-#allAnalyses = []
-#allPairs = []
-
-
+#def getDatabase():
+	#"""Creates a dictionary containing all runs as keys and all subdirectories resp. analyses as entries.
 	
+	#"""
+	#data = {}
+	#Base = validateBase(base)
+	#for r in allruns:
+		#if not os.path.exists('%s/%s' % (Base, r)):
+			#logger.warning('Using an uncomplete version of the database!')
+			#continue
+		#data[r] = os.listdir('%s/%s' % (Base, r))
+		#data[r] = [directory for directory in data[r] if not '.' in directory]
+		## exclude all files (e.g. create.sh) from list of directories 
+		#data[r] = [directory for directory in data[r] if not directory in artifacts]
+		## exclude every file and directory specified by list of artifacts
+	#return data
 	
-#def loadAnalysis
-
-#def loadTopology
-
-def getDatabase():
-	"""Creates a dictionary containing all runs as keys and all subdirectories resp. analyses as entries.
+#def checkResults(run = None, analysis = None, requested = 'info.txt'):
+	#"""Checks if results are available in form of info.txt, sms.root and sms.py.
 	
-	"""
+	#"""
+	#Base = validateBase(base)
 	
-	data = {}
-	Base = validateBase(base)
-	for r in allruns:
-		if not os.path.exists('%s/%s' % (Base, r)):
-			logger.warning('Using an uncomplete version of the database!')
-			continue
-		data[r] = os.listdir('%s/%s' % (Base, r))
-		data[r] = [directory for directory in data[r] if not '.' in directory]
-		# exclude all files (e.g. create.sh) from list of directories 
-		data[r] = [directory for directory in data[r] if not directory in artifacts]
-		# exclude every file and directory specified by list of artifacts
-	return data
-	
-def checkResults(run = None, analysis = None, requested = 'info.txt'):
-	"""Checks if results are available in form of info.txt, sms.root and sms.py.
-	
-	"""
-	Base = validateBase(base)
-	
-	if run and checkRun(run) == False:
-		return None
+	#if run and checkRun(run) == False:
+		#return None
 		
-	if not analysis:
-		logger.error('no results without analysis!')
-		return None
+	#if not analysis:
+		#logger.error('no results without analysis!')
+		#return None
 		
-	if not run:
-		run = getAllRuns(analysis)
+	#if not run:
+		#run = getAllRuns(analysis)
 		
-	path = Base + run + '/' + analysis + '/' + requested
-	logger.debug('check path: %s' %path)
-	if not os.path.exists(path):
-		logger.warning('for run %s and analyses %s no %s was found' %(run, analysis, requested))
-		return None
+	#path = Base + run + '/' + analysis + '/' + requested
+	#logger.debug('check path: %s' %path)
+	#if not os.path.exists(path):
+		#logger.warning('for run %s and analyses %s no %s was found' %(run, analysis, requested))
+		#return None
 		
-	return path
+	#return path
 	
-def readInfo(run = None, analysis = None):
-	"""Reads the whole info.txt file (if existing) for given run-analysis-pair
+#def readInfo(run = None, analysis = None):
+	#"""Reads the whole info.txt file (if existing) for given run-analysis-pair
 	
-	"""
+	#"""
 	
-	if run and checkRun(run) == False:
-		return None
+	#if run and checkRun(run) == False:
+		#return None
 
-	if not analysis: return None
+	#if not analysis: return None
 	
-	if not run: run = getAllRuns(analysis)
+	#if not run: run = getAllRuns(analysis)
 	
-	path = checkResults(run, analysis)
-	if path:
-		infoFile = open(path)
-		content = infoFile.readlines()
-		infoFile.close()
-		logger.debug('found info.txt for run %s and analysis %s' %(run, analysis))
-		return content 
+	#path = checkResults(run, analysis)
+	#if path:
+		#infoFile = open(path)
+		#content = infoFile.readlines()
+		#infoFile.close()
+		#logger.debug('found info.txt for run %s and analysis %s' %(run, analysis))
+		#return content 
 		
-def getInfo(run = None, analysis = None, requested = 'constraint'):
-	"""Extracts information from info.txt file, returns a list containing all lines the requested information is stored in.
+#def getInfo(run = None, analysis = None, requested = 'constraint'):
+	#"""Extracts information from info.txt file, returns a list containing all lines the requested information is stored in.
 	
-	"""
-	# to get all topologies without any additional information like mass-splitting, the best way is to read the constraint-lines!
+	#"""
+	## to get all topologies without any additional information like mass-splitting, the best way is to read the constraint-lines!
 	
-	if analysis and not run: run = getAllRuns(analysis)
+	#if analysis and not run: run = getAllRuns(analysis)
 	
-	if not checkResults(run, analysis): return None
+	#if not checkResults(run, analysis): return None
 	
-	content = readInfo(run, analysis)
-	content = [string.strip() for string in content if requested in string]
-	if not content == []: return content
-	logger.info('requested keyword %s could not be found for %s-%s!' %(requested, run, analysis))
-	return None
+	#content = readInfo(run, analysis)
+	#content = [string.strip() for string in content if requested in string]
+	#if not content == []: return content
+	#logger.info('requested keyword %s could not be found for %s-%s!' %(requested, run, analysis))
+	#return None
 	
-def preprocessAxes(infoLine):
-	"""To handle the information stored in the axes-labeled line of info.txt, this line has to be preprocessed.
+#def preprocessAxes(infoLine):
+	#"""To handle the information stored in the axes-labeled line of info.txt, this line has to be preprocessed.
 	
-	"""
-	infoLine = infoLine[0].split(',')
-	infoLine[0] = infoLine[0].replace('axes: ','')
-	infoLine = [ax.strip() for ax in infoLine]
-	logger.debug('axes- information: %s' %infoLine)
-	return infoLine
+	#"""
+	#infoLine = infoLine[0].split(',')
+	#infoLine[0] = infoLine[0].replace('axes: ','')
+	#infoLine = [ax.strip() for ax in infoLine]
+	#logger.debug('axes- information: %s' %infoLine)
+	#return infoLine
 
-def getAllRuns(analysis = None, topology = None, current = True):
-	"""Retrieves all runs a given analysis or topology or analysis-topology pair is available for. Returns a list containing all runs or just a string when current = True 
-	### FIX ME check if current still works resp. do I have to sort hits??!!!  ### FIX ME: maybe drop the topology-option?
+#def getAllRuns(analysis = None, topology = None, current = True):
+	#"""Retrieves all runs a given analysis or topology or analysis-topology pair is available for. Returns a list containing all runs or just a string when current = True 
 	
-	"""
-	database = getDatabase()
+	#"""
+	#database = getDatabase()
 	
-	if not analysis:
-		return database.keys()
+	#if not analysis:
+		#return database.keys()
 		
-	runs = [key for key in database if analysis in database[key]]
+	#runs = [key for key in database if analysis in database[key]]
 				
-	if runs == []:
-		logger.error('no valid analysis %s' %analysis)
-		return None
+	#if runs == []:
+		#logger.error('no valid analysis %s' %analysis)
+		#return None
 	
-	if current == True:
-		logger.info('for %s collected runs: %s' %(analysis,runs))
-		logger.info('returning: %s' %runs[0])
-		return runs[0]
+	#if current == True:
+		#logger.info('for %s collected runs: %s' %(analysis,runs))
+		#logger.info('returning: %s' %runs[0])
+		#return runs[0]
 		
-	if current == False:
-		return runs
+	#if current == False:
+		#return runs
 		
-def checkRun(run):
-	"""Verifies if given run is valid. Returns True if run is found in database.
+#def checkRun(run):
+	#"""Verifies if given run is valid. Returns True if run is found in database.
 	
-	"""
-	if not run in getDatabase().keys():
-		logger.error('no valid run %s' %run)
-		return False
+	#"""
+	#if not run in getDatabase().keys():
+		#logger.error('no valid run %s' %run)
+		#return False
 		
-	return True
+	#return True
 	
-def getAllAnalyses(run = None, topology = None):
-	"""Retrieves all analyses existing for given run or run-topology-pair
+#def getAllAnalyses(run = None, topology = None):
+	#"""Retrieves all analyses existing for given run or run-topology-pair
 	
-	"""
-	database = getDatabase()
-	analyses = []
+	#"""
+	#database = getDatabase()
+	#analyses = []
 	
-	if run and checkRun(run) == False:
-		return None
+	#if run and checkRun(run) == False:
+		#return None
 		
-	if not run:
-		analyses.append(database[key] for key in getAllRuns(current = False))
-		analyses = [ana for anas in analyses for ana in anas]
+	#if not run:
+		#analyses.append(database[key] for key in getAllRuns(current = False))
+		#analyses = [ana for anas in analyses for ana in anas]
 		
-	if not topology:
-		logger.info('found %s analyses for %s' %(len(database[run]), run))
-		return database[run]
+	#if not topology:
+		#logger.info('found %s analyses for %s' %(len(database[run]), run))
+		#return database[run]
 
-	for a in database[run]:
-		topologies = getAllTopologies(a, run)
-		if topologies and topology in topologies:
-			logger.info('found %s in %s-%s' %(topology,run,a))
-			analyses.append(a)
+	#for a in database[run]:
+		#topologies = getAllTopologies(a, run)
+		#if topologies and topology in topologies:
+			#logger.info('found %s in %s-%s' %(topology,run,a))
+			#analyses.append(a)
 		
-	if analyses == []:
-		logger.error('%s is no valid topology for given run %s' %(topology, run))
-		return None
+	#if analyses == []:
+		#logger.error('%s is no valid topology for given run %s' %(topology, run))
+		#return None
 		
-	return analyses
+	#return analyses
 
-def getAllTopologies(analysis = None, run = None):
-	"""Retrieves all topologies existing for given run or analysis-run-pair
-	### FIX ME: maybe all topologies with given characteristics like existing exclusionlines?
+#def getAllTopologies(analysis = None, run = None):
+	#"""Retrieves all topologies existing for given run or analysis-run-pair
 	
-	"""
-	topos = []
-	runs = []
-	analyses = []
-	nono = False
+	#"""
+	#topos = []
+	#runs = []
+	#analyses = []
+	#nono = False
 	
-	if run and checkRun(run) == False:
-		return None
+	#if run and checkRun(run) == False:
+		#return None
 		
-	if analysis and not run:
-		analyses.append(analysis)
-		runs.append(getAllRuns(analysis))
+	#if analysis and not run:
+		#analyses.append(analysis)
+		#runs.append(getAllRuns(analysis))
 
-	if run and not analysis:
-		runs.append(run)
-		analyses = getAllAnalyses(run)
+	#if run and not analysis:
+		#runs.append(run)
+		#analyses = getAllAnalyses(run)
 			
-	if run and analysis:
-		runs.append(run)
-		analyses.append(analysis)
+	#if run and analysis:
+		#runs.append(run)
+		#analyses.append(analysis)
 		
-	if not run and not analysis:
-		runs = getAllRuns()
-		nono = True
+	#if not run and not analysis:
+		#runs = getAllRuns()
+		#nono = True
 					
-	logger.debug('searching topologies for runs %s and analyses %s' %(runs,analyses))
-	for r in runs:
-		if nono == True:
-			analyses = getAllAnalyses(r)
-			logger.info('no analysis was given, therefore took all analyses for run %s: %s' %(r, analyses))
-		for a in analyses:
-			const = getInfo(r, a)
-			unconst = getInfo(r, a, requested = 'unconstraint')
-			if not const: content = unconst
-			if not unconst: content = const
-			if const and unconst: content = const + unconst
-			if not content: continue
-			for c in content:
-				if topos.count(c.split(' ')[1]) == 0:
-					topos.append(c.split(' ')[1])
+	#logger.debug('searching topologies for runs %s and analyses %s' %(runs,analyses))
+	#for r in runs:
+		#if nono == True:
+			#analyses = getAllAnalyses(r)
+			#logger.info('no analysis was given, therefore took all analyses for run %s: %s' %(r, analyses))
+		#for a in analyses:
+			#const = getInfo(r, a)
+			#unconst = getInfo(r, a, requested = 'unconstraint')
+			#if not const: content = unconst
+			#if not unconst: content = const
+			#if const and unconst: content = const + unconst
+			#if not content: continue
+			#for c in content:
+				#if topos.count(c.split(' ')[1]) == 0:
+					#topos.append(c.split(' ')[1])
 				
-	if topos == []:
-		logger.info('for runs %s and analyses %s no topology could be found' %(runs, analyses))
-		return None
+	#if topos == []:
+		#logger.info('for runs %s and analyses %s no topology could be found' %(runs, analyses))
+		#return None
 		
-	return topos
+	#return topos
 		
-def getExtendedTopologies(analysis, run, topology = None):
-	"""Checks if the topologies for one given analysis-run are tainted with any kind of mass requirements and returns dictionary with extended topologies. Can be reduced to given topology (returns list).
-	### FIX ME: maybe use in class Result only?
+#def getExtendedTopologies(analysis, run, topology = None):
+	#"""Checks if the topologies for one given analysis-run are tainted with any kind of mass requirements and returns dictionary with extended topologies. Can be reduced to given topology (returns list).
 	
-	"""
-	topos = {}
-	logger.debug('got analysis: %s and run %s!' %(analysis, run))
-	if not getInfo(run, analysis, 'axes'):
-		logger.info('No additional information about axes was found for %s-%s!' %(run, analysis))
-		if not getAllTopologies(analysis, run): return None
-		for t in getAllTopologies(analysis, run):
-			topos[t]=[t]
-		if not topology: return topos
-		if topos.has_key(topology): return topos[topology]
-		logger.warning('for %s-%s there is no topology %s' %(run, analysis, topology))
-		return None
+	#"""
+	#topos = {}
+	#logger.debug('got analysis: %s and run %s!' %(analysis, run))
+	#if not getInfo(run, analysis, 'axes'):
+		#logger.info('No additional information about axes was found for %s-%s!' %(run, analysis))
+		#if not getAllTopologies(analysis, run): return None
+		#for t in getAllTopologies(analysis, run):
+			#topos[t]=[t]
+		#if not topology: return topos
+		#if topos.has_key(topology): return topos[topology]
+		#logger.warning('for %s-%s there is no topology %s' %(run, analysis, topology))
+		#return None
 	
-	infoLine = getInfo(run, analysis, 'axes')
-	axes = preprocessAxes(infoLine)
-	logger.info('for %s-%s there is additional mass information!' %(run, analysis)) 
+	#infoLine = getInfo(run, analysis, 'axes')
+	#axes = preprocessAxes(infoLine)
+	#logger.info('for %s-%s there is additional mass information!' %(run, analysis)) 
 	
-	for ax in axes:
-		logger.debug('axesline is:%s' %ax)
-		massdic = massProportions(ax)
-		topo = massdic.keys()[0]
-		topos[topo] = []
+	#for ax in axes:
+		#logger.debug('axesline is:%s' %ax)
+		#massdic = massProportions(ax)
+		#topo = massdic.keys()[0]
+		#topos[topo] = []
 
-		for case in massdic[topo]:
-			if len(case) == 2: topos[topo].append(topo)
-			if len(case) == 3:
-				try:
-					x = int(case[2])
-					topos[topo].append(topo + case[2])
-				except ValueError:
-					if 'D' in case[2]:
-						D = case[2].split('=')[-1].strip()
-						topos[topo].append(topo + 'D' + D)
-					elif 'LSP' or 'x' or 'C' or 'M' in case[2]: topos[topo].append(topo + case[2])
-			if len(case) > 3:
-				logger.info('topology is: %s => more then one additional condition is too much at the moment' %topo)
-				continue
+		#for case in massdic[topo]:
+			#if len(case) == 2: topos[topo].append(topo)
+			#if len(case) == 3:
+				#try:
+					#x = int(case[2])
+					#topos[topo].append(topo + case[2])
+				#except ValueError:
+					#if 'D' in case[2]:
+						#D = case[2].split('=')[-1].strip()
+						#topos[topo].append(topo + 'D' + D)
+					#elif 'LSP' or 'x' or 'C' or 'M' in case[2]: topos[topo].append(topo + case[2])
+			#if len(case) > 3:
+				#logger.info('topology is: %s => more then one additional condition is too much at the moment' %topo)
+				#continue
 	
-	if topos == {'':[]}:
-		logger.warning('Something is wrong with the axes line in the info.txt for %s-%s!' %(run, analysis))
-		return None
-	if not topology: return topos
-	if topos.has_key(topology): return topos[topology]
-	logger.warning('for %s-%s there is no topology %s' %(run, analysis, topology))
-	return None
+	#if topos == {'':[]}:
+		#logger.warning('Something is wrong with the axes line in the info.txt for %s-%s!' %(run, analysis))
+		#return None
+	#if not topology: return topos
+	#if topos.has_key(topology): return topos[topology]
+	#logger.warning('for %s-%s there is no topology %s' %(run, analysis, topology))
+	#return None
 	
-def massProportions(axesLine):
-	"""Reads out all the conditions for intermediate masses (e.g. masssplitting-xvalues 025, 050, 075) implicitly stored in axes-lines of info.txt and returns the information as dictionary.
+#def massProportions(axesLine):
+	#"""Reads out all the conditions for intermediate masses (e.g. masssplitting-xvalues 025, 050, 075) implicitly stored in axes-lines of info.txt and returns the information as dictionary.
 	
-	"""
-	massdic = {}
-	topo = axesLine.split(' ')[0].replace(':', '').strip()
-	massdic[topo] = axesLine.replace(topo + ':', '').split('-')
-	massdic[topo] = [c.strip() for c in massdic[topo]]
-	logger.info('for %s there are %s different cases of mass proportions' %(topo, len(massdic[topo])))
-	massdic[topo]=[c.split(' ') for c in massdic[topo]]
-	return massdic
+	#"""
+	#massdic = {}
+	#topo = axesLine.split(' ')[0].replace(':', '').strip()
+	#massdic[topo] = axesLine.replace(topo + ':', '').split('-')
+	#massdic[topo] = [c.strip() for c in massdic[topo]]
+	#logger.info('for %s there are %s different cases of mass proportions' %(topo, len(massdic[topo])))
+	#massdic[topo]=[c.split(' ') for c in massdic[topo]]
+	#return massdic
 	
-def linkResult(analysis, topology, current = True):
-	"""Inter couples analysis and topology creating a specified pair. Either for all runs (returns dictionary) or for first run the given analysis appears for in the database (returns list)
+#def linkResult(analysis, topology, current = True):
+	#"""Inter couples analysis and topology creating a specified pair. Either for all runs (returns dictionary) or for first run the given analysis appears for in the database (returns list)
 	
-	"""
-	if current == False:
-		runs = getAllRuns(analysis, current = False)
-		pair = {}
-		if not runs: return None
-		logger.debug('try to link pair %s-%s for all available runs!' %(analysis, topology))
-		for r in runs:
-			topologies = getAllTopologies(analysis, run)
-			if topologies and topology in topologies:
-				pair[r]=[analysis, topology]
-				logger.debug('found pair %s-%s for run %s!' %(analysis, topology, run))
-		return pair
+	#"""
+	#if current == False:
+		#runs = getAllRuns(analysis, current = False)
+		#pair = {}
+		#if not runs: return None
+		#logger.debug('try to link pair %s-%s for all available runs!' %(analysis, topology))
+		#for r in runs:
+			#topologies = getAllTopologies(analysis, run)
+			#if topologies and topology in topologies:
+				#pair[r]=[analysis, topology]
+				#logger.debug('found pair %s-%s for run %s!' %(analysis, topology, run))
+		#return pair
 	
-	run = getAllRuns(analysis)
-	if not run: return None
-	topologies = getAllTopologies(analysis, run)
-	if not topologies:
-		logger.info('there are no topologies for %s-%s' %(run, analysis))
-		return None
+	#run = getAllRuns(analysis)
+	#if not run: return None
+	#topologies = getAllTopologies(analysis, run)
+	#if not topologies:
+		#logger.info('there are no topologies for %s-%s' %(run, analysis))
+		#return None
 		
-	logger.debug('try to link pair %s-%s for run %s!' %(analysis, topology, run))
-	if topologies and topology in topologies:
-		return [run, analysis, topology]
+	#logger.debug('try to link pair %s-%s for run %s!' %(analysis, topology, run))
+	#if topologies and topology in topologies:
+		#return [run, analysis, topology]
 
 		
-	# ### Do the rest below!!! ### 
+	## ### Do the rest below!!! ### 
 	
-class databaseBrowser(object):
+class Browser(object):
 	
-	"""Browses the database, exits if given path does not point to a valid smodels-database. Browser can be restricted to specified run or experiment.
-	### FIX ME: docstring???
-	### FIX ME: maybe drop the set run option?
-	### FIX ME: be aware of using some functions from the outside with specified runs or analysis, when inside these remain unset!
+	"""Browses the database, exits if given path does not point to a valid smodels-database. Browser can be restricted to specified run or experiment. Verbosity can be set to specified level.
 	
 	"""
 	def __init__(self, base = '/afs/hephy.at/user/w/walten/public/sms/'):
@@ -375,6 +346,7 @@ class databaseBrowser(object):
 		self._allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
 		self._artifacts = ['old', 'bad', 'missing', 'TODO', 'readme']
 		self._experimentRestriction = None
+		self._verbosity = 'error'
 		self._database = self.getDatabase()
 		self._runRestriction = None
 		self._infos = {}
@@ -426,6 +398,32 @@ class databaseBrowser(object):
 			sys.exit()
 		logger.info('Focusing on experiment %s.' %detector)
 		return detector
+		
+	@property
+	def verbosity(self):
+		"""Tells the level the logger is set to.
+		
+		"""
+		return self._verbosity
+		
+	@experiment.setter
+	def verbosity(self, level):
+		"""Restricts the browser to either CMS or ATLAS.
+		
+		"""
+		self._verbosity = level
+		self._setLogLevel(level)
+		
+	def _setLogLevel(self, level = 'error'):
+		if level == 'debug':
+			logger.setLevel(level=logging.DEBUG)
+		if level == 'info':
+			logger.setLevel(level=logging.INFO)
+		if level == 'warning':
+			logger.setLevel(level=logging.WARNING)
+		if level == 'error':
+			pass
+
 
 	def getDatabase(self):
 		"""Creates a dictionary containing all runs as keys and all subdirectories resp. analyses as entries.
@@ -607,9 +605,9 @@ class databaseBrowser(object):
 	for r in runs:
 		for a in analyses:
 			if a in self._info:
-				content = self._info.info()
+				content = self._info.info
 			else:
-				content = Infotxt(a, self._base).info()
+				content = Infotxt(a, self._base).info
 				self._info[a] = Infotxt(a, self._base)
 			content = [string.strip() for string in content if 'constraint' in string or if 'unconstraint' in string]
 			for c in content:
@@ -637,7 +635,7 @@ class databaseBrowser(object):
 		
 	return path
 	
-	def expAnalysis(self, analysisName):
+	def expAnalysis(self, analysis):
 		"""This is the factory for the experimental Analysis object.
 		
 		"""
@@ -648,8 +646,9 @@ class databaseBrowser(object):
 		if not self._checkResults(analysis):
 			logger.info('Skipped building of ExpAnalysis-object for %s!' %analysis)
 			return None
-			
-		return experimentalObjects.ExpAnalysis(analysis, self._checkResults(analysis))
+		if not analysis in self._info:
+			self._info[analysis] = Infotxt(analysis, self._checkResults(analysis))
+		return experimentalObjects.ExpAnalysis(analysis, self._infos[analysis], self._allruns(analysis))
 		
 	def expTopology(self, topologyName):
 		"""This is the factory for the experimental Topology object.
@@ -675,10 +674,10 @@ class databaseBrowser(object):
 		if not topology in self.alltopologies(run, analysis):
 			logger.warning('There is no experimental result for run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
 			return None
-		return experimentalObjects.ExpResult(self.expAnalysis(analysis), self.expTopology(topology))
+		return experimentalObjects.ExpResult(run, self.expAnalysis(analysis), self.expTopology(topology))
 		
 class Infotxt(object):
-	"""Holds all the lines, stored in the info.txt file. Provides the required information about topologies, results and all the metainfo needed for the experimental objects.
+	"""Holds all the lines, stored in the info.txt file. Provides the required information about topologies, results and all the meta-information needed for the experimental objects.
 	
 	"""
 	def __init__(self, analysis, path):
@@ -687,7 +686,7 @@ class Infotxt(object):
 		self._path = path
 		
 	def _readInfo(self):
-		"""Reads the whole info.txt file, returns a tuple containig a dictionary holding the metainfo an a list holding all the lines with keywords: 'constraint', 'condition', 'fuzzycondition' 'exclusions', 'expectedexclusions', 'category' and 'unconstraint'.
+		"""Reads the whole info.txt file, returns a tuple containing a dictionary holding the meta-information (e.g. PAS, lumi, comment, ...) and a list holding all the lines with keywords that show up several times (e.g. 'constraint', 'condition', 'exclusions', ...).
 	
 		"""
 		info = []

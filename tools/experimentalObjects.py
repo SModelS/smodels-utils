@@ -39,45 +39,41 @@ class ExpAnalysis(object):
 	
 	"""
 		
-	def __init__(self, analysis, path):
+	def __init__(self, analysis, infotxt, run):
 		self._name = analysis
-		self._info = self._infoDict()
-		self._run = databaseBrowser.allRuns(analysis)
-		self._path = path
-	
-	def _infoDict(self):
-		"""Reads the whole info.txt file, returns a dictionary. Excludes every line with keyword: 'constraint', 'condition', 'fuzzycondition' and 'unconstraint'.
-	
-		"""
-		infoFile = open(path)
-		_content = infoFile.readlines()
-		infoFile.close()
-		_exceptions = ['constraint', 'condition', 'fuzzycondition', 'unconstraint']
-		logger.debug('Found info.txt for run %s and analysis %s.' %(run, analysis))
-		_info = {line.split(':', 1)[0].strip(): line.split(':', 1)[1].strip() for line in _content if not line.split(':')[0].strip() in _exceptions}
-		return _info
+		self._info = infotxt.info
+		self._metaInfo = infotxt.metaInfo
+		self._run = run
 		
-	def _parsInfo(self, requested):
-		if not requested in self._info:
+	def _parsMetaInfo(self, requested):
+		if not requested in self._metaInfo:
 			logger.warning('Requested keyword %s could not be found for %s!' %(requested, self._name))
 			return None
-		return self._info[requested][0]
+		return self._metaInfo[requested][0]
 		
+	def _parsInfo(self, requested):
+		content = [line for line in self._info if requested is in line]
+		if not content:
+			logger.warning('Requested lines %s could not be found for %s!' %(requested, self._name))
+			return None
+		content = [line.split(':')[1].strip() for line in content]
+		return content
+	
 	@property
 	def lumi(self):
-		return self._parsInfo('lumi')
+		return self._parsMetaInfo('lumi')
 		
 	@property
 	def sqrts(self):
-		return self._parsInfo('sqrts')
+		return self._parsMetaInfo('sqrts')
 		
 	@property
 	def pas(self):
-		return self._parsInfo('pas')
+		return self._parsMetaInfo('pas')
 		
 	@property	
 	def url(self):
-		return self._parsInfo('URL')
+		return self._parsMetaInfo('URL')
 		
 	@property	
 	def experiment(self):
@@ -87,49 +83,54 @@ class ExpAnalysis(object):
 		
 	@property	
 	def comment(self):
-		return self._parsInfo('comment')
+		return self._parsMetaInfo('comment')
 	
 	@property
 	def prettyName(self):
-		return self._parsInfo('prettyname')
+		return self._parsMetaInfo('prettyname')
 		
 	@property	
 	def hasConstraints(self):
 		"""Checks if there are any constraints for this Analysis.
 		
 		"""
+		
 		if self._parsInfo('constraint'): return True
 		return False
-
+		
+	@property
+	def constraints(self):
+		return self._parsInfo('constraint')
+		
 	@property	
 	def private(self):
 		"""States if the analysis is private (1) or public (0).
 		### FIX ME: change to True and False?
 		
 		"""
-		return self._parsInfo('private')
+		return self._parsMetaInfo('private')
 	
 	@property	
 	def hasArxiv(self):
-		if self._parsInfo('arxiv'): return True
+		if self._parsMetaInfo('arxiv'): return True
 		return False
 		
 	@property		
 	def arxiv(self):
-		return self._parsInfo('arxiv')
+		return self._parsMetaInfo('arxiv')
 	
 	@property	
-	def isPublication(self):
-		if self._parsInfo('publication'): return True
+	def hasPublication(self):
+		if self._parsMetaInfo('publication'): return True
 		return False
 
 	@property	
 	def publication(self):
-		return self._parsInfo('publication')
+		return self._parsMetaInfo('publication')
 	
 	@property
 	def hasAxes(self):
-		if self._parsInfo('axes'): return True
+		if self._parsMetaInfo('axes'): return True
 		return False
 		
 	@property
@@ -137,20 +138,20 @@ class ExpAnalysis(object):
 		"""Retrieves the information stored in the axes-labeled line of info.txt.
 	
 		"""
-		return self._parsInfo('axes')
+		return self._parsMetaInfo('axes')
 	
 	@property	
 	def isChecked(self):
-		if self._parsInfo('checked'): return True
+		if self._parsMetaInfo('checked'): return True
 		return False
 		
 	@property		
 	def checked(self):
-		return self._parsInfo('checked')
+		return self._parsMetaInfo('checked')
 	
 	@property
 	def isPublished(self):
-		if self._parsInfo('arxiv') or self._parsInfo('publication'):
+		if self._parsMetaInfo('arxiv') or self._parsMetaInfo('publication'):
 			return True
 		return False
 	
@@ -167,7 +168,7 @@ class ExpAnalysis(object):
 		"""Retrieves all the topologies this analysis has results for as strings.
 		
 		"""
-		return databaseBrowser.allTopologies(self._run, self._name)
+		return databaseBrowser.Browser.allTopologies(self._run, self._name)
 		
 	def getExpTopologies(self):
 		if self.getTopologyNames():
@@ -245,10 +246,12 @@ class ExpResult (object):
 	"""Contains all result-specific informations and objects (e.g. exclusionlines, histograms, ...). A result denotes a specified pair of topology and analysis.
 
 	"""
-	def __init__ (self, pair):
-		self._topo = pair[2]
-		self._ana = pair[1]
-		self._run = pair[0]
+	def __init__ (self, run, analysis, topology):
+		self._topo = topology
+		self._ana = analysis
+		self._run = run
+		
+		# ### FIX ME: maybe implement Michis getExclusions - functions? Adapt to exp-objects!
 		self._extendedTopos = getExtendedTopologies(self._ana, self._run, self._topo) 
 		logger.info('creating pair-object for %s-%s!' %(self._ana, self._topo))
 		
