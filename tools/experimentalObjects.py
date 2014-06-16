@@ -52,7 +52,7 @@ class ExpAnalysis(object):
 		return self._metaInfo[requested][0]
 		
 	def _parsInfo(self, requested):
-		content = [line for line in self._info if requested is in line]
+		content = [line for line in self._info if requested in line]
 		if not content:
 			logger.warning('Requested lines %s could not be found for %s!' %(requested, self._name))
 			return None
