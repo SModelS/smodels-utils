@@ -42,14 +42,20 @@ def main():
 	
 	"""
 	argparser = argparse.ArgumentParser(description = 'Make a cleaned up copy of smodels-database')
-	argparser.add_argument ('-t', '--target', nargs = '?', help = 'target folder - default: ./clean-database', type = types.StringType, default = './clean-database/')
-	argparser.add_argument ('-rex', '--runExclusions', nargs = '?', help = 'runs that should be totally excluded - default: RPV7', type = types.StringType, default = 'RPV7')
-	argparser.add_argument ('-aex', '--analysisExclusions', nargs = '?', help = 'analyses that should be totally excluded - default: DileptonicStop8TeV, RazorMono8TeV and T1ttttCombination8TeV', type = types.StringType, default = 'DileptonicStop8TeV RazorMono8TeV T1ttttCombination8TeV')
+	argparser.add_argument ('-t', '--target', nargs = '?', help = 'target folder - default: ./clean-database', \
+	type = types.StringType, default = './clean-database/')
+	argparser.add_argument ('-rex', '--runExclusions', nargs = '?', \
+	help = 'runs that should be totally excluded - default: RPV7', type = types.StringType, default = 'RPV7')
+	argparser.add_argument ('-aex', '--analysisExclusions', nargs = '?', \
+	help = 'analyses that should be totally excluded - default: DileptonicStop8TeV, RazorMono8TeV and T1ttttCombination8TeV', \
+	type = types.StringType, default = 'DileptonicStop8TeV RazorMono8TeV T1ttttCombination8TeV')
 	argparser.add_argument ('-rm', '--remove', help = 'remove old local copy, if exists - default: False', action = 'store_true')
-	argparser.add_argument ('-scp', '--secureCopy', help = 'use scp to smodels instead of local copy from afs - default: False', action = 'store_true')
-	argparser.add_argument ('-log', '--loggingLevel', nargs = '?', help = 'set verbosity - default: WARNING', type = types.StringType, default = 'warning')
+	#argparser.add_argument ('-scp', '--secureCopy', help = 'use scp to smodels instead of local copy from afs - default: False', action = 'store_true')
+	argparser.add_argument ('-log', '--loggingLevel', nargs = '?', help = 'set verbosity - default: WARNING', \
+	type = types.StringType, default = 'warning')
 	args = argparser.parse_args()
 
+	scp = False
 	
 	targetPath = args.target
 	log.info('copying database to %s' %targetPath)
@@ -70,7 +76,8 @@ def main():
 	infoLines = ['sqrts', 'lumi', 'pas', 'publication', 'constraint', 'condition', 'axes', 'superseded_by']
 	remove = args.remove
 	log.info('removal is set to: %s' %remove)
-	scp = args.secureCopy
+	#scp = args.secureCopy
+	scp = False
 	log.info('secure copy option is set to: %s' %scp)
 	
 	cleanedDatabase = getCleanedDatabase(runExclusions, analysisExclusions, requestedLines)
@@ -111,6 +118,7 @@ def getCleanedDatabase(runExclusions, analysisExclusions, requestedLines):
 	"""Excludes all runs and analyses, that should not be copied.
 	
 	"""
+	private = None
 	db = databaseBrowser.getDatabase()
 	database = {}
 	keys = [key for key in db if not key in runExclusions]
@@ -118,6 +126,10 @@ def getCleanedDatabase(runExclusions, analysisExclusions, requestedLines):
 		database[key] = [a for a in db[key] if not a in analysisExclusions]
 		for requ in requestedLines:
 			database[key] = [a for a in database[key] if databaseBrowser.getInfo(key, a, requ)]
+			private = databaseBrowser.getInfo(key, a, 'private')
+			if private:
+				private = private[0].split()[-1].strip()
+			database[key] = [a for a in database[key] if not private == 1]
 	keys = [key for key in keys if not database[key] == []]
 	clean = {}
 	for key in keys:
@@ -130,7 +142,7 @@ def localCopy(targetPath, rmv, cleanedDatabase, infoLines):
 	"""Creates the folder structure for the cleaned version of the database and copies the files.
 	
 	"""
-	Base = databaseBrowser.Base
+	Base = databaseBrowser.base
 	target = getTarget(targetPath, rmv)
 	
 	for key in cleanedDatabase:
