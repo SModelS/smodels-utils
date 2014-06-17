@@ -6,7 +6,7 @@
    in order to produce summaryplots.
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
-.. moduleauthor:: Wolfgang Magerl <wolfgang.magerl@gmail.com>
+.. moduleauthor:: Michael Traub <michael.traub@gmx.at>
 
 """	
 
@@ -35,7 +35,7 @@ def setLogLevel(level = 'error'):
 	
 class ExpAnalysis(object):
 	
-	"""contains all analysis-specific information (e.g. PAS, lumi, publication-url, ...)
+	"""Contains all analysis-specific information (e.g. PAS, lumi, publication-url, ...)
 	
 	"""
 		
@@ -169,14 +169,22 @@ class ExpAnalysis(object):
 		
 		"""
 		return databaseBrowser.Browser.allTopologies(self._run, self._name)
+	
+	@property
+	def expTopologies(self):
+		"""Retrieves all the experimental topology objects this analysis has results for.
 		
-	def getExpTopologies(self):
+		"""
 		if self.getTopologyNames():
 			topos = [ExpTopology(t) for t in self.getExpTopologyNames()]
 			return topos
 		return None
 		
-	def getExtendedTopologyNames(self):
+	@property	
+	def extendedTopologyNames(self):
+		"""Retrieves all the topologies with their particular extentions (refering to possible mass conditions) this analysis has results for as strings.
+		
+		"""
 		return getExtendedTopologies(self._name, self._run)
 		
 	#def getRestOfInfo => contact, arxiv, publisheddata ### check something missing?
@@ -243,35 +251,91 @@ class ExpTopology(object):
 	#def refreshAnalyses
 	
 class ExpResult (object):
-	"""Contains all result-specific informations and objects (e.g. exclusionlines, histograms, ...). A result denotes a specified pair of topology and analysis.
-
+"""Contains all pair-specific informations and objects (e.g. exclusionlines, histograms, ...).
+	    use ExtendedResult-objects to handle different mass assumptions for given topology and analysis
 	"""
-	def __init__ (self, run, analysis, topology):
-		self._topo = topology
-		self._ana = analysis
-		self._run = run
+	# Best to call through function linkPairs()!
+	
+	def __init__ (self, pair): # should get objects
+	"""set all needed private variables, especially self._extendedResults as list containing all available 
+	"extended results" as ExtendedResults objects call self._setDefaultExResult
+	
+	"""
+		self._topo = pair[2]
+		self._ana = Analysis(pair[1],pair[0])
+		self.extendedTopos = getExtendedTopologies(self._ana.getName(), self._ana.getRun(), self._topo) # getExtendedtopo should build and return extendedTopo-objects 
+		self._extendedResults = [ExtendedResult(extTopo,self._ana) for extTopo in self.extendedTopos]
+		logger.info('creating pair-object for %s-%s!' %(self._ana.getName(), self._topo))
+		self._setDefaultExResult()
 		
-		# ### FIX ME: maybe implement Michis getExclusions - functions? Adapt to exp-objects!
-		self._extendedTopos = getExtendedTopologies(self._ana, self._run, self._topo) 
-		logger.info('creating pair-object for %s-%s!' %(self._ana, self._topo))
-		
-	def getExpAnalysis(self):
-		return ExpAnalysis(self._ana, self._run)
-		
-	def getExpTopology(self):
-		return ExpTopology(self._topo)
+	def _setDefaultExResult(self):
+	"""if there is only one extended Result this will be the default result if there more then one extended result,
+	the one with mass value = 050 is set to default
+	### FIX ME: rework defaultsettings 
+	"""
+		if len(self._extendedResults) == 1: 
+			self._DefaultExResult = self._extendedResults[0]
+			return
+		self._DefaultExResult = [ExResult for ExResult in self._extendedResults if ExResult.Name()[:3] == '050']
+		self._DefaultExResult = self._DefaultExResult[0]
+	
+	@property	
+	def expAnalysis(self):
+		'''returns the Analysis-object linked to this Pair-object'''
+		return self._ana
+	
+	@property	
+	def expTopology(self):
+		'''returns the topologie-object linked to this pair-object'''
+		return self._topo
 		
 	@property
-	def extendedTopologies(self):
-	    return self._extendedTopos
+	def allExtendedResults(self):
+		'''returns a list containing all available extended Results as ExtendedResults-object'''
+		return self._extendedResults
 		
-	@property
+	def allExclusionLines(self,expected = False, sigma = 0):
+		'''return a list containing the exclusionlines for all extended results, available for this pair as Root.TGraph-object
+		    if expected is set to False, the observed exclusionline will be returend, else the expected exclusionline will be returned
+		    possible values for keywordargument "sigma" are: -1,0,1. depending on this value the exclusionlines for sigma =-1,0,1 will be returend '''
+		return [ExResult.exclusionline(expected, sigma) for ExResult in self._extendedResults]
+		
+	def allExclusions(self,expected = False, typ = 0):
+		'''return a list containing all exclusionValues for all extended results, available for this pair 
+		    if expected is set to False, the observed values will be returend, else the expected values will be returned
+		    possible values for keywordargument "typ" are: 'limit','min','max'. '''
+		return [ExResult.exclusion(expected, typ) for ExResult in self._extendedResults]
+	    
+	def exclusionLine(self, extendedTopoName = 'default', expected = False, sigma = 0):
+		'''return one exclusionline as Root.TGraph-object
+		    if extendedTopoName is set to 'default', the exclusionline linked to the default extendedResult is returend
+		    if exclusionline for outher extendedResult is needed, the name of the linkt extendedTopo is requested
+		    if expected is set to False, the observed exclusionline will be returend, else the expected exclusionline will be returned
+		    possible values for keywordargument "sigma" are: -1,0,1. depending on this value the exclusionlines for sigma =-1,0,1 will be returend '''
+		return self._getSingleAttribute(extendedTopoName, expected, sigma, 'exclusionLine')
+	    
+	def exclusion(self, extendedTopoName = 'default',expected = False, typ ='max'):
+		'''return one exclusion value 
+		    if extendedTopoName is set to 'default', the value linked to the default extendedResult is returend
+		    if values for outher extendedResult is needed, the name of the linkt extendedTopo is requested
+		    if expected is set to False, the observed values will be returend, else the expected values will be returned
+		    possible values for keywordargument "type" are: 'limit','min','max'. '''
+		return self._getSingleAttribute(extendedTopoName, expected, typ, 'exclusion')
+		
+	def _getSingleAttribute(self, extendedTopoName, expected, argument, attribute):
+		'''private methode used by the methodes "exclusionline" and "exclusion"'''
+		if extendedTopoName == 'default':
+			return getattr(self._DefaultExResult, attribute)(expected, argument)
+		extendedResults = [ExResult for ExResult in self._extendedResults if extendedTopoName == ExResult.name]
+		return getattr(extendedResults[0],attribute)(expected, argument)
+	
+	@property	
 	def checkedBy(self):
 		"""Retrieves checked_by entry from info.txt.
 		
 		"""
-		infoLine = self.getExpAnalysis().getChecked()
-		logger.debug('got infoLine from ExpAnalysis-object: %s' %infoLine)
+		infoLine = self._ana.getChecked()
+		logger.debug('got infoLine from Analysis-object: %s' %infoLine)
 		if not infoLine: return None
 		if 'AL' in infoLine: # ### FIX ME: this if will be obsolet when the checked flag is fixed in every info.txt
 			logger.warning('there is no information about singel topologies')
@@ -279,7 +343,7 @@ class ExpResult (object):
 		infoLine = [ch for ch in infoLine if self._topo in ch]
 		logger.debug('first preprocessed infoLine: %s' %infoLine)
 		if not infoLine:
-			logger.warning('This Result is not checked!')
+			logger.warning('This Pair is not checked!')
 			return None
 		infoLine = [ch.split(':') for ch in infoLine]
 		logger.debug('second preprocessed infoLine: %s' %infoLine)
@@ -287,91 +351,95 @@ class ExpResult (object):
 		logger.debug('return value of infoLine: %s' %infoLine)
 		return infoLine[1].strip()
 		
-	def getExclusionLines(self):
-		"""Retrieves all the exclusionlines stored in sms.root as a python dictionary.
-		
-		"""
-		if not checkResults(self._run, self._ana, 'sms.root'): return None
-		rootFile = ROOT.TFile(checkResults(self._run, self._ana, 'sms.root'))
-		exclusionLines = {}
-		expected = []
-		observed = []
-		if not self._extendedTopos: return None
-		for t in self._extendedTopos:
-			for sigma in ['p1', '', 'm1']:
-				expected.append(rootFile.Get('expectedexclusion' + sigma + '_' + t))
-				observed.append(rootFile.Get('exclusion' + sigma + '_' + t))
-			exclusionLines[t + '_expected'] = expected
-			exclusionLines[t + '_observed'] = observed
-		return exclusionLines
-	
-	def selectTypeOfExclusionLine(self, expected = False, sigma = 0):
-		"""Picks one specified type of exclusionline as ROOT.TGraph.
-		
-		"""
-		allLines = self.getExclusionLines()
-		logger.debug('all exclusionlines: %s' %allLines)
-		if not allLines: return None
-		keys = allLines.keys()
-		
-		if expected == True:
-			keys = [k for k in keys if 'expected' in k]
-		if expected == False:
-			keys = [k for k in keys if 'observed' in k]
-			
-		exLines = allLines[keys[0]]
-		exLines = [l for l in exLines if l]
-		logger.debug('selected exclusionlines: %s' %exLines)
-		if sigma == 0: exLines = [l for l in exLines if not 'p1' in l.GetName() and not 'm1' in l.GetName()]
-		elif sigma == 1: exLines = [l for l in exLines if 'p1' in l.GetName()]
-		elif sigma == -1: exLines = [l for l in exLines if 'm1' in l.GetName()]
-		else:
-			logger.error('no exclusionlines available for sigma = %s' % sigma)
-			return None
-		return exLines
-		
 	def selectExclusionLine(self, expected = False, sigma = 0, condition = 'xvalue', value = 050):
 		"""Selects one exclusionline (out of all exclusionLines for this topology) corresponding to a specified case of mass proportions (e.g. x-value = 050, mass of LSP = 50 GeV, ...)
 		### FIX ME: maybe define a standard configuration for other conditions as xvalues
 		
 		"""
-		exLines = self.selectTypeOfExclusionLine(expected, sigma)
-		if not exLines: return None
-		if len(exLines) == 1:
-			logger.info('there is just one exclusionline of this type!')
-			return exLines[0]
-			
-		if not condition in ['D', 'x', 'LSP', 'C', 'M', 'xvalue']:
-			logger.error('%s is no valid type of condition for intermediate masses' %condition)
-			return None
-			
-		if condition == 'xvalue': topoextention = str(value)
-		else:
-			topoextention = condition + str(value)
-			
-		for line in exLines:
-			if topoextension in line.GetName(): return line
+		return self.exclusionLine(extendedTopoName = 'default', expected = expected, sigma = sigma)
+
+class ExtendedResult(object):
+	'''Contains all specific informations linked to one extended Result
+	    a extended result is linked to one specific mass-assumption'''
+	def __init__(self, name, Analysis):
+		'''set all needed private variables
+		    initiates the dictionaries for exclusionLines and exclusions'''
+		self._name = name
+		self._exclusionLines = {}
+		self._exclusions = {}
+		self._ana = Analysis
 		
-	def getExclusions(self):
-		"""Retrieves all exclusions stored in info.txt.
-		### FIX ME maybe it's better not to do it the same way it is done for exclusionlines!
+	@property
+	def name(self):
+	    '''return the name of the extended topology e.g.: "T.... ### Fixme'''
+	    return self._name
 		
-		"""
-		exclusions = {}
-		info = getInfo(self._run, self._ana, 'exclusions')
-		if not info: return None
-		expected = [line for line in info if 'expected' in line] 
-		observed = [line for line in info if not 'expected' in line]
-		if not self._extendedTopos: return None 
-		for t in self._extendedTopos: 
-			expected = [line.split() for line in expected]
-			observed = [line.split() for line in observed]
-			expected = [line for line in expected if line[1] == t]
-			observed = [line for line in observed if line[1] == t]
+	@property
+	def dictOfExclusionLines(self):
+		'''return a nested dictionary, containing all available exclusionlines
+		{'observed':{1:Root.TGraph-object,0:Root.TGraph-object,-1:Root.TGraph-object}
+		'expected':{1:Root.TGraph-object,0:Root.TGraph-object,-1:Root.TGraph-object}}'''
+		if not self._exclusionLines: self._setExclusionLines
+		return self._exclusionlines
+		
+	@property
+	def dictOfExclusions(self):
+		'''return a nested dictionary, containing all available exclusion-values
+		{'observed':{'limit':value,'min':value,'max':value}
+		'expected':{'limit':value,'min':value,'max':value}}'''
+		if not self._exclusions: self._setExclusions
+		return self._exclusions
+
+	def exclusionLine(self, expected = False, sigma = 0):
+		'''return the exclusionline as Root.TGraph-object
+		    if expected is set to False, the observed exclusionline will be returend, else the expected exclusionline will be returned
+		    possible values for keywordargument "sigma" are: -1,0,1. depending on this value the exclusionlines for sigma =-1,0,1 will be returend '''
+		if not self._exclusionLines: self._setExclusionLines()
+		sigmaDict = self._exclusionlines['observed']
+		if expected: sigmaDict = self._exclusionLines['expected']
+		return sigmaDict[sigma]
+	    
+	def exclusion(self,expected = False,typ ='max'):
+		'''return one exclusion value 
+		    if expected is set to False, the observed values will be returend, else the expected values will be returned
+		    possible values for keywordargument "type" are: 'limit','min','max'. '''
+		if not self._exclusions: self._setExclusions()
+		typeDict = self._exclusionlines['observed']
+		if expected: typeDict = self._exclusionlines['expected']
+		return typeDict[typ]
+	    
+	def _setExclusionLines(self):
+		''' private methode used by the methodes "exclusionLines" and "dictOfExclusionLines"
+		    search for the exclusionlines in the sms.root-file linked to the corresponding Analysis
+		    and build the a nested dictionary including all the exclusionlines'''
+		path = checkResults(self._ana.getRun(), self._ana.getName(), 'sms.root')
+		if not path: return None
+		rootFile = ROOT.TFile(path)
+		self._exclusionlines = {'observed':'exclusion','expected':'expectedexclusion'}
+		for key, value in self._exclusionlines.items(): 
+			sigmaDict = {1:'p1',0:'',-1:'m1'}
+			for sigmaKey, sigmaValue in sigmaDict.items():
+				sigmaDict[sigmaKey] = rootFile.Get(value + sigmaValue + '_' + self.name)
+			self._exclusionlines[key] = sigmaDict
+				
+	def _setExclusions(self): #if we change the read steps provided by readInfo and get info, we can do this in a better way
+		''' private methode used by the methodes "exclusion" and "dictOfExclusions"
+		    serch for for the exclusionValues in the info.txt-file linked to the corresponding Analysis
+		    and build the nested dictionary including all the exclusion values'''
+		self._exclusions = {'observed':'exclusion','expected':'expectedexclusion'}
+		for key, value in self._exclusions.items():
+			info = getInfo(self._ana.getRun(), self._ana.getName(), value)
+			try:
+			    info = [line.split() for line in info]
+			    info = [line for line in info if line[1] == self.name]
+			    info = info[0]
+			except: 
+			    del self._exclusions[key]
+			    continue			
+			typeDict = {'limit':2,'min':3,'max':4}
+			for typeKey,typeValue in typeDict.items():
+			    typeDict[typeKey] = info[typeValue]
+			    
 			
-			print expected
-			print observed
-			exclusions[t + '_expected'] = expected
-			exclusions[t + '_observed'] = observed
-		return exclusions
-	#def getLimitHistograms
+	#def getLimitHi1stograms
+

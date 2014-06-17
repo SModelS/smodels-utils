@@ -536,14 +536,14 @@ class Browser(object):
 		
 		topology = self._validateTopology(topology)	
 		if not analysis and topology:
-			runs = [key for key in self.database if topology in self.allTopologies(run = key)]
+			runs = [key for key in self.database if self.allTopologies(run = key) and topology in self.allTopologies(run = key)]
 			if not runs:
 				return None
 			logger.warning('No analysis was given. There are %s runs for given topology %s. Returnvalue will be list!' %(len(runs), topology))
 			return runs
 		
 		if analysis and topology:
-			runs = [key for key in self.database if analysis in self.database[key] and topology in self.allTopologies(run = key)]
+			runs = [key for key in self.database if analysis in self.database[key] and self.allTopologies(run = key) and topology in self.allTopologies(run = key)]
 			if len(runs) == 1:
 				return runs[0]
 			logger.error('%s appears in %s runs! Please check the database for ambiguities!' %(analysis, len(runs)))
@@ -576,12 +576,12 @@ class Browser(object):
 		topology = self._validateTopology(topology)
 		if topology and run:
 			for a in self.database[run]:
-				if topology in self.allTopologies(a):
+				if self.allTopologies(a) and topology in self.allTopologies(a):
 					logger.debug('Found %s in %s-%s.' %(topology, run, a))
 					analyses.append(a)
 			
 		if topology and not run:
-			analyses = [ana for ana in analyses if topology in self.allTopologies(analysis = ana)]
+			analyses = [ana for ana in analyses if self.allTopologies(analysis = ana) and topology in self.allTopologies(analysis = ana)]
 		
 		
 		if not analyses:
