@@ -375,7 +375,6 @@ class Browser(object):
 		if not [run for run in os.listdir(path) if run in self._allruns]:
 			logger.error('There is no valid database at %s' %path)
 			sys.exit()
-		logger.info('Set base to %s' %path)
 		return path
 		
 	@property
@@ -481,6 +480,7 @@ class Browser(object):
 		"""Validates the given run. Exits the script if the given run is unknown.
 		
 		"""
+		if not run: return None
 		if not run in self.database.keys():
 			logger.warning('%s is no valid run!' %run)
 			return None
@@ -491,10 +491,10 @@ class Browser(object):
 		"""Validates the given analysis. Returns None if the given analysis is unknown.
 		
 		"""
-			
+		if not analysis: return None	
 		runs = [key for key in self.database if analysis in self.database[key]]
 		if not runs:
-			logger.error('%s is no valid analysis!' %analysis)
+			logger.warning('%s is no valid analysis!' %analysis)
 			return None
 		
 		return analysis
@@ -621,15 +621,13 @@ class Browser(object):
 		for r in runs:
 			for a in analyses:
 				if a in self._infos:
-					content = self._infos[a].info
+					content = self._infos[a]
 				else:
-					content = Infotxt(a, self._base).info
+					content = Infotxt(a, self._base)
 					self._infos[a] = Infotxt(a, self._base)
-				content = [line for lines in content for line in lines]
-				content = [string.strip() for string in content if 'constraint' in string or 'unconstraint' in string]
-				for c in content:
-					if topos.count(c.split(' ')[1]) == 0:
-						topos.append(c.split(' ')[1])				
+				for t in content.topologies:
+					if topos.count(t) == 0:
+						topos.append(t)
 		if not topos:
 			logger.info('for runs %s and analyses %s no topology could be found' %(runs, analyses))
 			return None
@@ -703,6 +701,7 @@ class Infotxt(object):
 		self._run = Browser().allRuns(self._analysis)
 		logger.debug('Got run %s.' % self._run)
 		self._path = base + '/' + self._run + '/' + self._analysis + '/info.txt'
+		self._exceptions = ['constraint', 'condition', 'fuzzycondition', 'unconstraint', 'exclusions', 'expectedexclusions', 'exclusionsp1', 'expectedexclusionsp1','exclusionsm1', 'expectedexclusionsm1', 'category']
 		
 	def _readInfo(self):
 		"""Reads the whole info.txt file, returns a tuple containing a dictionary holding the meta-information (e.g. PAS, lumi, comment, ...) and a list holding all the lines with keywords that show up several times (e.g. 'constraint', 'condition', 'exclusions', ...).
@@ -712,12 +711,14 @@ class Infotxt(object):
 		infoFile = open(self._path)
 		content = infoFile.readlines()
 		infoFile.close()
-		exceptions = ['constraint', 'condition', 'fuzzycondition', 'unconstraint', 'exclusions', 'expectedexclusions', 'exclusionsp1', 'expectedexclusionsp1','exclusionsm1', 'expectedexclusionsm1', 'category']
+		
 		logger.debug('Found info.txt for run %s and analysis %s.' %(self._run, self._analysis))
-		metaInfo = {line.split(':', 1)[0].strip(): line.split(':', 1)[1].strip() for line in content if not line.split(':')[0].strip() in exceptions}
+		metaInfo = {line.split(':', 1)[0].strip(): line.split(':', 1)[1].strip() for line in content if not line.split(':')[0].strip() in self._exceptions}
 		logger.debug('Meta info is %s' %metaInfo)
-		#for key in exceptions:
-			#info.append(string.strip() for string in content if key in string)
+		for key in self._exceptions:
+			for line in content:
+				if key in line:
+					info.append(line.strip())
 		logger.debug('Info is %s' %info)	
 		return [metaInfo, info]
 	
@@ -734,3 +735,13 @@ class Infotxt(object):
 		
 		"""
 		return self._readInfo()[1]
+		
+	@property
+	def topologies(self):
+		topos = []
+		content = self.info
+		content = [string.strip() for string in content if 'constraint' in string or 'unconstraint' in string]
+		for c in content:
+			if topos.count(c.split(' ')[1]) == 0:
+				topos.append(c.split(' ')[1])				
+		return topos
