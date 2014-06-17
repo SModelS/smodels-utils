@@ -179,13 +179,13 @@ class ExpAnalysis(object):
 			topos = [ExpTopology(t) for t in self.getExpTopologyNames()]
 			return topos
 		return None
-		
+	# ### FIX ME not jet implemented in Browser!	
 	@property	
 	def extendedTopologyNames(self):
 		"""Retrieves all the topologies with their particular extentions (refering to possible mass conditions) this analysis has results for as strings.
 		
 		"""
-		return getExtendedTopologies(self._name, self._run)
+		return databaseBrowser.Browser.allExtendedTopologies(self._name, self._run)
 		
 	#def getRestOfInfo => contact, arxiv, publisheddata ### check something missing?
 # ### FIX ME ExpTopoObject ###
@@ -194,14 +194,6 @@ class ExpTopology(object):
 	### masssplitting? => move to pair object
 	
 	"""
-	
-	def __new__(self, topology):
-		alltopos = getAllTopologies()
-		if topology in alltopos:
-			logger.info('found topology %s' %topology)
-			return object.__new__(self)
-		logger.error('Cannot build ExpTopology %s' %topology)
-		
 	def __init__ (self, topology):
 		self._name = topology
 		self._runs = getAllRuns()
