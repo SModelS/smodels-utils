@@ -13,7 +13,7 @@
 import ROOT
 import logging, os, types
 import dictionaries
-import setPath
+#import setPath
 import sys
 
 
@@ -338,7 +338,7 @@ class Pair (object):
 			return None
 		return exLines
 		
-	def selectExclusionLine(self, expected = False, sigma = 0, condition = 'xvalue', value = 050):
+	def selectExclusionLine(self, expected = False, sigma = 0, condition = 'xvalue', value = 50):
 		"""Selects one exclusionline (out of all exclusionLines for this topology) corresponding to a specified case of mass proportions (e.g. x-value = 050, mass of LSP = 50 GeV, ...)
 		### FIX ME: maybe define a standard configuration for other conditions as xvalues
 		
@@ -353,12 +353,14 @@ class Pair (object):
 			logger.error('%s is no valid type of condition for intermediate masses' %condition)
 			return None
 			
-		if condition == 'xvalue': topoextention = str(value)
+		if condition == 'xvalue': topoextention = '0' + str(value)
 		else:
 			topoextention = condition + str(value)
 			
 		for line in exLines:
-			if topoextension in line.GetName(): return line
+			print '######## exclusionline: ', line.GetName()
+			print '######## extention: ', topoextention
+			if topoextention in line.GetName(): return line
 		
 	def getExclusions(self):
 		"""Retrieves all exclusions stored in info.txt.
