@@ -8,6 +8,7 @@
 
 import setPath
 from smodels.experiment import smsResults
+from smodels.tools import rcFile
 
 def count():
     #smsResults.ResultsForSqrts ( 0 )
