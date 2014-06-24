@@ -358,8 +358,6 @@ class Pair (object):
 			topoextention = condition + str(value)
 			
 		for line in exLines:
-			print '######## exclusionline: ', line.GetName()
-			print '######## extention: ', topoextention
 			if topoextention in line.GetName(): return line
 		
 	def getExclusions(self):
