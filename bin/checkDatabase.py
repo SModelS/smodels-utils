@@ -22,8 +22,6 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.DEBUG)
 
-databaseBrowser.setLogLevel()
-
 def setLogLevel(level):
 	"""Sets the level of verbosity.
 	
@@ -58,6 +56,7 @@ def main():
 	level for extended requests (0 - manual, 1 - reduced, 2 - standard, 3 - fully)- \
 	default: reduced', type = types.StringType, default = '1')
 	argparser.add_argument ('-log', '--loggingLevel', help = 'set verbosity - default: WARNING', type = types.StringType, default = 'warning')
+	argparser.add_argument ('-blog', '--browserVerbosity', help = 'set browser-verbosity - default: WARNING', type = types.StringType, default = 'warning')
 	argparser.add_argument ('-fl', '--flagList', nargs = '?', help = 'if level is manual, \
 	select list of requested information (gives only True or False) - \
 	default: INFO.TXT SMS.ROOT SMS.PY', type = types.StringType, default = 'INFO.TXT SMS.ROOT SMS.PY')
@@ -75,13 +74,16 @@ def main():
 	
 	args = argparser.parse_args()
 	setLogLevel(level = args.loggingLevel)
-	databaseBrowser.base = args.Base
+	browser = databaseBrowser.Browser(args.Base)
+	print browser
+	browser.verbosity = args.browserVerbosity
 	logger.info('Set base for database to: %s' %args.Base)
 	
-	allExtendedInfos = ['ANALYSIS', 'ARXIV', 'CONSTRAINTS', 'CHECKED', 'PUBLICATION', \
-	'JOURNAL', 'AXES', 'PAS', 'PRETTYNAME', 'TOPOLOGIES', 'EXTENDEDTOPOLOGIES', 'PRIVATE', 'COMMENT']
-	allFlagInfos = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY', 'CONSTRAINTS', \
-	'AXES', 'JOURNAL', 'PUBLICATION', 'ARXIV', 'CHECKED']
+	allExtendedInfos = ['ANALYSIS', 'LUMI', 'SQRTS', 'PAS', 'URL', 'EXPERIMENT',\
+	'COMMENT', 'PRETTYNAME', 'CONSTRAINTS', 'ARXIV', 'PUBLICATION', 'AXES', 'CHECKED', \
+	'TOPOLOGIES', 'EXTENDEDTOPOLOGIES']
+	allFlagInfos = ['ANALYSIS', 'URL', 'CONSTRAINTS', 'PRIVATE', 'ARXIV', 'PUBLICATION', \
+	'AXES', 'CHECKED', 'PUBLISHED', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY']
 	
 	flagLevel = setInfoLevel(args.flagLevel)
 	if args.flags:
@@ -117,22 +119,22 @@ def main():
 	
 	table1 = prettytable.PrettyTable(['ALL RUNS IN DATABASE'])
 	table1.align['ALL RUNS IN DATABASE'] = 'l'
-	table1.add_row([databaseBrowser.getAllRuns()])
+	table1.add_row([browser.allRuns()])
 	print >> outfile, table1
 	
 	print >> outfile, '\n************************************* ANALYSES FOR EACH RUN *************************************'
-	for run in databaseBrowser.getAllRuns():
+	for run in browser.allRuns():
 		print >> outfile,'\n~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ %s ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\n' %run
-		print >> outfile, databaseBrowser.getAllAnalyses(run)
+		print >> outfile, browser.allAnalyses(run = run)
 
 	print >> outfile, '\n************************************* ANALYSIS INFORMATION FOR EACH RUN *************************************'
 	if args.flags:
 		print >> outfile,'\n=========================================== AVAILABLE INFORMATION ==========================================='
-		createTable(flagList, flag = True)
+		createTable(flagList, browser, flag = True)
 		
 	if args.extended:
 		print >> outfile,'\n=========================================== DETAILED INFORMATION ==========================================='
-		createTable(extendedList, axesT = args.axesTable, topologiesT = args.extendedTopologyTable)
+		createTable(extendedList, browser, axesT = args.axesTable, topologiesT = args.extendedTopologyTable)
 
 def setInfoLevel(level):
 	"""Makes the level of information requested more readable.
@@ -185,9 +187,9 @@ def builtInfoList(level, add = [], flag = False):
 		return flagList
 	return extendedList
 
-def createTable(infoList, flag = False, axesT = False, topologiesT = False):
+def createTable(infoList, browser, flag = False, axesT = False, topologiesT = False):
 	
-	for run in databaseBrowser.getAllRuns():
+	for run in browser.allRuns():
 		print >> outfile,'\n~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ %s ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\n' %run
 		table = prettytable.PrettyTable(infoList)
 		table.align['ANALYSIS'] = 'l'
@@ -199,70 +201,93 @@ def createTable(infoList, flag = False, axesT = False, topologiesT = False):
 				topologiesTable = prettytable.PrettyTable(['ANALYSIS', 'TOPOLOGY', 'EXTENDEDTOPOLOGIES'])
 				topologiesTable.align['ANALYSIS'] = 'l'
 				
-		for analysis in databaseBrowser.getAllAnalyses(run):
+		for analysis in browser.allAnalyses(run):
+			lumi = 'not available'
+			sqrts = 'not available'
 			pas = 'not available'
-			constraints = 'not available'
-			prettyName = 'not available'
-			arxiv = 'not available'
-			journal = 'not available'
-			publication = 'not available'
+			url = 'not available'
+			experiment = 'not available'
 			comment = 'not available'
+			prettyName = 'not available'
+			constraints = 'not available'
+			arxiv = 'not available'
+			publication = 'not available'
+			axes = ['not available']			
 			checked = 'not available'
 			topologyNames = 'not available'
 			extendedTopologyNames = 'not available'
-			axes = ['not available']
-			private = 'not available'
+			# flags:
+			urlFLag = 'not available'
+			constraintsFlag = 'not available'
+			privateFlag = 'not available'
+			arxivFlag = 'not available'
+			publicationFlag = 'not available'
+			axesFlag = 'not available'
+			checkedFlag = 'not available'
+			published = 'not available'
 			infoFlag, rootFlag, pyFlag = False, False, False
-			Analysis = databaseBrowser.Analysis(analysis, run)
-			if Analysis:
-				pas = Analysis.getPAS()
-				constraintsFlag = Analysis.checkConstraints()
-				axesFlag = Analysis.checkAxes()
-				axes = Analysis.getAxes()
-				topologyNames = Analysis.getTopologyNames()
-				extendedTopologyNames = Analysis.getExtendedTopologyNames()
-				arxivFlag = Analysis.checkArxiv()
-				arxiv = Analysis.getArxiv()
-				journalFlag = Analysis.checkJournal()
-				journal = Analysis.getJournal()
-				publicationFlag = Analysis.checkPublication()
-				publication = Analysis.getPublication()
-				checked = Analysis.getChecked()
-				checkedFlag = Analysis.checkChecked()
-				prettyName = Analysis.getPrettyName()
-				private = Analysis.getPrivate()
-				comment = Analysis.getComment()
-			if databaseBrowser.checkResults(run, analysis): infoFlag = True
-			if databaseBrowser.checkResults(run, analysis, 'sms.root'): rootFlag = True
-			if databaseBrowser.checkResults(run, analysis, 'sms.py'): pyFlag = True
+			expAnalysis = browser.expAnalysis(analysis)
+			if expAnalysis:
+				lumi = expAnalysis.lumi
+				sqrts = expAnalysis.sqrts
+				pas = expAnalysis.pas
+				url = expAnalysis.url
+				experiment = expAnalysis.experiment
+				comment = expAnalysis.comment
+				prettyName = expAnalysis.prettyName
+				constraints = expAnalysis.constraints
+				arxiv = expAnalysis.arxiv
+				publication = expAnalysis.publication
+				axes = expAnalysis.axes
+				checked = expAnalysis.checked
+				topologyNames = expAnalysis.topologies
+				extendedTopologyNames = expAnalysis.extendedTopologies
+				#flags:
+				urlFLag = expAnalysis.hasUrl
+				constraintsFlag = expAnalysis.hasConstraints
+				privateFlag = expAnalysis.private
+				arxivFlag = expAnalysis.hasArxiv
+				publicationFlag = expAnalysis.hasPublication
+				axesFlag = expAnalysis.hasAxes
+				checkedFlag = expAnalysis.isChecked
+				published = expAnalysis.isPublished
+				infoFlag = True
+				pyFlag = expAnalysis.hasPY
+				rootFlag = expAnalysis.hasROOT
 		
 			infoDict = {
-				'ANALYSIS':analysis, 
+				'ANALYSIS':analysis,
+				'LUMI':lumi,
+				'SQRTS':sqrts,
+				'PAS':pas,
+				'URL':url,
+				'EXPERIMENT':experiment,
+				'COMMENT': comment, 
+				'PRETTYNAME':prettyName,
+				'CONSTRAINTS':constraints,
 				'ARXIV':arxiv, 
-				'CHECKED':checked, 
-				'PUBLICATION': publication, 
-				'JOURNAL':journal, 
+				'PUBLICATION': publication,
 				'AXES':axes, 
-				'PAS':pas, 
-				'PRETTYNAME':prettyName, 
+				'CHECKED':checked,
 				'TOPOLOGIES':topologyNames, 
-				'EXTENDEDTOPOLOGIES':extendedTopologyNames,
-				'PRIVATE': private,
-				'COMMENT': comment
+				'EXTENDEDTOPOLOGIES':extendedTopologyNames
 				}
 			if flag:
 				infoDict = {
 					'ANALYSIS': analysis, 
+					'URL': urlFLag,
+					'CONSTRAINTS': constraintsFlag,
+					'PRIVATE': privateFlag,
+					'ARXIV': arxivFlag,
+					'PUBLICATION': publicationFlag,
+					'AXES': axesFlag,
+					'CHECKED': checkedFlag,
+					'PUBLISHED':published,
 					'INFO.TXT': infoFlag, 
 					'SMS.ROOT': rootFlag, 
-					'SMS.PY': pyFlag, 
-					'CONSTRAINTS': constraintsFlag, 
-					'AXES': axesFlag, 
-					'JOURNAL':journalFlag, 
-					'PUBLICATION': publicationFlag, 
-					'ARXIV': arxivFlag,
-					'CHECKED': checkedFlag
+					'SMS.PY': pyFlag,
 					}
+					
 			tableList = [infoDict[key] for key in infoList]
 			logger.debug('Feeding into table: %s' %tableList)
 			table.add_row(tableList)
