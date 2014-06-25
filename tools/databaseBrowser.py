@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
 
-# ###	FIX ME: go back to old run handling ability there are still ambiguities!
 # ###	FIX ME: move some of the topology functionality to Infotxt object
 # ###	FIX ME: fix the list comprehensions in Infotxt
 
@@ -42,8 +41,9 @@ class Browser(object):
 		self.database = self._getDatabase()
 		self._runRestriction = None
 		self._infos = {}
-		#self._analysis = None
-		#self._topology = None
+		self._analyses = {}
+		self._topologies = {}
+		self._results = {}
 		
 	@property
 	def base(self):
@@ -67,7 +67,7 @@ class Browser(object):
 		
 	@property
 	def experimentRestriction(self):
-		"""Tells if the browser is restricted to either CMS or ATLAS. Gives None is both are allowed.
+		"""Tells if the browser is restricted to either CMS or ATLAS. Gives None if both are allowed.
 		
 		"""
 		return self._experimentRestriction
@@ -203,8 +203,10 @@ class Browser(object):
 		"""Retrieves all runs a given analysis or topology or analysis-topology pair is available for. Returns a list containing all runs or just a string when analysis is given. 
 	
 		"""
+	# ### FIX ME: think about the ambiguities: rais an error?, stop the script?, try to pass this problem?
 	# ### FIX ME: maybe return only list?
 		if not analysis and not topology:
+			logger.warning('No analysis was given. Returnvalue will be list containing all available runs!')
 			return self.database.keys()
 	
 		if self._runRestriction:
@@ -219,8 +221,8 @@ class Browser(object):
 			runs = [key for key in self.database if analysis in self.database[key]]
 			if len(runs) == 1:
 				return runs[0]
-			logger.error('%s appears in %s runs! Please check the database for ambiguities!' %(analysis, len(runs)))
-			return None
+			logger.error('%s appears in %s runs! Returnvalue will be list! Please check the database for ambiguities!' %(analysis, len(runs)))
+			return runs
 		
 		topology = self._validateTopology(topology)	
 		if not analysis and topology:
@@ -234,8 +236,8 @@ class Browser(object):
 			runs = [key for key in self.database if analysis in self.database[key] and self.allTopologies(run = key) and topology in self.allTopologies(run = key)]
 			if len(runs) == 1:
 				return runs[0]
-			logger.error('%s appears in %s runs! Please check the database for ambiguities!' %(analysis, len(runs)))
-			return None
+			logger.error('%s appears in %s runs! Returnvalue will be list! Please check the database for ambiguities!' %(analysis, len(runs)))
+			return runs
 
 	def allAnalyses(self, run = None, topology = None):
 		"""Retrieves all analyses or all analyses existing for given run or run-topology-pair.
@@ -322,7 +324,7 @@ class Browser(object):
 		
 		return topos
 	
-	def _checkResults(analysis, requested = 'info.txt'):
+	def _checkResults(self, analysis, requested = 'info.txt'):
 		"""Checks if results for given analysis are available in form of info.txt, sms.root and sms.py, returns path to these files.
 	
 		"""
@@ -343,30 +345,40 @@ class Browser(object):
 		
 		"""
 		
-		if isinstance(analysis, ExpAnalysis):
-			return analysis
-			
+		#if isinstance(analysis, object):
+			#return analysis
+		if analysis in self._analyses:
+			return self._analyses[analysis]
 		if not self._checkResults(analysis):
 			logger.info('Skipped building of ExpAnalysis-object for %s!' %analysis)
 			return None
-		if not analysis in self._info:
-			self._info[analysis] = Infotxt(analysis, self._checkResults(analysis))
-		return experimentalObjects.ExpAnalysis(analysis, self._infos[analysis], self._allruns(analysis))
+		if not analysis in self._infos:
+			logger.debug('Browser has no info.txt-object for %s!' %analysis)
+			self._infos[analysis] = Infotxt(analysis, self._checkResults(analysis))
+			logger.debug('Created and stored info.txt-object!')
+		logger.debug('Try to creat experimental Analysis: %s - %s - %s' %(analysis, self._infos[analysis], self.allRuns(analysis)))	
+		self._analyses[analysis] = experimentalObjects.ExpAnalysis(analysis, self._infos[analysis], self.allRuns(analysis))
+		return experimentalObjects.ExpAnalysis(analysis, self._infos[analysis], self.allRuns(analysis))
 		
 	def expTopology(self, topologyName):
 		"""This is the factory for the experimental Topology object.
 		
 		"""		
-		if isinstance(topology, ExpTopology):
-			return consideredTopology
-		
+		#if isinstance(topology, object):
+			#return topology
+		if topology in self._topologies:
+			return self._topologies[topology]
 		topology = self._validateTopology(topologyName)
-		return ExpTopology(consideredTopology)
+		self._topologies[topology] = experimentalObjects.ExpTopology(topology)
+		return experimentalObjects.ExpTopology(topology)
 		
 	def expResult(self, analysis, topology, run = None):
 		"""This is the factory for the experimental Result object.
 		
 		"""
+		_result = analysis + '-' + topology
+		if _result in self._results:
+			return self._results[_result]
 		analysis = self._validateAnalysis(analysis)
 		topology = self._validateTopology(topology)
 		if run:
@@ -374,21 +386,24 @@ class Browser(object):
 		if not run:
 			run = self.allRuns(analysis, topology)
 			
-		if not topology in self.alltopologies(run, analysis):
+		if not analysis or not topology or not topology in self.alltopologies(run, analysis):
 			logger.warning('There is no experimental result for run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
 			return None
+		self._results[_result] = experimentalObjects.ExpResult(run, self.expAnalysis(analysis), self.expTopology(topology))
 		return experimentalObjects.ExpResult(run, self.expAnalysis(analysis), self.expTopology(topology))
 		
 class Infotxt(object):
 	"""Holds all the lines, stored in the info.txt file. Provides the required information about topologies, results and all the meta-information needed for the experimental objects.
 	
 	"""
-	def __init__(self, analysis, base):
+	# ### FIX ME: I do give the path to the info.txt, self._run and self._analysis are just for the logger. Maybe better drop them!
+	def __init__(self, analysis, path):
 		self._analysis = analysis
 		logger.debug('Got analysis %s.' %analysis)
 		self._run = Browser().allRuns(self._analysis)
 		logger.debug('Got run %s.' % self._run)
-		self._path = base + '/' + self._run + '/' + self._analysis + '/info.txt'
+		self._path = path
+		logger.debug('Creating object of info.txt: %s' %self._path)
 		self._exceptions = ['constraint', 'condition', 'fuzzycondition', 'unconstraint', 'exclusions', 'expectedexclusions', 'exclusionsp1', 'expectedexclusionsp1','exclusionsm1', 'expectedexclusionsm1', 'category']
 		
 	def _readInfo(self):
@@ -436,18 +451,18 @@ class Infotxt(object):
 		
 	@property	
 	def _preprocessAxes(self):
-	"""Handles the information stored in the axes-labeled line of info.txt, therefor this line has to be preprocessed.
+		"""Handles the information stored in the axes-labeled line of info.txt, therefor this line has to be preprocessed.
 	
-	"""
-	infoLine = self.metaInfo['axes'].split(',')
-	infoLine = [ax.strip() for ax in infoLine]
-	logger.debug('axes- information: %s' %infoLine)
-	return infoLine
+		"""
+		infoLine = self.metaInfo['axes'].split(',')
+		infoLine = [ax.strip() for ax in infoLine]
+		logger.debug('axes- information: %s' %infoLine)
+		return infoLine
 
 
 		
 	def extendedTopologies(self, topology = None):
-		"""Checks if the topologies for one given analysis-run are tainted with any kind of mass requirements and returns dictionary with extended topologies. Can be reduced to given topology (returns list).
+		"""Checks if the topologies in this info.txt are tainted with any kind of mass requirements and returns dictionary with extended topologies. Can be reduced to given topology (returns list).
 	
 		"""
 		topos = {}
@@ -483,7 +498,7 @@ class Infotxt(object):
 							topos[topo].append(topo + 'D' + D)
 						elif 'LSP' or 'x' or 'C' or 'M' in case[2]: topos[topo].append(topo + case[2])
 				if len(case) > 3:
-					logger.info('Topology is: %s => more then one additional condition is too much at the moment' %topo)
+					logger.warning('Topology is: %s => more then one additional condition is too much at the moment' %topo)
 					continue
 		
 		if topos == {'':[]}:

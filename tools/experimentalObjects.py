@@ -43,13 +43,15 @@ class ExpAnalysis(object):
 		self._name = analysis
 		self._info = infotxt.info
 		self._metaInfo = infotxt.metaInfo
+		self._topologies = infotxt.topologies
+		self._extendedTopologies = infotxt.extendedTopologies()
 		self._run = run
 		
 	def _parsMetaInfo(self, requested):
 		if not requested in self._metaInfo:
 			logger.warning('Requested keyword %s could not be found for %s!' %(requested, self._name))
 			return None
-		return self._metaInfo[requested][0]
+		return self._metaInfo[requested]
 		
 	def _parsInfo(self, requested):
 		content = [line for line in self._info if requested in line]
@@ -74,7 +76,12 @@ class ExpAnalysis(object):
 	@property	
 	def url(self):
 		return self._parsMetaInfo('URL')
-		
+	
+	@property	
+	def hasUrl(self):
+		if self._parsMetaInfo('URL'): return True
+		return False
+	
 	@property	
 	def experiment(self):
 		if 'ATALS' in self._run:
@@ -155,6 +162,17 @@ class ExpAnalysis(object):
 			return True
 		return False
 	
+	# ### FIX ME: does this belong in here?
+	#@property	
+	#def hasROOT(self):
+		#if databaseBrowser.Browser._checkResults(self._name, requested = 'sms.root'): return True
+		#return False
+	
+	#@property	
+	#def hasPY(self):
+		#if databaseBrowser.Browser._checkResults(self._name, requested = 'sms.py'): return True
+		#return False
+	
 	@property	
 	def name(self):
 		return self._name
@@ -164,11 +182,11 @@ class ExpAnalysis(object):
 		return self._run
 		
 	@property
-	def allTopologyNames(self):
+	def topologies(self):
 		"""Retrieves all the topologies this analysis has results for as strings.
 		
 		"""
-		return databaseBrowser.Browser.allTopologies(self._run, self._name)
+		return self._topologies
 	
 	@property
 	def expTopologies(self):
@@ -179,13 +197,13 @@ class ExpAnalysis(object):
 			topos = [ExpTopology(t) for t in self.getExpTopologyNames()]
 			return topos
 		return None
-	# ### FIX ME not jet implemented in Browser!	
+		
 	@property	
-	def extendedTopologyNames(self):
+	def extendedTopologies(self):
 		"""Retrieves all the topologies with their particular extentions (refering to possible mass conditions) this analysis has results for as strings.
 		
 		"""
-		return databaseBrowser.Browser.allExtendedTopologies(self._name, self._run)
+		return self._extendedTopologies
 		
 	#def getRestOfInfo => contact, arxiv, publisheddata ### check something missing?
 # ### FIX ME ExpTopoObject ###
@@ -243,16 +261,16 @@ class ExpTopology(object):
 	#def refreshAnalyses
 	
 class ExpResult (object):
-"""Contains all pair-specific informations and objects (e.g. exclusionlines, histograms, ...).
+	"""Contains all pair-specific informations and objects (e.g. exclusionlines, histograms, ...).
 	    use ExtendedResult-objects to handle different mass assumptions for given topology and analysis
 	"""
 	# Best to call through function linkPairs()!
 	
 	def __init__ (self, pair): # should get objects
-	"""set all needed private variables, especially self._extendedResults as list containing all available 
+		"""set all needed private variables, especially self._extendedResults as list containing all available 
 	"extended results" as ExtendedResults objects call self._setDefaultExResult
 	
-	"""
+		"""
 		self._topo = pair[2]
 		self._ana = Analysis(pair[1],pair[0])
 		self.extendedTopos = getExtendedTopologies(self._ana.getName(), self._ana.getRun(), self._topo) # getExtendedtopo should build and return extendedTopo-objects 
@@ -261,10 +279,10 @@ class ExpResult (object):
 		self._setDefaultExResult()
 		
 	def _setDefaultExResult(self):
-	"""if there is only one extended Result this will be the default result if there more then one extended result,
+		"""if there is only one extended Result this will be the default result if there more then one extended result,
 	the one with mass value = 050 is set to default
 	### FIX ME: rework defaultsettings 
-	"""
+		"""
 		if len(self._extendedResults) == 1: 
 			self._DefaultExResult = self._extendedResults[0]
 			return
