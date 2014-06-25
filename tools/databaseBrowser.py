@@ -149,6 +149,10 @@ class Analysis(object):
 		if self._parsInfo('publication'): return self._parsInfo('publication')
 		return None	
 		
+	def checkPublic(self):
+		if self.checkPublication() or self.checkArxiv(): return True
+		return False
+		
 	def checkAxes(self):
 		if self._parsInfo('axes'): return True
 		return False
