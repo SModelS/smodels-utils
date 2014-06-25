@@ -26,36 +26,41 @@ def main():
 	print '\nStructure of database: ',database
 	print ''
 	
+	print '\n===========================\n'
 	# get a specified Analysis-object 
-	Analysis = databaseBrowser.Analysis('SUS13002')
-	print 'Analysis-object: ', Analysis
+	analysis = databaseBrowser.Analysis('SUS13002')
+	print 'Analysis-object: ', analysis
 	# use this object
-	print '\nAnalysis is: ', Analysis.getName()
-	print 'PAS: ', Analysis.getPAS()
-	print 'luminosity: ', Analysis.getLumi()
-	print 'Experiment: ', Analysis.getExperiment()
-	print 'comment: ', Analysis.getComment()
+	print '\nAnalysis is: ', analysis.getName()
+	print 'PAS: ', analysis.getPAS()
+	print 'Luminosity: ', analysis.getLumi()
+	print 'Experiment: ', analysis.getExperiment()
+	print 'Comment: ', analysis.getComment()
+	print 'Is analysis published?  ', analysis.checkPublic()
 	print ''
 
+	print '\n===========================\n'
 	# to get specified Topology-object
-	Topology = databaseBrowser.Topology('T1')
-	print 'Topology-object: ', Topology
+	topology = databaseBrowser.Topology('T1')
+	print 'Name of this topology: ', topology.getName()
+	print 'Topology-object: ', topology
 	# use this object
-	print 'Analyses that contain this topology: ', Topology.getAnalysisNames(run = '8TeV')
+	print 'Analyses that contain this topology: ', topology.getAnalysisNames(run = '8TeV')
 	print ''
 	
+	print '\n===========================\n'
 	# to get a specified Pair-object
-	Pair = databaseBrowser.Pair(['8TeV','SUS13002', 'T1tttt'])
-	print 'Pair-object is: ', Pair
+	pair = databaseBrowser.Pair(['8TeV','SUS13002', 'T1tttt'])
+	print 'Pair-object is: ', pair
 	# use this object
-	print '\nResult is checked: ', Pair.checkedBy()
-	print '\nGet all the exclusionlines: ', Pair.getExclusionLines()
-	print '\nSelect a specified exclusionline: ', Pair.selectExclusionLine(expected = True, sigma = 1)
+	print '\nResult is checked: ', pair.checkedBy()
+	print '\nGet all the exclusionlines: ', pair.getExclusionLines()
+	print '\nSelect a specified exclusionline: ', pair.selectExclusionLine(expected = True, sigma = 1)
 	
 	# get Analysis belonging to this Pair:
-	Analysis = Pair.getAnalysis()
-	print '\nNow we have an Analysis-object: ', Analysis
-	print '\nFor this Pair the PAS is: ', Analysis.getPAS()
+	analysis = pair.getAnalysis()
+	print '\nNow we have an Analysis-object: ', analysis
+	print '\nFor this Pair the PAS is: ', analysis.getPAS()
 	print ''
 	
 	
