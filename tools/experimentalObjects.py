@@ -75,11 +75,11 @@ class ExpAnalysis(object):
 		
 	@property	
 	def url(self):
-		return self._parsMetaInfo('URL')
+		return self._parsMetaInfo('url')
 	
 	@property	
 	def hasUrl(self):
-		if self._parsMetaInfo('URL'): return True
+		if self._parsMetaInfo('url'): return True
 		return False
 	
 	@property	
