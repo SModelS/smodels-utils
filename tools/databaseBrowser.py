@@ -221,8 +221,8 @@ class Browser(object):
 			runs = [key for key in self.database if analysis in self.database[key]]
 			if len(runs) == 1:
 				return runs[0]
-			logger.error('%s appears in %s runs! Returnvalue will be list! Please check the database for ambiguities!' %(analysis, len(runs)))
-			return runs
+			logger.error('%s appears in %s runs! Returnvalue will be first hit! Please check the database for ambiguities!' %(analysis, len(runs)))
+			return runs[0]
 		
 		topology = self._validateTopology(topology)	
 		if not analysis and topology:
@@ -236,8 +236,8 @@ class Browser(object):
 			runs = [key for key in self.database if analysis in self.database[key] and self.allTopologies(run = key) and topology in self.allTopologies(run = key)]
 			if len(runs) == 1:
 				return runs[0]
-			logger.error('%s appears in %s runs! Returnvalue will be list! Please check the database for ambiguities!' %(analysis, len(runs)))
-			return runs
+			logger.error('%s appears in %s runs! Returnvalue will be first hit! Please check the database for ambiguities!' %(analysis, len(runs)))
+			return runs[0]
 
 	def allAnalyses(self, run = None, topology = None):
 		"""Retrieves all analyses or all analyses existing for given run or run-topology-pair.
@@ -461,62 +461,62 @@ class Infotxt(object):
 
 
 		
-	def extendedTopologies(self, topology = None):
-		"""Checks if the topologies in this info.txt are tainted with any kind of mass requirements and returns dictionary with extended topologies. Can be reduced to given topology (returns list).
+	#def extendedTopologies(self, topology = None):
+		#"""Checks if the topologies in this info.txt are tainted with any kind of mass requirements and returns dictionary with extended topologies. Can be reduced to given topology (returns list).
 	
-		"""
-		topos = {}
-		logger.debug('Got analysis %s and run %s!' %(self._analysis, self._run))
-		if not 'axes' in self.metaInfo:
-			logger.info('No additional information about axes was found for %s-%s!' %(self._run, self._analysis))
-			if not self.topologies: return None
-			for t in self.topologies:
-				topos[t]=[t]
-			if not topology: return topos
-			if topos.has_key(topology): return topos[topology]
-			logger.warning('For %s-%s there is no topology %s' %(self._run, self._analysis, topology))
-			return None
+		#"""
+		#topos = {}
+		#logger.debug('Got analysis %s and run %s!' %(self._analysis, self._run))
+		#if not 'axes' in self.metaInfo:
+			#logger.info('No additional information about axes was found for %s-%s!' %(self._run, self._analysis))
+			#if not self.topologies: return None
+			#for t in self.topologies:
+				#topos[t]=[t]
+			#if not topology: return topos
+			#if topos.has_key(topology): return topos[topology]
+			#logger.warning('For %s-%s there is no topology %s' %(self._run, self._analysis, topology))
+			#return None
 	
-		axes = self._preprocessAxes
-		logger.info('For %s-%s there is additional mass information!' %(self._run, self._analysis)) 
+		#axes = self._preprocessAxes
+		#logger.info('For %s-%s there is additional mass information!' %(self._run, self._analysis)) 
 		
-		for ax in axes:
-			logger.debug('Axesline is:%s' %ax)
-			massdic = self._massProportions(ax)
-			topo = massdic.keys()[0]
-			topos[topo] = []
+		#for ax in axes:
+			#logger.debug('Axesline is: %s' %ax)
+			#massdic = self._massProportions(ax)
+			#topo = massdic.keys()[0]
+			#topos[topo] = []
 
-			for case in massdic[topo]:
-				if len(case) == 2: topos[topo].append(topo)
-				if len(case) == 3:
-					try:
-						x = int(case[2])
-						topos[topo].append(topo + case[2])
-					except ValueError:
-						if 'D' in case[2]:
-							D = case[2].split('=')[-1].strip()
-							topos[topo].append(topo + 'D' + D)
-						elif 'LSP' or 'x' or 'C' or 'M' in case[2]: topos[topo].append(topo + case[2])
-				if len(case) > 3:
-					logger.warning('Topology is: %s => more then one additional condition is too much at the moment' %topo)
-					continue
+			#for case in massdic[topo]:
+				#if len(case) == 2: topos[topo].append(topo)
+				#if len(case) == 3:
+					#try:
+						#x = int(case[2])
+						#topos[topo].append(topo + case[2])
+					#except ValueError:
+						#if 'D' in case[2]:
+							#D = case[2].split('=')[-1].strip()
+							#topos[topo].append(topo + 'D' + D)
+						#elif 'LSP' or 'x' or 'C' or 'M' in case[2]: topos[topo].append(topo + case[2])
+				#if len(case) > 3:
+					#logger.warning('Topology is: %s => more then one additional condition is too much at the moment' %topo)
+					#continue
 		
-		if topos == {'':[]}:
-			logger.warning('Something is wrong with the axes line in the info.txt for %s-%s!' %(self._run, self._analysis))
-			return None
-		if not topology: return topos
-		if topos.has_key(topology): return topos[topology]
-		logger.warning('For %s-%s there is no topology %s' %(self._run, self._analysis, topology))
-		return None
+		#if topos == {'':[]}:
+			#logger.warning('Something is wrong with the axes line in the info.txt for %s-%s!' %(self._run, self._analysis))
+			#return None
+		#if not topology: return topos
+		#if topos.has_key(topology): return topos[topology]
+		#logger.warning('For %s-%s there is no topology %s' %(self._run, self._analysis, topology))
+		#return None
 		
-	def _massProportions(axesLine):
-		"""Reads out all the conditions for intermediate masses (e.g. masssplitting-xvalues 025, 050, 075) implicitly stored in axes-lines of info.txt and returns the information as dictionary.
+	#def _massProportions(axesLine):
+		#"""Reads out all the conditions for intermediate masses (e.g. masssplitting-xvalues 025, 050, 075) implicitly stored in axes-lines of info.txt and returns the information as dictionary.
 	
-		"""
-		massdic = {}
-		topo = axesLine.split(' ')[0].replace(':', '').strip()
-		massdic[topo] = axesLine.replace(topo + ':', '').split('-')
-		massdic[topo] = [c.strip() for c in massdic[topo]]
-		logger.info('For %s there are %s different cases of mass proportions' %(topo, len(massdic[topo])))
-		massdic[topo]=[c.split(' ') for c in massdic[topo]]
-		return massdic
+		#"""
+		#massdic = {}
+		#topo = axesLine.split(' ')[0].replace(':', '').strip()
+		#massdic[topo] = axesLine.replace(topo + ':', '').split('-')
+		#massdic[topo] = [c.strip() for c in massdic[topo]]
+		#logger.info('For %s there are %s different cases of mass proportions' %(topo, len(massdic[topo])))
+		#massdic[topo]=[c.split(' ') for c in massdic[topo]]
+		#return massdic

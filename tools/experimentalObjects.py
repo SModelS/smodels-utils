@@ -44,7 +44,7 @@ class ExpAnalysis(object):
 		self._info = infotxt.info
 		self._metaInfo = infotxt.metaInfo
 		self._topologies = infotxt.topologies
-		self._extendedTopologies = infotxt.extendedTopologies()
+		#self._extendedTopologies = infotxt.extendedTopologies()
 		self._run = run
 		
 	def _parsMetaInfo(self, requested):
@@ -162,17 +162,6 @@ class ExpAnalysis(object):
 			return True
 		return False
 	
-	# ### FIX ME: does this belong in here?
-	#@property	
-	#def hasROOT(self):
-		#if databaseBrowser.Browser._checkResults(self._name, requested = 'sms.root'): return True
-		#return False
-	
-	#@property	
-	#def hasPY(self):
-		#if databaseBrowser.Browser._checkResults(self._name, requested = 'sms.py'): return True
-		#return False
-	
 	@property	
 	def name(self):
 		return self._name
@@ -198,12 +187,12 @@ class ExpAnalysis(object):
 			return topos
 		return None
 		
-	@property	
-	def extendedTopologies(self):
-		"""Retrieves all the topologies with their particular extentions (refering to possible mass conditions) this analysis has results for as strings.
+	#@property	
+	#def extendedTopologies(self):
+		#"""Retrieves all the topologies with their particular extentions (refering to possible mass conditions) this analysis has results for as strings.
 		
-		"""
-		return self._extendedTopologies
+		#"""
+		#return self._extendedTopologies
 		
 	#def getRestOfInfo => contact, arxiv, publisheddata ### check something missing?
 # ### FIX ME ExpTopoObject ###
@@ -264,7 +253,6 @@ class ExpResult (object):
 	"""Contains all pair-specific informations and objects (e.g. exclusionlines, histograms, ...).
 	    use ExtendedResult-objects to handle different mass assumptions for given topology and analysis
 	"""
-	# Best to call through function linkPairs()!
 	
 	def __init__ (self, pair): # should get objects
 		"""set all needed private variables, especially self._extendedResults as list containing all available 
@@ -298,7 +286,18 @@ class ExpResult (object):
 	def expTopology(self):
 		'''returns the topologie-object linked to this pair-object'''
 		return self._topo
-		
+	
+	# ### FIX ME: does this belong in here?
+	@property	
+	def hasROOT(self):
+		if databaseBrowser.Browser._checkResults(self._name, requested = 'sms.root'): return True
+		return False
+	
+	@property	
+	def hasPY(self):
+		if databaseBrowser.Browser._checkResults(self._name, requested = 'sms.py'): return True
+		return False
+	
 	@property
 	def allExtendedResults(self):
 		'''returns a list containing all available extended Results as ExtendedResults-object'''

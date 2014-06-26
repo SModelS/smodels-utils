@@ -252,8 +252,8 @@ def createTable(infoList, browser, flag = False, axesT = False, topologiesT = Fa
 				checkedFlag = expAnalysis.isChecked
 				published = expAnalysis.isPublished
 				infoFlag = True
-				pyFlag = expAnalysis.hasPY
-				rootFlag = expAnalysis.hasROOT
+				pyFlag = browser._checkResults(analysis, requested = 'sms.py')
+				rootFlag = browser._checkResults(analysis, requested = 'sms.root')
 		
 			infoDict = {
 				'ANALYSIS':analysis,
