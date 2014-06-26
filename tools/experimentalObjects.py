@@ -84,7 +84,7 @@ class ExpAnalysis(object):
 	
 	@property	
 	def experiment(self):
-		if 'ATALS' in self._run:
+		if 'ATLAS' in self._run:
 			return 'ATLAS'
 		return 'CMS' 
 		
