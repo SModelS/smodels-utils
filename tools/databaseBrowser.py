@@ -32,8 +32,8 @@ class Browser(object):
 	
 	"""
 	def __init__(self, base = '/afs/hephy.at/user/w/walten/public/sms/'):
-		#self._allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
-		self._allruns = ["8TeV", "ATLAS8TeV", "2012", "RPV7"]
+		self._allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
+		#self._allruns = ["8TeV", "ATLAS8TeV", "2012", "RPV7"]
 		self._artifacts = ['old', 'bad', 'missing', 'TODO', 'readme']
 		self._base = self._validateBase(base)
 		self._experimentRestriction = None
@@ -400,8 +400,8 @@ class Infotxt(object):
 	def __init__(self, analysis, path):
 		self._analysis = analysis
 		logger.debug('Got analysis %s.' %analysis)
-		self._run = Browser().allRuns(self._analysis)
-		logger.debug('Got run %s.' % self._run)
+		#self._run = Browser().allRuns(self._analysis)
+		#logger.debug('Got run %s.' % self._run)
 		self._path = path
 		logger.debug('Creating object of info.txt: %s' %self._path)
 		self._exceptions = ['constraint', 'condition', 'fuzzycondition', 'unconstraint', 'exclusions', 'expectedexclusions', 'exclusionsp1', 'expectedexclusionsp1','exclusionsm1', 'expectedexclusionsm1', 'category']
@@ -415,14 +415,14 @@ class Infotxt(object):
 		content = infoFile.readlines()
 		infoFile.close()
 		
-		logger.debug('Found info.txt for run %s and analysis %s.' %(self._run, self._analysis))
+		logger.debug('Found info.txt for %s.' %self._path)
 		metaInfo = {line.split(':', 1)[0].strip(): line.split(':', 1)[1].strip() for line in content if not line.split(':')[0].strip() in self._exceptions}
-		logger.debug('Meta info is %s' %metaInfo)
+		#logger.debug('Meta info is %s' %metaInfo)
 		for key in self._exceptions:
 			for line in content:
 				if key in line:
 					info.append(line.strip())
-		logger.debug('Info is %s' %info)	
+		#logger.debug('Info is %s' %info)	
 		return [metaInfo, info]
 	
 	@property
