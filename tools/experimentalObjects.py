@@ -44,7 +44,7 @@ class ExpAnalysis(object):
 		self._info = infotxt.info
 		self._metaInfo = infotxt.metaInfo
 		self._topologies = infotxt.topologies
-		#self._extendedTopologies = infotxt.extendedTopologies()
+		self._extendedTopologies = infotxt.extendedTopologies()
 		self._run = run
 		
 	def _parsMetaInfo(self, requested):
@@ -187,12 +187,12 @@ class ExpAnalysis(object):
 			return topos
 		return None
 		
-	#@property	
-	#def extendedTopologies(self):
-		#"""Retrieves all the topologies with their particular extentions (refering to possible mass conditions) this analysis has results for as strings.
+	@property	
+	def extendedTopologies(self):
+		"""Retrieves all the topologies with their particular extentions (refering to possible mass conditions) this analysis has results for as strings.
 		
-		#"""
-		#return self._extendedTopologies
+		"""
+		return self._extendedTopologies
 		
 	#def getRestOfInfo => contact, arxiv, publisheddata ### check something missing?
 # ### FIX ME ExpTopoObject ###
@@ -254,14 +254,14 @@ class ExpResult (object):
 	    use ExtendedResult-objects to handle different mass assumptions for given topology and analysis
 	"""
 	
-	def __init__ (self, pair): # should get objects
-		"""set all needed private variables, especially self._extendedResults as list containing all available 
+	def __init__ (self, run, expAnalysis, expTopology): # should get objects
+		"""Sets all needed private variables, especially self._extendedResults as list containing all available 
 	"extended results" as ExtendedResults objects call self._setDefaultExResult
 	
 		"""
-		self._topo = pair[2]
-		self._ana = Analysis(pair[1],pair[0])
-		self.extendedTopos = getExtendedTopologies(self._ana.getName(), self._ana.getRun(), self._topo) # getExtendedtopo should build and return extendedTopo-objects 
+		self._topo = expTopology.name
+		self._ana = expAnalysis.name
+		self.extendedTopos = getExtendedTopologies(self._ana, self._ana.run, self._topo) # getExtendedtopo should build and return extendedTopo-objects 
 		self._extendedResults = [ExtendedResult(extTopo,self._ana) for extTopo in self.extendedTopos]
 		logger.info('creating pair-object for %s-%s!' %(self._ana.getName(), self._topo))
 		self._setDefaultExResult()

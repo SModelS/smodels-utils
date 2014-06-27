@@ -75,10 +75,10 @@ def main():
 	args = argparser.parse_args()
 	setLogLevel(level = args.loggingLevel)
 	browser = databaseBrowser.Browser(args.Base)
-	print browser
 	browser.verbosity = args.browserVerbosity
 	logger.info('Set base for database to: %s' %args.Base)
 	
+	# All the information the databaseBrowser should be capable of:
 	allExtendedInfos = ['ANALYSIS', 'LUMI', 'SQRTS', 'PAS', 'URL', 'EXPERIMENT',\
 	'COMMENT', 'PRETTYNAME', 'CONSTRAINTS', 'ARXIV', 'PUBLICATION', 'AXES', 'CHECKED', \
 	'TOPOLOGIES', 'EXTENDEDTOPOLOGIES']
@@ -90,15 +90,17 @@ def main():
 		logger.info('set flag level to %s' %flagLevel)
 		
 	extendedLevel = setInfoLevel(args.extendedLevel)
-	logger.info('set extended level to %s' %extendedLevel)
-	
+	if args.extended:
+		logger.info('set extended level to %s' %extendedLevel)
+		
 	extendedList = builtInfoList(extendedLevel, add = args.addExtendedList.split())
 	flagList = builtInfoList(flagLevel, args.addFlagList.split(), args.flags)
 	
 	if extendedLevel == 'manual':
+		extendedList = []
 		if args.extendedList:
 			for el in args.extendedList.split():
-				if not el.strip() in allExtendedInfos:
+				if not el in allExtendedInfos:
 					logger.error('%s is no valid query!' %el.strip())
 			extendedList = [el.strip() for el in args.extendedList.split() if el.strip() in allExtendedInfos] 
 			extendedList.insert(0, 'ANALYSIS')
@@ -107,9 +109,10 @@ def main():
 			logger.error('Set list of queries or choose different information level to get preset list!')
 			
 	if flagLevel == 'manual':
+		flagList = []
 		if args.flagList:
 			for el in args.flagList.split():
-				if not el.strip in allFlagInfos:
+				if not el in allFlagInfos:
 					logger.error('%s is no valid query!' %el.strip())
 			flagList = [el.strip() for el in args.flagList.split() if el.strip() in allFlagInfos] 
 			flagList.insert(0, 'ANALYSIS')
@@ -160,10 +163,11 @@ def builtInfoList(level, add = [], flag = False):
 		flagList = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY']
 	if level == 'standard':
 		extendedList = ['ANALYSIS', 'CHECKED', 'TOPOLOGIES']
-		flagList = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY', 'JOURNAL', 'PUBLICATION', 'ARXIV', 'CHECKED']
+		flagList = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY', 'PUBLICATION', 'ARXIV', 'CHECKED']
 	if level == 'fully':
 		extendedList = ['ANALYSIS', 'PAS','CHECKED', 'TOPOLOGIES', 'EXTENDEDTOPOLOGIES', 'AXES', 'ARXIV']
-		flagList = ['ANALYSIS', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY', 'CONSTRAINTS', 'AXES', 'JOURNAL', 'PUBLICATION', 'ARXIV', 'CHECKED']
+		flagList = ['ANALYSIS', 'URL', 'CONSTRAINTS', 'PRIVATE', 'ARXIV', 'PUBLICATION', \
+	'AXES', 'CHECKED', 'PUBLISHED', 'INFO.TXT', 'SMS.ROOT', 'SMS.PY']
 	if level == 'manual':
 		extendedList = []
 		flagList = []
@@ -252,8 +256,8 @@ def createTable(infoList, browser, flag = False, axesT = False, topologiesT = Fa
 				checkedFlag = expAnalysis.isChecked
 				published = expAnalysis.isPublished
 				infoFlag = True
-				pyFlag = browser._checkResults(analysis, requested = 'sms.py')
-				rootFlag = browser._checkResults(analysis, requested = 'sms.root')
+				if browser._checkResults(analysis, requested = 'sms.py'): pyFlag = True
+				if browser._checkResults(analysis, requested = 'sms.root'): rootFlag = True
 		
 			infoDict = {
 				'ANALYSIS':analysis,
