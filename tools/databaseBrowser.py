@@ -313,8 +313,8 @@ class Browser(object):
 				if a in self._infos:
 					content = self._infos[a]
 				else:
-					content = Infotxt(a, self._base)
-					self._infos[a] = Infotxt(a, self._base)
+					content = Infotxt(a, self._checkResults(a))
+					self._infos[a] = Infotxt(a, self._checkResults(a))
 				for t in content.topologies:
 					if topos.count(t) == 0:
 						topos.append(t)
@@ -360,17 +360,17 @@ class Browser(object):
 		self._analyses[analysis] = experimentalObjects.ExpAnalysis(analysis, self._infos[analysis], self.allRuns(analysis))
 		return experimentalObjects.ExpAnalysis(analysis, self._infos[analysis], self.allRuns(analysis))
 		
-	def expTopology(self, topologyName):
+	def expTopology(self, topology):
 		"""This is the factory for the experimental Topology object.
 		
 		"""		
 		#if isinstance(topology, object):
 			#return topology
-		if topologyName in self._topologies:
+		if topology in self._topologies:
 			return self._topologies[topology]
-		topology = self._validateTopology(topologyName)
-		self._topologies[topology] = experimentalObjects.ExpTopology(topology)
-		return experimentalObjects.ExpTopology(topology)
+		topology = self._validateTopology(topology)
+		self._topologies[topology] = experimentalObjects.ExpTopology(topology, self.allRuns(topology = topology), self.allAnalyses(topology = topology))
+		return experimentalObjects.ExpTopology(topology, self.allRuns(topology = topology), self.allAnalyses(topology = topology))
 		
 	def expResult(self, analysis, topology, run = None):
 		"""This is the factory for the experimental Result object.

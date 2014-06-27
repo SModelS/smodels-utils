@@ -203,32 +203,36 @@ class ExpTopology(object):
 	### masssplitting? => move to pair object
 	
 	"""
-	def __init__ (self, topology):
+	def __init__ (self, topology, runs, analyses):
 		self._name = topology
-		self._runs = getAllRuns()
+		self._runs = runs
+		self._analyses = analyses
 	
 	@property	
 	def name(self):
 		return self._name
-		
-	def getAnalyses(self):
-		if self.getExpAnalysisNames():
-			anas = [ExpAnalysis(a) for a in self.getExpAnalysisNames()]
-			return anas
-		return None
+	
 	@property
-	def analysesNames(self, run = None):
-		"""Retrieves the names (as strings) of all analyses existing for this topology. Returns a list of names for one given run, or a dictionary with runs as keys.
+	def analyses(self):
+		return self._analyses
+	
+	@property
+	def runs(self):
+		return self._runs
 		
-		"""
-		if not run:
-			anas = {}
-			logger.warning('no run was given, therefore trying all available runs %s and returning dictionary!' %self._runs)
-			for r in self._runs:
-				if getAllAnalyses(run = r, topology = self._name):
-					anas[r] = [a for a in getAllAnalyses(run = r, topology = self._name)]
-			return anas
-		return getAllAnalyses(run = run, topology = self._name)
+	#@property
+	#def analysesNames(self, run = None):
+		#"""Retrieves the names (as strings) of all analyses existing for this topology. Returns a list of names for one given run, or a dictionary with runs as keys.
+		
+		#"""
+		#if not run:
+			#anas = {}
+			#logger.warning('no run was given, therefore trying all available runs %s and returning dictionary!' %self._runs)
+			#for r in self._runs:
+				#if getAllAnalyses(run = r, topology = self._name):
+					#anas[r] = [a for a in getAllAnalyses(run = r, topology = self._name)]
+			#return anas
+		#return getAllAnalyses(run = run, topology = self._name)
 	
 	def _slackExpTopologyName(self):
 		"""Bypassing case sensitivity
