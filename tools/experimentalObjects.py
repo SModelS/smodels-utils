@@ -203,10 +203,17 @@ class ExpTopology(object):
 	### masssplitting? => move to pair object
 	
 	"""
-	def __init__ (self, topology, runs, analyses):
+	def __init__ (self, topology, topoDict):
 		self._name = topology
-		self._runs = runs
-		self._analyses = analyses
+		self._runs = [key for key in topoDict]
+		self._analyses = [ana for ana in topoDict[run] for run in self._runs]
+		
+	def _category:
+        """Takes the category for this topology from every info.txt, compairs them and returns the string if they are all the same. Raises an ERROR if they are not!
+        UNDER CONSTRUCTION!
+        """
+        category = 'UNDER CONSTRUCTION'
+        return category
 	
 	@property	
 	def name(self):
@@ -219,6 +226,10 @@ class ExpTopology(object):
 	@property
 	def runs(self):
 		return self._runs
+		
+	@property
+	def category(self):
+        return self._category
 		
 	#@property
 	#def analysesNames(self, run = None):

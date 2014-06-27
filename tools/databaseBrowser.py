@@ -358,19 +358,28 @@ class Browser(object):
 			logger.debug('Created and stored info.txt-object!')
 		logger.debug('Try to creat experimental Analysis: %s - %s - %s' %(analysis, self._infos[analysis], self.allRuns(analysis)))	
 		self._analyses[analysis] = experimentalObjects.ExpAnalysis(analysis, self._infos[analysis], self.allRuns(analysis))
-		return experimentalObjects.ExpAnalysis(analysis, self._infos[analysis], self.allRuns(analysis))
+		return self._analyses[analysis]
 		
 	def expTopology(self, topology):
 		"""This is the factory for the experimental Topology object.
-		
+		# ### implement nested dictionary for category-lines
 		"""		
 		#if isinstance(topology, object):
 			#return topology
 		if topology in self._topologies:
 			return self._topologies[topology]
 		topology = self._validateTopology(topology)
-		self._topologies[topology] = experimentalObjects.ExpTopology(topology, self.allRuns(topology = topology), self.allAnalyses(topology = topology))
-		return experimentalObjects.ExpTopology(topology, self.allRuns(topology = topology), self.allAnalyses(topology = topology))
+		topoDict = {}
+		for r in self.allRuns(topology = topology):
+            topoDict[r] = self.allAnalyses(run = r, topology = topology)
+            for a in topoDict[r]:
+                if not analysis in self._infos:
+                    logger.debug('Browser has no info.txt-object for %s!' %analysis)
+                    self._infos[analysis] = Infotxt(analysis, self._checkResults(analysis))
+                    logger.debug('Created and stored info.txt-object!')
+                topoDict[r][a] = self._infos[a].category               
+		self._topologies[topology] = experimentalObjects.ExpTopology(topology, topoDict)
+		return self._topologies[topology]
 		
 	def expResult(self, analysis, topology, run = None):
 		"""This is the factory for the experimental Result object.
@@ -394,7 +403,7 @@ class Browser(object):
 		
 class Infotxt(object):
 	"""Holds all the lines, stored in the info.txt file. Provides the required information about topologies, results and all the meta-information needed for the experimental objects.
-	
+	# ### FIX ME:add category-method
 	"""
 	
 	def __init__(self, analysis, path):
