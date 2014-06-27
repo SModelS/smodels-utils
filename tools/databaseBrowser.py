@@ -251,10 +251,8 @@ class Browser(object):
 			logger.warnig('Browser is restricted to run %s!' %self._runRestriction)
 		
 		if not run:
-			analyses.append(self.database[key] for key in self.allRuns())  # creates a generator object
-			analyses = [ana for anas in analyses for ana in anas]  # flattens out the generator object to nested list
-			analyses = [ana for anas in analyses for ana in anas]  # flattens out the nested list to a simple list
-			# ### FIX ME: check how this works 8-o
+			analyses = (self.database[key] for key in self.allRuns())
+			analyses = [ana for anas in analyses for ana in anas]  # flattens out the nested list to plain list
 			
 		if not topology and not run:
 			return analyses
@@ -370,14 +368,14 @@ class Browser(object):
 			return self._topologies[topology]
 		topology = self._validateTopology(topology)
 		topoDict = {}
-		for r in self.allRuns(topology = topology):
-            topoDict[r] = self.allAnalyses(run = r, topology = topology)
-            for a in topoDict[r]:
-                if not analysis in self._infos:
-                    logger.debug('Browser has no info.txt-object for %s!' %analysis)
-                    self._infos[analysis] = Infotxt(analysis, self._checkResults(analysis))
-                    logger.debug('Created and stored info.txt-object!')
-                topoDict[r][a] = self._infos[a].category               
+		#for r in self.allRuns(topology = topology):
+            #topoDict[r] = self.allAnalyses(run = r, topology = topology)
+            #for a in topoDict[r]:
+                #if not analysis in self._infos:
+                    #logger.debug('Browser has no info.txt-object for %s!' %analysis)
+                    #self._infos[analysis] = Infotxt(analysis, self._checkResults(analysis))
+                    #logger.debug('Created and stored info.txt-object!')
+                #topoDict[r][a] = self._infos[a].category               
 		self._topologies[topology] = experimentalObjects.ExpTopology(topology, topoDict)
 		return self._topologies[topology]
 		
