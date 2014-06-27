@@ -142,10 +142,12 @@ class ExpAnalysis(object):
 		
 	@property
 	def axes(self):
-		"""Retrieves the information stored in the axes-labeled line of info.txt.
+		"""Retrieves the information stored in the axes-labeled line of info.txt as list.
 	
 		"""
-		return self._parsMetaInfo('axes')
+		if self.hasAxes:
+			return self._parsMetaInfo('axes').split(',')
+		return None
 	
 	@property	
 	def isChecked(self):

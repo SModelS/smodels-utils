@@ -403,7 +403,7 @@ class Infotxt(object):
 		self._path = path
 		self._run = self._path.split('/')[-3]
 		logger.debug('Got run %s.' % self._run)
-		logger.debug('Creating object of info.txt: %s' %self._path)
+		logger.debug('Creating object based on info.txt: %s' %self._path)
 		self._exceptions = ['constraint', 'condition', 'fuzzycondition', 'unconstraint', 'exclusions', 'expectedexclusions', 'exclusionsp1', 'expectedexclusionsp1','exclusionsm1', 'expectedexclusionsm1', 'category']
 		
 	def _readInfo(self):
@@ -482,7 +482,6 @@ class Infotxt(object):
 		
 		for ax in axes:
 			logger.debug('Axesline is: %s' %ax)
-			if isinstance(ax, basestring): print '#####'
 			massdic = self._massProportions(ax)
 			topo = massdic.keys()[0]
 			topos[topo] = []
@@ -499,7 +498,7 @@ class Infotxt(object):
 							topos[topo].append(topo + 'D' + D)
 						elif 'LSP' or 'x' or 'C' or 'M' in case[2]: topos[topo].append(topo + case[2])
 				if len(case) > 3:
-					logger.warning('Topology is: %s => more then one additional condition is too much at the moment' %topo)
+					logger.warning('Topology is: %s => more then one additional condition is too much at the moment.' %topo)
 					continue
 		
 		if topos == {'':[]}:
@@ -507,10 +506,10 @@ class Infotxt(object):
 			return None
 		if not topology: return topos
 		if topos.has_key(topology): return topos[topology]
-		logger.warning('For %s-%s there is no topology %s' %(self._run, self._analysis, topology))
+		logger.warning('For %s-%s there is no topology %s.' %(self._run, self._analysis, topology))
 		return None
 		
-	def _massProportions(axesLine):
+	def _massProportions(self, axesLine):
 		"""Reads out all the conditions for intermediate masses (e.g. masssplitting-xvalues 025, 050, 075) implicitly stored in axes-lines of info.txt and returns the information as dictionary.
 	
 		"""
@@ -518,6 +517,7 @@ class Infotxt(object):
 		topo = axesLine.split(' ')[0].replace(':', '').strip()
 		massdic[topo] = axesLine.replace(topo + ':', '').split('-')
 		massdic[topo] = [c.strip() for c in massdic[topo]]
-		logger.info('For %s there are %s different cases of mass proportions' %(topo, len(massdic[topo])))
+		logger.info('For %s there are %s different cases of mass proportions.' %(topo, len(massdic[topo])))
 		massdic[topo]=[c.split(' ') for c in massdic[topo]]
+		logger.debug('For %s the massdictionary is: %s.' %(topo, massdic[topo]))
 		return massdic
