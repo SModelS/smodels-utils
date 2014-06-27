@@ -239,8 +239,13 @@ class ExpTopology(object):
 		
 		"""
 		return self._name.replace("W","w").replace("Z","z" )
-
-	def getDecay(self):
+	
+	@property
+	def decay(self):
+		"""Retrieves the description of this decay as LaTex-strings.
+		UNDER CONSTRUCTION!
+		"""
+		# ### FIX ME: This is not done yet -> should use already existing code!  
 		if dictionaries.decay.has_key(self._name):
 			logger.info('found decay for topology %s' %self._name)
 			return dictionaries.decay[self._name]
