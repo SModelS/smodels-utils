@@ -396,7 +396,7 @@ class Infotxt(object):
 	"""Holds all the lines, stored in the info.txt file. Provides the required information about topologies, results and all the meta-information needed for the experimental objects.
 	
 	"""
-	# ### FIX ME: I do give the path to the info.txt, self._run and self._analysis are just for the logger. Maybe better drop them!
+	
 	def __init__(self, analysis, path):
 		self._analysis = analysis
 		logger.debug('Got analysis %s.' %analysis)
@@ -508,7 +508,7 @@ class Infotxt(object):
 		if topos.has_key(topology): return topos[topology]
 		logger.warning('For %s-%s there is no topology %s.' %(self._run, self._analysis, topology))
 		return None
-		
+
 	def _massProportions(self, axesLine):
 		"""Reads out all the conditions for intermediate masses (e.g. masssplitting-xvalues 025, 050, 075) implicitly stored in axes-lines of info.txt and returns the information as dictionary.
 	
