@@ -13,6 +13,10 @@ def count():
     #smsResults.ResultsForSqrts ( 0 )
     # smsResults.considerRuns()#if not all runs should be considered, give list of
     # runs to be considered as argument
+    # print "Base at",smsResults.smsHelpers.base
+    # smsResults.smsHelpers.base = "/home/walten/git/smodels-database/"
+    smsResults.smsHelpers.runs = [ "2012", "8TeV", "ATLAS8TeV" ]
+
 
     All=smsResults.getAllResults()
 

@@ -366,7 +366,7 @@ class Browser(object):
 		"""		
 		#if isinstance(topology, object):
 			#return topology
-		if topology in self._topologies:
+		if topologyName in self._topologies:
 			return self._topologies[topology]
 		topology = self._validateTopology(topologyName)
 		self._topologies[topology] = experimentalObjects.ExpTopology(topology)
