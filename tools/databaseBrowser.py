@@ -23,9 +23,6 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
 
-# ###    FIX ME: move some of the topology functionality to Infotxt object
-# ###    FIX ME: fix the list comprehensions in Infotxt
-
 class Browser(object):
     
     """Browses the database, exits if given path does not point to a valid smodels-database. Browser can be restricted to specified run or experiment. Verbosity can be set to specified level.

@@ -21,17 +21,7 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
-logger.setLevel(level=logging.DEBUG)
-
-def setLogLevel(level = 'error'):
-    if level == 'debug':
-        logger.setLevel(level=logging.DEBUG)
-    if level == 'info':
-        logger.setLevel(level=logging.INFO)
-    if level == 'warning':
-        logger.setLevel(level=logging.WARNING)
-    if level == 'error':
-        pass
+logger.setLevel(level=logging.ERROR)
     
 class ExpAnalysis(object):
     
@@ -46,7 +36,33 @@ class ExpAnalysis(object):
         self._topologies = infotxt.topologies
         self._extendedTopologies = infotxt.extendedTopologies()
         self._run = run
+        self._verbosity = 'error'
+     
+      @property
+    def verbosity(self):
+        """Tells the level the logger is set to.
         
+        """
+        return self._verbosity
+        
+    @verbosity.setter
+    def verbosity(self, level):
+        """Set the logger to specified level.
+        
+        """
+        self._verbosity = level
+        self._setLogLevel(level)
+        
+    def _setLogLevel(self, level = 'error'):
+        if level == 'debug':
+            logger.setLevel(level=logging.DEBUG)
+        if level == 'info':
+            logger.setLevel(level=logging.INFO)
+        if level == 'warning':
+            logger.setLevel(level=logging.WARNING)
+        if level == 'error':
+            pass
+
     def _parsMetaInfo(self, requested):
         if not requested in self._metaInfo:
             logger.warning('Requested keyword %s could not be found for %s!' %(requested, self._name))
@@ -208,6 +224,32 @@ class ExpTopology(object):
         self._topoDict = topoDict
         self._runs = [key for key in self._topoDict]
         self._analyses = self._anas
+        self._verbosity = 'error'
+     
+      @property
+    def verbosity(self):
+        """Tells the level the logger is set to.
+        
+        """
+        return self._verbosity
+        
+    @verbosity.setter
+    def verbosity(self, level):
+        """Set the logger to specified level.
+        
+        """
+        self._verbosity = level
+        self._setLogLevel(level)
+        
+    def _setLogLevel(self, level = 'error'):
+        if level == 'debug':
+            logger.setLevel(level=logging.DEBUG)
+        if level == 'info':
+            logger.setLevel(level=logging.INFO)
+        if level == 'warning':
+            logger.setLevel(level=logging.WARNING)
+        if level == 'error':
+            pass
         
     @property    
     def _anas(self):
