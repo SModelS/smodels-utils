@@ -382,7 +382,6 @@ class Browser(object):
                     self._infos[a] = Infotxt(a, self._checkResults(a))
                     logger.debug('Created and stored info.txt-object!')
                 topoDict[r][a] = self._infos[a].category
-        print '####################', topoDict
         return topoDict
                 
         

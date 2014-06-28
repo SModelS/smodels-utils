@@ -38,7 +38,7 @@ class ExpAnalysis(object):
         self._run = run
         self._verbosity = 'error'
      
-      @property
+    @property
     def verbosity(self):
         """Tells the level the logger is set to.
         
@@ -226,7 +226,7 @@ class ExpTopology(object):
         self._analyses = self._anas
         self._verbosity = 'error'
      
-      @property
+    @property
     def verbosity(self):
         """Tells the level the logger is set to.
         
@@ -281,7 +281,7 @@ class ExpTopology(object):
                         logger.error('There are different categories for topology %s! \
                         Please check the database entry %s-%s!' %(self._name, run, ana))
                 except KeyError:
-                    logger.error('The category for %s is missing! Please check the database entry %s-%s!' %(self._name, run, ana))
+                    logger.warning('The category for %s is missing! Please check the database entry %s-%s!' %(self._name, run, ana))
         logger.debug('List of categories: %s.' %cats)
         if len(cats) == 1:
             return cats[0]
