@@ -235,17 +235,15 @@ class ExpTopology(object):
                     category = self._topoDict[run][ana][self._name]
                     if cats.count(category) == 0:
                         cats.append(category)
-                    if cats and cats.count(category) == 0:
-                        logger.error('There are different categories for topology %s! \
-                        Please check the database entry %s-%s!' %(self._name, run, ana))
                 except KeyError:
                     logger.error('The category for %s is missing! Please check the database entry %s-%s!' %(self._name, run, ana))
         logger.debug('List of categories: %s.' %cats)
         if len(cats) == 1:
             return cats[0]
-        
-        logger.error('Unable to get category for topology %s!' %self._name)
-        return None
+        else:
+            logger.error('There are different categories for topology %s! \
+            Please check the database entry %s-%s!' %(self._name, run, ana))
+            return None
     
     @property    
     def name(self):

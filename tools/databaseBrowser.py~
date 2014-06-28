@@ -461,7 +461,6 @@ class Infotxt(object):
         cat = {}
         content = self.info
         content = [string.strip() for string in content if 'category' in string]
-        content = [string.split(':')[1] for string in content] 
         for c in content:
             cat[c.split('->')[0].strip()] = c.split('->')[1].strip()
         return cat
