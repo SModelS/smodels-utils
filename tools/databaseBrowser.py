@@ -383,7 +383,7 @@ class Browser(object):
                     logger.debug('Browser has no info.txt-object for %s!' %a)
                     self._infos[a] = Infotxt(a, self._checkResults(a))
                     logger.debug('Created and stored info.txt-object!')
-                topoDict[r][a] = self._infos[a].category
+                topoDict[r][a] = [self._infos[a].category, self._infos[a].constraints]
         return topoDict
                 
         
@@ -453,17 +453,27 @@ class Infotxt(object):
         
         """
         return self._readInfo()[1]
-     
-    @property
-    def category(self):
-        cat = {}
+    
+    def _topoInfo(self, requested):
+        dic = {}
+        logger.debug('Look for requested keyword %s.' %requested)
         content = self.info
-        content = [string.strip() for string in content if 'category' in string]
+        content = [string.strip() for string in content if requested in string]
         content = [string.split(':')[1] for string in content] 
         for c in content:
-            cat[c.split('->')[0].strip()] = c.split('->')[1].strip()
-        return cat
+            dic[c.split('->')[0].strip()] = c.split('->')[1].strip()
+        return dic
         
+    @property
+    def category(self):
+        cat = self._topoInfo('category')
+        return cat
+    
+    @property
+    def constraints(self):
+        const = self._topoInfo('constraint')
+        return const
+    
     @property
     def topologies(self):
         topos = []

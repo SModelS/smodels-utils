@@ -274,7 +274,7 @@ class ExpTopology(object):
         for run in self._topoDict:
             for ana in self._topoDict[run]:
                 try:
-                    category = self._topoDict[run][ana][self._name]
+                    category = self._topoDict[run][ana][0][self._name]
                     if cats.count(category) == 0:
                         cats.append(category)
                     if cats and cats.count(category) == 0:
@@ -290,6 +290,28 @@ class ExpTopology(object):
         return None
     
     @property    
+    def _constraints(self):
+        """Takes the constraints for this topology from every info.txt, 
+        returns a list containing all available constraints.
+        
+        """
+        
+        const = []
+        for run in self._topoDict:
+            for ana in self._topoDict[run]:
+                try:
+                    c = self._topoDict[run][ana][1][self._name]
+                    if const.count(c) == 0:
+                        const.append(c)
+                except KeyError:
+                    logger.warning('The constraint for %s is missing! Please check the database entry %s-%s!' %(self._name, run, ana))
+        logger.debug('List of constraints: %s.' %const)
+        return const
+        
+        logger.error('Unable to get category for topology %s!' %self._name)
+        return None
+        
+    @property    
     def name(self):
         return self._name
     
@@ -304,6 +326,10 @@ class ExpTopology(object):
     @property
     def category(self):
         return self._category
+      
+    @property
+    def constraints(self):
+        return self._constraints
         
     #@property
     #def analysesNames(self, run = None):
