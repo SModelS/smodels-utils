@@ -351,8 +351,7 @@ class ExpResult (object):
     """
     
     def __init__ (self, run, expAnalysis, expTopology): # should get objects
-        """Sets all needed private variables, especially self._extendedResults as list containing all available 
-    "extended results" as ExtendedResults objects call self._setDefaultExResult
+        """Sets all needed private variables, especially self._extendedResults as list containing all available "extended results" as ExtendedResults objects call self._setDefaultExResult
     
         """
         self._topo = expTopology.name

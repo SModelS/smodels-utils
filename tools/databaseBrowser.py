@@ -67,7 +67,9 @@ class Browser(object):
         """Tells if the browser is restricted to either CMS or ATLAS. Gives None if both are allowed.
         
         """
-        return self._experimentRestriction
+        if self._experimentRestriction:
+            return self._experimentRestriction
+        return 'Browser will use CMS and ATLAS'
         
     @experimentRestriction.setter
     def experimentRestriction(self, detector):
@@ -407,7 +409,7 @@ class Browser(object):
         
 class Infotxt(object):
     """Holds all the lines, stored in the info.txt file. Provides the required information about topologies, results and all the meta-information needed for the experimental objects.
-    # ### FIX ME:add category-method
+
     """
     
     def __init__(self, analysis, path):
