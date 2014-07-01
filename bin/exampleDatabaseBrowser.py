@@ -36,14 +36,20 @@ def main():
   print 'luminosity: ', analysis.lumi
   print 'Experiment: ', analysis.experiment
   print 'comment: ', analysis.comment
-  print ''
+  print 
+  print
 
   # to get specified Topology-object
   topology = browser.expTopology('T1')
-  #print 'Topology-object: ', topology
-  ## use this object
-  #print 'Analyses that contain this topology: ', topology.getAnalysisNames(run = '8TeV')
-  #print ''
+  print 'Topology-object: ', topology
+  print 'name: ', topology.name
+  print 'analyses: ', topology.analyses
+  print 'runs: ', topology.runs
+  print 'category: ', topology.category
+  print 'constraint: ', topology.constraints
+  print 'decay: ', topology.decay
+  print 
+  print 
   
   # to get a specified Pair-object
   pair = browser.Pair(['8TeV','SUS13002', 'T1tttt'])

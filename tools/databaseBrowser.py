@@ -54,6 +54,8 @@ class Browser(object):
     
         """
         logger.debug('Try to set the path for the database to: %s' %path)
+        import os
+        path=os.path.realpath ( path )+"/"
         if not os.path.exists(path):
             logger.error('%s is no valid path!' %path)
             sys.exit()
@@ -223,7 +225,7 @@ class Browser(object):
             runs = [key for key in self.database if analysis in self.database[key]]
             if len(runs) == 1:
                 return runs[0]
-            logger.error('%s appears in %s runs! Returnvalue will be first hit! Please check the database for ambiguities!' %(analysis, len(runs)))
+            logger.warning('%s appears in %s runs! Returnvalue will be first hit! Please check the database for ambiguities!' %(analysis, len(runs)))
             return runs[0]
         
         topology = self._validateTopology(topology)    
