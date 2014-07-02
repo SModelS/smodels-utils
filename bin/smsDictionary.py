@@ -28,20 +28,24 @@ categoryorder=( "colored", "third", "weakinos" )
 
 def header():
     f.write ( 
-"""#acl +DeveloperGroup:read,write,revert -All:write,read Default 
-<<LockedPage()>>
+##"""#acl +DeveloperGroup:read,write,revert -All:write,read Default 
+## <<LockedPage()>>
+"""#acl +DeveloperGroup:read,write,revert -All:write +All:read Default 
 
 = SMS dictionary =
 This page intends to collect information about how we map the SModelS description of 
-events onto the Tx nomenclature. It has been created with the smsDictionary.py tool. 
-ListOfAnalyses is here.
+events onto the Tx nomenclature. It has been created with the [[http://smodels.hephy.at/gitweb/?p=smodels-tools.git;a=blob;f=bin/smsDictionary.py;h=25451211ccf1d38e98c34b9d42e44deb39c6d6ea;hb=refs/heads/develop|smsDictionary.py]] tool. 
+
+The list has been created from the database version %s.
+
+There is also a ListOfAnalyses.
 
 The dictionary is split up by production:
 
 [[#colored|colored production]], [[#third|third generation]], 
 [[#weakinos|weakinos and sleptons]]
 
-""" )
+""" % browser.databaseVersion )
 
 def footer():
     f.write (
@@ -54,7 +58,9 @@ Obs: Each "()" group corresponds to a branch
 
 def xsel():
     import os
-    os.system ( "cat SmsDictionary | xsel -i -t 250" )
+    cmd="cat SmsDictionary | xsel -i"
+    os.system ( cmd )
+    print cmd
 
 def categoryHeader ( shortname, longname ):
     f.write ( "\n" )

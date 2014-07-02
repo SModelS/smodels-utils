@@ -35,12 +35,21 @@ class Browser(object):
         self._base = self._validateBase(base)
         self._experimentRestriction = None
         self._verbosity = 'error'
+        self._databaseVersion = "?"
         self.database = self._getDatabase()
         self._runRestriction = None
         self._infos = {}
         self._analyses = {}
         self._topologies = {}
         self._results = {}
+
+    @property
+    def databaseVersion(self):
+        """The version of the database, read from the 'version'
+           file
+
+        """
+        return self._databaseVersion
         
     @property
     def base(self):
@@ -133,6 +142,11 @@ class Browser(object):
     
         """
         data = {}
+        if os.path.exists('%s/version' % self._base ):
+            # set the database version
+            f=open('%s/version' % self._base )
+            self._databaseVersion=f.readline()[:-1]
+            f.close()
         for r in self._allruns:
             if not os.path.exists('%s/%s' % (self._base, r)):
                 logger.info('Using an incomplete version of the database! Run %s is missing' %r)
