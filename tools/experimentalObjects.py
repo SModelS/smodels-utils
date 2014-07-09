@@ -12,7 +12,7 @@
 
 import ROOT
 import logging, os, types
-import dictionaries
+import prettyDescriptions
 import setPath
 import sys
 import databaseBrowser
@@ -370,13 +370,13 @@ class ExpTopology(object):
         UNDER CONSTRUCTION!
         """
         # ### FIX ME: This is not done yet -> should use already existing code!  
-        if dictionaries.decay.has_key(self._name):
+        if prettyDescriptions.decay.has_key(self._name):
             logger.info('found decay for topology %s' %self._name)
-            return dictionaries.decay[self._name]
-        if dictionaries.decay.has_key(self._slackExpTopologyName()):
+            return prettyDescriptions.decay[self._name]
+        if prettyDescriptions.decay.has_key(self._slackExpTopologyName()):
             logger.info('found decay for topology %s with \
             slack name %s' %(self._name, self._slackExpTopologyName()))
-            return dictionaries.decay[self._slackExpTopologyName()]
+            return prettyDescriptions.decay[self._slackExpTopologyName()]
         logger.warning('no decay found for topology %s' %self._name)
         return None
         
@@ -502,8 +502,8 @@ class ExpResult (object):
         for keywordargument "type" are: 'limit', 'min', 'max'.
         
         """
-        return self._getSingleAttribute(extendedTopoName, expected, typ, 
-        \'exclusion')
+        return self._getSingleAttribute(extendedTopoName, expected, typ, '\
+        exclusion')
         
     def _getSingleAttribute(self, extendedTopoName, expected, argument, \
     attribute):
