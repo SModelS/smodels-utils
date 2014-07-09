@@ -11,3 +11,4 @@
 *.dvi
 *.py.kate-swp
 Database.txt
+*.py~
