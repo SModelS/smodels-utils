@@ -402,13 +402,23 @@ class ExpResult (object):
         self._ana = expAnalysis.name
         self._run = run
         self.extendedTopos = self._expAna.extendedTopologies[self._topo]
-        self._extendedResults = [ExtendedResult(extop, self._ana) for \
-        extop in self.extendedTopos]
-        logger.info('Creating result-object for %s-%s!' \
+        self._extendedResults = self._getExtendedResults
+        logger.info('Creating experimental result object for %s-%s!' \
         %(self._ana, self._topo))
-        self._setDefaultExResult()
+        self._setExtendedResultsDefault
         
-    def _setDefaultExResult(self):
+    @property
+    def _getExtendedResults(self):
+        """Retrieves a list of all extended results we have for this 
+        analysis topology pair.
+        
+        """
+        exRes = [ExtendedResult(extop, self._ana, self.ROOT) for extop in \
+        self.extendedTopos]
+        return exRes
+        
+    @property    
+    def _setExtendedResultsDefault(self):
         """Defines which mass assumptions for this result will be the default 
         for the extended results. If there are no further assumptions, the 
          only one there will be the default, else the one with 
@@ -417,11 +427,11 @@ class ExpResult (object):
         """
         # ### FIX ME: rework default settings and docstrings 
         if len(self._extendedResults) == 1: 
-            self._defaultExResult = self._extendedResults[0]
+            self._extendedResultsDefault = self._extendedResults[0]
             return
-        self._defaultExResult = [exRes for exRes in self._extendedResults\
+        self._extendedResultsDefault = [exRes for exRes in self._extendedResults\
         if exRes.topoName()[:3] == '050']
-        self._defaultExResult = self._defaultExResult[0]
+        self._extendedResultsDefault = self._extendedResultsDefault[0]
     
     @property    
     def expAnalysis(self):
@@ -548,7 +558,7 @@ class ExpResult (object):
         
         """
         if extendedTopoName == 'default':
-            return getattr(self._defaultExResult, attribute)(expected, argument)
+            return getattr(self._extendedResultsDefault, attribute)(expected, argument)
         extendedResults = [exRes for exRes in self._extendedResults if \
         extendedTopoName == exRes.topoName]
         return getattr(extendedResults[0], attribute)(expected, argument)
@@ -576,15 +586,17 @@ class ExtendedResult(object):
     
     """
     
-    def __init__(self, name, expAnalysis):
+    def __init__(self, extendedTopologyName, expAnalysis, path):
         """Sets all private variables and initiates the dictionaries for 
         exclusion lines and exclusions.
         
         """
-        self._topoName = name
+        self._topoName = extendedTopologyName
+        self._expAna = expAnalysis
+        self._path = path
         self._exclusionLines = {}
         self._exclusions = {}
-        self._expAna = expAnalysis
+        
         
     @property
     def topoName(self):
