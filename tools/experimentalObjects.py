@@ -387,59 +387,60 @@ class ExpTopology(object):
     
 class ExpResult (object):
     """Contains all result-specific information and objects (e.g. 
-    exclusionlines, histograms, ...). Uses the ExtendedResult-objects to 
+    exclusion lines, histograms, ...). Uses the extended result objects to 
     handle different mass assumptions for given topology and analysis.
     """
     
-    def __init__ (self, run, expAnalysis, expTopology): # should get objects
-        """Sets all needed private variables, especially self._extendedResults 
-        as list containing all available "extended results" as ExtendedResults 
-        objects call self._setDefaultExResult
+    def __init__ (self, run, expAnalysis, expTopology):
+        """Sets all private variables, especially self._extendedResults 
+        as list containing all available extended results as objects.
     
         """
+        self._expTopo = expTopology
+        self._expAna = expAnalysis
         self._topo = expTopology.name
         self._ana = expAnalysis.name
-        self.extendedTopos = getExtendedTopologies(self._ana, \
-        self._ana.run, self._topo)
-        # getExtendedtopo should build and return extendedTopo-objects 
-        self._extendedResults = [ExtendedResult(extTopo,self._ana) for \
-        extTopo in self.extendedTopos]
-        logger.info('creating pair-object for %s-%s!' \
-        %(self._ana.getName(), self._topo))
+        self._run = run
+        self.extendedTopos = self._expAna.extendedTopologies[self._topo]
+        self._extendedResults = [ExtendedResult(extop, self._ana) for \
+        extop in self.extendedTopos]
+        logger.info('Creating result-object for %s-%s!' \
+        %(self._ana, self._topo))
         self._setDefaultExResult()
         
     def _setDefaultExResult(self):
-        """if there is only one extended Result this will be the default result 
-        if there more then one extended result, the one with mass value = 050 
-        is set to default
+        """Defines which mass assumptions for this result will be the default 
+        for the extended results. If there are no further assumptions, the 
+         only one there will be the default, else the one with 
+         mass splitting = 050.
     
         """
-        # ### FIX ME: rework defaultsettings 
+        # ### FIX ME: rework default settings and docstrings 
         if len(self._extendedResults) == 1: 
-            self._DefaultExResult = self._extendedResults[0]
+            self._defaultExResult = self._extendedResults[0]
             return
-        self._DefaultExResult = [ExResult for ExResult in self._extendedResults\
-        if ExResult.Name()[:3] == '050']
-        self._DefaultExResult = self._DefaultExResult[0]
+        self._defaultExResult = [exRes for exRes in self._extendedResults\
+        if exRes.topoName()[:3] == '050']
+        self._defaultExResult = self._defaultExResult[0]
     
     @property    
     def expAnalysis(self):
         """Returns the analysis-object linked to this result-object.
         
         """
-        return self._ana
+        return self._expAna
     
     @property    
     def expTopology(self):
-        """Returns the topologie-object linked to this result-object.
+        """Returns the topology-object linked to this result-object.
         
         """
-        return self._topo
+        return self._expTopo
     
     # ### FIX ME: does this belong in here?
     @property    
     def hasROOT(self):
-        if databaseBrowser.Browser._checkResults(self._name, \
+        if databaseBrowser.Browser._checkResults(self._ana, \
         requested = 'sms.root'): return True
         return False
     
@@ -449,85 +450,28 @@ class ExpResult (object):
         requested = 'sms.py'): return True
         return False
     
-    @property
-    def allExtendedResults(self):
-        """Returns a list containing all available extended 
-        results as ExtendedResults-object.
+    @property    
+    def ROOT(self):
+        return databaseBrowser.Browser._checkResults(self._ana, \
+        requested = 'sms.root')
         
-        """
-        return self._extendedResults
-        
-    def allExclusionLines(self,expected = False, sigma = 0):
-        """Returns a list containing the exclusionlines for all extended results, 
-        available for this result as Root.TGraph-object if expected is set 
-        to False, the observed exclusionline will be returned, 
-        else the expected exclusionline will be returned. Possible values for 
-        keywordargument "sigma" are: -1,0,1. depending on this value the 
-        exclusionlines for sigma = -1,0,1 will be returned.
-        
-        """
-        return [ExResult.exclusionline(expected, sigma) for ExResult in self._extendedResults]
-        
-    def allExclusions(self,expected = False, typ = 0):
-        """Returns a list containing all exclusionvalues for all extended results, 
-        available for this result if expected is set to False, the observed 
-        values will be returned, else the expected values will be returned. 
-        Possible values for keywordargument "typ" are: 'limit', 'min', 'max'.
-        
-        """
-        return [ExResult.exclusion(expected, typ) for ExResult in \
-        self._extendedResults]
-        
-    def exclusionLine(self, extendedTopoName = 'default', expected = False, \
-    sigma = 0):
-        """Returns one exclusionline as Root.TGraph-object if extendedTopoName 
-        is set to 'default', the exclusionline linked to the default 
-        extendedResult is returned if exclusionline for other extendedResult 
-        is needed, the name of the linked extendedTopo is requested. 
-        If expected is set to False, the observed exclusionline will be returned, 
-        else the expected exclusionline will be returned. Possible values for 
-        keywordargument "sigma" are: -1,0,1. depending on this value the 
-        exclusionlines for sigma = -1,0,1 will be returned.
-        
-        """
-        return self._getSingleAttribute(extendedTopoName, expected, \
-        sigma, 'exclusionLine')
-        
-    def exclusion(self, extendedTopoName = 'default',expected = False, typ ='max'):
-        """Returns one exclusion value if extendedTopoName is set to 'default', 
-        the value linked to the default extendedResult is returned if values 
-        for other extendedResult is needed, the name of the linked extendedTopo 
-        is requested. If expected is set to False, the observed values will be 
-        returned, else the expected values will be returned. Possible values 
-        for keywordargument "type" are: 'limit', 'min', 'max'.
-        
-        """
-        return self._getSingleAttribute(extendedTopoName, expected, typ, '\
-        exclusion')
-        
-    def _getSingleAttribute(self, extendedTopoName, expected, argument, \
-    attribute):
-        """Private methode used by the methodes 'exclusionline' and 'exclusion'.
-        
-        """
-        if extendedTopoName == 'default':
-            return getattr(self._DefaultExResult, attribute)(expected, argument)
-        extendedResults = [ExResult for ExResult in self._extendedResults if \
-        extendedTopoName == ExResult.name]
-        return getattr(extendedResults[0],attribute)(expected, argument)
+    @property    
+    def PY(self):
+        return databaseBrowser.Browser._checkResults(self._name, \
+        requested = 'sms.py')
     
     @property    
     def checkedBy(self):
         """Retrieves checked_by entry from info.txt.
         
         """
-        infoLine = self._ana.getChecked()
+        infoLine = self._expAna.checked
         logger.debug('Got infoLine from Analysis-object: %s.' %infoLine)
         if not infoLine: return None
         # ### FIX ME: the IF below will be obsolet when 
         #the checked flag is fixed in every info.txt
         if 'AL' in infoLine: 
-            logger.warning('There is no information about singel topologies.')
+            logger.warning('There is no information about single topologies.')
             return infoLine[0]
         infoLine = [ch for ch in infoLine if self._topo in ch]
         logger.debug('First preprocessed infoLine: %s.' %infoLine)
@@ -539,10 +483,81 @@ class ExpResult (object):
         infoLine = infoLine[0]
         logger.debug('Return value of infoLine: %s.' %infoLine)
         return infoLine[1].strip()
+    
+    @property
+    def extendedResults(self):
+        """Returns a list containing all available extended 
+        results as objects.
+        
+        """
+        return self._extendedResults
+        
+    def exclusionLines(self,expected = False, sigma = 0):
+        """Returns a list containing the exclusion lines for all mass 
+        assumptions available for this result as Root.TGraph-objects. 
+        If expected is set to False, the observed exclusion lines will 
+        be returned, else the expected ones. 
+        Possible values for keyword argument 'sigma' are: -1,0,1.
+        
+        """
+        return [exRes.exclusionline(expected, sigma) for exRes in \
+        self._extendedResults]
+        
+    def exclusions(self,expected = False, typ = 0):
+        """Returns a list containing all exclusion values for all mass 
+        assumptions available for this result. If expected is set to False, 
+        the observed values will be returned, else the expected ones. 
+        Possible values for keyword argument 'typ' are: 'limit', 'min', 'max'.
+        
+        """
+        return [exRes.exclusion(expected, sigma) for exRes in \
+        self._extendedResults]
+        
+    def exclusionLine(self, extendedTopoName = 'default', expected = False, \
+    sigma = 0):
+        """Returns one exclusion line as Root.TGraph-object if extendedTopoName 
+        is set to 'default', the exclusion line linked to the default 
+        extendedResult is returned if exclusionline for other extendedResult 
+        is needed, the name of the linked extendedTopo is requested. 
+        If expected is set to False, the observed exclusionline will be returned, 
+        else the expected exclusionline will be returned. Possible values for 
+        keywordargument "sigma" are: -1,0,1. depending on this value the 
+        exclusionlines for sigma = -1,0,1 will be returned.
+        
+        """
+        # ### FIX ME: improve docstring!
+        return self._getSingleAttribute(extendedTopoName, expected, \
+        sigma, 'exclusionLine')
+        
+    def exclusion(self, extendedTopoName = 'default',expected = False, typ = 'max'):
+        """Returns one exclusion value if extendedTopoName is set to 'default', 
+        the value linked to the default extendedResult is returned if values 
+        for other extendedResult is needed, the name of the linked extendedTopo 
+        is requested. If expected is set to False, the observed values will be 
+        returned, else the expected values will be returned. Possible values 
+        for keywordargument "type" are: 'limit', 'min', 'max'.
+        
+        """
+        # ### FIX ME: improve docstring!
+        return self._getSingleAttribute(extendedTopoName, expected, typ, '\
+        exclusion')
+        
+    def _getSingleAttribute(self, extendedTopoName, expected, argument, \
+    attribute):
+        """Private method used by the methods 'exclusionLine' and 'exclusion'.
+        
+        """
+        if extendedTopoName == 'default':
+            return getattr(self._defaultExResult, attribute)(expected, argument)
+        extendedResults = [exRes for exRes in self._extendedResults if \
+        extendedTopoName == exRes.topoName]
+        return getattr(extendedResults[0], attribute)(expected, argument)
+    
+    
         
     def selectExclusionLine(self, expected = False, sigma = 0, \
     condition = 'xvalue', value = 050):
-        """Selects one exclusionline (out of all exclusionLines for this 
+        """Selects one exclusion line (out of all exclusionLines for this 
         topology) corresponding to a specified case of mass proportions 
         (e.g. x-value = 050, mass of LSP = 50 GeV, ...)
         
@@ -555,26 +570,28 @@ class ExpResult (object):
 
 class ExtendedResult(object):
     """Contains all specific informations linked to one extended result,
-    where exented result denotes a result with one specified mass assumption.
+    where an extended result denotes a pair of analysis and topology
+    when a specified case of mass proportions is assumed (e.g. x-value = 050, 
+    mass of LSP = 50 GeV, ...).
     
     """
     
-    def __init__(self, name, Analysis):
+    def __init__(self, name, expAnalysis):
         """Sets all private variables and initiates the dictionaries for 
         exclusion lines and exclusions.
         
         """
-        self._name = name
+        self._topoName = name
         self._exclusionLines = {}
         self._exclusions = {}
-        self._ana = Analysis
+        self._expAna = expAnalysis
         
     @property
-    def name(self):
-        """Returns the name of the extended topology e.g.: 'T.... '.
-        # ### FIX ME
+    def topoName(self):
+        """Returns the name of the extended topology e.g.: 'TChiChipmSlepL050'.
+
         """
-        return self._name
+        return self._topoName
         
     @property
     def dictOfExclusionLines(self):
@@ -600,11 +617,10 @@ class ExtendedResult(object):
         return self._exclusions
 
     def exclusionLine(self, expected = False, sigma = 0):
-        """Returns the exclusion line as Root.TGraph-object if expected is set 
-        to False, the observed exclusionline will be returned, else the 
-        expected exclusionline will be returned. Possible values for 
-        keywordargument "sigma" are: -1, 0, 1. Depending on this value the 
-        exclusion lines for sigma = -1, 0, 1 will be returned.
+        """Retrieves one specified exclusion line (out of all exclusion lines  
+        available for this topology) as root TGraph. If expected is set 
+        to False, the observed exclusion line will be returned, else the 
+        expected one. Possible values for keyword argument "sigma" are: -1, 0, 1.
         
         """
         if not self._exclusionLines: self._setExclusionLines()
@@ -612,10 +628,11 @@ class ExtendedResult(object):
         if expected: sigmaDict = self._exclusionLines['expected']
         return sigmaDict[sigma]
         
-    def exclusion(self,expected = False,typ ='max'):
-        """Returns one exclusion value. If expected is set to False, the 
-        observed value will be returned, else the expected value will be 
-        returned. Possible values for keywordargument "type" are: 
+    def exclusion(self, expected = False, typ ='max'):
+        """Retrieves one specified exclusion value (out of all exclusion   
+        values available for this topology). If expected is set to False, the 
+        observed value will be returned, else the expected one. 
+        Possible values for keyword argument "type" are: 
         'limit', 'min', 'max'.
         
         """
@@ -625,8 +642,8 @@ class ExtendedResult(object):
         return typeDict[typ]
         
     def _setExclusionLines(self):
-        """Private methode used by the methodes 'exclusionLines' and 
-        'dictOfExclusionLines'. Searches for the exclusion lines in the 
+        """Private method used by the methods 'exclusionLines' and 
+        'dictOfExclusionLines'. Retrieves the exclusion lines from the 
         sms.root-file linked to the corresponding analysis and builds a nested 
         dictionary including all the exclusion lines.
         
@@ -643,11 +660,12 @@ class ExtendedResult(object):
                 
     #if we change the read steps provided by readInfo and get info, we can do this in a better way            
     def _setExclusions(self):
-        """Private methode used by the methodes 'exclusionLines' and 
-        'dictOfExclusionLines'. Searches for the exclusion values in the 
+        """Private method used by the methods 'exclusions' and 
+        'dictOfExclusions'. Retrieves the exclusion values from the 
         info.txt-file linked to the corresponding analysis and builds a nested 
-        dictionary including all the exclusion values:
-        self._exclusions = {'observed': 'exclusion', 'expected': 'expectedexclusion'}
+        dictionary including all the exclusion values of form:
+        self._exclusions = {'observed': 'exclusion', 
+        'expected': 'expectedExclusion'}
         
         """
         
