@@ -9,3 +9,5 @@
 *.pdf
 *.log
 *.dvi
+*.py.kate-swp
+Database.txt
