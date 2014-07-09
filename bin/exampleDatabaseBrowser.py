@@ -40,7 +40,7 @@ def main():
   print
 
   # to get specified Topology-object
-  topology = browser.expTopology('T1')
+  topology = browser.expTopology('T1tttt')
   print 'Topology-object: ', topology
   print 'name: ', topology.name
   print 'analyses: ', topology.analyses
@@ -51,19 +51,19 @@ def main():
   print 
   print 
   
-  # to get a specified Pair-object
-  pair = browser.Pair(['8TeV','SUS13002', 'T1tttt'])
-  print 'Pair-object is: ', pair
-  # use this object
-  print '\nResult is checked: ', pair.checkedBy()
-  print '\nGet all the exclusionlines: ', pair.getExclusionLines()
-  print '\nSelect a specified exclusionline: ', pair.selectExclusionLine(expected = True, sigma = 1)
+  ## to get a specified Result-object
+  #result = browser.expResult('8TeV',analysis, topology)
+  #print 'Pair-object is: ', result
+  ## use this object
+  #print '\nResult is checked: ', result.checkedBy
+  #print '\nGet all the exclusionlines: ', result.getExclusionLines()
+  #print '\nSelect a specified exclusionline: ', result.selectExclusionLine(expected = True, sigma = 1)
   
-  # get Analysis belonging to this Pair:
-  analysis = pair.getAnalysis()
-  print '\nNow we have an Analysis-object: ', analysis
-  print '\nFor this Pair the PAS is: ', analysis.getPAS()
-  print ''
+  ## get Analysis belonging to this Pair:
+  #analysis = result.analysis
+  #print '\nNow we have an Analysis-object: ', analysis
+  #print '\nFor this Pair the PAS is: ', analysis.pas
+  #print ''
   
   
 if __name__ == '__main__':
