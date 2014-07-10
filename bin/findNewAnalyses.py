@@ -37,6 +37,11 @@ exceptions=[
 "SUS12018", #ggm
 "SUS12023", #no ul numbers given, has been updated with more data
 "SUS12016", #no ul numbers given, has been updated with more data
+"ATLAS_CONF_2014_037", #meta-stable gluinos
+"SUSY_2013_12", #GMSB
+"SUSY_2013_13", #rpv
+"SUSY_2013_03", #longlived
+"SUSY_2013_01" #long lived chargino
 ]
 
 #find all ATLAS 8TeV results
@@ -69,7 +74,7 @@ while i<10:
         pas=line[line.find("PAPERS")+7:line.find("target")-2]
       else: continue
       pas=pas.replace("-","_")
-      if not smsResults.exists(pas, None) and not pas in exceptions: print "Analysis %s not in database" %pas
+      if not smsResults._exists(pas, None) and not pas in exceptions: print "Analysis %s not in database" %pas
   if bottom: break
   i+=1
 
@@ -100,7 +105,7 @@ while i<10:
       break
     if readtable and "twikiTableCol1" in line and "SUS1" in line:
       pas=line[line.find("SUS1"):line.find("SUS1")+8]
-      if not smsResults.exists(pas, None) and not pas in exceptions: print "Analysis %s not in database" %pas
+      if not smsResults._exists(pas, None) and not pas in exceptions: print "Analysis %s not in database" %pas
   if bottom: break
   i+=1
 
