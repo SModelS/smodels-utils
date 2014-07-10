@@ -38,7 +38,7 @@ def header():
 = List Of Analyses =
 List of analyses and topologies in the SMS results database that has been used in [[http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5|EPJC May 2014, 74:2868]].
 It has been created with the [[http://smodels.hephy.at/gitweb/?p=smodels-tools.git;a=blob;f=bin/listOfAnalyses.py;h=33bc2e9b0eb1854f475b847928a11a1ae6d3098e;hb=refs/heads/develop|listOfAnalyses.py]] tool. 
-The list has been created from the database version %s.
+The list has been created from the database version `%s`.
 There is also an SmsDictionary.
 
  * Has Condition: lists, whether a special condition is required in order for the constraint to be applicable.
