@@ -430,7 +430,7 @@ class Browser(object):
             self._infos[analysis] = Infotxt(analysis, \
             self._checkResults(analysis))
             logger.debug('Created and stored info.txt-object!')
-        logger.debug('Try to creat experimental Analysis: %s - %s - %s' \
+        logger.debug('Try to create experimental Analysis: %s - %s - %s' \
         %(analysis, self._infos[analysis], self.allRuns(analysis)))    
         self._analyses[analysis] = experimentalObjects.ExpAnalysis(analysis, \
         self._infos[analysis], self.allRuns(analysis))
