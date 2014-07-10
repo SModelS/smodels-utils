@@ -64,7 +64,7 @@ class ExpAnalysis(object):
         if level == 'error':
             pass
 
-    def _parsMetaInfo(self, requested):
+    def _parseMetaInfo(self, requested):
         if not requested in self._metaInfo:
             logger.warning('Requested keyword %s could not be found for %s!' \
             %(requested, self._name))
@@ -82,23 +82,27 @@ class ExpAnalysis(object):
     
     @property
     def lumi(self):
-        return self._parsMetaInfo('lumi')
+        return self._parseMetaInfo('lumi')
+
+    @property
+    def publishedData(self):
+        return self._parseMetaInfo('publisheddata')
         
     @property
     def sqrts(self):
-        return self._parsMetaInfo('sqrts')
+        return self._parseMetaInfo('sqrts')
         
     @property
     def pas(self):
-        return self._parsMetaInfo('pas')
+        return self._parseMetaInfo('pas')
         
     @property    
     def url(self):
-        return self._parsMetaInfo('url')
+        return self._parseMetaInfo('url')
     
     @property    
     def hasUrl(self):
-        if self._parsMetaInfo('url'): return True
+        if self._parseMetaInfo('url'): return True
         return False
     
     @property    
@@ -109,11 +113,11 @@ class ExpAnalysis(object):
         
     @property    
     def comment(self):
-        return self._parsMetaInfo('comment')
+        return self._parseMetaInfo('comment')
     
     @property
     def prettyName(self):
-        return self._parsMetaInfo('prettyname')
+        return self._parseMetaInfo('prettyname')
         
     @property    
     def hasConstraints(self):
@@ -134,29 +138,29 @@ class ExpAnalysis(object):
         ### FIX ME: change to True and False?
         
         """
-        return self._parsMetaInfo('private')
+        return self._parseMetaInfo('private')
     
     @property    
     def hasArxiv(self):
-        if self._parsMetaInfo('arxiv'): return True
+        if self._parseMetaInfo('arxiv'): return True
         return False
         
     @property        
     def arxiv(self):
-        return self._parsMetaInfo('arxiv')
+        return self._parseMetaInfo('arxiv')
     
     @property    
     def hasPublication(self):
-        if self._parsMetaInfo('publication'): return True
+        if self._parseMetaInfo('publication'): return True
         return False
 
     @property    
     def publication(self):
-        return self._parsMetaInfo('publication')
+        return self._parseMetaInfo('publication')
     
     @property
     def hasAxes(self):
-        if self._parsMetaInfo('axes'): return True
+        if self._parseMetaInfo('axes'): return True
         return False
         
     @property
@@ -166,21 +170,21 @@ class ExpAnalysis(object):
     
         """
         if self.hasAxes:
-            return self._parsMetaInfo('axes').split(',')
+            return self._parseMetaInfo('axes').split(',')
         return None
     
     @property    
     def isChecked(self):
-        if self._parsMetaInfo('checked'): return True
+        if self._parseMetaInfo('checked'): return True
         return False
         
     @property        
     def checked(self):
-        return self._parsMetaInfo('checked')
+        return self._parseMetaInfo('checked')
     
     @property
     def isPublished(self):
-        if self._parsMetaInfo('arxiv') or self._parsMetaInfo('publication'):
+        if self._parseMetaInfo('arxiv') or self._parseMetaInfo('publication'):
             return True
         return False
     
