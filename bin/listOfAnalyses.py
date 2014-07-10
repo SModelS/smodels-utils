@@ -14,6 +14,8 @@ from smodels_tools import SModelSTools
 from smodels_tools.tools import databaseBrowser
 import logging
 logger=logging.getLogger(__name__)
+
+countResults=[0]
     
 # browser = databaseBrowser.Browser ( '../../smodels-database/' )
 browser = databaseBrowser.Browser ( )
@@ -62,7 +64,7 @@ def writeSection ( experiment, section, analyses ):
     f.write ( "=== %s ===\n" % prettynames[section] )
     f.write ( "<<Anchor(%s%s)>>\n" % ( experiment, section ) )
     f.write ( "\n" )
-    f.write ( "||'''Analysis''' ||'''Topology''' ||'''Constraint''' ||'''Has Condition?''' ||'''Data published in digital form?''' ||\n" )
+    f.write ( "||'''Analysis''' || '''#''' ||'''Topology''' ||'''Constraint''' ||'''Has Condition?''' ||'''Data published in digital form?''' ||\n" )
     names=analyses.keys()
     names.sort()
     for ananame in names:
@@ -91,7 +93,7 @@ def writeSection ( experiment, section, analyses ):
         span=""
         if len(anatopos)>1:
             span="<|%d>" % len(anatopos)
-        f.write ( "||%s [[%s|%s]]<<BR>>%d TeV, %s fb^-1^" % \
+        f.write ( "||%s [[%s|%s]]<<BR>>%d TeV<<BR>> %s fb^-1^" % \
                   ( span,anaurl,ananame, int(float(ana.sqrts)), ana.lumi ) )
         for topo in anatopos:
             topolink='{{http://smodels.hephy.at/feyn/%s_feyn.png||height="150"}}' \
@@ -111,8 +113,10 @@ def writeSection ( experiment, section, analyses ):
             hascond=True
             if mycond in [ "None", None, "" ]: hascond=False
             datapub=ana.publishedData
-            f.write ( "|| %s || %s || %s || %s ||\n" \
-                      % ( topolink, constr, yesno(hascond), yesno(datapub) ) )
+            countResults[0]=countResults[0]+1
+            f.write ( "|| %d || %s || %s || %s || %s ||\n" \
+                      % ( countResults[0], topolink, constr, \
+                          yesno(hascond), yesno(datapub) ) )
 
 def writeExperiment ( experiment ):
     experimentHeader ( experiment )
@@ -144,7 +148,7 @@ def writeExperiment ( experiment ):
 def main():
     header()
     browser.verbosity='error'
-    print "Base=",browser.base
+    print "base=",browser.base
     experiments=[ "CMS", "ATLAS" ]
     for experiment in experiments:
         writeExperiment ( experiment )
