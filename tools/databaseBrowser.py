@@ -479,7 +479,7 @@ class Browser(object):
             run = self.allRuns(analysis, topology)
             
         if not analysis or not topology or not topology in \
-        self.alltopologies(run, analysis):
+        self.allTopologies(run, analysis):
             logger.warning('There is no experimental result for run-analysis-\
             topology: %s-%s-%s!' %(run, analysis, topology))
             return None
