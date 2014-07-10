@@ -29,11 +29,11 @@ def yesno ( B ):
 
 def header():
     f.write ( 
-## """#acl +DeveloperGroup:read,write,revert -All:write +All:read Default 
-"""#acl +DeveloperGroup:read,write,revert -All:write,read Default 
-<<LockedPage()>>
+# """#acl +DeveloperGroup:read,write,revert -All:write,read Default 
+# <<LockedPage()>>
+"""#acl +DeveloperGroup:read,write,revert -All:write +All:read Default 
 
-= Test: List Of Analyses =
+= List Of Analyses =
 List of analyses and topologies in the SMS results database that has been used in [[http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5|EPJC May 2014, 74:2868]].
 It has been created with the [[http://smodels.hephy.at/gitweb/?p=smodels-tools.git;a=blob;f=bin/listOfAnalyses.py;h=33bc2e9b0eb1854f475b847928a11a1ae6d3098e;hb=refs/heads/develop|listOfAnalyses.py]] tool. 
 The list has been created from the database version %s.
@@ -91,7 +91,8 @@ def writeSection ( experiment, section, analyses ):
         span=""
         if len(anatopos)>1:
             span="<|%d>" % len(anatopos)
-        f.write ( "||%s [[%s|%s]]" % ( span,anaurl,ananame ) )
+        f.write ( "||%s [[%s|%s]]<<BR>>%d TeV, %s fb^-1^" % \
+                  ( span,anaurl,ananame, int(float(ana.sqrts)), ana.lumi ) )
         for topo in anatopos:
             topolink='{{http://smodels.hephy.at/feyn/%s_feyn.png||height="150"}}' \
                      % topo
@@ -105,8 +106,10 @@ def writeSection ( experiment, section, analyses ):
                 constr+="~+[+~`%s`~+]+~, " % ( ii[1:-1] )
                 container.append ( ii )
             constr=constr[:-2]
-            # result=browser.expResult ( ananame, topo )
-            hascond=None
+            from smodels.experiment import smsResults
+            mycond=smsResults.getConditions ( ananame, topo )
+            hascond=True
+            if mycond in [ "None", None, "" ]: hascond=False
             datapub=ana.publishedData
             f.write ( "|| %s || %s || %s || %s ||\n" \
                       % ( topolink, constr, yesno(hascond), yesno(datapub) ) )
