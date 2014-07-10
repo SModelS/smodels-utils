@@ -19,15 +19,20 @@ logger=logging.getLogger(__name__)
 browser = databaseBrowser.Browser ( )
 f=open("ListOfAnalyses","w")
 
+def yesno ( B ):
+    if B==True: return "Yes"
+    if B==False: return "No"
+    return "?"
+
 def header():
     f.write ( 
 ## """#acl +DeveloperGroup:read,write,revert -All:write +All:read Default 
 """#acl +DeveloperGroup:read,write,revert -All:write,read Default 
 <<LockedPage()>>
 
-= List Of Analyses =
+= Test: List Of Analyses =
 List of analyses and topologies in the SMS results database that has been used in [[http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5|EPJC May 2014, 74:2868]].
-It has been created with the [[http://smodels.hephy.at/gitweb/?p=smodels-tools.git;a=blob;f=bin/smsDictionary.py;h=25451211ccf1d38e98c34b9d42e44deb39c6d6ea;hb=refs/heads/develop|listOfAnalyses.py]] tool. 
+It has been created with the [[http://smodels.hephy.at/gitweb/?p=smodels-tools.git;a=blob;f=bin/listOfAnalyses.py;h=33bc2e9b0eb1854f475b847928a11a1ae6d3098e;hb=refs/heads/develop|listOfAnalyses.py]] tool. 
 The list has been created from the database version %s.
 There is also an SmsDictionary.
 
@@ -44,19 +49,93 @@ def xsel():
     os.system ( cmd )
     print cmd
 
-def experimentHeader ( experiment, categories ):
+def experimentHeader ( experiment ):
     f.write ( "\n" )
     f.write ( "== %s ==\n" % experiment )
     f.write ( "<<Anchor(%s)>>\n" % experiment )
+
+
+def writeSection ( experiment, section, analyses ):
+    f.write ( "=== %s ===\n" % section )
+    f.write ( "<<Anchor(%s%s)>>\n" % ( experiment, section ) )
+    f.write ( "\n" )
+    f.write ( "||'''Analysis''' ||'''Topology''' ||'''Constraint''' ||'''Has Condition?''' ||'''Data published in digital form?''' ||\n" )
+    names=analyses.keys()
+    names.sort()
+    for ananame in names:
+        ana=analyses[ananame]
+        if not ana.checked:
+            continue
+        anaurl=ana.url
+        topos=ana.topologies
+        anatopos=[]
+        for topo in topos:
+            otopo = browser.expTopology ( topo )
+            if otopo.category != section:
+                continue
+            constr=otopo.constraints
+            has_constr=False
+            for i in constr:
+                if i=="":
+                    continue
+                has_constr=True
+            if has_constr:
+                anatopos.append ( topo )
+        if len(anatopos)==0:
+            continue
+        span=""
+        if len(anatopos)>1:
+            span="<|%d>" % len(anatopos)
+        f.write ( "||%s [[%s|%s]]" % ( span,anaurl,ananame ) )
+        for topo in anatopos:
+            topolink='{{http://smodels.hephy.at/feyn/%s_feyn.png||height="150"}}' \
+                     % topo
+            otopo=browser.expTopology ( topo )
+            constr=""
+            for i in otopo.constraints:
+                if i=="": continue
+                constr+=i+", "
+            constr=constr[:-2].replace("'","").replace(" ","")
+            # result=browser.expResult ( ananame, topo )
+            hascond=None
+            datapub=None
+            f.write ( "|| %s || `%s` || %s || %s ||\n" \
+                      % ( topolink, constr, yesno(hascond), yesno(datapub) ) )
+
+def writeExperiment ( experiment ):
+    experimentHeader ( experiment )
+    anas = browser.allAnalyses()
+    categories=set()
+    manas={}
+
+    for sana in anas:
+        ana = browser.expAnalysis ( sana )
+        if ana.experiment != experiment:
+            continue
+        for stopo in ana.topologies:
+            topo = browser.expTopology ( stopo )
+            cats = topo.category
+            if cats in [ None, "" ]: continue
+            for cat in cats.split(","):
+                spcat = cat.replace(" ","")
+                categories.add( spcat )
+                if not spcat in manas:
+                    manas[spcat]={}
+                manas[spcat][ana.name]=ana
+    s="Section: "
+    for cat in categories:
+        s+= "[[#%s%s|%s]], " % ( experiment, cat, cat ) 
+    f.write ( "%s\n\n" % s[:-2] )
+    for cat in categories:
+        writeSection ( experiment, cat, manas[cat] )
 
 def main():
     header()
     browser.verbosity='error'
     print "Base=",browser.base
-    anas = browser.allAnalyses()
-    for experiment in [ "CMS", "ATLAS" ]:
-        categories=None
-        experimentHeader ( experiment, categories )
+    experiments=[ "CMS", "ATLAS" ]
+    for experiment in experiments:
+        writeExperiment ( experiment )
 
     xsel()
     
