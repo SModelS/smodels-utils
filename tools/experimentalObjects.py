@@ -134,11 +134,10 @@ class ExpAnalysis(object):
         
     @property    
     def private(self):
-        """States if the analysis is private (1) or public (0).
-        ### FIX ME: change to True and False?
-        
+        """States if the analysis is private (True) or public (False).
+
         """
-        return self._parseMetaInfo('private')
+        return self._parseMetaInfo('private')==1
     
     @property    
     def hasArxiv(self):

@@ -19,9 +19,12 @@ logger=logging.getLogger(__name__)
 browser = databaseBrowser.Browser ( )
 f=open("ListOfAnalyses","w")
 
+prettynames= { "thirdgen": "third generation", "hadronic": "hadronic production",
+               "directslep": "direct slepton production", "eweakino": "weakino production" }
+
 def yesno ( B ):
-    if B==True: return "Yes"
-    if B==False: return "No"
+    if B in [ True, "True" ]: return "Yes"
+    if B in [ False, "False" ]: return "No"
     return "?"
 
 def header():
@@ -56,7 +59,7 @@ def experimentHeader ( experiment ):
 
 
 def writeSection ( experiment, section, analyses ):
-    f.write ( "=== %s ===\n" % section )
+    f.write ( "=== %s ===\n" % prettynames[section] )
     f.write ( "<<Anchor(%s%s)>>\n" % ( experiment, section ) )
     f.write ( "\n" )
     f.write ( "||'''Analysis''' ||'''Topology''' ||'''Constraint''' ||'''Has Condition?''' ||'''Data published in digital form?''' ||\n" )
@@ -66,6 +69,8 @@ def writeSection ( experiment, section, analyses ):
         ana=analyses[ananame]
         if not ana.checked:
             continue
+        if ana.private:
+            continue
         anaurl=ana.url
         topos=ana.topologies
         anatopos=[]
@@ -73,10 +78,10 @@ def writeSection ( experiment, section, analyses ):
             otopo = browser.expTopology ( topo )
             if otopo.category != section:
                 continue
-            constr=otopo.constraints
+            constr=otopo.constraints ## check if we have a constraint
             has_constr=False
             for i in constr:
-                if i=="":
+                if i in [ "", "Not yet assigned" ]:
                     continue
                 has_constr=True
             if has_constr:
@@ -92,14 +97,18 @@ def writeSection ( experiment, section, analyses ):
                      % topo
             otopo=browser.expTopology ( topo )
             constr=""
+            container=[] ## dont list twice
             for i in otopo.constraints:
-                if i=="": continue
-                constr+=i+", "
-            constr=constr[:-2].replace("'","").replace(" ","")
+                if i in [ "", "Not yet assigned" ]: continue
+                ii=i.replace("'","").replace(" ","")
+                if ii in container: continue
+                constr+="~+[+~`%s`~+]+~, " % ( ii[1:-1] )
+                container.append ( ii )
+            constr=constr[:-2]
             # result=browser.expResult ( ananame, topo )
             hascond=None
-            datapub=None
-            f.write ( "|| %s || `%s` || %s || %s ||\n" \
+            datapub=ana.publishedData
+            f.write ( "|| %s || %s || %s || %s ||\n" \
                       % ( topolink, constr, yesno(hascond), yesno(datapub) ) )
 
 def writeExperiment ( experiment ):
@@ -124,7 +133,7 @@ def writeExperiment ( experiment ):
                 manas[spcat][ana.name]=ana
     s="Section: "
     for cat in categories:
-        s+= "[[#%s%s|%s]], " % ( experiment, cat, cat ) 
+        s+= "[[#%s%s|%s]], " % ( experiment, cat, prettynames[cat] ) 
     f.write ( "%s\n\n" % s[:-2] )
     for cat in categories:
         writeSection ( experiment, cat, manas[cat] )
