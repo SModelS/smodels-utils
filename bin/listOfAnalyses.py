@@ -64,7 +64,11 @@ def writeSection ( experiment, section, analyses ):
     f.write ( "=== %s ===\n" % prettynames[section] )
     f.write ( "<<Anchor(%s%s)>>\n" % ( experiment, section ) )
     f.write ( "\n" )
-    f.write ( "||'''Analysis''' || '''#''' ||'''Topology''' ||'''Constraint''' ||'''Has Condition?''' ||'''Data published in digital form?''' ||\n" )
+    for colheader in [ "Analysis", "#", "Topology", "Constraint", "Has Condition?", \
+        "Data published in digital form?" ]:
+        f.write ( "||<#EEEEEE>'''%s''' " % colheader )
+    f.write ( "||\n" )
+    # f.write ( "||'''Analysis''' || '''#''' ||'''Topology''' ||'''Constraint''' ||'''Has Condition?''' ||'''Data published in digital form?''' ||\n" )
     names=analyses.keys()
     names.sort()
     for ananame in names:
@@ -90,25 +94,36 @@ def writeSection ( experiment, section, analyses ):
                 anatopos.append ( topo )
         if len(anatopos)==0:
             continue
-        span=""
+        span="<:>"
         if len(anatopos)>1:
-            span="<|%d>" % len(anatopos)
+            span="<:|%d>" % len(anatopos)
+        ananameb=ananame.replace("_"," ")
+        # f.write ( "|| || || || || || ||\n" )
+        f.write ( "||||||||||||||\n" )
         f.write ( "||%s [[%s|%s]]<<BR>>%d TeV<<BR>> %s fb^-1^" % \
-                  ( span,anaurl,ananame, int(float(ana.sqrts)), ana.lumi ) )
+                  ( span,anaurl,ananameb, int(float(ana.sqrts)), ana.lumi ) )
         for topo in anatopos:
             topolink='{{http://smodels.hephy.at/feyn/%s_feyn.png||height="150"}}' \
                      % topo
-            otopo=browser.expTopology ( topo )
-            constr=""
-            container=[] ## dont list twice
-            for i in otopo.constraints:
-                if i in [ "", "Not yet assigned" ]: continue
-                ii=i.replace("'","").replace(" ","")
-                if ii in container: continue
-                constr+="~+[+~`%s`~+]+~, " % ( ii[1:-1] )
-                container.append ( ii )
-            constr=constr[:-2]
+            #otopo=browser.expTopology ( topo )
+            #constr=""
+            #container=[] ## dont list twice
             from smodels.experiment import smsResults
+            constrs=smsResults.getConstraints ( ananame, topo )
+            #print constrs,type(constrs)
+            #for i in otopo.constraints:
+            #    if i in [ "", "Not yet assigned" ]: continue
+            #    ii=i.replace("'","").replace(" ","")
+            #    if ii in container: continue
+            #    constr+="~+[+~`%s`~+]+~, " % ( ii[1:-1] )
+            #    container.append ( ii )
+            #constr=constr[:-2]
+            if constrs in [ None, "", "None" ]: continue
+            constr=constrs.replace("'","").replace(" ","")
+            if constr[0]=="[" and constr[-1]=="]":
+                constr="~+[+~`%s`~+]+~" % ( constr[1:-1] )
+            else:
+                constr="`%s`" % constr
             mycond=smsResults.getConditions ( ananame, topo )
             hascond=True
             if mycond in [ "None", None, "" ]: hascond=False
