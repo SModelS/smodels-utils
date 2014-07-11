@@ -125,7 +125,7 @@ def writeTopo ( topo ):
     for i in constro[1]:
         i2+="%d," % len(i)
     i2=i2[:-1]+",0)"
-    f.write ( "||%s<<Anchor(%s)>>" % ( rname, name ) )
+    f.write ( "||<:>'''%s'''<<Anchor(%s)>>" % ( rname, name ) )
     f.write ( "||vertices: (%d)(%d) <<BR>>  " % ( v1,v2) )
     f.write ( "insertions: %s%s <<BR>> " % ( i1,i2 ) )
     # f.write ( "(jet)(jet) <<BR>>" )
@@ -144,7 +144,7 @@ def writeTopo ( topo ):
                 continue
             ## print oana.name,"private",type(oana.private),oana.private
             if oana.private:
-                logger.warn ( "%s is private." % ana )
+                logger.warn ( "%s is marked as private." % ana )
                 continue
             if not oana.checked:
                 continue
