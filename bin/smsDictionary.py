@@ -66,10 +66,27 @@ def categoryHeader ( shortname, longname ):
     f.write ( "\n" )
     f.write ( "== %s ==\n" % longname )
     f.write ( "<<Anchor(%s)>>\n" % shortname )
-    f.write ( '||<tableclass="&quot;sortable&quot;">Tx name ||Topology ||graph ||Results ||\n' )
+    # f.write ( '||<tableclass="sortable"> Tx Name || Topology || Graph || Results ||\n' )
+    for header in [ "Tx", "Topology", "Graph", "Results" ]:
+        f.write ( "||<#EEEEEE:> '''%s''' " % header )
+    f.write ( "||\n" )
+    ## f.write ( '||<tableclass="sortable"> Tx Name || Topology || Graph || Results ||\n' )
 
 def writeTopo ( topo ):
     if len(topo.analyses)==0: return
+    ## count number of legit analyses
+    counter=0
+    for ana in topo.analyses:
+        oana=browser.expAnalysis ( ana ) ## get the object
+        if oana.private:
+            continue
+        if not oana.checked:
+            continue
+        counter+=1
+    if counter==0:
+        logger.info ( "couldnt find any checked analysis for %s. Skipping." % topo )
+        return
+
     name=topo.name
     rname=name
     if name in [ "T7ChiSlep", "T8ChiSlep" ]:
@@ -109,26 +126,34 @@ def writeTopo ( topo ):
         i2+="%d," % len(i)
     i2=i2[:-1]+",0)"
     f.write ( "||%s<<Anchor(%s)>>" % ( rname, name ) )
-    f.write ( "||Vertices: (%d)(%d) <<BR>>  " % ( v1,v2) )
+    f.write ( "||vertices: (%d)(%d) <<BR>>  " % ( v1,v2) )
     f.write ( "insertions: %s%s <<BR>> " % ( i1,i2 ) )
     # f.write ( "(jet)(jet) <<BR>>" )
     constr=constr.replace("'","")
     # constr=constr.replace("[[","(").replace("]]",")")
-    constr=constr.replace("[","(").replace("]",")")
+    #constr=constr.replace("[","(").replace("]",")")
+    constr="`%s`" % constr 
     f.write ( constr )
     f.write ( '||{{http://smodels.hephy.at/feyn/%s_feyn.png||width="150"}}' % name )
     f.write ( "|| " )
-    for ana in topo.analyses:
-        oana=browser.expAnalysis ( ana ) ## get the object
-        if int(oana.private)==1:
-            logger.warn ( "%s is private." % ana )
-            continue
-        url=oana.url
-        if url==None:
-            continue
-        if url.find(", ")>-1:
-            url=url[:url.find(", ")-1]
-        f.write ( "[[%s|%s]]<<BR>>" % ( url, ana ) )
+    for experiment in [ "CMS", "ATLAS" ]: 
+        # order by experiment
+        for ana in topo.analyses:
+            oana=browser.expAnalysis ( ana ) ## get the object
+            if oana.experiment != experiment:
+                continue
+            ## print oana.name,"private",type(oana.private),oana.private
+            if oana.private:
+                logger.warn ( "%s is private." % ana )
+                continue
+            if not oana.checked:
+                continue
+            url=oana.url
+            if url==None:
+                continue
+            if url.find(", ")>-1:
+                url=url[:url.find(", ")-1]
+            f.write ( "[[%s|%s]]<<BR>>" % ( url, ana.replace("_"," ") ) )
     f.write ( "||\n" )
 
 def main():

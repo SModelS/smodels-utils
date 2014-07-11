@@ -137,7 +137,8 @@ class ExpAnalysis(object):
         """States if the analysis is private (True) or public (False).
 
         """
-        return self._parseMetaInfo('private')==1
+        t=self._parseMetaInfo('private').lower()
+        return t in [ "1", "yes", "true" ]
     
     @property    
     def hasArxiv(self):
@@ -294,10 +295,15 @@ class ExpTopology(object):
                     logger.warning('The category for %s is missing! Please \
                     check the database entry %s-%s!' %(self._name, run, ana))
         logger.debug('List of categories: %s.' %cats)
+        if len(cats) == 0:
+            logger.error('Could not get any category information for %s.' % \
+                    self._name )
+            return None
         if len(cats) == 1:
             return cats[0]
         
-        logger.error('Unable to get category for topology %s!' %self._name)
+        logger.error('Unable to get consistent category for topology %s: %s' % \
+                      (self._name,cats) )
         return None
     
     @property    
