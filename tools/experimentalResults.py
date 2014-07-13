@@ -148,7 +148,7 @@ class ExpResult (object):
         Possible values for keyword argument "sigma" are: -1,0,1.
         
         """
-        return [exRes.exclusionline(expected, sigma) for exRes in \
+        return [exRes.exclusionLine(expected, sigma) for exRes in \
         self._extendedResults]
         
     def exclusions(self,expected = False, typ = 'xmax'):
@@ -287,7 +287,8 @@ class ExtendedResult(object):
         for key, value in exclusionLines.items(): 
             sigmaDict = {1: 'p1', 0: '', -1: 'm1'}
             for sigmaKey, sigmaValue in sigmaDict.items():
-                sigmaDict[sigmaKey] = rootFile.Get(value + sigmaValue + '_' + self._topoName)
+                sigmaDict[sigmaKey] = rootFile.Get(value + sigmaValue + '_' + \
+                self._topoName)
             exclusionLines[key] = sigmaDict
         logger.debug('Built dictionary for exclusion lines for %s-%s-%s: %s.'\
         %(self._run, self._ana, self._topoName, exclusionLines))     
@@ -313,8 +314,13 @@ class ExtendedResult(object):
             for line in excl:
                 if value in excl:
                     line = line.split()
-                    typDict = {'minx': line[2].strip(), \
-                    'xmin': line[3].strip(), 'xmax': line[4].strip()}
+                    try:
+                        typDict = {'minx': line[2].strip(), \
+                        'xmin': line[3].strip(), 'xmax': line[4].strip()}
+                    except IndexError:
+                        logger.error('Incorrect number (%s) of exclusion values\
+                        for %s-%s-%s-%s!' %(len(line), self._run, self._ana, \
+                        self._topoName, value)) 
             exclDict[key] = typDict
         logger.debug('Built dictionary for exclusion values for %s-%s-%s: %s.'\
         %(self._run, self._ana, self._topoName, exclDict))    
