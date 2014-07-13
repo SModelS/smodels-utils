@@ -29,15 +29,68 @@ motherparticle = {
 
 # pretty name of particle:
 
-prettyparticle = {
-	'g': '#tilde{g}',
-	'q': '#tilde{q}',
-	'b': '#tilde{b}',
-	't': '#tilde{t}',
-	'c0': '#tilde{#chi}^{0}_{1}',
-	'cpm': '#tilde{#chi}^{#pm}_{1}',
-	'l': '#tilde{l}',
-	'c0cpm': '#tilde{#chi}^{0}_{2}#tilde{#chi}^{#pm}_{1}'
+prettyParticle = {
+	'lsp' : '#tilde{#chi}^{0}_{1}',  # lightesd SUSY particle
+	'chargino^pm' : '#tilde{#chi}^{#pm}', #chargino +/- 
+	'chargino^mp' : '#tilde{#chi}^{#mp}', #chargino -/+
+	'chargino^p' : '#tilde{#chi}^{+}',    #chargino +
+	'chargino^m' : '#tilde{#chi}^{-}',    #chargino -
+	'neutralino' : '#tilde{#chi}^{0}',    #neutralino
+	
+	'gravitino':'G',              #gravitino
+	'graviton':'#tilde{G}',         #graviton
+	'photino':'#tilde{#gamma}',   #photino
+	'photon': '#gamma',             #photon
+	'gluino': '#tilde{g}',        #gluino
+	'gluon':'g',                    #gluon
+	'wino' : '#tilde{W}',       #Wino
+	'w' : 'W',                  #W
+	'wino^p' : '#tilde{W}^{+}', #Wino+
+	'w^p' : 'W^{+}',            #W+
+	'wino^m' : '#tilde{W}^{-}', #Wino-
+	'w^m' : 'W^{-}',            #W-
+	'zino' : '#tilde{Z}',       #Zino
+	'z' : 'Z',                  #Z
+	'higgsino' : '#tilde{H}',       #higgsino
+	'higgs' : 'H',                  #higgs
+	
+	'squark': '#tilde{q}',  #squark
+	'quark': 'q',           #quark
+	'sup': '#tilde{u}',  #sup
+	'up': 'u',           #up
+	'sdown': '#tilde{d}',  #sdown
+	'down': 'd',           #down
+	'scharm': '#tilde{c}',  #scharm
+	'charm': 'c',           #charm
+	'sstrange': '#tilde{s}',  #sstarnge
+	'strange': 's',           #strange
+	'stop': '#tilde{t}',  #stop
+	'top': 't',           #top
+	'sbottom': '#tilde{b}',  #sbottom
+	'bottom': 'b',           #bottom
+	
+	'slepton' : '#tilde{l}',    #slepton
+	'lepton' : 'l',             #lepton
+	'lepton^pm' : 'l^{#pm}',
+	'lepton^p' : 'l^{+}',
+	'lepton^m' : 'l^{-}',
+	'lepton^mp' : 'l^{#mp}',
+	'selectron' : '#tilde{e}',      #selectron
+	'electron' : 'e',               #electron
+	'smyon' : '#tilde{#mu}',   #smyon
+	'muyon' : '#mu',            #myon
+	'stauon' : '#tilde{#tau}', #stauon
+	'tauon' : '#tilde{#tau}',  #tauon
+	
+	'sneutrino' : '#tilde{#nu}',            #sneutrino
+	'neutrino' : '#nu',                     #neutrino
+	'elektron-sneutrino' : '#tilde{#nu}_{e}',      #elektron-sneutrino
+	'elektron-neutrino' : '#nu_{e}',               #elektron-neutrino
+	'myon-sneutrino' : '#tilde{#nu}_{#mu}',   #myon-sneutrino
+	'myon-neutrino' : '#nu_{#mu}',            #myon-neutrino
+	'tauon-sneutrino' : '#tilde{#nu}_{#tau}', #tauon-sneutrino
+	'tauon-neutrino' : '#nu_{#tau}',          #tauon-neutrino
+
 }
 
 # pretty name of Analyses for summary plots:
@@ -60,53 +113,83 @@ prettyAnalysisName = {
 
 # pretty name of decay:
 
-decay = { 'T1': '#tilde{g} #rightarrow q#bar{q} #tilde{#chi}^{0}_{1}', 
-	'T1bbbb': '#tilde{g} #rightarrow b#bar{b} #tilde{#chi}^{0}_{1}',
-	'T1tttt': '#tilde{g} #rightarrow t#bar{t} #tilde{#chi}^{0}_{1}',
-	'T1gg':'#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{0}_{2}#rightarrow #gamma#tilde{#chi}^{0}_{1})',
-	'T1lg':'#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{0}_{2}#rightarrow#gamma#tilde{#chi}^{0}_{1}|#tilde{#chi}^{#pm}_{1}#rightarrow W#tilde{#chi}^{0}_{1})',
-	'T1lnu':'#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{#pm} #rightarrow l^{#pm}#nu #tilde{#chi}^{0}_{1})',
-    'T1lh':'#tilde{g} #rightarrow q#bar{q} #tilde{#chi}^{0}_{2},#tilde{#chi}^{0}_{2} #rightarrow l^{+}l^{-}#tilde{#chi}^{0}_{1}',
-    'T2':'#tilde{q} #rightarrow q #tilde{#chi}^{0}_{1}',
-	'T2FVttcc': '#tilde{t} #rightarrow c #tilde{#chi}^{0}_{1}',
-    'T2llnunubb': '#tilde{t} #rightarrow l #nu b #tilde{#chi}^{0}_{1}',
-    'T2bb':'#tilde{b} #rightarrow b #tilde{#chi}^{0}_{1}',
-    'T2bw':'#tilde{t} #rightarrow b (#tilde{#chi}^{#pm}_{1} #rightarrow W #tilde{#chi}^{0}_{1})',
-    'T2ttww': '#tilde{b} #rightarrow tW #tilde{#chi}^{0}_{1}',
-    'T2tt': '#tilde{t} #rightarrow t #tilde{#chi}^{0}_{1}',
-    'T3w': '#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{#pm}_{1}#rightarrow W#tilde{#chi}^{0}_{1} |#tilde{#chi}^{0}_{1})',
-    'T3wb':'#tilde{g} #rightarrow b#bar{b}(W)#tilde{#chi}^{0}_{1}',
-    'T3lh':'#tilde{g} #rightarrow q#bar{q} (#tilde{#chi}^{0}_{2}#rightarrow l^{+}l^{-}#tilde{#chi}^{0}_{1})',
-    'T3tauh':'#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{2}#rightarrow #tau #tau #tilde{#chi}^{0}_{1} |#tilde{#chi}^{0}_{1})',
-    'T5WW':'#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{#pm}_{1}#rightarrow W#tilde{#chi}^{0}_{1})',
-    'T5wg':'#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{0}_{2}#rightarrow#gamma#tilde{#chi}^{0}_{1}|#tilde{#chi}^{#pm}_{1}#rightarrow W#tilde{#chi}^{0}_{1})',
-    'T5WH':'#tilde{g} #rightarrow q#bar{q} #tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow W#tilde{#chi}^{0}_{1} H#tilde{#chi}^{0}_{1} ',
-    'T5gg':'#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{0}_{2}#rightarrow #gamma#tilde{#chi}^{0}_{1})',
-    'T5lnu':'#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{#pm} #rightarrow l^{#pm}#nu #tilde{#chi}^{0}_{1})',
-    'T5ZZ':'#tilde{g} #rightarrow q#bar{q} (#tilde{#chi}^{0}_{2}#rightarrow Z #tilde{#chi}^{0}_{1})',
-    'T5ZZInc':'#tilde{#chi}^{0}_{2} #rightarrow Z #tilde{#chi}^{0}_{1}',
-    'T5zzgmsb':'#tilde{g} #rightarrow q#bar{q} (#tilde{#chi}^{0}_{2}#rightarrow Z #tilde{#chi}^{0}_{1})',
-    'T5tttt':'#tilde{g} #rightarrow t(#tilde{t} #rightarrow t#tilde{#chi}^{0}_{1})',
-    'T6ttww': '#tilde{b} #rightarrow tW #tilde{#chi}^{0}_{1}',
-    'T6ttHH': '#tilde{t} #rightarrow tH #tilde{#chi}^{0}_{1}',
-    'T6ttzz': '#tilde{t}_{2} #rightarrow tilde{t}_{1}Z #rightarrow #tilde{#chi}^{0}_{1}t',
-    'T6bbWW':'#tilde{t} #rightarrow b(#tilde{#chi}^{+} #rightarrow W#tilde{#chi}^{0}_{1})',
-    'T6bbZZ':'#tilde{b} #rightarrow bZ #tilde{#chi}^{0}_{1}',
-    'T7btW':'#tilde{g} #rightarrow btW#tilde{#chi}^{0}_{1}',
-    'T7btbtWW':'#tilde{g} #rightarrow b(#tilde{b} #rightarrow t(#tilde{#chi}^{#pm} #rightarrow W#tilde{#chi}^{0}_{1}))',
-    'TChiwz':'#tilde{#chi}^{#pm} #tilde{#chi}^{0}_{2} #rightarrow W Z #tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1}',
-    'TChizz':'#tilde{#chi}^{0}_{3} #tilde{#chi}^{0}_{2} #rightarrow Z Z #tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1}',
-    'TChiSlep':'#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm}_{1} #rightarrow l l l #nu #tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
-    'TChiNuSlep':'#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm}_{1} #rightarrow l l l #nu #tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
-    'TChiSlepSlep':'#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm}_{1} #rightarrow lll #nu#tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
-    'TChiChipmHW':'#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow W#tilde{#chi}^{0}_{1} H#tilde{#chi}^{0}_{1} ',
-    'TChiChipmSlepL':'#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow lll #nu#tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
-    'TChiChipmSlepSlep':'#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow lll #nu#tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
-    'TChiChipmSlepStau':'#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow ll#tau #nu#tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
-    'TChiChipmStauStau':'#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow #tau#tau#tau #nu#tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
-    'TChipChimSlepSnu':'#tilde{#chi}^{+}#tilde{#chi}^{-} #rightarrow l^{+}l^{-}#nu#nu#tilde{#chi}^{0}_{1}#tilde{#chi}^{0}_{1}',
-    'TSlepSlep':'#tilde{l} #rightarrow l #tilde{#chi}^{0}_{1}'
+decay = { 'T1': 'gluino  --> quark anti-quark  lsp ' , #tilde{g} #rightarrow q#bar{q} #tilde{#chi}^{0}_{1}', 
+	'T1bbbb': 'gluino  --> bottom anti-bottom  lsp ', #tilde{g} #rightarrow b#bar{b} #tilde{#chi}^{0}_{1}',
+	'T1tttt': 'gluino  --> top anti-top  lsp ', #tilde{g} #rightarrow t#bar{t} #tilde{#chi}^{0}_{1}',
+	'T1gg':'gluino  --> quark anti-quark (neutralino --> photon lsp )', #tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{0}_{2}#rightarrow #gamma#tilde{#chi}^{0}_{1})',
+	'T1lg':'gluino  --> quark anti-quark (neutralino  --> photon lsp |chargino^pm  --> w lsp )', #tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{0}_{2}#rightarrow#gamma#tilde{#chi}^{0}_{1}|#tilde{#chi}^{#pm}_{1}#rightarrow W#tilde{#chi}^{0}_{1})',
+	'T1lnu':'gluino  --> quark anti-quark (chargino^pm --> lepton^pm neutrino  lsp )', #tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{#pm} #rightarrow l^{#pm}#nu #tilde{#chi}^{0}_{1})',
+	'T1lh':'gluino  --> quark anti-quark  neutralino neutralino  --> lepton^p lepton^m lsp ' #tilde{g} #rightarrow q#bar{q} #tilde{#chi}^{0}_{2},#tilde{#chi}^{0}_{2} #rightarrow l^{+}l^{-}#tilde{#chi}^{0}_{1}',
+	#'T2':'#tilde{q} #rightarrow q #tilde{#chi}^{0}_{1}',
+	#'T2FVttcc': '#tilde{t} #rightarrow c #tilde{#chi}^{0}_{1}',
+    #'T2llnunubb': '#tilde{t} #rightarrow l #nu b #tilde{#chi}^{0}_{1}',
+    #'T2bb':'#tilde{b} #rightarrow b #tilde{#chi}^{0}_{1}',
+    #'T2bw':'#tilde{t} #rightarrow b (#tilde{#chi}^{#pm}_{1} #rightarrow W #tilde{#chi}^{0}_{1})',
+    #'T2ttww': '#tilde{b} #rightarrow tW #tilde{#chi}^{0}_{1}',
+    #'T2tt': '#tilde{t} #rightarrow t #tilde{#chi}^{0}_{1}',
+    #'T3w': '#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{#pm}_{1}#rightarrow W#tilde{#chi}^{0}_{1} |#tilde{#chi}^{0}_{1})',
+    #'T3wb':'#tilde{g} #rightarrow b#bar{b}(W)#tilde{#chi}^{0}_{1}',
+    #'T3lh':'#tilde{g} #rightarrow q#bar{q} (#tilde{#chi}^{0}_{2}#rightarrow l^{+}l^{-}#tilde{#chi}^{0}_{1})',
+    #'T3tauh':'#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{2}#rightarrow #tau #tau #tilde{#chi}^{0}_{1} |#tilde{#chi}^{0}_{1})',
+    #'T5WW':'#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{#pm}_{1}#rightarrow W#tilde{#chi}^{0}_{1})',
+    #'T5wg':'#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{0}_{2}#rightarrow#gamma#tilde{#chi}^{0}_{1}|#tilde{#chi}^{#pm}_{1}#rightarrow W#tilde{#chi}^{0}_{1})',
+    #'T5WH':'#tilde{g} #rightarrow q#bar{q} #tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow W#tilde{#chi}^{0}_{1} H#tilde{#chi}^{0}_{1} ',
+    #'T5gg':'#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{0}_{2}#rightarrow #gamma#tilde{#chi}^{0}_{1})',
+    #'T5lnu':'#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{#pm} #rightarrow l^{#pm}#nu #tilde{#chi}^{0}_{1})',
+    #'T5ZZ':'#tilde{g} #rightarrow q#bar{q} (#tilde{#chi}^{0}_{2}#rightarrow Z #tilde{#chi}^{0}_{1})',
+    #'T5ZZInc':'#tilde{#chi}^{0}_{2} #rightarrow Z #tilde{#chi}^{0}_{1}',
+    #'T5zzgmsb':'#tilde{g} #rightarrow q#bar{q} (#tilde{#chi}^{0}_{2}#rightarrow Z #tilde{#chi}^{0}_{1})',
+    #'T5tttt':'#tilde{g} #rightarrow t(#tilde{t} #rightarrow t#tilde{#chi}^{0}_{1})',
+    #'T6ttww': '#tilde{b} #rightarrow tW #tilde{#chi}^{0}_{1}',
+    #'T6ttHH': '#tilde{t} #rightarrow tH #tilde{#chi}^{0}_{1}',
+    #'T6ttzz': '#tilde{t}_{2} #rightarrow tilde{t}_{1}Z #rightarrow #tilde{#chi}^{0}_{1}t',
+    #'T6bbWW':'#tilde{t} #rightarrow b(#tilde{#chi}^{+} #rightarrow W#tilde{#chi}^{0}_{1})',
+    #'T6bbZZ':'#tilde{b} #rightarrow bZ #tilde{#chi}^{0}_{1}',
+    #'T7btW':'#tilde{g} #rightarrow btW#tilde{#chi}^{0}_{1}',
+    #'T7btbtWW':'#tilde{g} #rightarrow b(#tilde{b} #rightarrow t(#tilde{#chi}^{#pm} #rightarrow W#tilde{#chi}^{0}_{1}))',
+    #'TChiwz':'#tilde{#chi}^{#pm} #tilde{#chi}^{0}_{2} #rightarrow W Z #tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1}',
+    #'TChizz':'#tilde{#chi}^{0}_{3} #tilde{#chi}^{0}_{2} #rightarrow Z Z #tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1}',
+    #'TChiSlep':'#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm}_{1} #rightarrow l l l #nu #tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
+    #'TChiNuSlep':'#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm}_{1} #rightarrow l l l #nu #tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
+    #'TChiSlepSlep':'#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm}_{1} #rightarrow lll #nu#tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
+    #'TChiChipmHW':'#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow W#tilde{#chi}^{0}_{1} H#tilde{#chi}^{0}_{1} ',
+    #'TChiChipmSlepL':'#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow lll #nu#tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
+    #'TChiChipmSlepSlep':'#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow lll #nu#tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
+    #'TChiChipmSlepStau':'#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow ll#tau #nu#tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
+    #'TChiChipmStauStau':'#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow #tau#tau#tau #nu#tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
+    #'TChipChimSlepSnu':'#tilde{#chi}^{+}#tilde{#chi}^{-} #rightarrow l^{+}l^{-}#nu#nu#tilde{#chi}^{0}_{1}#tilde{#chi}^{0}_{1}',
+    #'TSlepSlep':'#tilde{l} #rightarrow l #tilde{#chi}^{0}_{1}'
 }
+
+def prettyDecay(topoName):
+    if not topoName in decay: return None
+    decayString = decay[topoName]
+    for key, value in prettyParticle.items():
+        decayString = decayString.replace('anti-' + key + ' ','#bar{' + value + '}')
+        decayString = decayString.replace(key + ' ',value)
+    decayString = decayString.replace('-->','#rightarrow')
+    return decayString
+        
+
+def decays(topo,plot = 'ROOT', kerning=True, omitleft=False ):
+  """ give the pretty decay string for a given topo.
+      E.g. T1 -> ~g -> q q ~ch10.
+      kerning: means smaller space between > and >
+      omitleft means omit everything up to #rightarrow """
+
+  if decay.has_key(topo):
+    part = decay[topo]
+    if omitleft and part.find("#rightarrow")>-1:
+      part=part[part.find("#rightarrow"):]
+    if plot=="ROOT":
+      return part
+    part = '$' + part.replace('#','\\') + '$'
+    if kerning:
+      part=part.replace(">>",">#kern[-.2]{>}")
+    return part
+  else:
+    return None
+
 
 #'Hadronic112q':'#tilde{q}_{R} #rightarrow qqqq  #lambda''_{112}',
     #'Leptonic233q':'#tilde{q} #rightarrow qll#nu  #lambda_{233}',
@@ -174,24 +257,7 @@ def describeTx (topo, short=True):
     ret = ret[:ret.find(";")]
     return ret
     
-def decays(topo,plot = 'ROOT', kerning=True, omitleft=False ):
-  """ give the pretty decay string for a given topo.
-      E.g. T1 -> ~g -> q q ~ch10.
-      kerning: means smaller space between > and >
-      omitleft means omit everything up to #rightarrow """
 
-  if decay.has_key(topo):
-    part = decay[topo]
-    if omitleft and part.find("#rightarrow")>-1:
-      part=part[part.find("#rightarrow"):]
-    if plot=="ROOT":
-      return part
-    part = '$' + part.replace('#','\\') + '$'
-    if kerning:
-      part=part.replace(">>",">#kern[-.2]{>}")
-    return part
-  else:
-    return None
 
 def production(topo,plot='ROOT'):
   a=particles(topo)
