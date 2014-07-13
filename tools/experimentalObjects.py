@@ -137,7 +137,7 @@ class ExpAnalysis(object):
         """States if the analysis is private (True) or public (False).
 
         """
-        t=self._parseMetaInfo('private').lower()
+        t = self._parseMetaInfo('private').lower()
         return t in [ "1", "yes", "true" ]
     
     @property    
