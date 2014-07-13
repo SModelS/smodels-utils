@@ -36,6 +36,7 @@ class ExpAnalysis(object):
         self._metaInfo = infotxt.metaInfo
         self._topologies = infotxt.topologies
         self._extendedTopologies = infotxt.extendedTopologies()
+        self._exclusions = infotxt.exclusions
         self._run = run
         self._verbosity = 'error'
      
@@ -222,6 +223,13 @@ class ExpAnalysis(object):
         
         """
         return self._extendedTopologies
+        
+    @property
+    def exclusions(self):
+        """Retrieves all the exclusion values stored in the info.txt file.
+        
+        """
+        return self._exclusions
         
     #def getRestOfInfo => contact, arxiv, publisheddata ### check something missing?
 
