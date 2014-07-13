@@ -15,6 +15,7 @@ import logging, os, types
 import setPath
 import sys
 import experimentalObjects
+import experimentalResults
 
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -468,9 +469,9 @@ class Browser(object):
         """This is the factory for the experimental Result object.
         
         """
-        _result = analysis + '-' + topology
-        if _result in self._results:
-            return self._results[_result]
+        result = analysis + '-' + topology
+        if result in self._results:
+            return self._results[result]
         analysis = self._validateAnalysis(analysis)
         topology = self._validateTopology(topology)
         if run:
@@ -483,10 +484,11 @@ class Browser(object):
             logger.warning('There is no experimental result for run-analysis-\
             topology: %s-%s-%s!' %(run, analysis, topology))
             return None
-        self._results[_result] = experimentalObjects.ExpResult(run, \
-        self.expAnalysis(analysis), self.expTopology(topology))
-        return experimentalObjects.ExpResult(run, self.expAnalysis(analysis), \
-        self.expTopology(topology))
+        self._results[result] = experimentalResults.ExpResult(run, \
+        self.expAnalysis(analysis), self.expTopology(topology), \
+        self._checkResults(analysis, requested = 'sms.root'), \
+        self._checkResults(analysis, requested = 'sms.py'))
+        return self._results[result]
         
 class Infotxt(object):
     """Holds all the lines, stored in the info.txt file. 
@@ -659,3 +661,21 @@ class Infotxt(object):
         massdic[topo]=[c.split(' ') for c in massdic[topo]]
         logger.debug('For %s the massdictionary is: %s.' %(topo, massdic[topo]))
         return massdic
+        
+    @property    
+    def exclusions(self):
+        """Retrieves all the exclusions for every extended topology stored in 
+        the info.txt and returns them as simple list.
+        
+        """
+        infList = self.info
+        exList = []
+        keys = ['exclusions', 'expectedexclusions', 'exclusionsp1', '\
+        expectedexclusionsp1','exclusionsm1', 'expectedexclusionsm1']
+        infList = [l for l in infList for k in keys if k in l]
+        for l in infList:
+            if exList.count(l) == 0:
+                exList.append(l)
+        logger.debug('List of exclusions for %s-%s: %s.' \
+        %(self._run, self._analysis, exList))
+        return exList
