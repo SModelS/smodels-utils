@@ -67,7 +67,7 @@ class Browser(object):
     
         """
         logger.debug('Try to set the path for the database to: %s' %path)
-        path = os.path.realpath ( path )+"/"
+        path = os.path.realpath(path) + '/'
         if not os.path.exists(path):
             logger.error('%s is no valid path!' %path)
             sys.exit()
@@ -88,6 +88,7 @@ class Browser(object):
             logger.debug('Found version file %s with content %s' \
             %(self._base + '/version', content))
             return content[0].strip()
+            
         except IOError:
             logger.error('There is no version file %s' \
             %self._base + '/version')
@@ -171,6 +172,20 @@ class Browser(object):
             logger.setLevel(level=logging.WARNING)
         if level == 'error':
             pass
+        
+    @property
+    def experimentalObejctsDictionaries(self):
+        """Retrieves all the dictionaries containing the experimental objects.
+        Use the deleter to reset these.
+        """
+        return [self._analyses, self._topologies, self._results]
+        
+    @experimentalObejctsDictionaries.deleter
+    def experimentalObejctsDictionaries(self):
+        """Resets all the dictionaries containing the experimental objects in
+        order to get all the logger messages from the building process again.
+        """
+        [self._analyses, self._topologies, self._results] = [{}, {}, {}]
 
     def _getDatabase(self):
         """Creates a dictionary containing all runs as keys and all 
