@@ -38,7 +38,7 @@ class Browser(object):
         self._base = self._validateBase(base)
         self._experimentRestriction = None
         self._verbosity = 'error'
-        self._databaseVersion = "?"
+        self._databaseVersion = self._getDatabaseVersion
         self.database = self._getDatabase()
         self._runRestriction = None
         self._infos = {}
@@ -67,8 +67,7 @@ class Browser(object):
     
         """
         logger.debug('Try to set the path for the database to: %s' %path)
-        import os
-        path=os.path.realpath ( path )+"/"
+        path = os.path.realpath ( path )+"/"
         if not os.path.exists(path):
             logger.error('%s is no valid path!' %path)
             sys.exit()
@@ -76,6 +75,23 @@ class Browser(object):
             logger.error('There is no valid database at %s' %path)
             sys.exit()
         return path
+     
+    @property
+    def _getDatabaseVersion(self):
+        """Retrieves the version of the database using the version file.
+        
+        """
+        try:
+            versionFile = open(self._base + '/version')
+            content = versionFile.readlines()
+            versionFile.close()
+            logger.debug('Found version file %s with content %s' \
+            %(self._base + '/version', content))
+            return content[0].strip()
+        except IOError:
+            logger.error('There is no version file %s' \
+            %self._base + '/version')
+            return 'unknown version'
         
     @property
     def experimentRestriction(self):
@@ -470,7 +486,9 @@ class Browser(object):
         
         """
         result = analysis + '-' + topology
+        logger.debug('Try to get experimental result %s for %s-%s.' %(result, analysis, topology))
         if result in self._results:
+            logger.debug('Found experimental result for %s-%s in dictionary.' %(analysis, topology))
             return self._results[result]
         analysis = self._validateAnalysis(analysis)
         topology = self._validateTopology(topology)
@@ -481,13 +499,14 @@ class Browser(object):
             
         if not analysis or not topology or not topology in \
         self.allTopologies(run, analysis):
-            logger.warning('There is no experimental result for run-analysis-\
-            topology: %s-%s-%s!' %(run, analysis, topology))
+            logger.error('There is no experimental result for \
+            run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
             return None
         self._results[result] = experimentalResults.ExpResult(run, \
         self.expAnalysis(analysis), self.expTopology(topology), \
         self._checkResults(analysis, requested = 'sms.root'), \
         self._checkResults(analysis, requested = 'sms.py'))
+        logger.debug('Built experimental result for %s-%s: %s' %(analysis, topology, self._results[result]))
         return self._results[result]
         
 class Infotxt(object):
