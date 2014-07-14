@@ -40,7 +40,7 @@ class ExpAnalysis(object):
         self._run = run
         self._verbosity = 'error'
      
-     @property
+    @property
     def verbosity(self):
         """Tells the level the logger is set to.
         

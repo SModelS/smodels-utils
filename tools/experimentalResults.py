@@ -109,7 +109,7 @@ class ExpResult (object):
             return exRes[0]
         logger.debug('There are %s extended results for %s-%s!' \
         %(len(exRes), self._ana, self._topo))
-        exRes = [er for er in exRes if er.topoName[:3] == '050']
+        exRes = [er for er in exRes if er.topoName[-3:] == '050']
         return exRes[0]
     
     @property    
@@ -126,7 +126,15 @@ class ExpResult (object):
         """
         return self._expTopo
     
-    # ### FIX ME: does this belong in here?
+    @property    
+    def extendedTopologyNames(self):
+        """Returns the topology-object linked to this result-object.
+        
+        """
+        return self.extendedTopologies
+    
+    # ### FIX ME: does this belong in here? -> NO not in this form
+    # move this to ExpAnalysis and here go deeper to find the topology in the files!
     @property    
     def hasROOT(self):
         if self._smsroot: return True
@@ -176,7 +184,9 @@ class ExpResult (object):
         
         """
         return self._extendedResults
-        
+     
+    # ### FIX ME: rework exclusions and exclusionlines to not get one type for all mass splittings but all types for one mass splitting!!! 
+     
     def exclusionLines(self,expected = False, sigma = 0):
         """Returns a list containing the exclusion lines for all mass 
         assumptions available for this result as ROOT TGraphs. 
@@ -232,7 +242,11 @@ class ExpResult (object):
         
         """
         if extendedTopoName == 'default':
+            logger.debug('Using default for mass proportions!')
             return getattr(self._extResDefault, attribute)(expected, argument)
+        if not extendedTopoName in self.extendedTopologies:
+            logger.error('No valid extended topology %s! Possibilities are %s: '\
+            %(extendedTopoName, self.extendedTopologies))
         extendedResults = [exRes for exRes in self._extendedResults if \
         extendedTopoName == exRes.topoName]
         return getattr(extendedResults[0], attribute)(expected, argument)
@@ -305,8 +319,8 @@ class ExtendedResult(object):
         if expected: typDict = self._exclusions['expected']
         if typ in typDict:
             return typDict[typ]
-        logger.warning('There is no exclusion of type %s when expected set to \
-        %s.' %(typ, expected))
+        logger.warning('There is no exclusion of type %s (expected = %s).'\
+        %(typ, expected))
         return None
         
     @property    
@@ -348,16 +362,20 @@ class ExtendedResult(object):
         exclDict = {'observed': 'exclusions', 'expected': 'expectedexclusions'}
         typDict = {}
         for key, value in exclDict.items():
+            print '1 ', key, value
             for line in excl:
-                if value in excl:
+                print '2 ', line
+                if value in line:
                     line = line.split()
+                    print '3 ', line
                     try:
                         typDict = {'minx': line[2].strip(), \
                         'xmin': line[3].strip(), 'xmax': line[4].strip()}
                     except IndexError:
                         logger.error('Incorrect number (%s) of exclusion values\
                         for %s-%s-%s-%s!' %(len(line), self._run, self._ana, \
-                        self._topoName, value)) 
+                        self._topoName, value))
+                        typDict = {'xmin': line[2].strip(), 'xmax': line[3].strip()}
             exclDict[key] = typDict
         logger.debug('Built dictionary for exclusion values for %s-%s-%s: %s.'\
         %(self._run, self._ana, self._topoName, exclDict))    
