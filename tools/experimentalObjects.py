@@ -40,7 +40,7 @@ class ExpAnalysis(object):
         self._run = run
         self._verbosity = 'error'
      
-    @property
+     @property
     def verbosity(self):
         """Tells the level the logger is set to.
         
@@ -52,9 +52,20 @@ class ExpAnalysis(object):
         """Set the logger to specified level.
         
         """
+        level = self._validateLevel(level)
         self._verbosity = level
         self._setLogLevel(level)
         
+    def _validateLevel(self, level):
+        """Validates given level for pythons logger module.
+        
+        """
+        if not level.lower() in ['debug', 'info', 'warning', 'error']:
+            logger.error('No valid level for verbosity: %s! Browser will \
+            use default setting!' %level)
+            return 'error'
+        return level.lower()
+            
     def _setLogLevel(self, level = 'error'):
         if level == 'debug':
             logger.setLevel(level=logging.DEBUG)
@@ -64,7 +75,6 @@ class ExpAnalysis(object):
             logger.setLevel(level=logging.WARNING)
         if level == 'error':
             pass
-
     def _parseMetaInfo(self, requested):
         if not requested in self._metaInfo:
             logger.warning('Requested keyword %s could not be found for %s!' \

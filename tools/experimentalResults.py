@@ -46,6 +46,43 @@ class ExpResult (object):
         self.extendedTopos = self._expAna.extendedTopologies[self._topo]
         self._extendedResults = self._getExtendedResults
         self._extResDefault = self._getExtendedResultsDefault
+        self._verbosity = 'error'
+    
+    @property
+    def verbosity(self):
+        """Tells the level the logger is set to.
+        
+        """
+        return self._verbosity
+        
+    @verbosity.setter
+    def verbosity(self, level):
+        """Set the logger to specified level.
+        
+        """
+        level = self._validateLevel(level)
+        self._verbosity = level
+        self._setLogLevel(level)
+        
+    def _validateLevel(self, level):
+        """Validates given level for pythons logger module.
+        
+        """
+        if not level.lower() in ['debug', 'info', 'warning', 'error']:
+            logger.error('No valid level for verbosity: %s! Browser will \
+            use default setting!' %level)
+            return 'error'
+        return level.lower()
+            
+    def _setLogLevel(self, level = 'error'):
+        if level == 'debug':
+            logger.setLevel(level=logging.DEBUG)
+        if level == 'info':
+            logger.setLevel(level=logging.INFO)
+        if level == 'warning':
+            logger.setLevel(level=logging.WARNING)
+        if level == 'error':
+            pass
         
     @property
     def _getExtendedResults(self):
