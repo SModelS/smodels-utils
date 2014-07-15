@@ -90,7 +90,7 @@ class ExpResult (object):
         analysis topology pair.
         
         """
-        exRes = [ExtendedResult(extop, self._expAna, self.ROOT) for extop in \
+        exRes = [ExtendedResult(extop, self._expAna, self._smsroot) for extop in \
         self.extendedTopos]
         return exRes
         
@@ -131,7 +131,7 @@ class ExpResult (object):
         """Returns the topology-object linked to this result-object.
         
         """
-        return self.extendedTopologies
+        return self.extendedTopos
     
     @property    
     def hasPY(self):
@@ -141,9 +141,17 @@ class ExpResult (object):
         if 'Dict' in localSms and self._topo in localSms['Dict']:
             return True
         return False
-        
+    
     @property    
-    def checkedBy(self):
+    def isChecked(self):
+        """Is this result checked?
+        
+        """
+        if self.checked: return True
+        return False
+    
+    @property    
+    def checked(self):
         """Retrieves checked_by entry from info.txt.
         
         """
@@ -174,7 +182,7 @@ class ExpResult (object):
         """
         return self._extendedResults
      
-    # ### FIX ME: rework exclusions and exclusionlines to not get one type for all mass splittings but all types for one mass splitting!!! 
+    # ### FIX ME: rework exclusions and exclusionLines to not get one type for all mass splittings but all types for one mass splitting!!! 
      
     def exclusionLines(self,expected = False, sigma = 0):
         """Returns a list containing the exclusion lines for all mass 
@@ -244,7 +252,7 @@ class ExpResult (object):
         
     def selectExclusionLine(self, expected = False, sigma = 0, \
     condition = 'xvalue', value = 050):
-        """Selects one exclusion line (out of all exclusionLines for this 
+        """Selects one exclusion line (out of all exclusion lines for this 
         topology) corresponding to a specified case of mass proportions 
         (e.g. x-value = 050, mass of LSP = 50 GeV, ...)
         
@@ -276,7 +284,13 @@ class ExtendedResult(object):
         self._exclusionLines = self._getExclusionLines
         self._exclusions = self._getExclusions
         
+    @property
+    def name(self):
+        """Returns the name of this experimental result as concatenated string.
         
+        """
+        return self._ana + '-' + self._topoName
+     
     @property
     def topoName(self):
         """Returns the name of the extended topology e.g.: 'TChiChipmSlepL050'.

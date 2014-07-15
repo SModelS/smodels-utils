@@ -215,14 +215,16 @@ class Browser(object):
     @property
     def runRestriction(self):
         """Tells if the browser is restricted to a specified run. 
-        Gives None if all runs are allowed.
         
         """
+        if not self._runRestriction:
+            return 'All runs are allowed.'
         return self._runRestriction
         
     @runRestriction.setter
     def runRestriction(self, run):
-        """Restricts the Browser to one specified run.
+        """Restricts the Browser to one specified run. Don't use this lightly
+        it may cause serious changes in functionality.
         
         """
         self._runRestriction = self._validateRun(run)
@@ -230,7 +232,7 @@ class Browser(object):
             logger.error('Failed to restrict browser to run: %s is not \
             valid!' %run)
             sys.exit()
-        logger.info('Browser restricted to run %s.' %run)
+        logger.warning('Browser restricted to run %s.' %run)
         self.database = {key: self.database[key] for key in self.database if \
         key == self._runRestriction}
     
@@ -287,13 +289,13 @@ class Browser(object):
     # ### FIX ME: maybe return only list?
         if not analysis and not topology:
             logger.warning('No analysis was given. Returnvalue will be list \
-            containing all available runs!')
+containing all available runs!')
             return self.database.keys()
     
         if self._runRestriction:
             logger.warning('Cannot get all runs because browser is restricted \
             to %s!' %self._runRestriction)
-            return self._runRestriction
+            #return self._runRestriction
     
         if self._experimentRestriction:
             logger.warning('Browser is restricted to experiment %s' \
@@ -341,7 +343,7 @@ class Browser(object):
         topologies = []
     
         if self._runRestriction:
-            logger.warnig('Browser is restricted to run %s!' \
+            logger.warning('Browser is restricted to run %s!' \
             %self._runRestriction)
         
         if not run:
@@ -467,7 +469,7 @@ class Browser(object):
         self._analyses[analysis] = experimentalObjects.ExpAnalysis(analysis, \
         self._infos[analysis], self.allRuns(analysis), \
         self._checkResults(analysis, requested = 'sms.root'), \
-        self._checkResults(analysis, requested = 'sms.py')))
+        self._checkResults(analysis, requested = 'sms.py'))
         return self._analyses[analysis]
         
     def expTopology(self, topology):
@@ -500,6 +502,8 @@ class Browser(object):
         
     def expResult(self, analysis, topology, run = None):
         """This is the factory for the experimental Result object.
+        :param analysis: name of analysis as string or expAnalysis.name
+        :param topology: name of topology as string or expTopology.name
         
         """
         result = analysis + '-' + topology
