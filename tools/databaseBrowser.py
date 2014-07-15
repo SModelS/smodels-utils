@@ -465,7 +465,9 @@ class Browser(object):
         logger.debug('Try to create experimental Analysis: %s - %s - %s' \
         %(analysis, self._infos[analysis], self.allRuns(analysis)))    
         self._analyses[analysis] = experimentalObjects.ExpAnalysis(analysis, \
-        self._infos[analysis], self.allRuns(analysis))
+        self._infos[analysis], self.allRuns(analysis), \
+        self._checkResults(analysis, requested = 'sms.root'), \
+        self._checkResults(analysis, requested = 'sms.py')))
         return self._analyses[analysis]
         
     def expTopology(self, topology):

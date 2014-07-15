@@ -133,25 +133,14 @@ class ExpResult (object):
         """
         return self.extendedTopologies
     
-    # ### FIX ME: does this belong in here? -> NO not in this form
-    # move this to ExpAnalysis and here go deeper to find the topology in the files!
-    @property    
-    def hasROOT(self):
-        if self._smsroot: return True
-        return False
-    
     @property    
     def hasPY(self):
-        if self._smspy: return True
+        localSms = {}
+        if self._smspy:
+            execfile(self._smspy, localSms)
+        if 'Dict' in localSms and self._topo in localSms['Dict']:
+            return True
         return False
-    
-    @property    
-    def ROOT(self):
-        return self._smsroot
-        
-    @property    
-    def PY(self):
-        return self._smspy
         
     @property    
     def checkedBy(self):
@@ -362,17 +351,14 @@ class ExtendedResult(object):
         exclDict = {'observed': 'exclusions', 'expected': 'expectedexclusions'}
         typDict = {}
         for key, value in exclDict.items():
-            print '1 ', key, value
             for line in excl:
-                print '2 ', line
                 if value in line:
                     line = line.split()
-                    print '3 ', line
                     try:
                         typDict = {'minx': line[2].strip(), \
                         'xmin': line[3].strip(), 'xmax': line[4].strip()}
                     except IndexError:
-                        logger.error('Incorrect number (%s) of exclusion values\
+                        logger.warning('Incorrect number (%s) of exclusion values\
                         for %s-%s-%s-%s!' %(len(line), self._run, self._ana, \
                         self._topoName, value))
                         typDict = {'xmin': line[2].strip(), 'xmax': line[3].strip()}

@@ -30,7 +30,7 @@ class ExpAnalysis(object):
     
     """
         
-    def __init__(self, analysis, infotxt, run):
+    def __init__(self, analysis, infotxt, run, smsroot, smspy):
         self._name = analysis
         self._info = infotxt.info
         self._metaInfo = infotxt.metaInfo
@@ -38,6 +38,8 @@ class ExpAnalysis(object):
         self._extendedTopologies = infotxt.extendedTopologies()
         self._exclusions = infotxt.exclusions
         self._run = run
+        self._smsroot = smsroot
+        self._smspy = smspy
         self._verbosity = 'error'
      
     @property
@@ -240,6 +242,24 @@ class ExpAnalysis(object):
         
         """
         return self._exclusions
+        
+    @property    
+    def hasROOT(self):
+        if self._smsroot: return True
+        return False
+    
+    @property    
+    def hasPY(self):
+        if self._smspy: return True
+        return False
+    
+    @property    
+    def ROOT(self):
+        return self._smsroot
+        
+    @property    
+    def PY(self):
+        return self._smspy
         
     #def getRestOfInfo => contact, arxiv, publisheddata ### check something missing?
 
