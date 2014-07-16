@@ -215,8 +215,29 @@ class ExpResult (object):
         return self._extendedResults
      
     # ### FIX ME: rework exclusions and exclusionLines to not get one type for all mass splittings but all types for one mass splitting!!! 
-     
-    def exclusionLines(self,expected = False, sigma = 0):
+    
+    @property
+    def exclusionLines(self):
+        """Returns all exclusion lines available for this result 
+        as ROOT TGraphs. 
+        
+        """
+        contours = {}
+        for exRes in self._extendedResults:
+            contours[exRes.name] = exRes.exclusionLines
+        return contours
+    
+    @property
+    def exclusions(self):
+        """Returns all exclusion values available for this result.
+        
+        """
+        values = {}
+        for exRes in self._extendedResults:
+            values[exRes.name] = exRes.exclusionLines
+        return values
+        
+    def typeOfExclusionLines(self,expected = False, sigma = 0):
         """Returns a list containing the exclusion lines for all mass 
         assumptions available for this result as ROOT TGraphs. 
         If expected is set to False, the observed exclusion lines will 
@@ -227,7 +248,7 @@ class ExpResult (object):
         return [exRes.exclusionLine(expected, sigma) for exRes in \
         self._extendedResults]
         
-    def exclusions(self,expected = False, typ = 'xmax'):
+    def typeOfExclusions(self,expected = False, typ = 'xmax'):
         """Returns a list containing all exclusion values for all mass 
         assumptions available for this result. If expected is set to False, 
         the observed values will be returned, else the expected ones. 
@@ -283,16 +304,28 @@ class ExpResult (object):
     
         
     def selectExclusionLine(self, expected = False, sigma = 0, \
-    condition = 'xvalue', value = 050):
-        """Selects one exclusion line (out of all exclusion lines for this 
-        topology) corresponding to a specified case of mass proportions 
-        (e.g. x-value = 050, mass of LSP = 50 GeV, ...)
+    condition = 'xvalue', value = '050'):
+        """Selects one type of exclusion line (out of all exclusion lines 
+        for this topology) corresponding to a specified case of mass proportions.
+        :param expected: switch between the observed (False) or the 
+        expected (True) exclusion lines
+        :param sigma: Takes -1, 0 or 1 corresponding to minus one sigma, 
+        no sigma or plus one sigma exclusion lines
+        :param condition: Takes the condition for the masses as string
+        (e.g. 'xvalue', 'LSP', 'D(M1/M2)=', ...)
+        :param value: Takes the value for the mass condition as string
+        (e.g. '050', '100', ...)
         
         """
-        # ### FIX ME: maybe define a standard configuration for other 
-        #conditions as xvalues
         
-        return self.exclusionLine(extendedTopoName = 'default', \
+        if condition == 'xvalue':
+            exTopName = self._topoName + value
+        elif condition in ['LSP' ,'x' ,'C' ,'M'] or 'D' in condition:
+            exTopName = self._topoName + condition + value
+        elif:
+            logger.error('Unknown condition %s!' %condition)
+            
+        return self.exclusionLine(extendedTopoName = exTopName, \
         expected = expected, sigma = sigma)
 
 class ExtendedResult(object):
@@ -313,8 +346,6 @@ class ExtendedResult(object):
         self._ana = expAnalysis.name
         self._run = expAnalysis.run
         self._path = path
-        self._exclusionLines = self._getExclusionLines
-        self._exclusions = self._getExclusions
         
     @property
     def name(self):
@@ -338,8 +369,8 @@ class ExtendedResult(object):
         
         """
         
-        sigmaDict = self._exclusionLines['observed']
-        if expected: sigmaDict = self._exclusionLines['expected']
+        sigmaDict = self.exclusionLines['observed']
+        if expected: sigmaDict = self.exclusionLines['expected']
         return sigmaDict[sigma]
         
     def exclusion(self, expected = False, typ = 'xmax'):
@@ -350,8 +381,8 @@ class ExtendedResult(object):
         
         """
 
-        typDict = self._exclusions['observed']
-        if expected: typDict = self._exclusions['expected']
+        typDict = self.exclusions['observed']
+        if expected: typDict = self.exclusions['expected']
         if typ in typDict:
             return typDict[typ]
         logger.warning('There is no exclusion of type %s (expected = %s).'\
@@ -359,7 +390,7 @@ class ExtendedResult(object):
         return None
         
     @property    
-    def _getExclusionLines(self):
+    def exclusionLines(self):
         """Retrieves the exclusion lines from the sms.root file linked to the 
         corresponding analysis and builds a nested dictionary including all 
         the exclusion lines: 
@@ -381,7 +412,7 @@ class ExtendedResult(object):
         return exclusionLines
         
     @property
-    def _getExclusions(self):
+    def exclusions(self):
         """Retrieves the exclusion values for this result from the experimental  
         analysis object and builds a nested dictionary including all the 
         exclusion values of form:
