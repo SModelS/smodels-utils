@@ -83,7 +83,11 @@ class ExpResult (object):
             logger.setLevel(level=logging.WARNING)
         if level == 'error':
             pass
-        
+    
+    @property
+    def name(self):
+        return self._ana + '_' + self._topo
+    
     @property
     def _getExtendedResults(self):
         """Retrieves a list of all extended results we have for this 
@@ -173,6 +177,34 @@ class ExpResult (object):
         infoLine = infoLine[0]
         logger.debug('Return value of infoLine: %s.' %infoLine)
         return infoLine[1].strip()
+    
+    @property
+    def condition(self):
+        """Retrieves the condition for this result.
+        
+        """
+        if not self._expAna.hasConditions:
+            logger.warning('No conditions available for analysis %s.' %self._ana)
+            return None
+        cond = [c for c in self._expAna.conditions if c.split()[0].strip() == self._topo]
+        if not cond:
+            logger.warning('No condition available for result %s.' %self._name)
+            return cond
+        return cond[0]
+     
+    @property
+    def constraint(self):
+        """Retrieves the constraint for this result.
+        
+        """
+        if not self._expAna.hasConstraints:
+            logger.warning('No constraints available for analysis %s.' %self._ana)
+            return None
+        cons = [c for c in self._expAna.constraints if c.split()[0].strip() == self._topo]
+        if not cond:
+            logger.warning('No constraints available for result %s.' %self._name)
+            return cond
+        return cond[0]
     
     @property
     def extendedResults(self):

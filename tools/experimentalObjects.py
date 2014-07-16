@@ -84,7 +84,7 @@ class ExpAnalysis(object):
             return None
         return self._metaInfo[requested]
         
-    def _parsInfo(self, requested):
+    def _parseInfo(self, requested):
         content = [line for line in self._info if requested in line]
         if not content:
             logger.warning('Requested lines %s could not be found for %s!' \
@@ -134,16 +134,35 @@ class ExpAnalysis(object):
         
     @property    
     def hasConstraints(self):
-        """Checks if there are any constraints for this Analysis.
+        """Checks if there are any constraints for this analysis.
         
         """
         
-        if self._parsInfo('constraint'): return True
+        if self._parseInfo('constraint'): return True
         return False
         
     @property
     def constraints(self):
-        return self._parsInfo('constraint')
+        """Retrieves all the constraints stored in the info.txt file.
+        
+        """
+        return self._parseInfo('constraint')
+     
+    @property
+    def hasConditions(self):
+        """Checks is there are any conditions for this analysis.
+        
+        """
+        if self._parseInfo('condition'): return True
+        return False
+        
+        
+    @property
+    def conditions(self):
+        """Retrieves all the conditions stored in the info.txt file.
+        
+        """
+        return self._parseInfo('condition')
         
     @property    
     def private(self):
@@ -242,7 +261,7 @@ class ExpAnalysis(object):
         
         """
         return self._exclusions
-        
+    
     @property    
     def hasROOT(self):
         if self._smsroot: return True
