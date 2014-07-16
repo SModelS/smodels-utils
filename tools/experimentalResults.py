@@ -164,31 +164,36 @@ class ExpResult (object):
         if not infoLine: return None
         # ### FIX ME: the IF below will be obsolet when 
         #the checked flag is fixed in every info.txt
-        if 'AL' in infoLine: 
+        if len(infoLine.split()) == 1: 
             logger.warning('There is no information about single topologies.')
             return infoLine[0]
-        infoLine = [ch for ch in infoLine if self._topo in ch]
+        
+        infoLine = infoLine.split(',')
         logger.debug('First preprocessed infoLine: %s.' %infoLine)
+        infoLine = [c.split(':')[1] for c in infoLine if \
+        c.split(':')[0] == self._topo]
+        logger.debug('Second preprocessed infoLine: %s.' %infoLine)
         if not infoLine:
             logger.warning('This Result is not checked!')
             return None
-        infoLine = [ch.split(':') for ch in infoLine]
-        logger.debug('Second preprocessed infoLine: %s.' %infoLine)
-        infoLine = infoLine[0]
-        logger.debug('Return value of infoLine: %s.' %infoLine)
-        return infoLine[1].strip()
+        logger.debug('Return value of infoLine: %s.' %infoLine[0])
+        return infoLine[0].strip()
     
     @property
     def condition(self):
         """Retrieves the condition for this result.
         
         """
+        cond = []
         if not self._expAna.hasConditions:
-            logger.warning('No conditions available for analysis %s.' %self._ana)
+            logger.warning('No conditions available for analysis %s.' \
+            %self._ana)
             return None
-        cond = [c for c in self._expAna.conditions if c.split()[0].strip() == self._topo]
+        cond = [c.split('->')[1].strip() for c in self._expAna.conditions \
+        if c.split('->')[0].strip() == self._topo]
         if not cond:
-            logger.warning('No condition available for result %s.' %self._name)
+            logger.warning('No condition available for result %s.' \
+            %self.name)
             return cond
         return cond[0]
      
@@ -197,14 +202,18 @@ class ExpResult (object):
         """Retrieves the constraint for this result.
         
         """
+        cons = []
         if not self._expAna.hasConstraints:
-            logger.warning('No constraints available for analysis %s.' %self._ana)
+            logger.warning('No constraints available for analysis %s.' \
+            %self._ana)
             return None
-        cons = [c for c in self._expAna.constraints if c.split()[0].strip() == self._topo]
-        if not cond:
-            logger.warning('No constraints available for result %s.' %self._name)
+        cons = [c.split('->')[1].strip() for c in self._expAna.constraints \
+        if c.split('->')[0].strip() == self._topo]
+        if not cons:
+            logger.warning('No constraints available for result %s.' \
+            %self.name)
             return cond
-        return cond[0]
+        return cons[0]
     
     @property
     def extendedResults(self):
@@ -322,7 +331,7 @@ class ExpResult (object):
             exTopName = self._topoName + value
         elif condition in ['LSP' ,'x' ,'C' ,'M'] or 'D' in condition:
             exTopName = self._topoName + condition + value
-        elif:
+        else:
             logger.error('Unknown condition %s!' %condition)
             
         return self.exclusionLine(extendedTopoName = exTopName, \
