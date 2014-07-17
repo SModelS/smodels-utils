@@ -170,8 +170,8 @@ class ExpResult (object):
         
         infoLine = infoLine.split(',')
         logger.debug('First preprocessed infoLine: %s.' %infoLine)
-        infoLine = [c.split(':')[1] for c in infoLine if \
-        c.split(':')[0] == self._topo]
+        infoLine = [c.split(':')[1].strip() for c in infoLine if \
+        c.split(':')[0].strip() == self._topo]
         logger.debug('Second preprocessed infoLine: %s.' %infoLine)
         if not infoLine:
             logger.warning('This Result is not checked!')
