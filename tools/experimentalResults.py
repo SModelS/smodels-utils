@@ -113,7 +113,10 @@ class ExpResult (object):
             return exRes[0]
         logger.debug('There are %s extended results for %s-%s!' \
         %(len(exRes), self._ana, self._topo))
-        exRes = [er for er in exRes if er.topoName[-3:] == '050']
+        exRes = [er for er in exRes if er.topoName == self._topo + '050']
+        if not exRes:
+            logger.warning('FIX ME: there is no default for: %s' %self.extendedTopos)
+            return None
         return exRes[0]
     
     @property    
@@ -302,10 +305,16 @@ class ExpResult (object):
         """
         if extendedTopoName == 'default':
             logger.debug('Using default for mass proportions!')
-            return getattr(self._extResDefault, attribute)(expected, argument)
+            extRes = self._extResDefault
+            if not extRes:
+            logger.error('Could not retrieve exclusion line! \
+            Check if there is a proper default for %s!' %self.extendedTopos)
+            return None
+            return getattr(extRes, attribute)(expected, argument)
         if not extendedTopoName in self.extendedTopologies:
             logger.error('No valid extended topology %s! Possibilities are %s: '\
             %(extendedTopoName, self.extendedTopologies))
+            return None
         extendedResults = [exRes for exRes in self._extendedResults if \
         extendedTopoName == exRes.topoName]
         return getattr(extendedResults[0], attribute)(expected, argument)
