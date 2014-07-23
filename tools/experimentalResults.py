@@ -69,7 +69,7 @@ class ExpResult (object):
         
         """
         if not level.lower() in ['debug', 'info', 'warning', 'error']:
-            logger.error('No valid level for verbosity: %s! \n
+            logger.error('No valid level for verbosity: %s! \n \
             Browser will use default setting!' %level)
             return 'error'
         return level.lower()
@@ -94,8 +94,8 @@ class ExpResult (object):
         analysis topology pair.
         
         """
-        exRes = [ExtendedResult(extop, self._expAna, self._smsroot) for extop in \
-        self.extendedTopos]
+        exRes = [ExtendedResult(extop, self._expAna, self._smsroot, self._smspy)\
+        for extop in self.extendedTopos]
         return exRes
         
     @property    
@@ -149,12 +149,38 @@ class ExpResult (object):
             return True
         return False
         
-    @property upperLimitDicts(self):
+    @property
+    def upperLimitDicts(self):
         """Retrieves all the upper limit dictionaries available for this result.
         
-        """
-        ulDicts = [exRes.upperLimitDict for exRes in self._extendedResults]
+        """ 
+        ulDicts = {}
+        for exTopo in self.extendedTopos:
+            ulDicts[exTopo] = [exRes.upperLimitDict for exRes in self._extendedResults]
         return ulDicts
+        
+    def upperLimitDict(self, extendedTopoName = 'default'):
+        """Retrieves the upper limit dictionary (out of all upper limit 
+        dictionaries available for this topology). If no extended topology name is 
+        given, the default mass assumptions will be used.
+        
+        """
+        
+        if extendedTopoName == 'default':
+            logger.debug('Using default for mass proportions!')
+            extRes = self._extResDefault
+            if not extRes:
+                logger.error('Could not retrieve upper limit dictionary!\n \
+                Check if there is a proper default for %s!' %self.extendedTopos)
+                return None
+            return extRes.upperLimitDict
+        if not extendedTopoName in self.extendedTopologies:
+            logger.error('No valid extended topology %s! Possibilities are %s: '\
+            %(extendedTopoName, self.extendedTopologies))
+            return None
+        extendedResults = [exRes for exRes in self._extendedResults if \
+        extendedTopoName == exRes.topoName]
+        return extendedResults[0].upperLimitDict
         
     @property    
     def isChecked(self):
@@ -253,7 +279,7 @@ class ExpResult (object):
         """
         values = {}
         for exRes in self._extendedResults:
-            values[exRes.name] = exRes.exclusionLines
+            values[exRes.name] = exRes.exclusions
         return values
         
     def typeOfExclusionLines(self,expected = False, sigma = 0):
@@ -314,9 +340,9 @@ class ExpResult (object):
             logger.debug('Using default for mass proportions!')
             extRes = self._extResDefault
             if not extRes:
-            logger.error('Could not retrieve exclusion line! \n
-            Check if there is a proper default for %s!' %self.extendedTopos)
-            return None
+                logger.error('Could not retrieve exclusion line! \n \
+                Check if there is a proper default for %s!' %self.extendedTopos)
+                return None
             return getattr(extRes, attribute)(expected, argument)
         if not extendedTopoName in self.extendedTopologies:
             logger.error('No valid extended topology %s! Possibilities are %s: '\
@@ -462,7 +488,7 @@ class ExtendedResult(object):
                         typDict = {'minx': line[2].strip(), \
                         'xmin': line[3].strip(), 'xmax': line[4].strip()}
                     except IndexError:
-                        logger.warning('Incorrect number (%s) of exclusion \n
+                        logger.warning('Incorrect number (%s) of exclusion \n \
                         values for %s-%s-%s-%s!' %(len(line), self._run, self._ana, \
                         self._topoName, value))
                         typDict = {'xmin': line[2].strip(), \
@@ -479,5 +505,5 @@ class ExtendedResult(object):
             execfile(self._smspy, localSms)
         if 'Dict' in localSms and self._topoName in localSms['Dict']:
             return localSms['Dict'][self._topoName]
-        logger.warning('No upper limit dictionary was found for extended \n
+        logger.warning('No upper limit dictionary was found for extended \n \
         result %s!' %self.name)

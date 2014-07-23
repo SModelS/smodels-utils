@@ -158,7 +158,7 @@ class Browser(object):
         
         """
         if not level.lower() in ['debug', 'info', 'warning', 'error']:
-            logger.error('No valid level for verbosity: %s! Browser will \
+            logger.error('No valid level for verbosity: %s! Browser will \n \
             use default setting!' %level)
             return 'error'
         return level.lower()
@@ -200,7 +200,7 @@ class Browser(object):
             f.close()
         for r in self._allruns:
             if not os.path.exists('%s/%s' % (self._base, r)):
-                logger.info('Using an incomplete version of the \
+                logger.info('Using an incomplete version of the \n\
                 database! Run %s is missing' %r)
                 continue
             data[r] = os.listdir('%s/%s' % (self._base, r))
@@ -229,7 +229,7 @@ class Browser(object):
         """
         self._runRestriction = self._validateRun(run)
         if self._runRestriction == None:
-            logger.error('Failed to restrict browser to run: %s is not \
+            logger.error('Failed to restrict browser to run: %s is not \n\
             valid!' %run)
             sys.exit()
         logger.warning('Browser restricted to run %s.' %run)
@@ -288,12 +288,12 @@ class Browser(object):
     #try to pass this problem?
     # ### FIX ME: maybe return only list?
         if not analysis and not topology:
-            logger.warning('No analysis was given. Returnvalue will be list \
-containing all available runs!')
+            logger.warning('No analysis was given. Returnvalue will be list\n \
+            containing all available runs!')
             return self.database.keys()
     
         if self._runRestriction:
-            logger.warning('Cannot get all runs because browser is restricted \
+            logger.warning('Cannot get all runs because browser is restricted \n\
             to %s!' %self._runRestriction)
             #return self._runRestriction
     
@@ -307,7 +307,7 @@ containing all available runs!')
             self.database[key]]
             if len(runs) == 1:
                 return runs[0]
-            logger.warning('%s appears in %s runs! Returnvalue will be first \
+            logger.warning('%s appears in %s runs! Returnvalue will be first\n \
             hit! Please check the database for ambiguities!' \
             %(analysis, len(runs)))
             return runs[0]
@@ -319,7 +319,7 @@ containing all available runs!')
             self.allTopologies(run = key)]
             if not runs:
                 return None
-            logger.warning('No analysis was given. There are %s runs for given \
+            logger.warning('No analysis was given. There are %s runs for given\n \
             topology %s. Returnvalue will be list!' %(len(runs), topology))
             return runs
         
@@ -329,7 +329,7 @@ containing all available runs!')
             in self.allTopologies(run = key)]
             if len(runs) == 1:
                 return runs[0]
-            logger.error('%s appears in %s runs! Returnvalue will be first hit! \
+            logger.error('%s appears in %s runs! Returnvalue will be first hit!\n \
             Please check the database for ambiguities!' %(analysis, len(runs)))
             return runs[0]
 
@@ -507,9 +507,11 @@ containing all available runs!')
         
         """
         result = analysis + '-' + topology
-        logger.debug('Try to get experimental result %s for %s-%s.' %(result, analysis, topology))
+        logger.debug('Try to get experimental result %s for %s-%s.' \
+        %(result, analysis, topology))
         if result in self._results:
-            logger.debug('Found experimental result for %s-%s in dictionary.' %(analysis, topology))
+            logger.debug('Found experimental result for %s-%s in dictionary.' \
+            %(analysis, topology))
             return self._results[result]
         analysis = self._validateAnalysis(analysis)
         topology = self._validateTopology(topology)
@@ -520,14 +522,15 @@ containing all available runs!')
             
         if not analysis or not topology or not topology in \
         self.allTopologies(run, analysis):
-            logger.error('There is no experimental result for \
+            logger.error('There is no experimental result for \n\
             run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
             return None
         self._results[result] = experimentalResults.ExpResult(run, \
         self.expAnalysis(analysis), self.expTopology(topology), \
         self._checkResults(analysis, requested = 'sms.root'), \
         self._checkResults(analysis, requested = 'sms.py'))
-        logger.debug('Built experimental result for %s-%s: %s' %(analysis, topology, self._results[result]))
+        logger.debug('Built experimental result for %s-%s: %s' \
+        %(analysis, topology, self._results[result]))
         return self._results[result]
         
 class Infotxt(object):
@@ -544,9 +547,10 @@ class Infotxt(object):
         self._run = self._path.split('/')[-3]
         logger.debug('Got run %s.' % self._run)
         logger.debug('Creating object based on info.txt: %s' %self._path)
-        self._exceptions = ['constraint', 'condition', 'fuzzycondition', '\
-        unconstraint', 'exclusions', 'expectedexclusions', 'exclusionsp1', '\
-        expectedexclusionsp1','exclusionsm1', 'expectedexclusionsm1', 'category']
+        self._exceptions = ['constraint', 'condition', 'fuzzycondition', \
+        'unconstraint', 'exclusions', 'expectedexclusions', 'exclusionsp1', \
+        'expectedexclusionsp1','exclusionsm1', 'expectedexclusionsm1', \
+        'category']
         
     def _readInfo(self):
         """Reads the whole info.txt file, returns a tuple containing a 
@@ -638,7 +642,7 @@ class Infotxt(object):
         topos = {}
         logger.debug('Got analysis %s and run %s!' %(self._analysis, self._run))
         if not 'axes' in self.metaInfo:
-            logger.info('No additional information about axes was found \
+            logger.info('No additional information about axes was found \n\
             for %s-%s!' %(self._run, self._analysis))
             if not self.topologies: return None
             for t in self.topologies:
@@ -672,12 +676,12 @@ class Infotxt(object):
                         elif 'LSP' or 'x' or 'C' or 'M' in case[2]: \
                         topos[topo].append(topo + case[2])
                 if len(case) > 3:
-                    logger.warning('Topology is: %s => more then one additional \
+                    logger.warning('Topology is: %s => more then one additional\n\
                     condition is too much at the moment.' %topo)
                     continue
         
         if topos == {'':[]}:
-            logger.warning('Something is wrong with the axes line in the \
+            logger.warning('Something is wrong with the axes line in the\n \
             info.txt for %s-%s!' %(self._run, self._analysis))
             return None
         if not topology: return topos
@@ -710,8 +714,8 @@ class Infotxt(object):
         """
         infList = self.info
         exList = []
-        keys = ['exclusions', 'expectedexclusions', 'exclusionsp1', '\
-        expectedexclusionsp1','exclusionsm1', 'expectedexclusionsm1']
+        keys = ['exclusions', 'expectedexclusions', 'exclusionsp1', \
+        'expectedexclusionsp1','exclusionsm1', 'expectedexclusionsm1']
         infList = [l for l in infList for k in keys if k in l]
         for l in infList:
             if exList.count(l) == 0:
