@@ -7,13 +7,14 @@
 """
 
 import setPath
-from smodels.experiment import smsResults
+from smodels.experiment import smsResults, smsHelpers
 from smodels.tools import rcFile
 
 def count():
     #smsResults.ResultsForSqrts ( 0 )
     # smsResults.considerRuns()#if not all runs should be considered, give list of
     # runs to be considered as argument
+    print "Base=",smsHelpers.base
 
     All=smsResults.getAllResults()
 
@@ -30,8 +31,8 @@ def count():
             c["haveconstraint"]+=1
             run=smsResults.getRun ( analysis )
             c[run]+=1
-            #checked=smsResults.getCheckedBy ( analysis )
-            #if checked: c["checked"]+=1
+            checked=smsHelpers.getMetaInfoField(analysis, "checked" )
+            if checked: c["checked"]+=1
 
     return c
 
