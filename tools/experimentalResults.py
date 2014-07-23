@@ -69,8 +69,8 @@ class ExpResult (object):
         
         """
         if not level.lower() in ['debug', 'info', 'warning', 'error']:
-            logger.error('No valid level for verbosity: %s! Browser will \
-            use default setting!' %level)
+            logger.error('No valid level for verbosity: %s! \n
+            Browser will use default setting!' %level)
             return 'error'
         return level.lower()
             
@@ -141,14 +141,21 @@ class ExpResult (object):
         return self.extendedTopos
     
     @property    
-    def hasPY(self):
-        localSms = {}
-        if self._smspy:
-            execfile(self._smspy, localSms)
-        if 'Dict' in localSms and self._topo in localSms['Dict']:
+    def hasupperLimitDict(self):
+        """Checks if there is any upper limit dictionary for this result.
+        
+        """
+        if self.upperLimitDicts:
             return True
         return False
-    
+        
+    @property upperLimitDicts(self):
+        """Retrieves all the upper limit dictionaries available for this result.
+        
+        """
+        ulDicts = [exRes.upperLimitDict for exRes in self._extendedResults]
+        return ulDicts
+        
     @property    
     def isChecked(self):
         """Is this result checked?
@@ -307,7 +314,7 @@ class ExpResult (object):
             logger.debug('Using default for mass proportions!')
             extRes = self._extResDefault
             if not extRes:
-            logger.error('Could not retrieve exclusion line! \
+            logger.error('Could not retrieve exclusion line! \n
             Check if there is a proper default for %s!' %self.extendedTopos)
             return None
             return getattr(extRes, attribute)(expected, argument)
@@ -354,7 +361,7 @@ class ExtendedResult(object):
     
     """
     
-    def __init__(self, extendedTopologyName, expAnalysis, path):
+    def __init__(self, extendedTopologyName, expAnalysis, smsroot, smspy):
         """Sets all private variables and initiates the dictionaries for 
         exclusion lines and exclusions.
         
@@ -363,7 +370,8 @@ class ExtendedResult(object):
         self._expAna = expAnalysis
         self._ana = expAnalysis.name
         self._run = expAnalysis.run
-        self._path = path
+        self._smsroot = smsroot
+        self._smspy = smspy
         
     @property
     def name(self):
@@ -417,8 +425,9 @@ class ExtendedResult(object):
         
         """
 
-        rootFile = ROOT.TFile(self._path)
-        exclusionLines = {'observed': 'exclusion', 'expected': 'expectedexclusion'}
+        rootFile = ROOT.TFile(self._smsroot)
+        exclusionLines = {'observed': 'exclusion', 'expected':\
+        'expectedexclusion'}
         for key, value in exclusionLines.items(): 
             sigmaDict = {1: 'p1', 0: '', -1: 'm1'}
             for sigmaKey, sigmaValue in sigmaDict.items():
@@ -453,11 +462,22 @@ class ExtendedResult(object):
                         typDict = {'minx': line[2].strip(), \
                         'xmin': line[3].strip(), 'xmax': line[4].strip()}
                     except IndexError:
-                        logger.warning('Incorrect number (%s) of exclusion values\
-                        for %s-%s-%s-%s!' %(len(line), self._run, self._ana, \
+                        logger.warning('Incorrect number (%s) of exclusion \n
+                        values for %s-%s-%s-%s!' %(len(line), self._run, self._ana, \
                         self._topoName, value))
-                        typDict = {'xmin': line[2].strip(), 'xmax': line[3].strip()}
+                        typDict = {'xmin': line[2].strip(), \
+                        'xmax': line[3].strip()}
             exclDict[key] = typDict
         logger.debug('Built dictionary for exclusion values for %s-%s-%s: %s.'\
         %(self._run, self._ana, self._topoName, exclDict))    
         return exclDict
+        
+    @property
+    def upperLimitDict(self):
+        localSms = {}
+        if self._smspy:
+            execfile(self._smspy, localSms)
+        if 'Dict' in localSms and self._topoName in localSms['Dict']:
+            return localSms['Dict'][self._topoName]
+        logger.warning('No upper limit dictionary was found for extended \n
+        result %s!' %self.name)
