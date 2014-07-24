@@ -7,18 +7,21 @@
 """
 
 import setPath
-from smodels.experiment import smsResults
+import os
+from smodels.experiment import smsResults, smsHelpers
 from smodels.tools import rcFile
 
 def count():
     #smsResults.ResultsForSqrts ( 0 )
     # smsResults.considerRuns()#if not all runs should be considered, give list of
     # runs to be considered as argument
+    smsHelpers.base=os.environ["HOME"]+"/git/smodels-database/"
+    print "Base=",smsHelpers.base
 
     All=smsResults.getAllResults()
 
     c={ "total":0, "public":0, "haveconstraint": 0, "2012": 0, "2011": 0,
-            "ATLAS8TeV": 0, "8TeV":0, "checked": 0 }
+            "ATLAS8TeV": 0, "8TeV":0, "checked": 0, "notchecked":[] }
 
     for analysis in All:
         for topo in All[analysis]:
@@ -30,8 +33,11 @@ def count():
             c["haveconstraint"]+=1
             run=smsResults.getRun ( analysis )
             c[run]+=1
-            #checked=smsResults.getCheckedBy ( analysis )
-            #if checked: c["checked"]+=1
+            checked=smsHelpers.getMetaInfoField(analysis, "checked" )
+            if checked: 
+                c["checked"]+=1
+            else:
+                c["notchecked"].append( analysis )
 
     return c
 
@@ -46,3 +52,4 @@ if __name__ == "__main__":
     print c["2011"]+c["2012"],"are 7 TeV results"
     print c["8TeV"]+c["ATLAS8TeV"],"are 8 TeV results"
     print c["checked"], "out of these", c["haveconstraint"],"have been verified so far"
+    print "Not checked:",", ".join( c["notchecked"] )
