@@ -430,6 +430,8 @@ class ExpTopology(object):
         """
         return self._name.replace("W","w").replace("Z","z" )
     
+
+    
     @property
     def decay(self):
         """Retrieves the description of this decay as LaTex-strings.
@@ -438,13 +440,33 @@ class ExpTopology(object):
         # ### FIX ME: This is not done yet -> should use already existing code!  
         if prettyDescriptions.decay.has_key(self._name):
             logger.info('found decay for topology %s' %self._name)
-            return prettyDescriptions.decay[self._name]
+            return self._latexDecay(self._name)
         if prettyDescriptions.decay.has_key(self._slackExpTopologyName()):
             logger.info('found decay for topology %s with \
             slack name %s' %(self._name, self._slackExpTopologyName()))
-            return prettyDescriptions.decay[self._slackExpTopologyName()]
+            return self._latexDecay(self._slackExpTopologyName())
         logger.warning('no decay found for topology %s' %self._name)
         return None
+        
+    def _latexDecay(self,topoName):
+        decayString = prettyDescriptions.decay[topoName]
+        for key, value in prettyDescriptions.prettySUSYParticle.items():
+            decayString = self._latexParticle(decayString,key,value)
+        for key, value in prettyDescriptions.prettySMParticle.items():
+            decayString = self._latexParticle(decayString,key,value)
+        for key, value in prettyDescriptions.highstrings.items():
+            decayString = decayString.replace(key,value)
+        for key, value in prettyDescriptions.lowstrings.items():
+            decayString = decayString.replace(key,value)
+        decayString = decayString.replace('-->','#rightarrow')
+        return decayString
+        
+    def _latexParticle(self,decayString,key,value):
+        decayString = decayString.replace('anti' + key + ' ','#bar{' + value + '}')
+        decayString = decayString.replace(key + ' ',value)
+        decayString = decayString.replace(key + '_',value + '_')
+        decayString = decayString.replace(key + '^',value + '^')
+        return decayString
         
     #def getPrettyName       # particles resp. productionmode
     #def treatMasssplitting
