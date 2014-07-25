@@ -468,6 +468,44 @@ class ExpTopology(object):
         decayString = decayString.replace(key + '^',value + '^')
         return decayString
         
+    @property
+    def motherParticle(self):
+        '''check if decy Dict has key self._name, uses self._getMotherParticle
+        :returns: motherParticle as string or None
+        
+        '''
+        # ### FIX ME: This is not done yet -> should use already existing code! 
+        if prettyDescriptions.decay.has_key(self._name):
+            logger.info('found motherParticle for topology %s' %self._name)
+            return self._getMotherParticle(self._name)
+        if prettyDescriptions.decay.has_key(self._slackExpTopologyName()):
+            logger.info('found motherParticle for topology %s with \
+            slack name %s' %(self._name, self._slackExpTopologyName()))
+            return self._getMotherParticle(self._slackExpTopologyName())
+        logger.warning('no decay found for topology %s' %self._name)
+        return None 
+        
+    def _getMotherParticle(self,topoName):
+        '''returns the matherparticle
+        
+        '''
+        # ### FIX ME: This is not done yet! 
+        decay = prettyDescriptions.decay[topoName]
+        motherPart = decay.split('-->')[0]
+        motherPart = motherPart.strip()
+        if motherPart == 'gluino': return 'g'
+        if motherPart == 'squark': return 'q'
+        if motherPart == 'stop': return 't'
+        if motherPart == 'sbottom': return 'b'
+        if motherPart == 'slepton': return 'l'
+        if 'chargino' in motherPart and 'neutralino' in motherPart:
+            return 'c0cpm'
+        if 'chargino' in motherPart and not 'neutralino' in motherPart:
+            return 'cpm'
+        if not 'chargino' in motherPart and 'neutralino' in motherPart:#
+            return 'c0'
+        logger.error('could not identify motherParticle for  %s' %self._name)
+        return None
     #def getPrettyName       # particles resp. productionmode
     #def treatMasssplitting
     #def setAnalyses
