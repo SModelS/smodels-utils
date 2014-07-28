@@ -250,7 +250,32 @@ class ExpResult (object):
             %self.name)
             return cond
         return cons[0]
-    
+        
+    @property
+    def axes(self):
+        """Retrieves the axes information for this result.
+        
+        """
+        axDict = {}
+        if not self._expAna.hasAxes:
+            logger.warning('No axes information available for analysis %s.' \
+            %self._ana)
+            return None
+        ax = [ a.strip() in self._ExpAna.axes.split(',') if self._topo in a]
+        ax = ax[0].replace('%s:' %self._topo, '')
+        if len(self.extendedTopologies) == 1:
+            axdict['mx'] = ax.split()[0].strip()
+            axdict['my'] = ax.split()[1].strip()
+            axdict['my'] = ax.split()[2].strip()
+            try:
+                logger.warning('There is a second condition for the masses: %s!'\
+                %ax.split()[3].strip())
+            except: pass
+        else:
+           logger.warning('Mass splitting not yet implemented properly!') 
+            pass
+        return axDict
+        
     @property
     def extendedResults(self):
         """Returns a list containing all available extended 
