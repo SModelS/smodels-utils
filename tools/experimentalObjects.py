@@ -430,26 +430,28 @@ class ExpTopology(object):
         """
         return self._name.replace("W","w").replace("Z","z" )
     
-
-    
-    @property
-    def decay(self):
-        """Retrieves the description of this decay as LaTex-strings.
-        UNDER CONSTRUCTION!
+        
+    def _searchDecayDict(self):
+        """seraches for topology name in Descripions.decay
+        :returns: dictionary entry without formating as string
+        
         """
-        # ### FIX ME: This is not done yet -> should use already existing code!  
         if prettyDescriptions.decay.has_key(self._name):
             logger.info('found decay for topology %s' %self._name)
-            return self._latexDecay(self._name)
+            return prettyDescriptions.decay[self._name]
         if prettyDescriptions.decay.has_key(self._slackExpTopologyName()):
             logger.info('found decay for topology %s with \
             slack name %s' %(self._name, self._slackExpTopologyName()))
-            return self._latexDecay(self._slackExpTopologyName())
+            prettyDescriptions.decay[self._slackExpTopologyName()]
         logger.warning('no decay found for topology %s' %self._name)
-        return None
+        return None        
+
+    @property
+    def decay(self):
+        """:returns: decay as string, formated for ROOT.TLatex
         
-    def _latexDecay(self,topoName):
-        decayString = prettyDescriptions.decay[topoName]
+        """
+        decayString = self._searchDecayDict()
         for key, value in prettyDescriptions.prettySUSYParticle.items():
             decayString = self._latexParticle(decayString,key,value)
         for key, value in prettyDescriptions.prettySMParticle.items():
@@ -470,27 +472,11 @@ class ExpTopology(object):
         
     @property
     def motherParticle(self):
-        '''check if decy Dict has key self._name, uses self._getMotherParticle
-        :returns: motherParticle as string or None
+        """ :returns: motherParticle in simple format as string or None
         
-        '''
-        # ### FIX ME: This is not done yet -> should use already existing code! 
-        if prettyDescriptions.decay.has_key(self._name):
-            logger.info('found motherParticle for topology %s' %self._name)
-            return self._getMotherParticle(self._name)
-        if prettyDescriptions.decay.has_key(self._slackExpTopologyName()):
-            logger.info('found motherParticle for topology %s with \
-            slack name %s' %(self._name, self._slackExpTopologyName()))
-            return self._getMotherParticle(self._slackExpTopologyName())
-        logger.warning('no decay found for topology %s' %self._name)
-        return None 
-        
-    def _getMotherParticle(self,topoName):
-        '''returns the matherparticle
-        
-        '''
+        """
         # ### FIX ME: This is not done yet! 
-        decay = prettyDescriptions.decay[topoName]
+        decay = self._searchDecayDict()
         motherPart = decay.split('-->')[0]
         motherPart = motherPart.strip()
         if motherPart == 'gluino': return 'g'
@@ -506,6 +492,8 @@ class ExpTopology(object):
             return 'c0'
         logger.error('could not identify motherParticle for  %s' %self._name)
         return None
+        
+        
     #def getPrettyName       # particles resp. productionmode
     #def treatMasssplitting
     #def setAnalyses
