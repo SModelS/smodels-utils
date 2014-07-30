@@ -34,7 +34,7 @@ class Browser(object):
     def __init__(self, base = '/afs/hephy.at/user/w/walten/public/sms/'):
         self._allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
         #self._allruns = ["8TeV", "ATLAS8TeV", "2012", "RPV7"]
-        self._artifacts = ['old', 'bad', 'missing', 'TODO', 'readme']
+        self._artifacts = ['old', 'bad', 'missing', 'TODO', 'readme', 'SUCHI_RL_TEST']
         self._base = self._validateBase(base)
         self._experimentRestriction = None
         self._verbosity = 'error'
