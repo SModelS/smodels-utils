@@ -254,6 +254,9 @@ class ExpResult (object):
     @property
     def axes(self):
         """Retrieves the axes information for this result.
+        :return: {extended topology: 
+        {'mx': mass on x-axis, 'my': mass on y-axes, 
+        'mz': condition for intermediate mass}}
         
         """
         axdict = {}
@@ -265,20 +268,42 @@ class ExpResult (object):
         ax = ax[0].replace('%s:' %self._topo, '')
         logger.debug('1) Axes information: %s.' %ax)
         if len(self.extendedTopos) == 1:
+            axdict[self._topo] = {}
             logger.debug('2) Axes information: %s.' %ax.split())
-            axdict['mx'] = ax.split()[0].strip()
-            axdict['my'] = ax.split()[1].strip()
+            axdict[self._topo]['mx'] = ax.split()[0].strip()
+            axdict[self._topo]['my'] = ax.split()[1].strip()
             try:
-                axdict['mz'] = ax.split()[2].strip()
+                axdict[self._topo]['mz'] = ax.split()[2].strip()
             except IndexError:
                 logger.info('No intermediate mass mz.')
-                axdict['mz'] = None
+                axdict[self._topo]['mz'] = None
             try:
                 logger.warning('There is a second condition for the masses: %s!'\
                 %ax.split()[3].strip())
             except IndexError: pass
         else:
-           logger.warning('Mass splitting not yet implemented properly!') 
+            logger.warning('There are %s extended topologies!'\
+            %len(self.extendedTopos))
+            ax = ax.split('-')
+            logger.debug('3) Axes information: %s.' %ax)
+            for et in self.extendedTopos:
+                axdict[et] = {}
+                extention = et.replace(self._topo, '')
+                if not 'D' in extention:
+                    for a in ax:
+                        logger.debug('4) Axes information: %s.' %a)
+                        if a.split()[2].strip() == extention:
+                            axdict[et]['mx'] = a.split()[0].strip()
+                            axdict[et]['my'] = a.split()[1].strip()
+                            axdict[et]['mz'] = a.split()[2].strip()
+                else:
+                    for a in ax:
+                        logger.debug('4) Axes information: %s.' %a)
+                        if extention.strip('D') == a.split()[2].split('=')[-1].strip():
+                            axdict[et]['mx'] = a.split()[0].strip()
+                            axdict[et]['my'] = a.split()[1].strip()
+                            axdict[et]['mz'] = a.split()[2].strip()
+               
         return axdict
         
     @property
