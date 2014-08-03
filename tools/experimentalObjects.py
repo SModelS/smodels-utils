@@ -103,7 +103,7 @@ class ExpAnalysis(object):
         
     @property
     def sqrts(self):
-        return self._parseMetaInfo('sqrts')
+        return float(self._parseMetaInfo('sqrts'))
         
     @property
     def pas(self):
