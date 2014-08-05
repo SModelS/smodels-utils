@@ -141,7 +141,7 @@ class ExpResult (object):
         return self.extendedTopos
     
     @property    
-    def hasupperLimitDict(self):
+    def hasUpperLimitDict(self):
         """Checks if there is any upper limit dictionary for this result.
         
         """

@@ -77,6 +77,7 @@ class ExpAnalysis(object):
             logger.setLevel(level=logging.WARNING)
         if level == 'error':
             pass
+        
     def _parseMetaInfo(self, requested):
         if not requested in self._metaInfo:
             logger.warning('Requested keyword %s could not be found for %s!' \
@@ -241,8 +242,8 @@ class ExpAnalysis(object):
         results for.
         
         """
-        if self.getTopologyNames():
-            topos = [ExpTopology(t) for t in self.getExpTopologyNames()]
+        if self.topologies:
+            topos = [ExpTopology(t) for t in self.topologies]
             return topos
         return None
         
@@ -299,7 +300,7 @@ class ExpTopology(object):
         """Tells the level the logger is set to.
         
         """
-        return self._verbosity
+        return self._verbositya
         
     @verbosity.setter
     def verbosity(self, level):
@@ -394,6 +395,13 @@ class ExpTopology(object):
     def analyses(self):
         return self._analyses
     
+    # ### FIX ME doesn't work this way!
+    #@property
+    #def experimentAnalyses(self):
+        #if self.analyses:
+            #anas = [ExpAnalysis(a) for a in self.analyses]
+        #return anas
+    
     @property
     def runs(self):
         return self._runs
@@ -432,7 +440,7 @@ class ExpTopology(object):
     
         
     def _searchDecayDict(self):
-        """seraches for topology name in Descripions.decay
+        """Searches for topology name in descriptions.decay
         :returns: dictionary entry without formating as string
         
         """
