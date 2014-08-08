@@ -522,6 +522,26 @@ class ExpTopology(object):
         logger.error('could not identify motherParticle for  %s' %self._name)
         return None
         
+    @property
+    def shortdecay(self):
+        decay = self._searchDecayDict()
+        if isinstance(decay,list): decay = decay[0]
+        decaySteps = decay.split('-->')
+        if len(decaySteps) == 2: return self._latexDecay(decay)
+        decay = decaySteps[0] + '--> '
+        lsp = 'lsp '*(len(decay.split())-1)
+        decaySteps = decaySteps[1:]
+        for decayStep in decaySteps:
+            decayStep.replace('(','')
+            decayStep.replace(')','')
+            decayStep.replace('|','')
+            for particle in prettyDescriptions.prettySMParticle:
+                if particle in decayStep: decay = decay + particle + ' '
+        decay = decay + lsp
+        return self._latexDecay(decay)
+            
+        
+        
         
     #def getPrettyName       # particles resp. productionmode
     #def treatMasssplitting
