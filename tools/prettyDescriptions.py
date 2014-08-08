@@ -66,7 +66,7 @@ prettySUSYParticle = {
     'photino':'#tilde{#gamma}',   #photino
     'gluino': '#tilde{g}',        #gluino
     'wino' : '#tilde{W}',       #Wino
-    'zino' : '#tilde{Z}',       #Zino
+    'zino' : '#ti:lde{Z}',       #Zino
     'higgsino' : '#tilde{H}',       #higgsino
     
     'squark': '#tilde{q}',  #squark
@@ -93,6 +93,7 @@ prettySUSYParticle = {
 highstrings = {
     '^0' : '^{0}',
     '^pm' : '^{#pm}',
+    '^mp' : '^{#mp}',
     '^p' : '^{+}',
     '^m' : '^{-}',
 }
@@ -123,52 +124,77 @@ prettyAnalysisName = {
 
 # pretty name of decay:
 
-decay = { 'T1': 'gluino  --> quark antiquark  lsp ' , #tilde{g} #rightarrow q#bar{q} #tilde{#chi}^{0}_{1}', 
-	'T1bbbb': 'gluino  --> bottom antibottom  lsp ', #tilde{g} #rightarrow b#bar{b} #tilde{#chi}^{0}_{1}',
-	'T1tttt': 'gluino  --> top antitop  lsp ', #tilde{g} #rightarrow t#bar{t} #tilde{#chi}^{0}_{1}',
-	'T1gg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp )', #tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{0}_{2}#rightarrow #gamma#tilde{#chi}^{0}_{1})',
-	'T1lg':'gluino  --> quark antiquark (neutralino_2  --> photon lsp |chargino^pm  --> w lsp )', #tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{0}_{2}#rightarrow#gamma#tilde{#chi}^{0}_{1}|#tilde{#chi}^{#pm}_{1}#rightarrow W#tilde{#chi}^{0}_{1})',
-	'T1lnu':'gluino  --> quark antiquark (chargino^pm --> lepton^pm neutrino  lsp )', #tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{#pm} #rightarrow l^{#pm}#nu #tilde{#chi}^{0}_{1})',
-	'T1lh':'gluino  --> quark antiquark  neutralino_2 neutralino_2  --> lepton^p lepton^m lsp ', #tilde{g} #rightarrow q#bar{q} #tilde{#chi}^{0}_{2},#tilde{#chi}^{0}_{2} #rightarrow l^{+}l^{-}#tilde{#chi}^{0}_{1}',
-	'T2':'squark  --> quark lsp ',#tilde{q} #rightarrow q #tilde{#chi}^{0}_{1}',
-	'T2FVttcc': 'stop  --> charm lsp ',#tilde{t} #rightarrow c #tilde{#chi}^{0}_{1}',
-    'T2llnunubb': 'stop  --> lepton neutrino bottom lsp ',#tilde{t} #rightarrow l #nu b #tilde{#chi}^{0}_{1}',
-    'T2bb':'sbottom  --> bottom lsp ', #tilde{b} #rightarrow b #tilde{#chi}^{0}_{1}',
-    'T2bw':'stop  --> bottom (chargino^pm_1 --> w lsp )',#tilde{t} #rightarrow b (#tilde{#chi}^{#pm}_{1} #rightarrow W #tilde{#chi}^{0}_{1})',
-    'T2ttww': 'sbottom  --> top w lsp ',#tilde{b} #rightarrow tW #tilde{#chi}^{0}_{1}',
-    'T2tt': 'stop  --> top lsp ', #tilde{t} #rightarrow t #tilde{#chi}^{0}_{1}',
-    'T3w': 'gluino --> quark antiquark (chargino^pm_1 --> w lsp | lsp )' ,#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{#pm}_{1}#rightarrow W#tilde{#chi}^{0}_{1} | #tilde{#chi}^{0}_{1})',
-    'T3wb':'gluino  --> bottom antibottom (w )lsp ', #tilde{g} #rightarrow b#bar{b}(W)#tilde{#chi}^{0}_{1}',
-    'T3lh':'gluino  --> quark antiquark (neutralino_2 --> lepton^p lepton^m lsp | lsp )',#tilde{g} #rightarrow q#bar{q} (#tilde{#chi}^{0}_{2}#rightarrow l^{+}l^{-}#tilde{#chi}^{0}_{1})',
-    'T3tauh':'gluino  --> quark antiquark (neutralino_2 --> tauon tauon lsp | lsp )', #tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{2}#rightarrow #tau #tau #tilde{#chi}^{0}_{1} |#tilde{#chi}^{0}_{1})',
-    'T5WW':'gluino  --> quark antiquark (chargino^pm_1 --> w lsp )',#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{#pm}_{1}#rightarrow W#tilde{#chi}^{0}_{1})',
-    'T5wg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp | chargino^pm_1 --> w lsp )',#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{0}_{2}#rightarrow#gamma#tilde{#chi}^{0}_{1}|#tilde{#chi}^{#pm}_{1}#rightarrow W#tilde{#chi}^{0}_{1})',
-    'T5WH':'gluino  --> quark antiquark (neutralino_2 --> higgs lsp | chargino^pm_1 --> w lsp )',#tilde{g} #rightarrow q#bar{q} #tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow W#tilde{#chi}^{0}_{1} H#tilde{#chi}^{0}_{1} ',
-    'T5gg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp )',#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{0}_{2}#rightarrow #gamma#tilde{#chi}^{0}_{1})',
-    'T5lnu':'gluino  --> quark antiquark (chargino^pm --> lepton^pm neutrino lsp )',#tilde{g} #rightarrow q#bar{q}(#tilde{#chi}^{#pm} #rightarrow l^{#pm}#nu #tilde{#chi}^{0}_{1})',
-    'T5ZZ':'gluino  --> quark antiquark (neutralino_2 --> z lsp )',#tilde{g} #rightarrow q#bar{q} (#tilde{#chi}^{0}_{2}#rightarrow Z #tilde{#chi}^{0}_{1})',
+decay = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
+	'T1bbbb': 'gluino  --> bottom antibottom  lsp ', 
+	'T1tttt': 'gluino  --> top antitop  lsp ',
+	'T1gg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp )', 
+	'T1lg':'gluino  --> quark antiquark (neutralino_2  --> photon lsp |chargino^pm  --> w lsp )', 
+	'T1lnu':'gluino  --> quark antiquark (chargino^pm --> lepton^pm neutrino  lsp )', 
+	'T1lh':'gluino  --> quark antiquark  neutralino_2 neutralino_2  --> lepton^p lepton^m lsp ', 
+	'T2':'squark  --> quark lsp ',
+	'T2FVttcc': 'stop  --> charm lsp ',
+    'T2llnunubb': 'stop  --> lepton neutrino bottom lsp ',
+    'T2bb':'sbottom  --> bottom lsp ', 
+    'T2bw':'stop  --> bottom w lsp ',
+    'T2ttww': 'sbottom  --> top w lsp ',
+    'T2tt': 'stop  --> top lsp ', 
+    'T3w': 'gluino --> quark antiquark (chargino^pm_1 --> w lsp | lsp )' ,
+    'T3wb':'gluino  --> bottom antibottom (w )lsp ', 
+    'T3lh':'gluino  --> quark antiquark (neutralino_2 --> lepton^p lepton^m lsp | lsp )',
+    'T3tauh':'gluino  --> quark antiquark (neutralino_2 --> tauon tauon lsp | lsp )', 
+    'T5WW':'gluino  --> quark antiquark (chargino^pm_1 --> w lsp )',
+    'T5wg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp | chargino^pm_1 --> w lsp )',
+    'T5WH':'gluino  --> quark antiquark (neutralino_2 --> higgs lsp | chargino^pm_1 --> w lsp )',
+    'T5gg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp )',
+    'T5lnu':'gluino  --> quark antiquark (chargino^pm --> lepton^pm neutrino lsp )',
+    'T5ZZ':'gluino  --> quark antiquark (neutralino_2 --> z lsp )',
     'T5ZZInc':'neutralino_2 --> z lsp ',#tilde{#chi}^{0}_{2} #rightarrow Z #tilde{#chi}^{0}_{1}',
-    'T5zzgmsb':'gluino --> quark antiquark (neutralino_2 --> z lsp )', #tilde{g} #rightarrow q#bar{q} (#tilde{#chi}^{0}_{2}#rightarrow Z #tilde{#chi}^{0}_{1})',
-    'T5tttt':'gluino  --> top (stop --> top antitop lsp )',#tilde{g} #rightarrow t(#tilde{t} #rightarrow t#tilde{#chi}^{0}_{1})',
-    'T6ttww': 'sbottom  --> top (chargino^pm_1 --> w lsp )',#tilde{b} #rightarrow tW #tilde{#chi}^{0}_{1}',
+    'T5zzgmsb':'gluino --> quark antiquark (neutralino_2 --> z lsp )', 
+    'T5tttt':'gluino  --> top (stop --> top antitop lsp )',
+    'T6ttww': 'sbottom  --> top (chargino^pm_1 --> w lsp )',
     'T6ttHH': 'stop  --> top higgs lsp ',#tilde{t} #rightarrow tH #tilde{#chi}^{0}_{1}',
-    'T6ttzz': 'stop_2  --> stop_1 z --> top lsp ',#tilde{t}_{2} #rightarrow tilde{t}_{1}Z #rightarrow #tilde{#chi}^{0}_{1}t',
-    'T6bbWW':'stop  --> bottom (chargino^p --> w lsp )',#tilde{t} #rightarrow b(#tilde{#chi}^{+} #rightarrow W#tilde{#chi}^{0}_{1})',
-    'T6bbZZ':'sbottom  --> bottom z lsp ',#tilde{b} #rightarrow bZ #tilde{#chi}^{0}_{1}',
+    'T6ttzz': 'stop_2  --> z (stop_1 --> top lsp ) ',
+    'T6bbWW':'stop  --> bottom (chargino^p --> w lsp )',
+    'T6bbZZ':'sbottom  -->  bottom (neutralino_2 --> z lsp )',#tilde{b} #rightarrow bZ #tilde{#chi}^{0}_{1}',
     'T7btW':'gluino  --> bottom top w lsp ',#tilde{g} #rightarrow btW#tilde{#chi}^{0}_{1}',
     'T7btbtWW':'gluino  --> bottom (sbottom --> top (chargino^pm --> w lsp ))',#tilde{g} #rightarrow b(#tilde{b} #rightarrow t(#tilde{#chi}^{#pm} #rightarrow W#tilde{#chi}^{0}_{1}))',
-    'TChiwz':'chargino^pm neutralino_2  --> w z lsp lsp ',#tilde{#chi}^{#pm} #tilde{#chi}^{0}_{2} #rightarrow W Z #tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1}',
-    'TChizz':'neutralino_3 neutralino_2  --> z z lsp lsp ',#tilde{#chi}^{0}_{3} #tilde{#chi}^{0}_{2} #rightarrow Z Z #tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1}',
+
+    'TChizz':'neutralino_3 neutralino_2  --> z z lsp lsp ',#checked
     'TChiSlep':'neutralino_2 chargino^pm_1  --> lepton lepton lepton neutrino lsp lsp ',#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm}_{1} #rightarrow l l l #nu #tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
     'TChiNuSlep':'neutralino_2 chargino^pm_1  --> lepton lepton lepton neutrino lsp lsp ',#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm}_{1} #rightarrow l l l #nu #tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
-    'TChiSlepSlep':'neutralino_2 chargino^pm_1  --> lepton lepton lepton neutrino lsp lsp',#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm}_{1} #rightarrow lll #nu#tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
-    'TChiChipmHW':'neutralino_2 chargino^pm_1  --> w lsp higgs lsp ',#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow W#tilde{#chi}^{0}_{1} H#tilde{#chi}^{0}_{1} ',
-    'TChiChipmSlepL':'neutralino_2 chargino^pm_1  --> lepton lepton lepton neutrino lsp lsp ',#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow lll #nu#tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
-    'TChiChipmSlepSlep':'neutralino_2 chargino^pm_1  --> lepton lepton lepton neutrino lsp lsp ',#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow lll #nu#tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
-    'TChiChipmSlepStau':'neutralino_2 chargino^pm_1  --> lepton lepton tauon neutrino lsp lsp ',#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow ll#tau #nu#tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
-    'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tauon tauon tauon neutrino lsp lsp ',#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm} #rightarrow #tau#tau#tau #nu#tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
-    'TChipChimSlepSnu':'chargino^p chargino^m  --> lepton^p lepton^m neutrino neutrino lsp lsp ',#tilde{#chi}^{+}#tilde{#chi}^{-} #rightarrow l^{+}l^{-}#nu#nu#tilde{#chi}^{0}_{1}#tilde{#chi}^{0}_{1}',
+    
+    'TChizz':'neutralino_3 neutralino_2  --> z z lsp lsp ',#checked
+
+    'TChiwz':'chargino^pm neutralino_2  --> w z lsp lsp ',#checked
+    
+    'TChiChipmSlepSlep':'neutralino_2 chargino^pm_1  --> lepton (slepton --> lepton lsp ) | neutrino (slepton --> lepton lsp )',#checked
+    
+    'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tauon (stauon --> tauon lsp ) | neutrino (stauon --> tauon lsp )', #checked
+    
+    'TChiChipmSlepL':[
+    'neutralino_2 chargino^pm_1  --> lepton (slepton --> lepton lsp ) | neutrino (slepton --> lepton lsp )' ,
+    'neutralino_2 chargino^pm_1  --> lepton (slepton --> lepton lsp ) | lepton (sneutrino --> neutrino lsp )',
+    'neutralino_2 chargino^pm_1  --> neutrino (sneutrino --> neutrino lsp ) | lepton (sneutrino --> neutrino lsp )' ,
+    'neutralino_2 chargino^pm_1  --> neutrino (sneutrino --> neutrino lsp ) | neutrino (slepton --> lepton lsp )'], #checked
+    
+    'TChiChipmStauL':[
+    'neutralino_2 chargino^pm_1  --> tauon (stauon --> tauon lsp ) | neutrino (stauon --> tauon lsp )',
+    'neutralino_2 chargino^pm_1  --> tauon (stauon --> tauon lsp ) | tauon (stauon --> neutrino lsp )',
+    'neutralino_2 chargino^pm_1  --> neutrino (sneutrino --> neutrino lsp ) | tauon (sneutrino --> neutrino lsp )',
+    'neutralino_2 chargino^pm_1  --> neutrino (sneutrino --> neutrino lsp ) | neutrino (stauon -->  lsp )'], #checked
+    
+    'TChiChipmHW':'neutralino_2 chargino^pm_1  --> w lsp higgs lsp ', #checked
+    
+    'TChiChipmSlepStau':'neutralino_2 chargino^pm_1  --> lepton (slepton --> lepton lsp ) | neutrino (stauon --> tauon lsp )', #checked!
+    'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tauon (stauon --> tauon lsp ) | neutrino (stauon --> tauon lsp ) ',#checked!
+    
+    'TChipChimSlepSnu':[
+    'chargino^pm chargino^mp  --> lepton (sneutrino --> neutrino lsp ) | neutrino (slepton --> lepton lsp )',
+    'chargino^pm chargino^mp  --> lepton (sneutrino --> neutrino lsp ) | lepton (sneutrino --> neutrino lsp )',
+    'chargino^pm chargino^mp  --> neutralino (slepton --> lepton lsp ) | neutrino (slepton --> lepton lsp )'], #checked
+    
     'TSlepSlep':'slepton  --> lepton lsp '#tilde{l} #rightarrow l #tilde{#chi}^{0}_{1}'
+    
 }
 
 def latexParticle(decayString,key,value):

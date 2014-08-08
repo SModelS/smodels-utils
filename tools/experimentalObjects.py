@@ -459,7 +459,27 @@ class ExpTopology(object):
         """:returns: decay as string, formated for ROOT.TLatex
         
         """
-        decayString = self._searchDecayDict()
+        
+        decay = self._searchDecayDict()
+        if isinstance(decay,str): return self._latexDecay(decay)
+        if isinstance(decay,list):
+            i = 1
+            lenght = len(decay)
+            decayString =''
+            for line in decay:
+                if i != 1: decayString = decayString + '{'
+                if i != lenght:
+                    decayString = decayString +  '#splitline{' + self._latexDecay(line) 
+                if i == lenght:
+                    decayString = decayString + self._latexDecay(line)
+                decayString = decayString + '}'
+                if i == lenght:
+                    decayString = decayString + '}'*(i-2)
+                i += 1
+            return decayString
+            
+    def _latexDecay(self, decayString):
+        
         for key, value in prettyDescriptions.prettySUSYParticle.items():
             decayString = self._latexParticle(decayString,key,value)
         for key, value in prettyDescriptions.prettySMParticle.items():
@@ -485,6 +505,7 @@ class ExpTopology(object):
         """
         # ### FIX ME: This is not done yet! 
         decay = self._searchDecayDict()
+        if isinstance(decay,list): decay = decay[0]
         motherPart = decay.split('-->')[0]
         motherPart = motherPart.strip()
         if motherPart == 'gluino': return 'g'
