@@ -53,6 +53,7 @@ class Threshold(object):
         thresh = {}
         thresh['mother'] = []
         thresh['lsp'] = []
+        thresh['d'] = []
         #for a in random.sample(set(self.topo.analyses), 4):
         analyses = self.topo.analyses
         for a in analyses:
@@ -60,11 +61,11 @@ class Threshold(object):
                 continue
             ulDict = self._browser.expResult(a, self.topo.name).upperLimitDict()
             if not ulDict: continue
-            print (ulDict)
             mM = []
             lspM = []
             for mother in ulDict:
                 if not mother: continue
+                if not ulDict[mother]: continue
                 mM.append(mother)
                 
                 for lsp in ulDict[mother]:
@@ -72,11 +73,24 @@ class Threshold(object):
                         lspM.append(lsp)
                 if not lspM: continue        
             lspM.sort()
-            thresh['lsp'].append(self._thresholdDict(lspM))
+            thresholdDictLsp = self._thresholdDict(lspM)
+            thresh['lsp'].append(thresholdDictLsp)
             mM.sort()
-            thresh['mother'].append(self._thresholdDict(mM))
+            thresholdDictMother = self._thresholdDict(mM)
+            thresh['mother'].append(thresholdDictMother)
+            thresh['d'].append(self._delta(thresholdDictMother['min'],thresholdDictMother['step'],ulDict))
         return thresh
-    
+        
+    def _delta(self, minMother, step, ulDict):
+        """Derives the lsp intercept
+        
+        """
+        
+        lspMassMax = -1000.
+        for lspMass in ulDict[minMother]:
+            if lspMass > lspMassMax: lspMassMax = lspMass
+        return lspMassMax-minMother+step
+        
     def _thresholdDict(self, masses):
         """Derives the thresholds and the step width for a given list of masses.
         :param masses: list of mass values for either mother particle or LSP
@@ -88,7 +102,7 @@ class Threshold(object):
         particleThreshold['max'] = max(masses)
         
         steps = []
-        for i in range(len(masses) - 1):
+        for i in range(len(masses)-1):
             step = abs(masses[i] - masses[i+1])
             if step:
                 if steps.count(step) == 0:
@@ -130,6 +144,7 @@ class Threshold(object):
         for particleDict in self.thresholds[particle]:
             if int(particleDict['step']) < int(minStep):
                 minStep = particleDict['step']
+        if minStep < 12.5: minStep = 12.5
         return minStep
     
     def _maxDelta(self):
@@ -137,17 +152,10 @@ class Threshold(object):
         
         """
         
-        if len(self.thresholds['mother']) != len(self.thresholds['lsp']):
-            logger.error('len(self.thresholds[mother]) != len(self.thresholds[lsp])')
-            return
-            
-        lenght = len(self.thresholds['mother'])
-        dmax = -1000000.0
-        for i in range(0,lenght-1):
-            d = self.thresholds['lsp'][i]['max'] - self.thresholds['mother'][i]['max']
-            print(d)
-            if int(dmax) < int(d): dmax = d
-        return dmax
+        dMax = -1000.
+        for d in self.thresholds['d']:
+            if d > dMax: dMax = d
+        return dMax
         
     def _massList(self, particle):    
         """Creates a list of mass values for the given particle.
@@ -165,3 +173,14 @@ class Threshold(object):
             massList.append(mass)
             mass = mass + step
         return massList
+
+def main():
+    threshold = Threshold('T1bbbb',Browser('../../smodels-database'))
+    print('motherMasse: %s' %threshold.motherMasses)
+    print('lspMasse: %s' %threshold.lspMasses)
+    print('d; %s' %threshold.d)
+
+    
+if __name__ == '__main__':
+    main()
+    
