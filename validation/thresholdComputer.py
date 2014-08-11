@@ -1,0 +1,167 @@
+#!/usr/bin/env python
+
+"""
+.. module:: thresholdComputer
+   :synopsis: Derives the thresholds and the bin widths for given topology.
+
+.. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
+
+"""
+
+from __future__ import print_function
+import setPath  # # set to python path for smodels
+import sys
+from tools.databaseBrowser import Browser
+import logging
+import os
+import types
+
+logger = logging.getLogger(__name__)
+
+class Threshold(object):
+    
+    def __init__(self, topology, browserObject):
+        """Uses the given browser object to retrieve all upper limit histogram 
+        dictionaries knowen for this topology. 
+        :param topology: topology the slha-files should be preoduced for
+        :param browserObject: instance of the class Browser
+        
+        
+        """
+        
+        if not isinstance(browserObject, Browser):
+            logger.error('Parameter browserObject must be type browser, %s given'\
+            %type(browserObject))
+            sys.exit()            
+        self._browser = browserObject
+        self.topo = self._browser.expTopology(topology)
+        self.thresholds = self._thresholds
+        self.motherMasses = self._massList('mother')
+        self.lspMasses = self._massList('lsp')
+        self.d = self._maxDelta()
+    
+    
+    
+    @property    
+    def _thresholds(self):
+        """Retrieves all the maximal and minimal masses for the mother particle
+        and the LSP from upper limit dictionaries for all the experimental 
+        results available. Derives the corresponding bin width.
+        :returns: {'mother': [thresholdDicts], 'lsp': [thresholdDicts]}
+        
+        """
+        thresh = {}
+        thresh['mother'] = []
+        thresh['lsp'] = []
+        #for a in random.sample(set(self.topo.analyses), 4):
+        analyses = self.topo.analyses
+        for a in analyses:
+            if self._browser.expAnalysis(a).sqrts != 8.0:
+                continue
+            ulDict = self._browser.expResult(a, self.topo.name).upperLimitDict()
+            if not ulDict: continue
+            print (ulDict)
+            mM = []
+            lspM = []
+            for mother in ulDict:
+                if not mother: continue
+                mM.append(mother)
+                
+                for lsp in ulDict[mother]:
+                    if not lsp in lspM:
+                        lspM.append(lsp)
+                if not lspM: continue        
+            lspM.sort()
+            thresh['lsp'].append(self._thresholdDict(lspM))
+            mM.sort()
+            thresh['mother'].append(self._thresholdDict(mM))
+        return thresh
+    
+    def _thresholdDict(self, masses):
+        """Derives the thresholds and the step width for a given list of masses.
+        :param masses: list of mass values for either mother particle or LSP
+        :returns: {min: lower threshold, max: upper threshold, step: step width}
+        
+        """
+        particleThreshold = {}
+        particleThreshold['min'] = min(masses)
+        particleThreshold['max'] = max(masses)
+        
+        steps = []
+        for i in range(len(masses) - 1):
+            step = abs(masses[i] - masses[i+1])
+            if step:
+                if steps.count(step) == 0:
+                    steps.append(step)
+        for step in steps:
+            step += step
+        particleThreshold['step'] = int(float(step) / float(len(steps)))
+        return particleThreshold
+    
+    def _maxMass(self, particle):
+        """Derives the maximal mass for given particle.
+        :param particle: 'mother' or 'lsp'
+        
+        """
+        maxM = 0.0
+        for particleDict in self.thresholds[particle]:
+            if int(particleDict['max']) > int(maxM):
+                maxM = particleDict['max']
+        return maxM
+        
+    def _minMass(self, particle):
+        """Derives the minimal mass for given particle.
+        :param particle: 'mother' or 'lsp'
+        
+        """
+        minM = 1000000.0
+        for particleDict in self.thresholds[particle]:
+            if int(particleDict['min']) < int(minM):
+                minM = particleDict['min']
+        return minM
+        
+    def _stepWidth(self, particle):
+        """Derives the minimal bin width for given particle.
+        :param particle: 'mother' or 'lsp'
+        
+        """
+        
+        minStep = 1000000.0
+        for particleDict in self.thresholds[particle]:
+            if int(particleDict['step']) < int(minStep):
+                minStep = particleDict['step']
+        return minStep
+    
+    def _maxDelta(self):
+        """Derives the maximal lsp intercept
+        
+        """
+        
+        if len(self.thresholds['mother']) != len(self.thresholds['lsp']):
+            logger.error('len(self.thresholds[mother]) != len(self.thresholds[lsp])')
+            return
+            
+        lenght = len(self.thresholds['mother'])
+        dmax = -1000000.0
+        for i in range(0,lenght-1):
+            d = self.thresholds['lsp'][i]['max'] - self.thresholds['mother'][i]['max']
+            print(d)
+            if int(dmax) < int(d): dmax = d
+        return dmax
+        
+    def _massList(self, particle):    
+        """Creates a list of mass values for the given particle.
+        :param particle: 'mother' or 'lsp'
+        
+        """
+        massList = []
+        maxMass = self._maxMass(particle)
+        minMass = self._minMass(particle)
+        step = self._stepWidth(particle)
+        logger.info('Creating list of %s masses from %s to %s in steps of %s'\
+        %(particle, minMass, maxMass, step))
+        mass = minMass
+        while mass <= maxMass:
+            massList.append(mass)
+            mass = mass + step
+        return massList
