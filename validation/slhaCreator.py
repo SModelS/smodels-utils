@@ -14,9 +14,10 @@ import logging
 import sys
 import os
 import setPath
+sys.path.append('../../smodels')
 from smodels.tools import xsecComputer
 from tools.databaseBrowser import Browser
-from experimentalResults import ExpResult
+from tools.experimentalResults import ExpResult
 from smodels.tools.physicsUnits import rmvunit, addunit
 import random
 from thresholdComputer import Threshold
@@ -78,7 +79,7 @@ class SlhaFiles(object):
         
         """
         logger.info('There are approximately %s points in the mass plane!' \
-        %(int(len(self.motherMasses) * len(self.lspMasses))) / 2)
+        %(int(len(self.motherMasses) * len(self.lspMasses) / 2.)))
         for motherMass in self.motherMasses:
             firstLoop = True
             for lspMass in self.lspMasses:
