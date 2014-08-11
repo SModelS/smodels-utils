@@ -22,9 +22,7 @@ logger = logging.getLogger(__name__)
 def getMetadata(filename,tags):
     infile = open(filename,'r')
     data = infile.read()
-    print ('####',data)
     info = data[data.find('#END'):].split('\n')
-    print ('####',info)
     metadata = {}
     for tag in tags: metadata[tag] = None
     if len(info) > 0:
@@ -32,17 +30,17 @@ def getMetadata(filename,tags):
         for tag in tags:
           if tag in line:
             if not metadata[tag]: metadata[tag] = []
-            entry = line.lstrip(tag+' :').rstrip()
+            entry = line.lstrip(tag + ' :').rstrip()
             if ':' in entry: entry = entry.split(':')
             metadata[tag].append(entry)
 
     infile.close()
     return metadata
   
-def getData(fname,Rmax=1.,condmax=0.001):
+def getData(fname, Rmax = 1., condmax = 0.001):
     infile = open(fname,'r')
     data = infile.read()
-    points = data[:data.find('#END')-1].split('\n')
+    points = data[:data.find('#END') - 1].split('\n')
     notTested = TGraph()
     excluded = TGraph()
     allowed = TGraph()
@@ -54,17 +52,19 @@ def getData(fname,Rmax=1.,condmax=0.001):
     condition = []
     theoreticalUpperLimit = []
     for pt in points:
-        mM,mLSP,tUL,eUL,cond = pt.split()    
-        R = float(eval(tUL))/float(eval(eUL))
+        mM, mLSP, tUL, eUL, cond = pt.split()    
+        R = float(eval(tUL)) / float(eval(eUL))
         if eval(tUL) < 0.: continue
         if cond == 'None': cond = '0.'
         mM = eval(mM)
         mLSP = eval(mLSP)
         eUL = eval(eUL)
+        tUL = eval(tUL)
         cond = eval(cond)
         massMother.append(mM)
         massLSP.append(mLSP)
         experimentalUpperLimit.append(eUL)
+        theoreticalUpperLimit.append(tUL)
         condition.append(cond)
         if cond > condmax: conditionViolated.SetPoint(conditionViolated.GetN(),mM,mLSP)
         if R < 0.:
@@ -74,11 +74,20 @@ def getData(fname,Rmax=1.,condmax=0.001):
         elif R < Rmax:
             allowed.SetPoint(allowed.GetN(),mM,mLSP)
         else:
-            print('Unknown R value',R)
+            logger.error('Unknown R value: %s' %R)
             sys.exit()
       
-    infile.close()      
-    return {'excluded' : excluded, 'notTested' : notTested, 'conditionViolated' : conditionViolated, 'allowed' : allowed, 'massMother' : massMother, 'massLSP' : massLSP, 'theoreticalUpperLimit' : theoreticalUpperLimit, 'experimentalUpperLimit' : experimentalUpperLimit, 'condition' : condition}
+    infile.close()
+    graphs = {'excluded' : excluded,
+    'notTested' : notTested,
+    'conditionViolated' : conditionViolated,
+    'allowed' : allowed,
+    'massMother' : massMother,
+    'massLSP' : massLSP,
+    'theoreticalUpperLimit' : theoreticalUpperLimit,
+    'experimentalUpperLimit' : experimentalUpperLimit,
+    'condition' : condition}
+    return graphs
   
 def getRootPlots(metadata):  
     plots = {}

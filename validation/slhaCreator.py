@@ -13,8 +13,6 @@
 import logging
 import sys
 import os
-import setPath
-sys.path.append('../../smodels')
 from smodels.tools import xsecComputer
 from tools.databaseBrowser import Browser
 from tools.experimentalResults import ExpResult

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-.. module:: gridDataCreator
+.. module:: tendencyChecker
    :synopsis: Will check the tendency of the xsections for the validation plots.
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
@@ -76,29 +76,54 @@ def main():
         lspM.append(line[1].strip())
         xsections.append(line[2].strip())
     
+    #c = ROOT.TCanvas("c1", "c1", 0, 0, 1000, 700)
+    #c.SetFillColor(ROOT.kWhite)
+    
+    #h = ROOT.TH2F('h', '', nstop, stopmin, stopmax, nlsp, lspmin, lspmax)
+    
+    #h.SetXTitle("gluino mass [GeV]")
+    #h.SetYTitle("LSP mass [GeV]")
+    #h.SetTitleSize(0.034, "X")
+    #h.SetLabelSize(0.034, "X")
+    #h.SetTitleSize(0.034, "Y")
+    #h.SetLabelSize(0.034, "Y")
+    #h.SetTitleOffset(1.3, "X")
+    #h.SetTitleOffset(1.6, "Y")
+
+    #c.cd()
+    #h.Draw()
+
+    #legend = ROOT.TLegend(0.56, 0.125, 0.15, 0.3)
+    #legend.SetBorderSize(0)
+    #legend.SetMargin(0.2)
+    #legend.SetFillColor(ROOT.kWhite)
+    #legend.SetTextSize(0.0235)
+    
     canvas = ROOT.TCanvas("c1", "c1", 0, 0, 900, 600)
     multi = None
-    canvas.Divide(2, 1)
+    #canvas.Divide(2, 1)
+    canvas.SetLogy()
     mother = motherTendency(motherM, xsections)
-    canvas.cd(1)
-    mother.Draw()
-    canvas.cd(2)
+    #canvas.cd(1)
     
-    multi = ROOT.TMultiGraph()
-    leg = ROOT.TLegend(0.6325287,0.7408994,0.9827586,1)
-    validationPlotsHelper.Default(leg,"Legend")
-    count = 0
-    for block in blocks:
-        lsp = lspTendency(motherM, lspM, xsections, block)[0]
-        lsp.SetLineColor(col[count])
-        count += 1
-        multi.Add(lsp, 'L')
-        leg.AddEntry(lsp, 'mother %s' %lspTendency(motherM, lspM, xsections, block)[1], 'L')
-    #leg.Draw()
-    multi.Draw('AL')
-    multi.GetXaxis().SetTitle("LSP mass")
-    multi.GetYaxis().SetTitle("xsection")
-    multi.SetTitle('LSP-mass vs xsection')
+    mother.Draw('alp')
+    #canvas.cd(2)
+    
+    #multi = ROOT.TMultiGraph()
+    #leg = ROOT.TLegend(0.6325287,0.7408994,0.9827586,1)
+    #validationPlotsHelper.Default(leg,"Legend")
+    #count = 0
+    #for block in blocks:
+        #lsp = lspTendency(motherM, lspM, xsections, block)[0]
+        #lsp.SetLineColor(col[count])
+        #count += 1
+        #multi.Add(lsp, 'L')
+        #leg.AddEntry(lsp, 'mother %s' %lspTendency(motherM, lspM, xsections, block)[1], 'L')
+    ##leg.Draw()
+    #multi.Draw('AL')
+    #multi.GetXaxis().SetTitle("LSP mass")
+    #multi.GetYaxis().SetTitle("xsection")
+    #multi.SetTitle('LSP-mass vs xsection')
     
     canvas.Update()
     ans = raw_input("Hit any key to close\n")
@@ -115,7 +140,7 @@ def motherTendency(masses, xsections):
     graph.SetPoint(0, m, float(xsections[0]))    
     for i in range(len(masses)):
         if m == float(masses[i]): continue
-        #if float(xsections[i]) > 4000.: continue
+        if float(xsections[i]) > 4000.: continue
         m = float(masses[i])
         n = graph.GetN()
         print('Fill in: ', n, m, float(xsections[i]))
@@ -123,8 +148,8 @@ def motherTendency(masses, xsections):
     graph.SetName('mother')
     graph.SetTitle('mother-mass vs xsection')
     graph.SetLineWidth(4)
-    graph.GetXaxis().SetTitle("mother mass")
-    graph.GetYaxis().SetTitle("xsection")
+    graph.GetXaxis().SetTitle(" mother mass")
+    graph.GetYaxis().SetTitle(" log xsection")
     
     return graph
  
@@ -179,5 +204,7 @@ def checkFile(path):
         sys.exit()
     return path
 
+    
+    
 if __name__ == '__main__':
     main()  
