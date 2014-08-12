@@ -272,13 +272,13 @@ def main():
         data.theoreticalCondition), file = outFile)
         count += 1
     print('#END', file = outFile)
-    metaData = writeMetaData(expRes, args.order)
+    metaData = writeMetaData(expRes, args.order, fileName)
     for key in metaData:
         print(key, metaData[key], file = outFile)
     print ('Worte %s lines of grid data to file %s!' %(count, fileName))
     outFile.close()    
 
-def writeMetaData(expRes, order):
+def writeMetaData(expRes, order, fileName):
     """Writes all the meta data (e.g. root tag, name of output-file, ...)
     :returns: dictionary
     
@@ -293,7 +293,7 @@ def writeMetaData(expRes, order):
     if expAna.prettyName: prettyName = expAna.prettyName
     if expAna.sqrts: sqrts = '%s TeV' %expAna.sqrts
     metaData['title:'] = '%s, %s, %s, %s' %(decay, prettyName, sqrts, order)
-    metaData['Out file:'] = '%s-%s.png' %(expTopo.name, expAna.name)
+    metaData['Out file:'] = fileName.replace('.dat', '.png') 
     exclName = ''
     official = ''
     if expRes.exclusionLine():
