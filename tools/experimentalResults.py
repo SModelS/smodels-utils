@@ -193,7 +193,7 @@ class ExpResult (object):
                 logger.error('Could not retrieve upper limit dictionary!\n \
                 Check if there is a proper default for %s!' %self.extendedTopos)
                 return None
-            return extRes.upperLimitDict
+            return extRes.upperLimitDict()
         if not extendedTopoName in self.extendedTopologies:
             logger.error('No valid extended topology %s! Possibilities are %s: '\
             %(extendedTopoName, self.extendedTopologies))
