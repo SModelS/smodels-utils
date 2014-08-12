@@ -10,6 +10,7 @@
 
 """
 
+import setPath
 import logging
 import sys
 import os
@@ -249,9 +250,7 @@ def main():
     argparser.add_argument ('-o', '--order', \
     help = 'perturbation order (LO, NLO, NLL) - default: NLL', \
     type = types.StringType, default = 'NLL')
-    argparser.add_argument ('-u', '--unlink', \
-    help = 'Clean up temp directory after running pythia - default: True', \
-    type = types.BooleanType, default = True)
+    argparser.add_argument ('-l', '--link', help = 'Do not clean up temp directory after running pythia', action = 'store_false')
     args = argparser.parse_args()
 
     browser = Browser(args.Base)
@@ -259,14 +258,14 @@ def main():
     topology = args.topology
     events = args.events
     order = args.order
-    unlink = args.unlink
+    unlink = args.link
     threshold = Threshold(topology, browser)
     count = 0
-    
     for f in SlhaFiles(topology, browser, threshold.motherMasses, \
-    threshold.lspMasses,threshold.d, events, order):
+    threshold.lspMasses,threshold.d, events, order,unlink):
         count += 1
-    print('Wrote %s slha-files to ./%s_%s_%s_slhas' %(count, topology, events, order,unlink))
+    print('Wrote %s slha-files to ./%s_%s_%s_slhas' %(count, topology, events, order))
+    print('unlink %s' %unlink)
         #slha = open(f,'r')
         #xsec = False
         #for line in slha.readlines():
