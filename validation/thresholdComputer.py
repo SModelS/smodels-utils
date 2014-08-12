@@ -11,7 +11,7 @@
 from __future__ import print_function
 import setPath  # # set to python path for smodels
 import sys
-from tools.databaseBrowser import Browser
+from smodels_tools.tools.databaseBrowser import Browser
 import logging
 import os
 import types

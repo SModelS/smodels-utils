@@ -37,7 +37,7 @@ class SlhaFiles(object):
     """
     
     def __init__(self, topology, browserObject, thresholdMotherMasses, \
-    thresholdLSPMasses, d, events = 1000, order = 'LO'):
+    thresholdLSPMasses, d, events = 1000, order = 'LO',unlink = True):
         """Uses the given browser object to retrieve all upper limit histogram 
         dictionaries knowen for this topology. Creates a directory ./'topology'_slhas
         and stores the slha-file for this topology for every point in the mass-plane.
@@ -69,6 +69,7 @@ class SlhaFiles(object):
         self.motherMasses = thresholdMotherMasses
         self.lspMasses = thresholdLSPMasses
         self.d = d
+        self._unlink = unlink
         
     def __iter__(self):
         """Creates a slha-file named 'topology_motherMass_lspMass_order.slha and
@@ -101,15 +102,15 @@ class SlhaFiles(object):
         """
         
         comment = "Nevts: " + str(self._events)
-        xsecs = xsecComputer.computeXSec(self._sqrts, 0, self._events, self._tempSlhaName)
+        xsecs = xsecComputer.computeXSec(self._sqrts, 0, self._events, self._tempSlhaName,unlink=self._unlink)
         xsecComputer.addXSecToFile(xsecs, self._tempSlhaName, comment)
         logger.info('added new LO order xsecs to temp.slha')
         if self._order == 'NLO':
-            xsecs = xsecComputer.computeXSec(self._sqrts, 1, self._events, self._tempSlhaName,loFromSlha=True)
+            xsecs = xsecComputer.computeXSec(self._sqrts, 1, self._events, self._tempSlhaName,loFromSlha=True,unlink=self._unlink)
             xsecComputer.addXSecToFile(xsecs, self._tempSlhaName, comment)
             logger.info('added new NLO order xsecs to temp.slha')
         if self._order == 'NLL':
-            xsecs = xsecComputer.computeXSec(self._sqrts, 2, self._events, self._tempSlhaName, loFromSlha=True)
+            xsecs = xsecComputer.computeXSec(self._sqrts, 2, self._events, self._tempSlhaName, loFromSlha=True,unlink=self._unlink)
             xsecComputer.addXSecToFile(xsecs, self._tempSlhaName, comment)
             logger.info('added new NLL order xsecs to temp.slha')
     
@@ -248,6 +249,9 @@ def main():
     argparser.add_argument ('-o', '--order', \
     help = 'perturbation order (LO, NLO, NLL) - default: NLL', \
     type = types.StringType, default = 'NLL')
+    argparser.add_argument ('-u', '--unlink', \
+    help = 'Clean up temp directory after running pythia - default: True', \
+    type = types.BooleanType, default = True)
     args = argparser.parse_args()
 
     browser = Browser(args.Base)
@@ -255,13 +259,14 @@ def main():
     topology = args.topology
     events = args.events
     order = args.order
+    unlink = args.unlink
     threshold = Threshold(topology, browser)
     count = 0
     
     for f in SlhaFiles(topology, browser, threshold.motherMasses, \
     threshold.lspMasses,threshold.d, events, order):
         count += 1
-    print('Wrote %s slha-files to ./%s_%s_%s_slhas' %(count, topology, events, order))
+    print('Wrote %s slha-files to ./%s_%s_%s_slhas' %(count, topology, events, order,unlink))
         #slha = open(f,'r')
         #xsec = False
         #for line in slha.readlines():
