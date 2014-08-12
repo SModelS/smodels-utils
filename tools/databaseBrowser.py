@@ -14,7 +14,8 @@ import ROOT
 import logging, os, types
 import setPath
 import sys
-import experimentalObjects
+import experimentalTopology
+import experimentalAnalysis
 import experimentalResults
 
 
@@ -466,7 +467,7 @@ class Browser(object):
             logger.debug('Created and stored info.txt-object!')
         logger.debug('Try to create experimental Analysis: %s - %s - %s' \
         %(analysis, self._infos[analysis], self.allRuns(analysis)))    
-        self._analyses[analysis] = experimentalObjects.ExpAnalysis(analysis, \
+        self._analyses[analysis] = experimentalAnalysis.ExpAnalysis(analysis, \
         self._infos[analysis], self.allRuns(analysis), \
         self._checkResults(analysis, requested = 'sms.root'), \
         self._checkResults(analysis, requested = 'sms.py'))
@@ -482,7 +483,7 @@ class Browser(object):
             return self._topologies[topology]
         topology = self._validateTopology(topology)
         topoDict = self._topoDict(topology)        
-        self._topologies[topology] = experimentalObjects.ExpTopology(topology, \
+        self._topologies[topology] = experimentalTopology.ExpTopology(topology, \
         topoDict)
         return self._topologies[topology]
         
