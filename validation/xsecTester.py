@@ -92,11 +92,12 @@ def main():
     c.cd()
     h.Draw('textsame')
 
-    title = ROOT.TLatex(0.5, 1, "#splitline{%s}{#splitline{analysis = %s,  \
-    #sqrt{s} = %s}{order = %s}}" \
-    %(description[0], description[1], description[2], description[3]))
-    title.SetTextSize(0.02)
-    title.Draw("SAME")
+    title = '#splitline{%s}{#splitline{analysis = %s,  \
+    #sqrt{s} = %s}{order = %s}}' \
+    %(description[0], description[1], description[2], description[3])
+    tex = ROOT.TLatex()
+    tex.SetTextSize(0.02)
+    tex.DrawLatex(3.1, 15.5, title)
 
     name = metadata['Out file'][0].strip().split('.')
     name = name[0] + '_xsecTester' + '.' + name[1]
