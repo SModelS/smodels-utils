@@ -142,12 +142,22 @@ class ExpResult (object):
     
     @property    
     def hasUpperLimitDict(self):
-        """Checks if there is any upper limit dictionary for this result.
+        """Checks if there is an upper limit dictionary for this result.
         
         """
         if self.upperLimitDicts:
             return True
         return False
+        
+    
+    @property    
+    def hasExpectedUpperLimitDict(self):
+        """Checks if there is an expected upper limit dictionary for this result.
+        
+        """
+        if self.expectedUpperLimitDicts:
+            return True
+        return False    
         
     @property
     def upperLimitDicts(self):
@@ -156,10 +166,20 @@ class ExpResult (object):
         """ 
         ulDicts = {}
         for exTopo in self.extendedTopos:
-            ulDicts[exTopo] = [exRes.upperLimitDict for exRes in self._extendedResults]
+            ulDicts[exTopo] = [exRes.upperLimitDict() for exRes in self._extendedResults]
         return ulDicts
         
-    def upperLimitDict(self, extendedTopoName = 'default'):
+    @property
+    def expectedUpperLimitDicts(self):
+        """Retrieves all the expected upper limit dictionaries available for this result.
+        
+        """ 
+        ulDicts = {}
+        for exTopo in self.extendedTopos:
+            ulDicts[exTopo] = [exRes.upperLimitDict(expected = True) for exRes in self._extendedResults]
+        return ulDicts
+        
+    def upperLimitDict(self, extendedTopoName = 'default', expected = False):
         """Retrieves the upper limit dictionary (out of all upper limit 
         dictionaries available for this topology). If no extended topology name is 
         given, the default mass assumptions will be used.
@@ -180,7 +200,7 @@ class ExpResult (object):
             return None
         extendedResults = [exRes for exRes in self._extendedResults if \
         extendedTopoName == exRes.topoName]
-        return extendedResults[0].upperLimitDict
+        return extendedResults[0].upperLimitDict(expected)
         
     @property    
     def isChecked(self):
@@ -553,12 +573,19 @@ class ExtendedResult(object):
         %(self._run, self._ana, self._topoName, exclDict))    
         return exclDict
         
-    @property
-    def upperLimitDict(self):
+    
+    def upperLimitDict(self, expected = False):
         localSms = {}
         if self._smspy:
             execfile(self._smspy, localSms)
-        if 'Dict' in localSms and self._topoName in localSms['Dict']:
+        if not expected and 'Dict' in localSms and \
+        self._topoName in localSms['Dict']:
             return localSms['Dict'][self._topoName]
-        logger.warning('No upper limit dictionary was found for extended \n \
-        result %s!' %self.name)
+            logger.warning('No upper limit dictionary was found for extended \n \
+            result %s!' %self.name)
+        if expected and 'ExpectedDict' in localSms and \
+        self._topoName in localSms['ExpectedDict']:
+            return localSms['ExpectedDict'][self._topoName]    
+            logger.warning('No expected upper limit dictionary was found  \n \
+            for extended result %s!' %self.name)
+        
