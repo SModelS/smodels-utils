@@ -19,13 +19,14 @@ import types
 import ROOT
 import logging
 import validationPlotsHelper
+import referenceXSections
 
 logger = logging.getLogger(__name__)
 
 def main():
     """Handles all command line options, as:
     topology, analysis, directory, base, loglevel, ...
-    Produces the grid data file and adds some meta data.
+    Produces the root plot.
     
     """
     argparser = argparse.ArgumentParser(description = \
@@ -76,6 +77,21 @@ def main():
         lspM.append(line[1].strip())
         xsections.append(line[2].strip())
     
+    #ROOT.gROOT.SetBatch()
+    #ROOT.gROOT.ProcessLine(".L tdrstyle_SUSY.C")
+    #ROOT.setTDRStyle()
+
+    #ROOT.gStyle.SetPadLeftMargin(0.125)
+    #ROOT.gStyle.SetPadRightMargin(0.07)
+    #ROOT.gStyle.SetPadBottomMargin(0.1)
+    #ROOT.gStyle.SetPadTopMargin(0.1)
+    #motherMin = 0
+    ##motherMax = max(motherM)
+    #motherMax = 2000
+    #motherN = 100
+    #lspMin = 0
+    #lspMax = 2000
+    #lspN = 100
     #c = ROOT.TCanvas("c1", "c1", 0, 0, 1000, 700)
     #c.SetFillColor(ROOT.kWhite)
     
@@ -92,21 +108,35 @@ def main():
 
     #c.cd()
     #h.Draw()
-
-    #legend = ROOT.TLegend(0.56, 0.125, 0.15, 0.3)
-    #legend.SetBorderSize(0)
-    #legend.SetMargin(0.2)
-    #legend.SetFillColor(ROOT.kWhite)
-    #legend.SetTextSize(0.0235)
     
     canvas = ROOT.TCanvas("c1", "c1", 0, 0, 900, 600)
-    multi = None
     #canvas.Divide(2, 1)
     canvas.SetLogy()
+    #title = ROOT.TLatex(450, 900, "#splitline{CMS Preliminary}{#splitline{#sqrt{s} = 8 TeV}{ICHEP 2014}}")
+    #title.SetTextSize(0.045)
+    #title.Draw("SAME")
+    legend = ROOT.TLegend(0.4, 0.15, 0.16, 0.3)
+    legend.SetBorderSize(0)
+    legend.SetMargin(0.2)
+    legend.SetFillColor(ROOT.kWhite)
+    legend.SetTextSize(0.0235)
+    
+    multi = ROOT.TMultiGraph()
+
     mother = motherTendency(motherM, xsections)
+    mother.SetLineColor(col[0])
+    reference = referenceTendency('8TeV')
+    reference.SetLineColor(col[3])
+    multi.Add(mother, 'l')
+    multi.Add(reference, 'l')
+    multi.Draw('alp')
+    multi.GetXaxis().SetTitle(" mother mass [GeV]")
+    multi.GetYaxis().SetTitle(" log (xsection[fb])")
+    legend.AddEntry(mother, 'smodels', 'L')
+    legend.AddEntry(reference, 'reference', 'L')
+    legend.Draw('SAME')
     #canvas.cd(1)
     
-    mother.Draw('alp')
     #canvas.cd(2)
     
     #multi = ROOT.TMultiGraph()
@@ -143,14 +173,12 @@ def motherTendency(masses, xsections):
         if float(xsections[i]) > 4000.: continue
         m = float(masses[i])
         n = graph.GetN()
-        print('Fill in: ', n, m, float(xsections[i]))
+        #print('Fill in: ', n, m, float(xsections[i]))
         graph.SetPoint(n, m, float(xsections[i]))
     graph.SetName('mother')
     graph.SetTitle('mother-mass vs xsection')
     graph.SetLineWidth(4)
-    graph.GetXaxis().SetTitle(" mother mass")
-    graph.GetYaxis().SetTitle(" log xsection")
-    
+    #print ('mother graph', graph)
     return graph
  
 def lspTendency(motherMasses, lspMasses, xsections, block):
@@ -177,6 +205,16 @@ def lspTendency(motherMasses, lspMasses, xsections, block):
     graph.SetName('LSP')
     graph.SetLineWidth(4)
     return [graph, m]
+
+def referenceTendency(sqrt):
+    values = referenceXSections.xSecs(sqrt)
+    graph = ROOT.TGraph()
+    for point in values:
+        graph.SetPoint(graph.GetN(), point[0], point[1]*1000.)
+    graph.SetName('reference')
+    graph.SetLineWidth(4)
+    #print ('reference graph', graph)
+    return graph    
     
 def getColor():
     col = [ROOT.kRed, ROOT.kYellow+1, ROOT.kGreen+1, ROOT.kGray+2,\

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 """
-.. module:: validationPlot
-     :synopsis: Module to create a validation plot for given grid data file. 
+.. module:: xsecTester
+     :synopsis: Module to create a histogram to check the values of the cross sections. 
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
 
@@ -16,7 +16,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-argparser = argparse.ArgumentParser(description='plots the exclusion region and envelope')
+argparser = argparse.ArgumentParser(description = \
+'Plots a histogram to check the cross sections')
 argparser.add_argument( 'input', help = 'input data file')
 args=argparser.parse_args()
 
@@ -43,6 +44,15 @@ for i in range(len(motherM)):
         lB = []
 print 'lspBins', lspBins 
 print 'motherBins', motherBins
+
+ROOT.gROOT.SetBatch()
+ROOT.gROOT.ProcessLine(".L tdrstyle_SUSY.C")
+ROOT.setTDRStyle()
+
+ROOT.gStyle.SetPadLeftMargin(0.125)
+ROOT.gStyle.SetPadRightMargin(0.07)
+ROOT.gStyle.SetPadBottomMargin(0.1)
+ROOT.gStyle.SetPadTopMargin(0.1)
 
 #Dimensions of the ROOT-histogram:   
 
@@ -80,11 +90,12 @@ h.SetTitleOffset(1.6, "Y")
 c.cd()
 h.Draw('textsame')
 
-title = ROOT.TLatex(390, 1100, "#splitline{%s}{#splitline{analysis = %s,  #sqrt{s} = %s}{order = %s}}" %(description[0], description[1], description[2], description[3]))
+title = ROOT.TLatex(motherMin + 10., lspMax - 10., "#splitline{%s}{#splitline{analysis = %s,  #sqrt{s} = %s}{order = %s}}" %(description[0], description[1], description[2], description[3]))
 title.SetTextSize(0.02)
 title.Draw("SAME")
 
-name = metadata['Out file'][0].strip()
+name = metadata['Out file'][0].strip().split('.')
+name = name[0] + '_xsecTester' + '.' + name[1]
 print name
 
-c.Print("%s" %name)
+c.Print("./plots/%s" %name)
