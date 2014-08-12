@@ -13,13 +13,13 @@ import setPath  # # set to python path for smodels
 from smodels.tools.physicsUnits import fb, GeV, addunit, rmvunit
 from smodels_tools.tools.databaseBrowser import Browser
 import logging
-import argparse
 import os
 import types
 import ROOT
 import logging
 import validationPlotsHelper
 import referenceXSections
+import argparse
 
 logger = logging.getLogger(__name__)
 
@@ -105,30 +105,29 @@ def main():
         multi.Add(reference, 'l')
         multi.Draw('ALP')
         multi.GetXaxis().SetTitle(" mother mass [GeV]")
-        multi.GetYaxis().SetTitle(" log (xsection[fb])")
+        multi.GetYaxis().SetTitle(" log (xsection [fb])")
         multi.SetTitle('mother-mass vs xsection')
         legend.AddEntry(mother, 'smodels', 'L')
         legend.AddEntry(reference, 'reference', 'L')
     if particle == 'LSP':
         count = 0
         for block in blocks:
-            lsp = lspTendency(motherM, lspM, xsections, block)[0]
-            lsp.SetLineColor(col[count])
+            lsp = lspTendency(motherM, lspM, xsections, block)
+            lsp[0].SetLineColor(col[count])
             count += 1
-            multi.Add(lsp, 'L')
-            legend.AddEntry(lsp, 'mother %s' %lspTendency(motherM, lspM, xsections, block)[1], 'L')
+            multi.Add(lsp[0], 'L')
+            legend.AddEntry(lsp[0], 'mother %s [GeV]' %lsp[1], 'L')
         multi.Draw('ALP')
-        multi.GetXaxis().SetTitle("LSP mass")
-        multi.GetYaxis().SetTitle("xsection")
+        multi.GetXaxis().SetTitle("LSP mass [GeV]")
+        multi.GetYaxis().SetTitle("xsection [fb]")
         multi.SetTitle('LSP-mass vs xsection')
         legend.Draw('SAME')
         canvas.Update()
 
-    name = metadata['Out file'][0].strip().split('.')
-    name = name[0] + '_xsecComparator' + '.' + name[1]
+    name = topology + '-' + analysis + '-' + particle + '_xsecComparator' + '.png'
     logger.debug('Name of the output file: %s' %name)
 
-    c.Print("./plots/%s" %name)
+    canvas.Print("./plots/%s" %name)
     
 def motherTendency(masses, xsections):
     """Produces a root TGraph with mother particle mass on x-axis and xsec on y-axis.
@@ -163,20 +162,23 @@ def lspTendency(motherMasses, lspMasses, xsections, block):
         logger.error('Something is very wrong!')
         return None
     m = float(motherMasses[0])
+    mm = None
     count = 0
     for i in range(len(motherMasses)):
         if m != float(motherMasses[i]):
             count += 1
             m = float(motherMasses[i])
         if count == block:
-            print('block' , block, 'count', count)
+            logger.debug('block %s and count %s' %(block, count))
             n = graph.GetN()
-            print('Fill in: ',m,  n, float(lspMasses[i]), float(xsections[i]))
+            logger.debug('Fill in: mother: %s, index: %s, lsp: %s and xsec: %s'\
+            %(m,  n, float(lspMasses[i]), float(xsections[i])))
             graph.SetPoint(n, float(lspMasses[i]), float(xsections[i]))
+            mm = m
         else: continue
     graph.SetName('LSP')
     graph.SetLineWidth(4)
-    return [graph, m]
+    return [graph, mm]
 
 def referenceTendency(sqrt):
     """Produces a root TGraph with mother particle mass on x-axis and xsec 
