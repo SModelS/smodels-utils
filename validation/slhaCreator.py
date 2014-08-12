@@ -14,8 +14,8 @@ import logging
 import sys
 import os
 from smodels.tools import xsecComputer
-from tools.databaseBrowser import Browser
-from tools.experimentalResults import ExpResult
+from smodels_tools.tools.databaseBrowser import Browser
+from smodels_tools.tools.experimentalResults import ExpResult
 from smodels.tools.physicsUnits import rmvunit, addunit
 import random
 from thresholdComputer import Threshold
