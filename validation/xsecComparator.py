@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 """
-.. module:: tendencyChecker
-   :synopsis: Will check the tendency of the xsections for the validation plots.
+.. module:: xsecComparator
+   :synopsis: Will check the tendency of the xsections and compair to official data.
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
 
@@ -46,6 +46,9 @@ def main():
     argparser.add_argument ('-n', '--events',\
     help = 'set number of events - default: 10000', \
     type = types.IntType, default = 10000)
+    argparser.add_argument ('-p', '--particle',\
+    help = 'mass of mother/LSP vs. cross section - default: mother', \
+    type = types.StringType, default = 'mother')
     args = argparser.parse_args()
 
     topology = args.topology
@@ -53,6 +56,8 @@ def main():
     targetPath = getTarget(args.directory)
     events = args.events
     order = args.order
+    particle = args.particle
+    
     blocks = [0, 1, 12, 25]
     col = [ROOT.kRed, ROOT.kYellow+1, ROOT.kGreen+1, ROOT.kGray+2,\
     ROOT.kOrange+7, ROOT.kMagenta+3, ROOT.kSpring-7, ROOT.kCyan+2, \
@@ -62,6 +67,9 @@ def main():
     print('Producing the tendency plot')
     print('Topology: ', topology)
     print('Analysis: ', analysis)
+    print('Order: ', order)
+    print('Events: ', events)
+    print('Particle: ', particle)
     print ("========================================================")
     
     fileName = '%s-%s-%s-%s.dat' %(topology, analysis, events, order)
@@ -77,44 +85,9 @@ def main():
         lspM.append(line[1].strip())
         xsections.append(line[2].strip())
     
-    #ROOT.gROOT.SetBatch()
-    #ROOT.gROOT.ProcessLine(".L tdrstyle_SUSY.C")
-    #ROOT.setTDRStyle()
-
-    #ROOT.gStyle.SetPadLeftMargin(0.125)
-    #ROOT.gStyle.SetPadRightMargin(0.07)
-    #ROOT.gStyle.SetPadBottomMargin(0.1)
-    #ROOT.gStyle.SetPadTopMargin(0.1)
-    #motherMin = 0
-    ##motherMax = max(motherM)
-    #motherMax = 2000
-    #motherN = 100
-    #lspMin = 0
-    #lspMax = 2000
-    #lspN = 100
-    #c = ROOT.TCanvas("c1", "c1", 0, 0, 1000, 700)
-    #c.SetFillColor(ROOT.kWhite)
-    
-    #h = ROOT.TH2F('h', '', nstop, stopmin, stopmax, nlsp, lspmin, lspmax)
-    
-    #h.SetXTitle("gluino mass [GeV]")
-    #h.SetYTitle("LSP mass [GeV]")
-    #h.SetTitleSize(0.034, "X")
-    #h.SetLabelSize(0.034, "X")
-    #h.SetTitleSize(0.034, "Y")
-    #h.SetLabelSize(0.034, "Y")
-    #h.SetTitleOffset(1.3, "X")
-    #h.SetTitleOffset(1.6, "Y")
-
-    #c.cd()
-    #h.Draw()
-    
     canvas = ROOT.TCanvas("c1", "c1", 0, 0, 900, 600)
-    #canvas.Divide(2, 1)
-    canvas.SetLogy()
-    #title = ROOT.TLatex(450, 900, "#splitline{CMS Preliminary}{#splitline{#sqrt{s} = 8 TeV}{ICHEP 2014}}")
-    #title.SetTextSize(0.045)
-    #title.Draw("SAME")
+    if particle == 'mother':
+        canvas.SetLogy()
     legend = ROOT.TLegend(0.4, 0.15, 0.16, 0.3)
     legend.SetBorderSize(0)
     legend.SetMargin(0.2)
@@ -123,41 +96,40 @@ def main():
     
     multi = ROOT.TMultiGraph()
 
-    mother = motherTendency(motherM, xsections)
-    mother.SetLineColor(col[0])
-    reference = referenceTendency('8TeV')
-    reference.SetLineColor(col[3])
-    multi.Add(mother, 'l')
-    multi.Add(reference, 'l')
-    multi.Draw('alp')
-    multi.GetXaxis().SetTitle(" mother mass [GeV]")
-    multi.GetYaxis().SetTitle(" log (xsection[fb])")
-    legend.AddEntry(mother, 'smodels', 'L')
-    legend.AddEntry(reference, 'reference', 'L')
-    legend.Draw('SAME')
-    #canvas.cd(1)
-    
-    #canvas.cd(2)
-    
-    #multi = ROOT.TMultiGraph()
-    #leg = ROOT.TLegend(0.6325287,0.7408994,0.9827586,1)
-    #validationPlotsHelper.Default(leg,"Legend")
-    #count = 0
-    #for block in blocks:
-        #lsp = lspTendency(motherM, lspM, xsections, block)[0]
-        #lsp.SetLineColor(col[count])
-        #count += 1
-        #multi.Add(lsp, 'L')
-        #leg.AddEntry(lsp, 'mother %s' %lspTendency(motherM, lspM, xsections, block)[1], 'L')
-    ##leg.Draw()
-    #multi.Draw('AL')
-    #multi.GetXaxis().SetTitle("LSP mass")
-    #multi.GetYaxis().SetTitle("xsection")
-    #multi.SetTitle('LSP-mass vs xsection')
-    
-    canvas.Update()
-    ans = raw_input("Hit any key to close\n")
+    if particle == 'mother':
+        mother = motherTendency(motherM, xsections)
+        mother.SetLineColor(col[0])
+        reference = referenceTendency('8TeV')
+        reference.SetLineColor(col[3])
+        multi.Add(mother, 'l')
+        multi.Add(reference, 'l')
+        multi.Draw('ALP')
+        multi.GetXaxis().SetTitle(" mother mass [GeV]")
+        multi.GetYaxis().SetTitle(" log (xsection[fb])")
+        multi.SetTitle('mother-mass vs xsection')
+        legend.AddEntry(mother, 'smodels', 'L')
+        legend.AddEntry(reference, 'reference', 'L')
+    if particle == 'LSP':
+        count = 0
+        for block in blocks:
+            lsp = lspTendency(motherM, lspM, xsections, block)[0]
+            lsp.SetLineColor(col[count])
+            count += 1
+            multi.Add(lsp, 'L')
+            legend.AddEntry(lsp, 'mother %s' %lspTendency(motherM, lspM, xsections, block)[1], 'L')
+        multi.Draw('ALP')
+        multi.GetXaxis().SetTitle("LSP mass")
+        multi.GetYaxis().SetTitle("xsection")
+        multi.SetTitle('LSP-mass vs xsection')
+        legend.Draw('SAME')
+        canvas.Update()
 
+    name = metadata['Out file'][0].strip().split('.')
+    name = name[0] + '_xsecComparator' + '.' + name[1]
+    logger.debug('Name of the output file: %s' %name)
+
+    c.Print("./plots/%s" %name)
+    
 def motherTendency(masses, xsections):
     """Produces a root TGraph with mother particle mass on x-axis and xsec on y-axis.
     
@@ -182,7 +154,8 @@ def motherTendency(masses, xsections):
     return graph
  
 def lspTendency(motherMasses, lspMasses, xsections, block):
-    """Produces a root TGraph with LSP particle mass on x-axis and xsec on y-axis.
+    """Produces a root TGraph with LSP mass on x-axis and xsec 
+    on y-axis, for several masses of the mother particle.
     
     """
     graph = ROOT.TGraph()
@@ -191,7 +164,6 @@ def lspTendency(motherMasses, lspMasses, xsections, block):
         return None
     m = float(motherMasses[0])
     count = 0
-    #graph.SetPoint(0, float(lspMasses[block]), float(xsections[block]))    
     for i in range(len(motherMasses)):
         if m != float(motherMasses[i]):
             count += 1
@@ -207,6 +179,10 @@ def lspTendency(motherMasses, lspMasses, xsections, block):
     return [graph, m]
 
 def referenceTendency(sqrt):
+    """Produces a root TGraph with mother particle mass on x-axis and xsec 
+    on y-axis using the reference cross sections.
+    
+    """
     values = referenceXSections.xSecs(sqrt)
     graph = ROOT.TGraph()
     for point in values:
