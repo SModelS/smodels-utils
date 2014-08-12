@@ -104,11 +104,16 @@ class ExpAnalysis(object):
         
     @property
     def sqrts(self):
+        s = self._parseMetaInfo('sqrts')
         try:
-            return float(self._parseMetaInfo('sqrts'))
-        except ValueError:    
-            s = self._parseMetaInfo('sqrts').split()
-            return float(s[0])
+            return float(s)
+        except ValueError:
+            try:
+                return float(s.split()[0])
+            except TypeError:
+                if '8' in s: return 8.0
+                if '7' in s: return 7.0
+                if not s: return None
         
     @property
     def pas(self):
