@@ -229,7 +229,7 @@ class SlhaFiles(object):
 def main():
     """Handles all command line options, as:
     topology, base, loglevel, ...
-    Produces the slha-file for given topology.
+    Produces the slha-files for given topology.
     
     """
     argparser = argparse.ArgumentParser(description = \
@@ -262,15 +262,11 @@ def main():
     threshold = Threshold(topology, browser)
     count = 0
     for f in SlhaFiles(topology, browser, threshold.motherMasses, \
-    threshold.lspMasses,threshold.d, events, order,unlink):
+    threshold.lspMasses, threshold.d, events, order, unlink):
         count += 1
     print('Wrote %s slha-files to ./%s_%s_%s_slhas' %(count, topology, events, order))
     print('unlink %s' %unlink)
-        #slha = open(f,'r')
-        #xsec = False
-        #for line in slha.readlines():
-            #if 'XSECTION' in line: xsec = True
-            #if xsec == True: print line
+
             
 if __name__ == '__main__':
     main()
