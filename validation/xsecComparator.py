@@ -109,6 +109,9 @@ def main():
         multi.SetTitle('mother-mass vs xsection')
         legend.AddEntry(mother, 'smodels', 'L')
         legend.AddEntry(reference, 'reference', 'L')
+        legend.Draw('SAME')
+        canvas.Update()
+        
     if particle == 'LSP':
         count = 0
         for block in blocks:
@@ -124,7 +127,7 @@ def main():
         legend.Draw('SAME')
         canvas.Update()
 
-    name = topology + '-' + analysis + '-' + particle + '_xsecComparator' + '.png'
+    name = fileName '-' + particle + '.png'
     logger.debug('Name of the output file: %s' %name)
 
     canvas.Print("./plots/%s" %name)
