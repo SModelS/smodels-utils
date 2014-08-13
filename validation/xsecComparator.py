@@ -104,6 +104,8 @@ def main():
         mother.SetLineColor(col[0])
         if comparison == 'ref':
             reference = referenceTendency('8TeV', topology)
+            if reference:
+                reference.SetLineColor(col[3])
         if comparison == 'LO':
             if not 'NLL' in fileName:
                 logger.error('Can not compare %s to LO' %order)
@@ -113,8 +115,9 @@ def main():
             lspRefM = readGrid(fileRefName, targetPath)[1]
             xsectionsRef = readGrid(fileRefName, targetPath)[2]
             reference = motherTendency(motherRefM, xsectionsRef)
-        if reference:
-            reference.SetLineColor(col[3])
+            if reference:
+                reference.SetLineColor(col[7])
+        if reference:        
             multi.Add(reference, 'l')
         multi.Add(mother, 'l')
         multi.Draw('ALP')
@@ -187,7 +190,8 @@ def readGrid(fileName, targetPath):
         lspM.append(line[1].strip())
         xsections.append(line[2].strip())
     return [motherM, lspM, xsections]
-    
+            
+
 def lspTendency(motherMasses, lspMasses, xsections, block):
     """Produces a root TGraph with LSP mass on x-axis and xsec 
     on y-axis, for several masses of the mother particle.
