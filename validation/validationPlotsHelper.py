@@ -52,7 +52,12 @@ def getData(fname, Rmax = 1., condmax = 0.001):
     condition = []
     theoreticalUpperLimit = []
     for pt in points:
-        mM, mLSP, tUL, eUL, cond = pt.split()    
+        mM, mLSP, tUL, eUL, cond = pt.split()
+        if not tUL:
+            mM = eval(mM)
+            mLSP = eval(mLSP)
+            notTested.SetPoint(notTested.GetN(),mM,mLSP)
+            continue
         R = float(eval(tUL)) / float(eval(eUL))
         if eval(tUL) < 0.: continue
         if cond == 'None': cond = '0.'

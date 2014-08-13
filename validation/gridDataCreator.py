@@ -260,16 +260,19 @@ def main():
     slhaList = sorted(fileList, key = lambda slha: int(slha.split('_')[1]))
     for slha in slhaList:
         data = GridData(topology, analysis, slhaPath + '/' + slha)
-        if not data.massMother: continue # ### FIX ME
+        massMother = data.massMother
+        massLSP = data.massLSP
+        tUL = data.theoreticalUpperLimit
+        eUL = data.experimentalUpperLimit
+        cond = data.theoreticalCondition
+        if not massMother:
+            massMother = slha.split('_')[1].strip()
+            massLSP = slha.split('_')[2].strip()
         if bool(data.theoreticalCondition):
             logger.warning('Condition %s not satisfied! degree of violation: %s' \
             %(data.experimentalCondition, data.theoreticalCondition))
         print('%s  %s  %s  %s %s' \
-        %(data.massMother, \
-        data.massLSP, \
-        data.theoreticalUpperLimit, \
-        data.experimentalUpperLimit, \
-        data.theoreticalCondition), file = outFile)
+        %(massMother, massLSP, tUL, eUL, cond), file = outFile)
         count += 1
     print('#END', file = outFile)
     metaData = writeMetaData(expRes, args.order, fileName)
