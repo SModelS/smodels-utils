@@ -256,8 +256,8 @@ def main():
         logger.error('There are no slha-files for %s with %s events and order %s! \n \
         Run slhaCreator.py first: ./slhaCreator.py -h!' %(topology, events, order))
         sys.exit()
-    slhaList =  os.listdir(slhaPath)
-    slhaList.sort()
+    fileList =  os.listdir(slhaPath)
+    slhaList = sorted(fileList, key = lambda slha: int(slha.split('_')[1]))
     for slha in slhaList:
         data = GridData(topology, analysis, slhaPath + '/' + slha)
         if not data.massMother: continue # ### FIX ME
