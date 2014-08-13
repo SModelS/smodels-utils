@@ -103,15 +103,18 @@ class SlhaFiles(object):
         """
         
         comment = "Nevts: " + str(self._events)
-        xsecs = xsecComputer.computeXSec(self._sqrts, 0, self._events, self._tempSlhaName,unlink=self._unlink)
+        xsecs = xsecComputer.computeXSec(self._sqrts, 0, self._events, \
+        self._tempSlhaName,unlink = self._unlink)
         xsecComputer.addXSecToFile(xsecs, self._tempSlhaName, comment)
         logger.info('added new LO order xsecs to temp.slha')
         if self._order == 'NLO':
-            xsecs = xsecComputer.computeXSec(self._sqrts, 1, self._events, self._tempSlhaName,loFromSlha=True,unlink=self._unlink)
+            xsecs = xsecComputer.computeXSec(self._sqrts, 1, self._events,\
+            self._tempSlhaName,loFromSlha=True,unlink = self._unlink)
             xsecComputer.addXSecToFile(xsecs, self._tempSlhaName, comment)
             logger.info('added new NLO order xsecs to temp.slha')
         if self._order == 'NLL':
-            xsecs = xsecComputer.computeXSec(self._sqrts, 2, self._events, self._tempSlhaName, loFromSlha=True,unlink=self._unlink)
+            xsecs = xsecComputer.computeXSec(self._sqrts, 2, self._events, \
+            self._tempSlhaName, loFromSlha=True,unlink = self._unlink)
             xsecComputer.addXSecToFile(xsecs, self._tempSlhaName, comment)
             logger.info('added new NLL order xsecs to temp.slha')
     
@@ -162,13 +165,14 @@ class SlhaFiles(object):
             
         motherPart = self.topo.motherParticle
         if not motherPart in picDict:
-            logger.error('no PIC code for motherParticle: %s in picDic' %motherPart)
+            logger.error('no PIC code for motherParticle: %s in picDic' \
+            %motherPart)
             sys.exit()
         return picDict[motherPart]
         
     def _setMass(self, motherMass, lspMass):
-        """Search for mass block in self._tempSlhaName and write the given motherMass
-        to all particles in ListOfPidCode and the LSPMass to LSP.
+        """Search for mass block in self._tempSlhaName and write the given 
+        motherMass to all particles in ListOfPidCode and the LSPMass to LSP.
         :param motherMass: one mass for all particles in ListOfPidCode as float
         :param lspMass: mass of the LSP as float
         :returns: list containing lines of slha file
@@ -198,7 +202,8 @@ class SlhaFiles(object):
             logger.error('No Mass block found in slha file')
             sys.exit()
         if listOfPidCode:
-            logger.error('PID Codes: %s not found in Mass block of slha file' %listOfPidCode)
+            logger.error('PID Codes: %s not found in Mass block of slha file' \
+            %listOfPidCode)
             sys.exit()
         if pidOfLsp:
             logger.error('PID Code of LSP  not found in Mass block of slha file')
@@ -212,7 +217,8 @@ class SlhaFiles(object):
         slhaFile = open(self._tempSlhaName,'w')
         slhaFile.writelines(lines)
         slhaFile.close()
-        logger.debug('temp.slha file changed to mother mass: %s and LSP mass: %s' %(motherMass, lspMass))
+        logger.debug('temp.slha file changed to mother mass: %s and LSP mass: \
+        %s' %(motherMass, lspMass))
         
     def _formatMassEntry(self,listOfLine):
         """Builds a correct formated mass entry for slha file out of a given list.
@@ -233,7 +239,7 @@ def main():
     
     """
     argparser = argparse.ArgumentParser(description = \
-    'Produces the grid data for smodels validation plots')
+    'Produces the slha files for smodels validation plots')
     argparser.add_argument ('-b', '--Base', \
     help = 'set path to base-directory of smodels-database\n \
     - default: /afs/hephy.at/user/w/walten/public/sms/', \
@@ -250,7 +256,9 @@ def main():
     argparser.add_argument ('-o', '--order', \
     help = 'perturbation order (LO, NLO, NLL) - default: NLL', \
     type = types.StringType, default = 'NLL')
-    argparser.add_argument ('-l', '--link', help = 'Do not clean up temp directory after running pythia', action = 'store_false')
+    argparser.add_argument ('-l', '--link', \
+    help = 'Do not clean up temp directory after running pythia', \
+    action = 'store_false')
     args = argparser.parse_args()
 
     browser = Browser(args.Base)
@@ -264,7 +272,8 @@ def main():
     for f in SlhaFiles(topology, browser, threshold.motherMasses, \
     threshold.lspMasses, threshold.d, events, order, unlink):
         count += 1
-    print('Wrote %s slha-files to ./%s_%s_%s_slhas' %(count, topology, events, order))
+    print('Wrote %s slha-files to ./%s_%s_%s_slhas' \
+    %(count, topology, events, order))
     print('unlink %s' %unlink)
 
             
