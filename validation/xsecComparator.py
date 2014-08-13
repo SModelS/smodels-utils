@@ -2,7 +2,9 @@
 
 """
 .. module:: xsecComparator
-   :synopsis: Will check the tendency of the xsections and compair to official data.
+   :synopsis: Will check the tendency of the xsections and compare to official 
+   data or to other order.
+   
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
 
@@ -20,12 +22,13 @@ import logging
 import validationPlotsHelper
 import referenceXSections
 import argparse
+import sys
 
 logger = logging.getLogger(__name__)
 
 def main():
     """Handles all command line options, as:
-    topology, analysis, directory, base, loglevel, ...
+    topology, analysis, directory, particle, ...
     Produces the root plot.
     
     """
@@ -49,6 +52,11 @@ def main():
     argparser.add_argument ('-p', '--particle',\
     help = 'mass of mother/LSP vs. cross section - default: mother', \
     type = types.StringType, default = 'mother')
+    argparser.add_argument ('-c', '--comparison',\
+    help = 'mass of mother vs. cross section compared to:\
+    reference x-sections or to LO if order is NLL - default: ref', \
+    type = types.StringType, default = 'ref')
+    argparser.print_help()
     args = argparser.parse_args()
 
     topology = args.topology
@@ -57,6 +65,7 @@ def main():
     events = args.events
     order = args.order
     particle = args.particle
+    comparison = args.comparison
     
     blocks = [0, 1, 12, 25]
     col = [ROOT.kRed, ROOT.kYellow+1, ROOT.kGreen+1, ROOT.kGray+2,\
@@ -70,20 +79,14 @@ def main():
     print('Order: ', order)
     print('Events: ', events)
     print('Particle: ', particle)
+    print('Compare to: ', comparison)
     print ("========================================================")
     
+    
     fileName = '%s-%s-%s-%s.dat' %(topology, analysis, events, order)
-    f = checkFile(targetPath + '/' + fileName)
-    motherM = []
-    lspM = []
-    xsections = []
-    outFile = open(f, 'r')
-    for line in outFile.readlines():
-        line = line.split()
-        if line[0] == '#END': break
-        motherM.append(line[0].strip())
-        lspM.append(line[1].strip())
-        xsections.append(line[2].strip())
+    motherM = readGrid(fileName, targetPath)[0]
+    lspM = readGrid(fileName, targetPath)[1]
+    xsections = readGrid(fileName, targetPath)[2]
     
     canvas = ROOT.TCanvas("c1", "c1", 0, 0, 900, 600)
     if particle == 'mother':
@@ -99,16 +102,31 @@ def main():
     if particle == 'mother':
         mother = motherTendency(motherM, xsections)
         mother.SetLineColor(col[0])
-        reference = referenceTendency('8TeV')
-        reference.SetLineColor(col[3])
+        if comparison == 'ref':
+            reference = referenceTendency('8TeV', topology)
+        if comparison == 'LO':
+            if not 'NLL' in fileName:
+                logger.error('Can not compare %s to LO' %order)
+                sys.exit()
+            fileRefName = fileName.replace('NLL', 'LO')
+            motherRefM = readGrid(fileRefName, targetPath)[0]
+            lspRefM = readGrid(fileRefName, targetPath)[1]
+            xsectionsRef = readGrid(fileRefName, targetPath)[2]
+            reference = motherTendency(motherRefM, xsectionsRef)
+        if reference:
+            reference.SetLineColor(col[3])
+            multi.Add(reference, 'l')
         multi.Add(mother, 'l')
-        multi.Add(reference, 'l')
         multi.Draw('ALP')
         multi.GetXaxis().SetTitle(" mother mass [GeV]")
         multi.GetYaxis().SetTitle(" log (xsection [fb])")
         multi.SetTitle('mother-mass vs xsection')
-        legend.AddEntry(mother, 'smodels', 'L')
-        legend.AddEntry(reference, 'reference', 'L')
+        legend.AddEntry(mother, 'smodels - %s' %order, 'L')
+        if reference:
+            if comparison == 'LO':
+                legend.AddEntry(reference, 'smodels LO', 'L')
+            else:
+                legend.AddEntry(reference, 'reference', 'L')
         legend.Draw('SAME')
         canvas.Update()
         
@@ -127,10 +145,10 @@ def main():
         legend.Draw('SAME')
         canvas.Update()
 
-    name = fileName '-' + particle + '.png'
+    name = fileName.replace('.dat', '') + '-' + particle + '-' + comparison + '.png'
     logger.debug('Name of the output file: %s' %name)
 
-    canvas.Print("./plots/%s" %name)
+    canvas.Print("./plots/xsecComparatorPlots/%s" %name)
     
 def motherTendency(masses, xsections):
     """Produces a root TGraph with mother particle mass on x-axis and xsec on y-axis.
@@ -154,7 +172,22 @@ def motherTendency(masses, xsections):
     graph.SetLineWidth(4)
     #print ('mother graph', graph)
     return graph
- 
+
+def readGrid(fileName, targetPath):
+    
+    f = checkFile(targetPath + '/' + fileName)
+    motherM = []
+    lspM = []
+    xsections = []
+    outFile = open(f, 'r')
+    for line in outFile.readlines():
+        line = line.split()
+        if line[0] == '#END': break
+        motherM.append(line[0].strip())
+        lspM.append(line[1].strip())
+        xsections.append(line[2].strip())
+    return [motherM, lspM, xsections]
+    
 def lspTendency(motherMasses, lspMasses, xsections, block):
     """Produces a root TGraph with LSP mass on x-axis and xsec 
     on y-axis, for several masses of the mother particle.
@@ -183,12 +216,13 @@ def lspTendency(motherMasses, lspMasses, xsections, block):
     graph.SetLineWidth(4)
     return [graph, mm]
 
-def referenceTendency(sqrt):
+def referenceTendency(sqrt, topology):
     """Produces a root TGraph with mother particle mass on x-axis and xsec 
     on y-axis using the reference cross sections.
     
     """
-    values = referenceXSections.xSecs(sqrt)
+    values = referenceXSections.xSecs(sqrt, topology)
+    if not values: return None
     graph = ROOT.TGraph()
     for point in values:
         graph.SetPoint(graph.GetN(), point[0], point[1]*1000.)
