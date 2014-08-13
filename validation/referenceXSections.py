@@ -14,10 +14,11 @@ import logging
 import argparse
 import sys
 import types
+import os
 
 logger = logging.getLogger(__name__)
 
-def xSecs(sqrt):
+def xSecs(sqrt, topology):
     """Reads the txt files and produces the python arrays for 7TeV and 8TeV.
     
     """
@@ -27,13 +28,18 @@ def xSecs(sqrt):
         sys.exit()
     
     
-    outFileName = 'referenceXSecs-%s.py' %sqrt
-    inFileName = 'xSections%s.txt' %sqrt
+    outFileName = 'referenceXSecs-%s-%s.py' %(sqrt, topology)
+    inFileName = 'xSections%s-%s.txt' %(sqrt, topology)
     values = readFile(inFileName)
     return values
         
 def readFile(fileName):
-    f = open('./references/%s' %fileName, 'r')
+    try:
+        f = open('./references/%s' %fileName, 'r')
+    except IOError:
+        logger.error('There are no reference cross sections for: %s-%s' \
+        %(topology, sqrt))
+        return None
     lines = f.readlines()
     values = []
     for line in lines:
