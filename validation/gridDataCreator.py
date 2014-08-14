@@ -293,21 +293,19 @@ def writeMetaData(expRes, order, fileName):
     prettyName = ''
     sqrts = ''
     if expTopo.decay: decay = expTopo.decay
-    if expAna.prettyName: prettyName = expAna.prettyName
+    if expAna.prettyName: prettyName = expAna.prettyName.replace('\\', '#')
     if expAna.sqrts: sqrts = '%s TeV' %expAna.sqrts
-    metaData['title:'] = '%s, %s, %s, %s' %(decay, prettyName, sqrts, order)
-    metaData['Out file:'] = fileName.replace('.dat', '.png') 
+    if expAna.pas: pas = expAna.pas
+    metaData['decay:'] = '%s' %decay
+    metaData['analysis:'] = '%s, %s, %s, %s' %(pas, prettyName, sqrts, order)
+    metaData['outFile:'] = fileName.replace('.dat', '.png') 
     exclName = ''
     official = ''
     if expRes.exclusionLine():
         exclName = expRes.exclusionLine().GetName()
     if expAna.publishedData or expAna.isPublished:
-        official = 'Official Exclusion'
-    metaData['Root tag:'] = '%s: %s' %(exclName, official)
-    path = ''
-    if exclName:
-        path = expRes._smsroot
-    metaData['Root file:'] = path
+        official = 'official exclusion line'
+    metaData['rootTag:'] = '%s: %s' %(exclName, official)
     return metaData
    
 

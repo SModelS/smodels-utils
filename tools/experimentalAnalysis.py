@@ -2,7 +2,7 @@
 
 """
 .. module:: experimentalAnalysis
-   :synopsis: Holds the ExpAnalysis object retrieved from smodels-database\ 
+   :synopsis: Holds the ExpAnalysis object retrieved from smodels-database 
    in order to produce summaryplots.
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>

@@ -649,6 +649,7 @@ class Infotxt(object):
             for t in self.topologies:
                 topos[t]=[t]
             if not topology: return topos
+            # ### FIX ME: better if topology in topos: returntopos[topology] ?
             if topos.has_key(topology): return topos[topology]
             logger.warning('For %s-%s there is no topology %s' \
             %(self._run, self._analysis, topology))
