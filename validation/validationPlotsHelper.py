@@ -54,13 +54,13 @@ def getData(fname, Rmax = 1., condmax = 0.001):
     for pt in points:
         values = [p.strip() for p in pt.split()]
         mM, mLSP, tUL, eUL, cond = values
-        print('point: ', mM, mLSP, tUL, eUL, cond)
-        if not tUL:
-            print('no tUL')
+        #print('point: ', mM, mLSP, tUL, eUL, cond)
+        if not eval(tUL):
+            #print('no tUL')
             mM = float(eval(mM))
             mLSP = float(eval(mLSP))
-            tUL = -1.
-            eUL = 1.
+            notTested.SetPoint(notTested.GetN(),mM,mLSP)
+            continue
         R = float(eval(tUL)) / float(eval(eUL))
         if eval(tUL) < 0.: continue
         if cond == 'None': cond = '0.'
