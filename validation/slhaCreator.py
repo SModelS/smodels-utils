@@ -10,6 +10,7 @@
 
 """
 
+from __future__ import print_function
 import setPath
 import logging
 import sys
