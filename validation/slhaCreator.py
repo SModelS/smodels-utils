@@ -22,6 +22,7 @@ import random
 from thresholdComputer import Threshold
 import argparse
 import types
+import shutil
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -50,7 +51,7 @@ class SlhaFiles(object):
         
         """
         self._tempSlhaName = 'temp.slah'
-        self.folder = '../slha//%s_%s_%s_slhas' %(topology, events, order)
+        self.folder = '../slha/%s_%s_%s_slhas' %(topology, events, order)
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
             logger.info('Created new folder %s!' %self.folder)
@@ -91,7 +92,8 @@ class SlhaFiles(object):
                     self._delXsecFromFile()
                     self._addXsecsToFile()
                     firstLoop = False
-                path = self.folder + '/' + fileName
+                path = self.folder + '/' + fileName)
+                
                 os.system('cp ./%s %s' %(self._tempSlhaName, path))
                 yield path
                 
@@ -122,7 +124,7 @@ class SlhaFiles(object):
         
         slhaFile = open(self._tempSlhaName,'r')
         lines = slhaFile.readlines()
-        for i in range(0,len(lines)-1):
+        for i in range(0, len(lines) - 1):
             if 'XSECTION' in lines[i]: break
         lines = lines[:i+1]
         slhaFile.close()
@@ -132,7 +134,7 @@ class SlhaFiles(object):
         slhaFile.close()
 
         
-    def _templateSlhaFile(self,topo):
+    def _templateSlhaFile(self, topo):
         """Checks if there is a template slha-file for given topology
         in smodels-tools/slha. If there is, the file is copied to self._tempSlhaName.
         :param topo: topology name as string
@@ -140,10 +142,10 @@ class SlhaFiles(object):
         """
         
         tempPath = '../slha/'
-        if not os.path.exists('%s%s.slha' %(tempPath,topo)):
+        if not os.path.exists('%s%s.slha' %(tempPath, topo)):
             logger.error('no template slha-file for %s' %topo)
             sys.exit()
-        os.system('cp %s%s.slha ./%s' %(tempPath,topo,self._tempSlhaName))
+        os.system('cp %s%s.slha ./%s' %(tempPath, topo, self._tempSlhaName))
         
     def _getPidCodeOfMother(self):
         """Sets the PID codes for mother particles to variable self._listOfMotherPid.
@@ -268,15 +270,33 @@ def main():
     order = args.order
     unlink = args.link
     threshold = Threshold(topology, browser)
+    folder = checkFolder('../slha/%s_%s_%s_slhas' \
+    %(topology, events, order))
     count = 0
     for f in SlhaFiles(topology, browser, threshold.motherMasses, \
     threshold.lspMasses, threshold.d, events, order, unlink):
         count += 1
-    print('Wrote %s slha-files to ./%s_%s_%s_slhas' \
+    print('Wrote %s slha-files to ../slha/%s_%s_%s_slhas' \
     %(count, topology, events, order))
     print('unlink %s' %unlink)
 
-            
+def checkFolder(path):
+    """Checks if the slha folder already exists.
+    If the folder already exists, the user can decide wether to remove 
+    all slha files, or to exit the script.
+    
+    """
+    if os.path.exists(path):
+        print('Folder %s already exists!' %path)
+        while True:
+            userInput = raw_input('Remove old files? [y/n]:  ')
+            if userInput == 'n':
+                sys.exit()
+            if userInput == 'y':
+                import shutil
+                shutil.rmtree(path)
+    return path
+    
 if __name__ == '__main__':
     main()
                     
