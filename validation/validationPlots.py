@@ -145,10 +145,10 @@ def main():
 
     #title = ROOT.TLatex(0, 1100, "#splitline{%s}{#splitline{analysis = %s,  #sqrt{s} = %s}{order = %s}}" %(description[0], description[1], description[2], description[3]))
     #title.SetTextSize(0.03)
-    title = ROOT.TLatex(100, 1130, '%s' %metadata['decay'][0])
+    title = ROOT.TLatex(min(motherM), max(lspM), '%s: %s' %(topology, metadata['decay'][0]))
     title.SetTextSize(0.05)
     title.Draw()
-    title2 = ROOT.TLatex(100, 1040, '%s %s, #sqrt{s} = %s, order = %s' \
+    title2 = ROOT.TLatex(min(motherM), max(lspM)-50, '%s %s, #sqrt{s} = %s, order = %s' \
     %(description[0], description[1].replace('\\', '#'), description[2], description[3]))
     
     title2.SetTextSize(0.03)
