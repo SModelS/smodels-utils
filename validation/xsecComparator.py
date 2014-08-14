@@ -148,18 +148,19 @@ def main():
         legend.Draw('SAME')
         canvas.Update()
 
-    name = fileName.replace('.dat', '') + '-' + particle + '-' + comparison + '.png'
+    name = '%s-%s-%s.png' %(fileName.replace('.dat', ''), particle, comparison)
     logger.debug('Name of the output file: %s' %name)
 
     canvas.Print("./plots/xsecComparatorPlots/%s" %name)
     
 def motherTendency(masses, xsections):
-    """Produces a root TGraph with mother particle mass on x-axis and xsec on y-axis.
+    """Produces a root TGraph with mother particle mass on x-axis 
+    and xsec on y-axis.
     
     """
     graph = ROOT.TGraph()
     if not len(masses) == len(xsections):
-        logger.error('Something is very wrong!')
+        logger.error('Something is very wrong! Check the grid data!')
         return None
     m = float(masses[0])
     graph.SetPoint(0, m, float(xsections[0]))    
