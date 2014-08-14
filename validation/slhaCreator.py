@@ -91,7 +91,7 @@ class SlhaFiles(object):
                     self._delXsecFromFile()
                     self._addXsecsToFile()
                     firstLoop = False
-                path = self.folder + '/' + fileName)
+                path = self.folder + '/' + fileName
                 
                 os.system('cp ./%s %s' %(self._tempSlhaName, path))
                 yield path
@@ -294,6 +294,7 @@ def checkFolder(path):
             if userInput == 'y':
                 import shutil
                 shutil.rmtree(path)
+                return path
     return path
     
 if __name__ == '__main__':
