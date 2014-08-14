@@ -10,6 +10,7 @@
 
 """
 
+from __future__ import print_function
 import setPath
 import logging
 import sys
@@ -275,6 +276,7 @@ def main():
     for f in SlhaFiles(topology, browser, threshold.motherMasses, \
     threshold.lspMasses, threshold.d, events, order, unlink):
         count += 1
+        print('Progress ...... ', count)
     print('Wrote %s slha-files to ../slha/%s_%s_%s_slhas' \
     %(count, topology, events, order))
     print('unlink %s' %unlink)
