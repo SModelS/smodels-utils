@@ -187,6 +187,8 @@ def readGrid(fileName, targetPath):
     for line in outFile.readlines():
         line = line.split()
         if line[0] == '#END': break
+        if not eval(line[2].strip()):
+            continue
         motherM.append(line[0].strip())
         lspM.append(line[1].strip())
         xsections.append(line[2].strip())
