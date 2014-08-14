@@ -39,18 +39,18 @@
 #
 #
 BLOCK SPINFO  # Spectrum calculator information
-     1   MRENNA    # spectrum calculator
-     2   1.0.1         # version number
+     1   MRENNA    # spectrum calculator                 
+     2   1.0.1         # version number                   
 #
 BLOCK MODSEL  # Model selection
-     1     1   #
+     1     1   #                                          
 #
 BLOCK MINPAR  # Input parameters - minimal models
-         1     2.00000000E+02   # m0
-         2     1.60000000E+02   # m12
-         3     1.00000000E+01   # tanb
-         4     1.00000000E+00   # sign(mu)
-         5    -4.00000000E+02   # A0
+         1     2.00000000E+02   # m0                  
+         2     1.60000000E+02   # m12                 
+         3     1.00000000E+01   # tanb                
+         4     1.00000000E+00   # sign(mu)            
+         5    -4.00000000E+02   # A0                  
 #
 BLOCK MASS  # Mass Spectrum
 # PDG code           mass       particle
@@ -58,13 +58,13 @@ BLOCK MASS  # Mass Spectrum
         35     1.00000000E+03
         36     1.00000000E+03
         37     1.00000000E+03
-   1000001     100000.0          # ~d_L
+   1000001     100000.          # ~d_L
    2000001     1.00000000E+05   # ~d_R
-   1000002     100000.0          # ~u_L
+   1000002     100000.          # ~u_L
    2000002     1.00000000E+05   # ~u_R
-   1000003     100000.0          # ~s_L
+   1000003     100000.          # ~s_L
    2000003     1.00000000E+05   # ~s_R
-   1000004     100000.0          # ~c_L
+   1000004     100000.          # ~c_L
    2000004     1.00000000E+05   # ~c_R
    1000005     1.00000000E+05   # ~b_1
    2000005     1.10000000E+05   # ~b_2
@@ -139,7 +139,7 @@ BLOCK ALPHA  # Higgs mixing
           -1.13676047E-01   # Mixing angle in the neutral Higgs boson sector
 #
 BLOCK HMIX Q=  2.90528802E+02  # DRbar Higgs Parameters
-         1     3.05599351E+02   # mu(Q)MSSM
+         1     3.05599351E+02   # mu(Q)MSSM           
 #
 BLOCK AU Q=  2.90528802E+02  # The trilinear couplings
   1  1     0.00000000E+00   # A_u(Q) DRbar
@@ -157,26 +157,26 @@ BLOCK AE Q=  2.90528802E+02  # The trilinear couplings
   3  3    -4.92306701E+02   # A_tau(Q) DRbar
 #
 BLOCK MSOFT Q=  2.90528802E+02  # The soft SUSY breaking masses at the scale Q
-         1     6.39136864E+01   # M_1(Q)
-         2     1.22006983E+02   # M_2(Q)
-         3     3.90619532E+02   # M_3(Q)
-        21     4.42860395E+04   # mH1^2(Q)
-        22    -9.76585434E+04   # mH2^2(Q)
-        31     2.26648170E+02   # meL(Q)
-        32     2.26648170E+02   # mmuL(Q)
-        33     2.24355944E+02   # mtauL(Q)
-        34     2.08394096E+02   # meR(Q)
-        35     2.08394096E+02   # mmuR(Q)
-        36     2.03337218E+02   # mtauR(Q)
-        41     4.08594291E+02   # mqL1(Q)
-        42     4.08594291E+02   # mqL2(Q)
-        43     3.46134575E+02   # mqL3(Q)
-        44     3.98943379E+02   # muR(Q)
-        45     3.98943379E+02   # mcR(Q)
-        46     2.58021672E+02   # mtR(Q)
-        47     3.95211849E+02   # mdR(Q)
-        48     3.95211849E+02   # msR(Q)
-        49     3.90320031E+02   # mbR(Q)
+         1     6.39136864E+01   # M_1(Q)              
+         2     1.22006983E+02   # M_2(Q)              
+         3     3.90619532E+02   # M_3(Q)              
+        21     4.42860395E+04   # mH1^2(Q)            
+        22    -9.76585434E+04   # mH2^2(Q)            
+        31     2.26648170E+02   # meL(Q)              
+        32     2.26648170E+02   # mmuL(Q)             
+        33     2.24355944E+02   # mtauL(Q)            
+        34     2.08394096E+02   # meR(Q)              
+        35     2.08394096E+02   # mmuR(Q)             
+        36     2.03337218E+02   # mtauR(Q)            
+        41     4.08594291E+02   # mqL1(Q)             
+        42     4.08594291E+02   # mqL2(Q)             
+        43     3.46134575E+02   # mqL3(Q)             
+        44     3.98943379E+02   # muR(Q)              
+        45     3.98943379E+02   # mcR(Q)              
+        46     2.58021672E+02   # mtR(Q)              
+        47     3.95211849E+02   # mdR(Q)              
+        48     3.95211849E+02   # msR(Q)              
+        49     3.90320031E+02   # mbR(Q)              
 #
 #
 #
@@ -219,10 +219,8 @@ DECAY   1000016     0.00000000E+00   # snu_tauL decays
 #         PDG            Width
 DECAY   1000021     1.00000000E+00   # chargino1+ decays
 #           BR         NDA      ID1       ID2       ID3
-      0.50000000E+00    3     1000022        -1         1   # BR(~gl -> N1 dbar d)
-      0.50000000E+00    3     1000022        -2         2   # BR(~gl -> N1 ubar u)
+      1.00000000E+00    3     1000022        -6         6   # BR(~gl -> N1 tbar t)               
 ########################################################################
-DECAY   1000022     0.00000000E+00   # neutralino1 decays
 XSECTION  8000.0 2212 2212 2 1000021 1000021   # Nevts: 10000
 XSECTION  8000.0 2212 2212 2 1000021 1000021   # Nevts: 10000
-0  0  0  0  0  0  0.06986711 SModelS 1.0
+0  0  0  0  0  0  0.06977813 SModelS 1.0

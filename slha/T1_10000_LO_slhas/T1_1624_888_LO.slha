@@ -58,14 +58,14 @@ BLOCK MASS  # Mass Spectrum
         35     1.00000000E+03
         36     1.00000000E+03
         37     1.00000000E+03
-   1000001     100000.0          # ~d_L
-   2000001     1.00000000E+05   # ~d_R
-   1000002     100000.0          # ~u_L
-   2000002     1.00000000E+05   # ~u_R
-   1000003     100000.0          # ~s_L
-   2000003     1.00000000E+05   # ~s_R
-   1000004     100000.0          # ~c_L
-   2000004     1.00000000E+05   # ~c_R
+   1000001    100.0    #    ~d_L
+   2000001    100.0    #    ~d_R
+   1000002    100.0    #    ~u_L
+   2000002    100.0    #    ~u_R
+   1000003    100.0    #    ~s_L
+   2000003    100.0    #    ~s_R
+   1000004    100.0    #    ~c_L
+   2000004    100.0    #    ~c_R
    1000005     1.00000000E+05   # ~b_1
    2000005     1.10000000E+05   # ~b_2
    1000006     1.00000000E+05   # ~t_1
@@ -81,10 +81,10 @@ BLOCK MASS  # Mass Spectrum
    1000016     1.00000000E+04   # ~nu_tauL
    1000021    1624.5    #    ~g
    1000022    888.0    #    ~chi_10
-   1000023     1.00000000E+04   # ~chi_20
+   1000023     100000.0           # ~chi_20
    1000025     1.00000000E+04   # ~chi_30
    1000035     1.00000000E+04   # ~chi_40
-   1000024     1.00000000E+04   # ~chi_1+
+   1000024     100000.0           # ~chi_1+
    1000037     1.00000000E+04   # ~chi_2+
 #
 BLOCK NMIX  # Neutralino Mixing Matrix
@@ -199,6 +199,39 @@ BLOCK MSOFT Q=  2.90528802E+02  # The soft SUSY breaking masses at the scale Q
 #
 #
 #         PDG            Width
+DECAY   1000001     1.00000000E+00   # sdown_L decays
+#          BR         NDA      ID1       ID2
+     1.00000000E+00    2     1000022         1   # BR(~d_L -> ~chi_10 d)
+#         PDG            Width
+DECAY   1000002     1.00000000E+00   # sup_L decays
+#          BR         NDA      ID1       ID2
+     1.00000000E+00    2     1000022         2   # BR(~u_L -> ~chi_10 d)
+#         PDG            Width
+DECAY   1000003     1.00000000E+00   # sstrange_L decays
+#          BR         NDA      ID1       ID2
+     1.00000000E+00    2     1000022         3   # BR(~s_L -> ~chi_10 s)
+#         PDG            Width
+DECAY   1000004     1.00000000E+00   # scharm_L decays
+#          BR         NDA      ID1       ID2
+     1.00000000E+00    2     1000022         4   # BR(~c_L -> ~chi_10 c)
+#         PDG            Width
+DECAY   2000001     1.00000000E+00   # sdown_R decays
+#          BR         NDA      ID1       ID2
+     1.00000000E+00    2     1000022         1   # BR(~d_R -> ~chi_10 d)
+#         PDG            Width
+DECAY   2000002     1.00000000E+00   # sup_R decays
+#          BR         NDA      ID1       ID2
+     1.00000000E+00    2     1000022         2   # BR(~u_R -> ~chi_10 d)
+#         PDG            Width
+DECAY   2000003     1.00000000E+00   # sstrange_R decays
+#          BR         NDA      ID1       ID2
+     1.00000000E+00    2     1000022         3   # BR(~s_R -> ~chi_10 s)
+#         PDG            Width
+DECAY   2000004     1.00000000E+00   # scharm_R decays
+#          BR         NDA      ID1       ID2
+     1.00000000E+00    2     1000022         4   # BR(~c_R -> ~chi_10 c)
+
+#         PDG            Width
 DECAY   1000006     0.00000000E+00   # stop1 decays
 DECAY   2000006     0.00000000E+00   # stop2 decays
 DECAY   1000005     0.00000000E+00   # sbottom1 decays
@@ -219,10 +252,36 @@ DECAY   1000016     0.00000000E+00   # snu_tauL decays
 #         PDG            Width
 DECAY   1000021     1.00000000E+00   # chargino1+ decays
 #           BR         NDA      ID1       ID2       ID3
-      0.50000000E+00    3     1000022        -1         1   # BR(~gl -> N1 dbar d)
-      0.50000000E+00    3     1000022        -2         2   # BR(~gl -> N1 ubar u)
+      0.00000000E+00    3     1000022        -1         1   # BR(~gl -> N1 dbar d)
+      0.00000000E+00    3     1000022        -2         2   # BR(~gl -> N1 ubar u)
+      0.00000000E+00    3     1000022        -3         3   # BR(~gl -> N1 dbar d)
+      0.00000000E+00    3     1000022        -4         4   # BR(~gl -> N1 ubar u)
+      0.00000000E+00    3     1000022        -5         5   # BR(~gl -> N1 ubar u)
+      0.20000000E+00    3     1000023        -1         1   # BR(~gl -> N2 dbar d)
+      0.20000000E+00    3     1000023        -2         2   # BR(~gl -> N2 ubar u)
+      0.20000000E+00    3     1000023        -3         3   # BR(~gl -> N2 dbar d)
+      0.20000000E+00    3     1000023        -4         4   # BR(~gl -> N2 ubar u)
+      0.20000000E+00    3     1000023        -5         5   # BR(~gl -> N2 ubar u)
+      0.00000000E+00    3     1000024        -2         1   # BR(~gl -> C1 ubar d)
+      0.00000000E+00    3    -1000024         2        -1   # BR(~gl -> C1bar u dbar)
+      0.00000000E+00    3     1000024        -4         3   # BR(~gl -> C1 ubar d)
+      0.00000000E+00    3    -1000024         4        -3   # BR(~gl -> C1bar u dbar)
+#         PDG            Width
+DECAY   1000024     0.10000000E+00   # chargino1+ decays
+#           BR         NDA      ID1       ID2       ID3
+      0.50000000E+00    3     1000022       -11        12   # BR(~chi_1+ -> ~chi_10 e+   nu_e)
+      0.50000000E+00    3     1000022       -13        14   # BR(~chi_1+ -> ~chi_10 mu+  nu_mu)
+      0.00000000E+00    3     1000022       -15        16   # BR(~chi_1+ -> ~chi_10 tau+ nu_tau)
+#         PDG            Width
+DECAY   1000023     0.10000000E+00   # chargino1+ decays
+#           BR         NDA      ID1       ID2       ID3
+#      0.50000000E+00    3     1000022       -11        11   # BR(N2 -> N1 e+ e-)
+#      0.50000000E+00    3     1000022       -13        13   # BR(N2 -> N1 mu+ mu-)
+#      0.00000000E+00    3     1000022       -15        15   # BR(N2 -> N1 tau+ tau-)
+       1.00000000E+00    2     1000022        22             # BR(N2 -> N1 gamma)
 ########################################################################
+DECAY   1000037     0.00000000E+00   # chargino2+ decays
 DECAY   1000022     0.00000000E+00   # neutralino1 decays
+DECAY   1000025     0.00000000E+00   # neutralino3 decays
 XSECTION  8000.0 2212 2212 2 1000021 1000021   # Nevts: 10000
-XSECTION  8000.0 2212 2212 2 1000021 1000021   # Nevts: 10000
-0  0  0  0  0  0  0.050987845 SModelS 1.0
+0  0  0  0  0  0  0.050925263 SModelS 1.0
