@@ -20,6 +20,7 @@ import argparse
 import os
 import types
 import ROOT
+import sys
 
 logger = logging.getLogger(__name__)
 
