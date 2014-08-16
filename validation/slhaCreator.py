@@ -294,8 +294,7 @@ def checkFolder(path):
             if userInput == 'n':
                 sys.exit()
             if userInput == 'y':
-                import shutil
-                shutil.rmtree(path)
+                os.system('rm -r %s' %path)
                 return path
     return path
     
