@@ -103,7 +103,7 @@ def main():
     name = name[0] + '_xsecTester' + '.' + name[1]
     logger.debug('Name of the output file: %s' %name)
 
-    c.Print("./plots/%s" %name)
+    c.Print("./plots/xsecTester/%s" %name)
     
 if __name__ == '__main__':
     main()      
