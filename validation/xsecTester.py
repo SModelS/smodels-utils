@@ -23,7 +23,7 @@ def main():
     args=argparser.parse_args()
 
     #Define metadata tags:
-    tags = ['title','Root file','Out file','Kfactor','Root tag']
+    tags = ['decay', 'analysis', 'outFile','Kfactor','rootTag']
     metadata = validationPlotsHelper.getMetadata(args.input,tags)
     description = metadata['title'][0].split(',')
     results = validationPlotsHelper.getData(args.input, Rmax = 1.)
