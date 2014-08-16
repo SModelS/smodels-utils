@@ -155,6 +155,7 @@ class Threshold(object):
         dMax = -1000.
         for d in self.thresholds['d']:
             if d > dMax: dMax = d
+        if dMax > 0.: dMax = 0
         return dMax
         
     def _massList(self, particle):    
