@@ -151,7 +151,7 @@ def main():
     name = '%s-%s-%s.png' %(fileName.replace('.dat', ''), particle, comparison)
     logger.debug('Name of the output file: %s' %name)
 
-    canvas.Print("./plots/xsecComparatorPlots/%s" %name)
+    canvas.Print("./plots/xsecComparator/%s" %name)
     
 def motherTendency(masses, xsections):
     """Produces a root TGraph with mother particle mass on x-axis 
@@ -178,6 +178,9 @@ def motherTendency(masses, xsections):
     return graph
 
 def readGrid(fileName, targetPath):
+    """Reads the given grid data file and creates python lists.
+    
+    """
     
     f = checkFile(targetPath + '/' + fileName)
     motherM = []
@@ -237,13 +240,6 @@ def referenceTendency(sqrt, topology):
     graph.SetLineWidth(4)
     #print ('reference graph', graph)
     return graph    
-    
-def getColor():
-    col = [ROOT.kRed, ROOT.kYellow+1, ROOT.kGreen+1, ROOT.kGray+2,\
-    ROOT.kOrange+7, ROOT.kMagenta+3, ROOT.kSpring-7, ROOT.kCyan+2, \
-    ROOT.kBlue, ROOT.kRed+1, ROOT.kOrange-3,ROOT.kGreen-4]
-    for c in col:
-        yield c 
 
 def getTarget(path):
     """Checks if the target directory already exists and raises an error if not.
