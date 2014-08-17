@@ -87,6 +87,7 @@ class SlhaFiles(object):
                 if lspMass > motherMass + self.d: continue
                 fileName = self.topo.name + '_' + str(int(motherMass)) + \
                 '_' + str(int(lspMass)) + '_' + self._order + '.slha'
+                logger.info('mother mass: %s, lsp mass: %s' %(motherMass, lspMass)) 
                 slhaLines = self._setMass(motherMass, lspMass)
                 if firstLoop:
                     self._delXsecFromFile()
