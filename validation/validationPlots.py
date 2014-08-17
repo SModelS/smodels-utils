@@ -102,11 +102,11 @@ def main():
     
     #Set the options for the TGraphs:
     excluded.SetMarkerStyle(10)
-    excluded.SetMarkerColor(ROOT.kMagenta+2)
+    excluded.SetMarkerColor(ROOT.kMagenta+3)
     allowed.SetMarkerStyle(10)
-    allowed.SetMarkerColor(ROOT.kGreen+1)
+    allowed.SetMarkerColor(ROOT.kGreen+2)
     notTested.SetMarkerStyle(10)
-    notTested.SetMarkerColor(ROOT.kYellow)
+    notTested.SetMarkerColor(ROOT.kOrange-2)
     exclusionLine.SetLineStyle(2)
     exclusionLine.SetLineWidth(4)
     exclusionLine.SetLineColor(ROOT.kBlack-2)
@@ -145,10 +145,22 @@ def main():
 
     #title = ROOT.TLatex(0, 1100, "#splitline{%s}{#splitline{analysis = %s,  #sqrt{s} = %s}{order = %s}}" %(description[0], description[1], description[2], description[3]))
     #title.SetTextSize(0.03)
-    title = ROOT.TLatex(min(motherM), max(lspM), '%s: %s' %(topology, metadata['decay'][0]))
+    motherMinExcluded = ROOT.TMath.MinElement(excluded.GetN(), excluded.GetX())
+    motherMinNotTested = ROOT.TMath.MinElement(notTested.GetN(), notTested.GetX())
+    motherMinAllowed = ROOT.TMath.MinElement(allowed.GetN(), allowed.GetX())
+    
+    xPosition = min([motherMinExcluded, motherMinAllowed, motherMinNotTested])
+    
+    lspMaxExcluded = ROOT.TMath.MaxElement(excluded.GetN(), excluded.GetY())
+    lspMaxNotTested = ROOT.TMath.MaxElement(notTested.GetN(), notTested.GetY())
+    lspMaxAllowed = ROOT.TMath.MaxElement(allowed.GetN(), allowed.GetY())
+    
+    yPosition = max([lspMaxExcluded, lspMaxAllowed, lspMaxNotTested])
+    
+    title = ROOT.TLatex(xPosition, yPosition-50, '%s: %s' %(topology, metadata['decay'][0]))
     title.SetTextSize(0.05)
     title.Draw()
-    title2 = ROOT.TLatex(min(motherM), max(lspM)-50, '%s %s, #sqrt{s} = %s, order = %s' \
+    title2 = ROOT.TLatex(xPosition, yPosition-130, '%s %s, #sqrt{s} = %s, order = %s' \
     %(description[0], description[1].replace('\\', '#'), description[2], description[3]))
     
     title2.SetTextSize(0.03)
