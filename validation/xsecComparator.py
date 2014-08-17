@@ -235,7 +235,7 @@ def main():
         legend.AddEntry(mother, 'smodels - %s' %order, 'L')
         if reference:
             if comparison == 'LO':
-                legend.AddEntry(reference, 'smodels LO', 'L')
+                legend.AddEntry(reference, 'smodels - LO', 'L')
             else:
                 legend.AddEntry(reference, 'reference', 'L')
         legend.Draw('SAME')
