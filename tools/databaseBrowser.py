@@ -642,7 +642,7 @@ class Infotxt(object):
         """
         topos = {}
         logger.debug('Got analysis %s and run %s!' %(self._analysis, self._run))
-        if not 'axes' in self.metaInfo:
+        if not 'axes' in self.metaInfo or not self.metaInfo['axes']:
             logger.info('No additional information about axes was found \n\
             for %s-%s!' %(self._run, self._analysis))
             if not self.topologies: return None
@@ -650,7 +650,7 @@ class Infotxt(object):
                 topos[t]=[t]
             if not topology: return topos
             # ### FIX ME: better if topology in topos: returntopos[topology] ?
-            if topos.has_key(topology): return topos[topology]
+            if topology in topos: return topos[topology]
             logger.warning('For %s-%s there is no topology %s' \
             %(self._run, self._analysis, topology))
             return None
