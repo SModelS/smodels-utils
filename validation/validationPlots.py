@@ -162,11 +162,11 @@ def main():
     title.Draw()
     if 'ATLAS' in analysis:
         
-        title2 = ROOT.TLatex(xPosition, yPosition-130, '%s %s' \
+        title2 = ROOT.TLatex(xPosition, yPosition-140, '%s %s' \
         %(description[0], description[1].replace('\\', '#')))
         title2.SetTextSize(0.03)
         title2.Draw()
-        title3 = ROOT.TLatex(xPosition, yPosition-155, \
+        title3 = ROOT.TLatex(xPosition, yPosition-190, \
         '#sqrt{s} = %s, order = %s' %(description[2], description[3]))
         title3.SetTextSize(0.03)
         title3.Draw()
