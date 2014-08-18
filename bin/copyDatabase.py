@@ -48,13 +48,13 @@ def main():
     help = 'target folder - default: ./clean-database', \
     type = types.StringType, default = './clean-database/')
     argparser.add_argument ('-rex', '--runExclusions', nargs = '?', \
-    help = 'runs that should be totally excluded - default: RPV7, RPV8, 2011', \
-    type = types.StringType, default = 'RPV7, RPV8, 2011')
+    help = 'runs that should be totally excluded - default: RPV7', \
+    type = types.StringType, default = 'RPV7')
     argparser.add_argument ('-aex', '--analysisExclusions', nargs = '?', \
     help = 'analyses that should be totally excluded \n \
-    - default: DileptonicStop8TeV, RazorMono8TeV and T1ttttCombination8TeV', \
+    - default: DileptonicStop8TeV, RazorMono8TeV, SUS11010 and T1ttttCombination8TeV', \
     type = types.StringType, \
-    default = 'DileptonicStop8TeV RazorMono8TeV T1ttttCombination8TeV')
+    default = 'DileptonicStop8TeV RazorMono8TeV T1ttttCombination8TeV SUS11010')
     argparser.add_argument ('-scp', '--secureCopy', \
     help = 'use scp to smodels instead of local copy from afs - default: False',\
     action = 'store_true')
@@ -74,7 +74,7 @@ def main():
     targetPath = checkTarget(args.target)
     logger.info('Copying database to %s' %targetPath)
     
-    browser = Browser(args.Base)
+    browser = databaseBrowser.Browser(args.Base)
     browser.verbosity = args.browserVerbosity
 
     setLogLevel(level = args.loggingLevel)
@@ -90,18 +90,18 @@ def main():
     logger.info('Analyses that are excluded: %s' %analysisExclusions)
 
     infoLines = ['sqrts', 'lumi', 'pas', 'publication', 'constraint', \
-    'condition', 'fuzzycondition','category', 'axes', 'superseded_by', 'superseds']
+    'condition', 'fuzzycondition','category', 'axes', 'superseded_by', 'supersedes']
     
     scp = args.secureCopy
     logger.info('secure copy option is set to: %s' %scp)
     
     database = getDatabase(runExclusions, analysisExclusions, browser)
     goodAnalyses = getGoodAnalyses(browser, database)
-    cleanDatabase = getCleanedDatabase(goodAnalyses, database)
+    cleanedDatabase = getCleanedDatabase(goodAnalyses, database)
     
     if not scp:
         logger.debug('calling localCopy')
-        localCopy(targetPath, cleanDatabase, infoLines)
+        localCopy(targetPath, cleanedDatabase, infoLines, browser)
     
     #if scp:
         #remoteCopy(targetPath, remove, cleanedDatabase, infoLines)
@@ -114,19 +114,20 @@ def checkTarget(path):
     
     """
     if os.path.exists(path):
-        print 'Folder %s already exists!' %path
+        print 'Database %s already exists!' %path
         subdirs = os.listdir(path)
         subdirs = [d for d in subdirs if not '.' in d]
         if not subdirs:
             print 'Target %s already exists but is empty.' %path
             return path
         while True:
-            userInput = raw_input('Remove old files? [y/n]:  ')
+            userInput = raw_input('Remove old version of database? [y/n]:  ')
             if userInput == 'n':
                 sys.exit()
             if userInput == 'y':
-                os.system('rm -r %s' %path)
-                return path
+                for subdir in subdirs:
+                    os.system('rm -r %s/%s' %(path, subdir))
+                return path   
     os.mkdir(path)            
     return path
     
@@ -138,8 +139,10 @@ def getDatabase(runExclusions, analysisExclusions, browser):
     db = browser.database
     database = {}
     keys = [key for key in db if not key in runExclusions]
+    logger.debug('Remaining runs: %s' %keys)
     for key in keys:
         database[key] = [a for a in db[key] if not a in analysisExclusions]
+        logger.debug('For run %s remaining analyses: %s' %(key, database[key]))
     return database
 
 def getGoodAnalyses(browser, database):
@@ -149,18 +152,19 @@ def getGoodAnalyses(browser, database):
     goodAnalyses = []
     for key in database:
         for ana in database[key]:
-            expAna = browser.expAnalysis(a)
+            expAna = browser.expAnalysis(ana)
             if expAna.isPublished and expAna.pas and expAna.isChecked \
             and expAna.hasPY and not expAna.private:
-                goodAnalyses.append(a)
+                goodAnalyses.append(ana)
     return goodAnalyses 
     
 def getCleanedDatabase(goodAnalyses, database):
     """Excludes all analyses that are insufficient.
     
     """
-    database[key] = [a for a in database[key] if a in goodAnalyses]
-    keys = [key for key in keys if database[key]]
+    for key in database:
+        database[key] = [a for a in database[key] if a in goodAnalyses]
+    keys = [key for key in database if database[key]]
     clean = {}
     for key in keys:
         clean[key] = database[key]
@@ -168,21 +172,23 @@ def getCleanedDatabase(goodAnalyses, database):
     return clean
     
     
-def localCopy(targetPath, cleanDatabase, infoLines):
+def localCopy(targetPath, cleanedDatabase, infoLines, browser):
     """Creates the folder structure for the cleaned version of the database and copies the files.
     
     """
-    
-    for key in cleanDatabase:
+    version = open('%s/version' %targetPath, 'w')
+    print >> version, browser.databaseVersion
+    version.close()
+    for key in cleanedDatabase:
         os.mkdir(targetPath + key)
         logger.debug('created folder for run: %s' %key) 
         for a in cleanedDatabase[key]:
             path = '/' + key + '/' + a + '/'
             os.mkdir(targetPath + path)
             logger.debug('created folder for analysis: %s' %a)
-            os.system('cp %s %s' %(Base + path + 'sms.py', target + path + 'sms.py'))
-                    logger.debug( 'command looks like: cp %s %s' %(Base + path + 'sms.py', target + path + 'sms.py'))
-            createInfo(target, key, a, infoLines)
+            os.system('cp %s %s' %(browser.base + path + 'sms.py', targetPath + path + 'sms.py'))
+            logger.debug('command looks like: cp %s %s' %(browser.base + path + 'sms.py', targetPath + path + 'sms.py'))
+            createInfo(targetPath, key, a, infoLines, browser)
             
 def remoteCopy():
     # ### FIX ME: how to? Is there a copy of smodels-database on smodels.hephy.at and can I use it here?
@@ -193,6 +199,7 @@ def createInfo(target, run, ana, infoLines, browser):
     """Creates the info.txt for every run-analysis and copies the requested lines.
     
     """
+    lines = []
     path = target + '/' + run + '/' + ana
     info = open('%s/info.txt' %path, 'w')
     logger.debug('creating info.txt file %s' %info)
@@ -202,14 +209,16 @@ def createInfo(target, run, ana, infoLines, browser):
     for requ in infoLines:
         logger.debug('try to get line for run %s, ana %s and keyword %s' %(run, ana, requ))
         if requ in infoObject.metaInfo:
-            line = '%s: %s' %(requ, info.metaInfo[requ])
-            logger.debug('line is %s' %line)
-            print >> info, line.strip()
+            line = '%s: %s' %(requ, infoObject.metaInfo[requ])
+            lines.append(line)
         else:
             for line in infoObject.info:
-                if requ in line:
-                logger.debug('line is %s' %line)
-                print >> info, line.strip()   
+                if requ in line and not line in lines:
+                    lines.append(line)
+    for line in lines:
+        logger.debug('line is %s' %line)
+        print >> info, line.strip()
+    info.close()
         
     
 
