@@ -50,7 +50,7 @@ class Browser(object):
     @property
     def databaseVersion(self):
         """The version of the database, read from the 'version'
-           file
+           file.
 
         """
         return self._databaseVersion
