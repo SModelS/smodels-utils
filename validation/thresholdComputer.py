@@ -162,8 +162,7 @@ class Threshold(object):
         dMax = -1000.
         for d in self.thresholds['d']:
             if d > dMax: dMax = d
-        dDefoult = 0
-        if self.topo.name == 'T1tttt' or self.topo.name == 'T2tt': dDefoult = -200
+        dDefoult = -200
         if dMax > dDefoult: dMax = dDefoult  
         return dMax
         
