@@ -8,25 +8,62 @@
 
 
 """
+from __future__ import print_function
 import argparse
 import os, sys
 import ROOT
 import validationPlotsHelper
 import logging
+import types
 
 logger = logging.getLogger(__name__)
 
 def main():
+    """Handles all command line options, as:
+    topology, analysis, directory, base, loglevel, ...
+    Produces the grid data file and adds some meta data.
+    
+    """
     argparser = argparse.ArgumentParser(description = \
-    'Plots a histogram to check the cross sections')
-    argparser.add_argument( 'input', help = 'input data file')
-    args=argparser.parse_args()
+    'Produces a root plot to test the xsections')
+    argparser.add_argument ('-a', '--analysis', \
+    help = 'analysis that should be validated - default: SUS12028',\
+    type = types.StringType, default = 'SUS12028')
+    argparser.add_argument ('-t', '--topology', \
+    help = 'topology that should be validated - default: T1',\
+    type = types.StringType, default = 'T1')
+    argparser.add_argument ('-o', '--order', \
+    help = 'perturbation order (LO, NLO, NLL) - default: NLL', \
+    type = types.StringType, default = 'NLL')
+    argparser.add_argument ('-d', '--directory', \
+    help = 'directory the data file should be taken from - default: ./gridData', \
+    type = types.StringType, default = './gridData')
+    argparser.add_argument ('-n', '--events',\
+    help = 'set number of events - default: 10000', \
+    type = types.IntType, default = 10000)
+    args = argparser.parse_args()
 
+    topology = args.topology
+    analysis = args.analysis
+    targetPath = getTarget(args.directory)
+    events = args.events
+    order = args.order
+
+    print ("========================================================")
+    print('Producing the test plot')
+    print('Topology: ', topology)
+    print('Analysis: ', analysis)
+    print('Take grid from: ', targetPath)
+    print ("========================================================")
+    
+    fileName = '%s-%s-%s-%s.dat' %(topology, analysis, events, order)
+    f = checkFile(targetPath + '/' + fileName)
+    
     #Define metadata tags:
     tags = ['decay', 'analysis', 'outFile','Kfactor','rootTag']
-    metadata = validationPlotsHelper.getMetadata(args.input,tags)
-    description = metadata['title'][0].split(',')
-    results = validationPlotsHelper.getData(args.input, Rmax = 1.)
+    metadata = validationPlotsHelper.getMetadata(f, tags)
+    description = metadata['analysis'][0].split(',')
+    results = validationPlotsHelper.getData(f, Rmax = 1.)
     motherM = results['massMother']
     lspM = results['massLSP']
     tUL = results['theoreticalUpperLimit']
@@ -78,7 +115,10 @@ def main():
     for i in range(len(motherM)):
         if motherM[i] < 800 or motherM[i] > 1000: continue
         logger.debug('Fill the TH2F %s-%s-%s-%s: ' %(i, motherM[i], lspM[i], eUL[i]))
-        h.Fill(motherM[i], lspM[i], int(eUL[i]))
+        if h.GetBinContent(h.FindBin(motherM[i], lspM[i])) < eUL[i]:
+            h.SetBinContent(h.FindBin(motherM[i], lspM[i]), eUL[i])
+        
+        #h.Fill(motherM[i], lspM[i], int(eUL[i]))
         
     h.SetXTitle("mother mass [GeV]")
     h.SetYTitle("LSP mass [GeV]")
@@ -90,20 +130,49 @@ def main():
     h.SetTitleOffset(1.6, "Y")
 
     c.cd()
-    h.Draw('textsame')
+    #h.Draw('textsame')
+    h.Draw('colz')
 
-    title = '#splitline{%s}{#splitline{analysis = %s,  \
-    #sqrt{s} = %s}{order = %s}}' \
-    %(description[0], description[1], description[2], description[3])
-    tex = ROOT.TLatex()
-    tex.SetTextSize(0.02)
-    tex.DrawLatex(3.1, 15.5, title)
-
-    name = metadata['Out file'][0].strip().split('.')
-    name = name[0] + '_xsecTester' + '.' + name[1]
-    logger.debug('Name of the output file: %s' %name)
-
+    title = ROOT.TLatex(motherMin + 20, lspMax + 70, '%s: %s' %(topology, metadata['decay'][0]))
+    title.SetTextSize(0.05)
+    title.Draw()
+    if 'ATLAS' in analysis:
+        
+        title2 = ROOT.TLatex(motherMin + 20, lspMax + 50, '%s %s' \
+        %(description[0], description[1].replace('\\', '#')))
+        title2.SetTextSize(0.03)
+        title2.Draw()
+        title3 = ROOT.TLatex(motherMin + 20, lspMax + 30, \
+        '#sqrt{s} = %s, order = %s' %(description[2], description[3]))
+        title3.SetTextSize(0.03)
+        title3.Draw()
+    else:
+        title2 = ROOT.TLatex(motherMin + 20, lspMax + 10, \
+        '%s %s, #sqrt{s} = %s, order = %s' %(description[0], \
+        description[1].replace('\\', '#'), description[2], description[3]))
+        title2.SetTextSize(0.03)
+        title2.Draw()
+    name = '2D-expUL-%s.png' %fileName.replace('.dat', '')    
     c.Print("./plots/xsecTester/%s" %name)
+    
+def getTarget(path):
+    """Checks if the target directory already exists and raises an error if not.
+    
+    """
+    
+    if not os.path.exists(path):
+        logger.error('Could not find directory %s!' %path)
+        sys.exit()
+    return path
+    
+def checkFile(path):
+    """Checks if the data file already exists, raises an error if not. 
+    
+    """
+    if not os.path.exists(path):
+        logger.error('Could not find file %s!' %path)
+        sys.exit()
+    return path  
     
 if __name__ == '__main__':
     main()      
