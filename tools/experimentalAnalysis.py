@@ -223,6 +223,14 @@ class ExpAnalysis(object):
     @property        
     def checked(self):
         return self._parseMetaInfo('checked')
+        
+    @property        
+    def supersedes(self):
+        return self._parseMetaInfo('supersedes')
+        
+    @property        
+    def superseded(self):
+        return self._parseMetaInfo('superseded_by')
     
     @property
     def isPublished(self):
