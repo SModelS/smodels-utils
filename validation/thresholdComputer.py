@@ -56,9 +56,12 @@ class Threshold(object):
         thresh['d'] = []
         #for a in random.sample(set(self.topo.analyses), 4):
         analyses = self.topo.analyses
+        print ('####', self.topo, analyses)
+        print('###', self.topo.name)
         for a in analyses:
             if self._browser.expAnalysis(a).sqrts != 8.0:
                 continue
+            print ('####', a, self.topo.name)
             ulDict = self._browser.expResult(a, self.topo.name).upperLimitDict()
             if not ulDict: continue
             mM = []
