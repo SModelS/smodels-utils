@@ -59,13 +59,13 @@ BLOCK MASS  # Mass Spectrum
         36     1.00000000E+03
         37     1.00000000E+03
    1000001    1094.0    #    ~d_L
-   2000001     1.00000000E+05   # ~d_R
+   2000001    1094.0    #    ~d_R
    1000002    1094.0    #    ~u_L
-   2000002     1.00000000E+05   # ~u_R
+   2000002    1094.0    #    ~u_R
    1000003    1094.0    #    ~s_L
-   2000003     1.00000000E+05   # ~s_R
+   2000003    1094.0    #    ~s_R
    1000004    1094.0    #    ~c_L
-   2000004     1.00000000E+05   # ~c_R
+   2000004    1094.0    #    ~c_R
    1000005     1.00000000E+05   # ~b_1
    2000005     1.10000000E+05   # ~b_2
    1000006     1.00000000E+05   # ~t_1
@@ -215,81 +215,88 @@ DECAY   1000004     1.00000000E+00   # scharm_L decays
 #          BR         NDA      ID1       ID2
      1.00000000E+00    2     1000022         4   # BR(~c_L -> ~chi_10 c)
 #         PDG            Width
+DECAY   2000001     1.00000000E+00   # sdown_L decays
+#          BR         NDA      ID1       ID2
+     1.00000000E+00    2     1000022         1   # BR(~d_R -> ~chi_10 d)
+#         PDG            Width
+DECAY   2000002     1.00000000E+00   # sup_L decays
+#          BR         NDA      ID1       ID2
+     1.00000000E+00    2     1000022         2   # BR(~u_R -> ~chi_10 d)
+#         PDG            Width
+DECAY   2000003     1.00000000E+00   # sstrange_L decays
+#          BR         NDA      ID1       ID2
+     1.00000000E+00    2     1000022         3   # BR(~s_R -> ~chi_10 s)
+#         PDG            Width
+DECAY   2000004     1.00000000E+00   # scharm_L decays
+#          BR         NDA      ID1       ID2
+     1.00000000E+00    2     1000022         4   # BR(~c_R -> ~chi_10 c)
+
 
 #         PDG            Width
-DECAY   1000006     0.00000000E+00   # stop1 decays
-DECAY   2000006     0.00000000E+00   # stop2 decays
-DECAY   1000005     0.00000000E+00   # sbottom1 decays
-DECAY   2000005     0.00000000E+00   # sbottom2 decays
+DECAY   1000006     -1  # stop1 decays
+DECAY   2000006     -1   # stop2 decays
+DECAY   1000005     -1   # sbottom1 decays
+DECAY   2000005     -1   # sbottom2 decays
+DECAY   1000011     -1   # selectron_L decays
+DECAY   2000011     -1   # selectron_R decays
+DECAY   1000013     -1   # smuon_L decays
+DECAY   2000013     -1   # smuon_R decays
+DECAY   1000015     -1   # stau_1 decays
+DECAY   2000015     -1   # stau_2 decays
 #
 #         PDG            Width
-DECAY   1000011     0.00000000E+00   # selectron_L decays
-DECAY   2000011     0.00000000E+00   # selectron_R decays
-DECAY   1000013     0.00000000E+00   # smuon_L decays
-DECAY   2000013     0.00000000E+00   # smuon_R decays
-DECAY   1000015     0.00000000E+00   # stau_1 decays
-DECAY   2000015     0.00000000E+00   # stau_2 decays
+DECAY   1000012     -1   # snu_elL decays
+DECAY   1000014     -1   # snu_muL decays
+DECAY   1000016     -1   # snu_tauL decays
 #
 #         PDG            Width
-DECAY   1000012     0.00000000E+00   # snu_elL decays
-DECAY   1000014     0.00000000E+00   # snu_muL decays
-DECAY   1000016     0.00000000E+00   # snu_tauL decays
-#         PDG            Width
-DECAY   1000021     1.00000000E+00   # chargino1+ decays
-#           BR         NDA      ID1       ID2       ID3
-      0.00000000E+00    3     1000022        -1         1   # BR(~gl -> N1 dbar d)
-      0.00000000E+00    3     1000022        -2         2   # BR(~gl -> N1 ubar u)
-      0.00000000E+00    3     1000022        -3         3   # BR(~gl -> N1 dbar d)
-      0.00000000E+00    3     1000022        -4         4   # BR(~gl -> N1 ubar u)
-      0.00000000E+00    3     1000022        -5         5   # BR(~gl -> N1 ubar u)
-      0.20000000E+00    3     1000023        -1         1   # BR(~gl -> N2 dbar d)
-      0.20000000E+00    3     1000023        -2         2   # BR(~gl -> N2 ubar u)
-      0.20000000E+00    3     1000023        -3         3   # BR(~gl -> N2 dbar d)
-      0.20000000E+00    3     1000023        -4         4   # BR(~gl -> N2 ubar u)
-      0.20000000E+00    3     1000023        -5         5   # BR(~gl -> N2 ubar u)
-      0.00000000E+00    3     1000024        -2         1   # BR(~gl -> C1 ubar d)
-      0.00000000E+00    3    -1000024         2        -1   # BR(~gl -> C1bar u dbar)
-      0.00000000E+00    3     1000024        -4         3   # BR(~gl -> C1 ubar d)
-      0.00000000E+00    3    -1000024         4        -3   # BR(~gl -> C1bar u dbar)
+DECAY   1000021     -1   # chargino1+ decays
+
 #         PDG            Width
 DECAY   1000024     0.10000000E+00   # chargino1+ decays
-#           BR         NDA      ID1       ID2       ID3
-      0.50000000E+00    3     1000022       -11        12   # BR(~chi_1+ -> ~chi_10 e+   nu_e)
-      0.50000000E+00    3     1000022       -13        14   # BR(~chi_1+ -> ~chi_10 mu+  nu_mu)
-      0.00000000E+00    3     1000022       -15        16   # BR(~chi_1+ -> ~chi_10 tau+ nu_tau)
+#
 #         PDG            Width
 DECAY   1000023     0.10000000E+00   # chargino1+ decays
-#           BR         NDA      ID1       ID2       ID3
-#      0.50000000E+00    3     1000022       -11        11   # BR(N2 -> N1 e+ e-)
-#      0.50000000E+00    3     1000022       -13        13   # BR(N2 -> N1 mu+ mu-)
-#      0.00000000E+00    3     1000022       -15        15   # BR(N2 -> N1 tau+ tau-)
-       1.00000000E+00    2     1000022        22             # BR(N2 -> N1 gamma)
+#
 ########################################################################
-DECAY   1000037     0.00000000E+00   # chargino2+ decays
-DECAY   1000022     0.00000000E+00   # neutralino1 decays
-DECAY   1000025     0.00000000E+00   # neutralino3 decays
-XSECTION  8000.0 2212 2212 2 -1000003 1000003   # Nevts: 50
+DECAY   1000037     -1   # chargino2+ decays
+DECAY   1000022     -1   # neutralino1 decays
+DECAY   1000025     -1   # neutralino3 decays
+DECAY   1000035     -1   # neutralino4 decays
 XSECTION  8000.0 2212 2212 2 -1000004 1000004   # Nevts: 50
-0  0  0  0  0  0  0.0995942064 SModelS 1.0
-XSECTION  8000.0 2212 2212 2 1000001 1000022   # Nevts: 50
-0  0  0  0  0  0  0.03983768256 SModelS 1.0
+XSECTION  8000.0 2212 2212 2 1000022 2000003   # Nevts: 50
+0  0  0  0  0  0  0.03814161304 SModelS 1.0
+XSECTION  8000.0 2212 2212 2 1000022 2000002   # Nevts: 50
+0  0  0  0  0  0  0.99168193904 SModelS 1.0
 XSECTION  8000.0 2212 2212 2 -1000002 1000002   # Nevts: 50
-0  0  0  0  0  0  0.0497971032 SModelS 1.0
+0  0  0  0  0  0  0.03814161304 SModelS 1.0
+XSECTION  8000.0 2212 2212 2 -2000002 2000002   # Nevts: 50
+0  0  0  0  0  0  0.15256645216 SModelS 1.0
+XSECTION  8000.0 2212 2212 2 -2000004 2000004   # Nevts: 50
+0  0  0  0  0  0  0.15256645216 SModelS 1.0
+XSECTION  8000.0 2212 2212 2 -2000002 1000022   # Nevts: 50
+0  0  0  0  0  0  0.1907080652 SModelS 1.0
+XSECTION  8000.0 2212 2212 2 -1000004 1000004   # Nevts: 50
+0  0  0  0  0  0  0.07628322608 SModelS 1.0
+XSECTION  8000.0 2212 2212 2 -1000003 1000003   # Nevts: 50
+0  0  0  0  0  0  0.07628322608 SModelS 1.0
+XSECTION  8000.0 2212 2212 2 -2000001 2000001   # Nevts: 50
+0  0  0  0  0  0  0.11442483912 SModelS 1.0
 XSECTION  8000.0 2212 2212 2 1000002 1000022   # Nevts: 50
-0  0  0  0  0  0  0.01991884128 SModelS 1.0
-XSECTION  8000.0 2212 2212 2 -1000003 1000003   # Nevts: 50
-0  0  0  0  0  0  0.13943188896 SModelS 1.0
-XSECTION  8000.0 2212 2212 2 1000001 1000001   # Nevts: 50
-0  0  0  0  0  0  0.00995942064 SModelS 1.0
+0  0  0  0  0  0  0.03814161304 SModelS 1.0
 XSECTION  8000.0 2212 2212 2 -1000001 1000001   # Nevts: 50
-0  0  0  0  0  0  0.13943188896 SModelS 1.0
-XSECTION  8000.0 2212 2212 2 -1000004 1000004   # Nevts: 50
-0  2  0  0  0  0  1.1745742326 SModelS 1.0
+0  0  0  0  0  0  0.03814161304 SModelS 1.0
 XSECTION  8000.0 2212 2212 2 -1000002 1000002   # Nevts: 50
-0  2  0  0  0  0  0.5872871163 SModelS 1.0
+0  2  0  0  0  0  0.449826927549 SModelS 1.0
+XSECTION  8000.0 2212 2212 2 -2000002 2000002   # Nevts: 50
+0  2  0  0  0  0  1.79930771019 SModelS 1.0
+XSECTION  8000.0 2212 2212 2 -2000004 2000004   # Nevts: 50
+0  2  0  0  0  0  1.79930771019 SModelS 1.0
+XSECTION  8000.0 2212 2212 2 -1000004 1000004   # Nevts: 50
+0  2  0  0  0  0  0.899653855097 SModelS 1.0
 XSECTION  8000.0 2212 2212 2 -1000003 1000003   # Nevts: 50
-0  2  0  0  0  0  1.64440392564 SModelS 1.0
-XSECTION  8000.0 2212 2212 2 1000001 1000001   # Nevts: 50
-0  2  0  0  0  0  0.0102582032592 SModelS 1.0
+0  2  0  0  0  0  0.899653855097 SModelS 1.0
+XSECTION  8000.0 2212 2212 2 -2000001 2000001   # Nevts: 50
+0  2  0  0  0  0  1.34948078265 SModelS 1.0
 XSECTION  8000.0 2212 2212 2 -1000001 1000001   # Nevts: 50
-0  2  0  0  0  0  1.64440392564 SModelS 1.0
+0  2  0  0  0  0  0.449826927549 SModelS 1.0
