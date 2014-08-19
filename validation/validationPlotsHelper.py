@@ -55,7 +55,7 @@ def getData(fname, Rmax = 1., condmax = 0.001):
         values = [p.strip() for p in pt.split()]
         mM, mLSP, tUL, eUL, cond = values
         #print('point: ', mM, mLSP, tUL, eUL, cond)
-        if not eval(tUL):
+        if not eval(tUL) or not eval(eUL):
             #print('no tUL')
             mM = float(eval(mM))
             mLSP = float(eval(mLSP))
