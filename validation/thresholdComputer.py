@@ -137,6 +137,8 @@ class Threshold(object):
                 minM = particleDict['min']
         if particle == 'mother' and self.topo.name == 'T1tttt':
             if minM < 400: minM = 400
+        if particle == 'mother' and self.topo.name == 'T2':
+            if minM < 200: minM = 200
         return minM
         
     def _stepWidth(self, particle):
@@ -186,7 +188,7 @@ class Threshold(object):
         return massList
 
 def main():
-    threshold = Threshold('TChiWZ',Browser('../../smodels-database'))
+    threshold = Threshold('T2',Browser('../../smodels-database'))
     print('motherMasse: %s' %threshold.motherMasses)
     print('lspMasse: %s' %threshold.lspMasses)
     print('minLSB: %s maxLSB %s' %(min(threshold.lspMasses), max(threshold.lspMasses)))
