@@ -347,6 +347,8 @@ decays = {
     'TChiNuSlep':'neutralino_2 chargino^pm_1  --> lepton lepton lepton neutrino lsp lsp ',
     'TChizz':'neutralino_3 neutralino_2  --> z z lsp lsp ',
     'TChiwz':'chargino^pm neutralino_2  --> w z lsp lsp ',
+    'TChiWZon':'chargino^pm neutralino_2  --> w z lsp lsp ',
+    'TChiWZoff':'chargino^pm neutralino_2  --> w z lsp lsp ',
     'TChiChipmSlepSlep':'neutralino_2 chargino^pm_1  --> lepton (slepton --> lepton lsp ) | neutrino (slepton --> lepton lsp )',
     'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tauon (stauon --> tauon lsp ) | neutrino (stauon --> tauon lsp )', 
     'TChiChipmSlepL':[
