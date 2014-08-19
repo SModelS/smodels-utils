@@ -150,7 +150,7 @@ class Threshold(object):
             if int(particleDict['step']) < int(minStep):
                 minStep = particleDict['step']
         if minStep < 12.5: minStep = 12.5
-        if self.topo.name == 'T1tttt':
+        if self.topo.name == 'T1tttt' or self.topo.name == 'TChiWZ':
             minStep = 25.
         return minStep
     
@@ -186,7 +186,7 @@ class Threshold(object):
         return massList
 
 def main():
-    threshold = Threshold('T1tttt',Browser('../../smodels-database'))
+    threshold = Threshold('TChiWZ',Browser('../../smodels-database'))
     print('motherMasse: %s' %threshold.motherMasses)
     print('lspMasse: %s' %threshold.lspMasses)
     print('minLSB: %s maxLSB %s' %(min(threshold.lspMasses), max(threshold.lspMasses)))
