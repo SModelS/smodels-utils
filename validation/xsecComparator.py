@@ -41,7 +41,7 @@ def main():
     help = 'analysis that should be validated - default: SUS12028',\
     type = types.StringType, default = 'SUS12028')
     argparser.add_argument ('-o', '--order', \
-    help = 'perturbation order (LO, NLO, NLL) - default: LO', \
+    help = 'perturbation order (LO, NLO, NLL) - default: NLL', \
     type = types.StringType, default = 'NLL')
     argparser.add_argument ('-d', '--directory', \
     help = 'directory the data file should be taken from - default: ./gridData', \
@@ -233,6 +233,8 @@ def referenceTendency(sqrt, topology):
     """
     if topology == 'T1tttt':
         values = referenceXSections.xSecs(sqrt, 'T1')
+    if topology == 'T2bb' or topology == 'T2tt':
+        values = referenceXSections.xSecs(sqrt, 'T2')    
     else:    
         values = referenceXSections.xSecs(sqrt, topology)
     if not values: return None
