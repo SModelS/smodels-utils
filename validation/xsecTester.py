@@ -89,9 +89,9 @@ def main():
     ROOT.setTDRStyle()
 
     ROOT.gStyle.SetPadLeftMargin(0.125)
-    ROOT.gStyle.SetPadRightMargin(0.07)
+    ROOT.gStyle.SetPadRightMargin(0.13)
     ROOT.gStyle.SetPadBottomMargin(0.1)
-    ROOT.gStyle.SetPadTopMargin(0.1)
+    ROOT.gStyle.SetPadTopMargin(0.2)
 
     #Dimensions of the ROOT-histogram:   
 
@@ -122,12 +122,18 @@ def main():
         
     h.SetXTitle("mother mass [GeV]")
     h.SetYTitle("LSP mass [GeV]")
+    h.SetZTitle("xsecs")
     h.SetTitleSize(0.034, "X")
     h.SetLabelSize(0.034, "X")
     h.SetTitleSize(0.034, "Y")
     h.SetLabelSize(0.034, "Y")
+    h.SetTitleSize(0.034, "Z")
+    h.SetLabelSize(0.034, "Z")
     h.SetTitleOffset(1.3, "X")
     h.SetTitleOffset(1.6, "Y")
+    h.SetTitleOffset(1.1, "Z")
+    
+    
 
     c.cd()
     #h.Draw('textsame')
