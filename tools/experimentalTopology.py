@@ -189,7 +189,7 @@ class ExpTopology(object):
         if decays.has_key(self._slackExpTopologyName()):
             logger.info('found decay for topology %s with \
             slack name %s' %(self._name, self._slackExpTopologyName()))
-            decays[self._slackExpTopologyName()]
+            return decays[self._slackExpTopologyName()]
         logger.warning('no decay found for topology %s' %self._name)
         return None        
 
