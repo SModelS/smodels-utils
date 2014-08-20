@@ -1,4 +1,4 @@
-cd /tmp/tmpnDnbWC ; /home/michi/Documents/Physik/Diplomarbeit_Hephy/smodels/smodels/tools/external/pythia6/pythia_lhe < /tmp/tmpnDnbWC/temp.cfg
+cd /tmp/tmpKJI6lh ; /home/michi/Documents/Physik/Diplomarbeit_Hephy/smodels/smodels/tools/external/pythia6/pythia_lhe < /tmp/tmpKJI6lh/temp.cfg
 
 
 1                                                                              
@@ -1365,10 +1365,10 @@ cd /tmp/tmpnDnbWC ; /home/michi/Documents/Physik/Diplomarbeit_Hephy/smodels/smod
  I                                  I                            I            I
  ==============================================================================
  I                                  I                            I            I
- I   0 All included subprocesses    I           50           820 I  4.374D-15 I
+ I   0 All included subprocesses    I        10000        151253 I  4.669D-15 I
  I 237 q + qbar -> ~chi1 + ~g       I            0             0 I  0.000D+00 I
- I 243 q + qbar -> ~g + ~g          I           45           704 I  3.623D-15 I
- I 244 g + g -> ~g + ~g             I            5           116 I  7.511D-16 I
+ I 243 q + qbar -> ~g + ~g          I         8678        125530 I  4.033D-15 I
+ I 244 g + g -> ~g + ~g             I         1322         25723 I  6.360D-16 I
  I                                  I                            I            I
  ==============================================================================
 
