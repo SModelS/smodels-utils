@@ -233,6 +233,11 @@ def main():
     browser = Browser(args.Base)
     browser.verbosity = args.browserVerbosity
     topology = args.topology
+    if topology[-2:] == 'on':
+        topologyName = topology[:-2]
+    elif topology[-3:] == 'off':
+        topologyName = topology[:-3]
+    else: topologyName = topology
     analysis = args.analysis
     targetPath = getTarget(args.directory)
     events = args.events
@@ -252,7 +257,7 @@ def main():
     f = checkFile(targetPath + '/' + fileName)
     outFile = open(f, 'w')
     count = 0
-    slhaPath = '../slha/%s_%s_%s_slhas' %(topology, events, order)
+    slhaPath = '../slha/%s_%s_%s_slhas' %(topologyName, events, order)
     if not os.path.exists(slhaPath):
         logger.error('There are no slha-files for %s with %s events and order %s! \n \
         Run slhaCreator.py first: ./slhaCreator.py -h!' %(topology, events, order))

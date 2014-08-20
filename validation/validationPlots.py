@@ -60,7 +60,7 @@ def main():
 
     browser = Browser(args.Base)
     browser.verbosity = args.browserVerbosity
-    topology = args.topology
+    topology = args.topology    
     analysis = args.analysis
     targetPath = getTarget(args.directory)
     events = args.events
