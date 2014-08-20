@@ -12,7 +12,6 @@
 
 from __future__ import print_function
 import setPath  # # set to python path for smodels
-from smodels.tools.physicsUnits import fb, GeV, addunit, rmvunit
 from smodels_tools.tools.databaseBrowser import Browser
 import logging
 import os
@@ -23,6 +22,7 @@ import validationPlotsHelper
 import referenceXSections
 import argparse
 import sys
+from smodels.tools.physicsUnits import rmvunit
 
 logger = logging.getLogger(__name__)
 
@@ -231,16 +231,13 @@ def referenceTendency(sqrt, topology):
     on y-axis using the reference cross sections.
     
     """
-    if topology == 'T1tttt':
-        values = referenceXSections.xSecs(sqrt, 'T1')
-    if topology == 'T2bb' or topology == 'T2tt':
-        values = referenceXSections.xSecs(sqrt, 'T2')    
-    else:    
-        values = referenceXSections.xSecs(sqrt, topology)
+    values = referenceXSections.xSecs(sqrt, topology)
     if not values: return None
     graph = ROOT.TGraph()
     for point in values:
-        graph.SetPoint(graph.GetN(), point[0], point[1]*1000.)
+        mass = rmvunit(point[0], 'GeV')
+        xsec = rmvunit(point[1], 'fb')
+        graph.SetPoint(graph.GetN(), mass, xsec)
     graph.SetName('reference')
     graph.SetLineWidth(4)
     #print ('reference graph', graph)

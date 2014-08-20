@@ -15,6 +15,7 @@ import argparse
 import sys
 import types
 import os
+from smodels.tools.physicsUnits import pb, fb, GeV
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,14 @@ def xSecs(sqrt, topology):
     
     
     outFileName = 'referenceXSecs-%s-%s.py' %(sqrt, topology)
-    inFileName = 'xSections%s-%s.txt' %(sqrt, topology)
+    if topology[:2] == 'T1': production = 'T1'
+    elif topology[:2] == 'T2': production = 'T2'
+    elif topology[:4] == 'TChi': production = 'TChi'
+    elif topology[:5] == 'TSlep': production = 'TSlep'   
+    else:
+        logger.error('Production for topology %s is unknown!' %topology)
+        return None
+    inFileName = 'xSections%s-%s.txt' %(sqrt, production)
     values = readFile(inFileName)
     return values
         
@@ -37,15 +45,17 @@ def readFile(fileName):
     try:
         f = open('./references/%s' %fileName, 'r')
     except IOError:
-        logger.error('There are no reference cross sections for: %s-%s' \
-        %(topology, sqrt))
+        logger.error('There are no reference cross sections: %s' \
+        %(fileName))
         return None
     lines = f.readlines()
     values = []
     for line in lines:
         line = [l for l in line.split()]
+        i = 1
+        if 'GeV' in line[1]: i = 2
         try:
-            values.append([float(line[0].strip()), float(line[2].strip())])
+            values.append([float(line[0].strip()) * GeV, float(line[i].strip()) * pb])
         except ValueError: continue
     f.close()    
     return values
