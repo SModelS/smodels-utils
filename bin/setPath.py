@@ -1,6 +1,8 @@
+#!/usr/bin/env python
+
 """ this sets the path so we can write e.g. "from smodels_tools.tools import blah """
 
-def configure():
+def configure( verbose=False ):
     """ get the path name of this file, remove setPath.py,
         remove the last subdir, the remaining string should be the
         base path name """
@@ -15,3 +17,6 @@ def configure():
     SModelSTools.addSModelSPath()
 
 configure()
+
+if __name__ == "__main__":
+    configure(True)
