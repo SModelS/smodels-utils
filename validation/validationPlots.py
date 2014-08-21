@@ -60,12 +60,20 @@ def main():
 
     browser = Browser(args.Base)
     browser.verbosity = args.browserVerbosity
-    topology = args.topology    
+    topology = args.topology
+    if topology[-2:] == 'on':
+        topologyName = topology[:-2]
+    elif topology[-3:] == 'off':
+        topologyName = topology[:-3]
+    else: topologyName = topology
     analysis = args.analysis
     targetPath = getTarget(args.directory)
     events = args.events
     order = args.order
     expRes = browser.expResult(analysis, topology)
+    expRes = browser.expResult(analysis, topology)
+    if not expRes:
+        expRes = browser.expResult(analysis, topologyName)
     expAna = expRes.expAnalysis
     expTopo = expRes.expTopology
     
