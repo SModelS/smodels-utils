@@ -282,13 +282,41 @@ class ExpTopology(object):
         lsp = 'lsp '*(len(decay.split())-1)
         decaySteps = decaySteps[1:]
         for decayStep in decaySteps:
-            decayStep.replace('(','')
-            decayStep.replace(')','')
-            decayStep.replace('|','')
+            #decayStep.replace('(','')
+            #decayStep.replace(')','')
+            #decayStep.replace('|','')
             for particle in prettySMParticle:
                 if particle in decayStep: decay = decay + particle + ' '
         decay = decay + lsp
         return self._latexDecay(decay)
+        
+    @property
+    def intermediateParticles(self):
+        """:returns: dictionary with intermadieted particles
+        
+        """
+        particles = []
+        decays = self._searchDecayDict()
+        if isinstance(decays,str): decays = [decays]
+        for decay in decays:
+            decay = decay.split('-->')
+            decay = decay[1:-1]
+            if not decay: continue
+            for expression in decay:
+                expression = expression.replace('(','')
+                expression = expression.replace(')','')
+                expression = expression.replace('|','')
+                expression = expression.replace('lsp','')
+                [particles.append(particle.strip()) for particle in expression.split(' ')]
+        if not particles: return
+        interParticles = []
+        for particle in particles:
+            for sparticle in prettySUSYParticle:
+                if sparticle in particle and not particle in interParticles: 
+                    interParticles.append(particle)
+        return interParticles
+        
+                
             
         
         
@@ -339,6 +367,7 @@ decays = {
     'T6ttHH': 'stop  --> top higgs lsp ',
     'T6ttzz': 'stop_2  --> z (stop_1 --> top lsp ) ',
     'T6bbWW':'stop  --> bottom (chargino^p --> w lsp )',
+    'T6bbWWoff':'stop  --> bottom (chargino^p --> w lsp )',
     'T6bbZZ':'sbottom  -->  bottom (neutralino_2 --> z lsp )',
     'T7btW':'gluino  --> bottom top w lsp ',
     'T7btbtWW':'gluino  --> bottom (sbottom --> top (chargino^pm --> w lsp ))',
