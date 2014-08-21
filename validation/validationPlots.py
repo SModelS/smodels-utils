@@ -190,6 +190,7 @@ def main():
         title2.SetTextSize(0.03)
         title2.Draw()
     
+    #ans = raw_input("Hit any key to close\n")
     c.Print("./plots/%s" %metadata['outFile'][0].strip())
 
 def getTarget(path):
