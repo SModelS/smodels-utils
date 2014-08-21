@@ -328,6 +328,10 @@ class Browser(object):
             runs = [key for key in self.database if analysis in \
             self.database[key] and self.allTopologies(run = key) and topology \
             in self.allTopologies(run = key)]
+            if not runs:
+                logger.warning('Could not find run for %s-%s!' \
+                %(analysis, topology))
+                return None
             if len(runs) == 1:
                 return runs[0]
             logger.error('%s appears in %s runs! Returnvalue will be first hit!\n \
@@ -521,7 +525,7 @@ class Browser(object):
         if not run:
             run = self.allRuns(analysis, topology)
             
-        if not analysis or not topology or not topology in \
+        if not analysis or not topology or not run or not topology in \
         self.allTopologies(run, analysis):
             logger.error('There is no experimental result for \n\
             run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
