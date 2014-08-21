@@ -51,6 +51,7 @@ def readFile(fileName):
     lines = f.readlines()
     values = []
     for line in lines:
+        if 'https' in line: continue
         line = [l for l in line.split()]
         i = 1
         if 'GeV' in line[1]: i = 2
