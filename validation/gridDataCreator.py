@@ -260,6 +260,8 @@ def main():
     outFile = open(f, 'w')
     count = 0
     slhaPath = '../slha/%s_%s_%s_slhas' %(topology, events, order)
+    logger.info('Take slha-files from %s.' %slhaPath)
+    print('Take slha-files from %s.' %slhaPath) 
     if not os.path.exists(slhaPath):
         logger.error('There are no slha-files for %s with %s events and order %s! \n \
         Run slhaCreator.py first: ./slhaCreator.py -h!' %(topology, events, order))
@@ -267,7 +269,7 @@ def main():
     fileList =  os.listdir(slhaPath)
     slhaList = sorted(fileList, key = lambda slha: int(slha.split('_')[1]))
     for slha in slhaList:
-        data = GridData(topology, analysis, slhaPath + '/' + slha)
+        data = GridData(topologyName, analysis, slhaPath + '/' + slha)
         massMother = data.massMother
         massLSP = data.massLSP
         tUL = data.theoreticalUpperLimit
