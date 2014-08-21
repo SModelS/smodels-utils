@@ -110,6 +110,9 @@ def main():
             if not 'NLL' in fileName:
                 logger.error('Can not compare %s to LO' %order)
                 sys.exit()
+            if not checkFile(fileName.replace('NLL', 'LO')):
+                logger.error('No LO-grid was found!' %order)
+                sys.exit()
             fileRefName = fileName.replace('NLL', 'LO')
             motherRefM = readGrid(fileRefName, targetPath)[0]
             lspRefM = readGrid(fileRefName, targetPath)[1]
