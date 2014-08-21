@@ -85,7 +85,7 @@ class SlhaFiles(object):
             firstLoop = True
             for lspMass in self.lspMasses:
                 if lspMass > motherMass + self.d: continue
-                if self.topo.name = 'TChiWZoff':
+                if self.topo.name == 'TChiWZoff':
                     if lspMass - motherMass < -100: continue
                 fileName = self.topo.name + '_' + str(int(motherMass)) + \
                 '_' + str(int(lspMass)) + '_' + self._order + '.slha'
