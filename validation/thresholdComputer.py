@@ -169,7 +169,7 @@ class Threshold(object):
         dDefoult = 0
         if self.topo.name == 'T1tttt' or self.topo.name == 'T2tt':
             dDefoult = -200
-        if self.topo.name == 'TCiWZon' or self.topo.name == 'TChiWZ':
+        if self.topo.name == 'TChiWZon' or self.topo.name == 'TChiWZ':
             dDefoult = -100
         if dMax > dDefoult: dMax = dDefoult  
         return dMax
@@ -192,7 +192,7 @@ class Threshold(object):
         return massList
 
 def main():
-    threshold = Threshold('TChiWZ',Browser('../../smodels-database'))
+    threshold = Threshold('TChiWZon',Browser('../../smodels-database'))
     print('motherMasse: %s' %threshold.motherMasses)
     print('lspMasse: %s' %threshold.lspMasses)
     print('minLSB: %s maxLSB %s' %(min(threshold.lspMasses), max(threshold.lspMasses)))
