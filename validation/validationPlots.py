@@ -66,8 +66,6 @@ def main():
     targetPath = getTarget(args.directory)
     events = args.events
     order = args.order
-    if order == 'NLO':
-        order = 'LO'
     expRes = browser.expResult(analysis, topology)
     expRes = browser.expResult(analysis, topology)
     if not expRes:
@@ -96,13 +94,13 @@ def main():
     factor = ''
     if metadata['factor'][0]:
         factor = ' * %s' %metadata['factor'][0]
-    print ("========================================================")
+  
     for i, des in enumerate(description):
-        if i = 3:
-            print(i, des, factor)
+        if i == 3:
+            logger.info('Index %s holds %s%s.' %(i, des, factor))
         else:
-            print(i, des)
-    print ("========================================================")
+            logger.info('Index %s holds %s.' %(i, des))
+
     maxR = 1.0
     if factor:
         maxR = 1.0/eval(metadata['factor'][0])
@@ -197,13 +195,14 @@ def main():
         title2.SetTextSize(0.03)
         title2.Draw()
         title3 = ROOT.TLatex(xPosition, yPosition - offset3, \
-        '#sqrt{s} = %s, order = %s' %(description[2], description[3], factor))
+        '#sqrt{s} = %s, order = %s%s' %(description[2], description[3], factor))
         title3.SetTextSize(0.03)
         title3.Draw()
     else:
         title2 = ROOT.TLatex(xPosition, yPosition - offset2, \
         '%s %s, #sqrt{s} = %s, order = %s%s' %(description[0], \
-        description[1].replace('\\', '#'), description[2], description[3], factor))
+        description[1].replace('\\', '#'), description[2], description[3], \
+        factor))
         title2.SetTextSize(0.03)
         title2.Draw()
     

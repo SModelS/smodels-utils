@@ -37,7 +37,7 @@ def getMetadata(filename,tags):
     infile.close()
     return metadata
   
-def getData(fileName, Rmax = 1., condmax = 0.001):
+def getData(fileName, maxR = 1., condmax = 0.001):
     infile = open(fileName,'r')
     data = infile.read()
     points = data[:data.find('#END') - 1].split('\n')
@@ -61,7 +61,7 @@ def getData(fileName, Rmax = 1., condmax = 0.001):
             mLSP = float(eval(mLSP))
             notTested.SetPoint(notTested.GetN(),mM,mLSP)
             continue
-        R = float(eval(tUL)) / float(eval(eUL))
+        r = float(eval(tUL)) / float(eval(eUL))
         if eval(tUL) < 0.: continue
         if cond == 'None': cond = '0.'
         mM = eval(mM)
@@ -75,14 +75,14 @@ def getData(fileName, Rmax = 1., condmax = 0.001):
         theoreticalUpperLimit.append(tUL)
         condition.append(cond)
         if cond > condmax: conditionViolated.SetPoint(conditionViolated.GetN(),mM,mLSP)
-        if R < 0.:
+        if r < 0.:
             notTested.SetPoint(notTested.GetN(),mM,mLSP)
-        elif R >= Rmax:
+        elif r >= maxR:
             excluded.SetPoint(excluded.GetN(),mM,mLSP)
-        elif R < Rmax:
+        elif r < maxR:
             allowed.SetPoint(allowed.GetN(),mM,mLSP)
         else:
-            logger.error('Unknown R value: %s' %R)
+            logger.error('Unknown r value: %s' %r)
             sys.exit()
       
     infile.close()

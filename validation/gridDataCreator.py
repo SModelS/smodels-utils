@@ -243,9 +243,10 @@ def main():
     events = args.events
     factor = False
     order = args.order
+    slhaOrder = order
     if order == 'NLO':
         factor = True
-        order = 'LO'
+        slhaOrder = 'LO'
     expRes = browser.expResult(analysis, topology)
     if not expRes:
         expRes = browser.expResult(analysis, topologyName)
@@ -263,11 +264,11 @@ def main():
     f = checkFile(targetPath + '/' + fileName)
     outFile = open(f, 'w')
     count = 0
-    slhaPath = '../slha/%s_%s_%s_slhas' %(topology, events, order)
+    slhaPath = '../slha/%s_%s_%s_slhas' %(topology, events, slhaOrder)
     logger.info('Take slha-files from %s.' %slhaPath)
     if not os.path.exists(slhaPath):
         logger.error('There are no slha-files for %s with %s events and order %s! \n \
-        Run slhaCreator.py first: ./slhaCreator.py -h!' %(topology, events, order))
+        Run slhaCreator.py first: ./slhaCreator.py -h!' %(topology, events, slhaOrder))
         sys.exit()
     fileList =  os.listdir(slhaPath)
     slhaList = sorted(fileList, key = lambda slha: int(slha.split('_')[1]))
@@ -288,7 +289,7 @@ def main():
         %(massMother, massLSP, tUL, eUL, cond), file = outFile)
         count += 1
     print('#END', file = outFile)
-    metaData = writeMetaData(expRes, args.order, fileName, factor)
+    metaData = writeMetaData(expRes, slhaOrder, fileName, factor)
     for key in metaData:
         print(key, metaData[key], file = outFile)
     print ('Worte %s lines of grid data to file %s!' %(count, fileName))
