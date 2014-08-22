@@ -665,7 +665,8 @@
 450.0  350.0  16.9511874017  657.845549919 0.0
 450.0  220.0  16.9511874017  99.3555211824 0.0
 #END
-outFile: TChiWZon-ATLAS_CONF_2013_035-10000-LO.png
+outFile: TChiWZon-ATLAS_CONF_2013_035-10000-NLO.png
 analysis: ATLAS-CONF-2013-035, ATLAS trilepton weakinos, 8.0 TeV, LO
 decay: #chi^{#pm} #chi^{0}_{2}  #rightarrow WZ#tilde{#chi}^{0}_{1}#tilde{#chi}^{0}_{1}
 rootTag: exclusion_TChiWZ: 
+factor 1.2
