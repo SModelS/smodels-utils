@@ -57,7 +57,7 @@ class Threshold(object):
         #for a in random.sample(set(self.topo.analyses), 4):
         analyses = self.topo.analyses
         logger.info('Computing mass thresholds for topology %s using analyses: \n \
-        %s' %(self.topo, analyses))
+        %s' %(self.topo.name, analyses))
         for a in analyses:
             if self._browser.expAnalysis(a).sqrts != 8.0:
                 continue
@@ -123,7 +123,16 @@ class Threshold(object):
         for particleDict in self.thresholds[particle]:
             if int(particleDict['max']) > int(maxM):
                 maxM = particleDict['max']
+        if particle == 'mother' and self.topo.name == 'TChiWZoff':
+            maxM = 250
+        if particle == 'lsp' and self.topo.name == 'TChiWZoff':
+            maxM = 200
         return maxM
+        if particle == 'mother' and self.topo.name == 'TChiWZon':
+            maxM = 400
+        if particle == 'lsp' and self.topo.name == 'TChiWZon':
+            maxM = 300
+        return maxMass
         
     def _minMass(self, particle):
         """Derives the minimal mass for given particle.
@@ -155,8 +164,8 @@ class Threshold(object):
             if int(particleDict['step']) < int(minStep):
                 minStep = particleDict['step']
         if minStep < 12.5: minStep = 12.5
-        if self.topo.name == 'T1tttt' or self.topo.name == 'TChiWZ':
-            minStep = 25.
+        if self.topo.name == 'T1tttt': minStep = 25.
+        if 'TChiWZ' in self.topo.name: minStep = 10
         return minStep
     
     def _maxDelta(self):
@@ -193,7 +202,7 @@ class Threshold(object):
         return massList
 
 def main():
-    threshold = Threshold('TChiWZon',Browser('../../smodels-database'))
+    threshold = Threshold('TChiWZoff',Browser('../../smodels-database'))
     print('motherMasse: %s' %threshold.motherMasses)
     print('lspMasse: %s' %threshold.lspMasses)
     print('minLSB: %s maxLSB %s' %(min(threshold.lspMasses), max(threshold.lspMasses)))
