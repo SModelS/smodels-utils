@@ -92,7 +92,7 @@ def main():
     metadata = validationPlotsHelper.getMetadata(f, tags)
     description = metadata['analysis'][0].split(',')
     factor = ''
-    if metadata['factor'][0]:
+    if metadata['factor']:
         factor = ' * %s' %metadata['factor'][0]
   
     for i, des in enumerate(description):
@@ -131,7 +131,8 @@ def main():
     multi = ROOT.TMultiGraph()
     multi.Add(excluded, 'P')
     multi.Add(allowed, 'P')
-    multi.Add(notTested, 'P')
+    if notTested.GetN():
+        multi.Add(notTested, 'P')
     multi.Add(exclusionLine, 'L')
     multi.Add(officialExclusionLine, 'L')
     
@@ -161,13 +162,20 @@ def main():
     #title = ROOT.TLatex(0, 1100, "#splitline{%s}{#splitline{analysis = %s,  #sqrt{s} = %s}{order = %s}}" %(description[0], description[1], description[2], description[3]))
     #title.SetTextSize(0.03)
     motherMinExcluded = ROOT.TMath.MinElement(excluded.GetN(), excluded.GetX())
-    motherMinNotTested = ROOT.TMath.MinElement(notTested.GetN(), notTested.GetX())
+    print(notTested.GetN(), notTested.GetX())
+    try:
+        motherMinNotTested = ROOT.TMath.MinElement(notTested.GetN(), notTested.GetX())
+    except TypeError:
+       motherMinNotTested =  motherMinExcluded
     motherMinAllowed = ROOT.TMath.MinElement(allowed.GetN(), allowed.GetX())
     
     xPosition = min([motherMinExcluded, motherMinAllowed, motherMinNotTested])
     
     lspMaxExcluded = ROOT.TMath.MaxElement(excluded.GetN(), excluded.GetY())
-    lspMaxNotTested = ROOT.TMath.MaxElement(notTested.GetN(), notTested.GetY())
+    try:
+        lspMaxNotTested = ROOT.TMath.MaxElement(notTested.GetN(), notTested.GetY())
+    except TypeError:
+        lspMaxNotTested = lspMaxExcluded
     lspMaxAllowed = ROOT.TMath.MaxElement(allowed.GetN(), allowed.GetY())
     
     yPosition = max([lspMaxExcluded, lspMaxAllowed, lspMaxNotTested])
