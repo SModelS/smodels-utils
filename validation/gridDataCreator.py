@@ -241,7 +241,11 @@ def main():
     analysis = args.analysis
     targetPath = getTarget(args.directory)
     events = args.events
+    factor = False
     order = args.order
+    if order == 'NLO':
+        factor = True
+        order = 'LO'
     expRes = browser.expResult(analysis, topology)
     if not expRes:
         expRes = browser.expResult(analysis, topologyName)
@@ -284,13 +288,13 @@ def main():
         %(massMother, massLSP, tUL, eUL, cond), file = outFile)
         count += 1
     print('#END', file = outFile)
-    metaData = writeMetaData(expRes, args.order, fileName)
+    metaData = writeMetaData(expRes, args.order, fileName, factor)
     for key in metaData:
         print(key, metaData[key], file = outFile)
     print ('Worte %s lines of grid data to file %s!' %(count, fileName))
     outFile.close()    
 
-def writeMetaData(expRes, order, fileName):
+def writeMetaData(expRes, order, fileName, factor):
     """Writes all the meta data (e.g. root tag, name of output-file, ...)
     :returns: dictionary
     
@@ -315,6 +319,8 @@ def writeMetaData(expRes, order, fileName):
     if expAna.publishedData or expAna.isPublished:
         official = 'official exclusion line'
     metaData['rootTag:'] = '%s: %s' %(exclName, official)
+    if factor:
+        metaData['factor'] = 1.2
     return metaData
    
 
