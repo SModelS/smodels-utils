@@ -37,8 +37,8 @@ def getMetadata(filename,tags):
     infile.close()
     return metadata
   
-def getData(fname, Rmax = 1., condmax = 0.001):
-    infile = open(fname,'r')
+def getData(fileName, Rmax = 1., condmax = 0.001):
+    infile = open(fileName,'r')
     data = infile.read()
     points = data[:data.find('#END') - 1].split('\n')
     notTested = TGraph()

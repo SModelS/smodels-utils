@@ -52,10 +52,6 @@ def main():
     argparser.add_argument ('-n', '--events',\
     help = 'set number of events - default: 10000', \
     type = types.IntType, default = 10000)
-    argparser.add_argument ('-R', '--maxR',\
-    help = 'set value for maximal R \
-    (quotient of theoretical to experimental upper limit) - default: 1.0', \
-    type = types.FloatType, default = 1.)
     args = argparser.parse_args()
 
     browser = Browser(args.Base)
@@ -100,9 +96,17 @@ def main():
     factor = ''
     if metadata['factor'][0]:
         factor = ' * %s' %metadata['factor'][0]
-    for i, des in enumerate(description): 
-        print(i, des)
-    results = validationPlotsHelper.getData(f, Rmax = args.maxR)
+    print ("========================================================")
+    for i, des in enumerate(description):
+        if i = 3:
+            print(i, des, factor)
+        else:
+            print(i, des)
+    print ("========================================================")
+    maxR = 1.0
+    if factor:
+        maxR = 1.0/eval(metadata['factor'][0])
+    results = validationPlotsHelper.getData(f, maxR = maxR)
     motherM = results['massMother']
     lspM = results['massLSP']
     tUL = results['theoreticalUpperLimit']
@@ -193,7 +197,7 @@ def main():
         title2.SetTextSize(0.03)
         title2.Draw()
         title3 = ROOT.TLatex(xPosition, yPosition - offset3, \
-        '#sqrt{s} = %s, order = %s' %(description[2], description[3]))
+        '#sqrt{s} = %s, order = %s' %(description[2], description[3], factor))
         title3.SetTextSize(0.03)
         title3.Draw()
     else:
