@@ -70,6 +70,8 @@ def main():
     targetPath = getTarget(args.directory)
     events = args.events
     order = args.order
+    if order == 'NLO':
+        order = 'LO'
     expRes = browser.expResult(analysis, topology)
     expRes = browser.expResult(analysis, topology)
     if not expRes:
@@ -78,7 +80,7 @@ def main():
     expTopo = expRes.expTopology
     
     #Define metadata tags:
-    tags = ['decay', 'analysis', 'outFile','Kfactor','rootTag']
+    tags = ['decay', 'analysis', 'outFile','factor','rootTag']
     
     #Get the grid data file:
     fileName = '%s-%s-%s-%s.dat' %(topology, analysis, events, order)
@@ -95,6 +97,9 @@ def main():
     #Get all the values and TGraphs:
     metadata = validationPlotsHelper.getMetadata(f, tags)
     description = metadata['analysis'][0].split(',')
+    factor = ''
+    if metadata['factor'][0]:
+        factor = ' * %s' %metadata['factor'][0]
     for i, des in enumerate(description): 
         print(i, des)
     results = validationPlotsHelper.getData(f, Rmax = args.maxR)
@@ -193,8 +198,8 @@ def main():
         title3.Draw()
     else:
         title2 = ROOT.TLatex(xPosition, yPosition - offset2, \
-        '%s %s, #sqrt{s} = %s, order = %s' %(description[0], \
-        description[1].replace('\\', '#'), description[2], description[3]))
+        '%s %s, #sqrt{s} = %s, order = %s%s' %(description[0], \
+        description[1].replace('\\', '#'), description[2], description[3], factor))
         title2.SetTextSize(0.03)
         title2.Draw()
     
