@@ -141,6 +141,8 @@ class Threshold(object):
             if minM < 200: minM = 200#
         if particle == 'mother' and self.topo.name == 'T1':
             if minM < 200: minM = 200
+        if particle == 'mother' and self.topo.name == 'T2bb':
+            if minM < 100: minM = 100
         return minM
         
     def _stepWidth(self, particle):
