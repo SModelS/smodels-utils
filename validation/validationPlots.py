@@ -192,6 +192,11 @@ def main():
         offset = 50
         offset2 = 100
         offset3 = 150
+        
+    if 'off' in topology:
+        offset = 10
+        offset2 = 25
+        offset3 = 40
     
     title = ROOT.TLatex(xPosition, yPosition - offset, '%s: %s' %(topology, metadata['decay'][0]))
     title.SetTextSize(0.05)
