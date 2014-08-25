@@ -180,38 +180,39 @@ BLOCK MSOFT Q=  2.90528802E+02  # The soft SUSY breaking masses at the scale Q
 
 # DECAY TABLE
 #         PDG            Width
-DECAY   1000001     0.00000000E+00   # sdown_L decays
-DECAY   2000001     0.00000000E+00   # sdown_R decays
-DECAY   1000002     0.00000000E+00   # sup_L decays
-DECAY   2000002     0.00000000E+00   # sup_R decays
-DECAY   1000003     0.00000000E+00   # sstrange_L decays
-DECAY   2000003     0.00000000E+00   # sstrange_R decays
-DECAY   1000004     0.00000000E+00   # scharm_L decays
-DECAY   2000004     0.00000000E+00   # scharm_R decays
-DECAY   1000005     0.00000000E+00   # sbottom1 decays
-DECAY   2000005     0.00000000E+00   # sbottom2 decays
-DECAY   1000006     0.00000000E+00   # stop1 decays
-DECAY   2000006     0.00000000E+00   # stop2 decays
-DECAY   1000011     0.00000000E+00   # selectron_L decays
-DECAY   2000011     0.00000000E+00   # selectron_R decays
-DECAY   1000012     0.00000000E+00   # snu_elL decays
-DECAY   1000013     0.00000000E+00   # smuon_L decays
-DECAY   2000013     0.00000000E+00   # smuon_R decays
-DECAY   1000014     0.00000000E+00   # snu_muL decays
-DECAY   1000015     0.00000000E+00   # stau_1 decays
-DECAY   2000015     0.00000000E+00   # stau_2 decays
-DECAY   1000016     0.00000000E+00   # snu_tauL decays
-DECAY   1000021     0.00000000E+00   # gluino decays
-DECAY   1000022     0.00000000E+00   # neutralino1 decays
+DECAY   1000001     -1   # sdown_L decays
+DECAY   2000001     -1   # sdown_R decays
+DECAY   1000002     -1  # sup_L decays
+DECAY   2000002     -1   # sup_R decays
+DECAY   1000003     -1   # sstrange_L decays
+DECAY   2000003     -1   # sstrange_R decays
+DECAY   1000004     -1   # scharm_L decays
+DECAY   2000004     -1   # scharm_R decays
+DECAY   1000005     -1   # sbottom1 decays
+DECAY   2000005     -1   # sbottom2 decays
+DECAY   1000006     -1   # stop1 decays
+DECAY   2000006     -1   # stop2 decays
+DECAY   1000011     -1   # selectron_L decays
+DECAY   2000011     -1   # selectron_R decays
+DECAY   1000012     -1   # snu_elL decays
+DECAY   1000013     -1   # smuon_L decays
+DECAY   2000013     -1   # smuon_R decays
+DECAY   1000014     -1   # snu_muL decays
+DECAY   1000015     -1   # stau_1 decays
+DECAY   2000015     -1   # stau_2 decays
+DECAY   1000016     -1   # snu_tauL decays
+DECAY   1000021     -1  # gluino decays
+DECAY   1000022     -1   # neutralino1 decays
 DECAY   1000023     0.10000000E+00   # neutralino2 decays
 #           BR         NDA      ID1       ID2       ID3
      1.00000000E+00    2    23    1000022
 DECAY   1000024     0.10000000E+00   # chargino1+ decays
 #           BR         NDA      ID1       ID2       ID3
      1.00000000E+00    2    24    1000022
-DECAY   1000025     0.00000000E+00   # neutralino3 decays
-DECAY   1000035     0.00000000E+00   # neutralino4 decays
-DECAY   1000037     0.00000000E+00   # chargino2+ decays
+DECAY   1000025     -1   # neutralino3 decays
+DECAY   1000035     -1   # neutralino4 decays
+DECAY   1000037     -1   # chargino2+ decays
+#
 XSECTION  8000.0 2212 2212 2 -1000024 1000024   # Nevts: 10000
 XSECTION  8000.0 2212 2212 2 -1000024 1000024   # Nevts: 10000
 0  0  0  0  0  0  26.4192501669 SModelS 1.0
