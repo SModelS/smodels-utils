@@ -1,427 +1,366 @@
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 400 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [1.86, 1.06]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [1.86, 1.06]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.86, 1.06]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 400 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [1.85, 1.06]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [1.85, 1.06]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 425.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [1.88, 1.06]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [1.88, 1.06]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.88, 1.06]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 425.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [1.87, 1.06]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [1.87, 1.06]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 450.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [1.91, 1.06]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [1.91, 1.06]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.9100000000001969, 1.0600000000000822]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 450.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [1.89, 1.06]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [1.89, 1.06]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 475.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [1.93, 1.06]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [1.93, 1.06]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.9299999999999271, 1.0600000000000822]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 475.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [1.9, 1.06]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [1.9, 1.06]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 500.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [1.95, 1.06]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [1.95, 1.06]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.9500000000005573, 1.0600000000000822]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 500.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [1.92, 1.06]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [1.92, 1.06]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 525.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [1.97, 1.06]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [1.97, 1.06]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.9699999999996698, 1.0600000000000822]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 525.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [1.94, 1.06]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [1.94, 1.06]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 550.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [1.99, 1.06]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [1.99, 1.06]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.9900000000002938, 1.0600000000000822]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 550.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [1.96, 1.07]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [1.96, 1.07]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 575.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.01, 1.07]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.01, 1.07]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [2.010000000000324, 1.0700000000000935]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 575.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [1.98, 1.07]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [1.98, 1.07]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 600.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.03, 1.07]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.03, 1.07]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [2.0300000000000504, 1.0700000000000935]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 600.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.0, 1.07]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.0, 1.07]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 625.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.05, 1.07]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.06, 1.07]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.0700000000000935]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 625.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.01, 1.07]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.01, 1.07]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 650.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.07, 1.07]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.08, 1.07]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.0700000000000935]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 650.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.02, 1.07]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.02, 1.07]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 675.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.09, 1.08]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.1, 1.08]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.0800000000000969]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 675.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.03, 1.07]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.03, 1.07]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 700.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.1, 1.08]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.12, 1.08]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.0800000000000969]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 700.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.04, 1.08]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.04, 1.08]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 725.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.12, 1.08]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.13, 1.08]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.0800000000000969]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 725.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.05, 1.08]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.05, 1.08]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 750.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.14, 1.08]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.15, 1.08]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.0800000000000969]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 750.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.07, 1.08]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.07, 1.08]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 775.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.16, 1.09]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.17, 1.09]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.0900000000001189]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 775.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.08, 1.08]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.08, 1.08]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 800.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.18, 1.09]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.19, 1.09]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.0900000000001189]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 800.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.1, 1.09]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.1, 1.09]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 825.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.21, 1.09]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.21, 1.09]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [2.2100000000005737, 1.0900000000001189]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 825.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.11, 1.09]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.11, 1.09]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 850.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.23, 1.09]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.24, 1.09]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.0900000000001189]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 850.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.12, 1.09]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.12, 1.09]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 875.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.25, 1.09]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.26, 1.09]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.0900000000001189]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 875.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.13, 1.09]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.13, 1.09]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 900.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.28, 1.09]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.29, 1.1]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.0]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 900.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.15, 1.09]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.15, 1.09]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 925.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.3, 1.1]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.31, 1.1]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1000000000001302]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 925.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.16, 1.09]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.16, 1.09]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 950.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.33, 1.1]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.33, 1.1]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [2.3300000000007244, 1.1000000000001302]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 950.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.17, 1.1]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.17, 1.1]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 975.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.35, 1.1]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.36, 1.1]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1000000000001302]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 975.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.19, 1.1]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.19, 1.1]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1000.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.38, 1.1]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.38, 1.11]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [2.3799999999998671, 1.0]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1000.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.2, 1.1]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.2, 1.1]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1025.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.4, 1.11]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.41, 1.11]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.110000000000444]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1025.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.21, 1.1]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.21, 1.1]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1050.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.43, 1.11]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.44, 1.11]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.110000000000444]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1050.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.23, 1.1]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.23, 1.1]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1075.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.46, 1.11]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.47, 1.11]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.110000000000444]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1075.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.24, 1.1]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.24, 1.1]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1100.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.49, 1.11]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.5, 1.11]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.110000000000444]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1100.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.25, 1.1]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.25, 1.1]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1125.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.52, 1.12]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.53, 1.12]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1199999999998485]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1125.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.27, 1.11]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.27, 1.11]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1150.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.55, 1.12]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.56, 1.12]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1199999999998485]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1150.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.29, 1.11]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.29, 1.11]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1175.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.59, 1.12]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.6, 1.12]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1199999999998485]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1175.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.3, 1.11]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.3, 1.11]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1200.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.63, 1.13]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.63, 1.13]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [2.6300000000004742, 1.1300000000001671]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1200.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.32, 1.12]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.32, 1.12]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1225.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.66, 1.13]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.67, 1.13]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1300000000001671]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1225.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.34, 1.12]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.34, 1.12]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1250.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.69, 1.13]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.71, 1.13]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1300000000001671]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1250.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.36, 1.12]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.36, 1.12]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1275.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.73, 1.13]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.76, 1.13]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1300000000001671]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1275.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.38, 1.13]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.38, 1.13]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1300.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.76, 1.14]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.8, 1.14]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1400000000004806]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1300.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.4, 1.13]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.4, 1.13]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1325.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.81, 1.14]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.84, 1.14]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1400000000004806]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1325.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.42, 1.13]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.42, 1.13]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1350.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.85, 1.14]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.88, 1.14]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1400000000004806]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1350.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.44, 1.13]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.44, 1.13]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1375.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.9, 1.15]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.93, 1.15]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1500000000001833]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1375.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.47, 1.13]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.47, 1.13]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1400.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.95, 1.15]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [2.97, 1.15]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1500000000001833]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1400.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.49, 1.14]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.49, 1.14]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1425.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.0, 1.16]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.02, 1.16]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.160000000000202]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1425.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.51, 1.14]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.51, 1.14]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1450.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.05, 1.16]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.08, 1.16]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.160000000000202]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1450.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.54, 1.14]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.54, 1.14]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1475.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.11, 1.16]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.14, 1.16]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.160000000000202]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1475.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.56, 1.15]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.56, 1.15]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1500.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.16, 1.17]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.2, 1.17]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1700000000002102]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1500.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.59, 1.15]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.59, 1.15]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1525.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.22, 1.17]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.26, 1.17]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1700000000002102]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1525.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.62, 1.15]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.62, 1.15]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1550.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.29, 1.18]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.32, 1.18]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.180000000000222]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1550.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.65, 1.16]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.65, 1.16]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1575.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.35, 1.18]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.39, 1.18]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.180000000000222]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1575.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.67, 1.16]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.67, 1.16]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1600.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.42, 1.19]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.46, 1.19]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1899999999999336]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1600.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.7, 1.16]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.7, 1.16]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1625.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.48, 1.19]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.52, 1.19]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.1899999999999336]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1625.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.73, 1.17]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.73, 1.17]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1650.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.55, 1.2]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.59, 1.2]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.2000000000002504]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1650.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.76, 1.17]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.76, 1.17]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1675.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.62, 1.2]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.66, 1.2]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.2000000000002504]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1675.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.79, 1.17]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.79, 1.17]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1700.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.7, 1.21]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.74, 1.21]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.2100000000002586]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1700.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.82, 1.18]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.82, 1.18]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1725.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.78, 1.21]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.82, 1.21]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.2100000000002586]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1725.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.85, 1.18]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.85, 1.18]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1750.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.86, 1.22]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.91, 1.22]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.2200000000002789]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1750.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.89, 1.19]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.89, 1.19]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1775.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [3.94, 1.22]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [4.0, 1.22]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.2200000000002789]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1775.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.93, 1.19]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.93, 1.19]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1800.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [4.03, 1.23]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [4.09, 1.23]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.2300000000002889]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1800.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [2.96, 1.19]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [2.96, 1.19]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1825.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [4.12, 1.24]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [4.18, 1.24]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.2400000000002989]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1825.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [3.0, 1.2]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [3.0, 1.2]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1850.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [4.21, 1.24]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [4.28, 1.24]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.2400000000002989]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1850.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [3.03, 1.2]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [3.03, 1.2]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1875.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [4.3, 1.25]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [4.39, 1.25]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.250000000000314]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1875.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [3.07, 1.21]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [3.07, 1.21]
 ------------- new call ------------
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq)
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> masses: gluino: 1900.0 squark: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> xmasses: 100000.0
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [4.41, 1.26]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> kfacs: [4.5, 1.26]
-getKfactorsFor((1000021, 1000021), 8.0, temp.slah, cteq) -> 2) returning kFacs: [1.0, 1.26000000000002]
+(line 55) getKfactorsFor((1000021, 1000021), 8.0, temp.slah)
+(line 90) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> masses: gluino: 1900.0 squark: 100000.0
+(line 142) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> decoupled squarkmass: 100000.0
+(line 151) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> getDecoupledKfactors: [3.11, 1.21]
+(line 157) getKfactorsFor((1000021, 1000021), 8.0, temp.slah) -> 2) returning Kfactors: [3.11, 1.21]
