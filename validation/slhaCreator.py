@@ -126,10 +126,13 @@ class SlhaFiles(object):
     def _delXsecFromFile(self):
         
         slhaFile = open(self._tempSlhaName,'r')
+        xsecBlock = False
         lines = slhaFile.readlines()
         for i in range(0, len(lines) - 1):
-            if 'XSECTION' in lines[i]: break
-        lines = lines[:i+1]
+            if 'XSECTION' in lines[i]:
+                xsecBlock = True
+                break
+        if xsecBlock: lines = lines[:i+1]
         slhaFile.close()
         
         slhaFile = open(self._tempSlhaName,'w')
