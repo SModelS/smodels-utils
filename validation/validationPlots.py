@@ -74,7 +74,7 @@ def main():
     expTopo = expRes.expTopology
     
     #Define metadata tags:
-    tags = ['decay', 'analysis', 'outFile','factor','rootTag']
+    tags = ['decay', 'analysis', 'outFile','factor','rootTag', 'intermediate']
     
     #Get the grid data file:
     fileName = '%s-%s-%s-%s.dat' %(topology, analysis, events, order)
@@ -90,6 +90,11 @@ def main():
     
     #Get all the values and TGraphs:
     metadata = validationPlotsHelper.getMetadata(f, tags)
+    intermediate = None
+    if 'intermediate' in metadata:
+        intermediate = metadata['intermediate'][0].split(',')
+        condition = intermediate[0]
+        value = intermediate[1]
     description = metadata['analysis'][0].split(',')
     factor = ''
     if metadata['factor']:
@@ -113,7 +118,14 @@ def main():
     allowed = results['allowed']
     notTested = results['notTested']
     exclusionLine = validationPlotsHelper.getEnvelope(excluded)
-    officialExclusionLine = expRes.exclusionLine()
+    if not intermediate:
+        officialExclusionLine = expRes.exclusionLine()
+    else:
+        # ### FIX ME: get valueAbove and valueBelow from expRes.axes!
+        officialExclusionLineAbove = expRes.selectExclusionLine(condition,\
+        valueAbove)
+        officialExclusionLineBelow = expRes.selectExclusionLine(condition,\
+        valueBelow)
     
     #Set the options for the TGraphs:
     excluded.SetMarkerStyle(10)

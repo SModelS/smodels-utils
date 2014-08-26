@@ -221,6 +221,9 @@ def main():
     argparser.add_argument ('-d', '--directory', \
     help = 'directory the data file should be stored in - default: ./gridData', \
     type = types.StringType, default = './gridData')
+    argparser.add_argument ('-i', '--intermediate', \
+    help = 'condition and value for intermediate particle - default: xvalue, 050' \
+    type = types.StringType, default = 'xvalue, 050')
     argparser.add_argument ('-blog', '--browserVerbosity',\
     help = 'set browser-verbosity - default: ERROR', \
     type = types.StringType, default = 'error')
@@ -233,6 +236,16 @@ def main():
     browser = Browser(args.Base)
     browser.verbosity = args.browserVerbosity
     topology = args.topology
+    intermediate = args.intermediate.split(',')
+    intermediate = [i.strip() for i in intermediate]
+    if intermediate[0] == 'xvalue':
+        condition = ''
+    else:
+        condition = intermediate[0]
+    if intermediate[1] == '050':
+        value = ''
+    else:
+        value = intermediate[1]
     if topology[-2:] == 'on':
         topologyName = topology[:-2]
     #elif topology[-3:] == 'off':
@@ -260,11 +273,11 @@ def main():
     print('Store file in: ', targetPath)
     print ("========================================================")
     
-    fileName = '%s-%s-%s-%s.dat' %(topology, analysis, events, order)
+    fileName = '%s%s%s-%s-%s-%s.dat' %(topology, condition, value, analysis, events, order)
     f = checkFile(targetPath + '/' + fileName)
     outFile = open(f, 'w')
     count = 0
-    slhaPath = '../slha/%s_%s_%s_slhas' %(topology, events, slhaOrder)
+    slhaPath = '../slha/%s%s%s_%s_%s_slhas' %(topology, condition, value, events, slhaOrder)
     logger.info('Take slha-files from %s.' %slhaPath)
     if not os.path.exists(slhaPath):
         logger.error('There are no slha-files for %s with %s events and order %s! \n \
@@ -311,6 +324,7 @@ def writeMetaData(expRes, order, fileName, factor):
     if expAna.sqrts: sqrts = '%s TeV' %expAna.sqrts
     if expAna.pas: pas = expAna.pas
     metaData['decay:'] = '%s' %decay
+    metaData['intermediate'] = '%s, %s' %(condition, value)
     metaData['analysis:'] = '%s, %s, %s, %s' %(pas, prettyName, sqrts, order)
     metaData['outFile:'] = fileName.replace('.dat', '.png') 
     exclName = ''
