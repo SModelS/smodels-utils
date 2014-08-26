@@ -81,6 +81,7 @@ class SlhaFiles(object):
         self._condition = condition
         self._interValue = self._setInterValue(value)
         
+        
     def _setInterValue(self,value):
         """
         
@@ -228,11 +229,12 @@ class SlhaFiles(object):
         
         
             
-    def _setMass(self, motherMass, lspMass):
+    def _setMass(self, motherMass, lspMass, interMass = None):
         """Search for mass block in self._tempSlhaName and write the given 
         motherMass to all particles in ListOfPidCode and the LSPMass to LSP.
         :param motherMass: one mass for all particles in ListOfPidCode as float
         :param lspMass: mass of the LSP as float
+        :param interMass: mass of intermadiated particle
         :returns: list containing lines of slha file
         ### FIX ME no intermediated mass implemented yet
         
@@ -241,6 +243,7 @@ class SlhaFiles(object):
         slhaFile = open(self._tempSlhaName,'r')
         lines = slhaFile.readlines()
         listOfPidCode = self._getPidCodeOfMother()
+        listOfInterPid = self._listOfInterPid
         
         massBlock = False
         for i in range(0,len(lines)-1):
@@ -255,6 +258,12 @@ class SlhaFiles(object):
                     pidOfLsp = None
                     listOfLine[1] = lspMass
                     lines[i] = self._formatMassEntry(listOfLine)
+                if listOfInterPid and interMass:
+                    if listOfLine[0] in listOfInterPid:
+                        listOfInterPid.renove(listOfLine[0])
+                        listOfLine[1] = interMass
+                        lines[i] = self._formatMassEntry(listOfLine)
+                        
             if 'BLOCK MASS' in lines[i]: massBlock = True
         if not massBlock: 
             logger.error('No Mass block found in slha file')
@@ -263,6 +272,10 @@ class SlhaFiles(object):
             logger.error('PID Codes: %s not found in Mass block of slha file' \
             %listOfPidCode)
             sys.exit()
+        if listOfInterPid:
+            logger.error('PID Codes: %s not found in Mass block of slha file' \
+            %listOfInterPid)
+            sys.exit()            
         if pidOfLsp:
             logger.error('PID Code of LSP  not found in Mass block of slha file')
             sys.exit()
