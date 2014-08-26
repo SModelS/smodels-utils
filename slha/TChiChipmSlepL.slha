@@ -54,10 +54,10 @@ BLOCK MINPAR  # Input parameters - minimal models
 #
 BLOCK MASS  # Mass Spectrum
 # PDG code           mass       particle
-        25     1.00000000E+03
-        35     1.00000000E+03
-        36     1.00000000E+03
-        37     1.00000000E+03
+        25     1.00000000E+05
+        35     1.00000000E+05
+        36     1.00000000E+05
+        37     1.00000000E+05
    1000001     1.00000000E+05   # ~d_L
    2000001     1.00000000E+05   # ~d_R
    1000002     1.00000000E+05   # ~u_L
@@ -71,21 +71,21 @@ BLOCK MASS  # Mass Spectrum
    1000006     1.00000000E+05   # ~t_1
    2000006     1.10000000E+05   # ~t_2
    1000011     300.0         # ~e_L
-   2000011     1.00000000E+04   # ~e_R
+   2000011     1.00000000E+05   # ~e_R
    1000012     300.0         # ~nu_eL
    1000013     300.0         # ~mu_L
-   2000013     1.00000000E+04   # ~mu_R
+   2000013     1.00000000E+05   # ~mu_R
    1000014     300.0         # ~nu_muL
    1000015     300.0         # ~tau_1
-   2000015     1.00000000E+04   # ~tau_2
+   2000015     1.00000000E+05   # ~tau_2
    1000016     300.0         # ~nu_tauL
    1000021     1.00000000E+05   # ~g
    1000022     200.0           # ~chi_10
    1000023     400.0           # ~chi_20
-   1000025     1.00000000E+04   # ~chi_30
-   1000035     1.00000000E+04   # ~chi_40
+   1000025     1.00000000E+05   # ~chi_30
+   1000035     1.00000000E+05   # ~chi_40
    1000024     400.0           # ~chi_1+
-   1000037     1.00000000E+04   # ~chi_2+
+   1000037     1.00000000E+05   # ~chi_2+
 #
 BLOCK NMIX  # Neutralino Mixing Matrix
   1  1     9.79183656E-01   # N_11
@@ -208,7 +208,9 @@ DECAY   2000005     0.00000000E+00   # sbottom2 decays
 DECAY   1000011     1.00000000E+00   # selectron_L decays
 #          BR         NDA      ID1       ID2      
       1.0000000E+00    2      11         1000022   # BR(~selL -> e- N0)
-DECAY   2000011     0.00000000E+00   # selectron_R decays
+#
+DECAY   2000011    -1   # selectron_R decays
+#
 DECAY   1000013     1.00000000E+00   # smuon_L decays
 #          BR         NDA      ID1       ID2      
       1.0000000E+00    2       13        1000022   # BR(~smuL -> mu- N0)
@@ -217,7 +219,7 @@ DECAY   1000015     1.00000000E+00   # stau_1 decays
 #          BR         NDA      ID1       ID2       
       1.0000000E+00    2       15      1000022     # BR(~stauL -> tau- N0)
 
-DECAY   2000015     0.00000000E+00   # stau_2 decays
+DECAY   2000015    -1   # stau_2 decays
 
 #         PDG            Width
 DECAY   1000012     1.00000000E+00   # snu_elL decays
@@ -227,14 +229,14 @@ DECAY   1000012     1.00000000E+00   # snu_elL decays
 DECAY   1000014     1.00000000E+00   # snu_muL decays
 #          BR         NDA      ID1       ID2      
       1.0000000E+00    2       -14       1000022   # BR(~snuL_mu -> nubar_mu N0)
-
+#
 DECAY   1000016     1.00000000E+00   # snu_tauL decays
 #          BR         NDA      ID1       ID2      
       1.0000000E+00    2       -16       1000022   # BR(~snuL_taul -> nubar_tau N0)
-
-DECAY   1000021     0.00000000E+00   # gluino decays
+#
+DECAY   1000021    -1   # gluino decays
+#
 #         PDG            Width
-
 DECAY   1000024     0.10000000E+00   # chargino1+ decays
 #           BR         NDA      ID1       ID2 
       0.16666666E+00    2     -1000011     12        # BR(~chi_1+ -> selL+   nu_e)
