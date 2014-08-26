@@ -334,6 +334,8 @@ class ExpTopology(object):
 # -prefix "anti" for anti-particles supported
 # -space is expected to end a particle description (eg: chargino^pm_2 )
 # -if there is more then one possible decay for one topology a list with decays is expected
+# -neutrino, lepton, neutralion, slepton means fisrt 2 genertions
+# -Neutrino, Lepton, Neutralion, sLepton means all 3 genertions
 
 decays = { 
     'T1': 'gluino  --> quark antiquark  lsp ' ,
@@ -381,10 +383,10 @@ decays = {
     'TChiChipmSlepSlep':'neutralino_2 chargino^pm_1  --> lepton (slepton --> lepton lsp ) | neutrino (slepton --> lepton lsp )',
     'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tauon (stauon --> tauon lsp ) | neutrino (stauon --> tauon lsp )', 
     'TChiChipmSlepL':[
-    'neutralino_2 chargino^pm_1  --> lepton (slepton --> lepton lsp ) | neutrino (slepton --> lepton lsp )' ,
-    'neutralino_2 chargino^pm_1  --> lepton (slepton --> lepton lsp ) | lepton (sneutrino --> neutrino lsp )',
-    'neutralino_2 chargino^pm_1  --> neutrino (sneutrino --> neutrino lsp ) | lepton (sneutrino --> neutrino lsp )' ,
-    'neutralino_2 chargino^pm_1  --> neutrino (sneutrino --> neutrino lsp ) | neutrino (slepton --> lepton lsp )'
+    'neutralino_2 chargino^pm_1  --> Lepton (sLepton --> Lepton lsp ) | Neutrino (sLepton --> Lepton lsp )' ,
+    'neutralino_2 chargino^pm_1  --> Lepton (sLepton --> Lepton lsp ) | Lepton (sNeutrino --> Neutrino lsp )',
+    'neutralino_2 chargino^pm_1  --> Neutrino (sNeutrino --> Neutrino lsp ) | Lepton (sNeutrino --> Neutrino lsp )' ,
+    'neutralino_2 chargino^pm_1  --> Neutrino (sNeutrino --> Neutrino lsp ) | Neutrino (sLepton --> Lepton lsp )'
     ], 
     'TChiChipmStauL':[
     'neutralino_2 chargino^pm_1  --> tauon (stauon --> tauon lsp ) | neutrino (stauon --> tauon lsp )',
@@ -393,12 +395,12 @@ decays = {
     'neutralino_2 chargino^pm_1  --> neutrino (sneutrino --> neutrino lsp ) | neutrino (stauon -->  lsp )'
     ], 
     'TChiChipmHW':'neutralino_2 chargino^pm_1  --> w lsp higgs lsp ', 
-    'TChiChipmSlepStau':'neutralino_2 chargino^pm_1  --> lepton (slepton --> lepton lsp ) | neutrino (stauon --> tauon lsp )', 
+    'TChiChipmSlepStau':'neutralino_2 chargino^pm_1  --> Lepton (slepton --> Lepton lsp ) | neutrino (stauon --> tauon lsp )', 
     'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tauon (stauon --> tauon lsp ) | neutrino (stauon --> tauon lsp ) ',
     'TChipChimSlepSnu':[
-    'chargino^pm chargino^mp  --> lepton (sneutrino --> neutrino lsp ) | neutrino (slepton --> lepton lsp )',
-    'chargino^pm chargino^mp  --> lepton (sneutrino --> neutrino lsp ) | lepton (sneutrino --> neutrino lsp )',
-    'chargino^pm chargino^mp  --> neutralino (slepton --> lepton lsp ) | neutrino (slepton --> lepton lsp )'
+    'chargino^pm chargino^mp  --> Lepton (sneutrino --> neutrino lsp ) | neutrino (slepton --> Lepton lsp )',
+    'chargino^pm chargino^mp  --> Lepton (sneutrino --> neutrino lsp ) | Lepton (sneutrino --> neutrino lsp )',
+    'chargino^pm chargino^mp  --> neutralino (slepton --> Lepton lsp ) | neutrino (slepton --> Lepton lsp )'
     ], 
     'TSlepSlep':'slepton  --> lepton lsp '
 }
@@ -419,12 +421,14 @@ prettySMParticle = {
     'top': 't',           #top
     'bottom': 'b',           #bottom
     
-    'lepton' : 'l',             #leptonsupot
+    'lepton' : 'l',             #leptonsupot (first 2 generations)
+    'Lepton' : 'l',             #leptonsupot (all 3 generations)
     'electron' : 'e',               #electron
     'muyon' : '#mu',            #myon
     'tauon' : '#tau',  #tauon
     
-    'neutrino' : '#nu',                     #neutrino
+    'neutrino' : '#nu',                     #neutrino (first 2 generations)
+    'Neutrino' : '#nu',                     #neutrino (all 3 generations)
     'elektron-neutrino' : '#nu_{e}',               #elektron-neutrino
     'myon-neutrino' : '#nu_{#mu}',            #myon-neutrino
     'tauon-neutrino' : '#nu_{#tau}',          #tauon-neutrino
@@ -449,12 +453,14 @@ prettySUSYParticle = {
     'stop': '#tilde{t}',  #stop
     'sbottom': '#tilde{b}',  #sbottom
     
-    'slepton' : '#tilde{l}',    #slepton
+    'slepton' : '#tilde{l}',    #slepton (first 2 generations)
+    'sLepton' : '#tilde{l}',    #slepton (all 3 generations)
     'selectron' : '#tilde{e}',      #selectron
     'smyon' : '#tilde{#mu}',   #smyon
     'stauon' : '#tilde{#tau}', #stauon
     
-    'sneutrino' : '#tilde{#nu}',            #sneutrino
+    'sneutrino' : '#tilde{#nu}',            #sneutrino (first 2 generations)
+    'sNeutrino' : '#tilde{#nu}',            #sneutrino (all 3 generations)
     'elektron-sneutrino' : '#tilde{#nu}_{e}',      #elektron-sneutrino
     'myon-sneutrino' : '#tilde{#nu}_{#mu}',   #myon-sneutrino
     'tauon-sneutrino' : '#tilde{#nu}_{#tau}', #tauon-sneutrino  
