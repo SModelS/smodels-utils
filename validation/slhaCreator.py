@@ -39,7 +39,7 @@ class SlhaFiles(object):
     """
     
     def __init__(self, topology, browserObject, thresholdMotherMasses, \
-    thresholdLSPMasses, d, events = 1000, order = 'LO',unlink = True):
+    thresholdLSPMasses, d, condition, value, events = 1000, order = 'LO',unlink = True):
         """Uses the given browser object to retrieve all upper limit histogram 
         dictionaries knowen for this topology. Creates a directory ./'topology'_slhas
         and stores the slha-file for this topology for every point in the mass-plane.
@@ -47,6 +47,8 @@ class SlhaFiles(object):
         :param browserObject: instance of the class Browser
         :param events: number of events for pythia simulation 
         :param order: order of pertubation theory as string
+        :param condition: contion for massspliting as string only xvalue supported
+        :param value: value for the massspliting as string
         'LO', 'NLO', and 'NLL' are possible
         
         """
@@ -73,6 +75,28 @@ class SlhaFiles(object):
         self.d = d
         self._unlink = unlink
         self._listOfInterPid = self._getPidCodeOfIntermediateParticle()
+        if not condition == 'xvalue':
+            logger.error('Contion %s not supported' %condition)
+            sys.exit()  
+        self._condition = condition
+        self._interValue = self._setInterValue(value)
+        
+    def _setInterValue(self,value):
+        """
+        
+        """
+        
+        if self._condition = 'xvalue':
+            if value[:1] != '0' or len(value) != 3:
+                logger.error('value %s not allowed for contion %s' %(value,condition))
+                sys.exit()  
+            interValue = float(value[1:])/100.
+            interValue = round(interValue,2)
+            if not intervalue >= 0. or not intervalue <= 1.:
+                logger.error('value for contion %s must be between 1 and 0. Got: %s' %(condition,interValue))
+                sys.exit() 
+            return intervalue
+        return
         
     def __iter__(self):
         """Creates a slha-file named 'topology_motherMass_lspMass_order.slha and
@@ -192,6 +216,7 @@ class SlhaFiles(object):
             'stauon' : ['1000015']}
             
         interPart = self.topo.intermediatedParticles
+        if not interPart: return
         listOfInterPid = []
         for particle in interPart:
             if not particle in picDict:
@@ -310,11 +335,6 @@ def main():
         value = ''
     else:
         value = intermediate[1]
-    if topology[-2:] == 'on':
-        topologyName = topology[:-2]
-    elif topology[-3:] == 'off':
-        topologyName = topology[:-3]
-    else: topologyName = topology
     extendedTopology = topology + condition + value
     events = args.events
     order = args.order
@@ -324,7 +344,7 @@ def main():
     %(extendedTopology, events, order))
     count = 0
     for f in SlhaFiles(topology, browser, threshold.motherMasses, \
-    threshold.lspMasses, threshold.d, events, order, unlink):
+    threshold.lspMasses, threshold.d, intermediate[0], intermediate[1], events, order, unlink):
         count += 1
         print('Progress ...... ', count)
     print('Wrote %s slha-files to %s' %folder)
