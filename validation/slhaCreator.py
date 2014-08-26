@@ -53,10 +53,6 @@ class SlhaFiles(object):
         
         """
         self._tempSlhaName = 'temp.slah'
-        self.folder = '../slha/%s_%s_%s_slhas' %(topology, events, order)
-        if not os.path.exists(self.folder):
-            os.makedirs(self.folder)
-            logger.info('Created new folder %s!' %self.folder)
         if not isinstance(browserObject, Browser):
             logger.error('Parameter browserObject must be type browser, %s given'\
             %type(browserObject))
@@ -76,8 +72,21 @@ class SlhaFiles(object):
         self._unlink = unlink
         self._listOfInterPid = self._getPidCodeOfIntermediateParticle()
         if not condition == 'xvalue':
-            logger.error('Contion %s not supported' %condition)
+            logger.error('Condition %s not supported' %condition)
             sys.exit()  
+        if condition == 'xvalue':
+            cond = ''
+        else:
+            cond = condition
+        if value == '050':
+            val = ''
+        else:
+            val = value
+        self._extension = cond + val
+        self.folder = '../slha/%s_%s_%s_slhas' %(topology + self._extension, events, order)
+        if not os.path.exists(self.folder):
+            os.makedirs(self.folder)
+            logger.info('Created new folder %s!' %self.folder)
         self._condition = condition
         self._interValue = self._setInterValue(value)
         
@@ -87,16 +96,16 @@ class SlhaFiles(object):
         
         """
         
-        if self._condition = 'xvalue':
+        if self._condition == 'xvalue':
             if value[:1] != '0' or len(value) != 3:
                 logger.error('value %s not allowed for contion %s' %(value,condition))
                 sys.exit()  
             interValue = float(value[1:])/100.
             interValue = round(interValue,2)
-            if not intervalue >= 0. or not intervalue <= 1.:
+            if not interValue >= 0. or not interValue <= 1.:
                 logger.error('value for contion %s must be between 1 and 0. Got: %s' %(condition,interValue))
                 sys.exit() 
-            return intervalue
+            return interValue
         return
         
     def __iter__(self):
@@ -113,10 +122,13 @@ class SlhaFiles(object):
                 if lspMass > motherMass + self.d: continue
                 if self.topo.name == 'TChiWZoff':
                     if lspMass - motherMass < -80: continue
-                fileName = self.topo.name + '_' + str(int(motherMass)) + \
-                '_' + str(int(lspMass)) + '_' + self._order + '.slha'
+                fileName = self.topo.name + self._extension + '_' + \
+                str(int(motherMass)) + '_' + str(int(lspMass)) + '_' + \
+                self._order + '.slha'
                 logger.info('mother mass: %s, lsp mass: %s' %(motherMass, lspMass)) 
-                slhaLines = self._setMass(motherMass, lspMass)
+                if self._condition == 'xvalue':
+                    interMass = self._interValue * motherMass + (1 - self._interValue) * lspMass
+                slhaLines = self._setMass(motherMass, lspMass, interMass)
                 if firstLoop:
                     self._delXsecFromFile()
                     self._addXsecsToFile()
@@ -213,10 +225,10 @@ class SlhaFiles(object):
             'slepton' : ['1000013','1000011'],
             'sLepton' : ['1000013','1000011','1000015'],
             'sneutrino' : ['1000012','1000014'],
-            'sNeutrino' : ['1000012','1000014'.'1000016'],
+            'sNeutrino' : ['1000012','1000014', '1000016'],
             'stauon' : ['1000015']}
             
-        interPart = self.topo.intermediatedParticles
+        interPart = self.topo.intermediateParticles
         if not interPart: return
         listOfInterPid = []
         for particle in interPart:
@@ -331,7 +343,7 @@ def main():
     help = 'Do not clean up temp directory after running pythia', \
     action = 'store_false')
     argparser.add_argument ('-i', '--intermediate', \
-    help = 'condition and value for intermediate particle - default: xvalue, 050' \
+    help = 'condition and value for intermediate particle - default: xvalue, 050', \
     type = types.StringType, default = 'xvalue, 050')
     args = argparser.parse_args()
 
@@ -349,6 +361,7 @@ def main():
     else:
         value = intermediate[1]
     extendedTopology = topology + condition + value
+    logger.info('Creating slha for extended topology %s.' %extendedTopology)
     events = args.events
     order = args.order
     unlink = args.link
@@ -360,7 +373,7 @@ def main():
     threshold.lspMasses, threshold.d, intermediate[0], intermediate[1], events, order, unlink):
         count += 1
         print('Progress ...... ', count)
-    print('Wrote %s slha-files to %s' %folder)
+    print('Wrote %s slha-files to %s' %(count, folder))
     print('unlink %s' %unlink)
 
 def checkFolder(path):
