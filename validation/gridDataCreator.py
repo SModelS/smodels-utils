@@ -222,7 +222,7 @@ def main():
     help = 'directory the data file should be stored in - default: ./gridData', \
     type = types.StringType, default = './gridData')
     argparser.add_argument ('-i', '--intermediate', \
-    help = 'condition and value for intermediate particle - default: xvalue, 050' \
+    help = 'condition and value for intermediate particle - default: xvalue,050', \
     type = types.StringType, default = 'xvalue, 050')
     argparser.add_argument ('-blog', '--browserVerbosity',\
     help = 'set browser-verbosity - default: ERROR', \
