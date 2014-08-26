@@ -72,6 +72,7 @@ class SlhaFiles(object):
         self.lspMasses = thresholdLSPMasses
         self.d = d
         self._unlink = unlink
+        self._listOfInterPid = self._getPidCodeOfIntermediateParticle()
         
     def __iter__(self):
         """Creates a slha-file named 'topology_motherMass_lspMass_order.slha and
@@ -155,7 +156,6 @@ class SlhaFiles(object):
         
     def _getPidCodeOfMother(self):
         """Sets the PID codes for mother particles to variable self._listOfMotherPid.
-        ### FIX ME: EW-Production not included yet
         
         """
         
@@ -176,7 +176,33 @@ class SlhaFiles(object):
             %motherPart)
             sys.exit()
         return picDict[motherPart]
+    
+    def _getPidCodeOfIntermediateParticle(self):
+        """":returms: List PID codes for intermediate particles 
         
+        """
+        
+        picDict = {
+            'chargino^pm_1' : ['1000024'],
+            'chargino^p' : ['1000024'],
+            'slepton' : ['1000013','1000011'],
+            'sLepton' : ['1000013','1000011','1000015'],
+            'sneutrino' : ['1000012','1000014'],
+            'sNeutrino' : ['1000012','1000014'.'1000016'],
+            'stauon' : ['1000015']}
+            
+        interPart = self.topo.intermediatedParticles
+        listOfInterPid = []
+        for particle in interPart:
+            if not particle in picDict:
+                logger.error('no PIC code for intermediateParticle: %s in picDic' \
+                %motherPart)
+                sys.exit()
+                for pid in picDic[particle]: listOfInterPid.append(pid)
+        return listOfInterPid
+        
+        
+            
     def _setMass(self, motherMass, lspMass):
         """Search for mass block in self._tempSlhaName and write the given 
         motherMass to all particles in ListOfPidCode and the LSPMass to LSP.
