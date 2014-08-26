@@ -52,21 +52,34 @@ def main():
     argparser.add_argument ('-n', '--events',\
     help = 'set number of events - default: 10000', \
     type = types.IntType, default = 10000)
+    argparser.add_argument ('-i', '--intermediate', \
+    help = 'condition and value for intermediate particle - default: xvalue, 050' \
+    type = types.StringType, default = 'xvalue, 050')
     args = argparser.parse_args()
 
     browser = Browser(args.Base)
     browser.verbosity = args.browserVerbosity
     topology = args.topology
+    intermediate = args.intermediate.split(',')
+    intermediate = [i.strip() for i in intermediate]
+    if intermediate[0] == 'xvalue':
+        condition = ''
+    else:
+        condition = intermediate[0]
+    if intermediate[1] == '050':
+        value = ''
+    else:
+        value = intermediate[1]
     if topology[-2:] == 'on':
         topologyName = topology[:-2]
     elif topology[-3:] == 'off':
         topologyName = topology[:-3]
     else: topologyName = topology
+    extendedTopology = topology + condition + value
     analysis = args.analysis
     targetPath = getTarget(args.directory)
     events = args.events
     order = args.order
-    expRes = browser.expResult(analysis, topology)
     expRes = browser.expResult(analysis, topology)
     if not expRes:
         expRes = browser.expResult(analysis, topologyName)
@@ -77,7 +90,8 @@ def main():
     tags = ['decay', 'analysis', 'outFile','factor','rootTag', 'intermediate']
     
     #Get the grid data file:
-    fileName = '%s-%s-%s-%s.dat' %(topology, analysis, events, order)
+    fileName = '%s-%s-%s-%s.dat' %(extendedTopology, condition, value, analysis,\
+    events, order)
     f = checkFile(targetPath + '/' + fileName)
     
     print ("========================================================")
@@ -90,11 +104,6 @@ def main():
     
     #Get all the values and TGraphs:
     metadata = validationPlotsHelper.getMetadata(f, tags)
-    intermediate = None
-    if 'intermediate' in metadata:
-        intermediate = metadata['intermediate'][0].split(',')
-        condition = intermediate[0]
-        value = intermediate[1]
     description = metadata['analysis'][0].split(',')
     factor = ''
     if metadata['factor']:
@@ -118,15 +127,31 @@ def main():
     allowed = results['allowed']
     notTested = results['notTested']
     exclusionLine = validationPlotsHelper.getEnvelope(excluded)
-    if not intermediate:
+    if not condition and not value:
         officialExclusionLine = expRes.exclusionLine()
     else:
-        # ### FIX ME: get valueAbove and valueBelow from expRes.axes!
-        officialExclusionLineAbove = expRes.selectExclusionLine(condition,\
-        valueAbove)
-        officialExclusionLineBelow = expRes.selectExclusionLine(condition,\
-        valueBelow)
-    
+        if not extendedTopology in expRes.extendedTopologies:
+            if condition == 'xvalue':
+                values = []
+                for extTopo in expRes.axes:
+                    values.append(expRes.axes[extTopo]['mz'])
+                values.append(value)
+                values.sort()
+                valueIndex = values.index(value)
+                if not valueIndex + 1 > len(values):
+                    valueAbove = values[valueIndex + 1]
+                else: valueAbove = value
+                if not valueIndex -1 < 0:
+                    valueBelow = values[valueIndex - 1]
+                else: valueBelow = value
+                    
+            officialExclusionLineAbove = expRes.selectExclusionLine(condition,\
+            valueAbove)
+            officialExclusionLineBelow = expRes.selectExclusionLine(condition,\
+            valueBelow)
+        else:
+            officialExclusionLine = expRes.exclusionLine(extendedTopology)
+            
     #Set the options for the TGraphs:
     excluded.SetMarkerStyle(10)
     excluded.SetMarkerColor(ROOT.kMagenta+3)
@@ -137,7 +162,12 @@ def main():
     exclusionLine.SetLineStyle(2)
     exclusionLine.SetLineWidth(4)
     exclusionLine.SetLineColor(ROOT.kBlack-2)
-    officialExclusionLine.SetLineColor(ROOT.kBlack)
+    if not value and not condition:
+        officialExclusionLine.SetLineColor(ROOT.kBlack)
+    else:
+        officialExclusionLineAbove.SetLineColor(ROOT.kBlack)
+        officialExclusionLineBelow.SetLineColor(ROOT.kBlack)
+        officialExclusionLineBelow.SetLineStyle(7)
     
     #Create TMutiGraph-object:
     multi = ROOT.TMultiGraph()
@@ -146,8 +176,12 @@ def main():
     if notTested.GetN():
         multi.Add(notTested, 'P')
     multi.Add(exclusionLine, 'L')
-    multi.Add(officialExclusionLine, 'L')
-    
+    if not value and not condition:
+        multi.Add(officialExclusionLine, 'L')
+    else:
+        multi.Add(officialExclusionLineAbove, 'L')
+        multi.Add(officialExclusionLineBelow, 'L')
+        
     #Legend:
     legend = ROOT.TLegend(0.6, 0.55, 0.9, 0.89)
     legend.SetBorderSize(1)
@@ -158,7 +192,11 @@ def main():
     legend.AddEntry(allowed, 'allowed', 'P')
     legend.AddEntry(notTested, 'not tested', 'P')
     legend.AddEntry(exclusionLine, 'derived exclusion contour', 'L')
-    legend.AddEntry(officialExclusionLine, '%s' %metadata['rootTag'][0][1], 'L')
+    if not value and not condition:
+        legend.AddEntry(officialExclusionLine, '%s' %metadata['rootTag'][0][1], 'L')
+    else:
+        legend.AddEntry(officialExclusionLineAbove, '%s, %s: %s' %(metadata['rootTag'][0][1], condition, valueAbove, 'L')
+        legend.AddEntry(officialExclusionLineBelow, '%s, %s: %s' %(metadata['rootTag'][0][1], condition, valueBelow, 'L'
     
     #Canvas:
     c = ROOT.TCanvas("c1", "c1", 0, 0, 800, 500)

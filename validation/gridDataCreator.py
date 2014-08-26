@@ -251,6 +251,7 @@ def main():
     #elif topology[-3:] == 'off':
         #topologyName = topology[:-3]
     else: topologyName = topology
+    extendedTopology = topology + condition + value
     analysis = args.analysis
     targetPath = getTarget(args.directory)
     events = args.events
@@ -273,15 +274,15 @@ def main():
     print('Store file in: ', targetPath)
     print ("========================================================")
     
-    fileName = '%s%s%s-%s-%s-%s.dat' %(topology, condition, value, analysis, events, order)
+    fileName = '%s-%s-%s-%s.dat' %(extendedTopology, analysis, events, order)
     f = checkFile(targetPath + '/' + fileName)
     outFile = open(f, 'w')
     count = 0
-    slhaPath = '../slha/%s%s%s_%s_%s_slhas' %(topology, condition, value, events, slhaOrder)
+    slhaPath = '../slha/%s_%s_%s_slhas' %(extendedTopology, events, slhaOrder)
     logger.info('Take slha-files from %s.' %slhaPath)
     if not os.path.exists(slhaPath):
         logger.error('There are no slha-files for %s with %s events and order %s! \n \
-        Run slhaCreator.py first: ./slhaCreator.py -h!' %(topology, events, slhaOrder))
+        Run slhaCreator.py first: ./slhaCreator.py -h!' %(extendedTopology, events, slhaOrder))
         sys.exit()
     fileList =  os.listdir(slhaPath)
     slhaList = sorted(fileList, key = lambda slha: int(slha.split('_')[1]))
@@ -302,13 +303,13 @@ def main():
         %(massMother, massLSP, tUL, eUL, cond), file = outFile)
         count += 1
     print('#END', file = outFile)
-    metaData = writeMetaData(expRes, slhaOrder, fileName, factor)
+    metaData = writeMetaData(expRes, slhaOrder, fileName, factor, condition, value)
     for key in metaData:
         print(key, metaData[key], file = outFile)
     print ('Worte %s lines of grid data to file %s!' %(count, fileName))
     outFile.close()    
 
-def writeMetaData(expRes, order, fileName, factor):
+def writeMetaData(expRes, order, fileName, factor, condition, value):
     """Writes all the meta data (e.g. root tag, name of output-file, ...)
     :returns: dictionary
     
