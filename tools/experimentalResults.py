@@ -23,6 +23,13 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
 
+# ### FIX ME:
+
+# various names for same variables!
+# ordering of functions is confusing
+# code duplicates
+
+
 class ExpResult (object):
     """Contains all result-specific information and objects (e.g. 
     exclusion lines, histograms, ...). Uses the extended result objects to 
@@ -87,7 +94,7 @@ class ExpResult (object):
     @property
     def name(self):
         return self._ana + '_' + self._topo
-    
+
     @property
     def _getExtendedResults(self):
         """Retrieves a list of all extended results we have for this 
@@ -134,8 +141,8 @@ class ExpResult (object):
         return self._expTopo
     
     @property    
-    def extendedTopologyNames(self):
-        """Returns the topology-object linked to this result-object.
+    def extendedTopologies(self):
+        """Returns the all the extended topologies linked to this result-object.
         
         """
         return self.extendedTopos

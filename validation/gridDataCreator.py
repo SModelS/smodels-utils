@@ -221,6 +221,9 @@ def main():
     argparser.add_argument ('-d', '--directory', \
     help = 'directory the data file should be stored in - default: ./gridData', \
     type = types.StringType, default = './gridData')
+    argparser.add_argument ('-i', '--intermediate', \
+    help = 'condition and value for intermediate particle - default: xvalue, 050' \
+    type = types.StringType, default = 'xvalue, 050')
     argparser.add_argument ('-blog', '--browserVerbosity',\
     help = 'set browser-verbosity - default: ERROR', \
     type = types.StringType, default = 'error')
@@ -233,11 +236,22 @@ def main():
     browser = Browser(args.Base)
     browser.verbosity = args.browserVerbosity
     topology = args.topology
+    intermediate = args.intermediate.split(',')
+    intermediate = [i.strip() for i in intermediate]
+    if intermediate[0] == 'xvalue':
+        condition = ''
+    else:
+        condition = intermediate[0]
+    if intermediate[1] == '050':
+        value = ''
+    else:
+        value = intermediate[1]
     if topology[-2:] == 'on':
         topologyName = topology[:-2]
     #elif topology[-3:] == 'off':
         #topologyName = topology[:-3]
     else: topologyName = topology
+    extendedTopology = topology + condition + value
     analysis = args.analysis
     targetPath = getTarget(args.directory)
     events = args.events
@@ -260,15 +274,15 @@ def main():
     print('Store file in: ', targetPath)
     print ("========================================================")
     
-    fileName = '%s-%s-%s-%s.dat' %(topology, analysis, events, order)
+    fileName = '%s-%s-%s-%s.dat' %(extendedTopology, analysis, events, order)
     f = checkFile(targetPath + '/' + fileName)
     outFile = open(f, 'w')
     count = 0
-    slhaPath = '../slha/%s_%s_%s_slhas' %(topology, events, slhaOrder)
+    slhaPath = '../slha/%s_%s_%s_slhas' %(extendedTopology, events, slhaOrder)
     logger.info('Take slha-files from %s.' %slhaPath)
     if not os.path.exists(slhaPath):
         logger.error('There are no slha-files for %s with %s events and order %s! \n \
-        Run slhaCreator.py first: ./slhaCreator.py -h!' %(topology, events, slhaOrder))
+        Run slhaCreator.py first: ./slhaCreator.py -h!' %(extendedTopology, events, slhaOrder))
         sys.exit()
     fileList =  os.listdir(slhaPath)
     slhaList = sorted(fileList, key = lambda slha: int(slha.split('_')[1]))
@@ -289,13 +303,13 @@ def main():
         %(massMother, massLSP, tUL, eUL, cond), file = outFile)
         count += 1
     print('#END', file = outFile)
-    metaData = writeMetaData(expRes, slhaOrder, fileName, factor)
+    metaData = writeMetaData(expRes, slhaOrder, fileName, factor, condition, value)
     for key in metaData:
         print(key, metaData[key], file = outFile)
     print ('Worte %s lines of grid data to file %s!' %(count, fileName))
     outFile.close()    
 
-def writeMetaData(expRes, order, fileName, factor):
+def writeMetaData(expRes, order, fileName, factor, condition, value):
     """Writes all the meta data (e.g. root tag, name of output-file, ...)
     :returns: dictionary
     
@@ -311,6 +325,7 @@ def writeMetaData(expRes, order, fileName, factor):
     if expAna.sqrts: sqrts = '%s TeV' %expAna.sqrts
     if expAna.pas: pas = expAna.pas
     metaData['decay:'] = '%s' %decay
+    metaData['intermediate'] = '%s, %s' %(condition, value)
     metaData['analysis:'] = '%s, %s, %s, %s' %(pas, prettyName, sqrts, order)
     metaData['outFile:'] = fileName.replace('.dat', '.png') 
     exclName = ''

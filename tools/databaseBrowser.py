@@ -661,7 +661,10 @@ class Infotxt(object):
     
         axes = self._preprocessAxes
         logger.info('For %s-%s there is additional mass information!' \
-        %(self._run, self._analysis)) 
+        %(self._run, self._analysis))
+        for t in self.topologies:
+            if not t in axes:
+                topos[t]=[t]
         
         for ax in axes:
             logger.debug('Axesline is: %s' %ax)
@@ -691,7 +694,7 @@ class Infotxt(object):
             info.txt for %s-%s!' %(self._run, self._analysis))
             return None
         if not topology: return topos
-        if topos.has_key(topology): return topos[topology]
+        if topology in topos: return topos[topology]
         logger.warning('For %s-%s there is no topology %s.' \
         %(self._run, self._analysis, topology))
         return None

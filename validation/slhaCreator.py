@@ -266,24 +266,42 @@ def main():
     argparser.add_argument ('-l', '--link', \
     help = 'Do not clean up temp directory after running pythia', \
     action = 'store_false')
+    argparser.add_argument ('-i', '--intermediate', \
+    help = 'condition and value for intermediate particle - default: xvalue, 050' \
+    type = types.StringType, default = 'xvalue, 050')
     args = argparser.parse_args()
 
     browser = Browser(args.Base)
     browser.verbosity = args.browserVerbosity
     topology = args.topology
+    intermediate = args.intermediate.split(',')
+    intermediate = [i.strip() for i in intermediate]
+    if intermediate[0] == 'xvalue':
+        condition = ''
+    else:
+        condition = intermediate[0]
+    if intermediate[1] == '050':
+        value = ''
+    else:
+        value = intermediate[1]
+    if topology[-2:] == 'on':
+        topologyName = topology[:-2]
+    elif topology[-3:] == 'off':
+        topologyName = topology[:-3]
+    else: topologyName = topology
+    extendedTopology = topology + condition + value
     events = args.events
     order = args.order
     unlink = args.link
     threshold = Threshold(topology, browser)
     folder = checkFolder('../slha/%s_%s_%s_slhas' \
-    %(topology, events, order))
+    %(extendedTopology, events, order))
     count = 0
     for f in SlhaFiles(topology, browser, threshold.motherMasses, \
     threshold.lspMasses, threshold.d, events, order, unlink):
         count += 1
         print('Progress ...... ', count)
-    print('Wrote %s slha-files to ../slha/%s_%s_%s_slhas' \
-    %(count, topology, events, order))
+    print('Wrote %s slha-files to %s' %folder)
     print('unlink %s' %unlink)
 
 def checkFolder(path):
