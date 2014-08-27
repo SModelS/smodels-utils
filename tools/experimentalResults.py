@@ -452,9 +452,9 @@ class ExpResult (object):
         """
         
         if condition == 'xvalue':
-            exTopName = self._topoName + value
+            exTopName = self._topo + value
         elif condition in ['LSP' ,'x' ,'C' ,'M'] or 'D' in condition:
-            exTopName = self._topoName + condition + value
+            exTopName = self._topo + condition + value
         else:
             logger.error('Unknown condition %s!' %condition)
             
