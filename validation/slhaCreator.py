@@ -30,26 +30,24 @@ logger = logging.getLogger(__name__)
 
 
 class SlhaFiles(object):
-    """Uses upper limit dictionaries for a given topology and analysis to 
-    create slha-files and returns them via an __iter__ method.
+    """Creates slha-files and stores them via an __iter__ method.
     ### no intermediated mass supported
     ### no mass splitting for topology supported
-    
 
     """
     
     def __init__(self, topology, browserObject, thresholdMotherMasses, \
     thresholdLSPMasses, d, condition, value, events = 1000, order = 'LO',unlink = True):
-        """Uses the given browser object to retrieve all upper limit histogram 
-        dictionaries knowen for this topology. Creates a directory ./'topology'_slhas
-        and stores the slha-file for this topology for every point in the mass-plane.
+        """Creates a directory ./'topology'_slhas and stores all the slha-files
+        for every point in the mass-plane.
         :param topology: topology the slha-files should be preoduced for
         :param browserObject: instance of the class Browser
-        :param events: number of events for pythia simulation 
-        :param order: order of pertubation theory as string
-        :param condition: contion for massspliting as string only xvalue supported
-        :param value: value for the massspliting as string
-        'LO', 'NLO', and 'NLL' are possible
+        :param events: number of events for pythia simulation 'LO' or 'NLL' 
+        :param order: order of perturbation theory as string
+        :param condition: condition for mass of the intermediate particle as string 
+        (only xvalue supported) 
+        :param value: value for the condition as string
+        
         
         """
         self._tempSlhaName = 'temp.slah'
@@ -111,7 +109,7 @@ class SlhaFiles(object):
         
     def __iter__(self):
         """Creates a slha-file named 'topology_motherMass_lspMass_order.slha and
-        adds the masses. If the mother mass changes the cross sections will be
+        adds the masses. If the mother mass changes the cross sections are
         computed and also added to the slha-file.
         
         """
