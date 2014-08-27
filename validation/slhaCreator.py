@@ -353,6 +353,10 @@ def main():
     topology = args.topology
     intermediate = args.intermediate.split(',')
     intermediate = [i.strip() for i in intermediate]
+    if len(intermediate) != 2:
+        logger.error('Could not handle argument intermediate: %s! \n \
+        Expected: condition,value!' %intermediate))
+        sys.exit()
     if intermediate[0] == 'xvalue':
         condition = ''
     else:
