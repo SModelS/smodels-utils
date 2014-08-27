@@ -131,6 +131,8 @@ def main():
         officialExclusionLine = expRes.exclusionLine()
     else:
         if not extendedTopology in expRes.extendedTopologies:
+            logger.info('There is no official exclusion line for %s!\n \
+            Search for next neighbors.' %extendedTopology)
             if not condition:
                 values = []
                 for extTopo in expRes.axes:
@@ -140,10 +142,18 @@ def main():
                 valueIndex = values.index(value)
                 if not valueIndex + 1 > len(values):
                     valueAbove = values[valueIndex + 1]
-                else: valueAbove = ''
+                    logger.info('Found neighbor above for xvalue = %s'\
+                    %valueAbove)
+                else:
+                    valueAbove = ''
+                    logger.info('No neighbor above could be found!')
                 if not valueIndex -1 < 0:
                     valueBelow = values[valueIndex - 1]
-                else: valueBelow = ''
+                    logger.info('Found neighbor below for xvalue = %s'\
+                    %valueBelow)
+                else:
+                    valueBelow = ''
+                    logger.info('No neighbor below could be found!')
             if valueAbove:        
                 officialExclusionLineAbove = expRes.selectExclusionLine\
                 (condition = intermediate[0], value = valueAbove)
@@ -152,6 +162,8 @@ def main():
                 (condition = intermediate[0], value = valueBelow)
         else:
             officialExclusionLine = expRes.exclusionLine(extendedTopology)
+            valueAbove = ''
+            valueBelow = ''
             
     #Set the options for the TGraphs:
     excluded.SetMarkerStyle(10)
@@ -171,7 +183,8 @@ def main():
         if valueBelow:
             officialExclusionLineBelow.SetLineColor(ROOT.kGray+1)
             officialExclusionLineBelow.SetLineStyle(7)
-    
+        if not valueAbove and not valueBelow:
+            officialExclusionLine.SetLineColor(ROOT.kBlack)
     #Create TMutiGraph-object:
     multi = ROOT.TMultiGraph()
     multi.Add(excluded, 'P')
@@ -186,6 +199,8 @@ def main():
             multi.Add(officialExclusionLineAbove, 'L')
         if valueBelow:
             multi.Add(officialExclusionLineBelow, 'L')
+        if not valueAbove and not valueBelow:
+            multi.Add(officialExclusionLine, 'L')
         
     #Legend:
     legend = ROOT.TLegend(0.57, 0.55, 0.9, 0.89)
@@ -206,7 +221,11 @@ def main():
         if valueBelow:
             legend.AddEntry(officialExclusionLineBelow, '%s, %s: %s' \
             %(metadata['rootTag'][0][1], intermediate[0], valueBelow), 'L')
-    
+        if not valueAbove and not valueBelow:
+            if not value: val = '050'
+            else: val = value
+            legend.AddEntry(officialExclusionLine, '%s, %s: %s' \
+            %(metadata['rootTag'][0][1], intermediate[0], val), 'L')
     #Canvas:
     c = ROOT.TCanvas("c1", "c1", 0, 0, 800, 500)
     c.SetFillColor(ROOT.kWhite)
@@ -261,7 +280,7 @@ def main():
         offset3 = 40
         offset4 = 55
         
-    if topology == 'TChiChipmSlepL':
+    if topology in ['TChiChipmSlepL', 'TChiChipmSlepStau']:
             title1 = ROOT.TLatex(xPosition, yPosition - offset, '%s:' %topology)
             title1.SetTextSize(0.05)
             title1.Draw()
