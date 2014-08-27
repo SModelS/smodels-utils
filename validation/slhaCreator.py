@@ -141,8 +141,9 @@ class SlhaFiles(object):
                 
                     
     def _addXsecsToFile(self):
-        """add the xsecs to the slha file. first LO then NLO and finaly 
-        are computed
+        """Adds the xsecs to the slha file. First LO then NLO and finally NLL 
+        are computed.
+        # ### FIX ME: order NLO? does this make sens? We get NLO by adding a factor 1.2 to LO, right?
         
         """
         
@@ -201,8 +202,8 @@ class SlhaFiles(object):
             'g' : ['1000021'],
             'q' : ['1000001', '1000002', '1000003', '1000004', 
             '2000001', '2000002','2000003','2000004'], 
-            'b' : ['1000005'], #'2000005'], no right handet particles
-            't' : ['1000006'], #'2000006'], no right handet particles
+            'b' : ['1000005'], #'2000005'], no right handed particles
+            't' : ['1000006'], #'2000006'], no right handed particles
             'l' : ['1000011','1000013','2000011','2000013'],
             'c0cpm':['1000024','1000023'],
             'c0':['100023'],
@@ -216,7 +217,7 @@ class SlhaFiles(object):
         return picDict[motherPart]
     
     def _getPidCodeOfIntermediateParticle(self):
-        """":returms: List PID codes for intermediate particles 
+        """":returns: List of PID codes for intermediate particles 
         
         """
         
@@ -247,7 +248,7 @@ class SlhaFiles(object):
         motherMass to all particles in ListOfPidCode and the LSPMass to LSP.
         :param motherMass: one mass for all particles in ListOfPidCode as float
         :param lspMass: mass of the LSP as float
-        :param interMass: mass of intermadiated particle
+        :param interMass: mass of intermediate particle
         :returns: list containing lines of slha file
         ### FIX ME no intermediated mass implemented yet
         
@@ -317,9 +318,14 @@ class SlhaFiles(object):
             
 
 def main():
-    """Handles all command line options, as:
-    topology, base, loglevel, ...
+    """Handles all command line options.
     Produces the slha-files for given topology.
+    :param Base: sets the path to the smodels-database
+    :param topology: topology the slha-files should be preoduced for
+    :param events: number of events for pythia simulation 
+    :param order: order of perturbation theory as string ('LO' or 'NLL')
+    :param link: unlinks the pythia log file, when set to False
+    :param intermediate: comma separated condition and value (e.g. LSP,300); condition for mass of intermediate particle (e.g xvalue), value for the mass condition (e.g. 025)
     
     """
     argparser = argparse.ArgumentParser(description = \
@@ -338,7 +344,7 @@ def main():
     help = 'set number of events - default: 10000', \
     type = types.IntType, default = 10000)
     argparser.add_argument ('-o', '--order', \
-    help = 'perturbation order (LO, NLO, NLL) - default: NLL', \
+    help = 'perturbation order (LO or NLL) - default: NLL', \
     type = types.StringType, default = 'NLL')
     argparser.add_argument ('-l', '--link', \
     help = 'Do not clean up temp directory after running pythia', \
@@ -383,7 +389,7 @@ def main():
 
 def checkFolder(path):
     """Checks if the slha folder already exists.
-    If the folder already exists, the user can decide wether to remove 
+    If the folder already exists, the user can decide whether to remove 
     all slha files, or to exit the script.
     
     """

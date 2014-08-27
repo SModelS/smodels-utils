@@ -26,7 +26,14 @@ def main():
     """Handles all command line options, as:
     topology, analysis, directory, base, loglevel, ...
     Produces the validation plot.
-    
+    :param Base: sets the path to the smodels-database
+    :param analysis: analysis the validation plot should be preoduced for
+    :param topology: topology the validation plot should be preoduced for
+    :param order: order of perturbation theory as string ('LO', 'NLO', 'NLL')
+    :param directory: 'directory the grid data file should be taken from
+    :param events: number of events for pythia simulation 
+    :param link: unlinks the pythia log file, when set to False
+    :param intermediate: comma separated condition and value (e.g. LSP,300); condition for mass of intermediate particle (e.g xvalue), value for the mass condition (e.g. 025)
     """
     argparser = argparse.ArgumentParser(description = \
     'Produces the validation plots')
@@ -53,7 +60,7 @@ def main():
     help = 'set number of events - default: 10000', \
     type = types.IntType, default = 10000)
     argparser.add_argument ('-i', '--intermediate', \
-    help = 'condition and value for intermediate particle - default: xvalue, 050' \
+    help = 'condition and value for intermediate particle - default: xvalue,050', \
     type = types.StringType, default = 'xvalue, 050')
     args = argparser.parse_args()
 
@@ -90,8 +97,7 @@ def main():
     tags = ['decay', 'analysis', 'outFile','factor','rootTag', 'intermediate']
     
     #Get the grid data file:
-    fileName = '%s-%s-%s-%s.dat' %(extendedTopology, condition, value, analysis,\
-    events, order)
+    fileName = '%s-%s-%s-%s.dat' %(extendedTopology, analysis, events, order)
     f = checkFile(targetPath + '/' + fileName)
     
     print ("========================================================")
@@ -131,7 +137,7 @@ def main():
         officialExclusionLine = expRes.exclusionLine()
     else:
         if not extendedTopology in expRes.extendedTopologies:
-            if condition == 'xvalue':
+            if not condition:
                 values = []
                 for extTopo in expRes.axes:
                     values.append(expRes.axes[extTopo]['mz'])
@@ -140,15 +146,16 @@ def main():
                 valueIndex = values.index(value)
                 if not valueIndex + 1 > len(values):
                     valueAbove = values[valueIndex + 1]
-                else: valueAbove = value
+                else: valueAbove = ''
                 if not valueIndex -1 < 0:
                     valueBelow = values[valueIndex - 1]
-                else: valueBelow = value
-                    
-            officialExclusionLineAbove = expRes.selectExclusionLine(condition,\
-            valueAbove)
-            officialExclusionLineBelow = expRes.selectExclusionLine(condition,\
-            valueBelow)
+                else: valueBelow = ''
+            if valueAbove:        
+                officialExclusionLineAbove = expRes.selectExclusionLine\
+                (condition = intermediate[0], value = valueAbove)
+            if valueBelow:
+                officialExclusionLineBelow = expRes.selectExclusionLine\
+                (condition = intermediate[0], value = valueBelow)
         else:
             officialExclusionLine = expRes.exclusionLine(extendedTopology)
             
@@ -165,9 +172,11 @@ def main():
     if not value and not condition:
         officialExclusionLine.SetLineColor(ROOT.kBlack)
     else:
-        officialExclusionLineAbove.SetLineColor(ROOT.kBlack)
-        officialExclusionLineBelow.SetLineColor(ROOT.kBlack)
-        officialExclusionLineBelow.SetLineStyle(7)
+        if valueAbove:
+            officialExclusionLineAbove.SetLineColor(ROOT.kGray+1)
+        if valueBelow:
+            officialExclusionLineBelow.SetLineColor(ROOT.kGray+1)
+            officialExclusionLineBelow.SetLineStyle(7)
     
     #Create TMutiGraph-object:
     multi = ROOT.TMultiGraph()
@@ -179,8 +188,10 @@ def main():
     if not value and not condition:
         multi.Add(officialExclusionLine, 'L')
     else:
-        multi.Add(officialExclusionLineAbove, 'L')
-        multi.Add(officialExclusionLineBelow, 'L')
+        if valueAbove:
+            multi.Add(officialExclusionLineAbove, 'L')
+        if valueBelow:
+            multi.Add(officialExclusionLineBelow, 'L')
         
     #Legend:
     legend = ROOT.TLegend(0.6, 0.55, 0.9, 0.89)
@@ -195,8 +206,12 @@ def main():
     if not value and not condition:
         legend.AddEntry(officialExclusionLine, '%s' %metadata['rootTag'][0][1], 'L')
     else:
-        legend.AddEntry(officialExclusionLineAbove, '%s, %s: %s' %(metadata['rootTag'][0][1], condition, valueAbove, 'L')
-        legend.AddEntry(officialExclusionLineBelow, '%s, %s: %s' %(metadata['rootTag'][0][1], condition, valueBelow, 'L'
+        if valueAbove:
+            legend.AddEntry(officialExclusionLineAbove, '%s, %s: %s' \
+            %(metadata['rootTag'][0][1], intermediate[0], valueAbove), 'L')
+        if valueBelow:
+            legend.AddEntry(officialExclusionLineBelow, '%s, %s: %s' \
+            %(metadata['rootTag'][0][1], intermediate[0], valueBelow), 'L')
     
     #Canvas:
     c = ROOT.TCanvas("c1", "c1", 0, 0, 800, 500)
@@ -209,8 +224,8 @@ def main():
     ROOT.gPad.RedrawAxis()
     legend.Draw('L')
 
-    #title = ROOT.TLatex(0, 1100, "#splitline{%s}{#splitline{analysis = %s,  #sqrt{s} = %s}{order = %s}}" %(description[0], description[1], description[2], description[3]))
-    #title.SetTextSize(0.03)
+    # compute the position of the title:
+    
     motherMinExcluded = ROOT.TMath.MinElement(excluded.GetN(), excluded.GetX())
     print(notTested.GetN(), notTested.GetX())
     try:
@@ -234,23 +249,36 @@ def main():
         offset = 100
         offset2 = 200
         offset3 = 300
+        offset4 = 400
     elif yPosition < 500:
         offset = 10
         offset2 = 40
         offset3 = 70
+        offset4 = 100
     else:
         offset = 50
         offset2 = 100
         offset3 = 150
+        offset4 = 200
         
     if 'off' in topology:
         offset = 10
         offset2 = 25
         offset3 = 40
-    
-    title = ROOT.TLatex(xPosition, yPosition - offset, '%s: %s' %(topology, metadata['decay'][0]))
-    title.SetTextSize(0.05)
-    title.Draw()
+        offset4 = 55
+        
+    if topology == 'TChiChipmSlepL':
+            title1 = ROOT.TLatex(xPosition, yPosition - offset, '%s:' %topology)
+            title1.SetTextSize(0.05)
+            title1.Draw()
+            title4 = ROOT.TLatex(xPosition, yPosition - offset4, '%s' %metadata['decay'][0])
+            title4.SetTextSize(0.03)
+            title4.Draw()
+    else:
+        title1 = ROOT.TLatex(xPosition, yPosition - offset, '%s: %s' %(topology, metadata['decay'][0]))
+        title1.SetTextSize(0.05)
+        title1.Draw()
+        
     if 'ATLAS' in analysis:
         
         title2 = ROOT.TLatex(xPosition, yPosition - offset2, '%s %s' \
@@ -293,30 +321,3 @@ def checkFile(path):
     
 if __name__ == '__main__':
     main()  
-#--------------------------------------------------------------------------------
-
-    
-    ##Dimensions of the ROOT-histogram:   
-
-    #motherMin = min(motherM)
-    #motherMax = max(motherM)
-    #motherN = len(motherM))
-    #lspMin = min(lspM)
-    #lspMax = max(lspM)
-    #lspN = len(lspM))
-
-    
-    #h = ROOT.TH2F('h', '', motherN, motherMin, motherMax, lspN, lspMin, lspMax)
-
-    #h.SetXTitle("mother mass [GeV]")
-    #h.SetYTitle("LSP mass [GeV]")
-    #h.SetTitleSize(0.034, "X")
-    #h.SetLabelSize(0.034, "X")
-    #h.SetTitleSize(0.034, "Y")
-    #h.SetLabelSize(0.034, "Y")
-    #h.SetTitleOffset(1.3, "X")
-    #h.SetTitleOffset(1.6, "Y")
-
-    #c.cd()
-    #h.Draw()
-
