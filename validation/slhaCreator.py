@@ -71,6 +71,7 @@ class SlhaFiles(object):
         self.d = d
         self._unlink = unlink
         self._listOfInterPid = self._getPidCodeOfIntermediateParticle()
+        self._listOfMotherPid = self._getPidCodeOfMother()
         if not condition == 'xvalue':
             logger.error('Condition %s not supported' %condition)
             sys.exit()  
@@ -236,7 +237,7 @@ class SlhaFiles(object):
                 logger.error('no PIC code for intermediateParticle: %s in picDic' \
                 %motherPart)
                 sys.exit()
-                for pid in picDic[particle]: listOfInterPid.append(pid)
+            for pid in picDict[particle]: listOfInterPid.append(pid)
         return listOfInterPid
         
         
@@ -254,8 +255,8 @@ class SlhaFiles(object):
         pidOfLsp = '1000022'
         slhaFile = open(self._tempSlhaName,'r')
         lines = slhaFile.readlines()
-        listOfPidCode = self._getPidCodeOfMother()
-        listOfInterPid = self._listOfInterPid
+        listOfPidCode = [pid for pid in self._listOfMotherPid]
+        listOfInterPid = [pid for pid in self._listOfInterPid]
         
         massBlock = False
         for i in range(0,len(lines)-1):
@@ -272,7 +273,7 @@ class SlhaFiles(object):
                     lines[i] = self._formatMassEntry(listOfLine)
                 if listOfInterPid and interMass:
                     if listOfLine[0] in listOfInterPid:
-                        listOfInterPid.renove(listOfLine[0])
+                        listOfInterPid.remove(listOfLine[0])
                         listOfLine[1] = interMass
                         lines[i] = self._formatMassEntry(listOfLine)
                         
