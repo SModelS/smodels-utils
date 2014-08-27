@@ -173,9 +173,11 @@ class ExpTopology(object):
     
     def _slackExpTopologyName(self):
         """Bypassing case sensitivity
-        
+        # ### FIX ME: doesn't know much at the moment.
         """
-        return self._name.replace("W","w").replace("Z","z" )
+        if any(c in self._name for c in ['w', 'W', 'z', 'Z']):
+            return self._name.replace("W","w").replace("Z","z" )
+        return self._name
     
         
     def _searchDecayDict(self):
