@@ -350,8 +350,8 @@ def main():
     help = 'Do not clean up temp directory after running pythia', \
     action = 'store_false')
     argparser.add_argument ('-i', '--intermediate', \
-    help = 'condition and value for intermediate particle - default: xvalue, 050', \
-    type = types.StringType, default = 'xvalue, 050')
+    help = 'condition and value for intermediate particle - default: xvalue,050', \
+    type = types.StringType, default = 'xvalue,050')
     args = argparser.parse_args()
 
     browser = Browser(args.Base)
@@ -361,7 +361,7 @@ def main():
     intermediate = [i.strip() for i in intermediate]
     if len(intermediate) != 2:
         logger.error('Could not handle argument intermediate: %s! \n \
-        Expected: condition,value!' %intermediate))
+        Expected: condition,value!' %intermediate)
         sys.exit()
     if intermediate[0] == 'xvalue':
         condition = ''

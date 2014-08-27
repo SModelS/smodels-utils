@@ -23,8 +23,7 @@ from smodels_tools.tools.databaseBrowser import Browser
 logger = logging.getLogger(__name__)
 
 def main():
-    """Handles all command line options, as:
-    topology, analysis, directory, base, loglevel, ...
+    """Handles all command line options.
     Produces the validation plot.
     :param Base: sets the path to the smodels-database
     :param analysis: analysis the validation plot should be preoduced for
@@ -32,7 +31,6 @@ def main():
     :param order: order of perturbation theory as string ('LO', 'NLO', 'NLL')
     :param directory: 'directory the grid data file should be taken from
     :param events: number of events for pythia simulation 
-    :param link: unlinks the pythia log file, when set to False
     :param intermediate: comma separated condition and value (e.g. LSP,300); condition for mass of intermediate particle (e.g xvalue), value for the mass condition (e.g. 025)
     """
     argparser = argparse.ArgumentParser(description = \
@@ -53,19 +51,15 @@ def main():
     argparser.add_argument ('-d', '--directory', \
     help = 'directory the grid data file should be taken from - default: ./gridData', \
     type = types.StringType, default = './gridData')
-    argparser.add_argument ('-blog', '--browserVerbosity',\
-    help = 'set browser-verbosity - default: ERROR', \
-    type = types.StringType, default = 'error')
     argparser.add_argument ('-n', '--events',\
     help = 'set number of events - default: 10000', \
     type = types.IntType, default = 10000)
     argparser.add_argument ('-i', '--intermediate', \
     help = 'condition and value for intermediate particle - default: xvalue,050', \
-    type = types.StringType, default = 'xvalue, 050')
+    type = types.StringType, default = 'xvalue,050')
     args = argparser.parse_args()
 
     browser = Browser(args.Base)
-    browser.verbosity = args.browserVerbosity
     topology = args.topology
     intermediate = args.intermediate.split(',')
     intermediate = [i.strip() for i in intermediate]

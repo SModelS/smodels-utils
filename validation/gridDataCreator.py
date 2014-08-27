@@ -198,9 +198,15 @@ class GridData(object):
         return rmvunit(tul, 'fb')
         
 def main():
-    """Handles all command line options, as:
-    topology, analysis, directory, base, loglevel, ...
+    """Handles all command line options
     Produces the grid data file and adds some meta data.
+    :param Base: sets the path to the smodels-database
+    :param analysis: analysis the validation plot should be preoduced for
+    :param topology: topology the validation plot should be preoduced for
+    :param order: order of perturbation theory as string ('LO', 'NLO', 'NLL')
+    :param directory: 'directory the grid data file should be taken from
+    :param events: number of events for pythia simulation 
+    :param intermediate: comma separated condition and value (e.g. LSP,300); condition for mass of intermediate particle (e.g xvalue), value for the mass condition (e.g. 025)
     
     """
     argparser = argparse.ArgumentParser(description = \
@@ -221,20 +227,16 @@ def main():
     argparser.add_argument ('-d', '--directory', \
     help = 'directory the data file should be stored in - default: ./gridData', \
     type = types.StringType, default = './gridData')
-    argparser.add_argument ('-i', '--intermediate', \
-    help = 'condition and value for intermediate particle - default: xvalue,050', \
-    type = types.StringType, default = 'xvalue, 050')
-    argparser.add_argument ('-blog', '--browserVerbosity',\
-    help = 'set browser-verbosity - default: ERROR', \
-    type = types.StringType, default = 'error')
     argparser.add_argument ('-n', '--events',\
     help = 'set number of events - default: 10000', \
     type = types.IntType, default = 10000)
+    argparser.add_argument ('-i', '--intermediate', \
+    help = 'condition and value for intermediate particle - default: xvalue,050', \
+    type = types.StringType, default = 'xvalue,050')
     args = argparser.parse_args()
 
     smsHelpers.base = args.Base
     browser = Browser(args.Base)
-    browser.verbosity = args.browserVerbosity
     topology = args.topology
     intermediate = args.intermediate.split(',')
     intermediate = [i.strip() for i in intermediate]
