@@ -188,7 +188,7 @@ def main():
             multi.Add(officialExclusionLineBelow, 'L')
         
     #Legend:
-    legend = ROOT.TLegend(0.6, 0.55, 0.9, 0.89)
+    legend = ROOT.TLegend(0.57, 0.55, 0.9, 0.89)
     legend.SetBorderSize(1)
     legend.SetMargin(0.2)
     legend.SetFillColor(ROOT.kWhite)
