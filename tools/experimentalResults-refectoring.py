@@ -302,8 +302,7 @@ class ExpResult (object):
         """ 
         ulDicts = {}
         for extTopo in self.extendedTopos:
-            if expected:
-            ulDicts[extTopo] = [exRes.upperLimitDict(expected = expected) \
+            ulDicts[extTopo] = [exRes.upperLimitDict(expected) \
             for exRes in self._extendedResults]
         return ulDicts
         
@@ -334,10 +333,10 @@ class ExpResult (object):
         """
         contours = {}
         for exRes in self._extendedResults:
-            contours[exRes.name] = exRes.exclusionLines(expected = expected)
+            contours[exRes.name] = exRes.exclusionLines(expected)
         return contours
         
-     @property
+    
     def exclusionLine(self, expected = False, sigma = 0, condition = None, value = None):
         """Retrieves one exclusion line (out of all exclusion lines available 
         for this topology). If condition and value are None, 
@@ -348,22 +347,21 @@ class ExpResult (object):
         
         """
         extTopo = self._getExtendedTopologyName(condition = condition, value = value)
-        if not extTopo in self.exclusionLines(expected = expected, sigma = sigma):
+        if not extTopo in self.exclusionLines(expected = expected)\
+        or not sigma in self.exclusionLines(expected = expected)[extTopo]: 
             if expected:
-                logger.error('No expected upper limit dictionary could be found for %s!' \
+                logger.error('No expected exclusion lines could be found for %s!' \
                 %extTopo)
                 return None
-            logger.error('No upper limit dictionary could be found for %s!' \
+            logger.error('No exclusion lines could be found for %s!' \
             %extTopo)
             return None
-        return self.exclusionLines(expected = expected)[extTopo]
+        return self.exclusionLines(expected = expected)[extTopo][sigma]
     
 
-    @property
     def exclusions(self, expected = False):
         """Returns all expected/observed exclusion values available for this result.
         
-        # ### FIX ME: learn handling of expected!
         """
         
         exclusions = {}
@@ -382,15 +380,16 @@ class ExpResult (object):
         """
         
         extTopo = self._getExtendedTopologyName(condition = condition, value = value)
-        if not extTopo in self.exclusionLines(expected = expected, sigma = sigma):
+        if not extTopo in self.exclusionLines(expected = expected)\
+        or not typ in self.exclusionLines(expected = expected)[extTopo]:
             if expected:
-                logger.error('No expected upper limit dictionary could be found for %s!' \
+                logger.error('No expected exclusions could be found for %s!' \
                 %extTopo)
                 return None
-            logger.error('No upper limit dictionary could be found for %s!' \
+            logger.error('No exclusions could be found for %s!' \
             %extTopo)
             return None
-        return self.exclusions(expected = expected)[extTopo]
+        return self.exclusions(expected = expected)[extTopo][typ]
         
 
 
@@ -479,15 +478,6 @@ class ExtendedResult(object):
             logger.warning('No expected exclusion lines were found for \n \
             extended result %s!' %self.name)
             return None 
-        
-    @property
-    def expectedExclusionLines(self):
-        """Retrieves the expected exclusion lines for this result as a 
-        dictionary.
-        :return: {1: TGraph, 0: TGraph, -1: TGraph}
-        
-        """
-        
      
     @property
     def _allExclusions(self):
