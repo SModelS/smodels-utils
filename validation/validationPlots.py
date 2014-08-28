@@ -279,31 +279,35 @@ def main():
         offset2 = 25
         offset3 = 40
         offset4 = 55
-        
+    
+    if topology in ['T6bbWW'] and value:
+        xOffset = 50
+    else:
+        xOffset = 0
     if topology in ['TChiChipmSlepL', 'TChiChipmSlepStau']:
-            title1 = ROOT.TLatex(xPosition, yPosition - offset, '%s:' %topology)
+            title1 = ROOT.TLatex(xPosition - xOffset, yPosition - offset, '%s:' %topology)
             title1.SetTextSize(0.05)
             title1.Draw()
-            title4 = ROOT.TLatex(xPosition, yPosition - offset4, '%s' %metadata['decay'][0])
+            title4 = ROOT.TLatex(xPosition - xOffset, yPosition - offset4, '%s' %metadata['decay'][0])
             title4.SetTextSize(0.03)
             title4.Draw()
     else:
-        title1 = ROOT.TLatex(xPosition, yPosition - offset, '%s: %s' %(topology, metadata['decay'][0]))
+        title1 = ROOT.TLatex(xPosition - xOffset, yPosition - offset, '%s: %s' %(topology, metadata['decay'][0]))
         title1.SetTextSize(0.05)
         title1.Draw()
         
     if 'ATLAS' in analysis:
         
-        title2 = ROOT.TLatex(xPosition, yPosition - offset2, '%s %s' \
+        title2 = ROOT.TLatex(xPosition - xOffset, yPosition - offset2, '%s %s' \
         %(description[0], description[1].replace('\\', '#')))
         title2.SetTextSize(0.03)
         title2.Draw()
-        title3 = ROOT.TLatex(xPosition, yPosition - offset3, \
+        title3 = ROOT.TLatex(xPosition - xOffset, yPosition - offset3, \
         '#sqrt{s} = %s, order = %s%s' %(description[2], description[3], factor))
         title3.SetTextSize(0.03)
         title3.Draw()
     else:
-        title2 = ROOT.TLatex(xPosition, yPosition - offset2, \
+        title2 = ROOT.TLatex(xPosition - xOffset, yPosition - offset2, \
         '%s %s, #sqrt{s} = %s, order = %s%s' %(description[0], \
         description[1].replace('\\', '#'), description[2], description[3], \
         factor))
