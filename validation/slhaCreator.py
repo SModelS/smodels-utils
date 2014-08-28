@@ -50,7 +50,7 @@ class SlhaFiles(object):
         
         
         """
-        self._tempSlhaName = 'temp.slah'
+        self._tempSlhaName = 'temp.slha'
         if not isinstance(browserObject, Browser):
             logger.error('Parameter browserObject must be type browser, %s given'\
             %type(browserObject))
@@ -89,6 +89,14 @@ class SlhaFiles(object):
         self._condition = condition
         self._interValue = self._setInterValue(value)
         
+    def __del__(self):
+        """remove temp.slha
+        
+        """
+        
+        os.system('rm ./%s' %self._tempSlhaName)
+        print('del temp file')
+        
         
     def _setInterValue(self,value):
         """
@@ -96,13 +104,16 @@ class SlhaFiles(object):
         """
         
         if self._condition == 'xvalue':
-            if value[:1] != '0' or len(value) != 3:
-                logger.error('value %s not allowed for contion %s' %(value,condition))
+            if value[:1] != '0':
+                logger.error('value %s not allowed for contion %s' %(value,self._condition))
                 sys.exit()  
-            interValue = float(value[1:])/100.
+            div = float('1' + (len(value)-1)*'0')
+            print('##############%s' %div)
+            print(value)
+            interValue = float(value[1:])/div
             interValue = round(interValue,2)
             if not interValue >= 0. or not interValue <= 1.:
-                logger.error('value for contion %s must be between 1 and 0. Got: %s' %(condition,interValue))
+                logger.error('value for contion %s must be between 1 and 0. Got: %s' %(self._condition,interValue))
                 sys.exit() 
             return interValue
         return
@@ -378,12 +389,14 @@ def main():
     folder = checkFolder('../slha/%s_%s_%s_slhas' \
     %(extendedTopology, events, order))
     count = 0
-    for f in SlhaFiles(topology, browser, threshold.motherMasses, \
-    threshold.lspMasses, threshold.d, intermediate[0], intermediate[1], events, order, unlink):
+    slhaFiles = SlhaFiles(topology, browser, threshold.motherMasses, \
+    threshold.lspMasses, threshold.d, intermediate[0], intermediate[1], events, order, unlink)
+    for f in slhaFiles:
         count += 1
         print('Progress ...... ', count)
     print('Wrote %s slha-files to %s' %(count, folder))
     print('unlink %s' %unlink)
+    #del slhaFiles
 
 def checkFolder(path):
     """Checks if the slha folder already exists.
