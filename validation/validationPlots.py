@@ -281,7 +281,7 @@ def main():
         offset4 = 55
     
     if topology in ['T6bbWW'] and value:
-        xOffset = 50
+        xOffset = 30
     else:
         xOffset = 0
     if topology in ['TChiChipmSlepL', 'TChiChipmSlepStau']:
