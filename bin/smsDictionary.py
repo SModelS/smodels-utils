@@ -15,8 +15,8 @@ from smodels_tools.tools import databaseBrowser
 import logging
 logger=logging.getLogger(__name__)
     
-# browser = databaseBrowser.Browser ( '../../smodels-database/' )
-browser = databaseBrowser.Browser ( )
+browser = databaseBrowser.Browser ( '../../smodels-database/' )
+## browser = databaseBrowser.Browser ( )
 f=open("SmsDictionary","w")
 
 shortnames={ "directslep": "weakinos", "hadronic": "colored",
@@ -27,7 +27,7 @@ longnames={ "sleptons": "sleptons", "colored": "colored production",
             "none": "not categorized" }
 categoryorder=( "colored", "third", "weakinos", "none" )
 
-def header():
+def header( categories ):
     f.write ( 
 ##"""#acl +DeveloperGroup:read,write,revert -All:write,read Default 
 ## <<LockedPage()>>
@@ -41,12 +41,14 @@ The list has been created from the database version %s.
 
 There is also a ListOfAnalyses.
 
-The dictionary is split up by production:
-
-[[#colored|colored production]], [[#third|third generation]], 
-[[#weakinos|weakinos and sleptons]], [[#none|uncategorized]]
-
 """ % browser.databaseVersion )
+    ret="The dictionary is split up by production:  "
+    for cat in categories:
+        ret+= "[[#%s|%s]], " % ( cat, longnames[cat] )
+    f.write ( ret[:-2]+"\n" )
+    #f.write ( "[[#colored|colored production]], [[#third|third generation]]," )
+    #f.write ( "[[#weakinos|weakinos and sleptons]], [[#none|uncategorized]]" )
+
 
 def footer():
     f.write (
@@ -178,7 +180,6 @@ def topoCmp ( x, y ):
     return 1
 
 def main():
-    header()
     browser.verbosity='error'
     print "Base=",browser.base
     topos = browser.allTopologies()
@@ -191,12 +192,15 @@ def main():
         cat=shortnames [ scat ]
         if not cat in categories: categories[cat]=[]
         categories[cat].append ( topo )
+    header( categories.keys() )
     #    if toponame=="T1tttt":
     #        print "category: ",toponame,scat,type(scat),cat
 
     #print categories.keys()
 
     for cat in categoryorder:
+        if not cat in categories:
+            continue
         topos = categories[cat]
         topos.sort ( topoCmp )
         categoryHeader ( cat, longnames[cat] )
