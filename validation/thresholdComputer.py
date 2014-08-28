@@ -169,13 +169,15 @@ class Threshold(object):
         if particle == 'mother' and self.topo.name == 'T1tttt':
             if minM < 400: minM = 400
         if particle == 'mother' and self.topo.name == 'T2':
-            if minM < 200: minM = 200#
+            if minM < 200: minM = 200
         if particle == 'mother' and self.topo.name == 'T1':
             if minM < 200: minM = 200
         if particle == 'mother' and self.topo.name == 'T2bb':
             if minM < 100: minM = 100
         if particle == 'mother' and self.topo.name == 'T6bbWW':
             if minM < 100: minM = 100
+        if particle == 'mother' and self.topo.name == 'T5WW':
+            if minM < 300: minM = 300
         return minM
         
     def _stepWidth(self, particle):
@@ -208,7 +210,7 @@ class Threshold(object):
             dDefoult = -200
         if self.topo.name == 'TChiWZon' or self.topo.name == 'TChiWZ':
             dDefoult = -100
-        if self.topo.name == 'T6bbWW' or self.topo.name == 'T6ttWW':
+        if self.topo.name in ['T6bbWW', 'T6ttWW','T5WW']:
             if self._condition == 'xvalue':
                 dMax = -(86/self._interValue)  
                 dMax = float(int(dMax-1))
@@ -232,7 +234,7 @@ class Threshold(object):
         return massList
 
 def main():
-    threshold = Threshold('T6bbWW',Browser('../../smodels-database'),'xvalue','037')
+    threshold = Threshold('T5WW',Browser('../../smodels-database'),'xvalue','070')
     print('motherMasse: %s' %threshold.motherMasses)
     print('lspMasse: %s' %threshold.lspMasses)
     print('minLSB: %s maxLSB %s' %(min(threshold.lspMasses), max(threshold.lspMasses)))
