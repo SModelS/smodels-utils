@@ -104,7 +104,7 @@ def getEnvelope(region):
     envelop = ROOT.TGraph()
     curve = copy.deepcopy(region)
     curve.Sort()
-    x1, y1 = Double(), Double()
+    x1, y1 = ROOT.Double(), ROOT.Double()
     curve.GetPoint(0, x1, y1)
     yline = []
     for ipt in range(curve.GetN() + 1): 
@@ -130,7 +130,7 @@ def getEnvelope(region):
             x1 = x
             yline = [y]
 
-    x2, y2 = Double(), Double()
+    x2, y2 = ROOT.Double(), ROOT.Double()
     envelop.GetPoint(envelop.GetN() - 1, x2, y2)
     envelop.SetPoint(envelop.GetN(), x2, 0.)  #Close exclusion curve at zero
     return envelop
