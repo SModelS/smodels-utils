@@ -11,4 +11,7 @@
 *.dvi
 *.py.kate-swp
 Database.txt
+bin/SmsDictionary
+bin/ListOfAnalyses
 *.py~
+old/

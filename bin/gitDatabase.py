@@ -5,6 +5,8 @@ import setPath
 from smodels.tools import rcFile
 from smodels.experiment import smsHelpers
 
+smsHelpers.base="/home/walten/git/smodels-database/"
+
 print "base=",smsHelpers.base
 repo=git.Repo ( smsHelpers.base )
 print repo
