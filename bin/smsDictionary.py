@@ -46,8 +46,6 @@ There is also a ListOfAnalyses.
     for cat in categories:
         ret+= "[[#%s|%s]], " % ( cat, longnames[cat] )
     f.write ( ret[:-2]+"\n" )
-    #f.write ( "[[#colored|colored production]], [[#third|third generation]]," )
-    #f.write ( "[[#weakinos|weakinos and sleptons]], [[#none|uncategorized]]" )
 
 
 def footer():
@@ -78,6 +76,7 @@ def categoryHeader ( shortname, longname ):
 topoCounter=[0]
 
 def writeTopo ( topo ):
+    # print "topo",topo.name,len(topo.analyses)
     if len(topo.analyses)==0: return
     ## count number of legit analyses
     counter=0
@@ -85,7 +84,7 @@ def writeTopo ( topo ):
         oana=browser.expAnalysis ( ana ) ## get the object
         if oana.private:
             continue
-        if not oana.checked:
+        if oana.checked==False:
             continue
         counter+=1
     if counter==0:
@@ -150,13 +149,14 @@ def writeTopo ( topo ):
         # order by experiment
         for ana in topo.analyses:
             oana=browser.expAnalysis ( ana ) ## get the object
+            ## print "ana",ana,oana.experiment,oana.checked,oana.url
             if oana.experiment != experiment:
                 continue
             ## print oana.name,"private",type(oana.private),oana.private
             if oana.private:
                 logger.warn ( "%s is marked as private." % ana )
                 continue
-            if not oana.checked:
+            if oana.checked==False:
                 continue
             url=oana.url
             if url==None:
@@ -193,10 +193,6 @@ def main():
         if not cat in categories: categories[cat]=[]
         categories[cat].append ( topo )
     header( categories.keys() )
-    #    if toponame=="T1tttt":
-    #        print "category: ",toponame,scat,type(scat),cat
-
-    #print categories.keys()
 
     for cat in categoryorder:
         if not cat in categories:
@@ -204,9 +200,9 @@ def main():
         topos = categories[cat]
         topos.sort ( topoCmp )
         categoryHeader ( cat, longnames[cat] )
-    #    print cat,">>",
+      #  print cat,">>",
         for topo in topos:
-    #        print topo.name," ",
+     #       print topo.name," ",
             writeTopo ( topo )
     #    print
     footer()
