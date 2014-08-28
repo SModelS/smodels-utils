@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class Threshold(object):
     
-    def __init__(self, topology, browserObject):
+    def __init__(self, topology, browserObject, condition, value):
         """Uses the given browser object to retrieve all upper limit histogram 
         dictionaries knowen for this topology. 
         :param topology: topology the slha-files should be preoduced for
@@ -35,12 +35,35 @@ class Threshold(object):
             sys.exit()            
         self._browser = browserObject
         self.topo = self._browser.expTopology(topology)
+        if not condition == 'xvalue':
+            logger.error('Condition %s not supported' %condition)
+            sys.exit()    
+        self._condition = condition
+        self._interValue = self._setInterValue(value)
         self.thresholds = self._thresholds
         self.motherMasses = self._massList('mother')
         self.lspMasses = self._massList('lsp')
         self.d = self._maxDelta()
+
     
-    
+    def _setInterValue(self,value):
+        """
+        
+        """
+        
+        if self._condition == 'xvalue':
+            if value[:1] != '0':
+                logger.error('value %s not allowed for contion %s' %(value,self._condition))
+                sys.exit()  
+            div = float('1' + (len(value)-1)*'0')
+            interValue = float(value[1:])/div
+            interValue = round(interValue,2)
+            if not interValue >= 0. or not interValue <= 1.:
+                logger.error('value for contion %s must be between 1 and 0. Got: %s' %(self._condition,interValue))
+                sys.exit() 
+            return interValue
+        return
+        
     
     @property    
     def _thresholds(self):
@@ -152,7 +175,7 @@ class Threshold(object):
         if particle == 'mother' and self.topo.name == 'T2bb':
             if minM < 100: minM = 100
         if particle == 'mother' and self.topo.name == 'T6bbWW':
-            if minM < 150: minM = 200
+            if minM < 100: minM = 100
         return minM
         
     def _stepWidth(self, particle):
@@ -185,7 +208,10 @@ class Threshold(object):
             dDefoult = -200
         if self.topo.name == 'TChiWZon' or self.topo.name == 'TChiWZ':
             dDefoult = -100
-        if dMax > dDefoult: dMax = dDefoult  
+        if self.topo.name == 'T6bbWW' or self.topo.name == 'T6ttWW':
+            if self._condition == 'xvalue':
+                dMax = -(86/self._interValue)  
+                dMax = float(int(dMax-1))
         return dMax
         
     def _massList(self, particle):    
@@ -206,7 +232,7 @@ class Threshold(object):
         return massList
 
 def main():
-    threshold = Threshold('T6bbWW',Browser('../../smodels-database'))
+    threshold = Threshold('T6bbWW',Browser('../../smodels-database'),'xvalue','037')
     print('motherMasse: %s' %threshold.motherMasses)
     print('lspMasse: %s' %threshold.lspMasses)
     print('minLSB: %s maxLSB %s' %(min(threshold.lspMasses), max(threshold.lspMasses)))
