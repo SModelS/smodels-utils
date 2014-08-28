@@ -95,7 +95,7 @@ class SlhaFiles(object):
         """
         
         os.system('rm ./%s' %self._tempSlhaName)
-        print('del temp file')
+
         
         
     def _setInterValue(self,value):
@@ -108,8 +108,6 @@ class SlhaFiles(object):
                 logger.error('value %s not allowed for contion %s' %(value,self._condition))
                 sys.exit()  
             div = float('1' + (len(value)-1)*'0')
-            print('##############%s' %div)
-            print(value)
             interValue = float(value[1:])/div
             interValue = round(interValue,2)
             if not interValue >= 0. or not interValue <= 1.:
@@ -385,7 +383,7 @@ def main():
     events = args.events
     order = args.order
     unlink = args.link
-    threshold = Threshold(topology, browser)
+    threshold = Threshold(topology, browser, intermediate[0], intermediate[1])
     folder = checkFolder('../slha/%s_%s_%s_slhas' \
     %(extendedTopology, events, order))
     count = 0
