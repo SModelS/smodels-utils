@@ -15,3 +15,5 @@ bin/SmsDictionary
 bin/ListOfAnalyses
 *.py~
 old/
+slha/T*_*_*_slhas/
+

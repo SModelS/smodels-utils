@@ -24,6 +24,7 @@ def addInstallDirectory():
     fname=inspect.getabsfile(addInstallDirectory)
     base=os.path.dirname ( os.path.realpath ( fname ) )
     sys.path.append ( base )
+    return base
 
 def version(astuple=False):
     """
@@ -49,7 +50,7 @@ def addSModelSPath():
         import sys
         # sys.path.append ( I )
         sys.path.append ( J )
-        return
+        return J
     except ImportError,e:
         pass
     import commands
