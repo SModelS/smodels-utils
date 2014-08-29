@@ -49,7 +49,7 @@ def addSModelSPath():
         import sys
         # sys.path.append ( I )
         sys.path.append ( J )
-        return
+        return J
     except ImportError,e:
         pass
     import commands
