@@ -24,6 +24,7 @@ def addInstallDirectory():
     fname=inspect.getabsfile(addInstallDirectory)
     base=os.path.dirname ( os.path.realpath ( fname ) )
     sys.path.append ( base )
+    return base
 
 def version(astuple=False):
     """
