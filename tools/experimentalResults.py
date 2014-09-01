@@ -2,7 +2,7 @@
 
 """
 .. module:: experimentalResults
-   :synopsis: Holds the experimental result object retrieved from smodels-database\ 
+   :synopsis: Holds the experimental result object retrieved from smodels-database 
    in order to produce summaryplots.
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
