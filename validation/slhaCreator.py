@@ -70,7 +70,7 @@ class SlhaFiles(object):
         self._unlink = unlink
         self._listOfInterPid = self._getPidCodeOfIntermediateParticle()
         self._listOfMotherPid = self._getPidCodeOfMother()
-        if not condition == 'xvalue':
+        if not condition in ['xvalue','x']:
             logger.error('Condition %s not supported' %condition)
             sys.exit()  
         if condition == 'xvalue':
@@ -102,7 +102,11 @@ class SlhaFiles(object):
         """
         
         """
-        
+        try:
+            float(value)
+        except ValueError:
+            logger.error('value for contion %s must be a number. Got: %s' %(self._condition,interValue))
+            sys.exit() 
         if self._condition == 'xvalue':
             if value[:1] != '0':
                 logger.error('value %s not allowed for contion %s' %(value,self._condition))
@@ -113,6 +117,10 @@ class SlhaFiles(object):
             if not interValue >= 0. or not interValue <= 1.:
                 logger.error('value for contion %s must be between 1 and 0. Got: %s' %(self._condition,interValue))
                 sys.exit() 
+            return interValue
+        if self._condition == 'x':
+            interValue == float(value)/100.
+            interValue == interValue = round(interValue,2)
             return interValue
         return
         
@@ -136,6 +144,8 @@ class SlhaFiles(object):
                 logger.info('mother mass: %s, lsp mass: %s' %(motherMass, lspMass)) 
                 if self._condition == 'xvalue':
                     interMass = self._interValue * motherMass + (1 - self._interValue) * lspMass
+                if self._condition == 'x':
+                    interMass = self._interValue * lspMass
                 slhaLines = self._setMass(motherMass, lspMass, interMass)
                 if firstLoop:
                     self._delXsecFromFile()
