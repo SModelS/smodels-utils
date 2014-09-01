@@ -142,10 +142,13 @@ class SlhaFiles(object):
                 str(int(motherMass)) + '_' + str(int(lspMass)) + '_' + \
                 self._order + '.slha'
                 logger.info('mother mass: %s, lsp mass: %s' %(motherMass, lspMass)) 
+                interMass = None
                 if self._condition == 'xvalue':
                     interMass = self._interValue * motherMass + (1 - self._interValue) * lspMass
                 if self._condition == 'x':
                     interMass = self._interValue * lspMass
+                if self.topo.name == 'T6ttWW' and self._condition == 'x':
+                    if interMass < 81./self._interValue: continue # valition of kin. contion
                 slhaLines = self._setMass(motherMass, lspMass, interMass)
                 if firstLoop:
                     self._delXsecFromFile()
