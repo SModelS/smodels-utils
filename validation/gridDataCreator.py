@@ -21,6 +21,7 @@ import os
 import types
 import ROOT
 import sys
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -288,6 +289,7 @@ def main():
         sys.exit()
     fileList =  os.listdir(slhaPath)
     slhaList = sorted(fileList, key = lambda slha: int(slha.split('_')[1]))
+    startTime = time.time()
     for slha in slhaList:
         data = GridData(expTopo.name, analysis, slhaPath + '/' + slha)
         massMother = data.massMother
@@ -304,13 +306,24 @@ def main():
         print('%s  %s  %s  %s %s' \
         %(massMother, massLSP, tUL, eUL, cond), file = outFile)
         count += 1
+    computTime = timeUnits(time.time() - startTime)
     print('#END', file = outFile)
+    print('time: %s' %computTime, file = outFile) 
     metaData = writeMetaData(expRes, slhaOrder, fileName, factor, condition, value)
     for key in metaData:
         print(key, metaData[key], file = outFile)
     print ('Worte %s lines of grid data to file %s!' %(count, fileName))
     outFile.close()    
 
+def timeUnits(t):
+    if t > 60.:
+        tU = '%s min' %(t/60.)
+    elif t > 3600:
+        tU = '%s h' %(t/3660.)
+    else:
+        tU = '%s sec' %t
+    return tU
+    
 def writeMetaData(expRes, order, fileName, factor, condition, value):
     """Writes all the meta data (e.g. root tag, name of output-file, ...)
     :returns: dictionary
