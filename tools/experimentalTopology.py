@@ -48,6 +48,11 @@ class ExpTopology(object):
         """
         self._verbosity = level
         self._setLogLevel(level)
+
+    def __str__(self):
+        ret="%s [%s]: " % ( self.name, self.category )
+        ret+= ",".join ( self.constraints ).replace("'","") 
+        return ret
         
     def _setLogLevel(self, level = 'error'):
         if level == 'debug':

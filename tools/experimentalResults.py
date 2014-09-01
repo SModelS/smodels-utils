@@ -54,6 +54,10 @@ class ExpResult (object):
         self._extendedResults = self._getExtendedResults
         self._extResDefault = self._getExtendedResultsDefault
         self._verbosity = 'error'
+
+    def __str__(self):
+        ret="%s/%s" % ( self.expAnalysis.name, self.expTopology.name )
+        return ret
     
     @property
     def verbosity(self):
@@ -149,6 +153,13 @@ class ExpResult (object):
     
     @property    
     def hasUpperLimitDict(self):
+        """Checks if there is an upper limit dictionary for this result.
+        
+        """
+        return self.hasUpperLimits
+
+    @property    
+    def hasUpperLimits(self):
         """Checks if there is an upper limit dictionary for this result.
         
         """

@@ -41,6 +41,11 @@ class ExpAnalysis(object):
         self._smsroot = smsroot
         self._smspy = smspy
         self._verbosity = 'error'
+
+    def __str__(self ):
+        ret="%s [%s, %s] <<%s>>" % \
+             ( self.name, self.experiment, self.run, ",".join(self.topologies) )
+        return ret
      
     @property
     def verbosity(self):
