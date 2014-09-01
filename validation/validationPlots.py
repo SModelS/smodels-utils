@@ -204,7 +204,10 @@ def main():
             multi.Add(officialExclusionLine, 'L')
         
     #Legend:
-    legend = ROOT.TLegend(0.57, 0.55, 0.9, 0.89)
+    if topology == 'T6ttWW':
+        legend = ROOT.TLegend(0.57, 0.6, 0.9, 0.89)
+    else:
+        legend = ROOT.TLegend(0.57, 0.55, 0.9, 0.89)
     legend.SetBorderSize(1)
     legend.SetMargin(0.2)
     legend.SetFillColor(ROOT.kWhite)
@@ -212,7 +215,8 @@ def main():
     legend.AddEntry(excluded, 'excluded', 'P')
     legend.AddEntry(allowed, 'allowed', 'P')
     legend.AddEntry(notTested, 'not tested', 'P')
-    legend.AddEntry(exclusionLine, 'derived exclusion contour', 'L')
+    legend.AddEntry(exclusionLine, 'SmodelS %s' %(intermediate[0] + ': '\
+    + intermediate[1]), 'L')
     if not value and not condition:
         legend.AddEntry(officialExclusionLine, '%s' %metadata['rootTag'][0][1], 'L')
     else:
@@ -286,8 +290,11 @@ def main():
     
     if topology in ['T6bbWW'] and value:
         xOffset = 30
+    elif topology in ['T6ttWW'] and value:
+        xOffset = 110
     else:
         xOffset = 0
+        
     if topology in ['TChiChipmSlepL', 'TChiChipmSlepStau']:
             title1 = ROOT.TLatex(xPosition - xOffset, yPosition - offset, '%s:' %topology)
             title1.SetTextSize(0.05)
