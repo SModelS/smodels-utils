@@ -232,7 +232,10 @@ def main():
     
     multi.Draw('APL')
     multi.GetXaxis().SetTitle("m_{mother} (GeV)")
-    multi.GetYaxis().SetTitle("m_{LSP} (GeV)")
+    if condition == 'LSP':
+        multi.GetYaxis().SetTitle("m_{intermediate} (GeV)")
+    else:
+        multi.GetYaxis().SetTitle("m_{LSP} (GeV)")
     multi.GetYaxis().SetTitleOffset(1.0)
     ROOT.gPad.RedrawAxis()
     legend.Draw('L')
