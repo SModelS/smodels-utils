@@ -50,8 +50,8 @@ class ExpTopology(object):
         self._setLogLevel(level)
 
     def __str__(self):
-        ret="%s [%s]: " % ( self.name, self.category )
-        ret+= ",".join ( self.constraints ).replace("'","") 
+        ret = "%s [%s]: " % ( self.name, self.category )
+        ret += ",".join ( self.constraints ).replace("'","") 
         return ret
         
     def _setLogLevel(self, level = 'error'):

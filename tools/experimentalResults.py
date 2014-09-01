@@ -56,7 +56,7 @@ class ExpResult (object):
         self._verbosity = 'error'
 
     def __str__(self):
-        ret="%s/%s" % ( self.expAnalysis.name, self.expTopology.name )
+        ret = "%s/%s" % ( self.expAnalysis.name, self.expTopology.name )
         return ret
     
     @property
