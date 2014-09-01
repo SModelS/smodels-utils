@@ -132,28 +132,29 @@ def main():
     else:
         if not extendedTopology in expRes.extendedTopologies:
             logger.info('There is no official exclusion line for %s!\n \
-            Search for next neighbors.' %extendedTopology)
-            if not condition:
+            Search for adjacent lines.' %extendedTopology)
+            if not condition or condition == 'x':
                 values = []
                 for extTopo in expRes.axes:
-                    values.append(expRes.axes[extTopo]['mz'])
+                    values.append(expRes.axes[extTopo]['mz'].replace(condition, ''))
                 values.append(value)
                 values.sort()
                 valueIndex = values.index(value)
                 if not valueIndex + 1 > len(values):
                     valueAbove = values[valueIndex + 1]
-                    logger.info('Found neighbor above for xvalue = %s'\
-                    %valueAbove)
+                    logger.info('Found adjacent line above for %s%s'\
+                    %(condition, valueAbove))
                 else:
                     valueAbove = ''
-                    logger.info('No neighbor above could be found!')
-                if not valueIndex -1 < 0:
+                    logger.info('No adjacent line above could be found!')
+                if not valueIndex - 1 < 0:
                     valueBelow = values[valueIndex - 1]
-                    logger.info('Found neighbor below for xvalue = %s'\
-                    %valueBelow)
+                    logger.info('Found adjacent line below for %s%s'\
+                    %(condition, valueBelow))
                 else:
                     valueBelow = ''
-                    logger.info('No neighbor below could be found!')
+                    logger.info('No adjacent line below could be found!')
+                
             if valueAbove:        
                 officialExclusionLineAbove = expRes.selectExclusionLine\
                 (condition = intermediate[0], value = valueAbove)
