@@ -124,7 +124,10 @@ class ExpResult (object):
             return exRes[0]
         logger.debug('There are %s extended results for %s-%s!' \
         %(len(exRes), self._ana, self._topo))
-        exRes = [er for er in exRes if er.topoName == self._topo + '050']
+        if 'TChiWZ' in self._topo:
+            exRes = [er for er in exRes if er.topoName == 'TChiWZ']
+        else:
+            exRes = [er for er in exRes if er.topoName == self._topo + '050']
         if not exRes:
             logger.warning('FIX ME: there is no default for: %s' %self.extendedTopos)
             return None
