@@ -119,8 +119,8 @@ class SlhaFiles(object):
                 sys.exit() 
             return interValue
         if self._condition == 'x':
-            interValue == float(value)/100.
-            interValue == interValue = round(interValue,2)
+            interValue = float(value)/100.
+            interValue = round(interValue,2)
             return interValue
         return
         
@@ -148,7 +148,7 @@ class SlhaFiles(object):
                 if self._condition == 'x':
                     interMass = self._interValue * lspMass
                 if self.topo.name == 'T6ttWW' and self._condition == 'x':
-                    if interMass < 81./self._interValue: continue # valition of kin. contion
+                    if interMass < (81.+lspMass): continue # valition of kin. contion
                 slhaLines = self._setMass(motherMass, lspMass, interMass)
                 if firstLoop:
                     self._delXsecFromFile()
