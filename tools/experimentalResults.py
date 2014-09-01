@@ -156,6 +156,13 @@ class ExpResult (object):
         """Checks if there is an upper limit dictionary for this result.
         
         """
+        return self.hasUpperLimits
+
+    @property    
+    def hasUpperLimits(self):
+        """Checks if there is an upper limit dictionary for this result.
+        
+        """
         if self.upperLimitDicts:
             return True
         return False
