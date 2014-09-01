@@ -35,10 +35,11 @@ class Threshold(object):
             sys.exit()            
         self._browser = browserObject
         self.topo = self._browser.expTopology(topology)
-        if not condition == 'xvalue':
+        if not condition in ['xvalue', 'x']:
             logger.error('Condition %s not supported' %condition)
             sys.exit()    
         self._condition = condition
+        self._value = value
         self._interValue = self._setInterValue(value)
         self.thresholds = self._thresholds
         self.motherMasses = self._massList('mother')
@@ -53,22 +54,22 @@ class Threshold(object):
         try:
             float(value)
         except ValueError:
-            logger.error('value for contion %s must be a number. Got: %s' %(self._condition,interValue))
+            logger.error('Value for condition %s must be a number. Got: %s' %(self._condition, interValue))
             sys.exit() 
         if self._condition == 'xvalue':
             if value[:1] != '0':
-                logger.error('value %s not allowed for condition %s' %(value,self._condition))
+                logger.error('Value %s not allowed for condition %s' %(value, self._condition))
                 sys.exit()  
             div = float('1' + (len(value) - 1) * '0')
             interValue = float(value[1:]) / div
             interValue = round(interValue, 2)
             if not interValue >= 0. or not interValue <= 1.:
-                logger.error('value for condition %s must be between 1 and 0. Got: %s' %(self._condition,interValue))
+                logger.error('value for condition %s must be between 1 and 0. Got: %s' %(self._condition, interValue))
                 sys.exit() 
             return interValue
         if self._condition == 'x':
-            interValue == float(value)/100.
-            interValue == interValue = round(interValue,2)
+            interValue = float(value) / 100.
+            interValue = round(interValue, 2)
             return interValue
         return
         return
@@ -92,7 +93,23 @@ class Threshold(object):
         for a in analyses:
             if self._browser.expAnalysis(a).sqrts != 8.0:
                 continue
-            ulDict = self._browser.expResult(a, self.topo.name).upperLimitDict()
+            result = self._browser.expResult(a, self.topo.name)
+            ulDicts = result.upperLimitDicts
+            if self.topo.name in ulDicts:
+                ulDict = result.upperLimitDict(self.topo.name)
+            elif self.topo.name + self._condition + self._value in ulDicts\
+            and not self._condition == 'LSP':
+                ulDict = result.upperLimitDict(self.topo.name + self._condition + self._value)
+            else:
+                for key in ulDicts:
+                    val = []
+                    if self.topo.name + self._condition in key:
+                        try:
+                            val.append(int(key.replace(self.topo.name + self._condition, '')))
+                        except ValueError: continue
+                if val:
+                    ulDict = result.upperLimitDict(self.topo.name + self._condition + str(min(val)))
+                
             if not ulDict: continue
             mM = []
             lspM = []
@@ -205,6 +222,8 @@ class Threshold(object):
         if 'T6bbWW' in self.topo.name and particle == 'mother':
             minStep = 20
         if 'TChiWZ' in self.topo.name: minStep = 10
+        if 'T6ttWW' in self.topo.name:
+            minStep = 12.5
         return minStep
     
     def _maxDelta(self):
@@ -244,12 +263,12 @@ class Threshold(object):
         return massList
 
 def main():
-    threshold = Threshold('T6bbWW',Browser('../../smodels-database'),'xvalue','037')
+    threshold = Threshold('T6ttWW',Browser('../../smodels-database'),'x','150')
     print('motherMasse: %s' %threshold.motherMasses)
     print('lspMasse: %s' %threshold.lspMasses)
     print('minLSB: %s maxLSB %s' %(min(threshold.lspMasses), max(threshold.lspMasses)))
     print('minMother: %s maxMother %s' %(min(threshold.motherMasses), max(threshold.motherMasses)))
-    print('d; %s' %threshold.d)
+    print('d: %s' %threshold.d)
 
     
 if __name__ == '__main__':
