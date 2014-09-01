@@ -78,7 +78,7 @@ class ExpTopology(object):
     @property    
     def _category(self):
         """Takes the category for this topology from every info.txt, 
-        compairs them and returns the string if they are all the same. 
+        compares them and returns the string if they are all the same. 
         Raises an ERROR and returns None if they are not!
         
         """

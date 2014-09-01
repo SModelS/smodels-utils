@@ -57,7 +57,7 @@ def main():
   print "has upper limits:", result.hasUpperLimits
   #print "upper limits:", result.upperLimitDicts
   print "has expected upper limits:", result.hasExpectedUpperLimits
-  äprint "upper limits:", result.expectedUpperLimitDicts
+  # print "upper limits:", result.expectedUpperLimitDicts
 
   ## use this object
   #print '\nResult is checked: ', result.checkedBy
