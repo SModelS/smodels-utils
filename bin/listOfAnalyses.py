@@ -17,8 +17,8 @@ logger=logging.getLogger(__name__)
 
 countResults=[0]
     
-# browser = databaseBrowser.Browser ( '../../smodels-database/' )
-browser = databaseBrowser.Browser ( )
+browser = databaseBrowser.Browser ( '../../smodels-database/' )
+## browser = databaseBrowser.Browser ( )
 f=open("ListOfAnalyses","w")
 
 prettynames= { "thirdgen": "third generation", "hadronic": "hadronic production",
@@ -43,6 +43,7 @@ There is also an SmsDictionary.
 
  * Has Condition: lists, whether a special condition is required in order for the constraint to be applicable.
  * Data published in digital form: has the experiment published the data in digital form? (e.g. as a ROOT file, or a HEPDATA table).
+ * Expected upper limits: has the experiment also published a histogram with the '''expected''' upper limits?
 
 To experiment: [[#CMS|CMS]], [[#ATLAS|ATLAS]]
 
@@ -65,7 +66,7 @@ def writeSection ( experiment, section, analyses ):
     f.write ( "<<Anchor(%s%s)>>\n" % ( experiment, section ) )
     f.write ( "\n" )
     for colheader in [ "Analysis", "#", "Topology", "Constraint", "Has Condition?", \
-        "Data published in digital form?" ]:
+        "Data published in digital form?", "Expected upper limits?" ]:
         f.write ( "||<#EEEEEE>'''%s''' " % colheader )
     f.write ( "||\n" )
     # f.write ( "||'''Analysis''' || '''#''' ||'''Topology''' ||'''Constraint''' ||'''Has Condition?''' ||'''Data published in digital form?''' ||\n" )
@@ -98,8 +99,8 @@ def writeSection ( experiment, section, analyses ):
         if len(anatopos)>1:
             span="<:|%d>" % len(anatopos)
         ananameb=ananame.replace("_"," ")
-        # f.write ( "|| || || || || || ||\n" )
-        f.write ( "||||||||||||||\n" )
+        # f.write ( "|| || || || || || || ||\n" )
+        f.write ( "||||||||||||||||\n" )
         f.write ( "||%s [[%s|%s]]<<BR>>%d TeV<<BR>> %s fb^-1^" % \
                   ( span,anaurl,ananameb, int(float(ana.sqrts)), ana.lumi ) )
         for topo in anatopos:
@@ -129,9 +130,11 @@ def writeSection ( experiment, section, analyses ):
             if mycond in [ "None", None, "" ]: hascond=False
             datapub=ana.publishedData
             countResults[0]=countResults[0]+1
-            f.write ( "|| %d || %s || %s || %s || %s ||\n" \
+            res=browser.expResult ( ananame, topo )
+            expctd=res.hasExpectedUpperLimits
+            f.write ( "|| %d || %s || %s || %s || %s || %s||\n" \
                       % ( countResults[0], topolink, constr, \
-                          yesno(hascond), yesno(datapub) ) )
+                          yesno(hascond), yesno(datapub), yesno(expctd) ) )
 
 def writeExperiment ( experiment ):
     experimentHeader ( experiment )
