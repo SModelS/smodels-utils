@@ -52,8 +52,8 @@ def main():
   print 
   
   ## to get a specified Result-object
-  #result = browser.expResult('8TeV',analysis, browser.expTopology('T1tttt'))
-  #print 'Pair-object is: ', result
+  result = browser.expResult("SUS13006","TChiWZ" )
+  print 'Result is: ', result
   ## use this object
   #print '\nResult is checked: ', result.checkedBy
   #print '\nGet all the exclusionlines: ', result.getExclusionLines()
