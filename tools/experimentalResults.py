@@ -158,13 +158,16 @@ class ExpResult (object):
         
     
     @property    
-    def hasExpectedUpperLimitDict(self):
+    def hasExpectedUpperLimits(self):
         """Checks if there is an expected upper limit dictionary for this result.
         
         """
-        if self.expectedUpperLimitDicts:
-            return True
-        return False    
+        if not self.expectedUpperLimitDicts:
+            return False
+        for (key,value) in self.expectedUpperLimitDicts.items():
+            if value!=[None]:
+                return True
+        return False
         
     @property
     def upperLimitDicts(self):
