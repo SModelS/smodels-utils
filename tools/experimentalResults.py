@@ -2,7 +2,7 @@
 
 """
 .. module:: experimentalResults
-   :synopsis: Holds the experimental result object retrieved from smodels-database\ 
+   :synopsis: Holds the experimental result object retrieved from smodels-database 
    in order to produce summaryplots.
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
@@ -56,7 +56,7 @@ class ExpResult (object):
         self._verbosity = 'error'
 
     def __str__(self):
-        ret="%s/%s" % ( self.expAnalysis.name, self.expTopology.name )
+        ret = "%s/%s" % ( self.expAnalysis.name, self.expTopology.name )
         return ret
     
     @property

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 """
-.. module:: experimentalObjects
-   :synopsis: Hold the ExpTopology object retrieved from smodels-database\ 
+.. module:: experimentalTopology
+   :synopsis: Holds the ExpTopology object retrieved from smodels-database 
    in order to produce summaryplots.
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
@@ -24,7 +24,7 @@ logger.setLevel(level=logging.ERROR)
 
 class ExpTopology(object):
     """Contains all topology-specific information (e.g. analyses and runs that 
-    contain this topology, category, particles resp. productionmode, ...)
+    contain this topology, category, particles resp. production mode, ...)
     
     """
     def __init__ (self, topology, topoDict):
@@ -50,8 +50,8 @@ class ExpTopology(object):
         self._setLogLevel(level)
 
     def __str__(self):
-        ret="%s [%s]: " % ( self.name, self.category )
-        ret+= ",".join ( self.constraints ).replace("'","") 
+        ret = "%s [%s]: " % ( self.name, self.category )
+        ret += ",".join ( self.constraints ).replace("'","") 
         return ret
         
     def _setLogLevel(self, level = 'error'):
@@ -187,7 +187,7 @@ class ExpTopology(object):
         
     def _searchDecayDict(self):
         """Searches for topology name in descriptions.decay
-        :returns: dictionary entry without formating 
+        :returns: dictionary entry without formatting 
         
         """
         if decays.has_key(self._name):
@@ -202,7 +202,7 @@ class ExpTopology(object):
 
     @property
     def decay(self):
-        """:returns: decay as string, formated for ROOT.TLatex
+        """:returns: decay as string, formatted for ROOT.TLatex
         
         """
         
@@ -225,8 +225,8 @@ class ExpTopology(object):
             return decayString
             
     def _latexDecay(self, decayString):
-        """translate decay description as given in decays dictionary
-        to a string readable by ROOT.TLatex object
+        """Translates decay description as given in decays dictionary
+        to a string readable by ROOT.TLatex object.
         
         """
         for key, value in prettySUSYParticle.items():
@@ -241,8 +241,8 @@ class ExpTopology(object):
         return decayString
         
     def _latexParticle(self,decayString,key,value):
-        """translate particle description as given in decays dictionary
-        to a string readable by ROOT.TLatex object
+        """Translates particle description as given in decays dictionary
+        to a string readable by ROOT.TLatex object.
         
         """
         decayString = decayString.replace('anti' + key + ' ','#bar{' + value + '}')
@@ -253,7 +253,7 @@ class ExpTopology(object):
         
     @property
     def motherParticle(self):
-        """ :returns: motherParticle in simple format as string or None
+        """ :returns: mother particle in simple format as string or None
         
         """
         # ### FIX ME: This is not done yet! 
@@ -272,7 +272,7 @@ class ExpTopology(object):
             return 'cpm'
         if not 'chargino' in motherPart and 'neutralino' in motherPart:#
             return 'c0'
-        logger.error('could not identify motherParticle for  %s' %self._name)
+        logger.error('could not identify mother particle for  %s' %self._name)
         return None
         
     @property
@@ -299,7 +299,7 @@ class ExpTopology(object):
         
     @property
     def intermediateParticles(self):
-        """:returns: dictionary with intermadieted particles
+        """:returns: dictionary with intermediate particles
         
         """
         particles = []
@@ -341,8 +341,8 @@ class ExpTopology(object):
 # -prefix "anti" for anti-particles supported
 # -space is expected to end a particle description (eg: chargino^pm_2 )
 # -if there is more then one possible decay for one topology a list with decays is expected
-# -neutrino, lepton, neutralion, slepton means fisrt 2 genertions
-# -Neutrino, Lepton, Neutralion, sLepton means all 3 genertions
+# -neutrino, lepton, neutralion, slepton means first 2 generations
+# -Neutrino, Lepton, Neutralion, sLepton means all 3 generations
 
 decays = { 
     'T1': 'gluino  --> quark antiquark  lsp ' ,
@@ -428,15 +428,15 @@ prettySMParticle = {
     'top': 't',           #top
     'bottom': 'b',           #bottom
     
-    'lepton' : 'l',             #leptonsupot (first 2 generations)
-    'Lepton' : 'l',             #leptonsupot (all 3 generations)
+    'lepton' : 'l',             #lepton (first 2 generations)
+    'Lepton' : 'l',             #lepton (all 3 generations)
     'electron' : 'e',               #electron
     'muyon' : '#mu',            #myon
     'tauon' : '#tau',  #tauon
     
     'neutrino' : '#nu',                     #neutrino (first 2 generations)
     'Neutrino' : '#nu',                     #neutrino (all 3 generations)
-    'elektron-neutrino' : '#nu_{e}',               #elektron-neutrino
+    'electron-neutrino' : '#nu_{e}',               #electron-neutrino
     'myon-neutrino' : '#nu_{#mu}',            #myon-neutrino
     'tauon-neutrino' : '#nu_{#tau}',          #tauon-neutrino
 }
@@ -456,19 +456,19 @@ prettySUSYParticle = {
     'sup': '#tilde{u}',  #sup
     'sdown': '#tilde{d}',  #sdown
     'scharm': '#tilde{c}',  #scharm
-    'sstrange': '#tilde{s}',  #sstarnge
+    'sstrange': '#tilde{s}',  #sstrange
     'stop': '#tilde{t}',  #stop
     'sbottom': '#tilde{b}',  #sbottom
     
     'slepton' : '#tilde{l}',    #slepton (first 2 generations)
-    'sLepton' : '#tilde{l}',    #slepton (all 3 generations)
+    'sLepton' : '#tilde{l}',    #sLepton (all 3 generations)
     'selectron' : '#tilde{e}',      #selectron
     'smyon' : '#tilde{#mu}',   #smyon
     'stauon' : '#tilde{#tau}', #stauon
     
     'sneutrino' : '#tilde{#nu}',            #sneutrino (first 2 generations)
     'sNeutrino' : '#tilde{#nu}',            #sneutrino (all 3 generations)
-    'elektron-sneutrino' : '#tilde{#nu}_{e}',      #elektron-sneutrino
+    'electron-sneutrino' : '#tilde{#nu}_{e}',      #electron-sneutrino
     'myon-sneutrino' : '#tilde{#nu}_{#mu}',   #myon-sneutrino
     'tauon-sneutrino' : '#tilde{#nu}_{#tau}', #tauon-sneutrino  
 }

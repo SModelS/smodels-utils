@@ -307,9 +307,11 @@ def main():
         %(massMother, massLSP, tUL, eUL, cond), file = outFile)
         count += 1
     computTime = timeUnits(time.time() - startTime)
+    timePerFile = timeUnits((time.time() - startTime)/float(count))
     print('#END', file = outFile)
     print('time: %s' %computTime, file = outFile) 
-    metaData = writeMetaData(expRes, slhaOrder, fileName, factor, condition, value)
+    print('time per slha: %s' %timePerFile, file = outFile) 
+    metaData = writeMetaData(expRes, slhaOrder, fileName, factor, intermediate[0], intermediate[1])
     for key in metaData:
         print(key, metaData[key], file = outFile)
     print ('Worte %s lines of grid data to file %s!' %(count, fileName))

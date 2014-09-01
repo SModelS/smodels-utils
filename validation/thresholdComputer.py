@@ -57,13 +57,13 @@ class Threshold(object):
             sys.exit() 
         if self._condition == 'xvalue':
             if value[:1] != '0':
-                logger.error('value %s not allowed for contion %s' %(value,self._condition))
+                logger.error('value %s not allowed for condition %s' %(value,self._condition))
                 sys.exit()  
-            div = float('1' + (len(value)-1)*'0')
-            interValue = float(value[1:])/div
-            interValue = round(interValue,2)
+            div = float('1' + (len(value) - 1) * '0')
+            interValue = float(value[1:]) / div
+            interValue = round(interValue, 2)
             if not interValue >= 0. or not interValue <= 1.:
-                logger.error('value for contion %s must be between 1 and 0. Got: %s' %(self._condition,interValue))
+                logger.error('value for condition %s must be between 1 and 0. Got: %s' %(self._condition,interValue))
                 sys.exit() 
             return interValue
         if self._condition == 'x':
@@ -86,7 +86,6 @@ class Threshold(object):
         thresh['mother'] = []
         thresh['lsp'] = []
         thresh['d'] = []
-        #for a in random.sample(set(self.topo.analyses), 4):
         analyses = self.topo.analyses
         logger.info('Computing mass thresholds for topology %s using analyses: \n \
         %s' %(self.topo.name, analyses))
