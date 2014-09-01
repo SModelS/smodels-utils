@@ -524,9 +524,14 @@ class Browser(object):
             run = self._validateRun(run)
         if not run:
             run = self.allRuns(analysis, topology)
+
+        alltopos=self.allTopologies(run,analysis)
+        if alltopos==None:
+            logger.error ('Found no topologies for %s/%s' % (run,analysis) )
+            return None
             
         if not analysis or not topology or not run or not topology in \
-        self.allTopologies(run, analysis):
+          alltopos:
             logger.error('There is no experimental result for \n\
             run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
             return None
