@@ -30,14 +30,15 @@ logger.setLevel(level=logging.ERROR)
 # code duplicates
 
 
-class ExpResult (object):
+class ExpResultSet (object):
     """Contains all result-specific information and objects (e.g. 
-    exclusion lines, histograms, ...). Uses the extended result objects to 
+    exclusion lines, histograms, ...). Encapsules the result objects to 
     handle different mass assumptions for given topology and analysis.
+    
     """
     
     def __init__ (self, run, expAnalysis, expTopology, smsroot, smspy):
-        """Sets all private variables, especially self._extendedResults 
+        """Sets all private variables, especially self._results 
         as list containing all available extended results as objects.
     
         """
@@ -51,7 +52,7 @@ class ExpResult (object):
         logger.info('Creating experimental result object for %s-%s-%s!' \
         %(self._run, self._ana, self._topo))
         self.extendedTopos = self._expAna.extendedTopologies[self._topo]
-        self._extendedResults = self._getExtendedResults
+        self._results = self._getResults
         self._verbosity = 'error'
     
     @property
@@ -89,7 +90,11 @@ class ExpResult (object):
             logger.setLevel(level=logging.WARNING)
         if level == 'error':
             pass
-    
+        
+    def __str__(self):
+        ret = "%s" %self.name
+        return ret
+        
     @property
     def name(self):
         return self._ana + '_' + self._topo
@@ -179,35 +184,33 @@ class ExpResult (object):
         return cons[0]
     
     @property    
-    def extendedTopologies(self):
-        """Returns all the extended topologies linked to this result-object.
+    def topologySet(self):
+        """Returns all the extended topologies linked to this result set.
         
         """
         return self.extendedTopos
         
     @property
-    def extendedResults(self):
-        """Returns a list containing all available extended 
-        results as objects.
+    def results(self):
+        """Returns a list containing all available result objects.
         
         """
-        return self._extendedResults    
+        return self._results    
 
     @property
-    def _getExtendedResults(self):
+    def _getResults(self):
         """Retrieves a list of all extended results we have for this 
         analysis topology pair.
         
         """
-        exRes = [ExtendedResult(extop, self._expAna, self._smsroot, self._smspy)\
+        res = [Results(extop, self._expAna, self._smsroot, self._smspy)\
         for extop in self.extendedTopos]
-        return exRes
+        return res
         
   
     def _getExtendedTopology(self, condition = condition, value = value):
         """Creates the name of the extended topology (e.g. 'T6ttWWLSP050')
-        :param condition: condition for mass of the intermediate particle
-        as string (e.g. 'xvalue')
+        :param condition: condition for the third mass as string (e.g. 'xvalue')
         :param value: value for the condition as string (e.g. '025')
         
         """
@@ -284,7 +287,8 @@ class ExpResult (object):
         return axdict
     
     def hasUpperLimitDict(self, expected = False):
-        """Checks if there is any observed/expected upper limit dictionary for this result.
+        """Checks if there is any observed/expected upper limit dictionary 
+        for this result set.
         
         """
         if not expected:
@@ -297,53 +301,53 @@ class ExpResult (object):
             return False
         
     def upperLimitDicts(self, expected = False):
-        """Retrieves all the expected/observed upper limit dictionaries available for this result.
+        """Retrieves all the observed/expected upper limit dictionaries 
+        available for this result set.
         
         """ 
         ulDicts = {}
         for extTopo in self.extendedTopos:
-            ulDicts[extTopo] = [exRes.upperLimitDict(expected) \
-            for exRes in self._extendedResults]
+            ulDicts[extTopo] = [res.upperLimitDict(expected) \
+            for res in self._results]
         return ulDicts
         
     def upperLimitDict(self, expected = False, condition = None, value = None):
-        """Retrieves one upper limit dictionary (out of all upper limit 
-        dictionaries available for this topology). If expected, condition and value are None, 
-        the default mass assumptions will be used.
+        """Retrieves one observed/expected upper limit dictionary (out of all 
+        upper limit dictionaries available for this topology). 
+        If condition and value are None, the default mass assumptions will be used.
         
         """
         
         extTopo = self._getExtendedTopologyName(condition = condition, value = value)
         if expected:
             if not extTopo in self.expectedUpperLimitDicts(expected = expected):
-        
-                logger.error('No expected upper limit dictionary could be found for %s!' \
-                %extTopo)
+                logger.error('No expected upper limit dictionary could be found\
+                for %s!' %extTopo)
                 return None
             logger.error('No upper limit dictionary could be found for %s!' \
             %extTopo)
             return None
         return self.upperLimitDicts(expected = expected)[extTopo]
         
-     @property
     def exclusionLines(self, expected = False):
-        """Returns all expected/observed exclusion lines available for this result 
-        as ROOT TGraphs. 
+        """Returns all observed/expected exclusion lines available for this 
+        result set as ROOT TGraphs. 
         
         """
         contours = {}
-        for exRes in self._extendedResults:
-            contours[exRes.name] = exRes.exclusionLines(expected)
+        for res in self._results:
+            contours[res.name] = res.exclusionLines(expected)
         return contours
         
     
-    def exclusionLine(self, expected = False, sigma = 0, condition = None, value = None):
-        """Retrieves one exclusion line (out of all exclusion lines available 
-        for this topology). If condition and value are None, 
-        the default mass assumptions will be used.
-        If expected is set to False, the observed exclusion line will be 
-        returned, else the expected one. Possible values for keyword argument 
-        "sigma" are: -1, 0, 1.
+    def exclusionLine(self, expected = False, sigma = 0, \
+    condition = None, value = None):
+        """Retrieves one observed/expected exclusion line (out of all 
+        exclusion lines available for this topology). 
+        If condition and value are None, the default mass assumptions 
+        will be used.
+         :param expected: False/True gives observed/expected
+        :param sigma: -1, 0, 1.
         
         """
         extTopo = self._getExtendedTopologyName(condition = condition, value = value)
@@ -360,22 +364,22 @@ class ExpResult (object):
     
 
     def exclusions(self, expected = False):
-        """Returns all expected/observed exclusion values available for this result.
+        """Returns all observed/expected exclusion values available for this result.
         
         """
         
         exclusions = {}
-        for exRes in self._extendedResults:
-            exclusions[exRes.name] = exRes.exclusions(expected)
+        for res in self._results:
+            exclusions[res.name] = res.exclusions(expected)
         return exclusions
         
     def exclusion(self, expected = False, typ = 'xmax', condition = None, value = None):
-        """Retrieves one specified exclusion value (out of all exclusion   
-        values available for this topology). If condition and value are None, 
-        the default mass assumptions will be used. 
-        If expected is set to False, the observed exclusion value will be 
-        returned, else the expected one. Possible values for keyword argument 
-        "typ" are: "limit", "min", "max".
+        """Retrieves one observed/expected exclusion line (out of all 
+        exclusion lines available for this topology). 
+        If condition and value are None, the default mass assumptions 
+        will be used.
+         :param expected: False/True gives observed/expected
+        :param typ: "limit", "min", "max"
         
         """
         
@@ -393,25 +397,29 @@ class ExpResult (object):
         
 
 
-class ExtendedResult(object):
-    """Contains all specific informations linked to one extended result,
-    where an extended result denotes a pair of analysis and topology
-    when a specified case of mass proportions is assumed (e.g. x-value = 050, 
-    mass of LSP = 50 GeV, ...).
+class Results(object):
+    """Contains all specific informations linked to one result,
+    where a result denotes a pair of analysis and topology with a specific
+    assumption for the third mass (e.g. x-value = 050, mass of LSP = 50 GeV, ...).
     
     """
     
-    def __init__(self, extendedTopology, expAnalysis, smsroot, smspy):
+    def __init__(self, extendedTopology, expAnalysis, expTopology, smsroot, smspy):
         """Sets all private variables and initiates the dictionaries for 
         exclusion lines and exclusions.
         
         """
         self._extTopo = extendedTopology
         self._expAna = expAnalysis
+        self._expTopo = expTopology
         self._ana = expAnalysis.name
         self._run = expAnalysis.run
         self._smsroot = smsroot
         self._smspy = smspy
+    
+    def __str__(self):
+        ret = "%s" %self.name
+        return ret
         
     @property
     def name(self):
@@ -419,20 +427,24 @@ class ExtendedResult(object):
         
         """
         return self._ana + '-' + self._extTopo
-     
     @property
-    def extendedTopology(self):
-        """Returns the name of the extended topology e.g.: 'TChiChipmSlepL050'.
-
+    def experimentalAnalysis(self):
+        """Retrieves the experimental analysis object.
         """
-        return self._extTopo
+        return self._expAna
+    
+    @property
+    def experimentalTopology(self):
+        """Retrieves the experimental topology object.
+        """
+        return self._expTopo
         
     @property    
-    def _allExclusionLines(self):
+    def allExclusionLines(self):
         """Retrieves the exclusion lines from the sms.root file linked to the 
         corresponding analysis and builds a nested dictionary including all 
-        the exclusion lines: 
-        {'observed': {1: TGraph, 0: TGraph, -1: TGraph}, 
+        the exclusion lines. 
+        :return: {'observed': {1: TGraph, 0: TGraph, -1: TGraph}, 
         'expected': {1: TGraph, 0: TGraph, -1: TGraph}}
         
         """
@@ -459,32 +471,52 @@ class ExtendedResult(object):
         %(self._run, self._ana, self._extTopo, exclusionLines))     
         return exclusionLines
      
-    @property
-    def exclusionLines(self):
+    def exclusionLines(self expected = False):
         """Retrieves the observed/expected exclusion lines for this result 
         as a dictionary.
         :return: {1: TGraph, 0: TGraph, -1: TGraph}
         
         """
         if not expected:
-            if self._allExclusionLiness['observed']:
-                return self._allExclusionLines['observed']
+            if self.allExclusionLines['observed']:
+                return self.allExclusionLines['observed']
             logger.warning('No observed exclusion lines were found for \n \
             extended result %s!' %self.name)
             return None
         if expected:
-            if self._allExclusionLines['expected']:
-                return self._allExclusionLines['expected']
+            if self.allExclusionLines['expected']:
+                return self.allExclusionLines['expected']
             logger.warning('No expected exclusion lines were found for \n \
             extended result %s!' %self.name)
             return None 
-     
+    
+    def exclusionLines(self, expected = False, sigma = 0):
+        """Retrieves one observed/expected exclusion line for this result 
+        specified by sigma.
+        :param sigm: 1,0,-1
+        :return: {1: TGraph, 0: TGraph, -1: TGraph}
+        
+        """
+        if not expected:
+            if self.exclusionLines() and sigma in self.exclusionLines():
+                return self.exclusionLines[sigma]
+            logger.warning('No observed exclusion line with %s was found for \n \
+            result %s!' %(sigma, self.name))
+            return None
+        if expected:
+            if self.exclusionLines(expected = True) and sigma \
+            in self.exclusionLines(expected = True):
+                return self.exclusionLines(expected = True)[sigma]
+            logger.warning('No expected exclusion line with %s was found for \n \
+            result %s!' %(sigma, self.name))
+            return None 
+    
     @property
-    def _allExclusions(self):
+    def allExclusions(self):
         """Retrieves the exclusion values for this result from the experimental  
         analysis object and builds a nested dictionary including all the 
-        exclusion values of form:
-        {'observed': {'minx': value, 'xmin':value, 'xmax': value}, 
+        exclusion values.
+        :return: {'observed': {'minx': value, 'xmin':value, 'xmax': value}, 
         'expected': {'minx': value, 'xmin': value, 'xmax': value}}
         
         """
@@ -513,29 +545,48 @@ class ExtendedResult(object):
         %(self._run, self._ana, self._extTopo, exclDict))    
         return exclDict
         
-    @property
-    def exclusions(self, expected):
+    def exclusions(self, expected = False):
         """Retrieves the observed/expected exclusion values for this result 
         as a dictionary.
         :return: {'minx': value, 'xmin':value, 'xmax': value}
         
         """
         if not expected:
-            if self._allExclusions['observed']:
-                return self._allExclusions['observed']
+            if self.allExclusions['observed']:
+                return self.allExclusions['observed']
             logger.warning('No observed exclusion values were found for \n \
-            extended result %s!' %self.name)
+            result %s!' %self.name)
             return None
         if expected:
-            if self._allExclusions['expected']:
-                return self._allExclusions['expected']
+            if self.allExclusions['expected']:
+                return self.allExclusions['expected']
             logger.warning('No expected exclusion values were found for \n \
-            extended result %s!' %self.name)
+            result %s!' %self.name)
             return None
         
-    @property
-    def upperLimitDict(self, expected):
-        """Retrieves the observed/expected cross section upper limit dictionary for this extended
+    def exclusion(self, expected = False, typ = 'xmax'):
+        """Retrieves the observed/expected exclusion value for this result 
+        specified by typ.
+        :param typ: 'minx', 'xmin', 'xmax'
+        :return: {'minx': value, 'xmin':value, 'xmax': value}
+        
+        """
+        if not expected:
+            if self.exclusions() and typ in sel.exclusions():
+                return self.exclusions()[typ]
+            logger.warning('No observed exclusion value with %s was found for \n \
+            result %s!' %(typ,self.name))
+            return None
+        if expected:
+            if self.exclusions(expected = True) and typ \
+            in self.exclusions(expected = True):
+                return self.exclusions(expected = True)[typ]
+            logger.warning('No expected exclusion value with %s was found for \n \
+            result %s!' %(typ, self.name))
+            return None
+            
+    def upperLimitDict(self, expected = False):
+        """Retrieves the observed/expected cross section upper limit dictionary for this 
         result from the sms.py file located in the database.
         
         """
