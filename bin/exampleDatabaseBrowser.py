@@ -52,7 +52,7 @@ def main():
   print 
   
   ## to get a specified Result-object
-  result = browser.expResult("SUS13006","TChiWZ" )
+  result = browser.expResult("SUS12024","T1tttt" )
   print 'Result is: ', result
   print "has upper limits:", result.hasUpperLimits
   #print "upper limits:", result.upperLimitDicts
@@ -60,10 +60,10 @@ def main():
   # print "upper limits:", result.expectedUpperLimitDicts
 
   ## use this object
-  #print '\nResult is checked: ', result.checkedBy
-  #print '\nGet all the exclusionlines: ', result.getExclusionLines()
+  print '\nResult is checked: ', result.checked
+  # print '\nGet all the exclusionlines: ', result.exclusionLines
   #print '\nSelect a specified exclusionline: ', \
-  #result.selectExclusionLine(expected = True, sigma = 1)
+  result.selectExclusionLine(expected = False, sigma = 0)
   
   ## get Analysis belonging to this Pair:
   #analysis = result.analysis

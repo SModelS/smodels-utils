@@ -243,7 +243,7 @@ class ExpResult (object):
         #the checked flag is fixed in every info.txt
         if len(infoLine.split()) == 1: 
             logger.warning('There is no information about single topologies.')
-            return infoLine[0]
+            return infoLine
         
         infoLine = infoLine.split(',')
         logger.debug('First preprocessed infoLine: %s.' %infoLine)
