@@ -245,7 +245,7 @@ def main():
         condition = ''
     else:
         condition = intermediate[0]
-    if intermediate[1] == '050':
+    if intermediate[1] == '050' and condition == 'xvalue':
         value = ''
     else:
         value = intermediate[1]
