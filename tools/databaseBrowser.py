@@ -649,6 +649,8 @@ class Infotxt(object):
         Can be reduced to given topology (returns list).
     
         """
+        # ### FIX ME: maybe it's better not to glue strings but to return either dictionaries or maybe tuples to have it like topo + condition + value
+        
         topos = {}
         logger.debug('Got analysis %s and run %s!' %(self._analysis, self._run))
         if not 'axes' in self.metaInfo or not self.metaInfo['axes']:
@@ -658,7 +660,6 @@ class Infotxt(object):
             for t in self.topologies:
                 topos[t]=[t]
             if not topology: return topos
-            # ### FIX ME: better if topology in topos: returntopos[topology] ?
             if topology in topos: return topos[topology]
             logger.warning('For %s-%s there is no topology %s' \
             %(self._run, self._analysis, topology))
@@ -705,7 +706,7 @@ class Infotxt(object):
         return None
 
     def _massProportions(self, axesLine):
-        """Reads out all the conditions for intermediate masses 
+        """Reads out all the conditions for the third mass 
         (e.g. masssplitting-xvalues 025, 050, 075) implicitly stored in 
         axes-lines of info.txt and returns the information as dictionary.
     

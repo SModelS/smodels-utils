@@ -226,8 +226,8 @@ class ExpResultSet (object):
         return extTopo
     
     def _getDefaultExtendedTopology(self, condition = condition, value = value)
-    """Retrieves the most useful default settings for the name of the 
-    extended topology.
+    """Retrieves the default settings for this set of results.
+    
     """
     # ### FIX ME: do this! xvalue -> 050, LSP -> ? etc.
     
