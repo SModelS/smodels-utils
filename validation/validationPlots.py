@@ -127,6 +127,9 @@ def main():
     allowed = results['allowed']
     notTested = results['notTested']
     exclusionLine = validationPlotsHelper.getEnvelope(excluded)
+    if extendedTopology == 'T6ttWWLSP050':
+        exclusionLine = validationPlotsHelper.cutGraph(exclusionLine, 19, before = False, after = True)
+        
     if not condition and not value:
         officialExclusionLine = expRes.exclusionLine()
     else:
@@ -204,8 +207,8 @@ def main():
             multi.Add(officialExclusionLine, 'L')
         
     #Legend:
-    if topology == 'T6ttWW':
-        legend = ROOT.TLegend(0.57, 0.6, 0.9, 0.89)
+    if extendedTopology == 'T6ttWWLSP050':
+        legend = ROOT.TLegend(0.57, 0.7, 0.9, 0.9)
     else:
         legend = ROOT.TLegend(0.57, 0.55, 0.9, 0.89)
     legend.SetBorderSize(1)
@@ -215,21 +218,21 @@ def main():
     legend.AddEntry(excluded, 'excluded', 'P')
     legend.AddEntry(allowed, 'allowed', 'P')
     legend.AddEntry(notTested, 'not tested', 'P')
-    legend.AddEntry(exclusionLine, 'SmodelS %s' %(intermediate[0] + ': '\
+    legend.AddEntry(exclusionLine, 'SmodelS %s' %(intermediate[0] + '='\
     + intermediate[1]), 'L')
     if not value and not condition:
         legend.AddEntry(officialExclusionLine, '%s' %metadata['rootTag'][0][1], 'L')
     else:
         if valueAbove:
-            legend.AddEntry(officialExclusionLineAbove, '%s, %s: %s' \
+            legend.AddEntry(officialExclusionLineAbove, '%s, %s=%s' \
             %(metadata['rootTag'][0][1], intermediate[0], valueAbove), 'L')
         if valueBelow:
-            legend.AddEntry(officialExclusionLineBelow, '%s, %s: %s' \
+            legend.AddEntry(officialExclusionLineBelow, '%s, %s=%s' \
             %(metadata['rootTag'][0][1], intermediate[0], valueBelow), 'L')
         if not valueAbove and not valueBelow:
             if not value: val = '050'
             else: val = value
-            legend.AddEntry(officialExclusionLine, '%s, %s: %s' \
+            legend.AddEntry(officialExclusionLine, '%s, %s=%s' \
             %(metadata['rootTag'][0][1], intermediate[0], val), 'L')
     #Canvas:
     c = ROOT.TCanvas("c1", "c1", 0, 0, 800, 500)
@@ -290,8 +293,11 @@ def main():
     
     if topology in ['T6bbWW'] and value:
         xOffset = 30
-    elif topology in ['T6ttWW'] and value:
+    elif 'T6ttWWx' in extendedTopology:
         xOffset = 110
+    elif extendedTopology == 'T6ttWWLSP050':
+        xOffset = 90
+    
     else:
         xOffset = 0
         
