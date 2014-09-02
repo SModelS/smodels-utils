@@ -555,7 +555,7 @@ class ExtendedResult(object):
             for sigmaKey, sigmaValue in sigmaDict.items():
                 sigmaDict[sigmaKey] = rootFile.Get(value + sigmaValue + '_' + \
                 self._topoName)
-                ###FIX ME: work around to handel exclusionlines of the topology TChiWZon: 
+                ###FIX ME: work around to handel exclusionlines of the topology TChiWZon,TChiWZoff and T6bbWWoff: 
                 if not sigmaDict[sigmaKey]:
                     if self.topoName[-2:] == 'on':
                         sigmaDict[sigmaKey] = rootFile.Get(value + sigmaValue + '_' + \
@@ -563,6 +563,9 @@ class ExtendedResult(object):
                     if self.topoName[-3:] == 'off':
                         sigmaDict[sigmaKey] = rootFile.Get(value + sigmaValue + '_' + \
                         self._topoName[:-3])
+                    if 'T6bbWWoff' in self._topoName:
+                        sigmaDict[sigmaKey] = rootFile.Get(value + sigmaValue + '_' + \
+                        self._topoName.replace('off',''))                        
                 ###---------------------------------------------------------------------
             exclusionLines[key] = sigmaDict
         logger.debug('Built dictionary for exclusion lines for %s-%s-%s: %s.'\
