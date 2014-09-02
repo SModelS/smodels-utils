@@ -70,7 +70,7 @@ class SlhaFiles(object):
         self._unlink = unlink
         self._listOfInterPid = self._getPidCodeOfIntermediateParticle()
         self._listOfMotherPid = self._getPidCodeOfMother()
-        if not condition in ['xvalue','x','LSP']:
+        if not condition in ['xvalue','x','LSP','D']:
             logger.error('Condition %s not supported' %condition)
             sys.exit()  
         if condition == 'xvalue':
@@ -121,7 +121,7 @@ class SlhaFiles(object):
         if self._condition == 'x':
             interValue = float(value)/100.
             interValue = round(interValue,2)
-        if self._condition == 'LSP':
+        if self._condition in ['LSP','D']:
             interValue = float(value)
             interValue = round(interValue,0)
         return interValue
@@ -152,6 +152,8 @@ class SlhaFiles(object):
                 if self._condition == 'LSP':
                     interMass = lspMass
                     lspMass = self._interValue
+                if self._condition == 'D':
+                    interMass = lspMass + self._interValue
                 if self.topo.name == 'T6ttWW':
                     if interMass < (81.+lspMass): continue # valition of kin. contion
                 logger.info('mother mass: %s, lsp mass: %s, inter mass: %s' %(motherMass, lspMass, interMass))
@@ -228,6 +230,7 @@ class SlhaFiles(object):
             'g' : ['1000021'],
             'q' : ['1000001', '1000002', '1000003', '1000004', 
             '2000001', '2000002','2000003','2000004'], 
+            'gq' : ['1000021', '1000001', '1000002', '1000003', '1000004'],
             'b' : ['1000005'], #'2000005'], no right handed particles
             't' : ['1000006'], #'2000006'], no right handed particles
             'l' : ['1000011','1000013','2000011','2000013'],
@@ -283,7 +286,9 @@ class SlhaFiles(object):
         slhaFile = open(self._tempSlhaName,'r')
         lines = slhaFile.readlines()
         listOfPidCode = [pid for pid in self._listOfMotherPid]
-        listOfInterPid = [pid for pid in self._listOfInterPid]
+        listOfInterPid = None
+        if self._listOfInterPid:
+            listOfInterPid = [pid for pid in self._listOfInterPid]
         
         massBlock = False
         for i in range(0,len(lines)-1):
