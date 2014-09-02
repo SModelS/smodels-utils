@@ -77,7 +77,7 @@ class SlhaFiles(object):
             cond = ''
         else:
             cond = condition
-        if value == '050':
+        if value == '050' and condition == 'xvalue':
             val = ''
         else:
             val = value
