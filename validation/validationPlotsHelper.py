@@ -159,7 +159,7 @@ def cutGraph (graph, n, before = True, after = False):
     
     """
     num = graph.GetN()
-    log.info('Got TGraph %s with %s points. Try to delet before(%s)/after(%s) n=%s.' %(graph.GetName(), num,  before, after, n))  
+    logger.info('Got TGraph %s with %s points. Try to delet before(%s)/after(%s) n=%s.' %(graph.GetName(), num,  before, after, n))  
     gr = ROOT.TGraph()
     gr.SetName(graph.GetName())
     gr.SetTitle(graph.GetTitle())
@@ -169,15 +169,15 @@ def cutGraph (graph, n, before = True, after = False):
         graph.GetPoint(ind, x, y)
         if before:
             if ind > n:
-                log.debug('Add point n=%s | x=%s | y=%s to new graph on n=%s.' %(ind, x, y, ind - n - 1))
+                logger.debug('Add point n=%s | x=%s | y=%s to new graph on n=%s.' %(ind, x, y, ind - n - 1))
                 gr.SetPoint(ind - n - 1, x, y)
             else:
-                log.debug('Deleted point n=%s | x=%s | y=%s from new graph.' %(ind - n - 1, x, y))
+                logger.debug('Deleted point n=%s | x=%s | y=%s from new graph.' %(ind - n - 1, x, y))
         if after:
             if ind < n:
-                log.debug('Add point n=%s | x=%s | y=%s to new graph.' %(ind, x, y))
+                logger.debug('Add point n=%s | x=%s | y=%s to new graph.' %(ind, x, y))
                 gr.SetPoint(ind, x, y)
             else:
-                log.debug('Deleted point n=%s | x=%s | y=%s from new graph.' %(ind, x, y))
+                logger.debug('Deleted point n=%s | x=%s | y=%s from new graph.' %(ind, x, y))
                 continue
     return(gr)    
