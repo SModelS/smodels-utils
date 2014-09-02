@@ -70,7 +70,7 @@ class SlhaFiles(object):
         self._unlink = unlink
         self._listOfInterPid = self._getPidCodeOfIntermediateParticle()
         self._listOfMotherPid = self._getPidCodeOfMother()
-        if not condition in ['xvalue','x']:
+        if not condition in ['xvalue','x','LSP']:
             logger.error('Condition %s not supported' %condition)
             sys.exit()  
         if condition == 'xvalue':
@@ -107,6 +107,7 @@ class SlhaFiles(object):
         except ValueError:
             logger.error('value for contion %s must be a number. Got: %s' %(self._condition,interValue))
             sys.exit() 
+        interValue = None
         if self._condition == 'xvalue':
             if value[:1] != '0':
                 logger.error('value %s not allowed for contion %s' %(value,self._condition))
@@ -117,12 +118,13 @@ class SlhaFiles(object):
             if not interValue >= 0. or not interValue <= 1.:
                 logger.error('value for contion %s must be between 1 and 0. Got: %s' %(self._condition,interValue))
                 sys.exit() 
-            return interValue
         if self._condition == 'x':
             interValue = float(value)/100.
             interValue = round(interValue,2)
-            return interValue
-        return
+        if self._condition == 'LSP':
+            interValue = float(value)
+            interValue = round(interValue,0)
+        return interValue
         
     def __iter__(self):
         """Creates a slha-file named 'topology_motherMass_lspMass_order.slha and
@@ -135,20 +137,24 @@ class SlhaFiles(object):
         for motherMass in self.motherMasses:
             firstLoop = True
             for lspMass in self.lspMasses:
+                
                 if lspMass > motherMass + self.d: continue
                 if self.topo.name == 'TChiWZoff':
                     if lspMass - motherMass < -80: continue
                 fileName = self.topo.name + self._extension + '_' + \
                 str(int(motherMass)) + '_' + str(int(lspMass)) + '_' + \
                 self._order + '.slha'
-                logger.info('mother mass: %s, lsp mass: %s' %(motherMass, lspMass)) 
                 interMass = None
                 if self._condition == 'xvalue':
                     interMass = self._interValue * motherMass + (1 - self._interValue) * lspMass
                 if self._condition == 'x':
                     interMass = self._interValue * lspMass
-                if self.topo.name == 'T6ttWW' and self._condition == 'x':
+                if self._condition == 'LSP':
+                    interMass = lspMass
+                    lspMass = self._interValue
+                if self.topo.name == 'T6ttWW':
                     if interMass < (81.+lspMass): continue # valition of kin. contion
+                logger.info('mother mass: %s, lsp mass: %s, inter mass: %s' %(motherMass, lspMass, interMass))
                 slhaLines = self._setMass(motherMass, lspMass, interMass)
                 if firstLoop:
                     self._delXsecFromFile()
@@ -159,7 +165,7 @@ class SlhaFiles(object):
                 os.system('cp ./%s %s' %(self._tempSlhaName, path))
                 yield path
                 
-                    
+    
     def _addXsecsToFile(self):
         """Adds the xsecs to the slha file. First LO then NLO and finally NLL 
         are computed.

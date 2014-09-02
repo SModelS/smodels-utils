@@ -35,7 +35,7 @@ class Threshold(object):
             sys.exit()            
         self._browser = browserObject
         self.topo = self._browser.expTopology(topology)
-        if not condition in ['xvalue', 'x']:
+        if not condition in ['xvalue', 'x','LSP']:
             logger.error('Condition %s not supported' %condition)
             sys.exit()    
         self._condition = condition
@@ -56,6 +56,7 @@ class Threshold(object):
         except ValueError:
             logger.error('Value for condition %s must be a number. Got: %s' %(self._condition, interValue))
             sys.exit() 
+        interValue = None
         if self._condition == 'xvalue':
             if value[:1] != '0':
                 logger.error('Value %s not allowed for condition %s' %(value, self._condition))
@@ -66,13 +67,14 @@ class Threshold(object):
             if not interValue >= 0. or not interValue <= 1.:
                 logger.error('value for condition %s must be between 1 and 0. Got: %s' %(self._condition, interValue))
                 sys.exit() 
-            return interValue
         if self._condition == 'x':
             interValue = float(value) / 100.
             interValue = round(interValue, 2)
-            return interValue
-        return
-        return
+        if self._condition == 'LSP':
+            interValue = float(value)
+            interValue = round(interValue,0)
+        return interValue
+
         
     
     @property    
@@ -97,8 +99,7 @@ class Threshold(object):
             ulDicts = result.upperLimitDicts
             if self.topo.name in ulDicts:
                 ulDict = result.upperLimitDict(self.topo.name)
-            elif self.topo.name + self._condition + self._value in ulDicts\
-            and not self._condition == 'LSP':
+            elif self.topo.name + self._condition + self._value in ulDicts:
                 ulDict = result.upperLimitDict(self.topo.name + self._condition + self._value)
             else:
                 for key in ulDicts:
