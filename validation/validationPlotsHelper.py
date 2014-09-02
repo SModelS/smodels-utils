@@ -134,3 +134,69 @@ def getEnvelope(region):
     envelop.GetPoint(envelop.GetN() - 1, x2, y2)
     envelop.SetPoint(envelop.GetN(), x2, 0.)  #Close exclusion curve at zero
     return envelop
+    
+def correctGraph(line):
+    """Adds a new first point (given xm, ym) to the TGraph. For cases that the region doesn't allow for proper shading.
+    
+    """
+    minX = ROOT.TMath.MinElement(line.GetN(),line.GetX())
+    num = line.GetN()  
+    gr = ROOT.TGraph()
+    gr.SetName(line.GetName())
+    gr.SetTitle(line.GetTitle())
+    gr.SetPoint(0, minX, 0.)
+    x = ROOT.Double(0.)
+    y = ROOT.Double(0.)
+    for ind in range(0, num):
+        line.GetPoint(ind, x, y)
+        logger.debug('Got point n=%s | x=%s | y=%s.' %(ind, x, y))
+        gr.SetPoint(ind + 1, x, y)
+        logger.debug('Add point n=%s | x=%s | y=%s to new line.' %(ind + 1, x, y))
+    return(gr)
+    
+def cutGraph (graph, n, before = True, after = False):
+    """Deletes all points from the TGraph before/after given number. For cases that region of plots doesn't match.
+    
+    """
+    num = graph.GetN()
+    logger.info('Got TGraph %s with %s points. Try to delet before(%s)/after(%s) n=%s.' %(graph.GetName(), num,  before, after, n))  
+    gr = ROOT.TGraph()
+    gr.SetName(graph.GetName())
+    gr.SetTitle(graph.GetTitle())
+    x = ROOT.Double(0.)
+    y = ROOT.Double(0.)
+    for ind in range(0,num):
+        graph.GetPoint(ind, x, y)
+        if before:
+            if ind > n:
+                logger.debug('Add point n=%s | x=%s | y=%s to new graph on n=%s.' %(ind, x, y, ind - n - 1))
+                gr.SetPoint(ind - n - 1, x, y)
+            else:
+                logger.debug('Deleted point n=%s | x=%s | y=%s from new graph.' %(ind - n - 1, x, y))
+        if after:
+            if ind < n:
+                logger.debug('Add point n=%s | x=%s | y=%s to new graph.' %(ind, x, y))
+                gr.SetPoint(ind, x, y)
+            else:
+                logger.debug('Deleted point n=%s | x=%s | y=%s from new graph.' %(ind, x, y))
+                continue
+    return(gr)
+    
+def addPoint(graph, xm, ym):
+    """Adds a new last point (given xm, ym) to the TGraph. For cases that the region doesn't allow for proper shading.
+    
+    """
+    num = graph.GetN()
+    logger.info('Got TGraph %s with %s points. Try to add last point xm=%s/ym=%s' %(graph.GetName(), num,  xm, ym))  
+    gr = ROOT.TGraph()
+    gr.SetName(graph.GetName())
+    gr.SetTitle(graph.GetTitle())
+    x = ROOT.Double(0.)
+    y = ROOT.Double(0.)
+    for ind in range(0, num):
+        graph.GetPoint(ind, x, y)
+        gr.SetPoint(ind, x, y)
+        logger.debug('Add point n=%s | x=%s | y=%s to new graph.' %(ind, x, y))
+    gr.SetPoint(num, xm, ym)
+    logger.info('Added last point n=%s | x=%s | y=%s.' %(num, xm, ym))
+    return(gr)    

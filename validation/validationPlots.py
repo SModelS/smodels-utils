@@ -127,6 +127,11 @@ def main():
     allowed = results['allowed']
     notTested = results['notTested']
     exclusionLine = validationPlotsHelper.getEnvelope(excluded)
+    if extendedTopology == 'T6ttWWLSP050':
+        exclusionLine = validationPlotsHelper.cutGraph(exclusionLine, 19, before = False, after = True)
+    if extendedTopology == 'T6ttWWx166':
+        exclusionLine = validationPlotsHelper.cutGraph(exclusionLine, 16, before = False, after = True)    
+        exclusionLine = validationPlotsHelper.addPoint(exclusionLine, 587., 100.)
     if not condition and not value:
         officialExclusionLine = expRes.exclusionLine()
     else:
@@ -158,9 +163,16 @@ def main():
             if valueAbove:        
                 officialExclusionLineAbove = expRes.selectExclusionLine\
                 (condition = intermediate[0], value = valueAbove)
+                if extendedTopology == 'T6ttWWx166':
+                    officialExclusionLineAbove = validationPlotsHelper.cutGraph(officialExclusionLineAbove, 35, before = False, after = True)    
+                    officialExclusionLineAbove = validationPlotsHelper.cutGraph(officialExclusionLineAbove, 5)    
+                
             if valueBelow:
                 officialExclusionLineBelow = expRes.selectExclusionLine\
                 (condition = intermediate[0], value = valueBelow)
+                if extendedTopology == 'T6ttWWx166':
+                    officialExclusionLineBelow = validationPlotsHelper.cutGraph(officialExclusionLineBelow, 55, before = False, after = True)
+                    officialExclusionLineBelow = validationPlotsHelper.cutGraph(officialExclusionLineBelow, 5)    
         else:
             officialExclusionLine = expRes.exclusionLine(extendedTopology)
             valueAbove = ''
@@ -181,9 +193,11 @@ def main():
     else:
         if valueAbove:
             officialExclusionLineAbove.SetLineColor(ROOT.kGray+1)
+            officialExclusionLineAbove.SetLineWidth(3)
         if valueBelow:
             officialExclusionLineBelow.SetLineColor(ROOT.kGray+1)
             officialExclusionLineBelow.SetLineStyle(7)
+            officialExclusionLineBelow.SetLineWidth(3)
         if not valueAbove and not valueBelow:
             officialExclusionLine.SetLineColor(ROOT.kBlack)
     #Create TMutiGraph-object:
@@ -192,20 +206,23 @@ def main():
     multi.Add(allowed, 'P')
     if notTested.GetN():
         multi.Add(notTested, 'P')
-    multi.Add(exclusionLine, 'L')
+    #multi.Add(exclusionLine, 'L')
+    multi.Add(exclusionLine, 'LSAME')
     if not value and not condition:
         multi.Add(officialExclusionLine, 'L')
     else:
         if valueAbove:
-            multi.Add(officialExclusionLineAbove, 'L')
+            #multi.Add(officialExclusionLineAbove, 'L')
+            multi.Add(officialExclusionLineAbove, 'LSAME')
         if valueBelow:
-            multi.Add(officialExclusionLineBelow, 'L')
+            #multi.Add(officialExclusionLineBelow, 'L')
+            multi.Add(officialExclusionLineBelow, 'LSAME')
         if not valueAbove and not valueBelow:
             multi.Add(officialExclusionLine, 'L')
-        
+    
     #Legend:
-    if topology == 'T6ttWW':
-        legend = ROOT.TLegend(0.57, 0.6, 0.9, 0.89)
+    if extendedTopology == 'T6ttWWLSP050':
+        legend = ROOT.TLegend(0.57, 0.7, 0.9, 0.9)
     else:
         legend = ROOT.TLegend(0.57, 0.55, 0.9, 0.89)
     legend.SetBorderSize(1)
@@ -215,21 +232,21 @@ def main():
     legend.AddEntry(excluded, 'excluded', 'P')
     legend.AddEntry(allowed, 'allowed', 'P')
     legend.AddEntry(notTested, 'not tested', 'P')
-    legend.AddEntry(exclusionLine, 'SmodelS %s' %(intermediate[0] + ': '\
+    legend.AddEntry(exclusionLine, 'SmodelS %s' %(intermediate[0] + '='\
     + intermediate[1]), 'L')
     if not value and not condition:
         legend.AddEntry(officialExclusionLine, '%s' %metadata['rootTag'][0][1], 'L')
     else:
         if valueAbove:
-            legend.AddEntry(officialExclusionLineAbove, '%s, %s: %s' \
+            legend.AddEntry(officialExclusionLineAbove, '%s, %s=%s' \
             %(metadata['rootTag'][0][1], intermediate[0], valueAbove), 'L')
         if valueBelow:
-            legend.AddEntry(officialExclusionLineBelow, '%s, %s: %s' \
+            legend.AddEntry(officialExclusionLineBelow, '%s, %s=%s' \
             %(metadata['rootTag'][0][1], intermediate[0], valueBelow), 'L')
         if not valueAbove and not valueBelow:
             if not value: val = '050'
             else: val = value
-            legend.AddEntry(officialExclusionLine, '%s, %s: %s' \
+            legend.AddEntry(officialExclusionLine, '%s, %s=%s' \
             %(metadata['rootTag'][0][1], intermediate[0], val), 'L')
     #Canvas:
     c = ROOT.TCanvas("c1", "c1", 0, 0, 800, 500)
@@ -290,8 +307,11 @@ def main():
     
     if topology in ['T6bbWW'] and value:
         xOffset = 30
-    elif topology in ['T6ttWW'] and value:
-        xOffset = 110
+    #elif 'T6ttWWx' in extendedTopology:
+        #xOffset = 110
+    elif extendedTopology == 'T6ttWWLSP050':
+        xOffset = 90
+    
     else:
         xOffset = 0
         
