@@ -129,7 +129,9 @@ def main():
     exclusionLine = validationPlotsHelper.getEnvelope(excluded)
     if extendedTopology == 'T6ttWWLSP050':
         exclusionLine = validationPlotsHelper.cutGraph(exclusionLine, 19, before = False, after = True)
-        
+    if extendedTopology == 'T6ttWWx166':
+        exclusionLine = validationPlotsHelper.cutGraph(exclusionLine, 16, before = False, after = True)    
+        exclusionLine = validationPlotsHelper.addPoint(exclusionLine, 587., 100.)
     if not condition and not value:
         officialExclusionLine = expRes.exclusionLine()
     else:
@@ -161,9 +163,16 @@ def main():
             if valueAbove:        
                 officialExclusionLineAbove = expRes.selectExclusionLine\
                 (condition = intermediate[0], value = valueAbove)
+                if extendedTopology == 'T6ttWWx166':
+                    officialExclusionLineAbove = validationPlotsHelper.cutGraph(officialExclusionLineAbove, 35, before = False, after = True)    
+                    officialExclusionLineAbove = validationPlotsHelper.cutGraph(officialExclusionLineAbove, 5)    
+                
             if valueBelow:
                 officialExclusionLineBelow = expRes.selectExclusionLine\
                 (condition = intermediate[0], value = valueBelow)
+                if extendedTopology == 'T6ttWWx166':
+                    officialExclusionLineBelow = validationPlotsHelper.cutGraph(officialExclusionLineBelow, 55, before = False, after = True)
+                    officialExclusionLineBelow = validationPlotsHelper.cutGraph(officialExclusionLineBelow, 5)    
         else:
             officialExclusionLine = expRes.exclusionLine(extendedTopology)
             valueAbove = ''
@@ -184,9 +193,11 @@ def main():
     else:
         if valueAbove:
             officialExclusionLineAbove.SetLineColor(ROOT.kGray+1)
+            officialExclusionLineAbove.SetLineWidth(3)
         if valueBelow:
             officialExclusionLineBelow.SetLineColor(ROOT.kGray+1)
             officialExclusionLineBelow.SetLineStyle(7)
+            officialExclusionLineBelow.SetLineWidth(3)
         if not valueAbove and not valueBelow:
             officialExclusionLine.SetLineColor(ROOT.kBlack)
     #Create TMutiGraph-object:
@@ -195,17 +206,20 @@ def main():
     multi.Add(allowed, 'P')
     if notTested.GetN():
         multi.Add(notTested, 'P')
-    multi.Add(exclusionLine, 'L')
+    #multi.Add(exclusionLine, 'L')
+    multi.Add(exclusionLine, 'LSAME')
     if not value and not condition:
         multi.Add(officialExclusionLine, 'L')
     else:
         if valueAbove:
-            multi.Add(officialExclusionLineAbove, 'L')
+            #multi.Add(officialExclusionLineAbove, 'L')
+            multi.Add(officialExclusionLineAbove, 'LSAME')
         if valueBelow:
-            multi.Add(officialExclusionLineBelow, 'L')
+            #multi.Add(officialExclusionLineBelow, 'L')
+            multi.Add(officialExclusionLineBelow, 'LSAME')
         if not valueAbove and not valueBelow:
             multi.Add(officialExclusionLine, 'L')
-        
+    
     #Legend:
     if extendedTopology == 'T6ttWWLSP050':
         legend = ROOT.TLegend(0.57, 0.7, 0.9, 0.9)
@@ -293,8 +307,8 @@ def main():
     
     if topology in ['T6bbWW'] and value:
         xOffset = 30
-    elif 'T6ttWWx' in extendedTopology:
-        xOffset = 110
+    #elif 'T6ttWWx' in extendedTopology:
+        #xOffset = 110
     elif extendedTopology == 'T6ttWWLSP050':
         xOffset = 90
     

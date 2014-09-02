@@ -180,4 +180,23 @@ def cutGraph (graph, n, before = True, after = False):
             else:
                 logger.debug('Deleted point n=%s | x=%s | y=%s from new graph.' %(ind, x, y))
                 continue
+    return(gr)
+    
+def addPoint(graph, xm, ym):
+    """Adds a new last point (given xm, ym) to the TGraph. For cases that the region doesn't allow for proper shading.
+    
+    """
+    num = graph.GetN()
+    logger.info('Got TGraph %s with %s points. Try to add last point xm=%s/ym=%s' %(graph.GetName(), num,  xm, ym))  
+    gr = ROOT.TGraph()
+    gr.SetName(graph.GetName())
+    gr.SetTitle(graph.GetTitle())
+    x = ROOT.Double(0.)
+    y = ROOT.Double(0.)
+    for ind in range(0, num):
+        graph.GetPoint(ind, x, y)
+        gr.SetPoint(ind, x, y)
+        logger.debug('Add point n=%s | x=%s | y=%s to new graph.' %(ind, x, y))
+    gr.SetPoint(num, xm, ym)
+    logger.info('Added last point n=%s | x=%s | y=%s.' %(num, xm, ym))
     return(gr)    

@@ -150,7 +150,25 @@ class GridData(object):
         if not self.removeUnits:
             return mass
         return rmvunit(mass, 'GeV')
-            
+
+    @property
+    def massIntermediate(self):
+        """Mass of the intermediate particle.
+        
+        """
+
+        if not self.predictions:
+            return None
+        for prediction in self.predictions:
+            if len(prediction.mass[0]) != 3:
+                logger.error('There is no intermediate mass!')
+                return None
+            else:
+                mass = prediction.mass[0][1]
+        if not self.removeUnits:
+            return mass
+        return rmvunit(mass, 'GeV')
+        
     @property
     def experimentalCondition(self):
         """Analysis condition, that has to be fulfilled.
@@ -294,17 +312,27 @@ def main():
         data = GridData(expTopo.name, analysis, slhaPath + '/' + slha)
         massMother = data.massMother
         massLSP = data.massLSP
+        if condition == 'LSP':
+            massIntermediate = data.massIntermediate
         tUL = data.theoreticalUpperLimit
         eUL = data.experimentalUpperLimit
         cond = data.theoreticalCondition
         if not massMother:
             massMother = slha.split('_')[1].strip()
-            massLSP = slha.split('_')[2].strip()
+            if condition == 'LSP':
+                massLSP = int(value)
+                massIntermediate = slha.split('_')[2].strip()
+            else:
+                massLSP = slha.split('_')[2].strip()
         if bool(data.theoreticalCondition):
             logger.warning('Condition %s not satisfied! degree of violation: %s' \
             %(data.experimentalCondition, data.theoreticalCondition))
-        print('%s  %s  %s  %s %s' \
-        %(massMother, massLSP, tUL, eUL, cond), file = outFile)
+        if condition == 'LSP':
+            print('%s  %s  %s  %s %s' \
+            %(massMother, massIntermediate, tUL, eUL, cond), file = outFile)
+        else:
+            print('%s  %s  %s  %s %s' \
+            %(massMother, massLSP, tUL, eUL, cond), file = outFile)
         count += 1
     computTime = timeUnits(time.time() - startTime)
     timePerFile = timeUnits((time.time() - startTime)/float(count))
@@ -347,8 +375,13 @@ def writeMetaData(expRes, order, fileName, factor, condition, value):
     metaData['outFile:'] = fileName.replace('.dat', '.png') 
     exclName = ''
     official = ''
-    if expRes.exclusionLine():
-        exclName = expRes.exclusionLine().GetName()
+    
+    if expRes.selectExclusionLine(condition = condition, value = value):
+        exclName = expRes.selectExclusionLine(condition = condition, value = value).GetName()
+    elif expRes.exclusionLine():
+        exclName = expRes.ExclusionLine().GetName
+    else:
+        exclName = 'exclusion_%s' %expTopo.name
     if expAna.publishedData or expAna.isPublished:
         official = 'official exclusion line'
     metaData['rootTag:'] = '%s: %s' %(exclName, official)
@@ -374,7 +407,7 @@ def getTarget(path):
 
 def checkFile(path):
     """Checks if the data file already exists.
-    If the file already exists, the user can decide wether to remove it, 
+    If the file already exists, the user can decide whether to remove it, 
     or to exit the script.
     
     """
