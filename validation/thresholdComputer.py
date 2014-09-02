@@ -35,7 +35,7 @@ class Threshold(object):
             sys.exit()            
         self._browser = browserObject
         self.topo = self._browser.expTopology(topology)
-        if not condition in ['xvalue', 'x','LSP']:
+        if not condition in ['xvalue', 'x','LSP','D']:
             logger.error('Condition %s not supported' %condition)
             sys.exit()    
         self._condition = condition
@@ -70,7 +70,7 @@ class Threshold(object):
         if self._condition == 'x':
             interValue = float(value) / 100.
             interValue = round(interValue, 2)
-        if self._condition == 'LSP':
+        if self._condition in ['LSP','D']:
             interValue = float(value)
             interValue = round(interValue,0)
         return interValue
@@ -109,7 +109,10 @@ class Threshold(object):
                             val.append(int(key.replace(self.topo.name + self._condition, '')))
                         except ValueError: continue
                 if val:
-                    ulDict = result.upperLimitDict(self.topo.name + self._condition + str(min(val)))
+                    val = str(min(val))
+                    if self._condition == 'D': 
+                        val = '0'*(3-len(val)) + val
+                    ulDict = result.upperLimitDict(self.topo.name + self._condition + val)
                 
             if not ulDict: continue
             mM = []
@@ -194,9 +197,7 @@ class Threshold(object):
                 minM = particleDict['min']
         if particle == 'mother' and self.topo.name == 'T1tttt':
             if minM < 400: minM = 400
-        if particle == 'mother' and self.topo.name == 'T2':
-            if minM < 200: minM = 200
-        if particle == 'mother' and self.topo.name == 'T1':
+        if particle == 'mother' and self.topo.name in ['T2', 'T1', 'TGQ']:
             if minM < 200: minM = 200
         if particle == 'mother' and self.topo.name == 'T2bb':
             if minM < 100: minM = 100
@@ -266,7 +267,7 @@ class Threshold(object):
         return massList
 
 def main():
-    threshold = Threshold('T6ttWW',Browser('../../smodels-database'),'x','150')
+    threshold = Threshold('T6bbWWoff',Browser('../../smodels-database'),'D','017')
     print('motherMasse: %s' %threshold.motherMasses)
     print('lspMasse: %s' %threshold.lspMasses)
     print('minLSB: %s maxLSB %s' %(min(threshold.lspMasses), max(threshold.lspMasses)))
