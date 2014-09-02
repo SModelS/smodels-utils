@@ -266,6 +266,8 @@ class ExpTopology(object):
         if motherPart == 'stop': return 't'
         if motherPart == 'sbottom': return 'b'
         if motherPart == 'slepton': return 'l'
+        if 'gluino' in motherPart and 'squark' in motherPart:
+            return 'gq'
         if 'chargino' in motherPart and 'neutralino' in motherPart:
             return 'c0cpm'
         if 'chargino' in motherPart and not 'neutralino' in motherPart:
@@ -380,6 +382,7 @@ decays = {
     'T6bbZZ':'sbottom  -->  bottom (neutralino_2 --> z lsp )',
     'T7btW':'gluino  --> bottom top w lsp ',
     'T7btbtWW':'gluino  --> bottom (sbottom --> top (chargino^pm --> w lsp ))',
+    'TGQ':'gluino squark --> quark antiquark lsp | quark lsp ',
     'TChizz':'neutralino_3 neutralino_2  --> z z lsp lsp ',
     'TChiSlep':'neutralino_2 chargino^pm_1  --> lepton lepton lepton neutrino lsp lsp ',
     'TChiNuSlep':'neutralino_2 chargino^pm_1  --> lepton lepton lepton neutrino lsp lsp ',
