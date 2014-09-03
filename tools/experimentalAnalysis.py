@@ -35,7 +35,6 @@ class ExpAnalysis(object):
         self._info = infotxt.info
         self._metaInfo = infotxt.metaInfo
         self._topologies = infotxt.topologies
-        self._extendedTopologies = infotxt.extendedTopologies()
         self._exclusions = infotxt.exclusions
         self._run = run
         self._smsroot = smsroot
@@ -99,6 +98,15 @@ class ExpAnalysis(object):
         content = [line.split(':')[1].strip() for line in content]
         return content
     
+    @property
+    def _extendedTopologies(self):
+        """Creates all the extendedTopologies as strings.
+        
+        """
+        for topo in self.topologies:
+            extensions = self.axes[topo]
+            extensions = [ext for ext in extensions if 'mz' in ext]
+            extensions = [ext['mz'][2] for ext in extensions]
     @property
     def lumi(self):
         return self._parseMetaInfo('lumi')
@@ -220,7 +228,7 @@ class ExpAnalysis(object):
     
         """
         if self.hasAxes:
-            return self._parseMetaInfo('axes').split(',')
+            return self.infotxt.axes
         return None
     
     @property    
@@ -274,7 +282,7 @@ class ExpAnalysis(object):
         
     @property    
     def extendedTopologies(self):
-        """Retrieves all the topologies with their particular extentions 
+        """Retrieves all the topologies with their particular extensions 
         (refering to possible mass conditions) this analysis has results 
         for as strings.
         

@@ -709,16 +709,18 @@ class Infotxt(object):
             axDict['my'] = axesEntry.split()[1].strip()
             try:
                 axDict['mz'] = axesEntry.split()[2].strip()
+                axDict['extension'] = axesEntry.split()[2].strip()
             except IndexError:
                 logger.debug('No intermediate mass mz.')
                 axDict['mz'] = None
+                axDict['extension'] = None
         return axDict
         
     def _massCondition(self, mz):
         """Takes the axes entry for the third mass and splits it into
         condition for this mass (e.g. fixed LSP, mass splitting, ...)
         and its value.
-        :return: [massCondition, value]
+        :return: ('massCondition', int(value))
         
         """
         
@@ -726,8 +728,8 @@ class Infotxt(object):
             value = int(mz)
             condition = 'massSplitting'
         except TypeError:
-            logger.error('Got no mz!')
-            return [None, None]
+            logger.debug('Got no mz!')
+            return None
         except ValueError:
             if 'D' in mz:
                 value = mz.split('=')[-1].strip()
@@ -748,14 +750,15 @@ class Infotxt(object):
                 logger.error('Unknown third mass entry %s!' %mz)
                 value = None
                 condition = None
-        return [condition, value]
+        return (condition, value)
                         
     @property
     def axes(self):
         """Runs all the preprocessing methods and retrieves the wrought axes 
         information.
         :return: {'topology': [{'mx': 'mass on x-axis', 'my': 'mass on y-axis',
-        'mz': ['condition for third mass', int(value for this condition)]}]}
+        'mz': ('condition for third mass', int(value for this condition)), 
+        'extension': 'extension glued to topology name'}]}
         
         """
         
@@ -774,10 +777,31 @@ class Infotxt(object):
                 entries.append(self._massDict(entry))
 
             entries = [e for e in entries if e]
-            entries = [e for e in entries if e['mz']]
             for entry in entries:
-                entry['mz'] = self._massCondition(entry['mz'])
+                if 'mz' in entry:
+                    entry['mz'] = self._massCondition(entry['mz'])
+                    
             axDict[t] = entries    
             logger.debug('Axes information for %s is: %s' \
             %(t, axDict[t]))
         return axDict
+    
+    @property
+    def extensions(self):
+        """Retrieves a dictionary with the topologies as keys and the 
+        extensions for these topologies to find exclusion lines etc.
+        :return: {'topology': ['extension']}
+        
+        """
+        extDic = {}
+        for t in self.topologies:
+            extDic[t] = []
+            for ax in self.axes[t]:
+                if ax['extension']:
+                    if 'D' in ax['extension']:
+                        extDic[t].append('D' + ax['extension'].split('=')[-1].strip())
+                    else:    
+                        extDic[t].append(ax['extension'])
+                        
+        return extDic
+            
