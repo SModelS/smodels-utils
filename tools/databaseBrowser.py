@@ -239,6 +239,9 @@ class Browser(object):
     
     @runRestriction.deleter
     def runRestriction(self):
+        """Deletes the restriction to one run.
+        
+        """
         self._runRestriction = None
         self.database = self._getDatabase()
         
@@ -450,7 +453,7 @@ class Browser(object):
         return path
     
     def expAnalysis(self, analysis):
-        """This is the factory for the experimental Analysis object. 
+        """This is the factory for the experimental analysis object. 
         Returns None if it's not possible to build the experimental 
         analysis object. 
         
@@ -461,8 +464,8 @@ class Browser(object):
         if analysis in self._analyses:
             return self._analyses[analysis]
         if not self._checkResults(analysis):
-            logger.info('Skipped building of ExpAnalysis-object for %s!' \
-            %analysis)
+            logger.info('Skipped building of ExpAnalysis-object for %s! \n \
+            There is not enough information.' %analysis)
             return None
         if not analysis in self._infos:
             logger.debug('Browser has no info.txt-object for %s!' %analysis)
@@ -478,7 +481,7 @@ class Browser(object):
         return self._analyses[analysis]
         
     def expTopology(self, topology):
-        """This is the factory for the experimental Topology object.
+        """This is the factory for the experimental topology object.
         
         """        
         #if isinstance(topology, object):
@@ -492,6 +495,11 @@ class Browser(object):
         return self._topologies[topology]
         
     def _topoDict(self, topology):
+        """Creates a nested dictionary that holds all the info.txt objects
+        for each topology.
+        :return: {'topology': {'analysis': Infotxt(analysis)}}
+        
+        """
         topoDict = {}
         for r in self.allRuns(topology = topology):
             topoDict[r] = {}
@@ -500,8 +508,7 @@ class Browser(object):
                     logger.debug('Browser has no info.txt-object for %s!' %a)
                     self._infos[a] = Infotxt(a, self._checkResults(a))
                     logger.debug('Created and stored info.txt-object!')
-                topoDict[r][a] = [self._infos[a].category, \
-                self._infos[a].constraints]
+                topoDict[r][a] = [self._infos[a]]
         return topoDict
                 
         
@@ -515,8 +522,8 @@ class Browser(object):
         logger.debug('Try to get experimental result %s for %s-%s.' \
         %(result, analysis, topology))
         if result in self._results:
-            logger.debug('Found experimental result for %s-%s in dictionary.' \
-            %(analysis, topology))
+            logger.debug('Found experimental result for %s in dictionary.' \
+            %result)
             return self._results[result]
         analysis = self._validateAnalysis(analysis)
         topology = self._validateTopology(topology)
@@ -525,13 +532,13 @@ class Browser(object):
         if not run:
             run = self.allRuns(analysis, topology)
 
-        alltopos=self.allTopologies(run,analysis)
-        if alltopos==None:
-            logger.error ('Found no topologies for %s/%s' % (run,analysis) )
+        alltopos = self.allTopologies(run,analysis)
+        if alltopos == None:
+            logger.error('Found no topologies for %s-%s' %(run,analysis))
             return None
             
         if not analysis or not topology or not run or not topology in \
-          alltopos:
+        alltopos:
             logger.error('There is no experimental result for \n\
             run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
             return None
@@ -561,7 +568,8 @@ class Infotxt(object):
         'unconstraint', 'exclusions', 'expectedexclusions', 'exclusionsp1', \
         'expectedexclusionsp1','exclusionsm1', 'expectedexclusionsm1', \
         'category']
-        
+    
+    @property
     def _readInfo(self):
         """Reads the whole info.txt file, returns a tuple containing a 
         dictionary holding the meta-information (e.g. PAS, lumi, comment, ...) 
@@ -587,19 +595,23 @@ class Infotxt(object):
     
     @property
     def metaInfo(self):
-        """Returns the meta info dictionary.
+        """Returns the meta info dictionary (contains the axes line too).
         
         """
-        return self._readInfo()[0]
+        return self._readInfo[0]
         
     @property
     def info(self):
         """Returns the list of lines connected with the topologies.
         
         """
-        return self._readInfo()[1]
+        return self._readInfo[1]
     
     def _topoInfo(self, requested):
+        """Creates a dictionary for topology related information.
+        :return: {'topology': 'line of info.txt'}
+        
+        """
         dic = {}
         logger.debug('Look for requested keyword %s.' %requested)
         content = self.info
@@ -629,98 +641,7 @@ class Infotxt(object):
             if topos.count(c.split(' ')[1]) == 0:
                 topos.append(c.split(' ')[1])                
         return topos
-        
-    @property    
-    def _preprocessAxes(self):
-        """Handles the information stored in the axes-labeled line of info.txt, 
-        therefor this line has to be preprocessed.
-    
-        """
-        infoLine = self.metaInfo['axes'].split(',')
-        infoLine = [ax.strip() for ax in infoLine]
-        logger.debug('axes- information: %s' %infoLine)
-        return infoLine
 
-
-        
-    def extendedTopologies(self, topology = None):
-        """Checks if the topologies in this info.txt are tainted with any kind 
-        of mass requirements and returns dictionary with extended topologies. 
-        Can be reduced to given topology (returns list).
-    
-        """
-        # ### FIX ME: maybe it's better not to glue strings but to return either dictionaries or maybe tuples to have it like topo + condition + value
-        
-        topos = {}
-        logger.debug('Got analysis %s and run %s!' %(self._analysis, self._run))
-        if not 'axes' in self.metaInfo or not self.metaInfo['axes']:
-            logger.info('No additional information about axes was found \n\
-            for %s-%s!' %(self._run, self._analysis))
-            if not self.topologies: return None
-            for t in self.topologies:
-                topos[t]=[t]
-            if not topology: return topos
-            if topology in topos: return topos[topology]
-            logger.warning('For %s-%s there is no topology %s' \
-            %(self._run, self._analysis, topology))
-            return None
-    
-        axes = self._preprocessAxes
-        logger.info('For %s-%s there is additional mass information!' \
-        %(self._run, self._analysis))
-        for t in self.topologies:
-            if not t in axes:
-                topos[t]=[t]
-        
-        for ax in axes:
-            logger.debug('Axesline is: %s' %ax)
-            massdic = self._massProportions(ax)
-            topo = massdic.keys()[0]
-            topos[topo] = []
-
-            for case in massdic[topo]:
-                if len(case) == 2: topos[topo].append(topo)
-                if len(case) == 3:
-                    try:
-                        x = int(case[2])
-                        topos[topo].append(topo + case[2])
-                    except ValueError:
-                        if 'D' in case[2]:
-                            D = case[2].split('=')[-1].strip()
-                            topos[topo].append(topo + 'D' + D)
-                        elif 'LSP' or 'x' or 'C' or 'M' in case[2]: \
-                        topos[topo].append(topo + case[2])
-                if len(case) > 3:
-                    logger.warning('Topology is: %s => more then one additional\n\
-                    condition is too much at the moment.' %topo)
-                    continue
-        
-        if topos == {'':[]}:
-            logger.warning('Something is wrong with the axes line in the\n \
-            info.txt for %s-%s!' %(self._run, self._analysis))
-            return None
-        if not topology: return topos
-        if topology in topos: return topos[topology]
-        logger.warning('For %s-%s there is no topology %s.' \
-        %(self._run, self._analysis, topology))
-        return None
-
-    def _massProportions(self, axesLine):
-        """Reads out all the conditions for the third mass 
-        (e.g. masssplitting-xvalues 025, 050, 075) implicitly stored in 
-        axes-lines of info.txt and returns the information as dictionary.
-    
-        """
-        massdic = {}
-        topo = axesLine.split(' ')[0].replace(':', '').strip()
-        massdic[topo] = axesLine.replace(topo + ':', '').split('-')
-        massdic[topo] = [c.strip() for c in massdic[topo]]
-        logger.info('For %s there are %s different cases of mass proportions.' \
-        %(topo, len(massdic[topo])))
-        massdic[topo]=[c.split(' ') for c in massdic[topo]]
-        logger.debug('For %s the massdictionary is: %s.' %(topo, massdic[topo]))
-        return massdic
-        
     @property    
     def exclusions(self):
         """Retrieves all the exclusions for every extended topology stored in 
@@ -738,3 +659,125 @@ class Infotxt(object):
         logger.debug('List of exclusions for %s-%s: %s.' \
         %(self._run, self._analysis, exList))
         return exList
+        
+    @property    
+    def _preprocessAxesLine(self):
+        """Handles the information stored in the axes-labeled line of info.txt, 
+        therefor this line has to be preprocessed.
+    
+        """
+        infoLine = self.metaInfo['axes'].split(',')
+        infoLine = [ax.strip() for ax in infoLine]
+        logger.debug('axes- information: %s' %infoLine)
+        return infoLine
+        
+    def _axesDict(self, axesLines):
+        """Splits the axes line and retrieves all the topologies to form
+        a dictionary.
+        :return: {'topology': ['axes entry', 'axes entry', ...]}
+    
+        """
+        axDic = {}
+        for axesLine in axesLines:
+            topo = axesLine.split(' ')[0].replace(':', '').strip()
+            axDic[topo] = axesLine.replace(topo + ':', '').split('-')
+            axDic[topo] = [c.strip() for c in axDic[topo]]
+            logger.info('For %s there are %s masses.' \
+            %(topo, len(axDic[topo])))
+            logger.debug('For %s the axes dictionary is: %s.' %(topo, axDic[topo]))
+        return axDic
+        
+    
+    def _massDict(self, axesEntry):
+        """Retrieves the axes information for given entry as dictionary.
+        :param axesEntry: one axes entry for one topology
+        :return:  {'mx': mass on x-axis, 'my': mass on y-axes, 
+        'mz': condition for intermediate mass}
+        
+        """
+        
+        axDict = {}
+        
+        logger.debug('Axes entry: %s.' %axesEntry.split())
+        try:
+            axesEntry.split()[3]
+            logger.warning('There are more then three masses!\n\
+            We cannot handle this!')
+            return None
+        except IndexError:
+            axDict['mx'] = axesEntry.split()[0].strip()
+            axDict['my'] = axesEntry.split()[1].strip()
+            try:
+                axDict['mz'] = axesEntry.split()[2].strip()
+            except IndexError:
+                logger.debug('No intermediate mass mz.')
+                axDict['mz'] = None
+        return axDict
+        
+    def _massCondition(self, mz):
+        """Takes the axes entry for the third mass and splits it into
+        condition for this mass (e.g. fixed LSP, mass splitting, ...)
+        and its value.
+        :return: [massCondition, value]
+        
+        """
+        
+        try:
+            value = int(mz)
+            condition = 'massSplitting'
+        except TypeError:
+            logger.error('Got no mz!')
+            return [None, None]
+        except ValueError:
+            if 'D' in mz:
+                value = mz.split('=')[-1].strip()
+                condition = 'difference'
+            elif 'LSP' in mz:
+                value = int(mz.replace('LSP', ''))
+                condition = 'fixedLSP'
+            elif 'M' in mz:
+                value = int(mz[2:])
+                condition = 'fixed%s' %mz[:2]
+            elif 'C' in mz:
+                value = int(mz.replace('C', ''))
+                condition = 'fixedChipm'
+            elif 'x' in mz:
+                value = int(mz.replace('x', ''))
+                condition = 'factor'
+            else:
+                logger.error('Unknown third mass entry %s!' %mz)
+                value = None
+                condition = None
+        return [condition, value]
+                        
+    @property
+    def axes(self):
+        """Runs all the preprocessing methods and retrieves the wrought axes 
+        information.
+        :return: {'topology': [{'mx': 'mass on x-axis', 'my': 'mass on y-axis',
+        'mz': ['condition for third mass', int(value for this condition)]}]}
+        
+        """
+        
+        axLines = self._preprocessAxesLine
+        axDict = self._axesDict(axLines)
+        for t in self.topologies:
+            if not t in axDict:
+                logger.error('There is no axes entry for %s! Check database!' %t)
+        for t in axDict:
+            if not t in self.topologies:
+                logger.error('There is an axes entry for %s, \n \
+                but this is no known topology! Check database!' %t)
+                continue
+            entries = []
+            for entry in axDict[t]:
+                entries.append(self._massDict(entry))
+
+            entries = [e for e in entries if e]
+            entries = [e for e in entries if e['mz']]
+            for entry in entries:
+                entry['mz'] = self._massCondition(entry['mz'])
+            axDict[t] = entries    
+            logger.debug('Axes information for %s is: %s' \
+            %(t, axDict[t]))
+        return axDict

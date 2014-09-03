@@ -27,7 +27,7 @@ class ExpTopology(object):
     contain this topology, category, particles resp. production mode, ...)
     
     """
-    def __init__ (self, topology, topoDict):
+    def __init__ (self, topology, topoDict): #give the info.txt-object!
         self._name = topology
         self._topoDict = topoDict
         self._runs = [key for key in self._topoDict]
