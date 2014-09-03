@@ -154,6 +154,8 @@ class SlhaFiles(object):
                     lspMass = self._interValue
                 if self._condition == 'D':
                     interMass = lspMass + self._interValue
+                if self.topo.name == 'T6bbWWoff':
+                    if lspMass < interMass-80: continue
                 if self.topo.name == 'T6ttWW':
                     if interMass < (81.+lspMass): continue # valition of kin. contion
                 logger.info('mother mass: %s, lsp mass: %s, inter mass: %s' %(motherMass, lspMass, interMass))
