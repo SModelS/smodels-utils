@@ -379,7 +379,7 @@ def writeMetaData(expRes, order, fileName, factor, condition, value):
     if expRes.selectExclusionLine(condition = condition, value = value):
         exclName = expRes.selectExclusionLine(condition = condition, value = value).GetName()
     elif expRes.exclusionLine():
-        exclName = expRes.ExclusionLine().GetName
+        exclName = expRes.exclusionLine().GetName
     else:
         exclName = 'exclusion_%s' %expTopo.name
     if expAna.publishedData or expAna.isPublished:
