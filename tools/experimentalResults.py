@@ -25,6 +25,7 @@ logger.setLevel(level=logging.ERROR)
 
 # ### FIX ME:
 
+# add upperlimithistos as root.TH2!
 # various names for same variables!
 # ordering of functions is confusing
 # code duplicates
@@ -39,7 +40,7 @@ class ExpResultSet (object):
     
     def __init__ (self, run, expAnalysis, expTopology, smsroot, smspy):
         """Sets all private variables, especially self._results 
-        as list containing all available extended results as objects.
+        as list containing all available results as objects.
     
         """
         self._expTopo = expTopology
@@ -70,7 +71,59 @@ class ExpResultSet (object):
         level = self._validateLevel(level)
         self._verbosity = level
         self._setLogLevel(level)
+    
+    def __str__(self):
+        ret = "%s" %self.name
+        return ret
         
+    @property
+    def name(self):
+        return self._ana + '_' + self._topo
+        
+        
+    @property    
+    def expAnalysis(self):
+        """Returns the analysis object linked to this set of results.
+        
+        """
+        return self._expAna
+    
+    @property    
+    def expTopology(self):
+        """Returns the topology object linked to this set of results.
+        
+        """
+        return self._expTopo
+        
+    @property    
+    def isChecked(self):
+        """Is this set of results checked?
+        
+        """
+        if self.checked: return True
+        return False
+    
+    @property    
+    def checked(self):
+        """Retrieves checked_by entry from info.txt.
+        
+        """
+        return self._checked
+    
+    @property    
+    def condition(self):
+        """Retrieves the condition for this set of results.
+        
+        """
+        return self._condition
+        
+    @property    
+    def constraint(self):
+        """Retrieves constraint for this set of results.
+        
+        """
+        return self._constraint
+    
     def _validateLevel(self, level):
         """Validates given level for pythons logger module.
         
@@ -91,39 +144,8 @@ class ExpResultSet (object):
         if level == 'error':
             pass
         
-    def __str__(self):
-        ret = "%s" %self.name
-        return ret
-        
-    @property
-    def name(self):
-        return self._ana + '_' + self._topo
-        
-        
     @property    
-    def expAnalysis(self):
-        """Returns the analysis-object linked to this result-object.
-        
-        """
-        return self._expAna
-    
-    @property    
-    def expTopology(self):
-        """Returns the topology-object linked to this result-object.
-        
-        """
-        return self._expTopo
-        
-    @property    
-    def isChecked(self):
-        """Is this result checked?
-        
-        """
-        if self.checked: return True
-        return False
-    
-    @property    
-    def checked(self):
+    def _checked(self):
         """Retrieves checked_by entry from info.txt.
         
         """
@@ -148,7 +170,7 @@ class ExpResultSet (object):
         return infoLine[0].strip()
     
     @property
-    def condition(self):
+    def _condition(self):
         """Retrieves the condition for this result.
         
         """
@@ -166,7 +188,7 @@ class ExpResultSet (object):
         return cond[0]
      
     @property
-    def constraint(self):
+    def _constraint(self):
         """Retrieves the constraint for this result.
         
         """
@@ -398,7 +420,7 @@ class ExpResultSet (object):
         
 
 
-class Results(object):
+class Result(object):
     """Contains all specific informations linked to one result,
     where a result denotes a pair of analysis and topology with a specific
     assumption for the third mass (e.g. x-value = 050, mass of LSP = 50 GeV, ...).

@@ -251,7 +251,7 @@ class Browser(object):
         """
         if not run: return None
         if not run in self.database.keys():
-            logger.warning('%s is no valid run!' %run)
+            logger.error('%s is no valid run!' %run)
             return None
 
         return run
@@ -264,7 +264,7 @@ class Browser(object):
         if not analysis: return None    
         runs = [key for key in self.database if analysis in self.database[key]]
         if not runs:
-            logger.warning('%s is no valid analysis!' %analysis)
+            logger.error('%s is no valid analysis!' %analysis)
             return None
         
         return analysis
@@ -277,7 +277,7 @@ class Browser(object):
         """
         
         if not topology in self.allTopologies():
-            logger.warning('%s is no valid topology!' %topology)
+            logger.error('%s is no valid topology!' %topology)
             return None
             
         return topology
@@ -439,10 +439,10 @@ class Browser(object):
         info.txt, sms.root and sms.py, returns path to these files.
     
         """
-    
-        analysis = self._validateAnalysis(analysis)
+        if not self._validateAnalysis(analysis):
+            return None
+            
         run = self.allRuns(analysis)
-        
         path = self._base + run + '/' + analysis + '/' + requested
         logger.debug('Check path: %s.' %path)
         if not os.path.exists(path):
@@ -508,7 +508,7 @@ class Browser(object):
                     logger.debug('Browser has no info.txt-object for %s!' %a)
                     self._infos[a] = Infotxt(a, self._checkResults(a))
                     logger.debug('Created and stored info.txt-object!')
-                topoDict[r][a] = [self._infos[a]]
+                topoDict[r][a] = self._infos[a]
         return topoDict
                 
         
@@ -725,15 +725,22 @@ class Infotxt(object):
         """
         
         try:
-            value = int(mz)
+            value = float(mz) / (10. ** (len(mz)-1))
             condition = 'massSplitting'
         except TypeError:
             logger.debug('Got no mz!')
             return None
         except ValueError:
             if 'D' in mz:
-                value = mz.split('=')[-1].strip()
-                condition = 'difference'
+                value = int(mz.split('=')[-1].strip())
+                if mz.split('=')[0].strip() == 'D':
+                    condition = 'difference' # ### FIXME: talk to uschi about the database!
+                    #                                      what is meant by just 'D'
+                else:
+                    condition = mz.split('=')[0].strip().replace('D(', '')
+                    condition = condition.replace(')', '')
+                    condition = condition.split('/')
+                    condition = '%s-%s' %(condition[0], condition[1])
             elif 'LSP' in mz:
                 value = int(mz.replace('LSP', ''))
                 condition = 'fixedLSP'
@@ -766,11 +773,11 @@ class Infotxt(object):
         axDict = self._axesDict(axLines)
         for t in self.topologies:
             if not t in axDict:
-                logger.error('There is no axes entry for %s! Check database!' %t)
+                logger.error('There is no axes entry for %s-%s! Check database!' %(self._analysis, t))
         for t in axDict:
             if not t in self.topologies:
-                logger.error('There is an axes entry for %s, \n \
-                but this is no known topology! Check database!' %t)
+                logger.error('There is an axes entry for %s-%s, \n \
+                but this is no known topology! Check database!' %(self._analysis, t))
                 continue
             entries = []
             for entry in axDict[t]:

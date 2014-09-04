@@ -32,10 +32,7 @@ class ExpAnalysis(object):
         
     def __init__(self, analysis, infotxt, run, smsroot, smspy):
         self._name = analysis
-        self._info = infotxt.info
-        self._metaInfo = infotxt.metaInfo
-        self._topologies = infotxt.topologies
-        self._exclusions = infotxt.exclusions
+        self._infotxt = infotxt
         self._run = run
         self._smsroot = smsroot
         self._smspy = smspy
@@ -43,7 +40,7 @@ class ExpAnalysis(object):
 
     def __str__(self ):
         ret = "%s [%s, %s] <<%s>>" % \
-             (self.name, self.experiment, self.run, ",".join(self.topologies))
+             (self.name, self.experiment, self.run, ", ".join(self.topologies))
         return ret
      
     @property
@@ -61,52 +58,7 @@ class ExpAnalysis(object):
         level = self._validateLevel(level)
         self._verbosity = level
         self._setLogLevel(level)
-        
-    def _validateLevel(self, level):
-        """Validates given level for pythons logger module.
-        
-        """
-        if not level.lower() in ['debug', 'info', 'warning', 'error']:
-            logger.error('No valid level for verbosity: %s! Browser will \
-            use default setting!' %level)
-            return 'error'
-        return level.lower()
-            
-    def _setLogLevel(self, level = 'error'):
-        if level == 'debug':
-            logger.setLevel(level=logging.DEBUG)
-        if level == 'info':
-            logger.setLevel(level=logging.INFO)
-        if level == 'warning':
-            logger.setLevel(level=logging.WARNING)
-        if level == 'error':
-            pass
-        
-    def _parseMetaInfo(self, requested):
-        if not requested in self._metaInfo:
-            logger.warning('Requested keyword %s could not be found for %s!' \
-            %(requested, self._name))
-            return None
-        return self._metaInfo[requested]
-        
-    def _parseInfo(self, requested):
-        content = [line for line in self._info if requested in line]
-        if not content:
-            logger.warning('Requested lines %s could not be found for %s!' \
-            %(requested, self._name))
-            return None
-        content = [line.split(':')[1].strip() for line in content]
-        return content
     
-    @property
-    def _extendedTopologies(self):
-        """Creates all the extendedTopologies as strings.
-        
-        """
-        for topo in self.topologies:
-            extensions = self.axes[topo]
-            extensions = [ext for ext in extensions if 'mz' in ext]
-            extensions = [ext['mz'][2] for ext in extensions]
     @property
     def lumi(self):
         return self._parseMetaInfo('lumi')
@@ -114,20 +66,11 @@ class ExpAnalysis(object):
     @property
     def publishedData(self):
         return self._parseMetaInfo('publisheddata')
-        
+    
     @property
-    def sqrts(self):
-        s = self._parseMetaInfo('sqrts')
-        try:
-            return float(s)
-        except ValueError:
-            try:
-                return float(s.split()[0])
-            except TypeError:
-                if '8' in s: return 8.0
-                if '7' in s: return 7.0
-                if not s: return None
-        
+    def extendedTopologies(self):
+        return self._extendedTopologies
+    
     @property
     def pas(self):
         return self._parseMetaInfo('pas')
@@ -223,12 +166,15 @@ class ExpAnalysis(object):
         
     @property
     def axes(self):
-        """Retrieves the information stored in the axes-labeled line of 
-        info.txt as list.
+        """Retrieves the axes information stored in the axes-labeled line of 
+        info.txt.
+        :return: {'topology': [{'mx': 'x-axis', 'my': 'y-axis', 
+        'mz': ('mass condition', value)}]}
+       
     
         """
         if self.hasAxes:
-            return self.infotxt.axes
+            return self._axes
         return None
     
     @property    
@@ -259,6 +205,10 @@ class ExpAnalysis(object):
         return self._name
     
     @property    
+    def sqrts(self):
+        return self._sqrts
+    
+    @property    
     def run(self):
         return self._run
         
@@ -283,7 +233,7 @@ class ExpAnalysis(object):
     @property    
     def extendedTopologies(self):
         """Retrieves all the topologies with their particular extensions 
-        (refering to possible mass conditions) this analysis has results 
+        (referring to possible mass conditions) this analysis has results 
         for as strings.
         
         """
@@ -294,7 +244,7 @@ class ExpAnalysis(object):
         """Retrieves all the exclusion values stored in the info.txt file.
         
         """
-        return self._exclusions
+        return self._getInfoProperty('exclusions')
     
     @property    
     def hasROOT(self):
@@ -313,5 +263,97 @@ class ExpAnalysis(object):
     @property    
     def PY(self):
         return self._smspy
+    
+    def _validateLevel(self, level):
+        """Validates given level for pythons logger module.
+        
+        """
+        if not level.lower() in ['debug', 'info', 'warning', 'error']:
+            logger.error('No valid level for verbosity: %s! Browser will \
+            use default setting!' %level)
+            return 'error'
+        return level.lower()
+            
+    def _setLogLevel(self, level = 'error'):
+        if level == 'debug':
+            logger.setLevel(level=logging.DEBUG)
+        if level == 'info':
+            logger.setLevel(level=logging.INFO)
+        if level == 'warning':
+            logger.setLevel(level=logging.WARNING)
+        if level == 'error':
+            pass
+    
+    def _getInfoProperty(self, requested):
+        """Retrieves the requested property of the given info.txt object.
+        
+        """
+        return getattr(self._infotxt, requested)
+    
+    def _parseMetaInfo(self, requested):
+        metaInf = self._getInfoProperty('metaInfo')
+        if not requested in metaInf:
+            logger.warning('Requested keyword %s could not be found for %s!' \
+            %(requested, self._name))
+            return None
+        return metaInf[requested]
+        
+    def _parseInfo(self, requested):
+        inf = self._getInfoProperty('info')
+        content = [line for line in inf if requested in line]
+        if not content:
+            logger.warning('Requested lines %s could not be found for %s!' \
+            %(requested, self._name))
+            return None
+        content = [line.split(':')[1].strip() for line in content]
+        return content
+    
+    @property
+    def _axes(self):
+        """
+        Creates the axes dictionary from the infotxt object's axes method.
+        
+        """
+        axesDict = {}
+        axes = self._getInfoProperty('axes')
+        for topo in axes:
+            axesDict[topo] = []
+            for a in axes[topo]:
+                axe = {key: a[key] for key in a if key != 'extension'} 
+                axesDict[topo].append(axe)
+        return axesDict        
+    
+    @property
+    def _extendedTopologies(self):
+        """Creates all the extended topologies by concatenating the name of
+        the topology and possible extensions and feeds them into a dictionary.
+        
+        """
+        extTopos = {}
+        extensions = self._getInfoProperty('extensions')
+        for topo in self._topologies:
+            extTopos[topo] = []
+            if not extensions[topo]:
+                extTopos[topo].append(topo)
+                continue
+            for ext in extensions[topo]:
+                extTopos[topo].append(topo + ext)
+        return extTopos        
+    
+        
+    @property
+    def _sqrts(self):
+        s = self._parseMetaInfo('sqrts')
+        try:
+            return float(s)
+        except ValueError:
+            try:
+                return float(s.split()[0])
+            except TypeError:
+                if '8' in s: return 8.0
+                if '7' in s: return 7.0
+                if not s: return None
+        
+    
         
     #def getRestOfInfo => contact, arxiv, publisheddata ### check something missing?

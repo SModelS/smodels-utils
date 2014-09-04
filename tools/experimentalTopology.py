@@ -51,18 +51,8 @@ class ExpTopology(object):
 
     def __str__(self):
         ret = "%s [%s]: " % ( self.name, self.category )
-        ret += ",".join ( self.constraints ).replace("'","") 
+        ret += ", ".join ( self.constraints ).replace("'","") 
         return ret
-        
-    def _setLogLevel(self, level = 'error'):
-        if level == 'debug':
-            logger.setLevel(level=logging.DEBUG)
-        if level == 'info':
-            logger.setLevel(level=logging.INFO)
-        if level == 'warning':
-            logger.setLevel(level=logging.WARNING)
-        if level == 'error':
-            pass
     
     @property    
     def name(self):
@@ -102,7 +92,17 @@ class ExpTopology(object):
     
     @property
     def motherParticle(self):
-       return self._motherParticle(self):
+       return self._motherParticle
+    
+    def _setLogLevel(self, level = 'error'):
+        if level == 'debug':
+            logger.setLevel(level=logging.DEBUG)
+        if level == 'info':
+            logger.setLevel(level=logging.INFO)
+        if level == 'warning':
+            logger.setLevel(level=logging.WARNING)
+        if level == 'error':
+            pass
     
     @property    
     def _anas(self):
@@ -130,10 +130,10 @@ class ExpTopology(object):
         """
         
         cats = []
-        for run in self._topoDict:
-            for ana in self._topoDict[run]:
+        for run in self._runs:
+            for ana in self._anas:
                 try:
-                    category = self._getInfoProperty(topoDict[run][ana], 'category')[self.name]
+                    category = self._getInfoProperty(self._topoDict[run][ana], 'category')[self.name]
                     if cats.count(category) == 0:
                         cats.append(category)
                     if cats and cats.count(category) == 0:
@@ -162,10 +162,10 @@ class ExpTopology(object):
         """
         
         const = []
-        for run in self._topoDict:
-            for ana in self._topoDict[run]:
+        for run in self._runs:
+            for ana in self._anas:
                 try:
-                    c = self._getInfoProperty(topoDict[run][ana], 'constraint')[self.name]
+                    c = self._getInfoProperty(self._topoDict[run][ana], 'constraint')[self.name]
                     if not c in const:
                         const.append(c)
                 except KeyError:
@@ -177,14 +177,14 @@ class ExpTopology(object):
     
     @property
     def _thirdMasses(self):
-        """Retrieves all conditions for the third mass, available this topology.
+        """Retrieves all conditions for the third mass, available for this topology.
         
         """
         massConds = []
-        for run in self._topoDict:
-            for ana in self._topoDict[run]:
+        for run in self._runs:
+            for ana in self._anas:
                 try:
-                    axes = self._getInfoProperty(topoDict[run][ana], 'axes')[self.name]
+                    axes = self._getInfoProperty(self._topoDict[run][ana], 'axes')[self.name]
                     axes = [ax for ax in axes if 'mz' in ax and ax['mz']]
                     axes = [ax['mz'] for ax in axes]
                     for ax in axes:
@@ -197,14 +197,14 @@ class ExpTopology(object):
     
     @property
     def _extensions(self):
-        """Retrieves all extensions, available this topology.
+        """Retrieves all extensions, available for this topology.
         
         """
         ext = []
-        for run in self._topoDict:
-            for ana in self._topoDict[run]:
+        for run in self._runs:
+            for ana in self._anas:
                 try:
-                    extensions = self._getInfoProperty(topoDict[run][ana], 'extensions')[self.name]
+                    extensions = self._getInfoProperty(self._topoDict[run][ana], 'extensions')[self.name]
                     for ex in extensions:
                         if not ex in ext:
                             ext.append(ex)
