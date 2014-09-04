@@ -187,7 +187,7 @@ class ExpResult (object):
         """ 
         ulDicts = {}
         for exTopo in self.extendedTopos:
-            ulDicts[exTopo] = [exRes.upperLimitDict() for exRes in self._extendedResults]
+            ulDicts[exTopo] = self.upperLimitDict(extendedTopoName = exTopo)
         return ulDicts
         
     @property
@@ -197,7 +197,7 @@ class ExpResult (object):
         """ 
         ulDicts = {}
         for exTopo in self.extendedTopos:
-            ulDicts[exTopo] = [exRes.upperLimitDict(expected = True) for exRes in self._extendedResults]
+            ulDicts[exTopo] = self.upperLimitDict(extendedTopoName = exTopo, expected = True)
         return ulDicts
         
     def upperLimitDict(self, extendedTopoName = 'default', expected = False):
