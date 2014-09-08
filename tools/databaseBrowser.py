@@ -749,7 +749,7 @@ class Infotxt(object):
                 value = int(mz.split('=')[-1].strip())
                 if mz.split('=')[0].strip() == 'D':
                     condition = 'difference' # ### FIXME: talk to uschi about the database!
-                    #                                      what is meant by just 'D'
+                    #                                      what is meant by just 'D' -> it's an error in the axes entry => fix database
                 else:
                     condition = mz.split('=')[0].strip().replace('D(', '')
                     condition = condition.replace(')', '')
@@ -780,7 +780,7 @@ class Infotxt(object):
         :return: {'topology': [{'mx': 'mass on x-axis', 'my': 'mass on y-axis',
         'mz': ('condition for third mass', int(value for this condition)), 
         'extension': 'extension glued to topology name'}]}
-        
+        # ### FIX ME: if there are two conditions for intermediate masses this routine yields the wrong format. This entreis should be totally removed?
         """
         
         axLines = self._preprocessAxesLine
@@ -793,6 +793,7 @@ class Infotxt(object):
                 logger.error('There is an axes entry for %s-%s, \n \
                 but this is no known topology! Check database!' %(self._analysis, t))
                 continue
+            
             entries = []
             for entry in axDict[t]:
                 entries.append(self._massDict(entry))
