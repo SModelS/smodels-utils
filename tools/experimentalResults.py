@@ -371,11 +371,11 @@ class ExpResultSet (object):
         
     @property
     def _resultDict(self):
-        return {r._topo: r for r in self._results}
+        return {r.name: r for r in self._results}
     
     @property
     def _resultNames(self):
-        return [r._topo for r in self._results]
+        return [r.name for r in self._results]
     
     
     def _getExtendedTopology(self, condition = None, value = None):

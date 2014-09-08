@@ -514,7 +514,7 @@ class Browser(object):
         return topoDict
                 
         
-    def expResultSet(self, analysis, topology, run = None):
+    def expResultSet(self, analysis, topology):
         """This is the factory for the experimental result set object.
         :param analysis: name of analysis as string or expAnalysis.name
         :param topology: name of topology as string or expTopology.name
@@ -528,68 +528,41 @@ class Browser(object):
             %resultSet)
             return self._resultSets[resultSet]
         analysis = self._validateAnalysis(analysis)
-        topology = self._validateTopology(topology)
-        if run:
-            run = self._validateRun(run)
-        if not run:
-            run = self.allRuns(analysis, topology)
-
-        alltopos = self.allTopologies(run, analysis)
-        if not alltopos:
-            logger.error('Found no topologies for %s-%s' %(run, analysis))
-            return None
-            
-        if not analysis or not topology or not run or not topology in \
-        alltopos:
-            logger.error('There is no experimental result for \n\
+        expAna = self.expAnalysis(analysis)
+        run = expAna.run
+        if not topology in expAna.topologies:
+            logger.error('There is no experimental result set for \n\
             run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
             return None
         self._resultSets[resultSet] = experimentalResults.ExpResultSet(run, \
-        self.expAnalysis(analysis), self.expTopology(topology), \
+        expAna, self.expTopology(topology), \
         self._checkResults(analysis, requested = 'sms.root'), \
         self._checkResults(analysis, requested = 'sms.py'))
         logger.debug('Built experimental result for %s-%s: %s' \
         %(analysis, topology, self._resultSets[resultSet]))
         return self._resultSets[resultSet]
     
-    #def expResult(self, analysis, topology, run = None):
-        #"""This is the factory for the experimental result object.
-        #:param analysis: name of analysis as string or expAnalysis.name
-        #:param topology: name of extended topology as string
-        ## ### FIX ME: how to check if this pair exists?
-        #"""
-        #result = analysis + '-' + topology
-        #logger.debug('Try to get experimental result %s for %s-%s.' \
-        #%(result, analysis, topology))
-        #if result in self._results:
-            #logger.debug('Found experimental result for %s in dictionary.' \
-            #%result)
-            #return self._results[result]
-        #analysis = self._validateAnalysis(analysis)
+    def expResult(self, analysis, topology):
+        """This is the factory for the experimental result object.
+        :param analysis: name of analysis as string or expAnalysis.name
+        :param topology: name of extended topology as string 
+        (e.g. 'T6ttWWLSP050')
         
-        #topology = self._validateTopology(topology)
-        #if run:
-            #run = self._validateRun(run)
-        #if not run:
-            #run = self.allRuns(analysis, topology)
-
-        #alltopos = self.allTopologies(run,analysis)
-        #if alltopos == None:
-            #logger.error('Found no topologies for %s-%s' %(run,analysis))
-            #return None
+        """
+        result = analysis + '-' + topology
+        logger.debug('Try to get experimental result %s for %s-%s.' \
+        %(result, analysis, topology))
+        expAna = self.expAnalysis(analysis)
+        run = expAna.run
+        for topo in expAna.extendedTopologies:
+            if topology in expAna.extendedTopologies[topo]:
+                return self.expResultSet(analysis, topo).results[result]
+            else:
+                continue
+        logger.error('There is no experimental result for \n\
+        run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
+        return None
             
-        #if not analysis or not topology or not run or not topology in \
-        #alltopos:
-            #logger.error('There is no experimental result for \n\
-            #run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
-            #return None
-        #self._results[result] = experimentalResults.ExpResult(run, \
-        #self.expAnalysis(analysis), self.expTopology(topology), \
-        #self._checkResults(analysis, requested = 'sms.root'), \
-        #self._checkResults(analysis, requested = 'sms.py'))
-        #logger.debug('Built experimental result for %s-%s: %s' \
-        #%(analysis, topology, self._results[result]))
-        #return self._results[result]
     
 class Infotxt(object):
     """Holds all the lines, stored in the info.txt file. 
