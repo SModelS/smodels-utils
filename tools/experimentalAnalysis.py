@@ -217,7 +217,7 @@ class ExpAnalysis(object):
         """Retrieves all the topologies this analysis has results for as strings.
         
         """
-        return self._topologies
+        return self._getInfoProperty('topologies')
     
     @property
     def expTopologies(self):
@@ -331,7 +331,7 @@ class ExpAnalysis(object):
         """
         extTopos = {}
         extensions = self._getInfoProperty('extensions')
-        for topo in self._topologies:
+        for topo in self.topologies:
             extTopos[topo] = []
             if not extensions[topo]:
                 extTopos[topo].append(topo)
@@ -340,7 +340,6 @@ class ExpAnalysis(object):
                 extTopos[topo].append(topo + ext)
         return extTopos        
     
-        
     @property
     def _sqrts(self):
         s = self._parseMetaInfo('sqrts')
