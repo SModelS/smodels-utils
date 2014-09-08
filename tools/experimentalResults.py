@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
 
+
 # ### FIX ME:
 
 # add upperlimithistos as root.TH2!
@@ -78,7 +79,7 @@ class ExpResultSet (object):
         
     @property
     def name(self):
-        return self._ana + '_' + self._topo
+        return self._ana + '-' + self._topo
         
         
     @property    
@@ -119,10 +120,18 @@ class ExpResultSet (object):
         
     @property
     def results(self):
-        """Returns a list containing all available result objects.
+        """Returns a dictionary containing all available result objects.
         
         """
-        return self._results    
+        return self._resultDict    
+    
+    @property
+    def resultNames(self):
+        """Returns a list containing all available result object names.
+        
+        """
+        return self._resultNames    
+    
     
     @property    
     def condition(self):
@@ -139,7 +148,7 @@ class ExpResultSet (object):
         return self._constraint
     
     @property
-    def axes(sefl):
+    def axes(self):
         """Retrieves the axes for this set of results.
         
         """
@@ -220,9 +229,10 @@ class ExpResultSet (object):
         :param sigma: -1, 0, 1.
         
         """
-        extTopo = self._getExtendedTopologyName(condition = condition, value = value)
-        if not extTopo in self.exclusionLines(expected = expected)\
-        or not sigma in self.exclusionLines(expected = expected)[extTopo]: 
+        extTopo = self._getExtendedTopology(condition = condition, value = value)
+        resultName = self.name.replace(self._topo, extTopo)
+        if not resultName in self.exclusionLines(expected = expected)\
+        or not sigma in self.exclusionLines(expected = expected)[resultName]: 
             if expected:
                 logger.error('No expected exclusion lines could be found for %s!' \
                 %extTopo)
@@ -230,7 +240,7 @@ class ExpResultSet (object):
             logger.error('No exclusion lines could be found for %s!' \
             %extTopo)
             return None
-        return self.exclusionLines(expected = expected)[extTopo][sigma]
+        return self.exclusionLines(expected = expected)[resultName][sigma]
     
 
     def exclusions(self, expected = False):
@@ -253,9 +263,10 @@ class ExpResultSet (object):
         
         """
         
-        extTopo = self._getExtendedTopologyName(condition = condition, value = value)
-        if not extTopo in self.exclusionLines(expected = expected)\
-        or not typ in self.exclusionLines(expected = expected)[extTopo]:
+        extTopo = self._getExtendedTopology(condition = condition, value = value)
+        resultName = self.name.replace(self._topo, extTopo)
+        if not resultName in self.exclusionLines(expected = expected)\
+        or not typ in self.exclusionLines(expected = expected)[resultName]:
             if expected:
                 logger.error('No expected exclusions could be found for %s!' \
                 %extTopo)
@@ -263,7 +274,7 @@ class ExpResultSet (object):
             logger.error('No exclusions could be found for %s!' \
             %extTopo)
             return None
-        return self.exclusions(expected = expected)[extTopo][typ]
+        return self.exclusions(expected = expected)[resultName][typ]
         
     def _validateLevel(self, level):
         """Validates given level for pythons logger module.
@@ -354,11 +365,19 @@ class ExpResultSet (object):
         analysis topology pair.
         
         """
-        res = [Results(extop, self._expAna, self._smsroot, self._smspy)\
-        for extop in self._extTopos]
+        res = [ExpResult(extop, self._expAna, self._expTopo, self._smsroot, \
+        self._smspy) for extop in self._extTopos]
         return res
         
-  
+    @property
+    def _resultDict(self):
+        return {r._topo: r for r in self._results}
+    
+    @property
+    def _resultNames(self):
+        return [r._topo for r in self._results]
+    
+    
     def _getExtendedTopology(self, condition = None, value = None):
         """Creates the name of the extended topology (e.g. 'T6ttWWLSP050')
         :param condition: condition for the third mass as string (e.g. 'massSplitting')
@@ -366,17 +385,20 @@ class ExpResultSet (object):
         :return: 'extended topology'
         
         """
+
         if not condition or not value:
-            return self._getDefaultExtendedTopology(condition = condition, value = value)
+            return self._getDefaultExtendedTopology
         else:
             for res in self._results:
                 if res.axes['mz'] == (condition, value):
                     return res._topo
-                logger.warning('Unknown condition for third mass %s!' \
-                %(condition, value))
-                return self._getDefaultExtendedTopology(condition = condition, value = value)
+                else: continue 
+            logger.warning('Unknown condition for third mass %s = %s!' \
+            %(condition, value))
+            return self._getDefaultExtendedTopology
     
-    def _getDefaultExtendedTopology(self, condition, value):
+    @property
+    def _getDefaultExtendedTopology(self):
         """Retrieves the default topology settings for this set of results.
         :return: 'extended topology'
     
@@ -536,7 +558,7 @@ class ExpResult(object):
     def _siblings(self):
         sibs = []
         for t in self._expAna.extendedTopologies[self._expTopo.name]:
-            sib.append(self._ana + '-' + t)
+            sibs.append(self._ana + '-' + t)
         return sibs
     
     @property    
@@ -559,10 +581,10 @@ class ExpResult(object):
                 self._topo)
                 ###FIX ME: work around to handel exclusionlines of the topology TChiWZon: 
                 if not sigmaDict[sigmaKey]:
-                    if self.topoName[-2:] == 'on':
+                    if self._topo[-2:] == 'on':
                         sigmaDict[sigmaKey] = rootFile.Get(value + sigmaValue + '_' + \
                         self._topo[:-2])
-                    if self.topoName[-3:] == 'off':
+                    if self._topo[-3:] == 'off':
                         sigmaDict[sigmaKey] = rootFile.Get(value + sigmaValue + '_' + \
                         self._topo[:-3])
                 ###---------------------------------------------------------------------
@@ -721,7 +743,7 @@ class ExpResult(object):
     @property
     def _axes(self):
         for ax in self._expAna._infotxt.axes[self._expTopo.name]:
-            if self._expTopo.name + '-' + ax[extension] != self._topo:
+            if self._expTopo.name + ax['extension'] != self._topo:
                 continue
             a = {key: ax[key] for key in ax if key != 'extension'}
             return a

@@ -180,14 +180,15 @@ class Browser(object):
         """Retrieves all the dictionaries containing the experimental objects.
         Use the deleter to reset these.
         """
-        return [self._analyses, self._topologies, self._results]
+        return [self._analyses, self._topologies, self._resultSets, self._infos]
         
     @experimentalObejctsDictionaries.deleter
     def experimentalObejctsDictionaries(self):
         """Resets all the dictionaries containing the experimental objects in
         order to get all the logger messages from the building process again.
         """
-        [self._analyses, self._topologies, self._results] = [{}, {}, {}]
+        [self._analyses, self._topologies, self._resultSets, self._infos] \
+        = [{}, {}, {}, {}]
 
     def _getDatabase(self):
         """Creates a dictionary containing all runs as keys and all 
@@ -533,9 +534,9 @@ class Browser(object):
         if not run:
             run = self.allRuns(analysis, topology)
 
-        alltopos = self.allTopologies(run,analysis)
-        if alltopos == None:
-            logger.error('Found no topologies for %s-%s' %(run,analysis))
+        alltopos = self.allTopologies(run, analysis)
+        if not alltopos:
+            logger.error('Found no topologies for %s-%s' %(run, analysis))
             return None
             
         if not analysis or not topology or not run or not topology in \
@@ -543,7 +544,7 @@ class Browser(object):
             logger.error('There is no experimental result for \n\
             run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
             return None
-        self._resultSets[resultSet] = experimentalResults.ExpResult(run, \
+        self._resultSets[resultSet] = experimentalResults.ExpResultSet(run, \
         self.expAnalysis(analysis), self.expTopology(topology), \
         self._checkResults(analysis, requested = 'sms.root'), \
         self._checkResults(analysis, requested = 'sms.py'))
@@ -622,7 +623,7 @@ class Infotxt(object):
         content = infoFile.readlines()
         infoFile.close()
         
-        logger.debug('Found info.txt for %s.' %self._path)
+        #logger.debug('Found info.txt for %s.' %self._path)
         metaInfo = {line.split(':', 1)[0].strip(): line.split(':', 1)[1].strip() \
         for line in content if not line.split(':')[0].strip() in self._exceptions}
         #logger.debug('Meta info is %s' %metaInfo)
@@ -813,7 +814,7 @@ class Infotxt(object):
         axDict = self._axesDict(axLines)
         for t in self.topologies:
             if not t in axDict:
-                logger.error('There is no axes entry for %s-%s! Check database!' %(self._analysis, t))
+                logger.warning('There is no axes entry for %s-%s! Check database!' %(self._analysis, t))
         for t in axDict:
             if not t in self.topologies:
                 logger.error('There is an axes entry for %s-%s, \n \
