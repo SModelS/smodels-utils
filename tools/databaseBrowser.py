@@ -17,6 +17,7 @@ import sys
 import experimentalTopology
 import experimentalAnalysis
 import experimentalResults
+from smodels.tools.physicsUnits import addunit, rmvunit
 
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -696,7 +697,7 @@ class Infotxt(object):
             topo = axesLine.split(' ')[0].replace(':', '').strip()
             axDic[topo] = axesLine.replace(topo + ':', '').split('-')
             axDic[topo] = [c.strip() for c in axDic[topo]]
-            logger.info('For %s there are %s masses.' \
+            logger.debug('For %s there are %s masses.' \
             %(topo, len(axDic[topo])))
             logger.debug('For %s the axes dictionary is: %s.' %(topo, axDic[topo]))
         return axDic
@@ -713,14 +714,16 @@ class Infotxt(object):
         axDict = {}
         
         logger.debug('Axes entry: %s.' %axesEntry.split())
+        axDict['mx'] = axesEntry.split()[0].strip()
+        axDict['my'] = axesEntry.split()[1].strip()
         try:
             axesEntry.split()[3]
-            logger.warning('There are more then three masses!\n\
-            We cannot handle this!')
-            return None
+            logger.warnig('There are more then three masses!\n\
+            Keys will be mx, my, m3 and m4!')
+            axDict['m3'] = axesEntry.split()[2].strip()
+            axDict['m4'] = axesEntry.split()[3].strip()
+            axDict['extension'] = '%s%s' %(axDict['m3'], axDict['m4'])
         except IndexError:
-            axDict['mx'] = axesEntry.split()[0].strip()
-            axDict['my'] = axesEntry.split()[1].strip()
             try:
                 axDict['mz'] = axesEntry.split()[2].strip()
                 axDict['extension'] = axesEntry.split()[2].strip()
@@ -732,8 +735,12 @@ class Infotxt(object):
         
     def _massCondition(self, mz):
         """Takes the axes entry for the third mass and splits it into
-        condition for this mass (e.g. fixed LSP, mass splitting, ...)
-        and its value.
+        condition for this mass and its value with units added if not unitless:
+        -) fixed LSP, Chargino or other mass in GeV
+        -) mass splitting (as well 'xvalue'): M2=x*M1+(1-x)*M0
+        -) difference between masses (e.g. M1-M0) in GeV
+        -) ratio between masses (e.g. M2/M0) in percent
+        :param mz: third item of an axes-entry for one topology
         :return: ('massCondition', int(value))
         
         """
@@ -746,27 +753,31 @@ class Infotxt(object):
             return None
         except ValueError:
             if 'D' in mz:
-                value = int(mz.split('=')[-1].strip())
+                value = addunit(int(mz.split('=')[-1].strip()), 'GeV')
                 if mz.split('=')[0].strip() == 'D':
-                    condition = 'difference' # ### FIXME: talk to uschi about the database!
-                    #                                      what is meant by just 'D' -> it's an error in the axes entry => fix database
+                    logger.error('There is something wrong with the "D-entry"!\n \
+                    Check database for %s!' %self.name)
+                    condition = 'difference' 
+                    # ### FIXME: talk to uschi about the database!
+                    #what is meant by just 'D' -> it's an error in 
+                    #the axes entry => fix database
                 else:
                     condition = mz.split('=')[0].strip().replace('D(', '')
                     condition = condition.replace(')', '')
                     condition = condition.split('/')
                     condition = '%s-%s' %(condition[0], condition[1])
             elif 'LSP' in mz:
-                value = int(mz.replace('LSP', ''))
+                value = addunit(int(mz.replace('LSP', '')), 'GeV')
                 condition = 'fixedLSP'
             elif 'M' in mz:
-                value = int(mz[2:])
+                value = addunit(int(mz[2:]), 'GeV')
                 condition = 'fixed%s' %mz[:2]
             elif 'C' in mz:
-                value = int(mz.replace('C', ''))
+                value = addunit(int(mz.replace('C', '')), 'GeV')
                 condition = 'fixedChipm'
             elif 'x' in mz:
-                value = int(mz.replace('x', ''))
-                condition = 'factor'
+                value = addunit(int(mz.replace('x', '')), '%')
+                condition = 'M2/M0'
             else:
                 logger.error('Unknown third mass entry %s!' %mz)
                 value = None
@@ -798,10 +809,11 @@ class Infotxt(object):
             for entry in axDict[t]:
                 entries.append(self._massDict(entry))
 
-            entries = [e for e in entries if e]
+            #entries = [e for e in entries if e]
             for entry in entries:
-                if 'mz' in entry:
-                    entry['mz'] = self._massCondition(entry['mz'])
+                for key in ['mz', 'm3', 'm4']:
+                    if key in entry:
+                        entry[key] = self._massCondition(entry[key])
                     
             axDict[t] = entries    
             logger.debug('Axes information for %s is: %s' \
