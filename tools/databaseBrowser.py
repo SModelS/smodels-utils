@@ -776,7 +776,7 @@ class Infotxt(object):
                 value = addunit(int(mz.replace('C', '')), 'GeV')
                 condition = 'fixedChipm'
             elif 'x' in mz:
-                value = addunit(int(mz.replace('x', '')), 'percent')
+                value = (float(mz.replace('x', ''))/100.)
                 condition = 'M2/M0'
             else:
                 logger.error('Unknown third mass entry %s!' %mz)
