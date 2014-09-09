@@ -16,6 +16,7 @@ import prettyDescriptions
 import setPath
 import sys
 import databaseBrowser
+from smodels.tools.physicsUnits import GeV, addunit, rmvunit
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)

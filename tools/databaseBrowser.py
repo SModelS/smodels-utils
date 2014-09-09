@@ -17,7 +17,7 @@ import sys
 import experimentalTopology
 import experimentalAnalysis
 import experimentalResults
-from smodels.tools.physicsUnits import addunit, rmvunit
+from smodels.tools.physicsUnits import GeV, addunit, rmvunit
 
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -718,7 +718,7 @@ class Infotxt(object):
         axDict['my'] = axesEntry.split()[1].strip()
         try:
             axesEntry.split()[3]
-            logger.warnig('There are more then three masses!\n\
+            logger.warning('There are more then three masses!\n\
             Keys will be mx, my, m3 and m4!')
             axDict['m3'] = axesEntry.split()[2].strip()
             axDict['m4'] = axesEntry.split()[3].strip()
@@ -796,6 +796,8 @@ class Infotxt(object):
         
         axLines = self._preprocessAxesLine
         axDict = self._axesDict(axLines)
+        # Just to cross check these two fields of the info.txt,
+        # print some warnings.
         for t in self.topologies:
             if not t in axDict:
                 logger.warning('There is no axes entry for %s-%s! Check database!' %(self._analysis, t))
@@ -803,8 +805,8 @@ class Infotxt(object):
             if not t in self.topologies:
                 logger.error('There is an axes entry for %s-%s, \n \
                 but this is no known topology! Check database!' %(self._analysis, t))
-                continue
-            
+        axDict = {t: axDict[t] for t in axDict if t in self.topologies}
+        for t in axDict:
             entries = []
             for entry in axDict[t]:
                 entries.append(self._massDict(entry))

@@ -16,6 +16,7 @@ import prettyDescriptions
 import setPath
 import sys
 import databaseBrowser
+from smodels.tools.physicsUnits import GeV, addunit, rmvunit
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -383,7 +384,7 @@ class ExpResultSet (object):
         :param condition: condition for the third mass as string (e.g. 'massSplitting')
         :param value: value for the condition as string (e.g. 0.25)
         :return: 'extended topology'
-        
+        # ### FIX ME whats with the units when matching with given values? give values with units? Add units?
         """
 
         if not condition or not value:
