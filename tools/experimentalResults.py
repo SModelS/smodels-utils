@@ -159,19 +159,14 @@ class ExpResultSet (object):
         """
         return self._members
         
-    def hasUpperLimitDict(self, expected = False):
-        """Checks if there is any observed/expected upper limit dictionary 
+    def hasUpperLimitDicts(self, expected = False):
+        """Checks which observed/expected upper limit dictionaries there are  
         for this result set.
-        # ### FIX ME: doesn't make sense anymore, maybe instead count how many
+        
         """
-        if not expected:
-            if self.upperLimitDicts():
-                return True
-            return False
-        if expected:
-            if self.upperLimitDicts(expected = True):
-                return True
-            return False
+        if self.upperLimitDicts(expected):
+            return [key for key in self.upperLimitDicts(expected)]
+        return None
         
     def upperLimitDicts(self, expected = False):
         """Retrieves all the observed/expected upper limit dictionaries 
@@ -414,7 +409,6 @@ class ExpResultSet (object):
         else:
             if type(value) == int:
                 value = addunit(value, 'GeV')
-                print value
             for res in self._results:
                 if res.axes['mz'] == (condition, value):
                     return res._topo

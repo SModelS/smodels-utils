@@ -166,7 +166,7 @@ class ExpTopology(object):
         for run in self._runs:
             for ana in self._anas:
                 try:
-                    c = self._getInfoProperty(self._topoDict[run][ana], 'constraint')[self.name]
+                    c = self._getInfoProperty(self._topoDict[run][ana], 'constraints')[self.name]
                     if not c in const:
                         const.append(c)
                 except KeyError:
