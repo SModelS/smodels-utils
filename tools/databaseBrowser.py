@@ -707,7 +707,10 @@ class Infotxt(object):
         """Retrieves the axes information for given entry as dictionary.
         :param axesEntry: one axes entry for one topology
         :return:  {'mx': mass on x-axis, 'my': mass on y-axes, 
-        'mz': condition for intermediate mass}
+        'mz': condition for intermediate mass} or 
+        {'mx': mass on x-axis, 'my': mass on y-axes, 
+        'm3': condition for first intermediate mass,
+        'm4': condition for second intermediate mass}
         
         """
         
@@ -718,7 +721,7 @@ class Infotxt(object):
         axDict['my'] = axesEntry.split()[1].strip()
         try:
             axesEntry.split()[3]
-            logger.warning('There are more then three masses!\n\
+            logger.info('There are more then three masses!\n\
             Keys will be mx, my, m3 and m4!')
             axDict['m3'] = axesEntry.split()[2].strip()
             axDict['m4'] = axesEntry.split()[3].strip()

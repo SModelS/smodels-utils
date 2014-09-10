@@ -28,9 +28,6 @@ logger.setLevel(level=logging.ERROR)
 # ### FIX ME:
 
 # add upperlimithistos as root.TH2!
-# various names for same variables!
-# ordering of functions is confusing
-# code duplicates
 
 
 class ExpResultSet (object):
@@ -155,6 +152,13 @@ class ExpResultSet (object):
         """
         return self._axes
         
+    @property
+    def members(self):
+        """Retrieves the members of this set of results.
+        :return: {'extended topology': ('condition', value)}
+        """
+        return self._members
+        
     def hasUpperLimitDict(self, expected = False):
         """Checks if there is any observed/expected upper limit dictionary 
         for this result set.
@@ -184,7 +188,9 @@ class ExpResultSet (object):
         """Retrieves one observed/expected upper limit dictionary (out of all 
         upper limit dictionaries available for this topology). 
         If condition and value are None, the default mass assumptions will be used.
-        
+        Condition and value as a tuple specify the result (out of this set) to be taken, e.g. ('fixedLSP', 50), ('massSplitting', 0.25), ...
+        :param condition: condition for the third mass 
+        :param value: value of the condition as either float or integer
         """
         
         extTopo = self._getExtendedTopologyName(condition = condition, value = value)
@@ -226,7 +232,10 @@ class ExpResultSet (object):
         exclusion lines available for this topology). 
         If condition and value are None, the default mass assumptions 
         will be used.
-         :param expected: False/True gives observed/expected
+        Condition and value as a tuple specify the result (out of this set) to be taken, e.g. ('fixedLSP', 50), ('massSplitting', 0.25), ...
+        :param condition: condition for the third mass 
+        :param value: value of the condition as either float or integer
+        :param expected: False/True gives observed/expected
         :param sigma: -1, 0, 1.
         
         """
@@ -243,7 +252,17 @@ class ExpResultSet (object):
             return None
         return self.exclusionLines(expected = expected)[resultName][sigma]
     
-
+    @property
+    def allExclusions(self):
+        """Returns all exclusions available for this 
+        result set as values. 
+        
+        """
+        values = {}
+        for res in self._results:
+            values[res.name] = res.allExclusions
+        return values
+        
     def exclusions(self, expected = False):
         """Returns all observed/expected exclusion values available for this result.
         
@@ -259,7 +278,10 @@ class ExpResultSet (object):
         exclusion lines available for this topology). 
         If condition and value are None, the default mass assumptions 
         will be used.
-         :param expected: False/True gives observed/expected
+        Condition and value as a tuple specify the result (out of this set) to be taken, e.g. ('fixedLSP', 50), ('massSplitting', 0.25), ...
+        :param condition: condition for the third mass 
+        :param value: value of the condition as either float or integer
+        :param expected: False/True gives observed/expected
         :param typ: "limit", "min", "max"
         
         """
@@ -390,6 +412,9 @@ class ExpResultSet (object):
         if not condition or not value:
             return self._getDefaultExtendedTopology
         else:
+            if type(value) == int:
+                value = addunit(value, 'GeV')
+                print value
             for res in self._results:
                 if res.axes['mz'] == (condition, value):
                     return res._topo
@@ -430,7 +455,18 @@ class ExpResultSet (object):
             %s.' %self.name)
             return None
     
-   
+    @property
+    def _members(self):
+        """Retrieves (condition, value) tuples for all the results in this set.
+        """
+        axes = self._expAna._infotxt.axes[self._topo]
+        mems ={}
+        for ax in axes:
+            if ax['extension']:
+                mems[self._topo + ax['extension']] = ax['mz']
+            else:
+                mems[self._topo] = ax['mz']
+        return mems        
 
 
 class ExpResult(object):
