@@ -289,7 +289,7 @@ class Browser(object):
         """Retrieves all runs a given analysis or topology or analysis-topology 
         pair is available for. Returns a list containing all runs or just a 
         string when analysis is given. 
-    
+    # ### FIX ME rename to findRuns
         """
     # ### FIX ME: think about the ambiguities: rais an error?, stop the script?,
     #try to pass this problem?
@@ -760,10 +760,7 @@ class Infotxt(object):
                 if mz.split('=')[0].strip() == 'D':
                     logger.error('There is something wrong with the "D-entry"!\n \
                     Check database for %s!' %self.name)
-                    condition = 'difference' 
-                    # ### FIXME: talk to uschi about the database!
-                    #what is meant by just 'D' -> it's an error in 
-                    #the axes entry => fix database
+                    condition = 'unknownDifference' 
                 else:
                     condition = mz.split('=')[0].strip().replace('D(', '')
                     condition = condition.replace(')', '')
@@ -777,7 +774,7 @@ class Infotxt(object):
                 condition = 'fixed%s' %mz[:2]
             elif 'C' in mz:
                 value = addunit(int(mz.replace('C', '')), 'GeV')
-                condition = 'fixedChipm'
+                condition = 'fixedM2'
             elif 'x' in mz:
                 value = (float(mz.replace('x', ''))/100.)
                 condition = 'M2/M0'

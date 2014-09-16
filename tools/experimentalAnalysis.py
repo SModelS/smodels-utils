@@ -137,7 +137,7 @@ class ExpAnalysis(object):
 
         """
         t = self._parseMetaInfo('private')
-        if t == None: 
+        if not t: 
             return False
         t=t.lower()
         return t in [ "1", "yes", "true" ]
