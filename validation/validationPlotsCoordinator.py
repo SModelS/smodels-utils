@@ -27,7 +27,7 @@ def main():
     validationPlots.py.
     """
     
-    topology = 'T2'
+    topology = 'T2bb'
     if not topology in topologyInfo():
         print('No slha files are available for %s!' %topology)
         sys.exit()
@@ -59,7 +59,8 @@ def main():
         gridDataCreator.main(arguments)
         try:
             validationPlots.main(arguments)
-        except: pass
+        except:
+		logger.warning('could not plot %s' %ana)
 
     
 def checkFile(path):
