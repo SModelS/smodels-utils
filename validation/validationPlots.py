@@ -22,9 +22,10 @@ from smodels_tools.tools.databaseBrowser import Browser
 
 logger = logging.getLogger(__name__)
 
-def main():
+def main(arguments = None):
     """Handles all command line options.
     Produces the validation plot.
+    :param None: if set to None script uses the argparser, else takes list of arguments
     :param Base: sets the path to the smodels-database
     :param analysis: analysis the validation plot should be preoduced for
     :param topology: topology the validation plot should be preoduced for
@@ -59,9 +60,14 @@ def main():
     type = types.StringType, default = 'xvalue,050')
     args = argparser.parse_args()
 
-    browser = Browser(args.Base)
-    topology = args.topology
-    intermediate = args.intermediate.split(',')
+    if not arguments:
+        browser = Browser(args.Base)
+        topology = args.topology
+        intermediate = args.intermediate.split(',')
+    else:
+        browser = Browser(arguments['base'])
+        topology = arguments['topology']
+        intermediate = arguments['intermediate'].split(',')
     intermediate = [i.strip() for i in intermediate]
     if intermediate[0] == 'xvalue':
         condition = ''
@@ -77,11 +83,18 @@ def main():
         topologyName = topology[:-3]
     else: topologyName = topology
     extendedTopology = topology + condition + value
-    analysis = args.analysis
-    targetPath = getTarget(args.directory)
-    events = args.events
-    order = args.order
-    expRes = browser.expResult(analysis, topology)
+    if not arguments:
+        analysis = args.analysis
+        targetPath = getTarget(args.directory)
+        events = args.events
+        order = args.order
+    else:
+        analysis = arguments['analysis']
+        targetPath = getTarget(arguments['directory'])
+        events = arguments['events']
+        order = argument['order']
+        
+    expRes = browser.expResult(ansalysis, topology)
     if not expRes:
         expRes = browser.expResult(analysis, topologyName)
     expAna = expRes.expAnalysis
