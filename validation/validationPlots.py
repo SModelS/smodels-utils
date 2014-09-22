@@ -61,13 +61,14 @@ def main(arguments = None):
     args = argparser.parse_args()
 
     if not arguments:
-        browser = Browser(args.Base)
+        base = args.Base
         topology = args.topology
         intermediate = args.intermediate.split(',')
     else:
-        browser = Browser(arguments['base'])
+        base = arguments['base']
         topology = arguments['topology']
         intermediate = arguments['intermediate'].split(',')
+    browser = Browser(base)    
     intermediate = [i.strip() for i in intermediate]
     if intermediate[0] == 'xvalue':
         condition = ''
@@ -111,7 +112,7 @@ def main(arguments = None):
     print('Producing the validation plot')
     print('Topology: ', topology)
     print('Analysis: ', analysis)
-    print('Using database: ', args.Base)
+    print('Using database: ', base)
     print('Use grid file: ', f)
     print ("========================================================")
     

@@ -216,7 +216,7 @@ class GridData(object):
             return tul
         return rmvunit(tul, 'fb')
         
-def main():
+def main(arguments = None):
     """Handles all command line options
     Produces the grid data file and adds some meta data.
     :param Base: sets the path to the smodels-database
@@ -254,10 +254,16 @@ def main():
     type = types.StringType, default = 'xvalue,050')
     args = argparser.parse_args()
 
-    smsHelpers.base = args.Base
-    browser = Browser(args.Base)
-    topology = args.topology
-    intermediate = args.intermediate.split(',')
+    if not arguments:
+        base = args.Base
+        topology = args.topology
+        intermediate = args.intermediate.split(',')
+    else:
+        base = arguments['base']
+        topology = arguments['topology']
+        intermediate = arguments['intermediate'].split(',')
+    smsHelpers.base = base
+    browser = Browser(base)
     intermediate = [i.strip() for i in intermediate]
     if intermediate[0] == 'xvalue':
         condition = ''
@@ -273,11 +279,17 @@ def main():
         #topologyName = topology[:-3]
     else: topologyName = topology
     extendedTopology = topology + condition + value
-    analysis = args.analysis
-    targetPath = getTarget(args.directory)
-    events = args.events
+    if not arguments:
+        analysis = args.analysis
+        targetPath = getTarget(args.directory)
+        events = args.events
+        order = args.order
+    else:
+        analysis = arguments['analysis']
+        targetPath = getTarget(arguments['directory'])
+        events = arguments['events']
+        order = argument['order']
     factor = False
-    order = args.order
     slhaOrder = order
     if order == 'NLO':
         factor = True
@@ -291,7 +303,7 @@ def main():
     print('Producing the grid data file')
     print('Topology: ', topology)
     print('Analysis: ', analysis)
-    print('Using database: ', args.Base)
+    print('Using database: ', base)
     print('Store file in: ', targetPath)
     print ("========================================================")
     
