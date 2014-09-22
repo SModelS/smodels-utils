@@ -93,9 +93,9 @@ def main(arguments = None):
         analysis = arguments['analysis']
         targetPath = getTarget(arguments['directory'])
         events = arguments['events']
-        order = argument['order']
+        order = arguments['order']
         
-    expRes = browser.expResult(ansalysis, topology)
+    expRes = browser.expResult(analysis, topology)
     if not expRes:
         expRes = browser.expResult(analysis, topologyName)
     expAna = expRes.expAnalysis

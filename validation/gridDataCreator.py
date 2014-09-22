@@ -288,7 +288,7 @@ def main(arguments = None):
         analysis = arguments['analysis']
         targetPath = getTarget(arguments['directory'])
         events = arguments['events']
-        order = argument['order']
+        order = arguments['order']
     factor = False
     slhaOrder = order
     if order == 'NLO':
