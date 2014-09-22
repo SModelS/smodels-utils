@@ -519,7 +519,8 @@ class ExtendedResult(object):
         expected one. Possible values for keyword argument "sigma" are: -1, 0, 1.
         
         """
-        
+        if no exclusionLines:
+            return None
         sigmaDict = self.exclusionLines['observed']
         if expected: sigmaDict = self.exclusionLines['expected']
         return sigmaDict[sigma]
@@ -549,7 +550,8 @@ class ExtendedResult(object):
         'expected': {1: TGraph, 0: TGraph, -1: TGraph}}
         
         """
-
+        if no self._smsroot:
+            return None
         rootFile = ROOT.TFile(self._smsroot)
         exclusionLines = {'observed': 'exclusion', 'expected':\
         'expectedexclusion'}
