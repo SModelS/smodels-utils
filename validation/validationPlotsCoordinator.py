@@ -57,7 +57,9 @@ def main():
         'directory': path}
 
         gridDataCreator.main(arguments)
-        validationPlots.main(arguments)
+        try:
+            validationPlots.main(arguments)
+        except: pass
 
     
 def checkFile(path):

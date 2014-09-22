@@ -141,6 +141,8 @@ def main(arguments = None):
     allowed = results['allowed']
     notTested = results['notTested']
     exclusionLine = validationPlotsHelper.getEnvelope(excluded)
+    valueAbove = ''
+    valueBelow = ''
     if extendedTopology == 'T6ttWWLSP050':
         exclusionLine = validationPlotsHelper.cutGraph(exclusionLine, 19, before = False, after = True)
     if extendedTopology == 'T6ttWWx166':
@@ -203,7 +205,10 @@ def main(arguments = None):
     exclusionLine.SetLineWidth(4)
     exclusionLine.SetLineColor(ROOT.kBlack-2)
     if not value and not condition:
-        officialExclusionLine.SetLineColor(ROOT.kBlack)
+        try: 
+            officialExclusionLine.SetLineColor(ROOT.kBlack)
+        except AttributeError:
+            logger.warning('No official line could be found!')
     else:
         if valueAbove:
             officialExclusionLineAbove.SetLineColor(ROOT.kGray+1)
@@ -213,7 +218,9 @@ def main(arguments = None):
             officialExclusionLineBelow.SetLineStyle(7)
             officialExclusionLineBelow.SetLineWidth(3)
         if not valueAbove and not valueBelow:
-            officialExclusionLine.SetLineColor(ROOT.kBlack)
+            try:
+                officialExclusionLine.SetLineColor(ROOT.kBlack)
+            except AttributeError: pass
     #Create TMutiGraph-object:
     multi = ROOT.TMultiGraph()
     multi.Add(excluded, 'P')
@@ -223,7 +230,9 @@ def main(arguments = None):
     #multi.Add(exclusionLine, 'L')
     multi.Add(exclusionLine, 'LSAME')
     if not value and not condition:
-        multi.Add(officialExclusionLine, 'L')
+        try:
+            multi.Add(officialExclusionLine, 'L')
+        except TypeError: pass
     else:
         if valueAbove:
             #multi.Add(officialExclusionLineAbove, 'L')
@@ -248,7 +257,7 @@ def main(arguments = None):
     legend.AddEntry(notTested, 'not tested', 'P')
     legend.AddEntry(exclusionLine, 'SmodelS %s' %(intermediate[0] + '='\
     + intermediate[1]), 'L')
-    if not value and not condition:
+    if not value and not condition and officialExclusionLine:
         legend.AddEntry(officialExclusionLine, '%s' %metadata['rootTag'][0][1], 'L')
     else:
         if valueAbove:
@@ -257,7 +266,7 @@ def main(arguments = None):
         if valueBelow:
             legend.AddEntry(officialExclusionLineBelow, '%s, %s=%s' \
             %(metadata['rootTag'][0][1], intermediate[0], valueBelow), 'L')
-        if not valueAbove and not valueBelow:
+        if not valueAbove and not valueBelow and officialExclusionLine:
             if not value: val = '050'
             else: val = value
             legend.AddEntry(officialExclusionLine, '%s, %s=%s' \
@@ -360,7 +369,7 @@ def main(arguments = None):
         title2.Draw()
     
     #ans = raw_input("Hit any key to close\n")
-    c.Print("./plots/%s" %metadata['outFile'][0].strip())
+    c.Print("./plots/%s/%s" %(topology, metadata['outFile'][0].strip()))
 
 def getTarget(path):
     """Checks if the target directory already exists and raises an error if not.
