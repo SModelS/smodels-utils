@@ -32,7 +32,7 @@ def main():
         print('No slha files are available for %s!' %topology)
         sys.exit()
     base = '/afs/hephy.at/user/w/walten/public/sms/'
-    browser = databaseBrowser.Browser(base)
+    browser = Browser(base)
     if not browser:
         print('No valid database!')
         sys.exit()
