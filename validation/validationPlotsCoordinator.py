@@ -27,7 +27,7 @@ def main():
     validationPlots.py.
     """
     
-    topology = 'T1'
+    topology = 'T2'
     if not topology in topologyInfo():
         print('No slha files are available for %s!' %topology)
         sys.exit()
