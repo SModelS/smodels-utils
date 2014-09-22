@@ -466,7 +466,10 @@ class ExpResult (object):
         """
         
         if condition == 'xvalue':
-            exTopName = self._topo + value
+            if value == '050':
+                exTopName = self._topo
+            else:
+                exTopName = self._topo + value
         elif condition in ['LSP' ,'x' ,'C' ,'M'] or 'D' in condition:
             exTopName = self._topo + condition + value
         else:
