@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-.. module:: validationPlot
+.. module:: validationPlots
      :synopsis: Module to create a validation plot for given grid data file. 
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
