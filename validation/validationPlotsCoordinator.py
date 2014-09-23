@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-.. module:: validationPlot
+.. module:: validationPlotsCoordinator
      :synopsis: Module to coordinate the validation plot procedure. 
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
@@ -22,9 +22,9 @@ import validationPlots
 logger = logging.getLogger(__name__)
 
 def main():
-    """Calls the unpacking module, gets all the topologies, gets all the analyses
-    for one topology and checks for results. Calls the gridDataCreator.py and the
-    validationPlots.py.
+    """Gets all the topologies, gets all the analyses for one topology and 
+    checks for results.
+    Calls the gridDataCreator.py and the validationPlots.py.
     """
     
     topology = 'T2bb'
@@ -60,25 +60,8 @@ def main():
         try:
             validationPlots.main(arguments)
         except:
-		logger.warning('could not plot %s' %ana)
+            logger.warning('could not plot %s' %ana)
 
-    
-def checkFile(path):
-    """Checks if the data file already exists.
-    If the file already exists, the user can decide whether to remove it, 
-    or to exit the script.
-    
-    """
-    if os.path.exists(path):
-        print('File %s already exists!' %path)
-        while True:
-            userInput = raw_input('Replace old file? [y/n]:  ')
-            if userInput == 'n':
-                sys.exit()
-            if userInput == 'y':
-                os.remove(path)
-                return path
-    return path    
 
 def getTarget(path):
     """Checks if the target directory already exists and creates it if not.
