@@ -27,7 +27,7 @@ def main():
     Calls the gridDataCreator.py and the validationPlots.py.
     """
     
-    topology = 'T2bb'
+    topology = 'T1'
     if not topology in topologyInfo():
         print('No slha files are available for %s!' %topology)
         sys.exit()
