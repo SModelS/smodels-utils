@@ -308,7 +308,10 @@ def main(arguments = None):
     print ("========================================================")
     
     fileName = '%s-%s-%s-%s.dat' %(extendedTopology, analysis, events, order)
-    f = checkFile(targetPath + '/' + fileName)
+    if not arguments:
+        f = checkFile(targetPath + '/' + fileName)
+    else:
+        f = removeFile(targetPath + '/' + fileName)
     outFile = open(f, 'w')
     count = 0
     slhaPath = '../slha/%s_%s_%s_slhas' %(extendedTopology, events, slhaOrder)
@@ -415,8 +418,18 @@ def getTarget(path):
     
     os.mkdir(path)
     logger.info('Created new directory: %s' %path) 
-    return path
-
+    return path 
+    
+def removeFile(path):
+    """Checks if the data file already exists.
+    If the file already exists and the validation is automated the grid
+    will be removed. 
+    """
+    if os.path.exists(path):
+        print('File %s will be removed!' %path)
+        os.remove(path)
+    return path 
+    
 def checkFile(path):
     """Checks if the data file already exists.
     If the file already exists, the user can decide whether to remove it, 
