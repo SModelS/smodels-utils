@@ -2342,8 +2342,8 @@
 1900  200  None  None None
 1900  400  None  None None
 #END
-time: 26.9490301609 sec
-time per slha: 0.0115019352173 sec
+time: 26.9028639793 sec
+time per slha: 0.0114822313412 sec
 outFile: T1tttt-SUS12026-10000-NLL.png
 analysis: SUS-12-026, multileptons, 8.0 TeV, NLL
 decay: #tilde{g} #rightarrow t#bar{t} #tilde{#chi}^{0}_{1}
