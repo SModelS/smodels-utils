@@ -27,7 +27,7 @@ def main():
     Calls the gridDataCreator.py and the validationPlots.py.
     """
     
-    topology = 'T2bb'
+    topology = 'T1tttt'
     if not topology in topologyInfo():
         print('No slha files are available for %s!' %topology)
         sys.exit()
@@ -39,7 +39,8 @@ def main():
     order = 'NLL'
     intermediate = 'xvalue,050'
     analyses = browser.allAnalyses(topology = topology)
-    analyses = [a for a in analyses if browser.expResult(a, topology)]
+    analyses = [a for a in analyses if browser.expResult(a, topology) \
+    and  browser.expResult(a, topology).hasUpperLimitDict]
     
     path = getTarget('./gridData/%s/' %topology)
     
