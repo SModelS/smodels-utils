@@ -2342,8 +2342,8 @@
 1900  200  None  None None
 1900  400  None  None None
 #END
-time: 4.69462215106 min
-time per slha: 0.120220799452 sec
+time: 4.71021183332 min
+time per slha: 0.12062002307 sec
 outFile: T1tttt-SUS13012-10000-NLL.png
 analysis: SUS-13-012, RA2, 8.0 TeV, NLL
 decay: #tilde{g} #rightarrow t#bar{t} #tilde{#chi}^{0}_{1}
