@@ -56,8 +56,10 @@ def main():
         arguments = {'analysis': ana, 'base': base, 'events': 10000, \
         'intermediate': intermediate, 'order': order, 'topology': topology, \
         'directory': path}
-
-        gridDataCreator.main(arguments)
+        try:    
+            gridDataCreator.main(arguments)
+        except:
+            logger.warning('could not make grid for %s' %ana)
         try:
             validationPlots.main(arguments)
         except:
