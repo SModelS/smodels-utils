@@ -1746,7 +1746,7 @@
 1037.5  624.0  18.530096244  55.5769408494 0.0
 1037.5  408.0  18.530096244  23.4523110837 0.0
 1037.5  96.0  18.530096244  21.6911568493 0.0
-1037.5  960.0  18.530096244  None 0.0
+1037  960  None  None None
 1037.5  840.0  18.530096244  380.618312955 0.0
 1037  984  None  None None
 1037.5  312.0  18.530096244  20.0849887356 0.0
@@ -4985,10 +4985,10 @@
 1800  1128  None  None None
 1800  1248  None  None None
 #END
-time: 7.60509563287 min
-time per slha: 0.0915173973083 sec
+time: 7.32067579826 min
+time per slha: 0.0880947755706 sec
 outFile: T1-SUS12028-10000-NLL.png
 analysis: SUS-12-028, #alpha_{T}, 8.0 TeV, NLL
 decay: #tilde{g} #rightarrow q#bar{q} #tilde{#chi}^{0}_{1}
 intermediate xvalue, 050
-rootTag: <ROOT.MethodProxy object at 0x38c6fd0>: official exclusion line
+rootTag: exclusion_T1: official exclusion line
