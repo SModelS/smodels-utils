@@ -2,8 +2,7 @@
 
 """
 .. module:: databaseBrowser
-   :synopsis: Centralized facility to access smodels-database 
-   in order to produce summaryplots.
+   :synopsis: Centralized facility to access smodels-database.
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
 .. moduleauthor:: Wolfgang Magerl <wolfgang.magerl@gmail.com>
@@ -215,7 +214,8 @@ class Browser(object):
             self._artifacts]
             # exclude every file and directory specified by list of artifacts
         return data
-     # ### FIX ME: Do we really want to restrict the run?   
+        
+    # ### FIX ME: Do we really want to restrict the run?   
     @property
     def runRestriction(self):
         """Tells if the browser is restricted to a specified run. 
@@ -227,12 +227,12 @@ class Browser(object):
         
     @runRestriction.setter
     def runRestriction(self, run):
-        """Restricts the Browser to one specified run. Don't use this lightly
+        """Restricts the browser to one specified run. Don't use this lightly
         it may cause serious changes in functionality.
         
         """
         self._runRestriction = self._validateRun(run)
-        if self._runRestriction == None:
+        if not self._runRestriction:
             logger.error('Failed to restrict browser to run: %s is not \n\
             valid!' %run)
             sys.exit()
@@ -253,7 +253,7 @@ class Browser(object):
         
         """
         if not run: return None
-        if not run in self.database.keys():
+        if not run in self.database:
             logger.error('%s is no valid run!' %run)
             return None
 
@@ -417,7 +417,7 @@ class Browser(object):
             runs = self.allRuns()
             analyses = self.allAnalyses()
                     
-        logger.debug('Searching topologies for runs %s and analyses %s' \
+        logger.debug('Searching topologies for runs %s and analyses %s.' \
         %(runs,analyses))
     
         for r in runs:
@@ -431,7 +431,7 @@ class Browser(object):
                     if topos.count(t) == 0:
                         topos.append(t)
         if not topos:
-            logger.info('for runs %s and analyses %s no topology could be found' \
+            logger.info('For runs %s and analyses %s no topology could be found!' \
             %(runs, analyses))
             return None
         
