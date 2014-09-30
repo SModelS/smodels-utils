@@ -56,7 +56,7 @@ def main():
         #massParam = ['%s <<BR>>' %expResSet.members[entry] for entry in expResSet.members]
         #massParamField = ''.join(massParam)
         massParamField = expResSet.expTopology.intermediateParticles
-        plotField = 'done with 10000 events <<BR>> [[[[attachment:%s%snew.png|%s]]' %(topology, ana, order)
+        plotField = 'done with 10000 events <<BR>> [[attachment:%s%snew.png|%s]]' %(topology, ana, order)
         commentField = 'not yet done'
         if not expResSet.constraint:
             commentField = commentField + ' -> no constraints!'
