@@ -9,6 +9,7 @@
 """
 
 from __future__ import print_function
+import setPath  # # set to python path for smodels
 from smodels_tools.tools.databaseBrowser import Browser
 
 
@@ -27,7 +28,7 @@ def main():
         sys.exit()
     
     outFile = open('./twiki/twiki_%s.txt' %topology, 'w')
-    analyses = browser.getAnalyses(topology = topology)
+    analyses = browser.allAnalyses(topology = topology)
     
     for ana in analyses:
         expAna = browser.expAnalysis(ana)
@@ -43,20 +44,21 @@ def main():
         published = 'NO'
         if bool(expAna.publishedData):
             published = 'YES'
-        expResSet = browser.expResultSet(ana, topology)
+        expResSet = browser.expResult(ana, topology)
         checked = 'NO'
         if expResSet.isChecked:
             checked = 'YES'
-        massParam = ['%s <<BR>>' %expResSet.members[entry] for entry in expResSet.members]
-        massParamField = ''.join(massParam)
+        #massParam = ['%s <<BR>>' %expResSet.members[entry] for entry in expResSet.members]
+        #massParamField = ''.join(massParam)
+        massParamField = expResSet.expTopology.intermediateParticles
         plotField = 'done with 10000 events <<BR>> [[[[attachment:%s%snew.png|%s]]' %(topology, ana, order)
         commentField = 'not yet done'
         if not expResSet.constraint:
             commentField = commentField + ' -> no constraints!'
-        if not expResSet.hasUpperLimitDicts():
+        if not expResSet.hasUpperLimitDict:
             commentField = commentField + ' <<BR>> -> no upper limits!'
             
-        line = '||%s||%s | %s||%s||%s||' %(analysisField, published, checked, plotField, commentField)
+        line = '||%s||%s||%s | %s||%s||%s||' %(analysisField, massParamField, published, checked, plotField, commentField)
         print(line, file = outFile)
         
     outFile.close()  
