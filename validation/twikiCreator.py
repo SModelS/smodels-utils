@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """
 .. module:: twikiCreator
@@ -20,6 +21,7 @@ def main():
     """
     
     topology = 'TSlepSlep'
+    topoLink = '([[SmsDictionary#%s|%s]])' %(topology, topology)
     order = 'LO * 1.2'
     base = '/afs/hephy.at/user/w/walten/public/sms/'
     browser = Browser(base)
@@ -28,6 +30,7 @@ def main():
         sys.exit()
     
     outFile = open('./twiki/twiki_%s.txt' %topology, 'w')
+    print(topoLink, file = outFile)
     analyses = browser.allAnalyses(topology = topology)
     head = "||'''Analysis  <<BR>>  (√s,lum)''' ||'''mass parametrization''' ||'''published data | checked''' ||'''plot''' ||'''comment''' ||"
     print(head, file = outFile)
