@@ -32,6 +32,8 @@ def main():
   print 'Analysis-object: ', analysis
   # use this object
   print '\nAnalysis is: ', analysis.name
+  print 'Print out this analysis:'
+  print str(analysis)
   print 'PAS: ', analysis.pas
   print 'luminosity: ', analysis.lumi
   print 'Experiment: ', analysis.experiment
@@ -44,6 +46,8 @@ def main():
   topology = browser.expTopology('TChiChipmSlepStau')
   print 'Topology-object: ', topology
   print 'name: ', topology.name
+  print 'Print out this topology:'
+  print str(topology)
   print 'analyses: ', topology.analyses
   print 'runs: ', topology.runs
   print 'category: ', topology.category
@@ -59,10 +63,12 @@ def main():
   ## to get a specified set of Result-objects
   resultSet = browser.expResultSet("SUS13008","T6ttWW" )
   print 'Set of results is: ', resultSet
+  print 'Print out this result set:'
+  print str(resultSet)
   print "members of this set:", resultSet.members
   print "results encapsulated in this set:", resultSet.results
-  print "which observed upper limits:", resultSet.hasUpperLimitDicts()
-  print "which expected upper limits:", resultSet.hasUpperLimitDicts(expected = True)
+  print "observed upper limits:", resultSet.hasUpperLimitDicts()
+  print "expected upper limits:", resultSet.hasUpperLimitDicts(expected = True)
   print 'Result is checked: ', resultSet.checked
   
   # to get one selected exclusion line:
