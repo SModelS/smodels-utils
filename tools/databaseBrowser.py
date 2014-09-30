@@ -279,17 +279,17 @@ class Browser(object):
         
         """
         
-        if not topology in self.allTopologies():
+        if not topology in self.getTopologies():
             logger.error('%s is no valid topology!' %topology)
             return None
             
         return topology
     
-    def allRuns(self, analysis = None, topology = None):
+    def getRuns(self, analysis = None, topology = None):
         """Retrieves all runs a given analysis or topology or analysis-topology 
         pair is available for. Returns a list containing all runs or just a 
         string when analysis is given. 
-    # ### FIX ME rename to findRuns
+        
         """
     # ### FIX ME: think about the ambiguities: rais an error?, stop the script?,
     #try to pass this problem?
@@ -305,7 +305,7 @@ class Browser(object):
             #return self._runRestriction
     
         if self._experimentRestriction:
-            logger.warning('Browser is restricted to experiment %s' \
+            logger.warning('Browser is restricted to experiment %s!' \
             %self._experimentRestriction)
         
         analysis = self._validateAnalysis(analysis)
@@ -322,8 +322,8 @@ class Browser(object):
         topology = self._validateTopology(topology)    
         if not analysis and topology:
             runs = [key for key in self.database if \
-            self.allTopologies(run = key) and topology in \
-            self.allTopologies(run = key)]
+            self.getTopologies(run = key) and topology in \
+            self.getTopologies(run = key)]
             if not runs:
                 return None
             logger.warning('No analysis was given. There are %s runs for given\n \
@@ -332,8 +332,8 @@ class Browser(object):
         
         if analysis and topology:
             runs = [key for key in self.database if analysis in \
-            self.database[key] and self.allTopologies(run = key) and topology \
-            in self.allTopologies(run = key)]
+            self.database[key] and self.getTopologies(run = key) and topology \
+            in self.getTopologies(run = key)]
             if not runs:
                 logger.warning('Could not find run for %s-%s!' \
                 %(analysis, topology))
@@ -344,7 +344,7 @@ class Browser(object):
             Please check the database for ambiguities!' %(analysis, len(runs)))
             return runs[0]
 
-    def allAnalyses(self, run = None, topology = None):
+    def getAnalyses(self, run = None, topology = None):
         """Retrieves all analyses or all analyses existing for given run or 
         run-topology-pair.
     
@@ -358,7 +358,7 @@ class Browser(object):
             %self._runRestriction)
         
         if not run:
-            analyses = [self.database[key] for key in self.allRuns()]
+            analyses = [self.database[key] for key in self.getRuns()]
             analyses = [ana for anas in analyses for ana in anas]  
             # flattens out the nested list to plain list
             
@@ -373,15 +373,15 @@ class Browser(object):
         topology = self._validateTopology(topology)
         if topology and run:
             for a in self.database[run]:
-                if self.allTopologies(analysis = a) and topology in \
-                self.allTopologies(analysis = a):
+                if self.getTopologies(analysis = a) and topology in \
+                self.getTopologies(analysis = a):
                     logger.debug('Found %s in %s-%s.' %(topology, run, a))
                     analyses.append(a)
             
         if topology and not run:
             analyses = [ana for ana in analyses if \
-            self.allTopologies(analysis = ana) and topology in \
-            self.allTopologies(analysis = ana)]
+            self.getTopologies(analysis = ana) and topology in \
+            self.getTopologies(analysis = ana)]
         
         
         if not analyses:
@@ -391,7 +391,7 @@ class Browser(object):
         
         return analyses
     
-    def allTopologies(self, run = None, analysis = None):
+    def getTopologies(self, run = None, analysis = None):
         """Retrieves all topologies existing for given run or analysis-run-pair.
     
         """
@@ -403,19 +403,19 @@ class Browser(object):
     
         if analysis and not run:
             analyses.append(analysis)
-            runs.append(self.allRuns(analysis))
+            runs.append(self.getRuns(analysis))
 
         if run and not analysis:
             runs.append(run)
-            analyses = self.allAnalyses(run)
+            analyses = self.getAnalyses(run)
             
         if run and analysis:
             runs.append(run)
             analyses.append(analysis)
         
         if not run and not analysis:
-            runs = self.allRuns()
-            analyses = self.allAnalyses()
+            runs = self.getRuns()
+            analyses = self.getAnalyses()
                     
         logger.debug('Searching topologies for runs %s and analyses %s.' \
         %(runs,analyses))
@@ -445,7 +445,7 @@ class Browser(object):
         if not self._validateAnalysis(analysis):
             return None
             
-        run = self.allRuns(analysis)
+        run = self.getRuns(analysis)
         path = self._base + run + '/' + analysis + '/' + requested
         logger.debug('Check path: %s.' %path)
         if not os.path.exists(path):
@@ -476,9 +476,9 @@ class Browser(object):
             self._checkResults(analysis))
             logger.debug('Created and stored info.txt-object!')
         logger.debug('Try to create experimental Analysis: %s - %s - %s' \
-        %(analysis, self._infos[analysis], self.allRuns(analysis)))    
+        %(analysis, self._infos[analysis], self.getRuns(analysis)))    
         self._analyses[analysis] = experimentalAnalysis.ExpAnalysis(analysis, \
-        self._infos[analysis], self.allRuns(analysis), \
+        self._infos[analysis], self.getRuns(analysis), \
         self._checkResults(analysis, requested = 'sms.root'), \
         self._checkResults(analysis, requested = 'sms.py'))
         return self._analyses[analysis]
@@ -504,9 +504,9 @@ class Browser(object):
         
         """
         topoDict = {}
-        for r in self.allRuns(topology = topology):
+        for r in self.getRuns(topology = topology):
             topoDict[r] = {}
-            for a in self.allAnalyses(run = r, topology = topology):
+            for a in self.getAnalyses(run = r, topology = topology):
                 if not a in self._infos:
                     logger.debug('Browser has no info.txt-object for %s!' %a)
                     self._infos[a] = Infotxt(a, self._checkResults(a))
@@ -791,7 +791,8 @@ class Infotxt(object):
         :return: {'topology': [{'mx': 'mass on x-axis', 'my': 'mass on y-axis',
         'mz': ('condition for third mass', int(value for this condition)), 
         'extension': 'extension glued to topology name'}]}
-        # ### FIX ME: if there are two conditions for intermediate masses this routine yields the wrong format. This entreis should be totally removed?
+        # ### FIX ME: if there are two conditions for intermediate masses this routine yields the wrong format. -> Fixed, right? 
+        # ### FIX ME: These entreis should be totally removed?
         """
         
         axLines = self._preprocessAxesLine

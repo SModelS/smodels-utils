@@ -72,7 +72,7 @@ class ExpResultSet (object):
         self._setLogLevel(level)
     
     def __str__(self):
-        ret = "%s" %self.name
+        ret = "Analysis: %s \nTopology: %s" %(self._expAna, self._expTopo)
         return ret
         
     @property
