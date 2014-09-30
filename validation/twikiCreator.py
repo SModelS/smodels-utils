@@ -29,6 +29,8 @@ def main():
     
     outFile = open('./twiki/twiki_%s.txt' %topology, 'w')
     analyses = browser.allAnalyses(topology = topology)
+    head = "||'''Analysis  <<BR>>  (√s,lum)''' ||'''mass parametrization''' ||'''published data | checked''' ||'''plot''' ||'''comment''' ||"
+    print(head, file = outFile)
     
     for ana in analyses:
         expAna = browser.expAnalysis(ana)
