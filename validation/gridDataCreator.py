@@ -249,36 +249,40 @@ def main(arguments = None):
     argparser.add_argument ('-n', '--events',\
     help = 'set number of events - default: 10000', \
     type = types.IntType, default = 10000)
-    argparser.add_argument ('-i', '--intermediate', \
-    help = 'condition and value for intermediate particle - default: xvalue,050', \
-    type = types.StringType, default = 'xvalue,050')
+    argparser.add_argument ('-p', '--parametrization', \
+    help = 'mass parametrization when there is an intermediate particle \n \
+    - default: None', type = types.StringType, default = None)
+    argparser.add_argument ('-v', '--value', help = 'value for parametrization \n \
+    - default: 0.5', type = types.StringType, default = '0.50')
     args = argparser.parse_args()
 
     if not arguments:
         base = args.Base
         topology = args.topology
-        intermediate = args.intermediate.split(',')
+        parametrization = args.parametrization
+        value = args.value
+        if not parametrization:
+            value = None
+        else:    
+            try:
+                value = int(value)
+            except ValueError:
+                try: value = float(value)
+                except ValueError:
+                    logger.error('Unknown value %s for parametrization')
+                    sys.exit()
     else:
         base = arguments['base']
         topology = arguments['topology']
-        intermediate = arguments['intermediate'].split(',')
+        parametrization = arguments['parametrization']
+        value = arguments['value']
+        
     smsHelpers.base = base
     browser = Browser(base)
-    intermediate = [i.strip() for i in intermediate]
-    if intermediate[0] == 'xvalue':
-        condition = ''
-    else:
-        condition = intermediate[0]
-    if intermediate[1] == '050' and not condition:
-        value = ''
-    else:
-        value = intermediate[1]
     if topology[-2:] == 'on':
         topologyName = topology[:-2]
-    #elif topology[-3:] == 'off':
-        #topologyName = topology[:-3]
+
     else: topologyName = topology
-    extendedTopology = topology + condition + value
     if not arguments:
         analysis = args.analysis
         targetPath = getTarget(args.directory)
@@ -294,11 +298,10 @@ def main(arguments = None):
     if order == 'NLO':
         factor = True
         slhaOrder = 'LO'
-    expRes = browser.expResult(analysis, topology)
-    if not expRes:
-        expRes = browser.expResult(analysis, topologyName)
-    expAna = expRes.expAnalysis
-    expTopo = expRes.expTopology
+    expResSet = browser.expResultSet(analysis, topology)
+    extendedTopology = getExtension(expResSet, parametrization, value)
+    expAna = expResSet.expAnalysis
+    expTopo = expResSet.expTopology
     print ("========================================================")
     print('Producing the grid data file')
     print('Topology: ', topology)
@@ -327,22 +330,22 @@ def main(arguments = None):
         data = GridData(expTopo.name, analysis, slhaPath + '/' + slha)
         massMother = data.massMother
         massLSP = data.massLSP
-        if condition == 'LSP':
+        if parametrization == 'fixedLSP':
             massIntermediate = data.massIntermediate
         tUL = data.theoreticalUpperLimit
         eUL = data.experimentalUpperLimit
         cond = data.theoreticalCondition
         if not massMother:
             massMother = slha.split('_')[1].strip()
-            if condition == 'LSP':
-                massLSP = int(value)
+            if parametrization == 'fixedLSP'
+                massLSP = value
                 massIntermediate = slha.split('_')[2].strip()
             else:
                 massLSP = slha.split('_')[2].strip()
         if bool(data.theoreticalCondition):
-            logger.warning('Condition %s not satisfied! degree of violation: %s' \
+            logger.warning('Condition %s not satisfied! Degree of violation: %s' \
             %(data.experimentalCondition, data.theoreticalCondition))
-        if condition == 'LSP':
+        if parametrization == 'fixedLSP':
             print('%s  %s  %s  %s %s' \
             %(massMother, massIntermediate, tUL, eUL, cond), file = outFile)
         else:
@@ -354,7 +357,7 @@ def main(arguments = None):
     print('#END', file = outFile)
     print('time: %s' %computTime, file = outFile) 
     print('time per slha: %s' %timePerFile, file = outFile) 
-    metaData = writeMetaData(expRes, slhaOrder, fileName, factor, intermediate[0], intermediate[1])
+    metaData = writeMetaData(expResSet, slhaOrder, fileName, factor, parametrization, value)
     for key in metaData:
         print(key, metaData[key], file = outFile)
     print ('Worte %s lines of grid data to file %s!' %(count, fileName))
@@ -369,13 +372,13 @@ def timeUnits(t):
         tU = '%s sec' %t
     return tU
     
-def writeMetaData(expRes, order, fileName, factor, condition, value):
+def writeMetaData(expResSet, order, fileName, factor, parametrization, value):
     """Writes all the meta data (e.g. root tag, name of output-file, ...)
     :returns: dictionary
     
     """
-    expAna = expRes.expAnalysis
-    expTopo = expRes.expTopology
+    expAna = expResSet.expAnalysis
+    expTopo = expResSet.expTopology
     metaData = {}
     decay = ''
     prettyName = ''
@@ -385,16 +388,14 @@ def writeMetaData(expRes, order, fileName, factor, condition, value):
     if expAna.sqrts: sqrts = '%s TeV' %expAna.sqrts
     if expAna.pas: pas = expAna.pas
     metaData['decay:'] = '%s' %decay
-    metaData['intermediate'] = '%s, %s' %(condition, value)
+    metaData['intermediate'] = '%s, %s' %(parametrization, value)
     metaData['analysis:'] = '%s, %s, %s, %s' %(pas, prettyName, sqrts, order)
     metaData['outFile:'] = fileName.replace('.dat', '.png') 
     exclName = ''
     official = ''
     
-    if expRes.selectExclusionLine(condition = condition, value = value):
-        exclName = expRes.selectExclusionLine(condition = condition, value = value).GetName()
-    elif expRes.exclusionLine():
-        exclName = expRes.exclusionLine().GetName
+    if expResSet.exclusionLine(condition = parametrization, value = value):
+        exclName = expResSet.exclusionLine(condition = parametrization, value = value).GetName()
     else:
         exclName = 'exclusion_%s' %expTopo.name
     if expAna.publishedData or expAna.isPublished:
@@ -405,7 +406,27 @@ def writeMetaData(expRes, order, fileName, factor, condition, value):
     return metaData
    
 
+def getExtension(expResSet, param, val):
+    """Produces possible extensions for the topology name via comparison
+    to database known cases.
     
+    """
+    setMembers = expResSet.members
+    extendedTopology = ''
+    for exTop in setMembers:
+        if setMembers[exTop] == (param, val):
+            extendedTopology = exTop
+    if not extendedTopology:
+        if setMembers[exTop][0] == param:
+            if param == 'massSplitting':
+                extension = str(val).replace('.', '')
+                if len(extension) < 3:
+                    extension = extension + '0'
+                extendedTopology = expResSet.expTopology.name + extension
+            else:
+                extendedTopology = exTop.replace('%s' %exTop[1], '%s'%val)
+    return extendedTopology        
+                
     
 def getTarget(path):
     """Checks if the target directory already exists and creates it if not.
