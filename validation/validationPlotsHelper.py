@@ -48,25 +48,51 @@ def checkFile(path):
                 os.remove(path)
                 return path
     return path    
+
+def validateValue(value):
+    """Checks if given value is of type integer, assumes mass if so and adds
+    GeV. If type is float, value must correspond to either mass splitting or
+    mass ratio without unit.
     
-def getExtension(expResSet, param, val, valStr):
+    """
+    try:
+        value = int(value)
+        value = addunit(value, 'GeV')
+        return value
+    except ValueError:
+        try:
+            value = float(value)
+            return value
+        except ValueError:
+            logger.error('Unknown value %s for parametrization')
+            sys.exit()
+    
+def getExtension(expTopology, param, val, valStr):
     """Produces possible extensions for the topology name via comparison
     to database known cases.
     
     """
-    setMembers = expResSet.members
-    extendedTopology = ''
-    for exTop in setMembers:
-        if setMembers[exTop] == (param, val):
-            extendedTopology = exTop
-    if not extendedTopology:
-        if setMembers[exTop][0] == param:
+    if not parametrization:
+        return expTopology.name
+    for i, exTop in enumerate(expTopology.thirdMasses):
+        if exTop == (param, val):
+            extendedTopology = expTopology.name + expTopology.extensions[i]
+            return extendedTopology    
+    for i, exTop in enumerate(expTopology.thirdMasses):
+        print (exTop[0], exTop[1])
+        if exTop[0] == param:
             if param == 'massSplitting':
-                extendedTopology = expResSet.expTopology.name + valStr
+                extendedTopology = expTopology.name + valStr.replace('.', '')
             elif param == 'M2/M0':
-                extendedTopology = exTop.replace('%s' %(exTop[1]*100.), '%s'%(val*100.))
+                extendedTopology = expTopology.name +  expTopology.extensions[i]
+                extendedTopology = extendedTopology.replace('%s' %(exTop[1] * 100), '%s'%(val * 100))
             else:
-                extendedTopology = exTop.replace('%s' %exTop[1], '%s'%val)
+                extendedTopology = expTopology.name + expTopology.extensions[i]
+                extendedTopology = extendedTopology[:-3]
+                rest = 3 - len(str(rmvunit(val, 'GeV')))
+                for j in range(rest):
+                    extendedTopology += '0'
+                extendedTopology = extendedTopology + str(rmvunit(val, 'GeV'))
     return extendedTopology        
 
 def getMetadata(filename,tags):

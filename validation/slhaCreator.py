@@ -36,16 +36,15 @@ class SlhaFiles(object):
 
     """
     
-    def __init__(self, topology, browserObject, thresholdMotherMasses, \
+    def __init__(self, topology, extTopo, browserObject, thresholdMotherMasses, \
     thresholdLSPMasses, d, condition, value, events = 1000, order = 'LO',unlink = True):
         """Creates a directory ./'topology'_slhas and stores all the slha-files
         for every point in the mass-plane.
-        :param topology: topology the slha-files should be preoduced for
+        :param topology: topology the slha-files should be produced for
         :param browserObject: instance of the class Browser
         :param events: number of events for pythia simulation 'LO' or 'NLL' 
         :param order: order of perturbation theory as string
-        :param condition: condition for mass of the intermediate particle as string 
-        (only xvalue supported) 
+        :param condition: parametrization for mass when there is an intermediate particle, as string 
         :param value: value for the condition as string
         
         
@@ -61,7 +60,7 @@ class SlhaFiles(object):
         self._events = events
         self._sqrts = 8.0
         if not order in ['LO','NLO','NLL']:
-            logger.error('%s is not a possible pertubation order' %(order))
+            logger.error('%s is not a possible perturbation order' %(order))
             sys.exit()            
         self._order = order
         self.motherMasses = thresholdMotherMasses
@@ -70,24 +69,25 @@ class SlhaFiles(object):
         self._unlink = unlink
         self._listOfInterPid = self._getPidCodeOfIntermediateParticle()
         self._listOfMotherPid = self._getPidCodeOfMother()
-        if not condition in ['xvalue','x','LSP','D']:
-            logger.error('Condition %s not supported' %condition)
-            sys.exit()  
-        if condition == 'xvalue':
-            cond = ''
-        else:
-            cond = condition
-        if value == '050' and condition == 'xvalue':
-            val = ''
-        else:
-            val = value
-        self._extension = cond + val
-        self.folder = '../slha/%s_%s_%s_slhas' %(topology + self._extension, events, order)
+        #if not condition in ['xvalue','x','LSP','D']:
+            #logger.error('Condition %s not supported' %condition)
+            #sys.exit()  
+        #if condition == 'xvalue':
+            #cond = ''
+        #else:
+            #cond = condition
+        #if value == '050' and condition == 'xvalue':
+            #val = ''
+        #else:
+            #val = value
+        #self._extension = cond + val
+        self.folder = '../slha/%s_%s_%s_slhas' %(extTopo, events, order)
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
             logger.info('Created new folder %s!' %self.folder)
         self._condition = condition
-        self._interValue = self._setInterValue(value)
+        self._interValue = rmvunit(value, 'GeV')
+        #self._interValue = self._setInterValue(value)
         
     def __del__(self):
         """remove temp.slha
@@ -98,33 +98,33 @@ class SlhaFiles(object):
 
         
         
-    def _setInterValue(self,value):
-        """
+    #def _setInterValue(self,value):
+        #"""
         
-        """
-        try:
-            float(value)
-        except ValueError:
-            logger.error('value for contion %s must be a number. Got: %s' %(self._condition,interValue))
-            sys.exit() 
-        interValue = None
-        if self._condition == 'xvalue':
-            if value[:1] != '0':
-                logger.error('value %s not allowed for contion %s' %(value,self._condition))
-                sys.exit()  
-            div = float('1' + (len(value)-1)*'0')
-            interValue = float(value[1:])/div
-            interValue = round(interValue,2)
-            if not interValue >= 0. or not interValue <= 1.:
-                logger.error('value for contion %s must be between 1 and 0. Got: %s' %(self._condition,interValue))
-                sys.exit() 
-        if self._condition == 'x':
-            interValue = float(value)/100.
-            interValue = round(interValue,2)
-        if self._condition in ['LSP','D']:
-            interValue = float(value)
-            interValue = round(interValue,0)
-        return interValue
+        #"""
+        #try:
+            #float(value)
+        #except ValueError:
+            #logger.error('value for contion %s must be a number. Got: %s' %(self._condition,interValue))
+            #sys.exit() 
+        #interValue = None
+        #if self._condition == 'xvalue':
+            #if value[:1] != '0':
+                #logger.error('value %s not allowed for contion %s' %(value,self._condition))
+                #sys.exit()  
+            #div = float('1' + (len(value)-1)*'0')
+            #interValue = float(value[1:])/div
+            #interValue = round(interValue,2)
+            #if not interValue >= 0. or not interValue <= 1.:
+                #logger.error('value for contion %s must be between 1 and 0. Got: %s' %(self._condition,interValue))
+                #sys.exit() 
+        #if self._condition == 'x':
+            #interValue = float(value)/100.
+            #interValue = round(interValue,2)
+        #if self._condition in ['LSP','D']:
+            #interValue = float(value)
+            #interValue = round(interValue,0)
+        #return interValue
         
     def __iter__(self):
         """Creates a slha-file named 'topology_motherMass_lspMass_order.slha and
@@ -145,19 +145,19 @@ class SlhaFiles(object):
                 str(int(motherMass)) + '_' + str(int(lspMass)) + '_' + \
                 self._order + '.slha'
                 interMass = None
-                if self._condition == 'xvalue':
+                if self._condition == 'massSplitting':
                     interMass = self._interValue * motherMass + (1 - self._interValue) * lspMass
-                if self._condition == 'x':
+                if self._condition == 'M2/M0':
                     interMass = self._interValue * lspMass
-                if self._condition == 'LSP':
+                if self._condition == 'fixedLSP':
                     interMass = lspMass
                     lspMass = self._interValue
-                if self._condition == 'D':
+                if self._condition == 'M2-M0':
                     interMass = lspMass + self._interValue
                 if self.topo.name == 'T6bbWWoff':
-                    if lspMass < interMass-80: continue
+                    if lspMass < interMass - 80: continue
                 if self.topo.name == 'T6ttWW':
-                    if interMass < (81.+lspMass): continue # valition of kin. contion
+                    if interMass < (81. + lspMass): continue # validation of kin. condition
                 logger.info('mother mass: %s, lsp mass: %s, inter mass: %s' %(motherMass, lspMass, interMass))
                 slhaLines = self._setMass(motherMass, lspMass, interMass)
                 if firstLoop:
@@ -382,39 +382,37 @@ def main():
     argparser.add_argument ('-l', '--link', \
     help = 'Do not clean up temp directory after running pythia', \
     action = 'store_false')
-    argparser.add_argument ('-i', '--intermediate', \
-    help = 'condition and value for intermediate particle - default: xvalue,050', \
-    type = types.StringType, default = 'xvalue,050')
+    argparser.add_argument ('-p', '--parametrization', \
+    help = 'mass parametrization when there is an intermediate particle \n \
+    - default: None', type = types.StringType, default = None)
+    argparser.add_argument ('-v', '--value', help = 'value for parametrization \n \
+    - default: 0.50', type = types.StringType, default = '0.50')
     args = argparser.parse_args()
 
     browser = Browser(args.Base)
     browser.verbosity = args.browserVerbosity
     topology = args.topology
-    intermediate = args.intermediate.split(',')
-    intermediate = [i.strip() for i in intermediate]
-    if len(intermediate) != 2:
-        logger.error('Could not handle argument intermediate: %s! \n \
-        Expected: condition,value!' %intermediate)
-        sys.exit()
-    if intermediate[0] == 'xvalue':
-        condition = ''
-    else:
-        condition = intermediate[0]
-    if intermediate[1] == '050':
-        value = ''
-    else:
-        value = intermediate[1]
-    extendedTopology = topology + condition + value
+    parametrization = args.parametrization
+    value = args.value
+    valueString = value
+        if not parametrization:
+            value = None
+            valueString = None
+        else:    
+            value = validationPlotsHelper.validateValue(value)
+    expTopology = browser.expTopology(topology)        
+    extendedTopology = validationPlotsHelper.getExtension(expTopology, parametrization, value, valueString)
     logger.info('Creating slha for extended topology %s.' %extendedTopology)
     events = args.events
     order = args.order
     unlink = args.link
-    threshold = Threshold(topology, browser, intermediate[0], intermediate[1])
+    threshold = Threshold(topology, browser, parametrization, value)
     folder = checkFolder('../slha/%s_%s_%s_slhas' \
     %(extendedTopology, events, order))
     count = 0
-    slhaFiles = SlhaFiles(topology, browser, threshold.motherMasses, \
-    threshold.lspMasses, threshold.d, intermediate[0], intermediate[1], events, order, unlink)
+    slhaFiles = SlhaFiles(topology, extendedTopology, browser, \
+    threshold.motherMasses, threshold.lspMasses, threshold.d, parametrization,\
+    value, events, order, unlink)
     for f in slhaFiles:
         count += 1
         print('Progress ...... ', count)

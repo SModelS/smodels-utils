@@ -265,14 +265,9 @@ def main(arguments = None):
         valueString = value
         if not parametrization:
             value = None
-        else:    
-            try:
-                value = int(value)
-            except ValueError:
-                try: value = float(value)
-                except ValueError:
-                    logger.error('Unknown value %s for parametrization')
-                    sys.exit()
+            valueString = None
+        else:
+            value = validationPlotsHelper.validateValue(value)
     else:
         base = arguments['base']
         topology = arguments['topology']
@@ -301,9 +296,9 @@ def main(arguments = None):
         factor = True
         slhaOrder = 'LO'
     expResSet = browser.expResultSet(analysis, topology)
-    extendedTopology = validationPlotsHelper.getExtension(expResSet, parametrization, value, valueString)
     expAna = expResSet.expAnalysis
     expTopo = expResSet.expTopology
+    extendedTopology = validationPlotsHelper.getExtension(expTopo, parametrization, value, valueString)
     print ("========================================================")
     print('Producing the grid data file')
     print('Topology: ', topology)
@@ -407,7 +402,16 @@ def writeMetaData(expResSet, order, fileName, factor, parametrization, value):
         metaData['factor:'] = 1.2
     return metaData
    
-
+def removeFile(path):
+    """Checks if the data file already exists.
+    If the file already exists and the validation is automated the grid
+    will be removed. 
+    """
+    if os.path.exists(path):
+        print('File %s will be removed!' %path)
+        os.remove(path)
+    return path 
+    
 #def getExtension(expResSet, param, val, valStr):
     #"""Produces possible extensions for the topology name via comparison
     #to database known cases.
@@ -441,16 +445,6 @@ def writeMetaData(expResSet, order, fileName, factor, parametrization, value):
     #os.mkdir(path)
     #logger.info('Created new directory: %s' %path) 
     #return path 
-    
-def removeFile(path):
-    """Checks if the data file already exists.
-    If the file already exists and the validation is automated the grid
-    will be removed. 
-    """
-    if os.path.exists(path):
-        print('File %s will be removed!' %path)
-        os.remove(path)
-    return path 
     
 #def checkFile(path):
     #"""Checks if the data file already exists.
