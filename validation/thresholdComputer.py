@@ -5,6 +5,7 @@
    :synopsis: Derives the thresholds and the bin widths for given topology.
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
+.. moduleauthor:: Michael Traub <michael.traub@gmx.at>
 
 """
 
@@ -12,6 +13,7 @@ from __future__ import print_function
 import setPath  # # set to python path for smodels
 import sys
 from smodels_tools.tools.databaseBrowser import Browser
+from smodels.tools.physicsUnits import rmvunit, addunit
 import logging
 import os
 import types
@@ -22,7 +24,7 @@ class Threshold(object):
     
     def __init__(self, topology, browserObject, condition, value):
         """Uses the given browser object to retrieve all upper limit histogram 
-        dictionaries knowen for this topology. 
+        dictionaries known for this topology. 
         :param topology: topology the slha-files should be preoduced for
         :param browserObject: instance of the class Browser
         
@@ -35,47 +37,14 @@ class Threshold(object):
             sys.exit()            
         self._browser = browserObject
         self.topo = self._browser.expTopology(topology)
-        if not condition in ['xvalue', 'x','LSP','D']:
-            logger.error('Condition %s not supported' %condition)
-            sys.exit()    
         self._condition = condition
         self._value = value
-        self._interValue = self._setInterValue(value)
         self.thresholds = self._thresholds
         self.motherMasses = self._massList('mother')
         self.lspMasses = self._massList('lsp')
         self.d = self._maxDelta()
+        self.extTopo = extTopo
 
-    
-    def _setInterValue(self,value):
-        """
-        
-        """
-        try:
-            float(value)
-        except ValueError:
-            logger.error('Value for condition %s must be a number. Got: %s' %(self._condition, interValue))
-            sys.exit() 
-        interValue = None
-        if self._condition == 'xvalue':
-            if value[:1] != '0':
-                logger.error('Value %s not allowed for condition %s' %(value, self._condition))
-                sys.exit()  
-            div = float('1' + (len(value) - 1) * '0')
-            interValue = float(value[1:]) / div
-            interValue = round(interValue, 2)
-            if not interValue >= 0. or not interValue <= 1.:
-                logger.error('value for condition %s must be between 1 and 0. Got: %s' %(self._condition, interValue))
-                sys.exit() 
-        if self._condition == 'x':
-            interValue = float(value) / 100.
-            interValue = round(interValue, 2)
-        if self._condition in ['LSP','D']:
-            interValue = float(value)
-            interValue = round(interValue,0)
-        return interValue
-
-        
     
     @property    
     def _thresholds(self):
@@ -95,25 +64,19 @@ class Threshold(object):
         for a in analyses:
             if self._browser.expAnalysis(a).sqrts != 8.0:
                 continue
-            result = self._browser.expResult(a, self.topo.name)
-            ulDicts = result.upperLimitDicts
-            if self.topo.name in ulDicts:
-                ulDict = result.upperLimitDict(self.topo.name)
-            elif self.topo.name + self._condition + self._value in ulDicts:
-                ulDict = result.upperLimitDict(self.topo.name + self._condition + self._value)
+            resultSet = self._browser.expResultSet(a, self.topo.name)
+            if resultSet.upperLimitDict(condition = self._condition, value = self._value)
+                ulDict = resultSet.upperLimitDict(condition = self._condition, value = self._value)
             else:
-                for key in ulDicts:
-                    val = []
-                    if self.topo.name + self._condition in key:
-                        try:
-                            val.append(int(key.replace(self.topo.name + self._condition, '')))
-                        except ValueError: continue
-                if val:
-                    val = str(min(val))
-                    if self._condition == 'D': 
-                        val = '0'*(3-len(val)) + val
-                    ulDict = result.upperLimitDict(self.topo.name + self._condition + val)
-                
+                val = []
+                for extTopo in resultSet.members:
+                    if not resultSet.members[extTopo][0] == self._condition:
+                        continue
+                    val.append(resultSet.members[extTopo][1])
+                if self._condition in ['massSplitting', 'M2-M1']:    
+                    ulDict = resultSet.upperLimitDict(condition = self._condition, value = min(val))        
+                if self._condition in ['M2/M0', 'fixedLSP']:    
+                    ulDict = resultSet.upperLimitDict(condition = self._condition, value = max(val))            
             if not ulDict: continue
             mM = []
             lspM = []
@@ -143,7 +106,7 @@ class Threshold(object):
         lspMassMax = -1000.
         for lspMass in ulDict[minMother]:
             if lspMass > lspMassMax: lspMassMax = lspMass
-        return lspMassMax-minMother+step
+        return lspMassMax - minMother + step
         
     def _thresholdDict(self, masses):
         """Derives the thresholds and the step width for a given list of masses.
@@ -231,7 +194,7 @@ class Threshold(object):
         return minStep
     
     def _maxDelta(self):
-        """Derives the maximal lsp intercept
+        """Derives the maximal LSP intercept
         
         """
         
@@ -244,8 +207,8 @@ class Threshold(object):
         if self.topo.name == 'TChiWZon' or self.topo.name == 'TChiWZ':
             dDefoult = -100
         if self.topo.name in ['T6bbWW', 'T6ttWW','T5WW']:
-            if self._condition == 'xvalue':
-                dMax = -(81/self._interValue)  
+            if self._condition == 'massSplitting':
+                dMax = -(81/self._value)  
                 dMax = float(int(dMax-1))
         return dMax
         

@@ -69,18 +69,6 @@ class SlhaFiles(object):
         self._unlink = unlink
         self._listOfInterPid = self._getPidCodeOfIntermediateParticle()
         self._listOfMotherPid = self._getPidCodeOfMother()
-        #if not condition in ['xvalue','x','LSP','D']:
-            #logger.error('Condition %s not supported' %condition)
-            #sys.exit()  
-        #if condition == 'xvalue':
-            #cond = ''
-        #else:
-            #cond = condition
-        #if value == '050' and condition == 'xvalue':
-            #val = ''
-        #else:
-            #val = value
-        #self._extension = cond + val
         self.folder = '../slha/%s_%s_%s_slhas' %(extTopo, events, order)
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
@@ -95,36 +83,6 @@ class SlhaFiles(object):
         """
         
         os.system('rm ./%s' %self._tempSlhaName)
-
-        
-        
-    #def _setInterValue(self,value):
-        #"""
-        
-        #"""
-        #try:
-            #float(value)
-        #except ValueError:
-            #logger.error('value for contion %s must be a number. Got: %s' %(self._condition,interValue))
-            #sys.exit() 
-        #interValue = None
-        #if self._condition == 'xvalue':
-            #if value[:1] != '0':
-                #logger.error('value %s not allowed for contion %s' %(value,self._condition))
-                #sys.exit()  
-            #div = float('1' + (len(value)-1)*'0')
-            #interValue = float(value[1:])/div
-            #interValue = round(interValue,2)
-            #if not interValue >= 0. or not interValue <= 1.:
-                #logger.error('value for contion %s must be between 1 and 0. Got: %s' %(self._condition,interValue))
-                #sys.exit() 
-        #if self._condition == 'x':
-            #interValue = float(value)/100.
-            #interValue = round(interValue,2)
-        #if self._condition in ['LSP','D']:
-            #interValue = float(value)
-            #interValue = round(interValue,0)
-        #return interValue
         
     def __iter__(self):
         """Creates a slha-file named 'topology_motherMass_lspMass_order.slha and
