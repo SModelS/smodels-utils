@@ -67,15 +67,16 @@ class SlhaFiles(object):
         self.lspMasses = thresholdLSPMasses
         self.d = d
         self._unlink = unlink
+        self.extTopo = extTopo
         self._listOfInterPid = self._getPidCodeOfIntermediateParticle()
         self._listOfMotherPid = self._getPidCodeOfMother()
-        self.folder = '../slha/%s_%s_%s_slhas' %(extTopo, events, order)
+        self.folder = '../slha/%s_%s_%s_slhas' %(self.extTopo, events, order)
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
             logger.info('Created new folder %s!' %self.folder)
         self._condition = condition
         self._interValue = rmvunit(value, 'GeV')
-        #self._interValue = self._setInterValue(value)
+        
         
     def __del__(self):
         """remove temp.slha
@@ -99,7 +100,7 @@ class SlhaFiles(object):
                 if lspMass > motherMass + self.d: continue
                 if self.topo.name == 'TChiWZoff':
                     if lspMass - motherMass < -80: continue
-                fileName = self.topo.name + self._extension + '_' + \
+                fileName = self.extTopo + '_' + \
                 str(int(motherMass)) + '_' + str(int(lspMass)) + '_' + \
                 self._order + '.slha'
                 interMass = None

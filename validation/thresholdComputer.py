@@ -38,12 +38,12 @@ class Threshold(object):
         self._browser = browserObject
         self.topo = self._browser.expTopology(topology)
         self._condition = condition
-        self._value = value
+        self._value = rmvunit(value, 'GeV')
         self.thresholds = self._thresholds
         self.motherMasses = self._massList('mother')
         self.lspMasses = self._massList('lsp')
         self.d = self._maxDelta()
-        self.extTopo = extTopo
+
 
     
     @property    

@@ -55,35 +55,35 @@ def main(arguments = None):
     argparser.add_argument ('-n', '--events',\
     help = 'set number of events - default: 10000', \
     type = types.IntType, default = 10000)
-    argparser.add_argument ('-i', '--intermediate', \
-    help = 'condition and value for intermediate particle - default: xvalue,050', \
-    type = types.StringType, default = 'xvalue,050')
+    argparser.add_argument ('-p', '--parametrization', \
+    help = 'mass parametrization when there is an intermediate particle \n \
+    - default: None', type = types.StringType, default = None)
+    argparser.add_argument ('-v', '--value', help = 'value for parametrization \n \
+    - default: 0.50', type = types.StringType, default = '0.50')
     args = argparser.parse_args()
 
     if not arguments:
         base = args.Base
         topology = args.topology
-        intermediate = args.intermediate.split(',')
-    else:
+        parametrization = args.parametrization
+        value = args.value
+        valueString = value
+        if not parametrization:
+            value = None
+            valueString = None
+        else:
+            value = validationPlotsHelper.validateValue(value)
+        else:
         base = arguments['base']
         topology = arguments['topology']
-        intermediate = arguments['intermediate'].split(',')
-    browser = Browser(base)    
-    intermediate = [i.strip() for i in intermediate]
-    if intermediate[0] == 'xvalue':
-        condition = ''
-    else:
-        condition = intermediate[0]
-    if intermediate[1] == '050' and not condition:
-        value = ''
-    else:
-        value = intermediate[1]
+        parametrization = arguments['parametrization']
+        value = arguments['value']
+        
+    browser = Browser(base)
     if topology[-2:] == 'on':
         topologyName = topology[:-2]
-    elif topology[-3:] == 'off':
-        topologyName = topology[:-3]
+
     else: topologyName = topology
-    extendedTopology = topology + condition + value
     if not arguments:
         analysis = args.analysis
         targetPath = getTarget(args.directory)
@@ -95,11 +95,10 @@ def main(arguments = None):
         events = arguments['events']
         order = arguments['order']
         
-    expRes = browser.expResult(analysis, topology)
-    if not expRes:
-        expRes = browser.expResult(analysis, topologyName)
-    expAna = expRes.expAnalysis
-    expTopo = expRes.expTopology
+    expResSet = browser.expResultSet(analysis, topology)
+    expAna = expResSet.expAnalysis
+    expTopo = expResSet.expTopology
+    extendedTopology = validationPlotsHelper.getExtension(expTopo, parametrization, value, valueString)
     
     #Define metadata tags:
     tags = ['decay', 'analysis', 'outFile','factor','rootTag', 'intermediate']
@@ -141,59 +140,55 @@ def main(arguments = None):
     allowed = results['allowed']
     notTested = results['notTested']
     exclusionLine = validationPlotsHelper.getEnvelope(excluded)
-    valueAbove = ''
-    valueBelow = ''
+    
     if extendedTopology == 'T6ttWWLSP050':
         exclusionLine = validationPlotsHelper.cutGraph(exclusionLine, 19, before = False, after = True)
     if extendedTopology == 'T6ttWWx166':
         exclusionLine = validationPlotsHelper.cutGraph(exclusionLine, 16, before = False, after = True)    
         exclusionLine = validationPlotsHelper.addPoint(exclusionLine, 587., 100.)
-    if not condition and not value:
-        officialExclusionLine = expRes.exclusionLine()
+    if expResSet.exclusionLine(condition = parametrization, value = value):    
+        officialExclusionLine = expResSet.exclusionLine(condition = parametrization, value = value)
+        
     else:
-        if not extendedTopology in expRes.extendedTopologies:
-            logger.info('There is no official exclusion line for %s!\n \
-            Search for adjacent lines.' %extendedTopology)
-            if not condition or condition == 'x':
-                values = []
-                for extTopo in expRes.axes:
-                    values.append(expRes.axes[extTopo]['mz'].replace(condition, ''))
-                values.append(value)
-                values.sort()
-                valueIndex = values.index(value)
-                if not valueIndex + 1 > len(values):
-                    valueAbove = values[valueIndex + 1]
-                    logger.info('Found adjacent line above for %s%s'\
-                    %(condition, valueAbove))
-                else:
-                    valueAbove = ''
-                    logger.info('No adjacent line above could be found!')
-                if not valueIndex - 1 < 0:
-                    valueBelow = values[valueIndex - 1]
-                    logger.info('Found adjacent line below for %s%s'\
-                    %(condition, valueBelow))
-                else:
-                    valueBelow = ''
-                    logger.info('No adjacent line below could be found!')
-                
-            if valueAbove:        
-                officialExclusionLineAbove = expRes.selectExclusionLine\
-                (condition = intermediate[0], value = valueAbove)
-                if extendedTopology == 'T6ttWWx166':
-                    officialExclusionLineAbove = validationPlotsHelper.cutGraph(officialExclusionLineAbove, 35, before = False, after = True)    
-                    officialExclusionLineAbove = validationPlotsHelper.cutGraph(officialExclusionLineAbove, 5)    
-                
-            if valueBelow:
-                officialExclusionLineBelow = expRes.selectExclusionLine\
-                (condition = intermediate[0], value = valueBelow)
-                if extendedTopology == 'T6ttWWx166':
-                    officialExclusionLineBelow = validationPlotsHelper.cutGraph(officialExclusionLineBelow, 55, before = False, after = True)
-                    officialExclusionLineBelow = validationPlotsHelper.cutGraph(officialExclusionLineBelow, 5)    
+        officialExclusionLine = None
+        logger.info('There is no official exclusion line for %s!\n \
+        Search for adjacent lines.' %extendedTopology)
         else:
-            officialExclusionLine = expRes.exclusionLine(extendedTopology)
-            valueAbove = ''
-            valueBelow = ''
-            
+            valueAbove = value
+            valueBelow = value
+            val = []
+            for extTopo in resultSet.members:
+                if not resultSet.members[extTopo][0] == self._condition:
+                    continue
+                val.append(resultSet.members[extTopo][1])
+            for v in val:
+                if valueAbove < v:
+                        valueAbove = v
+                if valueBelow > v:
+                        valueBelow = v
+        if valueAbove != value:
+            logger.info('Found adjacent line above for %s%s'\
+            %(condition, valueAbove))
+            officialExclusionLineAbove = expResSet.exclusionLine(condition = parametrization, value = valueAbove)
+        else:
+            officialExclusionLineAbove = None
+            logger.info('No adjacent line above could be found!')
+         if valueBelow != value:
+            logger.info('Found adjacent line below for %s%s'\
+            %(condition, valueBelow))
+            officialExclusionLineBelow = expResSet.exclusionLine(condition = parametrization, value = valueBelow)
+        else:
+            officialExclusionLineBelow = None
+            logger.info('No adjacent line below could be found!')
+                
+        if officialExclusionLineAbove and if extendedTopology == 'T6ttWWx166':
+            officialExclusionLineAbove = validationPlotsHelper.cutGraph(officialExclusionLineAbove, 35, before = False, after = True)    
+            officialExclusionLineAbove = validationPlotsHelper.cutGraph(officialExclusionLineAbove, 5)    
+                
+        if officialExclusionLineBelow and if extendedTopology == 'T6ttWWx166':
+            officialExclusionLineBelow = validationPlotsHelper.cutGraph(officialExclusionLineBelow, 55, before = False, after = True)
+            officialExclusionLineBelow = validationPlotsHelper.cutGraph(officialExclusionLineBelow, 5)    
+        
     #Set the options for the TGraphs:
     excluded.SetMarkerStyle(10)
     excluded.SetMarkerColor(ROOT.kMagenta+3)
@@ -204,23 +199,19 @@ def main(arguments = None):
     exclusionLine.SetLineStyle(2)
     exclusionLine.SetLineWidth(4)
     exclusionLine.SetLineColor(ROOT.kBlack-2)
-    if not value and not condition:
-        try: 
-            officialExclusionLine.SetLineColor(ROOT.kBlack)
-        except AttributeError:
-            logger.warning('No official line could be found!')
-    else:
-        if valueAbove:
-            officialExclusionLineAbove.SetLineColor(ROOT.kGray+1)
-            officialExclusionLineAbove.SetLineWidth(3)
-        if valueBelow:
-            officialExclusionLineBelow.SetLineColor(ROOT.kGray+1)
-            officialExclusionLineBelow.SetLineStyle(7)
-            officialExclusionLineBelow.SetLineWidth(3)
-        if not valueAbove and not valueBelow:
-            try:
-                officialExclusionLine.SetLineColor(ROOT.kBlack)
-            except AttributeError: pass
+    try: 
+        officialExclusionLine.SetLineColor(ROOT.kBlack)
+    except AttributeError: pass
+    try:
+        officialExclusionLineAbove.SetLineColor(ROOT.kGray+1)
+        officialExclusionLineAbove.SetLineWidth(3)
+    except AttributeError: pass    
+    try:
+        officialExclusionLineBelow.SetLineColor(ROOT.kGray+1)
+        officialExclusionLineBelow.SetLineStyle(7)
+        officialExclusionLineBelow.SetLineWidth(3)
+    except AttributeError: pass
+    
     #Create TMutiGraph-object:
     multi = ROOT.TMultiGraph()
     multi.Add(excluded, 'P')
@@ -229,19 +220,17 @@ def main(arguments = None):
         multi.Add(notTested, 'P')
     #multi.Add(exclusionLine, 'L')
     multi.Add(exclusionLine, 'LSAME')
-    if not value and not condition:
-        try:
-            multi.Add(officialExclusionLine, 'L')
-        except TypeError: pass
-    else:
-        if valueAbove:
-            #multi.Add(officialExclusionLineAbove, 'L')
-            multi.Add(officialExclusionLineAbove, 'LSAME')
-        if valueBelow:
-            #multi.Add(officialExclusionLineBelow, 'L')
-            multi.Add(officialExclusionLineBelow, 'LSAME')
-        if not valueAbove and not valueBelow:
-            multi.Add(officialExclusionLine, 'L')
+    try:
+        multi.Add(officialExclusionLine, 'L')
+    except TypeError: pass
+    try:
+        #multi.Add(officialExclusionLineAbove, 'L')
+        multi.Add(officialExclusionLineAbove, 'LSAME')
+    except TypeError: pass
+    try:
+        #multi.Add(officialExclusionLineBelow, 'L')
+        multi.Add(officialExclusionLineBelow, 'LSAME')
+    except TypeError: pass
     
     #Legend:
     if extendedTopology == 'T6ttWWLSP050':
@@ -257,20 +246,15 @@ def main(arguments = None):
     legend.AddEntry(notTested, 'not tested', 'P')
     legend.AddEntry(exclusionLine, 'SmodelS %s' %(intermediate[0] + '='\
     + intermediate[1]), 'L')
-    if not value and not condition and officialExclusionLine:
-        legend.AddEntry(officialExclusionLine, '%s' %metadata['rootTag'][0][1], 'L')
-    else:
-        if valueAbove:
-            legend.AddEntry(officialExclusionLineAbove, '%s, %s=%s' \
-            %(metadata['rootTag'][0][1], intermediate[0], valueAbove), 'L')
-        if valueBelow:
-            legend.AddEntry(officialExclusionLineBelow, '%s, %s=%s' \
-            %(metadata['rootTag'][0][1], intermediate[0], valueBelow), 'L')
-        if not valueAbove and not valueBelow and officialExclusionLine:
-            if not value: val = '050'
-            else: val = value
-            legend.AddEntry(officialExclusionLine, '%s, %s=%s' \
-            %(metadata['rootTag'][0][1], intermediate[0], val), 'L')
+    if officialExclusionLineAbove:
+        legend.AddEntry(officialExclusionLineAbove, '%s, %s=%s' \
+        %(metadata['rootTag'][0][1], condition, valueAbove), 'L')
+    if officialExclusionLineBelow:
+        legend.AddEntry(officialExclusionLineBelow, '%s, %s=%s' \
+        %(metadata['rootTag'][0][1], condition, valueBelow), 'L')
+    if officialExclusionLine:
+        legend.AddEntry(officialExclusionLine, '%s, %s=%s' \
+        %(metadata['rootTag'][0][1], condition, val), 'L')
     #Canvas:
     c = ROOT.TCanvas("c1", "c1", 0, 0, 800, 500)
     c.SetFillColor(ROOT.kWhite)
