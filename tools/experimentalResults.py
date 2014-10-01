@@ -452,6 +452,8 @@ class ExpResultSet (object):
     @property
     def _members(self):
         """Retrieves (condition, value) tuples for all the results in this set.
+        # ### FIX ME: if there is no information about mz this results in {'Tx': None}
+        this is not very nice?
         """
         axes = self._expAna._infotxt.axes[self._topo]
         mems ={}

@@ -744,7 +744,7 @@ class Infotxt(object):
         -) difference between masses (e.g. M1-M0) in GeV
         -) ratio between masses (e.g. M2/M0) in percent
         :param mz: third item of an axes-entry for one topology
-        :return: ('massCondition', int(value))
+        :return: ('massCondition', value)
         
         """
         
@@ -792,7 +792,7 @@ class Infotxt(object):
         'mz': ('condition for third mass', int(value for this condition)), 
         'extension': 'extension glued to topology name'}]}
         # ### FIX ME: if there are two conditions for intermediate masses this routine yields the wrong format. -> Fixed, right? 
-        # ### FIX ME: These entreis should be totally removed?
+        # ### FIX ME: These entries should be totally removed?
         """
         
         axLines = self._preprocessAxesLine
