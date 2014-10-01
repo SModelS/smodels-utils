@@ -253,7 +253,7 @@ def main(arguments = None):
     help = 'mass parametrization when there is an intermediate particle \n \
     - default: None', type = types.StringType, default = None)
     argparser.add_argument ('-v', '--value', help = 'value for parametrization \n \
-    - default: 0.5', type = types.StringType, default = '0.50')
+    - default: 0.50', type = types.StringType, default = '0.50')
     args = argparser.parse_args()
 
     if not arguments:
@@ -261,6 +261,7 @@ def main(arguments = None):
         topology = args.topology
         parametrization = args.parametrization
         value = args.value
+        valueString = value
         if not parametrization:
             value = None
         else:    
@@ -299,7 +300,7 @@ def main(arguments = None):
         factor = True
         slhaOrder = 'LO'
     expResSet = browser.expResultSet(analysis, topology)
-    extendedTopology = getExtension(expResSet, parametrization, value)
+    extendedTopology = getExtension(expResSet, parametrization, value, valueString)
     expAna = expResSet.expAnalysis
     expTopo = expResSet.expTopology
     print ("========================================================")
@@ -337,7 +338,7 @@ def main(arguments = None):
         cond = data.theoreticalCondition
         if not massMother:
             massMother = slha.split('_')[1].strip()
-            if parametrization == 'fixedLSP'
+            if parametrization == 'fixedLSP':
                 massLSP = value
                 massIntermediate = slha.split('_')[2].strip()
             else:
@@ -388,7 +389,7 @@ def writeMetaData(expResSet, order, fileName, factor, parametrization, value):
     if expAna.sqrts: sqrts = '%s TeV' %expAna.sqrts
     if expAna.pas: pas = expAna.pas
     metaData['decay:'] = '%s' %decay
-    metaData['intermediate'] = '%s, %s' %(parametrization, value)
+    metaData['intermediate:'] = '%s, %s' %(parametrization, value)
     metaData['analysis:'] = '%s, %s, %s, %s' %(pas, prettyName, sqrts, order)
     metaData['outFile:'] = fileName.replace('.dat', '.png') 
     exclName = ''
@@ -402,11 +403,11 @@ def writeMetaData(expResSet, order, fileName, factor, parametrization, value):
         official = 'official exclusion line'
     metaData['rootTag:'] = '%s: %s' %(exclName, official)
     if factor:
-        metaData['factor'] = 1.2
+        metaData['factor:'] = 1.2
     return metaData
    
 
-def getExtension(expResSet, param, val):
+def getExtension(expResSet, param, val, valStr):
     """Produces possible extensions for the topology name via comparison
     to database known cases.
     
@@ -419,10 +420,9 @@ def getExtension(expResSet, param, val):
     if not extendedTopology:
         if setMembers[exTop][0] == param:
             if param == 'massSplitting':
-                extension = str(val).replace('.', '')
-                if len(extension) < 3:
-                    extension = extension + '0'
-                extendedTopology = expResSet.expTopology.name + extension
+                extendedTopology = expResSet.expTopology.name + valStr
+            elif param == 'M2/M0':
+                extendedTopology = exTop.replace('%s' %(exTop[1]*100.), '%s'%(val*100.))
             else:
                 extendedTopology = exTop.replace('%s' %exTop[1], '%s'%val)
     return extendedTopology        
