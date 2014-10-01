@@ -15,6 +15,7 @@ from smodels.tools.physicsUnits import fb, GeV, addunit, rmvunit
 from smodels.experiment import smsAnalysisFactory, smsHelpers
 from smodels.theory.theoryPrediction import theoryPredictionFor
 from smodels_tools.tools.databaseBrowser import Browser
+from smodels_tools.validation import validationPlotsHelper
 import logging
 import argparse
 import os
@@ -286,12 +287,12 @@ def main(arguments = None):
     else: topologyName = topology
     if not arguments:
         analysis = args.analysis
-        targetPath = getTarget(args.directory)
+        targetPath = validationPlotsHelper.getTarget(args.directory)
         events = args.events
         order = args.order
     else:
         analysis = arguments['analysis']
-        targetPath = getTarget(arguments['directory'])
+        targetPath = validationPlotsHelper.getTarget(arguments['directory'])
         events = arguments['events']
         order = arguments['order']
     factor = False
@@ -300,7 +301,7 @@ def main(arguments = None):
         factor = True
         slhaOrder = 'LO'
     expResSet = browser.expResultSet(analysis, topology)
-    extendedTopology = getExtension(expResSet, parametrization, value, valueString)
+    extendedTopology = validationPlotsHelper.getExtension(expResSet, parametrization, value, valueString)
     expAna = expResSet.expAnalysis
     expTopo = expResSet.expTopology
     print ("========================================================")
@@ -313,7 +314,7 @@ def main(arguments = None):
     
     fileName = '%s-%s-%s-%s.dat' %(extendedTopology, analysis, events, order)
     if not arguments:
-        f = checkFile(targetPath + '/' + fileName)
+        f = validationPlotsHelper.checkFile(targetPath + '/' + fileName)
     else:
         f = removeFile(targetPath + '/' + fileName)
     outFile = open(f, 'w')
@@ -407,39 +408,39 @@ def writeMetaData(expResSet, order, fileName, factor, parametrization, value):
     return metaData
    
 
-def getExtension(expResSet, param, val, valStr):
-    """Produces possible extensions for the topology name via comparison
-    to database known cases.
+#def getExtension(expResSet, param, val, valStr):
+    #"""Produces possible extensions for the topology name via comparison
+    #to database known cases.
     
-    """
-    setMembers = expResSet.members
-    extendedTopology = ''
-    for exTop in setMembers:
-        if setMembers[exTop] == (param, val):
-            extendedTopology = exTop
-    if not extendedTopology:
-        if setMembers[exTop][0] == param:
-            if param == 'massSplitting':
-                extendedTopology = expResSet.expTopology.name + valStr
-            elif param == 'M2/M0':
-                extendedTopology = exTop.replace('%s' %(exTop[1]*100.), '%s'%(val*100.))
-            else:
-                extendedTopology = exTop.replace('%s' %exTop[1], '%s'%val)
-    return extendedTopology        
+    #"""
+    #setMembers = expResSet.members
+    #extendedTopology = ''
+    #for exTop in setMembers:
+        #if setMembers[exTop] == (param, val):
+            #extendedTopology = exTop
+    #if not extendedTopology:
+        #if setMembers[exTop][0] == param:
+            #if param == 'massSplitting':
+                #extendedTopology = expResSet.expTopology.name + valStr
+            #elif param == 'M2/M0':
+                #extendedTopology = exTop.replace('%s' %(exTop[1]*100.), '%s'%(val*100.))
+            #else:
+                #extendedTopology = exTop.replace('%s' %exTop[1], '%s'%val)
+    #return extendedTopology        
                 
     
-def getTarget(path):
-    """Checks if the target directory already exists and creates it if not.
+#def getTarget(path):
+    #"""Checks if the target directory already exists and creates it if not.
     
-    """
+    #"""
     
-    if os.path.exists(path):
-        logger.info('Target %s already exists.' %path)
-        return path
+    #if os.path.exists(path):
+        #logger.info('Target %s already exists.' %path)
+        #return path
     
-    os.mkdir(path)
-    logger.info('Created new directory: %s' %path) 
-    return path 
+    #os.mkdir(path)
+    #logger.info('Created new directory: %s' %path) 
+    #return path 
     
 def removeFile(path):
     """Checks if the data file already exists.
@@ -451,22 +452,22 @@ def removeFile(path):
         os.remove(path)
     return path 
     
-def checkFile(path):
-    """Checks if the data file already exists.
-    If the file already exists, the user can decide whether to remove it, 
-    or to exit the script.
+#def checkFile(path):
+    #"""Checks if the data file already exists.
+    #If the file already exists, the user can decide whether to remove it, 
+    #or to exit the script.
     
-    """
-    if os.path.exists(path):
-        print('File %s already exists!' %path)
-        while True:
-            userInput = raw_input('Replace old file? [y/n]:  ')
-            if userInput == 'n':
-                sys.exit()
-            if userInput == 'y':
-                os.remove(path)
-                return path
-    return path
+    #"""
+    #if os.path.exists(path):
+        #print('File %s already exists!' %path)
+        #while True:
+            #userInput = raw_input('Replace old file? [y/n]:  ')
+            #if userInput == 'n':
+                #sys.exit()
+            #if userInput == 'y':
+                #os.remove(path)
+                #return path
+    #return path
     
 if __name__ == '__main__':
     main()  
