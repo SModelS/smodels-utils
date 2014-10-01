@@ -19,6 +19,7 @@ from smodels.tools import xsecComputer
 from smodels_tools.tools.databaseBrowser import Browser
 from smodels_tools.tools.experimentalResults import ExpResult
 from smodels.tools.physicsUnits import rmvunit, addunit
+import validationPlotsHelper
 import random
 from thresholdComputer import Threshold
 import argparse
@@ -354,11 +355,11 @@ def main():
     parametrization = args.parametrization
     value = args.value
     valueString = value
-        if not parametrization:
-            value = None
-            valueString = None
-        else:    
-            value = validationPlotsHelper.validateValue(value)
+    if not parametrization:
+        value = None
+        valueString = None
+    else:    
+        value = validationPlotsHelper.validateValue(value)
     expTopology = browser.expTopology(topology)        
     extendedTopology = validationPlotsHelper.getExtension(expTopology, parametrization, value, valueString)
     logger.info('Creating slha for extended topology %s.' %extendedTopology)

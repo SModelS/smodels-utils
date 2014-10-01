@@ -171,10 +171,11 @@ class ExpResultSet (object):
     def upperLimitDicts(self, expected = False):
         """Retrieves all the observed/expected upper limit dictionaries 
         available for this result set.
-        
+        # ### FIX ME: yields list -> for every extTopo 0> compare to exclusions to fix!
         """ 
         ulDicts = {}
         for extTopo in self._extTopos:
+            
             ulDicts[extTopo] = [res.upperLimitDict(expected) \
             for res in self._results]
         return ulDicts
@@ -188,7 +189,7 @@ class ExpResultSet (object):
         :param value: value of the condition as either float or integer
         """
         
-        extTopo = self._getExtendedTopologyName(condition = condition, value = value)
+        extTopo = self._getExtendedTopology(condition = condition, value = value)
         if expected:
             if not extTopo in self.expectedUpperLimitDicts(expected = expected):
                 logger.error('No expected upper limit dictionary could be found\

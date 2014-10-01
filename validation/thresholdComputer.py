@@ -65,7 +65,7 @@ class Threshold(object):
             if self._browser.expAnalysis(a).sqrts != 8.0:
                 continue
             resultSet = self._browser.expResultSet(a, self.topo.name)
-            if resultSet.upperLimitDict(condition = self._condition, value = self._value)
+            if resultSet.upperLimitDict(condition = self._condition, value = self._value):
                 ulDict = resultSet.upperLimitDict(condition = self._condition, value = self._value)
             else:
                 val = []
@@ -82,6 +82,7 @@ class Threshold(object):
             lspM = []
             for mother in ulDict:
                 if not mother: continue
+                print ('##################', ulDict)
                 if not ulDict[mother]: continue
                 mM.append(mother)
                 
