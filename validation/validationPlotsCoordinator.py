@@ -27,7 +27,7 @@ def main():
     Calls the gridDataCreator.py and the validationPlots.py.
     """
     
-    topology = 'T2tt'
+    topology = 'TChiWZon'
     if not topology in topologyInfo():
         print('No slha files are available for %s!' %topology)
         sys.exit()
@@ -36,7 +36,7 @@ def main():
     if not browser:
         print('No valid database!')
         sys.exit()
-    order = 'NLL'
+    order = 'NLO'
     intermediate = 'xvalue,050'
     analyses = browser.allAnalyses(topology = topology)
     analyses = [a for a in analyses if browser.expResult(a, topology) \
