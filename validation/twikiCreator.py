@@ -1,5 +1,8 @@
 #!/usr/bin/env python
+<<<<<<< HEAD
 # -*- coding: utf-8 -*-
+=======
+>>>>>>> expRes
 
 """
 .. module:: twikiCreator
@@ -21,19 +24,21 @@ def main():
     """
     
     topology = 'TSlepSlep'
-    topoLink = '([[SmsDictionary#%s|%s]])' %(topology, topology)
     order = 'LO * 1.2'
     base = '/afs/hephy.at/user/w/walten/public/sms/'
+    
+    topoLink = '([[SmsDictionary#%s|%s]])' %(topology, topology)
     browser = Browser(base)
     if not browser:
         print('No valid database!')
         sys.exit()
-    
     outFile = open('./twiki/twiki_%s.txt' %topology, 'w')
     print(topoLink, file = outFile)
     analyses = browser.allAnalyses(topology = topology)
     head = "||'''Analysis  <<BR>>  (√s,lum)''' ||'''mass parametrization''' ||'''published data | checked''' ||'''plot''' ||'''comment''' ||"
     print(head, file = outFile)
+    analyses = browser.getAnalyses(topology = topology)
+
     
     for ana in analyses:
         expAna = browser.expAnalysis(ana)
@@ -49,7 +54,8 @@ def main():
         published = 'NO'
         if bool(expAna.publishedData):
             published = 'YES'
-        expResSet = browser.expResult(ana, topology)
+
+        expResSet = browser.expResultSet(ana, topology)
         checked = 'NO'
         if expResSet.isChecked:
             checked = 'YES'
@@ -64,6 +70,7 @@ def main():
             commentField = commentField + ' <<BR>> -> no upper limits!'
             
         line = '||%s||%s||%s | %s||%s||%s||' %(analysisField, massParamField, published, checked, plotField, commentField)
+
         print(line, file = outFile)
         
     outFile.close()  

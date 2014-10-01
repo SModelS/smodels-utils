@@ -2,8 +2,7 @@
 
 """
 .. module:: databaseBrowser
-   :synopsis: Centralized facility to access smodels-database 
-   in order to produce summaryplots.
+   :synopsis: Centralized facility to access smodels-database.
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
 .. moduleauthor:: Wolfgang Magerl <wolfgang.magerl@gmail.com>
@@ -17,6 +16,7 @@ import sys
 import experimentalTopology
 import experimentalAnalysis
 import experimentalResults
+from smodels.tools.physicsUnits import GeV, addunit, rmvunit
 
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -46,6 +46,7 @@ class Browser(object):
         self._analyses = {}
         self._topologies = {}
         self._results = {}
+        self._resultSets = {}
 
     @property
     def databaseVersion(self):
@@ -179,14 +180,15 @@ class Browser(object):
         """Retrieves all the dictionaries containing the experimental objects.
         Use the deleter to reset these.
         """
-        return [self._analyses, self._topologies, self._results]
+        return [self._analyses, self._topologies, self._resultSets, self._infos]
         
     @experimentalObejctsDictionaries.deleter
     def experimentalObejctsDictionaries(self):
         """Resets all the dictionaries containing the experimental objects in
         order to get all the logger messages from the building process again.
         """
-        [self._analyses, self._topologies, self._results] = [{}, {}, {}]
+        [self._analyses, self._topologies, self._resultSets, self._infos] \
+        = [{}, {}, {}, {}]
 
     def _getDatabase(self):
         """Creates a dictionary containing all runs as keys and all 
@@ -212,7 +214,8 @@ class Browser(object):
             self._artifacts]
             # exclude every file and directory specified by list of artifacts
         return data
-     # ### FIX ME: Do we really want to restrict the run?   
+        
+    # ### FIX ME: Do we really want to restrict the run?   
     @property
     def runRestriction(self):
         """Tells if the browser is restricted to a specified run. 
@@ -224,12 +227,12 @@ class Browser(object):
         
     @runRestriction.setter
     def runRestriction(self, run):
-        """Restricts the Browser to one specified run. Don't use this lightly
+        """Restricts the browser to one specified run. Don't use this lightly
         it may cause serious changes in functionality.
         
         """
         self._runRestriction = self._validateRun(run)
-        if self._runRestriction == None:
+        if not self._runRestriction:
             logger.error('Failed to restrict browser to run: %s is not \n\
             valid!' %run)
             sys.exit()
@@ -239,6 +242,9 @@ class Browser(object):
     
     @runRestriction.deleter
     def runRestriction(self):
+        """Deletes the restriction to one run.
+        
+        """
         self._runRestriction = None
         self.database = self._getDatabase()
         
@@ -247,8 +253,8 @@ class Browser(object):
         
         """
         if not run: return None
-        if not run in self.database.keys():
-            logger.warning('%s is no valid run!' %run)
+        if not run in self.database:
+            logger.error('%s is no valid run!' %run)
             return None
 
         return run
@@ -261,7 +267,7 @@ class Browser(object):
         if not analysis: return None    
         runs = [key for key in self.database if analysis in self.database[key]]
         if not runs:
-            logger.warning('%s is no valid analysis!' %analysis)
+            logger.error('%s is no valid analysis!' %analysis)
             return None
         
         return analysis
@@ -273,17 +279,17 @@ class Browser(object):
         
         """
         
-        if not topology in self.allTopologies():
-            logger.warning('%s is no valid topology!' %topology)
+        if not topology in self.getTopologies():
+            logger.error('%s is no valid topology!' %topology)
             return None
             
         return topology
     
-    def allRuns(self, analysis = None, topology = None):
+    def getRuns(self, analysis = None, topology = None):
         """Retrieves all runs a given analysis or topology or analysis-topology 
         pair is available for. Returns a list containing all runs or just a 
         string when analysis is given. 
-    
+        
         """
     # ### FIX ME: think about the ambiguities: rais an error?, stop the script?,
     #try to pass this problem?
@@ -299,7 +305,7 @@ class Browser(object):
             #return self._runRestriction
     
         if self._experimentRestriction:
-            logger.warning('Browser is restricted to experiment %s' \
+            logger.warning('Browser is restricted to experiment %s!' \
             %self._experimentRestriction)
         
         analysis = self._validateAnalysis(analysis)
@@ -316,8 +322,8 @@ class Browser(object):
         topology = self._validateTopology(topology)    
         if not analysis and topology:
             runs = [key for key in self.database if \
-            self.allTopologies(run = key) and topology in \
-            self.allTopologies(run = key)]
+            self.getTopologies(run = key) and topology in \
+            self.getTopologies(run = key)]
             if not runs:
                 return None
             logger.warning('No analysis was given. There are %s runs for given\n \
@@ -326,8 +332,8 @@ class Browser(object):
         
         if analysis and topology:
             runs = [key for key in self.database if analysis in \
-            self.database[key] and self.allTopologies(run = key) and topology \
-            in self.allTopologies(run = key)]
+            self.database[key] and self.getTopologies(run = key) and topology \
+            in self.getTopologies(run = key)]
             if not runs:
                 logger.warning('Could not find run for %s-%s!' \
                 %(analysis, topology))
@@ -338,7 +344,7 @@ class Browser(object):
             Please check the database for ambiguities!' %(analysis, len(runs)))
             return runs[0]
 
-    def allAnalyses(self, run = None, topology = None):
+    def getAnalyses(self, run = None, topology = None):
         """Retrieves all analyses or all analyses existing for given run or 
         run-topology-pair.
     
@@ -352,7 +358,7 @@ class Browser(object):
             %self._runRestriction)
         
         if not run:
-            analyses = [self.database[key] for key in self.allRuns()]
+            analyses = [self.database[key] for key in self.getRuns()]
             analyses = [ana for anas in analyses for ana in anas]  
             # flattens out the nested list to plain list
             
@@ -367,15 +373,15 @@ class Browser(object):
         topology = self._validateTopology(topology)
         if topology and run:
             for a in self.database[run]:
-                if self.allTopologies(analysis = a) and topology in \
-                self.allTopologies(analysis = a):
+                if self.getTopologies(analysis = a) and topology in \
+                self.getTopologies(analysis = a):
                     logger.debug('Found %s in %s-%s.' %(topology, run, a))
                     analyses.append(a)
             
         if topology and not run:
             analyses = [ana for ana in analyses if \
-            self.allTopologies(analysis = ana) and topology in \
-            self.allTopologies(analysis = ana)]
+            self.getTopologies(analysis = ana) and topology in \
+            self.getTopologies(analysis = ana)]
         
         
         if not analyses:
@@ -385,7 +391,7 @@ class Browser(object):
         
         return analyses
     
-    def allTopologies(self, run = None, analysis = None):
+    def getTopologies(self, run = None, analysis = None):
         """Retrieves all topologies existing for given run or analysis-run-pair.
     
         """
@@ -397,21 +403,21 @@ class Browser(object):
     
         if analysis and not run:
             analyses.append(analysis)
-            runs.append(self.allRuns(analysis))
+            runs.append(self.getRuns(analysis))
 
         if run and not analysis:
             runs.append(run)
-            analyses = self.allAnalyses(run)
+            analyses = self.getAnalyses(run)
             
         if run and analysis:
             runs.append(run)
             analyses.append(analysis)
         
         if not run and not analysis:
-            runs = self.allRuns()
-            analyses = self.allAnalyses()
+            runs = self.getRuns()
+            analyses = self.getAnalyses()
                     
-        logger.debug('Searching topologies for runs %s and analyses %s' \
+        logger.debug('Searching topologies for runs %s and analyses %s.' \
         %(runs,analyses))
     
         for r in runs:
@@ -425,7 +431,7 @@ class Browser(object):
                     if topos.count(t) == 0:
                         topos.append(t)
         if not topos:
-            logger.info('for runs %s and analyses %s no topology could be found' \
+            logger.info('For runs %s and analyses %s no topology could be found!' \
             %(runs, analyses))
             return None
         
@@ -436,10 +442,10 @@ class Browser(object):
         info.txt, sms.root and sms.py, returns path to these files.
     
         """
-    
-        analysis = self._validateAnalysis(analysis)
-        run = self.allRuns(analysis)
-        
+        if not self._validateAnalysis(analysis):
+            return None
+            
+        run = self.getRuns(analysis)
         path = self._base + run + '/' + analysis + '/' + requested
         logger.debug('Check path: %s.' %path)
         if not os.path.exists(path):
@@ -450,7 +456,7 @@ class Browser(object):
         return path
     
     def expAnalysis(self, analysis):
-        """This is the factory for the experimental Analysis object. 
+        """This is the factory for the experimental analysis object. 
         Returns None if it's not possible to build the experimental 
         analysis object. 
         
@@ -461,8 +467,8 @@ class Browser(object):
         if analysis in self._analyses:
             return self._analyses[analysis]
         if not self._checkResults(analysis):
-            logger.info('Skipped building of ExpAnalysis-object for %s!' \
-            %analysis)
+            logger.info('Skipped building of ExpAnalysis-object for %s! \n \
+            There is not enough information.' %analysis)
             return None
         if not analysis in self._infos:
             logger.debug('Browser has no info.txt-object for %s!' %analysis)
@@ -470,15 +476,15 @@ class Browser(object):
             self._checkResults(analysis))
             logger.debug('Created and stored info.txt-object!')
         logger.debug('Try to create experimental Analysis: %s - %s - %s' \
-        %(analysis, self._infos[analysis], self.allRuns(analysis)))    
+        %(analysis, self._infos[analysis], self.getRuns(analysis)))    
         self._analyses[analysis] = experimentalAnalysis.ExpAnalysis(analysis, \
-        self._infos[analysis], self.allRuns(analysis), \
+        self._infos[analysis], self.getRuns(analysis), \
         self._checkResults(analysis, requested = 'sms.root'), \
         self._checkResults(analysis, requested = 'sms.py'))
         return self._analyses[analysis]
         
     def expTopology(self, topology):
-        """This is the factory for the experimental Topology object.
+        """This is the factory for the experimental topology object.
         
         """        
         #if isinstance(topology, object):
@@ -492,57 +498,73 @@ class Browser(object):
         return self._topologies[topology]
         
     def _topoDict(self, topology):
+        """Creates a nested dictionary that holds all the info.txt objects
+        for each topology.
+        :return: {'topology': {'analysis': Infotxt(analysis)}}
+        
+        """
         topoDict = {}
-        for r in self.allRuns(topology = topology):
+        for r in self.getRuns(topology = topology):
             topoDict[r] = {}
-            for a in self.allAnalyses(run = r, topology = topology):
+            for a in self.getAnalyses(run = r, topology = topology):
                 if not a in self._infos:
                     logger.debug('Browser has no info.txt-object for %s!' %a)
                     self._infos[a] = Infotxt(a, self._checkResults(a))
                     logger.debug('Created and stored info.txt-object!')
-                topoDict[r][a] = [self._infos[a].category, \
-                self._infos[a].constraints]
+                topoDict[r][a] = self._infos[a]
         return topoDict
                 
         
-    def expResult(self, analysis, topology, run = None):
-        """This is the factory for the experimental Result object.
+    def expResultSet(self, analysis, topology):
+        """This is the factory for the experimental result set object.
         :param analysis: name of analysis as string or expAnalysis.name
         :param topology: name of topology as string or expTopology.name
+        
+        """
+        resultSet = analysis + '-' + topology
+        logger.debug('Try to get experimental result %s for %s-%s.' \
+        %(resultSet, analysis, topology))
+        if resultSet in self._resultSets:
+            logger.debug('Found experimental result for %s in dictionary.' \
+            %resultSet)
+            return self._resultSets[resultSet]
+        analysis = self._validateAnalysis(analysis)
+        expAna = self.expAnalysis(analysis)
+        run = expAna.run
+        if not topology in expAna.topologies:
+            logger.error('There is no experimental result set for \n\
+            run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
+            return None
+        self._resultSets[resultSet] = experimentalResults.ExpResultSet(run, \
+        expAna, self.expTopology(topology), \
+        self._checkResults(analysis, requested = 'sms.root'), \
+        self._checkResults(analysis, requested = 'sms.py'))
+        logger.debug('Built experimental result for %s-%s: %s' \
+        %(analysis, topology, self._resultSets[resultSet]))
+        return self._resultSets[resultSet]
+    
+    def expResult(self, analysis, topology):
+        """This is the factory for the experimental result object.
+        :param analysis: name of analysis as string or expAnalysis.name
+        :param topology: name of extended topology as string 
+        (e.g. 'T6ttWWLSP050')
         
         """
         result = analysis + '-' + topology
         logger.debug('Try to get experimental result %s for %s-%s.' \
         %(result, analysis, topology))
-        if result in self._results:
-            logger.debug('Found experimental result for %s-%s in dictionary.' \
-            %(analysis, topology))
-            return self._results[result]
-        analysis = self._validateAnalysis(analysis)
-        topology = self._validateTopology(topology)
-        if run:
-            run = self._validateRun(run)
-        if not run:
-            run = self.allRuns(analysis, topology)
-
-        alltopos=self.allTopologies(run,analysis)
-        if alltopos==None:
-            logger.error ('Found no topologies for %s/%s' % (run,analysis) )
-            return None
+        expAna = self.expAnalysis(analysis)
+        run = expAna.run
+        for topo in expAna.extendedTopologies:
+            if topology in expAna.extendedTopologies[topo]:
+                return self.expResultSet(analysis, topo).results[result]
+            else:
+                continue
+        logger.error('There is no experimental result for \n\
+        run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
+        return None
             
-        if not analysis or not topology or not run or not topology in \
-          alltopos:
-            logger.error('There is no experimental result for \n\
-            run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
-            return None
-        self._results[result] = experimentalResults.ExpResult(run, \
-        self.expAnalysis(analysis), self.expTopology(topology), \
-        self._checkResults(analysis, requested = 'sms.root'), \
-        self._checkResults(analysis, requested = 'sms.py'))
-        logger.debug('Built experimental result for %s-%s: %s' \
-        %(analysis, topology, self._results[result]))
-        return self._results[result]
-        
+    
 class Infotxt(object):
     """Holds all the lines, stored in the info.txt file. 
     Provides the required information about topologies, results and all the 
@@ -561,7 +583,8 @@ class Infotxt(object):
         'unconstraint', 'exclusions', 'expectedexclusions', 'exclusionsp1', \
         'expectedexclusionsp1','exclusionsm1', 'expectedexclusionsm1', \
         'category']
-        
+    
+    @property
     def _readInfo(self):
         """Reads the whole info.txt file, returns a tuple containing a 
         dictionary holding the meta-information (e.g. PAS, lumi, comment, ...) 
@@ -574,7 +597,7 @@ class Infotxt(object):
         content = infoFile.readlines()
         infoFile.close()
         
-        logger.debug('Found info.txt for %s.' %self._path)
+        #logger.debug('Found info.txt for %s.' %self._path)
         metaInfo = {line.split(':', 1)[0].strip(): line.split(':', 1)[1].strip() \
         for line in content if not line.split(':')[0].strip() in self._exceptions}
         #logger.debug('Meta info is %s' %metaInfo)
@@ -587,19 +610,23 @@ class Infotxt(object):
     
     @property
     def metaInfo(self):
-        """Returns the meta info dictionary.
+        """Returns the meta info dictionary (contains the axes line too).
         
         """
-        return self._readInfo()[0]
+        return self._readInfo[0]
         
     @property
     def info(self):
         """Returns the list of lines connected with the topologies.
         
         """
-        return self._readInfo()[1]
+        return self._readInfo[1]
     
     def _topoInfo(self, requested):
+        """Creates a dictionary for topology related information.
+        :return: {'topology': 'line of info.txt'}
+        
+        """
         dic = {}
         logger.debug('Look for requested keyword %s.' %requested)
         content = self.info
@@ -629,98 +656,7 @@ class Infotxt(object):
             if topos.count(c.split(' ')[1]) == 0:
                 topos.append(c.split(' ')[1])                
         return topos
-        
-    @property    
-    def _preprocessAxes(self):
-        """Handles the information stored in the axes-labeled line of info.txt, 
-        therefor this line has to be preprocessed.
-    
-        """
-        infoLine = self.metaInfo['axes'].split(',')
-        infoLine = [ax.strip() for ax in infoLine]
-        logger.debug('axes- information: %s' %infoLine)
-        return infoLine
 
-
-        
-    def extendedTopologies(self, topology = None):
-        """Checks if the topologies in this info.txt are tainted with any kind 
-        of mass requirements and returns dictionary with extended topologies. 
-        Can be reduced to given topology (returns list).
-    
-        """
-        # ### FIX ME: maybe it's better not to glue strings but to return either dictionaries or maybe tuples to have it like topo + condition + value
-        
-        topos = {}
-        logger.debug('Got analysis %s and run %s!' %(self._analysis, self._run))
-        if not 'axes' in self.metaInfo or not self.metaInfo['axes']:
-            logger.info('No additional information about axes was found \n\
-            for %s-%s!' %(self._run, self._analysis))
-            if not self.topologies: return None
-            for t in self.topologies:
-                topos[t]=[t]
-            if not topology: return topos
-            if topology in topos: return topos[topology]
-            logger.warning('For %s-%s there is no topology %s' \
-            %(self._run, self._analysis, topology))
-            return None
-    
-        axes = self._preprocessAxes
-        logger.info('For %s-%s there is additional mass information!' \
-        %(self._run, self._analysis))
-        for t in self.topologies:
-            if not t in axes:
-                topos[t]=[t]
-        
-        for ax in axes:
-            logger.debug('Axesline is: %s' %ax)
-            massdic = self._massProportions(ax)
-            topo = massdic.keys()[0]
-            topos[topo] = []
-
-            for case in massdic[topo]:
-                if len(case) == 2: topos[topo].append(topo)
-                if len(case) == 3:
-                    try:
-                        x = int(case[2])
-                        topos[topo].append(topo + case[2])
-                    except ValueError:
-                        if 'D' in case[2]:
-                            D = case[2].split('=')[-1].strip()
-                            topos[topo].append(topo + 'D' + D)
-                        elif 'LSP' or 'x' or 'C' or 'M' in case[2]: \
-                        topos[topo].append(topo + case[2])
-                if len(case) > 3:
-                    logger.warning('Topology is: %s => more then one additional\n\
-                    condition is too much at the moment.' %topo)
-                    continue
-        
-        if topos == {'':[]}:
-            logger.warning('Something is wrong with the axes line in the\n \
-            info.txt for %s-%s!' %(self._run, self._analysis))
-            return None
-        if not topology: return topos
-        if topology in topos: return topos[topology]
-        logger.warning('For %s-%s there is no topology %s.' \
-        %(self._run, self._analysis, topology))
-        return None
-
-    def _massProportions(self, axesLine):
-        """Reads out all the conditions for the third mass 
-        (e.g. masssplitting-xvalues 025, 050, 075) implicitly stored in 
-        axes-lines of info.txt and returns the information as dictionary.
-    
-        """
-        massdic = {}
-        topo = axesLine.split(' ')[0].replace(':', '').strip()
-        massdic[topo] = axesLine.replace(topo + ':', '').split('-')
-        massdic[topo] = [c.strip() for c in massdic[topo]]
-        logger.info('For %s there are %s different cases of mass proportions.' \
-        %(topo, len(massdic[topo])))
-        massdic[topo]=[c.split(' ') for c in massdic[topo]]
-        logger.debug('For %s the massdictionary is: %s.' %(topo, massdic[topo]))
-        return massdic
-        
     @property    
     def exclusions(self):
         """Retrieves all the exclusions for every extended topology stored in 
@@ -738,3 +674,175 @@ class Infotxt(object):
         logger.debug('List of exclusions for %s-%s: %s.' \
         %(self._run, self._analysis, exList))
         return exList
+        
+    @property    
+    def _preprocessAxesLine(self):
+        """Handles the information stored in the axes-labeled line of info.txt, 
+        therefor this line has to be preprocessed.
+    
+        """
+        infoLine = self.metaInfo['axes'].split(',')
+        infoLine = [ax.strip() for ax in infoLine]
+        logger.debug('axes- information: %s' %infoLine)
+        return infoLine
+        
+    def _axesDict(self, axesLines):
+        """Splits the axes line and retrieves all the topologies to form
+        a dictionary.
+        :return: {'topology': ['axes entry', 'axes entry', ...]}
+    
+        """
+        axDic = {}
+        for axesLine in axesLines:
+            topo = axesLine.split(' ')[0].replace(':', '').strip()
+            axDic[topo] = axesLine.replace(topo + ':', '').split('-')
+            axDic[topo] = [c.strip() for c in axDic[topo]]
+            logger.debug('For %s there are %s masses.' \
+            %(topo, len(axDic[topo])))
+            logger.debug('For %s the axes dictionary is: %s.' %(topo, axDic[topo]))
+        return axDic
+        
+    
+    def _massDict(self, axesEntry):
+        """Retrieves the axes information for given entry as dictionary.
+        :param axesEntry: one axes entry for one topology
+        :return:  {'mx': mass on x-axis, 'my': mass on y-axes, 
+        'mz': condition for intermediate mass} or 
+        {'mx': mass on x-axis, 'my': mass on y-axes, 
+        'm3': condition for first intermediate mass,
+        'm4': condition for second intermediate mass}
+        
+        """
+        
+        axDict = {}
+        
+        logger.debug('Axes entry: %s.' %axesEntry.split())
+        axDict['mx'] = axesEntry.split()[0].strip()
+        axDict['my'] = axesEntry.split()[1].strip()
+        try:
+            axesEntry.split()[3]
+            logger.info('There are more then three masses!\n\
+            Keys will be mx, my, m3 and m4!')
+            axDict['m3'] = axesEntry.split()[2].strip()
+            axDict['m4'] = axesEntry.split()[3].strip()
+            axDict['extension'] = '%s%s' %(axDict['m3'], axDict['m4'])
+        except IndexError:
+            try:
+                axDict['mz'] = axesEntry.split()[2].strip()
+                axDict['extension'] = axesEntry.split()[2].strip()
+            except IndexError:
+                logger.debug('No intermediate mass mz.')
+                axDict['mz'] = None
+                axDict['extension'] = None
+        return axDict
+        
+    def _massCondition(self, mz):
+        """Takes the axes entry for the third mass and splits it into
+        condition for this mass and its value with units added if not unitless:
+        -) fixed LSP, Chargino or other mass in GeV
+        -) mass splitting (as well 'xvalue'): M2=x*M1+(1-x)*M0
+        -) difference between masses (e.g. M1-M0) in GeV
+        -) ratio between masses (e.g. M2/M0) in percent
+        :param mz: third item of an axes-entry for one topology
+        :return: ('massCondition', int(value))
+        
+        """
+        
+        try:
+            value = float(mz) / (10. ** (len(mz)-1))
+            condition = 'massSplitting'
+        except TypeError:
+            logger.debug('Got no mz!')
+            return None
+        except ValueError:
+            if 'D' in mz:
+                value = addunit(int(mz.split('=')[-1].strip()), 'GeV')
+                if mz.split('=')[0].strip() == 'D':
+                    logger.error('There is something wrong with the "D-entry"!\n \
+                    Check database for %s!' %self.name)
+                    condition = 'unknownDifference' 
+                else:
+                    condition = mz.split('=')[0].strip().replace('D(', '')
+                    condition = condition.replace(')', '')
+                    condition = condition.split('/')
+                    condition = '%s-%s' %(condition[0], condition[1])
+            elif 'LSP' in mz:
+                value = addunit(int(mz.replace('LSP', '')), 'GeV')
+                condition = 'fixedLSP'
+            elif 'M' in mz:
+                value = addunit(int(mz[2:]), 'GeV')
+                condition = 'fixed%s' %mz[:2]
+            elif 'C' in mz:
+                value = addunit(int(mz.replace('C', '')), 'GeV')
+                condition = 'fixedM2'
+            elif 'x' in mz:
+                value = (float(mz.replace('x', ''))/100.)
+                condition = 'M2/M0'
+            else:
+                logger.error('Unknown third mass entry %s!' %mz)
+                value = None
+                condition = None
+        return (condition, value)
+                        
+    @property
+    def axes(self):
+        """Runs all the preprocessing methods and retrieves the wrought axes 
+        information.
+        :return: {'topology': [{'mx': 'mass on x-axis', 'my': 'mass on y-axis',
+        'mz': ('condition for third mass', int(value for this condition)), 
+        'extension': 'extension glued to topology name'}]}
+        # ### FIX ME: if there are two conditions for intermediate masses this routine yields the wrong format. -> Fixed, right? 
+        # ### FIX ME: These entreis should be totally removed?
+        """
+        
+        axLines = self._preprocessAxesLine
+        axDict = self._axesDict(axLines)
+        # Just to cross check these two fields of the info.txt,
+        # print some warnings.
+        for t in self.topologies:
+            if not t in axDict:
+                logger.warning('There is no axes entry for %s-%s! Check database!' %(self._analysis, t))
+        for t in axDict:
+            if not t in self.topologies:
+                logger.error('There is an axes entry for %s-%s, \n \
+                but this is no known topology! Check database!' %(self._analysis, t))
+        axDict = {t: axDict[t] for t in axDict if t in self.topologies}
+        for t in axDict:
+            entries = []
+            for entry in axDict[t]:
+                entries.append(self._massDict(entry))
+
+            #entries = [e for e in entries if e]
+            for entry in entries:
+                for key in ['mz', 'm3', 'm4']:
+                    if key in entry:
+                        entry[key] = self._massCondition(entry[key])
+                    
+            axDict[t] = entries    
+            logger.debug('Axes information for %s is: %s' \
+            %(t, axDict[t]))
+        return axDict
+    
+    @property
+    def extensions(self):
+        """Retrieves a dictionary with the topologies as keys and the 
+        extensions for these topologies to find exclusion lines etc.
+        :return: {'topology': ['extension']}
+        
+        """
+        extDic = {}
+        for t in self.topologies:
+            extDic[t] = []
+            try:
+                axes = self.axes[t]
+            except KeyError:
+                continue
+            for ax in axes:
+                if ax['extension']:
+                    if 'D' in ax['extension']:
+                        extDic[t].append('D' + ax['extension'].split('=')[-1].strip())
+                    else:    
+                        extDic[t].append(ax['extension'])
+                        
+        return extDic
+            
