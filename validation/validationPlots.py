@@ -156,10 +156,10 @@ def main(arguments = None):
         valueAbove = value
         valueBelow = value
         val = []
-        for extTopo in resultSet.members:
-            if not resultSet.members[extTopo][0] == self._condition:
+        for extTopo in expResultSet.members:
+            if not expResultSet.members[extTopo][0] == self._condition:
                 continue
-            val.append(resultSet.members[extTopo][1])
+            val.append(expResultSet.members[extTopo][1])
         for v in val:
             if valueAbove < v:
                 valueAbove = v
