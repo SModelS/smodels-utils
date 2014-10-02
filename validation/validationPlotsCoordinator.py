@@ -41,14 +41,14 @@ def main():
     parametrization = None
     value = '0.5'
     if not parametrization:
-            value = None
-            valueString = None
-        else:
-            valueString = value
-            value = validationPlotsHelper.validateValue(value)
-    analyses = browser.allAnalyses(topology = topology)
-    analyses = [a for a in analyses if browser.expResult(a, topology) \
-    and  browser.expResult(a, topology).hasUpperLimitDict]
+        value = None
+        valueString = None
+    else:
+        valueString = value
+        value = validationPlotsHelper.validateValue(value)
+    analyses = browser.getAnalyses(topology = topology)
+    analyses = [a for a in analyses if browser.expResultSet(a, topology) \
+    and  browser.expResultSet(a, topology).hasUpperLimitDicts()]
     
     path = validationPlotsHelper.getTarget('./gridData/%s/' %topology)
     logFile = open('%s/logFile' %path, 'w')
@@ -71,7 +71,7 @@ def main():
     for ana in analyses:
         
         arguments = {'analysis': ana, 'base': base, 'events': 10000, \
-        'parametrization': paramterization, 'value': value, 'valueString': valueString, 'order': order, 'topology': topology, \
+        'parametrization': parametrization, 'value': value, 'valueString': valueString, 'order': order, 'topology': topology, \
         'directory': path}
         try:    
             gridDataCreator.main(arguments)
