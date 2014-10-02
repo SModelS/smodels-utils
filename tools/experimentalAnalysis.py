@@ -332,6 +332,9 @@ class ExpAnalysis(object):
         """
         extTopos = {}
         extensions = self._getInfoProperty('extensions')
+        if not extensions:
+            logger.warning('Could not get extended topologies for %s' %self.name)
+            return None
         for topo in self.topologies:
             extTopos[topo] = []
             if not extensions[topo]:

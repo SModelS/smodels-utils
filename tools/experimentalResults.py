@@ -174,10 +174,8 @@ class ExpResultSet (object):
         # ### FIX ME: yields list -> for every extTopo 0> compare to exclusions to fix!
         """ 
         ulDicts = {}
-        for extTopo in self._extTopos:
-            
-            ulDicts[extTopo] = [res.upperLimitDict(expected) \
-            for res in self._results]
+        for res in self._results:
+            ulDicts[res.name] = res.upperLimitDict(expected)
         return ulDicts
         
     def upperLimitDict(self, expected = False, condition = None, value = None):
@@ -190,15 +188,16 @@ class ExpResultSet (object):
         """
         
         extTopo = self._getExtendedTopology(condition = condition, value = value)
-        if expected:
-            if not extTopo in self.expectedUpperLimitDicts(expected = expected):
+        resultName = self.name.replace(self._topo, extTopo)
+        if not resultName in self.upperLimitDicts(expected = expected):
+            if expected:
                 logger.error('No expected upper limit dictionary could be found\
                 for %s!' %extTopo)
                 return None
             logger.error('No upper limit dictionary could be found for %s!' \
             %extTopo)
             return None
-        return self.upperLimitDicts(expected = expected)[extTopo]
+        return self.upperLimitDicts(expected = expected)[resultName]
     
     @property
     def allExclusionLines(self):

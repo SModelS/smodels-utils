@@ -511,7 +511,8 @@ class Browser(object):
                     logger.debug('Browser has no info.txt-object for %s!' %a)
                     self._infos[a] = Infotxt(a, self._checkResults(a))
                     logger.debug('Created and stored info.txt-object!')
-                topoDict[r][a] = self._infos[a]
+                if self._infos[a].axes:    
+                    topoDict[r][a] = self._infos[a]
         return topoDict
                 
         
@@ -535,6 +536,10 @@ class Browser(object):
             logger.error('There is no experimental result set for \n\
             run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
             return None
+        if not expAna.hasAxes:
+            logger.error('There is no experimental result set for \n\
+            run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
+            return None
         self._resultSets[resultSet] = experimentalResults.ExpResultSet(run, \
         expAna, self.expTopology(topology), \
         self._checkResults(analysis, requested = 'sms.root'), \
@@ -555,6 +560,10 @@ class Browser(object):
         %(result, analysis, topology))
         expAna = self.expAnalysis(analysis)
         run = expAna.run
+        if not expAna.hasAxes:
+            logger.error('There is no experimental result for \n\
+            run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
+            return None
         for topo in expAna.extendedTopologies:
             if topology in expAna.extendedTopologies[topo]:
                 return self.expResultSet(analysis, topo).results[result]
@@ -681,6 +690,9 @@ class Infotxt(object):
         therefor this line has to be preprocessed.
     
         """
+        if not 'axes' in self.metaInfo:
+            logger.warning('There is no axes information for %s!' %self._analysis)
+            return None
         infoLine = self.metaInfo['axes'].split(',')
         infoLine = [ax.strip() for ax in infoLine]
         logger.debug('axes- information: %s' %infoLine)
@@ -734,6 +746,8 @@ class Infotxt(object):
                 logger.debug('No intermediate mass mz.')
                 axDict['mz'] = None
                 axDict['extension'] = None
+        if axDict['extension'] and 'D' in axDict['extension']:
+            axDict['extension'] = 'D' + axDict['extension'].split('=')[-1].strip()
         return axDict
         
     def _massCondition(self, mz):
@@ -796,6 +810,8 @@ class Infotxt(object):
         """
         
         axLines = self._preprocessAxesLine
+        if not axLines:
+            return None
         axDict = self._axesDict(axLines)
         # Just to cross check these two fields of the info.txt,
         # print some warnings.
@@ -830,6 +846,8 @@ class Infotxt(object):
         :return: {'topology': ['extension']}
         
         """
+        if not self.axes:
+            return None
         extDic = {}
         for t in self.topologies:
             extDic[t] = []
@@ -839,10 +857,7 @@ class Infotxt(object):
                 continue
             for ax in axes:
                 if ax['extension']:
-                    if 'D' in ax['extension']:
-                        extDic[t].append('D' + ax['extension'].split('=')[-1].strip())
-                    else:    
-                        extDic[t].append(ax['extension'])
+                    extDic[t].append(ax['extension'])
                         
         return extDic
             
