@@ -767,7 +767,7 @@ class Infotxt(object):
             condition = 'massSplitting'
         except TypeError:
             logger.debug('Got no mz!')
-            return None
+            return (None, None)
         except ValueError:
             if 'D' in mz:
                 value = addunit(int(mz.split('=')[-1].strip()), 'GeV')
