@@ -14,6 +14,7 @@ import setPath  # # set to python path for smodels
 import sys
 from smodels_tools.tools.databaseBrowser import Browser
 from smodels.tools.physicsUnits import rmvunit, addunit
+import validationPlotsHelper
 import logging
 import os
 import types
@@ -23,9 +24,9 @@ logger = logging.getLogger(__name__)
 class Threshold(object):
     
     def __init__(self, topology, browserObject, condition, value):
-        """Uses the given browser object to retrieve all upper limit histogram 
+        """Uses the given browser object to retrieve all upper limit
         dictionaries known for this topology. 
-        :param topology: topology the slha-files should be preoduced for
+        :param topology: topology the slha-files should be produced for
         :param browserObject: instance of the class Browser
         
         
@@ -59,9 +60,11 @@ class Threshold(object):
         thresh['lsp'] = []
         thresh['d'] = []
         analyses = self.topo.analyses
+        analyses = [a for a in analyses if self._browser.expResultSet(a, self.topo.name)]
         logger.info('Computing mass thresholds for topology %s using analyses: \n \
         %s' %(self.topo.name, analyses))
         for a in analyses:
+            #print ('######', a)
             if self._browser.expAnalysis(a).sqrts != 8.0:
                 continue
             resultSet = self._browser.expResultSet(a, self.topo.name)
@@ -82,7 +85,6 @@ class Threshold(object):
             lspM = []
             for mother in ulDict:
                 if not mother: continue
-                print ('##################', ulDict)
                 if not ulDict[mother]: continue
                 mM.append(mother)
                 
@@ -100,7 +102,7 @@ class Threshold(object):
         return thresh
         
     def _delta(self, minMother, step, ulDict):
-        """Derives the lsp intercept
+        """Derives the LSP intercept.
         
         """
         
@@ -231,13 +233,30 @@ class Threshold(object):
         return massList
 
 def main():
-    threshold = Threshold('T6bbWWoff',Browser('../../smodels-database'),'D','017')
+    """Makes the script executable for debugging and testing.
+    
+    """
+    topology = 'T6bbWW'
+    parametrization = 'M2-M1'
+    value = '17'
+    value = validationPlotsHelper.validateValue(value)
+    browser = Browser('../../smodels-database')
+    #browser = Browser()
+    browser.verbosity = 'warning'
+    print ("========================================================")
+    print('Derive mass thresholds')
+    print('Topology: ', topology)
+    print('Parametrization: ', parametrization)
+    print('Value: ', value)
+    print ("========================================================")
+    threshold = Threshold(topology, browser, parametrization, value)
+    print ("========================================================")
     print('motherMasse: %s' %threshold.motherMasses)
     print('lspMasse: %s' %threshold.lspMasses)
     print('minLSB: %s maxLSB %s' %(min(threshold.lspMasses), max(threshold.lspMasses)))
     print('minMother: %s maxMother %s' %(min(threshold.motherMasses), max(threshold.motherMasses)))
     print('d: %s' %threshold.d)
-
+    print ("========================================================")
     
 if __name__ == '__main__':
     main()

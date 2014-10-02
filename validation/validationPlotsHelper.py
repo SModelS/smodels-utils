@@ -72,7 +72,7 @@ def getExtension(expTopology, param, val, valStr):
     to database known cases.
     
     """
-    if not parametrization:
+    if not param:
         return expTopology.name
     for i, exTop in enumerate(expTopology.thirdMasses):
         if exTop == (param, val):

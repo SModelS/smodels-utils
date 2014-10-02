@@ -74,10 +74,11 @@ class SlhaFiles(object):
         self.folder = '../slha/%s_%s_%s_slhas' %(self.extTopo, events, order)
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
-            logger.info('Created new folder %s!' %self.folder)
+            logger.info('Created new folder %s.' %self.folder)
         self._condition = condition
         self._interValue = rmvunit(value, 'GeV')
-        
+        logger.info('Using parametrization: %s %s.' \
+        %(self._condition, self._interValue))
         
     def __del__(self):
         """remove temp.slha
@@ -112,7 +113,7 @@ class SlhaFiles(object):
                 if self._condition == 'fixedLSP':
                     interMass = lspMass
                     lspMass = self._interValue
-                if self._condition == 'M2-M0':
+                if self._condition == 'M2-M1':
                     interMass = lspMass + self._interValue
                 if self.topo.name == 'T6bbWWoff':
                     if lspMass < interMass - 80: continue
@@ -369,6 +370,13 @@ def main():
     threshold = Threshold(topology, browser, parametrization, value)
     folder = checkFolder('../slha/%s_%s_%s_slhas' \
     %(extendedTopology, events, order))
+    print ("========================================================")
+    print('Create slha files')
+    print('Topology: ', topology)
+    print('Parametrization: ', parametrization)
+    print('Value: ', value)
+    print('Order: ', order)
+    print ("========================================================")
     count = 0
     slhaFiles = SlhaFiles(topology, extendedTopology, browser, \
     threshold.motherMasses, threshold.lspMasses, threshold.d, parametrization,\
