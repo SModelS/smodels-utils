@@ -87,7 +87,7 @@ def main():
         except:
             logger.warning('could not plot %s' %ana)
             print('Could not create validation plot for analyses: %s' %ana, file = logFile)
-
+        print("--------------------------------------------------------", file = logFile)
     logFile.close()
 
     

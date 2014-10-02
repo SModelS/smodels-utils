@@ -78,6 +78,7 @@ def main(arguments = None):
         topology = arguments['topology']
         parametrization = arguments['parametrization']
         value = arguments['value']
+        valueString = arguments['valueString']
         
     browser = Browser(base)
     if topology[-2:] == 'on':
@@ -95,9 +96,9 @@ def main(arguments = None):
         events = arguments['events']
         order = arguments['order']
         
-    expResSet = browser.expResultSet(analysis, topology)
-    expAna = expResSet.expAnalysis
-    expTopo = expResSet.expTopology
+    expResultSet = browser.expResultSet(analysis, topology)
+    expAna = expResultSet.expAnalysis
+    expTopo = expResultSet.expTopology
     extendedTopology = validationPlotsHelper.getExtension(expTopo, parametrization, value, valueString)
     
     #Define metadata tags:
@@ -110,6 +111,8 @@ def main(arguments = None):
     print ("========================================================")
     print('Producing the validation plot')
     print('Topology: ', topology)
+    print('Parametrization: ', parametrization)
+    print('Value: ', value)
     print('Analysis: ', analysis)
     print('Using database: ', base)
     print('Use grid file: ', f)
@@ -146,8 +149,12 @@ def main(arguments = None):
     if extendedTopology == 'T6ttWWx166':
         exclusionLine = validationPlotsHelper.cutGraph(exclusionLine, 16, before = False, after = True)    
         exclusionLine = validationPlotsHelper.addPoint(exclusionLine, 587., 100.)
-    if expResSet.exclusionLine(condition = parametrization, value = value):    
-        officialExclusionLine = expResSet.exclusionLine(condition = parametrization, value = value)
+    if expResultSet.exclusionLine(condition = parametrization, value = value):    
+        officialExclusionLine = expResultSet.exclusionLine(condition = parametrization, value = value)
+        officialExclusionLineAbove = None
+        officialExclusionLineBelow = None
+        valueAbove = value
+        valueBelow = value
         
     else:
         officialExclusionLine = None
@@ -157,7 +164,7 @@ def main(arguments = None):
         valueBelow = value
         val = []
         for extTopo in expResultSet.members:
-            if not expResultSet.members[extTopo][0] == self._condition:
+            if not expResultSet.members[extTopo][0] == parametrization:
                 continue
             val.append(expResultSet.members[extTopo][1])
         for v in val:
@@ -167,15 +174,15 @@ def main(arguments = None):
                 valueBelow = v
         if valueAbove != value:
             logger.info('Found adjacent line above for %s%s'\
-            %(condition, valueAbove))
-            officialExclusionLineAbove = expResSet.exclusionLine(condition = parametrization, value = valueAbove)
+            %(parametrization, valueAbove))
+            officialExclusionLineAbove = expResultSet.exclusionLine(condition = parametrization, value = valueAbove)
         else:
             officialExclusionLineAbove = None
             logger.info('No adjacent line above could be found!')
         if valueBelow != value:
             logger.info('Found adjacent line below for %s%s'\
-            %(condition, valueBelow))
-            officialExclusionLineBelow = expResSet.exclusionLine(condition = parametrization, value = valueBelow)
+            %(parametrization, valueBelow))
+            officialExclusionLineBelow = expResultSet.exclusionLine(condition = parametrization, value = valueBelow)
         else:
             officialExclusionLineBelow = None
             logger.info('No adjacent line below could be found!')
@@ -243,24 +250,26 @@ def main(arguments = None):
     legend.AddEntry(excluded, 'excluded', 'P')
     legend.AddEntry(allowed, 'allowed', 'P')
     legend.AddEntry(notTested, 'not tested', 'P')
-    legend.AddEntry(exclusionLine, 'SmodelS %s' %(intermediate[0] + '='\
-    + intermediate[1]), 'L')
+    if not parametrization:
+        legend.AddEntry(exclusionLine, 'SmodelS', 'L')
+    else:    
+        legend.AddEntry(exclusionLine, 'SmodelS %s=%s' %(parametrization, valueAbove), 'L')
     if officialExclusionLineAbove:
         legend.AddEntry(officialExclusionLineAbove, '%s, %s=%s' \
-        %(metadata['rootTag'][0][1], condition, valueAbove), 'L')
+        %(metadata['rootTag'][0][1], parametrization, valueAbove), 'L')
     if officialExclusionLineBelow:
         legend.AddEntry(officialExclusionLineBelow, '%s, %s=%s' \
-        %(metadata['rootTag'][0][1], condition, valueBelow), 'L')
+        %(metadata['rootTag'][0][1], parametrization, valueBelow), 'L')
     if officialExclusionLine:
         legend.AddEntry(officialExclusionLine, '%s, %s=%s' \
-        %(metadata['rootTag'][0][1], condition, val), 'L')
+        %(metadata['rootTag'][0][1], parametrization, value), 'L')
     #Canvas:
     c = ROOT.TCanvas("c1", "c1", 0, 0, 800, 500)
     c.SetFillColor(ROOT.kWhite)
     
     multi.Draw('APL')
     multi.GetXaxis().SetTitle("m_{mother} (GeV)")
-    if condition == 'LSP':
+    if parametrization == 'fixedLSP':
         multi.GetYaxis().SetTitle("m_{intermediate} (GeV)")
     else:
         multi.GetYaxis().SetTitle("m_{LSP} (GeV)")
