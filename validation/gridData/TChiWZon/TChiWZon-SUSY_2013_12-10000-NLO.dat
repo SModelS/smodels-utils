@@ -665,8 +665,8 @@
 450  180  None  None None
 450  220  None  None None
 #END
-time: 9.95228505135 sec
-time per slha: 0.0149433766757 sec
+time: 10.0287640095 sec
+time per slha: 0.0150582103042 sec
 analysis: SUSY-2013-12, ATLAS trilepton inc Wh decay, 8.0 TeV, LO
 intermediate: None, None
 factor: 1.2
