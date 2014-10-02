@@ -64,7 +64,7 @@ class Threshold(object):
         logger.info('Computing mass thresholds for topology %s using analyses: \n \
         %s' %(self.topo.name, analyses))
         for a in analyses:
-            #print ('######', a)
+            logger.info('Processing %s' %a)
             if self._browser.expAnalysis(a).sqrts != 8.0:
                 continue
             resultSet = self._browser.expResultSet(a, self.topo.name)
