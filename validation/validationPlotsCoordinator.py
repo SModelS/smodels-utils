@@ -66,6 +66,8 @@ def main():
     print('Topology: ', topology, file = logFile)
     print('Parametrization: ', parametrization, file = logFile)
     print('Value: ', value, file = logFile)
+    print('Analyses: ', file = logFile)
+    print(analyses, file = logFile)
     print("========================================================", file = logFile)
     
     for ana in analyses:
@@ -75,16 +77,16 @@ def main():
         'directory': path}
         try:    
             gridDataCreator.main(arguments)
-            print('Sucsessfully created data grid for analyses: %s' %a, file = logFile)
+            print('Sucsessfully created data grid for analyses: %s' %ana, file = logFile)
         except:
             logger.warning('could not make grid for %s' %ana)
-            print('Could not create data grid for analyses: %s' %a, file = logFile)
+            print('Could not create data grid for analyses: %s' %ana, file = logFile)
         try:
             validationPlots.main(arguments)
-            print('Sucsessfully created validation plot for analyses: %s' %a, file = logFile)
+            print('Sucsessfully created validation plot for analyses: %s' %ana, file = logFile)
         except:
             logger.warning('could not plot %s' %ana)
-            print('Could not create validation plot for analyses: %s' %a, file = logFile)
+            print('Could not create validation plot for analyses: %s' %ana, file = logFile)
 
     logFile.close()
 
