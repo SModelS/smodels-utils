@@ -14,6 +14,7 @@ import setPath  # # set to python path for smodels
 from smodels_tools.tools.databaseBrowser import Browser
 import validationPlotsHelper
 import argparse
+import types
 
 
 def main():
@@ -33,6 +34,7 @@ def main():
     argparser.add_argument ('-o', '--order', \
     help = 'perturbation order (LO or NLL) - default: NLL', \
     type = types.StringType, default = 'NLL')
+    args = argparser.parse_args()
     
     topology = args.topology
     order = args.order
@@ -47,7 +49,6 @@ def main():
     path = validationPlotsHelper.checkFile('./twiki/twiki_%s.txt' %topology)    
     outFile = open(path, 'w')
     print(topoLink, file = outFile)
-    analyses = browser.allAnalyses(topology = topology)
     head = "||'''Analysis  <<BR>>  (√s,lum)''' ||'''mass parametrization''' ||'''published data | checked''' ||'''plot''' ||'''comment''' ||"
     print(head, file = outFile)
     analyses = browser.getAnalyses(topology = topology)
@@ -69,6 +70,10 @@ def main():
             published = 'YES'
 
         expResSet = browser.expResultSet(ana, topology)
+        commentField = 'not yet done'
+        if not expResSet: 
+            commentField = commentField + ' <<BR>> -> no experimental result! <<BR>> -> check database entry!'
+            continue
         checked = 'NO'
         if expResSet.isChecked:
             checked = 'YES'
@@ -76,10 +81,9 @@ def main():
         #massParamField = ''.join(massParam)
         massParamField = expResSet.expTopology.intermediateParticles
         plotField = 'done with 10000 events <<BR>> [[attachment:%s%snew.png|%s]]' %(topology, ana, order)
-        commentField = 'not yet done'
         if not expResSet.constraint:
             commentField = commentField + ' -> no constraints!'
-        if not expResSet.hasUpperLimitDict:
+        if not expResSet.hasUpperLimitDicts():
             commentField = commentField + ' <<BR>> -> no upper limits!'
             
         line = '||%s||%s||%s | %s||%s||%s||' %(analysisField, massParamField, published, checked, plotField, commentField)
