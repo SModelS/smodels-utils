@@ -73,7 +73,7 @@ def main(arguments = None):
             valueString = None
         else:
             value = validationPlotsHelper.validateValue(value)
-        else:
+    else:
         base = arguments['base']
         topology = arguments['topology']
         parametrization = arguments['parametrization']
@@ -153,19 +153,18 @@ def main(arguments = None):
         officialExclusionLine = None
         logger.info('There is no official exclusion line for %s!\n \
         Search for adjacent lines.' %extendedTopology)
-        else:
-            valueAbove = value
-            valueBelow = value
-            val = []
-            for extTopo in resultSet.members:
-                if not resultSet.members[extTopo][0] == self._condition:
-                    continue
-                val.append(resultSet.members[extTopo][1])
-            for v in val:
-                if valueAbove < v:
-                        valueAbove = v
-                if valueBelow > v:
-                        valueBelow = v
+        valueAbove = value
+        valueBelow = value
+        val = []
+        for extTopo in resultSet.members:
+            if not resultSet.members[extTopo][0] == self._condition:
+                continue
+            val.append(resultSet.members[extTopo][1])
+        for v in val:
+            if valueAbove < v:
+                valueAbove = v
+            if valueBelow > v:
+                valueBelow = v
         if valueAbove != value:
             logger.info('Found adjacent line above for %s%s'\
             %(condition, valueAbove))
@@ -173,7 +172,7 @@ def main(arguments = None):
         else:
             officialExclusionLineAbove = None
             logger.info('No adjacent line above could be found!')
-         if valueBelow != value:
+        if valueBelow != value:
             logger.info('Found adjacent line below for %s%s'\
             %(condition, valueBelow))
             officialExclusionLineBelow = expResSet.exclusionLine(condition = parametrization, value = valueBelow)
@@ -181,11 +180,11 @@ def main(arguments = None):
             officialExclusionLineBelow = None
             logger.info('No adjacent line below could be found!')
                 
-        if officialExclusionLineAbove and if extendedTopology == 'T6ttWWx166':
+        if officialExclusionLineAbove and extendedTopology == 'T6ttWWx166':
             officialExclusionLineAbove = validationPlotsHelper.cutGraph(officialExclusionLineAbove, 35, before = False, after = True)    
             officialExclusionLineAbove = validationPlotsHelper.cutGraph(officialExclusionLineAbove, 5)    
                 
-        if officialExclusionLineBelow and if extendedTopology == 'T6ttWWx166':
+        if officialExclusionLineBelow and extendedTopology == 'T6ttWWx166':
             officialExclusionLineBelow = validationPlotsHelper.cutGraph(officialExclusionLineBelow, 55, before = False, after = True)
             officialExclusionLineBelow = validationPlotsHelper.cutGraph(officialExclusionLineBelow, 5)    
         
