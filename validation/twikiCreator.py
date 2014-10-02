@@ -1,8 +1,5 @@
 #!/usr/bin/env python
-<<<<<<< HEAD
 # -*- coding: utf-8 -*-
-=======
->>>>>>> expRes
 
 """
 .. module:: twikiCreator
@@ -15,6 +12,7 @@
 from __future__ import print_function
 import setPath  # # set to python path for smodels
 from smodels_tools.tools.databaseBrowser import Browser
+import validationPlotsHelper
 
 
 def main():
@@ -22,17 +20,31 @@ def main():
     checks for results.
     Calls the gridDataCreator.py and the validationPlots.py.
     """
+    argparser = argparse.ArgumentParser(description = \
+    'Produces the slha files for smodels validation plots')
+    argparser.add_argument ('-b', '--Base', \
+    help = 'set path to base-directory of smodels-database\n \
+    - default: /afs/hephy.at/user/w/walten/public/sms/', \
+    type = types.StringType, default = '/afs/hephy.at/user/w/walten/public/sms/')
+    argparser.add_argument ('-t', '--topology', \
+    help = 'topology that slha-files should be produced for - default: T1',\
+    type = types.StringType, default = 'T1')
+    argparser.add_argument ('-o', '--order', \
+    help = 'perturbation order (LO or NLL) - default: NLL', \
+    type = types.StringType, default = 'NLL')
     
-    topology = 'TSlepSlep'
-    order = 'LO * 1.2'
-    base = '/afs/hephy.at/user/w/walten/public/sms/'
+    topology = args.topology
+    order = args.order
+    if order == 'NLO':
+        order = 'LO * 1.2'
     
     topoLink = '([[SmsDictionary#%s|%s]])' %(topology, topology)
-    browser = Browser(base)
+    browser = Browser(args.Base)
     if not browser:
         print('No valid database!')
         sys.exit()
-    outFile = open('./twiki/twiki_%s.txt' %topology, 'w')
+    path = validationPlotsHelper.checkFile('./twiki/twiki_%s.txt' %topology)    
+    outFile = open(path, 'w')
     print(topoLink, file = outFile)
     analyses = browser.allAnalyses(topology = topology)
     head = "||'''Analysis  <<BR>>  (√s,lum)''' ||'''mass parametrization''' ||'''published data | checked''' ||'''plot''' ||'''comment''' ||"
