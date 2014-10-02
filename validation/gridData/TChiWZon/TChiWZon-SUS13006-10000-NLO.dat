@@ -665,11 +665,11 @@
 450  180  None  None None
 450  220  None  None None
 #END
-time: 46.5093128681 sec
-time per slha: 0.069833810623 sec
+time: 45.9025278091 sec
+time per slha: 0.0689227205139 sec
 analysis: SUS-13-006, weakinos, 8.0 TeV, LO
+intermediate: None, None
+factor: 1.2
 outFile: TChiWZon-SUS13006-10000-NLO.png
-intermediate xvalue, 050
-factor 1.2
 decay: #chi^{#pm} #chi^{0}_{2}  #rightarrow WZ#tilde{#chi}^{0}_{1}#tilde{#chi}^{0}_{1}
 rootTag: exclusion_TChiWZ: official exclusion line

@@ -665,11 +665,11 @@
 450  180  None  None None
 450  220  None  None None
 #END
-time: 10.0739490986 sec
-time per slha: 0.0151260557833 sec
+time: 9.95228505135 sec
+time per slha: 0.0149433766757 sec
 analysis: SUSY-2013-12, ATLAS trilepton inc Wh decay, 8.0 TeV, LO
+intermediate: None, None
+factor: 1.2
 outFile: TChiWZon-SUSY_2013_12-10000-NLO.png
-intermediate xvalue, 050
-factor 1.2
 decay: #chi^{#pm} #chi^{0}_{2}  #rightarrow WZ#tilde{#chi}^{0}_{1}#tilde{#chi}^{0}_{1}
 rootTag: exclusion_TChiWZon: official exclusion line
