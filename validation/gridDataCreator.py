@@ -273,6 +273,7 @@ def main(arguments = None):
         topology = arguments['topology']
         parametrization = arguments['parametrization']
         value = arguments['value']
+        valueString = arguments['valueString']
         
     smsHelpers.base = base
     browser = Browser(base)

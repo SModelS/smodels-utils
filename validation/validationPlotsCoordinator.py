@@ -18,6 +18,7 @@ import sys
 from smodels_tools.tools.databaseBrowser import Browser
 import gridDataCreator
 import validationPlots
+import validationPlotsHelper
 
 logger = logging.getLogger(__name__)
 
@@ -37,48 +38,56 @@ def main():
         print('No valid database!')
         sys.exit()
     order = 'NLO'
-    intermediate = 'xvalue,050'
+    parametrization = None
+    value = '0.5'
+    if not parametrization:
+            value = None
+            valueString = None
+        else:
+            valueString = value
+            value = validationPlotsHelper.validateValue(value)
     analyses = browser.allAnalyses(topology = topology)
     analyses = [a for a in analyses if browser.expResult(a, topology) \
     and  browser.expResult(a, topology).hasUpperLimitDict]
     
-    path = getTarget('./gridData/%s/' %topology)
+    path = validationPlotsHelper.getTarget('./gridData/%s/' %topology)
+    logFile = open('%s/logFile' %path, 'w')
     
     print("========================================================")
     print('Validating procedure for:')
     print('Topology: ', topology)
-    print('Analysis: ')
+    print('Parametrization: ', parametrization)
+    print('Value: ', value)
+    print('Analyses: ')
     print(analyses)
     print("========================================================")
     
-    for ana in analyses:
+    print("========================================================", file = logFile)
+    print('Topology: ', topology, file = logFile)
+    print('Parametrization: ', parametrization, file = logFile)
+    print('Value: ', value, file = logFile)
+    print("========================================================", file = logFile)
     
+    for ana in analyses:
+        
         arguments = {'analysis': ana, 'base': base, 'events': 10000, \
-        'intermediate': intermediate, 'order': order, 'topology': topology, \
+        'parametrization': paramterization, 'value': value, 'valueString': valueString, 'order': order, 'topology': topology, \
         'directory': path}
         try:    
             gridDataCreator.main(arguments)
+            print('Sucsessfully created data grid for analyses: %s' %a, file = logFile)
         except:
             logger.warning('could not make grid for %s' %ana)
+            print('Could not create data grid for analyses: %s' %a, file = logFile)
         try:
             validationPlots.main(arguments)
+            print('Sucsessfully created validation plot for analyses: %s' %a, file = logFile)
         except:
             logger.warning('could not plot %s' %ana)
+            print('Could not create validation plot for analyses: %s' %a, file = logFile)
 
+    logFile.close()
 
-def getTarget(path):
-    """Checks if the target directory already exists and creates it if not.
-    
-    """
-    
-    if os.path.exists(path):
-        logger.info('Target %s already exists.' %path)
-        return path
-    
-    os.mkdir(path)
-    logger.info('Created new directory: %s' %path) 
-    return path
-    
     
 def topologyInfo():
     """Gives some infomation about topologies there are slha files for.
