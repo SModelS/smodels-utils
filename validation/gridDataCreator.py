@@ -15,7 +15,7 @@ from smodels.tools.physicsUnits import fb, GeV, addunit, rmvunit
 from smodels.experiment import smsAnalysisFactory, smsHelpers
 from smodels.theory.theoryPrediction import theoryPredictionFor
 from smodels_tools.tools.databaseBrowser import Browser
-from smodels_tools.validation import validationPlotsHelper
+import validationPlotsHelper
 import logging
 import argparse
 import os
