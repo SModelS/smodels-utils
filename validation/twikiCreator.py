@@ -71,20 +71,22 @@ def main():
 
         expResSet = browser.expResultSet(ana, topology)
         commentField = 'not yet done'
+        checked = 'NO'
+        massParamField = 'not available'
+        plotField = 'not available'
         if not expResSet: 
             commentField = commentField + ' <<BR>> -> no experimental result! <<BR>> -> check database entry!'
-            continue
-        checked = 'NO'
-        if expResSet.isChecked:
-            checked = 'YES'
-        #massParam = ['%s <<BR>>' %expResSet.members[entry] for entry in expResSet.members]
-        #massParamField = ''.join(massParam)
-        massParamField = expResSet.expTopology.intermediateParticles
-        plotField = 'done with 10000 events <<BR>> [[attachment:%s%snew.png|%s]]' %(topology, ana, order)
-        if not expResSet.constraint:
-            commentField = commentField + ' -> no constraints!'
-        if not expResSet.hasUpperLimitDicts():
-            commentField = commentField + ' <<BR>> -> no upper limits!'
+        else:
+            if expResSet.isChecked:
+                checked = 'YES'
+            massParam = [(str(expResSet.members[entry]) + '<<BR>>') for entry in expResSet.members]
+            massParamField = ''.join(massParam)
+            #massParamField = expResSet.expTopology.intermediateParticles
+            plotField = 'done with 10000 events <<BR>> [[attachment:%s%snew.png|%s]]' %(topology, ana, order)
+            if not expResSet.constraint:
+                commentField = commentField + ' -> no constraints!'
+            if not expResSet.hasUpperLimitDicts():
+                commentField = commentField + ' <<BR>> -> no upper limits!'
             
         line = '||%s||%s||%s | %s||%s||%s||' %(analysisField, massParamField, published, checked, plotField, commentField)
 
