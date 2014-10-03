@@ -15,6 +15,7 @@ from smodels.tools.physicsUnits import fb, GeV, addunit, rmvunit
 from smodels.experiment import smsAnalysisFactory, smsHelpers
 from smodels.theory.theoryPrediction import theoryPredictionFor
 from smodels_tools.tools.databaseBrowser import Browser
+import validationPlotsHelper
 import logging
 import argparse
 import os
@@ -216,7 +217,7 @@ class GridData(object):
             return tul
         return rmvunit(tul, 'fb')
         
-def main():
+def main(arguments = None):
     """Handles all command line options
     Produces the grid data file and adds some meta data.
     :param Base: sets the path to the smodels-database
@@ -249,54 +250,69 @@ def main():
     argparser.add_argument ('-n', '--events',\
     help = 'set number of events - default: 10000', \
     type = types.IntType, default = 10000)
-    argparser.add_argument ('-i', '--intermediate', \
-    help = 'condition and value for intermediate particle - default: xvalue,050', \
-    type = types.StringType, default = 'xvalue,050')
+    argparser.add_argument ('-p', '--parametrization', \
+    help = 'mass parametrization when there is an intermediate particle \n \
+    - default: None', type = types.StringType, default = None)
+    argparser.add_argument ('-v', '--value', help = 'value for parametrization \n \
+    - default: 0.50', type = types.StringType, default = '0.50')
     args = argparser.parse_args()
 
-    smsHelpers.base = args.Base
-    browser = Browser(args.Base)
-    topology = args.topology
-    intermediate = args.intermediate.split(',')
-    intermediate = [i.strip() for i in intermediate]
-    if intermediate[0] == 'xvalue':
-        condition = ''
+    if not arguments:
+        base = args.Base
+        topology = args.topology
+        parametrization = args.parametrization
+        value = args.value
+        valueString = value
+        if not parametrization:
+            value = None
+            valueString = None
+        else:
+            value = validationPlotsHelper.validateValue(value)
     else:
-        condition = intermediate[0]
-    if intermediate[1] == '050' and not condition:
-        value = ''
-    else:
-        value = intermediate[1]
+        base = arguments['base']
+        topology = arguments['topology']
+        parametrization = arguments['parametrization']
+        value = arguments['value']
+        valueString = arguments['valueString']
+        
+    smsHelpers.base = base
+    browser = Browser(base)
     if topology[-2:] == 'on':
         topologyName = topology[:-2]
-    #elif topology[-3:] == 'off':
-        #topologyName = topology[:-3]
+
     else: topologyName = topology
-    extendedTopology = topology + condition + value
-    analysis = args.analysis
-    targetPath = getTarget(args.directory)
-    events = args.events
+    if not arguments:
+        analysis = args.analysis
+        targetPath = validationPlotsHelper.getTarget(args.directory)
+        events = args.events
+        order = args.order
+    else:
+        analysis = arguments['analysis']
+        targetPath = validationPlotsHelper.getTarget(arguments['directory'])
+        events = arguments['events']
+        order = arguments['order']
     factor = False
-    order = args.order
     slhaOrder = order
     if order == 'NLO':
         factor = True
         slhaOrder = 'LO'
-    expRes = browser.expResult(analysis, topology)
-    if not expRes:
-        expRes = browser.expResult(analysis, topologyName)
-    expAna = expRes.expAnalysis
-    expTopo = expRes.expTopology
+    expResSet = browser.expResultSet(analysis, topology)
+    expAna = expResSet.expAnalysis
+    expTopo = expResSet.expTopology
+    extendedTopology = validationPlotsHelper.getExtension(expTopo, parametrization, value, valueString)
     print ("========================================================")
     print('Producing the grid data file')
     print('Topology: ', topology)
     print('Analysis: ', analysis)
-    print('Using database: ', args.Base)
+    print('Using database: ', base)
     print('Store file in: ', targetPath)
     print ("========================================================")
     
     fileName = '%s-%s-%s-%s.dat' %(extendedTopology, analysis, events, order)
-    f = checkFile(targetPath + '/' + fileName)
+    if not arguments:
+        f = validationPlotsHelper.checkFile(targetPath + '/' + fileName)
+    else:
+        f = removeFile(targetPath + '/' + fileName)
     outFile = open(f, 'w')
     count = 0
     slhaPath = '../slha/%s_%s_%s_slhas' %(extendedTopology, events, slhaOrder)
@@ -312,22 +328,22 @@ def main():
         data = GridData(expTopo.name, analysis, slhaPath + '/' + slha)
         massMother = data.massMother
         massLSP = data.massLSP
-        if condition == 'LSP':
+        if parametrization == 'fixedLSP':
             massIntermediate = data.massIntermediate
         tUL = data.theoreticalUpperLimit
         eUL = data.experimentalUpperLimit
         cond = data.theoreticalCondition
         if not massMother:
             massMother = slha.split('_')[1].strip()
-            if condition == 'LSP':
-                massLSP = int(value)
+            if parametrization == 'fixedLSP':
+                massLSP = value
                 massIntermediate = slha.split('_')[2].strip()
             else:
                 massLSP = slha.split('_')[2].strip()
         if bool(data.theoreticalCondition):
-            logger.warning('Condition %s not satisfied! degree of violation: %s' \
+            logger.warning('Condition %s not satisfied! Degree of violation: %s' \
             %(data.experimentalCondition, data.theoreticalCondition))
-        if condition == 'LSP':
+        if parametrization == 'fixedLSP':
             print('%s  %s  %s  %s %s' \
             %(massMother, massIntermediate, tUL, eUL, cond), file = outFile)
         else:
@@ -339,7 +355,7 @@ def main():
     print('#END', file = outFile)
     print('time: %s' %computTime, file = outFile) 
     print('time per slha: %s' %timePerFile, file = outFile) 
-    metaData = writeMetaData(expRes, slhaOrder, fileName, factor, intermediate[0], intermediate[1])
+    metaData = writeMetaData(expResSet, slhaOrder, fileName, factor, parametrization, value)
     for key in metaData:
         print(key, metaData[key], file = outFile)
     print ('Worte %s lines of grid data to file %s!' %(count, fileName))
@@ -354,13 +370,13 @@ def timeUnits(t):
         tU = '%s sec' %t
     return tU
     
-def writeMetaData(expRes, order, fileName, factor, condition, value):
+def writeMetaData(expResSet, order, fileName, factor, parametrization, value):
     """Writes all the meta data (e.g. root tag, name of output-file, ...)
     :returns: dictionary
     
     """
-    expAna = expRes.expAnalysis
-    expTopo = expRes.expTopology
+    expAna = expResSet.expAnalysis
+    expTopo = expResSet.expTopology
     metaData = {}
     decay = ''
     prettyName = ''
@@ -370,57 +386,83 @@ def writeMetaData(expRes, order, fileName, factor, condition, value):
     if expAna.sqrts: sqrts = '%s TeV' %expAna.sqrts
     if expAna.pas: pas = expAna.pas
     metaData['decay:'] = '%s' %decay
-    metaData['intermediate'] = '%s, %s' %(condition, value)
+    metaData['intermediate:'] = '%s, %s' %(parametrization, value)
     metaData['analysis:'] = '%s, %s, %s, %s' %(pas, prettyName, sqrts, order)
     metaData['outFile:'] = fileName.replace('.dat', '.png') 
     exclName = ''
     official = ''
     
-    if expRes.selectExclusionLine(condition = condition, value = value):
-        exclName = expRes.selectExclusionLine(condition = condition, value = value).GetName()
-    elif expRes.exclusionLine():
-        exclName = expRes.exclusionLine().GetName
+    if expResSet.exclusionLine(condition = parametrization, value = value):
+        exclName = expResSet.exclusionLine(condition = parametrization, value = value).GetName()
     else:
         exclName = 'exclusion_%s' %expTopo.name
     if expAna.publishedData or expAna.isPublished:
         official = 'official exclusion line'
     metaData['rootTag:'] = '%s: %s' %(exclName, official)
     if factor:
-        metaData['factor'] = 1.2
+        metaData['factor:'] = 1.2
     return metaData
    
-
-    
-    
-def getTarget(path):
-    """Checks if the target directory already exists and creates it if not.
-    
-    """
-    
-    if os.path.exists(path):
-        logger.info('Target %s already exists.' %path)
-        return path
-    
-    os.mkdir(path)
-    logger.info('Created new directory: %s' %path) 
-    return path
-
-def checkFile(path):
+def removeFile(path):
     """Checks if the data file already exists.
-    If the file already exists, the user can decide whether to remove it, 
-    or to exit the script.
-    
+    If the file already exists and the validation is automated the grid
+    will be removed. 
     """
     if os.path.exists(path):
-        print('File %s already exists!' %path)
-        while True:
-            userInput = raw_input('Replace old file? [y/n]:  ')
-            if userInput == 'n':
-                sys.exit()
-            if userInput == 'y':
-                os.remove(path)
-                return path
-    return path
+        print('File %s will be removed!' %path)
+        os.remove(path)
+    return path 
+    
+#def getExtension(expResSet, param, val, valStr):
+    #"""Produces possible extensions for the topology name via comparison
+    #to database known cases.
+    
+    #"""
+    #setMembers = expResSet.members
+    #extendedTopology = ''
+    #for exTop in setMembers:
+        #if setMembers[exTop] == (param, val):
+            #extendedTopology = exTop
+    #if not extendedTopology:
+        #if setMembers[exTop][0] == param:
+            #if param == 'massSplitting':
+                #extendedTopology = expResSet.expTopology.name + valStr
+            #elif param == 'M2/M0':
+                #extendedTopology = exTop.replace('%s' %(exTop[1]*100.), '%s'%(val*100.))
+            #else:
+                #extendedTopology = exTop.replace('%s' %exTop[1], '%s'%val)
+    #return extendedTopology        
+                
+    
+#def getTarget(path):
+    #"""Checks if the target directory already exists and creates it if not.
+    
+    #"""
+    
+    #if os.path.exists(path):
+        #logger.info('Target %s already exists.' %path)
+        #return path
+    
+    #os.mkdir(path)
+    #logger.info('Created new directory: %s' %path) 
+    #return path 
+    
+#def checkFile(path):
+    #"""Checks if the data file already exists.
+    #If the file already exists, the user can decide whether to remove it, 
+    #or to exit the script.
+    
+    #"""
+    #if os.path.exists(path):
+        #print('File %s already exists!' %path)
+        #while True:
+            #userInput = raw_input('Replace old file? [y/n]:  ')
+            #if userInput == 'n':
+                #sys.exit()
+            #if userInput == 'y':
+                #os.remove(path)
+                #return path
+    #return path
     
 if __name__ == '__main__':
     main()  

@@ -15,6 +15,7 @@ import logging, os, types
 import setPath
 import sys
 import databaseBrowser
+from smodels.tools.physicsUnits import GeV, addunit, rmvunit
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -27,7 +28,7 @@ class ExpTopology(object):
     contain this topology, category, particles resp. production mode, ...)
     
     """
-    def __init__ (self, topology, topoDict):
+    def __init__ (self, topology, topoDict): #give the info.txt-object!
         self._name = topology
         self._topoDict = topoDict
         self._runs = [key for key in self._topoDict]
@@ -39,7 +40,7 @@ class ExpTopology(object):
         """Tells the level the logger is set to.
         
         """
-        return self._verbositya
+        return self._verbosity
         
     @verbosity.setter
     def verbosity(self, level):
@@ -51,9 +52,49 @@ class ExpTopology(object):
 
     def __str__(self):
         ret = "%s [%s]: " % ( self.name, self.category )
-        ret += ",".join ( self.constraints ).replace("'","") 
+        ret += ", ".join ( self.constraints ).replace("'","") 
         return ret
+    
+    @property    
+    def name(self):
+        return self._name
+    
+    @property
+    def analyses(self):
+        return self._analyses
+    
+    @property
+    def runs(self):
+        return self._runs
         
+    @property
+    def category(self):
+        return self._category
+    
+    @property
+    def shortdecay(self):
+        return self._shortdecay
+    
+    @property
+    def constraints(self):
+        return self._constraints
+    
+    @property
+    def thirdMasses(self):
+        return self._thirdMasses
+    
+    @property
+    def extensions(self):
+        return self._extensions
+    
+    @property
+    def decay(self):
+        return self._decay
+    
+    @property
+    def motherParticle(self):
+       return self._motherParticle
+    
     def _setLogLevel(self, level = 'error'):
         if level == 'debug':
             logger.setLevel(level=logging.DEBUG)
@@ -63,7 +104,7 @@ class ExpTopology(object):
             logger.setLevel(level=logging.WARNING)
         if level == 'error':
             pass
-        
+    
     @property    
     def _anas(self):
         """Extracts all the analyses given as inner keys of nested topoDict.
@@ -74,7 +115,13 @@ class ExpTopology(object):
             for a in self._topoDict[r]:
                 anas.append(a)
         return anas
+    
+    def _getInfoProperty(self, info, requested):
+        """Retrieves the requested property of the given info.txt object.
         
+        """
+        return getattr(info, requested)
+    
     @property    
     def _category(self):
         """Takes the category for this topology from every info.txt, 
@@ -84,10 +131,10 @@ class ExpTopology(object):
         """
         
         cats = []
-        for run in self._topoDict:
-            for ana in self._topoDict[run]:
+        for run in self._runs:
+            for ana in self._anas:
                 try:
-                    category = self._topoDict[run][ana][0][self._name]
+                    category = self._getInfoProperty(self._topoDict[run][ana], 'category')[self.name]
                     if cats.count(category) == 0:
                         cats.append(category)
                     if cats and cats.count(category) == 0:
@@ -116,11 +163,11 @@ class ExpTopology(object):
         """
         
         const = []
-        for run in self._topoDict:
-            for ana in self._topoDict[run]:
+        for run in self._runs:
+            for ana in self._anas:
                 try:
-                    c = self._topoDict[run][ana][1][self._name]
-                    if const.count(c) == 0:
+                    c = self._getInfoProperty(self._topoDict[run][ana], 'constraints')[self.name]
+                    if not c in const:
                         const.append(c)
                 except KeyError:
                     logger.warning('The constraint for %s is missing! \
@@ -128,62 +175,52 @@ class ExpTopology(object):
         logger.debug('List of constraints: %s.' %const)
         return const
         
-        logger.error('Unable to get category for topology %s!' %self._name)
-        return None
-        
-    @property    
-    def name(self):
-        return self._name
     
     @property
-    def analyses(self):
-        return self._analyses
-    
-    # ### FIX ME doesn't work this way!
-    #@property
-    #def experimentAnalyses(self):
-        #if self.analyses:
-            #anas = [ExpAnalysis(a) for a in self.analyses]
-        #return anas
+    def _thirdMasses(self):
+        """Retrieves all conditions for the third mass, available for this topology.
+        
+        """
+        massConds = []
+        for run in self._runs:
+            for ana in self._anas:
+                try:
+                    axes = self._getInfoProperty(self._topoDict[run][ana], 'axes')[self.name]
+                    axes = [ax for ax in axes if 'mz' in ax and ax['mz']]
+                    axes = [ax['mz'] for ax in axes]
+                    for ax in axes:
+                        if not ax in massConds:
+                            massConds.append(ax)
+                except KeyError:
+                    logger.warning('The axes for %s are missing! \
+                    Please check the database entry %s-%s!' %(self._name, run, ana))
+        return massConds
     
     @property
-    def runs(self):
-        return self._runs
+    def _extensions(self):
+        """Retrieves all extensions, available for this topology.
         
-    @property
-    def category(self):
-        return self._category
-      
-    @property
-    def constraints(self):
-        return self._constraints
+        """
+        ext = []
+        for run in self._runs:
+            for ana in self._anas:
+                try:
+                    extensions = self._getInfoProperty(self._topoDict[run][ana], 'extensions')[self.name]
+                    for ex in extensions:
+                        if not ex in ext:
+                            ext.append(ex)
+                except KeyError:
+                    logger.warning('The extensions for %s are missing! \
+                    Please check the database entry %s-%s!' %(self._name, run, ana))
+        return ext
         
-    #@property
-    #def analysesNames(self, run = None):
-        #"""Retrieves the names (as strings) of all analyses existing for 
-        #this topology. Returns a list of names for one given run, 
-        #or a dictionary with runs as keys.
-        
-        #"""
-        #if not run:
-            #anas = {}
-            #logger.warning('no run was given, therefore trying all available \
-            #runs %s and returning dictionary!' %self._runs)
-            #for r in self._runs:
-                #if getAllAnalyses(run = r, topology = self._name):
-                    #anas[r] = [a for a in getAllAnalyses(run = r, \
-                    #topology = self._name)]
-            #return anas
-        #return getAllAnalyses(run = run, topology = self._name)
-    
     def _slackExpTopologyName(self):
         """Bypassing case sensitivity
-        # ### FIX ME: doesn't know much at the moment.
+        # ### FIX ME: doesn't know much at the moment. Is this still needed?
         """
         if any(c in self._name for c in ['w', 'W', 'z', 'Z']):
             return self._name.replace("W","w").replace("Z","z" )
         return self._name
-    
         
     def _searchDecayDict(self):
         """Searches for topology name in descriptions.decay
@@ -201,7 +238,7 @@ class ExpTopology(object):
         return None        
 
     @property
-    def decay(self):
+    def _decay(self):
         """:returns: decay as string, formatted for ROOT.TLatex
         
         """
@@ -252,7 +289,7 @@ class ExpTopology(object):
         return decayString
         
     @property
-    def motherParticle(self):
+    def _motherParticle(self):
         """ :returns: mother particle in simple format as string or None
         
         """

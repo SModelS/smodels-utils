@@ -17,8 +17,8 @@ def main():
   # set the level of the logger (default: error ; possible: debug, info, warning, error) 
   # databaseBrowser.setLogLevel('warning')
   
-  #set the path to the database (default - "/afs/hephy.at/user/w/walten/public/sms/") if the path does not exist or if there is no valid sms-database, databaseBrowser will be stoped
-  # databaseBrowser.base = '../../smodels-database/'
+  #set the path to the database (default - "/afs/hephy.at/user/w/walten/public/sms/") if the path does not exist or if there is no valid sms-database, databaseBrowser will be stopped
+
   browser = databaseBrowser.Browser ( '../../smodels-database/' )
 
   # to get the structure of the database:
@@ -32,44 +32,52 @@ def main():
   print 'Analysis-object: ', analysis
   # use this object
   print '\nAnalysis is: ', analysis.name
+  print 'Print out this analysis:'
+  print str(analysis)
   print 'PAS: ', analysis.pas
   print 'luminosity: ', analysis.lumi
   print 'Experiment: ', analysis.experiment
   print 'comment: ', analysis.comment
-  print 
+  print 'axes: ', analysis.axes
+  print
   print
 
   # to get specified Topology-object
-  topology = browser.expTopology('T1')
+  topology = browser.expTopology('TChiChipmSlepStau')
   print 'Topology-object: ', topology
   print 'name: ', topology.name
+  print 'Print out this topology:'
+  print str(topology)
   print 'analyses: ', topology.analyses
   print 'runs: ', topology.runs
   print 'category: ', topology.category
   print 'constraint: ', topology.constraints
   print 'decay: ', topology.decay
-  print 
-  print 
+  print 'short decay: ', topology.shortdecay
+  print 'third masses: ', topology.thirdMasses
+  print 'intermediate particles:', topology.intermediateParticles
+  print 'mother particle:', topology.motherParticle
+  print
+  print
   
-  ## to get a specified Result-object
-  result = browser.expResult("SUS12024","T1tttt" )
-  print 'Result is: ', result
-  print "has upper limits:", result.hasUpperLimits
-  #print "upper limits:", result.upperLimitDicts
-  print "has expected upper limits:", result.hasExpectedUpperLimits
-  # print "upper limits:", result.expectedUpperLimitDicts
+  ## to get a specified set of Result-objects
+  resultSet = browser.expResultSet("SUS13008","T6ttWW" )
+  print 'Set of results is: ', resultSet
+  print 'Print out this result set:'
+  print str(resultSet)
+  print "members of this set:", resultSet.members
+  print "results encapsulated in this set:", resultSet.results
+  print "observed upper limits:", resultSet.hasUpperLimitDicts()
+  print "expected upper limits:", resultSet.hasUpperLimitDicts(expected = True)
+  print 'Result is checked: ', resultSet.checked
+  
+  # to get one selected exclusion line:
+  
+  line = resultSet.exclusionLine(condition = 'M2/M0', value = 2.0)
+  print 'One selected exclusion line: ', line
+  print 'Default line: ', resultSet.exclusionLine()
+  
 
-  ## use this object
-  print '\nResult is checked: ', result.checked
-  # print '\nGet all the exclusionlines: ', result.exclusionLines
-  #print '\nSelect a specified exclusionline: ', \
-  result.selectExclusionLine(expected = False, sigma = 0)
-  
-  ## get Analysis belonging to this Pair:
-  #analysis = result.analysis
-  #print '\nNow we have an Analysis-object: ', analysis
-  #print '\nFor this Pair the PAS is: ', analysis.pas
-  #print ''
   
   
 if __name__ == '__main__':

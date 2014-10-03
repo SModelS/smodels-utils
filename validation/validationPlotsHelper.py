@@ -19,6 +19,82 @@ import copy
 
 logger = logging.getLogger(__name__)
 
+def getTarget(path):
+    """Checks if the target directory already exists and creates it if not.
+    
+    """
+    
+    if os.path.exists(path):
+        logger.info('Target %s already exists.' %path)
+        return path
+    
+    os.mkdir(path)
+    logger.info('Created new directory: %s' %path) 
+    return path 
+
+def checkFile(path):
+    """Checks if the data file already exists.
+    If the file already exists, the user can decide whether to remove it, 
+    or to exit the script.
+    
+    """
+    if os.path.exists(path):
+        print('File %s already exists!' %path)
+        while True:
+            userInput = raw_input('Replace old file? [y/n]:  ')
+            if userInput == 'n':
+                sys.exit()
+            if userInput == 'y':
+                os.remove(path)
+                return path
+    return path    
+
+def validateValue(value):
+    """Checks if given value is of type integer, assumes mass if so and adds
+    GeV. If type is float, value must correspond to either mass splitting or
+    mass ratio without unit.
+    
+    """
+    try:
+        value = int(value)
+        value = addunit(value, 'GeV')
+        return value
+    except ValueError:
+        try:
+            value = float(value)
+            return value
+        except ValueError:
+            logger.error('Unknown value %s for parametrization')
+            sys.exit()
+    
+def getExtension(expTopology, param, val, valStr):
+    """Produces possible extensions for the topology name via comparison
+    to database known cases.
+    
+    """
+    if not param:
+        return expTopology.name
+    for i, exTop in enumerate(expTopology.thirdMasses):
+        if exTop == (param, val):
+            extendedTopology = expTopology.name + expTopology.extensions[i]
+            return extendedTopology    
+    for i, exTop in enumerate(expTopology.thirdMasses):
+        print (exTop[0], exTop[1])
+        if exTop[0] == param:
+            if param == 'massSplitting':
+                extendedTopology = expTopology.name + valStr.replace('.', '')
+            elif param == 'M2/M0':
+                extendedTopology = expTopology.name +  expTopology.extensions[i]
+                extendedTopology = extendedTopology.replace('%s' %(exTop[1] * 100), '%s'%(val * 100))
+            else:
+                extendedTopology = expTopology.name + expTopology.extensions[i]
+                extendedTopology = extendedTopology[:-3]
+                rest = 3 - len(str(rmvunit(val, 'GeV')))
+                for j in range(rest):
+                    extendedTopology += '0'
+                extendedTopology = extendedTopology + str(rmvunit(val, 'GeV'))
+    return extendedTopology        
+
 def getMetadata(filename,tags):
     infile = open(filename,'r')
     data = infile.read()

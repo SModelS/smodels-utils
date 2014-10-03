@@ -16,6 +16,7 @@ import prettyDescriptions
 import setPath
 import sys
 import databaseBrowser
+from smodels.tools.physicsUnits import GeV, addunit, rmvunit
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -23,22 +24,22 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
 
+
 # ### FIX ME:
 
-# various names for same variables!
-# ordering of functions is confusing
-# code duplicates
+# add upperlimithistos as root.TH2!
 
 
-class ExpResult (object):
+class ExpResultSet (object):
     """Contains all result-specific information and objects (e.g. 
-    exclusion lines, histograms, ...). Uses the extended result objects to 
+    exclusion lines, histograms, ...). Encapsules the result objects to 
     handle different mass assumptions for given topology and analysis.
+    
     """
     
     def __init__ (self, run, expAnalysis, expTopology, smsroot, smspy):
-        """Sets all private variables, especially self._extendedResults 
-        as list containing all available extended results as objects.
+        """Sets all private variables, especially self._results 
+        as list containing all available results as objects.
     
         """
         self._expTopo = expTopology
@@ -50,14 +51,9 @@ class ExpResult (object):
         self._run = run
         logger.info('Creating experimental result object for %s-%s-%s!' \
         %(self._run, self._ana, self._topo))
-        self.extendedTopos = self._expAna.extendedTopologies[self._topo]
-        self._extendedResults = self._getExtendedResults
-        self._extResDefault = self._getExtendedResultsDefault
+        self._extTopos = self._expAna.extendedTopologies[self._topo]
+        self._results = self._getResults
         self._verbosity = 'error'
-
-    def __str__(self):
-        ret = "%s/%s" % ( self.expAnalysis.name, self.expTopology.name )
-        return ret
     
     @property
     def verbosity(self):
@@ -74,6 +70,229 @@ class ExpResult (object):
         level = self._validateLevel(level)
         self._verbosity = level
         self._setLogLevel(level)
+    
+    def __str__(self):
+        ret = "Analysis: %s \nTopology: %s" %(self._expAna, self._expTopo)
+        return ret
+        
+    @property
+    def name(self):
+        return self._ana + '-' + self._topo
+        
+        
+    @property    
+    def expAnalysis(self):
+        """Returns the analysis object linked to this set of results.
+        
+        """
+        return self._expAna
+    
+    @property    
+    def expTopology(self):
+        """Returns the topology object linked to this set of results.
+        
+        """
+        return self._expTopo
+        
+    @property    
+    def isChecked(self):
+        """Is this set of results checked?
+        
+        """
+        if self.checked: return True
+        return False
+    
+    @property    
+    def checked(self):
+        """Retrieves checked_by entry from info.txt.
+        
+        """
+        return self._checked
+    
+    @property    
+    def topologySet(self):
+        """Returns all the extended topologies linked to this result set.
+        
+        """
+        return self._extTopos
+        
+    @property
+    def results(self):
+        """Returns a dictionary containing all available result objects.
+        
+        """
+        return self._resultDict    
+    
+    @property
+    def resultNames(self):
+        """Returns a list containing all available result object names.
+        
+        """
+        return self._resultNames    
+    
+    
+    @property    
+    def condition(self):
+        """Retrieves the condition for this set of results.
+        
+        """
+        return self._condition
+        
+    @property    
+    def constraint(self):
+        """Retrieves constraint for this set of results.
+        
+        """
+        return self._constraint
+    
+    @property
+    def axes(self):
+        """Retrieves the axes for this set of results.
+        
+        """
+        return self._axes
+        
+    @property
+    def members(self):
+        """Retrieves the members of this set of results.
+        :return: {'extended topology': ('condition', value)}
+        """
+        return self._members
+        
+    def hasUpperLimitDicts(self, expected = False):
+        """Checks which observed/expected upper limit dictionaries there are  
+        for this result set.
+        
+        """
+        if self.upperLimitDicts(expected):
+            return [key for key in self.upperLimitDicts(expected)]
+        return None
+        
+    def upperLimitDicts(self, expected = False):
+        """Retrieves all the observed/expected upper limit dictionaries 
+        available for this result set.
+        # ### FIX ME: yields list -> for every extTopo 0> compare to exclusions to fix!
+        """ 
+        ulDicts = {}
+        for res in self._results:
+            ulDicts[res.name] = res.upperLimitDict(expected)
+        return ulDicts
+        
+    def upperLimitDict(self, expected = False, condition = None, value = None):
+        """Retrieves one observed/expected upper limit dictionary (out of all 
+        upper limit dictionaries available for this topology). 
+        If condition and value are None, the default mass assumptions will be used.
+        Condition and value as a tuple specify the result (out of this set) to be taken, e.g. ('fixedLSP', 50), ('massSplitting', 0.25), ...
+        :param condition: condition for the third mass 
+        :param value: value of the condition as either float or integer
+        """
+        
+        extTopo = self._getExtendedTopology(condition = condition, value = value)
+        resultName = self.name.replace(self._topo, extTopo)
+        if not resultName in self.upperLimitDicts(expected = expected):
+            if expected:
+                logger.error('No expected upper limit dictionary could be found\
+                for %s!' %extTopo)
+                return None
+            logger.error('No upper limit dictionary could be found for %s!' \
+            %extTopo)
+            return None
+        return self.upperLimitDicts(expected = expected)[resultName]
+    
+    @property
+    def allExclusionLines(self):
+        """Returns all exclusion lines available for this 
+        result set as ROOT TGraphs. 
+        
+        """
+        contours = {}
+        for res in self._results:
+            contours[res.name] = res.allExclusionLines
+        return contours
+    
+    def exclusionLines(self, expected = False):
+        """Returns all observed/expected exclusion lines available for this 
+        result set as ROOT TGraphs. 
+        
+        """
+        contours = {}
+        for res in self._results:
+            contours[res.name] = res.exclusionLines(expected)
+        return contours
+        
+    
+    def exclusionLine(self, expected = False, sigma = 0, \
+    condition = None, value = None):
+        """Retrieves one observed/expected exclusion line (out of all 
+        exclusion lines available for this topology). 
+        If condition and value are None, the default mass assumptions 
+        will be used.
+        Condition and value as a tuple specify the result (out of this set) to be taken, e.g. ('fixedLSP', 50), ('massSplitting', 0.25), ...
+        :param condition: condition for the third mass 
+        :param value: value of the condition as either float or integer
+        :param expected: False/True gives observed/expected
+        :param sigma: -1, 0, 1.
+        
+        """
+        extTopo = self._getExtendedTopology(condition = condition, value = value)
+        resultName = self.name.replace(self._topo, extTopo)
+        if not resultName in self.exclusionLines(expected = expected)\
+        or not sigma in self.exclusionLines(expected = expected)[resultName]: 
+            if expected:
+                logger.error('No expected exclusion lines could be found for %s!' \
+                %extTopo)
+                return None
+            logger.error('No exclusion lines could be found for %s!' \
+            %extTopo)
+            return None
+        return self.exclusionLines(expected = expected)[resultName][sigma]
+    
+    @property
+    def allExclusions(self):
+        """Returns all exclusions available for this 
+        result set as values. 
+        
+        """
+        values = {}
+        for res in self._results:
+            values[res.name] = res.allExclusions
+        return values
+        
+    def exclusions(self, expected = False):
+        """Returns all observed/expected exclusion values available for this result.
+        
+        """
+        
+        exclusions = {}
+        for res in self._results:
+            exclusions[res.name] = res.exclusions(expected)
+        return exclusions
+        
+    def exclusion(self, expected = False, typ = 'xmax', condition = None, value = None):
+        """Retrieves one observed/expected exclusion line (out of all 
+        exclusion lines available for this topology). 
+        If condition and value are None, the default mass assumptions 
+        will be used.
+        Condition and value as a tuple specify the result (out of this set) to be taken, e.g. ('fixedLSP', 50), ('massSplitting', 0.25), ...
+        :param condition: condition for the third mass 
+        :param value: value of the condition as either float or integer
+        :param expected: False/True gives observed/expected
+        :param typ: "limit", "min", "max"
+        
+        """
+        
+        extTopo = self._getExtendedTopology(condition = condition, value = value)
+        resultName = self.name.replace(self._topo, extTopo)
+        if not resultName in self.exclusionLines(expected = expected)\
+        or not typ in self.exclusionLines(expected = expected)[resultName]:
+            if expected:
+                logger.error('No expected exclusions could be found for %s!' \
+                %extTopo)
+                return None
+            logger.error('No exclusions could be found for %s!' \
+            %extTopo)
+            return None
+        return self.exclusions(expected = expected)[resultName][typ]
         
     def _validateLevel(self, level):
         """Validates given level for pythons logger module.
@@ -94,145 +313,9 @@ class ExpResult (object):
             logger.setLevel(level=logging.WARNING)
         if level == 'error':
             pass
-    
-    @property
-    def name(self):
-        return self._ana + '_' + self._topo
-
-    @property
-    def _getExtendedResults(self):
-        """Retrieves a list of all extended results we have for this 
-        analysis topology pair.
-        
-        """
-        exRes = [ExtendedResult(extop, self._expAna, self._smsroot, self._smspy)\
-        for extop in self.extendedTopos]
-        return exRes
         
     @property    
-    def _getExtendedResultsDefault(self):
-        """Defines the default mass assumptions for this result. 
-        If there is just a single result, this will be the default, 
-        else the one with mass splitting = 050.
-    
-        """
-        # ### FIX ME: rework default settings and docstring 
-        exRes = self._extendedResults
-        if len(exRes) == 1:
-            logger.debug('There is only one extended Result for %s-%s!' \
-            %(self._ana, self._topo))
-            return exRes[0]
-        logger.debug('There are %s extended results for %s-%s!' \
-        %(len(exRes), self._ana, self._topo))
-        exRes = [er for er in exRes if er.topoName == self._topo + '050']
-        if not exRes:
-            logger.warning('FIX ME: there is no default for: %s' %self.extendedTopos)
-            return None
-        return exRes[0]
-    
-    @property    
-    def expAnalysis(self):
-        """Returns the analysis-object linked to this result-object.
-        
-        """
-        return self._expAna
-    
-    @property    
-    def expTopology(self):
-        """Returns the topology-object linked to this result-object.
-        
-        """
-        return self._expTopo
-    
-    @property    
-    def extendedTopologies(self):
-        """Returns the all the extended topologies linked to this result-object.
-        
-        """
-        return self.extendedTopos
-    
-    @property    
-    def hasUpperLimitDict(self):
-        """Checks if there is an upper limit dictionary for this result.
-        
-        """
-        return self.hasUpperLimits
-
-    @property    
-    def hasUpperLimits(self):
-        """Checks if there is an upper limit dictionary for this result.
-        
-        """
-        if self.upperLimitDicts:
-            return True
-        return False
-        
-    
-    @property    
-    def hasExpectedUpperLimits(self):
-        """Checks if there is an expected upper limit dictionary for this result.
-        
-        """
-        if not self.expectedUpperLimitDicts:
-            return False
-        for (key,value) in self.expectedUpperLimitDicts.items():
-            if value!=[None]:
-                return True
-        return False
-        
-    @property
-    def upperLimitDicts(self):
-        """Retrieves all the upper limit dictionaries available for this result.
-        
-        """ 
-        ulDicts = {}
-        for exTopo in self.extendedTopos:
-            ulDicts[exTopo] = self.upperLimitDict(extendedTopoName = exTopo)
-        return ulDicts
-        
-    @property
-    def expectedUpperLimitDicts(self):
-        """Retrieves all the expected upper limit dictionaries available for this result.
-        
-        """ 
-        ulDicts = {}
-        for exTopo in self.extendedTopos:
-            ulDicts[exTopo] = self.upperLimitDict(extendedTopoName = exTopo, expected = True)
-        return ulDicts
-        
-    def upperLimitDict(self, extendedTopoName = 'default', expected = False):
-        """Retrieves the upper limit dictionary (out of all upper limit 
-        dictionaries available for this topology). If no extended topology name is 
-        given, the default mass assumptions will be used.
-        
-        """
-        
-        if extendedTopoName == 'default':
-            logger.debug('Using default for mass proportions!')
-            extRes = self._extResDefault
-            if not extRes:
-                logger.error('Could not retrieve upper limit dictionary!\n \
-                Check if there is a proper default for %s!' %self.extendedTopos)
-                return None
-            return extRes.upperLimitDict()
-        if not extendedTopoName in self.extendedTopologies:
-            logger.error('No valid extended topology %s! Possibilities are %s: '\
-            %(extendedTopoName, self.extendedTopologies))
-            return None
-        extendedResults = [exRes for exRes in self._extendedResults if \
-        extendedTopoName == exRes.topoName]
-        return extendedResults[0].upperLimitDict(expected)
-        
-    @property    
-    def isChecked(self):
-        """Is this result checked?
-        
-        """
-        if self.checked: return True
-        return False
-    
-    @property    
-    def checked(self):
+    def _checked(self):
         """Retrieves checked_by entry from info.txt.
         
         """
@@ -243,7 +326,7 @@ class ExpResult (object):
         #the checked flag is fixed in every info.txt
         if len(infoLine.split()) == 1: 
             logger.warning('There is no information about single topologies.')
-            return infoLine
+            return infoLine[0]
         
         infoLine = infoLine.split(',')
         logger.debug('First preprocessed infoLine: %s.' %infoLine)
@@ -257,7 +340,7 @@ class ExpResult (object):
         return infoLine[0].strip()
     
     @property
-    def condition(self):
+    def _condition(self):
         """Retrieves the condition for this result.
         
         """
@@ -275,7 +358,7 @@ class ExpResult (object):
         return cond[0]
      
     @property
-    def constraint(self):
+    def _constraint(self):
         """Retrieves the constraint for this result.
         
         """
@@ -291,262 +374,237 @@ class ExpResult (object):
             %self.name)
             return cond
         return cons[0]
+    
+    
+
+    @property
+    def _getResults(self):
+        """Retrieves a list of all extended results we have for this 
+        analysis topology pair.
+        
+        """
+        res = [ExpResult(extop, self._expAna, self._expTopo, self._smsroot, \
+        self._smspy) for extop in self._extTopos]
+        return res
         
     @property
-    def axes(self):
+    def _resultDict(self):
+        return {r.name: r for r in self._results}
+    
+    @property
+    def _resultNames(self):
+        return [r.name for r in self._results]
+    
+    
+    def _getExtendedTopology(self, condition = None, value = None):
+        """Creates the name of the extended topology (e.g. 'T6ttWWLSP050')
+        :param condition: condition for the third mass as string (e.g. 'massSplitting')
+        :param value: value for the condition as string (e.g. 0.25)
+        :return: 'extended topology'
+        # ### FIX ME whats with the units when matching with given values? give values with units? Add units?
+        """
+
+        if not condition or not value:
+            return self._getDefaultExtendedTopology
+        else:
+            if type(value) == int:
+                value = addunit(value, 'GeV')
+            for res in self._results:
+                if res.axes['mz'] == (condition, value):
+                    return res._topo
+                else: continue 
+            logger.warning('Unknown condition for third mass %s = %s!' \
+            %(condition, value))
+            return self._getDefaultExtendedTopology
+    
+    @property
+    def _getDefaultExtendedTopology(self):
+        """Retrieves the default topology settings for this set of results.
+        :return: 'extended topology'
+    
+        """
+        first = self._expAna._infotxt.axes[self._topo][0]
+        if first['extension']:
+            return self._topo + first['extension']
+        else:
+            return self._topo
+        
+    
+    @property
+    def _axes(self):
         """Retrieves the axes information for this result.
         :return: {extended topology: 
         {'mx': mass on x-axis, 'my': mass on y-axes, 
         'mz': condition for intermediate mass}}
         
         """
-        axdict = {}
         if not self._expAna.hasAxes:
             logger.warning('No axes information available for analysis %s.' \
             %self._ana)
             return None
-        ax = [ a.strip() for a in self._expAna.axes if self._topo in a]
-        ax = ax[0].replace('%s:' %self._topo, '')
-        logger.debug('1) Axes information: %s.' %ax)
-        if len(self.extendedTopos) == 1:
-            axdict[self._topo] = {}
-            logger.debug('2) Axes information: %s.' %ax.split())
-            axdict[self._topo]['mx'] = ax.split()[0].strip()
-            axdict[self._topo]['my'] = ax.split()[1].strip()
-            try:
-                axdict[self._topo]['mz'] = ax.split()[2].strip()
-            except IndexError:
-                logger.info('No intermediate mass mz.')
-                axdict[self._topo]['mz'] = None
-            try:
-                logger.warning('There is a second condition for the masses: %s!'\
-                %ax.split()[3].strip())
-            except IndexError: pass
-        else:
-            logger.warning('There are %s extended topologies!'\
-            %len(self.extendedTopos))
-            ax = ax.split('-')
-            logger.debug('3) Axes information: %s.' %ax)
-            for et in self.extendedTopos:
-                axdict[et] = {}
-                extention = et.replace(self._topo, '')
-                if not 'D' in extention:
-                    for a in ax:
-                        logger.debug('4) Axes information: %s.' %a)
-                        if a.split()[2].strip() == extention:
-                            axdict[et]['mx'] = a.split()[0].strip()
-                            axdict[et]['my'] = a.split()[1].strip()
-                            axdict[et]['mz'] = a.split()[2].strip()
-                else:
-                    for a in ax:
-                        logger.debug('4) Axes information: %s.' %a)
-                        if extention.strip('D') == a.split()[2].split('=')[-1].strip():
-                            axdict[et]['mx'] = a.split()[0].strip()
-                            axdict[et]['my'] = a.split()[1].strip()
-                            axdict[et]['mz'] = a.split()[2].strip()
-               
-        return axdict
-        
-    @property
-    def extendedResults(self):
-        """Returns a list containing all available extended 
-        results as objects.
-        
-        """
-        return self._extendedResults
-     
-    # ### FIX ME: rework exclusions and exclusionLines to not get one type for all mass splittings but all types for one mass splitting!!! 
-    
-    @property
-    def exclusionLines(self):
-        """Returns all exclusion lines available for this result 
-        as ROOT TGraphs. 
-        
-        """
-        contours = {}
-        for exRes in self._extendedResults:
-            contours[exRes.name] = exRes.exclusionLines
-        return contours
-    
-    @property
-    def exclusions(self):
-        """Returns all exclusion values available for this result.
-        
-        """
-        values = {}
-        for exRes in self._extendedResults:
-            values[exRes.name] = exRes.exclusions
-        return values
-        
-    def typeOfExclusionLines(self,expected = False, sigma = 0):
-        """Returns a list containing the exclusion lines for all mass 
-        assumptions available for this result as ROOT TGraphs. 
-        If expected is set to False, the observed exclusion lines will 
-        be returned, else the expected ones. 
-        Possible values for keyword argument "sigma" are: -1,0,1.
-        
-        """
-        return [exRes.exclusionLine(expected, sigma) for exRes in \
-        self._extendedResults]
-        
-    def typeOfExclusions(self,expected = False, typ = 'xmax'):
-        """Returns a list containing all exclusion values for all mass 
-        assumptions available for this result. If expected is set to False, 
-        the observed values will be returned, else the expected ones. 
-        Possible values for keyword argument "typ" are: "minx", "xmin", "xmax".
-        
-        """
-        return [exRes.exclusion(expected, typ) for exRes in \
-        self._extendedResults]
-        
-    def exclusionLine(self, extendedTopoName = 'default', expected = False, \
-    sigma = 0):
-        """Retrieves one specified exclusion line (out of all exclusion lines  
-        available for this topology) as ROOT TGraph. If no extended 
-        topology name is given, the default mass assumptions will be used. 
-        If expected is set to False, the observed exclusion line will be 
-        returned, else the expected one. Possible values for keyword argument 
-        "sigma" are: -1, 0, 1.
-        
-        """
-        
-        return self._getSingleAttribute(extendedTopoName, expected, \
-        sigma, 'exclusionLine')
-        
-    def exclusion(self, extendedTopoName = 'default', expected = False, typ = 'xmax'):
-        """Retrieves one specified exclusion value (out of all exclusion   
-        values available for this topology). If no extended topology name is 
-        given, the default mass assumptions will be used. 
-        If expected is set to False, the observed exclusion value will be 
-        returned, else the expected one. Possible values for keyword argument 
-        "typ" are: "limit", "min", "max".
-        
-        """
-        
-        return self._getSingleAttribute(extendedTopoName, expected, typ, \
-        'exclusion')
-        
-    def _getSingleAttribute(self, extendedTopoName, expected, argument, \
-    attribute):
-        """Private method used by the methods 'exclusionLine' and 'exclusion'.
-        Retrieves either an exclusion line or an exclusion value.
-        
-        """
-        if extendedTopoName == 'default':
-            logger.debug('Using default for mass proportions!')
-            extRes = self._extResDefault
-            if not extRes:
-                logger.error('Could not retrieve exclusion line! \n \
-                Check if there is a proper default for %s!' %self.extendedTopos)
-                return None
-            return getattr(extRes, attribute)(expected, argument)
-        if not extendedTopoName in self.extendedTopologies:
-            logger.error('No valid extended topology %s! Possibilities are %s: '\
-            %(extendedTopoName, self.extendedTopologies))
+        try:
+            return self._expAna.axes[self._topo]
+        except KeyError:
+            logger.warning('No axes information available for set of results \
+            %s.' %self.name)
             return None
-        extendedResults = [exRes for exRes in self._extendedResults if \
-        extendedTopoName == exRes.topoName]
-        return getattr(extendedResults[0], attribute)(expected, argument)
     
-    
-        
-    def selectExclusionLine(self, expected = False, sigma = 0, \
-    condition = 'xvalue', value = '050'):
-        """Selects one type of exclusion line (out of all exclusion lines 
-        for this topology) corresponding to a specified case of mass proportions.
-        :param expected: switch between the observed (False) or the 
-        expected (True) exclusion lines
-        :param sigma: Takes -1, 0 or 1 corresponding to minus one sigma, 
-        no sigma or plus one sigma exclusion lines
-        :param condition: Takes the condition for the masses as string
-        (e.g. 'xvalue', 'LSP', 'D(M1/M2)=', ...)
-        :param value: Takes the value for the mass condition as string
-        (e.g. '050', '100', ...)
-        
+    @property
+    def _members(self):
+        """Retrieves (condition, value) tuples for all the results in this set.
+        # ### FIX ME: if there is no information about mz this results in {'Tx': None}
+        this is not very nice?
         """
-        
-        if condition == 'xvalue':
-            exTopName = self._topo + value
-        elif condition in ['LSP' ,'x' ,'C' ,'M'] or 'D' in condition:
-            exTopName = self._topo + condition + value
-        else:
-            logger.error('Unknown condition %s!' %condition)
-            
-        return self.exclusionLine(extendedTopoName = exTopName, \
-        expected = expected, sigma = sigma)
+        axes = self._expAna._infotxt.axes[self._topo]
+        mems ={}
+        for ax in axes:
+            if ax['extension']:
+                mems[self._topo + ax['extension']] = ax['mz']
+            else:
+                mems[self._topo] = ax['mz']
+        return mems        
 
-class ExtendedResult(object):
-    """Contains all specific informations linked to one extended result,
-    where an extended result denotes a pair of analysis and topology
-    when a specified case of mass proportions is assumed (e.g. x-value = 050, 
-    mass of LSP = 50 GeV, ...).
+class ExpResult(object):
+    """Contains all specific informations linked to one result,
+    where a result denotes a pair of analysis and topology with a specific
+    assumption for the third mass (e.g. x-value = 050, mass of LSP = 50 GeV, ...).
     
     """
     
-    def __init__(self, extendedTopologyName, expAnalysis, smsroot, smspy):
+    def __init__(self, topology, expAnalysis, expTopology, smsroot, smspy):
         """Sets all private variables and initiates the dictionaries for 
         exclusion lines and exclusions.
         
         """
-        self._topoName = extendedTopologyName
+        self._topo = topology
         self._expAna = expAnalysis
+        self._expTopo = expTopology
         self._ana = expAnalysis.name
         self._run = expAnalysis.run
         self._smsroot = smsroot
         self._smspy = smspy
+    
+    def __str__(self):
+        ret = "%s" %self.name
+        return ret
         
     @property
     def name(self):
         """Returns the name of this experimental result as concatenated string.
         
         """
-        return self._ana + '-' + self._topoName
-     
+        return self._ana + '-' + self._topo
+        
     @property
-    def topoName(self):
-        """Returns the name of the extended topology e.g.: 'TChiChipmSlepL050'.
-
+    def experimentalAnalysis(self):
+        """Retrieves the experimental analysis object.
         """
-        return self._topoName
-
-    def exclusionLine(self, expected = False, sigma = 0):
-        """Retrieves one specified exclusion line (out of all exclusion lines  
-        available for this topology) as ROOT TGraph. If expected is set 
-        to False, the observed exclusion line will be returned, else the 
-        expected one. Possible values for keyword argument "sigma" are: -1, 0, 1.
-        
+        return self._expAna
+    
+    @property
+    def experimentalTopology(self):
+        """Retrieves the experimental topology object.
         """
-        
-        sigmaDict = self.exclusionLines['observed']
-        if expected: sigmaDict = self.exclusionLines['expected']
-        return sigmaDict[sigma]
-        
-    def exclusion(self, expected = False, typ = 'xmax'):
-        """Retrieves one specified exclusion value (out of all exclusion   
-        values available for this topology). If expected is set to False, the 
-        observed value will be returned, else the expected one. 
-        Possible values for keyword argument "typ" are: "minx", "xmin", "xmax".
+        return self._expTopo
+    
+    @property
+    def siblings(self):
+        """Retrieves the names of all the related results.
         
         """
-
-        typDict = self.exclusions['observed']
-        if expected: typDict = self.exclusions['expected']
-        if typ in typDict:
-            return typDict[typ]
-        logger.warning('There is no exclusion of type %s (expected = %s).'\
-        %(typ, expected))
-        return None
+        return self._siblings
+    
+    @property
+    def axes(self):
+        """Retrieves the x- and y- axis of the upper limit histogram
+        end the additional condition for the third mass, if there is any.
+        """
+        return self._axes
         
-    @property    
-    def exclusionLines(self):
+    
+    @property
+    def allExclusionLines(self):
         """Retrieves the exclusion lines from the sms.root file linked to the 
         corresponding analysis and builds a nested dictionary including all 
-        the exclusion lines: 
-        {'observed': {1: TGraph, 0: TGraph, -1: TGraph}, 
+        the exclusion lines. 
+        :return: {'observed': {1: TGraph, 0: TGraph, -1: TGraph}, 
         'expected': {1: TGraph, 0: TGraph, -1: TGraph}}
         
         """
+        
+        return self._allExclusionLines
 
+    def exclusionLines(self, expected = False):
+        """Retrieves the observed/expected exclusion lines for this result 
+        as a dictionary.
+        :return: {1: TGraph, 0: TGraph, -1: TGraph}
+        
+        """
+        return self._exclusionLines(expected)
+    
+    def exclusionLine(self, expected = False, sigma = 0):
+        """Retrieves one observed/expected exclusion line for this result 
+        specified by sigma.
+        :param sigm: 1,0,-1
+        :return: {1: TGraph, 0: TGraph, -1: TGraph}
+        
+        """
+
+        return self._exclusionLine(expected, sigma)
+    
+    @property
+    def allExclusions(self):
+        """Retrieves the exclusion values for this result from the experimental  
+        analysis object and builds a nested dictionary including all the 
+        exclusion values.
+        :return: {'observed': {'minx': value, 'xmin':value, 'xmax': value}, 
+        'expected': {'minx': value, 'xmin': value, 'xmax': value}}
+        
+        """
+        return self._allExclusions
+    
+    def exclusions(self, expected = False):
+        """Retrieves the observed/expected exclusion values for this result 
+        as a dictionary.
+        :return: {'minx': value, 'xmin':value, 'xmax': value}
+        
+        """
+        return _exclusions(expected)
+    
+    def exclusion(self, expected = False, typ = 'xmax'):
+        """Retrieves the observed/expected exclusion value for this result 
+        specified by typ.
+        :param typ: 'minx', 'xmin', 'xmax'
+        :return: {'minx': value, 'xmin':value, 'xmax': value}
+        
+        """
+        return self._exclusion(expected, typ)
+    
+    def upperLimitDict(self, expected = False):
+        """Retrieves the observed/expected cross section upper limit dictionary for this 
+        result from the sms.py file located in the database.
+        
+        """
+        return self._upperLimitDict(expected)
+    
+    @property
+    def _siblings(self):
+        sibs = []
+        for t in self._expAna.extendedTopologies[self._expTopo.name]:
+            sibs.append(self._ana + '-' + t)
+        return sibs
+    
+    @property    
+    def _allExclusionLines(self):
+        """Retrieves the exclusion lines from the sms.root file linked to the 
+        corresponding analysis and builds a nested dictionary including all 
+        the exclusion lines. 
+        :return: {'observed': {1: TGraph, 0: TGraph, -1: TGraph}, 
+        'expected': {1: TGraph, 0: TGraph, -1: TGraph}}
+        
+        """
+        if not self._smsroot:
+            return None
         rootFile = ROOT.TFile(self._smsroot)
         exclusionLines = {'observed': 'exclusion', 'expected':\
         'expectedexclusion'}
@@ -554,38 +612,75 @@ class ExtendedResult(object):
             sigmaDict = {1: 'p1', 0: '', -1: 'm1'}
             for sigmaKey, sigmaValue in sigmaDict.items():
                 sigmaDict[sigmaKey] = rootFile.Get(value + sigmaValue + '_' + \
-                self._topoName)
-                ###FIX ME: work around to handel exclusionlines of the topology TChiWZon,TChiWZoff and T6bbWWoff: 
+                self._topo)
+                ###FIX ME: work around to handel exclusionlines of the topology TChiWZon: 
                 if not sigmaDict[sigmaKey]:
-                    if self.topoName[-2:] == 'on':
+                    if self._topo[-2:] == 'on':
                         sigmaDict[sigmaKey] = rootFile.Get(value + sigmaValue + '_' + \
-                        self._topoName[:-2])
-                    if self.topoName[-3:] == 'off':
+                        self._topo[:-2])
+                    if self._topo[-3:] == 'off':
                         sigmaDict[sigmaKey] = rootFile.Get(value + sigmaValue + '_' + \
-                        self._topoName[:-3])
-                    if 'T6bbWWoff' in self._topoName:
-                        sigmaDict[sigmaKey] = rootFile.Get(value + sigmaValue + '_' + \
-                        self._topoName.replace('off',''))                        
+                        self._topo[:-3])
                 ###---------------------------------------------------------------------
             exclusionLines[key] = sigmaDict
         logger.debug('Built dictionary for exclusion lines for %s-%s-%s: %s.'\
-        %(self._run, self._ana, self._topoName, exclusionLines))     
+        %(self._run, self._ana, self._topo, exclusionLines))     
         return exclusionLines
+     
+    def _exclusionLines(self, expected):
+        """Retrieves the observed/expected exclusion lines for this result 
+        as a dictionary.
+        :return: {1: TGraph, 0: TGraph, -1: TGraph}
         
+        """
+        if not expected:
+            if self.allExclusionLines['observed']:
+                return self.allExclusionLines['observed']
+            logger.warning('No observed exclusion lines were found for \n \
+            extended result %s!' %self.name)
+            return None
+        if expected:
+            if self.allExclusionLines['expected']:
+                return self.allExclusionLines['expected']
+            logger.warning('No expected exclusion lines were found for \n \
+            extended result %s!' %self.name)
+            return None 
+    
+    def _exclusionLine(self, expected, sigma):
+        """Retrieves one observed/expected exclusion line for this result 
+        specified by sigma.
+        :param sigm: 1,0,-1
+        :return: {1: TGraph, 0: TGraph, -1: TGraph}
+        
+        """
+        if not expected:
+            if self.exclusionLines() and sigma in self.exclusionLines():
+                return self.exclusionLines[sigma]
+            logger.warning('No observed exclusion line with %s was found for \n \
+            result %s!' %(sigma, self.name))
+            return None
+        if expected:
+            if self.exclusionLines(expected = True) and sigma \
+            in self.exclusionLines(expected = True):
+                return self.exclusionLines(expected = True)[sigma]
+            logger.warning('No expected exclusion line with %s was found for \n \
+            result %s!' %(sigma, self.name))
+            return None 
+    
     @property
-    def exclusions(self):
+    def _allExclusions(self):
         """Retrieves the exclusion values for this result from the experimental  
         analysis object and builds a nested dictionary including all the 
-        exclusion values of form:
-        {'observed': {'minx': value, 'xmin':value, 'xmax': value}, 
+        exclusion values.
+        :return: {'observed': {'minx': value, 'xmin':value, 'xmax': value}, 
         'expected': {'minx': value, 'xmin': value, 'xmax': value}}
         
         """
         
         excl = self._expAna.exclusions
-        excl = [e for e in excl if self._topoName in e]
+        excl = [e for e in excl if self._topo in e]
         logger.debug('Found exclusions for %s-%s-%s: %s.'\
-        %(self._run, self._ana, self._topoName, excl))
+        %(self._run, self._ana, self._topo, excl))
         exclDict = {'observed': 'exclusions', 'expected': 'expectedexclusions'}
         typDict = {}
         for key, value in exclDict.items():
@@ -598,27 +693,91 @@ class ExtendedResult(object):
                     except IndexError:
                         logger.warning('Incorrect number (%s) of exclusion \n \
                         values for %s-%s-%s-%s!' %(len(line), self._run, self._ana, \
-                        self._topoName, value))
+                        self._topo, value))
                         typDict = {'xmin': line[2].strip(), \
                         'xmax': line[3].strip()}
             exclDict[key] = typDict
         logger.debug('Built dictionary for exclusion values for %s-%s-%s: %s.'\
-        %(self._run, self._ana, self._topoName, exclDict))    
+        %(self._run, self._ana, self._topo, exclDict))    
         return exclDict
         
-    
-    def upperLimitDict(self, expected = False):
+    def _exclusions(self, expected):
+        """Retrieves the observed/expected exclusion values for this result 
+        as a dictionary.
+        :return: {'minx': value, 'xmin':value, 'xmax': value}
+        
+        """
+        if not expected:
+            if self.allExclusions['observed']:
+                return self.allExclusions['observed']
+            logger.warning('No observed exclusion values were found for \n \
+            result %s!' %self.name)
+            return None
+        if expected:
+            if self.allExclusions['expected']:
+                return self.allExclusions['expected']
+            logger.warning('No expected exclusion values were found for \n \
+            result %s!' %self.name)
+            return None
+        
+    def _exclusion(self, expected, typ):
+        """Retrieves the observed/expected exclusion value for this result 
+        specified by typ.
+        :param typ: 'minx', 'xmin', 'xmax'
+        :return: {'minx': value, 'xmin':value, 'xmax': value}
+        
+        """
+        if not expected:
+            if self.exclusions() and typ in sel.exclusions():
+                return self.exclusions()[typ]
+            logger.warning('No observed exclusion value with %s was found for \n \
+            result %s!' %(typ,self.name))
+            return None
+        if expected:
+            if self.exclusions(expected = True) and typ \
+            in self.exclusions(expected = True):
+                return self.exclusions(expected = True)[typ]
+            logger.warning('No expected exclusion value with %s was found for \n \
+            result %s!' %(typ, self.name))
+            return None
+            
+    def _upperLimitDict(self, expected):
+        """Retrieves the observed/expected cross section upper limit dictionary for this 
+        result from the sms.py file located in the database.
+        
+        """
         localSms = {}
+        fakeDicts = [[None], [None, None], [None, None, None]]
         if self._smspy:
             execfile(self._smspy, localSms)
-        if not expected and 'Dict' in localSms and \
-        self._topoName in localSms['Dict']:
-            return localSms['Dict'][self._topoName]
+        else:
+            return None
+        if not expected:
+            if 'Dict' in localSms and self._topo in localSms['Dict']:
+                if localSms['Dict'][self._topo] in fakeDicts:
+                    logger.warning('No useful upper limit dictionary was found \n \
+                    for extended result %s!' %self.name)
+                    return None
+                return localSms['Dict'][self._topo]
             logger.warning('No upper limit dictionary was found for extended \n \
             result %s!' %self.name)
-        if expected and 'ExpectedDict' in localSms and \
-        self._topoName in localSms['ExpectedDict']:
-            return localSms['ExpectedDict'][self._topoName]    
+            return None
+        if expected:
+            if 'ExpectedDict' in localSms and self._topo in \
+            localSms['ExpectedDict']:
+                if localSms['ExpectedDict'][self._topo] in fakeDicts:
+                    logger.warning('No useful expected upper limit dictionary  \n \
+                    was found for extended result %s!' %self.name)
+                    return None
+                return localSms['ExpectedDict'][self._topo]    
             logger.warning('No expected upper limit dictionary was found  \n \
-            for extended result %s!' %self.name)
-        
+            for extended result %s!' %self.name)  
+            return None
+            
+    @property
+    def _axes(self):
+        for ax in self._expAna._infotxt.axes[self._expTopo.name]:
+            if self._expTopo.name + ax['extension'] != self._topo:
+                continue
+            a = {key: ax[key] for key in ax if key != 'extension'}
+            return a

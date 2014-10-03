@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-.. module:: validationPlot
+.. module:: validationPlots
      :synopsis: Module to create a validation plot for given grid data file. 
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
@@ -22,9 +22,10 @@ from smodels_tools.tools.databaseBrowser import Browser
 
 logger = logging.getLogger(__name__)
 
-def main():
+def main(arguments = None):
     """Handles all command line options.
     Produces the validation plot.
+    :param None: if set to None script uses the argparser, else takes list of arguments
     :param Base: sets the path to the smodels-database
     :param analysis: analysis the validation plot should be preoduced for
     :param topology: topology the validation plot should be preoduced for
@@ -54,38 +55,51 @@ def main():
     argparser.add_argument ('-n', '--events',\
     help = 'set number of events - default: 10000', \
     type = types.IntType, default = 10000)
-    argparser.add_argument ('-i', '--intermediate', \
-    help = 'condition and value for intermediate particle - default: xvalue,050', \
-    type = types.StringType, default = 'xvalue,050')
+    argparser.add_argument ('-p', '--parametrization', \
+    help = 'mass parametrization when there is an intermediate particle \n \
+    - default: None', type = types.StringType, default = None)
+    argparser.add_argument ('-v', '--value', help = 'value for parametrization \n \
+    - default: 0.50', type = types.StringType, default = '0.50')
     args = argparser.parse_args()
 
-    browser = Browser(args.Base)
-    topology = args.topology
-    intermediate = args.intermediate.split(',')
-    intermediate = [i.strip() for i in intermediate]
-    if intermediate[0] == 'xvalue':
-        condition = ''
+    if not arguments:
+        base = args.Base
+        topology = args.topology
+        parametrization = args.parametrization
+        value = args.value
+        valueString = value
+        if not parametrization:
+            value = None
+            valueString = None
+        else:
+            value = validationPlotsHelper.validateValue(value)
     else:
-        condition = intermediate[0]
-    if intermediate[1] == '050' and not condition:
-        value = ''
-    else:
-        value = intermediate[1]
+        base = arguments['base']
+        topology = arguments['topology']
+        parametrization = arguments['parametrization']
+        value = arguments['value']
+        valueString = arguments['valueString']
+        
+    browser = Browser(base)
     if topology[-2:] == 'on':
         topologyName = topology[:-2]
-    elif topology[-3:] == 'off':
-        topologyName = topology[:-3]
+
     else: topologyName = topology
-    extendedTopology = topology + condition + value
-    analysis = args.analysis
-    targetPath = getTarget(args.directory)
-    events = args.events
-    order = args.order
-    expRes = browser.expResult(analysis, topology)
-    if not expRes:
-        expRes = browser.expResult(analysis, topologyName)
-    expAna = expRes.expAnalysis
-    expTopo = expRes.expTopology
+    if not arguments:
+        analysis = args.analysis
+        targetPath = getTarget(args.directory)
+        events = args.events
+        order = args.order
+    else:
+        analysis = arguments['analysis']
+        targetPath = getTarget(arguments['directory'])
+        events = arguments['events']
+        order = arguments['order']
+        
+    expResultSet = browser.expResultSet(analysis, topology)
+    expAna = expResultSet.expAnalysis
+    expTopo = expResultSet.expTopology
+    extendedTopology = validationPlotsHelper.getExtension(expTopo, parametrization, value, valueString)
     
     #Define metadata tags:
     tags = ['decay', 'analysis', 'outFile','factor','rootTag', 'intermediate']
@@ -97,8 +111,10 @@ def main():
     print ("========================================================")
     print('Producing the validation plot')
     print('Topology: ', topology)
+    print('Parametrization: ', parametrization)
+    print('Value: ', value)
     print('Analysis: ', analysis)
-    print('Using database: ', args.Base)
+    print('Using database: ', base)
     print('Use grid file: ', f)
     print ("========================================================")
     
@@ -127,57 +143,58 @@ def main():
     allowed = results['allowed']
     notTested = results['notTested']
     exclusionLine = validationPlotsHelper.getEnvelope(excluded)
+    
     if extendedTopology == 'T6ttWWLSP050':
         exclusionLine = validationPlotsHelper.cutGraph(exclusionLine, 19, before = False, after = True)
     if extendedTopology == 'T6ttWWx166':
         exclusionLine = validationPlotsHelper.cutGraph(exclusionLine, 16, before = False, after = True)    
         exclusionLine = validationPlotsHelper.addPoint(exclusionLine, 587., 100.)
-    if not condition and not value:
-        officialExclusionLine = expRes.exclusionLine()
+    if expResultSet.exclusionLine(condition = parametrization, value = value):    
+        officialExclusionLine = expResultSet.exclusionLine(condition = parametrization, value = value)
+        officialExclusionLineAbove = None
+        officialExclusionLineBelow = None
+        valueAbove = value
+        valueBelow = value
+        
     else:
-        if not extendedTopology in expRes.extendedTopologies:
-            logger.info('There is no official exclusion line for %s!\n \
-            Search for adjacent lines.' %extendedTopology)
-            if not condition or condition == 'x':
-                values = []
-                for extTopo in expRes.axes:
-                    values.append(expRes.axes[extTopo]['mz'].replace(condition, ''))
-                values.append(value)
-                values.sort()
-                valueIndex = values.index(value)
-                if not valueIndex + 1 > len(values):
-                    valueAbove = values[valueIndex + 1]
-                    logger.info('Found adjacent line above for %s%s'\
-                    %(condition, valueAbove))
-                else:
-                    valueAbove = ''
-                    logger.info('No adjacent line above could be found!')
-                if not valueIndex - 1 < 0:
-                    valueBelow = values[valueIndex - 1]
-                    logger.info('Found adjacent line below for %s%s'\
-                    %(condition, valueBelow))
-                else:
-                    valueBelow = ''
-                    logger.info('No adjacent line below could be found!')
-                
-            if valueAbove:        
-                officialExclusionLineAbove = expRes.selectExclusionLine\
-                (condition = intermediate[0], value = valueAbove)
-                if extendedTopology == 'T6ttWWx166':
-                    officialExclusionLineAbove = validationPlotsHelper.cutGraph(officialExclusionLineAbove, 35, before = False, after = True)    
-                    officialExclusionLineAbove = validationPlotsHelper.cutGraph(officialExclusionLineAbove, 5)    
-                
-            if valueBelow:
-                officialExclusionLineBelow = expRes.selectExclusionLine\
-                (condition = intermediate[0], value = valueBelow)
-                if extendedTopology == 'T6ttWWx166':
-                    officialExclusionLineBelow = validationPlotsHelper.cutGraph(officialExclusionLineBelow, 55, before = False, after = True)
-                    officialExclusionLineBelow = validationPlotsHelper.cutGraph(officialExclusionLineBelow, 5)    
+        officialExclusionLine = None
+        logger.info('There is no official exclusion line for %s!\n \
+        Search for adjacent lines.' %extendedTopology)
+        valueAbove = value
+        valueBelow = value
+        val = []
+        for extTopo in expResultSet.members:
+            if not expResultSet.members[extTopo][0] == parametrization:
+                continue
+            val.append(expResultSet.members[extTopo][1])
+        for v in val:
+            if valueAbove < v:
+                valueAbove = v
+            if valueBelow > v:
+                valueBelow = v
+        if valueAbove != value:
+            logger.info('Found adjacent line above for %s%s'\
+            %(parametrization, valueAbove))
+            officialExclusionLineAbove = expResultSet.exclusionLine(condition = parametrization, value = valueAbove)
         else:
-            officialExclusionLine = expRes.exclusionLine(extendedTopology)
-            valueAbove = ''
-            valueBelow = ''
-            
+            officialExclusionLineAbove = None
+            logger.info('No adjacent line above could be found!')
+        if valueBelow != value:
+            logger.info('Found adjacent line below for %s%s'\
+            %(parametrization, valueBelow))
+            officialExclusionLineBelow = expResultSet.exclusionLine(condition = parametrization, value = valueBelow)
+        else:
+            officialExclusionLineBelow = None
+            logger.info('No adjacent line below could be found!')
+                
+        if officialExclusionLineAbove and extendedTopology == 'T6ttWWx166':
+            officialExclusionLineAbove = validationPlotsHelper.cutGraph(officialExclusionLineAbove, 35, before = False, after = True)    
+            officialExclusionLineAbove = validationPlotsHelper.cutGraph(officialExclusionLineAbove, 5)    
+                
+        if officialExclusionLineBelow and extendedTopology == 'T6ttWWx166':
+            officialExclusionLineBelow = validationPlotsHelper.cutGraph(officialExclusionLineBelow, 55, before = False, after = True)
+            officialExclusionLineBelow = validationPlotsHelper.cutGraph(officialExclusionLineBelow, 5)    
+        
     #Set the options for the TGraphs:
     excluded.SetMarkerStyle(10)
     excluded.SetMarkerColor(ROOT.kMagenta+3)
@@ -188,18 +205,19 @@ def main():
     exclusionLine.SetLineStyle(2)
     exclusionLine.SetLineWidth(4)
     exclusionLine.SetLineColor(ROOT.kBlack-2)
-    if not value and not condition:
+    try: 
         officialExclusionLine.SetLineColor(ROOT.kBlack)
-    else:
-        if valueAbove:
-            officialExclusionLineAbove.SetLineColor(ROOT.kGray+1)
-            officialExclusionLineAbove.SetLineWidth(3)
-        if valueBelow:
-            officialExclusionLineBelow.SetLineColor(ROOT.kGray+1)
-            officialExclusionLineBelow.SetLineStyle(7)
-            officialExclusionLineBelow.SetLineWidth(3)
-        if not valueAbove and not valueBelow:
-            officialExclusionLine.SetLineColor(ROOT.kBlack)
+    except AttributeError: pass
+    try:
+        officialExclusionLineAbove.SetLineColor(ROOT.kGray+1)
+        officialExclusionLineAbove.SetLineWidth(3)
+    except AttributeError: pass    
+    try:
+        officialExclusionLineBelow.SetLineColor(ROOT.kGray+1)
+        officialExclusionLineBelow.SetLineStyle(7)
+        officialExclusionLineBelow.SetLineWidth(3)
+    except AttributeError: pass
+    
     #Create TMutiGraph-object:
     multi = ROOT.TMultiGraph()
     multi.Add(excluded, 'P')
@@ -208,17 +226,17 @@ def main():
         multi.Add(notTested, 'P')
     #multi.Add(exclusionLine, 'L')
     multi.Add(exclusionLine, 'LSAME')
-    if not value and not condition:
+    try:
         multi.Add(officialExclusionLine, 'L')
-    else:
-        if valueAbove:
-            #multi.Add(officialExclusionLineAbove, 'L')
-            multi.Add(officialExclusionLineAbove, 'LSAME')
-        if valueBelow:
-            #multi.Add(officialExclusionLineBelow, 'L')
-            multi.Add(officialExclusionLineBelow, 'LSAME')
-        if not valueAbove and not valueBelow:
-            multi.Add(officialExclusionLine, 'L')
+    except TypeError: pass
+    try:
+        #multi.Add(officialExclusionLineAbove, 'L')
+        multi.Add(officialExclusionLineAbove, 'LSAME')
+    except TypeError: pass
+    try:
+        #multi.Add(officialExclusionLineBelow, 'L')
+        multi.Add(officialExclusionLineBelow, 'LSAME')
+    except TypeError: pass
     
     #Legend:
     if extendedTopology == 'T6ttWWLSP050':
@@ -232,29 +250,26 @@ def main():
     legend.AddEntry(excluded, 'excluded', 'P')
     legend.AddEntry(allowed, 'allowed', 'P')
     legend.AddEntry(notTested, 'not tested', 'P')
-    legend.AddEntry(exclusionLine, 'SmodelS %s' %(intermediate[0] + '='\
-    + intermediate[1]), 'L')
-    if not value and not condition:
-        legend.AddEntry(officialExclusionLine, '%s' %metadata['rootTag'][0][1], 'L')
-    else:
-        if valueAbove:
-            legend.AddEntry(officialExclusionLineAbove, '%s, %s=%s' \
-            %(metadata['rootTag'][0][1], intermediate[0], valueAbove), 'L')
-        if valueBelow:
-            legend.AddEntry(officialExclusionLineBelow, '%s, %s=%s' \
-            %(metadata['rootTag'][0][1], intermediate[0], valueBelow), 'L')
-        if not valueAbove and not valueBelow:
-            if not value: val = '050'
-            else: val = value
-            legend.AddEntry(officialExclusionLine, '%s, %s=%s' \
-            %(metadata['rootTag'][0][1], intermediate[0], val), 'L')
+    if not parametrization:
+        legend.AddEntry(exclusionLine, 'SmodelS', 'L')
+    else:    
+        legend.AddEntry(exclusionLine, 'SmodelS %s=%s' %(parametrization, valueAbove), 'L')
+    if officialExclusionLineAbove:
+        legend.AddEntry(officialExclusionLineAbove, '%s, %s=%s' \
+        %(metadata['rootTag'][0][1], parametrization, valueAbove), 'L')
+    if officialExclusionLineBelow:
+        legend.AddEntry(officialExclusionLineBelow, '%s, %s=%s' \
+        %(metadata['rootTag'][0][1], parametrization, valueBelow), 'L')
+    if officialExclusionLine:
+        legend.AddEntry(officialExclusionLine, '%s, %s=%s' \
+        %(metadata['rootTag'][0][1], parametrization, value), 'L')
     #Canvas:
     c = ROOT.TCanvas("c1", "c1", 0, 0, 800, 500)
     c.SetFillColor(ROOT.kWhite)
     
     multi.Draw('APL')
     multi.GetXaxis().SetTitle("m_{mother} (GeV)")
-    if condition == 'LSP':
+    if parametrization == 'fixedLSP':
         multi.GetYaxis().SetTitle("m_{intermediate} (GeV)")
     else:
         multi.GetYaxis().SetTitle("m_{LSP} (GeV)")
@@ -346,7 +361,7 @@ def main():
         title2.Draw()
     
     #ans = raw_input("Hit any key to close\n")
-    c.Print("./plots/%s" %metadata['outFile'][0].strip())
+    c.Print("./plots/%s/%s" %(topology, metadata['outFile'][0].strip()))
 
 def getTarget(path):
     """Checks if the target directory already exists and raises an error if not.

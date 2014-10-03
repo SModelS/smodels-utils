@@ -56,8 +56,8 @@ def connect ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=Tr
         fl=NamedLine[spin](p1,p2)
         if displace==None: displace=.05
         if label:
-            label=label.replace("nu",r"$\nu$").replace("+","$^{+}$").replace("-","$^{-}$")
-            label=label.replace("tau",r"$\tau$").replace("mu",r"$\mu$")
+            label=label.replace("nu","$\nu$").replace("+","$^{+}$").replace("-","$^{-}$")
+            label=label.replace("tau","$\tau$").replace("mu","$\mu$")
             fl.addLabel ( label, pos=0.9, displace=displace )
         return [ fl ]
 
