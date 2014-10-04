@@ -10,7 +10,6 @@
 
 """    
 
-import ROOT
 import logging, os, types
 import prettyDescriptions
 import setPath

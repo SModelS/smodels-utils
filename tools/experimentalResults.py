@@ -10,7 +10,6 @@
 
 """    
 
-import ROOT
 import logging, os, types
 import prettyDescriptions
 import setPath
@@ -605,7 +604,8 @@ class ExpResult(object):
         """
         if not self._smsroot:
             return None
-        rootFile = ROOT.TFile(self._smsroot)
+        from ROOT import TFile
+        rootFile = TFile(self._smsroot)
         exclusionLines = {'observed': 'exclusion', 'expected':\
         'expectedexclusion'}
         for key, value in exclusionLines.items(): 
