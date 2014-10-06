@@ -15,7 +15,9 @@ from smodels_tools.tools.databaseBrowser import Browser
 import validationPlotsHelper
 import argparse
 import types
+import logging
 
+logger = logging.getLogger(__name__)
 
 def main():
     """Gets all the analyses for one topology and 
@@ -68,7 +70,6 @@ def main():
         published = 'NO'
         if bool(expAna.publishedData):
             published = 'YES'
-
         expResSet = browser.expResultSet(ana, topology)
         commentField = 'not yet done'
         checked = 'NO'
@@ -79,9 +80,13 @@ def main():
         else:
             if expResSet.isChecked:
                 checked = 'YES'
-            massParam = [(str(expResSet.members[entry]) + '<<BR>>') for entry in expResSet.members]
-            massParamField = ''.join(massParam)
-            #massParamField = expResSet.expTopology.intermediateParticles
+            try:
+                massParam = [(str(expResSet.members[entry]) + '<<BR>>') for entry in expResSet.members]
+                massParamField = ''.join(massParam)
+            except KeyError, e:
+                logger.error('When calling the members of the set, \n \
+                a KeyError occured: %s' %e)
+                massParamField = 'not available'
             plotField = 'done with 10000 events <<BR>> [[attachment:%s%snew.png|%s]]' %(topology, ana, order)
             if not expResSet.constraint:
                 commentField = commentField + ' -> no constraints!'
