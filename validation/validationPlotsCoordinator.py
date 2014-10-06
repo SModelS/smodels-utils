@@ -67,12 +67,9 @@ def main():
     if not browser:
         print('No valid database!')
         sys.exit()
-    if topology[-2:] == 'on':
-        topologyName = topology[:-2]
-    else: topologyName = topology
     events = args.events
     order = args.order
-    allAnalyses = browser.getAnalyses(topology = topologyName)
+    allAnalyses = browser.getAnalyses(topology = topology)
     seven = [a for a in allAnalyses if browser.expAnalysis(a) \
     and  browser.expAnalysis(a).sqrts == 7.0]
     analyses = [a for a in allAnalyses if browser.expAnalysis(a) \
@@ -103,7 +100,7 @@ def main():
     print("========================================================", file = logFile)
     
     for ana in seven:
-            print('Skipped %s with sqrt = %s!' \
+            print('Skipped %s with sqrt = %sTeV!' \
             %(ana, browser.expAnalysis(ana).sqrts), file = logFile)
     for ana in analyses:
         arguments = {'analysis': ana, 'base': base, 'events': 10000, \

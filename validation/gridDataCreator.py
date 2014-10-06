@@ -277,10 +277,7 @@ def main(arguments = None):
         
     smsHelpers.base = base
     browser = Browser(base)
-    if topology[-2:] == 'on':
-        topologyName = topology[:-2]
 
-    else: topologyName = topology
     if not arguments:
         analysis = args.analysis
         targetPath = validationPlotsHelper.getTarget(args.directory)
