@@ -27,30 +27,57 @@ def main():
     checks for results.
     Calls the gridDataCreator.py and the validationPlots.py.
     """
+    argparser = argparse.ArgumentParser(description = \
+    'Produces the grid data for smodels validation plots')
+    argparser.add_argument ('-b', '--Base', \
+    help = 'set path to base-directory of smodels-database \n \
+    - default: /afs/hephy.at/user/w/walten/public/sms/', \
+    type = types.StringType, default = '/afs/hephy.at/user/w/walten/public/sms/')
+    argparser.add_argument ('-t', '--topology', \
+    help = 'topology that should be validated - default: T1',\
+    type = types.StringType, default = 'T1')
+    argparser.add_argument ('-o', '--order', \
+    help = 'perturbation order (LO, NLO, NLL) - default: NLL', \
+    type = types.StringType, default = 'NLL')
+    argparser.add_argument ('-n', '--events',\
+    help = 'set number of events - default: 10000', \
+    type = types.IntType, default = 10000)
+    argparser.add_argument ('-p', '--parametrization', \
+    help = 'mass parametrization when there is an intermediate particle \n \
+    - default: None', type = types.StringType, default = None)
+    argparser.add_argument ('-v', '--value', help = 'value for parametrization \n \
+    - default: 0.50', type = types.StringType, default = '0.50')
+    args = argparser.parse_args()
     
-    topology = 'TChiWZon'
+    base = args.Base
+    topology = args.topology
     if not topology in topologyInfo():
         print('No slha files are available for %s!' %topology)
         sys.exit()
-    base = '/afs/hephy.at/user/w/walten/public/sms/'
-    browser = Browser(base)
-    if not browser:
-        print('No valid database!')
-        sys.exit()
-    order = 'NLO'
-    parametrization = None
-    value = '0.5'
+    parametrization = args.parametrization
+    value = args.value
+    valueString = value
     if not parametrization:
         value = None
         valueString = None
     else:
-        valueString = value
         value = validationPlotsHelper.validateValue(value)
+    browser = Browser(base)
+    if not browser:
+        print('No valid database!')
+        sys.exit()
+    if topology[-2:] == 'on':
+        topologyName = topology[:-2]
+    else: topologyName = topology
+    events = args.events
+    order = args.order
     analyses = browser.getAnalyses(topology = topology)
     analyses = [a for a in analyses if browser.expResultSet(a, topology) \
     and  browser.expResultSet(a, topology).hasUpperLimitDicts()]
     
     path = validationPlotsHelper.getTarget('./gridData/%s/' %topology)
+    targetPath = validationPlotsHelper.getTarget('./plots/%s/' %topology)
+    
     logFile = open('%s/logFile' %path, 'w')
     
     print("========================================================")
