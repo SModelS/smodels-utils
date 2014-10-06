@@ -71,7 +71,11 @@ def main():
     else: topologyName = topology
     events = args.events
     order = args.order
-    analyses = browser.getAnalyses(topology = topology)
+    allAnalyses = browser.getAnalyses(topology = topology)
+    seven = [a for a in allAnalyses if browser.expAnalysis(a) \
+    and  browser.expAnalysis(a).sqrts == 7.0]
+    analyses = [a for a in allAnalyses if browser.expAnalysis(a) \
+    and  browser.expAnalysis(a).sqrts == 8.0]
     analyses = [a for a in analyses if browser.expResultSet(a, topology) \
     and  browser.expResultSet(a, topology).hasUpperLimitDicts()]
     
@@ -97,8 +101,10 @@ def main():
     print(analyses, file = logFile)
     print("========================================================", file = logFile)
     
+    for ana in seven:
+            print('Skipped %s with sqrt = %s!' \
+            %(ana, browser.expAnalysis(ana).sqrts), file = logFile)
     for ana in analyses:
-        
         arguments = {'analysis': ana, 'base': base, 'events': 10000, \
         'parametrization': parametrization, 'value': value, 'valueString': valueString, 'order': order, 'topology': topology, \
         'directory': path}
