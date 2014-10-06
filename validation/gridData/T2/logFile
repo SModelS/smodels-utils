@@ -1,0 +1,23 @@
+========================================================
+Topology:  T2
+Parametrization:  None
+Value:  None
+Analyses: 
+['SUS13012', 'SUS12028', 'SUS13019', 'ATLAS_CONF_2013_047']
+========================================================
+Skipped SUS12005 with sqrt = 7.0TeV!
+Skipped SUS11022 with sqrt = 7.0TeV!
+Skipped SUS12011 with sqrt = 7.0TeV!
+--------------------------------------------------------
+Sucsessfully created data grid for analyses: SUS13012
+Sucsessfully created validation plot for analyses: SUS13012
+--------------------------------------------------------
+Sucsessfully created data grid for analyses: SUS12028
+Sucsessfully created validation plot for analyses: SUS12028
+--------------------------------------------------------
+Sucsessfully created data grid for analyses: SUS13019
+Sucsessfully created validation plot for analyses: SUS13019
+--------------------------------------------------------
+Sucsessfully created data grid for analyses: ATLAS_CONF_2013_047
+Sucsessfully created validation plot for analyses: ATLAS_CONF_2013_047
+--------------------------------------------------------
