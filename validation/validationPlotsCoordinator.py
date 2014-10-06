@@ -102,6 +102,7 @@ def main():
     for ana in seven:
             print('Skipped %s with sqrt = %sTeV!' \
             %(ana, browser.expAnalysis(ana).sqrts), file = logFile)
+    print("--------------------------------------------------------", file = logFile)
     for ana in analyses:
         arguments = {'analysis': ana, 'base': base, 'events': 10000, \
         'parametrization': parametrization, 'value': value, 'valueString': valueString, 'order': order, 'topology': topology, \
