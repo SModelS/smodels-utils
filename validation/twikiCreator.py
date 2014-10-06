@@ -32,7 +32,7 @@ def main():
     help = 'topology that slha-files should be produced for - default: T1',\
     type = types.StringType, default = 'T1')
     argparser.add_argument ('-o', '--order', \
-    help = 'perturbation order (LO or NLL) - default: NLL', \
+    help = 'perturbation order (LO, NLO, NLL) - default: NLL', \
     type = types.StringType, default = 'NLL')
     args = argparser.parse_args()
     
