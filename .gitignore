@@ -16,4 +16,5 @@ bin/ListOfAnalyses
 *.py~
 old/
 slha/T*_*_*_slhas/
+validation/twiki/twiki*.txt
 
