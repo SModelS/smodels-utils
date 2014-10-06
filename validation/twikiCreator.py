@@ -65,14 +65,27 @@ def main():
         sqrts = expAna.sqrts
         prettyName = expAna.prettyName
         supersedes = expAna.supersedes
+        if supersedes:
+            supersedes = supersedes.split()[0].strip()
         superseded = expAna.superseded
+        if superseded:
+            superseded = superseded.split()[0].strip()
         if url:
             url = url.split()[0].strip()
         analysisField = '[[%s|%s]] <<BR>> (%s, %s TeV, %s/fb)' %(url, pas, prettyName, sqrts, lumi)
+        superUrl = None
         if superseded:
-            analysisField += '<<BR>> %s' %superseded 
+            if browser.expAnalysis(superseded.replace('-', '_')):
+                superUrl = browser.expAnalysis(superseded.replace('-', '_')).url
+                if superUrl:
+                    superUrl = superUrl.split()[0].strip()
+            analysisField += '<<BR>> superseded by: [[%s|%s]]' %(superUrl,superseded) 
         if supersedes:
-            analysisField += '<<BR>> %s' %supersedes 
+            if browser.expAnalysis(supersedes.replace('-', '_')):
+                superUrl = browser.expAnalysis(supersedes.replace('-', '_')).url
+                if superUrl:
+                    superUrl = superUrl.split()[0].strip()
+            analysisField += '<<BR>> supersedes: [[%s|%s]]' %(superUrl,supersedes) 
         published = 'NO'
         if bool(expAna.publishedData):
             published = 'YES'
