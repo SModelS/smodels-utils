@@ -64,9 +64,15 @@ def main():
         lumi = expAna.lumi
         sqrts = expAna.sqrts
         prettyName = expAna.prettyName
+        supersedes = expAna.supersedes
+        superseded = expAna.superseded
         if url:
             url = url.split()[0].strip()
         analysisField = '[[%s|%s]] <<BR>> (%s, %s TeV, %s/fb)' %(url, pas, prettyName, sqrts, lumi)
+        if superseded:
+            analysisField += '<<BR>> %s' %superseded 
+        if supersedes:
+            analysisField += '<<BR>> %s' %supersedes 
         published = 'NO'
         if bool(expAna.publishedData):
             published = 'YES'
