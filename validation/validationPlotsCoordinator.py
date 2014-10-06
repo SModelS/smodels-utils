@@ -19,6 +19,7 @@ from smodels_tools.tools.databaseBrowser import Browser
 import gridDataCreator
 import validationPlots
 import validationPlotsHelper
+import argparse
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +72,7 @@ def main():
     else: topologyName = topology
     events = args.events
     order = args.order
-    allAnalyses = browser.getAnalyses(topology = topology)
+    allAnalyses = browser.getAnalyses(topology = topologyName)
     seven = [a for a in allAnalyses if browser.expAnalysis(a) \
     and  browser.expAnalysis(a).sqrts == 7.0]
     analyses = [a for a in allAnalyses if browser.expAnalysis(a) \
