@@ -238,7 +238,17 @@ class ExpAnalysis(object):
         
         """
         return self._extendedTopologies
+    
+    @property    
+    def massParametrization(self):
+        """Retrieves a dictionary giving the correlation between all the 
+        topologies, their particular extensions and their mass parametrization.
+        :return: {topology: [{extended topology: (parametrization, value)}]}
         
+        """
+        return self._massParametrization
+    
+    
     @property
     def exclusions(self):
         """Retrieves all the exclusion values stored in the info.txt file.
@@ -343,6 +353,26 @@ class ExpAnalysis(object):
                 extTopos[topo].append(topo + ext)
         return extTopos        
     
+    @property
+    def _massParametrization(self):
+        paramDict = {}
+        axes = self._getInfoProperty('axes')
+        for topo in axes:
+            for a in axes[topo]:
+                if a['extension']:
+                    ext = a['extension']
+                else:
+                    ext = ''
+                if 'mz' in a:
+                    paramDict[topo + ext] = a['mz']
+                else:
+                    paramDict[topo + ext] = 'more than one'
+        for topo in self.topologies:
+            if not topo in paramDict:
+                logger.error('Mass parametrization for topology %s is missing!' \
+                %topo)
+        return paramDict
+        
     @property
     def _sqrts(self):
         s = self._parseMetaInfo('sqrts')
