@@ -277,10 +277,7 @@ def main(arguments = None):
         
     smsHelpers.base = base
     browser = Browser(base)
-    if topology[-2:] == 'on':
-        topologyName = topology[:-2]
 
-    else: topologyName = topology
     if not arguments:
         analysis = args.analysis
         targetPath = validationPlotsHelper.getTarget(args.directory)
@@ -303,6 +300,8 @@ def main(arguments = None):
     print ("========================================================")
     print('Producing the grid data file')
     print('Topology: ', topology)
+    print('Parametrization: ', parametrization)
+    print('Value: ', value)
     print('Analysis: ', analysis)
     print('Using database: ', base)
     print('Store file in: ', targetPath)
@@ -412,57 +411,7 @@ def removeFile(path):
         print('File %s will be removed!' %path)
         os.remove(path)
     return path 
-    
-#def getExtension(expResSet, param, val, valStr):
-    #"""Produces possible extensions for the topology name via comparison
-    #to database known cases.
-    
-    #"""
-    #setMembers = expResSet.members
-    #extendedTopology = ''
-    #for exTop in setMembers:
-        #if setMembers[exTop] == (param, val):
-            #extendedTopology = exTop
-    #if not extendedTopology:
-        #if setMembers[exTop][0] == param:
-            #if param == 'massSplitting':
-                #extendedTopology = expResSet.expTopology.name + valStr
-            #elif param == 'M2/M0':
-                #extendedTopology = exTop.replace('%s' %(exTop[1]*100.), '%s'%(val*100.))
-            #else:
-                #extendedTopology = exTop.replace('%s' %exTop[1], '%s'%val)
-    #return extendedTopology        
-                
-    
-#def getTarget(path):
-    #"""Checks if the target directory already exists and creates it if not.
-    
-    #"""
-    
-    #if os.path.exists(path):
-        #logger.info('Target %s already exists.' %path)
-        #return path
-    
-    #os.mkdir(path)
-    #logger.info('Created new directory: %s' %path) 
-    #return path 
-    
-#def checkFile(path):
-    #"""Checks if the data file already exists.
-    #If the file already exists, the user can decide whether to remove it, 
-    #or to exit the script.
-    
-    #"""
-    #if os.path.exists(path):
-        #print('File %s already exists!' %path)
-        #while True:
-            #userInput = raw_input('Replace old file? [y/n]:  ')
-            #if userInput == 'n':
-                #sys.exit()
-            #if userInput == 'y':
-                #os.remove(path)
-                #return path
-    #return path
+
     
 if __name__ == '__main__':
     main()  

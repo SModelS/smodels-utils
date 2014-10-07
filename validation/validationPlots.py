@@ -81,10 +81,6 @@ def main(arguments = None):
         valueString = arguments['valueString']
         
     browser = Browser(base)
-    if topology[-2:] == 'on':
-        topologyName = topology[:-2]
-
-    else: topologyName = topology
     if not arguments:
         analysis = args.analysis
         targetPath = getTarget(args.directory)

@@ -15,7 +15,9 @@ from smodels_tools.tools.databaseBrowser import Browser
 import validationPlotsHelper
 import argparse
 import types
+import logging
 
+logger = logging.getLogger(__name__)
 
 def main():
     """Gets all the analyses for one topology and 
@@ -32,15 +34,29 @@ def main():
     help = 'topology that slha-files should be produced for - default: T1',\
     type = types.StringType, default = 'T1')
     argparser.add_argument ('-o', '--order', \
-    help = 'perturbation order (LO or NLL) - default: NLL', \
+    help = 'perturbation order (LO, NLO, NLL) - default: NLL', \
     type = types.StringType, default = 'NLL')
+    argparser.add_argument ('-m', '--massLabel', \
+    help = 'mass parameter label - default: None', \
+    type = types.StringType, default = None)
     args = argparser.parse_args()
     
     topology = args.topology
     order = args.order
     if order == 'NLO':
         order = 'LO * 1.2'
-    
+    massLabel = args.massLabel
+    plotLabel = None
+    print ('1)', massLabel)
+    if massLabel:
+        massLabel = massLabel.split(',')
+        print ('2)', massLabel)
+        massLabel = [m.strip() for m in massLabel]
+        print ('3)', massLabel)
+        plotLabel = [(str(order) + ' with ' + str(m)) for m in massLabel]
+        print ('4)', plotLabel)
+        massLabel = [(str(topology) + str(m).replace('.', '')).replace('=', '') for m in massLabel]
+        print ('5)', massLabel)
     topoLink = '([[SmsDictionary#%s|%s]])' %(topology, topology)
     browser = Browser(args.Base)
     if not browser:
@@ -62,29 +78,61 @@ def main():
         lumi = expAna.lumi
         sqrts = expAna.sqrts
         prettyName = expAna.prettyName
+        supersedes = expAna.supersedes
+        if supersedes:
+            supersedes = supersedes.split()[0].strip()
+        superseded = expAna.superseded
+        if superseded:
+            superseded = superseded.split()[0].strip()
         if url:
             url = url.split()[0].strip()
         analysisField = '[[%s|%s]] <<BR>> (%s, %s TeV, %s/fb)' %(url, pas, prettyName, sqrts, lumi)
+        superUrl = None
+        if superseded:
+            if browser.expAnalysis(superseded.replace('-', '_')):
+                superUrl = browser.expAnalysis(superseded.replace('-', '_')).url
+                if superUrl:
+                    superUrl = superUrl.split()[0].strip()
+            analysisField += '<<BR>> superseded by: [[%s|%s]]' %(superUrl,superseded) 
+        if supersedes:
+            if browser.expAnalysis(supersedes.replace('-', '_')):
+                superUrl = browser.expAnalysis(supersedes.replace('-', '_')).url
+                if superUrl:
+                    superUrl = superUrl.split()[0].strip()
+            analysisField += '<<BR>> supersedes: [[%s|%s]]' %(superUrl,supersedes) 
         published = 'NO'
         if bool(expAna.publishedData):
             published = 'YES'
-
         expResSet = browser.expResultSet(ana, topology)
         commentField = 'not yet done'
+        checked = 'NO'
+        massParamField = 'not available'
+        plotField = 'not available'
         if not expResSet: 
             commentField = commentField + ' <<BR>> -> no experimental result! <<BR>> -> check database entry!'
-            continue
-        checked = 'NO'
-        if expResSet.isChecked:
-            checked = 'YES'
-        #massParam = ['%s <<BR>>' %expResSet.members[entry] for entry in expResSet.members]
-        #massParamField = ''.join(massParam)
-        massParamField = expResSet.expTopology.intermediateParticles
-        plotField = 'done with 10000 events <<BR>> [[attachment:%s%snew.png|%s]]' %(topology, ana, order)
-        if not expResSet.constraint:
-            commentField = commentField + ' -> no constraints!'
-        if not expResSet.hasUpperLimitDicts():
-            commentField = commentField + ' <<BR>> -> no upper limits!'
+        else:
+            if expResSet.isChecked:
+                checked = 'YES'
+            try:
+                massParam = [(str(expResSet.members[entry]) + '<<BR>>') for entry in expResSet.members]
+                massParamField = ''.join(massParam)
+            except KeyError, e:
+                logger.error('When calling the members of the set, \n \
+                a KeyError occured: %s' %e)
+                massParamField = 'not available'
+            if massLabel:
+                plotField = ''
+                for i, m in enumerate(massLabel):
+                    plotField += '[[attachment:%snew.png|%s]] <<BR>> ' %(m + str(ana), plotLabel[i])
+                print(plotField)
+                
+            else:  
+                plotField = 'done with 10000 events <<BR>> [[attachment:%s%snew.png|%s]]' %(topology, ana, order)
+                
+            if not expResSet.constraint:
+                commentField = commentField + ' -> no constraints!'
+            if not expResSet.hasUpperLimitDicts():
+                commentField = commentField + ' <<BR>> -> no upper limits!'
             
         line = '||%s||%s||%s | %s||%s||%s||' %(analysisField, massParamField, published, checked, plotField, commentField)
 

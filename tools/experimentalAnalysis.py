@@ -10,7 +10,6 @@
 
 """    
 
-import ROOT
 import logging, os, types
 import prettyDescriptions
 import setPath
@@ -66,7 +65,7 @@ class ExpAnalysis(object):
 
     @property
     def publishedData(self):
-        return self._parseMetaInfo('publisheddata')
+        return eval(str(self._parseMetaInfo('publisheddata')))
     
     @property
     def extendedTopologies(self):
