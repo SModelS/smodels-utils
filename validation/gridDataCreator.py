@@ -300,6 +300,8 @@ def main(arguments = None):
     print ("========================================================")
     print('Producing the grid data file')
     print('Topology: ', topology)
+    print('Parametrization: ', parametrization)
+    print('Value: ', value)
     print('Analysis: ', analysis)
     print('Using database: ', base)
     print('Store file in: ', targetPath)
