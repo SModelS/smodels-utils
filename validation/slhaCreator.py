@@ -38,7 +38,7 @@ class SlhaFiles(object):
     """
     
     def __init__(self, topology, extTopo, browserObject, thresholdMotherMasses, \
-    thresholdLSPMasses, d, condition, value, events = 1000, order = 'LO',unlink = True):
+    thresholdLSPMasses, d, condition, value, events = 1000, order = 'LO',unlink = True,sqrts =8.0):
         """Creates a directory ./'topology'_slhas and stores all the slha-files
         for every point in the mass-plane.
         :param topology: topology the slha-files should be produced for
@@ -59,7 +59,7 @@ class SlhaFiles(object):
         self.topo = self._browser.expTopology(topology)
         self._templateSlhaFile(topology)
         self._events = events
-        self._sqrts = 8.0
+        self._sqrts = float(sqrts)
         if not order in ['LO','NLO','NLL']:
             logger.error('%s is not a possible perturbation order' %(order))
             sys.exit()            
@@ -71,7 +71,10 @@ class SlhaFiles(object):
         self.extTopo = extTopo
         self._listOfInterPid = self._getPidCodeOfIntermediateParticle()
         self._listOfMotherPid = self._getPidCodeOfMother()
-        self.folder = '../slha/%s_%s_%s_slhas' %(self.extTopo, events, order)
+        if sqrts = 8.0:
+            self.folder = '../slha/%s_%s_%s_slhas' %(self.extTopo, events, order)
+        else:
+            self.folder = '../slha/%s_%s_%s_%sTeV_slhas' %(self.extTopo, events, order,int(self._sqrts))
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
             logger.info('Created new folder %s.' %self.folder)
@@ -348,7 +351,11 @@ def main():
     - default: None', type = types.StringType, default = None)
     argparser.add_argument ('-v', '--value', help = 'value for parametrization \n \
     - default: 0.50', type = types.StringType, default = '0.50')
+    argparser.add_argument ('-sqrts', '--sqrts',\
+    help = 'set sqrts in TeV - default: 8.0', \
+    type = types.floatType, default = 8.0)
     args = argparser.parse_args()
+
 
     browser = Browser(args.Base)
     browser.verbosity = args.browserVerbosity
@@ -366,10 +373,15 @@ def main():
     logger.info('Creating slha for extended topology %s.' %extendedTopology)
     events = args.events
     order = args.order
+    sqrts = args.sqrts
     unlink = args.link
     threshold = Threshold(topology, browser, parametrization, value)
-    folder = checkFolder('../slha/%s_%s_%s_slhas' \
-    %(extendedTopology, events, order))
+    if sqrts == 8.0:
+        folder = checkFolder('../slha/%s_%s_%s_slhas' \
+        %(extendedTopology, events, order))
+    else:
+        folder = checkFolder('../slha/%s_%s_%s_%sTeV_slhas' \
+        %(extendedTopology, events, order,int(sqrts)))        
     print ("========================================================")
     print('Create slha files')
     print('Topology: ', topology)
@@ -380,7 +392,7 @@ def main():
     count = 0
     slhaFiles = SlhaFiles(topology, extendedTopology, browser, \
     threshold.motherMasses, threshold.lspMasses, threshold.d, parametrization,\
-    value, events, order, unlink)
+    value, events, order, unlink,sqrts)
     for f in slhaFiles:
         count += 1
         print('Progress ...... ', count)
