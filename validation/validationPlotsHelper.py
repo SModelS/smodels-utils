@@ -66,36 +66,53 @@ def validateValue(value):
             return value
         except ValueError:
             logger.error('Unknown value %s for parametrization')
-            sys.exit()
-    
-def getExtension(expTopology, param, val, valStr):
+            sys.exit()     
+
+def getExtension(expTopology, param, val):
     """Produces possible extensions for the topology name via comparison
     to database known cases.
     
     """
     if not param:
         return expTopology.name
-    for i, exTop in enumerate(expTopology.thirdMasses):
-        if exTop == (param, val):
-            extendedTopology = expTopology.name + expTopology.extensions[i]
-            return extendedTopology    
-    for i, exTop in enumerate(expTopology.thirdMasses):
-        print (exTop[0], exTop[1])
-        if exTop[0] == param:
+    for extendedTopology in expTopology.massParametrizations:
+        condition = expTopology.massParametrizations[extendedTopology][0]
+        value = expTopology.massParametrizations[extendedTopology][1]
+        if condition == param and value == val:
+            return extendedTopology
+        else: continue
+    
+    extTopo = None
+    for extendedTopology in expTopology.massParametrizations:
+        condition = expTopology.massParametrizations[extendedTopology][0]
+        print ('1)', condition, param)
+        value = expTopology.massParametrizations[extendedTopology][1]
+        print ('2)', value, val)
+        if condition == param:
+            print('condition = param')
             if param == 'massSplitting':
-                extendedTopology = expTopology.name + valStr.replace('.', '')
-            elif param == 'M2/M0':
-                extendedTopology = expTopology.name +  expTopology.extensions[i]
-                extendedTopology = extendedTopology.replace('%s' %(exTop[1] * 100), '%s'%(val * 100))
+                extTopo = expTopology.name + '0%s' %int(val * 100)
+            elif param == 'M2/M0': 
+                extTopo = expTopology.name + 'x%s' %int(val * 100)
             else:
-                extendedTopology = expTopology.name + expTopology.extensions[i]
-                extendedTopology = extendedTopology[:-3]
-                rest = 3 - len(str(rmvunit(val, 'GeV')))
-                for j in range(rest):
-                    extendedTopology += '0'
-                extendedTopology = extendedTopology + str(rmvunit(val, 'GeV'))
-    return extendedTopology        
-
+                value = str(rmvunit(value, 'GeV'))
+                while len(value) < 3:
+                    value = '0' + value    
+                val = str(rmvunit(val, 'GeV'))
+                while len(val) < 3:
+                    val = '0' + val
+                print ('3)', value, val)   
+                extTopo = extendedTopology.replace(value, val)
+        else:
+            continue
+    if not extTopo:
+        logger.error('The parametrization %s is not valid for %s!' \
+        %(param, expTopology.name))
+        logger.info('Possibel parametrizations are: %s' \
+        %expTopology.massParametrizations)
+        
+    return extTopo
+    
 def getMetadata(filename,tags):
     infile = open(filename,'r')
     data = infile.read()
