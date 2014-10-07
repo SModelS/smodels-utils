@@ -29,23 +29,20 @@ def main():
   
   # get a specified Analysis-object 
   analysis = browser.expAnalysis('SUS13002')
-  print 'Analysis-object: ', analysis
-  # use this object
   print '\nAnalysis is: ', analysis.name
-  print 'Print out this analysis:'
-  print str(analysis)
+  print 'Analysis-object: ', analysis
   print 'PAS: ', analysis.pas
   print 'luminosity: ', analysis.lumi
   print 'Experiment: ', analysis.experiment
   print 'comment: ', analysis.comment
   print 'axes: ', analysis.axes
+  print 'parametrizations of third mass: ', analysis.massParametrizations
   print
   print
 
   # to get specified Topology-object
   topology = browser.expTopology('TChiChipmSlepStau')
-  print 'Topology-object: ', topology
-  print 'name: ', topology.name
+  print 'topology is: ', topology.name
   print 'Print out this topology:'
   print str(topology)
   print 'analyses: ', topology.analyses
@@ -54,7 +51,7 @@ def main():
   print 'constraint: ', topology.constraints
   print 'decay: ', topology.decay
   print 'short decay: ', topology.shortdecay
-  print 'third masses: ', topology.thirdMasses
+  print 'parametrizations of third mass: ', topology.massParametrizations
   print 'intermediate particles:', topology.intermediateParticles
   print 'mother particle:', topology.motherParticle
   print
@@ -62,7 +59,6 @@ def main():
   
   ## to get a specified set of Result-objects
   resultSet = browser.expResultSet("SUS13008","T6ttWW" )
-  print 'Set of results is: ', resultSet
   print 'Print out this result set:'
   print str(resultSet)
   print "members of this set:", resultSet.members
