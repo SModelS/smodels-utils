@@ -57,10 +57,8 @@ def main():
         sys.exit()
     parametrization = args.parametrization
     value = args.value
-    valueString = value
     if not parametrization:
         value = None
-        valueString = None
     else:
         value = validationPlotsHelper.validateValue(value)
     browser = Browser(base)
@@ -105,7 +103,7 @@ def main():
     print("--------------------------------------------------------", file = logFile)
     for ana in analyses:
         arguments = {'analysis': ana, 'base': base, 'events': 10000, \
-        'parametrization': parametrization, 'value': value, 'valueString': valueString, 'order': order, 'topology': topology, \
+        'parametrization': parametrization, 'value': value, 'order': order, 'topology': topology, \
         'directory': path}
         try:    
             gridDataCreator.main(arguments)
