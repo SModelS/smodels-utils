@@ -239,13 +239,13 @@ class ExpAnalysis(object):
         return self._extendedTopologies
     
     @property    
-    def massParametrization(self):
+    def massParametrizations(self):
         """Retrieves a dictionary giving the correlation between all the 
         topologies, their particular extensions and their mass parametrization.
         :return: {topology: [{extended topology: (parametrization, value)}]}
         
         """
-        return self._massParametrization
+        return self._massParametrizations
     
     
     @property
@@ -353,7 +353,7 @@ class ExpAnalysis(object):
         return extTopos        
     
     @property
-    def _massParametrization(self):
+    def _massParametrizations(self):
         paramDict = {}
         axes = self._getInfoProperty('axes')
         for topo in axes:
