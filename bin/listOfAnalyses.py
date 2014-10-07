@@ -138,7 +138,7 @@ def writeSection ( experiment, section, analyses ):
 
 def writeExperiment ( experiment ):
     experimentHeader ( experiment )
-    anas = browser.allAnalyses()
+    anas = browser.getAnalyses()
     categories=set()
     manas={}
 
