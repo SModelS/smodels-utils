@@ -11,7 +11,6 @@
 """    
 
 import logging, os, types
-import prettyDescriptions
 import setPath
 import sys
 import databaseBrowser
