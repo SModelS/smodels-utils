@@ -79,8 +79,8 @@ class ExpTopology(object):
         return self._constraints
     
     @property
-    def thirdMasses(self):
-        return self._thirdMasses
+    def massParametrizations(self):
+        return self._massParametrizations
     
     @property
     def extensions(self):
@@ -176,20 +176,23 @@ class ExpTopology(object):
         
     
     @property
-    def _thirdMasses(self):
+    def _massParametrizations(self):
         """Retrieves all conditions for the third mass, available for this topology.
         
         """
-        massConds = []
+        massConds = {}
         for run in self._runs:
             for ana in self._anas:
                 try:
                     axes = self._getInfoProperty(self._topoDict[run][ana], 'axes')[self.name]
                     axes = [ax for ax in axes if 'mz' in ax and ax['mz']]
-                    axes = [ax['mz'] for ax in axes]
                     for ax in axes:
-                        if not ax in massConds:
-                            massConds.append(ax)
+                        if not ax['extension']:
+                            ax['extension'] = self.name
+                        else:
+                            ax['extension'] = self.name + ax['extension']
+                        if not ax['extension'] in massConds:
+                            massConds[ax['extension']] = ax['mz']
                 except KeyError:
                     logger.warning('The axes for %s are missing! \
                     Please check the database entry %s-%s!' %(self._name, run, ana))
