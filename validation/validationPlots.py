@@ -67,10 +67,8 @@ def main(arguments = None):
         topology = args.topology
         parametrization = args.parametrization
         value = args.value
-        valueString = value
         if not parametrization:
             value = None
-            valueString = None
         else:
             value = validationPlotsHelper.validateValue(value)
     else:
@@ -78,7 +76,6 @@ def main(arguments = None):
         topology = arguments['topology']
         parametrization = arguments['parametrization']
         value = arguments['value']
-        valueString = arguments['valueString']
         
     browser = Browser(base)
     if not arguments:
@@ -95,7 +92,7 @@ def main(arguments = None):
     expResultSet = browser.expResultSet(analysis, topology)
     expAna = expResultSet.expAnalysis
     expTopo = expResultSet.expTopology
-    extendedTopology = validationPlotsHelper.getExtension(expTopo, parametrization, value, valueString)
+    extendedTopology = validationPlotsHelper.getExtension(expTopo, parametrization, value)
     
     #Define metadata tags:
     tags = ['decay', 'analysis', 'outFile','factor','rootTag', 'intermediate']
