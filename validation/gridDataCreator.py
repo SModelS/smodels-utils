@@ -262,10 +262,8 @@ def main(arguments = None):
         topology = args.topology
         parametrization = args.parametrization
         value = args.value
-        valueString = value
         if not parametrization:
             value = None
-            valueString = None
         else:
             value = validationPlotsHelper.validateValue(value)
     else:
@@ -273,7 +271,6 @@ def main(arguments = None):
         topology = arguments['topology']
         parametrization = arguments['parametrization']
         value = arguments['value']
-        valueString = arguments['valueString']
         
     smsHelpers.base = base
     browser = Browser(base)
@@ -296,12 +293,14 @@ def main(arguments = None):
     expResSet = browser.expResultSet(analysis, topology)
     expAna = expResSet.expAnalysis
     expTopo = expResSet.expTopology
-    extendedTopology = validationPlotsHelper.getExtension(expTopo, parametrization, value, valueString)
+    extendedTopology = validationPlotsHelper.getExtension(expTopo, parametrization, value)
+    sqrts = '%sTeV' %int(expAna.sqrts)
     print ("========================================================")
     print('Producing the grid data file')
     print('Topology: ', topology)
     print('Parametrization: ', parametrization)
     print('Value: ', value)
+    print('Extended topology: ', extendedTopology)
     print('Analysis: ', analysis)
     print('Using database: ', base)
     print('Store file in: ', targetPath)
@@ -314,7 +313,7 @@ def main(arguments = None):
         f = removeFile(targetPath + '/' + fileName)
     outFile = open(f, 'w')
     count = 0
-    slhaPath = '../slha/%s_%s_%s_slhas' %(extendedTopology, events, slhaOrder)
+    slhaPath = '../slha/%s_%s_%s_%s_slhas' %(extendedTopology, events, slhaOrder, sqrts)
     logger.info('Take slha-files from %s.' %slhaPath)
     if not os.path.exists(slhaPath):
         logger.error('There are no slha-files for %s with %s events and order %s! \n \
