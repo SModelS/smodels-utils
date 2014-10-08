@@ -86,6 +86,9 @@ def main():
     for ana in analyses:
         members = browser.expResultSet(ana, topology).members
         for extendedTopology in members:
+            if not extendedTopology in topologyInfo():
+                print('No slha files are available for %s!' %extendedTopology, file = logFile)
+                continue
             value = members[extendedTopology][1]
             parametrization = members[extendedTopology][0]
             print('\nParametrization: ', parametrization, file = logFile)
@@ -95,9 +98,7 @@ def main():
             arguments = {'analysis': ana, 'base': base, 'events': 10000, \
             'parametrization': parametrization, 'value': value, \
             'order': order, 'topology': topology, 'directory': path}
-            if not extendedTopology in topologyInfo():
-                print('No slha files are available for %s!' %extendedTopology, file = logFile)
-                continue
+           
             try:    
                 gridDataCreator.main(arguments)
                 print('Sucsessfully created data grid for analyses: %s' %ana, file = logFile)
