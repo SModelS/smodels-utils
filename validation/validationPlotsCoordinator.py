@@ -58,8 +58,8 @@ def main():
     #and  browser.expAnalysis(a).sqrts == 7.0]
     #analyses = [a for a in allAnalyses if browser.expAnalysis(a) \
     #and  browser.expAnalysis(a).sqrts == 8.0]
-    #analyses = [a for a in analyses if browser.expResultSet(a, topology) \
-    #and  browser.expResultSet(a, topology).hasUpperLimitDicts()]
+    analyses = [a for a in analyses if browser.expResultSet(a, topology) \
+    and  browser.expResultSet(a, topology).hasUpperLimitDicts()]
     
     path = validationPlotsHelper.getTarget('./gridData/%s/' %topology)
     targetPath = validationPlotsHelper.getTarget('./plots/%s/' %topology)
