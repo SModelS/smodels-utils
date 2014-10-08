@@ -362,14 +362,12 @@ def main():
     topology = args.topology
     parametrization = args.parametrization
     value = args.value
-    valueString = value
     if not parametrization:
         value = None
-        valueString = None
     else:    
         value = validationPlotsHelper.validateValue(value)
     expTopology = browser.expTopology(topology)        
-    extendedTopology = validationPlotsHelper.getExtension(expTopology, parametrization, value, valueString)
+    extendedTopology = validationPlotsHelper.getExtension(expTopology, parametrization, value)
     logger.info('Creating slha for extended topology %s.' %extendedTopology)
     events = args.events
     order = args.order

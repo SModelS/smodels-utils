@@ -36,27 +36,12 @@ def main():
     argparser.add_argument ('-o', '--order', \
     help = 'perturbation order (LO, NLO, NLL) - default: NLL', \
     type = types.StringType, default = 'NLL')
-    argparser.add_argument ('-m', '--massLabel', \
-    help = 'mass parameter label - default: None', \
-    type = types.StringType, default = None)
     args = argparser.parse_args()
     
     topology = args.topology
     order = args.order
     if order == 'NLO':
         order = 'LO * 1.2'
-    massLabel = args.massLabel
-    plotLabel = None
-    print ('1)', massLabel)
-    if massLabel:
-        massLabel = massLabel.split(',')
-        print ('2)', massLabel)
-        massLabel = [m.strip() for m in massLabel]
-        print ('3)', massLabel)
-        plotLabel = [(str(order) + ' with ' + str(m)) for m in massLabel]
-        print ('4)', plotLabel)
-        massLabel = [(str(topology) + str(m).replace('.', '')).replace('=', '') for m in massLabel]
-        print ('5)', massLabel)
     topoLink = '([[SmsDictionary#%s|%s]])' %(topology, topology)
     browser = Browser(args.Base)
     if not browser:
@@ -120,14 +105,17 @@ def main():
                 logger.error('When calling the members of the set, \n \
                 a KeyError occured: %s' %e)
                 massParamField = 'not available'
-            if massLabel:
-                plotField = ''
-                for i, m in enumerate(massLabel):
-                    plotField += '[[attachment:%snew.png|%s]] <<BR>> ' %(m + str(ana), plotLabel[i])
-                print(plotField)
-                
-            else:  
-                plotField = 'done with 10000 events <<BR>> [[attachment:%s%snew.png|%s]]' %(topology, ana, order)
+            plotField = 'done with 10000 events <<BR>> '    
+            for entry in expResSet.members:
+                print ('######', entry, expResSet.members[entry])
+                if expResSet.members[entry] == (None, None):
+                    label = str(order)
+                else:    
+                    label = str(order) + ' with ' + str(expResSet.members[entry][0]) \
+                    + '=' + str(expResSet.members[entry][1])
+                plotField += '[[attachment:%s%snew.png|%s]] <<BR>> ' \
+                %(entry, ana, label)
+            print('######', plotField)
                 
             if not expResSet.constraint:
                 commentField = commentField + ' -> no constraints!'
