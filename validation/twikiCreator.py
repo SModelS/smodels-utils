@@ -105,10 +105,17 @@ def main():
                 logger.error('When calling the members of the set, \n \
                 a KeyError occured: %s' %e)
                 massParamField = 'not available'
-            plotField = ''    
+            plotField = 'done with 10000 events <<BR>> '    
             for entry in expResSet.members:
-                plotField += '[[attachment:%snew.png|%s]] <<BR>> ' %(m + str(ana), entry)
-                print('######', plotField)
+                print ('######', entry, expResSet.members[entry])
+                if expResSet.members[entry] == (None, None):
+                    label = str(order)
+                else:    
+                    label = str(order) + ' with ' + str(expResSet.members[entry][0]) \
+                    + '=' + str(expResSet.members[entry][1])
+                plotField += '[[attachment:%s%snew.png|%s]] <<BR>> ' \
+                %(entry, ana, label)
+            print('######', plotField)
                 
             if not expResSet.constraint:
                 commentField = commentField + ' -> no constraints!'

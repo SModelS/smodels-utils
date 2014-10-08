@@ -43,37 +43,23 @@ def main():
     argparser.add_argument ('-n', '--events',\
     help = 'set number of events - default: 10000', \
     type = types.IntType, default = 10000)
-    argparser.add_argument ('-p', '--parametrization', \
-    help = 'mass parametrization when there is an intermediate particle \n \
-    - default: None', type = types.StringType, default = None)
-    argparser.add_argument ('-v', '--value', help = 'value for parametrization \n \
-    - default: 0.50', type = types.StringType, default = '0.50')
     args = argparser.parse_args()
     
     base = args.Base
     topology = args.topology
-    if not topology in topologyInfo():
-        print('No slha files are available for %s!' %topology)
-        sys.exit()
-    parametrization = args.parametrization
-    value = args.value
-    if not parametrization:
-        value = None
-    else:
-        value = validationPlotsHelper.validateValue(value)
     browser = Browser(base)
     if not browser:
         print('No valid database!')
         sys.exit()
     events = args.events
     order = args.order
-    allAnalyses = browser.getAnalyses(topology = topology)
-    seven = [a for a in allAnalyses if browser.expAnalysis(a) \
-    and  browser.expAnalysis(a).sqrts == 7.0]
-    analyses = [a for a in allAnalyses if browser.expAnalysis(a) \
-    and  browser.expAnalysis(a).sqrts == 8.0]
-    analyses = [a for a in analyses if browser.expResultSet(a, topology) \
-    and  browser.expResultSet(a, topology).hasUpperLimitDicts()]
+    analyses = browser.getAnalyses(topology = topology)
+    #seven = [a for a in allAnalyses if browser.expAnalysis(a) \
+    #and  browser.expAnalysis(a).sqrts == 7.0]
+    #analyses = [a for a in allAnalyses if browser.expAnalysis(a) \
+    #and  browser.expAnalysis(a).sqrts == 8.0]
+    #analyses = [a for a in analyses if browser.expResultSet(a, topology) \
+    #and  browser.expResultSet(a, topology).hasUpperLimitDicts()]
     
     path = validationPlotsHelper.getTarget('./gridData/%s/' %topology)
     targetPath = validationPlotsHelper.getTarget('./plots/%s/' %topology)
@@ -83,42 +69,49 @@ def main():
     print("========================================================")
     print('Validating procedure for:')
     print('Topology: ', topology)
-    print('Parametrization: ', parametrization)
-    print('Value: ', value)
     print('Analyses: ')
     print(analyses)
     print("========================================================")
     
     print("========================================================", file = logFile)
     print('Topology: ', topology, file = logFile)
-    print('Parametrization: ', parametrization, file = logFile)
-    print('Value: ', value, file = logFile)
     print('Analyses: ', file = logFile)
     print(analyses, file = logFile)
     print("========================================================", file = logFile)
     
-    for ana in seven:
-            print('Skipped %s with sqrt = %sTeV!' \
-            %(ana, browser.expAnalysis(ana).sqrts), file = logFile)
-    print("--------------------------------------------------------", file = logFile)
+    #for ana in seven:
+            #print('Skipped %s with sqrt = %sTeV!' \
+            #%(ana, browser.expAnalysis(ana).sqrts), file = logFile)
+    #print("--------------------------------------------------------", file = logFile)
     for ana in analyses:
-        arguments = {'analysis': ana, 'base': base, 'events': 10000, \
-        'parametrization': parametrization, 'value': value, 'order': order, 'topology': topology, \
-        'directory': path}
-        try:    
-            gridDataCreator.main(arguments)
-            print('Sucsessfully created data grid for analyses: %s' %ana, file = logFile)
-        except:
-            logger.warning('could not make grid for %s' %ana)
-            print('Could not create data grid for analyses: %s' %ana, file = logFile)
-        try:
-            validationPlots.main(arguments)
-            print('Sucsessfully created validation plot for analyses: %s' %ana, file = logFile)
-        except:
-            logger.warning('could not plot %s' %ana)
-            print('Could not create validation plot for analyses: %s' %ana, file = logFile)
-        print("--------------------------------------------------------", file = logFile)
-    logFile.close()
+        members = browser.expResultSet(ana, topology).members
+        for extendedTopology in members:
+            value = members[extendedTopology][1]
+            parametrization = members[extendedTopology][0]
+            print('\nParametrization: ', parametrization, file = logFile)
+            print('Value: ', value, file = logFile)
+            print('Analysis: ', ana, file = logFile)
+            print("........................................................", file = logFile)
+            arguments = {'analysis': ana, 'base': base, 'events': 10000, \
+            'parametrization': parametrization, 'value': value, \
+            'order': order, 'topology': topology, 'directory': path}
+            if not extendedTopology in topologyInfo():
+                print('No slha files are available for %s!' %extendedTopology, file = logFile)
+                continue
+            try:    
+                gridDataCreator.main(arguments)
+                print('Sucsessfully created data grid for analyses: %s' %ana, file = logFile)
+            except:
+                logger.warning('could not make grid for %s' %ana)
+                print('Could not create data grid for analyses: %s' %ana, file = logFile)
+            try:
+                validationPlots.main(arguments)
+                print('Sucsessfully created validation plot for analyses: %s' %ana, file = logFile)
+            except:
+                logger.warning('could not plot %s' %ana)
+                print('Could not create validation plot for analyses: %s' %ana, file = logFile)
+            print("--------------------------------------------------------", file = logFile)
+        logFile.close()
 
     
 def topologyInfo():
