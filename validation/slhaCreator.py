@@ -71,7 +71,7 @@ class SlhaFiles(object):
         self.extTopo = extTopo
         self._listOfInterPid = self._getPidCodeOfIntermediateParticle()
         self._listOfMotherPid = self._getPidCodeOfMother()
-        if sqrts = 8.0:
+        if sqrts == 8.0:
             self.folder = '../slha/%s_%s_%s_slhas' %(self.extTopo, events, order)
         else:
             self.folder = '../slha/%s_%s_%s_%sTeV_slhas' %(self.extTopo, events, order,int(self._sqrts))
@@ -88,7 +88,7 @@ class SlhaFiles(object):
         
         """
         
-        os.system('rm ./%s' %self._tempSlhaName)
+        #os.system('rm ./%s' %self._tempSlhaName)
         
     def __iter__(self):
         """Creates a slha-file named 'topology_motherMass_lspMass_order.slha and
@@ -353,7 +353,7 @@ def main():
     - default: 0.50', type = types.StringType, default = '0.50')
     argparser.add_argument ('-sqrts', '--sqrts',\
     help = 'set sqrts in TeV - default: 8.0', \
-    type = types.floatType, default = 8.0)
+    type = types.FloatType, default = 8.0)
     args = argparser.parse_args()
 
 
