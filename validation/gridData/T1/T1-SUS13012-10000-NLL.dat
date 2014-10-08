@@ -4985,10 +4985,10 @@
 1800  1128  None  None None
 1800  1248  None  None None
 #END
-time: 8.88107358217 min
-time per slha: 0.10687212594 sec
+time: 8.91100740035 min
+time per slha: 0.107232340167 sec
 outFile: T1-SUS13012-10000-NLL.png
 analysis: SUS-13-012, RA2, 8.0 TeV, NLL
 decay: #tilde{g} #rightarrow q#bar{q} #tilde{#chi}^{0}_{1}
-intermediate xvalue, 050
+intermediate: None, None
 rootTag: exclusion_T1: official exclusion line
