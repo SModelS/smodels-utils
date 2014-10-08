@@ -22,17 +22,24 @@ from smodels_tools.tools.databaseBrowser import Browser
 
 logger = logging.getLogger(__name__)
 
+# ### TO DO: rework the hole script:
+# *) don't use multigraph anymore, do it like in the summaryplots using a container
+# *) user the limit histograms from the analysis to define the plotting region
+# *) maybe replace the dotted lines by envelopes and shaded regions?
+# *) maybe rewrite validationPlotsHelper.getEnvelope and implement some kind of smoothing
+# *) do the rest of the cosmetically stuff
+
 def main(arguments = None):
     """Handles all command line options.
     Produces the validation plot.
     :param None: if set to None script uses the argparser, else takes list of arguments
     :param Base: sets the path to the smodels-database
-    :param analysis: analysis the validation plot should be preoduced for
-    :param topology: topology the validation plot should be preoduced for
+    :param analysis: analysis the validation plot should be produced for
+    :param topology: topology the validation plot should be produced for
     :param order: order of perturbation theory as string ('LO', 'NLO', 'NLL')
     :param directory: 'directory the grid data file should be taken from
     :param events: number of events for pythia simulation 
-    :param intermediate: comma separated condition and value (e.g. LSP,300); condition for mass of intermediate particle (e.g xvalue), value for the mass condition (e.g. 025)
+    :param intermediate: comma separated condition and value (e.g. fixedLSP,300); condition for mass of intermediate particle (e.g massSplitting), value for the mass condition (e.g. 0.25)
     """
     argparser = argparse.ArgumentParser(description = \
     'Produces the validation plots')
