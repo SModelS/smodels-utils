@@ -107,7 +107,6 @@ def main():
                 massParamField = 'not available'
             plotField = 'done with 10000 events <<BR>> '    
             for entry in expResSet.members:
-                print ('######', entry, expResSet.members[entry])
                 if expResSet.members[entry] == (None, None):
                     label = str(order)
                 else:    
@@ -115,8 +114,6 @@ def main():
                     + '=' + str(expResSet.members[entry][1])
                 plotField += '[[attachment:%s%snew.png|%s]] <<BR>> ' \
                 %(entry, ana, label)
-            print('######', plotField)
-                
             if not expResSet.constraint:
                 commentField = commentField + ' -> no constraints!'
             if not expResSet.hasUpperLimitDicts():
