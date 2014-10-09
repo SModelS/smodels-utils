@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 .. module:: databaseBrowser
    :synopsis: Centralized facility to access smodels-database.
@@ -16,6 +14,7 @@ import sys
 import experimentalTopology
 import experimentalAnalysis
 import experimentalResults
+from databaseBrowserException import DatabaseNotFoundException
 from smodels.tools.physicsUnits import GeV, addunit, rmvunit
 
 
@@ -32,7 +31,7 @@ class Browser(object):
     Verbosity can be set to specified level.
     
     """
-    def __init__(self, base = '/afs/hephy.at/user/w/walten/public/sms/'):
+    def __init__(self, base='/afs/hephy.at/user/w/walten/public/sms/'):
         self._allruns = ["8TeV", "ATLAS8TeV", "RPV8", "2012", "RPV7", "2011"]
         #self._allruns = ["8TeV", "ATLAS8TeV", "2012", "RPV7"]
         self._artifacts = ['old', 'bad', 'missing', 'TODO', 'readme', 'SUCHI_RL_TEST']
@@ -72,10 +71,10 @@ class Browser(object):
         path = os.path.realpath(path) + '/'
         if not os.path.exists(path):
             logger.error('%s is no valid path!' %path)
-            sys.exit()
+            raise DatabaseNotFoundException("Invalid path")
         if not [run for run in os.listdir(path) if run in self._allruns]:
             logger.error('There is no valid database at %s' %path)
-            sys.exit()
+            raise DatabaseNotFoundException("Database not found")
         return path
      
     @property
@@ -160,8 +159,8 @@ class Browser(object):
         
         """
         if not level.lower() in ['debug', 'info', 'warning', 'error']:
-            logger.error('No valid level for verbosity: %s! Browser will \n \
-            use default setting!' %level)
+            logger.error('No valid level for verbosity: %s! Browser will ' +
+                         'use default setting!' %level)
             return 'error'
         return level.lower()
             
@@ -196,17 +195,17 @@ class Browser(object):
     
         """
         data = {}
-        if os.path.exists('%s/version' % self._base ):
+        if os.path.exists('%s/version' % self._base):
             # set the database version
-            f=open('%s/version' % self._base )
-            self._databaseVersion=f.readline()[:-1]
+            f = open('%s/version' % self._base )
+            self._databaseVersion = f.readline()[:-1]
             f.close()
         for r in self._allruns:
             if not os.path.exists('%s/%s' % (self._base, r)):
                 logger.info('Using an incomplete version of the \n\
                 database! Run %s is missing' %r)
                 continue
-            data[r] = os.listdir('%s/%s' % (self._base, r))
+            data[r] = os.listdir('%s/%s' % (self._base, r)) # TODO: use os.walk
             data[r] = [directory for directory in data[r] if not '.' in \
             directory]
             # exclude all files (e.g. create.sh) from list of directories 
