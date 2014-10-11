@@ -14,7 +14,7 @@ class TestSlhaManipulator(unittest.TestCase):
 
     def assertEqualFiles(self,file1,file2):
         """ check that file1 == file2 """
-        print "assertEqualFiles",file1,file2
+      #  print "assertEqualFiles",file1,file2
         try:
             f1=open(file1)
             lines1=f1.readlines()
