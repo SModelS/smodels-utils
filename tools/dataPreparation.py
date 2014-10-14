@@ -4,7 +4,65 @@ from array import array
 ROOT.gROOT.ProcessLine(".L /afs/hephy.at/user/w/walten/public/sms/scripts/useNiceColorPalette.C")
 sys.path.append ( "/afs/hephy.at/user/w/walten/public/sms/scripts" )
 
-from Experiment.SMSHelpers import getCanonicalName
+#from Experiment.SMSHelpers import getCanonicalName
+
+def getDataFromNames(path):
+    """read the names.txt file and return the infos as nested dictionary
+    :param:path: absolute path of the analysis
+    :return: {extendedtopolgy:{'limit': fileName with limitHisto, 'exclusion': fileName with exclusionline,...}}
+    inner dictionary is only extended with key, if there are datas for this keyword in names.txt
+    fileName is allways a absolute path inkluding the the name of
+    the coresponding Object
+    
+    """
+    f = open(path+'/orig/names.txt','r')
+    lines = f.readlines()
+    data = {}
+    defoults = ['link','file','comment']
+    for l in lines:
+        if l[:1] == 'T':
+            l= l.split()
+            topo = l[0]
+            data[topo] = {}
+            if len(l) == 2:
+                if l[1] == "on/off": data[topo]["split"] = True
+            continue
+        if not l.split()==[] and  not 'Fig' in l and not 'fig' in l:
+            obj = l.split()[0]
+            print 
+            fileName = l.split()[1] 
+            if not fileName in defoults: 
+                data[topo][obj] = path+'/orig/'+fileName
+    f.close
+    return data
+    
+def getObject(path):
+    """return the object storred in root-Makro (.C) or root-file (.root)
+    :param: path: absolute path to the file plus objectName e.g: "path/objectName"
+    
+    """
+    
+    pathList = path.split("/")
+    filePath = [directory + "/" for directory in pathList[:-1]]
+    filePath = ''.join(filePath)[:-1]
+    objName = pathList[-1]
+    if ".root" in path:
+        f = ROOT.TFile(filePath)
+        obj = f.Get(objName)
+        if not isinstance(obj,ROOT.TGraph):
+            obj.SetDirectory(0)
+        f.Close()
+        return obj
+    if ".C" in path:
+        ROOT.gROOT.ProcessLine(".x "+filePath)
+        obj = eval("ROOT."+objName)
+        return obj
+
+
+def getCanonicalName ( topo ):
+    """ define a canonical name: w and z's are uppercase letters, etc """
+    topo=topo.replace("w","W").replace("z","Z" )
+    return topo
 
 def txtFileToPythonDict ( Filename, xyReverse=False, infb=False ):
     """ turn a text file into a python dictionary containing the upper
@@ -212,6 +270,44 @@ def limitHisto ( hold, topo, expected=False, plusminussigma=0, infb=False, tev=7
     if infb:
         histo.Scale(1./1000.)
     return histo
+    
+def limitHistoFromTxt(  topo, fileName, expected=False, plusminussigma=0, infb=False, tev=7 ):
+    """bild a limitHisto-rootplt out from txt file
+    
+    """
+    
+    txtFile = open(fileName,'r')
+    xList = []
+    yList = []
+    limitList = []
+    for line in txtFile.readlines():
+        x,y,limit = line.split()
+        xList.append(float(x))
+        yList.append(float(y))
+        limitList.append(float(limit))
+    xAxes = []
+    yAxes = []
+    for x in xList:
+        if not x in xAxes: xAxes.append(x)
+    for y in yList:
+        if not y in yAxes: yAxes.append(y)
+    xAxes.sort()
+    yAxes.sort()
+    print 'xAxes: %s' %xAxes
+    print 'yAxes: %s' %yAxes
+    deltaX = xAxes[0]-xAxes[1]
+    deltaY = yAxes[0]-yAxes[1]
+    xmin = min(xAxes)-deltaX/2
+    xmax = max(xAxes)+deltaX/2
+    ymin = min(yAxes)-deltaY/2
+    ymax = max(yAxes)+deltaY/2
+    histo = ROOT.TH2F('topo' ,'topo' ,len(xAxes) ,xmin ,xmax , len(yAxes), ymin, ymax)
+    for i,value in enumerate(xList):
+        histo.Fill(xList[i],yList[i],limitList[i])
+    histo = limitHisto( histo, topo, expected, plusminussigma, infb, tev )
+    return histo
+    
+        
 
 def bestSelectionHisto ( hold, topo ):
     """ standardize a limit histo plot """
@@ -908,7 +1004,7 @@ def writeInfo(lumi=None, minmax=None, contact=None, pas=None, missing=None,
         "bibtex", "x", "sqrts", "public", "nll", "prettyname", "order",
         "comment", "dictionary", "axes", "publisheddata", "missing",
         "private_topologies","superseded_by","arxiv","journal", "publication", 
-        'limit_unit', 'supersedes'
+        'limit_unit', 'supersedes','lastUpdate'
     ]
     makeDicts() # before we start, we write out the ul dictionaries
     for (key,value) in info.items():
@@ -1030,13 +1126,36 @@ def writeInfo(lumi=None, minmax=None, contact=None, pas=None, missing=None,
             f.write ( "category: %s -> %s\n" % (getCanonicalName(key),value) )
     if info.has_key("axes"):
         f.write ("axes: %s\n" %info["axes"])
+    if info.has_key("lastUpdate"):
+        CheckDateFormat(info["lastUpdate"])
+        f.write ("lastUpdate: %s\n" %info["lastUpdate"])
     f.close()
     if os.path.exists ( "info.txt_" ) and not identicalFiles ( "info.txt_", "info.txt" ):
         ## if we have a temporary backup file info.txt_ and something has changed between the current info.txt and the temporary backup file, then the temporary backup file will be
         ## saved as the lasting backup file info.old
         os.system ( "cp info.txt_ info.old" )
+        
 
-
+def CheckDateFormat(date):
+    """Check if Date is in Format: YYYY/MM/dd
+    exit raise ValueError
+    
+    """
+    if not isinstance(date,str):
+        raise ValueError('Date have to be formated as YYYY/MM/DD, got %s' %date)
+    try:
+        year, month, day = date.split('/')
+        year, month, day = int(year), int(month), int(day)
+    except ValueError:
+        raise ValueError('Date have to be formated as YYYY/MM/DD, got %s' %date)
+    if year < 2013 or year > 2100:
+        raise ValueError('Year have to be between 2013 and 2100, got %s' %year)
+    if month < 1 or month > 12:
+        raise ValueError('Month have to be between 1 and 12, got %s' %month)
+    if day < 1 or day > 31:
+        raise ValueError('day have to be between 1 and 31, got %s' %day)
+    return
+        
 def getTGraphViaPDF( filename ):
     """ returns a TGraph from a txt file with coorinates in svg format
             first line in txt file needs scaling information"""
@@ -1101,13 +1220,7 @@ def getTGraphFromTXTFile( filename ):
     """ returns a TGraph from a txt file with x and y coordinates in two columns """ 
     f = open( filename, 'r')
     points = f.readlines()
-    sortedPoints = []
-    while points:
-        i = getIndexOfMinX(points)
-        minxPoint = points.pop(i)
-        sortedPoints.append(minxPoint)   
-    points = sortedPoints
-    print points
+    points = sorted(points, key = lambda x: float(x.split()[0]))
     f.close()
     n = len(points)
     g = ROOT.TGraph(n)
@@ -1117,26 +1230,10 @@ def getTGraphFromTXTFile( filename ):
         i += 1
     return g
     
-def getIndexOfMinX(points):
-    """used by getGraphFromTXTFile to return
-    the index of the line with minx
-    """
-    print points
-    for i,point1 in enumerate(points):
-        print point1
-        x1,y1 = point1.split()
-        minx = True
-        for point2 in points:
-            x2,y2 = point2.split()
-            if float(x2) < float(x1):
-                minx = False
-                break
-        if minx: return i  
-    
 
-massplitting={"TChiWZ": 86., "T6bbWW": 86.}
+massplitting={"TChiWZ": 86., "T6bbWW": 86., "T1tttt": 338.}
 
-def splitHisto( hist):
+def splitHisto( hist,mz =""):
     """ splits an upper limit histogram into an on-shell and an off-shell one"""
     nx = hist.GetNbinsX()
     ny = hist.GetNbinsY()
@@ -1149,10 +1246,10 @@ def splitHisto( hist):
     if not topo:
         logger.error("Please define mass splitting for topology of histo %s in \
         the dictionary\"massplitting\"!" %name)
-    h_on.SetName(name + "on")
-    h_off.SetName(name + "off")
-    h_on.SetTitle(name + "on")
-    h_off.SetTitle(name + "off")
+    h_on.SetName(name + mz)
+    h_off.SetName(name + "off" + mz)
+    h_on.SetTitle(name + mz)
+    h_off.SetTitle(name + "off" + mz)
     for bx in range(1, nx+1):
         for by in range(1, ny+1):
             mx = hist.GetXaxis().GetBinCenter(bx)
@@ -1165,7 +1262,8 @@ def splitHisto( hist):
 
 def splitDict( topo, mz="", dict=None, expected=False ):
     """ splits an upper limit dictionary into an on-shell and an off-shell one.
-        the mass splitting, defining on- and off-shell region, is defined in the dictionary massplitting (for TChiWZ: 91-2*2.5=86)"""
+        the mass splitting, defining on- and off-shell region, is defined in the dictionary massplitting (for TChiWZ: 91-2*2.5=86,
+        T1ttt: 2*(173-2*2))"""
     if not massplitting[getCanonicalName(topo)]:
        logger.error("Please define mass splitting for %s in the dictionary \"massplitting\"!" %topo)
     if not dict:
@@ -1179,7 +1277,7 @@ def splitDict( topo, mz="", dict=None, expected=False ):
                dict = dictionaries[getCanonicalName(topo)+mz]
            except Exception, e:
                print e
-    topo_on = getCanonicalName(topo)+'on'+mz
+    topo_on = getCanonicalName(topo)+mz
     topo_off = getCanonicalName(topo)+'off'+mz
     Dict_on={}
     Dict_off={}
