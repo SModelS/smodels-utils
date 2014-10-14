@@ -14,7 +14,7 @@ import logging, os, types
 import setPath
 import sys
 import databaseBrowser
-from smodels.tools.physicsUnits import GeV, addunit, rmvunit
+from smodels.tools.physicsUnits import GeV
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -406,7 +406,8 @@ class ExpResultSet (object):
             return self._getDefaultExtendedTopology
         else:
             if type(value) == int:
-                value = addunit(value, 'GeV')
+                #value = addunit(value, 'GeV')
+                value = value * GeV
             for res in self._results:
                 if res.axes['mz'] == (condition, value):
                     return res._topo
