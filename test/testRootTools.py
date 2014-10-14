@@ -12,7 +12,8 @@ import setPath
 from smodels_tools.tools import rootTools
 import types
 
-class TestSlhaManipulator(unittest.TestCase):
+class TestRootTools(unittest.TestCase):
+
     def testVersionNumber(self):
         """ remove xsecs completely """
         v=rootTools.getRootVersion(astuple=True )

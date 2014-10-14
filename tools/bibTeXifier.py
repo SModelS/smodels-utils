@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 """
-.. module:: bibTeXification
-        :synopsis: module intended to obtain the optimal bibtex description for a given analysis.
+.. module:: bibTeXifier
+   :synopsis: module intended to obtain the optimal bibtex description 
+              for a given analysis.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
@@ -29,15 +30,16 @@ class BibTeXifier:
     def createBibTeX(self):
         """ create bibtex entry """
         self.noBibTeX()
-        if self.analysis.pas != None and not "SUSY" in self.analysis.name:
+        if self.analysis and self.analysis.pas != None \
+                and not "SUSY" in self.analysis.name:
             self.fromPAS ()
-        if "SUSY" in self.analysis.name:
+        if self.analysis and "SUSY" in self.analysis.name:
             self.fromCDS()
 
 
     def noBibTeX ( self ):
         """ set the default to 'no bibtex found' """
-        self.bibtex="No bibtex entry found for {}".format(analysis)
+        self.bibtex="No bibtex entry found for {}".format(self.analysis)
         if self.run:
             self.bibtex+=" run {}".format(run)
         if self.database:
