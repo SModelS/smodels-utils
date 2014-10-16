@@ -64,6 +64,7 @@ class Threshold(object):
         logger.info('Computing mass thresholds for topology %s using analyses: \n \
         %s' %(self.topo.name, analyses))
         for a in analyses:
+            ulDict = None
             logger.info('Processing %s' %a)
             if self._browser.expAnalysis(a).sqrts != 8.0:
                 continue
@@ -163,7 +164,7 @@ class Threshold(object):
                 minM = particleDict['min']
         if particle == 'mother' and self.topo.name == 'T1tttt':
             if minM < 400: minM = 400
-        if particle == 'mother' and self.topo.name in ['T2', 'T1', 'TGQ']:
+        if particle == 'mother' and self.topo.name in ['T2', 'T1', 'TGQ','T2tt']:
             if minM < 200: minM = 200
         if particle == 'mother' and self.topo.name == 'T2bb':
             if minM < 100: minM = 100
