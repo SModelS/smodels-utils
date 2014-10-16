@@ -15,7 +15,7 @@ import experimentalTopology
 import experimentalAnalysis
 import experimentalResults
 from databaseBrowserException import DatabaseNotFoundException
-from smodels.tools.physicsUnits import GeV, addunit, rmvunit
+from smodels.tools.physicsUnits import GeV
 
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -769,7 +769,8 @@ class Infotxt(object):
             return (None, None)
         except ValueError:
             if 'D' in mz:
-                value = addunit(int(mz.split('=')[-1].strip()), 'GeV')
+                #value = addunit(int(mz.split('=')[-1].strip()), 'GeV')
+                value = int(mz.split('=')[-1].strip()) * GeV
                 if mz.split('=')[0].strip() == 'D':
                     logger.error('There is something wrong with the "D-entry"!\n \
                     Check database for %s!' %self.name)
@@ -780,13 +781,16 @@ class Infotxt(object):
                     condition = condition.split('/')
                     condition = '%s-%s' %(condition[0], condition[1])
             elif 'LSP' in mz:
-                value = addunit(int(mz.replace('LSP', '')), 'GeV')
+                #value = addunit(int(mz.replace('LSP', '')), 'GeV')
+                value = int(mz.replace('LSP', '')) * GeV
                 condition = 'fixedLSP'
             elif 'M' in mz:
-                value = addunit(int(mz[2:]), 'GeV')
+                #value = addunit(int(mz[2:]), 'GeV')
+                value = int(mz[2:]) * GeV
                 condition = 'fixed%s' %mz[:2]
             elif 'C' in mz:
-                value = addunit(int(mz.replace('C', '')), 'GeV')
+                #value = addunit(int(mz.replace('C', '')), 'GeV')
+                value = int(mz.replace('C', '')) * GeV
                 condition = 'fixedM2'
             elif 'x' in mz:
                 value = (float(mz.replace('x', ''))/100.)
