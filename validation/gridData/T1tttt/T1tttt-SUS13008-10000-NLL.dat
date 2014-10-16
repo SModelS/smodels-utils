@@ -36,7 +36,7 @@
 475  175  None  None None
 475  100  None  None None
 475  225  None  None None
-475.0  250.0  6074.1502876  None 0.0
+475  250  None  None None
 475  200  None  None None
 475  50  None  None None
 475  0  None  None None
@@ -114,7 +114,7 @@
 600  300  None  None None
 600.0  200.0  1322.152134  32.6127000153 0.0
 600  275  None  None None
-600.0  350.0  1322.152134  None 0.0
+600  350  None  None None
 625.0  75.0  988.3821441  26.9076004624 0.0
 625.0  225.0  988.3821441  32.9645983875 0.0
 625  350  None  None None
@@ -142,11 +142,11 @@
 650.0  175.0  753.88032564  26.8120989203 0.0
 650.0  25.0  753.88032564  25.7574990392 0.0
 650  400  None  None None
-650.0  0.0  753.88032564  23.2001002878 0.0
+650  0  None  None None
 650.0  250.0  753.88032564  31.6632986069 0.0
 650.0  275.0  753.88032564  34.8744019866 0.0
 650.0  125.0  753.88032564  24.9046999961 0.0
-650.0  375.0  753.88032564  None 0.0
+650  375  None  None None
 650  450  None  None None
 650.0  200.0  753.88032564  28.8257002831 0.0
 650.0  75.0  753.88032564  23.6186999828 0.0
@@ -458,7 +458,7 @@
 950.0  350.0  39.870065774  18.826700747 0.0
 950.0  250.0  39.870065774  20.3320998698 0.0
 950.0  150.0  39.870065774  18.4829998761 0.0
-975  625  None  None None
+975.0  625.0  32.376803415  None 0.0
 975.0  550.0  32.376803415  26.912599802 0.0
 975.0  525.0  32.376803415  24.7485004365 0.0
 975.0  25.0  32.376803415  17.9730001837 0.0
@@ -511,7 +511,7 @@
 1000.0  450.0  25.67377274  20.2773995697 0.0
 1000.0  600.0  25.67377274  30.4192006588 0.0
 1000.0  525.0  25.67377274  22.4943999201 0.0
-1000.0  675.0  25.67377274  None 0.0
+1000  675  None  None None
 1000.0  375.0  25.67377274  18.0820990354 0.0
 1000.0  300.0  25.67377274  17.6145993173 0.0
 1000  650  None  None None
@@ -590,7 +590,7 @@
 1050.0  175.0  16.649592773  18.1131996214 0.0
 1050.0  125.0  16.649592773  19.3015001714 0.0
 1050.0  350.0  16.649592773  17.8559999913 0.0
-1050  700  None  None None
+1050.0  700.0  16.649592773  None 0.0
 1050.0  0.0  16.649592773  19.1307999194 0.0
 1075.0  275.0  13.365393888  20.5348003656 0.0
 1075.0  150.0  13.365393888  17.8477000445 0.0
@@ -816,7 +816,7 @@
 1200.0  825.0  4.77788569216  36.5214981139 0.0
 1200.0  400.0  4.77788569216  18.3733012527 0.0
 1200  1000  None  None None
-1200.0  925.0  4.77788569216  None 0.0
+1200  925  None  None None
 1200.0  100.0  4.77788569216  19.5709001273 0.0
 1200.0  325.0  4.77788569216  18.9482010901 0.0
 1200.0  275.0  4.77788569216  18.3269996196 0.0
@@ -830,16 +830,16 @@
 1225  575  None  None None
 1225  325  None  None None
 1225  750  None  None None
-1225  125  None  None None
+1225.0  125.0  3.8979302544  None 0.0
 1225  675  None  None None
 1225  275  None  None None
-1225.0  375.0  3.8979302544  None 0.0
-1225  100  None  None None
+1225  375  None  None None
+1225.0  100.0  3.8979302544  None 0.0
 1225  875  None  None None
 1225  250  None  None None
 1225  400  None  None None
-1225  650  None  None None
-1225.0  625.0  3.8979302544  None 0.0
+1225.0  650.0  3.8979302544  None 0.0
+1225  625  None  None None
 1225  600  None  None None
 1225  150  None  None None
 1225  825  None  None None
@@ -847,7 +847,7 @@
 1225  50  None  None None
 1225  725  None  None None
 1225  1000  None  None None
-1225.0  550.0  3.8979302544  None 0.0
+1225  550  None  None None
 1225  800  None  None None
 1225  175  None  None None
 1225  450  None  None None
@@ -863,7 +863,7 @@
 1225  200  None  None None
 1225  425  None  None None
 1225  850  None  None None
-1225.0  700.0  3.8979302544  None 0.0
+1225  700  None  None None
 1225  975  None  None None
 1250  225  None  None None
 1250  275  None  None None
@@ -871,11 +871,11 @@
 1250  175  None  None None
 1250  50  None  None None
 1250  850  None  None None
-1250.0  675.0  3.15020884416  None 0.0
+1250  675  None  None None
 1250  75  None  None None
 1250  525  None  None None
 1250  600  None  None None
-1250.0  750.0  3.15020884416  None 0.0
+1250  750  None  None None
 1250  725  None  None None
 1250  425  None  None None
 1250  1050  None  None None
@@ -883,7 +883,7 @@
 1250  875  None  None None
 1250  950  None  None None
 1250  650  None  None None
-1250  375  None  None None
+1250.0  375.0  3.15020884416  None 0.0
 1250  550  None  None None
 1250  100  None  None None
 1250  1025  None  None None
@@ -891,11 +891,11 @@
 1250  250  None  None None
 1250  575  None  None None
 1250  500  None  None None
-1250.0  325.0  3.15020884416  None 0.0
+1250  325  None  None None
 1250  1000  None  None None
 1250  400  None  None None
 1250  700  None  None None
-1250.0  300.0  3.15020884416  None 0.0
+1250  300  None  None None
 1250  775  None  None None
 1250  200  None  None None
 1250  125  None  None None
@@ -915,11 +915,11 @@
 1275  350  None  None None
 1275  225  None  None None
 1275  325  None  None None
-1275.0  100.0  2.58486490458  None 0.0
+1275  100  None  None None
 1275  1000  None  None None
 1275  575  None  None None
 1275  175  None  None None
-1275.0  425.0  2.58486490458  None 0.0
+1275  425  None  None None
 1275  900  None  None None
 1275  250  None  None None
 1275  975  None  None None
@@ -935,13 +935,13 @@
 1275  775  None  None None
 1275  550  None  None None
 1275  525  None  None None
-1275.0  850.0  2.58486490458  None 0.0
+1275  850  None  None None
 1275  0  None  None None
 1275  600  None  None None
 1275  275  None  None None
 1275  800  None  None None
 1275  875  None  None None
-1275  150  None  None None
+1275.0  150.0  2.58486490458  None 0.0
 1275  500  None  None None
 1275  1075  None  None None
 1275  925  None  None None
@@ -959,7 +959,7 @@
 1300  475  None  None None
 1300  0  None  None None
 1300  75  None  None None
-1300.0  100.0  2.1125552496  None 0.0
+1300  100  None  None None
 1300  175  None  None None
 1300  1100  None  None None
 1300  725  None  None None
@@ -967,7 +967,7 @@
 1300  1000  None  None None
 1300  625  None  None None
 1300  525  None  None None
-1300.0  825.0  2.1125552496  None 0.0
+1300  825  None  None None
 1300  550  None  None None
 1300  325  None  None None
 1300  350  None  None None
@@ -990,7 +990,7 @@
 1300  925  None  None None
 1300  675  None  None None
 1300  850  None  None None
-1300  750  None  None None
+1300.0  750.0  2.1125552496  None 0.0
 1300  25  None  None None
 1300  275  None  None None
 1300  950  None  None None
@@ -1001,13 +1001,13 @@
 1325  650  None  None None
 1325  1050  None  None None
 1325  200  None  None None
-1325.0  525.0  1.72855597376  None 0.0
+1325  525  None  None None
 1325  500  None  None None
 1325  325  None  None None
 1325  125  None  None None
 1325  800  None  None None
 1325  900  None  None None
-1325.0  950.0  1.72855597376  None 0.0
+1325  950  None  None None
 1325  400  None  None None
 1325  425  None  None None
 1325  1100  None  None None
@@ -1017,11 +1017,11 @@
 1325  825  None  None None
 1325  1025  None  None None
 1325  1075  None  None None
-1325.0  25.0  1.72855597376  None 0.0
+1325  25  None  None None
 1325  550  None  None None
 1325  375  None  None None
 1325  750  None  None None
-1325  875  None  None None
+1325.0  875.0  1.72855597376  None 0.0
 1325  1125  None  None None
 1325  0  None  None None
 1325  100  None  None None
@@ -1036,13 +1036,13 @@
 1325  475  None  None None
 1325  1000  None  None None
 1325  625  None  None None
-1325  775  None  None None
+1325.0  775.0  1.72855597376  None 0.0
 1325  150  None  None None
 1325  275  None  None None
 1325  175  None  None None
 1325  225  None  None None
 1325  850  None  None None
-1325  300  None  None None
+1325.0  300.0  1.72855597376  None 0.0
 1350  150  None  None None
 1350  0  None  None None
 1350  250  None  None None
@@ -1055,7 +1055,7 @@
 1350  225  None  None None
 1350  475  None  None None
 1350  825  None  None None
-1350.0  850.0  1.40942632316  None 0.0
+1350  850  None  None None
 1350  900  None  None None
 1350  300  None  None None
 1350  350  None  None None
@@ -1093,14 +1093,14 @@
 1375  300  None  None None
 1375  1025  None  None None
 1375  175  None  None None
-1375.0  875.0  1.16319134367  None 0.0
+1375  875  None  None None
 1375  0  None  None None
 1375  975  None  None None
 1375  400  None  None None
 1375  1000  None  None None
 1375  950  None  None None
 1375  100  None  None None
-1375  50  None  None None
+1375.0  50.0  1.16319134367  None 0.0
 1375  1175  None  None None
 1375  325  None  None None
 1375  600  None  None None
@@ -1111,13 +1111,13 @@
 1375  725  None  None None
 1375  75  None  None None
 1375  525  None  None None
-1375.0  250.0  1.16319134367  None 0.0
+1375  250  None  None None
 1375  425  None  None None
 1375  575  None  None None
 1375  500  None  None None
 1375  700  None  None None
 1375  475  None  None None
-1375.0  925.0  1.16319134367  None 0.0
+1375  925  None  None None
 1375  550  None  None None
 1375  275  None  None None
 1375  200  None  None None
@@ -1139,15 +1139,15 @@
 1375  375  None  None None
 1375  900  None  None None
 1400  475  None  None None
-1400.0  25.0  0.964066933746  None 0.0
+1400  25  None  None None
 1400  875  None  None None
-1400.0  50.0  0.964066933746  None 0.0
+1400  50  None  None None
 1400  850  None  None None
 1400  650  None  None None
 1400  450  None  None None
 1400  950  None  None None
 1400  425  None  None None
-1400  150  None  None None
+1400.0  150.0  0.964066933746  None 0.0
 1400  1125  None  None None
 1400  600  None  None None
 1400  100  None  None None
@@ -1155,7 +1155,7 @@
 1400  175  None  None None
 1400  1025  None  None None
 1400  1100  None  None None
-1400.0  400.0  0.964066933746  None 0.0
+1400  400  None  None None
 1400  900  None  None None
 1400  125  None  None None
 1400  550  None  None None
@@ -1181,7 +1181,7 @@
 1400  225  None  None None
 1400  275  None  None None
 1400  525  None  None None
-1400.0  200.0  0.964066933746  None 0.0
+1400  200  None  None None
 1400  750  None  None None
 1400  1200  None  None None
 1400  1000  None  None None
@@ -2342,10 +2342,10 @@
 1900  200  None  None None
 1900  400  None  None None
 #END
-time: 1.48760084709 min
-time per slha: 0.0380947737423 sec
+time: 1.47336620092 min
+time per slha: 0.037730250153 sec
 outFile: T1tttt-SUS13008-10000-NLL.png
 analysis: SUS-13-008, , 8.0 TeV, NLL
 decay: #tilde{g} #rightarrow t#bar{t} #tilde{#chi}^{0}_{1}
-intermediate xvalue, 050
+intermediate: None, None
 rootTag: exclusion_T1tttt: official exclusion line

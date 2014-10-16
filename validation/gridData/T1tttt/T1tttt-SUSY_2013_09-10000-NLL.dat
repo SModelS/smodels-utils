@@ -2342,10 +2342,10 @@
 1900  200  None  None None
 1900  400  None  None None
 #END
-time: 10.044000864 sec
-time per slha: 0.00428681387842 sec
+time: 9.72444820404 sec
+time per slha: 0.00415042766485 sec
 outFile: T1tttt-SUSY_2013_09-10000-NLL.png
 analysis: SUSY-2013-09, ATLAS SS+b, 8.0 TeV, NLL
 decay: #tilde{g} #rightarrow t#bar{t} #tilde{#chi}^{0}_{1}
-intermediate xvalue, 050
+intermediate: None, None
 rootTag: exclusion_T1tttt: official exclusion line

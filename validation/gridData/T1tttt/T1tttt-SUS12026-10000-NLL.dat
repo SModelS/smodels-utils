@@ -2342,10 +2342,10 @@
 1900  200  None  None None
 1900  400  None  None None
 #END
-time: 27.0489521027 sec
-time per slha: 0.0115445822261 sec
+time: 26.9044361115 sec
+time per slha: 0.0114829023323 sec
 outFile: T1tttt-SUS12026-10000-NLL.png
 analysis: SUS-12-026, multileptons, 8.0 TeV, NLL
 decay: #tilde{g} #rightarrow t#bar{t} #tilde{#chi}^{0}_{1}
-intermediate xvalue, 050
+intermediate: None, None
 rootTag: exclusion_T1tttt: official exclusion line
