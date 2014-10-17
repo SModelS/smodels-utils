@@ -85,23 +85,23 @@ def getExtension(expTopology, param, val):
     extTopo = None
     for extendedTopology in expTopology.massParametrizations:
         condition = expTopology.massParametrizations[extendedTopology][0]
-        print ('1)', condition, param)
+        #print ('1)', condition, param)
         value = expTopology.massParametrizations[extendedTopology][1]
-        print ('2)', value, val)
+        #print ('2)', value, val)
         if condition == param:
-            print('condition = param')
+            #print('condition = param')
             if param == 'massSplitting':
                 extTopo = expTopology.name + '0%s' %int(val * 100)
             elif param == 'M2/M0': 
                 extTopo = expTopology.name + 'x%s' %int(val * 100)
             else:
-                value = str(value / GeV)
+                value = str(int(value / GeV))
                 while len(value) < 3:
                     value = '0' + value    
-                val = str(val / GeV)
+                val = str(int(val / GeV))
                 while len(val) < 3:
                     val = '0' + val
-                print ('3)', value, val)   
+                #print ('3)', value, val)   
                 extTopo = extendedTopology.replace(value, val)
         else:
             continue
