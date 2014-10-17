@@ -16,6 +16,7 @@ import validationPlotsHelper
 import argparse
 import types
 import logging
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,10 @@ def main():
     head = "||'''Analysis  <<BR>>  (√s,lum)''' ||'''mass parametrization''' ||'''published data | checked''' ||'''plot''' ||'''comment''' ||"
     print(head, file = outFile)
     analyses = browser.getAnalyses(topology = topology)
-
+    if not analyses:
+        print('||There are no valid analyses for this topology||||||||||', file = outFile)
+        outFile.close()
+        sys.exit()
     
     for ana in analyses:
         expAna = browser.expAnalysis(ana)

@@ -325,11 +325,16 @@ def main(arguments = None):
     for slha in slhaList:
         data = GridData(expTopo.name, analysis, slhaPath + '/' + slha)
         massMother = data.massMother
+        massMother = float(massMother)
         massLSP = data.massLSP
+        massLSP = float(massLSP)
         if parametrization == 'fixedLSP':
             massIntermediate = data.massIntermediate
+            massIntermediate = float(massIntermediate)
         tUL = data.theoreticalUpperLimit
+        tUL = float(tUL)
         eUL = data.experimentalUpperLimit
+        eUL = float(eUL)
         cond = data.theoreticalCondition
         if not massMother:
             massMother = slha.split('_')[1].strip()
