@@ -137,7 +137,7 @@ class GridData(object):
             mass = prediction.mass[0][0]
         if not self.removeUnits:
             return mass
-        return mass / GeV
+        return float(mass / GeV)
             
     @property
     def massLSP(self):
@@ -150,7 +150,7 @@ class GridData(object):
             mass = prediction.mass[0][-1]
         if not self.removeUnits:
             return mass
-        return mass / GeV
+        return float(mass / GeV)
 
     @property
     def massIntermediate(self):
@@ -168,7 +168,7 @@ class GridData(object):
                 mass = prediction.mass[0][1]
         if not self.removeUnits:
             return mass
-        return mass / GeV
+        return float(mass / GeV)
         
     @property
     def experimentalCondition(self):
@@ -202,7 +202,7 @@ class GridData(object):
             eul = prediction.analysis.getUpperLimitFor(prediction.mass)
         if not self.removeUnits:
             return eul
-        return eul / fb
+        return float(eul / fb)
             
     @property
     def theoreticalUpperLimit(self):
@@ -215,7 +215,7 @@ class GridData(object):
             tul = prediction.value[0].value
         if not self.removeUnits:
             return tul
-        return tul / fb
+        return float(tul / fb)
         
 def main(arguments = None):
     """Handles all command line options
@@ -325,16 +325,11 @@ def main(arguments = None):
     for slha in slhaList:
         data = GridData(expTopo.name, analysis, slhaPath + '/' + slha)
         massMother = data.massMother
-        massMother = float(massMother)
         massLSP = data.massLSP
-        massLSP = float(massLSP)
         if parametrization == 'fixedLSP':
             massIntermediate = data.massIntermediate
-            massIntermediate = float(massIntermediate)
         tUL = data.theoreticalUpperLimit
-        tUL = float(tUL)
         eUL = data.experimentalUpperLimit
-        eUL = float(eUL)
         cond = data.theoreticalCondition
         if not massMother:
             massMother = slha.split('_')[1].strip()
