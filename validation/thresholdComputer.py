@@ -39,7 +39,10 @@ class Threshold(object):
         self._browser = browserObject
         self.topo = self._browser.expTopology(topology)
         self._condition = condition
-        self._value = value / GeV
+        if type(value) == float:
+            self._value = value
+        else:    
+            self._value = value / GeV
         self.thresholds = self._thresholds
         self.motherMasses = self._massList('mother')
         self.lspMasses = self._massList('lsp')
