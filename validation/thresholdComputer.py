@@ -41,8 +41,10 @@ class Threshold(object):
         self._condition = condition
         if type(value) == float:
             self._value = value
-        else:    
-            self._value = value / GeV
+        try:    
+            self._value = int(value / GeV)
+        except TypeError:
+            self._value = value
         self.thresholds = self._thresholds
         self.motherMasses = self._massList('mother')
         self.lspMasses = self._massList('lsp')
@@ -72,6 +74,8 @@ class Threshold(object):
             if self._browser.expAnalysis(a).sqrts != 8.0:
                 continue
             resultSet = self._browser.expResultSet(a, self.topo.name)
+            if not resultSet.upperLimitDict():
+                continue
             if resultSet.upperLimitDict(condition = self._condition, value = self._value):
                 ulDict = resultSet.upperLimitDict(condition = self._condition, value = self._value)
             else:

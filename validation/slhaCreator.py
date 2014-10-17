@@ -32,8 +32,6 @@ logger = logging.getLogger(__name__)
 
 class SlhaFiles(object):
     """Creates slha-files and stores them via an __iter__ method.
-    ### no intermediated mass supported
-    ### no mass splitting for topology supported
 
     """
     
