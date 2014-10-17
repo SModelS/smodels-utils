@@ -408,13 +408,13 @@ class ExpResultSet (object):
         :return: 'extended topology'
         # ### FIX ME whats with the units when matching with given values? give values with units? Add units?
         """
-        print '*****************', condition, value
+        #print '*****************', condition, value
         if not condition or not value:
             return self._getDefaultExtendedTopology
         else:
             if type(value) == int:
                 #value = addunit(value, 'GeV')
-                print '*****************', value
+                #print '*****************', value
                 value = value * GeV
                 
             for res in self._results:
