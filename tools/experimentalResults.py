@@ -23,7 +23,14 @@ logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.ERROR)
 
 
-# ### FIX ME:
+# ### FIX ME: When there is no intermediate particle in a given topology and one provides "condition" and "value" currently it throws an error in line 782: 
+    #if self._expTopo.name + ax['extension'] != self._topo:
+    #TypeError: cannot concatenate 'str' and 'NoneType' objects
+# this should be turned into a more human readable exception (e.g. MassParametrizationError), a warning should be given and the "extensionless" topology should be used to get e.g. upper limits or exclusion lines!
+
+# ### TO DO: clean up all the logger strings containing line brakes
+
+
 
 # add upperlimithistos as root.TH2!
 
@@ -401,13 +408,15 @@ class ExpResultSet (object):
         :return: 'extended topology'
         # ### FIX ME whats with the units when matching with given values? give values with units? Add units?
         """
-
+        print '*****************', condition, value
         if not condition or not value:
             return self._getDefaultExtendedTopology
         else:
             if type(value) == int:
                 #value = addunit(value, 'GeV')
+                print '*****************', value
                 value = value * GeV
+                
             for res in self._results:
                 if res.axes['mz'] == (condition, value):
                     return res._topo
