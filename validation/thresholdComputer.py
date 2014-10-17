@@ -13,7 +13,7 @@ from __future__ import print_function
 import setPath  # # set to python path for smodels
 import sys
 from smodels_tools.tools.databaseBrowser import Browser
-from smodels.tools.physicsUnits import rmvunit, addunit
+from smodels.tools.physicsUnits import GeV
 import validationPlotsHelper
 import logging
 import os
@@ -39,7 +39,7 @@ class Threshold(object):
         self._browser = browserObject
         self.topo = self._browser.expTopology(topology)
         self._condition = condition
-        self._value = rmvunit(value, 'GeV')
+        self._value = value / GeV
         self.thresholds = self._thresholds
         self.motherMasses = self._massList('mother')
         self.lspMasses = self._massList('lsp')
