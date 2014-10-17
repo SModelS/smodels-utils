@@ -79,7 +79,10 @@ class SlhaFiles(object):
             os.makedirs(self.folder)
             logger.info('Created new folder %s.' %self.folder)
         self._condition = condition
-        self._interValue = value / GeV
+        if type(value) == float:
+            self._value = value
+        else:    
+            self._value = value / GeV
         logger.info('Using parametrization: %s %s.' \
         %(self._condition, self._interValue))
         
