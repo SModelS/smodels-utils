@@ -80,9 +80,9 @@ class SlhaFiles(object):
             logger.info('Created new folder %s.' %self.folder)
         self._condition = condition
         if type(value) == float:
-            self._value = value
+            self._interValue = value
         else:    
-            self._value = value / GeV
+            self._interValue = value / GeV
         logger.info('Using parametrization: %s %s.' \
         %(self._condition, self._interValue))
         
