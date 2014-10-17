@@ -350,7 +350,7 @@ class Browser(object):
         """
     
         analyses = []
-        topologies = []
+        #topologies = [] what's this for?
     
         if self._runRestriction:
             logger.warning('Browser is restricted to run %s!' \
@@ -370,6 +370,9 @@ class Browser(object):
             return self.database[run]
 
         topology = self._validateTopology(topology)
+        if not topology:
+            return None
+            
         if topology and run:
             for a in self.database[run]:
                 if self.getTopologies(analysis = a) and topology in \
