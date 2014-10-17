@@ -10,7 +10,7 @@
 
 from __future__ import print_function
 import setPath  # # set to python path for smodels
-from smodels.tools.physicsUnits import fb, GeV, addunit, rmvunit
+from smodels.tools.physicsUnits import fb, GeV
 from smodels_tools.tools.databaseBrowser import Browser
 import logging
 import os
@@ -58,7 +58,7 @@ def validateValue(value):
     """
     try:
         value = int(value)
-        value = addunit(value, 'GeV')
+        value = value * GeV
         return value
     except ValueError:
         try:
@@ -95,10 +95,10 @@ def getExtension(expTopology, param, val):
             elif param == 'M2/M0': 
                 extTopo = expTopology.name + 'x%s' %int(val * 100)
             else:
-                value = str(rmvunit(value, 'GeV'))
+                value = str(value / GeV)
                 while len(value) < 3:
                     value = '0' + value    
-                val = str(rmvunit(val, 'GeV'))
+                val = str(val / GeV)
                 while len(val) < 3:
                     val = '0' + val
                 print ('3)', value, val)   
