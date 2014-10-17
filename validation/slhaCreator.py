@@ -18,7 +18,7 @@ import os
 from smodels.tools import xsecComputer
 from smodels_tools.tools.databaseBrowser import Browser
 from smodels_tools.tools.experimentalResults import ExpResult
-from smodels.tools.physicsUnits import rmvunit, addunit
+from smodels.tools.physicsUnits import GeV
 import validationPlotsHelper
 import random
 from thresholdComputer import Threshold
@@ -79,7 +79,7 @@ class SlhaFiles(object):
             os.makedirs(self.folder)
             logger.info('Created new folder %s.' %self.folder)
         self._condition = condition
-        self._interValue = rmvunit(value, 'GeV')
+        self._interValue = value / GeV
         logger.info('Using parametrization: %s %s.' \
         %(self._condition, self._interValue))
         

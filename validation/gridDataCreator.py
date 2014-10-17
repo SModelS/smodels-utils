@@ -11,7 +11,7 @@
 from __future__ import print_function
 import setPath  # # set to python path for smodels
 from smodels.theory import slhaDecomposer
-from smodels.tools.physicsUnits import fb, GeV, addunit, rmvunit
+from smodels.tools.physicsUnits import fb, GeV
 from smodels.experiment import smsAnalysisFactory, smsHelpers
 from smodels.theory.theoryPrediction import theoryPredictionFor
 from smodels_tools.tools.databaseBrowser import Browser
@@ -137,7 +137,7 @@ class GridData(object):
             mass = prediction.mass[0][0]
         if not self.removeUnits:
             return mass
-        return rmvunit(mass, 'GeV')
+        return mass / GeV
             
     @property
     def massLSP(self):
@@ -150,7 +150,7 @@ class GridData(object):
             mass = prediction.mass[0][-1]
         if not self.removeUnits:
             return mass
-        return rmvunit(mass, 'GeV')
+        return mass / GeV
 
     @property
     def massIntermediate(self):
@@ -168,7 +168,7 @@ class GridData(object):
                 mass = prediction.mass[0][1]
         if not self.removeUnits:
             return mass
-        return rmvunit(mass, 'GeV')
+        return mass / GeV
         
     @property
     def experimentalCondition(self):
@@ -202,7 +202,7 @@ class GridData(object):
             eul = prediction.analysis.getUpperLimitFor(prediction.mass)
         if not self.removeUnits:
             return eul
-        return rmvunit(eul, 'fb')
+        return eul / fb
             
     @property
     def theoreticalUpperLimit(self):
@@ -215,7 +215,7 @@ class GridData(object):
             tul = prediction.value[0].value
         if not self.removeUnits:
             return tul
-        return rmvunit(tul, 'fb')
+        return tul / fb
         
 def main(arguments = None):
     """Handles all command line options
