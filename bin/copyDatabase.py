@@ -12,7 +12,6 @@
 
 import os
 import sys
-#sys.path.append('../smodels-tools/tools')
 import setPath
 from smodels_tools.tools import databaseBrowser
 import argparse
@@ -55,9 +54,9 @@ def main():
     - default: DileptonicStop8TeV, RazorMono8TeV, SUS11010 and T1ttttCombination8TeV', \
     type = types.StringType, \
     default = 'DileptonicStop8TeV RazorMono8TeV T1ttttCombination8TeV SUS11010')
-    argparser.add_argument ('-scp', '--secureCopy', \
-    help = 'use scp to smodels instead of local copy from afs - default: False',\
-    action = 'store_true')
+    #argparser.add_argument ('-scp', '--secureCopy', \
+    #help = 'use scp to smodels instead of local copy from afs - default: False',\
+    #action = 'store_true')
     argparser.add_argument ('-log', '--loggingLevel', nargs = '?', \
     help = 'set verbosity - default: WARNING', \
     type = types.StringType, default = 'warning')
@@ -92,7 +91,8 @@ def main():
     infoLines = ['sqrts', 'lumi', 'pas', 'publication', 'constraint', \
     'condition', 'fuzzycondition','category', 'axes', 'superseded_by', 'supersedes']
     
-    scp = args.secureCopy
+    #scp = args.secureCopy
+    scp = False
     logger.info('secure copy option is set to: %s' %scp)
     
     database = getDatabase(runExclusions, analysisExclusions, browser)
@@ -137,6 +137,7 @@ def getDatabase(runExclusions, analysisExclusions, browser):
     """
     
     db = browser.database
+    #db = {run: db[run] for run in db if not run in runExclusions}
     database = {}
     keys = [key for key in db if not key in runExclusions]
     logger.debug('Remaining runs: %s' %keys)
@@ -154,7 +155,7 @@ def getGoodAnalyses(browser, database):
         for ana in database[key]:
             expAna = browser.expAnalysis(ana)
             if expAna.isPublished and expAna.pas and expAna.isChecked \
-            and expAna.hasPY and not expAna.private:
+            and expAna.hasPY and not expAna.private and expAna.publishedData:
                 goodAnalyses.append(ana)
     return goodAnalyses 
     
@@ -177,7 +178,7 @@ def localCopy(targetPath, cleanedDatabase, infoLines, browser):
     
     """
     version = open('%s/version' %targetPath, 'w')
-    versionString = 'August2014 (%s-based)' %browser.databaseVersion
+    versionString = 'Oktober2014 (%s-based)' %browser.databaseVersion
     print >> version, versionString
     version.close()
     for key in cleanedDatabase:
@@ -188,6 +189,7 @@ def localCopy(targetPath, cleanedDatabase, infoLines, browser):
             os.mkdir(targetPath + path)
             logger.debug('created folder for analysis: %s' %a)
             os.system('cp %s %s' %(browser.base + path + 'sms.py', targetPath + path + 'sms.py'))
+            # ### FIX ME: sms.py should be split into observed and expected dictionary -> only observed should be copied. Also fake entries (e.g. [None,None,None]) should be removed, as well as topologies which don't have valid entries in the info.txt
             logger.debug('command looks like: cp %s %s' %(browser.base + path + 'sms.py', targetPath + path + 'sms.py'))
             createInfo(targetPath, key, a, infoLines, browser)
             
@@ -198,7 +200,7 @@ def remoteCopy():
     
 def createInfo(target, run, ana, infoLines, browser):
     """Creates the info.txt for every run-analysis and copies the requested lines.
-    
+    # ### FIX ME: write lines for valid topologies only and split axes accordingly. 
     """
     lines = []
     path = target + '/' + run + '/' + ana
