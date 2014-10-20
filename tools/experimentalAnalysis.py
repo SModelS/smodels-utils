@@ -59,7 +59,7 @@ class ExpAnalysis(object):
     
     @property
     def lumi(self):
-        return self._parseMetaInfo('lumi')
+        return self._lumi
 
     @property
     def publishedData(self):
@@ -378,11 +378,22 @@ class ExpAnalysis(object):
             return float(s)
         except ValueError:
             try:
-                return float(s.split()[0])
+                return float(s.split('*')[0])
             except TypeError:
                 if '8' in s: return 8.0
                 if '7' in s: return 7.0
                 if not s: return None
+                
+    @property
+    def _lumi(self):
+        l = self._parseMetaInfo('lumi')
+        try:
+            return float(l)
+        except ValueError:
+            try:
+                return float(l.split('/')[0])
+            except TypeError:
+                return None
         
     
         
