@@ -785,6 +785,10 @@ class ExpResult(object):
             
     @property
     def _axes(self):
+        if self._expTopo.name == self._topo:
+            ax = self._expAna._infotxt.axes[self._expTopo.name][0]
+            a = {key: ax[key] for key in ax if key != 'extension'}
+            return a
         for ax in self._expAna._infotxt.axes[self._expTopo.name]:
             if self._expTopo.name + ax['extension'] != self._topo:
                 continue
