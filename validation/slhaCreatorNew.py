@@ -114,7 +114,7 @@ class MassPlane(object):
         if self._condition == 'M2-M1':
             massPoint.motherMass = xMass
             massPoint.lspMass = yMass
-            massPoint.interMass = self._value + xMass
+            massPoint.interMass = xMass - self._value
         if self._condition == 'M2-M0':
             massPoint.motherMass = xMass
             massPoint.lspMass = yMass
@@ -175,16 +175,16 @@ class MassPlane(object):
         yMin = 99999.
         yMax = 0.
         for dictionary in upperLimitdictionarys:
-            for y in dictionary:
-                if y < yMin and y >= 0.:
-                    yMin = y
-                if y > yMax:
-                    yMax = y
-                for x in dictionary[y]:
-                    if x < xMin and x >= 0.:
-                        xMin = x
-                    if x > xMax:
-                        xMax = x
+            for x in dictionary:
+                if x < xMin and x >= 0.:
+                    xMin = x
+                if x > xMax:
+                    xMax = x
+                for y in dictionary[x]:
+                    if y < yMin and y >= 0.:
+                        yMin = y
+                    if y > yMax:
+                        yMax = y
         xMin = round(xMin,0)
         xMax = round(xMax,0)
         yMin = round(yMin,0)
@@ -197,20 +197,20 @@ class MassPlane(object):
         yStepMin = 9999999.
         for dictionary in upperLimitdictionarys:
             #print dictionary
-            yValues = [y for y in dictionary]
-            yValues.sort()
+            xValues = [x for x in dictionary]
+            xValues.sort()
             #print 'xValues: %s' %xValues
-            if len(yValues) > 1: 
-                yStep = yValues[1] - yValues[0]
-                if yStep < yStepMin: yStepMin = yStep
-            for y in yValues:
-                x = dictionary[y]
-                xValues = [x for x in dictionary[y]]
-                xValues.sort()
+            if len(xValues) > 1: 
+                xStep = xValues[1] - xValues[0]
+                if xStep < xStepMin: xStepMin = xStep
+            for x in xValues:
+                y = dictionary[x]
+                yValues = [y for y in dictionary[x]]
+                yValues.sort()
                 # print 'yValues: %s' %yValues
-                if len(xValues) > 1:
-                    xStep = xValues[1] - xValues[0]
-                    if xStep < xStepMin: xStepMin = xStep
+                if len(yValues) > 1:
+                    yStep = yValues[1] - yValues[0]
+                    if yStep < yStepMin: yStepMin = yStep
         xStepMin = round(xStepMin,0)
         yStepMin = round(yStepMin,0)
         return [xStepMin, yStepMin]
@@ -458,7 +458,7 @@ def main():
     browser = Browser('../../smodels-database')
     extendetTopoName = 'T6bWWx125'
     #topo = browser.expTopology('T6bbWW')
-    topo = browser.expTopology('T1')
+    topo = browser.expTopology('T6bbWW')
     parametrizations = topo.massParametrizations
     slhaFileSets = []
     for extendetTopoName,  massParametrization in parametrizations.iteritems():
@@ -466,7 +466,6 @@ def main():
         slhaFileSets.append(fileSet)
     print (slhaFileSets)
     for fileSet in slhaFileSets:
-        print (fileSet.directory)
         userInput = raw_input('press any key')
         if fileSet: 
             fileSet.create()
@@ -476,6 +475,7 @@ def main():
             massPlane = fileSet._massPlane
             print('xmin: %s, xmax: %s, xStep: %s' %(massPlane.xMin, massPlane.xMax, massPlane.xStep))
             print('ymin: %s, ymax: %s, yStep: %s' %(massPlane.yMin, massPlane.yMax, massPlane.yStep))
+            print (fileSet.directory)
             
             
         
