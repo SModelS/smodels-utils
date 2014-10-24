@@ -14,6 +14,7 @@ def installDirectory():
     import inspect
     ret=os.path.realpath ( inspect.getabsfile(installDirectory) )
     ret=ret.replace("SModelSTools.py","")
+    ret=ret.replace("smodels_tools/","")
     return ret
 
 def addInstallDirectory():
