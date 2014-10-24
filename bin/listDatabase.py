@@ -5,7 +5,7 @@ what digitized results are not yet published """
 
 import setPath
 from smodels.experiment import smsResults, smsHelpers
-from smodels.tools.physicsUnits import rmvunit
+from smodels.tools.physicsUnits import TeV
   
 Fields= [ "analysis", "sqrts", "lumi", "topologies", "constraints" ]
 NiceName= { "nick name": "nick name", "analysis": "analysis", "sqrts":"$\sqrt{s}$", "topologies": "topologies", "constraints":"constraints", "lumi": "lumi" }
@@ -63,7 +63,7 @@ def pprint ( constr ):
   return constr
 
 def printFirstTopo ( File, analysis, topo ):
-  sqrts=int(rmvunit(smsResults.getSqrts ( analysis ),"TeV"))
+  sqrts=int( smsResults.getSqrts ( analysis ) / TeV )
   lumi=smsResults.getLumi ( analysis ).asNumber()
   constr=pprint ( smsResults.getConstraints ( analysis, topo ) )
   pas=smsResults.getPAS ( analysis )

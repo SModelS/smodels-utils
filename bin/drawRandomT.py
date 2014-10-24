@@ -32,7 +32,7 @@ def drawRandom ( lhedir ):
 
     print
     print "Today's Random Topology is ``%s'':" % T
-    print
+    # print
 
     reader = lheReader.LheReader( filename )
     Event = reader.next()
