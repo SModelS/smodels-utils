@@ -19,8 +19,10 @@ import logging
 import sys
 import os
 from massPlaneComputer import MassPlane
+import argparse
+import types
 
-FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
+FORMAT = '%(levelname)s in %(module)s.%(funcNbrowser, topo, extendedTopoName, massParametrization)ame)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
@@ -30,19 +32,22 @@ logger.setLevel(level=logging.INFO)
         
 class SlhaFileSet(object):
     
-    def __init__(self, browser, topo, extendedTopoName, massParametrization, events = 10, order = 'NLL', \
+    def __init__(self, browser, topo, extendedTopoName, massParametrization, events = 10000, order = None, \
     unlink = True, sqrts =8.0):
         
         self._browser = browser
         self._massPlane = MassPlane(browser, topo, extendedTopoName, massParametrization)
-        self.directory = self._createDirectory(extendedTopoName, events, order, sqrts)
+        self._order = self._getOrder(topo,order)
+        self.directory = self._createDirectory(extendedTopoName, events, self._order, sqrts)
         self._templateFile = self._setTemplateFile(topo)
         self._extendedTopoName = extendedTopoName
-        self._order = order
         self._condition = massParametrization[0]
         self._listOfInterPid = self._getPidCodeOfIntermediateParticle(topo)
         self._listOfMotherPid = self._getPidCodeOfMother(topo)
         self._lspPid = '1000022'
+        self._events = events
+        self._unlink = unlink
+        self._sqrts = sqrts
     
     def _setTemplateFile(self,topo):
         
@@ -53,6 +58,17 @@ class SlhaFileSet(object):
         logger.error('no template slha-file for %s' %topo.name)
         return None
         
+    def _getOrder(self, topo, order):
+        
+        motherParticle = topo.motherParticle
+        if not order and motherParticle in ['g','q','gq','b','t']:
+            return 'NLL'
+        if not order and motherParte in ['l','c0cpm','c0','cpm']:
+            return 'LO'
+        if order and order in ['LO','NLL','NLO']:
+            return order
+        logger.error('order must be LO, NLO, or NLL; got %s' %order)
+        sys.exit()
         
         
     def create(self):
@@ -60,49 +76,61 @@ class SlhaFileSet(object):
         countGOOD = 0
         for lspList in self._massPlane.iterListsWithFixedMotherMasses():
             fileContent  = open(self._templateFile,'r').readlines()
-            for i, massPoint in enumerate(lspList):
+            computeXsecs = True
+            for massPoint in lspList:
                     countAll = countAll + 1
                     fileName = '%s_%s_%s_%s.slha' \
                     %(self._extendedTopoName, int(massPoint.xMass), int(massPoint.yMass), self._order)
                     fileName = self.directory + '/' + fileName
-                    #print(fileName)
+                    logger.info('next file:  %s' %fileName.split('/')[-1])
                     pidMassesDict = self._getPidMassesDict(massPoint)
-                    #print pidMassesDict
                     fileContent = self._setMasses(fileContent, pidMassesDict)
-                    #testDict = self._getPidMassesDict(massPoint)
-                    #for l in fileContent:
-                    #    rows = l.split()
-                    #    if rows:
-                    #        if rows[0].strip() in testDict:
-                    #            print l
                     slhaFile = open(fileName,'w')
                     slhaFile.writelines(fileContent)
                     slhaFile.close()
                     status = SlhaStatus(fileName,findIllegalDecays=True, findDisplaced=False, \
                     checkXsec=False, checkLSP=False, checkFlightlength=False, findMissingDecays=False)
                     slhastat, warnings = status.status
-                    
-                    print('*****************start********************')
-                    print(fileName)
-                    print ('####slhasstatus: %s' %slhastat)
-                    print('******************end****************')
                     if slhastat == -1:
                         os.system('rm %s' %fileName)
+                        logger.info('illegalDecay: drop %s' %fileName.split('/')[-1])
                         continue
                     countGOOD = countGOOD + 1
-                    if i == 0: #### problem wenn 1.file nicht erlaubt!!!!!
-                        #### the xsecs have to be calculted at this place
+                    if computeXsecs: 
+                        #self._addXsecsToFile(fileName)
                         fileContent  = open(fileName,'r').readlines()
-
-        print('####all: %s' %countAll)
-        print('####good: %s' %countGOOD)
+                        computeXsecs = False
+        os.system(' tar -cf %s.tar %s' %(self.directory, self.directory))
+        print('\n*****slha creation for %s, %sTeV done**************' %(self._extendedTopoName, self._sqrts))
+        print('xmin: %s, xmax: %s, xStep: %s' %(self._massPlane.xMin, self._massPlane.xMax, self._massPlane.xStep))
+        print('ymin: %s, ymax: %s, yStep: %s' %(self._massPlane.yMin, self._massPlane.yMax, self._massPlane.yStep))
+        print('got %s mass points, chreated %s slha-files' %(countAll, countGOOD))
+        print('************************************************')
             
 
-            
-            #print '*******************************************'
-            #for p in l:
-            #    print 'motherMass: %s, intMass: %s, lspMass: %s, xMass: %s, yMass: %s' \
-            #    %(p.motherMass, p.interMass, p.lspMass, p.xMass, p.yMass)
+    def _addXsecsToFile(self,fileName):
+        """Adds the xsecs to the slha file. First LO then NLO and finally NLL 
+        are computed.
+        # ### FIX ME: order NLO? does this make sens? We get NLO by adding a factor 1.2 to LO, right?
+        
+        """
+        
+        comment = "Nevts: " + str(self._events)
+        xsecs = xsecComputer.computeXSec(self._sqrts, 0, self._events, \
+        fileName,unlink = self._unlink)
+        xsecComputer.addXSecToFile(xsecs, fileName, comment)
+        logger.info('added new LO order xsecs to %s' %fileName)
+        if self._order == 'NLO':
+            xsecs = xsecComputer.computeXSec(self._sqrts, 1, self._events,\
+            fileName,loFromSlha=True,unlink = self._unlink)
+            xsecComputer.addXSecToFile(xsecs, fileName, comment)
+            logger.info('added new NLO order xsecs to %s' %fileName)
+        if self._order == 'NLL':
+            xsecs = xsecComputer.computeXSec(self._sqrts, 2, self._events, \
+            fileName, loFromSlha=True,unlink = self._unlink)
+            xsecComputer.addXSecToFile(xsecs, fileName, comment)
+            logger.info('added new NLL order xsecs to %s' %fileName)
+    
             
     def _getPidMassesDict(self, massPoint):
         
@@ -254,27 +282,67 @@ class SlhaFileSet(object):
     
 def main():
     
-    browser = Browser('../../smodels-database')
-    extendedTopoName = 'T6bWWx125'
+    argparser = argparse.ArgumentParser(description = \
+    'Produces the slha files for smodels validation plots')
+    argparser.add_argument ('-b', '--Base', \
+    help = 'set path to base-directory of smodels-database\n \
+    - default: /afs/hephy.at/user/w/walten/public/sms/', \
+    type = types.StringType, default = '/afs/hephy.at/user/w/walten/public/sms/')
+    
+    
+    argparser.add_argument ('-t', '--topology', \
+    help = 'topology that slha-files should be produced for - default: T1',\
+    type = types.StringType, default = 'T1')
+    
+    argparser.add_argument ('-n', '--events',\
+    help = 'set number of events - default: 10000', \
+    type = types.IntType, default = 10000)
+    
+    
+    argparser.add_argument ('-o', '--order', \
+    help = 'perturbation order (LO or NLL) - default: LO for ew-production, NLL else', \
+    type = types.StringType, default = 'None')
+    
+    argparser.add_argument ('-l', '--link', \
+    help = 'Do not clean up temp directory after running pythia', \
+    action = 'store_false')
+   
+    argparser.add_argument ('-sqrts', '--sqrts',\
+    help = 'set sqrts in TeV - default: greate slha for 8 and 7TeV', \
+    type = types.FloatType, default = 0.0)
+    args = argparser.parse_args()
+    
+    browser = Browser(args.Base)
+    topoName = args.topology       
+    events = args.events
+    if args.order != 'None':
+        order = args.order
+    else:
+        order = None
+    if args.sqrts != 0.0:
+        sqrts = [args.sqrts]
+    else:
+        sqrts = [7.0, 8.0]
+    unlink = args.link
+    
+
     #topo = browser.expTopology('T6bbWW')
-    topo = browser.expTopology('T6bbWW')
+    topo = browser.expTopology(topoName)
     parametrizations = topo.massParametrizations
     slhaFileSets = []
     for extendedTopoName,  massParametrization in parametrizations.iteritems():
-        fileSet = SlhaFileSet(browser,topo, extendedTopoName,massParametrization)
-        slhaFileSets.append(fileSet)
-    print (slhaFileSets)
+        for sqrt in sqrts:
+            fileSet = SlhaFileSet(browser,topo, extendedTopoName,massParametrization, \
+            events = events , order = order, unlink = unlink, sqrts =sqrt)
+            slhaFileSets.append(fileSet)
+
+            
     for fileSet in slhaFileSets:
         userInput = raw_input('press any key')
         if fileSet: 
             fileSet.create()
-            print (fileSet._listOfInterPid)
-            print (fileSet._listOfMotherPid)
-            print (fileSet._lspPid)
             massPlane = fileSet._massPlane
-            print('xmin: %s, xmax: %s, xStep: %s' %(massPlane.xMin, massPlane.xMax, massPlane.xStep))
-            print('ymin: %s, ymax: %s, yStep: %s' %(massPlane.yMin, massPlane.yMax, massPlane.yStep))
-            print (fileSet.directory)
+
             
             
         

@@ -18,6 +18,8 @@ from unum import Unum
 import logging
 import sys
 import os
+import argparse
+import types
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -237,10 +239,19 @@ class MassPoint(object):
         
 def main():
     
-    browser = Browser('../../smodels-database')
-    extendedTopoName = 'T6bWWx125'
-    #topo = browser.expTopology('T6bbWW')
-    topo = browser.expTopology('T6bbWW')
+    argparser = argparse.ArgumentParser(description = \
+    'Produces the slha files for smodels validation plots')
+    argparser.add_argument ('-b', '--Base', \
+    help = 'set path to base-directory of smodels-database\n \
+    - default: /afs/hephy.at/user/w/walten/public/sms/', \
+    type = types.StringType, default = '/afs/hephy.at/user/w/walten/public/sms/')
+    argparser.add_argument ('-t', '--topology', \
+    help = 'topology that slha-files should be produced for - default: T1',\
+    type = types.StringType, default = 'T1')
+    args = argparser.parse_args()
+    
+    browser = Browser(args.Base)
+    topo = browser.expTopology(args.topology)
     parametrizations = topo.massParametrizations
     slhaFileSets = []
     for extendedTopoName,  massParametrization in parametrizations.iteritems():
