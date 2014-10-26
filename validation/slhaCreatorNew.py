@@ -81,7 +81,7 @@ class SlhaFileSet(object):
     
         if topo.motherParticle in ['g','gq','q']:
             return [200.,2000.]
-        if topo.motherParticle in ['b']:
+        if topo.motherParticle in ['b','t']:
             return [100.,1000.]
         return [0.,2000.]
         
@@ -357,7 +357,6 @@ def main():
 
             
     for fileSet in slhaFileSets:
-        userInput = raw_input('press any key')
         if fileSet: 
             fileSet.create()
             massPlane = fileSet._massPlane
