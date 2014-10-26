@@ -103,14 +103,14 @@ class MassPlane(object):
         massPoint.yMass = yMass
         if not self._condition:
             massPoint.motherMass = xMass
-            massPoint.lspMass = yMass
+            massPoint.lspMass = yMass 
         if self._condition == 'massSplitting':
             massPoint.motherMass = xMass
-            massPoint.lspMass = yMass
+            massPoint.lspMass = yMass + 1
             massPoint.interMass = self._value * yMass + (1 - self._value) * xMass
         if self._condition == 'fixedM2':
             massPoint.motherMass = xMass
-            massPoint.lspMass = yMass
+            massPoint.lspMass = yMass + 1
             massPoint.interMass = self._value
         if self._condition == 'fixedM1':
             massPoint.motherMass = self._value

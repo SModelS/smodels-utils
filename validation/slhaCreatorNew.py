@@ -13,7 +13,9 @@ from __future__ import print_function
 import setPath 
 from smodels_tools.tools.databaseBrowser import Browser
 from smodels.tools.physicsUnits import GeV
+from smodels.tools.physicsUnits import TeV
 from smodels.tools.slhaChecks import SlhaStatus
+from smodels.tools import xsecComputer
 from unum import Unum
 import logging
 import sys
@@ -48,6 +50,7 @@ class SlhaFileSet(object):
         self._events = events
         self._unlink = unlink
         self._sqrts = sqrts
+        self._NLLfastMin, self._NLLfastMax = self._getNLLfastMinMax(topo) #min/max mass for NLLfast 
     
     def _setTemplateFile(self,topo):
         
@@ -70,11 +73,26 @@ class SlhaFileSet(object):
         logger.error('order must be LO, NLO, or NLL; got %s' %order)
         sys.exit()
         
+    def _getNLLfastMinMax(self, topo):
+        """return the min lsp mass for which NLLfast is able to 
+        compute xsecs
+        
+        """
+    
+        if topo.motherParticle in ['g','gq','q']:
+            return [200.,2000.]
+        if topo.motherParticle in ['b']:
+            return [100.,1000.]
+        return [0.,2000.]
+        
         
     def create(self):
         countAll = 0
         countGOOD = 0
+
         for lspList in self._massPlane.iterListsWithFixedMotherMasses():
+            if lspList[0].motherMass < self._NLLfastMin: continue 
+            if lspList[0].motherMass > self._NLLfastMax: continue 
             fileContent  = open(self._templateFile,'r').readlines()
             computeXsecs = True
             for massPoint in lspList:
@@ -97,7 +115,7 @@ class SlhaFileSet(object):
                         continue
                     countGOOD = countGOOD + 1
                     if computeXsecs: 
-                        #self._addXsecsToFile(fileName)
+                        self._addXsecsToFile(fileName)
                         fileContent  = open(fileName,'r').readlines()
                         computeXsecs = False
         os.system(' tar -cf %s.tar %s' %(self.directory, self.directory))
@@ -116,17 +134,18 @@ class SlhaFileSet(object):
         """
         
         comment = "Nevts: " + str(self._events)
-        xsecs = xsecComputer.computeXSec(self._sqrts, 0, self._events, \
+        sqrts = self._sqrts*TeV
+        xsecs = xsecComputer.computeXSec(sqrts, 0, self._events, \
         fileName,unlink = self._unlink)
         xsecComputer.addXSecToFile(xsecs, fileName, comment)
         logger.info('added new LO order xsecs to %s' %fileName)
         if self._order == 'NLO':
-            xsecs = xsecComputer.computeXSec(self._sqrts, 1, self._events,\
+            xsecs = xsecComputer.computeXSec(sqrts, 1, self._events,\
             fileName,loFromSlha=True,unlink = self._unlink)
             xsecComputer.addXSecToFile(xsecs, fileName, comment)
             logger.info('added new NLO order xsecs to %s' %fileName)
         if self._order == 'NLL':
-            xsecs = xsecComputer.computeXSec(self._sqrts, 2, self._events, \
+            xsecs = xsecComputer.computeXSec(sqrts, 2, self._events, \
             fileName, loFromSlha=True,unlink = self._unlink)
             xsecComputer.addXSecToFile(xsecs, fileName, comment)
             logger.info('added new NLL order xsecs to %s' %fileName)
