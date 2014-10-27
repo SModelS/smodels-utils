@@ -8,3 +8,6 @@
 """
 class DatabaseNotFoundException(Exception):
     pass
+
+class InvalidExperimentException(Exception):
+    pass    

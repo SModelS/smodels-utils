@@ -1334,10 +1334,10 @@
 1000  537  None  None None
 1000  587  None  None None
 #END
-time: 1.36780646642 min
-time per slha: 0.0614744509651 sec
+time: 1.32946448326 min
+time per slha: 0.0597512150525 sec
 outFile: T2tt-SUS13011-10000-NLL.png
 analysis: SUS-13-011, leptonic stop, 8.0 TeV, NLL
 decay: #tilde{t} #rightarrow t#tilde{#chi}^{0}_{1}
-intermediate xvalue, 050
+intermediate: None, None
 rootTag: exclusion_T2tt: official exclusion line

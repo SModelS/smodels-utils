@@ -4,7 +4,7 @@
 .. module:: copyDatabase
    :synopsis: A simple script that copies the results database to a target directory
    (needs an afs installation on this machine). 
-### FIX ME: scp doesn't work jet!
+### FIX ME: scp doesn't work yet!
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
 
@@ -13,7 +13,7 @@
 import os
 import sys
 import setPath
-from smodels_tools.tools import databaseBrowser
+from smodels_tools.helper import databaseBrowser
 import argparse
 import logging
 import types
