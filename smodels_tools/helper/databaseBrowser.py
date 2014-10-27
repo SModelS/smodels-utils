@@ -129,12 +129,11 @@ class Browser(object):
     def _validateExperiment(self, detector):
         """Validates the given experiment. Exits the script if the given 
         experiment is unknown.
-        ### FIX ME: maybe better not exit the script, but set experiment to default?
         
         """
         if not detector in ['CMS', 'ATLAS']:
             logger.error('%s is no valid experiment!' %detector)
-            sys.exit()
+            raise InvalidExperimentException("Invalid experiment")
         logger.info('Focusing on experiment %s.' %detector)
         return detector
         
@@ -202,8 +201,8 @@ class Browser(object):
             f.close()
         for r in self._allruns:
             if not os.path.exists('%s/%s' % (self._base, r)):
-                logger.info('Using an incomplete version of the \n\
-                database! Run %s is missing' %r)
+                logger.info('Using an incomplete version of the' +
+                            'database! Run %s is missing' %r)
                 continue
             data[r] = os.listdir('%s/%s' % (self._base, r)) # TODO: use os.walk
             data[r] = [directory for directory in data[r] if not '.' in \
@@ -214,7 +213,6 @@ class Browser(object):
             # exclude every file and directory specified by list of artifacts
         return data
         
-    # ### FIX ME: Do we really want to restrict the run?   
     @property
     def runRestriction(self):
         """Tells if the browser is restricted to a specified run. 
@@ -232,8 +230,8 @@ class Browser(object):
         """
         self._runRestriction = self._validateRun(run)
         if not self._runRestriction:
-            logger.error('Failed to restrict browser to run: %s is not \n\
-            valid!' %run)
+            logger.error('Failed to restrict browser to run: %s is not' +
+                         'valid!' %run)
             sys.exit()
         logger.warning('Browser restricted to run %s.' %run)
         self.database = {key: self.database[key] for key in self.database if \
@@ -292,15 +290,14 @@ class Browser(object):
         """
     # ### FIX ME: think about the ambiguities: rais an error?, stop the script?,
     #try to pass this problem?
-    # ### FIX ME: maybe return only list?
         if not analysis and not topology:
-            logger.warning('No analysis was given. Returnvalue will be list\n \
-            containing all available runs!')
+            logger.info('No analysis was given. Returnvalue will be list' +
+                        'containing all available runs!')
             return self.database.keys()
     
         if self._runRestriction:
-            logger.warning('Cannot get all runs because browser is restricted \n\
-            to %s!' %self._runRestriction)
+            logger.warning('Cannot get all runs because browser is restricted' +
+                           'to %s!' %self._runRestriction)
             #return self._runRestriction
     
         if self._experimentRestriction:
@@ -313,9 +310,9 @@ class Browser(object):
             self.database[key]]
             if len(runs) == 1:
                 return runs[0]
-            logger.warning('%s appears in %s runs! Returnvalue will be first\n \
-            hit! Please check the database for ambiguities!' \
-            %(analysis, len(runs)))
+            logger.warning('%s appears in %s runs! Returnvalue will be first' +
+                           'hit! Please check the database for ambiguities!' \
+                           %(analysis, len(runs)))
             return runs[0]
         
         topology = self._validateTopology(topology)    
@@ -325,8 +322,9 @@ class Browser(object):
             self.getTopologies(run = key)]
             if not runs:
                 return None
-            logger.warning('No analysis was given. There are %s runs for given\n \
-            topology %s. Returnvalue will be list!' %(len(runs), topology))
+            logger.info('No analysis was given. There are %s runs for given' +
+                           'topology %s. Returnvalue will be list!' \
+                           %(len(runs), topology))
             return runs
         
         if analysis and topology:
@@ -339,8 +337,9 @@ class Browser(object):
                 return None
             if len(runs) == 1:
                 return runs[0]
-            logger.error('%s appears in %s runs! Returnvalue will be first hit!\n \
-            Please check the database for ambiguities!' %(analysis, len(runs)))
+            logger.warning('%s appears in %s runs! Returnvalue will be first hit!' +
+                           'Please check the database for ambiguities!' \
+                           %(analysis, len(runs)))
             return runs[0]
 
     def getAnalyses(self, run = None, topology = None):
@@ -469,8 +468,8 @@ class Browser(object):
         if analysis in self._analyses:
             return self._analyses[analysis]
         if not self._checkResults(analysis):
-            logger.info('Skipped building of ExpAnalysis-object for %s! \n \
-            There is not enough information.' %analysis)
+            logger.info('Skipped building of ExpAnalysis-object for %s!' +
+                        'There is not enough information.' %analysis)
             return None
         if not analysis in self._infos:
             logger.debug('Browser has no info.txt-object for %s!' %analysis)
@@ -489,8 +488,6 @@ class Browser(object):
         """This is the factory for the experimental topology object.
         
         """        
-        #if isinstance(topology, object):
-            #return topology
         if topology in self._topologies:
             return self._topologies[topology]
         topology = self._validateTopology(topology)
@@ -535,12 +532,14 @@ class Browser(object):
         expAna = self.expAnalysis(analysis)
         run = expAna.run
         if not topology in expAna.topologies:
-            logger.error('There is no experimental result set for \n\
-            run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
+            logger.error('There is no experimental result set for' +
+                         'run-analysis-topology: %s-%s-%s!' \
+                         %(run, analysis, topology))
             return None
         if not expAna.hasAxes:
-            logger.error('There is no experimental result set for \n\
-            run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
+            logger.error('There is no experimental result set for' +
+                         'run-analysis-topology: %s-%s-%s!' \
+                         %(run, analysis, topology))
             return None
         self._resultSets[resultSet] = experimentalResults.ExpResultSet(run, \
         expAna, self.expTopology(topology), \
@@ -563,16 +562,17 @@ class Browser(object):
         expAna = self.expAnalysis(analysis)
         run = expAna.run
         if not expAna.hasAxes:
-            logger.error('There is no experimental result for \n\
-            run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
+            logger.error('There is no experimental result for' +
+            'run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
             return None
         for topo in expAna.extendedTopologies:
             if topology in expAna.extendedTopologies[topo]:
                 return self.expResultSet(analysis, topo).results[result]
             else:
                 continue
-        logger.error('There is no experimental result for \n\
-        run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
+        logger.error('There is no experimental result for' +
+                     'run-analysis-topology: %s-%s-%s!' \
+                     %(run, analysis, topology))
         return None
             
     
@@ -735,8 +735,8 @@ class Infotxt(object):
         axDict['my'] = axesEntry.split()[1].strip()
         try:
             axesEntry.split()[3]
-            logger.info('There are more then three masses!\n\
-            Keys will be mx, my, m3 and m4!')
+            logger.info('There are more then three masses!'
+                        'Keys will be mx, my, m3 and m4!')
             axDict['m3'] = axesEntry.split()[2].strip()
             axDict['m4'] = axesEntry.split()[3].strip()
             axDict['extension'] = '%s%s' %(axDict['m3'], axDict['m4'])
@@ -823,18 +823,19 @@ class Infotxt(object):
         # print some warnings.
         for t in self.topologies:
             if not t in axDict:
-                logger.warning('There is no axes entry for %s-%s! Check database!' %(self._analysis, t))
+                logger.warning('There is no axes entry for %s-%s! Check database!' \
+                %(self._analysis, t))
         for t in axDict:
             if not t in self.topologies:
-                logger.error('There is an axes entry for %s-%s, \n \
-                but this is no known topology! Check database!' %(self._analysis, t))
+                logger.error('There is an axes entry for %s-%s, ' +
+                             'but this is no known topology! Check database!' \
+                             %(self._analysis, t))
         axDict = {t: axDict[t] for t in axDict if t in self.topologies}
         for t in axDict:
             entries = []
             for entry in axDict[t]:
                 entries.append(self._massDict(entry))
 
-            #entries = [e for e in entries if e]
             for entry in entries:
                 for key in ['mz', 'm3', 'm4']:
                     if key in entry:
