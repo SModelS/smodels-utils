@@ -11,7 +11,7 @@
 
 import setPath
 from smodels_tools import SModelSTools
-from smodels_tools.tools import databaseBrowser
+from smodels_tools.helper import databaseBrowser
 import logging
 logger=logging.getLogger(__name__)
 
@@ -131,7 +131,8 @@ def writeSection ( experiment, section, analyses ):
             datapub=ana.publishedData
             countResults[0]=countResults[0]+1
             res=browser.expResult ( ananame, topo )
-            expctd=res.hasExpectedUpperLimits
+            # expctd=res.hasExpectedUpperLimits
+            expctd=False
             f.write ( "|| %d || %s || %s || %s || %s || %s||\n" \
                       % ( countResults[0], topolink, constr, \
                           yesno(hascond), yesno(datapub), yesno(expctd) ) )

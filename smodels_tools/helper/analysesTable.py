@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+"""
+.. module:: analysesTable
+   :synopsis: generates a latex table with all analyses.
+
+.. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
+
+"""
+
 def generateAnalysisTable(ListOfAnalyses, texfile=None, wd=0.15, fig_dir=None):
   """Generates a raw latex table with all the analyses in ListOfAnalyses and their
   respective SMS graphs. The graphs are generated using printAnalysisGraphs.
