@@ -1334,10 +1334,10 @@
 1000  537  None  None None
 1000  587  None  None None
 #END
-time: 1.82784026861 min
-time per slha: 0.082150127468 sec
+time: 1.83115771612 min
+time per slha: 0.0822992262322 sec
 outFile: T2tt-SUS13004-10000-NLL.png
 analysis: SUS-13-004, razor (R^{2} and M_{T}), 8.0 TeV, NLL
 decay: #tilde{t} #rightarrow t#tilde{#chi}^{0}_{1}
-intermediate xvalue, 050
+intermediate: None, None
 rootTag: exclusion_T2tt: official exclusion line
