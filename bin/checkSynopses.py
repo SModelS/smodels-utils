@@ -50,8 +50,9 @@ def check ( dir, subdirs ):
 tooldir=SModelSTools.installDirectory()
 
 smodelsdir=SModelSTools.addSModelSPath()
-dirs = [ "experiment", "theory", "tools", "bin", "validation" ]
+dirs = [ "smodels/experiment", "smodels/theory", "smodels/tools", "bin" ]
 check ( smodelsdir, dirs )
 
 # check smodels-tools
-check ( tooldir, [ "bin", "tools" ] )
+check ( tooldir, [ "bin", "smodels_tools/helper", "smodels_tools/publication", \
+       "smodels_tools/plotting", "smodels_tools/checks" ] )

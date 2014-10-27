@@ -1,7 +1,11 @@
 #!/usr/bin/python
 # coding=latin-1
 
-""" Script used to create the document for wordle, which is used for the banner image, see http://smodels.hephy.at/images/banner.png.  
+""" 
+
+.. module:: prepareWordle
+   :synopsis: Script used to create the document for wordle, which is used for
+   the banner image, see http://smodels.hephy.at/images/banner.png.  
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com> 
 
