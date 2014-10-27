@@ -98,7 +98,6 @@ class Browser(object):
     @property
     def experimentRestriction(self):
         """Tells if the browser is restricted to either CMS or ATLAS. 
-        Gives None if both are allowed.
         
         """
         if self._experimentRestriction:
@@ -127,7 +126,7 @@ class Browser(object):
         self.database = self._getDatabase()
     
     def _validateExperiment(self, detector):
-        """Validates the given experiment. Exits the script if the given 
+        """Validates the given experiment. Raises an error if the given 
         experiment is unknown.
         
         """
@@ -172,11 +171,11 @@ class Browser(object):
             logger.setLevel(level=logging.WARNING)
         if level == 'error':
             pass
-        
     @property
     def experimentalObejctsDictionaries(self):
         """Retrieves all the dictionaries containing the experimental objects.
         Use the deleter to reset these.
+        
         """
         return [self._analyses, self._topologies, self._resultSets, self._infos]
         
@@ -184,6 +183,7 @@ class Browser(object):
     def experimentalObejctsDictionaries(self):
         """Resets all the dictionaries containing the experimental objects in
         order to get all the logger messages from the building process again.
+        
         """
         [self._analyses, self._topologies, self._resultSets, self._infos] \
         = [{}, {}, {}, {}]
@@ -194,14 +194,15 @@ class Browser(object):
     
         """
         data = {}
-        if os.path.exists('%s/version' % self._base):
-            # set the database version
-            f = open('%s/version' % self._base )
-            self._databaseVersion = f.readline()[:-1]
-            f.close()
+        #if os.path.exists('%s/version' % self._base):
+            ## set the database version ### FIX ME: maybe better to use _getDatabaseVersion?
+            #f = open('%s/version' % self._base )
+            #self._databaseVersion = f.readline()[:-1]
+            #f.close()
+        self._databaseVersion = self._getDatabaseVersion    
         for r in self._allruns:
             if not os.path.exists('%s/%s' % (self._base, r)):
-                logger.info('Using an incomplete version of the' +
+                logger.info('Using an incomplete version of the ' +
                             'database! Run %s is missing' %r)
                 continue
             data[r] = os.listdir('%s/%s' % (self._base, r)) # TODO: use os.walk
@@ -230,9 +231,9 @@ class Browser(object):
         """
         self._runRestriction = self._validateRun(run)
         if not self._runRestriction:
-            logger.error('Failed to restrict browser to run: %s is not' +
+            logger.error('Failed to restrict browser to run: %s is not ' +
                          'valid!' %run)
-            sys.exit()
+            raise InvalidRunRestrictionException("Invalid run")
         logger.warning('Browser restricted to run %s.' %run)
         self.database = {key: self.database[key] for key in self.database if \
         key == self._runRestriction}
@@ -291,12 +292,12 @@ class Browser(object):
     # ### FIX ME: think about the ambiguities: rais an error?, stop the script?,
     #try to pass this problem?
         if not analysis and not topology:
-            logger.info('No analysis was given. Returnvalue will be list' +
+            logger.info('No analysis was given. Returnvalue will be list ' +
                         'containing all available runs!')
             return self.database.keys()
     
         if self._runRestriction:
-            logger.warning('Cannot get all runs because browser is restricted' +
+            logger.warning('Cannot get all runs because browser is restricted ' +
                            'to %s!' %self._runRestriction)
             #return self._runRestriction
     
@@ -310,9 +311,9 @@ class Browser(object):
             self.database[key]]
             if len(runs) == 1:
                 return runs[0]
-            logger.warning('%s appears in %s runs! Returnvalue will be first' +
-                           'hit! Please check the database for ambiguities!' \
-                           %(analysis, len(runs)))
+            logger.warning('%s appears in %s runs! ' %(analysis, len(runs)) +
+                           'Return value will be first hit! Please check the ' +
+                           'database for ambiguities!' )
             return runs[0]
         
         topology = self._validateTopology(topology)    
@@ -322,9 +323,9 @@ class Browser(object):
             self.getTopologies(run = key)]
             if not runs:
                 return None
-            logger.info('No analysis was given. There are %s runs for given' +
-                           'topology %s. Returnvalue will be list!' \
-                           %(len(runs), topology))
+            logger.info('No analysis was given. There are %s runs ' %len(runs) +
+                        'for given topology %s. ' %topology +
+                        'Returnvalue will be list!' )
             return runs
         
         if analysis and topology:
@@ -337,9 +338,9 @@ class Browser(object):
                 return None
             if len(runs) == 1:
                 return runs[0]
-            logger.warning('%s appears in %s runs! Returnvalue will be first hit!' +
-                           'Please check the database for ambiguities!' \
-                           %(analysis, len(runs)))
+            logger.warning('%s appears in %s runs! ' %(analysis, len(runs)) + 
+                           'Returnvalue will be first hit! ' +
+                           'Please check the database for ambiguities!')
             return runs[0]
 
     def getAnalyses(self, run = None, topology = None):
@@ -349,7 +350,6 @@ class Browser(object):
         """
     
         analyses = []
-        #topologies = [] what's this for?
     
         if self._runRestriction:
             logger.warning('Browser is restricted to run %s!' \
@@ -438,7 +438,7 @@ class Browser(object):
         
         return topos
     
-    def _checkResults(self, analysis, requested = 'info.txt'):
+    def _checkResults(self, analysis, requested='info.txt'):
         """Checks if results for given analysis are available in form of 
         info.txt, sms.root and sms.py, returns path to these files.
     
@@ -462,14 +462,11 @@ class Browser(object):
         analysis object. 
         
         """
-        
-        #if isinstance(analysis, object):
-            #return analysis
         if analysis in self._analyses:
             return self._analyses[analysis]
         if not self._checkResults(analysis):
-            logger.info('Skipped building of ExpAnalysis-object for %s!' +
-                        'There is not enough information.' %analysis)
+            logger.info('Skipped building of ExpAnalysis-object for %s!'%analysis +
+                        ' There is not enough information.')
             return None
         if not analysis in self._infos:
             logger.debug('Browser has no info.txt-object for %s!' %analysis)
@@ -532,12 +529,12 @@ class Browser(object):
         expAna = self.expAnalysis(analysis)
         run = expAna.run
         if not topology in expAna.topologies:
-            logger.error('There is no experimental result set for' +
+            logger.error('There is no experimental result set for ' +
                          'run-analysis-topology: %s-%s-%s!' \
                          %(run, analysis, topology))
             return None
         if not expAna.hasAxes:
-            logger.error('There is no experimental result set for' +
+            logger.error('There is no experimental result set for ' +
                          'run-analysis-topology: %s-%s-%s!' \
                          %(run, analysis, topology))
             return None
@@ -562,7 +559,7 @@ class Browser(object):
         expAna = self.expAnalysis(analysis)
         run = expAna.run
         if not expAna.hasAxes:
-            logger.error('There is no experimental result for' +
+            logger.error('There is no experimental result for ' +
             'run-analysis-topology: %s-%s-%s!' %(run, analysis, topology))
             return None
         for topo in expAna.extendedTopologies:
@@ -570,11 +567,10 @@ class Browser(object):
                 return self.expResultSet(analysis, topo).results[result]
             else:
                 continue
-        logger.error('There is no experimental result for' +
+        logger.error('There is no experimental result for ' +
                      'run-analysis-topology: %s-%s-%s!' \
                      %(run, analysis, topology))
         return None
-            
     
 class Infotxt(object):
     """Holds all the lines, stored in the info.txt file. 
@@ -827,9 +823,9 @@ class Infotxt(object):
                 %(self._analysis, t))
         for t in axDict:
             if not t in self.topologies:
-                logger.error('There is an axes entry for %s-%s, ' +
-                             'but this is no known topology! Check database!' \
-                             %(self._analysis, t))
+                logger.error('There is an axes entry for %s-%s' %(self._analysis, t) +
+                             ', but this is no known topology! Check database!' \
+                             )
         axDict = {t: axDict[t] for t in axDict if t in self.topologies}
         for t in axDict:
             entries = []

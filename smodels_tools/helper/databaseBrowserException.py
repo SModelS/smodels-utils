@@ -10,4 +10,7 @@ class DatabaseNotFoundException(Exception):
     pass
 
 class InvalidExperimentException(Exception):
-    pass    
+    pass
+
+class InvalidRunRestrictionException(Exception):
+    pass
