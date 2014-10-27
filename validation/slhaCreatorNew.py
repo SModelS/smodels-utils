@@ -241,7 +241,7 @@ class SlhaFileSet(object):
         
         """
         
-        picDict = {
+        pidDict = {
             'chargino^pm_1' : ['1000024'],
             'chargino^p' : ['1000024'],
             'slepton' : ['1000013','1000011'],
@@ -259,11 +259,11 @@ class SlhaFileSet(object):
             return
         listOfInterPid = []
         for particle in interPart:
-            if not particle in picDict:
-                logger.error('no PIC code for intermediateParticle: %s in picDic' \
+            if not particle in pidDict:
+                logger.error('no PIC code for intermediateParticle: %s in pidDic' \
                 %motherPart)
                 return
-            for pid in picDict[particle]: listOfInterPid.append(pid)
+            for pid in pidDict[particle]: listOfInterPid.append(pid)
         return listOfInterPid
      
     def _getPidCodeOfMother(self,topo):
@@ -271,10 +271,10 @@ class SlhaFileSet(object):
         
         """
         
-        picDict = {
+        pidDict = {
             'g' : ['1000021'],
-            'q' : ['1000001', '1000002', '1000003', '1000004'],
-            #,'2000001', '2000002','2000003','2000004'], only lefthanded squarks
+            'q' : ['1000001', '1000002', '1000003', '1000004',
+            '2000001', '2000002','2000003','2000004'], #all squarks
             'gq' : ['1000021', '1000001', '1000002', '1000003', '1000004'],
             'b' : ['1000005'], #'2000005'], no b2
             't' : ['1000006'], #'2000006'], no t2
@@ -288,11 +288,11 @@ class SlhaFileSet(object):
             logger.error('no mother particle for %s, please check experimentalTopology.py in smodels-tools/tools'  \
             %topo.name)
             return
-        if not motherPart in picDict:
-            logger.error('no PIC code for motherParticle: %s in picDic' \
+        if not motherPart in pidDict:
+            logger.error('no PIC code for motherParticle: %s in pidDic' \
             %motherPart)
             return
-        return picDict[motherPart]
+        return pidDict[motherPart]
     
     
     
