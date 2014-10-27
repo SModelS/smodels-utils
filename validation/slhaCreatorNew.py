@@ -78,12 +78,11 @@ class SlhaFileSet(object):
         compute xsecs
         
         """
-    
         if topo.motherParticle in ['g','gq','q'] and not topo.intermediateParticles:
             return [200.,2000.]
         if topo.motherParticle in ['b','t'] and not topo.intermediateParticles:
             return [100.,1000.]
-        if topo.motherParticle in ['t'] and topo.intermediateParticles:
+        if topo.motherParticle in ['b'] and topo.intermediateParticles:
             return [400.,1000.]
         return [0.,2000.]
         
