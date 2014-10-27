@@ -426,7 +426,7 @@
 660  250  None  None None
 660  275  None  None None
 660  112  None  None None
-660  150  None  None None
+660.0  150.0  12.543478983  None 0.0
 660  25  None  None None
 660  50  None  None None
 660  37  None  None None
@@ -448,7 +448,7 @@
 660  325  None  None None
 660  162  None  None None
 660  450  None  None None
-660  287  None  None None
+660.0  287.5  12.543478983  None 0.0
 660  175  None  None None
 660  137  None  None None
 660  350  None  None None
@@ -564,7 +564,7 @@
 720  150  None  None None
 720  350  None  None None
 720  262  None  None None
-720  75  None  None None
+720.0  75.0  6.562794546  None 0.0
 720  237  None  None None
 720  100  None  None None
 720  87  None  None None
@@ -847,7 +847,7 @@
 840  562  None  None None
 840  537  None  None None
 840  625  None  None None
-840.0  350.0  1.98809190082  None 0.0
+840  350  None  None None
 840  300  None  None None
 840  512  None  None None
 840  487  None  None None
@@ -1064,7 +1064,7 @@
 920  450  None  None None
 920  637  None  None None
 920  587  None  None None
-920.0  350.0  0.93933327348  None 0.0
+920  350  None  None None
 920  87  None  None None
 920  25  None  None None
 920  662  None  None None
@@ -1334,10 +1334,5 @@
 1000  537  None  None None
 1000  587  None  None None
 #END
-time: 47.3550980091 sec
-time per slha: 0.0354719865635 sec
-outFile: T2tt-SUSY_2013_19-10000-NLL.png
-analysis: ATLAS-SUSY-2013-19, ATLAS stop dilepton, 8.0 TeV, NLL
-decay: #tilde{t} #rightarrow t#tilde{#chi}^{0}_{1}
-intermediate xvalue, 050
-rootTag: exclusion_T2tt: official exclusion line
+time: 47.9882400036 sec
+time per slha: 0.0359462502297 sec
