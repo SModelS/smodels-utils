@@ -361,7 +361,25 @@ class ExpResultSet (object):
             %self.name)
             return cond
         return cond[0]
-     
+    
+    @property
+    def _fuzzyCondition(self):
+        """Retrieves the fuzzycondition for this result.
+        
+        """
+        fuzcond = []
+        if not self._expAna.hasFuzzyConditions:
+            logger.warning('No fuzzy conditions available for analysis %s.' \
+            %self._ana)
+            return None
+        fuzcond = [c.split('->')[1].strip() for c in self._expAna.conditions \
+        if c.split('->')[0].strip() == self._topo]
+        if not fuzcond:
+            logger.warning('No fuzzy condition available for result %s.' \
+            %self.name)
+            return fuzcond
+        return fuzcond[0]
+    
     @property
     def _constraint(self):
         """Retrieves the constraint for this result.

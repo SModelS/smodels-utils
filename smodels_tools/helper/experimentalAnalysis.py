@@ -13,7 +13,6 @@
 import logging, os, types
 import setPath
 import sys
-import databaseBrowser
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -127,7 +126,23 @@ class ExpAnalysis(object):
         
         """
         return self._parseInfo('condition')
+    
+    @property
+    def hasFuzzyConditions(self):
+        """Checks is there are any conditions for this analysis.
         
+        """
+        if self._parseInfo('fuzzycondition'): return True
+        return False
+        
+        
+    @property
+    def fuzzyConditions(self):
+        """Retrieves all the conditions stored in the info.txt file.
+        
+        """
+        return self._parseInfo('fuzzycondition')
+    
     @property    
     def private(self):
         """States if the analysis is private (True) or public (False).
@@ -217,16 +232,16 @@ class ExpAnalysis(object):
         """
         return self._getInfoProperty('topologies')
     
-    @property
-    def expTopologies(self):
-        """Retrieves all the experimental topology objects this analysis has 
-        results for.
+    #@property
+    #def expTopologies(self):
+        #"""Retrieves all the experimental topology objects this analysis has 
+        #results for.
         
-        """
-        if self.topologies:
-            topos = [ExpTopology(t) for t in self.topologies]
-            return topos
-        return None
+        #"""
+        #if self.topologies:
+            #topos = [ExpTopology(t) for t in self.topologies]
+            #return topos
+        #return None
         
     @property    
     def extendedTopologies(self):
@@ -308,7 +323,7 @@ class ExpAnalysis(object):
         
     def _parseInfo(self, requested):
         inf = self._getInfoProperty('info')
-        content = [line for line in inf if requested in line]
+        content = [line for line in inf if requested == line.split(':')[0].strip()]
         if not content:
             logger.warning('Requested lines %s could not be found for %s!' \
             %(requested, self._name))
