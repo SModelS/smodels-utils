@@ -9,7 +9,7 @@
 """
 import unittest
 import setPath
-from smodels_tools.tools import rootTools
+from smodels_tools.helper import rootTools
 import types
 
 class TestRootTools(unittest.TestCase):

@@ -11,7 +11,7 @@
 
 import urllib
 import setPath
-from smodels_tools.tools import databaseBrowser
+from smodels_tools.helper import databaseBrowser
 
 class BibTeXifier:
     def __init__ ( self, analysis, run=None, database=None ):
