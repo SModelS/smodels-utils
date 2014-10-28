@@ -1,0 +1,1378 @@
+cd /tmp/tmpnDnbWC ; /home/michi/Documents/Physik/Diplomarbeit_Hephy/smodels/smodels/tools/external/pythia6/pythia_lhe < /tmp/tmpnDnbWC/temp.cfg
+
+
+1                                                                              
+ ******************************************************************************
+ ******************************************************************************
+ **                                                                          **
+ **                                                                          **
+ **              *......*                  Welcome to the Lund Monte Carlo!  **
+ **         *:::!!:::::::::::*                                               **
+ **      *::::::!!::::::::::::::*          PPP  Y   Y TTTTT H   H III   A    **
+ **    *::::::::!!::::::::::::::::*        P  P  Y Y    T   H   H  I   A A   **
+ **   *:::::::::!!:::::::::::::::::*       PPP    Y     T   HHHHH  I  AAAAA  **
+ **   *:::::::::!!:::::::::::::::::*       P      Y     T   H   H  I  A   A  **
+ **    *::::::::!!::::::::::::::::*!       P      Y     T   H   H III A   A  **
+ **      *::::::!!::::::::::::::* !!                                         **
+ **      !! *:::!!:::::::::::*    !!       This is PYTHIA version 6.427      **
+ **      !!     !* -><- *         !!       Last date of change: 12 Dec 2012  **
+ **      !!     !!                !!                                         **
+ **      !!     !!                !!       Now is  0 Jan 2000 at  0:00:00    **
+ **      !!                       !!                                         **
+ **      !!        lh             !!       Disclaimer: this program comes    **
+ **      !!                       !!       without any guarantees. Beware    **
+ **      !!                 hh    !!       of errors and use common sense    **
+ **      !!    ll                 !!       when interpreting results.        **
+ **      !!                       !!                                         **
+ **      !!                                Copyright T. Sjostrand (2011)     **
+ **                                                                          **
+ ** An archive of program versions and documentation is found on the web:    **
+ ** http://www.thep.lu.se/~torbjorn/Pythia.html                              **
+ **                                                                          **
+ ** When you cite this program, the official reference is to the 6.4 manual: **
+ ** T. Sjostrand, S. Mrenna and P. Skands, JHEP05 (2006) 026                 **
+ ** (LU TP 06-13, FERMILAB-PUB-06-052-CD-T) [hep-ph/0603175].                **
+ **                                                                          **
+ ** Also remember that the program, to a large extent, represents original   **
+ ** physics research. Other publications of special relevance to your        **
+ ** studies may therefore deserve separate mention.                          **
+ **                                                                          **
+ ** Main author: Torbjorn Sjostrand; Department of Theoretical Physics,      **
+ **   Lund University, Solvegatan 14A, S-223 62 Lund, Sweden;                **
+ **   phone: + 46 - 46 - 222 48 16; e-mail: torbjorn@thep.lu.se              **
+ ** Author: Stephen Mrenna; Computing Division, GDS Group,                   **
+ **   Fermi National Accelerator Laboratory, MS 234, Batavia, IL 60510, USA; **
+ **   phone: + 1 - 630 - 840 - 2556; e-mail: mrenna@fnal.gov                 **
+ ** Author: Peter Skands; CERN/PH-TH, CH-1211 Geneva, Switzerland            **
+ **   phone: + 41 - 22 - 767 24 47; e-mail: peter.skands@cern.ch             **
+ **                                                                          **
+ **                                                                          **
+ ******************************************************************************
+ ******************************************************************************
+     IMSS(1)        changed from              0 to             11
+     MSTP(47)       changed from              1 to              0
+     MSTP(161)      changed from              0 to             66
+     MSTP(162)      changed from              0 to             67
+     IMSS(21)       changed from              0 to             61
+     IMSS(22)       changed from              0 to             61
+     MSTJ(11)       changed from              4 to              3
+     MSTJ(22)       changed from              1 to              1
+     PARJ(71)       changed from       10.00000 to       10.00000
+     MSTP(2)        changed from              1 to              1
+     MSTP(33)       changed from              0 to              0
+     MSTP(42)       changed from              1 to              0
+     MSTP(81)       changed from              1 to              0
+     MSTP(82)       changed from              4 to              4
+     MSTU(21)       changed from              2 to              1
+     PARP(82)       changed from        2.00000 to        1.83870
+     PARP(89)       changed from     1800.00000 to     1960.00000
+     PARP(83)       changed from        0.50000 to        0.50000
+     PARP(84)       changed from        0.40000 to        0.40000
+     PARP(90)       changed from        0.25000 to        0.16000
+     PARP(67)       changed from        4.00000 to        2.50000
+     PARP(85)       changed from        0.90000 to        1.00000
+     PARP(86)       changed from        0.95000 to        1.00000
+     PARP(62)       changed from        1.00000 to        1.25000
+     PARP(64)       changed from        1.00000 to        0.20000
+     MSTP(91)       changed from              1 to              1
+     PARP(91)       changed from        2.00000 to        2.10000
+     PARP(93)       changed from        5.00000 to       15.00000
+     MSTP(61)       changed from              2 to              0
+     MSTP(71)       changed from              1 to              0
+     MSTP(111)      changed from              1 to              0
+     MSTJ(1)        changed from              1 to              0
+     MSEL           changed from              1 to              0
+     MSUB(216)      changed from              0 to              0
+     MSUB(201)      changed from              0 to              1
+     MSUB(202)      changed from              0 to              1
+     MSUB(203)      changed from              0 to              1
+     MSUB(204)      changed from              0 to              1
+     MSUB(205)      changed from              0 to              1
+     MSUB(206)      changed from              0 to              1
+     MSUB(207)      changed from              0 to              1
+     MSUB(208)      changed from              0 to              1
+     MSUB(209)      changed from              0 to              1
+     MSUB(210)      changed from              0 to              1
+     MSUB(211)      changed from              0 to              1
+     MSUB(212)      changed from              0 to              1
+     MSUB(213)      changed from              0 to              1
+     MSUB(214)      changed from              0 to              1
+     MSUB(217)      changed from              0 to              1
+     MSUB(218)      changed from              0 to              1
+     MSUB(219)      changed from              0 to              1
+     MSUB(220)      changed from              0 to              1
+     MSUB(221)      changed from              0 to              1
+     MSUB(222)      changed from              0 to              1
+     MSUB(223)      changed from              0 to              1
+     MSUB(224)      changed from              0 to              1
+     MSUB(225)      changed from              0 to              1
+     MSUB(226)      changed from              0 to              1
+     MSUB(227)      changed from              0 to              1
+     MSUB(228)      changed from              0 to              1
+     MSUB(229)      changed from              0 to              1
+     MSUB(230)      changed from              0 to              1
+     MSUB(231)      changed from              0 to              1
+     MSUB(232)      changed from              0 to              1
+     MSUB(233)      changed from              0 to              1
+     MSUB(234)      changed from              0 to              1
+     MSUB(235)      changed from              0 to              1
+     MSUB(236)      changed from              0 to              1
+     MSUB(237)      changed from              0 to              1
+     MSUB(238)      changed from              0 to              1
+     MSUB(239)      changed from              0 to              1
+     MSUB(240)      changed from              0 to              1
+     MSUB(241)      changed from              0 to              1
+     MSUB(242)      changed from              0 to              1
+     MSUB(243)      changed from              0 to              1
+     MSUB(244)      changed from              0 to              1
+     MSUB(246)      changed from              0 to              1
+     MSUB(247)      changed from              0 to              1
+     MSUB(248)      changed from              0 to              1
+     MSUB(249)      changed from              0 to              1
+     MSUB(250)      changed from              0 to              1
+     MSUB(251)      changed from              0 to              1
+     MSUB(252)      changed from              0 to              1
+     MSUB(253)      changed from              0 to              1
+     MSUB(254)      changed from              0 to              1
+     MSUB(256)      changed from              0 to              1
+     MSUB(258)      changed from              0 to              1
+     MSUB(259)      changed from              0 to              1
+     MSUB(261)      changed from              0 to              1
+     MSUB(262)      changed from              0 to              1
+     MSUB(263)      changed from              0 to              1
+     MSUB(264)      changed from              0 to              1
+     MSUB(265)      changed from              0 to              1
+     MSUB(271)      changed from              0 to              1
+     MSUB(272)      changed from              0 to              1
+     MSUB(273)      changed from              0 to              1
+     MSUB(274)      changed from              0 to              1
+     MSUB(275)      changed from              0 to              1
+     MSUB(276)      changed from              0 to              1
+     MSUB(277)      changed from              0 to              1
+     MSUB(278)      changed from              0 to              1
+     MSUB(279)      changed from              0 to              1
+     MSUB(280)      changed from              0 to              1
+     MSUB(281)      changed from              0 to              1
+     MSUB(282)      changed from              0 to              1
+     MSUB(283)      changed from              0 to              1
+     MSUB(284)      changed from              0 to              1
+     MSUB(285)      changed from              0 to              1
+     MSUB(286)      changed from              0 to              1
+     MSUB(287)      changed from              0 to              1
+     MSUB(288)      changed from              0 to              1
+     MSUB(289)      changed from              0 to              1
+     MSUB(290)      changed from              0 to              1
+     MSUB(291)      changed from              0 to              1
+     MSUB(292)      changed from              0 to              1
+     MSUB(293)      changed from              0 to              1
+     MSUB(294)      changed from              0 to              1
+     MSUB(295)      changed from              0 to              1
+     MSUB(296)      changed from              0 to              1
+1****************** PYINIT: initialization of PYTHIA routines *****************
+ ****************** PYSLHA v1.14: SUSY/BSM SPECTRUM INTERFACE *****************
+ * (PYSLHA:) Last Change 10 Jun 2010 - P.Z. Skands
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000006, ~t_1            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000006, ~t_2            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000005, ~b_1            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000005, ~b_2            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000011, ~e_L-           
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000011, ~e_R-           
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000013, ~mu_L-          
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000013, ~mu_R-          
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000015, ~tau_1-         
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000015, ~tau_2-         
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000012, ~nu_eL          
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000014, ~nu_muL         
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000016, ~nu_tauL        
+ * (PYSLHA:) Reading  DECAY table for KF =  1000021, ~g              
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000022, ~chi_10         
+
+     Advisory warning type 9 given after        0 PYEXEC calls:
+     (PYSLHA:) No mass information found for KF =     1000022    
+ *
+ * (PYSLHA:) INCONSISTENT SPECTRUM WARNING.
+ * Warning: one or more (serious) inconsistencies were found in the spectrum !
+ * Read the error messages above and check your input file.
+
+ *   Spectrum Calculator was: MRENNA    #  version 1.0.1       
+ *   Read spectrum file on unit:  61
+ *
+ * Pole masses:
+ *     ~d       ~u       ~s       ~c       ~b(12)   ~t(12)
+ *  L ******** ******** ******** ******** ******** ********
+ *  R ******** ******** ******** ******** ******** ********
+ *
+ *     ~e       ~nu_e    ~mu      ~nu_mu   ~tau(12) ~nu_tau
+ *  L 10000.00 10000.00 10000.00 10000.00 10000.00 10000.00
+ *  R 10000.00     0.00 10000.00     0.00 10000.00     0.00
+ *
+ *        ~g    ~chi_10  ~chi_20  ~chi_30  ~chi_40  ~chi_1+  ~chi_2+
+ *     1900.00     0.00 10000.00 10000.00 10000.00 10000.00 10000.00
+ *
+ *     h0       H0       A0       H+                                         
+ *     1000.00  1000.00  1000.00  1000.00
+ *
+ * Mixing structure:
+ *           |   ~B   |  ~W_3  |  ~H_1  |  ~H_2  |
+ *   ~chi_10 |  0.979 | -0.087 |  0.176 | -0.052 |
+ *   ~chi_20 |  0.139 |  0.944 | -0.272 |  0.122 |
+ *   ~chi_30 | -0.075 |  0.117 |  0.687 |  0.713 |
+ *   ~chi_40 | -0.127 |  0.295 |  0.650 | -0.688 |
+ *
+ *      L    |   ~W   |   ~H   |            R    |   ~W   |   ~H   |
+ *   ~chi_1+ |  0.915 | -0.402 |         ~chi_1+ |  0.983 | -0.186 |
+ *   ~chi_2+ |  0.402 |  0.915 |         ~chi_2+ |  0.186 |  0.983 |
+ *
+ *        |  ~b_L  |  ~b_R  |        |  ~t_L  |  ~t_R  |          | ~tau_L | ~tau_R |
+ *   ~b_1 |  0.967 |  0.256 |   ~t_1 |  0.579 |  0.815 |   ~tau_1 |  0.451 |  0.892 |
+ *   ~b_2 | -0.256 |  0.967 |   ~t_2 | -0.815 |  0.579 |   ~tau_2 | -0.892 |  0.451 |
+ *
+ * Couplings:
+ *     A_b =  -828.81          A_t =  -446.25    A_tau =  -492.31
+ *   alpha =    -0.11    tan(beta) =    10.00       mu =   305.60
+ *
+ ******************************** END OF PYSLHA *******************************
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000005, ~b_1            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000005, ~b_2            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000006, ~t_1            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000006, ~t_2            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000011, ~e_L-           
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000011, ~e_R-           
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000012, ~nu_eL          
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000013, ~mu_L-          
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000013, ~mu_R-          
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000014, ~nu_muL         
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000015, ~tau_1-         
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000015, ~tau_2-         
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000016, ~nu_tauL        
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000022, ~chi_10         
+
+ ==============================================================================
+ I                                                                            I
+ I              PYTHIA will be initialized for a p on p collider              I
+ I                  at   8000.000 GeV center-of-mass energy                   I
+ I                                                                            I
+ ==============================================================================
+ Warning: requested subprocess 201 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 202 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 203 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 204 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 205 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 206 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 207 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 208 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 209 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 210 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 211 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 212 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 213 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 214 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 217 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 218 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 219 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 220 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 221 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 222 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 223 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 224 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 225 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 226 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 227 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 228 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 229 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 230 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 231 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 232 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 233 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 234 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 235 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 236 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 238 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 239 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 240 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 241 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 242 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 246 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 247 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 248 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 249 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 250 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 251 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 252 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 253 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 254 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 256 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 258 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 259 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 261 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 262 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 263 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 264 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 265 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 271 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 272 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 273 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 274 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 275 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 276 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 277 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 278 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 279 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 280 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 281 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 282 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 283 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 284 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 285 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 286 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 287 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 288 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 289 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 290 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 291 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 292 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 293 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 294 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 295 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 296 has no allowed phase space.
+ Process switched off!
+
+ ******** PYMAXI: summary of differential cross-section maximum search ********
+
+           ==========================================================
+           I                                      I                 I
+           I  ISUB  Subprocess name               I  Maximum value  I
+           I                                      I                 I
+           ==========================================================
+           I                                      I                 I
+           I  237   q + qbar -> ~chi1 + ~g        I    8.6685D-20   I
+           I  243   q + qbar -> ~g + ~g           I    5.8196D-14   I
+           I  244   g + g -> ~g + ~g              I    1.1922D-14   I
+           I                                      I                 I
+           ==========================================================
+
+ ********************** PYINIT: initialization completed **********************
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      -2   0   0    0  101    0.000    0.000 1886.454 1886.454    0.000
+   2 -1       2   0   0  102    0    0.000    0.000-2314.303 2314.303    0.000
+   3  2 1000021   1   2  103  101 -503.030  213.107  465.905 2031.138 1900.000
+   4  2 1000021   1   2  102  103  503.030 -213.107 -893.753 2169.619 1900.000
+   5  1 1000022   3   0    0    0 -144.640   90.505  962.254  977.264    0.000
+   6  2      -6   3   0    0  101  134.977 -204.699  -88.614  314.003  175.000
+   7  2       6   3   0  103    0 -493.367  327.301 -407.735  739.871  175.000
+   8  1 1000022   4   0    0    0  257.739  735.118 -572.491  966.734    0.000
+   9  2      -6   4   0    0  103  346.504 -589.148  -45.402  706.998  175.000
+  10  2       6   4   0  102    0 -101.213 -359.077 -275.860  495.887  175.000
+  11  2     -24   6   0    0    0  151.451 -123.977  -93.465  231.334   80.450
+  12  1      -5   6   0    0  101  -16.474  -80.723    4.851   82.669    4.800
+  13  2      24   7   0    0    0 -388.318  177.955 -282.098  518.180   80.450
+  14  1       5   7   0  103    0 -105.049  149.346 -125.637  221.691    4.800
+  15  2     -24   9   0    0    0   77.263 -116.197   -2.799  161.094   80.450
+  16  1      -5   9   0    0  103  269.241 -472.950  -42.603  545.904    4.800
+  17  2      24  10   0    0    0   -9.983 -229.696 -112.345  268.241   80.450
+  18  1       5  10   0  102    0  -91.230 -129.381 -163.515  227.646    4.800
+  19  1      11  11   0    0    0   26.782    9.201  -20.021   34.681    0.001
+  20  1     -12  11   0    0    0  124.669 -133.177  -73.445  196.653    0.000
+  21  1      -1  13   0    0  104 -352.151  164.018 -280.915  479.401    0.330
+  22  1       2  13   0  104    0  -36.167   13.937   -1.184   38.779    0.330
+  23  1       3  15   0  105    0   -2.148  -28.950   26.736   39.469    0.500
+  24  1      -4  15   0    0  105   79.410  -87.247  -29.535  121.625    1.500
+  25  1      -1  17   0    0  106   21.814 -194.570  -84.164  213.112    0.330
+  26  1       2  17   0  106    0  -31.797  -35.126  -28.181   55.129    0.330
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !ubar!       21      -2    3    0.000    0.000 2089.456 2089.456    0.000
+    6 !u!          21       2    4    0.000    0.000-2089.456 2089.456    0.000
+    7 !~g!         21 1000021    0 -503.030  213.107  676.294 2089.456 1900.000
+    8 !~g!         21 1000021    0  503.030 -213.107 -676.294 2089.456 1900.000
+    9 !~chi_10!    21 1000022    7 -144.640   90.505 1067.339 1080.890    0.000
+   10 !tbar!       21      -6    7  134.977 -204.699  -56.929  306.572  175.000
+   11 !t!          21       6    7 -493.367  327.301 -334.116  701.994  175.000
+   12 !~chi_10!    21 1000022    8  257.739  735.118 -476.507  913.174    0.000
+   13 !tbar!       21      -6    8  346.504 -589.148   26.745  706.046  175.000
+   14 !t!          21       6    8 -101.213 -359.077 -226.532  470.236  175.000
+   15 !W-!         21     -24   10  151.451 -123.977  -70.269  222.974   80.450
+   16 !bbar!       21      -5   10  -16.474  -80.723   13.341   83.598    4.800
+   17 !W+!         21      24   11 -388.318  177.955 -230.520  492.007   80.450
+   18 !b!          21       5   11 -105.049  149.346 -103.596  209.987    4.800
+   19 !W-!         21     -24   13   77.263 -116.197   13.680  161.650   80.450
+   20 !bbar!       21      -5   13  269.241 -472.950   13.065  544.396    4.800
+   21 !W+!         21      24   14   -9.983 -229.696  -85.469  258.141   80.450
+   22 !b!          21       5   14  -91.230 -129.381 -141.063  212.095    4.800
+   23 !e-!         21      11   15   26.782    9.201  -16.575   32.812    0.001
+   24 !nu_ebar!    21     -12   15  124.669 -133.177  -53.695  190.162    0.000
+   25 !dbar!       21      -1   17 -352.151  164.018 -233.301  453.146    0.330
+   26 !u!          21       2   17  -36.167   13.937    2.780   38.861    0.330
+   27 !s!          21       3   19   -2.148  -28.950   30.917   42.413    0.500
+   28 !cbar!       21      -4   19   79.410  -87.247  -17.238  119.237    1.500
+   29 !dbar!       21      -1   21   21.814 -194.570  -62.785  205.609    0.330
+   30 !u!          21       2   21  -31.797  -35.126  -22.684   52.532    0.330
+  101 (ubar)       14      -2    3    0.000    0.000 1886.454 1886.454    0.000
+  102 (u)          14       2    4    0.000    0.000-2314.303 2314.303    0.000
+  103 (~g)         13 1000021    7 -503.030  213.107  465.905 2031.138 1900.000
+  104 (~g)         13 1000021    8  503.030 -213.107 -893.753 2169.619 1900.000
+  105 ~chi_10       1 1000022  103 -144.640   90.505  962.254  977.264    0.000
+  106 (tbar)       13      -6  103  134.977 -204.699  -88.614  314.003  175.000
+  107 (t)          13       6  103 -493.367  327.301 -407.735  739.871  175.000
+  108 ~chi_10       1 1000022  104  257.739  735.118 -572.491  966.734    0.000
+  109 (tbar)       13      -6  104  346.504 -589.148  -45.402  706.998  175.000
+  110 (t)          13       6  104 -101.213 -359.077 -275.860  495.887  175.000
+  111 (W-)         11     -24  106  151.451 -123.977  -93.465  231.334   80.450
+  112 bbar          3      -5  106  -16.474  -80.723    4.851   82.669    4.800
+  113 (W+)         11      24  107 -388.318  177.955 -282.098  518.180   80.450
+  114 b             3       5  107 -105.049  149.346 -125.637  221.691    4.800
+  115 (W-)         11     -24  109   77.263 -116.197   -2.799  161.094   80.450
+  116 bbar          3      -5  109  269.241 -472.950  -42.603  545.904    4.800
+  117 (W+)         11      24  110   -9.983 -229.696 -112.345  268.241   80.450
+  118 b             3       5  110  -91.230 -129.381 -163.515  227.646    4.800
+  119 e-            1      11  111   26.782    9.201  -20.021   34.681    0.001
+  120 nu_ebar       1     -12  111  124.669 -133.177  -73.445  196.653    0.000
+  121 dbar          3      -1  113 -352.151  164.018 -280.915  479.401    0.330
+  122 u             3       2  113  -36.167   13.937   -1.184   38.779    0.330
+  123 s             3       3  115   -2.148  -28.950   26.736   39.469    0.500
+  124 cbar          3      -4  115   79.410  -87.247  -29.535  121.625    1.500
+  125 dbar          3      -1  117   21.814 -194.570  -84.164  213.112    0.330
+  126 u             3       2  117  -31.797  -35.126  -28.181   55.129    0.330
+                   sum: -0.00        -0.000    0.000 -427.848 4200.757 4178.912
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      -2   0   0    0  101    0.000    0.000 1954.499 1954.499    0.000
+   2 -1       2   0   0  102    0    0.000    0.000-2355.287 2355.287    0.000
+   3  2 1000021   1   2  103  101 -266.570 -272.407  724.560 2068.877 1900.000
+   4  2 1000021   1   2  102  103  266.570  272.407-1125.348 2240.909 1900.000
+   5  1 1000022   3   0    0    0 -327.109  162.896 -202.352  417.710    0.000
+   6  2      -6   3   0    0  101 -275.513 -597.018   49.925  682.243  175.000
+   7  2       6   3   0  103    0  336.052  161.715  876.987  968.924  175.000
+   8  1 1000022   4   0    0    0 -198.008  403.378 -493.842  667.683    0.000
+   9  2      -6   4   0    0  103  772.688 -483.429 -509.537 1058.774  175.000
+  10  2       6   4   0  102    0 -308.111  352.458 -121.969  514.451  175.000
+  11  2     -24   6   0    0    0  -78.549 -264.280  -25.241  288.311   80.450
+  12  1      -5   6   0    0  101 -196.964 -332.738   75.167  393.932    4.800
+  13  2      24   7   0    0    0   69.269   65.481  212.061  246.024   80.450
+  14  1       5   7   0  103    0  266.783   96.233  664.926  722.900    4.800
+  15  2     -24   9   0    0    0  751.046 -457.210 -452.346  992.069   80.450
+  16  1      -5   9   0    0  103   21.642  -26.219  -57.191   66.706    4.800
+  17  2      24  10   0    0    0 -269.902  208.236  -78.051  358.851   80.450
+  18  1       5  10   0  102    0  -38.208  144.221  -43.918  155.600    4.800
+  19  1       1  11   0  104    0  -47.973 -212.231   11.040  217.865    0.330
+  20  1      -4  11   0    0  104  -30.576  -52.049  -36.281   70.446    1.500
+  21  1      -3  13   0    0  105  -15.765   12.971   65.624   68.728    0.500
+  22  1       4  13   0  105    0   85.033   52.510  146.437  177.296    1.500
+  23  1       3  15   0  106    0  477.975 -324.997 -268.536  637.334    0.500
+  24  1      -4  15   0    0  106  273.071 -132.213 -183.810  354.734    1.500
+  25  1      -1  17   0    0  107  -91.200   78.401   10.822  120.754    0.330
+  26  1       2  17   0  107    0 -178.702  129.836  -88.873  238.097    0.330
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !ubar!       21      -2    3    0.000    0.000 2145.555 2145.555    0.000
+    6 !u!          21       2    4    0.000    0.000-2145.555 2145.555    0.000
+    7 !~g!         21 1000021    0 -266.570 -272.407  920.946 2145.555 1900.000
+    8 !~g!         21 1000021    0  266.570  272.407 -920.946 2145.555 1900.000
+    9 !~chi_10!    21 1000022    7 -327.109  162.896 -164.219  400.629    0.000
+   10 !tbar!       21      -6    7 -275.513 -597.018  113.864  689.875  175.000
+   11 !t!          21       6    7  336.052  161.715  971.301 1055.051  175.000
+   12 !~chi_10!    21 1000022    8 -198.008  403.378 -433.630  624.465    0.000
+   13 !tbar!       21      -6    8  772.688 -483.429 -412.865 1015.792  175.000
+   14 !t!          21       6    8 -308.111  352.458  -74.450  505.298  175.000
+   15 !W-!         21     -24   10  -78.549 -264.280    1.577  287.208   80.450
+   16 !bbar!       21      -5   10 -196.964 -332.738  112.287  402.667    4.800
+   17 !W+!         21      24   11   69.269   65.481  235.962  266.901   80.450
+   18 !b!          21       5   11  266.783   96.233  735.339  788.150    4.800
+   19 !W-!         21     -24   13  751.046 -457.210 -361.656  954.138   80.450
+   20 !bbar!       21      -5   13   21.642  -26.219  -51.210   61.654    4.800
+   21 !W+!         21      24   14 -269.902  208.236  -44.874  353.123   80.450
+   22 !b!          21       5   14  -38.208  144.221  -29.576  152.175    4.800
+   23 !d!          21       1   15  -47.973 -212.231   31.436  219.844    0.330
+   24 !cbar!       21      -4   15  -30.576  -52.049  -29.859   67.364    1.500
+   25 !sbar!       21      -3   17  -15.765   12.971   72.329   75.156    0.500
+   26 !c!          21       4   17   85.033   52.510  163.634  191.745    1.500
+   27 !s!          21       3   19  477.975 -324.997 -210.178  615.027    0.500
+   28 !cbar!       21      -4   19  273.071 -132.213 -151.478  339.111    1.500
+   29 !dbar!       21      -1   21  -91.200   78.401   22.148  122.290    0.330
+   30 !u!          21       2   21 -178.702  129.836  -67.022  230.833    0.330
+  101 (ubar)       14      -2    3    0.000    0.000 1954.499 1954.499    0.000
+  102 (u)          14       2    4    0.000    0.000-2355.287 2355.287    0.000
+  103 (~g)         13 1000021    7 -266.570 -272.407  724.560 2068.877 1900.000
+  104 (~g)         13 1000021    8  266.570  272.407-1125.348 2240.909 1900.000
+  105 ~chi_10       1 1000022  103 -327.109  162.896 -202.352  417.710    0.000
+  106 (tbar)       13      -6  103 -275.513 -597.018   49.925  682.243  175.000
+  107 (t)          13       6  103  336.052  161.715  876.987  968.924  175.000
+  108 ~chi_10       1 1000022  104 -198.008  403.378 -493.842  667.683    0.000
+  109 (tbar)       13      -6  104  772.688 -483.429 -509.537 1058.774  175.000
+  110 (t)          13       6  104 -308.111  352.458 -121.969  514.451  175.000
+  111 (W-)         11     -24  106  -78.549 -264.280  -25.241  288.311   80.450
+  112 bbar          3      -5  106 -196.964 -332.738   75.167  393.932    4.800
+  113 (W+)         11      24  107   69.269   65.481  212.061  246.024   80.450
+  114 b             3       5  107  266.783   96.233  664.926  722.900    4.800
+  115 (W-)         11     -24  109  751.046 -457.210 -452.346  992.069   80.450
+  116 bbar          3      -5  109   21.642  -26.219  -57.191   66.706    4.800
+  117 (W+)         11      24  110 -269.902  208.236  -78.051  358.851   80.450
+  118 b             3       5  110  -38.208  144.221  -43.918  155.600    4.800
+  119 d             3       1  111  -47.973 -212.231   11.040  217.865    0.330
+  120 cbar          3      -4  111  -30.576  -52.049  -36.281   70.446    1.500
+  121 sbar          3      -3  113  -15.765   12.971   65.624   68.728    0.500
+  122 c             3       4  113   85.033   52.510  146.437  177.296    1.500
+  123 s             3       3  115  477.975 -324.997 -268.536  637.334    0.500
+  124 cbar          3      -4  115  273.071 -132.213 -183.810  354.734    1.500
+  125 dbar          3      -1  117  -91.200   78.401   10.822  120.754    0.330
+  126 u             3       2  117 -178.702  129.836  -88.873  238.097    0.330
+                   sum: -0.00         0.000   -0.000 -400.787 4309.786 4291.110
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      -2   0   0    0  101    0.000    0.000 1402.870 1402.870    0.000
+   2 -1       2   0   0  102    0    0.000    0.000-3131.630 3131.630    0.000
+   3  2 1000021   1   2  103  101  349.923  651.368 -338.289 2066.680 1900.000
+   4  2 1000021   1   2  102  103 -349.923 -651.368-1390.471 2467.820 1900.000
+   5  1 1000022   3   0    0    0 -419.852  -80.086  487.169  648.092    0.000
+   6  2      -6   3   0    0  101  253.180  420.492 -438.735  681.195  175.000
+   7  2       6   3   0  103    0  516.596  310.962 -386.723  737.393  175.000
+   8  1 1000022   4   0    0    0 -112.895 -588.072 -707.936  927.226    0.000
+   9  2      -6   4   0    0  103 -501.675  425.841  -53.637  683.023  175.000
+  10  2       6   4   0  102    0  264.646 -489.136 -628.897  857.571  175.000
+  11  2     -24   6   0    0    0  270.364  356.430 -385.820  596.211   80.450
+  12  1      -5   6   0    0  101  -17.183   64.063  -52.915   84.984    4.800
+  13  2      24   7   0    0    0  391.806  226.389 -360.914  584.376   80.450
+  14  1       5   7   0  103    0  124.790   84.573  -25.809  153.017    4.800
+  15  2     -24   9   0    0    0 -469.719  360.374   -9.185  597.547   80.450
+  16  1      -5   9   0    0  103  -31.956   65.467  -44.453   85.476    4.800
+  17  2      24  10   0    0    0  187.247 -440.839 -479.738  682.657   80.450
+  18  1       5  10   0  102    0   77.399  -48.297 -149.160  174.914    4.800
+  19  1       1  11   0  104    0    7.634   -2.120  -16.473   18.283    0.330
+  20  1      -2  11   0    0  104  262.729  358.550 -369.347  577.929    0.330
+  21  1     -13  13   0    0    0  299.865  208.217 -272.740  455.698    0.106
+  22  1      14  13   0    0    0   91.941   18.172  -88.174  128.678    0.000
+  23  1      11  15   0    0    0 -248.368  142.685    8.753  286.570    0.001
+  24  1     -12  15   0    0    0 -221.351  217.689  -17.937  310.977    0.000
+  25  1     -13  17   0    0    0   89.998 -144.828 -210.281  270.727    0.106
+  26  1      14  17   0    0    0   97.249 -296.011 -269.456  411.931    0.000
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !ubar!       21      -2    3    0.000    0.000 2096.013 2096.013    0.000
+    6 !u!          21       2    4    0.000    0.000-2096.013 2096.013    0.000
+    7 !~g!         21 1000021    0  349.923  651.368  486.357 2096.013 1900.000
+    8 !~g!         21 1000021    0 -349.923 -651.368 -486.357 2096.013 1900.000
+    9 !~chi_10!    21 1000022    7 -419.852  -80.086  794.237  901.944    0.000
+   10 !tbar!       21      -6    7  253.180  420.492 -193.658  555.916  175.000
+   11 !t!          21       6    7  516.596  310.962 -114.222  638.153  175.000
+   12 !~chi_10!    21 1000022    8 -112.895 -588.072 -383.391  711.030    0.000
+   13 !tbar!       21      -6    8 -501.675  425.841  223.654  716.704  175.000
+   14 !t!          21       6    8  264.646 -489.136 -326.620  668.279  175.000
+   15 !W-!         21     -24   10  270.364  356.430 -171.467  485.810   80.450
+   16 !bbar!       21      -5   10  -17.183   64.063  -22.191   70.105    4.800
+   17 !W+!         21      24   11  391.806  226.389 -149.407  483.279   80.450
+   18 !b!          21       5   11  124.790   84.573   35.186  154.874    4.800
+   19 !W-!         21     -24   13 -469.719  360.374  236.489  642.577   80.450
+   20 !bbar!       21      -5   13  -31.956   65.467  -12.835   74.127    4.800
+   21 !W+!         21      24   14  187.247 -440.839 -237.408  540.588   80.450
+   22 !b!          21       5   14   77.399  -48.297  -89.212  127.691    4.800
+   23 !d!          21       1   15    7.634   -2.120  -10.279   12.983    0.330
+   24 !ubar!       21      -2   15  262.729  358.550 -161.188  472.828    0.330
+   25 !mu+!        21     -13   17  299.865  208.217 -107.096  380.451    0.106
+   26 !nu_mu!      21      14   17   91.941   18.172  -42.312  102.828    0.000
+   27 !e-!         21      11   19 -248.368  142.685  127.647  313.591    0.001
+   28 !nu_ebar!    21     -12   19 -221.351  217.689  108.842  328.985    0.000
+   29 !mu+!        21     -13   21   89.998 -144.828 -115.815  206.126    0.106
+   30 !nu_mu!      21      14   21   97.249 -296.011 -121.593  334.462    0.000
+  101 (ubar)       14      -2    3    0.000    0.000 1402.870 1402.870    0.000
+  102 (u)          14       2    4    0.000    0.000-3131.630 3131.630    0.000
+  103 (~g)         13 1000021    7  349.923  651.368 -338.289 2066.680 1900.000
+  104 (~g)         13 1000021    8 -349.923 -651.368-1390.471 2467.820 1900.000
+  105 ~chi_10       1 1000022  103 -419.852  -80.086  487.169  648.092    0.000
+  106 (tbar)       13      -6  103  253.180  420.492 -438.735  681.195  175.000
+  107 (t)          13       6  103  516.596  310.962 -386.723  737.393  175.000
+  108 ~chi_10       1 1000022  104 -112.895 -588.072 -707.936  927.226    0.000
+  109 (tbar)       13      -6  104 -501.675  425.841  -53.637  683.023  175.000
+  110 (t)          13       6  104  264.646 -489.136 -628.897  857.571  175.000
+  111 (W-)         11     -24  106  270.364  356.430 -385.820  596.211   80.450
+  112 bbar          3      -5  106  -17.183   64.063  -52.915   84.984    4.800
+  113 (W+)         11      24  107  391.806  226.389 -360.914  584.376   80.450
+  114 b             3       5  107  124.790   84.573  -25.809  153.017    4.800
+  115 (W-)         11     -24  109 -469.719  360.374   -9.185  597.547   80.450
+  116 bbar          3      -5  109  -31.956   65.467  -44.453   85.476    4.800
+  117 (W+)         11      24  110  187.247 -440.839 -479.738  682.657   80.450
+  118 b             3       5  110   77.399  -48.297 -149.160  174.914    4.800
+  119 d             3       1  111    7.634   -2.120  -16.473   18.283    0.330
+  120 ubar          3      -2  111  262.729  358.550 -369.347  577.929    0.330
+  121 mu+           1     -13  113  299.865  208.217 -272.740  455.698    0.106
+  122 nu_mu         1      14  113   91.941   18.172  -88.174  128.678    0.000
+  123 e-            1      11  115 -248.368  142.685    8.753  286.570    0.001
+  124 nu_ebar       1     -12  115 -221.351  217.689  -17.937  310.977    0.000
+  125 mu+           1     -13  117   89.998 -144.828 -210.281  270.727    0.106
+  126 nu_mu         1      14  117   97.249 -296.011 -269.456  411.931    0.000
+                   sum:  0.00         0.000    0.000-1728.760 4534.500 4192.026
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      -2   0   0    0  101    0.000    0.000 2125.144 2125.144    0.000
+   2 -1       2   0   0  102    0    0.000    0.000-2807.053 2807.053    0.000
+   3  2 1000021   1   2  103  101 -479.927 1431.637 -618.348 2504.450 1900.000
+   4  2 1000021   1   2  102  103  479.927-1431.637  -63.561 2427.747 1900.000
+   5  1 1000022   3   0    0    0 -216.811  744.664 -645.937 1009.340    0.000
+   6  2      -6   3   0    0  101  208.165 -259.804  171.796  413.485  175.000
+   7  2       6   3   0  103    0 -471.281  946.777 -144.206 1081.625  175.000
+   8  1 1000022   4   0    0    0  -35.177 -256.435   90.098  274.069    0.000
+   9  2      -6   4   0    0  103 -349.759 -128.603  490.818  640.623  175.000
+  10  2       6   4   0  102    0  864.864-1046.599 -644.477 1513.054  175.000
+  11  2     -24   6   0    0    0   46.804  -37.471   59.607  116.705   80.450
+  12  1      -5   6   0    0  101  161.361 -222.333  112.188  296.780    4.800
+  13  2      24   7   0    0    0 -139.484  217.297  -29.761  272.088   80.450
+  14  1       5   7   0  103    0 -331.797  729.480 -114.445  809.537    4.800
+  15  2     -24   9   0    0    0 -323.435 -144.903  488.968  609.237   80.450
+  16  1      -5   9   0    0  103  -26.324   16.300    1.850   31.386    4.800
+  17  2      24  10   0    0    0  789.121 -981.741 -634.703 1412.745   80.450
+  18  1       5  10   0  102    0   75.743  -64.858   -9.774  100.310    4.800
+  19  1       1  11   0  104    0   47.798  -54.864   65.908   98.177    0.330
+  20  1      -2  11   0    0  104   -0.993   17.393   -6.301   18.528    0.330
+  21  1     -13  13   0    0    0 -147.469  215.368  -33.319  263.136    0.106
+  22  1      14  13   0    0    0    7.985    1.929    3.557    8.952    0.000
+  23  1       3  15   0  105    0 -216.742 -136.805  351.737  435.215    0.500
+  24  1      -4  15   0    0  105 -106.693   -8.099  137.231  174.022    1.500
+  25  1      -3  17   0    0  106    0.963  -13.987   -7.813   16.058    0.500
+  26  1       4  17   0  106    0  788.158 -967.754 -626.889 1396.686    1.500
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !ubar!       21      -2    3    0.000    0.000 2442.415 2442.415    0.000
+    6 !u!          21       2    4    0.000    0.000-2442.415 2442.415    0.000
+    7 !~g!         21 1000021    0 -479.927 1431.637 -274.730 2442.415 1900.000
+    8 !~g!         21 1000021    0  479.927-1431.637  274.730 2442.415 1900.000
+    9 !~chi_10!    21 1000022    7 -216.811  744.664 -511.300  928.956    0.000
+   10 !tbar!       21      -6    7  208.165 -259.804  231.183  441.477  175.000
+   11 !t!          21       6    7 -471.281  946.777    5.387 1071.982  175.000
+   12 !~chi_10!    21 1000022    8  -35.177 -256.435  129.231  289.304    0.000
+   13 !tbar!       21      -6    8 -349.759 -128.603  585.007  715.352  175.000
+   14 !t!          21       6    8  864.864-1046.599 -439.508 1437.759  175.000
+   15 !W-!         21     -24   10   46.804  -37.471   76.477  126.158   80.450
+   16 !bbar!       21      -5   10  161.361 -222.333  154.706  315.319    4.800
+   17 !W+!         21      24   11 -139.484  217.297    7.933  270.572   80.450
+   18 !b!          21       5   11 -331.797  729.480   -2.546  801.411    4.800
+   19 !W-!         21     -24   13 -323.435 -144.903  578.757  683.403   80.450
+   20 !bbar!       21      -5   13  -26.324   16.300    6.250   31.949    4.800
+   21 !W+!         21      24   14  789.121 -981.741 -443.642 1337.841   80.450
+   22 !b!          21       5   14   75.743  -64.858    4.134   99.918    4.800
+   23 !d!          21       1   15   47.798  -54.864   80.252  108.329    0.330
+   24 !ubar!       21      -2   15   -0.993   17.393   -3.775   17.828    0.330
+   25 !mu+!        21     -13   17 -147.469  215.368    3.091  261.036    0.106
+   26 !nu_mu!      21      14   17    7.985    1.929    4.841    9.535    0.000
+   27 !s!          21       3   19 -216.742 -136.805  415.903  488.536    0.500
+   28 !cbar!       21      -4   19 -106.693   -8.099  162.855  194.867    1.500
+   29 !sbar!       21      -3   21    0.963  -13.987   -5.648   15.123    0.500
+   30 !c!          21       4   21  788.158 -967.754 -437.994 1322.718    1.500
+  101 (ubar)       14      -2    3    0.000    0.000 2125.144 2125.144    0.000
+  102 (u)          14       2    4    0.000    0.000-2807.053 2807.053    0.000
+  103 (~g)         13 1000021    7 -479.927 1431.637 -618.348 2504.450 1900.000
+  104 (~g)         13 1000021    8  479.927-1431.637  -63.561 2427.747 1900.000
+  105 ~chi_10       1 1000022  103 -216.811  744.664 -645.937 1009.340    0.000
+  106 (tbar)       13      -6  103  208.165 -259.804  171.796  413.485  175.000
+  107 (t)          13       6  103 -471.281  946.777 -144.206 1081.625  175.000
+  108 ~chi_10       1 1000022  104  -35.177 -256.435   90.098  274.069    0.000
+  109 (tbar)       13      -6  104 -349.759 -128.603  490.818  640.623  175.000
+  110 (t)          13       6  104  864.864-1046.599 -644.477 1513.054  175.000
+  111 (W-)         11     -24  106   46.804  -37.471   59.607  116.705   80.450
+  112 bbar          3      -5  106  161.361 -222.333  112.188  296.780    4.800
+  113 (W+)         11      24  107 -139.484  217.297  -29.761  272.088   80.450
+  114 b             3       5  107 -331.797  729.480 -114.445  809.537    4.800
+  115 (W-)         11     -24  109 -323.435 -144.903  488.968  609.237   80.450
+  116 bbar          3      -5  109  -26.324   16.300    1.850   31.386    4.800
+  117 (W+)         11      24  110  789.121 -981.741 -634.703 1412.745   80.450
+  118 b             3       5  110   75.743  -64.858   -9.774  100.310    4.800
+  119 d             3       1  111   47.798  -54.864   65.908   98.177    0.330
+  120 ubar          3      -2  111   -0.993   17.393   -6.301   18.528    0.330
+  121 mu+           1     -13  113 -147.469  215.368  -33.319  263.136    0.106
+  122 nu_mu         1      14  113    7.985    1.929    3.557    8.952    0.000
+  123 s             3       3  115 -216.742 -136.805  351.737  435.215    0.500
+  124 cbar          3      -4  115 -106.693   -8.099  137.231  174.022    1.500
+  125 sbar          3      -3  117    0.963  -13.987   -7.813   16.058    0.500
+  126 c             3       4  117  788.158 -967.754 -626.889 1396.686    1.500
+                   sum: -0.00        -0.000    0.000 -681.909 4932.196 4884.830
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      -2   0   0    0  101    0.000    0.000 1354.721 1354.721    0.000
+   2 -1       2   0   0  102    0    0.000    0.000-2732.827 2732.827    0.000
+   3  2 1000021   1   2  103  101  128.761   -0.545 -396.926 1945.284 1900.000
+   4  2 1000021   1   2  102  103 -128.761    0.545 -981.180 2142.264 1900.000
+   5  1 1000022   3   0    0    0 -644.444   52.804 -163.071  666.850    0.000
+   6  2      -6   3   0    0  101  424.418 -353.471 -456.997  737.933  175.000
+   7  2       6   3   0  103    0  348.786  300.122  223.142  540.502  175.000
+   8  1 1000022   4   0    0    0 -352.569 -636.679 -809.071 1088.237    0.000
+   9  2      -6   4   0    0  103  438.611  208.276 -169.915  543.373  175.000
+  10  2       6   4   0  102    0 -214.803  428.948   -2.194  510.653  175.000
+  11  2     -24   6   0    0    0  406.704 -272.072 -387.254  629.182   80.450
+  12  1      -5   6   0    0  101   17.714  -81.399  -69.744  108.751    4.800
+  13  2      24   7   0    0    0  212.614  247.359  103.149  351.430   80.450
+  14  1       5   7   0  103    0  136.172   52.763  119.993  189.072    4.800
+  15  2     -24   9   0    0    0  172.290   24.300  -49.521  197.987   80.450
+  16  1      -5   9   0    0  103  266.321  183.975 -120.394  345.386    4.800
+  17  2      24  10   0    0    0  -75.308  289.572  -30.723  311.351   80.450
+  18  1       5  10   0  102    0 -139.494  139.376   28.529  199.302    4.800
+  19  1       3  11   0  104    0  172.706 -146.879 -217.299  314.038    0.500
+  20  1      -4  11   0    0  104  233.998 -125.194 -169.955  315.144    1.500
+  21  1     -13  13   0    0    0  199.758  249.076   87.403  331.031    0.106
+  22  1      14  13   0    0    0   12.856   -1.716   15.746   20.400    0.000
+  23  1      15  15   0    0    0  158.743   29.597  -17.025  162.384    1.777
+  24  1     -16  15   0    0    0   13.546   -5.297  -32.496   35.603    0.000
+  25  1      -1  17   0    0  105  -38.681   34.127   -9.184   52.395    0.330
+  26  1       2  17   0  105    0  -36.628  255.445  -21.539  258.956    0.330
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !ubar!       21      -2    3    0.000    0.000 1924.115 1924.115    0.000
+    6 !u!          21       2    4    0.000    0.000-1924.115 1924.115    0.000
+    7 !~g!         21 1000021    0  128.761   -0.545  275.023 1924.115 1900.000
+    8 !~g!         21 1000021    0 -128.761    0.545 -275.023 1924.115 1900.000
+    9 !~chi_10!    21 1000022    7 -644.444   52.804   65.596  649.922    0.000
+   10 !tbar!       21      -6    7  424.418 -353.471 -221.153  620.167  175.000
+   11 !t!          21       6    7  348.786  300.122  430.580  654.026  175.000
+   12 !~chi_10!    21 1000022    8 -352.569 -636.679 -469.673  866.174    0.000
+   13 !tbar!       21      -6    8  438.611  208.276   14.108  516.316  175.000
+   14 !t!          21       6    8 -214.803  428.948  180.542  541.625  175.000
+   15 !W-!         21     -24   10  406.704 -272.072 -186.018  529.629   80.450
+   16 !bbar!       21      -5   10   17.714  -81.399  -35.136   90.538    4.800
+   17 !W+!         21      24   11  212.614  247.359  235.416  410.224   80.450
+   18 !b!          21       5   11  136.172   52.763  195.165  243.801    4.800
+   19 !W-!         21     -24   13  172.290   24.300   18.301  192.565   80.450
+   20 !bbar!       21      -5   13  266.321  183.975   -4.193  323.751    4.800
+   21 !W+!         21      24   14  -75.308  289.572   78.865  319.711   80.450
+   22 !b!          21       5   14 -139.494  139.376  101.676  221.913    4.800
+   23 !s!          21       3   15  172.706 -146.879 -118.351  255.750    0.500
+   24 !cbar!       21      -4   15  233.998 -125.194  -67.667  273.879    1.500
+   25 !mu+!        21     -13   17  199.758  249.076  211.386  382.917    0.106
+   26 !nu_mu!      21      14   17   12.856   -1.716   24.030   27.307    0.000
+   27 !tau-!       21      15   19  158.743   29.597   40.069  166.385    1.777
+   28 !nu_taubar!  21     -16   19   13.546   -5.297  -21.767   26.180    0.000
+   29 !dbar!       21      -1   21  -38.681   34.127    9.009   52.365    0.330
+   30 !u!          21       2   21  -36.628  255.445   69.857  267.346    0.330
+  101 (ubar)       14      -2    3    0.000    0.000 1354.721 1354.721    0.000
+  102 (u)          14       2    4    0.000    0.000-2732.827 2732.827    0.000
+  103 (~g)         13 1000021    7  128.761   -0.545 -396.926 1945.284 1900.000
+  104 (~g)         13 1000021    8 -128.761    0.545 -981.180 2142.264 1900.000
+  105 ~chi_10       1 1000022  103 -644.444   52.804 -163.071  666.850    0.000
+  106 (tbar)       13      -6  103  424.418 -353.471 -456.997  737.933  175.000
+  107 (t)          13       6  103  348.786  300.122  223.142  540.502  175.000
+  108 ~chi_10       1 1000022  104 -352.569 -636.679 -809.071 1088.237    0.000
+  109 (tbar)       13      -6  104  438.611  208.276 -169.915  543.373  175.000
+  110 (t)          13       6  104 -214.803  428.948   -2.194  510.653  175.000
+  111 (W-)         11     -24  106  406.704 -272.072 -387.254  629.182   80.450
+  112 bbar          3      -5  106   17.714  -81.399  -69.744  108.751    4.800
+  113 (W+)         11      24  107  212.614  247.359  103.149  351.430   80.450
+  114 b             3       5  107  136.172   52.763  119.993  189.072    4.800
+  115 (W-)         11     -24  109  172.290   24.300  -49.521  197.987   80.450
+  116 bbar          3      -5  109  266.321  183.975 -120.394  345.386    4.800
+  117 (W+)         11      24  110  -75.308  289.572  -30.723  311.351   80.450
+  118 b             3       5  110 -139.494  139.376   28.529  199.302    4.800
+  119 s             3       3  111  172.706 -146.879 -217.299  314.038    0.500
+  120 cbar          3      -4  111  233.998 -125.194 -169.955  315.144    1.500
+  121 mu+           1     -13  113  199.758  249.076   87.403  331.031    0.106
+  122 nu_mu         1      14  113   12.856   -1.716   15.746   20.400    0.000
+  123 tau-          1      15  115  158.743   29.597  -17.025  162.384    1.777
+  124 nu_taubar     1     -16  115   13.546   -5.297  -32.496   35.603    0.000
+  125 dbar          3      -1  117  -38.681   34.127   -9.184   52.395    0.330
+  126 u             3       2  117  -36.628  255.445  -21.539  258.956    0.330
+                   sum: -0.00        -0.000    0.000-1378.106 4087.548 3848.229
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1       1   0   0  101    0    0.000    0.000 1973.809 1973.809    0.000
+   2 -1      -1   0   0    0  102    0.000    0.000-2104.472 2104.472    0.000
+   3  2 1000021   1   2  101  103 -433.843  246.747  477.831 2021.738 1900.000
+   4  2 1000021   1   2  103  102  433.843 -246.747 -608.494 2056.543 1900.000
+   5  1 1000022   3   0    0    0    5.947  300.165  108.571  319.252    0.000
+   6  2      -6   3   0    0  103 -227.763  475.856  794.766  969.842  175.000
+   7  2       6   3   0  101    0 -212.026 -529.274 -425.507  732.644  175.000
+   8  1 1000022   4   0    0    0 -315.396  472.598 -130.579  582.988    0.000
+   9  2      -6   4   0    0  102  638.290 -840.625 -170.353 1083.379  175.000
+  10  2       6   4   0  103    0  110.949  121.280 -307.562  390.177  175.000
+  11  2     -24   6   0    0    0 -190.319  278.229  579.230  674.991   80.450
+  12  1      -5   6   0    0  103  -37.444  197.626  215.536  294.851    4.800
+  13  2      24   7   0    0    0  -35.352 -235.992 -211.438  328.817   80.450
+  14  1       5   7   0  101    0 -176.674 -293.282 -214.068  403.827    4.800
+  15  2     -24   9   0    0    0  468.328 -679.618  -82.839  833.395   80.450
+  16  1      -5   9   0    0  102  169.962 -161.006  -87.514  249.984    4.800
+  17  2      24  10   0    0    0  139.065  130.278 -287.454  354.137   80.450
+  18  1       5  10   0  103    0  -28.116   -8.998  -20.108   36.040    4.800
+  19  1       3  11   0  104    0  -31.930  105.268  220.158  246.111    0.500
+  20  1      -4  11   0    0  104 -158.389  172.962  359.072  428.880    1.500
+  21  1     -13  13   0    0    0  -60.357 -187.764 -159.374  253.571    0.106
+  22  1      14  13   0    0    0   25.005  -48.228  -52.064   75.245    0.000
+  23  1       3  15   0  105    0  178.307 -211.983  -55.074  282.424    0.500
+  24  1      -4  15   0    0  105  290.021 -467.636  -27.765  550.970    1.500
+  25  1      -1  17   0    0  106   46.998    3.321  -93.607  104.796    0.330
+  26  1       2  17   0  106    0   92.067  126.957 -193.847  249.341    0.330
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !d!          21       1    3    0.000    0.000 2038.094 2038.094    0.000
+    6 !dbar!       21      -1    4    0.000    0.000-2038.094 2038.094    0.000
+    7 !~g!         21 1000021    0 -433.843  246.747  542.884 2038.094 1900.000
+    8 !~g!         21 1000021    0  433.843 -246.747 -542.884 2038.094 1900.000
+    9 !~chi_10!    21 1000022    7    5.947  300.165  118.861  322.897    0.000
+   10 !tbar!       21      -6    7 -227.763  475.856  826.263  995.816  175.000
+   11 !t!          21       6    7 -212.026 -529.274 -402.240  719.381  175.000
+   12 !~chi_10!    21 1000022    8 -315.396  472.598 -111.959  579.101    0.000
+   13 !tbar!       21      -6    8  638.290 -840.625 -135.712 1078.474  175.000
+   14 !t!          21       6    8  110.949  121.280 -295.213  380.518  175.000
+   15 !W-!         21     -24   10 -190.319  278.229  601.165  693.905   80.450
+   16 !bbar!       21      -5   10  -37.444  197.626  225.099  301.912    4.800
+   17 !W+!         21      24   11  -35.352 -235.992 -201.007  322.208   80.450
+   18 !b!          21       5   11 -176.674 -293.282 -201.233  397.173    4.800
+   19 !W-!         21     -24   13  468.328 -679.618  -56.166  831.167   80.450
+   20 !bbar!       21      -5   13  169.962 -161.006  -79.546  247.307    4.800
+   21 !W+!         21      24   14  139.065  130.278 -276.249  345.105   80.450
+   22 !b!          21       5   14  -28.116   -8.998  -18.963   35.413    4.800
+   23 !s!          21       3   15  -31.930  105.268  228.160  253.295    0.500
+   24 !cbar!       21      -4   15 -158.389  172.962  373.004  440.610    1.500
+   25 !mu+!        21     -13   17  -60.357 -187.764 -151.328  248.593    0.106
+   26 !nu_mu!      21      14   17   25.005  -48.228  -49.679   73.615    0.000
+   27 !s!          21       3   19  178.307 -211.983  -46.049  280.804    0.500
+   28 !cbar!       21      -4   19  290.021 -467.636  -10.117  550.363    1.500
+   29 !dbar!       21      -1   21   46.998    3.321  -90.296  101.850    0.330
+   30 !u!          21       2   21   92.067  126.957 -185.953  243.255    0.330
+  101 (d)          14       1    3    0.000    0.000 1973.809 1973.809    0.000
+  102 (dbar)       14      -1    4    0.000    0.000-2104.472 2104.472    0.000
+  103 (~g)         13 1000021    7 -433.843  246.747  477.831 2021.738 1900.000
+  104 (~g)         13 1000021    8  433.843 -246.747 -608.494 2056.543 1900.000
+  105 ~chi_10       1 1000022  103    5.947  300.165  108.571  319.252    0.000
+  106 (tbar)       13      -6  103 -227.763  475.856  794.766  969.842  175.000
+  107 (t)          13       6  103 -212.026 -529.274 -425.507  732.644  175.000
+  108 ~chi_10       1 1000022  104 -315.396  472.598 -130.579  582.988    0.000
+  109 (tbar)       13      -6  104  638.290 -840.625 -170.353 1083.379  175.000
+  110 (t)          13       6  104  110.949  121.280 -307.562  390.177  175.000
+  111 (W-)         11     -24  106 -190.319  278.229  579.230  674.991   80.450
+  112 bbar          3      -5  106  -37.444  197.626  215.536  294.851    4.800
+  113 (W+)         11      24  107  -35.352 -235.992 -211.438  328.817   80.450
+  114 b             3       5  107 -176.674 -293.282 -214.068  403.827    4.800
+  115 (W-)         11     -24  109  468.328 -679.618  -82.839  833.395   80.450
+  116 bbar          3      -5  109  169.962 -161.006  -87.514  249.984    4.800
+  117 (W+)         11      24  110  139.065  130.278 -287.454  354.137   80.450
+  118 b             3       5  110  -28.116   -8.998  -20.108   36.040    4.800
+  119 s             3       3  111  -31.930  105.268  220.158  246.111    0.500
+  120 cbar          3      -4  111 -158.389  172.962  359.072  428.880    1.500
+  121 mu+           1     -13  113  -60.357 -187.764 -159.374  253.571    0.106
+  122 nu_mu         1      14  113   25.005  -48.228  -52.064   75.245    0.000
+  123 s             3       3  115  178.307 -211.983  -55.074  282.424    0.500
+  124 cbar          3      -4  115  290.021 -467.636  -27.765  550.970    1.500
+  125 dbar          3      -1  117   46.998    3.321  -93.607  104.796    0.330
+  126 u             3       2  117   92.067  126.957 -193.847  249.341    0.330
+                   sum: -0.00        -0.000    0.000 -130.663 4078.281 4076.188
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      -2   0   0    0  101    0.000    0.000 1640.589 1640.589    0.000
+   2 -1       2   0   0  102    0    0.000    0.000-2462.140 2462.140    0.000
+   3  2 1000021   1   2  103  101  543.823  352.362 -311.516 2031.488 1900.000
+   4  2 1000021   1   2  102  103 -543.823 -352.362 -510.036 2071.241 1900.000
+   5  1 1000022   3   0    0    0 -185.923 -370.441 -229.968  474.003    0.000
+   6  2      -6   3   0    0  101  347.804 -270.584  -66.710  478.809  175.000
+   7  2       6   3   0  103    0  381.942  993.387  -14.837 1078.676  175.000
+   8  1 1000022   4   0    0    0  -36.588 -732.677 -345.774  810.996    0.000
+   9  2      -6   4   0    0  103  187.117  441.762   42.374  512.432  175.000
+  10  2       6   4   0  102    0 -694.353  -61.446 -206.636  747.813  175.000
+  11  2     -24   6   0    0    0  169.258 -216.082  -58.110  291.871   80.450
+  12  1      -5   6   0    0  101  178.545  -54.502   -8.600  186.938    4.800
+  13  2      24   7   0    0    0  235.657  581.248   59.164  635.103   80.450
+  14  1       5   7   0  103    0  146.285  412.138  -74.002  443.573    4.800
+  15  2     -24   9   0    0    0   76.532  324.096   -9.620  342.724   80.450
+  16  1      -5   9   0    0  103  110.585  117.666   51.994  169.708    4.800
+  17  2      24  10   0    0    0 -528.156  -13.646 -211.482  574.745   80.450
+  18  1       5  10   0  102    0 -166.197  -47.800    4.846  173.068    4.800
+  19  1       1  11   0  104    0  117.003 -138.138    0.875  181.032    0.330
+  20  1      -2  11   0    0  104   52.255  -77.944  -58.985  110.839    0.330
+  21  1      -3  13   0    0  105  212.885  483.594   74.663  533.627    0.500
+  22  1       4  13   0  105    0   22.772   97.655  -15.499  101.476    1.500
+  23  1       1  15   0  106    0   61.251  125.521   20.946  141.230    0.330
+  24  1      -2  15   0    0  106   15.281  198.575  -30.566  201.494    0.330
+  25  1      -1  17   0    0  107 -283.325   24.181  -86.208  297.136    0.330
+  26  1       2  17   0  107    0 -244.831  -37.828 -125.274  277.609    0.330
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !ubar!       21      -2    3    0.000    0.000 2009.816 2009.816    0.000
+    6 !u!          21       2    4    0.000    0.000-2009.816 2009.816    0.000
+    7 !~g!         21 1000021    0  543.823  352.362   97.250 2009.816 1900.000
+    8 !~g!         21 1000021    0 -543.823 -352.362  -97.250 2009.816 1900.000
+    9 !~chi_10!    21 1000022    7 -185.923 -370.441 -137.843  436.800    0.000
+   10 !tbar!       21      -6    7  347.804 -270.584   29.772  475.073  175.000
+   11 !t!          21       6    7  381.942  993.387  205.321 1097.943  175.000
+   12 !~chi_10!    21 1000022    8  -36.588 -732.677 -187.167  757.090    0.000
+   13 !tbar!       21      -6    8  187.117  441.762  147.983  531.686  175.000
+   14 !t!          21       6    8 -694.353  -61.446  -58.066  721.040  175.000
+   15 !W-!         21     -24   10  169.258 -216.082    0.343  286.028   80.450
+   16 !bbar!       21      -5   10  178.545  -54.502   29.429  189.045    4.800
+   17 !W+!         21      24   11  235.657  581.248  190.193  660.325   80.450
+   18 !b!          21       5   11  146.285  412.138   15.128  437.618    4.800
+   19 !W-!         21     -24   13   76.532  324.096   60.229  347.843   80.450
+   20 !bbar!       21      -5   13  110.585  117.666   87.754  183.843    4.800
+   21 !W+!         21      24   14 -528.156  -13.646  -98.384  543.403   80.450
+   22 !b!          21       5   14 -166.197  -47.800   40.318  177.636    4.800
+   23 !d!          21       1   15  117.003 -138.138   37.894  184.954    0.330
+   24 !ubar!       21      -2   15   52.255  -77.944  -37.551  101.074    0.330
+   25 !sbar!       21      -3   17  212.885  483.594  185.272  559.919    0.500
+   26 !c!          21       4   17   22.772   97.655    4.921  100.406    1.500
+   27 !d!          21       1   19   61.251  125.521   50.244  148.431    0.330
+   28 !ubar!       21      -2   19   15.281  198.575    9.985  199.413    0.330
+   29 !dbar!       21      -1   21 -283.325   24.181  -27.260  285.659    0.330
+   30 !u!          21       2   21 -244.831  -37.828  -71.124  257.744    0.330
+  101 (ubar)       14      -2    3    0.000    0.000 1640.589 1640.589    0.000
+  102 (u)          14       2    4    0.000    0.000-2462.140 2462.140    0.000
+  103 (~g)         13 1000021    7  543.823  352.362 -311.516 2031.488 1900.000
+  104 (~g)         13 1000021    8 -543.823 -352.362 -510.036 2071.241 1900.000
+  105 ~chi_10       1 1000022  103 -185.923 -370.441 -229.968  474.003    0.000
+  106 (tbar)       13      -6  103  347.804 -270.584  -66.710  478.809  175.000
+  107 (t)          13       6  103  381.942  993.387  -14.837 1078.676  175.000
+  108 ~chi_10       1 1000022  104  -36.588 -732.677 -345.774  810.996    0.000
+  109 (tbar)       13      -6  104  187.117  441.762   42.374  512.432  175.000
+  110 (t)          13       6  104 -694.353  -61.446 -206.636  747.813  175.000
+  111 (W-)         11     -24  106  169.258 -216.082  -58.110  291.871   80.450
+  112 bbar          3      -5  106  178.545  -54.502   -8.600  186.938    4.800
+  113 (W+)         11      24  107  235.657  581.248   59.164  635.103   80.450
+  114 b             3       5  107  146.285  412.138  -74.002  443.573    4.800
+  115 (W-)         11     -24  109   76.532  324.096   -9.620  342.724   80.450
+  116 bbar          3      -5  109  110.585  117.666   51.994  169.708    4.800
+  117 (W+)         11      24  110 -528.156  -13.646 -211.482  574.745   80.450
+  118 b             3       5  110 -166.197  -47.800    4.846  173.068    4.800
+  119 d             3       1  111  117.003 -138.138    0.875  181.032    0.330
+  120 ubar          3      -2  111   52.255  -77.944  -58.985  110.839    0.330
+  121 sbar          3      -3  113  212.885  483.594   74.663  533.627    0.500
+  122 c             3       4  113   22.772   97.655  -15.499  101.476    1.500
+  123 d             3       1  115   61.251  125.521   20.946  141.230    0.330
+  124 ubar          3      -2  115   15.281  198.575  -30.566  201.494    0.330
+  125 dbar          3      -1  117 -283.325   24.181  -86.208  297.136    0.330
+  126 u             3       2  117 -244.831  -37.828 -125.274  277.609    0.330
+                   sum: -0.00        -0.000   -0.000 -821.552 4102.729 4019.632
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      -2   0   0    0  101    0.000    0.000 1890.914 1890.914    0.000
+   2 -1       2   0   0  102    0    0.000    0.000-1981.577 1981.577    0.000
+   3  2 1000021   1   2  103  101 -249.778 -123.941  198.134 1930.546 1900.000
+   4  2 1000021   1   2  102  103  249.778  123.941 -288.797 1941.946 1900.000
+   5  1 1000022   3   0    0    0 -588.069  708.828  212.914  945.302    0.000
+   6  2      -6   3   0    0  101   84.231 -213.105  -47.715  292.251  175.000
+   7  2       6   3   0  103    0  254.061 -619.664   32.935  692.993  175.000
+   8  1 1000022   4   0    0    0 -207.017  186.106  150.938  316.661    0.000
+   9  2      -6   4   0    0  103  448.326 -445.765  339.959  738.850  175.000
+  10  2       6   4   0  102    0    8.469  383.600 -779.693  886.435  175.000
+  11  2     -24   6   0    0    0  101.742  -82.298   -5.892  153.725   80.450
+  12  1      -5   6   0    0  101  -17.511 -130.807  -41.824  138.526    4.800
+  13  2      24   7   0    0    0  131.583 -489.785   30.365  514.391   80.450
+  14  1       5   7   0  103    0  122.478 -129.879    2.569  178.603    4.800
+  15  2     -24   9   0    0    0  347.696 -251.573  211.669  485.239   80.450
+  16  1      -5   9   0    0  103  100.630 -194.192  128.290  253.611    4.800
+  17  2      24  10   0    0    0   55.554  282.092 -466.880  554.176   80.450
+  18  1       5  10   0  102    0  -47.084  101.508 -312.813  332.259    4.800
+  19  1      11  11   0    0    0   93.155  -94.521    8.499  132.982    0.001
+  20  1     -12  11   0    0    0    8.587   12.223  -14.391   20.743    0.000
+  21  1      -3  13   0    0  104    5.760 -118.451   29.961  122.318    0.500
+  22  1       2  13   0  104    0  125.824 -371.334    0.404  392.073    0.330
+  23  1      13  15   0    0    0  290.227 -218.180  208.503  418.697    0.106
+  24  1     -14  15   0    0    0   57.469  -33.393    3.166   66.542    0.000
+  25  1     -11  17   0    0    0   14.623    2.243  -34.161   37.226    0.001
+  26  1      12  17   0    0    0   40.930  279.849 -432.720  516.950    0.000
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !ubar!       21      -2    3    0.000    0.000 1935.715 1935.715    0.000
+    6 !u!          21       2    4    0.000    0.000-1935.715 1935.715    0.000
+    7 !~g!         21 1000021    0 -249.778 -123.941  243.398 1935.715 1900.000
+    8 !~g!         21 1000021    0  249.778  123.941 -243.398 1935.715 1900.000
+    9 !~chi_10!    21 1000022    7 -588.069  708.828  235.110  950.547    0.000
+   10 !tbar!       21      -6    7   84.231 -213.105  -40.884  291.213  175.000
+   11 !t!          21       6    7  254.061 -619.664   49.172  693.955  175.000
+   12 !~chi_10!    21 1000022    8 -207.017  186.106  158.395  320.282    0.000
+   13 !tbar!       21      -6    8  448.326 -445.765  357.355  747.014  175.000
+   14 !t!          21       6    8    8.469  383.600 -759.148  868.419  175.000
+   15 !W-!         21     -24   10  101.742  -82.298   -2.293  153.629   80.450
+   16 !bbar!       21      -5   10  -17.511 -130.807  -38.591  137.584    4.800
+   17 !W+!         21      24   11  131.583 -489.785   42.420  515.243   80.450
+   18 !b!          21       5   11  122.478 -129.879    6.753  178.712    4.800
+   19 !W-!         21     -24   13  347.696 -251.573  223.090  490.329   80.450
+   20 !bbar!       21      -5   13  100.630 -194.192  134.265  256.685    4.800
+   21 !W+!         21      24   14   55.554  282.092 -454.030  543.395   80.450
+   22 !b!          21       5   14  -47.084  101.508 -305.118  325.024    4.800
+   23 !e-!         21      11   15   93.155  -94.521   11.616  133.218    0.001
+   24 !nu_ebar!    21     -12   15    8.587   12.223  -13.909   20.411    0.000
+   25 !sbar!       21      -3   17    5.760 -118.451   32.834  123.053    0.500
+   26 !u!          21       2   17  125.824 -371.334    9.586  392.190    0.330
+   27 !mu-!        21      13   19  290.227 -218.180  218.365  423.695    0.106
+   28 !nu_mubar!   21     -14   19   57.469  -33.393    4.725   66.634    0.000
+   29 !e+!         21     -11   21   14.623    2.243  -33.298   36.437    0.001
+   30 !nu_e!       21      12   21   40.930  279.849 -420.732  506.958    0.000
+  101 (ubar)       14      -2    3    0.000    0.000 1890.914 1890.914    0.000
+  102 (u)          14       2    4    0.000    0.000-1981.577 1981.577    0.000
+  103 (~g)         13 1000021    7 -249.778 -123.941  198.134 1930.546 1900.000
+  104 (~g)         13 1000021    8  249.778  123.941 -288.797 1941.946 1900.000
+  105 ~chi_10       1 1000022  103 -588.069  708.828  212.914  945.302    0.000
+  106 (tbar)       13      -6  103   84.231 -213.105  -47.715  292.251  175.000
+  107 (t)          13       6  103  254.061 -619.664   32.935  692.993  175.000
+  108 ~chi_10       1 1000022  104 -207.017  186.106  150.938  316.661    0.000
+  109 (tbar)       13      -6  104  448.326 -445.765  339.959  738.850  175.000
+  110 (t)          13       6  104    8.469  383.600 -779.693  886.435  175.000
+  111 (W-)         11     -24  106  101.742  -82.298   -5.892  153.725   80.450
+  112 bbar          3      -5  106  -17.511 -130.807  -41.824  138.526    4.800
+  113 (W+)         11      24  107  131.583 -489.785   30.365  514.391   80.450
+  114 b             3       5  107  122.478 -129.879    2.569  178.603    4.800
+  115 (W-)         11     -24  109  347.696 -251.573  211.669  485.239   80.450
+  116 bbar          3      -5  109  100.630 -194.192  128.290  253.611    4.800
+  117 (W+)         11      24  110   55.554  282.092 -466.880  554.176   80.450
+  118 b             3       5  110  -47.084  101.508 -312.813  332.259    4.800
+  119 e-            1      11  111   93.155  -94.521    8.499  132.982    0.001
+  120 nu_ebar       1     -12  111    8.587   12.223  -14.391   20.743    0.000
+  121 sbar          3      -3  113    5.760 -118.451   29.961  122.318    0.500
+  122 u             3       2  113  125.824 -371.334    0.404  392.073    0.330
+  123 mu-           1      13  115  290.227 -218.180  208.503  418.697    0.106
+  124 nu_mubar      1     -14  115   57.469  -33.393    3.166   66.542    0.000
+  125 e+            1     -11  117   14.623    2.243  -34.161   37.226    0.001
+  126 nu_e          1      12  117   40.930  279.849 -432.720  516.950    0.000
+                   sum:  0.00        -0.000   -0.000  -90.663 3872.492 3871.430
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      -2   0   0    0  101    0.000    0.000 1992.574 1992.574    0.000
+   2 -1       2   0   0  102    0    0.000    0.000-2124.074 2124.074    0.000
+   3  2 1000021   1   2  103  101  265.577  531.168  453.846 2041.726 1900.000
+   4  2 1000021   1   2  102  103 -265.577 -531.168 -585.346 2074.922 1900.000
+   5  1 1000022   3   0    0    0 -217.938  -82.192  926.045  954.889    0.000
+   6  2      -6   3   0    0  101   68.084  -17.174 -173.300  256.102  175.000
+   7  2       6   3   0  103    0  415.431  630.534 -298.899  830.736  175.000
+   8  1 1000022   4   0    0    0 -215.397 -157.743  -40.495  270.035    0.000
+   9  2      -6   4   0    0  103  288.086 -378.173-1053.774 1169.219  175.000
+  10  2       6   4   0  102    0 -338.266    4.748  508.923  635.668  175.000
+  11  2     -24   6   0    0    0  -29.284  -22.920 -102.370  135.406   80.450
+  12  1      -5   6   0    0  101   97.368    5.747  -70.930  120.696    4.800
+  13  2      24   7   0    0    0  172.238  178.554 -120.969  287.495   80.450
+  14  1       5   7   0  103    0  243.193  451.980 -177.931  543.241    4.800
+  15  2     -24   9   0    0    0  245.211 -362.791-1018.006 1111.105   80.450
+  16  1      -5   9   0    0  103   42.875  -15.383  -35.768   58.114    4.800
+  17  2      24  10   0    0    0 -318.417   19.054  513.962  610.230   80.450
+  18  1       5  10   0  102    0  -19.849  -14.306   -5.039   25.438    4.800
+  19  1      11  11   0    0    0  -22.661   28.608  -38.012   52.696    0.001
+  20  1     -12  11   0    0    0   -6.622  -51.528  -64.358   82.710    0.000
+  21  1      -3  13   0    0  104   50.747   42.120    4.122   66.080    0.500
+  22  1       4  13   0  104    0  121.490  136.435 -125.091  221.414    1.500
+  23  1       1  15   0  105    0   46.552 -128.601 -274.933  307.073    0.330
+  24  1      -2  15   0    0  105  198.659 -234.189 -743.073  804.032    0.330
+  25  1      -3  17   0    0  106  -80.254   19.592  198.126  214.660    0.500
+  26  1       4  17   0  106    0 -238.163   -0.538  315.835  395.571    1.500
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !ubar!       21      -2    3    0.000    0.000 2057.274 2057.274    0.000
+    6 !u!          21       2    4    0.000    0.000-2057.274 2057.274    0.000
+    7 !~g!         21 1000021    0  265.577  531.168  519.331 2057.274 1900.000
+    8 !~g!         21 1000021    0 -265.577 -531.168 -519.331 2057.274 1900.000
+    9 !~chi_10!    21 1000022    7 -217.938  -82.192  957.036  984.972    0.000
+   10 !tbar!       21      -6    7   68.084  -17.174 -165.203  250.694  175.000
+   11 !t!          21       6    7  415.431  630.534 -272.502  821.607  175.000
+   12 !~chi_10!    21 1000022    8 -215.397 -157.743  -31.885  268.879    0.000
+   13 !tbar!       21      -6    8  288.086 -378.173-1016.944 1136.138  175.000
+   14 !t!          21       6    8 -338.266    4.748  529.499  652.258  175.000
+   15 !W-!         21     -24   10  -29.284  -22.920  -98.095  132.203   80.450
+   16 !bbar!       21      -5   10   97.368    5.747  -67.109  118.491    4.800
+   17 !W+!         21      24   11  172.238  178.554 -111.842  283.775   80.450
+   18 !b!          21       5   11  243.193  451.980 -160.659  537.832    4.800
+   19 !W-!         21     -24   13  245.211 -362.791 -983.015 1079.137   80.450
+   20 !bbar!       21      -5   13   42.875  -15.383  -33.929   57.001    4.800
+   21 !W+!         21      24   14 -318.417   19.054  533.727  626.968   80.450
+   22 !b!          21       5   14  -19.849  -14.306   -4.228   25.289    4.800
+   23 !e-!         21      11   15  -22.661   28.608  -36.348   51.508    0.001
+   24 !nu_ebar!    21     -12   15   -6.622  -51.528  -61.747   80.695    0.000
+   25 !sbar!       21      -3   17   50.747   42.120    6.236   66.246    0.500
+   26 !c!          21       4   17  121.490  136.435 -118.078  217.530    1.500
+   27 !d!          21       1   19   46.552 -128.601 -265.259  298.443    0.330
+   28 !ubar!       21      -2   19  198.659 -234.189 -717.756  780.694    0.330
+   29 !sbar!       21      -3   21  -80.254   19.592  205.088  221.102    0.500
+   30 !c!          21       4   21 -238.163   -0.538  328.639  405.867    1.500
+  101 (ubar)       14      -2    3    0.000    0.000 1992.574 1992.574    0.000
+  102 (u)          14       2    4    0.000    0.000-2124.074 2124.074    0.000
+  103 (~g)         13 1000021    7  265.577  531.168  453.846 2041.726 1900.000
+  104 (~g)         13 1000021    8 -265.577 -531.168 -585.346 2074.922 1900.000
+  105 ~chi_10       1 1000022  103 -217.938  -82.192  926.045  954.889    0.000
+  106 (tbar)       13      -6  103   68.084  -17.174 -173.300  256.102  175.000
+  107 (t)          13       6  103  415.431  630.534 -298.899  830.736  175.000
+  108 ~chi_10       1 1000022  104 -215.397 -157.743  -40.495  270.035    0.000
+  109 (tbar)       13      -6  104  288.086 -378.173-1053.774 1169.219  175.000
+  110 (t)          13       6  104 -338.266    4.748  508.923  635.668  175.000
+  111 (W-)         11     -24  106  -29.284  -22.920 -102.370  135.406   80.450
+  112 bbar          3      -5  106   97.368    5.747  -70.930  120.696    4.800
+  113 (W+)         11      24  107  172.238  178.554 -120.969  287.495   80.450
+  114 b             3       5  107  243.193  451.980 -177.931  543.241    4.800
+  115 (W-)         11     -24  109  245.211 -362.791-1018.006 1111.105   80.450
+  116 bbar          3      -5  109   42.875  -15.383  -35.768   58.114    4.800
+  117 (W+)         11      24  110 -318.417   19.054  513.962  610.230   80.450
+  118 b             3       5  110  -19.849  -14.306   -5.039   25.438    4.800
+  119 e-            1      11  111  -22.661   28.608  -38.012   52.696    0.001
+  120 nu_ebar       1     -12  111   -6.622  -51.528  -64.358   82.710    0.000
+  121 sbar          3      -3  113   50.747   42.120    4.122   66.080    0.500
+  122 c             3       4  113  121.490  136.435 -125.091  221.414    1.500
+  123 d             3       1  115   46.552 -128.601 -274.933  307.073    0.330
+  124 ubar          3      -2  115  198.659 -234.189 -743.073  804.032    0.330
+  125 sbar          3      -3  117  -80.254   19.592  198.126  214.660    0.500
+  126 c             3       4  117 -238.163   -0.538  315.835  395.571    1.500
+                   sum: -0.00         0.000   -0.000 -131.500 4116.648 4114.547
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      -2   0   0    0  101    0.000    0.000 1615.134 1615.134    0.000
+   2 -1       2   0   0  102    0    0.000    0.000-2336.375 2336.375    0.000
+   3  2 1000021   1   2  103  101  104.632 -381.460 -274.929 1960.114 1900.000
+   4  2 1000021   1   2  102  103 -104.632  381.460 -446.312 1991.395 1900.000
+   5  1 1000022   3   0    0    0  642.416 -255.022 -359.109  778.905    0.000
+   6  2      -6   3   0    0  101 -209.554 -381.972 -325.820  571.488  175.000
+   7  2       6   3   0  103    0 -328.230  255.534  410.001  609.720  175.000
+   8  1 1000022   4   0    0    0   87.127  745.278  -98.626  756.808    0.000
+   9  2      -6   4   0    0  103 -345.613  262.320 -318.277  565.849  175.000
+  10  2       6   4   0  102    0  153.855 -626.138  -29.409  668.738  175.000
+  11  2     -24   6   0    0    0  -84.311 -106.778 -166.961  229.909   80.450
+  12  1      -5   6   0    0  101 -125.242 -275.194 -158.859  341.579    4.800
+  13  2      24   7   0    0    0 -302.509  247.421  421.149  580.145   80.450
+  14  1       5   7   0  103    0  -25.721    8.112  -11.148   29.575    4.800
+  15  2     -24   9   0    0    0 -297.810  279.569 -275.199  499.055   80.450
+  16  1      -5   9   0    0  103  -47.803  -17.249  -43.079   66.794    4.800
+  17  2      24  10   0    0    0   20.575 -276.806   28.342  290.379   80.450
+  18  1       5  10   0  102    0  133.280 -349.333  -57.752  378.359    4.800
+  19  1       3  11   0  104    0  -71.584  -33.862 -114.316  139.066    0.500
+  20  1      -4  11   0    0  104  -12.727  -72.916  -52.645   90.843    1.500
+  21  1     -13  13   0    0    0 -108.255   57.504  174.235  213.034    0.106
+  22  1      14  13   0    0    0 -194.254  189.918  246.914  367.111    0.000
+  23  1      15  15   0    0    0 -169.381  157.122 -202.749  307.387    1.777
+  24  1     -16  15   0    0    0 -128.429  122.447  -72.450  191.667    0.000
+  25  1     -15  17   0    0    0   19.386 -253.032   49.465  258.555    1.777
+  26  1      16  17   0    0    0    1.189  -23.774  -21.123   31.824    0.000
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !ubar!       21      -2    3    0.000    0.000 1942.565 1942.565    0.000
+    6 !u!          21       2    4    0.000    0.000-1942.565 1942.565    0.000
+    7 !~g!         21 1000021    0  104.632 -381.460   84.252 1942.565 1900.000
+    8 !~g!         21 1000021    0 -104.632  381.460  -84.252 1942.565 1900.000
+    9 !~chi_10!    21 1000022    7  642.416 -255.022 -220.648  725.548    0.000
+   10 !tbar!       21      -6    7 -209.554 -381.972 -225.295  520.767  175.000
+   11 !t!          21       6    7 -328.230  255.534  530.195  696.250  175.000
+   12 !~chi_10!    21 1000022    8   87.127  745.278   40.184  751.429    0.000
+   13 !tbar!       21      -6    8 -345.613  262.320 -218.670  516.432  175.000
+   14 !t!          21       6    8  153.855 -626.138   94.234  674.704  175.000
+   15 !W-!         21     -24   10  -84.311 -106.778 -127.133  202.842   80.450
+   16 !bbar!       21      -5   10 -125.242 -275.194  -98.162  317.925    4.800
+   17 !W+!         21      24   11 -302.509  247.421  536.043  668.239   80.450
+   18 !b!          21       5   11  -25.721    8.112   -5.848   28.011    4.800
+   19 !W-!         21     -24   13 -297.810  279.569 -187.255  456.493   80.450
+   20 !bbar!       21      -5   13  -47.803  -17.249  -31.415   59.938    4.800
+   21 !W+!         21      24   14   20.575 -276.806   82.733  300.602   80.450
+   22 !b!          21       5   14  133.280 -349.333   11.501  374.102    4.800
+   23 !s!          21       3   15  -71.584  -33.862  -90.453  120.221    0.500
+   24 !cbar!       21      -4   15  -12.727  -72.916  -36.680   82.622    1.500
+   25 !mu+!        21     -13   17 -108.255   57.504  216.759  249.019    0.106
+   26 !nu_mu!      21      14   17 -194.254  189.918  319.284  419.220    0.000
+   27 !tau-!       21      15   19 -169.381  157.122 -149.149  275.001    1.777
+   28 !nu_taubar!  21     -16   19 -128.429  122.447  -38.106  181.492    0.000
+   29 !tau+!       21     -15   21   19.386 -253.032   98.309  272.156    1.777
+   30 !nu_tau!     21      16   21    1.189  -23.774  -15.576   28.447    0.000
+  101 (ubar)       14      -2    3    0.000    0.000 1615.134 1615.134    0.000
+  102 (u)          14       2    4    0.000    0.000-2336.375 2336.375    0.000
+  103 (~g)         13 1000021    7  104.632 -381.460 -274.929 1960.114 1900.000
+  104 (~g)         13 1000021    8 -104.632  381.460 -446.312 1991.395 1900.000
+  105 ~chi_10       1 1000022  103  642.416 -255.022 -359.109  778.905    0.000
+  106 (tbar)       13      -6  103 -209.554 -381.972 -325.820  571.488  175.000
+  107 (t)          13       6  103 -328.230  255.534  410.001  609.720  175.000
+  108 ~chi_10       1 1000022  104   87.127  745.278  -98.626  756.808    0.000
+  109 (tbar)       13      -6  104 -345.613  262.320 -318.277  565.849  175.000
+  110 (t)          13       6  104  153.855 -626.138  -29.409  668.738  175.000
+  111 (W-)         11     -24  106  -84.311 -106.778 -166.961  229.909   80.450
+  112 bbar          3      -5  106 -125.242 -275.194 -158.859  341.579    4.800
+  113 (W+)         11      24  107 -302.509  247.421  421.149  580.145   80.450
+  114 b             3       5  107  -25.721    8.112  -11.148   29.575    4.800
+  115 (W-)         11     -24  109 -297.810  279.569 -275.199  499.055   80.450
+  116 bbar          3      -5  109  -47.803  -17.249  -43.079   66.794    4.800
+  117 (W+)         11      24  110   20.575 -276.806   28.342  290.379   80.450
+  118 b             3       5  110  133.280 -349.333  -57.752  378.359    4.800
+  119 s             3       3  111  -71.584  -33.862 -114.316  139.066    0.500
+  120 cbar          3      -4  111  -12.727  -72.916  -52.645   90.843    1.500
+  121 mu+           1     -13  113 -108.255   57.504  174.235  213.034    0.106
+  122 nu_mu         1      14  113 -194.254  189.918  246.914  367.111    0.000
+  123 tau-          1      15  115 -169.381  157.122 -202.749  307.387    1.777
+  124 nu_taubar     1     -16  115 -128.429  122.447  -72.450  191.667    0.000
+  125 tau+          1     -15  117   19.386 -253.032   49.465  258.555    1.777
+  126 nu_tau        1      16  117    1.189  -23.774  -21.123   31.824    0.000
+                   sum:  0.00         0.000   -0.000 -721.241 3951.509 3885.129
+1********* PYSTAT:  Statistics on Number of Events and Cross-sections *********
+
+ ==============================================================================
+ I                                  I                            I            I
+ I            Subprocess            I      Number of points      I    Sigma   I
+ I                                  I                            I            I
+ I----------------------------------I----------------------------I    (mb)    I
+ I                                  I                            I            I
+ I N:o Type                         I    Generated         Tried I            I
+ I                                  I                            I            I
+ ==============================================================================
+ I                                  I                            I            I
+ I   0 All included subprocesses    I           50           820 I  4.374D-15 I
+ I 237 q + qbar -> ~chi1 + ~g       I            0             0 I  0.000D+00 I
+ I 243 q + qbar -> ~g + ~g          I           45           704 I  3.623D-15 I
+ I 244 g + g -> ~g + ~g             I            5           116 I  7.511D-16 I
+ I                                  I                            I            I
+ ==============================================================================
+
+ ********* Total number of errors, excluding junctions =        0 *************
+ ********* Total number of errors, including junctions =        0 *************
+ ********* Total number of warnings =                           1 *************
+ ********* Fraction of events that fail fragmentation cuts =  0.00000 *********

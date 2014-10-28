@@ -1,0 +1,424 @@
+#!/usr/bin/env python
+
+
+"""
+.. module:: slhaCreator
+   :synopsis: An iterator object returning slha-files for validation plots
+
+.. moduleauthor:: Michael Traub <michael.traub@gmx.at>
+.. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
+
+"""
+
+from __future__ import print_function
+import setPath
+import logging
+import sys
+import os
+from smodels.tools import xsecComputer
+from smodels_tools.tools.databaseBrowser import Browser
+from smodels_tools.tools.experimentalResults import ExpResult
+from smodels.tools.physicsUnits import GeV
+import validationPlotsHelper
+import random
+from thresholdComputer import Threshold
+import argparse
+import types
+
+FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
+logging.basicConfig(format=FORMAT)
+logger = logging.getLogger(__name__)
+
+
+class SlhaFiles(object):
+    """Creates slha-files and stores them via an __iter__ method.
+
+    """
+    
+    def __init__(self, topology, extTopo, browserObject, thresholdMotherMasses, \
+    thresholdLSPMasses, d, condition, value, events = 1000, order = 'LO',unlink = True,sqrts =8.0):
+        """Creates a directory ./'topology'_slhas and stores all the slha-files
+        for every point in the mass-plane.
+        :param topology: topology the slha-files should be produced for
+        :param browserObject: instance of the class Browser
+        :param events: number of events for pythia simulation 'LO' or 'NLL' 
+        :param order: order of perturbation theory as string
+        :param condition: parametrization for mass when there is an intermediate particle, as string 
+        :param value: value for the condition as string
+        
+        
+        """
+        self._tempSlhaName = 'temp.slha'
+        if not isinstance(browserObject, Browser):
+            logger.error('Parameter browserObject must be type browser, %s given'\
+            %type(browserObject))
+            sys.exit()            
+        self._browser = browserObject
+        self.topo = self._browser.expTopology(topology)
+        self._templateSlhaFile(topology)
+        self._events = events
+        self._sqrts = float(sqrts)
+        if not order in ['LO','NLO','NLL']:
+            logger.error('%s is not a possible perturbation order' %(order))
+            sys.exit()            
+        self._order = order
+        self.motherMasses = thresholdMotherMasses
+        self.lspMasses = thresholdLSPMasses
+        self.d = d
+        self._unlink = unlink
+        self.extTopo = extTopo
+        self._listOfInterPid = self._getPidCodeOfIntermediateParticle()
+        self._listOfMotherPid = self._getPidCodeOfMother()
+        if sqrts == 8.0:
+            self.folder = '../slha/%s_%s_%s_slhas' %(self.extTopo, events, order)
+        else:
+            self.folder = '../slha/%s_%s_%s_%sTeV_slhas' %(self.extTopo, events, order,int(self._sqrts))
+        if not os.path.exists(self.folder):
+            os.makedirs(self.folder)
+            logger.info('Created new folder %s.' %self.folder)
+        self._condition = condition
+        if type(value) == float:
+            self._interValue = value
+        else:    
+            self._interValue = value / GeV
+        logger.info('Using parametrization: %s %s.' \
+        %(self._condition, self._interValue))
+        
+    def __del__(self):
+        """remove temp.slha
+        
+        """
+        
+        #os.system('rm ./%s' %self._tempSlhaName)
+        
+    def __iter__(self):
+        """Creates a slha-file named 'topology_motherMass_lspMass_order.slha and
+        adds the masses. If the mother mass changes the cross sections are
+        computed and also added to the slha-file.
+        
+        """
+        logger.info('There are approximately %s points in the mass plane!' \
+        %(int(len(self.motherMasses) * len(self.lspMasses) / 2.)))
+        for motherMass in self.motherMasses:
+            firstLoop = True
+            for lspMass in self.lspMasses:
+                
+                if lspMass > motherMass + self.d: continue
+                if self.topo.name == 'TChiWZoff':
+                    if lspMass - motherMass < -80: continue
+                fileName = self.extTopo + '_' + \
+                str(int(motherMass)) + '_' + str(int(lspMass)) + '_' + \
+                self._order + '.slha'
+                interMass = None
+                if self._condition == 'massSplitting':
+                    interMass = self._interValue * motherMass + (1 - self._interValue) * lspMass
+                if self._condition == 'M2/M0':
+                    interMass = self._interValue * lspMass
+                if self._condition == 'fixedLSP':
+                    interMass = lspMass
+                    lspMass = self._interValue
+                if self._condition == 'M2-M1':
+                    interMass = lspMass + self._interValue
+                if self.topo.name == 'T6bbWWoff':
+                    if lspMass < interMass - 80: continue
+                if self.topo.name == 'T6ttWW':
+                    if interMass < (81. + lspMass): continue # validation of kin. condition
+                logger.info('mother mass: %s, lsp mass: %s, inter mass: %s' %(motherMass, lspMass, interMass))
+                slhaLines = self._setMass(motherMass, lspMass, interMass)
+                if firstLoop:
+                    self._delXsecFromFile()
+                    self._addXsecsToFile()
+                    firstLoop = False
+                path = self.folder + '/' + fileName
+                
+                os.system('cp ./%s %s' %(self._tempSlhaName, path))
+                yield path
+                
+    
+    def _addXsecsToFile(self):
+        """Adds the xsecs to the slha file. First LO then NLO and finally NLL 
+        are computed.
+        # ### FIX ME: order NLO? does this make sens? We get NLO by adding a factor 1.2 to LO, right?
+        
+        """
+        
+        comment = "Nevts: " + str(self._events)
+        xsecs = xsecComputer.computeXSec(self._sqrts, 0, self._events, \
+        self._tempSlhaName,unlink = self._unlink)
+        xsecComputer.addXSecToFile(xsecs, self._tempSlhaName, comment)
+        logger.info('added new LO order xsecs to temp.slha')
+        if self._order == 'NLO':
+            xsecs = xsecComputer.computeXSec(self._sqrts, 1, self._events,\
+            self._tempSlhaName,loFromSlha=True,unlink = self._unlink)
+            xsecComputer.addXSecToFile(xsecs, self._tempSlhaName, comment)
+            logger.info('added new NLO order xsecs to temp.slha')
+        if self._order == 'NLL':
+            xsecs = xsecComputer.computeXSec(self._sqrts, 2, self._events, \
+            self._tempSlhaName, loFromSlha=True,unlink = self._unlink)
+            xsecComputer.addXSecToFile(xsecs, self._tempSlhaName, comment)
+            logger.info('added new NLL order xsecs to temp.slha')
+    
+    def _delXsecFromFile(self):
+        
+        slhaFile = open(self._tempSlhaName,'r')
+        xsecBlock = False
+        lines = slhaFile.readlines()
+        for i in range(0, len(lines) - 1):
+            if 'XSECTION' in lines[i]:
+                xsecBlock = True
+                break
+        if xsecBlock: lines = lines[:i+1]
+        slhaFile.close()
+        
+        slhaFile = open(self._tempSlhaName,'w')
+        slhaFile.writelines(lines)
+        slhaFile.close()
+
+        
+    def _templateSlhaFile(self, topo):
+        """Checks if there is a template slha-file for given topology
+        in smodels-tools/slha. If there is, the file is copied to self._tempSlhaName.
+        :param topo: topology name as string
+        
+        """
+        
+        tempPath = '../slha/'
+        if not os.path.exists('%s%s.slha' %(tempPath, topo)):
+            logger.error('no template slha-file for %s' %topo)
+            sys.exit()
+        os.system('cp %s%s.slha ./%s' %(tempPath, topo, self._tempSlhaName))
+        
+    def _getPidCodeOfMother(self):
+        """Sets the PID codes for mother particles to variable self._listOfMotherPid.
+        
+        """
+        
+        picDict = {
+            'g' : ['1000021'],
+            'q' : ['1000001', '1000002', '1000003', '1000004', 
+            '2000001', '2000002','2000003','2000004'], 
+            'gq' : ['1000021', '1000001', '1000002', '1000003', '1000004'],
+            'b' : ['1000005'], #'2000005'], no right handed particles
+            't' : ['1000006'], #'2000006'], no right handed particles
+            'l' : ['1000011','1000013','2000011','2000013'],
+            'c0cpm':['1000024','1000023'],
+            'c0':['100023'],
+            'cpm':['1000024']}
+            
+        motherPart = self.topo.motherParticle
+        if not motherPart in picDict:
+            logger.error('no PIC code for motherParticle: %s in picDic' \
+            %motherPart)
+            sys.exit()
+        return picDict[motherPart]
+    
+    def _getPidCodeOfIntermediateParticle(self):
+        """":returns: List of PID codes for intermediate particles 
+        
+        """
+        
+        picDict = {
+            'chargino^pm_1' : ['1000024'],
+            'chargino^p' : ['1000024'],
+            'slepton' : ['1000013','1000011'],
+            'sLepton' : ['1000013','1000011','1000015'],
+            'sneutrino' : ['1000012','1000014'],
+            'sNeutrino' : ['1000012','1000014', '1000016'],
+            'stauon' : ['1000015']}
+            
+        interPart = self.topo.intermediateParticles
+        if not interPart: return
+        listOfInterPid = []
+        for particle in interPart:
+            if not particle in picDict:
+                logger.error('no PIC code for intermediateParticle: %s in picDic' \
+                %motherPart)
+                sys.exit()
+            for pid in picDict[particle]: listOfInterPid.append(pid)
+        return listOfInterPid
+        
+        
+            
+    def _setMass(self, motherMass, lspMass, interMass = None):
+        """Search for mass block in self._tempSlhaName and write the given 
+        motherMass to all particles in ListOfPidCode and the LSPMass to LSP.
+        :param motherMass: one mass for all particles in ListOfPidCode as float
+        :param lspMass: mass of the LSP as float
+        :param interMass: mass of intermediate particle
+        :returns: list containing lines of slha file
+        ### FIX ME no intermediated mass implemented yet
+        
+        """
+        pidOfLsp = '1000022'
+        slhaFile = open(self._tempSlhaName,'r')
+        lines = slhaFile.readlines()
+        listOfPidCode = [pid for pid in self._listOfMotherPid]
+        listOfInterPid = None
+        if self._listOfInterPid:
+            listOfInterPid = [pid for pid in self._listOfInterPid]
+        
+        massBlock = False
+        for i in range(0,len(lines)-1):
+            if lines[i] == '#\n' and massBlock ==True: break
+            if massBlock == True: 
+                listOfLine = lines[i].split()
+                if listOfLine[0] in listOfPidCode:
+                    listOfPidCode.remove(listOfLine[0])
+                    listOfLine[1] = motherMass
+                    lines[i] = self._formatMassEntry(listOfLine)
+                if listOfLine[0] == pidOfLsp:
+                    pidOfLsp = None
+                    listOfLine[1] = lspMass
+                    lines[i] = self._formatMassEntry(listOfLine)
+                if listOfInterPid and interMass:
+                    if listOfLine[0] in listOfInterPid:
+                        listOfInterPid.remove(listOfLine[0])
+                        listOfLine[1] = interMass
+                        lines[i] = self._formatMassEntry(listOfLine)
+                        
+            if 'BLOCK MASS' in lines[i]: massBlock = True
+        if not massBlock: 
+            logger.error('No Mass block found in slha file')
+            sys.exit()
+        if listOfPidCode:
+            logger.error('PID Codes: %s not found in Mass block of slha file' \
+            %listOfPidCode)
+            sys.exit()
+        if listOfInterPid:
+            logger.error('PID Codes: %s not found in Mass block of slha file' \
+            %listOfInterPid)
+            sys.exit()            
+        if pidOfLsp:
+            logger.error('PID Code of LSP  not found in Mass block of slha file')
+            sys.exit()
+        slhaFile.close()
+        
+        
+        #for line in lines:
+        #   print line
+        
+        slhaFile = open(self._tempSlhaName,'w')
+        slhaFile.writelines(lines)
+        slhaFile.close()
+        logger.debug('temp.slha file changed to mother mass: %s and LSP mass: \
+        %s' %(motherMass, lspMass))
+        
+    def _formatMassEntry(self,listOfLine):
+        """Builds a correct formated mass entry for slha file out of a given list.
+        :param listOfline: list containing PID-Code as string in [0], 
+        mass as float in [1], ('#' in [2] and particle name in [3] also supported)
+        
+        """
+        
+        listOfLine[1] = str(listOfLine[1])
+        listOfLine[0] = " "*(10-len(listOfLine[0])) + listOfLine[0]
+        return '    '.join(listOfLine) + '\n'
+            
+
+def main():
+    """Handles all command line options.
+    Produces the slha-files for given topology.
+    :param Base: sets the path to the smodels-database
+    :param topology: topology the slha-files should be preoduced for
+    :param events: number of events for pythia simulation 
+    :param order: order of perturbation theory as string ('LO' or 'NLL')
+    :param link: unlinks the pythia log file, when set to False
+    :param intermediate: comma separated condition and value (e.g. LSP,300); condition for mass of intermediate particle (e.g xvalue), value for the mass condition (e.g. 025)
+    
+    """
+    argparser = argparse.ArgumentParser(description = \
+    'Produces the slha files for smodels validation plots')
+    argparser.add_argument ('-b', '--Base', \
+    help = 'set path to base-directory of smodels-database\n \
+    - default: /afs/hephy.at/user/w/walten/public/sms/', \
+    type = types.StringType, default = '/afs/hephy.at/user/w/walten/public/sms/')
+    argparser.add_argument ('-t', '--topology', \
+    help = 'topology that slha-files should be produced for - default: T1',\
+    type = types.StringType, default = 'T1')
+    argparser.add_argument ('-blog', '--browserVerbosity',\
+    help = 'set browser-verbosity - default: ERROR', \
+    type = types.StringType, default = 'error')
+    argparser.add_argument ('-n', '--events',\
+    help = 'set number of events - default: 10000', \
+    type = types.IntType, default = 10000)
+    argparser.add_argument ('-o', '--order', \
+    help = 'perturbation order (LO or NLL) - default: NLL', \
+    type = types.StringType, default = 'NLL')
+    argparser.add_argument ('-l', '--link', \
+    help = 'Do not clean up temp directory after running pythia', \
+    action = 'store_false')
+    argparser.add_argument ('-p', '--parametrization', \
+    help = 'mass parametrization when there is an intermediate particle \n \
+    - default: None', type = types.StringType, default = None)
+    argparser.add_argument ('-v', '--value', help = 'value for parametrization \n \
+    - default: 0.50', type = types.StringType, default = '0.50')
+    argparser.add_argument ('-sqrts', '--sqrts',\
+    help = 'set sqrts in TeV - default: 8.0', \
+    type = types.FloatType, default = 8.0)
+    args = argparser.parse_args()
+
+
+    browser = Browser(args.Base)
+    browser.verbosity = args.browserVerbosity
+    topology = args.topology
+    parametrization = args.parametrization
+    value = args.value
+    if not parametrization:
+        value = None
+    else:    
+        value = validationPlotsHelper.validateValue(value)
+    expTopology = browser.expTopology(topology)        
+    extendedTopology = validationPlotsHelper.getExtension(expTopology, parametrization, value)
+    logger.info('Creating slha for extended topology %s.' %extendedTopology)
+    events = args.events
+    order = args.order
+    sqrts = args.sqrts
+    unlink = args.link
+    threshold = Threshold(topology, browser, parametrization, value)
+    if sqrts == 8.0:
+        folder = checkFolder('../slha/%s_%s_%s_slhas' \
+        %(extendedTopology, events, order))
+    else:
+        folder = checkFolder('../slha/%s_%s_%s_%sTeV_slhas' \
+        %(extendedTopology, events, order,int(sqrts)))        
+    print ("========================================================")
+    print('Create slha files')
+    print('Topology: ', topology)
+    print('Parametrization: ', parametrization)
+    print('Value: ', value)
+    print('Order: ', order)
+    print ("========================================================")
+    count = 0
+    slhaFiles = SlhaFiles(topology, extendedTopology, browser, \
+    threshold.motherMasses, threshold.lspMasses, threshold.d, parametrization,\
+    value, events, order, unlink,sqrts)
+    for f in slhaFiles:
+        count += 1
+        print('Progress ...... ', count)
+    print('Wrote %s slha-files to %s' %(count, folder))
+    print('unlink %s' %unlink)
+    #del slhaFiles
+
+def checkFolder(path):
+    """Checks if the slha folder already exists.
+    If the folder already exists, the user can decide whether to remove 
+    all slha files, or to exit the script.
+    
+    """
+    if os.path.exists(path):
+        print('Folder %s already exists!' %path)
+        while True:
+            userInput = raw_input('Remove old files? [y/n]:  ')
+            if userInput == 'n':
+                sys.exit()
+            if userInput == 'y':
+                os.system('rm -r %s' %path)
+                return path
+    return path
+    
+if __name__ == '__main__':
+    main()
+                    
+
+    
+    

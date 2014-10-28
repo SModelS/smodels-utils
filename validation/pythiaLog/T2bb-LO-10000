@@ -1,0 +1,742 @@
+cd /tmp/tmpZzbfhi ; /home/michi/Documents/Physik/Diplomarbeit_Hephy/smodels/smodels/tools/external/pythia6/pythia_lhe < /tmp/tmpZzbfhi/temp.cfg
+
+
+1                                                                              
+ ******************************************************************************
+ ******************************************************************************
+ **                                                                          **
+ **                                                                          **
+ **              *......*                  Welcome to the Lund Monte Carlo!  **
+ **         *:::!!:::::::::::*                                               **
+ **      *::::::!!::::::::::::::*          PPP  Y   Y TTTTT H   H III   A    **
+ **    *::::::::!!::::::::::::::::*        P  P  Y Y    T   H   H  I   A A   **
+ **   *:::::::::!!:::::::::::::::::*       PPP    Y     T   HHHHH  I  AAAAA  **
+ **   *:::::::::!!:::::::::::::::::*       P      Y     T   H   H  I  A   A  **
+ **    *::::::::!!::::::::::::::::*!       P      Y     T   H   H III A   A  **
+ **      *::::::!!::::::::::::::* !!                                         **
+ **      !! *:::!!:::::::::::*    !!       This is PYTHIA version 6.427      **
+ **      !!     !* -><- *         !!       Last date of change: 12 Dec 2012  **
+ **      !!     !!                !!                                         **
+ **      !!     !!                !!       Now is  0 Jan 2000 at  0:00:00    **
+ **      !!                       !!                                         **
+ **      !!        lh             !!       Disclaimer: this program comes    **
+ **      !!                       !!       without any guarantees. Beware    **
+ **      !!                 hh    !!       of errors and use common sense    **
+ **      !!    ll                 !!       when interpreting results.        **
+ **      !!                       !!                                         **
+ **      !!                                Copyright T. Sjostrand (2011)     **
+ **                                                                          **
+ ** An archive of program versions and documentation is found on the web:    **
+ ** http://www.thep.lu.se/~torbjorn/Pythia.html                              **
+ **                                                                          **
+ ** When you cite this program, the official reference is to the 6.4 manual: **
+ ** T. Sjostrand, S. Mrenna and P. Skands, JHEP05 (2006) 026                 **
+ ** (LU TP 06-13, FERMILAB-PUB-06-052-CD-T) [hep-ph/0603175].                **
+ **                                                                          **
+ ** Also remember that the program, to a large extent, represents original   **
+ ** physics research. Other publications of special relevance to your        **
+ ** studies may therefore deserve separate mention.                          **
+ **                                                                          **
+ ** Main author: Torbjorn Sjostrand; Department of Theoretical Physics,      **
+ **   Lund University, Solvegatan 14A, S-223 62 Lund, Sweden;                **
+ **   phone: + 46 - 46 - 222 48 16; e-mail: torbjorn@thep.lu.se              **
+ ** Author: Stephen Mrenna; Computing Division, GDS Group,                   **
+ **   Fermi National Accelerator Laboratory, MS 234, Batavia, IL 60510, USA; **
+ **   phone: + 1 - 630 - 840 - 2556; e-mail: mrenna@fnal.gov                 **
+ ** Author: Peter Skands; CERN/PH-TH, CH-1211 Geneva, Switzerland            **
+ **   phone: + 41 - 22 - 767 24 47; e-mail: peter.skands@cern.ch             **
+ **                                                                          **
+ **                                                                          **
+ ******************************************************************************
+ ******************************************************************************
+     IMSS(1)        changed from              0 to             11
+     MSTP(47)       changed from              1 to              0
+     MSTP(161)      changed from              0 to             66
+     MSTP(162)      changed from              0 to             67
+     IMSS(21)       changed from              0 to             61
+     IMSS(22)       changed from              0 to             61
+     MSTJ(11)       changed from              4 to              3
+     MSTJ(22)       changed from              1 to              1
+     PARJ(71)       changed from       10.00000 to       10.00000
+     MSTP(2)        changed from              1 to              1
+     MSTP(33)       changed from              0 to              0
+     MSTP(42)       changed from              1 to              0
+     MSTP(81)       changed from              1 to              0
+     MSTP(82)       changed from              4 to              4
+     MSTU(21)       changed from              2 to              1
+     PARP(82)       changed from        2.00000 to        1.83870
+     PARP(89)       changed from     1800.00000 to     1960.00000
+     PARP(83)       changed from        0.50000 to        0.50000
+     PARP(84)       changed from        0.40000 to        0.40000
+     PARP(90)       changed from        0.25000 to        0.16000
+     PARP(67)       changed from        4.00000 to        2.50000
+     PARP(85)       changed from        0.90000 to        1.00000
+     PARP(86)       changed from        0.95000 to        1.00000
+     PARP(62)       changed from        1.00000 to        1.25000
+     PARP(64)       changed from        1.00000 to        0.20000
+     MSTP(91)       changed from              1 to              1
+     PARP(91)       changed from        2.00000 to        2.10000
+     PARP(93)       changed from        5.00000 to       15.00000
+     MSTP(61)       changed from              2 to              0
+     MSTP(71)       changed from              1 to              0
+     MSTP(111)      changed from              1 to              0
+     MSTJ(1)        changed from              1 to              0
+     MSEL           changed from              1 to              0
+     MSUB(216)      changed from              0 to              0
+     MSUB(201)      changed from              0 to              1
+     MSUB(202)      changed from              0 to              1
+     MSUB(203)      changed from              0 to              1
+     MSUB(204)      changed from              0 to              1
+     MSUB(205)      changed from              0 to              1
+     MSUB(206)      changed from              0 to              1
+     MSUB(207)      changed from              0 to              1
+     MSUB(208)      changed from              0 to              1
+     MSUB(209)      changed from              0 to              1
+     MSUB(210)      changed from              0 to              1
+     MSUB(211)      changed from              0 to              1
+     MSUB(212)      changed from              0 to              1
+     MSUB(213)      changed from              0 to              1
+     MSUB(214)      changed from              0 to              1
+     MSUB(217)      changed from              0 to              1
+     MSUB(218)      changed from              0 to              1
+     MSUB(219)      changed from              0 to              1
+     MSUB(220)      changed from              0 to              1
+     MSUB(221)      changed from              0 to              1
+     MSUB(222)      changed from              0 to              1
+     MSUB(223)      changed from              0 to              1
+     MSUB(224)      changed from              0 to              1
+     MSUB(225)      changed from              0 to              1
+     MSUB(226)      changed from              0 to              1
+     MSUB(227)      changed from              0 to              1
+     MSUB(228)      changed from              0 to              1
+     MSUB(229)      changed from              0 to              1
+     MSUB(230)      changed from              0 to              1
+     MSUB(231)      changed from              0 to              1
+     MSUB(232)      changed from              0 to              1
+     MSUB(233)      changed from              0 to              1
+     MSUB(234)      changed from              0 to              1
+     MSUB(235)      changed from              0 to              1
+     MSUB(236)      changed from              0 to              1
+     MSUB(237)      changed from              0 to              1
+     MSUB(238)      changed from              0 to              1
+     MSUB(239)      changed from              0 to              1
+     MSUB(240)      changed from              0 to              1
+     MSUB(241)      changed from              0 to              1
+     MSUB(242)      changed from              0 to              1
+     MSUB(243)      changed from              0 to              1
+     MSUB(244)      changed from              0 to              1
+     MSUB(246)      changed from              0 to              1
+     MSUB(247)      changed from              0 to              1
+     MSUB(248)      changed from              0 to              1
+     MSUB(249)      changed from              0 to              1
+     MSUB(250)      changed from              0 to              1
+     MSUB(251)      changed from              0 to              1
+     MSUB(252)      changed from              0 to              1
+     MSUB(253)      changed from              0 to              1
+     MSUB(254)      changed from              0 to              1
+     MSUB(256)      changed from              0 to              1
+     MSUB(258)      changed from              0 to              1
+     MSUB(259)      changed from              0 to              1
+     MSUB(261)      changed from              0 to              1
+     MSUB(262)      changed from              0 to              1
+     MSUB(263)      changed from              0 to              1
+     MSUB(264)      changed from              0 to              1
+     MSUB(265)      changed from              0 to              1
+     MSUB(271)      changed from              0 to              1
+     MSUB(272)      changed from              0 to              1
+     MSUB(273)      changed from              0 to              1
+     MSUB(274)      changed from              0 to              1
+     MSUB(275)      changed from              0 to              1
+     MSUB(276)      changed from              0 to              1
+     MSUB(277)      changed from              0 to              1
+     MSUB(278)      changed from              0 to              1
+     MSUB(279)      changed from              0 to              1
+     MSUB(280)      changed from              0 to              1
+     MSUB(281)      changed from              0 to              1
+     MSUB(282)      changed from              0 to              1
+     MSUB(283)      changed from              0 to              1
+     MSUB(284)      changed from              0 to              1
+     MSUB(285)      changed from              0 to              1
+     MSUB(286)      changed from              0 to              1
+     MSUB(287)      changed from              0 to              1
+     MSUB(288)      changed from              0 to              1
+     MSUB(289)      changed from              0 to              1
+     MSUB(290)      changed from              0 to              1
+     MSUB(291)      changed from              0 to              1
+     MSUB(292)      changed from              0 to              1
+     MSUB(293)      changed from              0 to              1
+     MSUB(294)      changed from              0 to              1
+     MSUB(295)      changed from              0 to              1
+     MSUB(296)      changed from              0 to              1
+1****************** PYINIT: initialization of PYTHIA routines *****************
+ ****************** PYSLHA v1.14: SUSY/BSM SPECTRUM INTERFACE *****************
+ * (PYSLHA:) Last Change 10 Jun 2010 - P.Z. Skands
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000002, ~u_L            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000003, ~s_L            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000004, ~c_L            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000006, ~t_1            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000006, ~t_2            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000005, ~b_1            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000005, ~b_2            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000011, ~e_L-           
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000011, ~e_R-           
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000013, ~mu_L-          
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000013, ~mu_R-          
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000015, ~tau_1-         
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000015, ~tau_2-         
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000012, ~nu_eL          
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000014, ~nu_muL         
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000016, ~nu_tauL        
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000037, ~chi_2+         
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000022, ~chi_10         
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000025, ~chi_30         
+
+     Advisory warning type 9 given after        0 PYEXEC calls:
+     (PYSLHA:) No mass information found for KF =     1000022    
+ *
+ * (PYSLHA:) INCONSISTENT SPECTRUM WARNING.
+ * Warning: one or more (serious) inconsistencies were found in the spectrum !
+ * Read the error messages above and check your input file.
+
+ *   Spectrum Calculator was: MRENNA    #  version 1.0.1       
+ *   Read spectrum file on unit:  61
+ *
+ * Pole masses:
+ *     ~d       ~u       ~s       ~c       ~b(12)   ~t(12)
+ *  L ******** ******** ******** ********   891.50 ********
+ *  R ******** ******** ******** ******** ******** ********
+ *
+ *     ~e       ~nu_e    ~mu      ~nu_mu   ~tau(12) ~nu_tau
+ *  L 10000.00 10000.00 10000.00 10000.00 10000.00 10000.00
+ *  R 10000.00     0.00 10000.00     0.00 10000.00     0.00
+ *
+ *        ~g    ~chi_10  ~chi_20  ~chi_30  ~chi_40  ~chi_1+  ~chi_2+
+ *    ********     0.00 ******** 10000.00 10000.00 ******** 10000.00
+ *
+ *     h0       H0       A0       H+                                         
+ *     1000.00  1000.00  1000.00  1000.00
+ *
+ * Mixing structure:
+ *           |   ~B   |  ~W_3  |  ~H_1  |  ~H_2  |
+ *   ~chi_10 |  0.979 | -0.087 |  0.176 | -0.052 |
+ *   ~chi_20 |  0.139 |  0.944 | -0.272 |  0.122 |
+ *   ~chi_30 | -0.075 |  0.117 |  0.687 |  0.713 |
+ *   ~chi_40 | -0.127 |  0.295 |  0.650 | -0.688 |
+ *
+ *      L    |   ~W   |   ~H   |            R    |   ~W   |   ~H   |
+ *   ~chi_1+ |  0.915 | -0.402 |         ~chi_1+ |  0.983 | -0.186 |
+ *   ~chi_2+ |  0.402 |  0.915 |         ~chi_2+ |  0.186 |  0.983 |
+ *
+ *        |  ~b_L  |  ~b_R  |        |  ~t_L  |  ~t_R  |          | ~tau_L | ~tau_R |
+ *   ~b_1 |  0.967 |  0.256 |   ~t_1 |  0.579 |  0.815 |   ~tau_1 |  0.451 |  0.892 |
+ *   ~b_2 | -0.256 |  0.967 |   ~t_2 | -0.815 |  0.579 |   ~tau_2 | -0.892 |  0.451 |
+ *
+ * Couplings:
+ *     A_b =  -828.81          A_t =  -446.25    A_tau =  -492.31
+ *   alpha =    -0.11    tan(beta) =    10.00       mu =   305.60
+ *
+ ******************************** END OF PYSLHA *******************************
+  ERROR WITH DELM    89999.669999999998      -0.33000000000000002     
+  KF =      1000001
+  KF(decay) =      1000021           1           0
+  ERROR WITH DELM    89999.669999999998      -0.33000000000000002     
+  KF =      2000001
+  KF(decay) =      1000021           1           0
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000002, ~u_L            
+  ERROR WITH DELM    89999.669999999998      -0.33000000000000002     
+  KF =      2000002
+  KF(decay) =      1000021           2           0
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000003, ~s_L            
+  ERROR WITH DELM    89998.500000000000      -0.50000000000000000     
+  KF =      2000003
+  KF(decay) =      1000021           3           0
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000004, ~c_L            
+  ERROR WITH DELM    89998.500000000000       -1.5000000000000000     
+  KF =      2000004
+  KF(decay) =      1000021           4           0
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000005, ~b_1            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000005, ~b_2            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000006, ~t_1            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000006, ~t_2            
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000011, ~e_L-           
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000011, ~e_R-           
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000012, ~nu_eL          
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000013, ~mu_L-          
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000013, ~mu_R-          
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000014, ~nu_muL         
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000015, ~tau_1-         
+ * (PYSLHA:) Reading  SLHA stable particle KF =  2000015, ~tau_2-         
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000016, ~nu_tauL        
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000022, ~chi_10         
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000025, ~chi_30         
+ * (PYSLHA:) Reading  SLHA stable particle KF =  1000037, ~chi_2+         
+
+ ==============================================================================
+ I                                                                            I
+ I              PYTHIA will be initialized for a p on p collider              I
+ I                  at   8000.000 GeV center-of-mass energy                   I
+ I                                                                            I
+ ==============================================================================
+ Warning: requested subprocess 201 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 202 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 203 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 204 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 205 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 206 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 207 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 208 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 209 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 210 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 211 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 212 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 213 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 214 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 217 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 218 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 219 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 220 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 221 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 222 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 223 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 224 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 225 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 226 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 227 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 228 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 229 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 230 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 231 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 232 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 233 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 234 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 235 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 236 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 237 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 238 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 239 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 240 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 241 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 242 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 243 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 244 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 246 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 247 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 248 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 249 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 250 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 251 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 252 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 253 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 254 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 256 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 258 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 259 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 261 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 262 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 263 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 264 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 265 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 271 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 272 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 273 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 274 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 275 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 276 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 277 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 278 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 279 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 280 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 281 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 282 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 283 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 284 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 285 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 286 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 288 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 290 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 292 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 293 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 294 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 295 has no allowed phase space.
+ Process switched off!
+ Warning: requested subprocess 296 has no allowed phase space.
+ Process switched off!
+
+ ******** PYMAXI: summary of differential cross-section maximum search ********
+
+           ==========================================================
+           I                                      I                 I
+           I  ISUB  Subprocess name               I  Maximum value  I
+           I                                      I                 I
+           ==========================================================
+           I                                      I                 I
+           I  287   f + fbar -> ~b_1 + ~b_1bar    I    3.0041D-12   I
+           I  289   g + g -> ~b_1 + ~b_1bar       I    3.8003D-12   I
+           I  291   b + b -> ~b_1 + ~b_1          I    3.6242D-18   I
+           I                                      I                 I
+           ==========================================================
+
+ ********************** PYINIT: initialization completed **********************
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1       1   0   0  101    0    0.000    0.000 1786.209 1786.209    0.000
+   2 -1      -1   0   0    0  102    0.000    0.000 -935.243  935.243    0.000
+   3  1 1000005   1   2  101    0  527.232  772.549  392.921 1350.544  891.503
+   4  1-1000005   1   2    0  102 -527.232 -772.549  458.046 1370.908  891.503
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !d!          21       1    3    0.000    0.000 1292.493 1292.493    0.000
+    6 !dbar!       21      -1    4    0.000    0.000-1292.493 1292.493    0.000
+    7 !~b_1!       21 1000005    0  527.232  772.549  -30.930 1292.493  891.503
+    8 !~b_1bar!    21-1000005    0 -527.232 -772.549   30.930 1292.493  891.503
+  101 (d)          14       1    3    0.000    0.000 1786.209 1786.209    0.000
+  102 (dbar)       14      -1    4    0.000    0.000 -935.243  935.243    0.000
+  103 ~b_1          3 1000005    7  527.232  772.549  392.921 1350.544  891.503
+  104 ~b_1bar       3-1000005    8 -527.232 -772.549  458.046 1370.908  891.503
+                   sum:  0.00         0.000    0.000  850.967 2721.452 2584.987
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      -1   0   0    0  101    0.000    0.000 1448.757 1448.757    0.000
+   2 -1       1   0   0  102    0    0.000    0.000-1318.771 1318.771    0.000
+   3  1-1000005   1   2    0  101  915.875  486.367  266.262 1393.217  891.503
+   4  1 1000005   1   2  102    0 -915.875 -486.367 -136.276 1374.311  891.503
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !dbar!       21      -1    3    0.000    0.000 1382.237 1382.237    0.000
+    6 !d!          21       1    4    0.000    0.000-1382.237 1382.237    0.000
+    7 !~b_1bar!    21-1000005    0  915.875  486.367  201.047 1382.237  891.503
+    8 !~b_1!       21 1000005    0 -915.875 -486.367 -201.047 1382.237  891.503
+  101 (dbar)       14      -1    3    0.000    0.000 1448.757 1448.757    0.000
+  102 (d)          14       1    4    0.000    0.000-1318.771 1318.771    0.000
+  103 ~b_1bar       3-1000005    7  915.875  486.367  266.262 1393.217  891.503
+  104 ~b_1          3 1000005    8 -915.875 -486.367 -136.276 1374.311  891.503
+                   sum:  0.00         0.000    0.000  129.985 2767.528 2764.473
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      21   0   0  101  102    0.000    0.000  938.526  938.526    0.000
+   2 -1      21   0   0  103  101    0.000    0.000 -921.025  921.025    0.000
+   3  1-1000005   1   2    0  102   39.892  -46.637  265.398  932.191  891.503
+   4  1 1000005   1   2  103    0  -39.892   46.637 -247.896  927.360  891.503
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !g!          21      21    3    0.000    0.000  929.734  929.734    0.000
+    6 !g!          21      21    4    0.000    0.000 -929.734  929.734    0.000
+    7 !~b_1bar!    21-1000005    0   39.892  -46.637  256.636  929.734  891.503
+    8 !~b_1!       21 1000005    0  -39.892   46.637 -256.636  929.734  891.503
+  101 (g)          14      21    3    0.000    0.000  938.526  938.526    0.000
+  102 (g)          14      21    4    0.000    0.000 -921.025  921.025    0.000
+  103 ~b_1bar       3-1000005    7   39.892  -46.637  265.398  932.191  891.503
+  104 ~b_1          3 1000005    8  -39.892   46.637 -247.896  927.360  891.503
+                   sum:  0.00         0.000    0.000   17.501 1859.551 1859.469
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      21   0   0  101  102    0.000    0.000 1189.156 1189.156    0.000
+   2 -1      21   0   0  102  103    0.000    0.000 -759.147  759.147    0.000
+   3  1-1000005   1   2    0  103 -131.086  -76.784  -83.718  908.221  891.503
+   4  1 1000005   1   2  101    0  131.086   76.784  513.727 1040.083  891.503
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !g!          21      21    3    0.000    0.000  950.129  950.129    0.000
+    6 !g!          21      21    4    0.000    0.000 -950.129  950.129    0.000
+    7 !~b_1bar!    21-1000005    0 -131.086  -76.784 -291.355  950.129  891.503
+    8 !~b_1!       21 1000005    0  131.086   76.784  291.355  950.129  891.503
+  101 (g)          14      21    3    0.000    0.000 1189.156 1189.156    0.000
+  102 (g)          14      21    4    0.000    0.000 -759.147  759.147    0.000
+  103 ~b_1bar       3-1000005    7 -131.086  -76.784  -83.718  908.221  891.503
+  104 ~b_1          3 1000005    8  131.086   76.784  513.727 1040.083  891.503
+                   sum:  0.00         0.000    0.000  430.009 1948.304 1900.258
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      -2   0   0    0  101    0.000    0.000  610.787  610.787    0.000
+   2 -1       2   0   0  102    0    0.000    0.000-1956.721 1956.721    0.000
+   3  1-1000005   1   2    0  101 -576.831   32.270 -975.984 1442.601  891.503
+   4  1 1000005   1   2  102    0  576.831  -32.270 -369.950 1124.907  891.503
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !ubar!       21      -2    3    0.000    0.000 1093.225 1093.225    0.000
+    6 !u!          21       2    4    0.000    0.000-1093.225 1093.225    0.000
+    7 !~b_1bar!    21-1000005    0 -576.831   32.270 -258.045 1093.225  891.503
+    8 !~b_1!       21 1000005    0  576.831  -32.270  258.045 1093.225  891.503
+  101 (ubar)       14      -2    3    0.000    0.000  610.787  610.787    0.000
+  102 (u)          14       2    4    0.000    0.000-1956.721 1956.721    0.000
+  103 ~b_1bar       3-1000005    7 -576.831   32.270 -975.984 1442.601  891.503
+  104 ~b_1          3 1000005    8  576.831  -32.270 -369.950 1124.907  891.503
+                   sum:  0.00         0.000    0.000-1345.934 2567.508 2186.449
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      -2   0   0    0  101    0.000    0.000 1111.877 1111.877    0.000
+   2 -1       2   0   0  102    0    0.000    0.000-2605.676 2605.676    0.000
+   3  1-1000005   1   2    0  101-1081.602  856.047 -258.850 1662.667  891.503
+   4  1 1000005   1   2  102    0 1081.602 -856.047-1234.949 2054.886  891.503
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !ubar!       21      -2    3    0.000    0.000 1702.114 1702.114    0.000
+    6 !u!          21       2    4    0.000    0.000-1702.114 1702.114    0.000
+    7 !~b_1bar!    21-1000005    0-1081.602  856.047  446.916 1702.114  891.503
+    8 !~b_1!       21 1000005    0 1081.602 -856.047 -446.916 1702.114  891.503
+  101 (ubar)       14      -2    3    0.000    0.000 1111.877 1111.877    0.000
+  102 (u)          14       2    4    0.000    0.000-2605.676 2605.676    0.000
+  103 ~b_1bar       3-1000005    7-1081.602  856.047 -258.850 1662.667  891.503
+  104 ~b_1          3 1000005    8 1081.602 -856.047-1234.949 2054.886  891.503
+                   sum:  0.00         0.000    0.000-1493.799 3717.553 3404.227
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      -1   0   0    0  101    0.000    0.000  881.053  881.053    0.000
+   2 -1       1   0   0  102    0    0.000    0.000-1766.104 1766.104    0.000
+   3  1-1000005   1   2    0  101 -508.555  622.797  -83.095 1203.406  891.503
+   4  1 1000005   1   2  102    0  508.555 -622.797 -801.957 1443.751  891.503
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !dbar!       21      -1    3    0.000    0.000 1247.410 1247.410    0.000
+    6 !d!          21       1    4    0.000    0.000-1247.410 1247.410    0.000
+    7 !~b_1bar!    21-1000005    0 -508.555  622.797  338.747 1247.410  891.503
+    8 !~b_1!       21 1000005    0  508.555 -622.797 -338.747 1247.410  891.503
+  101 (dbar)       14      -1    3    0.000    0.000  881.053  881.053    0.000
+  102 (d)          14       1    4    0.000    0.000-1766.104 1766.104    0.000
+  103 ~b_1bar       3-1000005    7 -508.555  622.797  -83.095 1203.406  891.503
+  104 ~b_1          3 1000005    8  508.555 -622.797 -801.957 1443.751  891.503
+                   sum:  0.00         0.000    0.000 -885.051 2647.157 2494.819
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1       2   0   0  101    0    0.000    0.000 1533.192 1533.192    0.000
+   2 -1      -2   0   0    0  102    0.000    0.000-1002.308 1002.308    0.000
+   3  1 1000005   1   2  101    0 -396.293  745.394  440.472 1304.398  891.503
+   4  1-1000005   1   2    0  102  396.293 -745.394   90.412 1231.102  891.503
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !u!          21       2    3    0.000    0.000 1239.649 1239.649    0.000
+    6 !ubar!       21      -2    4    0.000    0.000-1239.649 1239.649    0.000
+    7 !~b_1!       21 1000005    0 -396.293  745.394  171.150 1239.649  891.503
+    8 !~b_1bar!    21-1000005    0  396.293 -745.394 -171.150 1239.649  891.503
+  101 (u)          14       2    3    0.000    0.000 1533.192 1533.192    0.000
+  102 (ubar)       14      -2    4    0.000    0.000-1002.308 1002.308    0.000
+  103 ~b_1          3 1000005    7 -396.293  745.394  440.472 1304.398  891.503
+  104 ~b_1bar       3-1000005    8  396.293 -745.394   90.412 1231.102  891.503
+                   sum:  0.00         0.000    0.000  530.884 2535.500 2479.299
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      21   0   0  101  102    0.000    0.000  971.505  971.505    0.000
+   2 -1      21   0   0  102  103    0.000    0.000-1257.130 1257.130    0.000
+   3  1-1000005   1   2    0  103  303.986  551.240   32.579 1091.839  891.503
+   4  1 1000005   1   2  101    0 -303.986 -551.240 -318.205 1136.796  891.503
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !g!          21      21    3    0.000    0.000 1105.128 1105.128    0.000
+    6 !g!          21      21    4    0.000    0.000-1105.128 1105.128    0.000
+    7 !~b_1bar!    21-1000005    0  303.986  551.240  173.946 1105.128  891.503
+    8 !~b_1!       21 1000005    0 -303.986 -551.240 -173.946 1105.128  891.503
+  101 (g)          14      21    3    0.000    0.000  971.505  971.505    0.000
+  102 (g)          14      21    4    0.000    0.000-1257.130 1257.130    0.000
+  103 ~b_1bar       3-1000005    7  303.986  551.240   32.579 1091.839  891.503
+  104 ~b_1          3 1000005    8 -303.986 -551.240 -318.205 1136.796  891.503
+                   sum:  0.00         0.000    0.000 -285.625 2228.635 2210.256
+
+          Event listing of user process at input (simplified)
+
+   I IST     ID Mothers   Colours    p_x      p_y      p_z       E        m
+   1 -1      21   0   0  101  102    0.000    0.000  931.863  931.863    0.000
+   2 -1      21   0   0  102  103    0.000    0.000-1654.679 1654.679    0.000
+   3  1 1000005   1   2  101    0 -270.302  806.319 -522.560 1338.305  891.503
+   4  1-1000005   1   2    0  103  270.302 -806.319 -200.256 1248.236  891.503
+
+
+
+                            Event listing (summary)
+
+    I particle/jet KS     KF  orig    p_x      p_y      p_z       E        m
+
+    1 !p+!         21    2212    0    0.000    0.000 4000.000 4000.000    0.938
+    2 !p+!         21    2212    0    0.000    0.000-4000.000 4000.000    0.938
+    5 !g!          21      21    3    0.000    0.000 1241.746 1241.746    0.000
+    6 !g!          21      21    4    0.000    0.000-1241.746 1241.746    0.000
+    7 !~b_1!       21 1000005    0 -270.302  806.319 -154.732 1241.746  891.503
+    8 !~b_1bar!    21-1000005    0  270.302 -806.319  154.732 1241.746  891.503
+  101 (g)          14      21    3    0.000    0.000  931.863  931.863    0.000
+  102 (g)          14      21    4    0.000    0.000-1654.679 1654.679    0.000
+  103 ~b_1          3 1000005    7 -270.302  806.319 -522.560 1338.305  891.503
+  104 ~b_1bar       3-1000005    8  270.302 -806.319 -200.256 1248.236  891.503
+                   sum:  0.00         0.000    0.000 -722.816 2586.541 2483.492
+1********* PYSTAT:  Statistics on Number of Events and Cross-sections *********
+
+ ==============================================================================
+ I                                  I                            I            I
+ I            Subprocess            I      Number of points      I    Sigma   I
+ I                                  I                            I            I
+ I----------------------------------I----------------------------I    (mb)    I
+ I                                  I                            I            I
+ I N:o Type                         I    Generated         Tried I            I
+ I                                  I                            I            I
+ ==============================================================================
+ I                                  I                            I            I
+ I   0 All included subprocesses    I        10000        119702 I  5.677D-13 I
+ I 287 f + fbar -> ~b_1 + ~b_1bar   I         4650         52763 I  2.660D-13 I
+ I 289 g + g -> ~b_1 + ~b_1bar      I         5350         66939 I  3.018D-13 I
+ I 291 b + b -> ~b_1 + ~b_1         I            0             0 I  0.000D+00 I
+ I                                  I                            I            I
+ ==============================================================================
+
+ ********* Total number of errors, excluding junctions =        0 *************
+ ********* Total number of errors, including junctions =        0 *************
+ ********* Total number of warnings =                           1 *************
+ ********* Fraction of events that fail fragmentation cuts =  0.00000 *********

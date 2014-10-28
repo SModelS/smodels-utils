@@ -1,0 +1,13 @@
+*.pyc
+*.dot
+*.eps
+*.png
+*.ps
+*.aux
+*.swp
+*.tex
+*.pdf
+*.log
+*.dvi
+*.py.kate-swp
+Database.txt
