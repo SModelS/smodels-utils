@@ -158,6 +158,18 @@ def getGoodAnalyses(browser, database):
             and expAna.hasPY and not expAna.private and expAna.publishedData:
                 goodAnalyses.append(ana)
     return goodAnalyses 
+
+def getGoodTopologies(browser, ana):
+    """Gets all topologies for each analysis, which fulfill the requirements 
+    for the official datbase.
+    
+    """
+    goodTopologies = []
+    for t in browser.getTopologies(ana):
+        res = browser.expResultSet(ana, t)
+        if not res: continue
+        if not res.hasUpperLimitDicts(): continue
+        
     
 def getCleanedDatabase(goodAnalyses, database):
     """Excludes all analyses that are insufficient.
@@ -178,7 +190,7 @@ def localCopy(targetPath, cleanedDatabase, infoLines, browser):
     
     """
     version = open('%s/version' %targetPath, 'w')
-    versionString = 'October2014 (%s-based)' %browser.databaseVersion
+    versionString = 'November2014 (%s-based)' %browser.databaseVersion
     print >> version, versionString
     version.close()
     for key in cleanedDatabase:
@@ -188,15 +200,25 @@ def localCopy(targetPath, cleanedDatabase, infoLines, browser):
             path = '/' + key + '/' + a + '/'
             os.mkdir(targetPath + path)
             logger.debug('created folder for analysis: %s' %a)
+            #---------------------------------------------------------------
             os.system('cp %s %s' %(browser.base + path + 'sms.py', targetPath + path + 'sms.py'))
             # ### FIX ME: sms.py should be split into observed and expected dictionary -> only observed should be copied. Also fake entries (e.g. [None,None,None]) should be removed, as well as topologies which don't have valid entries in the info.txt
             logger.debug('command looks like: cp %s %s' %(browser.base + path + 'sms.py', targetPath + path + 'sms.py'))
-            createInfo(targetPath, key, a, infoLines, browser)
+            #---------------------------------------------------------------
+            pathToSmsPy = browser.base + path + 'sms.py'
+            topos = getGoodTopologies(browser, a)
+            createSmsPy(pathToSmsPy, topos)
+            createInfo(targetPath, key, a, topos, infoLines, browser)
             
 def remoteCopy():
     # ### FIX ME: how to? Is there a copy of smodels-database on smodels.hephy.at and can I use it here?
     #target = getTarget()
     pass
+
+def createSmsPy( .... ):
+    """Splits the sms.py and creates a new one, that contains only 
+    observed upper limits for "good" topologies."""
+    # ### TO DO
     
 def createInfo(target, run, ana, infoLines, browser):
     """Creates the info.txt for every run-analysis and copies the requested lines.
