@@ -165,10 +165,26 @@ def getGoodTopologies(browser, ana):
     
     """
     goodTopologies = []
+    badTopologies = []
     for t in browser.getTopologies(ana):
         res = browser.expResultSet(ana, t)
+        if t in badTopologies: continue
         if not res: continue
         if not res.hasUpperLimitDicts(): continue
+        if not res.condition: continue
+        if res.condition.lower() == 'not yet assigned':
+            continue
+        if not res.constraint: continue
+        if res.constraint.lower() == 'not yet assigned':
+            continue
+        if not res.fuzzyCondition continue
+        if res.fuzzyCondition.lower() == 'not yet assigned'
+            continue
+        if not res.axes: continue
+        goodTopologies.append(t)
+    return goodTopologies
+        
+        
         
     
 def getCleanedDatabase(goodAnalyses, database):
@@ -205,9 +221,9 @@ def localCopy(targetPath, cleanedDatabase, infoLines, browser):
             # ### FIX ME: sms.py should be split into observed and expected dictionary -> only observed should be copied. Also fake entries (e.g. [None,None,None]) should be removed, as well as topologies which don't have valid entries in the info.txt
             logger.debug('command looks like: cp %s %s' %(browser.base + path + 'sms.py', targetPath + path + 'sms.py'))
             #---------------------------------------------------------------
-            pathToSmsPy = browser.base + path + 'sms.py'
+            pathToSmsPy = targetPath + path + 'sms.py'
             topos = getGoodTopologies(browser, a)
-            createSmsPy(pathToSmsPy, topos)
+            createSmsPy(browser, pathToSmsPy, topos, a)
             createInfo(targetPath, key, a, topos, infoLines, browser)
             
 def remoteCopy():
@@ -215,12 +231,26 @@ def remoteCopy():
     #target = getTarget()
     pass
 
-def createSmsPy( .... ):
+def createSmsPy(browser, path, topos, ana):
     """Splits the sms.py and creates a new one, that contains only 
-    observed upper limits for "good" topologies."""
-    # ### TO DO
+    observed upper limits for "good" topologies.
     
-def createInfo(target, run, ana, infoLines, browser):
+    """
+    f = open(path,'w')
+    f.write("Dict={}\n")
+    for t in topos:
+        resSet = browser.expResultSet(ana, t)
+        for key in resSet.results:
+            extendedTopo = key.split('-').strip()
+            upperLimitDict = resSet.results[key].upperLimitDict()
+            f.write("Dict['%s']=%s\n" %(extendedTopo, upperLimitDict))
+    f.close()
+            
+            
+        
+    
+    
+def createInfo(target, run, ana, topos, infoLines, browser):
     """Creates the info.txt for every run-analysis and copies the requested lines.
     # ### FIX ME: write lines for valid topologies only and split axes accordingly. 
     """
@@ -242,6 +272,9 @@ def createInfo(target, run, ana, infoLines, browser):
                     lines.append(line)
     for line in lines:
         logger.debug('line is %s' %line)
+        logger.debug('topo from line is %s' %(line.split(':')[1].split('->')[0].strip()))
+        if not line.split(':')[1].split('->')[0].strip() in topos:
+            continue
         print >> info, line.strip()
     info.close()
         
