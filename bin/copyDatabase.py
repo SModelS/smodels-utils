@@ -177,8 +177,8 @@ def getGoodTopologies(browser, ana):
         if not res.constraint: continue
         if res.constraint.lower() == 'not yet assigned':
             continue
-        if not res.fuzzyCondition continue
-        if res.fuzzyCondition.lower() == 'not yet assigned'
+        if not res.fuzzyCondition: continue
+        if res.fuzzyCondition.lower() == 'not yet assigned':
             continue
         if not res.axes: continue
         goodTopologies.append(t)
@@ -206,7 +206,7 @@ def localCopy(targetPath, cleanedDatabase, infoLines, browser):
     
     """
     version = open('%s/version' %targetPath, 'w')
-    versionString = 'November2014 (%s-based)' %browser.databaseVersion
+    versionString = 'Halloween2014 (%s-based)' %browser.databaseVersion
     print >> version, versionString
     version.close()
     for key in cleanedDatabase:
@@ -216,11 +216,11 @@ def localCopy(targetPath, cleanedDatabase, infoLines, browser):
             path = '/' + key + '/' + a + '/'
             os.mkdir(targetPath + path)
             logger.debug('created folder for analysis: %s' %a)
-            #---------------------------------------------------------------
-            os.system('cp %s %s' %(browser.base + path + 'sms.py', targetPath + path + 'sms.py'))
-            # ### FIX ME: sms.py should be split into observed and expected dictionary -> only observed should be copied. Also fake entries (e.g. [None,None,None]) should be removed, as well as topologies which don't have valid entries in the info.txt
-            logger.debug('command looks like: cp %s %s' %(browser.base + path + 'sms.py', targetPath + path + 'sms.py'))
-            #---------------------------------------------------------------
+            ##---------------------------------------------------------------
+            #os.system('cp %s %s' %(browser.base + path + 'sms.py', targetPath + path + 'sms.py'))
+            ## ### FIX ME: sms.py should be split into observed and expected dictionary -> only observed should be copied. Also fake entries (e.g. [None,None,None]) should be removed, as well as topologies which don't have valid entries in the info.txt
+            #logger.debug('command looks like: cp %s %s' %(browser.base + path + 'sms.py', targetPath + path + 'sms.py'))
+            ##---------------------------------------------------------------
             pathToSmsPy = targetPath + path + 'sms.py'
             topos = getGoodTopologies(browser, a)
             createSmsPy(browser, pathToSmsPy, topos, a)
@@ -241,7 +241,7 @@ def createSmsPy(browser, path, topos, ana):
     for t in topos:
         resSet = browser.expResultSet(ana, t)
         for key in resSet.results:
-            extendedTopo = key.split('-').strip()
+            extendedTopo = key.split('-')[1].strip()
             upperLimitDict = resSet.results[key].upperLimitDict()
             f.write("Dict['%s']=%s\n" %(extendedTopo, upperLimitDict))
     f.close()
@@ -269,12 +269,13 @@ def createInfo(target, run, ana, topos, infoLines, browser):
         else:
             for line in infoObject.info:
                 if requ in line and not line in lines:
+                    logger.debug('topo from line is %s' %(line.split(':')[1].split('->')[0].strip()))
+                    if not line.split(':')[1].split('->')[0].strip() in topos:
+                        continue
                     lines.append(line)
+                    
     for line in lines:
         logger.debug('line is %s' %line)
-        logger.debug('topo from line is %s' %(line.split(':')[1].split('->')[0].strip()))
-        if not line.split(':')[1].split('->')[0].strip() in topos:
-            continue
         print >> info, line.strip()
     info.close()
         

@@ -142,7 +142,14 @@ class ExpResultSet (object):
         
         """
         return self._condition
+    
+    @property    
+    def fuzzyCondition(self):
+        """Retrieves the fuzzy condition for this set of results.
         
+        """
+        return self._fuzzyCondition
+     
     @property    
     def constraint(self):
         """Retrieves constraint for this set of results.
