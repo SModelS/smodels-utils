@@ -377,7 +377,7 @@ class ExpResultSet (object):
         if not cons:
             logger.warning('No constraints available for result %s.' \
             %self.name)
-            return cond
+            return cons
         return cons[0]
     
     
