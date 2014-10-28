@@ -178,7 +178,7 @@ def localCopy(targetPath, cleanedDatabase, infoLines, browser):
     
     """
     version = open('%s/version' %targetPath, 'w')
-    versionString = 'Oktober2014 (%s-based)' %browser.databaseVersion
+    versionString = 'October2014 (%s-based)' %browser.databaseVersion
     print >> version, versionString
     version.close()
     for key in cleanedDatabase:
