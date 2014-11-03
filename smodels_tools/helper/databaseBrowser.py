@@ -7,9 +7,7 @@
 
 """
 
-import ROOT
 import logging, os, types
-import setPath
 import sys
 import experimentalTopology
 import experimentalAnalysis
