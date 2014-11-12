@@ -8,7 +8,7 @@
 
 """
 #import sys
-#sys.path.append('../smodels-tools/tools')
+#sys.path.append('../smodels-utils/tools')
 #from smodels_tools.tools import databaseBrowser
 import setPath
 from smodels_tools.tools import databaseBrowser

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """ this sets the path so we can write e.g. "from smodels_tools.tools import blah """
 
 def configure():
@@ -5,9 +7,15 @@ def configure():
         remove the last subdir, the remaining string should be the
         base path name """
     import sys
-    sys.path.append ( "../" )
-    import SModelSTools
+    ret="../../"
+    sys.path.append ( ret )
+    from smodels_tools import SModelSTools
     SModelSTools.addInstallDirectory()
     SModelSTools.addSModelSPath()
+    return ret
+    
 
 configure()
+
+if __name__ == "__main__":
+    print configure()

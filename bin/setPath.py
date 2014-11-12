@@ -15,7 +15,7 @@ def configure():
         base path name """
     import sys
     sys.path.append ( "../" )
-    import SModelSTools
+    from smodels_tools import SModelSTools
     SModelSTools.addInstallDirectory()
     return SModelSTools.addSModelSPath()
 

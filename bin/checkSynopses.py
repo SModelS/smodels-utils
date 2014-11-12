@@ -53,6 +53,6 @@ smodelsdir=SModelSTools.addSModelSPath()
 dirs = [ "smodels/experiment", "smodels/theory", "smodels/tools", "bin" ]
 check ( smodelsdir, dirs )
 
-# check smodels-tools
+# check smodels_tools
 check ( tooldir, [ "bin", "smodels_tools/helper", "smodels_tools/publication", \
        "smodels_tools/plotting", "smodels_tools/checks" ] )
