@@ -31,5 +31,5 @@ if __name__ == "__main__":
     Called as a script, print out the path.
 
     """
-    print("The following strings are appended to the path variable:",
-          configure())
+    print("The following strings are appended to the path variable: "+
+          str( configure() ) )
