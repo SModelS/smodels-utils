@@ -14,10 +14,15 @@ def configure():
         remove the last subdir, the remaining string should be the
         base path name """
     import sys
-    sys.path.append ( "../" )
-    import SModelSTools
-    SModelSTools.addInstallDirectory()
-    return SModelSTools.addSModelSPath()
+    r=()
+    ret= "../"
+    sys.path.append ( ret )
+    r+=(ret,)
+    from smodels_tools import SModelSTools
+    
+    r+= ( SModelSTools.addInstallDirectory(), )
+    r+= ( SModelSTools.addSModelSPath(), )
+    return r
 
 configure()
 
@@ -26,5 +31,5 @@ if __name__ == "__main__":
     Called as a script, print out the path.
 
     """
-    print("The following string is appended to the path variable:",
+    print("The following strings are appended to the path variable:",
           configure())
