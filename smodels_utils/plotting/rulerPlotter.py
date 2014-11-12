@@ -226,7 +226,7 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
 if __name__ == "__main__":
     import argparse, types
     import setPath
-    from smodels_tools import SModelSTools
+    from smodels_utils import SModelSTools
     argparser = argparse.ArgumentParser(description='Draws a "ruler-plot", i.e. particles arranged by their masses. See http://smodels.hephy.at/images/example_ruler.png.')
     argparser.add_argument('inputfile', type=types.StringType, nargs=1,
                     help='input masses text file name, for an example see "etc/example_masses.txt". "@@installdir@@" will be replaced with the installation directory of smodels-tools.')

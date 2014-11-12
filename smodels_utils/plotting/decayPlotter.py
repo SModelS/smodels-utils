@@ -18,7 +18,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
             :param offset: FIXME what does that one do?
     """
     import setPath
-    from smodels_tools.plotting import decayPlots
+    from smodels_utils.plotting import decayPlots
     import os
     out=os.path.basename ( slhafile ).replace(".slha","")
     if outfile!="":

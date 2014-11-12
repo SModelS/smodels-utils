@@ -80,7 +80,7 @@ def printAnalysisGraphs(Analysis,pdf_prefix=None):
   If pdf_prefix=None, uses the analysis label as a prefix for the files."""
   from smodels.theory.auxiliaryFunctions import getelements
   from smodels.theory.SMSDataObjects import EElement
-  from smodels_tools.tools import feynmanGraph
+  from smodels_utils.tools import feynmanGraph
 
 #Get topologies (in string format)
   consts = Analysis.results.keys()
