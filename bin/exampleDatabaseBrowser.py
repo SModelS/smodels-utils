@@ -11,7 +11,7 @@
 
 import ROOT
 import setPath
-from smodels_tools.helper import databaseBrowser
+from smodels_utils.helper import databaseBrowser
 
 def main():
   # set the level of the logger (default: error ; possible: debug, info, warning, error) 

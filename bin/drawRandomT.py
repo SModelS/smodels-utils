@@ -47,6 +47,6 @@ if __name__ == '__main__':
     args=argparser.parse_args()
     Dir=args.dir
     import setPath
-    from smodels_tools import SModelSTools
+    from smodels_utils import SModelSTools
     Dir=Dir.replace("@@installpath@@",SModelSTools.installDirectory() )
     drawRandom ( Dir )

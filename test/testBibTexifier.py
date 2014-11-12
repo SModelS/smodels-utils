@@ -9,7 +9,7 @@
 """
 import unittest
 import setPath
-from smodels_tools.publication import bibTeXifier
+from smodels_utils.publication import bibTeXifier
 import types
 
 class TestBibTeXifier(unittest.TestCase):

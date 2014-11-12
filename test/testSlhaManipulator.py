@@ -29,7 +29,7 @@ class TestSlhaManipulator(unittest.TestCase):
 
     def testRemoveXSecs(self):
         """ remove xsecs completely """
-        from smodels_tools.helper import slhaManipulator
+        from smodels_utils.helper import slhaManipulator
         slhaManipulator.removeXSecs ( "../slha/andrePT4.slha", "/tmp/test.slha" )
         self.assertEqualFiles ( "../slha/andrePT4.slha", "/tmp/test.slha" )
         return None

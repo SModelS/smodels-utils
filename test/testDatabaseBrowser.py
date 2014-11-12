@@ -9,7 +9,7 @@
 """
 import unittest
 import setPath
-from smodels_tools.helper import databaseBrowser
+from smodels_utils.helper import databaseBrowser
 from smodels import installation
 import types
 

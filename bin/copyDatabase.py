@@ -13,7 +13,7 @@
 import os
 import sys
 import setPath
-from smodels_tools.helper import databaseBrowser
+from smodels_utils.helper import databaseBrowser
 import argparse
 import logging
 import types

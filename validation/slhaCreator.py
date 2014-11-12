@@ -16,8 +16,8 @@ import logging
 import sys
 import os
 from smodels.tools import xsecComputer
-from smodels_tools.tools.databaseBrowser import Browser
-from smodels_tools.tools.experimentalResults import ExpResult
+from smodels_utils.tools.databaseBrowser import Browser
+from smodels_utils.tools.experimentalResults import ExpResult
 from smodels.tools.physicsUnits import GeV
 import validationPlotsHelper
 import random

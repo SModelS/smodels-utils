@@ -15,7 +15,7 @@ import logging
 import types
 import os
 import sys
-from smodels_tools.tools.databaseBrowser import Browser
+from smodels_utils.tools.databaseBrowser import Browser
 import gridDataCreator
 import validationPlots
 import validationPlotsHelper

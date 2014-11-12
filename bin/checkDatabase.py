@@ -9,9 +9,9 @@
 """
 #import sys
 #sys.path.append('../smodels-utils/tools')
-#from smodels_tools.tools import databaseBrowser
+#from smodels_utils.tools import databaseBrowser
 import setPath
-from smodels_tools.tools import databaseBrowser
+from smodels_utils.tools import databaseBrowser
 import logging
 import prettytable
 import argparse

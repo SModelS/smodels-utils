@@ -18,7 +18,7 @@ import ROOT
 import validationPlotsHelper
 import logging
 import types
-from smodels_tools.tools.databaseBrowser import Browser
+from smodels_utils.tools.databaseBrowser import Browser
 
 logger = logging.getLogger(__name__)
 

@@ -11,7 +11,7 @@
 """
 from __future__ import print_function
 import setPath 
-from smodels_tools.tools.databaseBrowser import Browser
+from smodels_utils.tools.databaseBrowser import Browser
 from smodels.tools.physicsUnits import GeV
 from smodels.tools.slhaChecks import SlhaStatus
 from unum import Unum

@@ -14,7 +14,7 @@ from smodels.theory import slhaDecomposer
 from smodels.tools.physicsUnits import fb, GeV
 from smodels.experiment import smsAnalysisFactory, smsHelpers
 from smodels.theory.theoryPrediction import theoryPredictionFor
-from smodels_tools.tools.databaseBrowser import Browser
+from smodels_utils.tools.databaseBrowser import Browser
 import validationPlotsHelper
 import logging
 import argparse

@@ -11,7 +11,7 @@
 
 import os
 import setPath
-from smodels_tools import SModelSTools
+from smodels_utils import SModelSTools
 
 def check ( dir, subdirs ):
     print "checking at",dir
@@ -53,6 +53,6 @@ smodelsdir=SModelSTools.addSModelSPath()
 dirs = [ "smodels/experiment", "smodels/theory", "smodels/tools", "bin" ]
 check ( smodelsdir, dirs )
 
-# check smodels_tools
-check ( tooldir, [ "bin", "smodels_tools/helper", "smodels_tools/publication", \
-       "smodels_tools/plotting", "smodels_tools/checks" ] )
+# check smodels_utils
+check ( tooldir, [ "bin", "smodels_utils/helper", "smodels_utils/publication", \
+       "smodels_utils/plotting", "smodels_utils/checks" ] )
