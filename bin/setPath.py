@@ -13,15 +13,19 @@ def configure():
     """ get the path name of this file, remove setPath.py, 
         remove the last subdir, the remaining string should be the
         base path name """
-    import sys
+    import os, inspect, sys
+    ret=os.path.realpath ( inspect.getabsfile(configure) )
+    ret=ret.replace("/bin/setPath.py","")
+    sys.path.append ( ret )
     r=()
     ret= "../"
     sys.path.append ( ret )
     r+=(ret,)
     from smodels_utils import SModelSTools
-    
     r+= ( SModelSTools.addInstallDirectory(), )
     r+= ( SModelSTools.addSModelSPath(), )
+    for x in r:
+        sys.path.append ( x )
     return r
 
 configure()
