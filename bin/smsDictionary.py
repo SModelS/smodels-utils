@@ -11,7 +11,7 @@
 
 import setPath
 from smodels_utils import SModelSTools
-from smodels_utils.tools import databaseBrowser
+from smodels_utils.helper import databaseBrowser
 import logging
 logger=logging.getLogger(__name__)
     
@@ -182,7 +182,7 @@ def topoCmp ( x, y ):
 def main():
     browser.verbosity='error'
     print "Base=",browser.base
-    topos = browser.allTopologies()
+    topos = browser.getTopologies()
     categories={}
     for toponame in topos:
         topo = browser.expTopology ( toponame )
