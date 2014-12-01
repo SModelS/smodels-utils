@@ -21,7 +21,8 @@ f=open("SmsDictionary","w")
 
 shortnames={ "directslep": "weakinos", "hadronic": "colored",
              "thirdgen": "third", "eweakino": "weakinos",
-             "hadronic, thirdgen": "colored", "None": "none" }
+             "hadronic, thirdgen": "colored", "None": "none",
+             "not yet assigned": "none" }
 longnames={ "sleptons": "sleptons", "colored": "colored production",
             "third": "third generation", "weakinos": "weakinos and sleptons",
             "none": "not categorized" }
