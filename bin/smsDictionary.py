@@ -120,10 +120,10 @@ def writeTopo ( topo ):
         return
     #    print "not yet assigned:", topo.constraints
     #    first="[[[]],[[]]]"
-    if first=="":
+    if first in [ "", "None", "not yet assigned" ]:
         logger.error ( "%s: first is empty: %s" % (name,topo.constraints) )
         return
-    #print name,first
+    print "name",name,"first",first
     constro=eval(first)
     # print "   `-",constro
     v1,v2=len(constro[0])+1,len(constro[1])+1
