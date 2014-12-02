@@ -424,6 +424,9 @@ class Browser(object):
                 if a in self._infos:
                     content = self._infos[a]
                 else:
+                #    res=self._checkResults(a)
+                #    if res==None:
+                #        continue
                     content = Infotxt(a, self._checkResults(a))
                     self._infos[a] = content
                 for t in content.topologies:
@@ -581,6 +584,7 @@ class Infotxt(object):
         self._analysis = analysis
         logger.debug('Got analysis %s.' %analysis)
         self._path = path
+        # print "path=",self._path
         self._run = self._path.split('/')[-3]
         logger.debug('Got run %s.' % self._run)
         logger.debug('Creating object based on info.txt: %s' %self._path)

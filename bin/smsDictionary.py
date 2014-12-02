@@ -12,6 +12,9 @@
 import setPath
 from smodels_utils import SModelSTools
 from smodels_utils.helper import databaseBrowser
+from smodels_utils.plotting import feynmanGraph
+from smodels.theory import element
+
 import logging
 logger=logging.getLogger(__name__)
     
@@ -146,6 +149,21 @@ def writeTopo ( topo ):
     f.write ( constr )
     f.write ( '||{{http://smodels.hephy.at/feyn/%s_feyn.png||width="150"}}' % name )
     f.write ( "|| " )
+    createFeynGraph=True
+    if createFeynGraph:
+        print "name,constr=",name,constr
+        c=constr
+        p=c.find("]+")
+        if p>-1:
+            c=c[:p+1]
+        p=c.find("] +")
+        if p>-1:
+            c=c[:p+1]
+        c=c.replace("71.*","").replace("(","").replace(")","")
+        feynfile=name+"_feyn.png"
+        print "drawing",feynfile,"from",c
+        e=element.Element(c)
+        feynmanGraph.draw ( e, feynfile, straight=False, inparts=True, verbose=False )
     for experiment in [ "CMS", "ATLAS" ]: 
         # order by experiment
         for ana in topo.analyses:
