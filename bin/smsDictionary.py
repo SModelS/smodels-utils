@@ -56,7 +56,7 @@ def footer():
     f.write (
 """
 
-Obs: Each "()" group corresponds to a branch
+N.B.: Each "()" group corresponds to a branch
 
 """
 )
@@ -100,6 +100,7 @@ def writeTopo ( topo ):
     if name in [ "T7ChiSlep", "T8ChiSlep" ]:
         rname="!"+name
     if name == "T2_OneSq":
+        return ## lets skip that guy
         rname="T2_!OneSq"
     constr="Not yet assigned"
     for c in topo.constraints:

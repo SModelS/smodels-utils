@@ -89,7 +89,12 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
     if displace==None: displace=-.08
     # if label: segs[-1].addLabel ( label, pos=0.7, displace=displace )
     if label:
-        filename="%s/icons/%s.jpg" % ( SModelSTools.installDirectory(), label.replace(" ","").replace("_","").replace("$","").upper().replace("+","").replace("-","") )
+        lbl=label.replace(" ","").replace("_","").replace("$","").replace("+","").replace("-","")
+        if lbl == "l": lbl="smallL"
+        else:
+            lbl=lbl.upper()
+        filename="%s/icons/%s.jpg" % ( SModelSTools.installDirectory(), lbl )
+        print "using",filename
         #print "filename=",filename
         if not os.path.exists ( filename ):
             print "[feynmanGraph.py] error:",filename,"not found."
