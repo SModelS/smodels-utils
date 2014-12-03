@@ -94,7 +94,7 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
         else:
             lbl=lbl.upper()
         filename="%s/icons/%s.jpg" % ( SModelSTools.installDirectory(), lbl )
-        print "using",filename
+        #print "using",filename
         #print "filename=",filename
         if not os.path.exists ( filename ):
             print "[feynmanGraph.py] error:",filename,"not found."

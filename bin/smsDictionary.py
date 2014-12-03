@@ -67,12 +67,19 @@ def xsel():
     os.system ( cmd )
     print cmd
 
+hasResultsColumn=False
+
 def categoryHeader ( shortname, longname ):
+    """ this method writes out the header of a category-specific 
+        table """
     f.write ( "\n" )
     f.write ( "== %s ==\n" % longname )
     f.write ( "<<Anchor(%s)>>\n" % shortname )
     # f.write ( '||<tableclass="sortable"> Tx Name || Topology || Graph || Results ||\n' )
-    for header in [ "#", "Tx", "Topology", "Graph", "Results" ]:
+    columns=[ "#", "Tx", "Topology", "Graph" ]
+    if hasResultsColumn:
+        columns.append ( "Results" )
+    for header in columns:
         f.write ( "||<#EEEEEE:> '''%s''' " % header )
     f.write ( "||\n" )
     ## f.write ( '||<tableclass="sortable"> Tx Name || Topology || Graph || Results ||\n' )
@@ -149,7 +156,6 @@ def writeTopo ( topo ):
     constr="`%s`" % constr 
     f.write ( constr )
     f.write ( '||{{http://smodels.hephy.at/feyn/%s_feyn.png||width="150"}}' % name )
-    f.write ( "|| " )
     createFeynGraph=True
     if createFeynGraph:
         print "name,constr=",name,constr
@@ -165,25 +171,27 @@ def writeTopo ( topo ):
         print "drawing",feynfile,"from",c
         e=element.Element(c)
         feynmanGraph.draw ( e, feynfile, straight=False, inparts=True, verbose=False )
-    for experiment in [ "CMS", "ATLAS" ]: 
-        # order by experiment
-        for ana in topo.analyses:
-            oana=browser.expAnalysis ( ana ) ## get the object
-            ## print "ana",ana,oana.experiment,oana.checked,oana.url
-            if oana.experiment != experiment:
-                continue
-            ## print oana.name,"private",type(oana.private),oana.private
-            if oana.private:
-                logger.warn ( "%s is marked as private." % ana )
-                continue
-            if oana.checked==False:
-                continue
-            url=oana.url
-            if url==None:
-                continue
-            if url.find(", ")>-1:
-                url=url[:url.find(", ")-1]
-            f.write ( "[[%s|%s]]<<BR>>" % ( url, ana.replace("_"," ") ) )
+    if hasResultsColumn:
+        f.write ( "|| " )
+        for experiment in [ "CMS", "ATLAS" ]: 
+            # order by experiment
+            for ana in topo.analyses:
+                oana=browser.expAnalysis ( ana ) ## get the object
+                ## print "ana",ana,oana.experiment,oana.checked,oana.url
+                if oana.experiment != experiment:
+                    continue
+                ## print oana.name,"private",type(oana.private),oana.private
+                if oana.private:
+                    logger.warn ( "%s is marked as private." % ana )
+                    continue
+                if oana.checked==False:
+                    continue
+                url=oana.url
+                if url==None:
+                    continue
+                if url.find(", ")>-1:
+                    url=url[:url.find(", ")-1]
+                f.write ( "[[%s|%s]]<<BR>>" % ( url, ana.replace("_"," ") ) )
     f.write ( "||\n" )
 
 def topoCmp ( x, y ):
