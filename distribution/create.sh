@@ -3,7 +3,7 @@
 # a script that creates from scratch the tarball that we ship
 # Wolfgang Waltenberger, december 2014
 
-VERSION="1.0beta"
+VERSION="1.0"
 
 clearTarball()
 {
@@ -26,9 +26,11 @@ testTarball()
 	cp smodels-v${VERSION}.tgz /tmp/
 	cd /tmp/
 	tar xzvf smodels-v${VERSION}.tgz
+  rm -r smodels-v${VERSION}
 	cd /tmp/smodels-v${VERSION}
   sudo  python /tmp/smodels-v${VERSION}/setup.py install
-	/tmp/smodels-v${VERSION}/runSModelS.py -f inputFiles/slha/simplyGluino.slha
+	/tmp/smodels-v${VERSION}/runSModelS.py -f inputFiles/slha/gluino_squarks.slha
+  /tmp/smodels-v${VERSION}/Example.py -f inputFiles/slha/simplyGluino.slha  
 }
 
 clearTarball
