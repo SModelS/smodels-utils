@@ -11,7 +11,7 @@
 """
 from __future__ import print_function
 import setPath 
-from smodels_utils.tools.databaseBrowser import Browser
+from smodels_utils.helper.databaseBrowser import Browser
 from smodels.tools.physicsUnits import GeV
 from smodels.tools.physicsUnits import TeV
 from smodels.tools.slhaChecks import SlhaStatus
@@ -328,7 +328,7 @@ def main():
     action = 'store_false')
    
     argparser.add_argument ('-sqrts', '--sqrts',\
-    help = 'set sqrts in TeV - default: greate slha for 8 and 7TeV', \
+    help = 'set sqrts in TeV - default: create slha for 8 and 7TeV', \
     type = types.FloatType, default = 0.0)
     args = argparser.parse_args()
     
