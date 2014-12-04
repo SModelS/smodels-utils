@@ -3,13 +3,13 @@
 # a script that creates from scratch the tarball that we ship
 # Wolfgang Waltenberger, december 2014
 
-VERSION="1.0"
+VERSION="1.0beta"
 
 clearTarball()
 {
   ## remove old tarball, just to be sure
 	rm -rf smodels-v${VERSION}
-	rm -rf smodels-v${VERSION}.tar.gz
+	rm -rf smodels-v${VERSION}.tgz
 }
 
 createTarball()
@@ -17,18 +17,17 @@ createTarball()
 	## create the tarball
 	git clone -b public git@smodels.hephy.at:smodels smodels-v${VERSION}
 	rm -rf smodels-v${VERSION}/.git 
-	tar xvf database.tar
-	mv testCopy smodels-v${VERSION}/smodels-database
-	tar czvf smodels-v${VERSION}.tar.gz smodels-v${VERSION}
+	tar czvf smodels-v${VERSION}.tgz smodels-v${VERSION}
 }
 
 testTarball()
 {
   ## explode the tarball and perform a simple test
-	cp smodels-v${VERSION}.tar.gz /tmp/
+	cp smodels-v${VERSION}.tgz /tmp/
 	cd /tmp/
-	tar xzvf smodels-v${VERSION}.tar.gz
+	tar xzvf smodels-v${VERSION}.tgz
 	cd /tmp/smodels-v${VERSION}
+  sudo  python /tmp/smodels-v${VERSION}/setup.py install
 	/tmp/smodels-v${VERSION}/runSModelS.py -f inputFiles/slha/simplyGluino.slha
 }
 
