@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 """
-.. module:: SModelSTools
-    :synopsis: SModelSTools entry point.
+.. module:: SModelSUtils
+    :synopsis: SModelSUtils entry point.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
@@ -13,7 +13,7 @@ def installDirectory():
     import os
     import inspect
     ret=os.path.realpath ( inspect.getabsfile(installDirectory) )
-    ret=ret.replace("SModelSTools.py","")
+    ret=ret.replace("SModelSUtils.py","")
     ret=ret.replace("smodels_utils/","")
     return ret
 
