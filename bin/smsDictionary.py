@@ -11,7 +11,10 @@
 
 import setPath
 from smodels_utils import SModelSTools
-from smodels_utils.tools import databaseBrowser
+from smodels_utils.helper import databaseBrowser
+from smodels_utils.plotting import feynmanGraph
+from smodels.theory import element
+
 import logging
 logger=logging.getLogger(__name__)
     
@@ -21,7 +24,8 @@ f=open("SmsDictionary","w")
 
 shortnames={ "directslep": "weakinos", "hadronic": "colored",
              "thirdgen": "third", "eweakino": "weakinos",
-             "hadronic, thirdgen": "colored", "None": "none" }
+             "hadronic, thirdgen": "colored", "None": "none",
+             "not yet assigned": "none" }
 longnames={ "sleptons": "sleptons", "colored": "colored production",
             "third": "third generation", "weakinos": "weakinos and sleptons",
             "none": "not categorized" }
@@ -52,7 +56,7 @@ def footer():
     f.write (
 """
 
-Obs: Each "()" group corresponds to a branch
+N.B.: Each "()" group corresponds to a branch
 
 """
 )
@@ -63,12 +67,19 @@ def xsel():
     os.system ( cmd )
     print cmd
 
+hasResultsColumn=False
+
 def categoryHeader ( shortname, longname ):
+    """ this method writes out the header of a category-specific 
+        table """
     f.write ( "\n" )
     f.write ( "== %s ==\n" % longname )
     f.write ( "<<Anchor(%s)>>\n" % shortname )
     # f.write ( '||<tableclass="sortable"> Tx Name || Topology || Graph || Results ||\n' )
-    for header in [ "#", "Tx", "Topology", "Graph", "Results" ]:
+    columns=[ "#", "Tx", "Topology", "Graph" ]
+    if hasResultsColumn:
+        columns.append ( "Results" )
+    for header in columns:
         f.write ( "||<#EEEEEE:> '''%s''' " % header )
     f.write ( "||\n" )
     ## f.write ( '||<tableclass="sortable"> Tx Name || Topology || Graph || Results ||\n' )
@@ -96,6 +107,7 @@ def writeTopo ( topo ):
     if name in [ "T7ChiSlep", "T8ChiSlep" ]:
         rname="!"+name
     if name == "T2_OneSq":
+        return ## lets skip that guy
         rname="T2_!OneSq"
     constr="Not yet assigned"
     for c in topo.constraints:
@@ -119,10 +131,10 @@ def writeTopo ( topo ):
         return
     #    print "not yet assigned:", topo.constraints
     #    first="[[[]],[[]]]"
-    if first=="":
+    if first in [ "", "None", "not yet assigned" ]:
         logger.error ( "%s: first is empty: %s" % (name,topo.constraints) )
         return
-    #print name,first
+    print "name",name,"first",first
     constro=eval(first)
     # print "   `-",constro
     v1,v2=len(constro[0])+1,len(constro[1])+1
@@ -144,26 +156,42 @@ def writeTopo ( topo ):
     constr="`%s`" % constr 
     f.write ( constr )
     f.write ( '||{{http://smodels.hephy.at/feyn/%s_feyn.png||width="150"}}' % name )
-    f.write ( "|| " )
-    for experiment in [ "CMS", "ATLAS" ]: 
-        # order by experiment
-        for ana in topo.analyses:
-            oana=browser.expAnalysis ( ana ) ## get the object
-            ## print "ana",ana,oana.experiment,oana.checked,oana.url
-            if oana.experiment != experiment:
-                continue
-            ## print oana.name,"private",type(oana.private),oana.private
-            if oana.private:
-                logger.warn ( "%s is marked as private." % ana )
-                continue
-            if oana.checked==False:
-                continue
-            url=oana.url
-            if url==None:
-                continue
-            if url.find(", ")>-1:
-                url=url[:url.find(", ")-1]
-            f.write ( "[[%s|%s]]<<BR>>" % ( url, ana.replace("_"," ") ) )
+    createFeynGraph=True
+    if createFeynGraph:
+        print "name,constr=",name,constr
+        c=constr
+        p=c.find("]+")
+        if p>-1:
+            c=c[:p+1]
+        p=c.find("] +")
+        if p>-1:
+            c=c[:p+1]
+        c=c.replace("71.*","").replace("(","").replace(")","")
+        feynfile=name+"_feyn.png"
+        print "drawing",feynfile,"from",c
+        e=element.Element(c)
+        feynmanGraph.draw ( e, feynfile, straight=False, inparts=True, verbose=False )
+    if hasResultsColumn:
+        f.write ( "|| " )
+        for experiment in [ "CMS", "ATLAS" ]: 
+            # order by experiment
+            for ana in topo.analyses:
+                oana=browser.expAnalysis ( ana ) ## get the object
+                ## print "ana",ana,oana.experiment,oana.checked,oana.url
+                if oana.experiment != experiment:
+                    continue
+                ## print oana.name,"private",type(oana.private),oana.private
+                if oana.private:
+                    logger.warn ( "%s is marked as private." % ana )
+                    continue
+                if oana.checked==False:
+                    continue
+                url=oana.url
+                if url==None:
+                    continue
+                if url.find(", ")>-1:
+                    url=url[:url.find(", ")-1]
+                f.write ( "[[%s|%s]]<<BR>>" % ( url, ana.replace("_"," ") ) )
     f.write ( "||\n" )
 
 def topoCmp ( x, y ):
@@ -182,7 +210,7 @@ def topoCmp ( x, y ):
 def main():
     browser.verbosity='error'
     print "Base=",browser.base
-    topos = browser.allTopologies()
+    topos = browser.getTopologies()
     categories={}
     for toponame in topos:
         topo = browser.expTopology ( toponame )

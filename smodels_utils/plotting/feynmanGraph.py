@@ -2,7 +2,8 @@
 
 """
 .. module:: feynmanGraph
-        :synopsis: This unit contains two simple routines that draw feynman graphs.
+        :synopsis: This unit contains code to draw feynman graphs, in two 
+                   different styles: xkcd, and straight.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
@@ -18,20 +19,20 @@ def printParticle_ ( label ):
     label=label+"     "
     return label[:2]
 
-def segment ( p1, p2, spin, Bend=None ):
+def segment_ ( p1, p2, spin, Bend=None ):
     from pyfeyn.user import NamedLine
     l=NamedLine[spin](p1,p2)#
     if Bend: l.bend(Bend)
     return l
 
-def zero ():
+def zero_ ():
     """ a super simple convenience thing to mark the (0,0) coordinates """
     from pyfeyn.user import Vertex, CIRCLE, RED, BLUE
     c=Vertex(0.,0., mark=CIRCLE, fill=[ RED ] ) ## , radius=.01)
     c1=Vertex(1.0,0., mark=CIRCLE, fill=[ BLUE ] ) ## , radius=.01)
     c1=Vertex(0.,1., mark=CIRCLE, fill=[ BLUE ] ) ## , radius=.01)
 
-def connect ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=True, \
+def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=True, \
                             verbose=False, nspec=None, displace=None ):
     """ simple: draw a line from p1 to p2
 
@@ -40,10 +41,10 @@ def connect ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=Tr
             :param p2: end point
             :param straight: straight lines or xkcd style?
             :param label: add a label?
-            :param nspec: specify the number of segments, None is draw the number randomly
+            :param nspec: specify the number of segment_s, None is draw the number randomly
             :param displace: displace at fixed distance?
 
-            :returns: array of all line segments
+            :returns: array of all line segment_s
     """
     import math, random, os
     from pyfeyn.user import NamedLine, Fermion, Scalar, WHITE
@@ -82,13 +83,18 @@ def connect ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=Tr
     for i in range(n):
         br=b * (-1)**i
         if not bend: br=None
-        segs.append ( segment(points[i],points[i+1],spin, Bend=br ) )
+        segs.append ( segment_(points[i],points[i+1],spin, Bend=br ) )
         if verbose:
             print "[feynmanGraph.py] draw line from (%f,%f) to (%f,%f)" % ( points[i].x(), points[i].y(), points[i+1].x(), points[i+1].y() )
     if displace==None: displace=-.08
     # if label: segs[-1].addLabel ( label, pos=0.7, displace=displace )
     if label:
-        filename="%s/icons/%s.jpg" % ( SModelSTools.installDirectory(), label.replace(" ","").replace("_","").replace("$","").upper().replace("+","").replace("-","") )
+        lbl=label.replace(" ","").replace("_","").replace("$","").replace("+","").replace("-","")
+        if lbl == "l": lbl="smallL"
+        else:
+            lbl=lbl.upper()
+        filename="%s/icons/%s.jpg" % ( SModelSTools.installDirectory(), lbl )
+        #print "using",filename
         #print "filename=",filename
         if not os.path.exists ( filename ):
             print "[feynmanGraph.py] error:",filename,"not found."
@@ -150,7 +156,7 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
                 P1a.addParallelArrow( pos=.44,displace=-.0003,
                         length=unit.length(1.75*f), size=.0001)
             else:
-                P1a = connect ( c, vtx1, in1, straight=straight, label="P$_1$",
+                P1a = connect_ ( c, vtx1, in1, straight=straight, label="P$_1$",
                         displace=.42 )
 
                 for i in P1a:
@@ -165,7 +171,7 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
                 P2a.addParallelArrow( pos=.44,displace=-.0003,
                         length=unit.length(1.75*f), size=.0001)
             else:
-                P2a = connect ( c, vtx1, in2, straight=straight, label="P$_2$",
+                P2a = connect_ ( c, vtx1, in2, straight=straight, label="P$_2$",
                         displace=.3 )
                 for i in P2a:
                     a1=i.addParallelArrow( pos=.44,displace=.0003,
@@ -190,7 +196,8 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
                 # mark=None
                 v1=Vertex ( f*(nvtx+1),f*ct,mark=mark)
                 # f1 = Scalar    ( lastVertex,v1) ## .addLabel ( "x")
-                f1 = connect ( c, lastVertex,v1, straight=straight, spin="scalar", bend=True, verbose=False, nspec=3 )
+                f1 = connect_ ( c, lastVertex,v1, straight=straight, spin="scalar", 
+                                bend=True, verbose=False, nspec=3 )
                 if straight:
                     if nvtx==0:
                         b=.10
@@ -207,14 +214,14 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
                     ## print "branch=",branch
                     label=printParticle_ ( insertion )
                     ## ff=Fermion(v1,p).addLabel ( label )
-                    connect ( c, v1, p, straight=straight, label=label )
+                    connect_ ( c, v1, p, straight=straight, label=label )
 
             pl = Point ( nvtx+2,ct )
             # fl = Scalar ( lastVertex,pl ) ## .addLabel( "lsp" )
-            connect ( c, lastVertex,pl, straight=straight, spin="scalar" )
+            connect_ ( c, lastVertex,pl, straight=straight, spin="scalar" )
         #jpg = bitmap.jpegimage("%s/plots/blob1.jpg" % SModelS.installDirectory() )
         #fd.currentCanvas.insert(bitmap.bitmap(0-.5, 0.5-.5, jpg, compressmode=None))
-        # zero()
+        # zero_()
         pdffile=filename.replace("png","pdf")
         fd.draw( pdffile )
         if pdffile!=filename:
@@ -227,16 +234,39 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
 if __name__ == "__main__":
         import setPath, argparse, types
 
-        argparser = argparse.ArgumentParser(description='simple tool that is meant to draw lessagraphs, as a pdf feynman plot')
-        argparser.add_argument ( '-T', nargs='?', help='Tx name, will look up lhe file in ../regression/Tx_1.lhe. Will be overriden by the "--lhe" argument', type=types.StringType, default='T1' )
-        argparser.add_argument ( '-l', '--lhe', nargs='?', help='lhe file name, supplied directly. Takes precedence over "-T" argument.', type=types.StringType, default='' )
-        argparser.add_argument ( '-o', '--output', nargs='?', help='output file, can be pdf or eps or png (via convert)', type=types.StringType, default='out.pdf' )
-        argparser.add_argument ( '-s', '--straight', help='straight, not xkcd style', action='store_true' )
-        argparser.add_argument ( '-v', '--verbose', help='be verbose', action='store_true' )
+        argparser = argparse.ArgumentParser(description=
+                'simple tool that is meant to draw lessagraphs, '
+                'as a pdf feynman plot')
+        argparser.add_argument ( '-T', nargs='?', 
+                help='Tx name, will look up lhe file in ../regression/Tx_1.lhe. '
+                     'Will be overriden by the "--lhe" argument', 
+                     type=types.StringType, default='T1' )
+        argparser.add_argument ( '-l', '--lhe', nargs='?', 
+                      help='lhe file name, supplied directly. '
+                          'Takes precedence over "-T" argument.', 
+                      type=types.StringType, default='' )
+        argparser.add_argument ( '-c', '--constraint', nargs='?', 
+                      help='create graph from SModelS constraint '
+                          'Takes precedence over "-T" and "-l" arguments.', 
+                      type=types.StringType, default='' )
+        argparser.add_argument ( '-o', '--output', nargs='?', 
+                help= 'output file, can be pdf or eps or png (via convert)', 
+                type=types.StringType, default='out.pdf' )
+        argparser.add_argument ( '-s', '--straight', help='straight, not xkcd style', 
+                                 action='store_true' )
+        argparser.add_argument ( '-v', '--verbose', help='be verbose', 
+                                 action='store_true' )
         args=argparser.parse_args()
 
-        from smodels.theory import lheReader, lheDecomposer, crossSection
+        from smodels.theory import lheReader, lheDecomposer, crossSection, element
         import SModelSTools
+        import sys
+
+        if args.constraint!="":
+            E=element.Element ( args.constraint )
+            draw ( E, args.output, straight=args.straight, inparts=False,
+                   verbose=args.verbose )
+            sys.exit()
 
         filename="%s/lhe/%s_1.lhe" % (SModelSTools.installDirectory(), args.T )
         if args.lhe!="": filename=args.lhe
