@@ -1,0 +1,286 @@
+#!/usr/bin/env python
+
+"""
+.. module:: origDataObjects
+   :synopsis: Holds objects for reading of data given by experimentalists 
+
+.. moduleauthor:: Michael Traub <michael.traub@gmx.at>
+
+"""
+
+import sys
+import ROOT
+from helper import Locker
+
+class Orig(Locker):
+    
+    plotableAttr = []
+    internalAttr = ['name','path', 'fileType', 'objectName',\
+    'dataUrl', 'index']
+    allowedAttr =  plotableAttr + internalAttr
+    
+    def __init__(self,name):
+        
+        self.name = name
+        self.path = None
+        self.fileType = None
+        self.objectName = None
+        self.dataUrl = None
+        self.index = None
+
+    def setSource(self, path, fileType, objectName = None, index = None):
+        
+        self.path = path
+        self.fileType = fileType
+        self.objectName = objectName
+        self.index = index
+        
+    def txt(self):
+        
+        txtFile = open(self.path,'r')
+        content = txtFile.readlines()
+        txtFile.close
+        for line in content:
+            #print(line)
+            try:
+                values = line.split()
+            except:
+                Errors().txtFormat(self.path, 'Orig')
+            values = [value.strip() for value in values] 
+            try:
+                values = [float(value) for value in values]
+            except:
+               Errors().value(self.path) 
+            yield values  
+    
+    def root(self):
+        
+        if not isinstance(self.objectName, str):
+            Errors().rootObject(self.objectName,self.path)
+        rootFile = ROOT.TFile(self.path)
+        obj = rootFile.Get(self.objectName)
+        if not isinstance(obj,ROOT.TGraph):
+            obj.SetDirectory(0)
+        rootFile.Close()
+        return obj
+        
+    def cMacro(self):
+        
+        if not isinstance(self.objectName, str):
+            Errors().rootObject(self.objectName,self.path)
+        ROOT.gROOT.SetBatch()
+        ROOT.gROOT.ProcessLine(".x %s" %self.path)
+        try:
+            return eval("ROOT.%s" %self.objectName)
+        except:
+            Errors().noRootObject(self.objectName,self.path)
+
+    def canvas(self):
+        
+        if not isinstance(self.objectName, str):
+            Errors().rootObject(self.objectName, self.path)
+        if not isinstance(self.index, int):
+            Errors().index(self.index, self.path)
+        rootFile = ROOT.TFile(self.path, 'r')
+        canvas = rootFile.Get(self.objectName)
+        return canvas.GetListOfPrimitives()[self.index]
+    
+    def __nonzero__(self):
+        
+        if self.path and self.fileType:
+            return True
+        return False            
+ 
+ 
+class OrigLimit(Orig):
+    
+    plotableAttr = []
+    internalAttr = ['_unit', 'unit', ]
+    allowedAttr =  plotableAttr + internalAttr + Orig.allowedAttr
+    
+    def __init__(self,name):
+        
+        Orig.__init__(self,name)
+        self._unit = 'pb'
+        
+    @property
+    def unit(self):
+        
+        return self._unit
+        
+    @unit.setter
+    def unit(self, unitString):
+        
+        units = ['fb','pb']
+        if not unitString in units: Errors().unit(unitString)
+        self._unit = unitString
+        
+    def __iter__(self):
+        
+        for point in getattr(self,self.fileType)():
+            if self.unit == 'fb': point[-1] = point[-1]/1000.
+            yield point
+            
+    def txt(self):
+        
+        for point in Orig.txt(self):
+            if not len(point) == 3:
+                Errors().txtFormat(self.path, 'OrigLimit', 3)
+            yield point
+    
+    def root(self):
+        
+        limit = Orig.root(self)
+        for point in self._getPoints(limit):
+            yield point
+                
+    def cMacro(self):
+       
+        limit = Orig.cMacro(self)
+        for point in self._getPoints(limit):
+            yield point
+            
+    def canvas(self):
+        
+        limit = Orig.canvas(self)
+        for point in self._getPoints(limit):
+            yield point
+                
+    def _getPoints(self,limit):
+        
+        xAxis = limit.GetXaxis()
+        yAxis = limit.GetYaxis()
+        xRange = range(1,xAxis.GetNbins() + 1)
+        yRange = range(1,yAxis.GetNbins() + 1)
+        for xBin in xRange:
+            x = xAxis.GetBinCenter(xBin)
+            for yBin in yRange:
+                y = yAxis.GetBinCenter(yBin)
+                ul = limit.GetBinContent(xBin, yBin)
+                if ul == 0.: continue
+                yield [x, y, ul]
+        
+        
+        
+class OrigExclusion(Orig):
+    
+    plotableAttr = []
+    internalAttr = ['sort', 'reverse']
+    allowedAttr =  plotableAttr + internalAttr + Orig.allowedAttr
+    
+    def __init__(self,name):
+        
+        Orig.__init__(self,name)
+        self.sort = False
+        self.reverse = False
+        
+    def __iter__(self):
+        
+        points = []
+        for point in getattr(self,self.fileType)():
+            points.append(point)
+        if self.reverse:
+            points = reversed(points)
+        if self.sort:
+            points = sorted(points, key = lambda x: x[0])
+        for point in points:
+            yield point
+
+    def txt(self):
+        
+        for point in Orig.txt(self):
+            if not len(point) == 2:
+                Errors().txtFormat(self.path, 'OrigExclusion', 2)
+            yield point
+            
+    def root(self):
+        
+        limit = Orig.root(self)
+        for point in self._getPoints(limit):
+            yield point
+                
+    def cMacro(self):
+       
+        limit = Orig.cMacro(self)
+        for point in self._getPoints(limit):
+            yield point
+    
+    def canvas(self):
+        
+        limit = Orig.canvas(self)
+        for point in self._getPoints(limit):
+            yield point
+    
+    def _getPoints(self, graph):
+        
+        x, y = ROOT.Double(0.),ROOT.Double(0.)
+        for i in range(0, graph.GetN()):
+            graph.GetPoint(i, x, y)
+            yield [float(x), float(y)]
+        
+        
+class Errors(object):
+    
+    def __init__(self):
+        
+        self._starLine = '\n************************************\n'
+        
+    def txtFormat(self,filePath, className, columns = ''):
+        
+        m = self._starLine
+        m = m + 'wrong content in file: %s!!\n'  %filePath
+        m = m + 'file content for a txt file readable by %s shuold be:\n' %className
+        m = m + '%s columns with numbers diveded by a split() sign' %columns
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def value(self, filePath):
+        
+        m = self._starLine#
+        m = m + 'valueError in file: %s\n' %filePath
+        m = m + 'cant convert value to float'
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def rootObject(self, objectName, filePath):
+        
+        m = self._starLine#
+        m = m + 'objectError in file: %s\n' %filePath
+        m = m + 'objectName for root file should be of string type\n'
+        m = m + 'got %s' %objectName
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def noRootObject(self, objectName, filePath):
+        
+        m = self._starLine#
+        m = m + 'objectError in file: %s\n' %filePath
+        m = m + 'file contain no root object called %s\n' %objectName
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def index(self, index, filePath):
+        
+        m = self._starLine#
+        m = m + 'indexError in file: %s\n' %filePath
+        m = m + 'index for listOfPrimitives should be of integer type\n'
+        m = m + 'got %s' %objectName
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def unit(self, unitString):
+        
+        m = self._starLine#
+        m = m + "unit for limits must be 'fb' or 'pb'\n"
+        m = m + 'got %s' %unitString
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+
+        
