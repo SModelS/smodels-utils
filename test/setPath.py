@@ -12,9 +12,9 @@ def configure():
     base=base[:pos+1]
     sys.path.append ( base )
     sys.path.append ( "../" )
-    import SModelSTools
-    SModelSTools.addInstallDirectory()
-    SModelSTools.addSModelSPath()
+    import SModelSUtils
+    SModelSUtils.addInstallDirectory()
+    SModelSUtils.addSModelSPath()
     return base
 
 configure()
