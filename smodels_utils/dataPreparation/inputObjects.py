@@ -253,6 +253,8 @@ class TxName(MassPlane,KineamtikRegion):
         self._txDecay = TxDecay(self._name)
         if not self._txDecay:
             Errors().unknownTxName(self._name)
+        if self._txDecay.doubledDecays:
+            Errors().doubledDecay(self._name, self._txDecay.doubledDecays)
             
         if not self._txDecay.intermediateParticles:
             MassPlane.__init__(self,self._txDecay)
@@ -366,8 +368,20 @@ class Errors(object):
         
         m = self._starLine
         m = m + '%s is no known txName !!\n'  %txName
-        m = m + 'make sure there are no typos in the txName\n'
-        m = m + 'or add the txName to the decay Dict at helper/txNames.py'
+        m = m + 'make shure there are no typos in the txName\n'
+        m = m + 'or add the txName to the decay Dict at helper/txDecays.py'
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def doubledDecay(self, txName, doubledTxNames):
+    
+        m = self._starLine
+        m = m + 'decay for %s ambiguous !!\n' %txName
+        m = m + 'there are the following txNames with equal decays '
+        m = m + 'in decay Dict at helper/txDecays.py:\n'
+        m = m + '%s\n' %doubledTxNames
+        m = m + 'for every decay only one TxName alowed, please check'
         m = m + self._starLine
         print(m)
         sys.exit()
