@@ -10,7 +10,7 @@
 """
 
 import setPath
-from smodels_utils import SModelSTools
+# from smodels_utils import SModelSTools
 from smodels_utils.helper import databaseBrowser
 import logging
 logger=logging.getLogger(__name__)

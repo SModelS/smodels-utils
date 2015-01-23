@@ -49,7 +49,7 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
     import math, random, os
     from pyfeyn.user import NamedLine, Fermion, Scalar, WHITE
     from pyx import bitmap
-    import SModelSTools
+    import SModelSUtils
 
     if spin=="scalar" and not NamedLine.has_key ( spin ) and NamedLine.has_key ( "higgs" ):
         spin="higgs"
@@ -93,12 +93,12 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
         if lbl == "l": lbl="smallL"
         else:
             lbl=lbl.upper()
-        filename="%s/icons/%s.jpg" % ( SModelSTools.installDirectory(), lbl )
+        filename="%s/icons/%s.jpg" % ( SModelSUtils.installDirectory(), lbl )
         #print "using",filename
         #print "filename=",filename
         if not os.path.exists ( filename ):
             print "[feynmanGraph.py] error:",filename,"not found."
-            filename="%s/icons/questionmark.jpg" % SModelSTools.installDirectory()
+            filename="%s/icons/questionmark.jpg" % SModelSUtils.installDirectory()
         try:
             jpg = bitmap.jpegimage( filename )
         except Exception,e:
@@ -259,7 +259,7 @@ if __name__ == "__main__":
         args=argparser.parse_args()
 
         from smodels.theory import lheReader, lheDecomposer, crossSection, element
-        import SModelSTools
+        import SModelSUtils
         import sys
 
         if args.constraint!="":
@@ -268,7 +268,7 @@ if __name__ == "__main__":
                    verbose=args.verbose )
             sys.exit()
 
-        filename="%s/lhe/%s_1.lhe" % (SModelSTools.installDirectory(), args.T )
+        filename="%s/lhe/%s_1.lhe" % (SModelSUtils.installDirectory(), args.T )
         if args.lhe!="": filename=args.lhe
 
         reader = lheReader.LheReader( filename )

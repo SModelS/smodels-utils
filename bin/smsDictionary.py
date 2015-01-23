@@ -10,7 +10,7 @@
 """
 
 import setPath
-from smodels_utils import SModelSTools
+# from smodels_utils import SModelSTools
 from smodels_utils.helper import databaseBrowser
 from smodels_utils.plotting import feynmanGraph
 from smodels.theory import element

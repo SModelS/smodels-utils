@@ -9,9 +9,9 @@ def configure():
     import sys
     ret="../../"
     sys.path.append ( ret )
-    from smodels_utils import SModelSTools
-    SModelSTools.addInstallDirectory()
-    SModelSTools.addSModelSPath()
+    from smodels_utils import SModelSUtils
+    SModelSUtils.addInstallDirectory()
+    SModelSUtils.addSModelSPath()
     return ret
     
 

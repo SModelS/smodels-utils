@@ -18,10 +18,10 @@ def configure():
     ret= "../"
     sys.path.append ( ret )
     r+=(ret,)
-    from smodels_utils import SModelSTools
+    from smodels_utils import SModelSUtils
     
-    r+= ( SModelSTools.addInstallDirectory(), )
-    r+= ( SModelSTools.addSModelSPath(), )
+    r+= ( SModelSUtils.addInstallDirectory(), )
+    r+= ( SModelSUtils.addSModelSPath(), )
     return r
 
 configure()
