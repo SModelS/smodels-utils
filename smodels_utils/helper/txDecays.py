@@ -10,6 +10,7 @@
 """
 
 import logging
+import sys
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -31,6 +32,17 @@ class TxDecay(object):
     def __nonzero__(self):
         
         return self._name in decays
+        
+    @property
+    def doubledDecays(self):
+        
+        compareDict = {key: value for (key, value) in decays.iteritems()\
+        if not self.name == key}
+        doubled = []
+        for compTxName, compDecay in compareDict.iteritems():
+            if decays[self.name] == compDecay:
+                doubled.append(compTxName)
+        return doubled
 
     @property
     def name(self):
@@ -122,9 +134,11 @@ class TxDecay(object):
         
         """
         decayString = decayString.replace('anti' + key + ' ','#bar{' + value + '}')
+        decayString = decayString.replace('anti' + key + '* ','#bar{' + value + '}*')
         decayString = decayString.replace(key + ' ',value)
         decayString = decayString.replace(key + '_',value + '_')
         decayString = decayString.replace(key + '^',value + '^')
+        decayString = decayString.replace(key + '* ',value + '*')
         return decayString
         
     @property
@@ -221,51 +235,47 @@ decays = {
     'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T1bbbb': 'gluino  --> bottom antibottom  lsp ', 
     'T1tttt': 'gluino  --> top antitop  lsp ',
-    'T1ttttoff': 'gluino  --> top antitop  lsp ',
-    'T1gg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp )', 
-    'T1lg':'gluino  --> quark antiquark (neutralino_2  --> photon lsp |chargino^pm  --> w lsp )', 
-    'T1lnu':'gluino  --> quark antiquark (chargino^pm --> lepton^pm neutrino  lsp )', 
-    'T1lh':'gluino  --> quark antiquark  neutralino_2 neutralino_2  --> lepton^p lepton^m lsp ', 
+    'T1ttttoff': 'gluino  --> top* antitop*  lsp ',
+    #'T1gg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp )', 
+    #'T1lg':'gluino  --> quark antiquark (neutralino_2  --> photon lsp |chargino^pm  --> w lsp )', 
+    #'T1lnu':'gluino  --> quark antiquark (chargino^pm --> lepton^pm neutrino  lsp )', 
+    #'T1lh':'gluino  --> quark antiquark  neutralino_2 neutralino_2  --> lepton^p lepton^m lsp ', 
     'T2':'squark  --> quark lsp ',
-    'T2FVttcc': 'stop  --> charm lsp ',
-    'T2llnunubb': 'stop  --> lepton neutrino bottom lsp ',
+    #'T2FVttcc': 'stop  --> charm lsp ',
+    #'T2llnunubb': 'stop  --> lepton neutrino bottom lsp ',
     'T2bb':'sbottom  --> bottom lsp ', 
-    'T2bw':'stop  --> bottom w lsp ',
-    'T2ttww': 'sbottom  --> top w lsp ',
+    'T2ttWW': 'sbottom  --> top w lsp ',
     'T2bbWW': 'stop  --> bottom w lsp ',
-    'T2tt': 'stop  --> top lsp ', 
-    'T3w': 'gluino --> quark antiquark (chargino^pm_1 --> w lsp | lsp )' ,
-    'T3wb':'gluino  --> bottom antibottom (w )lsp ', 
-    'T3lh':'gluino  --> quark antiquark (neutralino_2 --> lepton^p lepton^m lsp | lsp )',
-    'T3tauh':'gluino  --> quark antiquark (neutralino_2 --> tau tau lsp | lsp )', 
+    'T2tt': 'stop  --> top lsp ',  
+    #'T3W': 'gluino --> quark antiquark (chargino^pm_1 --> w lsp | lsp )' ,
+    #'T3Wb':'gluino  --> bottom antibottom (w )lsp ', 
+    #'T3lh':'gluino  --> quark antiquark (neutralino_2 --> lepton^p lepton^m lsp | lsp )',
+    #'T3tauh':'gluino  --> quark antiquark (neutralino_2 --> tau tau lsp | lsp )', 
     'T5WW':'gluino  --> quark antiquark (chargino^pm_1 --> w lsp )',
-    'T5wg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp | chargino^pm_1 --> w lsp )',
+    #'T5Wg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp | chargino^pm_1 --> w lsp )',
     'T5WH':'gluino  --> quark antiquark (neutralino_2 --> higgs lsp | chargino^pm_1 --> w lsp )',
-    'T5gg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp )',
-    'T5lnu':'gluino  --> quark antiquark (chargino^pm --> lepton^pm neutrino lsp )',
-    'T5ZZ':'gluino  --> quark antiquark (neutralino_2 --> z lsp )',
-    'T5ZZInc':'neutralino_2 --> z lsp ',
-    'T5zzgmsb':'gluino --> quark antiquark (neutralino_2 --> z lsp )', 
+    #'T5gg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp )',
+    #'T5lnu':'gluino  --> quark antiquark (chargino^pm --> lepton^pm neutrino lsp )',
+    #'T5ZZ':'gluino  --> quark antiquark (neutralino_2 --> z lsp )',
+    #'T5ZZInc':'neutralino_2 --> z lsp ',
+    #'T5ZZgmsb':'gluino --> quark antiquark (neutralino_2 --> z lsp )', 
     'T5tttt':'gluino  --> top (stop --> top antitop lsp )',
-    'T6ttww': 'sbottom  --> top (chargino^pm_1 --> w lsp )',
+    'T6ttWW': 'sbottom  --> top (chargino^pm_1 --> w lsp )',
     'T6WW': 'squark  --> quark (chargino^pm_1 --> w lsp )',
-    'T6ttHH': 'stop  --> top higgs lsp ',
+    'T6HHtt': 'stop  --> top higgs lsp ',
     'T6ZZtt': 'stop_2  --> z (stop_1 --> top lsp ) ',
     'T6bbWW':'stop  --> bottom (chargino^p --> w lsp )',
-    'T6bbWWoff':'stop  --> bottom (chargino^p --> w lsp )',
+    'T6bbWWoff':'stop  --> bottom (chargino^p --> w* lsp )',
     'T6bbZZ':'sbottom  -->  bottom (neutralino_2 --> z lsp )',
-    'T7btW':'gluino  --> bottom top w lsp ',
     'T7btbtWW':'gluino  --> bottom (sbottom --> top (chargino^pm --> w lsp ))',
     'TGQ':'gluino squark --> quark antiquark lsp | quark lsp ',
-    'TChizz':'neutralino_3 neutralino_2  --> z z lsp lsp ',
-    'TChiSlep':'neutralino_2 chargino^pm_1  --> lepton lepton lepton neutrino lsp lsp ',
-    'TChiNuSlep':'neutralino_2 chargino^pm_1  --> lepton lepton lepton neutrino lsp lsp ',
-    'TChizz':'neutralino_3 neutralino_2  --> z z lsp lsp ',
-    'TChiwz':'chargino^pm neutralino_2  --> w z lsp lsp ',
-    'TChiWZon':'chargino^pm neutralino_2  --> w z lsp lsp ',
+    'TChiZZ':'neutralino_3 neutralino_2  --> z z lsp lsp ',
+    #'TChiSlep':'neutralino_2 chargino^pm_1  --> lepton lepton lepton neutrino lsp lsp ',
+    #'TChiNuSlep':'neutralino_2 chargino^pm_1  --> lepton lepton lepton neutrino lsp lsp ',
+    'TChiWZ':'chargino^pm neutralino_2  --> w z lsp lsp ',
+    'TChiWZoff':'chargino^pm neutralino_2  --> w* z* lsp lsp ',
     'TChiWH':'chargino^pm neutralino_2  --> w higgs lsp lsp ',
     'TChiWW':'chargino^pm  --> w lsp ',
-    'TChiWZoff':'chargino^pm neutralino_2  --> w z lsp lsp ',
     'TChiChipmSlepSlep':'neutralino_2 chargino^pm_1  --> lepton (slepton --> lepton lsp ) | neutrino (slepton --> lepton lsp )',
     'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tau (stau --> tau lsp ) | neutrino (stau --> tau lsp )', 
     'TChiChipmSlepL':[
@@ -283,7 +293,6 @@ decays = {
     ], 
     'TChiChipmHW':'neutralino_2 chargino^pm_1  --> w lsp higgs lsp ', 
     'TChiChipmSlepStau':'neutralino_2 chargino^pm_1  --> Lepton (slepton --> Lepton lsp ) | neutrino (stau --> tau lsp )', 
-    'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tau (stau --> tau lsp ) | neutrino (stau --> tau lsp ) ',
     'TChipChimSlepSnu':[
     'chargino^pm chargino^mp  --> Lepton (sneutrino --> neutrino lsp ) | neutrino (slepton --> Lepton lsp )',
     'chargino^pm chargino^mp  --> Lepton (sneutrino --> neutrino lsp ) | Lepton (sneutrino --> neutrino lsp )',
