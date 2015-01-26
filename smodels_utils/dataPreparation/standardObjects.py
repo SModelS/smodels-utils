@@ -30,6 +30,7 @@ class StandardLimits(object):
         self.kinConstraints = self._getKinConstraints(txNameObj)
         self.limits = []
         self.dictName = dictName
+
         
     @property
     def txName(self):
@@ -66,7 +67,7 @@ class StandardLimits(object):
         for x,y,limit in origLimitHisto:
             massPoints = massPlaneObj.origPlot.getParticleMasses(x,y)
             massArray = [massPoints,massPoints]
-            self.limits.append([massArray, limit])
+            self._appendLimits(massArray, limit)
             if not self.kinConstraints: continue
 
             for region in self.txNameObj.kinematikRegions:
@@ -77,7 +78,23 @@ class StandardLimits(object):
                     setattr(massPlaneObj, region.regionName, True)
                     if not region.topoExtension in self.topoExtensions:
                         self.topoExtensions.append(region.topoExtension)
-                        
+    
+    def _appendLimits(self, massArray, limit):
+        
+        inLimit = False
+        for point in self.limits:
+            if massArray ==  point[0]:
+                if abs(limit-point[1]) > 0.0001:
+                    Errors().limitDifference\
+                    (massArray, point[1], limit)
+                inLimit = True
+                print 'check: %s' %massArray
+                break
+        if not inLimit:
+            self.limits.append([massArray, limit])
+                
+       
+    
     def _getPreDefineRegions(self, massPlaneObj):
         
         preDefineRegions = []
@@ -228,6 +245,8 @@ class StandardInfo(object):
     
     def __init__(self,metaInfo, path):
         
+        self.fieldAssign = ': '
+        self.txNameAssign = ' -> '
         self.metaInfo = self.mataInfoFormat(metaInfo)
         self.path = path
         self.txNameInfo = []
@@ -265,15 +284,15 @@ class StandardInfo(object):
                 if answer == 'n': return lastUpdate
         today = date.today()
         today = '%s/%s/%s\n' %(today.year, today.month, today.day)
-        return 'lastUpdate: %s' %today
+        return 'lastUpdate%s%s' %(self.fieldAssign, today)
         
     def mataInfoFormat(self,metaInfo):
         
         string =''
         for attr in metaInfo.plotableAttr:
             if not hasattr(metaInfo, attr): continue
-            string = '%s%s: %s\n' \
-            %(string, attr, getattr(metaInfo, attr))
+            string = '%s%s%s%s\n' \
+            %(string, attr, self.fieldAssign, getattr(metaInfo, attr))
         #for attr in plottingList:
             
         return string
@@ -298,8 +317,10 @@ class StandardInfo(object):
                 if not getattr(plane, region.regionName): continue
                 if regionName != region.regionName:
                     regionName = region.regionName
-                    self.axes = '%saxes: %s --> %s' %(self.axes,\
-                    (txNameObj.name + region.topoExtension), plane.origPlot)
+                    self.axes = '%saxes%s%s%s%s' %(self.axes,\
+                    self.fieldAssign, \
+                    (txNameObj.name + region.topoExtension),\
+                    self.txNameAssign, plane.origPlot)
                     continue
                 self.axes = '%s;%s' %(self.axes, plane.origPlot)
             self.axes += '\n'
@@ -320,8 +341,8 @@ class StandardInfo(object):
                 Errors().required(txNameObj.name, region, attr)
             return
         selfValue = self.txNameInfo[index]
-        selfValue = '%s%s: %s -> %s\n'\
-        %(selfValue, attr, txName, value)
+        selfValue = '%s%s%s%s%s%s\n'\
+        %(selfValue, attr, self.fieldAssign, txName, self.txNameAssign, value)
         self.txNameInfo[index] = selfValue
 
         
@@ -385,5 +406,11 @@ class Errors(object):
         print(m)
         sys.exit()
         
+    def limitDifference(self, massArray, oldLimit, limit):
         
+        m = '------------------------\n'
+        m = m + "WARNING: massPoint: %s allrady in limits \n" %massArray
+        m = m + "but differ in Upperlimit: %s v.s. %s" %(oldLimit, limit)
+        m = m + '\n------------------------'
+        print(m)
              

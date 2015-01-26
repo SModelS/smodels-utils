@@ -29,7 +29,7 @@ class OrigPlot(object):
     @classmethod
     def fromString(cls, string):
         
-        equations = string.split(' ')
+        equations = string.split('_')
         if len(equations) > 3:
             logger.error('Current implementation only work for decays with max.' + \
             '3 particles, got %s particles' %len(equations))
@@ -90,7 +90,13 @@ class OrigPlot(object):
         self._xyFunction = lambdify([mother,inter,lsp],[xy[x],xy[y]],'math')
         
         
-    def getXYValues(self,motherMass, interMass, lspMass):
+    def getXYValues(self,massArray):
+        
+        motherMass = massArray[0]
+        interMass = 0
+        if len(massArray) == 3: interMass = massArray[1]
+        lspMass = massArray[1]
+        if len(massArray) == 3: lspMass = massArray[2]
         
         if not '_xyFunction' in self.__dict__:
             self._setXYFunction()
