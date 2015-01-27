@@ -11,9 +11,9 @@
 import sys
 import os
 import ROOT
-print sys.path
 from smodels_utils.helper.txDecays import TxDecay
-from smodels_utils.dataPreparation.origDataObjects import OrigLimit, OrigExclusion
+from smodels_utils.dataPreparation.origDataObjects import\
+OrigLimit, OrigExclusion
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
 from smodels_utils.dataPreparation.helper import Locker, ObjectList

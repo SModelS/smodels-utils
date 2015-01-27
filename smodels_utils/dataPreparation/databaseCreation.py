@@ -12,8 +12,8 @@
 import sys
 import os
 import ROOT
-from standardObjects import StandardLimits, StandardExclusions, StandardTWiki, StandardInfo
-
+from smodels_utils.dataPreparation.standardObjects import\
+StandardLimits, StandardExclusions, StandardTWiki, StandardInfo
 import logging
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
