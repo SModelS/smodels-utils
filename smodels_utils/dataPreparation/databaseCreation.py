@@ -9,20 +9,18 @@
 """   
 
 
-import ROOT, sys, logging, os
-#sys.path.append("/home/michi/Documents/Physik/Diplomarbeit_Hephy/smodels-tools/smodels_tools/helper")
-#from txNames import TxDecay
-#from origDataObjects import OrigLimit, OrigExclusion
-#from origPlotObjects import OrigPlot
-#from inputObjects import MetaInfo
-from standardObjects import StandardLimits, StandardExclusions, StandardTWiki, StandardInfo
+import sys
+import os
+import ROOT
+from smodels_utils.dataPreparation.standardObjects import\
+StandardLimits, StandardExclusions, StandardTWiki, StandardInfo
+import logging
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
-
 
            
         

@@ -9,8 +9,9 @@
 """
 
 import sys
+import os
 import ROOT
-from helper import Locker
+from smodels_utils.dataPreparation.helper import Locker
 
 class Orig(Locker):
     

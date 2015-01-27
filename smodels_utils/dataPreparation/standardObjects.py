@@ -88,7 +88,6 @@ class StandardLimits(object):
                     Errors().limitDifference\
                     (massArray, point[1], limit)
                 inLimit = True
-                print 'check: %s' %massArray
                 break
         if not inLimit:
             self.limits.append([massArray, limit])
