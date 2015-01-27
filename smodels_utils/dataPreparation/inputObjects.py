@@ -8,14 +8,17 @@
 
 """   
 
-import ROOT, sys, logging, os
-sys.path.append("/home/michi/Documents/Physik/Diplomarbeit_Hephy/smodels-tools/smodels_utils/helper")
-from txDecays import TxDecay
-from origDataObjects import OrigLimit, OrigExclusion
-from origPlotObjects import OrigPlot
-from databaseCreation import databaseCreator
-from helper import Locker, ObjectList
-#from standardObjects import StandardLimits, StandardExclusions, StandardTWiki
+import sys
+import os
+import ROOT
+print sys.path
+from smodels_utils.helper.txDecays import TxDecay
+from smodels_utils.dataPreparation.origDataObjects import OrigLimit, OrigExclusion
+from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
+from smodels_utils.dataPreparation.databaseCreation import databaseCreator
+from smodels_utils.dataPreparation.helper import Locker, ObjectList
+
+import logging
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
