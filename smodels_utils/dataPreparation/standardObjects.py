@@ -18,17 +18,103 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
+
+class VertexChecker(object):
+
+    def __init__(self, onShellConstraints):
+        
+        self.kinConstraints = self._getKinConstraints(onShellConstraints)
+        
+    def getOffShellVertices(self, massArray_1, massArray_2):
+        
+        offShellVertices = []
+        massArray = [massArray_1, massArray_2]
+        massDeltaArray = [[],[]]
+        for i, branch in enumerate(massArray):
+            for j, mass in enumerate(branch):
+                if j == 0: continue
+                massDelta =branch[j-1] - mass
+                massDeltaArray[i].append(massDelta)
+                
+        for kinConstraint in self.kinConstraints:
+            for i, branch in enumerate(kinConstraint):
+                if len(branch) != len(massDeltaArray[i]):
+                    Errors().decayChain(self.txName,\
+                    len(branch),len(massDeltaArray[i]))
+                for j, massDelta in enumerate(branch):
+                    if massDeltaArray[i][j] <= massDelta:
+                        if not (i,j) in offShellVertices:
+                            offShellVertices.append((i,j))
+        return offShellVertices
+        
+    def _getKinConstraints(self, onShellConstraints):
+        
+        massDict = {'Z': 86., 'W': 76.,'t': 169.,'h': 118}
+        startString = '[[['
+        endString = ']]]'
+        kinConstraints = []
+        constraint = onShellConstraints
+        
+        if constraint == 'not yet assigned':
+            for region in txNameObj.kinematikRegions:
+                if region: self.topoExtensions.append(region.topoExtension)
+            return None
+        
+        for i in range(len(constraint)):
+            if constraint[i:i + len(startString)] == startString:
+                start = i
+            if constraint[i:i + len(endString)] == endString:
+                end = i + len(endString)
+                kinConstraints.append(constraint[start:end])
+        try:
+            kinConstraints = \
+            [eval(constraint) for constraint in kinConstraints]
+        except:
+            Errors().constraint(self.txName, constraint)
+        for i, constraint in enumerate(kinConstraints):
+            for j, branch  in enumerate(constraint):
+                for k, vertex in enumerate(branch):
+                    massSum = 0.
+                    for particle in vertex:
+                        particle = particle.replace('+','')
+                        particle = particle.replace('-','')
+                        if particle in massDict:
+                            massSum = massSum + massDict[particle]
+                    kinConstraints[i][j][k] = massSum
+        return kinConstraints
+        
+        
+class StandardLimits(list):
+    
+    def append(self, massArray_1, massArray_2, limit):
+        
+        massArray = [massArray_1, massArray_2]
+        inLimit = False
+        for point in self:
+            if massArray ==  point[0]:
+                if abs(limit-point[1]) > 0.0001:
+                    Errors().limitDifference\
+                    (massArray, point[1], limit)
+                inLimit = True
+                print 'check: %s' %point
+                break
+        if not inLimit:
+            list.append(self, [massArray, limit])
+        
+        
+        
+    
   
                     
-class StandardLimits(object):
+class OldStandardLimits(object):
     
     def __init__(self,txNameObj,limitName, dictName):
         
         self.txNameObj = txNameObj
         self.limitName = limitName
         self.topoExtensions = []
-        self.kinConstraints = self._getKinConstraints(txNameObj)
-        self.limits = []
+        self.vertexChecker = VertexChecker(txNameObj.constraint)
+        self.limits = StandardLimits()
         self.dictName = dictName
 
         
@@ -58,109 +144,40 @@ class StandardLimits(object):
         if not origLimitHisto: 
                 if not self.limitName == 'limit': return
                 for region in self.txNameObj.kinematikRegions:
-                    setattr(massPlaneObj, region.regionName, False)
+                    setattr(massPlaneObj, region.name, False)
                 return    
 
-        if self.kinConstraints:
+        if self.vertexChecker.kinConstraints:
             preDefineRegions = self._getPreDefineRegions(massPlaneObj)
                 
         for x,y,limit in origLimitHisto:
             massPoints = massPlaneObj.origPlot.getParticleMasses(x,y)
             massArray = [massPoints,massPoints]
-            self._appendLimits(massArray, limit)
-            if not self.kinConstraints: continue
+            self.limits.append(massPoints, massPoints, limit)
+            if not self.vertexChecker.kinConstraints: continue
 
             for region in self.txNameObj.kinematikRegions:
                 if not region.topoExtension in preDefineRegions:
                     continue
-                offShellVertices = self._getoffShellVertices(massArray)
+                offShellVertices = \
+                self.vertexChecker.getOffShellVertices(massPoints, massPoints)
                 if region.checkMassArray(offShellVertices, massArray):
-                    setattr(massPlaneObj, region.regionName, True)
+                    setattr(massPlaneObj, region.name, True)
                     if not region.topoExtension in self.topoExtensions:
                         self.topoExtensions.append(region.topoExtension)
     
-    def _appendLimits(self, massArray, limit):
-        
-        inLimit = False
-        for point in self.limits:
-            if massArray ==  point[0]:
-                if abs(limit-point[1]) > 0.0001:
-                    Errors().limitDifference\
-                    (massArray, point[1], limit)
-                inLimit = True
-                break
-        if not inLimit:
-            self.limits.append([massArray, limit])
-                
-       
     
     def _getPreDefineRegions(self, massPlaneObj):
         
         preDefineRegions = []
         for region in self.txNameObj.kinematikRegions:
             extension = region.topoExtension
-            value = getattr(massPlaneObj, region.regionName)
+            value = getattr(massPlaneObj, region.name)
             if value: preDefineRegions.append(extension)
-            setattr(massPlaneObj, region.regionName, False)
+            setattr(massPlaneObj, region.name, False)
         return preDefineRegions
         
-    def _getoffShellVertices(self, massArray):
-        
-        offShellVertices = []
-        massDeltaArray = [[],[]]
-        for i, branch in enumerate(massArray):
-            for j, mass in enumerate(branch):
-                if j == 0: continue
-                massDelta =branch[j-1] - mass
-                massDeltaArray[i].append(massDelta)
-                
-        for kinConstraint in self.kinConstraints:
-            for i, branch in enumerate(kinConstraint):
-                if len(branch) != len(massDeltaArray[i]):
-                    Errors().decayChain(self.txName,\
-                    len(branch),len(massDeltaArray[i]))
-                for j, massDelta in enumerate(branch):
-                    if massDeltaArray[i][j] <= massDelta:
-                        if not (i,j) in offShellVertices:
-                            offShellVertices.append((i,j))
-        return offShellVertices
-        
-        
-    def _getKinConstraints(self, txNameObj):
-        
-        massDict = {'Z': 86., 'W': 76.,'t': 169.,'h': 118}
-        startString = '[[['
-        endString = ']]]'
-        kinConstraints = []
-        constraint = txNameObj.constraint
-        
-        if constraint == 'not yet assigned':
-            for region in txNameObj.kinematikRegions:
-                if region: self.topoExtensions.append(region.topoExtension)
-            return None
-        
-        for i in range(len(constraint)):
-            if constraint[i:i + len(startString)] == startString:
-                start = i
-            if constraint[i:i + len(endString)] == endString:
-                end = i + len(endString)
-                kinConstraints.append(constraint[start:end])
-        try:
-            kinConstraints = \
-            [eval(constraint) for constraint in kinConstraints]
-        except:
-            Errors().constraint(self.txName, constraint)
-        for i, constraint in enumerate(kinConstraints):
-            for j, branch  in enumerate(constraint):
-                for k, vertex in enumerate(branch):
-                    massSum = 0.
-                    for particle in vertex:
-                        particle = particle.replace('+','')
-                        particle = particle.replace('-','')
-                        if particle in massDict:
-                            massSum = massSum + massDict[particle]
-                    kinConstraints[i][j][k] = massSum
-        return kinConstraints
+
         
 class StandardExclusions(list):
     
@@ -249,9 +266,9 @@ class StandardInfo(object):
         self.metaInfo = self.mataInfoFormat(metaInfo)
         self.path = path
         self.txNameInfo = []
-        for attr in inputObjects.KineamtikRegion.plotableAttr:
+        for attr in inputObjects.KineamtikRegion.infoAttr:
             self.txNameInfo.append('')
-        for attr in inputObjects.TxName.plotableAttr:
+        for attr in inputObjects.TxName.infoAttr:
             self.txNameInfo.append('')
         self.axes = ''
         self.publisheddata = True
@@ -288,7 +305,7 @@ class StandardInfo(object):
     def mataInfoFormat(self,metaInfo):
         
         string =''
-        for attr in metaInfo.plotableAttr:
+        for attr in metaInfo.infoAttr:
             if not hasattr(metaInfo, attr): continue
             string = '%s%s%s%s\n' \
             %(string, attr, self.fieldAssign, getattr(metaInfo, attr))
@@ -304,18 +321,18 @@ class StandardInfo(object):
         #    self._addTxNameInfo(txNameObj, 'condition', True)
         regionName = None
         for region in txNameObj.kinematikRegions:
-            if not getattr(txNameObj, region.regionName): continue
+            if not getattr(txNameObj, region.name): continue
             for i, attr in \
-            enumerate(inputObjects.KineamtikRegion.plotableAttr):
+            enumerate(inputObjects.KineamtikRegion.infoAttr):
                 
                 self._addTxNameInfo(txNameObj, region,region, attr, i)
                 
             for plane in txNameObj.planes:
                 if plane.limit and not plane.limit.dataUrl: 
                     self.publisheddata = False
-                if not getattr(plane, region.regionName): continue
-                if regionName != region.regionName:
-                    regionName = region.regionName
+                if not getattr(plane, region.name): continue
+                if regionName != region.name:
+                    regionName = region.name
                     self.axes = '%saxes%s%s%s%s' %(self.axes,\
                     self.fieldAssign, \
                     (txNameObj.name + region.topoExtension),\
@@ -325,7 +342,7 @@ class StandardInfo(object):
             self.axes += '\n'
                 
                     
-            for j, attr in enumerate(inputObjects.TxName.plotableAttr):
+            for j, attr in enumerate(inputObjects.TxName.infoAttr):
                 self._addTxNameInfo(txNameObj, region, txNameObj, attr, j+i+1)
             
     def _addTxNameInfo(self, txNameObj, region, obj, attr, index):
@@ -397,7 +414,7 @@ class Errors(object):
     def required(self, txName, kinObj, attr):
         
         m = self._starLine
-        m = m + "there is an %s-region for %s " %(kinObj.regionName, txName) 
+        m = m + "there is an %s-region for %s " %(kinObj.name, txName) 
         m = m + "but no %s for this region\n" %attr
         m = m + "use txName.%s.%s " %(kinObj.topoExtension, attr)
         m = m + "to set %s" %attr

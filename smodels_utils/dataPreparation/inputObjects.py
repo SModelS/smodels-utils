@@ -11,6 +11,7 @@
 import sys
 import os
 import ROOT
+from copy import deepcopy
 from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.origDataObjects import\
 OrigLimit, OrigExclusion
@@ -29,11 +30,10 @@ logger.setLevel(level=logging.ERROR)
 
 class MetaInfo(Locker):
     
-    plotableAttr = [ 'sqrts', 'lumi', 'id', 'prettyname', 'url', 'arxiv',\
+    infoAttr = [ 'sqrts', 'lumi', 'id', 'prettyname', 'url', 'arxiv',\
     'publication', 'superseded_by','supersedes', 'comment', 'private',\
     'implimented_by']
     internalAttr = ['_sqrts', '_lumi']
-    allowedAttr =  plotableAttr + internalAttr
     
     def __new__(cls, ID):
         
@@ -94,14 +94,13 @@ class MetaInfo(Locker):
             
 class KineamtikRegion(Locker):
     
-    plotableAttr = ['condition', 'fuzzycondition', 'constraint']
-    internalAttr = ['regionName', 'functions', 'topoExtension',\
+    infoAttr = ['condition', 'fuzzycondition', 'constraint']
+    internalAttr = ['name', 'functions', 'topoExtension',\
     'regionExist']
-    allowedAttr =  plotableAttr + internalAttr
     
     def __init__(self,name,topoExtension, *conditionFunctions):
         
-        self.regionName = name
+        self.name = name
         self.functions = conditionFunctions
         self.topoExtension = topoExtension
         self.regionExist = True
@@ -120,10 +119,9 @@ class KineamtikRegion(Locker):
              
 class MassPlane(Locker):
     
-    plotableAttr = []
+    infoAttr = []
     internalAttr = ['_txDecay', 'origPlot', 'origLimits', 'origExclusions',\
     'figure', 'figureUrl', 'dataUrl', 'histoDataUrl', 'exclusionDataUrl']
-    allowedAttr =  plotableAttr + internalAttr
     
     def __init__(self,txDecay):
         self._txDecay = txDecay
@@ -233,13 +231,12 @@ class MassPlane(Locker):
   
 
 
-class TxName(MassPlane,KineamtikRegion):
+class TxName(MassPlane):
     
-    plotableAttr = ['branchcondition', 'checked']
+    infoAttr = ['branchcondition', 'checked'] + MassPlane.infoAttr
     internalAttr = ['_name', 'name', '_txDecay', '_kinematikRegions','_planes',\
-    '_branchcondition', 'onShell', 'offShell']
-    allowedAttr =  plotableAttr + internalAttr + MassPlane.allowedAttr +\
-    KineamtikRegion.allowedAttr
+    '_branchcondition', 'onShell', 'offShell', 'constraint',\
+    'condition', 'fuzzycondition'] + MassPlane.internalAttr
     
     def __new__(cls,txName):
         
@@ -262,24 +259,31 @@ class TxName(MassPlane,KineamtikRegion):
         if not self._txDecay.intermediateParticles:
             MassPlane.__init__(self,self._txDecay)
             
-        KineamtikRegion.__init__(self,'onShell','',\
-        lambda offVertices: True if not offVertices else False)
-        self._kinematikRegions = [\
-        KineamtikRegion('offShell','off', \
-        lambda offVertices: True if offVertices else False)]
-        
+        self._kinematikRegions = self._getKinRegions()
         self._planes = []
         self._branchcondition = 'equal Branches'
 
+    def _getKinRegions(self):
         
+        kinRegions = ObjectList('name')
+        onShellFunc = lambda offVertices: True if not offVertices else False
+        onShellObj = KineamtikRegion('onShell','', onShellFunc)
+        kinRegions.append(onShellObj)
+        offShellFunc = lambda offVertices: True if offVertices else False
+        offShellObj = KineamtikRegion('offShell','off', offShellFunc)
+        kinRegions.append(offShellObj)
+        return kinRegions
+        
+    
     def addMassPlane(self, motherMass = None, interMass = None, \
     lspMass = None):
 
         massPlane = MassPlane.additional(self._txDecay,\
         motherMass = motherMass, interMass = interMass, lspMass = lspMass)
         for kinRegion in self.kinematikRegions:
-            MassPlane.allowedAttr.append(kinRegion.regionName)
-            setattr(massPlane, kinRegion.regionName, kinRegion.regionExist)
+            if not kinRegion.name in MassPlane.internalAttr:
+                MassPlane.internalAttr.append(kinRegion.name)
+            setattr(massPlane, kinRegion.name, kinRegion.regionExist)
         self._planes.append(massPlane)
         return massPlane
     
@@ -294,6 +298,36 @@ class TxName(MassPlane,KineamtikRegion):
         if not value == 'equal Branches':
             Errors().branchcondition(self.name, value)
         self._branchcondition = value
+            
+    @property
+    def constraint(self):
+        
+        return self.kinematikRegions['onShell'].constraint
+        
+    @constraint.setter
+    def constraint(self, value):
+
+        self.kinematikRegions['onShell'].constraint  = value
+        
+    @property
+    def condition(self):
+        
+        return self.kinematikRegions['onShell'].condition
+        
+    @condition.setter
+    def condition(self, value):
+        
+        self.kinematikRegions['onShell'].condition  = value
+        
+    @property
+    def fuzzycondition(self):
+        
+        return self.kinematikRegions['onShell'].fuzzycondition
+        
+    @fuzzycondition.setter
+    def fuzzycondition(self, value):
+        
+        self.kinematikRegions['onShell'].fuzzycondition  = value
     
     @property
     def name(self):
@@ -310,10 +344,7 @@ class TxName(MassPlane,KineamtikRegion):
     @property
     def kinematikRegions(self):
         
-        kinRegions = ObjectList('regionName')
-        kinRegions.append(self)
-        kinRegions.extend(self._kinematikRegions)
-        return kinRegions
+        return self._kinematikRegions
         
     @property
     def onShell(self):
@@ -341,24 +372,24 @@ class TxName(MassPlane,KineamtikRegion):
         
         self._kinematikRegionSetter('offShell', value)
         
-    def _kinematikRegionGetter(self, regionName):
+    def _kinematikRegionGetter(self, name):
 
         if not self._txDecay.intermediateParticles:
-            return self.kinematikRegions[regionName].regionExist
+            return self.kinematikRegions[name].regionExist
         for plane in self.planes:
             if plane == self: continue
-            if getattr(plane, regionName): return True
+            if getattr(plane, name): return True
         return False
         
-    def _kinematikRegionSetter(self, regionName, value):
+    def _kinematikRegionSetter(self, name, value):
         
         if not isinstance(value, bool):
-            Errors().kinRegionSetter(self.name, regionName, value)
+            Errors().kinRegionSetter(self.name, name, value)
         if not self._txDecay.intermediateParticles:
-            self.kinematikRegions[regionName].regionExist = value
+            self.kinematikRegions[name].regionExist = value
         for plane in self.planes:
             if plane == self: continue
-            setattr(plane, regionName, value)
+            setattr(plane, name, value)
     
 
 class Errors(object):
@@ -465,12 +496,12 @@ class Errors(object):
         print(m)
         sys.exit()
         
-    def kinRegionSetter(self, txName, regionName, value):
+    def kinRegionSetter(self, txName, name, value):
     
         m = self._starLine#
         m = m + "in txName %s'\n" %txName
         m = m + 'setter for propertsy %s must be of bool type\n'\
-        %(regionName)
+        %(name)
         m = m + 'got: %s' %value
         m = m + self._starLine
         print(m)

@@ -8,6 +8,7 @@
 
 """
 import logging
+import sys
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -23,6 +24,10 @@ class Locker(object):
             object.__setattr__(self, name, attr)
             return
         Errors().attr(name, type(self))
+        
+    @property
+    def allowedAttr(self):
+        return self.infoAttr + self.internalAttr
         
         
 class ObjectList(list):

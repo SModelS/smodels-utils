@@ -13,7 +13,7 @@ import sys
 import os
 import ROOT
 from smodels_utils.dataPreparation.standardObjects import\
-StandardLimits, StandardExclusions, StandardTWiki, StandardInfo
+OldStandardLimits, StandardExclusions, StandardTWiki, StandardInfo
 import logging
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -51,9 +51,9 @@ class DatabaseCreator(list):
             
             print '\nreading: %s' %txName.name
             
-            limits = StandardLimits(txName, 'limit',\
+            limits = OldStandardLimits(txName, 'limit',\
             self.limitsDictName)
-            expectedlimits = StandardLimits(txName, 'expectedlimit', \
+            expectedlimits = OldStandardLimits(txName, 'expectedlimit', \
             self.expectedlimitsDictName)
             exclusions = StandardExclusions(txName)
             for plane in txName.planes:

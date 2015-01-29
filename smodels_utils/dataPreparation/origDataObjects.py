@@ -15,10 +15,9 @@ from smodels_utils.dataPreparation.helper import Locker
 
 class Orig(Locker):
     
-    plotableAttr = []
+    infoAttr = []
     internalAttr = ['name','path', 'fileType', 'objectName',\
     'dataUrl', 'index']
-    allowedAttr =  plotableAttr + internalAttr
     
     def __init__(self,name):
         
@@ -95,9 +94,8 @@ class Orig(Locker):
  
 class OrigLimit(Orig):
     
-    plotableAttr = []
-    internalAttr = ['_unit', 'unit', ]
-    allowedAttr =  plotableAttr + internalAttr + Orig.allowedAttr
+    plotableAttr = [] + Orig.infoAttr
+    internalAttr = ['_unit', 'unit', ] + Orig.internalAttr
     
     def __init__(self,name):
         
@@ -165,9 +163,8 @@ class OrigLimit(Orig):
         
 class OrigExclusion(Orig):
     
-    plotableAttr = []
-    internalAttr = ['sort', 'reverse']
-    allowedAttr =  plotableAttr + internalAttr + Orig.allowedAttr
+    infoAttr = [] + Orig.infoAttr
+    internalAttr = ['sort', 'reverse'] + Orig.internalAttr
     
     def __init__(self,name):
         
