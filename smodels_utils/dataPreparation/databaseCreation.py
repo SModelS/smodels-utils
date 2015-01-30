@@ -13,8 +13,10 @@ import sys
 import os
 import ROOT
 from smodels_utils.dataPreparation.standardObjects import\
-OldStandardLimits, StandardExclusions, StandardTWiki, StandardInfo
+StandardLimits, VertexChecker, StandardExclusions, StandardTWiki
+from helper import ObjectList
 import logging
+from datetime import date
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -28,16 +30,13 @@ class DatabaseCreator(list):
         
     def __init__(self):
         
-        self.limits = []
-        self.expectedlimits = []
         self.exclusions = []
         self.limitsDictName = 'Dict'
         self.expectedlimitsDictName = 'ExpectedDict'
         self.metaInfo = None
         self.twikitxtPath = '/orig/twiki.txt'
         self.smsrootPath = '/sms.root'
-        self.smspyPath = '/sms.py'
-        self.infotxtPath = '/info.txt'
+        self.infoFilePath = '/'
         list.__init__(self)
             
     def create(self):
@@ -45,69 +44,146 @@ class DatabaseCreator(list):
         print '\n***strating creation of database entry for %s***\n'\
         %self.metaInfo.id
         
-        self.info = StandardInfo(self.metaInfo, self.infotxtPath)
+        self._extendInfoAttr(self.metaInfo, 'lastUpdate')
+        self.metaInfo.lastUpdate = self._getLastUpdate()
+        self._createInfoFile('info', self.metaInfo)
+   
         self.tWiki = StandardTWiki(self.metaInfo)
+        
+        publishedData = True
         for txName in self:
             
             print '\nreading: %s' %txName.name
             
-            limits = OldStandardLimits(txName, 'limit',\
-            self.limitsDictName)
-            expectedlimits = OldStandardLimits(txName, 'expectedlimit', \
-            self.expectedlimitsDictName)
-            exclusions = StandardExclusions(txName)
+            vertexChecker = VertexChecker(txName.constraint)
+            upperLimits = StandardLimits()
+            expectedUpperLimits = StandardLimits()
+            
+            exclusions = ObjectList('name')
+            for region in txName.kinematikRegions:
+                exclusions.append\
+                (StandardExclusions(txName.name + region.topoExtension))
+            
             for plane in txName.planes:
                 
                 print '\nreading mass plane: %s\n' %plane.origPlot
                 
-                limits.addMassPlane(plane)
+                upperLimits = self.extendlimit\
+                (upperLimits, 'limit', plane, vertexChecker, txName)
+                expectedUpperLimits = self.extendlimit(expectedUpperLimits,\
+                'expectedlimit', plane, vertexChecker, txName)
+                
                 print 'extending upperLimits to %s entrys'\
-                %len(limits.limits)
-                print 'found topoExtensions: %s' \
-                %( limits.topoExtensions)
+                %len(upperLimits)
+                print 'extending expectedUpperLimits to %s entrys'\
+                %len(expectedUpperLimits)
                 
-                expectedlimits.addMassPlane(plane)
-                
-                print 'extending expected upperLimits to %s entrys'\
-                %len(expectedlimits.limits)
-                print 'found topoExtensions: %s' \
-                %(expectedlimits.topoExtensions)
-                
-                exclusions.addMassPlane(plane)
-                
-                print 'extend exclusionLines to %s entrys'\
-                %len(exclusions)
+                if plane.limit and not plane.limit.dataUrl: 
+                    self.publishedData = False
+                    
+                for region in txName.kinematikRegions:      
+                    if getattr(plane, region.name) == 'auto':
+                        setattr(plane, region.name, False)
+                    else:
+                        exclusions[region.id].addMassPlane(plane)
+                        print 'Found region: %s' %region.name
+                        
+                for excl in exclusions:
+                    print 'extend exclusionLines for %s to %s entrys'\
+                    %(excl.name, len(excl))
 
                 self.tWiki.addMassPlane(txName.name,plane)
-            if limits: self.limits.append(limits)
-            if expectedlimits: self.expectedlimits.append(expectedlimits)
-            if exclusions: self.exclusions.append(exclusions)
-            #print 'on:%s' %txName.onShell
-            #print 'off:%s' %txName.offShell
-            self.info.addTxName(txName)
+
+            for excl in exclusions: 
+                if excl: self.exclusions.append(excl)
+            self._extendInfoAttr(txName, 'publishedData')
+            self._extendInfoAttr(txName, 'upperLimits')
+            self._extendInfoAttr(txName, 'expectedUpperLimits')
+            if upperLimits: txName.upperLimits = upperLimits
+            if expectedUpperLimits: txName.expectedUpperLimits =\
+            expectedUpperLimits
+            txName.publishedData = publishedData
+            
+            for region in txName.kinematikRegions:
+                if getattr(txName, region.name):
+                    self._createInfoFile(region.id, region, txName)
         
-        self._createSmsPy()
         self._createSmsRoot()
         self._createTwikiTxt()
-        self._createInfoTxt()
+
         
         
-    def _createSmsPy(self):
+    def extendlimit(self, upperLimits, limitType, plane, vertexChecker, txName):
         
-        smsPy = open(os.getcwd() + self.smspyPath,'w')
-        if self.limits:
-            smsPy.write('%s={}\n' %self.limitsDictName)
-            for limits in self.limits: smsPy.write('%s' %limits)
-        if self.expectedlimits:
-            print self.expectedlimits
-            smsPy.write('%s={}\n' %self.expectedlimitsDictName)
-            for limits in self.expectedlimits: smsPy.write('%s' %limits)
+        origLimitHisto = plane.origLimits[limitType] 
+        if not origLimitHisto: return upperLimits
             
+        kinRegions = txName.kinematikRegions
+               
+        for x,y,limit in origLimitHisto:
+            massPoints = plane.origPlot.getParticleMasses(x,y)
+            massArray = [massPoints,massPoints]
+            upperLimits.append(massArray, limit)
+            
+            for region in kinRegions:
+                regionExist = getattr(plane, region.name)
+                if not regionExist == 'auto':
+                    if not isinstance(regionExist , bool):
+                        Errors().kinRegionSetter(txName.name, region.name, \
+                        regionPreSet)
+                    continue
+                if not vertexChecker: 
+                    Errors().notAssigned(txName.name)
+                offShellVertices = \
+                vertexChecker.getOffShellVertices(massArray)
+                if region.checkMassArray(offShellVertices, massArray):
+                    setattr(plane, region.name, True)
+                    self._extendInfoAttr(region, 'id',0)
+                    region.id = txName.name + region.topoExtension
+                    self._extendInfoAttr(region, 'axes')
+                    if not hasattr(region, 'axes'):
+                        region.axes = str(plane.origPlot)
+                    else:
+                        region.axes = region.axes + ';' +\
+                        str(plane.origPlot)
+        return upperLimits
+    
+    
+    def _extendInfoAttr(self, obj, attr, position = None):
+    
+        if attr in obj.infoAttr: return
+        if position == None:
+            obj.infoAttr.append(attr)
+            return
+        obj.infoAttr.insert(position, attr)
+        
+        
+    def _getLastUpdate(self):
+        
+        if os.path.isfile(os.getcwd() + self.infoFilePath + 'info.txt'):
+            lastUpdate = False
+            oldInfo = open(os.getcwd() + self.infoFilePath + 'info.txt')
+            lines = oldInfo.readlines()
+            oldInfo.close()
+            for line in lines:
+                if 'lastUpdate' in line:
+                    lastUpdate = line.split(': ')[1]
+                    break
+            if lastUpdate:
+                while True:
+                    answer = raw_input('overwrite lastUpdate (y/n)?:')
+                    if answer == 'y' or answer == 'n': break
+                if answer == 'n': return lastUpdate
+        today = date.today()
+        today = '%s/%s/%s\n' %(today.year, today.month, today.day)
+        return today
+
+
     def _createSmsRoot(self):
     
         smsRoot = ROOT.TFile(os.getcwd() + self.smsrootPath,'recreate')
         for exclusions in self.exclusions:
-            directory = smsRoot.mkdir(exclusions.txName, exclusions.txName)
+            directory = smsRoot.mkdir(exclusions.name, exclusions.name)
             directory.cd()
             for exclusion in exclusions: exclusion.Write()
         smsRoot.Close()
@@ -118,11 +194,17 @@ class DatabaseCreator(list):
         twikiTxt.write('%s' %self.tWiki)
         twikiTxt.close()
         
-    def _createInfoTxt(self):
+    def _createInfoFile(self, name, *objects):
         
-        infoTxt = open(os.getcwd() + self.infotxtPath, 'w')
-        infoTxt.write('%s' %self.info)
-        infoTxt.close()
+        content = ''
+        for obj in objects:
+            for attr in obj.infoAttr:
+                if not hasattr(obj, attr): continue
+                content = '%s%s: %s\n' %(content, attr,\
+                getattr(obj, attr))
+        infoFile = open(os.getcwd() + self.infoFilePath + name + '.txt', 'w')
+        infoFile.write(content)
+        infoFile.close()
         
 databaseCreator = DatabaseCreator()        
         

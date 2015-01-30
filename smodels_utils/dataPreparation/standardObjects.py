@@ -13,6 +13,7 @@ from copy import deepcopy
 import inputObjects 
 from datetime import date
 
+
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
@@ -25,10 +26,9 @@ class VertexChecker(object):
         
         self.kinConstraints = self._getKinConstraints(onShellConstraints)
         
-    def getOffShellVertices(self, massArray_1, massArray_2):
-        
+    def getOffShellVertices(self, massArray):
+
         offShellVertices = []
-        massArray = [massArray_1, massArray_2]
         massDeltaArray = [[],[]]
         for i, branch in enumerate(massArray):
             for j, mass in enumerate(branch):
@@ -55,10 +55,7 @@ class VertexChecker(object):
         kinConstraints = []
         constraint = onShellConstraints
         
-        if constraint == 'not yet assigned':
-            for region in txNameObj.kinematikRegions:
-                if region: self.topoExtensions.append(region.topoExtension)
-            return None
+        if constraint == 'not yet assigned': return None
         
         for i in range(len(constraint)):
             if constraint[i:i + len(startString)] == startString:
@@ -83,107 +80,42 @@ class VertexChecker(object):
                     kinConstraints[i][j][k] = massSum
         return kinConstraints
         
+    def __nonzero__(self):
+        
+        return bool(self.kinConstraints)
+        
         
 class StandardLimits(list):
     
-    def append(self, massArray_1, massArray_2, limit):
+    def append(self, massArray, limit):
         
-        massArray = [massArray_1, massArray_2]
+        array = [[],[]]
+        for i in range(len(massArray)):
+            array[i] = ['%s*GeV' %mass for mass in massArray[i]]
         inLimit = False
         for point in self:
-            if massArray ==  point[0]:
-                if abs(limit-point[1]) > 0.0001:
+            if array ==  point[0]:
+                oldlimit = float(point[1][:-3])
+                if abs(limit-oldlimit) > 0.0001:
                     Errors().limitDifference\
-                    (massArray, point[1], limit)
+                    (array, point[1], '%s*pb' %limit)
                 inLimit = True
-                print 'check: %s' %point
                 break
+        limit = '%s*pb' %limit
         if not inLimit:
-            list.append(self, [massArray, limit])
-        
-        
-        
-    
-  
-                    
-class OldStandardLimits(object):
-    
-    def __init__(self,txNameObj,limitName, dictName):
-        
-        self.txNameObj = txNameObj
-        self.limitName = limitName
-        self.topoExtensions = []
-        self.vertexChecker = VertexChecker(txNameObj.constraint)
-        self.limits = StandardLimits()
-        self.dictName = dictName
-
-        
-    @property
-    def txName(self):
-        
-        return self.txNameObj.name
-        
+            list.append(self, [array, limit])
+            
     def __str__(self):
         
-        string = ''
-        for topoExtension in self.topoExtensions:
-            limit = "%s['%s%s'] = %s\n" \
-            %(self.dictName, self.txName, topoExtension, self.limits)
-            string = string + limit
-        return string
+        return list.__str__(self).replace("'","")
         
-    def __nonzero__(self):
-        
-        return bool(self.limits)
- 
-        
-    def addMassPlane(self, massPlaneObj):
-        
-
-        origLimitHisto = massPlaneObj.origLimits[self.limitName]
-        if not origLimitHisto: 
-                if not self.limitName == 'limit': return
-                for region in self.txNameObj.kinematikRegions:
-                    setattr(massPlaneObj, region.name, False)
-                return    
-
-        if self.vertexChecker.kinConstraints:
-            preDefineRegions = self._getPreDefineRegions(massPlaneObj)
-                
-        for x,y,limit in origLimitHisto:
-            massPoints = massPlaneObj.origPlot.getParticleMasses(x,y)
-            massArray = [massPoints,massPoints]
-            self.limits.append(massPoints, massPoints, limit)
-            if not self.vertexChecker.kinConstraints: continue
-
-            for region in self.txNameObj.kinematikRegions:
-                if not region.topoExtension in preDefineRegions:
-                    continue
-                offShellVertices = \
-                self.vertexChecker.getOffShellVertices(massPoints, massPoints)
-                if region.checkMassArray(offShellVertices, massArray):
-                    setattr(massPlaneObj, region.name, True)
-                    if not region.topoExtension in self.topoExtensions:
-                        self.topoExtensions.append(region.topoExtension)
-    
-    
-    def _getPreDefineRegions(self, massPlaneObj):
-        
-        preDefineRegions = []
-        for region in self.txNameObj.kinematikRegions:
-            extension = region.topoExtension
-            value = getattr(massPlaneObj, region.name)
-            if value: preDefineRegions.append(extension)
-            setattr(massPlaneObj, region.name, False)
-        return preDefineRegions
-        
-
+     
         
 class StandardExclusions(list):
     
-    def __init__(self, txNameObj):
+    def __init__(self, name):
         
-        self.txName = txNameObj.name
+        self.name = name
         list.__init__(self)
         
     def addMassPlane(self, massPlaneObj):
@@ -256,115 +188,6 @@ class StandardTWiki(object):
             string = string + self.link(obj.dataUrl, label)
         if not string: string = 'None'
         return string
-            
-class StandardInfo(object):
-    
-    def __init__(self,metaInfo, path):
-        
-        self.fieldAssign = ': '
-        self.txNameAssign = ' -> '
-        self.metaInfo = self.mataInfoFormat(metaInfo)
-        self.path = path
-        self.txNameInfo = []
-        for attr in inputObjects.KineamtikRegion.infoAttr:
-            self.txNameInfo.append('')
-        for attr in inputObjects.TxName.infoAttr:
-            self.txNameInfo.append('')
-        self.axes = ''
-        self.publisheddata = True
-        self.lastUpdate = self._getLastUpdate()
-    
-
-    def __str__(self):
-        
-        string = self.metaInfo
-        string = string + 'publisheddata:%s\n' %self.publisheddata
-        string = string + ''.join(self.txNameInfo)
-        string = string + self.axes
-        string = string + self.lastUpdate
-        return string
-        
-
-    def _getLastUpdate(self):
-        
-        if os.path.isfile(os.getcwd() + self.path):
-            lastUpdate = False
-            for line in open(os.getcwd() + self.path).readlines():
-                if 'lastUpdate' in line:
-                    lastUpdate = line
-                    break
-            if lastUpdate:
-                while True:
-                    answer = raw_input('overwrite lastUpdate (y/n)?:')
-                    if answer == 'y' or answer == 'n': break
-                if answer == 'n': return lastUpdate
-        today = date.today()
-        today = '%s/%s/%s\n' %(today.year, today.month, today.day)
-        return 'lastUpdate%s%s' %(self.fieldAssign, today)
-        
-    def mataInfoFormat(self,metaInfo):
-        
-        string =''
-        for attr in metaInfo.infoAttr:
-            if not hasattr(metaInfo, attr): continue
-            string = '%s%s%s%s\n' \
-            %(string, attr, self.fieldAssign, getattr(metaInfo, attr))
-        #for attr in plottingList:
-            
-        return string
-        
-    def addTxName(self,txNameObj):
-        
-        #if txNameObj.onShell:
-        #    self._addTxNameInfo(txNameObj, 'condition', False)
-        #if txNameObj.offShell:
-        #    self._addTxNameInfo(txNameObj, 'condition', True)
-        regionName = None
-        for region in txNameObj.kinematikRegions:
-            if not getattr(txNameObj, region.name): continue
-            for i, attr in \
-            enumerate(inputObjects.KineamtikRegion.infoAttr):
-                
-                self._addTxNameInfo(txNameObj, region,region, attr, i)
-                
-            for plane in txNameObj.planes:
-                if plane.limit and not plane.limit.dataUrl: 
-                    self.publisheddata = False
-                if not getattr(plane, region.name): continue
-                if regionName != region.name:
-                    regionName = region.name
-                    self.axes = '%saxes%s%s%s%s' %(self.axes,\
-                    self.fieldAssign, \
-                    (txNameObj.name + region.topoExtension),\
-                    self.txNameAssign, plane.origPlot)
-                    continue
-                self.axes = '%s;%s' %(self.axes, plane.origPlot)
-            self.axes += '\n'
-                
-                    
-            for j, attr in enumerate(inputObjects.TxName.infoAttr):
-                self._addTxNameInfo(txNameObj, region, txNameObj, attr, j+i+1)
-            
-    def _addTxNameInfo(self, txNameObj, region, obj, attr, index):
-        
-        requiredAttr = ['condition', 'fuzzycondition', 'constraint']
-        txName = txNameObj.name + region.topoExtension
-
-        try:
-            value = getattr(obj, attr)
-        except AttributeError:
-            if attr in requiredAttr: 
-                Errors().required(txNameObj.name, region, attr)
-            return
-        selfValue = self.txNameInfo[index]
-        selfValue = '%s%s%s%s%s%s\n'\
-        %(selfValue, attr, self.fieldAssign, txName, self.txNameAssign, value)
-        self.txNameInfo[index] = selfValue
-
-        
-            
-        
-        
       
     
 class Errors(object):
@@ -430,3 +253,13 @@ class Errors(object):
         m = m + '\n------------------------'
         print(m)
              
+    def kinRegionSetter(self, txName, name, value):
+    
+        m = self._starLine#
+        m = m + "in txName %s'\n" %txName
+        m = m + "setter for propertsy %s must be of bool type or 'auto'\n"\
+        %(name)
+        m = m + 'got: %s' %value
+        m = m + self._starLine
+        print(m)
+        sys.exit()

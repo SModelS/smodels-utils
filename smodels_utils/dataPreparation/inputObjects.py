@@ -96,14 +96,14 @@ class KineamtikRegion(Locker):
     
     infoAttr = ['condition', 'fuzzycondition', 'constraint']
     internalAttr = ['name', 'functions', 'topoExtension',\
-    'regionExist']
+    'region']
     
     def __init__(self,name,topoExtension, *conditionFunctions):
         
         self.name = name
         self.functions = conditionFunctions
         self.topoExtension = topoExtension
-        self.regionExist = True
+        self.region = 'auto'
 
     def checkMassArray(self,offShellVertices, massArray):
         
@@ -283,7 +283,7 @@ class TxName(MassPlane):
         for kinRegion in self.kinematikRegions:
             if not kinRegion.name in MassPlane.internalAttr:
                 MassPlane.internalAttr.append(kinRegion.name)
-            setattr(massPlane, kinRegion.name, kinRegion.regionExist)
+            setattr(massPlane, kinRegion.name, kinRegion.region)
         self._planes.append(massPlane)
         return massPlane
     
@@ -337,9 +337,9 @@ class TxName(MassPlane):
     def planes(self):
         
         if not self._txDecay.intermediateParticles:
-            yield self
-        for plane in self._planes:
-            yield plane
+            return [self]
+        return self._planes
+
             
     @property
     def kinematikRegions(self):
@@ -375,18 +375,15 @@ class TxName(MassPlane):
     def _kinematikRegionGetter(self, name):
 
         if not self._txDecay.intermediateParticles:
-            return self.kinematikRegions[name].regionExist
+            return self.kinematikRegions[name].region
         for plane in self.planes:
             if plane == self: continue
-            if getattr(plane, name): return True
+            if getattr(plane, name) == True: return True
         return False
         
     def _kinematikRegionSetter(self, name, value):
-        
-        if not isinstance(value, bool):
-            Errors().kinRegionSetter(self.name, name, value)
-        if not self._txDecay.intermediateParticles:
-            self.kinematikRegions[name].regionExist = value
+
+        self.kinematikRegions[name].region = value
         for plane in self.planes:
             if plane == self: continue
             setattr(plane, name, value)
@@ -496,14 +493,5 @@ class Errors(object):
         print(m)
         sys.exit()
         
-    def kinRegionSetter(self, txName, name, value):
-    
-        m = self._starLine#
-        m = m + "in txName %s'\n" %txName
-        m = m + 'setter for propertsy %s must be of bool type\n'\
-        %(name)
-        m = m + 'got: %s' %value
-        m = m + self._starLine
-        print(m)
-        sys.exit()
+
         
