@@ -299,35 +299,6 @@ class TxName(MassPlane):
             Errors().branchcondition(self.name, value)
         self._branchcondition = value
             
-    @property
-    def constraint(self):
-        
-        return self.kinematikRegions['onShell'].constraint
-        
-    @constraint.setter
-    def constraint(self, value):
-
-        self.kinematikRegions['onShell'].constraint  = value
-        
-    @property
-    def condition(self):
-        
-        return self.kinematikRegions['onShell'].condition
-        
-    @condition.setter
-    def condition(self, value):
-        
-        self.kinematikRegions['onShell'].condition  = value
-        
-    @property
-    def fuzzycondition(self):
-        
-        return self.kinematikRegions['onShell'].fuzzycondition
-        
-    @fuzzycondition.setter
-    def fuzzycondition(self, value):
-        
-        self.kinematikRegions['onShell'].fuzzycondition  = value
     
     @property
     def name(self):
@@ -360,6 +331,11 @@ class TxName(MassPlane):
     def off(self):
         
         return self.kinematikRegions['offShell']
+        
+    @property
+    def on(self):
+        
+        return self.kinematikRegions['onShell']
         
     @property
     def offShell(self):

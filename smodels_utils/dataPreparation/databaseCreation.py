@@ -55,7 +55,7 @@ class DatabaseCreator(list):
             
             print '\nreading: %s' %txName.name
             
-            vertexChecker = VertexChecker(txName.constraint)
+            vertexChecker = VertexChecker(txName.on.constraint)
             upperLimits = StandardLimits()
             expectedUpperLimits = StandardLimits()
             
