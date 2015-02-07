@@ -261,7 +261,7 @@ class TxName(MassPlane):
             
         self._kinematikRegions = self._getKinRegions()
         self._planes = []
-        self._branchcondition = 'equal Branches'
+        self._branchcondition = 'equal branches'
 
     def _getKinRegions(self):
         
@@ -295,7 +295,7 @@ class TxName(MassPlane):
     @branchcondition.setter
     def branchcondition(self, value):
         
-        if not value == 'equal Branches':
+        if not value == 'equal branches':
             Errors().branchcondition(self.name, value)
         self._branchcondition = value
             

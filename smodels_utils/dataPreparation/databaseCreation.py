@@ -85,7 +85,7 @@ class DatabaseCreator(list):
                     if getattr(plane, region.name) == 'auto':
                         setattr(plane, region.name, False)
                     else:
-                        exclusions[region.txName].addMassPlane(plane)
+                        exclusions[region.txname].addMassPlane(plane)
                         print 'Found region: %s' %region.name
                         
                 for excl in exclusions:
@@ -106,7 +106,7 @@ class DatabaseCreator(list):
             
             for region in txName.kinematikRegions:
                 if getattr(txName, region.name):
-                    self._createInfoFile(region.txName, region, txName)
+                    self._createInfoFile(region.txname, region, txName)
         
         self._createSmsRoot()
         self._createTwikiTxt()
@@ -138,8 +138,8 @@ class DatabaseCreator(list):
                 vertexChecker.getOffShellVertices(massArray)
                 if region.checkMassArray(offShellVertices, massArray):
                     setattr(plane, region.name, True)
-                    self._extendInfoAttr(region, 'txName',0)
-                    region.txName = txName.name + region.topoExtension
+                    self._extendInfoAttr(region, 'txname',0)
+                    region.txname = txName.name + region.topoExtension
                     self._extendInfoAttr(region, 'validated')
                     region.validated = False
                     self._extendInfoAttr(region, 'axes')
