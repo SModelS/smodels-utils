@@ -31,7 +31,7 @@ logger.setLevel(level=logging.ERROR)
 class MetaInfo(Locker):
     
     infoAttr = [ 'sqrts', 'lumi', 'id', 'prettyname', 'url', 'arxiv',\
-    'publication', 'contact', 'superseded_by','supersedes', 'comment',\ 'private',
+    'publication', 'contact', 'superseded_by','supersedes', 'comment',\
     'private', 'implemented_by']
     internalAttr = ['_sqrts', '_lumi']
     
@@ -94,7 +94,7 @@ class MetaInfo(Locker):
             
 class KineamtikRegion(Locker):
     
-    infoAttr = ['condition', 'fuzzycondition', 'constraint']
+    infoAttr = ['condition', 'fuzzycondition', 'constraint','checked']
     internalAttr = ['name', 'functions', 'topoExtension',\
     'region']
     
@@ -208,7 +208,7 @@ class MassPlane(Locker):
 
 class TxName(Locker):
     
-    infoAttr = ['branchcondition', 'checked']
+    infoAttr = ['branchcondition']
     internalAttr = ['_name', 'name', '_txDecay', '_kinematikRegions','_planes',\
     '_branchcondition', 'onShell', 'offShell', 'constraint',\
     'condition', 'fuzzycondition'] 
