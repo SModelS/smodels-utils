@@ -79,7 +79,7 @@ class DatabaseCreator(list):
                 %len(expectedUpperLimits)
                 
                 if plane.limit and not plane.limit.dataUrl: 
-                    self.publishedData = False
+                    publishedData = False
                     
                 for region in txName.kinematikRegions:      
                     if getattr(plane, region.name) == 'auto':
