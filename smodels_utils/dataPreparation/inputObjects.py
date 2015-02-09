@@ -31,8 +31,8 @@ logger.setLevel(level=logging.ERROR)
 class MetaInfo(Locker):
     
     infoAttr = [ 'sqrts', 'lumi', 'id', 'prettyname', 'url', 'arxiv',\
-    'publication', 'superseded_by','supersedes', 'comment', 'private',\
-    'implemented_by']
+    'publication', 'contact', 'superseded_by','supersedes', 'comment',\ 'private',
+    'private', 'implemented_by']
     internalAttr = ['_sqrts', '_lumi']
     
     def __new__(cls, ID):
