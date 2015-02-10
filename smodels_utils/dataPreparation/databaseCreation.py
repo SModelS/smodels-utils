@@ -55,7 +55,7 @@ class DatabaseCreator(list):
             
             print '\nreading: %s' %txName.name
             
-            vertexChecker = VertexChecker(txName.on.constraint)
+            vertexChecker = VertexChecker(txName)
             upperLimits = StandardLimits()
             expectedUpperLimits = StandardLimits()
             
@@ -106,6 +106,12 @@ class DatabaseCreator(list):
             
             for region in txName.kinematikRegions:
                 if getattr(txName, region.name):
+                    if not hasattr(region, 'constraint'):
+                        Errors().required(txName.name, region, 'constraint')
+                    if not hasattr(region, 'condition'):
+                        Errors().required(txName.name, region, 'condition')
+                    if not hasattr(region, 'fuzzycondition'):
+                        Errors().required(txName.name, region, 'fuzzycondition')
                     self._createInfoFile(region.txname, region, txName)
         
         self._createSmsRoot()
@@ -208,7 +214,24 @@ class DatabaseCreator(list):
         infoFile.write(content)
         infoFile.close()
         
-databaseCreator = DatabaseCreator()        
+databaseCreator = DatabaseCreator()   
+
+class Errors(object):
+    
+    def __init__(self):
+        
+        self._starLine = '\n************************************\n'
+
+    def required(self, txName, kinObj, attr):
+        
+        m = self._starLine
+        m = m + "there is an %s-region for %s " %(kinObj.name, txName) 
+        m = m + "but no %s for this region\n" %attr
+        m = m + "use txName.%s.%s " %(kinObj.topoExtension, attr)
+        m = m + "to set %s" %attr
+        m = m + self._starLine
+        print(m)
+        sys.exit()
         
         
         

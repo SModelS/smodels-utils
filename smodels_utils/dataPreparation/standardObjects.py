@@ -22,9 +22,9 @@ logger.setLevel(level=logging.ERROR)
 
 class VertexChecker(object):
 
-    def __init__(self, onShellConstraints):
+    def __init__(self, txNameObj):
         
-        self.kinConstraints = self._getKinConstraints(onShellConstraints)
+        self.kinConstraints = self._getKinConstraints(txNameObj)
         
     def getOffShellVertices(self, massArray):
 
@@ -47,13 +47,15 @@ class VertexChecker(object):
                             offShellVertices.append((i,j))
         return offShellVertices
         
-    def _getKinConstraints(self, onShellConstraints):
+    def _getKinConstraints(self, txNameObj):
         
         massDict = {'Z': 86., 'W': 76.,'t': 169.,'h': 118}
         startString = '[[['
         endString = ']]]'
         kinConstraints = []
-        constraint = onShellConstraints
+        if not hasattr(txNameObj.on, 'constraint'):
+            Errors().missingOnConstraint(txNameObj.name)
+        constraint = txNameObj.on.constraint
         
         if constraint == 'not yet assigned': return None
         
@@ -155,8 +157,7 @@ class StandardTWiki(object):
         [self.txNames, self.axes, self.figures, self.limits, self.exclusions]:
             string = string + '<<BR>>'.join(attr) + '||'
         return string + '\n'
-
-      
+    
     def addMassPlane(self, txName, plane):
             
         self.txNames.append(self.link('smsDictionary#%s' %txName, txName))
@@ -234,16 +235,6 @@ class Errors(object):
         print(m)
         sys.exit()
         
-    def required(self, txName, kinObj, attr):
-        
-        m = self._starLine
-        m = m + "there is an %s-region for %s " %(kinObj.name, txName) 
-        m = m + "but no %s for this region\n" %attr
-        m = m + "use txName.%s.%s " %(kinObj.topoExtension, attr)
-        m = m + "to set %s" %attr
-        m = m + self._starLine
-        print(m)
-        sys.exit()
         
     def limitDifference(self, massArray, oldLimit, limit):
         
@@ -255,7 +246,7 @@ class Errors(object):
              
     def kinRegionSetter(self, txName, name, value):
     
-        m = self._starLine#
+        m = self._starLine
         m = m + "in txName %s'\n" %txName
         m = m + "setter for propertsy %s must be of bool type or 'auto'\n"\
         %(name)
@@ -263,3 +254,14 @@ class Errors(object):
         m = m + self._starLine
         print(m)
         sys.exit()
+        
+    def missingOnConstraint(self, txName):
+        
+        m = self._starLine#
+        m = m + "in txName %s: on.constraint not set\n" %txName
+        m = m + "onShell constraint have to be set for automated splitting\n"
+        m = m + 'please use: %s.on.constraint =' %txName
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
