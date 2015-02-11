@@ -143,11 +143,11 @@ class MassPlane(Locker):
         self.figureUrl = None
 
     @property
-    def obsUlLimit(self):
+    def obsUpperLimit(self):
         return self.origLimits['limit']
         
     @property
-    def expUlLimit(self):
+    def expUpperLimit(self):
         return self.origLimits['expectedlimit']
         
     @property
