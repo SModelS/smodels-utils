@@ -24,7 +24,9 @@ class VertexChecker(object):
 
     def __init__(self, txNameObj):
         
+        self.txName = txNameObj.name
         self.kinConstraints = self._getKinConstraints(txNameObj)
+        
         
     def getOffShellVertices(self, massArray):
 
@@ -58,7 +60,10 @@ class VertexChecker(object):
         constraint = txNameObj.on.constraint
         
         if constraint == 'not yet assigned': return None
-        
+        if not isinstance(constraint, str):
+            Errors().constraint(self.txName, constraint)
+        if not endString in constraint or not startString in constraint:
+            Errors().constraint(self.txName, constraint)
         for i in range(len(constraint)):
             if constraint[i:i + len(startString)] == startString:
                 start = i
@@ -200,10 +205,10 @@ class Errors(object):
     def constraint(self, txName, constraint):
         
         m = self._starLine
-        m = m + 'In StandardLimits: Error by while reading the constraint'
+        m = m + 'In VertexChecker: Error while reading the onshell constraint '
         m = m + 'for txName: %s\n' %txName
         m = m + "constraint have to be of form:\n"
-        m = m + "[[['particle',...],...]][['particle',...],...]]"
+        m = m + "\"[[['particle',...],...]][['particle',...],...]]\"\n"
         m = m + 'got: %s' %constraint
         m = m + self._starLine
         print(m)
