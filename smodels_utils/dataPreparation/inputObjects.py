@@ -143,35 +143,35 @@ class MassPlane(Locker):
         self.figureUrl = None
 
     @property
-    def limit(self):
+    def obsUlLimit(self):
         return self.origLimits['limit']
         
     @property
-    def expectedlimit(self):
+    def expUlLimit(self):
         return self.origLimits['expectedlimit']
         
     @property
-    def exclusion(self):
+    def obsExclusion(self):
         return self.origExclusions['exclusion']
         
     @property
-    def exclusionP1(self):
+    def obsExclusionP1(self):
         return self.origExclusions['exclusionP1']
         
     @property
-    def exclusionM1(self):
+    def obsExclusionM1(self):
         return self.origExclusions['exclusionM1']
 
     @property
-    def expectedExclusion(self):
+    def expExclusion(self):
         return self.origExclusions['expectedExclusion']
         
     @property
-    def expectedExclusionP1(self):
+    def expExclusionP1(self):
         return self.origExclusions['expectedExclusionP1']
         
     @property
-    def expectedExclusionM1(self):
+    def expExclusionM1(self):
         return self.origExclusions['expectedExclusionM1'] 
     
     @property
