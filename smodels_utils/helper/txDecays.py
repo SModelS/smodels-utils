@@ -236,6 +236,7 @@ decays = {
     'T1bbbb': 'gluino  --> bottom antibottom  lsp ', 
     'T1tttt': 'gluino  --> top antitop  lsp ',
     'T1ttttoff': 'gluino  --> top* antitop*  lsp ',
+    'T1tbtb': 'gluino  --> top bottom  lsp ', 
     #'T1gg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp )', 
     #'T1lg':'gluino  --> quark antiquark (neutralino_2  --> photon lsp |chargino^pm  --> w lsp )', 
     #'T1lnu':'gluino  --> quark antiquark (chargino^pm --> lepton^pm neutrino  lsp )', 
