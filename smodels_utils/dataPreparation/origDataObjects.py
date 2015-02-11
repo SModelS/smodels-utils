@@ -59,6 +59,7 @@ class Orig(Locker):
             Errors().rootObject(self.objectName,self.path)
         rootFile = ROOT.TFile(self.path)
         obj = rootFile.Get(self.objectName)
+        if not obj: Errors().noRootObject(self.objectName,self.path)
         if not isinstance(obj,ROOT.TGraph):
             obj.SetDirectory(0)
         rootFile.Close()
@@ -83,6 +84,7 @@ class Orig(Locker):
             Errors().index(self.index, self.path)
         rootFile = ROOT.TFile(self.path, 'r')
         canvas = rootFile.Get(self.objectName)
+        if not canvas: Errors().noRootObject(self.objectName,self.path)
         return canvas.GetListOfPrimitives()[self.index]
     
     def __nonzero__(self):
