@@ -78,7 +78,7 @@ class DatabaseCreator(list):
                 print 'extending expectedUpperLimits to %s entrys'\
                 %len(expectedUpperLimits)
                 
-                if plane.limit and not plane.limit.dataUrl: 
+                if plane.obsUpperLimit and not plane.obsUpperLimit.dataUrl: 
                     publishedData = False
                     
                 for region in txName.kinematikRegions:      
