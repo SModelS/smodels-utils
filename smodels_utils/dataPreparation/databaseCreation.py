@@ -175,13 +175,15 @@ class DatabaseCreator(list):
         
         if os.path.isfile(self.base + self.infoFilePath(self.metaInfoFileName)):
             lastUpdate = False
+            implemented_by = False
             oldInfo = open(self.base + self.infoFilePath(self.metaInfoFileName))
             lines = oldInfo.readlines()
             oldInfo.close()
             for line in lines:
                 if 'lastUpdate' in line:
                     lastUpdate = line.split(self.assigmentOberator)[1]
-                    break
+                if 'implemented_by' in line:
+                    implemented_by = line.split(self.assigmentOberator)[1]
             if lastUpdate:
                 while True:
                     m = 'if one of the following data are changed, '
@@ -193,6 +195,8 @@ class DatabaseCreator(list):
                     if answer == 'y' or answer == 'n': break
                 if answer == 'n': 
                     self.metaInfo.lastUpdate = lastUpdate
+                    if not implemented_by: self._setImplementedBy()
+                    else: self.metaInfo.implemented_by = implemented_by
                     return
         today = date.today()
         today = '%s/%s/%s\n' %(today.year, today.month, today.day)
