@@ -59,6 +59,7 @@ class Orig(Locker):
             Errors().rootObject(self.objectName,self.path)
         rootFile = ROOT.TFile(self.path)
         obj = rootFile.Get(self.objectName)
+        if not obj: Errors().noRootObject(self.objectName,self.path)
         if not isinstance(obj,ROOT.TGraph):
             obj.SetDirectory(0)
         rootFile.Close()
@@ -83,6 +84,7 @@ class Orig(Locker):
             Errors().index(self.index, self.path)
         rootFile = ROOT.TFile(self.path, 'r')
         canvas = rootFile.Get(self.objectName)
+        if not canvas: Errors().noRootObject(self.objectName,self.path)
         return canvas.GetListOfPrimitives()[self.index]
     
     def __nonzero__(self):
@@ -191,6 +193,61 @@ class OrigExclusion(Orig):
                 Errors().txtFormat(self.path, 'OrigExclusion', 2)
             yield point
             
+    def svg(self):
+        """ returns a TGraph from a txt file with coorinates in svg format
+            first line in txt file needs scaling information"""
+        f = open(self.path, 'r')
+        lines = f.readlines()
+        f.close()
+        n = len(lines)
+        xorig = 0
+        yorig = 0
+        if 'm' in lines[0].split()[0]:
+            relative = True
+        elif 'M' in lines[0].split()[0]:
+            relative = False
+        else:
+            Errors().unknownSvg(self, self.path, lines[0].split()[0])
+        ticks = lines[0].split()
+        xticks = []
+        yticks = []
+        for tick in ticks[1:]:
+            if tick.split(':')[0][:1] == 'x':
+                xticks.append([float(tick.split(':')[0][1:-3]),float(tick.split(':')[1])])
+                if tick.split(':')[0][-3:] != 'GeV':
+                    Errors().unknownMassUnit(self.path, tick.split(':')[0][-3:])
+            elif tick.split(':')[0][:1] == 'y':
+                yticks.append([float(tick.split(':')[0][1:-3]),float(tick.split(':')[1])])
+                if tick.split(':')[0][-3:] != 'GeV':
+                    Errors().unknownMassUnit(self.path, tick.split(':')[0][-3:])
+            else:
+                Errors().unknownAxis(self, self.path, tick.split(':')[0][:1])
+        if len(xticks) != 2:
+            Errors().axesInformation(self, self.path)
+        if len(yticks) != 2:
+            Errors().axesInformation(self, self.path)    
+        xGeV = (xticks[1][1]-xticks[0][1])/(xticks[1][0]-xticks[0][0])
+        yGeV = (yticks[1][1]-yticks[0][1])/(yticks[1][0]-yticks[0][0])
+        x0 = xticks[0][1] - xticks[0][0]*xGeV
+        y0 = yticks[0][1] - yticks[0][0]*yGeV
+        if relative:
+            for l in lines[1:]:
+                v = l.split(' ')
+                xorig += float(v[0])
+                yorig += float(v[1])
+                x = (xorig-x0)/xGeV
+                y = (yorig-y0)/yGeV
+                yield [x,y]
+        else:
+            for l in lines[1:]:
+                v = l.split(' ')
+                xorig = float(v[0])
+                yorig = float(v[1])
+                x = (xorig-x0)/xGeV
+                y = (yorig-y0)/yGeV
+                yield [x,y]
+
+                
     def root(self):
         
         limit = Orig.root(self)
@@ -279,6 +336,46 @@ class Errors(object):
         m = m + self._starLine
         print(m)
         sys.exit()
+        
+    def unknownSvg(self, filePath, svg):
+        
+        m = self._starLine#
+        m = m + 'indexError in file: %s\n' %filePath
+        m = m + 'unknown %s (svg)' %svg
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def unknownMassUnit(self, filePath, massUnit):
+        
+        m = self._starLine#
+        m = m + 'indexError in file: %s\n' %filePath
+        m = m + 'unknown mass unit: %s\n' %massUnit
+        m = m + 'mass unit have to be: GeV' 
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def unknownAxis(self, filePath, axis):
+        
+        m = self._starLine#
+        m = m + 'indexError in file: %s\n' %filePath
+        m = m + 'unknown axis: %s\n' %axis
+        m = m + 'mass unit have to be: x or y'
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def axesInformation(self, filePath):
+        
+        m = self._starLine#
+        m = m + 'indexError in file: %s\n' %filePath
+        m = m + 'too much/less information about one of the axes!'
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+
+
         
 
         

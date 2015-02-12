@@ -22,9 +22,11 @@ logger.setLevel(level=logging.ERROR)
 
 class VertexChecker(object):
 
-    def __init__(self, onShellConstraints):
+    def __init__(self, txNameObj):
         
-        self.kinConstraints = self._getKinConstraints(onShellConstraints)
+        self.txName = txNameObj.name
+        self.kinConstraints = self._getKinConstraints(txNameObj)
+        
         
     def getOffShellVertices(self, massArray):
 
@@ -47,16 +49,21 @@ class VertexChecker(object):
                             offShellVertices.append((i,j))
         return offShellVertices
         
-    def _getKinConstraints(self, onShellConstraints):
+    def _getKinConstraints(self, txNameObj):
         
         massDict = {'Z': 86., 'W': 76.,'t': 169.,'h': 118}
         startString = '[[['
         endString = ']]]'
         kinConstraints = []
-        constraint = onShellConstraints
+        if not hasattr(txNameObj.on, 'constraint'):
+            Errors().missingOnConstraint(txNameObj.name)
+        constraint = txNameObj.on.constraint
         
         if constraint == 'not yet assigned': return None
-        
+        if not isinstance(constraint, str):
+            Errors().constraint(self.txName, constraint)
+        if not endString in constraint or not startString in constraint:
+            Errors().constraint(self.txName, constraint)
         for i in range(len(constraint)):
             if constraint[i:i + len(startString)] == startString:
                 start = i
@@ -155,8 +162,7 @@ class StandardTWiki(object):
         [self.txNames, self.axes, self.figures, self.limits, self.exclusions]:
             string = string + '<<BR>>'.join(attr) + '||'
         return string + '\n'
-
-      
+    
     def addMassPlane(self, txName, plane):
             
         self.txNames.append(self.link('smsDictionary#%s' %txName, txName))
@@ -199,10 +205,10 @@ class Errors(object):
     def constraint(self, txName, constraint):
         
         m = self._starLine
-        m = m + 'In StandardLimits: Error by while reading the constraint'
+        m = m + 'In VertexChecker: Error while reading the onshell constraint '
         m = m + 'for txName: %s\n' %txName
         m = m + "constraint have to be of form:\n"
-        m = m + "[[['particle',...],...]][['particle',...],...]]"
+        m = m + "\"[[['particle',...],...]][['particle',...],...]]\"\n"
         m = m + 'got: %s' %constraint
         m = m + self._starLine
         print(m)
@@ -234,16 +240,6 @@ class Errors(object):
         print(m)
         sys.exit()
         
-    def required(self, txName, kinObj, attr):
-        
-        m = self._starLine
-        m = m + "there is an %s-region for %s " %(kinObj.name, txName) 
-        m = m + "but no %s for this region\n" %attr
-        m = m + "use txName.%s.%s " %(kinObj.topoExtension, attr)
-        m = m + "to set %s" %attr
-        m = m + self._starLine
-        print(m)
-        sys.exit()
         
     def limitDifference(self, massArray, oldLimit, limit):
         
@@ -255,7 +251,7 @@ class Errors(object):
              
     def kinRegionSetter(self, txName, name, value):
     
-        m = self._starLine#
+        m = self._starLine
         m = m + "in txName %s'\n" %txName
         m = m + "setter for propertsy %s must be of bool type or 'auto'\n"\
         %(name)
@@ -263,3 +259,14 @@ class Errors(object):
         m = m + self._starLine
         print(m)
         sys.exit()
+        
+    def missingOnConstraint(self, txName):
+        
+        m = self._starLine#
+        m = m + "in txName %s: on.constraint not set\n" %txName
+        m = m + "onShell constraint have to be set for automated splitting\n"
+        m = m + 'please use: %s.on.constraint =' %txName
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        

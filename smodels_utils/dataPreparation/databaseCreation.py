@@ -31,12 +31,15 @@ class DatabaseCreator(list):
     def __init__(self):
         
         self.exclusions = []
-        self.limitsDictName = 'Dict'
-        self.expectedlimitsDictName = 'ExpectedDict'
         self.metaInfo = None
-        self.twikitxtPath = '/orig/twiki.txt'
-        self.smsrootPath = '/sms.root'
-        self.infoFilePath = '/'
+        self.base = os.getcwd() + '/'
+        self.twikitxtPath = './orig/twiki.txt'
+        self.smsrootPath = './sms.root'
+        self.infoFileDirectory = './'
+        self.infoFileExtension = '.txt'
+        self.metaInfoFileName = 'info'
+        self.assigmentOberator = ': '
+        self.txNameField = 'txname'
         list.__init__(self)
             
     def create(self):
@@ -45,8 +48,9 @@ class DatabaseCreator(list):
         %self.metaInfo.id
         
         self._extendInfoAttr(self.metaInfo, 'lastUpdate')
-        self.metaInfo.lastUpdate = self._getLastUpdate()
-        self._createInfoFile('info', self.metaInfo)
+        self._setLastUpdate()
+        self._delete()
+        self._createInfoFile(self.metaInfoFileName, self.metaInfo)
    
         self.tWiki = StandardTWiki(self.metaInfo)
         
@@ -55,7 +59,7 @@ class DatabaseCreator(list):
             
             print '\nreading: %s' %txName.name
             
-            vertexChecker = VertexChecker(txName.constraint)
+            vertexChecker = VertexChecker(txName)
             upperLimits = StandardLimits()
             expectedUpperLimits = StandardLimits()
             
@@ -78,14 +82,15 @@ class DatabaseCreator(list):
                 print 'extending expectedUpperLimits to %s entrys'\
                 %len(expectedUpperLimits)
                 
-                if plane.limit and not plane.limit.dataUrl: 
-                    self.publishedData = False
+                if plane.obsUpperLimit and not plane.obsUpperLimit.dataUrl: 
+                    publishedData = False
                     
                 for region in txName.kinematikRegions:      
                     if getattr(plane, region.name) == 'auto':
                         setattr(plane, region.name, False)
                     else:
-                        exclusions[region.id].addMassPlane(plane)
+                        exclusions[getattr(region, self.txNameField)]\
+                        .addMassPlane(plane)
                         print 'Found region: %s' %region.name
                         
                 for excl in exclusions:
@@ -106,7 +111,13 @@ class DatabaseCreator(list):
             
             for region in txName.kinematikRegions:
                 if getattr(txName, region.name):
-                    self._createInfoFile(region.id, region, txName)
+                    if not hasattr(region, 'constraint'):
+                        Errors().required(txName.name, region, 'constraint')
+                    if not hasattr(region, 'condition'):
+                        Errors().required(txName.name, region, 'condition')
+                    if not hasattr(region, 'fuzzycondition'):
+                        Errors().required(txName.name, region, 'fuzzycondition')
+                    self._createInfoFile(getattr(region, self.txNameField), region, txName)
         
         self._createSmsRoot()
         self._createTwikiTxt()
@@ -138,8 +149,10 @@ class DatabaseCreator(list):
                 vertexChecker.getOffShellVertices(massArray)
                 if region.checkMassArray(offShellVertices, massArray):
                     setattr(plane, region.name, True)
-                    self._extendInfoAttr(region, 'id',0)
-                    region.id = txName.name + region.topoExtension
+                    self._extendInfoAttr(region, self.txNameField,0)
+                    setattr(region, self.txNameField, txName.name + region.topoExtension)
+                    self._extendInfoAttr(region, 'validated')
+                    region.validated = False
                     self._extendInfoAttr(region, 'axes')
                     if not hasattr(region, 'axes'):
                         region.axes = str(plane.origPlot)
@@ -158,30 +171,70 @@ class DatabaseCreator(list):
         obj.infoAttr.insert(position, attr)
         
         
-    def _getLastUpdate(self):
+    def _setLastUpdate(self):
         
-        if os.path.isfile(os.getcwd() + self.infoFilePath + 'info.txt'):
+        if os.path.isfile(self.base + self.infoFilePath(self.metaInfoFileName)):
             lastUpdate = False
-            oldInfo = open(os.getcwd() + self.infoFilePath + 'info.txt')
+            implemented_by = False
+            oldInfo = open(self.base + self.infoFilePath(self.metaInfoFileName))
             lines = oldInfo.readlines()
             oldInfo.close()
             for line in lines:
                 if 'lastUpdate' in line:
-                    lastUpdate = line.split(': ')[1]
-                    break
+                    lastUpdate = line.split(self.assigmentOberator)[1]
+                if 'implemented_by' in line:
+                    implemented_by = line.split(self.assigmentOberator)[1]
             if lastUpdate:
                 while True:
-                    answer = raw_input('overwrite lastUpdate (y/n)?:')
+                    m = 'if one of the following data are changed, '
+                    m = m + 'lastUpdate should be overwritten:\n'
+                    m = m + 'number or name of txNames, arXiv, publication,'
+                    m = m + ' upperLimits\n'
+                    m = m + 'overwrite lastUpdate (y/n)?:'
+                    answer = raw_input(m)
                     if answer == 'y' or answer == 'n': break
-                if answer == 'n': return lastUpdate
+                if answer == 'n': 
+                    self.metaInfo.lastUpdate = lastUpdate
+                    if not implemented_by: self._setImplementedBy()
+                    else: self.metaInfo.implemented_by = implemented_by
+                    return
         today = date.today()
         today = '%s/%s/%s\n' %(today.year, today.month, today.day)
-        return today
-
+        self.metaInfo.lastUpdate = today
+        self._setImplementedBy()
+        
+    def _setImplementedBy(self):
+        
+        while True:
+            answer = raw_input('enter your name or initials: ')
+            if answer: break
+        self.metaInfo.implemented_by = answer
+        
+        
+    def _delete(self):
+        
+        predefinedPaths = [
+            self.base + self.smsrootPath,
+            self.base + self.twikitxtPath,
+            self.base + self.infoFilePath(self.metaInfoFileName)
+            ]
+        for path in predefinedPaths:
+            if os.path.exists(path): os.remove(path)
+        
+        for entry in os.listdir(self.base + self.infoFileDirectory):
+            if not entry[-len(self.infoFileExtension):] == self.infoFileExtension:
+                continue
+            compareLine = '%s%s%s\n' %(self.txNameField,\
+            self.assigmentOberator, entry[:-len(self.infoFileExtension):])
+            f = open(entry,'r')
+            lines = f.readlines()
+            f.close()
+            if not compareLine in lines: continue
+            os.remove(entry)
 
     def _createSmsRoot(self):
     
-        smsRoot = ROOT.TFile(os.getcwd() + self.smsrootPath,'recreate')
+        smsRoot = ROOT.TFile(self.base + self.smsrootPath,'recreate')
         for exclusions in self.exclusions:
             directory = smsRoot.mkdir(exclusions.name, exclusions.name)
             directory.cd()
@@ -190,7 +243,7 @@ class DatabaseCreator(list):
         
     def _createTwikiTxt(self):
         
-        twikiTxt = open(os.getcwd() + self.twikitxtPath,'w')
+        twikiTxt = open(self.base + self.twikitxtPath,'w')
         twikiTxt.write('%s' %self.tWiki)
         twikiTxt.close()
         
@@ -200,13 +253,36 @@ class DatabaseCreator(list):
         for obj in objects:
             for attr in obj.infoAttr:
                 if not hasattr(obj, attr): continue
-                content = '%s%s: %s\n' %(content, attr,\
-                getattr(obj, attr))
-        infoFile = open(os.getcwd() + self.infoFilePath + name + '.txt', 'w')
+                content = '%s%s%s%s\n' %(content, attr,\
+                self.assigmentOberator, getattr(obj, attr))
+        infoFile = open(self.base + self.infoFilePath(name), 'w')
         infoFile.write(content)
         infoFile.close()
         
-databaseCreator = DatabaseCreator()        
+    def infoFilePath(self, infoFileName):
+        
+        path = '%s%s%s' %(self.infoFileDirectory,\
+        infoFileName, self.infoFileExtension)
+        return path
+        
+databaseCreator = DatabaseCreator()   
+
+class Errors(object):
+    
+    def __init__(self):
+        
+        self._starLine = '\n************************************\n'
+
+    def required(self, txName, kinObj, attr):
+        
+        m = self._starLine
+        m = m + "there is an %s-region for %s " %(kinObj.name, txName) 
+        m = m + "but no %s for this region\n" %attr
+        m = m + "use txName.%s.%s " %(kinObj.topoExtension, attr)
+        m = m + "to set %s" %attr
+        m = m + self._starLine
+        print(m)
+        sys.exit()
         
         
         

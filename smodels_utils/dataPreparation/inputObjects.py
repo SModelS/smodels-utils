@@ -31,8 +31,8 @@ logger.setLevel(level=logging.ERROR)
 class MetaInfo(Locker):
     
     infoAttr = [ 'sqrts', 'lumi', 'id', 'prettyname', 'url', 'arxiv',\
-    'publication', 'superseded_by','supersedes', 'comment', 'private',\
-    'implimented_by']
+    'publication', 'contact', 'superseded_by','supersedes', 'comment',\
+    'private', 'implemented_by']
     internalAttr = ['_sqrts', '_lumi']
     
     def __new__(cls, ID):
@@ -94,7 +94,7 @@ class MetaInfo(Locker):
             
 class KineamtikRegion(Locker):
     
-    infoAttr = ['condition', 'fuzzycondition', 'constraint']
+    infoAttr = ['condition', 'fuzzycondition', 'constraint','checked']
     internalAttr = ['name', 'functions', 'topoExtension',\
     'region']
     
@@ -123,9 +123,10 @@ class MassPlane(Locker):
     internalAttr = ['_txDecay', 'origPlot', 'origLimits', 'origExclusions',\
     'figure', 'figureUrl', 'dataUrl', 'histoDataUrl', 'exclusionDataUrl']
     
-    def __init__(self,txDecay):
+    def __init__(self,txDecay, motherMass = None, interMass = None, lspMass = None):
         self._txDecay = txDecay
-        self.origPlot = None
+        self.origPlot = OrigPlot.fromConvert( \
+        motherMass = motherMass, interMass = interMass, lspMass = lspMass)
         self.origLimits = ObjectList('name',[
             OrigLimit('limit'),
             OrigLimit('expectedlimit')
@@ -142,62 +143,36 @@ class MassPlane(Locker):
         self.figureUrl = None
 
     @property
-    def limit(self):
+    def obsUpperLimit(self):
         return self.origLimits['limit']
         
     @property
-    def expectedlimit(self):
+    def expUpperLimit(self):
         return self.origLimits['expectedlimit']
         
     @property
-    def exclusion(self):
+    def obsExclusion(self):
         return self.origExclusions['exclusion']
         
     @property
-    def exclusionP1(self):
+    def obsExclusionP1(self):
         return self.origExclusions['exclusionP1']
         
     @property
-    def exclusionM1(self):
+    def obsExclusionM1(self):
         return self.origExclusions['exclusionM1']
 
     @property
-    def expectedExclusion(self):
+    def expExclusion(self):
         return self.origExclusions['expectedExclusion']
         
     @property
-    def expectedExclusionP1(self):
+    def expExclusionP1(self):
         return self.origExclusions['expectedExclusionP1']
         
     @property
-    def expectedExclusionM1(self):
-        return self.origExclusions['expectedExclusionM1']
-        
-    @classmethod
-    def additional(cls, txDecay, motherMass = None, interMass = None, lspMass = None):
-        
-        if not motherMass:
-            Errors().missingMass('motherMass',txDecay.name)
-        if not interMass:
-            Errors().missingMass('interMass',txDecay.name)
-        if not lspMass:
-            Errors().missingMass('lspMass',txDecay.name)
-        if not txDecay.intermediateParticles:
-            Errors().noInterParticle(txDecay.name)
-            
-        massPlane = cls(txDecay)
-        massPlane.origPlot = OrigPlot.fromConvert( \
-        motherMass = motherMass, interMass = interMass, lspMass = lspMass)
-        return massPlane
-        
-    def setMassPlane(self, motherMass = None, lspMass = None):
-        
-        if not motherMass:
-            Errors().missingMass('motherMass',self._txDecay.name)
-        if not lspMass:
-            Errors().missingMass('lspMass',self._txDecay.name)
-            
-        self.origPlot = OrigPlot.fromConvert(motherMass = motherMass, lspMass = lspMass)  
+    def expExclusionM1(self):
+        return self.origExclusions['expectedExclusionM1'] 
     
     @property
     def dataUrl(self):
@@ -231,12 +206,12 @@ class MassPlane(Locker):
   
 
 
-class TxName(MassPlane):
+class TxName(Locker):
     
-    infoAttr = ['branchcondition', 'checked'] + MassPlane.infoAttr
+    infoAttr = ['branchcondition']
     internalAttr = ['_name', 'name', '_txDecay', '_kinematikRegions','_planes',\
     '_branchcondition', 'onShell', 'offShell', 'constraint',\
-    'condition', 'fuzzycondition'] + MassPlane.internalAttr
+    'condition', 'fuzzycondition'] 
     
     def __new__(cls,txName):
         
@@ -254,14 +229,10 @@ class TxName(MassPlane):
         if not self._txDecay:
             Errors().unknownTxName(self._name)
         if self._txDecay.doubledDecays:
-            Errors().doubledDecay(self._name, self._txDecay.doubledDecays)
-            
-        if not self._txDecay.intermediateParticles:
-            MassPlane.__init__(self,self._txDecay)
-            
+            Errors().doubledDecay(self._name, self._txDecay.doubledDecays) 
         self._kinematikRegions = self._getKinRegions()
         self._planes = []
-        self._branchcondition = 'equal Branches'
+        self._branchcondition = 'equal branches'
 
     def _getKinRegions(self):
         
@@ -278,7 +249,18 @@ class TxName(MassPlane):
     def addMassPlane(self, motherMass = None, interMass = None, \
     lspMass = None):
 
-        massPlane = MassPlane.additional(self._txDecay,\
+        if not motherMass:
+            Errors().missingMass('motherMass',self.name)
+        if not lspMass:
+            Errors().missingMass('lspMass',self.name)
+        if not self._txDecay.intermediateParticles:
+            if self._planes: Errors().onlyOnePlane(self.name)
+            if interMass: Errors().interMediateParticle(self.name)
+        else:
+            if not interMass:
+                Errors().missingMass('interMass',self.name)
+            
+        massPlane = MassPlane(self._txDecay,\
         motherMass = motherMass, interMass = interMass, lspMass = lspMass)
         for kinRegion in self.kinematikRegions:
             if not kinRegion.name in MassPlane.internalAttr:
@@ -295,39 +277,10 @@ class TxName(MassPlane):
     @branchcondition.setter
     def branchcondition(self, value):
         
-        if not value == 'equal Branches':
+        if not value == 'equal branches':
             Errors().branchcondition(self.name, value)
         self._branchcondition = value
             
-    @property
-    def constraint(self):
-        
-        return self.kinematikRegions['onShell'].constraint
-        
-    @constraint.setter
-    def constraint(self, value):
-
-        self.kinematikRegions['onShell'].constraint  = value
-        
-    @property
-    def condition(self):
-        
-        return self.kinematikRegions['onShell'].condition
-        
-    @condition.setter
-    def condition(self, value):
-        
-        self.kinematikRegions['onShell'].condition  = value
-        
-    @property
-    def fuzzycondition(self):
-        
-        return self.kinematikRegions['onShell'].fuzzycondition
-        
-    @fuzzycondition.setter
-    def fuzzycondition(self, value):
-        
-        self.kinematikRegions['onShell'].fuzzycondition  = value
     
     @property
     def name(self):
@@ -336,8 +289,6 @@ class TxName(MassPlane):
     @property
     def planes(self):
         
-        if not self._txDecay.intermediateParticles:
-            return [self]
         return self._planes
 
             
@@ -362,6 +313,11 @@ class TxName(MassPlane):
         return self.kinematikRegions['offShell']
         
     @property
+    def on(self):
+        
+        return self.kinematikRegions['onShell']
+        
+    @property
     def offShell(self):
         
         return self._kinematikRegionGetter('offShell')
@@ -374,18 +330,13 @@ class TxName(MassPlane):
         
     def _kinematikRegionGetter(self, name):
 
-        if not self._txDecay.intermediateParticles:
-            return self.kinematikRegions[name].region
         for plane in self.planes:
-            if plane == self: continue
             if getattr(plane, name) == True: return True
         return False
         
     def _kinematikRegionSetter(self, name, value):
 
-        self.kinematikRegions[name].region = value
         for plane in self.planes:
-            if plane == self: continue
             setattr(plane, name, value)
     
 
@@ -435,16 +386,26 @@ class Errors(object):
         print(m)
         sys.exit()
         
-    def noInterParticle(self, txName):
+    def onlyOnePlane(self, txName):
         
         m = self._starLine
-        m = m + 'can not add massplane to tx: %s !!\n' %txName
+        m = m + 'can not add more then one massplane to tx: %s !!\n' %txName
         m = m + '%s has only one decay, ' %txName
         m = m + 'therefore onlyone massplane\n'
-        m = m + 'use methode setMassplane to define this one massplane'
         m = m + self._starLine
         print(m)
         sys.exit()
+        
+    def interMediateParticle(self, txName):
+        
+        m = self._starLine
+        m = m + 'txName: %s have no interMediateParticle!!\n' %txName
+        m = m + 'please check your addMassPlane call at convert.py, ' %txName
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+       
+    
         
     def shellFlag(self, txName, value):
         
