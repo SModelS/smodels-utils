@@ -31,12 +31,15 @@ class DatabaseCreator(list):
     def __init__(self):
         
         self.exclusions = []
-        self.limitsDictName = 'Dict'
-        self.expectedlimitsDictName = 'ExpectedDict'
         self.metaInfo = None
-        self.twikitxtPath = '/orig/twiki.txt'
-        self.smsrootPath = '/sms.root'
-        self.infoFilePath = '/'
+        self.base = os.getcwd() + '/'
+        self.twikitxtPath = './orig/twiki.txt'
+        self.smsrootPath = './sms.root'
+        self.infoFileDirectory = './'
+        self.infoFileExtension = '.txt'
+        self.metaInfoFileName = 'info'
+        self.assigmentOberator = ': '
+        self.txNameField = 'txname'
         list.__init__(self)
             
     def create(self):
@@ -46,7 +49,8 @@ class DatabaseCreator(list):
         
         self._extendInfoAttr(self.metaInfo, 'lastUpdate')
         self.metaInfo.lastUpdate = self._getLastUpdate()
-        self._createInfoFile('info', self.metaInfo)
+        self._deliteOldFiles()
+        self._createInfoFile(self.metaInfoFileName, self.metaInfo)
    
         self.tWiki = StandardTWiki(self.metaInfo)
         
@@ -85,7 +89,8 @@ class DatabaseCreator(list):
                     if getattr(plane, region.name) == 'auto':
                         setattr(plane, region.name, False)
                     else:
-                        exclusions[region.txname].addMassPlane(plane)
+                        exclusions[getattr(region, self.txNameField)]\
+                        .addMassPlane(plane)
                         print 'Found region: %s' %region.name
                         
                 for excl in exclusions:
@@ -112,7 +117,7 @@ class DatabaseCreator(list):
                         Errors().required(txName.name, region, 'condition')
                     if not hasattr(region, 'fuzzycondition'):
                         Errors().required(txName.name, region, 'fuzzycondition')
-                    self._createInfoFile(region.txname, region, txName)
+                    self._createInfoFile(getattr(region, self.txNameField), region, txName)
         
         self._createSmsRoot()
         self._createTwikiTxt()
@@ -144,8 +149,8 @@ class DatabaseCreator(list):
                 vertexChecker.getOffShellVertices(massArray)
                 if region.checkMassArray(offShellVertices, massArray):
                     setattr(plane, region.name, True)
-                    self._extendInfoAttr(region, 'txname',0)
-                    region.txname = txName.name + region.topoExtension
+                    self._extendInfoAttr(region, self.txNameField,0)
+                    setattr(region, self.txNameField, txName.name + region.topoExtension)
                     self._extendInfoAttr(region, 'validated')
                     region.validated = False
                     self._extendInfoAttr(region, 'axes')
@@ -168,9 +173,9 @@ class DatabaseCreator(list):
         
     def _getLastUpdate(self):
         
-        if os.path.isfile(os.getcwd() + self.infoFilePath + 'info.txt'):
+        if os.path.isfile(self.base + self.infoFilePath(self.metaInfoFileName)):
             lastUpdate = False
-            oldInfo = open(os.getcwd() + self.infoFilePath + 'info.txt')
+            oldInfo = open(self.base + self.infoFilePath(self.metaInfoFileName))
             lines = oldInfo.readlines()
             oldInfo.close()
             for line in lines:
@@ -185,11 +190,31 @@ class DatabaseCreator(list):
         today = date.today()
         today = '%s/%s/%s\n' %(today.year, today.month, today.day)
         return today
-
+        
+    def _deliteOldFiles(self):
+        
+        predefinedPaths = [
+            self.base + self.smsrootPath,
+            self.base + self.twikitxtPath,
+            self.base + self.infoFilePath(self.metaInfoFileName)
+            ]
+        for path in predefinedPaths:
+            if os.path.exists(path): os.remove(path)
+        
+        for entry in os.listdir(self.base + self.infoFileDirectory):
+            if not entry[-len(self.infoFileExtension):] == self.infoFileExtension:
+                continue
+            compareLine = '%s%s%s\n' %(self.txNameField,\
+            self.assigmentOberator, entry[:-len(self.infoFileExtension):])
+            f = open(entry,'r')
+            lines = f.readlines()
+            f.close()
+            if not compareLine in lines: continue
+            os.remove(entry)
 
     def _createSmsRoot(self):
     
-        smsRoot = ROOT.TFile(os.getcwd() + self.smsrootPath,'recreate')
+        smsRoot = ROOT.TFile(self.base + self.smsrootPath,'recreate')
         for exclusions in self.exclusions:
             directory = smsRoot.mkdir(exclusions.name, exclusions.name)
             directory.cd()
@@ -198,7 +223,7 @@ class DatabaseCreator(list):
         
     def _createTwikiTxt(self):
         
-        twikiTxt = open(os.getcwd() + self.twikitxtPath,'w')
+        twikiTxt = open(self.base + self.twikitxtPath,'w')
         twikiTxt.write('%s' %self.tWiki)
         twikiTxt.close()
         
@@ -208,11 +233,17 @@ class DatabaseCreator(list):
         for obj in objects:
             for attr in obj.infoAttr:
                 if not hasattr(obj, attr): continue
-                content = '%s%s: %s\n' %(content, attr,\
-                getattr(obj, attr))
-        infoFile = open(os.getcwd() + self.infoFilePath + name + '.txt', 'w')
+                content = '%s%s%s%s\n' %(content, attr,\
+                self.assigmentOberator, getattr(obj, attr))
+        infoFile = open(self.base + self.infoFilePath(name), 'w')
         infoFile.write(content)
         infoFile.close()
+        
+    def infoFilePath(self, infoFileName):
+        
+        path = '%s%s%s' %(self.infoFileDirectory,\
+        infoFileName, self.infoFileExtension)
+        return path
         
 databaseCreator = DatabaseCreator()   
 
