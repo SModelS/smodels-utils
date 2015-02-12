@@ -48,8 +48,8 @@ class DatabaseCreator(list):
         %self.metaInfo.id
         
         self._extendInfoAttr(self.metaInfo, 'lastUpdate')
-        self.metaInfo.lastUpdate = self._getLastUpdate()
-        self._deliteOldFiles()
+        self._setLastUpdate()
+        self._delite()
         self._createInfoFile(self.metaInfoFileName, self.metaInfo)
    
         self.tWiki = StandardTWiki(self.metaInfo)
@@ -171,7 +171,7 @@ class DatabaseCreator(list):
         obj.infoAttr.insert(position, attr)
         
         
-    def _getLastUpdate(self):
+    def _setLastUpdate(self):
         
         if os.path.isfile(self.base + self.infoFilePath(self.metaInfoFileName)):
             lastUpdate = False
@@ -180,18 +180,34 @@ class DatabaseCreator(list):
             oldInfo.close()
             for line in lines:
                 if 'lastUpdate' in line:
-                    lastUpdate = line.split(': ')[1]
+                    lastUpdate = line.split(self.assigmentOberator)[1]
                     break
             if lastUpdate:
                 while True:
-                    answer = raw_input('overwrite lastUpdate (y/n)?:')
+                    m = 'if one of the following data are changed, '
+                    m = m + 'lastUpdate should be overwritten:\n'
+                    m = m + 'number or name of txNames, arXiv, publication,'
+                    m = m + ' upperLimits\n'
+                    m = m + 'overwrite lastUpdate (y/n)?:'
+                    answer = raw_input(m)
                     if answer == 'y' or answer == 'n': break
-                if answer == 'n': return lastUpdate
+                if answer == 'n': 
+                    self.metaInfo.lastUpdate = lastUpdate
+                    return
         today = date.today()
         today = '%s/%s/%s\n' %(today.year, today.month, today.day)
-        return today
+        self.metaInfo.lastUpdate = today
+        self._setImplementedBy()
         
-    def _deliteOldFiles(self):
+    def _setImplementedBy(self):
+        
+        while True:
+            answer = raw_input('enter your name or initials: ')
+            if answer: break
+        self.metaInfo.implemented_by = answer
+        
+        
+    def _delite(self):
         
         predefinedPaths = [
             self.base + self.smsrootPath,
