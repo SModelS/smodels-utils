@@ -49,7 +49,7 @@ class DatabaseCreator(list):
         
         self._extendInfoAttr(self.metaInfo, 'lastUpdate')
         self._setLastUpdate()
-        self._delite()
+        self._delete()
         self._createInfoFile(self.metaInfoFileName, self.metaInfo)
    
         self.tWiki = StandardTWiki(self.metaInfo)
@@ -207,7 +207,7 @@ class DatabaseCreator(list):
         self.metaInfo.implemented_by = answer
         
         
-    def _delite(self):
+    def _delete(self):
         
         predefinedPaths = [
             self.base + self.smsrootPath,
