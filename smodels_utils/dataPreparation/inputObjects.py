@@ -14,7 +14,7 @@ import ROOT
 from copy import deepcopy
 from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.origDataObjects import\
-OrigLimit, OrigExclusion
+OrigLimit, OrigExclusion, OrigEfficiencyMap
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
 from smodels_utils.dataPreparation.helper import Locker, ObjectList
@@ -140,9 +140,14 @@ class MassPlane(Locker):
             OrigExclusion('expectedExclusionP1'),
             OrigExclusion('expectedExclusionM1'),
             ])
+        self.origEfficiencyMap = OrigEfficiencyMap('EfficiencyMap')
         self.figure =None
         self.figureUrl = None
 
+    @property
+    def efficiencyMap(self):
+        return self.origEfficiencyMap
+        
     @property
     def obsUpperLimit(self):
         return self.origLimits['limit']
