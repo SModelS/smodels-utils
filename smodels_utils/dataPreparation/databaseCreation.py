@@ -192,17 +192,11 @@ class DatabaseCreator(list):
             oldInfo.close()
             for line in lines:
                 if 'lastUpdate' in line:
-<<<<<<< HEAD
-                    lastUpdate = line.split(self.assigmentOberator)[1]
+                    lastUpdate = line.split(self.assignmentOperator)[1]
                     lastUpdate = lastUpdate.replace('\n','')
                 if 'implemented_by' in line:
-                    implemented_by = line.split(self.assigmentOberator)[1]
-                    implemented_by = implemented_by.replace('\n','')
-=======
-                    lastUpdate = line.split(self.assignmentOperator)[1]
-                if 'implemented_by' in line:
                     implemented_by = line.split(self.assignmentOperator)[1]
->>>>>>> 38ac7598ba733f6f705bc63e56a4f67912a12607
+                    implemented_by = implemented_by.replace('\n','')
             if lastUpdate:
                 while True:
                     m = 'if one of the following data are changed, '
