@@ -86,7 +86,8 @@ class DatabaseCreator(list):
                     publishedData = False
                     
                 for region in txName.kinematikRegions:      
-                    if getattr(plane, region.name) == 'auto':
+                    if getattr(plane, region.name) == 'auto' \
+                    or getattr(plane, region.name) == False:
                         setattr(plane, region.name, False)
                     else:
                         exclusions[getattr(region, self.txNameField)]\
@@ -131,7 +132,10 @@ class DatabaseCreator(list):
             
         kinRegions = txName.kinematikRegions
                
-        for x,y,limit in origLimitHisto:
+        for i,value in enumerate(origLimitHisto):
+            x = value[0] 
+            y = value[1]
+            limit = value[2]
             massPoints = plane.origPlot.getParticleMasses(x,y)
             massArray = [massPoints,massPoints]
             upperLimits.append(massArray, limit)
@@ -142,6 +146,8 @@ class DatabaseCreator(list):
                     if not isinstance(regionExist , bool):
                         Errors().kinRegionSetter(txName.name, region.name, \
                         regionPreSet)
+                    if regionExist == True and i == 0:
+                        self._setRegionAttr(txName, region, plane)
                     continue
                 if not vertexChecker: 
                     Errors().notAssigned(txName.name)
@@ -149,17 +155,22 @@ class DatabaseCreator(list):
                 vertexChecker.getOffShellVertices(massArray)
                 if region.checkMassArray(offShellVertices, massArray):
                     setattr(plane, region.name, True)
-                    self._extendInfoAttr(region, self.txNameField,0)
-                    setattr(region, self.txNameField, txName.name + region.topoExtension)
-                    self._extendInfoAttr(region, 'validated')
-                    region.validated = False
-                    self._extendInfoAttr(region, 'axes')
-                    if not hasattr(region, 'axes'):
-                        region.axes = str(plane.origPlot)
-                    else:
-                        region.axes = region.axes + ';' +\
-                        str(plane.origPlot)
+                    self._setRegionAttr(txName, region, plane)
         return upperLimits
+        
+        
+    def _setRegionAttr(self, txName, region, plane):
+        
+        self._extendInfoAttr(region, self.txNameField,0)
+        setattr(region, self.txNameField, txName.name + region.topoExtension)
+        self._extendInfoAttr(region, 'validated')
+        region.validated = False
+        self._extendInfoAttr(region, 'axes')
+        if not hasattr(region, 'axes'):
+            region.axes = str(plane.origPlot)
+        else:
+            region.axes = region.axes + ';' +\
+            str(plane.origPlot)
     
     
     def _extendInfoAttr(self, obj, attr, position = None):
@@ -182,8 +193,10 @@ class DatabaseCreator(list):
             for line in lines:
                 if 'lastUpdate' in line:
                     lastUpdate = line.split(self.assigmentOberator)[1]
+                    lastUpdate = lastUpdate.replace('\n','')
                 if 'implemented_by' in line:
                     implemented_by = line.split(self.assigmentOberator)[1]
+                    implemented_by = implemented_by.replace('\n','')
             if lastUpdate:
                 while True:
                     m = 'if one of the following data are changed, '
@@ -280,6 +293,17 @@ class Errors(object):
         m = m + "but no %s for this region\n" %attr
         m = m + "use txName.%s.%s " %(kinObj.topoExtension, attr)
         m = m + "to set %s" %attr
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def kinRegionSetter(self, txName, name, value):
+    
+        m = self._starLine
+        m = m + "in txName %s'\n" %txName
+        m = m + "setter for propertsy %s must be of bool type or 'auto'\n"\
+        %(name)
+        m = m + 'got: %s' %value
         m = m + self._starLine
         print(m)
         sys.exit()
