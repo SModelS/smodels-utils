@@ -32,7 +32,7 @@ class MetaInfo(Locker):
     
     infoAttr = [ 'sqrts', 'lumi', 'id', 'prettyname', 'url', 'arxiv',\
     'publication', 'contact', 'superseded_by','supersedes', 'comment',\
-    'private', 'implemented_by']
+    'private', 'implemented_by', 'observedN', 'expectedBG', 'bgError' ]
     internalAttr = ['_sqrts', '_lumi']
     
     def __new__(cls, ID):

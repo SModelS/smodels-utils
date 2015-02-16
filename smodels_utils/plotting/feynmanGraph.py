@@ -15,10 +15,12 @@ logger = logging.getLogger(__name__)
 def printParticle_ ( label ):
     """ very simple method to rename a few particles for the asciidraw
             routine, do not call directly """
+    ## print "label=",label
     if label=="jet": label="q"
     if label in [ "hi", "higgs" ]: label="H"
+    # if label in [ "nu" ]: label="$\\nu$"
     label=label+"     "
-    return label[:2]
+    return label[:3]
 
 def segment_ ( p1, p2, spin, Bend=None ):
     from pyfeyn.user import NamedLine
@@ -58,8 +60,8 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
         fl=NamedLine[spin](p1,p2)
         if displace==None: displace=.05
         if label:
-            label=label.replace("nu","$\nu$").replace("+","$^{+}$").replace("-","$^{-}$")
-            label=label.replace("tau","$\tau$").replace("mu","$\mu$")
+            label=label.replace("nu","$\\nu$").replace("+","$^{+}$").replace("-","$^{-}$")
+            label=label.replace("ta","$\\tau$").replace("mu","$\mu$")
             fl.addLabel ( label, pos=0.9, displace=displace )
         return [ fl ]
 

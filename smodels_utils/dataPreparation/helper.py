@@ -53,7 +53,7 @@ class Errors(object):
     def attr(self, name, attr):
     
         m = self._starLine
-        m = m + '%s is not a allowed attripute ' %name 
+        m = m + '%s is not an allowed attribute ' %name 
         m = m + 'for %s\n'  %attr
         m = m + self._starLine
         print(m)
