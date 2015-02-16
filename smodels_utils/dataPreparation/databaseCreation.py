@@ -62,6 +62,7 @@ class DatabaseCreator(list):
             vertexChecker = VertexChecker(txName)
             upperLimits = StandardLimits()
             expectedUpperLimits = StandardLimits()
+            efficiencyMap = StandardLimits()
             
             exclusions = ObjectList('name')
             for region in txName.kinematikRegions:
@@ -71,6 +72,9 @@ class DatabaseCreator(list):
             for plane in txName.planes:
                 
                 print '\nreading mass plane: %s\n' %plane.origPlot
+                
+                efficiencyMap = self.extendEfficiencyMap\
+                (efficiencyMap, plane, txName)
                 
                 upperLimits = self.extendlimit\
                 (upperLimits, 'limit', plane, vertexChecker, txName)
@@ -105,9 +109,11 @@ class DatabaseCreator(list):
             self._extendInfoAttr(txName, 'publishedData')
             self._extendInfoAttr(txName, 'upperLimits')
             self._extendInfoAttr(txName, 'expectedUpperLimits')
+            self._extendInfoAttr(txName, 'efficiencymap')
             if upperLimits: txName.upperLimits = upperLimits
             if expectedUpperLimits: txName.expectedUpperLimits =\
             expectedUpperLimits
+            if efficiencyMap: txName.efficiencymap = efficiencyMap
             txName.publishedData = publishedData
             
             for region in txName.kinematikRegions:
@@ -122,6 +128,17 @@ class DatabaseCreator(list):
         
         self._createSmsRoot()
         self._createTwikiTxt()
+        
+    def extendEfficiencyMap(self, efficiencyMap, plane, txName):
+        
+        origEfficiencyMap = plane.origEfficiencyMap
+        if not origEfficiencyMap: return efficiencyMap
+               
+        for x, y, limit in origEfficiencyMap :
+            massPoints = plane.origPlot.getParticleMasses(x,y)
+            massArray = [massPoints,massPoints]
+            efficiencyMap.append(massArray, limit)
+        return efficiencyMap
 
         
         
