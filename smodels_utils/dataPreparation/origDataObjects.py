@@ -161,6 +161,59 @@ class OrigLimit(Orig):
                 if ul == 0.: continue
                 yield [x, y, ul]
         
+
+class OrigEfficiencyMap(Orig):
+    
+    plotableAttr = [] + Orig.infoAttr
+    internalAttr = [] + Orig.internalAttr
+    
+    def __init__(self,name):
+        
+        Orig.__init__(self,name)
+        
+    def __iter__(self):
+        
+        for point in getattr(self,self.fileType)():
+            yield point
+            
+    def txt(self):
+        
+        for point in Orig.txt(self):
+            if not len(point) == 3:
+                Errors().txtFormat(self.path, 'OrigEfficiencyMap', 3)
+            yield point
+    
+    def root(self):
+        
+        limit = Orig.root(self)
+        for point in self._getPoints(limit):
+            yield point
+                
+    def cMacro(self):
+       
+        limit = Orig.cMacro(self)
+        for point in self._getPoints(limit):
+            yield point
+            
+    def canvas(self):
+        
+        limit = Orig.canvas(self)
+        for point in self._getPoints(limit):
+            yield point
+                
+    def _getPoints(self,limit):
+        
+        xAxis = limit.GetXaxis()
+        yAxis = limit.GetYaxis()
+        xRange = range(1,xAxis.GetNbins() + 1)
+        yRange = range(1,yAxis.GetNbins() + 1)
+        for xBin in xRange:
+            x = xAxis.GetBinCenter(xBin)
+            for yBin in yRange:
+                y = yAxis.GetBinCenter(yBin)
+                eff = limit.GetBinContent(xBin, yBin)
+                if eff == 0.: continue
+                yield [x, y, eff]
         
         
 class OrigExclusion(Orig):
