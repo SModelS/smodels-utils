@@ -94,21 +94,28 @@ class VertexChecker(object):
         
 class StandardLimits(list):
     
+    def __init__(self, massUnit = '*GeV', valueUnit = '*pb'):
+        
+        print valueUnit
+        self.massUnit = massUnit
+        self.valueUnit = valueUnit
+        
+    
     def append(self, massArray, limit):
         
         array = [[],[]]
         for i in range(len(massArray)):
-            array[i] = ['%s*GeV' %mass for mass in massArray[i]]
+            array[i] = ['%s%s' %(mass, self.massUnit) for mass in massArray[i]]
         inLimit = False
         for point in self:
             if array ==  point[0]:
                 oldlimit = float(point[1][:-3])
                 if abs(limit-oldlimit) > 0.0001:
                     Errors().limitDifference\
-                    (array, point[1], '%s*pb' %limit)
+                    (array, point[1], '%s%s' %(limit,self.valueUnit))
                 inLimit = True
                 break
-        limit = '%s*pb' %limit
+        limit = '%s%s' %(limit,self.valueUnit)
         if not inLimit:
             list.append(self, [array, limit])
             
