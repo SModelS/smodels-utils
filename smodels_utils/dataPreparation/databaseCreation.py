@@ -62,7 +62,7 @@ class DatabaseCreator(list):
             vertexChecker = VertexChecker(txName)
             upperLimits = StandardLimits()
             expectedUpperLimits = StandardLimits()
-            efficiencyMap = StandardLimits()
+            efficiencyMap = StandardLimits(valueUnit ='')
             
             exclusions = ObjectList('name')
             for region in txName.kinematikRegions:
@@ -74,7 +74,7 @@ class DatabaseCreator(list):
                 print '\nreading mass plane: %s\n' %plane.origPlot
                 
                 efficiencyMap = self.extendEfficiencyMap\
-                (efficiencyMap, plane, txName)
+                (efficiencyMap, plane, vertexChecker, txName)
                 
                 upperLimits = self.extendlimit\
                 (upperLimits, 'limit', plane, vertexChecker, txName)
@@ -85,6 +85,8 @@ class DatabaseCreator(list):
                 %len(upperLimits)
                 print 'extending expectedUpperLimits to %s entrys'\
                 %len(expectedUpperLimits)
+                print 'extending efficiencyMap to %s entrys'\
+                %len(efficiencyMap)
                 
                 if plane.obsUpperLimit and not plane.obsUpperLimit.dataUrl: 
                     publishedData = False
@@ -115,7 +117,7 @@ class DatabaseCreator(list):
             expectedUpperLimits
             if efficiencyMap: txName.efficiencymap = efficiencyMap
             txName.publishedData = publishedData
-            
+
             for region in txName.kinematikRegions:
                 if getattr(txName, region.name):
                     if not hasattr(region, 'constraint'):
@@ -129,15 +131,37 @@ class DatabaseCreator(list):
         self._createSmsRoot()
         self._createTwikiTxt()
         
-    def extendEfficiencyMap(self, efficiencyMap, plane, txName):
+    def extendEfficiencyMap(self, efficiencyMap, plane, vertexChecker, txName):
         
         origEfficiencyMap = plane.origEfficiencyMap
         if not origEfficiencyMap: return efficiencyMap
-               
-        for x, y, limit in origEfficiencyMap :
+        
+        kinRegions = txName.kinematikRegions
+
+        for i,value in enumerate(origEfficiencyMap):
+            x = value[0] 
+            y = value[1]
+            limit = value[2]
             massPoints = plane.origPlot.getParticleMasses(x,y)
             massArray = [massPoints,massPoints]
             efficiencyMap.append(massArray, limit)
+            
+            for region in kinRegions:
+                regionExist = getattr(plane, region.name)
+                if not regionExist == 'auto':
+                    if not isinstance(regionExist , bool):
+                        Errors().kinRegionSetter(txName.name, region.name, \
+                        regionPreSet)
+                    if regionExist == True and i == 0:
+                        self._setRegionAttr(txName, region, plane)
+                    continue
+                if not vertexChecker: 
+                    Errors().notAssigned(txName.name)
+                offShellVertices = \
+                vertexChecker.getOffShellVertices(massArray)
+                if region.checkMassArray(offShellVertices, massArray):
+                    setattr(plane, region.name, True)
+                    self._setRegionAttr(txName, region, plane)
         return efficiencyMap
 
         
