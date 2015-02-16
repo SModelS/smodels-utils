@@ -92,7 +92,7 @@ class VertexChecker(object):
         return bool(self.kinConstraints)
         
         
-class StandardLimits(list):
+class StandardDataList(list):
     
     def __init__(self, massUnit = '*GeV', valueUnit = '*pb'):
         

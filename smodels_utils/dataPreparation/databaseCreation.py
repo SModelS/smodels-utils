@@ -13,7 +13,7 @@ import sys
 import os
 import ROOT
 from smodels_utils.dataPreparation.standardObjects import\
-StandardLimits, VertexChecker, StandardExclusions, StandardTWiki
+StandardDataList, VertexChecker, StandardExclusions, StandardTWiki
 from helper import ObjectList
 import logging
 from datetime import date
@@ -60,9 +60,9 @@ class DatabaseCreator(list):
             print '\nreading: %s' %txName.name
             
             vertexChecker = VertexChecker(txName)
-            upperLimits = StandardLimits()
-            expectedUpperLimits = StandardLimits()
-            efficiencyMap = StandardLimits(valueUnit ='')
+            upperLimits = StandardDataList()
+            expectedUpperLimits = StandardDataList()
+            efficiencyMap = StandardDataList(valueUnit ='')
             
             exclusions = ObjectList('name')
             for region in txName.kinematikRegions:
@@ -73,13 +73,12 @@ class DatabaseCreator(list):
                 
                 print '\nreading mass plane: %s\n' %plane.origPlot
                 
-                efficiencyMap = self.extendEfficiencyMap\
+                efficiencyMap = self.extendDataList\
                 (efficiencyMap, plane, vertexChecker, txName)
-                
-                upperLimits = self.extendlimit\
-                (upperLimits, 'limit', plane, vertexChecker, txName)
-                expectedUpperLimits = self.extendlimit(expectedUpperLimits,\
-                'expectedlimit', plane, vertexChecker, txName)
+                upperLimits = self.extendDataList\
+                (upperLimits, plane, vertexChecker, txName, 'limit')
+                expectedUpperLimits = self.extendDataList(expectedUpperLimits,\
+                plane, vertexChecker, txName, 'expectedlimit')
                 
                 print 'extending upperLimits to %s entrys'\
                 %len(upperLimits)
@@ -130,56 +129,25 @@ class DatabaseCreator(list):
         
         self._createSmsRoot()
         self._createTwikiTxt()
+   
         
-    def extendEfficiencyMap(self, efficiencyMap, plane, vertexChecker, txName):
+    def extendDataList(self, dataList, plane, vertexChecker, txName, limitType = None):
         
-        origEfficiencyMap = plane.origEfficiencyMap
-        if not origEfficiencyMap: return efficiencyMap
-        
-        kinRegions = txName.kinematikRegions
-
-        for i,value in enumerate(origEfficiencyMap):
-            x = value[0] 
-            y = value[1]
-            limit = value[2]
-            massPoints = plane.origPlot.getParticleMasses(x,y)
-            massArray = [massPoints,massPoints]
-            efficiencyMap.append(massArray, limit)
-            
-            for region in kinRegions:
-                regionExist = getattr(plane, region.name)
-                if not regionExist == 'auto':
-                    if not isinstance(regionExist , bool):
-                        Errors().kinRegionSetter(txName.name, region.name, \
-                        regionPreSet)
-                    if regionExist == True and i == 0:
-                        self._setRegionAttr(txName, region, plane)
-                    continue
-                if not vertexChecker: 
-                    Errors().notAssigned(txName.name)
-                offShellVertices = \
-                vertexChecker.getOffShellVertices(massArray)
-                if region.checkMassArray(offShellVertices, massArray):
-                    setattr(plane, region.name, True)
-                    self._setRegionAttr(txName, region, plane)
-        return efficiencyMap
-
-        
-        
-    def extendlimit(self, upperLimits, limitType, plane, vertexChecker, txName):
-        
-        origLimitHisto = plane.origLimits[limitType] 
-        if not origLimitHisto: return upperLimits
+        if limitType:
+            origData = plane.origLimits[limitType] 
+        else:
+            origData = plane.origEfficiencyMap
+        if not origData: return dataList
             
         kinRegions = txName.kinematikRegions
                
-        for i,value in enumerate(origLimitHisto):
+        for i,value in enumerate(origData):
             x = value[0] 
             y = value[1]
-            limit = value[2]
+            value = value[2]
             massPoints = plane.origPlot.getParticleMasses(x,y)
             massArray = [massPoints,massPoints]
-            upperLimits.append(massArray, limit)
+            dataList.append(massArray, value)
             
             for region in kinRegions:
                 regionExist = getattr(plane, region.name)
@@ -197,7 +165,7 @@ class DatabaseCreator(list):
                 if region.checkMassArray(offShellVertices, massArray):
                     setattr(plane, region.name, True)
                     self._setRegionAttr(txName, region, plane)
-        return upperLimits
+        return dataList
         
         
     def _setRegionAttr(self, txName, region, plane):
