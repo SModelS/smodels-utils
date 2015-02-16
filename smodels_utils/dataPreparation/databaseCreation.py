@@ -38,7 +38,7 @@ class DatabaseCreator(list):
         self.infoFileDirectory = './'
         self.infoFileExtension = '.txt'
         self.metaInfoFileName = 'info'
-        self.assigmentOberator = ': '
+        self.assignmentOperator = ': '
         self.txNameField = 'txname'
         list.__init__(self)
             
@@ -181,9 +181,9 @@ class DatabaseCreator(list):
             oldInfo.close()
             for line in lines:
                 if 'lastUpdate' in line:
-                    lastUpdate = line.split(self.assigmentOberator)[1]
+                    lastUpdate = line.split(self.assignmentOperator)[1]
                 if 'implemented_by' in line:
-                    implemented_by = line.split(self.assigmentOberator)[1]
+                    implemented_by = line.split(self.assignmentOperator)[1]
             if lastUpdate:
                 while True:
                     m = 'if one of the following data are changed, '
@@ -225,7 +225,7 @@ class DatabaseCreator(list):
             if not entry[-len(self.infoFileExtension):] == self.infoFileExtension:
                 continue
             compareLine = '%s%s%s\n' %(self.txNameField,\
-            self.assigmentOberator, entry[:-len(self.infoFileExtension):])
+            self.assignmentOperator, entry[:-len(self.infoFileExtension):])
             f = open(entry,'r')
             lines = f.readlines()
             f.close()
@@ -254,7 +254,7 @@ class DatabaseCreator(list):
             for attr in obj.infoAttr:
                 if not hasattr(obj, attr): continue
                 content = '%s%s%s%s\n' %(content, attr,\
-                self.assigmentOberator, getattr(obj, attr))
+                self.assignmentOperator, getattr(obj, attr))
         infoFile = open(self.base + self.infoFilePath(name), 'w')
         infoFile.write(content)
         infoFile.close()
