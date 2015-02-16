@@ -96,7 +96,6 @@ class StandardDataList(list):
     
     def __init__(self, massUnit = '*GeV', valueUnit = '*pb'):
         
-        print valueUnit
         self.massUnit = massUnit
         self.valueUnit = valueUnit
         
