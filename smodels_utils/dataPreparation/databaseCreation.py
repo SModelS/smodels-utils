@@ -193,6 +193,7 @@ class DatabaseCreator(list):
             for line in lines:
                 if 'lastUpdate' in line:
                     lastUpdate = line.split(self.assignmentOperator)[1]
+                    lastUpdate = lastUpdate.replace('\n','')
                 if 'implemented_by' in line:
                     implemented_by = line.split(self.assignmentOperator)[1]
                     implemented_by = implemented_by.replace('\n','')
