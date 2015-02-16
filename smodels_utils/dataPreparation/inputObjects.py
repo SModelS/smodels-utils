@@ -30,8 +30,8 @@ logger.setLevel(level=logging.ERROR)
 
 class MetaInfo(Locker):
     
-    infoAttr = [ 'sqrts', 'lumi', 'id', 'prettyname', 'url', 'arxiv',\
-    'publication', 'contact', 'superseded_by','supersedes', 'comment',\
+    infoAttr = [ 'sqrts', 'lumi', 'id', 'prettyname', 'url', 'arxiv', 'signalRegion',
+    'publication', 'contact', 'superseded_by','supersedes', 'comment',
     'private', 'implemented_by', 'observedN', 'expectedBG', 'bgError' ]
     internalAttr = ['_sqrts', '_lumi']
     
@@ -120,8 +120,9 @@ class KineamtikRegion(Locker):
 class MassPlane(Locker):
     
     infoAttr = []
-    internalAttr = ['_txDecay', 'origPlot', 'origLimits', 'origExclusions',\
-    'figure', 'figureUrl', 'dataUrl', 'histoDataUrl', 'exclusionDataUrl']
+    internalAttr = ['_txDecay', 'origPlot', 'origLimits', 'origExclusions',
+    'origEfficiencyMap', 'figure', 'figureUrl', 'dataUrl', 'histoDataUrl', 
+    'exclusionDataUrl']
     
     def __init__(self,txDecay, motherMass = None,\
     lspMass = None, **interMasses ):
