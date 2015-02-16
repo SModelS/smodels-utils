@@ -294,13 +294,20 @@ decays = {
     ], 
     'TChiChipmHW':'neutralino_2 chargino^pm_1  --> w lsp higgs lsp ', 
     'TChiChipmSlepStau':'neutralino_2 chargino^pm_1  --> Lepton (slepton --> Lepton lsp ) | neutrino (stau --> tau lsp )', 
+    'TChipChimStauSnu':[
+    'chargino^pm chargino^mp  --> tau (sneutrino --> neutrino lsp ) | neutrino (stau --> tau lsp )',
+    'chargino^pm chargino^mp  --> tau (sneutrino --> neutrino lsp ) | tau (sneutrino --> neutrino lsp )',
+    'chargino^pm chargino^mp  --> neutrino (stau --> tau lsp ) | neutrino (stau --> tau lsp )'
+    ], 
     'TChipChimSlepSnu':[
     'chargino^pm chargino^mp  --> Lepton (sneutrino --> neutrino lsp ) | neutrino (slepton --> Lepton lsp )',
     'chargino^pm chargino^mp  --> Lepton (sneutrino --> neutrino lsp ) | Lepton (sneutrino --> neutrino lsp )',
-    'chargino^pm chargino^mp  --> neutralino (slepton --> Lepton lsp ) | neutrino (slepton --> Lepton lsp )'
+    'chargino^pm chargino^mp  --> neutino (slepton --> Lepton lsp ) | neutrino (slepton --> Lepton lsp )'
     ], 
     'TSlepSlep':'slepton  --> lepton lsp ',
-    'TStauStau':'stau  --> tau lsp '
+    'TStauStau':'stau  --> tau lsp ',
+    'T7ChiSlep':'gluino  --> quark (squark --> quark (neutralino_2 --> lepton lsp ))',
+    'T8ChiSlep':'squark  --> quark (neutralino_2 --> lepton lsp )'
 }
 
 prettySMParticle = {
