@@ -114,7 +114,14 @@ class StandardLimits(list):
             
     def __str__(self):
         
-        return list.__str__(self).replace("'","")
+        string = '['
+        
+        for i, entry in enumerate(self):
+            if not (i+1) == len(self):
+                string = '%s%s,\n' %(string, entry)
+                continue
+            string = '%s%s]' %(string, entry)
+        return string.replace("'","")
         
      
         
