@@ -123,10 +123,11 @@ class MassPlane(Locker):
     internalAttr = ['_txDecay', 'origPlot', 'origLimits', 'origExclusions',\
     'figure', 'figureUrl', 'dataUrl', 'histoDataUrl', 'exclusionDataUrl']
     
-    def __init__(self,txDecay, motherMass = None, interMass = None, lspMass = None):
+    def __init__(self,txDecay, motherMass = None,\
+    lspMass = None, **interMasses ):
         self._txDecay = txDecay
         self.origPlot = OrigPlot.fromConvert( \
-        motherMass = motherMass, interMass = interMass, lspMass = lspMass)
+        motherMass = motherMass, lspMass = lspMass, **interMasses)
         self.origLimits = ObjectList('name',[
             OrigLimit('limit'),
             OrigLimit('expectedlimit')
@@ -246,8 +247,7 @@ class TxName(Locker):
         return kinRegions
         
     
-    def addMassPlane(self, motherMass = None, interMass = None, \
-    lspMass = None):
+    def addMassPlane(self, motherMass = None, lspMass = None, **interMasses):
 
         if not motherMass:
             Errors().missingMass('motherMass',self.name)
@@ -255,13 +255,13 @@ class TxName(Locker):
             Errors().missingMass('lspMass',self.name)
         if not self._txDecay.intermediateParticles:
             if self._planes: Errors().onlyOnePlane(self.name)
-            if interMass: Errors().interMediateParticle(self.name)
+            if interMasses: Errors().interMediateParticle(self.name)
         else:
-            if not interMass:
+            if not interMasses:
                 Errors().missingMass('interMass',self.name)
             
         massPlane = MassPlane(self._txDecay,\
-        motherMass = motherMass, interMass = interMass, lspMass = lspMass)
+        motherMass = motherMass, lspMass = lspMass, **interMasses)
         for kinRegion in self.kinematikRegions:
             if not kinRegion.name in MassPlane.internalAttr:
                 MassPlane.internalAttr.append(kinRegion.name)
@@ -336,6 +336,7 @@ class TxName(Locker):
         
     def _kinematikRegionSetter(self, name, value):
 
+        setattr(self.kinematikRegions[name], 'region', value)
         for plane in self.planes:
             setattr(plane, name, value)
     
@@ -380,7 +381,7 @@ class Errors(object):
     def missingMass(self, massName, txName):
         
         m = self._starLine
-        m = m + '%s for mass plane off\n' %massName
+        m = m + '%s for mass plane of\n' %massName
         m = m + 'txName %s not deffiend' %txName
         m = m + self._starLine
         print(m)

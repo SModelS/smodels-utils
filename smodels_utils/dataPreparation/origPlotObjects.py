@@ -8,11 +8,12 @@
 
 """
 
+import sys 
 from sympy import var, Eq, lambdify, solve, sympify
 
 xValue = var('xValue')
 x, y = var('x y')
-mother, inter, lsp = var('mother inter lsp')
+mother, lsp = var('mother lsp')
 
 
 class OrigPlot(object):
@@ -21,37 +22,37 @@ class OrigPlot(object):
        
         self._equations = []
         self._equations.append(MotherEq)
-        self._equations.append(lspEq)
         for interEquation in interEq:
-            if isinstance(interEquation,Eq):
                 self._equations.append(interEquation)
+        self._equations.append(lspEq)
             
     @classmethod
     def fromString(cls, string):
+        equations = [sympify(eq) for eq in string.split('_')]
+        for i, eq in enumerate(equations):
+            if eq.args[0].name == 'mother':
+                motherEq = equations.pop(i)
+        for i, eq in enumerate(equations):
+            if eq.args[0].name == 'lsp':
+                lspEq = equations.pop(i)
+        interEqs = sorted(equations, key = lambda eq: eq.args[0].name)
         
-        equations = string.split('_')
-        if len(equations) > 3:
-            logger.error('Current implementation only work for decays with max.' + \
-            '3 particles, got %s particles' %len(equations))
-            sys.exit()
-        motherEq = sympify(equations[0])
-        lspEq = sympify(equations[1])
-        if len(equations) == 3:
-            interEq = sympify(equations[2])
-        else:
-            interEq = None
-        return cls(motherEq, lspEq, interEq)
+        return cls(motherEq, lspEq, *interEqs)
        
     @classmethod  
-    def fromConvert(cls, motherMass = None, interMass = None, lspMass = None):
+    def fromConvert(cls, motherMass = None, lspMass = None, **interMasses):
         
         motherEq = Eq(mother,motherMass)
-        if interMass:
-            interEq = Eq(inter,interMass)
-        else:
-            interEq = None
         lspEq = Eq(lsp,lspMass)
-        return cls(motherEq , lspEq, interEq)
+        interEqs = []
+        for k, v in interMasses.iteritems():
+            eq = Eq(var(k.replace('Mass','')), v)
+            interEqs.append(eq)
+        interEqs = sorted(interEqs, key = lambda eq: eq.args[0].name)
+        for i,eq in enumerate(interEqs):
+            if not eq.args[0].name == 'inter%s' %i:
+                Errors().interMass()
+        return cls(motherEq , lspEq, *interEqs)
         
     def _getMassFunction(self,equationNr, particle):
         
@@ -64,12 +65,9 @@ class OrigPlot(object):
         #if not '_massFuctions' in self.__dict__:
         if True:
             self._massFuctions = []
-            self._massFuctions.append(self._getMassFunction(0, mother))
-            if len(self._equations) == 3:
-                self._massFuctions.append(self._getMassFunction(2, inter))
-            self._massFuctions.append(self._getMassFunction(1, lsp))
+            for i,eq in enumerate(self._equations):
+                self._massFuctions.append(self._getMassFunction(i, eq.args[0]))
 
-        
         particleMasses = []
         for function in self._massFuctions:
             particleMasses.append(function(xMass,yMass))
@@ -87,34 +85,47 @@ class OrigPlot(object):
                     break
             if breaking == True: break
         self._xy = xy
-        self._xyFunction = lambdify([mother,inter,lsp],[xy[x],xy[y]],'math')
+        particles = [eq.args[0].name for eq in self._equations]
+        self._xyFunction = lambdify(particles,[xy[x],xy[y]],'math')
         
         
     def getXYValues(self,massArray):
-        
-        motherMass = massArray[0]
-        interMass = 0
-        if len(massArray) == 3: interMass = massArray[1]
-        lspMass = massArray[1]
-        if len(massArray) == 3: lspMass = massArray[2]
-        
+            
         if not '_xyFunction' in self.__dict__:
             self._setXYFunction()
-        if self.inOrigPlot(motherMass, interMass, lspMass):
-            return self._xyFunction(motherMass,interMass,lspMass)
+        if self.inOrigPlot(massArray):
+            return self._xyFunction(*massArray)
         return None
         
-    def inOrigPlot(self,motherMass, interMass, lspMass):
+    def inOrigPlot(self, massArray):
+        
+        if len(massArray) != len(self._equations):
+            return False
         
         if not '_xy' in self.__dict__:
             self._setXYFunction()
         
+        equations = []
         for eq in self._equations:
             equation = eq.subs(x,self._xy[x])
             equation = equation.subs(y,self._xy[y]) 
-            if equation != True: break
-        return equation.subs([(mother,motherMass),(inter,interMass),\
-        (lsp,lspMass)])
+            if equation != True: equations.append(equation)
+
+        massDublets = []
+        for i, eq in enumerate(self._equations):
+            particle = eq.args[0]
+            mass = massArray[i]
+            massDublets.append((particle, mass))
+
+        for eq in equations:
+            leftSide = eq.args[0]
+            rightSide = eq.args[1]
+            leftSide = leftSide.subs(massDublets)
+            rightSide = rightSide.subs(massDublets)
+            if abs(leftSide-rightSide) > 0.000001:
+                return False
+        return True
+        #return equation.subs(massDublets)
         
     def __str__(self):
         
@@ -125,3 +136,26 @@ class OrigPlot(object):
             str(equation).split('==')[0].strip().replace(' ',''), \
             str(equation).split('==')[1].strip().replace(' ',''))
         return string
+        
+    def __eq__(self, other):
+        
+        return str(self) == str(other)
+        
+        
+class Errors(object):
+    
+    def __init__(self):
+        
+        self._starLine = '\n************************************\n'
+        
+    def interMass(self):
+        
+        m = self._starLine
+        m = m + 'While defining a massPlane an error in Class Axes occurred:\n'
+        m = m + 'unkonown interMass chain. First interMass needs always index 0\n'
+        m = m + 'secound interMass (if exist) needs index 1, .....\n'
+        m = m + 'please check you convert file'
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
