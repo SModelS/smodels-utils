@@ -87,8 +87,10 @@ class DatabaseCreator(list):
                 print 'extending efficiencyMap to %s entrys'\
                 %len(efficiencyMap)
                 
-                if plane.obsUpperLimit and not plane.obsUpperLimit.dataUrl: 
-                    publishedData = False
+                if plane.obsUpperLimit or plane.efficiencyMap:
+                    if not plane.obsUpperLimit.dataUrl and \
+                    not plane.efficiencyMap.dataUrl: 
+                        publishedData = False
                     
                 for region in txName.kinematikRegions:      
                     if getattr(plane, region.name) == 'auto' \
