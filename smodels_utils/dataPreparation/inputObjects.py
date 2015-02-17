@@ -357,7 +357,7 @@ class Errors(object):
         
         m = self._starLine
         m = m + '%s is no known txName !!\n'  %txName
-        m = m + 'make shure there are no typos in the txName\n'
+        m = m + 'make sure there are no typos in the txName\n'
         m = m + 'or add the txName to the decay Dict at helper/txDecays.py'
         m = m + self._starLine
         print(m)
