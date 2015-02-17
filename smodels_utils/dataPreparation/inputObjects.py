@@ -231,7 +231,7 @@ class TxName(Locker):
     infoAttr = ['branchcondition']
     internalAttr = ['_name', 'name', '_txDecay', '_kinematikRegions','_planes',\
     '_branchcondition', 'onShell', 'offShell', 'constraint',\
-    'condition', 'fuzzycondition'] 
+    'condition', 'fuzzycondition','branchingRatio'] 
     
     def __new__(cls,txName):
         
@@ -252,7 +252,7 @@ class TxName(Locker):
             Errors().doubledDecay(self._name, self._txDecay.doubledDecays) 
         self._kinematikRegions = self._getKinRegions()
         self._planes = []
-        self._branchcondition = 'equal branches'
+        self.branchingRatio = None
 
     def _getKinRegions(self):
         
@@ -287,20 +287,24 @@ class TxName(Locker):
             setattr(massPlane, kinRegion.name, kinRegion.region)
         self._planes.append(massPlane)
         return massPlane
-    
+        
     @property
     def branchcondition(self):
         
-        return self._branchcondition
+        for plane in self.planes:
+            branch_1 = plane.origPlot.branch_1
+            branch_2 = plane.origPlot.branch_2
+            print branch_1
+            print branch_2
+            if branch_1 != branch_2:
+                if not self.branchingRatio: Errors().branchingRatio()
+                if not isinstance(self.branchingRatio, float):
+                    Errors().branchingRatioType(type(self.branchingRatio))
+                if self.branchingRatio < 0. or self.branchingRatio > 1.:
+                    Errors().branchingRatioValue(self.branchingRatio)
+                return 'asymetric branches BR = %s' %self.branchingRatio
+        return 'equal branches'
         
-    @branchcondition.setter
-    def branchcondition(self, value):
-        
-        if not value == 'equal branches':
-            Errors().branchcondition(self.name, value)
-        self._branchcondition = value
-            
-    
     @property
     def name(self):
         return self._name
@@ -470,6 +474,34 @@ class Errors(object):
         m = self._starLine#
         m = m + "Current implimentation only works for 'equal Branches'\n"
         m = m + 'got: %s for txName: %s' %(value, txName)
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def branchingRatio(self):
+        
+        m = self._starLine
+        m = m + 'Error there are asymetric branches\n'
+        m = m + 'but brunchingRatio not set\n'
+        m = m + 'please use .brunchingRatio ='
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def branchingRatioType(self, typ):
+    
+        m = self._starLine
+        m = m + 'Error branchingRatio must be of type float\n'
+        m = m + 'get: %s' %typ
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def branchingRatioValue(self, branchingRatio):
+    
+        m = self._starLine
+        m = m + 'Error branchingRatio must be between 0 and 1\n'
+        m = m + 'get: %s' %branchingRatio
         m = m + self._starLine
         print(m)
         sys.exit()

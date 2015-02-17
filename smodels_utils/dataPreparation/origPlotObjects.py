@@ -17,11 +17,12 @@ mother, lsp = var('mother lsp')
 
 class OrigPlot(object):
     
+    infoAttr = ['branchcondition']
+    
     def __init__(self):
         
         self.branch_1 = None
         self.branch_2 = None
-        self.branchingRatio = None
         
     def __nonzero__(self):
         
@@ -73,18 +74,6 @@ class OrigPlot(object):
             if abs(value - xy_2[i]) > 0.00001:
                 Errors().unequalXYValues()
         return xy_1
-        
-    @branchcondition:
-    def branchcondition(self):
-        
-        if branch_1 == branch_2:
-            return 'equal branches'
-        if not self.branchingRatio: Errors().branchingRatio()
-        if not isinstance(self.branchingRatio, float):
-            Errors().branchingRatioType(type(self.branchingRatio))
-        if self.branchingRatio < 0. oe self.branchingRatio > 1.:
-            Errors().branchingRatioValue(self.branchingRatio)
-        'asymetric branches BR = %s' %self.branchingRatio
         
     def __str__(self):
         
@@ -219,6 +208,10 @@ class Axes(object):
         
         return str(self) == str(other)
         
+    def __ne__(self, other):
+        
+        return str(self) != str(other)
+        
         
 class Errors(object):
     
@@ -266,32 +259,6 @@ class Errors(object):
         print(m)
         sys.exit()
         
-    def branchingRatio(self):
-        
-        m = self._starLine
-        m = m + 'Error there are asymetric branches\n'
-        m = m + 'but brunchingRatio not set\n'
-        m = m + 'please use .brunchingRatio ='
-        m = m + self._starLine
-        print(m)
-        sys.exit()
-        
-    def branchingRatioType(self, typ)
-    
-        m = self._starLine
-        m = m + 'Error branchingRatio must be of type float\n'
-        m = m + 'get: %s' %typ
-        m = m + self._starLine
-        print(m)
-        sys.exit()
-        
-    def branchingRatioValue(self, branchingRatio)
-    
-        m = self._starLine
-        m = m + 'Error branchingRatio must be between 0 and 1\n'
-        m = m + 'get: %s' %branchingRatio
-        m = m + self._starLine
-        print(m)
-        sys.exit()
+
         
         
