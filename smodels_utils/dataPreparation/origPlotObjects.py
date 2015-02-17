@@ -15,8 +15,74 @@ xValue = var('xValue')
 x, y = var('x y')
 mother, lsp = var('mother lsp')
 
-
 class OrigPlot(object):
+    
+    def __init__(self):
+        
+        self.branch_1 = None
+        self.branch_2 = None
+        
+    def __nonzero__(self):
+        
+        if branch_1 and branch_2:
+            return True
+        return False
+        
+    @classmethod
+    def fromString(cls, string):
+        
+        if string[:2] == '2*':
+            origPlot = OrigPlot()
+            origPlot.branch_1 = Axes.fromString(string[2:])
+            origPlot.branch_2 = Axes.fromString(string[2:])
+            return origPlot
+        if ')+Eq(' in string:
+            origPlot = OrigPlot()
+            origPlot.branch_1 = Axes.fromString(string.split(')+Eq(')[0] + ')')
+            origPlot.branch_2 = Axes.fromString('Eq(' + string.split(')+Eq(')[1])
+            return origPlot
+        Errors().unknownString(string)
+            
+            
+        
+    def setBranch_1(self, motherMass = None, lspMass = None, **interMasses):
+        
+        self.branch_1 = \
+        Axes.fromConvert(motherMass = motherMass, lspMass = lspMass, **interMasses)
+        
+    def setBranch_2(self, motherMass = None, lspMass = None, **interMasses):
+        
+        self.branch_2 = \
+        Axes.fromConvert(motherMass = motherMass, lspMass = lspMass, **interMasses)
+        
+    def getParticleMasses(self,xMass,yMass):
+        
+        massArray_1 = self.branch_1.getParticleMasses(xMass,yMass)
+        massArray_2 = self.branch_2.getParticleMasses(xMass,yMass)
+        return [massArray_1, massArray_2]
+        
+    def getXYValues(self,massArray):
+    
+        if not len(massArray) == 2: Errors().massArrayLen(massArray)
+        xy_1 = self.branch_1.getXYValues(massArray[0])
+        xy_2 = self.branch_2.getXYValues(massArray[1])
+        if not xy_1 or not xy_2: return None
+        
+        for i, value in enumerate(xy_1):
+            if abs(value - xy_2[i]) > 0.00001:
+                Errors().unequalXYValues()
+        return xy_1
+        
+    def __str__(self):
+        
+        if self.branch_1 == self.branch_2:
+            return '2*%s' %self.branch_1
+        return '%s+%s' %(self.branch_1, self.branch_2)
+        
+    
+
+
+class Axes(object):
     
     def __init__(self, MotherEq, lspEq, *interEq):
        
@@ -125,7 +191,6 @@ class OrigPlot(object):
             if abs(leftSide-rightSide) > 0.000001:
                 return False
         return True
-        #return equation.subs(massDublets)
         
     def __str__(self):
         
@@ -159,3 +224,31 @@ class Errors(object):
         print(m)
         sys.exit()
         
+    def massArrayLen(self, massArray):
+    
+        m = self._starLine
+        m = m + 'Error in OrigPlot object, getXYValues:\n'
+        m = m + 'massArray must have lengh 2\n'
+        m = m + 'got: %s \n' %massArray
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def unequalXYValues(self):
+        
+        m = self._starLine
+        m = m + 'Error in OrigPlot object, getXYValues:\n'
+        m = m + 'different values for branch_1 and branch_2'
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def unknownString(self, string):
+        
+        m = self._starLine
+        m = m + 'Error in OrigPlot.fromString:\n'
+        m = m + 'can not interpret equation string:\n'
+        m = m + '%s' %string
+        m = m + self._starLine
+        print(m)
+        sys.exit()
