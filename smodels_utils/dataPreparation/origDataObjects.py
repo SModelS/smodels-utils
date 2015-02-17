@@ -52,6 +52,24 @@ class Orig(Locker):
             except:
                Errors().value(self.path) 
             yield values  
+
+    def effi(self):
+        # file format of fastlim!
+        txtFile = open(self.path,'r')
+        content = txtFile.readlines()[3:] ## omit the first three lines
+        txtFile.close
+        for line in content:
+            #print(line)
+            try:
+                values = line.split()[:-1] ## omit the last column
+            except:
+                Errors().txtFormat(self.path, 'Orig')
+            values = [value.strip() for value in values] 
+            try:
+                values = [float(value) for value in values]
+            except:
+               Errors().value(self.path) 
+            yield values  
     
     def root(self):
         
@@ -182,6 +200,13 @@ class OrigEfficiencyMap(Orig):
             if not len(point) == 3:
                 Errors().txtFormat(self.path, 'OrigEfficiencyMap', 3)
             yield point
+
+    def effi(self):
+        
+        for point in Orig.effi(self):
+            if not len(point) == 3:
+                Errors().effiFormat(self.path, 'OrigEfficiencyMap', 3)
+            yield point
     
     def root(self):
         
@@ -247,7 +272,7 @@ class OrigExclusion(Orig):
             yield point
             
     def svg(self):
-        """ returns a TGraph from a txt file with coorinates in svg format
+        """ returns a TGraph from a txt file with coordinates in svg format
             first line in txt file needs scaling information"""
         f = open(self.path, 'r')
         lines = f.readlines()
@@ -337,11 +362,22 @@ class Errors(object):
         
         m = self._starLine
         m = m + 'wrong content in file: %s!!\n'  %filePath
-        m = m + 'file content for a txt file readable by %s shuold be:\n' %className
-        m = m + '%s columns with numbers diveded by a split() sign' %columns
+        m = m + 'file content for a txt file readable by %s should be:\n' %className
+        m = m + '%s columns with numbers divided by a split() character' %columns
         m = m + self._starLine
         print(m)
         sys.exit()
+
+    def effiFormat(self,filePath, className, columns = ''):
+        
+        m = self._starLine
+        m = m + 'wrong content in file: %s!!\n'  %filePath
+        m = m + 'file content for an effi file readable by %s should be:\n' %className
+        m = m + '%s columns with numbers divided by a split() character' %columns
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
         
     def value(self, filePath):
         
