@@ -294,8 +294,6 @@ class TxName(Locker):
         for plane in self.planes:
             branch_1 = plane.origPlot.branch_1
             branch_2 = plane.origPlot.branch_2
-            print branch_1
-            print branch_2
             if branch_1 != branch_2:
                 if not self.branchingRatio: Errors().branchingRatio()
                 if not isinstance(self.branchingRatio, float):

@@ -275,9 +275,9 @@ class DatabaseCreator(list):
         
         content = ''
         for obj in objects:
-            print obj.__dict__
             for attr in obj.infoAttr:
-                if not hasattr(obj, attr) and not hasattr(obj.__class__, attr) : continue
+                if not hasattr(obj, attr) and \
+                not hasattr(obj.__class__, attr) : continue
                 content = '%s%s%s%s\n' %(content, attr,\
                 self.assignmentOperator, getattr(obj, attr))
         infoFile = open(self.base + self.infoFilePath(name), 'w')
