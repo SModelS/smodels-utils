@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-.. module:: dataPreparation
+.. module:: inputObjects
    :synopsis: Holds objects used by convert.py.
 
 .. moduleauthor:: Michael Traub <michael.traub@gmx.at>
@@ -17,7 +17,7 @@ from smodels_utils.dataPreparation.origDataObjects import\
 OrigLimit, OrigExclusion, OrigEfficiencyMap
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
-from smodels_utils.dataPreparation.helper import Locker, ObjectList
+from smodels_utils.dataPreparation.preparationHelper import Locker, ObjectList
 
 import logging
 

@@ -11,7 +11,7 @@
 import sys
 import os
 import ROOT
-from smodels_utils.dataPreparation.helper import Locker
+from smodels_utils.dataPreparation.preparationHelper import Locker
 
 class Orig(Locker):
     

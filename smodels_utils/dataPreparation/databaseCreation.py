@@ -14,7 +14,7 @@ import os
 import ROOT
 from smodels_utils.dataPreparation.standardObjects import\
 StandardDataList, VertexChecker, StandardExclusions, StandardTWiki
-from helper import ObjectList
+from preparationHelper import ObjectList
 import logging
 from datetime import date
 
