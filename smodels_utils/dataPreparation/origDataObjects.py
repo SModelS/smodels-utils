@@ -30,6 +30,8 @@ class Orig(Locker):
 
     def setSource(self, path, fileType, objectName = None, index = None):
         
+        if not os.path.exists(path):
+            Errors().noFile(path)
         self.path = path
         self.fileType = fileType
         self.objectName = objectName
@@ -75,8 +77,12 @@ class Orig(Locker):
         
         if not isinstance(self.objectName, str):
             Errors().rootObject(self.objectName,self.path)
+            
         rootFile = ROOT.TFile(self.path)
+        print self.objectName
         obj = rootFile.Get(self.objectName)
+        print obj
+        print bool(obj)
         if not obj: Errors().noRootObject(self.objectName,self.path)
         if not isinstance(obj,ROOT.TGraph):
             obj.SetDirectory(0)
@@ -463,8 +469,14 @@ class Errors(object):
         m = m + self._starLine
         print(m)
         sys.exit()
+        
+    def noFile(self, path):
 
-
+        m = self._starLine
+        m = m + 'no file: : %s\n' %path
+        m = m + self._starLine
+        print(m)
+        sys.exit()
         
 
         
