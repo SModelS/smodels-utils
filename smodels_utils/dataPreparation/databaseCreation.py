@@ -147,8 +147,8 @@ class DatabaseCreator(list):
             x = value[0] 
             y = value[1]
             value = value[2]
-            massPoints = plane.origPlot.getParticleMasses(x,y)
-            massArray = [massPoints,massPoints]
+            massArray = plane.origPlot.getParticleMasses(x,y)
+            #massArray = [massPoints,massPoints]
             dataList.append(massArray, value)
             
             for region in kinRegions:
