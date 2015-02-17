@@ -127,8 +127,11 @@ class MassPlane(Locker):
     def __init__(self,txDecay, motherMass = None,\
     lspMass = None, **interMasses ):
         self._txDecay = txDecay
-        self.origPlot = OrigPlot.fromConvert( \
-        motherMass = motherMass, lspMass = lspMass, **interMasses)
+        self.origPlot = OrigPlot()
+        self.setBranch_1 \
+        ( motherMass = motherMass, lspMass = lspMass, **interMasses)
+        self.setBranch_2 \
+        ( motherMass = motherMass, lspMass = lspMass, **interMasses)
         self.origLimits = ObjectList('name',[
             OrigLimit('limit'),
             OrigLimit('expectedlimit')
@@ -144,7 +147,17 @@ class MassPlane(Locker):
         self.origEfficiencyMap = OrigEfficiencyMap('EfficiencyMap')
         self.figure =None
         self.figureUrl = None
+        
+    def setBranch_1(self, motherMass = None, lspMass = None, **interMasses):
 
+        self.origPlot.setBranch_1 \
+        ( motherMass = motherMass, lspMass = lspMass, **interMasses)
+        
+    def setBranch_2(self, motherMass = None, lspMass = None, **interMasses):
+
+        self.origPlot.setBranch_2 \
+        ( motherMass = motherMass, lspMass = lspMass, **interMasses)
+        
     @property
     def efficiencyMap(self):
         return self.origEfficiencyMap
