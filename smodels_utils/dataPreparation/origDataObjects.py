@@ -17,7 +17,7 @@ class Orig(Locker):
     
     infoAttr = []
     internalAttr = ['name','path', 'fileType', 'objectName',\
-    'dataUrl', 'index']
+    'dataUrl', 'index', 'allowNegativValues']
     
     def __init__(self,name):
         
@@ -27,6 +27,7 @@ class Orig(Locker):
         self.objectName = None
         self.dataUrl = None
         self.index = None
+        self.allowNegativValues = False
 
     def setSource(self, path, fileType, objectName = None, index = None):
         
@@ -36,6 +37,16 @@ class Orig(Locker):
         self.fileType = fileType
         self.objectName = objectName
         self.index = index
+        
+    def _positivValues(self, values):
+        
+        if self.allowNegativValues: return True
+        for value in values:
+            if values < 0.0: 
+                Errors().negativValue(values, path)
+                return False
+        return True
+        
         
     def txt(self):
         
@@ -79,10 +90,7 @@ class Orig(Locker):
             Errors().rootObject(self.objectName,self.path)
             
         rootFile = ROOT.TFile(self.path)
-        print self.objectName
         obj = rootFile.Get(self.objectName)
-        print obj
-        print bool(obj)
         if not obj: Errors().noRootObject(self.objectName,self.path)
         if not isinstance(obj,ROOT.TGraph):
             obj.SetDirectory(0)
@@ -144,6 +152,7 @@ class OrigLimit(Orig):
         
         for point in getattr(self,self.fileType)():
             if self.unit == 'fb': point[-1] = point[-1]/1000.
+            if not self._positivValues(point): continue
             yield point
             
     def txt(self):
@@ -198,6 +207,7 @@ class OrigEfficiencyMap(Orig):
     def __iter__(self):
         
         for point in getattr(self,self.fileType)():
+            if not self._positivValues(point): continue
             yield point
             
     def txt(self):
@@ -268,6 +278,7 @@ class OrigExclusion(Orig):
         if self.sort:
             points = sorted(points, key = lambda x: x[0])
         for point in points:
+            if not self._positivValues(point): continue
             yield point
 
     def txt(self):
@@ -477,6 +488,13 @@ class Errors(object):
         m = m + self._starLine
         print(m)
         sys.exit()
+        
+    def negativValue(self, values, path):
+    
+        m = m + 'skip negativ value: %s\n' %value
+        m = m + 'in orig data file: %s' %path
+        print(m)
+   
         
 
         
