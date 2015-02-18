@@ -234,6 +234,7 @@ class TxDecay(object):
 decays = { 
     'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T1bbbb': 'gluino  --> bottom antibottom  lsp ', 
+    'T1bbqq': 'gluino  --> bottom antibottom  lsp | quark antiquark lsp ', 
     'T1bbtt': 'gluino  --> bottom antibottom  lsp | top antitop  lsp ', 
     'T1qqtt': 'gluino  --> quark antiquark  lsp | top antitop  lsp ', 
     'T1tttt': 'gluino  --> top antitop  lsp ',
