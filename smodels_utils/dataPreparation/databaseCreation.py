@@ -44,7 +44,7 @@ class DatabaseCreator(list):
             
     def create(self):
         
-        print '\n***strating creation of database entry for %s***\n'\
+        print '\n***starting creation of database entry for %s***\n'\
         %self.metaInfo.id
         
         self._extendInfoAttr(self.metaInfo, 'lastUpdate')
