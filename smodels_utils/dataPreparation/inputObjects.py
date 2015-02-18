@@ -393,8 +393,8 @@ class Errors(object):
     def doppelTxName(self, txName):
         
         m = self._starLine
-        m = m + '%s allraedy deffiend !!\n' %txName
-        m = m + 'every txName can only appear one time in one publication'
+        m = m + '%s already defined !!\n' %txName
+        m = m + 'every txName can only appear once in one publication'
         m = m + self._starLine
         print(m)
         sys.exit()
@@ -403,7 +403,7 @@ class Errors(object):
         
         m = self._starLine
         m = m + '%s for mass plane of\n' %massName
-        m = m + 'txName %s not deffiend' %txName
+        m = m + 'txName %s not defined' %txName
         m = m + self._starLine
         print(m)
         sys.exit()
@@ -442,7 +442,7 @@ class Errors(object):
     def metaInfo(self):
         
         m = self._starLine
-        m = m + 'metaInfo object for this publication allrady defiend\n'
+        m = m + 'metaInfo object for this publication already defined\n'
         m = m + 'There can only be one metaInfo Object for every publication\n'
         m = m + 'please check your convert file'
         m = m + self._starLine
