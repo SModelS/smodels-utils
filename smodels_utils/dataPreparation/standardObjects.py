@@ -102,6 +102,7 @@ class StandardDataList(list):
     
     def append(self, massArray, limit):
         
+        self._checkMasses(massArray)
         array = [[],[]]
         for i in range(len(massArray)):
             array[i] = ['%s%s' %(mass, self.massUnit) for mass in massArray[i]]
@@ -117,6 +118,17 @@ class StandardDataList(list):
         limit = '%s%s' %(limit,self.valueUnit)
         if not inLimit:
             list.append(self, [array, limit])
+            
+    def _checkMasses(self, massArray):
+    
+        for array in massArray:
+            for i, mass in enumerate(array):
+                if mass < 0.0: Errors().negativMass(massArray)
+                if i > 0: 
+                    if mass > previousMass: Errors().massOrder(massArray)
+                previousMass = mass
+                
+    
             
     def __str__(self):
         
@@ -282,4 +294,26 @@ class Errors(object):
         m = m + self._starLine
         print(m)
         sys.exit()
+        
+    def negativMass(self, massArray):
+        
+        m = self._starLine#
+        m = m + "Error in StandardDataList: there is a negativ Mass:\n"
+        m = m + "%s\n" %massArray
+        m = m + 'please check your mass plane deffintion at convert.py'
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def massOrder(self, massArray):
+    
+        m = self._starLine#
+        m = m + "Error in StandardDataList\n"
+        m = m + "there is a particle with higher mass then the privous one in:\n"
+        m = m + "%s\n" %massArray
+        m = m + 'please check your mass plane deffintion at convert.py'
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
         
