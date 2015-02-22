@@ -228,16 +228,16 @@ class MassPlane(Locker):
 
 class TxName(Locker):
     
-    infoAttr = ['branchcondition']
+    infoAttr = []
     internalAttr = ['_name', 'name', '_txDecay', '_kinematikRegions','_planes',\
     '_branchcondition', 'onShell', 'offShell', 'constraint',\
-    'condition', 'fuzzycondition','branchingRatio'] 
+    'condition', 'fuzzycondition'] 
     
     def __new__(cls,txName):
         
         for txObjects in databaseCreator:
             if txObjects.name == txName: 
-                Errors().doppelTxName(txName)
+                Errors().doublelTxName(txName)
         txObject = object.__new__(cls)
         databaseCreator.append(txObject)
         return txObject
@@ -252,7 +252,7 @@ class TxName(Locker):
             Errors().doubledDecay(self._name, self._txDecay.doubledDecays) 
         self._kinematikRegions = self._getKinRegions()
         self._planes = []
-        self.branchingRatio = None
+
 
     def _getKinRegions(self):
         
@@ -287,21 +287,6 @@ class TxName(Locker):
             setattr(massPlane, kinRegion.name, kinRegion.region)
         self._planes.append(massPlane)
         return massPlane
-        
-    @property
-    def branchcondition(self):
-        
-        for plane in self.planes:
-            branch_1 = plane.origPlot.branch_1
-            branch_2 = plane.origPlot.branch_2
-            if branch_1 != branch_2:
-                if not self.branchingRatio: Errors().branchingRatio()
-                if not isinstance(self.branchingRatio, float):
-                    Errors().branchingRatioType(type(self.branchingRatio))
-                if self.branchingRatio < 0. or self.branchingRatio > 1.:
-                    Errors().branchingRatioValue(self.branchingRatio)
-                return 'asymetric branches BR = %s' %self.branchingRatio
-        return 'equal branches'
         
     @property
     def name(self):
@@ -390,7 +375,7 @@ class Errors(object):
         print(m)
         sys.exit()
     
-    def doppelTxName(self, txName):
+    def doublelTxName(self, txName):
         
         m = self._starLine
         m = m + '%s already defined !!\n' %txName
