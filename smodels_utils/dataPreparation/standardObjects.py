@@ -40,6 +40,7 @@ class VertexChecker(object):
                 
         for kinConstraint in self.kinConstraints:
             for i, branch in enumerate(kinConstraint):
+                # print "branch=",branch,"massDeltaArray=",massDeltaArray
                 if len(branch) != len(massDeltaArray[i]):
                     Errors().decayChain(self.txName,\
                     len(branch),len(massDeltaArray[i]))
@@ -247,7 +248,7 @@ class Errors(object):
         m = m + "constraints and topology must have the same"
         m = m + "numbers of vertices\n"
         m = m + 'got:\n'
-        m = m + 'verices in constraint: %s\n' %constraintLen
+        m = m + 'vertices in constraint: %s\n' %constraintLen
         m = m + 'vertices in topology: %s' %massArrayLen
         m = m + self._starLine
         print(m)

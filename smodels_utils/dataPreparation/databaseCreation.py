@@ -112,11 +112,11 @@ class DatabaseCreator(list):
             self._extendInfoAttr(txName, 'publishedData')
             self._extendInfoAttr(txName, 'upperLimits')
             self._extendInfoAttr(txName, 'expectedUpperLimits')
-            self._extendInfoAttr(txName, 'efficiencymap')
+            self._extendInfoAttr(txName, 'efficiencyMap')
             if upperLimits: txName.upperLimits = upperLimits
             if expectedUpperLimits: txName.expectedUpperLimits =\
             expectedUpperLimits
-            if efficiencyMap: txName.efficiencymap = efficiencyMap
+            if efficiencyMap: txName.efficiencyMap = efficiencyMap
             txName.publishedData = publishedData
 
             for region in txName.kinematicRegions:

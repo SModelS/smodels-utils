@@ -234,6 +234,8 @@ class TxDecay(object):
 decays = { 
     'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T1bbbb': 'gluino  --> bottom antibottom  lsp ', 
+    'T1bbbt': 'gluino  --> bottom antibottom  lsp | bottom antitop lsp ', 
+    'T1bbqq': 'gluino  --> bottom antibottom  lsp | quark antiquark lsp ', 
     'T1bbtt': 'gluino  --> bottom antibottom  lsp | top antitop  lsp ', 
     'T1qqtt': 'gluino  --> quark antiquark  lsp | top antitop  lsp ', 
     'T1tttt': 'gluino  --> top antitop  lsp ',
@@ -279,6 +281,9 @@ decays = {
     'T6bbZZ':'sbottom  -->  bottom (neutralino_2 --> z lsp )',
     'T7btbtWW':'gluino  --> bottom (sbottom --> top (chargino^pm --> w lsp ))',
     'TGQ':'gluino squark --> quark antiquark lsp | quark lsp ',
+    'TGQqtt':'gluino squark --> top antitop lsp | quark lsp ',
+    'TGQbtq':'gluino squark --> bottom antitop lsp | quark lsp ',
+    'TGQbbq':'gluino squark --> bottom antibottom lsp | quark lsp ',
     'TChiZZ':'neutralino_3 neutralino_2  --> z z lsp lsp ',
     #'TChiSlep':'neutralino_2 chargino^pm_1  --> lepton lepton lepton neutrino lsp lsp ',
     #'TChiNuSlep':'neutralino_2 chargino^pm_1  --> lepton lepton lepton neutrino lsp lsp ',
