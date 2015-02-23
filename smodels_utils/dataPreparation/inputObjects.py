@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.ERROR)
 
 
-class MetaInfo(Locker):
+class MetaInfoInput(Locker):
     
     infoAttr = [ 'sqrts', 'lumi', 'id', 'prettyname', 'url', 'arxiv', 'signalRegion',
     'publication', 'contact', 'superseded_by','supersedes', 'comment',
@@ -226,7 +226,7 @@ class MassPlane(Locker):
   
 
 
-class TxName(Locker):
+class TxNameInput(Locker):
     
     infoAttr = []
     internalAttr = ['_name', 'name', '_txDecay', '_kinematicRegions','_planes',\
