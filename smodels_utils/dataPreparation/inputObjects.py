@@ -92,7 +92,7 @@ class MetaInfo(Locker):
         except:
             return False
             
-class KineamtikRegion(Locker):
+class KinematicRegion(Locker):
     
     infoAttr = ['condition', 'fuzzycondition', 'constraint','checked']
     internalAttr = ['name', 'functions', 'topoExtension',\
@@ -258,10 +258,10 @@ class TxName(Locker):
         
         kinRegions = ObjectList('name')
         onShellFunc = lambda offVertices: True if not offVertices else False
-        onShellObj = KineamtikRegion('onShell','', onShellFunc)
+        onShellObj = KinematicRegion('onShell','', onShellFunc)
         kinRegions.append(onShellObj)
         offShellFunc = lambda offVertices: True if offVertices else False
-        offShellObj = KineamtikRegion('offShell','off', offShellFunc)
+        offShellObj = KinematicRegion('offShell','off', offShellFunc)
         kinRegions.append(offShellObj)
         return kinRegions
         
