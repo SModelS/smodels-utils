@@ -65,7 +65,7 @@ class DatabaseCreator(list):
             efficiencyMap = StandardDataList(valueUnit ='')
             
             exclusions = ObjectList('name')
-            for region in txName.kinematikRegions:
+            for region in txName.kinematicRegions:
                 exclusions.append\
                 (StandardExclusions(txName.name + region.topoExtension))
             
@@ -92,7 +92,7 @@ class DatabaseCreator(list):
                     not plane.efficiencyMap.dataUrl: 
                         publishedData = False
                     
-                for region in txName.kinematikRegions:      
+                for region in txName.kinematicRegions:      
                     if getattr(plane, region.name) == 'auto' \
                     or getattr(plane, region.name) == False:
                         setattr(plane, region.name, False)
@@ -119,7 +119,7 @@ class DatabaseCreator(list):
             if efficiencyMap: txName.efficiencymap = efficiencyMap
             txName.publishedData = publishedData
 
-            for region in txName.kinematikRegions:
+            for region in txName.kinematicRegions:
                 if getattr(txName, region.name):
                     if not hasattr(region, 'constraint'):
                         Errors().required(txName.name, region, 'constraint')
@@ -141,7 +141,7 @@ class DatabaseCreator(list):
             origData = plane.origEfficiencyMap
         if not origData: return dataList
             
-        kinRegions = txName.kinematikRegions
+        kinRegions = txName.kinematicRegions
                
         for i,value in enumerate(origData):
             x = value[0] 

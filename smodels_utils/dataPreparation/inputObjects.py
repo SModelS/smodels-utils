@@ -229,7 +229,7 @@ class MassPlane(Locker):
 class TxName(Locker):
     
     infoAttr = []
-    internalAttr = ['_name', 'name', '_txDecay', '_kinematikRegions','_planes',\
+    internalAttr = ['_name', 'name', '_txDecay', '_kinematicRegions','_planes',\
     '_branchcondition', 'onShell', 'offShell', 'constraint',\
     'condition', 'fuzzycondition'] 
     
@@ -250,7 +250,7 @@ class TxName(Locker):
             Errors().unknownTxName(self._name)
         if self._txDecay.doubledDecays:
             Errors().doubledDecay(self._name, self._txDecay.doubledDecays) 
-        self._kinematikRegions = self._getKinRegions()
+        self._kinematicRegions = self._getKinRegions()
         self._planes = []
 
 
@@ -281,7 +281,7 @@ class TxName(Locker):
             
         massPlane = MassPlane(self._txDecay,\
         motherMass = motherMass, lspMass = lspMass, **interMasses)
-        for kinRegion in self.kinematikRegions:
+        for kinRegion in self.kinematicRegions:
             if not kinRegion.name in MassPlane.internalAttr:
                 MassPlane.internalAttr.append(kinRegion.name)
             setattr(massPlane, kinRegion.name, kinRegion.region)
@@ -299,50 +299,50 @@ class TxName(Locker):
 
             
     @property
-    def kinematikRegions(self):
+    def kinematicRegions(self):
         
-        return self._kinematikRegions
+        return self._kinematicRegions
         
     @property
     def onShell(self):
         
-        return self._kinematikRegionGetter('onShell')
+        return self._kinematicRegionGetter('onShell')
         
     @onShell.setter
     def onShell(self,value):
 
-        self._kinematikRegionSetter('onShell', value)
+        self._kinematicRegionSetter('onShell', value)
         
     @property
     def off(self):
         
-        return self.kinematikRegions['offShell']
+        return self.kinematicRegions['offShell']
         
     @property
     def on(self):
         
-        return self.kinematikRegions['onShell']
+        return self.kinematicRegions['onShell']
         
     @property
     def offShell(self):
         
-        return self._kinematikRegionGetter('offShell')
+        return self._kinematicRegionGetter('offShell')
         
             
     @offShell.setter
     def offShell(self,value):
         
-        self._kinematikRegionSetter('offShell', value)
+        self._kinematicRegionSetter('offShell', value)
         
-    def _kinematikRegionGetter(self, name):
+    def _kinematicRegionGetter(self, name):
 
         for plane in self.planes:
             if getattr(plane, name) == True: return True
         return False
         
-    def _kinematikRegionSetter(self, name, value):
+    def _kinematicRegionSetter(self, name, value):
 
-        setattr(self.kinematikRegions[name], 'region', value)
+        setattr(self.kinematicRegions[name], 'region', value)
         for plane in self.planes:
             setattr(plane, name, value)
     

@@ -258,7 +258,7 @@ class Errors(object):
         m = self._starLine
         m = m + "can't split limits for txName: %s because " %txName
         m = m + "constraint is set to 'not yet assigned'\n"
-        m = m + "please, set all kinematikRegions propertys of txName"
+        m = m + "please, set all kinematicRegions propertys of txName"
         m = m + "object to 'False' except of one;\n"
         m = m + "or assign constraints"
         m = m + self._starLine
