@@ -48,7 +48,7 @@ class MetaInfoInput(Locker):
         databaseCreation if not
         :param ID: name of the publication as string
         :returns: instance of MetaInfoInput
-        :raise Error: if there is alrady a MetaInfoInput instance
+        :raise Error: if there is already a MetaInfoInput instance
         """
         
         if databaseCreator.metaInfo:
@@ -169,8 +169,10 @@ class KinematicRegion(Locker):
     def checkoffShellVertices(self,offShellVertices):
         
         """
-        checks if the massArray offShellVertices met the conditions
+        checks if offShellVertices met the conditions
         given by self.functions (= conditionFunctions)
+        :param offShellVertices: list of tuples describing
+        the vertices with off-shell SM-particles
         :returns: True or False
         """
 
@@ -185,6 +187,11 @@ class KinematicRegion(Locker):
              
 class MassPlane(Locker):
     
+    """
+    Holds all informations related to one mass plane
+    a mass plane is defined by their axes
+    """
+    
     infoAttr = []
     internalAttr = ['_txDecay', 'origPlot', 'origLimits', 'origExclusions',
     'origEfficiencyMap', 'figure', 'figureUrl', 'dataUrl', 'histoDataUrl', 
@@ -192,6 +199,19 @@ class MassPlane(Locker):
     
     def __init__(self,txDecay, motherMass = None,\
     lspMass = None, **interMasses ):
+        
+        """
+        sets both branches to the given axes and initialize the mass plane related
+        values an objects
+        :param txDecay: object of type TxDecay
+        :param motherMass: mass of mother particle as sympy.core.symbol.Symbol,
+        containing only the variables 'x', 'y' and numbers as float
+        :param lspMass: mass of lightest SUSY-particle as sympy.core.symbol.Symbol,
+        containing only the variables 'x', 'y' and numbers as float
+        :param **interMasses: masses of the intermediated particles as sympy.core.symbol.Symbol,
+        containing only the variables 'x', 'y' and numbers as float
+        """
+        
         self._txDecay = txDecay
         self.origPlot = OrigPlot()
         self.setBranch_1 \
@@ -215,77 +235,182 @@ class MassPlane(Locker):
         self.figureUrl = None
         
     def setBranch_1(self, motherMass = None, lspMass = None, **interMasses):
+        
+        """
+        sets branch 1 to the given axes
+        :param txDecay: object of type TxDecay
+        :param motherMass: mass of mother particle as sympy.core.symbol.Symbol,
+        containing only the variables 'x', 'y' and numbers as float
+        :param lspMass: mass of lightest SUSY-particle as sympy.core.symbol.Symbol,
+        containing only the variables 'x', 'y' and numbers as float
+        :param **interMasses: masses of the intermediated particles as sympy.core.symbol.Symbol,
+        containing only the variables 'x', 'y' and numbers as float
+        """
 
         self.origPlot.setBranch_1 \
         ( motherMass = motherMass, lspMass = lspMass, **interMasses)
         
     def setBranch_2(self, motherMass = None, lspMass = None, **interMasses):
+        
+        """
+        sets branch 2 to the given axes
+        :param txDecay: object of type TxDecay
+        :param motherMass: mass of mother particle as sympy.core.symbol.Symbol,
+        containing only the variables 'x', 'y' and numbers as float
+        :param lspMass: mass of lightest SUSY-particle as sympy.core.symbol.Symbol,
+        containing only the variables 'x', 'y' and numbers as float
+        :param **interMasses: masses of the intermediated particles as sympy.core.symbol.Symbol,
+        containing only the variables 'x', 'y' and numbers as float
+        """
 
         self.origPlot.setBranch_2 \
         ( motherMass = motherMass, lspMass = lspMass, **interMasses)
         
     @property
     def efficiencyMap(self):
+        
+        """
+        :return: original 2D-data of the  efficiencyMap
+        given by experimentalists, as OrigEfficiencyMap-object
+        """
+        
         return self.origEfficiencyMap
         
     @property
     def obsUpperLimit(self):
+        
+        """
+        :return: original 2D-data of the observed upper-limits
+        given by experimentalists, as OrigLimit-object
+        """
+        
         return self.origLimits['limit']
         
     @property
     def expUpperLimit(self):
+        
+        """
+        :return: original 2D-data of the expected upper-limits 
+        given by experimentalists, as OrigLimit-object
+        """
+        
         return self.origLimits['expectedlimit']
         
     @property
     def obsExclusion(self):
+        
+        """
+        :return: original 2D-data of the observed exclusion-line 
+        given by experimentalists, as OrigExclusion-object
+        """
+        
         return self.origExclusions['exclusion']
         
     @property
     def obsExclusionP1(self):
+        
+        """
+        :return: original 2D-data of the observed exclusion-line 
+        with sigma +1 given by experimentalists, as OrigExclusion-object
+        """
+        
         return self.origExclusions['exclusionP1']
         
     @property
     def obsExclusionM1(self):
+        
+        """
+        :return: original 2D-data of the observed exclusion-line 
+        with sigma -1 given by experimentalists, as OrigExclusion-object
+        """
+        
         return self.origExclusions['exclusionM1']
 
     @property
     def expExclusion(self):
+        
+        """
+        :return: original 2D-data of the expected exclusion-line 
+        given by experimentalists, as OrigExclusion-object
+        """
+        
         return self.origExclusions['expectedExclusion']
         
     @property
     def expExclusionP1(self):
+        
+        """
+        :return: original 2D-data of the expected exclusion-line 
+        with sigma +1 given by experimentalists, as OrigExclusion-object
+        """
+        
         return self.origExclusions['expectedExclusionP1']
         
     @property
     def expExclusionM1(self):
+        
+        """
+        :return: original 2D-data of the expected exclusion-line 
+        with sigma -1 given by experimentalists, as OrigExclusion-object
+        """
+        
         return self.origExclusions['expectedExclusionM1'] 
     
     @property
     def dataUrl(self):
+        
+        """ not yet in use, but is needed in order to define
+        a setter 
+        """
+        
         pass
     
     @dataUrl.setter
     def dataUrl(self, url):
         
+        """set url for efficiencyMap, opsUpperlimits, expUpperLimit 
+        and all exclusionlines
+        :param: html-link as string
+        """
+        
+        self.efficiencyMap.dataUrl = url
         self.exclusionDataUrl = url
         self.histoDataUrl = url
     
     @property
     def histoDataUrl(self):
+        
+        """ not yet in use, but is needed in order to define
+        a setter 
+        """
+        
         pass
     
     @histoDataUrl.setter
     def histoDataUrl(self, url):
+        
+        """set url for opsUpperlimits and expUpperLimit
+        :param: html-link as string
+        """
         
         for histo in self.origLimits:
             histo.dataUrl = url
             
     @property
     def exclusionDataUrl(self):
+        
+        """ not yet in use, but is needed in order to define
+        a setter 
+        """
+        
         pass
     
     @exclusionDataUrl.setter
     def exclusionDataUrl(self, url):
+        
+        """set url for all exclusion lines
+        :param: html-link as string
+        """
         
         for exclusion in self.origExclusions:
             exclusion.dataUrl = url
@@ -293,6 +418,10 @@ class MassPlane(Locker):
 
 
 class TxNameInput(Locker):
+    
+    """
+    Holds all informations related to one txName
+    """
     
     
     infoAttr = []
@@ -302,6 +431,15 @@ class TxNameInput(Locker):
     
     def __new__(cls,txName):
         
+        """
+        checks if databaseCreator already contains
+        a txName object with same name, writes this object to
+        databaseCreation if not
+        :param txName: name as string
+        :returns: instance of TxName
+        :raise Error: if there is already a MetaInfoInput instance with same name
+        """
+        
         for txObjects in databaseCreator:
             if txObjects.name == txName: 
                 Errors().doublelTxName(txName)
@@ -310,6 +448,16 @@ class TxNameInput(Locker):
         return txObject
     
     def __init__(self,txName):
+        
+        """initialize the txName related values an objects
+        checks if the given txName string is valid
+        :param txName: name as string
+        :raise unknownTxNameError: if txName string is not known by module 
+        helper.txDecays
+        :raise doubleDecayError: if helper.txDecays holds 2 txNames with 
+        the same decay chain
+        """
+        
         
         self._name = txName
         self._txDecay = TxDecay(self._name)
@@ -323,6 +471,13 @@ class TxNameInput(Locker):
 
     def _getKinRegions(self):
         
+        """
+        initialize KinematicRegion-objects, 
+        an onShell-object is build for case that no vertex if off-shell
+        an offShell-object is build for case that any vertex if off-shell
+        :return: list with KinematicRegion-objects
+        """
+        
         kinRegions = ObjectList('name')
         onShellFunc = lambda offVertices: True if not offVertices else False
         onShellObj = KinematicRegion('onShell','', onShellFunc)
@@ -334,6 +489,27 @@ class TxNameInput(Locker):
         
     
     def addMassPlane(self, motherMass = None, lspMass = None, **interMasses):
+        
+        """
+        add a MassPlane object with given axes to self.planes.
+        Add new attributes to the MassPlane. For every KinematicRegion-object
+        in self.kinematicRegions an attribute named after the name of the 
+        KinematicRegion-object is added and set to the value of 
+        KinematicRegion.region
+        :param txDecay: object of type TxDecay
+        :param motherMass: mass of mother particle as sympy.core.symbol.Symbol,
+        containing only the variables 'x', 'y' and numbers as float
+        :param lspMass: mass of lightest SUSY-particle as sympy.core.symbol.Symbol,
+        containing only the variables 'x', 'y' and numbers as float
+        :param **interMasses: masses of the intermediated particles as sympy.core.symbol.Symbol,
+        containing only the variables 'x', 'y' and numbers as float
+        :raise missingMassError: if one mass entry is missing
+        :raise onlyOnePlaneError: if a second mass plane is given and the related mass space 
+        have only 2 dimensions
+        :raise interMediateParticleError: if a interMasses are given and the related mass space 
+        have only 2 dimensions
+        :return: MassPlane-object
+        """
 
         if not motherMass:
             Errors().missingMass('motherMass',self.name)
@@ -357,10 +533,18 @@ class TxNameInput(Locker):
         
     @property
     def name(self):
+        
+        """
+        :return: name as string
+        """
         return self._name
         
     @property
     def planes(self):
+        
+        """
+        :return: list of MassPlane-objects
+        """
         
         return self._planes
 
@@ -368,30 +552,57 @@ class TxNameInput(Locker):
     @property
     def kinematicRegions(self):
         
+        """
+        :return: list of KinematicRegion-objects
+        """
+        
         return self._kinematicRegions
         
     @property
     def onShell(self):
         
+        """
+        :return: True if any mass plane is set to onShell = True,
+        esle False
+        """
+        
         return self._kinematicRegionGetter('onShell')
         
     @onShell.setter
     def onShell(self,value):
+        
+        """
+        set the attribute 'onShell of all mass planes to value 
+        :param value: True, False or 'auto'
+        """
 
         self._kinematicRegionSetter('onShell', value)
         
     @property
     def off(self):
         
+        """
+        :return: off-shell KinematicRegion-object
+        """
+        
         return self.kinematicRegions['offShell']
         
     @property
     def on(self):
         
+        """
+        :return: on-shell KinematicRegion-object
+        """
+        
         return self.kinematicRegions['onShell']
         
     @property
     def offShell(self):
+        
+        """
+        :return: True if any mass plane is set to offshell = True,
+        else False
+        """
         
         return self._kinematicRegionGetter('offShell')
         
@@ -399,19 +610,36 @@ class TxNameInput(Locker):
     @offShell.setter
     def offShell(self,value):
         
+        """
+        set the attribute 'offShell of all mass planes to value 
+        :param value: True, False or 'auto'
+        """
+        
         self._kinematicRegionSetter('offShell', value)
         
-    def _kinematicRegionGetter(self, name):
+    def _kinematicRegionGetter(self, attr):
+        
+        """
+        reads the given attribute for all massPlane-objects
+        :attr: name of KinematicRegion-object as string
+        :return: True if the attribute of any mass plane is equals True,
+        else False
+        """
 
         for plane in self.planes:
-            if getattr(plane, name) == True: return True
+            if getattr(plane, attr) == True: return True
         return False
         
-    def _kinematicRegionSetter(self, name, value):
+    def _kinematicRegionSetter(self, attr, value):
+        
+        """
+        set the the given attribute for all mass planes to value
+        :param value: True, False or 'auto'
+        """
 
-        setattr(self.kinematicRegions[name], 'region', value)
+        setattr(self.kinematicRegions[attr], 'region', value)
         for plane in self.planes:
-            setattr(plane, name, value)
+            setattr(plane, attr, value)
     
 
 class Errors(object):
