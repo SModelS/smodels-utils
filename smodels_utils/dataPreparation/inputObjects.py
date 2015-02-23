@@ -30,12 +30,26 @@ logger.setLevel(level=logging.ERROR)
 
 class MetaInfoInput(Locker):
     
+    """
+    Holds all informations related to the publication 
+    (publication means: physic summary note or conference note)
+    """
+    
     infoAttr = [ 'sqrts', 'lumi', 'id', 'prettyname', 'url', 'arxiv', 'signalRegion',
     'publication', 'contact', 'superseded_by','supersedes', 'comment',
     'private', 'implemented_by', 'observedN', 'expectedBG', 'bgError' ]
     internalAttr = ['_sqrts', '_lumi']
     
     def __new__(cls, ID):
+        
+        """
+        checks if databaseCreator already contains
+        a MetaInfoInput object, writes this object to
+        databaseCreation if not
+        :param ID: name of the publication as string
+        :returns: instance of MetaInfoInput
+        :raise Error: if there is alrady a MetaInfoInput instance
+        """
         
         if databaseCreator.metaInfo:
             Errors().metaInfo()
@@ -45,15 +59,29 @@ class MetaInfoInput(Locker):
     
     def __init__(self, ID):
         
+        """
+        :param ID: name of the publication as string
+        """
+        
         self.id = ID
        
     @property
     def sqrts(self):
         
+        """
+        :returns: center-of-mass energy in TeV as String
+        """
+        
         return self._sqrts
         
     @sqrts.setter
     def sqrts(self, value):
+        
+        """
+        sets center-of-mass energy
+        :param value: center-of-mass energy as float, integer or string
+        """
+        
         
         value = self.unitValue(value,'*','TeV')
         if not value:
@@ -63,10 +91,19 @@ class MetaInfoInput(Locker):
     @property
     def lumi(self):
         
+        """
+        :returns: integrated luminosity in fb-1 as string
+        """
+        
         return self._lumi
         
     @lumi.setter
     def lumi(self, value):
+        
+        """
+        sets integrated luminosity in fb-1 as string
+        :param value: integrated luminosity as float, integer or string
+        """
         
         value = self.unitValue(value,'/','fb')
         if not value:
@@ -74,6 +111,14 @@ class MetaInfoInput(Locker):
         self._lumi = value
     
     def unitValue(self, value, operation,unit):
+        
+        """
+        checks if input conditions are met by value
+        formats value 
+        :param value: float, integer or a number as string
+        :param operation: '/' or '*'
+        :param unit: unit of value as string
+        """
 
         if isinstance(value, str):
             check = value.split(operation)
@@ -94,19 +139,40 @@ class MetaInfoInput(Locker):
             
 class KinematicRegion(Locker):
     
+    """
+    Holds all informations related to one kinematic region
+    in this context a kinematic region is defined by their
+    off-shell vertices 
+    """
+    
+    
     infoAttr = ['condition', 'fuzzycondition', 'constraint','checked']
     internalAttr = ['name', 'functions', 'topoExtension',\
     'region']
     
     def __init__(self,name,topoExtension, *conditionFunctions):
         
+        """
+        :param name: name as string
+        :param topoExtension: string to be added to the txName in order
+        to define the membership to this kinematic region
+        :param *conditionFunctions: functions describing the conditions for the
+        kinematic region. The parameter of this functions have to be a list of 
+        tuples. The return value have to be a bool type
+        """
+        
         self.name = name
         self.functions = conditionFunctions
         self.topoExtension = topoExtension
         self.region = 'auto'
 
-    def checkMassArray(self,offShellVertices, massArray):
+    def checkoffShellVertices(self,offShellVertices):
         
+        """
+        checks if the massArray offShellVertices met the conditions
+        given by self.functions (= conditionFunctions)
+        :returns: True or False
+        """
 
         for function in self.functions:
             if not function(offShellVertices): 
@@ -227,6 +293,7 @@ class MassPlane(Locker):
 
 
 class TxNameInput(Locker):
+    
     
     infoAttr = []
     internalAttr = ['_name', 'name', '_txDecay', '_kinematicRegions','_planes',\

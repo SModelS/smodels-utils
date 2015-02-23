@@ -164,7 +164,7 @@ class DatabaseCreator(list):
                     Errors().notAssigned(txName.name)
                 offShellVertices = \
                 vertexChecker.getOffShellVertices(massArray)
-                if region.checkMassArray(offShellVertices, massArray):
+                if region.checkoffShellVertices(offShellVertices):
                     setattr(plane, region.name, True)
                     self._setRegionAttr(txName, region, plane)
         return dataList
