@@ -28,10 +28,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.ERROR)
 
 
+
 class MetaInfoInput(Locker):
-    
-    """
-    Holds all informations related to the publication 
+    """Holds all informations related to the publication 
     (publication means: physic summary note or conference note)
     """
     
