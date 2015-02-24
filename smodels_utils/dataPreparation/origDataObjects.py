@@ -15,11 +15,23 @@ from smodels_utils.dataPreparation.preparationHelper import Locker
 
 class Orig(Locker):
     
+    """Super class used by other origDataObjects
+    holds attributes for describing original data types and
+    methods to set the data source and preprocessing the data
+    """
+    
+    
     infoAttr = []
     internalAttr = ['name','path', 'fileType', 'objectName',\
     'dataUrl', 'index', 'allowNegativValues']
     
     def __init__(self,name):
+        
+        """
+        initialize data-source attributes with None
+        and allowNegativValues with False
+        :param Name: name as string
+        """
         
         self.name = name
         self.path = None
@@ -31,6 +43,15 @@ class Orig(Locker):
 
     def setSource(self, path, fileType, objectName = None, index = None):
         
+        """set path and type of data source
+        :param path: path to data file as string
+        :param fileType: string describing type of file
+        name of every public method of child-class can be used
+        :param objectName: name of object stored in root-file or cMacro,
+        :param index: index of object in listOfPrimitives of ROOT.TCanvas
+        :raise noFileError: if path does not exist
+        """
+        
         if not os.path.exists(path):
             Errors().noFile(path)
         self.path = path
@@ -39,6 +60,12 @@ class Orig(Locker):
         self.index = index
         
     def _positivValues(self, values):
+        
+        """checks if values greater then zero
+        :param value: float or integer
+        :return: True if value >= 0 or allowNegativValues == True
+        :raise negativValueError: if value < 0 and allowNegativValues == False
+        """   
         
         if self.allowNegativValues: return True
         for value in values:
@@ -49,6 +76,15 @@ class Orig(Locker):
         
         
     def txt(self):
+        
+        """
+        iterable method
+        preprocessing txt-files containing only columns with
+        floats
+        :raise txtFormatError: if columns can not be split
+        :raise valueError: if value can not be interpreted as float
+        :yield: list with values as foat, one float for every column
+        """
         
         txtFile = open(self.path,'r')
         content = txtFile.readlines()
@@ -86,6 +122,14 @@ class Orig(Locker):
     
     def root(self):
         
+        """
+        preprocessing root-files containing root-objects
+        
+        :raise rootObjectError: if type of objectName is not string
+        :raise noRootObjectError: if object not exist or not found in file
+        :return: ROOT-object
+        """
+        
         if not isinstance(self.objectName, str):
             Errors().rootObject(self.objectName,self.path)
             
@@ -99,6 +143,14 @@ class Orig(Locker):
         
     def cMacro(self):
         
+        """
+        preprocessing root c-macros containing root-objects
+        
+        :raise rootObjectError: if type of objectName is not string
+        :raise noRootObjectError: if object not exist or not found in file
+        :return: ROOT-object
+        """
+        
         if not isinstance(self.objectName, str):
             Errors().rootObject(self.objectName,self.path)
         ROOT.gROOT.SetBatch()
@@ -110,16 +162,33 @@ class Orig(Locker):
 
     def canvas(self):
         
+        """
+        preprocessing root-file containing canvas with root-objects
+        
+        :raise rootObjectError: if type of objectName is not string
+        :raise noRootObjectError: if canvas not exist or not found in file
+        :raise indexTypeError: if index type is not integer
+        :raise indexError: if index not in listOfPrimitives
+        :return: ROOT-object
+        """
+        
         if not isinstance(self.objectName, str):
             Errors().rootObject(self.objectName, self.path)
         if not isinstance(self.index, int):
-            Errors().index(self.index, self.path)
+            Errors().indexType(self.index, self.path)
         rootFile = ROOT.TFile(self.path, 'r')
         canvas = rootFile.Get(self.objectName)
         if not canvas: Errors().noRootObject(self.objectName,self.path)
-        return canvas.GetListOfPrimitives()[self.index]
+        try:
+            return canvas.GetListOfPrimitives()[self.index]
+        except IndexError:
+            Errors().index(self.path, self.objectName, self.index)
     
     def __nonzero__(self):
+        
+        """
+        :returns: True if path and fileType is set, else False
+        """
         
         if self.path and self.fileType:
             return True
@@ -128,10 +197,27 @@ class Orig(Locker):
  
 class OrigLimit(Orig):
     
+    """
+    iterable class
+    Holding original 2D upper limit histogram given by
+    experimentalists
+    public methods refer to different file-types 
+    The files or objects containing the histogram as well as 
+    the file type have to be set by using the method setSource
+    of the parents class 
+    This Class is designed to iterate over the entries of the
+    upper limit histogram
+    """
+    
     plotableAttr = [] + Orig.infoAttr
     internalAttr = ['_unit', 'unit', ] + Orig.internalAttr
     
     def __init__(self,name):
+        
+        """
+        initialize upper limit unit with 'pb'
+        :param Name: name as string
+        """
         
         Orig.__init__(self,name)
         self._unit = 'pb'
@@ -139,16 +225,31 @@ class OrigLimit(Orig):
     @property
     def unit(self):
         
+        """
+        :return: unit as string
+        """
+        
         return self._unit
         
     @unit.setter
     def unit(self, unitString):
+        
+        """
+        set unit for upper limits, default: 'pb' 
+        :param unitString: 'fb' or 'pb'
+        :raise unitError: if unit is not 'fb' or not 'pb'
+        """
         
         units = ['fb','pb']
         if not unitString in units: Errors().unit(unitString)
         self._unit = unitString
         
     def __iter__(self):
+        
+        """
+        gives the entries of the original upper limit histograms
+        :yield: [x-value in GeV, y-value in GeV, upper limit in pb]
+        """
         
         for point in getattr(self,self.fileType)():
             if self.unit == 'fb': point[-1] = point[-1]/1000.
@@ -157,6 +258,18 @@ class OrigLimit(Orig):
             
     def txt(self):
         
+        """
+        iterable method
+        processing txt-files containing only 3 columns with
+        floats. The columns of the file have to contain the values
+        for the following variables:
+        1. column: x-value in GeV
+        2. column: y-value in Gev
+        3. column: upper limits in pb or fb 
+        :raise txtFormatError: if file do not contain 3 columns 
+        :yield: [x-value in GeV, y-value in GeV, upper limit in pb or fb] 
+        """
+        
         for point in Orig.txt(self):
             if not len(point) == 3:
                 Errors().txtFormat(self.path, 'OrigLimit', 3)
@@ -164,11 +277,27 @@ class OrigLimit(Orig):
     
     def root(self):
         
+        """
+        iterable method
+        processing root-files containing root 2D-histograms
+        The bins of the histograms have to contain the upper
+        limits in pb or fb; unit of x and y-axis: GeV
+        :yield: [x-value in GeV, y-value in GeV, upper limit in pb or fb]
+        """
+        
         limit = Orig.root(self)
         for point in self._getPoints(limit):
             yield point
                 
     def cMacro(self):
+        
+        """
+        iterable method
+        processing root c-macros containing root 2D-histograms
+        The bins of the histograms have to contain the upper
+        limits in pb or fb; unit of x and y-axis: GeV
+        :yield: [x-value in GeV, y-value in GeV, upper limit in pb or fb]
+        """
        
         limit = Orig.cMacro(self)
         for point in self._getPoints(limit):
@@ -176,11 +305,27 @@ class OrigLimit(Orig):
             
     def canvas(self):
         
+        """
+        iterable method
+        processing root-files containing ROOT.TCanvas objects
+        with 2D-histograms
+        The bins of the histograms have to contain the upper
+        limits in pb or fb; unit of x and y-axis: GeV
+        :yield: [x-value, y-value, upper limit in pb or fb]
+        """
+        
         limit = Orig.canvas(self)
         for point in self._getPoints(limit):
             yield point
                 
     def _getPoints(self,limit):
+        
+        """
+        iterable metod
+        processing root 2D-histograms
+        :param limit: root 2D-histogram
+        :yield: [x-axes, y-axes, bin contend]
+        """
         
         xAxis = limit.GetXaxis()
         yAxis = limit.GetYaxis()
@@ -197,20 +342,53 @@ class OrigLimit(Orig):
 
 class OrigEfficiencyMap(Orig):
     
+    """
+    iterable class
+    Holding original 2D efficiency maps  given by
+    experimentalists
+    public methods refer to different file-types 
+    The files or objects containing the efficiency maps as well as 
+    the file type have to be set by using the method setSource
+    of the parents class 
+    This Class is designed to iterate over the entries of the
+    efficiency maps
+    """
+    
     plotableAttr = [] + Orig.infoAttr
     internalAttr = [] + Orig.internalAttr
     
     def __init__(self,name):
         
+        """
+        :param Name: name as string
+        """
+        
         Orig.__init__(self,name)
         
     def __iter__(self):
+        
+        """
+        gives the entries of the original efficiency map
+        :yield: [x-value in GeV, y-value in GeV, efficiency]
+        """
         
         for point in getattr(self,self.fileType)():
             if not self._positivValues(point): continue
             yield point
             
     def txt(self):
+        
+        """
+        iterable method
+        processing txt-files containing only 3 columns with
+        floats. The columns of the file have to contain the values
+        for the following variables:
+        1. column: x-value in GeV
+        2. column: y-value in Gev
+        3. column: efficiency
+        :raise txtFormatError: if file do not contain 3 columns 
+        :yield: [x-value in GeV, y-value in GeV, efficiency] 
+        """
         
         for point in Orig.txt(self):
             if not len(point) == 3:
@@ -226,11 +404,27 @@ class OrigEfficiencyMap(Orig):
     
     def root(self):
         
+        """
+        iterable method
+        processing root-files containing root 2D-histograms
+        The bins of the histograms have to contain the
+        efficiencies; unit of x and y-axis: GeV
+        :yield: [x-value in GeV, y-value in GeV, efficiency]
+        """
+        
         limit = Orig.root(self)
         for point in self._getPoints(limit):
             yield point
                 
     def cMacro(self):
+        
+        """
+        iterable method
+        processing root c-macros containing root 2D-histograms
+        The bins of the histograms have to contain the 
+        efficiencies; unit of x and y-axis: GeV
+        :yield: [x-value in GeV, y-value in GeV, efficiency]
+        """
        
         limit = Orig.cMacro(self)
         for point in self._getPoints(limit):
@@ -238,11 +432,27 @@ class OrigEfficiencyMap(Orig):
             
     def canvas(self):
         
+        """
+        iterable method
+        processing root-files containing ROOT.TCanvas objects
+        with 2D-histograms
+        The bins of the histograms have to contain the 
+        efficiencies; unit of x and y-axis: GeV
+        :yield: [x-value, y-value, efficiency]
+        """
+        
         limit = Orig.canvas(self)
         for point in self._getPoints(limit):
             yield point
                 
     def _getPoints(self,limit):
+        
+        """
+        iterable metod
+        processing root 2D-histograms
+        :param limit: root 2D-histogram
+        :yield: [x-axes, y-axes, bin contend]
+        """
         
         xAxis = limit.GetXaxis()
         yAxis = limit.GetYaxis()
@@ -259,10 +469,27 @@ class OrigEfficiencyMap(Orig):
         
 class OrigExclusion(Orig):
     
+    """
+    iterable class
+    Holding original exclusion line given by
+    experimentalists
+    public methods refer to different file-types 
+    The files or objects containing the exclusion line as well as 
+    the file type have to be set by using the method setSource
+    of the parents class 
+    This Class is designed to iterate over the point of the
+    exclusion line
+    """
+    
     infoAttr = [] + Orig.infoAttr
     internalAttr = ['sort', 'reverse'] + Orig.internalAttr
     
     def __init__(self,name):
+        
+        """
+        attributes 'sort' and 'reverse' are initialized with False
+        :param Name: name as string
+        """
         
         Orig.__init__(self,name)
         self.sort = False
@@ -270,18 +497,37 @@ class OrigExclusion(Orig):
         
     def __iter__(self):
         
+        """
+        gives the point of the exclusion line
+        if sort is set to True: points are sorted by x-values
+        in increasing order
+        if reverse is set to True: order of points is reversed
+        :yield: [x-value in GeV, y-value in GeV]
+        """
+        
         points = []
         for point in getattr(self,self.fileType)():
             points.append(point)
-        if self.reverse:
-            points = reversed(points)
         if self.sort:
             points = sorted(points, key = lambda x: x[0])
+        if self.reverse:
+            points = reversed(points)
         for point in points:
             if not self._positivValues(point): continue
             yield point
 
     def txt(self):
+        
+        """
+        iterable method
+        processing txt-files containing only 2 columns with
+        floats. The columns of the file have to contain the values
+        for the following variables:
+        1. column: x-value in GeV
+        2. column: y-value in Gev
+        :raise txtFormatError: if file do not contain 2 columns 
+        :yield: [x-value in GeV, y-value in GeV] 
+        """
         
         for point in Orig.txt(self):
             if not len(point) == 2:
@@ -289,8 +535,18 @@ class OrigExclusion(Orig):
             yield point
             
     def svg(self):
-        """ returns a TGraph from a txt file with coordinates in svg format
-            first line in txt file needs scaling information"""
+        
+        """
+        iterable method
+        processing files with coordinates in svg format.
+        first line in file needs scaling information
+        :raise unknownSvgError: if svg format is not 'm' or not 'M'
+        :raise unknownMassUnitError: if mass unit is not 'GeV'
+        :raise unknownAxisError: if axis is not 'x' or not 'y'
+        :raise axesInformationError: if more then 2 axes are given
+        :yield: [x-value in GeV, y-value in GeV] 
+        """
+
         f = open(self.path, 'r')
         lines = f.readlines()
         f.close()
@@ -345,23 +601,53 @@ class OrigExclusion(Orig):
                 
     def root(self):
         
-        limit = Orig.root(self)
-        for point in self._getPoints(limit):
+        """
+        iterable method
+        processing root-files containing ROOT.TGraphs
+        unit of x and y-axis have to be GeV
+        :yield: [x-value in GeV, y-value in GeV]
+        """
+        
+        exclusion = Orig.root(self)
+        for point in self._getPoints(exclusion):
             yield point
                 
     def cMacro(self):
+        
+        """
+        iterable method
+        processing root c-macros containing ROOT.TGraphs
+        unit of x and y-axis have to be GeV
+        :yield: [x-value in GeV, y-value in GeV]
+        """
        
-        limit = Orig.cMacro(self)
-        for point in self._getPoints(limit):
+        exclusion = Orig.cMacro(self)
+        for point in self._getPoints(exclusion):
             yield point
     
     def canvas(self):
         
-        limit = Orig.canvas(self)
-        for point in self._getPoints(limit):
+        """
+        iterable method
+        processing root-files containing ROOT.TCanvas objects
+        with ROOT.TGraphs
+        The bins of the histograms have to contain the 
+        unit of x and y-axis have to be GeV
+        :yield: [x-value in GeV, y-value in GeV]
+        """
+        
+        exclusion = Orig.canvas(self)
+        for point in self._getPoints(exclusion):
             yield point
     
     def _getPoints(self, graph):
+        
+        """
+        iterable metod
+        processing ROOT.TGraph
+        :param graph: ROOT.TGraph
+        :yield: [x-axes, y-axes]
+        """
         
         x, y = ROOT.Double(0.),ROOT.Double(0.)
         for i in range(0, graph.GetN()):
@@ -424,7 +710,7 @@ class Errors(object):
         print(m)
         sys.exit()
         
-    def index(self, index, filePath):
+    def indexType(self, index, filePath):
         
         m = self._starLine#
         m = m + 'indexError in file: %s\n' %filePath
@@ -494,6 +780,16 @@ class Errors(object):
         m = m + 'skip negativ value: %s\n' %value
         m = m + 'in orig data file: %s' %path
         print(m)
+        
+    def index(self ,path ,objectName, index):
+        
+        m = self._starLine#
+        m = m + 'indexError in file: %s\n' %path
+        m = m + 'listOfPrimitives of canvas with name: %s\n' %objectName
+        m = m + 'have not index %s' %index
+        m = m + self._starLine
+        print(m)
+        sys.exit()
    
         
 
