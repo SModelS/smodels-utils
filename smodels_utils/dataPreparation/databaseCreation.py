@@ -27,9 +27,30 @@ logger.setLevel(level=logging.ERROR)
            
         
 class DatabaseCreator(list):
+    
+    """
+    list-object
+    main class of smodels_utils.dataPreparation
+    Holds all TxNameInput-objects and the MetaInfo-object
+    The classes defined in the module standardObjects are used
+    to create the database entry for one publication
+    The following files are created by this class:
+    -sms.root
+    -twiki.txt
+    -info.txt
+    -txName.txt (one for every txName and every kin. region, 
+    if the kin. region exist)
+    """
         
     def __init__(self):
         
+        """
+        initialize the object
+        names and paths of the files to be created
+        are defined, as well as some other strings
+        used in those files 
+        """
+
         self.exclusions = []
         self.metaInfo = None
         self.base = os.getcwd() + '/'
@@ -43,6 +64,39 @@ class DatabaseCreator(list):
         list.__init__(self)
             
     def create(self):
+        
+        """
+        main method of the class
+        This method calls all other methods of the class
+        
+        The following working steps are performed:
+        --date of last update is evaluated
+        --old database files are deleted 
+        --write info.txt 
+        --a empty StandardTWiki-object is build
+        --loop over all txNames:
+        ----VertexChecker-object is build
+        ----empty StandardDataList objects for:
+            upperLimits, expectedUpperLimits and efficiencyMaps 
+            are build
+        ----self.exclusions is appended with an empty StandardExclusions-object
+        ----loop over all mass planes:
+        ------extending upperLimits, expectedUpperLimits and efficiencyMaps
+              and setting all kinematic region to True if the exist
+        ------checking published data
+        ------setting all kin region to False if the are not True until now
+        ------extending StandardExclusions
+        ------extending StandardTWiki
+        ----extend TxNames with some attributes, to be written to txName.txt
+        ----checking if constraint, condition and fuzzycondition are set for 
+            every existing kin. region
+        ----write txName.txt
+        --write sms.root
+        --write twiki.txt
+        
+        :raise requiredError: If a region exist, but no constraint, condition 
+        or fuzzycondition is set for this region
+        """
         
         print '\n***starting creation of database entry for %s***\n'\
         %self.metaInfo.id
@@ -135,13 +189,28 @@ class DatabaseCreator(list):
         
     def extendDataList(self, dataList, plane, vertexChecker, txName, limitType = None):
         
+        """
+        extend the given data list by the values related to this type of list
+        examples for data lists are ; upperLimits, efficiencyMaps, ....
+        The values held by the given mass plane are extended to the data list
+        
+        calls self._computeKinRegions to check the kin, regions
+        
+        :param dataList: standardObjects.StandardDataList-object
+        :param plane: inputObjects.MetaInfoInput-object
+        :param vertexChecker: standardObjects.VertexChecker-object
+        :param txName: inputObjects.TxNameInput-object
+        :param limitType: type of the given data list, None for
+        efficiency maps, else: name of the related origData-object
+        :return: data list, extended by the values given by plane
+        """
+        
+        
         if limitType:
             origData = plane.origLimits[limitType] 
         else:
             origData = plane.origEfficiencyMap
         if not origData: return dataList
-            
-        kinRegions = txName.kinematicRegions
                
         for i,value in enumerate(origData):
             x = value[0] 
@@ -150,27 +219,68 @@ class DatabaseCreator(list):
             massArray = plane.origPlot.getParticleMasses(x,y)
             #massArray = [massPoints,massPoints]
             dataList.append(massArray, value)
-            
-            for region in kinRegions:
-                regionExist = getattr(plane, region.name)
-                if not regionExist == 'auto':
-                    if not isinstance(regionExist , bool):
-                        Errors().kinRegionSetter(txName.name, region.name, \
-                        regionPreSet)
-                    if regionExist == True and i == 0:
-                        self._setRegionAttr(txName, region, plane)
-                    continue
-                if not vertexChecker: 
-                    Errors().notAssigned(txName.name)
-                offShellVertices = \
-                vertexChecker.getOffShellVertices(massArray)
-                if region.checkoffShellVertices(offShellVertices):
-                    setattr(plane, region.name, True)
-                    self._setRegionAttr(txName, region, plane)
+            self._computeKinRegions(massArray, i, plane, vertexChecker, txName)
         return dataList
+        
+    def _computeKinRegions(self, massArray, i, plane, vertexChecker, txName):
+        
+        """
+        checks to which kin reagion a mass array belongs 
+        A mass array belongs not only to a kin. region, but also to 
+        a mass plane. If a single mass array of a mass plane belongs
+        to a specific kin region, the whole mass plane belongs to that 
+        region and the -region-exist' attr. is set to True 
+        
+        Only if the region-exist' attr. is set to 'auto' this automated scan of 
+        region is performed, else the predefined settings (True/False)
+        of this attr. is used to determine if the mass plane belongs
+        to the region
+        
+        If the region exist (means at least on mass Array belongs to it)
+        self._setRegionAttr is called to set the attributes
+        which belong to the region
+        
+        :param massArray: list containing two other lists. Each list contains 
+        floats, representing the masses of the particles of each branch in GeV
+        :param i: loop-index of outer loop
+        :param plane: inputObjects.MetaInfoInput-objects
+        :param vertexChecker: standardObjects.VertexChecker-object
+        :param txName: inputObjects.TxNameInput-object
+        :raise kinRegionSetterError: if the 'region-exist' is not True, False or 'auto'
+        """
+        
+        kinRegions = txName.kinematicRegions  
+        for region in kinRegions:
+            regionExist = getattr(plane, region.name)
+            if not regionExist == 'auto':
+                if not isinstance(regionExist , bool):
+                    Errors().kinRegionSetter(txName.name, region.name, \
+                    regionPreSet)
+                if regionExist == True and i == 0:
+                    self._setRegionAttr(txName, region, plane)
+                continue
+            if not vertexChecker: 
+                Errors().notAssigned(txName.name)
+            offShellVertices = \
+            vertexChecker.getOffShellVertices(massArray)
+            if region.checkoffShellVertices(offShellVertices):
+                setattr(plane, region.name, True)
+                self._setRegionAttr(txName, region, plane)
+    
+        kinRegions = txName.kinematicRegions
         
         
     def _setRegionAttr(self, txName, region, plane):
+        
+        """
+        The list infoAttr of inputObjects.KinematicRegion-class
+        is extended by some attributes which will be written
+        to txname.txt
+
+        :param plane: inputObjects.MetaInfoInput-object
+        :param txName: inputObjects.TxNameInput-object
+        :param region: inputObjects.KinematicRegion-object
+        """ 
         
         self._extendInfoAttr(region, self.txNameField,0)
         setattr(region, self.txNameField, txName.name + region.topoExtension)
@@ -185,6 +295,18 @@ class DatabaseCreator(list):
     
     
     def _extendInfoAttr(self, obj, attr, position = None):
+        
+        """
+        checks if an attribute is in the list  'infoAttr' 
+        of the given object
+        If not: writes the attribute to the list.
+        
+        :param obj: any instance of a child-class of preparationHelper.Locker
+        :param attr: name of the attribute as string
+        :position: position were do add the attribute, if None:
+        add the attr. to the end of the list
+        """
+  
     
         if attr in obj.infoAttr: return
         if position == None:
@@ -194,6 +316,15 @@ class DatabaseCreator(list):
         
         
     def _setLastUpdate(self):
+        
+        """
+        checks if there is already a info,txt file. If there is, the lastUpdate
+        field and the implemented_by field is read.
+        If there is no old info.txt, lastUpdate for the info.txt is set to current date.
+        If there is an old file, the user is asked if the last update should be
+        overwritten with current date
+        When last update is overwritten, self._setImplementedBy is called
+        """
         
         if os.path.isfile(self.base + self.infoFilePath(self.metaInfoFileName)):
             lastUpdate = False
@@ -229,6 +360,11 @@ class DatabaseCreator(list):
         
     def _setImplementedBy(self):
         
+        """
+        set implemented_by attribute of self.metaInfo
+        from comand line
+        """
+        
         while True:
             answer = raw_input('enter your name or initials: ')
             if answer: break
@@ -236,6 +372,10 @@ class DatabaseCreator(list):
         
         
     def _delete(self):
+        
+        """
+        deletes all old info.txt, txName.txt, sms.root and twiki.txt files
+        """
         
         predefinedPaths = [
             self.base + self.smsrootPath,
@@ -257,6 +397,10 @@ class DatabaseCreator(list):
             os.remove(entry)
 
     def _createSmsRoot(self):
+        
+        """
+        creates the sms.root file
+        """
     
         smsRoot = ROOT.TFile(self.base + self.smsrootPath,'recreate')
         for exclusions in self.exclusions:
@@ -267,11 +411,25 @@ class DatabaseCreator(list):
         
     def _createTwikiTxt(self):
         
+        """
+        creates the twiki.txt file
+        """
+        
         twikiTxt = open(self.base + self.twikitxtPath,'w')
         twikiTxt.write('%s' %self.tWiki)
         twikiTxt.close()
         
     def _createInfoFile(self, name, *objects):
+        
+        """
+        creates a file of type .txt
+        all attributes defined in the list called 'infoAttr'
+        of the given objects are written to this txt file
+        :param name: name of the file (without extension)
+        :param *objects: objects containing attributes which will be
+        written to the file. The object must have a list called
+        'infoAttr' to define what attributes should be written  
+        """
         
         content = ''
         for obj in objects:
@@ -285,6 +443,11 @@ class DatabaseCreator(list):
         infoFile.close()
         
     def infoFilePath(self, infoFileName):
+        
+        """
+        :param infoFileName: name of requested file without extension
+        :return: path of info-file with given name
+        """
         
         path = '%s%s%s' %(self.infoFileDirectory,\
         infoFileName, self.infoFileExtension)
