@@ -15,7 +15,7 @@ def main():
     from andre_validation.validationObjs import ValidationPlot
     import logging
     from smodels.experiment.txnameObject import logger as ml
-    ml.setLevel(level=logging.ERROR)
+    ml.setLevel(level=logging.INFO)
     
     
     database = DataBase("/home/lessa/smodels-database/")
@@ -27,7 +27,8 @@ def main():
     valPlot = ValidationPlot(expRes,txname,axes)
     valPlot.setSLHAdir('/home/lessa/smodels-utils/slha/T1bbbb')
     valPlot.getData()
-#     valPlot.generatePlot()
+    valPlot.generatePlot(silentMode=False)
+    valPlot.savePlot()
 
 if __name__ == "__main__":
     main()

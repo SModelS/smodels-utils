@@ -17,13 +17,14 @@ from ROOT import *
 from smodels.tools.physicsUnits import fb, GeV
 
 
-def createPlot(validationPlot):
+def createPlot(validationPlot,silentMode=True):
     """
     Uses the data in validationPlot.data and the official exclusion curve
     in validationPlot.officialCurve to generate the exclusion plot
     
     :param validationPlot: ValidationPlot object
-    :return: FIXME ????
+    :param silentMode: If True the plot will not be shown on the screen
+    :return: TCanvas object containing the plot
     """
         
     # Check if data has been defined:
@@ -35,38 +36,40 @@ def createPlot(validationPlot):
         # Get excluded and allowed points:
         for pt in validationPlot.data:
             x, y = pt['axes']
-            x = (x / GeV).asNumber()
-            y = (y / GeV).asNumber()
-            if pt['cond'] and max(pt['cond']) > 0.01:
+            if pt['condition'] and max(pt['condition']) > 0.01:
                 logger.warning("Condition violated for file " + pt['slhafile'])
             if pt['signal'] > pt['UL']:
-                allowed.SetPoint(allowed.GetN(), x, y)
-            else:
                 excluded.SetPoint(excluded.GetN(), x, y)
+            else:
+                allowed.SetPoint(allowed.GetN(), x, y)
 
     # Check if official exclusion curve has been defined:
     if not validationPlot.officialCurve:
         logger.warning("Official curve for validation plot is not defined.")
     else:
         official = validationPlot.officialCurve
-        
-    setOptions(allowed, type='allowed')
-    setOptions(excluded, type='excluded')
-    setOptions(official, type='official')
+    
+    if silentMode: gROOT.SetBatch()    
+    setOptions(allowed, Type='allowed')
+    setOptions(excluded, Type='excluded')
+    setOptions(official, Type='official')
     base = TMultiGraph()
-    base.add(allowed, "P")
-    base.add(excluded, "P")
-    base.add(official, "C")
-    title = validationPlot.expRes.getValuesFor('id') + ":" \
+    base.Add(allowed, "P")
+    base.Add(excluded, "P")
+    base.Add(official, "C")
+    title = validationPlot.expRes.getValuesFor('id') + "_" \
             + validationPlot.txname.getInfo('txname')\
-            + ":" + validationPlot.axes
-    base.setTitle(title)
-    plane = TCanvas("c1", "c1", 0, 0, 800, 600)
+            + "_" + validationPlot.axes
+
+    plane = TCanvas("c1", "c1", 0, 0, 800, 600)            
+    plane.SetTitle(title)    
     base.Draw("AP")
-    ans = raw_input("Hit any key to close\n")
+    if not silentMode: ans = raw_input("Hit any key to close\n")
+    
+    return plane
             
         
-def setOptions(obj,type=None):
+def setOptions(obj,Type=None):
     """
     Define global options for the plotting object according to its type.
     :param obj: a plotting object (TGraph, TMultiGraph, TCanvas,...)
@@ -107,10 +110,10 @@ def setOptions(obj,type=None):
         obj.SetFillStyle(1001)
 
 #Type-specific settings:
-    if not type: return True
-    elif type == 'allowed':
+    if not Type: return True
+    elif Type == 'allowed':
         obj.SetMarkerStyle(20)    
         obj.SetMarkerColor(kGreen)
-    elif type == 'excluded':
+    elif Type == 'excluded':
         obj.SetMarkerStyle(20)    
         obj.SetMarkerColor(kRed)

@@ -82,21 +82,9 @@ def runSModelSFor(validationPlot):
             if len(value) != 1:
                 logger.warning("More than one cross-section found. Using first one")
             value = value[0].value
-            x,y = origPlot.getXYValues(mass) 
-            print x,y,mass[0]            
+            mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]
+            x,y = origPlot.getXYValues(mass_unitless)
             data.append({'slhafile' : slhafile, 'axes': [x,y], \
                          'signal' : value, 'UL' : upperLimit, 'condition': cond})
             
     return data
-
-def getAxes(mass,axes):
-    """
-    Reads the mass array and the definition of the validation plot axes
-    and returns the values of the axes (x and y)
-    :param mass: mass array (array of Unum objects)
-    :param axes: string describing the mass->axes mapping (e.g. 2*Eq(mother,x)_Eq(lsp,y))
-    
-    :return: values for x and y
-    """
-    
-    return mass[0]
