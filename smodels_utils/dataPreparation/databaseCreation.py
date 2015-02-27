@@ -24,6 +24,12 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
 
+
+class EmptyInfo:
+    """ the dataInfo.txt file content """
+    def __init__(self):
+        self.infoAttr = [ 'type' ]
+        self.type = 'upperLimit'
            
         
 class DatabaseCreator(list):
@@ -107,6 +113,9 @@ class DatabaseCreator(list):
         self._setLastUpdate()
         self._delete()
         self._createInfoFile(self.metaInfoFileName, self.metaInfo)
+        dummy = EmptyInfo()
+        self._createInfoFile( "dataInfo", dummy )
+
    
         self.tWiki = StandardTWiki(self.metaInfo)
         
