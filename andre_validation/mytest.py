@@ -2,17 +2,17 @@
 
 import sys
 
-sys.path.append('/home/lessa/smodels')
-sys.path.append('/home/lessa/smodels-utils')
+sys.path.append('../')
 
 
 def main():
+    from andre_validation.validationObjs import ValidationPlot
     from smodels.experiment.databaseObjects import ExpResult
     from smodels.experiment.infoObject import Info
     from smodels.experiment.databaseObjects import DataBase
     from smodels.tools.physicsUnits import GeV, fb, TeV, pb
     from smodels.experiment.databaseBrowser import Browser
-    from andre_validation.validationObjs import ValidationPlot
+    
     import logging
     from smodels.experiment.txnameObject import logger as ml
     ml.setLevel(level=logging.INFO)
@@ -27,7 +27,7 @@ def main():
     valPlot = ValidationPlot(expRes,txname,axes)
     valPlot.setSLHAdir('/home/lessa/smodels-utils/slha/T1bbbb')
     valPlot.getData()
-    valPlot.validatePlot(silentMode=True)
+    valPlot.getPlot(silentMode=False)
     valPlot.savePlot()
 
 if __name__ == "__main__":

@@ -13,8 +13,9 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
-sys.path.append('/home/lessa/smodels/')
-sys.path.append('/home/lessa/smodels-utils/')
+sys.path.append('../')
+from smodels_utils import SModelSUtils
+
 from smodels.theory import slhaDecomposer
 from smodels.tools.physicsUnits import fb, GeV
 from smodels.theory.theoryPrediction import theoryPredictionsFor

@@ -27,6 +27,7 @@ def createPlot(validationPlot,silentMode=True):
     :return: TCanvas object containing the plot
     """
         
+    silentMode=False
     # Check if data has been defined:
     excluded = TGraph()
     allowed = TGraph()        
@@ -61,12 +62,12 @@ def createPlot(validationPlot,silentMode=True):
             + validationPlot.txname.getInfo('txname')\
             + "_" + validationPlot.axes
 
-    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
+    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
     base.Draw("AP")
     base.SetTitle(title)
     if not silentMode: ans = raw_input("Hit any key to close\n")
     
-    return plane
+    return plane,base
             
         
 def setOptions(obj,Type=None):

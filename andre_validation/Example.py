@@ -2,8 +2,7 @@
 
 import sys,os
 
-sys.path.append('/home/lessa/smodels')
-sys.path.append('/home/lessa/smodels-utils')
+
 
 from plotProducer import validateTxName,validatePlot,validateExpRes
 from smodels.experiment.databaseBrowser import Browser
