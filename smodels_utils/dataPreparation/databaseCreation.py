@@ -60,7 +60,8 @@ class DatabaseCreator(list):
         self.exclusions = []
         self.metaInfo = None
         self.base = os.getcwd() + '/'
-        self.twikitxtPath = './orig/twiki.txt'
+        self.origPath = './orig/'
+        self.twikitxtPath = self.origPath + 'twiki.txt'
         self.validationPath = './validation/'
         self.smsrootFile = self.validationPath+"/sms.root"
         self.infoFileDirectory = './data/'
@@ -431,6 +432,9 @@ class DatabaseCreator(list):
         """
         creates the twiki.txt file
         """
+        if not os.path.exists ( self.base + self.origPath ):
+            os.mkdir ( self.base + self.origPath )
+
         
         twikiTxt = open(self.base + self.twikitxtPath,'w')
         twikiTxt.write('%s' %self.tWiki)
