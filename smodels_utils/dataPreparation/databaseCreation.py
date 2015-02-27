@@ -55,7 +55,8 @@ class DatabaseCreator(list):
         self.metaInfo = None
         self.base = os.getcwd() + '/'
         self.twikitxtPath = './orig/twiki.txt'
-        self.smsrootPath = './sms.root'
+        self.validationPath = './validation/'
+        self.smsrootFile = self.validationPath+"/sms.root"
         self.infoFileDirectory = './'
         self.infoFileExtension = '.txt'
         self.metaInfoFileName = 'info'
@@ -378,7 +379,7 @@ class DatabaseCreator(list):
         """
         
         predefinedPaths = [
-            self.base + self.smsrootPath,
+            self.base + self.smsrootFile,
             self.base + self.twikitxtPath,
             self.base + self.infoFilePath(self.metaInfoFileName)
             ]
@@ -401,8 +402,11 @@ class DatabaseCreator(list):
         """
         creates the sms.root file
         """
+
+        if not os.path.exists ( self.validationPath ):
+            os.mkdir ( self.validationPath )
     
-        smsRoot = ROOT.TFile(self.base + self.smsrootPath,'recreate')
+        smsRoot = ROOT.TFile(self.base + self.smsrootFile,'recreate')
         for exclusions in self.exclusions:
             directory = smsRoot.mkdir(exclusions.name, exclusions.name)
             directory.cd()
