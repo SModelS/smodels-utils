@@ -61,9 +61,9 @@ def createPlot(validationPlot,silentMode=True):
             + validationPlot.txname.getInfo('txname')\
             + "_" + validationPlot.axes
 
-    plane = TCanvas("c1", "c1", 0, 0, 800, 600)            
-    plane.SetTitle(title)    
+    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
     base.Draw("AP")
+    base.SetTitle(title)
     if not silentMode: ans = raw_input("Hit any key to close\n")
     
     return plane

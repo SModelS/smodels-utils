@@ -2,7 +2,7 @@
 
 """
 .. module:: validationObjs
-   :synopsis: Main classes and methods for generating a validation plot
+   :synopsis: Main classes and methods for generating a single validation plot
 
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
@@ -104,7 +104,7 @@ class ValidationPlot():
         
         self.data = runSModelSFor(self)
         
-    def generatePlot(self,silentMode=True):
+    def validatePlot(self,silentMode=True):
         """
         Uses the data in self.data and the official exclusion curve
         in self.officialCurve to generate the exclusion plot
@@ -138,12 +138,36 @@ class ValidationPlot():
         
         filename = self.plot.GetTitle()+'.png'
         filename = os.path.join(vDir,filename)
-        print filename
-        filename = filename.replace("*","").replace(",",".").replace("(",".").replace(")",".")
+        filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
         self.plot.Print(filename)
         return True
+    
+    def saveRoot(self,validationDir=None):
+        """
+        Saves the data and plot in a .root file in the validationDir folder.
+        If the folder does not exist, it will be created.
+        If the folder is not defined the plot will be created in the
+        analysis/validation/ folder
         
+        :param validationDir: Folder where the plot will be saved
+        """    
         
+        if not hasattr(self,'plot') or not self.plot:
+            logger.warning("No plot found. Nothing will be saved")
+            return False
+        if not hasattr(self,'data') or not self.data:
+            logger.warning("No data found. Nothing will be saved")
+            return False        
+        
+        if not validationDir:
+            vDir = os.path.join(self.expRes.path,'validation')
+        else: vDir = validationDir
+        
+        if not os.path.isdir(vDir):
+            logger.info("Creating validation folder "+vDir)
+            os.mkdir(vDir)
+        
+        return True        
             
         
         

@@ -27,7 +27,7 @@ def main():
     valPlot = ValidationPlot(expRes,txname,axes)
     valPlot.setSLHAdir('/home/lessa/smodels-utils/slha/T1bbbb')
     valPlot.getData()
-    valPlot.generatePlot(silentMode=False)
+    valPlot.validatePlot(silentMode=True)
     valPlot.savePlot()
 
 if __name__ == "__main__":

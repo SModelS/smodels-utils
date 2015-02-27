@@ -59,5 +59,5 @@ def reWriteFolder(slhadir):
     
 if __name__ == "__main__":
     
-    slhadir = '/home/lessa/smodels-utils/slha/T1bbbb/'
+    slhadir = '/home/lessa/smodels-utils/slha/T2tt/'
     reWriteFolder(slhadir)
