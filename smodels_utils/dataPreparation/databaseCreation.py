@@ -57,8 +57,9 @@ class DatabaseCreator(list):
         self.twikitxtPath = './orig/twiki.txt'
         self.validationPath = './validation/'
         self.smsrootFile = self.validationPath+"/sms.root"
-        self.infoFileDirectory = './'
+        self.infoFileDirectory = './data/'
         self.infoFileExtension = '.txt'
+        self.metaInfoFileDirectory = './'
         self.metaInfoFileName = 'info'
         self.assignmentOperator = ': '
         self.txNameField = 'txname'
@@ -386,16 +387,19 @@ class DatabaseCreator(list):
         for path in predefinedPaths:
             if os.path.exists(path): os.remove(path)
         
-        for entry in os.listdir(self.base + self.infoFileDirectory):
-            if not entry[-len(self.infoFileExtension):] == self.infoFileExtension:
-                continue
-            compareLine = '%s%s%s\n' %(self.txNameField,\
-            self.assignmentOperator, entry[:-len(self.infoFileExtension):])
-            f = open(entry,'r')
-            lines = f.readlines()
-            f.close()
-            if not compareLine in lines: continue
-            os.remove(entry)
+        try:
+            for entry in os.listdir(self.base + self.infoFileDirectory):
+                if not entry[-len(self.infoFileExtension):] == self.infoFileExtension:
+                    continue
+                compareLine = '%s%s%s\n' %(self.txNameField,\
+                self.assignmentOperator, entry[:-len(self.infoFileExtension):])
+                f = open( self.base + self.infoFileDirectory + entry,'r')
+                lines = f.readlines()
+                f.close()
+                if not compareLine in lines: continue
+                os.remove( self.base + self.infoFileDirectory + entry)
+        except OSError,e:
+            pass
 
     def _createSmsRoot(self):
         
@@ -447,14 +451,19 @@ class DatabaseCreator(list):
         infoFile.close()
         
     def infoFilePath(self, infoFileName):
-        
         """
         :param infoFileName: name of requested file without extension
         :return: path of info-file with given name
         """
+
+        directory = self.infoFileDirectory
+        if infoFileName=="info":
+            directory = self.metaInfoFileDirectory
+
+        if not os.path.exists ( directory ):
+            os.mkdir ( directory )
         
-        path = '%s%s%s' %(self.infoFileDirectory,\
-        infoFileName, self.infoFileExtension)
+        path = '%s%s%s' %(directory, infoFileName, self.infoFileExtension)
         return path
         
 databaseCreator = DatabaseCreator()   
