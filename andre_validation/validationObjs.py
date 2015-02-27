@@ -9,6 +9,7 @@
 """
 
 import logging,os,sys
+sys.path.append('../')
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -104,14 +105,14 @@ class ValidationPlot():
         
         self.data = runSModelSFor(self)
         
-    def validatePlot(self,silentMode=True):
+    def getPlot(self,silentMode=True):
         """
         Uses the data in self.data and the official exclusion curve
         in self.officialCurve to generate the exclusion plot
         :param silentMode: If True the plot will not be shown on the screen
         """
         
-        self.plot = createPlot(self,silentMode)
+        self.plot,self.base = createPlot(self,silentMode)
         
     def savePlot(self,validationDir=None):
         """
