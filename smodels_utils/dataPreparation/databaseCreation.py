@@ -63,7 +63,7 @@ class DatabaseCreator(list):
         self.origPath = './orig/'
         self.twikitxtPath = self.origPath + 'twiki.txt'
         self.validationPath = './validation/'
-        self.smsrootFile = self.validationPath+"/sms.root"
+        self.smsrootFile = "./sms.root"
         self.infoFileDirectory = './data/'
         self.infoFileExtension = '.txt'
         self.metaInfoFileDirectory = './'
@@ -114,19 +114,19 @@ class DatabaseCreator(list):
         self._setLastUpdate()
         self._delete()
         self._createInfoFile(self.metaInfoFileName, self.metaInfo)
-        dummy = EmptyInfo()
-        self._createInfoFile( "dataInfo", dummy )
 
-   
         self.tWiki = StandardTWiki(self.metaInfo)
         
         publishedData = True
+
+        hasUpperLimits = False
         for txName in self:
             
             print '\nreading: %s' %txName.name
             
             vertexChecker = VertexChecker(txName)
             upperLimits = StandardDataList()
+            print "upperLimits=",upperLimits
             expectedUpperLimits = StandardDataList()
             efficiencyMap = StandardDataList(valueUnit ='')
             
@@ -194,6 +194,10 @@ class DatabaseCreator(list):
                     if not hasattr(region, 'fuzzycondition'):
                         Errors().required(txName.name, region, 'fuzzycondition')
                     self._createInfoFile(getattr(region, self.txNameField), region, txName)
+        dummy = EmptyInfo()
+        self._createInfoFile( "dataInfo", dummy )
+
+   
         
         self._createSmsRoot()
         self._createTwikiTxt()
@@ -417,8 +421,8 @@ class DatabaseCreator(list):
         creates the sms.root file
         """
 
-        if not os.path.exists ( self.validationPath ):
-            os.mkdir ( self.validationPath )
+        #if not os.path.exists ( self.validationPath ):
+        #    os.mkdir ( self.validationPath )
     
         smsRoot = ROOT.TFile(self.base + self.smsrootFile,'recreate')
         for exclusions in self.exclusions:
