@@ -63,6 +63,7 @@ def runSModelSFor(validationPlot):
         return False
     slhaFiles = getSlhaFiles(validationPlot.slhaDir)
     
+    expRes = validationPlot.expRes
     #Define basic parameters
     sigmacut = 0.001 * fb
     mingap = 2. * GeV
@@ -71,19 +72,25 @@ def runSModelSFor(validationPlot):
     for slhafile in slhaFiles:
         smstoplist = slhaDecomposer.decompose(slhafile, sigmacut,\
                         doCompress=True,doInvisible=True, minmassgap=mingap)
-        predictions = theoryPredictionsFor(validationPlot.expRes, smstoplist)
+        predictions = theoryPredictionsFor(expRes, smstoplist)
         if not predictions: continue
+        dataset = predictions.dataset
+        datasetID = dataset.getValuesFor('dataid')
         for theoryPrediction in predictions:
             txname = theoryPrediction.txname
-            if txname  != validationPlot.txname: continue
+            if txname and txname  != validationPlot.txname: continue
             mass = theoryPrediction.mass
             value = theoryPrediction.value
             cond = theoryPrediction.conditions
-            upperLimit = theoryPrediction.expResult.getUpperLimitFor(txname,mass)
+            if expRes.getValuesFor('datatype') == 'upper-limit':
+                upperLimit = expRes.getUpperLimitFor(txname=txname,mass=mass)
+            elif expRes.getValuesFor('datatype') == 'efficiency-map':
+                upperLimit = expRes.getUpperLimitFor(dataID=datasetID)
+
             if len(value) != 1:
                 logger.warning("More than one cross-section found. Using first one")
             value = value[0].value
-            mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]
+            mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]            
             x,y = origPlot.getXYValues(mass_unitless)
             data.append({'slhafile' : slhafile, 'axes': [x,y], \
                          'signal' : value, 'UL' : upperLimit, 'condition': cond})

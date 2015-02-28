@@ -9,7 +9,7 @@
 """
 
 import logging,os,sys
-sys.path.append('../')
+sys.path.append('../../smodels/')
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
