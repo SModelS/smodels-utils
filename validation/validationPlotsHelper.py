@@ -11,7 +11,7 @@
 from __future__ import print_function
 import setPath  # # set to python path for smodels
 from smodels.tools.physicsUnits import fb, GeV
-from smodels_utils.tools.databaseBrowser import Browser
+from smodels_utils.helper.databaseBrowser import Browser
 import logging
 import os
 import ROOT

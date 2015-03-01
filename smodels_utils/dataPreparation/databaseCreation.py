@@ -24,6 +24,12 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
 
+
+class EmptyInfo:
+    """ the dataInfo.txt file content """
+    def __init__(self):
+        self.infoAttr = [ 'type' ]
+        self.type = 'upperLimit'
            
         
 class DatabaseCreator(list):
@@ -54,10 +60,13 @@ class DatabaseCreator(list):
         self.exclusions = []
         self.metaInfo = None
         self.base = os.getcwd() + '/'
-        self.twikitxtPath = './orig/twiki.txt'
-        self.smsrootPath = './sms.root'
-        self.infoFileDirectory = './'
+        self.origPath = './orig/'
+        self.twikitxtPath = self.origPath + 'twiki.txt'
+        self.validationPath = './validation/'
+        self.smsrootFile = "./sms.root"
+        self.infoFileDirectory = './data/'
         self.infoFileExtension = '.txt'
+        self.metaInfoFileDirectory = './'
         self.metaInfoFileName = 'info'
         self.assignmentOperator = ': '
         self.txNameField = 'txname'
@@ -104,16 +113,19 @@ class DatabaseCreator(list):
         self._setLastUpdate()
         self._delete()
         self._createInfoFile(self.metaInfoFileName, self.metaInfo)
-   
+
         self.tWiki = StandardTWiki(self.metaInfo)
         
         publishedData = True
+
+        hasUpperLimits = False
         for txName in self:
             
             print '\nreading: %s' %txName.name
             
             vertexChecker = VertexChecker(txName)
             upperLimits = StandardDataList()
+            print "upperLimits=",upperLimits
             expectedUpperLimits = StandardDataList()
             efficiencyMap = StandardDataList(valueUnit ='')
             
@@ -181,6 +193,10 @@ class DatabaseCreator(list):
                     if not hasattr(region, 'fuzzycondition'):
                         Errors().required(txName.name, region, 'fuzzycondition')
                     self._createInfoFile(getattr(region, self.txNameField), region, txName)
+        dummy = EmptyInfo()
+        self._createInfoFile( "dataInfo", dummy )
+
+   
         
         self._createSmsRoot()
         self._createTwikiTxt()
@@ -377,31 +393,37 @@ class DatabaseCreator(list):
         """
         
         predefinedPaths = [
-            self.base + self.smsrootPath,
+            self.base + self.smsrootFile,
             self.base + self.twikitxtPath,
             self.base + self.infoFilePath(self.metaInfoFileName)
             ]
         for path in predefinedPaths:
             if os.path.exists(path): os.remove(path)
         
-        for entry in os.listdir(self.base + self.infoFileDirectory):
-            if not entry[-len(self.infoFileExtension):] == self.infoFileExtension:
-                continue
-            compareLine = '%s%s%s\n' %(self.txNameField,\
-            self.assignmentOperator, entry[:-len(self.infoFileExtension):])
-            f = open(entry,'r')
-            lines = f.readlines()
-            f.close()
-            if not compareLine in lines: continue
-            os.remove(entry)
+        try:
+            for entry in os.listdir(self.base + self.infoFileDirectory):
+                if not entry[-len(self.infoFileExtension):] == self.infoFileExtension:
+                    continue
+                compareLine = '%s%s%s\n' %(self.txNameField,\
+                self.assignmentOperator, entry[:-len(self.infoFileExtension):])
+                f = open( self.base + self.infoFileDirectory + entry,'r')
+                lines = f.readlines()
+                f.close()
+                if not compareLine in lines: continue
+                os.remove( self.base + self.infoFileDirectory + entry)
+        except OSError,e:
+            pass
 
     def _createSmsRoot(self):
         
         """
         creates the sms.root file
         """
+
+        #if not os.path.exists ( self.validationPath ):
+        #    os.mkdir ( self.validationPath )
     
-        smsRoot = ROOT.TFile(self.base + self.smsrootPath,'recreate')
+        smsRoot = ROOT.TFile(self.base + self.smsrootFile,'recreate')
         for exclusions in self.exclusions:
             directory = smsRoot.mkdir(exclusions.name, exclusions.name)
             directory.cd()
@@ -413,6 +435,9 @@ class DatabaseCreator(list):
         """
         creates the twiki.txt file
         """
+        if not os.path.exists ( self.base + self.origPath ):
+            os.mkdir ( self.base + self.origPath )
+
         
         twikiTxt = open(self.base + self.twikitxtPath,'w')
         twikiTxt.write('%s' %self.tWiki)
@@ -442,14 +467,19 @@ class DatabaseCreator(list):
         infoFile.close()
         
     def infoFilePath(self, infoFileName):
-        
         """
         :param infoFileName: name of requested file without extension
         :return: path of info-file with given name
         """
+
+        directory = self.infoFileDirectory
+        if infoFileName=="info":
+            directory = self.metaInfoFileDirectory
+
+        if not os.path.exists ( directory ):
+            os.mkdir ( directory )
         
-        path = '%s%s%s' %(self.infoFileDirectory,\
-        infoFileName, self.infoFileExtension)
+        path = '%s%s%s' %(directory, infoFileName, self.infoFileExtension)
         return path
         
 databaseCreator = DatabaseCreator()   
