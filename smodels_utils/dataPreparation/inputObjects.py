@@ -229,7 +229,7 @@ class MassPlane(Locker):
             OrigExclusion('expectedExclusionP1'),
             OrigExclusion('expectedExclusionM1'),
             ])
-        self.origEfficiencyMap = OrigEfficiencyMap('EfficiencyMap')
+        self.origEfficiencyMap = OrigEfficiencyMap('efficiencyMap')
         self.figure =None
         self.figureUrl = None
         

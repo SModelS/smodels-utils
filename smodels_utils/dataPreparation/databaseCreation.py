@@ -76,9 +76,8 @@ class DatabaseCreator(list):
         --a empty StandardTWiki-object is build
         --loop over all txNames:
         ----VertexChecker-object is build
-        ----empty StandardDataList objects for:
+        ----empty StandardDataList objects are build for:
             upperLimits, expectedUpperLimits and efficiencyMaps 
-            are build
         ----self.exclusions is appended with an empty StandardExclusions-object
         ----loop over all mass planes:
         ------extending upperLimits, expectedUpperLimits and efficiencyMaps
