@@ -110,9 +110,16 @@ class Orig(Locker):
         for line in content:
             #print(line)
             try:
-                values = line.split()[:-1] ## omit the last column
-            except:
-                Errors().txtFormat(self.path, 'Orig')
+                values = copy.deepcopy ( line.split() ) ## omit the last column
+                if float(values[-2])<4*float(values[-1]):
+                    print "[origDataObjects] Small value",values[-2],"+-",values[-1],"!"
+                    print "[origDataObjects] Will set to zero."
+                    values[-2]="0."
+#                print "values=",values
+                values=values[:-1]
+            except Exception,e:
+                print "[origDataObjects]",e
+                Errors().effiFormat(self.path, 'Orig')
             values = [value.strip() for value in values] 
             try:
                 values = [float(value) for value in values]
