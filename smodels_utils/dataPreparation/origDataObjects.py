@@ -111,7 +111,7 @@ class Orig(Locker):
             #print(line)
             try:
                 values = copy.deepcopy ( line.split() ) ## omit the last column
-                if float(values[-2])<2*float(values[-1]):
+                if float(values[-2])<4*float(values[-1]):
                     print "[origDataObjects] Small value",values[-2],"+-",values[-1],"!"
                     print "[origDataObjects] Will set to zero."
                     values[-2]="0."
