@@ -12,6 +12,7 @@ import sys
 import os
 import ROOT
 from smodels_utils.dataPreparation.preparationHelper import Locker
+import copy
 
 class Orig(Locker):
     
