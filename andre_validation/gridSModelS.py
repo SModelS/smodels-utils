@@ -78,8 +78,13 @@ def runSModelSFor(validationPlot):
         datasetID = dataset.getValuesFor('dataid')
         for theoryPrediction in predictions:
             txname = theoryPrediction.txname
-            if txname and txname  != validationPlot.txname: continue
+            if txname and txname.txname  != validationPlot.txname: continue                      
             mass = theoryPrediction.mass
+            if not mass and len(smstoplist.getElements()) == 1:
+                mass = smstoplist.getElements()[0].getMasses()
+            elif not mass:
+                logger.error("Could not define mass for prediction.")
+                sys.exit()            
             value = theoryPrediction.value
             cond = theoryPrediction.conditions
             if expRes.getValuesFor('datatype') == 'upper-limit':
@@ -93,6 +98,7 @@ def runSModelSFor(validationPlot):
             mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]            
             x,y = origPlot.getXYValues(mass_unitless)
             data.append({'slhafile' : slhafile, 'axes': [x,y], \
-                         'signal' : value, 'UL' : upperLimit, 'condition': cond})
-            
+                         'signal' : value, 'UL' : upperLimit, 'condition': cond,
+                         'dataset': predictions.dataset.getValuesFor("dataid")})
+
     return data

@@ -14,10 +14,9 @@ sys.path.append('../../smodels/')
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
-from ROOT import TFile,TGraph,TMultiGraph,TCanvas
 from smodels.tools.physicsUnits import fb, GeV
 from gridSModelS import runSModelSFor
-from plottingFuncs import createPlot
+from plottingFuncs import createPlot, getExclusionCurvesFor
 
 logger.setLevel(level=logging.DEBUG)
 
@@ -28,10 +27,10 @@ class ValidationPlot():
     Encapsulates all the data necessary for creating a single validation plot.
     """
     
-    def __init__(self, ExptRes, TxName, Axes, slhadir=None, databasePath=None):
+    def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None):
     
         self.expRes = ExptRes
-        self.txname = TxName
+        self.txname = TxNameStr
         self.axes = Axes
         self.slhaDir = None
         self.data = None
@@ -58,7 +57,7 @@ class ValidationPlot():
         
         vstr = "Validation plot for\n"
         vstr += 'id: '+self.expRes.getValuesFor('id')+'\n'
-        vstr += 'TxName: '+str(self.txname)+'\n'
+        vstr += 'TxName: '+self.txname+'\n'
         vstr += 'Axes: '+self.axes
         return vstr
     
@@ -84,18 +83,13 @@ class ValidationPlot():
         
         :return: a root TGraph object    
         """
-        
-        rootpath = os.path.join(self.expRes.path,'sms.root')
-        if not os.path.isfile(rootpath):
-            logger.error("Root file not found for "+str(self)+" in "+rootpath)
-            sys.exit()
-        
-        rootFile = TFile(rootpath)
-        tgraph = rootFile.Get(self.txname.getInfo('txname')+'/exclusion_'+self.axes)
-        if not isinstance(tgraph,TGraph):
-            logger.warning("Exclusion curve found for "+str(self)+" in "+rootpath)
-            return None
-        else: return tgraph
+        tgraphDict = getExclusionCurvesFor(self.expRes,txname=self.txname,axes=self.axes)
+        if not tgraphDict: return None
+        tgraph = tgraphDict[self.txname]
+        if len(tgraph) > 1:
+            logger.warning("More than one exclusion curve found. Using the first one.")
+
+        return tgraph[0]
         
     def getData(self):
         """
@@ -138,6 +132,7 @@ class ValidationPlot():
             os.mkdir(vDir)
         
         filename = self.plot.GetTitle()+'.png'
+        filename = filename.replace(self.expRes.getValuesFor('id')+"_","")
         filename = os.path.join(vDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
         self.plot.Print(filename)

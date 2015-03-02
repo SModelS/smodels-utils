@@ -8,13 +8,60 @@
 
 """
 
-import logging
+import logging,os
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 from ROOT import *
 from smodels.tools.physicsUnits import fb, GeV
+
+
+def getExclusionCurvesFor(expResult,txname=None,axes=None):
+    """
+    Reads sms.root and returns the TGraph objects for the exclusion
+    curves. If txname is defined, returns only the curves corresponding
+    to the respective txname. If axes is defined, only returns the curves
+    
+    :param expResult: an ExpResult object
+    :param txname: the TxName in string format (i.e. T1tttt)
+    :param axes: the axes definition in string format (i.e. 2*Eq(mother,x)_Eq(lsp,y))
+    
+    :return: a dictionary, where the keys are the TxName strings
+            and the values are the respective list of TGraph objects.
+    """
+    
+    rootpath = os.path.join(expResult.path,'sms.root')
+    if not os.path.isfile(rootpath):
+        logger.error("Root file %s not found" %rootpath)
+        return False
+    
+    rootFile = TFile(rootpath)
+    txnames = {}
+    #Get list of TxNames (directories in root file)
+    for obj in rootFile.GetListOfKeys():
+        objName = obj.ReadObj().GetName()
+        if txname and txname != objName: continue
+        txnames[objName] = obj.ReadObj()        
+    if not txnames:
+        logger.warning("Exclusion curve for %s not found in %s" %(txname,rootpath))
+        return False
+
+    #For each Txname/Directory get list of exclusion curves
+    nplots = 0
+    for tx,txDir in txnames.items():
+        txnames[tx] = []
+        for obj in txDir.GetListOfKeys():
+            objName = obj.ReadObj().GetName()
+            if not 'exclusion_' in objName: continue
+            if axes and not axes in objName: continue
+            txnames[tx].append(obj.ReadObj())
+            nplots += 1
+    if not nplots:
+        logger.warning("No exclusion curve found.")
+        return False
+    
+    return txnames
 
 
 def createPlot(validationPlot,silentMode=True):
@@ -27,7 +74,6 @@ def createPlot(validationPlot,silentMode=True):
     :return: TCanvas object containing the plot
     """
         
-    silentMode=False
     # Check if data has been defined:
     excluded = TGraph()
     allowed = TGraph()        
@@ -59,7 +105,7 @@ def createPlot(validationPlot,silentMode=True):
     base.Add(excluded, "P")
     base.Add(official, "C")
     title = validationPlot.expRes.getValuesFor('id') + "_" \
-            + validationPlot.txname.getInfo('txname')\
+            + validationPlot.txname\
             + "_" + validationPlot.axes
 
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    

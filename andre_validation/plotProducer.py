@@ -14,6 +14,7 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 from validationObjs  import ValidationPlot
+from plottingFuncs import getExclusionCurvesFor
 
 logger.setLevel(level=logging.DEBUG)
 
@@ -29,8 +30,13 @@ def validatePlot(expRes,txname,axes,slhadir):
     :param slhadir: folder containing the SLHA files corresponding to txname
     """
 
+    #Get exclusion curve for expRes:
+    curve = getExclusionCurvesFor(expResult=expRes,txname=txname,axes=axes)
+    if not curve:
+        return False
+
     logger.info("Generating validation plot for " + expRes.getValuesFor('id') 
-                +", "+txname.txname+", "+axes)        
+                +", "+txname+", "+axes)        
     valPlot = ValidationPlot(expRes,txname,axes)
     valPlot.setSLHAdir(slhadir)
     valPlot.getData()
@@ -48,12 +54,17 @@ def validateTxName(expRes,txname,slhadir):
     :param slhadir: folder containing the SLHA files corresponding to txname
     """    
 
-    axes = txname.getInfo('axes')
+    tgraphs = getExclusionCurvesFor(expRes,txname=txname)[txname]
+    axes = []
+    for tgraph in tgraphs:
+        ax = tgraph.GetName()
+        ax = ax.replace('exclusion_',"")
+        axes.append(ax)
+    
     if not axes: return False
     
-    if isinstance(axes,list):
-        for ax in axes: validatePlot(expRes,txname,ax,slhadir)
-    else: validatePlot(expRes,txname,axes,slhadir)
+    for ax in axes: validatePlot(expRes,txname,ax,slhadir)
+    
     
 def validateExpRes(expRes,slhaDict):
     """
@@ -65,14 +76,13 @@ def validateExpRes(expRes,slhaDict):
     txnames (i.e. {'T1bbbb' : ./T1bbbb/, 'T1ttt' : ./T1tttt/,...})
     """    
 
-    #Get the txnames appearing in expRes:
-    txstrs = expRes.getValuesFor('txname')  #List of strings
-    for txstr in txstrs:
-        if not txstr in slhaDict:
-            logger.warning("The SLHA folder for %s has not been defined" % txstr)
+    #Get all exclusion curves appearing in sms.root:
+    curves = getExclusionCurvesFor(expRes)
+    for txname in curves:
+        if not txname in slhaDict:
+            logger.warning("The SLHA folder for %s has not been defined" % txname)
             continue
-        slhadir = slhaDict[txstr]
-        txname = expRes.getTxnameWith({'txname' : txstr})
+        slhadir = slhaDict[txname]        
         validateTxName(expRes,txname,slhadir)
         
     return True
