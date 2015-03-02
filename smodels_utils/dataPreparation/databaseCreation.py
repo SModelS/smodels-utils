@@ -28,8 +28,8 @@ logger.setLevel(level=logging.ERROR)
 class EmptyInfo:
     """ the dataInfo.txt file content """
     def __init__(self):
-        self.infoAttr = [ 'type' ]
-        self.type = 'upperLimit'
+        self.infoAttr = [ 'datatype' ]
+        self.datatype = 'upperLimit'
            
         
 class DatabaseCreator(list):
