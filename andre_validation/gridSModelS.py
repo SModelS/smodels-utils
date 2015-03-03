@@ -8,14 +8,14 @@
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
 """
-import os,sys,logging
+import os,sys,logging,shutil
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
 sys.path.append('../')
 from smodels_utils import SModelSUtils
-
+import tempfile,tarfile
 from smodels.theory import slhaDecomposer
 from smodels.tools.physicsUnits import fb, GeV
 from smodels.theory.theoryPrediction import theoryPredictionsFor
@@ -26,23 +26,38 @@ logger.setLevel(level=logging.DEBUG)
 def getSlhaFiles(slhadir):
     """
     Returns a list of valid SLHA files in slhadir
-    :param slhadir: path to the SLHA folder (string)
+    :param slhadir: path to the SLHA folder or the tar ball containing the files (string)
     :return: list of SLHA files (list of strings)
     """            
     
     slhaFiles = []    
-    for f in os.listdir(slhadir):
-        slhafile = os.path.join(slhadir,f)      
-        if not os.path.isfile(slhafile): continue
-        f = open(slhafile,'r')
-        fdata = f.read()
-        f.close()
-        #Skip non-SLHA files
-        if not 'BLOCK MASS' in fdata: continue
-        if not 'XSECTION' in fdata: continue
-        slhaFiles.append(slhafile)
+    if os.path.isdir(slhadir):
+        slhaD = slhadir
+    elif os.path.isfile(slhadir):
+        try:
+            tar = tarfile.open(slhadir)
+            tempdir = tempfile.mkdtemp(dir=os.getcwd())
+            tar.extractall(path=tempdir)
+            slhaD = tempdir
+        except:
+            logger.error("Could not extract SLHA files from %s" %slhadir)
+            sys.exit()
+    else:
+        logger.error("%s is not a file nor a folder" %slhadir)
+        sys.exit()
     
-    return slhaFiles
+    for root, dirs, files in os.walk(slhaD):
+        for slhafile in files:
+            slhafile = os.path.join(root,slhafile)
+            f = open(slhafile,'r')
+            fdata = f.read()
+            f.close()
+            #Skip non-SLHA files
+            if not 'BLOCK MASS' in fdata: continue
+            if not 'XSECTION' in fdata: continue
+            slhaFiles.append(slhafile)
+
+    return slhaFiles,slhaD
         
 def runSModelSFor(validationPlot):
     """
@@ -61,7 +76,7 @@ def runSModelSFor(validationPlot):
     if not validationPlot.slhaDir:
         logger.warning("SLHA folder not defined")
         return False
-    slhaFiles = getSlhaFiles(validationPlot.slhaDir)
+    slhaFiles,slhaD = getSlhaFiles(validationPlot.slhaDir)
     
     expRes = validationPlot.expRes
     #Define basic parameters
@@ -100,5 +115,8 @@ def runSModelSFor(validationPlot):
             data.append({'slhafile' : slhafile, 'axes': [x,y], \
                          'signal' : value, 'UL' : upperLimit, 'condition': cond,
                          'dataset': predictions.dataset.getValuesFor("dataid")})
+
+    #Remove temporary folder
+    if slhaD != validationPlot.slhaDir: shutil.rmtree(slhaD)
 
     return data
