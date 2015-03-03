@@ -63,13 +63,13 @@ class ValidationPlot():
     
     def setSLHAdir(self,slhadir):
         """
-        Defines the folder which contains all the slha files to be
+        Defines the folder or tar file containing all the slha files to be
         used to generate the validation plot
         
         :param slhadir: existing folder containing SLHA files
         """
         
-        if not os.path.isdir(slhadir):
+        if not os.path.isdir(slhadir) and not os.path.isfile(slhadir):
             logger.error("Folder containing SLHA files not found for "+str(self))
             sys.exit()
         else:
@@ -168,10 +168,15 @@ class ValidationPlot():
             datafile = self.plot.GetTitle()+'.py'
             datafile = datafile.replace(self.expRes.getValuesFor('id')+"_","")
             datafile = os.path.join(validationDir,datafile)
+            datafile = datafile.replace("*","").replace(",","").replace("(","").replace(")","")
 
+        
         #Save data to file
         f = open(datafile,'w')
-        f.write("validationData = "+str(self.data))
+        dataStr = str(self.data)
+        dataStr = dataStr.replace('[fb]','*fb').replace('[pb]','*pb')
+        dataStr = dataStr.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
+        f.write("validationData = "+dataStr)
         f.close()
         
         return True        
