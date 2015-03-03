@@ -42,6 +42,7 @@ def validatePlot(expRes,txname,axes,slhadir):
     valPlot.getData()
     valPlot.getPlot()
     valPlot.savePlot()
+    valPlot.saveData()
     logger.info("Validation plot done.")
     
 def validateTxName(expRes,txname,slhadir):
