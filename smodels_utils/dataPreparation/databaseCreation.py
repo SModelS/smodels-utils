@@ -13,7 +13,7 @@ import sys
 import os
 import ROOT
 from smodels_utils.dataPreparation.standardObjects import\
-StandardDataList, VertexChecker, StandardExclusions, StandardTWiki
+StandardDataList, VertexChecker, StandardExclusions, StandardTWiki, StandardDataInfo
 from preparationHelper import ObjectList
 import logging
 from datetime import date
@@ -24,13 +24,7 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
 
-
-class EmptyInfo:
-    """ the dataInfo.txt file content """
-    def __init__(self):
-        self.infoAttr = [ 'datatype' ]
-        self.datatype = 'upperLimit'
-           
+         
         
 class DatabaseCreator(list):
     
@@ -82,6 +76,7 @@ class DatabaseCreator(list):
         --date of last update is evaluated
         --old database files are deleted 
         --write info.txt 
+        --a empty StandardDataInfo-object is build
         --a empty StandardTWiki-object is build
         --loop over all txNames:
         ----VertexChecker-object is build
@@ -94,6 +89,7 @@ class DatabaseCreator(list):
         ------checking published data
         ------setting all kin region to False if the are not True until now
         ------extending StandardExclusions
+        ------pass massplane to dataInfo
         ------extending StandardTWiki
         ----extend TxNames with some attributes, to be written to txName.txt
         ----checking if constraint, condition and fuzzycondition are set for 
@@ -101,6 +97,7 @@ class DatabaseCreator(list):
         ----write txName.txt
         --write sms.root
         --write twiki.txt
+        --write datainfo.txt
         
         :raise requiredError: If a region exist, but no constraint, condition 
         or fuzzycondition is set for this region
@@ -128,6 +125,8 @@ class DatabaseCreator(list):
             print "upperLimits=",upperLimits
             expectedUpperLimits = StandardDataList()
             efficiencyMap = StandardDataList(valueUnit ='')
+            
+            dataInfo = StandardDataInfo()
             
             exclusions = ObjectList('name')
             for region in txName.kinematicRegions:
@@ -169,7 +168,8 @@ class DatabaseCreator(list):
                 for excl in exclusions:
                     print 'extend exclusionLines for %s to %s entrys'\
                     %(excl.name, len(excl))
-
+                    
+                dataInfo.checkMassPlane(plane)
                 self.tWiki.addMassPlane(txName.name,plane)
 
             for excl in exclusions: 
@@ -193,8 +193,7 @@ class DatabaseCreator(list):
                     if not hasattr(region, 'fuzzycondition'):
                         Errors().required(txName.name, region, 'fuzzycondition')
                     self._createInfoFile(getattr(region, self.txNameField), region, txName)
-        dummy = EmptyInfo()
-        self._createInfoFile( "dataInfo", dummy )
+        self._createInfoFile( dataInfo.name, dataInfo)
 
    
         
