@@ -20,6 +20,59 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
 
+class StandardDataInfo(object):
+    """ the dataInfo.txt file content """
+    def __init__(self):
+        
+        self.infoAttr = [ 'datatype', 'dataid' ]
+        self._datatype = None
+        self.name = 'dataInfo'
+        
+    @property
+    def datatype(self):
+        
+        """
+        :returns: datatype as string
+        """
+        
+        return self._datatype
+    
+    @datatype.setter
+    def datatype(self, datatype):
+        
+        """
+        Checks and sets datatype
+        :raise datatypeError: if a datatype diferent
+        from the allrady existing one is given
+        """
+        if not self._datatype:
+            self._datatype = datatype
+            return
+        if self._datatype != datatype:
+            Errors().datatype()
+        
+    def checkMassPlane(self, massPlaneObj):
+        
+        """
+        checks the settings for origLimits and origEfficiencyMap
+        for given massplane. 
+        sets property datatype
+        stes attribute dataid to None (only for upper-limit)
+        :param massPlaneObj: inputObjects.MassPlane-objectFormat
+        """
+        
+        limits = False
+        for limit in massPlaneObj.origLimits:
+            if limit:
+                self.datatype = 'upper-limit'
+                self.dataid = None
+                break
+        if massPlaneObj.origEfficiencyMap:
+            self.datatype = 'efficiency-map'
+        print self.datatype
+            
+
+        
 class VertexChecker(object):
     
     """
@@ -478,6 +531,18 @@ class Errors(object):
         m = m + "there is a particle with higher mass then the privous one in:\n"
         m = m + "%s\n" %massArray
         m = m + 'please check your mass plane deffintion at convert.py'
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def datatype(self):
+        
+        m = self._starLine#
+        m = m + "Error datatype, got efficency Map and upper-limits\n"
+        m = m + "one publication can either be an efficienciy analyis\n"
+        m = m + "or an upper-limit analysis\n" 
+        m = m + 'please only use setSource for either obsUpperLimit/expUpperLimits\n' 
+        m = m + 'or for efficiencyMap'
         m = m + self._starLine
         print(m)
         sys.exit()
