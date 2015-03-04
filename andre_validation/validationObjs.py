@@ -68,6 +68,7 @@ class ValidationPlot():
             :param looseness: how much do we loosen the criterion?
         """
         curve=self.getOfficialCurve()
+        curve.SetPoint( curve.GetN()+1,0.,0.) ## close the curve nicely
         n_points=0
         pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0, "not_excluded_inside": 0,
                "not_excluded_outside": 0, "wrong" : 0 }
@@ -94,6 +95,7 @@ class ValidationPlot():
             if really_not_excluded and inside:
                 pts["wrong"]+=1
         logger.debug ( "points in categories %s" % str(pts) )
+        print ( "[validationObjs] points in categories %s" % str(pts) )
         return float(pts["wrong"]) / float(pts["total"])
 
     def setSLHAdir(self,slhadir):
