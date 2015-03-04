@@ -44,6 +44,7 @@ def validatePlot(expRes,txname,axes,slhadir):
     valPlot.savePlot()
     valPlot.saveData()
     logger.info("Validation plot done.")
+    return valPlot.computeWrongnessFactor() # return wrongness factor
     
 def validateTxName(expRes,txname,slhadir):
     """
@@ -63,8 +64,11 @@ def validateTxName(expRes,txname,slhadir):
         axes.append(ax)
     
     if not axes: return False
-    
-    for ax in axes: validatePlot(expRes,txname,ax,slhadir)
+
+    ret={}
+    for ax in axes: 
+        ret[ax]= validatePlot(expRes,txname,ax,slhadir) 
+    return ret ## return wrongness factors
     
     
 def validateExpRes(expRes,slhaDict):
@@ -79,14 +83,15 @@ def validateExpRes(expRes,slhaDict):
 
     #Get all exclusion curves appearing in sms.root:
     curves = getExclusionCurvesFor(expRes)
+    ret={}
     for txname in curves:
         if not txname in slhaDict:
             logger.warning("The SLHA folder for %s has not been defined" % txname)
             continue
         slhadir = slhaDict[txname]        
-        validateTxName(expRes,txname,slhadir)
+        ret[txname]= validateTxName(expRes,txname,slhadir)
         
-    return True
+    return ret
 
 def validateDataBase(database,slhaDict):
     """
@@ -97,7 +102,8 @@ def validateDataBase(database,slhaDict):
     :param slhaDict: Dictionary containing the SLHA files corresponding to the
     txnames (i.e. {'T1bbbb' : ./T1bbbb/, 'T1ttt' : ./T1tttt/,...})
     """  
-    
-    for expRes in database.getExpResults(): validateExpRes(expRes,slhaDict)
+    ret={}
+    for expRes in database.getExpResults(): 
+        ret[expRes.id]= validateExpRes(expRes,slhaDict)
         
-    return True          
+    return ret
