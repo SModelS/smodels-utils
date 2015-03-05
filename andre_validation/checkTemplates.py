@@ -16,7 +16,7 @@ sys.path.append('../../smodels-utils/')
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
+logger.setLevel(level=logging.WARNING)
 from smodels.experiment.databaseObjects import DataBase
 from andre_validation.slhaCreator import TemplateFile
 
@@ -27,6 +27,8 @@ missTxnames = []
 badTemplates = []
 database = DataBase("/home/lessa/smodels-database/")
 for expRes in database.expResultList:
+    #Skip efficiency-map analyses:
+    if 'efficiency-map' in expRes.getValuesFor('datatype'): continue
     for txname in expRes.getTxNames():
         template = os.path.join(templateDir,txname.txname+'.template')
         if template in badTemplates: continue
@@ -34,7 +36,7 @@ for expRes in database.expResultList:
         #check if the txname.template file exists: 
         if not os.path.isfile(template):            
             missTxnames.append(txname.txname)
-            print 'Template missing for %s' %txname.txname
+            logger.warning('Template missing for %s' %txname.txname)
         else:
             axes = txname.getInfo('axes')
             if not isinstance(axes,list): axes = [axes]
@@ -42,7 +44,7 @@ for expRes in database.expResultList:
                 tempf = TemplateFile(template,ax)
                 #Check if smodels produces the proper topologies/elements for a given set of masses:
                 if not tempf.checkFor(txname, 500.,50.):
-                    print 'Bad template in %s for \n %s' %(template,str(expRes))
+                    logger.error('Bad template in %s for \n %s' %(template,str(expRes)))
                     badTemplates.append(template)
                  
 print 'Missing TxNames:'                    

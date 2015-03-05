@@ -220,9 +220,7 @@ if __name__ == "__main__":
     database = DataBase("/home/lessa/smodels-database/")
     expRes = database.getExpResults(analysisIDs=['ATLAS-CONF-2013-062'],
                                 datasetIDs=['ANA11-CUT5'],txnames=['TGQ'])
-    print expRes
     txnameObj = expRes.getTxNames()[0]
-    print txnameObj
     print tempf.checkFor(txnameObj, 500.,200.)
     
     
