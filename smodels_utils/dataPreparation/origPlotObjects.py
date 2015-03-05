@@ -64,14 +64,14 @@ class OrigPlot(object):
         if the string consists of 2 sequences of equations separated by '+', the first 
         sequence is related to the first branch and the second to the second branch.
         """
+        origPlot = OrigPlot()
+        origPlot.string = string
         
         if string[:2] == '2*':
-            origPlot = OrigPlot()
             origPlot.branch_1 = Axes.fromString(string[2:])
             origPlot.branch_2 = Axes.fromString(string[2:])
             return origPlot
         if ')+Eq(' in string:
-            origPlot = OrigPlot()
             origPlot.branch_1 = Axes.fromString(string.split(')+Eq(')[0] + ')')
             origPlot.branch_2 = Axes.fromString('Eq(' + string.split(')+Eq(')[1])
             return origPlot

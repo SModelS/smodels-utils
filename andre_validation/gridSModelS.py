@@ -111,7 +111,11 @@ def runSModelSFor(validationPlot):
                 logger.warning("More than one cross-section found. Using first one")
             value = value[0].value
             mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]            
-            x,y = origPlot.getXYValues(mass_unitless)
+            v=origPlot.getXYValues(mass_unitless)
+            if v == None:
+                logger.info ( "dropping %s, doesnt fall into the plane of %s." % ( slhafile, origPlot.string ) )
+                continue
+            x,y = v
             data.append({'slhafile' : slhafile, 'axes': [x,y], \
                          'signal' : value, 'UL' : upperLimit, 'condition': cond,
                          'dataset': predictions.dataset.getValuesFor("dataid")})
