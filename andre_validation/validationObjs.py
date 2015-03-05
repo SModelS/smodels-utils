@@ -96,6 +96,8 @@ class ValidationPlot():
                 pts["wrong"]+=1
         logger.debug ( "points in categories %s" % str(pts) )
         print ( "[validationObjs] points in categories %s" % str(pts) )
+        if pts["total"]==0:
+            return float("nan")
         return float(pts["wrong"]) / float(pts["total"])
 
     def setSLHAdir(self,slhadir):
