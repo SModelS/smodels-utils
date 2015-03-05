@@ -81,7 +81,7 @@ class TemplateFile(object):
             massDict = {'mother': masses[0],'inter0' : masses[1], 'lsp' : masses[2]}
             
         #First check if the axes labels defined in axesDict match the template's
-        if sorted(massDict.keys()) != sorted(self.tags):
+        if set(massDict.keys()) - set(self.tags):
             logger.error("Labels do not match the ones defined in %s" %self.path)
             return False
         #Replace the axes labels by their mass values:
@@ -92,7 +92,8 @@ class TemplateFile(object):
             
         #Create SLHA filename (if not defined) 
         if not slhaname:
-            slhaname = tempfile.mkstemp(prefix=self.path[:self.path.rfind(".")]+"_",suffix=".slha")
+            templateName = self.path[self.path.rfind("/")+1:self.path.rfind(".")]
+            slhaname = tempfile.mkstemp(prefix=templateName+"_",suffix=".slha",dir=os.getcwd())
             os.close(slhaname[0])
             slhaname = slhaname[1]
 
@@ -122,6 +123,10 @@ class TemplateFile(object):
                         OBS:  The cross-sections are computed only once per x-value
         :return: list of SLHA file names generated.
         """
+        
+        if not 'Eq(mother,x)' in self.axes and addXsecs:
+            logger.error("X value does not correspond to mother mass. Can not compute cross-sections.")
+            addXsecs = False
         
         #First sort points by x-values
         sorted_pts = sorted(pts, key=lambda pt: pt[0])
@@ -164,6 +169,7 @@ class TemplateFile(object):
                 
         #First create temporary file:
         tempSLHA = self.createFileFor(x,y)
+        if not tempSLHA: return False
         #Add cross-sections to file:
         xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=tempSLHA)
         addXSecToFile(xsecs,tempSLHA)
@@ -204,16 +210,19 @@ class TemplateFile(object):
 
 
 if __name__ == "__main__":
-    axesDict = {'mother': 500., 'lsp': 200.}
-    template = '/home/lessa/smodels-utils/slha/T2tt/T2tt_NLL.template'
+    
+    template = '/home/lessa/smodels-utils/slha/templates/TGQ.template'
     axes = '2*Eq(mother,x)_Eq(lsp,y)'
     tempf = TemplateFile(template,axes)
-    slhafiles = tempf.createFilesFor([[500.,200.],[600.,200.],[600.,300.]])
-    print slhafiles
-#     database = DataBase("/home/lessa/smodels-database/")
-#     expRes = database.getExpResults(analysisIDs=['CMS-SUS-13-004'],
-#                                 datasetIDs=[None],txnames=['T2tt'])
-#     txnameObj = expRes.getTxNames()[0]
-#     print tempf.checkFor(txnameObj, 500.,200.)
+    
+#     slhafiles = tempf.createFilesFor([[500.,200.],[600.,200.],[600.,300.]])
+#     print slhafiles
+    database = DataBase("/home/lessa/smodels-database/")
+    expRes = database.getExpResults(analysisIDs=['ATLAS-CONF-2013-062'],
+                                datasetIDs=['ANA11-CUT5'],txnames=['TGQ'])
+    print expRes
+    txnameObj = expRes.getTxNames()[0]
+    print txnameObj
+    print tempf.checkFor(txnameObj, 500.,200.)
     
     
