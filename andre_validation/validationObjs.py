@@ -62,10 +62,11 @@ class ValidationPlot():
         return vstr
 
     def computeWrongnessFactor ( self, looseness=1.2 ):
-        """ computes how 'wrong' the plot is, by cutting the points
+        """ computes how 'wrong' the plot is, by counting the points
             that are inside/outside the official exclusion curve, and comparing
-            against the points' r value ( upper limit / predict theory cross section )
-            :param looseness: how much do we loosen the criterion?
+            against the points' r values ( upper limit / predict theory cross section )
+            :param looseness: how much do we loosen the criterion? I.e. by what factor do we
+            change the cross sections in favor of getting the right assignment?
         """
         curve=self.getOfficialCurve()
         curve.SetPoint( curve.GetN()+1,0.,0.) ## close the curve nicely
