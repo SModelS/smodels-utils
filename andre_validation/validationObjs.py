@@ -69,6 +69,9 @@ class ValidationPlot():
             change the cross sections in favor of getting the right assignment?
         """
         curve=self.getOfficialCurve()
+        if not curve:
+            logger.error( "could not get official tgraph curve for %s %s %s" % ( self.expRes,self.txname,self.axes  ) )
+            return 1.0
         curve.SetPoint( curve.GetN()+1,0.,0.) ## close the curve nicely
         n_points=0
         pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0, "not_excluded_inside": 0,
