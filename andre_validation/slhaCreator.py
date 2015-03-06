@@ -184,7 +184,7 @@ class TemplateFile(object):
         
         allEls = smstoplist.getElements()
         goodEl = False
-        for elA in txnameObj._elements:
+        for elA in txnameObj._elements:            
             if goodEl: break
             for elB in allEls:
                 if elA.particlesMatch(elB):
@@ -211,18 +211,16 @@ class TemplateFile(object):
 
 if __name__ == "__main__":
     
-    template = '/home/lessa/smodels-utils/slha/templates/TGQ.template'
+    template = '/home/lessa/smodels-utils/slha/templates/TChiWZ.template'
     axes = '2*Eq(mother,x)_Eq(lsp,y)'
     tempf = TemplateFile(template,axes)
     
 #     slhafiles = tempf.createFilesFor([[500.,200.],[600.,200.],[600.,300.]])
 #     print slhafiles
     database = DataBase("/home/lessa/smodels-database/")
-    expRes = database.getExpResults(analysisIDs=['ATLAS-CONF-2013-062'],
-                                datasetIDs=['ANA11-CUT5'],txnames=['TGQ'])
-    print expRes
-    txnameObj = expRes.getTxNames()[0]
-    print txnameObj
+    expRes = database.getExpResults(analysisIDs=['ATLAS-CONF-2013-035'],
+                                datasetIDs=[None],txnames=['TChiWZ'])
+    txnameObj = expRes.getTxNames()[0]  
     print tempf.checkFor(txnameObj, 500.,200.)
     
     
