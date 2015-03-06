@@ -111,6 +111,12 @@ def createPlot(validationPlot,silentMode=True):
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
     base.Draw("AP")
     base.SetTitle(title)
+    l=TLatex()
+    l.SetNDC()
+    l.SetTextSize(.04)
+    wrongness = validationPlot.computeWrongnessFactor()
+    l.DrawLatex(.15,.8,"validation wrong by %.1f %s" % (wrongness*100, "%" ) )
+    base.l=l
     if not silentMode: ans = raw_input("Hit any key to close\n")
     
     return plane,base
