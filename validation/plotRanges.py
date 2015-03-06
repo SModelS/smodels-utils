@@ -34,6 +34,15 @@ def getPoints ( tgraph ):
             points.append ( [i,j] )
     return points
 
+def mergeListsOfPoints ( points1, points2 ):
+    import copy
+    ret=copy.deepcopy ( points1 )
+    for point in points2:
+        if point in points1:
+            continue
+        ret.append ( copy.deepcopy ( point ) )
+    return ret
+
 def draw ( graph, points ):
     # container=[]
     t=ROOT.TGraph()
