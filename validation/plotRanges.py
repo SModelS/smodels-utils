@@ -11,13 +11,34 @@
 import ROOT
 import numpy
 
-def getPoints ( tgraph ):
-    """ given a TGraph object, returns list of points to probe """
+def mergeListsOfPoints ( points1, points2 ):
+    """ given a list of a list of points, flatten the top structure, and remove
+        elements appeaaring repeatedly """
+    import copy
+    ret=copy.deepcopy(points1)
+    for point in points2:
+        if not point in ret:
+            ret.append ( copy.deepcopy ( point ) )
+    return ret
+
+def mergeListsOfListsOfPoints ( lists ):
+    if len ( lists ) == 0:
+        return []
+    if len ( lists ) == 1:
+        return lists[0]
+    ret=lists[0]
+    for i in lists[1:]:
+        ret=mergeListsOfPoints ( ret, i )
+    return ret
+
+def getPoints ( tgraphs ):
+    """ given a TGraph object, returns list of points to probe.
+    """
     minx, miny = float("inf"), float("inf")
     maxx, maxy = 0., 0.
-    for i in range(tgraph.GetN()):
+    for i in range(tgraphs.GetN()):
         x, y = ROOT.Double(), ROOT.Double()
-        tgraph.GetPoint(i,x,y) 
+        tgraphs.GetPoint(i,x,y) 
         if x<minx: minx=x
         if y<miny: miny=y
         if x>maxx: maxx=x
@@ -26,22 +47,14 @@ def getPoints ( tgraph ):
     miny=0.9*miny
     maxx=1.2*maxx
     maxy=1.2*maxy
-    dx=(maxx-minx)/30.
-    dy=(maxy-miny)/20.
+    dx=(maxx-minx)/(30.-1.)
+    dy=(maxy-miny)/(20.-1.)
     points=[]
     for i in numpy.arange ( minx, maxx+dx/2., dx ):
         for j in numpy.arange ( miny, maxy+dy/2., dy ):
             points.append ( [i,j] )
     return points
 
-def mergeListsOfPoints ( points1, points2 ):
-    import copy
-    ret=copy.deepcopy ( points1 )
-    for point in points2:
-        if point in points1:
-            continue
-        ret.append ( copy.deepcopy ( point ) )
-    return ret
 
 def draw ( graph, points ):
     # container=[]
