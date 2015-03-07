@@ -213,17 +213,44 @@ class TemplateFile(object):
 
 
 if __name__ == "__main__":
-    
-    template = '/home/lessa/smodels-utils/slha/templates/TChiWZ.template'
-    axes = '2*Eq(mother,x)_Eq(lsp,y)'
-    tempf = TemplateFile(template,axes)
-    
-#     slhafiles = tempf.createFilesFor([[500.,200.],[600.,200.],[600.,300.]])
-#     print slhafiles
-    database = DataBase("/home/lessa/smodels-database/")
-    expRes = database.getExpResults(analysisIDs=['ATLAS-CONF-2013-035'],
-                                datasetIDs=[None],txnames=['TChiWZ'])
-    txnameObj = expRes.getTxNames()[0]  
-    print tempf.checkFor(txnameObj, 500.,200.)
-    
-    
+    import argparse, types
+    argparser = argparse.ArgumentParser(description="creates slha files from template file in given mass ranges")
+    argparser.add_argument ( '-T', '--templatefile', nargs='?', help='path to template file', 
+        type=types.StringType, default='T1' )
+    argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description', 
+        type=types.StringType, default='2*Eq(mother,x)_Eq(lsp,y)' )
+    argparser.add_argument ( '--xmin', nargs='?', help='minimum value for x', 
+        type=types.FloatType, default=0. )
+    argparser.add_argument ( '--xmax', nargs='?', help='maximum value for x', 
+        type=types.FloatType, default=100. )
+    argparser.add_argument ( '--dx', nargs='?', help='binning in x', 
+        type=types.FloatType, default=20. )
+    argparser.add_argument ( '--ymin', nargs='?', help='minimum value for y', 
+        type=types.FloatType, default=0. )
+    argparser.add_argument ( '--ymax', nargs='?', help='maximum value for y', 
+        type=types.FloatType, default=100. )
+    argparser.add_argument ( '--dy', nargs='?', help='binning in y', 
+        type=types.FloatType, default=20. )
+    args=argparser.parse_args()
+
+    templatefile = args.templatefile
+    if not os.path.exists ( templatefile ):
+        templatefile="../slha/%s" % templatefile
+        if not os.path.exists ( templatefile ):
+            print "[slhaCreator] error: templatefile does not exist."
+            import sys
+            sys.exit()
+    tempf = TemplateFile(args.templatefile,args.axes)
+    masses=[]
+    for mother in range(xmin,xmax+1,dx):
+        for lsp in range(ymin,ymax+1,dy):
+            masses.append ( [ mother, lsp ] )
+    slhafiles = tempf.createFilesFor( masses )
+    print slhafiles
+#    database = DataBase("/home/lessa/smodels-database/")
+#    expRes = database.getExpResults(analysisIDs=['ATLAS-CONF-2013-035'],
+#                                datasetIDs=[None],txnames=['TChiWZ'])
+#    txnameObj = expRes.getTxNames()[0]  
+#    print tempf.checkFor(txnameObj, 500.,200.)
+#    
+#    
