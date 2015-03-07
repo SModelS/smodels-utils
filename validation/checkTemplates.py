@@ -18,7 +18,7 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.WARNING)
 from smodels.experiment.databaseObjects import DataBase
-from andre_validation.slhaCreator import TemplateFile
+from validation.slhaCreator import TemplateFile
 
 
 templateDir = '../slha/templates'
@@ -30,6 +30,8 @@ for expRes in database.expResultList:
     #Skip efficiency-map analyses:
     if 'efficiency-map' in expRes.getValuesFor('datatype'): continue
     for txname in expRes.getTxNames():
+        #Skip incomplete analysis
+        if txname.getInfo('constraint') == 'not yet assigned': continue 
         template = os.path.join(templateDir,txname.txname+'.template')
         if template in badTemplates: continue
         if txname.txname in missTxnames: continue

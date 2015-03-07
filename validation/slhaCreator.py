@@ -79,6 +79,9 @@ class TemplateFile(object):
             massDict = {'mother': masses[0],'lsp' : masses[1]}
         elif len(masses) == 3:
             massDict = {'mother': masses[0],'inter0' : masses[1], 'lsp' : masses[2]}
+        elif len(masses) == 4:
+            massDict = {'mother': masses[0],'inter0' : masses[1], 'inter1' : masses[2],
+                         'lsp' : masses[3]}            
             
         #First check if the axes labels defined in axesDict match the template's
         if set(massDict.keys()) - set(self.tags):
