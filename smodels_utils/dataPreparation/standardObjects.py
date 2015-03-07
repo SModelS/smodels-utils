@@ -85,14 +85,14 @@ class VertexChecker(object):
     in this vertex
     """
 
-    def __init__(self, txNameObj):
+    def __init__(self, name, constraint ):
         
         """
         :param txNameObj: inputObjects.TxNameInput-object
         """
         
-        self.txName = txNameObj.name
-        self.kinConstraints = self._getKinConstraints(txNameObj)
+        self.txName = name
+        self.kinConstraints = self._getKinConstraints(name,constraint)
         
         
     def getOffShellVertices(self, massArray):
@@ -133,7 +133,7 @@ class VertexChecker(object):
                             offShellVertices.append((i,j))
         return offShellVertices
         
-    def _getKinConstraints(self, txNameObj):
+    def _getKinConstraints(self, name, constraint ):
         
         """
         takes the on-shell constraint of a given txName,
@@ -158,9 +158,6 @@ class VertexChecker(object):
         startString = '[[['
         endString = ']]]'
         kinConstraints = []
-        if not hasattr(txNameObj.on, 'constraint'):
-            Errors().missingOnConstraint(txNameObj.name)
-        constraint = txNameObj.on.constraint
         
         if constraint == 'not yet assigned': return None
         if not isinstance(constraint, str):

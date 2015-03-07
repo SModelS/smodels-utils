@@ -120,7 +120,7 @@ class DatabaseCreator(list):
             
             print '\nreading: %s' %txName.name
             
-            vertexChecker = VertexChecker(txName)
+            vertexChecker = VertexChecker(txName.name, txName.on.constraint )
             upperLimits = StandardDataList()
             print "upperLimits=",upperLimits
             expectedUpperLimits = StandardDataList()
