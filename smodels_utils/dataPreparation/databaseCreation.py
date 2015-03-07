@@ -13,7 +13,8 @@ import sys
 import os
 import ROOT
 from smodels_utils.dataPreparation.standardObjects import\
-StandardDataList, VertexChecker, StandardExclusions, StandardTWiki, StandardDataInfo
+StandardDataList, StandardExclusions, StandardTWiki, StandardDataInfo
+from smodels_utils.dataPreparation.vertexChecking import VertexChecker
 from preparationHelper import ObjectList
 import logging
 from datetime import date
