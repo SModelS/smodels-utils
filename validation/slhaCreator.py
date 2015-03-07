@@ -23,6 +23,7 @@ from smodels.tools.physicsUnits import fb, GeV, TeV
 from smodels.tools.xsecComputer import computeXSec,addXSecToFile
 from smodels.experiment.databaseObjects import DataBase
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
+from validation.pythiaCardGen import getPythiaCardFor
 
 class TemplateFile(object):
     """
@@ -41,6 +42,8 @@ class TemplateFile(object):
         self.slhaObj = None
         self.tags = []
         self.axes = axes
+        self.motherPDGs = []
+        self.pythiaCard = None
         #Loads the information from the template file and store the axes labels
         if not os.path.isfile(template):
             logger.error("Template file %s not found." %template)
@@ -50,9 +53,13 @@ class TemplateFile(object):
         except modpyslha.ParseError,e:
             logger.error ( "This file cannot be parsed as an SLHA file: %s" % e )
             sys.exit()
-        for mass in self.slhaObj.blocks['MASS'].values():
-            if isinstance(mass,str): self.tags.append(mass)
+        for pdg,mass in self.slhaObj.blocks['MASS'].items():
+            if isinstance(mass,str):
+                self.tags.append(mass)
+                if mass == 'mother': self.motherPDGs.append(pdg)
 
+        if self.motherPDGs:
+            self.pythiaCard = getPythiaCardFor(self.motherPDGs)
         #Define original plot
         self.origPlot = OrigPlot.fromString(self.axes)
         
@@ -108,8 +115,11 @@ class TemplateFile(object):
         fslha.close()
                 
         #Compute cross-sections
-        if computeXsecs:                    
-            xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=slhaname)
+        if computeXsecs:
+            if self.pythiaCard:
+                xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=slhaname,pythiacard=self.pythiaCard)
+                addXSecToFile(xsecs,slhaname)         
+            xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=slhaname,pythiacard='./pythia.card')
             addXSecToFile(xsecs,slhaname,comment="10k events (unit = pb)")
             xsecs = computeXSec(sqrts=8.*TeV, maxOrder=2, nevts=10000, slhafile=slhaname,loFromSlha=True)
             addXSecToFile(xsecs,slhaname,comment="10k events (unit = pb)")
@@ -143,12 +153,19 @@ class TemplateFile(object):
             if not addXsecs: continue
             #Compute cross-sections every time the x-value changes
             if not x0 or x0 != x:
-                xsecsLO = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=slhafile)
+                if self.pythiaCard:
+                    xsecsProc = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=slhafile,
+                                        pythiacard=self.pythiaCard)
+                    addXSecToFile(xsecsProc,slhafile)         
+                xsecsLO = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=slhafile,
+                                      pythiacard='./pythia.card')
                 addXSecToFile(xsecsLO,slhafile,comment="10k events (unit = pb)")
                 xsecsNLL = computeXSec(sqrts=8.*TeV, maxOrder=2, nevts=10000, slhafile=slhafile,loFromSlha=True)
                 addXSecToFile(xsecsNLL,slhafile,comment="10k events (unit = pb)")
             #If the x-value did not change, simply add the previously computed xsecs to file
             else:
+                if self.pythiaCard:
+                    addXSecToFile(xsecsProc,slhafile,comment="10k events (unit = pb)")
                 addXSecToFile(xsecsLO,slhafile,comment="10k events (unit = pb)")                
                 addXSecToFile(xsecsNLL,slhafile,comment="10k events (unit = pb)")
             x0 = x
@@ -173,11 +190,18 @@ class TemplateFile(object):
         #First create temporary file:
         tempSLHA = self.createFileFor(x,y)
         if not tempSLHA: return False
-        #Add cross-sections to file:
-        xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=tempSLHA)
+        #Add cross-sections to file running only mother pair production:
+        #(to guarantee the mother cross-section value is reliable)
+        if self.pythiaCard:        
+            xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=tempSLHA,pythiacard=self.pythiaCard)
+            addXSecToFile(xsecs,tempSLHA)
+        #Now add cross-sections to file running all MSSM processes:
+        #(to avoid too trivial results from the decomposition)
+        xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=tempSLHA,pythiacard='./pythia.card')
         addXSecToFile(xsecs,tempSLHA)
+        
         #Run decomposition on the file:
-        sigmacut = 0.001
+        sigmacut = 0.*fb
         mingap = 5.*GeV
         smstoplist = slhaDecomposer.decompose(tempSLHA, sigmacut,\
                         doCompress=True,doInvisible=True, minmassgap=mingap)
