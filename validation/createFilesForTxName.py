@@ -8,6 +8,7 @@
 
 #Import basic functions (this file must be run under the installation folder)
 import sys
+sys.path.insert(0,"../../smodels")
 from smodels.theory import slhaDecomposer
 from smodels.theory import lheDecomposer
 from smodels.tools.physicsUnits import fb, GeV
@@ -21,6 +22,19 @@ database = DataBase("../../smodels-database/")
 from plottingFuncs import getExclusionCurvesFor
 import plotRanges
 import slhaCreator
+
+def addQuotationMarks ( constraint ):
+    """ [[[t+]],[[t-]]] -> [[['t+']],[['t-']]] """
+    ret=""
+    for i in range(len(constraint)):
+        if constraint[i] == "[" and constraint[i+1] not in [ "[", "]" ]:
+            ret+=constraint[i]+"'"
+            continue
+        if constraint[i] == "]" and constraint[i-1] not in [ "[", "]" ]:
+            ret+="'" + constraint[i]
+            continue
+        ret+=constraint[i]
+    return ret
 
 def main( txname= "T6bbWW" ):
     """
@@ -46,15 +60,20 @@ def main( txname= "T6bbWW" ):
         print('\n',expResult)
         print(expResult.path)
         axes=expResult.getValuesFor("axes")
-        constraint=expResult.getValuesFor("constraint")
+        constraint=addQuotationMarks ( expResult.getValuesFor("constraint") )
         print "constraint=",constraint
-        constraint="[[['t+']],[['t-']]]"
+         #  constraint="[[['t+']],[['t-']]]"
         if type(axes)==str:
             axes=[axes]
         for naxes in axes:
             print "naxes=",naxes
             tgraph=getExclusionCurvesFor ( expResult,txname,naxes)
+            print "tgraph=",tgraph
+            if not tgraph:
+                continue
+            print "get points"
             pts = plotRanges.getPoints ( tgraph[txname][0], txname, naxes, constraint, onshell, offshell )
+            print "got points"
             if not naxes in points:
                 points[naxes]=[]
             points[naxes].append ( pts )
@@ -62,7 +81,7 @@ def main( txname= "T6bbWW" ):
         print "axes=",axes
         flatpts = plotRanges.mergeListsOfListsOfPoints ( pts )
         print "for",axes,"get",flatpts[-1]
-        tempf=slhaCreator.TemplateFile ( templatefile,axes, constraint )
+        tempf=slhaCreator.TemplateFile ( templatefile,axes )
         slhafiles = tempf.createFilesFor ( flatpts )
 
     import commands
