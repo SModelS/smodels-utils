@@ -60,7 +60,7 @@ class VertexChecker(object):
                 
         for kinConstraint in self.kinConstraints:
             for i, branch in enumerate(kinConstraint):
-                # print "branch=",branch,"massDeltaArray=",massDeltaArray
+                print "branch=",branch,"massDeltaArray=",massDeltaArray[i]
                 if len(branch) != len(massDeltaArray[i]):
                     Errors().decayChain(self.txName,\
                     len(branch),len(massDeltaArray[i]))
@@ -122,6 +122,7 @@ class VertexChecker(object):
                         if particle in massDict:
                             massSum = massSum + massDict[particle]
                     kinConstraints[i][j][k] = massSum
+        print "vertex checker produces",kinConstraints
         return kinConstraints
         
     def __nonzero__(self):
@@ -160,3 +161,11 @@ class Errors(object):
         print(m)
         sys.exit()
         
+
+if __name__ == "__main__":
+    checker = VertexChecker ( "T2tt", "[[['t+']],[['t-']]]" )
+    print checker.kinConstraints
+    checker = VertexChecker ( "T6bbWW", "[[['b','W+']],[['b','W-']]]" )
+    print checker.kinConstraints
+
+
