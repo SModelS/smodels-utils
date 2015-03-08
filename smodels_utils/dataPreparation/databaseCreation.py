@@ -121,6 +121,8 @@ class DatabaseCreator(list):
             
             print '\nreading: %s' %txName.name
             
+            if not hasattr(txName.on, 'constraint'): 
+                Errors().missingOnConstraint(txName.name)
             vertexChecker = VertexChecker(txName.name, txName.on.constraint )
             upperLimits = StandardDataList()
             print "upperLimits=",upperLimits
@@ -508,6 +510,16 @@ class Errors(object):
         m = m + "setter for propertsy %s must be of bool type or 'auto'\n"\
         %(name)
         m = m + 'got: %s' %value
+        m = m + self._starLine
+        print(m)
+        sys.exit()
+        
+    def missingOnConstraint(self, txName):
+        
+        m = self._starLine#
+        m = m + "in txName %s: on.constraint not set\n" %txName
+        m = m + "onShell constraint have to be set for automated splitting\n"
+        m = m + 'please use: %s.on.constraint =' %txName
         m = m + self._starLine
         print(m)
         sys.exit()

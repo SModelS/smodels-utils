@@ -354,16 +354,6 @@ class Errors(object):
         print(m)
         sys.exit()
         
-    def missingOnConstraint(self, txName):
-        
-        m = self._starLine#
-        m = m + "in txName %s: on.constraint not set\n" %txName
-        m = m + "onShell constraint have to be set for automated splitting\n"
-        m = m + 'please use: %s.on.constraint =' %txName
-        m = m + self._starLine
-        print(m)
-        sys.exit()
-        
     def negativMass(self, massArray):
         
         m = self._starLine#
