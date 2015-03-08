@@ -60,6 +60,10 @@ def getPoints ( tgraphs, txname="T2tt", axes = "2*Eq(mother,x)_Eq(lsp,y)", \
     maxy=1.2*maxy
     dx=(maxx-minx)/(30.-1.)
     dy=(maxy-miny)/(20.-1.)
+    dx = round ( dx / 5. ) * 5.
+    dy = round ( dy / 5. ) * 5.
+    minx = round ( minx / dx ) * dx
+    miny = round ( miny / dy ) * dy
 
     origPlot = OrigPlot.fromString ( axes )
 
