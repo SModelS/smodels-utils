@@ -1,14 +1,16 @@
 #!/usr/bin/python
 
-from smodels.tools import statistics
 import random
 import math
 import scipy.stats
 import dataharvester
+import sys
+sys.path.insert(0,"../../../smodels/")
+from smodels.tools import statistics
 
 def main():
     writer = dataharvester.Writer_file("dates.root;dates.txt")
-    nexperiments=10
+    nexperiments=1000
     for i in range(nexperiments):
         print "Experiment #",i
         t=one_experiment ()
