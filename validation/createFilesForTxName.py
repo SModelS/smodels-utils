@@ -66,7 +66,7 @@ def main( txname= "T6bbWW" ):
         slhafiles = tempf.createFilesFor ( flatpts )
 
     import commands
-    cmds=commands.getoutput ( "tar cvf %s.tar %s_.slha" % ( txname, txname ) )
+    cmds=commands.getoutput ( "tar cvf %s.tar %s_*.slha" % ( txname, txname ) )
     print cmds
 
 
