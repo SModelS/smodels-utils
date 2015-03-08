@@ -27,6 +27,11 @@ def main( txname= "T6bbWW" ):
     Main program. Displays basic use case.
 
     """
+    onshell=True
+    offshell=False
+    if txname[-3:]=="off":
+        onshell=False
+        offshell=True
     templatefile = "../slha/templates/%s.template" % txname
     # Load all analyses from database
     listOfExpRes = database.getExpResults( txnames=[ txname ] )
@@ -41,12 +46,15 @@ def main( txname= "T6bbWW" ):
         print('\n',expResult)
         print(expResult.path)
         axes=expResult.getValuesFor("axes")
+        constraint=expResult.getValuesFor("constraint")
+        print "constraint=",constraint
+        constraint="[[['t+']],[['t-']]]"
         if type(axes)==str:
             axes=[axes]
         for naxes in axes:
             print "naxes=",naxes
             tgraph=getExclusionCurvesFor ( expResult,txname,naxes)
-            pts = plotRanges.getPoints ( tgraph[txname][0] )
+            pts = plotRanges.getPoints ( tgraph[txname][0], txname, naxes, constraint, onshell, offshell )
             if not naxes in points:
                 points[naxes]=[]
             points[naxes].append ( pts )
@@ -54,7 +62,7 @@ def main( txname= "T6bbWW" ):
         print "axes=",axes
         flatpts = plotRanges.mergeListsOfListsOfPoints ( pts )
         print "for",axes,"get",flatpts[-1]
-        tempf=slhaCreator.TemplateFile ( templatefile,axes )
+        tempf=slhaCreator.TemplateFile ( templatefile,axes, constraint )
         slhafiles = tempf.createFilesFor ( flatpts )
 
     import commands

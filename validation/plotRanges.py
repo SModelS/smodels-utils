@@ -10,6 +10,10 @@
 
 import ROOT
 import numpy
+import sys
+sys.path.insert(0,"../")
+from smodels_utils.dataPreparation.vertexChecking import VertexChecker
+from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 
 def mergeListsOfPoints ( points1, points2 ):
     """ given a list of a list of points, flatten the top structure, and remove
@@ -31,9 +35,16 @@ def mergeListsOfListsOfPoints ( lists ):
         ret=mergeListsOfPoints ( ret, i )
     return ret
 
-def getPoints ( tgraphs ):
-    """ given a TGraph object, returns list of points to probe.
+def getPoints ( tgraphs, txname="T2tt", axes = "2*Eq(mother,x)_Eq(lsp,y)", \
+                constraint="[[['t+']],[['t-']]]", onshell=True, offshell=True ):
+    """ given a TGraph object, returns list of points to probe. You define whether
+        you want the onshell region or the offshell region (or both).
+        :param txname: txname
+        :param axes: the axes used to transform x,y into mass parameters (for the check
+                of the kinematic region)
+        :param constraint: the constraint to check for onshell / offshellness
     """
+    vertexChecker = VertexChecker ( txname, constraint )
     minx, miny = float("inf"), float("inf")
     maxx, maxy = 0., 0.
     for i in range(tgraphs.GetN()):
@@ -49,12 +60,22 @@ def getPoints ( tgraphs ):
     maxy=1.2*maxy
     dx=(maxx-minx)/(30.-1.)
     dy=(maxy-miny)/(20.-1.)
+
+    origPlot = OrigPlot.fromString ( axes )
+
     points=[]
     for i in numpy.arange ( minx, maxx+dx/2., dx ):
         for j in numpy.arange ( miny, maxy+dy/2., dy ):
-            points.append ( [i,j] )
+            if i>j:
+                masses = origPlot.getParticleMasses ( i,j )
+                ## print "i,j",i,j,"m1,m2,m3",masses
+                osv=vertexChecker.getOffShellVertices ( masses )
+                if osv==[] and not onshell:
+                    continue
+                if not osv==[] and not offshell:
+                    continue
+                points.append ( [i,j] )
     return points
-
 
 def draw ( graph, points ):
     # container=[]
@@ -72,6 +93,8 @@ def draw ( graph, points ):
 if __name__ == "__main__":
     filename="/home/walten/git/smodels-database/8TeV/ATLAS/ATLAS-SUSY-2013-19/sms.root"
     f=ROOT.TFile(filename)
-    graph=f.Get("T2tt/exclusion_2*Eq(mother,x)_Eq(lsp,y)")
-    pts = getPoints ( graph )
+    axes="2*Eq(mother,x)_Eq(lsp,y)"
+    txname="T2tt"
+    graph=f.Get("%s/exclusion_%s" % ( txname, axes) )
+    pts = getPoints ( graph, txname, axes, "[[['t+']],[['t-']]]", onshell=False, offshell=True )
     draw ( graph, pts )

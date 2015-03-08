@@ -8,6 +8,8 @@
 
 """   
 
+import sys
+
 class VertexChecker(object):
     
     """
