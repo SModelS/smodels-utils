@@ -1,18 +1,14 @@
 #!/usr/bin/env python
 
 """
-.. module:: Example
-   :synopsis: Basic main file example for using SModelS.
+.. module:: createFilesForTxName.py
+   :synopsis: create SLHA files for a given txname.
 
 """
 
 #Import basic functions (this file must be run under the installation folder)
 import sys
 sys.path.insert(0,"../../smodels")
-from smodels.theory import slhaDecomposer
-from smodels.theory import lheDecomposer
-from smodels.tools.physicsUnits import fb, GeV
-from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels.experiment.databaseObjects import DataBase
 
 #Set the address of the database folder
@@ -86,6 +82,8 @@ def main( txname= "T6bbWW" ):
         print "axes=",axes
         print "points=",pts
         # flatpts = plotRanges.mergeListsOfListsOfPoints ( pts )
+        if len(pts)==0:
+            continue
         print "for",axes,"get",pts[-1]
         tempf=slhaCreator.TemplateFile ( templatefile,axes )
         slhafiles = tempf.createFilesFor ( pts )
