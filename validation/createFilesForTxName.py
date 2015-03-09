@@ -7,7 +7,7 @@
 """
 
 #Import basic functions (this file must be run under the installation folder)
-import sys
+import sys,os
 sys.path.insert(0,"../../smodels")
 from smodels.experiment.databaseObjects import DataBase
 
@@ -49,7 +49,7 @@ def main( txname= "T6bbWW" ):
     if type(listOfExpRes)!=list:
         listOfExpRes=[listOfExpRes]
 
-    points={}
+    slhafiles = []
     tgraphs = {}
 
     # Compute the theory predictions for each analysis
@@ -59,7 +59,7 @@ def main( txname= "T6bbWW" ):
         axes=expResult.getValuesFor("axes")
         constraint=addQuotationMarks ( expResult.getValuesFor("constraint") )
         print "constraint=",constraint
-         #  constraint="[[['t+']],[['t-']]]"
+        #  constraint="[[['t+']],[['t-']]]"
         if type(axes)==str:
             axes=[axes]
         for naxes in axes:
@@ -86,13 +86,15 @@ def main( txname= "T6bbWW" ):
             continue
         print "for",axes,"get",pts[-1]
         tempf=slhaCreator.TemplateFile ( templatefile,axes )
-        slhafiles = tempf.createFilesFor ( pts )
+        slhafiles += tempf.createFilesFor ( pts )
+
 
     import commands
     cmds=commands.getoutput ( "tar cvf %s.tar %s_*.slha" % ( txname, txname ) )
     print cmds
-
-
+    #Remove SLHA files
+    for f in slhafiles: os.remove(f)
+    
 
 
 if __name__ == '__main__':

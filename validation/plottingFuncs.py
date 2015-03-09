@@ -13,7 +13,7 @@ import logging,os
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
-from ROOT import *
+from ROOT import TFile,TGraph,gROOT,TMultiGraph,TCanvas,TLatex,TLegend,kGreen,kRed
 from smodels.tools.physicsUnits import fb, GeV
 
 
@@ -85,7 +85,8 @@ def createPlot(validationPlot,silentMode=True):
             x, y = pt['axes']
             if pt['condition'] and max(pt['condition']) > 0.01:
                 logger.warning("Condition violated for file " + pt['slhafile'])
-            if pt['signal'] > pt['UL']:
+                allowed.SetPoint(allowed.GetN(), x, y)
+            elif pt['signal'] > pt['UL']:
                 excluded.SetPoint(excluded.GetN(), x, y)
             else:
                 allowed.SetPoint(allowed.GetN(), x, y)
