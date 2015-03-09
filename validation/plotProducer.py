@@ -28,6 +28,7 @@ def validatePlot(expRes,txname,axes,slhadir):
     :param axes: the axes string describing the plane to be validated
      (i.e.  2*Eq(mother,x),Eq(lsp,y))
     :param slhadir: folder containing the SLHA files corresponding to txname
+    or the .tar file containing the SLHA files.
     """
 
     #Get exclusion curve for expRes:
@@ -54,6 +55,7 @@ def validateTxName(expRes,txname,slhadir):
     :param expRes: a ExpResult object containing the result to be validated
     :param txname: a TxName object containing the txname to be validated
     :param slhadir: folder containing the SLHA files corresponding to txname
+    or the .tar file containing the SLHA files.
     """    
 
     tgraphs = getExclusionCurvesFor(expRes,txname=txname)[txname]
@@ -71,39 +73,44 @@ def validateTxName(expRes,txname,slhadir):
     return ret ## return wrongness factors
     
     
-def validateExpRes(expRes,slhaDict):
+def validateExpRes(expRes,slhaDir):
     """
     Creates a ValidationPlot for each txname appearing in expRes and 
     each plane/axes appearing in txname and saves the output.
     
     :param expRes: a ExpResult object containing the result to be validated    
-    :param slhaDict: Dictionary containing the SLHA files corresponding to the
-    txnames (i.e. {'T1bbbb' : ./T1bbbb/, 'T1ttt' : ./T1tttt/,...})
+    :param slhaDir: Location of the slha folder containing the
+    txname.tar files or the ./txname folders (i. e. ../slha/)
     """    
 
     #Get all exclusion curves appearing in sms.root:
     curves = getExclusionCurvesFor(expRes)
     ret={}
     for txname in curves:
-        if not txname in slhaDict:
+        if not txname in slhaDir:
             logger.warning("The SLHA folder for %s has not been defined" % txname)
             continue
-        slhadir = slhaDict[txname]        
+        slhadir = os.path.join(slhaDir,txname)
+        if not os.path.isdir(slhadir):
+            slhadir = os.path.join(slhaDir,txname+'.tar')
+            if not os.path.isfile(slhadir):
+                logger.error("SLHA files for %s not found in %s" %(txname,slhadir))
+                return False        
         ret[txname]= validateTxName(expRes,txname,slhadir)
         
     return ret
 
-def validateDataBase(database,slhaDict):
+def validateDataBase(database,slhaDir):
     """
     Creates a ValidationPlot for each expRes/txname/axes appering in the database
     and saves the output.
    
     :param database: a DataBase object
-    :param slhaDict: Dictionary containing the SLHA files corresponding to the
-    txnames (i.e. {'T1bbbb' : ./T1bbbb/, 'T1ttt' : ./T1tttt/,...})
+    :param slhaDir: Location of the slha folder containing the
+    txname.tar files or the ./txname folders (i. e. ../slha/)
     """  
     ret={}
     for expRes in database.getExpResults(): 
-        ret[expRes.id]= validateExpRes(expRes,slhaDict)
+        ret[expRes.id]= validateExpRes(expRes,slhaDir)
         
     return ret

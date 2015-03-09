@@ -7,7 +7,7 @@
 """
 
 #Import basic functions (this file must be run under the installation folder)
-import sys
+import sys,os
 sys.path.insert(0,"../../smodels")
 from smodels.theory import slhaDecomposer
 from smodels.theory import lheDecomposer
@@ -54,6 +54,7 @@ def main( txname= "T6bbWW" ):
         listOfExpRes=[listOfExpRes]
 
     points={}
+    slhafiles = []
 
     # Compute the theory predictions for each analysis
     for expResult in listOfExpRes:
@@ -62,7 +63,7 @@ def main( txname= "T6bbWW" ):
         axes=expResult.getValuesFor("axes")
         constraint=addQuotationMarks ( expResult.getValuesFor("constraint") )
         print "constraint=",constraint
-         #  constraint="[[['t+']],[['t-']]]"
+        #  constraint="[[['t+']],[['t-']]]"
         if type(axes)==str:
             axes=[axes]
         for naxes in axes:
@@ -82,11 +83,14 @@ def main( txname= "T6bbWW" ):
         flatpts = plotRanges.mergeListsOfListsOfPoints ( pts )
         print "for",axes,"get",flatpts[-1]
         tempf=slhaCreator.TemplateFile ( templatefile,axes )
-        slhafiles = tempf.createFilesFor ( flatpts )
+        slhafiles += tempf.createFilesFor ( flatpts )
 
     import commands
     cmds=commands.getoutput ( "tar cvf %s.tar %s_*.slha" % ( txname, txname ) )
     print cmds
+    #Remove SLHA files
+    for f in slhafiles: os.remove(f)
+    
 
 
 

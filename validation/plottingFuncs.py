@@ -13,7 +13,7 @@ import logging,os
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
-from ROOT import *
+from ROOT import TFile,TGraph,gROOT,TMultiGraph,TCanvas,TLatex,TLegend,kGreen,kRed
 from smodels.tools.physicsUnits import fb, GeV
 
 

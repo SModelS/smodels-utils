@@ -161,13 +161,14 @@ class TemplateFile(object):
                                       pythiacard='./pythia.card')
                 addXSecToFile(xsecsLO,slhafile,comment="10k events (unit = pb)")
                 xsecsNLL = computeXSec(sqrts=8.*TeV, maxOrder=2, nevts=10000, slhafile=slhafile,loFromSlha=True)
+                for xsec in xsecsNLL: print 'X=',xsec
                 addXSecToFile(xsecsNLL,slhafile,comment="(unit = pb)")
             #If the x-value did not change, simply add the previously computed xsecs to file
             else:
                 if self.pythiaCard:
-                    addXSecToFile(xsecsProc,slhafile,comment="10k events (unit = pb)")
+                    addXSecToFile(xsecsProc,slhafile,comment="1k events (unit = pb)")
                 addXSecToFile(xsecsLO,slhafile,comment="10k events (unit = pb)")                
-                addXSecToFile(xsecsNLL,slhafile,comment="10k events (unit = pb)")
+                addXSecToFile(xsecsNLL,slhafile,comment="(unit = pb)")
             x0 = x
 
         return slhafiles

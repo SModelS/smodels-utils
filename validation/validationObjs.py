@@ -113,7 +113,7 @@ class ValidationPlot():
         """
 
         if not os.path.isdir(slhadir) and not os.path.isfile(slhadir):
-            logger.error("Folder containing SLHA files not found for "+str(self))
+            logger.error("SLHA files not found in %s for %s" %(slhadir,str(self)))
             sys.exit()
         else:
             self.slhaDir = slhadir

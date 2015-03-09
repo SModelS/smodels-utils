@@ -16,15 +16,15 @@ dl.setLevel(level=logging.WARNING)
 tl.setLevel(level=logging.WARNING)
 
 database = DataBase("/home/lessa/smodels-database/")
-
-
-#How to validate one single plot for a UL analysis:
-expRes = database.getExpResults(analysisIDs=['CMS-SUS-13-004'],
-                                datasetIDs=[None],txnames=['T2ttoff'])
-slhadir = '/home/lessa/smodels-utils/slha/T2tt'
-txnameStr = 'T2tt'
-axes = '2*Eq(mother,x)_Eq(lsp,y)'
-validatePlot(expRes,txnameStr,axes,slhadir)
+# 
+# 
+# #How to validate one single plot for a UL analysis:
+# expRes = database.getExpResults(analysisIDs=['CMS-SUS-13-004'],
+#                                 datasetIDs=[None],txnames=['T2ttoff'])
+# slhadir = '/home/lessa/smodels-utils/slha/T2tt'
+# txnameStr = 'T2tt'
+# axes = '2*Eq(mother,x)_Eq(lsp,y)'
+# validatePlot(expRes,txnameStr,axes,slhadir)
 
 # #How to validate one single plot for a efficiency map analysis:
 # expRes = database.getExpResults(analysisIDs=['ATLAS-CONF-2013-024'],
@@ -41,12 +41,12 @@ validatePlot(expRes,txnameStr,axes,slhadir)
 # validatePlot(expRes,txnameStr,axes,slhadir)
 
  
-# #How to validate all plots for a single Txname in one ExpRes:
-# expRes = database.getExpResults(analysisIDs=['CMS-SUS-13-004'],datasetIDs=[None],
-#                                 txnames=['T1bbbb'])
-# txname = 'T1bbbb'
-# slhadir = '/home/lessa/smodels-utils/slha/T1bbbb'
-# validateTxName(expRes,txname,slhadir)
+#How to validate all plots for a single Txname in one ExpRes:
+expRes = database.getExpResults(analysisIDs=['CMS-SUS-13-004'],datasetIDs=[None],
+                                txnames=['T1bbbb'])
+txname = 'T1bbbb'
+slhadir = '/home/lessa/smodels-utils/slha/T1bbbb.tar'
+validateTxName(expRes,txname,slhadir)
 
 # #How to validate all plots for all Txnames in one ExpRes:
 # expRes = database.getExpResults(analysisIDs=['CMS-SUS-13-004'],datasetIDs=[None])
