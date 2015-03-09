@@ -87,9 +87,6 @@ def validateExpRes(expRes,slhaDir):
     curves = getExclusionCurvesFor(expRes)
     ret={}
     for txname in curves:
-        if not txname in slhaDir:
-            logger.warning("The SLHA folder for %s has not been defined" % txname)
-            continue
         slhadir = os.path.join(slhaDir,txname)
         if not os.path.isdir(slhadir):
             slhadir = os.path.join(slhaDir,txname+'.tar')
