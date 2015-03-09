@@ -117,11 +117,13 @@ class TemplateFile(object):
         #Compute cross-sections
         if computeXsecs:
             if self.pythiaCard:
-                xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=1000, slhafile=slhaname,pythiacard=self.pythiaCard)
+                xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=1000, slhafile=slhaname,
+                                    pythiacard=self.pythiaCard)
                 addXSecToFile(xsecs,slhaname,comment="1k events (unit = pb)")         
-            xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=slhaname,pythiacard='./pythia.card')
+            xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=slhaname)
             addXSecToFile(xsecs,slhaname,comment="10k events (unit = pb)")
-            xsecs = computeXSec(sqrts=8.*TeV, maxOrder=2, nevts=10000, slhafile=slhaname,loFromSlha=True)
+            xsecs = computeXSec(sqrts=8.*TeV, maxOrder=2, nevts=10000, slhafile=slhaname,
+                                loFromSlha=True)
             addXSecToFile(xsecs,slhaname,comment="(unit = pb)")
             
         logger.info("File %s created." %slhaname)
@@ -157,10 +159,10 @@ class TemplateFile(object):
                     xsecsProc = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=1000, slhafile=slhafile,
                                         pythiacard=self.pythiaCard)
                     addXSecToFile(xsecsProc,slhafile,comment="1k events (unit = pb)")         
-                xsecsLO = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=slhafile,
-                                      pythiacard='./pythia.card')
+                xsecsLO = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=slhafile)
                 addXSecToFile(xsecsLO,slhafile,comment="10k events (unit = pb)")
-                xsecsNLL = computeXSec(sqrts=8.*TeV, maxOrder=2, nevts=10000, slhafile=slhafile,loFromSlha=True)
+                xsecsNLL = computeXSec(sqrts=8.*TeV, maxOrder=2, nevts=10000, slhafile=slhafile,
+                                       loFromSlha=True)
                 for xsec in xsecsNLL: print 'X=',xsec
                 addXSecToFile(xsecsNLL,slhafile,comment="(unit = pb)")
             #If the x-value did not change, simply add the previously computed xsecs to file
@@ -194,11 +196,12 @@ class TemplateFile(object):
         #Add cross-sections to file running only mother pair production:
         #(to guarantee the mother cross-section value is reliable)
         if self.pythiaCard:        
-            xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=1000, slhafile=tempSLHA,pythiacard=self.pythiaCard)
+            xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=1000, slhafile=tempSLHA,
+                                pythiacard=self.pythiaCard)
             addXSecToFile(xsecs,tempSLHA)
         #Now add cross-sections to file running all MSSM processes:
         #(to avoid too trivial results from the decomposition)
-        xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=tempSLHA,pythiacard='./pythia.card')
+        xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=tempSLHA)
         addXSecToFile(xsecs,tempSLHA)
         
         #Run decomposition on the file:
