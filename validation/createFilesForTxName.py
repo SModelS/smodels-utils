@@ -1,18 +1,14 @@
 #!/usr/bin/env python
 
 """
-.. module:: Example
-   :synopsis: Basic main file example for using SModelS.
+.. module:: createFilesForTxName.py
+   :synopsis: create SLHA files for a given txname.
 
 """
 
 #Import basic functions (this file must be run under the installation folder)
 import sys,os
 sys.path.insert(0,"../../smodels")
-from smodels.theory import slhaDecomposer
-from smodels.theory import lheDecomposer
-from smodels.tools.physicsUnits import fb, GeV
-from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels.experiment.databaseObjects import DataBase
 
 #Set the address of the database folder
@@ -53,8 +49,8 @@ def main( txname= "T6bbWW" ):
     if type(listOfExpRes)!=list:
         listOfExpRes=[listOfExpRes]
 
-    points={}
     slhafiles = []
+    tgraphs = {}
 
     # Compute the theory predictions for each analysis
     for expResult in listOfExpRes:
@@ -72,18 +68,26 @@ def main( txname= "T6bbWW" ):
             print "tgraph=",tgraph
             if not tgraph:
                 continue
-            print "get points"
-            pts = plotRanges.getPoints ( tgraph[txname][0], txname, naxes, constraint, onshell, offshell )
-            print "got points"
-            if not naxes in points:
-                points[naxes]=[]
-            points[naxes].append ( pts )
-    for (axes,pts) in points.items():
+            if not naxes in tgraphs:
+                tgraphs[naxes]=[]
+            tgraphs[naxes].append ( tgraph[txname][0] )
+            #print "get points"
+            #pts = plotRanges.getPoints ( tgraph[txname][0], txname, naxes, constraint, onshell, offshell )
+            #print "got points"
+            #if not naxes in points:
+            #    points[naxes]=[]
+            #points[naxes].append ( pts )
+    for (axes,tgraphs) in tgraphs.items():
+        pts = plotRanges.getPoints ( tgraphs, txname, naxes, constraint, onshell, offshell )
         print "axes=",axes
-        flatpts = plotRanges.mergeListsOfListsOfPoints ( pts )
-        print "for",axes,"get",flatpts[-1]
+        print "points=",pts
+        # flatpts = plotRanges.mergeListsOfListsOfPoints ( pts )
+        if len(pts)==0:
+            continue
+        print "for",axes,"get",pts[-1]
         tempf=slhaCreator.TemplateFile ( templatefile,axes )
-        slhafiles += tempf.createFilesFor ( flatpts )
+        slhafiles += tempf.createFilesFor ( pts )
+
 
     import commands
     cmds=commands.getoutput ( "tar cvf %s.tar %s_*.slha" % ( txname, txname ) )
@@ -91,8 +95,6 @@ def main( txname= "T6bbWW" ):
     #Remove SLHA files
     for f in slhafiles: os.remove(f)
     
-
-
 
 
 if __name__ == '__main__':

@@ -35,6 +35,46 @@ def mergeListsOfListsOfPoints ( lists ):
         ret=mergeListsOfPoints ( ret, i )
     return ret
 
+
+def getMinMax ( tgraph ):
+    """ get the frame that tgraphs fits in nicely """
+    minx, miny = float("inf"), float("inf")
+    maxx, maxy = 0., 0.
+    for i in range(tgraph.GetN()):
+        x, y = ROOT.Double(), ROOT.Double()
+        tgraph.GetPoint(i,x,y) 
+        if x<minx: minx=x
+        if y<miny: miny=y
+        if x>maxx: maxx=x
+        if y>maxy: maxy=y
+    minx=0.8*minx
+    miny=0.9*miny
+    maxx=1.2*maxx
+    maxy=1.2*maxy
+
+    return { "x": [minx,maxx], "y": [miny,maxy] }
+
+def getSuperFrame ( tgraphs ):
+    """ get the all-enveloping frame of tgraphs """
+    if type ( tgraphs ) == ROOT.TGraph:
+        return getMinMax ( tgraphs) 
+    frames=[]
+    minx, miny = float("inf"), float("inf")
+    maxx, maxy = 0., 0.
+    for tgraph in tgraphs:
+        frame = getMinMax ( tgraph )
+        if frame["x"][0] < minx:
+            minx = frame["x"][0]
+        if frame["x"][1] > maxx:
+            maxx = frame["x"][1]
+        if frame["y"][0] < miny:
+            miny = frame["y"][0]
+        if frame["y"][1] > maxy:
+            maxy = frame["y"][1]
+    return { "x": [ minx, maxx], "y": [ miny, maxy ] }
+
+
+
 def getPoints ( tgraphs, txname="T2tt", axes = "2*Eq(mother,x)_Eq(lsp,y)", \
                 constraint="[[['t+']],[['t-']]]", onshell=True, offshell=True ):
     """ given a TGraph object, returns list of points to probe. You define whether
@@ -45,25 +85,17 @@ def getPoints ( tgraphs, txname="T2tt", axes = "2*Eq(mother,x)_Eq(lsp,y)", \
         :param constraint: the constraint to check for onshell / offshellness
     """
     vertexChecker = VertexChecker ( txname, constraint )
-    minx, miny = float("inf"), float("inf")
-    maxx, maxy = 0., 0.
-    for i in range(tgraphs.GetN()):
-        x, y = ROOT.Double(), ROOT.Double()
-        tgraphs.GetPoint(i,x,y) 
-        if x<minx: minx=x
-        if y<miny: miny=y
-        if x>maxx: maxx=x
-        if y>maxy: maxy=y
-    minx=0.8*minx
-    miny=0.9*miny
-    maxx=1.2*maxx
-    maxy=1.2*maxy
+    frame=getSuperFrame ( tgraphs )
+    minx,maxx=frame["x"][0], frame["x"][1]
+    miny,maxy=frame["y"][0], frame["y"][1]
+
     dx=(maxx-minx)/(30.-1.)
     dy=(maxy-miny)/(20.-1.)
     dx = round ( dx / 5. ) * 5.
     dy = round ( dy / 5. ) * 5.
     minx = round ( minx / dx ) * dx
     miny = round ( miny / dy ) * dy
+
 
     origPlot = OrigPlot.fromString ( axes )
 
@@ -91,7 +123,10 @@ def draw ( graph, points ):
         # container.append(t)
         t.SetPoint(ctr,point[0],point[1])
     t.Draw("AP")
-    graph.Draw("same")
+    if type(graph)==ROOT.TGraph: graph.Draw("same")
+    if type(graph)==list:
+        for g in graph:
+            g.Draw("same")
     ROOT.c1.Print("save.png")
 
 if __name__ == "__main__":
@@ -100,5 +135,11 @@ if __name__ == "__main__":
     axes="2*Eq(mother,x)_Eq(lsp,y)"
     txname="T2tt"
     graph=f.Get("%s/exclusion_%s" % ( txname, axes) )
-    pts = getPoints ( graph, txname, axes, "[[['t+']],[['t-']]]", onshell=False, offshell=True )
-    draw ( graph, pts )
+    filename2="/home/walten/git/smodels-database/8TeV/ATLAS/ATLAS-SUSY-2013-05/sms.root"
+    f2=ROOT.TFile(filename2)
+    print "ls=",f2.ls()
+    graph2=f2.Get("%s/exclusion_%s" % ( "T2bb", axes) )
+    print "graph1,2=",graph,graph2
+
+    pts = getPoints ( [graph, graph2], txname, axes, "[[['t+']],[['t-']]]", onshell=True, offshell=False )
+    draw ( [graph, graph2] , pts )
