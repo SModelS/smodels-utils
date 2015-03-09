@@ -19,18 +19,7 @@ from plottingFuncs import getExclusionCurvesFor
 import plotRanges
 import slhaCreator
 
-def addQuotationMarks ( constraint ):
-    """ [[[t+]],[[t-]]] -> [[['t+']],[['t-']]] """
-    ret=""
-    for i in range(len(constraint)):
-        if constraint[i] == "[" and constraint[i+1] not in [ "[", "]" ]:
-            ret+=constraint[i]+"'"
-            continue
-        if constraint[i] == "]" and constraint[i-1] not in [ "[", "]" ]:
-            ret+="'" + constraint[i]
-            continue
-        ret+=constraint[i]
-    return ret
+
 
 def main( txname= "T6bbWW" ):
     """

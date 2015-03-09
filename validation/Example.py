@@ -16,12 +16,12 @@ dl.setLevel(level=logging.WARNING)
 tl.setLevel(level=logging.WARNING)
 
 database = DataBase("/home/lessa/smodels-database/")
-# 
-# 
+# # 
+# # 
 # #How to validate one single plot for a UL analysis:
 # expRes = database.getExpResults(analysisIDs=['CMS-SUS-13-004'],
-#                                 datasetIDs=[None],txnames=['T2ttoff'])
-# slhadir = '/home/lessa/smodels-utils/slha/T2tt'
+#                                 datasetIDs=[None],txnames=['T2tt'])
+# slhadir = '/home/lessa/smodels-utils/slha/T2tt.tar'
 # txnameStr = 'T2tt'
 # axes = '2*Eq(mother,x)_Eq(lsp,y)'
 # validatePlot(expRes,txnameStr,axes,slhadir)
@@ -42,18 +42,13 @@ database = DataBase("/home/lessa/smodels-database/")
 
  
 #How to validate all plots for a single Txname in one ExpRes:
-expRes = database.getExpResults(analysisIDs=['CMS-SUS-13-004'],datasetIDs=[None],
-                                txnames=['T1bbbb'])
-txname = 'T1bbbb'
-slhadir = '/home/lessa/smodels-utils/slha/T1bbbb.tar'
-validateTxName(expRes,txname,slhadir)
+# expRes = database.getExpResults(analysisIDs=['CMS-SUS-13-004'],datasetIDs=[None],
+#                                 txnames=['T1bbbb'])
+# txname = 'T1bbbb'
+# slhadir = '/home/lessa/smodels-utils/slha/T1bbbb.tar'
+# validateTxName(expRes,txname,slhadir)
 
-# #How to validate all plots for all Txnames in one ExpRes:
-# expRes = database.getExpResults(analysisIDs=['CMS-SUS-13-004'],datasetIDs=[None])
-# slhamain = '/home/lessa/smodels-utils/slha/'
-# slhaDict = {'T1bbbb': os.path.join(slhamain,'T1bbbb'),
-#             'T1tttt': os.path.join(slhamain,'T1tttt'),
-#             'T2tt': os.path.join(slhamain,'T2tt'),
-#             'T1ttttoff': os.path.join(slhamain,'T1tttt'),
-#             'T2ttoff': os.path.join(slhamain,'T2tt')}  
-# validateExpRes(expRes,slhaDict)
+#How to validate all plots for all Txnames in one ExpRes:
+expRes = database.getExpResults(analysisIDs=['CMS-SUS-13-004'],datasetIDs=[None])
+slhaDir = '/home/lessa/smodels-utils/slha/'
+validateExpRes(expRes,slhaDir)
