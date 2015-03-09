@@ -60,7 +60,7 @@ class VertexChecker(object):
                 
         for kinConstraint in self.kinConstraints:
             for i, branch in enumerate(kinConstraint):
-                print "branch=",branch,"massDeltaArray=",massDeltaArray[i]
+                ## print "branch=",branch,"massDeltaArray=",massDeltaArray[i]
                 if len(branch) != len(massDeltaArray[i]):
                     Errors().decayChain(self.txName,\
                     len(branch),len(massDeltaArray[i]))
