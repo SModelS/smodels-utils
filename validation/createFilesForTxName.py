@@ -20,7 +20,6 @@ import plotRanges
 import slhaCreator
 
 
-
 def main( txname= "T6bbWW" ):
     """
     Main program. Displays basic use case.
@@ -46,7 +45,7 @@ def main( txname= "T6bbWW" ):
         print('\n',expResult)
         print(expResult.path)
         axes=expResult.getValuesFor("axes")
-        constraint=addQuotationMarks ( expResult.getValuesFor("constraint") )
+        constraint= expResult.getValuesFor("constraint") 
         print "constraint=",constraint
         #  constraint="[[['t+']],[['t-']]]"
         if type(axes)==str:

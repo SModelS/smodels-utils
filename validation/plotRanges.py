@@ -73,10 +73,24 @@ def getSuperFrame ( tgraphs ):
             maxy = frame["y"][1]
     return { "x": [ minx, maxx], "y": [ miny, maxy ] }
 
+def addQuotationMarks ( constraint ):
+    """ [[[t+]],[[t-]]] -> [[['t+']],[['t-']]] """
+    if constraint.find("'")>-1:
+        return constraint
+    ret=""
+    for i in range(len(constraint)):
+        if constraint[i] == "[" and constraint[i+1] not in [ "[", "]" ]:
+            ret+=constraint[i]+"'"
+            continue
+        if constraint[i] == "]" and constraint[i-1] not in [ "[", "]" ]:
+            ret+="'" + constraint[i]
+            continue
+        ret+=constraint[i]
+    return ret
 
 
 def getPoints ( tgraphs, txname="T2tt", axes = "2*Eq(mother,x)_Eq(lsp,y)", \
-                constraint="[[['t+']],[['t-']]]", onshell=True, offshell=True ):
+                constraint="[[[t+]],[[t-]]]", onshell=True, offshell=True ):
     """ given a TGraph object, returns list of points to probe. You define whether
         you want the onshell region or the offshell region (or both).
         :param txname: txname
@@ -84,7 +98,7 @@ def getPoints ( tgraphs, txname="T2tt", axes = "2*Eq(mother,x)_Eq(lsp,y)", \
                 of the kinematic region)
         :param constraint: the constraint to check for onshell / offshellness
     """
-    vertexChecker = VertexChecker ( txname, constraint )
+    vertexChecker = VertexChecker ( txname, addQuotationMarks ( constraint ) )
     frame=getSuperFrame ( tgraphs )
     minx,maxx=frame["x"][0], frame["x"][1]
     miny,maxy=frame["y"][0], frame["y"][1]
@@ -141,5 +155,5 @@ if __name__ == "__main__":
     graph2=f2.Get("%s/exclusion_%s" % ( "T2bb", axes) )
     print "graph1,2=",graph,graph2
 
-    pts = getPoints ( [graph, graph2], txname, axes, "[[['t+']],[['t-']]]", onshell=True, offshell=False )
+    pts = getPoints ( [graph, graph2], txname, axes, "[[[t+]],[[t-]]]", onshell=True, offshell=False )
     draw ( [graph, graph2] , pts )
