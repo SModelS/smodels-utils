@@ -18,6 +18,12 @@ from plottingFuncs import getExclusionCurvesFor
 
 logger.setLevel(level=logging.DEBUG)
 
+def getExpIdFromPath ():
+    """ get experimental id from path """
+    ret=os.getcwd()
+    ret=ret.replace("/validation","")
+    ret=ret[ret.rfind("/")+1:]
+    return ret
 
 def validatePlot(expRes,txname,axes,slhadir):
     """
