@@ -76,7 +76,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         
     # Check if data has been defined:
     excluded, allowed, excluded_border, allowed_border = TGraph(), TGraph(), TGraph(), TGraph()
-    allowed = TGraph()        
+    cond_violated=TGraph()
     if not validationPlot.data:
         logger.warning("Data for validation plot is not defined.")
     else:
@@ -85,7 +85,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             x, y = pt['axes']
             if pt['condition'] and max(pt['condition']) > 0.01:
                 logger.warning("Condition violated for file " + pt['slhafile'])
-                allowed.SetPoint(allowed.GetN(), x, y)
+                cond_violated.SetPoint(cond_violated.GetN(), x, y)
             elif pt['signal'] > pt['UL']:
                 if pt['signal'] < pt ['UL']* looseness:
                     excluded_border.SetPoint(excluded_border.GetN(), x, y)
@@ -106,6 +106,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     
     if silentMode: gROOT.SetBatch()    
     setOptions(allowed, Type='allowed')
+    setOptions(cond_violated, Type='cond_violated')
     setOptions(allowed_border, Type='allowed_border')
     setOptions(excluded, Type='excluded')
     setOptions(excluded_border, Type='excluded_border')
@@ -115,6 +116,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     base.Add(excluded, "P")
     base.Add(allowed_border, "P")
     base.Add(excluded_border, "P")
+    base.Add(cond_violated, "P")
     base.Add(official, "C")
     title = validationPlot.expRes.getValuesFor('id') + "_" \
             + validationPlot.txname\
@@ -178,6 +180,9 @@ def setOptions(obj,Type=None):
     if not Type: return True
     elif Type == 'allowed':
         obj.SetMarkerStyle(20)    
+        obj.SetMarkerColor(kGreen)
+    elif Type == 'cond_violated':
+        obj.SetMarkerStyle(23)
         obj.SetMarkerColor(kGreen)
     elif Type == 'excluded':
         obj.SetMarkerStyle(20)    
