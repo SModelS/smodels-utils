@@ -27,7 +27,8 @@ class ValidationPlot():
     Encapsulates all the data necessary for creating a single validation plot.
     """
 
-    def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None):
+    def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
+                 kfactor = 1.):
 
         self.expRes = ExptRes
         self.txname = TxNameStr
@@ -35,6 +36,7 @@ class ValidationPlot():
         self.slhaDir = None
         self.data = None
         self.officialCurve = self.getOfficialCurve()
+        self.kfactor = kfactor
 
         if slhadir: self.setSLHAdir(slhadir)
         if databasePath:
@@ -142,6 +144,10 @@ class ValidationPlot():
         """
 
         self.data = runSModelSFor(self)
+        #Apply k-factors to theory prediction (default is 1)
+        for ipt,pt in enumerate(self.data):
+            pt['signal'] *= self.kfactor 
+            self.data[ipt] = pt
 
     def getPlot(self,silentMode=True):
         """

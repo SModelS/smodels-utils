@@ -25,7 +25,7 @@ def getExpIdFromPath ():
     ret=ret[ret.rfind("/")+1:]
     return ret
 
-def validatePlot(expRes,txname,axes,slhadir):
+def validatePlot(expRes,txname,axes,slhadir,kfactor=1.):
     """
     Creates a ValidationPlot object and saves its output.
     
@@ -35,6 +35,8 @@ def validatePlot(expRes,txname,axes,slhadir):
      (i.e.  2*Eq(mother,x),Eq(lsp,y))
     :param slhadir: folder containing the SLHA files corresponding to txname
     or the .tar file containing the SLHA files.
+    :param kfactor: optional global k-factor value to re-scale 
+                    all theory prediction values
     """
 
     #Get exclusion curve for expRes:
@@ -44,7 +46,7 @@ def validatePlot(expRes,txname,axes,slhadir):
 
     logger.info("Generating validation plot for " + expRes.getValuesFor('id') 
                 +", "+txname+", "+axes)        
-    valPlot = ValidationPlot(expRes,txname,axes)
+    valPlot = ValidationPlot(expRes,txname,axes,kfactor=kfactor)
     valPlot.setSLHAdir(slhadir)
     valPlot.getData()
     valPlot.getPlot()
@@ -53,40 +55,53 @@ def validatePlot(expRes,txname,axes,slhadir):
     logger.info("Validation plot done.")
     return valPlot.computeAgreementFactor() # return agreement factor
     
-def validateTxName(expRes,txname,slhadir):
+def validateTxName(expRes,txname,slhadir,kfactor=1.):
     """
     Creates a ValidationPlot for each plane/axes appearing
     in txname and saves the output.
     
-    :param expRes: a ExpResult object containing the result to be validated
+    :param expRes: a single ExpResult object containing the result to be validated
+    or a list of ExpResult objects containing the txname.
     :param txname: a TxName object containing the txname to be validated
     :param slhadir: folder containing the SLHA files corresponding to txname
     or the .tar file containing the SLHA files.
+    :param kfactor: optional global k-factor value to re-scale 
+                    all theory prediction values
+    
+    :return: Nested dictionary with the wrongness factor for each experimental
+             result/plot.
     """    
 
-    tgraphs = getExclusionCurvesFor(expRes,txname=txname)[txname]
-    axes = []
-    for tgraph in tgraphs:
-        ax = tgraph.GetName()
-        ax = ax.replace('exclusion_',"")
-        axes.append(ax)
+    if not isinstance(expRes,list): expResList = [expRes]
+    else: expResList = expRes
+    ret = {}
+    for exp in expResList:
+        tgraphs = getExclusionCurvesFor(expRes,txname=txname)[txname]
+        axes = []
+        for tgraph in tgraphs:
+            ax = tgraph.GetName()
+            ax = ax.replace('exclusion_',"")
+            axes.append(ax)
     
-    if not axes: return False
-
-    ret={}
-    for ax in axes: 
-        ret[ax]= validatePlot(expRes,txname,ax,slhadir) 
+        if not axes: continue
+        ret = {exp.getValuesFor('id') : {}}
+        for ax in axes: 
+            ret[exp.getValuesFor('id')][ax]= validatePlot(expRes,txname,ax,slhadir,
+                                                          kfactor=kfactor) 
     return ret ## return agreement factors
     
     
-def validateExpRes(expRes,slhaDir):
+def validateExpRes(expRes,slhaDir,kfactorDict=None):
     """
     Creates a ValidationPlot for each txname appearing in expRes and 
     each plane/axes appearing in txname and saves the output.
     
     :param expRes: a ExpResult object containing the result to be validated    
-    :param slhaDir: Location of the slha folder containing the
-    txname.tar files or the ./txname folders (i. e. ../slha/)
+    :param slhaDir: Location of the slha folder containing the    
+                    txname.tar files or the ./txname folders (i. e. ../slha/)
+    :param kfactorDict: optinal k-factor dictionary for the txnames 
+                        (i.e. {'TChiWZ' : 1.2, 'T2tt' : 1.,...})
+                        If not define will assume k-factors = 1 for txnames.
     """    
 
     #Get all exclusion curves appearing in sms.root:
@@ -98,8 +113,11 @@ def validateExpRes(expRes,slhaDir):
             slhadir = os.path.join(slhaDir,txname+'.tar')
             if not os.path.isfile(slhadir):
                 logger.error("SLHA files for %s not found in %s" %(txname,slhadir))
-                return False        
-        ret[txname]= validateTxName(expRes,txname,slhadir)
+                return False
+        if not kfactorDict or not txname in kfactorDict:
+            kfactor=1.
+        else: kfactor = kfactorDict[txname]
+        ret[txname]= validateTxName(expRes,txname,slhadir,kfactor)
         
     return ret
 
