@@ -14,27 +14,11 @@ import sys
 sys.path.insert(0,"../")
 from smodels_utils.dataPreparation.vertexChecking import VertexChecker
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
-
-def mergeListsOfPoints ( points1, points2 ):
-    """ given a list of a list of points, flatten the top structure, and remove
-        elements appeaaring repeatedly """
-    import copy
-    ret=copy.deepcopy(points1)
-    for point in points2:
-        if not point in ret:
-            ret.append ( copy.deepcopy ( point ) )
-    return ret
-
-def mergeListsOfListsOfPoints ( lists ):
-    if len ( lists ) == 0:
-        return []
-    if len ( lists ) == 1:
-        return lists[0]
-    ret=lists[0]
-    for i in lists[1:]:
-        ret=mergeListsOfPoints ( ret, i )
-    return ret
-
+import logging
+FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
+logging.basicConfig(format=FORMAT)
+logger = logging.getLogger(__name__)
+logger.setLevel(level=logging.INFO)
 
 def getMinMax ( tgraph ):
     """ get the frame that tgraphs fits in nicely """
@@ -71,6 +55,7 @@ def getSuperFrame ( tgraphs ):
             miny = frame["y"][0]
         if frame["y"][1] > maxy:
             maxy = frame["y"][1]
+    logger.info ( "the super frame is [%d,%d],[%d,%d]" % ( minx, maxx, miny, maxy ) )
     return { "x": [ minx, maxx], "y": [ miny, maxy ] }
 
 def addQuotationMarks ( constraint ):
@@ -85,7 +70,11 @@ def addQuotationMarks ( constraint ):
         if constraint[i] == "]" and constraint[i-1] not in [ "[", "]" ]:
             ret+="'" + constraint[i]
             continue
+        if constraint[i] == "," and constraint[i-1] not in [ "[", "]" ]:
+            ret+="'" + constraint[i] + "'"
+            continue
         ret+=constraint[i]
+    logger.info ( "added quotation marks: %s" % ret )
     return ret
 
 
