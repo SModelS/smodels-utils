@@ -52,24 +52,31 @@ def validateTxName(expRes,txname,slhadir):
     Creates a ValidationPlot for each plane/axes appearing
     in txname and saves the output.
     
-    :param expRes: a ExpResult object containing the result to be validated
+    :param expRes: a single ExpResult object containing the result to be validated
+    or a list of ExpResult objects containing the txname.
     :param txname: a TxName object containing the txname to be validated
     :param slhadir: folder containing the SLHA files corresponding to txname
     or the .tar file containing the SLHA files.
+    
+    :return: Nested dictionary with the wrongness factor for each experimental
+             result/plot.
     """    
 
-    tgraphs = getExclusionCurvesFor(expRes,txname=txname)[txname]
-    axes = []
-    for tgraph in tgraphs:
-        ax = tgraph.GetName()
-        ax = ax.replace('exclusion_',"")
-        axes.append(ax)
+    if not isinstance(expRes,list): expResList = [expRes]
+    else: expResList = expRes
+    ret = {}
+    for exp in expResList:
+        tgraphs = getExclusionCurvesFor(expRes,txname=txname)[txname]
+        axes = []
+        for tgraph in tgraphs:
+            ax = tgraph.GetName()
+            ax = ax.replace('exclusion_',"")
+            axes.append(ax)
     
-    if not axes: return False
-
-    ret={}
-    for ax in axes: 
-        ret[ax]= validatePlot(expRes,txname,ax,slhadir) 
+        if not axes: continue
+        ret = {exp.getValuesFor('id') : {}}
+        for ax in axes: 
+            ret[exp.getValuesFor('id')][ax]= validatePlot(expRes,txname,ax,slhadir) 
     return ret ## return wrongness factors
     
     
