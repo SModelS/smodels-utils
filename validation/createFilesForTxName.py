@@ -32,7 +32,7 @@ def main( txname= "T6bbWW" ):
         offshell=True
     templatefile = "../slha/templates/%s.template" % txname
     # Load all analyses from database
-    listOfExpRes = database.getExpResults( txnames=[ txname ] )
+    listOfExpRes = database.getExpResults( txnames=[ txname ], datasetIDs=[None] )
 
     if type(listOfExpRes)!=list:
         listOfExpRes=[listOfExpRes]

@@ -15,11 +15,11 @@ cl.setLevel(level=logging.WARNING)
 dl.setLevel(level=logging.WARNING)
 tl.setLevel(level=logging.WARNING)
 
+txname = "T5tttt"
 database = DataBase("/home/lessa/smodels-database/")
-expResList = database.getExpResults(txnames=['TChiWZ'],datasetIDs=[None])
-slhadir = '/home/lessa/smodels-utils/slha/TChiWZ.tar'
-kfactor = 1.25
-validateTxName(expResList,'TChiWZ',slhadir,kfactor)
+expResList = database.getExpResults(txnames=[txname],datasetIDs=[None])
+slhadir = '/home/lessa/smodels-utils/slha/' + txname +'.tar'
+validateTxName(expResList,txname,slhadir)
 
 # # 
 # # 
@@ -53,7 +53,7 @@ validateTxName(expResList,'TChiWZ',slhadir,kfactor)
 # slhadir = '/home/lessa/smodels-utils/slha/T1bbbb.tar'
 # validateTxName(expRes,txname,slhadir)
 # 
-# #How to validate all plots for all Txnames in one ExpRes:
+#How to validate all plots for all Txnames in one ExpRes:
 # expRes = database.getExpResults(analysisIDs=['CMS-SUS-13-004'],datasetIDs=[None])
 # slhaDir = '/home/lessa/smodels-utils/slha/'
 # validateExpRes(expRes,slhaDir)
