@@ -13,7 +13,7 @@ import logging,os
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
-from ROOT import TFile,TGraph,gROOT,TMultiGraph,TCanvas,TLatex,TLegend,kGreen,kRed
+from ROOT import TFile,TGraph,gROOT,TMultiGraph,TCanvas,TLatex,TLegend,kGreen,kRed,kOrange
 from smodels.tools.physicsUnits import fb, GeV
 
 
@@ -64,7 +64,7 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None):
     return txnames
 
 
-def createPlot(validationPlot,silentMode=True):
+def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     """
     Uses the data in validationPlot.data and the official exclusion curve
     in validationPlot.officialCurve to generate the exclusion plot
@@ -75,8 +75,8 @@ def createPlot(validationPlot,silentMode=True):
     """
         
     # Check if data has been defined:
-    excluded = TGraph()
-    allowed = TGraph()        
+    excluded, allowed, excluded_border, allowed_border = TGraph(), TGraph(), TGraph(), TGraph()
+    cond_violated=TGraph()
     if not validationPlot.data:
         logger.warning("Data for validation plot is not defined.")
     else:
@@ -85,11 +85,18 @@ def createPlot(validationPlot,silentMode=True):
             x, y = pt['axes']
             if pt['condition'] and max(pt['condition']) > 0.01:
                 logger.warning("Condition violated for file " + pt['slhafile'])
-                allowed.SetPoint(allowed.GetN(), x, y)
+                cond_violated.SetPoint(cond_violated.GetN(), x, y)
             elif pt['signal'] > pt['UL']:
-                excluded.SetPoint(excluded.GetN(), x, y)
+                if pt['signal'] < pt ['UL']* looseness:
+                    excluded_border.SetPoint(excluded_border.GetN(), x, y)
+                else:
+                    excluded.SetPoint(excluded.GetN(), x, y )
             else:
-                allowed.SetPoint(allowed.GetN(), x, y)
+                if pt['signal']*looseness > pt['UL']:
+                    allowed_border.SetPoint(allowed_border.GetN(), x, y)
+                else:
+                    allowed.SetPoint(allowed.GetN(), x, y)
+        
 
     # Check if official exclusion curve has been defined:
     if not validationPlot.officialCurve:
@@ -99,11 +106,17 @@ def createPlot(validationPlot,silentMode=True):
     
     if silentMode: gROOT.SetBatch()    
     setOptions(allowed, Type='allowed')
+    setOptions(cond_violated, Type='cond_violated')
+    setOptions(allowed_border, Type='allowed_border')
     setOptions(excluded, Type='excluded')
+    setOptions(excluded_border, Type='excluded_border')
     setOptions(official, Type='official')
     base = TMultiGraph()
     base.Add(allowed, "P")
     base.Add(excluded, "P")
+    base.Add(allowed_border, "P")
+    base.Add(excluded_border, "P")
+    base.Add(cond_violated, "P")
     base.Add(official, "C")
     title = validationPlot.expRes.getValuesFor('id') + "_" \
             + validationPlot.txname\
@@ -168,6 +181,16 @@ def setOptions(obj,Type=None):
     elif Type == 'allowed':
         obj.SetMarkerStyle(20)    
         obj.SetMarkerColor(kGreen)
+    elif Type == 'cond_violated':
+        obj.SetMarkerStyle(23)
+        obj.SetMarkerColor(kGreen)
     elif Type == 'excluded':
         obj.SetMarkerStyle(20)    
         obj.SetMarkerColor(kRed)
+    elif Type == 'allowed_border':
+        obj.SetMarkerStyle(20)    
+        obj.SetMarkerColor(kGreen+1)
+    elif Type == 'excluded_border':
+        obj.SetMarkerStyle(20)    
+        obj.SetMarkerColor(kOrange+1)
+        
