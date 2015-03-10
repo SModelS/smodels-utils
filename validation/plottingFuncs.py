@@ -115,8 +115,8 @@ def createPlot(validationPlot,silentMode=True):
     l=TLatex()
     l.SetNDC()
     l.SetTextSize(.04)
-    wrongness = validationPlot.computeWrongnessFactor()
-    l.DrawLatex(.15,.8,"validation wrong by %.1f %s" % (wrongness*100, "%" ) )
+    agreement = validationPlot.computeAgreementFactor()
+    l.DrawLatex(.15,.8,"validation agreement %.1f %s" % (agreement*100, "%" ) )
     base.l=l
     if not silentMode: ans = raw_input("Hit any key to close\n")
     

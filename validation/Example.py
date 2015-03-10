@@ -17,8 +17,9 @@ tl.setLevel(level=logging.WARNING)
 
 database = DataBase("/home/lessa/smodels-database/")
 expResList = database.getExpResults(txnames=['TChiWZ'],datasetIDs=[None])
-slhadir = '/home/lessa/smodels-utils/slha'
-validateTxName(expResList,'TChiWZ',slhadir)
+slhadir = '/home/lessa/smodels-utils/slha/TChiWZ.tar'
+kfactor = 1.25
+validateTxName(expResList,'TChiWZ',slhadir,kfactor)
 
 # # 
 # # 

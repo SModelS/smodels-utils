@@ -27,7 +27,8 @@ class ValidationPlot():
     Encapsulates all the data necessary for creating a single validation plot.
     """
 
-    def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None):
+    def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
+                 kfactor = 1.):
 
         self.expRes = ExptRes
         self.txname = TxNameStr
@@ -35,6 +36,7 @@ class ValidationPlot():
         self.slhaDir = None
         self.data = None
         self.officialCurve = self.getOfficialCurve()
+        self.kfactor = kfactor
 
         if slhadir: self.setSLHAdir(slhadir)
         if databasePath:
@@ -61,10 +63,11 @@ class ValidationPlot():
         vstr += 'Axes: '+self.axes
         return vstr
 
-    def computeWrongnessFactor ( self, looseness=1.2 ):
-        """ computes how 'wrong' the plot is, by counting the points
-            that are inside/outside the official exclusion curve, and comparing
-            against the points' r values ( upper limit / predict theory cross section )
+    def computeAgreementFactor ( self, looseness=1.2 ):
+        """ computes how much the plot agrees with the official exclusion curve
+            by counting the points that are inside/outside the official
+            exclusion curve, and comparing against the points' r values
+            ( upper limit / predict theory cross section )
             :param looseness: how much do we loosen the criterion? I.e. by what factor do we
             change the cross sections in favor of getting the right assignment?
         """
@@ -102,7 +105,7 @@ class ValidationPlot():
         print ( "[validationObjs] points in categories %s" % str(pts) )
         if pts["total"]==0:
             return float("nan")
-        return float(pts["wrong"]) / float(pts["total"])
+        return 1.0 - float(pts["wrong"]) / float(pts["total"])
 
     def setSLHAdir(self,slhadir):
         """
@@ -141,6 +144,10 @@ class ValidationPlot():
         """
 
         self.data = runSModelSFor(self)
+        #Apply k-factors to theory prediction (default is 1)
+        for ipt,pt in enumerate(self.data):
+            pt['signal'] *= self.kfactor 
+            self.data[ipt] = pt
 
     def getPlot(self,silentMode=True):
         """
