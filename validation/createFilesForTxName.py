@@ -32,6 +32,15 @@ def main( txname= "T6bbWW" ):
         offshell=True
     templatefile = "../slha/templates/%s.template" % txname
     # Load all analyses from database
+    listOfExpResOn = database.getExpResults( txnames=[ txname.replace("off","") ] )
+    onshell_constraint=""
+    if type(listOfExpResOn)!=list:
+        listOfExpResOn=[listOfExpResOn]
+    for expResult in listOfExpResOn:
+        onshell_constraint= expResult.getValuesFor("constraint") 
+        print "constraint=",onshell_constraint
+        
+
     listOfExpRes = database.getExpResults( txnames=[ txname ] )
 
     if type(listOfExpRes)!=list:
@@ -45,8 +54,8 @@ def main( txname= "T6bbWW" ):
         print('\n',expResult)
         print(expResult.path)
         axes=expResult.getValuesFor("axes")
-        constraint= expResult.getValuesFor("constraint") 
-        print "constraint=",constraint
+        #constraint= expResult.getValuesFor("constraint") 
+        # print "constraint=",constraint
         #  constraint="[[['t+']],[['t-']]]"
         if type(axes)==str:
             axes=[axes]
@@ -60,13 +69,14 @@ def main( txname= "T6bbWW" ):
                 tgraphs[naxes]=[]
             tgraphs[naxes].append ( tgraph[txname][0] )
             #print "get points"
+    
             #pts = plotRanges.getPoints ( tgraph[txname][0], txname, naxes, constraint, onshell, offshell )
             #print "got points"
             #if not naxes in points:
             #    points[naxes]=[]
             #points[naxes].append ( pts )
     for (axes,tgraphs) in tgraphs.items():
-        pts = plotRanges.getPoints ( tgraphs, txname, naxes, constraint, onshell, offshell )
+        pts = plotRanges.getPoints ( tgraphs, txname, naxes, onshell_constraint, onshell, offshell )
         print "axes=",axes
         print "points=",pts
         # flatpts = plotRanges.mergeListsOfListsOfPoints ( pts )
