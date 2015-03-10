@@ -51,7 +51,7 @@ def validatePlot(expRes,txname,axes,slhadir):
     valPlot.savePlot()
     valPlot.saveData()
     logger.info("Validation plot done.")
-    return valPlot.computeWrongnessFactor() # return wrongness factor
+    return valPlot.computeAgreementFactor() # return agreement factor
     
 def validateTxName(expRes,txname,slhadir):
     """
@@ -76,7 +76,7 @@ def validateTxName(expRes,txname,slhadir):
     ret={}
     for ax in axes: 
         ret[ax]= validatePlot(expRes,txname,ax,slhadir) 
-    return ret ## return wrongness factors
+    return ret ## return agreement factors
     
     
 def validateExpRes(expRes,slhaDir):
