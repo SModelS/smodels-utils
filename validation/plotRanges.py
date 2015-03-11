@@ -9,11 +9,12 @@
 """
 
 import ROOT
-import numpy
+import numpy,math
 import sys
 sys.path.insert(0,"../")
 from smodels_utils.dataPreparation.vertexChecking import VertexChecker
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
+from smodels.tools.physicsUnits import GeV,fb
 import logging
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -22,20 +23,13 @@ logger.setLevel(level=logging.INFO)
 
 def getMinMax ( tgraph ):
     """ get the frame that tgraphs fits in nicely """
-    minx, miny = float("inf"), float("inf")
-    maxx, maxy = 0., 0.
-    for i in range(tgraph.GetN()):
-        x, y = ROOT.Double(), ROOT.Double()
-        tgraph.GetPoint(i,x,y) 
-        if x<minx: minx=x
-        if y<miny: miny=y
-        if x>maxx: maxx=x
-        if y>maxy: maxy=y
-    minx=0.8*minx
-    miny=0.9*miny
-    maxx=1.2*maxx
-    maxy=1.2*maxy
 
+    xpts,ypts = tgraph.GetX(),tgraph.GetY()
+    minx = 0.8*ROOT.TMath.MinElement(tgraph.GetN(),xpts)
+    maxx = 1.2*ROOT.TMath.MaxElement(tgraph.GetN(),xpts)
+    miny = 0.9*ROOT.TMath.MinElement(tgraph.GetN(),ypts)
+    maxy = 1.2*ROOT.TMath.MaxElement(tgraph.GetN(),ypts)
+    
     return { "x": [minx,maxx], "y": [miny,maxy] }
 
 def getSuperFrame ( tgraphs ):
@@ -47,16 +41,40 @@ def getSuperFrame ( tgraphs ):
     maxx, maxy = 0., 0.
     for tgraph in tgraphs:
         frame = getMinMax ( tgraph )
-        if frame["x"][0] < minx:
-            minx = frame["x"][0]
-        if frame["x"][1] > maxx:
-            maxx = frame["x"][1]
-        if frame["y"][0] < miny:
-            miny = frame["y"][0]
-        if frame["y"][1] > maxy:
-            maxy = frame["y"][1]
+        minx = min(minx,frame["x"][0])
+        maxx = max(maxx,frame["x"][1])
+        miny = min(miny,frame["y"][0])
+        maxy = max(maxy,frame["y"][1])
     logger.info ( "the super frame is [%d,%d],[%d,%d]" % ( minx, maxx, miny, maxy ) )
     return { "x": [ minx, maxx], "y": [ miny, maxy ] }
+
+def getExtendedFrame(txnameObj,axes):
+    """
+    Gets the frame containing all points in the TxName data which belong
+    to the axes definition
+    :param txnameObj: TxName object
+    :param axes: Axes definition (string), i.e. 2*Eq(mother,x)_Eq(lsp,y)
+    :return: max and min values for x and y in the extended frame
+    """
+    
+    origPlot = OrigPlot.fromString(axes)
+    data = txnameObj.txnameData.data  #Data grid of mass points and ULs of efficiencies
+    minx, miny = float("inf"), float("inf")
+    maxx, maxy = 0., 0.
+    for pt in data:
+        mass = pt[0]
+        mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]
+        xy = origPlot.getXYValues(mass_unitless)
+        if xy is None: continue
+        else: x,y = xy
+        minx = min(minx,x)
+        miny = min(miny,y)
+        maxx = max(maxx,x)
+        maxy = max(maxy,y)
+        
+    return { "x": [ 0.8*minx, 1.2*maxx], "y": [ 0.9*miny, 1.2*maxy ] }
+        
+    
 
 def addQuotationMarks ( constraint ):
     """ [[[t+]],[[t-]]] -> [[['t+']],[['t-']]] """
@@ -78,44 +96,74 @@ def addQuotationMarks ( constraint ):
     return ret
 
 
-def getPoints ( tgraphs, txname="T2tt", axes = "2*Eq(mother,x)_Eq(lsp,y)", \
+def getPoints ( tgraphs, txnameObj, axes = "2*Eq(mother,x)_Eq(lsp,y)", \
                 constraint="[[[t+]],[[t-]]]", onshell=True, offshell=True ):
     """ given a TGraph object, returns list of points to probe. You define whether
         you want the onshell region or the offshell region (or both).
-        :param txname: txname
+        :param txnameObj: TxName object
         :param axes: the axes used to transform x,y into mass parameters (for the check
                 of the kinematic region)
         :param constraint: the constraint to check for onshell / offshellness
     """
+    
+    txname = txnameObj.getInfo('txname')
     vertexChecker = VertexChecker ( txname, addQuotationMarks ( constraint ) )
     print "[getPoints] vertexChecker constraint=",addQuotationMarks(constraint)
     print "[getPoints] vertexChecker kinconstraint=",vertexChecker.kinConstraints
-    frame=getSuperFrame ( tgraphs )
+    frame = getSuperFrame(tgraphs)
+    extframe = getExtendedFrame(txnameObj,axes)
+    origPlot = OrigPlot.fromString ( axes )
+    
+    #First generate points for the extended frame with a lower density:
+    minx,maxx=extframe["x"][0], extframe["x"][1]
+    miny,maxy=extframe["y"][0], extframe["y"][1]    
+    dx=(maxx-minx)/(10.-1.)
+    dy=(maxy-miny)/(10.-1.)
+    dx = round(dx/5.)*5.
+    dy = round(dy/5.)*5.
+    minx = round(minx/dx)*dx
+    miny = round(miny/dy)*dy
+    
+    ptsA = generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObj,axes,onshell
+                          ,offshell,origPlot,vertexChecker)
+    
+    #Now generate points for the exclusion curve frame with a higher density:
     minx,maxx=frame["x"][0], frame["x"][1]
-    miny,maxy=frame["y"][0], frame["y"][1]
-
+    miny,maxy=frame["y"][0], frame["y"][1]    
     dx=(maxx-minx)/(30.-1.)
     dy=(maxy-miny)/(20.-1.)
-    dx = round ( dx / 5. ) * 5.
-    dy = round ( dy / 5. ) * 5.
-    minx = round ( minx / dx ) * dx
-    miny = round ( miny / dy ) * dy
+    dx = round(dx/5.)*5.
+    dy = round(dy/5.)*5.
+    minx = round(minx/dx)*dx
+    miny = round(miny/dy)*dy
+    
+    ptsB = generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObj,axes,onshell
+                          ,offshell,origPlot,vertexChecker)
+    
+    pts = ptsA + ptsB
+    
+    return pts
 
 
-    origPlot = OrigPlot.fromString ( axes )
-
+def generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObj,axes,onshell,offshell,origPlot,vertexChecker):
     points=[]
     for i in numpy.arange ( minx, maxx+dx/2., dx ):
         for j in numpy.arange ( miny, maxy+dy/2., dy ):
-            masses = origPlot.getParticleMasses ( i,j )
+            masses_unitless = origPlot.getParticleMasses(i,j)
+            #Skip points with zero masses (too slow when running pythia)
+            if 0. in masses_unitless[0]+masses_unitless[1]: continue
+            masses = [[m*GeV for m in mm] for mm in masses_unitless]
+            #Skip points which are outside the grid
+            val = txnameObj.txnameData.getValueFor(masses)
+            if not type(val) == type(fb): continue
             ordered=True
             for k in range(len(masses[0])-1):
                 if masses[0][k]<=masses[0][k+1]:
                     ordered=False
             if not ordered:
                 continue
-            osv=vertexChecker.getOffShellVertices ( masses )
-            print "i,j = ",i,j,"masses = ",masses, "offshell=",osv,"axes=",axes
+            osv=vertexChecker.getOffShellVertices(masses_unitless)
+#             print "i,j = ",i,j,"masses = ",masses, "offshell=",osv,"axes=",axes
             if osv==[] and not onshell:
                 continue
             if not osv==[] and not offshell:

@@ -144,23 +144,26 @@ class TemplateFile(object):
                         OBS:  The cross-sections are computed only once per x-value
         :return: list of SLHA file names generated.
         """
-        
-        if not 'Eq(mother,x)' in self.axes and addXsecs:
-            logger.error("X value does not correspond to mother mass. Can not compute cross-sections.")
-            addXsecs = False
-        
-        #First sort points by x-values
-        sorted_pts = sorted(pts, key=lambda pt: pt[0])
-        x0 = None        
+
+        #First add the value of the mother masses for each (x,y) point:
+        mpts = []
+        for x,y in pts:
+            mother1 = self.origPlot.getParticleMasses(x,y)[0][0]
+            mother2 = self.origPlot.getParticleMasses(x,y)[1][0]
+            mpts.append([[mother1,mother2],x,y])
+        #Sort list of point by mother masses (to speed up xsec calculation):
+        sorted_pts = sorted(mpts, key=lambda pt: pt[0], reverse=True)
+        mother0 = None        
         slhafiles = []
         for pt in sorted_pts:
-            x,y = pt
+            mother = pt[0]
+            x,y = pt[1],pt[2]
             slhafile = self.createFileFor(x,y,massesInFileName=massesInFileName )
             if slhafile: slhafiles.append(slhafile)
             else: continue
             if not addXsecs: continue
             #Compute cross-sections every time the x-value changes
-            if not x0 or x0 != x:
+            if not mother0 or mother0 != mother:
                 if self.pythiaCard:
                     xsecsProc = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=1000, slhafile=slhafile,
                                         pythiacard=self.pythiaCard)
@@ -169,7 +172,6 @@ class TemplateFile(object):
                 addXSecToFile(xsecsLO,slhafile,comment="10k events (unit = pb)")
                 xsecsNLL = computeXSec(sqrts=8.*TeV, maxOrder=2, nevts=10000, slhafile=slhafile,
                                        loFromSlha=True)
-                for xsec in xsecsNLL: print 'X=',xsec
                 addXSecToFile(xsecsNLL,slhafile,comment="(unit = pb)")
             #If the x-value did not change, simply add the previously computed xsecs to file
             else:
@@ -177,7 +179,7 @@ class TemplateFile(object):
                     addXSecToFile(xsecsProc,slhafile,comment="1k events (unit = pb)")
                 addXSecToFile(xsecsLO,slhafile,comment="10k events (unit = pb)")                
                 addXSecToFile(xsecsNLL,slhafile,comment="(unit = pb)")
-            x0 = x
+            mother0 = mother
 
         return slhafiles
 

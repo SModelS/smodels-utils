@@ -15,10 +15,10 @@ cl.setLevel(level=logging.WARNING)
 dl.setLevel(level=logging.WARNING)
 tl.setLevel(level=logging.WARNING)
 
-txname = "T5tttt"
+txname = "T2tt"
 database = DataBase("/home/lessa/smodels-database/")
 expResList = database.getExpResults(txnames=[txname],datasetIDs=[None])
-slhadir = '/home/lessa/smodels-utils/slha/' + txname +'.tar'
+slhadir = '/home/lessa/smodels-utils/slha/' + txname +'_test.tar'
 validateTxName(expResList,txname,slhadir)
 
 # # 

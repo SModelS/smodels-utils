@@ -45,7 +45,7 @@ def main( txname= "T6bbWW" ):
         print "constraint=",onshell_constraint
         
 
-    listOfExpRes = database.getExpResults( txnames=[ txname ] )
+    listOfExpRes = database.getExpResults( txnames=[ txname ], datasetIDs = [None] )
 
     if type(listOfExpRes)!=list:
         listOfExpRes=[listOfExpRes]
@@ -55,6 +55,12 @@ def main( txname= "T6bbWW" ):
 
     # Compute the theory predictions for each analysis
     for expResult in listOfExpRes:
+        txnameList = expResult.getTxNames()
+        if len(txnameList) != 1:
+            print " %i Txname(s) found!" %len(txnameList)
+            print [tx.txname for tx in txnameList]
+            sys.exit()
+        else: txnameObj = txnameList[0]        
         print('\n',expResult)
         print(expResult.path)
         axes=expResult.getValuesFor("axes")
@@ -65,13 +71,13 @@ def main( txname= "T6bbWW" ):
             axes=[axes]
         for naxes in axes:
             print "naxes=",naxes
-            tgraph=getExclusionCurvesFor ( expResult,txname,naxes)
+            tgraph=getExclusionCurvesFor(expResult,txname,naxes)
             print "tgraph=",tgraph
             if not tgraph:
                 continue
             if not naxes in tgraphs:
                 tgraphs[naxes]=[]
-            tgraphs[naxes].append ( tgraph[txname][0] )
+            tgraphs[naxes].append(tgraph[txname][0])
             #print "get points"
     
             #pts = plotRanges.getPoints ( tgraph[txname][0], txname, naxes, constraint, onshell, offshell )
@@ -81,7 +87,7 @@ def main( txname= "T6bbWW" ):
             #points[naxes].append ( pts )
     for (axes,tgraphs) in tgraphs.items():
         print "--=----------------------"
-        pts = plotRanges.getPoints ( tgraphs, txname, axes, onshell_constraint, onshell, offshell )
+        pts = plotRanges.getPoints ( tgraphs, txnameObj, axes, onshell_constraint, onshell, offshell )
         print "axes=",axes
         print "txname=",txname
         print "onshell_constraint=",onshell_constraint
