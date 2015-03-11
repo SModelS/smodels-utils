@@ -88,6 +88,8 @@ def getPoints ( tgraphs, txname="T2tt", axes = "2*Eq(mother,x)_Eq(lsp,y)", \
         :param constraint: the constraint to check for onshell / offshellness
     """
     vertexChecker = VertexChecker ( txname, addQuotationMarks ( constraint ) )
+    print "[getPoints] vertexChecker constraint=",addQuotationMarks(constraint)
+    print "[getPoints] vertexChecker kinconstraint=",vertexChecker.kinConstraints
     frame=getSuperFrame ( tgraphs )
     minx,maxx=frame["x"][0], frame["x"][1]
     miny,maxy=frame["y"][0], frame["y"][1]
@@ -105,15 +107,20 @@ def getPoints ( tgraphs, txname="T2tt", axes = "2*Eq(mother,x)_Eq(lsp,y)", \
     points=[]
     for i in numpy.arange ( minx, maxx+dx/2., dx ):
         for j in numpy.arange ( miny, maxy+dy/2., dy ):
-            if i>j:
-                masses = origPlot.getParticleMasses ( i,j )
-                ## print "i,j",i,j,"m1,m2,m3",masses
-                osv=vertexChecker.getOffShellVertices ( masses )
-                if osv==[] and not onshell:
-                    continue
-                if not osv==[] and not offshell:
-                    continue
-                points.append ( [i,j] )
+            masses = origPlot.getParticleMasses ( i,j )
+            ordered=True
+            for k in range(len(masses[0])-1):
+                if masses[0][k]<=masses[0][k+1]:
+                    ordered=False
+            if not ordered:
+                continue
+            osv=vertexChecker.getOffShellVertices ( masses )
+            print "i,j = ",i,j,"masses = ",masses, "offshell=",osv,"axes=",axes
+            if osv==[] and not onshell:
+                continue
+            if not osv==[] and not offshell:
+                continue
+            points.append ( [i,j] )
     return points
 
 def draw ( graph, points ):
