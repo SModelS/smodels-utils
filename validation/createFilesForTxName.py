@@ -76,13 +76,16 @@ def main( txname= "T6bbWW" ):
             #    points[naxes]=[]
             #points[naxes].append ( pts )
     for (axes,tgraphs) in tgraphs.items():
-        pts = plotRanges.getPoints ( tgraphs, txname, naxes, onshell_constraint, onshell, offshell )
+        print "--=----------------------"
+        pts = plotRanges.getPoints ( tgraphs, txname, axes, onshell_constraint, onshell, offshell )
         print "axes=",axes
+        print "txname=",txname
+        print "onshell_constraint=",onshell_constraint
         print "points=",pts
+        print "len(pts)=",len(pts)
         # flatpts = plotRanges.mergeListsOfListsOfPoints ( pts )
         if len(pts)==0:
             continue
-        print "for",axes,"get",pts[-1]
         tempf=slhaCreator.TemplateFile ( templatefile,axes )
         slhafiles += tempf.createFilesFor ( pts )
 
