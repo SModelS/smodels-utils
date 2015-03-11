@@ -21,3 +21,4 @@ validation/twiki/twiki*.txt
 distribution/smodels-v*
 .project
 .pydevproject
+validation/pythia_??????.card
