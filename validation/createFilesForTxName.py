@@ -25,6 +25,10 @@ def main( txname= "T6bbWW" ):
     Main program. Displays basic use case.
 
     """
+    # first remove old slha files
+    cmd = "rm -f %s_??????.slha" % ( txname )
+    import commands
+    commands.getoutput ( cmd )
     onshell=True
     offshell=False
     if txname[-3:]=="off":
@@ -87,14 +91,15 @@ def main( txname= "T6bbWW" ):
         if len(pts)==0:
             continue
         tempf=slhaCreator.TemplateFile ( templatefile,axes )
-        slhafiles += tempf.createFilesFor ( pts )
+        slhafiles += tempf.createFilesFor ( pts, massesInFileName=True )
 
 
     import commands
     cmds=commands.getoutput ( "tar cvf %s.tar %s_*.slha" % ( txname, txname ) )
     print cmds
     #Remove SLHA files
-    for f in slhafiles: os.remove(f)
+    for f in slhafiles: 
+        if os.path.exists ( f ): os.remove(f)
     
 
 

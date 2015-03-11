@@ -64,7 +64,7 @@ class TemplateFile(object):
         self.origPlot = OrigPlot.fromString(self.axes)
         
 
-    def createFileFor(self,x,y,slhaname=None,computeXsecs=False):
+    def createFileFor(self,x,y,slhaname=None,computeXsecs=False, massesInFileName = False):
         """
         Creates a new SLHA file from the template.
         The entries on the template are replaced by the x,y values.
@@ -103,9 +103,15 @@ class TemplateFile(object):
         #Create SLHA filename (if not defined) 
         if not slhaname:
             templateName = self.path[self.path.rfind("/")+1:self.path.rfind(".")]
-            slhaname = tempfile.mkstemp(prefix=templateName+"_",suffix=".slha",dir=os.getcwd())
-            os.close(slhaname[0])
-            slhaname = slhaname[1]
+            if not massesInFileName:
+                slhaname = tempfile.mkstemp(prefix=templateName+"_",suffix=".slha",dir=os.getcwd())
+                os.close(slhaname[0])
+                slhaname = slhaname[1]
+            else:
+                slhaname = "%s" % ( templateName)
+                for i in masses:
+                    slhaname += "_%d" % i
+                slhaname += ".slha"
 
         fdata = fdata[:fdata.find('XSECTION')]
         
@@ -129,7 +135,7 @@ class TemplateFile(object):
         logger.info("File %s created." %slhaname)
         return slhaname
     
-    def createFilesFor(self,pts,addXsecs=True):
+    def createFilesFor(self,pts,addXsecs=True, massesInFileName=False):
         """
         Creates new SLHA files from the template for the respective (x,y) values in pts.
         For each distinct x value, new cross-sections will be computed.  
@@ -149,7 +155,7 @@ class TemplateFile(object):
         slhafiles = []
         for pt in sorted_pts:
             x,y = pt
-            slhafile = self.createFileFor(x,y)
+            slhafile = self.createFileFor(x,y,massesInFileName=massesInFileName )
             if slhafile: slhafiles.append(slhafile)
             else: continue
             if not addXsecs: continue
