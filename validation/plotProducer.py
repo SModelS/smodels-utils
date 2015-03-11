@@ -76,7 +76,7 @@ def validateTxName(expRes,txname,slhadir,kfactor=1.):
     else: expResList = expRes
     ret = {}
     for exp in expResList:
-        tgraphs = getExclusionCurvesFor(expRes,txname=txname)[txname]
+        tgraphs = getExclusionCurvesFor(exp,txname=txname)[txname]
         axes = []
         for tgraph in tgraphs:
             ax = tgraph.GetName()
@@ -86,7 +86,7 @@ def validateTxName(expRes,txname,slhadir,kfactor=1.):
         if not axes: continue
         ret = {exp.getValuesFor('id') : {}}
         for ax in axes: 
-            ret[exp.getValuesFor('id')][ax]= validatePlot(expRes,txname,ax,slhadir,
+            ret[exp.getValuesFor('id')][ax]= validatePlot(exp,txname,ax,slhadir,
                                                           kfactor=kfactor) 
     return ret ## return agreement factors
     
