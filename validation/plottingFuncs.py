@@ -122,7 +122,13 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     title = validationPlot.expRes.getValuesFor('id') + "_" \
             + validationPlot.txname\
             + "_" + validationPlot.axes
-
+    figureUrl=None
+    # print "validationPlut.txnames=",validationPlot.expRes.getTxNames()
+    #print "validationPlut.figureUrl=",validationPlot.expRes.getValuesFor("figureUrl")
+    for ( actr,axes) in enumerate ( validationPlot.expRes.getValuesFor("axes")[0] ):
+        if validationPlot.axes == axes:
+     #       print "figureUrl = ",validationPlot.expRes.getValuesFor("figureUrl")[0][actr]
+            figureUrl=validationPlot.expRes.getValuesFor("figureUrl")[0][actr] 
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
     base.Draw("AP")
     base.SetTitle(title)
@@ -132,6 +138,13 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     agreement = validationPlot.computeAgreementFactor()
     l.DrawLatex(.15,.8,"validation agreement %.1f %s" % (agreement*100, "%" ) )
     base.l=l
+    if figureUrl:
+        # print "dawing figureUrl"
+        l1=TLatex()
+        l1.SetNDC()
+        l1.SetTextSize(.025)
+        l1.DrawLatex(.12,.15,"%s" % figureUrl)
+        base.l1=l1
     if not silentMode: ans = raw_input("Hit any key to close\n")
     
     return plane,base
