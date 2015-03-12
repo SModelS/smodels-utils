@@ -309,6 +309,10 @@ class DatabaseCreator(list):
         else:
             region.axes = region.axes + ';' +\
             str(plane.origPlot)
+        if not hasattr(region, 'figureUrl'):
+            region.figureUrl=plane.figureUrl
+        else:
+            region.figureUrl += ";" + plane.figureUrl
     
     
     def _extendInfoAttr(self, obj, attr, position = None):
