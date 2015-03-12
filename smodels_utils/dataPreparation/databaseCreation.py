@@ -309,7 +309,6 @@ class DatabaseCreator(list):
         else:
             region.axes = region.axes + ';' +\
             str(plane.origPlot)
-        print "[databaseCreation] now add figureUrl to the region object"
         if not hasattr(region, 'figureUrl'):
             region.figureUrl=plane.figureUrl
         else:
