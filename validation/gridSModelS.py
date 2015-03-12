@@ -83,10 +83,10 @@ def runSModelSFor(validationPlot):
     sigmacut = 0. * fb
     mingap = 2. * GeV
     #Loop over SLHA files and compute results:
-    data = []
+    data = []    
     for slhafile in slhaFiles:
         smstoplist = slhaDecomposer.decompose(slhafile, sigmacut,\
-                        doCompress=True,doInvisible=True, minmassgap=mingap)        
+                        doCompress=True,doInvisible=True, minmassgap=mingap)
         predictions = theoryPredictionsFor(expRes, smstoplist)
         if not predictions: continue
         dataset = predictions.dataset

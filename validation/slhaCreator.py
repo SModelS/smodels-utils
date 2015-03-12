@@ -152,7 +152,7 @@ class TemplateFile(object):
             mother2 = self.origPlot.getParticleMasses(x,y)[1][0]
             mpts.append([[mother1,mother2],x,y])
         #Sort list of point by mother masses (to speed up xsec calculation):
-        sorted_pts = sorted(mpts, key=lambda pt: pt[0], reverse=True)
+        sorted_pts = sorted(mpts, key=lambda pt: pt[0])
         mother0 = None        
         slhafiles = []
         for pt in sorted_pts:
