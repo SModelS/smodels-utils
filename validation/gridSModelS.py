@@ -85,6 +85,10 @@ def runSModelSFor(validationPlot):
     #Loop over SLHA files and compute results:
     data = []
     for slhafile in slhaFiles:
+        print
+        print
+        print " slhafile ",slhafile
+        print "---------------------------"
         smstoplist = slhaDecomposer.decompose(slhafile, sigmacut,\
                         doCompress=True,doInvisible=True, minmassgap=mingap)        
         predictions = theoryPredictionsFor(expRes, smstoplist)
@@ -95,10 +99,16 @@ def runSModelSFor(validationPlot):
             txname = theoryPrediction.txname
             if txname and txname.txname  != validationPlot.txname: continue                      
             mass = theoryPrediction.mass
-            if not mass and len(smstoplist.getElements()) == 1:
-                mass = smstoplist.getElements()[0].getMasses()
-            elif not mass:
-                logger.error("Could not define mass for prediction.")
+            if not mass: # and len(smstoplist.getElements()) == 1:
+                for i in smstoplist.getElements():
+                    if str(i)!="[[],[]]":
+                        mass=i.getMasses()
+              #  mass = smstoplist.getElements()[0].getMasses()
+            if not mass:
+                logger.error("Could not define mass ``%s'' for prediction." % mass )
+                for i in smstoplist.getElements():
+                    print "element",i
+                    print "element masses=",i.getMasses()
                 sys.exit()            
             value = theoryPrediction.value
             cond = theoryPrediction.conditions
