@@ -22,8 +22,20 @@ def getExpIdFromPath ():
     """ get experimental id from path """
     ret=os.getcwd()
     ret=ret.replace("/validation","")
+    ret=ret.replace("-eff","")
     ret=ret[ret.rfind("/")+1:]
     return ret
+
+def getDatasetIdsFromPath(dir="../"):
+    """ determine the datasetids from the path"""
+    import os
+    files=os.listdir(dir)
+    datasetids=[]
+    for f in files:
+        if f.find("data")==0:
+            datasetids.append  ( f.replace("data-","").replace("ana","ANA").replace("cut","CUT" ) )
+    return datasetids
+
 
 def validatePlot(expRes,txname,axes,slhadir,kfactor=1.):
     """
