@@ -130,10 +130,13 @@ def getPoints ( tgraphs, txnameObj, axes = "2*Eq(mother,x)_Eq(lsp,y)", \
     #Now generate points for the exclusion curve frame with a higher density:
     minx,maxx=frame["x"][0], frame["x"][1]
     miny,maxy=frame["y"][0], frame["y"][1]    
+
+    #print "x=",minx,maxx
+    #print "y=",miny,maxy
     dx=(maxx-minx)/(30.-1.)
     dy=(maxy-miny)/(20.-1.)
-    dx = round(dx/5.)*5.
-    dy = round(dy/5.)*5.
+    dx = max(1,round(dx/5.)*5.)
+    dy = max(1,round(dy/5.)*5.)
     minx = round(minx/dx)*dx
     miny = round(miny/dy)*dy
     
