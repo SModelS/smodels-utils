@@ -148,6 +148,7 @@ class ValidationPlot():
         for ipt,pt in enumerate(self.data):
             pt['signal'] *= self.kfactor 
             self.data[ipt] = pt
+            self.data[ipt]['kfactor'] = self.kfactor
 
     def getPlot(self,silentMode=True):
         """

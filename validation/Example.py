@@ -15,12 +15,14 @@ cl.setLevel(level=logging.WARNING)
 dl.setLevel(level=logging.WARNING)
 tl.setLevel(level=logging.WARNING)
 
-database = DataBase(os.path.join(os.path.expanduser("~"),"smodels-database/"))
+home = os.path.expanduser("~")
+
+database = DataBase(os.path.join(home,"smodels-database/"))
 
 txname = "T2tt"
 expResList = database.getExpResults(datasetIDs=[None],txnames=[txname])
 k=1.
-slhadir = '/home/lessa/smodels-utils/slha/'+txname+'.tar'
+slhadir = os.path.join(home,'smodels-utils/slha/'+txname+'.tar')
 validateTxName(expResList,txname,slhadir,kfactor=k)
 # slhadir = '/home/lessa/smodels-utils/slha/' + txname +'_test.tar'
 # validateTxName(expResList,txname,slhadir)
