@@ -77,8 +77,9 @@ class DatabaseCreator(list):
         --date of last update is evaluated
         --old database files are deleted 
         --write info.txt 
-        --a empty StandardDataInfo-object is build
-        --a empty StandardTWiki-object is build
+        --a empty StandardDataInfo-object is built
+        --a empty StandardTWiki-object is built
+        --a validation folder is created and a validate.py script is added
         --loop over all txNames:
         ----VertexChecker-object is build
         ----empty StandardDataList objects are build for:
@@ -111,6 +112,7 @@ class DatabaseCreator(list):
         self._setLastUpdate()
         self._delete()
         self._createInfoFile(self.metaInfoFileName, self.metaInfo)
+        self._createValidationFolder ()
 
         self.tWiki = StandardTWiki(self.metaInfo)
         
@@ -419,6 +421,19 @@ class DatabaseCreator(list):
                 os.remove( self.base + self.infoFileDirectory + entry)
         except OSError,e:
             pass
+
+    def _createValidationFolder(self):
+        """ create the validation folder and populate it with validate.py """
+        if not os.path.exists ( self.validationPath ):
+            os.mkdir ( self.validationPath )
+        import inspect, commands
+        path = inspect.getfile ( self._createValidationFolder )
+        path=path.replace( "smodels_utils/dataPreparation/databaseCreation.py", "validation/scripts" )
+        cmd = "cp %s/validate.py %s" % ( path, self.validationPath ) 
+        print cmd
+        print commands.getoutput ( "cp %s/validate.py %s" % ( path, self.validationPath ) )
+        ### fixme add a few more, txname specific, only the plotting, etc ###
+
 
     def _createSmsRoot(self):
         
