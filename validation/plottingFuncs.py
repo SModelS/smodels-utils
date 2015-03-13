@@ -142,7 +142,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     title = validationPlot.expRes.getValuesFor('id') + "_" \
             + validationPlot.txname\
             + "_" + validationPlot.axes
-    figureUrl = getFigureUrl ( expRes )
+    figureUrl = getFigureUrl(validationPlot.expRes)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
     base.Draw("AP")
     base.SetTitle(title)
