@@ -60,6 +60,6 @@ database = DataBase(os.path.join(home,"smodels-database/"))
 # validateTxName(expRes,txname,slhadir)
 # 
 # How to validate all plots for all Txnames in one ExpRes:
-expRes = database.getExpResults(analysisIDs=['CMS-SUS-13-007'],datasetIDs=[None])
+expRes = database.getExpResults(analysisIDs=['CMS-SUS-13-004'],datasetIDs=[None])
 slhaDir = '/home/lessa/smodels-utils/slha/'
 validateExpRes(expRes,slhaDir)
