@@ -19,11 +19,11 @@ home = os.path.expanduser("~")
 
 database = DataBase(os.path.join(home,"smodels-database/"))
 
-txname = "T2tt"
-expResList = database.getExpResults(datasetIDs=[None],txnames=[txname])
-k=1.
-slhadir = os.path.join(home,'smodels-utils/slha/'+txname+'.tar')
-validateTxName(expResList,txname,slhadir,kfactor=k)
+# txname = "T2tt"
+# expResList = database.getExpResults(datasetIDs=[None],txnames=[txname])
+# k=1.
+# slhadir = os.path.join(home,'smodels-utils/slha/'+txname+'.tar')
+# validateTxName(expResList,txname,slhadir,kfactor=k)
 # slhadir = '/home/lessa/smodels-utils/slha/' + txname +'_test.tar'
 # validateTxName(expResList,txname,slhadir)
 
@@ -59,7 +59,7 @@ validateTxName(expResList,txname,slhadir,kfactor=k)
 # slhadir = '/home/lessa/smodels-utils/slha/T1bbbb.tar'
 # validateTxName(expRes,txname,slhadir)
 # 
-#How to validate all plots for all Txnames in one ExpRes:
-# expRes = database.getExpResults(analysisIDs=['CMS-SUS-13-004'],datasetIDs=[None])
-# slhaDir = '/home/lessa/smodels-utils/slha/'
-# validateExpRes(expRes,slhaDir)
+# How to validate all plots for all Txnames in one ExpRes:
+expRes = database.getExpResults(analysisIDs=['CMS-SUS-13-007'],datasetIDs=[None])
+slhaDir = '/home/lessa/smodels-utils/slha/'
+validateExpRes(expRes,slhaDir)
