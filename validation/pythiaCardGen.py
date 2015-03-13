@@ -52,13 +52,16 @@ MSEL=0        ! All MSSM processes, except Higgs production\n"
     if len(momPDGs) == 1: pids = [[momPDGs[0],momPDGs[0]]]
     elif len(momPDGs) == 2:  pids = [[momPDGs[0],momPDGs[1]]]
     else:
+        pids=[]
         for ipdg1,pdg1 in enumerate(momPDGs):
             for ipdg2 in range(ipdg1,len(momPDGs)):
                 pids.append([pdg1,momPDGs[ipdg2]])
     
     for pid in pids:
         procs = getProcessesFor(pid)
-        if not procs: return False
+        if not procs: 
+            continue
+            # return False
         for p in procs:
             f.write("MSUB("+str(p)+")=1\n")
     
@@ -130,6 +133,6 @@ def getProcessesFor(pidPair):
                 return isub
     
     logger.warning("Pythia process for %s not found" %str(pidPair))
-    import sys
-    sys.exit()
+    #import sys
+    #sys.exit()
     return False
