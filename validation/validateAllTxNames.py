@@ -22,7 +22,7 @@ for txname in txnames:
         print 'running for',txname
         expResList = database.getExpResults(datasetIDs=[None],txnames=[txname])
         k=1.
-	if 'TChi' in txname: k = 1.25
+        if 'TChi' in txname: k = 1.25
         slhadir = '/home/lessa/smodels-utils/slha/'+txname+'.tar'
         validateTxName(expResList,txname,slhadir,kfactor=k)
     except:
