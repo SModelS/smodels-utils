@@ -15,9 +15,13 @@ cl.setLevel(level=logging.WARNING)
 dl.setLevel(level=logging.WARNING)
 tl.setLevel(level=logging.WARNING)
 
-# txname = "T2ttoff"
 database = DataBase(os.path.join(os.path.expanduser("~"),"smodels-database/"))
-# expResList = database.getExpResults(txnames=[txname],datasetIDs=[None])
+
+txname = "T2tt"
+expResList = database.getExpResults(datasetIDs=[None],txnames=[txname])
+k=1.
+slhadir = '/home/lessa/smodels-utils/slha/'+txname+'.tar'
+validateTxName(expResList,txname,slhadir,kfactor=k)
 # slhadir = '/home/lessa/smodels-utils/slha/' + txname +'_test.tar'
 # validateTxName(expResList,txname,slhadir)
 
@@ -31,19 +35,19 @@ database = DataBase(os.path.join(os.path.expanduser("~"),"smodels-database/"))
 # axes = '2*Eq(mother,x)_Eq(lsp,y)'
 # validatePlot(expRes,txnameStr,axes,slhadir)
 
-#How to validate one single plot for a efficiency map analysis:
-expRes = database.getExpResults(analysisIDs=['ATLAS-CONF-2013-024'],
-                                datasetIDs=['ANA1-CUT0','ANA1-CUT1','ANA1-CUT2',
-                                            'ANA2-CUT0','ANA2-CUT1','ANA2-CUT2',
-                                            'ANA3-CUT0','ANA3-CUT1','ANA3-CUT2',
-                                            'ANA4-CUT0','ANA4-CUT1','ANA4-CUT2',
-                                            'ANA5-CUT0','ANA5-CUT1','ANA5-CUT2',
-                                            'ANA7-CUT0','ANA7-CUT1','ANA7-CUT2'],
-                                txnames=['T2tt'])
-slhadir = '/home/lessa/smodels-utils/slha/T2tt_test.tar'
-txnameStr = 'T2tt'
-axes = '2*Eq(mother,x)_Eq(lsp,y)'
-validatePlot(expRes,txnameStr,axes,slhadir)
+# #How to validate one single plot for a efficiency map analysis:
+# expRes = database.getExpResults(analysisIDs=['ATLAS-CONF-2013-024'],
+#                                 datasetIDs=['ANA1-CUT0','ANA1-CUT1','ANA1-CUT2',
+#                                             'ANA2-CUT0','ANA2-CUT1','ANA2-CUT2',
+#                                             'ANA3-CUT0','ANA3-CUT1','ANA3-CUT2',
+#                                             'ANA4-CUT0','ANA4-CUT1','ANA4-CUT2',
+#                                             'ANA5-CUT0','ANA5-CUT1','ANA5-CUT2',
+#                                             'ANA7-CUT0','ANA7-CUT1','ANA7-CUT2'],
+#                                 txnames=['T2tt'])
+# slhadir = '/home/lessa/smodels-utils/slha/T2tt_test.tar'
+# txnameStr = 'T2tt'
+# axes = '2*Eq(mother,x)_Eq(lsp,y)'
+# validatePlot(expRes,txnameStr,axes,slhadir)
 
  
 #How to validate all plots for a single Txname in one ExpRes:

@@ -142,7 +142,7 @@ class OrigPlot(object):
         xy_1 = self.branch_1.getXYValues(massArray[0])
         xy_2 = self.branch_2.getXYValues(massArray[1])
         if not xy_1 or not xy_2: return None
-        
+
         for i, value in enumerate(xy_1):
             if abs(value - xy_2[i]) > 0.00001:
                 Errors().unequalXYValues()
@@ -335,7 +335,7 @@ class Axes(object):
         equations = []
         for eq in self._equations:
             equation = eq.subs(x,self._xy[x])
-            equation = equation.subs(y,self._xy[y]) 
+            equation = equation.subs(y,self._xy[y])
             if equation != True: equations.append(equation)
 
         massDublets = []
