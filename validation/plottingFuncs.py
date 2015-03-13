@@ -63,6 +63,26 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None):
     
     return txnames
 
+def getFigureUrl ( expRes ):
+    if not validationPlot.expRes.getValuesFor("figureUrl"):
+        return None
+    figureUrl=None
+    #print "[plotting funcs] validationPlut.axes=",validationPlot.expRes.getValuesFor("axes")
+    #print "[plotting funcs] validationPlut.txname=",validationPlot.expRes.getValuesFor("txname")
+    #print "[plotting funcs] searching for",validationPlot.axes
+    #print "validationPlut.figureUrl=",validationPlot.expRes.getValuesFor("figureUrl")
+    for (idx,txname) in enumerate ( validationPlot.expRes.getValuesFor("txname") ):
+        if validationPlot.txname==txname:
+            if type ( validationPlot.expRes.getValuesFor("figureUrl")[idx] ) == str:
+                figureUrl = validationPlot.expRes.getValuesFor("figureUrl")[idx]
+                break
+            for ( actr,axes) in enumerate ( validationPlot.expRes.getValuesFor("axes")[idx] ):
+                if validationPlot.axes == axes:
+     #       print "figureUrl = ",validationPlot.expRes.getValuesFor("figureUrl")[0][actr]
+                    figureUrl=validationPlot.expRes.getValuesFor("figureUrl")[idx][actr] 
+                    break
+    #print "figureUrl=",figureUrl
+    return figureUrl
 
 def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     """
@@ -122,22 +142,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     title = validationPlot.expRes.getValuesFor('id') + "_" \
             + validationPlot.txname\
             + "_" + validationPlot.axes
-    figureUrl=None
-    #print "[plotting funcs] validationPlut.axes=",validationPlot.expRes.getValuesFor("axes")
-    #print "[plotting funcs] validationPlut.txname=",validationPlot.expRes.getValuesFor("txname")
-    #print "[plotting funcs] searching for",validationPlot.axes
-    #print "validationPlut.figureUrl=",validationPlot.expRes.getValuesFor("figureUrl")
-    for (idx,txname) in enumerate ( validationPlot.expRes.getValuesFor("txname") ):
-        if validationPlot.txname==txname:
-            if type ( validationPlot.expRes.getValuesFor("figureUrl")[idx] ) == str:
-                figureUrl = validationPlot.expRes.getValuesFor("figureUrl")[idx]
-                break
-            for ( actr,axes) in enumerate ( validationPlot.expRes.getValuesFor("axes")[idx] ):
-                if validationPlot.axes == axes:
-     #       print "figureUrl = ",validationPlot.expRes.getValuesFor("figureUrl")[0][actr]
-                    figureUrl=validationPlot.expRes.getValuesFor("figureUrl")[idx][actr] 
-                    break
-    #print "figureUrl=",figureUrl
+    figureUrl = getFigureUrl ( expRes )
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
     base.Draw("AP")
     base.SetTitle(title)
