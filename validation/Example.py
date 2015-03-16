@@ -19,14 +19,12 @@ home = os.path.expanduser("~")
 
 database = DataBase(os.path.join(home,"smodels-database/"))
 
-txname = "T5tttt"
+txname = "T6bbWWoff"
 expResList = database.getExpResults(datasetIDs=[None],txnames=[txname],
-                                    analysisIDs=['ATLAS-CONF-2013-007'])
+                                    analysisIDs=['ATLAS-SUSY-2013-19'])
 k=1.
 slhadir = os.path.join(home,'smodels-utils/slha/'+txname+'.tar')
 validateTxName(expResList,txname,slhadir,kfactor=k)
-slhadir = '/home/lessa/smodels-utils/slha/' + txname +'_test.tar'
-validateTxName(expResList,txname,slhadir)
 
 # # 
 # # 

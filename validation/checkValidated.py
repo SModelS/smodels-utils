@@ -18,12 +18,12 @@ for expRes in database.getExpResults(datasetIDs=[None]):
         if txname.getInfo('validated'): validated.append([txname,expRes])  
         else: not_validated.append([txname,expRes])
 
+check = not_validated
 ans = raw_input("Open plots? (y/n) \n")
 if ans.lower() == 'y':
     showPlots = True
     ans2 = raw_input("Check only not validated plots? (y/n) \n")
-    if ans2.lower() == 'y': check = not_validated
-    else:  check = validated + not_validated 
+    if ans2.lower() == 'n': check += validated     
 else: showPlots = False
 
 
@@ -54,9 +54,9 @@ for txname,expRes in check:
                 l = 'validated: '+str(validated)+'\n'
             tdata += l
         tf.close()
-#         tf = open(txfile,'w')
-#         tf.write(tdata)
-#         tf.close()
+        tf = open(txfile,'w')
+        tf.write(tdata)
+        tf.close()
         for plot in plots:
             plot.terminate()
             plot.kill()
