@@ -64,28 +64,47 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None):
     return txnames
 
 def getFigureUrl ( validationPlot ):
-    if not validationPlot.expRes.getValuesFor("figureUrl"):
+    txnameinfo = validationPlot.expRes.getTxnameWith ( { "txname": validationPlot.txname } )
+    if type ( txnameinfo.getInfo ( "figureUrl" ) ) != type ( txnameinfo.getInfo ( "axes" )  ):
+            logger.error ( "figureUrl and axes are not of the same type" )
+            sys.exit()
+    if type ( txnameinfo.getInfo ( "figureUrl" ) ) == str:
+        return txnameinfo.getInfo ( "figureUrl" )
+    if not validationPlot.axes in txnameinfo.getInfo ( "axes" ):
         return None
-    figureUrl=None
-    #print "[plotting funcs] validationPlut.axes=",validationPlot.expRes.getValuesFor("axes")
-    #print "[plotting funcs] validationPlut.txname=",validationPlot.expRes.getValuesFor("txname")
-    #print "[plotting funcs] searching for",validationPlot.axes
-    #print "validationPlot.figureUrl=",validationPlot.expRes.getValuesFor("figureUrl")
-    if type ( validationPlot.expRes.getValuesFor("figureUrl") ) == str:
-        # just one entry
-        return validationPlot.expRes.getValuesFor("figureUrl")
-    for (idx,txname) in enumerate ( validationPlot.expRes.getValuesFor("txname") ):
-        if validationPlot.txname==txname:
-            if type ( validationPlot.expRes.getValuesFor("figureUrl")[idx] ) == str:
-                figureUrl = validationPlot.expRes.getValuesFor("figureUrl")[idx]
-                break
-            for ( actr,axes) in enumerate ( validationPlot.expRes.getValuesFor("axes")[idx] ):
-                if validationPlot.axes == axes:
-     #       print "figureUrl = ",validationPlot.expRes.getValuesFor("figureUrl")[0][actr]
-                    figureUrl=validationPlot.expRes.getValuesFor("figureUrl")[idx][actr] 
-                    break
-    #print "[plotting funcs] figureUrl=",figureUrl
-    return figureUrl
+    pos = [ i for i,x in enumerate ( txnameinfo.getInfo ( "axes" ) ) if x==validationPlot.axes ]
+    if len(pos)!=1:
+        logger.error ( "found axes %d times" % len(pos ) )
+        sys.exit()
+    print "pos=",pos
+    return txnameinfo.getInfo ( "figureUrl" )[ pos[0] ]
+    #idx = txnameinfo.getInfo ( "axes" ).find ( validationPlot.axes )
+
+    #print "figureUrl=", txnameinfo.getInfo ( "figureUrl" )
+    #print "axes=", txnameinfo.getInfo ( "axes" )
+
+    #if not validationPlot.expRes.getValuesFor("figureUrl"):
+    #    return None
+    #figureUrl=None
+    ##print "[plotting funcs] validationPlut.axes=",validationPlot.expRes.getValuesFor("axes")
+    ##print "[plotting funcs] validationPlut.txname=",validationPlot.expRes.getValuesFor("txname")
+    ##print "[plotting funcs] searching for",validationPlot.axes
+    ##print "validationPlot.figureUrl=",validationPlot.expRes.getValuesFor("figureUrl")
+    #if type ( validationPlot.expRes.getValuesFor("figureUrl") ) == str:
+    #    # just one entry
+    #    return validationPlot.expRes.getValuesFor("figureUrl")
+    #for (idx,txname) in enumerate ( validationPlot.expRes.getValuesFor("txname") ):
+    #    if validationPlot.txname==txname:
+    #        if type ( validationPlot.expRes.getValuesFor("figureUrl")[idx] ) == str:
+    #            figureUrl = validationPlot.expRes.getValuesFor("figureUrl")[idx]
+    #            break
+    #        for ( actr,axes) in enumerate ( validationPlot.expRes.getValuesFor("axes")[idx] ):
+    #            if validationPlot.axes == axes:
+    # #       print "figureUrl = ",validationPlot.expRes.getValuesFor("figureUrl")[0][actr]
+    #                figureUrl=validationPlot.expRes.getValuesFor("figureUrl")[idx][actr] 
+    #                break
+    ##print "[plotting funcs] figureUrl=",figureUrl
+    #return figureUrl
 
 def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     """
@@ -100,11 +119,18 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     # Check if data has been defined:
     excluded, allowed, excluded_border, allowed_border = TGraph(), TGraph(), TGraph(), TGraph()
     cond_violated=TGraph()
+    kfactor=None
+
     if not validationPlot.data:
         logger.warning("Data for validation plot is not defined.")
     else:
         # Get excluded and allowed points:
         for pt in validationPlot.data:
+            if kfactor == None:
+                kfactor = pt ['kfactor']
+            if abs ( kfactor - pt['kfactor'] ) > 1e-5:
+                logger.error("kfactor not a constant throughout the plane!")
+                sys.exit()
             x, y = pt['axes']
             #print pt
             if pt['condition'] and max(pt['condition'].values() ) > 0.05:
@@ -163,6 +189,12 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         l1.SetTextSize(.025)
         l1.DrawLatex(.12,.15,"%s" % figureUrl)
         base.l1=l1
+    l2=TLatex()
+    l2.SetNDC()
+    l2.SetTextSize(.04)
+    l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor ) 
+    base.l2=l2
+
     if not silentMode: ans = raw_input("Hit any key to close\n")
     
     return plane,base
