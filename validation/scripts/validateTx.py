@@ -30,5 +30,5 @@ if len (sys.argv)<2:
     sys.exit()
     
 txname=sys.argv[1]
-print validatePlot(exp,txname,axes,slhamain+"%s.tar" % txname )
+print validatePlot(expRes,txname,axes,slhamain+"%s.tar" % txname )
 
