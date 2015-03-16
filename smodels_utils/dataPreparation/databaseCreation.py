@@ -433,7 +433,7 @@ class DatabaseCreator(list):
         for i in scripts:
             cmd = "cp %s/%s %s" % ( path, i, self.validationPath ) 
             print cmd
-            print commands.getoutput ( "cp %s/validate.py %s" % ( path, self.validationPath ) )
+            print commands.getoutput ( "cp %s/%s %s" % ( path, i, self.validationPath ) )
         ### fixme add a few more, txname specific, only the plotting, etc ###
 
 
