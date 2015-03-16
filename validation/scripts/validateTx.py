@@ -25,8 +25,8 @@ axes="2*Eq(mother,x)_Eq(inter0,2.0*y)_Eq(lsp,y)"
 slhamain = '../../../../../smodels-utils/slha/'
 ## txname="T6bbWW"
 
-if len (sys.argv<2):
-    print "pleasse supply txname"
+if len (sys.argv)<2:
+    print "please supply txname"
     sys.exit()
     
 txname=sys.argv[1]
