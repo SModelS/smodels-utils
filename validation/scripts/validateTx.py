@@ -2,12 +2,13 @@
 
 import argparse, types
 argparser = argparse.ArgumentParser(description="validates one pair of txname / axes")
-argparser.add_argument ( '-T', '--txname', nargs='?', help='txname',
+argparser.add_argument ( '-T', '--txname', nargs='?', help='txname [T1]',
                 type=types.StringType, default='T1' )
-argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description',
+argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description [2*Eq(mother,x)_Eq(lsp,y)]',
                 type=types.StringType, default='2*Eq(mother,x)_Eq(lsp,y)' )
+argparser.add_argument ( '-k', '--kfactor', nargs='?', help='k factor [1.0]',
+                type=types.FloatType, default=1.0 )
 args=argparser.parse_args() 
-print validatePlot(expRes,args.txname,args.axes,slhamain+"%s.tar" % args.txname )
 
 
 import sys,os
@@ -34,3 +35,4 @@ expRes = database.getExpResults(analysisIDs=[getExpIdFromPath()],datasetIDs=[Non
 slhamain = '../../../../../smodels-utils/slha/'
 ## txname="T6bbWW"
 
+print validatePlot(expRes,args.txname,args.axes,slhamain+"%s.tar" % args.txname, kfactor=args.kfactor )
