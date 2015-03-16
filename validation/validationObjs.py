@@ -71,11 +71,23 @@ class ValidationPlot():
             :param looseness: how much do we loosen the criterion? I.e. by what factor do we
             change the cross sections in favor of getting the right assignment?
         """
+        import ROOT
         curve=self.getOfficialCurve()
         if not curve:
             logger.error( "could not get official tgraph curve for %s %s %s" % ( self.expRes,self.txname,self.axes  ) )
             return 1.0
-        curve.SetPoint( curve.GetN()+1,0.,0.) ## close the curve nicely
+        x0=ROOT.Double()
+        y0=ROOT.Double()
+        x=ROOT.Double()
+        y=ROOT.Double()
+        curve.GetPoint ( 0, x0, y0 ) ## get the last point
+        curve.GetPoint ( curve.GetN()-1, x, y ) ## get the last point
+        curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
+        curve.SetPoint ( curve.GetN(), x0, 0. )  ## extend to first point
+        #for i in range ( curve.GetN() ):
+        #    curve.GetPoint ( i, x, y )
+        #    print "[computeAgreementFactor] i,x,y=",i,x,y
+        # curve.SetPoint( curve.GetN()+1,0.,0.) ## close the curve nicely
         n_points=0
         pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0, "not_excluded_inside": 0,
                "not_excluded_outside": 0, "wrong" : 0 }
