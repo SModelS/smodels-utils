@@ -70,7 +70,10 @@ def getFigureUrl ( validationPlot ):
     #print "[plotting funcs] validationPlut.axes=",validationPlot.expRes.getValuesFor("axes")
     #print "[plotting funcs] validationPlut.txname=",validationPlot.expRes.getValuesFor("txname")
     #print "[plotting funcs] searching for",validationPlot.axes
-    #print "validationPlut.figureUrl=",validationPlot.expRes.getValuesFor("figureUrl")
+    #print "validationPlot.figureUrl=",validationPlot.expRes.getValuesFor("figureUrl")
+    if type ( validationPlot.expRes.getValuesFor("figureUrl") ) == str:
+        # just one entry
+        return validationPlot.expRes.getValuesFor("figureUrl")
     for (idx,txname) in enumerate ( validationPlot.expRes.getValuesFor("txname") ):
         if validationPlot.txname==txname:
             if type ( validationPlot.expRes.getValuesFor("figureUrl")[idx] ) == str:
@@ -81,7 +84,7 @@ def getFigureUrl ( validationPlot ):
      #       print "figureUrl = ",validationPlot.expRes.getValuesFor("figureUrl")[0][actr]
                     figureUrl=validationPlot.expRes.getValuesFor("figureUrl")[idx][actr] 
                     break
-    #print "figureUrl=",figureUrl
+    #print "[plotting funcs] figureUrl=",figureUrl
     return figureUrl
 
 def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
@@ -103,8 +106,8 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         # Get excluded and allowed points:
         for pt in validationPlot.data:
             x, y = pt['axes']
-            print pt
-            if pt['condition'] and max(pt['condition'].values() ) > 0.01:
+            #print pt
+            if pt['condition'] and max(pt['condition'].values() ) > 0.05:
                 #print "pt['condition']",pt['condition']
                 logger.warning("Condition violated for file " + pt['slhafile'])
                 cond_violated.SetPoint(cond_violated.GetN(), x, y)
