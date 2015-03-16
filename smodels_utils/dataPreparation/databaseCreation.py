@@ -429,9 +429,11 @@ class DatabaseCreator(list):
         import inspect, commands
         path = inspect.getfile ( self._createValidationFolder )
         path=path.replace( "smodels_utils/dataPreparation/databaseCreation.py", "validation/scripts" )
-        cmd = "cp %s/validate.py %s" % ( path, self.validationPath ) 
-        print cmd
-        print commands.getoutput ( "cp %s/validate.py %s" % ( path, self.validationPath ) )
+        scripts = [ "validate.py", "validateTx.py", "plotValidation.py" ]
+        for i in scripts:
+            cmd = "cp %s/%s %s" % ( path, i, self.validationPath ) 
+            print cmd
+            print commands.getoutput ( "cp %s/validate.py %s" % ( path, self.validationPath ) )
         ### fixme add a few more, txname specific, only the plotting, etc ###
 
 
