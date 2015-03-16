@@ -67,10 +67,13 @@ def getFigureUrl ( validationPlot ):
     if not validationPlot.expRes.getValuesFor("figureUrl"):
         return None
     figureUrl=None
-    #print "[plotting funcs] validationPlut.axes=",validationPlot.expRes.getValuesFor("axes")
-    #print "[plotting funcs] validationPlut.txname=",validationPlot.expRes.getValuesFor("txname")
-    #print "[plotting funcs] searching for",validationPlot.axes
-    #print "validationPlut.figureUrl=",validationPlot.expRes.getValuesFor("figureUrl")
+    print "[plotting funcs] validationPlut.axes=",validationPlot.expRes.getValuesFor("axes")
+    print "[plotting funcs] validationPlut.txname=",validationPlot.expRes.getValuesFor("txname")
+    print "[plotting funcs] searching for",validationPlot.axes
+    print "validationPlot.figureUrl=",validationPlot.expRes.getValuesFor("figureUrl")
+    if type ( validationPlot.expRes.getValuesFor("figureUrl") ) == str:
+        # just one entry
+        return validationPlot.expRes.getValuesFor("figureUrl")
     for (idx,txname) in enumerate ( validationPlot.expRes.getValuesFor("txname") ):
         if validationPlot.txname==txname:
             if type ( validationPlot.expRes.getValuesFor("figureUrl")[idx] ) == str:
@@ -81,7 +84,7 @@ def getFigureUrl ( validationPlot ):
      #       print "figureUrl = ",validationPlot.expRes.getValuesFor("figureUrl")[0][actr]
                     figureUrl=validationPlot.expRes.getValuesFor("figureUrl")[idx][actr] 
                     break
-    #print "figureUrl=",figureUrl
+    print "[plotting funcs] figureUrl=",figureUrl
     return figureUrl
 
 def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
