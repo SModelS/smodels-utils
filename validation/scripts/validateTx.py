@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 
+import argparse, types
+argparser = argparse.ArgumentParser(description="validates one pair of txname / axes")
+argparser.add_argument ( '-T', '--txname', nargs='?', help='txname',
+                type=types.StringType, default='T1' )
+argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description',
+                type=types.StringType, default='2*Eq(mother,x)_Eq(lsp,y)' )
+args=argparser.parse_args() 
+print validatePlot(expRes,args.txname,args.axes,slhamain+"%s.tar" % args.txname )
+
+
 import sys,os
 sys.path.insert(0,"/home/walten/git/smodels-utils/validation/")
 sys.path.insert(0,"/home/walten/git/smodels-utils/")
@@ -23,13 +33,4 @@ expRes = database.getExpResults(analysisIDs=[getExpIdFromPath()],datasetIDs=[Non
 ## axes="2*Eq(mother,x)_Eq(lsp,y)"
 slhamain = '../../../../../smodels-utils/slha/'
 ## txname="T6bbWW"
-
-import argparse, types
-argparser = argparse.ArgumentParser(description="validates one pair of txname / axes")
-argparser.add_argument ( '-T', '--txname', nargs='?', help='txname',
-                type=types.StringType, default='T1' )
-argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description',
-                type=types.StringType, default='2*Eq(mother,x)_Eq(lsp,y)' )
-args=argparser.parse_args() 
-print validatePlot(expRes,args.txname,args.axes,slhamain+"%s.tar" % args.txname )
 
