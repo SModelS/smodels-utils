@@ -161,7 +161,7 @@ class ValidationPlot():
 
     def savePlot(self,validationDir=None):
         """
-        Saves the plot in .png format in the validationDir folder.
+        Saves the plot in .pdf format in the validationDir folder.
         If the folder does not exist, it will be created.
         If the folder is not defined the plot will be created in the
         analysis/validation/ folder
@@ -182,7 +182,7 @@ class ValidationPlot():
             logger.info("Creating validation folder "+vDir)
             os.mkdir(vDir)
 
-        filename = self.plot.GetTitle()+'.png'
+        filename = self.plot.GetTitle()+'.pdf'
         filename = filename.replace(self.expRes.getValuesFor('id')+"_","")
         filename = os.path.join(vDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")

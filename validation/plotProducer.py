@@ -125,7 +125,7 @@ def validateExpRes(expRes,slhaDir,kfactorDict=None):
             slhadir = os.path.join(slhaDir,txname+'.tar')
             if not os.path.isfile(slhadir):
                 logger.error("SLHA files for %s not found in %s" %(txname,slhadir))
-                return False
+                continue
         if not kfactorDict or not txname in kfactorDict:
             kfactor=1.
         else: kfactor = kfactorDict[txname]

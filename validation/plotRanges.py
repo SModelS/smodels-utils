@@ -188,7 +188,7 @@ def draw ( graph, points ):
     if type(graph)==list:
         for g in graph:
             g.Draw("same")
-    ROOT.c1.Print("save.png")
+    ROOT.c1.Print("save.pdf")
 
 if __name__ == "__main__":
     filename="/home/walten/git/smodels-database/8TeV/ATLAS/ATLAS-SUSY-2013-19/sms.root"

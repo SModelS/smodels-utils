@@ -37,4 +37,4 @@ for expResult in listOfExpRes:
     tgraph[txname][0].Draw("same")
     cont.append ( tgraph)
 
-ROOT.c1.Print("check_%s.png" % txname )
+ROOT.c1.Print("check_%s.pdf" % txname )

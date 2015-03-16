@@ -103,6 +103,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         # Get excluded and allowed points:
         for pt in validationPlot.data:
             x, y = pt['axes']
+            print pt
             if pt['condition'] and max(pt['condition'].values() ) > 0.01:
                 #print "pt['condition']",pt['condition']
                 logger.warning("Condition violated for file " + pt['slhafile'])

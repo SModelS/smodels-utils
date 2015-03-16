@@ -31,17 +31,24 @@ print '# Validated Txnames =',len(validated)
 
 print '# Not Validated Txnames =',len(not_validated)
 
+miss_plots = []
 for txname,expRes in check:    
     print expRes.getValuesFor('id'),txname.txname    
     expDir = expRes.path
     valDir = os.path.join(expDir,'validation')
     #Check the plots
-    if showPlots:
-        plots = []    
-        for fig in glob.glob(valDir+"/"+txname.txname+"*.png"):
-            plots.append(subprocess.Popen(['eog',fig]))
-        print '***',len(plots),'PLOT(S) FOUND***'
-        if not plots: continue        
+    plots = []    
+    for fig in glob.glob(valDir+"/"+txname.txname+"_*.pdf"):
+        if showPlots: plots.append(subprocess.Popen(['eog',fig]))
+        else: plots.append(fig)
+    axes = txname.getInfo('axes')
+    if not isinstance(axes,list): axes = [axes]
+    print '***',len(plots),'PLOT(S) FOUND for %i axes***' %len(axes)
+    if len(axes) != len(plots) and plots: print '------>',len(axes)-len(plots),'plot(s) missing'
+    if not plots:
+        miss_plots.append([txname,expRes])
+        continue      
+    if showPlots:      
         val = raw_input("TxName is validated? (y/n) \n")
         if val.lower() == 'y': validated = True
         else: validated = False
@@ -60,7 +67,9 @@ for txname,expRes in check:
         for plot in plots:
             plot.terminate()
             plot.kill()
-        
-    
+
+if miss_plots:        
+    print '\n\n MISSING PLOTS FOR:'
+    for txname,expRes in miss_plots: print expRes.getValuesFor('id'),txname.txname    
 
     
