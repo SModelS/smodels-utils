@@ -89,6 +89,8 @@ def validateTxName(expRes,txname,slhadir,kfactor=1.):
     ret = {}
     for exp in expResList:
         tgraphs = getExclusionCurvesFor(exp,txname=txname)[txname]
+        if not tgraphs:
+            continue
         axes = []
         for tgraph in tgraphs:
             ax = tgraph.GetName()
