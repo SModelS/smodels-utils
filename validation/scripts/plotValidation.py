@@ -15,7 +15,8 @@ sys.path.insert(0,"../../../../../smodels/")
 
 from smodels.experiment.databaseObjects import DataBase
 from validation.plotProducer import ValidationPlot, getExpIdFromPath
-from smodels.tools.physicsUnits import pb
+from smodels.tools.physicsUnits import pb, fb
+NAN=float('nan')
 
 ## ValidationPlot.computeWrongnessFactor = computeWrongnessFactor
 
