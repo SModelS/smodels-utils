@@ -67,7 +67,7 @@ def getFigureUrl ( validationPlot ):
     txnameinfo = validationPlot.expRes.getTxnameWith ( { "txname": validationPlot.txname } )
     if type ( txnameinfo ) == list:
         logger.error ( "received a list for .getTxnameWith. Dont know what to do with this" )
-        return None
+        txnameinfo=txnameinfo[0]
     if type ( txnameinfo.getInfo ( "figureUrl" ) ) != type ( txnameinfo.getInfo ( "axes" )  ):
             logger.error ( "figureUrl and axes are not of the same type" )
             sys.exit()
