@@ -68,11 +68,14 @@ def getFigureUrl ( validationPlot ):
     if type ( txnameinfo ) == list:
         logger.error ( "received a list for .getTxnameWith. Dont know what to do with this" )
         txnameinfo=txnameinfo[0]
-    if type ( txnameinfo.getInfo ( "figureUrl" ) ) != type ( txnameinfo.getInfo ( "axes" )  ):
-            logger.error ( "figureUrl and axes are not of the same type" )
-            sys.exit()
     if type ( txnameinfo.getInfo ( "figureUrl" ) ) == str:
         return txnameinfo.getInfo ( "figureUrl" )
+    if not txnameinfo.getInfo ( "figureUrl" ):
+        return None
+    if type ( txnameinfo.getInfo ( "figureUrl" ) ) != type ( txnameinfo.getInfo ( "axes" )  ):
+            logger.error ( "figureUrl (%s) and axes (%s) are not of the same type" % ( txnameinfo.getInfo ( "figureUrl" ),
+                       txnameinfo.getInfo ( "axes" )  ) )
+            return None
     if not validationPlot.axes in txnameinfo.getInfo ( "axes" ):
         return None
     pos = [ i for i,x in enumerate ( txnameinfo.getInfo ( "axes" ) ) if x==validationPlot.axes ]
@@ -166,11 +169,11 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     setOptions(excluded_border, Type='excluded_border')
     setOptions(official, Type='official')
     base = TMultiGraph()
-    base.Add(allowed, "P")
-    base.Add(excluded, "P")
-    base.Add(allowed_border, "P")
-    base.Add(excluded_border, "P")
-    base.Add(cond_violated, "P")
+    if allowed.GetN()>0: base.Add(allowed, "P")
+    if excluded.GetN()>0: base.Add(excluded, "P")
+    if allowed_border.GetN()>0: base.Add(allowed_border, "P")
+    if excluded_border.GetN()>0: base.Add(excluded_border, "P")
+    if cond_violated.GetN()>0: base.Add(cond_violated, "P")
     base.Add(official, "C")
     title = validationPlot.expRes.getValuesFor('id') + "_" \
             + validationPlot.txname\
