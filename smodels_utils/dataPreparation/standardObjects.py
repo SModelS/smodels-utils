@@ -43,7 +43,7 @@ class StandardDataInfo(object):
         """
         Checks and sets datatype
         :raise datatypeError: if a datatype diferent
-        from the allrady existing one is given
+        from the already existing one is given
         """
         if not self._datatype:
             self._datatype = datatype
@@ -99,7 +99,7 @@ class StandardDataList(list):
         """
         append StandardDataList with [massArray, value]
         if there is no entry with the same massArray
-        allready in StandardDataList
+        already in StandardDataList
         
         :raise valueDifferenceWarning: If there are two entries 
         with same massArray but different values
@@ -338,7 +338,7 @@ class Errors(object):
     def valueDifference(self, massArray, oldValue, value):
         
         m = '------------------------\n'
-        m = m + "WARNING: massPoint: %s allrady in \n" %massArray
+        m = m + "WARNING: massPoint: %s already in \n" %massArray
         m = m + "but differ in value: %s v.s. %s" %(oldValue, value)
         m = m + '\n------------------------'
         print(m)
