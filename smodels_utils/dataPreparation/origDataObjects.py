@@ -92,8 +92,14 @@ class Orig(Locker):
         txtFile.close
         for line in content:
             #print(line)
+            if line.find("#")>-1:
+                line=line[:line.find("#")]
+                if line=="":
+                    continue
             try:
                 values = line.split()
+                if values==[]:
+                    continue
             except:
                 Errors().txtFormat(self.path, 'Orig')
             values = [value.strip() for value in values] 
