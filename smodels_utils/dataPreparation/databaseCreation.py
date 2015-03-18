@@ -431,9 +431,10 @@ class DatabaseCreator(list):
         path=path.replace( "smodels_utils/dataPreparation/databaseCreation.py", "validation/scripts" )
         scripts = [ "validate.py", "validateTx.py", "plotValidation.py" ]
         for i in scripts:
-            cmd = "cp %s/%s %s" % ( path, i, self.validationPath ) 
-            print cmd
-            print commands.getoutput ( "cp %s/%s %s" % ( path, i, self.validationPath ) )
+            if not os path.exists ( "%s/%s" % ( self.validationPath, i ) ):
+                cmd = "cp %s/%s %s" % ( path, i, self.validationPath ) 
+                print cmd
+                print commands.getoutput ( "cp %s/%s %s" % ( path, i, self.validationPath ) )
         ### fixme add a few more, txname specific, only the plotting, etc ###
 
 
