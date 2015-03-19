@@ -16,7 +16,7 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import fb, GeV
 from gridSModelS import runSModelSFor
-from plottingFuncs import createPlot, getExclusionCurvesFor
+from plottingFuncs import createPlot, createBestCutPlot, getExclusionCurvesFor
 
 logger.setLevel(level=logging.DEBUG)
 
@@ -170,6 +170,10 @@ class ValidationPlot():
         """
 
         self.plot,self.base = createPlot(self,silentMode)
+
+
+    def getBestCutPlot(self,silentMode=True):
+        self.plot = createBestCutPlot ( self, silentMode )
 
     def savePlot(self,validationDir=None):
         """
