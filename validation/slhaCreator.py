@@ -92,7 +92,8 @@ class TemplateFile(object):
             
         #First check if the axes labels defined in axesDict match the template's
         if set(massDict.keys()) - set(self.tags):
-            logger.error("Labels do not match the ones defined in %s" %self.path)
+            logger.error("Labels do not match the ones defined in %s. keys=%s. tags=%s." % \
+                ( self.path, str(set(massDict.keys())), str(set(self.tags))) )
             return False
         #Replace the axes labels by their mass values:
         ftemplate = open(self.path,'r')

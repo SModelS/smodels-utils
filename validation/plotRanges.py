@@ -23,7 +23,8 @@ logger.setLevel(level=logging.INFO)
 
 def getMinMax ( tgraph ):
     """ get the frame that tgraphs fits in nicely """
-
+    if tgraph.GetN() == 0:
+        return None
     xpts,ypts = tgraph.GetX(),tgraph.GetY()
     minx = 0.8*ROOT.TMath.MinElement(tgraph.GetN(),xpts)
     maxx = 1.2*ROOT.TMath.MaxElement(tgraph.GetN(),xpts)
@@ -41,6 +42,8 @@ def getSuperFrame ( tgraphs ):
     maxx, maxy = 0., 0.
     for tgraph in tgraphs:
         frame = getMinMax ( tgraph )
+        if not frame:
+            continue
         minx = min(minx,frame["x"][0])
         maxx = max(maxx,frame["x"][1])
         miny = min(miny,frame["y"][0])
