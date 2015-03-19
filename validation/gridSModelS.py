@@ -95,10 +95,10 @@ def runSModelSFor(validationPlot):
             txname = theoryPrediction.txname
             if txname and txname.txname  != validationPlot.txname: continue                      
             mass = theoryPrediction.mass
-            if not mass: # and len(smstoplist.getElements()) == 1:
-                for i in smstoplist.getElements():
-                    if str(i)!="[[],[]]":
-                        mass=i.getMasses()
+#             if not mass: # and len(smstoplist.getElements()) == 1:
+#                 for i in smstoplist.getElements():
+#                     if str(i)!="[[],[]]":
+#                         mass=i.getMasses()
             if not mass:
                 logger.error("Could not define mass ``%s'' for prediction." % mass )         
             value = theoryPrediction.value
