@@ -304,7 +304,7 @@ class DatabaseCreator(list):
         self._extendInfoAttr(region, self.txNameField,0)
         setattr(region, self.txNameField, txName.name + region.topoExtension)
         self._extendInfoAttr(region, 'validated')
-        region.validated = False
+        region.validated = None
         self._extendInfoAttr(region, 'axes')
         if not hasattr(region, 'axes'):
             region.axes = str(plane.origPlot)

@@ -86,6 +86,123 @@ def getFigureUrl ( validationPlot ):
     return txnameinfo.getInfo ( "figureUrl" )[ pos[0] ]
 
 
+def createBestCutPlot(validationPlot,silentMode=True,looseness=1.2):
+    """
+    Uses the data in validationPlot.data and the official exclusion curve
+    in validationPlot.officialCurve to generate the exclusion plot
+    
+    :param validationPlot: ValidationPlot object
+    :param silentMode: If True the plot will not be shown on the screen
+    :return: TCanvas object containing the plot
+    """
+    kfactor=None
+
+    excluded, allowed, excluded_border, allowed_border = TGraph(), TGraph(), TGraph(), TGraph()
+    cond_violated=TGraph()
+    if not validationPlot.data:
+        logger.warning("Data for validation plot is not defined.")
+    else:
+        # Get excluded and allowed points:
+        for pt in validationPlot.data:
+            if kfactor == None:
+                kfactor = pt ['kfactor']
+            if abs ( kfactor - pt['kfactor'] ) > 1e-5:
+                logger.error("kfactor not a constant throughout the plane!")
+                sys.exit()
+            x, y = pt['axes']
+            #print pt
+            if pt['condition'] and max(pt['condition'].values() ) > 0.05:
+                #print "pt['condition']",pt['condition']
+                logger.warning("Condition violated for file " + pt['slhafile'])
+                cond_violated.SetPoint(cond_violated.GetN(), x, y)
+            elif pt['signal'] > pt['UL']:
+                if pt['signal'] < pt ['UL']* looseness:
+                    excluded_border.SetPoint(excluded_border.GetN(), x, y)
+                else:
+                    excluded.SetPoint(excluded.GetN(), x, y )
+            else:
+                if pt['signal']*looseness > pt['UL']:
+                    allowed_border.SetPoint(allowed_border.GetN(), x, y)
+                else:
+                    allowed.SetPoint(allowed.GetN(), x, y)
+
+    labels=[]
+
+    # Check if official exclusion curve has been defined:
+    if not validationPlot.officialCurve:
+        logger.warning("Official curve for validation plot is not defined.")
+    else:
+        official = validationPlot.officialCurve
+    
+    if silentMode: gROOT.SetBatch()    
+    setOptions(allowed, Type='allowed')
+    setOptions(cond_violated, Type='cond_violated')
+    setOptions(allowed_border, Type='allowed_border')
+    setOptions(excluded, Type='excluded')
+    setOptions(excluded_border, Type='excluded_border')
+    setOptions(official, Type='official')
+    base = TMultiGraph()
+    if allowed.GetN()>0: base.Add(allowed, "P")
+    if excluded.GetN()>0: base.Add(excluded, "P")
+    if allowed_border.GetN()>0: base.Add(allowed_border, "P")
+    if excluded_border.GetN()>0: base.Add(excluded_border, "P")
+    if cond_violated.GetN()>0: base.Add(cond_violated, "P")
+    base.Add(official, "C")
+    title = "best_cut_"+validationPlot.expRes.getValuesFor('id') + "_" \
+            + validationPlot.txname\
+            + "_" + validationPlot.axes
+    figureUrl = getFigureUrl(validationPlot)
+    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
+    base.Draw("AP")
+    base.SetTitle(title)
+    l=TLatex()
+    l.SetNDC()
+    l.SetTextSize(.04)
+    agreement = validationPlot.computeAgreementFactor()
+    l.DrawLatex(.15,.85,"validation agreement %.1f %s" % (agreement*100, "%" ) )
+    base.l=l
+    if figureUrl:
+        # print "dawing figureUrl"
+        l1=TLatex()
+        l1.SetNDC()
+        l1.SetTextSize(.02)
+        l1.DrawLatex(.12,.1,"%s" % figureUrl)
+        base.l1=l1
+
+    if not validationPlot.data:
+        logger.warning("Data for validation plot is not defined.")
+    else:
+        # Get excluded and allowed points:
+        for pt in validationPlot.data:
+            if kfactor == None:
+                kfactor = pt ['kfactor']
+            if abs ( kfactor - pt['kfactor'] ) > 1e-5:
+                logger.error("kfactor not a constant throughout the plane!")
+                sys.exit()
+            x, y = pt['axes']
+            import ROOT
+            lk=ROOT.TLatex ()
+            lk.SetTextSize(.02)
+            cut=pt["dataset"].replace("ANA","").replace("CUT","")
+            lk.DrawLatex ( x, y, cut )
+            print "draw",x,y,pt["dataset"]
+            labels.append ( lk )
+
+    l2=TLatex()
+    l2.SetNDC()
+    l2.SetTextSize(.04)
+    l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor ) 
+    base.l2=l2
+    plane.base = base
+
+    if not silentMode: ans = raw_input("Hit any key to close\n")
+
+    plane.labels=labels
+    
+    return plane
+            
+        
+
 def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     """
     Uses the data in validationPlot.data and the official exclusion curve
