@@ -12,11 +12,15 @@ database = DataBase(os.path.join(os.path.expanduser("~"),"smodels-database/"))
 
 validated = []
 not_validated = []
+not_checked = []
 for expRes in database.getExpResults(datasetIDs=[None]):
     for txname in expRes.getTxNames():
         if 'assigned' in txname.getInfo('constraint'): continue
-        if txname.getInfo('validated'): validated.append([txname,expRes])  
-        else: not_validated.append([txname,expRes])
+        if txname.getInfo('validated') is True: validated.append([txname,expRes])  
+        elif txname.getInfo('validated') is False: not_validated.append([txname,expRes])
+        elif txname.getInfo('validated') is None: not_checked.append([txname,expRes])
+        else: print "Unknown field %s",txname.getInfo('validated')
+        
 
 check = not_validated
 ans = raw_input("Open plots? (y/n) \n")
@@ -31,6 +35,8 @@ print '# Validated Txnames =',len(validated)
 
 print '# Not Validated Txnames =',len(not_validated)
 
+print '# Not Checked Txnames =',len(not_checked)
+
 miss_plots = []
 for txname,expRes in check:    
     print expRes.getValuesFor('id'),txname.txname    
@@ -39,7 +45,7 @@ for txname,expRes in check:
     #Check the plots
     plots = []    
     for fig in glob.glob(valDir+"/"+txname.txname+"_*.pdf"):
-        if showPlots: plots.append(subprocess.Popen(['evince',fig]))
+        if showPlots: plots.append(subprocess.Popen(['evince','--preview',fig]))
         else: plots.append(fig)
     if glob.glob(valDir+"/"+txname.txname+"_*.comment"):
         print '== Comment file found =='

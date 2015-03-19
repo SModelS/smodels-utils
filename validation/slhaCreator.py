@@ -221,7 +221,7 @@ class TemplateFile(object):
         if not smstoplist or not smstoplist.getElements():
             logger.error("Decomposition produced no results.")
             return False
-        
+                
         allEls = smstoplist.getElements()
         goodEl = False
         for elA in txnameObj._elements:            

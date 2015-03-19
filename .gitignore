@@ -22,3 +22,4 @@ distribution/smodels-v*
 .project
 .pydevproject
 validation/pythia_??????.card
+*~
