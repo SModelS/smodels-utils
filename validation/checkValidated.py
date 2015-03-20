@@ -62,9 +62,10 @@ for txname,expRes in check:
         miss_plots.append([txname,expRes])
         continue      
     if showPlots:      
-        val = raw_input("TxName is validated? (y/n) \n")
+        val = raw_input("TxName is validated? (y/n/i) \n")
         if val.lower() == 'y': validated = True
-        else: validated = False
+        elif val.lower() == 'n': validated = False
+        else: validated = None
         #Rewrite txname.txt file with validation result
         txfile = txname.getInfo('txnameFile')
         tf = open(txfile,'r')
