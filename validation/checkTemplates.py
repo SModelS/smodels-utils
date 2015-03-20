@@ -25,7 +25,7 @@ templateDir = '../slha/templates'
 
 missTxnames = []
 badTemplates = []
-database = DataBase("/home/lessa/smodels-database/")
+database = DataBase(os.path.expanduser("~/smodels-database/"))
 for expRes in database.expResultList:
     #Skip efficiency-map analyses:
     if 'efficiency-map' in expRes.getValuesFor('datatype'): continue
