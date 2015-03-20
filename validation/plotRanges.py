@@ -44,11 +44,11 @@ def getSuperFrame ( tgraphs ):
         frame = getMinMax ( tgraph )
         if not frame:
             continue
-        minx = min(minx,frame["x"][0])
-        maxx = max(maxx,frame["x"][1])
-        miny = min(miny,frame["y"][0])
-        maxy = max(maxy,frame["y"][1])
-    logger.info ( "the super frame is [%d,%d],[%d,%d]" % ( minx, maxx, miny, maxy ) )
+        minx = int(min(minx,frame["x"][0]))
+        maxx = int(max(maxx,frame["x"][1]))
+        miny = int(min(miny,frame["y"][0]))
+        maxy = int(max(maxy,frame["y"][1]))
+    logger.info ( "the super frame is [%f,%f],[%f,%f]" % ( minx, maxx, miny, maxy ) )
     return { "x": [ minx, maxx], "y": [ miny, maxy ] }
 
 def getExtendedFrame(txnameObj,axes):
@@ -153,6 +153,8 @@ def getPoints ( tgraphs, txnameObj, axes = "2*Eq(mother,x)_Eq(lsp,y)", \
 
 def generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObj,axes,onshell,offshell,origPlot,vertexChecker):
     points=[]
+    if minx==float('inf') or abs(maxx)<1e-5:
+        return points
     for i in numpy.arange ( minx, maxx+dx/2., dx ):
         for j in numpy.arange ( miny, maxy+dy/2., dy ):
             masses_unitless = origPlot.getParticleMasses(i,j)
