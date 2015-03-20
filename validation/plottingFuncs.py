@@ -111,9 +111,6 @@ def createBestCutPlot(validationPlot,silentMode=True,looseness=1.2):
                 sys.exit()
             x, y = pt['axes']
 #             print pt
-            if pt['UL'] is None:
-                logger.warning("ERROR interpolating UL for %s" %pt['slhafile'])
-                continue
             if pt['condition'] and max(pt['condition'].values() ) > 0.05:
                 #print "pt['condition']",pt['condition']
                 logger.warning("Condition violated for file " + pt['slhafile'])
@@ -233,9 +230,6 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
                 sys.exit()
             x, y = pt['axes']
 #             print pt
-            if pt['UL'] is None:
-                logger.warning("ERROR interpolating UL for %s" %pt['slhafile'])
-                continue            
             if pt['condition'] and max(pt['condition'].values() ) > 0.05:
                 #print "pt['condition']",pt['condition']
                 logger.warning("Condition violated for file " + pt['slhafile'])
