@@ -368,9 +368,9 @@ class Errors(object):
     
         m = self._starLine#
         m = m + "Error in StandardDataList\n"
-        m = m + "there is a particle with higher mass then the privous one in:\n"
+        m = m + "there is a particle with higher mass then the previous one in:\n"
         m = m + "%s\n" %massArray
-        m = m + 'please check your mass plane deffintion at convert.py'
+        m = m + 'please check your mass plane definition at convert.py'
         m = m + self._starLine
         print(m)
         sys.exit()
