@@ -19,14 +19,14 @@ home = os.path.expanduser("~")
 
 database = DataBase(os.path.join(home,"smodels-database/"))
 
-txname = "T6bbWWoff"
+txname = "T2tt"
 expResList = database.getExpResults(datasetIDs=[None],txnames=[txname],
-                                    analysisIDs=['ATLAS-SUSY-2013-05'])
+                                    analysisIDs=['ATLAS-SUSY-2013-15'])
 k=1.
 slhadir = os.path.join(home,'smodels-utils/slha/'+txname+'.tar')
 axes = '2*Eq(mother,x)_Eq(inter0,y+5.0)_Eq(lsp,y)'
-# validateTxName(expResList,txname,slhadir,kfactor=k)
-validatePlot(expResList,txname,axes,slhadir,kfactor=k)
+validateTxName(expResList,txname,slhadir,kfactor=k)
+# validatePlot(expResList,txname,axes,slhadir,kfactor=k)
 
 # # 
 # # 

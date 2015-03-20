@@ -22,12 +22,17 @@ for expRes in database.getExpResults(datasetIDs=[None]):
         else: print "Unknown field %s",txname.getInfo('validated')
         
 
-check = not_validated
+check = validated + not_validated + not_checked
 ans = raw_input("Open plots? (y/n) \n")
 if ans.lower() == 'y':
     showPlots = True
-    ans2 = raw_input("Check only not validated plots? (y/n) \n")
-    if ans2.lower() == 'n': check += validated     
+    ans2 = raw_input("Check: \n (a) all plots \n (b) not checked and not validated\
+     \n (c) not checked \n (d) not validated \n (e) validated \n")
+    if ans2.lower() == 'a': check = validated + not_validated + not_checked
+    elif ans2.lower() == 'b': check = not_validated + not_checked
+    elif ans2.lower() == 'c': check = not_checked
+    elif ans2.lower() == 'd': check = not_validated
+    elif ans2.lower() == 'e': check = validated
 else: showPlots = False
 
 
