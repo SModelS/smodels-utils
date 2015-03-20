@@ -110,7 +110,7 @@ def createBestCutPlot(validationPlot,silentMode=True,looseness=1.2):
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
             x, y = pt['axes']
-            #print pt
+#             print pt
             if pt['condition'] and max(pt['condition'].values() ) > 0.05:
                 #print "pt['condition']",pt['condition']
                 logger.warning("Condition violated for file " + pt['slhafile'])
@@ -229,7 +229,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
             x, y = pt['axes']
-            #print pt
+#             print pt
             if pt['condition'] and max(pt['condition'].values() ) > 0.05:
                 #print "pt['condition']",pt['condition']
                 logger.warning("Condition violated for file " + pt['slhafile'])
