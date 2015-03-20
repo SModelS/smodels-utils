@@ -8,7 +8,7 @@
 
 """
 
-import logging,os
+import logging,os,sys
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -84,33 +84,7 @@ def getFigureUrl ( validationPlot ):
         sys.exit()
     print "pos=",pos
     return txnameinfo.getInfo ( "figureUrl" )[ pos[0] ]
-    #idx = txnameinfo.getInfo ( "axes" ).find ( validationPlot.axes )
 
-    #print "figureUrl=", txnameinfo.getInfo ( "figureUrl" )
-    #print "axes=", txnameinfo.getInfo ( "axes" )
-
-    #if not validationPlot.expRes.getValuesFor("figureUrl"):
-    #    return None
-    #figureUrl=None
-    ##print "[plotting funcs] validationPlut.axes=",validationPlot.expRes.getValuesFor("axes")
-    ##print "[plotting funcs] validationPlut.txname=",validationPlot.expRes.getValuesFor("txname")
-    ##print "[plotting funcs] searching for",validationPlot.axes
-    ##print "validationPlot.figureUrl=",validationPlot.expRes.getValuesFor("figureUrl")
-    #if type ( validationPlot.expRes.getValuesFor("figureUrl") ) == str:
-    #    # just one entry
-    #    return validationPlot.expRes.getValuesFor("figureUrl")
-    #for (idx,txname) in enumerate ( validationPlot.expRes.getValuesFor("txname") ):
-    #    if validationPlot.txname==txname:
-    #        if type ( validationPlot.expRes.getValuesFor("figureUrl")[idx] ) == str:
-    #            figureUrl = validationPlot.expRes.getValuesFor("figureUrl")[idx]
-    #            break
-    #        for ( actr,axes) in enumerate ( validationPlot.expRes.getValuesFor("axes")[idx] ):
-    #            if validationPlot.axes == axes:
-    # #       print "figureUrl = ",validationPlot.expRes.getValuesFor("figureUrl")[0][actr]
-    #                figureUrl=validationPlot.expRes.getValuesFor("figureUrl")[idx][actr] 
-    #                break
-    ##print "[plotting funcs] figureUrl=",figureUrl
-    #return figureUrl
 
 def createBestCutPlot(validationPlot,silentMode=True,looseness=1.2):
     """
