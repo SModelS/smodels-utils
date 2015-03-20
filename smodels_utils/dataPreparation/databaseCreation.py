@@ -238,10 +238,10 @@ class DatabaseCreator(list):
             massArray = plane.origPlot.getParticleMasses(x,y)
             #massArray = [massPoints,massPoints]
             dataList.append(massArray, value)
-            self._computeKinRegions(massArray, i, plane, vertexChecker, txName)
+            self._computeKinRegions(massArray, i, plane, vertexChecker, txName, limitType )
         return dataList
         
-    def _computeKinRegions(self, massArray, i, plane, vertexChecker, txName):
+    def _computeKinRegions(self, massArray, i, plane, vertexChecker, txName, limitType ):
         
         """
         checks to which kin reagion a mass array belongs 
@@ -265,6 +265,7 @@ class DatabaseCreator(list):
         :param plane: inputObjects.MetaInfoInput-objects
         :param vertexChecker: standardObjects.VertexChecker-object
         :param txName: inputObjects.TxNameInput-object
+        :param limitType: type off limit (limit, expectedlimit, or None for efficiencyMap)
         :raise kinRegionSetterError: if the 'region-exist' is not True, False or 'auto'
         """
         
@@ -275,14 +276,14 @@ class DatabaseCreator(list):
                 if not isinstance(regionExist , bool):
                     Errors().kinRegionSetter(txName.name, region.name, \
                     regionPreSet)
-                if regionExist == True and i == 0:
+                if regionExist == True and i == 0 and limitType != "expectedlimit":
                     self._setRegionAttr(txName, region, plane)
                 continue
             if not vertexChecker: 
                 Errors().notAssigned(txName.name)
             offShellVertices = \
             vertexChecker.getOffShellVertices(massArray)
-            if region.checkoffShellVertices(offShellVertices):
+            if region.checkoffShellVertices(offShellVertices) and limitType != "expectedlimit":
                 setattr(plane, region.name, True)
                 self._setRegionAttr(txName, region, plane)
     
