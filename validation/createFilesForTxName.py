@@ -64,9 +64,6 @@ def main( txname= "T6bbWW" ):
         print('\n',expResult)
         print(expResult.path)
         axes=expResult.getValuesFor("axes")
-        #constraint= expResult.getValuesFor("constraint") 
-        # print "constraint=",constraint
-        #  constraint="[[['t+']],[['t-']]]"
         if type(axes)==str:
             axes=[axes]
         for naxes in axes:
@@ -78,13 +75,7 @@ def main( txname= "T6bbWW" ):
             if not naxes in tgraphs:
                 tgraphs[naxes]=[]
             tgraphs[naxes].append(tgraph[txname][0])
-            #print "get points"
-    
-            #pts = plotRanges.getPoints ( tgraph[txname][0], txname, naxes, constraint, onshell, offshell )
-            #print "got points"
-            #if not naxes in points:
-            #    points[naxes]=[]
-            #points[naxes].append ( pts )
+
     for (axes,tgraphs) in tgraphs.items():
         print "--=----------------------"
         pts = plotRanges.getPoints ( tgraphs, txnameObj, axes, onshell_constraint, onshell, offshell )

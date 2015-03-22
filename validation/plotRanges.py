@@ -74,8 +74,13 @@ def getExtendedFrame(txnameObj,axes):
         miny = min(miny,y)
         maxx = max(maxx,x)
         maxy = max(maxy,y)
-        
-    return { "x": [ 0.8*minx, 1.2*maxx], "y": [ 0.9*miny, 1.2*maxy ] }
+
+    minx = 0.8*minx
+    maxx = 1.2*maxx
+    miny = 0.9*miny
+    maxy = 1.2*maxy
+    logger.info ( "the extended frame is [%f,%f],[%f,%f]" % ( minx, maxx, miny, maxy ) )  
+    return { "x": [ minx, maxx], "y": [ miny, maxy ] }
         
     
 
