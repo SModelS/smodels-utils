@@ -35,7 +35,7 @@ plot.data=validationData
 agreement = plot.computeAgreementFactor()
 print "agreement=",agreement
 
-if args.plottype=="plane":
+if args.plottype=="plain":
     plot.getPlot()
 else:
     plot.getSpecialPlot( what=args.plottype )
