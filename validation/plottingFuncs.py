@@ -184,7 +184,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
             import ROOT
             lk=ROOT.TLatex ()
             lk.SetTextSize(.02)
-            if what == "bestregion":
+            if what in [ "bestregion", "bestcut" ]:
                 bestregion=pt["dataset"].replace("ANA","").replace("CUT","")
                 lk.DrawLatex ( x, y, bestregion )
                 print "draw",x,y,pt["dataset"]
@@ -211,7 +211,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     drawingwhat="upper limits [pb]"
     if what == "crosssections":
         drawingwhat="theory predictions [pb]"
-    if what == "bestregion":
+    if what in [ "bestregion", "bestcut" ]:
         drawingwhat="best signal region"
     l3.DrawLatex(.15,.7, drawingwhat )
     base.l3=l3
