@@ -14,7 +14,7 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 from ROOT import TFile,TGraph,gROOT,TMultiGraph,TCanvas,TLatex,TLegend,kGreen,kRed,kOrange
-from smodels.tools.physicsUnits import fb, GeV
+from smodels.tools.physicsUnits import fb, GeV, pb
 
 
 def getExclusionCurvesFor(expResult,txname=None,axes=None):
@@ -85,14 +85,15 @@ def getFigureUrl ( validationPlot ):
     print "pos=",pos
     return txnameinfo.getInfo ( "figureUrl" )[ pos[0] ]
 
-
-def createBestCutPlot(validationPlot,silentMode=True,looseness=1.2):
+def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestregion" ):
     """
     Uses the data in validationPlot.data and the official exclusion curve
-    in validationPlot.officialCurve to generate the exclusion plot
+    in validationPlot.officialCurve to generate "special" plots, showing
+    e.g. upper limits or best signal region
     
     :param validationPlot: ValidationPlot object
     :param silentMode: If True the plot will not be shown on the screen
+    :param what: what is to be plotted ( "bestregion", "upperlimits", "crosssections")
     :return: TCanvas object containing the plot
     """
     kfactor=None
@@ -148,7 +149,7 @@ def createBestCutPlot(validationPlot,silentMode=True,looseness=1.2):
     if excluded_border.GetN()>0: base.Add(excluded_border, "P")
     if cond_violated.GetN()>0: base.Add(cond_violated, "P")
     base.Add(official, "C")
-    title = "best_cut_"+validationPlot.expRes.getValuesFor('id') + "_" \
+    title = what+"_"+validationPlot.expRes.getValuesFor('id') + "_" \
             + validationPlot.txname\
             + "_" + validationPlot.axes
     figureUrl = getFigureUrl(validationPlot)
@@ -183,16 +184,37 @@ def createBestCutPlot(validationPlot,silentMode=True,looseness=1.2):
             import ROOT
             lk=ROOT.TLatex ()
             lk.SetTextSize(.02)
-            cut=pt["dataset"].replace("ANA","").replace("CUT","")
-            lk.DrawLatex ( x, y, cut )
-            print "draw",x,y,pt["dataset"]
+            if what == "bestregion":
+                bestregion=pt["dataset"].replace("ANA","").replace("CUT","")
+                lk.DrawLatex ( x, y, bestregion )
+                print "draw",x,y,pt["dataset"]
+            elif what == "upperlimits":
+                ul=pt["UL"].asNumber(pb)
+                lk.DrawLatex ( x, y, str(ul) )
+            elif what == "crosssections":
+                signalxsec=pt['signal'].asNumber(pb)
+                lk.DrawLatex ( x, y, str(signalxsec) )
+                # print "point",pt["axes"],pt["signal"]
+            else:
+                logger.error( "dont know how to draw %s" % what )
+                sys.exit()
             labels.append ( lk )
 
     l2=TLatex()
     l2.SetNDC()
     l2.SetTextSize(.04)
-    l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor ) 
+    l2.DrawLatex(.15,.78,"k-factor %.2f" % kfactor ) 
     base.l2=l2
+    l3=TLatex()
+    l3.SetNDC()
+    l3.SetTextSize(.04)
+    drawingwhat="upper limits [pb]"
+    if what == "crosssections":
+        drawingwhat="theory predictions [pb]"
+    if what == "bestregion":
+        drawingwhat="best signal region"
+    l3.DrawLatex(.15,.7, drawingwhat )
+    base.l3=l3
     plane.base = base
 
     if not silentMode: ans = raw_input("Hit any key to close\n")

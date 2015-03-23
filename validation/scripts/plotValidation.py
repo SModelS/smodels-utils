@@ -4,6 +4,9 @@ import argparse, types
 argparser = argparse.ArgumentParser(description="validates one pair of txname / axes")
 argparser.add_argument ( '-T', '--txname', nargs='?', help='txname [default T1]',
                 type=types.StringType, default='T1' )
+argparser.add_argument ( '-p', '--plottype', nargs='?', help=
+                'plottype [plain, bestcut, upperlimits, crosssections. default plain]',
+                type=types.StringType, default='plain' )
 argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description [default 2*Eq(mother,x)_Eq(lsp,y)]',
                 type=types.StringType, default='2*Eq(mother,x)_Eq(lsp,y)' )
 args=argparser.parse_args() 
@@ -32,7 +35,10 @@ plot.data=validationData
 agreement = plot.computeAgreementFactor()
 print "agreement=",agreement
 
-plot.getPlot()
+if args.plottype=="plane":
+    plot.getPlot()
+else:
+    plot.getSpecialPlot( what=args.plottype )
 plot.savePlot()
 
 # import IPython

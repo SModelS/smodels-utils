@@ -16,7 +16,7 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import fb, GeV
 from gridSModelS import runSModelSFor
-from plottingFuncs import createPlot, createBestCutPlot, getExclusionCurvesFor
+from plottingFuncs import createPlot, getExclusionCurvesFor, createSpecialPlot
 
 logger.setLevel(level=logging.DEBUG)
 
@@ -172,8 +172,14 @@ class ValidationPlot():
         self.plot,self.base = createPlot(self,silentMode)
 
 
-    def getBestCutPlot(self,silentMode=True):
-        self.plot = createBestCutPlot ( self, silentMode )
+    def getSpecialPlot(self,silentMode=True,what = "bestregion"):
+        """ get one of the special plots.
+            :param what: which special plot
+                         bestregion = best analysis/cut pair 
+                         upperlimits = upper limits on prod xsec (pb) 
+                         crosssections = theory prediction, in pb
+        """
+        self.plot = createSpecialPlot ( self, silentMode, 1.2, what )
 
     def savePlot(self,validationDir=None):
         """
