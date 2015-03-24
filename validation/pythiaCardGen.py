@@ -127,9 +127,9 @@ def getProcessesFor(pidPair):
             elif pids[1] in ptcDic[pair[1]] and pids[0] == pair[0]:
                 return isub 
         elif isinstance(pair[0],str) and isinstance(pair[1],str):            
-            if pids[0] in ptcDic[pair[0]] and pids[1] == ptcDic[pair[1]]:
+            if pids[0] in ptcDic[pair[0]] and pids[1] in ptcDic[pair[1]]:
                 return isub
-            elif pids[0] in ptcDic[pair[1]] and pids[1] == ptcDic[pair[0]]:
+            elif pids[0] in ptcDic[pair[1]] and pids[1] in ptcDic[pair[0]]:
                 return isub
     
     logger.warning("Pythia process for %s not found" %str(pidPair))
