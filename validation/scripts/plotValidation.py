@@ -13,8 +13,9 @@ args=argparser.parse_args()
 
 
 import sys,os
-sys.path.insert(0,"../../../../../smodels-utils/")
-sys.path.insert(0,"../../../../../smodels/")
+home = os.path.expanduser("~")
+sys.path.insert(0,os.path.join(home,"smodels-utils/"))
+sys.path.insert(0,os.path.join(home,"smodels/"))
 
 from smodels.experiment.databaseObjects import DataBase
 from validation.plotProducer import ValidationPlot, getExpIdFromPath
@@ -26,7 +27,7 @@ NAN=float('nan')
 filename="%s_%s.py" % ( args.txname, args.axes.replace("(","").replace(")","").replace(",","").replace("*","") )
 execfile(filename)
 
-database = DataBase("../../../../")
+database = DataBase(os.path.join(home,"smodels-database"))
 expRes = database.getExpResults(analysisIDs=[ getExpIdFromPath() ],datasetIDs=[None])
 
 

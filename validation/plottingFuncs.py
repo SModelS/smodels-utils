@@ -372,7 +372,7 @@ def setOptions(obj,Type=None):
         obj.SetMarkerColor(kRed)
     elif Type == 'allowed_border':
         obj.SetMarkerStyle(20)    
-        obj.SetMarkerColor(kGreen+1)
+        obj.SetMarkerColor(kGreen+3)
     elif Type == 'excluded_border':
         obj.SetMarkerStyle(20)    
         obj.SetMarkerColor(kOrange+1)
