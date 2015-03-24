@@ -65,11 +65,16 @@ for txname,expRes in check:
     if not plots:
         miss_plots.append([txname,expRes])
         continue      
-    if showPlots:      
-        val = raw_input("TxName is validated? (y/n/i) \n")
+    if showPlots: 
+        val = raw_input("TxName is validated? \n Yes/No/None/Skip (y/n/i/s) \n")
         if val.lower() == 'y': validated = True
         elif val.lower() == 'n': validated = False
         else: validated = None
+        for plot in plots:
+            plot.terminate()
+            plot.kill()        
+        
+        if val.lower() == 's': continue
         #Rewrite txname.txt file with validation result
         txfile = txname.getInfo('txnameFile')
         tf = open(txfile,'r')
@@ -82,9 +87,7 @@ for txname,expRes in check:
         tf = open(txfile,'w')
         tf.write(tdata)
         tf.close()
-        for plot in plots:
-            plot.terminate()
-            plot.kill()
+
 
 if miss_plots:        
     print '\n\n MISSING PLOTS FOR:'
