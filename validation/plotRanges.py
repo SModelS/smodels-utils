@@ -37,13 +37,12 @@ def getSuperFrame ( tgraphs ):
     """ get the all-enveloping frame of tgraphs """
     if type ( tgraphs ) == ROOT.TGraph:
         return getMinMax ( tgraphs) 
-    frames=[]
     minx, miny = float("inf"), float("inf")
     maxx, maxy = 0., 0.
     for tgraph in tgraphs:
         frame = getMinMax ( tgraph )
         if not frame:
-            continue
+            continue    
         minx = int(min(minx,frame["x"][0]))
         maxx = int(max(maxx,frame["x"][1]))
         miny = int(min(miny,frame["y"][0]))
@@ -79,7 +78,7 @@ def getExtendedFrame(txnameObj,axes):
     maxx = 1.2*maxx
     miny = 0.9*miny
     maxy = 1.2*maxy
-    logger.info ( "the extended frame is [%f,%f],[%f,%f]" % ( minx, maxx, miny, maxy ) )  
+    logger.info ( "the extended frame is [%f,%f],[%f,%f]" % ( minx, maxx, miny, maxy ) )
     return { "x": [ minx, maxx], "y": [ miny, maxy ] }
         
     

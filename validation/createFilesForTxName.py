@@ -7,9 +7,11 @@
 """
 
 #Import basic functions (this file must be run under the installation folder)
-import sys,os
+import sys,os,logging
 sys.path.insert(0,"../../smodels")
 from smodels.experiment.databaseObjects import DataBase
+from smodels.experiment.txnameObject import logger as tl
+tl.setLevel(level=logging.ERROR)
 
 #Set the address of the database folder
 database = DataBase("../../smodels-database/")
@@ -42,7 +44,7 @@ def main( txname= "T6bbWW" ):
         listOfExpResOn=[listOfExpResOn]
     for expResult in listOfExpResOn:
         onshell_constraint= expResult.getValuesFor("constraint") 
-        print "constraint=",onshell_constraint
+#         print "constraint=",onshell_constraint
         
 
     listOfExpRes = database.getExpResults( txnames=[ txname ], datasetIDs = [None] )
@@ -61,29 +63,31 @@ def main( txname= "T6bbWW" ):
             print [tx.txname for tx in txnameList]
             sys.exit()
         else: txnameObj = txnameList[0]        
-        print('\n',expResult)
-        print(expResult.path)
-        axes=expResult.getValuesFor("axes")
-        if type(axes)==str:
-            axes=[axes]
+#         print('\n',expResult)
+#         print(expResult.path)
+        axes=txnameObj.getInfo("axes")
+        if type(axes)==str: axes=[axes]
         for naxes in axes:
-            print "naxes=",naxes
+#             print "naxes=",naxes
             tgraph=getExclusionCurvesFor(expResult,txname,naxes)
-            print "tgraph=",tgraph
+            print expResult
+            print tgraph.keys(),tgraph.values()[0][0].GetN()
+#             print "tgraph=",tgraph
             if not tgraph:
                 continue
             if not naxes in tgraphs:
                 tgraphs[naxes]=[]
             tgraphs[naxes].append(tgraph[txname][0])
-
-    for (axes,tgraphs) in tgraphs.items():
+    sys.exit()
+    for (axes,tgr) in tgraphs.items():
         print "--=----------------------"
-        pts = plotRanges.getPoints ( tgraphs, txnameObj, axes, onshell_constraint, onshell, offshell )
+        pts = plotRanges.getPoints ( tgr, txnameObj, axes, onshell_constraint, onshell, offshell )
         print "axes=",axes
         print "txname=",txname
         print "onshell_constraint=",onshell_constraint
-        print "points=",pts
+#         print "points=",pts
         print "len(pts)=",len(pts)
+        continue
         # flatpts = plotRanges.mergeListsOfListsOfPoints ( pts )
         if len(pts)==0:
             continue
