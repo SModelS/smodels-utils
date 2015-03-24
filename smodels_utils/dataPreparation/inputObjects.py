@@ -512,7 +512,7 @@ class TxNameInput(Locker):
 
         if not motherMass:
             Errors().missingMass('motherMass',self.name)
-        if not lspMass:
+        if not lspMass and lspMass != 0.:
             Errors().missingMass('lspMass',self.name)
         if not self._txDecay.intermediateParticles:
             if self._planes: Errors().onlyOnePlane(self.name)
