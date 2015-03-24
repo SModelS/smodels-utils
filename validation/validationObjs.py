@@ -179,7 +179,7 @@ class ValidationPlot():
                          upperlimits = upper limits on prod xsec (pb) 
                          crosssections = theory prediction, in pb
         """
-        self.plot = createSpecialPlot ( self, silentMode, 1.2, what )
+        self.plot = createSpecialPlot( self, silentMode, 1.2, what )
 
     def savePlot(self,validationDir=None):
         """

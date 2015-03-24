@@ -9,12 +9,14 @@
 """
 
 import logging,os,sys
+sys.path.append('../')
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 from ROOT import TFile,TGraph,gROOT,TMultiGraph,TCanvas,TLatex,TLegend,kGreen,kRed,kOrange
 from smodels.tools.physicsUnits import fb, GeV, pb
+from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 
 
 def getExclusionCurvesFor(expResult,txname=None,axes=None):
@@ -199,6 +201,22 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
                 logger.error( "dont know how to draw %s" % what )
                 sys.exit()
             labels.append ( lk )
+
+        #Add original grid data to UL plot:
+        if what == "upperlimits":
+            olk=ROOT.TLatex ()
+            olk.SetTextSize(.02)
+            origPlot = OrigPlot.fromString(validationPlot.axes)
+            txnameObj = validationPlot.expRes.getTxnameWith({'txname': validationPlot.txname})
+            txnameData = txnameObj.txnameData.data
+            for mass,ul in txnameData:
+                mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]            
+                v=origPlot.getXYValues(mass_unitless)
+                if not v: continue
+                x,y = v
+                ul = ul.asNumber(pb)
+                lk.DrawLatex ( x, y, "#color[4]{"+str(ul)+"}" )
+                
 
     l2=TLatex()
     l2.SetNDC()
