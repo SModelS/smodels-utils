@@ -93,7 +93,6 @@ def main( txname= "T6bbWW" ):
         print "onshell_constraint=",onshell_constraint
 #         print "points=",pts
         print "len(pts)=",len(pts)
-        continue
         # flatpts = plotRanges.mergeListsOfListsOfPoints ( pts )
         if len(pts)==0:
             continue
