@@ -52,8 +52,12 @@ for txname,expRes in check:
     for fig in glob.glob(valDir+"/"+txname.txname+"_*.pdf"):
         if showPlots: plots.append(subprocess.Popen(['evince','--preview',fig]))
         else: plots.append(fig)
-    if glob.glob(valDir+"/"+txname.txname+"_*.comment"):
-        print '== Comment file found =='
+    if glob.glob(valDir+"/"+txname.txname+".comment"):
+        print '== Comment file found: =='
+        for cfile in glob.glob(valDir+"/"+txname.txname+"*comment"):
+            cf = open(cfile,'r')
+            print cf.read()
+            cf.close()
     axes = txname.getInfo('axes')
     if not isinstance(axes,list): axes = [axes]
     print '***',len(plots),'PLOT(S) FOUND for %i axes***' %len(axes)
