@@ -56,7 +56,7 @@ class TemplateFile(object):
         for pdg,mass in self.slhaObj.blocks['MASS'].items():
             if isinstance(mass,str):
                 self.tags.append(mass)
-                if mass == 'mother': self.motherPDGs.append(pdg)
+                if mass == 'M0' or mass == 'm0': self.motherPDGs.append(pdg)
 
         if self.motherPDGs:
             self.pythiaCard = getPythiaCardFor(self.motherPDGs)
@@ -77,21 +77,15 @@ class TemplateFile(object):
         :return: SLHA file name if file has been successfully generated, False otherwise.
         """
 
-        masses = self.origPlot.getParticleMasses(x, y)[0]
-        if not '2*Eq(' in self.axes:
-            logger.error("Asymmetric branches are not yet implemented here!")
-            sys.exit()
+        masses = self.origPlot.getParticleMasses(x, y)
+        massDict = {}
+        for ibr,br in enumerate(masses):
+            if ibr == 0: massTag = 'M'
+            elif ibr == 1: massTag = 'm'
+            for im,m in enumerate(br): massDict[massTag+str(im)] = m 
             
-        if len(masses) == 2:
-            massDict = {'mother': masses[0],'lsp' : masses[1]}
-        elif len(masses) == 3:
-            massDict = {'mother': masses[0],'inter0' : masses[1], 'lsp' : masses[2]}
-        elif len(masses) == 4:
-            massDict = {'mother': masses[0],'inter0' : masses[1], 'inter1' : masses[2],
-                         'lsp' : masses[3]}            
-            
-        #First check if the axes labels defined in axesDict match the template's
-        if set(massDict.keys()) - set(self.tags):
+        #First check if all the axes labels defined in the template appears in massDict
+        if not set(self.tags).issubset(set(massDict.keys())):
             logger.error("Labels do not match the ones defined in %s. keys=%s. tags=%s." % \
                 ( self.path, str(set(massDict.keys())), str(set(self.tags))) )
             return False
@@ -110,8 +104,8 @@ class TemplateFile(object):
                 slhaname = slhaname[1]
             else:
                 slhaname = "%s" % ( templateName)
-                for i in masses:
-                    slhaname += "_%d" % i
+                for br in masses:
+                    for m in br: slhaname += "_%d" % m
                 slhaname += ".slha"
 
         fdata = fdata[:fdata.find('XSECTION')]
@@ -285,10 +279,3 @@ if __name__ == "__main__":
             masses.append ( [ mother, lsp ] )
     slhafiles = tempf.createFilesFor( masses )
     print slhafiles
-#    database = DataBase("/home/lessa/smodels-database/")
-#    expRes = database.getExpResults(analysisIDs=['ATLAS-CONF-2013-035'],
-#                                datasetIDs=[None],txnames=['TChiWZ'])
-#    txnameObj = expRes.getTxNames()[0]  
-#    print tempf.checkFor(txnameObj, 500.,200.)
-#    
-#    

@@ -173,7 +173,7 @@ def generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,onshell,offshell,or
                 if type(val) == type(fb):
                     inside=True
             if not inside:
-                print "masses",masses,"not inside any grid"
+#                 print "masses",masses,"not inside any grid"
                 continue
             ordered=True
             for k in range(len(masses[0])-1):

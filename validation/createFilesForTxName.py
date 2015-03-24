@@ -76,8 +76,6 @@ def main( txname= "T6bbWW" ):
         for naxes in axes:
 #             print "naxes=",naxes
             tgraph=getExclusionCurvesFor(expResult,txname,naxes)
-            print expResult
-            print tgraph.keys(),tgraph.values()[0][0].GetN()
 #             print "tgraph=",tgraph
             if not tgraph:
                 continue
