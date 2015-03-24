@@ -54,6 +54,7 @@ def main( txname= "T6bbWW" ):
 
     slhafiles = []
     tgraphs = {}
+    txnameObjs = []
 
     # Compute the theory predictions for each analysis
     for expResult in listOfExpRes:
@@ -62,11 +63,14 @@ def main( txname= "T6bbWW" ):
             print " %i Txname(s) found!" %len(txnameList)
             print [tx.txname for tx in txnameList]
             sys.exit()
-        else: txnameObj = txnameList[0]        
+        else: 
+            txnameObj = txnameList[0]        
+            txnameObjs.append ( txnameObj )
 #         print('\n',expResult)
 #         print(expResult.path)
         axes=txnameObj.getInfo("axes")
-        if type(axes)==str: axes=[axes]
+        if type(axes)==str:
+            axes=[axes]
         for naxes in axes:
 #             print "naxes=",naxes
             tgraph=getExclusionCurvesFor(expResult,txname,naxes)
@@ -79,9 +83,9 @@ def main( txname= "T6bbWW" ):
                 tgraphs[naxes]=[]
             tgraphs[naxes].append(tgraph[txname][0])
     sys.exit()
-    for (axes,tgr) in tgraphs.items():
+    for (axes,ntgraph) in tgraphs.items():
         print "--=----------------------"
-        pts = plotRanges.getPoints ( tgr, txnameObj, axes, onshell_constraint, onshell, offshell )
+        pts = plotRanges.getPoints ( ntgraph, txnameObjs, axes, onshell_constraint, onshell, offshell )
         print "axes=",axes
         print "txname=",txname
         print "onshell_constraint=",onshell_constraint
@@ -105,7 +109,6 @@ def main( txname= "T6bbWW" ):
 
 
 if __name__ == '__main__':
-    txname="T2tt"
     if len(sys.argv)>1:
         txname=sys.argv[1]
     main( txname )

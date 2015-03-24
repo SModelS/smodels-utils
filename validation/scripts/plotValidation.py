@@ -5,7 +5,7 @@ argparser = argparse.ArgumentParser(description="validates one pair of txname / 
 argparser.add_argument ( '-T', '--txname', nargs='?', help='txname [default T1]',
                 type=types.StringType, default='T1' )
 argparser.add_argument ( '-p', '--plottype', nargs='?', help=
-                'plottype [plain, bestcut, upperlimits, crosssections. default plain]',
+                'plottype [plain, bestregion, upperlimits, crosssections. default plain]',
                 type=types.StringType, default='plain' )
 argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description [default 2*Eq(mother,x)_Eq(lsp,y)]',
                 type=types.StringType, default='2*Eq(mother,x)_Eq(lsp,y)' )

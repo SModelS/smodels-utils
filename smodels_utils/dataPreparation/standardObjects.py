@@ -357,9 +357,9 @@ class Errors(object):
     def negativMass(self, massArray):
         
         m = self._starLine#
-        m = m + "Error in StandardDataList: there is a negativ Mass:\n"
+        m = m + "Error in StandardDataList: there is a negative mass:\n"
         m = m + "%s\n" %massArray
-        m = m + 'please check your mass plane deffintion at convert.py'
+        m = m + 'please check your mass plane definition at convert.py'
         m = m + self._starLine
         print(m)
         sys.exit()
