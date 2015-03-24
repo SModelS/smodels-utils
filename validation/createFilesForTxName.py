@@ -52,6 +52,8 @@ def main( txname= "T6bbWW" ):
     if type(listOfExpRes)!=list:
         listOfExpRes=[listOfExpRes]
 
+    print "experimental results",listOfExpRes
+
     slhafiles = []
     tgraphs = {}
     txnameObjs = []
@@ -82,7 +84,7 @@ def main( txname= "T6bbWW" ):
             if not naxes in tgraphs:
                 tgraphs[naxes]=[]
             tgraphs[naxes].append(tgraph[txname][0])
-    sys.exit()
+
     for (axes,ntgraph) in tgraphs.items():
         print "--=----------------------"
         pts = plotRanges.getPoints ( ntgraph, txnameObjs, axes, onshell_constraint, onshell, offshell )
@@ -91,7 +93,6 @@ def main( txname= "T6bbWW" ):
         print "onshell_constraint=",onshell_constraint
 #         print "points=",pts
         print "len(pts)=",len(pts)
-        continue
         # flatpts = plotRanges.mergeListsOfListsOfPoints ( pts )
         if len(pts)==0:
             continue
