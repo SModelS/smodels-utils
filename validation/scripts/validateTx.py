@@ -12,9 +12,10 @@ args=argparser.parse_args()
 
 
 import sys,os
-sys.path.insert(0,"../../../../../smodels-utils/validation/")
-sys.path.insert(0,"../../../../../smodels-utils/")
-sys.path.insert(0,"../../../../../smodels/")
+home = os.path.expanduser("~")
+sys.path.insert(0,os.path.join(home,"smodels-utils/validation"))
+sys.path.insert(0,os.path.join(home,"smodels-utils"))
+sys.path.insert(0,os.path.join(home,"smodels/"))
 
 from validation.plotProducer import validateTxName,validatePlot,validateExpRes, getExpIdFromPath
 from smodels.experiment.databaseObjects import DataBase
@@ -26,13 +27,13 @@ cl.setLevel(level=logging.DEBUG)
 dl.setLevel(level=logging.DEBUG)
 tl.setLevel(level=logging.DEBUG)
 
-database = DataBase("../../../../")
+database = DataBase(os.path.join(home,"smodels-database"))
 
 #How to validate all plots for all Txnames in one ExpRes:
 expRes = database.getExpResults(analysisIDs=[getExpIdFromPath()],datasetIDs=[None])
 
 ## axes="2*Eq(mother,x)_Eq(lsp,y)"
-slhamain = '../../../../../smodels-utils/slha/'
+slhamain = os.path.join(home,"smodels-utils/slha")
 ## txname="T6bbWW"
 
 print validatePlot(expRes,args.txname,args.axes,slhamain+"%s.tar" % args.txname, kfactor=args.kfactor )

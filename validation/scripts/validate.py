@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-import sys
-sys.path.insert(0,"../../../../../smodels-utils/")
-sys.path.insert(0,"../../../../../smodels/")
+import sys,os
+home = os.path.expanduser("~")
+sys.path.insert(0,os.path.join(home,"smodels-utils/"))
+sys.path.insert(0,os.path.join(home,"smodels/"))
 
 
 from validation.plotProducer import validateExpRes, getExpIdFromPath
@@ -18,10 +19,10 @@ tl.setLevel(level=logging.DEBUG)
 
 print "exp id=",getExpIdFromPath()
 
-database = DataBase("../../../../")
+database = DataBase(os.path.join(home,"smodels-database"))
 #How to validate all plots for all Txnames in one ExpRes:
 expRes = database.getExpResults(analysisIDs=[getExpIdFromPath()],datasetIDs=[None])
-slhamain = '../../../../../smodels-utils/slha/'
+slhamain = os.path.join(home,"smodels-utils/slha")
 # kfactorDict = { "TChiWZ": 1.25, "TChiWW": 1.25 }
 kfactorDict= {} 
 validateExpRes(expRes,slhamain, kfactorDict = kfactorDict )
