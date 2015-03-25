@@ -428,6 +428,10 @@ class Errors(object):
         print(m)
         sys.exit()
         
-
-        
-        
+if __name__ == "__main__":
+    ## axes = "Eq(mother,x)_Eq(lsp,0.0)+Eq(mother,y)_Eq(lsp,0.0)"
+    axes = '2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,60.0)'
+    # axes = "2*Eq(mother,x)_Eq(lsp,y)"
+    origPlot = OrigPlot.fromString ( axes )
+    print "particle masses",origPlot.getParticleMasses ( 150,120  )
+    print "xy values", origPlot.getXYValues ( [[ 150,120,60 ],[150,120,60]] )
