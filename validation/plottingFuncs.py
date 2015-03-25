@@ -212,7 +212,8 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
             origPlot = OrigPlot.fromString(validationPlot.axes)
             txnameObj = validationPlot.expRes.getTxnameWith({'txname': validationPlot.txname})
             txnameData = txnameObj.txnameData.data
-            for mass,ul in txnameData:
+            for (itr, (mass,ul)) in enumerate ( txnameData ):
+                if itr% nthpoint != 0: continue
                 mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]            
                 v=origPlot.getXYValues(mass_unitless)
                 if not v: continue
