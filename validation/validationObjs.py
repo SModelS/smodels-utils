@@ -172,14 +172,15 @@ class ValidationPlot():
         self.plot,self.base = createPlot(self,silentMode)
 
 
-    def getSpecialPlot(self,silentMode=True,what = "bestregion"):
+    def getSpecialPlot(self,silentMode=True,what = "bestregion", nthpoint = 1 ):
         """ get one of the special plots.
             :param what: which special plot
                          bestregion = best analysis/cut pair 
                          upperlimits = upper limits on prod xsec (pb) 
                          crosssections = theory prediction, in pb
+            :param nthpoint: plot only every nth point
         """
-        self.plot = createSpecialPlot( self, silentMode, 1.2, what )
+        self.plot = createSpecialPlot( self, silentMode, 1.2, what, nthpoint )
 
     def savePlot(self,validationDir=None):
         """

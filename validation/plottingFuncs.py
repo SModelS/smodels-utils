@@ -87,7 +87,7 @@ def getFigureUrl ( validationPlot ):
     print "pos=",pos
     return txnameinfo.getInfo ( "figureUrl" )[ pos[0] ]
 
-def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestregion" ):
+def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestregion", nthpoint =1 ):
     """
     Uses the data in validationPlot.data and the official exclusion curve
     in validationPlot.officialCurve to generate "special" plots, showing
@@ -96,6 +96,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     :param validationPlot: ValidationPlot object
     :param silentMode: If True the plot will not be shown on the screen
     :param what: what is to be plotted ( "bestregion", "upperlimits", "crosssections")
+    :param nthpoint: label only every nth point
     :return: TCanvas object containing the plot
     """
     kfactor=None
@@ -176,7 +177,9 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
         logger.warning("Data for validation plot is not defined.")
     else:
         # Get excluded and allowed points:
-        for pt in validationPlot.data:
+        for ctr,pt in enumerate(validationPlot.data):
+            if ctr%nthpoint != 0: 
+                continue
             if kfactor == None:
                 kfactor = pt ['kfactor']
             if abs ( kfactor - pt['kfactor'] ) > 1e-5:
