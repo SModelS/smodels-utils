@@ -120,10 +120,23 @@ class OrigPlot(object):
         :return: list containing two other lists. Each list contains floats, representing
         the masses of the particles of each branch in GeV
         """
-        
         massArray_1 = self.branch_1.getParticleMasses(xMass,yMass)
         massArray_2 = self.branch_2.getParticleMasses(xMass,yMass)
         return [massArray_1, massArray_2]
+
+    def combine(self, xy_1, xy_2 ):
+        """ If x appears in branch1, but y appears in branch2 (think e.g. TGQ),
+            then we need to combine the two arrays to a single array
+        """
+        ret=[]
+        for a,b in zip (xy_1,xy_2):
+            if a==None:
+                ret.append(b)
+            elif b==None:
+                ret.append(a)
+            else:
+                logger.error ( "cannot combined the two arrays into a single consisten array." )
+        return ret
         
     def getXYValues(self,massArray):
         
@@ -144,7 +157,8 @@ class OrigPlot(object):
         if not xy_1 or not xy_2: return None
 
         for i, value in enumerate(xy_1):
-            if abs(value - xy_2[i]) > 0.00001:
+            if value==None or xy_2[i]==None or abs(value - xy_2[i]) > 0.00001:
+                return self.combine ( xy_1, xy_2 )
                 Errors().unequalXYValues()
         return xy_1
         
@@ -296,6 +310,8 @@ class Axes(object):
                     break
             if breaking == True: break
         self._xy = xy
+        if not x in xy: xy[x]=None
+        if not y in xy: xy[y]=None
         particles = [eq.args[0].name for eq in self._equations]
         self._xyFunction = lambdify(particles,[xy[x],xy[y]],'math')
         
@@ -429,9 +445,10 @@ class Errors(object):
         sys.exit()
         
 if __name__ == "__main__":
-    ## axes = "Eq(mother,x)_Eq(lsp,0.0)+Eq(mother,y)_Eq(lsp,0.0)"
-    axes = '2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,60.0)'
+    axes = "Eq(mother,x)_Eq(lsp,0.0)+Eq(mother,y)_Eq(lsp,0.0)"
+    # axes = '2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,60.0)'
     # axes = "2*Eq(mother,x)_Eq(lsp,y)"
     origPlot = OrigPlot.fromString ( axes )
-    print "particle masses",origPlot.getParticleMasses ( 150,120  )
-    print "xy values", origPlot.getXYValues ( [[ 150,120,60 ],[150,120,60]] )
+    x1,y1=150,120
+    print "particle masses",origPlot.getParticleMasses ( x1,y1  )
+    print "xy values", origPlot.getXYValues ( origPlot.getParticleMasses ( x1,y1  ) )
