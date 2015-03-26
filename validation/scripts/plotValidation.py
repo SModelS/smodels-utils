@@ -19,7 +19,7 @@ home = os.path.expanduser("~")
 sys.path.insert(0,os.path.join(home,"smodels-utils/"))
 sys.path.insert(0,os.path.join(home,"smodels/"))
 
-from smodels.experiment.databaseObjects import DataBase
+from smodels.experiment.databaseObjects import Database
 from validation.plotProducer import ValidationPlot, getExpIdFromPath
 from smodels.tools.physicsUnits import pb, fb
 NAN=float('nan')
@@ -29,7 +29,7 @@ NAN=float('nan')
 filename="%s_%s.py" % ( args.txname, args.axes.replace("(","").replace(")","").replace(",","").replace("*","") )
 execfile(filename)
 
-database = DataBase(os.path.join(home,"smodels-database"))
+database = Database(os.path.join(home,"smodels-database"))
 expRes = database.getExpResults(analysisIDs=[ getExpIdFromPath() ],datasetIDs=[None])
 
 

@@ -17,7 +17,7 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.WARNING)
-from smodels.experiment.databaseObjects import DataBase
+from smodels.experiment.databaseObjects import Database
 from validation.slhaCreator import TemplateFile
 
 
@@ -25,7 +25,7 @@ templateDir = '../slha/templates'
 
 missTxnames = []
 badTemplates = []
-database = DataBase(os.path.expanduser("~/smodels-database/"))
+database = Database(os.path.expanduser("~/smodels-database/"))
 for expRes in database.expResultList:
     #Skip efficiency-map analyses:
     if 'efficiency-map' in expRes.getValuesFor('datatype'): continue

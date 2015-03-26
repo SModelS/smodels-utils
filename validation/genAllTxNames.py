@@ -13,10 +13,10 @@ tl.setLevel(level=logging.ERROR)
 gl.setLevel(level=logging.ERROR)
 
 
-from smodels.experiment.databaseObjects import DataBase
+from smodels.experiment.databaseObjects import Database
 import subprocess
 
-database = DataBase(os.path.join(os.path.expanduser("~"),"smodels-database/"))
+database = Database(os.path.join(os.path.expanduser("~"),"smodels-database/"))
 
 txnames = []
 for expRes in database.getExpResults(datasetIDs=[None]):
