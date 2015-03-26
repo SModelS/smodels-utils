@@ -14,8 +14,8 @@ gl.setLevel(level=logging.ERROR)
 
 
 from plotProducer import validateTxName
-from smodels.experiment.databaseObjects import DataBase
-database = DataBase(os.path.join(os.path.expanduser("~"),"smodels-database/"))
+from smodels.experiment.databaseObjects import Database
+database = Database(os.path.join(os.path.expanduser("~"),"smodels-database/"))
 
 
 def main(txname):

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from smodels.experiment.databaseObjects import DataBase
+from smodels.experiment.databaseObjects import Database
 from plottingFuncs import getExclusionCurvesFor
 import os, glob
 from smodels.tools import modpyslha
@@ -26,7 +26,7 @@ for (ctr,f) in enumerate(files):
 
 gr.Draw("AP")
 
-database = DataBase("../../smodels-database/")
+database = Database("../../smodels-database/")
 listOfExpRes = database.getExpResults( txnames=[ txname ] )
 cont=[]
 if type(listOfExpRes)!=list:

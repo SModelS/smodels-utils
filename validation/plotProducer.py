@@ -135,12 +135,12 @@ def validateExpRes(expRes,slhaDir,kfactorDict=None):
         
     return ret
 
-def validateDataBase(database,slhaDir):
+def validateDatabase(database,slhaDir):
     """
     Creates a ValidationPlot for each expRes/txname/axes appering in the database
     and saves the output.
    
-    :param database: a DataBase object
+    :param database: a Database object
     :param slhaDir: Location of the slha folder containing the
     txname.tar files or the ./txname folders (i. e. ../slha/)
     """  
