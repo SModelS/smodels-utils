@@ -4,10 +4,10 @@ import sys,os
 sys.path.insert(0,os.path.join(os.path.expanduser("~"),"smodels"))
 sys.path.insert(0,os.path.join(os.path.expanduser("~"),"smodels-utils"))
 
-from smodels.experiment.databaseObjects import DataBase
+from smodels.experiment.databaseObjects import Database
 from validation.plottingFuncs import getExclusionCurvesFor
 
-database = DataBase(os.path.join(os.path.expanduser("~"),"smodels-database/"))
+database = Database(os.path.join(os.path.expanduser("~"),"smodels-database/"))
 missingCurves = []
 for expRes in database.getExpResults(datasetIDs=[None]):
     txnames = expRes.getTxNames()

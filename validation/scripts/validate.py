@@ -7,7 +7,7 @@ sys.path.insert(0,os.path.join(home,"smodels/"))
 
 
 from validation.plotProducer import validateExpRes, getExpIdFromPath
-from smodels.experiment.databaseObjects import DataBase
+from smodels.experiment.databaseObjects import Database
 import logging
 from smodels.theory.crossSection import logger as cl
 from smodels.theory.slhaDecomposer import logger as dl
@@ -19,7 +19,7 @@ tl.setLevel(level=logging.DEBUG)
 
 print "exp id=",getExpIdFromPath()
 
-database = DataBase(os.path.join(home,"smodels-database"))
+database = Database(os.path.join(home,"smodels-database"))
 #How to validate all plots for all Txnames in one ExpRes:
 expRes = database.getExpResults(analysisIDs=[getExpIdFromPath()],datasetIDs=[None])
 slhamain = os.path.join(home,"smodels-utils/slha")

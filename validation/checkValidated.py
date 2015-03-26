@@ -4,11 +4,11 @@ import sys,os
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 
-from smodels.experiment.databaseObjects import DataBase
+from smodels.experiment.databaseObjects import Database
 import subprocess
 import glob
 
-database = DataBase(os.path.join(os.path.expanduser("~"),"smodels-database/"))
+database = Database(os.path.join(os.path.expanduser("~"),"smodels-database/"))
 
 validated = []
 not_validated = []

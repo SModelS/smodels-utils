@@ -6,7 +6,7 @@ import sys,os
 
 from plotProducer import validateTxName,validatePlot,validateExpRes
 from smodels.experiment.databaseBrowser import Browser
-from smodels.experiment.databaseObjects import DataBase
+from smodels.experiment.databaseObjects import Database
 import logging
 from smodels.theory.crossSection import logger as cl
 from smodels.theory.slhaDecomposer import logger as dl
@@ -17,7 +17,7 @@ tl.setLevel(level=logging.WARNING)
 
 home = os.path.expanduser("~")
 
-database = DataBase(os.path.join(home,"smodels-database/"))
+database = Database(os.path.join(home,"smodels-database/"))
 
 txname = "T6bbWWoff"
 expResList = database.getExpResults(datasetIDs=[None],txnames=[txname],

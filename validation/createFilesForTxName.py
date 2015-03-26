@@ -9,13 +9,13 @@
 #Import basic functions (this file must be run under the installation folder)
 import sys,os,logging
 sys.path.insert(0,"../../smodels")
-from smodels.experiment.databaseObjects import DataBase
+from smodels.experiment.databaseObjects import Database
 from smodels.experiment.txnameObject import logger as tl
 tl.setLevel(level=logging.ERROR)
 
 #Set the address of the database folder
-database = DataBase("../../smodels-database/")
-# database = DataBase("/home/walten/git/branches/smodels-database/")
+database = Database("../../smodels-database/")
+# database = Database("/home/walten/git/branches/smodels-database/")
 
 from plottingFuncs import getExclusionCurvesFor
 import plotRanges
