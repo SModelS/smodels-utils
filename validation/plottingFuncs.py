@@ -263,7 +263,8 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     kfactor=None
 
     if not validationPlot.data:
-        logger.warning("Data for validation plot is not defined.")
+        logger.error("Data for validation plot is not defined.")
+        sys.exit()
     else:
         # Get excluded and allowed points:
         for pt in validationPlot.data:
