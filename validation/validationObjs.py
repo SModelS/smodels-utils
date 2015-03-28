@@ -63,13 +63,14 @@ class ValidationPlot():
         vstr += 'Axes: '+self.axes
         return vstr
 
-    def computeAgreementFactor ( self, looseness=1.2 ):
+    def computeAgreementFactor ( self, looseness=1.2, signal_factor=1.0 ):
         """ computes how much the plot agrees with the official exclusion curve
             by counting the points that are inside/outside the official
             exclusion curve, and comparing against the points' r values
             ( upper limit / predict theory cross section )
             :param looseness: how much do we loosen the criterion? I.e. by what factor do we
             change the cross sections in favor of getting the right assignment?
+            :param signal_factor: an additional factor that is multiplied with the signal cross section,
         """
         import ROOT
         curve=self.getOfficialCurve()
@@ -95,8 +96,8 @@ class ValidationPlot():
             x,y=point["axes"][0],point["axes"][1]
             if y==0: y=1.5 ## to avoid points sitting on the line
             excluded = point["UL"] < point["signal"]
-            really_excluded = looseness * point["UL"] < point["signal"]
-            really_not_excluded = point["UL"] > looseness * point["signal"]
+            really_excluded = looseness * point["UL"] < point["signal"] * signal_factor
+            really_not_excluded = point["UL"] > looseness * point["signal"] * signal_factor
             inside = curve.IsInside ( x,y )
             pts["total"]+=1
             s=""
@@ -172,15 +173,16 @@ class ValidationPlot():
         self.plot,self.base = createPlot(self,silentMode)
 
 
-    def getSpecialPlot(self,silentMode=True,what = "bestregion", nthpoint = 1 ):
+    def getSpecialPlot(self,silentMode=True,what = "bestregion", nthpoint = 1,signal_factor = 1.0 ):
         """ get one of the special plots.
             :param what: which special plot
                          bestregion = best analysis/cut pair 
                          upperlimits = upper limits on prod xsec (pb) 
                          crosssections = theory prediction, in pb
             :param nthpoint: plot only every nth point
+            :param signal_factor: an additional factor that is multiplied with the signal cross section,
         """
-        self.plot = createSpecialPlot( self, silentMode, 1.2, what, nthpoint )
+        self.plot = createSpecialPlot( self, silentMode, 1.2, what, nthpoint, signal_factor )
 
     def savePlot(self,validationDir=None):
         """

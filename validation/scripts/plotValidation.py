@@ -9,8 +9,10 @@ argparser.add_argument ( '-p', '--plottype', nargs='?', help=
                 type=types.StringType, default='plain' )
 argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description [default 2*Eq(mother,x)_Eq(lsp,y)]',
                 type=types.StringType, default='2*Eq(mother,x)_Eq(lsp,y)' )
-argparser.add_argument ( '-n', '--nthpoint', nargs='?', help='plot only every nthpoint',
+argparser.add_argument ( '-n', '--nthpoint', nargs='?', help='plot only every nth point [1]',
                 type=types.IntType, default=1 )
+argparser.add_argument ( '-s', '--signal_factor', nargs='?', help='factor to multiply theory cross section with, before comparing [1.0]', type=types.FloatType, default=1.0 )
+
 args=argparser.parse_args() 
 
 
@@ -35,13 +37,13 @@ expRes = database.getExpResults(analysisIDs=[ getExpIdFromPath() ],datasetIDs=[N
 
 plot=ValidationPlot( expRes, args.txname, args.axes )
 plot.data=validationData
-agreement = plot.computeAgreementFactor()
+agreement = plot.computeAgreementFactor( signal_factor = args.signal_factor )
 print "agreement=",agreement
 
 if args.plottype=="plain":
     plot.getPlot()
 else:
-    plot.getSpecialPlot( what=args.plottype, nthpoint=args.nthpoint )
+    plot.getSpecialPlot( what=args.plottype, nthpoint=args.nthpoint, signal_factor = args.signal_factor )
 plot.savePlot()
 
 # import IPython
