@@ -41,6 +41,9 @@ nlines = 0
 expResList = database.getExpResults(datasetIDs=[None])
 
 #Copy/update the database plots and generate the wiki table
+true_lines = []
+false_lines = []
+none_lines = []
 for expRes in expResList:
     valDir = os.path.join(expRes.path,'validation').replace("\n","")
     if not os.path.isdir(valDir): continue
@@ -53,7 +56,8 @@ for expRes in expResList:
             if validated is True: color = "#32CD32"
             elif validated is None: color = "#778899"
             elif validated is False: color = "#FF0000"
-            line += "|| %s ||<style=\"color: %s;\"> %s ||" %(txname.txname,color,str(validated))
+            line += "|| [[SmsDictionary#%s|%s]] ||<style=\"color: %s;\"> %s ||" \
+                %(txname.txname,txname.txname,color,str(validated))
             for fig in glob.glob(valDir+"/"+txname.txname+"_*.pdf"):
                 figName = fig.replace(valDir+"/","")                
                 dirPath =  os.path.join('/validationWiki/',valDir.replace(databasePath,""))
@@ -70,9 +74,18 @@ for expRes in expResList:
                         "|"+txname.txname+".comment"+"]] ||\n"
             else:
                 line += "  ||\n" #In case there are no comments
-        wFile.write(line)
+        if "#778899" in line: none_lines.append(line)
+        elif "#FF0000" in line: false_lines.append(line)
+        else: true_lines.append(line)
         nlines += 1
 #         if nlines > 2: break
+        
+        
+for line in none_lines: wFile.write(line)
+for line in true_lines: wFile.write(line)
+for line in false_lines: wFile.write(line)
+    
+    
 print 'Done.\n --->Copy and paste the content to the SModelS wiki page.'            
 
 wFile.close()
