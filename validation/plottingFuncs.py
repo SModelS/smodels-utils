@@ -87,7 +87,8 @@ def getFigureUrl ( validationPlot ):
     print "pos=",pos
     return txnameinfo.getInfo ( "figureUrl" )[ pos[0] ]
 
-def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestregion", nthpoint =1 ):
+def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestregion", nthpoint =1, 
+       signal_factor = 1. ):
     """
     Uses the data in validationPlot.data and the official exclusion curve
     in validationPlot.officialCurve to generate "special" plots, showing
@@ -97,6 +98,9 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     :param silentMode: If True the plot will not be shown on the screen
     :param what: what is to be plotted ( "bestregion", "upperlimits", "crosssections")
     :param nthpoint: label only every nth point
+    :param signal_factor: an additional factor that is multiplied with the signal cross section,
+    when comparing with the upper limit. Makes it easier to account for multiplicative factors,
+    like the number of squark flavors in production
     :return: TCanvas object containing the plot
     """
     kfactor=None
@@ -119,13 +123,13 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
                 #print "pt['condition']",pt['condition']
                 logger.warning("Condition violated for file " + pt['slhafile'])
                 cond_violated.SetPoint(cond_violated.GetN(), x, y)
-            elif pt['signal'] > pt['UL']:
-                if pt['signal'] < pt ['UL']* looseness:
+            elif signal_factor * pt['signal'] > pt['UL']:
+                if signal_factor * pt['signal'] < pt ['UL']* looseness:
                     excluded_border.SetPoint(excluded_border.GetN(), x, y)
                 else:
                     excluded.SetPoint(excluded.GetN(), x, y )
             else:
-                if pt['signal']*looseness > pt['UL']:
+                if signal_factor * pt['signal']*looseness > pt['UL']:
                     allowed_border.SetPoint(allowed_border.GetN(), x, y)
                 else:
                     allowed.SetPoint(allowed.GetN(), x, y)
@@ -162,7 +166,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     l=TLatex()
     l.SetNDC()
     l.SetTextSize(.04)
-    agreement = validationPlot.computeAgreementFactor()
+    agreement = validationPlot.computeAgreementFactor( signal_factor = signal_factor )
     l.DrawLatex(.15,.85,"validation agreement %.1f %s" % (agreement*100, "%" ) )
     base.l=l
     if figureUrl:
@@ -237,6 +241,13 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
         drawingwhat="best signal region"
     l3.DrawLatex(.15,.7, drawingwhat )
     base.l3=l3
+    if abs(signal_factor-1.0)>.0001:
+        l4=TLatex()
+        l4.SetNDC()
+        l4.SetTextSize(.04)
+        l4.DrawLatex(.15,.62, "signal factor %.1f" % signal_factor )
+        base.l4=l4
+
     plane.base = base
 
     if not silentMode: ans = raw_input("Hit any key to close\n")
