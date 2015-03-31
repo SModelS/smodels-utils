@@ -223,7 +223,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
                 if not v: continue
                 x,y = v
                 ul = ul.asNumber(pb)
-                lk.DrawLatex ( x, y, "#color[4]{"+str(ul)+"}" )
+                lk.DrawLatex ( x, y, "#color[4]{%.2f}" % ul )
                 
 
     l2=TLatex()
