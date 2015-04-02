@@ -155,7 +155,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     if allowed_border.GetN()>0: base.Add(allowed_border, "P")
     if excluded_border.GetN()>0: base.Add(excluded_border, "P")
     if cond_violated.GetN()>0: base.Add(cond_violated, "P")
-    base.Add(official, "C")
+    base.Add(official, "L")
     title = what+"_"+validationPlot.expRes.getValuesFor('id') + "_" \
             + validationPlot.txname\
             + "_" + validationPlot.axes
@@ -321,7 +321,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     if allowed_border.GetN()>0: base.Add(allowed_border, "P")
     if excluded_border.GetN()>0: base.Add(excluded_border, "P")
     if cond_violated.GetN()>0: base.Add(cond_violated, "P")
-    base.Add(official, "C")
+    base.Add(official, "L")
     title = validationPlot.expRes.getValuesFor('id') + "_" \
             + validationPlot.txname\
             + "_" + validationPlot.axes
