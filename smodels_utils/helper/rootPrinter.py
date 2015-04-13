@@ -27,7 +27,7 @@ class ROOTPrinter(object):
     def prepareTheoryNr ( self ):
         ROOT.gROOT.ProcessLine ( \
                 "struct TheoryNr{ \
-                    int nr;\
+                    int theory_nr;\
                  };" )
         self.TheoryNr = ROOT.TheoryNr()
         self.TheoryNr.theory_nr = 0
@@ -225,4 +225,4 @@ class ROOTPrinter(object):
         self.theorypred_cond_violation.clear()
 
         if not theory_nr:
-            self.TheoryNr.nr+=1
+            self.TheoryNr.theory_nr+=1
