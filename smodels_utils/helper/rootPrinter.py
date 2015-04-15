@@ -59,6 +59,30 @@ class ROOTPrinter(object):
         self.elements.Branch ( "mother_1_mass", self.elements_mother_1_mass )
         self.elements.Branch ( "sqrts", self.elements_sqrts )
 
+    def prepareOutputStatus ( self ):
+        """ prepare the ttree for the output status """
+        if self.hasPreparedOutputStatus:
+            return
+        self.hasPreparedOutputStatus=True
+        ROOT.gROOT.ProcessLine ( \
+                "struct OutputStatus{ \
+                    int filestatus;\
+                    char inputfile[256];\
+                    char outputfile[256];\
+                    char databaseVersion[256];\
+                    char warnings[512];\
+                 };" )
+        self.outputstatus_databaseVersion = ROOT.std.string() 
+        self.OutputStatus = ROOT.OutputStatus()
+        self.OutputStatusTree = ROOT.TTree ( "OutputStatus", "OutputStatus" )
+        self.OutputStatusTree.Branch ( "filestatus", ROOT.AddressOf ( self.OutputStatus, "filestatus" ), "filestatus/I" )
+        self.OutputStatusTree.Branch ( "outputfile", ROOT.AddressOf ( self.OutputStatus, "outputfile" ), "outputfile/C" )
+        self.OutputStatusTree.Branch ( "inputfile", ROOT.AddressOf ( self.OutputStatus, "inputfile" ), "inputfile/C" )
+        self.OutputStatusTree.Branch ( "warnings", ROOT.AddressOf ( self.OutputStatus, "warnings" ), "warnings/C" )
+        self.OutputStatusTree.Branch ( "databaseVersion", ROOT.AddressOf ( self.OutputStatus, "databaseVersion" ), "databaseVersion/C" )
+        self.OutputStatusTree.Branch ( "theory_nr", ROOT.AddressOf ( self.TheoryNr, "theory_nr" ), "theory_nr/I" )
+
+
     def prepareMissingTopos ( self ):
         """ prepare the ttree for missing topologies """
         if self.hasPreparedMissingTopos:
@@ -106,6 +130,7 @@ class ROOTPrinter(object):
         self.hasPreparedTheoryPredictions=False
         self.hasPreparedElements=False
         self.hasPreparedMissingTopos=False
+        self.hasPreparedOutputStatus=False
 
     def writeElement ( self, element ):
         self.prepareElements()
@@ -143,7 +168,7 @@ class ROOTPrinter(object):
 
         for topology in topolist:
             self.writeTopology ( topology )
-        
+
         self.element_ctr += 1
 
 
@@ -180,7 +205,7 @@ class ROOTPrinter(object):
             logger.info ( "pids=%s sqrtsvalue=%s" % ( pids, sqrtsvalue ) )
             for (sqrts, value ) in sqrtsvalue.items():
                 self.theorypred_value_pb.push_back ( value.asNumber(pb) )
-        
+
 
 
     def writeTheoryPredictionList ( self, obj ):
@@ -205,6 +230,22 @@ class ROOTPrinter(object):
         for i in obj.topos:
             self.writeMissingTopo ( i )
 
+    def writeOutputStatus ( self, obj ):
+        self.prepareOutputStatus()
+        self.OutputStatus.filestatus = obj.filestatus
+        if len(obj.outputfile)>255:
+                logger.error ( "outputfile string is too long" )
+        self.OutputStatus.outputfile = obj.outputfile
+        if len(obj.inputfile)>255:
+                logger.error ( "inputfile string is too long" )
+        self.OutputStatus.inputfile = obj.inputfile
+        if len(obj.databaseVersion)>255:
+                logger.error ( "databaseVersion string is too long" )
+        self.OutputStatus.databaseVersion = obj.databaseVersion
+        if len(str(obj.warnings))>511:
+                logger.error ( "warnings string is too long" )
+        self.OutputStatus.warnings = str(obj.warnings)
+
     def write ( self, obj ):
         """ write any type of object """
         logger.info( "now printing %s" % str(obj ) )
@@ -214,6 +255,8 @@ class ROOTPrinter(object):
             self.writeTheoryPredictionList ( obj )
         elif isinstance ( obj, MissingTopoList ):
             self.writeMissingTopos ( obj )
+        elif isinstance ( obj, OutputStatus ):
+            self.writeOutputStatus ( obj )
         elif isinstance ( obj, list ):
             for i in obj:
                 self.write ( i )
@@ -237,23 +280,28 @@ class ROOTPrinter(object):
             self.elements.Write()
         if self.hasPreparedTheoryPredictions:
             self.theorypredictions.Write()
+        if self.hasPreparedOutputStatus:
+            self.OutputStatusTree.Write()
         self.rootfile.Close()
-        logger.info 
-            
-    
-    def addObj(self,obj):
+        logger.info
+
+
+    def addObj(self,obj,outputLevel=None):
         """
         Adds object to the Printer. The object will formatted according to the outputType
         and the outputLevel. The resulting output will be stored in outputList.
         :param obj: A object to be printed. Must match one of the types defined in formatObj
+        :param outputlevel: currently not used
         """
         logger.debug ( "addObj %s" % type(obj) )
-        self.objList.append(obj)  
+        self.objList.append(obj)
 
     def flush(self, theory_nr = None):
         """
-        tells the printer that the next theory point is being processed 
+        tells the printer that the next theory point is being processed
         """
+        if theory_nr:
+            self.TheoryNr.theory_nr= theory_nr
         logger.info ("next theory point" )
         if self.hasPreparedElements:
             self.elements.Fill()
@@ -282,6 +330,9 @@ class ROOTPrinter(object):
             self.missingtopos_weights.clear()
             self.missingtopos_value.clear()
 
+        if self.hasPreparedOutputStatus:
+            self.OutputStatusTree.Fill()
+
         if not theory_nr:
             self.TheoryNr.theory_nr+=1
 
@@ -290,10 +341,17 @@ if __name__ == "__main__":
     from smodels.installation import installDirectory
     slhafile = installDirectory() + '/inputFiles/slha/lightEWinos.slha'
     ## slhafile = installDirectory() + '/inputFiles/slha/gluino_squarks.slha'
+    sigmacut = 0.1 *fb
+    mingap = 5* GeV
+
+    outputstats = OutputStatus([1,None], slhafile,  
+         {'sigmacut' : sigmacut, 'mingap' : mingap}, '1.0.90','outputfile') 
+    printer = ROOTPrinter("out.root")
+
+    printer.addObj ( outputstats)
     print "slhafile=",slhafile
     from smodels.theory import slhaDecomposer
-    smstoplist = slhaDecomposer.decompose(slhafile )
-    printer = ROOTPrinter("out.root")
+    smstoplist = slhaDecomposer.decompose(slhafile, sigcut=sigmacut, minmassgap=mingap )
     printer.addObj ( smstoplist )
 
     # database = Database ( installDirectory() + '/test/database' )
@@ -310,8 +368,7 @@ if __name__ == "__main__":
     sqrts = max([xsec.info.sqrts for xsec in smstoplist.getTotalWeight()])
     missingtopos = MissingTopoList(sqrts)
     missingtopos.findMissingTopos(smstoplist, listOfExpRes, 5*GeV, True, True )
-    
-    printer.addObj ( missingtopos )
 
+    printer.addObj ( missingtopos )
     printer.close()
 
