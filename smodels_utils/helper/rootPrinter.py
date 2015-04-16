@@ -48,6 +48,7 @@ class ROOTPrinter(object):
         self.elements_mother_1_pid = ROOT.std.vector(int)()
         self.elements_mother_0_mass = ROOT.std.vector(float)()
         self.elements_mother_1_mass = ROOT.std.vector(float)()
+        self.elements_pids = ROOT.std.vector(ROOT.std.string)()
         self.elements_sqrts = ROOT.std.vector(ROOT.std.string)()
         self.elements.Branch ( "theory_nr", ROOT.AddressOf ( self.TheoryNr, "theory_nr" ), "theory_nr/I" )
         self.elements.Branch ( "particles", self.elements_particles )
@@ -57,6 +58,7 @@ class ROOTPrinter(object):
         self.elements.Branch ( "mother_1_pid", self.elements_mother_1_pid )
         self.elements.Branch ( "mother_0_mass", self.elements_mother_0_mass )
         self.elements.Branch ( "mother_1_mass", self.elements_mother_1_mass )
+        self.elements.Branch ( "pids", self.elements_pids )
         self.elements.Branch ( "sqrts", self.elements_sqrts )
 
     def prepareOutputStatus ( self ):
@@ -157,6 +159,7 @@ class ROOTPrinter(object):
         if mother_1_pid == None:
             mother_1_pid = 0
         self.elements_mother_1_pid.push_back ( mother_1_pid )
+        self.elements_pids.push_back ( str ( element.getPIDs() ) )
         self.elements_sqrts.push_back ( sqrts )
 
     def writeTopology ( self, topology ):
