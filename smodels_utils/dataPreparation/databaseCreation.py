@@ -94,7 +94,7 @@ class DatabaseCreator(list):
         ------pass massplane to dataInfo
         ------extending StandardTWiki
         ----extend TxNames with some attributes, to be written to txName.txt
-        ----checking if constraint, condition and fuzzycondition are set for 
+        ----checking if constraint, condition and conditionDescription are set for 
             every existing kin. region
         ----write txName.txt
         --write sms.root
@@ -102,7 +102,7 @@ class DatabaseCreator(list):
         --write dataInfo.txt
         
         :raise requiredError: If a region exist, but no constraint, condition 
-        or fuzzycondition is set for this region
+        or conditionDescription is set for this region
         """
         
         print '\n***starting creation of database entry for %s***\n'\
@@ -195,8 +195,8 @@ class DatabaseCreator(list):
                         Errors().required(txName.name, region, 'constraint')
                     if not hasattr(region, 'condition'):
                         Errors().required(txName.name, region, 'condition')
-                    if not hasattr(region, 'fuzzycondition'):
-                        Errors().required(txName.name, region, 'fuzzycondition')
+                    if not hasattr(region, 'conditionDescription'):
+                        Errors().required(txName.name, region, 'conditionDescription')
                     self._createInfoFile(getattr(region, self.txNameField), region, txName)
         self._createInfoFile( dataInfo.name, dataInfo)
 
@@ -343,7 +343,7 @@ class DatabaseCreator(list):
         
         """
         checks if there is already a globalInfo,txt file. If there is, the lastUpdate
-        field and the implemented_by field is read.
+        field and the implementedBy field is read.
         If there is no old globalInfo.txt, lastUpdate for the globalInfo.txt is set to current date.
         If there is an old file, the user is asked if the last update should be
         overwritten with current date
@@ -352,7 +352,7 @@ class DatabaseCreator(list):
         
         if os.path.isfile(self.base + self.infoFilePath(self.metaInfoFileName)):
             lastUpdate = False
-            implemented_by = False
+            implementedBy = False
             oldInfo = open(self.base + self.infoFilePath(self.metaInfoFileName))
             lines = oldInfo.readlines()
             oldInfo.close()
@@ -360,9 +360,9 @@ class DatabaseCreator(list):
                 if 'lastUpdate' in line:
                     lastUpdate = line.split(self.assignmentOperator)[1]
                     lastUpdate = lastUpdate.replace('\n','')
-                if 'implemented_by' in line:
-                    implemented_by = line.split(self.assignmentOperator)[1]
-                    implemented_by = implemented_by.replace('\n','')
+                if 'implementedBy' in line:
+                    implementedBy = line.split(self.assignmentOperator)[1]
+                    implementedBy = implementedBy.replace('\n','')
             if lastUpdate:
                 while True:
                     m = 'if one of the following data are changed, '
@@ -374,8 +374,8 @@ class DatabaseCreator(list):
                     if answer == 'y' or answer == 'n': break
                 if answer == 'n': 
                     self.metaInfo.lastUpdate = lastUpdate
-                    if not implemented_by: self._setImplementedBy()
-                    else: self.metaInfo.implemented_by = implemented_by
+                    if not implementedBy: self._setImplementedBy()
+                    else: self.metaInfo.implementedBy = implementedBy
                     return
         today = date.today()
         today = '%s/%s/%s\n' %(today.year, today.month, today.day)
@@ -385,14 +385,26 @@ class DatabaseCreator(list):
     def _setImplementedBy(self):
         
         """
-        set implemented_by attribute of self.metaInfo
+        set implementedBy attribute of self.metaInfo
         from comand line
         """
         
         while True:
             answer = raw_input('enter your name or initials: ')
             if answer: break
-        self.metaInfo.implemented_by = answer
+        initialDict= { "ww": "Wolfgang Waltenberger",
+            "WW": "Wolfgang Waltenberger",
+            "AL": "Andre Lessa",
+            "al": "Andre Lessa",
+            "suk": "Suchita Kulkarni",
+            "SuK": "Suchita Kulkarni",
+            "SUK": "Suchita Kulkarni",
+            "fa" : "Federico Ambrogi",
+            "FA" : "Federico Ambrogi" }
+        if answer in initialDict.keys():
+            snwer=initialDict[answer]
+            
+        self.metaInfo.implementedBy = answer
         
         
     def _delete(self):

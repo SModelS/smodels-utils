@@ -34,9 +34,9 @@ class MetaInfoInput(Locker):
     (publication means: physic summary note or conference note)
     """
     
-    infoAttr = [ 'sqrts', 'lumi', 'id', 'prettyname', 'url', 'arxiv', 'signalRegion',
-    'publication', 'contact', 'superseded_by','supersedes', 'comment',
-    'private', 'implemented_by', 'observedN', 'expectedBG', 'bgError' ]
+    infoAttr = [ 'sqrts', 'lumi', 'id', 'prettyName', 'url', 'arxiv', 'signalRegion',
+    'publication', 'contact', 'supersededBy','supersedes', 'comment',
+    'private', 'implementedBy', 'observedN', 'expectedBG', 'bgError' ]
     internalAttr = ['_sqrts', '_lumi']
     
     def __new__(cls, ID):
@@ -145,7 +145,7 @@ class KinematicRegion(Locker):
     """
     
     
-    infoAttr = ['condition', 'fuzzycondition', 'constraint','checked','figureUrl']
+    infoAttr = ['conditionDescription', 'condition', 'constraint','checked','figureUrl']
     internalAttr = ['name', 'functions', 'topoExtension',\
     'region']
     
@@ -426,7 +426,7 @@ class TxNameInput(Locker):
     infoAttr = []
     internalAttr = ['_name', 'name', '_txDecay', '_kinematicRegions','_planes',\
     '_branchcondition', 'onShell', 'offShell', 'constraint',\
-    'condition', 'fuzzycondition'] 
+    'condition', 'conditionDescription'] 
     
     def __new__(cls,txName):
         

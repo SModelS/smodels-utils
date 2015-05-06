@@ -25,51 +25,51 @@ class StandardDataInfo(object):
     def __init__(self):
         
         self.infoAttr = [ 'dataType', 'dataId' ]
-        self._datatype = None
+        self._dataType = None
         self.name = 'dataInfo'
         
     @property
-    def datatype(self):
+    def dataType(self):
         
         """
-        :returns: datatype as string
+        :returns: dataType as string
         """
         
-        return self._datatype
+        return self._dataType
     
-    @datatype.setter
-    def datatype(self, datatype):
+    @dataType.setter
+    def dataType(self, dataType):
         
         """
-        Checks and sets datatype
-        :raise datatypeError: if a datatype diferent
+        Checks and sets dataType
+        :raise dataTypeError: if a dataType different
         from the already existing one is given
         """
-        if not self._datatype:
-            self._datatype = datatype
+        if not self._dataType:
+            self._dataType = dataType
             return
-        if self._datatype != datatype:
-            Errors().datatype()
+        if self._dataType != dataType:
+            Errors().dataType()
         
     def checkMassPlane(self, massPlaneObj):
         
         """
         checks the settings for origLimits and origEfficiencyMap
         for given massplane. 
-        sets property datatype
-        stes attribute dataid to None (only for upper-limit)
+        sets property dataType
+        stes attribute dataid to None (only for upperLimit)
         :param massPlaneObj: inputObjects.MassPlane-objectFormat
         """
         
         limits = False
         for limit in massPlaneObj.origLimits:
             if limit:
-                self.datatype = 'upper-limit'
-                self.dataid = None
+                self.dataType = 'upperLimit'
+                self.dataId = None
                 break
         if massPlaneObj.origEfficiencyMap:
-            self.datatype = 'efficiency-map'
-        print self.datatype
+            self.dataType = 'efficiencyMap'
+        print self.dataType
             
 class StandardDataList(list):
     
@@ -287,7 +287,7 @@ class StandardTWiki(object):
         
         ID = self.link(metaInfo.url, metaInfo.id)
         if hasattr(metaInfo, 'supersededBy'):
-            ID = '%s<<BR>>ss_by: %s' %(ID, metaInfo.superseded_by)
+            ID = '%s<<BR>>ss_by: %s' %(ID, metaInfo.supersededBy)
         return ID
     
     def objectFormat(self, objectList):
@@ -375,12 +375,12 @@ class Errors(object):
         print(m)
         sys.exit()
         
-    def datatype(self):
+    def dataType(self):
         
         m = self._starLine#
-        m = m + "Error datatype, got efficency Map and upper-limits\n"
-        m = m + "one publication can either be an efficienciy analyis\n"
-        m = m + "or an upper-limit analysis\n" 
+        m = m + "Error dataType, got efficencyMap and upperLimits\n"
+        m = m + "one publication can either be an efficiency analyis\n"
+        m = m + "or an upperLimit analysis\n" 
         m = m + 'please only use setSource for either obsUpperLimit/expUpperLimits\n' 
         m = m + 'or for efficiencyMap'
         m = m + self._starLine
