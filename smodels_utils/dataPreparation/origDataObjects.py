@@ -729,7 +729,7 @@ class Errors(object):
         m = self._starLine#
         m = m + 'indexError in file: %s\n' %filePath
         m = m + 'index for listOfPrimitives should be of integer type\n'
-        m = m + 'got %s' %objectName
+        m = m + 'got %s' % index
         m = m + self._starLine
         print(m)
         sys.exit()

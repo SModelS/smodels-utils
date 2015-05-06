@@ -2,7 +2,7 @@
 
 """
 .. module:: dataPreparation
-   :synopsis: Holds objects used by convert.py to create info.txt, sms.root, sms.py and newSms.py.
+   :synopsis: Holds objects used by convert.py to create globalInfo.txt, sms.root, sms.py and newSms.py.
 
 .. moduleauthor:: Michael Traub <michael.traub@gmx.at>
 
@@ -38,7 +38,7 @@ class DatabaseCreator(list):
     The following files are created by this class:
     -sms.root
     -twiki.txt
-    -info.txt
+    -globalInfo.txt
     -txName.txt (one for every txName and every kin. region, 
     if the kin. region exist)
     """
@@ -62,7 +62,7 @@ class DatabaseCreator(list):
         self.infoFileDirectory = './data/'
         self.infoFileExtension = '.txt'
         self.metaInfoFileDirectory = './'
-        self.metaInfoFileName = 'info'
+        self.metaInfoFileName = 'globalInfo'
         self.assignmentOperator = ': '
         self.txNameField = 'txname'
         list.__init__(self)
@@ -76,7 +76,7 @@ class DatabaseCreator(list):
         The following working steps are performed:
         --date of last update is evaluated
         --old database files are deleted 
-        --write info.txt 
+        --write globalInfo.txt 
         --a empty StandardDataInfo-object is built
         --a empty StandardTWiki-object is built
         --a validation folder is created and a validate.py script is added
@@ -99,7 +99,7 @@ class DatabaseCreator(list):
         ----write txName.txt
         --write sms.root
         --write twiki.txt
-        --write datainfo.txt
+        --write dataInfo.txt
         
         :raise requiredError: If a region exist, but no constraint, condition 
         or fuzzycondition is set for this region
@@ -313,9 +313,9 @@ class DatabaseCreator(list):
             region.axes = region.axes + ';' +\
             str(plane.origPlot)
         if not hasattr(region, 'figureUrl'):
-            region.figureUrl=plane.figureUrl
+            region.figureUrl=str(plane.figureUrl)
         else:
-            region.figureUrl += ";" + plane.figureUrl
+            region.figureUrl += ";" + str(plane.figureUrl)
     
     
     def _extendInfoAttr(self, obj, attr, position = None):
@@ -342,9 +342,9 @@ class DatabaseCreator(list):
     def _setLastUpdate(self):
         
         """
-        checks if there is already a info,txt file. If there is, the lastUpdate
+        checks if there is already a globalInfo,txt file. If there is, the lastUpdate
         field and the implemented_by field is read.
-        If there is no old info.txt, lastUpdate for the info.txt is set to current date.
+        If there is no old globalInfo.txt, lastUpdate for the globalInfo.txt is set to current date.
         If there is an old file, the user is asked if the last update should be
         overwritten with current date
         When last update is overwritten, self._setImplementedBy is called
@@ -398,7 +398,7 @@ class DatabaseCreator(list):
     def _delete(self):
         
         """
-        deletes all old info.txt, txName.txt, sms.root and twiki.txt files
+        deletes all old globalInfo.txt, txName.txt, sms.root and twiki.txt files
         """
         
         predefinedPaths = [
@@ -498,7 +498,7 @@ class DatabaseCreator(list):
         """
 
         directory = self.infoFileDirectory
-        if infoFileName=="info":
+        if infoFileName=="globalInfo":
             directory = self.metaInfoFileDirectory
 
         if not os.path.exists ( directory ):

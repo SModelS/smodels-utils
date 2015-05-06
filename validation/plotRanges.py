@@ -64,6 +64,7 @@ def getExtendedFrame(txnameObjs,axes):
     maxx, maxy = 0., 0.
     for txnameObj in txnameObjs:
         data = txnameObj.txnameData.data  #Data grid of mass points and ULs of efficiencies
+        print "data=",data,txnameObj.getInfo("id")
         for pt in data:
             mass = pt[0]
             mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]

@@ -91,7 +91,7 @@ class VertexChecker(object):
         
         """
         
-        massDict = {'Z': 86., 'W': 76.,'t': 169.,'h': 118}
+        massDict = {'Z': 86., 'W': 76.,'t': 169.,'h': 118, 'higgs': 118}
         startString = '[[['
         endString = ']]]'
         kinConstraints = []

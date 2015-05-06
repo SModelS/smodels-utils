@@ -33,7 +33,7 @@ database = Database(os.path.join(home,"smodels-database"))
 expRes = database.getExpResults(analysisIDs=[getExpIdFromPath()],datasetIDs=[None])
 
 ## axes="2*Eq(mother,x)_Eq(lsp,y)"
-slhamain = os.path.join(home,"smodels-utils/slha")
+slhamain = os.path.join(home,"smodels-utils/slha/")
 ## txname="T6bbWW"
 
 print validatePlot(expRes,args.txname,args.axes,slhamain+"%s.tar" % args.txname, kfactor=args.kfactor )

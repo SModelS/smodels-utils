@@ -2,7 +2,7 @@
 
 """
 .. module:: dataPreparation
-   :synopsis: Holds objects used by convert.py to create info.txt, sms.root, sms.py and newSms.py.
+   :synopsis: Holds objects used by convert.py to create globalInfo.txt, sms.root, sms.py and newSms.py.
 
 .. moduleauthor:: Michael Traub <michael.traub@gmx.at>
 
@@ -24,7 +24,7 @@ class StandardDataInfo(object):
     """ the dataInfo.txt file content """
     def __init__(self):
         
-        self.infoAttr = [ 'datatype', 'dataid' ]
+        self.infoAttr = [ 'dataType', 'dataId' ]
         self._datatype = None
         self.name = 'dataInfo'
         
@@ -286,7 +286,7 @@ class StandardTWiki(object):
         """
         
         ID = self.link(metaInfo.url, metaInfo.id)
-        if hasattr(metaInfo, 'superseded_by'):
+        if hasattr(metaInfo, 'supersededBy'):
             ID = '%s<<BR>>ss_by: %s' %(ID, metaInfo.superseded_by)
         return ID
     
