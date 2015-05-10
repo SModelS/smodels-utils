@@ -90,10 +90,10 @@ def runSModelSFor(validationPlot):
         predictions = theoryPredictionsFor(expRes, smstoplist)
         if not predictions: continue
         dataset = predictions.dataset
-        datasetID = dataset.getValuesFor('dataid')
+        datasetID = dataset.getValuesFor('dataId')
         for theoryPrediction in predictions:
             txname = theoryPrediction.txname
-            if txname and txname.txname  != validationPlot.txname: continue                      
+            if txname and txname.txName  != validationPlot.txName: continue                      
             mass = theoryPrediction.mass
 #             if not mass: # and len(smstoplist.getElements()) == 1:
 #                 for i in smstoplist.getElements():
@@ -103,10 +103,14 @@ def runSModelSFor(validationPlot):
                 logger.error("Could not define mass ``%s'' for prediction." % mass )         
             value = theoryPrediction.value
             cond = theoryPrediction.conditions
-            if expRes.getValuesFor('datatype') == 'upper-limit':
+            upperLimit=None
+            if expRes.getValuesFor('dataType')[0] == 'upperLimit':
+                print "getting upper limt for ",expRes,txname,mass
                 upperLimit = expRes.getUpperLimitFor(txname=txname,mass=mass)
-            elif expRes.getValuesFor('datatype') == 'efficiency-map':
+            elif expRes.getValuesFor('dataType')[0] == 'efficiencyMap':
                 upperLimit = expRes.getUpperLimitFor(dataID=datasetID)
+            else:
+                logger.error ( "dont know dataType of "+expRes.getValuesFor('dataType')[0] )
 
             if len(value) != 1:
                 logger.warning("More than one cross-section found. Using first one")
@@ -119,7 +123,7 @@ def runSModelSFor(validationPlot):
             x,y = v
             data.append({'slhafile' : slhafile, 'axes': [x,y], \
                          'signal' : value, 'UL' : upperLimit, 'condition': cond,
-                         'dataset': predictions.dataset.getValuesFor("dataid")})
+                         'dataset': predictions.dataset.getValuesFor("dataId")})
 
     #Remove temporary folder
     if slhaD != validationPlot.slhaDir: shutil.rmtree(slhaD)

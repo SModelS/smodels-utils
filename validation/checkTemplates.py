@@ -28,7 +28,7 @@ badTemplates = []
 database = Database(os.path.expanduser("~/smodels-database/"))
 for expRes in database.expResultList:
     #Skip efficiency-map analyses:
-    if 'efficiency-map' in expRes.getValuesFor('datatype'): continue
+    if 'efficiencyMap' in expRes.getValuesFor('dataType'): continue
     for txname in expRes.getTxNames():
         #Skip incomplete analysis
         if txname.getInfo('constraint') == 'not yet assigned': continue 

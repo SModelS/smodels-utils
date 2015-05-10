@@ -36,4 +36,5 @@ expRes = database.getExpResults(analysisIDs=[getExpIdFromPath()],datasetIDs=[Non
 slhamain = os.path.join(home,"smodels-utils/slha/")
 ## txname="T6bbWW"
 
-print validatePlot(expRes,args.txname,args.axes,slhamain+"%s.tar" % args.txname, kfactor=args.kfactor )
+for i in expRes:
+    print validatePlot(i,args.txname,args.axes,slhamain+"%s.tar" % args.txname, kfactor=args.kfactor )

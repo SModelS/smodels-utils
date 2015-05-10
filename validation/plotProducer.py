@@ -56,7 +56,7 @@ def validatePlot(expRes,txname,axes,slhadir,kfactor=1.):
     if not curve:
         return False
 
-    logger.info("Generating validation plot for " + expRes.getValuesFor('id') 
+    logger.info("Generating validation plot for " + expRes.getValuesFor('id')[0]
                 +", "+txname+", "+axes)        
     valPlot = ValidationPlot(expRes,txname,axes,kfactor=kfactor)
     valPlot.setSLHAdir(slhadir)
@@ -98,9 +98,10 @@ def validateTxName(expRes,txname,slhadir,kfactor=1.):
             axes.append(ax)
     
         if not axes: continue
-        ret = {exp.getValuesFor('id') : {}}
+        ID=exp.getValuesFor('id')[0]
+        ret = { ID : {}}
         for ax in axes: 
-            ret[exp.getValuesFor('id')][ax]= validatePlot(exp,txname,ax,slhadir,
+            ret[ID][ax]= validatePlot(exp,txname,ax,slhadir,
                                                           kfactor=kfactor) 
     return ret ## return agreement factors
     

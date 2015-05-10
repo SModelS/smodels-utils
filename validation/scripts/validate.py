@@ -25,5 +25,6 @@ expRes = database.getExpResults(analysisIDs=[getExpIdFromPath()],datasetIDs=[Non
 slhamain = os.path.join(home,"smodels-utils/slha")
 # kfactorDict = { "TChiWZ": 1.25, "TChiWW": 1.25 }
 kfactorDict= {} 
-validateExpRes(expRes,slhamain, kfactorDict = kfactorDict )
+for i in expRes:
+    validateExpRes(i,slhamain, kfactorDict = kfactorDict )
 

@@ -66,7 +66,7 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None):
     return txnames
 
 def getFigureUrl ( validationPlot ):
-    txnameinfo = validationPlot.expRes.getTxnameWith ( { "txname": validationPlot.txname } )
+    txnameinfo = validationPlot.expRes.getTxnameWith ( { "txName": validationPlot.txName } )
     if type ( txnameinfo ) == list:
         logger.error ( "received a list for .getTxnameWith. Dont know what to do with this" )
         txnameinfo=txnameinfo[0]
@@ -322,8 +322,8 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     if excluded_border.GetN()>0: base.Add(excluded_border, "P")
     if cond_violated.GetN()>0: base.Add(cond_violated, "P")
     base.Add(official, "L")
-    title = validationPlot.expRes.getValuesFor('id') + "_" \
-            + validationPlot.txname\
+    title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
+            + validationPlot.txName\
             + "_" + validationPlot.axes
     figureUrl = getFigureUrl(validationPlot)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    

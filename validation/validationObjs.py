@@ -31,7 +31,7 @@ class ValidationPlot():
                  kfactor = 1.):
 
         self.expRes = ExptRes
-        self.txname = TxNameStr
+        self.txName = TxNameStr
         self.axes = Axes
         self.slhaDir = None
         self.data = None
@@ -47,7 +47,7 @@ class ValidationPlot():
                 sys.exit()
         #Try to guess the path:
         else:
-            anaID = ExptRes.getValuesFor('id')
+            anaID = ExptRes.getValuesFor('id')[0]
             self.database = ExptRes.path[:ExptRes.path.find('/'+anaID)]
             self.database = self.database[:self.database.rfind('/')]
             self.database = self.database[:self.database.rfind('/')+1]
@@ -59,7 +59,7 @@ class ValidationPlot():
 
         vstr = "Validation plot for\n"
         vstr += 'id: '+self.expRes.getValuesFor('id')+'\n'
-        vstr += 'TxName: '+self.txname+'\n'
+        vstr += 'TxName: '+self.txName+'\n'
         vstr += 'Axes: '+self.axes
         return vstr
 
@@ -75,7 +75,7 @@ class ValidationPlot():
         import ROOT
         curve=self.getOfficialCurve()
         if not curve:
-            logger.error( "could not get official tgraph curve for %s %s %s" % ( self.expRes,self.txname,self.axes  ) )
+            logger.error( "could not get official tgraph curve for %s %s %s" % ( self.expRes,self.txName,self.axes  ) )
             return 1.0
         x0=ROOT.Double()
         y0=ROOT.Double()
@@ -142,9 +142,9 @@ class ValidationPlot():
 
         :return: a root TGraph object
         """
-        tgraphDict = getExclusionCurvesFor(self.expRes,txname=self.txname,axes=self.axes)
+        tgraphDict = getExclusionCurvesFor(self.expRes,txname=self.txName,axes=self.axes)
         if not tgraphDict: return None
-        tgraph = tgraphDict[self.txname]
+        tgraph = tgraphDict[self.txName]
         if len(tgraph) > 1:
             logger.warning("More than one exclusion curve found. Using the first one.")
 
@@ -208,7 +208,7 @@ class ValidationPlot():
             os.mkdir(vDir)
 
         filename = self.plot.GetTitle()+'.pdf'
-        filename = filename.replace(self.expRes.getValuesFor('id')+"_","")
+        filename = filename.replace(self.expRes.getValuesFor('id')[0]+"_","")
         filename = os.path.join(vDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
         self.plot.Print(filename)
@@ -242,7 +242,7 @@ class ValidationPlot():
 
         if not datafile:
             datafile = self.plot.GetTitle()+'.py'
-            datafile = datafile.replace(self.expRes.getValuesFor('id')+"_","")
+            datafile = datafile.replace(self.expRes.getValuesFor('id')[0]+"_","")
             datafile = os.path.join(validationDir,datafile)
             datafile = datafile.replace("*","").replace(",","").replace("(","").replace(")","")
 

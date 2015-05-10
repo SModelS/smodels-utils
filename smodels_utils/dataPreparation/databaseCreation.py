@@ -64,7 +64,7 @@ class DatabaseCreator(list):
         self.metaInfoFileDirectory = './'
         self.metaInfoFileName = 'globalInfo'
         self.assignmentOperator = ': '
-        self.txNameField = 'txname'
+        self.txNameField = 'txName'
         list.__init__(self)
             
     def create(self):
@@ -402,7 +402,7 @@ class DatabaseCreator(list):
             "fa" : "Federico Ambrogi",
             "FA" : "Federico Ambrogi" }
         if answer in initialDict.keys():
-            snwer=initialDict[answer]
+            answer=initialDict[answer]
             
         self.metaInfo.implementedBy = answer
         
