@@ -284,7 +284,7 @@ class MassPlane(Locker):
         """
         
         return self.origLimits['limit']
-        
+
     @property
     def expUpperLimit(self):
         

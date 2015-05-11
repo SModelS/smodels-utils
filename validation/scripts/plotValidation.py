@@ -34,17 +34,17 @@ execfile(filename)
 database = Database(os.path.join(home,"smodels-database"))
 expRes = database.getExpResults(analysisIDs=[ getExpIdFromPath() ],datasetIDs=[None])
 
+for res in expRes:
+    plot=ValidationPlot( res, args.txname, args.axes )
+    plot.data=validationData
+    agreement = plot.computeAgreementFactor( signal_factor = args.signal_factor )
+    print "agreement=",agreement
 
-plot=ValidationPlot( expRes, args.txname, args.axes )
-plot.data=validationData
-agreement = plot.computeAgreementFactor( signal_factor = args.signal_factor )
-print "agreement=",agreement
+    if args.plottype=="plain":
+        plot.getPlot()
+    else:
+        plot.getSpecialPlot( what=args.plottype, nthpoint=args.nthpoint, signal_factor = args.signal_factor )
+    plot.savePlot()
 
-if args.plottype=="plain":
-    plot.getPlot()
-else:
-    plot.getSpecialPlot( what=args.plottype, nthpoint=args.nthpoint, signal_factor = args.signal_factor )
-plot.savePlot()
-
-# import IPython
-# IPython.embed()
+    # import IPython
+    # IPython.embed()
