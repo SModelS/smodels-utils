@@ -32,7 +32,7 @@ def getDatasetIdsFromPath(dir="../"):
     files=os.listdir(dir)
     datasetids=[]
     for f in files:
-        if f.find("globalInfo.txt")!=0 and f.find("validation")!=0:
+        if f.find("globalInfo.txt")!=0 and f.find("validation")!=0 and f.find("sms.root")!=0:
             datasetids.append  ( f.replace("data-","").replace("ana","ANA").replace("cut","CUT" ) )
     return datasetids
 
