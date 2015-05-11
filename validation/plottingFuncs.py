@@ -156,8 +156,8 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     if excluded_border.GetN()>0: base.Add(excluded_border, "P")
     if cond_violated.GetN()>0: base.Add(cond_violated, "P")
     base.Add(official, "L")
-    title = what+"_"+validationPlot.expRes.getValuesFor('id') + "_" \
-            + validationPlot.txname\
+    title = what+"_"+validationPlot.expRes.getValuesFor('id')[0] + "_" \
+            + validationPlot.txName\
             + "_" + validationPlot.axes
     figureUrl = getFigureUrl(validationPlot)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
@@ -210,20 +210,25 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
             labels.append ( lk )
 
         #Add original grid data to UL plot:
-        if what == "upperlimits":
+        if what == "upperlimits": ## FIXME this doesnt work anymore
             olk=ROOT.TLatex ()
             olk.SetTextSize(.02)
             origPlot = OrigPlot.fromString(validationPlot.axes)
-            txnameObj = validationPlot.expRes.getTxnameWith({'txname': validationPlot.txname})
-            txnameData = txnameObj.txnameData.data
-            for (itr, (mass,ul)) in enumerate ( txnameData ):
-                if itr% nthpoint != 0: continue
-                mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]            
-                v=origPlot.getXYValues(mass_unitless)
-                if not v: continue
-                x,y = v
-                ul = ul.asNumber(pb)
-                lk.DrawLatex ( x, y, "#color[4]{%.2f}" % ul )
+            txnameObjs = validationPlot.expRes.getTxnameWith({'txName': validationPlot.txName})
+            for txnameObj in txnameObjs:
+                print "txnameObj=",txnameObj,type(txnameObj),txnameObj.txName
+                txnameData = txnameObj.txnameData.data
+                print "txnameData=",txnameData
+                if txnameData==None:
+                        continue
+                for (itr, (mass,ul)) in enumerate ( txnameData ):
+                    if itr% nthpoint != 0: continue
+                    mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]            
+                    v=origPlot.getXYValues(mass_unitless)
+                    if not v: continue
+                    x,y = v
+                    ul = ul.asNumber(pb)
+                    lk.DrawLatex ( x, y, "#color[4]{%.2f}" % ul )
                 
 
     l2=TLatex()

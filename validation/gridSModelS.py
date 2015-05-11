@@ -28,9 +28,9 @@ def getSlhaFiles(slhadir):
     Returns a list of valid SLHA files in slhadir
     :param slhadir: path to the SLHA folder or the tar ball containing the files (string)
     :return: list of SLHA files (list of strings)
-    """            
-    
-    slhaFiles = []    
+    """
+
+    slhaFiles = []
     if os.path.isdir(slhadir):
         slhaD = slhadir
     elif os.path.isfile(slhadir):
@@ -45,7 +45,7 @@ def getSlhaFiles(slhadir):
     else:
         logger.error("%s is not a file nor a folder" %slhadir)
         sys.exit()
-    
+
     for root, dirs, files in os.walk(slhaD):
         for slhafile in files:
             slhafile = os.path.join(root,slhafile)
@@ -58,72 +58,113 @@ def getSlhaFiles(slhadir):
             slhaFiles.append(slhafile)
 
     return slhaFiles,slhaD
-        
+
 def runSModelSFor(validationPlot):
     """
     Uses the information in the ValidationPlot object
     to produce a parameter file to be used with runSModelS.
     Selects the analysis and topology corresponding to the validationPlot
-    
+
     :param validationPlot: a ValidationPlot object
     :return: path to the temporary parameter file
-    """  
-    
+    """
+
     #Define original plot
     origPlot = OrigPlot.fromString(validationPlot.axes)
-    
+
     #Get list of SLHA files:
     if not validationPlot.slhaDir:
         logger.warning("SLHA folder not defined")
         return False
     slhaFiles,slhaD = getSlhaFiles(validationPlot.slhaDir)
-    
+
     expRes = validationPlot.expRes
     #Define basic parameters
     sigmacut = 0. * fb
     mingap = 2. * GeV
     #Loop over SLHA files and compute results:
-    data = []    
+    data = []
     for slhafile in slhaFiles:
+        #print "[gridSModelS] now run on",slhafile
         smstoplist = slhaDecomposer.decompose(slhafile, sigmacut,\
                         doCompress=True,doInvisible=True, minmassgap=mingap)
+        #print "smstoplist=",smstoplist
+        #for topo in smstoplist:
+        #    print "topo=",topo
+        #print "expRes=",expRes
         predictions = theoryPredictionsFor(expRes, smstoplist)
-        if not predictions: continue
-        dataset = predictions.dataset
-        datasetID = dataset.getValuesFor('dataId')
+        if not predictions:
+            logger.error ( "no theory predictions" )
+            continue
+        # datasetID = expRes.getValuesFor('dataId')
+        #import IPython
+        # IPython.embed()
         for theoryPrediction in predictions:
-            txname = theoryPrediction.txname
-            if txname and txname.txName  != validationPlot.txName: continue                      
+            dataset = theoryPrediction.dataset
+            datasetID = dataset.dataInfo.dataId
+            txnames = theoryPrediction.txnames
+            is_in=False
+            for txname in txnames:
+                if txname.txName == validationPlot.txName:
+                    is_in=True
+            if not is_in:
+                logger.error ( "cannot find %s" % validationPlot.txName )
+                continue
+            #if txname and txname.txName  != validationPlot.txName: 
+            #    logger.error ( "wrong txname %s != %s" % ( txname, validationPlot.txName ) )
+            #    print "txnames=",theoryPrediction.txnames
+            #    for i in theoryPrediction.txnames:
+            #        print i.txName,
+            #    print
+            #    import sys
+            #    sys.exit()
+            #    continue
             mass = theoryPrediction.mass
 #             if not mass: # and len(smstoplist.getElements()) == 1:
 #                 for i in smstoplist.getElements():
 #                     if str(i)!="[[],[]]":
 #                         mass=i.getMasses()
             if not mass:
-                logger.error("Could not define mass ``%s'' for prediction." % mass )         
+                logger.error("Could not define mass ``%s'' for prediction." % mass )
             value = theoryPrediction.value
             cond = theoryPrediction.conditions
             upperLimit=None
+            efficiency=None
+            CLs=None
             if expRes.getValuesFor('dataType')[0] == 'upperLimit':
-                print "getting upper limt for ",expRes,txname,mass
                 upperLimit = expRes.getUpperLimitFor(txname=txname,mass=mass)
             elif expRes.getValuesFor('dataType')[0] == 'efficiencyMap':
                 upperLimit = expRes.getUpperLimitFor(dataID=datasetID)
+                # eff=expRes.getTxNames()[0].getEfficiencyFor ( mass )
+                eff=expRes.getTxNames()[0].txnameData.getValueFor ( mass )
+                # print effMap[mass]
+                expectedBG=dataset.getValuesFor ( "expectedBG" )
+                observedN=dataset.getValuesFor ( "observedN" )
+                bgError=dataset.getValuesFor ( "bgError" )
+                lumi=dataset.getValuesFor ( "lumi" )[0]
+                from smodels.tools import exclusion_CLs
+                ## import IPython
+                ## IPython.embed()
+                CLs=exclusion_CLs.CLs ( observedN, expectedBG, bgError, value[0].value * lumi, 10000 )
+                efficiency=eff
             else:
                 logger.error ( "dont know dataType of "+expRes.getValuesFor('dataType')[0] )
 
             if len(value) != 1:
                 logger.warning("More than one cross-section found. Using first one")
             value = value[0].value
-            mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]            
+            mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]
             v=origPlot.getXYValues(mass_unitless)
             if v == None:
                 logger.info ( "dropping %s, doesnt fall into the plane of %s." % ( slhafile, origPlot.string ) )
                 continue
             x,y = v
-            data.append({'slhafile' : slhafile, 'axes': [x,y], \
-                         'signal' : value, 'UL' : upperLimit, 'condition': cond,
-                         'dataset': predictions.dataset.getValuesFor("dataId")})
+            Dict= {'slhafile' : slhafile, 'axes': [x,y], 'signal' : value, 'UL' : upperLimit, 'condition': cond, 'dataset': datasetID }
+            # print "[gridSModelS] run on ",Dict
+            if efficiency:
+                Dict['efficiency']=efficiency
+                Dict['CLs']=CLs
+            data.append( Dict )
 
     #Remove temporary folder
     if slhaD != validationPlot.slhaDir: shutil.rmtree(slhaD)
