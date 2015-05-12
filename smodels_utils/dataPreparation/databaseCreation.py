@@ -67,7 +67,7 @@ class DatabaseCreator(list):
         self.txNameField = 'txName'
         list.__init__(self)
             
-    def create(self):
+    def create(self, createAdditional=False):
         
         """
         main method of the class
@@ -100,6 +100,8 @@ class DatabaseCreator(list):
         --write sms.root
         --write twiki.txt
         --write dataInfo.txt
+
+        if createAdditional is true, we dont delete, nor do we create sms.root
         
         :raise requiredError: If a region exist, but no constraint, condition 
         or conditionDescription is set for this region
@@ -108,11 +110,12 @@ class DatabaseCreator(list):
         print '\n***starting creation of database entry for %s***\n'\
         %self.metaInfo.id
         
-        self._extendInfoAttr(self.metaInfo, 'lastUpdate')
-        self._setLastUpdate()
-        self._delete()
-        self._createInfoFile(self.metaInfoFileName, self.metaInfo)
-        self._createValidationFolder ()
+        if not createAdditional:
+            self._extendInfoAttr(self.metaInfo, 'lastUpdate')
+            self._setLastUpdate()
+            self._delete()
+            self._createInfoFile(self.metaInfoFileName, None, self.metaInfo)
+            self._createValidationFolder ()
 
         self.tWiki = StandardTWiki(self.metaInfo)
         
@@ -122,6 +125,7 @@ class DatabaseCreator(list):
 
         hasUpperLimits = False
         for txName in self:
+            dataset=None
             
             print '\nreading: %s' %txName.name
             # print "   for dataset",txName.dataset
@@ -208,13 +212,13 @@ class DatabaseCreator(list):
                         Errors().required(txName.name, region, 'condition')
                     if not hasattr(region, 'conditionDescription'):
                         Errors().required(txName.name, region, 'conditionDescription')
-                    self._createInfoFile(getattr(region, self.txNameField), region, txName)
-        self._createInfoFile( dataInfo.name, dataInfo)
-
-   
+                    print "dataInfo.dataId",dataInfo.dataId
+                    self._createInfoFile(getattr(region, self.txNameField), dataInfo.dataId, region, txName )
+        self._createInfoFile( dataInfo.name, dataInfo.dataId, dataInfo)
         
-        self._createSmsRoot()
-        self._createTwikiTxt()
+        if not createAdditional:
+            self._createSmsRoot()
+            self._createTwikiTxt()
    
         
     def extendDataList(self, dataList, plane, vertexChecker, txName, limitType = None):
@@ -448,6 +452,8 @@ class DatabaseCreator(list):
         except OSError,e:
             pass
 
+        print "[databaseCreation] cleaned up in",self.base
+
     def _createValidationFolder(self):
         """ create the validation folder and populate it with validate.py """
         if not os.path.exists ( self.validationPath ):
@@ -493,7 +499,7 @@ class DatabaseCreator(list):
         twikiTxt.write('%s' %self.tWiki)
         twikiTxt.close()
         
-    def _createInfoFile(self, name, *objects):
+    def _createInfoFile(self, name, dataid, *objects):
         
         """
         creates a file of type .txt
@@ -506,23 +512,28 @@ class DatabaseCreator(list):
         """
         
         content = ''
+        path=self.infoFilePath(name, dataid)
         for obj in objects:
             for attr in obj.infoAttr:
                 if not hasattr(obj, attr) and \
                 not hasattr(obj.__class__, attr) : continue
                 content = '%s%s%s%s\n' %(content, attr,\
                 self.assignmentOperator, getattr(obj, attr))
-        infoFile = open(self.base + self.infoFilePath(name), 'w')
+                if attr == "dataId":
+                    path = self.infoFilePath ( name, getattr ( obj, attr ) )
+        infoFile = open(self.base + path, 'w')
         infoFile.write(content)
         infoFile.close()
         
-    def infoFilePath(self, infoFileName):
+    def infoFilePath(self, infoFileName, dataid=None ):
         """
         :param infoFileName: name of requested file without extension
         :return: path of info-file with given name
         """
 
         directory = self.infoFileDirectory
+        if dataid: ## if dataid is given, we name the directory according to the dataid
+            directory = dataid + "/"
         if infoFileName=="globalInfo":
             directory = self.metaInfoFileDirectory
 
@@ -530,6 +541,7 @@ class DatabaseCreator(list):
             os.mkdir ( directory )
         
         path = '%s%s%s' %(directory, infoFileName, self.infoFileExtension)
+        print "[infoFilePath]",path
         return path
         
 databaseCreator = DatabaseCreator()   
