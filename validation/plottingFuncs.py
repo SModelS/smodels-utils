@@ -330,6 +330,10 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
             + validationPlot.txName\
             + "_" + validationPlot.axes
+    subtitle = "datasetIds: "
+    for dataset in validationPlot.expRes.datasets:
+        subtitle+=dataset.dataInfo.dataId+" "
+    ## IPython.embed()
     figureUrl = getFigureUrl(validationPlot)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
     base.Draw("AP")
@@ -340,6 +344,11 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     agreement = validationPlot.computeAgreementFactor()
     l.DrawLatex(.15,.85,"validation agreement %.1f %s" % (agreement*100, "%" ) )
     base.l=l
+    l0=TLatex()
+    l0.SetNDC()
+    l0.SetTextSize(.015)
+    l0.DrawLatex(.1,.905,subtitle)
+    base.l0=l0
     if figureUrl:
         # print "dawing figureUrl"
         l1=TLatex()
