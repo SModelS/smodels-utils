@@ -134,7 +134,7 @@ class DatabaseCreator(list):
                 Errors().missingOnConstraint(txName.name)
             vertexChecker = VertexChecker(txName.name, txName.on.constraint )
             upperLimits = StandardDataList()
-            print "upperLimits=",upperLimits
+            ## print "upperLimits=",upperLimits
             expectedUpperLimits = StandardDataList()
             efficiencyMap = StandardDataList(valueUnit ='')
             

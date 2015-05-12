@@ -30,6 +30,7 @@ class StandardDataInfo(object ):
         self.dataId= None
         self.dataset = None
         self.observedN = None
+        self.hasAddedStatistics=False
         
     @property
     def dataType(self):
@@ -73,10 +74,12 @@ class StandardDataInfo(object ):
         if massPlaneObj.origEfficiencyMap:
             self.dataType = 'efficiencyMap'
             self.dataId = self.dataset
-            self.infoAttr.append ( "observedN" )
-            self.infoAttr.append ( "expectedBG" )
-            self.infoAttr.append ( "bgError" )
-            self.infoAttr.append ( "upperLimit" )
+            if not self.hasAddedStatistics:
+                self.infoAttr.append ( "observedN" )
+                self.infoAttr.append ( "expectedBG" )
+                self.infoAttr.append ( "bgError" )
+                self.infoAttr.append ( "upperLimit" )
+                self.hasAddedStatistics=True
         print self.dataType
             
 class StandardDataList(list):
