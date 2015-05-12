@@ -20,13 +20,16 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
 
-class StandardDataInfo(object):
+class StandardDataInfo(object ):
     """ the dataInfo.txt file content """
-    def __init__(self):
+    def __init__(self ):
         
         self.infoAttr = [ 'dataType', 'dataId' ]
         self._dataType = None
         self.name = 'dataInfo'
+        self.dataId= None
+        self.dataset = None
+        self.observedN = None
         
     @property
     def dataType(self):
@@ -69,6 +72,11 @@ class StandardDataInfo(object):
                 break
         if massPlaneObj.origEfficiencyMap:
             self.dataType = 'efficiencyMap'
+            self.dataId = self.dataset
+            self.infoAttr.append ( "observedN" )
+            self.infoAttr.append ( "expectedBG" )
+            self.infoAttr.append ( "bgError" )
+            self.infoAttr.append ( "upperLimit" )
         print self.dataType
             
 class StandardDataList(list):

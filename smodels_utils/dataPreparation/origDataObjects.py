@@ -24,7 +24,8 @@ class Orig(Locker):
     
     infoAttr = []
     internalAttr = ['name','path', 'fileType', 'objectName',\
-    'dataUrl', 'index', 'allowNegativValues']
+    'dataUrl', 'index', 'allowNegativValues', 'dataset',
+    'observedN','expectedBG','bgError' ]
     
     def __init__(self,name):
         
@@ -41,8 +42,9 @@ class Orig(Locker):
         self.dataUrl = None
         self.index = None
         self.allowNegativValues = False
+        self.dataset=None
 
-    def setSource(self, path, fileType, objectName = None, index = None):
+    def setSource(self, path, fileType, objectName = None, index = None, dataset="data" ):
         
         """set path and type of data source
         :param path: path to data file as string
@@ -59,6 +61,14 @@ class Orig(Locker):
         self.fileType = fileType
         self.objectName = objectName
         self.index = index
+        self.dataset = dataset
+
+    def setStatistics ( self, observedN, expectedBG, bgError ):
+        """for efficiency maps set the statistical values
+        """
+        self.observedN = observedN
+        self.expectedBG = expectedBG
+        self.bgError = bgError
         
     def _positivValues(self, values):
         

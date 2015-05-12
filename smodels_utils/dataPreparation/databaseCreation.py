@@ -117,11 +117,14 @@ class DatabaseCreator(list):
         self.tWiki = StandardTWiki(self.metaInfo)
         
         publishedData = True
+            
+        dataInfo = StandardDataInfo()
 
         hasUpperLimits = False
         for txName in self:
             
             print '\nreading: %s' %txName.name
+            # print "   for dataset",txName.dataset
             
             if not hasattr(txName.on, 'constraint'): 
                 Errors().missingOnConstraint(txName.name)
@@ -131,14 +134,22 @@ class DatabaseCreator(list):
             expectedUpperLimits = StandardDataList()
             efficiencyMap = StandardDataList(valueUnit ='')
             
-            dataInfo = StandardDataInfo()
-            
             exclusions = ObjectList('name')
             for region in txName.kinematicRegions:
                 exclusions.append\
                 (StandardExclusions(txName.name + region.topoExtension))
-            
+
             for plane in txName.planes:
+                
+                if plane.origEfficiencyMap:
+                    dataInfo.dataset = plane.origEfficiencyMap.dataset
+                    dataInfo.observedN = plane.origEfficiencyMap.observedN
+                    dataInfo.expectedBG = plane.origEfficiencyMap.expectedBG
+                    dataInfo.bgError = plane.origEfficiencyMap.bgError
+                    from smodels.tools import statistics
+                    from smodels.tools.physicsUnits import fb, pb
+                    lumi=eval(self.metaInfo.lumi)
+                    dataInfo.upperLimit = str ( statistics.upperLimit ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError, lumi ).asNumber ( fb ) )+"*fb"
                 
                 print '\nreading mass plane: %s\n' %plane.origPlot
                 
@@ -400,6 +411,8 @@ class DatabaseCreator(list):
             "SuK": "Suchita Kulkarni",
             "SUK": "Suchita Kulkarni",
             "fa" : "Federico Ambrogi",
+            "ul" : "Ursula Laa",
+            "UL" : "Ursula Laa",
             "FA" : "Federico Ambrogi" }
         if answer in initialDict.keys():
             answer=initialDict[answer]
