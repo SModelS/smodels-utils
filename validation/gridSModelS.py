@@ -94,8 +94,9 @@ def runSModelSFor(validationPlot):
         #print "expRes=",expRes
         predictions = theoryPredictionsFor(expRes, smstoplist)
         if not predictions:
-            logger.error ( "no theory predictions" )
+            logger.info ( "no theory predictions for %s in %s" % ( expRes,slhafile) )
             continue
+        logger.info("I have theory predictions for %s in %s" % ( expRes,slhafile) )
         # datasetID = expRes.getValuesFor('dataId')
         #import IPython
         # IPython.embed()
