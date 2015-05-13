@@ -30,7 +30,7 @@ def createDataInfoFile ( analysis, ana, cut ):
     ul=statistics.upperLimit ( data, bg, sys, lumi )
 
     f=open ( destdir+newananame+datadir+ "/dataInfo.txt", "w")
-    f.write ( "dataType: efficiency-map\n" )
+    f.write ( "dataType: efficiencyMap\n" )
     f.write ( "dataId: ANA%d-CUT%d\n" % ( ana, cut ) )
     f.write ( "observedN: %d\n" % data )
     f.write ( "expectedBG: %.1f\n" % bg )
