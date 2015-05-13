@@ -12,10 +12,41 @@ sys.path.append(os.path.join(home,'smodels'))
 from smodels.experiment.databaseObjects import Database
 from smodels.tools.physicsUnits import GeV, fb, TeV, pb
 import random
-from ROOT import TCanvas, TGraph2D, TLatex, gPad, gStyle
+from ROOT import TCanvas, TGraph2D, TLatex, gPad, gStyle, TH1F
 from AuxPlot import Default, set_palette
 
 
+
+def createHist(pts,silentMode=False):
+    """
+    :return: TCanvas object containing the plot
+    """
+
+    h = TH1F("errors", "relative errors", 1000,0.,100.)
+    for pt in pts:
+        if pt[1] == pt[2]: continue
+        relError = abs(pt[1]-pt[2])/pt[1]
+        h.Fill(relError)
+        
+    Default(h,"TH1")
+#     h.GetXaxis().SetTitle("Relative error")
+    h.GetYaxis().SetTitle("Fraction of Interpolations")
+    plane = TCanvas("c1", "c1",0,0,800,600)    
+    Default(plane,"TCanvas")
+    set_palette(gStyle)
+    plane.SetLeftMargin(0.17)
+    plane.SetBottomMargin(0.16)
+    plane.SetRightMargin(0.2)
+    plane.SetLogy()
+    plane.SetLogx()
+    plane.cd()
+    h.DrawNormalized()
+
+    if not silentMode:
+        ans = raw_input("Hit any key to close\n")    
+
+    return plane
+    
 
 def createPlot(pts,silentMode=False):
     """
@@ -136,8 +167,9 @@ def checkInterpolationFor(expIds = ['all'], txnames=['all'], datasetIDs = ['all'
         txnameErrors[txname.path] = []
         for pt in removedPts[itx]:            
             val = txname.txnameData.getValueFor(pt[0])
-            if pt[1].asNumber() == 0.: continue
-            if val is None or val == pt[1]: continue
+            if type(pt[1]) == type(fb): pt[1] = pt[1].asNumber(fb)
+            if pt[1] == 0. or val is None: continue
+            elif type(val) == type(fb): val = val.asNumber(fb)
             maxErrors[itx] = max(maxErrors[itx],abs(val-pt[1])/pt[1])
             newpt = pt
             newpt.append(val)
@@ -152,15 +184,17 @@ def checkInterpolationFor(expIds = ['all'], txnames=['all'], datasetIDs = ['all'
         print txname,'\nmax rel. error=',maxErrors[itx]
         
     #Plot results
+    allPts = []
     for txname,pts in txnameErrors.items():
-        createPlot(pts,silentMode=True)
+        allPts += pts
+#         createPlot(pts,silentMode=True)
         
-    
+    createHist(allPts,silentMode=False) 
         
         
 if __name__ == "__main__":
     
-    expIds = ['ATLAS-SUSY-2013-02']
+    expIds = ['all']
     txnames = ['all']
     datasetIDs = ['all']
     checkInterpolationFor(expIds,txnames,datasetIDs)    
