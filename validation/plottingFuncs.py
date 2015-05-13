@@ -332,7 +332,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             + "_" + validationPlot.axes
     subtitle = "datasetIds: "
     for dataset in validationPlot.expRes.datasets:
-        subtitle+=dataset.dataInfo.dataId+" "
+        subtitle+=str(dataset.dataInfo.dataId)+" "
     ## IPython.embed()
     figureUrl = getFigureUrl(validationPlot)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
