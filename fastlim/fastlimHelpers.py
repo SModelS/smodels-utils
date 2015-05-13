@@ -17,7 +17,7 @@ def createDataInfoFile ( analysis, ana, cut ):
     if not os.path.exists ( destdir+newananame ):
         print "creating",destdir+newananame
         os.mkdir ( destdir + newananame )
-    datadir="/data-ana%d-cut%d" % ( ana, cut )
+    datadir="/ANA%d-CUT%d" % ( ana, cut )
     if not os.path.exists ( destdir+newananame+datadir ):
         print "creating",destdir+newananame+datadir
         os.mkdir ( destdir+newananame+datadir )
@@ -30,8 +30,8 @@ def createDataInfoFile ( analysis, ana, cut ):
     ul=statistics.upperLimit ( data, bg, sys, lumi )
 
     f=open ( destdir+newananame+datadir+ "/dataInfo.txt", "w")
-    f.write ( "datatype: efficiency-map\n" )
-    f.write ( "dataid: ANA%d-CUT%d\n" % ( ana, cut ) )
+    f.write ( "dataType: efficiency-map\n" )
+    f.write ( "dataId: ANA%d-CUT%d\n" % ( ana, cut ) )
     f.write ( "observedN: %d\n" % data )
     f.write ( "expectedBG: %.1f\n" % bg )
     f.write ( "bgError: %.1f\n" % sys )
@@ -56,10 +56,10 @@ def createInfoFile ( analysis ):
     f.write ( "lumi: %.1f/fb\n" % lumi )
     f.write ( "id: %s\n" % newexpid )
     f.write ( "url: https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/CONFNOTES/%s/\n" % newexpid )
-    f.write ( "implemented_by: WW\n" )
+    f.write ( "implementedBy: WW\n" )
     f.write ( "contact: fastlim\n" )
     f.write ( "comment: created from fastlim-1.0\n" )
-    f.write ( "last_update: %s\n" % time.strftime("%Y/%m/%d") )
+    f.write ( "lastUpdate: %s\n" % time.strftime("%Y/%m/%d") )
     f.close()
 
 def existsAnalysisCut ( analysis, ana, cut ):
