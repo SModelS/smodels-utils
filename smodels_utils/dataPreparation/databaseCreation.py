@@ -214,6 +214,8 @@ class DatabaseCreator(list):
                         Errors().required(txName.name, region, 'conditionDescription')
                     print "dataInfo.dataId",dataInfo.dataId
                     self._createInfoFile(getattr(region, self.txNameField), dataInfo.dataId, region, txName )
+                    region.figureUrl=""
+                    region.axes=""
         self._createInfoFile( dataInfo.name, dataInfo.dataId, dataInfo)
         
         if not createAdditional:
@@ -325,12 +327,17 @@ class DatabaseCreator(list):
         if not hasattr(region, 'axes'):
             region.axes = str(plane.origPlot)
         else:
-            region.axes = region.axes + ';' +\
-            str(plane.origPlot)
+            if region.axes == "":
+                region.axes = str(plane.origPlot)
+            else:
+                region.axes += ';' + str(plane.origPlot)
         if not hasattr(region, 'figureUrl'):
             region.figureUrl=str(plane.figureUrl)
         else:
-            region.figureUrl += ";" + str(plane.figureUrl)
+            if region.figureUrl == "": 
+                region.figureUrl = str(plane.figureUrl)
+            else:
+                region.figureUrl += ";" + str(plane.figureUrl)
     
     
     def _extendInfoAttr(self, obj, attr, position = None):
@@ -460,6 +467,7 @@ class DatabaseCreator(list):
             os.mkdir ( self.validationPath )
         import inspect, commands
         path = inspect.getfile ( self._createValidationFolder )
+        print "create validation folder=",path
         path=path.replace( "smodels_utils/dataPreparation/databaseCreation.py", "validation/scripts" )
         scripts = [ "validate.py", "validateTx.py", "plotValidation.py" ]
         for i in scripts:
