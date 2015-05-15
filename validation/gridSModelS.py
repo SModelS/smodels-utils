@@ -88,18 +88,13 @@ def runSModelSFor(validationPlot):
         #print "[gridSModelS] now run on",slhafile
         smstoplist = slhaDecomposer.decompose(slhafile, sigmacut,\
                         doCompress=True,doInvisible=True, minmassgap=mingap)
-        #print "smstoplist=",smstoplist
-        #for topo in smstoplist:
-        #    print "topo=",topo
-        #print "expRes=",expRes
+
         predictions = theoryPredictionsFor(expRes, smstoplist)
         if not predictions:
             logger.info ( "no theory predictions for %s in %s" % ( expRes,slhafile) )
             continue
         logger.info("I have theory predictions for %s in %s" % ( expRes,slhafile) )
-        # datasetID = expRes.getValuesFor('dataId')
-        #import IPython
-        # IPython.embed()
+
         for theoryPrediction in predictions:
             dataset = theoryPrediction.dataset
             datasetID = dataset.dataInfo.dataId
@@ -111,20 +106,7 @@ def runSModelSFor(validationPlot):
             if not is_in:
                 logger.error ( "cannot find %s" % validationPlot.txName )
                 continue
-            #if txname and txname.txName  != validationPlot.txName: 
-            #    logger.error ( "wrong txname %s != %s" % ( txname, validationPlot.txName ) )
-            #    print "txnames=",theoryPrediction.txnames
-            #    for i in theoryPrediction.txnames:
-            #        print i.txName,
-            #    print
-            #    import sys
-            #    sys.exit()
-            #    continue
             mass = theoryPrediction.mass
-#             if not mass: # and len(smstoplist.getElements()) == 1:
-#                 for i in smstoplist.getElements():
-#                     if str(i)!="[[],[]]":
-#                         mass=i.getMasses()
             if not mass:
                 logger.error("Could not define mass ``%s'' for prediction." % mass )
             value = theoryPrediction.value
