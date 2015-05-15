@@ -20,14 +20,16 @@ from smodels.theory.crossSection import XSectionList, XSection, XSectionInfo
 logger = logging.getLogger(__name__)
 
 
-def fastlimParser(outputfile,useBestDataset=True,txname=None):
+def fastlimParser(outputfile,useBestDataset=True,expResID=None,txname=None):
     """
     Parses the fastlim output file and converts it to a TheoryPredictionList object
     :param outputfile: Path to fastlim output file (string)
     :param useBestData: If True will only keep the best dataset (signal region) for
                         each experimental result
     :param txname: Used to select results for a specific Txname (i.e. T2tt,T5bbbb,...)
-                   If None will return the total prediction. 
+                   If None will return the total prediction.
+    :param expResID: Used to select results for a experimental result (i.e. ATLAS-CONF-xxx)
+                   If None will return predictions for all IDs.
     :return: TheoryPredictionList object with TheoryPrediction objects for all datasets
     """
     
@@ -121,6 +123,8 @@ def fastlimParser(outputfile,useBestDataset=True,txname=None):
             theoPred.expResult = expRes
             theoPred.dataset = dataset            
             theoPred.txnames = [txname]
+            #Lines with zero cross-sections are shown as nan for the txnames in fastlim
+            if 'nan' in l: continue
             value = eval(l.split()[1])/lumi
             if value.asNumber(fb) == 0.: continue #Skip empty results
             xsecs = XSectionList()
@@ -138,6 +142,7 @@ def fastlimParser(outputfile,useBestDataset=True,txname=None):
             
         #Beginning of next experimental result           
         if '-----------------' in l or il == len(outdata)-1:
+            if expResID and expID != expResID: continue 
             if not datasetPredictionLists: continue
             if useBestDataset:
                 theoryPredictions += _getBestResults(datasetPredictionLists)
@@ -151,7 +156,7 @@ def fastlimParser(outputfile,useBestDataset=True,txname=None):
 
 if __name__ == '__main__':
     theoPreds = fastlimParser('./fastlim-1.0/fastlim.out',useBestDataset=True,
-                              txname='T1bbbb')
+                              txname='T1bbbb',expResID='ATLAS-CONF-2013-054')
     for theoPred in theoPreds:
         expRes = theoPred.expResult
         datasetID = theoPred.dataset.getValuesFor('dataId')[0]

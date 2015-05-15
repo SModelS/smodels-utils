@@ -9,13 +9,15 @@ __version__ = "1.0"
 
 import os
 import sys
-sys.path.append('fastlim-1.0')
-from pyslha import * 
+sys.path.append('../')
+home = os.path.expanduser("~")
+sys.path.append(os.path.join(home,'smodels-utils/fastlim/fastlim-1.0'))
+import modpyslha 
 from math import *
 from basic_func import *
-sys.path.append('fastlim-1.0/interpolation')
+sys.path.append(os.path.join(home,'smodels-utils/fastlim/fastlim-1.0/interpolation'))
 from interpolate import *
-sys.path.append('fastlim-1.0/statistics/CLs_limits')
+sys.path.append(os.path.join(home,'smodels-utils/fastlim/fastlim-1.0/statistics/CLs_limits'))
 from mycls import *
 from extract_chain import *
 from read_data import *
@@ -40,7 +42,7 @@ def fastlimMain(slhafile,outputfile="fastlim.output"):
         logging.info("Use correct command: (e.g.) ./fastlim.py slha_files/testspectrum.slha")
         exit()
 
-    options = {'fastlimdir' : os.path.dirname(os.path.realpath(__file__)), \
+    options = {'fastlimdir' : os.path.join(home,'smodels-utils/fastlim/fastlim-1.0'), \
                'version_major' : ((__version__).split("."))[0], 
                'version_minor' : ((__version__).split("."))[1], 
                'authors' : __author__,
@@ -51,10 +53,21 @@ def fastlimMain(slhafile,outputfile="fastlim.output"):
 
     check_install_update(options)
 
-    warning_list = []
-    blocks, decays = readSLHAFile(infile)
+    warning_list = []    
+    slhadata = modpyslha.readSLHAFile(infile)
+    blocks, decays = slhadata.blocks, slhadata.decays
+
+    #Fix the case of missing decays
+    if not 1000022 in decays:
+        decays[1000022] = modpyslha.Particle(1000022,0.,blocks['MASS'][1000022])        
+        decays[1000022].decays = []
 
     Input = Paths_and_Data(infile, blocks, decays)
+    for key,val in Input.xsec_table.items():
+        Input.xsec_table[key] = os.path.join(options['fastlimdir'],val)
+    for key,val in Input.xsec_table_dcpl.items():
+        Input.xsec_table_dcpl[key] = os.path.join(options['fastlimdir'],val) 
+         
 
 
     # Here the masses are stored. For example, get_mass(blocks,"T1") gives the T1 mass. 
