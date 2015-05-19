@@ -10,14 +10,21 @@ fastlimdir="/home/walten/Downloads/fastlim-1.0/analyses_info/8TeV/"
 efficienciesdir="/home/walten/Downloads/fastlim-1.0/efficiency_tables/"
 destdir="/home/walten/git/smodels-database/8TeV/ATLAS/"
 
-def createDataInfoFile ( analysis, ana, cut ):
+def createDataInfoFile ( analysis, cut ):
     """ create the datainfo file for analysis, signalregion ANAana-CUTcut """
+    print "[fastlimHelpers] now createDataInfoFile for",analysis,cut
     destdir="/home/walten/git/smodels-database/8TeV/ATLAS/"
     newananame=analysis.replace("_","-")+"-eff"
+    datadir="/data-cut%d" % ( cut )
+    dataInfoFile=destdir+newananame+datadir+ "/dataInfo.txt"
+    if os.path.exists ( dataInfoFile ):
+        print "[fastlimHelpers.createDataInfoFile]",dataInfoFile,"exists already."
+        return
+
     if not os.path.exists ( destdir+newananame ):
         print "creating",destdir+newananame
         os.mkdir ( destdir + newananame )
-    datadir="/ANA%d-CUT%d" % ( ana, cut )
+    ## datadir="/ANA%d-CUT%d" % ( ana, cut )
     if not os.path.exists ( destdir+newananame+datadir ):
         print "creating",destdir+newananame+datadir
         os.mkdir ( destdir+newananame+datadir )
@@ -27,16 +34,18 @@ def createDataInfoFile ( analysis, ana, cut ):
     infofile.close()
     tokens=lines[cut+1].split()
     lumi,data,bg,sys=float(tokens[1]),float(tokens[2]),float(tokens[3]),float(tokens[4])
-    ul=statistics.upperLimit ( data, bg, sys, lumi )
+    ul=float(tokens[7])
+    ## ul=statistics.upperLimit ( data, bg, sys, lumi )
 
     f=open ( destdir+newananame+datadir+ "/dataInfo.txt", "w")
     f.write ( "dataType: efficiencyMap\n" )
-    f.write ( "dataId: ANA%d-CUT%d\n" % ( ana, cut ) )
+    f.write ( "dataId: data-cut%d\n" % ( cut ) )
     f.write ( "observedN: %d\n" % data )
     f.write ( "expectedBG: %.1f\n" % bg )
     f.write ( "bgError: %.1f\n" % sys )
     f.write ( "upperLimit: %.2f*fb\n" % ul )
     f.close ()
+    print "[fastlimHelpers] done creating",destdir+newananame+datadir+ "/dataInfo.txt"
 
 def createInfoFile ( analysis ):
     """ creates info.txt """
@@ -51,7 +60,7 @@ def createInfoFile ( analysis ):
     infofile.close()
     tokens=lines[1].split()
     sqrts,lumi,data,bg,sys=int(tokens[0]),float(tokens[1]),float(tokens[2]),float(tokens[3]),float(tokens[4])
-    f=open ( destdir + newananame + "/info.txt", "w" )
+    f=open ( destdir + newananame + "/globalInfo.txt", "w" )
     f.write ( "sqrts: %d*TeV\n" % sqrts )
     f.write ( "lumi: %.1f/fb\n" % lumi )
     f.write ( "id: %s\n" % newexpid )
@@ -87,6 +96,7 @@ def copyEffiFiles ( analysis, ana, cut ):
              'GbbN1_GttN1': "T1bbtt", 'GqqN1_GqqN1': "T1",
              "GbB1bN1_GbB1tN1": "T5bbbt", "GtT1tN1_GtT1tN1": "T5tttt"
     }
+    print "[fastlimHelpers.py.copyEffiFiles]"
     for (key,value) in Dict.items():
         Dict[value]=key
     newananame=analysis.replace("_","-")+"-eff"
@@ -104,13 +114,15 @@ def copyEffiFiles ( analysis, ana, cut ):
         if not os.path.exists ( effifile ):
             continue
 #            print "[fastlimHelpers] ",effifile,"does not exist."
-        realdestdir="%s/%s/data-ana%d-cut%d/orig/" % ( destdir, newananame, ana, cut  )
+        realdestdir="%s/%s/data-cut%d/orig/" % ( destdir, newananame, cut  )
         if not os.path.exists ( realdestdir ):
             cmd="mkdir -p %s" % realdestdir
             commands.getoutput ( cmd )
+        if os.path.exists ( "%s/%s.effi" % ( realdestdir, Tname ) ):
+            continue
         cmd="cp %s %s/%s.effi" % ( effifile, realdestdir, Tname )
         Tnames.append ( Tname )
-#print "cmd=",cmd
+        print "[fastlimHelpers.copyEffiFiles] cmd=",cmd
         o=commands.getoutput ( cmd )
         if o!="": print "[copyEffiFiles]",o  
     exclusiondir = efficienciesdir+"../exclusion_lines/" + analysis.replace("_","-")
@@ -125,25 +137,36 @@ def copyEffiFiles ( analysis, ana, cut ):
           print "[copyEffiFiles] cmd",cmd
           commands.getoutput ( cmd )
 
-def createAndRunConvertFiles ( analysis, ana, cut ):
+def createAndRunConvertFiles ( analysis, cut ):
     """ create the proper convert.py file """
+    print "[fastlimHelpers] createAndRunConvertFiles"
     newananame=analysis.replace("_","-")+"-eff"
-    realdestdir="%s/%s/data-ana%d-cut%d/" % ( destdir, newananame, ana, cut  )
+    realdestdir="%s/%s/data-cut%d/" % ( destdir, newananame, cut  )
     cmd="cp ./convert.py %s" % realdestdir
     print "[createAndRunConvertFiles] >>%s<<" % cmd
     commands.getoutput ( cmd )
     cmd= "cd %s; ./convert.py" % realdestdir
     print "[createAndRunConvertFiles] >>%s<<" % cmd
+    o=None
     o=commands.getoutput ( cmd )
     print "[createAndRunConvertFiles] out",o
 
 
 def mergeSmsRootFiles ( analysis ):
-    import ROOT
+    ## wait! if there exists an UL analysis of the same name, why dont we copy sms.root from there?
+    ULananame=analysis.replace("_","-")
     newananame=analysis.replace("_","-")+"-eff"
+    ULsmsroot = destdir + "/" + ULananame + "/sms.root" 
+    if os.path.exists ( ULsmsroot ):
+        import commands
+        cmd = "cp %s %s/%s/" % ( ULsmsroot, destdir,newananame )
+        print "[fastlimHelpers.mergeSmsRootFiles] cmd=",cmd
+        commands.getoutput ( cmd )
+        return
+    import ROOT
     targetsmsname=destdir + "/" + newananame + "/sms.root"
     write=ROOT.TFile ( targetsmsname, "recreate" )
-    print "writing to",targetsmsname
+    print "[fastlimHelprswriting to",targetsmsname
     has=[]
     for i in os.listdir ( destdir + "/" + newananame ):
         if i[:4]!="data": continue
@@ -172,6 +195,20 @@ def mergeSmsRootFiles ( analysis ):
         # print "deleting",smsfilename
         if os.path.exists ( smsfilename ):
              os.unlink ( smsfilename )
+
+def copyValidationScripts ( expid ):
+    """ this little method should just copy validate.py, validateTx.py and plotValidation.py
+        to the destination """
+    print "[fastlimHelpers.copyValidationScripts] expid=",expid
+    destination=destdir+expid.replace("_","-")+"-eff"
+    cmd="mkdir %s/validation" % destination
+    print "[fastlimHelpers.copyValidationScripts]",cmd
+    import commands
+    commands.getoutput ( cmd )
+    cmd="cp /home/walten/git/smodels-utils/validation/scripts/*.py %s/validation/" % destination
+    print "[fastlimHelpers.copyValidationScripts]",cmd
+    commands.getoutput ( cmd )
+    
 
 if __name__ == "__main__":
 #    createInfoFile ( "ATLAS_CONF_2013_035" )
