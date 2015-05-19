@@ -33,7 +33,7 @@ def getDatasetIdsFromPath(dir="../"):
     datasetids=[]
     for f in files:
         if not f in [ "globalInfo.txt", "validation", "sms.root", "convert.py", "old", "smodels.log", "orig" ]:
-            f=f.replace("data-","").replace("ana","ANA").replace("cut","CUT" )
+       ##     f=f.replace("data-","").replace("ana","ANA").replace("cut","CUT" )
             if f=="data": f=None
             datasetids.append  ( f )
     return datasetids
