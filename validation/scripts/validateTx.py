@@ -25,7 +25,7 @@ from smodels.theory.slhaDecomposer import logger as dl
 from smodels.experiment.txnameObject import logger as tl
 cl.setLevel(level=logging.DEBUG)
 dl.setLevel(level=logging.DEBUG)
-tl.setLevel(level=logging.DEBUG)
+tl.setLevel(level=logging.INFO)
 
 database = Database(os.path.join(home,"smodels-database"))
 
