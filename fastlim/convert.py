@@ -49,15 +49,15 @@ info = MetaInfoInput(expid)
 info.signalRegion = signalregion
 info.url ='https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/CONFNOTES/%s/' % expid 
 info.sqrts = 8
-info.prettyname = ''
+info.prettyName = ''
 info.private = True
 info.arxiv = ''
 info.contact ='fastlim'
 info.publication = ''
 info.lumi = 1.0 
 info.comment = 'created from fastlim-1.0'
-info.superseded_by = ''
-info.implemented_by = ''
+info.supersededBy = ''
+info.implementedBy = ''
 
 
 constraints =  { "T2tt": "[[['t+']],[['t-']]]", "T2bb": "[[['b']],[['b']]]", 
@@ -125,8 +125,8 @@ for i in os.listdir("orig/"):
     print txname 
     tmp= TxNameInput ( txname )
     tmp.on.constraint = constraints[txname]
-    tmp.on.condition=None
-    tmp.on.fuzzycondition = None
+    tmp.on.conditionDescription=None
+    tmp.on.condition = None
     if i[:2] in [ "T5", "T6" ]:
 #        tmp.globalEfficiencyMap.setSource ( './orig/%s.effi' % txname, 'effi', objectName = None, index = None )
         continue
@@ -180,7 +180,15 @@ def translate ( filename ):
 #T2tt_1.efficiencyMap.setSource( './orig/T2tt.effi', 'effi', objectName = None, index = None )
 
 databaseCreator.infoFileDirectory="./"
-databaseCreator.create()
+databaseCreator.create( ask_for_name = False )
 
 import os
-os.unlink ("info.txt")
+os.unlink ("globalInfo.txt")
+
+import glob
+for i in glob.iglob ( "*/validation" ):
+    print "[convert.py] unlinking",i,"from",os.getcwd()
+    os.unlink ( i )
+for i in glob.iglob ( "*/sms.root" ):
+    print "[convert.py] unlinking",i,"from",os.getcwd()
+    os.unlink ( i )

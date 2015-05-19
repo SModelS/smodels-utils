@@ -86,17 +86,8 @@ def existsAnalysisCut ( analysis, ana, cut ):
 
 def copyEffiFiles ( analysis, ana, cut ):
     """ copy the .effi files to their proper place in the database """
-    Dict = { "GbB1tN1_GbB1tN1": "T5btbt", "GtT1bN1_GtT1tN1": "T5tbtt", "GgN1_GqqN1": "TGQ",
-             "GtT1bN1_GtT1bN1": "T5tbtb", "GgN1_GgN1": "T2", "GbtN1_GgN1": "TGQbtq",
-             "GbbN1_GgN1": "TGQbbq", "GttN1_GttN1": "T1tttt", "GbbN1_GbbN1": "T1bbbb",
-             "GbB1bN1_GbB1bN1": "T5bbbb", "GbbN1_GqqN1": "T1bbqq",
-             "T1tN1_T1tN1": "T2tt", "GgN1_GttN1": "TGQqtt", 'GbbN1_GbtN1': "T1bbbt",
-             'GqqN1_GttN1': "T1qqtt", 'T1bN1_T1bN1': "T2bb", 'GbtN1_GbtN1': "T1btbt",
-             'GbtN1_GqqN1': "T1btqq", 'GbtN1_GttN1': "T1bttt", 'T1bN1_T1tN1': "T2bt",
-             'GbbN1_GttN1': "T1bbtt", 'GqqN1_GqqN1': "T1",
-             "GbB1bN1_GbB1tN1": "T5bbbt", "GtT1tN1_GtT1tN1": "T5tttt"
-    }
-    print "[fastlimHelpers.py.copyEffiFiles]"
+    Dict = smodels2fastlim('Dict')
+
     for (key,value) in Dict.items():
         Dict[value]=key
     newananame=analysis.replace("_","-")+"-eff"
@@ -209,6 +200,31 @@ def copyValidationScripts ( expid ):
     print "[fastlimHelpers.copyValidationScripts]",cmd
     commands.getoutput ( cmd )
     
+def smodels2fastlim(txname):
+    """
+    Converts the SModelS Txname (i.e. T2tt) to a fastlim notation (i.e. T1tN1_T1tN1)
+    :param txname: Txname in string notation (i.e. T2tt). If txname=Dict returns
+                    the full dictionary
+    :return: Txname in fastlim notation (string) or the dictionary (if txname = Dict). 
+    """
+    
+    Dict = { "GbB1tN1_GbB1tN1": "T5btbt", "GtT1bN1_GtT1tN1": "T5tbtt", "GgN1_GqqN1": "TGQ",
+             "GtT1bN1_GtT1bN1": "T5tbtb", "GgN1_GgN1": "T2", "GbtN1_GgN1": "TGQbtq",
+             "GbbN1_GgN1": "TGQbbq", "GttN1_GttN1": "T1tttt", "GbbN1_GbbN1": "T1bbbb",
+             "GbB1bN1_GbB1bN1": "T5bbbb", "GbbN1_GqqN1": "T1bbqq",
+             "T1tN1_T1tN1": "T2tt", "GgN1_GttN1": "TGQqtt", 'GbbN1_GbtN1': "T1bbbt",
+             'GqqN1_GttN1': "T1qqtt", 'T1bN1_T1bN1': "T2bb", 'GbtN1_GbtN1': "T1btbt",
+             'GbtN1_GqqN1': "T1btqq", 'GbtN1_GttN1': "T1bttt", 'T1bN1_T1tN1': "T2bt",
+             'GbbN1_GttN1': "T1bbtt", 'GqqN1_GqqN1': "T1",
+             "GbB1bN1_GbB1tN1": "T5bbbt", "GtT1tN1_GtT1tN1": "T5tttt"
+    }
+    
+    if txname == 'Dict': return Dict
+    
+    for f,tx in Dict.items():
+        if tx == txname: return f
+        
+    return None
 
 if __name__ == "__main__":
 #    createInfoFile ( "ATLAS_CONF_2013_035" )

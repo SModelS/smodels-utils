@@ -67,7 +67,7 @@ class DatabaseCreator(list):
         self.txNameField = 'txName'
         list.__init__(self)
             
-    def create(self, createAdditional=False):
+    def create(self, createAdditional=False, ask_for_name=True ):
         
         """
         main method of the class
@@ -101,11 +101,15 @@ class DatabaseCreator(list):
         --write twiki.txt
         --write dataInfo.txt
 
-        if createAdditional is true, we dont delete, nor do we create sms.root
+        :param createAdditional: if true, we dont delete, nor do we create sms.root
+        :param ask_for_name: if false, we assume 'ww' to be the author. Use with
+        great care!
         
         :raise requiredError: If a region exist, but no constraint, condition 
         or conditionDescription is set for this region
         """
+
+        self.ask_for_name = ask_for_name
         
         print '\n***starting creation of database entry for %s***\n'\
         %self.metaInfo.id
@@ -145,7 +149,7 @@ class DatabaseCreator(list):
 
             for plane in txName.planes:
                 
-                if plane.origEfficiencyMap:
+                if plane.origEfficiencyMap and hasattr ( plane.origEfficiencyMap, "observedN" ):
                     dataInfo.dataset = plane.origEfficiencyMap.dataset
                     dataInfo.observedN = plane.origEfficiencyMap.observedN
                     dataInfo.expectedBG = plane.origEfficiencyMap.expectedBG
@@ -392,7 +396,9 @@ class DatabaseCreator(list):
                     m = m + 'number or name of txNames, arXiv, publication,'
                     m = m + ' upperLimits\n'
                     m = m + 'overwrite lastUpdate (y/n)?:'
-                    answer = raw_input(m)
+                    answer = 'n' 
+                    if self.ask_for_name:
+                        answer = raw_input(m)
                     if answer == 'y' or answer == 'n': break
                 if answer == 'n': 
                     self.metaInfo.lastUpdate = lastUpdate
@@ -412,7 +418,9 @@ class DatabaseCreator(list):
         """
         
         while True:
-            answer = raw_input('enter your name or initials: ')
+            answer = 'ww'
+            if self.ask_for_name:
+                answer = raw_input('enter your name or initials: ')
             if answer: break
         initialDict= { "ww": "Wolfgang Waltenberger",
             "WW": "Wolfgang Waltenberger",
