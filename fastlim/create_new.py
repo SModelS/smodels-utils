@@ -22,7 +22,7 @@ for expid in [
         for ana in range(15):
             if fastlimHelpers.existsAnalysisCut ( expid, ana, cut ):
                 fastlimHelpers.copyEffiFiles ( expid, ana, cut )
-                fastlimHelpers.createAndRunConvertFiles ( expid, cut )
+                fastlimHelpers.createAndRunConvertFiles ( expid, cut, dry_run=True )
                 if not has_globals:
                     fastlimHelpers.createDataInfoFile ( expid, cut )
                     fastlimHelpers.copyValidationScripts ( expid )

@@ -128,7 +128,7 @@ def copyEffiFiles ( analysis, ana, cut ):
           print "[copyEffiFiles] cmd",cmd
           commands.getoutput ( cmd )
 
-def createAndRunConvertFiles ( analysis, cut ):
+def createAndRunConvertFiles ( analysis, cut, dry_run=False ):
     """ create the proper convert.py file """
     print "[fastlimHelpers] createAndRunConvertFiles"
     newananame=analysis.replace("_","-")+"-eff"
@@ -139,8 +139,9 @@ def createAndRunConvertFiles ( analysis, cut ):
     cmd= "cd %s; ./convert.py" % realdestdir
     print "[createAndRunConvertFiles] >>%s<<" % cmd
     o=None
-    o=commands.getoutput ( cmd )
-    print "[createAndRunConvertFiles] out",o
+    if not dry_run:
+        o=commands.getoutput ( cmd )
+        print "[createAndRunConvertFiles] out",o
 
 
 def mergeSmsRootFiles ( analysis ):
