@@ -145,7 +145,7 @@ class KinematicRegion(Locker):
     """
     
     
-    infoAttr = ['conditionDescription', 'condition', 'constraint','checked','figureUrl', 'dataUrl' ]
+    infoAttr = ['conditionDescription', 'condition', 'constraint','checked','figureUrl']
     internalAttr = ['name', 'functions', 'topoExtension',\
     'region']
     
@@ -232,7 +232,6 @@ class MassPlane(Locker):
         self.origEfficiencyMap = OrigEfficiencyMap('efficiencyMap')
         self.figure =None
         self.figureUrl = None
-        self.dataUrl = None
         
     def setBranch_1(self, motherMass = None, lspMass = None, **interMasses):
         
@@ -356,26 +355,26 @@ class MassPlane(Locker):
         
         return self.origExclusions['expectedExclusionM1'] 
     
-    #@property
-    #def dataUrl(self):
-    #    
-    #    """ not yet in use, but is needed in order to define
-    #    a setter 
-    #    """
-    #    
-    #    pass
-    #
-    #@dataUrl.setter
-    #def dataUrl(self, url):
-    #    
-    #    """set url for efficiencyMap, opsUpperlimits, expUpperLimit 
-    #    and all exclusionlines
-    #    :param: html-link as string
-    #    """
-    #    
-    #    #self.efficiencyMap.dataUrl = url
-    #    #self.exclusionDataUrl = url
-    #    #self.histoDataUrl = url
+    @property
+    def dataUrl(self):
+        
+        """ not yet in use, but is needed in order to define
+        a setter 
+        """
+        
+        pass
+    
+    @dataUrl.setter
+    def dataUrl(self, url):
+        
+        """set url for efficiencyMap, opsUpperlimits, expUpperLimit 
+        and all exclusionlines
+        :param: html-link as string
+        """
+        
+        self.efficiencyMap.dataUrl = url
+        self.exclusionDataUrl = url
+        self.histoDataUrl = url
     
     @property
     def histoDataUrl(self):

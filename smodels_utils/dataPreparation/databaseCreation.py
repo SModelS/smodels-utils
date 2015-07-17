@@ -342,13 +342,6 @@ class DatabaseCreator(list):
                 region.figureUrl = str(plane.figureUrl)
             else:
                 region.figureUrl += ";" + str(plane.figureUrl)
-        if not hasattr(region, 'dataUrl'):
-            region.dataUrl=str(plane.dataUrl)
-        else:
-            if region.dataUrl == "" or region.dataUrl=="None": 
-                region.dataUrl = str(plane.dataUrl)
-            else:
-                region.dataUrl += ";" + str(plane.dataUrl)
     
     
     def _extendInfoAttr(self, obj, attr, position = None):
