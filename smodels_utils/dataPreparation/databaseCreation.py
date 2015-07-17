@@ -327,21 +327,21 @@ class DatabaseCreator(list):
         setattr(region, self.txNameField, txName.name + region.topoExtension)
         self._extendInfoAttr(region, 'validated')
         region.validated = None
-        self._extendInfoAttr(region, 'axes')
-        if not hasattr(region, 'axes'):
-            region.axes = str(plane.origPlot)
+        self._extendRegionAttr(region, 'axes', str(plane.origPlot))
+        self._extendRegionAttr(region, 'figureUrl', plane.figureUrl)
+        if plane.obsUpperLimit.dataUrl:
+            self._extendRegionAttr(region, 'dataUrl', plane.obsUpperLimit.dataUrl)
+        if plane.efficiencyMap.dataUrl:
+            self._extendRegionAttr(region, 'dataUrl', plane.efficiencyMap.dataUrl)
+        
+            
+    def _extendRegionAttr(self, region, name, value):
+    
+        if hasattr(region, name):
+            value = getattr(region, name) + ";" + value
         else:
-            if region.axes == "":
-                region.axes = str(plane.origPlot)
-            else:
-                region.axes += ';' + str(plane.origPlot)
-        if not hasattr(region, 'figureUrl'):
-            region.figureUrl=str(plane.figureUrl)
-        else:
-            if region.figureUrl == "": 
-                region.figureUrl = str(plane.figureUrl)
-            else:
-                region.figureUrl += ";" + str(plane.figureUrl)
+            self._extendInfoAttr(region, name)
+        setattr(region, name, value)
     
     
     def _extendInfoAttr(self, obj, attr, position = None):
