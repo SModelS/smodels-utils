@@ -219,6 +219,7 @@ class DatabaseCreator(list):
                     print "dataInfo.dataId",dataInfo.dataId
                     self._createInfoFile(getattr(region, self.txNameField), dataInfo.dataId, region, txName )
                     region.figureUrl=""
+                    region.dataUrl=""
                     region.axes=""
         self._createInfoFile( dataInfo.name, dataInfo.dataId, dataInfo)
         
