@@ -177,8 +177,7 @@ class DatabaseCreator(list):
                 
                 if plane.obsUpperLimit or plane.efficiencyMap:
                     if not plane.obsUpperLimit.dataUrl and \
-                    not plane.efficiencyMap.dataUrl and not \
-                    plane.dataUrl:
+                    not plane.efficiencyMap.dataUrl: 
                         publishedData = False
                     
                 for region in txName.kinematicRegions:      
@@ -349,8 +348,7 @@ class DatabaseCreator(list):
             if region.dataUrl == "" or region.dataUrl=="None": 
                 region.dataUrl = str(plane.dataUrl)
             else:
-                #region.dataUrl += ";" + str(plane.dataUrl)
-                region.dataUrl = str(plane.dataUrl)
+                region.dataUrl += ";" + str(plane.dataUrl)
     
     
     def _extendInfoAttr(self, obj, attr, position = None):
