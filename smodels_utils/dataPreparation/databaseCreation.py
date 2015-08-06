@@ -337,10 +337,11 @@ class DatabaseCreator(list):
         
             
     def _extendRegionAttr(self, region, name, value):
-    
         if hasattr(region, name):
             if not getattr(region, name) == "":
-                value = getattr(region, name) + ";" + value
+                if not value in getattr(region,name):
+                    # dont duplicate entries
+                    value = getattr(region, name) + ";" + value
         else:
             self._extendInfoAttr(region, name)
         setattr(region, name, value)
