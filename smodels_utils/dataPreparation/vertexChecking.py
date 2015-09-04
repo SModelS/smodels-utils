@@ -56,7 +56,7 @@ class VertexChecker(object):
             for j, mass in enumerate(branch):
                 if j == 0: continue
                 massDelta =  branch[j-1] - mass
-                print "branch[j-1],mass=",branch[j-1],mass
+#                print "branch[j-1],mass=",branch[j-1],mass
                 # massDelta =  mass - branch[j-1]
                 massDeltaArray[i].append(massDelta)
                 
