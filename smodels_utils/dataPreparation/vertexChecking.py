@@ -55,7 +55,9 @@ class VertexChecker(object):
         for i, branch in enumerate(massArray):
             for j, mass in enumerate(branch):
                 if j == 0: continue
-                massDelta =  mass - branch[j-1]
+                massDelta =  branch[j-1] - mass
+                print "branch[j-1],mass=",branch[j-1],mass
+                # massDelta =  mass - branch[j-1]
                 massDeltaArray[i].append(massDelta)
                 
         for kinConstraint in self.kinConstraints:
