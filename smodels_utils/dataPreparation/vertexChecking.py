@@ -15,7 +15,7 @@ class VertexChecker(object):
     """
     This class is designed to compute the off-shell
     vertices for a given mass array
-    The on-shell constraints of txName are used to define 
+    The on-shell constraints of txName are [used to define 
     the SM-particles occurring in every vertex.
     The differences of the masses of the SUSY-particles related
     to one vertex are compared with the mass sum of the SM-particles
@@ -55,12 +55,12 @@ class VertexChecker(object):
         for i, branch in enumerate(massArray):
             for j, mass in enumerate(branch):
                 if j == 0: continue
-                massDelta =branch[j-1] - mass
+                massDelta =  mass - branch[j-1]
                 massDeltaArray[i].append(massDelta)
                 
         for kinConstraint in self.kinConstraints:
             for i, branch in enumerate(kinConstraint):
-                ## print "branch=",branch,"massDeltaArray=",massDeltaArray[i]
+                #print "branch=",branch,"massDeltaArray=",massDeltaArray[i]
                 if len(branch) != len(massDeltaArray[i]):
                     Errors().decayChain(self.txName,\
                     len(branch),len(massDeltaArray[i]))
