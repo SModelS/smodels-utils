@@ -222,9 +222,9 @@ class DatabaseCreator(list):
                     region.dataUrl=""
                     region.axes=""
         self._createInfoFile( dataInfo.name, dataInfo.dataId, dataInfo)
+        self._createSmsRoot( createAdditional )
         
         if not createAdditional:
-            self._createSmsRoot()
             self._createTwikiTxt()
    
         
@@ -489,17 +489,22 @@ class DatabaseCreator(list):
         ### fixme add a few more, txname specific, only the plotting, etc ###
 
 
-    def _createSmsRoot(self):
+    def _createSmsRoot(self,update=False):
         
         """
         creates the sms.root file
         """
+        mode="recreate"
+        if update:
+            mode="update"
 
         #if not os.path.exists ( self.validationPath ):
         #    os.mkdir ( self.validationPath )
     
-        smsRoot = ROOT.TFile(self.base + self.smsrootFile,'recreate')
+        smsRoot = ROOT.TFile(self.base + self.smsrootFile,mode)
         for exclusions in self.exclusions:
+            if smsRoot.Get( exclusions.name )!=None:
+                continue
             directory = smsRoot.mkdir(exclusions.name, exclusions.name)
             directory.cd()
             for exclusion in exclusions: exclusion.Write()
