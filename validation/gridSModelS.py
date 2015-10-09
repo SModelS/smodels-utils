@@ -142,7 +142,8 @@ def runSModelSFor(validationPlot):
                 logger.info ( "dropping %s, doesnt fall into the plane of %s." % ( slhafile, origPlot.string ) )
                 continue
             x,y = v
-            Dict= {'slhafile' : slhafile, 'axes': [x,y], 'signal' : value, 'UL' : upperLimit, 'condition': cond, 'dataset': datasetID }
+            Dict= {'slhafile' : slhafile, 'axes': [x,y], 'signal' : value, 'UL' : upperLimit,
+                   'condition': cond, 'dataset': datasetID }
             # print "[gridSModelS] run on ",Dict
             if efficiency:
                 Dict['efficiency']=efficiency

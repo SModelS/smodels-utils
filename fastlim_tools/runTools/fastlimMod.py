@@ -28,7 +28,7 @@ from update import *
 ###############################################################################
 ## Main function for module testing
 
-def fastlimMain(slhafile,outputfile="fastlim.output"):
+def fastlimMain(slhafile,outputfile="fastlim.out"):
     """
     Runs fastlim as in the command line
     """

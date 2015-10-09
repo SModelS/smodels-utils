@@ -1,9 +1,11 @@
 #!/usr/bin/python
 
-import os
+import os,sys
 import time
 import glob
 import commands
+home = os.path.expanduser("~")
+sys.path.append(os.path.join(home,'smodels'))
 from smodels.tools import statistics
     
 fastlimdir="/home/walten/Downloads/fastlim-1.0/analyses_info/8TeV/"

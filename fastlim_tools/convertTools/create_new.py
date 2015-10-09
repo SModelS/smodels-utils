@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import fastlimHelpers
+import convertHelpers
 
 for expid in [ 
     "ATLAS_CONF_2013_024",
@@ -16,18 +16,18 @@ for expid in [
     "ATLAS_CONF_2013_093" 
         ]:
 
-    fastlimHelpers.createInfoFile ( expid )
+    convertHelpers.createInfoFile ( expid )
     for cut in range(15):
         has_globals=False
         for ana in range(15):
-            if fastlimHelpers.existsAnalysisCut ( expid, ana, cut ):
-                fastlimHelpers.copyEffiFiles ( expid, ana, cut )
-                fastlimHelpers.createAndRunConvertFiles ( expid, cut, dry_run=True )
+            if convertHelpers.existsAnalysisCut ( expid, ana, cut ):
+                convertHelpers.copyEffiFiles ( expid, ana, cut )
+                convertHelpers.createAndRunConvertFiles ( expid, cut, dry_run=True )
                 if not has_globals:
-                    fastlimHelpers.createDataInfoFile ( expid, cut )
-                    fastlimHelpers.copyValidationScripts ( expid )
+                    convertHelpers.createDataInfoFile ( expid, cut )
+                    convertHelpers.copyValidationScripts ( expid )
                     has_globals=True
 
-    fastlimHelpers.mergeSmsRootFiles ( expid )
+    convertHelpers.mergeSmsRootFiles ( expid )
 #            else:
 #                print "expid,ana,cut",expid,ana,cut,"doesnt exist?"

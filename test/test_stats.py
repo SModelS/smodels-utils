@@ -1,10 +1,15 @@
 #!/usr/bin/python
 
+import os,sys
+home = os.path.expanduser("~")
+sys.path.append(os.path.join(home,'smodels'))
 from smodels.tools import statistics
 import random
 import math
 import scipy.stats
 import dataharvester
+
+
 
 def main():
     writer = dataharvester.Writer_file("dates.root;dates.txt")

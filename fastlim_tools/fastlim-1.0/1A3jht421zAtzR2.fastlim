@@ -1,0 +1,1068 @@
+
+##################################################
+    Branching Ratio x Cross Section @ 8 TeV  
+##################################################
+--------------------------------------------------
+Production:   Xsec/fb       Rate
+     Total:    16.409    100.00%
+     T1_T1:    15.329     93.42%
+     B1_B1:     0.075      0.46%
+       G_G:     0.954      5.81%
+     T2_T2:     0.051      0.31%
+--------------------------------------------------
+Output processes upto 0.5%
+                 Process:  Br*Xsec/fb     Rate    Accum
+         T1bC1qqN1_T1tN1:     1.49558    9.11%    9.11%
+     T1bC1qqN1_T1bC1qqN1:     1.34442    8.19%   17.31%
+     T1bC1qqN1_T1tN2qqN1:     1.07025    6.52%   23.83%
+         T1tN1_T1tN2qqN1:     0.59529    3.63%   27.46%
+     T1bC1enN1_T1bC1qqN1:     0.44814    2.73%   30.19%
+     T1bC1mnN1_T1bC1qqN1:     0.44814    2.73%   32.92%
+ T1bC1qqN1_T1tN3qqC1qqN1:     0.43267    2.64%   35.56%
+    T1bC1ntaN1_T1bC1qqN1:     0.42500    2.59%   38.15%
+             T1tN1_T1tN1:     0.41593    2.53%   40.68%  <== Implemented
+     T1bC1qqN1_T1tN2nnN1:     0.41380    2.52%   43.20%
+         T1bC1mnN1_T1tN1:     0.24926    1.52%   44.72%
+         T1bC1enN1_T1tN1:     0.24926    1.52%   46.24%
+     T1bC1qqN1_T1tN2bbN1:     0.24130    1.47%   47.71%
+     T1tN1_T1tN3qqC1qqN1:     0.24066    1.47%   49.18%
+        T1bC1ntaN1_T1tN1:     0.23639    1.44%   50.62%
+         T1tN1_T1tN2nnN1:     0.23016    1.40%   52.02%
+     T1tN2qqN1_T1tN2qqN1:     0.21300    1.30%   53.32%
+     T1bC1mnN1_T1tN2qqN1:     0.17838    1.09%   54.41%
+     T1bC1enN1_T1tN2qqN1:     0.17838    1.09%   55.49%
+ T1tN2qqN1_T1tN3qqC1qqN1:     0.17222    1.05%   56.54%
+    T1bC1ntaN1_T1tN2qqN1:     0.16916    1.03%   57.57%
+     T1tN2nnN1_T1tN2qqN1:     0.16471    1.00%   58.58%
+         T1tN1_T1tN2bbN1:     0.13422    0.82%   59.40%
+     T1tN2bbN1_T1tN2qqN1:     0.09605    0.59%   59.98%
+     GtT1bC1qqN1_GtT1tN1:     0.07850    0.48%   60.46%
+...
+
+
+############################################################
+                 Analyses Details 
+############################################################
+------------------------------------------------------------
+[ATLAS_CONF_2013_035]
+3 leptons + Etmiss [EW production] at 8 TeV with $20.7fb^{-1}$.
+https://cds.cern.ch/record/1532426
+Ecm/TeV = 8
+lumi*fb = 20.7
+   #----  SRnoZa  ----#
+   Nobs:              101
+   Nbg:               96.0(19.0)
+   Nvis_UL[observed]: 41.8
+           Process       Nev    R[obs]
+             Total    0.0000    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+   #----  SRnoZb  ----#
+   Nobs:              32
+   Nbg:               29.0(6.0)
+   Nvis_UL[observed]: 18.0
+           Process       Nev    R[obs]
+             Total    0.0000    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+   #----  SRnoZc  ----#
+   Nobs:              5
+   Nbg:               4.4(1.8)
+   Nvis_UL[observed]: 6.8
+           Process       Nev    R[obs]
+             Total    0.0000    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+   #----  SRZa  ----#
+   Nobs:              273
+   Nbg:               249.0(35.0)
+   Nvis_UL[observed]: 83.7
+           Process       Nev    R[obs]
+             Total    0.0000    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+   #----  SRZb  ----#
+   Nobs:              23
+   Nbg:               22.0(5.0)
+   Nvis_UL[observed]: 13.9
+           Process       Nev    R[obs]
+             Total    0.0000    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+   #----  SRZc  ----#
+   Nobs:              6
+   Nbg:               6.3(1.5)
+   Nvis_UL[observed]: 6.5
+           Process       Nev    R[obs]
+             Total    0.0000    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+
+------------------------------------------------------------
+[ATLAS_CONF_2013_024]
+0 lepton + 6 (2 b-)jets + Etmiss [Heavy stop] at 8TeV with $20.5fb^{-1}$
+https://cds.cern.ch/record/1525880
+Ecm/TeV = 8
+lumi*fb = 20.5
+   #----  SR1: MET > 200  ----#
+   Nobs:              15
+   Nbg:               17.5(3.2)
+   Nvis_UL[observed]: 10.0
+           Process       Nev    R[obs]
+             Total    0.1580    0.0157
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0164    0.0016          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.1416    0.0141          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SR2: MET > 300  ----#
+   Nobs:              2
+   Nbg:               4.7(1.5)
+   Nvis_UL[observed]: 3.6
+           Process       Nev    R[obs]
+             Total    0.1233    0.0354
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0143    0.0041          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.1091    0.0313          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SR3: MET > 350  ----#
+   Nobs:              1
+   Nbg:               2.7(1.2)
+   Nvis_UL[observed]: 3.9
+           Process       Nev    R[obs]
+             Total    0.0996    0.0256
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0140    0.0036          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0856    0.0220          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+
+------------------------------------------------------------
+[ATLAS_CONF_2013_054]
+0 leptons + >=7-10 jets + Etmiss [Incl. squarks & gluinos] at 8TeV with $20.3fb^{-1}$
+http://arxiv.org/abs/1308.1841
+Ecm/TeV = 8
+lumi*fb = 20.3
+   #----  7j80 flavor 1 b-jets  ----#
+   Nobs:              17
+   Nbg:               17.0(6.0)
+   Nvis_UL[observed]: 16.0
+           Process       Nev    R[obs]
+             Total    0.0122    0.0008
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0075    0.0005          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0047    0.0003          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  7j80 flavor >=2 b-jets  ----#
+   Nobs:              13
+   Nbg:               25.0(10.0)
+   Nvis_UL[observed]: 12.0
+           Process       Nev    R[obs]
+             Total    0.0215    0.0018
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0186    0.0015          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0029    0.0002          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  8j50 flavor 0 b-jets  ----#
+   Nobs:              40
+   Nbg:               35.0(4.0)
+   Nvis_UL[observed]: 20.0
+           Process       Nev    R[obs]
+             Total    0.0082    0.0004
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0033    0.0002          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0049    0.0002          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  8j50 flavor 1 b-jets  ----#
+   Nobs:              44
+   Nbg:               40.0(10.0)
+   Nvis_UL[observed]: 23.0
+           Process       Nev    R[obs]
+             Total    0.0198    0.0009
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0100    0.0004          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0098    0.0004          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  8j50 flavor >=2 b-jets  ----#
+   Nobs:              44
+   Nbg:               50.0(10.0)
+   Nvis_UL[observed]: 22.0
+           Process       Nev    R[obs]
+             Total    0.0336    0.0015
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0267    0.0012          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0069    0.0003          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  9j50 flavor 0 b-jets  ----#
+   Nobs:              5
+   Nbg:               3.3(0.7)
+   Nvis_UL[observed]: 7.0
+           Process       Nev    R[obs]
+             Total    0.0024    0.0003
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0011    0.0002          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0013    0.0002          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  9j50 flavor 1 b-jets  ----#
+   Nobs:              8
+   Nbg:               6.1(1.7)
+   Nvis_UL[observed]: 9.0
+           Process       Nev    R[obs]
+             Total    0.0091    0.0010
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0073    0.0008          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0017    0.0002          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  9j50 flavor >=2 b-jets  ----#
+   Nobs:              7
+   Nbg:               8.0(2.7)
+   Nvis_UL[observed]: 7.0
+           Process       Nev    R[obs]
+             Total    0.0123    0.0016
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0116    0.0015          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0007    0.0001          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  10j50 flavor  ----#
+   Nobs:              3
+   Nbg:               1.37(0.35)
+   Nvis_UL[observed]: 6.0
+           Process       Nev    R[obs]
+             Total    0.0137    0.0023
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0133    0.0023          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0004    0.0001          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  7j80 flavor 0 b-jets  ----#
+   Nobs:              12
+   Nbg:               11.0(2.2)
+   Nvis_UL[observed]: 10.0
+           Process       Nev    R[obs]
+             Total    0.0057    0.0006
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0036    0.0004          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0021    0.0002          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  8j80 flavor >=2 b-jets  ----#
+   Nobs:              3
+   Nbg:               3.3(2.2)
+   Nvis_UL[observed]: 6.0
+           Process       Nev    R[obs]
+             Total    0.0117    0.0019
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0113    0.0018          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0003    0.0000          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  8j50 MJ 340  ----#
+   Nobs:              69
+   Nbg:               75.0(19.0)
+   Nvis_UL[observed]: 35.0
+           Process       Nev    R[obs]
+             Total    0.0785    0.0023
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0668    0.0019          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0117    0.0003          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  8j80 flavor 0 b-jets  ----#
+   Nobs:              2
+   Nbg:               0.9(0.6)
+   Nvis_UL[observed]: 5.0
+           Process       Nev    R[obs]
+             Total    0.0011    0.0002
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0011    0.0002          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+   #----  8j80 flavor 1 b-jets  ----#
+   Nobs:              1
+   Nbg:               1.5(0.9)
+   Nvis_UL[observed]: 3.5
+           Process       Nev    R[obs]
+             Total    0.0070    0.0020
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0066    0.0019          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0004    0.0001          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  9j50 MJ 420  ----#
+   Nobs:              9
+   Nbg:               11.0(5.0)
+   Nvis_UL[observed]: 10.0
+           Process       Nev    R[obs]
+             Total    0.0294    0.0029
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0282    0.0028          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0012    0.0001          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  10j50 MJ 340  ----#
+   Nobs:              1
+   Nbg:               3.2(3.45)
+   Nvis_UL[observed]: 4.0
+           Process       Nev    R[obs]
+             Total    0.0135    0.0033
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0128    0.0032          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0006    0.0002          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  8j50 MJ 420  ----#
+   Nobs:              37
+   Nbg:               45.0(14.0)
+   Nvis_UL[observed]: 20.0
+           Process       Nev    R[obs]
+             Total    0.0556    0.0027
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0515    0.0025          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0041    0.0002          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  9j50 MJ 340  ----#
+   Nobs:              13
+   Nbg:               17.0(7.0)
+   Nvis_UL[observed]: 11.0
+           Process       Nev    R[obs]
+             Total    0.0350    0.0035
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0323    0.0032          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0027    0.0003          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  10j50 MJ 420  ----#
+   Nobs:              1
+   Nbg:               2.2(2.0)
+   Nvis_UL[observed]: 4.0
+           Process       Nev    R[obs]
+             Total    0.0124    0.0030
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0124    0.0030          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+
+------------------------------------------------------------
+[ATLAS_CONF_2013_053]
+0 leptons + 2 b-jets + Etmiss [Sbottom/stop] at 8TeV with $20.1fb^{-1}$ 
+http://arxiv.org/abs/1308.2631
+Ecm/TeV = 8
+lumi*fb = 20.1
+   #----  SRA mCT150  ----#
+   Nobs:              102
+   Nbg:               94.0(13.0)
+   Nvis_UL[observed]: 38.0
+           Process       Nev    R[obs]
+             Total    0.0157    0.0004
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0157    0.0004          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SRA mCT200  ----#
+   Nobs:              48
+   Nbg:               39.0(6.0)
+   Nvis_UL[observed]: 26.0
+           Process       Nev    R[obs]
+             Total    0.0119    0.0005
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0119    0.0005          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SRA mCT250  ----#
+   Nobs:              14
+   Nbg:               15.8(2.8)
+   Nvis_UL[observed]: 9.0
+           Process       Nev    R[obs]
+             Total    0.0080    0.0009
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0080    0.0009          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SRA mCT300  ----#
+   Nobs:              7
+   Nbg:               5.9(1.1)
+   Nvis_UL[observed]: 7.5
+           Process       Nev    R[obs]
+             Total    0.0046    0.0006
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0046    0.0006          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SRA mCT350  ----#
+   Nobs:              3
+   Nbg:               2.5(0.6)
+   Nvis_UL[observed]: 5.2
+           Process       Nev    R[obs]
+             Total    0.0025    0.0005
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0025    0.0005          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SRB  ----#
+   Nobs:              65
+   Nbg:               64.0(10.0)
+   Nvis_UL[observed]: 27.0
+           Process       Nev    R[obs]
+             Total    0.0146    0.0006
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0146    0.0006          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+
+------------------------------------------------------------
+[ATLAS_CONF_2013_037]
+1 lepton + 4(1 b-)jets + Etmiss [Medium / heavy stop] at 8TeV with $20.7fb^{-1}$
+https://cds.cern.ch/record/1532431
+Ecm/TeV = 8
+lumi*fb = 20.7
+   #----  SRtN2  ----#
+   Nobs:              14
+   Nbg:               13.0(3.0)
+   Nvis_UL[observed]: 10.7
+           Process       Nev    R[obs]
+             Total    0.1720    0.0166
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0132    0.0013          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.1588    0.0153          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SRtN3  ----#
+   Nobs:              7
+   Nbg:               5.0(2.0)
+   Nvis_UL[observed]: 8.5
+           Process       Nev    R[obs]
+             Total    0.1391    0.0168
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0142    0.0017          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.1249    0.0151          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SRbC1  ----#
+   Nobs:              456
+   Nbg:               482.0(76.0)
+   Nvis_UL[observed]: 83.2
+           Process       Nev    R[obs]
+             Total    0.4428    0.0053
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0351    0.0004          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.4077    0.0049          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SRbC2  ----#
+   Nobs:              25
+   Nbg:               25.0(18.0)
+   Nvis_UL[observed]: 19.5
+           Process       Nev    R[obs]
+             Total    0.1586    0.0085
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0279    0.0015          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.1307    0.0070          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SRbC3  ----#
+   Nobs:              6
+   Nbg:               7.0(3.0)
+   Nvis_UL[observed]: 7.6
+           Process       Nev    R[obs]
+             Total    0.0859    0.0104
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0205    0.0025          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0654    0.0079          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+
+------------------------------------------------------------
+[ATLAS_CONF_2013_049]
+2 leptons + Etmiss [EW production] at 8 TeV with $20.3fb^{-1}$.
+https://cds.cern.ch/record/1547565
+Ecm/TeV = 8
+lumi*fb = 20.3
+   #----  WWc  ----#
+   Nobs:              9
+   Nbg:               7.4(1.5)
+   Nvis_UL[observed]: 8.729
+           Process       Nev    R[obs]
+             Total    0.0000    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+   #----  ee: mT2 > 90  ----#
+   Nobs:              15
+   Nbg:               16.6(2.3)
+   Nvis_UL[observed]: 8.932
+           Process       Nev    R[obs]
+             Total    0.0000    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+   #----  em: mT2 > 90  ----#
+   Nobs:              19
+   Nbg:               20.7(3.2)
+   Nvis_UL[observed]: 10.353
+           Process       Nev    R[obs]
+             Total    0.0005    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0005    0.0000          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  mm: mT2 > 90  ----#
+   Nobs:              19
+   Nbg:               22.4(3.3)
+   Nvis_UL[observed]: 9.541
+           Process       Nev    R[obs]
+             Total    0.0000    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+   #----  ee: mT2 > 110  ----#
+   Nobs:              4
+   Nbg:               6.1(2.2)
+   Nvis_UL[observed]: 5.481
+           Process       Nev    R[obs]
+             Total    0.0000    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+   #----  em: mT2 > 110  ----#
+   Nobs:              5
+   Nbg:               4.4(2.0)
+   Nvis_UL[observed]: 7.105
+           Process       Nev    R[obs]
+             Total    0.0003    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0003    0.0000          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  mm: mT2 > 110  ----#
+   Nobs:              4
+   Nbg:               6.3(2.4)
+   Nvis_UL[observed]: 5.684
+           Process       Nev    R[obs]
+             Total    0.0000    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+   #----  WWa  ----#
+   Nobs:              123
+   Nbg:               117.9(14.6)
+   Nvis_UL[observed]: 39.382
+           Process       Nev    R[obs]
+             Total    0.0000    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+   #----  WWb  ----#
+   Nobs:              16
+   Nbg:               13.6(2.3)
+   Nvis_UL[observed]: 11.774
+           Process       Nev    R[obs]
+             Total    0.0000    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+
+------------------------------------------------------------
+[ATLAS_CONF_2013_048]
+2 leptons (+ jets) + Etmiss [Medium stop] at 8 TeV with $20.3fb^{-1}$.
+http://cds.cern.ch/record/1547564
+Ecm/TeV = 8
+lumi*fb = 20.3
+   #----  SR M90  ----#
+   Nobs:              260
+   Nbg:               300.0(40.0)
+   Nvis_UL[observed]: 50.75
+           Process       Nev    R[obs]
+             Total    0.0543    0.0011
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0029    0.0001          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0514    0.0010          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SR M100  ----#
+   Nobs:              3
+   Nbg:               4.8(2.2)
+   Nvis_UL[observed]: 5.481
+           Process       Nev    R[obs]
+             Total    0.0282    0.0051
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0029    0.0005          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0253    0.0046          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SR M110  ----#
+   Nobs:              7
+   Nbg:               11.0(4.0)
+   Nvis_UL[observed]: 8.12
+           Process       Nev    R[obs]
+             Total    0.0393    0.0048
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0022    0.0003          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0371    0.0046          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SR M120  ----#
+   Nobs:              3
+   Nbg:               4.3(1.3)
+   Nvis_UL[observed]: 4.669
+           Process       Nev    R[obs]
+             Total    0.0363    0.0078
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0022    0.0005          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0341    0.0073          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+
+------------------------------------------------------------
+[ATLAS_CONF_2013_062]
+1-2 leptons + 3-6 jets + Etmiss [Incl. squarks & gluinos, mUED] at 8TeV with $20.3fb^{-1}$
+http://cds.cern.ch/record/1557779
+Ecm/TeV = 8
+lumi*fb = 20.3
+   #----  incHL3j_m  ----#
+   Nobs:              5
+   Nbg:               2.7(0.9)
+   Nvis_UL[observed]: 7.7
+           Process       Nev    R[obs]
+             Total    0.0265    0.0034
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0093    0.0012          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0172    0.0022          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  incHL5j_e  ----#
+   Nobs:              4
+   Nbg:               3.6(1.0)
+   Nvis_UL[observed]: 6.0
+           Process       Nev    R[obs]
+             Total    0.0390    0.0064
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0268    0.0044          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0122    0.0020          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SL1b_low  ----#
+   Nobs:              8
+   Nbg:               6.1(1.4)
+   Nvis_UL[observed]: 8.8
+           Process       Nev    R[obs]
+             Total    0.0118    0.0013
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0001    0.0000          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0117    0.0013          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SL1b_high  ----#
+   Nobs:              6
+   Nbg:               4.0(1.1)
+   Nvis_UL[observed]: 7.9
+           Process       Nev    R[obs]
+             Total    0.0121    0.0015
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0001    0.0000          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0121    0.0015          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SL2b_low  ----#
+   Nobs:              24
+   Nbg:               24.1(4.1)
+   Nvis_UL[observed]: 13.4
+           Process       Nev    R[obs]
+             Total    0.0034    0.0003
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0034    0.0003          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SL2b_high  ----#
+   Nobs:              3
+   Nbg:               3.6(1.4)
+   Nvis_UL[observed]: 5.3
+           Process       Nev    R[obs]
+             Total    0.0017    0.0003
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0017    0.0003          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SL3j  ----#
+   Nobs:              7
+   Nbg:               5.6(1.6)
+   Nvis_UL[observed]: 8.1
+           Process       Nev    R[obs]
+             Total    0.0121    0.0015
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0121    0.0015          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SL5j  ----#
+   Nobs:              9
+   Nbg:               14.8(3.7)
+   Nvis_UL[observed]: 7.1
+           Process       Nev    R[obs]
+             Total    0.0205    0.0029
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0002    0.0000          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0203    0.0029          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SL2m  ----#
+   Nobs:              7
+   Nbg:               1.6(1.0)
+   Nvis_UL[observed]: 11.5
+           Process       Nev    R[obs]
+             Total    0.0000    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+   #----  incHL3j_e  ----#
+   Nobs:              4
+   Nbg:               3.9(1.0)
+   Nvis_UL[observed]: 6.0
+           Process       Nev    R[obs]
+             Total    0.0334    0.0055
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0163    0.0027          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0172    0.0028          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  incHL6j_m  ----#
+   Nobs:              0
+   Nbg:               1.7(0.6)
+   Nvis_UL[observed]: 3.0
+           Process       Nev    R[obs]
+             Total    0.0307    0.0101
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0173    0.0057          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0134    0.0044          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  incHL5j_m  ----#
+   Nobs:              2
+   Nbg:               2.5(0.8)
+   Nvis_UL[observed]: 4.6
+           Process       Nev    R[obs]
+             Total    0.0313    0.0070
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0207    0.0046          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0106    0.0024          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  incHL6j_e  ----#
+   Nobs:              2
+   Nbg:               2.0(0.7)
+   Nvis_UL[observed]: 4.6
+           Process       Nev    R[obs]
+             Total    0.0359    0.0077
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0228    0.0049          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0131    0.0028          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+
+------------------------------------------------------------
+[ATLAS_CONF_2013_061]
+0-1 leptons + >=3 b-jets + Etmiss [3rd gen. squarks] at 8TeV with $20.1fb^{-1}$
+http://cds.cern.ch/record/1557778
+Ecm/TeV = 8
+lumi*fb = 20.1
+   #----  SR-1l-6j-C  ----#
+   Nobs:              0
+   Nbg:               3.0(2.8)
+   Nvis_UL[observed]: 3.0
+           Process       Nev    R[obs]
+             Total    0.0321    0.0106
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0288    0.0096          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0032    0.0011          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SR-0l-4j-A  ----#
+   Nobs:              2
+   Nbg:               3.0(1.3)
+   Nvis_UL[observed]: 4.6
+           Process       Nev    R[obs]
+             Total    0.0484    0.0105
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0250    0.0054          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0234    0.0051          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SR-0l-4j-B  ----#
+   Nobs:              3
+   Nbg:               1.3(1.0)
+   Nvis_UL[observed]: 6.7
+           Process       Nev    R[obs]
+             Total    0.0473    0.0071
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0337    0.0051          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0135    0.0020          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SR-0l-4j-C  ----#
+   Nobs:              2
+   Nbg:               1.8(1.0)
+   Nvis_UL[observed]: 4.8
+           Process       Nev    R[obs]
+             Total    0.0416    0.0086
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0351    0.0073          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0065    0.0013          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SR-0l-7j-A  ----#
+   Nobs:              22
+   Nbg:               22.5(6.9)
+   Nvis_UL[observed]: 15.3
+           Process       Nev    R[obs]
+             Total    0.0700    0.0046
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0501    0.0033          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0200    0.0013          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SR-0l-7j-B  ----#
+   Nobs:              3
+   Nbg:               3.6(2.5)
+   Nvis_UL[observed]: 6.1
+           Process       Nev    R[obs]
+             Total    0.0559    0.0093
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0420    0.0070          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0140    0.0023          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SR-0l-7j-C  ----#
+   Nobs:              1
+   Nbg:               0.8(0.85)
+   Nvis_UL[observed]: 3.9
+           Process       Nev    R[obs]
+             Total    0.0465    0.0122
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0435    0.0114          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0030    0.0008          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SR-1l-6j-A  ----#
+   Nobs:              7
+   Nbg:               15.5(8.4)
+   Nvis_UL[observed]: 6.6
+           Process       Nev    R[obs]
+             Total    0.0425    0.0064
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0373    0.0056          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0052    0.0008          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  SR-1l-6j-B  ----#
+   Nobs:              0
+   Nbg:               7.4(5.7)
+   Nvis_UL[observed]: 3.0
+           Process       Nev    R[obs]
+             Total    0.0398    0.0132
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0355    0.0118          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0043    0.0014          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+
+------------------------------------------------------------
+[ATLAS_CONF_2013_047]
+0 leptons + 2-6 jets + Etmiss [Incl. squarks & gluinos] at 8TeV with $20.3fb^{-1}$
+http://cds.cern.ch/record/1547563
+Ecm/TeV = 8
+lumi*fb = 20.3
+   #----  E Medium  ----#
+   Nobs:              41
+   Nbg:               30.0(8.0)
+   Nvis_UL[observed]: 28.6
+           Process       Nev    R[obs]
+             Total    0.1824    0.0064
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0698    0.0024          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.1126    0.0039          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  E Tight  ----#
+   Nobs:              5
+   Nbg:               2.9(1.8)
+   Nvis_UL[observed]: 8.3
+           Process       Nev    R[obs]
+             Total    0.0780    0.0094
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0473    0.0057          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0307    0.0037          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  A Loose  ----#
+   Nobs:              5333
+   Nbg:               4700.0(500.0)
+   Nvis_UL[observed]: 1341.2
+           Process       Nev    R[obs]
+             Total    1.6985    0.0013
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.1273    0.0001          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    1.5713    0.0012          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  A Medium  ----#
+   Nobs:              135
+   Nbg:               122.0(18.0)
+   Nvis_UL[observed]: 51.3
+           Process       Nev    R[obs]
+             Total    0.1271    0.0025
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0417    0.0008          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0854    0.0017          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  B Medium  ----#
+   Nobs:              29
+   Nbg:               33.0(7.0)
+   Nvis_UL[observed]: 14.9
+           Process       Nev    R[obs]
+             Total    0.0938    0.0063
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0574    0.0039          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0363    0.0025          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  B Tight  ----#
+   Nobs:              4
+   Nbg:               2.4(1.4)
+   Nvis_UL[observed]: 6.7
+           Process       Nev    R[obs]
+             Total    0.0104    0.0015
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0090    0.0013          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0014    0.0002          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  C Medium  ----#
+   Nobs:              228
+   Nbg:               210.0(40.0)
+   Nvis_UL[observed]: 81.2
+           Process       Nev    R[obs]
+             Total    0.5414    0.0067
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0802    0.0010          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.4612    0.0057          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  C Tight  ----#
+   Nobs:              0
+   Nbg:               1.6(1.4)
+   Nvis_UL[observed]: 2.4
+           Process       Nev    R[obs]
+             Total    0.0228    0.0094
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0183    0.0075          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0045    0.0019          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  D  ----#
+   Nobs:              18
+   Nbg:               15.0(5.0)
+   Nvis_UL[observed]: 15.5
+           Process       Nev    R[obs]
+             Total    0.1274    0.0082
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0720    0.0046          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0554    0.0035          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+   #----  E Loose  ----#
+   Nobs:              166
+   Nbg:               113.0(21.0)
+   Nvis_UL[observed]: 92.4
+           Process       Nev    R[obs]
+             Total    0.2800    0.0030
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0888    0.0010          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.1912    0.0021          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+
+------------------------------------------------------------
+[ATLAS_CONF_2013_093]
+1 lepton + bb(H) + Etmiss [EW production] at 8TeV with $20.3fb^{-1}$ 
+https://cds.cern.ch/record/1595756
+Ecm/TeV = 8
+lumi*fb = 20.3
+   #----  SRAh  ----#
+   Nobs:              4
+   Nbg:               5.4(3.1)
+   Nvis_UL[observed]: 6.9
+           Process       Nev    R[obs]
+             Total    0.0000    0.0000
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+       T1tN1_T1tN1    0.0000    0.0000          
+   #----  SRBh  ----#
+   Nobs:              2
+   Nbg:               2.1(0.7)
+   Nvis_UL[observed]: 4.4
+           Process       Nev    R[obs]
+             Total    0.0046    0.0011
+       B1bN1_B1bN1       nan       nan          
+   GtT1tN1_GtT1tN1    0.0000    0.0000          
+       T2tN1_T2tN1       nan       nan          
+       T1tN1_T1tN1    0.0046    0.0011          
+   GbB1bN1_GbB1bN1    0.0000    0.0000          
+
