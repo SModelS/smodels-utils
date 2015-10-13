@@ -38,29 +38,29 @@ from smodels_utils.dataPreparation.origPlotObjects import x, y
 import os, glob
 dir=os.getcwd()
 print dir
-pos1=dir.find("ATLAS/")+6                                                                                                       
+pos1=dir.find("ATLAS/")+6
 pos=dir.find("-ANA")
-expid = dir[pos1:pos]  
+expid = dir[pos1:pos]
 print "expid=",expid
 signalregion=dir[pos+1:]
 print "signalregion=",signalregion
 
 info = MetaInfoInput(expid)
 info.signalRegion = signalregion
-info.url ='https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/CONFNOTES/%s/' % expid 
+info.url ='https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/CONFNOTES/%s/' % expid
 info.sqrts = 8
 info.prettyName = ''
 info.private = True
 info.arxiv = ''
 info.contact ='fastlim'
 info.publication = ''
-info.lumi = 1.0 
+info.lumi = 1.0
 info.comment = 'created from fastlim-1.0'
 info.supersededBy = ''
 info.implementedBy = ''
 
 
-constraints =  { "T2tt": "[[['t+']],[['t-']]]", "T2bb": "[[['b']],[['b']]]", 
+constraints =  { "T2tt": "[[['t+']],[['t-']]]", "T2bb": "[[['b']],[['b']]]",
                  "T2": "[[['jet']],[['jet']]]",
                  "T2bt": "[[['b']],[['t']]]", "T1tttt": "[[['t+','t-']],[['t+','t-']]]",
                  "T5tttt": "[[['t+'],['t-']],[['t+'],['t-']]]",
@@ -99,8 +99,8 @@ constraints =  { "T2tt": "[[['t+']],[['t-']]]", "T2bb": "[[['b']],[['b']]]",
 #T1_1.expExclusionM1.setSource( path, type, objectName = None, index = None )
 #T1_1.expExclusionP1.setSource( path, type, objectName = None, index = None )
 #----global url settings ----
-#T1_1.dataUrl = 
-#T1_1.histoDataUrl = 
+#T1_1.dataUrl =
+#T1_1.histoDataUrl =
 #----limit url settings ----
 # T1_1.obsUpperLimit.dataUrl = 'https://twiki.cern.ch/twiki/pub/CMSPublic/PhysicsResultsSUS13007/limits_model_A.txt'
 #T1_1.expectedlimit.dataUrl =
@@ -122,7 +122,7 @@ figureUrl["T1"]='https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/CONFNOTES/ATLAS-
 for i in os.listdir("orig/"):
     if i[-5:]!=".effi": continue
     txname=i[:-5]
-    print txname 
+    print txname
     tmp= TxNameInput ( txname )
     tmp.on.constraint = constraints[txname]
     tmp.on.conditionDescription=None
@@ -134,7 +134,7 @@ for i in os.listdir("orig/"):
         tmp_1 = tmp.addMassPlane (motherMass = x , lspMass = y )
     else:
         tmp_1 = tmp.addMassPlane (motherMass = x , lspMass = y )
-    tmp_1.efficiencyMap.setSource( './orig/%s.effi' % txname, 'effi', objectName = None, index = None ) 
+    tmp_1.efficiencyMap.setSource( './orig/%s.effi' % txname, 'effi', objectName = None, index = None )
     if os.path.exists ( './orig/%s_excl.dat' % txname ):
         tmp_1.obsExclusion.setSource( './orig/%s_excl.dat' % txname, 'txt', objectName = None, index = None )
     if txname in figure:
@@ -170,7 +170,7 @@ def translate ( filename ):
 # T1_1.obsUpperLimit.unit = 'fb'
 # T1_1.expUpperLimit.setSource( path, type, objectName = None, index = None )
 # ----exclusion source----
-        
+
 
 #T2tt = TxName('T2tt')
 #T2tt.on.constraint = "[[['t']],[['t']]]"
@@ -186,9 +186,15 @@ import os
 os.unlink ("globalInfo.txt")
 
 import glob
-for i in glob.iglob ( "*/validation" ):
+for i in glob.iglob ( "./validation/*" ):
     print "[convert.py] unlinking",i,"from",os.getcwd()
     os.unlink ( i )
-for i in glob.iglob ( "*/sms.root" ):
+os.rmdir ( "./validation" )
+for i in glob.iglob ( "./sms.root" ):
     print "[convert.py] unlinking",i,"from",os.getcwd()
     os.unlink ( i )
+## os.unlink("orig/twiki.txt")
+#for i in glob.iglob ( "./orig/*" ):
+#    print "[convert.py] unlinking",i,"from",os.getcwd()
+#    os.unlink ( i )
+#os.rmdir ( "./orig" )
