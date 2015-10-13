@@ -67,7 +67,7 @@ class DatabaseCreator(list):
         self.txNameField = 'txName'
         list.__init__(self)
             
-    def create(self, createAdditional=False, ask_for_name=True ):
+    def create(self, createAdditional=False, ask_for_name=True, create_dataInfo=True ):
         
         """
         main method of the class
@@ -104,6 +104,7 @@ class DatabaseCreator(list):
         :param createAdditional: if true, we dont delete, nor do we create sms.root
         :param ask_for_name: if false, we assume 'ww' to be the author. Use with
         great care!
+        :param createDataInfo: if false, we dont create dataInfo.txt
         
         :raise requiredError: If a region exist, but no constraint, condition 
         or conditionDescription is set for this region
@@ -216,12 +217,13 @@ class DatabaseCreator(list):
                         Errors().required(txName.name, region, 'condition')
                     if not hasattr(region, 'conditionDescription'):
                         Errors().required(txName.name, region, 'conditionDescription')
-                    print "dataInfo.dataId",dataInfo.dataId
+                    # print "dataInfo.dataId",dataInfo.dataId
                     self._createInfoFile(getattr(region, self.txNameField), dataInfo.dataId, region, txName )
                     region.figureUrl=""
                     region.dataUrl=""
                     region.axes=""
-        self._createInfoFile( dataInfo.name, dataInfo.dataId, dataInfo)
+        if create_dataInfo:
+            self._createInfoFile( dataInfo.name, dataInfo.dataId, dataInfo)
         self._createSmsRoot( createAdditional )
         
         if not createAdditional:
@@ -547,6 +549,7 @@ class DatabaseCreator(list):
                     path = self.infoFilePath ( name, getattr ( obj, attr ) )
         infoFile = open(self.base + path, 'w')
         infoFile.write(content)
+        print "[databaseCreation.py] writing >>%s<< to >>%s<< " % ( content,path )
         infoFile.close()
         
     def infoFilePath(self, infoFileName, dataid=None ):

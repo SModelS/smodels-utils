@@ -145,7 +145,7 @@ class KinematicRegion(Locker):
     """
     
     
-    infoAttr = ['conditionDescription', 'condition', 'constraint','checked','figureUrl']
+    infoAttr = ['conditionDescription', 'condition', 'constraint','checked','figureUrl', 'dataUrl' ]
     internalAttr = ['name', 'functions', 'topoExtension',\
     'region']
     
