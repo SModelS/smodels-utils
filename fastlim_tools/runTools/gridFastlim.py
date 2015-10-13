@@ -69,21 +69,32 @@ def runFastlim(slhafile,outfile,fastlimdir='../fastlim-1.0/'):
     :return: True/False if the run was/was not successful 
     """
     
+    #Several checks to make sure Fastlim will run with the correct input
     if not os.path.isdir(fastlimdir):
         logger.error('Fastlim folder %s not found' %fastlimdir)
         return False
     if not os.path.isfile(os.path.join(fastlimdir,'fastlim.py')):
         logger.error("fastlim.py not found in %s" %fastlimdir)
         return False
+    if not os.path.isabs(fastlimdir):
+        logger.error("Please provide an absolute for fastlim dir.")
+        return False
     
-    try:
+    if not os.path.isfile(slhafile):
+        logger.error("File: %s not found" %slhafile)
+        return False
+    elif not os.path.isabs(slhafile) or not os.path.isabs(outfile):
+        logger.error("Please provide absolute paths for files")
+        return False
+     
+    try:        
         proc = subprocess.Popen([os.path.join(fastlimdir,'fastlim.py'),slhafile],
                                 cwd = fastlimdir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         proc.wait()
     except:    
         logger.error('Error running fastlim')
         return False
-    
+ 
     #Copy the output (default is fastlim.out) to the outfile
     shutil.copy(os.path.join(fastlimdir,'fastlim.out'),outfile)
     return True
@@ -106,6 +117,7 @@ def runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None,outType='sms'):
     :return: List of dictionaries containing the output of each file
     """
 
+    
     #Create temp file    
     slhaFiles,slhaD = getSlhaFiles(slhadir)
     
@@ -113,17 +125,19 @@ def runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None,outType='sms'):
     #Loop over SLHA files and compute results:
     data = []
     for slhafile in slhaFiles:
-        infile = tempfile.mkstemp()
+        infile = tempfile.mkstemp()     #Use temp file to store fastlim-ready SLHA file
         os.close(infile[0])
         infile = infile[1]
         prepareSLHA(slhafile,infile)
-        outputfile = 'fastlim.out'
+        outputfile = tempfile.mkstemp()  #Use temp file to store fastlim output
+        os.close(outputfile[0])
+        outputfile = outputfile[1]
         #Run Fastlim
         proc = runFastlim(infile,outputfile,fastlimdir)
         if not proc:
             logger.error("Fastlim failed for file %s" %slhafile)
             return False
-
+ 
         #Convert results to SModelS format (TheoryPredictionList)      
         predictions = fastlimParser(outputfile,useBestDataset=True,
                                     expResID=expResID,txname=txname)                
@@ -139,10 +153,12 @@ def runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None,outType='sms'):
         elif outType == 'dict':
             data.append(output)
 
+        #Remove temp file
+        if os.path.isfile(outputfile): os.remove(outputfile)
+
+
     #Remove temporary folder
     if slhaD != slhadir: shutil.rmtree(slhaD)
-    #Remove temp file
-    if os.path.isfile(outputfile): os.remove(outputfile)
 
     return data
 
