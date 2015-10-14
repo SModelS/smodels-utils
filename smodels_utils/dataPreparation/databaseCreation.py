@@ -549,7 +549,7 @@ class DatabaseCreator(list):
                     path = self.infoFilePath ( name, getattr ( obj, attr ) )
         infoFile = open(self.base + path, 'w')
         infoFile.write(content)
-        print "[databaseCreation.py] writing >>%s<< to >>%s<< " % ( content,path )
+        # print "[databaseCreation.py] writing >>%s<< to >>%s<< " % ( content,path )
         infoFile.close()
         
     def infoFilePath(self, infoFileName, dataid=None ):
