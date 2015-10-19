@@ -79,6 +79,7 @@ class StandardDataInfo(object ):
                 self.infoAttr.append ( "expectedBG" )
                 self.infoAttr.append ( "bgError" )
                 self.infoAttr.append ( "upperLimit" )
+                self.infoAttr.append ( "expectedUpperLimit" )
                 self.hasAddedStatistics=True
         print self.dataType
             

@@ -159,6 +159,7 @@ class DatabaseCreator(list):
                     from smodels.tools.physicsUnits import fb, pb
                     lumi=eval(self.metaInfo.lumi)
                     dataInfo.upperLimit = str ( statistics.upperLimit ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError, lumi ).asNumber ( fb ) )+"*fb"
+                    dataInfo.expectedUpperLimit = str ( statistics.upperLimit ( dataInfo.expectedBG, dataInfo.expectedBG, dataInfo.bgError, lumi ).asNumber ( fb ) )+"*fb"
                 
                 print '\nreading mass plane: %s\n' %plane.origPlot
                 
@@ -549,7 +550,6 @@ class DatabaseCreator(list):
                     path = self.infoFilePath ( name, getattr ( obj, attr ) )
         infoFile = open(self.base + path, 'w')
         infoFile.write(content)
-        # print "[databaseCreation.py] writing >>%s<< to >>%s<< " % ( content,path )
         infoFile.close()
         
     def infoFilePath(self, infoFileName, dataid=None ):
@@ -568,7 +568,7 @@ class DatabaseCreator(list):
             os.mkdir ( directory )
         
         path = '%s%s%s' %(directory, infoFileName, self.infoFileExtension)
-        print "[infoFilePath]",path
+        # print "[infoFilePath]",path
         return path
         
 databaseCreator = DatabaseCreator()   
