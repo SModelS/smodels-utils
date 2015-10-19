@@ -17,7 +17,7 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
 import tempfile
-from smodels.tools import modpyslha
+import pyslha as modpyslha
 from smodels.theory import slhaDecomposer
 from smodels.tools.physicsUnits import fb, GeV, TeV
 from smodels.tools.xsecComputer import computeXSec,addXSecToFile
@@ -274,8 +274,9 @@ if __name__ == "__main__":
             sys.exit()
     tempf = TemplateFile(args.templatefile,args.axes)
     masses=[]
-    for mother in range(xmin,xmax+1,dx):
-        for lsp in range(ymin,ymax+1,dy):
+    import numpy
+    for mother in numpy.arange(args.xmin,args.xmax+1,args.dx):
+        for lsp in numpy.arange(args.ymin,args.ymax+1,args.dy):
             masses.append ( [ mother, lsp ] )
     slhafiles = tempf.createFilesFor( masses )
     print slhafiles

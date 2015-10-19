@@ -63,8 +63,12 @@ def getExtendedFrame(txnameObjs,axes):
     minx, miny = float("inf"), float("inf")
     maxx, maxy = 0., 0.
     for txnameObj in txnameObjs:
+        txnameObj.txnameData.loadData()
         data = txnameObj.txnameData.data  #Data grid of mass points and ULs of efficiencies
-        print "data=",data,txnameObj.getInfo("id")
+        # print "data=",type(data),txnameObj.getInfo("id"),txnameObj,type(txnameObj)
+        # print "path=",txnameObj.path,txnameObj.globalInfo
+        if data==None:
+            continue
         for pt in data:
             mass = pt[0]
             mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]
@@ -87,6 +91,7 @@ def getExtendedFrame(txnameObjs,axes):
 
 def addQuotationMarks ( constraint ):
     """ [[[t+]],[[t-]]] -> [[['t+']],[['t-']]] """
+    ##print("[plotRanges.py] addQuotationMarks",constraint)
     if constraint.find("'")>-1:
         return constraint
     ret=""
@@ -117,8 +122,8 @@ def getPoints ( tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", \
     
     txname = txnameObjs[0].getInfo('txname')
     vertexChecker = VertexChecker ( txname, addQuotationMarks ( constraint ) )
-    print "[getPoints] vertexChecker constraint=",addQuotationMarks(constraint)
-    print "[getPoints] vertexChecker kinconstraint=",vertexChecker.kinConstraints
+    #print "[getPoints] vertexChecker constraint=",addQuotationMarks(constraint)
+    #print "[getPoints] vertexChecker kinconstraint=",vertexChecker.kinConstraints
     frame = getSuperFrame(tgraphs)
     extframe = getExtendedFrame(txnameObjs,axes)
     origPlot = OrigPlot.fromString ( axes )

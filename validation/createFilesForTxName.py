@@ -43,8 +43,8 @@ def main( txname= "T6bbWW" ):
     if type(listOfExpResOn)!=list:
         listOfExpResOn=[listOfExpResOn]
     for expResult in listOfExpResOn:
-        onshell_constraint= expResult.getValuesFor("constraint") 
-#         print "constraint=",onshell_constraint
+        onshell_constraint= expResult.getValuesFor("constraint")[0]
+        ## print "constraint=",onshell_constraint
         
 
     listOfExpRes = database.getExpResults( txnames=[ txname ], datasetIDs = [None] )
@@ -85,11 +85,11 @@ def main( txname= "T6bbWW" ):
 
     for (axes,ntgraph) in tgraphs.items():
         print "--=----------------------"
-        pts = plotRanges.getPoints ( ntgraph, txnameObjs, axes, onshell_constraint, onshell, offshell )
         print "axes=",axes
         print "txname=",txname
         print "onshell_constraint=",onshell_constraint
 #         print "points=",pts
+        pts = plotRanges.getPoints ( ntgraph, txnameObjs, axes, onshell_constraint, onshell, offshell )
         print "len(pts)=",len(pts)
         # flatpts = plotRanges.mergeListsOfListsOfPoints ( pts )
         if len(pts)==0:
