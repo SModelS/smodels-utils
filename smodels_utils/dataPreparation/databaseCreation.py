@@ -544,6 +544,9 @@ class DatabaseCreator(list):
             for attr in obj.infoAttr:
                 if not hasattr(obj, attr) and \
                 not hasattr(obj.__class__, attr) : continue
+                value=getattr(obj,attr)
+                if value=="": continue
+                #print("[databaseCreation] attr",attr,getattr(obj,attr))
                 content = '%s%s%s%s\n' %(content, attr,\
                 self.assignmentOperator, getattr(obj, attr))
                 if attr == "dataId":
