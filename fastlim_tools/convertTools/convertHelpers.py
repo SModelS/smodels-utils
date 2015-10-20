@@ -37,7 +37,7 @@ def createDataInfoFile ( analysis, cut ):
     tokens=lines[cut+1].split()
     lumi,data,bg,sys=float(tokens[1]),float(tokens[2]),float(tokens[3]),float(tokens[4])
     ul=float(tokens[7])
-    ## ul=statistics.upperLimit ( data, bg, sys, lumi )
+    eul=statistics.upperLimit ( bg, bg, sys, lumi )
 
     f=open ( destdir+newananame+datadir+ "/dataInfo.txt", "w")
     f.write ( "dataType: efficiencyMap\n" )
@@ -46,6 +46,7 @@ def createDataInfoFile ( analysis, cut ):
     f.write ( "expectedBG: %.1f\n" % bg )
     f.write ( "bgError: %.1f\n" % sys )
     f.write ( "upperLimit: %.2f*fb\n" % ul )
+    f.write ( "expectedUpperLimit: %.2f*fb\n" % eul )
     f.close ()
     print "[fastlimHelpers] done creating",destdir+newananame+datadir+ "/dataInfo.txt"
 
