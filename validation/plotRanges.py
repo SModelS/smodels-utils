@@ -120,7 +120,8 @@ def getPoints ( tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", \
         :param constraint: the constraint to check for onshell / offshellness
     """
     
-    txname = txnameObjs[0].getInfo('txname')
+    txname = txnameObjs[0].getInfo('txName')
+    print("[plotRanges] txname=>>%s<<" % txname)
     vertexChecker = VertexChecker ( txname, addQuotationMarks ( constraint ) )
     #print "[getPoints] vertexChecker constraint=",addQuotationMarks(constraint)
     #print "[getPoints] vertexChecker kinconstraint=",vertexChecker.kinConstraints
@@ -176,7 +177,7 @@ def generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,onshell,offshell,or
             inside=False
             for txnameObj in txnameObjs:
                 val = txnameObj.txnameData.getValueFor(masses)
-                if type(val) == type(fb):
+                if type(val) in [ type(fb), float ]:
                     inside=True
             if not inside:
 #                 print "masses",masses,"not inside any grid"

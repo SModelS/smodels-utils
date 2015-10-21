@@ -47,7 +47,8 @@ def main( txname= "T6bbWW" ):
         ## print "constraint=",onshell_constraint
         
 
-    listOfExpRes = database.getExpResults( txnames=[ txname ], datasetIDs = [None] )
+    listOfExpRes = database.getExpResults( txnames=[ txname ] )
+    # print("[createFilesForTxName] txnames=%s list=%s" % (txname,listOfExpRes) )
 
     if type(listOfExpRes)!=list:
         listOfExpRes=[listOfExpRes]
@@ -61,27 +62,22 @@ def main( txname= "T6bbWW" ):
     # Compute the theory predictions for each analysis
     for expResult in listOfExpRes:
         txnameList = expResult.getTxNames()
-        if len(txnameList) != 1:
-            print " %i Txname(s) found!" %len(txnameList)
-            print [tx.txname for tx in txnameList]
-            sys.exit()
-        else: 
-            txnameObj = txnameList[0]        
+        for txnameObj in txnameList:
             txnameObjs.append ( txnameObj )
-#         print('\n',expResult)
-#         print(expResult.path)
-        axes=txnameObj.getInfo("axes")
-        if type(axes)==str:
-            axes=[axes]
-        for naxes in axes:
-#             print "naxes=",naxes
-            tgraph=getExclusionCurvesFor(expResult,txname,naxes)
-#             print "tgraph=",tgraph
-            if not tgraph:
-                continue
-            if not naxes in tgraphs:
-                tgraphs[naxes]=[]
-            tgraphs[naxes].append(tgraph[txname][0])
+    #         print('\n',expResult)
+    #         print(expResult.path)
+            axes=txnameObj.getInfo("axes")
+            if type(axes)==str:
+                axes=[axes]
+            for naxes in axes:
+    #             print "naxes=",naxes
+                tgraph=getExclusionCurvesFor(expResult,txname,naxes)
+#                print "tgraph=",[ x.GetName() for x in tgraph["TScharm"] ]
+                if not tgraph:
+                    continue
+                if not naxes in tgraphs:
+                    tgraphs[naxes]=[]
+                tgraphs[naxes].append(tgraph[txname][0])
 
     for (axes,ntgraph) in tgraphs.items():
         print "--=----------------------"
