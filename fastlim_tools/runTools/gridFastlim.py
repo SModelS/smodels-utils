@@ -20,6 +20,7 @@ from smodels.tools.physicsUnits import fb, GeV, TeV
 from fastlimOutput import fastlimParser, formatOutput
 import subprocess
 import pyslha
+import multiprocessing
 
 logger.setLevel(level=logging.DEBUG)
 
@@ -58,13 +59,18 @@ def getSlhaFiles(slhadir):
 
     return slhaFiles,slhaD
 
-def runFastlim(slhafile,outfile,fastlimdir='../fastlim-1.0/'):
+def runFastlim(slhafile,outfile,fastlimdir='../fastlim-1.0/',expResID=None,txname=None):
     """
-    Runs fastlim for the SLHA file. The output is copied to outfile.
+    Runs fastlim for the SLHA file and generate the corresponding .sms file.
     
     :param slhafile: Path to the SLHA file
     :param outfile: Path to the outputfile
     :param fastlimdir: Folder containing fastlim data and fastlim.py
+    :param txname: Used to only use efficiencies for a specific Txname 
+                   (i.e. T2tt,T5bbbb,...). If None will return the total prediction.
+    :param expResID: Used to select results for a experimental result (i.e. ATLAS-CONF-xxx)
+                   If None will return predictions for all IDs.
+    
     
     :return: True/False if the run was/was not successful 
     """
@@ -86,22 +92,35 @@ def runFastlim(slhafile,outfile,fastlimdir='../fastlim-1.0/'):
     elif not os.path.isabs(slhafile) or not os.path.isabs(outfile):
         logger.error("Please provide absolute paths for files")
         return False
-     
+    
+    infile = tempfile.mkstemp()     #Use temp file to store fastlim-ready SLHA file
+    os.close(infile[0])
+    infile = infile[1]
+    prepareSLHA(slhafile,infile)
     try:        
-        proc = subprocess.Popen([os.path.join(fastlimdir,'fastlim.py'),slhafile],
+        proc = subprocess.Popen([os.path.join(fastlimdir,'fastlimMod.py'),infile,outfile],
                                 cwd = fastlimdir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         proc.wait()
     except:    
         logger.error('Error running fastlim')
         return False
  
-    #Copy the output (default is fastlim.out) to the outfile
-    shutil.copy(os.path.join(fastlimdir,'fastlim.out'),outfile)
-    return True
-    
-    
+    #Convert results to SModelS format (TheoryPredictionList)      
+    predictions = fastlimParser(outfile,useBestDataset=True,
+                                expResID=expResID,txname=txname)
+    os.remove(infile)          
 
-def runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None,outType='sms'):
+    #Format output to a python dictionary
+    output = formatOutput(slhafile,predictions,'sms')         
+    outfile = open(outfile,'w')
+    outfile.write(str(output))
+    outfile.close()
+     
+    return True
+
+        
+
+def runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None,np=1,tout=200):
     """
     Runs fastlim for the SLHA files in slhaFiles. Uses only the best
     dataset for each experimental result.
@@ -112,7 +131,9 @@ def runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None,outType='sms'):
                    (i.e. T2tt,T5bbbb,...). If None will return the total prediction.
     :param expResID: Used to select results for a experimental result (i.e. ATLAS-CONF-xxx)
                    If None will return predictions for all IDs.
-    :param outType: Type of output (see fastlimOutput.formatOutput)                   
+    :param outType: Type of output (see fastlimOutput.formatOutput)   
+    :param np: Number of parallel processes. If np=1, run as serial. Otherwise uses multiprocessing
+    :param tout: Timeout for each process                
 
     :return: List of dictionaries containing the output of each file
     """
@@ -121,42 +142,33 @@ def runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None,outType='sms'):
     #Create temp file    
     slhaFiles,slhaD = getSlhaFiles(slhadir)
     
+    #Set up multiprocessing:
+    pool = multiprocessing.Pool(processes=np)
     
-    #Loop over SLHA files and compute results:
-    data = []
+    #Loop over SLHA files and compute results:    
+    results = []
     for slhafile in slhaFiles:        
-        infile = tempfile.mkstemp()     #Use temp file to store fastlim-ready SLHA file
-        os.close(infile[0])
-        infile = infile[1]
-        prepareSLHA(slhafile,infile)
-        outputfile = tempfile.mkstemp()  #Use temp file to store fastlim output
-        os.close(outputfile[0])
-        outputfile = outputfile[1]
-        #Run Fastlim
-        proc = runFastlim(infile,outputfile,fastlimdir)
-        if not proc:
-            logger.error("Fastlim failed for file %s" %slhafile)
-            return False
- 
-        #Convert results to SModelS format (TheoryPredictionList)      
-        predictions = fastlimParser(outputfile,useBestDataset=True,
-                                    expResID=expResID,txname=txname)                
-        if infile != slhafile: os.remove(infile)
+        outputfile = slhafile.replace(".slha",".sms")
+        #Run Fastlim (submit threads):
+        results.append([outputfile,
+                        pool.apply_async(runFastlim,args=(slhafile,outputfile,fastlimdir,
+                                                          expResID,txname))])
         
-        #Format output to a python dictionary
-        output = formatOutput(slhafile,predictions,outType)
-        if outType == 'sms':            
-            outfile = open(slhafile.replace('.slha','.sms'),'w')
-            outfile.write(str(output))
-            outfile.close()
-            data.append(slhafile.replace('.slha','.sms'))
-        elif outType == 'dict':
-            data.append(output)
+        
 
-        #Remove temp file
-        if os.path.isfile(outputfile): os.remove(outputfile)
-
-
+    #Check results
+    data = []
+    for res in results:
+        outputfile,run = res
+        try:
+            goodRun = run.get(tout)
+        except multiprocessing.TimeoutError:
+            goodRun = False
+        if not goodRun:
+            logger.error("Fastlim failed for file %s" %outputfile)
+        else:
+            data.append(outputfile)
+            
     #Remove temporary folder
     if slhaD != slhadir: shutil.rmtree(slhaD)
 
@@ -169,7 +181,7 @@ def prepareSLHA(slhafile,newfile):
     Removes the XSECTION blocks and adds missing decay blocks
     
     :param slhafile: path to the original SLHA file
-    :param outfile: path to the new SLHA file
+    :param newfile: path to the new SLHA file
     :return: path to new file
     """
     

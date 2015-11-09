@@ -24,7 +24,7 @@ class testRunFastlimG(unittest.TestCase):
         slhaDir = os.path.join(os.getcwd(),'slhaFiles/')
         fastlimdir = os.path.join(os.getcwd(),'../fastlim_tools/fastlim-1.0/')
         #Runs Fastlim on slhaDir to generate the output as .sms files
-        result = runFastlimFor(slhaDir,fastlimdir,expResID=None,txname=None,outType='sms')
+        result = runFastlimFor(slhaDir,fastlimdir,expResID=None,txname=None)
         print 'Files generated:\n',result
         
         
@@ -118,8 +118,9 @@ class testRunFastlimG(unittest.TestCase):
             f = open(slhaDir + fname,'r')
             resDict = eval(f.read())
             f.close()
-            assert equalObjs(defaultDict,resDict,0.01) == True
             os.remove(slhaDir + fname)
+            assert equalObjs(defaultDict,resDict,0.01) == True
+
 
 
 # In[ ]:
