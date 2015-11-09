@@ -23,21 +23,26 @@ if __name__ == "__main__":
     slhadir = args.dir
     ncore = args.Ncore
     njobs = args.Njobs
+    slhadir  = os.path.abspath(slhadir)
     if slhadir[-1] == '/': slhadir = slhadir[:-1]
     
-    nfolders = [slhadir + "_job_"+str(i) for i in range(njobs)]
     slhafiles = glob.glob(slhadir+"/*.slha")
     nFilesPerJob = len(slhafiles)/njobs + 1
     nCoresPerJob = max(1,ncore/njobs)
     islha = 0
-    for folder in nfolders:
+    nfolders = []
+    for ijob in range(njobs):
+        folder = slhadir + "_job_"+str(ijob)
         if os.path.isdir(folder):
             print 'Error: Folder %s exists' %folder
             sys.exit()
+        if folder[:7] == '/export':
+            folder = folder[7:]
         os.mkdir(folder)
+        nfolders.append(folder)
         for ifile in range(islha,islha+nFilesPerJob):
             if ifile >= len(slhafiles): break
-            shutil.copy(slhafiles[ifile],folder)
+            shutil.move(slhafiles[ifile],folder)
         islha += nFilesPerJob
     
     #Submit jobs
@@ -52,7 +57,7 @@ cd $PBS_O_WORKDIR\n\
 \n\
 ./singleJob.py %s -Ncore %d >> $PBS_O_WORKDIR/%s \n" %(args.twall,nCoresPerJob,'subJob'+str(ijob),
                                                        nfolders[ijob],nCoresPerJob,args.log))
-        
+
         subprocess.call("qsub ./subJob"+str(ijob),shell=True)
     sys.exit()
         
