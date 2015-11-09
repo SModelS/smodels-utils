@@ -10,8 +10,8 @@ def configure():
     base=os.path.dirname ( os.path.realpath ( inspect.getabsfile(configure) ) )
     pos=base.rfind("/")
     base=base[:pos+1]
-    sys.path.append ( base )
-    sys.path.append ( "../" )
+    sys.path.append ( base )    
+    sys.path.append ( os.path.join(base,"smodels_utils") )
     import SModelSUtils
     SModelSUtils.addInstallDirectory()
     SModelSUtils.addSModelSPath()

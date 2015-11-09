@@ -119,6 +119,7 @@ class testRunFastlimG(unittest.TestCase):
             resDict = eval(f.read())
             f.close()
             assert equalObjs(defaultDict,resDict,0.01) == True
+            os.remove(slhaDir + fname)
 
 
 # In[ ]:

@@ -44,6 +44,15 @@ def version(astuple=False):
 
 def addSModelSPath():
     """ adds the path of where smodels is installed to the search  path """
+
+    #First try home/smodels. If it doesn't exist, look for other locations
+    import os,sys
+    home = os.path.expanduser("~")
+    smodelsDir = os.path.join(home,'smodels')
+    if os.path.isdir(smodelsDir):
+        sys.path.append(smodelsDir)
+        return smodelsDir
+            
     try:
         from smodels import SModelS
         # I=SModelS.installDirectory()
@@ -57,9 +66,9 @@ def addSModelSPath():
     import commands
     O=commands.getoutput("smodels-config --pythondir")
     if O.find("not found")==-1:
-      import sys
-      sys.path.append(O)
-      return O
+        import sys
+        sys.path.append(O)
+        return O
     return ""
 
 def printHelp():

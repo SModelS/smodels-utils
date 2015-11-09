@@ -16,7 +16,7 @@ def getRootVersion ( astuple=False, useimport=False ):
     """
     if useimport: return getRootVersionFromImport_(astuple)
     import setPath
-    from smodels.tools import logger
+    import logging as logger
     try:
         import commands
         S=commands.getoutput("root-config --version")
@@ -26,7 +26,7 @@ def getRootVersion ( astuple=False, useimport=False ):
         if not astuple: return S
         return tupelizeVersion ( S )
     except Exception,e:
-        log.error ( e )
+        logger.error ( e )
         return None
 
 def getRootVersionFromImport_ ( astuple=False ):
@@ -112,7 +112,7 @@ def getRootPythonPath ( ):
     if not version or not libpath:
         return None
     V=str(version[0])+"."+str(version[1])
-    for SubDir in [ V, "root"+V ]:
+    for SubDir in [ V, "root"+V ,""]:
         Dir=libpath+"/"+SubDir
         if os.path.exists ( Dir+"/ROOT.py" ):
             return Dir 
