@@ -14,7 +14,6 @@ from smodels.tools.physicsUnits import fb
 from gridFastlim import runFastlimFor
 from fastlimOutput import equalObjs
 import glob
-from numpy.testing import assert_almost_equal
 from collections import OrderedDict
 import unittest
 

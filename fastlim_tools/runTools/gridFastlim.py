@@ -124,7 +124,7 @@ def runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None,outType='sms'):
     
     #Loop over SLHA files and compute results:
     data = []
-    for slhafile in slhaFiles:
+    for slhafile in slhaFiles:        
         infile = tempfile.mkstemp()     #Use temp file to store fastlim-ready SLHA file
         os.close(infile[0])
         infile = infile[1]
