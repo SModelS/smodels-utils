@@ -17,4 +17,4 @@ fastlimdir = os.path.join(os.getcwd(),'../fastlim-1.0/')
 
 slhadir = './SLHA/strong_lt_TeV_focus'
 #Runs Fastlim on slhaDir to generate the output as .sms files
-result = runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None,outType='sms')
+result = runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None)

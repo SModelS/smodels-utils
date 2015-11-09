@@ -12,10 +12,10 @@ import sys,glob
 sys.path.append('../runTools')
 from gridFastlim import runFastlim,getSlhaFiles
 import logging as logger
-import shutil
+import shutil,os
 
 slhadir = './SLHA/strong_gt_TeV_focus/'
-fastlimdir = '/home/lessa/smodels-utils/fastlim_tools/fastlim-1.0/'
+fastlimdir = os.path.join(os.path.expanduser("~"),'smodels-utils/fastlim_tools/fastlim-1.0/')
 
 #slhaFiles,slhaD = getSlhaFiles(slhadir)
 slhaFiles = ['/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_TeV_focus/2aOxfvBBClZ6aBk.slha',
@@ -26,7 +26,7 @@ slhaFiles = ['/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_
              '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_TeV_focus/2an6V3SXsVKUPkG.slha']
 np = 4
 
-slhaFiles = glob.glob("./SLHA/strong_lt_TeV_focus/*.slha")
+slhaFiles = glob.glob(os.getcwd()+"/SLHA/strong_lt_TeV_focus/*.slha")
 slhaFiles = slhaFiles[:50]
 
 #Set up multiprocessing:
