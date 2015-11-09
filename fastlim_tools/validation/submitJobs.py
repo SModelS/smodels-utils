@@ -16,6 +16,7 @@ if __name__ == "__main__":
     argparser.add_argument('dir', help='name of SLHA folder containing the SLHA files')
     argparser.add_argument('-Ncore', help='total number of cores to be used', type=int, default=1)
     argparser.add_argument('-Njobs', help='total number of jobs to be submitted', type=int, default=1)
+    argparser.add_argument('-twall', help='walltime for each job (in hours)', type=int, default=2)
     argparser.add_argument('-log', help='log file to store the output', default="log.dat")
     args = argparser.parse_args()    
     
@@ -27,7 +28,7 @@ if __name__ == "__main__":
     nfolders = [slhadir + "_job_"+str(i) for i in range(njobs)]
     slhafiles = glob.glob(slhadir+"/*.slha")
     nFilesPerJob = len(slhafiles)/njobs + 1
-    nCoresPerJob = ncore/njobs
+    nCoresPerJob = max(1,ncore/njobs)
     islha = 0
     for folder in nfolders:
         if os.path.isdir(folder):
@@ -36,11 +37,22 @@ if __name__ == "__main__":
         os.mkdir(folder)
         for ifile in range(islha,islha+nFilesPerJob):
             if ifile >= len(slhafiles): break
-            shutil.move(slhafiles[ifile],folder)
+            shutil.copy(slhafiles[ifile],folder)
         islha += nFilesPerJob
     
     #Submit jobs
     for ijob in range(njobs):
-        subprocess.call(["qsub ./singleJob ",nfolders[ijob]," -Ncore "+str(nCoresPerJob), " >> "+args.log])
+        with open('subJob'+str(ijob),'w') as jobscript:
+            jobscript.write("#PBS -S /bin/bash\n\
+#PBS -l walltime=%d:00:00\n\
+#PBS -l nodes=1:ppn=%d\n\
+#PBS -N %s\n\
+\n\
+cd $PBS_O_WORKDIR\n\
+\n\
+./singleJob.py %s -Ncore %d >> $PBS_O_WORKDIR/%s \n" %(args.twall,nCoresPerJob,'subJob'+str(ijob),
+                                                       nfolders[ijob],nCoresPerJob,args.log))
+        
+        subprocess.call("qsub ./subJob"+str(ijob),shell=True)
     sys.exit()
         
