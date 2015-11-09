@@ -8,7 +8,7 @@ Created on 09/11/2015
 
 
 import multiprocessing
-import sys
+import sys,glob
 sys.path.append('../runTools')
 from gridFastlim import runFastlim,getSlhaFiles
 import logging as logger
@@ -26,6 +26,8 @@ slhaFiles = ['/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_
              '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_TeV_focus/2an6V3SXsVKUPkG.slha']
 np = 4
 
+slhaFiles = glob.glob("./SLHA/strong_lt_TeV_focus/*.slha")
+slhaFiles = slhaFiles[:50]
 
 #Set up multiprocessing:
 pool = multiprocessing.Pool(processes=np)
