@@ -155,7 +155,7 @@ def runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None,np=1,tout=200):
                                                           expResID,txname))])
         
         
-
+    pool.close()
     #Check results
     data = []
     for res in results:
