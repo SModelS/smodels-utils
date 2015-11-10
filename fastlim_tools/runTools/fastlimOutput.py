@@ -275,14 +275,15 @@ def formatOutput(slhafile,predictions,outType='sms',extraInfo={}):
     return output            
 
 
-def compareFiles(file1,file2,allowedDiff=0.001):
+def compareFiles(file1,file2,allowedDiff=0.001,ignore=[]):
     """
     Compare two files containing SModelS output in a python dictionary format.
     The numerical values are compared up to the precision defined by allowedDiff.
     
     :param file1: Output file name (containing a python dict)
     :param file2: Output file name (containing a python dict)
-    :param allowedDiff: Allowed % difference between two numerical values 
+    :param allowedDiff: Allowed % difference between two numerical values
+    :param ignore: List of keys to be ignored 
                     
     :return: True/False    
     """                
@@ -296,10 +297,10 @@ def compareFiles(file1,file2,allowedDiff=0.001):
         dicts.append(eval(fin.read().replace(' [fb]','*fb').replace('[GeV]','*GeV')))
         fin.close()
     
-    return equalObjs(dicts[0],dicts[1],allowedDiff)
+    return equalObjs(dicts[0],dicts[1],allowedDiff,ignore)
                 
 
-def equalObjs(obj1,obj2,allowedDiff):
+def equalObjs(obj1,obj2,allowedDiff,ignore=[]):
     """
     Compare two objects.
     The numerical values are compared up to the precision defined by allowedDiff.
@@ -307,7 +308,7 @@ def equalObjs(obj1,obj2,allowedDiff):
     :param obj1: First python object to be compared 
     :param obj2: Second python object to be compared
     :param allowedDiff: Allowed % difference between two numerical values 
-                    
+    :param ignore: List of keys to be ignored
     :return: True/False    
     """      
     
@@ -332,6 +333,7 @@ def equalObjs(obj1,obj2,allowedDiff):
             logger.info("Dictionaries have distinct lengths (%i,%i)" %(len(obj1),len(obj2)))
             return False
         for key in obj1:
+            if key in ignore: continue
             if not key in obj2:
                 logger.info("Key %s missing" %key)
                 return False
@@ -347,18 +349,4 @@ def equalObjs(obj1,obj2,allowedDiff):
         return obj1 == obj2
             
     return True           
-
-        
-
-if __name__ == '__main__':
-    theoPreds = fastlimParser('./fastlim-1.0/fastlim.out',useBestDataset=True,
-                              txname='T1bbbb',expResID='ATLAS-CONF-2013-054')
-    for theoPred in theoPreds:
-        expRes = theoPred.expResult
-        datasetID = theoPred.dataset.getValuesFor('dataId')[0]
-        print 'id=',expRes.getValuesFor('id')[0]
-        print 'dataset=',datasetID
-        print 'value=',theoPred.value
-        print 'ul=', expRes.getUpperLimitFor(dataID=datasetID)
-
 
