@@ -11,11 +11,17 @@ import multiprocessing
 import sys,glob
 sys.path.append('../runTools')
 from gridSmodels import runSmodelS,getSlhaFiles
-from gridFastlim import prepareSLHA
+from gridFastlim import prepareSLHA,runFastlim
 import os
 
 database = os.path.join(os.path.expanduser("~"),'smodels-database/')
+fastlimdir = os.path.join(os.getcwd(),'../fastlim-1.0/')
 
+slhafile =  '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/test/1a1KLBOapEbTeGW.slha'
+outputfile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/test/1a1KLBOapEbTeGW.sms'
+print runFastlim(slhafile,outputfile,fastlimdir,None,None)
+
+sys.exit()
 #slhaFiles,slhaD = getSlhaFiles(slhadir)
 np = 3
 pool = multiprocessing.Pool(processes=np)

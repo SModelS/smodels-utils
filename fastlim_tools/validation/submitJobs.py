@@ -33,7 +33,7 @@ if __name__ == "__main__":
     islha = 0
     nfolders = []
     for ijob in range(njobs):
-        folder = slhadir + "_"+args.tool+"Job_"+str(ijob)
+        folder = slhadir + "_"+args.Tool+"Job_"+str(ijob)
         if os.path.isdir(folder):
             print 'Error: Folder %s exists' %folder
             sys.exit()

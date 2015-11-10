@@ -186,19 +186,26 @@ def formatOutput(slhafile,predictions,outType='sms',extraInfo={}):
             value = theoryPrediction.value[0].value
             upperLimit = expRes.getUpperLimitFor(dataID=datasetID)
             txnames = theoryPrediction.txnames
+            if len(txnames) == 1:
+                txname = txnames[0].getInfo('txName')
+            else: txname = []
             maxconds = theoryPrediction.getmaxCondition()
             mass = theoryPrediction.mass
             #Fix for the case of eff maps:
             if not mass: mass = [[0.*GeV,0.*GeV],[0.*GeV,0.*GeV]]
             sqrts = dataset.getValuesFor('sqrts')[0].asNumber(TeV)
+            observedN = dataset.getValuesFor('observedN')[0]
+            expectedBG = dataset.getValuesFor('expectedBG')[0]
             ExptRes.append({'maxcond': maxconds, 'tval': value.asNumber(fb),
                         'exptlimit': upperLimit.asNumber(fb), 
-                        'AnalysisTopo': [], 
+                        'AnalysisTopo': txname, 
                         'DaughterMass': mass[0][-1].asNumber(GeV), 
                         'AnalysisName': expID,
                         'DataSet' : datasetID, 
                         'AnalysisSqrts': sqrts,                        
-                        'MotherMass': mass[0][0].asNumber(GeV)})
+                        'MotherMass': mass[0][0].asNumber(GeV),
+                        'ObservedN' : observedN,
+                        'expectedBG' : expectedBG})
     
         
         #Additional data:

@@ -144,19 +144,18 @@ def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=700):
         
         
     pool.close()
-    pool.join()
     #Check results
-    data = []
-    for res in results:
+    data = {}
+    for res in results:        
         outputfile,run = res
         try:
             goodRun = run.get(tout)
-        except multiprocessing.TimeoutError:
+        except:
             goodRun = False
         if not goodRun:
             logger.error("SModelS failed for file %s" %outputfile)
         else:
-            data.append(outputfile)
+            data[outputfile[outputfile.rfind('/')+1:]] = goodRun
             
 
     return data    

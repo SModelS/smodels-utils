@@ -156,17 +156,17 @@ def runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None,np=1,tout=200):
         
     pool.close()
     #Check results
-    data = []
+    data = {}
     for res in results:
-        outputfile,run = res
+        outputfile,run = res       
         try:
             goodRun = run.get(tout)
-        except multiprocessing.TimeoutError:
+        except:
             goodRun = False
         if not goodRun:
             logger.error("Fastlim failed for file %s" %outputfile)
         else:
-            data.append(outputfile)
+            data[outputfile[outputfile.rfind('/')+1:]] = goodRun
             
 
     return data
