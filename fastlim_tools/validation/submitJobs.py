@@ -18,7 +18,7 @@ if __name__ == "__main__":
     argparser.add_argument('-Njobs', help='total number of jobs to be submitted', type=int, default=1)
     argparser.add_argument('-twall', help='walltime for each job (in hours)', type=int, default=2)
     argparser.add_argument('-log', help='log file to store the output', default="log.dat")
-    argparser.add_argument('-Tool', help='Tool to be used (fastlim/smodels)', default='fastlim')
+    argparser.add_argument('-Tool', help='Tool to be used (fastlim/smodels)', required=True)
     args = argparser.parse_args()    
     
     slhadir = args.dir

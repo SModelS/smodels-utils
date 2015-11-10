@@ -66,7 +66,7 @@ def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=
 
     
     sigmacut = 0.01 * fb
-    mingap = 2. * GeV
+    mingap = 10. * GeV
     
     #Load the browser:
     browser = databaseBrowser.Browser(databasePath)
