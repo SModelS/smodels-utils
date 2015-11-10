@@ -18,6 +18,7 @@ if __name__ == "__main__":
     argparser.add_argument('-Njobs', help='total number of jobs to be submitted', type=int, default=1)
     argparser.add_argument('-twall', help='walltime for each job (in hours)', type=int, default=2)
     argparser.add_argument('-log', help='log file to store the output', default="log.dat")
+    argparser.add_argument('-Tool', help='Tool to be used (fastlim/smodels)', default='fastlim')
     args = argparser.parse_args()    
     
     slhadir = args.dir
@@ -32,7 +33,7 @@ if __name__ == "__main__":
     islha = 0
     nfolders = []
     for ijob in range(njobs):
-        folder = slhadir + "_job_"+str(ijob)
+        folder = slhadir + "_"+args.tool+"Job_"+str(ijob)
         if os.path.isdir(folder):
             print 'Error: Folder %s exists' %folder
             sys.exit()
@@ -42,22 +43,24 @@ if __name__ == "__main__":
         nfolders.append(folder)
         for ifile in range(islha,islha+nFilesPerJob):
             if ifile >= len(slhafiles): break
-            shutil.move(slhafiles[ifile],folder)
+            shutil.copy(slhafiles[ifile],folder)
         islha += nFilesPerJob
     
     #Submit jobs
     for ijob in range(njobs):
-        with open('subJob'+str(ijob),'w') as jobscript:
+        with open('subJob'+args.Tool+str(ijob),'w') as jobscript:
             jobscript.write("#PBS -S /bin/bash\n\
 #PBS -l walltime=%d:00:00\n\
-#PBS -l nodes=1:ppn=%d\n\
+#PBS -l procs=%d\n\
 #PBS -N %s\n\
 \n\
 cd $PBS_O_WORKDIR\n\
 \n\
-./singleJob.py %s -Ncore %d >> $PBS_O_WORKDIR/%s \n" %(args.twall,nCoresPerJob,'subJob'+str(ijob),
-                                                       nfolders[ijob],nCoresPerJob,args.log))
+./singleJob.py %s -Ncore %d -Tool %s >> $PBS_O_WORKDIR/%s \n" %(args.twall,nCoresPerJob,
+                                                                'subJob'+args.Tool+str(ijob),
+                                                                nfolders[ijob],nCoresPerJob,args.Tool,
+                                                                args.log))
 
-        subprocess.call("qsub ./subJob"+str(ijob),shell=True)
+        subprocess.call("qsub ./subJob"+args.Tool+str(ijob),shell=True)
     sys.exit()
         

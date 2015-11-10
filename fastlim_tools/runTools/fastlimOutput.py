@@ -160,7 +160,7 @@ def fastlimParser(outputfile,useBestDataset=True,expResID=None,txname=None):
 
 
 
-def formatOutput(slhafile,predictions,outType='sms'):
+def formatOutput(slhafile,predictions,outType='sms',extraInfo={}):
     """
     Format the list of theory predictions and the SLHA file input to a specific output
     format.
@@ -171,6 +171,7 @@ def formatOutput(slhafile,predictions,outType='sms'):
     :param slhafile: Name of the corresponding SLHA file
     :param prediction: TheoryPredictionList object (output of fastlimParser)
     :param outType: Type of output (see above)
+    :param extraInfo: Additional information to be stored in the file
     
     :return: If outType='sms', name of sms file. If outType='valplot', python dictionary
     """
@@ -190,11 +191,13 @@ def formatOutput(slhafile,predictions,outType='sms'):
             #Fix for the case of eff maps:
             if not mass: mass = [[0.*GeV,0.*GeV],[0.*GeV,0.*GeV]]
             sqrts = dataset.getValuesFor('sqrts')[0].asNumber(TeV)
-            ExptRes.append({'maxcond': maxconds, 'tval': value.asNumber(fb), 
-                        'AnalysisTopo': txnames, 
-                        'DaughterMass': mass[0][-1].asNumber(GeV), 'exptlimit': upperLimit.asNumber(fb), 
-                        'AnalysisName': expID, 
-                        'AnalysisSqrts': sqrts, 
+            ExptRes.append({'maxcond': maxconds, 'tval': value.asNumber(fb),
+                        'exptlimit': upperLimit.asNumber(fb), 
+                        'AnalysisTopo': [], 
+                        'DaughterMass': mass[0][-1].asNumber(GeV), 
+                        'AnalysisName': expID,
+                        'DataSet' : datasetID, 
+                        'AnalysisSqrts': sqrts,                        
                         'MotherMass': mass[0][0].asNumber(GeV)})
     
         
@@ -204,6 +207,9 @@ def formatOutput(slhafile,predictions,outType='sms'):
         EXTPAR = dict(res.blocks['EXTPAR'].entries)
         mass = OrderedDict(res.blocks['MASS'].entries.items())
         extra = {'sigmacut' : 0.}
+        if extraInfo:
+            extra.update(extraInfo)
+        
         chimix = {}
         for key in res.blocks['NMIX'].entries:
             val = res.blocks['NMIX'].entries[key]
@@ -230,6 +236,9 @@ def formatOutput(slhafile,predictions,outType='sms'):
             newkey = 'SB'+str(key[0])+str(key[1])
             sbotmix[newkey] = val  
     
+        #Order ExptRes according to tval:
+        ExptRes = sorted(ExptRes, key=lambda k: k['tval'], reverse=True) 
+        
         output =  {'ExptRes' : ExptRes, 'MINPAR' : MINPAR, 'extra' : extra, 'chimix' : chimix,
             'stopmix' : stopmix, 'chamix' : chamix, 'MM' : {}, 'sbotmix' : sbotmix,
              'EXTPAR' : EXTPAR, 'mass' : mass}

@@ -3,7 +3,7 @@
 """
 .. module:: gridFastlim
    :synopsis: Defines the functionalities required to run fastlim on
-   a grid of SLHA files for producing a validation plot
+   a grid of SLHA files
 
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
@@ -33,7 +33,7 @@ def getSlhaFiles(slhadir):
 
     slhaFiles = []
     if os.path.isdir(slhadir):
-        slhaD = slhadir
+        slhaD = os.path.abspath(slhadir)
     elif os.path.isfile(slhadir):
         try:
             tar = tarfile.open(slhadir)
@@ -111,7 +111,7 @@ def runFastlim(slhafile,outfile,fastlimdir='../fastlim-1.0/',expResID=None,txnam
     os.remove(infile)          
 
     #Format output to a python dictionary
-    output = formatOutput(slhafile,predictions,'sms')         
+    output = formatOutput(slhafile,predictions,'sms',extraInfo={'tool': 'fastlim'})         
     outfile = open(outfile,'w')
     outfile.write(str(output))
     outfile.close()
@@ -130,12 +130,11 @@ def runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None,np=1,tout=200):
     :param txname: Used to only use efficiencies for a specific Txname 
                    (i.e. T2tt,T5bbbb,...). If None will return the total prediction.
     :param expResID: Used to select results for a experimental result (i.e. ATLAS-CONF-xxx)
-                   If None will return predictions for all IDs.
-    :param outType: Type of output (see fastlimOutput.formatOutput)   
+                   If None will return predictions for all IDs.  
     :param np: Number of parallel processes. If np=1, run as serial. Otherwise uses multiprocessing
     :param tout: Timeout for each process                
 
-    :return: List of dictionaries containing the output of each file
+    :return: List of sms files generated
     """
 
     
@@ -169,8 +168,6 @@ def runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None,np=1,tout=200):
         else:
             data.append(outputfile)
             
-    #Remove temporary folder
-    if slhaD != slhadir: shutil.rmtree(slhaD)
 
     return data
 
