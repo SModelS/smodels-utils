@@ -72,12 +72,11 @@ def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=
     browser = databaseBrowser.Browser(databasePath)
     browser.selectExpResultsWith(contact = ['fastlim'])
     database = browser.database
-    database.expResultList = browser._selectedExpResults
+    database.expResultList = browser._selectedExpResults    
     if expResID:
         database.expResultList = database.getExpResults(analysisIDs=[expResID])
     if txname:
         database.expResultList = database.getExpResults(txnames=[txname])
-    
     
     try:
         smstoplist = slhaDecomposer.decompose(slhafile, sigmacut,\

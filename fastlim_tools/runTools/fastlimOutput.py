@@ -17,6 +17,8 @@ from smodels.experiment import databaseObjects, datasetObject, infoObject
 from smodels.theory.theoryPrediction import TheoryPrediction, TheoryPredictionList
 from smodels.theory.theoryPrediction import _getBestResults
 from smodels.theory.crossSection import XSectionList, XSection, XSectionInfo
+from smodels.theory.clusterTools import ElementCluster
+from smodels.theory.element import Element
 from collections import OrderedDict
 import pyslha, unum
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -42,122 +44,185 @@ def fastlimParser(outputfile,useBestDataset=True,expResID=None,txname=None):
     if not os.path.isfile(outputfile):
         logger.error("Output file %s not found" % (outputfile))
         return False
-    
-    
+        
     if txname:
-        fastname = smodels2fastlim(txname)
-        if not fastname:
+        if not smodels2fastlim(txname):
             logger.error("Txname %s not found in dictionary" % (txname))
             return False
     
     outfile = open(outputfile,'r')
-    outdata = outfile.readlines()
+    data = outfile.read()
     outfile.close()
-    
-    theoryPredictions = TheoryPredictionList()
             
-    analysesSection = 0
-    for il,l in enumerate(outdata):
-        l = l.replace('\n','')
-        if 'Analyses Details' in l:
-            analysesSection = il            
-        if not analysesSection or il <= analysesSection+2: continue
+    data = data[data.find('Analyses Details'):]
+    #Get list of expResults blocks
+    expResults = data.split('------------------------------------------------------------')[1:]
+    
+    theoryPredictions = TheoryPredictionList()    
+    for expBlock in expResults:        
+        datasets = expBlock.split('#----')
+        #Get ExpResult object:
+        expRes = getExpResFromFastlim(datasets[0])
+        if expResID and expRes.getValuesFor('id')[0] != expResID:
+            continue
+        predictionList = [] #List of predictions for the datasets
+        for datasetBlock in datasets[1:]:
+            #Get DataSet object:               
+            dataset = getDataSetFromFastlim(datasetBlock,expRes)
+            expRes.datasets.append(dataset)
+            #Get TheoryPredictionList object (with one entry):
+            theoPreds = getTheoryPredFromFastlim(datasetBlock,expRes,dataset,txname) 
+            if not theoPreds: continue
+            predictionList.append(theoPreds)
+        if not predictionList: continue
+        if useBestDataset:
+            theoryPredictions += _getBestResults(predictionList)
+        else:
+            for theoPredList in predictionList:
+                theoryPredictions += theoPredList
+    
+    return theoryPredictions
         
-        #Beginning of experimental result
-        if 'ATLAS' in l or 'CMS' in l:
+def  getExpResFromFastlim(block):
+    """
+    Reads a Fastlim block containing the basic information
+    about an experimental result and returns the corresponding ExpResult object
+    :param block: Single block of string containing the required information
+    :return: ExpResult object
+    """
+    
+    lines = block.split('\n')
+    expID,comment,url,sqrts,lumi = None,None,None,None,None
+    for il,l in enumerate(lines):
+        if not l.strip(): continue
+        if 'ATLAS' in l or 'CMS' in l:            
             expID = l.replace('[','').replace(']','').replace('_','-')
-            comment = outdata[il+1]
-            url = outdata[il+2]        
-            expRes = databaseObjects.ExpResult()
-            expRes.datasets = []
-            expRes.globalInfo = infoObject.Info()
-            expRes.globalInfo.id = expID
-            expRes.globalInfo.comment = comment
-            expRes.globalInfo.url = url
-            datasetPredictionLists = []         
+            comment = lines[il+1]
+            url = lines[il+2]
         elif 'Ecm/TeV' in l:
             sqrts = eval(l.split('=')[1])*TeV
-            expRes.globalInfo.sqrts = sqrts
         elif 'lumi*fb' in l:
             lumi = eval(l.split('=')[1])/fb
-            expRes.globalInfo.lumi = lumi
-        
-        #Beginning of dataset (signal region):
-        elif '#---- ' in l:
-            predictionList = TheoryPredictionList()            
-            dataset = datasetObject.DataSet(infoObj=expRes.globalInfo)            
-            datasetId = l[l.find('#----')+5:l.rfind('----#')].replace(' ','')                       
-            dataset.dataInfo = infoObject.Info()
-            dataset.dataInfo.dataType = 'efficiencyMap'
-            dataset.dataInfo.dataId = datasetId
-            
-            expRes.datasets.append(dataset)
-        elif 'Nobs' in l:
+
+    #Create object
+    expRes = databaseObjects.ExpResult()
+    expRes.datasets = []
+    expRes.globalInfo = infoObject.Info()
+    expRes.globalInfo.id = expID
+    expRes.globalInfo.comment = comment
+    expRes.globalInfo.url = url
+    expRes.globalInfo.sqrts = sqrts
+    expRes.globalInfo.lumi = lumi
+    
+    return expRes
+
+def  getDataSetFromFastlim(block,expRes):
+    """
+    Reads a Fastlim block containing the basic information
+    about a dataset/signal region and returns the corresponding DataSet object
+    :param block: Single block of string containing the required information
+    :param expRes: Corresponding ExpResult object (necessary obtaining additional info)
+    :return: DataSet object
+    """    
+
+    lumi = expRes.getValuesFor('lumi')[0]
+    datasetId,Nobs,expectedBG,bgError,upperLimit = None,None,None,None,None
+    lines = block.split('\n')
+    for l in lines:
+        if not l.strip(): continue
+        if '----#' in l:
+            datasetId = l.replace('----#','').strip()
+        if 'Nobs' in l:
             Nobs = eval(l.split(':')[1])
-            dataset.dataInfo.observedN = Nobs
         elif 'Nbg' in l:
             val = l.split(':')[1].replace(' ','')
             expectedBG = eval(val[:val.find('(')])
             bgError = eval(val[val.find('(')+1:val.rfind(')')])
-            dataset.dataInfo.expectedBG = expectedBG
-            dataset.dataInfo.bgError = bgError
         elif 'Nvis_UL[observed]' in l:
             upperLimit = eval(l.split(':')[1])/lumi
-            dataset.dataInfo.upperLimit = upperLimit        
-        elif 'Total' in l and not txname:
-            theoPred = TheoryPrediction()
-            theoPred.expResult = expRes
-            theoPred.dataset = dataset
-            theoPred.txnames = []
-            value = eval(l.split()[1])/lumi
-            if value.asNumber(fb) == 0.: continue #Skip empty results
-            xsecs = XSectionList()
-            xsecs.xSections.append(XSection())
-            xsecs[0].value = value
-            xsecs[0].info = XSectionInfo()
-            xsecs[0].info.sqrts = sqrts
-            xsecs[0].info.label = '8 TeV'
-            theoPred.value = xsecs
-            theoPred.conditions = None
-            theoPred.mass = None
-            theoPred.PIDs = []            
-            predictionList._theoryPredictions.append(theoPred)
-            datasetPredictionLists.append(predictionList)
-        elif txname and fastname in l:
-            theoPred = TheoryPrediction()
-            theoPred.expResult = expRes
-            theoPred.dataset = dataset            
-            theoPred.txnames = [txname]
-            #Lines with zero cross-sections are shown as nan for the txnames in fastlim
-            if 'nan' in l: continue
-            value = eval(l.split()[1])/lumi
-            if value.asNumber(fb) == 0.: continue #Skip empty results
-            xsecs = XSectionList()
-            xsecs.xSections.append(XSection())
-            xsecs[0].value = value
-            xsecs[0].info = XSectionInfo()
-            xsecs[0].info.sqrts = sqrts
-            xsecs[0].info.label = '8 TeV'
-            theoPred.value = xsecs
-            theoPred.conditions = None
-            theoPred.mass = None
-            theoPred.PIDs = []            
-            predictionList._theoryPredictions.append(theoPred)
-            datasetPredictionLists.append(predictionList)
             
-        #Beginning of next experimental result           
-        if '-----------------' in l or il == len(outdata)-1:
-            if expResID and expID != expResID: continue 
-            if not datasetPredictionLists: continue
-            if useBestDataset:
-                theoryPredictions += _getBestResults(datasetPredictionLists)
-            else:
-                for theoPredList in datasetPredictionLists:
-                    theoryPredictions += theoPredList
-            
-            
-    return theoryPredictions
+    #Create object:
+    dataset = datasetObject.DataSet(infoObj=expRes.globalInfo)
+    dataset.dataInfo = infoObject.Info()
+    dataset.dataInfo.dataType = 'efficiencyMap'
+    dataset.dataInfo.dataId = datasetId
+    dataset.dataInfo.observedN = Nobs
+    dataset.dataInfo.expectedBG = expectedBG
+    dataset.dataInfo.bgError = bgError
+    dataset.dataInfo.upperLimit = upperLimit
+    
+    return dataset
 
+
+def  getTheoryPredFromFastlim(block,expRes,dataset,txname):
+    """
+    Reads a Fastlim block containing the basic information
+    about a dataset/signal region and returns the corresponding TheoryPredictionList object
+    (The list only contains a single theory prediction)
+    :param block: Single block of string containing the required information
+    :param expRes: Corresponding ExpResult object (necessary obtaining additional info)
+    :param dataset: Corresponding DataSet object (necessary obtaining additional info)
+    :return: TheoryPredictionList object
+    """    
+
+    lumi = expRes.getValuesFor('lumi')[0]
+    sqrts = expRes.getValuesFor('sqrts')[0]
+    txnames = []    
+    #Select useful part of block:
+    lines = block.split('Process')[1].split('\n')[1:]
+    cluster = ElementCluster()
+    for l in lines:
+        if not l.strip(): continue
+        if 'Total' in l:
+            value = eval(l.split()[1])/lumi
+            if value.asNumber(fb) == 0.: return None #Skip null results
+            totalXsec = XSectionList()
+            totalXsec.xSections.append(XSection())
+            totalXsec[0].value = value
+            totalXsec[0].info = XSectionInfo()
+            totalXsec[0].info.sqrts = sqrts
+            totalXsec[0].info.label = '8 TeV'       
+        else:
+            fastname, Nev, R = l.split()
+            fastname = fastname.strip()            
+            if 'nan' in Nev: continue
+            Nev = eval(Nev)
+            if not Nev: continue
+            R = eval(R)
+            txnames.append(smodels2fastlim('Dict')[fastname])
+            xsec = XSectionList()
+            xsec.xSections.append(XSection())
+            xsec[0].value = Nev/lumi
+            xsec[0].info = XSectionInfo()
+            xsec[0].info.sqrts = sqrts
+            xsec[0].info.label = '8 TeV'
+            element = Element()
+            element.weight = xsec
+            cluster.elements.append(element)
+            
+    #Create Object:    
+    theoPred = TheoryPrediction()
+    theoPred.expResult = expRes
+    theoPred.dataset = dataset
+    theoPred.cluster = cluster
+    theoPred.txnames = txnames    
+    theoPred.conditions = None
+    theoPred.mass = None
+    theoPred.PIDs = []  
+    #Select specific txname (if required)
+    if txname:
+        if not txname in txnames:
+            return None
+        else:
+            itx = txnames.index(txname)
+            theoPred.cluster.elements = cluster.elements[itx:itx+1]
+            theoPred.txnames = txnames[itx:itx+1]
+    theoPred.value = theoPred.cluster.getTotalXSec()
+    theoPredList = TheoryPredictionList()
+    theoPredList._theoryPredictions.append(theoPred)
+    
+    return theoPredList
+        
 
 
 def formatOutput(slhafile,predictions,outType='sms',extraInfo={}):

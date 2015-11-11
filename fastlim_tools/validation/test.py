@@ -12,7 +12,21 @@ import sys,glob
 sys.path.append('../runTools')
 from gridSmodels import runSmodelS,getSlhaFiles
 from gridFastlim import prepareSLHA,runFastlim
+from fastlimOutput import fastlimParser
 import os
+
+tlist = fastlimParser('../fastlim-1.0/fastlim.out')
+for t in tlist:
+    print t.expResult.getValuesFor('id')
+    print t.expResult.getValuesFor('dataId')
+    print t.dataset.getValuesFor('dataId')
+    print t.value
+    print t.txnames
+    print [el.weight[0].value for el in t.cluster.elements]
+    sys.exit()
+
+
+sys.exit()
 
 database = os.path.join(os.path.expanduser("~"),'smodels-database/')
 fastlimdir = os.path.join(os.getcwd(),'../fastlim-1.0/')

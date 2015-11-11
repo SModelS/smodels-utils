@@ -45,12 +45,12 @@ for f in fastFiles:
         dic = eval(fin.read().replace(' [fb]','*fb').replace('[GeV]','*GeV'))
         sigcut = max(sigcut,dic['extra']['sigmacut'])
         exptRes = dic['ExptRes']
-        if ff == f:
-            for iexp,exp in enumerate(exptRes[:]):
-                if exp['tval'] < 10.*sigcut: exptRes[iexp] = None 
-            while None in exptRes: exptRes.remove(None)
+        for iexp,exp in enumerate(exptRes[:]):
+            if exp['tval'] < 5.*sigcut: exptRes[iexp] = None 
+        while None in exptRes: exptRes.remove(None)
         allRes.append(sorted(exptRes,  key=lambda k: k['AnalysisName']))
-        
+    
+    print fname,'\n'    
     sres,fres = allRes
     print fres,'\n\n'
     print sres
