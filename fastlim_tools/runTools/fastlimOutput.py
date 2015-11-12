@@ -188,8 +188,8 @@ def  getTheoryPredFromFastlim(block,expRes,dataset,txname):
             if 'nan' in Nev: continue
             Nev = eval(Nev)
             if not Nev: continue
-            R = eval(R)
-            txnames.append(smodels2fastlim('Dict')[fastname])
+            R = eval(R)            
+            txnames.append(EmptyTxName(smodels2fastlim('Dict')[fastname]))
             xsec = XSectionList()
             xsec.xSections.append(XSection())
             xsec[0].value = Nev/lumi
@@ -205,7 +205,7 @@ def  getTheoryPredFromFastlim(block,expRes,dataset,txname):
     theoPred.expResult = expRes
     theoPred.dataset = dataset
     theoPred.cluster = cluster
-    theoPred.txnames = txnames    
+    theoPred.txnames = txnames
     theoPred.conditions = None
     theoPred.mass = None
     theoPred.PIDs = []  
@@ -217,12 +217,19 @@ def  getTheoryPredFromFastlim(block,expRes,dataset,txname):
             itx = txnames.index(txname)
             theoPred.cluster.elements = cluster.elements[itx:itx+1]
             theoPred.txnames = txnames[itx:itx+1]
-    theoPred.value = theoPred.cluster.getTotalXSec()
+        theoPred.value = theoPred.cluster.getTotalXSec()
+    else:
+        theoPred.value = totalXsec
     theoPredList = TheoryPredictionList()
     theoPredList._theoryPredictions.append(theoPred)
     
     return theoPredList
         
+class EmptyTxName(object):
+    """Empty txname object just to hold the TxName label from fastlim"""
+    
+    def __init__(self, txname=None):
+        self.txName = txname    
 
 
 def formatOutput(slhafile,predictions,outType='sms',extraInfo={}):
@@ -250,10 +257,8 @@ def formatOutput(slhafile,predictions,outType='sms',extraInfo={}):
             datasetID = dataset.dataInfo.dataId
             value = theoryPrediction.value[0].value
             upperLimit = expRes.getUpperLimitFor(dataID=datasetID)
-            txnames = theoryPrediction.txnames
-            if len(txnames) == 1:
-                txname = txnames[0].getInfo('txName')
-            else: txname = []
+            txnames = [txname.txName for txname in theoryPrediction.txnames]
+            weights = [el.weight[0].value.asNumber(fb) for el in theoryPrediction.cluster.elements]
             maxconds = theoryPrediction.getmaxCondition()
             mass = theoryPrediction.mass
             #Fix for the case of eff maps:
@@ -263,15 +268,17 @@ def formatOutput(slhafile,predictions,outType='sms',extraInfo={}):
             expectedBG = dataset.getValuesFor('expectedBG')[0]
             ExptRes.append({'maxcond': maxconds, 'tval': value.asNumber(fb),
                         'exptlimit': upperLimit.asNumber(fb), 
-                        'AnalysisTopo': txname, 
+                        'AnalysisTopo': txnames,
+                        'Weights' : weights,
                         'DaughterMass': mass[0][-1].asNumber(GeV), 
                         'AnalysisName': expID,
                         'DataSet' : datasetID, 
                         'AnalysisSqrts': sqrts,                        
                         'MotherMass': mass[0][0].asNumber(GeV),
-                        'ObservedN' : observedN,
+                        'observedN' : observedN,
                         'expectedBG' : expectedBG})
-    
+            
+
         
         #Additional data:
         res = pyslha.readSLHAFile(slhafile)

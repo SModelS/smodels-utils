@@ -20,38 +20,94 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
-
-fastlimDir = './SLHA/test_fastlim'
-smodelsDir = './SLHA/test_smodels'
+#Allowed difference for numerical values (0.01 = 1%)
+allowedDiff = 0.05
+debug = True
+ignoreFields = ['DataSet','Weights','DaughterMass','MotherMass']
+fastlimDir = './SLHA/test/fastlim'
+smodelsDir = './SLHA/test/smodels'
 
 fastFiles = glob.glob(os.path.join(fastlimDir,'*.sms'))
 smodelsFiles = glob.glob(os.path.join(smodelsDir,'*.sms'))
 
-
-for f in fastFiles:
-    fname = f[f.rfind('/')+1:]
+diffsDict = {}
+for fastfile in fastFiles:
+    fname = fastfile[fastfile.rfind('/')+1:]
+    diffsDict[fname] = {}
     if not os.path.join(smodelsDir,fname) in smodelsFiles: continue
     #First check additional data (consistency check)
-    if not compareFiles(f,os.path.join(smodelsDir,fname),allowedDiff=0.01,
+    if not compareFiles(fastfile,os.path.join(smodelsDir,fname),allowedDiff=0.01,
                         ignore=['ExptRes','extra']):
         logger.error("Data in %s have differ" %fname)
         sys.exit()
 
-    #Check experimental results:
-    allRes = []
-    sigcut = 0.
-    for ff in [os.path.join(smodelsDir,fname),f]:
-        fin = open(ff,'r')
-        dic = eval(fin.read().replace(' [fb]','*fb').replace('[GeV]','*GeV'))
-        sigcut = max(sigcut,dic['extra']['sigmacut'])
-        exptRes = dic['ExptRes']
-        for iexp,exp in enumerate(exptRes[:]):
-            if exp['tval'] < 5.*sigcut: exptRes[iexp] = None 
-        while None in exptRes: exptRes.remove(None)
-        allRes.append(sorted(exptRes,  key=lambda k: k['AnalysisName']))
+    #Load experimental results:
+    fastf = open(fastfile,'r')
+    fastPreds = eval(fastf.read().replace(' [fb]','*fb').replace('[GeV]','*GeV'))['ExptRes']
+    fastf.close()
+    fastPreds = sorted(fastPreds, key=lambda thpred: thpred['AnalysisName'])
+    smodf = open(os.path.join(smodelsDir,fname),'r')
+    smodPreds = eval(smodf.read().replace(' [fb]','*fb').replace('[GeV]','*GeV'))
+    sigmacut = smodPreds['extra']['sigmacut']
+    smodPreds = smodPreds['ExptRes']
+    smodf.close()
+    smodPreds = sorted(smodPreds, key=lambda thpred: thpred['AnalysisName'])
     
-    print fname,'\n'    
-    sres,fres = allRes
-    print fres,'\n\n'
-    print sres
+    missPredsFast = []
+    for smod in smodPreds:
+        fast = None
+        for j, fth in enumerate(fastPreds):            
+            if fth['AnalysisName'] == smod['AnalysisName']:
+                fast = fastPreds[j]
+                break
+        if not fast:
+            missPredsFast.append(smod['AnalysisName'])
+            continue
+        
+        for key in smod:
+            diff = False
+            if key in ignoreFields: continue
+            if smod[key] == fast[key]: continue
+            if key == 'tval':
+                if abs(smod[key] - fast[key]) > 2.*sigmacut: diff = True
+            elif key == 'AnalysisTopo':
+                if not set(fast['AnalysisTopo']).issubset(set(smod['AnalysisTopo'])):
+                    diff = True                    
+            elif isinstance(smod[key],float):
+                if 2.*abs(smod[key]-fast[key])/abs(smod[key]+fast[key]) > allowedDiff:
+                    diff = True
+            elif smod[key] != fast[key]: diff = True
+            
+            if diff:
+                if not smod['AnalysisName'] in diffsDict[fname]:
+                    diffsDict[fname][smod['AnalysisName']] = {}
+                diffsDict[fname][smod['AnalysisName']][key] = [smod[key],fast[key]]
+
+
+
+    missPredsSmod = []
+    for fast in fastPreds:
+        smod = None
+        for j, sth in enumerate(smodPreds):            
+            if sth['AnalysisName'] == fast['AnalysisName']:
+                smod = smodPreds[j]
+                break
+        if not smod:
+            missPredsSmod.append(fast['AnalysisName'])
+            continue      
+
+    diffsDict[fname]['Missing Results in Fastlim'] =  missPredsFast
+    diffsDict[fname]['Missing Results in SModelS'] =  missPredsSmod
+
+
+    if debug:
+        print 'SMODELS/FASTLIM for ',fname
+        for exp in diffsDict[fname]:
+            if 'Missing Results' in exp: continue        
+            print '\n------',exp
+            for key,val in diffsDict[fname][exp].items():
+                print key,': ',val[0],'/',val[1]
+        print '\n\nMissing Results in Fastlim:',diffsDict[fname]['Missing Results in Fastlim']
+        print 'Missing Results in SModelS:',diffsDict[fname]['Missing Results in SModelS']
     sys.exit()
+  
