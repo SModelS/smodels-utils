@@ -80,6 +80,8 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,txname=None):
                             cwd = fastlimdir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     proc.wait()
 
+#     import shutil
+#     shutil.copy(outfile,'./fastlim.out')
     #Convert results to SModelS format (TheoryPredictionList)      
     predictions = fastlimParser(outfile,useBestDataset=True,
                                 expResID=expResID,txname=txname)
@@ -89,12 +91,12 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,txname=None):
               
 
 if __name__ == '__main__':
-    expID =  'ATLAS-CONF-2013-047'
-    datasetId = 'data-cut4'
-    expID = None
-    datasetId = None
+    expID =  'ATLAS-CONF-2013-053'
+    datasetId = 'data-cut0'
+#     expID = None
+#     datasetId = None
     slhafile = os.path.abspath('./SLHA/strong_lt_TeV_focus/1anKWViqpBkaJuC.slha')
-    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/test/1a3NYRAbKS40cPY.slha'
+    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/test/1a0gBELT5sweUwa.slha'
     
     fastPreds = debugFastlim(slhafile, fastlimdir, expID)
     fastPreds = sorted(fastPreds, key=lambda thpred: thpred.expResult.getValuesFor('id')[0])
@@ -122,6 +124,8 @@ if __name__ == '__main__':
         print [txname.txName for txname in fast.txnames]
         print [el.weight[0].value for el in smod.cluster.elements],'/'
         print [el.weight[0].value for el in fast.cluster.elements]
+        
+        print '\n',[el.eff for el in smod.cluster.elements]
         
     missPredsSmod = []
     for fast in fastPreds:

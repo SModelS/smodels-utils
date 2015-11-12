@@ -101,13 +101,15 @@ for fastfile in fastFiles:
 
 
     if debug:
-        print 'SMODELS/FASTLIM for ',fname
+        print '\n-------------------SMODELS/FASTLIM for:',fname
         for exp in diffsDict[fname]:
             if 'Missing Results' in exp: continue        
             print '\n------',exp
             for key,val in diffsDict[fname][exp].items():
                 print key,': ',val[0],'/',val[1]
-        print '\n\nMissing Results in Fastlim:',diffsDict[fname]['Missing Results in Fastlim']
-        print 'Missing Results in SModelS:',diffsDict[fname]['Missing Results in SModelS']
-    sys.exit()
+        if missPredsFast:
+            print '\nMissing Results in Fastlim:',diffsDict[fname]['Missing Results in Fastlim']
+        if missPredsSmod:
+            print '\nMissing Results in SModelS:',diffsDict[fname]['Missing Results in SModelS']
+
   
