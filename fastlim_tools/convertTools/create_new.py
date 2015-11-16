@@ -31,3 +31,5 @@ for expid in [
     convertHelpers.mergeSmsRootFiles ( expid )
 #            else:
 #                print "expid,ana,cut",expid,ana,cut,"doesnt exist?"
+
+convertHelpers.closeDictionaryFile()

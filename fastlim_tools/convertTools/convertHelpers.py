@@ -12,16 +12,21 @@ fastlimdir="/home/walten/Downloads/fastlim-1.0/analyses_info/8TeV/"
 efficienciesdir="/home/walten/Downloads/fastlim-1.0/efficiency_tables/"
 destdir="/home/walten/git/smodels-database/8TeV/ATLAS/"
 
+dictionary=open("/home/walten/git/smodels-database/signalregions.py","w")
+SRs={}
+
 def createDataInfoFile ( analysis, cut ):
     """ create the datainfo file for analysis, signalregion ANAana-CUTcut """
     print "[fastlimHelpers] now createDataInfoFile for",analysis,cut
+    if not analysis in SRs:
+        SRs[analysis]={}
     destdir="/home/walten/git/smodels-database/8TeV/ATLAS/"
     newananame=analysis.replace("_","-")+"-eff"
     datadir="/data-cut%d" % ( cut )
     dataInfoFile=destdir+newananame+datadir+ "/dataInfo.txt"
     if os.path.exists ( dataInfoFile ):
         print "[fastlimHelpers.createDataInfoFile]",dataInfoFile,"exists already."
-        return
+#        return
 
     if not os.path.exists ( destdir+newananame ):
         print "creating",destdir+newananame
@@ -35,7 +40,7 @@ def createDataInfoFile ( analysis, cut ):
     lines=infofile.readlines()
     infofile.close()
     tokens=lines[cut+1].split()
-    lumi,data,bg,sys=float(tokens[1]),float(tokens[2]),float(tokens[3]),float(tokens[4])
+    lumi,data,bg,sys,sr=float(tokens[1]),float(tokens[2]),float(tokens[3]),float(tokens[4])," ".join(tokens[10:])
     ul=float(tokens[7])
     eul=statistics.upperLimit ( bg, bg, sys, lumi )
 
@@ -47,6 +52,9 @@ def createDataInfoFile ( analysis, cut ):
     f.write ( "bgError: %.1f\n" % sys )
     f.write ( "upperLimit: %.2f*fb\n" % ul )
     f.write ( "expectedUpperLimit: %.2f*fb\n" % eul )
+    ## f.write ( "signalRegion: %s\n" % sr )
+    print("[SRs[analysis][datadir]=sr")
+    SRs[analysis][datadir]=sr.replace("/","")
     f.close ()
     print "[fastlimHelpers] done creating",destdir+newananame+datadir+ "/dataInfo.txt"
 
@@ -229,6 +237,19 @@ def smodels2fastlim(txname):
         if tx == txname: return f
         
     return None
+
+def closeDictionaryFile():
+    dictionary.write ( "SRs={" )
+    for analysis,cuts in SRs.items():
+        dictionary.write ( '"%s":{' % analysis )
+        for cut,region in cuts.items():
+            dictionary.write ( '"%s":"%s", ' % ( cut, region ) ) 
+        dictionary.write ( "}," )
+    dictionary.write ( "}\n" )
+    dictionary.close()
+    ## import commands
+    ## commands.getoutput ( "chmod 755 /home/walten/git/smodels-database/signalregions.py" )
+
 
 if __name__ == "__main__":
 #    createInfoFile ( "ATLAS_CONF_2013_035" )
