@@ -30,7 +30,7 @@ else:
 sys.path.append(os.path.abspath(utilsPath))
 from smodels_utils.dataPreparation.inputObjects import TxNameInput, MetaInfoInput
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
-from smodels_utils.dataPreparation.origPlotObjects import x, y
+from smodels_utils.dataPreparation.origPlotObjects import x, y, z
 
 
 #+++++++ global info block ++++++++++++++
@@ -120,6 +120,7 @@ figureUrl={}
 figureUrl["T1"]='https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/CONFNOTES/ATLAS-CONF-2013-047/fig_07a.pdf'
 
 for i in os.listdir("orig/"):
+    print("[convert.py] i=%s" % i)
     if i[-5:]!=".effi": continue
     txname=i[:-5]
     print txname
@@ -128,13 +129,19 @@ for i in os.listdir("orig/"):
     tmp.on.conditionDescription=None
     tmp.on.condition = None
     if i[:2] in [ "T5", "T6" ]:
-#        tmp.globalEfficiencyMap.setSource ( './orig/%s.effi' % txname, 'effi', objectName = None, index = None )
-        continue
-    if txname=="TGQ":
-        tmp_1 = tmp.addMassPlane (motherMass = x , lspMass = y )
+        print("[convert.py] tmp=%s" % type(tmp))
+        tmp_1 = tmp.addMassPlane ( motherMass = x, lspMass=z, interMass0= y )
+        tmp_1.efficiencyMap3D.setSource ( './orig/%s.effi' % txname, 'effi', objectName = None, index = None )
+        print("[type] %s" % type ( tmp_1 ) )
+#        continue
     else:
-        tmp_1 = tmp.addMassPlane (motherMass = x , lspMass = y )
-    tmp_1.efficiencyMap.setSource( './orig/%s.effi' % txname, 'effi', objectName = None, index = None )
+        if txname=="TGQ":
+            tmp_1 = tmp.addMassPlane (motherMass = x , lspMass = y )
+#            tmp_1.setBranch_1 ( x, lspMass = y )
+#            tmp_1.setBranch_2 ( x, lspMass = y )
+        else:
+            tmp_1 = tmp.addMassPlane (motherMass = x , lspMass = y )
+        tmp_1.efficiencyMap.setSource( './orig/%s.effi' % txname, 'effi', objectName = None, index = None )
     if os.path.exists ( './orig/%s_excl.dat' % txname ):
         tmp_1.obsExclusion.setSource( './orig/%s_excl.dat' % txname, 'txt', objectName = None, index = None )
     if txname in figure:
