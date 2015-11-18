@@ -17,7 +17,7 @@ exps= [
     "ATLAS_CONF_2013_093" 
 ]
 
-exps = [ "ATLAS_CONF_2013_047" ]
+## exps = [ "ATLAS_CONF_2013_047" ]
 
 for expid in exps:
     convertHelpers.createInfoFile ( expid )
@@ -26,7 +26,7 @@ for expid in exps:
         for ana in range(15):
             if convertHelpers.existsAnalysisCut ( expid, ana, cut ):
                 convertHelpers.copyEffiFiles ( expid, ana, cut )
-                convertHelpers.createAndRunConvertFiles ( expid, cut, dry_run=True )
+                convertHelpers.createAndRunConvertFiles ( expid, cut, dry_run=False )
                 if not has_globals:
                     convertHelpers.createDataInfoFile ( expid, cut )
                     convertHelpers.copyValidationScripts ( expid )
