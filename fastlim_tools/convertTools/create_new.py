@@ -2,7 +2,8 @@
 
 import convertHelpers
 
-for expid in [ 
+
+exps= [ 
     "ATLAS_CONF_2013_024",
     "ATLAS_CONF_2013_035",  
     "ATLAS_CONF_2013_037",
@@ -14,8 +15,11 @@ for expid in [
     "ATLAS_CONF_2013_061",
     "ATLAS_CONF_2013_062",
     "ATLAS_CONF_2013_093" 
-        ]:
+]
 
+exps = [ "ATLAS_CONF_2013_047" ]
+
+for expid in exps:
     convertHelpers.createInfoFile ( expid )
     for cut in range(15):
         has_globals=False

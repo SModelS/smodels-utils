@@ -11,12 +11,13 @@
 import sys
 from sympy import var, Eq, lambdify, solve, sympify
 import logging
+import inspect
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
 xValue = var('xValue')
-x, y = var('x y')
+x, y, z = var('x y z')
 mother, lsp = var('mother lsp')
 
 class OrigPlot(object):
@@ -115,7 +116,7 @@ class OrigPlot(object):
         self.branch_2 = \
         Axes.fromConvert(motherMass = motherMass, lspMass = lspMass, **interMasses)
 
-    def getParticleMasses(self,xMass,yMass):
+    def getParticleMasses(self,xMass,yMass,zMass=None):
 
         """
         translate a point of th plot, given by x- and y-values to a mass Array
@@ -124,8 +125,8 @@ class OrigPlot(object):
         :return: list containing two other lists. Each list contains floats, representing
         the masses of the particles of each branch in GeV
         """
-        massArray_1 = self.branch_1.getParticleMasses(xMass,yMass)
-        massArray_2 = self.branch_2.getParticleMasses(xMass,yMass)
+        massArray_1 = self.branch_1.getParticleMasses(xMass,yMass,zMass)
+        massArray_2 = self.branch_2.getParticleMasses(xMass,yMass,zMass)
         return [massArray_1, massArray_2]
 
     def combine(self, xy_1, xy_2 ):
@@ -158,6 +159,7 @@ class OrigPlot(object):
 
         if not len(massArray) == 2: Errors().massArrayLen(massArray)
         xy_1 = self.branch_1.getXYValues(massArray[0])
+        ## print "xy_1=",xy_1
         xy_2 = self.branch_2.getXYValues(massArray[1])
         if not xy_1 or not xy_2: return None
 
@@ -274,10 +276,13 @@ class Axes(object):
         """
 
         mass = solve(self._equations[equationNr],particle)
+        if mass == [z]:
+            massFunction = lambdify([x,y,z],mass,'math')
+            return lambda xMass,yMass,zMass: massFunction(xMass,yMass,zMass)[0]
         massFunction = lambdify([x,y],mass,'math')
         return lambda xMass,yMass: massFunction(xMass,yMass)[0]
 
-    def getParticleMasses(self,xMass,yMass):
+    def getParticleMasses(self,xMass,yMass,zMass=None):
 
         """
         translate a point of th plot, given by x- and y-values to a mass Array
@@ -294,8 +299,41 @@ class Axes(object):
 
         particleMasses = []
         for function in self._massFuctions:
-            particleMasses.append(function(xMass,yMass))
+            if len(inspect.getargspec(function).args)==2:
+                particleMasses.append(function(xMass,yMass))
+            else:
+                particleMasses.append(function(xMass,yMass,zMass))
         return particleMasses
+
+    def _setXYZFunction(self):
+        """
+        build a function to compute the x-, y- and z-values for a given
+        mass array
+        :return: lambdify function
+        """
+        print("_setXYFunction",self._equations)
+        breaking = False
+        for equation1 in self._equations:
+            for equation2 in self._equations:
+                if equation1 == equation2: continue
+                for equation3 in self._equations:
+                    if equation3 == equation1: continue
+                    if equation3 == equation2: continue
+                    xyz = solve([equation1,equation2,equation3],[x,y,z])
+                    if x in xyz and y in xyz and z in xyz:
+                        print ("[origPlotObjects.py] xyz=",xyz)
+                        breaking = True
+                        break
+                if breaking == True: break
+            if breaking == True: break
+        self._xy = xyz
+        if not x in xyz: xyz[x]=None
+        if not y in xyz: xyz[y]=None
+        if not z in xyz: xyz[y]=None
+        particles = [eq.args[0].name for eq in self._equations]
+        self._xyFunction = lambdify(particles,[xyz[x],xyz[y],xyz[z]],'math')
+        self._nArguments=3
+
 
     def _setXYFunction(self):
 
@@ -304,13 +342,19 @@ class Axes(object):
         mass array
         :return: lambdify function
         """
-
+        for eq in self._equations:
+            s=solve([eq],[z])
+            if z in s: 
+                self._setXYZFunction()
+                return
+        print("_setXYFunction",self._equations)
         breaking = False
         for equation1 in self._equations:
             for equation2 in self._equations:
                 if equation1 == equation2: continue
-                xy = solve([equation1,equation2],[x,y])
+                xy = solve([equation1,equation2],[x,y,z])
                 if x in xy and y in xy:
+                    print ("[origPlotObjects.py] xy=",xy)
                     breaking = True
                     break
             if breaking == True: break
@@ -319,6 +363,7 @@ class Axes(object):
         if not y in xy: xy[y]=None
         particles = [eq.args[0].name for eq in self._equations]
         self._xyFunction = lambdify(particles,[xy[x],xy[y]],'math')
+        self._nArguments=2
 
 
     def getXYValues(self,massArray):
@@ -332,8 +377,14 @@ class Axes(object):
         else: [x-value in GeV as float, y-value in GeV as float]
         """
 
+        print "getXYValues",massArray
+
         if not '_xyFunction' in self.__dict__:
             self._setXYFunction()
+        print "_xyFunction=",self._xyFunction
+        print "_nArguments=",self._nArguments
+        print "_massArray=",massArray
+        print "_inOrigPlot=",self.inOrigPlot(massArray)
         if self.inOrigPlot(massArray):
             return self._xyFunction(*massArray)
         return None
@@ -357,6 +408,7 @@ class Axes(object):
         for eq in self._equations:
             equation = eq.subs(x,self._xy[x])
             equation = equation.subs(y,self._xy[y])
+            equation = equation.subs(z,self._xy[z])
             if equation != True: equations.append(equation)
 
         massDublets = []
@@ -453,8 +505,10 @@ if __name__ == "__main__":
     axes = "Eq(mother,x)_Eq(lsp,y)+Eq(mother,0.96*x)_Eq(lsp,y)"
     # axes = "Eq(mother,x)_Eq(lsp,0.0)+Eq(mother,y)_Eq(lsp,0.0)"
     # axes = '2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,60.0)'
-    # axes = "2*Eq(mother,x)_Eq(lsp,y)"
+    axes = "2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,z)"
     origPlot = OrigPlot.fromString ( axes )
-    x1,y1=150,120
-    print "particle masses",origPlot.getParticleMasses ( x1,y1  )
-    print "xy values", origPlot.getXYValues ( origPlot.getParticleMasses ( x1,y1  ) )
+    x1,y1,z1=150,120,100
+    pms=origPlot.getParticleMasses ( x1,y1,z1 )
+    print "particle masses",pms
+    xyz=origPlot.getXYValues ( pms )
+    print "xyz values", xyz

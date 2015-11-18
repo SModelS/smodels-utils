@@ -87,7 +87,7 @@ class StandardDataList(list):
     
     """
     list-object, 
-    holds lists, each list consists of 2 entrys: [massArry, value]
+    holds lists, each list consists of 2 entrys: [massArray, value]
     The MassArray holds the masses of the SUSY-particles for each branch
     The masses are represented by a string incl. unit of mass
     eg: [['5.0*GeV, '10.0*GeV'],[['5.0*GeV, '10.0*GeV']]
@@ -117,7 +117,6 @@ class StandardDataList(list):
         with same massArray but different values
         """
        
-        
         self._checkMasses(massArray)
         array = [[],[]]
         for i in range(len(massArray)):

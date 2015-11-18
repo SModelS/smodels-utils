@@ -14,7 +14,7 @@ import ROOT
 from copy import deepcopy
 from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.origDataObjects import\
-OrigLimit, OrigExclusion, OrigEfficiencyMap
+OrigLimit, OrigExclusion, OrigEfficiencyMap, OrigEfficiencyMap3D
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
 from smodels_utils.dataPreparation.preparationHelper import Locker, ObjectList
@@ -194,7 +194,7 @@ class MassPlane(Locker):
     infoAttr = []
     internalAttr = ['_txDecay', 'origPlot', 'origLimits', 'origExclusions',
     'origEfficiencyMap', 'figure', 'figureUrl', 'dataUrl', 'histoDataUrl', 
-    'exclusionDataUrl']
+    'exclusionDataUrl', 'origEfficiencyMap3D']
     
     def __init__(self,txDecay, motherMass = None,\
     lspMass = None, **interMasses ):
@@ -230,6 +230,7 @@ class MassPlane(Locker):
             OrigExclusion('expectedExclusionM1'),
             ])
         self.origEfficiencyMap = OrigEfficiencyMap('efficiencyMap')
+        self.origEfficiencyMap3D = OrigEfficiencyMap3D('efficiencyMap3D')
         self.figure =None
         self.figureUrl = None
         
@@ -269,11 +270,19 @@ class MassPlane(Locker):
     def efficiencyMap(self):
         
         """
-        :return: original 2D-data of the  efficiencyMap
+        :return: original 2D-data of the efficiencyMap
         given by experimentalists, as OrigEfficiencyMap-object
         """
         
         return self.origEfficiencyMap
+
+    @property
+    def efficiencyMap3D(self):
+        """
+        :return: original 3d-data of the efficiencyMap
+         given by experimentalists, as OrigEfficiencyMap3D-object
+        """
+        return self.origEfficiencyMap3D
         
     @property
     def obsUpperLimit(self):
@@ -509,6 +518,7 @@ class TxNameInput(Locker):
         have only 2 dimensions
         :return: MassPlane-object
         """
+        print("[inputObjects] add mass plane",motherMass,interMasses)
 
         if not motherMass:
             Errors().missingMass('motherMass',self.name)

@@ -108,20 +108,22 @@ def copyEffiFiles ( analysis, ana, cut ):
         if not Fastlimname in Dict.keys():
           continue
         Tname=Dict[Fastlimname]
+        print("[convertHelpers.py] %s %s" % ( Tname,Fastlimname ) )
         anadir = efficienciesdir+"/"+Fastlimname + "/8TeV/" + analysis
         if not os.path.exists ( anadir ):
-            print "[fastlimHelpers] ",anadir,"does not exist."
+#            print "[fastlimHelpers] ",anadir,"does not exist."
             continue
         effifile = anadir + "/ana_%d_cut_%d.effi" % ( ana, cut ) 
         if not os.path.exists ( effifile ):
+            print "[fastlimHelpers] ",effifile,"does not exist."
             continue
-#            print "[fastlimHelpers] ",effifile,"does not exist."
         realdestdir="%s/%s/data-cut%d/orig/" % ( destdir, newananame, cut  )
         if not os.path.exists ( realdestdir ):
             cmd="mkdir -p %s" % realdestdir
             commands.getoutput ( cmd )
         if os.path.exists ( "%s/%s.effi" % ( realdestdir, Tname ) ):
-            continue
+            print "[convertHelpers] %s/%s.effi exists already" % ( realdestdir, Tname )
+#            continue
         cmd="cp %s %s/%s.effi" % ( effifile, realdestdir, Tname )
         Tnames.append ( Tname )
         print "[fastlimHelpers.copyEffiFiles] cmd=",cmd
