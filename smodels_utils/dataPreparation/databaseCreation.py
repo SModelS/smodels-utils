@@ -579,6 +579,7 @@ class DatabaseCreator(list):
         path=self.infoFilePath(name, dataid)
         for obj in objects:
             for attr in obj.infoAttr:
+                if attr in [ "efficiencyMap3D" ]: continue
                 if not hasattr(obj, attr) and \
                 not hasattr(obj.__class__, attr) : continue
                 value=getattr(obj,attr)
@@ -589,6 +590,7 @@ class DatabaseCreator(list):
                 if attr == "dataId":
                     path = self.infoFilePath ( name, getattr ( obj, attr ) )
         infoFile = open(self.base + path, 'w')
+        print "Y>>",self.base+path
         infoFile.write(content)
         infoFile.close()
         
