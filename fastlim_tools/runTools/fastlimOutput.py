@@ -11,6 +11,8 @@ import sys,os,logging
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 sys.path.append(os.path.join(home,'smodels-utils/fastlim_tools/convertTools'))
+sys.path.append(os.path.join(home,'smodels-database'))
+
 from convertHelpers import smodels2fastlim
 from smodels.tools.physicsUnits import GeV, fb, TeV
 from smodels.experiment import databaseObjects, datasetObject, infoObject
@@ -20,6 +22,7 @@ from smodels.theory.crossSection import XSectionList, XSection, XSectionInfo
 from smodels.theory.clusterTools import ElementCluster
 from smodels.theory.element import Element
 from collections import OrderedDict
+from signalregions import SRs
 import pyslha, unum
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -140,7 +143,13 @@ def  getDataSetFromFastlim(block,expRes):
             bgError = eval(val[val.find('(')+1:val.rfind(')')])
         elif 'Nvis_UL[observed]' in l:
             upperLimit = eval(l.split(':')[1])/lumi
-            
+
+    datasetDict = SRs[expRes.getValuesFor('id')[0]]
+    for key,val in datasetDict.items():
+        if val == datasetId:
+            datasetId = key
+            break
+                
     #Create object:
     dataset = datasetObject.DataSet(infoObj=expRes.globalInfo)
     dataset.dataInfo = infoObject.Info()

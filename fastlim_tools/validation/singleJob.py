@@ -19,7 +19,7 @@ databasePath = os.path.join(home,'smodels-database')
 
 if __name__ == "__main__":
     
-    argparser = argparse.ArgumentParser(description='Runs fastlim and generate .sms files')
+    argparser = argparse.ArgumentParser(description='Runs fastlim/smodels and generate .sms files')
     argparser.add_argument('dir', help='name of SLHA folder containing the SLHA files')
     argparser.add_argument('-Ncore', help='total number of cores to be used', type=int, default=1)
     argparser.add_argument('-Tool', help='Tool to be used (fastlim/smodels)', required=True)

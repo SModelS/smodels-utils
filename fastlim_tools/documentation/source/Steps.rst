@@ -1,0 +1,98 @@
+.. index:: Main steps for running Fastlim and performing the validation
+
+.. _steps:
+
+
+Steps for Validation
+====================
+
+Generating Fastlim Output
+-------------------------
+
+The tools for running Fastlim are stored in :mod:`runTools.gridFastlim`.
+The basic tool is :py:meth:`~runTools.gridFastlim.runFastlim`
+(see :ref:`runFastlim <runfastlim>` for more details).
+It runs Fastlim for a given SLHA file and generates an output file 
+formatted according to some specification. The default format is a file containing
+a python dictionary (.sms file).
+
+
+In order to run Fastlim on a folder containing several SLHAfiles,
+the method :py:meth:`~runTools.gridFastlim.runFastlimFor` is available.
+It uses the multiprocessing module to allow for parallel processing.
+After :py:meth:`~runTools.gridFastlim.runFastlimFor` is run, the folder containing
+the SLHA files will also contain the respective .sms files with Fastlim output. 
+
+.. _runfastlim:
+
+runFastlim
+~~~~~~~~~~
+
+:py:meth:`~runTools.gridFastlim.runFastlim` uses subprocess.Popen to run fastlim-1.0/fastlimMod.py,
+which is identical to fastlim.py, except for the suppression of the screen output
+and the option to take an arbitrary file name as output.
+
+
+Once Fastlim is run, the output file is read by  :py:meth:`~runTools.fastlimOutput.fastlimParser`,
+which creates a TheoryPredictionList object containing Fastlim output.
+Finally, :py:meth:`~runTools.fastlimOutput.formatOutput` is called to write the TheoryPredictionList
+as an object to the .sms file.
+
+
+Generating SModelS Output
+-------------------------
+
+The method for generating and storing SModelS output parallels Fastlim's.
+The tools are stored in  :mod:`runTools.gridSmodels`.
+The basic tool is :py:meth:`~runTools.gridSmodels.runSmodelS`
+(see :ref:`runSmodelS <runsmodels>` for more details).
+It runs SModelS for a given SLHA file and generates an output file 
+formatted according to some specification. The default format is a file containing
+a python dictionary (.sms file).
+
+
+In order to run SModelS on a folder containing several SLHAfiles,
+the method :py:meth:`~runTools.gridSmodels.runSmodelSFor` is available.
+It uses the multiprocessing module to allow for parallel processing.
+After :py:meth:`~runTools.gridSmodels.runSmodelSFor` is run, the folder containing
+the SLHA files will also contain the respective .sms files with SModelS output. 
+
+
+.. _runsmodels:
+
+runSmodelS
+~~~~~~~~~~
+
+
+:py:meth:`~runTools.gridSmodels.runSmodelS` runs the main SModelS steps
+(slhaDecomposer.decompose, theoryPrediction.theoryPredictionsFor).
+The user can select a subset of the experimental results in the database.
+This selection is made internally using the databaseBrowser.
+*By default only results with contact = 'fastlim' are used*.
+
+If doXsecs = True, :py:meth:`~runTools.gridSmodels.runSmodelS` will use subprocess.call
+to run the runTools.py utility and compute the cross-sections at LO and NLL.
+
+*Mass and invisible compression are always turned on
+and the values for sigmacut and the mass compression gap are fixed. 
+See* :py:meth:`~runTools.gridSmodels.runSmodelS` *for the values used.*
+
+
+Once runSmodelS is run, the TheoryPredictionList output file is read by 
+:py:meth:`~runTools.fastlimOutput.formatOutput` to write the .sms file.
+
+
+Comparing the Output
+--------------------
+
+After using :py:meth:`~runTools.gridFastlim.runFastlimFor` and
+:py:meth:`~runTools.gridSmodels.runSmodelSFor`  to generate the .sms files for Fastlim
+and SModelS, the results will already be in the same format (a .sms file containing
+a python dictionary).
+The module :mod:`validation.compareResults` can then be used to compare the two sets of files.
+
+ 
+
+
+Main Issues
+-----------
