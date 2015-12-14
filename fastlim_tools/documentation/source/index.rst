@@ -13,6 +13,7 @@ Contents
    Overview
    CodeDoc
    Steps
+   Examples
 
 Indices and tables
 ------------------

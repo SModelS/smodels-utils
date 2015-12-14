@@ -89,9 +89,17 @@ After using :py:meth:`~runTools.gridFastlim.runFastlimFor` and
 :py:meth:`~runTools.gridSmodels.runSmodelSFor`  to generate the .sms files for Fastlim
 and SModelS, the results will already be in the same format (a .sms file containing
 a python dictionary).
-The module :mod:`validation.compareResults` can then be used to compare the two sets of files.
+The method :py:meth:`validation.compareResults.compareFolders` can then be used 
+to compare the the two folders containing the .sms files.
 
- 
+
+The comparison checks for all the keys in the .sms files and compare their values.
+The differences are stored in a dictionary, which is returned as the output.
+It is possible to select which fields to ignore and how much to allow for numerical
+differences.
+
+:py:meth:`validation.compareResults.compareFolders` also checks
+for missing results. 
 
 
 Main Issues
