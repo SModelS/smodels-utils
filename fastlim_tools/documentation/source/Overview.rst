@@ -15,40 +15,8 @@ Main Tools
 
 The most important tools are grouped into 3 categories:
 
-* :ref:`conversion tools <conversiontools>`
+* conversion tools :ref:`runTools`
 
 * :ref:`run tools <runtools>`
 
 * :ref:`validation tools <validationtools>`
-
-
-.. _conversiontools:
-
-Conversion Tools
-----------------
-
-Bla bla
-
-
-* **Conversion tools are stored in** :mod:`convertTools`
-
-.. _runtools:
-
-Run Tools
-----------------
-
-Bla bla
-
-
-* **Conversion tools are stored in** :mod:`runTools`   
-
-
-.. _validationtools:
-
-Validation Tools
-----------------
-
-Bla bla
-
-
-* **Conversion tools are stored in** :mod:`validation`   

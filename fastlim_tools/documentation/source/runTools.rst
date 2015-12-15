@@ -5,7 +5,7 @@ Submodules
 ----------
 
 runTools.fastlimOutput module
-----------------------
+-----------------------------
 
 .. automodule:: runTools.fastlimOutput
     :members:
@@ -13,7 +13,7 @@ runTools.fastlimOutput module
     :show-inheritance:
 
 runTools.gridFastlim module
---------------------------------
+---------------------------
 
 .. automodule:: runTools.gridFastlim
     :members:
@@ -21,7 +21,7 @@ runTools.gridFastlim module
     :show-inheritance:
 
 runTools.gridSmodels module
---------------------
+---------------------------
 
 .. automodule:: runTools.gridSmodels
     :members:

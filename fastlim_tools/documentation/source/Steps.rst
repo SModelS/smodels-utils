@@ -6,6 +6,16 @@
 Steps for Validation
 ====================
 
+The validation procedure consists first on running Fastlim and SModelS
+on the same set of SLHA files. The output produced can then be compared
+on a file-by-file basis.
+In order to run a scan over several SLHA files the package :mod:`validation.singleJob`
+can be used. It uses the methods :py:meth:`~runTools.gridFastlim.runFastlimFor`
+or :py:meth:`~runTools.gridSmodels.runSmodelSFor` to run either SModelS or Fastlim (see details below).
+The output is then compared using the :mod:`validation.compareResults` package.
+
+
+
 Generating Fastlim Output
 -------------------------
 
@@ -99,7 +109,13 @@ It is possible to select which fields to ignore and how much to allow for numeri
 differences.
 
 :py:meth:`validation.compareResults.compareFolders` also checks
-for missing results. 
+for missing results.
+
+In order to check specific results, the :mod:`validation.debugResults` package can be used.
+It contains the :py:meth:`validation.debugResults.debugSmodelS` and 
+:py:meth:`validation.debugResults.debugFastlim` methods which re-run SModelS and Fastlim
+for a specific experimental result/dataset and provides additional information on the output.
+
 
 
 Main Issues

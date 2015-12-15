@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
 
 
-def fastlimParser(outputfile,useBestDataset=True,expResID=None,txname=None):
+def fastlimParser(outputfile,useBestDataset=True,expResID=None,datasetID=None,txname=None):
     """
     Parses the fastlim output file and converts it to a TheoryPredictionList object
     :param outputfile: Path to fastlim output file (string)
@@ -39,7 +39,10 @@ def fastlimParser(outputfile,useBestDataset=True,expResID=None,txname=None):
     :param txname: Used to select results for a specific Txname (i.e. T2tt,T5bbbb,...)
                    If None will return the total prediction.
     :param expResID: Used to select results for a experimental result (i.e. ATLAS-CONF-xxx)
-                   If None will return predictions for all IDs.
+                   If None will return predictions for all experimental results.
+    :param datasetID: Used to select a specific dataset (i.e. data-cut0)
+                   If None will return predictions for all datasets.
+                   If != None, it overwrites the useBestDataset option.                   
     :return: TheoryPredictionList object with TheoryPrediction objects for all datasets
     """
     
@@ -72,6 +75,8 @@ def fastlimParser(outputfile,useBestDataset=True,expResID=None,txname=None):
         for datasetBlock in datasets[1:]:
             #Get DataSet object:               
             dataset = getDataSetFromFastlim(datasetBlock,expRes)
+            if datasetID and dataset.getValuesFor('dataId')[0] != datasetID:
+                continue
             expRes.datasets.append(dataset)
             #Get TheoryPredictionList object (with one entry):
             theoPreds = getTheoryPredFromFastlim(datasetBlock,expRes,dataset,txname) 

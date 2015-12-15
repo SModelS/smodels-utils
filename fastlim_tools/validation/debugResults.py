@@ -27,6 +27,16 @@ fastlimdir = os.path.join(os.getcwd(),'../fastlim-1.0/')
 databasePath = os.path.join(home,'smodels-database')
 
 def debugSmodelS(slhafile,expResID,datasetId):
+    """
+    Runs SModelS for a specific slhafile. Allows the user to select a specific experimental
+    result and dataset.
+    Returns  the list of theory predictions.
+    
+    :param slhafile: input SLHA file
+    :param expResID: ID of specific experimental result to be used (i.e. ATLAS-CONF-2013-053)
+    :param datasetId: ID of specific dataset to be used (i.e. data-cut0)
+    :return: TheoryPredictionList object containing SModelS results    
+    """
     
     sigmacut = 0.01 * fb
     mingap = 10. * GeV
@@ -47,7 +57,7 @@ def debugSmodelS(slhafile,expResID,datasetId):
                     break
 
     smstoplist = slhaDecomposer.decompose(slhafile, sigmacut,\
-                    doCompress=False,doInvisible=False, minmassgap=mingap)
+                    doCompress=True,doInvisible=True, minmassgap=mingap)
     
     totdecomp = 0.*fb
     for el in smstoplist.getElements():
@@ -69,7 +79,20 @@ def debugSmodelS(slhafile,expResID,datasetId):
     return predictions
 
 
-def debugFastlim(slhafile,fastlimdir,expResID=None,txname=None):
+def debugFastlim(slhafile,fastlimdir,expResID=None,datasetID=None,txname=None):
+    """
+    Runs Fastlim for a specific slhafile. Allows the user to select a specific experimental
+    result and txname.
+    Returns  the list of theory predictions.
+    
+    :param slhafile: input SLHA file
+    :param fastlimdir: Fastlim folder containing fastlimMod.py
+    :param expResID: ID of specific experimental result to be used (i.e. ATLAS-CONF-2013-053)
+    :param datasetID: Used to select a specific dataset (i.e. data-cut0)
+                   If None will return predictions for the best dataset.
+    :param txname: Used to select the contribution of a single topology (i.e. T2tt)    
+    :return: TheoryPredictionList object containing Fastlim results    
+    """    
     
     infile = tempfile.mkstemp()     #Use temp file to store fastlim-ready SLHA file
     os.close(infile[0])
@@ -80,25 +103,25 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,txname=None):
                             cwd = fastlimdir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     proc.wait()
 
+    
 #     import shutil
 #     shutil.copy(outfile,'./fastlim.out')
     #Convert results to SModelS format (TheoryPredictionList)      
     predictions = fastlimParser(outfile,useBestDataset=True,
-                                expResID=expResID,txname=txname)
+                                expResID=expResID,datasetID=datasetID,txname=txname)
     os.remove(infile)
     os.remove(outfile)
     return predictions
               
 
 if __name__ == '__main__':
-    expID =  'ATLAS-CONF-2013-053'
-    datasetId = 'data-cut0'
+    expID =  'ATLAS-CONF-2013-047'
+    datasetId = 'data-cut1'
 #     expID = None
-#     datasetId = None
-    slhafile = os.path.abspath('./SLHA/strong_lt_TeV_focus/1anKWViqpBkaJuC.slha')
+#     datasetId = None    
     slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/test/1a0gBELT5sweUwa.slha'
     
-    fastPreds = debugFastlim(slhafile, fastlimdir, expID)
+    fastPreds = debugFastlim(slhafile, fastlimdir, expID, datasetId)
     fastPreds = sorted(fastPreds, key=lambda thpred: thpred.expResult.getValuesFor('id')[0])
     
     smodelsPreds = debugSmodelS(slhafile, expID, datasetId)
@@ -119,11 +142,22 @@ if __name__ == '__main__':
         print smod.expResult.getValuesFor('id'),'/',fast.expResult.getValuesFor('id')
         print smod.dataset.getValuesFor('dataId'),'/',fast.dataset.getValuesFor('dataId')
         print smod.dataset.getValuesFor('observedN'),smod.dataset.getValuesFor('expectedBG'),'/',fast.dataset.getValuesFor('observedN'),fast.dataset.getValuesFor('expectedBG')
-        print smod.value[0].value,'/',fast.value[0].value
-        print [txname.txName for txname in smod.txnames],'/'
-        print [txname.txName for txname in fast.txnames]
-        print [el.weight[0].value for el in smod.cluster.elements],'/'
-        print [el.weight[0].value for el in fast.cluster.elements]
+        print smod.value[0].value.asNumber(fb),' fb','/',fast.value[0].value.asNumber(fb),' fb'
+        smodTxnames = []
+        for el in smod.cluster.elements:
+            for txname in smod.txnames:
+                if txname.hasElementAs(el):
+                    smodTxnames.append([txname.txName,el.weight[0].value])
+                    break
+        fastTxnames = []        
+        for iel,el in enumerate(fast.cluster.elements):
+            fastTxnames.append([fast.txnames[iel].txName,el.weight[0].value])
+        smodTxnames = sorted(smodTxnames, key=lambda tx: tx[1], reverse=True)
+        fastTxnames = sorted(fastTxnames, key=lambda tx: tx[1], reverse=True)
+        print smodTxnames,'/'
+        print fastTxnames
+#         print [el.weight[0].value for el in smod.cluster.elements],'/'
+#         print [el.weight[0].value for el in fast.cluster.elements]
         
         print '\n',[el.eff for el in smod.cluster.elements]
         
