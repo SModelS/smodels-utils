@@ -13,6 +13,7 @@ import sys,os,tempfile,subprocess
 sys.path.append('../runTools')
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
+sys.path.append(os.path.join(home,'smodels-database'))
 from fastlimOutput import compareFiles, fastlimParser
 from smodels.tools.physicsUnits import GeV, fb, TeV
 from gridFastlim import runFastlim
@@ -21,6 +22,7 @@ from smodels.theory import slhaDecomposer, crossSection, theoryPrediction
 from fastlimOutput import formatOutput
 from smodels.tools import databaseBrowser
 from gridFastlim import getSlhaFiles, prepareSLHA
+from signalregions import SRs
 
 
 fastlimdir = os.path.join(os.getcwd(),'../fastlim-1.0/')
@@ -138,20 +140,22 @@ if __name__ == '__main__':
         if not fast:
             missPredsFast.append(smod)
             continue
+        lum = smod.expResult.getValuesFor('lumi')[0]
         print '\nSMODELS/FASTLIM'
         print smod.expResult.getValuesFor('id'),'/',fast.expResult.getValuesFor('id')
-        print smod.dataset.getValuesFor('dataId'),'/',fast.dataset.getValuesFor('dataId')
+        print smod.dataset.getValuesFor('dataId'),'/',fast.dataset.getValuesFor('dataId'),\
+        '(',SRs[smod.expResult.getValuesFor('id')[0]][smod.dataset.getValuesFor('dataId')[0]],')'
         print smod.dataset.getValuesFor('observedN'),smod.dataset.getValuesFor('expectedBG'),'/',fast.dataset.getValuesFor('observedN'),fast.dataset.getValuesFor('expectedBG')
-        print smod.value[0].value.asNumber(fb),' fb','/',fast.value[0].value.asNumber(fb),' fb'
+        print smod.value[0].value*lum,'/',fast.value[0].value*lum
         smodTxnames = []
         for el in smod.cluster.elements:
             for txname in smod.txnames:
                 if txname.hasElementAs(el):
-                    smodTxnames.append([txname.txName,el.weight[0].value])
+                    smodTxnames.append([txname.txName,el.weight[0].value*lum,el.eff])
                     break
         fastTxnames = []        
         for iel,el in enumerate(fast.cluster.elements):
-            fastTxnames.append([fast.txnames[iel].txName,el.weight[0].value])
+            fastTxnames.append([fast.txnames[iel].txName,el.weight[0].value*lum])
         smodTxnames = sorted(smodTxnames, key=lambda tx: tx[1], reverse=True)
         fastTxnames = sorted(fastTxnames, key=lambda tx: tx[1], reverse=True)
         print smodTxnames,'/'

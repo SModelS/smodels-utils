@@ -118,5 +118,4 @@ for a specific experimental result/dataset and provides additional information o
 
 
 
-Main Issues
------------
+.. include:: MainIssues.rst
