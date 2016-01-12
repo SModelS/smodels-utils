@@ -118,7 +118,7 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,datasetID=None,txname=None):
 
 if __name__ == '__main__':
     expID =  'ATLAS-CONF-2013-047'
-    datasetId = 'data-cut1'
+    datasetId = 'data-cut4'
 #     expID = None
 #     datasetId = None    
     slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/test/1a0gBELT5sweUwa.slha'
@@ -144,8 +144,11 @@ if __name__ == '__main__':
         print '\nSMODELS/FASTLIM'
         print smod.expResult.getValuesFor('id'),'/',fast.expResult.getValuesFor('id')
         print smod.dataset.getValuesFor('dataId'),'/',fast.dataset.getValuesFor('dataId'),\
-        '(',SRs[smod.expResult.getValuesFor('id')[0]][smod.dataset.getValuesFor('dataId')[0]],')'
-        print smod.dataset.getValuesFor('observedN'),smod.dataset.getValuesFor('expectedBG'),'/',fast.dataset.getValuesFor('observedN'),fast.dataset.getValuesFor('expectedBG')
+        '(',SRs[fast.expResult.getValuesFor('id')[0]][fast.dataset.getValuesFor('dataId')[0]],')'
+        print smod.dataset.getValuesFor('observedN'),smod.dataset.getValuesFor('expectedBG'),\
+        smod.dataset.getValuesFor('upperLimit')[0]*lum,\
+        '/',fast.dataset.getValuesFor('observedN'),fast.dataset.getValuesFor('expectedBG'),\
+        fast.dataset.getValuesFor('upperLimit')[0]*lum
         print smod.value[0].value*lum,'/',fast.value[0].value*lum
         smodTxnames = []
         for el in smod.cluster.elements:

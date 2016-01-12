@@ -151,7 +151,7 @@ def  getDataSetFromFastlim(block,expRes):
 
     datasetDict = SRs[expRes.getValuesFor('id')[0]]
     for key,val in datasetDict.items():
-        if val == datasetId:
+        if val == datasetId or val.replace(" ","") == datasetId:
             datasetId = key
             break
                 
