@@ -164,6 +164,7 @@ def  getDataSetFromFastlim(block,expRes):
     dataset.dataInfo.expectedBG = expectedBG
     dataset.dataInfo.bgError = bgError
     dataset.dataInfo.upperLimit = upperLimit
+    dataset.dataInfo.expectedUpperLimit = dataset.getSRUpperLimit(0.05,expected=True,compute=True)
     
     return dataset
 
