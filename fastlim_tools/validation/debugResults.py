@@ -40,7 +40,7 @@ def debugSmodelS(slhafile,expResID,datasetId):
     :return: TheoryPredictionList object containing SModelS results    
     """
     
-    sigmacut = 0.01 * fb
+    sigmacut = 0.001 * fb
     mingap = 10. * GeV
     
     #Load the browser:
@@ -74,7 +74,7 @@ def debugSmodelS(slhafile,expResID,datasetId):
 
     predictions = theoryPrediction.TheoryPredictionList()    
     for expRes in database.expResultList:
-        preds =  theoryPrediction.theoryPredictionsFor(expRes, smstoplist)        
+        preds =  theoryPrediction.theoryPredictionsFor(expRes, smstoplist,useBestDataset=False)        
         if preds:    
             predictions += preds
 
@@ -109,7 +109,7 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,datasetID=None,txname=None):
 #     import shutil
 #     shutil.copy(outfile,'./fastlim.out')
     #Convert results to SModelS format (TheoryPredictionList)      
-    predictions = fastlimParser(outfile,useBestDataset=True,
+    predictions = fastlimParser(outfile,useBestDataset=False,
                                 expResID=expResID,datasetID=datasetID,txname=txname)
     os.remove(infile)
     os.remove(outfile)
@@ -118,9 +118,9 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,datasetID=None,txname=None):
 
 if __name__ == '__main__':
     expID =  'ATLAS-CONF-2013-047'
-#     datasetId = 'data-cut1'
+    datasetId = 'data-cut8'
 #     expID = None
-    datasetId = None    
+#     datasetId = None    
     slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/test/1a0gBELT5sweUwa.slha'
     
     fastPreds = debugFastlim(slhafile, fastlimdir, expID, datasetId)
@@ -135,8 +135,9 @@ if __name__ == '__main__':
         fast = None
         for j, fth in enumerate(fastPreds):            
             if fth.expResult.getValuesFor('id') == smod.expResult.getValuesFor('id'):
-                fast = fastPreds[j]
-                break
+                if fth.dataset.dataInfo.dataId == smod.dataset.dataInfo.dataId:
+                    fast = fastPreds[j]
+                    break
         if not fast:
             missPredsFast.append(smod)
             continue
@@ -173,8 +174,9 @@ if __name__ == '__main__':
         smod = None
         for j, sth in enumerate(smodelsPreds):            
             if sth.expResult.getValuesFor('id') == fast.expResult.getValuesFor('id'):
-                smod = smodelsPreds[j]
-                break
+                if sth.dataset.dataInfo.dataId == fast.dataset.dataInfo.dataId:
+                    smod = smodelsPreds[j]
+                    break
         if not smod:
             missPredsSmod.append(fast)
             continue

@@ -9,6 +9,7 @@
 """
 import sys,os,glob
 import logging
+from sympy.assumptions.assume import Predicate
 sys.path.append('../runTools')
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
@@ -54,25 +55,28 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
         fastf = open(fastfile,'r')
         fastPreds = eval(fastf.read().replace(' [fb]','*fb').replace('[GeV]','*GeV'))['ExptRes']
         fastf.close()
-        fastPreds = sorted(fastPreds, key=lambda thpred: thpred['AnalysisName'])
+        fastPreds = sorted(fastPreds, key=lambda thpred: (thpred['AnalysisName'],thpred['DataSet']))
         smodf = open(os.path.join(smodelsDir,fname),'r')
         smodPreds = eval(smodf.read().replace(' [fb]','*fb').replace('[GeV]','*GeV'))
         sigmacut = smodPreds['extra']['sigmacut']
         smodPreds = smodPreds['ExptRes']
         smodf.close()
-        smodPreds = sorted(smodPreds, key=lambda thpred: thpred['AnalysisName'])
+        smodPreds = sorted(smodPreds, key=lambda thpred: (thpred['AnalysisName'],thpred['DataSet']))
         
         missPredsFast = []
         for smod in smodPreds:
             fast = None
+            #First find the same exp. result/dataset in Fastlim
             for j, fth in enumerate(fastPreds):            
-                if fth['AnalysisName'] == smod['AnalysisName']:
+                if fth['AnalysisName'] == smod['AnalysisName'] and  fth['DataSet'] == smod['DataSet']:
                     fast = fastPreds[j]
                     break
             if not fast:
-                missPredsFast.append(smod['AnalysisName'])
+                missPredsFast.append(smod['AnalysisName']+'/'+ smod['DataSet'])
                 continue
             
+            
+            #Now check if the result for the particular exp. result/dataset matches
             for key in smod:
                 diff = False
                 if key in ignoreFields: continue
@@ -88,9 +92,10 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
                 elif smod[key] != fast[key]: diff = True
                 
                 if diff:
-                    if not smod['AnalysisName'] in diffsDict[fname]:
-                        diffsDict[fname][smod['AnalysisName']] = {}
-                    diffsDict[fname][smod['AnalysisName']][key] = [smod[key],fast[key]]
+                    label = smod['AnalysisName']+'/'+smod['DataSet']
+                    if not label in diffsDict[fname]:
+                        diffsDict[fname][label] = {}
+                    diffsDict[fname][label][key] = [smod[key],fast[key]]
     
     
     
@@ -98,11 +103,11 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
         for fast in fastPreds:
             smod = None
             for j, sth in enumerate(smodPreds):            
-                if sth['AnalysisName'] == fast['AnalysisName']:
+                if sth['AnalysisName'] == fast['AnalysisName'] and  sth['DataSet'] == fast['DataSet']:
                     smod = smodPreds[j]
                     break
-            if not smod:
-                missPredsSmod.append(fast['AnalysisName'])
+            if not smod and fast['tval'] > sigmacut/10.:
+                missPredsSmod.append(fast['AnalysisName']+'/'+fast['DataSet'])
                 continue      
     
         diffsDict[fname]['Missing Results in Fastlim'] =  missPredsFast

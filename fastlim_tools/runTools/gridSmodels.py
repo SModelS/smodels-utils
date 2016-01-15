@@ -83,7 +83,7 @@ def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=
                         doCompress=True,doInvisible=True, minmassgap=mingap)
         predictions = theoryPrediction.TheoryPredictionList()
         for expRes in database.expResultList:
-            preds =  theoryPrediction.theoryPredictionsFor(expRes, smstoplist)
+            preds =  theoryPrediction.theoryPredictionsFor(expRes, smstoplist, useBestDataset=False)
             if preds:
                 predictions += preds
     except:    

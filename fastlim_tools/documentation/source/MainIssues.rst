@@ -37,7 +37,7 @@ Efficiency Maps
 
 The efficiency maps in the SModelS database are identical to the ones in Fastlim, except
 for an important difference. When translating Fastlim maps to the SModelS database, whenever the
-uncertainty in the efficiency value was too large (larger than half the value), *the corresponding
+uncertainty in the efficiency value is larger than 25%, *the corresponding
 efficiency was set to zero in the SModelS database*. The purpose of this is to avoid points with large uncertainties
 and produce a more conservative efficiency map.
 However, as a result, some points will have smaller efficiencies in SModelS than the ones used in Fastlim.
