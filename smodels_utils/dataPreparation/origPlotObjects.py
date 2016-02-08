@@ -408,7 +408,10 @@ class Axes(object):
         for eq in self._equations:
             equation = eq.subs(x,self._xy[x])
             equation = equation.subs(y,self._xy[y])
-            equation = equation.subs(z,self._xy[z])
+            try:
+                equation = equation.subs(z,self._xy[z])
+            except KeyError,e:
+                pass
             if equation != True: equations.append(equation)
 
         massDublets = []
