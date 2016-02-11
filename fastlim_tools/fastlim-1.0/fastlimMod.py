@@ -1,7 +1,10 @@
 #! /usr/bin/env python
 
 """
-MODIFIED (A. Lessa): Removes screen output and uses sys.argv[2] to define file output
+MODIFIED (A. Lessa): 1. Removes screen output and uses sys.argv[2] to define file output
+                     2. Added option to do linear interpolation on the efficiencies or
+                        linear interpoaltion on the logarithm of the efficiencies (fastlim default)                        
+                        
 """
 
 __author__ = "M.Papucci, K.Sakurai, A.Weiler, L.Zeune"
@@ -17,10 +20,12 @@ from interpolate import *
 sys.path.append('statistics/CLs_limits')
 from mycls import *
 from extract_chain import *
-from read_data import *
-from display import *
+from read_dataMod import *
+from displayMod import *
 from finalstate import *
 from update import *
+
+logInterpolation = False
 
 ###############################################################################
 ## Main function for module testing
@@ -221,7 +226,7 @@ if __name__ == "__main__":
     logging.info('Reading efficiency tables...')    
     # Here calculates the visible cross sections and R measures. These are stored in results dictionary 
     results = {}
-    res, warn = get_results(ana_dict_8, proc3D, proc2D)
+    res, warn = get_results(ana_dict_8, proc3D, proc2D, logInterpolation)
     results.update(res)
     warning_list += warn
     for w in warning_list: print w

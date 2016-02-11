@@ -62,7 +62,7 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
         smodPreds = smodPreds['ExptRes']
         smodf.close()
         smodPreds = sorted(smodPreds, key=lambda thpred: (thpred['AnalysisName'],thpred['DataSet']))
-        
+                
         missPredsFast = []
         for smod in smodPreds:
             fast = None
@@ -82,7 +82,8 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
                 if key in ignoreFields: continue
                 if smod[key] == fast[key]: continue
                 if key == 'tval':
-                    if abs(smod[key] - fast[key]) > 2.*sigmacut: diff = True
+                    if abs(smod[key] - fast[key]) > 2.*sigmacut and 2.*abs(smod[key]-fast[key])/abs(smod[key]+fast[key]) > allowedDiff:
+                        diff = True
                 elif key == 'AnalysisTopo':
                     if not set(fast['AnalysisTopo']).issubset(set(smod['AnalysisTopo'])):
                         diff = True                    

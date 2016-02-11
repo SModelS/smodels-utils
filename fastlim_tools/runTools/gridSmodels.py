@@ -27,7 +27,8 @@ import subprocess
 logger.setLevel(level=logging.DEBUG)
 
 
-def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=None,doXsecs=True):
+def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=None,
+               doXsecs=True):
     """
     Runs smodels for the SLHA file and generate the corresponding .sms file.
     
@@ -83,7 +84,8 @@ def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=
                         doCompress=True,doInvisible=True, minmassgap=mingap)
         predictions = theoryPrediction.TheoryPredictionList()
         for expRes in database.expResultList:
-            preds =  theoryPrediction.theoryPredictionsFor(expRes, smstoplist, useBestDataset=False)
+            preds =  theoryPrediction.theoryPredictionsFor(expRes, smstoplist, 
+                                                           useBestDataset=False)
             if preds:
                 predictions += preds
     except:    
@@ -100,7 +102,7 @@ def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=
     return True
 
 
-def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=700):
+def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=1000):
     """
     Runs fastlim for the SLHA files in slhaFiles. Uses only the best
     dataset for each experimental result.
@@ -149,10 +151,10 @@ def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=700):
         outputfile,run = res
         try:
             goodRun = run.get(tout)
-        except:
+        except Exception as e:
             goodRun = False
         if not goodRun:
-            logger.error("SModelS failed for file %s" %outputfile)
+            logger.error("SModelS failed for file %s \n   Exception: %s" %(outputfile,str(type(e))))
         else:
             data[outputfile[outputfile.rfind('/')+1:]] = goodRun
             

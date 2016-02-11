@@ -41,3 +41,7 @@ uncertainty in the efficiency value is larger than 25%, *the corresponding
 efficiency was set to zero in the SModelS database*. The purpose of this is to avoid points with large uncertainties
 and produce a more conservative efficiency map.
 However, as a result, some points will have smaller efficiencies in SModelS than the ones used in Fastlim.
+
+Furthermore, Fastlim uses a linear interpolation for the logarithm of the efficiencies, where SModelS
+interpolates directly on the efficiency values. In most cases the differences between the two
+methods are negligible, except in regions of parameter space where there is a sharp drop on the efficiencies.   

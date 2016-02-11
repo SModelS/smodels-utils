@@ -247,7 +247,7 @@ class EmptyTxName(object):
         self.txName = txname    
 
 
-def formatOutput(slhafile,predictions,outType='sms',extraInfo={}):
+def formatOutput(slhafile,predictions,outType='sms',extraInfo={},minval=0.00004):
     """
     Format the list of theory predictions and the SLHA file input to a specific output
     format.
@@ -259,7 +259,8 @@ def formatOutput(slhafile,predictions,outType='sms',extraInfo={}):
     :param prediction: TheoryPredictionList object (output of fastlimParser)
     :param outType: Type of output (see above)
     :param extraInfo: Additional information to be stored in the file
-    
+    :param minval: Option to remove predictions with very low theory predictions
+                   (useful since fastlim already rounds its output to 4 digits)    
     :return: If outType='sms', name of sms file. If outType='valplot', python dictionary
     """
     
@@ -270,12 +271,15 @@ def formatOutput(slhafile,predictions,outType='sms',extraInfo={}):
             expID = expRes.getValuesFor('id')[0]
             dataset = theoryPrediction.dataset
             datasetID = dataset.dataInfo.dataId
-            value = theoryPrediction.value[0].value
+            value = theoryPrediction.value[0].value                     
             upperLimit = expRes.getUpperLimitFor(dataID=datasetID)
             txnames = [txname.txName for txname in theoryPrediction.txnames]
             weights = [el.weight[0].value.asNumber(fb) for el in theoryPrediction.cluster.elements]
             maxconds = theoryPrediction.getmaxCondition()
             mass = theoryPrediction.mass
+            #Cut very low values:
+            if expRes.getValuesFor('lumi')[0]*value < minval: continue
+                        
             #Fix for the case of eff maps:
             if not mass: mass = [[0.*GeV,0.*GeV],[0.*GeV,0.*GeV]]
             sqrts = dataset.getValuesFor('sqrts')[0].asNumber(TeV)

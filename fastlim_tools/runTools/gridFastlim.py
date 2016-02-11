@@ -108,7 +108,7 @@ def runFastlim(slhafile,outfile,fastlimdir='../fastlim-1.0/',expResID=None,txnam
     #Convert results to SModelS format (TheoryPredictionList)      
     predictions = fastlimParser(outfile,useBestDataset=False,
                                 expResID=expResID,txname=txname)
-    os.remove(infile)          
+    os.remove(infile)      
 
     #Format output to a python dictionary
     output = formatOutput(slhafile,predictions,'sms',extraInfo={'tool': 'fastlim'})         
