@@ -41,5 +41,6 @@ for expres in smsdict['ExptRes']:
     res.append([expres['AnalysisName'],expres['DataSet'],expres['tval'],expres['exptlimit']])
 res = sorted(res)
 for r in res:
-    print r[0],r[1],'\n',r[2],r[3]
+    print 'ID:',r[0],'DataSet:',r[1],'\n','tval:',r[2],'UL:',r[3]
+    print '--------------------------------------------------------'
         

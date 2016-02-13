@@ -277,7 +277,8 @@ def formatOutput(slhafile,predictions,outType='sms',extraInfo={},minval=0.00005)
             weights = [el.weight[0].value.asNumber(fb) for el in theoryPrediction.cluster.elements]
             maxconds = theoryPrediction.getmaxCondition()
             mass = theoryPrediction.mass
-            #Cut very low values:
+            
+            #Cut very low values (since fastlim only prints 4 digits):
             if expRes.getValuesFor('lumi')[0]*value < minval: continue
                         
             #Fix for the case of eff maps:

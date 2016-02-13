@@ -417,9 +417,7 @@ def get_results(ana_dict, proc3D_dict, proc2D_dict):
     results = {}
     warning_list = []
     for ana, anaData in ana_dict.iteritems():
-        for sr_name, srData in anaData.sr_dict.iteritems():            
-            if ana == 'ATLAS_CONF_2013_053':
-                  print  sr_name, srData
+        for sr_name, srData in anaData.sr_dict.iteritems():
             #print key
             proc_Data = {}
             pData_dict, warn_list = get_proc_Data_2D(proc2D_dict, ana, sr_name, anaData.root_S, anaData.lumi)

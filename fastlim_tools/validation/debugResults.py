@@ -137,10 +137,26 @@ if __name__ == '__main__':
                 if fth.dataset.dataInfo.dataId == smod.dataset.dataInfo.dataId:
                     fast = fastPreds[j]
                     break
+        lum = smod.expResult.getValuesFor('lumi')[0]
         if not fast:
             missPredsFast.append(smod)
+            print '\nSMODELS'
+            print smod.expResult.getValuesFor('id')
+            print smod.dataset.getValuesFor('dataId'),\
+            '(',SRs[smod.expResult.getValuesFor('id')[0]][smod.dataset.getValuesFor('dataId')[0]],')'
+            print smod.dataset.getValuesFor('observedN'),smod.dataset.getValuesFor('expectedBG'),\
+            smod.dataset.getValuesFor('upperLimit')[0]*lum,smod.dataset.getValuesFor('expectedUpperLimit')[0]*lum            
+            print smod.value[0].value*lum
+            smodTxnames = []
+            for el in smod.cluster.elements:
+                for txname in smod.txnames:
+                    if txname.hasElementAs(el):
+                        smodTxnames.append([txname.txName,el.weight[0].value*lum,el.eff])
+                        break
+            smodTxnames = sorted(smodTxnames, key=lambda tx: tx[1], reverse=True)
+            print smodTxnames            
             continue
-        lum = smod.expResult.getValuesFor('lumi')[0]
+        
         print '\nSMODELS/FASTLIM'
         print smod.expResult.getValuesFor('id'),'/',fast.expResult.getValuesFor('id')
         print smod.dataset.getValuesFor('dataId'),'/',fast.dataset.getValuesFor('dataId'),\
@@ -178,6 +194,19 @@ if __name__ == '__main__':
                     break
         if not smod:
             missPredsSmod.append(fast)
+            lum = fast.expResult.getValuesFor('lumi')[0]
+            print '\nFASTLIM'
+            print fast.expResult.getValuesFor('id')
+            print fast.dataset.getValuesFor('dataId'),\
+            '(',SRs[fast.expResult.getValuesFor('id')[0]][fast.dataset.getValuesFor('dataId')[0]],')'
+            print fast.dataset.getValuesFor('observedN'),fast.dataset.getValuesFor('expectedBG'),\
+            fast.dataset.getValuesFor('upperLimit')[0]*lum,fast.dataset.getValuesFor('expectedUpperLimit')[0]*lum
+            print fast.value[0].value*lum
+            fastTxnames = []        
+            for iel,el in enumerate(fast.cluster.elements):
+                fastTxnames.append([fast.txnames[iel].txName,el.weight[0].value*lum])
+            fastTxnames = sorted(fastTxnames, key=lambda tx: tx[1], reverse=True)
+            print fastTxnames
             continue
     
     print '\n\n Results missing in Fastlim:'
