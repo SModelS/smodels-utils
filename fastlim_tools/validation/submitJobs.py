@@ -49,17 +49,15 @@ if __name__ == "__main__":
     #Submit jobs
     for ijob in range(njobs):
         with open('subJob'+args.Tool+str(ijob),'w') as jobscript:
-            jobscript.write("#PBS -S /bin/bash\n\
-#PBS -l walltime=%d:00:00\n\
-#PBS -l procs=%d\n\
-#PBS -N %s\n\
-#PBS -e %s/err.log\n\
-#PBS -o %s/log.out\n\
+            jobscript.write("#!bin/bash\n\
+#PBS -l walltime="+str(args.twall)+":00:00\n\
+#PBS -l procs="+str(nCoresPerJob)+"\n\
+#PBS -N "+args.Tool+"Job_"+str(ijob)+"\n\
+#PBS -e "+nfolders[ijob]+"/err.log\n\
+#PBS -o "+nfolders[ijob]+"/log.out\n\
 \n\
-./singleJob.py %s -Ncore %d -Tool %s >> %s/%s \n" %(args.twall,nCoresPerJob,nfolders[ijob],nfolders[ijob],
-                                                                'subJob'+args.Tool+str(ijob),
-                                                                nfolders[ijob],nCoresPerJob,args.Tool,
-                                                                nfolders[ijob],args.log))
+./singleJob.py "+nfolders[ijob]+" -Ncore "+str(nCoresPerJob)
+                +" -Tool "+args.Tool+" >> "+nfolders[ijob]+"/"+args.log)
 
         subprocess.call("qsub subJob"+args.Tool+str(ijob),shell=True)
     sys.exit()
