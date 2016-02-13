@@ -53,14 +53,14 @@ if __name__ == "__main__":
 #PBS -l walltime=%d:00:00\n\
 #PBS -l procs=%d\n\
 #PBS -N %s\n\
+#PBS -e %s/err.log\n\
+#PBS -o %s/log.out\n\
 \n\
-cd $PBS_O_WORKDIR\n\
-\n\
-./singleJob.py %s -Ncore %d -Tool %s >> $PBS_O_WORKDIR/%s \n" %(args.twall,nCoresPerJob,
+./singleJob.py %s -Ncore %d -Tool %s >> %s/%s \n" %(args.twall,nCoresPerJob,nfolders[ijob],nfolders[ijob],
                                                                 'subJob'+args.Tool+str(ijob),
                                                                 nfolders[ijob],nCoresPerJob,args.Tool,
-                                                                args.log))
+                                                                nfolders[ijob],args.log))
 
-        subprocess.call("qsub ./subJob"+args.Tool+str(ijob),shell=True)
+        subprocess.call("qsub subJob"+args.Tool+str(ijob),shell=True)
     sys.exit()
         
