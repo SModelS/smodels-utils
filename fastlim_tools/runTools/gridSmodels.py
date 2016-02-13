@@ -102,7 +102,7 @@ def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=
     return True
 
 
-def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=1000):
+def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=1500):
     """
     Runs fastlim for the SLHA files in slhaFiles. Uses only the best
     dataset for each experimental result.

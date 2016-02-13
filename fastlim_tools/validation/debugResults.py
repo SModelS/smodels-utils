@@ -117,8 +117,8 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,datasetID=None,txname=None):
               
 
 if __name__ == '__main__':
-    expID =  'ATLAS-CONF-2013-035'
-    datasetId = 'data-cut3'
+    expID =  'ATLAS-CONF-2013-049'
+#     datasetId = 'data-cut3'
 #     expID = None
     datasetId = None    
     slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/test/1a0gBELT5sweUwa.slha'

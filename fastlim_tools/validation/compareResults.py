@@ -40,6 +40,7 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
     fastFiles = glob.glob(os.path.join(fastlimDir,'*.sms'))
     smodelsFiles = glob.glob(os.path.join(smodelsDir,'*.sms'))
     
+    maxdiff = 0.
     diffsDict = {}
     for fastfile in fastFiles:
         fname = fastfile[fastfile.rfind('/')+1:]
@@ -82,13 +83,17 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
                 if key in ignoreFields: continue
                 if smod[key] == fast[key]: continue
                 if key == 'tval':
-                    if abs(smod[key] - fast[key]) > 2.*sigmacut and 2.*abs(smod[key]-fast[key])/abs(smod[key]+fast[key]) > allowedDiff:
-                        diff = True
+                    if abs(smod[key] - fast[key]) < 2.*sigmacut: continue
+                    vdiff = 2.*abs(smod[key]-fast[key])/abs(smod[key]+fast[key])
+                    maxdiff = max(maxdiff,vdiff)                    
+                    if vdiff > allowedDiff: diff = True
                 elif key == 'AnalysisTopo':
                     if not set(fast['AnalysisTopo']).issubset(set(smod['AnalysisTopo'])):
                         diff = True                    
                 elif isinstance(smod[key],float):
-                    if 2.*abs(smod[key]-fast[key])/abs(smod[key]+fast[key]) > allowedDiff:
+                    vdiff = 2.*abs(smod[key]-fast[key])/abs(smod[key]+fast[key])
+                    maxdiff = max(maxdiff,vdiff)
+                    if vdiff > allowedDiff:
                         diff = True
                 elif smod[key] != fast[key]: diff = True
                 
@@ -127,7 +132,7 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
             if missPredsSmod:
                 print '\nMissing Results in SModelS:',diffsDict[fname]['Missing Results in SModelS']
     
-      
+    print '\n\nMaximum percentual difference for numerical values =',maxdiff
     return diffsDict
 
 if __name__ == "__main__":

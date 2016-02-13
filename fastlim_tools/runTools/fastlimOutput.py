@@ -247,7 +247,7 @@ class EmptyTxName(object):
         self.txName = txname    
 
 
-def formatOutput(slhafile,predictions,outType='sms',extraInfo={},minval=0.00004):
+def formatOutput(slhafile,predictions,outType='sms',extraInfo={},minval=0.00005):
     """
     Format the list of theory predictions and the SLHA file input to a specific output
     format.
