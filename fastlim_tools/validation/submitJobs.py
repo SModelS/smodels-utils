@@ -49,7 +49,7 @@ if __name__ == "__main__":
     #Submit jobs
     for ijob in range(njobs):
         with open('subJob'+args.Tool+str(ijob),'w') as jobscript:
-            jobscript.write("#!bin/bash\n\
+            jobscript.write("#!/bin/bash\n\
 #PBS -l walltime="+str(args.twall)+":00:00\n\
 #PBS -l procs="+str(nCoresPerJob)+"\n\
 #PBS -N "+args.Tool+"Job_"+str(ijob)+"\n\
