@@ -40,7 +40,7 @@ def debugSmodelS(slhafile,expResID,datasetId):
     :return: TheoryPredictionList object containing SModelS results    
     """
     
-    sigmacut = 0.001 * fb
+    sigmacut = 0.01 * fb
     mingap = 10. * GeV
     
     #Load the browser:
@@ -121,7 +121,7 @@ if __name__ == '__main__':
 #     datasetId = 'data-cut3'
 #     expID = None
     datasetId = None    
-    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/test/1a0gBELT5sweUwa.slha'
+    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/NewData/strong_lt_focus/ZWS7lFIUwisenw.slha'
     
     fastPreds = debugFastlim(slhafile, fastlimdir, expID, datasetId)
     fastPreds = sorted(fastPreds, key=lambda thpred: thpred.expResult.getValuesFor('id')[0])

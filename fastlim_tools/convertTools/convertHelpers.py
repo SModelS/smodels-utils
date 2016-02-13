@@ -225,7 +225,9 @@ def smodels2fastlim(txname):
              "B1bN1_B1bN1" : "T2bb", "T2tN1_T2tN1" : "T2tt", "T1tN1_T1tN1" : "T2tt",
              "B2bN1_B2bN1" : "T2bb", "GbB2bN1_GbB2bN1" : "T5bbbb", "GtT2tN1_GtT2tN1" : "T5tttt",
              "GbB2tN1_GbB2tN1": "T5btbt", "GbB2bN1_GbB2tN1" : "T5bbbt", "GtT2bN1_GtT2bN1" : "T5tbtb",
-             "T2bN1_T2bN1" : "T2bb", "T2bN1_T2tN1" : "T2bt"
+             "T2bN1_T2bN1" : "T2bb", "T2bN1_T2tN1" : "T2bt",
+#Added (Andre - 02/13/2016):
+             "B1tN1_B1tN1" : "T2tt","B2tN1_B2tN1" : "T2tt", "B1bN1_B1tN1" : "T2bt", "B2bN1_B2tN1" : "T2bt" 
     }
     
     if txname == 'Dict': return Dict

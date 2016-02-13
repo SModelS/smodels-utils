@@ -83,7 +83,7 @@ def runFastlim(slhafile,outfile,fastlimdir='../fastlim-1.0/',expResID=None,txnam
         logger.error("fastlim.py not found in %s" %fastlimdir)
         return False
     if not os.path.isabs(fastlimdir):
-        logger.error("Please provide an absolute for fastlim dir.")
+        logger.error("Please provide an absolute path for fastlim dir.")
         return False
     
     if not os.path.isfile(slhafile):
@@ -161,10 +161,10 @@ def runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None,np=1,tout=200):
         outputfile,run = res       
         try:
             goodRun = run.get(tout)
-        except:
+        except Exception as e:
             goodRun = False
         if not goodRun:
-            logger.error("Fastlim failed for file %s" %outputfile)
+            logger.error("Fastlim failed for file  %s \n   Exception: %s" %(outputfile,str(type(e))))
         else:
             data[outputfile[outputfile.rfind('/')+1:]] = goodRun
             

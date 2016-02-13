@@ -41,6 +41,7 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
     smodelsFiles = glob.glob(os.path.join(smodelsDir,'*.sms'))
     
     maxdiff = 0.
+    nErrorFiles = 0
     diffsDict = {}
     for fastfile in fastFiles:
         fname = fastfile[fastfile.rfind('/')+1:]
@@ -112,16 +113,22 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
                 if sth['AnalysisName'] == fast['AnalysisName'] and  sth['DataSet'] == fast['DataSet']:
                     smod = smodPreds[j]
                     break
-            if not smod and fast['tval'] > sigmacut/10.:
+            if not smod and fast['tval'] > sigmacut:
+                if fast['AnalysisName'] == 'ATLAS-CONF-2013-054': continue
                 missPredsSmod.append(fast['AnalysisName']+'/'+fast['DataSet'])
                 continue      
     
-        diffsDict[fname]['Missing Results in Fastlim'] =  missPredsFast
-        diffsDict[fname]['Missing Results in SModelS'] =  missPredsSmod
+        if missPredsFast:
+            diffsDict[fname]['Missing Results in Fastlim'] =  missPredsFast
+        if missPredsSmod:
+            diffsDict[fname]['Missing Results in SModelS'] =  missPredsSmod
     
     
-        if debug:
-            print '\n-------------------SMODELS/FASTLIM for:',fname
+        
+        if debug:            
+            if not diffsDict[fname]: continue
+            nErrorFiles += 1
+            print '\n-------------------SMODELS/FASTLIM for:',fname            
             for exp in diffsDict[fname]:
                 if 'Missing Results' in exp: continue        
                 print '\n------',exp
@@ -132,7 +139,8 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
             if missPredsSmod:
                 print '\nMissing Results in SModelS:',diffsDict[fname]['Missing Results in SModelS']
     
-    print '\n\nMaximum percentual difference for numerical values =',maxdiff
+    print '\n\n---------------------------------------\nMaximum percentual difference for numerical values =',maxdiff
+    print 'Error in %i files' %nErrorFiles
     return diffsDict
 
 if __name__ == "__main__":
