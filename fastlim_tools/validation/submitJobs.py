@@ -17,6 +17,7 @@ if __name__ == "__main__":
     argparser.add_argument('-Ncore', help='total number of cores to be used', type=int, default=1)
     argparser.add_argument('-Njobs', help='total number of jobs to be submitted', type=int, default=1)
     argparser.add_argument('-twall', help='walltime for each job (in hours)', type=int, default=2)
+    argparser.add_argument('-Tout', help='Time out limit (in seconds) for a single process', type=float, default=2000)
     argparser.add_argument('-log', help='log file to store the output', default="log.dat")
     argparser.add_argument('-Tool', help='Tool to be used (fastlim/smodels)', required=True)
     args = argparser.parse_args()    
@@ -58,7 +59,7 @@ if __name__ == "__main__":
 #PBS -m ae\n\
 #PBS -M andre.lessa@ufabc.edu.br\n\
 \n\
-./singleJob.py "+nfolders[ijob]+" -Ncore "+str(nCoresPerJob)
+./singleJob.py "+nfolders[ijob]+" -Ncore "+str(nCoresPerJob)+ " -Tout "+str(args.Tout)
                 +" -Tool "+args.Tool+" >> "+nfolders[ijob]+"/"+args.log)
 
         subprocess.call("qsub subJob"+args.Tool+str(ijob),shell=True)
