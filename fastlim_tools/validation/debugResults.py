@@ -61,15 +61,20 @@ def debugSmodelS(slhafile,expResID,datasetId):
     smstoplist = slhaDecomposer.decompose(slhafile, sigmacut,\
                     doCompress=True,doInvisible=True, minmassgap=mingap)
     
-    totdecomp = 0.*fb
-    for el in smstoplist.getElements():
-        if not el.motherElements: totdecomp += el.weight[0].value
     
-    total = 0.*fb
-    xSectionList = crossSection.getXsecFromSLHAFile(slhafile)
-    xSectionList.removeLowerOrder()
-    for xsec in xSectionList:
-        total += xsec.value
+#     for top in smstoplist:
+#         if top.vertnumb == [3,3] and top.vertparts == [[1,1,0],[1,1,0]]:
+#             for el in top.elementList: print el,el.getMasses(),el.weight
+#     sys.exit()
+#     totdecomp = 0.*fb
+#     for el in smstoplist.getElements():
+#         if not el.motherElements: totdecomp += el.weight[0].value
+#     
+#     total = 0.*fb
+#     xSectionList = crossSection.getXsecFromSLHAFile(slhafile)
+#     xSectionList.removeLowerOrder()
+#     for xsec in xSectionList:
+#         total += xsec.value
 #     print 'total =',total,'totaldecomp = ',totdecomp,'coverage = ',totdecomp/total,'diff = ',total-totdecomp
 
     predictions = theoryPrediction.TheoryPredictionList()    
@@ -117,11 +122,11 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,datasetID=None,txname=None):
               
 
 if __name__ == '__main__':
-    expID =  'ATLAS-CONF-2013-049'
-#     datasetId = 'data-cut3'
+    expID =  'ATLAS-CONF-2013-024'
+    datasetId = 'data-cut0'
 #     expID = None
-    datasetId = None    
-    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/NewData/strong_lt_focus/ZWS7lFIUwisenw.slha'
+#     datasetId = None    
+    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/zxER9lvXmPfLRY.slha'
     
     fastPreds = debugFastlim(slhafile, fastlimdir, expID, datasetId)
     fastPreds = sorted(fastPreds, key=lambda thpred: thpred.expResult.getValuesFor('id')[0])

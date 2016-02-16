@@ -213,7 +213,7 @@ def smodels2fastlim(txname):
     """
     
     Dict = { "GbB1tN1_GbB1tN1": "T5btbt", "GtT1bN1_GtT1tN1": "T5tbtt", "GgN1_GqqN1": "TGQ",
-             "GtT1bN1_GtT1bN1": "T5tbtb", "GgN1_GgN1": "T2", "GbtN1_GgN1": "TGQbtq",
+             "GtT1bN1_GtT1bN1": "T5tbtb", "GgN1_GgN1": "T2gg", "GbtN1_GgN1": "TGQbtq",
              "GbbN1_GgN1": "TGQbbq", "GttN1_GttN1": "T1tttt", "GbbN1_GbbN1": "T1bbbb",
              "GbB1bN1_GbB1bN1": "T5bbbb", "GbbN1_GqqN1": "T1bbqq",
              "T1tN1_T1tN1": "T2tt", "GgN1_GttN1": "TGQqtt", 'GbbN1_GbtN1': "T1bbbt",

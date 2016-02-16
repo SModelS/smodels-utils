@@ -51,7 +51,7 @@ if __name__ == "__main__":
         with open('subJob'+args.Tool+str(ijob),'w') as jobscript:
             jobscript.write("#!/bin/bash\n\
 #PBS -l walltime="+str(args.twall)+":00:00\n\
-#PBS -l procs="+str(nCoresPerJob)+"\n\
+#PBS -l nodes=1:ppn="+str(nCoresPerJob)+"\n\
 #PBS -N "+args.Tool+"Job_"+str(ijob)+"\n\
 #PBS -e "+nfolders[ijob]+"/err.log\n\
 #PBS -o "+nfolders[ijob]+"/log.out\n\
