@@ -25,6 +25,22 @@ from gridFastlim import getSlhaFiles, prepareSLHA
 
 
 
+old = {"data-cut10":"8j80 flavor 0 b-jets", "data-cut11":"8j80 flavor 1 b-jets", "data-cut12":"8j80 flavor >=2 b-jets", "data-cut13":"8j50 MJ 340", "data-cut14":"8j50 MJ 420", "data-cut8":"7j80 flavor 1 b-jets", "data-cut9":"7j80 flavor >=2 b-jets", "data-cut2":"8j50 flavor >=2 b-jets", "data-cut3":"9j50 flavor 0 b-jets", "data-cut0":"8j50 flavor 0 b-jets", "data-cut1":"8j50 flavor 1 b-jets", "data-cut6":"10j50 flavor", "data-cut7":"7j80 flavor 0 b-jets", "data-cut4":"9j50 flavor 1 b-jets", "data-cut5":"9j50 flavor >=2 b-jets"}
+
+new = {'data-cut0':'8j50 flavor 0 b-jets', 'data-cut1':'8j50 flavor 1 b-jets', 'data-cut2':'8j50 flavor >=2 b-jets', 'data-cut3':'9j50 flavor 0 b-jets', 'data-cut4':'9j50 flavor 1 b-jets', 'data-cut5':'9j50 flavor >=2 b-jets', 'data-cut6':'10j50 flavor', 'data-cut7':'7j80 flavor 0 b-jets', 'data-cut8':'7j80 flavor 1 b-jets', 'data-cut9':'7j80 flavor >=2 b-jets', 'data-cut10':'8j80 flavor 0 b-jets', 'data-cut11':'8j80 flavor 1 b-jets', 'data-cut12':'8j80 flavor >=2 b-jets', 'data-cut13':'8j50 MJ 340', 'data-cut14':'8j50 MJ 420', 'data-cut15':'9j50 MJ 340', 'data-cut16':'9j50 MJ 420', 'data-cut17':'10j50 MJ 340', 'data-cut18':'10j50 MJ 420'}
+
+
+for k,v in old.items():
+    if not k in new:
+        print 'missing',k
+        continue
+    if new[k] != v:
+        print k,"differs:",v,new[k]
+        
+print len(new),len(old)
+
+sys.exit()
+
 slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/missing/ZtqRWMuYjLZrfk.slha'
 outfile = '/home/lessa/smodels-utils/fastlim_tools/validation/ZZwJnsq8Z00T3w.sms'
 fastdir = '/home/lessa/smodels-utils/fastlim_tools/fastlim-1.0'

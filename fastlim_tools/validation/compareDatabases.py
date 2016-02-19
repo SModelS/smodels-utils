@@ -30,7 +30,9 @@ class simpleSR(object):
         self.BGerror = eval(data[4])
         self.upperLimit = eval(data[7])*fb
         self.id = data[9]        
-        self.name = data[10:]
+        self.name = ""
+        for sn in data[10:]: self.name += " "+sn
+        self.name = self.name.lstrip()
         
     def __str__(self):
         return self.id

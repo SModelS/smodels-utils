@@ -113,7 +113,6 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
                     smod = smodPreds[j]
                     break
             if not smod and fast['tval'] > sigmacut:
-                if fast['AnalysisName'] == 'ATLAS-CONF-2013-054': continue
                 missPredsSmod.append(fast['AnalysisName']+'/'+fast['DataSet'])
                 continue      
     
