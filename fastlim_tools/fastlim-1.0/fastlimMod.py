@@ -3,7 +3,8 @@
 """
 MODIFIED (A. Lessa): 1. Removes screen output and uses sys.argv[2] to define file output
                      2. Added option to do linear interpolation on the efficiencies or
-                        linear interpoaltion on the logarithm of the efficiencies (fastlim default)                        
+                        linear interpoaltion on the logarithm of the efficiencies (fastlim default)
+                     3. Added option to read cross-sections from SLHA input file                        
                         
 """
 
@@ -12,7 +13,7 @@ __version__ = "1.0"
 
 import os
 import sys
-from pyslha import * 
+import pyslha3
 from math import *
 from basic_func import *
 sys.path.append('interpolation')
@@ -26,6 +27,7 @@ from finalstate import *
 from update import *
 
 logInterpolation = False
+useSLHAxsecs = True
 
 ###############################################################################
 ## Main function for module testing
@@ -53,7 +55,8 @@ if __name__ == "__main__":
     check_install_update(options)
 
     warning_list = []
-    blocks, decays = readSLHAFile(infile)
+    d = pyslha3.readSLHAFile(infile)
+    blocks, decays, xsections = d.blocks, d.decays, d.xsections
 
     Input = Paths_and_Data(infile, blocks, decays)
 
@@ -99,12 +102,48 @@ if __name__ == "__main__":
     # Here, the cross section of all the topologies are calculated combining the produciton cross section and the branching ratios.  The 8TeV T1T1 production cross section can be obtained by get_xsec("T1", "T1", 8, Input)
     root_S = 8
     Prod_8 = TheProdMode()
-    logging.info('Calculating sigma * BR...')    
-    if 'G' in initial_part_list: Prod_8.add_prod(part_dict, "G", "G", get_xsec("G", "G", root_S, Input)) 
-    if 'T1' in initial_part_list: Prod_8.add_prod(part_dict, "T1", "T1", get_xsec("T1", "T1", root_S, Input)) 
-    if 'B1' in initial_part_list: Prod_8.add_prod(part_dict, "B1", "B1", get_xsec("B1", "B1", root_S, Input)) 
-    if 'T2' in initial_part_list: Prod_8.add_prod(part_dict, "T2", "T2", get_xsec("T2", "T2", root_S, Input)) 
-    if 'B2' in initial_part_list: Prod_8.add_prod(part_dict, "B2", "B2", get_xsec("B2", "B2", root_S, Input)) 
+    logging.info('Calculating sigma * BR...')
+    if not useSLHAxsecs:
+        if 'G' in initial_part_list: Prod_8.add_prod(part_dict, "G", "G", get_xsec("G", "G", root_S, Input)) 
+        if 'T1' in initial_part_list: Prod_8.add_prod(part_dict, "T1", "T1", get_xsec("T1", "T1", root_S, Input)) 
+        if 'B1' in initial_part_list: Prod_8.add_prod(part_dict, "B1", "B1", get_xsec("B1", "B1", root_S, Input)) 
+        if 'T2' in initial_part_list: Prod_8.add_prod(part_dict, "T2", "T2", get_xsec("T2", "T2", root_S, Input)) 
+        if 'B2' in initial_part_list: Prod_8.add_prod(part_dict, "B2", "B2", get_xsec("B2", "B2", root_S, Input))
+    else:        
+        if not xsections:
+            logging.error('Cross-sections not found in SLHA file')
+            exit()
+        try:
+            ggxsec = xsections[2212, 2212, 1000021, 1000021]
+            ggxsec = ggxsec.get_xsecs(sqrts=8000., qcd_order=2)[0].value
+        except:
+            ggxsec = 1e-20
+        try:
+            t1t1xsec = xsections[2212, 2212, -1000006,1000006]
+            t1t1xsec = t1t1xsec.get_xsecs(sqrts=8000., qcd_order=2)[0].value
+        except:
+            t1t1xsec = 1e-20
+        try:
+            t2t2xsec = xsections[2212, 2212, -2000006,2000006]
+            t2t2xsec = t2t2xsec.get_xsecs(sqrts=8000., qcd_order=2)[0].value
+        except:
+            t2t2xsec = 1e-20
+        try:
+            b1b1xsec = xsections[2212, 2212, -1000005,1000005]
+            b1b1xsec = b1b1xsec.get_xsecs(sqrts=8000., qcd_order=2)[0].value
+        except:
+            b1b1xsec = 1e-20
+        try:
+            b2b2xsec = xsections[2212, 2212, -2000005,2000005]
+            b2b2xsec = b2b2xsec.get_xsecs(sqrts=8000., qcd_order=2)[0].value
+        except:
+            b2b2xsec = 1e-20                        
+        if 'G' in initial_part_list: Prod_8.add_prod(part_dict, "G", "G", ggxsec)
+        if 'T1' in initial_part_list: Prod_8.add_prod(part_dict, "T1", "T1", t1t1xsec) 
+        if 'B1' in initial_part_list: Prod_8.add_prod(part_dict, "B1", "B1", b1b1xsec) 
+        if 'T2' in initial_part_list: Prod_8.add_prod(part_dict, "T2", "T2",t2t2xsec) 
+        if 'B2' in initial_part_list: Prod_8.add_prod(part_dict, "B2", "B2", b2b2xsec)        
+         
 
     # The topologies are renamed if there is mass degeneracies satisfying the conditions below.
     procs_8 = Prod_8.processes  ### Do not comment out

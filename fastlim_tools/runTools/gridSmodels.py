@@ -21,7 +21,7 @@ from smodels.theory import slhaDecomposer, theoryPrediction
 from fastlimOutput import formatOutput
 import multiprocessing
 from smodels.tools import databaseBrowser
-from gridFastlim import getSlhaFiles, prepareSLHA
+from gridFastlim import getSlhaFiles
 import subprocess
 
 logger.setLevel(level=logging.DEBUG)
@@ -159,4 +159,38 @@ def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=1500)
             data[outputfile[outputfile.rfind('/')+1:]] = goodRun
             
 
-    return data    
+    return data
+
+
+
+def prepareSLHA(slhafile,newfile):
+    """
+    Prepares a SLHA file to be read by fastlim.
+    Removes the XSECTION blocks and adds missing decay blocks
+    
+    :param slhafile: path to the original SLHA file
+    :param newfile: path to the new SLHA file
+    :return: path to new file
+    """
+    
+    
+    #Remove XSECTION block from slhafile
+    slha = open(slhafile,'r')
+    slhadata = slha.read()
+    slha.close()
+    if 'XSECTION' in slhadata:
+        slhadata = slhadata[:slhadata.find('XSECTION')]
+    slha = open(newfile,'w')
+    slha.write(slhadata)
+    slha.close()  
+     
+    pyslhaData = pyslha.readSLHAFile(slhafile)
+    slha = open(newfile,'a')
+    for pid in pyslhaData.blocks['MASS'].keys():
+        if not pid in pyslhaData.decays:
+            slha.write("#         PDG            Width\n")
+            slha.write("DECAY   "+str(pid)+"     0.00000000E+00\n")
+    slha.close()
+        
+    return True
+    

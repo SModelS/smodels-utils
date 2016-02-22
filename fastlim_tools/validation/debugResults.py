@@ -9,7 +9,7 @@
 """
 
 
-import sys,os,tempfile,subprocess
+import sys,os,tempfile,subprocess,shutil
 sys.path.append('../runTools')
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
@@ -21,7 +21,7 @@ from gridSmodels import runSmodelS
 from smodels.theory import slhaDecomposer, crossSection, theoryPrediction
 from fastlimOutput import formatOutput
 from smodels.tools import databaseBrowser
-from gridFastlim import getSlhaFiles, prepareSLHA
+from gridFastlim import getSlhaFiles
 from signalregions import SRs
 
 
@@ -101,23 +101,18 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,datasetID=None,txname=None):
     :return: TheoryPredictionList object containing Fastlim results    
     """    
     
-    infile = tempfile.mkstemp()     #Use temp file to store fastlim-ready SLHA file
-    os.close(infile[0])
-    infile = infile[1]
-    outfile = infile+'.out'
-    prepareSLHA(slhafile,infile)
+    infile = slhafile
+    outfile = infile.replace('.slha','.out')
     proc = subprocess.Popen([os.path.join(fastlimdir,'fastlimMod.py'),infile,outfile],
                             cwd = fastlimdir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     proc.wait()
 
     
-#     import shutil
-#     shutil.copy(outfile,'./fastlim.out')
     #Convert results to SModelS format (TheoryPredictionList)      
     predictions = fastlimParser(outfile,useBestDataset=False,
                                 expResID=expResID,datasetID=datasetID,txname=txname)
-    os.remove(infile)
-    os.remove(outfile)
+    
+    shutil.move(outfile,'./fastlim.debug')
     return predictions
               
 
@@ -126,7 +121,7 @@ if __name__ == '__main__':
     datasetId = 'data-cut15'
 #     expID = None
 #     datasetId = None    
-    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/zxER9lvXmPfLRY.slha'
+    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/ZMUrbsDmODv3A8.slha'
     
     fastPreds = debugFastlim(slhafile, fastlimdir, expID, datasetId)
     fastPreds = sorted(fastPreds, key=lambda thpred: thpred.expResult.getValuesFor('id')[0])
@@ -147,16 +142,21 @@ if __name__ == '__main__':
             missPredsFast.append(smod)
             print '\nSMODELS'
             print smod.expResult.getValuesFor('id')
+            print lum
             print smod.dataset.getValuesFor('dataId'),\
             '(',SRs[smod.expResult.getValuesFor('id')[0]][smod.dataset.getValuesFor('dataId')[0]],')'
             print smod.dataset.getValuesFor('observedN'),smod.dataset.getValuesFor('expectedBG'),\
             smod.dataset.getValuesFor('upperLimit')[0]*lum,smod.dataset.getValuesFor('expectedUpperLimit')[0]*lum            
             print smod.value[0].value*lum
-            smodTxnames = []
+            smodTxnames = {}
             for el in smod.cluster.elements:
                 for txname in smod.txnames:
                     if txname.hasElementAs(el):
-                        smodTxnames.append([txname.txName,el.weight[0].value*lum,el.eff])
+                        if not txname.txName in smodTxnames:
+                            smodTxnames[txname.txName] = [el.weight[0].value*lum,[el.eff]]
+                        else:
+                            smodTxnames[txname.txName][0] += el.weight[0].value*lum
+                            smodTxnames[txname.txName][1].append(el.eff)
                         break
             smodTxnames = sorted(smodTxnames, key=lambda tx: tx[1], reverse=True)
             print smodTxnames            
@@ -164,6 +164,7 @@ if __name__ == '__main__':
         
         print '\nSMODELS/FASTLIM'
         print smod.expResult.getValuesFor('id'),'/',fast.expResult.getValuesFor('id')
+        print lum
         print smod.dataset.getValuesFor('dataId'),'/',fast.dataset.getValuesFor('dataId'),\
         '(',SRs[fast.expResult.getValuesFor('id')[0]][fast.dataset.getValuesFor('dataId')[0]],')'
         print smod.dataset.getValuesFor('observedN'),smod.dataset.getValuesFor('expectedBG'),\
@@ -171,23 +172,26 @@ if __name__ == '__main__':
         '/',fast.dataset.getValuesFor('observedN'),fast.dataset.getValuesFor('expectedBG'),\
         fast.dataset.getValuesFor('upperLimit')[0]*lum,fast.dataset.getValuesFor('expectedUpperLimit')[0]*lum
         print smod.value[0].value*lum,'/',fast.value[0].value*lum
-        smodTxnames = []
+        smodTxnames = {}
         for el in smod.cluster.elements:
             for txname in smod.txnames:
                 if txname.hasElementAs(el):
-                    smodTxnames.append([txname.txName,el.weight[0].value*lum,el.eff])
+                    if not txname.txName in smodTxnames:
+                        smodTxnames[txname.txName] = [el.weight[0].value*lum,[el.eff]]
+                    else:
+                        smodTxnames[txname.txName][0] += el.weight[0].value*lum
+                        smodTxnames[txname.txName][1].append(el.eff)
                     break
-        fastTxnames = []        
+        fastTxnames = {}       
         for iel,el in enumerate(fast.cluster.elements):
-            fastTxnames.append([fast.txnames[iel].txName,el.weight[0].value*lum])
-        smodTxnames = sorted(smodTxnames, key=lambda tx: tx[1], reverse=True)
-        fastTxnames = sorted(fastTxnames, key=lambda tx: tx[1], reverse=True)
+            fastTxnames[fast.txnames[iel].txName] = [el.weight[0].value*lum]
+#         smodTxnames = sorted(smodTxnames)
+#         fastTxnames = sorted(fastTxnames)
         print smodTxnames,'/'
         print fastTxnames
 #         print [el.weight[0].value for el in smod.cluster.elements],'/'
 #         print [el.weight[0].value for el in fast.cluster.elements]
         
-        print '\n',[el.eff for el in smod.cluster.elements]
         
     missPredsSmod = []
     for fast in fastPreds:

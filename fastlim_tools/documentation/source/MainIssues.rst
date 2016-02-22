@@ -44,4 +44,35 @@ However, as a result, some points will have smaller efficiencies in SModelS than
 
 Furthermore, Fastlim uses a linear interpolation for the logarithm of the efficiencies, where SModelS
 interpolates directly on the efficiency values. In most cases the differences between the two
-methods are negligible, except in regions of parameter space where there is a sharp drop on the efficiencies.   
+methods are negligible, except in regions of parameter space where there is a sharp drop on the efficiencies. 
+
+
+
+Cross-Sections
+~~~~~~~~~~~~~~
+
+Fastlim uses its own tables of cross-sections based on arxiv:1206.2892.
+On the other hand SModelS uses Pythia6 and NLLfast to compute cross-sections.
+Usuallly the cross-section values are very similar with only a few percent difference.
+For the case of gluino pair production, however, the transition to the decoupled squark regime
+in Fastlim sometimes occurs for too low squark masses, when they have not really decoupled yet.
+As an specific example, consider the point :math:`(m_{\tilde{g}},m_{\tilde{q}}) = (1285 \mbox{GeV},2.5 \mbox{TeV})`.
+The quoted 8 TeV cross-section for this point given by Fastlim is:
+
+.. math::
+   \sigma_{\tilde{g} \tilde{g}}^{NLO+NLL} = 2.17 fb
+   
+While NLLfast gives:
+
+.. math::
+   \sigma_{\tilde{g} \tilde{g}}^{NLO+NLL} = 1.60 fb      
+
+If we ask NLLfast to compute this cross-section in the decoupled regime we obtain:
+
+.. math::
+   \sigma_{\tilde{g} \tilde{g}}^{NLO+NLL} = 2.18 fb \; \mbox{ (decoupled squarks)}
+
+Hence we can clearly see that the Fastlim cross-section assumes decoupled squarks when 
+they have not fully decoupled yet.
+In this case results obtained from Fastlim can significantly differ from SModelS.
+

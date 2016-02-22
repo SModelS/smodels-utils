@@ -19,7 +19,7 @@ from mycls import *
 #from PoissonModelWithBackg import *
 from extract_chain import *
 
-def read_2D_xsec(filename, m1, m2):            
+def read_2D_xsec(filename, m1, m2):  
     if not os.path.isfile(filename):
         print ""
         print '!! File "' + str(filename) + '" not found !!'
@@ -49,7 +49,7 @@ def read_2D_xsec(filename, m1, m2):
         print warn
     return xsec
 
-def read_1D_xsec(filename, m1):            
+def read_1D_xsec(filename, m1):  
     if not os.path.isfile(filename):
         print ""
         print '!! File "' + str(filename) + '" not found !!'

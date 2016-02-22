@@ -93,10 +93,7 @@ def runFastlim(slhafile,outfile,fastlimdir='../fastlim-1.0/',expResID=None,txnam
         logger.error("Please provide absolute paths for files")
         return False
     
-    infile = tempfile.mkstemp()     #Use temp file to store fastlim-ready SLHA file
-    os.close(infile[0])
-    infile = infile[1]
-    prepareSLHA(slhafile,infile)
+    infile = slhafile
     try:        
         proc = subprocess.Popen([os.path.join(fastlimdir,'fastlimMod.py'),infile,outfile],
                                 cwd = fastlimdir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -108,8 +105,7 @@ def runFastlim(slhafile,outfile,fastlimdir='../fastlim-1.0/',expResID=None,txnam
     #Convert results to SModelS format (TheoryPredictionList)      
     predictions = fastlimParser(outfile,useBestDataset=False,
                                 expResID=expResID,txname=txname)
-    os.remove(infile)      
-
+    
     #Format output to a python dictionary
     output = formatOutput(slhafile,predictions,'sms',extraInfo={'tool': 'fastlim'})         
     outfile = open(outfile,'w')
@@ -152,8 +148,7 @@ def runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None,np=1,tout=200):
         results.append([outputfile,
                         pool.apply_async(runFastlim,args=(slhafile,outputfile,fastlimdir,
                                                           expResID,txname))])
-        
-        
+                
     pool.close()
     #Check results
     data = {}
@@ -170,36 +165,3 @@ def runFastlimFor(slhadir,fastlimdir,expResID=None,txname=None,np=1,tout=200):
             
 
     return data
-
-
-def prepareSLHA(slhafile,newfile):
-    """
-    Prepares a SLHA file to be read by fastlim.
-    Removes the XSECTION blocks and adds missing decay blocks
-    
-    :param slhafile: path to the original SLHA file
-    :param newfile: path to the new SLHA file
-    :return: path to new file
-    """
-    
-    
-    #Remove XSECTION block from slhafile
-    slha = open(slhafile,'r')
-    slhadata = slha.read()
-    slha.close()
-    if 'XSECTION' in slhadata:
-        slhadata = slhadata[:slhadata.find('XSECTION')]
-    slha = open(newfile,'w')
-    slha.write(slhadata)
-    slha.close()  
-     
-    pyslhaData = pyslha.readSLHAFile(slhafile)
-    slha = open(newfile,'a')
-    for pid in pyslhaData.blocks['MASS'].keys():
-        if not pid in pyslhaData.decays:
-            slha.write("#         PDG            Width\n")
-            slha.write("DECAY   "+str(pid)+"     0.00000000E+00\n")
-    slha.close()
-        
-    return True
-    
