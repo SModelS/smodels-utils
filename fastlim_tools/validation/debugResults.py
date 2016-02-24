@@ -14,7 +14,7 @@ sys.path.append('../runTools')
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 sys.path.append(os.path.join(home,'smodels-database'))
-from fastlimOutput import fastlimParser
+from fastlimParser import fastlimParser
 from auxiliaryObjs import compareFiles,getSlhaFiles, formatOutput
 from smodels.tools.physicsUnits import GeV, fb, TeV
 from gridFastlim import runFastlim
@@ -22,7 +22,6 @@ from gridSmodels import runSmodelS
 from smodels.theory import slhaDecomposer, crossSection, theoryPrediction
 from smodels.tools import databaseBrowser
 from signalregions import SRs
-from datetime import datetime
 
 
 fastlimdir = os.path.join(os.getcwd(),'../fastlim-1.0/')
@@ -59,7 +58,7 @@ def debugSmodelS(slhafile,expResID,datasetId):
                     break
 
     smstoplist = slhaDecomposer.decompose(slhafile, sigmacut,\
-                    doCompress=True,doInvisible=True, minmassgap=mingap)
+                    doCompress=True,doInvisible=False, minmassgap=mingap)
     
 #     for top in smstoplist:
 #         if top.vertnumb == [3,3] and top.vertparts == [[1,1,0],[1,1,0]]:
@@ -68,6 +67,7 @@ def debugSmodelS(slhafile,expResID,datasetId):
 #     totdecomp = 0.*fb
 #     for el in smstoplist.getElements():
 #         if not el.motherElements: totdecomp += el.weight[0].value
+#     print totdecomp
 #     
 #     total = 0.*fb
 #     xSectionList = crossSection.getXsecFromSLHAFile(slhafile)
@@ -79,13 +79,10 @@ def debugSmodelS(slhafile,expResID,datasetId):
 
     predictions = theoryPrediction.TheoryPredictionList()     
     for expRes in database.expResultList:
-        preds =  theoryPrediction.theoryPredictionsFor(expRes, smstoplist,useBestDataset=False)        
+        preds =  theoryPrediction.theoryPredictionsFor(expRes, smstoplist,useBestDataset=False)       
         if preds:    
             predictions += preds
 
-    print 'starting format output',str(datetime.now())
-    output = formatOutput(slhafile,predictions)
-    print 'done format output',str(datetime.now())
     return predictions
 
 
@@ -120,12 +117,11 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,datasetID=None,txname=None):
               
 
 if __name__ == '__main__':
-#     expID =  'ATLAS-CONF-2013-024'
-#     datasetId = 'data-cut0'
-    expID = None
-    datasetId = None
-    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/ZuemzNlYC35Qfg.slha'
-    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/bla/zZ7Ljle3Yih14a.slha'    
+    expID =  'ATLAS-CONF-2013-061'
+    datasetId = 'data-cut0'
+#     expID = None
+#     datasetId = None
+    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/ZYG81xxPDbI14i.slha'
     
     fastPreds = debugFastlim(slhafile, fastlimdir, expID, datasetId)
     fastPreds = sorted(fastPreds, key=lambda thpred: thpred.expResult.getValuesFor('id')[0])
@@ -187,13 +183,12 @@ if __name__ == '__main__':
                     break
         fastTxnames = {}       
         for iel,el in enumerate(fast.cluster.elements):
-            fastTxnames[fast.txnames[iel].txName] = [el.weight[0].value*lum]
-#         smodTxnames = sorted(smodTxnames)
-#         fastTxnames = sorted(fastTxnames)
+            if not fast.txnames[iel].txName in fastTxnames:
+                fastTxnames[fast.txnames[iel].txName] = [el.weight[0].value*lum]
+            else:
+                fastTxnames[fast.txnames[iel].txName][0] += el.weight[0].value*lum
         print smodTxnames,'/'
         print fastTxnames
-#         print [el.weight[0].value for el in smod.cluster.elements],'/'
-#         print [el.weight[0].value for el in fast.cluster.elements]
         
         
     missPredsSmod = []

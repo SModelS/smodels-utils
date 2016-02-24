@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 from smodels.tools.physicsUnits import fb, GeV, TeV
-from fastlimOutput import fastlimParser
+from fastlimParser import fastlimParser
 import subprocess
 import multiprocessing
 from auxiliaryObjs import Timeout, getSlhaFiles, FastlimError, formatOutput, NoTime

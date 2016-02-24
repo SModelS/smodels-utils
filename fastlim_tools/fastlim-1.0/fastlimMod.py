@@ -287,7 +287,7 @@ if __name__ == "__main__":
     fout.close()
 
     # Creating the output file
-    show_processes(Prod_8, proc_list, 8, outputfile, upto = 0.005)
+    show_processes(Prod_8, proc_list, 8, outputfile, upto = 0.0001)
     show_analysis(ana_dict, results, outputfile)
 
     ####################################################################

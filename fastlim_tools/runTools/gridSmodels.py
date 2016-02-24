@@ -74,7 +74,7 @@ def runSmodelS(slhafile,outfile,database,expResID=None,txname=None,
         
         try:
             smstoplist = slhaDecomposer.decompose(slhafile, sigmacut,\
-                            doCompress=True,doInvisible=True, minmassgap=mingap)
+                            doCompress=True,doInvisible=False, minmassgap=mingap)
             predictions = theoryPrediction.TheoryPredictionList()
             for expRes in database.expResultList:
                 preds =  theoryPrediction.theoryPredictionsFor(expRes, smstoplist, 

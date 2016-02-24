@@ -115,7 +115,7 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
                 if sth['AnalysisName'] == fast['AnalysisName'] and  sth['DataSet'] == fast['DataSet']:
                     smod = smodPreds[j]
                     break
-            if not smod and fast['tval'] > sigmacut:
+            if not smod and fast['tval'] > 2.*sigmacut:
                 missPredsSmod.append(fast['AnalysisName']+'/'+fast['DataSet'])
                 continue      
     
@@ -141,7 +141,10 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
                 print '\nMissing Results in SModelS:',diffsDict[fname]['Missing Results in SModelS']
     
     print '\n\n---------------------------------------\nMaximum percentual difference for numerical values =',maxdiff
-    print 'Error in %i files' %nErrorFiles
+    print 'Error in %i files:' %nErrorFiles
+    for fname in diffsDict:
+        if not diffsDict[fname]: continue
+        print fname
     return diffsDict
 
 if __name__ == "__main__":
