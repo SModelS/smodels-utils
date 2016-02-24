@@ -61,6 +61,9 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
         smodf = open(os.path.join(smodelsDir,fname),'r')
         smodPreds = eval(smodf.read().replace(' [fb]','*fb').replace('[GeV]','*GeV'))
         sigmacut = smodPreds['extra']['sigmacut']
+        if not sigmacut:
+            logger.error("Value for sigma cut not found. Check if the folder ordering is correct")
+            sys.exit()
         smodPreds = smodPreds['ExptRes']
         smodf.close()
         smodPreds = sorted(smodPreds, key=lambda thpred: (thpred['AnalysisName'],thpred['DataSet']))
@@ -156,7 +159,7 @@ if __name__ == "__main__":
     #Allowed difference for numerical values (0.01 = 1%)
     allowedDiff = args.diff
     debug = args.debug
-    ignoreFields = ['Weights','DaughterMass','MotherMass']
+    ignoreFields = ['Weights','DaughterMass','MotherMass', 'AnalysisTopo']
     if args.ignore:
         ignoreFields = args.ignore
     

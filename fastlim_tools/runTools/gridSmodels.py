@@ -26,14 +26,14 @@ from auxiliaryObjs import Timeout, SModelSError, getSlhaFiles, formatOutput, pre
 logger.setLevel(level=logging.DEBUG)
 
 
-def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=None,
+def runSmodelS(slhafile,outfile,database,expResID=None,txname=None,
                doXsecs=True,tout=None):
     """
     Runs smodels for the SLHA file and generate the corresponding .sms file.
     
     :param slhafile: Path to the SLHA file
     :param outfile: Path to the outputfile
-    :param database: Path to the database folder
+    :param database: Database object
     :param txname: Used to only use efficiencies for a specific Txname 
                    (i.e. T2tt,T5bbbb,...). If None will return the total prediction.
     :param expResID: Used to select results for a experimental result (i.e. ATLAS-CONF-xxx)
@@ -45,12 +45,8 @@ def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=
     :return: True/False if the run was/was not successful 
     """
     
-
-    #Several checks to make sure Fastlim will run with the correct input
-    if not os.path.isdir(databasePath):
-        logger.error('Database folder %s not found' %databasePath)
-        return False
     
+    #Several checks to make sure SModelS will run with the correct input    
     if not os.path.isfile(slhafile):
         logger.error("File: %s not found" %slhafile)
         return False
@@ -70,12 +66,7 @@ def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=
     
         sigmacut = 0.01 * fb
         mingap = 10. * GeV
-        
-        #Load the browser:
-        browser = databaseBrowser.Browser(databasePath)
-        browser.selectExpResultsWith(contact = ['fastlim'])
-        database = browser.database
-        database.expResultList = browser._selectedExpResults    
+            
         if expResID:
             database.expResultList = database.getExpResults(analysisIDs=[expResID])
         if txname:
@@ -97,7 +88,7 @@ def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=
      
         #Format output to a python dictionary
         extraInfo={'tool': 'smodels','sigmacut' : sigmacut.asNumber(fb), 'mingap' : mingap.asNumber(GeV)}
-        output = formatOutput(slhafile,predictions,'sms',extraInfo)         
+        output = formatOutput(slhafile,predictions,extraInfo)        
         outfile = open(outfile,'w')
         outfile.write(str(output))
         outfile.close()
@@ -120,10 +111,19 @@ def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=None)
     :param tout: Timeout for each process                
 
     :return: List of sms files generated
-    """
-
+    """    
     
-    #Create temp file    
+    #Load a single database for all processes:    
+    if os.path.isdir(databasePath):
+        browser = databaseBrowser.Browser(databasePath)
+        browser.selectExpResultsWith(contact = ['fastlim'])
+        database = browser.database
+        database.expResultList = browser._selectedExpResults            
+    else:
+        logger.error('Database folder %s not found' %databasePath)
+        return False
+
+    #Get SLHA files
     slhaFiles,slhaD = getSlhaFiles(slhadir)
     
     #Set up multiprocessing:
@@ -143,9 +143,8 @@ def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=None)
             doXsecs = True
         #Run Fastlim (submit threads):
         results.append([outputfile,
-                        pool.apply_async(runSmodelS,args=(slhafile,outputfile,databasePath,
+                        pool.apply_async(runSmodelS,args=(slhafile,outputfile,database,
                                                           expResID,txname,doXsecs,tout))])
-        
         
     #Close pool:                    
     pool.close()

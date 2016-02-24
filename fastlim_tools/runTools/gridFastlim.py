@@ -75,7 +75,7 @@ def runFastlim(slhafile,outfile,fastlimdir='../fastlim-1.0/',expResID=None,txnam
                                     expResID=expResID,txname=txname)
         
         #Format output to a python dictionary
-        output = formatOutput(slhafile,predictions,'sms',extraInfo={'tool': 'fastlim'})         
+        output = formatOutput(slhafile,predictions,extraInfo={'tool': 'fastlim'})         
         outfile = open(outfile,'w')
         outfile.write(str(output))
         outfile.close()

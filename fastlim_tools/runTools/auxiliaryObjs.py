@@ -89,7 +89,7 @@ def getSlhaFiles(slhadir):
     return slhaFiles,slhaD
 
 
-def formatOutput(slhafile,predictions,outType='sms',extraInfo={},minval=0.00005):
+def formatOutput(slhafile,predictions,extraInfo={},minval=0.00005):
     """
     Format the list of theory predictions and the SLHA file input to a specific output
     format.
@@ -99,112 +99,87 @@ def formatOutput(slhafile,predictions,outType='sms',extraInfo={},minval=0.00005)
     
     :param slhafile: Name of the corresponding SLHA file
     :param prediction: TheoryPredictionList object (output of fastlimParser)
-    :param outType: Type of output (see above)
-    :param extraInfo: Additional information to be stored in the file
+        :param extraInfo: Additional information to be stored in the file
     :param minval: Option to remove predictions with very low theory predictions
                    (useful since fastlim already rounds its output to 4 digits)    
-    :return: If outType='sms', name of sms file. If outType='valplot', python dictionary
+    :return: Name of sms file.
     """
     
-    if outType == 'sms':
-        ExptRes = []
-        for theoryPrediction in predictions:
-            expRes = theoryPrediction.expResult
-            expID = expRes.getValuesFor('id')[0]
-            dataset = theoryPrediction.dataset
-            datasetID = dataset.dataInfo.dataId
-            value = theoryPrediction.value[0].value                     
-            upperLimit = expRes.getUpperLimitFor(dataID=datasetID)
-            txnames = [txname.txName for txname in theoryPrediction.txnames]
-            weights = [el.weight[0].value.asNumber(fb) for el in theoryPrediction.cluster.elements]
-            maxconds = theoryPrediction.getmaxCondition()
-            mass = theoryPrediction.mass
-            
-            #Cut very low values (since fastlim only prints 4 digits):
-            if expRes.getValuesFor('lumi')[0]*value < minval: continue
-                        
-            #Fix for the case of eff maps:
-            if not mass: mass = [[0.*GeV,0.*GeV],[0.*GeV,0.*GeV]]
-            sqrts = dataset.getValuesFor('sqrts')[0].asNumber(TeV)
-            observedN = dataset.getValuesFor('observedN')[0]
-            expectedBG = dataset.getValuesFor('expectedBG')[0]
-            ExptRes.append({'maxcond': maxconds, 'tval': value.asNumber(fb),
-                        'exptlimit': upperLimit.asNumber(fb), 
-                        'AnalysisTopo': txnames,
-                        'Weights' : weights,
-                        'DaughterMass': mass[0][-1].asNumber(GeV), 
-                        'AnalysisName': expID,
-                        'DataSet' : datasetID, 
-                        'AnalysisSqrts': sqrts,                        
-                        'MotherMass': mass[0][0].asNumber(GeV),
-                        'observedN' : observedN,
-                        'expectedBG' : expectedBG})
-            
-
-        
-        #Additional data:
-        res = pyslha.readSLHAFile(slhafile)
-        MINPAR = dict(res.blocks['MINPAR'].entries)
-        EXTPAR = dict(res.blocks['EXTPAR'].entries)
-        mass = OrderedDict(res.blocks['MASS'].entries.items())
-        extra = {'sigmacut' : 0.}
-        if extraInfo:
-            extra.update(extraInfo)
-        
-        chimix = {}
-        for key in res.blocks['NMIX'].entries:
-            val = res.blocks['NMIX'].entries[key]
-            if key[0] != 1: continue
-            newkey = 'N'+str(key[0])+str(key[1])
-            chimix[newkey] = val
-        chamix = {}
-        for key in res.blocks['UMIX'].entries:
-            val = res.blocks['UMIX'].entries[key]
-            newkey = 'U'+str(key[0])+str(key[1])
-            chamix[newkey] = val  
-        for key in res.blocks['VMIX'].entries:
-            val = res.blocks['VMIX'].entries[key]
-            newkey = 'V'+str(key[0])+str(key[1])
-            chamix[newkey] = val  
-        stopmix = {}
-        for key in res.blocks['STOPMIX'].entries:
-            val = res.blocks['STOPMIX'].entries[key]
-            newkey = 'ST'+str(key[0])+str(key[1])
-            stopmix[newkey] = val  
-        sbotmix = {}  
-        for key in res.blocks['SBOTMIX'].entries:
-            val = res.blocks['SBOTMIX'].entries[key]
-            newkey = 'SB'+str(key[0])+str(key[1])
-            sbotmix[newkey] = val  
-    
-        #Order ExptRes according to tval:
-        ExptRes = sorted(ExptRes, key=lambda k: k['tval'], reverse=True) 
-        
-        output =  {'ExptRes' : ExptRes, 'MINPAR' : MINPAR, 'extra' : extra, 'chimix' : chimix,
-            'stopmix' : stopmix, 'chamix' : chamix, 'MM' : {}, 'sbotmix' : sbotmix,
-             'EXTPAR' : EXTPAR, 'mass' : mass}
-        
-    elif outType == 'valplot':
-        if len(predictions) == 0:
-            return {'slhafile' : slhafile, 'signal' : None,
-                'UL' : None, 'condition': None,'dataset': None, 'expID': None, 'txnames' : None}
-        if len(predictions) > 1:
-            logger.error("List of predictions > 1. Can not use valplot format.")
-            return False
-        
-        theoryPrediction = predictions[0]
-        expRes = theoryPrediction.expResult
-        expID = expRes.getValuesFor('id')[0]
+    ExptRes = []
+    for theoryPrediction in predictions:
+        expRes = theoryPrediction.expResult        
+        expID = expRes.globalInfo.id
         dataset = theoryPrediction.dataset
         datasetID = dataset.dataInfo.dataId
-        value = theoryPrediction.value[0].value.asNumber(fb)
-        upperLimit = expRes.getUpperLimitFor(dataID=datasetID)
-        cond = theoryPrediction.conditions
-        txnames = theoryPrediction.txnames
-        output = {'slhafile' : slhafile, 'signal' : value,
-                'UL' : upperLimit, 'condition': cond,
-                 'dataset': datasetID, 'expID': expID, 'txnames' : txnames}
+        value = theoryPrediction.value[0].value                     
+        upperLimit = dataset.dataInfo.upperLimit
+        txnames = [txname.txName for txname in theoryPrediction.txnames]
+        weights = [el.weight[0].value.asNumber(fb) for el in theoryPrediction.cluster.elements]
+        maxconds = theoryPrediction.getmaxCondition()
+        mass = theoryPrediction.mass
+        #Cut very low values (since fastlim only prints 4 digits):
+        if expRes.globalInfo.lumi*value < minval: continue
+                    
+        #Fix for the case of eff maps:
+        if not mass: mass = [[0.*GeV,0.*GeV],[0.*GeV,0.*GeV]]
+        sqrts = dataset.globalInfo.sqrts.asNumber(TeV)
+        observedN = dataset.dataInfo.observedN
+        expectedBG = dataset.dataInfo.expectedBG
+        ExptRes.append({'maxcond': maxconds, 'tval': value.asNumber(fb),
+                    'exptlimit': upperLimit.asNumber(fb), 
+                    'AnalysisTopo': txnames,
+                    'Weights' : weights,
+                    'DaughterMass': mass[0][-1].asNumber(GeV), 
+                    'AnalysisName': expID,
+                    'DataSet' : datasetID, 
+                    'AnalysisSqrts': sqrts,                        
+                    'MotherMass': mass[0][0].asNumber(GeV),
+                    'observedN' : observedN,
+                    'expectedBG' : expectedBG})
+        
+
+    #Additional data:    
+    res = pyslha.readSLHAFile(slhafile)
+    MINPAR = dict(res.blocks['MINPAR'].entries)
+    EXTPAR = dict(res.blocks['EXTPAR'].entries)
+    mass = OrderedDict(res.blocks['MASS'].entries.items())
+    extra = {'sigmacut' : 0.}
+    if extraInfo:
+        extra.update(extraInfo)
     
+    chimix = {}
+    for key in res.blocks['NMIX'].entries:
+        val = res.blocks['NMIX'].entries[key]
+        if key[0] != 1: continue
+        newkey = 'N'+str(key[0])+str(key[1])
+        chimix[newkey] = val
+    chamix = {}
+    for key in res.blocks['UMIX'].entries:
+        val = res.blocks['UMIX'].entries[key]
+        newkey = 'U'+str(key[0])+str(key[1])
+        chamix[newkey] = val  
+    for key in res.blocks['VMIX'].entries:
+        val = res.blocks['VMIX'].entries[key]
+        newkey = 'V'+str(key[0])+str(key[1])
+        chamix[newkey] = val  
+    stopmix = {}
+    for key in res.blocks['STOPMIX'].entries:
+        val = res.blocks['STOPMIX'].entries[key]
+        newkey = 'ST'+str(key[0])+str(key[1])
+        stopmix[newkey] = val  
+    sbotmix = {}  
+    for key in res.blocks['SBOTMIX'].entries:
+        val = res.blocks['SBOTMIX'].entries[key]
+        newkey = 'SB'+str(key[0])+str(key[1])
+        sbotmix[newkey] = val  
+
+    #Order ExptRes according to tval:
+    ExptRes = sorted(ExptRes, key=lambda k: k['tval'], reverse=True) 
+    
+    output =  {'ExptRes' : ExptRes, 'MINPAR' : MINPAR, 'extra' : extra, 'chimix' : chimix,
+        'stopmix' : stopmix, 'chamix' : chamix, 'MM' : {}, 'sbotmix' : sbotmix,
+         'EXTPAR' : EXTPAR, 'mass' : mass}
+        
 
     return output            
 

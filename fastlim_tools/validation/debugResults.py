@@ -9,7 +9,7 @@
 """
 
 
-import sys,os,tempfile,subprocess,shutil
+import sys,os,subprocess,shutil
 sys.path.append('../runTools')
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
@@ -22,6 +22,7 @@ from gridSmodels import runSmodelS
 from smodels.theory import slhaDecomposer, crossSection, theoryPrediction
 from smodels.tools import databaseBrowser
 from signalregions import SRs
+from datetime import datetime
 
 
 fastlimdir = os.path.join(os.getcwd(),'../fastlim-1.0/')
@@ -60,7 +61,6 @@ def debugSmodelS(slhafile,expResID,datasetId):
     smstoplist = slhaDecomposer.decompose(slhafile, sigmacut,\
                     doCompress=True,doInvisible=True, minmassgap=mingap)
     
-    
 #     for top in smstoplist:
 #         if top.vertnumb == [3,3] and top.vertparts == [[1,1,0],[1,1,0]]:
 #             for el in top.elementList: print el,el.getMasses(),el.weight
@@ -76,12 +76,16 @@ def debugSmodelS(slhafile,expResID,datasetId):
 #         total += xsec.value
 #     print 'total =',total,'totaldecomp = ',totdecomp,'coverage = ',totdecomp/total,'diff = ',total-totdecomp
 
-    predictions = theoryPrediction.TheoryPredictionList()    
+
+    predictions = theoryPrediction.TheoryPredictionList()     
     for expRes in database.expResultList:
         preds =  theoryPrediction.theoryPredictionsFor(expRes, smstoplist,useBestDataset=False)        
         if preds:    
             predictions += preds
 
+    print 'starting format output',str(datetime.now())
+    output = formatOutput(slhafile,predictions)
+    print 'done format output',str(datetime.now())
     return predictions
 
 
@@ -116,11 +120,12 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,datasetID=None,txname=None):
               
 
 if __name__ == '__main__':
-    expID =  'ATLAS-CONF-2013-024'
-    datasetId = 'data-cut0'
-#     expID = None
-#     datasetId = None    
+#     expID =  'ATLAS-CONF-2013-024'
+#     datasetId = 'data-cut0'
+    expID = None
+    datasetId = None
     slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/ZuemzNlYC35Qfg.slha'
+    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/bla/zZ7Ljle3Yih14a.slha'    
     
     fastPreds = debugFastlim(slhafile, fastlimdir, expID, datasetId)
     fastPreds = sorted(fastPreds, key=lambda thpred: thpred.expResult.getValuesFor('id')[0])
