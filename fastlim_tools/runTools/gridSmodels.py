@@ -8,7 +8,7 @@
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
 """
-import os,sys,logging,shutil
+import os,sys,logging
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
@@ -18,17 +18,16 @@ databaseDir = os.path.join(home,'smodels-database')
 sys.path.append(os.path.join(home,'smodels'))
 from smodels.tools.physicsUnits import fb, GeV, TeV
 from smodels.theory import slhaDecomposer, theoryPrediction
-from fastlimOutput import formatOutput
 import multiprocessing
 from smodels.tools import databaseBrowser
-from gridFastlim import getSlhaFiles
 import subprocess
+from auxiliaryObjs import Timeout, SModelSError, getSlhaFiles, formatOutput, prepareSLHA, NoTime
 
 logger.setLevel(level=logging.DEBUG)
 
 
 def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=None,
-               doXsecs=True):
+               doXsecs=True,tout=None):
     """
     Runs smodels for the SLHA file and generate the corresponding .sms file.
     
@@ -40,11 +39,13 @@ def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=
     :param expResID: Used to select results for a experimental result (i.e. ATLAS-CONF-xxx)
                    If None will return predictions for all IDs.
     :param doXsecs: If True will erase the original cross-sections and compute new ones
+    :param tout: Timeout for the process
     
     
     :return: True/False if the run was/was not successful 
     """
     
+
     #Several checks to make sure Fastlim will run with the correct input
     if not os.path.isdir(databasePath):
         logger.error('Database folder %s not found' %databasePath)
@@ -57,52 +58,54 @@ def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=
         logger.error("Please provide absolute paths for files")
         return False
     
-    #Recompute xsecs
-    if doXsecs:
-        prepareSLHA(slhafile,slhafile)
-        subprocess.call([os.path.join(home,'smodels','runTools.py'), 
-                                'xseccomputer', '-s 8', '-e 10000', '-p', '-f '+slhafile],)
-        subprocess.call([os.path.join(home,'smodels','runTools.py'), 
-                                'xseccomputer', '-s 8', '-N', '-O', '-e 10000', '-p', '-f '+slhafile],)
-
+    with Timeout(tout):        
+        #Recompute xsecs
+        if doXsecs:
+            prepareSLHA(slhafile,slhafile)
+            subprocess.call([os.path.join(home,'smodels','runTools.py'), 
+                                    'xseccomputer', '-s 8', '-e 10000', '-p', '-f '+slhafile],)
+            subprocess.call([os.path.join(home,'smodels','runTools.py'), 
+                                    'xseccomputer', '-s 8', '-N', '-O', '-e 10000', '-p', '-f '+slhafile],)
     
-    sigmacut = 0.01 * fb
-    mingap = 10. * GeV
     
-    #Load the browser:
-    browser = databaseBrowser.Browser(databasePath)
-    browser.selectExpResultsWith(contact = ['fastlim'])
-    database = browser.database
-    database.expResultList = browser._selectedExpResults    
-    if expResID:
-        database.expResultList = database.getExpResults(analysisIDs=[expResID])
-    if txname:
-        database.expResultList = database.getExpResults(txnames=[txname])
-    
-    try:
-        smstoplist = slhaDecomposer.decompose(slhafile, sigmacut,\
-                        doCompress=True,doInvisible=True, minmassgap=mingap)
-        predictions = theoryPrediction.TheoryPredictionList()
-        for expRes in database.expResultList:
-            preds =  theoryPrediction.theoryPredictionsFor(expRes, smstoplist, 
-                                                           useBestDataset=False)
-            if preds:
-                predictions += preds
-    except:    
-        logger.error('Error running smodels')
-        return False
- 
-    #Format output to a python dictionary
-    extraInfo={'tool': 'smodels','sigmacut' : sigmacut.asNumber(fb), 'mingap' : mingap.asNumber(GeV)}
-    output = formatOutput(slhafile,predictions,'sms',extraInfo)         
-    outfile = open(outfile,'w')
-    outfile.write(str(output))
-    outfile.close()
+        sigmacut = 0.01 * fb
+        mingap = 10. * GeV
+        
+        #Load the browser:
+        browser = databaseBrowser.Browser(databasePath)
+        browser.selectExpResultsWith(contact = ['fastlim'])
+        database = browser.database
+        database.expResultList = browser._selectedExpResults    
+        if expResID:
+            database.expResultList = database.getExpResults(analysisIDs=[expResID])
+        if txname:
+            database.expResultList = database.getExpResults(txnames=[txname])
+        
+        try:
+            smstoplist = slhaDecomposer.decompose(slhafile, sigmacut,\
+                            doCompress=True,doInvisible=True, minmassgap=mingap)
+            predictions = theoryPrediction.TheoryPredictionList()
+            for expRes in database.expResultList:
+                preds =  theoryPrediction.theoryPredictionsFor(expRes, smstoplist, 
+                                                               useBestDataset=False)
+                if preds:
+                    predictions += preds
+        except NoTime:
+            raise                    
+        except:    
+            raise SModelSError(slhafile)
+     
+        #Format output to a python dictionary
+        extraInfo={'tool': 'smodels','sigmacut' : sigmacut.asNumber(fb), 'mingap' : mingap.asNumber(GeV)}
+        output = formatOutput(slhafile,predictions,'sms',extraInfo)         
+        outfile = open(outfile,'w')
+        outfile.write(str(output))
+        outfile.close()
      
     return True
 
 
-def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=1500):
+def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=None):
     """
     Runs fastlim for the SLHA files in slhaFiles. Uses only the best
     dataset for each experimental result.
@@ -141,56 +144,27 @@ def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=1500)
         #Run Fastlim (submit threads):
         results.append([outputfile,
                         pool.apply_async(runSmodelS,args=(slhafile,outputfile,databasePath,
-                                                          expResID,txname,doXsecs))])
+                                                          expResID,txname,doXsecs,tout))])
         
         
+    #Close pool:                    
     pool.close()
-    #Check results
-    data = {}
-    for res in results:        
-        outputfile,run = res
-        try:
-            goodRun = run.get(tout)
-        except Exception as e:
-            goodRun = False
-        if not goodRun:
-            logger.error("SModelS failed for file %s \n   Exception: %s" %(outputfile,str(type(e))))
+    #Wait for results to end:
+    pool.join()
+    #Check if results were successful
+    runstatus = {'successful' : [], 'failed' : []}
+    for res in results:
+        outfile, run = res
+        outfile = outfile[outfile.rfind('/')+1:]
+        if run.successful():
+            runstatus['successful'].append(outfile)
         else:
-            data[outputfile[outputfile.rfind('/')+1:]] = goodRun
-            
+            try: run.get()
+            except Exception as e:
+                runstatus['failed'].append([outfile,str(e)])
 
-    return data
+    #Return the status of each run:
+    return runstatus
 
 
 
-def prepareSLHA(slhafile,newfile):
-    """
-    Prepares a SLHA file to be read by fastlim.
-    Removes the XSECTION blocks and adds missing decay blocks
-    
-    :param slhafile: path to the original SLHA file
-    :param newfile: path to the new SLHA file
-    :return: path to new file
-    """
-    
-    
-    #Remove XSECTION block from slhafile
-    slha = open(slhafile,'r')
-    slhadata = slha.read()
-    slha.close()
-    if 'XSECTION' in slhadata:
-        slhadata = slhadata[:slhadata.find('XSECTION')]
-    slha = open(newfile,'w')
-    slha.write(slhadata)
-    slha.close()  
-     
-    pyslhaData = pyslha.readSLHAFile(slhafile)
-    slha = open(newfile,'a')
-    for pid in pyslhaData.blocks['MASS'].keys():
-        if not pid in pyslhaData.decays:
-            slha.write("#         PDG            Width\n")
-            slha.write("DECAY   "+str(pid)+"     0.00000000E+00\n")
-    slha.close()
-        
-    return True
-    

@@ -13,7 +13,7 @@ from sympy.assumptions.assume import Predicate
 sys.path.append('../runTools')
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
-from fastlimOutput import compareFiles
+from auxiliaryObjs import compareFiles
 from collections import OrderedDict
 from smodels.tools.physicsUnits import GeV, fb, TeV
 import argparse

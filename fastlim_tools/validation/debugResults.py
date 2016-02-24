@@ -14,14 +14,13 @@ sys.path.append('../runTools')
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 sys.path.append(os.path.join(home,'smodels-database'))
-from fastlimOutput import compareFiles, fastlimParser
+from fastlimOutput import fastlimParser
+from auxiliaryObjs import compareFiles,getSlhaFiles, formatOutput
 from smodels.tools.physicsUnits import GeV, fb, TeV
 from gridFastlim import runFastlim
 from gridSmodels import runSmodelS
 from smodels.theory import slhaDecomposer, crossSection, theoryPrediction
-from fastlimOutput import formatOutput
 from smodels.tools import databaseBrowser
-from gridFastlim import getSlhaFiles
 from signalregions import SRs
 
 
@@ -117,11 +116,11 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,datasetID=None,txname=None):
               
 
 if __name__ == '__main__':
-    expID =  'ATLAS-CONF-2013-054'
-    datasetId = 'data-cut15'
+    expID =  'ATLAS-CONF-2013-024'
+    datasetId = 'data-cut0'
 #     expID = None
 #     datasetId = None    
-    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/ZMUrbsDmODv3A8.slha'
+    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/ZuemzNlYC35Qfg.slha'
     
     fastPreds = debugFastlim(slhafile, fastlimdir, expID, datasetId)
     fastPreds = sorted(fastPreds, key=lambda thpred: thpred.expResult.getValuesFor('id')[0])
@@ -158,7 +157,6 @@ if __name__ == '__main__':
                             smodTxnames[txname.txName][0] += el.weight[0].value*lum
                             smodTxnames[txname.txName][1].append(el.eff)
                         break
-            smodTxnames = sorted(smodTxnames, key=lambda tx: tx[1], reverse=True)
             print smodTxnames            
             continue
         
