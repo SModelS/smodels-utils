@@ -76,3 +76,13 @@ Hence we can clearly see that the Fastlim cross-section assumes decoupled squark
 they have not fully decoupled yet.
 In this case results obtained from Fastlim can significantly differ from SModelS.
 
+
+Invisible and Mass Compression
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The invisible compression feature is not included in Fastlim. Hence it must be turned off
+before a proper comparison with SModelS can be made.
+Furthermore, the mass compression implemented in Fastlim only acts on Chargino 1 and Neutralinos 1 and 2
+(the minimum mass gap in Fastlim is 10 GeV).
+Other sparticles are not automatically compressed. Therefore in some cases the SModelS predictions
+may become larger than the ones obtained with Fastlim.
