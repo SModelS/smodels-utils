@@ -39,7 +39,7 @@ def debugSmodelS(slhafile,expResID,datasetId):
     :return: TheoryPredictionList object containing SModelS results    
     """
     
-    sigmacut = 0.01 * fb
+    sigmacut = 0.001 * fb
     mingap = 10. * GeV
     
     #Load the browser:
@@ -117,11 +117,11 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,datasetID=None,txname=None):
               
 
 if __name__ == '__main__':
-    expID =  'ATLAS-CONF-2013-054'
-#     datasetId = 'data-cut0'
+    expID =  'ATLAS-CONF-2013-061'
+    datasetId = 'data-cut2'
 #     expID = None
-    datasetId = None
-    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/ZQF1LS7nEvZHHk.slha'
+#     datasetId = None
+    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/zVQT3ThaN5FpeK.slha'
     
     fastPreds = debugFastlim(slhafile, fastlimdir, expID, datasetId)
     fastPreds = sorted(fastPreds, key=lambda thpred: thpred.expResult.getValuesFor('id')[0])
@@ -133,20 +133,20 @@ if __name__ == '__main__':
     for smod in smodelsPreds:
         fast = None
         for j, fth in enumerate(fastPreds):            
-            if fth.expResult.getValuesFor('id') == smod.expResult.getValuesFor('id'):
+            if fth.expResult.globalInfo.id == smod.expResult.globalInfo.id:
                 if fth.dataset.dataInfo.dataId == smod.dataset.dataInfo.dataId:
                     fast = fastPreds[j]
                     break
-        lum = smod.expResult.getValuesFor('lumi')[0]
+        lum = smod.expResult.globalInfo.lumi
         if not fast:
             missPredsFast.append(smod)
             print '\nSMODELS'
-            print smod.expResult.getValuesFor('id')
+            print smod.expResult.globalInfo.id
             print lum
-            print smod.dataset.getValuesFor('dataId'),\
-            '(',SRs[smod.expResult.getValuesFor('id')[0]][smod.dataset.getValuesFor('dataId')[0]],')'
-            print smod.dataset.getValuesFor('observedN'),smod.dataset.getValuesFor('expectedBG'),\
-            smod.dataset.getValuesFor('upperLimit')[0]*lum,smod.dataset.getValuesFor('expectedUpperLimit')[0]*lum            
+            print smod.dataset.dataInfo.dataId,\
+            '(',SRs[smod.expResult.globalInfo.id][smod.dataset.dataInfo.dataId],')'
+            print smod.dataset.dataInfo.observedN,smod.dataset.dataInfo.expectedBG,\
+            smod.dataset.dataInfo.upperLimit*lum,smod.dataset.dataInfo.expectedUpperLimit*lum            
             print smod.value[0].value*lum
             smodTxnames = {}
             for el in smod.cluster.elements:
@@ -162,14 +162,14 @@ if __name__ == '__main__':
             continue
         
         print '\nSMODELS/FASTLIM'
-        print smod.expResult.getValuesFor('id'),'/',fast.expResult.getValuesFor('id')
+        print smod.expResult.globalInfo.id,'/',fast.expResult.globalInfo.id
         print lum
-        print smod.dataset.getValuesFor('dataId'),'/',fast.dataset.getValuesFor('dataId'),\
-        '(',SRs[fast.expResult.getValuesFor('id')[0]][fast.dataset.getValuesFor('dataId')[0]],')'
-        print smod.dataset.getValuesFor('observedN'),smod.dataset.getValuesFor('expectedBG'),\
-        smod.dataset.getValuesFor('upperLimit')[0]*lum,smod.dataset.getValuesFor('expectedUpperLimit')[0]*lum,\
-        '/',fast.dataset.getValuesFor('observedN'),fast.dataset.getValuesFor('expectedBG'),\
-        fast.dataset.getValuesFor('upperLimit')[0]*lum,fast.dataset.getValuesFor('expectedUpperLimit')[0]*lum
+        print smod.dataset.dataInfo.dataId,'/',fast.dataset.dataInfo.dataId,\
+        '(',SRs[fast.expResult.globalInfo.id][fast.dataset.dataInfo.dataId],')'
+        print smod.dataset.dataInfo.observedN,smod.dataset.dataInfo.expectedBG,\
+        smod.dataset.dataInfo.upperLimit*lum,smod.dataset.dataInfo.expectedUpperLimit*lum,\
+        '/',fast.dataset.dataInfo.observedN,fast.dataset.dataInfo.expectedBG,\
+        fast.dataset.dataInfo.upperLimit*lum,fast.dataset.dataInfo.expectedUpperLimit*lum
         print smod.value[0].value*lum,'/',fast.value[0].value*lum
         smodTxnames = {}
         for el in smod.cluster.elements:
@@ -195,7 +195,7 @@ if __name__ == '__main__':
     for fast in fastPreds:
         smod = None
         for j, sth in enumerate(smodelsPreds):            
-            if sth.expResult.getValuesFor('id') == fast.expResult.getValuesFor('id'):
+            if sth.expResult.globalInfo.id == fast.expResult.globalInfo.id:
                 if sth.dataset.dataInfo.dataId == fast.dataset.dataInfo.dataId:
                     smod = smodelsPreds[j]
                     break

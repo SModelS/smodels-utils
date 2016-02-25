@@ -64,7 +64,7 @@ def runSmodelS(slhafile,outfile,database,expResID=None,txname=None,
                                     'xseccomputer', '-s 8', '-N', '-O', '-e 10000', '-p', '-f '+slhafile],)
     
     
-        sigmacut = 0.01 * fb
+        sigmacut = 0.001 * fb
         mingap = 10. * GeV
             
         if expResID:

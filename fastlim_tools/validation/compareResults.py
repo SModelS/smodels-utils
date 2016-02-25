@@ -87,7 +87,7 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
                 if key in ignoreFields: continue
                 if smod[key] == fast[key]: continue
                 if key == 'tval':
-                    if abs(smod[key] - fast[key]) < 2.*sigmacut: continue
+                    if abs(smod[key] - fast[key]) < 2.*sigmacut/100.: continue
                     vdiff = 2.*abs(smod[key]-fast[key])/abs(smod[key]+fast[key])
                     maxdiff = max(maxdiff,vdiff)
                     if vdiff > allowedDiff: diff = True
