@@ -87,7 +87,7 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
                 if key in ignoreFields: continue
                 if smod[key] == fast[key]: continue
                 if key == 'tval':
-                    if abs(smod[key] - fast[key]) < 2.*sigmacut/100.: continue
+                    if abs(smod[key] - fast[key]) < sigmacut/10.: continue
                     vdiff = 2.*abs(smod[key]-fast[key])/abs(smod[key]+fast[key])
                     maxdiff = max(maxdiff,vdiff)
                     if vdiff > allowedDiff: diff = True
@@ -115,7 +115,7 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
                 if sth['AnalysisName'] == fast['AnalysisName'] and  sth['DataSet'] == fast['DataSet']:
                     smod = smodPreds[j]
                     break
-            if not smod and fast['tval'] > 2.*sigmacut:
+            if not smod and fast['tval'] > sigmacut/10.:
                 missPredsSmod.append(fast['AnalysisName']+'/'+fast['DataSet'])
                 continue      
     

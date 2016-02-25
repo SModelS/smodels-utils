@@ -117,11 +117,11 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,datasetID=None,txname=None):
               
 
 if __name__ == '__main__':
-    expID =  'ATLAS-CONF-2013-061'
-    datasetId = 'data-cut2'
+    expID =  'ATLAS-CONF-2013-047'
+#     datasetId = 'data-cut2'
 #     expID = None
-#     datasetId = None
-    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/zVQT3ThaN5FpeK.slha'
+    datasetId = None
+    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/zvWM75AuTwiNnk.slha'
     
     fastPreds = debugFastlim(slhafile, fastlimdir, expID, datasetId)
     fastPreds = sorted(fastPreds, key=lambda thpred: thpred.expResult.getValuesFor('id')[0])
