@@ -17,12 +17,10 @@ def configure():
     ret=os.path.realpath ( inspect.getabsfile(configure) )
     ret=ret.replace("/bin/setPath.py","")
     sys.path.append ( ret )
-    r=()
     ret= "../"
     sys.path.append ( ret )
-    r+=(ret,)
     from smodels_utils import SModelSUtils
-    r+= ( SModelSUtils.addInstallDirectory(), )
+    r= ( SModelSUtils.addInstallDirectory(), )
     r+= ( SModelSUtils.addSModelSPath(), )
     for x in r:
         sys.path.append ( x )
