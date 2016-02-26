@@ -21,9 +21,9 @@ exps= [
 
 for expid in exps:
     convertHelpers.createInfoFile ( expid )
-    for cut in range(15):
+    for cut in range(25):
         has_globals=False
-        for ana in range(15):
+        for ana in range(25):
             if convertHelpers.existsAnalysisCut ( expid, ana, cut ):
                 convertHelpers.copyEffiFiles ( expid, ana, cut )
                 convertHelpers.createAndRunConvertFiles ( expid, cut, dry_run=False )
