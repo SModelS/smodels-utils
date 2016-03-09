@@ -135,7 +135,8 @@ def formatOutput(slhafile,predictions,extraInfo={},minval=0.00005):
                     'AnalysisSqrts': sqrts,                        
                     'MotherMass': mass[0][0].asNumber(GeV),
                     'observedN' : observedN,
-                    'expectedBG' : expectedBG})
+                    'expectedBG' : expectedBG,
+                    'lumi' : (expRes.globalInfo.lumi*fb).asNumber()})
         
 
     #Additional data:    

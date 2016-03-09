@@ -88,12 +88,15 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
             
             
             #Now check if the result for the particular exp. result/dataset matches
+            lumi = fast['lumi']
             for key in smod:
                 diff = False
                 if key in ignoreFields: continue
                 if smod[key] == fast[key]: continue
                 if key == 'tval':
-                    if abs(smod[key] - fast[key]) < sigmacut/10.: continue
+                    smod[key] = round(smod[key]*lumi,4)
+                    fast[key] = round(fast[key]*lumi,4)
+                    if abs(smod[key] - fast[key]) < sigmacut*lumi/10.: continue
                     vdiff = 2.*abs(smod[key]-fast[key])/abs(smod[key]+fast[key])
                     maxdiff = max(maxdiff,vdiff)
                     if vdiff > allowedDiff: diff = True
