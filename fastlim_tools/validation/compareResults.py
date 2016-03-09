@@ -43,6 +43,7 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
     maxdiff = 0.
     nErrorFiles = 0
     diffsDict = {}
+    fileschecked = 0
     for fastfile in fastFiles:
         fname = fastfile[fastfile.rfind('/')+1:]
         diffsDict[fname] = {}
@@ -55,19 +56,24 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
     
         #Load experimental results:
         fastf = open(fastfile,'r')
-        fastPreds = eval(fastf.read().replace(' [fb]','*fb').replace('[GeV]','*GeV'))['ExptRes']
-        fastf.close()
-        fastPreds = sorted(fastPreds, key=lambda thpred: (thpred['AnalysisName'],thpred['DataSet']))
+        fastPreds = eval(fastf.read().replace(' [fb]','*fb').replace('[GeV]','*GeV'))        
         smodf = open(os.path.join(smodelsDir,fname),'r')
         smodPreds = eval(smodf.read().replace(' [fb]','*fb').replace('[GeV]','*GeV'))
         sigmacut = smodPreds['extra']['sigmacut']
+        if fastPreds['extra']['sigmacut']:  #If we are comparing two smodels versions
+            if fastPreds['extra']['sigmacut'] != sigmacut:
+                continue
         if not sigmacut:
             logger.error("Value for sigma cut not found. Check if the folder ordering is correct")
             sys.exit()
+        
+        fastPreds = fastPreds['ExptRes']            
+        fastPreds = sorted(fastPreds, key=lambda thpred: (thpred['AnalysisName'],thpred['DataSet']))
+        fastf.close()        
         smodPreds = smodPreds['ExptRes']
         smodf.close()
         smodPreds = sorted(smodPreds, key=lambda thpred: (thpred['AnalysisName'],thpred['DataSet']))
-                
+        fileschecked += 1        
         missPredsFast = []
         for smod in smodPreds:
             fast = None
@@ -129,7 +135,7 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
         if debug:            
             if not diffsDict[fname]: continue
             nErrorFiles += 1
-            print '\n-------------------SMODELS/FASTLIM for:',fname            
+            print '\n-------------------SMODELS/FASTLIM for:',fname,'(sigmacut=',sigmacut,')'     
             for exp in diffsDict[fname]:
                 if 'Missing Results' in exp: continue        
                 print '\n------',exp
@@ -141,6 +147,7 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
                 print '\nMissing Results in SModelS:',diffsDict[fname]['Missing Results in SModelS']
     
     print '\n\n---------------------------------------\nMaximum percentual difference for numerical values =',maxdiff
+    print 'Files checked: %i files:' %fileschecked
     print 'Error in %i files:' %nErrorFiles
     for fname in diffsDict:
         if not diffsDict[fname]: continue
