@@ -7,7 +7,7 @@
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
 """
-import sys,os,shutil
+import os,shutil
 import argparse
 
 if __name__ == "__main__":
@@ -33,6 +33,7 @@ if __name__ == "__main__":
             else:
                 lfile = open(os.path.join(root,logfile),'r')
                 res = eval(lfile.read().replace('\n',''))
+                if not res: continue
                 lfile.close()            
                 for f in res['successful']:                
                     shutil.move(os.path.join(root,f),os.path.join(args.outdir,f))           
@@ -41,7 +42,7 @@ if __name__ == "__main__":
                     if args.errdir:
                         slhafile = f[0].replace('.sms','.slha')
                         shutil.move(os.path.join(root,slhafile),os.path.join(args.errdir,slhafile))
-            shutil.rmtree(root)
+            #shutil.rmtree(root)
     for f in allerrors:
         print f,allerrors[f]
             
