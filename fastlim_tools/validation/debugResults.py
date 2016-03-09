@@ -53,7 +53,7 @@ def debugSmodelS(slhafile,expResID,datasetId):
     if datasetId:        
         for exp in database.expResultList:
             for dataset in exp.datasets:
-                if dataset.getValuesFor('dataId')[0] == datasetId:
+                if dataset.dataInfo.dataId == datasetId:
                     exp.datasets = [dataset]
                     break
 
@@ -124,10 +124,10 @@ if __name__ == '__main__':
     slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/zvWM75AuTwiNnk.slha'
     
     fastPreds = debugFastlim(slhafile, fastlimdir, expID, datasetId)
-    fastPreds = sorted(fastPreds, key=lambda thpred: thpred.expResult.getValuesFor('id')[0])
+    fastPreds = sorted(fastPreds, key=lambda thpred: thpred.expResult.globalInfo.id)
     
     smodelsPreds = debugSmodelS(slhafile, expID, datasetId)
-    smodelsPreds = sorted(smodelsPreds, key=lambda thpred: thpred.expResult.getValuesFor('id')[0])
+    smodelsPreds = sorted(smodelsPreds, key=lambda thpred: thpred.expResult.globalInfo.id)
     
     missPredsFast = []
     for smod in smodelsPreds:
@@ -171,6 +171,12 @@ if __name__ == '__main__':
         '/',fast.dataset.dataInfo.observedN,fast.dataset.dataInfo.expectedBG,\
         fast.dataset.dataInfo.upperLimit*lum,fast.dataset.dataInfo.expectedUpperLimit*lum
         print smod.value[0].value*lum,'/',fast.value[0].value*lum
+        
+        print 'bla=',smod.dataset.dataInfo.expectedUpperLimit,fast.dataset.dataInfo.expectedUpperLimit
+        print lum
+        print fast.dataset.dataInfo.expectedUpperLimit*lum
+        sys.exit()
+        
         smodTxnames = {}
         for el in smod.cluster.elements:
             for txname in smod.txnames:
@@ -201,13 +207,13 @@ if __name__ == '__main__':
                     break
         if not smod:
             missPredsSmod.append(fast)
-            lum = fast.expResult.getValuesFor('lumi')[0]
+            lum = fast.expResult.globalInfo.lumi
             print '\nFASTLIM'
-            print fast.expResult.getValuesFor('id')
-            print fast.dataset.getValuesFor('dataId'),\
-            '(',SRs[fast.expResult.getValuesFor('id')[0]][fast.dataset.getValuesFor('dataId')[0]],')'
-            print fast.dataset.getValuesFor('observedN'),fast.dataset.getValuesFor('expectedBG'),\
-            fast.dataset.getValuesFor('upperLimit')[0]*lum,fast.dataset.getValuesFor('expectedUpperLimit')[0]*lum
+            print fast.expResult.globalInfo.id
+            print fast.dataset.dataInfo.dataId,\
+            '(',SRs[fast.expResult.globalInfo.id][fast.dataset.dataInfo.dataId],')'
+            print fast.dataset.dataInfo.observedN,fast.dataset.dataInfo.expectedBG,\
+            fast.dataset.dataInfo.upperLimit*lum,fast.dataset.dataInfo.expectedUpperLimit*lum
             print fast.value[0].value*lum
             fastTxnames = []        
             for iel,el in enumerate(fast.cluster.elements):
@@ -217,9 +223,9 @@ if __name__ == '__main__':
             continue
     
     print '\n\n Results missing in Fastlim:'
-    print [pred.expResult.getValuesFor('id')[0] for pred in missPredsFast]
+    print [pred.expResult.dataInfo.id for pred in missPredsFast]
     print ' Results missing in SModelS:'
-    print [pred.expResult.getValuesFor('id')[0] for pred in missPredsSmod]
+    print [pred.expResult.dataInfo.id for pred in missPredsSmod]
     
         
             

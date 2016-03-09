@@ -67,13 +67,13 @@ def fastlimParser(outputfile,useBestDataset=True,expResID=None,datasetID=None,tx
         datasets = expBlock.split('#----')
         #Get ExpResult object:
         expRes = getExpResFromFastlim(datasets[0])
-        if expResID and expRes.getValuesFor('id')[0] != expResID:
+        if expResID and expRes.globalInfo.id != expResID:
             continue
         predictionList = [] #List of predictions for the datasets
         for datasetBlock in datasets[1:]:
             #Get DataSet object:               
             dataset = getDataSetFromFastlim(datasetBlock,expRes)
-            if datasetID and dataset.getValuesFor('dataId')[0] != datasetID:
+            if datasetID and dataset.dataInfo.dataId != datasetID:
                 continue
             expRes.datasets.append(dataset)
             #Get TheoryPredictionList object (with one entry):
@@ -131,7 +131,7 @@ def  getDataSetFromFastlim(block,expRes):
     :return: DataSet object
     """    
 
-    lumi = expRes.getValuesFor('lumi')[0]
+    lumi = expRes.globalInfo.lumi
     datasetId,Nobs,expectedBG,bgError,upperLimit = None,None,None,None,None
     lines = block.split('\n')
     for l in lines:
@@ -147,7 +147,7 @@ def  getDataSetFromFastlim(block,expRes):
         elif 'Nvis_UL[observed]' in l:
             upperLimit = eval(l.split(':')[1])/lumi
 
-    datasetDict = SRs[expRes.getValuesFor('id')[0]]
+    datasetDict = SRs[expRes.globalInfo.id]
     for key,val in datasetDict.items():
         if val == datasetId or val.replace(" ","") == datasetId:
             datasetId = key
@@ -178,8 +178,8 @@ def  getTheoryPredFromFastlim(block,expRes,dataset,txname):
     :return: TheoryPredictionList object
     """    
 
-    lumi = expRes.getValuesFor('lumi')[0]
-    sqrts = expRes.getValuesFor('sqrts')[0]
+    lumi = expRes.globalInfo.lumi
+    sqrts = expRes.globalInfo.sqrts
     txnames = []    
     #Select useful part of block:
     lines = block.split('Process')[1].split('\n')[1:]
