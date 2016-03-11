@@ -94,6 +94,8 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
                 if key in ignoreFields: continue
                 if smod[key] == fast[key]: continue
                 if key == 'tval':
+                    #Fastlim only prints the total Nev up to four digits. So we
+                    #must round results before comparing:
                     smod[key] = round(smod[key]*lumi,4)
                     fast[key] = round(fast[key]*lumi,4)
                     if abs(smod[key] - fast[key]) < sigmacut*lumi/10.: continue
