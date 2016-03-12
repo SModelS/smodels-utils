@@ -119,17 +119,20 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,datasetID=None,txname=None):
 if __name__ == '__main__':
     
     minval = 0.00005 #Cut-off to remove txnames which would not appear in fastlim
-    expID =  'ATLAS-CONF-2013-054'
-#     datasetId = 'data-cut3'
-#     expID = None
-    datasetId = None
-    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/zZw4FGC57nmDzU.slha'
+    expID =  'ATLAS-CONF-2013-061'
+    datasetId = 'data-cut3'
+    #     expID = None
+#     datasetId = None
+    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/ZZ2BCXW8XPY0yW.slha'
+
+    smodelsPreds = debugSmodelS(slhafile, expID, datasetId)
+    smodelsPreds = sorted(smodelsPreds, key=lambda thpred: thpred.expResult.globalInfo.id)
+    
     
     fastPreds = debugFastlim(slhafile, fastlimdir, expID, datasetId)
     fastPreds = sorted(fastPreds, key=lambda thpred: thpred.expResult.globalInfo.id)
     
-    smodelsPreds = debugSmodelS(slhafile, expID, datasetId)
-    smodelsPreds = sorted(smodelsPreds, key=lambda thpred: thpred.expResult.globalInfo.id)
+
     
     missPredsFast = []
     for smod in smodelsPreds:
@@ -151,19 +154,23 @@ if __name__ == '__main__':
             smod.dataset.dataInfo.upperLimit*lum,smod.dataset.dataInfo.expectedUpperLimit*lum            
             print smod.value[0].value*lum
             smodTxnames = {}
+            smodPIDs = {}
             for el in smod.cluster.elements:
                 for txname in smod.txnames:
                     if txname.hasElementAs(el):
                         if not txname.txName in smodTxnames:
                             smodTxnames[txname.txName] = [el.weight[0].value*lum,[el.eff]]
+                            smodPIDs[txname.txName] = el.getPIDs()
                         else:
                             smodTxnames[txname.txName][0] += el.weight[0].value*lum
                             smodTxnames[txname.txName][1].append(el.eff)
+                            smodPIDs[txname.txName] += el.getPIDs()
                         break
             for tx in smodTxnames.keys()[:]:                
                 if smodTxnames[tx][0] < minval:  #Remove topologies which would not appear in fastlim
                     smodTxnames.pop(tx)
-            print smodTxnames            
+            print smodTxnames
+            print smodPIDs             
             continue
         
         print '\nSMODELS/FASTLIM'
@@ -178,14 +185,17 @@ if __name__ == '__main__':
         print round(smod.value[0].value*lum,4),'/',round(fast.value[0].value*lum,4)
         
         smodTxnames = {}
+        smodPIDs = {}
         for el in smod.cluster.elements:
             for txname in smod.txnames:
                 if txname.hasElementAs(el):
                     if not txname.txName in smodTxnames:
                         smodTxnames[txname.txName] = [el.weight[0].value*lum,[el.eff]]
+                        smodPIDs[txname.txName] = el.getPIDs()
                     else:
                         smodTxnames[txname.txName][0] += el.weight[0].value*lum
                         smodTxnames[txname.txName][1].append(el.eff)
+                        smodPIDs[txname.txName] += el.getPIDs()
                     break
         for tx in smodTxnames.keys()[:]:
             smodTxnames[tx][0] = round(smodTxnames[tx][0],4)
@@ -198,7 +208,8 @@ if __name__ == '__main__':
             else:
                 fastTxnames[fast.txnames[iel].txName][0] += el.weight[0].value*lum
         for tx in fastTxnames.keys()[:]:
-            fastTxnames[tx][0] = round(fastTxnames[tx][0],4)                
+            fastTxnames[tx][0] = round(fastTxnames[tx][0],4)
+#         print smodPIDs                            
         print smodTxnames,'/'
         print fastTxnames
         

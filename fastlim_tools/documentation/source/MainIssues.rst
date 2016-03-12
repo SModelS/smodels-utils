@@ -26,10 +26,10 @@ from SModelS will be larger than in Fastlim, due
 to a larger coverage of the topologies.
 
 
-**Obs:** In order to avoid this issue, it is possible to distinguish between gluon-jets and quark-jets in SModelS. This can
-be implemented by removing gluons ("g") from the jet definition in particles.py. Furthermore the
-efficiency maps (or UL maps) which refer to gluon jets would have to be modified. First a new TxName would have to be
-created (distinct from T2) and the constraint would have to be changed (:math:`[[[jet]],[[jet]]] \rightarrow [[[g]],[[g]]]`).
+**Obs:** In order to avoid this issue, it is possible to exclude elements which
+do not have the PIDs matching the expected PIDs from Fastlim topology.
+Hence in the above case elements matching **T2** with PIDs *different* from *[[1000021,1000022],[1000021,1000022]*
+should not be included.
 
 
 Efficiency Maps
@@ -86,3 +86,11 @@ Furthermore, the mass compression implemented in Fastlim only acts on Chargino 1
 (the minimum mass gap in Fastlim is 10 GeV).
 Other sparticles are not automatically compressed. Therefore in some cases the SModelS predictions
 may become larger than the ones obtained with Fastlim.
+
+Fastlim Output Reading
+~~~~~~~~~~~~~~~~~~~~~~
+
+The  main Fastlim output only presents values for :math:`\sigma\times\mathcal{L}`
+up to four digits. Hence small numbers can be rounded to zero or a single digit.
+When reading Fastlim output this issue must be taken into consideration and comparison
+against SModelS results can only be expected to match up to possible rounding effects. 

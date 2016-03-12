@@ -4,7 +4,7 @@
 MODIFIED (A. Lessa): 1. Removes screen output and uses sys.argv[2] to define file output
                      2. Added option to do linear interpolation on the efficiencies or
                         linear interpoaltion on the logarithm of the efficiencies (fastlim default)
-                     3. Added option to read cross-sections from SLHA input file                        
+                     3. Added option to read cross-sections from SLHA input file
                         
 """
 
@@ -145,6 +145,7 @@ if __name__ == "__main__":
         if 'B2' in initial_part_list: Prod_8.add_prod(part_dict, "B2", "B2", b2b2xsec)        
          
 
+    
     # The topologies are renamed if there is mass degeneracies satisfying the conditions below.
     procs_8 = Prod_8.processes  ### Do not comment out
     if 0 < mN2 - mC1 < 10:
