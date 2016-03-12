@@ -123,7 +123,7 @@ if __name__ == '__main__':
     datasetId = 'data-cut15'
     #     expID = None
 #     datasetId = None
-    slhafile = '/home/lessa/smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/ZSvngF0H8ZDVV2.slha'
+    slhafile = os.path.join(home,'smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/ZSvngF0H8ZDVV2.slha')
 
     smodelsPreds = debugSmodelS(slhafile, expID, datasetId)
     smodelsPreds = sorted(smodelsPreds, key=lambda thpred: thpred.expResult.globalInfo.id)
