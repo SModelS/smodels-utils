@@ -151,23 +151,29 @@ if __name__ == "__main__":
     if 0 < mN2 - mC1 < 10:
         Replace(procs_8, "N2qqC1", "C1")
         Replace(procs_8, "N2enC1", "C1")
-        Replace(procs_8, "N2mnC1", "C1")        
-        Replace(procs_8, "N2e3nC1", "C1")        
+        Replace(procs_8, "N2mnC1", "C1")
+#         Replace(procs_8, "N2e3nC1", "C1")                    
+        Replace(procs_8, "N2ntaC1", "C1")   #Andre's FIX 
     if 0 < mC1 - mN2 < 10:
         Replace(procs_8, "C1qqN2", "N2")
         Replace(procs_8, "C1enN2", "N2")
-        Replace(procs_8, "C1mnN2", "N2")        
-        Replace(procs_8, "C1e3nN2", "N2")        
+        Replace(procs_8, "C1mnN2", "N2")
+#         Replace(procs_8, "C1e3nN2", "N2")       
+        Replace(procs_8, "C1ntaN2", "N2")   #Andre's FIX        
+        Replace(procs_8, "C1tanN2", "N2")   #Andre's FIX
     if 0 < mC1 - mN1 < 10:
         Replace(procs_8, "C1qqN1", "N1")
         Replace(procs_8, "C1enN1", "N1")
-        Replace(procs_8, "C1mnN1", "N1")        
-        Replace(procs_8, "C1e3nN1", "N1")        
+        Replace(procs_8, "C1mnN1", "N1")
+#         Replace(procs_8, "C1e3nN1", "N1")                
+        Replace(procs_8, "C1ntaN1", "N1")  #Andre's FIX      
+        Replace(procs_8, "C1tanN1", "N1")  #Andre's FIX
     if 0 < mN2 - mN1 < 10:   
         Replace(procs_8, "N2qqN1", "N1")
         Replace(procs_8, "N2eeN1", "N1")
-        Replace(procs_8, "N2mmN1", "N1")        
-        Replace(procs_8, "N2e3e3N1", "N1")        
+        Replace(procs_8, "N2mmN1", "N1")   
+#         Replace(procs_8, "N2e3e3N1", "N1")               
+        Replace(procs_8, "N2tataN1", "N1") #Andre's FIX       
         Replace(procs_8, "N2nnN1", "N1")    
         Replace(procs_8, "N2gamN1", "N1")        
     set_rates(procs_8)          ### Do not comment out     

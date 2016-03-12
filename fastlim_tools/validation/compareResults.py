@@ -98,13 +98,16 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
                     #must round results before comparing:
                     smod[key] = round(smod[key]*lumi,4)
                     fast[key] = round(fast[key]*lumi,4)
-#                     if abs(smod[key] - fast[key]) < sigmacut*lumi/1000.: continue
                     vdiff = 2.*abs(smod[key]-fast[key])/abs(smod[key]+fast[key])
                     maxdiff = max(maxdiff,vdiff)
-                    if vdiff > allowedDiff: diff = True
+                    if vdiff > allowedDiff and abs(smod[key]-fast[key]) > 0.00011: diff = True
                 elif key == 'AnalysisTopo':
                     if not set(fast['AnalysisTopo']).issubset(set(smod['AnalysisTopo'])):
-                        diff = True                    
+                        diff = True  
+                elif key == 'exptlimit':
+                    vdiff = 2.*abs(smod[key]-fast[key])/abs(smod[key]+fast[key])
+                    if vdiff > 0.2:   #Allow for 20% differences in the numerical calculation of signal UL
+                        diff = True                                        
                 elif isinstance(smod[key],float):
                     vdiff = 2.*abs(smod[key]-fast[key])/abs(smod[key]+fast[key])
                     maxdiff = max(maxdiff,vdiff)
@@ -126,8 +129,7 @@ def compareFolders(fastlimDir,smodelsDir,ignoreFields,allowedDiff,debug):
                 if sth['AnalysisName'] == fast['AnalysisName'] and  sth['DataSet'] == fast['DataSet']:
                     smod = smodPreds[j]
                     break
-            if not smod and fast['tval'] > 0.:                
-#             if not smod and fast['tval'] > sigmacut/1000.:
+            if not smod and fast['tval'] > 0.0:
                 missPredsSmod.append(fast['AnalysisName']+'/'+fast['DataSet'])
                 continue      
     
