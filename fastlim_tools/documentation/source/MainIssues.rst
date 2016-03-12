@@ -26,14 +26,14 @@ from SModelS will be larger than in Fastlim, due
 to a larger coverage of the topologies.
 
 
-**Obs:** In order to avoid this issue, it is possible to exclude elements which
-do not have the PIDs matching the expected PIDs from Fastlim topology.
-Hence in the above case elements matching **T2** with PIDs *different* from *[[1000021,1000022],[1000021,1000022]*
+**Obs:** In order to avoid this issue (for comparison purposes), it is possible to skip elements which
+do not have the PIDs expected by Fastlim.
+Hence in the above case elements matching **T2** with PIDs *different* from *[[1000021,1000022],[1000021,1000022]]*
 should not be included.
 
 
-Efficiency Maps
-~~~~~~~~~~~~~~~
+Efficiency Maps and Interpolation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The efficiency maps in the SModelS database are identical to the ones in Fastlim, except
 for an important difference. When translating Fastlim maps to the SModelS database, whenever the
@@ -44,8 +44,12 @@ However, as a result, some points will have smaller efficiencies in SModelS than
 
 Furthermore, Fastlim uses a linear interpolation for the logarithm of the efficiencies, where SModelS
 interpolates directly on the efficiency values. In most cases the differences between the two
-methods are negligible, except in regions of parameter space where there is a sharp drop on the efficiencies. 
+methods are negligible, except in regions of parameter space where there is a sharp drop on the efficiencies.
 
+Finally, Fastlim and SModelS use slightly different linear interpolation methods. Even when the issues
+mentioned above are taken into consideration, there can still be slightly different results from the interpolation
+of the same efficiency map. This may happen mainly near regions of parameter space where the efficiency
+map contains a non-zero value surrounded by zero entries.
 
 
 Cross-Sections
@@ -87,6 +91,14 @@ Furthermore, the mass compression implemented in Fastlim only acts on Chargino 1
 Other sparticles are not automatically compressed. Therefore in some cases the SModelS predictions
 may become larger than the ones obtained with Fastlim.
 
+Fastlim Mass Compression Bug
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The label for :math:`\tau` s in Fastlim is "ta", while when
+performing the compression, the label for "ta" is assumed to be "e3".
+As a result, topologies which contain "ta" are *never compressed*.
+This issue can be easily fixed modifying the Replace statements in the main Fastlim method.
+
 Fastlim Output Reading
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -94,3 +106,18 @@ The  main Fastlim output only presents values for :math:`\sigma\times\mathcal{L}
 up to four digits. Hence small numbers can be rounded to zero or a single digit.
 When reading Fastlim output this issue must be taken into consideration and comparison
 against SModelS results can only be expected to match up to possible rounding effects. 
+
+
+Decay Tables
+~~~~~~~~~~~~
+
+If the sum of all branching ratios for a particle is slightly different from 1,
+Fastlim will renormalize each BR in order to have the sum exactly 1.
+As a result, the BRs used by Fastlim can differ slightly from the ones in the SLHA
+file, sometimes generating small discrepancies when comparing against SModelS.
+
+Interpolation
+~~~~~~~~~~~~~
+
+
+

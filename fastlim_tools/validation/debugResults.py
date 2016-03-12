@@ -39,7 +39,7 @@ def debugSmodelS(slhafile,expResID,datasetId):
     :return: TheoryPredictionList object containing SModelS results    
     """
     
-    sigmacut = 0.00001 * fb
+    sigmacut = 0.0000001 * fb
     mingap = 10. * GeV
     
     #Load the browser:
@@ -124,11 +124,11 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,datasetID=None,txname=None):
 if __name__ == '__main__':
     
     minval = 0.00005 #Cut-off to remove txnames which would not appear in fastlim
-    expID =  'ATLAS-CONF-2013-024'
-    datasetId = 'data-cut0'
+    expID =  'ATLAS-CONF-2013-054'
+    datasetId = 'data-cut11'
     #     expID = None
 #     datasetId = None
-    slhafile = os.path.join(home,'smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/ZU5fkyKRpch9pY.slha')
+    slhafile = os.path.join(home,'smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/zYl2t0e5ahS0lM.slha')
 
     smodelsPreds = debugSmodelS(slhafile, expID, datasetId)
     smodelsPreds = sorted(smodelsPreds, key=lambda thpred: thpred.expResult.globalInfo.id)
@@ -214,7 +214,7 @@ if __name__ == '__main__':
                 fastTxnames[fast.txnames[iel].txName][0] += el.weight[0].value*lum
         for tx in fastTxnames.keys()[:]:
             fastTxnames[tx][0] = round(fastTxnames[tx][0],6)
-#         print smodPIDs                            
+        print smodPIDs                            
         print smodTxnames,'/'
         print fastTxnames
         
