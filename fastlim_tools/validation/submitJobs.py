@@ -57,7 +57,7 @@ if __name__ == "__main__":
 #PBS -e "+nfolders[ijob]+"/err.log\n\
 #PBS -o "+nfolders[ijob]+"/log.out\n\
 #PBS -m ae\n\
-#PBS -M andre.lessa@ufabc.edu.br\n\
+#PBS -M lessa.a.p@gmail.com\n\
 \n\
 ./singleJob.py "+nfolders[ijob]+" -Ncore "+str(nCoresPerJob)+ " -Tout "+str(args.Tout)
                 +" -Tool "+args.Tool+" >> "+nfolders[ijob]+"/"+args.log)
