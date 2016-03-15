@@ -124,11 +124,11 @@ def debugFastlim(slhafile,fastlimdir,expResID=None,datasetID=None,txname=None):
 if __name__ == '__main__':
     
     minval = 0.00005 #Cut-off to remove txnames which would not appear in fastlim
-    expID =  'ATLAS-CONF-2013-054'
-    datasetId = 'data-cut11'
+    expID =  'ATLAS-CONF-2013-047'
+    datasetId = 'data-cut4'
     #     expID = None
 #     datasetId = None
-    slhafile = os.path.join(home,'smodels-utils/fastlim_tools/validation/SLHA/strong_lt_focus/zYl2t0e5ahS0lM.slha')
+    slhafile = os.path.join(home,'smodels-utils/fastlim_tools/validation/SLHA/strong_gt_focus/3ttJOQbPLyTqreK.slha')
 
     smodelsPreds = debugSmodelS(slhafile, expID, datasetId)
     smodelsPreds = sorted(smodelsPreds, key=lambda thpred: thpred.expResult.globalInfo.id)

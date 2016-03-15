@@ -25,24 +25,23 @@ if __name__ == "__main__":
     errfile = args.errorfile
     for root, dirs, files in os.walk('./'):
         if (logfile in files) and (errfile in files):
-            errf = open(os.path.join(root,errfile),'r')
-            if errf.read():  #Some thing happened (probably cluster time out). Redo all points
-                for f in files:
-                    if '.slha' in f and args.errdir:
-                        shutil.move(os.path.join(root,f),os.path.join(args.errdir,f))
-            else:
-                lfile = open(os.path.join(root,logfile),'r')
-                res = eval(lfile.read().replace('\n',''))
-                if not res: continue
-                lfile.close()            
-                for f in res['successful']:                
-                    shutil.move(os.path.join(root,f),os.path.join(args.outdir,f))           
-                for f in res['failed']:
-                    allerrors[f[0]] = f[1]
-                    if args.errdir:
-                        slhafile = f[0].replace('.sms','.slha')
-                        shutil.move(os.path.join(root,slhafile),os.path.join(args.errdir,slhafile))
-            #shutil.rmtree(root)
+#             errf = open(os.path.join(root,errfile),'r')
+#            if errf.read():  #Some thing happened (probably cluster time out). Redo all points
+#                for f in files:
+#                    if '.slha' in f and args.errdir:
+#                        shutil.move(os.path.join(root,f),os.path.join(args.errdir,f))
+            lfile = open(os.path.join(root,logfile),'r')
+            res = eval(lfile.read().replace('\n',''))
+            if not res: continue
+            lfile.close()            
+            for f in res['successful']:                
+                shutil.move(os.path.join(root,f),os.path.join(args.outdir,f))           
+            for f in res['failed']:
+                allerrors[f[0]] = f[1]
+                if args.errdir:
+                    slhafile = f[0].replace('.sms','.slha')
+                    shutil.move(os.path.join(root,slhafile),os.path.join(args.errdir,slhafile))
+        #shutil.rmtree(root)
     for f in allerrors:
         print f,allerrors[f]
             
