@@ -127,7 +127,7 @@ def formatOutput(slhafile,predictions,extraInfo={},minval=0.00005):
         expectedBG = dataset.dataInfo.expectedBG
         ExptRes.append({'maxcond': maxconds, 'tval': value.asNumber(fb),
                     'exptlimit': upperLimit.asNumber(fb), 
-                    'AnalysisTopo': txnames,
+#                    'AnalysisTopo': txnames,
                     'Weights' : weights,
                     'DaughterMass': mass[0][-1].asNumber(GeV), 
                     'AnalysisName': expID,
