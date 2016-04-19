@@ -18,13 +18,13 @@ sys.path.insert(0,os.path.join(home,"smodels-utils"))
 sys.path.insert(0,os.path.join(home,"smodels/"))
 
 from validation.plotProducer import validateTxName,validatePlot,validateExpRes, getExpIdFromPath, getDatasetIdsFromPath
-from smodels.experiment.databaseObjects import Database
+from smodels.experiment.databaseObj import Database
 import logging
 from smodels.theory.crossSection import logger as cl
 from smodels.theory.slhaDecomposer import logger as dl
-from smodels.experiment.txnameObject import logger as tl
-cl.setLevel(level=logging.DEBUG)
-dl.setLevel(level=logging.DEBUG)
+from smodels.experiment.txnameObj import logger as tl
+cl.setLevel(level=logging.INFO)
+dl.setLevel(level=logging.INFO)
 tl.setLevel(level=logging.INFO)
 
 database = Database(os.path.join(home,"smodels-database"))

@@ -93,7 +93,7 @@ def runSModelSFor(validationPlot):
         if not predictions:
             logger.info ( "no theory predictions for %s in %s" % ( expRes,slhafile) )
             continue
-        logger.info("I have theory predictions for %s in %s" % ( expRes,slhafile) )
+        logger.debug("I have theory predictions for %s in %s" % ( expRes,slhafile) )
 
         for theoryPrediction in predictions:
             dataset = theoryPrediction.dataset

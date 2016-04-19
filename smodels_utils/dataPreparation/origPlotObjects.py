@@ -377,14 +377,14 @@ class Axes(object):
         else: [x-value in GeV as float, y-value in GeV as float]
         """
 
-        print "getXYValues",massArray
+        #print "getXYValues",massArray
 
         if not '_xyFunction' in self.__dict__:
             self._setXYFunction()
-        print "_xyFunction=",self._xyFunction
-        print "_nArguments=",self._nArguments
-        print "_massArray=",massArray
-        print "_inOrigPlot=",self.inOrigPlot(massArray)
+        #print "_xyFunction=",self._xyFunction
+        #print "_nArguments=",self._nArguments
+        #print "_massArray=",massArray
+        #print "_inOrigPlot=",self.inOrigPlot(massArray)
         if self.inOrigPlot(massArray):
             return self._xyFunction(*massArray)
         return None

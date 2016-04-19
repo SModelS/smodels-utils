@@ -33,6 +33,8 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None):
             and the values are the respective list of TGraph objects.
     """
     
+    if type(expResult)==list:
+        expResult=expResult[0]
     rootpath = os.path.join(expResult.path,'sms.root')
     if not os.path.isfile(rootpath):
         logger.error("Root file %s not found" %rootpath)
