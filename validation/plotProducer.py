@@ -32,7 +32,7 @@ def getDatasetIdsFromPath(dir="../"):
     files=os.listdir(dir)
     datasetids=[]
     for f in files:
-        if not f in [ "globalInfo.txt", "validation", "sms.root", "convert.py", "old", "smodels.log", "orig" ]:
+        if not f in [ "globalInfo.txt", "validation", "sms.root", "convert.py", "old", "smodels.log", "orig", ".DS_Store" ]:
        ##     f=f.replace("data-","").replace("ana","ANA").replace("cut","CUT" )
             if f=="data": f=None
             datasetids.append  ( f )
@@ -85,7 +85,6 @@ def validateTxName(expRes,txname,slhadir,kfactor=1.):
     :return: Nested dictionary with the wrongness factor for each experimental
              result/plot.
     """    
-
     if not isinstance(expRes,list): expResList = [expRes]
     else: expResList = expRes
     ret = {}
