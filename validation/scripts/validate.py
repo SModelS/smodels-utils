@@ -25,10 +25,17 @@ database = Database(os.path.join(home,"smodels-database"))
 #How to validate all plots for all Txnames in one ExpRes:
 expRes = database.getExpResults(analysisIDs=[getExpIdFromPath()],datasetIDs=getDatasetIdsFromPath() )
 if expRes == []:
-    print "[validate.py] Error: could not find any experimental results?"
-    print "[validate.py] Maybe path directory %s does not match exp id %s?" % \
-     ( os.getcwd(), getExpIdFromPath())
-    print "[validate.py] check id in globalInfo.txt"
+    print "[validate.py] Error: could not find any experimental results."
+    f=open("../globalInfo.txt")
+    lines=f.readlines()
+    f.close()
+    for line in lines:
+        if line[:3]=="id:":
+            Id=line[4:]
+            Id=Id.replace("\n","")
+            if Id != getExpIdFromPath():
+                print "[validate.py] Error: path directory ``%s'' does not match exp id ``%s'' in ../globalInfo.txt" % ( getExpIdFromPath(), Id  )
+                sys.exit()
 
 slhamain = os.path.join(home,"smodels-utils/slha")
 kfactorDict = { "TChiWZ": 1.2, "TChiWW": 1.2, "TChiChipmSlepL": 1.2, 
