@@ -311,7 +311,7 @@ class Axes(object):
         mass array
         :return: lambdify function
         """
-        print("_setXYFunction",self._equations)
+        ## print("_setXYFunction",self._equations)
         breaking = False
         for equation1 in self._equations:
             for equation2 in self._equations:
@@ -321,7 +321,7 @@ class Axes(object):
                     if equation3 == equation2: continue
                     xyz = solve([equation1,equation2,equation3],[x,y,z])
                     if x in xyz and y in xyz and z in xyz:
-                        print ("[origPlotObjects.py] xyz=",xyz)
+                        ## print ("[origPlotObjects.py] xyz=",xyz)
                         breaking = True
                         break
                 if breaking == True: break
@@ -347,14 +347,14 @@ class Axes(object):
             if z in s: 
                 self._setXYZFunction()
                 return
-        print("_setXYFunction",self._equations)
+        ## print("_setXYFunction",self._equations)
         breaking = False
         for equation1 in self._equations:
             for equation2 in self._equations:
                 if equation1 == equation2: continue
                 xy = solve([equation1,equation2],[x,y,z])
                 if x in xy and y in xy:
-                    print ("[origPlotObjects.py] xy=",xy)
+                    ## print ("[origPlotObjects.py] xy=",xy)
                     breaking = True
                     break
             if breaking == True: break
@@ -377,14 +377,8 @@ class Axes(object):
         else: [x-value in GeV as float, y-value in GeV as float]
         """
 
-        #print "getXYValues",massArray
-
         if not '_xyFunction' in self.__dict__:
             self._setXYFunction()
-        #print "_xyFunction=",self._xyFunction
-        #print "_nArguments=",self._nArguments
-        #print "_massArray=",massArray
-        #print "_inOrigPlot=",self.inOrigPlot(massArray)
         if self.inOrigPlot(massArray):
             return self._xyFunction(*massArray)
         return None
