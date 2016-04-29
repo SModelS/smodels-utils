@@ -77,9 +77,9 @@ def EM_Value_Extractor_CM(EM_output='', analyisis='', region=''):
            
   
 
-def EM_Creator(ana_list = '', global_txNameDir = '' , slha_name= '', ma5=True): # general_OutDir contains all the different txNames folders
+def EM_Creator(ana_list = '', global_txNameDir = '' , slha_name= '', ma5=True, cm_data_dir=''): # general_OutDir contains all the different txNames folders
     if ma5: ana_dics_all = MA5_Analyses_Dicts
-    else: ana_dicts_all = CM_Analyses_Dicts 
+    else: ana_dicts_all = get_CM_Analyses_Dict(cm_data_dir) 
     txname = slha_name.split('_')[0]
     slha_split = slha_name.split('_')
 

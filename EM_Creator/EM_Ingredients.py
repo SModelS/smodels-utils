@@ -12,6 +12,7 @@ SLHA_InputDir   	  = Home_Dir + '/Input/slha' # TODO this can also be hard coded
 Templates_Folder 	  = Home_Dir + '/Input/' 
 Save_PartialOutput_Switch = 'OFF' # set to 'OFF' if you don't want to save the partial Output files
 
+ma5 = True # set False to run checkmate instead, FIXME change code to run both..
 
 Installation_Switch = 'OFF'   #Select if MG5 and MA5 will be installed; If OFF, select the paths and versions of your installations. Otherwise, it will proceed to the installation
 '''

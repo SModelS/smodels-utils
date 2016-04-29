@@ -61,7 +61,6 @@ MA5_Analyses_Dicts = [
 
 ]
 
-CM_Analyses_Dicts= []
 def get_CM_Analyses_Dict(cm_data_dir=''):
     if not cm_data_dir or not os.path.isdir(cm_data_dir):
         print "CheckMATE data directory %s not found!" %cm_data_dir

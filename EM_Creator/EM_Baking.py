@@ -80,7 +80,7 @@ for slha in SLHA_List:
     os.system("gunzip "+input_HEP) 
     input_HEP = OutputFolder_TxName_SLHA_dir+'/MG5Output/tag_1_pythia_events.hep'
 
-    #FIXME now choose between MA5 and CheckMate (or using both?)
+    #FIXME now choose between MA5 and CheckMate (ideally run one after the other?)
 
     if ma5:
     	os.chdir(Home_Dir)
