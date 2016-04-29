@@ -135,7 +135,9 @@ def EM_Value_Extractor_CM(EM_output='', analyisis='', region=''):
            
   
 
-def EM_Creator(ana_list = '', ana_dics_all = MA5_Analyses_Dicts , global_txNameDir = '' , slha_name= '', ma5=True): # general_OutDir contains all the different txNames folders
+def EM_Creator(ana_list = '', global_txNameDir = '' , slha_name= '', ma5=True): # general_OutDir contains all the different txNames folders
+    if ma5: ana_dics_all = MA5_Analyses_Dicts
+    else: ana_dicts_all = CM_Analyses_Dicts 
     txname = slha_name.split('_')[0]
     slha_split = slha_name.split('_')
 
@@ -148,7 +150,8 @@ def EM_Creator(ana_list = '', ana_dics_all = MA5_Analyses_Dicts , global_txNameD
         for dic in ana_dics_all:                     # looping over all the analyses in the dictionary (should contain the info of the complete set of implemented MA5 analyses) 
             if dic['Name'] == analysis:              # matching the correct dictionary
                for SR_dic in dic['SR_Dict_List']:    # looping over all the SRs
-                   saf_file = global_txNameDir + '/' + slha_name + '/MA5_Analyses_Results/CLs_output.saf'
+                   if ma5: saf_file = global_txNameDir + '/' + slha_name + '/MA5_Analyses_Results/CLs_output.saf'
+                   else: saf_file = global_txNameDir + '/' + slha_name + '/CM_Results/evaluation'  #FIXME call this as saf file now, but this is actually directory of eff maps, change name for ma5 and CM both ?
                    OutEM_Name = analysis_EM_folder+'/MA5_EM_'+SR_dic['Official_SR_Name']+'.dat'
                    if (not os.path.isdir(OutEM_Name) ):
                       
@@ -158,7 +161,6 @@ def EM_Creator(ana_list = '', ana_dics_all = MA5_Analyses_Dicts , global_txNameD
                          EM_Out.write('#MA5 EffMap for txName: ' + txname + ' , Analysis: ' + analysis + ' , SR: ' + SR_dic['Official_SR_Name'] +'\n' )
                       EM_Out.close()
                  
-####FIXME how to find the good path to pass intead of saf_file so it is valid also for CM??
 
            	   if  (len(slha_split) == 4 ):      # Determine if it is a direct decay or 1 step cascade decay from the txName 
                        EM_Out = open(OutEM_Name,'a+')
@@ -167,7 +169,7 @@ def EM_Creator(ana_list = '', ana_dics_all = MA5_Analyses_Dicts , global_txNameD
               	       mother_1 = (slha_split[1])
               	       interm_1 = (slha_split[2])
               	       daught_1 = (slha_split[3])
-              	       Eff_Value = EM_Value_Extractor(MA5_EM_OutputSaf = saf_file , analysis = analysis, region = SR_dic['MA5_SR_Name'], ma5)
+              	       Eff_Value = EM_Value_Extractor(EM_Output = saf_file , analysis = analysis, region = SR_dic['MA5_SR_Name'], ma5)
                        EM_Out.write(str(mother_1) + '   ' +str(interm_1) + '   ' + str(daught_1)+'   '+  str(Eff_Value) + '\n') 
                        EM_Out.close()
 
@@ -177,7 +179,7 @@ def EM_Creator(ana_list = '', ana_dics_all = MA5_Analyses_Dicts , global_txNameD
                           EM_Out.write('# Mother  Daughter  Eff. \n')
               	       mother_1 = (slha_split[1])
               	       daught_1 = (slha_split[2])
-              	       Eff_Value = EM_Value_Extractor(MA5_EM_OutputSaf = saf_file , analysis = analysis, region = SR_dic['MA5_SR_Name'], ma5 )
+              	       Eff_Value = EM_Value_Extractor(EM_Output = saf_file , analysis = analysis, region = SR_dic['MA5_SR_Name'], ma5 )
                        EM_Out.write(str(mother_1) + '   ' + str(daught_1)+'   '+  str(Eff_Value) + '\n')  
                        EM_Out.close()
 
