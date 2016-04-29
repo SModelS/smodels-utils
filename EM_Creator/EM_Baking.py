@@ -97,13 +97,14 @@ for slha in SLHA_List:
     else: # run CheckMate instead
     	#installation of checkmate?
         Run_CM(cmDir = CM_Dir, inputHEP=input_HEP)
+        CM_Output_Relocator(cmDir = CM_Dir, CM_OutputDir = OutputFolder_TxName_SLHA_dir)
 
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Creating Efficiency Maps
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------   
     #FIXME again, choose between MA5 and CM (do import outside the loop?)
-    from MA5_Output_parser import *  
+    from MA5_Output_parser import * #FIXME maybe just call this Output_parser, use for MA5 and CM ? 
     EM_Creator(ana_list= MA5_Analyses_List, global_txNameDir= OutputFolder_TxName_dir, slha_name= SLHA_name, ma5 = ma5   )
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------

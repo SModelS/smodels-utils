@@ -177,6 +177,11 @@ def RunCM(cmDir ='', inputHEP=''):
        shutil.move('results/EM_baking',  'results/Saved_EM_baking_' + str(now.month)+':'+str(now.day)+':'+str(now.year)+'_'+str(now.hour)+':'+str(now.minute) )
     os.system('./bin/CheckMATE CM_commands_file.txt < CM_answers.txt')
 
+def CM_Output_Relocator(cmDir = '', CM_OutputDir = '' ):
+    cmOutput_Path  = cmDir + '/results/EM_baking'  # contains the MA5 analyses output
+    if (os.path.isdir(CM_OutputDir) ):                         # further check that the directory exists
+       shutil.move(cmOutput_Path , CM_OutputDir+'/CM_Results')
+    else: print "ERROR: %s does not exist, cannot relocate output"
 
 
 

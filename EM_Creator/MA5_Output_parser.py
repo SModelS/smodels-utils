@@ -20,6 +20,10 @@ from Baker_Assistant import Folder_Creator
 # The user will have to copy and paste, I do not want to modify the convert.py itself,
 # but at least it will save a lot of time finding the numbers and replacing the path to the EM file.
 # These lines in fact depend only on the TxName, name of the SR, name of the file containing the produced map and the event-bkg-error numbers
+
+
+#FIXME the information stored in the dictionaries should not be kept here but separately ? Just read it here...store as global objects to safe time?
+
 MA5_Analyses_Dicts = [
 {'Name'        : 'cms_sus_14_001_TopTag' , 
  'SR_Dict_List' : [ { 'MA5_SR_Name' : 'MET200-350__Nbjets=1' ,          'Official_SR_Name' : 'Official_region1' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
@@ -96,8 +100,15 @@ they extract the correct EM value for the region specified.
 It is meant to be used in a loop over all the regions from the MA5_Analyses_Dicts above.
 The output are txt files containing the EM , for example ' Mother Interm   Daughter  Eff. ' 
 '''
-def EM_Value_Extractor(MA5_EM_OutputSaf = '', analysis = '', region = ''):
-    EM_Value = []
+
+#FIXME it will be better to read the file only once and store the efficiencies
+#FIXME no check on the error at the moment??
+def EM_Value_Extractor(EM_output = '', analysis = '', region = '', ma5=True):
+    if ma5: return EM_Value_Extractor_MA5(MA5_EM_OutputSaf = EM_output, analysis = analysis, region = region)
+    return EM_Value_Extractor_CM(EM_output, analyisis, region)
+
+def EM_Value_Extractor_MA5(MA5_EM_OutputSaf = '', analysis = '', region = ''):
+    EM_Value = [] #FIXME why is this a list if only one value is returned, break loop with return s[5] instead of append?
     if (not os.path.exists(MA5_EM_OutputSaf)):
          print 'MA5 Efficiency Maps Output not found! Terminating Execution'
          sys.exit()        
@@ -106,15 +117,28 @@ def EM_Value_Extractor(MA5_EM_OutputSaf = '', analysis = '', region = ''):
        Lines = open(MA5_EM_OutputSaf,'r').readlines() 
        for line in Lines[1:]:
            if analysis in line and region in line:   # checks analysis and region
-              split = [x for x in line.split('  ') if x != '']
-              EM_Value.append(split[5])
-
+              s = [x for x in line.split('  ') if x != '']
+              EM_Value.append(s[5])
     return EM_Value[0]
+
+def EM_Value_Extractor_CM(EM_output='', analyisis='', region=''):
+    effFile = EM_output+"/%s_eff_tab.txt" %analysis
+    if (not os.path.exists(effFile)):
+    	print 'CM Efficiency Maps Output not found in %s! Terminating Execution' %effFile
+        sys.exit()
+    for l in open(effFile):
+        if "Signal_Region" in l: continue
+        l = l.strip().split()
+        if region == l[0]: return l[1]
+    print "Signal region %s not found for %s." %(region, analysis)
+    return None
+           
   
 
-def EM_Creator(ana_list = '', ana_dics_all = MA5_Analyses_Dicts , global_txNameDir = '' , slha_name= ''): # general_OutDir contains all the different txNames folders
+def EM_Creator(ana_list = '', ana_dics_all = MA5_Analyses_Dicts , global_txNameDir = '' , slha_name= '', ma5=True): # general_OutDir contains all the different txNames folders
     txname = slha_name.split('_')[0]
     slha_split = slha_name.split('_')
+
 
     for analysis in ana_list:                        # looping over all the selected analyses
         analysis_EM_folder = global_txNameDir +'/'+txname+'_EfficiencyMaps/'+analysis+'_EM'
@@ -134,6 +158,8 @@ def EM_Creator(ana_list = '', ana_dics_all = MA5_Analyses_Dicts , global_txNameD
                          EM_Out.write('#MA5 EffMap for txName: ' + txname + ' , Analysis: ' + analysis + ' , SR: ' + SR_dic['Official_SR_Name'] +'\n' )
                       EM_Out.close()
                  
+####FIXME how to find the good path to pass intead of saf_file so it is valid also for CM??
+
            	   if  (len(slha_split) == 4 ):      # Determine if it is a direct decay or 1 step cascade decay from the txName 
                        EM_Out = open(OutEM_Name,'a+')
                        if ( len(EM_Out.readlines() ) == 1):
@@ -141,7 +167,7 @@ def EM_Creator(ana_list = '', ana_dics_all = MA5_Analyses_Dicts , global_txNameD
               	       mother_1 = (slha_split[1])
               	       interm_1 = (slha_split[2])
               	       daught_1 = (slha_split[3])
-              	       Eff_Value = EM_Value_Extractor(MA5_EM_OutputSaf = saf_file , analysis = analysis, region = SR_dic['MA5_SR_Name'] )
+              	       Eff_Value = EM_Value_Extractor(MA5_EM_OutputSaf = saf_file , analysis = analysis, region = SR_dic['MA5_SR_Name'], ma5)
                        EM_Out.write(str(mother_1) + '   ' +str(interm_1) + '   ' + str(daught_1)+'   '+  str(Eff_Value) + '\n') 
                        EM_Out.close()
 
@@ -151,7 +177,7 @@ def EM_Creator(ana_list = '', ana_dics_all = MA5_Analyses_Dicts , global_txNameD
                           EM_Out.write('# Mother  Daughter  Eff. \n')
               	       mother_1 = (slha_split[1])
               	       daught_1 = (slha_split[2])
-              	       Eff_Value = EM_Value_Extractor(MA5_EM_OutputSaf = saf_file , analysis = analysis, region = SR_dic['MA5_SR_Name'] )
+              	       Eff_Value = EM_Value_Extractor(MA5_EM_OutputSaf = saf_file , analysis = analysis, region = SR_dic['MA5_SR_Name'], ma5 )
                        EM_Out.write(str(mother_1) + '   ' + str(daught_1)+'   '+  str(Eff_Value) + '\n')  
                        EM_Out.close()
 

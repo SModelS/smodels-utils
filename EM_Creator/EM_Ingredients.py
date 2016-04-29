@@ -36,6 +36,13 @@ MA5 Input Parameters
 MA5_Analyses_List = ['cms_sus_14_001_TopTag','atlas_susy_2013_21','cms_sus_13_016'] # TODO it will be used to create the recasting card in MA5 (when it works...)
 
 '''
+CheckMATE Input Parameters
+'''
+CM_Analyses_List = ['atlas_conf_2013_024'] # TODO now hard coded to run over all available atlas analyses, this is list of results to be extracted
+#FIXME there should be a switch to run over atlas or cms analyses, mabye also both (requires running twice because of delphes settings)
+
+
+'''
 MadGraph5 Pythia Input Parameters
 '''                                                      
 MG5_Pythia_Params		= { 'EBEAM'   	 		: '4000' 		, # Single Beam Energy expressed in GeV

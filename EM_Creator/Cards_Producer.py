@@ -83,6 +83,7 @@ def CM_commands_producer(input_file='', xsec, err):
 def CM_answer_producer():
   CM_answers = open('CM_answers.txt','w')
   CM_answers.write("y\n")
+  CM_answers.write("o\n")
   return 'CM_answers.txt'
 
 
