@@ -164,6 +164,18 @@ def PartialOutput_Saver(switch = 'OFF', outFolder= '' ):
        shutil.rmtree(outFolder+'/MA5_Delphes_RootFiles' )
        
        
+'''
+Below new facilities to run CheckMate
+'''
+def RunCM(cmDir ='', inputHEP=''):
+    os.chdir(cmDir)
+    CM_commands_producer(inputHEP)
+    CM_answer_producer()
+    if (os.path.isdir('results/EM_baking')):   # Renaming the folder EM_baking if it exists (so the data inside is not lost) TODO or actually remove it completely
+       now = datetime.datetime.now()
+       print 'The folder EM_baking existed already; renamed it as Saved_EM_baking_' + str(now.month)+':'+str(now.day)+':'+str(now.year)+'_'+str(now.hour)+':'+str(now.minute)
+       shutil.move('results/EM_baking',  'results/Saved_EM_baking_' + str(now.month)+':'+str(now.day)+':'+str(now.year)+'_'+str(now.hour)+':'+str(now.minute) )
+    os.system('./bin/CheckMATE CM_commands_file.txt < CM_answers.txt')
 
 
 

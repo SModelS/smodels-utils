@@ -65,6 +65,25 @@ def MA5_commands_producer(input_file='', MA5_path = ''):
     MG5_comm.write('submit'+'\n')
     return 'MA5_commands_file.txt'
 
+def CM_commands_producer(input_file='', xsec, err):
+    #xsec and err should be given in PB
+    CM_comm = open("CM_commands_file.txt",'w')
+    CM_comm.write("[Mandatory Parameters]\n")
+    CM_comm.write("Name: EM_baking\n")
+    CM_comm.write("Analyses: atlas\n")
+    CM_comm.write("[Optional Parameters]\n")
+    CM_comm.write("eff_tab = True\n")
+    CM_comm.write("TempMode = True\n")
+    CM_comm.write("[evts]\n")
+    CM_comm.write("XSect: %s*PB\n" %str(xsec))
+    CM_comm.write("XSectErr: %s*PB\n" %str(err))
+    CM_comm.write("Events: %s" %input_file)
+    return 'CM_commands_file.txt'
+
+def CM_answer_producer():
+  CM_answers = open('CM_answers.txt','w')
+  CM_answers.write("y\n")
+  return 'CM_answers.txt'
 
 
 

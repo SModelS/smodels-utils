@@ -68,6 +68,7 @@ for slha in SLHA_List:
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Running MadAnalysis (Delphes + Analyzer)
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    #FIXME this part is independent of MA5, also neede for Delphes
     input_HEP = OutputFolder_TxName_SLHA_dir+'/MG5Output/tag_1_pythia_events.hep.gz'             # Complete path of the HEP file inside the Output folder
     print input_HEP
     if ( not NoFile_Continue(input_HEP) ): 
@@ -79,25 +80,31 @@ for slha in SLHA_List:
     os.system("gunzip "+input_HEP) 
     input_HEP = OutputFolder_TxName_SLHA_dir+'/MG5Output/tag_1_pythia_events.hep'
 
-    os.chdir(Home_Dir)
-    ReInstall_PAD(MA5_Dir)  
+    #FIXME now choose between MA5 and CheckMate (or using both?)
 
-    Run_MA5(ma5Dir = MA5_Dir, inputHEP = input_HEP)  
-    if (not NoFile_Continue(MA5_Dir + '/ANALYSIS_0') ): 
-       print 'MA5 Delphes file not found! I will continue with next SLHA'
-       continue
+    if ma5:
+    	os.chdir(Home_Dir)
+    	ReInstall_PAD(MA5_Dir)  
+
+    	Run_MA5(ma5Dir = MA5_Dir, inputHEP = input_HEP)  
+    	if (not NoFile_Continue(MA5_Dir + '/ANALYSIS_0') ): 
+       		print 'MA5 Delphes file not found! I will continue with next SLHA'
+       		continue
 #    if (not os.path.isdir(MA5_Dir + '/ANALYSIS_0') ):
 #       print 'No MA5 Output found! Moving to next SLHA'
 #       continue 
-    MA5_Output_Relocator(ma5Dir = MA5_Dir, MA5_OutputDir = OutputFolder_TxName_SLHA_dir)
-
+    	MA5_Output_Relocator(ma5Dir = MA5_Dir, MA5_OutputDir = OutputFolder_TxName_SLHA_dir)
+    else: # run CheckMate instead
+    	#installation of checkmate?
+        Run_CM(cmDir = CM_Dir, inputHEP=input_HEP)
 
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Creating Efficiency Maps
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------   
+    #FIXME again, choose between MA5 and CM (do import outside the loop?)
     from MA5_Output_parser import *  
-    EM_Creator(ana_list= MA5_Analyses_List, global_txNameDir= OutputFolder_TxName_dir, slha_name= SLHA_name   )
+    EM_Creator(ana_list= MA5_Analyses_List, global_txNameDir= OutputFolder_TxName_dir, slha_name= SLHA_name, ma5 = ma5   )
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Saving Intermediate Outputs
