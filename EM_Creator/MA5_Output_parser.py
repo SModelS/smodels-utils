@@ -9,7 +9,7 @@
 
 import os,sys
 from Baker_Assistant import Folder_Creator
-
+from analyses_info import *
 
 # It is a list of dictionaries, one dic for each MA5 analysis included in the Pad.
 # Each Dictionary contains two keys:  name of the analysis and a sub-dictionary { Ma5_name , Official_name + numbers of evenets needed for the Bkg, Obs event, Error } 
@@ -21,64 +21,6 @@ from Baker_Assistant import Folder_Creator
 # but at least it will save a lot of time finding the numbers and replacing the path to the EM file.
 # These lines in fact depend only on the TxName, name of the SR, name of the file containing the produced map and the event-bkg-error numbers
 
-
-#FIXME the information stored in the dictionaries should not be kept here but separately ? Just read it here...store as global objects to safe time?
-
-MA5_Analyses_Dicts = [
-{'Name'        : 'cms_sus_14_001_TopTag' , 
- 'SR_Dict_List' : [ { 'MA5_SR_Name' : 'MET200-350__Nbjets=1' ,          'Official_SR_Name' : 'Official_region1' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'MET>350__Nbjets=1' ,             'Official_SR_Name' : 'Official_region2' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },                                           
-                    { 'MA5_SR_Name' : 'MET200-350__Nbjets>1' ,          'Official_SR_Name' : 'Official_region3' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'MET>350__Nbjets>1' ,             'Official_SR_Name' : 'Official_region4' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 }   
-               ] 
-},
-
-{'Name'        : 'atlas_susy_2013_21' , 
- 'SR_Dict_List' : [ { 'MA5_SR_Name' : 'M1' ,                           'Official_SR_Name' : 'Official_region1' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'M2' ,           		       'Official_SR_Name' : 'Official_region2' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },                                           
-                    { 'MA5_SR_Name' : 'M3' ,           		       'Official_SR_Name' : 'Official_region3' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },  
-               ] 
-},
-
-{'Name'        : 'cms_sus_13_016' , 
- 'SR_Dict_List' : [ { 'MA5_SR_Name' : 'Gluino_to_TT_neutralino' ,      'Official_SR_Name' : 'Official_region1' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 }, 
-               ] 
-},
-
-
-# TODO the above numbers are not real, only the ones for these following two analyses are correct
-
-
-{'Name'        : 'atlas_sus_13_05' , 
- 'SR_Dict_List' : [ { 'MA5_SR_Name' : 'SRA, HighDeltaM, MET > 150, MCT > 150' ,      'Official_SR_Name' : 'SRA-mCT150' , 'Obs': 102 , 'Bkg': 94 ,   'Err': 13 }, 
-                    { 'MA5_SR_Name' : 'SRA, HighDeltaM, MET > 150, MCT > 200' ,      'Official_SR_Name' : 'SRA-mCT200' , 'Obs': 48  , 'Bkg': 39 ,   'Err': 6 }, 
-                    { 'MA5_SR_Name' : 'SRA, HighDeltaM, MET > 150, MCT > 250' ,      'Official_SR_Name' : 'SRA-mCT250' , 'Obs': 14  , 'Bkg': 15.8 , 'Err': 2.8 }, 
-                    { 'MA5_SR_Name' : 'SRA, HighDeltaM, MET > 150, MCT > 300' ,      'Official_SR_Name' : 'SRA-mCT300' , 'Obs': 7   , 'Bkg': 5.9 ,  'Err': 1.1 }, 
-                    { 'MA5_SR_Name' : 'SRA, HighDeltaM, MET > 150, MCT > 350' ,      'Official_SR_Name' : 'SRA-mCT350' , 'Obs': 3   , 'Bkg': 2.5  , 'Err': 0.6 }, 
-                    { 'MA5_SR_Name' : 'SRB, LowDeltaM, MET > 250'             ,      'Official_SR_Name' : 'SRB'         , 'Obs': 65  , 'Bkg': 64   , 'Err': 10 }, 
-
-               ] 
-},
-
-{'Name'        : 'atlas_susy_2013_11' ,
- 'SR_Dict_List' : [ { 'MA5_SR_Name' : 'MT2-90 ee;MT2-90 mumu' ,         'Official_SR_Name' : 'mT2-90-SF'      , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'MT2-90 emu' ,                    'Official_SR_Name' : 'mT2-90-DF'      , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'MT2-120 ee;MT2-120 mumu' ,       'Official_SR_Name' : 'mT2-120-SF'    , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'MT2-120 emu' ,                   'Official_SR_Name' : 'mT2-120-DF'    , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'MT2-150 ee;MT2-150 mumu' ,       'Official_SR_Name' : 'mT2-150-SF'    , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'MT2-150 emu' ,                   'Official_SR_Name' : 'mT2-150-DF'     , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'WWa ee;WWa mumu' ,               'Official_SR_Name' : 'WWa-SF'         , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'WWa emu' ,                       'Official_SR_Name' : 'WWa-DF'         , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'WWb ee;WWb mumu' ,               'Official_SR_Name' : 'WWb-SF'         , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'WWb emu' ,                       'Official_SR_Name' : 'WWb-DF'         , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'WWc ee;WWc mumu' ,               'Official_SR_Name' : 'WWc-SF'         , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'WWc emu' ,                       'Official_SR_Name' : 'WWc-DF'         , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'Zjets ee;Zjets mumu' ,           'Official_SR_Name' : 'Zjets'          , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 }
-                   
-                   ]
-                      },
-
-]
 
 
 '''
@@ -182,7 +124,6 @@ def EM_Creator(ana_list = '', global_txNameDir = '' , slha_name= '', ma5=True): 
               	       Eff_Value = EM_Value_Extractor(EM_Output = saf_file , analysis = analysis, region = SR_dic['MA5_SR_Name'], ma5 )
                        EM_Out.write(str(mother_1) + '   ' + str(daught_1)+'   '+  str(Eff_Value) + '\n')  
                        EM_Out.close()
-
 
 
 

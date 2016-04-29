@@ -84,9 +84,11 @@ def get_CM_Analyses_Dict(cm_data_dir=''):
                 if "bkg_err" in l:
                     getEntry.append(l.index("bkg_err"))
                 else: getEntry.append(None) #FIXME non standard error definition, dont know what to do for now
+                continue
+            if len(l) < 1: continue
             dictSR['SR_Name'] = l[getEntry[0]]
             dictSR['Official_SR_Name'] = l[getEntry[0]] #NOTE this is a dummy, we dont have the official name
-            dictSR['Obs'] = int(l[getEntry[1]])
+            dictSR['Obs'] = float(l[getEntry[1]])
             dictSR['Bkg'] = float(l[getEntry[2]])
             if getEntry[3]: dictSR['Err'] = float(l[getEntry[3]])
             else: dictSR['Err'] = None
