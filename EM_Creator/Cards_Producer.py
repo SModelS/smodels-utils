@@ -65,7 +65,7 @@ def MA5_commands_producer(input_file='', MA5_path = ''):
     MG5_comm.write('submit'+'\n')
     return 'MA5_commands_file.txt'
 
-def CM_commands_producer(input_file='', xsec, err):
+def CM_commands_producer(input_file, xsec, err):
     #xsec and err should be given in PB
     CM_comm = open("CM_commands_file.txt",'w')
     CM_comm.write("[Mandatory Parameters]\n")

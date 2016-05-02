@@ -161,15 +161,15 @@ def PartialOutput_Saver(switch = 'OFF', outFolder= '' ):
        for File in os.listdir(outFolder+'/MG5Output'):
            if 'banner' not in File:
               os.remove(outFolder +'/MG5Output/'+ File)
-       shutil.rmtree(outFolder+'/MA5_Delphes_RootFiles' )
+       if os.path.isdir(outFolder+'/MA5_Delphes_RootFiles'): shutil.rmtree(outFolder+'/MA5_Delphes_RootFiles' )
        
        
 '''
 Below new facilities to run CheckMate
 '''
-def RunCM(cmDir ='', inputHEP=''):
+def Run_CM(cmDir ='', inputHEP=''):
     os.chdir(cmDir)
-    CM_commands_producer(inputHEP)
+    CM_commands_producer(inputHEP, 0.025, 0.004) #FIXME dummy cross section and error, not strictly needed for efficiency!
     CM_answer_producer()
     if (os.path.isdir('results/EM_baking')):   # Renaming the folder EM_baking if it exists (so the data inside is not lost) TODO or actually remove it completely
        now = datetime.datetime.now()

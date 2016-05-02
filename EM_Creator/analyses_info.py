@@ -61,13 +61,14 @@ MA5_Analyses_Dicts = [
 
 ]
 
-def get_CM_Analyses_Dict(cm_data_dir=''):
+def get_CM_Analyses_Dict(cm_data_dir='', detector="atlas"):
     if not cm_data_dir or not os.path.isdir(cm_data_dir):
         print "CheckMATE data directory %s not found!" %cm_data_dir
         return None
     ret = []
     for f in os.listdir(cm_data_dir):
         if not "ref.dat" in f: continue
+        if not detector in f: continue
         dicEntry = {}
         ana = f.split("_ref")[0]
         dicEntry["Name"] = ana

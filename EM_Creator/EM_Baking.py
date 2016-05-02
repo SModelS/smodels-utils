@@ -1,4 +1,4 @@
-"""
+""":
 .. module:: EM_Baking.
         :synopsis: This module loops over SLHA files and creates EM in a SModelS
                     friendly format
@@ -48,7 +48,7 @@ for slha in SLHA_List:
     SLHA_name = slha.split('.')[0]
     TxName    = slha.split('_')[0]
 
-    MG5_Process = MG5_detProcess(slha, extraISR = '2jet')        # this extracts the correct MG5 process from the txName
+    MG5_Process = MG5_detProcess(slha)#, extraISR = '2jet')        # this extracts the correct MG5 process from the txName
 #    MG5_Process = 'e+e-'   #TODO little HACK : comment the line above and uncomment this to make the process faster (but physically meaningless) -> just to test the code
     OutputFolder_TxName_dir = Output_Folder +'/'+ TxName
     Folder_Creator(out_dir = OutputFolder_TxName_dir)            # Create a folder for each Mg5 process inside the output folder just created
@@ -68,7 +68,7 @@ for slha in SLHA_List:
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Running MadAnalysis (Delphes + Analyzer)
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    #FIXME this part is independent of MA5, also neede for Delphes
+    # NOTE this part is independent of MA5, also neede for Delphes
     input_HEP = OutputFolder_TxName_SLHA_dir+'/MG5Output/tag_1_pythia_events.hep.gz'             # Complete path of the HEP file inside the Output folder
     print input_HEP
     if ( not NoFile_Continue(input_HEP) ): 
@@ -95,7 +95,7 @@ for slha in SLHA_List:
 #       continue 
     	MA5_Output_Relocator(ma5Dir = MA5_Dir, MA5_OutputDir = OutputFolder_TxName_SLHA_dir)
     else: # run CheckMate instead
-    	#installation of checkmate?
+    	# FIXME installation of checkmate?
         Run_CM(cmDir = CM_Dir, inputHEP=input_HEP)
         CM_Output_Relocator(cmDir = CM_Dir, CM_OutputDir = OutputFolder_TxName_SLHA_dir)
 
@@ -104,8 +104,10 @@ for slha in SLHA_List:
 # Creating Efficiency Maps
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------   
     #FIXME again, choose between MA5 and CM (do import outside the loop?)
-    from MA5_Output_parser import * #FIXME maybe just call this Output_parser, use for MA5 and CM ? 
-    EM_Creator(ana_list= MA5_Analyses_List, global_txNameDir= OutputFolder_TxName_dir, slha_name= SLHA_name, ma5 = ma5   )
+    from MA5_Output_parser import * #FIXME maybe just call this Output_parser, use for MA5 and CM ?
+    if ma5: Analyses_List = MA5_Analyses_List
+    else: Analyses_List = CM_Analyses_List 
+    EM_Creator(ana_list= Analyses_List, global_txNameDir= OutputFolder_TxName_dir, slha_name= SLHA_name, ma5 = ma5 , cm_data_dir=CM_Data  )
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Saving Intermediate Outputs

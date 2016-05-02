@@ -45,9 +45,9 @@ The output are txt files containing the EM , for example ' Mother Interm   Daugh
 
 #FIXME it will be better to read the file only once and store the efficiencies
 #FIXME no check on the error at the moment??
-def EM_Value_Extractor(EM_output = '', analysis = '', region = '', ma5=True):
-    if ma5: return EM_Value_Extractor_MA5(MA5_EM_OutputSaf = EM_output, analysis = analysis, region = region)
-    return EM_Value_Extractor_CM(EM_output, analyisis, region)
+def EM_Value_Extractor(EM_Output = '', analysis = '', region = '', ma5=True):
+    if ma5: return EM_Value_Extractor_MA5(MA5_EM_OutputSaf = EM_Output, analysis = analysis, region = region)
+    return EM_Value_Extractor_CM(EM_Output, analysis, region)
 
 def EM_Value_Extractor_MA5(MA5_EM_OutputSaf = '', analysis = '', region = ''):
     EM_Value = [] #FIXME why is this a list if only one value is returned, break loop with return s[5] instead of append?
@@ -63,7 +63,7 @@ def EM_Value_Extractor_MA5(MA5_EM_OutputSaf = '', analysis = '', region = ''):
               EM_Value.append(s[5])
     return EM_Value[0]
 
-def EM_Value_Extractor_CM(EM_output='', analyisis='', region=''):
+def EM_Value_Extractor_CM(EM_output='', analysis='', region=''):
     effFile = EM_output+"/%s_eff_tab.txt" %analysis
     if (not os.path.exists(effFile)):
     	print 'CM Efficiency Maps Output not found in %s! Terminating Execution' %effFile
@@ -79,7 +79,7 @@ def EM_Value_Extractor_CM(EM_output='', analyisis='', region=''):
 
 def EM_Creator(ana_list = '', global_txNameDir = '' , slha_name= '', ma5=True, cm_data_dir=''): # general_OutDir contains all the different txNames folders
     if ma5: ana_dics_all = MA5_Analyses_Dicts
-    else: ana_dicts_all = get_CM_Analyses_Dict(cm_data_dir) 
+    else: ana_dics_all = get_CM_Analyses_Dict(cm_data_dir, detector="atlas") #FIXME dont need to state detector, only if this is used to define ana_list 
     txname = slha_name.split('_')[0]
     slha_split = slha_name.split('_')
 
@@ -95,13 +95,18 @@ def EM_Creator(ana_list = '', global_txNameDir = '' , slha_name= '', ma5=True, c
                    if ma5: saf_file = global_txNameDir + '/' + slha_name + '/MA5_Analyses_Results/CLs_output.saf'
                    else: saf_file = global_txNameDir + '/' + slha_name + '/CM_Results/evaluation'  #FIXME call this as saf file now, but this is actually directory of eff maps, change name for ma5 and CM both ?
                    OutEM_Name = analysis_EM_folder+'/MA5_EM_'+SR_dic['Official_SR_Name']+'.dat'
+                   if not ma5: OutEM_Name = OutEM_Name.replace("MA5","CM")
                    if (not os.path.isdir(OutEM_Name) ):
                       
                       EM_Out   = open(OutEM_Name,'a+')
                       header = '#MA5 EffMap for txName: ' + txname + ' , Analysis: ' + analysis + ' , SR: ' + SR_dic['Official_SR_Name'] +'\n'
+                      if not ma5: header = header.replace("MA5","CM")
                       if (header not in EM_Out.readlines() ):
-                         EM_Out.write('#MA5 EffMap for txName: ' + txname + ' , Analysis: ' + analysis + ' , SR: ' + SR_dic['Official_SR_Name'] +'\n' )
+                         EM_Out.write(header) #FIXME this is exactly the same?
+                         #EM_Out.write('#MA5 EffMap for txName: ' + txname + ' , Analysis: ' + analysis + ' , SR: ' + SR_dic['Official_SR_Name'] +'\n' )
                       EM_Out.close()
+                   if ma5: internalName = 'MA5_SR_Name'
+                   else: internalName = 'SR_Name'
                  
 
            	   if  (len(slha_split) == 4 ):      # Determine if it is a direct decay or 1 step cascade decay from the txName 
@@ -111,7 +116,7 @@ def EM_Creator(ana_list = '', global_txNameDir = '' , slha_name= '', ma5=True, c
               	       mother_1 = (slha_split[1])
               	       interm_1 = (slha_split[2])
               	       daught_1 = (slha_split[3])
-              	       Eff_Value = EM_Value_Extractor(EM_Output = saf_file , analysis = analysis, region = SR_dic['MA5_SR_Name'], ma5)
+              	       Eff_Value = EM_Value_Extractor(EM_Output = saf_file , analysis = analysis, region = SR_dic[internalName], ma5=ma5)
                        EM_Out.write(str(mother_1) + '   ' +str(interm_1) + '   ' + str(daught_1)+'   '+  str(Eff_Value) + '\n') 
                        EM_Out.close()
 
@@ -121,7 +126,7 @@ def EM_Creator(ana_list = '', global_txNameDir = '' , slha_name= '', ma5=True, c
                           EM_Out.write('# Mother  Daughter  Eff. \n')
               	       mother_1 = (slha_split[1])
               	       daught_1 = (slha_split[2])
-              	       Eff_Value = EM_Value_Extractor(EM_Output = saf_file , analysis = analysis, region = SR_dic['MA5_SR_Name'], ma5 )
+              	       Eff_Value = EM_Value_Extractor(EM_Output = saf_file , analysis = analysis, region = SR_dic[internalName], ma5=ma5 )
                        EM_Out.write(str(mother_1) + '   ' + str(daught_1)+'   '+  str(Eff_Value) + '\n')  
                        EM_Out.close()
 
