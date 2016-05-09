@@ -2,7 +2,8 @@
 
 """
 .. module:: dataPreparation
-   :synopsis: Holds objects used by convert.py to create globalInfo.txt, sms.root, sms.py and newSms.py.
+   :synopsis: Holds objects used by convert.py to create globalInfo.txt,
+              sms.root, sms.py and newSms.py.
 
 .. moduleauthor:: Michael Traub <michael.traub@gmx.at>
 
@@ -12,6 +13,7 @@ import sys, logging, os, ROOT
 from copy import deepcopy
 import inputObjects 
 from datetime import date
+from math import floor, log10
 
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -19,6 +21,23 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
+
+def _naturalUnits ( n ):
+    round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1))
+    try:
+        vn=float(n)
+        #print "vn=",vn
+        if vn==0.0:
+            n=vn
+        else:   
+            n=round_to_n(vn,4)
+        n=str(n)
+        #print "n=",n
+    except (TypeError,ValueError),e: ## cast doesnt work
+        pass
+    return n
+
+
 
 class StandardDataInfo(object ):
     """ the dataInfo.txt file content """
@@ -81,7 +100,7 @@ class StandardDataInfo(object ):
                 self.infoAttr.append ( "upperLimit" )
                 self.infoAttr.append ( "expectedUpperLimit" )
                 self.hasAddedStatistics=True
-        print self.dataType
+        #print self.dataType
             
 class StandardDataList(list):
     
@@ -162,12 +181,17 @@ class StandardDataList(list):
         """
         
         string = '['
-        
         for i, entry in enumerate(self):
+            nentry=[]
+            for n in entry:
+                n = _naturalUnits ( n )
+                nentry.append(n)
+            #print "entry=",type(entry),entry
+            print "nentry=",type(nentry),nentry
             if not (i+1) == len(self):
-                string = '%s%s,\n' %(string, entry)
+                string = '%s%s,\n' %(string, nentry)
                 continue
-            string = '%s%s]' %(string, entry)
+            string = '%s%s]' %(string, nentry)
         return string.replace("'","")
         
      

@@ -2,13 +2,14 @@
 
 """
 .. module:: dataPreparation
-   :synopsis: Holds objects used by convert.py to create globalInfo.txt, sms.root, sms.py and newSms.py.
+   :synopsis: Holds objects used by convert.py to create globalInfo.txt,
+              sms.root, sms.py and newSms.py.
 
 .. moduleauthor:: Michael Traub <michael.traub@gmx.at>
 
 """   
 
-
+import copy
 import sys
 import os
 import ROOT
@@ -162,11 +163,11 @@ class DatabaseCreator(list):
                     dataInfo.upperLimit = str ( statistics.upperLimit ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError, lumi ).asNumber ( fb ) )+"*fb"
                     dataInfo.expectedUpperLimit = str ( statistics.upperLimit ( dataInfo.expectedBG, dataInfo.expectedBG, dataInfo.bgError, lumi ).asNumber ( fb ) )+"*fb"
                 
-                print '\nReading mass plane: %s\n' %plane.origPlot
+                print 'Reading mass plane: %s' %plane.origPlot
                 
                 efficiencyMap = self.extendDataList\
                 (efficiencyMap, plane, vertexChecker, txName)
-                print '\nOld efficiencyMap3D=%s %d\n' % ( efficiencyMap3D, len(efficiencyMap3D) )
+                # print '\nOld efficiencyMap3D=%s %d\n' % ( efficiencyMap3D, len(efficiencyMap3D) )
                 efficiencyMap3D = self.extendDataList\
                 (efficiencyMap3D, plane, vertexChecker, txName)
                 upperLimits = self.extendDataList\
@@ -199,7 +200,7 @@ class DatabaseCreator(list):
                         print 'Found region: %s' %region.name
                         
                 for excl in exclusions:
-                    print 'extend exclusionLines for %s to %s entrys'\
+                    print 'extend exclusionLines for %s to %s entries'\
                     %(excl.name, len(excl))
                     
                 dataInfo.checkMassPlane(plane)
@@ -584,13 +585,13 @@ class DatabaseCreator(list):
                 not hasattr(obj.__class__, attr) : continue
                 value=getattr(obj,attr)
                 if value=="": continue
-                #print("[databaseCreation] attr",attr,getattr(obj,attr))
                 content = '%s%s%s%s\n' %(content, attr,\
-                self.assignmentOperator, getattr(obj, attr))
+                self.assignmentOperator, value )
+
                 if attr == "dataId":
                     path = self.infoFilePath ( name, getattr ( obj, attr ) )
         infoFile = open(self.base + path, 'w')
-        print "Y>>",self.base+path
+        print "[databaseCreation] writing",path
         infoFile.write(content)
         infoFile.close()
         
