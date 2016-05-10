@@ -63,8 +63,9 @@ def _naturalUnits ( n ):
             except IncompatibleUnitsError,e:
                 pass
         except AttributeError,e:
-            print "[standardObjects.py] IncompatibleUnitsError",e
-    print "finally n=",n
+            pass
+            # print "[standardObjects.py] IncompatibleUnitsError",e
+    # print "finally n=",n
     return n
 
 
