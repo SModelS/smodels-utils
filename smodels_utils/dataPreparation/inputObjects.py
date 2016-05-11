@@ -518,7 +518,7 @@ class TxNameInput(Locker):
         have only 2 dimensions
         :return: MassPlane-object
         """
-        print("[inputObjects] add mass plane",motherMass,interMasses)
+        # print("[inputObjects] add mass plane %s %s" % ( motherMass,interMasses) )
 
         if not motherMass:
             Errors().missingMass('motherMass',self.name)

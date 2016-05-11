@@ -124,7 +124,7 @@ class VertexChecker(object):
                         if particle in massDict:
                             massSum = massSum + massDict[particle]
                     kinConstraints[i][j][k] = massSum
-        print "vertex checker produces",kinConstraints
+        # print "vertex checker produces",kinConstraints
         return kinConstraints
         
     def __nonzero__(self):
