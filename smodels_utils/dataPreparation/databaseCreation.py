@@ -439,8 +439,12 @@ class DatabaseCreator(list):
                     m = m + 'lastUpdate should be overwritten:\n'
                     m = m + 'number or name of txNames, arXiv, publication,'
                     m = m + ' upperLimits\n'
+                    m = m + '(You can turn this off via the environment variable SMODELS_NOUPDATE)\n'
                     m = m + 'overwrite lastUpdate (y/n)?:'
                     answer = 'n' 
+                    if "SMODELS_NOUPDATE" in os.environ.keys():
+                        print "SMODELS_NOUPDATE is set!"
+                        break
                     if self.ask_for_name:
                         answer = raw_input(m)
                     if answer == 'y' or answer == 'n': break

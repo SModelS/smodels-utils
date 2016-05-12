@@ -218,8 +218,8 @@ class StandardDataList(list):
                 n = _naturalUnits ( n )
                 nentry.append(n)
             #print "entry=",type(entry),entry
-            if "3333" in nentry[-1]:
-                print "[standardObjects.py] nentry=",type(nentry),nentry
+            #if "3333" in nentry[-1]:
+            #    print "[standardObjects.py] nentry=",type(nentry),nentry
             if not (i+1) == len(self):
                 string = '%s%s,\n' %(string, nentry)
                 continue
