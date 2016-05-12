@@ -10,13 +10,14 @@ from smodels.experiment.databaseObj import Database
 import subprocess
 import glob
 
-database = Database(databasePath, force_load = 'txt')
+#database = Database(databasePath, force_load = 'txt')
+database = Database(databasePath)
 expResList = sorted(database.getExpResults(), key=lambda exp: exp.globalInfo.id)
 
 validated = []
 not_validated = []
 not_checked = []
-for expRes in database.getExpResults(datasetIDs=[None]):
+for expRes in expResList:
     txnamesList = sorted(expRes.getTxNames(), key=lambda tx: tx.txName)
     for txname in txnamesList:
 #         if 'assigned' in txname.getInfo('constraint'): continue        
