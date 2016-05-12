@@ -85,6 +85,9 @@ for txname,expRes in check:
         if val.lower() == 's': continue
         #Rewrite txname.txt file with validation result
         txfile = txname.getInfo('txnameFile')
+        if not os.path.isfile(txfile):
+            print '\n\n ******\n ERROR: %s NOT FOUND!!! \n**** \n\n' %(txfile)
+            continue
         tf = open(txfile,'r')
         tdata = ""
         for l in tf.readlines():
