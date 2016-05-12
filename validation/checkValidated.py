@@ -1,24 +1,28 @@
 #!/usr/bin/env python
 
 import sys,os
-home = os.path.expanduser("~")
-sys.path.append(os.path.join(home,'smodels'))
+#Local smodels and database paths:
+smodelsPath = '/home/lessa/smodels/'
+databasePath = '/home/lessa/smodels-database/'
+sys.path.append(smodelsPath)
 
-from smodels.experiment.databaseObjects import Database
+from smodels.experiment.databaseObj import Database
 import subprocess
 import glob
 
-database = Database(os.path.join(os.path.expanduser("~"),"smodels-database/"))
+database = Database(databasePath)
+expResList = sorted(database.getExpResults(), key=lambda exp: exp.globalInfo.id)
 
 validated = []
 not_validated = []
 not_checked = []
 for expRes in database.getExpResults(datasetIDs=[None]):
-    for txname in expRes.getTxNames():
+    txnamesList = sorted(expRes.getTxNames(), key=lambda tx: tx.txName)
+    for txname in txnamesList:
         if 'assigned' in txname.getInfo('constraint'): continue
-        if txname.getInfo('validated') is True: validated.append([txname,expRes])  
-        elif txname.getInfo('validated') is False: not_validated.append([txname,expRes])
-        elif txname.getInfo('validated') is None: not_checked.append([txname,expRes])
+        if txname.validated is True: validated.append([txname,expRes])  
+        elif txname.validated is False: not_validated.append([txname,expRes])
+        elif txname.validated is None: not_checked.append([txname,expRes])
         else: print "Unknown field %s",txname.getInfo('validated')
         
 
@@ -44,17 +48,17 @@ print '# Not Checked Txnames =',len(not_checked)
 
 miss_plots = []
 for txname,expRes in check:    
-    print expRes.getValuesFor('id'),txname.txname    
+    print expRes.getValuesFor('id'),txname.txName    
     expDir = expRes.path
     valDir = os.path.join(expDir,'validation')
     #Check the plots
     plots = []    
-    for fig in glob.glob(valDir+"/"+txname.txname+"_*.pdf"):
+    for fig in glob.glob(valDir+"/"+txname.txName+"_*.pdf"):
         if showPlots: plots.append(subprocess.Popen(['evince','--preview',fig]))
         else: plots.append(fig)
-    if glob.glob(valDir+"/"+txname.txname+".comment"):
+    if glob.glob(valDir+"/"+txname.txName+".comment"):
         print '== Comment file found: =='
-        for cfile in glob.glob(valDir+"/"+txname.txname+"*comment"):
+        for cfile in glob.glob(valDir+"/"+txname.txName+"*comment"):
             cf = open(cfile,'r')
             print cf.read()
             cf.close()
@@ -91,6 +95,6 @@ for txname,expRes in check:
 
 if miss_plots:        
     print '\n\n MISSING PLOTS FOR:'
-    for txname,expRes in miss_plots: print expRes.getValuesFor('id'),txname.txname    
+    for txname,expRes in miss_plots: print expRes.getValuesFor('id'),txname.txName    
 
     
