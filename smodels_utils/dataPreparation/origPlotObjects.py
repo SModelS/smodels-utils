@@ -9,7 +9,7 @@
 """
 
 import sys
-from sympy import var, Eq, lambdify, solve, sympify
+from sympy import var, Eq, lambdify, solve, sympify, N
 import logging
 import inspect
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -258,7 +258,7 @@ class Axes(object):
         lspEq = Eq(lsp,lspMass)
         interEqs = []
         for k, v in interMasses.iteritems():
-            eq = Eq(var(k.replace('Mass','')), v)
+            eq = Eq(var(k.replace('Mass','')), N(v,2) )
             interEqs.append(eq)
         interEqs = sorted(interEqs, key = lambda eq: eq.args[0].name)
         for i,eq in enumerate(interEqs):
