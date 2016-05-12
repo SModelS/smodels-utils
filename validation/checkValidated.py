@@ -10,7 +10,7 @@ from smodels.experiment.databaseObj import Database
 import subprocess
 import glob
 
-database = Database(databasePath)
+database = Database(databasePath, force_load = 'txt')
 expResList = sorted(database.getExpResults(), key=lambda exp: exp.globalInfo.id)
 
 validated = []
