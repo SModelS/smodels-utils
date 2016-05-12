@@ -19,7 +19,7 @@ not_checked = []
 for expRes in database.getExpResults(datasetIDs=[None]):
     txnamesList = sorted(expRes.getTxNames(), key=lambda tx: tx.txName)
     for txname in txnamesList:
-        if 'assigned' in txname.getInfo('constraint'): continue
+#         if 'assigned' in txname.getInfo('constraint'): continue        
         if txname.validated is True: validated.append([txname,expRes])  
         elif txname.validated is False: not_validated.append([txname,expRes])
         elif txname.validated is None: not_checked.append([txname,expRes])
@@ -54,7 +54,11 @@ for txname,expRes in check:
     #Check the plots
     plots = []    
     for fig in glob.glob(valDir+"/"+txname.txName+"_*.pdf"):
-        if showPlots: plots.append(subprocess.Popen(['evince','--preview',fig]))
+        if showPlots:
+            try:
+                plots.append(subprocess.Popen(['evince','--preview',fig]))
+            except:
+                plots.append(subprocess.Popen(['open',fig]))                
         else: plots.append(fig)
     if glob.glob(valDir+"/"+txname.txName+".comment"):
         print '== Comment file found: =='
