@@ -138,14 +138,14 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
 
     labels=[]
 
-    print "validationPlot.officialCurves=",validationPlot.officialCurves
+    # print "validationPlot.officialCurves=",validationPlot.officialCurves
 
     # Check if official exclusion curve has been defined:
     if not validationPlot.officialCurves:
         logger.warning("Official curve for validation plot is not defined.")
     else:
         official = validationPlot.officialCurves
-        print "[plottingFuncs.py] official=",len(official)
+        # print "[plottingFuncs.py] official=",len(official)
     
     if silentMode: gROOT.SetBatch()    
     setOptions(allowed, Type='allowed')
