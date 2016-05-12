@@ -141,10 +141,10 @@ class ValidationPlot():
         tgraphDict = getExclusionCurvesFor(self.expRes,txname=self.txName,axes=self.axes, get_all = get_all )
         if not tgraphDict: return None
         tgraph = tgraphDict[self.txName]
-        print "[validationObjs.py] get_all=",get_all
-        for t in tgraph:
-            print "[validationObjs.py] t=",t
-            print "[validationObjs.py] name=",t.GetName()
+        #print "[validationObjs.py] get_all=",get_all
+        #for t in tgraph:
+        #    print "[validationObjs.py] t=",t
+        #    print "[validationObjs.py] name=",t.GetName()
         if get_all:
             return tgraph
         else:
