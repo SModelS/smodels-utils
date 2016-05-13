@@ -35,7 +35,7 @@ class ValidationPlot():
         self.axes = Axes
         self.slhaDir = None
         self.data = None
-        self.officialCurve = self.getOfficialCurve()
+        self.officialCurves = self.getOfficialCurve( get_all = True )
         self.kfactor = kfactor
 
         if slhadir: self.setSLHAdir(slhadir)
@@ -85,10 +85,6 @@ class ValidationPlot():
         curve.GetPoint ( curve.GetN()-1, x, y ) ## get the last point
         curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
         curve.SetPoint ( curve.GetN(), x0, 0. )  ## extend to first point
-        #for i in range ( curve.GetN() ):
-        #    curve.GetPoint ( i, x, y )
-        #    print "[computeAgreementFactor] i,x,y=",i,x,y
-        # curve.SetPoint( curve.GetN()+1,0.,0.) ## close the curve nicely
         n_points=0
         pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0, "not_excluded_inside": 0,
                "not_excluded_outside": 0, "wrong" : 0 }
@@ -114,8 +110,8 @@ class ValidationPlot():
                 pts["wrong"]+=1
             if really_not_excluded and inside:
                 pts["wrong"]+=1
-        logger.debug ( "points in categories %s" % str(pts) )
-        print ( "[validationObjs] points in categories %s" % str(pts) )
+        #logger.debug ( "points in categories %s" % str(pts) )
+        #print ( "[validationObjs] points in categories %s" % str(pts) )
         if pts["total"]==0:
             return float("nan")
         return 1.0 - float(pts["wrong"]) / float(pts["total"])
@@ -134,21 +130,27 @@ class ValidationPlot():
         else:
             self.slhaDir = slhadir
 
-    def getOfficialCurve(self):
+    def getOfficialCurve(self, get_all=False ):
         """
         Reads the root file associated to the ExpRes and
         obtain the experimental exclusion curve for the corresponding TxName and Axes.
-        Saves the exclusion curve in self.officialCurve
+        :param get_all: get also the +- 1 sigma curves
 
         :return: a root TGraph object
         """
-        tgraphDict = getExclusionCurvesFor(self.expRes,txname=self.txName,axes=self.axes)
+        tgraphDict = getExclusionCurvesFor(self.expRes,txname=self.txName,axes=self.axes, get_all = get_all )
         if not tgraphDict: return None
         tgraph = tgraphDict[self.txName]
-        if len(tgraph) > 1:
-            logger.warning("More than one exclusion curve found. Using the first one.")
-
-        return tgraph[0]
+        #print "[validationObjs.py] get_all=",get_all
+        #for t in tgraph:
+        #    print "[validationObjs.py] t=",t
+        #    print "[validationObjs.py] name=",t.GetName()
+        if get_all:
+            return tgraph
+        else:
+        #if len(tgraph) > 1:
+        #    logger.warning("More than one exclusion curve found. Using the first one.")
+            return tgraph[0]
 
     def getData(self):
         """
@@ -166,7 +168,7 @@ class ValidationPlot():
     def getPlot(self,silentMode=True):
         """
         Uses the data in self.data and the official exclusion curve
-        in self.officialCurve to generate the exclusion plot
+        in self.officialCurves to generate the exclusion plot
         :param silentMode: If True the plot will not be shown on the screen
         """
 

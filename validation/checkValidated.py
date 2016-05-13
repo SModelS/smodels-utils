@@ -2,8 +2,8 @@
 
 import sys,os
 #Local smodels and database paths:
-smodelsPath = '/home/lessa/smodels/'
-databasePath = '/home/lessa/smodels-database/'
+smodelsPath = '/home/walten/smodels/'
+databasePath = '/home/walten/smodels-database/'
 sys.path.append(smodelsPath)
 
 from smodels.experiment.databaseObj import Database

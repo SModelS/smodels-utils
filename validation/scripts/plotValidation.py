@@ -25,7 +25,7 @@ home = os.path.expanduser("~")
 sys.path.insert(0,os.path.join(home,"smodels-utils/"))
 sys.path.insert(0,os.path.join(home,"smodels/"))
 
-from smodels.experiment.databaseObjects import Database
+from smodels.experiment.databaseObj import Database
 from validation.plotProducer import ValidationPlot, getExpIdFromPath
 from validation.plotProducer import getDatasetIdsFromPath
 from smodels.tools.physicsUnits import pb, fb

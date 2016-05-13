@@ -22,6 +22,8 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
+    
+round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1))
 
 def _naturalUnits ( n ):
     if type(n)==list:
@@ -31,7 +33,6 @@ def _naturalUnits ( n ):
             ret.append ( _naturalUnits (i) )
         return ret
     # print "_naturalUnits(%s)" % n
-    round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1))
     try:
         vn=float(n)
         #print "vn=",vn
@@ -218,8 +219,8 @@ class StandardDataList(list):
                 n = _naturalUnits ( n )
                 nentry.append(n)
             #print "entry=",type(entry),entry
-            if "3333" in nentry[-1]:
-                print "[standardObjects.py] nentry=",type(nentry),nentry
+            #if "3333" in nentry[-1]:
+            #    print "[standardObjects.py] nentry=",type(nentry),nentry
             if not (i+1) == len(self):
                 string = '%s%s,\n' %(string, nentry)
                 continue

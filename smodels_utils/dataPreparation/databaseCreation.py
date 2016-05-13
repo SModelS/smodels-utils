@@ -13,8 +13,8 @@ import copy
 import sys
 import os
 import ROOT
-from smodels_utils.dataPreparation.standardObjects import\
-StandardDataList, StandardExclusions, StandardTWiki, StandardDataInfo
+from smodels_utils.dataPreparation.standardObjects import StandardDataList, \
+     StandardExclusions, StandardTWiki, StandardDataInfo, round_to_n
 from smodels_utils.dataPreparation.vertexChecking import VertexChecker
 from preparationHelper import ObjectList
 import logging
@@ -439,8 +439,12 @@ class DatabaseCreator(list):
                     m = m + 'lastUpdate should be overwritten:\n'
                     m = m + 'number or name of txNames, arXiv, publication,'
                     m = m + ' upperLimits\n'
+                    m = m + '(You can turn this off via the environment variable SMODELS_NOUPDATE)\n'
                     m = m + 'overwrite lastUpdate (y/n)?:'
                     answer = 'n' 
+                    if "SMODELS_NOUPDATE" in os.environ.keys():
+                        print "SMODELS_NOUPDATE is set!"
+                        break
                     if self.ask_for_name:
                         answer = raw_input(m)
                     if answer == 'y' or answer == 'n': break
@@ -585,6 +589,9 @@ class DatabaseCreator(list):
                 not hasattr(obj.__class__, attr) : continue
                 value=getattr(obj,attr)
                 if value=="": continue
+                if attr in [ "upperLimit", "expectedUpperLimit" ]:
+                    fvalue=round_to_n ( float(value[:-3] ), 4 )
+                    value = "%s%s" % ( fvalue, value[-3:] )
                 content = '%s%s%s%s\n' %(content, attr,\
                 self.assignmentOperator, value )
 

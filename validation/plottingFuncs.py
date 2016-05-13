@@ -19,7 +19,7 @@ from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 
 
-def getExclusionCurvesFor(expResult,txname=None,axes=None):
+def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):
     """
     Reads sms.root and returns the TGraph objects for the exclusion
     curves. If txname is defined, returns only the curves corresponding
@@ -28,6 +28,7 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None):
     :param expResult: an ExpResult object
     :param txname: the TxName in string format (i.e. T1tttt)
     :param axes: the axes definition in string format (i.e. 2*Eq(mother,x)_Eq(lsp,y))
+    :param get_all: Get also the +-1 sigma curves?
     
     :return: a dictionary, where the keys are the TxName strings
             and the values are the respective list of TGraph objects.
@@ -57,7 +58,9 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None):
         txnames[tx] = []
         for obj in txDir.GetListOfKeys():
             objName = obj.ReadObj().GetName()
-            if not 'exclusion_' in objName: continue
+            if not 'exclusion' in objName: continue
+            if (not get_all) and (not 'exclusion_' in objName): continue
+            # print "[plottingFuncs.py] name=",objName
             if axes and not axes in objName: continue
             txnames[tx].append(obj.ReadObj())
             nplots += 1
@@ -86,14 +89,13 @@ def getFigureUrl ( validationPlot ):
     if len(pos)!=1:
         logger.error ( "found axes %d times" % len(pos ) )
         sys.exit()
-    print "pos=",pos
     return txnameinfo.getInfo ( "figureUrl" )[ pos[0] ]
 
 def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestregion", nthpoint =1, 
        signal_factor = 1. ):
     """
     Uses the data in validationPlot.data and the official exclusion curve
-    in validationPlot.officialCurve to generate "special" plots, showing
+    in validationPlot.officialCurves to generate "special" plots, showing
     e.g. upper limits or best signal region
     
     :param validationPlot: ValidationPlot object
@@ -120,9 +122,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
             x, y = pt['axes']
-#             print pt
             if pt['condition'] and max(pt['condition'].values() ) > 0.05:
-                #print "pt['condition']",pt['condition']
                 logger.warning("Condition violated for file " + pt['slhafile'])
                 cond_violated.SetPoint(cond_violated.GetN(), x, y)
             elif signal_factor * pt['signal'] > pt['UL']:
@@ -138,11 +138,14 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
 
     labels=[]
 
+    # print "validationPlot.officialCurves=",validationPlot.officialCurves
+
     # Check if official exclusion curve has been defined:
-    if not validationPlot.officialCurve:
+    if not validationPlot.officialCurves:
         logger.warning("Official curve for validation plot is not defined.")
     else:
-        official = validationPlot.officialCurve
+        official = validationPlot.officialCurves
+        # print "[plottingFuncs.py] official=",len(official)
     
     if silentMode: gROOT.SetBatch()    
     setOptions(allowed, Type='allowed')
@@ -267,8 +270,8 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
 
 def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     """
-    Uses the data in validationPlot.data and the official exclusion curve
-    in validationPlot.officialCurve to generate the exclusion plot
+    Uses the data in validationPlot.data and the official exclusion curves
+    in validationPlot.officialCurves to generate the exclusion plot
     
     :param validationPlot: ValidationPlot object
     :param silentMode: If True the plot will not be shown on the screen
@@ -311,10 +314,12 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         
 
     # Check if official exclusion curve has been defined:
-    if not validationPlot.officialCurve:
+    if not validationPlot.officialCurves:
         logger.warning("Official curve for validation plot is not defined.")
     else:
-        official = validationPlot.officialCurve
+        official = validationPlot.officialCurves
+        logger.warning("Official curves have length %d" % len (official) )
+    # IPython.embed()
     
     if silentMode: gROOT.SetBatch()    
     setOptions(allowed, Type='allowed')
@@ -322,21 +327,22 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     setOptions(allowed_border, Type='allowed_border')
     setOptions(excluded, Type='excluded')
     setOptions(excluded_border, Type='excluded_border')
-    setOptions(official, Type='official')
+    for i in official:
+        setOptions( i, Type='official')
     base = TMultiGraph()
     if allowed.GetN()>0: base.Add(allowed, "P")
     if excluded.GetN()>0: base.Add(excluded, "P")
     if allowed_border.GetN()>0: base.Add(allowed_border, "P")
     if excluded_border.GetN()>0: base.Add(excluded_border, "P")
     if cond_violated.GetN()>0: base.Add(cond_violated, "P")
-    base.Add(official, "L")
+    for i in official:
+        base.Add( i, "L")
     title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
             + validationPlot.txName\
             + "_" + validationPlot.axes
     subtitle = "datasetIds: "
     for dataset in validationPlot.expRes.datasets:
         subtitle+=str(dataset.dataInfo.dataId)+" "
-    ## IPython.embed()
     figureUrl = getFigureUrl(validationPlot)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
     base.Draw("AP")
@@ -353,7 +359,6 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     l0.DrawLatex(.1,.905,subtitle)
     base.l0=l0
     if figureUrl:
-        # print "dawing figureUrl"
         l1=TLatex()
         l1.SetNDC()
         l1.SetTextSize(.025)
