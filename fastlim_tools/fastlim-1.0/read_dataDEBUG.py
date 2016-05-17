@@ -241,7 +241,9 @@ def get_proc_Data_3D(proc3D_dict, ana, sr_name, root_S, lumi):
             print eff_file, "does not exist!!  skep"
             continue
         logefftab = []
-        eff = -1  
+        eff = -1
+	if ana == 'ATLAS_CONF_2013_047' and sr_name == 'cut_3' and proc == 'GbB1bN1_GbB1bN1':
+		print '\t\t FILE=',eff_file
         for line in open(eff_file, 'r'):            
             vals = extract_numbers(line)
             try:
@@ -253,10 +255,15 @@ def get_proc_Data_3D(proc3D_dict, ana, sr_name, root_S, lumi):
                     logeff = log(min_eff)
                 else:
                     logeff = log(eff)
+		logeff = eff  #---->CHANGE TO LINEAR INTERPOLATION INSTEAD!!!!
                 logefftab.append([m1, m2, m3, logeff])
             except: pass
         #print m1, m2, m3, logefftab
         LogEff = Interpolate3D(logefftab, [Data.m1, Data.m2, Data.m3], err_out = "off")
+	try:
+  	    LogEff = log(LogEff)  	#---->CHANGE TO LINEAR INTERPOLATION INSTEAD!!!!
+	except:
+	    LogEff = log(min_eff)
         #LogEff = 0
         prcData = Structure()
         prcData.eff = 0            
@@ -269,7 +276,11 @@ def get_proc_Data_3D(proc3D_dict, ana, sr_name, root_S, lumi):
                 warn_list.append(warn)
                 prcData.eff = 1
             else:
-                prcData.eff = exp(LogEff)        
+                prcData.eff = exp(LogEff)
+	if ana == 'ATLAS_CONF_2013_047' and sr_name == 'cut_3' and proc == 'GbB1bN1_GbB1bN1':
+		print ana, sr_name, proc, Data.xsec, prcData.eff
+                print [Data.m1, Data.m2, Data.m3]
+#		for pt in logefftab: print pt
         prcData.xsec = Data.xsec
         prcData.xvis = prcData.eff * Data.xsec
         prcData.nvis = prcData.xvis * lumi        
@@ -417,7 +428,9 @@ def get_results(ana_dict, proc3D_dict, proc2D_dict):
     results = {}
     warning_list = []
     for ana, anaData in ana_dict.iteritems():
-        for sr_name, srData in anaData.sr_dict.iteritems():
+        for sr_name, srData in anaData.sr_dict.iteritems():            
+            if ana == 'ATLAS_CONF_2013_053':
+                  print  sr_name, srData
             #print key
             proc_Data = {}
             pData_dict, warn_list = get_proc_Data_2D(proc2D_dict, ana, sr_name, anaData.root_S, anaData.lumi)

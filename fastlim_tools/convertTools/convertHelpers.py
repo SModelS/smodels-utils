@@ -223,14 +223,21 @@ def smodels2fastlim(txname):
     """
     
     Dict = { "GbB1tN1_GbB1tN1": "T5btbt", "GtT1bN1_GtT1tN1": "T5tbtt", "GgN1_GqqN1": "TGQ",
-             "GtT1bN1_GtT1bN1": "T5tbtb", "GgN1_GgN1": "T2", "GbtN1_GgN1": "TGQbtq",
+             "GtT1bN1_GtT1bN1": "T5tbtb", "GgN1_GgN1": "T2gg", "GbtN1_GgN1": "TGQbtq",
              "GbbN1_GgN1": "TGQbbq", "GttN1_GttN1": "T1tttt", "GbbN1_GbbN1": "T1bbbb",
              "GbB1bN1_GbB1bN1": "T5bbbb", "GbbN1_GqqN1": "T1bbqq",
              "T1tN1_T1tN1": "T2tt", "GgN1_GttN1": "TGQqtt", 'GbbN1_GbtN1': "T1bbbt",
              'GqqN1_GttN1': "T1qqtt", 'T1bN1_T1bN1': "T2bb", 'GbtN1_GbtN1': "T1btbt",
              'GbtN1_GqqN1': "T1btqq", 'GbtN1_GttN1': "T1bttt", 'T1bN1_T1tN1': "T2bt",
              'GbbN1_GttN1': "T1bbtt", 'GqqN1_GqqN1': "T1",
-             "GbB1bN1_GbB1tN1": "T5bbbt", "GtT1tN1_GtT1tN1": "T5tttt"
+             "GbB1bN1_GbB1tN1": "T5bbbt", "GtT1tN1_GtT1tN1": "T5tttt",
+#Added (Andre - 11/11/2015):             
+             "B1bN1_B1bN1" : "T2bb", "T2tN1_T2tN1" : "T2tt", "T1tN1_T1tN1" : "T2tt",
+             "B2bN1_B2bN1" : "T2bb", "GbB2bN1_GbB2bN1" : "T5bbbb", "GtT2tN1_GtT2tN1" : "T5tttt",
+             "GbB2tN1_GbB2tN1": "T5btbt", "GbB2bN1_GbB2tN1" : "T5bbbt", "GtT2bN1_GtT2bN1" : "T5tbtb",
+             "T2bN1_T2bN1" : "T2bb", "T2bN1_T2tN1" : "T2bt",
+#Added (Andre - 02/13/2016):
+             "B1tN1_B1tN1" : "T2tt","B2tN1_B2tN1" : "T2tt", "B1bN1_B1tN1" : "T2bt", "B2bN1_B2tN1" : "T2bt" 
     }
     
     if txname == 'Dict': return Dict
@@ -239,6 +246,7 @@ def smodels2fastlim(txname):
         if tx == txname: return f
         
     return None
+
 
 def closeDictionaryFile():
     dictionary.write ( "SRs={" )
@@ -251,6 +259,74 @@ def closeDictionaryFile():
     dictionary.close()
     ## import commands
     ## commands.getoutput ( "chmod 755 /home/walten/git/smodels-database/signalregions.py" )
+
+
+def fastlimPIDsFor(txname):
+    """
+    Converts the SModelS Txname (i.e. T2tt)
+    to the corresponding list of PIDs appearing in the specific decay assumed by Fastlim.
+    :param txname: Input txname (i.e. T2tt)
+    :return: List of PIDs appearing in txname according to Fastlim. 
+    """
+    
+    fastlimNames = []
+    for fast,smod in smodels2fastlim('Dict').items():
+        if smod == txname: 
+            fastlimNames.append(fast)
+    if not fastlimNames: return []
+    
+    pidsDict = {}
+    
+    pidsDict["GbB1tN1_GbB1tN1"] = [[[1000021,1000005,1000022],[1000021,1000005,1000022]],
+                                    [[1000021,2000005,1000022],[1000021,2000005,1000022]]] 
+    pidsDict["GtT1bN1_GtT1tN1"] = [[[1000021,1000006,1000022],[1000021,1000006,1000022]],
+                                    [[1000021,2000006,1000022],[1000021,2000006,1000022]]]
+    pidsDict["GgN1_GqqN1"] =  [[[1000021,1000022],[1000021,1000022]]]
+    pidsDict["T1tN1_T1tN1"] =  [ [[1000006,1000022], [1000006,1000022]], 
+                                [[2000006,1000022], [2000006,1000022]] ]
+    pidsDict["B1bN1_B1bN1"]  =  [ [[1000005,1000022], [1000005,1000022]], 
+                                [[2000005,1000022], [2000005,1000022]] ]     
+    pidsDict["GgN1_GttN1"] =  pidsDict["GgN1_GqqN1"] 
+    pidsDict['GbbN1_GbtN1'] =  pidsDict["GgN1_GqqN1"]
+    pidsDict['GqqN1_GttN1'] =  pidsDict["GgN1_GqqN1"] 
+    pidsDict['T1bN1_T1bN1'] =  pidsDict["T1tN1_T1tN1"] 
+    pidsDict['GbtN1_GbtN1'] =  pidsDict["GgN1_GqqN1"]
+    pidsDict['GbtN1_GqqN1'] =  pidsDict["GgN1_GqqN1"] 
+    pidsDict['GbtN1_GttN1'] =  pidsDict["GgN1_GqqN1"] 
+    pidsDict['T1bN1_T1tN1'] =  pidsDict["T1tN1_T1tN1"]
+    pidsDict['GbbN1_GttN1'] =  pidsDict["GgN1_GqqN1"] 
+    pidsDict['GqqN1_GqqN1'] =  pidsDict["GgN1_GqqN1"]
+    pidsDict["GbB1bN1_GbB1tN1"] =  pidsDict["GbB1tN1_GbB1tN1"] 
+    pidsDict["GtT1tN1_GtT1tN1"] =  pidsDict["GtT1bN1_GtT1tN1"]   
+    pidsDict["GtT1bN1_GtT1bN1"] =  pidsDict["GtT1bN1_GtT1tN1"] 
+    pidsDict["GgN1_GgN1"] =  pidsDict["GgN1_GqqN1"] 
+    pidsDict["GbtN1_GgN1"] =  pidsDict["GgN1_GqqN1"]
+    pidsDict["GbbN1_GgN1"] =  pidsDict["GgN1_GqqN1"] 
+    pidsDict["GttN1_GttN1"] =  pidsDict["GgN1_GqqN1"] 
+    pidsDict["GbbN1_GbbN1"] =  pidsDict["GgN1_GqqN1"]
+    pidsDict["GbB1bN1_GbB1bN1"] =  pidsDict["GbB1tN1_GbB1tN1"] 
+    pidsDict["GbbN1_GqqN1"] =  pidsDict["GgN1_GqqN1"]     
+    pidsDict["T2tN1_T2tN1"]  = pidsDict['T1bN1_T1tN1'] 
+    pidsDict["T1tN1_T1tN1"]  = pidsDict['T1bN1_T1tN1']
+    pidsDict["B2bN1_B2bN1"]  =  pidsDict["B1bN1_B1bN1"]
+    pidsDict["GbB2bN1_GbB2bN1"]  = pidsDict["GbB1tN1_GbB1tN1"] 
+    pidsDict["GtT2tN1_GtT2tN1"]  = pidsDict["GtT1bN1_GtT1tN1"]
+    pidsDict["GbB2tN1_GbB2tN1"] = pidsDict["GbB2bN1_GbB2bN1"] 
+    pidsDict["GbB2bN1_GbB2tN1"]  = pidsDict["GbB2bN1_GbB2bN1"] 
+    pidsDict["GtT2bN1_GtT2bN1"]  =  pidsDict["GtT1bN1_GtT1tN1"]
+    pidsDict["T2bN1_T2bN1"]  = pidsDict['T1bN1_T1tN1'] 
+    pidsDict["T2bN1_T2tN1"]  = pidsDict['T1bN1_T1tN1']
+    pidsDict["B1tN1_B1tN1"]  = pidsDict["B1bN1_B1bN1"]
+    pidsDict["B2tN1_B2tN1"]  = pidsDict["B1bN1_B1bN1"] 
+    pidsDict["B1bN1_B1tN1"]  = pidsDict["B1bN1_B1bN1"] 
+    pidsDict["B2bN1_B2tN1"]  = pidsDict["B1bN1_B1bN1"]
+
+    allpids = []
+    for fastlimName in fastlimNames:
+        pids = [sorted(pid) for pid in pidsDict[fastlimName]]
+        allpids += pids
+    
+    return allpids
 
 
 if __name__ == "__main__":

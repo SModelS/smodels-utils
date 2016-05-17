@@ -8,7 +8,7 @@
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
 """
-import os,sys,logging,shutil
+import os,sys,logging
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
@@ -18,37 +18,35 @@ databaseDir = os.path.join(home,'smodels-database')
 sys.path.append(os.path.join(home,'smodels'))
 from smodels.tools.physicsUnits import fb, GeV, TeV
 from smodels.theory import slhaDecomposer, theoryPrediction
-from fastlimOutput import formatOutput
 import multiprocessing
 from smodels.tools import databaseBrowser
-from gridFastlim import getSlhaFiles, prepareSLHA
 import subprocess
+from auxiliaryObjs import Timeout, SModelSError, getSlhaFiles, formatOutput, prepareSLHA, NoTime
 
 logger.setLevel(level=logging.DEBUG)
 
 
-def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=None,doXsecs=True):
+def runSmodelS(slhafile,outfile,database,expResID=None,txname=None,
+               doXsecs=True,tout=None):
     """
     Runs smodels for the SLHA file and generate the corresponding .sms file.
     
     :param slhafile: Path to the SLHA file
     :param outfile: Path to the outputfile
-    :param database: Path to the database folder
+    :param database: Database object
     :param txname: Used to only use efficiencies for a specific Txname 
                    (i.e. T2tt,T5bbbb,...). If None will return the total prediction.
     :param expResID: Used to select results for a experimental result (i.e. ATLAS-CONF-xxx)
                    If None will return predictions for all IDs.
     :param doXsecs: If True will erase the original cross-sections and compute new ones
+    :param tout: Timeout for the process
     
     
     :return: True/False if the run was/was not successful 
     """
     
-    #Several checks to make sure Fastlim will run with the correct input
-    if not os.path.isdir(databasePath):
-        logger.error('Database folder %s not found' %databasePath)
-        return False
     
+    #Several checks to make sure SModelS will run with the correct input    
     if not os.path.isfile(slhafile):
         logger.error("File: %s not found" %slhafile)
         return False
@@ -56,52 +54,49 @@ def runSmodelS(slhafile,outfile,databasePath = databaseDir,expResID=None,txname=
         logger.error("Please provide absolute paths for files")
         return False
     
-    #Recompute xsecs
-    if doXsecs:
-        prepareSLHA(slhafile,slhafile)
-        subprocess.call([os.path.join(home,'smodels','runTools.py'), 
-                                'xseccomputer', '-s 8', '-e 10000', '-p', '-f '+slhafile],)
-        subprocess.call([os.path.join(home,'smodels','runTools.py'), 
-                                'xseccomputer', '-s 8', '-N', '-O', '-e 10000', '-p', '-f '+slhafile],)
-
-    
-    sigmacut = 0.01 * fb
-    mingap = 10. * GeV
-    
-    #Load the browser:
-    browser = databaseBrowser.Browser(databasePath)
-    browser.selectExpResultsWith(contact = ['fastlim'])
-    database = browser.database
-    database.expResultList = browser._selectedExpResults
-    if expResID:
-        database.expResultList = database.getExpResults(analysisIDs=[expResID])
-    if txname:
-        database.expResultList = database.getExpResults(txnames=[txname])
+    with Timeout(tout):        
+        #Recompute xsecs
+        if doXsecs:
+            prepareSLHA(slhafile,slhafile)
+            subprocess.call([os.path.join(home,'smodels','runTools.py'), 
+                                    'xseccomputer', '-s 8', '-e 10000', '-p', '-f '+slhafile],)
+            subprocess.call([os.path.join(home,'smodels','runTools.py'), 
+                                    'xseccomputer', '-s 8', '-N', '-O', '-e 10000', '-p', '-f '+slhafile],)
     
     
-    try:
-        smstoplist = slhaDecomposer.decompose(slhafile, sigmacut,\
-                        doCompress=True,doInvisible=True, minmassgap=mingap)
-        predictions = theoryPrediction.TheoryPredictionList()
-        for expRes in database.expResultList:
-            preds =  theoryPrediction.theoryPredictionsFor(expRes, smstoplist)
-            if preds:
-                predictions += preds
-    except:    
-        logger.error('Error running smodels')
-        return False
- 
-    #Format output to a python dictionary
-    extraInfo={'tool': 'smodels','sigmacut' : sigmacut.asNumber(fb), 'mingap' : mingap.asNumber(GeV)}
-    output = formatOutput(slhafile,predictions,'sms',extraInfo)         
-    outfile = open(outfile,'w')
-    outfile.write(str(output))
-    outfile.close()
+        sigmacut = 0.0000001 * fb
+        mingap = 10. * GeV
+            
+        if expResID:
+            database.expResultList = database.getExpResults(analysisIDs=[expResID])
+        if txname:
+            database.expResultList = database.getExpResults(txnames=[txname])
+        
+        try:
+            smstoplist = slhaDecomposer.decompose(slhafile, sigmacut,\
+                            doCompress=True,doInvisible=False, minmassgap=mingap)
+            predictions = theoryPrediction.TheoryPredictionList()
+            for expRes in database.expResultList:
+                preds =  theoryPrediction.theoryPredictionsFor(expRes, smstoplist, 
+                                                               useBestDataset=False)
+                if preds:
+                    predictions += preds
+        except NoTime:
+            raise                    
+        except:    
+            raise SModelSError(slhafile)
+     
+        #Format output to a python dictionary
+        extraInfo={'tool': 'smodels','sigmacut' : sigmacut.asNumber(fb), 'mingap' : mingap.asNumber(GeV)}
+        output = formatOutput(slhafile,predictions,extraInfo)        
+        outfile = open(outfile,'w')
+        outfile.write(str(output))
+        outfile.close()
      
     return True
 
 
-def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=700):
+def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=None):
     """
     Runs fastlim for the SLHA files in slhaFiles. Uses only the best
     dataset for each experimental result.
@@ -116,10 +111,19 @@ def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=700):
     :param tout: Timeout for each process                
 
     :return: List of sms files generated
-    """
-
+    """    
     
-    #Create temp file    
+    #Load a single database for all processes:    
+    if os.path.isdir(databasePath):
+        browser = databaseBrowser.Browser(databasePath)
+        browser.selectExpResultsWith(contact = ['fastlim'])
+        database = browser.database
+        database.expResultList = browser._selectedExpResults            
+    else:
+        logger.error('Database folder %s not found' %databasePath)
+        return False
+
+    #Get SLHA files
     slhaFiles,slhaD = getSlhaFiles(slhadir)
     
     #Set up multiprocessing:
@@ -139,23 +143,27 @@ def runSmodelSFor(slhadir,databasePath,expResID=None,txname=None,np=1,tout=700):
             doXsecs = True
         #Run Fastlim (submit threads):
         results.append([outputfile,
-                        pool.apply_async(runSmodelS,args=(slhafile,outputfile,databasePath,
-                                                          expResID,txname,doXsecs))])
+                        pool.apply_async(runSmodelS,args=(slhafile,outputfile,database,
+                                                          expResID,txname,doXsecs,tout))])
         
-        
+    #Close pool:                    
     pool.close()
-    #Check results
-    data = {}
-    for res in results:        
-        outputfile,run = res
-        try:
-            goodRun = run.get(tout)
-        except:
-            goodRun = False
-        if not goodRun:
-            logger.error("SModelS failed for file %s" %outputfile)
+    #Wait for results to end:
+    pool.join()
+    #Check if results were successful
+    runstatus = {'successful' : [], 'failed' : []}
+    for res in results:
+        outfile, run = res
+        outfile = outfile[outfile.rfind('/')+1:]
+        if run.successful():
+            runstatus['successful'].append(outfile)
         else:
-            data[outputfile[outputfile.rfind('/')+1:]] = goodRun
-            
+            try: run.get()
+            except Exception as e:
+                runstatus['failed'].append([outfile,str(e)])
 
-    return data    
+    #Return the status of each run:
+    return runstatus
+
+
+

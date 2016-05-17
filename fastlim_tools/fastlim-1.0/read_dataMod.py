@@ -1,5 +1,12 @@
 #! /usr/bin/env python
 
+"""
+MODIFIED (A. Lessa): Added option to do linear interpolation on the efficiencies or
+                        linear interpoaltion on the logarithm of the efficiencies (fastlim default)
+                        
+"""
+
+
 import os.path
 from math import *
 from basic_func import *
@@ -12,7 +19,7 @@ from mycls import *
 #from PoissonModelWithBackg import *
 from extract_chain import *
 
-def read_2D_xsec(filename, m1, m2):            
+def read_2D_xsec(filename, m1, m2):  
     if not os.path.isfile(filename):
         print ""
         print '!! File "' + str(filename) + '" not found !!'
@@ -42,7 +49,7 @@ def read_2D_xsec(filename, m1, m2):
         print warn
     return xsec
 
-def read_1D_xsec(filename, m1):            
+def read_1D_xsec(filename, m1):  
     if not os.path.isfile(filename):
         print ""
         print '!! File "' + str(filename) + '" not found !!'
@@ -219,7 +226,7 @@ def get_ana_dict(ana_list, RootS):
     return ana_dict
 
 
-def get_proc_Data_3D(proc3D_dict, ana, sr_name, root_S, lumi):
+def get_proc_Data_3D(proc3D_dict, ana, sr_name, root_S, lumi, logInterpolation = True):
     proc_Data = {}
     warn_list = []
     min_eff = 1./100000
@@ -241,6 +248,7 @@ def get_proc_Data_3D(proc3D_dict, ana, sr_name, root_S, lumi):
             print eff_file, "does not exist!!  skep"
             continue
         logefftab = []
+        efftab = []
         eff = -1  
         for line in open(eff_file, 'r'):            
             vals = extract_numbers(line)
@@ -248,28 +256,38 @@ def get_proc_Data_3D(proc3D_dict, ana, sr_name, root_S, lumi):
                 m1 = vals[0]
                 m2 = vals[1]
                 m3 = vals[2]
-                eff = vals[3]
+                eff = vals[3]                
                 if eff == 0: 
                     logeff = log(min_eff)
                 else:
                     logeff = log(eff)
                 logefftab.append([m1, m2, m3, logeff])
+                efftab.append([m1, m2, m3, eff])
             except: pass
         #print m1, m2, m3, logefftab
-        LogEff = Interpolate3D(logefftab, [Data.m1, Data.m2, Data.m3], err_out = "off")
         #LogEff = 0
-        prcData = Structure()
-        prcData.eff = 0            
-        if not isinstance(LogEff, float):
+        prcData = Structure()        
+        if logInterpolation:
+            effFinal = Interpolate3D(logefftab, [Data.m1, Data.m2, Data.m3], err_out = "off")
+        else:
+            effFinal = Interpolate3D(efftab, [Data.m1, Data.m2, Data.m3], err_out = "off")            
+        if not isinstance(effFinal, float):
             warn = "Warning in " + str(proc) + ": Efficiency in " + str(ana) + ", " + str(sr_name) + " is outside our table. => [eff is set at 0]" 
             warn_list.append(warn)
-        else:
-            if exp(LogEff) > 1:
+            effFinal = 0.
+        elif logInterpolation:
+            effFinal = exp(effFinal)
+                    
+        if effFinal > 1.:
                 warn = "Warning in " + str(proc) + ", " + str(ana) + ", " + str(sr_name) + ": eff > 1 in interpolation. => [eff is set at 1]"
                 warn_list.append(warn)
-                prcData.eff = 1
-            else:
-                prcData.eff = exp(LogEff)        
+                effFinal = 1.
+        elif effFinal < 0.:
+            warn = "Warning in " + str(proc) + ", " + str(ana) + ", " + str(sr_name) + ": eff < 0 in interpolation. => [eff is set at 0]"
+            warn_list.append(warn)
+            effFinal = 0.                
+
+        prcData.eff = effFinal
         prcData.xsec = Data.xsec
         prcData.xvis = prcData.eff * Data.xsec
         prcData.nvis = prcData.xvis * lumi        
@@ -278,7 +296,7 @@ def get_proc_Data_3D(proc3D_dict, ana, sr_name, root_S, lumi):
     return proc_Data, warn_list
 
 
-def get_proc_Data_2D(proc2D_dict, ana, sr_name, root_S, lumi):
+def get_proc_Data_2D(proc2D_dict, ana, sr_name, root_S, lumi, logInterpolation = True):
     proc_Data = {}
     warn_list = []
     for proc, Data in proc2D_dict.iteritems():
@@ -295,6 +313,7 @@ def get_proc_Data_2D(proc2D_dict, ana, sr_name, root_S, lumi):
             print eff_file, "does not exist!!  skep"
             continue            
         logefftab = []
+        efftab = []
         eff = -1  
         for line in open(eff_file, 'r'):
             vals = extract_numbers(line)
@@ -307,24 +326,35 @@ def get_proc_Data_2D(proc2D_dict, ana, sr_name, root_S, lumi):
                 else:
                     logeff = -100000000000000.
                 logefftab.append([m1, m2, logeff])
+                efftab.append([m1, m2, eff])
             except: pass
         #print logefftab
         Dm1 = Data.m1
         Dm2 = Data.m2
-        if Dm2 < 1.: Dm2 = 1.1
-        LogEff = Interpolate2D(logefftab, [Dm1, Dm2])
-        prcData = Structure()
-        prcData.eff = 0            
-        if not isinstance(LogEff, float):
+        if Dm2 < 1.: Dm2 = 1.1        
+        prcData = Structure()       
+        if logInterpolation:
+            effFinal = Interpolate2D(logefftab, [Dm1, Dm2])
+        else:
+            effFinal = Interpolate2D(efftab, [Dm1, Dm2]) 
+        
+        if not isinstance(effFinal, float):
             warn = "Warning in " + str(proc) + ": Efficiency in " + str(ana) + ", " + str(sr_name) + " is outside our table. => [eff is set at 0]" 
             warn_list.append(warn)
-        else:
-            if exp(LogEff) > 1:
+            effFinal = 0.
+        elif logInterpolation:
+            effFinal = exp(effFinal)
+                    
+        if effFinal > 1.:
                 warn = "Warning in " + str(proc) + ", " + str(ana) + ", " + str(sr_name) + ": eff > 1 in interpolation. => [eff is set at 1]"
-                warn_list.append(warn) 
-                prcData.eff = 1
-            else:
-                prcData.eff = exp(LogEff)        
+                warn_list.append(warn)
+                effFinal = 1.
+        elif effFinal < 0.:
+            warn = "Warning in " + str(proc) + ", " + str(ana) + ", " + str(sr_name) + ": eff < 0 in interpolation. => [eff is set at 0]"
+            warn_list.append(warn)
+            effFinal = 0.                
+      
+        prcData.eff = effFinal        
         prcData.xsec = Data.xsec
         prcData.xvis = prcData.eff * Data.xsec
         prcData.nvis = prcData.xvis * lumi
@@ -413,17 +443,16 @@ def get_proc_Data_2D_scan(proc2D_dict, ana, sr_name, root_S, lumi, eff_list_dict
 
 
 
-def get_results(ana_dict, proc3D_dict, proc2D_dict):
+def get_results(ana_dict, proc3D_dict, proc2D_dict, logInterpolation = True):
     results = {}
     warning_list = []
     for ana, anaData in ana_dict.iteritems():
-        for sr_name, srData in anaData.sr_dict.iteritems():
-            #print key
+        for sr_name, srData in anaData.sr_dict.iteritems():            
             proc_Data = {}
-            pData_dict, warn_list = get_proc_Data_2D(proc2D_dict, ana, sr_name, anaData.root_S, anaData.lumi)
+            pData_dict, warn_list = get_proc_Data_2D(proc2D_dict, ana, sr_name, anaData.root_S, anaData.lumi,logInterpolation)
             proc_Data.update(pData_dict)
             warning_list += warn_list
-            pData_dict, warn_list = get_proc_Data_3D(proc3D_dict, ana, sr_name, anaData.root_S, anaData.lumi) 
+            pData_dict, warn_list = get_proc_Data_3D(proc3D_dict, ana, sr_name, anaData.root_S, anaData.lumi,logInterpolation) 
             proc_Data.update(pData_dict)
             warning_list += warn_list
             

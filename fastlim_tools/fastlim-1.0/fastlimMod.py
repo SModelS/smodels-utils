@@ -1,7 +1,11 @@
 #! /usr/bin/env python
 
 """
-MODIFIED (A. Lessa): Removes screen output and uses sys.argv[2] to define file output
+MODIFIED (A. Lessa): 1. Removes screen output and uses sys.argv[2] to define file output
+                     2. Added option to do linear interpolation on the efficiencies or
+                        linear interpoaltion on the logarithm of the efficiencies (fastlim default)
+                     3. Added option to read cross-sections from SLHA input file
+                        
 """
 
 __author__ = "M.Papucci, K.Sakurai, A.Weiler, L.Zeune"
@@ -9,7 +13,7 @@ __version__ = "1.0"
 
 import os
 import sys
-from pyslha import * 
+import pyslha3
 from math import *
 from basic_func import *
 sys.path.append('interpolation')
@@ -17,10 +21,13 @@ from interpolate import *
 sys.path.append('statistics/CLs_limits')
 from mycls import *
 from extract_chain import *
-from read_data import *
-from display import *
+from read_dataMod import *
+from displayMod import *
 from finalstate import *
 from update import *
+
+logInterpolation = False
+useSLHAxsecs = True
 
 ###############################################################################
 ## Main function for module testing
@@ -48,7 +55,8 @@ if __name__ == "__main__":
     check_install_update(options)
 
     warning_list = []
-    blocks, decays = readSLHAFile(infile)
+    d = pyslha3.readSLHAFile(infile)
+    blocks, decays, xsections = d.blocks, d.decays, d.xsections
 
     Input = Paths_and_Data(infile, blocks, decays)
 
@@ -94,35 +102,78 @@ if __name__ == "__main__":
     # Here, the cross section of all the topologies are calculated combining the produciton cross section and the branching ratios.  The 8TeV T1T1 production cross section can be obtained by get_xsec("T1", "T1", 8, Input)
     root_S = 8
     Prod_8 = TheProdMode()
-    logging.info('Calculating sigma * BR...')    
-    if 'G' in initial_part_list: Prod_8.add_prod(part_dict, "G", "G", get_xsec("G", "G", root_S, Input)) 
-    if 'T1' in initial_part_list: Prod_8.add_prod(part_dict, "T1", "T1", get_xsec("T1", "T1", root_S, Input)) 
-    if 'B1' in initial_part_list: Prod_8.add_prod(part_dict, "B1", "B1", get_xsec("B1", "B1", root_S, Input)) 
-    if 'T2' in initial_part_list: Prod_8.add_prod(part_dict, "T2", "T2", get_xsec("T2", "T2", root_S, Input)) 
-    if 'B2' in initial_part_list: Prod_8.add_prod(part_dict, "B2", "B2", get_xsec("B2", "B2", root_S, Input)) 
+    logging.info('Calculating sigma * BR...')
+    if not useSLHAxsecs:
+        if 'G' in initial_part_list: Prod_8.add_prod(part_dict, "G", "G", get_xsec("G", "G", root_S, Input)) 
+        if 'T1' in initial_part_list: Prod_8.add_prod(part_dict, "T1", "T1", get_xsec("T1", "T1", root_S, Input)) 
+        if 'B1' in initial_part_list: Prod_8.add_prod(part_dict, "B1", "B1", get_xsec("B1", "B1", root_S, Input)) 
+        if 'T2' in initial_part_list: Prod_8.add_prod(part_dict, "T2", "T2", get_xsec("T2", "T2", root_S, Input)) 
+        if 'B2' in initial_part_list: Prod_8.add_prod(part_dict, "B2", "B2", get_xsec("B2", "B2", root_S, Input))
+    else:        
+        if not xsections:
+            logging.error('Cross-sections not found in SLHA file')
+            exit()
+        try:
+            ggxsec = xsections[2212, 2212, 1000021, 1000021]
+            ggxsec = ggxsec.get_xsecs(sqrts=8000., qcd_order=2)[0].value
+        except:
+            ggxsec = 1e-20
+        try:
+            t1t1xsec = xsections[2212, 2212, -1000006,1000006]
+            t1t1xsec = t1t1xsec.get_xsecs(sqrts=8000., qcd_order=2)[0].value
+        except:
+            t1t1xsec = 1e-20
+        try:
+            t2t2xsec = xsections[2212, 2212, -2000006,2000006]
+            t2t2xsec = t2t2xsec.get_xsecs(sqrts=8000., qcd_order=2)[0].value
+        except:
+            t2t2xsec = 1e-20
+        try:
+            b1b1xsec = xsections[2212, 2212, -1000005,1000005]
+            b1b1xsec = b1b1xsec.get_xsecs(sqrts=8000., qcd_order=2)[0].value
+        except:
+            b1b1xsec = 1e-20
+        try:
+            b2b2xsec = xsections[2212, 2212, -2000005,2000005]
+            b2b2xsec = b2b2xsec.get_xsecs(sqrts=8000., qcd_order=2)[0].value
+        except:
+            b2b2xsec = 1e-20                        
+        if 'G' in initial_part_list: Prod_8.add_prod(part_dict, "G", "G", ggxsec)
+        if 'T1' in initial_part_list: Prod_8.add_prod(part_dict, "T1", "T1", t1t1xsec) 
+        if 'B1' in initial_part_list: Prod_8.add_prod(part_dict, "B1", "B1", b1b1xsec) 
+        if 'T2' in initial_part_list: Prod_8.add_prod(part_dict, "T2", "T2",t2t2xsec) 
+        if 'B2' in initial_part_list: Prod_8.add_prod(part_dict, "B2", "B2", b2b2xsec)        
+         
 
+    
     # The topologies are renamed if there is mass degeneracies satisfying the conditions below.
     procs_8 = Prod_8.processes  ### Do not comment out
     if 0 < mN2 - mC1 < 10:
         Replace(procs_8, "N2qqC1", "C1")
         Replace(procs_8, "N2enC1", "C1")
-        Replace(procs_8, "N2mnC1", "C1")        
-        Replace(procs_8, "N2e3nC1", "C1")        
+        Replace(procs_8, "N2mnC1", "C1")
+#         Replace(procs_8, "N2e3nC1", "C1")                    
+        Replace(procs_8, "N2ntaC1", "C1")   #Andre's FIX 
     if 0 < mC1 - mN2 < 10:
         Replace(procs_8, "C1qqN2", "N2")
         Replace(procs_8, "C1enN2", "N2")
-        Replace(procs_8, "C1mnN2", "N2")        
-        Replace(procs_8, "C1e3nN2", "N2")        
+        Replace(procs_8, "C1mnN2", "N2")
+#         Replace(procs_8, "C1e3nN2", "N2")       
+        Replace(procs_8, "C1ntaN2", "N2")   #Andre's FIX        
+        Replace(procs_8, "C1tanN2", "N2")   #Andre's FIX
     if 0 < mC1 - mN1 < 10:
         Replace(procs_8, "C1qqN1", "N1")
         Replace(procs_8, "C1enN1", "N1")
-        Replace(procs_8, "C1mnN1", "N1")        
-        Replace(procs_8, "C1e3nN1", "N1")        
+        Replace(procs_8, "C1mnN1", "N1")
+#         Replace(procs_8, "C1e3nN1", "N1")                
+        Replace(procs_8, "C1ntaN1", "N1")  #Andre's FIX      
+        Replace(procs_8, "C1tanN1", "N1")  #Andre's FIX
     if 0 < mN2 - mN1 < 10:   
         Replace(procs_8, "N2qqN1", "N1")
         Replace(procs_8, "N2eeN1", "N1")
-        Replace(procs_8, "N2mmN1", "N1")        
-        Replace(procs_8, "N2e3e3N1", "N1")        
+        Replace(procs_8, "N2mmN1", "N1")   
+#         Replace(procs_8, "N2e3e3N1", "N1")               
+        Replace(procs_8, "N2tataN1", "N1") #Andre's FIX       
         Replace(procs_8, "N2nnN1", "N1")    
         Replace(procs_8, "N2gamN1", "N1")        
     set_rates(procs_8)          ### Do not comment out     
@@ -221,7 +272,7 @@ if __name__ == "__main__":
     logging.info('Reading efficiency tables...')    
     # Here calculates the visible cross sections and R measures. These are stored in results dictionary 
     results = {}
-    res, warn = get_results(ana_dict_8, proc3D, proc2D)
+    res, warn = get_results(ana_dict_8, proc3D, proc2D, logInterpolation)
     results.update(res)
     warning_list += warn
     for w in warning_list: print w
@@ -243,7 +294,7 @@ if __name__ == "__main__":
     fout.close()
 
     # Creating the output file
-    show_processes(Prod_8, proc_list, 8, outputfile, upto = 0.005)
+    show_processes(Prod_8, proc_list, 8, outputfile, upto = 0.0001)
     show_analysis(ana_dict, results, outputfile)
 
     ####################################################################

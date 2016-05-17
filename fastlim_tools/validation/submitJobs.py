@@ -17,6 +17,7 @@ if __name__ == "__main__":
     argparser.add_argument('-Ncore', help='total number of cores to be used', type=int, default=1)
     argparser.add_argument('-Njobs', help='total number of jobs to be submitted', type=int, default=1)
     argparser.add_argument('-twall', help='walltime for each job (in hours)', type=int, default=2)
+    argparser.add_argument('-Tout', help='Time out limit (in seconds) for a single process', type=float, default=2000)
     argparser.add_argument('-log', help='log file to store the output', default="log.dat")
     argparser.add_argument('-Tool', help='Tool to be used (fastlim/smodels)', required=True)
     args = argparser.parse_args()    
@@ -49,18 +50,18 @@ if __name__ == "__main__":
     #Submit jobs
     for ijob in range(njobs):
         with open('subJob'+args.Tool+str(ijob),'w') as jobscript:
-            jobscript.write("#PBS -S /bin/bash\n\
-#PBS -l walltime=%d:00:00\n\
-#PBS -l procs=%d\n\
-#PBS -N %s\n\
+            jobscript.write("#!/bin/bash\n\
+#PBS -l walltime="+str(args.twall)+":00:00\n\
+#PBS -l nodes=1:ppn="+str(nCoresPerJob)+"\n\
+#PBS -N "+args.Tool+"Job_"+str(ijob)+"\n\
+#PBS -e "+nfolders[ijob]+"/err.log\n\
+#PBS -o "+nfolders[ijob]+"/log.out\n\
+#PBS -m ae\n\
+#PBS -M lessa.a.p@gmail.com\n\
 \n\
-cd $PBS_O_WORKDIR\n\
-\n\
-./singleJob.py %s -Ncore %d -Tool %s >> $PBS_O_WORKDIR/%s \n" %(args.twall,nCoresPerJob,
-                                                                'subJob'+args.Tool+str(ijob),
-                                                                nfolders[ijob],nCoresPerJob,args.Tool,
-                                                                args.log))
+./singleJob.py "+nfolders[ijob]+" -Ncore "+str(nCoresPerJob)+ " -Tout "+str(args.Tout)
+                +" -Tool "+args.Tool+" >> "+nfolders[ijob]+"/"+args.log)
 
-        subprocess.call("qsub ./subJob"+args.Tool+str(ijob),shell=True)
+        subprocess.call("qsub subJob"+args.Tool+str(ijob),shell=True)
     sys.exit()
         
