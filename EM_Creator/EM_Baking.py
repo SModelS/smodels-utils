@@ -45,7 +45,7 @@ SLHA_List = SLHA_List_Creator(SLHA_InputDir)
 for slha in SLHA_List:
 
     SLHA_path = SLHA_InputDir + '/' + slha
-    SLHA_name = slha.split('.')[0]
+    SLHA_name = slha.split('.slha')[0]
     TxName    = slha.split('_')[0]
 
     MG5_Process = MG5_detProcess(slha)#, extraISR = '2jet')        # this extracts the correct MG5 process from the txName

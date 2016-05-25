@@ -27,16 +27,17 @@ def SLHA_List_Creator(slhaDir):
     SLHA_List.sort()
     return SLHA_List
 
+
 '''
-SLHA - HEP - ROOT existing files part ---------------------------------------------------------------------------------------------------------------------------------------------------
+This function checks if the input directory containing the existing SLHA files is existing or not
 '''
-# This function checks if the input directory containing the existing SLHA files is existing or not
 def NoSLHAInput_Breaker(slhaDir = ''):
     if not slhaDir:
        print 'The SLHA input folder is not correct! Please run again providing a valid directory!'
        sys.exit()
-
-# This function checks if the file exists or not, and if not it continues to the next slha 
+'''
+This function checks if the file exists or not, and if not it continues to the next slha
+''' 
 def NoFile_Continue(File = ''):
     if (os.path.exists(File)):
        return True

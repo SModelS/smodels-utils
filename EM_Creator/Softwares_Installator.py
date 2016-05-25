@@ -18,7 +18,7 @@ This utilies builds MG5 and MA5 by extracting the tools from the respective tarb
 mg5 and ma5 are the name of the respective tarballs i.e. MA5_tar = 'MadAnalysis5_v1.3.tar.gz' , MG5_tar = 'MG5_aMC_v2.3.3.tar'
 '''
 prog_dir     = 'Programs_Installation' 
-folder_containing_tar = os.getcwd()+'/' + prog_dir  # TODO this will be fixed in the final version on the script
+folder_containing_tar = os.getcwd()+'/' + prog_dir  # TODO this will be fixed and hard-coded in the final version on the script
 
 def Install_MA5(ma5):
     os.chdir(folder_containing_tar)
