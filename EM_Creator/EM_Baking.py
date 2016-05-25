@@ -48,7 +48,7 @@ for slha in SLHA_List:
     SLHA_name = slha.split('.slha')[0]
     TxName    = slha.split('_')[0]
 
-    MG5_Process = MG5_detProcess(slha, extraISR = '0jet')       # this extracts the correct MG5 process from the txName TODO extraISR = '2jet' is the def option
+    MG5_Process = MG5_detProcess(slha)       # this extracts the correct MG5 process from the txName TODO extraISR = '2jet' is the def option
     if (not NoFile_Continue(Home_Dir+'/Input/MG5_Process_Cards/'+MG5_Process+'.txt') ):   # checks if the MG5 proc card is present
        	print 'MAG Process Card not found! I will continue with next SLHA'
        	continue
