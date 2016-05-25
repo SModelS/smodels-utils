@@ -10,25 +10,55 @@ MA5_Analyses_Dicts = [
  'SR_Dict_List' : [ { 'MA5_SR_Name' : 'MET200-350__Nbjets=1' ,          'Official_SR_Name' : 'Official_region1' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
                     { 'MA5_SR_Name' : 'MET>350__Nbjets=1' ,             'Official_SR_Name' : 'Official_region2' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },              
                     { 'MA5_SR_Name' : 'MET200-350__Nbjets>1' ,          'Official_SR_Name' : 'Official_region3' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'MET>350__Nbjets>1' ,             'Official_SR_Name' : 'Official_region4' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 }
-               ]
-},
+                    { 'MA5_SR_Name' : 'MET>350__Nbjets>1' ,             'Official_SR_Name' : 'Official_region4' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 } ] },
 
 {'Name'        : 'atlas_susy_2013_21' ,
  'SR_Dict_List' : [ { 'MA5_SR_Name' : 'M1' ,                           'Official_SR_Name' : 'Official_region1' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
                     { 'MA5_SR_Name' : 'M2' ,                           'Official_SR_Name' : 'Official_region2' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },               
-                    { 'MA5_SR_Name' : 'M3' ,                           'Official_SR_Name' : 'Official_region3' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-               ]
-},
+                    { 'MA5_SR_Name' : 'M3' ,                           'Official_SR_Name' : 'Official_region3' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 }, ] },
 
 {'Name'        : 'cms_sus_13_016' ,
- 'SR_Dict_List' : [ { 'MA5_SR_Name' : 'Gluino_to_TT_neutralino' ,      'Official_SR_Name' : 'Official_region1' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-               ]
-},
+'SR_Dict_List' : [ { 'MA5_SR_Name' : 'Gluino_to_TT_neutralino' ,      'Official_SR_Name' : 'sr0' , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 } ] },
 
+{'Name'        : 'cms_sus_13_012' ,
+ 'SR_Dict_List' : [ { 'MA5_SR_Name' : 'Njets3-5, HT500-800, MHT200-300' ,       'Official_SR_Name' : 'Njets3-5,HT500-800,MHT200-300' ,  'Obs': 22 , 'Bkg': 22 ,   'Err': 22 },
+                    { 'MA5_SR_Name' : 'Njets3-5, HT500-800, MHT300-450' ,       'Official_SR_Name' : 'Njets3-5,HT500-800,MHT300-450' ,  'Obs': 22  , 'Bkg': 22 ,   'Err': 22 },
+                    { 'MA5_SR_Name' : 'Njets3-5, HT500-800, MHT450-600' ,       'Official_SR_Name' : 'Njets3-5,HT500-800,MHT450-600' ,  'Obs': 22  , 'Bkg': 22 , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets3-5, HT500-800, MHT>600' ,          'Official_SR_Name' : 'Njets3-5,HT500-800,MHT>600' ,  'Obs': 22   , 'Bkg': 22 ,  'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets3-5, HT800-1000, MHT200-300' ,      'Official_SR_Name' : 'Njets3-5,HT800-1000,MHT200-300' ,  'Obs': 22   , 'Bkg': 22  , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets3-5, HT800-1000, MHT300-450' ,      'Official_SR_Name' : 'Njets3-5,HT800-1000,MHT300-450'         , 'Obs': 22  , 'Bkg': 22  , 'Err': 22 },  
+                    { 'MA5_SR_Name' : 'Njets3-5, HT800-1000, MHT450-600' ,      'Official_SR_Name' : 'Njets3-5,HT800-1000,MHT450-600' ,  'Obs': 22  , 'Bkg': 22 ,   'Err': 22 },
+                    { 'MA5_SR_Name' : 'Njets3-5, HT800-1000, MHT>600' ,         'Official_SR_Name' : 'Njets3-5,HT800-1000,MHT>600' ,  'Obs': 22  , 'Bkg': 22 , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets3-5, HT1000-1250, MHT200-300' ,     'Official_SR_Name' : 'Njets3-5,HT1000-1250,MHT200-300' ,  'Obs': 22   , 'Bkg': 22 ,  'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets3-5, HT1000-1250, MHT300-450' ,     'Official_SR_Name' : 'Njets3-5,HT1000-1250,MHT300-450' ,  'Obs': 22   , 'Bkg': 22  , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets3-5, HT1000-1250, MHT450-600' ,     'Official_SR_Name' : 'Njets3-5,HT1000-1250,MHT450-600'         , 'Obs': 22  , 'Bkg': 22  , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets3-5, HT1000-1250, MHT>600' ,        'Official_SR_Name' : 'Njets3-5,HT1000-1250,MHT>600' ,  'Obs': 22  , 'Bkg': 22 ,   'Err': 22 },
+                    { 'MA5_SR_Name' : 'Njets3-5, HT1250-1500, MHT200-300' ,     'Official_SR_Name' : 'Njets3-5,HT1250-1500,MHT200-300' ,  'Obs': 22  , 'Bkg': 22 , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets3-5, HT1250-1500, MHT300-450' ,     'Official_SR_Name' : 'Njets3-5,HT1250-1500,MHT300-450' ,  'Obs': 22   , 'Bkg': 22 ,  'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets3-5, HT1250-1500, MHT>450' ,        'Official_SR_Name' : 'Njets3-5,HT1250-1500,MHT>450' ,  'Obs': 22   , 'Bkg': 22  , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets3-5, HT>1500, MHT200-300' ,         'Official_SR_Name' : 'Njets3-5,HT>1500,MHT200-300'         , 'Obs': 22  , 'Bkg': 22  , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets3-5, HT>1500, MHT>300' ,            'Official_SR_Name' : 'Njets3-5,HT>1500,MHT>300' ,  'Obs': 22  , 'Bkg': 22 ,   'Err': 22 },
 
-# TODO the numebrs are not correct! They are not used anywhere
+                    { 'MA5_SR_Name' : 'Njets6-7, HT500-800, MHT200-300' ,       'Official_SR_Name' : 'Njets6-7,HT500-800,MHT200-300' ,  'Obs': 22  , 'Bkg': 22 , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets6-7, HT500-800, MHT300-450' ,       'Official_SR_Name' : 'Njets6-7,HT500-800,MHT300-450' ,  'Obs': 22   , 'Bkg': 22 ,  'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets6-7, HT500-800, MHT>450' ,          'Official_SR_Name' : 'Njets6-7,HT500-800,MHT>450' ,  'Obs': 22   , 'Bkg': 22  , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets6-7, HT800-1000, MHT200-300' ,      'Official_SR_Name' : 'Njets6-7,HT800-1000,MHT200-300'         , 'Obs': 22  , 'Bkg': 22  , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets6-7, HT800-1000, MHT300-450' ,      'Official_SR_Name' : 'Njets6-7,HT800-1000,MHT300-450' ,  'Obs': 22  , 'Bkg': 22 , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets6-7, HT800-1000, MHT>450' ,         'Official_SR_Name' : 'Njets6-7,HT800-1000,MHT>450' ,  'Obs': 22   , 'Bkg': 22 ,  'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets6-7, HT1000-1250, MHT200-300' ,     'Official_SR_Name' : 'Njets6-7,HT1000-1250,MHT200-300' ,  'Obs': 22   , 'Bkg': 22  , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets6-7, HT1000-1250, MHT300-450' ,     'Official_SR_Name' : 'Njets6-7,HT1000-1250,MHT300-450'         , 'Obs': 22  , 'Bkg': 22  , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets6-7, HT1000-1250, MHT>450' ,        'Official_SR_Name' : 'Njets6-7,HT1000-1250,MHT>450' ,  'Obs': 22  , 'Bkg': 22 , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets6-7, HT1250-1500, MHT200-300' ,     'Official_SR_Name' : 'Njets6-7,HT1250-1500,MHT200-300' ,  'Obs': 22   , 'Bkg': 22 ,  'Err': 22 },
+                    { 'MA5_SR_Name' : 'Njets6-7, HT1250-1500, MHT300-450' ,     'Official_SR_Name' : 'Njets6-7,HT1250-1500,MHT300-450' ,  'Obs': 22   , 'Bkg': 22  , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets6-7, HT1250-1500, MHT>450' ,        'Official_SR_Name' : 'Njets6-7,HT1250-1500,MHT>450'         , 'Obs': 22  , 'Bkg': 22  , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets6-7, HT>1500, MHT200-300' ,         'Official_SR_Name' : 'Njets6-7,HT>1500,MHT200-300' ,  'Obs': 22  , 'Bkg': 22 , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets6-7, HT>1500, MHT>300' ,            'Official_SR_Name' : 'Njets6-7,HT>1500,MHT>300' ,  'Obs': 22   , 'Bkg': 22 ,  'Err': 22 }, 
 
+                    { 'MA5_SR_Name' : 'Njets>7, HT500-800, MHT>200' ,           'Official_SR_Name' : 'Njets>7,HT500-800,MHT>200' ,  'Obs': 22   , 'Bkg': 22  , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets>7, HT800-1000, MHT>200' ,          'Official_SR_Name' : 'Njets>7,HT800-1000,MHT>200'         , 'Obs': 22  , 'Bkg': 22  , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets>7, HT1000-1250, MHT>200' ,         'Official_SR_Name' : 'Njets>7,HT1000-1250,MHT>200' ,  'Obs': 22  , 'Bkg': 22 , 'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets>7, HT1250-1500, MHT>200' ,         'Official_SR_Name' : 'Njets>7,HT1250-1500,MHT>200' ,  'Obs': 22   , 'Bkg': 22 ,  'Err': 22 }, 
+                    { 'MA5_SR_Name' : 'Njets>7, HT>1500, MHT>200' ,             'Official_SR_Name' : 'Njets>7,HT>1500,MHT>200' ,  'Obs': 22   , 'Bkg': 22  , 'Err': 22 }, ] },
 
 {'Name'        : 'atlas_sus_13_05' ,
  'SR_Dict_List' : [ { 'MA5_SR_Name' : 'SRA, HighDeltaM, MET > 150, MCT > 150' ,      'Official_SR_Name' : 'SRA-mCT150' , 'Obs': 102 , 'Bkg': 94 ,   'Err': 13 },
@@ -36,10 +66,28 @@ MA5_Analyses_Dicts = [
                     { 'MA5_SR_Name' : 'SRA, HighDeltaM, MET > 150, MCT > 250' ,      'Official_SR_Name' : 'SRA-mCT250' , 'Obs': 14  , 'Bkg': 15.8 , 'Err': 2.8 }, 
                     { 'MA5_SR_Name' : 'SRA, HighDeltaM, MET > 150, MCT > 300' ,      'Official_SR_Name' : 'SRA-mCT300' , 'Obs': 7   , 'Bkg': 5.9 ,  'Err': 1.1 }, 
                     { 'MA5_SR_Name' : 'SRA, HighDeltaM, MET > 150, MCT > 350' ,      'Official_SR_Name' : 'SRA-mCT350' , 'Obs': 3   , 'Bkg': 2.5  , 'Err': 0.6 }, 
-                    { 'MA5_SR_Name' : 'SRB, LowDeltaM, MET > 250'             ,      'Official_SR_Name' : 'SRB'         , 'Obs': 65  , 'Bkg': 64  , 'Err': 10 }, 
+                    { 'MA5_SR_Name' : 'SRB, LowDeltaM, MET > 250'             ,      'Official_SR_Name' : 'SRB'         , 'Obs': 65  , 'Bkg': 64  , 'Err': 10 }, ] },
 
-               ]
-},
+{'Name'        : 'cms_sus_13_011' ,
+ 'SR_Dict_List' : [ { 'MA5_SR_Name' : 'Stop->T+neutralino, LowDeltaM, MET>150' ,      'Official_SR_Name' : 'Stop->T+neutralino,LowDeltaM,MET>150' , 'Obs': 102 , 'Bkg': 94 ,   'Err': 13 },
+                    { 'MA5_SR_Name' : 'Stop->T+neutralino, LowDeltaM, MET>200' ,      'Official_SR_Name' : 'Stop->T+neutralino,LowDeltaM,MET>200' , 'Obs': 48  , 'Bkg': 39 ,   'Err': 6 },
+                    { 'MA5_SR_Name' : 'Stop->T+neutralino, LowDeltaM, MET>250' ,      'Official_SR_Name' : 'Stop->T+neutralino,LowDeltaM,MET>250' , 'Obs': 14  , 'Bkg': 15.8 , 'Err': 2.8 }, 
+                    { 'MA5_SR_Name' : 'Stop->T+neutralino, LowDeltaM, MET>300' ,      'Official_SR_Name' : 'Stop->T+neutralino,LowDeltaM,MET>300' , 'Obs': 7   , 'Bkg': 5.9 ,  'Err': 1.1 }, 
+
+                    { 'MA5_SR_Name' : 'Stop->T+neutralino, HighDeltaM, MET>150' ,      'Official_SR_Name' : 'Stop->T+neutralino,HighDeltaM,MET>150' , 'Obs': 3   , 'Bkg': 2.5  , 'Err': 0.6 }, 
+                    { 'MA5_SR_Name' : 'Stop->T+neutralino, HighDeltaM, MET>200' ,      'Official_SR_Name' : 'Stop->T+neutralino,HighDeltaM,MET>200'         , 'Obs': 65  , 'Bkg': 64  , 'Err': 10 },
+                    { 'MA5_SR_Name' : 'Stop->T+neutralino, HighDeltaM, MET>250' ,      'Official_SR_Name' : 'Stop->T+neutralino,HighDeltaM,MET>250' , 'Obs': 48  , 'Bkg': 39 ,   'Err': 6 },
+                    { 'MA5_SR_Name' : 'Stop->T+neutralino, HighDeltaM, MET>300' ,      'Official_SR_Name' : 'Stop->T+neutralino,HighDeltaM,MET>300' , 'Obs': 14  , 'Bkg': 15.8 , 'Err': 2.8 },
+
+                    { 'MA5_SR_Name' : 'Stop->b+chargino, LowDeltaM, MET>100' ,      'Official_SR_Name' : 'Stop->b+chargino,LowDeltaM,MET>100' , 'Obs': 7   , 'Bkg': 5.9 ,  'Err': 1.1 }, 
+                    { 'MA5_SR_Name' : 'Stop->b+chargino, LowDeltaM, MET>150' ,      'Official_SR_Name' : 'Stop->b+chargino,LowDeltaM,MET>150' , 'Obs': 3   , 'Bkg': 2.5  , 'Err': 0.6 }, 
+                    { 'MA5_SR_Name' : 'Stop->b+chargino, LowDeltaM, MET>200' ,      'Official_SR_Name' : 'Stop->b+chargino,LowDeltaM,MET>200'         , 'Obs': 65  , 'Bkg': 64  , 'Err': 10 }, 
+                    { 'MA5_SR_Name' : 'Stop->b+chargino, LowDeltaM, MET>250' ,      'Official_SR_Name' : 'Stop->b+chargino,LowDeltaM,MET>250' , 'Obs': 48  , 'Bkg': 39 ,   'Err': 6 },
+
+                    { 'MA5_SR_Name' : 'Stop->b+chargino, HighDeltaM, MET>100' ,      'Official_SR_Name' : 'Stop->b+chargino,HighDeltaM,MET>100' , 'Obs': 14  , 'Bkg': 15.8 , 'Err': 2.8 }, 
+                    { 'MA5_SR_Name' : 'Stop->b+chargino, HighDeltaM, MET>150' ,      'Official_SR_Name' : 'Stop->b+chargino,HighDeltaM,MET>150' , 'Obs': 7   , 'Bkg': 5.9 ,  'Err': 1.1 }, 
+                    { 'MA5_SR_Name' : 'Stop->b+chargino, HighDeltaM, MET>200' ,      'Official_SR_Name' : 'Stop->b+chargino,HighDeltaM,MET>200' , 'Obs': 3   , 'Bkg': 2.5  , 'Err': 0.6 }, 
+                    { 'MA5_SR_Name' : 'Stop->b+chargino, HighDeltaM, MET>250' ,      'Official_SR_Name' : 'Stop->b+chargino,HighDeltaM,MET>250'         , 'Obs': 65  , 'Bkg': 64  , 'Err': 10 }, ] },
 
 {'Name'        : 'atlas_susy_2013_11' ,
  'SR_Dict_List' : [ { 'MA5_SR_Name' : 'MT2-90 ee;MT2-90 mumu' ,         'Official_SR_Name' : 'mT2-90-SF'      , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
@@ -54,10 +102,22 @@ MA5_Analyses_Dicts = [
                     { 'MA5_SR_Name' : 'WWb emu' ,                       'Official_SR_Name' : 'WWb-DF'         , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
                     { 'MA5_SR_Name' : 'WWc ee;WWc mumu' ,               'Official_SR_Name' : 'WWc-SF'         , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
                     { 'MA5_SR_Name' : 'WWc emu' ,                       'Official_SR_Name' : 'WWc-DF'         , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
-                    { 'MA5_SR_Name' : 'Zjets ee;Zjets mumu' ,           'Official_SR_Name' : 'Zjets'          , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 }
+                    { 'MA5_SR_Name' : 'Zjets ee;Zjets mumu' ,           'Official_SR_Name' : 'Zjets'          , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 } ] },
 
-                   ]
-                      },
+{'Name'        : 'atlas_susy_2013_04' ,
+ 'SR_Dict_List' : [ { 'MA5_SR_Name' : '8j50, 0 bjet' ,                  'Official_SR_Name' : '8j50,0bjet'      , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
+                    { 'MA5_SR_Name' : '8j50, 1 bjet' ,                  'Official_SR_Name' : '8j50,1bjet'      , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
+                    { 'MA5_SR_Name' : '8j50, >=2 bjets' ,               'Official_SR_Name' : '8j50,>=2bjets'    , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
+                    { 'MA5_SR_Name' : '9j50, 0 bjet' ,                  'Official_SR_Name' : '9j50,0bjet'    , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
+                    { 'MA5_SR_Name' : '9j50, 1 bjet' ,                  'Official_SR_Name' : '9j50,1bjet'    , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
+                    { 'MA5_SR_Name' : '9j50, >=2 bjets' ,               'Official_SR_Name' : '9j50,>=2bjets'     , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
+                    { 'MA5_SR_Name' : '>=10j50' ,                       'Official_SR_Name' : '>=10j50'         , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
+                    { 'MA5_SR_Name' : '7j80, 0 bjet' ,                  'Official_SR_Name' : '7j80,0bjet'         , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
+                    { 'MA5_SR_Name' : '7j80, 1 bjet' ,                  'Official_SR_Name' : '7j80,1bjet'         , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
+                    { 'MA5_SR_Name' : '7j80, >=2 bjets' ,               'Official_SR_Name' : '7j80,>=2bjets'         , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
+                    { 'MA5_SR_Name' : '>=8j80, 0 bjet' ,                'Official_SR_Name' : '>=8j80,0bjet'         , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
+                    { 'MA5_SR_Name' : '>=8j80, 1 bjet' ,                'Official_SR_Name' : '>=8j80,1bjet'         , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 },
+                    { 'MA5_SR_Name' : '>=8j80, >=2 bjets' ,             'Official_SR_Name' : '>=8j80,>=2bjets'          , 'Obs': 10 , 'Bkg': 9 , 'Err': 3 } ] },
 
 ]
 

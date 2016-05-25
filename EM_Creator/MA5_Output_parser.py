@@ -61,7 +61,9 @@ def EM_Value_Extractor_MA5(MA5_EM_OutputSaf = '', analysis = '', region = ''):
            if analysis in line and region in line:   # checks analysis and region
               s = [x for x in line.split('  ') if x != '']
               EM_Value.append(s[5])
-    return EM_Value[0]
+    if (EM_Value[0]):
+       return EM_Value[0]
+    else: return 'No_Eff'
 
 def EM_Value_Extractor_CM(EM_output='', analysis='', region=''):
     effFile = EM_output+"/%s_eff_tab.txt" %analysis

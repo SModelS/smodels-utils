@@ -121,9 +121,3 @@ for slha in SLHA_List:
 Info_Saver(author= author, outDir= Output_Folder )         # Saving a recap file
 
 
-
-
-
-
-
-

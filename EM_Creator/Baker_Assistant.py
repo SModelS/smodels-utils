@@ -89,14 +89,18 @@ def Run_MG5( MG5Pythia_paramDic = '', slha_file = '', MG5dir = '' , templ_dir ='
     os.chdir(MG5dir)
     if (not os.path.isfile(templ_dir+'/MG5_Process_Cards/'+proc+'.txt') ):
        print 'The process card', proc, ' does not exists in the MG5 proc input folder!'
-    if (not os.path.isdir(proc) ): 
+       return None
+    if (not os.path.isdir(proc) and os.path.exists(templ_dir+'/MG5_Process_Cards/'+proc+'.txt') ): 
        os.system('./bin/mg5 '+ templ_dir+'/MG5_Process_Cards/'+proc+'.txt')
-    commands_file = MG5_commands_producer(proc)                             
-    copyfile(slha_file , proc+'/Cards/param_card.dat' )                              
-    MG5_Pythia_cards_producer(MG5Pythia_paramDic= MG5Pythia_paramDic, MG5dir= MG5dir, proc= proc, templ_dir= templ_dir )   # ext funct creating the run_card from the templ 
-    if (os.path.isdir(proc+'/Events/run_01')):
-       shutil.rmtree(proc+'/Events/run_01')
-    os.system("./bin/mg5 "+commands_file)          
+    if os.path.exists(MG5dir+'/'+proc):
+       commands_file = MG5_commands_producer(proc)                             
+       copyfile(slha_file , proc+'/Cards/param_card.dat' )                              
+       MG5_Pythia_cards_producer(MG5Pythia_paramDic= MG5Pythia_paramDic, MG5dir= MG5dir, proc= proc, templ_dir= templ_dir )   # ext funct creating the run_card from the templ 
+       if (os.path.isdir(proc+'/Events/run_01')):
+          shutil.rmtree(proc+'/Events/run_01')
+       os.system("./bin/mg5 "+commands_file) 
+    else:
+       return None          
 
 '''
 Running MA5:
