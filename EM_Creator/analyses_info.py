@@ -27,7 +27,7 @@ MA5_Analyses_Dicts = [
 },
 
 
-# TODO the above numbers are not real, only the ones for these following two analyses are correct
+# TODO the numebrs are not correct! They are not used anywhere
 
 
 {'Name'        : 'atlas_sus_13_05' ,
@@ -36,7 +36,7 @@ MA5_Analyses_Dicts = [
                     { 'MA5_SR_Name' : 'SRA, HighDeltaM, MET > 150, MCT > 250' ,      'Official_SR_Name' : 'SRA-mCT250' , 'Obs': 14  , 'Bkg': 15.8 , 'Err': 2.8 }, 
                     { 'MA5_SR_Name' : 'SRA, HighDeltaM, MET > 150, MCT > 300' ,      'Official_SR_Name' : 'SRA-mCT300' , 'Obs': 7   , 'Bkg': 5.9 ,  'Err': 1.1 }, 
                     { 'MA5_SR_Name' : 'SRA, HighDeltaM, MET > 150, MCT > 350' ,      'Official_SR_Name' : 'SRA-mCT350' , 'Obs': 3   , 'Bkg': 2.5  , 'Err': 0.6 }, 
-                    { 'MA5_SR_Name' : 'SRB, LowDeltaM, MET > 250'             ,      'Official_SR_Name' : 'SRB'         , 'Obs': 65  , 'Bkg': 64   , 'Err': 10 }, 
+                    { 'MA5_SR_Name' : 'SRB, LowDeltaM, MET > 250'             ,      'Official_SR_Name' : 'SRB'         , 'Obs': 65  , 'Bkg': 64  , 'Err': 10 }, 
 
                ]
 },

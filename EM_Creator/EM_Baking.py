@@ -48,8 +48,11 @@ for slha in SLHA_List:
     SLHA_name = slha.split('.slha')[0]
     TxName    = slha.split('_')[0]
 
-    MG5_Process = MG5_detProcess(slha)#, extraISR = '2jet')        # this extracts the correct MG5 process from the txName
-#    MG5_Process = 'e+e-'   #TODO little HACK : comment the line above and uncomment this to make the process faster (but physically meaningless) -> just to test the code
+    MG5_Process = MG5_detProcess(slha, extraISR = '0jet')       # this extracts the correct MG5 process from the txName TODO extraISR = '2jet' is the def option
+    if (not NoFile_Continue(Home_Dir+'/Input/MG5_Process_Cards/'+MG5_Process+'.txt') ):   # checks if the MG5 proc card is present
+       	print 'MAG Process Card not found! I will continue with next SLHA'
+       	continue
+
     OutputFolder_TxName_dir = Output_Folder +'/'+ TxName
     Folder_Creator(out_dir = OutputFolder_TxName_dir)            # Create a folder for each Mg5 process inside the output folder just created
 
@@ -60,7 +63,6 @@ for slha in SLHA_List:
 # For each Mg5 process there will be a folder inside the Output dir ;
 # inside each process folder there will be a folder called as the SLHA file                          ----> 'OutputFolder_Mg5Process_SLHA_dir' 
 # Inside each SLHA folder, there will be one folder containing the Mg5 output and the MA5 root file  ----> 'OutputFolder_Mg5Process_SLHA_Mg5Folder_dir'
-         
     Run_MG5 (MG5Pythia_paramDic= MG5_Pythia_Params, slha_file= SLHA_path, MG5dir= MG5_Dir, templ_dir= Templates_Folder , proc = MG5_Process) 
     OutputFolder_TxName_SLHA_dir= OutputFolder_TxName_dir +'/'+SLHA_name           # Output folder for each differen SLHA
     MG5_Output_Relocator (mg5Out= MG5_Dir+'/'+MG5_Process+'/Events/run_01', MG5_OutputDir = OutputFolder_TxName_SLHA_dir  ) 
@@ -88,12 +90,11 @@ for slha in SLHA_List:
 
     	Run_MA5(ma5Dir = MA5_Dir, inputHEP = input_HEP)  
     	if (not NoFile_Continue(MA5_Dir + '/ANALYSIS_0') ): 
-       		print 'MA5 Delphes file not found! I will continue with next SLHA'
+       		print 'MA5 Output not found! I will continue with next SLHA'
        		continue
-#    if (not os.path.isdir(MA5_Dir + '/ANALYSIS_0') ):
-#       print 'No MA5 Output found! Moving to next SLHA'
-#       continue 
+
     	MA5_Output_Relocator(ma5Dir = MA5_Dir, MA5_OutputDir = OutputFolder_TxName_SLHA_dir)
+
     else: # run CheckMate instead
     	# FIXME installation of checkmate?
         Run_CM(cmDir = CM_Dir, inputHEP=input_HEP)

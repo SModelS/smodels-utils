@@ -46,10 +46,6 @@ def ReInstall_PAD(ma5_path):
     os.chdir(ma5_path)
     os.system('./bin/ma5 -s ../MA5_Install_PADForMA5tune.txt')
 
-
-
-
-
 def Install_MG5(mg5): 
     os.chdir(folder_containing_tar)
     os.system("tar -xf " + mg5)
@@ -66,7 +62,6 @@ def Install_MG5(mg5):
     os.chdir(mg5_home)
     return os.getcwd() 
 
-
 '''
 This function install MG5 and MA5 if the switch option is not set to OFF;
 by default it is set to 'ON'
@@ -75,7 +70,7 @@ It checks if the installations were succesfull
 '''
 def Install_MG5_MA5(mg5, ma5, install_switch = 'ON', mg5UserDir = MG5_Dir , ma5UserDir = MA5_Dir ):
     mg5_ma5_paths = []
-    if (install_switch != 'OFF' or ( not os.path.isdir(mg5UserDir) and os.path.isdir(ma5UserDir) )  ):
+    if (install_switch != 'OFF' or(not os.path.isdir(mg5UserDir) ) or (not os.path.isdir(ma5UserDir) )   ):
        print 'Proceeding with a new MG5 and MA5 installation'
        mg5_ma5_paths.append(Install_MG5(mg5))
        mg5_ma5_paths.append(Install_MA5(ma5))

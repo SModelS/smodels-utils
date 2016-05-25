@@ -15,6 +15,7 @@ import shutil
 from shutil         import *
 import datetime, sys, os
 
+
 '''
 This function simply looks for slha files contained in a certain directory.
 '''
@@ -97,8 +98,6 @@ def Run_MG5( MG5Pythia_paramDic = '', slha_file = '', MG5dir = '' , templ_dir ='
        shutil.rmtree(proc+'/Events/run_01')
     os.system("./bin/mg5 "+commands_file)          
 
-  
-
 '''
 Running MA5:
 Ma5 takes the HEP file complete path as an input, and then runs the Delphes simulator to produce the ROOT files used for the Ma5 analyses
@@ -112,9 +111,6 @@ def Run_MA5(ma5Dir ='', inputHEP=''):
        print 'The folder ANALYSIS_0 existed already; renamed it as Saved_ANALYSIS_0_' + str(now.month)+':'+str(now.day)+':'+str(now.year)+'_'+str(now.hour)+':'+str(now.minute) 
        shutil.move('ANALYSIS_0',  'Saved_ANALYSIS_0_' + str(now.month)+':'+str(now.day)+':'+str(now.year)+'_'+str(now.hour)+':'+str(now.minute) ) 
     os.system('./bin/ma5 -R -s MA5_commands_file.txt')
-
-
-
 
 '''
 Utilities to relocate the output from MG5 and MA5 - the (MG5+MA5 root files will be completely removed after the testing phase - only the MA5 analyses output will be stored)
@@ -131,7 +127,6 @@ def MA5_Output_Relocator(ma5Dir = '', MA5_OutputDir = '' ):
 def MG5_Output_Relocator(mg5Out = '', MG5_OutputDir = ''):
     Folder_Creator(out_dir = MG5_OutputDir) 
     shutil.move(mg5Out, MG5_OutputDir+'/MG5Output') 
-
 
 '''
 This utility simply saves the EM_Ingredients.py used for the production;
@@ -150,9 +145,6 @@ def Info_Saver(author= '', outDir= '' , homeDir = Home_Dir ):
     logFile.write('\n\n\n***** End of the Report ***** \n\n\n')
     logFile.close()  
 
-
-
-
 '''
 Info saver: is the Save_PartialOutput_Switch is not set to 'ON', it will erase all the partial MG5 and MA5 output.
 The only output saved will the the MA5 analyses output and the MG5 banner card.
@@ -163,7 +155,6 @@ def PartialOutput_Saver(switch = 'OFF', outFolder= '' ):
            if 'banner' not in File:
               os.remove(outFolder +'/MG5Output/'+ File)
        if os.path.isdir(outFolder+'/MA5_Delphes_RootFiles'): shutil.rmtree(outFolder+'/MA5_Delphes_RootFiles' )
-       
        
 '''
 Below new facilities to run CheckMate
