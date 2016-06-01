@@ -21,7 +21,7 @@ import pyslha as modpyslha
 from smodels.theory import slhaDecomposer
 from smodels.tools.physicsUnits import fb, GeV, TeV
 from smodels.tools.xsecComputer import computeXSec,addXSecToFile
-from smodels.experiment.databaseObjects import Database
+from smodels.experiment.databaseObj import Database
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 from validation.pythiaCardGen import getPythiaCardFor
 
