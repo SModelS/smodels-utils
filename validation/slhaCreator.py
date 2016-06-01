@@ -252,17 +252,17 @@ if __name__ == "__main__":
     argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description', 
         type=types.StringType, default='2*Eq(mother,x)_Eq(lsp,y)' )
     argparser.add_argument ( '--xmin', nargs='?', help='minimum value for x', 
-        type=types.FloatType, default=0. )
+        type=types.FloatType, default=100. )
     argparser.add_argument ( '--xmax', nargs='?', help='maximum value for x', 
-        type=types.FloatType, default=100. )
+        type=types.FloatType, default=300. )
     argparser.add_argument ( '--dx', nargs='?', help='binning in x', 
-        type=types.FloatType, default=20. )
+        type=types.FloatType, default=25. )
     argparser.add_argument ( '--ymin', nargs='?', help='minimum value for y', 
-        type=types.FloatType, default=0. )
-    argparser.add_argument ( '--ymax', nargs='?', help='maximum value for y', 
         type=types.FloatType, default=100. )
+    argparser.add_argument ( '--ymax', nargs='?', help='maximum value for y', 
+        type=types.FloatType, default=300. )
     argparser.add_argument ( '--dy', nargs='?', help='binning in y', 
-        type=types.FloatType, default=20. )
+        type=types.FloatType, default=25. )
     args=argparser.parse_args()
 
     templatefile = args.templatefile
