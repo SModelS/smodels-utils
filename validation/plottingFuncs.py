@@ -143,6 +143,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     # Check if official exclusion curve has been defined:
     if not validationPlot.officialCurves:
         logger.warning("Official curve for validation plot is not defined.")
+        official = None
     else:
         official = validationPlot.officialCurves
         # print "[plottingFuncs.py] official=",len(official)
@@ -153,14 +154,16 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     setOptions(allowed_border, Type='allowed_border')
     setOptions(excluded, Type='excluded')
     setOptions(excluded_border, Type='excluded_border')
-    setOptions(official, Type='official')
+    if official:
+        setOptions(official, Type='official')
     base = TMultiGraph()
     if allowed.GetN()>0: base.Add(allowed, "P")
     if excluded.GetN()>0: base.Add(excluded, "P")
     if allowed_border.GetN()>0: base.Add(allowed_border, "P")
     if excluded_border.GetN()>0: base.Add(excluded_border, "P")
     if cond_violated.GetN()>0: base.Add(cond_violated, "P")
-    base.Add(official, "L")
+    if official:
+        base.Add(official, "L")
     title = what+"_"+validationPlot.expRes.getValuesFor('id')[0] + "_" \
             + validationPlot.txName\
             + "_" + validationPlot.axes
@@ -311,11 +314,28 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
                     allowed_border.SetPoint(allowed_border.GetN(), x, y)
                 else:
                     allowed.SetPoint(allowed.GetN(), x, y)
+
+
+    #Get envelopes:
+    exclEnvelop = getEnvelope(excluded) 
+    exclborderEnvelop = getEnvelope(excluded_border)
+    allborderEnvelop = getEnvelope(allowed_border)
+    #Get excluded band:
+    exclBand = TGraph()
+    for i in range(allborderEnvelop.GetN()):
+        x,y = Double(),Double()
+        allborderEnvelop.GetPoint(i,x,y)
+        exclBand.SetPoint(exclBand.GetN(),x,y)    
+    for i in range(exclEnvelop.GetN()):
+        x,y = Double(),Double()
+        exclEnvelop.GetPoint(exclEnvelop.GetN()-i,x,y)
+        exclBand.SetPoint(exclBand.GetN(),x,y)    
         
 
     # Check if official exclusion curve has been defined:
     if not validationPlot.officialCurves:
         logger.warning("Official curve for validation plot is not defined.")
+        official = None
     else:
         official = validationPlot.officialCurves
         logger.warning("Official curves have length %d" % len (official) )
@@ -327,16 +347,20 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     setOptions(allowed_border, Type='allowed_border')
     setOptions(excluded, Type='excluded')
     setOptions(excluded_border, Type='excluded_border')
-    for i in official:
-        setOptions( i, Type='official')
+    setOptions(exclBand, Type='excluded')
+    if official:
+        for i in official:
+            setOptions( i, Type='official')
     base = TMultiGraph()
+    if exclBand.GetN()>0: base.Add(exclBand, "CF")
     if allowed.GetN()>0: base.Add(allowed, "P")
     if excluded.GetN()>0: base.Add(excluded, "P")
     if allowed_border.GetN()>0: base.Add(allowed_border, "P")
     if excluded_border.GetN()>0: base.Add(excluded_border, "P")
     if cond_violated.GetN()>0: base.Add(cond_violated, "P")
-    for i in official:
-        base.Add( i, "L")
+    if official:
+        for i in official:
+            base.Add( i, "L")
     title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
             + validationPlot.txName\
             + "_" + validationPlot.axes
@@ -426,10 +450,52 @@ def setOptions(obj,Type=None):
     elif Type == 'excluded':
         obj.SetMarkerStyle(20)    
         obj.SetMarkerColor(kRed)
+        obj.SetFillColorAlpha(kRed,0.15)
     elif Type == 'allowed_border':
         obj.SetMarkerStyle(20)    
         obj.SetMarkerColor(kGreen+3)
     elif Type == 'excluded_border':
         obj.SetMarkerStyle(20)    
         obj.SetMarkerColor(kOrange+1)
-        
+
+def getEnvelope(excludedGraph):
+    """
+    Tries to return the envelope curve of the points in the
+    excluded graph (ROOT TGraph).
+    :param excludedGraph: ROOT TGraph object containing the excluded points.
+    :return: a TGraph object containing the envelope curve
+    """
+
+    envelop = TGraph()
+    curve = copy.deepcopy(excludedGraph)
+    curve.Sort()
+    x1, y1 = Double(), Double()
+    curve.GetPoint(0, x1, y1)
+    yline = []
+    for ipt in range(curve.GetN() + 1): 
+        x, y = Double(), Double()
+        dmin = 0.
+        if ipt < curve.GetN(): curve.GetPoint(ipt, x, y)
+        if ipt != curve.GetN() and x == x1: yline.append(y)
+        else:
+            yline = sorted(yline, reverse = True)
+            dy = [abs(yline[i] - yline[i + 1]) for i in range(len(yline) - 1)]
+            if len(yline) <= 3 or envelop.GetN() == 0:
+                newy = max(yline)
+                if len(dy) > 2: dmin = min([abs(yline[i] - yline[i + 1]) for i in range(len(yline) - 1)])
+            else:
+                newy = max(yline)     
+        #        dmin = min(dy)
+                dmin = sum(dy) / float(len(dy))
+                for iD in range(len(dy) - 1):
+                    if dy[iD] <= dmin and dy[iD + 1] <= dmin:
+                        newy = yline[iD]
+                        break
+            envelop.SetPoint(envelop.GetN(), x1, newy + dmin/2.)
+            x1 = x
+            yline = [y]
+
+    x2, y2 = Double(), Double()
+    envelop.GetPoint(envelop.GetN() - 1, x2, y2)
+    envelop.SetPoint(envelop.GetN(), x2, 0.)  #Close exclusion curve at zero
+    return envelop        
