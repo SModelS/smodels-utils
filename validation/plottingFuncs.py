@@ -8,7 +8,7 @@
 
 """
 
-import logging,os,sys
+import logging,os,sys,copy
 sys.path.append('../')
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -16,7 +16,7 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TLegend,kGreen,kRed,kOrange,kBlack,
-                  TPolyLine3D,Double,TColor,gStyle)
+                  TPolyLine3D,Double,TColor,gStyle,TH2D)
 from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 
@@ -418,6 +418,7 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
     kfactor=None
 
     grTemp = TGraph2D()
+    excluded = TGraph()
     if not validationPlot.data:
         logger.warning("Data for validation plot is not defined.")
         return None
@@ -441,8 +442,16 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
                 logger.error("Unknown plotting variable: %s" %what)
                 return None
             grTemp.SetPoint(grTemp.GetN(),x,y,z)
-            
-    labels=[]
+            if pt['signal'] > pt['UL']:
+                excluded.SetPoint(excluded.GetN(), x, y )
+
+    zlabel = ""            
+    if what == "R":
+        zlabel = "#sigma_{theory}/#sigma_{UL}"
+    elif what == "crosssections":
+        zlabel="Theory Predictions [pb]"
+    elif what == "upperlimits":
+        zlabel = "Upper Limits [pb]"
 
     # Check if official exclusion curve has been defined:
     if not validationPlot.officialCurves:
@@ -451,6 +460,9 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
     else:
         official = validationPlot.officialCurves
         if isinstance(official,list): official = official[0]
+    #Get envelopes:
+    exclenvelop = TGraph(getEnvelope(excluded)) 
+    setOptions(exclenvelop, Type='excluded')
     
     if silentMode: gROOT.SetBatch()
     setOptions(grTemp, Type='temperature')        
@@ -462,54 +474,40 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
             + validationPlot.txName\
             + "_" + validationPlot.axes
     figureUrl = getFigureUrl(validationPlot)
-    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)   
+    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
+    plane.SetRightMargin(0.16)
+    plane.SetLeftMargin(0.15)
+    plane.SetBottomMargin(0.15)    
     set_palette(gStyle) 
     h = grTemp.GetHistogram()
+    setOptions(h, Type='temperature') 
     h.Draw("COLZ")
-    official.Draw("SAMEC")
+    h.GetZaxis().SetTitle(zlabel)
+    if official:
+        official.Draw("SAMEL")
+    exclenvelop.Draw("SAMEL")
     base.SetTitle(title)
-    l=TLatex()
-    l.SetNDC()
-    l.SetTextSize(.04)
-    base.l=l
     if figureUrl:
-        l1=TLatex()
-        l1.SetNDC()
-        l1.SetTextSize(.02)
-#         l1.DrawLatex(.12,.1,"%s" % figureUrl)
-        base.l1=l1
-    l2=TLatex()
-    l2.SetNDC()
-    l2.SetTextSize(.04)
-#     l2.DrawLatex(.15,.78,"k-factor %.2f" % kfactor)
-    base.l2=l2
-    l3=TLatex()
-    l3.SetNDC()
-    l3.SetTextSize(.06)
-    if what == "R":
-        drawingwhat = "#sigma_{theory}/#sigma_{UL}"
-    elif what == "crosssections":
-        drawingwhat="Theory Predictions [pb]"
-    elif what == "upperlimits":
-        drawingwhat = "Upper Limits [pb]"
-         
-    l3.DrawLatex(.15,.7, drawingwhat )
-    base.l3=l3
+        figUrl=TLatex()
+        figUrl.SetNDC()
+        figUrl.SetTextSize(.02)
+        figUrl.DrawLatex(.12,.1,"%s" % figureUrl)
+        base.figUrl = figUrl
     if abs(signal_factor-1.0)>.0001:
-        l4=TLatex()
-        l4.SetNDC()
-        l4.SetTextSize(.04)
-        l4.DrawLatex(.15,.62, "signal factor %.1f" % signal_factor )
-        base.l4=l4
+        sigFac=TLatex()
+        sigFac.SetNDC()
+        sigFac.SetTextSize(.04)
+        sigFac.DrawLatex(.15,.62, "signal factor %.1f" % signal_factor )
+        base.sigFac = sigFac
+    leg = TLegend(0.5,0.5,0.7,0.7,"")
+    leg.AddEntry(official,"Official Exclusion","L")
+    leg.Draw()
 
     plane.base = base
-    plane.SetTheta(90.)
-    plane.SetPhi(0.001)
-    
+    plane.official = official
 
     if not silentMode: ans = raw_input("Hit any key to close\n")
-
-    plane.labels=labels
+    plane.Print("test.png")
     
     return plane
 
@@ -554,13 +552,25 @@ def setOptions(obj,Type=None):
         obj.SetLineWidth(1)
         obj.SetFillColor(0)
         obj.SetFillStyle(1001)
-    elif isinstance(obj,TGraph2D):
+    elif isinstance(obj,TGraph2D) or isinstance(obj,TH2D):
         obj.GetZaxis().SetTitleFont(132)
         obj.GetZaxis().SetTitleSize(0.06)
         obj.GetZaxis().CenterTitle(True)
         obj.GetZaxis().SetTitleOffset(0.7)
         obj.GetZaxis().SetLabelFont(132)
         obj.GetZaxis().SetLabelSize(0.05)
+        obj.GetYaxis().SetTitleFont(132)
+        obj.GetYaxis().SetTitleSize(0.075)
+        obj.GetYaxis().CenterTitle(True)
+        obj.GetYaxis().SetTitleOffset(1.15)
+        obj.GetXaxis().SetTitleFont(132)
+        obj.GetXaxis().SetTitleSize(0.075)
+        obj.GetXaxis().CenterTitle(True)
+        obj.GetXaxis().SetTitleOffset(1.2)
+        obj.GetYaxis().SetLabelFont(132)
+        obj.GetXaxis().SetLabelFont(132)
+        obj.GetYaxis().SetLabelSize(0.055)
+        obj.GetXaxis().SetLabelSize(0.06)
 
 
 #Type-specific settings:
@@ -575,6 +585,9 @@ def setOptions(obj,Type=None):
         obj.SetMarkerStyle(20)    
         obj.SetMarkerColor(kRed)
         obj.SetFillColorAlpha(kRed,0.15)
+        obj.SetLineColor(kRed)
+        obj.SetLineWidth(4)
+        obj.SetLineStyle(2)
     elif Type == 'allowed_border':
         obj.SetMarkerStyle(20)    
         obj.SetMarkerColor(kGreen+3)
@@ -599,7 +612,8 @@ def getEnvelope(excludedGraph):
     """
 
     envelop = TGraph()
-    curve = copy.deepcopy(excludedGraph)
+    envelop.SetName("envelope")
+    curve = TGraph(excludedGraph)
     curve.Sort()
     x1, y1 = Double(), Double()
     curve.GetPoint(0, x1, y1)

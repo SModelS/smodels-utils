@@ -196,7 +196,7 @@ class ValidationPlot():
             :param nthpoint: plot only every nth point
             :param signal_factor: an additional factor that is multiplied with the signal cross section,
         """
-        self.plot = createTempPlot( self, silentMode, what, nthpoint, signal_factor )
+        self.plot = createTempPlot(self, silentMode, what, nthpoint, signal_factor)
         
 
     def savePlot(self,validationDir=None,format='pdf'):
