@@ -119,7 +119,7 @@ def runSModelSFor(validationPlot):
             elif expRes.getValuesFor('dataType')[0] == 'efficiencyMap':
                 upperLimit = expRes.getUpperLimitFor(dataID=datasetID)
                 # eff=expRes.getTxNames()[0].getEfficiencyFor ( mass )
-                eff=expRes.getTxNames()[0].txnameData.getValueFor ( mass )
+                eff=expRes.getTxNames()[0].txnameData.getValueFor(mass)
                 # print effMap[mass]
                 expectedBG=dataset.getValuesFor ( "expectedBG" )
                 observedN=dataset.getValuesFor ( "observedN" )
@@ -143,7 +143,7 @@ def runSModelSFor(validationPlot):
                 continue
             x,y = v
             Dict= {'slhafile' : slhafile, 'axes': [x,y], 'signal' : value, 'UL' : upperLimit,
-                   'condition': cond, 'dataset': datasetID }
+                   'condition': cond, 'dataset': datasetID, 'efficiency' : eff}
             # print "[gridSModelS] run on ",Dict
             if efficiency:
                 Dict['efficiency']=efficiency

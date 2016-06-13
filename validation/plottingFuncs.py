@@ -14,7 +14,9 @@ sys.path.append('../')
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
-from ROOT import TFile,TGraph,gROOT,TMultiGraph,TCanvas,TLatex,TLegend,kGreen,kRed,kOrange
+from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
+                  TLegend,kGreen,kRed,kOrange,kBlack,
+                  TPolyLine3D,Double,TColor,gStyle)
 from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 
@@ -70,26 +72,26 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):
     
     return txnames
 
-def getFigureUrl ( validationPlot ):
-    txnameinfo = validationPlot.expRes.getTxnameWith ( { "txName": validationPlot.txName } )
-    if type ( txnameinfo ) == list:
-        logger.error ( "received a list for .getTxnameWith. Dont know what to do with this" )
+def getFigureUrl(validationPlot ):
+    txnameinfo = validationPlot.expRes.getTxnameWith({ "txName": validationPlot.txName } )
+    if type(txnameinfo)== list:
+        logger.error("received a list for .getTxnameWith. Dont know what to do with this" )
         txnameinfo=txnameinfo[0]
-    if type ( txnameinfo.getInfo ( "figureUrl" ) ) == str:
-        return txnameinfo.getInfo ( "figureUrl" )
-    if not txnameinfo.getInfo ( "figureUrl" ):
+    if type(txnameinfo.getInfo("figureUrl")) == str:
+        return txnameinfo.getInfo("figureUrl" )
+    if not txnameinfo.getInfo("figureUrl" ):
         return None
-    if type ( txnameinfo.getInfo ( "figureUrl" ) ) != type ( txnameinfo.getInfo ( "axes" )  ):
-            logger.error ( "figureUrl (%s) and axes (%s) are not of the same type" % ( txnameinfo.getInfo ( "figureUrl" ),
-                       txnameinfo.getInfo ( "axes" )  ) )
+    if type(txnameinfo.getInfo("figureUrl")) != type(txnameinfo.getInfo("axes") ):
+            logger.error("figureUrl (%s) and axes (%s) are not of the same type" %(txnameinfo.getInfo("figureUrl" ),
+                       txnameinfo.getInfo("axes")))
             return None
-    if not validationPlot.axes in txnameinfo.getInfo ( "axes" ):
+    if not validationPlot.axes in txnameinfo.getInfo("axes" ):
         return None
-    pos = [ i for i,x in enumerate ( txnameinfo.getInfo ( "axes" ) ) if x==validationPlot.axes ]
+    pos = [ i for i,x in enumerate(txnameinfo.getInfo("axes")) if x==validationPlot.axes ]
     if len(pos)!=1:
-        logger.error ( "found axes %d times" % len(pos ) )
+        logger.error("found axes %d times" % len(pos))
         sys.exit()
-    return txnameinfo.getInfo ( "figureUrl" )[ pos[0] ]
+    return txnameinfo.getInfo("figureUrl" )[ pos[0] ]
 
 def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestregion", nthpoint =1, 
        signal_factor = 1. ):
@@ -100,7 +102,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     
     :param validationPlot: ValidationPlot object
     :param silentMode: If True the plot will not be shown on the screen
-    :param what: what is to be plotted ( "bestregion", "upperlimits", "crosssections")
+    :param what: what is to be plotted("bestregion", "upperlimits", "crosssections")
     :param nthpoint: label only every nth point
     :param signal_factor: an additional factor that is multiplied with the signal cross section,
     when comparing with the upper limit. Makes it easier to account for multiplicative factors,
@@ -118,11 +120,11 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
         for pt in validationPlot.data:
             if kfactor == None:
                 kfactor = pt ['kfactor']
-            if abs ( kfactor - pt['kfactor'] ) > 1e-5:
+            if abs(kfactor - pt['kfactor'])> 1e-5:
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
             x, y = pt['axes']
-            if pt['condition'] and max(pt['condition'].values() ) > 0.05:
+            if pt['condition'] and max(pt['condition'].values())> 0.05:
                 logger.warning("Condition violated for file " + pt['slhafile'])
                 cond_violated.SetPoint(cond_violated.GetN(), x, y)
             elif signal_factor * pt['signal'] > pt['UL']:
@@ -175,7 +177,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     l.SetNDC()
     l.SetTextSize(.04)
     agreement = validationPlot.computeAgreementFactor( signal_factor = signal_factor )
-    l.DrawLatex(.15,.85,"validation agreement %.1f %s" % (agreement*100, "%" ) )
+    l.DrawLatex(.15,.85,"validation agreement %.1f %s" % (agreement*100, "%"))
     base.l=l
     if figureUrl:
         # print "dawing figureUrl"
@@ -194,7 +196,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
                 continue
             if kfactor == None:
                 kfactor = pt ['kfactor']
-            if abs ( kfactor - pt['kfactor'] ) > 1e-5:
+            if abs(kfactor - pt['kfactor'])> 1e-5:
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
             x, y = pt['axes']
@@ -203,19 +205,19 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
             lk.SetTextSize(.02)
             if what in [ "bestregion", "bestcut" ]:
                 bestregion=pt["dataset"].replace("ANA","").replace("CUT","")
-                lk.DrawLatex ( x, y, bestregion )
+                lk.DrawLatex(x, y, bestregion )
                 print "draw",x,y,pt["dataset"]
             elif what == "upperlimits":
                 ul=pt["UL"].asNumber(pb)
-                lk.DrawLatex ( x, y, str(ul) )
+                lk.DrawLatex(x, y, str(ul) )
             elif what == "crosssections":
                 signalxsec=pt['signal'].asNumber(pb)
-                lk.DrawLatex ( x, y, str(signalxsec) )
+                lk.DrawLatex(x, y, str(signalxsec) )
                 # print "point",pt["axes"],pt["signal"]
             else:
                 logger.error( "dont know how to draw %s" % what )
                 sys.exit()
-            labels.append ( lk )
+            labels.append(lk )
 
         #Add original grid data to UL plot:
         if what == "upperlimits": ## FIXME this doesnt work anymore
@@ -229,20 +231,20 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
                 print "txnameData=",txnameData
                 if txnameData==None:
                         continue
-                for (itr, (mass,ul)) in enumerate ( txnameData ):
+                for (itr, (mass,ul)) in enumerate(txnameData ):
                     if itr% nthpoint != 0: continue
                     mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]            
                     v=origPlot.getXYValues(mass_unitless)
                     if not v: continue
                     x,y = v
                     ul = ul.asNumber(pb)
-                    lk.DrawLatex ( x, y, "#color[4]{%.2f}" % ul )
+                    lk.DrawLatex(x, y, "#color[4]{%.2f}" % ul )
                 
 
     l2=TLatex()
     l2.SetNDC()
     l2.SetTextSize(.04)
-    l2.DrawLatex(.15,.78,"k-factor %.2f" % kfactor ) 
+    l2.DrawLatex(.15,.78,"k-factor %.2f" % kfactor)
     base.l2=l2
     l3=TLatex()
     l3.SetNDC()
@@ -295,12 +297,12 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         for pt in validationPlot.data:
             if kfactor == None:
                 kfactor = pt ['kfactor']
-            if abs ( kfactor - pt['kfactor'] ) > 1e-5:
+            if abs(kfactor - pt['kfactor'])> 1e-5:
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
             x, y = pt['axes']
 #             print pt
-            if pt['condition'] and max(pt['condition'].values() ) > 0.05:
+            if pt['condition'] and max(pt['condition'].values())> 0.05:
                 #print "pt['condition']",pt['condition']
                 logger.warning("Condition violated for file " + pt['slhafile'])
                 cond_violated.SetPoint(cond_violated.GetN(), x, y)
@@ -375,7 +377,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     l.SetNDC()
     l.SetTextSize(.04)
     agreement = validationPlot.computeAgreementFactor()
-    l.DrawLatex(.15,.85,"validation agreement %.1f %s" % (agreement*100, "%" ) )
+    l.DrawLatex(.15,.85,"validation agreement %.1f %s" % (agreement*100, "%"))
     base.l=l
     l0=TLatex()
     l0.SetNDC()
@@ -391,12 +393,126 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     l2=TLatex()
     l2.SetNDC()
     l2.SetTextSize(.04)
-    l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor ) 
+    l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor)
     base.l2=l2
 
     if not silentMode: ans = raw_input("Hit any key to close\n")
     
     return plane,base
+
+
+def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signal_factor =1.):
+    """
+    Uses the data in validationPlot.data and the official exclusion curve
+    in validationPlot.officialCurves to generate temperature plots, showing
+    e.g. upper limits or R values
+    
+    :param validationPlot: ValidationPlot object
+    :param silentMode: If True the plot will not be shown on the screen
+    :param what: what is to be plotted ("upperlimits", "crosssections", "R")
+    :param nthpoint: label only every nth point
+    :param signal_factor: an additional factor that is multiplied with the signal cross section.
+     Makes it easier to account for multiplicative factors, like K-factors.
+    :return: TCanvas object containing the plot
+    """
+    kfactor=None
+
+    grTemp = TGraph2D()
+    if not validationPlot.data:
+        logger.warning("Data for validation plot is not defined.")
+        return None
+    else:
+        # Get points:
+        for pt in validationPlot.data:
+            if kfactor == None:
+                kfactor = pt['kfactor']
+            if abs(kfactor - pt['kfactor'])> 1e-5:
+                logger.error("kfactor not a constant throughout the plane!")
+                sys.exit()
+            x, y = pt['axes']
+            pt['signal'] = pt['signal']*signal_factor
+            if what == 'R':
+                z = pt['signal']/pt['UL']
+            elif what == 'upperlimits':
+                z = pt['UL'].asNumber(pb)
+            elif what == 'crosssections':
+                z = pt['signal'].asNumber(pb)
+            else:
+                logger.error("Unknown plotting variable: %s" %what)
+                return None
+            grTemp.SetPoint(grTemp.GetN(),x,y,z)
+            
+    labels=[]
+
+    # Check if official exclusion curve has been defined:
+    if not validationPlot.officialCurves:
+        logger.warning("Official curve for validation plot is not defined.")
+        official = None
+    else:
+        official = validationPlot.officialCurves
+        if isinstance(official,list): official = official[0]
+    
+    if silentMode: gROOT.SetBatch()
+    setOptions(grTemp, Type='temperature')        
+    if official:        
+        setOptions(official, Type='official')
+
+    base = grTemp
+    title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
+            + validationPlot.txName\
+            + "_" + validationPlot.axes
+    figureUrl = getFigureUrl(validationPlot)
+    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)   
+    set_palette(gStyle) 
+    h = grTemp.GetHistogram()
+    h.Draw("COLZ")
+    official.Draw("SAMEC")
+    base.SetTitle(title)
+    l=TLatex()
+    l.SetNDC()
+    l.SetTextSize(.04)
+    base.l=l
+    if figureUrl:
+        l1=TLatex()
+        l1.SetNDC()
+        l1.SetTextSize(.02)
+#         l1.DrawLatex(.12,.1,"%s" % figureUrl)
+        base.l1=l1
+    l2=TLatex()
+    l2.SetNDC()
+    l2.SetTextSize(.04)
+#     l2.DrawLatex(.15,.78,"k-factor %.2f" % kfactor)
+    base.l2=l2
+    l3=TLatex()
+    l3.SetNDC()
+    l3.SetTextSize(.06)
+    if what == "R":
+        drawingwhat = "#sigma_{theory}/#sigma_{UL}"
+    elif what == "crosssections":
+        drawingwhat="Theory Predictions [pb]"
+    elif what == "upperlimits":
+        drawingwhat = "Upper Limits [pb]"
+         
+    l3.DrawLatex(.15,.7, drawingwhat )
+    base.l3=l3
+    if abs(signal_factor-1.0)>.0001:
+        l4=TLatex()
+        l4.SetNDC()
+        l4.SetTextSize(.04)
+        l4.DrawLatex(.15,.62, "signal factor %.1f" % signal_factor )
+        base.l4=l4
+
+    plane.base = base
+    plane.SetTheta(90.)
+    plane.SetPhi(0.001)
+    
+
+    if not silentMode: ans = raw_input("Hit any key to close\n")
+
+    plane.labels=labels
+    
+    return plane
+
             
         
 def setOptions(obj,Type=None):
@@ -438,6 +554,14 @@ def setOptions(obj,Type=None):
         obj.SetLineWidth(1)
         obj.SetFillColor(0)
         obj.SetFillStyle(1001)
+    elif isinstance(obj,TGraph2D):
+        obj.GetZaxis().SetTitleFont(132)
+        obj.GetZaxis().SetTitleSize(0.06)
+        obj.GetZaxis().CenterTitle(True)
+        obj.GetZaxis().SetTitleOffset(0.7)
+        obj.GetZaxis().SetLabelFont(132)
+        obj.GetZaxis().SetLabelSize(0.05)
+
 
 #Type-specific settings:
     if not Type: return True
@@ -457,6 +581,14 @@ def setOptions(obj,Type=None):
     elif Type == 'excluded_border':
         obj.SetMarkerStyle(20)    
         obj.SetMarkerColor(kOrange+1)
+    elif Type == 'official':
+        obj.SetLineWidth(4)
+        obj.SetLineColor(kBlack)
+    elif Type == 'temperature':
+        obj.SetMarkerStyle(20)
+        obj.SetMarkerSize(1.5)
+        obj.SetTitle("")    
+
 
 def getEnvelope(excludedGraph):
     """
@@ -499,3 +631,31 @@ def getEnvelope(excludedGraph):
     envelop.GetPoint(envelop.GetN() - 1, x2, y2)
     envelop.SetPoint(envelop.GetN(), x2, 0.)  #Close exclusion curve at zero
     return envelop        
+
+def set_palette(gStyle,name="none", ncontours=999):
+    """Set a color palette from a given RGB list
+    stops, red, green and blue should all be lists of the same length
+    see set_decent_colors for an example"""
+    
+    from array import array
+
+    if name == "gray" or name == "grayscale":
+        stops = [0.00, 0.34, 0.61, 0.84, 1.00]
+        red   = [1.00, 0.84, 0.61, 0.34, 0.00]
+        green = [1.00, 0.84, 0.61, 0.34, 0.00]
+        blue  = [1.00, 0.84, 0.61, 0.34, 0.00]
+    else:
+        # default palette, looks cool
+        stops = [0.00, 0.34, 0.61, 0.84, 1.00]
+        red   = [0.00, 0.00, 0.87, 1.00, 0.51]
+        green = [0.00, 0.81, 1.00, 0.20, 0.00]
+        blue  = [0.51, 1.00, 0.12, 0.00, 0.00]
+
+    s = array('d', stops)
+    r = array('d', red)
+    g = array('d', green)
+    b = array('d', blue)
+
+    npoints = len(s)
+    TColor.CreateGradientColorTable(npoints, s, r, g, b, ncontours)
+    gStyle.SetNumberContours(ncontours)

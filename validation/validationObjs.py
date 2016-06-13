@@ -16,7 +16,7 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 #from smodels.tools.physicsUnits import fb, GeV
 from gridSModelS import runSModelSFor
-from plottingFuncs import createPlot, getExclusionCurvesFor, createSpecialPlot
+from plottingFuncs import createPlot, getExclusionCurvesFor, createSpecialPlot, createTempPlot
 
 logger.setLevel(level=logging.DEBUG)
 
@@ -181,12 +181,25 @@ class ValidationPlot():
                          bestregion = best analysis/cut pair 
                          upperlimits = upper limits on prod xsec (pb) 
                          crosssections = theory prediction, in pb
+                         efficiencies = efficiency (=1 for UL results)
             :param nthpoint: plot only every nth point
             :param signal_factor: an additional factor that is multiplied with the signal cross section,
         """
         self.plot = createSpecialPlot( self, silentMode, 1.2, what, nthpoint, signal_factor )
+        
+    def getTempPlot(self,silentMode=True,what = "R", nthpoint = 1,signal_factor = 1.0 ):
+        """ get one of the special plots.
+            :param what: which special plot
+                         R = theory prediction/upper limit 
+                         upperlimits = upper limits on prod xsec (pb) 
+                         crosssections = theory prediction, in pb
+            :param nthpoint: plot only every nth point
+            :param signal_factor: an additional factor that is multiplied with the signal cross section,
+        """
+        self.plot = createTempPlot( self, silentMode, what, nthpoint, signal_factor )
+        
 
-    def savePlot(self,validationDir=None):
+    def savePlot(self,validationDir=None,format='pdf'):
         """
         Saves the plot in .pdf format in the validationDir folder.
         If the folder does not exist, it will be created.
@@ -194,6 +207,7 @@ class ValidationPlot():
         analysis/validation/ folder
 
         :param validationDir: Folder where the plot will be saved
+        :param format: File format (accepted by ROOT), i.e. pdf, png, jpg...
         """
 
 
@@ -209,7 +223,7 @@ class ValidationPlot():
             logger.info("Creating validation folder "+vDir)
             os.mkdir(vDir)
 
-        filename = self.plot.GetTitle()+'.pdf'
+        filename = self.plot.GetTitle()+'.'+format
         filename = filename.replace(self.expRes.getValuesFor('id')[0]+"_","")
         filename = os.path.join(vDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")

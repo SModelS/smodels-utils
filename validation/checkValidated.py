@@ -13,7 +13,7 @@ import glob
 def main():
     #database = Database(databasePath, force_load = 'txt')
     database = Database(databasePath)
-    expResList = sorted(database.getExpResults(dataTypes = ['all']), key=lambda exp: exp.globalInfo.id)
+    expResList = sorted(database.getExpResults(dataTypes = ['all'], useNonValidated= True, useSuperseded=True), key=lambda exp: exp.globalInfo.id)
     
     validated = []
     not_validated = []
@@ -21,7 +21,7 @@ def main():
     for expRes in expResList:
         txnamesList = sorted(expRes.getTxNames(), key=lambda tx: tx.txName)
         for txname in txnamesList:
-    #         if 'assigned' in txname.getInfo('constraint'): continue        
+    #         if 'assigned' in txname.getInfo('constraint'): continue   
             if txname.validated is True: validated.append([txname,expRes])  
             elif txname.validated is False: not_validated.append([txname,expRes])
             elif txname.validated is None: not_checked.append([txname,expRes])
