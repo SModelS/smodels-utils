@@ -143,7 +143,7 @@ def runSModelSFor(validationPlot):
                 continue
             x,y = v
             Dict= {'slhafile' : slhafile, 'axes': [x,y], 'signal' : value, 'UL' : upperLimit,
-                   'condition': cond, 'dataset': datasetID, 'efficiency' : eff}
+                   'condition': cond, 'dataset': datasetID } ## , 'efficiency' : eff}
             # print "[gridSModelS] run on ",Dict
             if efficiency:
                 Dict['efficiency']=efficiency
