@@ -2,6 +2,8 @@
 
 import sys,os
 home = os.path.expanduser("~")
+home = "../../../../../"
+
 sys.path.insert(0,os.path.join(home,"smodels-utils/"))
 sys.path.insert(0,os.path.join(home,"smodels/"))
 

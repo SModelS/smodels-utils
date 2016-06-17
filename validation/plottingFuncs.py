@@ -285,6 +285,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         
     # Check if data has been defined:
     excluded, allowed, excluded_border, allowed_border = TGraph(), TGraph(), TGraph(), TGraph()
+    excluded.SetName("excluded")
     cond_violated=TGraph()
     kfactor=None
 
@@ -610,6 +611,11 @@ def getEnvelope(excludedGraph):
     :param excludedGraph: ROOT TGraph object containing the excluded points.
     :return: a TGraph object containing the envelope curve
     """
+    print "[plottingFuncs.py] getEnvelope, curve=",excludedGraph.GetN()
+    print "[plottingFuncs.py] name=",excludedGraph.GetName()
+    print "[plottingFuncs.py] title=",excludedGraph.GetTitle()
+    if excludedGraph.GetN() == 0:
+        return excludedGraph
 
     envelop = TGraph()
     envelop.SetName("envelope")

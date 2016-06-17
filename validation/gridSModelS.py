@@ -153,4 +153,7 @@ def runSModelSFor(validationPlot):
     #Remove temporary folder
     if slhaD != validationPlot.slhaDir: shutil.rmtree(slhaD)
 
+    if data == []:
+        logger.error ( "There are no data for a validation plot. Are the SLHA files correct? Are the constraints correct?" )
+
     return data
