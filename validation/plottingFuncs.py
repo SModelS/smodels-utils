@@ -357,7 +357,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         for i in official:
             setOptions( i, Type='official')
     base = TMultiGraph()
-    if exclBand.GetN()>0: base.Add(exclBand, "CF")
+#    if exclBand.GetN()>0: base.Add(exclBand, "CF")
     if allowed.GetN()>0: base.Add(allowed, "P")
     if excluded.GetN()>0: base.Add(excluded, "P")
     if allowed_border.GetN()>0: base.Add(allowed_border, "P")
