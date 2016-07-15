@@ -255,6 +255,7 @@ decays = {
     'T2ttWW': 'sbottom  --> top w lsp ',
     'T2bbWW': 'stop  --> bottom w lsp ',
     'T2tt': 'stop  --> top lsp ',  
+    'T2cc': 'stop --> charm lsp',
     'T2bt':'stop  --> bottom lsp | top lsp ', 
     'T3tttbW': 'gluino --> top (antitop lsp | bottom (chargino --> w lsp ))' ,
     'T3tbbbW': 'gluino --> bottom (antibottom lsp | bottom (chargino --> w lsp ))' ,
