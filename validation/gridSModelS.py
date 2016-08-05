@@ -79,8 +79,11 @@ def runSModelSFor(validationPlot):
     slhaFiles,slhaD = getSlhaFiles(validationPlot.slhaDir)
 
     expRes = validationPlot.expRes
+    #Limit the experimental result to the respective Txname (relevant for EM results)
+    for dataset in expRes.datasets:
+        dataset.txnameList = [tx for tx in dataset.txnameList[:] if tx.txName == validationPlot.txName]
     #Define basic parameters
-    sigmacut = 0. * fb
+    sigmacut = 0.0 * fb
     mingap = 2. * GeV
     #Loop over SLHA files and compute results:
     data = []
@@ -99,6 +102,8 @@ def runSModelSFor(validationPlot):
             dataset = theoryPrediction.dataset
             datasetID = dataset.dataInfo.dataId
             txnames = theoryPrediction.txnames
+            if len(txnames) != 1:
+                logger.warning("Multiple Txnames entering the theory prediction. Something may be wrong.")
             is_in=False
             for txname in txnames:
                 if txname.txName == validationPlot.txName:
@@ -114,17 +119,15 @@ def runSModelSFor(validationPlot):
             upperLimit=None
             efficiency=None
             CLs=None
-            if expRes.getValuesFor('dataType')[0] == 'upperLimit':
+            if expRes.datasets[0].dataInfo.dataType == 'upperLimit':
                 upperLimit = expRes.getUpperLimitFor(txname=txname,mass=mass)
-            elif expRes.getValuesFor('dataType')[0] == 'efficiencyMap':
-                upperLimit = expRes.getUpperLimitFor(dataID=datasetID)
-                # eff=expRes.getTxNames()[0].getEfficiencyFor ( mass )
-                eff=expRes.getTxNames()[0].txnameData.getValueFor(mass)
-                # print effMap[mass]
-                expectedBG=dataset.getValuesFor ( "expectedBG" )
-                observedN=dataset.getValuesFor ( "observedN" )
-                bgError=dataset.getValuesFor ( "bgError" )
-                lumi=dataset.getValuesFor ( "lumi" )[0]
+            elif expRes.datasets[0].dataInfo.dataType == 'efficiencyMap':
+                upperLimit = expRes.getUpperLimitFor(dataID=datasetID)                
+                eff=dataset.txnameList[0].txnameData.getValueFor(mass)
+                expectedBG=dataset.dataInfo.expectedBG
+                observedN=dataset.dataInfo.observedN
+                bgError=dataset.dataInfo.bgError
+                lumi=expRes.globalInfo.lumi
                 from smodels.tools import exclusion_CLs
                 ## import IPython
                 ## IPython.embed()
