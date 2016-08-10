@@ -78,7 +78,8 @@ def runSModelSFor(validationPlot):
         return False
     slhaFiles,slhaD = getSlhaFiles(validationPlot.slhaDir)
 
-    expRes = validationPlot.expRes
+    import copy
+    expRes = copy.deepcopy ( validationPlot.expRes )
     #Limit the experimental result to the respective Txname (relevant for EM results)
     for dataset in expRes.datasets:
         dataset.txnameList = [tx for tx in dataset.txnameList[:] if tx.txName == validationPlot.txName]
