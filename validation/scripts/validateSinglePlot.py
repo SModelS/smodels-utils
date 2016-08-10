@@ -49,4 +49,5 @@ slhamain = os.path.join(home,"smodels-utils/slha/")
 
 for i in expRes:
     slha = slhamain+"%s.tar" % args.txname
-    print validatePlot(i,args.txname,args.axes,slha, kfactor=args.kfactor )
+    print validatePlot(i,args.txname,args.axes,slha, kfactor=args.kfactor, 
+            recycle_data=False )

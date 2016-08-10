@@ -525,7 +525,7 @@ class DatabaseCreator(list):
         path = inspect.getfile ( self._createValidationFolder )
         print "create validation folder=",path
         path=path.replace( "smodels_utils/dataPreparation/databaseCreation.py", "validation/scripts" )
-        scripts = [ "validate.py", "validateTx.py", "plotValidation.py" ]
+        scripts = [ "validate.py", "validateSinglePlot.py" ] # , "plotValidation.py" ]
         for i in scripts:
             if not os.path.exists ( "%s/%s" % ( self.validationPath, i ) ):
                 cmd = "cp %s/%s %s" % ( path, i, self.validationPath ) 

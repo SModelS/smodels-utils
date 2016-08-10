@@ -54,5 +54,5 @@ kfactorDict = { "TChiWZ": 1.2, "TChiWW": 1.2, "TChiChipmSlepL": 1.2,
                 "TChiWZoff": 1.2 }
 #kfactorDict= {}
 for i in expRes:
-    validateExpRes(i,slhamain, kfactorDict = kfactorDict )
+    validateExpRes(i,slhamain, kfactorDict = kfactorDict, recycle_data=False )
 
