@@ -73,6 +73,15 @@ class DatabaseCreator(list):
     def timeStamp ( self, txt ):
         dt = time.time() - self.t0
         print "[databaseCreation:%.1fs] %s" % ( dt, txt )
+
+    def describeMap ( self, Map ):
+        """ simple method to describe quickly method in a string """
+        ret=""
+        if len(Map)==0:
+            return ret
+        m=str(Map[0]).replace("'","")
+        ret = ">>> %s ... " % m
+        return ret
             
     def create(self, createAdditional=False, ask_for_name=True, create_dataInfo=True ):
         
@@ -167,33 +176,32 @@ class DatabaseCreator(list):
                     from smodels.tools import statistics
                     from smodels.tools.physicsUnits import fb, pb
                     lumi=eval(self.metaInfo.lumi)
-#                    if create_dataInfo:
-                    if True:
+                    if create_dataInfo:
                         self.timeStamp ( "computing upper limit for %d/%.1f/%.1f" % ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError ) )
                         dataInfo.upperLimit = str ( statistics.upperLimit ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError, lumi ).asNumber ( fb ) )+"*fb"
                         dataInfo.expectedUpperLimit = str ( statistics.upperLimit ( dataInfo.expectedBG, dataInfo.expectedBG, dataInfo.bgError, lumi ).asNumber ( fb ) )+"*fb"
                         self.timeStamp ( "done computing upper limit." )
                 
-                self.timeStamp ( 'Reading mass plane: %s, %s' % (txName, plane.origPlot ) )
+                self.timeStamp ( 'Reading mass plane: %s, %s [%s]' % (txName, plane.origPlot, plane.obsExclusion.path[-30:] ) )
                 
                 efficiencyMap = self.extendDataList\
                 (efficiencyMap, plane, vertexChecker, txName)
-                # print '\nOld efficiencyMap3D=%s %d\n' % ( efficiencyMap3D, len(efficiencyMap3D) )
+                self.timeStamp ( 'extended efficiencyMap to %s entries %s'\
+                                 % (len(efficiencyMap), self.describeMap ( efficiencyMap ) ) )
                 efficiencyMap3D = self.extendDataList\
                 (efficiencyMap3D, plane, vertexChecker, txName)
+                self.timeStamp ( 'extended efficiencyMap3D to %s entries %s'\
+                                 % (len(efficiencyMap3D), self.describeMap ( efficiencyMap3D ) ) )
                 upperLimits = self.extendDataList\
                 (upperLimits, plane, vertexChecker, txName, 'limit')
+                self.timeStamp ( 'extended upperLimits to %s entries %s'\
+                                 % ( len(upperLimits), self.describeMap ( upperLimits ) ) )
                 expectedUpperLimits = self.extendDataList(expectedUpperLimits,\
-                plane, vertexChecker, txName, 'expectedlimit')
+                        plane, vertexChecker, txName, 'expectedlimit')
+                self.timeStamp ( 'extended expectedUpperLimits to %s entries %s'\
+                                 % ( len(expectedUpperLimits), self.describeMap ( expectedUpperLimits ) ) )
+                # self.timeStamp ( 'efficiency map is now %s' % efficiencyMap )
                 
-                self.timeStamp ( 'extending upperLimits to %s entries'\
-                                 % len(upperLimits) )
-                self.timeStamp ( 'extending expectedUpperLimits to %s entries'\
-                                 %len(expectedUpperLimits) )
-                self.timeStamp ( 'extending efficiencyMap to %s entries'\
-                                 %len(efficiencyMap) )
-                self.timeStamp ( 'extending efficiencyMap3D to %s entries'\
-                                 %len(efficiencyMap3D) )
                 
                 if plane.obsUpperLimit or plane.efficiencyMap or plane.efficiencyMap3D:
                     if not plane.obsUpperLimit.dataUrl and \
