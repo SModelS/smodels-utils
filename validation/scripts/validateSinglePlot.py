@@ -29,7 +29,7 @@ import logging
 from smodels.theory.crossSection import logger as cl
 from smodels.theory.slhaDecomposer import logger as dl
 from smodels.experiment.txnameObj import logger as tl
-cl.setLevel(level=logging.INFO)
+cl.setLevel(level=logging.WARNING)
 dl.setLevel(level=logging.WARNING)
 tl.setLevel(level=logging.INFO)
 

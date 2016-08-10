@@ -93,13 +93,13 @@ def runSModelSFor(validationPlot):
                         doCompress=True,doInvisible=True, minmassgap=mingap)
 
         predictions = theoryPredictionsFor(expRes, smstoplist)
+        s_eR = str ( expRes )
+        if len(s_eR) > 44:
+            s_eR = s_eR[:20]+"..."+s_eR[-20:]
         if not predictions:
-            s_eR = str ( expRes )
-            if len(s_eR) > 44:
-                s_eR = s_eR[:20]+"..."+s_eR[-20:]
             logger.info ( "no theory predictions for %s in %s" % ( s_eR, slhafile) )
             continue
-        logger.debug("I have theory predictions for %s in %s" % ( expRes,slhafile) )
+        logger.info("I have theory predictions for %s in %s" % ( s_eR, slhafile) )
 
         for theoryPrediction in predictions:
             dataset = theoryPrediction.dataset
