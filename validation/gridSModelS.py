@@ -21,7 +21,7 @@ from smodels.tools.physicsUnits import fb, GeV
 from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 
-logger.setLevel(level=logging.DEBUG)
+logger.setLevel(level=logging.INFO )
 
 def getSlhaFiles(slhadir):
     """

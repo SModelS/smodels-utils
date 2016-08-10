@@ -104,8 +104,7 @@ def validateTxName(expRes,txname,slhadir,kfactor=1.):
         ID=exp.getValuesFor('id')[0]
         ret = { ID : {}}
         for ax in axes: 
-            ret[ID][ax]= validatePlot(exp,txname,ax,slhadir,
-                                                          kfactor=kfactor) 
+            ret[ID][ax]= validatePlot(exp,txname,ax,slhadir, kfactor=kfactor) 
     return ret ## return agreement factors
     
     
