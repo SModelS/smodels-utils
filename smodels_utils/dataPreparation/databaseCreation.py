@@ -19,6 +19,7 @@ from smodels_utils.dataPreparation.vertexChecking import VertexChecker
 from preparationHelper import ObjectList
 import logging
 from datetime import date
+import time
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -53,6 +54,7 @@ class DatabaseCreator(list):
         used in those files 
         """
 
+        self.t0 = time.time()
         self.exclusions = []
         self.metaInfo = None
         self.base = os.getcwd() + '/'
@@ -67,6 +69,10 @@ class DatabaseCreator(list):
         self.assignmentOperator = ': '
         self.txNameField = 'txName'
         list.__init__(self)
+
+    def timeStamp ( self, txt ):
+        dt = time.time() - self.t0
+        print "[databaseCreation:%.1fs] %s" % ( dt, txt )
             
     def create(self, createAdditional=False, ask_for_name=True, create_dataInfo=True ):
         
@@ -110,11 +116,12 @@ class DatabaseCreator(list):
         :raise requiredError: If a region exist, but no constraint, condition 
         or conditionDescription is set for this region
         """
+        self.timeStamp ( "start" )
 
         self.ask_for_name = ask_for_name
         
-        print '\n***starting creation of database entry for %s***\n'\
-        %self.metaInfo.id
+        print '\n*** starting creation of database entry for %s*** \n'\
+            %self.metaInfo.id
         
         if not createAdditional:
             self._extendInfoAttr(self.metaInfo, 'lastUpdate')
@@ -130,11 +137,11 @@ class DatabaseCreator(list):
         dataInfo = StandardDataInfo()
 
         hasUpperLimits = False
+
+        self.timeStamp ( "before going through txnames" )
         for txName in self:
+            self.timeStamp ( "reading %s" % txName )
             dataset=None
-            
-            print '\nreading: %s' %txName.name
-            # print "   for dataset",txName.dataset
             
             if not hasattr(txName.on, 'constraint'): 
                 Errors().missingOnConstraint(txName.name)
@@ -160,10 +167,14 @@ class DatabaseCreator(list):
                     from smodels.tools import statistics
                     from smodels.tools.physicsUnits import fb, pb
                     lumi=eval(self.metaInfo.lumi)
-                    dataInfo.upperLimit = str ( statistics.upperLimit ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError, lumi ).asNumber ( fb ) )+"*fb"
-                    dataInfo.expectedUpperLimit = str ( statistics.upperLimit ( dataInfo.expectedBG, dataInfo.expectedBG, dataInfo.bgError, lumi ).asNumber ( fb ) )+"*fb"
+#                    if create_dataInfo:
+                    if True:
+                        self.timeStamp ( "computing upper limit for %d/%.1f/%.1f" % ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError ) )
+                        dataInfo.upperLimit = str ( statistics.upperLimit ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError, lumi ).asNumber ( fb ) )+"*fb"
+                        dataInfo.expectedUpperLimit = str ( statistics.upperLimit ( dataInfo.expectedBG, dataInfo.expectedBG, dataInfo.bgError, lumi ).asNumber ( fb ) )+"*fb"
+                        self.timeStamp ( "done computing upper limit." )
                 
-                print 'Reading mass plane: %s' %plane.origPlot
+                self.timeStamp ( 'Reading mass plane: %s, %s' % (txName, plane.origPlot ) )
                 
                 efficiencyMap = self.extendDataList\
                 (efficiencyMap, plane, vertexChecker, txName)
@@ -175,14 +186,14 @@ class DatabaseCreator(list):
                 expectedUpperLimits = self.extendDataList(expectedUpperLimits,\
                 plane, vertexChecker, txName, 'expectedlimit')
                 
-                print 'extending upperLimits to %s entries'\
-                %len(upperLimits)
-                print 'extending expectedUpperLimits to %s entries'\
-                %len(expectedUpperLimits)
-                print 'extending efficiencyMap to %s entries'\
-                %len(efficiencyMap)
-                print 'extending efficiencyMap3D to %s entries'\
-                %len(efficiencyMap3D)
+                self.timeStamp ( 'extending upperLimits to %s entries'\
+                                 % len(upperLimits) )
+                self.timeStamp ( 'extending expectedUpperLimits to %s entries'\
+                                 %len(expectedUpperLimits) )
+                self.timeStamp ( 'extending efficiencyMap to %s entries'\
+                                 %len(efficiencyMap) )
+                self.timeStamp ( 'extending efficiencyMap3D to %s entries'\
+                                 %len(efficiencyMap3D) )
                 
                 if plane.obsUpperLimit or plane.efficiencyMap or plane.efficiencyMap3D:
                     if not plane.obsUpperLimit.dataUrl and \
@@ -197,11 +208,11 @@ class DatabaseCreator(list):
                     else:
                         exclusions[getattr(region, self.txNameField)]\
                         .addMassPlane(plane)
-                        print 'Found region: %s' %region.name
+                        self.timeStamp ( 'Found region: %s' %region.name )
                         
                 for excl in exclusions:
-                    print 'extend exclusionLines for %s to %s entries'\
-                    %(excl.name, len(excl))
+                    self.timeStamp ( 'extend exclusionLines for %s to %s entries'\
+                        %(excl.name, len(excl)) )
                     
                 dataInfo.checkMassPlane(plane)
                 self.tWiki.addMassPlane(txName.name,plane)
@@ -233,12 +244,14 @@ class DatabaseCreator(list):
                     region.figureUrl=""
                     region.dataUrl=""
                     region.axes=""
+        self.timeStamp ( "after going through txnames" )
         if create_dataInfo:
             self._createInfoFile( dataInfo.name, dataInfo.dataId, dataInfo)
         self._createSmsRoot( createAdditional )
         
         if not createAdditional:
             self._createTwikiTxt()
+        self.timeStamp ( "done" )
    
         
     def extendDataList(self, dataList, plane, vertexChecker, txName, limitType = None):
@@ -515,7 +528,7 @@ class DatabaseCreator(list):
         except OSError,e:
             pass
 
-        print "[databaseCreation] cleaned up in",self.base
+        self.timeStamp ( "cleaned up in %s " % self.base )
 
     def _createValidationFolder(self):
         """ create the validation folder and populate it with validate.py """
@@ -523,7 +536,7 @@ class DatabaseCreator(list):
             os.mkdir ( self.validationPath )
         import inspect, commands
         path = inspect.getfile ( self._createValidationFolder )
-        print "create validation folder=",path
+        self.timeStamp ( "creating validation folder %s" % path )
         path=path.replace( "smodels_utils/dataPreparation/databaseCreation.py", "validation/scripts" )
         scripts = [ "validate.py", "validateSinglePlot.py" ] # , "plotValidation.py" ]
         for i in scripts:
@@ -598,7 +611,7 @@ class DatabaseCreator(list):
                 if attr == "dataId":
                     path = self.infoFilePath ( name, getattr ( obj, attr ) )
         infoFile = open(self.base + path, 'w')
-        print "[databaseCreation] writing",path
+        self.timeStamp ( "writing %s" % path )
         infoFile.write(content)
         infoFile.close()
         

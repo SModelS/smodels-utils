@@ -476,6 +476,9 @@ class TxNameInput(Locker):
         self._kinematicRegions = self._getKinRegions()
         self._planes = []
 
+    def __str__(self):
+        ret=self._name
+        return ret
 
     def _getKinRegions(self):
         
