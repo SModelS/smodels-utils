@@ -7,7 +7,7 @@
 
 .. moduleauthor:: Michael Traub <michael.traub@gmx.at>
 
-"""   
+"""
 
 import copy
 import sys
@@ -19,6 +19,7 @@ from smodels_utils.dataPreparation.vertexChecking import VertexChecker
 from preparationHelper import ObjectList
 import logging
 from datetime import date
+from smodels.tools.physicsUnits import fb, pb
 import time
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -27,10 +28,23 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
 
-         
-        
+limitCache={}
+
+def computeLimit ( observed, expected, error, lumi ):
+    """ compute limits and cache them """
+    from math import floor, log10
+    from smodels.tools import statistics
+    r4 = lambda x: round(x, -int(floor(log10(x))) + (4 - 1))
+    key = "%f %f %f %f" % ( r4(observed), r4(expected), r4(error), r4(lumi.asNumber(1/fb)) )
+    if key in limitCache:
+        return limitCache[key]
+    ul = statistics.upperLimit ( observed, expected, error, lumi ).asNumber ( fb )
+    ret=str(ul)+"*fb"
+    limitCache[key]=ret
+    return ret
+
 class DatabaseCreator(list):
-    
+
     """
     list-object
     main class of smodels_utils.dataPreparation
@@ -41,17 +55,17 @@ class DatabaseCreator(list):
     -sms.root
     -twiki.txt
     -globalInfo.txt
-    -txName.txt (one for every txName and every kin. region, 
+    -txName.txt (one for every txName and every kin. region,
     if the kin. region exist)
     """
-        
+
     def __init__(self):
-        
+
         """
         initialize the object
         names and paths of the files to be created
         are defined, as well as some other strings
-        used in those files 
+        used in those files
         """
 
         self.t0 = time.time()
@@ -82,24 +96,24 @@ class DatabaseCreator(list):
         m=str(Map[0]).replace("'","")
         ret = ">>> %s ... " % m
         return ret
-            
+
     def create(self, createAdditional=False, ask_for_name=True, create_dataInfo=True ):
-        
+
         """
         main method of the class
         This method calls all other methods of the class
-        
+
         The following working steps are performed:
         --date of last update is evaluated
-        --old database files are deleted 
-        --write globalInfo.txt 
+        --old database files are deleted
+        --write globalInfo.txt
         --a empty StandardDataInfo-object is built
         --a empty StandardTWiki-object is built
         --a validation folder is created and a validate.py script is added
         --loop over all txNames:
         ----VertexChecker-object is build
         ----empty StandardDataList objects are build for:
-            upperLimits, expectedUpperLimits and efficiencyMaps 
+            upperLimits, expectedUpperLimits and efficiencyMaps
         ----self.exclusions is appended with an empty StandardExclusions-object
         ----loop over all mass planes:
         ------extending upperLimits, expectedUpperLimits and efficiencyMaps
@@ -110,7 +124,7 @@ class DatabaseCreator(list):
         ------pass massplane to dataInfo
         ------extending StandardTWiki
         ----extend TxNames with some attributes, to be written to txName.txt
-        ----checking if constraint, condition and conditionDescription are set for 
+        ----checking if constraint, condition and conditionDescription are set for
             every existing kin. region
         ----write txName.txt
         --write sms.root
@@ -121,17 +135,17 @@ class DatabaseCreator(list):
         :param ask_for_name: if false, we assume 'ww' to be the author. Use with
         great care!
         :param createDataInfo: if false, we dont create dataInfo.txt
-        
-        :raise requiredError: If a region exist, but no constraint, condition 
+
+        :raise requiredError: If a region exist, but no constraint, condition
         or conditionDescription is set for this region
         """
         self.timeStamp ( "start" )
 
         self.ask_for_name = ask_for_name
-        
+
         print '\n*** starting creation of database entry for %s*** \n'\
             %self.metaInfo.id
-        
+
         if not createAdditional:
             self._extendInfoAttr(self.metaInfo, 'lastUpdate')
             self._setLastUpdate()
@@ -140,9 +154,9 @@ class DatabaseCreator(list):
             self._createValidationFolder ()
 
         self.tWiki = StandardTWiki(self.metaInfo)
-        
+
         publishedData = True
-            
+
         dataInfo = StandardDataInfo()
 
         hasUpperLimits = False
@@ -151,8 +165,8 @@ class DatabaseCreator(list):
         for txName in self:
             self.timeStamp ( "reading %s" % txName )
             dataset=None
-            
-            if not hasattr(txName.on, 'constraint'): 
+
+            if not hasattr(txName.on, 'constraint'):
                 Errors().missingOnConstraint(txName.name)
             vertexChecker = VertexChecker(txName.name, txName.on.constraint )
             upperLimits = StandardDataList()
@@ -160,30 +174,28 @@ class DatabaseCreator(list):
             expectedUpperLimits = StandardDataList()
             efficiencyMap = StandardDataList(valueUnit ='')
             efficiencyMap3D = StandardDataList(valueUnit ='')
-            
+
             exclusions = ObjectList('name')
             for region in txName.kinematicRegions:
                 exclusions.append\
                 (StandardExclusions(txName.name + region.topoExtension))
 
             for plane in txName.planes:
-                
+
                 if plane.origEfficiencyMap and hasattr ( plane.origEfficiencyMap, "observedN" ):
                     dataInfo.dataset = plane.origEfficiencyMap.dataset
                     dataInfo.observedN = plane.origEfficiencyMap.observedN
                     dataInfo.expectedBG = plane.origEfficiencyMap.expectedBG
                     dataInfo.bgError = plane.origEfficiencyMap.bgError
-                    from smodels.tools import statistics
-                    from smodels.tools.physicsUnits import fb, pb
                     lumi=eval(self.metaInfo.lumi)
                     if create_dataInfo:
                         self.timeStamp ( "computing upper limit for %d/%.1f/%.1f" % ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError ) )
-                        dataInfo.upperLimit = str ( statistics.upperLimit ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError, lumi ).asNumber ( fb ) )+"*fb"
-                        dataInfo.expectedUpperLimit = str ( statistics.upperLimit ( dataInfo.expectedBG, dataInfo.expectedBG, dataInfo.bgError, lumi ).asNumber ( fb ) )+"*fb"
+                        dataInfo.upperLimit = computeLimit ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError, lumi )
+                        dataInfo.expectedUpperLimit = computeLimit ( dataInfo.expectedBG, dataInfo.expectedBG, dataInfo.bgError, lumi )
                         self.timeStamp ( "done computing upper limit." )
-                
+
                 self.timeStamp ( 'Reading mass plane: %s, %s [%s]' % (txName, plane.origPlot, plane.obsExclusion.path[-30:] ) )
-                
+
                 efficiencyMap = self.extendDataList\
                 (efficiencyMap, plane, vertexChecker, txName)
                 self.timeStamp ( 'extended efficiencyMap to %s entries %s'\
@@ -201,15 +213,15 @@ class DatabaseCreator(list):
                 self.timeStamp ( 'extended expectedUpperLimits to %s entries %s'\
                                  % ( len(expectedUpperLimits), self.describeMap ( expectedUpperLimits ) ) )
                 # self.timeStamp ( 'efficiency map is now %s' % efficiencyMap )
-                
-                
+
+
                 if plane.obsUpperLimit or plane.efficiencyMap or plane.efficiencyMap3D:
                     if not plane.obsUpperLimit.dataUrl and \
                     not plane.efficiencyMap.dataUrl and \
-                    not plane.efficiencyMap3D.dataUrl: 
+                    not plane.efficiencyMap3D.dataUrl:
                         publishedData = False
-                    
-                for region in txName.kinematicRegions:      
+
+                for region in txName.kinematicRegions:
                     if getattr(plane, region.name) == 'auto' \
                     or getattr(plane, region.name) == False:
                         setattr(plane, region.name, False)
@@ -217,15 +229,15 @@ class DatabaseCreator(list):
                         exclusions[getattr(region, self.txNameField)]\
                         .addMassPlane(plane)
                         self.timeStamp ( 'Found region: %s' %region.name )
-                        
+
                 for excl in exclusions:
                     self.timeStamp ( 'extend exclusionLines for %s to %s entries'\
                         %(excl.name, len(excl)) )
-                    
+
                 dataInfo.checkMassPlane(plane)
                 self.tWiki.addMassPlane(txName.name,plane)
 
-            for excl in exclusions: 
+            for excl in exclusions:
                 if excl: self.exclusions.append(excl)
             self._extendInfoAttr(txName, 'publishedData')
             self._extendInfoAttr(txName, 'upperLimits')
@@ -256,21 +268,21 @@ class DatabaseCreator(list):
         if create_dataInfo:
             self._createInfoFile( dataInfo.name, dataInfo.dataId, dataInfo)
         self._createSmsRoot( createAdditional )
-        
+
         if not createAdditional:
             self._createTwikiTxt()
         self.timeStamp ( "done" )
-   
-        
+
+
     def extendDataList(self, dataList, plane, vertexChecker, txName, limitType = None):
-        
+
         """
         extend the given data list by the values related to this type of list
         examples for data lists are ; upperLimits, efficiencyMaps, ....
         The values held by the given mass plane are extended to the data list
-        
+
         calls self._computeKinRegions to check the kin, regions
-        
+
         :param dataList: standardObjects.StandardDataList-object
         :param plane: inputObjects.MetaInfoInput-object
         :param vertexChecker: standardObjects.VertexChecker-object
@@ -279,21 +291,21 @@ class DatabaseCreator(list):
         efficiency maps, else: name of the related origData-object
         :return: data list, extended by the values given by plane
         """
-        
+
         effMap3d=False
-        
+
         if limitType:
-            origData = plane.origLimits[limitType] 
+            origData = plane.origLimits[limitType]
         else:
             origData = plane.origEfficiencyMap
             if len(plane.origEfficiencyMap)>0 and len(plane.origEfficiencyMap3D)>0:
-               Errors().has2DAnd3DMap(plane) 
+               Errors().has2DAnd3DMap(plane)
             if len(plane.origEfficiencyMap)>0:
                 origData = plane.origEfficiencyMap
             if len(plane.origEfficiencyMap3D)>0:
                 origData = plane.origEfficiencyMap3D
                 effMap3d=True
-                
+
         #print "[databaseCreation.py] origData=",origData,"limitType=",limitType
         #print "origEfficiencyMap=",len(plane.origEfficiencyMap)
         #print "origEfficiencyMap3D=",len(plane.origEfficiencyMap3D)
@@ -303,7 +315,7 @@ class DatabaseCreator(list):
 
         if effMap3d:
             for i,value in enumerate(origData):
-                x = value[0] 
+                x = value[0]
                 y = value[1]
                 z = value[2]
                 value = value[3]
@@ -312,9 +324,9 @@ class DatabaseCreator(list):
                 dataList.append(massArray, value)
                 self._computeKinRegions(massArray, i, plane, vertexChecker, txName, limitType )
             return dataList
-               
+
         for i,value in enumerate(origData):
-            x = value[0] 
+            x = value[0]
             y = value[1]
             value = value[2]
             massArray = plane.origPlot.getParticleMasses(x,y)
@@ -322,26 +334,26 @@ class DatabaseCreator(list):
             dataList.append(massArray, value)
             self._computeKinRegions(massArray, i, plane, vertexChecker, txName, limitType )
         return dataList
-        
+
     def _computeKinRegions(self, massArray, i, plane, vertexChecker, txName, limitType ):
-        
+
         """
-        checks to which kin reagion a mass array belongs 
-        A mass array belongs not only to a kin. region, but also to 
+        checks to which kin reagion a mass array belongs
+        A mass array belongs not only to a kin. region, but also to
         a mass plane. If a single mass array of a mass plane belongs
-        to a specific kin region, the whole mass plane belongs to that 
-        region and the -region-exist' attr. is set to True 
-        
-        Only if the region-exist' attr. is set to 'auto' this automated scan of 
+        to a specific kin region, the whole mass plane belongs to that
+        region and the -region-exist' attr. is set to True
+
+        Only if the region-exist' attr. is set to 'auto' this automated scan of
         region is performed, else the predefined settings (True/False)
         of this attr. is used to determine if the mass plane belongs
         to the region
-        
+
         If the region exist (means at least on mass Array belongs to it)
         self._setRegionAttr is called to set the attributes
         which belong to the region
-        
-        :param massArray: list containing two other lists. Each list contains 
+
+        :param massArray: list containing two other lists. Each list contains
         floats, representing the masses of the particles of each branch in GeV
         :param i: loop-index of outer loop
         :param plane: inputObjects.MetaInfoInput-objects
@@ -350,8 +362,8 @@ class DatabaseCreator(list):
         :param limitType: type off limit (limit, expectedlimit, or None for efficiencyMap)
         :raise kinRegionSetterError: if the 'region-exist' is not True, False or 'auto'
         """
-        
-        kinRegions = txName.kinematicRegions  
+
+        kinRegions = txName.kinematicRegions
         for region in kinRegions:
             regionExist = getattr(plane, region.name)
             if not regionExist == 'auto':
@@ -361,19 +373,19 @@ class DatabaseCreator(list):
                 if regionExist == True and i == 0 and limitType != "expectedlimit":
                     self._setRegionAttr(txName, region, plane)
                 continue
-            if not vertexChecker: 
+            if not vertexChecker:
                 Errors().notAssigned(txName.name)
             offShellVertices = \
             vertexChecker.getOffShellVertices(massArray)
             if region.checkoffShellVertices(offShellVertices) and limitType != "expectedlimit":
                 setattr(plane, region.name, True)
                 self._setRegionAttr(txName, region, plane)
-    
+
         kinRegions = txName.kinematicRegions
-        
-        
+
+
     def _setRegionAttr(self, txName, region, plane):
-        
+
         """
         The list infoAttr of inputObjects.KinematicRegion-class
         is extended by some attributes which will be written
@@ -382,8 +394,8 @@ class DatabaseCreator(list):
         :param plane: inputObjects.MetaInfoInput-object
         :param txName: inputObjects.TxNameInput-object
         :param region: inputObjects.KinematicRegion-object
-        """ 
-        
+        """
+
         self._extendInfoAttr(region, self.txNameField,0)
         setattr(region, self.txNameField, txName.name + region.topoExtension)
         self._extendInfoAttr(region, 'validated')
@@ -396,8 +408,8 @@ class DatabaseCreator(list):
             self._extendRegionAttr(region, 'dataUrl', plane.efficiencyMap.dataUrl)
         if plane.efficiencyMap3D.dataUrl:
             self._extendRegionAttr(region, 'dataUrl', plane.efficiencyMap3D.dataUrl)
-        
-            
+
+
     def _extendRegionAttr(self, region, name, value):
         if hasattr(region, name):
             if not getattr(region, name) in [ "", None ]:
@@ -407,31 +419,31 @@ class DatabaseCreator(list):
         else:
             self._extendInfoAttr(region, name)
         setattr(region, name, value)
-    
-    
+
+
     def _extendInfoAttr(self, obj, attr, position = None):
-        
+
         """
-        checks if an attribute is in the list  'infoAttr' 
+        checks if an attribute is in the list  'infoAttr'
         of the given object
         If not: writes the attribute to the list.
-        
+
         :param obj: any instance of a child-class of preparationHelper.Locker
         :param attr: name of the attribute as string
         :position: position were do add the attribute, if None:
         add the attr. to the end of the list
         """
-  
-    
+
+
         if attr in obj.infoAttr: return
         if position == None:
             obj.infoAttr.append(attr)
             return
         obj.infoAttr.insert(position, attr)
-        
-        
+
+
     def _setLastUpdate(self):
-        
+
         """
         checks if there is already a globalInfo,txt file. If there is, the lastUpdate
         field and the implementedBy field is read.
@@ -440,7 +452,7 @@ class DatabaseCreator(list):
         overwritten with current date
         When last update is overwritten, self._setImplementedBy is called
         """
-        
+
         if os.path.isfile(self.base + self.infoFilePath(self.metaInfoFileName)):
             lastUpdate = False
             implementedBy = False
@@ -462,14 +474,14 @@ class DatabaseCreator(list):
                     m = m + ' upperLimits\n'
                     m = m + '(You can turn this off via the environment variable SMODELS_NOUPDATE)\n'
                     m = m + 'overwrite lastUpdate (y/n)?:'
-                    answer = 'n' 
+                    answer = 'n'
                     if "SMODELS_NOUPDATE" in os.environ.keys():
                         print "SMODELS_NOUPDATE is set!"
                         break
                     if self.ask_for_name:
                         answer = raw_input(m)
                     if answer == 'y' or answer == 'n': break
-                if answer == 'n': 
+                if answer == 'n':
                     self.metaInfo.lastUpdate = lastUpdate
                     if not implementedBy: self._setImplementedBy()
                     else: self.metaInfo.implementedBy = implementedBy
@@ -478,14 +490,14 @@ class DatabaseCreator(list):
         today = '%s/%s/%s\n' %(today.year, today.month, today.day)
         self.metaInfo.lastUpdate = today
         self._setImplementedBy()
-        
+
     def _setImplementedBy(self):
-        
+
         """
         set implementedBy attribute of self.metaInfo
         from comand line
         """
-        
+
         while True:
             answer = 'ww'
             if self.ask_for_name:
@@ -504,16 +516,16 @@ class DatabaseCreator(list):
             "FA" : "Federico Ambrogi" }
         if answer in initialDict.keys():
             answer=initialDict[answer]
-            
+
         self.metaInfo.implementedBy = answer
-        
-        
+
+
     def _delete(self):
-        
+
         """
         deletes all old globalInfo.txt, txName.txt, sms.root and twiki.txt files
         """
-        
+
         predefinedPaths = [
             self.base + self.smsrootFile,
             self.base + self.twikitxtPath,
@@ -521,7 +533,7 @@ class DatabaseCreator(list):
             ]
         for path in predefinedPaths:
             if os.path.exists(path): os.remove(path)
-        
+
         try:
             for entry in os.listdir(self.base + self.infoFileDirectory):
                 if not entry[-len(self.infoFileExtension):] == self.infoFileExtension:
@@ -549,14 +561,14 @@ class DatabaseCreator(list):
         scripts = [ "validate.py", "validateSinglePlot.py" ] # , "plotValidation.py" ]
         for i in scripts:
             if not os.path.exists ( "%s/%s" % ( self.validationPath, i ) ):
-                cmd = "cp %s/%s %s" % ( path, i, self.validationPath ) 
+                cmd = "cp %s/%s %s" % ( path, i, self.validationPath )
                 print cmd
                 print commands.getoutput ( "cp %s/%s %s" % ( path, i, self.validationPath ) )
         ### fixme add a few more, txname specific, only the plotting, etc ###
 
 
     def _createSmsRoot(self,update=False):
-        
+
         """
         creates the sms.root file
         """
@@ -566,7 +578,7 @@ class DatabaseCreator(list):
 
         #if not os.path.exists ( self.validationPath ):
         #    os.mkdir ( self.validationPath )
-    
+
         smsRoot = ROOT.TFile(self.base + self.smsrootFile,mode)
         for exclusions in self.exclusions:
             if smsRoot.Get( exclusions.name )!=None:
@@ -575,22 +587,22 @@ class DatabaseCreator(list):
             directory.cd()
             for exclusion in exclusions: exclusion.Write()
         smsRoot.Close()
-        
+
     def _createTwikiTxt(self):
-        
+
         """
         creates the twiki.txt file
         """
         if not os.path.exists ( self.base + self.origPath ):
             os.mkdir ( self.base + self.origPath )
 
-        
+
         twikiTxt = open(self.base + self.twikitxtPath,'w')
         twikiTxt.write('%s' %self.tWiki)
         twikiTxt.close()
-        
+
     def _createInfoFile(self, name, dataid, *objects):
-        
+
         """
         creates a file of type .txt
         all attributes defined in the list called 'infoAttr'
@@ -598,9 +610,9 @@ class DatabaseCreator(list):
         :param name: name of the file (without extension)
         :param *objects: objects containing attributes which will be
         written to the file. The object must have a list called
-        'infoAttr' to define what attributes should be written  
+        'infoAttr' to define what attributes should be written
         """
-        
+
         content = ''
         path=self.infoFilePath(name, dataid)
         for obj in objects:
@@ -622,7 +634,7 @@ class DatabaseCreator(list):
         self.timeStamp ( "writing %s" % path )
         infoFile.write(content)
         infoFile.close()
-        
+
     def infoFilePath(self, infoFileName, dataid=None ):
         """
         :param infoFileName: name of requested file without extension
@@ -637,32 +649,32 @@ class DatabaseCreator(list):
 
         if not os.path.exists ( directory ):
             os.mkdir ( directory )
-        
+
         path = '%s%s%s' %(directory, infoFileName, self.infoFileExtension)
         # print "[infoFilePath]",path
         return path
-        
-databaseCreator = DatabaseCreator()   
+
+databaseCreator = DatabaseCreator()
 
 class Errors(object):
-    
+
     def __init__(self):
-        
+
         self._starLine = '\n************************************\n'
 
     def required(self, txName, kinObj, attr):
-        
+
         m = self._starLine
-        m = m + "there is an %s-region for %s " %(kinObj.name, txName) 
+        m = m + "there is an %s-region for %s " %(kinObj.name, txName)
         m = m + "but no %s for this region\n" %attr
         m = m + "use txName.%s.%s " %(kinObj.topoExtension, attr)
         m = m + "to set %s" %attr
         m = m + self._starLine
         print(m)
         sys.exit()
-        
+
     def kinRegionSetter(self, txName, name, value):
-    
+
         m = self._starLine
         m = m + "in txName %s'\n" %txName
         m = m + "setter for propertsy %s must be of bool type or 'auto'\n"\
@@ -677,9 +689,9 @@ class Errors(object):
         m = m + '%s has 2d and 3d plane' % ( plane )
         print(m)
         sys.exit()
-        
+
     def missingOnConstraint(self, txName):
-        
+
         m = self._starLine#
         m = m + "in txName %s: on.constraint not set\n" %txName
         m = m + "onShell constraint have to be set for automated splitting\n"
@@ -687,7 +699,7 @@ class Errors(object):
         m = m + self._starLine
         print(m)
         sys.exit()
-        
-        
-        
-             
+
+
+
+
