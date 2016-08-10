@@ -94,7 +94,10 @@ def runSModelSFor(validationPlot):
 
         predictions = theoryPredictionsFor(expRes, smstoplist)
         if not predictions:
-            logger.info ( "no theory predictions for %s in %s" % ( expRes,slhafile) )
+            s_eR = str ( expRes )
+            if len(s_eR) > 44:
+                s_eR = s_eR[:20]+"..."+s_eR[-20:]
+            logger.info ( "no theory predictions for %s in %s" % ( s_eR, slhafile) )
             continue
         logger.debug("I have theory predictions for %s in %s" % ( expRes,slhafile) )
 
