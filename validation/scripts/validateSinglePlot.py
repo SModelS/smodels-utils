@@ -9,6 +9,8 @@ argparser.add_argument ( '-a', '--axes', nargs='?',
                 type=types.StringType, default='2*Eq(mother,x)_Eq(lsp,y)' )
 argparser.add_argument ( '-k', '--kfactor', nargs='?', help='k factor [1.0]',
                 type=types.FloatType, default=1.0 )
+argparser.add_argument ( '-r', '--recycle', help='recycle py files',
+								action='store_true')
 args=argparser.parse_args()
 
 import sys,os
@@ -50,4 +52,4 @@ slhamain = os.path.join(home,"smodels-utils/slha/")
 for i in expRes:
     slha = slhamain+"%s.tar" % args.txname
     print validatePlot(i,args.txname,args.axes,slha, kfactor=args.kfactor, 
-            recycle_data=False )
+            recycle_data=args.recycle )

@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+import argparse, types
+argparser = argparse.ArgumentParser(description="validate all results for this analysis")
+argparser.add_argument ( '-r', '--recycle', help='recycle py files',
+								action='store_true')
+args=argparser.parse_args()
+
 import sys,os
 home = os.path.expanduser("~")
 home = "../../../../../"
@@ -54,5 +60,4 @@ kfactorDict = { "TChiWZ": 1.2, "TChiWW": 1.2, "TChiChipmSlepL": 1.2,
                 "TChiWZoff": 1.2 }
 #kfactorDict= {}
 for i in expRes:
-    validateExpRes(i,slhamain, kfactorDict = kfactorDict, recycle_data=False )
-
+    validateExpRes(i,slhamain, kfactorDict = kfactorDict, recycle_data=args.recycle )
