@@ -21,7 +21,7 @@ from smodels.tools.physicsUnits import fb, GeV
 from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 
-logger.setLevel(level=logging.DEBUG)
+logger.setLevel(level=logging.INFO )
 
 def getSlhaFiles(slhadir):
     """
@@ -78,9 +78,13 @@ def runSModelSFor(validationPlot):
         return False
     slhaFiles,slhaD = getSlhaFiles(validationPlot.slhaDir)
 
-    expRes = validationPlot.expRes
+    import copy
+    expRes = copy.deepcopy ( validationPlot.expRes )
+    #Limit the experimental result to the respective Txname (relevant for EM results)
+    for dataset in expRes.datasets:
+        dataset.txnameList = [tx for tx in dataset.txnameList[:] if tx.txName == validationPlot.txName]
     #Define basic parameters
-    sigmacut = 0. * fb
+    sigmacut = 0.0 * fb
     mingap = 2. * GeV
     #Loop over SLHA files and compute results:
     data = []
@@ -90,15 +94,21 @@ def runSModelSFor(validationPlot):
                         doCompress=True,doInvisible=True, minmassgap=mingap)
 
         predictions = theoryPredictionsFor(expRes, smstoplist)
+        s_eR = str ( expRes )
+        if len(s_eR) > 44:
+            s_eR = s_eR[:20]+"..."+s_eR[-20:]
         if not predictions:
-            logger.info ( "no theory predictions for %s in %s" % ( expRes,slhafile) )
+            logger.info ( "no theory predictions for %s in %s" % ( s_eR, slhafile) )
             continue
-        logger.debug("I have theory predictions for %s in %s" % ( expRes,slhafile) )
+        logger.info("I have theory predictions for %s in %s" % ( s_eR, slhafile) )
 
         for theoryPrediction in predictions:
             dataset = theoryPrediction.dataset
             datasetID = dataset.dataInfo.dataId
             txnames = theoryPrediction.txnames
+            if len(txnames) != 1:
+                logger.warning( "Multiple Txnames entering the theory prediction. "
+                                "Something may be wrong.")
             is_in=False
             for txname in txnames:
                 if txname.txName == validationPlot.txName:
@@ -114,24 +124,24 @@ def runSModelSFor(validationPlot):
             upperLimit=None
             efficiency=None
             CLs=None
-            if expRes.getValuesFor('dataType')[0] == 'upperLimit':
+            if expRes.datasets[0].dataInfo.dataType == 'upperLimit':
                 upperLimit = expRes.getUpperLimitFor(txname=txname,mass=mass)
-            elif expRes.getValuesFor('dataType')[0] == 'efficiencyMap':
-                upperLimit = expRes.getUpperLimitFor(dataID=datasetID)
-                # eff=expRes.getTxNames()[0].getEfficiencyFor ( mass )
-                eff=expRes.getTxNames()[0].txnameData.getValueFor(mass)
-                # print effMap[mass]
-                expectedBG=dataset.getValuesFor ( "expectedBG" )
-                observedN=dataset.getValuesFor ( "observedN" )
-                bgError=dataset.getValuesFor ( "bgError" )
-                lumi=dataset.getValuesFor ( "lumi" )[0]
+            elif expRes.datasets[0].dataInfo.dataType == 'efficiencyMap':
+                upperLimit = expRes.getUpperLimitFor(dataID=datasetID)                
+                eff=dataset.txnameList[0].txnameData.getValueFor(mass)
+                expectedBG=dataset.dataInfo.expectedBG
+                observedN=dataset.dataInfo.observedN
+                bgError=dataset.dataInfo.bgError
+                lumi=expRes.globalInfo.lumi
                 from smodels.tools import exclusion_CLs
                 ## import IPython
                 ## IPython.embed()
-                CLs=exclusion_CLs.CLs ( observedN, expectedBG, bgError, value[0].value * lumi, 10000 )
+                CLs=exclusion_CLs.CLs ( observedN, expectedBG, bgError, 
+                                        value[0].value * lumi, 10000 )
                 efficiency=eff
             else:
-                logger.error ( "dont know dataType of "+expRes.getValuesFor('dataType')[0] )
+                logger.error ( "dont know dataType of %s" % 
+                               expRes.getValuesFor('dataType')[0] )
 
             if len(value) != 1:
                 logger.warning("More than one cross-section found. Using first one")
@@ -139,11 +149,13 @@ def runSModelSFor(validationPlot):
             mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]
             v=origPlot.getXYValues(mass_unitless)
             if v == None:
-                logger.info ( "dropping %s, doesnt fall into the plane of %s." % ( slhafile, origPlot.string ) )
+                logger.info ( "dropping %s, doesnt fall into the plane of %s." % 
+                              ( slhafile, origPlot.string ) )
                 continue
             x,y = v
-            Dict= {'slhafile' : slhafile, 'axes': [x,y], 'signal' : value, 'UL' : upperLimit,
-                   'condition': cond, 'dataset': datasetID } ## , 'efficiency' : eff}
+            Dict= {'slhafile' : slhafile, 'axes': [x,y], 'signal' : value, 
+                   'UL' : upperLimit, 'condition': cond, 'dataset': datasetID } 
+            ## , 'efficiency' : eff}
             # print "[gridSModelS] run on ",Dict
             if efficiency:
                 Dict['efficiency']=efficiency
@@ -154,6 +166,7 @@ def runSModelSFor(validationPlot):
     if slhaD != validationPlot.slhaDir: shutil.rmtree(slhaD)
 
     if data == []:
-        logger.error ( "There are no data for a validation plot. Are the SLHA files correct? Are the constraints correct?" )
+        logger.error ( "There are no data for a validation plot."
+                       " Are the SLHA files correct? Are the constraints correct?" )
 
     return data

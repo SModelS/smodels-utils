@@ -148,6 +148,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
         official = None
     else:
         official = validationPlot.officialCurves
+        if isinstance(official,list): official = official[0]
         # print "[plottingFuncs.py] official=",len(official)
     
     if silentMode: gROOT.SetBatch()    
@@ -202,11 +203,11 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
             x, y = pt['axes']
             import ROOT
             lk=ROOT.TLatex ()
-            lk.SetTextSize(.02)
+            lk.SetTextSize(.01)
             if what in [ "bestregion", "bestcut" ]:
                 bestregion=pt["dataset"].replace("ANA","").replace("CUT","")
                 lk.DrawLatex(x, y, bestregion )
-                print "draw",x,y,pt["dataset"]
+#                 print "draw",x,y,pt["dataset"]
             elif what == "upperlimits":
                 ul=pt["UL"].asNumber(pb)
                 lk.DrawLatex(x, y, str(ul) )
@@ -214,6 +215,13 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
                 signalxsec=pt['signal'].asNumber(pb)
                 lk.DrawLatex(x, y, str(signalxsec) )
                 # print "point",pt["axes"],pt["signal"]
+            elif what == "efficiencies":
+                eff = pt['efficiency']
+                if isinstance(eff,float):
+                    eff = format(eff,'1.0e')
+                else:
+                    eff = str(eff)
+                lk.DrawLatex(x, y, eff)
             else:
                 logger.error( "dont know how to draw %s" % what )
                 sys.exit()
@@ -249,11 +257,14 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     l3=TLatex()
     l3.SetNDC()
     l3.SetTextSize(.04)
-    drawingwhat="upper limits [pb]"
+    if what == "upperlimits":
+        drawingwhat="upper limits [pb]"
     if what == "crosssections":
         drawingwhat="theory predictions [pb]"
     if what in [ "bestregion", "bestcut" ]:
         drawingwhat="best signal region"
+    else:
+        drawingwhat = what        
     l3.DrawLatex(.15,.7, drawingwhat )
     base.l3=l3
     if abs(signal_factor-1.0)>.0001:
@@ -357,7 +368,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         for i in official:
             setOptions( i, Type='official')
     base = TMultiGraph()
-    if exclBand.GetN()>0: base.Add(exclBand, "CF")
+#    if exclBand.GetN()>0: base.Add(exclBand, "CF")
     if allowed.GetN()>0: base.Add(allowed, "P")
     if excluded.GetN()>0: base.Add(excluded, "P")
     if allowed_border.GetN()>0: base.Add(allowed_border, "P")

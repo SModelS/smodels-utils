@@ -1,31 +1,43 @@
 #!/usr/bin/env python
 
+import argparse, types
+argparser = argparse.ArgumentParser(description="validate all results for this analysis")
+argparser.add_argument ( '-r', '--recycle', help='recycle py files',
+								action='store_true')
+args=argparser.parse_args()
+
 import sys,os
 home = os.path.expanduser("~")
 home = "../../../../../"
+database_home = "../../../../"
 
 sys.path.insert(0,os.path.join(home,"smodels-utils/"))
 sys.path.insert(0,os.path.join(home,"smodels/"))
 
-
-from validation.plotProducer import validateExpRes, getExpIdFromPath, getDatasetIdsFromPath
+from validation.plotProducer import validateExpRes, getExpIdFromPath, \
+                                    getDatasetIdsFromPath
 from smodels.experiment.databaseObj import Database
 import logging
 from smodels.theory.crossSection import logger as cl
 from smodels.theory.slhaDecomposer import logger as dl
 from smodels.experiment.txnameObj import logger as tl
-from validation.gridSModelS import logger as gl
-cl.setLevel(level=logging.INFO) 
+cl.setLevel(level=logging.WARNING)
 dl.setLevel(level=logging.WARNING)
 tl.setLevel(level=logging.INFO)
-gl.setLevel(level=logging.INFO)
 
+database = Database( database_home )
 
-print "exp id=",getExpIdFromPath(),"datasetid=",getDatasetIdsFromPath()
+expIds = getExpIdFromPath()
+print "Experimental Id:",expIds
+dsIds = datasetIDs=getDatasetIdsFromPath()
+print "Dataset Ids:",", ".join ( map ( str, dsIds[:3] ) ),
+if len(dsIds)>3:
+    print ", ...",
+print
 
-database = Database(os.path.join(home,"smodels-database"))
 #How to validate all plots for all Txnames in one ExpRes:
-expRes = database.getExpResults(analysisIDs=[getExpIdFromPath()],datasetIDs=getDatasetIdsFromPath() )
+expRes = database.getExpResults ( analysisIDs=[ expIds ],datasetIDs= dsIds )
+
 if expRes == []:
     print "[validate.py] Error: could not find any experimental results."
     f=open("../globalInfo.txt")
@@ -40,11 +52,10 @@ if expRes == []:
                 sys.exit()
 
 slhamain = os.path.join(home,"smodels-utils/slha")
-kfactorDict = { "TChiWZ": 1.2, "TChiWW": 1.2, "TChiChipmSlepL": 1.2, 
-                "TChiChipmSlepStau": 1.2, "TChiChipmStauStau": 1.2, 
-                "TChiSlepSnu": 1.2, "TChiStauSnu": 1.2, "TChiWH": 1.2, 
+kfactorDict = { "TChiWZ": 1.2, "TChiWW": 1.2, "TChiChipmSlepL": 1.2,
+                "TChiChipmSlepStau": 1.2, "TChiChipmStauStau": 1.2,
+                "TChiSlepSnu": 1.2, "TChiStauSnu": 1.2, "TChiWH": 1.2,
                 "TChiWZoff": 1.2 }
-#kfactorDict= {} 
+#kfactorDict= {}
 for i in expRes:
-    validateExpRes(i,slhamain, kfactorDict = kfactorDict )
-
+    validateExpRes(i,slhamain, kfactorDict = kfactorDict, recycle_data=args.recycle )
