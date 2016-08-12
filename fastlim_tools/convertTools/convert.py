@@ -87,7 +87,7 @@ def getConstraints ( txname, analysis ):
                      "T1": "[[['jet','jet']],[['jet','jet']]]" }
     if txname == "T2tt": 
         tmp = expid.replace ( "ATLAS-CONF-","" ).replace("-eff","" )
-        if expid in [ "2013-024", "2013-037", "2013-047", "2013-053", "2013-054",
+        if tmp in [ "2013-024", "2013-037", "2013-047", "2013-053", "2013-054",
                       "2013-061", "2013-062", "2013-093" ]:
             return "[[['t']],[['t']]]"
     return constraints[txname]
