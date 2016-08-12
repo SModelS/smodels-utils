@@ -37,9 +37,9 @@ from smodels_utils.dataPreparation.origPlotObjects import x, y, z
 
 import os, glob
 dir=os.getcwd()
-print dir
+## print dir
 pos1=dir.find("ATLAS/")+6
-pos=dir.find("-ANA")
+pos=dir.rfind("/data")
 expid = dir[pos1:pos]
 print "[convert.py] expid=",expid
 signalregion=dir[pos+1:]
@@ -62,10 +62,11 @@ info.implementedBy = ''
 def getConstraints ( txname, analysis ):
     constraints =  { "T2tt": "[[['t+']],[['t-']]]", "T2bb": "[[['b']],[['b']]]",
                      "T2": "[[['jet']],[['jet']]]",
+#                    "T2gg": "[[['jet']],[['jet','jet']],[['jet']],[['jet','jet']]]",
                      "T2bt": "[[['b']],[['t']]]", 
                      "T1tttt": "[[['t+','t-']],[['t+','t-']]]",
-                     "T5tttt": "[[[t+],[t-]],[[t+],[t-]]]+" \
-                               "[[[t-],[t+]],[[t-],[t+]]]",
+                     "T5tttt": "[[['t+'],['t-']],[['t+'],['t-']]]+" \
+                               "[[['t-'],['t+']],[['t-'],['t+']]]",
                      "T5bbbb": "[[['b'],['b']],[['b'],['b']]]",
                      "T5bbbt": "[[['b'],['b']],[['b'],['t']]]",
                      "T1bbtt": "[[['b','b']],[['t+','t-']]]", 
@@ -75,7 +76,7 @@ def getConstraints ( txname, analysis ):
                      "T1bbbt": "[[['b','b']],[['b','t']]]", 
                      "T5btbt": "[[['b'],['t']],[['b'],['t']]]",
                      "T5tbtb": "[[['t'],['b']],[['t'],['b']]]", 
-                     "T5tbtt": "[[[t],[b]],[[t+],[t-]]]+[[[t],[b]],[[t-],[t+]]]",
+                     "T5tbtt": "[[['t'],['b']],[['t+'],['t-']]]+[[['t'],['b']],[['t-'],['t+']]]",
                      "TGQqtt": "[[['jet']],[['t+','t-']]]", 
                      "TGQ": "[[['jet']],[['jet','jet']]]",
                      "TGQbtq": "[[['b','t']],[['jet']]]", 
@@ -88,7 +89,7 @@ def getConstraints ( txname, analysis ):
         tmp = expid.replace ( "ATLAS-CONF-","" ).replace("-eff","" )
         if expid in [ "2013-024", "2013-037", "2013-047", "2013-053", "2013-054",
                       "2013-061", "2013-062", "2013-093" ]:
-            return "[[['t+']],[['t-']]]"
+            return "[[['t']],[['t']]]"
     return constraints[txname]
 
 figure={}
@@ -101,7 +102,10 @@ for i in os.listdir("orig/"):
     # print("[convert.py] i=%s" % i)
     if i[-5:]!=".effi": continue
     txname=i[:-5]
-    print txname
+    print "[convert.py] Txname: %s" % txname
+    if txname in [ "T2gg" ]:
+        print "[convert.py] Skipping Txname: %s. Dont know how to handle." % txname
+        continue
     tmp= TxNameInput ( txname )
     tmp.on.constraint = getConstraints(txname,expid)
     # sys.exit()

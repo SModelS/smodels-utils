@@ -194,7 +194,7 @@ class DatabaseCreator(list):
                         dataInfo.expectedUpperLimit = computeLimit ( dataInfo.expectedBG, dataInfo.expectedBG, dataInfo.bgError, lumi )
                         self.timeStamp ( "done computing upper limit." )
 
-                self.timeStamp ( 'Reading mass plane: %s, %s [%s]' % (txName, plane.origPlot, plane.obsExclusion.path[-30:] ) )
+                self.timeStamp ( 'Reading mass plane: %s, %s [%s]' % (txName, plane.origPlot, str(plane.obsExclusion.path)[-30:] ) )
 
                 efficiencyMap = self.extendDataList\
                 (efficiencyMap, plane, vertexChecker, txName)

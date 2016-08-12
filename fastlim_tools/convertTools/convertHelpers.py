@@ -254,7 +254,7 @@ def closeDictionaryFile():
     for analysis,cuts in SRs.items():
         dictionary.write ( '"%s":{' % analysis )
         for cut,region in cuts.items():
-            dictionary.write ( '"%s":"%s", ' % ( cut, region ) ) 
+            dictionary.write ( '"%s":"%s", ' % ( cut.replace("/",""), region ) ) 
         dictionary.write ( "}," )
     dictionary.write ( "}\n" )
     dictionary.close()
