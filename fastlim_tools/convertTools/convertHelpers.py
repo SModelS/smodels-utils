@@ -8,11 +8,12 @@ home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 from smodels.tools import statistics
     
-fastlimdir="/home/walten/Downloads/fastlim-1.0/analyses_info/8TeV/"
-efficienciesdir="/home/walten/Downloads/fastlim-1.0/efficiency_tables/"
-destdir="/home/walten/git/smodels-database/8TeV/ATLAS/"
+fastlimdir="../fastlim-1.0/analyses_info/8TeV/"
+efficienciesdir="../fastlim-1.0/efficiency_tables/"
+databasedir = "../../../smodels-database/"
+destdir="%s/8TeV/ATLAS/" % databasedir
 
-dictionary=open("/home/walten/git/smodels-database/signalregions.py","w")
+dictionary=open("%s/signalregions.py" % databasedir, "w" )
 SRs={}
 
 def createDataInfoFile ( analysis, cut ):
@@ -20,7 +21,7 @@ def createDataInfoFile ( analysis, cut ):
     print "[fastlimHelpers] now createDataInfoFile for",analysis,cut
     if not analysis in SRs:
         SRs[analysis]={}
-    destdir="/home/walten/git/smodels-database/8TeV/ATLAS/"
+    destdir="%s/8TeV/ATLAS/" % databasedir
     newananame=analysis.replace("_","-")+"-eff"
     datadir="/data-cut%d" % ( cut )
     dataInfoFile=destdir+newananame+datadir+ "/dataInfo.txt"
@@ -35,7 +36,7 @@ def createDataInfoFile ( analysis, cut ):
     if not os.path.exists ( destdir+newananame+datadir ):
         print "creating",destdir+newananame+datadir
         os.mkdir ( destdir+newananame+datadir )
-    fastlimdir="/home/walten/Downloads/fastlim-1.0/analyses_info/8TeV/"
+    # fastlimdir="/home/walten/Downloads/fastlim-1.0/analyses_info/8TeV/"
     infofile=open ( fastlimdir + analysis + "/SR_info.txt" )
     lines=infofile.readlines()
     infofile.close()

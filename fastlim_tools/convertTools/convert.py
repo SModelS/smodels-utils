@@ -41,9 +41,9 @@ print dir
 pos1=dir.find("ATLAS/")+6
 pos=dir.find("-ANA")
 expid = dir[pos1:pos]
-print "expid=",expid
+print "[convert.py] expid=",expid
 signalregion=dir[pos+1:]
-print "signalregion=",signalregion
+print "[convert.py] signalregion=",signalregion
 
 info = MetaInfoInput(expid)
 info.signalRegion = signalregion
@@ -58,60 +58,38 @@ info.lumi = 1.0
 info.comment = 'created from fastlim-1.0'
 info.supersededBy = ''
 info.implementedBy = ''
-
-
-constraints =  { "T2tt": "[[['t+']],[['t-']]]", "T2bb": "[[['b']],[['b']]]",
-                 "T2": "[[['jet']],[['jet']]]",
-                 "T2bt": "[[['b']],[['t']]]", "T1tttt": "[[['t+','t-']],[['t+','t-']]]",
-                 "T5tttt": "[[[t+],[t-]],[[t+],[t-]]]+[[[t-],[t+]],[[t+],[t-]]]+[[[t-],[t+]],[[t-],[t+]]]",
-                 "T5bbbb": "[[['b'],['b']],[['b'],['b']]]",
-                 "T5bbbt": "[[['b'],['b']],[['b'],['t']]]",
-                 "T1bbtt": "[[['b','b']],[['t+','t-']]]", "T1btbt": "[[['b','t']],[['b','t']]]",
-                 "T1bbqq": "[[['b','b']],[['jet','jet']]]", "T1bbbb": "[[['b','b']],[['b','b']]]",
-                 "T1bbbt": "[[['b','b']],[['b','t']]]", "T5btbt": "[[['b'],['t']],[['b'],['t']]]",
-                 "T5tbtb": "[[['t'],['b']],[['t'],['b']]]", "T5tbtt": "[[[t],[b]],[[t+],[t-]]]+[[[t],[b]],[[t-],[t+]]]",
-                 "TGQqtt": "[[['jet']],[['t+','t-']]]", "TGQ": "[[['jet']],[['jet','jet']]]",
-                 "TGQbtq": "[[['b','t']],[['jet']]]", "TGQbbq": "[[['b','b']],[['jet']]]",
-                 "T1btqq": "[[['b','t']],[['jet','jet']]]", "T1qqtt": "[[['jet','jet']],[['t+','t-']]]",
-                 "T1bttt": "[[['b','t']],[['t+','t-']]]", "T1": "[[['jet','jet']],[['jet','jet']]]" }
-
-#+++++++ next txName block ++++++++++++++
-#T1 = TxName('T1')
-#T1.on.constraint = constraints["T1"]
-#T1.on.condition = None
-#T1.on.fuzzycondition = None
-#
-##+++++++ next mass plane block ++++++++++++++
-#T1_1 = T1.addMassPlane(motherMass = x , lspMass = y )
-##----figure----
-#T1_1.figure = 'fig_07a.pdf'
-#T1_1.figureUrl = 'https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/CONFNOTES/ATLAS-CONF-2013-047/fig_07a.pdf'
-## ----limit source----
-### T1_1.obsUpperLimit.setSource( './orig/T1.effi', 'txt', objectName = None, index = None )
-#T1_1.efficiencyMap.setSource( './orig/T1.effi', 'txt', objectName = None, index = None )
-## T1_1.obsUpperLimit.unit = 'fb'
-## T1_1.expUpperLimit.setSource( path, type, objectName = None, index = None )
-## ----exclusion source----
-#T1_1.obsExclusion.setSource( './orig/T1_exc.dat', 'txt', objectName = None, index = None )
-##T1_1.obsExclusionM1.setSource( path, type, objectName = None, index = None )
-#T1_1.obsExclusionP1.setSource( path, type, objectName = None, index = None )
-#T1_1.expExclusion.setSource( path, type, objectName = None, index = None )
-#T1_1.expExclusionM1.setSource( path, type, objectName = None, index = None )
-#T1_1.expExclusionP1.setSource( path, type, objectName = None, index = None )
-#----global url settings ----
-#T1_1.dataUrl =
-#T1_1.histoDataUrl =
-#----limit url settings ----
-# T1_1.obsUpperLimit.dataUrl = 'https://twiki.cern.ch/twiki/pub/CMSPublic/PhysicsResultsSUS13007/limits_model_A.txt'
-#T1_1.expectedlimit.dataUrl =
-#----exclusion url settings ----
-#T1_1.exclusionDataUrl =
-#T1_1.exclusion.dataUrl =
-#T1_1.exclusionM1.dataUrl =
-#T1_1.exclusionP1.dataUrl =
-#T1_1.expectedExclusion.dataUrl =
-#T1_1.expectedExclusionM1.dataUrl =
-#T1_1.expectedExclusionP1.dataUrl =
+ 
+def getConstraints ( txname, analysis ):
+    constraints =  { "T2tt": "[[['t+']],[['t-']]]", "T2bb": "[[['b']],[['b']]]",
+                     "T2": "[[['jet']],[['jet']]]",
+                     "T2bt": "[[['b']],[['t']]]", 
+                     "T1tttt": "[[['t+','t-']],[['t+','t-']]]",
+                     "T5tttt": "[[[t+],[t-]],[[t+],[t-]]]+" \
+                               "[[[t-],[t+]],[[t-],[t+]]]",
+                     "T5bbbb": "[[['b'],['b']],[['b'],['b']]]",
+                     "T5bbbt": "[[['b'],['b']],[['b'],['t']]]",
+                     "T1bbtt": "[[['b','b']],[['t+','t-']]]", 
+                     "T1btbt": "[[['b','t']],[['b','t']]]",
+                     "T1bbqq": "[[['b','b']],[['jet','jet']]]", 
+                     "T1bbbb": "[[['b','b']],[['b','b']]]",
+                     "T1bbbt": "[[['b','b']],[['b','t']]]", 
+                     "T5btbt": "[[['b'],['t']],[['b'],['t']]]",
+                     "T5tbtb": "[[['t'],['b']],[['t'],['b']]]", 
+                     "T5tbtt": "[[[t],[b]],[[t+],[t-]]]+[[[t],[b]],[[t-],[t+]]]",
+                     "TGQqtt": "[[['jet']],[['t+','t-']]]", 
+                     "TGQ": "[[['jet']],[['jet','jet']]]",
+                     "TGQbtq": "[[['b','t']],[['jet']]]", 
+                     "TGQbbq": "[[['b','b']],[['jet']]]",
+                     "T1btqq": "[[['b','t']],[['jet','jet']]]", 
+                     "T1qqtt": "[[['jet','jet']],[['t+','t-']]]",
+                     "T1bttt": "[[['b','t']],[['t+','t-']]]", 
+                     "T1": "[[['jet','jet']],[['jet','jet']]]" }
+    if txname == "T2tt": 
+        tmp = expid.replace ( "ATLAS-CONF-","" ).replace("-eff","" )
+        if expid in [ "2013-024", "2013-037", "2013-047", "2013-053", "2013-054",
+                      "2013-061", "2013-062", "2013-093" ]:
+            return "[[['t+']],[['t-']]]"
+    return constraints[txname]
 
 figure={}
 figure["T1"]='fig_07a.pdf'
@@ -120,19 +98,20 @@ figureUrl={}
 figureUrl["T1"]='https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/CONFNOTES/ATLAS-CONF-2013-047/fig_07a.pdf'
 
 for i in os.listdir("orig/"):
-    print("[convert.py] i=%s" % i)
+    # print("[convert.py] i=%s" % i)
     if i[-5:]!=".effi": continue
     txname=i[:-5]
     print txname
     tmp= TxNameInput ( txname )
-    tmp.on.constraint = constraints[txname]
+    tmp.on.constraint = getConstraints(txname,expid)
+    # sys.exit()
     tmp.on.conditionDescription=None
     tmp.on.condition = None
     if i[:2] in [ "T5", "T6" ]:
-        print("[convert.py] tmp=%s" % type(tmp))
+        ## print("[convert.py] tmp=%s" % type(tmp))
         tmp_1 = tmp.addMassPlane ( motherMass = x, lspMass=z, interMass0= y )
         tmp_1.efficiencyMap3D.setSource ( './orig/%s.effi' % txname, 'effi', objectName = None, index = None )
-        print("[type] %s" % type ( tmp_1 ) )
+        ## print("[type] %s" % type ( tmp_1 ) )
 #        continue
     else:
         if txname=="TGQ":
@@ -163,29 +142,6 @@ def translate ( filename ):
         w.write ( line +"\n" )
     w.close()
 
-
-#T5tttt = TxName ( "T5tttt" )
-#T5tttt.on.constraint = "[[['t+'],['t-']],[['t+'],['t-']]]"
-#T5tttt.on.condition = None
-#T5tttt.on.fuzzycondition = None
-## T5tttt.globalEfficiencyMap.setSource ( './orig/T5tttt.effi', 'effi', objectName = None, index = None )
-#translate ( './orig/T5tttt.effi' )
-
-# ----limit source----
-## T1_1.obsUpperLimit.setSource( './orig/T1.effi', 'txt', objectName = None, index = None )
-#        tmp_1.efficiencyMap.setSource( './orig/T1.effi', 'txt', objectName = None, index = None )
-# T1_1.obsUpperLimit.unit = 'fb'
-# T1_1.expUpperLimit.setSource( path, type, objectName = None, index = None )
-# ----exclusion source----
-
-
-#T2tt = TxName('T2tt')
-#T2tt.on.constraint = "[[['t']],[['t']]]"
-#T2tt.on.condition = None
-#T2tt.on.fuzzycondition = None
-#T2tt_1 = T2tt.addMassPlane(motherMass = x , lspMass = y )
-#T2tt_1.efficiencyMap.setSource( './orig/T2tt.effi', 'effi', objectName = None, index = None )
-
 databaseCreator.infoFileDirectory="./"
 databaseCreator.create( ask_for_name = False, create_dataInfo=False )
 
@@ -200,8 +156,3 @@ os.rmdir ( "./validation" )
 for i in glob.iglob ( "./sms.root" ):
     print "[convert.py] unlinking",i,"from",os.getcwd()
     os.unlink ( i )
-## os.unlink("orig/twiki.txt")
-#for i in glob.iglob ( "./orig/*" ):
-#    print "[convert.py] unlinking",i,"from",os.getcwd()
-#    os.unlink ( i )
-#os.rmdir ( "./orig" )
