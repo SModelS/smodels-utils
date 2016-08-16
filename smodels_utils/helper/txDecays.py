@@ -250,6 +250,7 @@ decays = {
     #'T1lnu':'gluino  --> quark antiquark (chargino^pm --> lepton^pm neutrino  lsp )', 
     #'T1lh':'gluino  --> quark antiquark  neutralino_2 neutralino_2  --> lepton^p lepton^m lsp ', 
     'T2':'squark  --> quark lsp ',
+    'T2gg':'gluino  --> gluon lsp ',
     #'T2FVttcc': 'stop  --> charm lsp ',
     #'T2llnunubb': 'stop  --> lepton neutrino bottom lsp ',
     'T2bb':'sbottom  --> bottom lsp ', 

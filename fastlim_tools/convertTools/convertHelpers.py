@@ -47,7 +47,9 @@ def createDataInfoFile ( analysis, cut ):
 
     f=open ( destdir+newananame+datadir+ "/dataInfo.txt", "w")
     f.write ( "dataType: efficiencyMap\n" )
-    f.write ( "dataId: data-cut%d\n" % ( cut ) )
+    my_sr = sr.replace("/","")
+    # f.write ( "dataId: data-cut%d\n" % ( cut ) )
+    f.write ( "dataId: %s\n" % ( my_sr ) )
     f.write ( "observedN: %d\n" % data )
     f.write ( "expectedBG: %.1f\n" % bg )
     f.write ( "bgError: %.1f\n" % sys )
@@ -55,7 +57,7 @@ def createDataInfoFile ( analysis, cut ):
     f.write ( "expectedUpperLimit: %.2f*fb\n" % eul )
     ## f.write ( "signalRegion: %s\n" % sr )
     print("[SRs[analysis][datadir]=sr")
-    SRs[analysis][datadir]=sr.replace("/","")
+    SRs[analysis][datadir]= my_sr
     f.close ()
     print "[fastlimHelpers] done creating",destdir+newananame+datadir+ "/dataInfo.txt"
 
@@ -250,6 +252,8 @@ def smodels2fastlim(txname):
 
 
 def closeDictionaryFile():
+    print "currently we dont write a dict file"
+    return
     dictionary.write ( "SRs={" )
     for analysis,cuts in SRs.items():
         dictionary.write ( '"%s":{' % analysis )
@@ -258,8 +262,6 @@ def closeDictionaryFile():
         dictionary.write ( "}," )
     dictionary.write ( "}\n" )
     dictionary.close()
-    ## import commands
-    ## commands.getoutput ( "chmod 755 /home/walten/git/smodels-database/signalregions.py" )
 
 
 def fastlimPIDsFor(txname):
@@ -328,6 +330,28 @@ def fastlimPIDsFor(txname):
         allpids += pids
     
     return allpids
+
+all_exps= [ "ATLAS_CONF_2013_024", "ATLAS_CONF_2013_035",  "ATLAS_CONF_2013_037",
+    "ATLAS_CONF_2013_047", "ATLAS_CONF_2013_048",  "ATLAS_CONF_2013_049", 
+    "ATLAS_CONF_2013_053",  "ATLAS_CONF_2013_054",  "ATLAS_CONF_2013_061",
+    "ATLAS_CONF_2013_062", "ATLAS_CONF_2013_093" 
+]
+
+def runExps ( exps ):
+    """ run conversions for the given experimental ids """
+    for expid in exps:
+        createInfoFile ( expid )
+        for cut in range(25):
+            has_globals=False
+            for ana in range(25):
+                if existsAnalysisCut ( expid, ana, cut ):
+                    copyEffiFiles ( expid, ana, cut )
+                    createAndRunConvertFiles ( expid, cut, dry_run=False )
+                    if not has_globals:
+                        createDataInfoFile ( expid, cut )
+                        copyValidationScripts ( expid )
+                        has_globals=True
+        mergeSmsRootFiles ( expid )
 
 
 if __name__ == "__main__":

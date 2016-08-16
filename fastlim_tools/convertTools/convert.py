@@ -62,7 +62,7 @@ info.implementedBy = ''
 def getConstraints ( txname, analysis ):
     constraints =  { "T2tt": "[[['t+']],[['t-']]]", "T2bb": "[[['b']],[['b']]]",
                      "T2": "[[['jet']],[['jet']]]",
-#                    "T2gg": "[[['jet']],[['jet','jet']],[['jet']],[['jet','jet']]]",
+                     "T2gg": "[[['jet']],[['jet']]]",
                      "T2bt": "[[['b']],[['t']]]", 
                      "T1tttt": "[[['t+','t-']],[['t+','t-']]]",
                      "T5tttt": "[[['t+'],['t-']],[['t+'],['t-']]]+" \
@@ -103,7 +103,7 @@ for i in os.listdir("orig/"):
     if i[-5:]!=".effi": continue
     txname=i[:-5]
     print "[convert.py] Txname: %s" % txname
-    if txname in [ "T2gg" ]:
+    if txname in [ ]: ## "T2gg" ]:
         print "[convert.py] Skipping Txname: %s. Dont know how to handle." % txname
         continue
     tmp= TxNameInput ( txname )
