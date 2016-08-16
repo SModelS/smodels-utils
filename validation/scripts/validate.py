@@ -14,11 +14,9 @@ import logging
 from smodels.theory.crossSection import logger as cl
 from smodels.theory.slhaDecomposer import logger as dl
 from smodels.experiment.txnameObj import logger as tl
-from validation.gridSModelS import logger as gl
 cl.setLevel(level=logging.INFO) 
 dl.setLevel(level=logging.WARNING)
 tl.setLevel(level=logging.INFO)
-gl.setLevel(level=logging.INFO)
 
 
 print "exp id=",getExpIdFromPath(),"datasetid=",getDatasetIdsFromPath()

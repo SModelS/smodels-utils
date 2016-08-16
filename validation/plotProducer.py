@@ -8,7 +8,7 @@
 
 """
 
-import logging,os,sys
+import logging,os
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -16,9 +16,9 @@ logger = logging.getLogger(__name__)
 from validationObjs  import ValidationPlot
 from plottingFuncs import getExclusionCurvesFor
 
-logger.setLevel(level=logging.DEBUG)
+logger.setLevel(level=logging.ERROR)
 
-def getExpIdFromPath ():
+def getExpIdFromPath():
     """ get experimental id from path """
     ret=os.getcwd()
     ret=ret.replace("/validation","")
@@ -26,27 +26,25 @@ def getExpIdFromPath ():
     ret=ret[ret.rfind("/")+1:]
     return ret
 
-def getDatasetIdsFromPath(dir="../"):
+def getDatasetIdsFromPath(folder="../"):
     """ determine the datasetids from the path"""
-    import os
-    files=os.listdir(dir)
+    files=os.listdir(folder)
     datasetids=[]
     for f in files:
         if not f in [ "globalInfo.txt", "validation", "sms.root", "convert.py", "old", "smodels.log", "orig", ".DS_Store" ]:
-       ##     f=f.replace("data-","").replace("ana","ANA").replace("cut","CUT" )
+        ## f=f.replace("data-","").replace("ana","ANA").replace("cut","CUT" )
             if not os.path.isdir ( os.path.join ( dir, f ) ): 
                 continue
             if f=="data": f=None
             datasetids.append  ( f )
     return datasetids
 
-
 def validatePlot(expRes,txname,axes,slhadir,kfactor=1.):
     """
     Creates a ValidationPlot object and saves its output.
     
     :param expRes: a ExpResult object containing the result to be validated
-    :param txname: a TxName object containing the txname to be validated
+    :param txname: String describing the txname (e.g. T2tt)
     :param axes: the axes string describing the plane to be validated
      (i.e.  2*Eq(mother,x),Eq(lsp,y))
     :param slhadir: folder containing the SLHA files corresponding to txname
@@ -91,9 +89,11 @@ def validateTxName(expRes,txname,slhadir,kfactor=1.):
     else: expResList = expRes
     ret = {}
     for exp in expResList:
-        tgraphs = getExclusionCurvesFor(exp,txname=txname)[txname]
-        if not tgraphs:
+        tgraphs = getExclusionCurvesFor(exp,txname=txname)
+        if not tgraphs or not tgraphs[txname]:
             continue
+        else:
+            tgraphs = tgraphs[txname] 
         axes = []
         for tgraph in tgraphs:
             ax = tgraph.GetName()
@@ -107,8 +107,7 @@ def validateTxName(expRes,txname,slhadir,kfactor=1.):
             ret[ID][ax]= validatePlot(exp,txname,ax,slhadir,
                                                           kfactor=kfactor) 
     return ret ## return agreement factors
-    
-    
+ 
 def validateExpRes(expRes,slhaDir,kfactorDict=None):
     """
     Creates a ValidationPlot for each txname appearing in expRes and 
@@ -136,20 +135,5 @@ def validateExpRes(expRes,slhaDir,kfactorDict=None):
             kfactor=1.
         else: kfactor = kfactorDict[txname]
         ret[txname]= validateTxName(expRes,txname,slhadir,kfactor)
-        
-    return ret
-
-def validateDatabase(database,slhaDir):
-    """
-    Creates a ValidationPlot for each expRes/txname/axes appering in the database
-    and saves the output.
-   
-    :param database: a Database object
-    :param slhaDir: Location of the slha folder containing the
-    txname.tar files or the ./txname folders (i. e. ../slha/)
-    """  
-    ret={}
-    for expRes in database.getExpResults(): 
-        ret[expRes.id]= validateExpRes(expRes,slhaDir)
         
     return ret

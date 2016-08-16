@@ -9,28 +9,39 @@
 """
 
 import logging,os,sys
-sys.path.append('../../smodels/')
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 #from smodels.tools.physicsUnits import fb, GeV
-from gridSModelS import runSModelSFor
+from smodels.experiment import databaseObj
+from smodels.tools.physicsUnits import GeV
+from smodels.tools import statistics, modelTester 
 from plottingFuncs import createPlot, getExclusionCurvesFor, createSpecialPlot, createTempPlot
+import tempfile,tarfile,shutil,copy
+from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 
-logger.setLevel(level=logging.DEBUG)
+logger.setLevel(level=logging.ERROR)
 
 
 
 class ValidationPlot():
     """
     Encapsulates all the data necessary for creating a single validation plot.
+    
+    :ivar ExptRes: ExpResult object containing the experimental result for validation
+    :ivar TxNameStr: String describing the txname (e.g. T2tt)
+    :ivar Axes: String describing the axes (e.g. 2*Eq(mother,x)_Eq(lsp,y))
+    :ivar slhadir: path to the SLHA folder or the tar ball containing the files (string)
+    :ivar databasePath: path to the database folder. If not defined, the path from ExptRes.path will be
+                        used to extract the database path.
+    :ivar kfactor: Common kfactor to be applied to all theory cross-sections (float)
     """
 
     def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
                  kfactor = 1.):
 
-        self.expRes = ExptRes
+        self.expRes = copy.deepcopy(ExptRes)
         self.txName = TxNameStr
         self.axes = Axes
         self.slhaDir = None
@@ -41,18 +52,18 @@ class ValidationPlot():
         if slhadir: self.setSLHAdir(slhadir)
         if databasePath:
             if os.path.isdir(databasePath):
-                self.database = databasePath
+                self.databasePath = databasePath
             else:
                 logger.error("Database folder "+databasePath+" does not exist")
                 sys.exit()
         #Try to guess the path:
         else:
             anaID = ExptRes.getValuesFor('id')[0]
-            self.database = ExptRes.path[:ExptRes.path.find('/'+anaID)]
-            self.database = self.database[:self.database.rfind('/')]
-            self.database = self.database[:self.database.rfind('/')+1]
-            if not os.path.isdir(self.database):
-                logger.error("Could not define database folder")
+            self.databasePath = ExptRes.path[:ExptRes.path.find('/'+anaID)]
+            self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
+            self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
+            if not os.path.isdir(self.databasePath):
+                logger.error("Could not define databasePath folder")
                 sys.exit()
 
     def __str__(self):
@@ -73,10 +84,16 @@ class ValidationPlot():
             :param signal_factor: an additional factor that is multiplied with the signal cross section,
         """
         import ROOT
-        curve=self.getOfficialCurve()
+        curve = self.getOfficialCurve()        
         if not curve:
             logger.error( "could not get official tgraph curve for %s %s %s" % ( self.expRes,self.txName,self.axes  ) )
             return 1.0
+        elif isinstance(curve,list):
+            for c in curve:                
+                objName = c.GetName()
+                if 'exclusion_' in objName:
+                    curve = c
+                    break
         x0=ROOT.Double()
         y0=ROOT.Double()
         x=ROOT.Double()
@@ -85,7 +102,7 @@ class ValidationPlot():
         curve.GetPoint ( curve.GetN()-1, x, y ) ## get the last point
         curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
         curve.SetPoint ( curve.GetN(), x0, 0. )  ## extend to first point
-        n_points=0
+
         pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0, "not_excluded_inside": 0,
                "not_excluded_outside": 0, "wrong" : 0 }
         for point in self.data:
@@ -129,11 +146,39 @@ class ValidationPlot():
             sys.exit()
         else:
             self.slhaDir = slhadir
-
-    def getOfficialCurve(self, get_all=False ):
+            
+    def getSLHAdir(self):
+        """
+        Returns path to the folders containing the SLHA files.
+        If slhadir is a .tar file, returns a temporary folder where the files
+        have been extracted to.
+        
+        :param slhadir: path to the SLHA folder or the tar ball containing the files (string)
+        :return: path to the folder containing the SLHA files
+        """
+    
+        if os.path.isdir(self.slhaDir):
+            return self.slhaDir
+        elif os.path.isfile(self.slhaDir):
+            try:
+                tar = tarfile.open(self.slhaDir)
+                tempdir = tempfile.mkdtemp(dir=os.getcwd())
+                tar.extractall(path=tempdir)
+                logger.info("SLHA files extracted to %s" %tempdir)
+                return tempdir
+            except:
+                logger.error("Could not extract SLHA files from %s" %self.slhaDir)
+                sys.exit()
+        else:
+            logger.error("%s is not a file nor a folder" %self.slhaDir)
+            sys.exit()            
+    
+    
+    def getOfficialCurve(self, get_all=True ):
         """
         Reads the root file associated to the ExpRes and
         obtain the experimental exclusion curve for the corresponding TxName and Axes.
+        
         :param get_all: get also the +- 1 sigma curves
 
         :return: a root TGraph object
@@ -152,13 +197,120 @@ class ValidationPlot():
         #    logger.warning("More than one exclusion curve found. Using the first one.")
             return tgraph[0]
 
+    
+    def getParameterFile(self,tempdir=None):
+        """
+        Creates a temporary parameter file to be passed to runSModelS
+        
+        :param tempdir: Temporary folder where the parameter file will be created. Default = current folder.
+        """
+        
+        #Get the analysis ID, txname and dataset ID:
+        expId = self.expRes.globalInfo.id
+        txname = self.expRes.getTxNames()[0].txName
+        
+        if tempdir is None: tempdir = os.getcwd()
+        pf, parFile = tempfile.mkstemp(dir=tempdir,prefix='parameter_',suffix='.ini')
+        
+        os.write(pf,"[path]\ndatabasePath = %s\n" %self.databasePath)
+        os.write(pf,"[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ntestCoverage = False\n")
+        os.write(pf,"[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = -1\n")
+        os.write(pf,"[database]\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (expId,txname))
+        os.write(pf,"[stdout]\nprintDecomp = False\naddElmentInfo = False\nprintAnalyses = False\naddAnaInfo = False\noutputType = python\n")
+        os.write(pf,"[file]\nexpandedSummary = True\naddConstraintInfo = True\n")
+        
+        os.close(pf)
+        return parFile
+    
     def getData(self):
         """
-        Runs SModelS on the SLHA files listed in slhaDir and
-        returns the list of excluded and allowed points.
+        Runs SModelS on the SLHA files from self.slhaDir and store
+        the relevant data in self.data.
+        Uses runSModelS.main.
         """
 
-        self.data = runSModelSFor(self)
+        #Get list of SLHA files:
+        if not self.slhaDir:
+            logger.warning("SLHA folder not defined")
+            return False
+        slhaDir = self.getSLHAdir()  #Path to the folder containing the SLHA files
+        logger.info("SLHA files for validation at %s" %slhaDir)
+        
+        #Set temporary outputdir:
+        outputDir = tempfile.mkdtemp(dir=slhaDir,prefix='results_')
+        
+        #Get parameter file:
+        parameterFile = self.getParameterFile(tempdir=outputDir)
+        logger.info("Parameter file: %s" %parameterFile)
+        
+        #Read and check parameter file, exit parameterFile does not exist
+        parser = modelTester.getParameters(parameterFile)
+
+        #Get list of input files to be tested
+        fileList = modelTester.getAllInputFiles(slhaDir)
+
+        #Select the desired txnames and experimental result:
+        for dataset in self.expRes.datasets:
+            dataset.txnameList = [tx for tx in dataset.txnameList[:] if tx.txName == self.txName]
+        listOfExpRes = [self.expRes]
+
+        """ Test all input points """
+        modelTester.testPoints(fileList, slhaDir, outputDir, parser, 'validation', 
+                 listOfExpRes, 1000, False, parameterFile) 
+
+        #Define original plot
+        origPlot = OrigPlot.fromString(self.axes)        
+        #Now read the output and collect the necessary data
+        self.data = []
+        for slhafile in os.listdir(slhaDir):
+            if not os.path.isfile(os.path.join(slhaDir,slhafile)):  #Exclude the results folder
+                continue
+            fout = os.path.join(outputDir,slhafile + '.py')            
+            if not os.path.isfile(fout):
+                logger.error("No SModelS output found for %s \n" %slhafile)
+                continue            
+            f = open(fout,'r')
+            exec(f.read().replace('\n',''))
+            f.close()
+            if not 'ExptRes' in smodelsOutput:
+                logger.info("No results for %s \n" %slhafile)
+                continue 
+            res = smodelsOutput['ExptRes']
+            if len(res) != 1:
+                logger.warning("More than one result found for %s \n" %slhafile)
+            for expRes in res:
+                if expRes['AnalysisID'] != self.expRes.globalInfo.id:
+                    continue
+                txnames = [tx.txName for tx in self.expRes.getTxNames()] 
+                if txnames != expRes['TxNames']:
+                    continue
+                mass = expRes['Mass (GeV)']                
+                v = origPlot.getXYValues(mass)
+                if v == None:
+                    logger.info("dropping %s, doesnt fall into the plane of %s." % (slhafile, origPlot.string ) )
+                    continue
+                x,y = v
+                Dict = {'slhafile' : slhafile, 'axes': [x,y], 'signal' : expRes['theory prediction (fb)'],
+                         'UL' : expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
+                         'dataset': expRes['DataSetID']}                
+                if expRes['dataType'] == 'efficiencyMap':
+                    dataset = self.expRes.datasets[0]
+                    massGeV = [[m*GeV for m in mbr] for mbr in mass]
+                    Dict['efficiency'] = dataset.txnameList[0].txnameData.getValueFor(massGeV)
+                    expectedBG = dataset.dataInfo.expectedBG
+                    observedN = dataset.dataInfo.observedN
+                    bgError = dataset.dataInfo.bgError
+                    lumi = expRes.globalInfo.lumi
+                    CLs = statistics.CLs(observedN, expectedBG, bgError, Dict['signal']*lumi, 10000)                    
+                    Dict['CLs'] =CLs
+                self.data.append(Dict)
+    
+        #Remove temporary folder
+        if slhaDir != self.slhaDir: shutil.rmtree(slhaDir)
+            
+        if self.data == []:
+            logger.error ( "There are no data for a validation plot. Are the SLHA files correct? Are the constraints correct?" )
+        
         #Apply k-factors to theory prediction (default is 1)
         for ipt,pt in enumerate(self.data):
             pt['signal'] *= self.kfactor 

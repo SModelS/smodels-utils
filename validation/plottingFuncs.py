@@ -46,10 +46,10 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):
     rootFile = TFile(rootpath)
     txnames = {}
     #Get list of TxNames (directories in root file)
-    for obj in rootFile.GetListOfKeys():
+    for obj in rootFile.GetListOfKeys():        
         objName = obj.ReadObj().GetName()
         if txname and txname != objName: continue
-        txnames[objName] = obj.ReadObj()        
+        txnames[objName] = obj.ReadObj()      
     if not txnames:
         logger.warning("Exclusion curve for %s not found in %s" %(txname,rootpath))
         return False
@@ -282,8 +282,6 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     
     return plane
             
-        
-
 def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
@@ -316,8 +314,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
             x, y = pt['axes']
-#             print pt
-            if pt['condition'] and max(pt['condition'].values())> 0.05:
+            if pt['condition'] and pt['condition'] > 0.05:
                 #print "pt['condition']",pt['condition']
                 logger.warning("Condition violated for file " + pt['slhafile'])
                 cond_violated.SetPoint(cond_violated.GetN(), x, y)
@@ -413,7 +410,6 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     if not silentMode: ans = raw_input("Hit any key to close\n")
     
     return plane,base
-
 
 def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signal_factor =1.):
     """
