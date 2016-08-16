@@ -133,11 +133,9 @@ def runSModelSFor(validationPlot):
                 observedN=dataset.dataInfo.observedN
                 bgError=dataset.dataInfo.bgError
                 lumi=expRes.globalInfo.lumi
-                from smodels.tools import exclusion_CLs
-                ## import IPython
-                ## IPython.embed()
-                CLs=exclusion_CLs.CLs ( observedN, expectedBG, bgError, 
-                                        value[0].value * lumi, 10000 )
+                from smodels.tools import statistics
+                CLs=statistics.CLs ( observedN, expectedBG, bgError, 
+                                     value[0].value * lumi, 10000 )
                 efficiency=eff
             else:
                 logger.error ( "dont know dataType of %s" % 
