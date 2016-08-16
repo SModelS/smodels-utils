@@ -16,6 +16,11 @@ destdir="%s/8TeV/ATLAS/" % databasedir
 dictionary=open("%s/signalregions.py" % databasedir, "w" )
 SRs={}
 
+def removeExp ( exp ):
+    cmd = "rm -r %s/%s-eff" % ( destdir, exp )
+    print "[convertHelpers] %s" % cmd
+    commands.getoutput ( cmd )
+
 def createDataInfoFile ( analysis, cut ):
     """ create the datainfo file for analysis, signalregion ANAana-CUTcut """
     print "[fastlimHelpers] now createDataInfoFile for",analysis,cut

@@ -11,6 +11,10 @@ import os
 all_exps= convertHelpers.all_exps
 # all_exps = [ "ATLAS_CONF_2013_024" ]
 
+for i in all_exps:
+    t=i.replace("_","-")
+    convertHelpers.removeExp ( t )
+
 ncpus = multiprocessing.cpu_count()
 # ncpus = 1
 p_exps = []
