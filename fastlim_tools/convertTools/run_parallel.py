@@ -15,7 +15,8 @@ for i in all_exps:
     t=i.replace("_","-")
     convertHelpers.removeExp ( t )
 
-ncpus = multiprocessing.cpu_count()
+# ncpus = multiprocessing.cpu_count()
+ncpus = len ( convertHelpers.all_exps )
 # ncpus = 1
 p_exps = []
 for i in range(ncpus):

@@ -48,7 +48,7 @@ def createDataInfoFile ( analysis, cut ):
     tokens=lines[cut+1].split()
     lumi,data,bg,sys,sr=float(tokens[1]),float(tokens[2]),float(tokens[3]),float(tokens[4])," ".join(tokens[10:])
     ul=float(tokens[7])
-    eul=statistics.upperLimit ( bg, bg, sys, lumi, 20000 )
+    eul=statistics.upperLimit ( bg, bg, sys, lumi, .05, 20000 )
 
     f=open ( destdir+newananame+datadir+ "/dataInfo.txt", "w")
     f.write ( "dataType: efficiencyMap\n" )
@@ -119,7 +119,7 @@ def copyEffiFiles ( analysis, ana, cut ):
         if not Fastlimname in Dict.keys():
           continue
         Tname=Dict[Fastlimname]
-        print("[convertHelpers.py] %s %s" % ( Tname,Fastlimname ) )
+        print("[convertHelpers.py] %s <- %s" % ( Tname,Fastlimname ) )
         anadir = efficienciesdir+"/"+Fastlimname + "/8TeV/" + analysis
         if not os.path.exists ( anadir ):
 #            print "[fastlimHelpers] ",anadir,"does not exist."
@@ -134,7 +134,7 @@ def copyEffiFiles ( analysis, ana, cut ):
             commands.getoutput ( cmd )
         if os.path.exists ( "%s/%s.effi" % ( realdestdir, Tname ) ):
             print "[convertHelpers] %s/%s.effi exists already" % ( realdestdir, Tname )
-#            continue
+            continue
         cmd="cp %s %s/%s.effi" % ( effifile, realdestdir, Tname )
         Tnames.append ( Tname )
         print "[fastlimHelpers.copyEffiFiles] cmd=",cmd
@@ -233,8 +233,9 @@ def smodels2fastlim(txname):
     :return: Txname in fastlim notation (string) or the dictionary (if txname = Dict). 
     """
     
-    Dict = { "GbB1tN1_GbB1tN1": "T5btbt", "GtT1bN1_GtT1tN1": "T5tbtt", "GgN1_GqqN1": "TGQ",
-             "GtT1bN1_GtT1bN1": "T5tbtb", "GgN1_GgN1": "T2gg", "GbtN1_GgN1": "TGQbtq",
+    Dict = { "GbB1tN1_GbB1tN1": "T5btbt", "GtT1bN1_GtT1tN1": "T5tbtt", 
+             "GgN1_GqqN1": "TGQ",
+             "GtT1bN1_GtT1bN1": "T5tbtb", "GgN1_GgN1": "T2", "GbtN1_GgN1": "TGQbtq",
              "GbbN1_GgN1": "TGQbbq", "GttN1_GttN1": "T1tttt", "GbbN1_GbbN1": "T1bbbb",
              "GbB1bN1_GbB1bN1": "T5bbbb", "GbbN1_GqqN1": "T1bbqq",
              "T1tN1_T1tN1": "T2tt", "GgN1_GttN1": "TGQqtt", 'GbbN1_GbtN1': "T1bbbt",
@@ -244,11 +245,13 @@ def smodels2fastlim(txname):
              "GbB1bN1_GbB1tN1": "T5bbbt", "GtT1tN1_GtT1tN1": "T5tttt",
 #Added (Andre - 11/11/2015):             
              "B1bN1_B1bN1" : "T2bb", "T2tN1_T2tN1" : "T2tt", "T1tN1_T1tN1" : "T2tt",
-             "B2bN1_B2bN1" : "T2bb", "GbB2bN1_GbB2bN1" : "T5bbbb", "GtT2tN1_GtT2tN1" : "T5tttt",
-             "GbB2tN1_GbB2tN1": "T5btbt", "GbB2bN1_GbB2tN1" : "T5bbbt", "GtT2bN1_GtT2bN1" : "T5tbtb",
+             "B2bN1_B2bN1" : "T2bb", "GbB2bN1_GbB2bN1" : "T5bbbb", 
+             "GtT2tN1_GtT2tN1" : "T5tttt", "GbB2tN1_GbB2tN1": "T5btbt", 
+             "GbB2bN1_GbB2tN1" : "T5bbbt", "GtT2bN1_GtT2bN1" : "T5tbtb",
              "T2bN1_T2bN1" : "T2bb", "T2bN1_T2tN1" : "T2bt",
 #Added (Andre - 02/13/2016):
-             "B1tN1_B1tN1" : "T2tt","B2tN1_B2tN1" : "T2tt", "B1bN1_B1tN1" : "T2bt", "B2bN1_B2tN1" : "T2bt" 
+             "B1tN1_B1tN1" : "T2tt","B2tN1_B2tN1" : "T2tt", "B1bN1_B1tN1" : "T2bt", 
+             "B2bN1_B2tN1" : "T2bt" 
     }
     
     if txname == 'Dict': return Dict
@@ -360,7 +363,6 @@ def runExps ( exps ):
                         copyValidationScripts ( expid )
                         has_globals=True
         mergeSmsRootFiles ( expid )
-
 
 if __name__ == "__main__":
 #    createInfoFile ( "ATLAS_CONF_2013_035" )
