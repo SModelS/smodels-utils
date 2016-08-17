@@ -10,4 +10,4 @@ exps = [ "ATLAS_CONF_2013_024" ]
 
 convertHelpers.runExps ( exps )
 
-convertHelpers.closeDictionaryFile()
+## convertHelpers.closeDictionaryFile()

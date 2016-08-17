@@ -38,4 +38,4 @@ for exps in p_exps:
 for child in children:
     r = os.waitpid ( child, 0 )
 
-convertHelpers.closeDictionaryFile()
+# convertHelpers.closeDictionaryFile()
