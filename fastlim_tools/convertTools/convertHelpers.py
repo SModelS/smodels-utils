@@ -48,7 +48,7 @@ def createDataInfoFile ( analysis, cut ):
     tokens=lines[cut+1].split()
     lumi,data,bg,sys,sr=float(tokens[1]),float(tokens[2]),float(tokens[3]),float(tokens[4])," ".join(tokens[10:])
     ul=float(tokens[7])
-    eul=statistics.upperLimit ( bg, bg, sys, lumi )
+    eul=statistics.upperLimit ( bg, bg, sys, lumi, 20000 )
 
     f=open ( destdir+newananame+datadir+ "/dataInfo.txt", "w")
     f.write ( "dataType: efficiencyMap\n" )
@@ -58,8 +58,11 @@ def createDataInfoFile ( analysis, cut ):
     f.write ( "observedN: %d\n" % data )
     f.write ( "expectedBG: %.1f\n" % bg )
     f.write ( "bgError: %.1f\n" % sys )
-    f.write ( "upperLimit: %.2f*fb\n" % ul )
-    f.write ( "expectedUpperLimit: %.2f*fb\n" % eul )
+    s_ul = float('%.2g' % ul ) ## round to n significant numbers
+    f.write ( "upperLimit: %.2f*fb\n" % s_ul )
+    s_eul = float ('%.2g' % eul )
+    f.write ( "expectedUpperLimit: %.2f*fb\n" % s_eul )
+    ## float('%.2g' % 0.0123435456)
     ## f.write ( "signalRegion: %s\n" % sr )
     print("[SRs[analysis][datadir]=sr")
     SRs[analysis][datadir]= my_sr
