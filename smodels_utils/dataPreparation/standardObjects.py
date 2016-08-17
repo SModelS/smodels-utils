@@ -331,7 +331,7 @@ class StandardTWiki(object):
         :param plane: inputObjects.MassPlane-object
         """
             
-        self.txNames.append(self.link('smsDictionary#%s' %txName, txName))
+        self.txNames.append(self.link('SmsDictionary#%s' %txName, txName))
         self.axes.append(str(plane.origPlot))
         self.figures.append(self.link(plane.figureUrl, plane.figure))
         self.limits.append(self.objectFormat(plane.origLimits))

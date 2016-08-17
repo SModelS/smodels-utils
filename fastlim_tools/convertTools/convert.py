@@ -47,7 +47,8 @@ print "[convert.py] signalregion=",signalregion
 
 info = MetaInfoInput(expid)
 info.signalRegion = signalregion
-info.url ='https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/CONFNOTES/%s/' % expid
+noeff = expid.replace ( "-eff", "" )
+info.url ='https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/CONFNOTES/%s/' % noeff
 info.sqrts = 8
 info.prettyName = ''
 info.private = True
