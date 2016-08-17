@@ -268,6 +268,8 @@ decays = {
     'T5WW':'gluino  --> quark antiquark (chargino^pm_1 --> w lsp )',
     #'T5Wg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp | chargino^pm_1 --> w lsp )',
     'T5WH':'gluino  --> quark antiquark (neutralino_2 --> higgs lsp | chargino^pm_1 --> w lsp )',
+    'T5ZZ':'gluino  --> quark antiquark (neutralino_2 --> z lsp )',
+    'T5ZZoff':'gluino  --> quark antiquark (neutralino_2 --> z* lsp )',
     #'T5gg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp )',
     #'T5lnu':'gluino  --> quark antiquark (chargino^pm --> lepton^pm neutrino lsp )',
     #'T5ZZ':'gluino  --> quark antiquark (neutralino_2 --> z lsp )',

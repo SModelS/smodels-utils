@@ -175,7 +175,9 @@ class StandardDataList(list):
         inList = False
         for point in self:
             if array ==  point[0]:
-                oldvalue = float(point[1][:-3])
+                v1 = point[1].replace(self.valueUnit,"")
+                # print "[standardObjects] v= >>%s<< for point %s" % ( v1, point[1] )
+                oldvalue = float(v1)
                 if abs(value-oldvalue) > 0.0001:
                     Errors().valueDifference\
                     (array, point[1], '%s%s' %(value,self.valueUnit))
