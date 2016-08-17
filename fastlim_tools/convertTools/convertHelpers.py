@@ -342,11 +342,13 @@ def fastlimPIDsFor(txname):
     
     return allpids
 
-all_exps= [ "ATLAS_CONF_2013_024", "ATLAS_CONF_2013_035",  "ATLAS_CONF_2013_037",
-    "ATLAS_CONF_2013_047", "ATLAS_CONF_2013_048",  "ATLAS_CONF_2013_049", 
-    "ATLAS_CONF_2013_053",  "ATLAS_CONF_2013_054",  "ATLAS_CONF_2013_061",
-    "ATLAS_CONF_2013_062", "ATLAS_CONF_2013_093" 
-]
+#all_exps= [ "ATLAS_CONF_2013_024", "ATLAS_CONF_2013_035",  "ATLAS_CONF_2013_037",
+#    "ATLAS_CONF_2013_047", "ATLAS_CONF_2013_048",  "ATLAS_CONF_2013_049", 
+#    "ATLAS_CONF_2013_053",  "ATLAS_CONF_2013_054",  "ATLAS_CONF_2013_061",
+#    "ATLAS_CONF_2013_062", "ATLAS_CONF_2013_093" 
+#]
+
+all_exps = [ x[:-1] for x in open("expids").readlines() ]
 
 def runExps ( exps ):
     """ run conversions for the given experimental ids """
