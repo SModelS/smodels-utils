@@ -162,14 +162,7 @@ class DatabaseCreator(list):
         hasUpperLimits = False
 
         self.timeStamp ( "before going through txnames" )
-        parallel = "SMODELS_PARALLEL" in os.environ.keys()
-        children = []
         for txName in self:
-            if parallel:
-                pid = os.fork()
-                if pid > 0:
-                    children.append ( pid )
-                    continue
             self.timeStamp ( "reading %s" % txName )
             dataset=None
 
@@ -244,8 +237,6 @@ class DatabaseCreator(list):
                 dataInfo.checkMassPlane(plane)
                 self.tWiki.addMassPlane(txName.name,plane)
 
-            
-
             for excl in exclusions:
                 if excl: self.exclusions.append(excl)
             self._extendInfoAttr(txName, 'publishedData')
@@ -273,13 +264,6 @@ class DatabaseCreator(list):
                     region.figureUrl=""
                     region.dataUrl=""
                     region.axes=""
-
-            if parallel:
-                os._exit(0)
-        if parallel:
-            for child in children:
-                os.waitpid ( child, 0 )
-
         self.timeStamp ( "after going through txnames" )
         if create_dataInfo:
             self._createInfoFile( dataInfo.name, dataInfo.dataId, dataInfo)
