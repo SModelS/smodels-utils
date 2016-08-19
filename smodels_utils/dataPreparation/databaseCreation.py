@@ -306,11 +306,6 @@ class DatabaseCreator(list):
                 origData = plane.origEfficiencyMap3D
                 effMap3d=True
 
-        #print "[databaseCreation.py] origData=",origData,"limitType=",limitType
-        #print "origEfficiencyMap=",len(plane.origEfficiencyMap)
-        #print "origEfficiencyMap3D=",len(plane.origEfficiencyMap3D)
-        #if y>0:
-        #    sys.exit()
         if not origData: return dataList
 
         if effMap3d:
@@ -621,7 +616,12 @@ class DatabaseCreator(list):
                 if not hasattr(obj, attr) and \
                 not hasattr(obj.__class__, attr) : continue
                 value=getattr(obj,attr)
-                if value=="": continue
+                if value=="":
+                    self.timeStamp ( "Error: %s %s is empty in %d!" % \
+                            ( obj, attr, dataid ) )
+                    self.timeStamp ( "I stop here. Please fix this." )
+                    sys.exit()
+                    ## continue
                 if attr in [ "upperLimit", "expectedUpperLimit" ]:
                     fvalue=round_to_n ( float(value[:-3] ), 4 )
                     value = "%s%s" % ( fvalue, value[-3:] )
