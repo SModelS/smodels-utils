@@ -13,7 +13,9 @@ efficienciesdir="../fastlim-1.0/efficiency_tables/"
 databasedir = "../../../smodels-database/"
 destdir="%s/8TeV/ATLAS/" % databasedir
 
-dictionary=open("%s/signalregions.py" % databasedir, "w" )
+dictionary=None
+def openDictionary():
+    dictionary=open("%s/signalregions.py" % databasedir, "w" )
 SRs={}
 
 def removeExp ( exp ):
@@ -58,10 +60,10 @@ def createDataInfoFile ( analysis, cut ):
     f.write ( "observedN: %d\n" % data )
     f.write ( "expectedBG: %.1f\n" % bg )
     f.write ( "bgError: %.1f\n" % sys )
-    s_ul = float('%.2g' % ul ) ## round to n significant numbers
-    f.write ( "upperLimit: %.2f*fb\n" % s_ul )
-    s_eul = float ('%.2g' % eul )
-    f.write ( "expectedUpperLimit: %.2f*fb\n" % s_eul )
+    s_ul = float('%.3g' % ul ) ## round to n significant numbers
+    f.write ( "upperLimit: %g*fb\n" % s_ul )
+    s_eul = float ('%.3g' % eul )
+    f.write ( "expectedUpperLimit: %g*fb\n" % s_eul )
     ## float('%.2g' % 0.0123435456)
     ## f.write ( "signalRegion: %s\n" % sr )
     print("[SRs[analysis][datadir]=sr")
