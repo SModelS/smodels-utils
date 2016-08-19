@@ -11,7 +11,6 @@ from smodels.experiment.databaseObj import Database
 from ConfigParser import SafeConfigParser
 
 
-
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
 
@@ -37,6 +36,8 @@ def validatePlot(expRes,txname,axes,slhadir,kfactor=1.):
     valPlot = validationObjs.ValidationPlot(expRes,txname,axes,kfactor=kfactor)
     valPlot.setSLHAdir(slhadir)
     valPlot.getData()
+    if not valPlot.data:
+        return None
     valPlot.getPlot()
     valPlot.savePlot()
     valPlot.saveData()
@@ -102,7 +103,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             for tgraph in tgraphs:                
                 ax = tgraph.GetName().replace('exclusion_',"")
                 agreement = validatePlot(expRes,txname,ax,tarfile,kfactor)
-                logger.info('               agreement factor = %f' %agreement)
+                logger.info('               agreement factor = %s' %str(agreement))
         
     logger.info("\n\n----- Finished validation.")
 
@@ -122,7 +123,7 @@ if __name__ == "__main__":
     logger.setLevel(level=numeric_level)
     plottingFuncs.logger.setLevel(level=numeric_level)
     validationObjs.logger.setLevel(level=numeric_level)
-    
+                
     if not os.path.isfile(args.parfile):
         logger.error("Parameters file %s not found" %args.parfile)
     else:

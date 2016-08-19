@@ -312,7 +312,8 @@ class ValidationPlot():
         if slhaDir != self.slhaDir: shutil.rmtree(slhaDir)
             
         if self.data == []:
-            logger.error ( "There are no data for a validation plot. Are the SLHA files correct? Are the constraints correct?" )
+            logger.error("There is no data for %s/%s/%s.\n Are the SLHA files correct? Are the constraints correct?"
+                          %(self.expRes.globalInfo.id,self.txName,self.axes))
         
         #Apply k-factors to theory prediction (default is 1)
         for ipt,pt in enumerate(self.data):
