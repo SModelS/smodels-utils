@@ -78,44 +78,6 @@ constraints =  { "T2tt": "[[['t+']],[['t-']]]", "T2bb": "[[['b']],[['b']]]",
                  "T1btqq": "[[['b','t']],[['jet','jet']]]", "T1qqtt": "[[['jet','jet']],[['t','t']]]",
                  "T1bttt": "[[['b','t']],[['t','t']]]", "T1": "[[['jet','jet']],[['jet','jet']]]" }
 
-#+++++++ next txName block ++++++++++++++
-#T1 = TxName('T1')
-#T1.on.constraint = constraints["T1"]
-#T1.on.condition = None
-#T1.on.fuzzycondition = None
-#
-##+++++++ next mass plane block ++++++++++++++
-#T1_1 = T1.addMassPlane(motherMass = x , lspMass = y )
-##----figure----
-#T1_1.figure = 'fig_07a.pdf'
-#T1_1.figureUrl = 'https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/CONFNOTES/ATLAS-CONF-2013-047/fig_07a.pdf'
-## ----limit source----
-### T1_1.obsUpperLimit.setSource( './orig/T1.effi', 'txt', objectName = None, index = None )
-#T1_1.efficiencyMap.setSource( './orig/T1.effi', 'txt', objectName = None, index = None )
-## T1_1.obsUpperLimit.unit = 'fb'
-## T1_1.expUpperLimit.setSource( path, type, objectName = None, index = None )
-## ----exclusion source----
-#T1_1.obsExclusion.setSource( './orig/T1_exc.dat', 'txt', objectName = None, index = None )
-##T1_1.obsExclusionM1.setSource( path, type, objectName = None, index = None )
-#T1_1.obsExclusionP1.setSource( path, type, objectName = None, index = None )
-#T1_1.expExclusion.setSource( path, type, objectName = None, index = None )
-#T1_1.expExclusionM1.setSource( path, type, objectName = None, index = None )
-#T1_1.expExclusionP1.setSource( path, type, objectName = None, index = None )
-#----global url settings ----
-#T1_1.dataUrl = 
-#T1_1.histoDataUrl = 
-#----limit url settings ----
-# T1_1.obsUpperLimit.dataUrl = 'https://twiki.cern.ch/twiki/pub/CMSPublic/PhysicsResultsSUS13007/limits_model_A.txt'
-#T1_1.expectedlimit.dataUrl =
-#----exclusion url settings ----
-#T1_1.exclusionDataUrl =
-#T1_1.exclusion.dataUrl =
-#T1_1.exclusionM1.dataUrl =
-#T1_1.exclusionP1.dataUrl =
-#T1_1.expectedExclusion.dataUrl =
-#T1_1.expectedExclusionM1.dataUrl =
-#T1_1.expectedExclusionP1.dataUrl =
-
 figure={}
 figure["T1"]='fig_07a.pdf'
 
@@ -158,29 +120,5 @@ def translate ( filename ):
               ( f[0], f[1], f[2], f[0], f[1], f[2], f[3] )
         w.write ( line +"\n" )
     w.close()
-
-
-#T5tttt = TxName ( "T5tttt" )
-#T5tttt.on.constraint = "[[['t+'],['t-']],[['t+'],['t-']]]"
-#T5tttt.on.condition = None
-#T5tttt.on.fuzzycondition = None
-## T5tttt.globalEfficiencyMap.setSource ( './orig/T5tttt.effi', 'effi', objectName = None, index = None )
-#translate ( './orig/T5tttt.effi' )
-
-# ----limit source----
-## T1_1.obsUpperLimit.setSource( './orig/T1.effi', 'txt', objectName = None, index = None )
-#        tmp_1.efficiencyMap.setSource( './orig/T1.effi', 'txt', objectName = None, index = None )
-# T1_1.obsUpperLimit.unit = 'fb'
-# T1_1.expUpperLimit.setSource( path, type, objectName = None, index = None )
-# ----exclusion source----
-        
-
-#T2tt = TxName('T2tt')
-#T2tt.on.constraint = "[[['t']],[['t']]]"
-#T2tt.on.condition = None
-#T2tt.on.fuzzycondition = None
-#T2tt_1 = T2tt.addMassPlane(motherMass = x , lspMass = y )
-#T2tt_1.efficiencyMap.setSource( './orig/T2tt.effi', 'effi', objectName = None, index = None )
-
 
 databaseCreator.create()

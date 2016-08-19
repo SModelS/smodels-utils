@@ -25,7 +25,7 @@ class Orig(Locker):
     infoAttr = []
     internalAttr = ['name','path', 'fileType', 'objectName',\
     'dataUrl', 'index', 'allowNegativValues', 'dataset',
-    'observedN','expectedBG','bgError' ]
+    'observedN','expectedBG','bgError', 'percentage' ]
     
     def __init__(self,name):
         
@@ -43,6 +43,7 @@ class Orig(Locker):
         self.index = None
         self.allowNegativValues = False
         self.dataset=None
+        self.percentage=False
 
     def setSource(self, path, fileType, objectName = None, index = None, dataset="data" ):
         
@@ -69,7 +70,13 @@ class Orig(Locker):
         self.observedN = observedN
         self.expectedBG = expectedBG
         self.bgError = bgError
-        
+
+    def usePercentage ( self, value=True ):
+        """ for efficiency maps, data is given in percentage 
+            (value=True), or in fractions (value=False)
+        """
+        self.percentage = value 
+
     def _positivValues(self, values):
         
         """checks if values greater then zero
@@ -401,6 +408,8 @@ class OrigEfficiencyMap(Orig):
         
         for point in getattr(self,self.fileType)():
             if not self._positivValues(point): continue
+            if self.percentage:
+                point[-1]=point[-1]/100.
             yield point
 
     def txt(self):
@@ -538,6 +547,8 @@ class OrigEfficiencyMap3D(Orig):
         # print "[origDataObjects] fileType=",self.fileType
         for point in getattr(self,self.fileType)():
             if not self._positivValues(point): continue
+            if self.percentage:
+                point[-1]=point[-1]/100.
             yield point
 
     def __len__(self):

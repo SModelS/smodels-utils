@@ -8,19 +8,27 @@ home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 from smodels.tools import statistics
     
-fastlimdir="/home/walten/Downloads/fastlim-1.0/analyses_info/8TeV/"
-efficienciesdir="/home/walten/Downloads/fastlim-1.0/efficiency_tables/"
-destdir="/home/walten/git/smodels-database/8TeV/ATLAS/"
+fastlimdir="../fastlim-1.0/analyses_info/8TeV/"
+efficienciesdir="../fastlim-1.0/efficiency_tables/"
+databasedir = "../../../smodels-database/"
+destdir="%s/8TeV/ATLAS/" % databasedir
 
-dictionary=open("/home/walten/git/smodels-database/signalregions.py","w")
+dictionary=None
+def openDictionary():
+    dictionary=open("%s/signalregions.py" % databasedir, "w" )
 SRs={}
+
+def removeExp ( exp ):
+    cmd = "rm -r %s/%s-eff" % ( destdir, exp )
+    print "[convertHelpers] %s" % cmd
+    commands.getoutput ( cmd )
 
 def createDataInfoFile ( analysis, cut ):
     """ create the datainfo file for analysis, signalregion ANAana-CUTcut """
     print "[fastlimHelpers] now createDataInfoFile for",analysis,cut
     if not analysis in SRs:
         SRs[analysis]={}
-    destdir="/home/walten/git/smodels-database/8TeV/ATLAS/"
+    destdir="%s/8TeV/ATLAS/" % databasedir
     newananame=analysis.replace("_","-")+"-eff"
     datadir="/data-cut%d" % ( cut )
     dataInfoFile=destdir+newananame+datadir+ "/dataInfo.txt"
@@ -35,26 +43,31 @@ def createDataInfoFile ( analysis, cut ):
     if not os.path.exists ( destdir+newananame+datadir ):
         print "creating",destdir+newananame+datadir
         os.mkdir ( destdir+newananame+datadir )
-    fastlimdir="/home/walten/Downloads/fastlim-1.0/analyses_info/8TeV/"
+    # fastlimdir="/home/walten/Downloads/fastlim-1.0/analyses_info/8TeV/"
     infofile=open ( fastlimdir + analysis + "/SR_info.txt" )
     lines=infofile.readlines()
     infofile.close()
     tokens=lines[cut+1].split()
     lumi,data,bg,sys,sr=float(tokens[1]),float(tokens[2]),float(tokens[3]),float(tokens[4])," ".join(tokens[10:])
     ul=float(tokens[7])
-    eul=statistics.upperLimit ( bg, bg, sys, lumi )
+    eul=statistics.upperLimit ( bg, bg, sys, lumi, .05, 20000 )
 
     f=open ( destdir+newananame+datadir+ "/dataInfo.txt", "w")
     f.write ( "dataType: efficiencyMap\n" )
-    f.write ( "dataId: data-cut%d\n" % ( cut ) )
+    my_sr = sr.replace("/","")
+    # f.write ( "dataId: data-cut%d\n" % ( cut ) )
+    f.write ( "dataId: %s\n" % ( my_sr ) )
     f.write ( "observedN: %d\n" % data )
     f.write ( "expectedBG: %.1f\n" % bg )
     f.write ( "bgError: %.1f\n" % sys )
-    f.write ( "upperLimit: %.2f*fb\n" % ul )
-    f.write ( "expectedUpperLimit: %.2f*fb\n" % eul )
+    s_ul = float('%.3g' % ul ) ## round to n significant numbers
+    f.write ( "upperLimit: %g*fb\n" % s_ul )
+    s_eul = float ('%.3g' % eul )
+    f.write ( "expectedUpperLimit: %g*fb\n" % s_eul )
+    ## float('%.2g' % 0.0123435456)
     ## f.write ( "signalRegion: %s\n" % sr )
     print("[SRs[analysis][datadir]=sr")
-    SRs[analysis][datadir]=sr.replace("/","")
+    SRs[analysis][datadir]= my_sr
     f.close ()
     print "[fastlimHelpers] done creating",destdir+newananame+datadir+ "/dataInfo.txt"
 
@@ -108,7 +121,7 @@ def copyEffiFiles ( analysis, ana, cut ):
         if not Fastlimname in Dict.keys():
           continue
         Tname=Dict[Fastlimname]
-        print("[convertHelpers.py] %s %s" % ( Tname,Fastlimname ) )
+        print("[convertHelpers.py] %s <- %s" % ( Tname,Fastlimname ) )
         anadir = efficienciesdir+"/"+Fastlimname + "/8TeV/" + analysis
         if not os.path.exists ( anadir ):
 #            print "[fastlimHelpers] ",anadir,"does not exist."
@@ -123,7 +136,7 @@ def copyEffiFiles ( analysis, ana, cut ):
             commands.getoutput ( cmd )
         if os.path.exists ( "%s/%s.effi" % ( realdestdir, Tname ) ):
             print "[convertHelpers] %s/%s.effi exists already" % ( realdestdir, Tname )
-#            continue
+            continue
         cmd="cp %s %s/%s.effi" % ( effifile, realdestdir, Tname )
         Tnames.append ( Tname )
         print "[fastlimHelpers.copyEffiFiles] cmd=",cmd
@@ -222,8 +235,9 @@ def smodels2fastlim(txname):
     :return: Txname in fastlim notation (string) or the dictionary (if txname = Dict). 
     """
     
-    Dict = { "GbB1tN1_GbB1tN1": "T5btbt", "GtT1bN1_GtT1tN1": "T5tbtt", "GgN1_GqqN1": "TGQ",
-             "GtT1bN1_GtT1bN1": "T5tbtb", "GgN1_GgN1": "T2gg", "GbtN1_GgN1": "TGQbtq",
+    Dict = { "GbB1tN1_GbB1tN1": "T5btbt", "GtT1bN1_GtT1tN1": "T5tbtt", 
+             "GgN1_GqqN1": "TGQ",
+             "GtT1bN1_GtT1bN1": "T5tbtb", "GgN1_GgN1": "T2", "GbtN1_GgN1": "TGQbtq",
              "GbbN1_GgN1": "TGQbbq", "GttN1_GttN1": "T1tttt", "GbbN1_GbbN1": "T1bbbb",
              "GbB1bN1_GbB1bN1": "T5bbbb", "GbbN1_GqqN1": "T1bbqq",
              "T1tN1_T1tN1": "T2tt", "GgN1_GttN1": "TGQqtt", 'GbbN1_GbtN1': "T1bbbt",
@@ -233,11 +247,13 @@ def smodels2fastlim(txname):
              "GbB1bN1_GbB1tN1": "T5bbbt", "GtT1tN1_GtT1tN1": "T5tttt",
 #Added (Andre - 11/11/2015):             
              "B1bN1_B1bN1" : "T2bb", "T2tN1_T2tN1" : "T2tt", "T1tN1_T1tN1" : "T2tt",
-             "B2bN1_B2bN1" : "T2bb", "GbB2bN1_GbB2bN1" : "T5bbbb", "GtT2tN1_GtT2tN1" : "T5tttt",
-             "GbB2tN1_GbB2tN1": "T5btbt", "GbB2bN1_GbB2tN1" : "T5bbbt", "GtT2bN1_GtT2bN1" : "T5tbtb",
+             "B2bN1_B2bN1" : "T2bb", "GbB2bN1_GbB2bN1" : "T5bbbb", 
+             "GtT2tN1_GtT2tN1" : "T5tttt", "GbB2tN1_GbB2tN1": "T5btbt", 
+             "GbB2bN1_GbB2tN1" : "T5bbbt", "GtT2bN1_GtT2bN1" : "T5tbtb",
              "T2bN1_T2bN1" : "T2bb", "T2bN1_T2tN1" : "T2bt",
 #Added (Andre - 02/13/2016):
-             "B1tN1_B1tN1" : "T2tt","B2tN1_B2tN1" : "T2tt", "B1bN1_B1tN1" : "T2bt", "B2bN1_B2tN1" : "T2bt" 
+             "B1tN1_B1tN1" : "T2tt","B2tN1_B2tN1" : "T2tt", "B1bN1_B1tN1" : "T2bt", 
+             "B2bN1_B2tN1" : "T2bt" 
     }
     
     if txname == 'Dict': return Dict
@@ -249,16 +265,16 @@ def smodels2fastlim(txname):
 
 
 def closeDictionaryFile():
+    print "currently we dont write a dict file"
+    return
     dictionary.write ( "SRs={" )
     for analysis,cuts in SRs.items():
         dictionary.write ( '"%s":{' % analysis )
         for cut,region in cuts.items():
-            dictionary.write ( '"%s":"%s", ' % ( cut, region ) ) 
+            dictionary.write ( '"%s":"%s", ' % ( cut.replace("/",""), region ) ) 
         dictionary.write ( "}," )
     dictionary.write ( "}\n" )
     dictionary.close()
-    ## import commands
-    ## commands.getoutput ( "chmod 755 /home/walten/git/smodels-database/signalregions.py" )
 
 
 def fastlimPIDsFor(txname):
@@ -328,6 +344,29 @@ def fastlimPIDsFor(txname):
     
     return allpids
 
+#all_exps= [ "ATLAS_CONF_2013_024", "ATLAS_CONF_2013_035",  "ATLAS_CONF_2013_037",
+#    "ATLAS_CONF_2013_047", "ATLAS_CONF_2013_048",  "ATLAS_CONF_2013_049", 
+#    "ATLAS_CONF_2013_053",  "ATLAS_CONF_2013_054",  "ATLAS_CONF_2013_061",
+#    "ATLAS_CONF_2013_062", "ATLAS_CONF_2013_093" 
+#]
+
+all_exps = [ x[:-1] for x in open("expids").readlines() ]
+
+def runExps ( exps ):
+    """ run conversions for the given experimental ids """
+    for expid in exps:
+        createInfoFile ( expid )
+        for cut in range(25):
+            has_globals=False
+            for ana in range(25):
+                if existsAnalysisCut ( expid, ana, cut ):
+                    copyEffiFiles ( expid, ana, cut )
+                    createAndRunConvertFiles ( expid, cut, dry_run=False )
+                    if not has_globals:
+                        createDataInfoFile ( expid, cut )
+                        copyValidationScripts ( expid )
+                        has_globals=True
+        mergeSmsRootFiles ( expid )
 
 if __name__ == "__main__":
 #    createInfoFile ( "ATLAS_CONF_2013_035" )

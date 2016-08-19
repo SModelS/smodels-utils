@@ -232,9 +232,9 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
             origPlot = OrigPlot.fromString(validationPlot.axes)
             txnameObjs = validationPlot.expRes.getTxnameWith({'txName': validationPlot.txName})
             for txnameObj in txnameObjs:
-                print "txnameObj=",txnameObj,type(txnameObj),txnameObj.txName
+                #print "txnameObj=",txnameObj,type(txnameObj),txnameObj.txName
                 txnameData = txnameObj.txnameData.data
-                print "txnameData=",txnameData
+                #print "txnameData=",txnameData
                 if txnameData==None:
                         continue
                 for (itr, (mass,ul)) in enumerate(txnameData ):
@@ -377,7 +377,12 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             + "_" + validationPlot.axes
     subtitle = "datasetIds: "
     for dataset in validationPlot.expRes.datasets:
-        subtitle+=str(dataset.dataInfo.dataId)+" "
+        ds_txnames = map ( str, dataset.txnameList )
+        if not validationPlot.txName in ds_txnames:
+            continue
+        id = str(dataset.dataInfo.dataId)
+        # print "[plottingFuncs.py] add to %s: %s, %s" % ( validationPlot.txName, id, str ( map ( str, dataset.txnameList  ) ) )
+        subtitle+=id+" "
     figureUrl = getFigureUrl(validationPlot)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
     base.Draw("AP")

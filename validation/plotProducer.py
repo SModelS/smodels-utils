@@ -15,6 +15,7 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 from validationObjs  import ValidationPlot
 from plottingFuncs import getExclusionCurvesFor
+from smodels.tools.physicsUnits import fb, pb, GeV
 
 logger.setLevel(level=logging.ERROR)
 
@@ -39,7 +40,8 @@ def getDatasetIdsFromPath(folder="../"):
             datasetids.append  ( f )
     return datasetids
 
-def validatePlot(expRes,txname,axes,slhadir,kfactor=1.):
+
+def validatePlot(expRes,txname,axes,slhadir,kfactor=1.,recycle_data=False ):
     """
     Creates a ValidationPlot object and saves its output.
     
@@ -51,6 +53,7 @@ def validatePlot(expRes,txname,axes,slhadir,kfactor=1.):
     or the .tar file containing the SLHA files.
     :param kfactor: optional global k-factor value to re-scale 
                     all theory prediction values
+    :param recycle_data: use python dictionary files, if they exist
     """
 
     #Get exclusion curve for expRes:
@@ -62,14 +65,22 @@ def validatePlot(expRes,txname,axes,slhadir,kfactor=1.):
                 +", "+txname+", "+axes)        
     valPlot = ValidationPlot(expRes,txname,axes,kfactor=kfactor)
     valPlot.setSLHAdir(slhadir)
-    valPlot.getData()
+    filename="%s_%s.py" % ( txname, 
+            axes.replace("(","").replace(")","").replace(",","").replace("*","") )
+    if recycle_data and os.path.exists (filename ):
+        print "Recycling data from %s" % filename
+        globs ={ "pb": pb, "fb": fb }
+        execfile(filename,globs )
+        valPlot.data = globs["validationData"]
+    else:
+        valPlot.getData()
     valPlot.getPlot()
     valPlot.savePlot()
     valPlot.saveData()
     logger.info("Validation plot done.")
     return valPlot.computeAgreementFactor() # return agreement factor
     
-def validateTxName(expRes,txname,slhadir,kfactor=1.):
+def validateTxName(expRes,txname,slhadir,kfactor=1., recycle_data = False ):
     """
     Creates a ValidationPlot for each plane/axes appearing
     in txname and saves the output.
@@ -81,6 +92,7 @@ def validateTxName(expRes,txname,slhadir,kfactor=1.):
     or the .tar file containing the SLHA files.
     :param kfactor: optional global k-factor value to re-scale 
                     all theory prediction values
+    :param recycle_data: use python dictionary files, if they exist
     
     :return: Nested dictionary with the wrongness factor for each experimental
              result/plot.
@@ -104,11 +116,17 @@ def validateTxName(expRes,txname,slhadir,kfactor=1.):
         ID=exp.getValuesFor('id')[0]
         ret = { ID : {}}
         for ax in axes: 
-            ret[ID][ax]= validatePlot(exp,txname,ax,slhadir,
-                                                          kfactor=kfactor) 
+            ret[ID][ax]= validatePlot(exp,txname,ax,slhadir, 
+                    kfactor=kfactor, recycle_data = recycle_data ) 
     return ret ## return agreement factors
+<<<<<<< HEAD
  
 def validateExpRes(expRes,slhaDir,kfactorDict=None):
+=======
+    
+    
+def validateExpRes(expRes,slhaDir,kfactorDict=None, recycle_data = False ):
+>>>>>>> b91bcefdbba9caab401aeeb893193ec93e0cd888
     """
     Creates a ValidationPlot for each txname appearing in expRes and 
     each plane/axes appearing in txname and saves the output.
@@ -119,6 +137,7 @@ def validateExpRes(expRes,slhaDir,kfactorDict=None):
     :param kfactorDict: optinal k-factor dictionary for the txnames 
                         (i.e. {'TChiWZ' : 1.2, 'T2tt' : 1.,...})
                         If not define will assume k-factors = 1 for txnames.
+    :param recycle_data: use python dictionary files, if they exist
     """    
 
     #Get all exclusion curves appearing in sms.root:
@@ -134,6 +153,6 @@ def validateExpRes(expRes,slhaDir,kfactorDict=None):
         if not kfactorDict or not txname in kfactorDict:
             kfactor=1.
         else: kfactor = kfactorDict[txname]
-        ret[txname]= validateTxName(expRes,txname,slhadir,kfactor)
+        ret[txname]= validateTxName(expRes,txname,slhadir,kfactor,recycle_data)
         
     return ret
