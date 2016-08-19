@@ -617,11 +617,11 @@ class DatabaseCreator(list):
                 not hasattr(obj.__class__, attr) : continue
                 value=getattr(obj,attr)
                 if value=="":
-                    self.timeStamp ( "Error: %s %s is empty in %s!" % \
-                            ( obj, attr, str ( dataid ) ) )
-                    self.timeStamp ( "I stop here. Please fix this." )
-                    sys.exit()
-                    ## continue
+                    # self.timeStamp ( "Error: %s %s is empty in %s!" % \
+                    #         ( obj, attr, str ( dataid ) ) )
+                    # self.timeStamp ( "I stop here. Please fix this." )
+                    # sys.exit()
+                    continue
                 if attr in [ "upperLimit", "expectedUpperLimit" ]:
                     fvalue=round_to_n ( float(value[:-3] ), 4 )
                     value = "%s%s" % ( fvalue, value[-3:] )
