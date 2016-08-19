@@ -191,7 +191,9 @@ class TemplateFile(object):
         inmasses = self.origPlot.getParticleMasses(x, y)
         #Add units:
         for ib,mbranch in enumerate(inmasses):
-            for im,mass in enumerate(mbranch): inmasses[ib][im] = mass*GeV
+            for im,mass in enumerate(mbranch):
+                print mass,GeV,txnameObj,x,y
+                inmasses[ib][im] = mass*GeV
                 
         #First create temporary file:
         tempSLHA = self.createFileFor(x,y)
@@ -218,12 +220,10 @@ class TemplateFile(object):
                 
         allEls = smstoplist.getElements()
         goodEl = False
-        for elA in txnameObj._elements:            
-            if goodEl: break
-            for elB in allEls:
-                if elA.particlesMatch(elB):
-                    goodEl = elB
-                    break
+        for el in allEls:
+            if txnameObj.hasElementAs(el):
+                goodEl = el
+                break
         
         #Check if a valid element was created:
         if not goodEl:

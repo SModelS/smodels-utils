@@ -48,6 +48,11 @@ class ValidationPlot():
         self.data = None
         self.officialCurves = self.getOfficialCurve( get_all = True )
         self.kfactor = kfactor
+        
+        #Select the desired txname and corresponding datasets in the experimental result:
+        for dataset in self.expRes.datasets:
+            dataset.txnameList = [tx for tx in dataset.txnameList[:] if tx.txName == self.txName]
+        self.expRes.datasets = [dataset for dataset in self.expRes.datasets[:] if len(dataset.txnameList) > 0]            
 
         if slhadir: self.setSLHAdir(slhadir)
         if databasePath:
@@ -164,7 +169,7 @@ class ValidationPlot():
                 tar = tarfile.open(self.slhaDir)
                 tempdir = tempfile.mkdtemp(dir=os.getcwd())
                 tar.extractall(path=tempdir)
-                logger.info("SLHA files extracted to %s" %tempdir)
+                logger.debug("SLHA files extracted to %s" %tempdir)
                 return tempdir
             except:
                 logger.error("Could not extract SLHA files from %s" %self.slhaDir)
@@ -186,15 +191,9 @@ class ValidationPlot():
         tgraphDict = getExclusionCurvesFor(self.expRes,txname=self.txName,axes=self.axes, get_all = get_all )
         if not tgraphDict: return None
         tgraph = tgraphDict[self.txName]
-        #print "[validationObjs.py] get_all=",get_all
-        #for t in tgraph:
-        #    print "[validationObjs.py] t=",t
-        #    print "[validationObjs.py] name=",t.GetName()
         if get_all:
             return tgraph
         else:
-        #if len(tgraph) > 1:
-        #    logger.warning("More than one exclusion curve found. Using the first one.")
             return tgraph[0]
 
     
@@ -234,14 +233,14 @@ class ValidationPlot():
             logger.warning("SLHA folder not defined")
             return False
         slhaDir = self.getSLHAdir()  #Path to the folder containing the SLHA files
-        logger.info("SLHA files for validation at %s" %slhaDir)
+        logger.debug("SLHA files for validation at %s" %slhaDir)
         
         #Set temporary outputdir:
         outputDir = tempfile.mkdtemp(dir=slhaDir,prefix='results_')
         
         #Get parameter file:
         parameterFile = self.getParameterFile(tempdir=outputDir)
-        logger.info("Parameter file: %s" %parameterFile)
+        logger.debug("Parameter file: %s" %parameterFile)
         
         #Read and check parameter file, exit parameterFile does not exist
         parser = modelTester.getParameters(parameterFile)
@@ -249,9 +248,7 @@ class ValidationPlot():
         #Get list of input files to be tested
         fileList = modelTester.getAllInputFiles(slhaDir)
 
-        #Select the desired txnames and experimental result:
-        for dataset in self.expRes.datasets:
-            dataset.txnameList = [tx for tx in dataset.txnameList[:] if tx.txName == self.txName]
+        #Select the desired experimental result
         listOfExpRes = [self.expRes]
 
         """ Test all input points """
@@ -267,43 +264,49 @@ class ValidationPlot():
                 continue
             fout = os.path.join(outputDir,slhafile + '.py')            
             if not os.path.isfile(fout):
-                logger.error("No SModelS output found for %s \n" %slhafile)
+                logger.error("No SModelS output found for %s " %slhafile)
                 continue            
             f = open(fout,'r')
             exec(f.read().replace('\n',''))
             f.close()
             if not 'ExptRes' in smodelsOutput:
-                logger.info("No results for %s \n" %slhafile)
+                logger.info("No results for %s " %slhafile)
                 continue 
             res = smodelsOutput['ExptRes']
+            expRes = res[0]       
+            #Double checks (to make sure SModelS ran as expected):
             if len(res) != 1:
-                logger.warning("More than one result found for %s \n" %slhafile)
-            for expRes in res:
-                if expRes['AnalysisID'] != self.expRes.globalInfo.id:
-                    continue
-                txnames = [tx.txName for tx in self.expRes.getTxNames()] 
-                if txnames != expRes['TxNames']:
-                    continue
-                mass = expRes['Mass (GeV)']                
-                v = origPlot.getXYValues(mass)
-                if v == None:
-                    logger.info("dropping %s, doesnt fall into the plane of %s." % (slhafile, origPlot.string ) )
-                    continue
-                x,y = v
-                Dict = {'slhafile' : slhafile, 'axes': [x,y], 'signal' : expRes['theory prediction (fb)'],
-                         'UL' : expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
-                         'dataset': expRes['DataSetID']}                
-                if expRes['dataType'] == 'efficiencyMap':
-                    dataset = self.expRes.datasets[0]
-                    massGeV = [[m*GeV for m in mbr] for mbr in mass]
-                    Dict['efficiency'] = dataset.txnameList[0].txnameData.getValueFor(massGeV)
-                    expectedBG = dataset.dataInfo.expectedBG
-                    observedN = dataset.dataInfo.observedN
-                    bgError = dataset.dataInfo.bgError
-                    lumi = expRes.globalInfo.lumi
-                    CLs = statistics.CLs(observedN, expectedBG, bgError, Dict['signal']*lumi, 10000)                    
-                    Dict['CLs'] =CLs
-                self.data.append(Dict)
+                logger.warning("Something went wrong. More than one result found for %s \n" %slhafile)
+                return False                
+            if expRes['AnalysisID'] != self.expRes.globalInfo.id:
+                logger.error("Something went wrong. Obtained results for the wrong analyses")
+                return False
+            if self.txName != expRes['TxNames'][0] or len(expRes['TxNames']) != 1:
+                logger.error("Something went wrong. Obtained results for the wrong txname")
+                return False
+            
+            mass = expRes['Mass (GeV)']                
+            v = origPlot.getXYValues(mass)
+            if v == None:
+                logger.debug("dropping %s, doesnt fall into the plane of %s." % (slhafile, origPlot.string ) )
+                continue
+            x,y = v
+            Dict = {'slhafile' : slhafile, 'axes': [x,y], 'signal' : expRes['theory prediction (fb)'],
+                     'UL' : expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
+                     'dataset': expRes['DataSetID']}                
+            if expRes['dataType'] == 'efficiencyMap':
+                #Select the correct dataset (best SR):
+                dataset = [dset for dset in self.expRes.datasets if dset.dataInfo.dataId == expRes['DataSetID']][0]
+                txname = dataset.txnameList[0]
+                massGeV = [[m*GeV for m in mbr] for mbr in mass]
+                Dict['efficiency'] = txname.txnameData.getValueFor(massGeV)
+                expectedBG = dataset.dataInfo.expectedBG
+                observedN = dataset.dataInfo.observedN
+                bgError = dataset.dataInfo.bgError
+                lumi = expRes['lumi (fb-1)']
+                CLs = statistics.CLs(observedN, expectedBG, bgError, Dict['signal']*lumi, 10000)                    
+                Dict['CLs'] =CLs
+            self.data.append(Dict)
     
         #Remove temporary folder
         if slhaDir != self.slhaDir: shutil.rmtree(slhaDir)
@@ -372,7 +375,7 @@ class ValidationPlot():
         else: vDir = validationDir
 
         if not os.path.isdir(vDir):
-            logger.info("Creating validation folder "+vDir)
+            logger.debug("Creating validation folder "+vDir)
             os.mkdir(vDir)
 
         filename = self.plot.GetTitle()+'.'+format

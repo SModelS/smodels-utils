@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
 import sys,os
+import logging
+import argparse
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 sys.path.append(os.path.join(home,'smodels-utils'))
 from validation import plottingFuncs, validationObjs
 from smodels.experiment.databaseObj import Database
-import logging
-import argparse
 from ConfigParser import SafeConfigParser
 
+
+
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
-logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
 
 
 def validatePlot(expRes,txname,axes,slhadir,kfactor=1.):
@@ -40,12 +40,11 @@ def validatePlot(expRes,txname,axes,slhadir,kfactor=1.):
     valPlot.getPlot()
     valPlot.savePlot()
     valPlot.saveData()
-    logger.info("Validation plot done.")
     
     return valPlot.computeAgreementFactor() # return agreement factor
 
 
-def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath):
+def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,verbosity='info'):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -55,20 +54,23 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param slhadir: Path to the folder containing the txname .tar files
     :param databasePath: Path to the SModelS database
     :param kfactorDict: kfactor dictionary to be applied to the theory cross-sections (e.g. {'TChiWZ' : 1.2, 'T2' : 1.,..})
+    :param verbosity: overall verbosity (e.g. error, warning, info, debug) 
     
     :return: A dictionary containing the agreement factors 
     """
+    
+    
 
     if not os.path.isdir(databasePath):
         logger.error('%s is not a folder' %databasePath)
     
     try:
-        db = Database(databasePath)
+        db = Database(databasePath,verbosity=verbosity)
     except:
         logger.error("Error loading database at %s" %databasePath)
         
     
-    logger.info('-----Running validation...')
+    logger.info('----- Running validation...')
     
     #Select experimental results, txnames and datatypes:
     expResList = db.getExpResults( analysisIDs, datasetIDs, txnames,
@@ -76,11 +78,11 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     
     #Loop over experimental results and validate plots
     for expRes in expResList:
-        logger.info("---------Validating  %s" %expRes.globalInfo.id)
+        logger.info("--------- validating  %s" %expRes.globalInfo.id)
         #Loop over pre-selected txnames:
-        for tx in expRes.getTxNames():
-            txname = tx.txName
-            logger.info("------------Validating  %s" %txname)
+        txnames = set([tx.txName for tx in expRes.getTxNames()])
+        for txname in txnames:
+            logger.info("------------ validating  %s" %txname)
             tarfile = os.path.join(slhadir,txname+".tar")                
             if not os.path.isfile(tarfile):
                 logger.error('Missing .tar file for %s' %txname)
@@ -92,16 +94,17 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
 
             tgraphs = plottingFuncs.getExclusionCurvesFor(expRes,txname,get_all=False)
             if not tgraphs or not tgraphs[txname]:
+                logger.info("No exclusion curves found for %s" %txname)
                 continue
             else:
                 tgraphs = tgraphs[txname] 
             #Loop over plots:
-            for tgraph in tgraphs:
+            for tgraph in tgraphs:                
                 ax = tgraph.GetName().replace('exclusion_',"")
                 agreement = validatePlot(expRes,txname,ax,tarfile,kfactor)
-                break
+                logger.info('               agreement factor = %f' %agreement)
         
-    logger.info("\n\n-----Finished validation.")
+    logger.info("\n\n----- Finished validation.")
 
 
 if __name__ == "__main__":
@@ -109,8 +112,16 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Produces validation plots and data for the selected results")
     ap.add_argument('-p', '--parfile', 
             help='parameter file specifying the validation options', default='./validation_parameters.ini')
+    ap.add_argument('-l', '--log', 
+            help='specifying the level of verbosity (error, warning,info, debug)', 
+            default = 'info', type = str)
         
     args = ap.parse_args()
+    
+    numeric_level = getattr(logging,args.log.upper(), None)
+    logger.setLevel(level=numeric_level)
+    plottingFuncs.logger.setLevel(level=numeric_level)
+    validationObjs.logger.setLevel(level=numeric_level)
     
     if not os.path.isfile(args.parfile):
         logger.error("Parameters file %s not found" %args.parfile)
@@ -137,6 +148,6 @@ if __name__ == "__main__":
     databasePath = parser.get("path", "databasePath")
 
     #Run validation:
-    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath)
+    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,args.log)
     
     

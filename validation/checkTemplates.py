@@ -17,7 +17,7 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.WARNING)
-from smodels.experiment.databaseObjects import Database
+from smodels.experiment.databaseObj import Database
 from validation.slhaCreator import TemplateFile
 
 
@@ -28,17 +28,17 @@ badTemplates = []
 database = Database(os.path.expanduser("~/smodels-database/"))
 for expRes in database.expResultList:
     #Skip efficiency-map analyses:
-    if 'efficiencyMap' in expRes.getValuesFor('dataType'): continue
+#     if 'efficiencyMap' in expRes.getValuesFor('dataType'): continue
     for txname in expRes.getTxNames():
         #Skip incomplete analysis
         if txname.getInfo('constraint') == 'not yet assigned': continue 
-        template = os.path.join(templateDir,txname.txname+'.template')
+        template = os.path.join(templateDir,txname.txName+'.template')
         if template in badTemplates: continue
-        if txname.txname in missTxnames: continue
+        if txname.txName in missTxnames: continue
         #check if the txname.template file exists: 
         if not os.path.isfile(template):            
-            missTxnames.append(txname.txname)
-            logger.warning('Template missing for %s' %txname.txname)
+            missTxnames.append(txname.txName)
+            logger.warning('Template missing for %s' %txname.txName)
         else:
             axes = txname.getInfo('axes')
             if not isinstance(axes,list): axes = [axes]

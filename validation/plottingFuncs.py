@@ -11,8 +11,6 @@
 import logging,os,sys,copy
 sys.path.append('../')
 
-FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
-logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TLegend,kGreen,kRed,kOrange,kBlack,
@@ -73,25 +71,25 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):
     return txnames
 
 def getFigureUrl(validationPlot ):
-    txnameinfo = validationPlot.expRes.getTxnameWith({ "txName": validationPlot.txName } )
-    if type(txnameinfo)== list:
-        logger.error("received a list for .getTxnameWith. Dont know what to do with this" )
-        txnameinfo=txnameinfo[0]
-    if type(txnameinfo.getInfo("figureUrl")) == str:
-        return txnameinfo.getInfo("figureUrl" )
-    if not txnameinfo.getInfo("figureUrl" ):
+    
+    txname = validationPlot.expRes.datasets[0].txnameList[0]
+    txurl = txname.getInfo("figureUrl")
+    txaxes = txname.getInfo("axes")
+    if isinstance(txurl,str):
+        return txname.getInfo("figureUrl" )
+    if not txurl:
         return None
-    if type(txnameinfo.getInfo("figureUrl")) != type(txnameinfo.getInfo("axes") ):
-            logger.error("figureUrl (%s) and axes (%s) are not of the same type" %(txnameinfo.getInfo("figureUrl" ),
-                       txnameinfo.getInfo("axes")))
+    if type(txurl) != type(txaxes):
+            logger.error("figureUrl (%s) and axes (%s) are not of the same type" %(txurl,
+                       txaxes))
             return None
-    if not validationPlot.axes in txnameinfo.getInfo("axes" ):
+    if not validationPlot.axes in txaxes:
         return None
-    pos = [ i for i,x in enumerate(txnameinfo.getInfo("axes")) if x==validationPlot.axes ]
+    pos = [i for i,x in enumerate(txaxes) if x==validationPlot.axes ]
     if len(pos)!=1:
         logger.error("found axes %d times" % len(pos))
         sys.exit()
-    return txnameinfo.getInfo("figureUrl" )[ pos[0] ]
+    return txurl[pos[0]]
 
 def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestregion", nthpoint =1, 
        signal_factor = 1. ):
@@ -330,20 +328,20 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
                     allowed.SetPoint(allowed.GetN(), x, y)
 
 
-    #Get envelopes:
-    exclEnvelop = getEnvelope(excluded) 
-    exclborderEnvelop = getEnvelope(excluded_border)
-    allborderEnvelop = getEnvelope(allowed_border)
-    #Get excluded band:
-    exclBand = TGraph()
-    for i in range(allborderEnvelop.GetN()):
-        x,y = Double(),Double()
-        allborderEnvelop.GetPoint(i,x,y)
-        exclBand.SetPoint(exclBand.GetN(),x,y)    
-    for i in range(exclEnvelop.GetN()):
-        x,y = Double(),Double()
-        exclEnvelop.GetPoint(exclEnvelop.GetN()-i,x,y)
-        exclBand.SetPoint(exclBand.GetN(),x,y)    
+#     #Get envelopes:
+#     exclEnvelop = getEnvelope(excluded) 
+#     exclborderEnvelop = getEnvelope(excluded_border)
+#     allborderEnvelop = getEnvelope(allowed_border)
+#     #Get excluded band:
+#     exclBand = TGraph()
+#     for i in range(allborderEnvelop.GetN()):
+#         x,y = Double(),Double()
+#         allborderEnvelop.GetPoint(i,x,y)
+#         exclBand.SetPoint(exclBand.GetN(),x,y)    
+#     for i in range(exclEnvelop.GetN()):
+#         x,y = Double(),Double()
+#         exclEnvelop.GetPoint(exclEnvelop.GetN()-i,x,y)
+#         exclBand.SetPoint(exclBand.GetN(),x,y)  
         
 
     # Check if official exclusion curve has been defined:
@@ -352,7 +350,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         official = None
     else:
         official = validationPlot.officialCurves
-        logger.info("Official curves have length %d" % len (official) )
+        logger.debug("Official curves have length %d" % len (official) )
     
     if silentMode: gROOT.SetBatch()    
     setOptions(allowed, Type='allowed')
@@ -360,7 +358,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     setOptions(allowed_border, Type='allowed_border')
     setOptions(excluded, Type='excluded')
     setOptions(excluded_border, Type='excluded_border')
-    setOptions(exclBand, Type='excluded')
+#     setOptions(exclBand, Type='excluded')
     if official:
         for i in official:
             setOptions( i, Type='official')
@@ -621,7 +619,7 @@ def getEnvelope(excludedGraph):
     :return: a TGraph object containing the envelope curve
     """
     if excludedGraph.GetN() == 0:
-        print "[plottingFuncs.py] getEnvelope %s N=%d " % ( excludedGraph.GetName(), excludedGraph.GetN() )
+        logger.info("No excluded points found for %s" %excludedGraph.GetName())
         return excludedGraph
 
     envelop = TGraph()
