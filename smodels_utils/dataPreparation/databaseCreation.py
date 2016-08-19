@@ -617,8 +617,8 @@ class DatabaseCreator(list):
                 not hasattr(obj.__class__, attr) : continue
                 value=getattr(obj,attr)
                 if value=="":
-                    self.timeStamp ( "Error: %s %s is empty in %d!" % \
-                            ( obj, attr, dataid ) )
+                    self.timeStamp ( "Error: %s %s is empty in %s!" % \
+                            ( obj, attr, str ( dataid ) ) )
                     self.timeStamp ( "I stop here. Please fix this." )
                     sys.exit()
                     ## continue
