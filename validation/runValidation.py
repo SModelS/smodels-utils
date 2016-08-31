@@ -2,6 +2,7 @@
 
 import sys,os
 import logging
+logging.basicConfig(filename='val.out')
 import argparse
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
@@ -10,9 +11,9 @@ from validation import plottingFuncs, validationObjs
 from smodels.experiment.databaseObj import Database
 from ConfigParser import SafeConfigParser
 
-
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
+
 
 
 def validatePlot(expRes,txname,axes,slhadir,kfactor=1.):
@@ -116,18 +117,21 @@ if __name__ == "__main__":
     ap.add_argument('-l', '--log', 
             help='specifying the level of verbosity (error, warning,info, debug)', 
             default = 'info', type = str)
-        
+           
     args = ap.parse_args()
     
     numeric_level = getattr(logging,args.log.upper(), None)
     logger.setLevel(level=numeric_level)
     plottingFuncs.logger.setLevel(level=numeric_level)
     validationObjs.logger.setLevel(level=numeric_level)
+    
                 
     if not os.path.isfile(args.parfile):
         logger.error("Parameters file %s not found" %args.parfile)
     else:
         logger.info("Reading validation parameters from %s" %args.parfile)
+        
+        
 
     parser = SafeConfigParser()
     parser.read(args.parfile)        
@@ -150,5 +154,4 @@ if __name__ == "__main__":
 
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,args.log)
-    
     

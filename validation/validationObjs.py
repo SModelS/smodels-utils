@@ -10,8 +10,6 @@
 
 import logging,os,sys
 
-FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
-logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 #from smodels.tools.physicsUnits import fb, GeV
 from smodels.experiment import databaseObj
