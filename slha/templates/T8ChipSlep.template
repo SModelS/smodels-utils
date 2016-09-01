@@ -54,39 +54,39 @@ BLOCK MINPAR  # Input parameters - minimal models
 #
 BLOCK MASS  # Mass Spectrum
 # PDG code           mass       particle
-        25     125.
-        35     1.00000000E+05
-        36     1.00000000E+05
-        37     1.00000000E+05
-   1000001     1.00000000E+05   # ~d_L
-   2000001     1.00000000E+05   # ~d_R
-   1000002     1.00000000E+05   # ~u_L
-   2000002     1.00000000E+05   # ~u_R
-   1000003     1.00000000E+05   # ~s_L
-   2000003     1.00000000E+05   # ~s_R
-   1000004     1.00000000E+05   # ~c_L
-   2000004     1.00000000E+05   # ~c_R
+        25     1.00000000E+03
+        35     1.00000000E+03
+        36     1.00000000E+03
+        37     1.00000000E+03
+   1000001     M0   #    ~d_L
+   2000001     1.00000000E+05   #    ~d_R
+   1000002     M0   #    ~u_L
+   2000002     1.00000000E+05   #    ~u_R
+   1000003     M0   #    ~s_L
+   2000003     1.00000000E+05   #    ~s_R
+   1000004     M0   #    ~c_L
+   2000004     1.00000000E+05   #    ~c_R
    1000005     1.00000000E+05   # ~b_1
-   2000005     1.00000000E+05   # ~b_2
+   2000005     1.10000000E+05   # ~b_2
    1000006     1.00000000E+05   # ~t_1
-   2000006     1.00000000E+05   # ~t_2
-   1000011     1.00000000E+05   # ~e_L
-   2000011     1.00000000E+05   # ~e_R
-   1000012     1.00000000E+05   # ~nu_eL
-   1000013     1.00000000E+05   # ~mu_L
-   2000013     1.00000000E+05   # ~mu_R
-   1000014     1.00000000E+05   # ~nu_muL
-   1000015     1.00000000E+05   # ~tau_1
-   2000015     1.00000000E+05   # ~tau_2
-   1000016     1.00000000E+05   # ~nu_tauL
-   1000021     1.00000000E+05   # ~g
-   1000022     M1   # ~chi_10
-   1000023     M0   # ~chi_20
-   1000024     m0   # ~chi_1+
-   1000025     1.00000000E+05   # ~chi_30
-   1000035     1.00000000E+05   # ~chi_40
-   1000037     1.00000000E+05   # ~chi_2+
-# /
+   2000006     1.10000000E+05   # ~t_2
+   1000011     M2         # ~e_L
+   2000011     1.00000000E+04   # ~e_R
+   1000012     M2         # ~nu_eL
+   1000013     M2         # ~mu_L
+   2000013     1.00000000E+04   # ~mu_R
+   1000014     M2         # ~nu_muL
+   1000015     M2         # ~tau_1
+   2000015     1.00000000E+04   # ~tau_2
+   1000016     M2         # ~nu_tauL
+   1000021     1.10000000E+05   # ~g
+   1000022     M3           # ~chi_10
+   1000023     M1   # ~chi_20
+   1000025     1.00000000E+04   # ~chi_30
+   1000035     1.00000000E+04   # ~chi_40
+   1000024     M1           # ~chi_1+
+   1000037     1.00000000E+04   # ~chi_2+
+#
 BLOCK NMIX
  1   1   -1.00000000e+00
  1   2    0.00000000e+00
@@ -177,12 +177,81 @@ BLOCK MSOFT Q=  2.90528802E+02  # The soft SUSY breaking masses at the scale Q
         47     3.95211849E+02   # mdR(Q)              
         48     3.95211849E+02   # msR(Q)              
         49     3.90320031E+02   # mbR(Q)              
-
-# DECAY TABLE
-DECAY   1000023     0.10000000E+00   # neutralino2 decays
+#
+#
+#
+#                             =================
+#                             |The decay table|
+#                             =================
+#
+# - The QCD corrections to the decays gluino -> squark  + quark
+#                                     squark -> gaugino + quark_prime
+#                                     squark -> squark_prime + Higgs
+#                                     squark -> gluino  + quark
+#   are included.
+#
+# - The multi-body decays for the inos, stops and sbottoms are included.
+#
+# - The loop induced decays for the gluino, neutralinos and stops
+#   are included.
+#
+# - The SUSY decays of the top quark are included.
+#
+#
+DECAY   1000001     1.00000000E+00   # ~d_L decays
 #           BR         NDA      ID1       ID2       ID3
-     1.00000000E+00    2    25    1000022
-DECAY   1000024     0.10000000E+00   # chargino1+ decays
+      0.50000000E+00    2     1000023       1           # BR(~dL -> N2 d)               
+      0.50000000E+00    2    -1000024       2           # BR(~dL -> C1- u)
+DECAY   1000002     1.00000000E+00   # ~u_L decays
 #           BR         NDA      ID1       ID2       ID3
-     1.00000000E+00    2    24    1000022
-
+      0.50000000E+00    2     1000023       2           # BR(~uL -> N2 u)               
+      0.50000000E+00    2     1000024       1           # BR(~uL -> C1+ d)
+DECAY   1000003     1.00000000E+00   # ~s_L decays
+#           BR         NDA      ID1       ID2       ID3
+      0.50000000E+00    2     1000023       3           # BR(~sL -> N2 s)               
+      0.50000000E+00    2    -1000024       4           # BR(~sL -> C1- c)
+DECAY   1000004     1.00000000E+00   # ~c_L decays
+#           BR         NDA      ID1       ID2       ID3
+      0.50000000E+00    2     1000023       4           # BR(~cL -> N2 c)               
+      0.50000000E+00    2     1000024       3           # BR(~cL -> C1+ s)          
+            
+DECAY   1000011     1.00000000E+00   # stau_1 decays
+#          BR         NDA      ID1       ID2       
+      1.0000000E+00    2       11      1000022     # BR(~seL -> e- N0)
+DECAY   1000013     1.00000000E+00   # stau_1 decays
+#          BR         NDA      ID1       ID2       
+      1.0000000E+00    2       13      1000022     # BR(~smuL -> mu- N0)
+DECAY   1000015     1.00000000E+00   # stau_1 decays
+#          BR         NDA      ID1       ID2       
+      1.0000000E+00    2       15      1000022     # BR(~stauL -> tau- N0)
+DECAY   1000012     1.00000000E+00   # snu_tauL decays
+#          BR         NDA      ID1       ID2      
+      1.0000000E+00    2       -12       1000022   # BR(~snuL_el -> nubar_e N0)
+DECAY   1000014     1.00000000E+00   # snu_tauL decays
+#          BR         NDA      ID1       ID2      
+      1.0000000E+00    2       -14       1000022   # BR(~snuL_mul -> nubar_mu N0)
+DECAY   1000016     1.00000000E+00   # snu_tauL decays
+#          BR         NDA      ID1       ID2      
+      1.0000000E+00    2       -16       1000022   # BR(~snuL_taul -> nubar_tau N0)
+DECAY   1000024     1.00000000E+00   # chargino1+ decays
+#           BR         NDA      ID1       ID2 
+      0.16660000E+00    2     -1000011     12        # BR(~chi_1+ -> stau1+   nu_tau)
+      0.16660000E+00    2      1000012    -11        # BR(~chi_1+ -> ~nu_tau1   tau+)
+      0.16660000E+00    2     -1000013     14        # BR(~chi_1+ -> stau1+   nu_tau)
+      0.16660000E+00    2      1000014    -13        # BR(~chi_1+ -> ~nu_tau1   tau+)
+      0.16660000E+00    2     -1000015     16        # BR(~chi_1+ -> stau1+   nu_tau)
+      0.16660000E+00    2      1000016    -15        # BR(~chi_1+ -> ~nu_tau1   tau+)
+DECAY   1000023     1.00000000E+00   # neutralino2 decays
+#           BR         NDA      ID1       ID2       
+      0.08333333E+00    2     1000011      -11    # BR(N2 -> selL- e+)
+      0.08333333E+00    2    -1000011       11    # BR(N2 -> selL+ e-)
+      0.08333333E+00    2     1000012      -12    # BR(N2 -> ~nu_e nu_e+)
+      0.08333333E+00    2    -1000012       12    # BR(N2 -> ~nu_e+ nu_e)
+      0.08333333E+00    2     1000013      -13    # BR(N2 -> smuL- mu+)                
+      0.08333333E+00    2    -1000013       13    # BR(N2 -> smuL+ mu-)                
+      0.08333333E+00    2     1000014      -14    # BR(N2 -> ~nu_mu nu_mu+)
+      0.08333333E+00    2    -1000014       14    # BR(N2 -> ~nu_mu+ nu_mu)
+      0.08333333E+00    2     1000015      -15    # BR(N2 -> stauL- tau+)
+      0.08333333E+00    2    -1000015       15    # BR(N2 -> stauL+ tau-)
+      0.08333333E+00    2     1000016      -16    # BR(N2 -> ~nu_tau1 nu_tau+)
+      0.08333333E+00    2    -1000016       16    # BR(N2 -> ~nu_tau1+ nu_tau)      

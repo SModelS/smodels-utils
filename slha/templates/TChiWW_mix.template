@@ -179,9 +179,6 @@ BLOCK MSOFT Q=  2.90528802E+02  # The soft SUSY breaking masses at the scale Q
         49     3.90320031E+02   # mbR(Q)              
 
 # DECAY TABLE
-DECAY   1000023     0.10000000E+00   # neutralino2 decays
-#           BR         NDA      ID1       ID2       ID3
-     1.00000000E+00    2    23    1000022
 DECAY   1000024     0.10000000E+00   # chargino1+ decays
 #           BR         NDA      ID1       ID2       ID3
      1.00000000E+00    2    24    1000022

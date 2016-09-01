@@ -2,7 +2,7 @@
 
 import sys,os
 import logging
-logging.basicConfig(filename='val.out')
+# logging.basicConfig(filename='val.out')
 import argparse
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
