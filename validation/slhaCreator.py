@@ -192,7 +192,6 @@ class TemplateFile(object):
         #Add units:
         for ib,mbranch in enumerate(inmasses):
             for im,mass in enumerate(mbranch):
-                print mass,GeV,txnameObj,x,y
                 inmasses[ib][im] = mass*GeV
                 
         #First create temporary file:
