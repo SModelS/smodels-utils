@@ -220,16 +220,15 @@ DECAY   1000016     0.00000000E+00   # snu_tauL decays
 DECAY   1000021     1.00000000E+00   # gluino decays
 #           BR         NDA      ID1       ID2       ID3
       0.50000000E+00    3     1000024        -6  5           # BR(~gl -> C1+ tbar b)
-      0.50000000E+00    3    -1000024         6  -5           # BR(~gl -> C1- t bbar)               
+      0.50000000E+00    3    -1000024        6  -5           # BR(~gl -> C1- t bbar)                          
 
-DECAY   1000024     1.22983315E-05   # chargino1+ decays
+DECAY   1000024     1.00000000E+00   # chargino1+ decays
  #           BR         NDA      ID1       ID2       ID3
       3.35000000E-01    3     1000022         2        -1   # BR(~chi_1+ -> ~chi_10 u    db)
       3.35000000E-01    3     1000022         4        -3   # BR(~chi_1+ -> ~chi_10 c    sb)
       1.10000000E-01    3     1000022       -11        12   # BR(~chi_1+ -> ~chi_10 e+   nu_e)
       1.10000000E-01    3     1000022       -13        14   # BR(~chi_1+ -> ~chi_10 mu+  nu_mu)
-      1.10000000E-01    3     1000022       -15        16   # BR(~chi_1+ -> ~chi_10 tau+ nu_tau)              
+      1.10000000E-01    3     1000022       -15        16   # BR(~chi_1+ -> ~chi_10 tau+ nu_tau)            
 ########################################################################
 
 DECAY   1000022     0.00000000E+00   # neutralino1 decays
-
