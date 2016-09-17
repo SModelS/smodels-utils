@@ -50,7 +50,7 @@ def getSuperFrame ( tgraphs ):
     logger.info ( "the super frame is [%f,%f],[%f,%f]" % ( minx, maxx, miny, maxy ) )
     return { "x": [ minx, maxx], "y": [ miny, maxy ] }
 
-def getExtendedFrame(txnameObjs,axes):
+def getExtendedFrame(txnameObj,axes):
     """
     Gets the frame containing all points in the TxName data which belong
     to the axes definition
@@ -62,23 +62,21 @@ def getExtendedFrame(txnameObjs,axes):
     origPlot = OrigPlot.fromString(axes)
     minx, miny = float("inf"), float("inf")
     maxx, maxy = 0., 0.
-    for txnameObj in txnameObjs:
-        txnameObj.txnameData.loadData()
-        data = txnameObj.txnameData.data  #Data grid of mass points and ULs of efficiencies
-        # print "data=",type(data),txnameObj.getInfo("id"),txnameObj,type(txnameObj)
-        # print "path=",txnameObj.path,txnameObj.globalInfo
-        if data==None:
-            continue
-        for pt in data:
-            mass = pt[0]
-            mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]
-            xy = origPlot.getXYValues(mass_unitless)
-            if xy is None: continue
-            else: x,y = xy
-            minx = min(minx,x)
-            miny = min(miny,y)
-            maxx = max(maxx,x)
-            maxy = max(maxy,y)
+    data = txnameObj.txnameData._data  #Data grid of mass points and ULs of efficiencies
+    # print "data=",type(data),txnameObj.getInfo("id"),txnameObj,type(txnameObj)
+    # print "path=",txnameObj.path,txnameObj.globalInfo
+    if data==None:
+        continue
+    for pt in data:
+        mass = pt[0]
+        mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]
+        xy = origPlot.getXYValues(mass_unitless)
+        if xy is None: continue
+        else: x,y = xy
+        minx = min(minx,x)
+        miny = min(miny,y)
+        maxx = max(maxx,x)
+        maxy = max(maxy,y)
 
     minx = 0.8*minx
     maxx = 1.2*maxx
@@ -110,7 +108,7 @@ def addQuotationMarks ( constraint ):
     return ret
 
 
-def getPoints ( tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", \
+def getPoints ( tgraphs, txnameObj, axes = "2*Eq(mother,x)_Eq(lsp,y)", \
                 constraint="[[[t+]],[[t-]]]", onshell=True, offshell=True ):
     """ given a TGraph object, returns list of points to probe. You define whether
         you want the onshell region or the offshell region (or both).
@@ -120,13 +118,13 @@ def getPoints ( tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", \
         :param constraint: the constraint to check for onshell / offshellness
     """
     
-    txname = txnameObjs[0].getInfo('txName')
+    txname = txnameObj.getInfo('txName')
     print("[plotRanges] txname=>>%s<<" % txname)
     vertexChecker = VertexChecker ( txname, addQuotationMarks ( constraint ) )
     #print "[getPoints] vertexChecker constraint=",addQuotationMarks(constraint)
     #print "[getPoints] vertexChecker kinconstraint=",vertexChecker.kinConstraints
     frame = getSuperFrame(tgraphs)
-    extframe = getExtendedFrame(txnameObjs,axes)
+    extframe = getExtendedFrame(txnameObj,axes)
     origPlot = OrigPlot.fromString ( axes )
     
     #First generate points for the extended frame with a lower density:
@@ -139,7 +137,7 @@ def getPoints ( tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", \
     minx = round(minx/dx)*dx
     miny = round(miny/dy)*dy
     
-    ptsA = generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,onshell
+    ptsA = generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObj,axes,onshell
                           ,offshell,origPlot,vertexChecker)
     
     #Now generate points for the exclusion curve frame with a higher density:
@@ -155,7 +153,7 @@ def getPoints ( tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", \
     minx = round(minx/dx)*dx
     miny = round(miny/dy)*dy
     
-    ptsB = generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,onshell
+    ptsB = generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObj,axes,onshell
                           ,offshell,origPlot,vertexChecker)
     
     pts = ptsA + ptsB
@@ -163,7 +161,7 @@ def getPoints ( tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", \
     return pts
 
 
-def generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,onshell,offshell,origPlot,vertexChecker):
+def generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObj,axes,onshell,offshell,origPlot,vertexChecker):
     points=[]
     if minx==float('inf') or abs(maxx)<1e-5:
         return points
@@ -175,10 +173,9 @@ def generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,onshell,offshell,or
             masses = [[m*GeV for m in mm] for mm in masses_unitless]
             #Skip points which are outside any grid
             inside=False
-            for txnameObj in txnameObjs:
-                val = txnameObj.txnameData.getValueFor(masses)
-                if type(val) in [ type(fb), float ]:
-                    inside=True
+            val = txnameObj.txnameData.getValueFor(masses)
+            if type(val) in [ type(fb), float ]:
+                inside=True
             if not inside:
 #                 print "masses",masses,"not inside any grid"
                 continue

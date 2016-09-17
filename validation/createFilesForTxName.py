@@ -9,8 +9,8 @@
 #Import basic functions (this file must be run under the installation folder)
 import sys,os,logging
 sys.path.insert(0,"../../smodels")
-from smodels.experiment.databaseObjects import Database
-from smodels.experiment.txnameObject import logger as tl
+from smodels.experiment.databaseObj import Database
+from smodels.experiment.txnameObj import logger as tl
 tl.setLevel(level=logging.ERROR)
 
 #Set the address of the database folder
@@ -38,7 +38,7 @@ def main( txname= "T6bbWW" ):
         offshell=True
     templatefile = "../slha/templates/%s.template" % txname
     # Load all analyses from database
-    listOfExpResOn = database.getExpResults( txnames=[ txname.replace("off","") ] )
+    listOfExpResOn = database.getExpResults(txnames=[ txname.replace("off","") ] )
     onshell_constraint=""
     if type(listOfExpResOn)!=list:
         listOfExpResOn=[listOfExpResOn]
