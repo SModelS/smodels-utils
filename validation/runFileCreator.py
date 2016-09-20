@@ -1,27 +1,27 @@
 #!/usr/bin/env python
 
-import sys,os
+import sys,os,shutil
 import logging
 # logging.basicConfig(filename='val.out')
 import argparse
-from EM_Creator.EM_Baking import TxName
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 sys.path.append(os.path.join(home,'smodels-utils'))
 from validation import plottingFuncs, validationObjs
 from smodels.experiment.databaseObj import Database
+from smodels.tools import xsecComputer, nllFast
 from ConfigParser import SafeConfigParser
 from plottingFuncs import getExclusionCurvesFor
-import tempfile
 import plotRanges
 import slhaCreator
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
+xsecComputer.logger.setLevel(logging.ERROR)
+nllFast.logger.setLevel(logging.ERROR)
 
 
-
-def createFiles(expResList,txname,templateFile,tarFile):
+def createFiles(expResList,txname,templateFile,tarFile,xargs):
     """
     Creates a .tar file for the txname using the data in expResults.
     
@@ -36,19 +36,17 @@ def createFiles(expResList,txname,templateFile,tarFile):
     logger.info("Generating %s file" %tarFile)        
 
     #Create temp folder to store the SLHA files:
-    tempdir = tempfile.mkdtemp(dir=os.getcwd())
-    slhafiles = []
     tgraphs = {}
     txnameObjs = []
 
     #Get axes
     for expResult in expResList:
-        txnameObj = [tx for tx in expResult.getTxNames() if tx.txName == txname]
-        if len(txnameObj) != 1:
-            logger.error("%i objects found matching the txname %s" %(len(txnameObj),txname))
-            return False
+        txnameObj = [tx for tx in expResult.getTxNames() if tx.txName == txname]           
+        if not txnameObj: #Skip result if it does not contain the txname
+            continue
         txnameObj = txnameObj[0]
-        axes=txnameObj.getInfo("axes")
+        txnameObjs.append(txnameObj) #Collect all txnames
+        axes = txnameObj.getInfo("axes")
         if type(axes)==str:
             axes=[axes]
         for naxes in axes:
@@ -59,30 +57,47 @@ def createFiles(expResList,txname,templateFile,tarFile):
                 tgraphs[naxes]=[]
             tgraphs[naxes].append(tgraph[txname][0])
 
-    #Get SLHA points
+    if not tgraphs:
+        logger.warning("No exclusion curves found for %s" %txname)
+        return False
+        
+    #Get SLHA points and create files
     for (axes,ntgraph) in tgraphs.items():
-        pts = plotRanges.getPoints(ntgraph, txnameObjs, axes, onshell_constraint, onshell, offshell )
-        print "len(pts)=",len(pts)
-        # flatpts = plotRanges.mergeListsOfListsOfPoints ( pts )
+        pts = plotRanges.getPoints(ntgraph, txnameObjs, axes)
+        logger.info("%i SLHA files for axes %s" %(len(pts),axes))
         if len(pts)==0:
             continue
-        tempf=slhaCreator.TemplateFile ( templatefile,axes )
-        slhafiles += tempf.createFilesFor ( pts, massesInFileName=True )
+        tempf = slhaCreator.TemplateFile(templateFile,axes)
+        tempf.createFilesFor(pts, massesInFileName=True)
 
 
+    #Set up cross-section options: 
+    xargs.query = False
+    xargs.NLL = False
+    xargs.NLO = False
+    xargs.LOfromSLHA = False
+    xargs.keep = False
+    xargs.tofile = True
+    xargs.pythiacard = tempf.pythiaCard
+    xargs.filename = tempf.tempdir
+    #Compute LO cross-sections
+    xsecComputer.main(xargs)
+    #Compute NLL cross-sections
+    xargs.NLL = True
+    xargs.LOfromSLHA = True
+    xsecComputer.main(xargs)
+    
     import commands
-    cmds=commands.getoutput ( "tar cvf %s.tar %s_*.slha" % ( txname, txname ) )
-    print cmds
-    #Remove SLHA files
-    for f in slhafiles: 
-        if os.path.exists ( f ): os.remove(f)
-
+    cmds=commands.getoutput("cd %s && tar cf %s *.slha" % (tempf.tempdir,tarFile))
+    logger.info("-------- File %s created.\n" %tarFile)
+    #Remove temp folder containing the SLHA files:
+    shutil.rmtree(tempf.tempdir)
 
     
-    return 
+    return True
 
 
-def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,databasePath,verbosity='info'):
+def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,databasePath,xargs,verbosity='info'):
     """
     Creates .tar files for all the txnames and analyses.
 
@@ -92,12 +107,11 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,databasePa
     :param templatedir: Path to the folder containing the txname.template files
     :param slhadir: Path to the output folder holding the txname .tar files
     :param databasePath: Path to the SModelS database
-    :param verbosity: overall verbosity (e.g. error, warning, info, debug) 
+    :param verbosity: overall verbosity (e.g. error, warning, info, debug)
+    :param xargs: argparse.Namespace object holding the options for the cross-section calculation
     
     :return: A dictionary containing the list of created .tar files 
     """
-    
-    
 
     if not os.path.isdir(databasePath):
         logger.error('%s is not a folder' %databasePath)
@@ -114,6 +128,9 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,databasePa
     expResList = db.getExpResults(analysisIDs, datasetIDs, txnames,
                   dataTypes, useSuperseded=True, useNonValidated=True)
     
+    if not expResList:
+        logger.error("No experimental results found.")
+    
     #Get list of txnames:
     txnameList = []
     for expRes in expResList:
@@ -121,41 +138,17 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,databasePa
             if not tx.txName in txnameList:
                 txnameList.append(tx.txName)
     txnameList = sorted(txnameList)        
-    #Loop over experimental results and validate plots
+    if not txnameList:
+        logger.error("No txnames found.")
+    
+    #Loop over txnames and create tar files
     for txname in txnameList:
-        templateFile = os.path.join(templatedir,txname+'.txt')
+        templateFile = os.path.join(templatedir,txname+'.template')
         tarFile = os.path.join(slhadir,txname+'.tar')
-        createFiles(expResList,txname,templateFile,tarFile)
+        createFiles(expResList,txname,templateFile,tarFile,xargs)
         
-        
-    for expRes in expResList:
-        logger.info("--------- validating  %s" %expRes.globalInfo.id)
-        #Loop over pre-selected txnames:
-        txnames = set([tx.txName for tx in expRes.getTxNames()])
-        for txname in txnames:
-            logger.info("------------ validating  %s" %txname)
-            tarfile = os.path.join(slhadir,txname+".tar")                
-            if not os.path.isfile(tarfile):
-                logger.error('Missing .tar file for %s' %txname)
-                continue
-            if txname.lower() in kfactorDict:
-                kfactor = float(kfactorDict[txname.lower()])
-            else:
-                kfactor = 1.
-
-            tgraphs = plottingFuncs.getExclusionCurvesFor(expRes,txname,get_all=False)
-            if not tgraphs or not tgraphs[txname]:
-                logger.info("No exclusion curves found for %s" %txname)
-                continue
-            else:
-                tgraphs = tgraphs[txname] 
-            #Loop over plots:
-            for tgraph in tgraphs:                
-                ax = tgraph.GetName().replace('exclusion_',"")
-                agreement = validatePlot(expRes,txname,ax,tarfile,kfactor)
-                logger.info('               agreement factor = %s' %str(agreement))
-        
-    logger.info("\n\n----- Finished validation.")
+    
+    logger.info("\n\n----- Finished file creation.")
 
 
 if __name__ == "__main__":
@@ -183,8 +176,17 @@ if __name__ == "__main__":
         
 
     parser = SafeConfigParser()
-    parser.read(args.parfile)        
-
+    parser.read(args.parfile) 
+    
+    #Options for cross-section calculation:
+    xargs = argparse.Namespace()
+    for name,value in parser.items("xsec"):
+        setattr(xargs, name, value)
+    xargs.sqrts = [[eval(sqrts) for sqrts in xargs.sqrts.split(',')]]
+    xargs.ncpus = int(xargs.ncpus)
+    xargs.nevents = int(xargs.nevents)    
+        
+    
     analyses = parser.get("database", "analyses").split(",")
     txnames = parser.get("database", "txnames").split(",")
     if parser.get("database", "dataselector") == "efficiencyMap":
@@ -197,10 +199,10 @@ if __name__ == "__main__":
         dataTypes = ['all']
         datasetIDs = parser.get("database", "dataselector").split(",")
         
-    slhadir = parser.get("path", "slhaPath")
-    templatedir = parser.get("path", "templatePath")
-    databasePath = parser.get("path", "databasePath")
+    slhadir = os.path.abspath(parser.get("path", "slhaPath"))
+    templatedir = os.path.abspath(parser.get("path", "templatePath"))
+    databasePath = os.path.abspath(parser.get("path", "databasePath"))
 
-    #Run validation:
-    main(analyses,datasetIDs,txnames,dataTypes,templatedir,slhadir,databasePath,args.log)
+    #Run creation:
+    main(analyses,datasetIDs,txnames,dataTypes,templatedir,slhadir,databasePath,xargs,args.log)
     

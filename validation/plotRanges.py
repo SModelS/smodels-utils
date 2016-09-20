@@ -12,7 +12,6 @@ import ROOT
 import numpy,math
 import sys
 sys.path.insert(0,"../")
-from smodels_utils.dataPreparation.vertexChecking import VertexChecker
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 from smodels.tools.physicsUnits import GeV,fb
 import logging
@@ -50,11 +49,11 @@ def getSuperFrame ( tgraphs ):
     logger.info ( "the super frame is [%f,%f],[%f,%f]" % ( minx, maxx, miny, maxy ) )
     return { "x": [ minx, maxx], "y": [ miny, maxy ] }
 
-def getExtendedFrame(txnameObj,axes):
+def getExtendedFrame(txnameObjs,axes):
     """
     Gets the frame containing all points in the TxName data which belong
     to the axes definition
-    :param txnameObj: TxName object
+    :param txnameObjs: list of TxName objects
     :param axes: Axes definition (string), i.e. 2*Eq(mother,x)_Eq(lsp,y)
     :return: max and min values for x and y in the extended frame
     """
@@ -62,21 +61,20 @@ def getExtendedFrame(txnameObj,axes):
     origPlot = OrigPlot.fromString(axes)
     minx, miny = float("inf"), float("inf")
     maxx, maxy = 0., 0.
-    data = txnameObj.txnameData._data  #Data grid of mass points and ULs of efficiencies
-    # print "data=",type(data),txnameObj.getInfo("id"),txnameObj,type(txnameObj)
-    # print "path=",txnameObj.path,txnameObj.globalInfo
-    if data==None:
-        continue
-    for pt in data:
-        mass = pt[0]
-        mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]
-        xy = origPlot.getXYValues(mass_unitless)
-        if xy is None: continue
-        else: x,y = xy
-        minx = min(minx,x)
-        miny = min(miny,y)
-        maxx = max(maxx,x)
-        maxy = max(maxy,y)
+    for txnameObj in txnameObjs:
+        data = txnameObj.txnameData._data  #Data grid of mass points and ULs of efficiencies
+        if not data:
+            continue
+        for pt in data:
+            mass = pt[0]
+            mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]
+            xy = origPlot.getXYValues(mass_unitless)
+            if xy is None: continue
+            else: x,y = xy
+            minx = min(minx,x)
+            miny = min(miny,y)
+            maxx = max(maxx,x)
+            maxy = max(maxy,y)
 
     minx = 0.8*minx
     maxx = 1.2*maxx
@@ -108,24 +106,16 @@ def addQuotationMarks ( constraint ):
     return ret
 
 
-def getPoints ( tgraphs, txnameObj, axes = "2*Eq(mother,x)_Eq(lsp,y)", \
-                constraint="[[[t+]],[[t-]]]", onshell=True, offshell=True ):
-    """ given a TGraph object, returns list of points to probe. You define whether
-        you want the onshell region or the offshell region (or both).
-        :param txnameObj: TxName object
+def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)"):
+    """ given a TGraph object, returns list of points to probe. 
+        :param txnameObjs: list of TxName objects
         :param axes: the axes used to transform x,y into mass parameters (for the check
                 of the kinematic region)
-        :param constraint: the constraint to check for onshell / offshellness
     """
-    
-    txname = txnameObj.getInfo('txName')
-    print("[plotRanges] txname=>>%s<<" % txname)
-    vertexChecker = VertexChecker ( txname, addQuotationMarks ( constraint ) )
-    #print "[getPoints] vertexChecker constraint=",addQuotationMarks(constraint)
-    #print "[getPoints] vertexChecker kinconstraint=",vertexChecker.kinConstraints
+        
     frame = getSuperFrame(tgraphs)
-    extframe = getExtendedFrame(txnameObj,axes)
-    origPlot = OrigPlot.fromString ( axes )
+    extframe = getExtendedFrame(txnameObjs,axes)
+    origPlot = OrigPlot.fromString( axes )
     
     #First generate points for the extended frame with a lower density:
     minx,maxx=extframe["x"][0], extframe["x"][1]
@@ -137,8 +127,7 @@ def getPoints ( tgraphs, txnameObj, axes = "2*Eq(mother,x)_Eq(lsp,y)", \
     minx = round(minx/dx)*dx
     miny = round(miny/dy)*dy
     
-    ptsA = generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObj,axes,onshell
-                          ,offshell,origPlot,vertexChecker)
+    ptsA = generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot)
     
     #Now generate points for the exclusion curve frame with a higher density:
     minx,maxx=frame["x"][0], frame["x"][1]
@@ -153,15 +142,15 @@ def getPoints ( tgraphs, txnameObj, axes = "2*Eq(mother,x)_Eq(lsp,y)", \
     minx = round(minx/dx)*dx
     miny = round(miny/dy)*dy
     
-    ptsB = generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObj,axes,onshell
-                          ,offshell,origPlot,vertexChecker)
+    ptsB = generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot)
     
     pts = ptsA + ptsB
     
     return pts
 
 
-def generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObj,axes,onshell,offshell,origPlot,vertexChecker):
+def generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot):
+    
     points=[]
     if minx==float('inf') or abs(maxx)<1e-5:
         return points
@@ -173,23 +162,18 @@ def generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObj,axes,onshell,offshell,ori
             masses = [[m*GeV for m in mm] for mm in masses_unitless]
             #Skip points which are outside any grid
             inside=False
-            val = txnameObj.txnameData.getValueFor(masses)
-            if type(val) in [ type(fb), float ]:
-                inside=True
+            for txnameObj in txnameObjs:
+                val = txnameObj.txnameData.getValueFor(masses)
+                if type(val) in [ type(fb), float ]:
+                    inside=True 
+                    break
             if not inside:
-#                 print "masses",masses,"not inside any grid"
                 continue
             ordered=True
             for k in range(len(masses[0])-1):
                 if masses[0][k]<=masses[0][k+1]:
                     ordered=False
             if not ordered:
-                continue
-            osv=vertexChecker.getOffShellVertices(masses_unitless)
-#             print "i,j = ",i,j,"masses = ",masses, "offshell=",osv,"axes=",axes
-            if osv==[] and not onshell:
-                continue
-            if not osv==[] and not offshell:
                 continue
             points.append ( [i,j] )
     return points

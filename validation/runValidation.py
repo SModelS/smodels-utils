@@ -78,6 +78,9 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     expResList = db.getExpResults( analysisIDs, datasetIDs, txnames,
                   dataTypes, useSuperseded=True, useNonValidated=True)
     
+    if not expResList:
+        logger.error("No experimental results found.")    
+    
     #Loop over experimental results and validate plots
     for expRes in expResList:
         logger.info("--------- validating  %s" %expRes.globalInfo.id)

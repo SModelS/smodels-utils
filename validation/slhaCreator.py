@@ -15,7 +15,7 @@ sys.path.append('../../smodels-utils/')
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
+logger.setLevel(level=logging.WARNING)
 import tempfile
 import pyslha as modpyslha
 from smodels.theory import slhaDecomposer
@@ -44,6 +44,7 @@ class TemplateFile(object):
         self.axes = axes
         self.motherPDGs = []
         self.pythiaCard = None
+        self.tempdir = tempfile.mkdtemp(dir=os.getcwd())
         #Loads the information from the template file and store the axes labels
         if not os.path.isfile(template):
             logger.error("Template file %s not found." %template)
@@ -95,18 +96,19 @@ class TemplateFile(object):
         ftemplate.close()
         for tag in massDict: fdata = fdata.replace(tag,str(massDict[tag]))
             
-        #Create SLHA filename (if not defined) 
+        #Create SLHA filename (if not defined)        
         if not slhaname:
             templateName = self.path[self.path.rfind("/")+1:self.path.rfind(".")]
             if not massesInFileName:
-                slhaname = tempfile.mkstemp(prefix=templateName+"_",suffix=".slha",dir=os.getcwd())
+                slhaname = tempfile.mkstemp(prefix=templateName+"_",suffix=".slha",dir=self.tempdir)
                 os.close(slhaname[0])
                 slhaname = slhaname[1]
             else:
-                slhaname = "%s" % ( templateName)
+                slhaname = "%s" % (templateName)
                 for br in masses:
                     for m in br: slhaname += "_%d" % m
                 slhaname += ".slha"
+                slhaname = os.path.join(self.tempdir,slhaname)
 
         fdata = fdata[:fdata.find('XSECTION')]
         
@@ -130,13 +132,12 @@ class TemplateFile(object):
         logger.info("File %s created." %slhaname)
         return slhaname
     
-    def createFilesFor(self,pts,addXsecs=True, massesInFileName=False):
+    def createFilesFor(self,pts,addXsecs=False, massesInFileName=False):
         """
         Creates new SLHA files from the template for the respective (x,y) values in pts.
         For each distinct x value, new cross-sections will be computed.  
         :param pts: list of [x,y] values for the plot in GeV (i. e. [mother mass, lsp mass])
         :param addXsecs: if True will compute the cross-sections and add them to the SLHA files.
-                        OBS:  The cross-sections are computed only once per x-value
         :return: list of SLHA file names generated.
         """
 
@@ -147,34 +148,25 @@ class TemplateFile(object):
             mother2 = self.origPlot.getParticleMasses(x,y)[1][0]
             mpts.append([[mother1,mother2],x,y])
         #Sort list of point by mother masses (to speed up xsec calculation):
-        sorted_pts = sorted(mpts, key=lambda pt: pt[0])
-        mother0 = None        
+        sorted_pts = sorted(mpts, key=lambda pt: pt[0])        
         slhafiles = []
         for pt in sorted_pts:
-            mother = pt[0]
             x,y = pt[1],pt[2]
             slhafile = self.createFileFor(x,y,massesInFileName=massesInFileName )
             if slhafile: slhafiles.append(slhafile)
             else: continue
             if not addXsecs: continue
             #Compute cross-sections every time the x-value changes
-            if not mother0 or mother0 != mother:
-                if self.pythiaCard:
-                    xsecsProc = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=1000, slhafile=slhafile,
-                                        pythiacard=self.pythiaCard)
-                    addXSecToFile(xsecsProc,slhafile,comment="1k events (unit = pb)")         
-                xsecsLO = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=slhafile)
-                addXSecToFile(xsecsLO,slhafile,comment="10k events (unit = pb)")
-                xsecsNLL = computeXSec(sqrts=8.*TeV, maxOrder=2, nevts=10000, slhafile=slhafile,
-                                       loFromSlha=True)
-                addXSecToFile(xsecsNLL,slhafile,comment="(unit = pb)")
+            if self.pythiaCard:
+                xsecsProc = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=1000, slhafile=slhafile,
+                                    pythiacard=self.pythiaCard)
+                addXSecToFile(xsecsProc,slhafile,comment="1k events (unit = pb)")         
+            xsecsLO = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=slhafile)
+            addXSecToFile(xsecsLO,slhafile,comment="10k events (unit = pb)")
+            xsecsNLL = computeXSec(sqrts=8.*TeV, maxOrder=2, nevts=10000, slhafile=slhafile,
+                                   loFromSlha=True)
+            addXSecToFile(xsecsNLL,slhafile,comment="(unit = pb)")
             #If the x-value did not change, simply add the previously computed xsecs to file
-            else:
-                if self.pythiaCard:
-                    addXSecToFile(xsecsProc,slhafile,comment="1k events (unit = pb)")
-                addXSecToFile(xsecsLO,slhafile,comment="10k events (unit = pb)")                
-                addXSecToFile(xsecsNLL,slhafile,comment="(unit = pb)")
-            mother0 = mother
 
         return slhafiles
 
