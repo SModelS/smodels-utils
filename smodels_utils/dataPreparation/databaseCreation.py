@@ -406,13 +406,26 @@ class DatabaseCreator(list):
 
 
     def _extendRegionAttr(self, region, name, value):
+        if value in [ None, "" ]: ## we dont add None or empty strings
+            return
+        #if name == "axes":
+        #    self.timeStamp ( "extending region %s with %s, %s" % ( region, name, value ) )
         if hasattr(region, name):
-            if not getattr(region, name) in [ "", None ]:
-                if not value in getattr(region,name):
+            previous =getattr (region, name )
+            #self.timeStamp ( "it has already something. Look: >>%s<<" % previous )
+            #self.timeStamp ( "and I want to add >>%s<<" % value )
+            if previous in [ "", None ]:
+                self._extendInfoAttr(region, name)
+            else:
+                # self.timeStamp ( "is it already in? %d" % ( value in previous ) )
+                if value in previous:
+                    value = previous
+                else:
                     # dont duplicate entries
-                    value = getattr(region, name) + ";" + value
+                    value = previous + ";" + value
         else:
             self._extendInfoAttr(region, name)
+        # self.timeStamp ( "value is now >>%s<<" % value )
         setattr(region, name, value)
 
 
@@ -616,6 +629,11 @@ class DatabaseCreator(list):
                 if not hasattr(obj, attr) and \
                 not hasattr(obj.__class__, attr) : continue
                 value=getattr(obj,attr)
+                if attr == "axes":
+                    self.timeStamp ( "adding attr %s" % attr )
+                    self.timeStamp ( "value=%s" % value )
+                    self.timeStamp ( "obj=%s" % obj )
+                    self.timeStamp ( "axes=%s" % obj.axes )
                 if value=="":
                     # self.timeStamp ( "Error: %s %s is empty in %s!" % \
                     #         ( obj, attr, str ( dataid ) ) )
