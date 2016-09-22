@@ -572,7 +572,8 @@ class DatabaseCreator(list):
         path = inspect.getfile ( self._createValidationFolder )
         self.timeStamp ( "creating validation folder %s" % path )
         path=path.replace( "smodels_utils/dataPreparation/databaseCreation.py", "validation/scripts" )
-        scripts = [ "validate.py", "validateSinglePlot.py" ] # , "plotValidation.py" ]
+        # scripts = [ "validate.py", "validateSinglePlot.py"]#, "plotValidation.py" ]
+        scripts = [] # for now, no scripts
         for i in scripts:
             if not os.path.exists ( "%s/%s" % ( self.validationPath, i ) ):
                 cmd = "cp %s/%s %s" % ( path, i, self.validationPath )

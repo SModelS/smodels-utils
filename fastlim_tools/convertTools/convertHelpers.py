@@ -215,8 +215,10 @@ def mergeSmsRootFiles ( analysis ):
              os.unlink ( smsfilename )
 
 def copyValidationScripts ( expid ):
-    """ this little method should just copy validate.py, validateTx.py and plotValidation.py
-        to the destination """
+    """ this little method should just copy validate.py, validateTx.py and
+        plotValidation.py to the destination """
+    return
+    """
     print "[fastlimHelpers.copyValidationScripts] expid=",expid
     destination=destdir+expid.replace("_","-")+"-eff"
     cmd="mkdir %s/validation" % destination
@@ -226,6 +228,7 @@ def copyValidationScripts ( expid ):
     cmd="cp /home/walten/git/smodels-utils/validation/scripts/*.py %s/validation/" % destination
     print "[fastlimHelpers.copyValidationScripts]",cmd
     commands.getoutput ( cmd )
+    """
     
 def smodels2fastlim(txname):
     """
