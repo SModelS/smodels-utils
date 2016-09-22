@@ -194,17 +194,15 @@ class StandardDataList(list):
         
         :raise negativMassError: If one of the masses is negative
         :raise massOrderError: if the mass of one particle is bigger
-        then the mass of the previous one
+        than the mass of the previous one
         """
-        
         for array in massArray:
+            previousMass = -0.
             for i, mass in enumerate(array):
                 if mass < 0.0: Errors().negativMass(massArray)
                 if i > 0: 
                     if mass > previousMass: Errors().massOrder(massArray)
                 previousMass = mass
-                
-    
             
     def __str__(self):
         
@@ -438,7 +436,7 @@ class Errors(object):
     
         m = self._starLine#
         m = m + "Error in StandardDataList\n"
-        m = m + "there is a particle with higher mass then the previous one in:\n"
+        m = m + "there is a particle with higher mass than the previous one in:\n"
         m = m + "%s\n" %massArray
         m = m + 'please check your mass plane definition at convert.py'
         m = m + self._starLine

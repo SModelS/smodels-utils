@@ -9,6 +9,7 @@
 """   
 
 import sys
+from smodels_utils.dataPreparation.standardObjects import StandardDataList
 
 class VertexChecker(object):
     
@@ -31,6 +32,33 @@ class VertexChecker(object):
         self.txName = name
         self.kinConstraints = self._getKinConstraints(name,constraint)
         
+    def filterData ( self, data, shellness = "onShell" ):
+        """ we filter data according to their shellness """
+        if shellness == "onShell":
+            return data
+        if len(data)==0: return data
+        valueUnit=""
+        if "*pb" in data[0][1]:
+            valueUnit = "*pb"
+        if "*fb" in data[0][1]:
+            valueUnit = "*fb"
+        ret=StandardDataList( valueUnit=valueUnit )
+        for d in data:
+            value = d[1].replace("*pb","")
+            massArray = self.massArrayFromStrings ( d[0] )
+            offshellvertices = self.getOffShellVertices (massArray )
+            if len(offshellvertices)>0:
+                ret.append ( massArray, value )
+        return ret
+
+    def massArrayFromStrings ( self, lists ):
+        ret = []
+        for branches in lists:
+            branch = []
+            for value in branches:
+                branch.append ( float ( value.replace("*GeV","") ) )
+            ret.append ( branch )
+        return ret
         
     def getOffShellVertices(self, massArray):
         
@@ -49,6 +77,7 @@ class VertexChecker(object):
         of the vertex and the second one the position of the vertex in the branch
         The count starts with 0. eg: (0,1) --> second vertex in first branch
         """
+
 
         offShellVertices = []
         massDeltaArray = [[],[]]
