@@ -15,6 +15,7 @@ sys.path.insert(0,"../")
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 from smodels.tools.physicsUnits import GeV,fb
 import logging
+from smodels_utils.dataPreparation.vertexChecking import VertexChecker
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
@@ -133,8 +134,6 @@ def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)"):
     minx,maxx=frame["x"][0], frame["x"][1]
     miny,maxy=frame["y"][0], frame["y"][1]    
 
-    #print "x=",minx,maxx
-    #print "y=",miny,maxy
     dx=(maxx-minx)/(30.-1.)
     dy=(maxy-miny)/(20.-1.)
     dx = max(1,round(dx/5.)*5.)
@@ -175,7 +174,7 @@ def generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot):
                     ordered=False
             if not ordered:
                 continue
-            points.append ( [i,j] )
+            points.append([i,j])
     return points
 
 def draw ( graph, points ):

@@ -226,7 +226,6 @@ class Axes(object):
         x, y, mother, lsp and inter0, inter1, .... interN
         :return: Axes-object
         """
-        print "fromString: %s" % string
 
         equations = [sympify(eq) for eq in string.split('_')]
         for i, eq in enumerate(equations):

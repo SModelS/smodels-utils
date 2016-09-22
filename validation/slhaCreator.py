@@ -31,11 +31,13 @@ class TemplateFile(object):
     for generating SLHA files.
     """
 
-    def __init__(self,template,axes):
+    def __init__(self,template,axes,tempdir=None):
         """
         :param template: path to the template file
         :param axes: string describing the axes for the template file 
                     (i.e. 2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,x-80.0))
+        :param tempdir: Folder to store the SLHA files. If not set,
+                        a temporary folder will be created at the current location.
         """
         
         self.path = template
@@ -44,7 +46,10 @@ class TemplateFile(object):
         self.axes = axes
         self.motherPDGs = []
         self.pythiaCard = None
-        self.tempdir = tempfile.mkdtemp(dir=os.getcwd())
+        if tempdir:
+            self.tempdir = tempdir
+        else:
+            self.tempdir = tempfile.mkdtemp(dir=os.getcwd())
         #Loads the information from the template file and store the axes labels
         if not os.path.isfile(template):
             logger.error("Template file %s not found." %template)

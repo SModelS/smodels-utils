@@ -268,7 +268,7 @@ class ValidationPlot():
             exec(f.read().replace('\n',''))
             f.close()
             if not 'ExptRes' in smodelsOutput:
-                logger.info("No results for %s " %slhafile)
+#                 logger.info("No results for %s " %slhafile)
                 continue 
             res = smodelsOutput['ExptRes']
             expRes = res[0]       
@@ -295,7 +295,7 @@ class ValidationPlot():
             if expRes['dataType'] == 'efficiencyMap':
                 #Select the correct dataset (best SR):
                 dataset = [dset for dset in self.expRes.datasets if dset.dataInfo.dataId == expRes['DataSetID']][0]
-                txname = dataset.txnameList[0]
+                txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
                 massGeV = [[m*GeV for m in mbr] for mbr in mass]
                 Dict['efficiency'] = txname.txnameData.getValueFor(massGeV)
                 expectedBG = dataset.dataInfo.expectedBG

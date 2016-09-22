@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 
 import sys,os,shutil
-import logging
+import logging,tempfile
 # logging.basicConfig(filename='val.out')
 import argparse
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 sys.path.append(os.path.join(home,'smodels-utils'))
-from validation import plottingFuncs, validationObjs
 from smodels.experiment.databaseObj import Database
 from smodels.tools import xsecComputer, nllFast
 from ConfigParser import SafeConfigParser
@@ -17,8 +16,7 @@ import slhaCreator
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
-xsecComputer.logger.setLevel(logging.ERROR)
-nllFast.logger.setLevel(logging.ERROR)
+
 
 
 def createFiles(expResList,txname,templateFile,tarFile,xargs):
@@ -61,15 +59,15 @@ def createFiles(expResList,txname,templateFile,tarFile,xargs):
         logger.warning("No exclusion curves found for %s" %txname)
         return False
         
-    #Get SLHA points and create files
+    #Get SLHA points and create files for each axes
+    tempdir = tempfile.mkdtemp(dir=os.getcwd())
     for (axes,ntgraph) in tgraphs.items():
         pts = plotRanges.getPoints(ntgraph, txnameObjs, axes)
         logger.info("%i SLHA files for axes %s" %(len(pts),axes))
         if len(pts)==0:
             continue
-        tempf = slhaCreator.TemplateFile(templateFile,axes)
+        tempf = slhaCreator.TemplateFile(templateFile,axes,tempdir)
         tempf.createFilesFor(pts, massesInFileName=True)
-
 
     #Set up cross-section options: 
     xargs.query = False
@@ -79,7 +77,7 @@ def createFiles(expResList,txname,templateFile,tarFile,xargs):
     xargs.keep = False
     xargs.tofile = True
     xargs.pythiacard = tempf.pythiaCard
-    xargs.filename = tempf.tempdir
+    xargs.filename = tempdir
     #Compute LO cross-sections
     xsecComputer.main(xargs)
     #Compute NLL cross-sections
@@ -88,10 +86,10 @@ def createFiles(expResList,txname,templateFile,tarFile,xargs):
     xsecComputer.main(xargs)
     
     import commands
-    cmds=commands.getoutput("cd %s && tar cf %s *.slha" % (tempf.tempdir,tarFile))
+    cmds=commands.getoutput("cd %s && tar cf %s *.slha" % (tempdir,tarFile))
     logger.info("-------- File %s created.\n" %tarFile)
     #Remove temp folder containing the SLHA files:
-    shutil.rmtree(tempf.tempdir)
+    shutil.rmtree(tempdir)
 
     
     return True
@@ -164,8 +162,9 @@ if __name__ == "__main__":
     
     numeric_level = getattr(logging,args.log.upper(), None)
     logger.setLevel(level=numeric_level)
-    plottingFuncs.logger.setLevel(level=numeric_level)
-    validationObjs.logger.setLevel(level=numeric_level)
+    xsecComputer.logger.setLevel(level=numeric_level+10)
+    nllFast.logger.setLevel(level=numeric_level+10)
+    plotRanges.logger.setLevel(level=numeric_level+10)
     
                 
     if not os.path.isfile(args.parfile):
