@@ -322,7 +322,7 @@ class DatabaseCreator(list):
                 massArray = plane.origPlot.getParticleMasses(x,y,z)
                 #massArray = [massPoints,massPoints]
                 dataList.append(massArray, value)
-                self._computeKinRegions(massArray, i, plane, vertexChecker, txName, limitType )
+                self._computeKinRegions(massArray, i, plane, txName, limitType )
             return dataList
 
         for i,value in enumerate(origData):
