@@ -8,7 +8,7 @@
 
 """
 
-import logging,os,sys
+import logging,os,sys,shutil
 sys.path.append('../../smodels/')
 sys.path.append('../../smodels-utils/')
 
@@ -181,10 +181,13 @@ class TemplateFile(object):
         at least one of the elements belonging to the txnameObj.
         Also verifies if the masses are the ones given by x,y.
         :param txnameObj: a TxName object holding information about the txname
-        :param x: x value for the plot in GeV (i. e. mother mass)
-        :param y: y value for the plot in GeV (i. e. lsp mass)
+        :param x: x value for the plot in GeV (i. e. mother mass).
+        :param y: y value for the plot in GeV (i. e. lsp mass).
         """
         
+        
+        print x,y
+        print self.origPlot.getParticleMasses(x, y)
         inmasses = self.origPlot.getParticleMasses(x, y)
         #Add units:
         for ib,mbranch in enumerate(inmasses):
@@ -207,9 +210,14 @@ class TemplateFile(object):
         
         #Run decomposition on the file:
         sigmacut = 0.*fb
-        mingap = 5.*GeV
+        mingap = 2.*GeV
         smstoplist = slhaDecomposer.decompose(tempSLHA, sigmacut,\
                         doCompress=True,doInvisible=True, minmassgap=mingap)
+        
+        #Delete the temporary SLHA file and pythia card
+        shutil.rmtree(os.path.dirname(os.path.realpath(tempSLHA)))
+        os.remove(self.pythiaCard)        
+        
         if not smstoplist or not smstoplist.getElements():
             logger.error("Decomposition produced no results.")
             return False
@@ -217,24 +225,23 @@ class TemplateFile(object):
         allEls = smstoplist.getElements()
         goodEl = False
         for el in allEls:
-            if txnameObj.hasElementAs(el):
-                goodEl = el
+            goodEl = txnameObj.hasElementAs(el)
+            if goodEl:
                 break
         
         #Check if a valid element was created:
         if not goodEl:
-            logger.warning("No macthing element for %s generated from template" %txnameObj.txname)
+            logger.warning("No macthing element for %s generated from template" %txnameObj.txName)
             return False
         
-        #Check if the masses match:
-        outmasses = goodEl.getMasses()
-        if inmasses != outmasses:
-            logger.warning("Masses do not seem to match")
-            return False
+        #Check if the masses match 
+        #(allow for the case where both branching orders matches the txname):
+        if inmasses != goodEl.getMasses():
+            goodElB = txnameObj.hasElementAs(goodEl.switchBranches())            
+            if (not goodElB) or (goodElB and inmasses != goodElB.getMasses()):
+                logger.warning("Masses do not seem to match")
+                return False
         
-        #Finally, delete the temporary SLHA file
-        os.remove(tempSLHA)
-        os.remove(self.pythiaCard)
         
         return True
         

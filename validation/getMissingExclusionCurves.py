@@ -4,7 +4,7 @@ import sys,os
 sys.path.insert(0,os.path.join(os.path.expanduser("~"),"smodels"))
 sys.path.insert(0,os.path.join(os.path.expanduser("~"),"smodels-utils"))
 
-from smodels.experiment.databaseObjects import Database
+from smodels.experiment.databaseObj import Database
 from validation.plottingFuncs import getExclusionCurvesFor
 
 database = Database(os.path.join(os.path.expanduser("~"),"smodels-database/"))
@@ -17,7 +17,7 @@ for expRes in database.getExpResults(datasetIDs=[None]):
         for ax in axes:
             tgraph = None
             try:
-                tgraph=getExclusionCurvesFor(expRes,txname.txname,ax)
+                tgraph=getExclusionCurvesFor(expRes,txname.txName,ax)
             except: pass
             if not tgraph:
                 missingCurves.append({'txname' : txname.txname, 'axes' : ax,
