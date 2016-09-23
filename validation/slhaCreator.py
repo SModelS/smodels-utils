@@ -70,20 +70,21 @@ class TemplateFile(object):
         self.origPlot = OrigPlot.fromString(self.axes)
         
 
-    def createFileFor(self,x,y,slhaname=None,computeXsecs=False, massesInFileName = False):
+    def createFileFor(self,x,y,z=None,slhaname=None,computeXsecs=False, massesInFileName = False):
         """
         Creates a new SLHA file from the template.
         The entries on the template are replaced by the x,y values.
         OBS: The cross-sections blocks from the template file are never copied to the new file.
         :param x: x value for the plot in GeV (i. e. mother mass)
         :param y: y value for the plot in GeV (i. e. lsp mass)
+        :param z: z value for the plot in GeV (only for 3D grids)
         :param slhaname: filename for the new file. If None, a random name for the file will be generated,
                      with prefix template and suffix .slha
         :param computeXsecs: if True, will compute NLL cross-sections for the file using 10k events
         :return: SLHA file name if file has been successfully generated, False otherwise.
         """
 
-        masses = self.origPlot.getParticleMasses(x, y)
+        masses = self.origPlot.getParticleMasses(x, y, z)
         massDict = {}
         for ibr,br in enumerate(masses):
             if ibr == 0: massTag = 'M'
@@ -175,7 +176,7 @@ class TemplateFile(object):
 
         return slhafiles
 
-    def checkFor(self,txnameObj,x,y):
+    def checkFor(self,txnameObj,x,y,z=None):
         """
         Run SModels in the template file with the x,y values and check if it returns
         at least one of the elements belonging to the txnameObj.
@@ -183,19 +184,16 @@ class TemplateFile(object):
         :param txnameObj: a TxName object holding information about the txname
         :param x: x value for the plot in GeV (i. e. mother mass).
         :param y: y value for the plot in GeV (i. e. lsp mass).
+        :param z: z value for the plot in GeV (only for 3D grids).
         """
         
         
-        print x,y
-        print self.origPlot.getParticleMasses(x, y)
-        inmasses = self.origPlot.getParticleMasses(x, y)
+        inmasses = self.origPlot.getParticleMasses(x, y, z)
         #Add units:
-        for ib,mbranch in enumerate(inmasses):
-            for im,mass in enumerate(mbranch):
-                inmasses[ib][im] = mass*GeV
+        inmasses = [[m*GeV for m in br] for br in inmasses]
                 
         #First create temporary file:
-        tempSLHA = self.createFileFor(x,y)
+        tempSLHA = self.createFileFor(x,y,z)
         if not tempSLHA: return False
         #Add cross-sections to file running only mother pair production:
         #(to guarantee the mother cross-section value is reliable)
@@ -215,7 +213,7 @@ class TemplateFile(object):
                         doCompress=True,doInvisible=True, minmassgap=mingap)
         
         #Delete the temporary SLHA file and pythia card
-        shutil.rmtree(os.path.dirname(os.path.realpath(tempSLHA)))
+#         shutil.rmtree(os.path.dirname(os.path.realpath(tempSLHA)))
         os.remove(self.pythiaCard)        
         
         if not smstoplist or not smstoplist.getElements():

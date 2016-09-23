@@ -38,7 +38,7 @@ for expRes in database.getExpResults(useSuperseded=True, useNonValidated=True):
     #Skip efficiency-map analyses:
 #     if 'efficiencyMap' in expRes.getValuesFor('dataType'): continue
     for txname in expRes.getTxNames():
-        if txname.txName != 'T5bbbb': continue
+#         if txname.txName != 'T5bbbb': continue
         #Skip incomplete analysis
         if txname.getInfo('constraint') == 'not yet assigned': continue 
         template = os.path.join(templateDir,txname.txName+'.template')
@@ -56,10 +56,9 @@ for expRes in database.getExpResults(useSuperseded=True, useNonValidated=True):
         axes = txname.getInfo('axes')
         if not isinstance(axes,list): axes = [axes]
         for ax in axes:
-            print axes
             tempf = TemplateFile(template,ax)
             #Check if smodels produces the proper topologies/elements for a given set of masses:
-            if not tempf.checkFor(txname,500.,50.):
+            if not tempf.checkFor(txname,500.,300.,50.):
                 logger.error('Bad template in %s for \n %s' %(template,str(expRes)))
                 badTemplates.append(template)
                 break
