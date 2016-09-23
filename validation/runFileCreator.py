@@ -165,7 +165,7 @@ if __name__ == "__main__":
     logger.setLevel(level=numeric_level)
     xsecComputer.logger.setLevel(level=numeric_level+10)
     nllFast.logger.setLevel(level=numeric_level+10)
-    plotRanges.logger.setLevel(level=numeric_level+10)
+    plotRanges.logger.setLevel(level=numeric_level)
     
                 
     if not os.path.isfile(args.parfile):

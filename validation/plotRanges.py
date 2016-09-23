@@ -88,7 +88,7 @@ def getExtendedFrame(txnameObjs,axes):
 
 def addQuotationMarks ( constraint ):
     """ [[[t+]],[[t-]]] -> [[['t+']],[['t-']]] """
-    ##print("[plotRanges.py] addQuotationMarks",constraint)
+
     if constraint.find("'")>-1:
         return constraint
     ret=""
@@ -103,7 +103,7 @@ def addQuotationMarks ( constraint ):
             ret+="'" + constraint[i] + "'"
             continue
         ret+=constraint[i]
-    logger.info ( "added quotation marks: %s" % ret )
+
     return ret
 
 
