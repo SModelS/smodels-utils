@@ -13,6 +13,7 @@ from ConfigParser import SafeConfigParser
 from plottingFuncs import getExclusionCurvesFor
 import plotRanges
 import slhaCreator
+import commands
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
@@ -85,8 +86,8 @@ def createFiles(expResList,txname,templateFile,tarFile,xargs):
     xargs.LOfromSLHA = True
     xsecComputer.main(xargs)
     
-    import commands
-    cmds=commands.getoutput("cd %s && tar cf %s *.slha" % (tempdir,tarFile))
+    
+    commands.getoutput("cd %s && tar cf %s *.slha" % (tempdir,tarFile))
     logger.info("-------- File %s created.\n" %tarFile)
     #Remove temp folder containing the SLHA files:
     shutil.rmtree(tempdir)

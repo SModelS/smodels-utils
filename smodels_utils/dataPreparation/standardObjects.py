@@ -9,10 +9,7 @@
 
 """   
 
-import sys, logging, os, ROOT
-from copy import deepcopy
-import inputObjects 
-from datetime import date
+import sys, logging, ROOT
 from math import floor, log10
 from smodels.tools.physicsUnits import pb, IncompatibleUnitsError, GeV
 

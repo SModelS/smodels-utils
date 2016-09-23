@@ -14,8 +14,8 @@ import sys
 sys.path.insert(0,"../")
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 from smodels.tools.physicsUnits import GeV,fb
+from smodels_utils.dataPreparation import vertexChecking
 import logging
-from smodels_utils.dataPreparation.vertexChecking import VertexChecker
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
@@ -107,9 +107,11 @@ def addQuotationMarks ( constraint ):
     return ret
 
 
-def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)"):
+def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", vertexChecker=None):
     """ given a TGraph object, returns list of points to probe. 
         :param txnameObjs: list of TxName objects
+        :param vertexChecker: VertexChecker object to check if the SLHA point is
+                              kinematically forbidden (contains an off-shell decay)
         :param axes: the axes used to transform x,y into mass parameters (for the check
                 of the kinematic region)
     """
@@ -117,6 +119,8 @@ def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)"):
     frame = getSuperFrame(tgraphs)
     extframe = getExtendedFrame(txnameObjs,axes)
     origPlot = OrigPlot.fromString( axes )
+    vertexChecker = vertexChecking.VertexChecker(txnameObjs[0], 
+                        addQuotationMarks(txnameObjs[0].constraint))
     
     #First generate points for the extended frame with a lower density:
     minx,maxx=extframe["x"][0], extframe["x"][1]
@@ -128,7 +132,7 @@ def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)"):
     minx = round(minx/dx)*dx
     miny = round(miny/dy)*dy
     
-    ptsA = generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot)
+    ptsA = generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot,vertexChecker)
     
     #Now generate points for the exclusion curve frame with a higher density:
     minx,maxx=frame["x"][0], frame["x"][1]
@@ -141,14 +145,14 @@ def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)"):
     minx = round(minx/dx)*dx
     miny = round(miny/dy)*dy
     
-    ptsB = generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot)
+    ptsB = generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot,vertexChecker)
     
     pts = ptsA + ptsB
     
     return pts
 
 
-def generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot):
+def generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot,vertexChecker):
     
     points=[]
     if minx==float('inf') or abs(maxx)<1e-5:
@@ -157,7 +161,11 @@ def generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot):
         for j in numpy.arange ( miny, maxy+dy/2., dy ):
             masses_unitless = origPlot.getParticleMasses(i,j)
             #Skip points with zero masses (too slow when running pythia)
-            if 0. in masses_unitless[0]+masses_unitless[1]: continue
+            if min([br[-1] for br in masses_unitless]) <= 0.: continue
+            #Check off-shell vertices. If there are any, skip point
+            #(Important to skip possible off-shell points in the on-shell data grid)
+            if vertexChecker and vertexChecker.getOffShellVertices(masses_unitless):
+                continue            
             masses = [[m*GeV for m in mm] for mm in masses_unitless]
             #Skip points which are outside any grid
             inside=False

@@ -9,7 +9,6 @@
 
 """
 
-import copy
 import sys
 import os
 import ROOT
