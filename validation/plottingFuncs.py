@@ -597,7 +597,7 @@ def setOptions(obj,Type=None):
     elif Type == 'excluded':
         obj.SetMarkerStyle(20)    
         obj.SetMarkerColor(kRed)
-        obj.SetFillColorAlpha(kRed,0.15)
+#        obj.SetFillColorAlpha(kRed,0.15)
         obj.SetLineColor(kRed)
         obj.SetLineWidth(4)
         obj.SetLineStyle(2)

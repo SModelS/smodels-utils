@@ -66,11 +66,11 @@ BLOCK MASS  # Mass Spectrum
         37     1.00000000E+03
    1000001     1.00000000E+05 # ~d_L
    2000001     1.00000000E+05   # ~d_R
-   1000002     1.00000000E+05   # ~u_L
+   1000002     M0   # ~u_L    #Pythia does not produce pure ~c_L + ~c_L. We can use u_L production in this case and force u_L -> c + lsp
    2000002     1.00000000E+05   # ~u_R
    1000003     1.00000000E+05 # ~s_L
    2000003     1.00000000E+05   # ~s_R
-   1000004     M0    # ~c_L
+   1000004     1.00000000E+05    # ~c_L
    2000004     1.00000000E+05   # ~c_R
    1000005     1.00000000E+05   # ~b_1
    2000005     1.10000000E+05   # ~b_2
@@ -201,6 +201,6 @@ BLOCK MSOFT Q=  4.67034192E+02  # The soft SUSY breaking masses at the scale Q
 #
 #
 #    Width
-DECAY   1000004     5.47719539E+00   # scharm_L decays
+DECAY   1000002     1.0000000E+00   # u_L decays
 #          BR         NDA      ID1       ID2
-     1.0000E+00      2     1000022         4   # BR(~c_L -> ~chi_10 c)
+     1.0000E+00      2     1000022         4   # BR(~u_L -> ~chi_10 c)

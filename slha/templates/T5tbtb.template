@@ -215,9 +215,10 @@ DECAY   1000021     1.00000000E+00   # gluino decays
      0.50000000E+00    2     1000006        -6   # BR(~g -> ~t_1  tb)
      0.50000000E+00    2    -1000006         6   # BR(~g -> ~t_1* t )
 #
-DECAY   1000005     1.00000000E+00   # sbottom1 decays
+DECAY   1000006     1.00000000E+00   # stop1 decays
 #          BR         NDA      ID1       ID2
      1.00000000E+00    2    1000024         5   # BR(~t1 -> ~chi+ b)
+
 DECAY   1000024     1.00000000E+00   # chargino1+ decays
  #           BR         NDA      ID1       ID2       ID3
       3.35000000E-01    3     1000022         2        -1   # BR(~chi_1+ -> ~chi_10 u    db)

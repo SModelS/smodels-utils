@@ -21,7 +21,6 @@ import pyslha as modpyslha
 from smodels.theory import slhaDecomposer
 from smodels.tools.physicsUnits import fb, GeV, TeV
 from smodels.tools.xsecComputer import computeXSec,addXSecToFile
-from smodels.experiment.databaseObj import Database
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 from validation.pythiaCardGen import getPythiaCardFor
 
@@ -213,7 +212,7 @@ class TemplateFile(object):
                         doCompress=True,doInvisible=True, minmassgap=mingap)
         
         #Delete the temporary SLHA file and pythia card
-#         shutil.rmtree(os.path.dirname(os.path.realpath(tempSLHA)))
+        shutil.rmtree(os.path.dirname(os.path.realpath(tempSLHA)))
         os.remove(self.pythiaCard)        
         
         if not smstoplist or not smstoplist.getElements():
@@ -271,7 +270,6 @@ if __name__ == "__main__":
         templatefile="../slha/%s" % templatefile
         if not os.path.exists ( templatefile ):
             print "[slhaCreator] error: templatefile does not exist."
-            import sys
             sys.exit()
     tempf = TemplateFile(args.templatefile,args.axes)
     masses=[]
