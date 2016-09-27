@@ -80,11 +80,11 @@ def createFiles(expResList,txname,templateFile,tarFile,xargs):
     xargs.pythiacard = tempf.pythiaCard
     xargs.filename = tempdir
     #Compute LO cross-sections
-    xsecComputer.main(xargs)
+#     xsecComputer.main(xargs)
     #Compute NLL cross-sections
     xargs.NLL = True
     xargs.LOfromSLHA = True
-    xsecComputer.main(xargs)
+#     xsecComputer.main(xargs)
     
     
     commands.getoutput("cd %s && tar cf %s *.slha" % (tempdir,tarFile))
