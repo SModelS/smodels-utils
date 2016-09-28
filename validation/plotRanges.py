@@ -107,14 +107,14 @@ def addQuotationMarks ( constraint ):
     return ret
 
 
-def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", vertexChecker=None):
+def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", Npts=300):
     """ given a TGraph object, returns list of points to probe. 
         :param txnameObjs: list of TxName objects
-        :param vertexChecker: VertexChecker object to check if the SLHA point is
-                              kinematically forbidden (contains an off-shell decay)
         :param axes: the axes used to transform x,y into mass parameters (for the check
                 of the kinematic region)
+        :param Npts: Trial number of points for the plot.
     """
+        
         
     frame = getSuperFrame(tgraphs)
     extframe = getExtendedFrame(txnameObjs,axes)
@@ -124,19 +124,15 @@ def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", vertexChec
     
     #First generate points for the extended frame with a lower density:
     minx,maxx=extframe["x"][0], extframe["x"][1]
-    miny,maxy=extframe["y"][0], extframe["y"][1]    
-    Npts = 100
-    ptsA = generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChecker)
+    miny,maxy=extframe["y"][0], extframe["y"][1]
+    ptsA = generateBetterPoints(Npts/3,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChecker)
     
     #Now generate points for the exclusion curve frame with a higher density:
     minx,maxx=frame["x"][0], frame["x"][1]
     miny,maxy=frame["y"][0], frame["y"][1]    
-    Npts = 300    
     ptsB = generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChecker)
     
-    pts = ptsA + ptsB
-    pts = ptsB
-    
+    pts = ptsA + ptsB    
     
     return pts
 
@@ -221,7 +217,6 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChec
                           kinematical constraints
     :return: List of x,y points belonging to the plot and the data grids.    
     """
-    
     
     #Create a dummy copy of a TxnameData object to hold all the data corresponding to the plane
     txdata = copy.deepcopy(txnameObjs[0].txnameData)
