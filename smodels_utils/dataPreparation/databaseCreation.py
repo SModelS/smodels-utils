@@ -590,16 +590,28 @@ class DatabaseCreator(list):
         if update:
             mode="update"
 
+        #print "[sms.root] mode=",mode
         #if not os.path.exists ( self.validationPath ):
         #    os.mkdir ( self.validationPath )
+        #print "[sms.root] add exclusions",[ x.name for x in self.exclusions ]
 
         smsRoot = ROOT.TFile(self.base + self.smsrootFile,mode)
         for exclusions in self.exclusions:
-            if smsRoot.Get( exclusions.name )!=None:
-                continue
-            directory = smsRoot.mkdir(exclusions.name, exclusions.name)
-            directory.cd()
-            for exclusion in exclusions: exclusion.Write()
+            dirname = exclusions.name
+            if smsRoot.Get( dirname )==None:
+                #print "skipping",exclusions.name,type(exclusions)
+                #continue
+        #        print "[sms.root] mkdir",dirname
+                directory = smsRoot.mkdir( dirname, dirname )
+                # directory.cd()
+            smsRoot.cd ( dirname )
+            for exclusion in exclusions: 
+                fullname = "%s/%s" % ( dirname, exclusion.GetName() )
+                if smsRoot.Get( fullname ) == None:
+         #           print "[sms.root] now writing",fullname
+                    exclusion.Write()
+          #      else:
+          #          print "[sms.root] skipping %s" % fullname
         smsRoot.Close()
 
     def _createTwikiTxt(self):
