@@ -137,23 +137,6 @@ def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", vertexChec
     pts = ptsA + ptsB
     pts = ptsB
     
-    import matplotlib.pyplot as plt
-    print axes
-    print minx,maxx
-    print miny,maxy
-    print Npts
-    print len(pts)
-    xvals = [pt[0] for pt in pts]
-    yvals = [pt[1] for pt in pts]
-    # txvals = [pt[0][0][0].asNumber(GeV) for pt in txdata._data]
-    # tyvals = [pt[0][0][-1].asNumber(GeV) for pt in txdata._data]
-#     txvals = [pt[0] for pt in txdata.Mp]
-#     tyvals = [pt[1] for pt in txdata.Mp]
-    plt.plot(xvals,yvals,'ro')
-#     plt.plot(xvals,yvals,'ro',txvals,tyvals,'bs')
-    plt.show()
-    import sys
-    sys.exit()
     
     return pts
 
@@ -237,11 +220,8 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChec
     :param vertexChecker: VertexChecker object holding information about the
                           kinematical constraints
     :return: List of x,y points belonging to the plot and the data grids.    
-    """    
+    """
     
-    
-    print 'xmin,xmax,dx=',minx,maxx
-    print 'ymin,ymax,dy=',miny,maxy   
     
     #Create a dummy copy of a TxnameData object to hold all the data corresponding to the plane
     txdata = copy.deepcopy(txnameObjs[0].txnameData)
@@ -277,8 +257,7 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChec
     dy=(ymax-ymin)/math.sqrt(float(Npts))
     xmin = round(xmin/dx)*dx
     ymin = round(ymin/dy)*dy
-        
-    
+
     points=[]
     massDimensions = [len(br) for br in txdata._data[0][0]] #Store the mass format 
     for i in numpy.arange(xmin, xmax+dx/2., dx):
@@ -287,9 +266,6 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChec
             massFlat = numpy.dot(pt,numpy.transpose(txdata._V)) + txdata.delta_x #Flatten Mass
             massFlat = massFlat.tolist()[0]
             mass = [[massFlat.pop(0) for im in range(brdim)] for brdim in massDimensions] #Nested mass
-            print 'M=',mass
-            print vertexChecker.getOffShellVertices(mass),origPlot.getXYValues(mass)
-            sys.exit()
             if vertexChecker.getOffShellVertices(mass):
                 continue
             if origPlot.getXYValues(mass) is None:

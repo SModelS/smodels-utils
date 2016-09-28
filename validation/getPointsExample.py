@@ -10,12 +10,16 @@ from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 from smodels_utils.dataPreparation import vertexChecking
 from smodels.tools.physicsUnits import GeV,fb
 import copy
-import numpy
+import numpy,math
 
 
 
 
-def generatePointsB(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot,vertexChecker):
+def generatePointsB(Npts,minx,maxx,miny,maxy,txnameObjs,axes,origPlot,vertexChecker):
+
+
+    print 'xmin,xmax=',minx,maxx
+    print 'ymin,ymax=',miny,maxy
     
     #Create a dummy copy of a TxnameData object to hold all the data corresponding to the plane
     txdata = copy.deepcopy(txnameObjs[0].txnameData)
@@ -27,6 +31,7 @@ def generatePointsB(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot,vertexChe
     txdata._data = []
     #Collects all points belonging to the plane:
     for tx in txnameObjs:
+        print tx.txName
         for pt in tx.txnameData._data:
             mass = [[m.asNumber(GeV) for m in br] for br in pt[0]]
             if not origPlot.getXYValues(mass): continue
@@ -47,15 +52,16 @@ def generatePointsB(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot,vertexChe
     ymin = max(min(numpy.array(extremes)[:,1]),min(numpy.array(txdata.Mp)[:,1]))
     ymax = min(max(numpy.array(extremes)[:,1]),max(numpy.array(txdata.Mp)[:,1]))
     #Compute dx and dy values to generate the desired number of points
-    Npts = 300
     dx=(xmax-xmin)/math.sqrt(float(Npts))
     dy=(ymax-ymin)/math.sqrt(float(Npts))
     xmin = round(xmin/dx)*dx
     ymin = round(ymin/dy)*dy
 
+    print len(txdata.Mp)
+    for ipt,pt in enumerate(txdata.Mp): print pt,txdata._data[ipt][0][0]
     
-    print 'xmin,xmax,dx=',xmin,xmax,dx
-    print 'ymin,ymax,dy=',ymin,ymax,dy
+    print 'xmin,xmax=',xmin,xmax,dx
+    print 'ymin,ymax=',ymin,ymax,dy 
     
     points=[]
     massDimensions = [len(br) for br in txdata._data[0][0]] #Store the mass format 
@@ -65,9 +71,9 @@ def generatePointsB(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot,vertexChe
             massFlat = numpy.dot(pt,numpy.transpose(txdata._V)) + txdata.delta_x #Flatten Mass
             massFlat = massFlat.tolist()[0]
             mass = [[massFlat.pop(0) for im in range(brdim)] for brdim in massDimensions] #Nested mass
+            print 'i,j=',i,j
             print 'M=',mass
-            print vertexChecker.getOffShellVertices(mass),origPlot.getXYValues(mass)
-            sys.exit()
+            print vertexChecker.getOffShellVertices(mass),origPlot.getXYValues(mass)            
             if vertexChecker.getOffShellVertices(mass):
                 continue
             if origPlot.getXYValues(mass) is None:
@@ -78,9 +84,12 @@ def generatePointsB(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot,vertexChe
                 if not (tx.txnameData.getValueFor(mass_unit) is None):
                     inside = True
                     break
+            print 'inside=',inside
+#             sys.exit()                
             if not inside:
                 continue
-            points.append(origPlot.getXYValues(mass))
+            points.append([i,j])
+#             points.append(origPlot.getXYValues(mass))
     return points,txdata
 #     return points
 
@@ -96,6 +105,7 @@ exp = browser[0]
 toff = [tx for tx in exp.getTxNames() if tx.txName == 'T5WWoff'][0]
 
 axes = "2*Eq(mother,x)_Eq(inter0,0.5*x+0.5*y)_Eq(lsp,y)"
+axes = "2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,60.)"
 #Define x,y <-> masses mapping:
 origPlot = OrigPlot.fromString(axes)
 #Define vertexChecker (used to check for kinematically forbidden vertices):
@@ -106,17 +116,11 @@ vertexChecker = vertexChecking.VertexChecker(toff,
 #                         axes=axes,origPlot=origPlot,vertexChecker=vertexChecker)
 
 # print '%i  points found for %s and axes %s' %(len(pts),toff.txName,axes)
-import math
 Npts =300
-minx,maxx,miny,maxy=134.,1632.,71.,1391.
-dx=(maxx-minx)/math.sqrt(float(Npts))
-dy=(maxy-miny)/math.sqrt(float(Npts))
-minx = round(minx/dx)*dx
-miny = round(miny/dy)*dy
+minx,maxx,miny,maxy=160.,1800.,62.991,132.
 
 
-
-pts,txdata = generatePointsB(minx,maxx,miny,maxy,dx,dy,txnameObjs=[toff],
+pts,txdata = generatePointsB(Npts,minx,maxx,miny,maxy,txnameObjs=[toff],
                         axes=axes,origPlot=origPlot,vertexChecker=vertexChecker)
 
 print '%i  points found for %s and axes %s' %(len(pts),toff.txName,axes)
@@ -124,10 +128,10 @@ print '%i  points found for %s and axes %s' %(len(pts),toff.txName,axes)
 import matplotlib.pyplot as plt
 xvals = [pt[0] for pt in pts]
 yvals = [pt[1] for pt in pts]
-txvals = [pt[0][0][0].asNumber(GeV) for pt in txdata._data]
-tyvals = [pt[0][0][-1].asNumber(GeV) for pt in txdata._data]
-# txvals = [pt[0] for pt in txdata.Mp]
-# tyvals = [pt[1] for pt in txdata.Mp]
+# txvals = [pt[0][0][0].asNumber(GeV) for pt in txdata._data]
+# tyvals = [pt[0][0][-1].asNumber(GeV) for pt in txdata._data]
+txvals = [pt[0] for pt in txdata.Mp]
+tyvals = [pt[1] for pt in txdata.Mp]
 # plt.plot(xvals,yvals,'ro')
 plt.plot(xvals,yvals,'ro',txvals,tyvals,'bs')
 plt.show()
