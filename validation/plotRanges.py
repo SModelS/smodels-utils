@@ -9,7 +9,7 @@
 """
 
 import ROOT
-import numpy,math
+import numpy,math,copy
 import sys
 sys.path.insert(0,"../")
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
@@ -107,52 +107,62 @@ def addQuotationMarks ( constraint ):
     return ret
 
 
-def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", vertexChecker=None):
+def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", Npts=300):
     """ given a TGraph object, returns list of points to probe. 
         :param txnameObjs: list of TxName objects
-        :param vertexChecker: VertexChecker object to check if the SLHA point is
-                              kinematically forbidden (contains an off-shell decay)
         :param axes: the axes used to transform x,y into mass parameters (for the check
                 of the kinematic region)
+        :param Npts: Trial number of points for the plot.
     """
+        
         
     frame = getSuperFrame(tgraphs)
     extframe = getExtendedFrame(txnameObjs,axes)
-    origPlot = OrigPlot.fromString( axes )
+    origPlot = OrigPlot.fromString(axes)
     vertexChecker = vertexChecking.VertexChecker(txnameObjs[0], 
                         addQuotationMarks(txnameObjs[0].constraint))
     
     #First generate points for the extended frame with a lower density:
     minx,maxx=extframe["x"][0], extframe["x"][1]
-    miny,maxy=extframe["y"][0], extframe["y"][1]    
-    dx=(maxx-minx)/(10.-1.)
-    dy=(maxy-miny)/(10.-1.)
-    dx = round(dx/5.)*5.
-    dy = round(dy/5.)*5.
-    minx = round(minx/dx)*dx
-    miny = round(miny/dy)*dy
-    
-    ptsA = generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot,vertexChecker)
+    miny,maxy=extframe["y"][0], extframe["y"][1]
+    ptsA = generateBetterPoints(Npts/3,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChecker)
     
     #Now generate points for the exclusion curve frame with a higher density:
     minx,maxx=frame["x"][0], frame["x"][1]
     miny,maxy=frame["y"][0], frame["y"][1]    
-
-    dx=(maxx-minx)/(30.-1.)
-    dy=(maxy-miny)/(20.-1.)
-    dx = max(1,round(dx/5.)*5.)
-    dy = max(1,round(dy/5.)*5.)
-    minx = round(minx/dx)*dx
-    miny = round(miny/dy)*dy
+    ptsB = generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChecker)
     
-    ptsB = generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot,vertexChecker)
-    
-    pts = ptsA + ptsB
+    pts = ptsA + ptsB    
     
     return pts
 
 
-def generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot,vertexChecker):
+def generatePoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChecker):
+    """
+    Method to generate points between minx,maxx and miny,maxy.
+    Check if the points belong to the plane described by origPlot an obeys
+    the kinematical constraints defined by vertexChecker.
+    Also, requires the point to belong to at least one of the data grids in
+    txnameObjs.
+
+    :param Npts: Number of points to be tried
+    :param minx: Minimal x-value for the respective mass plane)
+    :param maxx: Maximal x-value for the respective mass plane)
+    :param miny: Minimal y-value for the respective mass plane)
+    :param maxy: Maximal y-value for the respective mass plane)
+    :param txnameObjs: List of Txname objects
+    :param origPlot: OrigPlot object holding information about the plane
+    :param vertexChecker: VertexChecker object holding information about the
+                          kinematical constraints
+    :return: List of x,y points belonging to the plot and the data grids.    
+    """
+    
+    #Compute dx and dy values to generate the desired number of points
+    dx=(maxx-minx)/math.sqrt(float(Npts))
+    dy=(maxy-miny)/math.sqrt(float(Npts))
+    minx = round(minx/dx)*dx
+    miny = round(miny/dy)*dy
+    
     
     points=[]
     if minx==float('inf') or abs(maxx)<1e-5:
@@ -183,6 +193,87 @@ def generatePoints(minx,maxx,miny,maxy,dx,dy,txnameObjs,axes,origPlot,vertexChec
             if not ordered:
                 continue
             points.append([i,j])
+    return points
+
+
+def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChecker):
+    """
+    Method to generate points between minx,maxx and miny,maxy.
+    Uses the PCA decomposition and rotated points in order to best estimate
+    what is the relevant region of parameter space where there is data.
+    Check if the points belong to the plane described by origPlot an obeys
+    the kinematical constraints defined by vertexChecker.
+    Also, requires the point to belong to at least one of the data grids in
+    txnameObjs.
+    
+    :param Npts: Number of points to be tried
+    :param minx: Minimal x-value for the respective mass plane)
+    :param maxx: Maximal x-value for the respective mass plane)
+    :param miny: Minimal y-value for the respective mass plane)
+    :param maxy: Maximal y-value for the respective mass plane)
+    :param txnameObjs: List of Txname objects
+    :param origPlot: OrigPlot object holding information about the plane
+    :param vertexChecker: VertexChecker object holding information about the
+                          kinematical constraints
+    :return: List of x,y points belonging to the plot and the data grids.    
+    """
+    
+    #Create a dummy copy of a TxnameData object to hold all the data corresponding to the plane
+    txdata = copy.deepcopy(txnameObjs[0].txnameData)
+    txdata.dataTag = 'dummy'
+    txdata._id = 'dummy'
+    txdata._accept_errors_upto=0.05    
+    txdata._V = None
+    txdata.Mp = []
+    txdata._data = []
+    #Collects all points belonging to the plane:
+    for tx in txnameObjs:
+        for pt in tx.txnameData._data:
+            mass = [[m.asNumber(GeV) for m in br] for br in pt[0]]
+            if not origPlot.getXYValues(mass): continue
+            txdata._data.append(pt)
+    #Compute the PCA for the reduced dataset:
+    txdata.computeV()
+    #Transform the min and max values to the rotated plane:
+    extremes = []
+    for x,y in [[minx,miny],[maxx,miny],[minx,maxy],[maxx,maxy]]:
+        mass = [[m*GeV for m in br] for br in origPlot.getParticleMasses(x,y)]
+        porig = txdata.flattenMassArray(mass)
+        p=((numpy.matrix(porig)[0] - txdata.delta_x)).tolist()[0]
+        P=numpy.dot(p,txdata._V)  ## rotated point
+        extremes.append(P)
+    #New values of extremes in the rotated plane (limit values by extremes in data):
+    xmin = max(min(numpy.array(extremes)[:,0]),min(numpy.array(txdata.Mp)[:,0]))
+    xmax = min(max(numpy.array(extremes)[:,0]),max(numpy.array(txdata.Mp)[:,0])) 
+    ymin = max(min(numpy.array(extremes)[:,1]),min(numpy.array(txdata.Mp)[:,1]))
+    ymax = min(max(numpy.array(extremes)[:,1]),max(numpy.array(txdata.Mp)[:,1]))
+    #Compute dx and dy values to generate the desired number of points
+    dx=(xmax-xmin)/math.sqrt(float(Npts))
+    dy=(ymax-ymin)/math.sqrt(float(Npts))
+    xmin = round(xmin/dx)*dx
+    ymin = round(ymin/dy)*dy
+
+    points=[]
+    massDimensions = [len(br) for br in txdata._data[0][0]] #Store the mass format 
+    for i in numpy.arange(xmin, xmax+dx/2., dx):
+        for j in numpy.arange(ymin, ymax+dy/2., dy):
+            pt = [i,j] + [0.]*(txdata.full_dimensionality-2)  #Point in rotated space
+            massFlat = numpy.dot(pt,numpy.transpose(txdata._V)) + txdata.delta_x #Flatten Mass
+            massFlat = massFlat.tolist()[0]
+            mass = [[massFlat.pop(0) for im in range(brdim)] for brdim in massDimensions] #Nested mass
+            if vertexChecker.getOffShellVertices(mass):
+                continue
+            if origPlot.getXYValues(mass) is None:
+                continue
+            inside = False
+            mass_unit = [[m*GeV for m in br] for br in mass]
+            for tx in txnameObjs:                
+                if not (tx.txnameData.getValueFor(mass_unit) is None):
+                    inside = True
+                    break
+            if not inside:
+                continue
+            points.append(origPlot.getXYValues(mass))
     return points
 
 def draw ( graph, points ):

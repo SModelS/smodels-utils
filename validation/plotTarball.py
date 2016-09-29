@@ -1,40 +1,69 @@
 #!/usr/bin/python
 
-from smodels.experiment.databaseObjects import Database
+import sys,os,shutil
+
+home = os.path.expanduser("~")
+sys.path.append(os.path.join(home,'smodels'))
+
+from smodels.experiment.databaseObj import Database
 from plottingFuncs import getExclusionCurvesFor
-import os, glob
-from smodels.tools import modpyslha
+import glob, pyslha
 import ROOT
-import commands
+import commands,tempfile
 
-txname="T2tt"
 
-tarball="%s.tar" % txname
-commands.getoutput ( "tar xvf %s" % tarball )
-files=glob.iglob( "%s_*.slha" % txname )
 
-gr=ROOT.TGraph()
+txname="T5WWoff"
+
+tarball="../slha/%s.tar" % txname
+tempdir = tempfile.mkdtemp(prefix=os.getcwd()+'/')
+commands.getoutput ( "tar xvf %s -C %s" %(tarball,tempdir) )
+files=glob.iglob( "%s/%s_*.slha" %(tempdir,txname) )
+
+xM = 1000021
+yM = 1000022
+zM = 1000024
+
+if zM is None:
+    gr = ROOT.TGraph()  #2-D grid
+else:
+    gr = ROOT.TGraph2D() #3-D grid
+    
 gr.SetMarkerSize(1)
-gr.SetMarkerStyle(23)
+gr.SetMarkerStyle(20)
 
-for (ctr,f) in enumerate(files):
-    pyfile=modpyslha.readSLHAFile ( f )
+
+for (ifile,f) in enumerate(files):
+    pyfile=pyslha.readSLHAFile ( f )
     masses=pyfile.blocks["MASS"]
-    stopmass=masses[1000006]
-    lspmass=masses[1000022]
-    gr.SetPoint(ctr,stopmass,lspmass)
+    xmass=masses[xM]
+    ymass=masses[yM]
+    if zM:
+        zmass=masses[zM]
+        gr.SetPoint(ifile,xmass,ymass,zmass)
+    else:
+        gr.SetPoint(ifile,xmass,ymass)
 
+print tempdir
+shutil.rmtree(tempdir)
+print gr.GetN()
+gr.GetXaxis().SetTitle("%s mass (GeV)" %str(xM))
+gr.GetYaxis().SetTitle("%s mass (GeV)" %str(yM))
+if zM:
+    gr.GetZaxis().SetTitle("%s mass (GeV)" %str(zM))
+    
 gr.Draw("AP")
 
-database = Database("../../smodels-database/")
-listOfExpRes = database.getExpResults( txnames=[ txname ] )
-cont=[]
-if type(listOfExpRes)!=list:
-    listOfExpRes=[listOfExpRes]
-for expResult in listOfExpRes:
-    axes=expResult.getValuesFor("axes")
-    tgraph=getExclusionCurvesFor ( expResult,txname,axes[0])
-    tgraph[txname][0].Draw("same")
-    cont.append ( tgraph)
-
-ROOT.c1.Print("check_%s.pdf" % txname )
+wait = raw_input("Press any key to exit")
+# database = Database("../../smodels-database/")
+# listOfExpRes = database.getExpResults( txnames=[ txname ] )
+# cont=[]
+# if type(listOfExpRes)!=list:
+#     listOfExpRes=[listOfExpRes]
+# for expResult in listOfExpRes:
+#     axes=expResult.getValuesFor("axes")
+#     tgraph=getExclusionCurvesFor ( expResult,txname,axes[0])
+#     tgraph[txname][0].Draw("same")
+#     cont.append ( tgraph)
+# 
+# ROOT.c1.Print("check_%s.pdf" % txname )
