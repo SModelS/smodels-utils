@@ -132,7 +132,7 @@ def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", Npts=300):
     miny,maxy=frame["y"][0], frame["y"][1]    
     ptsB = generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChecker)
     
-    pts = ptsA + ptsB    
+    pts = ptsA + ptsB
     
     return pts
 

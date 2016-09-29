@@ -13,7 +13,7 @@ from ConfigParser import SafeConfigParser
 from plottingFuncs import getExclusionCurvesFor
 import plotRanges
 import slhaCreator
-import commands
+import commands,time
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
@@ -34,7 +34,9 @@ def createFiles(expResList,txname,templateFile,tarFile,xargs,Npts=300):
     :return: True if successful, False otherwise. 
     """
 
-    logger.info("Generating %s file" %tarFile)        
+    logger.info("--------  \033[32m Generating %s file \033[0m" %tarFile)
+    t0 = time.time()
+           
 
     #Create temp folder to store the SLHA files:
     tgraphs = {}
@@ -67,7 +69,7 @@ def createFiles(expResList,txname,templateFile,tarFile,xargs,Npts=300):
     tempdir = tempfile.mkdtemp(dir=os.getcwd())
     for (axes,ntgraph) in tgraphs.items():
         pts = plotRanges.getPoints(ntgraph, txnameObjs, axes, Npts)
-        logger.info("%i SLHA files for axes %s" %(len(pts),axes))
+        logger.info("\033[31m %i SLHA files for axes %s \033[0m " %(len(pts),axes))
         if len(pts)==0:
             continue
         tempf = slhaCreator.TemplateFile(templateFile,axes,tempdir)
@@ -91,7 +93,7 @@ def createFiles(expResList,txname,templateFile,tarFile,xargs,Npts=300):
     
     
     commands.getoutput("cd %s && tar cf %s *.slha" % (tempdir,tarFile))
-    logger.info("-------- File %s created.\n" %tarFile)
+    logger.info("--------  \033[32m File %s created in %.1f min. \033[0m \n" %(tarFile,(time.time()-t0)/60.))
     #Remove temp folder containing the SLHA files:
     shutil.rmtree(tempdir)
 
