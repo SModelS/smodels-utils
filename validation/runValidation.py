@@ -2,7 +2,8 @@
 
 import sys,os
 import logging
-import argparse
+# logging.basicConfig(filename='val.out')
+import argparse,time
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 sys.path.append(os.path.join(home,'smodels-utils'))
@@ -10,9 +11,9 @@ from validation import plottingFuncs, validationObjs
 from smodels.experiment.databaseObj import Database
 from ConfigParser import SafeConfigParser
 
-
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
+
 
 
 def validatePlot(expRes,txname,axes,slhadir,kfactor=1.):
@@ -77,13 +78,18 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     expResList = db.getExpResults( analysisIDs, datasetIDs, txnames,
                   dataTypes, useSuperseded=True, useNonValidated=True)
     
+    if not expResList:
+        logger.error("No experimental results found.")    
+    
     #Loop over experimental results and validate plots
     for expRes in expResList:
-        logger.info("--------- validating  %s" %expRes.globalInfo.id)
+        expt0 = time.time()
+        logger.info("--------- \033[32m validating  %s \033[0m" %expRes.globalInfo.id)
         #Loop over pre-selected txnames:
         txnames = set([tx.txName for tx in expRes.getTxNames()])
         for txname in txnames:
-            logger.info("------------ validating  %s" %txname)
+            txt0 = time.time()
+            logger.info("------------ \033[31m validating  %s \033[0m" %txname)
             tarfile = os.path.join(slhadir,txname+".tar")                
             if not os.path.isfile(tarfile):
                 logger.error('Missing .tar file for %s' %txname)
@@ -104,7 +110,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
                 ax = tgraph.GetName().replace('exclusion_',"")
                 agreement = validatePlot(expRes,txname,ax,tarfile,kfactor)
                 logger.info('               agreement factor = %s' %str(agreement))
-        
+            logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txname,(time.time()-txt0)/60.))
+        logger.info("--------- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
     logger.info("\n\n----- Finished validation.")
 
 
@@ -116,18 +123,21 @@ if __name__ == "__main__":
     ap.add_argument('-l', '--log', 
             help='specifying the level of verbosity (error, warning,info, debug)', 
             default = 'info', type = str)
-        
+           
     args = ap.parse_args()
     
     numeric_level = getattr(logging,args.log.upper(), None)
     logger.setLevel(level=numeric_level)
     plottingFuncs.logger.setLevel(level=numeric_level)
     validationObjs.logger.setLevel(level=numeric_level)
+    
                 
     if not os.path.isfile(args.parfile):
         logger.error("Parameters file %s not found" %args.parfile)
     else:
         logger.info("Reading validation parameters from %s" %args.parfile)
+        
+        
 
     parser = SafeConfigParser()
     parser.read(args.parfile)        
@@ -150,5 +160,4 @@ if __name__ == "__main__":
 
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,args.log)
-    
     

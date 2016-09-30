@@ -157,7 +157,7 @@ class KinematicRegion(Locker):
         to define the membership to this kinematic region
         :param *conditionFunctions: functions describing the conditions for the
         kinematic region. The parameter of this functions have to be a list of 
-        tuples. The return value have to be a bool type
+        tuples. The return value has to be a bool type
         """
         
         self.name = name
@@ -168,7 +168,7 @@ class KinematicRegion(Locker):
     def checkoffShellVertices(self,offShellVertices):
         
         """
-        checks if offShellVertices met the conditions
+        checks if offShellVertices meet the conditions
         given by self.functions (= conditionFunctions)
         :param offShellVertices: list of tuples describing
         the vertices with off-shell SM-particles
@@ -187,7 +187,7 @@ class KinematicRegion(Locker):
 class MassPlane(Locker):
     
     """
-    Holds all informations related to one mass plane
+    Holds all information related to one mass plane
     a mass plane is defined by their axes
     """
     
@@ -484,8 +484,8 @@ class TxNameInput(Locker):
         
         """
         initialize KinematicRegion-objects, 
-        an onShell-object is build for case that no vertex if off-shell
-        an offShell-object is build for case that any vertex if off-shell
+        an onShell-object is built for case that no vertex is off-shell
+        an offShell-object is built for case that at least one vertex is off-shell
         :return: list with KinematicRegion-objects
         """
         

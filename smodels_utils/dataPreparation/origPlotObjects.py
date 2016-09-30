@@ -9,7 +9,7 @@
 """
 
 import sys
-from sympy import var, Eq, lambdify, solve, sympify, N
+from sympy import var, Eq, lambdify, solve, sympify, N, Float
 import logging
 import inspect
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -212,6 +212,7 @@ class Axes(object):
         for interEquation in interEq:
                 self._equations.append(interEquation)
         self._equations.append(lspEq)
+        ## print "Axes ",self._equations
 
     @classmethod
     def fromString(cls, string):
@@ -253,9 +254,12 @@ class Axes(object):
         :return: Axes-object
         """
 
-
+        # print "lspMass=",type(lspMass),lspMass
         motherEq = Eq(mother,motherMass)
         lspEq = Eq(lsp,lspMass)
+        if type(lspMass)==float:
+            lspEq = Eq(lsp, N(lspMass,2))
+        # print "lspEq=",lspEq
         interEqs = []
         for k, v in interMasses.iteritems():
             eq = Eq(var(k.replace('Mass','')), N(v,2) )
@@ -427,10 +431,17 @@ class Axes(object):
 
         string =''
         for equation in self._equations:
-            if string: string = '%s_'%string
-            string = '%sEq(%s,%s)' %(string, \
-            str(equation).split('==')[0].strip().replace(' ',''), \
-            str(equation).split('==')[1].strip().replace(' ',''))
+            # print "equation=%s %s" % ( type(equation),equation )
+            if not "==" in str(equation):
+                if len(string)>0:
+                    string+="_"
+                string += str ( equation ).replace(" ","")
+            else:
+                if string: string = '%s_'%string
+                string = '%sEq(%s,%s)' %(string, \
+                str(equation).split('==')[0].strip().replace(' ',''), \
+                str(equation).split('==')[1].strip().replace(' ',''))
+                #print "string= >>%s<<" % string
         return string
 
     def __eq__(self, other):

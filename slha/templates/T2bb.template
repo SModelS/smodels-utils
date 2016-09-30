@@ -199,13 +199,13 @@ BLOCK MSOFT Q=  2.90528802E+02  # The soft SUSY breaking masses at the scale Q
 #
 #
 #         PDG            Width
-DECAY   1000005     1.00000000E+00   # sdown_L decays
+DECAY   1000005     0.00000000E+00   # sdown_L decays
 DECAY   1000002     0.00000000E+00   # sup_L decays
 DECAY   1000003     0.00000000E+00   # sstrange_L decays
 DECAY   1000004     0.00000000E+00   # scharm_L decays
 DECAY   1000006     0.00000000E+00   # stop1 decays
 DECAY   2000006     0.00000000E+00   # stop2 decays
-DECAY   1000005     0.00000000E+00   # sbottom1 decays
+DECAY   1000005     1.00000000E+00   # sbottom1 decays
 #          BR         NDA      ID1       ID2
      1.00000000E+00    2     1000022         5   # BR(~b_1 -> ~chi_10 b)
 #
@@ -219,9 +219,9 @@ DECAY   2000015     0.00000000E+00   # stau_2 decays
 DECAY   1000012     0.00000000E+00   # snu_elL decays
 DECAY   1000014     0.00000000E+00   # snu_muL decays
 DECAY   1000016     0.00000000E+00   # snu_tauL decays
-DECAY   1000021     1.00000000E+00   # chargino1+ decays
-DECAY   1000024     0.10000000E+00   # chargino1+ decays
-DECAY   1000023     0.10000000E+00   # chargino1+ decays
+DECAY   1000021     0.00000000E+00   # chargino1+ decays
+DECAY   1000024     0.00000000E+00   # chargino1+ decays
+DECAY   1000023     0.00000000E+00   # chargino1+ decays
 DECAY   1000037     0.00000000E+00   # chargino2+ decays
 DECAY   1000022     0.00000000E+00   # neutralino1 decays
 DECAY   1000025     0.00000000E+00   # neutralino3 decays

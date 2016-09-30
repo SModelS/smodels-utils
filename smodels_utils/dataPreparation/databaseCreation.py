@@ -9,7 +9,6 @@
 
 """
 
-import copy
 import sys
 import os
 import ROOT
@@ -34,7 +33,10 @@ def computeLimit ( observed, expected, error, lumi ):
     """ compute limits and cache them """
     from math import floor, log10
     from smodels.tools import statistics
-    r4 = lambda x: round(x, -int(floor(log10(x))) + (4 - 1))
+    def r4 ( x ): ## round to four digits
+        if x==0.: return x
+        return round(x, -int(floor(log10(x))) + (4 - 1))
+    ## r4 = lambda x: round(x, -int(floor(log10(x))) + (4 - 1))
     key = "%f %f %f %f" % ( r4(observed), r4(expected), r4(error), r4(lumi.asNumber(1/fb)) )
     if key in limitCache:
         return limitCache[key]
@@ -150,7 +152,7 @@ class DatabaseCreator(list):
             self._extendInfoAttr(self.metaInfo, 'lastUpdate')
             self._setLastUpdate()
             self._delete()
-            self._createInfoFile(self.metaInfoFileName, None, self.metaInfo)
+            self._createInfoFile(self.metaInfoFileName, None, None, self.metaInfo)
             self._createValidationFolder ()
 
         self.tWiki = StandardTWiki(self.metaInfo)
@@ -168,7 +170,7 @@ class DatabaseCreator(list):
 
             if not hasattr(txName.on, 'constraint'):
                 Errors().missingOnConstraint(txName.name)
-            vertexChecker = VertexChecker(txName.name, txName.on.constraint )
+            self.vertexChecker = VertexChecker(txName.name, txName.on.constraint )
             upperLimits = StandardDataList()
             ## print "upperLimits=",upperLimits
             expectedUpperLimits = StandardDataList()
@@ -197,19 +199,19 @@ class DatabaseCreator(list):
                 self.timeStamp ( 'Reading mass plane: %s, %s [%s]' % (txName, plane.origPlot, str(plane.obsExclusion.path)[-30:] ) )
 
                 efficiencyMap = self.extendDataList\
-                (efficiencyMap, plane, vertexChecker, txName)
+                (efficiencyMap, plane, txName)
                 self.timeStamp ( 'extended efficiencyMap to %s entries %s'\
                                  % (len(efficiencyMap), self.describeMap ( efficiencyMap ) ) )
                 efficiencyMap3D = self.extendDataList\
-                (efficiencyMap3D, plane, vertexChecker, txName)
+                (efficiencyMap3D, plane, txName)
                 self.timeStamp ( 'extended efficiencyMap3D to %s entries %s'\
                                  % (len(efficiencyMap3D), self.describeMap ( efficiencyMap3D ) ) )
                 upperLimits = self.extendDataList\
-                (upperLimits, plane, vertexChecker, txName, 'limit')
+                (upperLimits, plane, txName, 'limit')
                 self.timeStamp ( 'extended upperLimits to %s entries %s'\
                                  % ( len(upperLimits), self.describeMap ( upperLimits ) ) )
                 expectedUpperLimits = self.extendDataList(expectedUpperLimits,\
-                        plane, vertexChecker, txName, 'expectedlimit')
+                        plane, txName, 'expectedlimit')
                 self.timeStamp ( 'extended expectedUpperLimits to %s entries %s'\
                                  % ( len(expectedUpperLimits), self.describeMap ( expectedUpperLimits ) ) )
                 # self.timeStamp ( 'efficiency map is now %s' % efficiencyMap )
@@ -222,18 +224,21 @@ class DatabaseCreator(list):
                         publishedData = False
 
                 for region in txName.kinematicRegions:
-                    if getattr(plane, region.name) == 'auto' \
-                    or getattr(plane, region.name) == False:
+                    #if getattr(plane, region.name) == 'auto' \
+                    #or getattr(plane, region.name) == False:
+                    if getattr(plane, region.name) == False:
                         setattr(plane, region.name, False)
                     else:
                         exclusions[getattr(region, self.txNameField)]\
                         .addMassPlane(plane)
-                        self.timeStamp ( 'Found region: %s' %region.name )
+                        self.timeStamp ( 'Found region: %s %d' % \
+                                  ( region.name, txName.onShell ) )
 
                 for excl in exclusions:
                     self.timeStamp ( 'extend exclusionLines for %s to %s entries'\
                         %(excl.name, len(excl)) )
 
+                self.timeStamp ( 'Now checking mass plane %s' % plane )
                 dataInfo.checkMassPlane(plane)
                 self.tWiki.addMassPlane(txName.name,plane)
 
@@ -251,6 +256,8 @@ class DatabaseCreator(list):
             if efficiencyMap3D: txName.efficiencyMap3D = efficiencyMap3D
             txName.publishedData = publishedData
 
+            self.timeStamp ( "we have %d kin regions" % 
+                             len (txName.kinematicRegions ) )
             for region in txName.kinematicRegions:
                 if getattr(txName, region.name):
                     if not hasattr(region, 'constraint'):
@@ -260,13 +267,13 @@ class DatabaseCreator(list):
                     if not hasattr(region, 'conditionDescription'):
                         Errors().required(txName.name, region, 'conditionDescription')
                     # print "dataInfo.dataId",dataInfo.dataId
-                    self._createInfoFile(getattr(region, self.txNameField), dataInfo.dataId, region, txName )
+                    self._createInfoFile(getattr(region, self.txNameField), region.name, dataInfo.dataId, region, txName )
                     region.figureUrl=""
                     region.dataUrl=""
                     region.axes=""
         self.timeStamp ( "after going through txnames" )
         if create_dataInfo:
-            self._createInfoFile( dataInfo.name, dataInfo.dataId, dataInfo)
+            self._createInfoFile( dataInfo.name, None, dataInfo.dataId, dataInfo)
         self._createSmsRoot( createAdditional )
 
         if not createAdditional:
@@ -274,7 +281,7 @@ class DatabaseCreator(list):
         self.timeStamp ( "done" )
 
 
-    def extendDataList(self, dataList, plane, vertexChecker, txName, limitType = None):
+    def extendDataList(self, dataList, plane, txName, limitType = None):
 
         """
         extend the given data list by the values related to this type of list
@@ -317,7 +324,7 @@ class DatabaseCreator(list):
                 massArray = plane.origPlot.getParticleMasses(x,y,z)
                 #massArray = [massPoints,massPoints]
                 dataList.append(massArray, value)
-                self._computeKinRegions(massArray, i, plane, vertexChecker, txName, limitType )
+                self._computeKinRegions(massArray, i, plane, txName, limitType )
             return dataList
 
         for i,value in enumerate(origData):
@@ -327,19 +334,19 @@ class DatabaseCreator(list):
             massArray = plane.origPlot.getParticleMasses(x,y)
             #massArray = [massPoints,massPoints]
             dataList.append(massArray, value)
-            self._computeKinRegions(massArray, i, plane, vertexChecker, txName, limitType )
+            self._computeKinRegions(massArray, i, plane, txName, limitType )
         return dataList
 
-    def _computeKinRegions(self, massArray, i, plane, vertexChecker, txName, limitType ):
+    def _computeKinRegions(self, massArray, i, plane, txName, limitType ):
 
         """
-        checks to which kin reagion a mass array belongs
+        checks to which kin region a mass array belongs
         A mass array belongs not only to a kin. region, but also to
         a mass plane. If a single mass array of a mass plane belongs
         to a specific kin region, the whole mass plane belongs to that
-        region and the -region-exist' attr. is set to True
+        region and the regionExist attr. is set to True
 
-        Only if the region-exist' attr. is set to 'auto' this automated scan of
+        Only if the regionExist attr. is set to 'auto' this automated scan of
         region is performed, else the predefined settings (True/False)
         of this attr. is used to determine if the mass plane belongs
         to the region
@@ -355,11 +362,14 @@ class DatabaseCreator(list):
         :param vertexChecker: standardObjects.VertexChecker-object
         :param txName: inputObjects.TxNameInput-object
         :param limitType: type off limit (limit, expectedlimit, or None for efficiencyMap)
-        :raise kinRegionSetterError: if the 'region-exist' is not True, False or 'auto'
+        :raise kinRegionSetterError: if the 'regionExist' is not True, False or 'auto'
         """
 
         kinRegions = txName.kinematicRegions
         for region in kinRegions:
+            #print "region.name=",region.name
+            #print "plane.onShell=",plane.onShell
+            #print "plane.offShell=",plane.onShell
             regionExist = getattr(plane, region.name)
             if not regionExist == 'auto':
                 if not isinstance(regionExist , bool):
@@ -368,12 +378,16 @@ class DatabaseCreator(list):
                 if regionExist == True and i == 0 and limitType != "expectedlimit":
                     self._setRegionAttr(txName, region, plane)
                 continue
-            if not vertexChecker:
+            if regionExist == 'auto':
+                self._setRegionAttr(txName, region, plane)
+
+            if not self.vertexChecker:
                 Errors().notAssigned(txName.name)
             offShellVertices = \
-            vertexChecker.getOffShellVertices(massArray)
+            self.vertexChecker.getOffShellVertices(massArray)
             if region.checkoffShellVertices(offShellVertices) and limitType != "expectedlimit":
-                setattr(plane, region.name, True)
+                setattr(plane, region.name, True )
+                ## setattr(plane, region.name, 'auto' )
                 self._setRegionAttr(txName, region, plane)
 
         kinRegions = txName.kinematicRegions
@@ -406,11 +420,18 @@ class DatabaseCreator(list):
 
 
     def _extendRegionAttr(self, region, name, value):
+        if value in [ None, "" ]: ## we dont add None or empty strings
+            return
         if hasattr(region, name):
-            if not getattr(region, name) in [ "", None ]:
-                if not value in getattr(region,name):
+            previous =getattr (region, name )
+            if previous in [ "", None ]:
+                self._extendInfoAttr(region, name)
+            else:
+                if value in previous:
+                    value = previous
+                else:
                     # dont duplicate entries
-                    value = getattr(region, name) + ";" + value
+                    value = previous + ";" + value
         else:
             self._extendInfoAttr(region, name)
         setattr(region, name, value)
@@ -553,7 +574,8 @@ class DatabaseCreator(list):
         path = inspect.getfile ( self._createValidationFolder )
         self.timeStamp ( "creating validation folder %s" % path )
         path=path.replace( "smodels_utils/dataPreparation/databaseCreation.py", "validation/scripts" )
-        scripts = [ "validate.py", "validateSinglePlot.py" ] # , "plotValidation.py" ]
+        # scripts = [ "validate.py", "validateSinglePlot.py"]#, "plotValidation.py" ]
+        scripts = [] # for now, no scripts
         for i in scripts:
             if not os.path.exists ( "%s/%s" % ( self.validationPath, i ) ):
                 cmd = "cp %s/%s %s" % ( path, i, self.validationPath )
@@ -571,16 +593,28 @@ class DatabaseCreator(list):
         if update:
             mode="update"
 
+        #print "[sms.root] mode=",mode
         #if not os.path.exists ( self.validationPath ):
         #    os.mkdir ( self.validationPath )
+        #print "[sms.root] add exclusions",[ x.name for x in self.exclusions ]
 
         smsRoot = ROOT.TFile(self.base + self.smsrootFile,mode)
         for exclusions in self.exclusions:
-            if smsRoot.Get( exclusions.name )!=None:
-                continue
-            directory = smsRoot.mkdir(exclusions.name, exclusions.name)
-            directory.cd()
-            for exclusion in exclusions: exclusion.Write()
+            dirname = exclusions.name
+            if smsRoot.Get( dirname )==None:
+                #print "skipping",exclusions.name,type(exclusions)
+                #continue
+        #        print "[sms.root] mkdir",dirname
+                directory = smsRoot.mkdir( dirname, dirname )
+                # directory.cd()
+            smsRoot.cd ( dirname )
+            for exclusion in exclusions: 
+                fullname = "%s/%s" % ( dirname, exclusion.GetName() )
+                if smsRoot.Get( fullname ) == None:
+         #           print "[sms.root] now writing",fullname
+                    exclusion.Write()
+          #      else:
+          #          print "[sms.root] skipping %s" % fullname
         smsRoot.Close()
 
     def _createTwikiTxt(self):
@@ -596,7 +630,7 @@ class DatabaseCreator(list):
         twikiTxt.write('%s' %self.tWiki)
         twikiTxt.close()
 
-    def _createInfoFile(self, name, dataid, *objects):
+    def _createInfoFile(self, name, kinregname, dataid, *objects):
 
         """
         creates a file of type .txt
@@ -610,21 +644,21 @@ class DatabaseCreator(list):
 
         content = ''
         path=self.infoFilePath(name, dataid)
-        for obj in objects:
+        # self.timeStamp ( "we write to %s for %s" % (path, kinregname) )
+        for obj in objects: 
+            # in the case of Txname.txt, obj is a Kinematic region
+            # self.timeStamp ( "we write %s" % obj )
             for attr in obj.infoAttr:
+                ## self.timeStamp ( "attr is %s" % attr )
                 if attr in [ "efficiencyMap3D" ]: continue
                 if not hasattr(obj, attr) and \
                 not hasattr(obj.__class__, attr) : continue
                 value=getattr(obj,attr)
                 if value=="":
-                    # self.timeStamp ( "Error: %s %s is empty in %s!" % \
-                    #         ( obj, attr, str ( dataid ) ) )
-                    # self.timeStamp ( "I stop here. Please fix this." )
-                    # sys.exit()
                     continue
-                if attr in [ "upperLimit", "expectedUpperLimit" ]:
-                    fvalue=round_to_n ( float(value[:-3] ), 4 )
-                    value = "%s%s" % ( fvalue, value[-3:] )
+                if attr in [ "upperLimits", "expectedUpperLimits", "efficiencyMap" ]:
+                    ## the next line splits onshell from offshell data points
+                    value = self.vertexChecker.filterData( value, kinregname )
                 content = '%s%s%s%s\n' %(content, attr,\
                 self.assignmentOperator, value )
 
@@ -691,15 +725,10 @@ class Errors(object):
         sys.exit()
 
     def missingOnConstraint(self, txName):
-
         m = self._starLine#
         m = m + "in txName %s: on.constraint not set\n" %txName
-        m = m + "onShell constraint have to be set for automated splitting\n"
+        m = m + "onShell constraint has to be set for automated splitting\n"
         m = m + 'please use: %s.on.constraint =' %txName
         m = m + self._starLine
         print(m)
         sys.exit()
-
-
-
-

@@ -8,20 +8,19 @@
 
 """
 
-import logging,os,sys
+import logging,os,sys,shutil
 sys.path.append('../../smodels/')
 sys.path.append('../../smodels-utils/')
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
+logger.setLevel(level=logging.WARNING)
 import tempfile
 import pyslha as modpyslha
 from smodels.theory import slhaDecomposer
 from smodels.tools.physicsUnits import fb, GeV, TeV
 from smodels.tools.xsecComputer import computeXSec,addXSecToFile
-from smodels.experiment.databaseObj import Database
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 from validation.pythiaCardGen import getPythiaCardFor
 
@@ -31,11 +30,13 @@ class TemplateFile(object):
     for generating SLHA files.
     """
 
-    def __init__(self,template,axes):
+    def __init__(self,template,axes,tempdir=None):
         """
         :param template: path to the template file
         :param axes: string describing the axes for the template file 
                     (i.e. 2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,x-80.0))
+        :param tempdir: Folder to store the SLHA files. If not set,
+                        a temporary folder will be created at the current location.
         """
         
         self.path = template
@@ -44,6 +45,10 @@ class TemplateFile(object):
         self.axes = axes
         self.motherPDGs = []
         self.pythiaCard = None
+        if tempdir:
+            self.tempdir = tempdir
+        else:
+            self.tempdir = tempfile.mkdtemp(dir=os.getcwd())
         #Loads the information from the template file and store the axes labels
         if not os.path.isfile(template):
             logger.error("Template file %s not found." %template)
@@ -64,20 +69,21 @@ class TemplateFile(object):
         self.origPlot = OrigPlot.fromString(self.axes)
         
 
-    def createFileFor(self,x,y,slhaname=None,computeXsecs=False, massesInFileName = False):
+    def createFileFor(self,x,y,z=None,slhaname=None,computeXsecs=False, massesInFileName = False):
         """
         Creates a new SLHA file from the template.
         The entries on the template are replaced by the x,y values.
         OBS: The cross-sections blocks from the template file are never copied to the new file.
         :param x: x value for the plot in GeV (i. e. mother mass)
         :param y: y value for the plot in GeV (i. e. lsp mass)
+        :param z: z value for the plot in GeV (only for 3D grids)
         :param slhaname: filename for the new file. If None, a random name for the file will be generated,
                      with prefix template and suffix .slha
         :param computeXsecs: if True, will compute NLL cross-sections for the file using 10k events
         :return: SLHA file name if file has been successfully generated, False otherwise.
         """
 
-        masses = self.origPlot.getParticleMasses(x, y)
+        masses = self.origPlot.getParticleMasses(x, y, z)
         massDict = {}
         for ibr,br in enumerate(masses):
             if ibr == 0: massTag = 'M'
@@ -95,18 +101,19 @@ class TemplateFile(object):
         ftemplate.close()
         for tag in massDict: fdata = fdata.replace(tag,str(massDict[tag]))
             
-        #Create SLHA filename (if not defined) 
+        #Create SLHA filename (if not defined)        
         if not slhaname:
             templateName = self.path[self.path.rfind("/")+1:self.path.rfind(".")]
             if not massesInFileName:
-                slhaname = tempfile.mkstemp(prefix=templateName+"_",suffix=".slha",dir=os.getcwd())
+                slhaname = tempfile.mkstemp(prefix=templateName+"_",suffix=".slha",dir=self.tempdir)
                 os.close(slhaname[0])
                 slhaname = slhaname[1]
             else:
-                slhaname = "%s" % ( templateName)
+                slhaname = "%s" % (templateName)
                 for br in masses:
                     for m in br: slhaname += "_%d" % m
                 slhaname += ".slha"
+                slhaname = os.path.join(self.tempdir,slhaname)
 
         fdata = fdata[:fdata.find('XSECTION')]
         
@@ -130,13 +137,12 @@ class TemplateFile(object):
         logger.info("File %s created." %slhaname)
         return slhaname
     
-    def createFilesFor(self,pts,addXsecs=True, massesInFileName=False):
+    def createFilesFor(self,pts,addXsecs=False, massesInFileName=False):
         """
         Creates new SLHA files from the template for the respective (x,y) values in pts.
         For each distinct x value, new cross-sections will be computed.  
         :param pts: list of [x,y] values for the plot in GeV (i. e. [mother mass, lsp mass])
         :param addXsecs: if True will compute the cross-sections and add them to the SLHA files.
-                        OBS:  The cross-sections are computed only once per x-value
         :return: list of SLHA file names generated.
         """
 
@@ -147,56 +153,46 @@ class TemplateFile(object):
             mother2 = self.origPlot.getParticleMasses(x,y)[1][0]
             mpts.append([[mother1,mother2],x,y])
         #Sort list of point by mother masses (to speed up xsec calculation):
-        sorted_pts = sorted(mpts, key=lambda pt: pt[0])
-        mother0 = None        
+        sorted_pts = sorted(mpts, key=lambda pt: pt[0])        
         slhafiles = []
         for pt in sorted_pts:
-            mother = pt[0]
             x,y = pt[1],pt[2]
             slhafile = self.createFileFor(x,y,massesInFileName=massesInFileName )
             if slhafile: slhafiles.append(slhafile)
             else: continue
             if not addXsecs: continue
             #Compute cross-sections every time the x-value changes
-            if not mother0 or mother0 != mother:
-                if self.pythiaCard:
-                    xsecsProc = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=1000, slhafile=slhafile,
-                                        pythiacard=self.pythiaCard)
-                    addXSecToFile(xsecsProc,slhafile,comment="1k events (unit = pb)")         
-                xsecsLO = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=slhafile)
-                addXSecToFile(xsecsLO,slhafile,comment="10k events (unit = pb)")
-                xsecsNLL = computeXSec(sqrts=8.*TeV, maxOrder=2, nevts=10000, slhafile=slhafile,
-                                       loFromSlha=True)
-                addXSecToFile(xsecsNLL,slhafile,comment="(unit = pb)")
+            if self.pythiaCard:
+                xsecsProc = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=1000, slhafile=slhafile,
+                                    pythiacard=self.pythiaCard)
+                addXSecToFile(xsecsProc,slhafile,comment="1k events (unit = pb)")         
+            xsecsLO = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=slhafile)
+            addXSecToFile(xsecsLO,slhafile,comment="10k events (unit = pb)")
+            xsecsNLL = computeXSec(sqrts=8.*TeV, maxOrder=2, nevts=10000, slhafile=slhafile,
+                                   loFromSlha=True)
+            addXSecToFile(xsecsNLL,slhafile,comment="(unit = pb)")
             #If the x-value did not change, simply add the previously computed xsecs to file
-            else:
-                if self.pythiaCard:
-                    addXSecToFile(xsecsProc,slhafile,comment="1k events (unit = pb)")
-                addXSecToFile(xsecsLO,slhafile,comment="10k events (unit = pb)")                
-                addXSecToFile(xsecsNLL,slhafile,comment="(unit = pb)")
-            mother0 = mother
 
         return slhafiles
 
-    def checkFor(self,txnameObj,x,y):
+    def checkFor(self,txnameObj,x,y,z=None):
         """
         Run SModels in the template file with the x,y values and check if it returns
         at least one of the elements belonging to the txnameObj.
         Also verifies if the masses are the ones given by x,y.
         :param txnameObj: a TxName object holding information about the txname
-        :param x: x value for the plot in GeV (i. e. mother mass)
-        :param y: y value for the plot in GeV (i. e. lsp mass)
+        :param x: x value for the plot in GeV (i. e. mother mass).
+        :param y: y value for the plot in GeV (i. e. lsp mass).
+        :param z: z value for the plot in GeV (only for 3D grids).
         """
         
-        inmasses = self.origPlot.getParticleMasses(x, y)
+        
+        inmasses = self.origPlot.getParticleMasses(x, y, z)
         #Add units:
-        for ib,mbranch in enumerate(inmasses):
-            for im,mass in enumerate(mbranch):
-                print mass,GeV,txnameObj,x,y
-                inmasses[ib][im] = mass*GeV
+        inmasses = [[m*GeV for m in br] for br in inmasses]
                 
         #First create temporary file:
-        tempSLHA = self.createFileFor(x,y)
+        tempSLHA = self.createFileFor(x,y,z)
         if not tempSLHA: return False
         #Add cross-sections to file running only mother pair production:
         #(to guarantee the mother cross-section value is reliable)
@@ -211,9 +207,14 @@ class TemplateFile(object):
         
         #Run decomposition on the file:
         sigmacut = 0.*fb
-        mingap = 5.*GeV
+        mingap = 2.*GeV
         smstoplist = slhaDecomposer.decompose(tempSLHA, sigmacut,\
                         doCompress=True,doInvisible=True, minmassgap=mingap)
+        
+        #Delete the temporary SLHA file and pythia card
+        shutil.rmtree(os.path.dirname(os.path.realpath(tempSLHA)))
+        os.remove(self.pythiaCard)        
+        
         if not smstoplist or not smstoplist.getElements():
             logger.error("Decomposition produced no results.")
             return False
@@ -221,24 +222,23 @@ class TemplateFile(object):
         allEls = smstoplist.getElements()
         goodEl = False
         for el in allEls:
-            if txnameObj.hasElementAs(el):
-                goodEl = el
+            goodEl = txnameObj.hasElementAs(el)
+            if goodEl:
                 break
         
         #Check if a valid element was created:
         if not goodEl:
-            logger.warning("No macthing element for %s generated from template" %txnameObj.txname)
+            logger.warning("No macthing element for %s generated from template" %txnameObj.txName)
             return False
         
-        #Check if the masses match:
-        outmasses = goodEl.getMasses()
-        if inmasses != outmasses:
-            logger.warning("Masses do not seem to match")
-            return False
+        #Check if the masses match 
+        #(allow for the case where both branching orders matches the txname):
+        if inmasses != goodEl.getMasses():
+            goodElB = txnameObj.hasElementAs(goodEl.switchBranches())            
+            if (not goodElB) or (goodElB and inmasses != goodElB.getMasses()):
+                logger.warning("Masses do not seem to match")
+                return False
         
-        #Finally, delete the temporary SLHA file
-        os.remove(tempSLHA)
-        os.remove(self.pythiaCard)
         
         return True
         
@@ -270,7 +270,6 @@ if __name__ == "__main__":
         templatefile="../slha/%s" % templatefile
         if not os.path.exists ( templatefile ):
             print "[slhaCreator] error: templatefile does not exist."
-            import sys
             sys.exit()
     tempf = TemplateFile(args.templatefile,args.axes)
     masses=[]
