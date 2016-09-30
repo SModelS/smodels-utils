@@ -20,7 +20,10 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
     
-round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1))
+#round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1))
+def round_to_n ( x, n ):
+    if x==0.: return x
+    return round(x, -int(floor(log10(x))) + (n - 1))
 
 def _naturalUnits ( n ):
     if type(n)==list:

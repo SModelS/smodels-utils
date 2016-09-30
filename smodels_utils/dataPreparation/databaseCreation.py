@@ -33,7 +33,10 @@ def computeLimit ( observed, expected, error, lumi ):
     """ compute limits and cache them """
     from math import floor, log10
     from smodels.tools import statistics
-    r4 = lambda x: round(x, -int(floor(log10(x))) + (4 - 1))
+    def r4 ( x ): ## round to four digits
+        if x==0.: return x
+        return round(x, -int(floor(log10(x))) + (4 - 1))
+    ## r4 = lambda x: round(x, -int(floor(log10(x))) + (4 - 1))
     key = "%f %f %f %f" % ( r4(observed), r4(expected), r4(error), r4(lumi.asNumber(1/fb)) )
     if key in limitCache:
         return limitCache[key]
