@@ -13,16 +13,16 @@ import commands,tempfile
 
 
 
-txname="T5WWoff"
+txname="TSlepSlep"
 
 tarball="../slha/%s.tar" % txname
 tempdir = tempfile.mkdtemp(prefix=os.getcwd()+'/')
 commands.getoutput ( "tar xvf %s -C %s" %(tarball,tempdir) )
 files=glob.iglob( "%s/%s_*.slha" %(tempdir,txname) )
 
-xM = 1000021
+xM = 1000011
 yM = 1000022
-zM = 1000024
+zM = None
 
 if zM is None:
     gr = ROOT.TGraph()  #2-D grid

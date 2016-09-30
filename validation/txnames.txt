@@ -1,9 +1,8 @@
 TO RUN:
 ------------------------------
 
-T5tttt,T5WWoff,T5WW,T5ZZoff,T5ZZ,T6bbWWoff,T6bbWW,T6ttWWoff,T6ttWW,T6WWoff,T6WW,T6ZZtt
+T6bbWWoff,T6bbWW,T6ttWWoff,T6ttWW,T6WWoff,T6ZZtt
 TChiChipmSlepL,TChiChipmSlepStau,TChiChipmStauL,TChiChiSlepSlep,TChipChimSlepSnu,TChipChimStauSnu
-TChiWZoff,TSlepSlep
 TGQ,TScharm
 
 From CMS-SUS-13-012-eff:
@@ -11,6 +10,7 @@ T1,T2,T1ttttoff,T1tttt
 
 Missing tar files (probably from EMs):
 T1bbbt,T1bbqq,T1bbtt,T1btqq,T1bttt,T1qqtt,T2bt,T5bbbb,T5bbbt,T5btbt,T5tbtt
+T5ZZoff,T5ZZ
 T5WZ,T7btbtWWoff,T7ChipSlep,T8ChipSlep
 TChiChipmStauStau
 T2cc
@@ -20,7 +20,8 @@ TGQbbq,TGQbtq,TGQqtt
 DONE:
 -------------------------------------
 T1bbbb,T1btbt,T2bb,T2bbWWoff,T2bbWW,T2ttoff,T2tt,T5tctc,T5ttttoff
-TChiWH,TChiWW,TChiWZ
+T6WW,T5tttt,T5WWoff,T5WW
+TChiWH,TChiWW,TChiWZ,TChiWZoff,TSlepSlep
 
 ERROR:
 -------------------------------------
