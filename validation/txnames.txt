@@ -1,8 +1,6 @@
 TO RUN:
 ------------------------------
 
-T6bbWWoff,T6bbWW,T6ttWWoff,T6ttWW,T6WWoff,T6ZZtt
-TChiChipmSlepL,TChiChipmSlepStau,TChiChipmStauL,TChiChiSlepSlep,TChipChimSlepSnu,TChipChimStauSnu
 TGQ,TScharm
 
 From CMS-SUS-13-012-eff:
@@ -20,9 +18,11 @@ TGQbbq,TGQbtq,TGQqtt
 DONE:
 -------------------------------------
 T1bbbb,T1btbt,T2bb,T2bbWWoff,T2bbWW,T2ttoff,T2tt,T5tctc,T5ttttoff
-T6WW,T5tttt,T5WWoff,T5WW
+T6WW,T5tttt,T5WWoff,T5WW,T6bbWWoff,T6bbWW,T6ttWW,T6WWoff,T6ZZtt
 TChiWH,TChiWW,TChiWZ,TChiWZoff,TSlepSlep
+TChiChipmSlepL,TChiChipmSlepStau,TChiChipmStauL,,TChipChimSlepSnu,TChipChimStauSnu
 
 ERROR:
 -------------------------------------
+TChiChiSlepSlep,T6ttWWoff
 
