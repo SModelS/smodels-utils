@@ -37,16 +37,23 @@ def getSuperFrame ( tgraphs ):
     """ get the all-enveloping frame of tgraphs """
     if type ( tgraphs ) == ROOT.TGraph:
         return getMinMax ( tgraphs) 
-    minx, miny = float("inf"), float("inf")
-    maxx, maxy = 0., 0.
+    minx, miny = None, None
+    maxx, maxy = None, None
     for tgraph in tgraphs:
         frame = getMinMax ( tgraph )
         if not frame:
-            continue    
+            continue
+        if minx is None:
+            minx, maxx = int(frame["x"][0]),int(frame["x"][1])
+            miny, maxy = int(frame["y"][0]),int(frame["y"][1])
+            
         minx = int(min(minx,frame["x"][0]))
         maxx = int(max(maxx,frame["x"][1]))
         miny = int(min(miny,frame["y"][0]))
         maxy = int(max(maxy,frame["y"][1]))
+    if minx is None:
+        logger.info("Could not find points for %s" %axes)
+        return None
     logger.info ( "the super frame is [%f,%f],[%f,%f]" % ( minx, maxx, miny, maxy ) )
     return { "x": [ minx, maxx], "y": [ miny, maxy ] }
 
@@ -60,8 +67,8 @@ def getExtendedFrame(txnameObjs,axes):
     """
     
     origPlot = OrigPlot.fromString(axes)
-    minx, miny = float("inf"), float("inf")
-    maxx, maxy = 0., 0.
+    minx, miny = None, None
+    maxx, maxy = None, None
     for txnameObj in txnameObjs:
         data = txnameObj.txnameData._data  #Data grid of mass points and ULs of efficiencies
         if not data:
@@ -72,16 +79,23 @@ def getExtendedFrame(txnameObjs,axes):
             xy = origPlot.getXYValues(mass_unitless)
             if xy is None: continue
             else: x,y = xy
+            if minx is None:
+                minx, maxx = x, x
+                miny, maxy = y, y
             minx = min(minx,x)
             miny = min(miny,y)
             maxx = max(maxx,x)
             maxy = max(maxy,y)
 
+    if minx is None:
+        logger.info("Could not find points for %s" %axes)
+        return None
+
     minx = 0.8*minx
     maxx = 1.2*maxx
     miny = 0.9*miny
     maxy = 1.2*maxy
-    logger.info ( "the extended frame is [%f,%f],[%f,%f]" % ( minx, maxx, miny, maxy ) )
+    logger.info( "the extended frame is [%f,%f],[%f,%f]" % ( minx, maxx, miny, maxy ) )
     return { "x": [ minx, maxx], "y": [ miny, maxy ] }
         
     
@@ -123,14 +137,18 @@ def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", Npts=300):
                         addQuotationMarks(txnameObjs[0].constraint))
     
     #First generate points for the extended frame with a lower density:
-    minx,maxx=extframe["x"][0], extframe["x"][1]
-    miny,maxy=extframe["y"][0], extframe["y"][1]
-    ptsA = generateBetterPoints(Npts/3,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChecker)
+    if extframe:
+        minx,maxx=extframe["x"][0], extframe["x"][1]
+        miny,maxy=extframe["y"][0], extframe["y"][1]
+        ptsA = generateBetterPoints(Npts/3,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChecker)
+    else: ptsA = []
     
     #Now generate points for the exclusion curve frame with a higher density:
-    minx,maxx=frame["x"][0], frame["x"][1]
-    miny,maxy=frame["y"][0], frame["y"][1]    
-    ptsB = generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChecker)
+    if frame:
+        minx,maxx=frame["x"][0], frame["x"][1]
+        miny,maxy=frame["y"][0], frame["y"][1]    
+        ptsB = generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChecker)
+    else: ptsB = []
     
     pts = ptsA + ptsB
     
@@ -232,8 +250,14 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChec
             mass = [[m.asNumber(GeV) for m in br] for br in pt[0]]
             if not origPlot.getXYValues(mass): continue
             txdata._data.append(pt)
+    
+    #If there is no data, return empty list:
+    if not txdata._data:
+        logger.warning("No data points found for plane.")
+        return []
+    else:
     #Compute the PCA for the reduced dataset:
-    txdata.computeV()
+        txdata.computeV()
     #Transform the min and max values to the rotated plane:
     extremes = []
     for x,y in [[minx,miny],[maxx,miny],[minx,maxy],[maxx,maxy]]:
