@@ -50,7 +50,7 @@ def createDataInfoFile ( analysis, cut ):
     tokens=lines[cut+1].split()
     lumi,data,bg,sys,sr=float(tokens[1]),float(tokens[2]),float(tokens[3]),float(tokens[4])," ".join(tokens[10:])
     ul=float(tokens[7])
-    eul=statistics.upperLimit ( bg, bg, sys, lumi, .05, 20000 )
+    eul=statistics.upperLimit ( bg, bg, sys, lumi, .05 )
 
     f=open ( destdir+newananame+datadir+ "/dataInfo.txt", "w")
     f.write ( "dataType: efficiencyMap\n" )
