@@ -3,7 +3,7 @@
 import sys,os
 import logging
 # logging.basicConfig(filename='val.out')
-import argparse
+import argparse,time
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 sys.path.append(os.path.join(home,'smodels-utils'))
@@ -83,11 +83,13 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     
     #Loop over experimental results and validate plots
     for expRes in expResList:
-        logger.info("--------- validating  %s" %expRes.globalInfo.id)
+        expt0 = time.time()
+        logger.info("--------- \033[32m validating  %s \033[0m" %expRes.globalInfo.id)
         #Loop over pre-selected txnames:
         txnames = set([tx.txName for tx in expRes.getTxNames()])
         for txname in txnames:
-            logger.info("------------ validating  %s" %txname)
+            txt0 = time.time()
+            logger.info("------------ \033[31m validating  %s \033[0m" %txname)
             tarfile = os.path.join(slhadir,txname+".tar")                
             if not os.path.isfile(tarfile):
                 logger.error('Missing .tar file for %s' %txname)
@@ -108,7 +110,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
                 ax = tgraph.GetName().replace('exclusion_',"")
                 agreement = validatePlot(expRes,txname,ax,tarfile,kfactor)
                 logger.info('               agreement factor = %s' %str(agreement))
-        
+            logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txname,(time.time()-txt0)/60.))
+        logger.info("--------- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
     logger.info("\n\n----- Finished validation.")
 
 

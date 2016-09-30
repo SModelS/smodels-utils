@@ -13,14 +13,14 @@ from ConfigParser import SafeConfigParser
 from plottingFuncs import getExclusionCurvesFor
 import plotRanges
 import slhaCreator
-import commands
+import commands,time
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
 
 
 
-def createFiles(expResList,txname,templateFile,tarFile,xargs):
+def createFiles(expResList,txname,templateFile,tarFile,xargs,Npts=300):
     """
     Creates a .tar file for the txname using the data in expResults.
     
@@ -28,11 +28,15 @@ def createFiles(expResList,txname,templateFile,tarFile,xargs):
     :param txname: String describing the txname (e.g. T2tt)
     :param templateFile: path to the txname template
     :param tarFile: name of the output file
+    :param xargs: argparse.Namespace object holding the options for the cross-section calculation
+    :param Npts: Trial number of points for each plane.
                     
     :return: True if successful, False otherwise. 
     """
 
-    logger.info("Generating %s file" %tarFile)        
+    logger.info("--------  \033[32m Generating %s file \033[0m" %tarFile)
+    t0 = time.time()
+           
 
     #Create temp folder to store the SLHA files:
     tgraphs = {}
@@ -40,7 +44,8 @@ def createFiles(expResList,txname,templateFile,tarFile,xargs):
 
     #Get axes
     for expResult in expResList:
-        txnameObj = [tx for tx in expResult.getTxNames() if tx.txName == txname]           
+        txnameObj = [tx for tx in expResult.getTxNames() 
+                     if (tx.txName == txname and not 'assigned' in tx.constraint)]           
         if not txnameObj: #Skip result if it does not contain the txname
             continue
         txnameObj = txnameObj[0]
@@ -59,12 +64,13 @@ def createFiles(expResList,txname,templateFile,tarFile,xargs):
     if not tgraphs:
         logger.warning("No exclusion curves found for %s" %txname)
         return False
-        
+
+       
     #Get SLHA points and create files for each axes
     tempdir = tempfile.mkdtemp(dir=os.getcwd())
     for (axes,ntgraph) in tgraphs.items():
-        pts = plotRanges.getPoints(ntgraph, txnameObjs, axes)
-        logger.info("%i SLHA files for axes %s" %(len(pts),axes))
+        pts = plotRanges.getPoints(ntgraph, txnameObjs, axes, Npts)
+        logger.info("\033[31m %i SLHA files for axes %s \033[0m " %(len(pts),axes))
         if len(pts)==0:
             continue
         tempf = slhaCreator.TemplateFile(templateFile,axes,tempdir)
@@ -88,7 +94,7 @@ def createFiles(expResList,txname,templateFile,tarFile,xargs):
     
     
     commands.getoutput("cd %s && tar cf %s *.slha" % (tempdir,tarFile))
-    logger.info("-------- File %s created.\n" %tarFile)
+    logger.info("--------  \033[32m File %s created in %.1f min. \033[0m \n" %(tarFile,(time.time()-t0)/60.))
     #Remove temp folder containing the SLHA files:
     shutil.rmtree(tempdir)
 
@@ -96,7 +102,8 @@ def createFiles(expResList,txname,templateFile,tarFile,xargs):
     return True
 
 
-def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,databasePath,xargs,verbosity='info'):
+def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
+         databasePath,xargs,Npts=300,verbosity='info'):
     """
     Creates .tar files for all the txnames and analyses.
 
@@ -106,6 +113,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,databasePa
     :param templatedir: Path to the folder containing the txname.template files
     :param slhadir: Path to the output folder holding the txname .tar files
     :param databasePath: Path to the SModelS database
+    :param Npts: Trial number of points for each plane.
     :param verbosity: overall verbosity (e.g. error, warning, info, debug)
     :param xargs: argparse.Namespace object holding the options for the cross-section calculation
     
@@ -144,7 +152,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,databasePa
     for txname in txnameList:
         templateFile = os.path.join(templatedir,txname+'.template')
         tarFile = os.path.join(slhadir,txname+'.tar')
-        createFiles(expResList,txname,templateFile,tarFile,xargs)
+        createFiles(expResList,txname,templateFile,tarFile,xargs,Npts)
         
     
     logger.info("\n\n----- Finished file creation.")
@@ -198,11 +206,18 @@ if __name__ == "__main__":
     else:
         dataTypes = ['all']
         datasetIDs = parser.get("database", "dataselector").split(",")
+    
+
+    if parser.get("extra","npts"):
+        Npts = int(parser.get("extra","npts"))
+    else:
+        Npts = 300
         
     slhadir = os.path.abspath(parser.get("path", "slhaPath"))
     templatedir = os.path.abspath(parser.get("path", "templatePath"))
     databasePath = os.path.abspath(parser.get("path", "databasePath"))
 
     #Run creation:
-    main(analyses,datasetIDs,txnames,dataTypes,templatedir,slhadir,databasePath,xargs,args.log)
+    main(analyses,datasetIDs,txnames,dataTypes,templatedir,slhadir,
+         databasePath,xargs,Npts,args.log)
     
