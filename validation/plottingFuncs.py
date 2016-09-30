@@ -80,12 +80,17 @@ def getFigureUrl(validationPlot ):
     if not txurl:
         return None
     if type(txurl) != type(txaxes):
-            logger.error("figureUrl (%s) and axes (%s) are not of the same type" %(txurl,
+        logger.error("figureUrl (%s) and axes (%s) are not of the same type" %(txurl,
                        txaxes))
-            return None
+        return None
+    elif isinstance(txurl,list) and len(txurl) != len(txaxes):
+        logger.error("figureUrl (%s) and axes (%s) are not of the same length" %(txurl,
+                       txaxes))
+        return None 
     if not validationPlot.axes in txaxes:
         return None
     pos = [i for i,x in enumerate(txaxes) if x==validationPlot.axes ]
+    
     if len(pos)!=1:
         logger.error("found axes %d times" % len(pos))
         sys.exit()
