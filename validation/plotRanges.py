@@ -136,6 +136,7 @@ def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", Npts=300):
     vertexChecker = vertexChecking.VertexChecker(txnameObjs[0], 
                         addQuotationMarks(txnameObjs[0].constraint))
     
+
     #First generate points for the extended frame with a lower density:
     if extframe:
         minx,maxx=extframe["x"][0], extframe["x"][1]

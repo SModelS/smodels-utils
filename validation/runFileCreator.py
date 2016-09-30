@@ -44,7 +44,8 @@ def createFiles(expResList,txname,templateFile,tarFile,xargs,Npts=300):
 
     #Get axes
     for expResult in expResList:
-        txnameObj = [tx for tx in expResult.getTxNames() if tx.txName == txname]           
+        txnameObj = [tx for tx in expResult.getTxNames() 
+                     if (tx.txName == txname and not 'assigned' in tx.constraint)]           
         if not txnameObj: #Skip result if it does not contain the txname
             continue
         txnameObj = txnameObj[0]
