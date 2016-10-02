@@ -7,6 +7,8 @@ import argparse,time
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 sys.path.append(os.path.join(home,'smodels-utils'))
+sys.path.insert(0,".")
+sys.path.insert(0,"../")
 from validation import plottingFuncs, validationObjs
 from smodels.experiment.databaseObj import Database
 from ConfigParser import SafeConfigParser
