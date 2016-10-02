@@ -4,13 +4,6 @@ import sys,os
 import logging
 # logging.basicConfig(filename='val.out')
 import argparse,time
-home = os.path.expanduser("~")
-sys.path.append(os.path.join(home,'smodels'))
-sys.path.append(os.path.join(home,'smodels-utils'))
-sys.path.insert(0,".")
-sys.path.insert(0,"../")
-from validation import plottingFuncs, validationObjs
-from smodels.experiment.databaseObj import Database
 from ConfigParser import SafeConfigParser
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -127,23 +120,30 @@ if __name__ == "__main__":
             default = 'info', type = str)
            
     args = ap.parse_args()
-    
-    numeric_level = getattr(logging,args.log.upper(), None)
-    logger.setLevel(level=numeric_level)
-    plottingFuncs.logger.setLevel(level=numeric_level)
-    validationObjs.logger.setLevel(level=numeric_level)
-    
                 
     if not os.path.isfile(args.parfile):
         logger.error("Parameters file %s not found" %args.parfile)
     else:
         logger.info("Reading validation parameters from %s" %args.parfile)
-        
-        
 
     parser = SafeConfigParser()
-    parser.read(args.parfile)        
+    parser.read(args.parfile)
+    
+    #Add smodels and smodels-utils to path
+    smodelsPath = parser.get("path", "smodelsPath")
+    utilsPath = parser.get("path", "utilsPath")    
+    sys.path.append(smodelsPath)
+    sys.path.append(utilsPath)
+    from validation import plottingFuncs, validationObjs
+    from smodels.experiment.databaseObj import Database
 
+    #Control output level:
+    numeric_level = getattr(logging,args.log.upper(), None)
+    logger.setLevel(level=numeric_level)
+    plottingFuncs.logger.setLevel(level=numeric_level)
+    validationObjs.logger.setLevel(level=numeric_level)
+    
+    #Seleceted plots for validation:
     analyses = parser.get("database", "analyses").split(",")
     txnames = parser.get("database", "txnames").split(",")
     if parser.get("database", "dataselector") == "efficiencyMap":
