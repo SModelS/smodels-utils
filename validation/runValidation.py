@@ -111,7 +111,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
                 logger.info('               agreement factor = %s' %str(agreement))
             logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txname,(time.time()-txt0)/60.))
         logger.info("--------- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
-    logger.info("\n\n----- Finished validation in %.1f min." %(time.time()-tval0)/60.)
+    logger.info("\n\n----- Finished validation in %.1f min." %((time.time()-tval0)/60.))
 
 
 if __name__ == "__main__":
