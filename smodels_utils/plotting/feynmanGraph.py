@@ -19,6 +19,9 @@ def printParticle_ ( label ):
     if label=="jet": label="q"
     if label in [ "hi", "higgs" ]: label="H"
     # if label in [ "nu" ]: label="$\\nu$"
+    # if label in [ "f" ]: label = r"\Pelectron"
+    if label in [ "f" ]: return r"\Pfermion"
+    if label in [ "b" ]: return r"\Pbeauty"
     label=label+"     "
     return label[:3]
 
@@ -35,8 +38,8 @@ def zero_ ():
     c1=Vertex(1.0,0., mark=CIRCLE, fill=[ BLUE ] ) ## , radius=.01)
     c1=Vertex(0.,1., mark=CIRCLE, fill=[ BLUE ] ) ## , radius=.01)
 
-def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=True, \
-                            verbose=False, nspec=None, displace=None ):
+def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=True,\
+               verbose=False, nspec=None, displace=None ):
     """ simple: draw a line from p1 to p2
 
             :param canvas: the pyx canvas to draw on
@@ -44,7 +47,8 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
             :param p2: end point
             :param straight: straight lines or xkcd style?
             :param label: add a label?
-            :param nspec: specify the number of segment_s, None is draw the number randomly
+            :param nspec: specify the number of segment_s, 
+                          None is draw the number randomly
             :param displace: displace at fixed distance?
 
             :returns: array of all line segment_s
@@ -54,7 +58,8 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
     from pyx import bitmap
     import SModelSUtils
 
-    if spin=="scalar" and not NamedLine.has_key ( spin ) and NamedLine.has_key ( "higgs" ):
+    if spin=="scalar" and not NamedLine.has_key ( spin ) and \
+                  NamedLine.has_key ( "higgs" ):
         spin="higgs"
     if straight:
         fl=NamedLine[spin](p1,p2)
@@ -63,6 +68,7 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
             label=label.replace("nu","$\\nu$").replace("+","$^{+}$").replace("-","$^{-}$")
             label=label.replace("ta","$\\tau$").replace("mu","$\mu$")
             fl.addLabel ( label, pos=0.9, displace=displace )
+            # fl.addLabel ( "$%s$" % label, pos=0.9, displace=displace )
         return [ fl ]
 
     fl=Fermion(p1,p2)
@@ -92,7 +98,8 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
     if displace==None: displace=-.08
     # if label: segs[-1].addLabel ( label, pos=0.7, displace=displace )
     if label:
-        lbl=label.replace(" ","").replace("_","").replace("$","").replace("+","").replace("-","")
+        lbl=label.replace(" ","").replace("_","").replace("$","").replace("+","")
+        lbl=lbl.replace("-","")
         if lbl == "l": lbl="smallL"
         else:
             lbl=lbl.upper()
@@ -120,7 +127,8 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
         canvas.insert(bitmap.bitmap(pt.x()+displace, pt.y(), jpg, compressmode=None))
     return segs
 
-def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=False ):
+def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=False,
+           italic=False ):
     """ plot a lessagraph, write into pdf/eps/png file called <filename>
         :param straight: draw straight lines, or xkcd style
         :param inparts: draw the incoming lines and the big production blob?
@@ -213,10 +221,14 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
                 dx=(len(insertions)-1)*(-.25)*f ## delta_x
                 #dx=(particles-1)*(-.5)*f ## delta_x
                 for (i,insertion) in enumerate(insertions):
-                    p=Point ( f*(nvtx + 1 +    dx + 0.5*i), f*y )
+                    x_c=f*(nvtx + 1 +    dx + 0.5*i)
+                    y_c=f*y
+                    p=Point ( x_c, y_c )
+                    # print "add point at",x_c,y_c
                     ## print "branch=",branch
                     label=printParticle_ ( insertion )
                     ## ff=Fermion(v1,p).addLabel ( label )
+                    if italic: label="$%s$" % label
                     connect_ ( c, v1, p, straight=straight, label=label )
 
             pl = Point ( nvtx+2,ct )
@@ -257,6 +269,10 @@ if __name__ == "__main__":
                 type=types.StringType, default='out.pdf' )
         argparser.add_argument ( '-s', '--straight', help='straight, not xkcd style', 
                                  action='store_true' )
+        argparser.add_argument ( '-I', '--italic', action='store_true',
+                help='write labels in italic (only in straight mode' )
+        argparser.add_argument ( '-i', '--incoming', help='draw incoming particles', 
+                                 action='store_true' )
         argparser.add_argument ( '-v', '--verbose', help='be verbose', 
                                  action='store_true' )
         args=argparser.parse_args()
@@ -267,8 +283,8 @@ if __name__ == "__main__":
 
         if args.constraint!="":
             E=element.Element ( args.constraint )
-            draw ( E, args.output, straight=args.straight, inparts=False,
-                   verbose=args.verbose )
+            draw ( E, args.output, straight=args.straight, inparts=args.incoming,
+                   verbose=args.verbose, italic=args.italic )
             sys.exit()
 
         filename="%s/lhe/%s_1.lhe" % (SModelSUtils.installDirectory(), args.T )
@@ -278,5 +294,5 @@ if __name__ == "__main__":
         Event = reader.next()
         E = lheDecomposer.elementFromEvent( Event, crossSection.XSectionList() )
 
-        draw ( E, args.output, straight=args.straight, inparts=False,
-               verbose=args.verbose )
+        draw ( E, args.output, straight=args.straight, inparts=args.incoming,
+               verbose=args.verbose, italic=args.italic )
