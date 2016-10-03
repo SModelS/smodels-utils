@@ -76,12 +76,16 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     if not expResList:
         logger.error("No experimental results found.")    
     
+    tval0 = time.time()
     #Loop over experimental results and validate plots
     for expRes in expResList:
         expt0 = time.time()
         logger.info("--------- \033[32m validating  %s \033[0m" %expRes.globalInfo.id)
         #Loop over pre-selected txnames:
-        txnames = set([tx.txName for tx in expRes.getTxNames()])
+        txnames = set([tx.txName for tx in expRes.getTxNames() if not 'assigned' in tx.constraint])
+        if not txnames:
+            logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
+            continue
         for txname in txnames:
             txt0 = time.time()
             logger.info("------------ \033[31m validating  %s \033[0m" %txname)
@@ -107,7 +111,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
                 logger.info('               agreement factor = %s' %str(agreement))
             logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txname,(time.time()-txt0)/60.))
         logger.info("--------- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
-    logger.info("\n\n----- Finished validation.")
+    logger.info("\n\n----- Finished validation in %.1f min." %(time.time()-tval0)/60.)
 
 
 if __name__ == "__main__":
