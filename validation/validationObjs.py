@@ -268,7 +268,7 @@ class ValidationPlot():
             exec(f.read().replace('\n',''))
             f.close()
             if not 'ExptRes' in smodelsOutput:
-#                 logger.info("No results for %s " %slhafile)
+                logger.debug("No results for %s " %slhafile)
                 continue 
             res = smodelsOutput['ExptRes']
             expRes = res[0]       
@@ -284,7 +284,7 @@ class ValidationPlot():
                 return False
             
             mass = expRes['Mass (GeV)']                
-            v = origPlot.getXYValues(mass)
+            v = origPlot.getXYValues(mass)            
             if v == None:
                 logger.debug("dropping %s, doesnt fall into the plane of %s." % (slhafile, origPlot.string ) )
                 continue
