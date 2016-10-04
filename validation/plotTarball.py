@@ -13,16 +13,16 @@ import commands,tempfile
 
 
 
-txname="TSlepSlep"
+txname="T6bbWWoff"
 
 tarball="../slha/%s.tar" % txname
 tempdir = tempfile.mkdtemp(prefix=os.getcwd()+'/')
 commands.getoutput ( "tar xvf %s -C %s" %(tarball,tempdir) )
 files=glob.iglob( "%s/%s_*.slha" %(tempdir,txname) )
 
-xM = 1000011
+xM = 1000006
 yM = 1000022
-zM = None
+zM = 1000024
 
 if zM is None:
     gr = ROOT.TGraph()  #2-D grid
@@ -47,12 +47,43 @@ for (ifile,f) in enumerate(files):
 print tempdir
 shutil.rmtree(tempdir)
 print gr.GetN()
+
+gr.GetYaxis().SetTitleFont(132)
+gr.GetYaxis().SetTitleSize(0.04)
+gr.GetYaxis().CenterTitle(True)
+gr.GetYaxis().SetTitleOffset(2.)
+gr.GetXaxis().SetTitleFont(52)
+gr.GetXaxis().SetTitleSize(0.04)
+gr.GetXaxis().CenterTitle(True)
+gr.GetXaxis().SetTitleOffset(2.)
+gr.GetYaxis().SetLabelFont(132)
+gr.GetXaxis().SetLabelFont(132)
+gr.GetYaxis().SetLabelSize(0.05)
+gr.GetXaxis().SetLabelSize(0.05)
+if zM:
+    gr.GetZaxis().SetTitleFont(132)
+    gr.GetZaxis().SetTitleSize(0.04)
+    gr.GetZaxis().CenterTitle(True)
+    gr.GetZaxis().SetTitleOffset(2.)
+    gr.GetZaxis().SetLabelFont(132)
+    gr.GetZaxis().SetLabelSize(0.05)
+
+plane = ROOT.TCanvas("c1", "c1",0,0,800,600)    
+plane.SetLeftMargin(0.17)
+plane.SetBottomMargin(0.16)
+plane.SetRightMargin(0.2)
+plane.cd()
 gr.GetXaxis().SetTitle("%s mass (GeV)" %str(xM))
 gr.GetYaxis().SetTitle("%s mass (GeV)" %str(yM))
 if zM:
     gr.GetZaxis().SetTitle("%s mass (GeV)" %str(zM))
-    
-gr.Draw("AP")
+
+gr.SetTitle(tarball)
+gr.Draw("P")
+
+
+
+
 
 wait = raw_input("Press any key to exit")
 # database = Database("../../smodels-database/")

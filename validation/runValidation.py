@@ -82,34 +82,37 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         expt0 = time.time()
         logger.info("--------- \033[32m validating  %s \033[0m" %expRes.globalInfo.id)
         #Loop over pre-selected txnames:
-        txnames = set([tx.txName for tx in expRes.getTxNames() if not 'assigned' in tx.constraint])
+        txnames = set([tx for tx in expRes.getTxNames() if not 'assigned' in tx.constraint])
         if not txnames:
             logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
             continue
         for txname in txnames:
+            txnameStr = txname.txName
             txt0 = time.time()
-            logger.info("------------ \033[31m validating  %s \033[0m" %txname)
-            tarfile = os.path.join(slhadir,txname+".tar")                
+            logger.info("------------ \033[31m validating  %s \033[0m" %txnameStr)
+            tarfile = os.path.join(slhadir,txnameStr+".tar")                
             if not os.path.isfile(tarfile):
-                logger.error('Missing .tar file for %s' %txname)
+                logger.error('Missing .tar file for %s' %txnameStr)
                 continue
-            if txname.lower() in kfactorDict:
-                kfactor = float(kfactorDict[txname.lower()])
+            if txnameStr.lower() in kfactorDict:
+                kfactor = float(kfactorDict[txnameStr.lower()])
             else:
                 kfactor = 1.
 
-            tgraphs = plottingFuncs.getExclusionCurvesFor(expRes,txname,get_all=False)
-            if not tgraphs or not tgraphs[txname]:
-                logger.info("No exclusion curves found for %s" %txname)
+            tgraphs = plottingFuncs.getExclusionCurvesFor(expRes,txnameStr,get_all=False)
+            if not tgraphs or not tgraphs[txnameStr]:
+                logger.info("No exclusion curves found for %s" %txnameStr)
                 continue
             else:
-                tgraphs = tgraphs[txname] 
+                tgraphs = tgraphs[txnameStr] 
             #Loop over plots:
             for tgraph in tgraphs:                
                 ax = tgraph.GetName().replace('exclusion_',"")
-                agreement = validatePlot(expRes,txname,ax,tarfile,kfactor)
+                if not ax in txname.axes: continue
+                if not 'Eq(inter0,x-10.0)_Eq(lsp,y)' in ax: continue
+                agreement = validatePlot(expRes,txnameStr,ax,tarfile,kfactor)
                 logger.info('               agreement factor = %s' %str(agreement))
-            logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txname,(time.time()-txt0)/60.))
+            logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--------- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
     logger.info("\n\n----- Finished validation in %.1f min." %((time.time()-tval0)/60.))
 
