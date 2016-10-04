@@ -201,22 +201,19 @@ class DatabaseCreator(list):
                 efficiencyMap = self.extendDataList\
                 (efficiencyMap, plane, txName)
                 self.timeStamp ( 'extended efficiencyMap to %s entries %s'\
-                                 % (len(efficiencyMap), self.describeMap ( efficiencyMap ) ) )
+                    % (len(efficiencyMap), self.describeMap ( efficiencyMap ) ) )
                 efficiencyMap3D = self.extendDataList\
                 (efficiencyMap3D, plane, txName)
                 self.timeStamp ( 'extended efficiencyMap3D to %s entries %s'\
-                                 % (len(efficiencyMap3D), self.describeMap ( efficiencyMap3D ) ) )
+                    % (len(efficiencyMap3D), self.describeMap ( efficiencyMap3D ) ) )
                 upperLimits = self.extendDataList\
                 (upperLimits, plane, txName, 'limit')
                 self.timeStamp ( 'extended upperLimits to %s entries %s'\
-                                 % ( len(upperLimits), self.describeMap ( upperLimits ) ) )
+                    % ( len(upperLimits), self.describeMap ( upperLimits ) ) )
                 expectedUpperLimits = self.extendDataList(expectedUpperLimits,\
                         plane, txName, 'expectedlimit')
                 self.timeStamp ( 'extended expectedUpperLimits to %s entries %s'\
-                                 % ( len(expectedUpperLimits), self.describeMap ( expectedUpperLimits ) ) )
-                # self.timeStamp ( 'efficiency map is now %s' % efficiencyMap )
-
-
+                    % ( len(expectedUpperLimits), self.describeMap ( expectedUpperLimits ) ) )
                 if plane.obsUpperLimit or plane.efficiencyMap or plane.efficiencyMap3D:
                     if not plane.obsUpperLimit.dataUrl and \
                     not plane.efficiencyMap.dataUrl and \
@@ -414,14 +411,13 @@ class DatabaseCreator(list):
         region.validated = None
         if add_axes:
             self._extendRegionAttr(region, 'axes', str(plane.origPlot))
-        self._extendRegionAttr(region, 'figureUrl', plane.figureUrl)
-        if plane.obsUpperLimit.dataUrl:
-            self._extendRegionAttr(region, 'dataUrl', plane.obsUpperLimit.dataUrl)
-        if plane.efficiencyMap.dataUrl:
-            self._extendRegionAttr(region, 'dataUrl', plane.efficiencyMap.dataUrl)
-        if plane.efficiencyMap3D.dataUrl:
-            self._extendRegionAttr(region, 'dataUrl', plane.efficiencyMap3D.dataUrl)
-
+            self._extendRegionAttr(region, 'figureUrl', plane.figureUrl)
+            if plane.obsUpperLimit.dataUrl:
+                self._extendRegionAttr(region, 'dataUrl', plane.obsUpperLimit.dataUrl)
+            if plane.efficiencyMap.dataUrl:
+                self._extendRegionAttr(region, 'dataUrl', plane.efficiencyMap.dataUrl)
+            if plane.efficiencyMap3D.dataUrl:
+                self._extendRegionAttr(region, 'dataUrl', plane.efficiencyMap3D.dataUrl)
 
     def _extendRegionAttr(self, region, name, value):
         if value in [ None, "" ]: ## we dont add None or empty strings
@@ -600,28 +596,17 @@ class DatabaseCreator(list):
         if update:
             mode="update"
 
-        #print "[sms.root] mode=",mode
-        #if not os.path.exists ( self.validationPath ):
-        #    os.mkdir ( self.validationPath )
-        #print "[sms.root] add exclusions",[ x.name for x in self.exclusions ]
-
         smsRoot = ROOT.TFile(self.base + self.smsrootFile,mode)
         for exclusions in self.exclusions:
             dirname = exclusions.name
             if smsRoot.Get( dirname )==None:
-                #print "skipping",exclusions.name,type(exclusions)
-                #continue
-        #        print "[sms.root] mkdir",dirname
                 directory = smsRoot.mkdir( dirname, dirname )
-                # directory.cd()
             smsRoot.cd ( dirname )
             for exclusion in exclusions: 
                 fullname = "%s/%s" % ( dirname, exclusion.GetName() )
+                print "[sms.root] add %s" % fullname
                 if smsRoot.Get( fullname ) == None:
-         #           print "[sms.root] now writing",fullname
                     exclusion.Write()
-          #      else:
-          #          print "[sms.root] skipping %s" % fullname
         smsRoot.Close()
 
     def _createTwikiTxt(self):
