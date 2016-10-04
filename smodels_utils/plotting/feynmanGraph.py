@@ -238,7 +238,10 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
         #fd.currentCanvas.insert(bitmap.bitmap(0-.5, 0.5-.5, jpg, compressmode=None))
         # zero_()
         pdffile=filename.replace("png","pdf")
+        epsfile=filename.replace("pdf","eps")
         fd.draw( pdffile )
+        print "epsfile=",epsfile
+        fd.draw( epsfile )
         if pdffile!=filename:
             import os
             os.system ( "convert %s %s" % ( pdffile, filename ) )

@@ -163,9 +163,9 @@ class DatabaseCreator(list):
 
         hasUpperLimits = False
 
-        self.timeStamp ( "before going through txnames" )
+        # self.timeStamp ( "before going through txnames" )
         for txName in self:
-            self.timeStamp ( "reading %s" % txName )
+            # self.timeStamp ( "reading %s" % txName )
             dataset=None
 
             if not hasattr(txName.on, 'constraint'):
@@ -231,8 +231,8 @@ class DatabaseCreator(list):
                     else:
                         exclusions[getattr(region, self.txNameField)]\
                         .addMassPlane(plane)
-                        self.timeStamp ( 'Found region: %s %d' % \
-                                  ( region.name, txName.onShell ) )
+                        self.timeStamp ( 'Found region: %s' % \
+                                  ( region.name ) )
 
                 for excl in exclusions:
                     self.timeStamp ( 'extend exclusionLines for %s to %s entries'\
@@ -348,9 +348,6 @@ class DatabaseCreator(list):
 
         Only if the regionExist attr. is set to 'auto' this automated scan of
         region is performed, else the predefined settings (True/False)
-        of this attr. is used to determine if the mass plane belongs
-        to the region
-
         If the region exist (means at least on mass Array belongs to it)
         self._setRegionAttr is called to set the attributes
         which belong to the region
@@ -361,39 +358,44 @@ class DatabaseCreator(list):
         :param plane: inputObjects.MetaInfoInput-objects
         :param vertexChecker: standardObjects.VertexChecker-object
         :param txName: inputObjects.TxNameInput-object
-        :param limitType: type off limit (limit, expectedlimit, or None for efficiencyMap)
+        :param limitType: type of limit (limit, expectedlimit, or None for efficiencyMap)
         :raise kinRegionSetterError: if the 'regionExist' is not True, False or 'auto'
         """
 
         kinRegions = txName.kinematicRegions
         for region in kinRegions:
-            #print "region.name=",region.name
-            #print "plane.onShell=",plane.onShell
-            #print "plane.offShell=",plane.onShell
+            offShellVertices = self.vertexChecker.getOffShellVertices(massArray)
+            """
+            print "region.name=",region.name
+            print "plane.onShell=",plane.onShell
+            print "plane.offShell=",plane.onShell
+            print "offShellVertices=",offShellVertices
+            """
+            add_axes = True
+            if len(offShellVertices)==0 and region.name == "offShell":
+                add_axes = False
             regionExist = getattr(plane, region.name)
             if not regionExist == 'auto':
                 if not isinstance(regionExist , bool):
                     Errors().kinRegionSetter(txName.name, region.name, \
                     regionPreSet)
                 if regionExist == True and i == 0 and limitType != "expectedlimit":
-                    self._setRegionAttr(txName, region, plane)
+                    self._setRegionAttr(txName, region, plane, add_axes )
                 continue
             if regionExist == 'auto':
-                self._setRegionAttr(txName, region, plane)
+                self._setRegionAttr(txName, region, plane, add_axes )
 
             if not self.vertexChecker:
                 Errors().notAssigned(txName.name)
-            offShellVertices = \
-            self.vertexChecker.getOffShellVertices(massArray)
             if region.checkoffShellVertices(offShellVertices) and limitType != "expectedlimit":
                 setattr(plane, region.name, True )
                 ## setattr(plane, region.name, 'auto' )
-                self._setRegionAttr(txName, region, plane)
+                self._setRegionAttr(txName, region, plane, add_axes )
 
         kinRegions = txName.kinematicRegions
 
 
-    def _setRegionAttr(self, txName, region, plane):
+    def _setRegionAttr(self, txName, region, plane, add_axes ):
 
         """
         The list infoAttr of inputObjects.KinematicRegion-class
@@ -404,12 +406,14 @@ class DatabaseCreator(list):
         :param txName: inputObjects.TxNameInput-object
         :param region: inputObjects.KinematicRegion-object
         """
+        # self.timeStamp ( "_setRegionAttr %s" % ( region ) )
 
         self._extendInfoAttr(region, self.txNameField,0)
         setattr(region, self.txNameField, txName.name + region.topoExtension)
         self._extendInfoAttr(region, 'validated')
         region.validated = None
-        self._extendRegionAttr(region, 'axes', str(plane.origPlot))
+        if add_axes:
+            self._extendRegionAttr(region, 'axes', str(plane.origPlot))
         self._extendRegionAttr(region, 'figureUrl', plane.figureUrl)
         if plane.obsUpperLimit.dataUrl:
             self._extendRegionAttr(region, 'dataUrl', plane.obsUpperLimit.dataUrl)
@@ -422,6 +426,9 @@ class DatabaseCreator(list):
     def _extendRegionAttr(self, region, name, value):
         if value in [ None, "" ]: ## we dont add None or empty strings
             return
+        #if name == "axes":
+        #    self.timeStamp ( "we extend region ``%s'' with %s" % ( region, value ))
+            
         if hasattr(region, name):
             previous =getattr (region, name )
             if previous in [ "", None ]:
@@ -648,6 +655,13 @@ class DatabaseCreator(list):
         for obj in objects: 
             # in the case of Txname.txt, obj is a Kinematic region
             # self.timeStamp ( "we write %s" % obj )
+            add_axes=False
+            for attr in obj.infoAttr:
+                if not attr in [ "upperLimits", "expectedUpperLimits", \
+                                 "efficiencyMap" ]:
+                    continue
+                add_axes=True
+
             for attr in obj.infoAttr:
                 ## self.timeStamp ( "attr is %s" % attr )
                 if attr in [ "efficiencyMap3D" ]: continue
@@ -659,6 +673,9 @@ class DatabaseCreator(list):
                 if attr in [ "upperLimits", "expectedUpperLimits", "efficiencyMap" ]:
                     ## the next line splits onshell from offshell data points
                     value = self.vertexChecker.filterData( value, kinregname )
+                    #self.timeStamp ( "after vertex checker we have: %s, %s" %(value[:3], kinregname ) )
+                #if attr == "axes":
+                #    self.timeStamp ( "now writing axes: %s: %d" % (value, add_axes) )
                 content = '%s%s%s%s\n' %(content, attr,\
                 self.assignmentOperator, value )
 

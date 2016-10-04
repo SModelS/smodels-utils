@@ -330,6 +330,8 @@ class StandardTWiki(object):
         """
             
         self.txNames.append(self.link('SmsDictionary#%s' %txName, txName))
+        #print "[standardObjects] appending",str(plane.origPlot),"to",\
+        #    txName
         self.axes.append(str(plane.origPlot))
         self.figures.append(self.link(plane.figureUrl, plane.figure))
         self.limits.append(self.objectFormat(plane.origLimits))

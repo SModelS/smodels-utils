@@ -145,12 +145,11 @@ class KinematicRegion(Locker):
     """
     
     
-    infoAttr = ['conditionDescription', 'condition', 'constraint','checked','figureUrl', 'dataUrl' ]
-    internalAttr = ['name', 'functions', 'topoExtension',\
-    'region']
+    infoAttr = ['conditionDescription', 'condition', 'constraint','checked',\
+                'figureUrl', 'dataUrl' ]
+    internalAttr = ['name', 'functions', 'topoExtension', 'region']
     
     def __init__(self,name,topoExtension, *conditionFunctions):
-        
         """
         :param name: name as string
         :param topoExtension: string to be added to the txName in order
@@ -159,14 +158,17 @@ class KinematicRegion(Locker):
         kinematic region. The parameter of this functions have to be a list of 
         tuples. The return value has to be a bool type
         """
-        
         self.name = name
         self.functions = conditionFunctions
         self.topoExtension = topoExtension
         self.region = 'auto'
 
+    def __str__(self):
+        ret="KinematicRegion: %s, %s" % ( self.name, self.region )
+        # ret+=" [%s]" % ( self.topoExtension )
+        return ret
+
     def checkoffShellVertices(self,offShellVertices):
-        
         """
         checks if offShellVertices meet the conditions
         given by self.functions (= conditionFunctions)
@@ -174,18 +176,15 @@ class KinematicRegion(Locker):
         the vertices with off-shell SM-particles
         :returns: True or False
         """
-
         for function in self.functions:
             if not function(offShellVertices): 
                 return False
         return True
         
     def __nonzero__(self):
-        
         return self.regionExist
              
 class MassPlane(Locker):
-    
     """
     Holds all information related to one mass plane
     a mass plane is defined by their axes
@@ -193,12 +192,10 @@ class MassPlane(Locker):
     
     infoAttr = []
     internalAttr = ['_txDecay', 'origPlot', 'origLimits', 'origExclusions',
-    'origEfficiencyMap', 'figure', 'figureUrl', 'dataUrl', 'histoDataUrl', 
-    'exclusionDataUrl', 'origEfficiencyMap3D']
+            'origEfficiencyMap', 'figure', 'figureUrl', 'dataUrl', 'histoDataUrl', 
+            'exclusionDataUrl', 'origEfficiencyMap3D']
     
-    def __init__(self,txDecay, motherMass = None,\
-    lspMass = None, **interMasses ):
-        
+    def __init__(self,txDecay, motherMass = None, lspMass = None, **interMasses ):
         """
         sets both branches to the given axes and initialize the mass plane related
         values an objects
@@ -207,10 +204,10 @@ class MassPlane(Locker):
         containing only the variables 'x', 'y' and numbers as float
         :param lspMass: mass of lightest SUSY-particle as sympy.core.symbol.Symbol,
         containing only the variables 'x', 'y' and numbers as float
-        :param **interMasses: masses of the intermediated particles as sympy.core.symbol.Symbol,
-        containing only the variables 'x', 'y' and numbers as float
+        :param **interMasses: masses of the intermediated particles as 
+                              sympy.core.symbol.Symbol, containing only the
+                              variables 'x', 'y' and numbers as float
         """
-        
         self._txDecay = txDecay
         self.origPlot = OrigPlot()
         self.setBranch_1 \
@@ -233,6 +230,10 @@ class MassPlane(Locker):
         self.origEfficiencyMap3D = OrigEfficiencyMap3D('efficiencyMap3D')
         self.figure =None
         self.figureUrl = None
+
+    def __str__(self):
+        return "%s" % ( self.origPlot )
+
         
     def setBranch_1(self, motherMass = None, lspMass = None, **interMasses):
         
