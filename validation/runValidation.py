@@ -109,7 +109,6 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             for tgraph in tgraphs:                
                 ax = tgraph.GetName().replace('exclusion_',"")
                 if not ax in txname.axes: continue
-                if not 'Eq(inter0,x-10.0)_Eq(lsp,y)' in ax: continue
                 agreement = validatePlot(expRes,txnameStr,ax,tarfile,kfactor)
                 logger.info('               agreement factor = %s' %str(agreement))
             logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
