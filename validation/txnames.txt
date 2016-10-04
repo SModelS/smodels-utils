@@ -2,10 +2,6 @@ TO RUN:
 ------------------------------
 
 TGQ,TScharm
-
-From CMS-SUS-13-012-eff:
-
-
 Missing tar files (probably from EMs):
 T1bbbt,T1bbqq,T1bbtt,T1btqq,T1bttt,T1qqtt,T2bt,T5bbbb,T5bbbt,T5btbt,T5tbtt
 T5ZZoff,T5ZZ
