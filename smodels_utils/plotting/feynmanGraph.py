@@ -2,7 +2,7 @@
 
 """
 .. module:: feynmanGraph
-        :synopsis: This unit contains code to draw feynman graphs, in two 
+        :synopsis: This unit contains code to draw feynman graphs, in two
                    different styles: xkcd, and straight.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
@@ -11,6 +11,22 @@
 
 import logging
 logger = logging.getLogger(__name__)
+import sys
+
+class Redirector(object):
+    def __init__(self, name, mode = "w" ):
+        self.file = open(name, mode)
+        self.stdout = sys.stdout
+        self.stderr = sys.stderr
+        sys.stdout = self
+        sys.stderr = self
+    def __del__(self):
+        sys.stdout = self.stdout
+        sys.stderr = self.stderr
+        self.file.close()
+    def write(self, data):
+        self.file.write(data)
+        self.file.flush()
 
 def printParticle_ ( label ):
     """ very simple method to rename a few particles for the asciidraw
@@ -47,7 +63,7 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
             :param p2: end point
             :param straight: straight lines or xkcd style?
             :param label: add a label?
-            :param nspec: specify the number of segment_s, 
+            :param nspec: specify the number of segment_s,
                           None is draw the number randomly
             :param displace: displace at fixed distance?
 
@@ -65,8 +81,13 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
         fl=NamedLine[spin](p1,p2)
         if displace==None: displace=.05
         if label:
-            label=label.replace("nu","$\\nu$").replace("+","$^{+}$").replace("-","$^{-}$")
-            label=label.replace("ta","$\\tau$").replace("mu","$\mu$")
+            # print "before replacement",label
+            replacements = { "nu": "\\nu", "+": "^{+}", "-":"^{-}", "ta": "\\tau",
+                             "mu": "\\mu" }
+            for r,rr in replacements.items():
+                #label=label.replace ( r, "$%s%" % rr )
+                label=label.replace ( r, rr )
+            label="$%s$" % label
             fl.addLabel ( label, pos=0.9, displace=displace )
             # fl.addLabel ( "$%s$" % label, pos=0.9, displace=displace )
         return [ fl ]
@@ -115,7 +136,7 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
             logger.error ( "cant load %s!" % filename )
             import sys
             sys.error(0)
- 
+
         jpg = bitmap.jpegimage( filename )
         y1=segs[-1].fracpoint(1.0).y()
         y2=segs[-1].fracpoint(0.0).y()
@@ -207,7 +228,7 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
                 # mark=None
                 v1=Vertex ( f*(nvtx+1),f*ct,mark=mark)
                 # f1 = Scalar    ( lastVertex,v1) ## .addLabel ( "x")
-                f1 = connect_ ( c, lastVertex,v1, straight=straight, spin="scalar", 
+                f1 = connect_ ( c, lastVertex,v1, straight=straight, spin="scalar",
                                 bend=True, verbose=False, nspec=3 )
                 if straight:
                     if nvtx==0:
@@ -228,20 +249,20 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
                     ## print "branch=",branch
                     label=printParticle_ ( insertion )
                     ## ff=Fermion(v1,p).addLabel ( label )
-                    if italic: label="$%s$" % label
-                    connect_ ( c, v1, p, straight=straight, label=label )
+                    # if italic: label="$%s$" % label
+                    # print "label=",label
+                    connect_ ( c, v1, p, straight=straight, label=label, displace=.1 )
 
             pl = Point ( nvtx+2,ct )
-            # fl = Scalar ( lastVertex,pl ) ## .addLabel( "lsp" )
             connect_ ( c, lastVertex,pl, straight=straight, spin="scalar" )
-        #jpg = bitmap.jpegimage("%s/plots/blob1.jpg" % SModelS.installDirectory() )
-        #fd.currentCanvas.insert(bitmap.bitmap(0-.5, 0.5-.5, jpg, compressmode=None))
-        # zero_()
-        pdffile=filename.replace("png","pdf")
-        epsfile=filename.replace("pdf","eps")
+        extensions = [ "png", "svg", "jpg", "jpeg" ]
+        pdffile=filename
+        for e in extensions: pdffile=pdffile.replace( e, "pdf" )
+        epsfile=pdffile.replace("pdf","eps")
+        redir = Redirector ( "feyndraw.log" )
         fd.draw( pdffile )
-        print "epsfile=",epsfile
         fd.draw( epsfile )
+        del redir
         if pdffile!=filename:
             import os
             os.system ( "convert %s %s" % ( pdffile, filename ) )
@@ -255,28 +276,28 @@ if __name__ == "__main__":
         argparser = argparse.ArgumentParser(description=
                 'simple tool that is meant to draw lessagraphs, '
                 'as a pdf feynman plot')
-        argparser.add_argument ( '-T', nargs='?', 
+        argparser.add_argument ( '-T', nargs='?',
                 help='Tx name, will look up lhe file in ../regression/Tx_1.lhe. '
-                     'Will be overriden by the "--lhe" argument', 
+                     'Will be overriden by the "--lhe" argument',
                      type=types.StringType, default='T1' )
-        argparser.add_argument ( '-l', '--lhe', nargs='?', 
+        argparser.add_argument ( '-l', '--lhe', nargs='?',
                       help='lhe file name, supplied directly. '
-                          'Takes precedence over "-T" argument.', 
+                          'Takes precedence over "-T" argument.',
                       type=types.StringType, default='' )
-        argparser.add_argument ( '-c', '--constraint', nargs='?', 
+        argparser.add_argument ( '-c', '--constraint', nargs='?',
                       help='create graph from SModelS constraint '
-                          'Takes precedence over "-T" and "-l" arguments.', 
+                          'Takes precedence over "-T" and "-l" arguments.',
                       type=types.StringType, default='' )
-        argparser.add_argument ( '-o', '--output', nargs='?', 
-                help= 'output file, can be pdf or eps or png (via convert)', 
+        argparser.add_argument ( '-o', '--output', nargs='?',
+                help= 'output file, can be pdf or eps or png (via convert)',
                 type=types.StringType, default='out.pdf' )
-        argparser.add_argument ( '-s', '--straight', help='straight, not xkcd style', 
+        argparser.add_argument ( '-s', '--straight', help='straight, not xkcd style',
                                  action='store_true' )
         argparser.add_argument ( '-I', '--italic', action='store_true',
                 help='write labels in italic (only in straight mode' )
-        argparser.add_argument ( '-i', '--incoming', help='draw incoming particles', 
+        argparser.add_argument ( '-i', '--incoming', help='draw incoming particles',
                                  action='store_true' )
-        argparser.add_argument ( '-v', '--verbose', help='be verbose', 
+        argparser.add_argument ( '-v', '--verbose', help='be verbose',
                                  action='store_true' )
         args=argparser.parse_args()
 
