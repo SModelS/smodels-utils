@@ -84,6 +84,7 @@ class DatabaseCreator(list):
         self.metaInfoFileName = 'globalInfo'
         self.assignmentOperator = ': '
         self.txNameField = 'txName'
+        self.addToSmsRootFile = set()
         list.__init__(self)
 
     def timeStamp ( self, txt ):
@@ -335,7 +336,6 @@ class DatabaseCreator(list):
         return dataList
 
     def _computeKinRegions(self, massArray, i, plane, txName, limitType ):
-
         """
         checks to which kin region a mass array belongs
         A mass array belongs not only to a kin. region, but also to
@@ -355,8 +355,10 @@ class DatabaseCreator(list):
         :param plane: inputObjects.MetaInfoInput-objects
         :param vertexChecker: standardObjects.VertexChecker-object
         :param txName: inputObjects.TxNameInput-object
-        :param limitType: type of limit (limit, expectedlimit, or None for efficiencyMap)
-        :raise kinRegionSetterError: if the 'regionExist' is not True, False or 'auto'
+        :param limitType: type of limit (limit, expectedlimit, 
+                          or None for efficiencyMap)
+        :raise kinRegionSetterError: raised if the 'regionExist' is not 
+                                     True, False or 'auto'
         """
 
         kinRegions = txName.kinematicRegions
@@ -371,6 +373,11 @@ class DatabaseCreator(list):
             add_axes = True
             if len(offShellVertices)==0 and region.name == "offShell":
                 add_axes = False
+            if add_axes:
+                # print "[_computeKinRegions] add_axes for ",txName.name,plane
+                off="off" if region.name == "offShell" else ""
+                adde = "%s%s/exclusion_%s" % (txName.name, off, plane)
+                self.addToSmsRootFile.add ( adde )
             regionExist = getattr(plane, region.name)
             if not regionExist == 'auto':
                 if not isinstance(regionExist , bool):
@@ -384,7 +391,8 @@ class DatabaseCreator(list):
 
             if not self.vertexChecker:
                 Errors().notAssigned(txName.name)
-            if region.checkoffShellVertices(offShellVertices) and limitType != "expectedlimit":
+            if region.checkoffShellVertices(offShellVertices) and \
+                       limitType != "expectedlimit":
                 setattr(plane, region.name, True )
                 ## setattr(plane, region.name, 'auto' )
                 self._setRegionAttr(txName, region, plane, add_axes )
@@ -422,9 +430,6 @@ class DatabaseCreator(list):
     def _extendRegionAttr(self, region, name, value):
         if value in [ None, "" ]: ## we dont add None or empty strings
             return
-        #if name == "axes":
-        #    self.timeStamp ( "we extend region ``%s'' with %s" % ( region, value ))
-            
         if hasattr(region, name):
             previous =getattr (region, name )
             if previous in [ "", None ]:
@@ -450,7 +455,7 @@ class DatabaseCreator(list):
         :param obj: any instance of a child-class of preparationHelper.Locker
         :param attr: name of the attribute as string
         :position: position were do add the attribute, if None:
-        add the attr. to the end of the list
+                   add the attr. to the end of the list
         """
 
 
@@ -604,9 +609,10 @@ class DatabaseCreator(list):
             smsRoot.cd ( dirname )
             for exclusion in exclusions: 
                 fullname = "%s/%s" % ( dirname, exclusion.GetName() )
-                print "[sms.root] add %s" % fullname
-                if smsRoot.Get( fullname ) == None:
-                    exclusion.Write()
+                if fullname in self.addToSmsRootFile:
+                    if smsRoot.Get( fullname ) == None:
+                        print "[sms.root] add %s" % fullname
+                        exclusion.Write()
         smsRoot.Close()
 
     def _createTwikiTxt(self):
@@ -658,11 +664,8 @@ class DatabaseCreator(list):
                 if attr in [ "upperLimits", "expectedUpperLimits", "efficiencyMap" ]:
                     ## the next line splits onshell from offshell data points
                     value = self.vertexChecker.filterData( value, kinregname )
-                    #self.timeStamp ( "after vertex checker we have: %s, %s" %(value[:3], kinregname ) )
-                #if attr == "axes":
-                #    self.timeStamp ( "now writing axes: %s: %d" % (value, add_axes) )
-                content = '%s%s%s%s\n' %(content, attr,\
-                self.assignmentOperator, value )
+                content = '%s%s%s%s\n' % ( content, attr,\
+                                           self.assignmentOperator, value )
 
                 if attr == "dataId":
                     path = self.infoFilePath ( name, getattr ( obj, attr ) )
