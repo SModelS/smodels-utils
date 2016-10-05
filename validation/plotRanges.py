@@ -277,6 +277,16 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChec
     dy=(ymax-ymin)/math.sqrt(float(Npts))
     xmin = round(xmin/dx)*dx
     ymin = round(ymin/dy)*dy
+    #Detected extended 1D-data:
+    if txdata.dimensionality == 2 and len(txdata.Mp) % 2 == 0:
+        xptsA = [pt[0] for pt in txdata.Mp[:len(txdata.Mp)/2]]
+        xptsB = [pt[0] for pt in txdata.Mp[len(txdata.Mp)/2:]]
+        if xptsA == xptsB:
+            yptsB = [pt[1] for pt in txdata.Mp[len(txdata.Mp)/2:]]
+            if len(set(yptsB)) == 1:
+                logger.info("1D data detected. Collapsing y-dimension")
+                ymin = 0.
+                ymax = 0.
 
     points=[]
     massDimensions = [len(br) for br in txdata._data[0][0]] #Store the mass format 
