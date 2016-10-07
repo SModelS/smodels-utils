@@ -262,7 +262,7 @@ class Axes(object):
         # print "lspEq=",lspEq
         interEqs = []
         for k, v in interMasses.iteritems():
-            eq = Eq(var(k.replace('Mass','')), N(v,2) )
+            eq = Eq(var(k.replace('Mass','')), N(v,5) )
             interEqs.append(eq)
         interEqs = sorted(interEqs, key = lambda eq: eq.args[0].name)
         for i,eq in enumerate(interEqs):

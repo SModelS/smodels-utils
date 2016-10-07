@@ -2,117 +2,100 @@
 
 """
 .. module:: analysesTable
-   :synopsis: generates a latex table with all analyses.
+     :synopsis: generates a latex table with all analyses.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
 
-def generateAnalysisTable(ListOfAnalyses, texfile=None, wd=0.15, fig_dir=None):
-  """Generates a raw latex table with all the analyses in ListOfAnalyses and their
-  respective SMS graphs. The graphs are generated using printAnalysisGraphs.
-  If texfile=None, returns the latex table as a single string.
-  wd = linewidth of each graph"""
+from ordered_set import OrderedSet
 
+def isIn ( i, txnames ):
+    """ is i in list txnames, leaving out onshell versions """
+    for x in txnames:
+        if i == x: return True
+        if i == x+"(off)": return True
+    return False
 
+def writeSingleAna ( ana ):
+    ret = ""
+    lines= [ "" ]
+    print ana.globalInfo.id
+    txnobjs = ana.getTxNames() 
+    t_txnames = [ x.txName for x in txnobjs ]
+    t_txnames.sort()
+    txnames=[]
+    for i in OrderedSet ( t_txnames ):
+        if "off" in i: 
+            on = i.replace("off","") 
+            if on in txnames: txnames.remove ( on )
+            txnames.append ( i.replace("off","[off]" ) )
+        else:
+            if not isIn ( i, txnames ):
+                txnames.append ( i )
+    alltxes = ", ".join ( txnames ) 
+    max=30
+    if len(alltxes)>max+3:
+        alltxes=alltxes[:max]+" ..."
 
-  toprint ="\\begin{longtable}{|c|c|} \n \
-  \hline \n\
-  Analysis & SMS Topology \\\ \n \
-  \hline \n"
+    lines[0] += "%s & %s \\\\\n" % ( ana.globalInfo.id, alltxes )
+    return "\\n".join ( lines )
 
-  textab = ""
-  texlines = []
+def generateAnalysisTable(listOfAnalyses, texfile=None ):
+    """ Generates a raw latex table with all the analyses in listOfAnalyses,
+    writes it to texfile (if not None), and returns it as its return value. """
 
-  if not fig_dir:
-    pdf_prefix=None
-  else:
-    pdf_prefix = fig_dir
+    toprint = """
+\\begin{longtable}{|c|c|}
+\hline
+{\\bf ID} & {\\bf Topologies} \\\\
+\hline
+"""
+    for ana in listOfAnalyses:
+        toprint += writeSingleAna ( ana )
+    toprint += """
+\hline
+\caption{SModelS database}
+\label{tab:SModelS database} \n \
+\end{longtable}
+"""
 
-  for Ana in ListOfAnalyses:
-    texline = Ana.label.partition(":")[0].replace("_","-") + " & "
-    resdic = printAnalysisGraphs(Ana,pdf_prefix)
-    texconstraint = Ana.results.keys()[0]
-    for key in resdic.keys():
-      texplot = "\includegraphics[width="+str(wd)+"\linewidth]{"+resdic[key]+"}\spacer"
-      texconstraint = texconstraint.replace(key,texplot)
-
-    texline += texconstraint + " \\\ "
-
-    texlines.append(texline)
-
-  newtexlines = []
-#Convert simple table to multirow one, grouping the analysis:
-  for (iline,line) in enumerate(texlines):
-    if line == "Done": continue
-    newline = "\multirow{Nrows}{*}{"+line.partition("&")[0]+"} & "+ line.partition("&")[2]
-    nrows = 1
-    for jline in range(iline+1,len(texlines)):
-      lineB = texlines[jline]
-      if  line.partition("&")[0] == lineB.partition("&")[0]:
-        newline += "\n & " + lineB.partition("&")[2]
-        nrows += 1
-        texlines[jline] = "Done"
-
-    newline = newline.replace("Nrows",str(nrows))
-    newtexlines.append(newline)
-
-  for line in newtexlines:
-    textab += line + " \hline \n"
-
-  toprint += textab
-  toprint += "\caption{SMS.} \n \
-  \label{tab:LHCresults} \n \
-  \end{longtable}"
-
-  if texfile:
-    outfile = open(texfile,"w")
-    outfile.write(toprint)
-    outfile.close()
-    return True
-  else:
+    if texfile:
+        outfile = open(texfile,"w")
+        outfile.write(toprint)
+        outfile.close()
     return toprint
 
-
-
-def printAnalysisGraphs(Analysis,pdf_prefix=None):
-  """ Generateres pdf files with the graph for the SMS Topologies being constrained by the analysis.
-  If pdf_prefix=None, uses the analysis label as a prefix for the files."""
-  from smodels.theory.auxiliaryFunctions import getelements
-  from smodels.theory.SMSDataObjects import EElement
-  from smodels_utils.tools import feynmanGraph
-
-#Get topologies (in string format)
-  consts = Analysis.results.keys()
-  tops = getelements(consts)
-#Get corresponding CMS lables
-  CMSlabel = Analysis.plots.values()[0][0]
-
-#Generate file names dictionary:
-  topdic = {}
-  if not pdf_prefix: pdf_prefix = ""
-  pdf_prefix += Analysis.label
-  iplot = 0
-  for top in tops:
-    iplot += 1
-    topdic[top] = pdf_prefix + "_" + CMSlabel + "_" + str(iplot) + "_" + ".pdf"
-#Generate graph
-    feynmanGraph.draw(EElement(top), topdic[top], straight=True, inparts=False )
-
-  return topdic   #Return dictionary
+def createPdfFile ( texfile ):
+    import commands
+    pdffile=texfile.replace(".tex",".pdf" )
+    repl="@@@TEXFILE@@@"
+    cmd="cat template.tex | sed -e 's/%s/%s/' > /tmp/smodels.tex" % ( repl, texfile )
+    commands.getoutput ( cmd )
+    commands.getoutput ( "latex /tmp/smodels.tex" )
+    os.unlink ( "/tmp/smodels.tex" )
+    os.unlink ( "smodels.log" )
+    os.unlink ( "smodels.aux" )
 
 if __name__ == "__main__":
-    import setPath, argparse, types, os
+        import setPath, argparse, types, os
 
-    argparser = argparse.ArgumentParser(description='simple tool to generate a latex table with all analysis used')
-    argparser.add_argument ( '-o', '--output', nargs='?', help='output file', type=types.StringType, default='tab.tex')
-    argparser.add_argument ( '-D', '--Dir', nargs='?', help='figure folder', type=types.StringType, default='figures/')
-    args=argparser.parse_args()
-    from smodels.experiment import smsAnalysisFactory
-    #Creat analyses list:
-    ListOfAnalyses = smsAnalysisFactory.load()
-    if not os.path.isdir(args.Dir):
-      os.system("mkdir "+args.Dir)
-    #Generate table:
-    generateAnalysisTable(ListOfAnalyses, texfile=args.output, fig_dir=args.Dir)
-
+        argparser = argparse.ArgumentParser(description=
+                      'simple tool to generate a latex table with all analysis used')
+        dbpath = os.path.abspath( '../../../smodels-database/' )
+        argparser.add_argument ( '-d', '--database', nargs='?', 
+                            help='path to database', 
+                            type=types.StringType, default=dbpath )
+        argparser.add_argument ( '-o', '--output', nargs='?', help='output file', 
+                            type=types.StringType, default='tab.tex')
+        argparser.add_argument('-p', '--pdf', help='produce pdf file', 
+                            action='store_true' )
+        args=argparser.parse_args()
+        from smodels.experiment.databaseObj import Database
+        database = Database ( args.database )
+        #Creat analyses list:
+        listOfAnalyses = database.getExpResults()
+        #Generate table:
+        generateAnalysisTable( listOfAnalyses, texfile=args.output )
+        # create pdf
+        if args.pdf: createPdfFile ( args.output )
