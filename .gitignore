@@ -5,7 +5,7 @@
 *.ps
 *.aux
 *.swp
-*.tex
+# *.tex
 *.pdf
 *.log
 *.dvi
