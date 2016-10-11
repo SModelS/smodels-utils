@@ -149,7 +149,7 @@ if __name__ == "__main__":
     plottingFuncs.logger.setLevel(level=numeric_level)
     validationObjs.logger.setLevel(level=numeric_level)
     
-    #Seleceted plots for validation:
+    #Selected plots for validation:
     analyses = parser.get("database", "analyses").split(",")
     txnames = parser.get("database", "txnames").split(",")
     if parser.get("database", "dataselector") == "efficiencyMap":
