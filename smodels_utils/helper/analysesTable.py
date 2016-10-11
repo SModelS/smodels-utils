@@ -116,9 +116,12 @@ def createPdfFile ( texfile, no_unlink, experiment ):
     #commands.getoutput ( cmd )
     print "now latexing"
     commands.getoutput ( "latex -interaction=nonstopmode /tmp/smodels.tex" )
+    if os.path.isfile("smodels.dvi"):
+        commands.getoutput( "dvips smodels.dvi" )
     print "done latexing"
     if experiment != "both":
         commands.getoutput ( "cp smodels.pdf %s.pdf" % experiment )
+        commands.getoutput ( "cp smodels.ps %s.ps" % experiment )
     os.unlink ( "smodels.log" )
     os.unlink ( "smodels.aux" )
     if not no_unlink:
