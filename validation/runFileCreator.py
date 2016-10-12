@@ -5,14 +5,7 @@ import logging,tempfile
 # logging.basicConfig(filename='val.out')
 import argparse
 home = os.path.expanduser("~")
-sys.path.append(os.path.join(home,'smodels'))
-sys.path.append(os.path.join(home,'smodels-utils'))
-from smodels.experiment.databaseObj import Database
-from smodels.tools import xsecComputer, nllFast
 from ConfigParser import SafeConfigParser
-from plottingFuncs import getExclusionCurvesFor
-import plotRanges
-import slhaCreator
 import commands,time
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -169,22 +162,34 @@ if __name__ == "__main__":
            
     args = ap.parse_args()
     
+    if not os.path.isfile(args.parfile):
+        logger.error("Parameters file %s not found" %args.parfile)
+    else:
+        logger.info("Reading validation parameters from %s" %args.parfile)
+
+    parser = SafeConfigParser()
+    parser.read(args.parfile) 
+    
+    #Add smodels and smodels-utils to path
+    smodelsPath = parser.get("path", "smodelsPath")
+    utilsPath = parser.get("path", "utilsPath")    
+    sys.path.append(smodelsPath)
+    sys.path.append(utilsPath)
+    from smodels.experiment.databaseObj import Database
+    from smodels.tools import xsecComputer, nllFast
+    from plottingFuncs import getExclusionCurvesFor
+    import plotRanges
+    import slhaCreator
+    
+    
+
     numeric_level = getattr(logging,args.log.upper(), None)
     logger.setLevel(level=numeric_level)
     xsecComputer.logger.setLevel(level=numeric_level+10)
     nllFast.logger.setLevel(level=numeric_level+10)
     plotRanges.logger.setLevel(level=numeric_level)
-    
-                
-    if not os.path.isfile(args.parfile):
-        logger.error("Parameters file %s not found" %args.parfile)
-    else:
-        logger.info("Reading validation parameters from %s" %args.parfile)
-        
-        
 
-    parser = SafeConfigParser()
-    parser.read(args.parfile) 
+    
     
     #Options for cross-section calculation:
     xargs = argparse.Namespace()
