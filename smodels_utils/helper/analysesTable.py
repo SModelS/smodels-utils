@@ -73,7 +73,7 @@ def writeSingleAna ( ana ):
     lines[0] += "%s & %s & %s & %s & %s \\\\\n" % \
                  ( Id, alltxes, dt, ana.globalInfo.lumi.asNumber(1/fb), 
                    int ( ana.globalInfo.sqrts.asNumber(TeV) ) )
-    return "\\n".join ( lines )
+    return "\\n".join ( lines ), len(txnames)
 
 def generateAnalysisTable(listOfAnalyses, texfile=None, experiment = "both" ):
     """ Generates a raw latex table with all the analyses in listOfAnalyses,
@@ -85,9 +85,14 @@ def generateAnalysisTable(listOfAnalyses, texfile=None, experiment = "both" ):
 {\\bf ID} & {\\bf Topologies} & {\\bf Type} & {\\bf $\\mathcal{L}$ [fb$^{-1}$] } & {\\bf $\\sqrt s$ } \\\\
 \hline
 """
+    num_analyses = 0
+    num_topos = 0
     for ana in listOfAnalyses:
         if experiment == "both" or experiment in ana.globalInfo.id:
-            toprint += writeSingleAna ( ana )
+            tp, n_topos = writeSingleAna ( ana )
+            toprint += tp
+            num_topos += n_topos
+            num_analyses += 1
     toprint += "\\hline\n"
     caption = "\\caption{SModelS database"
     if experiment != "both": caption += " (%s)" % experiment
@@ -101,6 +106,8 @@ def generateAnalysisTable(listOfAnalyses, texfile=None, experiment = "both" ):
         outfile.close()
 
     createLatexDocument ( texfile )
+    print "Number of analyses",num_analyses
+    print "Number of topos",num_topos
     return toprint
 
 
