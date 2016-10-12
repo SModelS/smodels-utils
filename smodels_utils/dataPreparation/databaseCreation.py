@@ -369,9 +369,13 @@ class DatabaseCreator(list):
             print "plane.onShell=",plane.onShell
             print "plane.offShell=",plane.onShell
             print "offShellVertices=",offShellVertices
+            print "txname=",txName,"region.name=",region.name,"offShell=",len(offShellVertices)
             """
             add_axes = True
             if len(offShellVertices)==0 and region.name == "offShell":
+                add_axes = False
+            if len(offShellVertices)>0 and region.name == "onShell":
+                #pass
                 add_axes = False
             if add_axes:
                 # print "[_computeKinRegions] add_axes for ",txName.name,plane
