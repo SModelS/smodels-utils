@@ -11,12 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 
-def validatePlot(expRes,txname,axes,slhadir,kfactor=1.):
+def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.):
     """
     Creates a validation plot and saves its output.
     
     :param expRes: a ExpResult object containing the result to be validated
-    :param txname: String describing the txname (e.g. T2tt)
+    :param txnameStr: String describing the txname (e.g. T2tt)
     :param axes: the axes string describing the plane to be validated
      (i.e.  2*Eq(mother,x),Eq(lsp,y))
     :param slhadir: folder containing the SLHA files corresponding to txname
@@ -28,8 +28,8 @@ def validatePlot(expRes,txname,axes,slhadir,kfactor=1.):
     """
 
     logger.info("Generating validation plot for " + expRes.getValuesFor('id')[0]
-                +", "+txname+", "+axes)        
-    valPlot = validationObjs.ValidationPlot(expRes,txname,axes,kfactor=kfactor)
+                +", "+txnameStr+", "+axes)        
+    valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor)
     valPlot.setSLHAdir(slhadir)
     valPlot.getData()
     if not valPlot.data:
@@ -82,7 +82,16 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         expt0 = time.time()
         logger.info("--------- \033[32m validating  %s \033[0m" %expRes.globalInfo.id)
         #Loop over pre-selected txnames:
-        txnames = [tx for tx in expRes.getTxNames() if not 'assigned' in tx.constraint]
+        txnamesStr = []
+        txnames = []
+        for tx in expRes.getTxNames():
+            if 'assigned' in tx.constraint:
+                continue  #Skip not assigned constraints
+            if tx.txName in txnamesStr:
+                continue #Do not include a txname twice (if it appears in more than one dataset)
+            txnames.append(tx)
+            txnamesStr.append(tx.txName)
+            
         if not txnames:
             logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
             continue

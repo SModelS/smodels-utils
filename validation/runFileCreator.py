@@ -13,12 +13,12 @@ logger = logging.getLogger(__name__)
 
 
 
-def createFiles(expResList,txname,templateFile,tarFile,xargs,Npts=300):
+def createFiles(expResList,txnameStr,templateFile,tarFile,xargs,Npts=300):
     """
     Creates a .tar file for the txname using the data in expResults.
     
     :param expResults: a list of ExpResult objects
-    :param txname: String describing the txname (e.g. T2tt)
+    :param txnameStr: String describing the txname (e.g. T2tt)
     :param templateFile: path to the txname template
     :param tarFile: name of the output file
     :param xargs: argparse.Namespace object holding the options for the cross-section calculation
@@ -38,24 +38,28 @@ def createFiles(expResList,txname,templateFile,tarFile,xargs,Npts=300):
     #Get axes
     for expResult in expResList:
         txnameObj = [tx for tx in expResult.getTxNames() 
-                     if (tx.txName == txname and not 'assigned' in tx.constraint)]           
+                     if (tx.txName == txnameStr and not 'assigned' in tx.constraint)]           
         if not txnameObj: #Skip result if it does not contain the txname
-            continue
-        txnameObj = txnameObj[0]
-        txnameObjs.append(txnameObj) #Collect all txnames
-        axes = txnameObj.getInfo("axes")
-        if type(axes)==str:
-            axes=[axes]
+            continue        
+        axes = []
+        for tx in txnameObj:
+            taxes = tx.axes
+            if type(taxes) == str:
+                taxes = [taxes]
+            for ax in taxes:
+                if not ax in axes:
+                    axes.append(ax)        
+        txnameObjs += txnameObj #Collect all txnames        
         for naxes in axes:
-            tgraph = getExclusionCurvesFor(expResult,txname,naxes)
+            tgraph = getExclusionCurvesFor(expResult,txnameStr,naxes)
             if not tgraph:
                 continue
             if not naxes in tgraphs:
                 tgraphs[naxes]=[]
-            tgraphs[naxes].append(tgraph[txname][0])
+            tgraphs[naxes].append(tgraph[txnameStr][0])
 
     if not tgraphs:
-        logger.warning("No exclusion curves found for %s" %txname)
+        logger.warning("No exclusion curves found for %s" %txnameStr)
         return False
 
        

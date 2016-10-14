@@ -70,7 +70,7 @@ def getExtendedFrame(txnameObjs,axes):
     minx, miny = None, None
     maxx, maxy = None, None
     for txnameObj in txnameObjs:
-        data = txnameObj.txnameData._data  #Data grid of mass points and ULs of efficiencies
+        data = txnameObj.txnameData._data  #Data grid of mass points and ULs or efficiencies
         if not data:
             continue
         for pt in data:
@@ -246,11 +246,14 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChec
     txdata.Mp = []
     txdata._data = []
     #Collects all points belonging to the plane:
+    masses = []
     for tx in txnameObjs:
         for pt in tx.txnameData._data:
             mass = [[m.asNumber(GeV) for m in br] for br in pt[0]]
             if not origPlot.getXYValues(mass): continue
-            txdata._data.append(pt)
+            if not pt[0] in masses:  #Does not include the same mass point twice from distinct signal regions
+                txdata._data.append(pt)
+                masses.append(pt[0])
     
     #If there is no data, return empty list:
     if not txdata._data:
