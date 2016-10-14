@@ -10,6 +10,7 @@
 
 import sys
 from sympy import var, Eq, lambdify, solve, sympify, N, Float
+from standardObjects import round_to_n
 import logging
 import inspect
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -141,7 +142,7 @@ class OrigPlot(object):
                 ret.append(a)
             else:
                 logger.error ( "cannot combine the two arrays into a single consistent array, a,b=%s,%s" , a,b )
-                sys.exit()
+                return None
         return ret
 
     def getXYValues(self,massArray):
@@ -164,7 +165,7 @@ class OrigPlot(object):
         if not xy_1 or not xy_2: return None
 
         for i, value in enumerate(xy_1):
-            if value==None or xy_2[i]==None or abs(value - xy_2[i]) > 0.00001:
+            if value==None or xy_2[i]==None or abs(value - xy_2[i]) > 0.1:
                 return self.combine ( xy_1, xy_2 )
                 Errors().unequalXYValues()
         return xy_1
