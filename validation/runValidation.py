@@ -82,7 +82,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         expt0 = time.time()
         logger.info("--------- \033[32m validating  %s \033[0m" %expRes.globalInfo.id)
         #Loop over pre-selected txnames:
-        txnames = set([tx for tx in expRes.getTxNames() if not 'assigned' in tx.constraint])
+        txnames = [tx for tx in expRes.getTxNames() if not 'assigned' in tx.constraint]
         if not txnames:
             logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
             continue
@@ -91,20 +91,25 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             txt0 = time.time()
             logger.info("------------ \033[31m validating  %s \033[0m" %txnameStr)
             tarfile = os.path.join(slhadir,txnameStr+".tar")                
-            if not os.path.isfile(tarfile):
-                logger.error('Missing .tar file for %s' %txnameStr)
-                continue
-            if txnameStr.lower() in kfactorDict:
-                kfactor = float(kfactorDict[txnameStr.lower()])
-            else:
-                kfactor = 1.
 
+            #Collect exclusion curves
             tgraphs = plottingFuncs.getExclusionCurvesFor(expRes,txnameStr,get_all=False)
             if not tgraphs or not tgraphs[txnameStr]:
                 logger.info("No exclusion curves found for %s" %txnameStr)
                 continue
             else:
-                tgraphs = tgraphs[txnameStr] 
+                tgraphs = tgraphs[txnameStr]
+            if not os.path.isfile(tarfile):
+                logger.error('Missing .tar file for %s' %txnameStr)
+                continue
+
+            #Define k-factors
+            if txnameStr.lower() in kfactorDict:
+                kfactor = float(kfactorDict[txnameStr.lower()])
+            else:
+                kfactor = 1.
+
+                 
             #Loop over plots:
             for tgraph in tgraphs:                
                 ax = tgraph.GetName().replace('exclusion_',"")
