@@ -84,6 +84,7 @@ class DatabaseCreator(list):
         self.metaInfoFileName = 'globalInfo'
         self.assignmentOperator = ': '
         self.txNameField = 'txName'
+        self.add_axes= {}
         self.addToSmsRootFile = set()
         list.__init__(self)
 
@@ -345,7 +346,7 @@ class DatabaseCreator(list):
 
         Only if the regionExist attr. is set to 'auto' this automated scan of
         region is performed, else the predefined settings (True/False)
-        If the region exist (means at least on mass Array belongs to it)
+        If the region exist (means at least one mass array belongs to it)
         self._setRegionAttr is called to set the attributes
         which belong to the region
 
@@ -364,20 +365,29 @@ class DatabaseCreator(list):
         kinRegions = txName.kinematicRegions
         for region in kinRegions:
             offShellVertices = self.vertexChecker.getOffShellVertices(massArray)
+            #add_axes = True
+            #if len(offShellVertices)==0 and region.name == "offShell":
+            #    add_axes = False
+            #if len(offShellVertices)>0 and region.name == "onShell":
+            #    add_axes = False
+            tn = str(txName)+region.name
+            if not tn in self.add_axes:
+                self.add_axes[tn]=False
+            if len(offShellVertices)>0 and region.name == "offShell":
+                self.add_axes[tn] = True
+            if len(offShellVertices)==0 and region.name == "onShell":
+                self.add_axes[tn] = True
             """
-            print "region.name=",region.name
-            print "plane.onShell=",plane.onShell
-            print "plane.offShell=",plane.onShell
-            print "offShellVertices=",offShellVertices
-            print "txname=",txName,"region.name=",region.name,"offShell=",len(offShellVertices)
+            print "[debug]"
+            print "[debug] region.name=",region.name
+            print "[debug] plane.onShell=",plane.onShell
+            print "[debug] plane.offShell=",plane.onShell
+            print "[debug] offShellVertices=",offShellVertices
+            print "[debug] txname=",txName,"region.name=",region.name,"offShell=",\
+                    len(offShellVertices)
+            print "[debug] add_axes=",self.add_axes[tn]
             """
-            add_axes = True
-            if len(offShellVertices)==0 and region.name == "offShell":
-                add_axes = False
-            if len(offShellVertices)>0 and region.name == "onShell":
-                #pass
-                add_axes = False
-            if add_axes:
+            if self.add_axes[tn]:
                 # print "[_computeKinRegions] add_axes for ",txName.name,plane
                 off="off" if region.name == "offShell" else ""
                 adde = "%s%s/exclusion_%s" % (txName.name, off, plane)
@@ -388,10 +398,10 @@ class DatabaseCreator(list):
                     Errors().kinRegionSetter(txName.name, region.name, \
                     regionPreSet)
                 if regionExist == True and i == 0 and limitType != "expectedlimit":
-                    self._setRegionAttr(txName, region, plane, add_axes )
+                    self._setRegionAttr(txName, region, plane, self.add_axes[tn] )
                 continue
             if regionExist == 'auto':
-                self._setRegionAttr(txName, region, plane, add_axes )
+                self._setRegionAttr(txName, region, plane, self.add_axes[tn] )
 
             if not self.vertexChecker:
                 Errors().notAssigned(txName.name)
@@ -399,7 +409,7 @@ class DatabaseCreator(list):
                        limitType != "expectedlimit":
                 setattr(plane, region.name, True )
                 ## setattr(plane, region.name, 'auto' )
-                self._setRegionAttr(txName, region, plane, add_axes )
+                self._setRegionAttr(txName, region, plane, self.add_axes[tn] )
 
         kinRegions = txName.kinematicRegions
 
@@ -415,7 +425,7 @@ class DatabaseCreator(list):
         :param txName: inputObjects.TxNameInput-object
         :param region: inputObjects.KinematicRegion-object
         """
-        # self.timeStamp ( "_setRegionAttr %s" % ( region ) )
+        #self.timeStamp ( "_setRegionAttr %s add_axes=%d" % ( region, add_axes ) )
 
         self._extendInfoAttr(region, self.txNameField,0)
         setattr(region, self.txNameField, txName.name + region.topoExtension)
