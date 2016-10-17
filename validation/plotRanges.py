@@ -271,22 +271,25 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChec
         P=numpy.dot(p,txdata._V)  ## rotated point
         extremes.append(P)
     #New values of extremes in the rotated plane (limit values by extremes in data):
-    xmin = max(min(numpy.array(extremes)[:,0]),min(numpy.array(txdata.Mp)[:,0]))
-    xmax = min(max(numpy.array(extremes)[:,0]),max(numpy.array(txdata.Mp)[:,0])) 
-    ymin = max(min(numpy.array(extremes)[:,1]),min(numpy.array(txdata.Mp)[:,1]))
-    ymax = min(max(numpy.array(extremes)[:,1]),max(numpy.array(txdata.Mp)[:,1]))
-    #Compute dx and dy values to generate the desired number of points
+    xdataMin = min(numpy.array(txdata.Mp)[:,0]) 
+    xdataMax = max(numpy.array(txdata.Mp)[:,0])
+    ydataMin = min(numpy.array(txdata.Mp)[:,1]) 
+    ydataMax = max(numpy.array(txdata.Mp)[:,1])
+    xmin = max(min(numpy.array(extremes)[:,0]),xdataMin)
+    xmax = min(max(numpy.array(extremes)[:,0]),xdataMax)
     dx=(xmax-xmin)/math.sqrt(float(Npts))
-    dy=(ymax-ymin)/math.sqrt(float(Npts))
+    #Check for extended 1D-data:
+    if txdata.dimensionality == 2 and len(txdata.Mp) % 2 == 0:        
+        if ydataMax - ydataMin < 0.001:
+            logger.info("1D data detected. Collapsing y-dimension")            
+            ymin = ymax = (ydataMax+ydataMin)/2.
+            dy = 0.001
+    else:
+        ymin = max(min(numpy.array(extremes)[:,1]),ydataMin)
+        ymax = min(max(numpy.array(extremes)[:,1]),ydataMax)
+        dy=(ymax-ymin)/math.sqrt(float(Npts))            
     xmin = round(xmin/dx)*dx
     ymin = round(ymin/dy)*dy
-    #Detected extended 1D-data:
-    if txdata.dimensionality == 2 and len(txdata.Mp) % 2 == 0:
-        ydataMin = min(numpy.array(txdata.Mp)[:,1]) 
-        ydataMax = max(numpy.array(txdata.Mp)[:,1])
-        if ydataMax - ydataMin < 0.001:
-            logger.info("1D data detected. Collapsing y-dimension")
-            ymin = ymax = (ydataMax+ydataMin)/2.
 
     points=[]
     massDimensions = [len(br) for br in txdata._data[0][0]] #Store the mass format 
