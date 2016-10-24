@@ -278,16 +278,15 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChec
     xmin = max(min(numpy.array(extremes)[:,0]),xdataMin)
     xmax = min(max(numpy.array(extremes)[:,0]),xdataMax)
     dx=(xmax-xmin)/math.sqrt(float(Npts))
+    ymin = max(min(numpy.array(extremes)[:,1]),ydataMin)
+    ymax = min(max(numpy.array(extremes)[:,1]),ydataMax)
+    dy=(ymax-ymin)/math.sqrt(float(Npts))
     #Check for extended 1D-data:
-    if txdata.dimensionality == 2 and len(txdata.Mp) % 2 == 0:        
+    if txdata.dimensionality == 2 and len(txdata.Mp) % 3 == 0:        
         if ydataMax - ydataMin < 0.001:
             logger.info("1D data detected. Collapsing y-dimension")            
             ymin = ymax = (ydataMax+ydataMin)/2.
             dy = 0.001
-    else:
-        ymin = max(min(numpy.array(extremes)[:,1]),ydataMin)
-        ymax = min(max(numpy.array(extremes)[:,1]),ydataMax)
-        dy=(ymax-ymin)/math.sqrt(float(Npts))            
     xmin = round(xmin/dx)*dx
     ymin = round(ymin/dy)*dy
 
