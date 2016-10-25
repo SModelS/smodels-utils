@@ -52,7 +52,7 @@ def getSuperFrame ( tgraphs ):
         miny = int(min(miny,frame["y"][0]))
         maxy = int(max(maxy,frame["y"][1]))
     if minx is None:
-        logger.info("Could not find points for %s" %axes)
+        logger.info("Could not find points for %s" %str(tgraphs))
         return None
     logger.info ( "the super frame is [%f,%f],[%f,%f]" % ( minx, maxx, miny, maxy ) )
     return { "x": [ minx, maxx], "y": [ miny, maxy ] }
@@ -291,7 +291,7 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChec
     ymin = round(ymin/dy)*dy
 
     points=[]
-    massDimensions = [len(br) for br in txdata._data[0][0]] #Store the mass format 
+    massDimensions = [len(br) for br in txdata._data[0][0]] #Store the mass format
     for i in numpy.arange(xmin, xmax+dx/2., dx):
         for j in numpy.arange(ymin, ymax+dy/2., dy):
             pt = [i,j] + [0.]*(txdata.full_dimensionality-2)  #Point in rotated space
