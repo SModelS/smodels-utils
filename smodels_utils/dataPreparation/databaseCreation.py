@@ -370,7 +370,7 @@ class DatabaseCreator(list):
             #    add_axes = False
             #if len(offShellVertices)>0 and region.name == "onShell":
             #    add_axes = False
-            tn = str(txName)+region.name
+            tn = str(txName)+region.name+str(plane)
             if not tn in self.add_axes:
                 self.add_axes[tn]=False
             if len(offShellVertices)>0 and region.name == "offShell":
@@ -380,6 +380,8 @@ class DatabaseCreator(list):
             """
             print "[debug]"
             print "[debug] region.name=",region.name
+            print "[debug] plane=",plane
+            print "[debug] tn=",tn
             print "[debug] plane.onShell=",plane.onShell
             print "[debug] plane.offShell=",plane.onShell
             print "[debug] offShellVertices=",offShellVertices

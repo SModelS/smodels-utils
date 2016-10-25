@@ -178,8 +178,8 @@ class StandardDataList(list):
                 v1 = point[1].replace(self.valueUnit,"")
                 # print "[standardObjects] v= >>%s<< for point %s" % ( v1, point[1] )
                 oldvalue = float(v1)
-                print "value=",value,type(value)
-                print "oldvalue=",oldvalue,type(oldvalue)
+                # print "value=",value,type(value)
+                # print "oldvalue=",oldvalue,type(oldvalue)
                 if abs(float(value)-oldvalue) > 0.0001:
                     Errors().valueDifference\
                     (array, point[1], '%s%s' %(value,self.valueUnit))
