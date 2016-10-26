@@ -27,10 +27,7 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,xargs,Npts=300):
     :return: True if successful, False otherwise. 
     """
 
-    logger.info("--------  \033[32m Generating %s file \033[0m" %tarFile)
-    t0 = time.time()
-           
-
+    
     #Create temp folder to store the SLHA files:
     tgraphs = {}
     txnameObjs = []
@@ -91,7 +88,6 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,xargs,Npts=300):
     
     
     commands.getoutput("cd %s && tar cf %s *.slha" % (tempdir,tarFile))
-    logger.info("--------  \033[32m File %s created in %.1f min. \033[0m \n" %(tarFile,(time.time()-t0)/60.))
     #Remove temp folder containing the SLHA files:
     shutil.rmtree(tempdir)
 
@@ -100,7 +96,7 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,xargs,Npts=300):
 
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
-         databasePath,xargs,Npts=300,verbosity='info'):
+         databasePath,xargs,Npts=300,addToFile=False,verbosity='info'):
     """
     Creates .tar files for all the txnames and analyses.
 
@@ -111,6 +107,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
     :param slhadir: Path to the output folder holding the txname .tar files
     :param databasePath: Path to the SModelS database
     :param Npts: Trial number of points for each plane.
+    :param addToFile: If True it will add to the existing .tar file (or create a new one if there is no previous file)
     :param verbosity: overall verbosity (e.g. error, warning, info, debug)
     :param xargs: argparse.Namespace object holding the options for the cross-section calculation
     
@@ -149,8 +146,23 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
     for txname in txnameList:
         templateFile = os.path.join(templatedir,txname+'.template')
         tarFile = os.path.join(slhadir,txname+'.tar')
-        createFiles(expResList,txname,templateFile,tarFile,xargs,Npts)
-        
+        oldTarFile = None
+        if addToFile and os.path.isfile(tarFile):
+            oldTarFile = tempfile.mkstemp(suffix='_old.tar', dir=slhadir)
+            os.close(oldTarFile[0])
+            oldTarFile = oldTarFile[1]
+            os.rename(tarFile,oldTarFile)
+            logger.info("--------  \033[32m Extending %s \033[0m" %tarFile)
+        else:
+            logger.info("--------  \033[32m Generating %s \033[0m" %tarFile)            
+        t0 = time.time()
+        createFiles(expResList,txname,templateFile,tarFile,xargs,Npts)        
+        if oldTarFile:
+            commands.getoutput("tar -Af %s %s" % (tarFile,oldTarFile))
+            os.remove(oldTarFile)
+            logger.info("--------  \033[32m File %s extended in %.1f min. \033[0m \n" %(tarFile,(time.time()-t0)/60.))
+        else:
+            logger.info("--------  \033[32m File %s generated in %.1f min. \033[0m \n" %(tarFile,(time.time()-t0)/60.))            
     
     logger.info("\n\n----- Finished file creation.")
 
@@ -221,6 +233,10 @@ if __name__ == "__main__":
         Npts = int(parser.get("extra","npts"))
     else:
         Npts = 300
+    if parser.get("extra","addToFile"):
+        addToFile = parser.getboolean("extra","addToFile")
+    else:
+        addToFile = False        
         
     slhadir = os.path.abspath(parser.get("path", "slhaPath"))
     templatedir = os.path.abspath(parser.get("path", "templatePath"))
@@ -228,5 +244,5 @@ if __name__ == "__main__":
 
     #Run creation:
     main(analyses,datasetIDs,txnames,dataTypes,templatedir,slhadir,
-         databasePath,xargs,Npts,args.log)
+         databasePath,xargs,Npts,addToFile,args.log)
     
