@@ -158,8 +158,13 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
         t0 = time.time()
         createFiles(expResList,txname,templateFile,tarFile,xargs,Npts)        
         if oldTarFile:
-            commands.getoutput("tar -Af %s %s" % (tarFile,oldTarFile))
+            tempdir = tempfile.mkdtemp(dir='./')
+            commands.getoutput("tar -xf %s -C %s" % (tarFile,tempdir))
+            commands.getoutput("tar -xf %s -C %s" % (oldTarFile,tempdir))
             os.remove(oldTarFile)
+            os.remove(tarFile)
+            commands.getoutput("cd %s && tar -cf %s *.slha" % (tempdir,tarFile))
+            shutil.rmtree(tempdir)
             logger.info("--------  \033[32m File %s extended in %.1f min. \033[0m \n" %(tarFile,(time.time()-t0)/60.))
         else:
             logger.info("--------  \033[32m File %s generated in %.1f min. \033[0m \n" %(tarFile,(time.time()-t0)/60.))            
