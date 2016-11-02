@@ -50,7 +50,6 @@ MSEL=0        ! All MSSM processes, except Higgs production\n"
     
     #Define the processes to be generated:
     if len(momPDGs) == 1: pids = [[momPDGs[0],momPDGs[0]]]
-    elif len(momPDGs) == 2:  pids = [[momPDGs[0],momPDGs[1]]]
     else:
         pids=[]
         for ipdg1,pdg1 in enumerate(momPDGs):
