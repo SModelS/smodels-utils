@@ -41,7 +41,7 @@ def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.):
     return valPlot.computeAgreementFactor() # return agreement factor
 
 
-def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,verbosity='info'):
+def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles=None,verbosity='info'):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -51,6 +51,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param slhadir: Path to the folder containing the txname .tar files
     :param databasePath: Path to the SModelS database
     :param kfactorDict: kfactor dictionary to be applied to the theory cross-sections (e.g. {'TChiWZ' : 1.2, 'T2' : 1.,..})
+    :param tarfiles: Allows to define a specific list of tarballs to be used. The list should match the txnames list.
+                    If set to None, it will use the default file (txname.tar).
     :param verbosity: overall verbosity (e.g. error, warning, info, debug) 
     
     :return: A dictionary containing the agreement factors 
@@ -95,11 +97,15 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         if not txnames:
             logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
             continue
-        for txname in txnames:
+        for itx,txname in enumerate(txnames):
             txnameStr = txname.txName
             txt0 = time.time()
             logger.info("------------ \033[31m validating  %s \033[0m" %txnameStr)
-            tarfile = os.path.join(slhadir,txnameStr+".tar")                
+            if not tarfiles:
+                tarfile = txnameStr+".tar"
+            else:
+                tarfile = os.path.basename(tarfiles[itx])
+            tarfile = os.path.join(slhadir,tarfile)
 
             #Collect exclusion curves
             tgraphs = plottingFuncs.getExclusionCurvesFor(expRes,txnameStr,get_all=False)
@@ -179,7 +185,15 @@ if __name__ == "__main__":
     kfactorDict = dict(parser.items("kfactors"))
     slhadir = parser.get("path", "slhaPath")
     databasePath = parser.get("path", "databasePath")
+    
+    tarfiles = None
+    if parser.has_option("path","tarfiles"):
+        tarfiles = parser.get("path", "tarfiles")
+        if not tarfiles or tarfiles == "None":
+            tarfiles = None
+        else:
+            tarfiles = tarfiles.split(',')
 
     #Run validation:
-    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,args.log)
+    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,args.log)
     
