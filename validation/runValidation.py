@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 
-def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.):
+def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1):
     """
     Creates a validation plot and saves its output.
     
@@ -23,6 +23,7 @@ def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.):
     or the .tar file containing the SLHA files.
     :param kfactor: optional global k-factor value to re-scale 
                     all theory prediction values
+    :param ncpus: Number of jobs to submit. ncpus = -1 means all processors.
                     
     :return: agreement factor
     """
@@ -31,6 +32,7 @@ def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.):
                 +", "+txnameStr+", "+axes)        
     valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor)
     valPlot.setSLHAdir(slhadir)
+    valPlot.ncpus = ncpus
     valPlot.getData()
     if not valPlot.data:
         return None
@@ -41,7 +43,7 @@ def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.):
     return valPlot.computeAgreementFactor() # return agreement factor
 
 
-def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles=None,verbosity='info'):
+def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles=None,ncpus=-1,verbosity='info'):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -53,6 +55,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param kfactorDict: kfactor dictionary to be applied to the theory cross-sections (e.g. {'TChiWZ' : 1.2, 'T2' : 1.,..})
     :param tarfiles: Allows to define a specific list of tarballs to be used. The list should match the txnames list.
                     If set to None, it will use the default file (txname.tar).
+    :param ncpus: Number of jobs to submit. ncpus = -1 means all processors.
     :param verbosity: overall verbosity (e.g. error, warning, info, debug) 
     
     :return: A dictionary containing the agreement factors 
@@ -129,7 +132,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             for tgraph in tgraphs:                
                 ax = tgraph.GetName().replace('exclusion_',"")
                 if not ax in txname.axes: continue
-                agreement = validatePlot(expRes,txnameStr,ax,tarfile,kfactor)
+                agreement = validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus)
                 logger.info('               agreement factor = %s' %str(agreement))
             logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--------- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
@@ -193,7 +196,12 @@ if __name__ == "__main__":
             tarfiles = None
         else:
             tarfiles = tarfiles.split(',')
+            
+    if parser.has_section("options") and parser.has_option("options","ncpus"):
+        ncpus = parser.getint("options","ncpus")
+    else:
+        ncpus = -1
 
     #Run validation:
-    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,args.log)
+    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,ncpus,args.log)
     

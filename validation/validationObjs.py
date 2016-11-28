@@ -206,12 +206,16 @@ class ValidationPlot():
         expId = self.expRes.globalInfo.id
         txname = self.expRes.getTxNames()[0].txName
         
+        #Get number of cpus:
+        if not hasattr(self, 'ncpus') or not self.ncpus:
+            self.ncpus  = -1
+        
         if tempdir is None: tempdir = os.getcwd()
         pf, parFile = tempfile.mkstemp(dir=tempdir,prefix='parameter_',suffix='.ini')
         
         os.write(pf,"[path]\ndatabasePath = %s\n" %self.databasePath)
         os.write(pf,"[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n")
-        os.write(pf,"[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = -1\n")
+        os.write(pf,"[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus)
         os.write(pf,"[database]\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (expId,txname))
         os.write(pf,"[printer]\noutputType = python\n")
         os.write(pf,"[python-printer]\naddElementList = False\n")
