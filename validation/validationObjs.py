@@ -210,10 +210,11 @@ class ValidationPlot():
         pf, parFile = tempfile.mkstemp(dir=tempdir,prefix='parameter_',suffix='.ini')
         
         os.write(pf,"[path]\ndatabasePath = %s\n" %self.databasePath)
-        os.write(pf,"[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ntestCoverage = False\n")
+        os.write(pf,"[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n")
         os.write(pf,"[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = -1\n")
         os.write(pf,"[database]\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (expId,txname))
-        os.write(pf,"[printer]\nprintDecomp = False\naddElmentInfo = False\nprintExtendedResults = True\noutputType = python\nexpandedSummary = True\naddElementList = False\n")
+        os.write(pf,"[printer]\noutputType = python\n")
+        os.write(pf,"[python-printer]\naddElementList = False\n")
         
         os.close(pf)
         return parFile
