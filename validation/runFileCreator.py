@@ -96,7 +96,7 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,xargs,Npts=300):
 
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
-         databasePath,xargs,Npts=300,addToFile=False,verbosity='info'):
+         databasePath,xargs,Npts=300,addToFile=False,verbosity='error'):
     """
     Creates .tar files for all the txnames and analyses.
 
@@ -197,7 +197,6 @@ if __name__ == "__main__":
     sys.path.append(smodelsPath)
     sys.path.append(utilsPath)
     from smodels.experiment.databaseObj import Database
-    from smodels.tools import xsecComputer, nllFast
     from plottingFuncs import getExclusionCurvesFor
     import plotRanges
     import slhaCreator
@@ -206,10 +205,9 @@ if __name__ == "__main__":
 
     numeric_level = getattr(logging,args.log.upper(), None)
     logger.setLevel(level=numeric_level)
-    xsecComputer.logger.setLevel(level=numeric_level+10)
-    nllFast.logger.setLevel(level=numeric_level+10)
     plotRanges.logger.setLevel(level=numeric_level)
-
+    from smodels.tools import smodelsLogging, xsecComputer
+    smodelsLogging.setLogLevel("error")
     
     
     #Options for cross-section calculation:
@@ -249,5 +247,5 @@ if __name__ == "__main__":
 
     #Run creation:
     main(analyses,datasetIDs,txnames,dataTypes,templatedir,slhadir,
-         databasePath,xargs,Npts,addToFile,args.log)
+         databasePath,xargs,Npts,addToFile)
     

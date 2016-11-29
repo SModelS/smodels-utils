@@ -43,7 +43,7 @@ def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1):
     return valPlot.computeAgreementFactor() # return agreement factor
 
 
-def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles=None,ncpus=-1,verbosity='info'):
+def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles=None,ncpus=-1,verbosity='error'):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -60,8 +60,6 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     
     :return: A dictionary containing the agreement factors 
     """
-    
-    
 
     if not os.path.isdir(databasePath):
         logger.error('%s is not a folder' %databasePath)
@@ -171,6 +169,8 @@ if __name__ == "__main__":
     logger.setLevel(level=numeric_level)
     plottingFuncs.logger.setLevel(level=numeric_level)
     validationObjs.logger.setLevel(level=numeric_level)
+    from smodels.tools import smodelsLogging
+    smodelsLogging.setLogLevel("error")
     
     #Selected plots for validation:
     analyses = parser.get("database", "analyses").split(",")
@@ -203,5 +203,5 @@ if __name__ == "__main__":
         ncpus = -1
 
     #Run validation:
-    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,ncpus,args.log)
+    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,ncpus)
     
