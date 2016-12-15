@@ -72,7 +72,7 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
     import math, random, os
     from pyfeyn.user import NamedLine, Fermion, Scalar, WHITE
     from pyx import bitmap
-    import SModelSUtils
+    from smodels_utils import SModelSUtils
 
     if spin=="scalar" and not NamedLine.has_key ( spin ) and \
                   NamedLine.has_key ( "higgs" ):
@@ -302,7 +302,7 @@ if __name__ == "__main__":
         args=argparser.parse_args()
 
         from smodels.theory import lheReader, lheDecomposer, crossSection, element
-        import SModelSUtils
+        from smodels_utils import SModelSUtils
         import sys
 
         if args.constraint!="":
