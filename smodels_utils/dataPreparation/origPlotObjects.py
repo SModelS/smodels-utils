@@ -8,6 +8,7 @@
 
 """
 
+from __future__ import print_function
 import sys
 from sympy import var, Eq, lambdify, solve, sympify, N, Float
 from standardObjects import round_to_n
@@ -409,7 +410,7 @@ class Axes(object):
             equation = equation.subs(y,self._xy[y])
             try:
                 equation = equation.subs(z,self._xy[z])
-            except KeyError,e:
+            except KeyError as e:
                 pass
             if equation != True: equations.append(equation)
 
@@ -518,6 +519,6 @@ if __name__ == "__main__":
     origPlot = OrigPlot.fromString ( axes )
     x1,y1,z1=150,120,100
     pms=origPlot.getParticleMasses ( x1,y1,z1 )
-    print "particle masses",pms
+    print ( "particle masses",pms )
     xyz=origPlot.getXYValues ( pms )
-    print "xyz values", xyz
+    print ( "xyz values", xyz )

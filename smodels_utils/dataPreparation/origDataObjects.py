@@ -142,8 +142,8 @@ class Orig(Locker):
                     values[-2]="0."
 #                print "values=",values
                 values=values[:-1]
-            except Exception,e:
-                print "[origDataObjects]",e
+            except Exception as e:
+                print ( "[origDataObjects]",e )
                 Errors().effiFormat(self.path, 'Orig')
             values = [value.strip() for value in values] 
             try:
