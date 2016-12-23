@@ -50,13 +50,35 @@ def checkPlotsFor(txname,update):
             plots.append(subprocess.Popen('evince --preview '+fig,shell=True, preexec_fn=os.setsid, 
                                           stdout=subprocess.PIPE))
         except:
-            plots.append(subprocess.Popen(['open',fig]))
-    cfile = os.path.join(txname.path,"../validation/"+txname.txName+".comment")
+            plots.append(subprocess.Popen(['open',fig]))    
+    cfile = os.path.join(os.path.dirname(txname.path),"../validation/"+txname.txName+".comment")
     if os.path.isfile(cfile):
-        logger.info('== Comment file found: ==')        
+        logger.info('\033[96m  == Txname Comment file found: == \033[0m')        
         cf = open(cfile,'r')
-        print cf.read()
+        print "\033[96m"+cf.read()+"\033[0m"
         cf.close()
+    cfile = os.path.join(os.path.dirname(txname.path),"../general.comment")
+    if os.path.isfile(cfile):
+        logger.info('\033[96m  == General Comment file found: == \033[0m')        
+        cf = open(cfile,'r')
+        print "\033[96m"+cf.read()+"\033[0m"
+        cf.close()
+    cfile = os.path.join(os.path.dirname(txname.path),"../validation/"+txname.txName+".comment")
+    cfile.replace('smodels-database/','smodels-database-old')
+    if os.path.isfile(cfile):
+        logger.info('\033[96m  == OLD Txname Comment file found: == \033[0m')        
+        cf = open(cfile,'r')
+        print "\033[96m"+cf.read()+"\033[0m"
+        cf.close()
+    cfile = os.path.join(os.path.dirname(txname.path),"../general.comment")
+    cfile.replace('smodels-database/','smodels-database-old')
+    if os.path.isfile(cfile):
+        logger.info('\033[96m  == OLD General Comment file found: == \033[0m')        
+        cf = open(cfile,'r')
+        print "\033[96m"+cf.read()+"\033[0m"
+        cf.close()
+
+
     val = ""
     while not val.lower() in ['t','f','n','s']:
         val = raw_input("TxName is validated? \n True/False/None/Skip (t/f/n/s) \n")    
