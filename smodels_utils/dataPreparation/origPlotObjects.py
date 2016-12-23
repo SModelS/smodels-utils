@@ -325,7 +325,15 @@ class Axes(object):
                 for equation3 in self._equations:
                     if equation3 == equation1: continue
                     if equation3 == equation2: continue
-                    xyz = solve([equation1,equation2,equation3],[x,y,z])
+                    xyz = solve([equation1,equation2,equation3],[x,y,z],dict=True)
+                    #dict=True forces the output to be always a list
+                    #(makes the output the same format for linear and non-linear eqs)                    
+                    if not isinstance(xyz,list) or len(xyz) != 1:
+                        logger.error("Something wrong with the result from solve: %s" %str(xyz))
+                        sys.exit()
+                    else:
+                        xyz = xyz[0]
+                    
                     if x in xyz and y in xyz and z in xyz:
                         ## print ("[origPlotObjects.py] xyz=",xyz)
                         breaking = True
@@ -357,10 +365,17 @@ class Axes(object):
         breaking = False
         for equation1 in self._equations:
             for equation2 in self._equations:
-                if equation1 == equation2: continue
-                xy = solve([equation1,equation2],[x,y,z])
+                if equation1 == equation2: continue                
+                xy = solve([equation1,equation2],[x,y,z],dict=True)
+                #dict=True forces the output to be always a list
+                #(makes the output the same format for linear and non-linear eqs)
+                if not isinstance(xy,list) or len(xy) != 1:
+                    logger.error("Something wrong with the result from solve: %s" %str(xy))
+                    sys.exit()
+                else:
+                    xy = xy[0]
                 if x in xy and y in xy:
-                    ## print ("[origPlotObjects.py] xy=",xy)
+#                     print ("[origPlotObjects.py] xy=",xy)
                     breaking = True
                     break
             if breaking == True: break
