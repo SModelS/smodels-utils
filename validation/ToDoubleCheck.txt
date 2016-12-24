@@ -24,14 +24,6 @@ LB@f3083
 
 Validated False:
 ----------------------
-ATLAS-CONF-2013-047_TGQ_Eq(mother,0.96*x)_Eq(lsp,y)+Eq(mother,x)_Eq(lsp,y)  ---> Interpolation issue?
-ATLAS-SUSY-2013-02_TGQ_Eq(mother,0.96*x)_Eq(lsp,y)+Eq(mother,x)_Eq(lsp,y)
-
-
-ATLAS-SUSY-2013-02_T6WW_2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,60.0)
-ATLAS-SUSY-2013-02_T6WW_2*Eq(mother,x)_Eq(inter0,0.5*x+0.5*y)_Eq(lsp,y)
-ATLAS-SUSY-2013-02_T6WWoff_2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,60.0)
-ATLAS-SUSY-2013-02_T6WWoff_2*Eq(mother,x)_Eq(inter0,0.5*x+0.5*y)_Eq(lsp,y)
 
 ATLAS-SUSY-2013-11_TChiWW_2*Eq(mother,x)_Eq(lsp,y)
 ATLAS-SUSY-2013-15_T2bbWW_2*Eq(mother,x)_Eq(lsp,y)

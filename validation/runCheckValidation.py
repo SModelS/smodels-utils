@@ -63,20 +63,6 @@ def checkPlotsFor(txname,update):
         cf = open(cfile,'r')
         print "\033[96m"+cf.read()+"\033[0m"
         cf.close()
-    cfile = os.path.join(os.path.dirname(txname.path),"../validation/"+txname.txName+".comment")
-    cfile.replace('smodels-database/','smodels-database-old')
-    if os.path.isfile(cfile):
-        logger.info('\033[96m  == OLD Txname Comment file found: == \033[0m')        
-        cf = open(cfile,'r')
-        print "\033[96m"+cf.read()+"\033[0m"
-        cf.close()
-    cfile = os.path.join(os.path.dirname(txname.path),"../general.comment")
-    cfile.replace('smodels-database/','smodels-database-old')
-    if os.path.isfile(cfile):
-        logger.info('\033[96m  == OLD General Comment file found: == \033[0m')        
-        cf = open(cfile,'r')
-        print "\033[96m"+cf.read()+"\033[0m"
-        cf.close()
 
 
     val = ""
