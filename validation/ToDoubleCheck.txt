@@ -24,13 +24,6 @@ LB@f3083
 
 Validated False:
 ----------------------
-
-ATLAS-SUSY-2013-11_TChiWW_2*Eq(mother,x)_Eq(lsp,y)
-ATLAS-SUSY-2013-15_T2bbWW_2*Eq(mother,x)_Eq(lsp,y)
-
-CMS-PAS-SUS-12-022_TChiChipmStauStau_2*Eq(mother,x)_Eq(inter0,0.5*x+0.5*y)_Eq(lsp,y)
-CMS-PAS-SUS-13-015_T2tt_2*Eq(mother,x)_Eq(lsp,y)
-CMS-PAS-SUS-13-015_T2ttoff_2*Eq(mother,x)_Eq(lsp,y)
-CMS-PAS-SUS-13-023_T6bbWWoff_2*Eq(mother,x)_Eq(inter0,0.75*x+0.25*y)_Eq(lsp,y)
-CMS-SUS-13-006_TChiWH_2*Eq(mother,x)_Eq(lsp,y)
+ATLAS-SUSY-2013-02_T6WWoff_2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,60.0)
+ATLAS-SUSY-2013-02_T6WWoff_2*Eq(mother,x)_Eq(inter0,0.5*x+0.5*y)_Eq(lsp,y)
 

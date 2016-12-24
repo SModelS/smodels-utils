@@ -79,11 +79,12 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,xargs,Npts=300):
     xargs.tofile = True
     xargs.pythiacard = tempf.pythiaCard
     xargs.filename = tempdir
+    xargs.verbosity = 30
     #Compute LO cross-sections
     xsecComputer.main(xargs)
     #Compute NLL cross-sections
     xargs.NLL = True
-    xargs.LOfromSLHA = True
+    xargs.LOfromSLHA = True    
     xsecComputer.main(xargs)
     
     
