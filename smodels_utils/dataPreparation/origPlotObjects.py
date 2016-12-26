@@ -326,9 +326,11 @@ class Axes(object):
                     if equation3 == equation1: continue
                     if equation3 == equation2: continue
                     xyz = solve([equation1,equation2,equation3],[x,y,z],dict=True)
+                    if not xyz:
+                        continue                    
                     #dict=True forces the output to be always a list
                     #(makes the output the same format for linear and non-linear eqs)                    
-                    if not isinstance(xyz,list) or len(xyz) != 1:
+                    if not isinstance(xyz,list) or len(xyz) > 1:
                         logger.error("Something wrong with the result from solve: %s" %str(xyz))
                         sys.exit()
                     else:
@@ -369,7 +371,9 @@ class Axes(object):
                 xy = solve([equation1,equation2],[x,y,z],dict=True)
                 #dict=True forces the output to be always a list
                 #(makes the output the same format for linear and non-linear eqs)
-                if not isinstance(xy,list) or len(xy) != 1:
+                if not xy:
+                    continue
+                if not isinstance(xy,list) or len(xy) > 1:
                     logger.error("Something wrong with the result from solve: %s" %str(xy))
                     sys.exit()
                 else:
