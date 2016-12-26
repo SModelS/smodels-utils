@@ -57,21 +57,19 @@ def checkPlotsFor(txname,update):
         cf = open(cfile,'r')
         print "\033[96m"+cf.read()+"\033[0m"
         cf.close()
-    cfile = os.path.join(os.path.dirname(txname.path),"../general.comment")
-    if os.path.isfile(cfile):
-        logger.info('\033[96m  == General Comment file found: == \033[0m')        
-        cf = open(cfile,'r')
-        print "\033[96m"+cf.read()+"\033[0m"
-        cf.close()
 
 
     val = ""
-    while not val.lower() in ['t','f','n','s']:
-        val = raw_input("TxName is validated? \n True/False/None/Skip (t/f/n/s) \n")    
+    while not val.lower() in ['t','f','n','s','exit']:
+        val = raw_input("TxName is validated? \n True/False/None/Skip (t/f/n/s) \n (or type exit to stop)\n")    
         if val.lower() == 't': validationResult = True
         elif val.lower() == 'f': validationResult = False
         elif val.lower() == 'n': validationResult = None
         elif val.lower() == 's': validationResult = 'skip'
+        elif val.lower() == 'exit':
+            for plot in plots:
+                os.killpg(os.getpgid(plot.pid), signal.SIGTERM)            
+            sys.exit()
         else:
             print 'Unknow option. Try again.'
     for plot in plots:
@@ -120,6 +118,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
         logger.error("No experimental results found.")    
     
     tval0 = time.time()
+    expResList = sorted(expResList, key=lambda exp: exp.globalInfo.id)
     #Loop over experimental results and validate plots
     for expRes in expResList:
         expt0 = time.time()
@@ -128,9 +127,17 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
         dataset = expRes.datasets[0]
         #Loop over pre-selected txnames:
         txnameList = [tx for tx in dataset.txnameList if not 'assigned' in tx.constraint]
+	txnameList = sorted(txnameList, key=lambda tx: tx.txName)
         if not txnameList:
             logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
             continue
+        cfile = os.path.join(os.path.dirname(expRes.path),"general.comment")
+        if os.path.isfile(cfile):
+            logger.info('\033[96m  == General Comment file found: == \033[0m')        
+            cf = open(cfile,'r')
+            print "\033[96m"+cf.read()+"\033[0m"
+            cf.close()        
+        
         for txname in txnameList:
             txnameStr = txname.txName
             if not txname.validated in check: continue
@@ -178,7 +185,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
             expResList = db.getExpResults(analysisIDs, datasetIDs, txnames,
                       dataTypes, useSuperseded=True, useNonValidated=True)
         for expRes in expResList:
-            print expRes
+#             print expRes
             dataset = expRes.datasets[0]
             txnameList = [tx for tx in dataset.txnameList if not 'assigned' in tx.constraint]
             for txname in txnameList:

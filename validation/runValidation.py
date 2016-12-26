@@ -66,8 +66,9 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     
     try:
         db = Database(databasePath,verbosity=verbosity)
-    except:
+    except Exception as e:
         logger.error("Error loading database at %s" %databasePath)
+        logger.error("Error:\n %s" %str(e))
         
     
     logger.info('----- Running validation...')
