@@ -32,17 +32,24 @@ def checkPlotsFor(txname,update):
         axes = [axes]
     #Collect validation plots:
     valPlots = []
+    missingPlots = []
     for ax in axes:
         ax = ax.replace("*","").replace(",","").replace("(","").replace(")","")
         plotfile = txname.txName+"_"+ax+".pdf"
         valplot = os.path.join(txname.path,'../../validation/'+plotfile)
         valplot = os.path.abspath(valplot)
         if not os.path.isfile(valplot):
-            logger.error('\033[36m        plot %s not found \033[0m' %valplot)
-            continue
-        valPlots.append(valplot)
+            missingPlots.append(valplot)
+        else:
+            valPlots.append(valplot)
 
-    if not valPlots: return 'skip'
+    if not valPlots:
+        logger.error('\033[36m       No plots found \033[0m')
+        return 'skip'
+    else:
+        for plot in missingPlots:
+            logger.error('\033[36m        plot %s not found \033[0m' %valplot)
+
     #Check the plots
     plots = []    
     for fig in valPlots:
@@ -61,7 +68,8 @@ def checkPlotsFor(txname,update):
 
     val = ""
     while not val.lower() in ['t','f','n','s','exit']:
-        val = raw_input("TxName is validated? \n True/False/None/Skip (t/f/n/s) \n (or type exit to stop)\n")    
+        val = raw_input("TxName is validated? (Current validation status: %s) \
+        \n True/False/None/Skip (t/f/n/s) \n (or type exit to stop)\n" %txname.validated)    
         if val.lower() == 't': validationResult = True
         elif val.lower() == 'f': validationResult = False
         elif val.lower() == 'n': validationResult = None
@@ -121,17 +129,21 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
     expResList = sorted(expResList, key=lambda exp: exp.globalInfo.id)
     #Loop over experimental results and validate plots
     for expRes in expResList:
+        
+#         if (not hasattr(expRes.globalInfo,'contact')) or (not 'fastlim' in expRes.globalInfo.contact):
+#             continue
+        
         expt0 = time.time()
         logger.info("--------- \033[32m Checking  %s \033[0m" %expRes.globalInfo.id)
         #Select only one dataset (for EM results avoid duplicated txnames)
         dataset = expRes.datasets[0]
         #Loop over pre-selected txnames:
         txnameList = [tx for tx in dataset.txnameList if not 'assigned' in tx.constraint]
-	txnameList = sorted(txnameList, key=lambda tx: tx.txName)
+        txnameList = sorted(txnameList, key=lambda tx: tx.txName)
         if not txnameList:
             logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
             continue
-        cfile = os.path.join(os.path.dirname(expRes.path),"general.comment")
+        cfile = os.path.join(expRes.path,"general.comment")
         if os.path.isfile(cfile):
             logger.info('\033[96m  == General Comment file found: == \033[0m')        
             cf = open(cfile,'r')
