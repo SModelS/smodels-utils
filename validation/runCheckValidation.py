@@ -130,8 +130,11 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
     #Loop over experimental results and validate plots
     for expRes in expResList:
         
-#         if (not hasattr(expRes.globalInfo,'contact')) or (not 'fastlim' in expRes.globalInfo.contact):
-#             continue
+#        if (not hasattr(expRes.globalInfo,'contact')) or (not 'fastlim' in expRes.globalInfo.contact):
+#            continue
+#        if (hasattr(expRes.globalInfo,'contact')) and ('fastlim' in expRes.globalInfo.contact):
+#            continue
+
         
         expt0 = time.time()
         logger.info("--------- \033[32m Checking  %s \033[0m" %expRes.globalInfo.id)
@@ -167,7 +170,6 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
             for dset in expRes.datasets:
                 txfiles += [tx.path for tx in dset.txnameList if tx.txName == txname.txName]
             for txfile in txfiles:
-                txfile = txname.path
                 if not os.path.isfile(txfile):
                     logger.error('\n\n ******\n Txname file %s NOT FOUND!!! \n**** \n\n' %(txfile))
                     continue
