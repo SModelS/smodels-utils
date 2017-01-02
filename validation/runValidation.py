@@ -146,6 +146,8 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Produces validation plots and data for the selected results")
     ap.add_argument('-p', '--parfile', 
             help='parameter file specifying the validation options', default='./validation_parameters.ini')
+    ap.add_argument('-v', '--verbosity', 
+            help='specify verbosity level: debug, info, warn, error', default='error' )
     ap.add_argument('-l', '--log', 
             help='specifying the level of verbosity (error, warning,info, debug)', 
             default = 'info', type = str)
@@ -207,5 +209,6 @@ if __name__ == "__main__":
         ncpus = -1
 
     #Run validation:
-    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,ncpus)
+    main( analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,
+          ncpus, args.verbosity )
     
