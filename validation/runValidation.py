@@ -146,8 +146,6 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Produces validation plots and data for the selected results")
     ap.add_argument('-p', '--parfile', 
             help='parameter file specifying the validation options', default='./validation_parameters.ini')
-    ap.add_argument('-v', '--verbosity', 
-            help='specify verbosity level: debug, info, warn, error', default='error' )
     ap.add_argument('-l', '--log', 
             help='specifying the level of verbosity (error, warning,info, debug)', 
             default = 'info', type = str)
@@ -176,7 +174,7 @@ if __name__ == "__main__":
     plottingFuncs.logger.setLevel(level=numeric_level)
     validationObjs.logger.setLevel(level=numeric_level)
     from smodels.tools import smodelsLogging
-    smodelsLogging.setLogLevel("error")
+    smodelsLogging.setLogLevel( args.log )
     
     #Selected plots for validation:
     analyses = parser.get("database", "analyses").split(",")
@@ -210,5 +208,5 @@ if __name__ == "__main__":
 
     #Run validation:
     main( analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,
-          ncpus, args.verbosity )
+          ncpus, args.log )
     
