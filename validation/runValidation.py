@@ -2,7 +2,6 @@
 
 import sys,os
 import logging
-# logging.basicConfig(filename='val.out')
 import argparse,time
 from ConfigParser import SafeConfigParser
 
@@ -50,7 +49,9 @@ def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,pretty=False)
     return valPlot.computeAgreementFactor() # return agreement factor
 
 
-def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles=None,ncpus=-1,verbosity='error',pretty=False):
+
+def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
+        tarfiles=None,ncpus=-1,verbosity='error',pretty=False):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -59,9 +60,11 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param txnames: list of txnames ([TChiWZ,...])
     :param slhadir: Path to the folder containing the txname .tar files
     :param databasePath: Path to the SModelS database
-    :param kfactorDict: kfactor dictionary to be applied to the theory cross-sections (e.g. {'TChiWZ' : 1.2, 'T2' : 1.,..})
-    :param tarfiles: Allows to define a specific list of tarballs to be used. The list should match the txnames list.
-                    If set to None, it will use the default file (txname.tar).
+    :param kfactorDict: kfactor dictionary to be applied to the theory cross-sections 
+                        (e.g. {'TChiWZ' : 1.2, 'T2' : 1.,..})
+    :param tarfiles: Allows to define a specific list of tarballs to be used. 
+                     The list should match the txnames list.
+                     If set to None, it will use the default file (txname.tar).
     :param ncpus: Number of jobs to submit. ncpus = -1 means all processors.
     :param verbosity: overall verbosity (e.g. error, warning, info, debug)
     
@@ -77,7 +80,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         db = Database(databasePath,verbosity=verbosity)
     except Exception as e:
         logger.error("Error loading database at %s" %databasePath)
-        logger.error("Error:\n %s" %str(e))
+        logger.error("Error: %s" % str(e) )
+        sys.exit()
         
     
     logger.info('----- Running validation...')
@@ -180,7 +184,7 @@ if __name__ == "__main__":
     plottingFuncs.logger.setLevel(level=numeric_level)
     validationObjs.logger.setLevel(level=numeric_level)
     from smodels.tools import smodelsLogging
-    smodelsLogging.setLogLevel("error")
+    smodelsLogging.setLogLevel( args.log )
     
     #Selected plots for validation:
     analyses = parser.get("database", "analyses").split(",")
@@ -217,5 +221,10 @@ if __name__ == "__main__":
         pretty = False
 
     #Run validation:
+<<<<<<< HEAD
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,ncpus,args.log.lower(),pretty)
+=======
+    main( analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,
+          ncpus, args.log )
+>>>>>>> 92b66d7fac8b34b078e259b53fd38ff06120be97
     
