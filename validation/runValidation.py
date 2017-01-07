@@ -221,10 +221,6 @@ if __name__ == "__main__":
         pretty = False
 
     #Run validation:
-<<<<<<< HEAD
-    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,ncpus,args.log.lower(),pretty)
-=======
-    main( analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,
-          ncpus, args.log )
->>>>>>> 92b66d7fac8b34b078e259b53fd38ff06120be97
+    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,
+         ncpus,args.log.lower(),pretty)
     
