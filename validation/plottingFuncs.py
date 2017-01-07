@@ -10,6 +10,7 @@
 
 import logging,os,sys,copy
 sys.path.append('../')
+from array import array
 
 logger = logging.getLogger(__name__)
 from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
@@ -332,21 +333,6 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
                 else:
                     allowed.SetPoint(allowed.GetN(), x, y)
 
-
-#     #Get envelopes:
-#     exclEnvelop = getEnvelope(excluded) 
-#     exclborderEnvelop = getEnvelope(excluded_border)
-#     allborderEnvelop = getEnvelope(allowed_border)
-#     #Get excluded band:
-#     exclBand = TGraph()
-#     for i in range(allborderEnvelop.GetN()):
-#         x,y = Double(),Double()
-#         allborderEnvelop.GetPoint(i,x,y)
-#         exclBand.SetPoint(exclBand.GetN(),x,y)    
-#     for i in range(exclEnvelop.GetN()):
-#         x,y = Double(),Double()
-#         exclEnvelop.GetPoint(exclEnvelop.GetN()-i,x,y)
-#         exclBand.SetPoint(exclBand.GetN(),x,y)  
         
 
     # Check if official exclusion curve has been defined:
@@ -363,12 +349,10 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     setOptions(allowed_border, Type='allowed_border')
     setOptions(excluded, Type='excluded')
     setOptions(excluded_border, Type='excluded_border')
-#     setOptions(exclBand, Type='excluded')
     if official:
         for i in official:
             setOptions( i, Type='official')
     base = TMultiGraph()
-#    if exclBand.GetN()>0: base.Add(exclBand, "CF")
     if allowed.GetN()>0: base.Add(allowed, "P")
     if excluded.GetN()>0: base.Add(excluded, "P")
     if allowed_border.GetN()>0: base.Add(allowed_border, "P")
@@ -418,6 +402,114 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     if not silentMode: ans = raw_input("Hit any key to close\n")
     
     return plane,base
+
+
+def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
+    """
+    Uses the data in validationPlot.data and the official exclusion curves
+    in validationPlot.officialCurves to generate a pretty exclusion plot
+    
+    :param validationPlot: ValidationPlot object
+    :param silentMode: If True the plot will not be shown on the screen
+    :return: TCanvas object containing the plot
+    """
+        
+    # Check if data has been defined:
+    tgr = TGraph2D()
+    cond_violated =TGraph()
+    kfactor=None
+
+    zmax = 0.
+    if not validationPlot.data:
+        logger.error("Data for validation plot is not defined.")
+        return (None,None)
+        ## sys.exit()
+    else:
+        # Get excluded and allowed points:
+        for pt in validationPlot.data:
+            if kfactor == None:
+                kfactor = pt ['kfactor']
+            if abs(kfactor - pt['kfactor'])> 1e-5:
+                logger.error("kfactor not a constant throughout the plane!")
+                sys.exit()
+            x, y = pt['axes']
+            z = pt['signal']/pt ['UL']
+            zmax = max(z,zmax)
+            if pt['condition'] and pt['condition'] > 0.05:
+                logger.warning("Condition violated for file " + pt['slhafile'])
+            else:
+                tgr.SetPoint(tgr.GetN(), x, y, z)        
+
+    # Check if official exclusion curve has been defined:
+    if not validationPlot.officialCurves:
+        logger.warning("Official curve for validation plot is not defined.")
+        official = None
+    else:
+        official = validationPlot.officialCurves
+        logger.debug("Official curves have length %d" % len (official) )
+    
+    
+    if silentMode: gROOT.SetBatch()  
+    setOptions(tgr, Type='allowed')
+    title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
+            + validationPlot.txName\
+            + "_" + validationPlot.axes
+    tgr.SetTitle(title)            
+    subtitle = "datasetIds: "
+    for dataset in validationPlot.expRes.datasets:
+        ds_txnames = map ( str, dataset.txnameList )
+        if not validationPlot.txName in ds_txnames:
+            continue
+        expId = str(dataset.dataInfo.dataId)
+        subtitle+=expId+" "
+    figureUrl = getFigureUrl(validationPlot)
+    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
+    set_palette(gStyle)
+    #Set contours:
+    h = tgr.GetHistogram()
+    h.GetZaxis().SetRangeUser(0., min(zmax,5.))
+    h.DrawCopy("COLZ")    
+    setOptions(h, Type='smodels')
+    h.SetContour(1,array('d',[1.]))
+    h.SetLineStyle(1)
+    h.DrawCopy("CONT3 same")
+    h.SetContour(2,array('d',[1./looseness,looseness]))
+    h.SetLineStyle(2)    
+    h.Draw("CONT3 same")
+    if official:
+        for gr in official:
+            setOptions(gr, Type='official')
+            gr.Draw("L SAME")
+     
+    
+    l=TLatex()
+    l.SetNDC()
+    l.SetTextSize(.04)
+    agreement = validationPlot.computeAgreementFactor()
+    l.DrawLatex(.15,.85,"validation agreement %.1f %s" % (agreement*100, "%"))
+    tgr.l=l
+    l0=TLatex()
+    l0.SetNDC()
+    l0.SetTextSize(.015)
+    l0.DrawLatex(.1,.905,subtitle)
+    tgr.l0=l0
+    if figureUrl:
+        l1=TLatex()
+        l1.SetNDC()
+        l1.SetTextSize(.025)
+        l1.DrawLatex(.12,.15,"%s" % figureUrl)
+        tgr.l1=l1
+    l2=TLatex()
+    l2.SetNDC()
+    l2.SetTextSize(.04)
+    l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor)
+    tgr.l2=l2
+
+    if not silentMode: ans = raw_input("Hit any key to close\n")
+    
+    return plane,tgr
+
+
 
 def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signal_factor =1.):
     """
@@ -615,6 +707,9 @@ def setOptions(obj,Type=None):
     elif Type == 'official':
         obj.SetLineWidth(4)
         obj.SetLineColor(kBlack)
+    elif Type == 'smodels':
+        obj.SetLineWidth(4)
+        obj.SetLineColor(kRed)        
     elif Type == 'temperature':
         obj.SetMarkerStyle(20)
         obj.SetMarkerSize(1.5)

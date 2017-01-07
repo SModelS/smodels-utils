@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 from smodels.experiment import databaseObj
 from smodels.tools.physicsUnits import GeV
 from smodels.tools import statistics, modelTester 
-from plottingFuncs import createPlot, getExclusionCurvesFor, createSpecialPlot, createTempPlot
+from plottingFuncs import createPlot, getExclusionCurvesFor, createSpecialPlot, createTempPlot, createPrettyPlot
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 
@@ -331,6 +331,15 @@ class ValidationPlot():
         """
 
         self.plot,self.base = createPlot(self,silentMode)
+        
+    def getPrettyPlot(self,silentMode=True):
+        """
+        Uses the data in self.data and the official exclusion curve
+        in self.officialCurves to generate a pretty exclusion plot
+        :param silentMode: If True the plot will not be shown on the screen
+        """
+
+        self.plot,self.base = createPrettyPlot(self,silentMode)        
 
 
     def getSpecialPlot(self,silentMode=True,what = "bestregion", nthpoint = 1,signal_factor = 1.0 ):
@@ -385,6 +394,8 @@ class ValidationPlot():
         filename = filename.replace(self.expRes.getValuesFor('id')[0]+"_","")
         filename = os.path.join(vDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
+        if self.pretty:
+            filename = filename.replace('.'+format,'_pretty.'+format)
         self.plot.Print(filename)
         return True
 

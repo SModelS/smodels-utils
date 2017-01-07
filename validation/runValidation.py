@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 
-def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1):
+def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,pretty=False):
     """
     Creates a validation plot and saves its output.
     
@@ -24,6 +24,8 @@ def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1):
     :param kfactor: optional global k-factor value to re-scale 
                     all theory prediction values
     :param ncpus: Number of jobs to submit. ncpus = -1 means all processors.
+    
+    :param pretty: If True it will generate "pretty" plots
                     
     :return: agreement factor
     """
@@ -36,14 +38,19 @@ def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1):
     valPlot.getData()
     if not valPlot.data:
         return None
-    valPlot.getPlot()
+    if pretty:
+        valPlot.getPrettyPlot()
+        valPlot.pretty = True
+    else:
+        valPlot.getPlot()
+        valPlot.pretty = False
     valPlot.savePlot()
     valPlot.saveData()
     
     return valPlot.computeAgreementFactor() # return agreement factor
 
 
-def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles=None,ncpus=-1,verbosity='error'):
+def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles=None,ncpus=-1,verbosity='error',pretty=False):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -56,7 +63,9 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param tarfiles: Allows to define a specific list of tarballs to be used. The list should match the txnames list.
                     If set to None, it will use the default file (txname.tar).
     :param ncpus: Number of jobs to submit. ncpus = -1 means all processors.
-    :param verbosity: overall verbosity (e.g. error, warning, info, debug) 
+    :param verbosity: overall verbosity (e.g. error, warning, info, debug)
+    
+    :param pretty: If True it will generate "pretty" plots     
     
     :return: A dictionary containing the agreement factors 
     """
@@ -131,7 +140,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             for tgraph in tgraphs:                
                 ax = tgraph.GetName().replace('exclusion_',"")
                 if not ax in txname.axes: continue
-                agreement = validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus)
+                agreement = validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty)
                 logger.info('               agreement factor = %s' %str(agreement))
             logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--------- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
@@ -198,11 +207,15 @@ if __name__ == "__main__":
         else:
             tarfiles = tarfiles.split(',')
             
-    if parser.has_section("options") and parser.has_option("options","ncpus"):
-        ncpus = parser.getint("options","ncpus")
+    if parser.has_section("options"):
+        if parser.has_option("options","ncpus"):
+            ncpus = parser.getint("options","ncpus")
+        if parser.has_option("options","prettyPlots"):
+            pretty = parser.getboolean("options", "prettyPlots")
     else:
         ncpus = -1
+        pretty = False
 
     #Run validation:
-    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,ncpus)
+    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,ncpus,args.log.lower(),pretty)
     
