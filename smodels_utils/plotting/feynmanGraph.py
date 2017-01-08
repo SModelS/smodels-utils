@@ -128,7 +128,7 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
         #print "using",filename
         #print "filename=",filename
         if not os.path.exists ( filename ):
-            print "[feynmanGraph.py] error:",filename,"not found."
+            print ( "[feynmanGraph.py] error:",filename,"not found." )
             filename="%s/icons/questionmark.jpg" % SModelSUtils.installDirectory()
         try:
             jpg = bitmap.jpegimage( filename )
@@ -156,13 +156,13 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
     """
     try:
         import os, sys
-        f = open(os.devnull, 'w')
-        copy=sys.stdout
-        sys.stdout = f
+        #f = open(os.devnull, 'w')
+        #copy=sys.stdout
+        #sys.stdout = f
         from pyx import text, bitmap, unit
         from pyfeyn.user import FeynDiagram, Point, Circle, HATCHED135, CIRCLE, \
             Vertex, WHITE, Fermion
-        sys.stdout=copy
+        #sys.stdout=copy
     except ImportError,e:
         logger.error ( "cannot draw, pyfeyn not installed? %s" % e )
         return
@@ -259,7 +259,7 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
         pdffile=filename
         for e in extensions: pdffile=pdffile.replace( e, "pdf" )
         epsfile=pdffile.replace("pdf","eps")
-        redir = Redirector ( "feyndraw.log" )
+        # redir = Redirector ( "feyndraw.log" )
         fd.draw( pdffile )
         fd.draw( epsfile )
         del redir

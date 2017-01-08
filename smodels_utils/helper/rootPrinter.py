@@ -12,9 +12,9 @@ import logging
 from smodels.theory.topology import TopologyList
 from smodels.theory.element import Element
 from smodels.theory.theoryPrediction import TheoryPredictionList, theoryPredictionsFor
-from smodels.experiment.txnameObject import TxName
+from smodels.experiment.txnameObj import TxName
 from smodels.tools.ioObjects import OutputStatus, ResultList
-from smodels.tools.missingTopologies import MissingTopoList
+from smodels.tools.missingTopos import MissingTopoList
 from smodels.tools.physicsUnits import GeV, fb, TeV, pb
 from smodels.experiment.databaseObjects import Database
 import ROOT
