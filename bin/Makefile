@@ -1,13 +1,21 @@
-all: create upload move xsel
+all: ana_create ana_xsel
 
-create:
+# all: sms_create sms_upload sms_move sms_xsel
+
+ana_create:
+	./listOfAnalyses.py 
+
+ana_xsel:
+	cat ListOfAnalyses | xsel -i
+
+sms_create:
 	./smsDictionary.py
 
-upload:
+sms_upload:
 	scp *.png smodels.hephy.at:/var/www/feyn/
 
-move:
+sms_move:
 	mv *feyn* graphs/
 
-xsel:
+sms_xsel:
 	cat SmsDictionary | xsel -i
