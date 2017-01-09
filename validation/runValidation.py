@@ -50,7 +50,8 @@ def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,pretty=False,
         valPlot.getPlot()
         valPlot.pretty = False
     valPlot.savePlot()
-    valPlot.saveData()
+    if generateData:
+        valPlot.saveData()
     
     return valPlot.computeAgreementFactor() # return agreement factor
 
