@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 
-def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,pretty=False):
+def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,pretty=False,generateData=True):
     """
     Creates a validation plot and saves its output.
     
@@ -25,6 +25,9 @@ def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,pretty=False)
     :param ncpus: Number of jobs to submit. ncpus = -1 means all processors.
     
     :param pretty: If True it will generate "pretty" plots
+    
+    :param generateData: If True, run SModelS on the slha files.
+                         If False, use the already existing *.py files in the validation folder.
                     
     :return: agreement factor
     """
@@ -34,7 +37,10 @@ def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,pretty=False)
     valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor)
     valPlot.setSLHAdir(slhadir)
     valPlot.ncpus = ncpus
-    valPlot.getData()
+    if generateData:
+        valPlot.getData()
+    else:
+        valPlot.loadData()
     if not valPlot.data:
         return None
     if pretty:
@@ -44,14 +50,15 @@ def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,pretty=False)
         valPlot.getPlot()
         valPlot.pretty = False
     valPlot.savePlot()
-    valPlot.saveData()
+    if generateData:
+        valPlot.saveData()
     
     return valPlot.computeAgreementFactor() # return agreement factor
 
 
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
-        tarfiles=None,ncpus=-1,verbosity='error',pretty=False):
+        tarfiles=None,ncpus=-1,verbosity='error',pretty=False,generateData=True):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -68,7 +75,11 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param ncpus: Number of jobs to submit. ncpus = -1 means all processors.
     :param verbosity: overall verbosity (e.g. error, warning, info, debug)
     
-    :param pretty: If True it will generate "pretty" plots     
+    :param pretty: If True it will generate "pretty" plots   
+    
+    :param generateData: If True, run SModelS on the slha files.
+                         If False, use the already existing *.py files in the validation folder.
+      
     
     :return: A dictionary containing the agreement factors 
     """
@@ -144,7 +155,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             for tgraph in tgraphs:                
                 ax = tgraph.GetName().replace('exclusion_',"")
                 if not ax in txname.axes: continue
-                agreement = validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty)
+                agreement = validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,generateData)
                 logger.info('               agreement factor = %s' %str(agreement))
             logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--------- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
@@ -211,16 +222,20 @@ if __name__ == "__main__":
         else:
             tarfiles = tarfiles.split(',')
             
-    if parser.has_section("options"):
-        if parser.has_option("options","ncpus"):
-            ncpus = parser.getint("options","ncpus")
-        if parser.has_option("options","prettyPlots"):
-            pretty = parser.getboolean("options", "prettyPlots")
+    if parser.has_section("options") and parser.has_option("options","ncpus"):        
+        ncpus = parser.getint("options","ncpus")
     else:
         ncpus = -1
+    if parser.has_section("options") and parser.has_option("options","prettyPlots"):
+        pretty = parser.getboolean("options", "prettyPlots")
+    else:
         pretty = False
+    if parser.has_section("options") and parser.has_option("options","generateData"):
+        generateData = parser.getboolean("options", "generateData")            
+    else:
+        generateData = True
 
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,
-         ncpus,args.log.lower(),pretty)
+         ncpus,args.log.lower(),pretty,generateData)
     

@@ -8,7 +8,7 @@
 
 """
 
-import logging,os,sys,copy
+import logging,os,sys,numpy,random
 sys.path.append('../')
 from array import array
 
@@ -403,7 +403,6 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     
     return plane,base
 
-
 def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
@@ -413,13 +412,11 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     :param silentMode: If True the plot will not be shown on the screen
     :return: TCanvas object containing the plot
     """
-        
+
     # Check if data has been defined:
     tgr = TGraph2D()
-    cond_violated =TGraph()
     kfactor=None
-
-    zmax = 0.
+    
     if not validationPlot.data:
         logger.error("Data for validation plot is not defined.")
         return (None,None)
@@ -434,11 +431,34 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
                 sys.exit()
             x, y = pt['axes']
             z = pt['signal']/pt ['UL']
-            zmax = max(z,zmax)
             if pt['condition'] and pt['condition'] > 0.05:
                 logger.warning("Condition violated for file " + pt['slhafile'])
             else:
                 tgr.SetPoint(tgr.GetN(), x, y, z)        
+
+    if tgr.GetN() == 0:
+        logger.error("No good points for validation plot.")
+        return (None,None)
+
+    #ROOT has trouble obtaining a histogram from a 1-d graph. So it is
+    #necessary to smear the points if they rest in a single line.
+    oneX, oneY = False,False
+    if tgr.GetYmax() == tgr.GetYmin():
+        logger.info("1d data detected, smearing Y values")
+        xpts = numpy.frombuffer(tgr.GetX(),count=tgr.GetN())
+        ypts = numpy.frombuffer(tgr.GetY(),count=tgr.GetN())
+        zpts = numpy.frombuffer(tgr.GetZ(),count=tgr.GetN())
+        for i in range(tgr.GetN()):
+            tgr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,0.001),zpts[i])
+        oneY = True
+    if tgr.GetXmax() == tgr.GetXmin():
+        logger.info("1d data detected, smearing X values")
+        xpts = numpy.frombuffer(tgr.GetX(),count=tgr.GetN())
+        ypts = numpy.frombuffer(tgr.GetY(),count=tgr.GetN())
+        zpts = numpy.frombuffer(tgr.GetZ(),count=tgr.GetN())
+        for i in range(tgr.GetN()):
+            tgr.SetPoint(i,xpts[i]+random.uniform(0.,0.001),ypts[i],zpts[i])
+        oneX = True
 
     # Check if official exclusion curve has been defined:
     if not validationPlot.officialCurves:
@@ -454,20 +474,26 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
             + validationPlot.txName\
             + "_" + validationPlot.axes
-    tgr.SetTitle(title)            
-    subtitle = "datasetIds: "
+    tgr.SetTitle(title)
+    types = []
     for dataset in validationPlot.expRes.datasets:
         ds_txnames = map ( str, dataset.txnameList )
         if not validationPlot.txName in ds_txnames:
             continue
-        expId = str(dataset.dataInfo.dataId)
-        subtitle+=expId+" "
+        types.append(dataset.dataInfo.dataType)
+    types = list(set(types))
+    if len(types) == 1: types = types[0]
+    subtitle = "result type: %s" %str(types)
     figureUrl = getFigureUrl(validationPlot)
-    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
-    set_palette(gStyle)
+    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
+    plane.SetRightMargin(0.16)
+    set_palette(gStyle)    
     #Set contours:
     h = tgr.GetHistogram()
-    h.GetZaxis().SetRangeUser(0., min(zmax,5.))
+    h.GetZaxis().SetRangeUser(0., min(tgr.GetZmax(),3.))
+    h.GetZaxis().SetTitle("r = #sigma_{signal}/#sigma_{UL}")
+    h.GetZaxis().CenterTitle()
+    h.GetZaxis().SetTitleOffset(1.2)      
     h.DrawCopy("COLZ")    
     setOptions(h, Type='smodels')
     h.SetContour(1,array('d',[1.]))
@@ -480,6 +506,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         for gr in official:
             setOptions(gr, Type='official')
             gr.Draw("L SAME")
+
      
     
     l=TLatex()
@@ -490,14 +517,14 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     tgr.l=l
     l0=TLatex()
     l0.SetNDC()
-    l0.SetTextSize(.015)
+    l0.SetTextSize(.025)
     l0.DrawLatex(.1,.905,subtitle)
     tgr.l0=l0
     if figureUrl:
         l1=TLatex()
         l1.SetNDC()
         l1.SetTextSize(.025)
-        l1.DrawLatex(.12,.15,"%s" % figureUrl)
+        l1.DrawLatex(.01,0.023,"#splitline{official plot:}{%s}" % figureUrl)
         tgr.l1=l1
     l2=TLatex()
     l2.SetNDC()
@@ -508,8 +535,6 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     if not silentMode: ans = raw_input("Hit any key to close\n")
     
     return plane,tgr
-
-
 
 def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signal_factor =1.):
     """
@@ -622,6 +647,9 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
     return plane
 
             
+
+
+
         
 def setOptions(obj,Type=None):
     """
@@ -714,7 +742,6 @@ def setOptions(obj,Type=None):
         obj.SetMarkerStyle(20)
         obj.SetMarkerSize(1.5)
         obj.SetTitle("")    
-
 
 def getEnvelope(excludedGraph):
     """
