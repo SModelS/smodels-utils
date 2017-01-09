@@ -40,7 +40,7 @@ def computeLimit ( observed, expected, error, lumi ):
     key = "%f %f %f %f" % ( r4(observed), r4(expected), r4(error), r4(lumi.asNumber(1/fb)) )
     if key in limitCache:
         return limitCache[key]
-    ul = statistics.upperLimit ( observed, expected, error, lumi, .05, 10000 ).asNumber ( fb )
+    ul = statistics.upperLimit ( observed, expected, error, lumi, .05, 200000 ).asNumber ( fb )
     ret=str(ul)+"*fb"
     limitCache[key]=ret
     return ret
