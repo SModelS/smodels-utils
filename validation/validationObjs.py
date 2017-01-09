@@ -11,8 +11,6 @@
 import logging,os,sys
 
 logger = logging.getLogger(__name__)
-#from smodels.tools.physicsUnits import fb, GeV
-from smodels.experiment import databaseObj
 from smodels.tools.physicsUnits import GeV
 from smodels.tools import statistics, modelTester 
 from plottingFuncs import createPlot, getExclusionCurvesFor, createSpecialPlot, createTempPlot, createPrettyPlot
@@ -176,7 +174,6 @@ class ValidationPlot():
             logger.error("%s is not a file nor a folder" %self.slhaDir)
             sys.exit()            
     
-    
     def getOfficialCurve(self, get_all=True ):
         """
         Reads the root file associated to the ExpRes and
@@ -193,8 +190,7 @@ class ValidationPlot():
             return tgraph
         else:
             return tgraph[0]
-
-    
+   
     def getParameterFile(self,tempdir=None):
         """
         Creates a temporary parameter file to be passed to runSModelS
@@ -222,6 +218,30 @@ class ValidationPlot():
         
         os.close(pf)
         return parFile
+    
+    def loadData(self):
+        """
+        Tries to load an already existing python output.
+        """
+        
+        validationDir = os.path.join(self.expRes.path,'validation')
+        title = self.expRes.getValuesFor('id')[0] + "_" \
+            + self.txName\
+            + "_" + self.axes   
+        datafile = title +'.py'
+        datafile = datafile.replace(self.expRes.getValuesFor('id')[0]+"_","")
+        datafile = os.path.join(validationDir,datafile)
+        datafile = datafile.replace("*","").replace(",","").replace("(","").replace(")","")
+        if not os.path.isfile(datafile):
+            logger.error("Validation datafile %s not found" %datafile)
+            self.data = None
+            return
+
+        #Save data to file
+        f = open(datafile,'r')
+        self.data = eval(f.read().replace("validationData = ",""))
+        f.close()
+        
     
     def getData(self):
         """
@@ -341,7 +361,6 @@ class ValidationPlot():
 
         self.plot,self.base = createPrettyPlot(self,silentMode)        
 
-
     def getSpecialPlot(self,silentMode=True,what = "bestregion", nthpoint = 1,signal_factor = 1.0 ):
         """ get one of the special plots.
             :param what: which special plot
@@ -365,7 +384,6 @@ class ValidationPlot():
         """
         self.plot = createTempPlot(self, silentMode, what, nthpoint, signal_factor)
         
-
     def savePlot(self,validationDir=None,format='pdf'):
         """
         Saves the plot in .pdf format in the validationDir folder.

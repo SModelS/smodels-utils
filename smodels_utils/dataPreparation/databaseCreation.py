@@ -40,7 +40,7 @@ def computeLimit ( observed, expected, error, lumi ):
     key = "%f %f %f %f" % ( r4(observed), r4(expected), r4(error), r4(lumi.asNumber(1/fb)) )
     if key in limitCache:
         return limitCache[key]
-    ul = statistics.upperLimit ( observed, expected, error, lumi ).asNumber ( fb )
+    ul = statistics.upperLimit ( observed, expected, error, lumi, .05, 200000 ).asNumber ( fb )
     ret=str(ul)+"*fb"
     limitCache[key]=ret
     return ret
@@ -86,11 +86,21 @@ class DatabaseCreator(list):
         self.txNameField = 'txName'
         self.add_axes= {}
         self.addToSmsRootFile = set()
+        self.useColors = True
         list.__init__(self)
 
-    def timeStamp ( self, txt ):
+    def timeStamp ( self, txt, c="green" ):
+        color, reset = '\x1b[32m', '\x1b[39m'
+        colors = { "yellow": '\x1b[33m', "red": '\x1b[31m', "blue": '\x1b[34m', \
+                   "white": '\x1b[37m' }
+        if c in colors: color = colors[c]
+        if not self.useColors:
+            color, reset = "", ""
+
         dt = time.time() - self.t0
-        print "[databaseCreation:%.1fs] %s" % ( dt, txt )
+        name=""
+        # name="databaseCreation:"
+        print ( "[%s%.1fs] %s%s%s" % ( name, dt, color, txt, reset ) )
 
     def describeMap ( self, Map ):
         """ simple method to describe quickly method in a string """
@@ -143,12 +153,9 @@ class DatabaseCreator(list):
         :raise requiredError: If a region exist, but no constraint, condition
         or conditionDescription is set for this region
         """
-        self.timeStamp ( "start" )
-
         self.ask_for_name = ask_for_name
 
-        print '\n*** starting creation of database entry for %s*** \n'\
-            %self.metaInfo.id
+        self.timeStamp ( 'create next database entry for %s' % self.metaInfo.id, "red" )
 
         if not createAdditional:
             self._extendInfoAttr(self.metaInfo, 'lastUpdate')
@@ -167,7 +174,7 @@ class DatabaseCreator(list):
 
         # self.timeStamp ( "before going through txnames" )
         for txName in self:
-            # self.timeStamp ( "reading %s" % txName )
+            self.timeStamp ( "reading %s" % txName )
             dataset=None
 
             if not hasattr(txName.on, 'constraint'):
@@ -184,7 +191,14 @@ class DatabaseCreator(list):
                 exclusions.append\
                 (StandardExclusions(txName.name + region.topoExtension))
 
+            datasets = []
+
             for plane in txName.planes:
+                if len(datasets)>0 and datasets[0] != plane.origEfficiencyMap.dataset:
+                    self.timeStamp ( "wrong dataset of plane!! %s" % plane.origEfficiencyMap.dataset )
+                    continue
+                datasets.append ( plane.origEfficiencyMap.dataset )
+                # print ( "what datasets do we have here? %s" % datasets  )
 
                 if plane.origEfficiencyMap and hasattr ( plane.origEfficiencyMap, "observedN" ):
                     dataInfo.dataset = plane.origEfficiencyMap.dataset
@@ -196,26 +210,33 @@ class DatabaseCreator(list):
                         self.timeStamp ( "computing upper limit for %d/%.1f/%.1f" % ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError ) )
                         dataInfo.upperLimit = computeLimit ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError, lumi )
                         dataInfo.expectedUpperLimit = computeLimit ( dataInfo.expectedBG, dataInfo.expectedBG, dataInfo.bgError, lumi )
-                        self.timeStamp ( "done computing upper limit." )
+                        self.timeStamp ( "done computing upper limit.", "white" )
 
-                self.timeStamp ( 'Reading mass plane: %s, %s [%s]' % (txName, plane.origPlot, str(plane.obsExclusion.path)[-30:] ) )
+                self.timeStamp ( 'Reading mass plane: %s, %s [%s][%s]' % (txName, plane.origPlot, str(plane.obsExclusion.path)[-30:], plane.origEfficiencyMap.dataset ) )
 
-                efficiencyMap = self.extendDataList\
-                (efficiencyMap, plane, txName)
-                self.timeStamp ( 'extended efficiencyMap to %s entries %s'\
-                    % (len(efficiencyMap), self.describeMap ( efficiencyMap ) ) )
+                efficiencyMap = self.extendDataList (efficiencyMap, plane, txName)
+                if len ( efficiencyMap) > 0:
+                    self.timeStamp ( 'extended efficiencyMap of %s to %s entries %s'\
+                                    % ( plane.origEfficiencyMap.dataset, len(efficiencyMap), 
+                                     self.describeMap ( efficiencyMap ) ), "yellow" )
                 efficiencyMap3D = self.extendDataList\
                 (efficiencyMap3D, plane, txName)
-                self.timeStamp ( 'extended efficiencyMap3D to %s entries %s'\
-                    % (len(efficiencyMap3D), self.describeMap ( efficiencyMap3D ) ) )
+                self.timeStamp ( 'extended efficiencyMap3D of %s to %s entries %s'\
+                    % ( plane.origEfficiencyMap.dataset, len(efficiencyMap3D), 
+                        self.describeMap ( efficiencyMap3D ) ), "yellow" )
                 upperLimits = self.extendDataList\
                 (upperLimits, plane, txName, 'limit')
-                self.timeStamp ( 'extended upperLimits to %s entries %s'\
-                    % ( len(upperLimits), self.describeMap ( upperLimits ) ) )
-                expectedUpperLimits = self.extendDataList(expectedUpperLimits,\
-                        plane, txName, 'expectedlimit')
-                self.timeStamp ( 'extended expectedUpperLimits to %s entries %s'\
-                    % ( len(expectedUpperLimits), self.describeMap ( expectedUpperLimits ) ) )
+                if len(upperLimits)>0:
+                    self.timeStamp ( 'extended upperLimits to %s entries %s'\
+                                   % ( len(upperLimits), self.describeMap ( upperLimits ) ),
+                                "yellow" )
+                if len(expectedUpperLimits)>0:
+                    expectedUpperLimits = self.extendDataList(expectedUpperLimits,\
+                                                              plane, txName, 'expectedlimit')
+                if len(expectedUpperLimits)>0:
+                    self.timeStamp ( 'extended expectedUpperLimits to %s entries %s'\
+                                    % ( len(expectedUpperLimits), 
+                                        self.describeMap ( expectedUpperLimits ) ) )
                 if plane.obsUpperLimit or plane.efficiencyMap or plane.efficiencyMap3D:
                     if not plane.obsUpperLimit.dataUrl and \
                     not plane.efficiencyMap.dataUrl and \
@@ -230,8 +251,7 @@ class DatabaseCreator(list):
                     else:
                         exclusions[getattr(region, self.txNameField)]\
                         .addMassPlane(plane)
-                        self.timeStamp ( 'Found region: %s' % \
-                                  ( region.name ) )
+                        #self.timeStamp ( 'Found region: %s' % ( region.name ) )
 
                 for excl in exclusions:
                     self.timeStamp ( 'extend exclusionLines for %s to %s entries'\
@@ -270,14 +290,14 @@ class DatabaseCreator(list):
                     region.figureUrl=""
                     region.dataUrl=""
                     region.axes=""
-        self.timeStamp ( "after going through txnames" )
+        # self.timeStamp ( "after going through txnames" )
         if create_dataInfo:
             self._createInfoFile( dataInfo.name, None, dataInfo.dataId, dataInfo)
         self._createSmsRoot( createAdditional )
 
         if not createAdditional:
             self._createTwikiTxt()
-        self.timeStamp ( "done" )
+        # self.timeStamp ( "done", "white" )
 
 
     def extendDataList(self, dataList, plane, txName, limitType = None):
@@ -332,6 +352,7 @@ class DatabaseCreator(list):
             value = value[2]
             massArray = plane.origPlot.getParticleMasses(x,y)
             #massArray = [massPoints,massPoints]
+            # print ( "[databaseCreation] appending %s %s" % ( massArray, value ) )
             dataList.append(massArray, value)
             self._computeKinRegions(massArray, i, plane, txName, limitType )
         return dataList
@@ -516,7 +537,7 @@ class DatabaseCreator(list):
                     m = m + 'overwrite lastUpdate (y/n)?:'
                     answer = 'n'
                     if "SMODELS_NOUPDATE" in os.environ.keys():
-                        print "SMODELS_NOUPDATE is set!"
+                        self.timeStamp ( "SMODELS_NOUPDATE is set!", "red" )
                         break
                     if self.ask_for_name:
                         answer = raw_input(m)
@@ -627,7 +648,7 @@ class DatabaseCreator(list):
                 fullname = "%s/%s" % ( dirname, exclusion.GetName() )
                 if fullname in self.addToSmsRootFile:
                     if smsRoot.Get( fullname ) == None:
-                        print "[sms.root] add %s" % fullname
+                        self.timeStamp ( "add %s to sms.root" % fullname, "info" )
                         exclusion.Write()
         smsRoot.Close()
 
