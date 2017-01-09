@@ -9,6 +9,7 @@
 
 """
 
+from __future__ import print_function
 import logging
 logger = logging.getLogger(__name__)
 import sys
@@ -109,13 +110,13 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
     a=random.gauss ( 0, 1 )
     if a<0.: b=-b
     segs=[]
-    if verbose: print "[feynmanGraph.py] "
+    # if verbose: print ( "[feynmanGraph.py] " )
     for i in range(n):
         br=b * (-1)**i
         if not bend: br=None
         segs.append ( segment_(points[i],points[i+1],spin, Bend=br ) )
         if verbose:
-            print "[feynmanGraph.py] draw line from (%f,%f) to (%f,%f)" % ( points[i].x(), points[i].y(), points[i+1].x(), points[i+1].y() )
+            print ( "[feynmanGraph.py] draw line from (%f,%f) to (%f,%f)" % ( points[i].x(), points[i].y(), points[i+1].x(), points[i+1].y() ) )
     if displace==None: displace=-.08
     # if label: segs[-1].addLabel ( label, pos=0.7, displace=displace )
     if label:
@@ -124,6 +125,7 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
         if lbl == "l": lbl="smallL"
         else:
             lbl=lbl.upper()
+        if lbl == "\\PBEAUTY": lbl="B"
         filename="%s/icons/%s.jpg" % ( SModelSUtils.installDirectory(), lbl )
         #print "using",filename
         #print "filename=",filename
@@ -133,9 +135,9 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
         try:
             jpg = bitmap.jpegimage( filename )
         except Exception,e:
-            logger.error ( "cant load %s!" % filename )
+            logger.error ( "cant load %s: %s!" % (filename,e) )
             import sys
-            sys.error(0)
+            sys.exit(0)
 
         jpg = bitmap.jpegimage( filename )
         y1=segs[-1].fracpoint(1.0).y()
@@ -262,7 +264,7 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
         # redir = Redirector ( "feyndraw.log" )
         fd.draw( pdffile )
         fd.draw( epsfile )
-        del redir
+        # del redir
         if pdffile!=filename:
             import os
             os.system ( "convert %s %s" % ( pdffile, filename ) )

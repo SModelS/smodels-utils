@@ -14,6 +14,10 @@ import setPath
 from smodels.experiment.databaseObj import Database
 
 def header( f, version ):
+
+### It has been created with the 
+### [[http://smodels.hephy.at/gitweb/?p=smodels-utils.git;a=blob;f=bin/smsDictionary.py;h=25451211ccf1d38e98c34b9d42e44deb39c6d6ea;hb=refs/heads/develop|smsDictionary.py]] tool. 
+
     f.write ( 
 ##"""#acl +DeveloperGroup:read,write,revert -All:write,read Default 
 ## <<LockedPage()>>
@@ -99,7 +103,10 @@ def writeTopo ( f, nr, txname, constraint ):
     f.write ( "||\n" )
 
 def writeTopos ( f, topos ):
-    for ctr,(txname,constraint) in enumerate( topos.items() ):
+    keys = topos.keys()
+    keys.sort()
+    for ctr,txname in enumerate( keys ):
+        constraint = topos[txname]
         writeTopo ( f, ctr+1, txname, constraint )
 
 def main():
