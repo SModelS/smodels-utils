@@ -403,7 +403,6 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     
     return plane,base
 
-
 def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
@@ -416,7 +415,6 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         
     # Check if data has been defined:
     tgr = TGraph2D()
-    cond_violated =TGraph()
     kfactor=None
 
     zmax = 0.
@@ -454,20 +452,26 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
             + validationPlot.txName\
             + "_" + validationPlot.axes
-    tgr.SetTitle(title)            
-    subtitle = "datasetIds: "
+    tgr.SetTitle(title)
+    types = []
     for dataset in validationPlot.expRes.datasets:
         ds_txnames = map ( str, dataset.txnameList )
         if not validationPlot.txName in ds_txnames:
             continue
-        expId = str(dataset.dataInfo.dataId)
-        subtitle+=expId+" "
+        types.append(dataset.dataInfo.dataType)
+    types = list(set(types))
+    if len(types) == 1: types = types[0]
+    subtitle = "result type: %s" %str(types)
     figureUrl = getFigureUrl(validationPlot)
-    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
+    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
+    plane.SetRightMargin(0.16)
     set_palette(gStyle)
     #Set contours:
     h = tgr.GetHistogram()
-    h.GetZaxis().SetRangeUser(0., min(zmax,5.))
+    h.GetZaxis().SetRangeUser(0., min(zmax,3.))
+    h.GetZaxis().SetTitle("r = #sigma_{signal}/#sigma_{UL}")
+    h.GetZaxis().CenterTitle()
+    h.GetZaxis().SetTitleOffset(1.2)
     h.DrawCopy("COLZ")    
     setOptions(h, Type='smodels')
     h.SetContour(1,array('d',[1.]))
@@ -490,14 +494,14 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     tgr.l=l
     l0=TLatex()
     l0.SetNDC()
-    l0.SetTextSize(.015)
+    l0.SetTextSize(.025)
     l0.DrawLatex(.1,.905,subtitle)
     tgr.l0=l0
     if figureUrl:
         l1=TLatex()
         l1.SetNDC()
         l1.SetTextSize(.025)
-        l1.DrawLatex(.12,.15,"%s" % figureUrl)
+        l1.DrawLatex(.01,0.023,"#splitline{official plot:}{%s}" % figureUrl)
         tgr.l1=l1
     l2=TLatex()
     l2.SetNDC()
@@ -508,8 +512,6 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     if not silentMode: ans = raw_input("Hit any key to close\n")
     
     return plane,tgr
-
-
 
 def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signal_factor =1.):
     """
@@ -622,6 +624,9 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
     return plane
 
             
+
+
+
         
 def setOptions(obj,Type=None):
     """
@@ -714,7 +719,6 @@ def setOptions(obj,Type=None):
         obj.SetMarkerStyle(20)
         obj.SetMarkerSize(1.5)
         obj.SetTitle("")    
-
 
 def getEnvelope(excludedGraph):
     """
