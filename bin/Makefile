@@ -1,6 +1,6 @@
-all: ana_create ana_xsel
-
-# all: sms_create sms_upload sms_move sms_xsel
+all: ana sms
+ana: ana_create ana_xsel
+sms: sms_create sms_upload sms_move sms_xsel
 
 ana_create:
 	./listOfAnalyses.py 

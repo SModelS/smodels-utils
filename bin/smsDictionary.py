@@ -25,16 +25,14 @@ def header( f, version ):
 
 = SMS dictionary =
 This page intends to collect information about how we map the SModelS description of 
-events onto the Tx nomenclature. It has been created with the 
-[[http://smodels.hephy.at/gitweb/?p=smodels-utils.git;a=blob;f=bin/smsDictionary.py;h=25451211ccf1d38e98c34b9d42e44deb39c6d6ea;hb=refs/heads/develop|smsDictionary.py]] tool. 
-
-The list has been created from the database version %s.
+events onto the Tx nomenclature. The list has been created from the database version %s.
 
 There is also a ListOfAnalyses.
 
 """ % version )
 
 def footer( f ):
+    return
     f.write (
 """
 
@@ -51,7 +49,9 @@ def xsel():
 
 def getTopos( database ):
     topos = {}
-    for expRes in database.getExpResults():
+    # expresults = database.getExpResults()
+    expresults = database.expResultList ## also non-validated
+    for expRes in expresults:
         for dataset in expRes.datasets:
             for txname in dataset.txnameList:
                 stxname = str ( txname )
