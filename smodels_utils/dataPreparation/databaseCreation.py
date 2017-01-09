@@ -98,7 +98,9 @@ class DatabaseCreator(list):
             color, reset = "", ""
 
         dt = time.time() - self.t0
-        print "%s[databaseCreation:%.1fs] %s%s" % ( color, dt, txt, reset )
+        name=""
+        # name="databaseCreation:"
+        print ( "[%s%.1fs] %s%s%s" % ( name, dt, color, txt, reset ) )
 
     def describeMap ( self, Map ):
         """ simple method to describe quickly method in a string """
@@ -295,7 +297,7 @@ class DatabaseCreator(list):
 
         if not createAdditional:
             self._createTwikiTxt()
-        self.timeStamp ( "done", "white" )
+        # self.timeStamp ( "done", "white" )
 
 
     def extendDataList(self, dataList, plane, txName, limitType = None):
@@ -535,7 +537,7 @@ class DatabaseCreator(list):
                     m = m + 'overwrite lastUpdate (y/n)?:'
                     answer = 'n'
                     if "SMODELS_NOUPDATE" in os.environ.keys():
-                        print "SMODELS_NOUPDATE is set!"
+                        self.timeStamp ( "SMODELS_NOUPDATE is set!", "red" )
                         break
                     if self.ask_for_name:
                         answer = raw_input(m)
