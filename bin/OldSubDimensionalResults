@@ -1,0 +1,19 @@
+#acl +DeveloperGroup:read,write,revert -All:write +All:read Default
+
+= List Of Sub-Dimensional Results =
+The following is a list of SMS results with unphysical constraints,
+e.g. a result for a cascade decay applies only if the mass of
+the intermediate particle is exactly the means of the mother and
+the daughter masses. For realistic applications, these results
+are not applicable. They are anyhow kept in the SModelS database
+for reasons of documentation and completeness.
+
+The list has been created from the database version `1.1.0 (Silvester 2016)`.
+
+||<#EEEEEE:> '''id'''||<#EEEEEE:> '''topology'''||<#EEEEEE:> '''constraint'''||
+|| ATLAS-SUSY-2013-02 || T5tctc || 2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,y-20.0) ||
+|| ATLAS-SUSY-2013-08 || T6ZZtt || 2*Eq(mother,x)_Eq(inter0,y+1.8e+2)_Eq(lsp,y) ||
+|| ATLAS-SUSY-2013-11 || TChipChimSlepSnu || 2*Eq(mother,x)_Eq(inter0,0.5*x+0.5*y)_Eq(lsp,y) ||
+|| ATLAS-SUSY-2013-12 || TChiChipmSlepL || 2*Eq(mother,x)_Eq(inter0,0.5*x+0.5*y)_Eq(lsp,y) ||
+|| ATLAS-SUSY-2013-12 || TChiChipmStauL || 2*Eq(mother,x)_Eq(inter0,0.5*x+0.5*y)_Eq(lsp,y) ||
+|| CMS-SUS-13-007 || T5ttttoff || 2*Eq(mother,1000.00000000000)_Eq(inter0,x)_Eq(lsp,y) ||
