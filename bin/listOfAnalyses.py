@@ -11,6 +11,8 @@
 
 from __future__ import print_function
 import setPath
+import commands 
+from short_descriptions import SDs
 from smodels.experiment.databaseObj import Database
     
 def yesno ( B ):
@@ -29,10 +31,11 @@ List of analyses and topologies in the SMS results database of v1.1.
 The list has been created from the database version `%s`.
 There is also an SmsDictionary.
 
-To experiment: [[#CMS|CMS]], [[#ATLAS|ATLAS]]
+Individual tables: [[#CMSupperLimit|CMS upper limits]], [[#CMSefficiencyMap|CMS efficiency maps]], [[#ATLASupperLimit|ATLAS upper limits]], [[#ATLASefficiencyMap|ATLAS efficiency Maps]]
 
 """ % version )
     
+fields = [ "ID", "short description", "L", "&radic;s", "Tx names", "superseded by" ]
 
 def xsel():
     import os
@@ -40,19 +43,24 @@ def xsel():
     os.system ( cmd )
     print ( cmd )
 
-def experimentHeader ( f, experiment ):
+def experimentHeader ( f, experiment, Type, nr ):
     f.write ( "\n" )
-    f.write ( "== %s ==\n" % experiment )
-    f.write ( "<<Anchor(%s)>>\n" % experiment )
-    # f.write ( "||<#EEEEEE:> '''ID''' ||<#EEEEEE:> '''short description''' ||<#EEEEEE:> '''L''' ||<#EEEEEE:> '''Tx names''' ||\n" )
-    f.write ( "||<#EEEEEE:> '''ID''' ||<#EEEEEE:> '''short description''' ||<#EEEEEE:> '''L''' ||<#EEEEEE:> '''&radic;s''' ||<#EEEEEE:> '''Tx names''' ||\n" )
+    stype = "efficiency maps"
+    if Type == "upperLimit": 
+        stype = "upper limits"
+    f.write ( "== %s, %s (%d results) ==\n" % (experiment,stype,nr ) )
+    f.write ( "<<Anchor(%s%s)>>\n" % (experiment, Type ) )
+    for i in fields:
+        f.write ( "||<#EEEEEE:> '''%s'''" % i )
+    f.write ( "||\n" )
 
 def emptyLine( f ):
-        f.write ( "|| || || || || ||\n"  )
+        f.write ( "||" )
+        f.write ( " ||"*( len(fields) ) )
+        f.write ( "\n" )
 
-def writeExperiment ( f, db, experiment ):
-    experimentHeader ( f, experiment )
-    anas = db.getExpResults()
+def writeOneTable ( f, db, experiment, Type, anas ):
+    experimentHeader ( f, experiment, Type, len(anas) )
 
     keys, anadict = [], {}
     for ana in anas:
@@ -71,7 +79,7 @@ def writeExperiment ( f, db, experiment ):
             emptyLine( f )
         previous = ana_name
         ana = anadict[ana_name]
-        import IPython
+        # import IPython
         # IPython.embed()
         try:
             comment = ana.globalInfo.comment
@@ -79,29 +87,72 @@ def writeExperiment ( f, db, experiment ):
             comment = ""
         # print ( comment )
         fastlim = ( "fastlim" in comment )
-        topos = set ( map ( str, ana.getTxNames() ) )
+        topos = list ( set ( map ( str, ana.getTxNames() ) ) )
+        topos.sort()
         # print ( topos )
         topos_s = ""
         for i in topos:
-            topos_s += ", %s" % i
+            topos_s += ", [[SmsDictionary#%s|%s]]" % (i, i )
         topos_s = topos_s[2:]
         if fastlim:
             topos_s = "(from fastlim)"
         url = ana.globalInfo.url
         if url.find ( " " ) > 0:
             url = url[:url.find(" ") ]
-        f.write ( "|| [[%s|%s]]" % ( url, ana.globalInfo.id ) )
-        f.write ( "|| || %s || %d || %s ||\n" % ( 
+        Id = ana.globalInfo.id
+        superseded = ""
+        if hasattr ( ana.globalInfo, "supersededBy" ):
+            s = ana.globalInfo.supersededBy
+            t = s
+            if t.find(" " ) > 0:
+                t=t[:t.find(" ")]
+            superseded = "[[#%s|%s]]" % ( t, s )
+        f.write ( "|| [[%s|%s]]<<Anchor(%s)>>" % ( url, Id, Id ) )
+        short_desc = ""
+        if Id in SDs: short_desc = SDs[Id]
+        f.write ( "|| %s || %s || %d || %s ||" % ( short_desc,
                ana.globalInfo.lumi.asNumber(), ana.globalInfo.sqrts.asNumber(), topos_s ) )
+        if "superseded by" in fields:
+            f.write ( "%s ||" % superseded )
+        f.write ( "\n" )
+
+def writeExperiment ( f, db, experiment ):
+    tanas = db.getExpResults( useSuperseded=True )
+    for Type in [ "upperLimit", "efficiencyMap" ]:
+        anas = []
+        for ana in tanas:
+            id = ana.globalInfo.id
+            # print ( id )
+            ds0 = ana.datasets[0]
+            dt = ana.datasets[0].dataInfo.dataType
+            if not experiment in id or not Type == dt:
+                continue
+            anas.append ( ana )
+        writeOneTable ( f, db, experiment, Type, anas )
+
+def backup():
+    o = commands.getoutput ( "cp ListOfAnalyses OldListOfAnalyses" )
+    if len(o):
+        print ( "backup: %s" % o )
+
+def diff():
+    o = commands.getoutput ( "diff ListOfAnalyses OldListOfAnalyses" )
+    if len(o)==0:
+        print ( "No changes in ListOfAnalyses since last call." )
+        return
+    print ( "ListOfAnalyses has changed (%d changes)" % ( len(o.split() ) ) )
 
 def main():
+    backup()
     f = open ( "ListOfAnalyses", "w" )
     database = Database ( '../../smodels-database/' )
     header( f, database.databaseVersion )
-    print ( "base=", database.databaseVersion )
+    print ( "Database", database.databaseVersion )
     experiments=[ "CMS", "ATLAS" ]
     for experiment in experiments:
         writeExperiment ( f, database, experiment )
+    f.close()
+    diff()
     xsel()
     
 if __name__ == '__main__':
