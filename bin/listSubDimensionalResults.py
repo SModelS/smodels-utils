@@ -31,11 +31,13 @@ def header( f, version ):
 """#acl +DeveloperGroup:read,write,revert -All:write +All:read Default
 
 = List Of Sub-Dimensional Results =
-The following is a list of SMS results with unphysical constraints,
+The following is a list of SMS results with additional constraints 
+on the data,
 e.g. a result for a cascade decay applies only if the mass of
-the intermediate particle is exactly the means of the mother and
+the intermediate particle is exactly the average of the mother and
 the daughter masses. For realistic applications, these results
-are not applicable. They are anyhow kept in the SModelS database
+are usually not applicable, since it is often highly unlikely that your 
+full model satisfies the constraints. They are anyhow kept in the SModelS database
 for reasons of documentation and completeness.
 
 The list has been created from the database version `%s`.
@@ -43,13 +45,33 @@ The list has been created from the database version `%s`.
 """ % version )
 
 def tableHeader ( f ):
-    fields = [ "id", "topology", "constraint" ]
+    fields = [ "id", "topology", "SModelS<<BR>>constraint", "data<<BR>>constraint" ]
     for i in fields:
         f.write ( "||<#EEEEEE:> '''%s'''" % i )
     f.write ( "||\n" )
 
 def writeEntry ( f, id, tx ):
-    f.write ( "|| %s || %s || %s ||\n" % ( id, tx.txName, tx.getInfo("axes") ) )
+    axes = tx.getInfo("axes").strip()
+    inter = "m,,inter,,"
+    mother = "m,,mother,,"
+    lsp = "m,,lsp,,"
+    replacements = { "2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,y-20.0)":\
+                            "%s = %s + 20 GeV" % ( inter, lsp ),
+                     "2*Eq(mother,x)_Eq(inter0,y+1.8e+2)_Eq(lsp,y)": \
+                            "%s = %s + 180 GeV" % ( inter, lsp ),
+                     "2*Eq(mother,x)_Eq(inter0,0.5*x+0.5*y)_Eq(lsp,y)": \
+                            "%s = 0.5 (%s + %s)" % ( inter, mother, lsp ),
+                     "2*Eq(mother,1000.00000000000)_Eq(inter0,x)_Eq(lsp,y)": \
+                            "%s = 1000 GeV" % ( mother )
+    }
+    constraint = tx.getInfo("constraint").strip()
+    constraint = constraint.replace( " ", "" )
+    constraint = constraint.replace ( "]+[", "]+`<<BR>>`[" )
+
+    waxes = axes
+    if axes in replacements:
+        waxes = replacements[axes]
+    f.write ( "|| %s || %s || `%s` || %s ||\n" % ( id, tx.txName, constraint, waxes ) )
 
 def main():
     backup()
