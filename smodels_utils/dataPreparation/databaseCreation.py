@@ -93,21 +93,22 @@ class DatabaseCreator(list):
 
     def timeStamp ( self, txt, c="info" ):
         color, reset = '\x1b[32m', '\x1b[39m'
-        #colors = { "yellow": '\x1b[33m', "red": '\x1b[31m', "blue": '\x1b[34m', \
-        #           "white": '\x1b[37m' }
-        colors = {}
-        if self.colorScheme == "light":
-            colors = { "info": '\x1b[33m', "error": '\x1b[31m', 
-                       "warn": '\x1b[34m', "debug": '\x1b[37m' }
-        if self.colorScheme == "dark":
-            colors = { "info": '\x1b[33m', "error": '\x1b[31m', 
-                       "warn": '\x1b[34m', "debug": '\x1b[30m' }
-        if c in colors: 
-            color = colors[c]
-        else:
-            self.timeStamp ( "do not know message level %s" % c )
-        if self.colorScheme == None:
+        if self.colorScheme in [ None, "None", "mono" ]:
             color, reset = "", ""
+        else:
+            #colors = { "yellow": '\x1b[33m', "red": '\x1b[31m', "blue": '\x1b[34m', \
+            #           "white": '\x1b[37m' }
+            colors = {}
+            if self.colorScheme == "light":
+                colors = { "info": '\x1b[33m', "error": '\x1b[31m', 
+                           "warn": '\x1b[34m', "debug": '\x1b[37m' }
+            if self.colorScheme == "dark":
+                colors = { "info": '\x1b[33m', "error": '\x1b[31m', 
+                           "warn": '\x1b[34m', "debug": '\x1b[30m' }
+            if c in colors: 
+                color = colors[c]
+            else:
+                self.timeStamp ( "do not know message level %s" % c, "error" )
 
         dt = time.time() - self.t0
         name=""
@@ -186,7 +187,7 @@ class DatabaseCreator(list):
 
         # self.timeStamp ( "before going through txnames" )
         for txName in self:
-            self.timeStamp ( "reading %s" % txName )
+            self.timeStamp ( "reading %s" % txName, "debug" )
             dataset=None
 
             if not hasattr(txName.on, 'constraint'):
