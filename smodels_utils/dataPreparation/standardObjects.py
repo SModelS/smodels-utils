@@ -9,7 +9,8 @@
 
 """   
 
-import sys, logging, ROOT
+import sys, logging
+import ROOT
 from math import floor, log10
 from smodels.tools.physicsUnits import pb, IncompatibleUnitsError, GeV
 

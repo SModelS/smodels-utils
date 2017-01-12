@@ -86,15 +86,27 @@ class DatabaseCreator(list):
         self.txNameField = 'txName'
         self.add_axes= {}
         self.addToSmsRootFile = set()
-        self.useColors = True
+        # colorScheme: light for dark background, dark for light background
+        #              None for monochrome
+        self.colorScheme = "light" ## "dark", None
         list.__init__(self)
 
-    def timeStamp ( self, txt, c="green" ):
+    def timeStamp ( self, txt, c="info" ):
         color, reset = '\x1b[32m', '\x1b[39m'
-        colors = { "yellow": '\x1b[33m', "red": '\x1b[31m', "blue": '\x1b[34m', \
-                   "white": '\x1b[37m' }
-        if c in colors: color = colors[c]
-        if not self.useColors:
+        #colors = { "yellow": '\x1b[33m', "red": '\x1b[31m', "blue": '\x1b[34m', \
+        #           "white": '\x1b[37m' }
+        colors = {}
+        if self.colorScheme == "light":
+            colors = { "info": '\x1b[33m', "error": '\x1b[31m', 
+                       "warn": '\x1b[34m', "debug": '\x1b[37m' }
+        if self.colorScheme == "dark":
+            colors = { "info": '\x1b[33m', "error": '\x1b[31m', 
+                       "warn": '\x1b[34m', "debug": '\x1b[30m' }
+        if c in colors: 
+            color = colors[c]
+        else:
+            self.timeStamp ( "do not know message level %s" % c )
+        if self.colorScheme == None:
             color, reset = "", ""
 
         dt = time.time() - self.t0
@@ -155,7 +167,7 @@ class DatabaseCreator(list):
         """
         self.ask_for_name = ask_for_name
 
-        self.timeStamp ( 'create next database entry for %s' % self.metaInfo.id, "red" )
+        self.timeStamp ( 'create next database entry for %s' % self.metaInfo.id, "error" )
 
         if not createAdditional:
             self._extendInfoAttr(self.metaInfo, 'lastUpdate')
@@ -210,7 +222,7 @@ class DatabaseCreator(list):
                         self.timeStamp ( "computing upper limit for %d/%.1f/%.1f" % ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError ) )
                         dataInfo.upperLimit = computeLimit ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError, lumi )
                         dataInfo.expectedUpperLimit = computeLimit ( dataInfo.expectedBG, dataInfo.expectedBG, dataInfo.bgError, lumi )
-                        self.timeStamp ( "done computing upper limit.", "white" )
+                        self.timeStamp ( "done computing upper limit.", "debug" )
 
                 self.timeStamp ( 'Reading mass plane: %s, %s [%s][%s]' % (txName, plane.origPlot, str(plane.obsExclusion.path)[-30:], plane.origEfficiencyMap.dataset ) )
 
@@ -218,18 +230,18 @@ class DatabaseCreator(list):
                 if len ( efficiencyMap) > 0:
                     self.timeStamp ( 'extended efficiencyMap of %s to %s entries %s'\
                                     % ( plane.origEfficiencyMap.dataset, len(efficiencyMap), 
-                                     self.describeMap ( efficiencyMap ) ), "yellow" )
+                                     self.describeMap ( efficiencyMap ) ), "info" )
                 efficiencyMap3D = self.extendDataList\
                 (efficiencyMap3D, plane, txName)
                 self.timeStamp ( 'extended efficiencyMap3D of %s to %s entries %s'\
                     % ( plane.origEfficiencyMap.dataset, len(efficiencyMap3D), 
-                        self.describeMap ( efficiencyMap3D ) ), "yellow" )
+                        self.describeMap ( efficiencyMap3D ) ), "info" )
                 upperLimits = self.extendDataList\
                 (upperLimits, plane, txName, 'limit')
                 if len(upperLimits)>0:
                     self.timeStamp ( 'extended upperLimits to %s entries %s'\
                                    % ( len(upperLimits), self.describeMap ( upperLimits ) ),
-                                "yellow" )
+                                "info" )
                 if len(expectedUpperLimits)>0:
                     expectedUpperLimits = self.extendDataList(expectedUpperLimits,\
                                                               plane, txName, 'expectedlimit')
@@ -297,7 +309,7 @@ class DatabaseCreator(list):
 
         if not createAdditional:
             self._createTwikiTxt()
-        # self.timeStamp ( "done", "white" )
+        # self.timeStamp ( "done", "debug" )
 
 
     def extendDataList(self, dataList, plane, txName, limitType = None):
@@ -537,7 +549,7 @@ class DatabaseCreator(list):
                     m = m + 'overwrite lastUpdate (y/n)?:'
                     answer = 'n'
                     if "SMODELS_NOUPDATE" in os.environ.keys():
-                        self.timeStamp ( "SMODELS_NOUPDATE is set!", "red" )
+                        self.timeStamp ( "SMODELS_NOUPDATE is set!", "error" )
                         break
                     if self.ask_for_name:
                         answer = raw_input(m)

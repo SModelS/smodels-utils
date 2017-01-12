@@ -10,7 +10,6 @@
 
 import sys
 import os
-import ROOT
 from copy import deepcopy
 from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.origDataObjects import\
