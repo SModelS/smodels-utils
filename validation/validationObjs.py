@@ -241,8 +241,7 @@ class ValidationPlot():
         f = open(datafile,'r')
         self.data = eval(f.read().replace("validationData = ",""))
         f.close()
-        
-    
+            
     def getData(self):
         """
         Runs SModelS on the SLHA files from self.slhaDir and store
@@ -359,7 +358,7 @@ class ValidationPlot():
         :param silentMode: If True the plot will not be shown on the screen
         """
 
-        self.plot,self.base = createPrettyPlot(self,silentMode)        
+        self.plot,self.base = createPrettyPlot(self,silentMode)
 
     def getSpecialPlot(self,silentMode=True,what = "bestregion", nthpoint = 1,signal_factor = 1.0 ):
         """ get one of the special plots.
@@ -413,7 +412,7 @@ class ValidationPlot():
         filename = os.path.join(vDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
         if self.pretty:
-            filename = filename.replace('.'+format,'_pretty.'+format)
+            filename = filename.replace('.'+format,'_pretty.'+format)            
         self.plot.Print(filename)
         return True
 
