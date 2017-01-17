@@ -5,33 +5,16 @@
    :synopsis: Module to provide some latex-coded strings needed for summaryplots.
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
+.. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
 
 '''
-# ### FIX ME: this is very preliminary => maybe can be replaced completely by functionality located in other modules
-# ### FIX ME: Has to be rewritten completely!
-
-# topologies linked to motherparticle:
-
-motherparticle = {
-	'g': ['T1', 'T5WW', 'T5WH', 'T1bbbb', 'T1tttt', 'T1tbtb', 'T5tttt'],
-	'q': ['T2'],
-	'b': ['T2bb', 'T6ttWW'],
-	't': ['T2tt', 'T6bbWW', 'T6ttZZ'],
-	'c0': ['TChiZZ', 'TChiChiSlepSlep'],
-	'cpm': ['TChiWW', 'TChipChimSlepSnu', 'TChipChimStauSnu'],
-	'l': ['TSlepSlep'],
-	'c0cpm': ['TChiWZ', 'TChiChipmSlepL', 'TChiChipmStauL', 'TChiChipmSlepStau', 'TChiChipmStauStau']
-}
-	
-
-
+import logging
 
 # pretty name of particle:
 
-prettySMParticle = {
-
-	'graviton':'#tilde{G}',         #graviton
+prettyParticle = {
+	'graviton':'G',         #graviton
 	'photon': '#gamma',             #photon
 	'gluon':'g',                    #gluon
 	'w' : 'W',                  #W
@@ -39,34 +22,31 @@ prettySMParticle = {
 	'higgs' : 'H',                  #higgs
 	
 	'quark': 'q',           #quark
+    'antiquark': '#bar{q}',
 	'up': 'u',           #up
 	'down': 'd',           #down
 	'charm': 'c',           #charm
 	'strange': 's',           #strange
 	'top': 't',           #top
+    'antitop': '#bar{t}',
 	'bottom': 'b',           #bottom
+    'antibottom': '#bar{b}',
 	
 	'lepton' : 'l',             #lepton
 	'electron' : 'e',               #electron
-	'muyon' : '#mu',            #myon
-	'tauon' : '#tau',  #tauon
+	'muon' : '#mu',            #muon
+	'tau' : '#tau',  #tau
 	
 	'neutrino' : '#nu',                     #neutrino
-	'elektron-neutrino' : '#nu_{e}',               #elektron-neutrino
-	'myon-neutrino' : '#nu_{#mu}',            #myon-neutrino
-	'tauon-neutrino' : '#nu_{#tau}',          #tauon-neutrino
+	'electron-neutrino' : '#nu_{e}',               #electron-neutrino
+	'muon-neutrino' : '#nu_{#mu}',            #muon-neutrino
+	'tau-neutrino' : '#nu_{#tau}',          #tau-neutrino
 
-}
-
-prettySUSYParticle = {
     'lsp' : '#tilde{#chi}^{0}_{1}',  # lightesd SUSY particle
-    'neutralino' : '#chi^{0}',      #neutralino
-    'chargino' : '#chi',            #Chargino
-    'gravitino':'G',              #gravitino
-    'photino':'#tilde{#gamma}',   #photino
+    'neutralino' : '#tilde{#chi}^{0}',      #neutralino
+    'chargino' : '#tilde{#chi}',            #Chargino
+    'gravitino':'#tilde{G}',              #gravitino
     'gluino': '#tilde{g}',        #gluino
-    'wino' : '#tilde{W}',       #Wino
-    'zino' : '#ti:lde{Z}',       #Zino
     'higgsino' : '#tilde{H}',       #higgsino
     
     'squark': '#tilde{q}',  #squark
@@ -79,14 +59,13 @@ prettySUSYParticle = {
     
     'slepton' : '#tilde{l}',    #slepton
     'selectron' : '#tilde{e}',      #selectron
-    'smyon' : '#tilde{#mu}',   #smyon
-    'stauon' : '#tilde{#tau}', #stauon
+    'smuon' : '#tilde{#mu}',   #smuon
+    'stau' : '#tilde{#tau}', #stau
     
     'sneutrino' : '#tilde{#nu}',            #sneutrino
-    'elektron-sneutrino' : '#tilde{#nu}_{e}',      #elektron-sneutrino
-    'myon-sneutrino' : '#tilde{#nu}_{#mu}',   #myon-sneutrino
-    'tauon-sneutrino' : '#tilde{#nu}_{#tau}', #tauon-sneutrino
-
+    'electron-sneutrino' : '#tilde{#nu}_{e}',      #electron-sneutrino
+    'muon-sneutrino' : '#tilde{#nu}_{#mu}',   #muon-sneutrino
+    'tau-sneutrino' : '#tilde{#nu}_{#tau}', #tau-sneutrino
    
 }
 
@@ -96,6 +75,7 @@ highstrings = {
     '^mp' : '^{#mp}',
     '^p' : '^{+}',
     '^m' : '^{-}',
+    '^*' : '*',
 }
 
 lowstrings = {
@@ -104,315 +84,211 @@ lowstrings = {
     '_3' : '_{3}',
     '_4' : '_{4}',
 }
-# pretty name of Analyses for summary plots:
-
-prettyAnalysisName = {
-	'SUS12028': '0-lep (#alpha_{T})',
-	'SUS12024': 'b-jet',
-	'SUS13013': '2-lep (SS+b)',
-	'SUS13007': '1-lep (#Delta#phi)',
-	'SUS13007LS': '1-lep (LS)',
-	'SUS13008': '3-lep (3l+b)',
-	'SUS13016': '2-lep (OS+b)',
-	'SUS13004': '0+1-lep (razor)',
-	'SUS13002': '(MultiLepton)',
-	'SUS13019': '(MT_{2})',
-	'SUS13012': '0-lep (#slash{E}_{T}+H_{T})',
-	'SUS13004': '0+1-lep (razor)',
-	'SUS13016': '2-lep (OS+b)'
-}
 
 # pretty name of decay:
 
-decay = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
-	'T1bbbb': 'gluino  --> bottom antibottom  lsp ', 
-	'T1tttt': 'gluino  --> top antitop  lsp ',
-	'T1gg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp )', 
-	'T1lg':'gluino  --> quark antiquark (neutralino_2  --> photon lsp |chargino^pm  --> w lsp )', 
-	'T1lnu':'gluino  --> quark antiquark (chargino^pm --> lepton^pm neutrino  lsp )', 
-	'T1lh':'gluino  --> quark antiquark  neutralino_2 neutralino_2  --> lepton^p lepton^m lsp ', 
-	'T2':'squark  --> quark lsp ',
-	'T2FVttcc': 'stop  --> charm lsp ',
-    'T2llnunubb': 'stop  --> lepton neutrino bottom lsp ',
-    'T2bb':'sbottom  --> bottom lsp ', 
-    'T2bw':'stop  --> bottom w lsp ',
-    'T2ttww': 'sbottom  --> top w lsp ',
+decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
+    'T1bbbb': 'gluino  --> bottom antibottom  lsp ',
+    'T1bbbt': 'gluino gluino  --> bottom antibottom bottom top lsp lsp',
+    'T1bbqq': 'gluino gluino  --> bottom antibottom quark antiquark lsp lsp',
+    'T1bbtt': 'gluino gluino  --> bottom antibottom top antitop lsp lsp',
+    'T1btbt': 'gluino  --> bottom top  lsp ',
+    'T1btqq': 'gluino gluino  --> bottom top quark antiquark lsp lsp',
+    'T1bttt': 'gluino gluino  --> bottom top top antitop lsp lsp',
+    'T1qqtt': 'gluino gluino  --> quark antiquark top antitop lsp lsp',
+    'T1tttt': 'gluino  --> top antitop  lsp ',
+    'T1ttttoff': 'gluino  --> top^* antitop^* lsp ',
+    'T2':'squark  --> quark lsp ',
+    'T2bb':'sbottom  --> bottom lsp ',
+    'T2bbWW':'stop  --> bottom W lsp ',
+    'T2bbWWoff':'stop  --> bottom W^* lsp ',
+    'T2bt':'sbottom sbottom  --> bottom top lsp lsp',
+    'T2cc':'stop  --> charm lsp ',
     'T2tt': 'stop  --> top lsp ', 
-    'T3w': 'gluino --> quark antiquark (chargino^pm_1 --> w lsp | lsp )' ,
-    'T3wb':'gluino  --> bottom antibottom (w )lsp ', 
-    'T3lh':'gluino  --> quark antiquark (neutralino_2 --> lepton^p lepton^m lsp | lsp )',
-    'T3tauh':'gluino  --> quark antiquark (neutralino_2 --> tauon tauon lsp | lsp )', 
-    'T5WW':'gluino  --> quark antiquark (chargino^pm_1 --> w lsp )',
-    'T5wg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp | chargino^pm_1 --> w lsp )',
-    'T5WH':'gluino  --> quark antiquark (neutralino_2 --> higgs lsp | chargino^pm_1 --> w lsp )',
-    'T5gg':'gluino  --> quark antiquark (neutralino_2 --> photon lsp )',
-    'T5lnu':'gluino  --> quark antiquark (chargino^pm --> lepton^pm neutrino lsp )',
-    'T5ZZ':'gluino  --> quark antiquark (neutralino_2 --> z lsp )',
-    'T5ZZInc':'neutralino_2 --> z lsp ',#tilde{#chi}^{0}_{2} #rightarrow Z #tilde{#chi}^{0}_{1}',
-    'T5zzgmsb':'gluino --> quark antiquark (neutralino_2 --> z lsp )', 
-    'T5tttt':'gluino  --> top (stop --> top antitop lsp )',
-    'T6ttww': 'sbottom  --> top (chargino^pm_1 --> w lsp )',
-    'T6ttHH': 'stop  --> top higgs lsp ',#tilde{t} #rightarrow tH #tilde{#chi}^{0}_{1}',
-    'T6ttzz': 'stop_2  --> z (stop_1 --> top lsp ) ',
-    'T6bbWW':'stop  --> bottom (chargino^p --> w lsp )',
-    'T6bbZZ':'sbottom  -->  bottom (neutralino_2 --> z lsp )',#tilde{b} #rightarrow bZ #tilde{#chi}^{0}_{1}',
-    'T7btW':'gluino  --> bottom top w lsp ',#tilde{g} #rightarrow btW#tilde{#chi}^{0}_{1}',
-    'T7btbtWW':'gluino  --> bottom (sbottom --> top (chargino^pm --> w lsp ))',#tilde{g} #rightarrow b(#tilde{b} #rightarrow t(#tilde{#chi}^{#pm} #rightarrow W#tilde{#chi}^{0}_{1}))',
-
-    'TChizz':'neutralino_3 neutralino_2  --> z z lsp lsp ',#checked
-    'TChiSlep':'neutralino_2 chargino^pm_1  --> lepton lepton lepton neutrino lsp lsp ',#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm}_{1} #rightarrow l l l #nu #tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
-    'TChiNuSlep':'neutralino_2 chargino^pm_1  --> lepton lepton lepton neutrino lsp lsp ',#tilde{#chi}^{0}_{2} #tilde{#chi}^{#pm}_{1} #rightarrow l l l #nu #tilde{#chi}^{0}_{1} #tilde{#chi}^{0}_{1} ',
-    
-    'TChizz':'neutralino_3 neutralino_2  --> z z lsp lsp ',#checked
-
-    'TChiwz':'chargino^pm neutralino_2  --> w z lsp lsp ',#checked
-    
-    'TChiChipmSlepSlep':'neutralino_2 chargino^pm_1  --> lepton (slepton --> lepton lsp ) | neutrino (slepton --> lepton lsp )',#checked
-    
-    'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tauon (stauon --> tauon lsp ) | neutrino (stauon --> tauon lsp )', #checked
-    
-    'TChiChipmSlepL':[
-    'neutralino_2 chargino^pm_1  --> lepton (slepton --> lepton lsp ) | neutrino (slepton --> lepton lsp )' ,
-    'neutralino_2 chargino^pm_1  --> lepton (slepton --> lepton lsp ) | lepton (sneutrino --> neutrino lsp )',
-    'neutralino_2 chargino^pm_1  --> neutrino (sneutrino --> neutrino lsp ) | lepton (sneutrino --> neutrino lsp )' ,
-    'neutralino_2 chargino^pm_1  --> neutrino (sneutrino --> neutrino lsp ) | neutrino (slepton --> lepton lsp )'], #checked
-    
-    'TChiChipmStauL':[
-    'neutralino_2 chargino^pm_1  --> tauon (stauon --> tauon lsp ) | neutrino (stauon --> tauon lsp )',
-    'neutralino_2 chargino^pm_1  --> tauon (stauon --> tauon lsp ) | tauon (stauon --> neutrino lsp )',
-    'neutralino_2 chargino^pm_1  --> neutrino (sneutrino --> neutrino lsp ) | tauon (sneutrino --> neutrino lsp )',
-    'neutralino_2 chargino^pm_1  --> neutrino (sneutrino --> neutrino lsp ) | neutrino (stauon -->  lsp )'], #checked
-    
-    'TChiChipmHW':'neutralino_2 chargino^pm_1  --> w lsp higgs lsp ', #checked
-    
-    'TChiChipmSlepStau':'neutralino_2 chargino^pm_1  --> lepton (slepton --> lepton lsp ) | neutrino (stauon --> tauon lsp )', #checked!
-    'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tauon (stauon --> tauon lsp ) | neutrino (stauon --> tauon lsp ) ',#checked!
-    
-    'TChipChimSlepSnu':[
-    'chargino^pm chargino^mp  --> lepton (sneutrino --> neutrino lsp ) | neutrino (slepton --> lepton lsp )',
-    'chargino^pm chargino^mp  --> lepton (sneutrino --> neutrino lsp ) | lepton (sneutrino --> neutrino lsp )',
-    'chargino^pm chargino^mp  --> neutralino (slepton --> lepton lsp ) | neutrino (slepton --> lepton lsp )'], #checked
-    
-    'TSlepSlep':'slepton  --> lepton lsp '#tilde{l} #rightarrow l #tilde{#chi}^{0}_{1}'
-    
+    'T2ttoff': 'stop  --> top^* lsp ', 
+    'T5WW':'gluino  --> quark antiquark chargino^pm_1, chargino^pm_1 --> W lsp',
+    'T5WWoff':'gluino  --> quark antiquark chargino^pm_1, chargino^pm_1 --> W^* lsp',
+    'T5ZZ':'gluino  --> quark antiquark neutralino_2, neutralino_2 --> Z lsp',
+    'T5ZZoff':'gluino  --> quark antiquark neutralino_2, neutralino_2 --> Z^* lsp',
+    'T5bbbb':'gluino  --> bottom sbottom, sbottom --> bottom lsp',
+    'T5bbbt':'gluino gluino --> bottom sbottom bottom sbottom, sbottom --> bottom lsp, sbottom --> top lsp',
+    'T5btbt':'gluino --> bottom sbottom, sbottom --> top lsp',
+    'T5tbtb':'gluino --> top stop, stop --> bottom lsp',
+    'T5tbtt':'gluino gluino --> top stop top stop, stop --> bottom lsp, stop --> top lsp',
+    'T5tctc':'gluino --> top stop, stop --> charm lsp',
+    'T5tttt':'gluino  --> antitop stop, stop --> top lsp',
+    'T5ttttoff':'gluino  --> antitop^* stop, stop --> top^* lsp',
+    'T6WW': 'squark  --> quark chargino^pm_1, chargino^pm_1 --> W lsp',
+    'T6WWoff': 'squark  --> quark chargino^pm_1, chargino^pm_1 --> W^* lsp',
+    'T6ZZtt': 'stop_2  --> Z stop_1, stop_1 --> top lsp',
+    'T6bbWW':'stop  --> bottom chargino_1^pm, chargino_1^pm --> W lsp',
+    'T6bbWWoff':'stop  --> bottom chargino_1^pm, chargino_1^pm --> W^* lsp',
+    'T6ttWW':'sbottom  --> top chargino_1^pm, chargino_1^pm --> W lsp',
+    'T6ttWWoff':'sbottom  --> top chargino_1^pm, chargino_1^pm --> W^* lsp',
+    'TChiChiSlepSlep':'neutralino_3 neutralino_2  --> lepton slepton lepton slepton, slepton --> lepton lsp',
+    'TChiChipmSlepL':'neutralino_2 chargino^pm_1  --> lepton slepton ( neutrino sneutrino ) lepton sneutrino ( neutrino slepton ), slepton --> lepton lsp, sneutrino --> neutrino lsp',
+    'TChiChipmSlepStau':'neutralino_2 chargino^pm_1  --> lepton slepton neutrino stau, slepton --> lepton lsp, stau --> tau lsp',
+    'TChiChipmStauL':'neutralino_2 chargino^pm_1  --> tau stau ( neutrino sneutrino ) tau sneutrino ( neutrino stau ), stau --> tau lsp, sneutrino --> neutrino lsp',
+    'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tau stau neutrino stau, stau --> tau lsp',
+    'TChiWH':'neutralino_2 chargino^pm_1 --> H W lsp lsp ',
+    'TChiWW':'chargino^pm_1 --> W lsp lsp ',
+    'TChiWZ':'neutralino_2 chargino^pm_1 --> Z W lsp lsp ',
+    'TChiWZoff':'neutralino_2 chargino^pm_1 --> Z^* W^* lsp lsp ',
+    'TChipChimSlepSnu':'chargino^pm_1 --> neutrino slepton ( lepton sneutrino ), slepton --> lepton lsp, sneutrino --> neutrino lsp ',
+    'TChipChimStauSnu':'chargino^pm_1 --> neutrino stau ( tau sneutrino ), stau --> tau lsp, sneutrino --> neutrino lsp ',
+    'TGQ':'gluino squark --> quark quark antiquark lsp lsp ',
+    'TGQbbq':'gluino gluino --> bottom antibottom gluon lsp lsp ',
+    'TGQbtq':'gluino gluino --> bottom top gluon lsp lsp ',
+    'TGQqtt':'gluino gluino --> gluon top antitop lsp lsp ',
+    'TScharm':'scharm  --> charm lsp ',
+    'TSlepSlep':'slepton  --> lepton lsp '    
 }
 
-def latexParticle(decayString,key,value):
-    decayString = decayString.replace('anti' + key + ' ','#bar{' + value + '}')
-    decayString = decayString.replace(key + ' ',value)
-    decayString = decayString.replace(key + '_',value + '_')
-    decayString = decayString.replace(key + '^',value + '^')
-    return decayString
+#Name of mother particles
 
-def prettyDecay(topoName):
-    if not topoName in decay: return None
-    decayString = decay[topoName]
-    for key, value in prettySUSYParticle.items():
-        decayString = latexParticle(decayString,key,value)
-    for key, value in prettySMParticle.items():
-        decayString = latexParticle(decayString,key,value)
-    for key, value in highstrings.items():
-        decayString = decayString.replace(key,value)
-    for key, value in lowstrings.items():
-        decayString = decayString.replace(key,value)
-    decayString = decayString.replace('-->','#rightarrow')
-    return decayString
-    
-        
-
-def decays(topo,plot = 'ROOT', kerning=True, omitleft=False ):
-  """ give the pretty decay string for a given topo.
-      E.g. T1 -> ~g -> q q ~ch10.
-      kerning: means smaller space between > and >
-      omitleft means omit everything up to #rightarrow """
-
-  if decay.has_key(topo):
-    part = decay[topo]
-    if omitleft and part.find("#rightarrow")>-1:
-      part=part[part.find("#rightarrow"):]
-    if plot=="ROOT":
-      return part
-    part = '$' + part.replace('#','\\') + '$'
-    if kerning:
-      part=part.replace(">>",">#kern[-.2]{>}")
-    return part
-  else:
-    return None
-
-
-#'Hadronic112q':'#tilde{q}_{R} #rightarrow qqqq  #lambda''_{112}',
-    #'Leptonic233q':'#tilde{q} #rightarrow qll#nu  #lambda_{233}',
-    #'Leptonic122g':'#tilde{g} #rightarrow qll#nu  #lambda_{122}',
-    #'SemiLeptonic233g':'#tilde{g} #rightarrow qbt#mu  #lambda'_{233}',,,
-    #'SemiLeptonic233q':'#tilde{q} #rightarrow qbt#mu  #lambda'_{233}',
-    #'bprime':'b' #rightarrow bZ',
-    #'Stop233':'#tilde{t}_{R} #rightarrow #mu#tau#nut  #lambda_{233}',
-    #'Leptonic122q':'#tilde{q} #rightarrow qll#nu  #lambda_{122}',
-    #'Hadronic112g':'#tilde{g} #rightarrow qqqq  #lambda''_{112}',
-    #'Hadronic122g':'#tilde{g} #rightarrow qqqq  #lambda_{122}',
-    #'Stop122':'#tilde{t}_{R} #rightarrow #mue#nut  #lambda_{122}',
-    #'Stop123':'#tilde{t}_{R} #rightarrow #mu#tau#nut  #lambda_{123}',
-    #'Leptonic123g':'#tilde{g} #rightarrow qll#nu  #lambda_{123}',
-    #'Leptonic123q':'#tilde{q} #rightarrow qll#nu  #lambda_{123}',
-    #'StopLLE122':'#tilde{t}_{R} #rightarrow t#nu_{#mu}e#mu  #lambda_{122}',
-    #'StopLLE233':'#tilde{t}_{R} #rightarrow t#nu_{#tau}#mu#tau  #lambda_{233}',
-    #'StopLQD233':'#tilde{t}_{R} #rightarrow tbt#mu  #lambda'_{233}',
-    
-    
-    
-    
-    #'Rstop':'#tilde{t} #rightarrow b#tau  #lambda'_{333}',
-    #'Rg3j':'#tilde{g} #rightarrow qqq  #lambda''_{112}',
-    #'SemiLeptonic231g':'#tilde{g} #rightarrow qbt#mu  #lambda'_{231}',
-    #'SemiLeptonic231q':'#tilde{q} #rightarrow qbt#mu  #lambda'_{231}',
-    
-    
-    #'Gluino113/223':'#tilde{g} #rightarrow qqb  #lambda''_{113/223}',
-    #'Gluino323':'#tilde{g} #rightarrow tbs  #lambda''_{323}'
-    
-dicparticle = { 
-     "T1": "#tilde{g}",
-     "T1bbbb": "#tilde{g}",
-     "T1tttt": "#tilde{g}",
-     "T1lg": "#tilde{g}",
-     "T1gg": "#tilde{g}",
-     "T5gg": "#tilde{g}",
-     "T5Wg": "#tilde{g}",
-     "T2": "#tilde{q}",
-     "T2bb": "#tilde{b}",
-     "T2tt": "#tilde{t}",
-     "T2ttww": "#tilde{b}",
-     "T3w": "#tilde{g}",
-     "T3lh": "#tilde{g}",
-     "T5zz": "#tilde{g}",
-     "T5zzInc": "#tilde{g}", 
-     #"T5zzh": "#tilde{g}", 
-     #"T5zzl": "#tilde{g}", 
-     "T5lnu": "#tilde{g}",
-     "T5zzgmsb": "#tilde{g}",
-     "T6bbWW": "#tilde{t}", 
-     "TChiwz": "#tilde{#chi}^{0}_{2}#tilde{#chi}^{#pm}_{1}",
-     #"TChiwz": "#tilde{#chi}^{0}",
-     "TChizz": "#tilde{#chi}^{0}_{2}",
-     "TChiSlep": "#tilde{#chi}^{0}_{2}",
-     "TChiSlepSlep": "#tilde{#chi}^{0}_{2}#tilde{#chi}^{#pm}_{1}",
-     "TChiNuSlep": "#tilde{#chi}^{0}_{2}",
-     "TSlepSlep":"#tilde{l}",
+motherDict = {"T1" :  "gluino", 
+    "T1bbbb" :  "gluino", 
+    "T1bbbt" :  "gluino", 
+    "T1bbqq" :  "gluino", 
+    "T1bbtt" :  "gluino", 
+    "T1btbt" :  "gluino", 
+    "T1btqq" :  "gluino", 
+    "T1bttt" :  "gluino", 
+    "T1qqtt" :  "gluino", 
+    "T1tttt" :  "gluino", 
+    "T1ttttoff" :  "gluino", 
+    "T2" :  "squark", 
+    "T2bb" :  "sbottom", 
+    "T2bbWW" :  "stop", 
+    "T2bbWWoff" :  "stop", 
+    "T2bt" :  "sbottom", 
+    "T2cc" :  "stop", 
+    "T2tt" :  "stop", 
+    "T2ttoff" :  "stop", 
+    "T5WW" :  "gluino", 
+    "T5WWoff" :  "gluino", 
+    "T5ZZ" :  "gluino", 
+    "T5ZZoff" :  "gluino", 
+    "T5bbbb" :  "gluino", 
+    "T5bbbt" :  "gluino", 
+    "T5btbt" :  "gluino", 
+    "T5tbtb" :  "gluino", 
+    "T5tbtt" :  "gluino", 
+    "T5tctc" :  "gluino", 
+    "T5tttt" :  "gluino", 
+    "T5ttttoff" :  "gluino", 
+    "T6WW" :  "squark", 
+    "T6WWoff" :  "squark", 
+    "T6ZZtt" :  "stop_2", 
+    "T6bbWW" :  "stop", 
+    "T6bbWWoff" :  "stop", 
+    "T6ttWW" :  "sbottom", 
+    "T6ttWWoff" :  "sbottom", 
+    "TChiChiSlepSlep" :  "neutralino_3 neutralino_2", 
+    "TChiChipmSlepL" :  "neutralino_2 chargino^pm_1", 
+    "TChiChipmSlepStau" :   "neutralino_2 chargino^pm_1", 
+    "TChiChipmStauL" :  "neutralino_2 chargino^pm_1", 
+    "TChiChipmStauStau" :  "neutralino_2 chargino^pm_1", 
+    "TChiWH" :  "neutralino_2 chargino^pm_1", 
+    "TChiWW" :  "chargino^pm_1 chargino^pm_1", 
+    "TChiWZ" :  "neutralino_2 chargino^pm_1", 
+    "TChiWZoff" :  "neutralino_2 chargino^pm_1", 
+    "TChipChimSlepSnu" :   "chargino^pm_1 chargino^pm_1", 
+    "TChipChimStauSnu" :  "chargino^pm_1 chargino^pm_1", 
+    "TGQ" :  "gluino squark", 
+    "TGQbbq" :  "gluino", 
+    "TGQbtq" :  "gluino", 
+    "TGQqtt" :  "gluino", 
+    "TScharm" :  "scharm",
+    "TSlepSlep" : "slepton"
 }
 
-def describeTx (topo, short=True):
-    """ describe a Tx name, e.g. T2tt -> "#tilde{t} -> t #tilde{#chi}^{0} """
-    ret = topo + ": " + description (topo, plot = 'ROOT', kerning = False, short = short).replace("pp #rightarrow ", "")
-    ret = ret[:ret.find(";")]
-    return ret
+
+def latexfy(instr):
+    """
+    Tries to convert the string to its latex form,
+    using ROOT conventions
     
-
-
-def production(topo,plot='ROOT'):
-  a=particles(topo)
-  pair=str(a)+" "+str(a)
-  if topo=="TGQ":
-    pair=particles("T1")+" "+particles("T2")
-  if topo=="TChiSlep":
-    pair="#tilde{#chi}^{0}_{2}#tilde{#chi}^{#pm}_{1}"
-  if topo=="TChiSlep":
-    pair="#tilde{#chi}^{0}_{2}#tilde{#chi}^{#pm}_{1}"
-  if topo=="TChiwz":
-    pair="#tilde{#chi}^{0}_{2}#tilde{#chi}^{#pm}_{1}"
-  if topo=="TChizz":
-    pair="#tilde{#chi}^{0}_{2}#tilde{#chi}^{0}_{3}"
-  if topo=="TChiNuSlep":
-    pair="#tilde{#chi}^{0}_{2}#tilde{#chi}^{#pm}_{1}"
-  if topo=="TChiSlepSlep":
-    pair="#tilde{#chi}^{0}_{2}#tilde{#chi}^{#pm}_{1}"
-#pair="#tilde{#chi}^{0}_{2}#tilde{#chi}^{0}_{2}"
-
-  if plot == 'ROOT':
-    return pair
-  if plot == 'python':
-    return pair.replace('#','\\')
-
-def particles(topo,plot = 'ROOT'):
-  """return the production mode for a given topology:
-     latex code either compatible to ROOT or Python"""
-  if dicparticle.has_key(topo):
-    part = dicparticle[topo]
-    if plot == 'ROOT':
-      return part
-    if plot == 'python':
-      return part.replace('#','\\')
-  else:
-    return None
+    :param instr: Input string
     
-def description(topo,plot='ROOT',kerning=True,short=False):
-  """ give a long description of the topology,
-      with production, decay, and mass decoupling """
-  if short:
-    return "pp #rightarrow %s %s; %s" % ( production(topo,plot),  decays ( topo,plot,kerning, omitleft=True), massDecoupling ( topo,plot,kerning) )
-  return "pp#rightarrow %s, %s; %s" % ( production(topo,plot), decays ( topo,plot,kerning, omitleft=False ), massDecoupling ( topo,plot,kerning) )
-  
-def particles(topo, plot='ROOT'):
-    """return the production mode for a given topology:
-         latex code either compatible to ROOT or Python"""
-    if dicparticle.has_key(topo):
-        part = dicparticle[topo]
-        if plot == 'ROOT':
-            # print "[SMSResults.py] debug",part
-            return part
-        if plot == 'python':
-            return part.replace('#', '\\')
-    else:
+    :return: String converted to its latex form (if possible)
+    """
+    
+    outstr = ' '+instr[:]
+    for key,rep in highstrings.items():
+        if key in outstr:
+            outstr = outstr.replace(key,rep)
+    for key,rep in lowstrings.items():
+        if key in outstr:
+            outstr = outstr.replace(key,rep)
+    #Make sure that the largest replacement happen first 
+    #(e.g. stau -> #tilde{#tau} happens before tau -> #tilde{#tau}
+    for key,rep in sorted(prettyParticle.items(),  
+                          key=lambda pair: len(pair[0]), reverse=True):
+        if ' '+key in outstr:
+            outstr = outstr.replace(' '+key,' '+rep)
+    
+    outstr = outstr.replace('-->','#rightarrow')
+
+
+    return outstr.lstrip().rstrip()
+
+
+def prettyProduction(txname):
+    """
+    Converts the txname string to the corresponding SUSY production process
+    in latex form (using ROOT conventions)
+    :param: txname (string) (e.g. 'T1')
+    
+    :return: latex string (e.g. p p #rightarrow #tilde{g} #tilde{g})
+    """    
+    if not txname in motherDict:
+        logging.error("Txname %s not found in motherDict" %txname)
         return None
+    
+    prodString = motherDict[txname].lstrip().rstrip().split()
+    #Check if a single mother was given. If so, duplicate it
+    if len(prodString) == 1:
+        prodString = prodString[0]+" "+prodString[0]
+    elif len(prodString) == 2:
+        prodString = prodString[0]+" "+prodString[1]
+    else:
+        logging.error("More than two mothers given: %s" %motherDict[txname])
+        return None
+    
+    prodString = "pp --> "+prodString
+    prodString = latexfy(prodString)
+    return prodString.lstrip().rstrip()
 
-def particleName(topo):
-    """return the production mode for a given topology:
-         write out the name in plain letters, no latex """
-    if topo[:2] == "TGQ": return "associate"
-    if topo == "TChiSlep" or topo == "TChiNuSlep": return "chargino/neutralino"
-    if topo == "TChiSlepSlep": return "chargino/neutralino"
-    if topo == "TChiWZ": return "chargino/neutralino"
-    if topo[:4] == "TChi": return "chargino/neutralino"
-    if not dicparticle.has_key(topo):
-        return "???"
-    part = dicparticle[topo].replace("#tilde", "").replace("{", "").replace("}", "")
-    if part == "g": part = "gluino"
-    if part == "b": part = "sbottom"
-    if part == "t": part = "stop"
-    if part == "q": part = "squark"
-    if part == "l": part = "slepton"
-    return part
+def prettyDecay(txname):
+    """
+    Converts the txname string to the corresponding SUSY decay process
+    in latex form (using ROOT conventions)
+    :param: txname (string) (e.g. 'T1')
+    
+    :return: latex string (e.g. #tilde{g} #rightarrow q q #tilde{#chi}_{1}^{0})
+    """
+    
+    if not txname in decayDict:
+        logging.error("Txname %s not found in decayDict" %txname)
+        return None
+    decayString = latexfy(decayDict[txname])
+    return decayString.lstrip().rstrip()
 
-def massDecoupling_ (topo):
-    if topo == "T2tt":
-        return "m(#tilde{g},#tilde{q})>>m(#tilde{t})"
-    if topo == "T2FVttcc":
-        return "m(#tilde{g},#tilde{q})>>m(#tilde{t})"
-    if topo == "T2bb":
-        return "m(#tilde{g},#tilde{q})>>m(#tilde{b})"
-    if topo == "TChiSlep":
-        # return "m(#tilde{g}),m(#tilde{q})>>m(#tilde{#chi}^{0}_{2}),m(#tilde{#chi}^{#pm})"
-        return "m(#tilde{g},m(#tilde{q})>>m(#tilde{#chi}^{0}_{2},#tilde{#chi}^{#pm})"
-    if topo == "TChiSlepSlep":
-# return "m(#tilde{g}),m(#tilde{q})>>m(#tilde{#chi}^{0}_{2})"
-        return "m(#tilde{g},#tilde{q})>>m(#tilde{#chi}^{0}_{2},#tilde{#chi}^{#pm})"
-    if topo == "TChiNuSlep":
-        return "m(#tilde{g},#tilde{q})>>m(#tilde{#chi}^{0}_{2},#tilde{#chi}^{#pm})"
-        # return "m(#tilde{g}),m(#tilde{q})>>m(#tilde{#chi}^{0}_{2}),m(#tilde{#chi}^{#pm})"
-    if topo == "TChiwz":
-        return "m(#tilde{g},#tilde{q})>>m(#tilde{#chi}^{0}_{2},#tilde{#chi}^{#pm})"
-    T2 = topo[:2]
-    if T2 == "T1" or T2 == "T3" or T2 == "T5":
-        return "m(#tilde{q})>>m(#tilde{g})"
-    if T2 == "T2" or T2 == "T4" or T2 == "T6":
-        return "m(#tilde{g})>>m(#tilde{q})"
-    return ""
+    
+def description(txname):
+    """
+    Converts the txname string to the corresponding SUSY desctiption
+    in latex form (using ROOT conventions)
+    :param: txname (string) (e.g. 'T1')
+    
+    :return: latex string 
+             (e.g. pp #rightarrow #tilde{g} #tilde{g}, 
+             #tilde{g} #rightarrow q q #tilde{#chi}_{1}^{0})
+    """
 
-def massDecoupling (topo, plot='ROOT', kerning=True):
-    """ describe the assumed mass decoupling """
-    md = massDecoupling_ (topo)
-    if kerning:
-        md = md.replace(">>", ">#kern[-.2]{>}")
-    if plot != 'ROOT':
-        md = '$' + md.replace('#', '\\') + '$'
-    return md
+    prodString = prettyProduction(txname)
+    decayString = prettyDecay(txname)
+    
+    return prodString + ", " + decayString
 
