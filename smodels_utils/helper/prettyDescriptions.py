@@ -9,9 +9,10 @@
 
 
 '''
-import logging
-import sys
-sys.path.append('../')
+import logging,os,sys
+home = os.path.expanduser('~')
+utils = os.path.join(home,'smodels-utils/smodels_utils')
+sys.path.append(utils)
 from dataPreparation.origPlotObjects import Axes
 
 # pretty name of particle:
@@ -236,6 +237,43 @@ def latexfy(instr):
 
     return outstr.lstrip().rstrip()
 
+def getMothers(txname):
+    """
+    Returns the SUSY mother particle(s) for the txname.
+    
+    :param txname: txname string (e.g. 'T1')
+    
+    :return: list of mother particles in standard format (e.g. ['gluino', 'gluino'])
+    """
+    
+    mothers = motherDict[txname].lstrip().rstrip().split()
+    if len(mothers) == 1:
+        mothers = mothers*2
+    
+    return mothers
+
+def getIntermediates(txname):
+    """
+    Returns the SUSY intermediate particle(s) for the txname.
+    
+    :param txname: txname string (e.g. 'T1')
+    
+    :return: list of intermediate particles in standard format (e.g. ['stop', 'chargino^pm_1'])
+    """
+    
+    #Get the decays
+    decays = decayDict[txname].split(',')
+    #Find the subsequent decays:
+    inter = [d.split('-->')[0].strip() for d in decays[1:]]
+    first_decay = decays[0].split('-->')[1]
+    #Check if the intermediate particles appear in the first decay
+    #(sanity check)
+    for particle in inter:
+        if not particle in first_decay:
+            logging.error('Unknown decay format: %s' %str(decays))
+
+    return inter
+
 
 def prettyProduction(txname):
     """
@@ -279,7 +317,7 @@ def prettyDecay(txname):
     return decayString.lstrip().rstrip()
 
     
-def description(txname):
+def prettyTxname(txname):
     """
     Converts the txname string to the corresponding SUSY desctiption
     in latex form (using ROOT conventions)
@@ -307,31 +345,48 @@ def prettyAxes(txname,axes):
              'constraints' : [m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}]})
     """
     
-    
+    #Build axes object (depending on symmetric or asymmetric branches:
     if axes[:2] == '2*':
-        axList = [Axes.fromString(axes[2:])]
-    if ')+Eq(' in axes:
-        axList = [Axes.fromString(axes.split(')+Eq(')[0] + ')')]
-        axList.append(Axes.fromString('Eq(' + axes.split(')+Eq(')[1]))
-
-    motherList = motherDict[txname].lstrip().rstrip().split()
-    if len(motherList) != len(axList):
-        logging.error('Inconsistent mother and axes')
+        ax = Axes.fromString(axes[2:])
+    elif ')+Eq(' in axes:
+        niceAxes = None
+        if txname == 'TGQ':
+            niceAxes = ['m_{#tilde{g}} = x, m_{#tilde{q}} = 0.96*x',
+                        'm_{#tilde{#chi}_{1}^{0}} = y']
+        elif txname == 'TChiChiSlepSlep':
+            niceAxes = ['m_{#tilde{#chi}_{3}^{0} = x+80.0, m_{#tilde{#chi}_{2}^{0} = x+75.0',
+                        'm_{#tilde{#l}} = x-y+80.0',
+                        'm_{#tilde{#chi}_{1}^{0}} = x']
+        else:
+            logging.error('Asymmetric branches are not yet automatized.')            
+#         axList = [Axes.fromString(axes.split(')+Eq(')[0] + ')')]
+#         axList.append(Axes.fromString('Eq(' + axes.split(')+Eq(')[1]))        
+        return niceAxes
+    else:
+        logging.error("Unknown axes format: %s" %axes)
         return None
+
+    #Get mother particles:
+    motherList = list(set(getMothers(txname)))
+    #Convert to latex for mass:
+    motherList = ['m_{'+latexfy(mother)+'}' for mother in motherList]
+    motherStr = str(motherList).replace(']','').replace('[','')
+    #Get intermediate particles:
+    interList = list(set(getIntermediates(txname)))
+    #Convert to latex for mass:
+    interList = ['m_{'+latexfy(inter)+'}' for inter in interList]
+    interStr = str(interList).replace(']','').replace('[','')
+    #Daugther particles are always trivial:
+    lspList = ['m_{'+latexfy('lsp')+'}']
+    lspStr = str(lspList).replace(']','').replace('[','')
+
+    niceAxes = []
+    for eq in ax._equations:
+        axStr = str(eq).replace('mother',motherStr)
+        axStr = axStr.replace('==','=')
+        axStr = axStr.replace('lsp',lspStr)
+        axStr = axStr.replace('inter0',interStr)
+        niceAxes.append(str(axStr).replace("'",""))
     
-    interDict = {}
-    for decay in decayDict[txname].split(',')[1:]:
-        inter = decay.split('-->')[0].lstrip().rstrip()
-        interDict['inter'+str(len(interDict))] = 'm_{'+latexfy(inter)+'}'
-    
-    print interDict
-    for ibr,ax in enumerate(axList):
-        axStr = []
-        for eq in ax._equations:
-            axStr = str(eq).replace('mother','m_{'+latexfy(motherList[ibr])+'}')
-            axStr = axStr.replace('==','=')
-            axStr = axStr.replace('lsp','m_{'+prettyParticle['lsp']+'}')
-            for inter,rep in interDict.items():
-                axStr = axStr.replace(inter,rep)
-            print axStr
+    return niceAxes
         

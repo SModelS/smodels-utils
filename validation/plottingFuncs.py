@@ -18,7 +18,7 @@ from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TPolyLine3D,Double,TColor,gStyle,TH2D,TImage)
 from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
-from smodels_utils.helper.prettyDescriptions import description
+from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 
 
 def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):
@@ -486,6 +486,9 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     tgr.SetTitle(title)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
     plane.SetRightMargin(0.16)
+    plane.SetTopMargin(0.16)
+    plane.SetBottomMargin(0.16)
+    plane.SetLeftMargin(0.12)
     set_palette(gStyle)
     gStyle.SetTitleSize(0.045,"t")
     gStyle.SetTitleY(1.005)
@@ -495,11 +498,12 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     contVals = [1./looseness,1.,looseness]
     cgraphs = getContours(tgr,contVals)
     #Draw temp plot:
-    h = tgr.GetHistogram()   
+    h = tgr.GetHistogram()
+    setOptions(h,Type='pretty')
     h.GetZaxis().SetRangeUser(0., min(tgr.GetZmax(),3.))
-    h.GetZaxis().SetTitle("r = #sigma_{signal}/#sigma_{UL}")
-    h.GetZaxis().CenterTitle()
-    h.GetZaxis().SetTitleOffset(1.2)      
+    h.GetXaxis().SetTitle("x")
+    h.GetYaxis().SetTitle("y")
+    h.GetZaxis().SetTitle("r = #sigma_{signal}/#sigma_{UL}")    
     h.SetContour(200)
     h.Draw("COLZ")
     palette = h.GetListOfFunctions().FindObject("palette")
@@ -524,9 +528,12 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     ltx=TLatex()
     ltx.SetNDC()
     ltx.SetTextSize(.035)
-    ltx.SetTextFont(132)
-    txStr = validationPlot.txName +' : '+description(validationPlot.txName)
-    ltx.DrawLatex(.105,.917,txStr)
+    ltx.SetTextFont(12)
+    txStr = validationPlot.txName +' : '+prettyTxname(validationPlot.txName)
+    axStr = prettyAxes(validationPlot.txName,validationPlot.axes)
+    axStr = str(axStr).replace(']','').replace('[','').replace("'","")
+    infoStr = "#splitline{"+txStr+'}{'+axStr+'}'
+    ltx.DrawLatex(.03,.89,infoStr)
     tgr.ltx = ltx
     figureUrl = getFigureUrl(validationPlot)
     if figureUrl:
@@ -538,14 +545,14 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     if kfactor > 1.0:
         l2=TLatex()
         l2.SetNDC()
+        l2.SetTextFont(12)
         l2.SetTextSize(.04)
-        l2.DrawLatex(.15,.63,"k-factor %.2f" % kfactor)
+        l2.DrawLatex(.15,.59,"k-factor = %.2f" % kfactor)
         tgr.l2=l2
     
     
-    
     #Draw legend:
-    leg = TLegend(0.11,0.68,0.455,0.88)
+    leg = TLegend(0.15,0.63,0.495,0.83)
     setOptions(leg)
     leg.SetFillStyle(0)
     leg.SetTextSize(0.04)
@@ -566,13 +573,16 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     leg.Draw()
     tgr.leg = leg
     #Add smodels logo
-    logo = TImage.Open("smodels-banner.gif")
+    logo = TImage.Open("/home/lessa/smodels-utils/validation/smodels-banner.jpg")
     plane.cd()
-    logoPad = TPad("l","l",0.7,0.8,0.83,0.89)
+    logoPad = TPad("l","l",0.67,0.75,0.855,0.84)
+    logoPad.SetFillStyle(4000)
+    logoPad.SetFillColor(0)
+    logoPad.SetFrameFillStyle(4000)
     logoPad.Draw()
     logoPad.cd()
-    logo.Draw("X")
-    
+    logo.Draw()
+
     plane.Update()  
 
     if not silentMode: ans = raw_input("Hit any key to close\n")
@@ -784,7 +794,19 @@ def setOptions(obj,Type=None):
     elif Type == 'temperature':
         obj.SetMarkerStyle(20)
         obj.SetMarkerSize(1.5)
-        obj.SetTitle("")    
+        obj.SetTitle("")
+    elif Type == 'pretty':
+        obj.GetXaxis().SetTitleFont(12)
+        obj.GetXaxis().SetTitleOffset(0.7)
+        obj.GetYaxis().SetTitleFont(12)
+        obj.GetYaxis().SetTitleOffset(0.8)    
+        obj.GetZaxis().CenterTitle()
+        obj.GetZaxis().SetTitleOffset(0.75)
+        obj.GetXaxis().SetLabelSize(0.045)
+        obj.GetYaxis().SetLabelSize(0.045)
+        obj.GetXaxis().SetTitleSize(0.06)
+        obj.GetYaxis().SetTitleSize(0.06)
+ 
 
 def getContours(tgr,contVals):
     """
