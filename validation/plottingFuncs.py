@@ -14,7 +14,7 @@ from array import array
 
 logger = logging.getLogger(__name__)
 from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
-                  TLegend,kGreen,kRed,kOrange,kBlack,TPad,
+                  TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,
                   TPolyLine3D,Double,TColor,gStyle,TH2D,TImage)
 from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
@@ -516,7 +516,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             ls = 2
         for gr in grlist:
             setOptions(gr, Type='official')
-            gr.SetLineColor(kRed)
+            gr.SetLineColor(kGray+2)
             gr.SetLineStyle(ls)
             gr.Draw("L SAME")
     if official:
@@ -552,37 +552,30 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     
     
     #Draw legend:
-    leg = TLegend(0.15,0.63,0.495,0.83)
-    setOptions(leg)
+    nleg = len(cgraphs) + len(official) - cgraphs.values().count([])    
+    leg = TLegend(0.15,0.83-0.05*nleg,0.495,0.83)
+    setOptions(leg)    
     leg.SetFillStyle(0)
     leg.SetTextSize(0.04)
-    for cval,grlist in cgraphs.items():
+    added = False    
+    for cval,grlist in cgraphs.items():        
         if not grlist:
             continue
         if cval == 1.0:
             leg.AddEntry(grlist[0],"exclusion (SModelS)","L")
-        elif cval == looseness:
+        elif (cval == looseness or cval == 1./looseness) and not added:
             leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
+            added = True
+    added = False
     for gr in official:
         if 'exclusion_' in gr.GetTitle():
             leg.AddEntry(gr,"exclusion (official)","L")
-        elif 'exclusionP1_' in gr.GetTitle():
+        elif 'exclusionP1_' in gr.GetTitle() or 'exclusionM1_' in gr.GetTitle() and not added:
             leg.AddEntry(gr,"#pm1#sigma (official)","L")
- 
+            added = True
     
     leg.Draw()
     tgr.leg = leg
-    #Add smodels logo
-    logo = TImage.Open("/home/lessa/smodels-utils/validation/smodels-banner.jpg")
-    plane.cd()
-    logoPad = TPad("l","l",0.67,0.75,0.855,0.84)
-    logoPad.SetFillStyle(4000)
-    logoPad.SetFillColor(0)
-    logoPad.SetFrameFillStyle(4000)
-    logoPad.Draw()
-    logoPad.cd()
-    logo.Draw()
-
     plane.Update()  
 
     if not silentMode: ans = raw_input("Hit any key to close\n")

@@ -414,19 +414,14 @@ class ValidationPlot():
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
         if not self.pretty:
             self.plot.Print(filename)
-        else:            
+        else:
+            #Print pdf, png and root formats     
             filename = filename.replace('.'+format,'_pretty.'+format)
-            filename = filename.replace('.pdf','.png')
-            self.plot.Print(filename)
-            filename = filename.replace('.png','.pdf')
-            self.plot.Print(filename)                       
-            if  '.pdf' in filename:
-                #Add logo to pdf:
-                logo = 'smodels-bannerRotated.png'
-                self.addLogo(filename,logo)
-            #Print png and root formats
-            filename = filename.replace('.pdf','.root')
-            self.plot.Print(filename)            
+            self.plot.Print(filename)                             
+            filename = filename.replace('.'+format,'.png')
+            self.plot.Print(filename)                
+            filename = filename.replace('.png','.root')
+            self.plot.Print(filename)                
             
         return True
 
@@ -472,43 +467,6 @@ class ValidationPlot():
         f.close()
 
         return True
-
-
-    def addLogo(self,filename,logo,transparent=False):
-        """
-        Add the logo image to the filename pdf.
-        
-        :param filename: path to the original pdf plot
-        :param logo: path to the logo png image
-        """
-        
-        from reportlab.pdfgen import canvas
-        from PyPDF2 import PdfFileWriter, PdfFileReader
-        # Create the watermark from an image
-        c = canvas.Canvas('watermark.pdf')
-        #Draw logo watermark
-        if transparent:
-            c.drawImage(logo, 87, 645, width=35,height=80,mask=[255,255,255,255,255,255])
-        else:
-            c.drawImage(logo, 87, 645, width=35,height=80)
-        c.save()            
-        # Get the watermark file you just created
-        watermark = PdfFileReader(open("watermark.pdf", "rb"))
-        #Get the original file:
-        input_file = PdfFileReader(open(filename, "rb"))
-        # Create merged file
-        output_file = PdfFileWriter()
-        input_page = input_file.getPage(0)
-        input_page.mergePage(watermark.getPage(0))
-        # add page from input file to output document
-        output_file.addPage(input_page)
-        # finally, write "output" to document-output.pdf
-        with open('temp_test_logo.pdf', "wb") as outputStream:
-            output_file.write(outputStream)
-            
-        os.remove("watermark.pdf")
-        os.rename('temp_test_logo.pdf', filename)
-
 
 
 
