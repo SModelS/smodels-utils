@@ -20,6 +20,19 @@ from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 
+#Set nice ROOT color palette for temperature plots:
+stops = [0.00, 0.34, 0.61, 0.84, 1.00]
+red   = [0.00, 0.00, 0.87, 1.00, 0.51]
+green = [0.00, 0.81, 1.00, 0.20, 0.00]
+blue  = [0.51, 1.00, 0.12, 0.00, 0.00]
+s = array('d', stops)
+r = array('d', red)
+g = array('d', green)
+b = array('d', blue)
+TColor.CreateGradientColorTable(len(s), s, r, g, b, 999)
+gStyle.SetNumberContours(999)
+
+
 
 def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):
     """
@@ -435,7 +448,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             if pt['condition'] and pt['condition'] > 0.05:
                 logger.warning("Condition violated for file " + pt['slhafile'])
             else:
-                tgr.SetPoint(tgr.GetN(), x, y, z)        
+                tgr.SetPoint(tgr.GetN(), x, y, z)
 
     if tgr.GetN() == 0:
         logger.error("No good points for validation plot.")
@@ -446,17 +459,29 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     oneX, oneY = False,False
     if tgr.GetYmax() == tgr.GetYmin():
         logger.info("1d data detected, smearing Y values")
-        xpts = numpy.frombuffer(tgr.GetX(),count=tgr.GetN())
-        ypts = numpy.frombuffer(tgr.GetY(),count=tgr.GetN())
-        zpts = numpy.frombuffer(tgr.GetZ(),count=tgr.GetN())
+        buff = tgr.GetX()
+        buff.SetSize(sys.maxint)
+        xpts = numpy.frombuffer(buff,count=tgr.GetN())
+        buff = tgr.GetY()
+        buff.SetSize(sys.maxint)
+        ypts = numpy.frombuffer(buff,count=tgr.GetN())
+        buff = tgr.GetZ()
+        buff.SetSize(sys.maxint)
+        zpts = numpy.frombuffer(buff,count=tgr.GetN())
         for i in range(tgr.GetN()):
             tgr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,0.001),zpts[i])
         oneY = True
     if tgr.GetXmax() == tgr.GetXmin():
         logger.info("1d data detected, smearing X values")
-        xpts = numpy.frombuffer(tgr.GetX(),count=tgr.GetN())
-        ypts = numpy.frombuffer(tgr.GetY(),count=tgr.GetN())
-        zpts = numpy.frombuffer(tgr.GetZ(),count=tgr.GetN())
+        buff = tgr.GetX()
+        buff.SetSize(sys.maxint)
+        xpts = numpy.frombuffer(buff,count=tgr.GetN())
+        buff = tgr.GetY()
+        buff.SetSize(sys.maxint)
+        ypts = numpy.frombuffer(buff,count=tgr.GetN())
+        buff = tgr.GetZ()
+        buff.SetSize(sys.maxint)
+        zpts = numpy.frombuffer(buff,count=tgr.GetN())
         for i in range(tgr.GetN()):
             tgr.SetPoint(i,xpts[i]+random.uniform(0.,0.001),ypts[i],zpts[i])
         oneX = True
@@ -489,7 +514,6 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     plane.SetTopMargin(0.16)
     plane.SetBottomMargin(0.16)
     plane.SetLeftMargin(0.12)
-    set_palette(gStyle)
     gStyle.SetTitleSize(0.045,"t")
     gStyle.SetTitleY(1.005)
    
@@ -503,12 +527,14 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     h.GetZaxis().SetRangeUser(0., min(tgr.GetZmax(),3.))
     h.GetXaxis().SetTitle("x")
     h.GetYaxis().SetTitle("y")
-    h.GetZaxis().SetTitle("r = #sigma_{signal}/#sigma_{UL}")    
+    h.GetZaxis().SetTitle("r = #sigma_{signal}/#sigma_{UL}")
     h.SetContour(200)
     h.Draw("COLZ")
     palette = h.GetListOfFunctions().FindObject("palette")
-    palette.SetX1NDC(0.85)
-    palette.SetX2NDC(0.9)
+    palette.SetX1NDC(0.845)
+    palette.SetX2NDC(0.895)
+    palette.SetY1NDC(0.16)
+    palette.SetY2NDC(0.84)
     for cval,grlist in cgraphs.items():
         if cval == 1.0:
             ls = 1
@@ -545,15 +571,15 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     if kfactor > 1.0:
         l2=TLatex()
         l2.SetNDC()
-        l2.SetTextFont(12)
+        l2.SetTextFont(132)
         l2.SetTextSize(.04)
-        l2.DrawLatex(.15,.59,"k-factor = %.2f" % kfactor)
+        l2.DrawLatex(0.16,0.6,"k-factor = %.2f" % kfactor)
         tgr.l2=l2
     
     
     #Draw legend:
     nleg = len(cgraphs) + len(official) - cgraphs.values().count([])    
-    leg = TLegend(0.15,0.83-0.05*nleg,0.495,0.83)
+    leg = TLegend(0.15,0.83-0.03*nleg,0.495,0.83)
     setOptions(leg)    
     leg.SetFillStyle(0)
     leg.SetTextSize(0.04)
@@ -794,9 +820,10 @@ def setOptions(obj,Type=None):
         obj.GetYaxis().SetTitleFont(12)
         obj.GetYaxis().SetTitleOffset(0.8)    
         obj.GetZaxis().CenterTitle()
-        obj.GetZaxis().SetTitleOffset(0.75)
+        obj.GetZaxis().SetTitleOffset(0.85)
         obj.GetXaxis().SetLabelSize(0.045)
         obj.GetYaxis().SetLabelSize(0.045)
+        obj.GetZaxis().SetLabelSize(0.04)
         obj.GetXaxis().SetTitleSize(0.06)
         obj.GetYaxis().SetTitleSize(0.06)
  
@@ -883,24 +910,16 @@ def getEnvelope(excludedGraph):
     envelop.SetPoint(envelop.GetN(), x2, 0.)  #Close exclusion curve at zero
     return envelop        
 
-def set_palette(gStyle,name="none", ncontours=999):
+def set_palette(gStyle, ncontours=999):
     """Set a color palette from a given RGB list
     stops, red, green and blue should all be lists of the same length
     see set_decent_colors for an example"""
     
-    from array import array
-
-    if name == "gray" or name == "grayscale":
-        stops = [0.00, 0.34, 0.61, 0.84, 1.00]
-        red   = [1.00, 0.84, 0.61, 0.34, 0.00]
-        green = [1.00, 0.84, 0.61, 0.34, 0.00]
-        blue  = [1.00, 0.84, 0.61, 0.34, 0.00]
-    else:
-        # default palette, looks cool
-        stops = [0.00, 0.34, 0.61, 0.84, 1.00]
-        red   = [0.00, 0.00, 0.87, 1.00, 0.51]
-        green = [0.00, 0.81, 1.00, 0.20, 0.00]
-        blue  = [0.51, 1.00, 0.12, 0.00, 0.00]
+    # default palette, looks cool
+    stops = [0.00, 0.34, 0.61, 0.84, 1.00]
+    red   = [0.00, 0.00, 0.87, 1.00, 0.51]
+    green = [0.00, 0.81, 1.00, 0.20, 0.00]
+    blue  = [0.51, 1.00, 0.12, 0.00, 0.00]
 
     s = array('d', stops)
     r = array('d', red)
