@@ -10,6 +10,9 @@
 
 '''
 import logging
+import sys
+sys.path.append('../')
+from dataPreparation.origPlotObjects import Axes
 
 # pretty name of particle:
 
@@ -292,3 +295,43 @@ def description(txname):
     
     return prodString + ", " + decayString
 
+def prettyAxes(txname,axes):
+    """
+    Converts the axes string to the axes labels (plus additional constraints)
+    in latex form (using ROOT conventions)
+    :param txname: txname string  (e.g. 'T1')
+    :param axes: axes string (e.g. '2*Eq(mother,x)_Eq(inter0,0.05*x+0.95*y)_Eq(lsp,y)')
+    
+    :return: dictionary with the latex labels 
+             (e.g. {'x' : m_{#tilde{g}}, 'y' : m_{#tilde{#chi}_{1}^{0}}
+             'constraints' : [m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}]})
+    """
+    
+    
+    if axes[:2] == '2*':
+        axList = [Axes.fromString(axes[2:])]
+    if ')+Eq(' in axes:
+        axList = [Axes.fromString(axes.split(')+Eq(')[0] + ')')]
+        axList.append(Axes.fromString('Eq(' + axes.split(')+Eq(')[1]))
+
+    motherList = motherDict[txname].lstrip().rstrip().split()
+    if len(motherList) != len(axList):
+        logging.error('Inconsistent mother and axes')
+        return None
+    
+    interDict = {}
+    for decay in decayDict[txname].split(',')[1:]:
+        inter = decay.split('-->')[0].lstrip().rstrip()
+        interDict['inter'+str(len(interDict))] = 'm_{'+latexfy(inter)+'}'
+    
+    print interDict
+    for ibr,ax in enumerate(axList):
+        axStr = []
+        for eq in ax._equations:
+            axStr = str(eq).replace('mother','m_{'+latexfy(motherList[ibr])+'}')
+            axStr = axStr.replace('==','=')
+            axStr = axStr.replace('lsp','m_{'+prettyParticle['lsp']+'}')
+            for inter,rep in interDict.items():
+                axStr = axStr.replace(inter,rep)
+            print axStr
+        
