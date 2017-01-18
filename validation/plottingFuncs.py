@@ -18,6 +18,7 @@ from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TPolyLine3D,Double,TColor,gStyle,TH2D,TImage)
 from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
+from smodels_utils.helper.prettyDescriptions import description
 
 
 def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):
@@ -471,10 +472,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     
     if silentMode: gROOT.SetBatch()  
     setOptions(tgr, Type='allowed')
-    title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
-            + validationPlot.txName\
-            + "_" + validationPlot.axes
-    tgr.SetTitle(title)
+    title = validationPlot.expRes.getValuesFor('id')[0]
     types = []
     for dataset in validationPlot.expRes.datasets:
         ds_txnames = map ( str, dataset.txnameList )
@@ -483,11 +481,14 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         types.append(dataset.dataInfo.dataType)
     types = list(set(types))
     if len(types) == 1: types = types[0]
-    subtitle = "result type: %s" %str(types)
-    figureUrl = getFigureUrl(validationPlot)
+    resultType = "%s" %str(types)
+    title = title + "  #scale[0.8]{("+resultType+")}"  
+    tgr.SetTitle(title)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
     plane.SetRightMargin(0.16)
     set_palette(gStyle)
+    gStyle.SetTitleSize(0.045,"t")
+    gStyle.SetTitleY(1.005)
    
     
     #Get contour graphs:
@@ -501,6 +502,9 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     h.GetZaxis().SetTitleOffset(1.2)      
     h.SetContour(200)
     h.Draw("COLZ")
+    palette = h.GetListOfFunctions().FindObject("palette")
+    palette.SetX1NDC(0.85)
+    palette.SetX2NDC(0.9)
     for cval,grlist in cgraphs.items():
         if cval == 1.0:
             ls = 1
@@ -516,12 +520,15 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             setOptions(gr, Type='official')
             gr.Draw("L SAME")
     
-    #Draw additional info
-    l0=TLatex()
-    l0.SetNDC()
-    l0.SetTextSize(.025)
-    l0.DrawLatex(.1,.905,subtitle)
-    tgr.l0=l0
+    #Draw additional info      
+    ltx=TLatex()
+    ltx.SetNDC()
+    ltx.SetTextSize(.035)
+    ltx.SetTextFont(132)
+    txStr = validationPlot.txName +' : '+description(validationPlot.txName)
+    ltx.DrawLatex(.105,.917,txStr)
+    tgr.ltx = ltx
+    figureUrl = getFigureUrl(validationPlot)
     if figureUrl:
         l1=TLatex()
         l1.SetNDC()
@@ -534,6 +541,8 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         l2.SetTextSize(.04)
         l2.DrawLatex(.15,.63,"k-factor %.2f" % kfactor)
         tgr.l2=l2
+    
+    
     
     #Draw legend:
     leg = TLegend(0.11,0.68,0.455,0.88)
@@ -559,7 +568,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     #Add smodels logo
     logo = TImage.Open("smodels-banner.gif")
     plane.cd()
-    logoPad = TPad("l","l",0.7,0.8,0.85,0.9)
+    logoPad = TPad("l","l",0.7,0.8,0.83,0.89)
     logoPad.Draw()
     logoPad.cd()
     logo.Draw("X")

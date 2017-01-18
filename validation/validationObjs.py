@@ -407,7 +407,8 @@ class ValidationPlot():
             logger.debug("Creating validation folder "+vDir)
             os.mkdir(vDir)
 
-        filename = self.plot.GetTitle()+'.'+format
+        filename = self.expRes.getValuesFor('id')[0] + "_" \
+            + self.txName + "_" + self.axes +'.'+format
         filename = filename.replace(self.expRes.getValuesFor('id')[0]+"_","")
         filename = os.path.join(vDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
