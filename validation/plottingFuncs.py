@@ -577,9 +577,11 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         tgr.l2=l2
     
     
-    #Draw legend:
-    nleg = len(cgraphs) + len(official) - cgraphs.values().count([])    
-    leg = TLegend(0.15,0.83-0.03*nleg,0.495,0.83)
+    
+    #Count the number of entries in legend:
+    nleg = min(2,len(cgraphs)-cgraphs.values().count([])) + min(2,len(official))
+    #Draw legend: 
+    leg = TLegend(0.15,0.83-0.045*nleg,0.495,0.83)
     setOptions(leg)    
     leg.SetFillStyle(0)
     leg.SetTextSize(0.04)
@@ -820,12 +822,13 @@ def setOptions(obj,Type=None):
         obj.GetYaxis().SetTitleFont(12)
         obj.GetYaxis().SetTitleOffset(0.8)    
         obj.GetZaxis().CenterTitle()
-        obj.GetZaxis().SetTitleOffset(0.85)
+        obj.GetZaxis().SetTitleOffset(1.05)
         obj.GetXaxis().SetLabelSize(0.045)
         obj.GetYaxis().SetLabelSize(0.045)
         obj.GetZaxis().SetLabelSize(0.04)
         obj.GetXaxis().SetTitleSize(0.06)
         obj.GetYaxis().SetTitleSize(0.06)
+        obj.GetZaxis().SetTitleSize(0.051)
  
 
 def getContours(tgr,contVals):
