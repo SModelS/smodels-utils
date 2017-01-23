@@ -241,8 +241,7 @@ class ValidationPlot():
         f = open(datafile,'r')
         self.data = eval(f.read().replace("validationData = ",""))
         f.close()
-        
-    
+            
     def getData(self):
         """
         Runs SModelS on the SLHA files from self.slhaDir and store
@@ -359,7 +358,7 @@ class ValidationPlot():
         :param silentMode: If True the plot will not be shown on the screen
         """
 
-        self.plot,self.base = createPrettyPlot(self,silentMode)        
+        self.plot,self.base = createPrettyPlot(self,silentMode)
 
     def getSpecialPlot(self,silentMode=True,what = "bestregion", nthpoint = 1,signal_factor = 1.0 ):
         """ get one of the special plots.
@@ -408,13 +407,22 @@ class ValidationPlot():
             logger.debug("Creating validation folder "+vDir)
             os.mkdir(vDir)
 
-        filename = self.plot.GetTitle()+'.'+format
+        filename = self.expRes.getValuesFor('id')[0] + "_" \
+            + self.txName + "_" + self.axes +'.'+format
         filename = filename.replace(self.expRes.getValuesFor('id')[0]+"_","")
         filename = os.path.join(vDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
-        if self.pretty:
+        if not self.pretty:
+            self.plot.Print(filename)
+        else:
+            #Print pdf, png and root formats     
             filename = filename.replace('.'+format,'_pretty.'+format)
-        self.plot.Print(filename)
+            self.plot.Print(filename)                             
+            filename = filename.replace('.'+format,'.png')
+            self.plot.Print(filename)                
+            filename = filename.replace('.png','.root')
+            self.plot.Print(filename)                
+            
         return True
 
     def saveData(self,validationDir=None,datafile=None):
@@ -459,9 +467,6 @@ class ValidationPlot():
         f.close()
 
         return True
-
-
-
 
 
 
