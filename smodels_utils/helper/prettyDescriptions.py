@@ -17,7 +17,7 @@ from dataPreparation.origPlotObjects import Axes
 
 # pretty name of particle:
 
-prettyParticle = {
+prettySMParticle = {
 	'graviton':'G',         #graviton
 	'photon': '#gamma',             #photon
 	'gluon':'g',                    #gluon
@@ -45,7 +45,9 @@ prettyParticle = {
 	'electron-neutrino' : '#nu_{e}',               #electron-neutrino
 	'muon-neutrino' : '#nu_{#mu}',            #muon-neutrino
 	'tau-neutrino' : '#nu_{#tau}',          #tau-neutrino
+}
 
+prettySUSYParticle = {
     'lsp' : '#tilde{#chi}^{0}_{1}',  # lightesd SUSY particle
     'neutralino' : '#tilde{#chi}^{0}',      #neutralino
     'chargino' : '#tilde{#chi}',            #Chargino
@@ -72,6 +74,9 @@ prettyParticle = {
     'tau-sneutrino' : '#tilde{#nu}_{#tau}', #tau-sneutrino
    
 }
+
+prettyParticle = prettySMParticle.copy()
+prettyParticle.update(prettySUSYParticle)
 
 highstrings = {
     '^0' : '^{0}',
@@ -145,7 +150,12 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TGQbtq':'gluino gluino --> bottom top gluon lsp lsp ',
     'TGQqtt':'gluino gluino --> gluon top antitop lsp lsp ',
     'TScharm':'scharm  --> charm lsp ',
-    'TSlepSlep':'slepton  --> lepton lsp '    
+    'TSlepSlep':'slepton  --> lepton lsp ',
+    'HSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 'HSCPM3' : 'squark --> quark chargino_1', 'HSCPM5' : 'squark --> quark lsp, lsp --> tau stau_1', 
+    'HSCPM7' : 'lsp chargino_2 --> tau stau_1 chargino_1, chargino_2 --> nu stau_1',
+    'HSCPM8' : 'squark --> quark quark stau_1', 'HSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp',
+    'HSCPM4' : 'squark --> quark chargino_1 (quark lsp)',
+    'HSCPM6' : 'squark squark --> quark quark lsp lsp, lsp --> tau tau_1'
 }
 
 #Name of mother particles
@@ -204,7 +214,15 @@ motherDict = {"T1" :  "gluino",
     "TGQbtq" :  "gluino", 
     "TGQqtt" :  "gluino", 
     "TScharm" :  "scharm",
-    "TSlepSlep" : "slepton"
+    "TSlepSlep" : "slepton",
+    "HSCPM1" : "chargino^pm_1",
+    "HSCPM3" : "squark",
+    "HSCPM5" : "squark",
+    "HSCPM7" : "lsp chargino^pm_2",
+    "HSCPM8" : "squark",
+    "HSCPM2" : "lsp chargino^pm_1",
+    "HSCPM4" : "squark",
+    "HSCPM6" : "squark"
 }
 
 
