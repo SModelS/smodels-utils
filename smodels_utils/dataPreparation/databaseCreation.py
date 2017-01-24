@@ -203,10 +203,7 @@ class DatabaseCreator(list):
 
             datasets = []
 
-            for plane in txName.planes:
-                
-                print 'MAP',type(plane.origEfficiencyMap)
-                
+            for plane in txName.planes:               
                 if len(datasets)>0 and datasets[0] != plane.origEfficiencyMap.dataset:
                     self.timeStamp ( "wrong dataset of plane!! %s" % plane.origEfficiencyMap.dataset )
                     continue
@@ -232,10 +229,7 @@ class DatabaseCreator(list):
                     self.timeStamp ( 'extended efficiencyMap of %s to %s entries %s'\
                                     % ( plane.origEfficiencyMap.dataset, len(efficiencyMap), 
                                      self.describeMap(efficiencyMap ) ), "info" )
-                    
-                import sys
-                sys.exit()
-
+ 
                 if len(upperLimits)>0:
                     self.timeStamp ( 'extended upperLimits to %s entries %s'\
                                    % ( len(upperLimits), self.describeMap ( upperLimits ) ),
@@ -392,28 +386,14 @@ class DatabaseCreator(list):
                 self.add_axes[tn] = True
             if len(offShellVertices)==0 and region.name == "onShell":
                 self.add_axes[tn] = True
-            """
-            print "[debug]"
-            print "[debug] region.name=",region.name
-            print "[debug] plane=",plane
-            print "[debug] tn=",tn
-            print "[debug] plane.onShell=",plane.onShell
-            print "[debug] plane.offShell=",plane.onShell
-            print "[debug] offShellVertices=",offShellVertices
-            print "[debug] txname=",txName,"region.name=",region.name,"offShell=",\
-                    len(offShellVertices)
-            print "[debug] add_axes=",self.add_axes[tn]
-            """
             if self.add_axes[tn]:
-                # print "[_computeKinRegions] add_axes for ",txName.name,plane
                 off="off" if region.name == "offShell" else ""
                 adde = "%s%s/exclusion_%s" % (txName.name, off, plane)
                 self.addToSmsRootFile.add ( adde )
             regionExist = getattr(plane, region.name)
             if not regionExist == 'auto':
                 if not isinstance(regionExist , bool):
-                    Errors().kinRegionSetter(txName.name, region.name, \
-                    regionPreSet)
+                    Errors().kinRegionSetter(txName.name, region.name)
                 if regionExist == True and i == 0 and limitType != "expectedlimit":
                     self._setRegionAttr(txName, region, plane, self.add_axes[tn] )
                 continue
@@ -421,7 +401,7 @@ class DatabaseCreator(list):
                 self._setRegionAttr(txName, region, plane, self.add_axes[tn] )
 
             if not self.vertexChecker:
-                Errors().notAssigned(txName.name)
+                continue
             if region.checkoffShellVertices(offShellVertices) and \
                        limitType != "expectedlimit":
                 setattr(plane, region.name, True )
