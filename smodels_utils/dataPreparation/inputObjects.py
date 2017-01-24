@@ -13,7 +13,7 @@ import os
 from copy import deepcopy
 from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.origDataObjects import\
-OrigLimit, OrigExclusion, OrigEfficiencyMap, OrigEfficiencyMap3D
+OrigLimit, OrigExclusion, OrigEfficiencyMap
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
 from smodels_utils.dataPreparation.preparationHelper import Locker, ObjectList
@@ -192,7 +192,7 @@ class MassPlane(Locker):
     infoAttr = []
     internalAttr = ['_txDecay', 'origPlot', 'origLimits', 'origExclusions',
             'origEfficiencyMap', 'figure', 'figureUrl', 'dataUrl', 'histoDataUrl', 
-            'exclusionDataUrl', 'origEfficiencyMap3D']
+            'exclusionDataUrl', '_planeDimensions']
     
     def __init__(self,txDecay, motherMass = None, lspMass = None, **interMasses ):
         """
@@ -200,7 +200,9 @@ class MassPlane(Locker):
         values an objects
         :param txDecay: object of type TxDecay
         :param motherMass: mass of mother particle as sympy.core.symbol.Symbol,
-        containing only the variables 'x', 'y' and numbers as float
+        containing only the variables 'x', 'y' and numbers as float.
+        NEW FORMAT: the motherMass may also be the full mass array containing the 'x','y' symbols.
+        In this format lspMass and interMasses should not be defined. 
         :param lspMass: mass of lightest SUSY-particle as sympy.core.symbol.Symbol,
         containing only the variables 'x', 'y' and numbers as float
         :param **interMasses: masses of the intermediated particles as 
@@ -209,10 +211,19 @@ class MassPlane(Locker):
         """
         self._txDecay = txDecay
         self.origPlot = OrigPlot()
-        self.setBranch_1 \
-        ( motherMass = motherMass, lspMass = lspMass, **interMasses)
-        self.setBranch_2 \
-        ( motherMass = motherMass, lspMass = lspMass, **interMasses)
+        if not isinstance(motherMass,list):  #Standard input:
+            self.setBranch_1 \
+            ( motherMass = motherMass, lspMass = lspMass, **interMasses)
+            self.setBranch_2 \
+            ( motherMass = motherMass, lspMass = lspMass, **interMasses)
+        else:
+            self.setBranch_1(motherMass = motherMass[0])
+            self.setBranch_2(motherMass = motherMass[1])
+        
+        self._planeDimensions = len(list(set(self.origPlot.branch_1._xvars 
+                                            + self.origPlot.branch_1._xvars)))
+            
+            
         self.origLimits = ObjectList('name',[
             OrigLimit('limit'),
             OrigLimit('expectedlimit')
@@ -225,9 +236,10 @@ class MassPlane(Locker):
             OrigExclusion('expectedExclusionP1'),
             OrigExclusion('expectedExclusionM1'),
             ])
+        
         self.origEfficiencyMap = OrigEfficiencyMap('efficiencyMap')
-        self.origEfficiencyMap3D = OrigEfficiencyMap3D('efficiencyMap3D')
-        self.figure =None
+        self.origEfficiencyMap._planeDimensions = self._planeDimensions
+        self.figure = None
         self.figureUrl = None
 
     def __str__(self):
@@ -276,13 +288,6 @@ class MassPlane(Locker):
         
         return self.origEfficiencyMap
 
-    @property
-    def efficiencyMap3D(self):
-        """
-        :return: original 3d-data of the efficiencyMap
-         given by experimentalists, as OrigEfficiencyMap3D-object
-        """
-        return self.origEfficiencyMap3D
         
     @property
     def obsUpperLimit(self):
@@ -435,7 +440,7 @@ class TxNameInput(Locker):
     infoAttr = []
     internalAttr = ['_name', 'name', '_txDecay', '_kinematicRegions','_planes',\
     '_branchcondition', 'onShell', 'offShell', 'constraint',\
-    'condition', 'conditionDescription'] 
+    'condition', 'conditionDescription', '_newMassInput'] 
     
     def __new__(cls,txName):
         
@@ -509,7 +514,9 @@ class TxNameInput(Locker):
         KinematicRegion.region
         :param txDecay: object of type TxDecay
         :param motherMass: mass of mother particle as sympy.core.symbol.Symbol,
-        containing only the variables 'x', 'y' and numbers as float
+        containing only the variables 'x', 'y' and numbers as float.
+        NEW FORMAT: the motherMass may also be the full mass array containing the 'x','y' symbols.
+        In this format lspMass and interMasses should not be defined.        
         :param lspMass: mass of lightest SUSY-particle as sympy.core.symbol.Symbol,
         containing only the variables 'x', 'y' and numbers as float
         :param **interMasses: masses of the intermediated particles as sympy.core.symbol.Symbol,
@@ -523,25 +530,49 @@ class TxNameInput(Locker):
         """
         # print("[inputObjects] add mass plane %s %s" % ( motherMass,interMasses) )
 
-        if not motherMass:
-            Errors().missingMass('motherMass',self.name)
-        if not lspMass and lspMass != 0.:
-            Errors().missingMass('lspMass',self.name)
-        if not self._txDecay.intermediateParticles:
-            if self._planes: Errors().onlyOnePlane(self.name)
-            if interMasses: Errors().interMediateParticle(self.name)
-        else:
-            if not interMasses:
-                Errors().missingMass('interMass',self.name)
+        #Standard input
+        if not isinstance(motherMass,list):
+            #Checks for standard input
+            if not motherMass:
+                Errors().missingMass('motherMass',self.name)
+            if not lspMass and lspMass != 0.:
+                Errors().missingMass('lspMass',self.name)
+            if not self._txDecay.intermediateParticles:
+                if self._planes: Errors().onlyOnePlane(self.name)
+                if interMasses: Errors().interMediateParticle(self.name)
+            else:
+                if not interMasses:
+                    Errors().missingMass('interMass',self.name)
+                    
+            #Create mass plane for standard input        
+            massPlane = MassPlane(self._txDecay,\
+            motherMass = motherMass, lspMass = lspMass, **interMasses)
+            for kinRegion in self.kinematicRegions:
+                if not kinRegion.name in MassPlane.internalAttr:
+                    MassPlane.internalAttr.append(kinRegion.name)
+                setattr(massPlane, kinRegion.name, kinRegion.region)
+            self._planes.append(massPlane)
+            return massPlane                    
+
+        #New input
+        if isinstance(motherMass,list):
+            print '*** Using new mass input format (beta) ***'
+            #Checks for new input
+            for ibr,br in enumerate(eval(self.on.constraint)):
+                nmasses = len(br)+1
+                if len(motherMass[ibr]) != nmasses:
+                    Errors().inconsistentMasses(self.name)
             
-        massPlane = MassPlane(self._txDecay,\
-        motherMass = motherMass, lspMass = lspMass, **interMasses)
-        for kinRegion in self.kinematicRegions:
-            if not kinRegion.name in MassPlane.internalAttr:
-                MassPlane.internalAttr.append(kinRegion.name)
-            setattr(massPlane, kinRegion.name, kinRegion.region)
-        self._planes.append(massPlane)
-        return massPlane
+            #Create mass plane for standard input
+            massPlane = MassPlane(self._txDecay,motherMass = motherMass)
+            for kinRegion in self.kinematicRegions:
+                if not kinRegion.name in MassPlane.internalAttr:
+                    MassPlane.internalAttr.append(kinRegion.name)
+                setattr(massPlane, kinRegion.name, kinRegion.region)
+            self._planes.append(massPlane)
+            return massPlane 
+                  
+
         
     @property
     def name(self):
@@ -719,6 +750,15 @@ class Errors(object):
         print(m)
         sys.exit()
        
+       
+    def inconsistentMasses(self, txName):
+        
+        m = self._starLine
+        m = m + 'Mass array and constraint for txName: %s are inconsistent!!\n' %txName
+        m = m + 'please check your addMassPlane call at convert.py, ' %txName
+        m = m + self._starLine
+        print(m)
+        sys.exit()       
     
         
     def shellFlag(self, txName, value):
