@@ -11,9 +11,8 @@
 """
 
 import logging
-import sys
 from prettyDescriptions import decayDict as decays
-from prettyDescriptions import highstrings,lowstrings,prettySMParticle,prettySUSYParticle
+from prettyDescriptions import highstrings,lowstrings,prettySMParticle,prettySUSYParticle,getIntermediates
 
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -62,7 +61,7 @@ class TxDecay(object):
         
     @property
     def motherParticle(self):
-       return self._motherParticle
+        return self._motherParticle
        
     @property
     def intermediateParticles(self):
@@ -203,34 +202,5 @@ class TxDecay(object):
         """:returns: dictionary with intermediate particles
         
         """
-        particles = []
-        decays = self._searchDecayDict()
-        if isinstance(decays,str): decays = [decays]
-        for decay in decays:
-            decay = decay.split('-->')
-            decay = decay[1:-1]
-            if not decay: continue
-            for expression in decay:
-                expression = expression.replace('(','')
-                expression = expression.replace(')','')
-                expression = expression.replace('|','')
-                expression = expression.replace('lsp','')
-                [particles.append(particle.strip()) for particle in expression.split(' ')]
-        if not particles: return
-        interParticles = []
-        for particle in particles:
-            for sparticle in prettySUSYParticle:
-                if sparticle in particle and not particle in interParticles: 
-                    interParticles.append(particle)
-        return interParticles
-        
-# dictionary containing all decays for the different topologies.
-# special format expected: 
-# -supported particle names can be found in the dictionaries prettySMParticels and 
-#  prettySUSYParticle
-# -supported postfixes can be found in the dictionaries highstrings and lowstrings
-# -prefix "anti" for anti-particles supported
-# -space is expected to end a particle description (eg: chargino^pm_2 )
-# -if there is more then one possible decay for one topology a list with decays is expected
-# -neutrino, lepton, neutralion, slepton means first 2 generations
-# -Neutrino, Lepton, Neutralion, sLepton means all 3 generations
+
+        return getIntermediates(self._name)

@@ -221,7 +221,7 @@ class MassPlane(Locker):
             self.setBranch_2(motherMass = motherMass[1])
         
         self._planeDimensions = len(list(set(self.origPlot.branch_1._xvars 
-                                            + self.origPlot.branch_1._xvars)))
+                                            + self.origPlot.branch_2._xvars)))
             
             
         self.origLimits = ObjectList('name',[

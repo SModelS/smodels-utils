@@ -316,7 +316,7 @@ class Axes(object):
             return cls(allEqs)
         
 
-    def _getMassFunction(self,equation, particle):
+    def _getMassFunction(self):
 
         """
         build a function to compute the mass of a particle for given x- and y-values
@@ -324,9 +324,12 @@ class Axes(object):
         :param particle: name of the variable related to the requested particle mass
         :return: lambdify function
         """
-
-        mass = solve(equation,particle)
-        massFunction = lambdify(self._xvars,mass,'math')  
+        
+        masses = [eq.args[0] for eq in self._equations]
+        xvars = self._xvars
+        s = solve(self._equations,masses,dict=True)[0]
+        massSolution = [s[m] for m in masses]
+        massFunction = lambdify(xvars,massSolution,'math')
         return lambda *xMass: massFunction(*xMass)[0]
 
     def getParticleMasses(self,*xMass):
@@ -339,9 +342,8 @@ class Axes(object):
 
         
         if not '_massFunctions' in self.__dict__:
-            self._massFuctions = [self._getMassFunction(eq, eq.args[0]) for eq in self._equations]
-
-        
+            self._massFunctions = self._getMassFunction()
+                
         particleMasses = []
         for function in self._massFuctions:
             particleMasses.append(function(*xMass))
