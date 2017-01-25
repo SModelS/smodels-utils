@@ -506,7 +506,7 @@ class OrigEfficiencyMap(Orig):
         if naxis > 1:
             yAxis = limit.GetYaxis()
         if naxis > 2:
-            zAxis = limit.GetYaxis()
+            zAxis = limit.GetZaxis()
             xRange = range(1,xAxis.GetNbins() + 1)
         if yAxis:
             yRange = range(1,yAxis.GetNbins() + 1)

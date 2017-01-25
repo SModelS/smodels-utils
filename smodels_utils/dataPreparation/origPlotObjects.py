@@ -8,7 +8,6 @@
 
 """
 
-from __future__ import print_function
 import sys
 from sympy import var, Eq, lambdify, solve, sympify, N, Float
 from standardObjects import round_to_n
@@ -236,7 +235,7 @@ class Axes(object):
             
         #Already define the functions and plot dimensions:
         self._setXYFunction()        
-        self._xvars = self._xy.keys() #Variables appearing in branch
+        self._xvars = sorted(self._xy.keys(), key= lambda xv: str(xv))  #Variables appearing in branch in correct order
         
         
             
@@ -317,17 +316,17 @@ class Axes(object):
             return cls(allEqs)
         
 
-    def _getMassFunction(self,equationNr, particle):
+    def _getMassFunction(self,equation, particle):
 
         """
         build a function to compute the mass of a particle for given x- and y-values
-        :param equation: index of equation in self._equations
+        :param equation: equation in self._equations
         :param particle: name of the variable related to the requested particle mass
         :return: lambdify function
         """
 
-        mass = solve(self._equations[equationNr],particle)
-        massFunction = lambdify(self._xvars,mass,'math')        
+        mass = solve(equation,particle)
+        massFunction = lambdify(self._xvars,mass,'math')  
         return lambda *xMass: massFunction(*xMass)[0]
 
     def getParticleMasses(self,*xMass):
@@ -338,11 +337,11 @@ class Axes(object):
         :return: list containing floats, representing the masses of the particles in GeV
         """
 
+        
         if not '_massFunctions' in self.__dict__:
-            self._massFuctions = []            
-            for i,eq in enumerate(self._equations):
-                self._massFuctions.append(self._getMassFunction(i, eq.args[0]))
+            self._massFuctions = [self._getMassFunction(eq, eq.args[0]) for eq in self._equations]
 
+        
         particleMasses = []
         for function in self._massFuctions:
             particleMasses.append(function(*xMass))
@@ -381,14 +380,16 @@ class Axes(object):
                 logger.error("Something wrong with the result from solve: %s" %str(xy))
                 sys.exit()
             else:
-                xy = xy[0]
-            if sorted(xy.keys()) == sorted(xvars):
+                xy = xy[0]            
+            #Check solution:
+            if len(xy) == nvars:                
                 break
             else:
                 xy = dict([[v,None] for v in xvars]) #Create dictionary with None values
 
-        if xy.values().count(None):
-            logger.error("Could not solve the equations for the x,y,... values.\nCheck the mass plane definition.")
+        for sol in xy.values():
+            if not sol:
+                logger.error("Could not solve the equations for the x,y,... values.\nCheck the mass plane definition.")
         self._xy = xy
         particles = [eq.args[0].name for eq in self._equations]        
         self._xyFunction = lambdify(particles,xy.items(),'math')

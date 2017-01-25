@@ -286,7 +286,7 @@ class DatabaseCreator(list):
                         Errors().required(txName.name, region, 'condition')
                     if not hasattr(region, 'conditionDescription'):
                         Errors().required(txName.name, region, 'conditionDescription')
-                    # print "dataInfo.dataId",dataInfo.dataId
+                    # print "dataInfo.dataId",dataInfo.dataId                    
                     self._createInfoFile(getattr(region, self.txNameField), region.name, dataInfo.dataId, region, txName )
                     region.figureUrl=""
                     region.dataUrl=""
@@ -374,11 +374,6 @@ class DatabaseCreator(list):
         kinRegions = txName.kinematicRegions
         for region in kinRegions:
             offShellVertices = self.vertexChecker.getOffShellVertices(massArray)
-            #add_axes = True
-            #if len(offShellVertices)==0 and region.name == "offShell":
-            #    add_axes = False
-            #if len(offShellVertices)>0 and region.name == "onShell":
-            #    add_axes = False
             tn = str(txName)+region.name+str(plane)
             if not tn in self.add_axes:
                 self.add_axes[tn]=False
@@ -401,7 +396,7 @@ class DatabaseCreator(list):
                 self._setRegionAttr(txName, region, plane, self.add_axes[tn] )
 
             if not self.vertexChecker:
-                continue
+                Errors().notAssigned(txName.name)
             if region.checkoffShellVertices(offShellVertices) and \
                        limitType != "expectedlimit":
                 setattr(plane, region.name, True )

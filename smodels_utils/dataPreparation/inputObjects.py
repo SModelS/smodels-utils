@@ -529,7 +529,7 @@ class TxNameInput(Locker):
         :return: MassPlane-object
         """
         # print("[inputObjects] add mass plane %s %s" % ( motherMass,interMasses) )
-
+        
         #Standard input
         if not isinstance(motherMass,list):
             #Checks for standard input
@@ -542,17 +542,10 @@ class TxNameInput(Locker):
                 if interMasses: Errors().interMediateParticle(self.name)
             else:
                 if not interMasses:
-                    Errors().missingMass('interMass',self.name)
-                    
+                    Errors().missingMass('interMass',self.name)                    
             #Create mass plane for standard input        
             massPlane = MassPlane(self._txDecay,\
             motherMass = motherMass, lspMass = lspMass, **interMasses)
-            for kinRegion in self.kinematicRegions:
-                if not kinRegion.name in MassPlane.internalAttr:
-                    MassPlane.internalAttr.append(kinRegion.name)
-                setattr(massPlane, kinRegion.name, kinRegion.region)
-            self._planes.append(massPlane)
-            return massPlane                    
 
         #New input
         if isinstance(motherMass,list):
@@ -561,16 +554,17 @@ class TxNameInput(Locker):
             for ibr,br in enumerate(eval(self.on.constraint)):
                 nmasses = len(br)+1
                 if len(motherMass[ibr]) != nmasses:
-                    Errors().inconsistentMasses(self.name)
-            
-            #Create mass plane for standard input
+                    Errors().inconsistentMasses(self.name)            
+            #Create mass plane for new input
             massPlane = MassPlane(self._txDecay,motherMass = motherMass)
-            for kinRegion in self.kinematicRegions:
-                if not kinRegion.name in MassPlane.internalAttr:
-                    MassPlane.internalAttr.append(kinRegion.name)
-                setattr(massPlane, kinRegion.name, kinRegion.region)
-            self._planes.append(massPlane)
-            return massPlane 
+
+        #Define the mass plane as on or off-shell:        
+        for kinRegion in self.kinematicRegions:            
+            if not kinRegion.name in MassPlane.internalAttr:
+                MassPlane.internalAttr.append(kinRegion.name)
+            setattr(massPlane, kinRegion.name, kinRegion.region)
+        self._planes.append(massPlane)
+        return massPlane                    
                   
 
         
