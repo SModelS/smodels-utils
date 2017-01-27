@@ -25,7 +25,7 @@ class Orig(Locker):
     infoAttr = []
     internalAttr = ['name','path', 'fileType', 'objectName',\
     'dataUrl', 'index', 'allowNegativValues', 'dataset',
-    'observedN','expectedBG','bgError', 'percentage','_planeDimensions' ]
+    'observedN','expectedBG','bgError', 'percentage' ]
     
     def __init__(self,name):
         
@@ -401,7 +401,7 @@ class OrigEfficiencyMap(Orig):
         
         """
         gives the entries of the original efficiency map
-        :yield: [x-value in GeV, y-value in GeV,..., efficiency]
+        :yield: [x-value in GeV, y-value in GeV, efficiency]
         """
         if self.fileType==None:
             raise StopIteration()
@@ -412,14 +412,6 @@ class OrigEfficiencyMap(Orig):
                 point[-1]=point[-1]/100.
             yield point
 
-    def __len__(self):
-        """ count how many points """
-        x=0
-        for point in self:
-            if not self._positivValues(point): continue
-            x+=1
-        return x
-
     def txt(self):
         
         """
@@ -429,15 +421,14 @@ class OrigEfficiencyMap(Orig):
         for the following variables:
         1. column: x-value in GeV
         2. column: y-value in Gev
-    ...
-        n. column: efficiency
-        :raise txtFormatError: if file do not contain the right number of columns 
-        :yield: [x-value in GeV, y-value in GeV,... efficiency] 
+        3. column: efficiency
+        :raise txtFormatError: if file do not contain 3 columns 
+        :yield: [x-value in GeV, y-value in GeV, efficiency] 
         """
         
         for point in Orig.txt(self):
-            if not len(point) == self._planeDimensions+1:
-                Errors().txtFormat(self.path, 'OrigEfficiencyMap', self._planeDimensions+1)
+            if not len(point) == 3:
+                Errors().txtFormat(self.path, 'OrigEfficiencyMap', 3)
             yield point
 
     def effi(self):
@@ -447,6 +438,13 @@ class OrigEfficiencyMap(Orig):
                 Errors().effiFormat(self.path, 'OrigEfficiencyMap', 3)
             yield point
 
+    def __len__(self):
+        """ count how many points """
+        x=0
+        for point in self:
+            if not self._positivValues(point): continue
+            x+=1
+        return x
     
     def root(self):
         
@@ -455,7 +453,7 @@ class OrigEfficiencyMap(Orig):
         processing root-files containing root 2D-histograms
         The bins of the histograms have to contain the
         efficiencies; unit of x and y-axis: GeV
-        :yield: [x-value in GeV, y-value in GeV,..., efficiency]
+        :yield: [x-value in GeV, y-value in GeV, efficiency]
         """
         
         limit = Orig.root(self)
@@ -469,7 +467,7 @@ class OrigEfficiencyMap(Orig):
         processing root c-macros containing root 2D-histograms
         The bins of the histograms have to contain the 
         efficiencies; unit of x and y-axis: GeV
-        :yield: [x-value in GeV, y-value in GeV,..., efficiency]
+        :yield: [x-value in GeV, y-value in GeV, efficiency]
         """
        
         limit = Orig.cMacro(self)
@@ -500,40 +498,161 @@ class OrigEfficiencyMap(Orig):
         :yield: [x-axes, y-axes, bin contend]
         """
         
-        naxis = self._planeDimensions
         xAxis = limit.GetXaxis()
-        yAxis, zAxis = None,None
-        if naxis > 1:
-            yAxis = limit.GetYaxis()
-        if naxis > 2:
-            zAxis = limit.GetZaxis()
-            xRange = range(1,xAxis.GetNbins() + 1)
-        if yAxis:
-            yRange = range(1,yAxis.GetNbins() + 1)
-        if zAxis:
-            zRange = range(1,zAxis.GetNbins() + 1)
+        yAxis = limit.GetYaxis()
+        xRange = range(1,xAxis.GetNbins() + 1)
+        yRange = range(1,yAxis.GetNbins() + 1)
         for xBin in xRange:
-            x = xAxis.GetBinCenter(xBin)            
-            if not yAxis:
-                eff = limit.GetBinContent(xBin)
-                if eff == 0.: continue
-                yield [x,eff]
-                continue
-            
+            x = xAxis.GetBinCenter(xBin)
             for yBin in yRange:
                 y = yAxis.GetBinCenter(yBin)
-                if not zAxis:
-                    eff = limit.GetBinContent(xBin, yBin)
-                    if eff == 0.: continue
-                    yield [x, y, eff]
-                    continue
- 
+                eff = limit.GetBinContent(xBin, yBin)
+                if eff == 0.: continue
+                yield [x, y, eff]
+        
+class OrigEfficiencyMap3D(Orig):
+    
+    """
+    iterable class
+    Holding original 3D efficiency maps  given by
+    experimentalists
+    public methods refer to different file-types 
+    The files or objects containing the efficiency maps as well as 
+    the file type have to be set by using the method setSource
+    of the parents class 
+    This Class is designed to iterate over the entries of the
+    efficiency maps
+    """
+    
+    plotableAttr = [] + Orig.infoAttr
+    internalAttr = [] + Orig.internalAttr
+    
+    def __init__(self,name):
+        
+        """
+        :param Name: name as string
+        """
+        
+        Orig.__init__(self,name)
+        
+    def __iter__(self):
+        
+        """
+        gives the entries of the original efficiency map
+        :yield: [x-value in GeV, y-value in GeV, z-value in GeV, efficiency]
+        """
+        if self.fileType==None:
+            raise StopIteration()
+        
+        # print "[origDataObjects] fileType=",self.fileType
+        for point in getattr(self,self.fileType)():
+            if not self._positivValues(point): continue
+            if self.percentage:
+                point[-1]=point[-1]/100.
+            yield point
+
+    def __len__(self):
+        """ count how many points """
+        x=0
+        for point in self:
+            if not self._positivValues(point): continue
+            x+=1
+        return x
+            
+    def txt(self):
+        
+        """
+        iterable method
+        processing txt-files containing only 3 columns with
+        floats. The columns of the file have to contain the values
+        for the following variables:
+        1. column: x-value in GeV
+        2. column: y-value in GeV
+        3. column: z-value in GeV
+        4. column: efficiency
+        :raise txtFormatError: if file do not contain 3 columns 
+        :yield: [x-value in GeV, y-value in GeV, efficiency] 
+        """
+        
+        for point in Orig.txt(self):
+            if not len(point) == 4:
+                Errors().txtFormat(self.path, 'OrigEfficiencyMap', 4)
+            yield point
+
+    def effi(self):
+        
+        for point in Orig.effi(self):
+            if not len(point) == 4:
+                Errors().effiFormat(self.path, 'OrigEfficiencyMap', 4)
+            yield point
+    
+    def root(self):
+        
+        """
+        iterable method
+        processing root-files containing root 2D-histograms
+        The bins of the histograms have to contain the
+        efficiencies; unit of x and y-axis: GeV
+        :yield: [x-value in GeV, y-value in GeV, z-value in GeV, efficiency]
+        """
+        
+        limit = Orig.root(self)
+        for point in self._getPoints(limit):
+            yield point
+                
+    def cMacro(self):
+        
+        """
+        iterable method
+        processing root c-macros containing root 2D-histograms
+        The bins of the histograms have to contain the 
+        efficiencies; unit of x, y and z-axis: GeV
+        :yield: [x-value in GeV, y-value in GeV, z-value in GeV, efficiency]
+        """
+       
+        limit = Orig.cMacro(self)
+        for point in self._getPoints(limit):
+            yield point
+            
+    def canvas(self):
+        
+        """
+        iterable method
+        processing root-files containing ROOT.TCanvas objects
+        with 2D-histograms
+        The bins of the histograms have to contain the 
+        efficiencies; unit of x and y-axis: GeV
+        :yield: [x-value, y-value, efficiency]
+        """
+        
+        limit = Orig.canvas(self)
+        for point in self._getPoints(limit):
+            yield point
+                
+    def _getPoints(self,limit):
+        
+        """
+        iterable metod
+        processing root 2D-histograms
+        :param limit: root 2D-histogram
+        :yield: [x-axes, y-axes, bin contend]
+        """
+        
+        xAxis = limit.GetXaxis()
+        yAxis = limit.GetYaxis()
+        zAxis = limit.GetYaxis()
+        xRange = range(1,xAxis.GetNbins() + 1)
+        yRange = range(1,yAxis.GetNbins() + 1)
+        zRange = range(1,zAxis.GetNbins() + 1)
+        for xBin in xRange:
+            x = xAxis.GetBinCenter(xBin)
+            for yBin in yRange:
+                y = yAxis.GetBinCenter(yBin)
                 for zBin in zRange:
-                    z = zAxis.GetBinCenter(zBin)
                     eff = limit.GetBinContent(xBin, yBin, zBin)
                     if eff == 0.: continue
                     yield [x, y, z, eff]
-
+        
         
 class OrigExclusion(Orig):
     

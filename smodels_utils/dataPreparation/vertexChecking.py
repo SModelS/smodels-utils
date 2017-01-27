@@ -131,9 +131,6 @@ class VertexChecker(object):
         if not isinstance(constraint, str):
             Errors().constraint(self.txName, constraint)
         if not endString in constraint or not startString in constraint:
-            if constraint.strip() == "[[],[]]":  #Deals with pair production without decays
-                print '--->Detected null constraint'
-                return [[],[]]
             Errors().constraint(self.txName, constraint)
         for i in range(len(constraint)):
             if constraint[i:i + len(startString)] == startString:

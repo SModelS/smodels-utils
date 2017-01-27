@@ -188,13 +188,16 @@ class DatabaseCreator(list):
         # self.timeStamp ( "before going through txnames" )
         for txName in self:
             self.timeStamp ( "reading %s" % txName, "debug" )
+            dataset=None
+
             if not hasattr(txName.on, 'constraint'):
                 Errors().missingOnConstraint(txName.name)
             self.vertexChecker = VertexChecker(txName.name, txName.on.constraint )
             upperLimits = StandardDataList()
-
+            ## print "upperLimits=",upperLimits
             expectedUpperLimits = StandardDataList()
             efficiencyMap = StandardDataList(valueUnit ='')
+            efficiencyMap3D = StandardDataList(valueUnit ='')
 
             exclusions = ObjectList('name')
             for region in txName.kinematicRegions:
@@ -203,14 +206,14 @@ class DatabaseCreator(list):
 
             datasets = []
 
-            for plane in txName.planes:               
+            for plane in txName.planes:
                 if len(datasets)>0 and datasets[0] != plane.origEfficiencyMap.dataset:
                     self.timeStamp ( "wrong dataset of plane!! %s" % plane.origEfficiencyMap.dataset )
                     continue
                 datasets.append ( plane.origEfficiencyMap.dataset )
                 # print ( "what datasets do we have here? %s" % datasets  )
 
-                if plane.origEfficiencyMap and hasattr(plane.origEfficiencyMap, "observedN"):
+                if plane.origEfficiencyMap and hasattr ( plane.origEfficiencyMap, "observedN" ):
                     dataInfo.dataset = plane.origEfficiencyMap.dataset
                     dataInfo.observedN = plane.origEfficiencyMap.observedN
                     dataInfo.expectedBG = plane.origEfficiencyMap.expectedBG
@@ -224,12 +227,18 @@ class DatabaseCreator(list):
 
                 self.timeStamp ( 'Reading mass plane: %s, %s [%s][%s]' % (txName, plane.origPlot, str(plane.obsExclusion.path)[-30:], plane.origEfficiencyMap.dataset ) )
 
-                efficiencyMap = self.extendDataList(efficiencyMap, plane, txName)
+                efficiencyMap = self.extendDataList (efficiencyMap, plane, txName)
                 if len ( efficiencyMap) > 0:
                     self.timeStamp ( 'extended efficiencyMap of %s to %s entries %s'\
                                     % ( plane.origEfficiencyMap.dataset, len(efficiencyMap), 
-                                     self.describeMap(efficiencyMap ) ), "info" )
- 
+                                     self.describeMap ( efficiencyMap ) ), "info" )
+                efficiencyMap3D = self.extendDataList\
+                (efficiencyMap3D, plane, txName)
+                self.timeStamp ( 'extended efficiencyMap3D of %s to %s entries %s'\
+                    % ( plane.origEfficiencyMap.dataset, len(efficiencyMap3D), 
+                        self.describeMap ( efficiencyMap3D ) ), "info" )
+                upperLimits = self.extendDataList\
+                (upperLimits, plane, txName, 'limit')
                 if len(upperLimits)>0:
                     self.timeStamp ( 'extended upperLimits to %s entries %s'\
                                    % ( len(upperLimits), self.describeMap ( upperLimits ) ),
@@ -241,9 +250,10 @@ class DatabaseCreator(list):
                     self.timeStamp ( 'extended expectedUpperLimits to %s entries %s'\
                                     % ( len(expectedUpperLimits), 
                                         self.describeMap ( expectedUpperLimits ) ) )
-                if plane.obsUpperLimit or plane.efficiencyMap:
+                if plane.obsUpperLimit or plane.efficiencyMap or plane.efficiencyMap3D:
                     if not plane.obsUpperLimit.dataUrl and \
-                    not plane.efficiencyMap.dataUrl:
+                    not plane.efficiencyMap.dataUrl and \
+                    not plane.efficiencyMap3D.dataUrl:
                         publishedData = False
 
                 for region in txName.kinematicRegions:
@@ -270,10 +280,12 @@ class DatabaseCreator(list):
             self._extendInfoAttr(txName, 'upperLimits')
             self._extendInfoAttr(txName, 'expectedUpperLimits')
             self._extendInfoAttr(txName, 'efficiencyMap')
+            self._extendInfoAttr(txName, 'efficiencyMap3D')
             if upperLimits: txName.upperLimits = upperLimits
             if expectedUpperLimits: txName.expectedUpperLimits =\
             expectedUpperLimits
             if efficiencyMap: txName.efficiencyMap = efficiencyMap
+            if efficiencyMap3D: txName.efficiencyMap3D = efficiencyMap3D
             txName.publishedData = publishedData
 
             self.timeStamp ( "we have %d kin regions" % 
@@ -286,7 +298,7 @@ class DatabaseCreator(list):
                         Errors().required(txName.name, region, 'condition')
                     if not hasattr(region, 'conditionDescription'):
                         Errors().required(txName.name, region, 'conditionDescription')
-                    # print "dataInfo.dataId",dataInfo.dataId                    
+                    # print "dataInfo.dataId",dataInfo.dataId
                     self._createInfoFile(getattr(region, self.txNameField), region.name, dataInfo.dataId, region, txName )
                     region.figureUrl=""
                     region.dataUrl=""
@@ -318,32 +330,45 @@ class DatabaseCreator(list):
         efficiency maps, else: name of the related origData-object
         :return: data list, extended by the values given by plane
         """
-        
-        #Get dimension of the plot:
-        nvars = plane._planeDimensions
-        if nvars < 1 or nvars > 3:
-            logger.error('Can not deal with %i variables' %nvars)
-            sys.exit()
-        
-        
-        origData = None
+
+        effMap3d=False
+
         if limitType:
             origData = plane.origLimits[limitType]
         else:
             origData = plane.origEfficiencyMap
+            if len(plane.origEfficiencyMap)>0 and len(plane.origEfficiencyMap3D)>0:
+               Errors().has2DAnd3DMap(plane)
+            if len(plane.origEfficiencyMap)>0:
+                origData = plane.origEfficiencyMap
+            if len(plane.origEfficiencyMap3D)>0:
+                origData = plane.origEfficiencyMap3D
+                effMap3d=True
+
+        if not origData: return dataList
+
+        if effMap3d:
+            for i,value in enumerate(origData):
+                x = value[0]
+                y = value[1]
+                z = value[2]
+                value = value[3]
+                massArray = plane.origPlot.getParticleMasses(x,y,z)
+                #massArray = [massPoints,massPoints]
+                dataList.append(massArray, value)
+                self._computeKinRegions(massArray, i, plane, txName, limitType )
+            return dataList
 
         for i,value in enumerate(origData):
-            if len(value) != nvars+1:
-                logger.error("Number of free parameters in data and in axes do not match")
-                sys.exit()
-            xvals = value[:nvars]
-            value = value[-1]
-            massArray = plane.origPlot.getParticleMasses(*xvals)
+            x = value[0]
+            y = value[1]
+            value = value[2]
+            massArray = plane.origPlot.getParticleMasses(x,y)
+            #massArray = [massPoints,massPoints]
+            # print ( "[databaseCreation] appending %s %s" % ( massArray, value ) )
             dataList.append(massArray, value)
             self._computeKinRegions(massArray, i, plane, txName, limitType )
         return dataList
-        
-        
 
     def _computeKinRegions(self, massArray, i, plane, txName, limitType ):
         """
@@ -374,6 +399,11 @@ class DatabaseCreator(list):
         kinRegions = txName.kinematicRegions
         for region in kinRegions:
             offShellVertices = self.vertexChecker.getOffShellVertices(massArray)
+            #add_axes = True
+            #if len(offShellVertices)==0 and region.name == "offShell":
+            #    add_axes = False
+            #if len(offShellVertices)>0 and region.name == "onShell":
+            #    add_axes = False
             tn = str(txName)+region.name+str(plane)
             if not tn in self.add_axes:
                 self.add_axes[tn]=False
@@ -381,14 +411,28 @@ class DatabaseCreator(list):
                 self.add_axes[tn] = True
             if len(offShellVertices)==0 and region.name == "onShell":
                 self.add_axes[tn] = True
+            """
+            print "[debug]"
+            print "[debug] region.name=",region.name
+            print "[debug] plane=",plane
+            print "[debug] tn=",tn
+            print "[debug] plane.onShell=",plane.onShell
+            print "[debug] plane.offShell=",plane.onShell
+            print "[debug] offShellVertices=",offShellVertices
+            print "[debug] txname=",txName,"region.name=",region.name,"offShell=",\
+                    len(offShellVertices)
+            print "[debug] add_axes=",self.add_axes[tn]
+            """
             if self.add_axes[tn]:
+                # print "[_computeKinRegions] add_axes for ",txName.name,plane
                 off="off" if region.name == "offShell" else ""
                 adde = "%s%s/exclusion_%s" % (txName.name, off, plane)
                 self.addToSmsRootFile.add ( adde )
             regionExist = getattr(plane, region.name)
             if not regionExist == 'auto':
                 if not isinstance(regionExist , bool):
-                    Errors().kinRegionSetter(txName.name, region.name)
+                    Errors().kinRegionSetter(txName.name, region.name, \
+                    regionPreSet)
                 if regionExist == True and i == 0 and limitType != "expectedlimit":
                     self._setRegionAttr(txName, region, plane, self.add_axes[tn] )
                 continue
@@ -430,6 +474,8 @@ class DatabaseCreator(list):
                 self._extendRegionAttr(region, 'dataUrl', plane.obsUpperLimit.dataUrl)
             if plane.efficiencyMap.dataUrl:
                 self._extendRegionAttr(region, 'dataUrl', plane.efficiencyMap.dataUrl)
+            if plane.efficiencyMap3D.dataUrl:
+                self._extendRegionAttr(region, 'dataUrl', plane.efficiencyMap3D.dataUrl)
 
     def _extendRegionAttr(self, region, name, value):
         if value in [ None, "" ]: ## we dont add None or empty strings
@@ -659,6 +705,7 @@ class DatabaseCreator(list):
 
             for attr in obj.infoAttr:
                 ## self.timeStamp ( "attr is %s" % attr )
+                if attr in [ "efficiencyMap3D" ]: continue
                 if not hasattr(obj, attr) and \
                 not hasattr(obj.__class__, attr) : continue
                 value=getattr(obj,attr)
@@ -726,6 +773,11 @@ class Errors(object):
         print(m)
         sys.exit()
 
+    def has2DAnd3DMap(self, plane):
+        m= self._starLine
+        m = m + '%s has 2d and 3d plane' % ( plane )
+        print(m)
+        sys.exit()
 
     def missingOnConstraint(self, txName):
         m = self._starLine#
