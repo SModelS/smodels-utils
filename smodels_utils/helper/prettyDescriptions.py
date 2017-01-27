@@ -349,7 +349,10 @@ def prettyTxname(txname):
     prodString = prettyProduction(txname)
     decayString = prettyDecay(txname)
     
-    return prodString + ", " + decayString
+    if prodString and decayString:    
+        return prodString + ", " + decayString
+    else:
+        return None
 
 def prettyAxes(txname,axes):
     """
