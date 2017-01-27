@@ -319,37 +319,47 @@ class Axes(object):
     def _getMassFunction(self):
 
         """
-        build a function to compute the mass of a particle for given x- and y-values
-        :param equation: equation in self._equations
-        :param particle: name of the variable related to the requested particle mass
-        :return: lambdify function
+        Build a function to compute the mass array of a particle for given x,y, .. values.
+        The input variables are the ones define in self._xvars.
+        :return: lambdify function which returns the mass array given the input variables.
         """
         
         masses = [eq.args[0] for eq in self._equations]
         xvars = self._xvars
         s = solve(self._equations,masses,dict=True)[0]
         massSolution = [s[m] for m in masses]
-        massFunction = lambdify(xvars,massSolution,'math')
-        return lambda *xMass: massFunction(*xMass)[0]
+        #dummify=False allows to keep x,y,z... as valid argument keywords:
+        massFunction = lambdify(xvars,massSolution,'math',dummify=False) 
+        return lambda **xVals: massFunction(**xVals)
 
-    def getParticleMasses(self,*xMass):
+    def getParticleMasses(self,xvalue=None,yvalue=None,zvalue=None):
 
         """
         translate a point of the plot, given by x,y,.. values to a mass Array
-        :param xMass: x,y,... values (length depends on the number of dimensions of the plot)
+        :param xvalue: Value for the x variable
+        :param yvalue: Value for the y variable (optional according to the number of input variables)
+        :param zvalue: Value for the z variable (optional according to the number of input variables)
         :return: list containing floats, representing the masses of the particles in GeV
         """
 
         
+        #If mass function has not yet been created, create it now:
         if not '_massFunctions' in self.__dict__:
             self._massFunctions = self._getMassFunction()
-                
-        particleMasses = []
-        for function in self._massFuctions:
-            particleMasses.append(function(*xMass))
-
-        return particleMasses
-
+            
+        #Create dictionary with input values
+        xValues = {'x' : xvalue, 'y' : yvalue, 'z' : zvalue}
+        #Restrict input variables to the ones require do compute the masses:
+        xVals = {}
+        for xv in xValues:
+            if var(xv) in self._xvars:
+                xVals[xv] = xValues[xv]
+        
+        if len(xVals) != len(self._xvars):
+            logger.error("Number of input values and number of variables do not match.")
+            return None
+         
+        return self._massFunctions(**xVals)
 
     def _setXYFunction(self):
 
