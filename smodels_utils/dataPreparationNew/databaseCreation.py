@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-.. module:: dataPreparation
+.. module:: databaseCreation
    :synopsis: Holds objects used by convert.py to create globalInfo.txt,
               sms.root, sms.py and newSms.py.
 
@@ -14,10 +14,10 @@ import sys
 import os
 import shutil
 import ROOT
-from smodels_utils.dataPreparationNew.standardObjects import StandardTWiki
 import logging
 from datetime import date
-from smodels.tools.physicsUnits import fb, pb
+from smodels.tools.physicsUnits import fb, pb,IncompatibleUnitsError,GeV,TeV
+from math import floor, log10
 import time
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -28,21 +28,6 @@ logger.setLevel(level=logging.ERROR)
 
 limitCache={}
 
-def computeLimit ( observed, expected, error, lumi ):
-    """ compute limits and cache them """
-    from math import floor, log10
-    from smodels.tools import statistics
-    def r4 ( x ): ## round to four digits
-        if x==0.: return x
-        return round(x, -int(floor(log10(x))) + (4 - 1))
-    ## r4 = lambda x: round(x, -int(floor(log10(x))) + (4 - 1))
-    key = "%f %f %f %f" % ( r4(observed), r4(expected), r4(error), r4(lumi.asNumber(1/fb)) )
-    if key in limitCache:
-        return limitCache[key]
-    ul = statistics.upperLimit ( observed, expected, error, lumi, .05, 200000 ).asNumber ( fb )
-    ret=str(ul)+"*fb"
-    limitCache[key]=ret
-    return ret
 
 class DatabaseCreator(list):
 
@@ -155,8 +140,6 @@ class DatabaseCreator(list):
             self._createInfoFile(self.metaInfoFileName, self.metaInfo)
             self._createValidationFolder()
 
-        self.tWiki = StandardTWiki(self.metaInfo)
-
         #Loop over datasets:
         for dataset in self:
             #Set current dataset folder (for writing all files below)
@@ -164,30 +147,29 @@ class DatabaseCreator(list):
             self.timeStamp ( "reading %s" % dataset, "debug" )            
             #Create dataInfo.txt file:
             if dataset.dataType == 'efficiencyMap':
-                if not hasattr(dataset,'upperLimit') or not hasattr(dataset,'expectedUpperLimit '):
+                if not hasattr(dataset,'upperLimit') or not hasattr(dataset,'expectedUpperLimit'):
                     self.timeStamp("computing upper limits for %s" %str(dataset))
                     dataset.computeStatistics()
             #Write down dataInfo.txt
             self._createInfoFile('dataInfo', dataset)
-            continue
+
             #Loop over txnames in datasets:
             for txName in dataset._txnameList:
                 if not hasattr(txName, 'constraint'):
                     logger.error('Missing constraint for txname %s' %str(txName))
                     sys.exit()
-                txName.getData(dataType = dataset.dataType)  #Read source files and load data
+
+                #Write down txname.txt                
                 txName.getInfo()  #Set txname info attributes
+                txName.getData(dataType = dataset.dataType)  #Read source files and load data
+                self._createTxnameFile(str(txName), txName)
                 
-                #Write down txname.txt
-                self._createInfoFile(str(txName), txName)
+                
+                
         
         #Get all exclusion curves and write to sms.root:
         self.exclusions = self.getExclusionCurves()
         self._createSmsRoot(createAdditional)
-
-        #Create twiki.txt
-        if not createAdditional:
-            self._createTwikiTxt()
 
 
     def getExclusionCurves(self):
@@ -199,6 +181,7 @@ class DatabaseCreator(list):
         """
                 
         curves = {}
+        allCurves = []
         #Loop over datasets
         for dataset in self:
             curves[dataset.dataId] = {}
@@ -228,16 +211,10 @@ class DatabaseCreator(list):
                         if 'P1' in exclusion.name or 'M1' in exclusion.name:
                             stGraph.SetLineStyle(2)
                         planeCurves[name] = stGraph
+                        allCurves.append(stGraph)
                         
-        allCurves = []
-        for dataset in curves:
-            for txname in dataset:
-                for plane in txname:
-                    for curveName in plane:
-                        allCurves.append(plane[curveName])
                         
         return allCurves
-
 
     def _setLastUpdate(self):
 
@@ -347,7 +324,6 @@ class DatabaseCreator(list):
         if not os.path.exists(self.validationPath):
             os.mkdir(self.validationPath)
 
-
     def _createSmsRoot(self,update=False):
 
         """
@@ -370,19 +346,6 @@ class DatabaseCreator(list):
                         self.timeStamp("add %s to sms.root" % fullname, "info")
                         exclusion.Write()
         smsRoot.Close()
-
-    def _createTwikiTxt(self):
-
-        """
-        creates the twiki.txt file
-        """
-        if not os.path.exists ( self.base + self.origPath ):
-            os.mkdir ( self.base + self.origPath )
-
-
-        twikiTxt = open(self.base + self.twikitxtPath,'w')
-        twikiTxt.write('%s' %self.tWiki)
-        twikiTxt.close()
 
     def _createInfoFile(self, name, obj):
 
@@ -419,6 +382,68 @@ class DatabaseCreator(list):
         self.timeStamp ( "writing %s" % path )
         infoFile.write(content)
         infoFile.close()
+        
+    def _createTxnameFile(self, name, obj):
+
+        """
+        creates a file of type txname.txt
+        all attributes defined in the list called 'infoAttr'
+        of the given txname obj are written to this txt file.
+        The txname data is formatted before being written to the file.
+        :param name: name of the file (without extension)
+        :param obj: a TxNameInput object containing attributes which will be
+        written to the file. The object must have a list called
+        'infoAttr' to define what attributes should be written
+        """
+    
+        if not hasattr(obj,'_dataTypes'):
+            logger.error('Input obj must be a TxNameInput object')
+    
+        #Get the dataTypes stored in the txname 
+        #(e.g. efficiencyMap, upperLimits, expectedUpperLimits)
+        dataTypes = obj._dataTypes
+        content = ''
+        
+        path = self.infoFilePath(name)
+
+        #Check if all required attributes have been defined:
+        for attr in obj.requiredAttr:
+            if not hasattr(obj,attr):
+                logger.error("Attribute %s must be defined for object type %s" %(attr,type(obj)))
+                sys.exit()
+
+        for attr in obj.infoAttr:
+            if not hasattr(obj,attr) and not hasattr(obj.__class__,attr):
+                continue
+            value = getattr(obj,attr)
+            if value=="":
+                continue
+            #Leave data for last
+            if attr in dataTypes:
+                continue
+                value = self._formatData(value)            
+            
+            content = '%s%s%s%s\n' % (content, attr,\
+                                       self.assignmentOperator, value)
+        for attr in obj.infoAttr:
+            if not attr in dataTypes:
+                continue
+            if not hasattr(obj,attr) and not hasattr(obj.__class__,attr):
+                continue
+            value = getattr(obj,attr)
+            if value=="":
+                continue
+            
+            value = self._formatData(value)
+            content = '%s%s%s%s\n' % (content, attr,\
+                                       self.assignmentOperator, value)
+
+
+        infoFile = open(self.base + path, 'w')
+        self.timeStamp ( "writing %s" % path )
+        infoFile.write(content)
+        infoFile.close()
+        
 
     def infoFilePath(self, infoFileName):
         """
@@ -435,8 +460,57 @@ class DatabaseCreator(list):
         if not os.path.exists(directory):
             os.mkdir(directory)
 
-        path = '%s%s%s' %(directory, infoFileName, self.infoFileExtension)
-        # print "[infoFilePath]",path
+        path = os.path.join(directory, infoFileName.strip()+self.infoFileExtension.strip())
         return path
 
+    def _formatData(self,value):
+        """
+        Formats the data grid for nice printing in the txname.txt file
+        
+        :param value: value for the data (in list format)
+        """
+        
+        if not isinstance(value,list):
+            logger.error("Data for TxNameInput must be in list format")
+            sys.exit()
+        
+        #First round numbers:
+        value = round_list(value)
+        #Convert to string:
+        vStr = str(value)
+        #Replace units:
+        vStr = vStr.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
+        vStr = vStr.replace('[fb]','*fb').replace('[pb]','*pb')        
+        #Break lines:
+        vStr = vStr.replace(" ","")
+        vStr = vStr.replace('],[[','],\n[[')
+
+        return vStr
+
+
+def round_list(x, n=5):
+    """
+    Rounds all values in x down to n digits.
+    :param x: value (float) or nested list of floats
+    
+    :return: x, with all floats rounded to n digits
+    """
+    
+    if isinstance(x,list):
+        for i,pt in enumerate(x):
+            x[i] = round_list(pt)
+        return x
+    else:
+        if type(x) is type(fb):
+            unit = x/x.asNumber()
+            x = x.asNumber()
+        else:
+            unit = 1.
+        if not x:
+            return x*unit
+        
+        return round(x,-int(floor(log10(x))) + (n - 1))*unit
+
 databaseCreator = DatabaseCreator()
+
+

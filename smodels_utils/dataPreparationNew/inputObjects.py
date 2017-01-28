@@ -10,12 +10,11 @@
 
 import sys
 from smodels_utils.helper.txDecays import TxDecay
-from smodels_utils.dataPreparationNew.origDataObjects import\
-OrigLimit, OrigExclusion, OrigEfficiencyMap
+from smodels_utils.dataPreparationNew.origDataObjects import Orig
 from smodels_utils.dataPreparationNew.origPlotObjects import OrigPlot
 from smodels_utils.dataPreparationNew.databaseCreation import databaseCreator
 from smodels_utils.dataPreparationNew.preparationHelper import Locker
-from smodels.tools.physicsUnits import fb, pb
+from smodels.tools.physicsUnits import fb, pb, TeV, GeV
 from smodels.theory.particleNames import elementsInStr
 from smodels.particles import rEven, ptcDic
 
@@ -141,56 +140,7 @@ class MetaInfoInput(Locker):
             return '%s%s%s' %(value,operation,unit)
         except:
             return False
-            
-class KinematicRegion(Locker):
-    
-    """
-    Holds all informations related to one kinematic region
-    in this context a kinematic region is defined by their
-    off-shell vertices 
-    """
-    
-    
-    infoAttr = ['conditionDescription', 'condition', 'constraint','checked',\
-                'figureUrl', 'dataUrl', 'finalState' ]
-    internalAttr = ['name', 'functions', 'topoExtension', 'region']
-    
-    requiredAttr = ['condition','constraint']
-    
-    def __init__(self,name,topoExtension, *conditionFunctions):
-        """
-        :param name: name as string
-        :param topoExtension: string to be added to the txName in order
-        to define the membership to this kinematic region
-        :param *conditionFunctions: functions describing the conditions for the
-        kinematic region. The parameter of this functions have to be a list of 
-        tuples. The return value has to be a bool type
-        """
-        self.name = name
-        self.functions = conditionFunctions
-        self.topoExtension = topoExtension
-        self.region = 'auto'
 
-    def __str__(self):
-        ret="KinematicRegion: %s, %s" % ( self.name, self.region )
-        # ret+=" [%s]" % ( self.topoExtension )
-        return ret
-
-    def checkoffShellVertices(self,offShellVertices):
-        """
-        checks if offShellVertices meet the conditions
-        given by self.functions (= conditionFunctions)
-        :param offShellVertices: list of tuples describing
-        the vertices with off-shell SM-particles
-        :returns: True or False
-        """
-        for function in self.functions:
-            if not function(offShellVertices): 
-                return False
-        return True
-        
-    def __nonzero__(self):
-        return self.regionExist
              
 class MassPlane(Locker):
     """
@@ -201,10 +151,13 @@ class MassPlane(Locker):
     infoAttr = ['figureUrl','dataUrl','axes']
     internalAttr = ['_txDecay', 'origPlot', 'origLimits','_exclusionCurves',
             'origEfficiencyMap', 'figure', 'figureUrl', 'dataUrl', 'histoDataUrl', 
-            'exclusionDataUrl', '_planeDimensions', 'upperLimits','expectedUpperLimits','efficiencyMap',
+            'exclusionDataUrl', 'dimensions', 'upperLimits','expectedUpperLimits','efficiencyMap',
             'obsExclusion','obsExclusionP1','obsExclusionM1',
             'expExclusion','expExclusionP1','expExclusionM1']
     requiredAttr = []
+    allowedDataTypes = ['efficiencyMap','upperLimits','expectedUpperLimits',
+                        'obsExclusion','obsExclusionP1','obsExclusionM1',
+                        'expExclusion','expExclusionP1','expExclusionM1']
     
     def __init__(self,txDecay, massArray):
         """
@@ -234,22 +187,9 @@ class MassPlane(Locker):
             for xvar in br._xvars:
                 if not xvar in xvars:
                     xvars.append(xvar)
-        self._planeDimensions = len(xvars)
-            
-
-        #Define all possible data types:        
-        self.efficiencyMap = OrigEfficiencyMap('efficiencyMap')
-        self.upperLimits = OrigLimit('limit')
-        self.expectedUpperLimits = OrigLimit('expectedlimit')
-        
-        self.obsExclusion = OrigExclusion('exclusion')
-        self.obsExclusionP1 =  OrigExclusion('exclusionP1')
-        self.obsExclusionM1 =  OrigExclusion('exclusionM1')
-        self.expExclusion =  OrigExclusion('expectedExclusion')
-        self.expExclusionP1 =  OrigExclusion('expectedExclusionP1')
-        self.expExclusionM1 =  OrigExclusion('expectedExclusionM1')
-        self._exclusionCurves = [self.obsExclusion,self.obsExclusionP1,self.obsExclusionM1,
-                                 self.expExclusion,self.expExclusionP1,self.expExclusionM1]
+        dimensions = len(xvars)
+        self.dimensions = dimensions
+        self._exclusionCurves = []
                 
         self.figure = None
         self.figureUrl = None
@@ -270,7 +210,78 @@ class MassPlane(Locker):
 
         self.origPlot.setBranch(branchNumber,branchMasses)
         
-         
+
+    def setSources(self,dataTypes,dataFiles,dataFormats,objectNames=None,indices=None):
+        """
+        Defines the data sources for the plane.
+        
+        :param dataTypes: Single string with the data type or list of strings with the dataTypes
+                          possible data types are defined in allowedDataTypes
+                          (e.g. efficiencyMap, upperLimist, expectedUpperLimits,...)
+        :param datafiles: Single string with the file path or list of strings with the file paths
+                          to the data files.
+        :param dataFormats: Single string with the file format or list of strings with the file formats
+                          for the data files.
+        
+        :param objectName: name of object stored in root-file or cMacro or list of object names                         
+        :param indices: index of object in listOfPrimitives of ROOT.TCanvas or lis of indices                            
+        """
+        
+        #Make sure input is consistent:
+        if isinstance(dataFiles,list):
+            if indices is None:
+                indices = [None]*len(dataFiles)
+            if objectNames is None:
+                objectNames = [None]*len(dataFiles)
+            if not isinstance(dataTypes,list) or len(dataTypes) != len(dataFiles):
+                logger.error("dataTypes and dataFiles are not consistent")
+                sys.exit()
+            if not isinstance(dataFormats,list) or len(dataFormats) != len(dataFiles):
+                logger.error("dataFormats and dataFiles are not consistent")
+                sys.exit()                
+            if not isinstance(indices,list) or len(indices) != len(dataFiles):
+                logger.error("indices and dataFiles are not consistent")
+                sys.exit()
+            if not isinstance(objectNames,list) or len(objectNames) != len(dataFiles):
+                logger.error("objectNames and dataFiles are not consistent")
+                sys.exit()
+                                
+        elif not isinstance(dataFiles,str):
+            logger.error('dataFiles must be a list or a single string')
+        else:
+            if not isinstance(dataTypes,str):
+                logger.error("dataTypes and dataFiles are not consistent")
+                sys.exit()
+            if not isinstance(dataFormats,str):
+                logger.error("dataFormats and dataFiles are not consistent")
+                sys.exit()      
+            dataFiles = [dataFiles]
+            dataTypes = [dataTypes]
+            indices = [indices]
+            objectNames = [objectNames]
+            
+            
+        for i,dataFile in enumerate(dataFiles):
+            dataType = dataTypes[i]
+            dataFormat = dataFormats[i]
+            index = indices[i]
+            objectName = objectNames[i]
+            if not dataType in self.allowedDataTypes:
+                logger.warning("Data type %s is not allowed and will be ignored" %dataType)
+                continue
+            
+            if 'exclusion' in dataType.lower():
+                dimensions = 2
+            else:
+                dimensions = self.dimensions
+            #Get the origData object for the corresponding dataType
+            origObject = Orig.getObjectFor(dataType,dimensions)
+            #Set source of object
+            origObject.setSource(dataFile, dataFormat, objectName, index)
+            #Store it as a mass plane attribute:
+            setattr(self,dataType,origObject)
+            if 'exclusion' in dataType.lower():
+                self._exclusionCurves.append(origObject)
     
     @property
     def dataUrl(self):
@@ -330,6 +341,7 @@ class MassPlane(Locker):
         
         for exclusion in self.origExclusions:
             exclusion.dataUrl = url
+
   
 class DataSetInput(Locker):
     """
@@ -389,7 +401,6 @@ class DataSetInput(Locker):
     def computeStatistics(self):
         """Compute expected and observed limits and store them """
         
-        from math import floor, log10
         from smodels.tools import statistics
         
         if not hasattr(databaseCreator, 'metaInfo'):
@@ -404,10 +415,12 @@ class DataSetInput(Locker):
 
         
         lumi = databaseCreator.metaInfo.lumi
+        if isinstance(lumi,str):
+            lumi = eval(lumi)
         ul = statistics.upperLimit(self.observedN, self.expectedBG, self.bgError, lumi, .05, 200000).asNumber(fb)
         ulExpected = statistics.upperLimit(self.expectedBG, self.expectedBG, self.bgError, lumi, .05, 200000).asNumber(fb)
-        self.upperLimit = ul
-        self.expectedUpperLimit = ulExpected
+        self.upperLimit = str(ul)+'*fb'
+        self.expectedUpperLimit = str(ulExpected)+'*fb'
         
     def addTxName(self,txname):
         """
@@ -439,23 +452,20 @@ class TxNameInput(Locker):
     
     infoAttr = ['condition', 'conditionDescription', 'upperLimits',
                 'efficiencyMap','expectedUpperLimits','txName','figureUrl','dataUrl','validated','axes',
-                'publishedData','prettyTxName','checked','finalState']
-    internalAttr = ['_name', 'name', '_txDecay', '_kinematicRegions','_planes',\
-    '_branchcondition', 'onShell', 'offShell', 'constraint',\
-    'condition', 'conditionDescription', '_newMassInput', '_ignoreKinematics',\
-    'upperLimits','efficiencyMap','expectedUpperLimits']
+                'publishedData','susyProcess','checked','finalState','constraint']
+    internalAttr = ['_name', 'name', '_txDecay','_planes',
+    '_branchcondition', 'onShell', 'offShell', 'constraint',
+    'condition', 'conditionDescription', '_newMassInput',
+    'upperLimits','efficiencyMap','expectedUpperLimits','massConstraints','_dataTypes']
     
     requiredAttr = ['constraint','condition','txName']
     
     
-    def __init__(self,txName, ignoreKinematics=False):
+    def __init__(self,txName):
         
         """initialize the txName related values an objects
         checks if the given txName string is valid
         :param txName: name as string
-        :param ignoreKinematics: If True the data points will not be checked against
-                                 the kinematic restrictiins defined by the contraint and
-                                 all the data points will be included.
         :raise unknownTxNameError: if txName string is not known by module 
         helper.txDecays
         :raise doubleDecayError: if helper.txDecays holds 2 txNames with 
@@ -465,13 +475,13 @@ class TxNameInput(Locker):
         
         self._name = txName
         self.txName = txName
-        self.prettyTxName = prettyDescriptions.prettyTxname(txName)
+        self.susyProcess = prettyDescriptions.prettyTxname(txName,latex=False)
         self._txDecay = TxDecay(self._name)    
         if not self._txDecay:
             logger.error("Unknown txname %s" %self._name)
             sys.exit()
-        self._ignoreKinematics = ignoreKinematics
         self._planes = []
+        self._dataTypes = []
 
     def __str__(self):
 
@@ -482,10 +492,7 @@ class TxNameInput(Locker):
         
         """
         add a MassPlane object with given axes to self.planes.
-        Add new attributes to the MassPlane. For every KinematicRegion-object
-        in self.kinematicRegions an attribute named after the name of the 
-        KinematicRegion-object is added and set to the value of 
-        KinematicRegion.region
+        Add new attributes to the MassPlane.
         :param txDecay: object of type TxDecay
         :param massArray: the full mass array containing equations which relate the
         physical masses and the plane coordinates, using the pre-defined 'x','y',.. symbols.
@@ -516,38 +523,30 @@ class TxNameInput(Locker):
         self._planes.append(massPlane)
         return massPlane                    
                   
-
-            
-
     def getData(self,dataType):
         """
+        Loop over the defined the planes and collects the data.
         Reads the source file and stores the data.
         :param dataType: Type of data (efficiencyMap or upperLimit)
         """
         
 
         for plane in self._planes:
-            self.timeStamp('Reading mass plane: %s, %s' % (self, plane.origPlot))
+            logger.info('Reading mass plane: %s, %s' % (self, plane.origPlot))
             
-            if dataType == 'efficiencyMap':
-                if not plane.efficiencyMap:
-                    logger.error('Efficiency map source not defined for plane %s' %plane.origPlot)
-                    sys.exit()
-                self.addData(plane,dataType='efficiencyMap')
-                
-            elif dataType == 'upperLimits':
-                if not plane.upperLimits:
-                    logger.error('Upper limit map source not defined for plane %s' %plane.origPlot)
-                    sys.exit()
-                self.addData(plane,dataType='upperLimits')
-                self.publishedData = hasattr(plane,'upperLimits.dataUrl')
-
-            if plane.expectedUpperLimits:
-                self.addData(plane,dataType='expectedUpperLimits')
+            if not hasattr(plane,dataType):
+                logger.error('%s source not defined for plane %s' %(dataType,plane.origPlot))
+                sys.exit()
+            self.addData(plane,dataType)
+            self._dataTypes.append(dataType)
+            #Add expected upper limits, if it exists:
+            if hasattr(plane,'expectedUpperLimits'):
+                self.addData(plane,'expectedUpperLimits')
+                self._dataTypes.append('expectedUpperLimits')
                 
     def getInfo(self):
         """
-        Collects all the info from its mass planes and stores it
+        Collects all the info attributes from its mass planes and stores it
         in self. Also defines additional information.
         """
         
@@ -555,6 +554,8 @@ class TxNameInput(Locker):
             infoList = [""]*len(self._planes)            
             planeHasInfo = False
             for i,plane in enumerate(self._planes):
+                if not infoAttr in plane.infoAttr:
+                    continue
                 if hasattr(plane,infoAttr):
                     planeHasInfo = True
                     infoList[i] = str(getattr(plane, infoAttr))
@@ -564,7 +565,6 @@ class TxNameInput(Locker):
         
         self.publishedData = hasattr(self,'efficiencyMap.dataUrl')
         self.validated = 'Not done yet'
-
 
     def addData(self, plane, dataType):
 
@@ -580,7 +580,7 @@ class TxNameInput(Locker):
         """
         
         #Get dimension of the plot:
-        nvars = plane._planeDimensions
+        nvars = plane.dimensions
         if nvars < 1 or nvars > 3:
             logger.error('Can not deal with %i variables' %nvars)
             sys.exit()
@@ -600,24 +600,27 @@ class TxNameInput(Locker):
             xvals = value[:nvars]
             value = value[-1]
             massArray = plane.origPlot.getParticleMasses(*xvals)
-            #Check if mass array is consistent with the kinematical constraints given by the 
+            #Check if mass array is consistent with the mass constraints given by the 
             #txname constraint. If not, skip this mass.
-            if not self._ignoreKinematics:
-                if not self.checkKinematicConstrain(massArray):
-                    continue
+            if not self.checkMassConstraints(massArray):
+                continue
             dataList.append([massArray, value])
         
         #Add data to txname. If dataType already exists, extend it
-        if hasattr(self,dataType):
+        if hasattr(self,dataType) and isinstance(getattr(self,dataType),list):
             txData = getattr(self,dataType)
             txData += dataList
         else:
             setattr(self,dataType,dataList)
             
-    def _setKinematicConstraint(self):
+    def _setMassConstraints(self):
         """
-        Define the kinematical constraint for the txname, based
-        on its constraint.
+        Define the mass constraints for the txname, based
+        on its constraint. The constraints on the mass differences of the BSM
+        particles are given as a nested array (according to the constraint format)
+        containing string inequalities to be satisfied by the BSM masses.
+        (e.g. for the constraint [[[t,t]],[[t,t]] we have the
+        mass constraint [[['m > 169.+169.']],[['m > 169.+169.']]].
         """
         
         #Build mass dictionary for all particles
@@ -637,13 +640,22 @@ class TxNameInput(Locker):
             massDict[key] = minMass
         
         #Replace particles appearing in the vertices by their mass        
-        self._kinematicConstraints = []
-        for el in elementsInStr(self.constraint):
-            self._kinematicConstraints.append(eval(el,massDict)) #Replace particles in element by their masses
+        self._massConstraints = []
+        for el in elementsInStr(self.constraint):            
+            self.massConstraints.append(eval(el,massDict)) #Replace particles in element by their masses
             
-    def checkKinematicConstrain(self,massArray):
+        #Now convert the constraints to inequality expressions:
+        for el in self.massConstraints:
+            for branch in el:
+                for iv,vertex in enumerate(branch):
+                    eqStr = "m >= "
+                    massValue = sum(vertex)
+                    eqStr += str(massValue)
+                    branch[iv] = eqStr
+                        
+    def checkMassConstraints(self,massArray):
         """
-        Check if massArray satisfies the kinematical constraints.
+        Check if massArray satisfies the mass constraints defined in massConstraints
         
         If the txname constraint contains several elements, require that massArray
         satisfied the constaint for at least one of the elements.
@@ -652,16 +664,26 @@ class TxNameInput(Locker):
                           topology of the txname constraint.
         """
         
-        if not hasattr(self, '_kinematicConstraints'):
-            self._setKinematicConstraint()
+        if not hasattr(self, 'massConstraints'):
+            self._setMassConstraints()
         
-        for elMass in self._kinematicConstraints:
+        #If massConstraints was pre-defined as None or empty list, return always True
+        if not self.massConstraints:  
+            return True
+        
+        for elMass in self.massConstraints:
             goodMasses = True
             for ib,br in enumerate(elMass):
                 for iv,vertex in enumerate(br):
-                    if sum(vertex) > massArray[ib][iv]-massArray[ib][iv+1]:
+                    massDiff = massArray[ib][iv]-massArray[ib][iv+1]
+                    #Evaluate the inequality replacing m by the mass difference:
+                    check = eval(vertex,{'m' : massDiff}) 
+                    if check is False:
                         goodMasses = False
                         break
+                    elif not check is True:
+                        logger.error("Something went wrong evaluating the mass constraint %s" %vertex)
+                        sys.exit()
             if goodMasses:
                 return True
         

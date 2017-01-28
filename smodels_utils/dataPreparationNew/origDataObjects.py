@@ -11,7 +11,7 @@
 import sys
 import os
 import ROOT
-from smodels_utils.dataPreparation.preparationHelper import Locker
+from smodels_utils.dataPreparationNew.preparationHelper import Locker
 import copy
 
 class Orig(Locker):
@@ -25,10 +25,10 @@ class Orig(Locker):
     infoAttr = []
     internalAttr = ['name','path', 'fileType', 'objectName',\
     'dataUrl', 'index', 'allowNegativValues', 'dataset',
-    'percentage','_planeDimensions' ]
+    'percentage','dimensions' ]
     requiredAttr = ['name']
     
-    def __init__(self,name):
+    def __init__(self,name,dimensions):
         
         """
         initialize data-source attributes with None
@@ -37,6 +37,7 @@ class Orig(Locker):
         """
         
         self.name = name
+        self.dimensions = dimensions
         self.path = None
         self.fileType = None
         self.objectName = None
@@ -45,6 +46,25 @@ class Orig(Locker):
         self.allowNegativValues = False
         self.dataset=None
         self.percentage=False
+    
+    @staticmethod
+    def getObjectFor(dataType,dimensions):
+        """
+        Returns an instance of the correct object for dataType
+        :param dataType: type of data (efficiencyMap, upperLimits,...)
+        :param dimensions: number of dimensions of the data
+        
+        :return: an instance of OrigEfficiencyMap, OrigUpperLimits,...
+        """
+        
+        if dataType == 'efficiencyMap':
+            return OrigEfficiencyMap(dataType,dimensions)
+        elif dataType == 'upperLimits' or dataType == 'expectedUpperLimits':
+            return OrigUpperLimits(dataType,dimensions)
+        elif dataType in ['obsExclusion','obsExclusionP1','obsExclusionM1',
+                          'expExclusion', 'expExclusionP1', 'expExclusionM1']:
+            return OrigExclusion(dataType,dimensions)
+        
 
     def setSource(self, path, fileType, objectName = None, index = None):
         
@@ -81,8 +101,8 @@ class Orig(Locker):
         
         if self.allowNegativValues: return True
         for value in values:
-            if values < 0.0: 
-                Errors().negativValue(values, path)
+            if value < 0.0: 
+                Errors().negativValue(value)
                 return False
         return True
         
@@ -117,7 +137,7 @@ class Orig(Locker):
             try:
                 values = [float(value) for value in values]
             except:
-               Errors().value(self.path) 
+                Errors().value(self.path) 
             yield values  
 
     def effi(self):
@@ -131,7 +151,7 @@ class Orig(Locker):
             try:
                 values = copy.deepcopy ( line.split() ) ## omit the last column
                 if float(values[-2])<4*float(values[-1]):
- #                   print "[origDataObjects] Small value",values[-2],"+-",values[-1],"!"
+#                    print "[origDataObjects] Small value",values[-2],"+-",values[-1],"!"
 #                    print "[origDataObjects] Will set to zero."
                     values[-2]="0."
 #                print "values=",values
@@ -143,7 +163,7 @@ class Orig(Locker):
             try:
                 values = [float(value) for value in values]
             except:
-               Errors().value(self.path) 
+                Errors().value(self.path) 
             yield values  
     
     def root(self):
@@ -221,7 +241,7 @@ class Orig(Locker):
         return False            
  
  
-class OrigLimit(Orig):
+class OrigUpperLimits(Orig):
     
     """
     iterable class
@@ -238,14 +258,14 @@ class OrigLimit(Orig):
     plotableAttr = [] + Orig.infoAttr
     internalAttr = ['_unit', 'unit', ] + Orig.internalAttr
     
-    def __init__(self,name):
+    def __init__(self,name,dimensions):
         
         """
         initialize upper limit unit with 'pb'
         :param Name: name as string
         """
         
-        Orig.__init__(self,name)
+        Orig.__init__(self,name,dimensions)
         self._unit = 'pb'
         
     @property
@@ -298,7 +318,7 @@ class OrigLimit(Orig):
         
         for point in Orig.txt(self):
             if not len(point) == 3:
-                Errors().txtFormat(self.path, 'OrigLimit', 3)
+                Errors().txtFormat(self.path, 'OrigUpperLimits', 3)
             yield point
     
     def root(self):
@@ -383,13 +403,13 @@ class OrigEfficiencyMap(Orig):
     plotableAttr = [] + Orig.infoAttr
     internalAttr = [] + Orig.internalAttr
     
-    def __init__(self,name):
+    def __init__(self,name,dimensions):
         
         """
         :param Name: name as string
         """
         
-        Orig.__init__(self,name)
+        Orig.__init__(self,name,dimensions)
         
     def __iter__(self):
         
@@ -430,8 +450,8 @@ class OrigEfficiencyMap(Orig):
         """
         
         for point in Orig.txt(self):
-            if not len(point) == self._planeDimensions+1:
-                Errors().txtFormat(self.path, 'OrigEfficiencyMap', self._planeDimensions+1)
+            if not len(point) == self.dimensions+1:
+                Errors().txtFormat(self.path, 'OrigEfficiencyMap', self.dimensions+1)
             yield point
 
     def effi(self):
@@ -494,7 +514,7 @@ class OrigEfficiencyMap(Orig):
         :yield: [x-axes, y-axes, bin contend]
         """
         
-        naxis = self._planeDimensions
+        naxis = self.dimensions
         xAxis = limit.GetXaxis()
         yAxis, zAxis = None,None
         if naxis > 1:
@@ -554,7 +574,7 @@ class OrigExclusion(Orig):
         :param Name: name as string
         """
         
-        Orig.__init__(self,name)
+        Orig.__init__(self,name,dimensions=2)  #Exclusion curve always has dimensions = 2
         self.sort = False
         self.reverse = False
         

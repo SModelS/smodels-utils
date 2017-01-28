@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-.. module:: dataPreparation
+.. module:: preparationHelper
    :synopsis: Holds short objects used dataPreparation scripts.
 
 .. moduleauthor:: Michael Traub <michael.traub@gmx.at>

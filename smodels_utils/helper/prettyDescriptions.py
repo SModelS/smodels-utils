@@ -293,13 +293,15 @@ def getIntermediates(txname):
     return inter
 
 
-def prettyProduction(txname):
+def prettyProduction(txname,latex=True):
     """
     Converts the txname string to the corresponding SUSY production process
     in latex form (using ROOT conventions)
     :param: txname (string) (e.g. 'T1')
+    :param latex: If True it will return the latex version, otherwise
+                 it will return a more human readable string
     
-    :return: latex string (e.g. p p #rightarrow #tilde{g} #tilde{g})
+    :return: string or latex string (e.g. p p #rightarrow #tilde{g} #tilde{g})
     """    
     if not txname in motherDict:
         logging.error("Txname %s not found in motherDict" %txname)
@@ -316,38 +318,47 @@ def prettyProduction(txname):
         return None
     
     prodString = "pp --> "+prodString
-    prodString = latexfy(prodString)
+    if latex:
+        prodString = latexfy(prodString)
     return prodString.lstrip().rstrip()
 
-def prettyDecay(txname):
+def prettyDecay(txname,latex=True):
     """
     Converts the txname string to the corresponding SUSY decay process
     in latex form (using ROOT conventions)
     :param: txname (string) (e.g. 'T1')
+    :param latex: If True it will return the latex version, otherwise
+                 it will return a more human readable string
     
-    :return: latex string (e.g. #tilde{g} #rightarrow q q #tilde{#chi}_{1}^{0})
+    
+    :return: string or latex string (e.g. #tilde{g} #rightarrow q q #tilde{#chi}_{1}^{0})
     """
     
     if not txname in decayDict:
         logging.error("Txname %s not found in decayDict" %txname)
         return None
-    decayString = latexfy(decayDict[txname])
+    decayString = decayDict[txname]
+    if latex:
+        decayString = latexfy(decayString)
     return decayString.lstrip().rstrip()
 
     
-def prettyTxname(txname):
+def prettyTxname(txname,latex=True):
     """
     Converts the txname string to the corresponding SUSY desctiption
     in latex form (using ROOT conventions)
     :param: txname (string) (e.g. 'T1')
+    :param latex: If True it will return the latex version, otherwise
+                 it will return a more human readable string
     
-    :return: latex string 
+    
+    :return: string or latex string 
              (e.g. pp #rightarrow #tilde{g} #tilde{g}, 
              #tilde{g} #rightarrow q q #tilde{#chi}_{1}^{0})
     """
 
-    prodString = prettyProduction(txname)
-    decayString = prettyDecay(txname)
+    prodString = prettyProduction(txname,latex)
+    decayString = prettyDecay(txname,latex)
     
     if prodString and decayString:    
         return prodString + ", " + decayString
