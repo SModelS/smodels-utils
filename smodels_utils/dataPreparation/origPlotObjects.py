@@ -73,6 +73,8 @@ class OrigPlot(object):
         massArray = eval(string)
         for ibr,br in enumerate(massArray):
             origPlot.setBranch(ibr,br)
+            
+        return origPlot
 
 
     def setBranch(self,branchNumber, branchMasses):
@@ -91,32 +93,19 @@ class OrigPlot(object):
             self.branches[branchNumber] = Axes.fromConvert(branchMasses)
 
 
-    def getParticleMasses(self,*xMass):
+    def getParticleMasses(self,**xMass):
 
         """
-        translate a point of th plot, given by x- and y-values to a mass Array
+        Translate a point of the plot, given by x- and y-values to a mass Array
         :param xMass: x,y,... values (length depends on the number of dimensions of the plot)
+                     Keyword arguments must equal the variable name.
         :return: list containing two other lists. Each list contains floats, representing
         the masses of the particles of each branch in GeV
         """
         
-        massArray = [br.getParticleMasses(*xMass) for br in self.branches]
+        massArray = [br.getParticleMasses(**xMass) for br in self.branches]
         return massArray
 
-    def combine(self, xy_1, xy_2 ):
-        """ If x appears in branch1, but y appears in branch2 (think e.g. TGQ),
-            then we need to combine the two arrays to a single array
-        """
-        ret=[]
-        for a,b in zip (xy_1,xy_2):
-            if a==None:
-                ret.append(b)
-            elif b==None:
-                ret.append(a)
-            else:
-                logger.error ( "cannot combine the two arrays into a single consistent array, a,b=%s,%s" , a,b )
-                return None
-        return ret
 
     def getXYValues(self,massArray):
 
@@ -131,15 +120,18 @@ class OrigPlot(object):
         else: [x-value in GeV as float, y-value in GeV,.. as floats].
         The list is sorted alphabetically according to the variable labels
         """
-
-        if not len(massArray) != len(self.branches):
+        
+        if len(massArray) != len(self.branches):
             Errors().massArrayLen(massArray)
         xyArray = {}
         for i,mass in enumerate(massArray):
-            xyDict = self.branch[i].getXYValues(mass)
+            xyDict = self.branches[i].getXYValues(mass)
+            if xyDict is None:
+                return None
             for xvar,value in xyDict.items():
-                if xvar in xyArray and xyArray[xvar] != value:
-                    return None
+                if xvar in xyArray:
+                    if abs(xyArray[xvar]-value)/abs(xyArray[xvar]+value) > 0.0001:
+                        return None
                 xyArray[xvar] = value
         
         xValues = [xvar[1] for xvar in sorted(xyArray.items(), key = lambda xx: xx[0])]
@@ -162,8 +154,6 @@ class OrigPlot(object):
         return ret
 
 
-
-
 class Axes(object):
 
     """
@@ -173,7 +163,7 @@ class Axes(object):
 
     """
 
-    def __init__(self, massEqs):
+    def __init__(self, massEqs,massVars):
 
         """
         Initialize a list of sympy.core.relational.Equality-object
@@ -182,22 +172,20 @@ class Axes(object):
 
         :param massEqs: Full list of equations for the branch masses.
                         Each list entry must be a Equalty-object in terms of x,y,z.
+        :param massVars: Full list of mass variables (sympy symbol object).
+                                
         """
 
         if not isinstance(massEqs,list):
             logger.error("Masses must be a list")
             sys.exit()
 
-        self._equations = massEqs[:]
+        self._equations = massEqs[:] #Store equations
+        self._massVars = massVars[:] #Store mass variables
             
         #Already define the functions and plot dimensions:
-        self._setXYFunction()        
-        self._xvars = sorted(self._xy.keys(), key= lambda xv: str(xv))  #Variables appearing in branch in correct order
+        self._setXYFunction()
         
-        
-            
-        ## print "Axes ",self._equations
-
 
     @classmethod
     def fromConvert(cls, massEqs):
@@ -210,69 +198,69 @@ class Axes(object):
         :return: Axes-object
         """
 
-        # print "lspMass=",type(lspMass),lspMass
-        
-        #Standard input:        
+                
         if not isinstance(massEqs,list):
             logger.error('Mass must be a list of equations')
+        
+        #Define mass variables:
+        massVars = []
+        for im,mass in enumerate(massEqs):            
+            massVars.append(var('Mass'+string.ascii_uppercase[im]))        
         
         #New format:
         allEqs = []
         for im,mass in enumerate(massEqs):
             #Create mass variable (upper case for first branch and lower case for second)
-            massVariable = var('Mass'+string.ascii_uppercase[im])
-            eq = Eq(massVariable,N(mass,5))  
+            eq = Eq(massVars[im],N(mass,5))  
             allEqs.append(eq)
             
             allEqs = sorted(allEqs, key = lambda eq: eq.args[0].name)
         
-        return cls(allEqs)
+        return cls(allEqs,massVars)
         
 
     def _getMassFunction(self):
 
         """
-        Build a function to compute the mass array of a particle for given x,y, .. values.
+        Build a function to compute the mass array for given x,y, .. values.
         The input variables are the ones define in self._xvars.
         :return: lambdify function which returns the mass array given the input variables.
         """
         
-        masses = [eq.args[0] for eq in self._equations]
-        xvars = self._xvars
+        #Mass variables:
+        masses = self._massVars
+        #Solve equation for masses
         s = solve(self._equations,masses,dict=True)[0]
-        massSolution = [s[m] for m in masses]
         #dummify=False allows to keep x,y,z... as valid argument keywords:
-        massFunction = lambdify(xvars,massSolution,'math',dummify=False) 
-        return lambda **xVals: massFunction(**xVals)
+        #(make sure the x,y,z values are passed as keywords)
+        self._massFunctions = []
+        for m in self._massVars:
+            self._massFunctions.append(lambdify(self._xvars,s[m],'math',dummify=False))
 
-    def getParticleMasses(self,xvalue=None,yvalue=None,zvalue=None):
+    def getParticleMasses(self,**xMass):
 
         """
         translate a point of the plot, given by x,y,.. values to a mass Array
-        :param xvalue: Value for the x variable
-        :param yvalue: Value for the y variable (optional according to the number of input variables)
-        :param zvalue: Value for the z variable (optional according to the number of input variables)
+        :param xMass: x,y,... values (length depends on the number of dimensions of the plot)
+                     Keyword arguments must equal the variable name.
         :return: list containing floats, representing the masses of the particles in GeV
         """
 
         
         #If mass function has not yet been created, create it now:
         if not '_massFunctions' in self.__dict__:
-            self._massFunctions = self._getMassFunction()
-            
-        #Create dictionary with input values
-        xValues = {'x' : xvalue, 'y' : yvalue, 'z' : zvalue}
-        #Restrict input variables to the ones require do compute the masses:
-        xVals = {}
-        for xv in xValues:
-            if var(xv) in self._xvars:
-                xVals[xv] = xValues[xv]
+            self._getMassFunction()
         
-        if len(xVals) != len(self._xvars):
-            logger.error("Number of input values and number of variables do not match.")
-            return None
-         
-        return self._massFunctions(**xVals)
+        #Create dictionary with input values
+        xValues = {}
+        for xv in self._xvars:
+            if not str(xv) in xMass:  #Missing a variable
+                logger.error("Input variable %s missing for computing mass" %xv)
+                return None
+            xValues[str(xv)] = xMass[str(xv)]
+    
+        massArray = [mfunc(**xValues) for mfunc in self._massFunctions]
+        return massArray
 
     def _setXYFunction(self):
 
@@ -289,7 +277,7 @@ class Axes(object):
             for v in [x,y,z]:
                 if v in eq.free_symbols and not v in xvars:
                     xvars.append(v)
-        
+
         #Vars defines the number of variables to be solved for:
         nvars = len(xvars)
         neqs = len(self._equations)
@@ -316,8 +304,14 @@ class Axes(object):
             if not sol:
                 logger.error("Could not solve the equations for the x,y,... values.\nCheck the mass plane definition.")
         self._xy = xy
-        particles = [eq.args[0].name for eq in self._equations]        
-        self._xyFunction = lambdify(particles,xy.items(),'math')
+        self._xvars = sorted(self._xy.keys(), key= lambda xv: str(xv))  #Variables appearing in branch in correct order
+        
+        #Define xy function as dictionary:
+        self._xyFunction = {}
+        #dummify=False allows to keep MassA,MassB,... as valid argument keywords:
+        #(make sure the MassA,MassB,.. values are passed as keywords)        
+        for xv in self._xvars:
+            self._xyFunction[xv] = lambdify(self._massVars,xy[xv],'math',dummify=False)
         self._nArguments = nvars
 
 
@@ -328,61 +322,31 @@ class Axes(object):
 
         :param massArray: list containing  floats, representing
         the masses of the particles in GeV
-        :return: None if the d ..mass array do not hold one of the equations in self._equations
-        else: dictionary {'x' : x-value in GeV as float, 'y' : y-value in GeV as float,...}
+        :return: None if the the mass array does not satify the mass equations.
+                Otherwise, returns a dictionary: 
+                {'x' : x-value in GeV as float, 'y' : y-value in GeV as float,...}
         """
 
         if not '_xyFunction' in self.__dict__:
             self._setXYFunction()
             
-        if not self.inOrigPlot(massArray):
-            return None
+        #Define dictionary with mass variables and values
+        massInput = dict([[str(self._massVars[im]),mass] for im,mass in enumerate(massArray)])
         
-        xValues = self._xyFunction(*massArray)
-        if not isinstance(xValues,list) or not len(xValues) == 1:
-            logger.error("Error computing x-values from mass array")
-            sys.exit()
+        xValues = {}
+        #Get the function for each x,y,.. variable and compute its value
+        for xv,xfunc in self._xyFunction.items():
+            xValues[str(xv)] = xfunc(**massInput)
+           
+        
+        #Now check if the x,y,.. values computed give the massArray back:
+        newMass = self.getParticleMasses(**xValues)
+        for im,m in enumerate(newMass):
+            if abs(m-massArray[im])/abs(m+massArray[im]) > 0.0001: #Masses differ
+                return None
+        
         return xValues
 
-    def inOrigPlot(self, massArray):
-
-        """
-        checks if mass array hold all equations in self._equations
-
-        :return: True if mass array hold all of the equations in self._equations
-        else: None
-        """
-
-        if len(massArray) != len(self._equations):
-            return False
-
-        if not '_xy' in self.__dict__:
-            self._setXYFunction()
-
-        equations = []
-        for eq in self._equations:
-            equation = eq.subs(x,self._xy[x])
-            equation = equation.subs(y,self._xy[y])
-            try:
-                equation = equation.subs(z,self._xy[z])
-            except KeyError as e:
-                pass
-            if equation != True: equations.append(equation)
-
-        massDublets = []
-        for i, eq in enumerate(self._equations):
-            particle = eq.args[0]
-            mass = massArray[i]
-            massDublets.append((particle, mass))
-
-        for eq in equations:
-            leftSide = eq.args[0]
-            rightSide = eq.args[1]
-            leftSide = leftSide.subs(massDublets)
-            rightSide = rightSide.subs(massDublets)
-            if abs(leftSide-rightSide) > 0.000001:
-                return False
-        return True
 
     def __str__(self):
 
@@ -465,15 +429,3 @@ class Errors(object):
         m = m + self._starLine
         print(m)
         sys.exit()
-
-if __name__ == "__main__":
-    axes = "Eq(mother,x)_Eq(lsp,y)+Eq(mother,0.96*x)_Eq(lsp,y)"
-    # axes = "Eq(mother,x)_Eq(lsp,0.0)+Eq(mother,y)_Eq(lsp,0.0)"
-    # axes = '2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,60.0)'
-    axes = "2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,z)"
-    origPlot = OrigPlot.fromString ( axes )
-    x1,y1,z1=150,120,100
-    pms=origPlot.getParticleMasses ( x1,y1,z1 )
-    print ( "particle masses",pms )
-    xyz=origPlot.getXYValues ( pms )
-    print ( "xyz values", xyz )

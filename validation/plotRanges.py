@@ -188,7 +188,7 @@ def generatePoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChecker):
         return points
     for i in numpy.arange ( minx, maxx+dx/2., dx ):
         for j in numpy.arange ( miny, maxy+dy/2., dy ):
-            masses_unitless = origPlot.getParticleMasses(i,j)
+            masses_unitless = origPlot.getParticleMasses(x=i,y=j)
             #Skip points with zero masses (too slow when running pythia)
             if min([br[-1] for br in masses_unitless]) <= 0.: continue
             #Check off-shell vertices. If there are any, skip point
@@ -265,7 +265,7 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,origPlot,vertexChec
     #Transform the min and max values to the rotated plane:
     extremes = []
     for x,y in [[minx,miny],[maxx,miny],[minx,maxy],[maxx,maxy]]:
-        mass = [[m*GeV for m in br] for br in origPlot.getParticleMasses(x,y)]
+        mass = [[m*GeV for m in br] for br in origPlot.getParticleMasses(x=x,y=y)]
         porig = txdata.flattenMassArray(mass)
         p=((numpy.matrix(porig)[0] - txdata.delta_x)).tolist()[0]
         P=numpy.dot(p,txdata._V)  ## rotated point

@@ -155,7 +155,7 @@ class MassPlane(Locker):
             'origEfficiencyMap', 'figure', 'figureUrl', 'dataUrl', 'histoDataUrl', 
             'exclusionDataUrl', 'dimensions', 'upperLimits','expectedUpperLimits','efficiencyMap',
             'obsExclusion','obsExclusionP1','obsExclusionM1',
-            'expExclusion','expExclusionP1','expExclusionM1']
+            'expExclusion','expExclusionP1','expExclusionM1','axesLabels']
     requiredAttr = []
     allowedDataLabels = ['efficiencyMap','upperLimits','expectedUpperLimits',
                         'obsExclusion','obsExclusionP1','obsExclusionM1',
@@ -192,6 +192,9 @@ class MassPlane(Locker):
         dimensions = len(xvars)
         self.dimensions = dimensions
         self._exclusionCurves = []
+        #Define the default labels for the input axes variables
+        #(relevant for computing the masses from x,y,z...)
+        self.axesLabels = ['x','y','z'][:dimensions]
          
         self.axes = massArray       
         self.figure = None
@@ -569,14 +572,15 @@ class TxNameInput(Locker):
             
         origData = getattr(plane,dataLabel)
         
-        dataList = []
+        dataList = []        
         for value in origData:
             if len(value) != nvars+1:
                 logger.error("Number of free parameters in data and in axes do not match")
                 sys.exit()
             xvals = value[:nvars]
             value = value[-1]
-            massArray = plane.origPlot.getParticleMasses(*xvals)
+            xdict = dict([[plane.axesLabels[i],xv] for i,xv in enumerate(xvals)])
+            massArray = plane.origPlot.getParticleMasses(**xdict)
             #Check if mass array is consistent with the mass constraints given by the 
             #txname constraint. If not, skip this mass.
             if not self.checkMassConstraints(massArray):

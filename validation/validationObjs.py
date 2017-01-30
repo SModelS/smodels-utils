@@ -16,6 +16,8 @@ from smodels.tools import statistics, modelTester
 from plottingFuncs import createPlot, getExclusionCurvesFor, createSpecialPlot, createTempPlot, createPrettyPlot
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
+from sympy import var
+import string
 
 logger.setLevel(level=logging.ERROR)
 
@@ -40,6 +42,7 @@ class ValidationPlot():
         self.expRes = copy.deepcopy(ExptRes)
         self.txName = TxNameStr
         self.axes = Axes
+        self.niceAxes = self.getNiceAxes(Axes)
         self.slhaDir = None
         self.data = None
         self.officialCurves = self.getOfficialCurve( get_all = True )
@@ -72,7 +75,7 @@ class ValidationPlot():
         vstr = "Validation plot for\n"
         vstr += 'id: '+self.expRes.getValuesFor('id')+'\n'
         vstr += 'TxName: '+self.txName+'\n'
-        vstr += 'Axes: '+self.axes
+        vstr += 'Axes: '+self.niceAxes
         return vstr
 
     def computeAgreementFactor ( self, looseness=1.2, signal_factor=1.0 ):
@@ -92,7 +95,7 @@ class ValidationPlot():
         elif isinstance(curve,list):
             for c in curve:                
                 objName = c.GetName()
-                if 'exclusion_' in objName:
+                if 'exclusion_' in objName.lower():
                     curve = c
                     break
         x0=ROOT.Double()
@@ -407,8 +410,10 @@ class ValidationPlot():
             logger.debug("Creating validation folder "+vDir)
             os.mkdir(vDir)
 
-        filename = self.expRes.getValuesFor('id')[0] + "_" \
-            + self.txName + "_" + self.axes +'.'+format
+        filename = self.expRes.getValuesFor('id')[0] + "_" + self.txName + "_"
+        filename += self.niceAxes.replace(",","").replace("(","").replace(")","")
+        filename += '.'+format
+        
         filename = filename.replace(self.expRes.getValuesFor('id')[0]+"_","")
         filename = os.path.join(vDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
@@ -468,5 +473,43 @@ class ValidationPlot():
 
         return True
 
+    def getNiceAxes(self,axesStr):
+        """
+        Convert the axes definition format ('[[x,y],[x,y]]')
+        to a nicer format ('Eq(MassA,x)_Eq(MassB,y)_Eq(MassA,x)_Eq(MassB,y)')
+        
+        :param axesStr: string defining axes in the old format
+        
+        :return: string with a nicer representation of the axes (more suitable for printing)
+        """
+        
+        
+        x,y,z = var('x y z')
+        axes = eval(axesStr)
+        
+        eqList = []
+        for ib,br in enumerate(axes):
+            if ib == 0:
+                mStr = 'Mass'
+            else:
+                mStr = 'mass'
+            mList = []
+            for im,eq in enumerate(br):
+                mList.append('Eq(%s,%s)'
+                               %(var(mStr+string.ascii_uppercase[im]),eq))
+            mStr = "_".join(mList)
+            eqList.append(mStr)
+        
+        #Simplify symmetric branches:
+        if eqList[0].lower() == eqList[1].lower() and len(eqList) == 2:            
+            eqStr = "2*%s"%eqList[0]
+        else:
+            eqStr = "__".join(eqList)
+            
+        eqStr = eqStr.replace(" ","")
+            
+        return eqStr
+                
+                
 
 

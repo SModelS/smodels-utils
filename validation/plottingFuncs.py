@@ -187,7 +187,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
         base.Add(official, "L")
     title = what+"_"+validationPlot.expRes.getValuesFor('id')[0] + "_" \
             + validationPlot.txName\
-            + "_" + validationPlot.axes
+            + "_" + validationPlot.niceAxes
     figureUrl = getFigureUrl(validationPlot)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
     base.Draw("AP")
@@ -377,7 +377,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             base.Add( i, "L")
     title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
             + validationPlot.txName\
-            + "_" + validationPlot.axes
+            + "_" + validationPlot.niceAxes
     subtitle = "datasetIds: "
     for dataset in validationPlot.expRes.datasets:
         ds_txnames = map ( str, dataset.txnameList )
@@ -681,7 +681,7 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
     base = grTemp
     title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
             + validationPlot.txName\
-            + "_" + validationPlot.axes
+            + "_" + validationPlot.niceAxes
     figureUrl = getFigureUrl(validationPlot)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
     plane.SetRightMargin(0.16)
