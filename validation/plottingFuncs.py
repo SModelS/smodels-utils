@@ -73,8 +73,8 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):
         txnames[tx] = []
         for obj in txDir.GetListOfKeys():
             objName = obj.ReadObj().GetName()
-            if not 'exclusion' in objName: continue
-            if (not get_all) and (not 'exclusion_' in objName): continue
+            if not 'exclusion' in objName.lower(): continue
+            if (not get_all) and (not 'exclusion_' in objName.lower()): continue
             # print "[plottingFuncs.py] name=",objName
             if axes and not axes in objName: continue
             txnames[tx].append(obj.ReadObj())

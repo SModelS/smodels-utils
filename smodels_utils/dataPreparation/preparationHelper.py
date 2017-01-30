@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-.. module:: dataPreparation
+.. module:: preparationHelper
    :synopsis: Holds short objects used dataPreparation scripts.
 
 .. moduleauthor:: Michael Traub <michael.traub@gmx.at>
@@ -49,7 +49,7 @@ class Locker(object):
         infoAttr and internalAttr
         """
         
-        return self.infoAttr + self.internalAttr
+        return self.infoAttr + self.internalAttr + self.requiredAttr
         
         
 class ObjectList(list):

@@ -25,9 +25,10 @@ class Orig(Locker):
     infoAttr = []
     internalAttr = ['name','path', 'fileType', 'objectName',\
     'dataUrl', 'index', 'allowNegativValues', 'dataset',
-    'observedN','expectedBG','bgError', 'percentage' ]
+    'percentage','dimensions','unit','_unit','_massUnit','massUnit']
+    requiredAttr = ['name']
     
-    def __init__(self,name):
+    def __init__(self,name,dimensions):
         
         """
         initialize data-source attributes with None
@@ -36,6 +37,7 @@ class Orig(Locker):
         """
         
         self.name = name
+        self.dimensions = dimensions
         self.path = None
         self.fileType = None
         self.objectName = None
@@ -44,8 +46,28 @@ class Orig(Locker):
         self.allowNegativValues = False
         self.dataset=None
         self.percentage=False
+        self._massUnit = 'GeV'
+    
+    @staticmethod
+    def getObjectFor(dataLabel,dimensions):
+        """
+        Returns an instance of the correct object for dataLabel
+        :param dataLabel: label of data (efficiencyMap, upperLimits,...)
+        :param dimensions: number of dimensions of the data
+        
+        :return: an instance of OrigEfficiencyMap, OrigUpperLimits,...
+        """
 
-    def setSource(self, path, fileType, objectName = None, index = None, dataset="data" ):
+        if dataLabel == 'efficiencyMap':
+            return OrigEfficiencyMap(dataLabel,dimensions)
+        elif dataLabel == 'upperLimits' or dataLabel == 'expectedUpperLimits':
+            return OrigUpperLimits(dataLabel,dimensions)
+        elif dataLabel in ['obsExclusion','obsExclusionP1','obsExclusionM1',
+                          'expExclusion', 'expExclusionP1', 'expExclusionM1']:
+            return OrigExclusion(dataLabel,dimensions)
+        
+
+    def setSource(self, path, fileType, objectName = None, index = None):
         
         """set path and type of data source
         :param path: path to data file as string
@@ -62,14 +84,32 @@ class Orig(Locker):
         self.fileType = fileType
         self.objectName = objectName
         self.index = index
-        self.dataset = dataset
-
-    def setStatistics ( self, observedN, expectedBG, bgError ):
-        """for efficiency maps set the statistical values
+        
+    @property
+    def massUnit(self):
+        
         """
-        self.observedN = observedN
-        self.expectedBG = expectedBG
-        self.bgError = bgError
+        :return: unit as string
+        """
+        
+        return self._massUnit
+        
+    @massUnit.setter
+    def massUnit(self, unitString):
+        
+        """
+        Set unit for upper limits, default: 'pb'.
+        If unitString is null, it will not set the property 
+        :param unitString: 'fb','pb' or '', None
+        :raise unitError: if unit is not 'fb' or not 'pb'
+        """
+        
+        if unitString:           
+            units = ['GeV','TeV']
+            if not unitString in units: Errors().unit(unitString)
+            self._massUnit = unitString
+        
+
 
     def usePercentage ( self, value=True ):
         """ for efficiency maps, data is given in percentage 
@@ -85,10 +125,10 @@ class Orig(Locker):
         :raise negativValueError: if value < 0 and allowNegativValues == False
         """   
         
-        if self.allowNegativValues: return True
+        if self.allowNegativValues: return True        
         for value in values:
-            if values < 0.0: 
-                Errors().negativValue(values, path)
+            if value < 0.0:
+                Errors().negativValue(value,self.path)
                 return False
         return True
         
@@ -123,7 +163,7 @@ class Orig(Locker):
             try:
                 values = [float(value) for value in values]
             except:
-               Errors().value(self.path) 
+                Errors().value(self.path) 
             yield values  
 
     def effi(self):
@@ -137,7 +177,7 @@ class Orig(Locker):
             try:
                 values = copy.deepcopy ( line.split() ) ## omit the last column
                 if float(values[-2])<4*float(values[-1]):
- #                   print "[origDataObjects] Small value",values[-2],"+-",values[-1],"!"
+#                    print "[origDataObjects] Small value",values[-2],"+-",values[-1],"!"
 #                    print "[origDataObjects] Will set to zero."
                     values[-2]="0."
 #                print "values=",values
@@ -149,7 +189,7 @@ class Orig(Locker):
             try:
                 values = [float(value) for value in values]
             except:
-               Errors().value(self.path) 
+                Errors().value(self.path) 
             yield values  
     
     def root(self):
@@ -227,7 +267,7 @@ class Orig(Locker):
         return False            
  
  
-class OrigLimit(Orig):
+class OrigUpperLimits(Orig):
     
     """
     iterable class
@@ -244,14 +284,14 @@ class OrigLimit(Orig):
     plotableAttr = [] + Orig.infoAttr
     internalAttr = ['_unit', 'unit', ] + Orig.internalAttr
     
-    def __init__(self,name):
+    def __init__(self,name,dimensions):
         
         """
         initialize upper limit unit with 'pb'
         :param Name: name as string
         """
         
-        Orig.__init__(self,name)
+        Orig.__init__(self,name,dimensions)
         self._unit = 'pb'
         
     @property
@@ -267,14 +307,16 @@ class OrigLimit(Orig):
     def unit(self, unitString):
         
         """
-        set unit for upper limits, default: 'pb' 
-        :param unitString: 'fb' or 'pb'
+        Set unit for upper limits, default: 'pb'.
+        If unitString is null, it will not set the property 
+        :param unitString: 'fb','pb' or '', None
         :raise unitError: if unit is not 'fb' or not 'pb'
         """
         
-        units = ['fb','pb']
-        if not unitString in units: Errors().unit(unitString)
-        self._unit = unitString
+        if unitString:           
+            units = ['fb','pb']
+            if not unitString in units: Errors().unit(unitString)
+            self._unit = unitString
         
     def __iter__(self):
         
@@ -284,8 +326,7 @@ class OrigLimit(Orig):
         """
         
         for point in getattr(self,self.fileType)():
-            if self.unit == 'fb': point[-1] = point[-1]/1000.
-            if not self._positivValues(point): continue
+            if not self._positivValues(point[-1:]): continue
             yield point
             
     def txt(self):
@@ -304,7 +345,7 @@ class OrigLimit(Orig):
         
         for point in Orig.txt(self):
             if not len(point) == 3:
-                Errors().txtFormat(self.path, 'OrigLimit', 3)
+                Errors().txtFormat(self.path, 'OrigUpperLimits', 3)
             yield point
     
     def root(self):
@@ -389,28 +430,36 @@ class OrigEfficiencyMap(Orig):
     plotableAttr = [] + Orig.infoAttr
     internalAttr = [] + Orig.internalAttr
     
-    def __init__(self,name):
+    def __init__(self,name,dimensions):
         
         """
         :param Name: name as string
         """
         
-        Orig.__init__(self,name)
+        Orig.__init__(self,name,dimensions)
         
     def __iter__(self):
         
         """
         gives the entries of the original efficiency map
-        :yield: [x-value in GeV, y-value in GeV, efficiency]
+        :yield: [x-value in GeV, y-value in GeV,..., efficiency]
         """
         if self.fileType==None:
             raise StopIteration()
         
         for point in getattr(self,self.fileType)():
-            if not self._positivValues(point): continue
+            if not self._positivValues(point[-1:]): continue
             if self.percentage:
                 point[-1]=point[-1]/100.
             yield point
+
+    def __len__(self):
+        """ count how many points """
+        x=0
+        for point in self:
+            if not self._positivValues(point[-1:]): continue
+            x+=1
+        return x
 
     def txt(self):
         
@@ -421,14 +470,15 @@ class OrigEfficiencyMap(Orig):
         for the following variables:
         1. column: x-value in GeV
         2. column: y-value in Gev
-        3. column: efficiency
-        :raise txtFormatError: if file do not contain 3 columns 
-        :yield: [x-value in GeV, y-value in GeV, efficiency] 
+    ...
+        n. column: efficiency
+        :raise txtFormatError: if file do not contain the right number of columns 
+        :yield: [x-value in GeV, y-value in GeV,... efficiency] 
         """
         
         for point in Orig.txt(self):
-            if not len(point) == 3:
-                Errors().txtFormat(self.path, 'OrigEfficiencyMap', 3)
+            if not len(point) == self.dimensions+1:
+                Errors().txtFormat(self.path, 'OrigEfficiencyMap', self.dimensions+1)
             yield point
 
     def effi(self):
@@ -438,13 +488,6 @@ class OrigEfficiencyMap(Orig):
                 Errors().effiFormat(self.path, 'OrigEfficiencyMap', 3)
             yield point
 
-    def __len__(self):
-        """ count how many points """
-        x=0
-        for point in self:
-            if not self._positivValues(point): continue
-            x+=1
-        return x
     
     def root(self):
         
@@ -453,7 +496,7 @@ class OrigEfficiencyMap(Orig):
         processing root-files containing root 2D-histograms
         The bins of the histograms have to contain the
         efficiencies; unit of x and y-axis: GeV
-        :yield: [x-value in GeV, y-value in GeV, efficiency]
+        :yield: [x-value in GeV, y-value in GeV,..., efficiency]
         """
         
         limit = Orig.root(self)
@@ -467,7 +510,7 @@ class OrigEfficiencyMap(Orig):
         processing root c-macros containing root 2D-histograms
         The bins of the histograms have to contain the 
         efficiencies; unit of x and y-axis: GeV
-        :yield: [x-value in GeV, y-value in GeV, efficiency]
+        :yield: [x-value in GeV, y-value in GeV,..., efficiency]
         """
        
         limit = Orig.cMacro(self)
@@ -498,161 +541,40 @@ class OrigEfficiencyMap(Orig):
         :yield: [x-axes, y-axes, bin contend]
         """
         
+        naxis = self.dimensions
         xAxis = limit.GetXaxis()
-        yAxis = limit.GetYaxis()
         xRange = range(1,xAxis.GetNbins() + 1)
-        yRange = range(1,yAxis.GetNbins() + 1)
+        yAxis, zAxis = None,None
+        if naxis > 1:
+            yAxis = limit.GetYaxis()
+        if naxis > 2:
+            zAxis = limit.GetZaxis()
+        if yAxis:
+            yRange = range(1,yAxis.GetNbins() + 1)
+        if zAxis:
+            zRange = range(1,zAxis.GetNbins() + 1)
         for xBin in xRange:
-            x = xAxis.GetBinCenter(xBin)
-            for yBin in yRange:
-                y = yAxis.GetBinCenter(yBin)
-                eff = limit.GetBinContent(xBin, yBin)
+            x = xAxis.GetBinCenter(xBin)            
+            if not yAxis:
+                eff = limit.GetBinContent(xBin)
                 if eff == 0.: continue
-                yield [x, y, eff]
-        
-class OrigEfficiencyMap3D(Orig):
-    
-    """
-    iterable class
-    Holding original 3D efficiency maps  given by
-    experimentalists
-    public methods refer to different file-types 
-    The files or objects containing the efficiency maps as well as 
-    the file type have to be set by using the method setSource
-    of the parents class 
-    This Class is designed to iterate over the entries of the
-    efficiency maps
-    """
-    
-    plotableAttr = [] + Orig.infoAttr
-    internalAttr = [] + Orig.internalAttr
-    
-    def __init__(self,name):
-        
-        """
-        :param Name: name as string
-        """
-        
-        Orig.__init__(self,name)
-        
-    def __iter__(self):
-        
-        """
-        gives the entries of the original efficiency map
-        :yield: [x-value in GeV, y-value in GeV, z-value in GeV, efficiency]
-        """
-        if self.fileType==None:
-            raise StopIteration()
-        
-        # print "[origDataObjects] fileType=",self.fileType
-        for point in getattr(self,self.fileType)():
-            if not self._positivValues(point): continue
-            if self.percentage:
-                point[-1]=point[-1]/100.
-            yield point
-
-    def __len__(self):
-        """ count how many points """
-        x=0
-        for point in self:
-            if not self._positivValues(point): continue
-            x+=1
-        return x
+                yield [x,eff]
+                continue
             
-    def txt(self):
-        
-        """
-        iterable method
-        processing txt-files containing only 3 columns with
-        floats. The columns of the file have to contain the values
-        for the following variables:
-        1. column: x-value in GeV
-        2. column: y-value in GeV
-        3. column: z-value in GeV
-        4. column: efficiency
-        :raise txtFormatError: if file do not contain 3 columns 
-        :yield: [x-value in GeV, y-value in GeV, efficiency] 
-        """
-        
-        for point in Orig.txt(self):
-            if not len(point) == 4:
-                Errors().txtFormat(self.path, 'OrigEfficiencyMap', 4)
-            yield point
-
-    def effi(self):
-        
-        for point in Orig.effi(self):
-            if not len(point) == 4:
-                Errors().effiFormat(self.path, 'OrigEfficiencyMap', 4)
-            yield point
-    
-    def root(self):
-        
-        """
-        iterable method
-        processing root-files containing root 2D-histograms
-        The bins of the histograms have to contain the
-        efficiencies; unit of x and y-axis: GeV
-        :yield: [x-value in GeV, y-value in GeV, z-value in GeV, efficiency]
-        """
-        
-        limit = Orig.root(self)
-        for point in self._getPoints(limit):
-            yield point
-                
-    def cMacro(self):
-        
-        """
-        iterable method
-        processing root c-macros containing root 2D-histograms
-        The bins of the histograms have to contain the 
-        efficiencies; unit of x, y and z-axis: GeV
-        :yield: [x-value in GeV, y-value in GeV, z-value in GeV, efficiency]
-        """
-       
-        limit = Orig.cMacro(self)
-        for point in self._getPoints(limit):
-            yield point
-            
-    def canvas(self):
-        
-        """
-        iterable method
-        processing root-files containing ROOT.TCanvas objects
-        with 2D-histograms
-        The bins of the histograms have to contain the 
-        efficiencies; unit of x and y-axis: GeV
-        :yield: [x-value, y-value, efficiency]
-        """
-        
-        limit = Orig.canvas(self)
-        for point in self._getPoints(limit):
-            yield point
-                
-    def _getPoints(self,limit):
-        
-        """
-        iterable metod
-        processing root 2D-histograms
-        :param limit: root 2D-histogram
-        :yield: [x-axes, y-axes, bin contend]
-        """
-        
-        xAxis = limit.GetXaxis()
-        yAxis = limit.GetYaxis()
-        zAxis = limit.GetYaxis()
-        xRange = range(1,xAxis.GetNbins() + 1)
-        yRange = range(1,yAxis.GetNbins() + 1)
-        zRange = range(1,zAxis.GetNbins() + 1)
-        for xBin in xRange:
-            x = xAxis.GetBinCenter(xBin)
             for yBin in yRange:
                 y = yAxis.GetBinCenter(yBin)
+                if not zAxis:
+                    eff = limit.GetBinContent(xBin, yBin)
+                    if eff == 0.: continue
+                    yield [x, y, eff]
+                    continue
+ 
                 for zBin in zRange:
+                    z = zAxis.GetBinCenter(zBin)
                     eff = limit.GetBinContent(xBin, yBin, zBin)
                     if eff == 0.: continue
                     yield [x, y, z, eff]
-        
+
         
 class OrigExclusion(Orig):
     
@@ -670,17 +592,19 @@ class OrigExclusion(Orig):
     
     infoAttr = [] + Orig.infoAttr
     internalAttr = ['sort', 'reverse'] + Orig.internalAttr
+    requiredAttr = []
     
-    def __init__(self,name):
+    def __init__(self,name,dimensions=2):
         
         """
         attributes 'sort' and 'reverse' are initialized with False
         :param Name: name as string
         """
         
-        Orig.__init__(self,name)
+        Orig.__init__(self,name,dimensions)  #Exclusion curve always has dimensions = 2
         self.sort = False
         self.reverse = False
+        self.dimensions = dimensions
         
     def __iter__(self):
         
@@ -700,7 +624,6 @@ class OrigExclusion(Orig):
         if self.reverse:
             points = reversed(points)
         for point in points:
-            if not self._positivValues(point): continue
             yield point
 
     def txt(self):
@@ -964,7 +887,7 @@ class Errors(object):
         
     def negativValue(self, values, path):
     
-        m = m + 'skip negativ value: %s\n' %value
+        m = 'skip negativ value: %s\n' %values
         m = m + 'in orig data file: %s' %path
         print(m)
         
