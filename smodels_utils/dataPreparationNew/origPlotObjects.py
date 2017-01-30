@@ -17,9 +17,7 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
-xValue = var('xValue')
 x, y, z = var('x y z')
-mother, lsp = var('mother lsp')
 
 class OrigPlot(object):
 

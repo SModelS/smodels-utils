@@ -152,7 +152,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TScharm':'scharm  --> charm lsp ',
     'TSlepSlep':'slepton  --> lepton lsp ',
     'HSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 'HSCPM3' : 'squark --> quark chargino_1', 'HSCPM5' : 'squark --> quark lsp, lsp --> tau stau_1', 
-    'HSCPM7' : 'lsp chargino_2 --> tau stau_1 chargino_1, chargino_2 --> nu stau_1',
+    'HSCPM7' : 'lsp chargino^pm_2 --> tau stau_1 chargino^pm_1, chargino^pm_1 --> nu stau_1',
     'HSCPM8' : 'squark --> quark quark stau_1', 'HSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp',
     'HSCPM4' : 'squark --> quark chargino_1 (quark lsp)',
     'HSCPM6' : 'squark squark --> quark quark lsp lsp, lsp --> tau tau_1'

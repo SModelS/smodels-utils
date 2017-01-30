@@ -34,7 +34,7 @@ class MetaInfoInput(Locker):
     (publication means: physic summary note or conference note)
     """
     
-    infoAttr = [ 'sqrts', 'lumi', 'id', 'prettyName', 'url', 'arxiv', 'signalRegion',
+    infoAttr = ['id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
     'publication', 'contact', 'supersededBy','supersedes', 'comment',
     'private', 'implementedBy','lastUpdate']
     internalAttr = ['_sqrts', '_lumi']
@@ -155,7 +155,7 @@ class MassPlane(Locker):
             'obsExclusion','obsExclusionP1','obsExclusionM1',
             'expExclusion','expExclusionP1','expExclusionM1']
     requiredAttr = []
-    allowedDataTypes = ['efficiencyMap','upperLimits','expectedUpperLimits',
+    allowedDataLabels = ['efficiencyMap','upperLimits','expectedUpperLimits',
                         'obsExclusion','obsExclusionP1','obsExclusionM1',
                         'expExclusion','expExclusionP1','expExclusionM1']
     
@@ -190,13 +190,13 @@ class MassPlane(Locker):
         dimensions = len(xvars)
         self.dimensions = dimensions
         self._exclusionCurves = []
-                
+         
+        self.axes = massArray       
         self.figure = None
         self.figureUrl = None
 
     def __str__(self):
-        return "%s" % ( self.origPlot )
-
+        return "%s" % ( self.axes )
         
     def setBranch(self,branchNumber, branchMasses):
         
@@ -210,31 +210,33 @@ class MassPlane(Locker):
 
         self.origPlot.setBranch(branchNumber,branchMasses)
         
-
-    def setSources(self,dataTypes,dataFiles,dataFormats,objectNames=None,indices=None):
+    def setSources(self,dataLabels,dataFiles,dataFormats,objectNames=None,indices=None,units=None):
         """
         Defines the data sources for the plane.
         
-        :param dataTypes: Single string with the data type or list of strings with the dataTypes
-                          possible data types are defined in allowedDataTypes
-                          (e.g. efficiencyMap, upperLimist, expectedUpperLimits,...)
+        :param dataLabels: Single string with the data label or list of strings with the dataLabels
+                          possible data laels are defined in allowedDataLabels
+                          (e.g. efficiencyMap, upperLimits, expectedUpperLimits,...)
         :param datafiles: Single string with the file path or list of strings with the file paths
                           to the data files.
         :param dataFormats: Single string with the file format or list of strings with the file formats
                           for the data files.
         
         :param objectName: name of object stored in root-file or cMacro or list of object names                         
-        :param indices: index of object in listOfPrimitives of ROOT.TCanvas or lis of indices                            
+        :param indices: index of object in listOfPrimitives of ROOT.TCanvas or lis of indices
+        :param units: Unit string for objects (e.g. 'fb',None,'pb',...)
         """
-        
+
         #Make sure input is consistent:
         if isinstance(dataFiles,list):
             if indices is None:
                 indices = [None]*len(dataFiles)
             if objectNames is None:
                 objectNames = [None]*len(dataFiles)
-            if not isinstance(dataTypes,list) or len(dataTypes) != len(dataFiles):
-                logger.error("dataTypes and dataFiles are not consistent")
+            if units is None:
+                units = [None]*len(dataFiles)                
+            if not isinstance(dataLabels,list) or len(dataLabels) != len(dataFiles):
+                logger.error("dataLabels and dataFiles are not consistent")
                 sys.exit()
             if not isinstance(dataFormats,list) or len(dataFormats) != len(dataFiles):
                 logger.error("dataFormats and dataFiles are not consistent")
@@ -249,107 +251,50 @@ class MassPlane(Locker):
         elif not isinstance(dataFiles,str):
             logger.error('dataFiles must be a list or a single string')
         else:
-            if not isinstance(dataTypes,str):
-                logger.error("dataTypes and dataFiles are not consistent")
+            if not isinstance(dataLabels,str):
+                logger.error("dataLabels and dataFiles are not consistent")
                 sys.exit()
             if not isinstance(dataFormats,str):
                 logger.error("dataFormats and dataFiles are not consistent")
                 sys.exit()      
             dataFiles = [dataFiles]
-            dataTypes = [dataTypes]
+            dataLabels = [dataLabels]
             indices = [indices]
             objectNames = [objectNames]
             
             
         for i,dataFile in enumerate(dataFiles):
-            dataType = dataTypes[i]
+            dataLabel = dataLabels[i]
             dataFormat = dataFormats[i]
             index = indices[i]
             objectName = objectNames[i]
-            if not dataType in self.allowedDataTypes:
-                logger.warning("Data type %s is not allowed and will be ignored" %dataType)
+            unit = units[i]
+            if not dataLabel in self.allowedDataLabels:
+                logger.warning("Data label %s is not allowed and will be ignored" %dataLabel)
                 continue
             
-            if 'exclusion' in dataType.lower():
+            if 'exclusion' in dataLabel.lower():
                 dimensions = 2
             else:
                 dimensions = self.dimensions
-            #Get the origData object for the corresponding dataType
-            origObject = Orig.getObjectFor(dataType,dimensions)
+            #Get the origData object for the corresponding dataLabel
+            origObject = Orig.getObjectFor(dataLabel,dimensions)
             #Set source of object
             origObject.setSource(dataFile, dataFormat, objectName, index)
-            #Store it as a mass plane attribute:
-            setattr(self,dataType,origObject)
-            if 'exclusion' in dataType.lower():
+            origObject.unit = unit
+            #Store it as a mass plane attribute:            
+            setattr(self,dataLabel,origObject)
+            if 'exclusion' in dataLabel.lower():
                 self._exclusionCurves.append(origObject)
     
-    @property
-    def dataUrl(self):
-        
-        """ not yet in use, but is needed in order to define
-        a setter 
-        """
-        
-        pass
-    
-    @dataUrl.setter
-    def dataUrl(self, url):
-        
-        """set url for efficiencyMap, opsUpperlimits, expUpperLimit 
-        and all exclusionlines
-        :param: html-link as string
-        """
-        
-        self.efficiencyMap.dataUrl = url
-        self.exclusionDataUrl = url
-        self.histoDataUrl = url
-    
-    @property
-    def histoDataUrl(self):
-        
-        """ not yet in use, but is needed in order to define
-        a setter 
-        """
-        
-        pass
-    
-    @histoDataUrl.setter
-    def histoDataUrl(self, url):
-        
-        """set url for opsUpperlimits and expUpperLimit
-        :param: html-link as string
-        """
-        
-        for histo in self.origLimits:
-            histo.dataUrl = url
-            
-    @property
-    def exclusionDataUrl(self):
-        
-        """ not yet in use, but is needed in order to define
-        a setter 
-        """
-        
-        pass
-    
-    @exclusionDataUrl.setter
-    def exclusionDataUrl(self, url):
-        
-        """set url for all exclusion lines
-        :param: html-link as string
-        """
-        
-        for exclusion in self.origExclusions:
-            exclusion.dataUrl = url
 
-  
 class DataSetInput(Locker):
     """
     Holds all informations related to one dataset
     """
     
     
-    infoAttr = ['dataType', 'dataId', 'observedN','expectedBG','bgError', 
+    infoAttr = ['dataId','dataType','observedN','expectedBG','bgError', 
                 'upperLimit', 'expectedUpperLimit']
     internalAttr = ['_name','_txnameList']
     
@@ -450,13 +395,14 @@ class TxNameInput(Locker):
     """
     
     
-    infoAttr = ['condition', 'conditionDescription', 'upperLimits',
-                'efficiencyMap','expectedUpperLimits','txName','figureUrl','dataUrl','validated','axes',
-                'publishedData','susyProcess','checked','finalState','constraint']
+    infoAttr = ['txName','constraint','condition','conditionDescription','finalState',
+                'susyProcess','checked','figureUrl','dataUrl','publishedData',
+                'validated','axes','upperLimits',
+                'efficiencyMap','expectedUpperLimits']
     internalAttr = ['_name', 'name', '_txDecay','_planes',
     '_branchcondition', 'onShell', 'offShell', 'constraint',
     'condition', 'conditionDescription', '_newMassInput',
-    'upperLimits','efficiencyMap','expectedUpperLimits','massConstraints','_dataTypes']
+    'upperLimits','efficiencyMap','expectedUpperLimits','massConstraints','_dataLabels']
     
     requiredAttr = ['constraint','condition','txName']
     
@@ -481,7 +427,7 @@ class TxNameInput(Locker):
             logger.error("Unknown txname %s" %self._name)
             sys.exit()
         self._planes = []
-        self._dataTypes = []
+        self._dataLabels = []
 
     def __str__(self):
 
@@ -534,15 +480,28 @@ class TxNameInput(Locker):
         for plane in self._planes:
             logger.info('Reading mass plane: %s, %s' % (self, plane.origPlot))
             
-            if not hasattr(plane,dataType):
-                logger.error('%s source not defined for plane %s' %(dataType,plane.origPlot))
-                sys.exit()
-            self.addData(plane,dataType)
-            self._dataTypes.append(dataType)
+            if dataType == 'upperLimit':
+                if not hasattr(plane,'upperLimits'):
+                    logger.error('%s source not defined for plane %s' %(dataType,plane.origPlot))
+                    sys.exit()
+                else:
+                    self.addData(plane,'upperLimits')
+                    self._dataLabels.append('upperLimits')
+            elif dataType == 'efficiencyMap':
+                if not hasattr(plane,'efficiencyMap'):
+                    logger.error('%s source not defined for plane %s' %(dataType,plane.origPlot))
+                    sys.exit()
+                else:
+                    self.addData(plane,'efficiencyMap')
+                    self._dataLabels.append('efficiencyMap')
+            else:
+                logger.error('Unknown data type %s' %dataType)
+                sys.exit()         
+                                
             #Add expected upper limits, if it exists:
             if hasattr(plane,'expectedUpperLimits'):
                 self.addData(plane,'expectedUpperLimits')
-                self._dataTypes.append('expectedUpperLimits')
+                self._dataLabels.append('expectedUpperLimits')
                 
     def getInfo(self):
         """
@@ -566,16 +525,16 @@ class TxNameInput(Locker):
         self.publishedData = hasattr(self,'efficiencyMap.dataUrl')
         self.validated = 'Not done yet'
 
-    def addData(self, plane, dataType):
+    def addData(self, plane, dataLabel):
 
         """
         extend the given data list by the values related to this type of list
         examples for data lists are ; upperLimits, efficiencyMaps, ....
         The values held by the given mass plane are extended to the data list.
-        If self does not contain the dataType, set this attribute.
+        If self does not contain the dataLabel, set this attribute.
 
         :param plane: MassPlane-object
-        :param dataType: type of the given data (efficiencyMap, obsUpperLimit, expUpperLimit,..)
+        :param dataLabel: label of the given data (efficiencyMap, upperLimits,..)
         
         """
         
@@ -585,12 +544,12 @@ class TxNameInput(Locker):
             logger.error('Can not deal with %i variables' %nvars)
             sys.exit()
         
-        #Check if plane is has a dataType object holder:
-        if not hasattr(plane,dataType):
-            logger.error("Plane %s does not contain data holder for dataType %s" %(plane,dataType))
+        #Check if plane is has a dataLabel object holder:
+        if not hasattr(plane,dataLabel):
+            logger.error("Plane %s does not contain data holder for dataLabel %s" %(plane,dataLabel))
             sys.exit()
             
-        origData = getattr(plane,dataType)
+        origData = getattr(plane,dataLabel)
         
         dataList = []
         for value in origData:
@@ -604,14 +563,19 @@ class TxNameInput(Locker):
             #txname constraint. If not, skip this mass.
             if not self.checkMassConstraints(massArray):
                 continue
+            #Add units
+            if hasattr(origData, 'unit') and origData.unit:
+                value = value*eval(origData.unit)
+            if hasattr(origData, 'massUnit') and origData.massUnit:
+                massArray = [[m*eval(origData.massUnit) for m in br ] for br in massArray]
             dataList.append([massArray, value])
         
-        #Add data to txname. If dataType already exists, extend it
-        if hasattr(self,dataType) and isinstance(getattr(self,dataType),list):
-            txData = getattr(self,dataType)
+        #Add data to txname. If dataLabel already exists, extend it
+        if hasattr(self,dataLabel) and isinstance(getattr(self,dataLabel),list):
+            txData = getattr(self,dataLabel)
             txData += dataList
         else:
-            setattr(self,dataType,dataList)
+            setattr(self,dataLabel,dataList)
             
     def _setMassConstraints(self):
         """
@@ -640,7 +604,7 @@ class TxNameInput(Locker):
             massDict[key] = minMass
         
         #Replace particles appearing in the vertices by their mass        
-        self._massConstraints = []
+        self.massConstraints = []
         for el in elementsInStr(self.constraint):            
             self.massConstraints.append(eval(el,massDict)) #Replace particles in element by their masses
             

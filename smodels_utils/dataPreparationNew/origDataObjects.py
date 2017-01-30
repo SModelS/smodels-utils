@@ -25,7 +25,7 @@ class Orig(Locker):
     infoAttr = []
     internalAttr = ['name','path', 'fileType', 'objectName',\
     'dataUrl', 'index', 'allowNegativValues', 'dataset',
-    'percentage','dimensions' ]
+    'percentage','dimensions','unit','_unit','_massUnit','massUnit']
     requiredAttr = ['name']
     
     def __init__(self,name,dimensions):
@@ -46,24 +46,25 @@ class Orig(Locker):
         self.allowNegativValues = False
         self.dataset=None
         self.percentage=False
+        self._massUnit = 'GeV'
     
     @staticmethod
-    def getObjectFor(dataType,dimensions):
+    def getObjectFor(dataLabel,dimensions):
         """
-        Returns an instance of the correct object for dataType
-        :param dataType: type of data (efficiencyMap, upperLimits,...)
+        Returns an instance of the correct object for dataLabel
+        :param dataLabel: label of data (efficiencyMap, upperLimits,...)
         :param dimensions: number of dimensions of the data
         
         :return: an instance of OrigEfficiencyMap, OrigUpperLimits,...
         """
-        
-        if dataType == 'efficiencyMap':
-            return OrigEfficiencyMap(dataType,dimensions)
-        elif dataType == 'upperLimits' or dataType == 'expectedUpperLimits':
-            return OrigUpperLimits(dataType,dimensions)
-        elif dataType in ['obsExclusion','obsExclusionP1','obsExclusionM1',
+
+        if dataLabel == 'efficiencyMap':
+            return OrigEfficiencyMap(dataLabel,dimensions)
+        elif dataLabel == 'upperLimits' or dataLabel == 'expectedUpperLimits':
+            return OrigUpperLimits(dataLabel,dimensions)
+        elif dataLabel in ['obsExclusion','obsExclusionP1','obsExclusionM1',
                           'expExclusion', 'expExclusionP1', 'expExclusionM1']:
-            return OrigExclusion(dataType,dimensions)
+            return OrigExclusion(dataLabel,dimensions)
         
 
     def setSource(self, path, fileType, objectName = None, index = None):
@@ -83,6 +84,31 @@ class Orig(Locker):
         self.fileType = fileType
         self.objectName = objectName
         self.index = index
+        
+    @property
+    def massUnit(self):
+        
+        """
+        :return: unit as string
+        """
+        
+        return self._massUnit
+        
+    @massUnit.setter
+    def massUnit(self, unitString):
+        
+        """
+        Set unit for upper limits, default: 'pb'.
+        If unitString is null, it will not set the property 
+        :param unitString: 'fb','pb' or '', None
+        :raise unitError: if unit is not 'fb' or not 'pb'
+        """
+        
+        if unitString:           
+            units = ['GeV','TeV']
+            if not unitString in units: Errors().unit(unitString)
+            self._massUnit = unitString
+        
 
 
     def usePercentage ( self, value=True ):
@@ -281,14 +307,16 @@ class OrigUpperLimits(Orig):
     def unit(self, unitString):
         
         """
-        set unit for upper limits, default: 'pb' 
-        :param unitString: 'fb' or 'pb'
+        Set unit for upper limits, default: 'pb'.
+        If unitString is null, it will not set the property 
+        :param unitString: 'fb','pb' or '', None
         :raise unitError: if unit is not 'fb' or not 'pb'
         """
         
-        units = ['fb','pb']
-        if not unitString in units: Errors().unit(unitString)
-        self._unit = unitString
+        if unitString:           
+            units = ['fb','pb']
+            if not unitString in units: Errors().unit(unitString)
+            self._unit = unitString
         
     def __iter__(self):
         
@@ -567,16 +595,17 @@ class OrigExclusion(Orig):
     internalAttr = ['sort', 'reverse'] + Orig.internalAttr
     requiredAttr = []
     
-    def __init__(self,name):
+    def __init__(self,name,dimensions=2):
         
         """
         attributes 'sort' and 'reverse' are initialized with False
         :param Name: name as string
         """
         
-        Orig.__init__(self,name,dimensions=2)  #Exclusion curve always has dimensions = 2
+        Orig.__init__(self,name,dimensions)  #Exclusion curve always has dimensions = 2
         self.sort = False
         self.reverse = False
+        self.dimensions = dimensions
         
     def __iter__(self):
         

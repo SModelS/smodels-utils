@@ -653,6 +653,7 @@ class DatabaseCreator(list):
 
         smsRoot = ROOT.TFile(self.base + self.smsrootFile,mode)
         for exclusions in self.exclusions:
+            print exclusions.name,type(exclusions)         
             dirname = exclusions.name
             if smsRoot.Get( dirname )==None:
                 directory = smsRoot.mkdir( dirname, dirname )

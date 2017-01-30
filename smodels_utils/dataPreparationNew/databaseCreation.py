@@ -18,7 +18,10 @@ import logging
 from datetime import date
 from smodels.tools.physicsUnits import fb, pb,IncompatibleUnitsError,GeV,TeV
 from math import floor, log10
+from unum import Unum  
 import time
+
+Unum.VALUE_FORMAT = "%.4E"
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -196,12 +199,14 @@ class DatabaseCreator(list):
                     for exclusion in plane._exclusionCurves:
                         if not exclusion:
                             continue  #Exclusion source has not been defined                        
-                        name = '%s_%s' %(exclusion.name, plane.origPlot)
+                        name = '%s_%s' %(exclusion.name, plane.axes)
                         if name in planeCurves: #Curve already appears in dict
                             continue
                         stGraph = ROOT.TGraph()
                         stGraph.SetName(name)
                         stGraph.SetTitle(name)
+                        stGraph.name = exclusion.name
+                        stGraph.txname = txname.txName
                         for i,point in enumerate(exclusion):
                             stGraph.SetPoint(i,point[0],point[1])
                         stGraph.SetLineColor ( ROOT.kBlack )
@@ -261,7 +266,7 @@ class DatabaseCreator(list):
                     else: self.metaInfo.implementedBy = implementedBy
                     return
         today = date.today()
-        today = '%s/%s/%s\n' %(today.year, today.month, today.day)
+        today = '%s/%s/%s' %(today.year, today.month, today.day)
         self.metaInfo.lastUpdate = today
         self._setImplementedBy()
 
@@ -334,17 +339,15 @@ class DatabaseCreator(list):
             mode="update"
 
         smsRoot = ROOT.TFile(self.base + self.smsrootFile,mode)
-        for exclusions in self.exclusions:
-            dirname = exclusions.name
+        for exclusion in self.exclusions:
+            dirname = exclusion.txname
             if smsRoot.Get(dirname)==None:
                 directory = smsRoot.mkdir(dirname, dirname)
             smsRoot.cd(dirname)
-            for exclusion in exclusions: 
-                fullname = "%s/%s" % (dirname, exclusion.GetName())
-                if fullname in self.addToSmsRootFile:
-                    if smsRoot.Get( fullname ) == None:
-                        self.timeStamp("add %s to sms.root" % fullname, "info")
-                        exclusion.Write()
+            fullname = "%s/%s" % (dirname, exclusion.GetName())
+            if smsRoot.Get(fullname) == None:
+                self.timeStamp("add %s to sms.root" % fullname, "info")
+                exclusion.Write()
         smsRoot.Close()
 
     def _createInfoFile(self, name, obj):
@@ -396,12 +399,12 @@ class DatabaseCreator(list):
         'infoAttr' to define what attributes should be written
         """
     
-        if not hasattr(obj,'_dataTypes'):
+        if not hasattr(obj,'_dataLabels'):
             logger.error('Input obj must be a TxNameInput object')
     
-        #Get the dataTypes stored in the txname 
+        #Get the dataLabels stored in the txname 
         #(e.g. efficiencyMap, upperLimits, expectedUpperLimits)
-        dataTypes = obj._dataTypes
+        dataLabels = obj._dataLabels
         content = ''
         
         path = self.infoFilePath(name)
@@ -419,14 +422,14 @@ class DatabaseCreator(list):
             if value=="":
                 continue
             #Leave data for last
-            if attr in dataTypes:
+            if attr in dataLabels:
                 continue
                 value = self._formatData(value)            
             
             content = '%s%s%s%s\n' % (content, attr,\
                                        self.assignmentOperator, value)
         for attr in obj.infoAttr:
-            if not attr in dataTypes:
+            if not attr in dataLabels:
                 continue
             if not hasattr(obj,attr) and not hasattr(obj.__class__,attr):
                 continue
@@ -502,12 +505,14 @@ def round_list(x, n=5):
         return x
     else:
         if type(x) is type(fb):
+            if not x.asNumber():
+                return x            
             unit = x/x.asNumber()
             x = x.asNumber()
         else:
+            if not x:
+                return x
             unit = 1.
-        if not x:
-            return x*unit
         
         return round(x,-int(floor(log10(x))) + (n - 1))*unit
 
