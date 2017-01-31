@@ -21,7 +21,7 @@ import pyslha as modpyslha
 from smodels.theory import slhaDecomposer
 from smodels.tools.physicsUnits import fb, GeV, TeV
 from smodels.tools.xsecComputer import computeXSec,addXSecToFile
-from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
+from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from validation.pythiaCardGen import getPythiaCardFor
 
 class TemplateFile(object):
@@ -66,7 +66,7 @@ class TemplateFile(object):
         if self.motherPDGs:
             self.pythiaCard = getPythiaCardFor(self.motherPDGs)
         #Define original plot
-        self.origPlot = OrigPlot.fromString(self.axes)
+        self.massPlane = MassPlane.fromString(None,self.axes)
         
 
     def createFileFor(self,x,y,z=None,slhaname=None,computeXsecs=False, massesInFileName = False):
@@ -83,7 +83,7 @@ class TemplateFile(object):
         :return: SLHA file name if file has been successfully generated, False otherwise.
         """
 
-        masses = self.origPlot.getParticleMasses(x=x, y=y, z=z)
+        masses = self.massPlane.getParticleMasses(x=x, y=y, z=z)
         massDict = {}
         for ibr,br in enumerate(masses):
             if ibr == 0: massTag = 'M'
@@ -149,8 +149,8 @@ class TemplateFile(object):
         #First add the value of the mother masses for each (x,y) point:
         mpts = []
         for x,y in pts:
-            mother1 = self.origPlot.getParticleMasses(x=x,y=y)[0][0]
-            mother2 = self.origPlot.getParticleMasses(x=x,y=y)[1][0]
+            mother1 = self.massPlane.getParticleMasses(x=x,y=y)[0][0]
+            mother2 = self.massPlane.getParticleMasses(x=x,y=y)[1][0]
             mpts.append([[mother1,mother2],x,y])
         #Sort list of point by mother masses (to speed up xsec calculation):
         sorted_pts = sorted(mpts, key=lambda pt: pt[0])        
@@ -187,7 +187,7 @@ class TemplateFile(object):
         """
         
         
-        inmasses = self.origPlot.getParticleMasses(x=x, y=y, z=z)
+        inmasses = self.massPlane.getParticleMasses(x=x, y=y, z=z)
         #Add units:
         inmasses = [[m*GeV for m in br] for br in inmasses]
                 

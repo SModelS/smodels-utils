@@ -339,23 +339,15 @@ class TxNameInput(Locker):
         have only 2 dimensions
         :return: MassPlane-object
         """
-        # print("[inputObjects] add mass plane %s %s" % ( motherMass,interMasses) )
-        
+                
         if isinstance(plane,MassPlane):
-            newplane = copy.deepcopy(plane)
-            self._planes.append(newplane)
-            return newplane            
+            self._planes.append(plane)
+            return plane
         elif isinstance(plane,list):
             massArray = plane
         else:
             logger.error("Input must be a MassPlane object or a mass array")
             sys.exit()
-        
-        #Standard input
-        if not isinstance(massArray,list):
-            logger.error('Input must be a mass array')
-            sys.exit()
-            
 
         #Get element constraint structure/topology:
         element = eval(elementsInStr(self.constraint,removeQuotes=False)[0])

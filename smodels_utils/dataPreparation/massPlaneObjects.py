@@ -77,7 +77,7 @@ class MassPlane(object):
         self.figureUrl = None
 
     @classmethod
-    def fromString(cls, txname,string):
+    def fromString(cls,txname,string):
 
         """
         build an instance of MassPlane from a given string
@@ -279,7 +279,7 @@ class Axes(object):
         
         #Define mass variables:
         massVars = []
-        for im,mass in enumerate(massEqs):            
+        for im in range(len(massEqs)):            
             massVars.append(var('Mass'+string.ascii_uppercase[im]))        
         
         #New format:

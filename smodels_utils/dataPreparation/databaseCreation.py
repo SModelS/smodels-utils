@@ -20,8 +20,6 @@ from math import floor, log10
 from unum import Unum  
 import time
 
-Unum.VALUE_FORMAT = "%.5G"  #Make sure unum numbers are printed with sufficient precision
-
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
@@ -439,11 +437,12 @@ class DatabaseCreator(list):
         path = os.path.join(directory, infoFileName.strip()+self.infoFileExtension.strip())
         return path
 
-    def _formatData(self,value):
+    def _formatData(self,value,n=5):
         """
         Formats the data grid for nice printing in the txname.txt file
         
         :param value: value for the data (in list format)
+        :param n: number of digits to be kept (default = 5)
         """
         
         if not isinstance(value,list):
@@ -451,8 +450,10 @@ class DatabaseCreator(list):
             sys.exit()
         
         #First round numbers:
-        value = self.round_list(value)
+        value = self.round_list(value,n)
         #Convert to string:
+        #Make sure unum numbers are printed with sufficient precision
+        Unum.VALUE_FORMAT = "%."+"%ig"%n  
         vStr = str(value)
         #Replace units:
         vStr = vStr.replace('[GeV]','*GeV').replace('[TeV]','*TeV')

@@ -404,7 +404,7 @@ def prettyAxes(txname,axes):
     """
     
     #Build axes object (depending on symmetric or asymmetric branches:
-    ax = eval(axes)
+    axes = eval(axes)
     if txname == 'TGQ':
         return ['m_{#tilde{g}} = x, m_{#tilde{q}} = 0.96*x',
                     'm_{#tilde{#chi}_{1}^{0}} = y']
@@ -412,7 +412,7 @@ def prettyAxes(txname,axes):
         return ['m_{#tilde{#chi}_{3}^{0} = x+80.0, m_{#tilde{#chi}_{2}^{0} = x+75.0',
                     'm_{#tilde{#l}} = x-y+80.0',
                     'm_{#tilde{#chi}_{1}^{0}} = x']
-    elif ax.axes[0] != ax.axes[1]:
+    elif axes[0] != axes[1]:
         logging.error('Asymmetric branches are not yet automatized.')
         return None
         
@@ -434,6 +434,8 @@ def prettyAxes(txname,axes):
     interStr = str(interList).replace(']','').replace('[','')
     #Daugther particles are always trivial:
     daughterList = list(set(getDaughters(txname)))
+    #Convert to latex for mass:
+    daughterList = ['m_{'+latexfy(daughter)+'}' for daughter in daughterList]
     daughterStr = str(daughterList).replace(']','').replace('[','')
 
     #Define mass strings for each axes format:

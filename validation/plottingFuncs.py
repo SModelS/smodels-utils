@@ -17,7 +17,7 @@ from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,
                   TPolyLine3D,Double,TColor,gStyle,TH2D,TImage)
 from smodels.tools.physicsUnits import fb, GeV, pb
-from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
+from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 
 #Set nice ROOT color palette for temperature plots:
@@ -249,7 +249,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
         if what == "upperlimits": ## FIXME this doesnt work anymore
             olk=ROOT.TLatex ()
             olk.SetTextSize(.02)
-            origPlot = OrigPlot.fromString(validationPlot.axes)
+            massPlane = MassPlane.fromString(validationPlot.axes)
             txnameObjs = validationPlot.expRes.getTxnameWith({'txName': validationPlot.txName})
             for txnameObj in txnameObjs:
                 #print "txnameObj=",txnameObj,type(txnameObj),txnameObj.txName
@@ -260,7 +260,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
                 for (itr, (mass,ul)) in enumerate(txnameData ):
                     if itr% nthpoint != 0: continue
                     mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]            
-                    v=origPlot.getXYValues(mass_unitless)
+                    v=massPlane.getXYValues(mass_unitless)
                     if not v: continue
                     x,y = v
                     ul = ul.asNumber(pb)
@@ -294,7 +294,8 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
 
     plane.base = base
 
-    if not silentMode: ans = raw_input("Hit any key to close\n")
+    if not silentMode:
+        ans = raw_input("Hit any key to close\n")
 
     plane.labels=labels
     
@@ -413,7 +414,8 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor)
     base.l2=l2
 
-    if not silentMode: ans = raw_input("Hit any key to close\n")
+    if not silentMode:
+        ans = raw_input("Hit any key to close\n")
     
     return plane,base
 
@@ -606,7 +608,8 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     tgr.leg = leg
     plane.Update()  
 
-    if not silentMode: ans = raw_input("Hit any key to close\n")
+    if not silentMode:
+        ans = raw_input("Hit any key to close\n")
     
     return plane,tgr
 
@@ -715,7 +718,8 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
     plane.base = base
     plane.official = official
 
-    if not silentMode: ans = raw_input("Hit any key to close\n")
+    if not silentMode:
+        ans = raw_input("Hit any key to close\n")
     plane.Print("test.png")
     
     return plane

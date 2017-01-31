@@ -15,7 +15,7 @@ from smodels.tools.physicsUnits import GeV
 from smodels.tools import statistics, modelTester 
 from plottingFuncs import createPlot, getExclusionCurvesFor, createSpecialPlot, createTempPlot, createPrettyPlot
 import tempfile,tarfile,shutil,copy
-from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
+from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from sympy import var
 import string
 
@@ -48,6 +48,7 @@ class ValidationPlot():
         self.officialCurves = self.getOfficialCurve( get_all = True )
         self.kfactor = kfactor
         
+        
         #Select the desired txname and corresponding datasets in the experimental result:
         for dataset in self.expRes.datasets:
             dataset.txnameList = [tx for tx in dataset.txnameList[:] if tx.txName == self.txName]
@@ -69,6 +70,7 @@ class ValidationPlot():
             if not os.path.isdir(self.databasePath):
                 logger.error("Could not define databasePath folder")
                 sys.exit()
+                
 
     def __str__(self):
 
@@ -228,13 +230,7 @@ class ValidationPlot():
         """
         
         validationDir = os.path.join(self.expRes.path,'validation')
-        title = self.expRes.getValuesFor('id')[0] + "_" \
-            + self.txName\
-            + "_" + self.axes   
-        datafile = title +'.py'
-        datafile = datafile.replace(self.expRes.getValuesFor('id')[0]+"_","")
-        datafile = os.path.join(validationDir,datafile)
-        datafile = datafile.replace("*","").replace(",","").replace("(","").replace(")","")
+        datafile = self.getDataFile(validationDir)
         if not os.path.isfile(datafile):
             logger.error("Validation datafile %s not found" %datafile)
             self.data = None
@@ -280,7 +276,7 @@ class ValidationPlot():
                  listOfExpRes, 1000, False, parameterFile) 
 
         #Define original plot
-        origPlot = OrigPlot.fromString(self.axes)        
+        massPlane = MassPlane.fromString(self.txName,self.axes)        
         #Now read the output and collect the necessary data
         self.data = []
         for slhafile in os.listdir(slhaDir):
@@ -310,9 +306,9 @@ class ValidationPlot():
                 return False
             
             mass = expRes['Mass (GeV)']                
-            v = origPlot.getXYValues(mass)            
+            v = massPlane.getXYValues(mass)            
             if v == None:
-                logger.debug("dropping %s, doesnt fall into the plane of %s." % (slhafile, origPlot.string ) )
+                logger.debug("dropping %s, doesnt fall into the plane of %s." % (slhafile, massPlane ) )
                 continue
             x,y = v
             Dict = {'slhafile' : slhafile, 'axes': [x,y], 'signal' : expRes['theory prediction (fb)'],
@@ -352,7 +348,7 @@ class ValidationPlot():
         :param silentMode: If True the plot will not be shown on the screen
         """
 
-        self.plot,self.base = createPlot(self,silentMode)
+        self.plot,self.base = createPlot(self,silentMode=silentMode)
         
     def getPrettyPlot(self,silentMode=True):
         """
@@ -361,32 +357,9 @@ class ValidationPlot():
         :param silentMode: If True the plot will not be shown on the screen
         """
 
-        self.plot,self.base = createPrettyPlot(self,silentMode)
-
-    def getSpecialPlot(self,silentMode=True,what = "bestregion", nthpoint = 1,signal_factor = 1.0 ):
-        """ get one of the special plots.
-            :param what: which special plot
-                         bestregion = best analysis/cut pair 
-                         upperlimits = upper limits on prod xsec (pb) 
-                         crosssections = theory prediction, in pb
-                         efficiencies = efficiency (=1 for UL results)
-            :param nthpoint: plot only every nth point
-            :param signal_factor: an additional factor that is multiplied with the signal cross section,
-        """
-        self.plot = createSpecialPlot( self, silentMode, 1.2, what, nthpoint, signal_factor )
+        self.plot,self.base = createPrettyPlot(self,silentMode=silentMode)
         
-    def getTempPlot(self,silentMode=True,what = "R", nthpoint = 1,signal_factor = 1.0 ):
-        """ get one of the special plots.
-            :param what: which special plot
-                         R = theory prediction/upper limit 
-                         upperlimits = upper limits on prod xsec (pb) 
-                         crosssections = theory prediction, in pb
-            :param nthpoint: plot only every nth point
-            :param signal_factor: an additional factor that is multiplied with the signal cross section,
-        """
-        self.plot = createTempPlot(self, silentMode, what, nthpoint, signal_factor)
-        
-    def savePlot(self,validationDir=None,format='pdf'):
+    def savePlot(self,validationDir=None,fformat='pdf'):
         """
         Saves the plot in .pdf format in the validationDir folder.
         If the folder does not exist, it will be created.
@@ -394,7 +367,7 @@ class ValidationPlot():
         analysis/validation/ folder
 
         :param validationDir: Folder where the plot will be saved
-        :param format: File format (accepted by ROOT), i.e. pdf, png, jpg...
+        :param fformat: File fformat (accepted by ROOT), i.e. pdf, png, jpg...
         """
 
 
@@ -410,20 +383,15 @@ class ValidationPlot():
             logger.debug("Creating validation folder "+vDir)
             os.mkdir(vDir)
 
-        filename = self.expRes.getValuesFor('id')[0] + "_" + self.txName + "_"
-        filename += self.niceAxes.replace(",","").replace("(","").replace(")","")
-        filename += '.'+format
-        
-        filename = filename.replace(self.expRes.getValuesFor('id')[0]+"_","")
-        filename = os.path.join(vDir,filename)
-        filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
+        filename = self.getPlotFile(vDir,fformat)
+
         if not self.pretty:
             self.plot.Print(filename)
         else:
             #Print pdf, png and root formats     
-            filename = filename.replace('.'+format,'_pretty.'+format)
+            filename = filename.replace('.'+fformat,'_pretty.'+fformat)
             self.plot.Print(filename)                             
-            filename = filename.replace('.'+format,'.png')
+            filename = filename.replace('.'+fformat,'.png')
             self.plot.Print(filename)                
             filename = filename.replace('.png','.root')
             self.plot.Print(filename)                
@@ -457,12 +425,7 @@ class ValidationPlot():
             os.mkdir(validationDir)
 
         if not datafile:
-            datafile = self.plot.GetTitle()+'.py'
-            datafile = datafile.replace(self.expRes.getValuesFor('id')[0]+"_","")
-            datafile = os.path.join(validationDir,datafile)
-            datafile = datafile.replace("*","").replace(",","").replace("(","").replace(")","")
-
-
+            datafile = self.getDataFile(validationDir)
         #Save data to file
         f = open(datafile,'w')
         dataStr = str(self.data)
@@ -472,6 +435,38 @@ class ValidationPlot():
         f.close()
 
         return True
+
+    def getDataFile(self,validationDir,fformat='.pdf'):
+        """
+        Defines the name of the .py file and returns it
+        
+        :param validationDir: Folder where the root file will be saved
+        
+        :return: name of the .py file
+        """
+        
+        datafile = self.getPlotFile(validationDir,fformat)
+        datafile = datafile.rstrip(fformat)
+        return datafile+'.py'
+    
+    def getPlotFile(self,validationDir,fformat='.pdf'):
+        """
+        Defines the name of the plot file and returns it
+        
+        :param validationDir: Folder where the root file will be saved
+        
+        :return: name of the plot file
+        """
+        
+        filename = self.expRes.getValuesFor('id')[0] + "_" + self.txName + "_"
+        filename += self.niceAxes.replace(",","").replace("(","").replace(")","")
+        filename += '.'+fformat
+        
+        filename = filename.replace(self.expRes.getValuesFor('id')[0]+"_","")
+        filename = os.path.join(validationDir,filename)
+        filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
+
+        return filename    
 
     def getNiceAxes(self,axesStr):
         """
