@@ -13,7 +13,9 @@ import logging,os,sys
 home = os.path.expanduser('~')
 utils = os.path.join(home,'smodels-utils/smodels_utils')
 sys.path.append(utils)
-from dataPreparation.origPlotObjects import Axes
+from sympy import var
+#For evaluating axes expressions in prettyAxes:
+x,y,z = var('x y z')
 
 # pretty name of particle:
 
@@ -292,6 +294,30 @@ def getIntermediates(txname):
 
     return inter
 
+def getDaughters(txname):
+    """
+    Returns the SUSY daughter particle(s) for the txname.
+    
+    :param txname: txname string (e.g. 'T1')
+    
+    :return: list of daughter particles in standard format (e.g. ['lsp', 'chargino^pm_1'])
+    """
+    
+    #Get the decays
+    decays = decayDict[txname].split(',')
+    #Find the subsequent decays:
+    moms = [d.split('-->')[0].strip() for d in decays]
+    daughters = set()
+    for d in decays:
+        for ptc in  d.split('-->')[1].split():
+            if not ptc in prettySUSYParticle:
+                continue
+            if ptc in moms:
+                continue       
+            daughters.add(ptc)
+
+    return list(daughters)
+
 
 def prettyProduction(txname,latex=True):
     """
@@ -378,24 +404,22 @@ def prettyAxes(txname,axes):
     """
     
     #Build axes object (depending on symmetric or asymmetric branches:
-    if axes[:2] == '2*':
-        ax = Axes.fromString(axes[2:])
-    elif ')+Eq(' in axes:
-        niceAxes = None
-        if txname == 'TGQ':
-            niceAxes = ['m_{#tilde{g}} = x, m_{#tilde{q}} = 0.96*x',
-                        'm_{#tilde{#chi}_{1}^{0}} = y']
-        elif txname == 'TChiChiSlepSlep':
-            niceAxes = ['m_{#tilde{#chi}_{3}^{0} = x+80.0, m_{#tilde{#chi}_{2}^{0} = x+75.0',
-                        'm_{#tilde{#l}} = x-y+80.0',
-                        'm_{#tilde{#chi}_{1}^{0}} = x']
-        else:
-            logging.error('Asymmetric branches are not yet automatized.')            
-#         axList = [Axes.fromString(axes.split(')+Eq(')[0] + ')')]
-#         axList.append(Axes.fromString('Eq(' + axes.split(')+Eq(')[1]))        
-        return niceAxes
-    else:
-        logging.error("Unknown axes format: %s" %axes)
+    ax = eval(axes)
+    if txname == 'TGQ':
+        return ['m_{#tilde{g}} = x, m_{#tilde{q}} = 0.96*x',
+                    'm_{#tilde{#chi}_{1}^{0}} = y']
+    elif txname == 'TChiChiSlepSlep':
+        return ['m_{#tilde{#chi}_{3}^{0} = x+80.0, m_{#tilde{#chi}_{2}^{0} = x+75.0',
+                    'm_{#tilde{#l}} = x-y+80.0',
+                    'm_{#tilde{#chi}_{1}^{0}} = x']
+    elif ax.axes[0] != ax.axes[1]:
+        logging.error('Asymmetric branches are not yet automatized.')
+        return None
+        
+    ax = axes[0]
+    if len(ax) > 3:
+        logging.error("Nice axes with more than one \
+        intermetiate particle is not available.")
         return None
 
     #Get mother particles:
@@ -409,16 +433,21 @@ def prettyAxes(txname,axes):
     interList = ['m_{'+latexfy(inter)+'}' for inter in interList]
     interStr = str(interList).replace(']','').replace('[','')
     #Daugther particles are always trivial:
-    lspList = ['m_{'+latexfy('lsp')+'}']
-    lspStr = str(lspList).replace(']','').replace('[','')
+    daughterList = list(set(getDaughters(txname)))
+    daughterStr = str(daughterList).replace(']','').replace('[','')
 
-    niceAxes = []
-    for eq in ax._equations:
-        axStr = str(eq).replace('mother',motherStr)
-        axStr = axStr.replace('==','=')
-        axStr = axStr.replace('lsp',lspStr)
-        axStr = axStr.replace('inter0',interStr)
-        niceAxes.append(str(axStr).replace("'",""))
+    #Define mass strings for each axes format:
+    if len(ax) == 1:
+        massStrings = [motherStr]
+    elif len(ax) == 2:
+        massStrings = [motherStr,daughterStr]
+    else:
+        massStrings = [motherStr,interStr,daughterStr]
+
+    niceAxes = []    
+    for i,eq in enumerate(ax):
+        axStr = massStrings[i].strip()+'='+str(eq)
+        niceAxes.append(axStr.replace("'",""))
     
     return niceAxes
         

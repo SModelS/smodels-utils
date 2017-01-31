@@ -16,7 +16,6 @@ import shutil
 import ROOT
 import logging
 from datetime import date
-from smodels.tools.physicsUnits import fb, pb,IncompatibleUnitsError,GeV,TeV
 from math import floor, log10
 from unum import Unum  
 import time
@@ -62,7 +61,6 @@ class DatabaseCreator(list):
         self.metaInfo = None
         self.base = os.getcwd() + '/'
         self.origPath = './orig/'
-        self.twikitxtPath = self.origPath + 'twiki.txt'
         self.validationPath = './validation/'
         self.smsrootFile = "./sms.root"
         self.infoFileExtension = '.txt'
@@ -73,6 +71,7 @@ class DatabaseCreator(list):
         #              None for monochrome
         self.colorScheme = "light" ## "dark", None
         list.__init__(self)
+
 
     def timeStamp ( self, txt, c="info" ):
         color, reset = '\x1b[32m', '\x1b[39m'
@@ -95,19 +94,10 @@ class DatabaseCreator(list):
 
         dt = time.time() - self.t0
         name=""
-        # name="databaseCreation:"
         print ( "[%s%.1fs] %s%s%s" % ( name, dt, color, txt, reset ) )
 
-    def describeMap ( self, Map ):
-        """ simple method to describe quickly method in a string """
-        ret=""
-        if len(Map)==0:
-            return ret
-        m=str(Map[0]).replace("'","")
-        ret = ">>> %s ... " % m
-        return ret
 
-    def create(self, createAdditional=False, ask_for_name=True):
+    def create(self, createAdditional=False):
 
         """
         main method of the class
@@ -123,17 +113,14 @@ class DatabaseCreator(list):
         ------load data from mass planes
         ------define info for txname
         ------write txname.txt
-        --write sms.root
-        --write twiki.txt
+        --get exclusion curves
+        --write sms.root wit
 
         :param createAdditional: if true, we dont delete, nor do we create sms.root
-        :param ask_for_name: if false, we assume 'ww' to be the author. Use with
-        great care!
 
         :raise requiredError: If a region exist, but no constraint, condition
         or conditionDescription is set for this region
         """
-        self.ask_for_name = ask_for_name
 
         self.timeStamp ( 'create next database entry for %s' % self.metaInfo.id, "error" )
 
@@ -166,9 +153,6 @@ class DatabaseCreator(list):
                 txName.getInfo()  #Set txname info attributes
                 txName.getData(dataType = dataset.dataType)  #Read source files and load data
                 self._createTxnameFile(str(txName), txName)
-                
-                
-                
         
         #Get all exclusion curves and write to sms.root:
         self.exclusions = self.getExclusionCurves()
@@ -183,24 +167,19 @@ class DatabaseCreator(list):
         :return: list with exclusion curves (TGraph objects)
         """
                 
-        curves = {}
+        curves = []
         allCurves = []
         #Loop over datasets
         for dataset in self:
-            curves[dataset.dataId] = {}
-            datasetCurves = curves[dataset.dataId]
             #Loop over txnames
-            for txname in dataset._txnameList:                 
-                datasetCurves[txname.txName] = {}
-                txnameCurves = datasetCurves[txname.txName]
+            for txname in dataset._txnameList:
                 for plane in txname._planes:
-                    txnameCurves[str(plane)] = {}
-                    planeCurves = txnameCurves[str(plane)]
                     for exclusion in plane._exclusionCurves:
                         if not exclusion:
                             continue  #Exclusion source has not been defined                        
                         name = '%s_%s' %(exclusion.name, plane.axes)
-                        if name in planeCurves: #Curve already appears in dict
+                        label = [txname.txName,exclusion.name,plane.axes]
+                        if label in curves: #Curve already appears in dict
                             continue
                         stGraph = ROOT.TGraph()
                         stGraph.SetName(name)
@@ -209,17 +188,18 @@ class DatabaseCreator(list):
                         stGraph.txname = txname.txName
                         for i,point in enumerate(exclusion):
                             stGraph.SetPoint(i,point[0],point[1])
-                        stGraph.SetLineColor ( ROOT.kBlack )
+                        stGraph.SetLineColor(ROOT.kBlack)
                         if 'expected' in exclusion.name:
                             stGraph.SetLineColor(ROOT.kRed)
                         stGraph.SetLineStyle(1)
                         if 'P1' in exclusion.name or 'M1' in exclusion.name:
                             stGraph.SetLineStyle(2)
-                        planeCurves[name] = stGraph
+                        curves.append(label)  #Store curves (to avoid duplicates)
                         allCurves.append(stGraph)
                         
                         
         return allCurves
+
 
     def _setLastUpdate(self):
 
@@ -257,8 +237,8 @@ class DatabaseCreator(list):
                     if "SMODELS_NOUPDATE" in os.environ.keys():
                         self.timeStamp ( "SMODELS_NOUPDATE is set!", "error" )
                         break
-                    if self.ask_for_name:
-                        answer = raw_input(m)
+                    
+                    answer = raw_input(m)
                     if answer == 'y' or answer == 'n': break
                 if answer == 'n':
                     self.metaInfo.lastUpdate = lastUpdate
@@ -277,24 +257,16 @@ class DatabaseCreator(list):
         from comand line
         """
 
-        while True:
-            answer = 'ww'
-            if self.ask_for_name:
-                answer = raw_input('enter your name or initials: ')
+        while True:        
+            answer = raw_input('enter your name or initials: ')
             if answer: break
         initialDict= { "ww": "Wolfgang Waltenberger",
-            "WW": "Wolfgang Waltenberger",
-            "AL": "Andre Lessa",
             "al": "Andre Lessa",
             "suk": "Suchita Kulkarni",
-            "SuK": "Suchita Kulkarni",
-            "SUK": "Suchita Kulkarni",
             "fa" : "Federico Ambrogi",
-            "ul" : "Ursula Laa",
-            "UL" : "Ursula Laa",
-            "FA" : "Federico Ambrogi" }
-        if answer in initialDict.keys():
-            answer=initialDict[answer]
+            "ul" : "Ursula Laa"}
+        if answer.lower() in initialDict.keys():
+            answer=initialDict[answer.lower()]
 
         self.metaInfo.implementedBy = answer
 
@@ -307,17 +279,15 @@ class DatabaseCreator(list):
         #Remove files
         predefinedPaths = [
             self.base + self.smsrootFile,
-            self.base + self.twikitxtPath,
             self.base + self.infoFilePath(self.metaInfoFileName)
             ]
         #Remove dataset folders
-        datasetFolders = [ os.path.join(self.base,dataset._name) for dataset in self]
+        datasetFolders = [os.path.join(self.base,dataset._name) for dataset in self]
         for path in predefinedPaths:
             if os.path.exists(path): os.remove(path)
         for path in datasetFolders:
             if os.path.isdir(path):
                 shutil.rmtree(path)
-
 
         self.timeStamp ( "cleaned up in %s " % self.base )
 
@@ -343,6 +313,9 @@ class DatabaseCreator(list):
             dirname = exclusion.txname
             if smsRoot.Get(dirname)==None:
                 directory = smsRoot.mkdir(dirname, dirname)
+                if not directory:
+                    logger.error("Error creating root file")
+                    sys.exit()
             smsRoot.cd(dirname)
             fullname = "%s/%s" % (dirname, exclusion.GetName())
             if smsRoot.Get(fullname) == None:
@@ -353,7 +326,7 @@ class DatabaseCreator(list):
     def _createInfoFile(self, name, obj):
 
         """
-        creates a file of type .txt
+        Creates a file of type .txt (globalInfo.txt or dataInfo.txt)
         all attributes defined in the list called 'infoAttr'
         of the given objects are written to this txt file
         :param name: name of the file (without extension)
@@ -389,7 +362,7 @@ class DatabaseCreator(list):
     def _createTxnameFile(self, name, obj):
 
         """
-        creates a file of type txname.txt
+        Creates a file of type txname.txt
         all attributes defined in the list called 'infoAttr'
         of the given txname obj are written to this txt file.
         The txname data is formatted before being written to the file.
@@ -478,7 +451,7 @@ class DatabaseCreator(list):
             sys.exit()
         
         #First round numbers:
-        value = round_list(value)
+        value = self.round_list(value)
         #Convert to string:
         vStr = str(value)
         #Replace units:
@@ -491,30 +464,30 @@ class DatabaseCreator(list):
         return vStr
 
 
-def round_list(x, n=5):
-    """
-    Rounds all values in x down to n digits.
-    :param x: value (float) or nested list of floats
-    
-    :return: x, with all floats rounded to n digits
-    """
-    
-    if isinstance(x,list):
-        for i,pt in enumerate(x):
-            x[i] = round_list(pt)
-        return x
-    else:
-        if type(x) is type(fb):
-            if not x.asNumber():
-                return x            
-            unit = x/x.asNumber()
-            x = x.asNumber()
-        else:
-            if not x:
-                return x
-            unit = 1.
+    def round_list(self,x, n=5):
+        """
+        Rounds all values in x down to n digits.
+        :param x: value (float) or nested list of floats
         
-        return round(x,-int(floor(log10(x))) + (n - 1))*unit
+        :return: x, with all floats rounded to n digits
+        """
+        
+        if isinstance(x,list):
+            for i,pt in enumerate(x):
+                x[i] = self.round_list(pt)
+            return x
+        else:
+            if isinstance(x,Unum):
+                if not x.asNumber():
+                    return x            
+                unit = x/x.asNumber()
+                x = x.asNumber()
+            else:
+                if not x:
+                    return x
+                unit = 1.
+            
+            return round(x,-int(floor(log10(x))) + (n - 1))*unit
 
 databaseCreator = DatabaseCreator()
 

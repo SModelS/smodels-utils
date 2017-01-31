@@ -11,12 +11,10 @@
 import sys
 import copy
 from smodels_utils.helper.txDecays import TxDecay
-from smodels_utils.dataPreparation.origDataObjects import Orig
-from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
-from smodels_utils.dataPreparation.preparationHelper import Locker
 from smodels.tools.physicsUnits import fb, pb, TeV, GeV
 from smodels.theory.particleNames import elementsInStr
+from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.particles import rEven, ptcDic
 
 
@@ -29,7 +27,40 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.ERROR)
 
-
+class Locker(object):
+    
+    """Super-class to 'lock' a class.
+    Every child-class of Locker needs 2 class-attributes:
+    infoAttr: list of strings
+    interAttr: list of strings
+    Only attributes with names defined in one of those lists can
+    be added to the child
+    """
+    
+    
+    def __setattr__(self, name, attr):
+        
+        """
+        set a attripute if defiened in self.allowedAttr
+        :param name: name of the attribute
+        :param attr: value of the attribute
+        :raise attrError: If name is not in self.allowedAttr
+        """
+        
+        if name in self.allowedAttr:
+            object.__setattr__(self, name, attr)
+            return
+        logger.error("Attribute %s in not allowed for %s" %(name,type(object)))
+        
+    @property
+    def allowedAttr(self):
+        
+        """
+        :return: list containing all entries of
+        infoAttr and internalAttr
+        """
+        
+        return self.infoAttr + self.internalAttr + self.requiredAttr
 
 class MetaInfoInput(Locker):
     """Holds all informations related to the publication 
@@ -143,155 +174,6 @@ class MetaInfoInput(Locker):
         except:
             return False
 
-             
-class MassPlane(Locker):
-    """
-    Holds all information related to one mass plane
-    a mass plane is defined by their axes
-    """
-    
-    infoAttr = ['figureUrl','dataUrl','axes']
-    internalAttr = ['_txDecay', 'origPlot', 'origLimits','_exclusionCurves',
-            'origEfficiencyMap', 'figure', 'figureUrl', 'dataUrl', 'histoDataUrl', 
-            'exclusionDataUrl', 'dimensions', 'upperLimits','expectedUpperLimits','efficiencyMap',
-            'obsExclusion','obsExclusionP1','obsExclusionM1',
-            'expExclusion','expExclusionP1','expExclusionM1','axesLabels']
-    requiredAttr = []
-    allowedDataLabels = ['efficiencyMap','upperLimits','expectedUpperLimits',
-                        'obsExclusion','obsExclusionP1','obsExclusionM1',
-                        'expExclusion','expExclusionP1','expExclusionM1']
-    
-    def __init__(self,txDecay, massArray):
-        """
-        sets the branches to the given axes and initialize the mass plane related
-        values an objects
-        :param txDecay: object of type TxDecay
-        :param massArray: the full mass array containing equations which relate the
-        physical masses and the plane coordinates, using the pre-defined 'x','y',.. symbols.
-        (e.g. [[x,y],[x,y]])        
-        :param lspMass: mass of lightest SUSY-particle as sympy.core.symbol.Symbol,
-        containing only the variables 'x', 'y' and numbers as float
-        :param **interMasses: masses of the intermediated particles as 
-                              sympy.core.symbol.Symbol, containing only the
-                              variables 'x', 'y' and numbers as float
-        """
-        self._txDecay = txDecay
-        self.origPlot = OrigPlot()
-        for i,brMasses in enumerate(massArray):
-            if not isinstance(brMasses,list):
-                logger.error("Mass array must be in the format [[m1,m2,..],[m3,m4,..]]")
-                sys.exit()
-            self.setBranch(branchNumber=i,branchMasses=brMasses)
-        
-        #Count mass plane dimensions:
-        xvars = []
-        for br in self.origPlot.branches:
-            for xvar in br._xvars:
-                if not xvar in xvars:
-                    xvars.append(xvar)
-        dimensions = len(xvars)
-        self.dimensions = dimensions
-        self._exclusionCurves = []
-        #Define the default labels for the input axes variables
-        #(relevant for computing the masses from x,y,z...)
-        self.axesLabels = ['x','y','z'][:dimensions]
-         
-        self.axes = massArray       
-        self.figure = None
-        self.figureUrl = None
-
-    def __str__(self):
-        return "%s" % ( self.axes )
-        
-    def setBranch(self,branchNumber, branchMasses):
-        
-        """
-        Set masses for branch branchNumber.
-        :param branchNumber: index of the branch        
-        :param branchMasses: list containing the equations which relate the
-        physical masses and the plane coordinates, using the pre-defined 'x','y',.. symbols.
-        (e.g. [x,y])        
-        """
-
-        self.origPlot.setBranch(branchNumber,branchMasses)
-        
-    def setSources(self,dataLabels,dataFiles,dataFormats,objectNames=None,indices=None,units=None):
-        """
-        Defines the data sources for the plane.
-        
-        :param dataLabels: Single string with the data label or list of strings with the dataLabels
-                          possible data laels are defined in allowedDataLabels
-                          (e.g. efficiencyMap, upperLimits, expectedUpperLimits,...)
-        :param datafiles: Single string with the file path or list of strings with the file paths
-                          to the data files.
-        :param dataFormats: Single string with the file format or list of strings with the file formats
-                          for the data files.
-        
-        :param objectName: name of object stored in root-file or cMacro or list of object names                         
-        :param indices: index of object in listOfPrimitives of ROOT.TCanvas or lis of indices
-        :param units: Unit string for objects (e.g. 'fb',None,'pb',...)
-        """
-
-        #Make sure input is consistent:
-        if isinstance(dataFiles,list):
-            if indices is None:
-                indices = [None]*len(dataFiles)
-            if objectNames is None:
-                objectNames = [None]*len(dataFiles)
-            if units is None:
-                units = [None]*len(dataFiles)                
-            if not isinstance(dataLabels,list) or len(dataLabels) != len(dataFiles):
-                logger.error("dataLabels and dataFiles are not consistent:\n %s \n %s" %(dataLabels,dataFiles))
-                sys.exit()
-            if not isinstance(dataFormats,list) or len(dataFormats) != len(dataFiles):
-                logger.error("dataFormats and dataFiles are not consistent:\n %s \n %s" %(dataFormats,dataFiles))
-                sys.exit()                
-            if not isinstance(indices,list) or len(indices) != len(dataFiles):
-                logger.error("indices and dataFiles are not consistent:\n %s \n %s" %(indices,dataFiles))
-                sys.exit()
-            if not isinstance(objectNames,list) or len(objectNames) != len(dataFiles):
-                logger.error("objectNames and dataFiles are not consistent:\n %s \n %s" %(objectNames,dataFiles))
-                sys.exit()
-                                
-        elif not isinstance(dataFiles,str):
-            logger.error('dataFiles must be a list or a single string')
-        else:
-            if not isinstance(dataLabels,str):
-                logger.error("dataLabels and dataFiles are not consistent")
-                sys.exit()
-            if not isinstance(dataFormats,str):
-                logger.error("dataFormats and dataFiles are not consistent")
-                sys.exit()      
-            dataFiles = [dataFiles]
-            dataLabels = [dataLabels]
-            indices = [indices]
-            objectNames = [objectNames]
-            
-            
-        for i,dataFile in enumerate(dataFiles):
-            dataLabel = dataLabels[i]
-            dataFormat = dataFormats[i]
-            index = indices[i]
-            objectName = objectNames[i]
-            unit = units[i]
-            if not dataLabel in self.allowedDataLabels:
-                logger.warning("Data label %s is not allowed and will be ignored" %dataLabel)
-                continue
-            
-            if 'exclusion' in dataLabel.lower():
-                dimensions = 2
-            else:
-                dimensions = self.dimensions
-            #Get the origData object for the corresponding dataLabel
-            origObject = Orig.getObjectFor(dataLabel,dimensions)
-            #Set source of object
-            origObject.setSource(dataFile, dataFormat, objectName, index)
-            origObject.unit = unit
-            #Store it as a mass plane attribute:            
-            setattr(self,dataLabel,origObject)
-            if 'exclusion' in dataLabel.lower():
-                self._exclusionCurves.append(origObject)
-    
 
 class DataSetInput(Locker):
     """
@@ -364,11 +246,13 @@ class DataSetInput(Locker):
             sys.exit()
 
         
-        lumi = databaseCreator.metaInfo.lumi
+        lumi = getattr(databaseCreator.metaInfo,'lumi')
         if isinstance(lumi,str):
             lumi = eval(lumi)
-        ul = statistics.upperLimit(self.observedN, self.expectedBG, self.bgError, lumi, .05, 200000).asNumber(fb)
-        ulExpected = statistics.upperLimit(self.expectedBG, self.expectedBG, self.bgError, lumi, .05, 200000).asNumber(fb)
+        ul = statistics.upperLimit(self.observedN, self.expectedBG, 
+                                   self.bgError, lumi, .05, 200000).asNumber(fb)
+        ulExpected = statistics.upperLimit(self.expectedBG, self.expectedBG, 
+                                           self.bgError, lumi, .05, 200000).asNumber(fb)
         self.upperLimit = str(ul)+'*fb'
         self.expectedUpperLimit = str(ulExpected)+'*fb'
         
@@ -409,7 +293,7 @@ class TxNameInput(Locker):
     'condition', 'conditionDescription','massConstraint',
     'upperLimits','efficiencyMap','expectedUpperLimits','massConstraints','_dataLabels']
     
-    requiredAttr = ['constraint','condition','txName']
+    requiredAttr = ['constraint','condition','txName','axes']
     
     
     def __init__(self,txName):
@@ -499,18 +383,18 @@ class TxNameInput(Locker):
         
 
         for plane in self._planes:
-            logger.info('Reading mass plane: %s, %s' % (self, plane.origPlot))
+            logger.info('Reading mass plane: %s, %s' % (self, plane))
             
             if dataType == 'upperLimit':
                 if not hasattr(plane,'upperLimits'):
-                    logger.error('%s source not defined for plane %s' %(dataType,plane.origPlot))
+                    logger.error('%s source not defined for plane %s' %(dataType,plane))
                     sys.exit()
                 else:
                     self.addData(plane,'upperLimits')
                     self._dataLabels.append('upperLimits')
             elif dataType == 'efficiencyMap':
                 if not hasattr(plane,'efficiencyMap'):
-                    logger.error('%s source not defined for plane %s' %(dataType,plane.origPlot))
+                    logger.error('%s source not defined for plane %s' %(dataType,plane))
                     sys.exit()
                 else:
                     self.addData(plane,'efficiencyMap')
@@ -570,26 +454,28 @@ class TxNameInput(Locker):
             logger.error("Plane %s does not contain data holder for dataLabel %s" %(plane,dataLabel))
             sys.exit()
             
-        origData = getattr(plane,dataLabel)
+        dataHandler = getattr(plane,dataLabel)
         
         dataList = []        
-        for value in origData:
+        for value in dataHandler:
             if len(value) != nvars+1:
                 logger.error("Number of free parameters in data and in axes do not match")
                 sys.exit()
             xvals = value[:nvars]
             value = value[-1]
+            #The ordering of the coordinates in the data source is
+            #assumed to follow the one defined in plane.axesLabels:
             xdict = dict([[plane.axesLabels[i],xv] for i,xv in enumerate(xvals)])
-            massArray = plane.origPlot.getParticleMasses(**xdict)
+            massArray = plane.getParticleMasses(**xdict)
             #Check if mass array is consistent with the mass constraints given by the 
             #txname constraint. If not, skip this mass.
             if not self.checkMassConstraints(massArray):
                 continue
             #Add units
-            if hasattr(origData, 'unit') and origData.unit:
-                value = value*eval(origData.unit)
-            if hasattr(origData, 'massUnit') and origData.massUnit:
-                massArray = [[m*eval(origData.massUnit) for m in br ] for br in massArray]
+            if hasattr(dataHandler, 'unit') and dataHandler.unit:
+                value = value*eval(dataHandler.unit)
+            if hasattr(dataHandler, 'massUnit') and dataHandler.massUnit:
+                massArray = [[m*eval(dataHandler.massUnit) for m in br ] for br in massArray]
             dataList.append([massArray, value])
         
         #Add data to txname. If dataLabel already exists, extend it
@@ -630,7 +516,7 @@ class TxNameInput(Locker):
         for el in elementsInStr(self.constraint,removeQuotes=False):
             el = eval(el)
             #Replace particles in element by their masses
-            massConstraint = [[[massDict[ptc] for ptc in v] for v in br] for br in el]      
+            massConstraint = [[[massDict[ptc] for ptc in vertex] for vertex in br] for br in el]      
             self.massConstraints.append(massConstraint) 
             
         #Now convert the constraints to inequality expressions:

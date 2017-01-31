@@ -1,82 +1,102 @@
 #!/usr/bin/env python
 
 """
-.. module:: origPlotObjects
-   :synopsis: Holds object representing one original plot, given by expirimentalists
+.. module:: massPlaneObjects
+   :synopsis: Holds object representing one mass plane
 
 .. moduleauthor:: Michael Traub <michael.traub@gmx.at>
+.. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
 """
 
 import sys
 from sympy import var, Eq, lambdify, solve, N
 from itertools import permutations
+from smodels_utils.dataPreparation.dataHandlerObjects import DataHandler,ExclusionHandler
 import string
 import logging
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
+#All possible plane variables are defined here:
 x, y, z = var('x y z')
-
-class OrigPlot(object):
-
+allvars = [x,y,z]  #Order assumed for the data columns
+     
+class MassPlane(object):
     """
-    Holds the axes information for both branches of a singe mass plane, as Axes-objects
-    This class is designed to translate between the x- and y-values of one plot,
-    representing one mass plane, and the mass Array holding the masses of the particles
-    The mass array consists of a list containing two other lists. the first one contain the
-    masses of the SUSY-particles of the first branch as float and the second the masses of
-    the second branches.
-
-    No units supported!
-
+    Holds all information related to one mass plane
+    a mass plane is defined by their axes.
+    The variables defined in infoAttr are passed to the corresponding
+    txname to be written in txname.txt
     """
-
-
-    def __init__(self):
-
+    
+    infoAttr = ['figureUrl','dataUrl','axes']
+    allowedDataLabels = ['efficiencyMap','upperLimits','expectedUpperLimits',
+                        'obsExclusion','obsExclusionP1','obsExclusionM1',
+                        'expExclusion','expExclusionP1','expExclusionM1']
+    
+    def __init__(self,txDecay, massArray):
         """
-        initialize both branches with None
+        sets the branches to the given axes and initialize the mass plane related
+        values an objects
+        :param txDecay: object of type TxDecay
+        :param massArray: the full mass array containing equations which relate the
+        physical masses and the plane coordinates, using the pre-defined 'x','y',.. symbols.
+        (e.g. [[x,y],[x,y]])        
+        :param lspMass: mass of lightest SUSY-particle as sympy.core.symbol.Symbol,
+        containing only the variables 'x', 'y' and numbers as float
+        :param **interMasses: masses of the intermediated particles as 
+                              sympy.core.symbol.Symbol, containing only the
+                              variables 'x', 'y' and numbers as float
         """
-
+        
         self.branches = []
-
-    def __nonzero__(self):
-
-        """
-        :return: True if both branches are set, else False
-        """
-
-        if not self.branches:
-            return True
-        return False
+        self._txDecay = txDecay
+        for i,brMasses in enumerate(massArray):
+            if not isinstance(brMasses,list):
+                logger.error("Mass array must be in the format [[m1,m2,..],[m3,m4,..]]")
+                sys.exit()
+            self.setBranch(branchNumber=i,branchMasses=brMasses)
+        
+        #Count mass plane dimensions:
+        xvars = []
+        for br in self.branches:
+            for xvar in br._xvars:
+                if not xvar in xvars:
+                    xvars.append(xvar)
+        dimensions = len(xvars)
+        self.dimensions = dimensions
+        self._exclusionCurves = []
+        #Define the default labels for the input axes variables
+        #(relevant for computing the masses from x,y,z...)
+        self.axesLabels = [str(xv) for xv in allvars][:dimensions]
+         
+        self.axes = massArray       
+        self.figure = None
+        self.figureUrl = None
 
     @classmethod
-    def fromString(cls, string):
+    def fromString(cls, txname,string):
 
         """
-        build an instance of OrigPlot from a given string
+        build an instance of MassPlane from a given string
 
-        :raise unknownStringError: If the string do not met the requirements
-        :param string: The string must contain a sequence of equations, separated by '_'.
-        The equations have to be readable by sympify as sympy.core.relational.Equality-object.
-        The equation should only contain the variables:
-        x, y, mother, lsp and inter0, inter1, .... interN
-        If the sequence of equations starts with '2*' both branches are assumed to be equal
-        if the string consists of 2 sequences of equations separated by '+', the first
-        sequence is related to the first branch and the second to the second branch.
+        :param txname: txname string (e.g. T1)
+        :param string: The string must contain a representation of the axes in the format
+                      '[[exp1,exp2,..], [Exp1,Exp2,..]]', where exp1,.. are the expressions
+                      defining the mass array in terms of the x,y,.. variables
+                      (e.g. [[x,y],[x,y]])
         """
-        origPlot = OrigPlot()
-        origPlot.string = string
-
+        
         massArray = eval(string)
-        for ibr,br in enumerate(massArray):
-            origPlot.setBranch(ibr,br)
+        massPlane = MassPlane(txname,massArray)
             
-        return origPlot
-
-
+        return massPlane
+    
+    def __str__(self):
+        return "%s" % ( self.axes )    
+        
     def setBranch(self,branchNumber, branchMasses):
         
         """
@@ -92,7 +112,80 @@ class OrigPlot(object):
         else:
             self.branches[branchNumber] = Axes.fromConvert(branchMasses)
 
+    def setSources(self,dataLabels,dataFiles,dataFormats,objectNames=None,indices=None,units=None):
+        """
+        Defines the data sources for the plane.
+        
+        :param dataLabels: Single string with the data label or list of strings with the dataLabels
+                          possible data laels are defined in allowedDataLabels
+                          (e.g. efficiencyMap, upperLimits, expectedUpperLimits,...)
+        :param datafiles: Single string with the file path or list of strings with the file paths
+                          to the data files.
+        :param dataFormats: Single string with the file format or list of strings with the file formats
+                          for the data files.
+        
+        :param objectName: name of object stored in root-file or cMacro or list of object names                         
+        :param indices: index of object in listOfPrimitives of ROOT.TCanvas or lis of indices
+        :param units: Unit string for objects (e.g. 'fb',None,'pb',...)
+        """
 
+        #Make sure input is consistent:
+        if isinstance(dataFiles,list):
+            if indices is None:
+                indices = [None]*len(dataFiles)
+            if objectNames is None:
+                objectNames = [None]*len(dataFiles)
+            if units is None:
+                units = [None]*len(dataFiles)                
+            if not isinstance(dataLabels,list) or len(dataLabels) != len(dataFiles):
+                logger.error("dataLabels and dataFiles are not consistent:\n %s \n %s" %(dataLabels,dataFiles))
+                sys.exit()
+            if not isinstance(dataFormats,list) or len(dataFormats) != len(dataFiles):
+                logger.error("dataFormats and dataFiles are not consistent:\n %s \n %s" %(dataFormats,dataFiles))
+                sys.exit()                
+            if not isinstance(indices,list) or len(indices) != len(dataFiles):
+                logger.error("indices and dataFiles are not consistent:\n %s \n %s" %(indices,dataFiles))
+                sys.exit()
+            if not isinstance(objectNames,list) or len(objectNames) != len(dataFiles):
+                logger.error("objectNames and dataFiles are not consistent:\n %s \n %s" %(objectNames,dataFiles))
+                sys.exit()
+                                
+        elif not isinstance(dataFiles,str):
+            logger.error('dataFiles must be a list or a single string')
+        else:
+            if not isinstance(dataLabels,str):
+                logger.error("dataLabels and dataFiles are not consistent")
+                sys.exit()
+            if not isinstance(dataFormats,str):
+                logger.error("dataFormats and dataFiles are not consistent")
+                sys.exit()      
+            dataFiles = [dataFiles]
+            dataLabels = [dataLabels]
+            indices = [indices]
+            objectNames = [objectNames]
+            
+            
+        for i,dataFile in enumerate(dataFiles):
+            dataLabel = dataLabels[i]
+            dataFormat = dataFormats[i]
+            index = indices[i]
+            objectName = objectNames[i]
+            unit = units[i]
+            if not dataLabel in self.allowedDataLabels:
+                logger.warning("Data label %s is not allowed and will be ignored" %dataLabel)
+                continue
+            if not 'exclusion' in dataLabel.lower():
+                #Initialize a data handler
+                dataObject = DataHandler(dataLabel,self.dimensions)
+            else:
+                dataObject = ExclusionHandler(dataLabel)
+                self._exclusionCurves.append(dataObject)
+            #Set source of object
+            dataObject.setSource(dataFile, dataFormat, objectName, index)
+            dataObject.unit = unit
+            #Store it as a mass plane attribute:            
+            setattr(self,dataLabel,dataObject)
+        
     def getParticleMasses(self,**xMass):
 
         """
@@ -105,8 +198,7 @@ class OrigPlot(object):
         
         massArray = [br.getParticleMasses(**xMass) for br in self.branches]
         return massArray
-
-
+                  
     def getXYValues(self,massArray):
 
         """
@@ -122,7 +214,8 @@ class OrigPlot(object):
         """
         
         if len(massArray) != len(self.branches):
-            Errors().massArrayLen(massArray)
+            logger.error("Mass array inconsistent with branches length")
+            sys.exit()
         xyArray = {}
         for i,mass in enumerate(massArray):
             xyDict = self.branches[i].getXYValues(mass)
@@ -138,29 +231,12 @@ class OrigPlot(object):
         
         return xValues
 
-    def __str__(self):
-
-        """
-        :return: String containing a sequence of equations, separated by '_'.
-        If both branches are equal, the sequence of equations starts with '2*'
-        If the two branches are not equal, the string consists of two sequences of
-        equations separated by '+'
-        """
-
-        if len(self.branches) == 2 and self.branches[0] == self.branches[1]:
-            return '2*%s' %self.branches[0]
-        else:
-            ret = "+".join([str(br) for br in self.branches])
-        return ret
-
 
 class Axes(object):
 
     """
-    Holds the axes information for one both branch of a singe mass plane.
-
+    Holds the axes information for one branch of a singe mass plane.
     No units supported!
-
     """
 
     def __init__(self, massEqs,massVars):
@@ -186,7 +262,6 @@ class Axes(object):
         #Already define the functions and plot dimensions:
         self._setXYFunction()
         
-
     @classmethod
     def fromConvert(cls, massEqs):
 
@@ -209,16 +284,15 @@ class Axes(object):
         
         #New format:
         allEqs = []
-        for im,mass in enumerate(massEqs):
+        for im,massEq in enumerate(massEqs):
             #Create mass variable (upper case for first branch and lower case for second)
-            eq = Eq(massVars[im],N(mass,5))  
+            eq = Eq(massVars[im],N(massEq,5))  
             allEqs.append(eq)
             
             allEqs = sorted(allEqs, key = lambda eq: eq.args[0].name)
         
         return cls(allEqs,massVars)
         
-
     def _getMassFunction(self):
 
         """
@@ -314,7 +388,6 @@ class Axes(object):
             self._xyFunction[xv] = lambdify(self._massVars,xy[xv],'math',dummify=False)
         self._nArguments = nvars
 
-
     def getXYValues(self,massArray):
 
         """
@@ -347,7 +420,6 @@ class Axes(object):
         
         return xValues
 
-
     def __str__(self):
 
         string =''
@@ -365,67 +437,3 @@ class Axes(object):
                 #print "string= >>%s<<" % string
         return string
 
-    def __eq__(self, other):
-
-        """
-        :return: True if string-representations are equal,
-        else False
-        """
-
-        return str(self) == str(other)
-
-    def __ne__(self, other):
-
-        """
-        :return: False if string-representations are equal,
-        else True
-        """
-
-        return str(self) != str(other)
-
-
-class Errors(object):
-
-    def __init__(self):
-
-        self._starLine = '\n************************************\n'
-
-    def interMass(self):
-
-        m = self._starLine
-        m = m + 'While defining a massPlane an error in Class Axes occurred:\n'
-        m = m + 'unkonown interMass chain. First interMass needs always index 0\n'
-        m = m + 'secound interMass (if exist) needs index 1, .....\n'
-        m = m + 'please check you convert file'
-        m = m + self._starLine
-        print(m)
-        sys.exit()
-
-    def massArrayLen(self, massArray):
-
-        m = self._starLine
-        m = m + 'Error in OrigPlot object, getXYValues:\n'
-        m = m + 'massArray must have lengh 2\n'
-        m = m + 'got: %s \n' %massArray
-        m = m + self._starLine
-        print(m)
-        sys.exit()
-
-    def unequalXYValues(self):
-
-        m = self._starLine
-        m = m + 'Error in OrigPlot object, getXYValues:\n'
-        m = m + 'different values for branch_1 and branch_2'
-        m = m + self._starLine
-        print(m)
-        sys.exit()
-
-    def unknownString(self, string):
-
-        m = self._starLine
-        m = m + 'Error in OrigPlot.fromString:\n'
-        m = m + 'can not interpret equation string:\n'
-        m = m + '%s' %string
-        m = m + self._starLine
-        print(m)
-        sys.exit()
