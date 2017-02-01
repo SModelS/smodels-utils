@@ -150,7 +150,7 @@ class DatabaseCreator(list):
                 #Write down txname.txt                
                 txName.getInfo()  #Set txname info attributes
                 txName.getData(dataType = dataset.dataType)  #Read source files and load data
-                if txName.hasData(dataType = dataset.dataType): #Do not write empty txnames:
+                if txName.hasData(dataset.dataType): #Do not write empty txnames:
                     self._createTxnameFile(str(txName), txName)
         
         #Get all exclusion curves and write to sms.root:
