@@ -476,6 +476,23 @@ class TxNameInput(Locker):
             txData += dataList
         else:
             setattr(self,dataLabel,dataList)
+
+    def hasData(self, dataLabel):
+
+        """
+        Check if txname has data of the type dataLabel.
+        Returns True/False
+
+        :param dataLabel: label of the given data (efficiencyMap, upperLimits,..)
+        
+        """
+        
+        if not hasattr(self,dataLabel) or not getattr(self,dataLabel):
+            return False
+        
+        return True
+        
+
             
     def _setMassConstraints(self):
         """
@@ -496,19 +513,21 @@ class TxNameInput(Locker):
                 massDict[key] = 0.
         #Set masses for inclusive labels (use lowest mass)
         for key,ptclist in ptcDic.items():
+            if key in massDict:
+                continue
             minMass = [massDict[ptc] for ptc in ptclist if ptc in massDict]
             if not minMass:
                 minMass = 0.
             else:
                 minMass = min(minMass)
             massDict[key] = minMass
-        
+       
         #Replace particles appearing in the vertices by their mass        
         self.massConstraints = []
         for el in elementsInStr(self.constraint,removeQuotes=False):
             el = eval(el)
             #Replace particles in element by their masses
-            massConstraint = [[[massDict[ptc] for ptc in vertex] for vertex in br] for br in el]      
+            massConstraint = [[[massDict[ptc] for ptc in vertex] for vertex in br] for br in el]
             self.massConstraints.append(massConstraint) 
             
         #Now convert the constraints to inequality expressions:

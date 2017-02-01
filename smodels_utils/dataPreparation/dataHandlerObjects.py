@@ -72,7 +72,7 @@ class DataHandler(object):
         if not unitString:
             return
         
-        if self.name != 'upperLimits':
+        if self.name != 'upperLimits' and self.name != 'expectedUpperLimits':
             logger.error("Units should only be defined for upper limits")
             sys.exit()              
 

@@ -71,7 +71,7 @@ class MassPlane(object):
         #Define the default labels for the input axes variables
         #(relevant for computing the masses from x,y,z...)
         self.axesLabels = [str(xv) for xv in allvars][:dimensions]
-         
+        
         self.axes = massArray       
         self.figure = None
         self.figureUrl = None

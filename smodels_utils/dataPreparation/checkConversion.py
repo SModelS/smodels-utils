@@ -1,0 +1,247 @@
+#!/usr/bin/env python
+
+"""
+.. module:: checkConversion
+   :synopsis: Compares the globalInfo.txt, dataInfo.txt and txname.txt files between
+              an old format folder and a new format folder.
+
+.. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
+
+"""
+
+
+import sys,os,filecmp
+sys.path.append('/home/lessa/smodels-utils')
+sys.path.append('/home/lessa/smodels')
+from smodels.tools.physicsUnits import fb,pb,GeV,TeV
+import logging
+FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
+logging.basicConfig(format=FORMAT)
+logger = logging.getLogger(__name__)
+
+logger.setLevel(level=logging.ERROR)
+
+
+def compareLines(new,old,ignore=['#']):
+    """
+    Compare the lines of two files irrespective of their order
+    Ignore lines which start with strings given by ignore.
+    
+    :param new: path to new file
+    :param old: path to old file
+    :param ignore: List of strings to be ignored
+    
+    :return: True/False
+    """
+    
+    fnew = open(new,'r')
+    newLines = sorted(fnew.readlines())
+    fnew.close()
+    fold = open(old,'r')
+    oldLines = sorted(fold.readlines())
+    fold.close()
+    
+    #Remove ignored lines:
+    for fLines in [newLines,oldLines]:
+        for i,l in enumerate(fLines):
+            if not l:
+                continue
+            if not l.strip().replace('\n',''): #Remove empty lines
+                fLines[i] = None
+                continue        
+            for ig in ignore:
+                if l.lstrip()[:len(ig)] == ig:
+                    fLines[i] = None
+                    break
+        while fLines.count(None):
+            fLines.remove(None)
+        
+        
+    if len(newLines) != len(oldLines):
+        logger.debug('Number of lines in %s and %s differ' %(new,old))
+        return False
+    
+    for i,l in enumerate(newLines):
+        if l != oldLines[i]:
+            logger.debug('Line %i in %s and %s differ:\n\t %s\n\t %s' %(i,new,old,l,oldLines[i]))
+            return False
+    
+    return True
+        
+
+def checkValue(value,oldValue,reps):
+    
+    if type(oldValue) != type(value):        
+        return False    
+    if value == oldValue:
+        return True
+    
+    if isinstance(value,str):
+        if value.strip() != oldValue.strip():
+            return False
+    elif isinstance(value,list):
+        if len(value) != len(oldValue):
+            return False
+        for i,v in enumerate(value):
+            checkValue(v,oldValue[i],reps)
+    else:
+        vdiff = abs(value-oldValue)/(abs(value+oldValue))
+        if vdiff > reps:
+            return False                
+    
+    return True
+
+
+def compareFields(new,old,ignoreFields=['susyProcess'],reps=0.01):
+    """
+    Compare the fields and their values
+    for two files. Ignore lines which start with strings given by ignore.
+    For floats, compare their relative difference up to reps
+    
+    :param new: path to new file
+    :param old: path to old file
+    :param ignore: List of strings to be ignored
+    :param reps: allowed relative difference for floats:
+    
+    :return: True/False
+    """
+    
+    fnew = open(new,'r')
+    fold = open(old,'r')    
+    newLines = fnew.readlines()
+    oldLines = fold.readlines()
+    fnew.close()
+    fold.close()
+
+    allFields = []    
+    for fLines in [newLines,oldLines]:
+        fields = {}
+        for l in fLines:
+            l = l.replace('\n','')
+            if not l.strip():
+                continue  #Skip empty lines
+            if ':' in l:
+                field = l.split(':')[0].strip()
+                value = "".join(l.split(':')[1:]).strip()
+                if field in ignoreFields:
+                    continue  #Skip fields to be ignored
+                fields[field] = value
+                lastField = l.split(':')[0].strip()
+            else:
+                fields[lastField] += l.strip()
+        for key,value in fields.items():
+            try:
+                fields[key] = eval(value)
+            except:
+                pass
+        allFields.append(fields)
+    
+    newFields,oldFields = allFields
+
+    #Check fields:
+    if len(newFields) != len(oldFields):
+        logger.error("Number of fields in %s differ" %new)
+    if sorted(newFields.keys()) != sorted(oldFields.keys()):
+        logger.error("Fields in %s differ" %new)
+
+    
+    for key,value in newFields.items():
+        oldValue = oldFields[key]
+        if not checkValue(value, oldValue, reps):
+            logger.error("Field %s value differ in %s:\n %s \n %s" %(key,new,value,oldValue))
+            return False
+
+    return True
+    
+    
+def replaceValidated(new,old):
+    """
+    Replace validated field in the new file by the value in the old one
+    
+    :param new: full path to the new experimental result folder
+    :param old: full path to the corresponding old experimental result folder
+    """
+
+
+    
+    fold = open(old,'r') 
+    oldLines = fold.readlines()
+    fold.close()
+    valLine = None   
+    for l in oldLines:
+        if 'validated:' in l.replace(" ",""):
+            valLine = l
+            break
+    if not valLine:
+        return
+    
+    fnew = open(new,'r')
+    newLines = fnew.readlines()
+    fnew.close()
+    fnew = open(new,'w')
+    for l in newLines:
+        if 'validated:' in l.replace(" ",""):
+            fnew.write(valLine)
+        else:
+            fnew.write(l)
+    fnew.close()
+               
+
+def checkNewOutput(new,old,setValidated=True):
+    """
+    Check the files in the new folder and the old folder.
+    If setValidated = True and both folders are equal, replace the
+    validation field in the new folder to the same one in the old folder.
+    
+    :param new: full path to the new experimental result folder
+    :param old: full path to the corresponding old experimental result folder
+    :param setValidated: If True, replace the validation field in the new folder
+                         by the same value present in the old one.
+    
+    :return: True if both folders are equivalent, False otherwise.
+    """
+    
+    
+    #Check if folders have the same required structure:
+    comp = filecmp.dircmp(new,old,['convertNew.py']) #Ignore convertNew.py
+    if comp.left_only:
+        print 'Only in new:',comp.left_only
+        return False
+    if comp.right_only:
+        print 'Only in old:',comp.right_only
+        return False
+
+    for f in comp.diff_files:
+        if f == 'sms.root':
+            continue #Ignore the ROOT file (will be tested later in validation)        
+        fnew = os.path.join(new,f)
+        fold = os.path.join(old,f)
+        if not compareLines(fnew,fold):
+            return False
+    
+    for subdir in comp.subdirs:
+        if subdir in ['orig','validation']:
+            continue
+        sdir = comp.subdirs[subdir]
+        if sdir.left_only:
+            print 'Only in %s new:'%subdir,sdir.left_only
+            return False
+        if sdir.right_only:
+            print 'Only in %s old:'%subdir,sdir.right_only
+            return False
+
+        for f in sdir.diff_files:
+            if f == 'sms.root':
+                continue #Ignore the ROOT file (will be tested later in validation)
+                        
+            fnew = os.path.join(new,os.path.join(subdir,f))
+            fold = os.path.join(old,os.path.join(subdir,f))
+            if setValidated:
+                replaceValidated(fnew,fold)                     
+            if not compareLines(fnew,fold,ignore=['#']):
+                if not compareFields(fnew,fold,ignoreFields=['susyProcess','axes','dataUrl']):
+                    return False
+    
+    
+    return True
+        
