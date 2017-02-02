@@ -9,13 +9,13 @@
 """   
 
 import sys
-import copy
 from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
 from smodels.tools.physicsUnits import fb, pb, TeV, GeV
 from smodels.theory.particleNames import elementsInStr
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.particles import rEven, ptcDic
+
 
 
 import logging
@@ -72,7 +72,7 @@ class MetaInfoInput(Locker):
     'private', 'implementedBy','lastUpdate']
     internalAttr = ['_sqrts', '_lumi']
     
-    requiredAttr = ['sqrts', 'lumi', 'id', 'contact', 'lastUpdate']
+    requiredAttr = ['sqrts', 'lumi', 'id', 'lastUpdate']
     
     def __new__(cls, ID):
         
@@ -288,7 +288,7 @@ class TxNameInput(Locker):
                 'susyProcess','checked','figureUrl','dataUrl','publishedData',
                 'validated','axes','upperLimits',
                 'efficiencyMap','expectedUpperLimits']
-    internalAttr = ['_name', 'name', '_txDecay','_planes',
+    internalAttr = ['_name', 'name', '_txDecay','_planes','_goodPlanes',
     '_branchcondition', 'onShell', 'offShell', 'constraint',
     'condition', 'conditionDescription','massConstraint',
     'upperLimits','efficiencyMap','expectedUpperLimits','massConstraints','_dataLabels']
@@ -316,6 +316,7 @@ class TxNameInput(Locker):
             logger.error("Unknown txname %s" %self._name)
             sys.exit()
         self._planes = []
+        self._goodPlanes = []
         self._dataLabels = []
 
     def __str__(self):
@@ -366,10 +367,12 @@ class TxNameInput(Locker):
         self._planes.append(massPlane)
         return massPlane                    
                   
-    def getData(self,dataType):
+    def getDataFromPlanes(self,dataType):
         """
         Loop over the defined the planes and collects the data.
         Reads the source file and stores the data.
+        Stores which planes have data for this txname in _goodPlanes.
+        
         :param dataType: Type of data (efficiencyMap or upperLimit)
         """
         
@@ -382,34 +385,38 @@ class TxNameInput(Locker):
                     logger.error('%s source not defined for plane %s' %(dataType,plane))
                     sys.exit()
                 else:
-                    self.addData(plane,'upperLimits')
-                    self._dataLabels.append('upperLimits')
+                    if self.addDataFrom(plane,'upperLimits'):
+                        self._dataLabels.append('upperLimits')
+                        self._goodPlanes.append(plane)
             elif dataType == 'efficiencyMap':
                 if not hasattr(plane,'efficiencyMap'):
                     logger.error('%s source not defined for plane %s' %(dataType,plane))
                     sys.exit()
                 else:
-                    self.addData(plane,'efficiencyMap')
-                    self._dataLabels.append('efficiencyMap')
+                    if self.addDataFrom(plane,'efficiencyMap'):
+                        self._dataLabels.append('efficiencyMap')
+                        self._goodPlanes.append(plane)
             else:
                 logger.error('Unknown data type %s' %dataType)
                 sys.exit()         
                                 
             #Add expected upper limits, if it exists:
             if hasattr(plane,'expectedUpperLimits'):
-                self.addData(plane,'expectedUpperLimits')
-                self._dataLabels.append('expectedUpperLimits')
+                if self.addDataFrom(plane,'expectedUpperLimits'):
+                    self._dataLabels.append('expectedUpperLimits')
+                    self._goodPlanes.append(plane)
                 
-    def getInfo(self):
+    def getInfoFromPlanes(self):
         """
-        Collects all the info attributes from its mass planes and stores it
-        in self. Also defines additional information.
+        Collects all the info attributes from its mass planes
+        (only for the planes which generated data and are stored
+        in _goodPlanes) and stores it in self. Also defines additional information.
         """
         
         for infoAttr in self.infoAttr:
-            infoList = [""]*len(self._planes)            
+            infoList = [""]*len(self._goodPlanes)            
             planeHasInfo = False
-            for i,plane in enumerate(self._planes):
+            for i,plane in enumerate(self._goodPlanes):
                 if not infoAttr in plane.infoAttr:
                     continue
                 if hasattr(plane,infoAttr):
@@ -422,7 +429,7 @@ class TxNameInput(Locker):
         self.publishedData = hasattr(self,'dataUrl')
         self.validated = 'Not done yet'
 
-    def addData(self, plane, dataLabel):
+    def addDataFrom(self, plane, dataLabel):
 
         """
         extend the given data list by the values related to this type of list
@@ -449,12 +456,12 @@ class TxNameInput(Locker):
         dataHandler = getattr(plane,dataLabel)
         
         dataList = []        
-        for value in dataHandler:
-            if len(value) != nvars+1:
+        for pt in dataHandler:
+            if len(pt) != nvars+1:
                 logger.error("Number of free parameters in data and in axes do not match")
                 sys.exit()
-            xvals = value[:nvars]
-            value = value[-1]
+            xvals = pt[:nvars]
+            value = pt[-1]
             #The ordering of the coordinates in the data source is
             #assumed to follow the one defined in plane.axesLabels:
             xdict = dict([[plane.axesLabels[i],xv] for i,xv in enumerate(xvals)])
@@ -470,25 +477,34 @@ class TxNameInput(Locker):
                 massArray = [[m*eval(dataHandler.massUnit) for m in br ] for br in massArray]
             dataList.append([massArray, value])
         
+        if not dataList:
+            return False
         #Add data to txname. If dataLabel already exists, extend it
         if hasattr(self,dataLabel) and isinstance(getattr(self,dataLabel),list):
             txData = getattr(self,dataLabel)
             txData += dataList
         else:
             setattr(self,dataLabel,dataList)
-
-    def hasData(self, dataLabel):
+        return True
+    
+    def hasData(self, dataType):
 
         """
         Check if txname has data of the type dataLabel.
         Returns True/False
 
-        :param dataLabel: label of the given data (efficiencyMap, upperLimits,..)
-        
+        :param dataType: Type of data (efficiencyMap or upperLimit)        
         """
         
-        if not hasattr(self,dataLabel) or not getattr(self,dataLabel):
-            return False
+        if dataType == 'upperLimit':
+            if not hasattr(self,'upperLimits') or not getattr(self,'upperLimits'):
+                return False
+        elif dataType == 'efficiencyMap':
+            if not hasattr(self,'efficiencyMap') or not getattr(self,'efficiencyMap'):
+                return False
+        else:
+            logger.error("DataType %s unknown" %dataType)
+            sys.exit()
         
         return True
         

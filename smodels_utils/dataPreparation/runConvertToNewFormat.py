@@ -9,12 +9,13 @@
 """
 
 
-import sys,glob,os
+import sys,glob,os,time
 from subprocess import Popen,PIPE
 sys.path.append('/home/lessa/smodels-utils')
 sys.path.append('/home/lessa/smodels')
 from smodels_utils.dataPreparation.inputObjects import TxNameInput
 from smodels_utils.dataPreparation.checkConversion import checkNewOutput
+from removeDocStrings import  rmDocStrings
 
 template = open("convertNew_template.py",'r')
 header = template.read()
@@ -44,30 +45,43 @@ def getObjectNames(f,objType):
         if objType+'(' in l:            
             objName = l.split('=')[0].strip() #Store name of objType instance
             if objName:
-                objects.append(objName)
+                objects.append(objName)        
                 
     return objects
 
 
-def getObjectLines(f,objName):
+def getObjectLines(f,objName,objType):
     """
-    Reads f and collects all lines which begin with objName = xxx
-    or objName.xxx
+    Reads f and collects all lines (beginning with one with objName = objType 
+    and have objName.xxx. Stops searching when objName = xxx if found again.
     
     :param f: file object
     :param objName: name of object in file (e.g. info, T1,..)
+    :param objType: Object type (e.g. MetaInfoInput, TxNameInput,...)
     
     :return: string with all lines  
     """
     
     f.seek(0,0)
-    objLines = []    
+    objLines = []
+    instanceTag = "%s=%s(" %(objName,objType)
+    start,stop = False,False
     for l in f.readlines():
         if l.lstrip() and l.lstrip()[0] == '#':
+            continue        
+        if not start and instanceTag == l.replace(" ","")[:len(instanceTag)]:
+            start = True
+            objLines.append(l)            
             continue
+        if not start:
+            continue
+        if stop:
+            break
         
         newl = l.replace(" ","")[:len(objName)+1] #Get beginning of line
-        if objName+'.' == newl or  objName+'=' == newl:
+        if  objName+'=' == newl and start:  #Object name is being redefined. Stop it
+            stop = True
+        elif objName+'.' == newl:
             objLines.append(l) # Line belongs to metablock
 
     return objLines
@@ -120,8 +134,9 @@ def newMassFormat(line):
         return line
     
     #Get axes string
-    lA,laxes = line.split('(')
-    laxes,lC = laxes.split(')')
+    lA = line[:line.find('(')+1]
+    lC = line[line.rfind(')'):]
+    laxes = line[line.find('(')+1:line.rfind(')')]
     laxes = laxes.split(',')
     newAxes = []
     for eq in laxes:
@@ -132,7 +147,7 @@ def newMassFormat(line):
     newAxes = str(newAxes).replace("'","")
     newAxes = "2*[%s]" %newAxes
     
-    return lA+'('+newAxes+')'+lC
+    return lA+newAxes+lC
     
 
 def getSources(planeLines):
@@ -160,7 +175,6 @@ def getSources(planeLines):
             unitsDict[sourceName] = unit
     
 
-    
     for l in planeLines:
         if not '.setSource' in l:
             continue
@@ -180,7 +194,7 @@ def getSources(planeLines):
         for inputEntry in sInput:
             inputEntry = inputEntry.replace("'","").replace('"','')
             if 'orig/' in inputEntry:
-                dataFilesDict[sourceName] = inputEntry.split('=')[-1].strip()            
+                dataFilesDict[sourceName] = inputEntry.split('=')[-1].strip()          
             elif inputEntry.strip() in ['root','txt','svg','canvas','cMacro']:                
                 dataFormatsDict[sourceName] = inputEntry.split('=')[-1].strip()        
             elif 'objectName' in inputEntry:
@@ -232,6 +246,19 @@ def addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint):
     off-shell txname
     """
     
+    hasConstraint = False
+    for l in txOffLines:
+        if "%s.off.constraint" %txname in l:
+            hasConstraint = True
+            break
+    
+    #If no constraint has been defined, the off txname
+    #was not properly defined and will be ignored:
+    #(Sometimes the off topology is not properly commented out)
+    if not hasConstraint:        
+        return False
+        
+    
     #Ignore mass constraints for on-shell txname 
     #everytime off-shell also exists (include full data):
     fnew.write('%s.massConstraint = None\n' %txname)
@@ -243,8 +270,10 @@ def addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint):
         fnew.write(l)
     #Set mass constraint for off-shell txname:
     massConstraint = getMassConstraint(txname,onshellConstraint) #Get on-shell constraints
-    massConstraint = str(massConstraint).replace('>','<') #Get off-shell constraints
-    fnew.write('%soff.massConstraint = %s\n' %(txname,massConstraint))
+    massConstraintOff = str(massConstraint).replace('>','<') #Get off-shell constraints
+    massConstraintOff = massConstraintOff.replace("'m <= 0.0'","'m >= 0.0'") #Revert back dummy constraints
+    fnew.write('%soff.massConstraint = %s\n' %(txname,massConstraintOff))
+    return True
 
 
 def getMassConstraint(txname,constraint):
@@ -273,31 +302,15 @@ def getMassConstraint(txname,constraint):
 def main(f,fnew):
     
     fold = open(f,'r')
-    fnew = open(f.replace('convert.py','convertNew.py'),'w')
-    
+    fnew = open(f.replace('convert.py','convertNew.py'),'w')    
     #Remove comments from old file:
-    lignore = False
-    lines = fold.readlines()
+    strClean = rmDocStrings(fold.read())
     fold.close()
-    newlines = []
-    for l in lines:        
-        if "'''" in l:
-            if lignore is True:
-                lignore = False
-                continue
-            else:
-                lignore = True
-        if lignore:
-            continue
-        if l.lstrip() and l.lstrip()[0] == '#':
-            continue
-        newlines.append(l)
-    fold = open('convertTemp.py','w')
-    for l in newlines:
-        fold.write(l)
+    ftemp = f.replace('convert.py','convertTemp.py')
+    fold = open(ftemp,'w')
+    fold.write(strClean.replace('\n\n','\n'))
     fold.close()
-    fold = open('convertTemp.py','r')
-        
+    fold = open(ftemp,'r')
 
     #Write header:
     fnew.write(header)
@@ -311,7 +324,7 @@ def main(f,fnew):
         infoName = infoName[0]
     metaData = "\n\n#+++++++ global info block ++++++++++++++\n"
     #Get metainfo lines:
-    metaData += "".join(getObjectLines(fold,infoName))
+    metaData += "".join(getObjectLines(fold,infoName,'MetaInfoInput'))
     #Write meta info block
     fnew.write(metaData+'\n\n')
     
@@ -335,7 +348,7 @@ def main(f,fnew):
         print 'efficiency map result not yet implemented (%s)' %f.replace('convert.py','')
         fold.close()
         fnew.close()        
-        return False
+        return None
         
         
     #Get Txnames:
@@ -346,7 +359,7 @@ def main(f,fnew):
             return False
         
         fnew.write("#+++++++ next txName block ++++++++++++++\n")
-        txLines = getObjectLines(fold, txname)
+        txLines = getObjectLines(fold, txname,'TxNameInput')
         txOffLines = []
         onshellConstraint = None
         for l in txLines:
@@ -362,8 +375,8 @@ def main(f,fnew):
             fnew.write(l)
         #Add txnameOff definitions:
         if txOffLines:
-            addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint)
-               
+            addedTxOff = addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint)
+
         #Get mass planes for txname:
         massPlanes = getObjectNames(fold, '%s.addMassPlane'%txname)
         for plane in massPlanes:
@@ -371,12 +384,14 @@ def main(f,fnew):
             if massPlanes.count(plane) > 1:
                 print 'Plane %s for %s is defined multiple times' %(plane,txname)
                 return False
-            planeLines = getObjectLines(fold, plane)            
+            planeLines = getObjectLines(fold, plane, '%s.addMassPlane'%txname)            
             for l in planeLines:
                 if '.addMassPlane(' in l:
                     l = newMassFormat(l)
                 elif '.setSource' in l:
                     continue
+                elif '.obsUpperLimit.dataUrl' in l:
+                    l = l.replace('.obsUpperLimit','')
                 elif l.split('=')[0].count('.') > 1:
                     continue  #Skip attributes given to derived objects
                 fnew.write(l)
@@ -384,15 +399,16 @@ def main(f,fnew):
             sourceStr = plane+getSources(planeLines)
             fnew.write(sourceStr+'\n')
 
-            #Add plane to off-shell txname
-            if txOffLines:            
+            #Add plane to off-shell txname, if off-shell lines
+            #have been added
+            if txOffLines and addedTxOff:          
                 fnew.write("%s.addMassPlane(%s)\n" %(txname+"off",plane))
             
         fnew.write('\n')
             
         
     fold.close()
-    os.remove('convertTemp.py')
+    os.remove(ftemp)
     
     fnew.write('\n\ndatabaseCreator.create()\n')
     fnew.close()        
@@ -402,41 +418,75 @@ def main(f,fnew):
     
 if __name__ == "__main__":
     
+    
+    skipList = ['ATLAS-CONF-2013-001', #T6bbWW only has off-shell data, so the on-shell massConstraint has to be set
+                'ATLAS-CONF-2013-007',  #Mass constraints are tricky and need to be fixed by hand
+                'ATLAS-CONF-2013-035',   #DataUrl was not set for full plane
+                'ATLAS-CONF-2013-036',    #TChiSlepSlep (asymmetric branches)
+                'ATLAS-CONF-2013-047'    #TGQ (asymmetric branches)
+                ]
+    
     #Set SMODELSNOUPDATE to avoid rewritting implementedBy and lastUpdate fields:
     os.environ["SMODELS_NOUPDATE"] = 'True'
+    timeOut = 150.
     
-    for f in glob.glob(databasePath+'/*/*/*/convert.py')[:5]:
-        fnew = f.replace('convert.py','convertNew.py')
-        if os.path.isfile(fnew):
-            os.remove(fnew)
-            
-        r = main(f,fnew)
-        if not r:
-            continue
+    for f in sorted(glob.glob(databasePath+'/*/*/*/convert.py'))[12:20]:
         
+        if '-eff' in f:
+            continue  #Skip efficiency map results
+        
+        #Skip writing convertNew.py for the results in skipList
+        skipProduction = False
+        for skipRes in skipList:
+            if skipRes in f:
+                skipProduction = True
+                break
+                
+        fnew = f.replace('convert.py','convertNew.py')
+        if not skipProduction:            
+            if os.path.isfile(fnew):
+                os.remove(fnew)
+            print f
+            r = main(f,fnew)
+                
+            if not r:
+                print '\033[31m Error generating %s \033[0m' %fnew
+                sys.exit()        
+                
         #Make file executable
         run = Popen('chmod +x %s' %fnew,shell=True)
         run.wait()
         #Execute file
         rdir = fnew.replace(os.path.basename(fnew),'')
+        t0 = time.time()
         run = Popen(fnew+' -smodelsPath /home/lessa/smodels -utilsPath /home/lessa/smodels-utils',
                     shell=True,cwd=rdir,stdout=PIPE,stderr=PIPE)
-        rstatus = run.wait()
+        
+        rstatus = None
+        while rstatus is None and ((time.time() - t0) < timeOut):
+            time.sleep(5)
+            rstatus = run.poll()
+        if time.time() - t0 > timeOut:
+            run.terminate()
+            print '\033[31m Running %s exceeded timeout %s \033[0m' %(fnew,timeOut)
+            sys.exit()
+        
 
         if rstatus:
-            print 'Error running %s' %fnew
+            print '\033[31m Error running %s \033[0m' %fnew
+            print rstatus
             sys.exit()
         rerror = run.stderr.read()
         if rerror:
-            print 'Error running %s:' %fnew
+            print '\033[31m Error running %s: \033[0m' %fnew
             print rerror 
             sys.exit()
         
         oldir = rdir.replace('smodels-database','smodels-database-master')
         check = checkNewOutput(new=rdir,old=oldir,setValidated=True)
         if not check:
-            print 'Error comparing %s' %rdir
+            print '\033[31m Error comparing %s \033[0m' %rdir
             sys.exit()
             
-        print f,'OK'
+        print "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0)
         

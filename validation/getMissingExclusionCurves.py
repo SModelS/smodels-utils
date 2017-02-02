@@ -12,7 +12,7 @@ missingCurves = []
 for expRes in database.getExpResults(datasetIDs=[None]):
     txnames = expRes.getTxNames()
     for txname in txnames:
-        axes = txname.getInfo('axes')
+        axes = txname.getInfoFromPlanes('axes')
         if not isinstance(axes,list): axes = [axes]
         for ax in axes:
             tgraph = None

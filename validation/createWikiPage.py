@@ -52,7 +52,7 @@ for expRes in expResList:
         line = "||<|%i> [[%s|%s]]" %(len(txnames),\
                 expRes.getValuesFor('url'),expRes.getValuesFor('id'))
         for txname in txnames:
-            validated = txname.getInfo('validated')
+            validated = txname.getInfoFromPlanes('validated')
             if validated is True: color = "#32CD32"
             elif validated is None: color = "#778899"
             elif validated is False: color = "#FF0000"

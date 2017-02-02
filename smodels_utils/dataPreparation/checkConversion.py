@@ -10,7 +10,7 @@
 """
 
 
-import sys,os,filecmp
+import sys,os,filecmp,difflib
 sys.path.append('/home/lessa/smodels-utils')
 sys.path.append('/home/lessa/smodels')
 from smodels.tools.physicsUnits import fb,pb,GeV,TeV
@@ -78,15 +78,18 @@ def checkValue(value,oldValue,reps):
     
     if isinstance(value,str):
         if value.strip() != oldValue.strip():
+            logger.error('New value = %s \nOld value = %s' %(value,oldValue))
             return False
     elif isinstance(value,list):
         if len(value) != len(oldValue):
+            logger.error('\nNew value length = %i \nOld value length = %i' %(len(value),len(oldValue)))
             return False
         for i,v in enumerate(value):
             checkValue(v,oldValue[i],reps)
     else:
         vdiff = abs(value-oldValue)/(abs(value+oldValue))
         if vdiff > reps:
+            logger.error('New value = %s \nOld value = %s' %(value,oldValue))
             return False                
     
     return True
@@ -148,7 +151,7 @@ def compareFields(new,old,ignoreFields=['susyProcess'],reps=0.01):
     for key,value in newFields.items():
         oldValue = oldFields[key]
         if not checkValue(value, oldValue, reps):
-            logger.error("Field %s value differ in %s:\n %s \n %s" %(key,new,value,oldValue))
+            logger.error("Field %s value differ in %s" %(key,new))
             return False
 
     return True
@@ -203,12 +206,12 @@ def checkNewOutput(new,old,setValidated=True):
     
     
     #Check if folders have the same required structure:
-    comp = filecmp.dircmp(new,old,['convertNew.py']) #Ignore convertNew.py
+    comp = filecmp.dircmp(new,old,['convertNew.py','convertNew.py~','convert.py~']) #Ignore convertNew.py
     if comp.left_only:
-        print 'Only in new:',comp.left_only
+        logger.error('Only in new: %s' %comp.left_only)
         return False
     if comp.right_only:
-        print 'Only in old:',comp.right_only
+        logger.error('Only in old: %s' %comp.right_only)
         return False
 
     for f in comp.diff_files:
@@ -217,6 +220,10 @@ def checkNewOutput(new,old,setValidated=True):
         fnew = os.path.join(new,f)
         fold = os.path.join(old,f)
         if not compareLines(fnew,fold):
+            if '.txt' in f:
+                if compareFields(fnew,fold,ignoreFields=[]):
+                    continue            
+            logger.error('File %s differ' %f)
             return False
     
     for subdir in comp.subdirs:
@@ -224,10 +231,10 @@ def checkNewOutput(new,old,setValidated=True):
             continue
         sdir = comp.subdirs[subdir]
         if sdir.left_only:
-            print 'Only in %s new:'%subdir,sdir.left_only
+            logger.error('Only in new: %s/%s' %(subdir,sdir.left_only))
             return False
         if sdir.right_only:
-            print 'Only in %s old:'%subdir,sdir.right_only
+            logger.error('Only in old: %s/%s' %(subdir,sdir.right_only))
             return False
 
         for f in sdir.diff_files:

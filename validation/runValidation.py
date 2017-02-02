@@ -38,7 +38,7 @@ def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,pretty=False,
     valPlot.setSLHAdir(slhadir)
     valPlot.ncpus = ncpus
     if generateData:
-        valPlot.getData()
+        valPlot.getDataFromPlanes()
     else:
         valPlot.loadData()
     if not valPlot.data:

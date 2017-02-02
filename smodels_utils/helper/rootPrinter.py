@@ -177,7 +177,7 @@ class ROOTPrinter(object):
 
     def writeTheoryPrediction ( self, obj, expResult, datasetInfo ):
         self.prepareTheoryPredictions()
-        logger.info ( "write theory prediction for %s" % expResult.info.getInfo("id") )
+        logger.info ( "write theory prediction for %s" % expResult.info.getInfoFromPlanes("id") )
         logger.info ( "theory prediction for %s" % obj.analysis )
         logger.info ( "theory prediction for txname %s" % obj.txname )
         self.theorypred_txname.push_back ( str(obj.txname) )
@@ -185,7 +185,7 @@ class ROOTPrinter(object):
         #logger.info ( "theory prediction for dataset %s" % expResult.dataset.getValuesFor('dataid') )
         #self.theorypred_dataset.push_back ( obj.dataset.getValuesFor('dataid') )
         logger.info ( "theory value %s " % obj.value )
-        self.theorypred_experimental_id.push_back ( expResult.info.getInfo("id")  )
+        self.theorypred_experimental_id.push_back ( expResult.info.getInfoFromPlanes("id")  )
         self.theorypred_masses.push_back ( str(obj.mass) )
         exp_ul=float('nan')
         if expResult.getValuesFor('datatype') == 'upper-limit':
@@ -216,7 +216,7 @@ class ROOTPrinter(object):
         logger.info ( "theory prediction list for dataid %s" % obj.dataset.getValuesFor('dataid') )
         logger.info ( "theory prediction list for dataset %s" % obj.dataset )
         logger.info ( "theory prediction list for experimental result %s" % obj.expResult )
-        logger.info ( "theory prediction list for experimental result %s" % obj.expResult.info.getInfo("id") )
+        logger.info ( "theory prediction list for experimental result %s" % obj.expResult.info.getInfoFromPlanes("id") )
         for theoryprediction in obj:
             self.writeTheoryPrediction ( theoryprediction, obj.expResult, obj.dataset )
         logger.info ( "done writing theory prediction list" )

@@ -241,7 +241,7 @@ class ValidationPlot():
         self.data = eval(f.read().replace("validationData = ",""))
         f.close()
             
-    def getData(self):
+    def getDataFromPlanes(self):
         """
         Runs SModelS on the SLHA files from self.slhaDir and store
         the relevant data in self.data.

@@ -17,7 +17,7 @@ import ROOT
 import logging
 from datetime import date
 from math import floor, log10
-from unum import Unum  
+from unum import Unum
 import time
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -147,9 +147,10 @@ class DatabaseCreator(list):
                     logger.error('Missing constraint for txname %s' %str(txName))
                     sys.exit()
 
+                #(getData has to be called first to define which planes contain data for this txname)
+                txName.getDataFromPlanes(dataType = dataset.dataType)  #Read source files and load data
+                txName.getInfoFromPlanes()  #Set txname info attributes
                 #Write down txname.txt                
-                txName.getInfo()  #Set txname info attributes
-                txName.getData(dataType = dataset.dataType)  #Read source files and load data
                 if txName.hasData(dataset.dataType): #Do not write empty txnames:
                     self._createTxnameFile(str(txName), txName)
         
@@ -172,7 +173,7 @@ class DatabaseCreator(list):
         for dataset in self:
             #Loop over txnames
             for txname in dataset._txnameList:
-                for plane in txname._planes:
+                for plane in txname._goodPlanes:
                     for exclusion in plane._exclusionCurves:
                         if not exclusion:
                             continue  #Exclusion source has not been defined                        
@@ -452,6 +453,10 @@ class DatabaseCreator(list):
         
         #First round numbers:
         value = self.round_list(value,n)
+        
+        #Remove repeated mass entries:
+        value = self.removeRepeated(value)
+        
         #Convert to string:
         #Make sure unum numbers are printed with sufficient precision
         Unum.VALUE_FORMAT = "%."+"%ig"%n  
@@ -490,6 +495,46 @@ class DatabaseCreator(list):
                 unit = 1.
             
             return round(x,-int(floor(log10(x))) + (n - 1))*unit
+
+    def removeRepeated(self,datalist):
+        """
+        Loops over the data grid and remove points with identical
+        mass values. Issues an warning if points appear repeated
+        and with distinct values (upper limit value or efficiency value).
+        
+        :param datalist:  data grid list (e.g. [[massArray1,ul1],[massArray2,ul2],...]
+        
+        :return: New list with repeated values removed
+        """
+        
+        #First sort list (for performance)
+        sortedValue = sorted(datalist, key = lambda x: x[0])
+        sortedIndices = sorted(range(len(datalist)), key = lambda k: datalist[k][0])
+        uniqueEntries = []
+        repeatedEntries = []
+        inconsistentEntries = []
+        for i,pt in enumerate(sortedValue):
+            originalIndex = sortedIndices[i]
+            m = pt[0]
+            #Check if new mass is different from previous one:
+            if m != sortedValue[i-1][0]:
+                uniqueEntries.append(originalIndex)
+            else:
+                #Check if the values differ:
+                if pt[1] == sortedValue[i-1][1]:                    
+                    repeatedEntries.append(originalIndex) #Entries are identical, but repeated
+                else:
+                    inconsistentEntries.append(originalIndex) #Masses are identical, but with inconsistent values
+
+        if inconsistentEntries:
+            for j in inconsistentEntries:
+                logger.warning("Mass entry %s appears in data with distinct values"
+                                 %(str(datalist[j][0]).replace(" ","")))
+
+        #Remove repeated entries:                    
+        newList = [pt for i,pt in enumerate(datalist) if i in uniqueEntries]
+
+        return newList
 
 databaseCreator = DatabaseCreator()
 
