@@ -10,10 +10,11 @@
 """
 
 
-import sys,os,filecmp,difflib
+import sys,os,filecmp
 sys.path.append('/home/lessa/smodels-utils')
 sys.path.append('/home/lessa/smodels')
 from smodels.tools.physicsUnits import fb,pb,GeV,TeV
+from smodels_utils.dataPreparation.databaseCreation import removeRepeated
 import logging
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -85,7 +86,9 @@ def checkValue(value,oldValue,reps):
             logger.error('\nNew value length = %i \nOld value length = %i' %(len(value),len(oldValue)))
             return False
         for i,v in enumerate(value):
-            checkValue(v,oldValue[i],reps)
+            c = checkValue(v,oldValue[i],reps)
+            if not c:
+                return False
     else:
         vdiff = abs(value-oldValue)/(abs(value+oldValue))
         if vdiff > reps:
@@ -95,7 +98,7 @@ def checkValue(value,oldValue,reps):
     return True
 
 
-def compareFields(new,old,ignoreFields=['susyProcess'],reps=0.01):
+def compareFields(new,old,ignoreFields=['susyProcess'],skipFields=[],reps=0.01):
     """
     Compare the fields and their values
     for two files. Ignore lines which start with strings given by ignore.
@@ -103,7 +106,9 @@ def compareFields(new,old,ignoreFields=['susyProcess'],reps=0.01):
     
     :param new: path to new file
     :param old: path to old file
-    :param ignore: List of strings to be ignored
+    :param ignoreFields: List of tag strings to be completely ignored
+    :param skipFields: List of tag strings for which the values should be ignored
+                     (but they should be present in new if and only if present in old)
     :param reps: allowed relative difference for floats:
     
     :return: True/False
@@ -134,7 +139,10 @@ def compareFields(new,old,ignoreFields=['susyProcess'],reps=0.01):
                 fields[lastField] += l.strip()
         for key,value in fields.items():
             try:
-                fields[key] = eval(value)
+                fields[key] = eval(value,{'fb' : fb, 
+                                          'GeV' : GeV, 
+                                          'pb' : pb, 
+                                          'TeV' : TeV})
             except:
                 pass
         allFields.append(fields)
@@ -144,12 +152,23 @@ def compareFields(new,old,ignoreFields=['susyProcess'],reps=0.01):
     #Check fields:
     if len(newFields) != len(oldFields):
         logger.error("Number of fields in %s differ" %new)
+        for key in set(newFields.keys()).symmetric_difference(set(oldFields.keys())):
+            if key in newFields:
+                print 'Missing in old:',key
+            else:
+                print 'Missing in new:',key
+        return False
     if sorted(newFields.keys()) != sorted(oldFields.keys()):
         logger.error("Fields in %s differ" %new)
+        return False
 
     
     for key,value in newFields.items():
         oldValue = oldFields[key]
+        if key in skipFields:
+            continue
+        if key == 'upperLimits' or key == 'expectedUpperLimits':
+            oldValue  = removeRepeated(oldValue)
         if not checkValue(value, oldValue, reps):
             logger.error("Field %s value differ in %s" %(key,new))
             return False
@@ -240,13 +259,14 @@ def checkNewOutput(new,old,setValidated=True):
         for f in sdir.diff_files:
             if f == 'sms.root':
                 continue #Ignore the ROOT file (will be tested later in validation)
-                        
+  
             fnew = os.path.join(new,os.path.join(subdir,f))
             fold = os.path.join(old,os.path.join(subdir,f))
             if setValidated:
                 replaceValidated(fnew,fold)                     
             if not compareLines(fnew,fold,ignore=['#']):
-                if not compareFields(fnew,fold,ignoreFields=['susyProcess','axes','dataUrl']):
+                if not compareFields(fnew,fold,ignoreFields=['susyProcess'],
+                                     skipFields=['axes','dataUrl','figureUrl']):
                     return False
     
     

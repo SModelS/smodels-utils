@@ -49,7 +49,7 @@ class DataHandler(object):
         self._massUnit = 'GeV'
         self._unit = None  #Default unit
         
-        if self.name == 'upperLimits':
+        if self.name == 'upperLimits' or self.name == 'expectedUpperLimits':
             self._unit = 'pb'
                 
     @property

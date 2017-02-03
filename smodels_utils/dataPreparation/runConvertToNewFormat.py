@@ -170,7 +170,7 @@ def getSources(planeLines):
     #First get units (if defined)
     for l in planeLines:
         if '.unit' in l:
-            unit = l.split('=')[1].replace(" ","").replace('\n','').replace("'","")
+            unit = l.split('=')[1].replace(" ","").replace('\n','').replace("'","").replace('"','')
             sourceName = l.split('.')[1]
             unitsDict[sourceName] = unit
     
@@ -224,7 +224,7 @@ def getSources(planeLines):
         if not sourceName in indicesDict:
             indices.append(None)
         else:
-            indices.append(indicesDict[sourceName])
+            indices.append(eval(indicesDict[sourceName]))
         
     
     newSourceStr = ".setSources(dataLabels= %s,\n\
@@ -423,17 +423,33 @@ if __name__ == "__main__":
                 'ATLAS-CONF-2013-007',  #Mass constraints are tricky and need to be fixed by hand
                 'ATLAS-CONF-2013-035',   #DataUrl was not set for full plane
                 'ATLAS-CONF-2013-036',    #TChiSlepSlep (asymmetric branches)
-                'ATLAS-CONF-2013-047'    #TGQ (asymmetric branches)
+                'ATLAS-CONF-2013-047','ATLAS-SUSY-2013-02',    #TGQ (asymmetric branches)
+                'ATLAS-SUSY-2013-15',   #Plane assignments are tricky (on/off-shell) and need to be defiend by hand
+                'CMS-SUS-13-006',  #TChiWZ on/off-shell splitting is ambiguous, massConstraint set by hand
+                'CMS-SUS-13-007',   #T5tttt on/off-shell splitting is ambiguous, massConstraint set by hand
+                'CMS-SUS-13-013'   #automatic massConstraints for T6ttWWoff do not work and need to be set by hand
                 ]
+    
+    ignoreList = ['CMS-SUS-13-013'] #The on/off-shell splitting in master is inconsistent with the constraints
     
     #Set SMODELSNOUPDATE to avoid rewritting implementedBy and lastUpdate fields:
     os.environ["SMODELS_NOUPDATE"] = 'True'
     timeOut = 150.
     
-    for f in sorted(glob.glob(databasePath+'/*/*/*/convert.py'))[12:20]:
+    for f in sorted(glob.glob(databasePath+'/*/*/*/convert.py')):
         
         if '-eff' in f:
+            print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
             continue  #Skip efficiency map results
+        
+        ignore = False
+        for igF in ignoreList:
+            if igF in f:                
+                ignore = True
+                break
+        if ignore:
+            print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
+            continue
         
         #Skip writing convertNew.py for the results in skipList
         skipProduction = False

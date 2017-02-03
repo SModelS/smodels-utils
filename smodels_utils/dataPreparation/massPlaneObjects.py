@@ -73,8 +73,7 @@ class MassPlane(object):
         self.axesLabels = [str(xv) for xv in allvars][:dimensions]
         
         self.axes = massArray       
-        self.figure = None
-        self.figureUrl = None
+
 
     @classmethod
     def fromString(cls,txname,string):

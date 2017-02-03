@@ -387,7 +387,9 @@ class TxNameInput(Locker):
                 else:
                     if self.addDataFrom(plane,'upperLimits'):
                         self._dataLabels.append('upperLimits')
-                        self._goodPlanes.append(plane)
+                        #Avoid adding the same plane twice
+                        if not plane in self._goodPlanes: 
+                            self._goodPlanes.append(plane)
             elif dataType == 'efficiencyMap':
                 if not hasattr(plane,'efficiencyMap'):
                     logger.error('%s source not defined for plane %s' %(dataType,plane))
@@ -395,7 +397,9 @@ class TxNameInput(Locker):
                 else:
                     if self.addDataFrom(plane,'efficiencyMap'):
                         self._dataLabels.append('efficiencyMap')
-                        self._goodPlanes.append(plane)
+                        #Avoid adding the same plane twice
+                        if not plane in self._goodPlanes: 
+                            self._goodPlanes.append(plane)
             else:
                 logger.error('Unknown data type %s' %dataType)
                 sys.exit()         
@@ -404,7 +408,9 @@ class TxNameInput(Locker):
             if hasattr(plane,'expectedUpperLimits'):
                 if self.addDataFrom(plane,'expectedUpperLimits'):
                     self._dataLabels.append('expectedUpperLimits')
-                    self._goodPlanes.append(plane)
+                    #Avoid adding the same plane twice
+                    if not plane in self._goodPlanes: 
+                        self._goodPlanes.append(plane)
                 
     def getInfoFromPlanes(self):
         """

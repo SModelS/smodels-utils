@@ -452,10 +452,10 @@ class DatabaseCreator(list):
             sys.exit()
         
         #First round numbers:
-        value = self.round_list(value,n)
+        value = round_list(value,n)
         
         #Remove repeated mass entries:
-        value = self.removeRepeated(value)
+        value = removeRepeated(value)
         
         #Convert to string:
         #Make sure unum numbers are printed with sufficient precision
@@ -471,70 +471,77 @@ class DatabaseCreator(list):
         return vStr
 
 
-    def round_list(self,x, n=5):
-        """
-        Rounds all values in x down to n digits.
-        :param x: value (float) or nested list of floats
-        
-        :return: x, with all floats rounded to n digits
-        """
-        
-        if isinstance(x,list):
-            for i,pt in enumerate(x):
-                x[i] = self.round_list(pt)
-            return x
+def round_list(x, n=5):
+    """
+    Rounds all values in x down to n digits.
+    :param x: value (float) or nested list of floats
+    
+    :return: x, with all floats rounded to n digits
+    """
+    
+    if isinstance(x,list):
+        for i,pt in enumerate(x):
+            x[i] = round_list(pt)
+        return x
+    else:
+        if isinstance(x,Unum):
+            if not x.asNumber():
+                return x            
+            unit = x/x.asNumber()
+            x = x.asNumber()
         else:
-            if isinstance(x,Unum):
-                if not x.asNumber():
-                    return x            
-                unit = x/x.asNumber()
-                x = x.asNumber()
+            if not x:
+                return x
+            unit = 1.
+        
+        return round(x,-int(floor(log10(x))) + (n - 1))*unit
+
+
+def removeRepeated(datalist):
+    """
+    Loops over the data grid and remove points with identical
+    mass values. Issues an warning if points appear repeated
+    and with distinct values (upper limit value or efficiency value).
+    
+    :param datalist:  data grid list (e.g. [[massArray1,ul1],[massArray2,ul2],...]
+    
+    :return: New list with repeated values removed
+    """
+    
+    #First sort list (for performance)
+    sortedValue = sorted(datalist, key = lambda x: x[0])
+    sortedIndices = sorted(range(len(datalist)), key = lambda k: datalist[k][0])
+    uniqueEntries = []
+    repeatedEntries = []
+    inconsistentEntries = []
+    for i,pt in enumerate(sortedValue):
+        originalIndex = sortedIndices[i]
+        m = pt[0]
+        #Check if new mass is different from previous one:
+        if m != sortedValue[i-1][0]:
+            uniqueEntries.append(originalIndex)
+        else:
+            #Check if the values differ:
+            if pt[1] == sortedValue[i-1][1]:                    
+                repeatedEntries.append(originalIndex) #Entries are identical, but repeated
             else:
-                if not x:
-                    return x
-                unit = 1.
+                inconsistentEntries.append(originalIndex) #Masses are identical, but with inconsistent values
+
+    if inconsistentEntries:
+        for j in inconsistentEntries:
+            logger.warning("Mass entry %s appears in data with distinct values"
+                             %(str(datalist[j][0]).replace(" ","")))
             
-            return round(x,-int(floor(log10(x))) + (n - 1))*unit
+    if repeatedEntries:
+        for j in repeatedEntries:
+            logger.info("Entry %s appears in data repeated (after rounding)"
+                             %(str(datalist[j]).replace(" ","")))
+            
 
-    def removeRepeated(self,datalist):
-        """
-        Loops over the data grid and remove points with identical
-        mass values. Issues an warning if points appear repeated
-        and with distinct values (upper limit value or efficiency value).
-        
-        :param datalist:  data grid list (e.g. [[massArray1,ul1],[massArray2,ul2],...]
-        
-        :return: New list with repeated values removed
-        """
-        
-        #First sort list (for performance)
-        sortedValue = sorted(datalist, key = lambda x: x[0])
-        sortedIndices = sorted(range(len(datalist)), key = lambda k: datalist[k][0])
-        uniqueEntries = []
-        repeatedEntries = []
-        inconsistentEntries = []
-        for i,pt in enumerate(sortedValue):
-            originalIndex = sortedIndices[i]
-            m = pt[0]
-            #Check if new mass is different from previous one:
-            if m != sortedValue[i-1][0]:
-                uniqueEntries.append(originalIndex)
-            else:
-                #Check if the values differ:
-                if pt[1] == sortedValue[i-1][1]:                    
-                    repeatedEntries.append(originalIndex) #Entries are identical, but repeated
-                else:
-                    inconsistentEntries.append(originalIndex) #Masses are identical, but with inconsistent values
+    #Remove repeated entries:                    
+    newList = [pt for i,pt in enumerate(datalist) if i in uniqueEntries]
 
-        if inconsistentEntries:
-            for j in inconsistentEntries:
-                logger.warning("Mass entry %s appears in data with distinct values"
-                                 %(str(datalist[j][0]).replace(" ","")))
-
-        #Remove repeated entries:                    
-        newList = [pt for i,pt in enumerate(datalist) if i in uniqueEntries]
-
-        return newList
+    return newList
 
 databaseCreator = DatabaseCreator()
 
