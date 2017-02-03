@@ -40,7 +40,7 @@ for expRes in database.getExpResults(useSuperseded=True, useNonValidated=True):
     for txname in expRes.getTxNames():
 #         if txname.txName != 'T5tbtb': continue
         #Skip incomplete analysis
-        if txname.getInfoFromPlanes('constraint') == 'not yet assigned': continue 
+        if txname.getMetaData('constraint') == 'not yet assigned': continue 
         template = os.path.join(templateDir,txname.txName+'.template')
         if template in goodTemplates: continue
         if template in badTemplates: continue
@@ -53,7 +53,7 @@ for expRes in database.getExpResults(useSuperseded=True, useNonValidated=True):
             logger.warning('Template missing for %s' %txname.txName)
             continue
         try:
-            axes = txname.getInfoFromPlanes('axes')
+            axes = txname.getMetaData('axes')
             if not isinstance(axes,list): axes = [axes]
             for ax in axes:
                 tempf = TemplateFile(template,ax)

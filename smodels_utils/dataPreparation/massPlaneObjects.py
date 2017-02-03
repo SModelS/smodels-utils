@@ -19,9 +19,12 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
-#All possible plane variables are defined here:
-x, y, z = var('x y z')
-allvars = [x,y,z]  #Order assumed for the data columns
+#Define all available variables
+#(The ordering is the default order assumed for columns in source txt files,
+# or the x,y,.. bins in ROOT histograms or the x,y values in ROOT TGraphs and svg files)
+#This order can be changed using the coordinates keyword in setSources or addSource.
+allvars = x,y,z = var('x y z')
+
      
 class MassPlane(object):
     """
@@ -59,20 +62,16 @@ class MassPlane(object):
                 sys.exit()
             self.setBranch(branchNumber=i,branchMasses=brMasses)
         
-        #Count mass plane dimensions:
+        self.axes = massArray
+        #Store plane variables (x,y,..)
         xvars = []
         for br in self.branches:
             for xvar in br._xvars:
                 if not xvar in xvars:
                     xvars.append(xvar)
-        dimensions = len(xvars)
-        self.dimensions = dimensions
-        self._exclusionCurves = []
-        #Define the default labels for the input axes variables
-        #(relevant for computing the masses from x,y,z...)
-        self.axesLabels = [str(xv) for xv in allvars][:dimensions]
-        
-        self.axes = massArray       
+        self.xvars = xvars #All variables used in defining the axes
+        self._exclusionCurves = []        
+         
 
 
     @classmethod
@@ -111,79 +110,94 @@ class MassPlane(object):
         else:
             self.branches[branchNumber] = Axes.fromConvert(branchMasses)
 
-    def setSources(self,dataLabels,dataFiles,dataFormats,objectNames=None,indices=None,units=None):
+    def setSources(self,dataLabels,dataFiles,dataFormats,
+                   objectNames=None,indices=None,units=None,coordinates=None):
         """
         Defines the data sources for the plane.
         
-        :param dataLabels: Single string with the data label or list of strings with the dataLabels
-                          possible data laels are defined in allowedDataLabels
+        :param dataLabels: List of strings with the dataLabels
+                          possible data labels are defined in allowedDataLabels
                           (e.g. efficiencyMap, upperLimits, expectedUpperLimits,...)
-        :param datafiles: Single string with the file path or list of strings with the file paths
+        :param dataFiles: List of strings with the file paths
                           to the data files.
-        :param dataFormats: Single string with the file format or list of strings with the file formats
+        :param dataFormats: List of strings with the file formats
                           for the data files.
         
-        :param objectName: name of object stored in root-file or cMacro or list of object names                         
-        :param indices: index of object in listOfPrimitives of ROOT.TCanvas or lis of indices
-        :param units: Unit string for objects (e.g. 'fb',None,'pb',...)
+        :param objectNames: List of object names stored in root-file or cMacro                         
+        :param indices: List of indices objects in listOfPrimitives of ROOT.TCanvas
+        :param units: List of strings with units for objects (e.g. 'fb',None,'pb',...)
+        :param coordinates: Lists of dictionaries with the mapping of txt file columns
+                            to the x,y,... coordinates (e.g. {x : 1, y: 2, 'value' :3})        
+        
         """
 
         #Make sure input is consistent:
-        if isinstance(dataFiles,list):
-            if indices is None:
-                indices = [None]*len(dataFiles)
-            if objectNames is None:
-                objectNames = [None]*len(dataFiles)
-            if units is None:
-                units = [None]*len(dataFiles)                
-            if not isinstance(dataLabels,list) or len(dataLabels) != len(dataFiles):
-                logger.error("dataLabels and dataFiles are not consistent:\n %s \n %s" %(dataLabels,dataFiles))
+        optionalInput = [objectNames,indices,units,coordinates]
+        allInput = [dataFiles,dataLabels,dataFormats] + optionalInput
+        for i,inputList in enumerate(allInput):
+            if inputList is None and inputList in optionalInput:
+                allInput[i] = [None]*len(dataFiles)
+            if not isinstance(allInput[i],list):
+                logger.error("Input must be a list")
                 sys.exit()
-            if not isinstance(dataFormats,list) or len(dataFormats) != len(dataFiles):
-                logger.error("dataFormats and dataFiles are not consistent:\n %s \n %s" %(dataFormats,dataFiles))
-                sys.exit()                
-            if not isinstance(indices,list) or len(indices) != len(dataFiles):
-                logger.error("indices and dataFiles are not consistent:\n %s \n %s" %(indices,dataFiles))
+            elif len(allInput[i]) != len(dataFiles):
+                logger.error("Length of lists is inconsistent")
                 sys.exit()
-            if not isinstance(objectNames,list) or len(objectNames) != len(dataFiles):
-                logger.error("objectNames and dataFiles are not consistent:\n %s \n %s" %(objectNames,dataFiles))
-                sys.exit()
-                                
-        elif not isinstance(dataFiles,str):
-            logger.error('dataFiles must be a list or a single string')
-        else:
-            if not isinstance(dataLabels,str):
-                logger.error("dataLabels and dataFiles are not consistent")
-                sys.exit()
-            if not isinstance(dataFormats,str):
-                logger.error("dataFormats and dataFiles are not consistent")
-                sys.exit()      
-            dataFiles = [dataFiles]
-            dataLabels = [dataLabels]
-            indices = [indices]
-            objectNames = [objectNames]
             
             
         for i,dataFile in enumerate(dataFiles):
-            dataLabel = dataLabels[i]
-            dataFormat = dataFormats[i]
-            index = indices[i]
-            objectName = objectNames[i]
-            unit = units[i]
-            if not dataLabel in self.allowedDataLabels:
-                logger.warning("Data label %s is not allowed and will be ignored" %dataLabel)
-                continue
-            if not 'exclusion' in dataLabel.lower():
-                #Initialize a data handler
-                dataObject = DataHandler(dataLabel,self.dimensions)
-            else:
-                dataObject = ExclusionHandler(dataLabel)
-                self._exclusionCurves.append(dataObject)
-            #Set source of object
-            dataObject.setSource(dataFile, dataFormat, objectName, index)
-            dataObject.unit = unit
-            #Store it as a mass plane attribute:            
-            setattr(self,dataLabel,dataObject)
+            dataLabel = allInput[1][i]
+            dataFormat = allInput[2][i]            
+            objectName = allInput[3][i]
+            index = allInput[4][i]
+            unit = allInput[5][i]
+            coordinate = allInput[6][i]
+            self.addSource(dataLabel,dataFile, dataFormat, 
+                           objectName, index, unit, coordinate)
+
+    def addSource(self,dataLabel,dataFile,dataFormat,
+                   objectName=None,index=None,unit=None,coordinateMap=None):
+        """
+        Defines a single data sources for the plane.
+        
+        :param dataLabel: Srings with the dataLabel
+                          possible data labels are defined in allowedDataLabels
+                          (e.g. efficiencyMap, upperLimits, expectedUpperLimits,...)
+        :param dataFile: Strings with the file path to the data file.
+        :param dataFormat: Strings with the file format for the data file.
+        
+        :param objectName: String with the object name stored in root-file or cMacro                         
+        :param index: Index for objects in listOfPrimitives of ROOT.TCanvas
+        :param unit: Strings with unit for data (e.g. 'fb',None,'pb',...)
+        :param coordinateMap: Dictionaries with the mapping of txt file columns
+                            to the x,y,... coordinates (e.g. {x : 0, y: 1, 'ul' :2})    
+        
+        """
+        
+        dimensions = len(self.xvars)
+        if not dataLabel in self.allowedDataLabels:
+            logger.warning("Data label %s is not allowed and will be ignored" %dataLabel)
+            return False
+        if not 'exclusion' in dataLabel.lower():
+            #Define the default coordinate mapping:
+            if not coordinateMap:
+                coordinateMap = dict([[xv,i] for i,xv in enumerate(allvars[:dimensions])])
+                coordinateMap['value'] = dimensions            
+            #Initialize a data handler
+            dataObject = DataHandler(dataLabel,coordinateMap,self.xvars)
+        else:
+            #Define the default 1D coordinate mapping for exclusion curves
+            if not coordinateMap:
+                coordinateMap = {x : 0, y : 1, 'value' : None}
+            dataObject = ExclusionHandler(dataLabel,coordinateMap,[x,y])
+            self._exclusionCurves.append(dataObject)
+        
+        #Set source of object
+        dataObject.setSource(dataFile, dataFormat, objectName, index)
+        dataObject.unit = unit
+        #Store it as a mass plane attribute:            
+        setattr(self,dataLabel,dataObject)
+
         
     def getParticleMasses(self,**xMass):
 
@@ -346,9 +360,9 @@ class Axes(object):
         """
         
         xvars = []
-        for eq in self._equations:
-            for v in [x,y,z]:
-                if v in eq.free_symbols and not v in xvars:
+        for eq in self._equations:            
+            for v in eq.free_symbols:                
+                if v in allvars and not v in xvars:
                     xvars.append(v)
 
         #Vars defines the number of variables to be solved for:

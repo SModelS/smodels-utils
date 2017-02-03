@@ -265,8 +265,8 @@ def checkNewOutput(new,old,setValidated=True):
             if setValidated:
                 replaceValidated(fnew,fold)                     
             if not compareLines(fnew,fold,ignore=['#']):
-                if not compareFields(fnew,fold,ignoreFields=['susyProcess'],
-                                     skipFields=['axes','dataUrl','figureUrl']):
+                if not compareFields(fnew,fold,ignoreFields=['susyProcess','source','publishedData','dataUrl'],
+                                     skipFields=['axes','figureUrl']):
                     return False
     
     

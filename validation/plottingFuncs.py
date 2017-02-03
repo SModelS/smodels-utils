@@ -88,10 +88,10 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):
 def getFigureUrl(validationPlot ):
     
     txname = validationPlot.expRes.datasets[0].txnameList[0]
-    txurl = txname.getInfoFromPlanes("figureUrl")
-    txaxes = txname.getInfoFromPlanes("axes")
+    txurl = txname.getMetaData("figureUrl")
+    txaxes = txname.getMetaData("axes")
     if isinstance(txurl,str):
-        return txname.getInfoFromPlanes("figureUrl" )
+        return txname.getMetaData("figureUrl" )
     if not txurl:
         return None
     if type(txurl) != type(txaxes):

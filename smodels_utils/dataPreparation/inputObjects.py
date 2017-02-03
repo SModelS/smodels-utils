@@ -248,7 +248,7 @@ class DataSetInput(Locker):
         
         lumi = getattr(databaseCreator.metaInfo,'lumi')
         if isinstance(lumi,str):
-            lumi = eval(lumi)
+            lumi = eval(lumi,{'fb':fb,'pb': pb})
         ul = statistics.upperLimit(self.observedN, self.expectedBG, 
                                    self.bgError, lumi, .05, 200000).asNumber(fb)
         ulExpected = statistics.upperLimit(self.expectedBG, self.expectedBG, 
@@ -285,7 +285,7 @@ class TxNameInput(Locker):
     
     
     infoAttr = ['txName','constraint','condition','conditionDescription','finalState',
-                'susyProcess','checked','figureUrl','dataUrl','publishedData',
+                'susyProcess','checked','figureUrl','dataUrl','source',
                 'validated','axes','upperLimits',
                 'efficiencyMap','expectedUpperLimits']
     internalAttr = ['_name', 'name', '_txDecay','_planes','_goodPlanes',
@@ -293,7 +293,7 @@ class TxNameInput(Locker):
     'condition', 'conditionDescription','massConstraint',
     'upperLimits','efficiencyMap','expectedUpperLimits','massConstraints','_dataLabels']
     
-    requiredAttr = ['constraint','condition','txName','axes']
+    requiredAttr = ['constraint','condition','txName','axes','dataUrl','source']
     
     
     def __init__(self,txName):
@@ -412,11 +412,12 @@ class TxNameInput(Locker):
                     if not plane in self._goodPlanes: 
                         self._goodPlanes.append(plane)
                 
-    def getInfoFromPlanes(self):
+    def getMetaData(self):
         """
         Collects all the info attributes from its mass planes
         (only for the planes which generated data and are stored
-        in _goodPlanes) and stores it in self. Also defines additional information.
+        in _goodPlanes) and stores it in self.
+        Also defines additional information.
         """
         
         for infoAttr in self.infoAttr:
@@ -432,7 +433,6 @@ class TxNameInput(Locker):
                 infoStr = ";".join(infoList)
                 setattr(self,infoAttr,infoStr)
         
-        self.publishedData = hasattr(self,'dataUrl')
         self.validated = 'Not done yet'
 
     def addDataFrom(self, plane, dataLabel):
@@ -449,7 +449,7 @@ class TxNameInput(Locker):
         """
         
         #Get dimension of the plot:
-        nvars = plane.dimensions
+        nvars = len(plane.xvars)
         if nvars < 1 or nvars > 3:
             logger.error('Can not deal with %i variables' %nvars)
             sys.exit()
@@ -462,25 +462,28 @@ class TxNameInput(Locker):
         dataHandler = getattr(plane,dataLabel)
         
         dataList = []        
-        for pt in dataHandler:
-            if len(pt) != nvars+1:
+        for ptDict in dataHandler:
+            if len(ptDict) != nvars+1:
                 logger.error("Number of free parameters in data and in axes do not match")
-                sys.exit()
-            xvals = pt[:nvars]
-            value = pt[-1]
-            #The ordering of the coordinates in the data source is
-            #assumed to follow the one defined in plane.axesLabels:
-            xdict = dict([[plane.axesLabels[i],xv] for i,xv in enumerate(xvals)])
-            massArray = plane.getParticleMasses(**xdict)
+                sys.exit()                
+            
+            #ptDic is of the form: {x : float, y : float, value-key : float}
+            #where value-key is any key identifind the (upper limit,efficiency,..) value
+            #Restrict the pt dictionary to only the variable values:
+            xDict = dict([[str(xv),v] for xv,v in ptDict.items() if xv in plane.xvars])
+            #Get the (upper limit, efficiency,..) value:
+            value = [v for xv,v in ptDict.items() if  not xv in plane.xvars][0]
+            massArray = plane.getParticleMasses(**xDict)
             #Check if mass array is consistent with the mass constraints given by the 
             #txname constraint. If not, skip this mass.
             if not self.checkMassConstraints(massArray):
                 continue
             #Add units
             if hasattr(dataHandler, 'unit') and dataHandler.unit:
-                value = value*eval(dataHandler.unit)
+                value = value*eval(dataHandler.unit, 
+                                   {'fb':fb,'pb': pb,'GeV': GeV,'TeV': TeV})
             if hasattr(dataHandler, 'massUnit') and dataHandler.massUnit:
-                massArray = [[m*eval(dataHandler.massUnit) for m in br ] for br in massArray]
+                massArray = [[m*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV}) for m in br ] for br in massArray]
             dataList.append([massArray, value])
         
         if not dataList:
@@ -549,14 +552,18 @@ class TxNameInput(Locker):
         for el in elementsInStr(self.constraint,removeQuotes=False):
             el = eval(el)
             #Replace particles in element by their masses
-            massConstraint = [[[massDict[ptc] for ptc in vertex] for vertex in br] for br in el]
+            massConstraint = []
+            for ibr,br in enumerate(el):
+                massConstraint.append([])
+                for vertex in br:
+                    massConstraint[ibr].append([massDict[ptc] for ptc in vertex])
             self.massConstraints.append(massConstraint) 
             
         #Now convert the constraints to inequality expressions:
         for el in self.massConstraints:
             for branch in el:
                 for iv,vertex in enumerate(branch):
-                    eqStr = "m >= "
+                    eqStr = "dm >= "
                     massValue = sum(vertex)
                     eqStr += str(massValue)
                     branch[iv] = eqStr
@@ -592,7 +599,7 @@ class TxNameInput(Locker):
                         logger.error("Parent mass is smaller than daughter mass for %s" %str(self))
                         sys.exit()
                     #Evaluate the inequality replacing m by the mass difference:
-                    check = eval(vertex,{'m' : massDiff}) 
+                    check = eval(vertex,{'dm' : massDiff}) 
                     if check is False:
                         goodMasses = False
                         break

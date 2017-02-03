@@ -27,30 +27,48 @@ class DataHandler(object):
     methods to set the data source and preprocessing the data
     """
     
-    def __init__(self,dataLabel,dimensions):
+    def __init__(self,dataLabel,coordinateMap,xvars):
         
         """
         initialize data-source attributes with None
         and allowNegativValues with False
         :param name: name as string
         :param dimensions: Dimensions of the data (e.g., for x,y,value, dimensions =2).
+        :param coordinateMap: A dictionary mapping the index of the variables in the data and the
+                          corresponding x,y,.. coordinates used to define the plane axes.
+                          (e.g. {x : 0, y : 1, 'ul value' : 2} for a 3-column data,
+                          where x,y,.. are the sympy symbols and the value key can be anything)
+        :param xvars: List with x,y,.. variables (sympy symbols).
         """
         
         self.name = dataLabel
-        self.dimensions = dimensions
+        self.dimensions = len(xvars)
+        self.coordinateMap = coordinateMap
+        self.xvars = xvars
         self.path = None
+        self.files = []
         self.fileType = None
         self.objectName = None
         self.dataUrl = None
         self.index = None
         self.allowNegativValues = False
         self.dataset=None
-        self.percentage=False
         self._massUnit = 'GeV'
         self._unit = None  #Default unit
         
         if self.name == 'upperLimits' or self.name == 'expectedUpperLimits':
             self._unit = 'pb'
+            
+        #Consistency checks:
+        if len(coordinateMap) != self.dimensions+1:
+            logger.error("Coordinate map %s is not consistent with number of dimensions (%i)"
+                         %(coordinateMap,self.dimensions))
+            sys.exit()
+        for xv in self.xvars:
+            if not xv in coordinateMap:
+                logger.error("Coordinate %s has not been defined in coordinateMap" %xv)
+                sys.exit()
+                       
                 
     @property
     def unit(self):
@@ -105,12 +123,41 @@ class DataHandler(object):
             sys.exit()
         
         for point in getattr(self,self.fileType)():
+            if self.allowNegativValues:
+                yield point
             #Check if the upper limit value is positive:
-            if not self._positivValues(point[-1:]):
-                continue
-            if self.percentage:
-                point[-1]=point[-1]/100.            
-            yield point
+            else:
+                #Just check floats in the point elements which are not variables
+                values = [value for xv,value in point.items() if not xv in self.xvars]
+                if self._positivValues(values):
+                    yield point
+    
+    def mapPoint(self,point):
+        """
+        Convert a point in list format (e.g. [float,float,float])
+        to a dictionary using the definitions in self.coordinateMap
+        
+        :param point: list with floats
+        
+        :return: dictionary with coordinates and value 
+                 (e.g. {x : x-float, y : y-float, 'ul' : ul-float})
+        """
+
+        if len(point) < self.dimensions+1:
+            logger.error("Data should have at least %i dimensions (%i dimensions found)" 
+                         %(self.dimensions+1,len(point)))
+            sys.exit()
+
+        ptDict = {}
+        #Return a dictionary with the values:
+        for xvar,i in self.coordinateMap.items():
+            #Skip variables without indices (relevant for exclusion curves)
+            if i is None:
+                continue  
+            ptDict[xvar] = point[i]
+        
+        return ptDict
+        
         
     def setSource(self, path, fileType, objectName = None, index = None):
         
@@ -122,13 +169,14 @@ class DataHandler(object):
         :param index: index of object in listOfPrimitives of ROOT.TCanvas
         """
         
-        if not os.path.exists(path):
-            logger.error("Files %s not found" %path)
+        if not os.path.isfile(path):
+            logger.error("File %s not found" %path)
             sys.exit()
+                
         self.path = path
         self.fileType = fileType
         self.objectName = objectName
-        self.index = index
+        self.index = index        
         
     @property
     def massUnit(self):
@@ -154,13 +202,7 @@ class DataHandler(object):
                 logger.error('Mass units must be in %s' %str(units))
                 sys.exit()
             self._massUnit = unitString
-        
-    def usePercentage ( self, value=True ):
-        """ for efficiency maps, data is given in percentage 
-            (value=True), or in fractions (value=False)
-        """
-        self.percentage = value 
-
+            
     def _positivValues(self, values):
         
         """checks if values greater then zero
@@ -208,12 +250,8 @@ class DataHandler(object):
                 logger.error("Error evaluating values %s in file %s" %(values,self.path))
                 sys.exit() 
                 
-            if len(values) != self.dimensions+1:
-                logger.error("Data should have %i dimensions (%i dimensions found)" 
-                             %(self.dimensions+1,len(values)))
-                sys.exit()
-                
-            yield values  
+                            
+            yield self.mapPoint(values)  
     
     def root(self):
         
@@ -238,11 +276,8 @@ class DataHandler(object):
         rootFile.Close()
         
         for point in self._getPoints(obj):
-            if len(point) != self.dimensions+1:
-                logger.error("Data should have %i dimensions (%i dimensions found)" 
-                             %(self.dimensions+1,len(point)))
-                sys.exit()            
-            yield point
+            yield self.mapPoint(point)  
+
         
     def cMacro(self):
         
@@ -266,11 +301,7 @@ class DataHandler(object):
             sys.exit()
             
         for point in self._getPoints(limit):
-            if len(point) != self.dimensions+1:
-                logger.error("Data should have %i dimensions (%i dimensions found)" 
-                             %(self.dimensions+1,len(point)))
-                sys.exit()
-            yield point
+            yield self.mapPoint(point)
             
     def canvas(self):
         
@@ -301,11 +332,7 @@ class DataHandler(object):
             sys.exit()
         
         for point in self._getPoints(limit):
-            if len(point) != self.dimensions+1:
-                logger.error("Data should have %i dimensions (%i dimensions found)" 
-                             %(self.dimensions+1,len(point)))
-                sys.exit()            
-            yield point   
+            yield self.mapPoint(point)
             
     def _getPoints(self,obj):
         
@@ -411,16 +438,20 @@ class ExclusionHandler(DataHandler):
     exclusion line
     """
     
-    def __init__(self,name):
+    def __init__(self,name,coordinateMap,xvars):
         
         """
         attributes 'sort' and 'reverse' are initialized with False
         :param name: name as string
-        :param dimensions: Dimensions of the data (should always be 1).        
+        :param coordinateMap: A dictionary mapping the index of the variables in the data and the
+                          corresponding x,y,.. coordinates used to define the plane axes.
+                          (e.g. {x : 0, y : 1, 'ul value' : 2} for a 3-column data,
+                          where x,y,.. are the sympy symbols and the value key can be anything)
+        
         """
         
         #Exclusion curve always has dimensions = 1 (x-value)
-        DataHandler.__init__(self,name,1)  
+        DataHandler.__init__(self,name,coordinateMap,xvars)  
         self.sort = False
         self.reverse = False
         self.dimensions = 1
@@ -509,7 +540,7 @@ class ExclusionHandler(DataHandler):
                 yorig += float(v[1])
                 x = (xorig-x0)/xGeV
                 y = (yorig-y0)/yGeV
-                yield [x,y]
+                yield self.mapPoint([x,y])
         else:
             for l in lines[1:]:
                 v = l.split(' ')
@@ -517,5 +548,5 @@ class ExclusionHandler(DataHandler):
                 yorig = float(v[1])
                 x = (xorig-x0)/xGeV
                 y = (yorig-y0)/yGeV
-                yield [x,y]
+                yield self.mapPoint([x,y])
                 

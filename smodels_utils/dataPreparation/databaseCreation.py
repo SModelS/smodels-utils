@@ -149,7 +149,7 @@ class DatabaseCreator(list):
 
                 #(getData has to be called first to define which planes contain data for this txname)
                 txName.getDataFromPlanes(dataType = dataset.dataType)  #Read source files and load data
-                txName.getInfoFromPlanes()  #Set txname info attributes
+                txName.getMetaData()  #Set txname info attributes
                 #Write down txname.txt                
                 if txName.hasData(dataset.dataType): #Do not write empty txnames:
                     self._createTxnameFile(str(txName), txName)
@@ -186,8 +186,9 @@ class DatabaseCreator(list):
                         stGraph.SetTitle(name)
                         stGraph.name = exclusion.name
                         stGraph.txname = txname.txName
-                        for i,point in enumerate(exclusion):
-                            stGraph.SetPoint(i,point[0],point[1])
+                        for i,pointDict in enumerate(exclusion):
+                            point = dict([[str(xv),v] for xv,v in pointDict.items()])
+                            stGraph.SetPoint(i,point['x'],point['y'])
                         stGraph.SetLineColor(ROOT.kBlack)
                         if 'expected' in exclusion.name:
                             stGraph.SetLineColor(ROOT.kRed)

@@ -271,7 +271,7 @@ def addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint):
     #Set mass constraint for off-shell txname:
     massConstraint = getMassConstraint(txname,onshellConstraint) #Get on-shell constraints
     massConstraintOff = str(massConstraint).replace('>','<') #Get off-shell constraints
-    massConstraintOff = massConstraintOff.replace("'dm <= 0.0'","'dm >= 0.0'") #Revert back dummy constraints
+    massConstraintOff = massConstraintOff.replace("'m <= 0.0'","'m >= 0.0'") #Revert back dummy constraints
     fnew.write('%soff.massConstraint = %s\n' %(txname,massConstraintOff))
     return True
 
@@ -329,99 +329,74 @@ def main(f,fnew):
     fnew.write(metaData+'\n\n')
     
     #Collect datasets
-    datasets = getDatasetIds(fold)    
+    datasets = getDatasetIds(fold)
+    #Collect files:
     #For now only deals with UL results
     #Write dataset blocks:
+    fnew.write("#+++++++ dataset block ++++++++++++++\n")
+    fnew.write('datasets = \n' %datasets)
+    fnew.write('for dataset in datasets:\n')
     for dataId in datasets:
-        fnew.write("#+++++++ dataset block ++++++++++++++\n")
-        if dataId is None:
-            dataFolder = 'data'
-            dataType = 'upperLimit'
-        else:
-            dataFolder = dataId.replace(" ","")
-            dataType = 'efficiencyMap'
-        datasetStr = "dataset = DataSetInput('%s')\n" %dataFolder #Dataset folder name                
-        datasetStr += "dataset.setInfo(dataType = '%s', dataId = %s)" %(dataType,dataId)
+        dataFolder = dataId.replace(" ","")
+        dataType = 'efficiencyMap'
+        statStr = getDatasetStatistics(dataId)
+        datasetStr = "    dataset = DataSetInput('%s')\n" %dataFolder #Dataset folder name                
+        datasetStr += "    dataset.setInfo(dataType = '%s', dataId = %s, %s)" %(dataType,dataId,statStr)
         fnew.write(datasetStr+'\n\n')
         
-    if datasets != [None]:
-        print 'efficiency map result not yet implemented (%s)' %f.replace('convert.py','')
-        fold.close()
-        fnew.close()        
-        return None
-        
-        
-    #Get Txnames:
-    txnames = getObjectNames(fold, 'TxNameInput')
-    for txname in txnames:
-        if txnames.count(txname) > 1:
-            print 'Txname %s is defined multiple times' %txname
-            return False
-        
-        fnew.write("#+++++++ next txName block ++++++++++++++\n")
-        txLines = getObjectLines(fold, txname,'TxNameInput')
-        txOffLines = []
-        onshellConstraint = None        
-        for l in txLines:
-            if 'TxNameInput(' in l:
-                l = l.replace('TxNameInput(','dataset.addTxName(')
-            elif '.off.' in l:
-                txOffLines.append(l)
-                continue
-            elif '.on.' in l:
-                if '%s.on.constraint'%txname in l:
-                    onshellConstraint = l.split('=')[1].strip()
-                l = l.replace('.on.','.')
-            fnew.write(l)
-        #Automatically define source:
-        if "MetaInfoInput('ATLAS" in metaData.replace(" ",""):
-            source = 'ATLAS'
-        elif "MetaInfoInput('CMS" in metaData.replace(" ",""):
-            source = 'CMS'
-        else:
-            source = None
-        if source:
-            fnew.write('%s.source = "%s"\n' %(txname,source))
-        #Add txnameOff definitions:
-        if txOffLines:
-            addedTxOff = addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint)
-            if addedTxOff and source:
-                    fnew.write('%soff.source = "%s"\n' %(txname,source))
-
-
-        #Get mass planes for txname:
-        massPlanes = getObjectNames(fold, '%s.addMassPlane'%txname)
-        for plane in massPlanes:
-            fnew.write("#+++++++ next mass plane block ++++++++++++++\n")
-            if massPlanes.count(plane) > 1:
-                print 'Plane %s for %s is defined multiple times' %(plane,txname)
-                return False
-            planeLines = getObjectLines(fold, plane, '%s.addMassPlane'%txname)
-            hasDataUrl = False            
-            for l in planeLines:
-                if '.addMassPlane(' in l:
-                    l = newMassFormat(l)
-                elif '.setSource' in l:
+        #Get Txnames:
+        txnames = getObjectNames(fold, 'TxNameInput')
+        for txname in txnames:           
+            fnew.write("#+++++++ next txName block ++++++++++++++\n")
+            txLines = getObjectLines(fold, txname,'TxNameInput')
+            txOffLines = []
+            onshellConstraint = None
+            for l in txLines:
+                if 'TxNameInput(' in l:
+                    l = l.replace('TxNameInput(','dataset.addTxName(')
+                elif '.off.' in l:
+                    txOffLines.append(l)
                     continue
-                elif '.obsUpperLimit.dataUrl' in l:
-                    l = l.replace('.obsUpperLimit','')
-                elif l.split('=')[0].count('.') > 1:
-                    continue  #Skip attributes given to derived objects
-                if 'dataUrl' in l:
-                    hasDataUrl = True
+                elif '.on.' in l:
+                    if '%s.on.constraint'%txname in l:
+                        onshellConstraint = l.split('=')[1].strip()
+                    l = l.replace('.on.','.')
                 fnew.write(l)
-            #Write down dataUrl if not yet appears:
-            if not hasDataUrl:
-                fnew.write("%s.dataUrl = 'Not defined'\n" %plane)
-            #Extract sources from file:
-            sourceStr = plane+getSources(planeLines)
-            fnew.write(sourceStr+'\n')
-
-            #Add plane to off-shell txname, if off-shell lines
-            #have been added
-            if txOffLines and addedTxOff:          
-                fnew.write("%s.addMassPlane(%s)\n" %(txname+"off",plane))
-            
+            #Add txnameOff definitions:
+            if txOffLines:
+                addedTxOff = addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint)
+    
+            #Get mass planes for txname:
+            massPlanes = getObjectNames(fold, '%s.addMassPlane'%txname)
+            for plane in massPlanes:
+                fnew.write("#+++++++ next mass plane block ++++++++++++++\n")
+                if massPlanes.count(plane) > 1:
+                    print 'Plane %s for %s is defined multiple times' %(plane,txname)
+                    return False
+                planeLines = getObjectLines(fold, plane, '%s.addMassPlane'%txname)            
+                for l in planeLines:
+                    if '.addMassPlane(' in l:
+                        l = newMassFormat(l)
+                    elif '.setSource' in l:
+                        continue
+                    elif '.obsUpperLimit.dataUrl' in l:
+                        l = l.replace('.obsUpperLimit','')
+                    elif l.split('=')[0].count('.') > 1:
+                        continue  #Skip attributes given to derived objects
+                    fnew.write(l)
+                #Extract sources from file:
+                sourceStr = plane+getSources(planeLines)
+                fnew.write(sourceStr+'\n')
+    
+                #Add plane to off-shell txname, if off-shell lines
+                #have been added
+                if txOffLines and addedTxOff:          
+                    fnew.write("%s.addMassPlane(%s)\n" %(txname+"off",plane))
+                
+            fnew.write('\n')
+        
+        
+        for txname in txnames:
         fnew.write('\n')
             
         
@@ -437,26 +412,18 @@ def main(f,fnew):
 if __name__ == "__main__":
     
     
-    skipList = ['ATLAS-CONF-2013-001', #T6bbWW only has off-shell data, so the on-shell massConstraint has to be set
-                'ATLAS-CONF-2013-007',  #Mass constraints are tricky and need to be fixed by hand
-                'ATLAS-CONF-2013-035',   #DataUrl was not set for full plane
-                'ATLAS-CONF-2013-036',    #TChiSlepSlep (asymmetric branches)
-                'ATLAS-CONF-2013-047','ATLAS-SUSY-2013-02',    #TGQ (asymmetric branches)
-                'ATLAS-SUSY-2013-15'   #Plane assignments are tricky (on/off-shell) and need to be defiend by hand                
-                ]
+    skipList = [ ]
     
-    ignoreList = ['CMS-SUS-13-006',
-                  'CMS-SUS-13-007',
-                  'CMS-SUS-13-013'] #The on/off-shell splitting in master is inconsistent with the constraints
+    ignoreList = []
     
     #Set SMODELSNOUPDATE to avoid rewritting implementedBy and lastUpdate fields:
     os.environ["SMODELS_NOUPDATE"] = 'True'
     timeOut = 150.
     
-    for f in sorted(glob.glob(databasePath+'/*/*/*/convert.py'))[:]:
+    for f in sorted(glob.glob(databasePath+'/*/*/*/convert.py')):
         
-        if '-eff' in f:
-#             print "\033[31m Not checking EM result %s \033[0m" %f.replace('convert.py','')
+        if not '-eff' in f:
+            print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
             continue  #Skip efficiency map results
         
         ignore = False
