@@ -3,19 +3,24 @@
 import sys, os, time
 sys.path.insert(0,"../")
 from smodels.experiment.databaseObj import Database
+from smodels.installation import version
+import numpy
+
 try:
     import commands as executor
 except:
     import subprocess as executor
 
 
-f=open("log","w")
-dir = "./database/"
-# dir = "../../smodels-database/"
+f=open("log%s" % version(),"w")
+# dir = "./database/"
+dir = "../../smodels-database/"
 
 def write ( line ):
     f.write ( line + "\n" )
     print ( line )
+
+write ( "version: %s" % version() )
 
 pcl = "%sdatabase.pcl" % dir
 
@@ -34,11 +39,20 @@ d=Database( dir )
 t2=time.time()
 write ( "Reading the database took %.2f seconds." % ( t2 - t1 ) )
 
-executor.getoutput ( "sudo /home/walten/.local/bin/drop_caches.sh" )
-t3=time.time()
+statistics = []
 
-d=Database( dir )
-t4=time.time()
-write ( "Reading the database (flushed) took %.2f seconds." % ( t4 - t3 ) )
-f.close()
+for i in range(10):
+    executor.getoutput ( "sudo /home/walten/.local/bin/drop_caches.sh" )
+    t3=time.time()
+
+    d=Database( dir )
+    t4=time.time()
+    dt = t4 - t3
+    write ( "Reading the database (flushed) took %.2f seconds." % dt )
+    statistics.append ( dt )
+
+write ( "avg time reading database: %.2f +- %.2f" % \
+        ( numpy.mean(statistics), numpy.sqrt ( numpy.var ( statistics ) ) ) )
+
 write ( "done" )
+f.close()
