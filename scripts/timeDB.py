@@ -10,8 +10,12 @@ except:
 
 
 f=open("log","w")
-# dir = "./database/"
-dir = "../../smodels-database/"
+dir = "./database/"
+# dir = "../../smodels-database/"
+
+def write ( line ):
+    f.write ( line + "\n" )
+    print ( line )
 
 pcl = "%sdatabase.pcl" % dir
 
@@ -19,21 +23,22 @@ if os.path.exists ( pcl ):
     os.unlink ( pcl )
 
 t0=time.time()
+write ( "start" )
 d=Database( dir )
-f.write(d+"\n" )
+write( str(d) )
 t1=time.time()
-f.write ( "Building the database took %.2f seconds.\n" % ( t1 - t0 ) )
+write ( "Building the database took %.2f seconds." % ( t1 - t0 ) )
 s = os.stat ( pcl )
-f.write ( "Database is %.1f MB.\n" % ( s.st_size / 1000. / 1000. ) )
+write ( "Database is %.1f MB." % ( s.st_size / 1000. / 1000. ) )
 d=Database( dir )
 t2=time.time()
-f.write ( "Reading the database took %.2f seconds.\n" % ( t2 - t1 ) )
+write ( "Reading the database took %.2f seconds." % ( t2 - t1 ) )
 
 executor.getoutput ( "sudo /home/walten/.local/bin/drop_caches.sh" )
 t3=time.time()
 
 d=Database( dir )
 t4=time.time()
-f.write ( "Reading the database (flushed) took %.2f seconds.\n" % ( t4 - t3 ) )
+write ( "Reading the database (flushed) took %.2f seconds." % ( t4 - t3 ) )
 f.close()
-print ( "done" )
+write ( "done" )
