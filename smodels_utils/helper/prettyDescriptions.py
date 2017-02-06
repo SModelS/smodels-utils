@@ -9,10 +9,7 @@
 
 
 '''
-import logging,os,sys
-home = os.path.expanduser('~')
-utils = os.path.join(home,'smodels-utils/smodels_utils')
-sys.path.append(utils)
+import logging
 from sympy import var
 #For evaluating axes expressions in prettyAxes:
 x,y,z = var('x y z')

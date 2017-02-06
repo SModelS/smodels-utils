@@ -55,6 +55,7 @@ class DataHandler(object):
         self.dataset=None
         self._massUnit = 'GeV'
         self._unit = None  #Default unit
+        self._rescaleFactors = None
         
         if self.name == 'upperLimits' or self.name == 'expectedUpperLimits':
             self._unit = 'pb'
@@ -101,14 +102,38 @@ class DataHandler(object):
                 sys.exit()
             self._unit = unitString        
 
+    def loadData(self):
+        """
+        Loads the data and stores it in the data attribute
+        """
+
+        if not self.fileType:
+            logger.error("File type for %s has not been defined" %self.path)
+            sys.exit()
+        
+        #Load data
+        self.data = []
+        for point in getattr(self,self.fileType)():
+            ptDict = self.mapPoint(point) #Convert point to dictionary
+            if self.allowNegativValues:
+                self.data.append(ptDict)
+            #Check if the upper limit value is positive:
+            else:
+                #Just check floats in the point elements which are not variables
+                values = [value for xv,value in ptDict.items() if not xv in self.xvars]
+                if self._positivValues(values):
+                    self.data.append(ptDict)       
+        
+
     def __nonzero__(self):
         
         """
-        :returns: True if path and fileType is set, else False
+        :returns: True if contains data
         """
         
-        if self.path and self.fileType:
+        if hasattr(self,'data') and len(self.data):
             return True
+        
         return False
 
     def __iter__(self):
@@ -118,20 +143,121 @@ class DataHandler(object):
         :yield: [x-value in GeV, y-value in GeV,..., value]
         """
         
-        if not self.fileType:
-            logger.error("File type for %s has not been defined" %self.path)
-            sys.exit()
+        for point in self.data:
+            yield point
+ 
+    def __getitem_(self,i):
+        """
+        Returns the point located at i=x.
         
-        for point in getattr(self,self.fileType)():
-            if self.allowNegativValues:
-                yield point
-            #Check if the upper limit value is positive:
-            else:
-                #Just check floats in the point elements which are not variables
-                values = [value for xv,value in point.items() if not xv in self.xvars]
-                if self._positivValues(values):
-                    yield point
-    
+        :param i: Integer specifying the point index.
+        
+        :return: Point in dictionary format. 
+        """
+        
+        return self.data[i]
+     
+    def __len_(self):
+        """
+        Returns the data length.
+        
+        :return: Integer (length)
+        """         
+        
+        return len(self.data)
+
+    def getX(self):
+        
+        """
+        Iterates over the x,y,.. values for the data
+        :yield: {x : x-value, y: y-value,...}
+        """
+        
+        for point in self.data:
+            xDict = {}
+            for key,val in point.items():
+                if not key in self.vars:
+                    continue
+                xDict[key] = val
+            yield xDict
+            
+    def getValues(self):
+        
+        """
+        Iterates over the values for the data (e.g. upper limit for upperLimits,
+        efficiency for efficiencyMap,...)
+        :yield: {'value-keyword' : value}
+        """
+        
+        for point in self.data:
+            vDict = {}
+            for key,val in point.items():
+                if key in self.xvars:
+                    continue
+                vDict[key] = val
+            yield vDict            
+
+    def getPointsWith(self,**xvals):
+        """
+        Returns point(s) with the properties defined by input.
+        (e.g. x=200., y=100., will return all points with these values)
+        
+        :param xvals: Values for the variables (e.g. x=x-float, y=y-float,...)
+        
+        :return: list of points which satisfy the requirements given by xvals. 
+        """
+        
+        points = []
+        for point in self.data:
+            addPoint = True
+            for key,val in xvals.items():
+                if not key in point:
+                    logger.error("Key %s not allowed for data" %key)
+                    sys.exit()
+                if point[key] != val:
+                    addPoint = False
+                    break
+            
+            if addPoint:
+                points.append(point)
+                
+        return points
+
+    def reweightBy(self,data):        
+        """
+        Reweight the values in self by the values in data.
+        If data is a float, apply the same rescaling for all points.
+        If data is a DataHandler object, applies the rescaling to
+        the intersecting points:
+        
+        :param data: float or DataHandler object
+        """
+                
+        if isinstance(data,float):
+            for i,value in enumerate(self.getValues()):
+                factor = data
+                newvalue = dict([[key,val*factor] for key,val in value.items()])
+                self.data[i].update(newvalue)
+        elif isinstance(data,DataHandler):
+            for i,xvals in enumerate(self.getX()):
+                #Get the point in the data which matches the one in self
+                pts = data.getPointsWith(**xvals)
+                if not pts:
+                    continue
+                elif len(pts) > 1.:
+                    logger.error("More than one point in reweighting data matches point %s" %xvals)
+                    sys.exit()
+                else:
+                    pt = pts[0]
+                    oldpt = self.data[i]  #Old point
+                    for key,val in oldpt:
+                        if key in xvals or not key in pt:
+                            continue
+                        factor = pt[key]
+                        oldpt[key] = oldpt[key]*factor  #Rescale values which do not appear in xvals
+                    self.data[i] = oldpt #Store rescaled point
+
+            
     def mapPoint(self,point):
         """
         Convert a point in list format (e.g. [float,float,float])
@@ -157,9 +283,9 @@ class DataHandler(object):
             ptDict[xvar] = point[i]
         
         return ptDict
-        
-        
-    def setSource(self, path, fileType, objectName = None, index = None):
+                
+    def setSource(self, path, fileType, objectName = None, 
+                  index = None, unit = None, scale = None):
         
         """set path and type of data source
         :param path: path to data file as string
@@ -167,16 +293,24 @@ class DataHandler(object):
         name of every public method of child-class can be used
         :param objectName: name of object stored in root-file or cMacro,
         :param index: index of object in listOfPrimitives of ROOT.TCanvas
+        :param unit: string defining unit. If None, it will use the default values.
+        :param scale: float to re-escale the data.
         """
         
         if not os.path.isfile(path):
             logger.error("File %s not found" %path)
             sys.exit()
+            
+        if unit:
+            self.unit = unit
                 
         self.path = path
         self.fileType = fileType
         self.objectName = objectName
-        self.index = index        
+        self.index = index
+        self.loadData()
+        if scale:
+            self.reweightBy(scale)
         
     @property
     def massUnit(self):
@@ -251,7 +385,7 @@ class DataHandler(object):
                 sys.exit() 
                 
                             
-            yield self.mapPoint(values)  
+            yield values  
     
     def root(self):
         
@@ -276,8 +410,7 @@ class DataHandler(object):
         rootFile.Close()
         
         for point in self._getPoints(obj):
-            yield self.mapPoint(point)  
-
+            yield point  
         
     def cMacro(self):
         
@@ -301,7 +434,7 @@ class DataHandler(object):
             sys.exit()
             
         for point in self._getPoints(limit):
-            yield self.mapPoint(point)
+            yield point
             
     def canvas(self):
         
@@ -332,7 +465,7 @@ class DataHandler(object):
             sys.exit()
         
         for point in self._getPoints(limit):
-            yield self.mapPoint(point)
+            yield point
             
     def _getPoints(self,obj):
         
@@ -474,8 +607,7 @@ class ExclusionHandler(DataHandler):
         if self.reverse:
             points = reversed(points)
         for point in points:
-            yield point
-
+            yield self.mapPoint(point)
             
     def svg(self):
         
@@ -540,7 +672,7 @@ class ExclusionHandler(DataHandler):
                 yorig += float(v[1])
                 x = (xorig-x0)/xGeV
                 y = (yorig-y0)/yGeV
-                yield self.mapPoint([x,y])
+                yield [x,y]
         else:
             for l in lines[1:]:
                 v = l.split(' ')
@@ -548,5 +680,5 @@ class ExclusionHandler(DataHandler):
                 yorig = float(v[1])
                 x = (xorig-x0)/xGeV
                 y = (yorig-y0)/yGeV
-                yield self.mapPoint([x,y])
+                yield [x,y]
                 

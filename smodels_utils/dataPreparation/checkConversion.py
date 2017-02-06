@@ -225,7 +225,7 @@ def checkNewOutput(new,old,setValidated=True):
     
     
     #Check if folders have the same required structure:
-    comp = filecmp.dircmp(new,old,['convertNew.py','convertNew.py~','convert.py~']) #Ignore convertNew.py
+    comp = filecmp.dircmp(new,old,['convertNew.py','convertNew.py~','convert.py~','convertNew_template.py']) #Ignore convertNew.py
     if comp.left_only:
         logger.error('Only in new: %s' %comp.left_only)
         return False
@@ -266,7 +266,10 @@ def checkNewOutput(new,old,setValidated=True):
                 replaceValidated(fnew,fold)                     
             if not compareLines(fnew,fold,ignore=['#']):
                 if not compareFields(fnew,fold,ignoreFields=['susyProcess','source','publishedData','dataUrl'],
-                                     skipFields=['axes','figureUrl']):
+                                     skipFields=['axes']):
+                
+#                 if not compareFields(fnew,fold,ignoreFields=['susyProcess','source','publishedData','dataUrl'],
+#                                      skipFields=['axes','figureUrl']):
                     return False
     
     

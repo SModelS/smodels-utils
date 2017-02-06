@@ -36,6 +36,7 @@ class MassPlane(object):
     
     infoAttr = ['figureUrl','dataUrl','axes']
     allowedDataLabels = ['efficiencyMap','upperLimits','expectedUpperLimits',
+                         'acceptanceMap',
                         'obsExclusion','obsExclusionP1','obsExclusionM1',
                         'expExclusion','expExclusionP1','expExclusionM1']
     
@@ -111,7 +112,7 @@ class MassPlane(object):
             self.branches[branchNumber] = Axes.fromConvert(branchMasses)
 
     def setSources(self,dataLabels,dataFiles,dataFormats,
-                   objectNames=None,indices=None,units=None,coordinates=None):
+                   objectNames=None,indices=None,units=None,coordinates=None,scales=None):
         """
         Defines the data sources for the plane.
         
@@ -128,11 +129,12 @@ class MassPlane(object):
         :param units: List of strings with units for objects (e.g. 'fb',None,'pb',...)
         :param coordinates: Lists of dictionaries with the mapping of txt file columns
                             to the x,y,... coordinates (e.g. {x : 1, y: 2, 'value' :3})        
+        :param scales: Lists of floats to reescale the data (optional)        
         
         """
 
         #Make sure input is consistent:
-        optionalInput = [objectNames,indices,units,coordinates]
+        optionalInput = [objectNames,indices,units,coordinates,scales]
         allInput = [dataFiles,dataLabels,dataFormats] + optionalInput
         for i,inputList in enumerate(allInput):
             if inputList is None and inputList in optionalInput:
@@ -152,11 +154,12 @@ class MassPlane(object):
             index = allInput[4][i]
             unit = allInput[5][i]
             coordinate = allInput[6][i]
+            scale = allInput[7][i]
             self.addSource(dataLabel,dataFile, dataFormat, 
-                           objectName, index, unit, coordinate)
+                           objectName, index, unit, coordinate, scale)
 
     def addSource(self,dataLabel,dataFile,dataFormat,
-                   objectName=None,index=None,unit=None,coordinateMap=None):
+                   objectName=None,index=None,unit=None,coordinateMap=None,scale=None):
         """
         Defines a single data sources for the plane.
         
@@ -170,7 +173,8 @@ class MassPlane(object):
         :param index: Index for objects in listOfPrimitives of ROOT.TCanvas
         :param unit: Strings with unit for data (e.g. 'fb',None,'pb',...)
         :param coordinateMap: Dictionaries with the mapping of txt file columns
-                            to the x,y,... coordinates (e.g. {x : 0, y: 1, 'ul' :2})    
+                            to the x,y,... coordinates (e.g. {x : 0, y: 1, 'ul' :2})  
+        :param scale: Float to reescale the data                              
         
         """
         
@@ -193,8 +197,8 @@ class MassPlane(object):
             self._exclusionCurves.append(dataObject)
         
         #Set source of object
-        dataObject.setSource(dataFile, dataFormat, objectName, index)
-        dataObject.unit = unit
+        dataObject.setSource(dataFile, dataFormat, 
+                             objectName, index, unit, scale)
         #Store it as a mass plane attribute:            
         setattr(self,dataLabel,dataObject)
 

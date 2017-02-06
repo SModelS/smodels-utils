@@ -458,8 +458,14 @@ class TxNameInput(Locker):
         if not hasattr(plane,dataLabel):
             logger.error("Plane %s does not contain data holder for dataLabel %s" %(plane,dataLabel))
             sys.exit()
-            
+        
         dataHandler = getattr(plane,dataLabel)
+
+        #Check if acceptances have been defined and reweight efficiencies by acceptance data:
+        if dataLabel == 'efficiencyMap':
+            if hasattr(plane, 'acceptanceMap'):
+                acceptanceData = getattr(plane,'acceptanceMap')
+                dataHandler.reweightBy(acceptanceData)
         
         dataList = []        
         for ptDict in dataHandler:
@@ -484,6 +490,7 @@ class TxNameInput(Locker):
                                    {'fb':fb,'pb': pb,'GeV': GeV,'TeV': TeV})
             if hasattr(dataHandler, 'massUnit') and dataHandler.massUnit:
                 massArray = [[m*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV}) for m in br ] for br in massArray]
+            
             dataList.append([massArray, value])
         
         if not dataList:

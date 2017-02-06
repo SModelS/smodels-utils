@@ -125,39 +125,76 @@ class DatabaseCreator(list):
         if not createAdditional:
             self._setLastUpdate()
             self._delete()
-            self._createInfoFile(self.metaInfoFileName, self.metaInfo)
+            self._createInfoFile(self.metaInfoFileName, self.metaInfo,
+                                 self.metaInfoFileDirectory)
             self._createValidationFolder()
-
+        
         #Loop over datasets:
-        for dataset in self:
-            #Set current dataset folder (for writing all files below)
-            self.dataInfoDirectory = './'+dataset._name
-            self.timeStamp ( "reading %s" % dataset, "debug" )            
-            #Create dataInfo.txt file:
-            if dataset.dataType == 'efficiencyMap':
-                if not hasattr(dataset,'upperLimit') or not hasattr(dataset,'expectedUpperLimit'):
-                    self.timeStamp("computing upper limits for %s" %str(dataset))
-                    dataset.computeStatistics()
-            #Write down dataInfo.txt
-            self._createInfoFile('dataInfo', dataset)
-
-            #Loop over txnames in datasets:
-            for txName in dataset._txnameList:
-                if not hasattr(txName, 'constraint'):
-                    logger.error('Missing constraint for txname %s' %str(txName))
-                    sys.exit()
-
-                #(getData has to be called first to define which planes contain data for this txname)
-                txName.getDataFromPlanes(dataType = dataset.dataType)  #Read source files and load data
-                txName.getMetaData()  #Set txname info attributes
-                #Write down txname.txt                
-                if txName.hasData(dataset.dataType): #Do not write empty txnames:
-                    self._createTxnameFile(str(txName), txName)
+        ncpus = 30
+        chunkedDatasets = [self[x::ncpus] for x in range(ncpus)]
+        children = []           
+        for (i,chunk) in enumerate(chunkedDatasets):
+            pid=os.fork()
+            logger.debug("Forking: %s %s %s " % ( i,pid,os.getpid() ) )
+            if pid == 0:
+                self.createDatasets(chunk)
+                os._exit(0) ## not sys.exit(), return, nor continue
+            if pid < 0:
+                logger.error("fork did not succeed! Pid=%d" % pid)
+                sys.exit()
+            if pid > 0:
+                children.append(pid)
+        for child in children:
+            r = os.waitpid(child, 0)
         
         #Get all exclusion curves and write to sms.root:
         self.exclusions = self.getExclusionCurves()
         self._createSmsRoot(createAdditional)
 
+    def createDatasets(self,datasetList):
+        """
+        Creates a dataset folders for the datasets in datasetList and the correponsing txname and dataInfo files
+        
+        :param datasetList: List of DataSetInput objects
+        """
+        
+        for dataset in datasetList:
+            self._createDatasetAt(dataset,'./'+dataset._name)
+
+
+
+    def _createDatasetAt(self,dataset,datasetFolder):
+        """
+        Creates a dataset folder and the correponsing txname and dataInfo files
+        
+        :param dataset: DataSetInput object
+        :param datasetFolder: Path to the dataset folder
+        """
+        
+        #Set current dataset folder (for writing all files below)
+        self.timeStamp ( "reading %s" % dataset, "debug" )            
+        #Create dataInfo.txt file:
+        if dataset.dataType == 'efficiencyMap':
+            if not hasattr(dataset,'upperLimit') or not hasattr(dataset,'expectedUpperLimit'):
+                self.timeStamp("computing upper limits for %s" %str(dataset))
+                dataset.computeStatistics()
+        #Write down dataInfo.txt
+        self._createInfoFile('dataInfo', dataset, datasetFolder)
+
+        #Loop over txnames in datasets:
+        for txName in dataset._txnameList:
+            if not hasattr(txName, 'constraint'):
+                logger.error('Missing constraint for txname %s' %str(txName))
+                sys.exit()
+
+            #(getData has to be called first to define which planes contain data for this txname)
+            txName.getDataFromPlanes(dataType = dataset.dataType)  #Read source files and load data
+            txName.getMetaData()  #Set txname info attributes
+            #Write down txname.txt                
+            if txName.hasData(dataset.dataType): #Do not write empty txnames:
+                self._createTxnameFile(str(txName), txName, datasetFolder)
+
+        
 
     def getExclusionCurves(self):
         """
@@ -201,7 +238,6 @@ class DatabaseCreator(list):
                         
         return allCurves
 
-
     def _setLastUpdate(self):
 
         """
@@ -213,10 +249,13 @@ class DatabaseCreator(list):
         When last update is overwritten, self._setImplementedBy is called
         """
 
-        if os.path.isfile(self.base + self.infoFilePath(self.metaInfoFileName)):
+        if os.path.isfile(self.base + 
+                          self.infoFilePath(self.metaInfoFileName,
+                                            self.metaInfoFileDirectory)):
             lastUpdate = False
             implementedBy = False
-            oldInfo = open(self.base + self.infoFilePath(self.metaInfoFileName))
+            oldInfo = open(self.base + self.infoFilePath(self.metaInfoFileName,
+                                                         self.metaInfoFileDirectory))
             lines = oldInfo.readlines()
             oldInfo.close()
             for line in lines:
@@ -280,7 +319,8 @@ class DatabaseCreator(list):
         #Remove files
         predefinedPaths = [
             self.base + self.smsrootFile,
-            self.base + self.infoFilePath(self.metaInfoFileName)
+            self.base + self.infoFilePath(self.metaInfoFileName,
+                                          self.metaInfoFileDirectory)
             ]
         #Remove dataset folders
         datasetFolders = [os.path.join(self.base,dataset._name) for dataset in self]
@@ -324,7 +364,7 @@ class DatabaseCreator(list):
                 exclusion.Write()
         smsRoot.Close()
 
-    def _createInfoFile(self, name, obj):
+    def _createInfoFile(self, name, obj, folder):
 
         """
         Creates a file of type .txt (globalInfo.txt or dataInfo.txt)
@@ -338,7 +378,7 @@ class DatabaseCreator(list):
 
         content = ''
         
-        path = self.infoFilePath(name)
+        path = self.infoFilePath(name,folder)
 
         #Check if all required attributes have been defined:
         for attr in obj.requiredAttr:
@@ -360,7 +400,7 @@ class DatabaseCreator(list):
         infoFile.write(content)
         infoFile.close()
         
-    def _createTxnameFile(self, name, obj):
+    def _createTxnameFile(self, name, obj,folder):
 
         """
         Creates a file of type txname.txt
@@ -381,7 +421,7 @@ class DatabaseCreator(list):
         dataLabels = obj._dataLabels
         content = ''
         
-        path = self.infoFilePath(name)
+        path = self.infoFilePath(name,folder)
 
         #Check if all required attributes have been defined:
         for attr in obj.requiredAttr:
@@ -421,18 +461,13 @@ class DatabaseCreator(list):
         infoFile.write(content)
         infoFile.close()
         
-
-    def infoFilePath(self, infoFileName):
+    def infoFilePath(self, infoFileName,infoFolder):
         """
         :param infoFileName: name of requested file without extension
         :return: path of info-file with given name
         """
         
-        #Define where the file will be written to:
-        if infoFileName == "globalInfo":
-            directory = self.metaInfoFileDirectory
-        else:  #Except for globalInfo, all other files are written to the current dataset folder
-            directory = self.dataInfoDirectory            
+        directory = infoFolder            
 
         if not os.path.exists(directory):
             os.mkdir(directory)
@@ -510,14 +545,19 @@ def removeRepeated(datalist):
     """
     
     #First sort list (for performance)
-    sortedValue = sorted(datalist, key = lambda x: x[0])
-    sortedIndices = sorted(range(len(datalist)), key = lambda k: datalist[k][0])
+    #(Sort first values, so when removing repeated entries the smallest
+    #values will be used -> least conservative for efficiencies, most conservative for ul)
+    sortedValue = sorted(sorted(datalist, key = lambda pt: pt[1],reverse=True), key = lambda pt: pt[0])
+    sortedIndices = sorted(sorted(range(len(datalist)), 
+                          key = lambda k: datalist[k][1],reverse=True),
+                          key = lambda k: datalist[k][0])
+    
     uniqueEntries = []
     repeatedEntries = []
     inconsistentEntries = []
     for i,pt in enumerate(sortedValue):
         originalIndex = sortedIndices[i]
-        m = pt[0]
+        m = pt[0]        
         #Check if new mass is different from previous one:
         if m != sortedValue[i-1][0]:
             uniqueEntries.append(originalIndex)
