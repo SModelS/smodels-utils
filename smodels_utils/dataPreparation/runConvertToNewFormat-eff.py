@@ -365,6 +365,7 @@ def main(f,fnew):
     datasets = getDatasetIds(fold)
     #Loop over datasets and write blocks:
     for dataset in datasets:
+        fnew.write('\n\n')
         for l in templateLines:
             if not l.strip():
                 continue
@@ -418,7 +419,9 @@ def main(f,fnew):
 if __name__ == "__main__":
     
     
-    skipList = [ ]
+    skipList = ['ATLAS-SUSY-2013-16-eff', #Not all txnames have the same SRs (has to be assigned by hand)
+                'ATLAS-SUSY-2013-18-eff',#Same as above and the statistics for a single SR has to be set by hand
+                'ATLAS-SUSY-2013-21-eff'] #Not all txnames have the same SRs (has to be assigned by hand)
     
     ignoreList = []
     
@@ -432,7 +435,7 @@ if __name__ == "__main__":
         if not '-eff' in f:
 #             print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
             continue  #Skip UL results
-        
+      
         
         ignore = False
         for igF in ignoreList:
@@ -452,7 +455,7 @@ if __name__ == "__main__":
 
         nres += 1
         
-        if nres < 2:
+        if nres < 8:
             continue
                         
         fnew = f.replace('convert.py','convertNew.py')

@@ -450,8 +450,7 @@ class DatabaseCreator(list):
             value = getattr(obj,attr)
             if value=="":
                 continue
-            
-            value = self._formatData(value)
+            value = self._formatData(value,dataType=attr)
             content = '%s%s%s%s\n' % (content, attr,\
                                        self.assignmentOperator, value)
 
@@ -475,12 +474,14 @@ class DatabaseCreator(list):
         path = os.path.join(directory, infoFileName.strip()+self.infoFileExtension.strip())
         return path
 
-    def _formatData(self,value,n=5):
+    def _formatData(self,value,n=5,dataType=None):
         """
         Formats the data grid for nice printing in the txname.txt file
         
         :param value: value for the data (in list format)
         :param n: number of digits to be kept (default = 5)
+        :param dataType: Specifies the type of data (upperLimits, efficiencyMap,...).
+                         Relevant only for removing repeated entries.
         """
         
         if not isinstance(value,list):
@@ -491,7 +492,7 @@ class DatabaseCreator(list):
         value = round_list(value,n)
         
         #Remove repeated mass entries:
-        value = removeRepeated(value)
+        value = removeRepeated(value,dataType)
         
         #Convert to string:
         #Make sure unum numbers are printed with sufficient precision
@@ -533,23 +534,32 @@ def round_list(x, n=5):
         return round(x,-int(floor(log10(x))) + (n - 1))*unit
 
 
-def removeRepeated(datalist):
+def removeRepeated(datalist,dataType=None):
     """
     Loops over the data grid and remove points with identical
     mass values. Issues an warning if points appear repeated
     and with distinct values (upper limit value or efficiency value).
     
     :param datalist:  data grid list (e.g. [[massArray1,ul1],[massArray2,ul2],...]
+    :param dataType: Specifies the type of data (upperLimits, efficiencyMap,...).
+                     For repeated entries in efficiencyMaps, it will use the lowest
+                     value, while for the other cases it will use the highest value.
+                     This way the final grid is always conservative.
+    
     
     :return: New list with repeated values removed
     """
     
+    rev = True
+    if dataType and dataType == 'efficiencyMap':
+        rev = False 
+    
     #First sort list (for performance)
-    #(Sort first values, so when removing repeated entries the smallest
-    #values will be used -> least conservative for efficiencies, most conservative for ul)
-    sortedValue = sorted(sorted(datalist, key = lambda pt: pt[1],reverse=True), key = lambda pt: pt[0])
+    #Sort first values, so when removing repeated entries the largest (smallest)
+    #values will be used for upper limits (efficiencies).
+    sortedValue = sorted(sorted(datalist, key = lambda pt: pt[1],reverse=rev), key = lambda pt: pt[0])
     sortedIndices = sorted(sorted(range(len(datalist)), 
-                          key = lambda k: datalist[k][1],reverse=True),
+                          key = lambda k: datalist[k][1],reverse=rev),
                           key = lambda k: datalist[k][0])
     
     uniqueEntries = []

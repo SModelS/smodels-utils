@@ -72,10 +72,11 @@ def compareLines(new,old,ignore=['#']):
 
 def checkValue(value,oldValue,reps):
     
-    if type(oldValue) != type(value):        
-        return False    
-    if value == oldValue:
+    if oldValue == value:
         return True
+    
+    if type(oldValue) != type(value):        
+        return False
     
     if isinstance(value,str):
         if value.strip() != oldValue.strip():
@@ -88,6 +89,8 @@ def checkValue(value,oldValue,reps):
         for i,v in enumerate(value):
             c = checkValue(v,oldValue[i],reps)
             if not c:
+                if len(oldValue) < 4:
+                    logger.error("Old: %s \nNew: %s" %(oldValue,value))
                 return False
     else:
         vdiff = abs(value-oldValue)/(abs(value+oldValue))
@@ -167,10 +170,10 @@ def compareFields(new,old,ignoreFields=['susyProcess'],skipFields=[],reps=0.01):
         oldValue = oldFields[key]
         if key in skipFields:
             continue
-        if key == 'upperLimits' or key == 'expectedUpperLimits':
+        if key == 'upperLimits' or key == 'expectedUpperLimits' or key == 'efficiencyMap':
             oldValue  = removeRepeated(oldValue)
         if not checkValue(value, oldValue, reps):
-            logger.error("Field %s value differ in %s" %(key,new))
+            logger.error("Field %s value differ in %s:\n old = %s ...\n new = %s ..." %(key,new,str(oldValue)[:80],str(value)[:80]))
             return False
 
     return True
