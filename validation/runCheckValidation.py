@@ -111,7 +111,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
         logger.error('%s is not a folder' %databasePath)
     
     try:
-        db = Database(databasePath,verbosity=verbosity)
+        db = Database(databasePath)
     except:
         logger.error("Error loading database at %s" %databasePath)
         
@@ -195,7 +195,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
         validated_none = []
         #Only reload the database if files were updated:
         if update:
-            db = Database(databasePath,verbosity=verbosity)
+            db = Database(databasePath)
             expResList = db.getExpResults(analysisIDs, datasetIDs, txnames,
                       dataTypes, useSuperseded=True, useNonValidated=True)
         for expRes in expResList:
