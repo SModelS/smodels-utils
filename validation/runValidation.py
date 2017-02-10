@@ -88,7 +88,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         logger.error('%s is not a folder' %databasePath)
     
     try:
-        db = Database(databasePath,verbosity=verbosity)
+        db = Database(databasePath)
     except Exception as e:
         logger.error("Error loading database at %s" %databasePath)
         logger.error("Error: %s" % str(e) )

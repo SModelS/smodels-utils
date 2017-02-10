@@ -10,10 +10,7 @@
 
 '''
 import logging,os,sys
-home = os.path.expanduser('~')
-utils = os.path.join(home,'smodels-utils/smodels_utils')
-sys.path.append(utils)
-from dataPreparation.origPlotObjects import Axes
+from smodels_utils.dataPreparation.origPlotObjects import Axes
 
 # pretty name of particle:
 
