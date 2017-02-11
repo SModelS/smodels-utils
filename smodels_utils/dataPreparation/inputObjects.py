@@ -10,7 +10,7 @@
 
 import sys
 from smodels_utils.helper.txDecays import TxDecay
-from smodels_utils.dataPreparation.databaseCreation import databaseCreator
+from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round_list
 from smodels.tools.physicsUnits import fb, pb, TeV, GeV
 from smodels.theory.particleNames import elementsInStr
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -253,6 +253,10 @@ class DataSetInput(Locker):
                                    self.bgError, lumi, .05, 200000).asNumber(fb)
         ulExpected = statistics.upperLimit(self.expectedBG, self.expectedBG, 
                                            self.bgError, lumi, .05, 200000).asNumber(fb)
+                                           
+        #Round numbers:
+        ul = round_list(ul, 3)
+        ulExpected = round_list(ulExpected, 3)
         self.upperLimit = str(ul)+'*fb'
         self.expectedUpperLimit = str(ulExpected)+'*fb'
         

@@ -384,6 +384,9 @@ def main(f,fnew):
                     l  = l.replace('$'+v+'$',str(dataDict[v]))
                 elif v in locals() or v in globals():
                     l  = l.replace('$'+v+'$',str(eval('%s["%s"]'%(v,dataset))))
+            
+            if '.efficiencyMap.dataUrl' in l:
+                l = l.replace('efficiencyMap.dataUrl','dataUrl')
                 
             if not '$' in l:
                 fnew.write(l)
