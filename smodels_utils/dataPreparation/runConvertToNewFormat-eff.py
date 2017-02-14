@@ -9,7 +9,7 @@
 """
 
 
-import sys,glob,os,time
+import sys,glob,os,time,math
 from subprocess import Popen,PIPE
 sys.path.append('/home/lessa/smodels-utils')
 sys.path.append('/home/lessa/smodels')
@@ -18,7 +18,7 @@ from smodels_utils.dataPreparation.checkConversion import checkNewOutput
 from removeDocStrings import  rmDocStrings
 
 
-databasePath = '/home/lessa/smodels-database'
+databasePath = '/home/lessa/smodels-database-old'
 
     
     
@@ -384,7 +384,7 @@ def main(f,fnew):
                     l  = l.replace('$'+v+'$',str(dataDict[v]))
                 elif v in locals() or v in globals():
                     l  = l.replace('$'+v+'$',str(eval('%s["%s"]'%(v,dataset))))
-            
+
             if '.efficiencyMap.dataUrl' in l:
                 l = l.replace('efficiencyMap.dataUrl','dataUrl')
                 
@@ -394,7 +394,7 @@ def main(f,fnew):
             elif '$$' in l:
                 key = l.split('=')[0]
                 val = getValueFor(datasetLines,key)
-                l = key + ' = ' + str(val)+'\n'
+                l = key + ' = ' + str(val)+'\n'                
                 fnew.write(l)
             else:
                 print 'Something wrong with line %s' %l
@@ -424,7 +424,8 @@ if __name__ == "__main__":
     
     skipList = ['ATLAS-SUSY-2013-16-eff', #Not all txnames have the same SRs (has to be assigned by hand)
                 'ATLAS-SUSY-2013-18-eff',#Same as above and the statistics for a single SR has to be set by hand
-                'ATLAS-SUSY-2013-21-eff'] #Not all txnames have the same SRs (has to be assigned by hand)
+                'ATLAS-SUSY-2013-21-eff', #Not all txnames have the same SRs (has to be assigned by hand)
+                'CMS-SUS-13-011-eff'] #Statistics for a single SR has to be set by hand
     
     ignoreList = []
     
@@ -458,7 +459,7 @@ if __name__ == "__main__":
 
         nres += 1
         
-        if nres < 8:
+        if nres < 0:
             continue
                         
         fnew = f.replace('convert.py','convertNew.py')
@@ -501,7 +502,7 @@ if __name__ == "__main__":
             print rerror 
             sys.exit()
         
-        oldir = rdir.replace('smodels-database','smodels-database-master')
+        oldir = rdir.replace(databasePath,'/home/lessa/smodels-database-master')
         check = checkNewOutput(new=rdir,old=oldir,setValidated=True)
         if not check:
             print '\033[31m Error comparing %s \033[0m' %rdir

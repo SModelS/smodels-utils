@@ -22,7 +22,7 @@ header = template.read()
 
 
 
-databasePath = '/home/lessa/smodels-database'
+databasePath = '/home/lessa/smodels-database-old'
 
     
     
@@ -441,12 +441,13 @@ if __name__ == "__main__":
                 'ATLAS-CONF-2013-007',  #Mass constraints are tricky and need to be fixed by hand
                 'ATLAS-CONF-2013-035',   #DataUrl was not set for full plane
                 'ATLAS-CONF-2013-036',    #TChiSlepSlep (asymmetric branches)
-                'ATLAS-CONF-2013-047','ATLAS-SUSY-2013-02',    #TGQ (asymmetric branches)
-                'ATLAS-SUSY-2013-15'   #Plane assignments are tricky (on/off-shell) and need to be defiend by hand                
+                'ATLAS-CONF-2013-047','ATLAS-SUSY-2013-02'    #TGQ (asymmetric branches)                                
                 ]
     
-    ignoreList = ['CMS-SUS-13-006',
-                  'CMS-SUS-13-007',
+    ignoreList = ['CMS-SUS-13-006', #The on/off-shell splitting in master is inconsistent with the constraints
+                  'CMS-SUS-13-007', #The on/off-shell splitting in master is inconsistent with the constraints
+                  'ATLAS-SUSY-2013-05',  #Plane assignments are tricky (some planes only have off-shell points) -> Only axes and figureUrl differ
+                  'ATLAS-SUSY-2013-15',   #Plane assignments are tricky (on/off-shell) and need to be defiend by hand -> Only axes and figureUrl differ
                   'CMS-SUS-13-013'] #The on/off-shell splitting in master is inconsistent with the constraints
     
     #Set SMODELSNOUPDATE to avoid rewritting implementedBy and lastUpdate fields:
@@ -454,6 +455,9 @@ if __name__ == "__main__":
     timeOut = 150.
     
     for f in sorted(glob.glob(databasePath+'/*/*/*/convert.py'))[:]:
+        
+        if not 'ATLAS-SUSY-2015-09' in f:
+            continue
         
         if '-eff' in f:
 #             print "\033[31m Not checking EM result %s \033[0m" %f.replace('convert.py','')
@@ -479,7 +483,7 @@ if __name__ == "__main__":
         if not skipProduction:            
             if os.path.isfile(fnew):
                 os.remove(fnew)
-            print f
+#             print f
             r = main(f,fnew)
                 
             if not r:
@@ -504,6 +508,8 @@ if __name__ == "__main__":
             print '\033[31m Running %s exceeded timeout %s \033[0m' %(fnew,timeOut)
             sys.exit()
         
+        print run.stdout.read()
+        print run.stderr.read()
 
         if rstatus:
             print '\033[31m Error running %s \033[0m' %fnew
@@ -515,7 +521,7 @@ if __name__ == "__main__":
             print rerror 
             sys.exit()
         
-        oldir = rdir.replace('smodels-database','smodels-database-master')
+        oldir = rdir.replace(databasePath,'/home/lessa/smodels-database-master')
         check = checkNewOutput(new=rdir,old=oldir,setValidated=True)
         if not check:
             print '\033[31m Error comparing %s \033[0m' %rdir
