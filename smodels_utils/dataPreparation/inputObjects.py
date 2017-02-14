@@ -187,25 +187,6 @@ class DataSetInput(Locker):
     
     requiredAttr = ['dataType', 'dataId']
     
-    def __new__(cls,name):
-        
-        """
-        Checks if databaseCreator already contains
-        a dataset object with the same id, writes this object to
-        databaseCreation if not
-        :param name: name of dataset (used as folder name)
-        :returns: instance of DataSetInput
-        :raise Error: if there is already a dataset instance with same name
-        """
-        
-        for dataSet in databaseCreator:
-            if dataSet._name == name: 
-                logger.error("Dataset %s has already been defined" %name)
-                sys.exit()
-        datasetObject = object.__new__(cls)
-        databaseCreator.append(datasetObject)
-        return datasetObject 
-    
 
     def __init__(self,name):
         
@@ -214,7 +195,9 @@ class DataSetInput(Locker):
         """
         
         self._name = name
-        self._txnameList = []
+        self._txnameList = []        
+
+        databaseCreator.addDataset(self)
 
     def __str__(self):
         return self._name
@@ -223,18 +206,18 @@ class DataSetInput(Locker):
         """
         Set the attributes given as input. The only allowed attributes
         are the ones defined in infoAttr:
-        
+         
         :param attributes: Attributes and their values (dataId = xxx,...)
         """
-        
+         
         for key,val in attributes.items():
             setattr(self,key,val)
-       
+        
     def computeStatistics(self):
         """Compute expected and observed limits and store them """
-        
+         
         from smodels.tools import statistics
-        
+         
         if not hasattr(databaseCreator, 'metaInfo'):
             logger.error('MetaInfo must be defined before computing statistics')
             sys.exit()
@@ -244,8 +227,8 @@ class DataSetInput(Locker):
         elif not hasattr(self, 'observedN') or not hasattr(self, 'expectedBG') or not hasattr(self, 'bgError'):
             logger.error('observedN, expectedBG and bgError must be defined before computing statistics')
             sys.exit()
-
-        
+ 
+         
         lumi = getattr(databaseCreator.metaInfo,'lumi')
         if isinstance(lumi,str):
             lumi = eval(lumi,{'fb':fb,'pb': pb})
@@ -253,31 +236,31 @@ class DataSetInput(Locker):
                                    self.bgError, lumi, .05, 200000).asNumber(fb)
         ulExpected = statistics.upperLimit(self.expectedBG, self.expectedBG, 
                                            self.bgError, lumi, .05, 200000).asNumber(fb)
-                                           
+                                            
         #Round numbers:
         ul = round_list(ul, 3)
         ulExpected = round_list(ulExpected, 3)
         self.upperLimit = str(ul)+'*fb'
         self.expectedUpperLimit = str(ulExpected)+'*fb'
-        
+         
     def addTxName(self,txname):
         """
         Adds txname to dataset. Checks if txname already exists and
         raise a error if it does.
-        
+         
         :param txname: txname (string)
-        
+         
         :return: TxNameInput object
         """
-        
+         
         for txobj in self._txnameList:
             if txobj._name == txname:
                 logger.error("Txname %s already exists in dataset" %txname)
                 sys.exit()
-                
+                 
         txobj = TxNameInput(txname)
         self._txnameList.append(txobj)
-        
+         
         return txobj
         
 

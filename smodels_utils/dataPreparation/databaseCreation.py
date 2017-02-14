@@ -15,6 +15,7 @@ import os
 import shutil
 import ROOT
 import logging
+import multiprocessing
 from datetime import date
 from math import floor, log10
 from unum import Unum
@@ -71,7 +72,7 @@ class DatabaseCreator(list):
         list.__init__(self)
 
 
-    def timeStamp ( self, txt, c="info" ):
+    def timeStamp(self, txt, c="info"):
         color, reset = '\x1b[32m', '\x1b[39m'
         if self.colorScheme in [ None, "None", "mono" ]:
             color, reset = "", ""
@@ -94,6 +95,44 @@ class DatabaseCreator(list):
         name=""
         print ( "[%s%.1fs] %s%s%s" % ( name, dt, color, txt, reset ) )
 
+    def addDataset(self,datasetObject):
+        
+        """
+        Checks if databaseCreator already contains
+        a dataset object with the same id. If not, append dataset.
+        Otherwise, raises an error.
+        
+        :param datasetObject: DataSetInput object
+        :raise Error: if there is already a dataset instance with same name
+        """
+          
+        for dataset in self:
+            if dataset._name == datasetObject._name: 
+                logger.error("Dataset %s has already been defined" %dataset._name)
+                sys.exit()
+        self.append(datasetObject)   
+        
+        
+    def updateDataset(self,datasetObject):
+        
+        """
+        Checks if databaseCreator already contains
+        a dataset object with the same id. If it does, update the dataset.
+        Otherwise, raises an error.
+        
+        :param datasetObject: DataSetInput object
+        :raise Error: if there is already a dataset instance with same name
+        """
+        
+        hasDataset = False
+        for i,dataset in enumerate(self):
+            if dataset._name == datasetObject._name:
+                self[i] = datasetObject
+                hasDataset = True
+                break
+        if not hasDataset:
+            logger.error("Dataset %s did not exist in creator" %datasetObject._name)
+            sys.exit()                
 
     def create(self, createAdditional=False):
 
@@ -131,27 +170,29 @@ class DatabaseCreator(list):
         
         #Loop over datasets:
         ncpus = 30
-        chunkedDatasets = [self[x::ncpus] for x in range(ncpus)]
+        chunkedDatasets = [self[x::ncpus] for x in range(ncpus) if self[x::ncpus]]
+        manager = multiprocessing.Manager()
+        newDatasets = manager.list()        
         children = []           
-        for (i,chunk) in enumerate(chunkedDatasets):
-            pid=os.fork()
-            logger.debug("Forking: %s %s %s " % ( i,pid,os.getpid() ) )
-            if pid == 0:
-                self.createDatasets(chunk)
-                os._exit(0) ## not sys.exit(), return, nor continue
-            if pid < 0:
-                logger.error("fork did not succeed! Pid=%d" % pid)
-                sys.exit()
-            if pid > 0:
-                children.append(pid)
-        for child in children:
-            r = os.waitpid(child, 0)
+        for chunk in chunkedDatasets:            
+            p = multiprocessing.Process(target=self.createDatasets, args=(chunk,newDatasets))
+            children.append(p)
+            p.start()
+        for p in children:
+            p.join(timeout=500)
+
+        if len(newDatasets) != len(self):
+            logger.error("Error creating datasets")
+            sys.exit()
+            
+        for dataset in newDatasets:
+            self.updateDataset(dataset)
         
         #Get all exclusion curves and write to sms.root:
         self.exclusions = self.getExclusionCurves()
         self._createSmsRoot(createAdditional)
 
-    def createDatasets(self,datasetList):
+    def createDatasets(self,datasetList,newDatasets):
         """
         Creates a dataset folders for the datasets in datasetList and the correponsing txname and dataInfo files
         
@@ -159,9 +200,7 @@ class DatabaseCreator(list):
         """
         
         for dataset in datasetList:
-            self._createDatasetAt(dataset,'./'+dataset._name)
-
-
+            newDatasets.append(self._createDatasetAt(dataset,'./'+dataset._name))
 
     def _createDatasetAt(self,dataset,datasetFolder):
         """
@@ -194,7 +233,13 @@ class DatabaseCreator(list):
             if txName.hasData(dataset.dataType): #Do not write empty txnames:
                 self._createTxnameFile(str(txName), txName, datasetFolder)
 
-        
+        for tx in dataset._txnameList:
+            for plane in tx._planes:
+                plane.branches = None #Required for parallel processing (issue with lambda functions in branch._xyFunction)
+
+                
+        return dataset
+
 
     def getExclusionCurves(self):
         """
