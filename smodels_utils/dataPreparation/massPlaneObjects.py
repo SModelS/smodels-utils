@@ -240,6 +240,7 @@ class MassPlane(object):
                 return None
             for xvar,value in xyDict.items():
                 if xvar in xyArray:
+                    #Check if x,y-values given by distinct branches agree:
                     if abs(xyArray[xvar]-value)/abs(xyArray[xvar]+value) > 0.0001:
                         return None
                 xyArray[xvar] = value
@@ -432,7 +433,7 @@ class Axes(object):
         #Now check if the x,y,.. values computed give the massArray back:
         newMass = self.getParticleMasses(**xValues)
         for im,m in enumerate(newMass):
-            if abs(m-massArray[im])/abs(m+massArray[im]) > 0.0001: #Masses differ
+            if abs(m-massArray[im]) > 0.000001: #Masses differ
                 return None
         
         return xValues

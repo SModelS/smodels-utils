@@ -198,6 +198,17 @@ class DataSetInput(Locker):
         self._txnameList = []        
 
         databaseCreator.addDataset(self)
+        
+    def __eq__(self,other):
+        """
+        Check if datasets have the same name
+        """
+        
+        if type(self) != type(other):
+            return False
+        
+        return self._name == other._name 
+        
 
     def __str__(self):
         return self._name

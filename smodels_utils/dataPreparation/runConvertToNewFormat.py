@@ -456,8 +456,9 @@ if __name__ == "__main__":
     
     for f in sorted(glob.glob(databasePath+'/*/*/*/convert.py'))[:]:
         
-        if not 'ATLAS-SUSY-2015-09' in f:
+        if not 'ATLAS-CONF-2012-166' in f:
             continue
+        
         
         if '-eff' in f:
 #             print "\033[31m Not checking EM result %s \033[0m" %f.replace('convert.py','')
@@ -508,8 +509,8 @@ if __name__ == "__main__":
             print '\033[31m Running %s exceeded timeout %s \033[0m' %(fnew,timeOut)
             sys.exit()
         
-        print run.stdout.read()
-        print run.stderr.read()
+#         print run.stdout.read()
+#         print run.stderr.read()
 
         if rstatus:
             print '\033[31m Error running %s \033[0m' %fnew

@@ -71,7 +71,6 @@ class DatabaseCreator(list):
         self.colorScheme = "light" ## "dark", None
         list.__init__(self)
 
-
     def timeStamp(self, txt, c="info"):
         color, reset = '\x1b[32m', '\x1b[39m'
         if self.colorScheme in [ None, "None", "mono" ]:
@@ -106,13 +105,12 @@ class DatabaseCreator(list):
         :raise Error: if there is already a dataset instance with same name
         """
           
-        for dataset in self:
-            if dataset._name == datasetObject._name: 
-                logger.error("Dataset %s has already been defined" %dataset._name)
-                sys.exit()
-        self.append(datasetObject)   
-        
-        
+        if datasetObject in self: 
+            logger.error("Dataset %s has already been defined" %datasetObject._name)
+            sys.exit()
+        else:
+            self.append(datasetObject)   
+                
     def updateDataset(self,datasetObject):
         
         """
@@ -124,16 +122,14 @@ class DatabaseCreator(list):
         :raise Error: if there is already a dataset instance with same name
         """
         
-        hasDataset = False
-        for i,dataset in enumerate(self):
-            if dataset._name == datasetObject._name:
-                self[i] = datasetObject
-                hasDataset = True
-                break
-        if not hasDataset:
-            logger.error("Dataset %s did not exist in creator" %datasetObject._name)
-            sys.exit()                
-
+        if not datasetObject in self:
+            logger.error("Dataset %s can not be updated." %datasetObject._name)
+            sys.exit()
+            
+        #Find index of dataset with the same name
+        i = self.index(datasetObject)
+        self[i] = datasetObject
+                            
     def create(self, createAdditional=False):
 
         """
@@ -171,21 +167,21 @@ class DatabaseCreator(list):
         #Loop over datasets:
         ncpus = 30
         chunkedDatasets = [self[x::ncpus] for x in range(ncpus) if self[x::ncpus]]
-        manager = multiprocessing.Manager()
-        newDatasets = manager.list()        
+        manager = multiprocessing.Manager() 
+        updatedDatasets = manager.list() #Stores the updated datasets for each process    
         children = []           
         for chunk in chunkedDatasets:            
-            p = multiprocessing.Process(target=self.createDatasets, args=(chunk,newDatasets))
+            p = multiprocessing.Process(target=self.createDatasets, args=(chunk,updatedDatasets))
             children.append(p)
             p.start()
         for p in children:
             p.join(timeout=500)
 
-        if len(newDatasets) != len(self):
+        if len(updatedDatasets) != len(self):
             logger.error("Error creating datasets")
             sys.exit()
             
-        for dataset in newDatasets:
+        for dataset in updatedDatasets:
             self.updateDataset(dataset)
         
         #Get all exclusion curves and write to sms.root:
@@ -233,13 +229,15 @@ class DatabaseCreator(list):
             if txName.hasData(dataset.dataType): #Do not write empty txnames:
                 self._createTxnameFile(str(txName), txName, datasetFolder)
 
+        #Remove lambda functions from objects
+        #Required for storing datasets through parallel processing
+        #(issue with pickling lambda functions)
         for tx in dataset._txnameList:
             for plane in tx._planes:
-                plane.branches = None #Required for parallel processing (issue with lambda functions in branch._xyFunction)
+                plane.branches = None 
 
                 
         return dataset
-
 
     def getExclusionCurves(self):
         """
