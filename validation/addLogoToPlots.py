@@ -67,7 +67,7 @@ def addLogo(filename,logo):
         
 if __name__ == '__main__':
     
-    files = glob.glob('../../smodels-database/*/*/*/validation/*_pretty.*')
+    files = glob.glob('../../smodels-database-old/*/*/*/validation/*_pretty.*')
     if not files:
         print 'No files found'
         

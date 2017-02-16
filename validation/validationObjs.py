@@ -13,7 +13,7 @@ import logging,os,sys
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
 from smodels.tools import statistics, modelTester 
-from plottingFuncs import createPlot, getExclusionCurvesFor, createSpecialPlot, createTempPlot, createPrettyPlot
+from plottingFuncs import createPlot, getExclusionCurvesFor, createPrettyPlot
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from sympy import var

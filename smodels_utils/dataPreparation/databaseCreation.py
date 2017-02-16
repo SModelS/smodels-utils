@@ -165,7 +165,10 @@ class DatabaseCreator(list):
             self._createValidationFolder()
         
         #Loop over datasets:
-        ncpus = 30
+        try:
+            ncpus =  multiprocessing.cpu_count()
+        except:
+            ncpus = 1
         chunkedDatasets = [self[x::ncpus] for x in range(ncpus) if self[x::ncpus]]
         manager = multiprocessing.Manager() 
         updatedDatasets = manager.list() #Stores the updated datasets for each process    
@@ -539,7 +542,7 @@ class DatabaseCreator(list):
         
         #Convert to string:
         #Make sure unum numbers are printed with sufficient precision
-        Unum.VALUE_FORMAT = "%."+"%ig"%n  
+        Unum.VALUE_FORMAT = "%."+"%iE"%(n-1)  
         vStr = str(value)
         #Replace units:
         vStr = vStr.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
@@ -636,6 +639,8 @@ def removeRepeated(datalist,dataType=None):
     newList = [pt for i,pt in enumerate(datalist) if i in uniqueEntries]
 
     return newList
+
+
 
 databaseCreator = DatabaseCreator()
 

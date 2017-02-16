@@ -425,7 +425,9 @@ if __name__ == "__main__":
     skipList = ['ATLAS-SUSY-2013-16-eff', #Not all txnames have the same SRs (has to be assigned by hand)
                 'ATLAS-SUSY-2013-18-eff',#Same as above and the statistics for a single SR has to be set by hand
                 'ATLAS-SUSY-2013-21-eff', #Not all txnames have the same SRs (has to be assigned by hand)
-                'CMS-SUS-13-011-eff'] #Statistics for a single SR has to be set by hand
+                'CMS-SUS-13-011-eff', #Statistics for a single SR has to be set by hand
+                'ATLAS-SUSY-2013-11-eff',
+                'ATLAS-SUSY-2013-02-eff'] #Statistics for a single SR has to be set by hand
     
     ignoreList = []
     
@@ -450,8 +452,8 @@ if __name__ == "__main__":
             print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
             continue
         
-        #Skip writing convertNew.py for the results in skipList
-        skipProduction = False
+        #Skip writing convertNew.py for the results in skipList        
+        skipProduction = True #(ALWAYS SKIP SINCE ALL STATISTICS HAVE BEEN SET BY HAND)
         for skipRes in skipList:
             if skipRes in f:
                 skipProduction = True
