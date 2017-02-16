@@ -53,11 +53,9 @@ def checkValue(value,oldValue,reps):
         for k,v in value.items():
             if k == 'CLs':
                 continue
-            else:
-                error = reps
-            c = checkValue(v,oldValue[k],error)
+            c = checkValue(v,oldValue[k],reps)
             if not c:
-                logger.error("Old: %s \nNew: %s" %(oldValue,value))
+                logger.error("Difference in %s\nOld: %s \nNew: %s" %(k,oldValue,value))
                 return False
     else:
         vdiff = abs(value-oldValue)/(abs(value+oldValue))
@@ -78,6 +76,10 @@ def checkNewOutput(new,old):
     
     :return: True if both folders are equivalent, False otherwise.
     """
+    
+    #Check number of plots:
+    if len(glob.glob(new+'/*.py')) != len(glob.glob(old+'/*.py')):
+        print '\033[31m Number of files differ in %s \033[0m' %new
     
     #Check if plots agree:
     for f in glob.glob(new+'/*.py'):
@@ -125,7 +127,7 @@ def checkNewOutput(new,old):
             return False
         
         for i,pt in enumerate(newData):
-            if not checkValue(pt,oldData[i],reps=0.001):
+            if not checkValue(pt,oldData[i],reps=0.01):
                 return False
  
      
@@ -148,9 +150,9 @@ if __name__ == "__main__":
     
     for f in sorted(glob.glob(databasePath+'/*/*/*/validation'))[:]:
         
-        if not '-eff' in f:
+#         if '-eff' in f:
 #             print "\033[31m Not checking EM result %s \033[0m" %f.replace('convert.py','')
-            continue  #Skip efficiency map results
+#             continue  #Skip efficiency map results
         
         ignore = False
         for igF in ignoreList:
@@ -170,7 +172,7 @@ if __name__ == "__main__":
         check = checkNewOutput(new=newdir,old=olddir)
         if not check:
             print '\033[31m Error comparing %s \033[0m' %newdir
-            sys.exit()
+#             sys.exit()
             
         print "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0)
             

@@ -438,7 +438,7 @@ if __name__ == "__main__":
     nres = 0
     for f in sorted(glob.glob(databasePath+'/*/*/*/convert.py')):
         
-        if not '-eff' in f:
+        if not 'eff' in f:
 #             print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
             continue  #Skip UL results
       

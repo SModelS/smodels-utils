@@ -154,8 +154,9 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
 
                  
             #Loop over plots:
-            for tgraph in tgraphs:                
+            for tgraph in tgraphs:              
                 ax = tgraph.GetName().split('_')[1]
+                print 'ax=',ax,txname.axes
                 if not ax in txname.axes: continue
                 agreement = validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,generateData)
                 logger.info('               agreement factor = %s' %str(agreement))
@@ -171,7 +172,7 @@ if __name__ == "__main__":
             help='parameter file specifying the validation options', default='./validation_parameters.ini')
     ap.add_argument('-l', '--log', 
             help='specifying the level of verbosity (error, warning,info, debug)', 
-            default = 'info', type = str)
+            default = 'warning', type = str)
            
     args = ap.parse_args()
                 
