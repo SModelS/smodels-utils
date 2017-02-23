@@ -139,7 +139,7 @@ def checkNewOutput(new,old):
 if __name__ == "__main__":
     
     
-    databasePath = '/home/lessa/smodels-database-old'
+    databasePath = '/home/lessa/smodels-database'
     
     ignoreList = ['CMS-SUS-13-006', #The on/off-shell splitting in master is inconsistent with the constraints
                   'CMS-SUS-13-007', #The on/off-shell splitting in master is inconsistent with the constraints
@@ -166,7 +166,7 @@ if __name__ == "__main__":
         
         t0 = time.time()
         newdir = f
-        olddir = f.replace('smodels-database-old','smodels-database-master')
+        olddir = f.replace('smodels-database','smodels-database-master')
         
        
         check = checkNewOutput(new=newdir,old=olddir)

@@ -386,6 +386,46 @@ class DataHandler(object):
                 
                             
             yield values  
+            
+
+    def effi(self):
+        
+        """
+        iterable method
+        preprocessing txt-files containing fastlim efficiency maps 
+        (only columns with floats)
+
+        :yield: list with values as foat, one float for every column
+        """
+        
+        txtFile = open(self.path,'r')
+        content = txtFile.readlines()
+        txtFile.close
+        for line in content:
+            #print(line)
+            if line.find("#")>-1:
+                line=line[:line.find("#")]
+                if line=="":
+                    continue
+            try:
+                values = line.split()
+                if values==[]:
+                    continue
+            except:
+                logger.error("Error reading file %s" %self.path)
+                sys.exit()
+            values = [value.strip() for value in values] 
+            try:
+                values = [float(value) for value in values]
+            except:
+                logger.error("Error evaluating values %s in file %s" %(values,self.path))
+                sys.exit() 
+            
+                if values[-2]<4*values[-1]:
+                    logger.debug("Small efficiency value %s +- %s. Setting to zero." %(values[-2],values[-1]))
+                    values[-2]= 0.0
+                            
+            yield values             
     
     def root(self):
         

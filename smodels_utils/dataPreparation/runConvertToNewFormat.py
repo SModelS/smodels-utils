@@ -19,6 +19,7 @@ from removeDocStrings import  rmDocStrings
 
 template = open("convertNew_template.py",'r')
 header = template.read()
+template.close()
 
 
 
