@@ -402,6 +402,9 @@ class DataHandler(object):
         content = txtFile.readlines()
         txtFile.close
         for line in content:
+            #Ignore lines which start with a letter
+            if line.strip()[:1].isalpha():
+                continue
             #print(line)
             if line.find("#")>-1:
                 line=line[:line.find("#")]
@@ -421,9 +424,9 @@ class DataHandler(object):
                 logger.error("Error evaluating values %s in file %s" %(values,self.path))
                 sys.exit() 
             
-                if values[-2]<4*values[-1]:
-                    logger.debug("Small efficiency value %s +- %s. Setting to zero." %(values[-2],values[-1]))
-                    values[-2]= 0.0
+            if values[-2]<4*values[-1]:
+                logger.debug("Small efficiency value %s +- %s. Setting to zero." %(values[-2],values[-1]))
+                values[-2]= 0.0
                             
             yield values             
     

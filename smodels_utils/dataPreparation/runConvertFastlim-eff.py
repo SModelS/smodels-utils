@@ -64,12 +64,11 @@ def getGlobalInfo(fold):
     
     globalInfo = open(os.path.join(fold,'globalInfo.txt'),'r')
     for l in globalInfo.readlines():
+        if not l.strip().replace('\n',''):
+            continue  #Ignore  empty lines
         field = l[:l.find(':')].strip()
         value = l[l.find(':')+1:].strip()
-        try:
-            globalDict[field] = value
-        except:
-            globalDict[field] = value    
+        globalDict[field] = value    
     
     globalInfo.close()
     return globalDict
@@ -302,5 +301,4 @@ if __name__ == "__main__":
             sys.exit()
             
         print "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0)
-        sys.exit()
         
