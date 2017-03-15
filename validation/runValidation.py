@@ -88,7 +88,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         logger.error('%s is not a folder' %databasePath)
     
     try:
-        db = Database(databasePath,verbosity=verbosity)
+        db = Database(databasePath)
     except Exception as e:
         logger.error("Error loading database at %s" %databasePath)
         logger.error("Error: %s" % str(e) )
@@ -237,6 +237,18 @@ if __name__ == "__main__":
         generateData = parser.getboolean("options", "generateData")            
     else:
         generateData = True
+        
+#    try:
+#        import ROOT
+#        if args.log == 'warning':
+#            ROOT.gErrorIgnoreLevel = ROOT.kWarning
+#        elif args.log == 'error':
+#            ROOT.gErrorIgnoreLevel = ROOT.kError
+#        else:
+#            ROOT.gErrorIgnoreLevel = ROOT.kInfo
+#    except:
+#        pass
+
 
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,
