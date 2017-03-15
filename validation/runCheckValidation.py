@@ -3,7 +3,6 @@
 import logging,sys,os
 # logging.basicConfig(filename='val.out')
 import subprocess
-import glob
 import argparse
 import signal
 from ConfigParser import SafeConfigParser
@@ -67,12 +66,13 @@ def checkPlotsFor(txname,update):
 
 
     val = ""
-    while not val.lower() in ['t','f','n','s','exit']:
+    while not val.lower() in ['t','f','n','tbd','s','exit']:
         val = raw_input("TxName is validated? (Current validation status: %s) \
-        \n True/False/None/Skip (t/f/n/s) \n (or type exit to stop)\n" %txname.validated)    
+        \n True/False/NA(N/A)/TBD(To be done)/Skip (t/f/n/tbd/s) \n (or type exit to stop)\n" %txname.validated)    
         if val.lower() == 't': validationResult = True
         elif val.lower() == 'f': validationResult = False
-        elif val.lower() == 'n': validationResult = None
+        elif val.lower() == 'n': validationResult = 'N/A'
+        elif val.lower() == 'tbd': validationResult = 'TBD'
         elif val.lower() == 's': validationResult = 'skip'
         elif val.lower() == 'exit':
             for plot in plots:
