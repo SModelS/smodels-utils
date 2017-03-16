@@ -555,7 +555,11 @@ class TxNameInput(Locker):
         #Replace particles appearing in the vertices by their mass        
         self.massConstraints = []
         for el in elementsInStr(self.constraint,removeQuotes=False):
-            el = eval(el)
+            if isinstance(el,str):
+                #use dummy labels to evaluate elements without strings
+                dummyLabels = dict([[label,label] for label in rEven.values()])
+                dummyLabels.update(dict([[label,label] for label in ptcDic])) 
+                el = eval(el,dummyLabels)
             #Replace particles in element by their masses
             massConstraint = []
             for ibr,br in enumerate(el):
@@ -602,7 +606,7 @@ class TxNameInput(Locker):
                     massDiff = massArray[ib][iv]-massArray[ib][iv+1]
                     if massDiff < 0.:
                         logger.error("Parent mass is smaller than daughter mass for %s" %str(self))
-                        sys.exit()
+                        return False
                     #Evaluate the inequality replacing m by the mass difference:
                     check = eval(vertex,{'dm' : massDiff}) 
                     if check is False:
@@ -610,7 +614,7 @@ class TxNameInput(Locker):
                         break
                     elif not check is True:
                         logger.error("Something went wrong evaluating the mass constraint %s" %vertex)
-                        sys.exit()
+                        return False
             if goodMasses:
                 return True
         

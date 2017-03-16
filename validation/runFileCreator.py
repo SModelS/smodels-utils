@@ -70,7 +70,10 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,xargs,Npts=300):
         tempf = slhaCreator.TemplateFile(templateFile,axes,tempdir)
         tempf.createFilesFor(pts, massesInFileName=True)
 
-    #Set up cross-section options: 
+    #Set up cross-section options:
+    xargs.colors = None
+    xargs.alltofile = False 
+    xargs.pythia6 = True
     xargs.query = False
     xargs.NLL = False
     xargs.NLO = False
@@ -119,7 +122,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
         logger.error('%s is not a folder' %databasePath)
     
     try:
-        db = Database(databasePath,verbosity=verbosity)
+        db = Database(databasePath)
     except:
         logger.error("Error loading database at %s" %databasePath)
         

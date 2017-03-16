@@ -480,7 +480,7 @@ class ValidationPlot():
         
         
         x,y,z = var('x y z')
-        axes = eval(axesStr)
+        axes = eval(axesStr,{'x' : x, 'y' : y, 'z': z})
         
         eqList = []
         for ib,br in enumerate(axes):

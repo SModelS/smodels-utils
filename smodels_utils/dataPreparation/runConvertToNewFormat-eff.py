@@ -436,13 +436,13 @@ if __name__ == "__main__":
     timeOut = 15000.
     
     nres = 0
-    for f in sorted(glob.glob(databasePath+'/*/*/*/convert.py')):
+    for f in sorted(glob.glob(databasePath+'/*/*/*/convertNew.py')):
         
         if not '-eff' in f:
 #             print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
             continue  #Skip UL results
-      
-        if not 'CMS-SUS-13-012-eff' in f:
+        
+        if not 'ATLAS-CONF-2013-048-eff' in f:
             continue
         
         ignore = False
@@ -476,35 +476,36 @@ if __name__ == "__main__":
                 print '\033[31m Error generating %s \033[0m' %fnew
                 sys.exit()        
 
-
-        #Make file executable
-        run = Popen('chmod +x %s' %fnew,shell=True)
-        run.wait()
-        #Execute file
+        runConvert = True
         rdir = fnew.replace(os.path.basename(fnew),'')
         t0 = time.time()
-        run = Popen(fnew+' -smodelsPath /home/lessa/smodels -utilsPath /home/lessa/smodels-utils',
-                    shell=True,cwd=rdir,stdout=PIPE,stderr=PIPE)
-        
-        rstatus = None
-        while rstatus is None and ((time.time() - t0) < timeOut):
-            time.sleep(5)
-            rstatus = run.poll()
-        if time.time() - t0 > timeOut:
-            run.terminate()
-            print '\033[31m Running %s exceeded timeout %s \033[0m' %(fnew,timeOut)
-            sys.exit()
-        
-
-        if rstatus:
-            print '\033[31m Error running %s \033[0m' %fnew
-            print rstatus
-            sys.exit()
-        rerror = run.stderr.read()
-        if rerror:
-            print '\033[31m Error running %s: \033[0m' %fnew
-            print rerror 
-            sys.exit()
+        if runConvert:
+            #Make file executable
+            run = Popen('chmod +x %s' %fnew,shell=True)
+            run.wait()
+            #Execute file
+            run = Popen(fnew+' -smodelsPath /home/lessa/smodels -utilsPath /home/lessa/smodels-utils',
+                        shell=True,cwd=rdir,stdout=PIPE,stderr=PIPE)
+            
+            rstatus = None
+            while rstatus is None and ((time.time() - t0) < timeOut):
+                time.sleep(5)
+                rstatus = run.poll()
+            if time.time() - t0 > timeOut:
+                run.terminate()
+                print '\033[31m Running %s exceeded timeout %s \033[0m' %(fnew,timeOut)
+                sys.exit()
+            
+    
+            if rstatus:
+                print '\033[31m Error running %s \033[0m' %fnew
+                print rstatus
+                sys.exit()
+            rerror = run.stderr.read()
+            if rerror:
+                print '\033[31m Error running %s: \033[0m' %fnew
+                print rerror 
+                sys.exit()
         
         oldir = rdir.replace(databasePath,'/home/lessa/smodels-database-master')
         check = checkNewOutput(new=rdir,old=oldir,setValidated=True)

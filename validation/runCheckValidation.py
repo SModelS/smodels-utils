@@ -3,15 +3,54 @@
 import logging,sys,os
 # logging.basicConfig(filename='val.out')
 import subprocess
-import glob
 import argparse
 import signal
 from ConfigParser import SafeConfigParser
 import time
-
+from sympy import var
+import string
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
+
+
+def getNiceAxes(axesStr):
+    """
+    Convert the axes definition format ('[[x,y],[x,y]]')
+    to a nicer format ('Eq(MassA,x)_Eq(MassB,y)_Eq(MassA,x)_Eq(MassB,y)')
+    
+    :param axesStr: string defining axes in the old format
+    
+    :return: string with a nicer representation of the axes (more suitable for printing)
+    """
+    
+    x,y,z = var('x y z')
+    axes = eval(axesStr,{'x' : x, 'y' : y, 'z': z})
+    
+    eqList = []
+    for ib,br in enumerate(axes):
+        if ib == 0:
+            mStr = 'Mass'
+        else:
+            mStr = 'mass'
+        mList = []
+        for im,eq in enumerate(br):
+            mList.append('Eq(%s,%s)'
+                           %(var(mStr+string.ascii_uppercase[im]),eq))
+        mStr = "_".join(mList)
+        eqList.append(mStr)
+    
+    #Simplify symmetric branches:
+    if eqList[0].lower() == eqList[1].lower() and len(eqList) == 2:            
+        eqStr = "2*%s"%eqList[0]
+    else:
+        eqStr = "__".join(eqList)
+        
+    eqStr = eqStr.replace(" ","")
+    
+    eqStr = eqStr.replace(",","").replace("(","").replace(")","")
+        
+    return eqStr.replace('*','')
 
 
 def checkPlotsFor(txname,update):
@@ -33,8 +72,8 @@ def checkPlotsFor(txname,update):
     #Collect validation plots:
     valPlots = []
     missingPlots = []
-    for ax in axes:
-        ax = ax.replace("*","").replace(",","").replace("(","").replace(")","")
+    for axe in axes:
+        ax = getNiceAxes(axe)
         plotfile = txname.txName+"_"+ax+".pdf"
         valplot = os.path.join(txname.path,'../../validation/'+plotfile)
         valplot = os.path.abspath(valplot)
@@ -111,7 +150,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
         logger.error('%s is not a folder' %databasePath)
     
     try:
-        db = Database(databasePath,verbosity=verbosity)
+        db = Database(databasePath)
     except:
         logger.error("Error loading database at %s" %databasePath)
         
@@ -129,19 +168,17 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
     expResList = sorted(expResList, key=lambda exp: exp.globalInfo.id)
     #Loop over experimental results and validate plots
     for expRes in expResList:
-        
-#        if (not hasattr(expRes.globalInfo,'contact')) or (not 'fastlim' in expRes.globalInfo.contact):
-#            continue
-#        if (hasattr(expRes.globalInfo,'contact')) and ('fastlim' in expRes.globalInfo.contact):
-#            continue
-
-        
+       
         expt0 = time.time()
         logger.info("--------- \033[32m Checking  %s \033[0m" %expRes.globalInfo.id)
-        #Select only one dataset (for EM results avoid duplicated txnames)
-        dataset = expRes.datasets[0]
-        #Loop over pre-selected txnames:
-        txnameList = [tx for tx in dataset.txnameList if not 'assigned' in tx.constraint]
+        txnameList = []
+        txnameStrs = []
+        for dataset in expRes.datasets:
+            for tx in dataset.txnameList:
+                if tx.txName in txnameStrs:
+                    continue
+                txnameList.append(tx)
+                txnameStrs.append(tx.txName)
         txnameList = sorted(txnameList, key=lambda tx: tx.txName)
         if not txnameList:
             logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))

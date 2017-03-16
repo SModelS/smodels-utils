@@ -70,13 +70,14 @@ def getExtendedFrame(txnameObjs,axes):
     minx, miny = None, None
     maxx, maxy = None, None
     for txnameObj in txnameObjs:
-        data = txnameObj.txnameData._data  #Data grid of mass points and ULs or efficiencies
-        if not data:
+        data = txnameObj.txnameData.tri.points  #Data grid of rotated points
+        if len(data) == 0:
             continue
         for pt in data:
-            mass = pt[0]
-            mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]
-            xy = massPlane.getXYValues(mass_unitless)
+            #Switch back to original mass point
+            mass = txnameObj.txnameData._getMassArrayFrom(pt,unit=None)
+            #Check if mass belong to the mass plane:
+            xy = massPlane.getXYValues(mass)
             if xy is None: continue
             else: x,y = xy
             if minx is None:
@@ -241,25 +242,30 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChe
     txdata._id = 'dummy'
     txdata._accept_errors_upto=0.05    
     txdata._V = None
-    txdata.Mp = []
-    txdata._data = []
     #Collects all points belonging to the plane:
-    masses = []
+    planeMasses = []
     for tx in txnameObjs:
-        for pt in tx.txnameData._data:
-            mass = [[m.asNumber(GeV) for m in br] for br in pt[0]]
-            if not massPlane.getXYValues(mass): continue
-            if not pt[0] in masses:  #Does not include the same mass point twice from distinct signal regions
-                txdata._data.append(pt)
-                masses.append(pt[0])
+        data = tx.txnameData.tri.points  #Data grid of rotated points
+        for pt in data:
+            #Switch back to original mass point
+            mass = tx.txnameData._getMassArrayFrom(pt,unit=None)
+            #Check if mass belong to the mass plane:
+            xy = massPlane.getXYValues(mass)
+            mass = [[m*GeV for m in br] for br in mass]
+            #Does not include the same mass point twice from distinct signal regions
+            if xy is None or mass in planeMasses:
+                continue
+            planeMasses.append(mass)
     
+    reducedData = [[mass,numpy.asscalar(tx.txnameData.xsec[i])] 
+                   for i,mass in enumerate(planeMasses)]
     #If there is no data, return empty list:
-    if not txdata._data:
+    if len(txdata.tri.points) == 0:
         logger.warning("No data points found for plane.")
         return []
     else:
     #Compute the PCA for the reduced dataset:
-        txdata.computeV()
+        txdata.loadData(reducedData)
     #Transform the min and max values to the rotated plane:
     extremes = []
     for x,y in [[minx,miny],[maxx,miny],[minx,maxy],[maxx,maxy]]:
@@ -269,10 +275,11 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChe
         P=numpy.dot(p,txdata._V)  ## rotated point
         extremes.append(P)
     #New values of extremes in the rotated plane (limit values by extremes in data):
-    xdataMin = min(numpy.array(txdata.Mp)[:,0]) 
-    xdataMax = max(numpy.array(txdata.Mp)[:,0])
-    ydataMin = min(numpy.array(txdata.Mp)[:,1]) 
-    ydataMax = max(numpy.array(txdata.Mp)[:,1])
+    Mp = txdata.tri.points
+    xdataMin = min(numpy.array(Mp)[:,0]) 
+    xdataMax = max(numpy.array(Mp)[:,0])
+    ydataMin = min(numpy.array(Mp)[:,1]) 
+    ydataMax = max(numpy.array(Mp)[:,1])
     xmin = max(min(numpy.array(extremes)[:,0]),xdataMin)
     xmax = min(max(numpy.array(extremes)[:,0]),xdataMax)
     dx=(xmax-xmin)/math.sqrt(float(Npts))
@@ -280,7 +287,7 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChe
     ymax = min(max(numpy.array(extremes)[:,1]),ydataMax)
     dy=(ymax-ymin)/math.sqrt(float(Npts))
     #Check for extended 1D-data:
-    if txdata.dimensionality == 2 and len(txdata.Mp) % 3 == 0:        
+    if txdata.dimensionality == 2 and len(Mp) % 3 == 0:        
         if ydataMax - ydataMin < 0.001:
             logger.info("1D data detected. Collapsing y-dimension")            
             ymin = ymax = (ydataMax+ydataMin)/2.
@@ -289,13 +296,10 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChe
     ymin = round(ymin/dy)*dy
 
     points=[]
-    massDimensions = [len(br) for br in txdata._data[0][0]] #Store the mass format
     for i in numpy.arange(xmin, xmax+dx/2., dx):
         for j in numpy.arange(ymin, ymax+dy/2., dy):
-            pt = [i,j] + [0.]*(txdata.full_dimensionality-2)  #Point in rotated space
-            massFlat = numpy.dot(pt,numpy.transpose(txdata._V)) + txdata.delta_x #Flatten Mass
-            massFlat = massFlat.tolist()[0]
-            mass = [[massFlat.pop(0) for im in range(brdim)] for brdim in massDimensions] #Nested mass
+            pt = [i,j]
+            mass = txdata._getMassArrayFrom(pt,unit=None)
             if not vertexChecker(mass):
                 continue
             if massPlane.getXYValues(mass) is None:
