@@ -62,7 +62,7 @@ def checkPlotsFor(txname,update):
     :param txname: Txname object corresponding to the    
     :param update: option to update (rewrite) the txname.txt files (True/False)
     
-    :return: Validation result (True/False/None or skip)
+    :return: Validation result (True/False/NA/TBD or skip)
     """
 
 
@@ -108,10 +108,11 @@ def checkPlotsFor(txname,update):
     val = ""
     while not val.lower() in ['t','f','n','s','exit']:
         val = raw_input("TxName is validated? (Current validation status: %s) \
-        \n True/False/None/Skip (t/f/n/s) \n (or type exit to stop)\n" %txname.validated)    
+        \n True/False/NA/TBD/Skip (t/f/n/tbd/s) \n (or type exit to stop)\n" %txname.validated)    
         if val.lower() == 't': validationResult = True
         elif val.lower() == 'f': validationResult = False
-        elif val.lower() == 'n': validationResult = None
+        elif val.lower() == 'n': validationResult = 'N/A'
+        elif val.lower() == 'tbd': validationResult = 'TBD'
         elif val.lower() == 's': validationResult = 'skip'
         elif val.lower() == 'exit':
             for plot in plots:
@@ -136,11 +137,11 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
     :param dataType: dataType of the analysis (all, efficiencyMap or upperLimit)
     :param txnames: list of txnames ([TChiWZ,...])
     :param databasePath: Path to the SModelS database
-    :param check: list containing which type of plots to check ([False,None,..])
+    :param check: list containing which type of plots to check ([False,'N/A',..])
     :param showPlots: option to open the plots or not (True/False)
     :param update: option to update (rewrite) the txname.txt files (True/False)
     :param printSummary: option to re-load the database and print the number of
-                        validated True/False/None txnames        
+                        validated True/False/Other txnames        
     :param verbosity: overall verbosity (e.g. error, warning, info, debug) 
     
     :return: True if all selected plots were checked, False otherwise 
@@ -244,12 +245,12 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
                     validated_true.append(txname)
                 elif txname.validated is False:
                     validated_false.append(txname)
-                elif txname.validated is None:
+                else:
                     validated_none.append(txname)
         #Print results
         logger.info('\033[32m %i Txnames with Validated = True \033[0m' %len(validated_true))
         logger.info('\033[32m %i Txnames with Validated = False \033[0m' %len(validated_false))
-        logger.info('\033[32m %i Txnames with Validated = None \033[0m' %len(validated_none))    
+        logger.info('\033[32m %i Txnames with Validated = "other" \033[0m' %len(validated_none))    
  
 
     
@@ -299,7 +300,13 @@ if __name__ == "__main__":
         
     databasePath = parser.get("path", "databasePath")
     
-    check = [eval(c) for c in parser.get("extra","check").split(',')]
+    check = []
+    for c in parser.get("extra","check").split(','):
+        try:
+            check.append(eval(c))
+        except:
+            check.append(c)
+            
     showPlots = parser.getboolean("extra","showPlots")
     update = parser.getboolean("extra","update")
     printSummary = parser.getboolean("extra","printSummary")

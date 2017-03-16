@@ -188,8 +188,6 @@ def replaceValidated(new,old):
     :param new: full path to the new experimental result folder
     :param old: full path to the corresponding old experimental result folder
     """
-
-
     
     fold = open(old,'r') 
     oldLines = fold.readlines()
@@ -308,7 +306,7 @@ if __name__ == "__main__":
         t0 = time.time()        
         rdir = f.replace(os.path.basename(f),'')        
         oldir = rdir.replace(databasePath,'/home/lessa/smodels-database-master')
-        check = checkNewOutput(new=rdir,old=oldir,setValidated=True)
+        check = checkNewOutput(new=rdir,old=oldir,setValidated=False)
         if not check:
             print '\033[31m Error comparing %s \033[0m' %rdir
             
