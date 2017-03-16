@@ -107,8 +107,6 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     tval0 = time.time()
     #Loop over experimental results and validate plots
     for expRes in expResList:
-        if hasattr(expRes.globalInfo,'contact') and 'fastlim' in expRes.globalInfo.contact:
-            continue
         expt0 = time.time()
         logger.info("--------- \033[32m validating  %s \033[0m" %expRes.globalInfo.id)
         #Loop over pre-selected txnames:
