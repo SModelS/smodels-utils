@@ -23,7 +23,7 @@ template.close()
 
 
 
-databasePath = '/home/lessa/smodels-database-old'
+databasePath = '/home/lessa/smodels-database'
 
     
     

@@ -11,6 +11,7 @@
 
 
 import sys,os,filecmp
+import glob,time
 sys.path.append('/home/lessa/smodels-utils')
 sys.path.append('/home/lessa/smodels')
 from smodels.tools.physicsUnits import fb,pb,GeV,TeV
@@ -22,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.WARNING)
 
+databasePath = '/home/lessa/smodels-database'
 
 def compareLines(new,old,ignore=['#']):
     """
@@ -234,10 +236,8 @@ def checkNewOutput(new,old,setValidated=True):
     comp = filecmp.dircmp(new,old,ignoreFiles)
     if comp.left_only:
         logger.warning('Only in new: %s' %comp.left_only)
-#         return False
     if comp.right_only:
         logger.warning('Only in old: %s' %comp.right_only)
-#         return False
 
     for f in comp.diff_files:
         if f == 'sms.root':
@@ -257,10 +257,8 @@ def checkNewOutput(new,old,setValidated=True):
         sdir = comp.subdirs[subdir]
         if sdir.left_only:
             logger.warning('Only in new: %s/%s' %(subdir,sdir.left_only))
-#             return False
         if sdir.right_only:
             logger.warning('Only in old: %s/%s' %(subdir,sdir.right_only))
-#             return False
 
         for f in sdir.diff_files:
             if f == 'sms.root':
@@ -274,10 +272,45 @@ def checkNewOutput(new,old,setValidated=True):
                 if not compareFields(fnew,fold,ignoreFields=['susyProcess','source','publishedData','dataUrl'],
                                      skipFields=['axes']):
                 
-#                 if not compareFields(fnew,fold,ignoreFields=['susyProcess','source','publishedData','dataUrl'],
-#                                      skipFields=['axes','figureUrl']):
                     return False
     
     
     return True
+        
+
+
+    
+if __name__ == "__main__":
+    
+      
+    ignoreList = ['CMS-SUS-13-006', #The on/off-shell splitting in master is inconsistent with the constraints
+                  'CMS-SUS-13-007', #The on/off-shell splitting in master is inconsistent with the constraints
+                  'ATLAS-SUSY-2013-05',  #Plane assignments are tricky (some planes only have off-shell points) -> Only axes and figureUrl differ
+                  'ATLAS-SUSY-2013-15',   #Plane assignments are tricky (on/off-shell) and need to be defiend by hand -> Only axes and figureUrl differ
+                  'CMS-SUS-13-013'] #The on/off-shell splitting in master is inconsistent with the constraints
+    
+    for f in sorted(glob.glob(databasePath+'/*/*/*/convertNew.py'))[:]:               
+        
+        ignore = False
+        for igF in ignoreList:
+            if igF in f:
+                if '-eff' in igF and not '-eff' in  f:
+                    continue
+                if '-eff' in f and not '-eff' in igF:
+                    continue
+                ignore = True
+                break
+        if ignore:
+            print "\033[31m Not checking %s \033[0m" %os.path.dirname(f)
+            continue
+
+
+        t0 = time.time()        
+        rdir = f.replace(os.path.basename(f),'')        
+        oldir = rdir.replace(databasePath,'/home/lessa/smodels-database-master')
+        check = checkNewOutput(new=rdir,old=oldir,setValidated=True)
+        if not check:
+            print '\033[31m Error comparing %s \033[0m' %rdir
+            
+        print "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0)
         

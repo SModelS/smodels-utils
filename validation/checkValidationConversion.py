@@ -155,9 +155,9 @@ if __name__ == "__main__":
     
     for f in sorted(glob.glob(databasePath+'/*/*/*/validation'))[:]:
         
-        if not '-eff' in f:
+#         if not '-eff' in f:
 #             print "\033[31m Not checking EM result %s \033[0m" %f.replace('convert.py','')
-            continue  #Skip efficiency map results
+#             continue  #Skip efficiency map results
         
         ignore = False
         for igF in ignoreList:
