@@ -181,7 +181,7 @@ if __name__ == "__main__":
         check = checkNewOutput(new=newdir,old=olddir)
         if not check:
             print '\033[31m Error comparing %s \033[0m' %newdir
-            sys.exit()
-            
-        print "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0)
+#             sys.exit()
+        else:    
+            print "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0)
             
