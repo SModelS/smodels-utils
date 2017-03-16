@@ -9,11 +9,10 @@
 
 """
 
-import sys,os,filecmp,glob,time
+import sys,os,glob,time
 sys.path.append('/home/lessa/smodels-utils')
 sys.path.append('/home/lessa/smodels')
 from smodels.tools.physicsUnits import fb,pb,GeV,TeV
-from smodels_utils.dataPreparation.databaseCreation import removeRepeated
 import logging
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -80,6 +79,7 @@ def checkNewOutput(new,old):
     #Check number of plots:
     if len(glob.glob(new+'/*.py')) != len(glob.glob(old+'/*.py')):
         print '\033[31m Number of files differ in %s \033[0m' %new
+        return False
     
     #Check if plots agree:
     for f in glob.glob(new+'/*.py'):
@@ -103,6 +103,8 @@ def checkNewOutput(new,old):
                 fold =  fold.replace('60.0','60.')
             elif '300.0_' in fold:
                 fold = fold.replace('300.0_','300.000000000000_')
+            elif 'inter02y' in fold:
+                fold = fold.replace('inter02y','inter02.0y')
             if not os.path.isfile(fold):
                 print '\033[31m File %s not found \033[0m' %fold
                 return False
@@ -141,26 +143,33 @@ if __name__ == "__main__":
     
     databasePath = '/home/lessa/smodels-database'
     
-    ignoreList = ['CMS-SUS-13-006', #The on/off-shell splitting in master is inconsistent with the constraints
-                  'CMS-SUS-13-007', #The on/off-shell splitting in master is inconsistent with the constraints
-                  'ATLAS-SUSY-2013-05',  #Plane assignments are tricky (some planes only have off-shell points) -> Only axes and figureUrl differ
-                  'ATLAS-SUSY-2013-15',   #Plane assignments are tricky (on/off-shell) and need to be defiend by hand -> Only axes and figureUrl differ
-                  'CMS-SUS-13-013'] #The on/off-shell splitting in master is inconsistent with the constraints
-    
+    ignoreList = ['ATLAS-SUSY-2013-15', #Duplicated points removed
+                  'CMS-SUS-13-006', #The on/off-shell splitting for TChiWZ in master is inconsistent with the constraints
+                  'CMS-SUS-13-007', #There is no fully off-shell region for T5tttt (the result in master is inconsistent)
+                  'CMS-SUS-13-013', #The on/off-shell splitting for T6ttWW in master is inconsistent with the constraints
+                  'ATLAS-SUSY-2013-04-eff', #The T5ZZ validation plots in master are fake (no exclusion curves)
+                  'ATLAS-SUSY-2013-15-eff', #The rounding on the dataInfo fields results in small changes of SR selection
+                  'CMS-SUS-13-007-eff' #The rounding on the dataInfo fields results in small changes of SR selection
+                  ]   
+
     
     for f in sorted(glob.glob(databasePath+'/*/*/*/validation'))[:]:
         
-#         if '-eff' in f:
+        if not '-eff' in f:
 #             print "\033[31m Not checking EM result %s \033[0m" %f.replace('convert.py','')
-#             continue  #Skip efficiency map results
+            continue  #Skip efficiency map results
         
         ignore = False
         for igF in ignoreList:
-            if igF in f:                
+            if igF in f:
+                if '-eff' in igF and not '-eff' in  f:
+                    continue
+                if '-eff' in f and not '-eff' in igF:
+                    continue
                 ignore = True
                 break
         if ignore:
-#             print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
+            print "\033[31m Not checking %s \033[0m" %os.path.dirname(f)
             continue
         
         
@@ -172,7 +181,7 @@ if __name__ == "__main__":
         check = checkNewOutput(new=newdir,old=olddir)
         if not check:
             print '\033[31m Error comparing %s \033[0m' %newdir
-#             sys.exit()
+            sys.exit()
             
         print "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0)
             

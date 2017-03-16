@@ -433,7 +433,7 @@ if __name__ == "__main__":
     
     #Set SMODELSNOUPDATE to avoid rewritting implementedBy and lastUpdate fields:
     os.environ["SMODELS_NOUPDATE"] = 'True'
-    timeOut = 150.
+    timeOut = 15000.
     
     nres = 0
     for f in sorted(glob.glob(databasePath+'/*/*/*/convert.py')):
@@ -442,6 +442,8 @@ if __name__ == "__main__":
 #             print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
             continue  #Skip UL results
       
+        if not 'CMS-SUS-13-012-eff' in f:
+            continue
         
         ignore = False
         for igF in ignoreList:

@@ -156,7 +156,6 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             #Loop over plots:
             for tgraph in tgraphs:              
                 ax = tgraph.GetName().split('_')[1]
-                print 'ax=',ax,txname.axes
                 if not ax in txname.axes: continue
                 agreement = validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,generateData)
                 logger.info('               agreement factor = %s' %str(agreement))
