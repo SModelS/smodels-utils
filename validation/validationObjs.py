@@ -288,8 +288,12 @@ class ValidationPlot():
                 logger.error("No SModelS output found for %s " %slhafile)
                 continue            
             f = open(fout,'r')
-            exec(f.read().replace('\n',''))
+            exec(f.read().replace('\n',''), globals() )
             f.close()
+            # print ( " fout=%s" % fout )
+            if not "smodelsOutput" in globals().keys():
+                logger.error ( "smodelsOutput not defined, from %s" % fout )
+                sys.exit()
             if not 'ExptRes' in smodelsOutput:
                 logger.debug("No results for %s " %slhafile)
                 continue 
