@@ -176,9 +176,9 @@ class DataHandler(object):
         for point in self.data:
             xDict = {}
             for key,val in point.items():
-                if not key in self.vars:
+                if not key in self.xvars:
                     continue
-                xDict[key] = val
+                xDict[str(key)] = val
             yield xDict
             
     def getValues(self):
@@ -194,7 +194,7 @@ class DataHandler(object):
             for key,val in point.items():
                 if key in self.xvars:
                     continue
-                vDict[key] = val
+                vDict[str(key)] = val
             yield vDict            
 
     def getPointsWith(self,**xvals):
@@ -208,9 +208,12 @@ class DataHandler(object):
         """
         
         points = []
+        #Convert xvals from dictionary to sympy vars:
+        varDict = dict([[str(v),v] for v in self.xvars])
+        xv = dict([[eval(k,varDict),v] for k,v in xvals.items()])
         for point in self.data:
             addPoint = True
-            for key,val in xvals.items():
+            for key,val in xv.items():                
                 if not key in point:
                     logger.error("Key %s not allowed for data" %key)
                     sys.exit()
@@ -227,8 +230,9 @@ class DataHandler(object):
         """
         Reweight the values in self by the values in data.
         If data is a float, apply the same rescaling for all points.
-        If data is a DataHandler object, applies the rescaling to
-        the intersecting points:
+        If data is a DataHandler object, multiply the value for the points in self
+        by the values for the same points in data. Mainly intended to be
+        used to rescale efficiencies by acceptances or to rescale the whole data.
         
         :param data: float or DataHandler object
         """
@@ -250,7 +254,7 @@ class DataHandler(object):
                 else:
                     pt = pts[0]
                     oldpt = self.data[i]  #Old point
-                    for key,val in oldpt:
+                    for key,val in oldpt.items():
                         if key in xvals or not key in pt:
                             continue
                         factor = pt[key]
