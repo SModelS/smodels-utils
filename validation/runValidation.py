@@ -3,7 +3,13 @@
 import sys,os
 import logging
 import argparse,time
-from ConfigParser import SafeConfigParser
+try:
+    from ConfigParser import SafeConfigParser as ConfigParser
+except ImportError:
+    from configparser import ConfigParser
+
+sys.path.insert(0,"../" )
+sys.path.insert(0,"../smodels_utils/dataPreparation/" )
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
@@ -178,7 +184,11 @@ if __name__ == "__main__":
     else:
         logger.info("Reading validation parameters from %s" %args.parfile)
 
-    parser = SafeConfigParser()
+    parser = ConfigParser()
+    try:
+        parser = ConfigParser( inline_comment_prefixes=( ';', ) ) # python3
+    except Exception as e:
+        pass
     parser.read(args.parfile)
     
     #Add smodels and smodels-utils to path

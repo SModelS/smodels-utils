@@ -619,7 +619,7 @@ class DatabaseCreator(list):
                 f.close()
                 if not compareLine in lines: continue
                 os.remove( self.base + self.infoFileDirectory + entry)
-        except OSError,e:
+        except OSError as e:
             pass
 
         self.timeStamp ( "cleaned up in %s " % self.base )

@@ -43,7 +43,7 @@ def _naturalUnits ( n ):
             n=round_to_n(vn,5)
         n=str(n)
         #print "n=",n
-    except (TypeError,ValueError),e: ## cast doesnt work
+    except (TypeError,ValueError) as e: ## cast doesnt work
         # print "[standardObjects.py] _naturalUnits",e,"n=>>%s<<" % n
         try:
             un=eval(n)
@@ -53,7 +53,7 @@ def _naturalUnits ( n ):
             else:
                 n=round_to_n(vn,5)
             n=str(n)+"*pb"
-        except IncompatibleUnitsError,e:
+        except IncompatibleUnitsError as e:
             try:
                 un=eval(n)
                 vn=un.asNumber(GeV)
@@ -62,9 +62,9 @@ def _naturalUnits ( n ):
                 else:
                     n=round_to_n(vn,5)
                 n=str(n)+"*GeV"
-            except IncompatibleUnitsError,e:
+            except IncompatibleUnitsError as e:
                 pass
-        except AttributeError,e:
+        except AttributeError as e:
             pass
             # print "[standardObjects.py] IncompatibleUnitsError",e
     # print "finally n=",n
