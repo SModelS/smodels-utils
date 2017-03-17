@@ -209,12 +209,12 @@ class ValidationPlot():
         if tempdir is None: tempdir = os.getcwd()
         pf, parFile = tempfile.mkstemp(dir=tempdir,prefix='parameter_',suffix='.ini')
         
-        os.write(pf,"[path]\ndatabasePath = %s\n" %self.databasePath)
-        os.write(pf,"[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n")
-        os.write(pf,"[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus)
-        os.write(pf,"[database]\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (expId,txname))
-        os.write(pf,"[printer]\noutputType = python\n")
-        os.write(pf,"[python-printer]\naddElementList = False\n")
+        os.write(pf,("[path]\ndatabasePath = %s\n" %self.databasePath).encode() )
+        os.write(pf,("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n").encode() )
+        os.write(pf,("[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus).encode() )
+        os.write(pf,("[database]\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (expId,txname)).encode() )
+        os.write(pf,("[printer]\noutputType = python\n").encode() )
+        os.write(pf,("[python-printer]\naddElementList = False\n").encode() )
         
         os.close(pf)
         return parFile
