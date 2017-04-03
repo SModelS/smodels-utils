@@ -218,6 +218,11 @@ class DatabaseCreator(list):
                 dataset.computeStatistics()
         #Write down dataInfo.txt
         self._createInfoFile('dataInfo', dataset, datasetFolder)
+        
+        #Consistency checks:
+        if not dataset.checkConsistency():
+            logger.error("Dataset %s failed the consistency checks" %dataset)
+            sys.exit()
 
         #Loop over txnames in datasets:
         for txName in dataset._txnameList:

@@ -15,6 +15,7 @@ from smodels.tools.physicsUnits import fb, pb, TeV, GeV
 from smodels.theory.particleNames import elementsInStr
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.particles import rEven, ptcDic
+from smodels.theory.element import Element
 
 
 
@@ -274,6 +275,52 @@ class DataSetInput(Locker):
          
         return txobj
         
+    def checkConsistency(self):
+        """
+        Some consistency checks which the dataset must satisfy
+        """
+        
+        #Check if it contains txnames:
+        if not self._txnameList:
+            logger.error("Dataset %s does not contain txnames" %self)
+            return False
+        
+        #Check txname data type
+        for tx in self._txnameList:
+            txDataTypes = set()
+            for plane in tx._planes:
+                if hasattr(plane,'upperLimits'):                
+                    txDataTypes.add('upperLimits')
+                elif hasattr(plane,'efficiencyMap'):
+                    txDataTypes.add('efficiencyMap')
+            txDataTypes = list(txDataTypes)
+            if len(txDataTypes) != 1:
+                logger.error("Txname %s has mixed data types" %tx.txName)
+                return False
+            elif not self.dataType in txDataTypes[0]:
+                logger.error("Txname %s data type (%s) does not match dataset type (%s)" 
+                             %(tx.txName,txDataTypes[0],self.dataType))
+                return False
+
+
+        if self.dataType != 'efficiencyMap':
+            return True
+        
+        #Check constraints (only for EM results):
+        datasetElements = []
+        for tx in self._txnameList:
+            for el in elementsInStr(tx.constraint):                
+                datasetElements.append(Element(el))
+        for iel,elA in enumerate(datasetElements):
+            for jel,elB in enumerate(datasetElements):
+                if jel <= iel:
+                    continue
+                
+                if elA.particlesMatch(elB):
+                    logger.error("Constraints (%s) appearing in dataset %s overlap (may result in double counting)" %(elA,self))
+                    return False
+            
+        return True
 
 class TxNameInput(Locker):
     

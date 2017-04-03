@@ -442,21 +442,10 @@ if __name__ == "__main__":
 #             print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
             continue  #Skip UL results
         
-        if not 'ATLAS-CONF-2013-048-eff' in f:
-            continue
-        
-        ignore = False
-        for igF in ignoreList:
-            if igF in f:                
-                ignore = True
-                break
-        if ignore:
-            print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
-            continue
-        
+       
         #Skip writing convertNew.py for the results in skipList        
         skipProduction = True #(ALWAYS SKIP SINCE ALL STATISTICS HAVE BEEN SET BY HAND)
-        for skipRes in skipList:
+        for skipRes in skipList+ignoreList:
             if skipRes in f:
                 skipProduction = True
                 break
@@ -506,6 +495,16 @@ if __name__ == "__main__":
                 print '\033[31m Error running %s: \033[0m' %fnew
                 print rerror 
                 sys.exit()
+        
+        ignore = False
+        for igF in ignoreList:
+            if igF in f:                
+                ignore = True
+                break
+        if ignore:
+            print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
+            continue
+        
         
         oldir = rdir.replace(databasePath,'/home/lessa/smodels-database-master')
         check = checkNewOutput(new=rdir,old=oldir,setValidated=True)
