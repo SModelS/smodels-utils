@@ -309,8 +309,13 @@ class DataSetInput(Locker):
         #Check constraints (only for EM results):
         datasetElements = []
         for tx in self._txnameList:
-            for el in elementsInStr(tx.constraint):                
-                datasetElements.append(Element(el))
+            for el in elementsInStr(tx.constraint):
+                newEl = Element(el)
+                if hasattr(tx,'finalState'):
+                    newEl.setFinalState(tx.finalState)
+                else:
+                    newEl.setFinalState(["MET","MET"])
+                datasetElements.append(newEl)
         for iel,elA in enumerate(datasetElements):
             for jel,elB in enumerate(datasetElements):
                 if jel <= iel:
@@ -332,13 +337,13 @@ class TxNameInput(Locker):
     infoAttr = ['txName','constraint','condition','conditionDescription','finalState',
                 'susyProcess','checked','figureUrl','dataUrl','source',
                 'validated','axes','upperLimits',
-                'efficiencyMap','expectedUpperLimits']
+                'efficiencyMap','expectedUpperLimits', 'finalState']
     internalAttr = ['_name', 'name', '_txDecay','_planes','_goodPlanes',
     '_branchcondition', 'onShell', 'offShell', 'constraint',
     'condition', 'conditionDescription','massConstraint',
     'upperLimits','efficiencyMap','expectedUpperLimits','massConstraints','_dataLabels']
     
-    requiredAttr = ['constraint','condition','txName','axes','dataUrl','source']
+    requiredAttr = ['constraint','condition','txName','axes','dataUrl','source','finalState']
     
     
     def __init__(self,txName):
@@ -355,6 +360,7 @@ class TxNameInput(Locker):
         
         self._name = txName
         self.txName = txName
+        self.finalState = ['MET','MET']
         self.susyProcess = prettyDescriptions.prettyTxname(txName,latex=False)
         self._txDecay = TxDecay(self._name)    
         if not self._txDecay:
