@@ -18,7 +18,7 @@ from smodels_utils.dataPreparation.checkConversion import checkNewOutput
 from removeDocStrings import  rmDocStrings
 
 
-databasePath = '/home/lessa/smodels-database'
+databasePath = '/home/lessa/smodels-database-hscp'
 
     
     
@@ -442,6 +442,7 @@ if __name__ == "__main__":
 #             print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
             continue  #Skip UL results
         
+        if not 'ATLAS-SUSY-2013-04' in f: continue
        
         #Skip writing convertNew.py for the results in skipList        
         skipProduction = True #(ALWAYS SKIP SINCE ALL STATISTICS HAVE BEEN SET BY HAND)
@@ -511,7 +512,7 @@ if __name__ == "__main__":
         if not check:
             print '\033[31m Error comparing %s \033[0m' %rdir
             sys.exit()
+        
             
         print "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0)
-        
         

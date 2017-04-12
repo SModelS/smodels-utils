@@ -200,6 +200,7 @@ def replaceValidated(new,old):
     if not valLine:
         return
     
+    
     fnew = open(new,'r')
     newLines = fnew.readlines()
     fnew.close()
@@ -267,7 +268,7 @@ def checkNewOutput(new,old,setValidated=True):
             if setValidated:
                 replaceValidated(fnew,fold)                     
             if not compareLines(fnew,fold,ignore=['#']):
-                if not compareFields(fnew,fold,ignoreFields=['susyProcess','source','publishedData','dataUrl'],
+                if not compareFields(fnew,fold,ignoreFields=['susyProcess','source','publishedData','dataUrl','finalState'],
                                      skipFields=['axes']):
                 
                     return False

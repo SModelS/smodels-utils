@@ -311,10 +311,6 @@ class DataSetInput(Locker):
         for tx in self._txnameList:
             for el in elementsInStr(tx.constraint):
                 newEl = Element(el)
-                if hasattr(tx,'finalState'):
-                    newEl.setFinalState(tx.finalState)
-                else:
-                    newEl.setFinalState(["MET","MET"])
                 datasetElements.append(newEl)
         for iel,elA in enumerate(datasetElements):
             for jel,elB in enumerate(datasetElements):
@@ -334,10 +330,10 @@ class TxNameInput(Locker):
     """
     
     
-    infoAttr = ['txName','constraint','condition','conditionDescription','finalState',
+    infoAttr = ['txName','constraint', 'finalState','condition','conditionDescription',
                 'susyProcess','checked','figureUrl','dataUrl','source',
                 'validated','axes','upperLimits',
-                'efficiencyMap','expectedUpperLimits', 'finalState']
+                'efficiencyMap','expectedUpperLimits']
     internalAttr = ['_name', 'name', '_txDecay','_planes','_goodPlanes',
     '_branchcondition', 'onShell', 'offShell', 'constraint',
     'condition', 'conditionDescription','massConstraint',
