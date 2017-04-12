@@ -311,6 +311,10 @@ class DataSetInput(Locker):
         for tx in self._txnameList:
             for el in elementsInStr(tx.constraint):
                 newEl = Element(el)
+                if hasattr(tx, 'finalState'):
+                    newEl.setFinalState(tx.finalState)
+                else:
+                    newEl.setFinalState(['MET','MET'])
                 datasetElements.append(newEl)
         for iel,elA in enumerate(datasetElements):
             for jel,elB in enumerate(datasetElements):
