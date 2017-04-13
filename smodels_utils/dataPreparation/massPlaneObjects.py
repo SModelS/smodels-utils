@@ -269,7 +269,7 @@ class Axes(object):
         :param massVars: Full list of mass variables (sympy symbol object).
                                 
         """
-
+        
         if not isinstance(massEqs,list):
             logger.error("Masses must be a list")
             sys.exit()
@@ -338,6 +338,8 @@ class Axes(object):
         :return: list containing floats, representing the masses of the particles in GeV
         """
 
+        if not self._equations:
+            return []
         
         #If mass function has not yet been created, create it now:
         if not '_massFunctions' in self.__dict__:
@@ -363,6 +365,12 @@ class Axes(object):
         equations and solve for them. The system should not be underconstrained.
         :return: lambdify function
         """
+
+        self._xyFunction = {}
+        self._xvars = []
+        self._nArguments = 0
+        if not self._equations:
+            return
         
         xvars = []
         for eq in self._equations:            
@@ -417,6 +425,9 @@ class Axes(object):
                 Otherwise, returns a dictionary: 
                 {'x' : x-value in GeV as float, 'y' : y-value in GeV as float,...}
         """
+        
+        if not massArray:
+            return {}
 
         if not '_xyFunction' in self.__dict__:
             self._setXYFunction()

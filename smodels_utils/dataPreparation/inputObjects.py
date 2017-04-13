@@ -310,11 +310,11 @@ class DataSetInput(Locker):
         datasetElements = []
         for tx in self._txnameList:
             for el in elementsInStr(tx.constraint):
-                newEl = Element(el)
                 if hasattr(tx, 'finalState'):
-                    newEl.setFinalState(tx.finalState)
+                    fs = tx.finalState
                 else:
-                    newEl.setFinalState(['MET','MET'])
+                    fs = ['MET','MET']
+                newEl = Element(el,fs)
                 datasetElements.append(newEl)
         for iel,elA in enumerate(datasetElements):
             for jel,elB in enumerate(datasetElements):
@@ -402,15 +402,16 @@ class TxNameInput(Locker):
             sys.exit()
 
         #Get element constraint structure/topology:
-        element = eval(elementsInStr(self.constraint,removeQuotes=False)[0])
+        element = Element(elementsInStr(self.constraint,removeQuotes=False)[0])
         #Checks for new input
-        if len(massArray) != len(element):
+        if len(massArray) != len(element.branches):
             logger.error("Mass array definition %s is not consistent with the txname constraint %s"
                          %(str(massArray),str(element)))
             sys.exit()
-        for ibr,br in enumerate(element):
-            nmasses = len(br)+1
-            if len(massArray[ibr]) != nmasses:
+        for ibr,br in enumerate(element.branches):
+            if str(br) == '[*]':  #Ignore wildcard branches
+                continue            
+            if len(massArray[ibr]) != br.vertnumb+1:
                 logger.error("Mass array definition is not consistent with the txname constraint")
                 sys.exit()
         #Create mass plane for new input
