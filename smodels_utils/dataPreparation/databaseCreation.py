@@ -574,9 +574,11 @@ def round_list(x, n=5):
     else:
         if isinstance(x,Unum):
             if not x.asNumber():
-                return x            
+                return x     
             unit = x/x.asNumber()
             x = x.asNumber()
+        elif isinstance(x,str):
+            return x            
         else:
             if not x:
                 return x

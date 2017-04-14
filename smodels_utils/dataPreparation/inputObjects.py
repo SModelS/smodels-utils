@@ -526,7 +526,7 @@ class TxNameInput(Locker):
                 sys.exit()                
             
             #ptDic is of the form: {x : float, y : float, value-key : float}
-            #where value-key is any key identifind the (upper limit,efficiency,..) value
+            #where value-key is any key identifying the (upper limit,efficiency,..) value
             #Restrict the pt dictionary to only the variable values:
             xDict = dict([[str(xv),v] for xv,v in ptDict.items() if xv in plane.xvars])
             #Get the (upper limit, efficiency,..) value:
@@ -541,8 +541,13 @@ class TxNameInput(Locker):
                 value = value*eval(dataHandler.unit, 
                                    {'fb':fb,'pb': pb,'GeV': GeV,'TeV': TeV})
             if hasattr(dataHandler, 'massUnit') and dataHandler.massUnit:
-                massArray = [[m*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV}) for m in br ] for br in massArray]
-            
+                for i,br in enumerate(massArray):
+                    if isinstance(br,str):  #Allow for string identifiers in the mass array
+                        continue                    
+                    for j,m in enumerate(br):
+                        if isinstance(m,(float,int)):
+                            m = m*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
+                        massArray[i][j] = m
             dataList.append([massArray, value])
         
         if not dataList:

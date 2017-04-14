@@ -107,9 +107,16 @@ class MassPlane(object):
         """
         
         if len(self.branches) <= branchNumber:
-            self.branches.append(Axes.fromConvert(branchMasses))
+            if branchMasses == ['*']:
+                self.branches.append(WildAxes.fromConvert(branchMasses))
+            else:
+                self.branches.append(Axes.fromConvert(branchMasses))
         else:
-            self.branches[branchNumber] = Axes.fromConvert(branchMasses)
+            if branchMasses == ['*']:
+                self.branches[branchNumber] = WildAxes.fromConvert(branchMasses)
+            else:
+                self.branches[branchNumber] = Axes.fromConvert(branchMasses)
+            
 
     def setSources(self,dataLabels,dataFiles,dataFormats,
                    objectNames=None,indices=None,units=None,coordinates=None,scales=None):
@@ -466,3 +473,34 @@ class Axes(object):
                 #print "string= >>%s<<" % string
         return string
 
+class WildAxes(Axes):
+
+    """
+    Holds the axes information for a wildcard branch ('*') of a singe mass plane.
+    No units supported!
+    """
+
+    def __init__(self, massEqs,massVars):
+        Axes.__init__(self,massEqs,massVars)
+        
+    @classmethod
+    def fromConvert(cls, massEqs):
+
+        """
+        build an instance of Axes from the given parameters
+
+        :param massEqs:  Full list of equations for the branch masses.
+                        Each list entry must be a Equalty-object in terms of x,y,z.
+        :return: Axes-object
+        """
+        
+        return cls([],[])
+        
+        
+    def getXYValues(self,massArray):
+        
+        return None
+    
+    def getParticleMasses(self,**xMass):
+        
+        return '*'    
