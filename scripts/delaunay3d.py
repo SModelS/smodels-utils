@@ -6,6 +6,7 @@ import IPython
 from matplotlib import rc
 import matplotlib.pyplot as plt
 from smodels.tools.physicsUnits import GeV, pb
+from mpl_toolkits.mplot3d import Axes3D
 
 anaid = "CMS-SUS-PAS-15-002"
 topo = "T1ttttoff"
@@ -27,7 +28,8 @@ def getData():
 
 
 fig=plt.figure ( figsize=(340/72.,340/72.) )
-
+# ax = fig.add_subplot(111, projection='3d')
+ax = fig.gca( projection='3d')
 
 rc('text',usetex=True)
 
@@ -51,11 +53,15 @@ from scipy.spatial import Delaunay
 #tri = Delaunay(points)
 tri=data.tri
 
-plt.triplot(points[:,0], points[:,1], tri.simplices.copy(), linewidth=.4 )
-plt.plot(points[:,0], points[:,1], 'bo', markeredgecolor='#0000aa', ms=2.0 )
+#ax.plot_wireframe (points[:,0], points[:,1], points[:,2] ) ## tri.simplices.copy(), linewidth=.4 )
+ax.plot_trisurf ( points[:,0], points[:,1], points[:,2], triangles=tri.simplices.copy(), color="#ffddff", \
+                  shade=False, linewidth=.4, antialiased=True, edgecolors='r', alpha=0 )
+ax.scatter(points[:,0], points[:,1], points[:,2], 'bo' )
+ax.view_init ( 30, -113 )
 corr_anaid = anaid.replace ( "CMS-SUS-PAS", "CMS-PAS-SUS-15-002" )
-plt.title("Delaunay triangulation, %s (%s)" % (anaid,topo) )
+plt.title("Delaunay triangulation\n %s (%s)" % (anaid,topo) )
 plt.xlabel ( "m$_\mathrm{mother}$ [GeV]" )
 plt.ylabel ( "m$_\mathrm{lsp}$ [GeV]" )
+ax.set_zlabel( "m$_\mathrm{mother2}$ [GeV]" )
 #plt.show()
-plt.savefig ( "delaunay.pdf" )
+plt.savefig ( "delaunay3d.pdf" )
