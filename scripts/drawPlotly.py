@@ -8,18 +8,12 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import plotly.plotly as py
-from plotly.graph_objs import *
+import plotly.offline as offline
+import plotly.graph_objs as go
 from smodels.tools.physicsUnits import GeV, pb
 from mpl_toolkits.mplot3d import Axes3D
 
-anaid = "CMS-SUS-PAS-15-002"
-topo = "T1ttttoff"
-anaid = "ATLAS-SUSY-2013-23"
-topo = "TChiWH"
-anaid = "ATLAS-CONF-2013-007"
-topo = "T5tttt"
 anaid = "CMS-SUS-13-013"
-corr_anaid = anaid.replace ( "CMS-SUS-PAS", "CMS-PAS-SUS-15-002" )
 topo = "T6ttWW"
 
 def map_z2color(zval, colormap, vmin, vmax):
@@ -53,18 +47,10 @@ def plotly_trisurf(x, y, z, simplices, colormap=cm.RdBu, plot_edges=None):
     facecolor=[map_z2color(zz,  colormap, min_zmean, max_zmean) for zz in zmean] 
     I,J,K=tri_indices(simplices)
     
-    triangles=Mesh3d(x=x,
-                     y=y,
-                     z=z,
-                     facecolor=facecolor, 
-                     i=I,
-                     j=J,
-                     k=K,
-                     name=''
-                    )
+    triangles=go.Mesh3d( x=x, y=y, z=z, facecolor=facecolor, i=I, j=J, k=K, name='' )
     
     if plot_edges is None:# the triangle sides are not plotted 
-        return Data([triangles])
+        return go.Data([triangles])
     else:
         #define the lists Xe, Ye, Ze, of x, y, resp z coordinates of edge end points for each triangle
         #None separates data corresponding to two consecutive triangles
@@ -72,13 +58,10 @@ def plotly_trisurf(x, y, z, simplices, colormap=cm.RdBu, plot_edges=None):
         Xe, Ye, Ze=[reduce(lambda x,y: x+y, lists_coord[k]) for k in range(3)]
         
         #define the lines to be plotted
-        lines=Scatter3d(x=Xe,
-                        y=Ye,
-                        z=Ze,
-                        mode='lines',
-                        line=Line(color= 'rgb(50,50,50)', width=1.5)
+        lines=go.Scatter3d(x=Xe, y=Ye, z=Ze, mode='lines',
+                        line=go.Line(color= 'rgb(50,50,50)', width=2.5)
                )
-        return Data([triangles, lines])
+        return go.Data([triangles, lines])
 
 
 def getData():
@@ -134,22 +117,23 @@ points = cleanPoints ( data )
 from scipy.spatial import Delaunay
 tri=data.tri
 
-# ax = initFig()
 axis = dict(
-showbackground=True, 
-backgroundcolor="rgb(230, 230,230)",
+showbackground=True,
+backgroundcolor="rgb(240, 240, 240)",
 gridcolor="rgb(255, 255, 255)",      
 zerolinecolor="rgb(255, 255, 255)",  
+title="$x^2$"
     )
 
-layout = Layout(
-         title='Moebius band triangulation',
+layout = go.Layout(
+         title="Delaunay triangulation<br> %s (%s)" % (anaid,topo),
          width=800,
          height=800,
-         scene=Scene(  
-         xaxis=XAxis(axis),
-         yaxis=YAxis(axis), 
-         zaxis=ZAxis(axis), 
+         scene=go.Scene(  
+         xaxis=go.XAxis(axis,title="m(mother) [GeV]" ),
+         yaxis=go.YAxis(axis,title="$\\gamma$ [2]" ), 
+         # zaxis=go.ZAxis(axis,title="m$$_{lsp}$$ [GeV]"), 
+         zaxis=axis,
         aspectratio=dict(
             x=1,
             y=1,
@@ -158,20 +142,10 @@ layout = Layout(
         )
         )
 
-# triangulation = matplotlib.tri.Triangulation(x=points[:,0], y=points[:,1], z=points[:,2], triangles= tri.simplices.copy(), mask=None)
+ts = plotly_trisurf ( points[:,0], points[:,1], points[:,2], tri.simplices.copy(), plot_edges=True ) 
+fig = go.Figure(data=ts, layout=layout)
 
-# ax.plot_wireframe (points[:,0], points[:,1], points[:,2] ) ## tri.simplices.copy(), linewidth=.4 )
-# ax.plot_trisurf ( triangulation )
-#ax.plot_trisurf ( points[:,0], points[:,1], points[:,2], triangles=tri.simplices.copy(), color="#ffddff", \
-#                  shade=False, linewidth=.4, antialiased=True, edgecolors='r', alpha=0, mask=None, plot_edges=True )
-ts = plotly_trisurf ( points[:,0], points[:,1], points[:,2], tri.simplices.copy(), plot_edges=True ) #, color="#ffddff", \
-                  # shade=False, linewidth=.4, antialiased=True, edgecolors='r', alpha=0, mask=None, plot_edges=True )
-# ax.scatter(points[:,0], points[:,1], points[:,2], 'bo' )
-fig = Figure(data=ts, layout=layout)
+#py.sign_in('WolfgangWaltenberger', '5mBjlg7FEj1awizxm5cR')
+#py.iplot(fig, filename='delaunay')
 
-py.sign_in('WolfgangWaltenberger', '5mBjlg7FEj1awizxm5cR')
-# py.sign_in('walten@hephy.oeaw.ac.at', 'tr1n0s00')
-py.iplot(fig, filename='trial')
-
-#plt.show()
-#plt.savefig ( "delaunay3d.pdf" )
+py.image.save_as(fig, filename='delaunay.png')
