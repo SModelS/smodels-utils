@@ -11,12 +11,13 @@ anaid = "CMS-SUS-PAS-15-002"
 topo = "T1ttttoff"
 anaid = "ATLAS-SUSY-2013-23"
 topo = "TChiWH"
+#anaid = "CMS-SUS-13-013"
+#topo = "T6ttWW"
 
 def getData():
     from smodels.experiment.databaseObj import Database
     home=os.environ["HOME"]
-    db = "%s/git/smodels/test/tinydb/" % home
-    # db = "%s/git/smodels-database//" % home
+    db = "./tinydb/"
     d=Database ( db )
     results = d.getExpResults ( analysisIDs=[ anaid ] )
     res=results[0]
