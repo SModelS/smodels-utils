@@ -18,50 +18,60 @@ topo = "T6ttWW"
 
 def map_z2color(zval, colormap, vmin, vmax):
     #map the normalized value zval to a corresponding color in the colormap
-    
+
     if vmin>vmax:
         raise ValueError('incorrect relation between vmin and vmax')
     t=(zval-vmin)/float((vmax-vmin))#normalize val
     R, G, B, alpha=colormap(t)
-    return 'rgb('+'{:d}'.format(int(R*255+0.5))+','+'{:d}'.format(int(G*255+0.5))+\
-           ','+'{:d}'.format(int(B*255+0.5))+')'   
+    alpha=.05
+    return 'rgba('+'{:d}'.format(int(R*255+0.5))+','+'{:d}'.format(int(G*255+0.5))+','+'{:d}'.format(int(B*255+0.5))+\
+           ','+'{:d}'.format(int(alpha*255+0.5))+')'
+    #return 'rgb('+'{:d}'.format(int(R*255+0.5))+','+'{:d}'.format(int(G*255+0.5))+\
+    #       ','+'{:d}'.format(int(B*255+0.5))+')'
 
 def tri_indices(simplices):
     #simplices is a numpy array defining the simplices of the triangularization
     #returns the lists of indices i, j, k
-    
+
     return ([triplet[c] for triplet in simplices] for c in range(3))
 
-def plotly_trisurf(x, y, z, simplices, colormap=cm.RdBu, plot_edges=None):
-    #x, y, z are lists of coordinates of the triangle vertices 
+def plotly_trisurf(x, y, z, simplices, colormap=cm.coolwarm, data=None, plot_edges=None):
+    #x, y, z are lists of coordinates of the triangle vertices
     #simplices are the simplices that define the triangularization;
     #simplices  is a numpy array of shape (no_triangles, 3)
     #insert here the  type check for input data
-    
+
     points3D=np.vstack((x,y,z)).T
-    tri_vertices=map(lambda index: points3D[index], simplices)# vertices of the surface triangles     
-    zmean=[np.mean(tri[:,2]) for tri in tri_vertices ]# mean values of z-coordinates of 
+    tri_vertices=map(lambda index: points3D[index], simplices)# vertices of the surface triangles
+    zmean=[np.mean(tri[:,2]) for tri in tri_vertices ]# mean values of z-coordinates of
                                                       #triangle vertices
+    zman = []
+    for tri in tri_vertices[:10]:
+        tx,ty,tz=np.mean(tri[:,0]),np.mean(tri[:,1]),np.mean(tri[:,2])
+        v=data.getValueFor ( [ [ tx*GeV, ty*GeV, tz*GeV ], [ tx*GeV,ty*GeV, tz*GeV ] ] ).asNumber(pb)
+        zmean.append ( v )
+    #    print tri,tx,ty,tz,v
+    # print len(zmean)
     min_zmean=np.min(zmean)
-    max_zmean=np.max(zmean)  
-    facecolor=[map_z2color(zz,  colormap, min_zmean, max_zmean) for zz in zmean] 
+    max_zmean=np.max(zmean)
+    facecolor=[map_z2color(zz,  colormap, min_zmean, max_zmean) for zz in zmean]
     I,J,K=tri_indices(simplices)
-    
-    triangles=go.Mesh3d( x=x, y=y, z=z, facecolor=facecolor, i=I, j=J, k=K, name='' )
-    
-    if plot_edges is None:# the triangle sides are not plotted 
+
+    triangles=go.Mesh3d( x=x, y=y, z=z, facecolor=facecolor, i=I, j=J, k=K )
+
+    if plot_edges is None:# the triangle sides are not plotted
         return go.Data([triangles])
     else:
         #define the lists Xe, Ye, Ze, of x, y, resp z coordinates of edge end points for each triangle
         #None separates data corresponding to two consecutive triangles
         lists_coord=[[[T[k%3][c] for k in range(4)]+[ None]   for T in tri_vertices]  for c in range(3)]
         Xe, Ye, Ze=[reduce(lambda x,y: x+y, lists_coord[k]) for k in range(3)]
-        
+
         #define the lines to be plotted
-        lines=go.Scatter3d(x=Xe, y=Ye, z=Ze, mode='lines',
-                        line=go.Line(color= 'rgb(50,50,50)', width=2.5)
+        lines=go.Scatter3d(x=Xe, y=Ye, z=Ze, mode='lines', name="vbdji",
+                        line=go.Line(color= 'rgb(50,50,50)', width=3.5)
                )
-        return go.Data([triangles, lines])
+        return go.Data([triangles, lines], name="dfuij", showlegend=True ) ##, text="djij" )
 
 
 def getData():
@@ -71,7 +81,7 @@ def getData():
     from smodels.experiment.txnameObj import TxNameData
     TxNameData._keep_values = True
     home=os.environ["HOME"]
-    db = "./tinydb/" 
+    db = "./tinydb/"
     #db = "%s/git/smodels-database//" % home
     d=Database ( db )
     results = d.getExpResults ( analysisIDs=[ anaid ], useSuperseded=True, useNonValidated=True )
@@ -96,16 +106,6 @@ def cleanPoints( data ):
     points = np.array ( Points )
     return points
 
-def initFig():
-    fig=plt.figure ( figsize=(340/72.,340/72.) )
-    ax = fig.gca( projection='3d')
-    ax.view_init ( 30, -113 )
-    plt.title("Delaunay triangulation\n %s (%s)" % (anaid,topo) )
-    plt.xlabel ( "m$_\mathrm{mother}$ [GeV]" )
-    plt.ylabel ( "m$_\mathrm{inter}$ [GeV]" )
-    ax.set_zlabel( "m$_\mathrm{lsp}$ [GeV]" )
-    return ax
-
 rc('text',usetex=True)
 
 # print len ( results )
@@ -119,33 +119,40 @@ tri=data.tri
 
 axis = dict(
 showbackground=True,
-backgroundcolor="rgb(240, 240, 240)",
-gridcolor="rgb(255, 255, 255)",      
-zerolinecolor="rgb(255, 255, 255)",  
-title="$x^2$"
+backgroundcolor="rgb(255, 255, 255)",
+gridcolor="rgb(175, 175, 175)",
+zerolinecolor="rgb(145, 145, 145)",
     )
 
+camera = dict(
+    up=dict(x=0, y=0, z=1),
+    center=dict(x=0, y=0, z=0),
+    eye=dict(x=-1.5, y=-1.5, z=1.2 ),
+)
+
 layout = go.Layout(
-         title="Delaunay triangulation<br> %s (%s)" % (anaid,topo),
+         title="<br><br><br><br>Delaunay triangulation<br> %s (%s)" % (anaid,topo),
          width=800,
-         height=800,
-         scene=go.Scene(  
-         xaxis=go.XAxis(axis,title="m(mother) [GeV]" ),
-         yaxis=go.YAxis(axis,title="$\\gamma$ [2]" ), 
-         # zaxis=go.ZAxis(axis,title="m$$_{lsp}$$ [GeV]"), 
-         zaxis=axis,
+         height=600,
+         margin = go.Margin ( t = 0, b = 0, l = 0, r = 0, pad = 1 ),
+         scene=go.Scene(
+             camera=camera,
+         xaxis=go.XAxis(axis,title="m1 [GeV]" ),
+         yaxis=go.YAxis(axis,title="m2 [GeV]" ),
+         zaxis=go.ZAxis(axis,title="m3 [GeV]" ),
         aspectratio=dict(
-            x=1,
-            y=1,
+            x=1.1,
+            y=1.1,
             z=0.5
         ),
         )
         )
 
-ts = plotly_trisurf ( points[:,0], points[:,1], points[:,2], tri.simplices.copy(), plot_edges=True ) 
-fig = go.Figure(data=ts, layout=layout)
+ts = plotly_trisurf ( points[:,0], points[:,1], points[:,2], tri.simplices.copy(), data=data, plot_edges=True )
+fig = go.Figure(data=ts, layout=layout )
 
-#py.sign_in('WolfgangWaltenberger', '5mBjlg7FEj1awizxm5cR')
-#py.iplot(fig, filename='delaunay')
+py.sign_in('WolfgangWaltenberger', '5mBjlg7FEj1awizxm5cR')
+py.iplot(fig, filename='delaunay')
 
 py.image.save_as(fig, filename='delaunay.png')
+# py.image.save_as(fig, filename='delaunay.pdf')
