@@ -293,8 +293,11 @@ class DataSetInput(Locker):
                     txDataTypes.add('upperLimits')
                 elif hasattr(plane,'efficiencyMap'):
                     txDataTypes.add('efficiencyMap')
-            txDataTypes = list(txDataTypes)
-            if len(txDataTypes) != 1:
+            txDataTypes = list(txDataTypes)            
+            if not txDataTypes:
+                logger.error("Txname %s has upperLimits or efficiencyMap data" %tx.txName)
+                return False
+            if len(txDataTypes) > 1:
                 logger.error("Txname %s has mixed data types" %tx.txName)
                 return False
             elif not self.dataType in txDataTypes[0]:
