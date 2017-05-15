@@ -536,10 +536,10 @@ class TxNameInput(Locker):
             value = [v for xv,v in ptDict.items() if  not xv in plane.xvars][0]
             massArray = plane.getParticleMasses(**xDict)
             #Check if the massArray is positive and value is positive:
-            if min([m.asNumber(GeV) for br  in massArray for m in br]) < 0.:
+            if min([m for br  in massArray for m in br]) < 0.:
                 logger.warning("Negative mass value found. Point %s will be ignored." %str(massArray))
                 continue 
-            if value.asNumber() < 0.:
+            if value < 0.:
                 logger.warning("Negative value for %s found. Point %s will be ignored." %(dataLabel,str(massArray)))
                 continue
             #Check if mass array is consistent with the mass constraints given by the 
