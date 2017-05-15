@@ -509,7 +509,7 @@ class TxNameInput(Locker):
             logger.error('Can not deal with %i variables' %nvars)
             sys.exit()
         
-        #Check if plane is has a dataLabel object holder:
+        #Check if plane has a dataLabel object holder:
         if not hasattr(plane,dataLabel):
             logger.error("Plane %s does not contain data holder for dataLabel %s" %(plane,dataLabel))
             sys.exit()
@@ -535,6 +535,13 @@ class TxNameInput(Locker):
             #Get the (upper limit, efficiency,..) value:
             value = [v for xv,v in ptDict.items() if  not xv in plane.xvars][0]
             massArray = plane.getParticleMasses(**xDict)
+            #Check if the massArray is positive and value is positive:
+            if min([m.asNumber(GeV) for br  in massArray for m in br]) < 0.:
+                logger.warning("Negative mass value found. Point %s will be ignored." %str(massArray))
+                continue 
+            if value.asNumber() < 0.:
+                logger.warning("Negative value for %s found. Point %s will be ignored." %(dataLabel,str(massArray)))
+                continue
             #Check if mass array is consistent with the mass constraints given by the 
             #txname constraint. If not, skip this mass.
             if not self.checkMassConstraints(massArray):
