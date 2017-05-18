@@ -623,11 +623,14 @@ class TxNameInput(Locker):
        
         #Replace particles appearing in the vertices by their mass        
         self.massConstraints = []
-        for el in elementsInStr(self.constraint,removeQuotes=False):
+        for el in elementsInStr(self.constraint,removeQuotes=False):            
             if isinstance(el,str):
                 #use dummy labels to evaluate elements without strings
                 dummyLabels = dict([[label,label] for label in rEven.values()])
-                dummyLabels.update(dict([[label,label] for label in ptcDic])) 
+                dummyLabels.update(dict([[label,label] for label in ptcDic]))
+                for key,val in dummyLabels.items():
+                    dummyLabels[key.replace('+','_p').replace('-','_m')] = val                    
+                el = el.replace('+','_p').replace('-','_m')
                 el = eval(el,dummyLabels)
             #Replace particles in element by their masses
             massConstraint = []
