@@ -299,7 +299,10 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChe
     for i in numpy.arange(xmin, xmax+dx/2., dx):
         for j in numpy.arange(ymin, ymax+dy/2., dy):
             pt = [i,j]
-            mass = txdata._getMassArrayFrom(pt,unit=None)
+            #Check if point is in the convexhull. If not, try another one
+            if txdata.tri.find_simplex(pt) < 0:
+                continue
+            mass = txdata._getMassArrayFrom(pt,unit=None)            
             if not vertexChecker(mass):
                 continue
             if massPlane.getXYValues(mass) is None:
