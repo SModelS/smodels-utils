@@ -18,7 +18,7 @@ sys.path.append('%s/smodels-utils' % home )
 sys.path.append('%s/smodels' % home )
 from smodels_utils.dataPreparation.inputObjects import TxNameInput
 from smodels_utils.dataPreparation.checkConversion import checkNewOutput
-from removeDocStrings import  rmDocStrings
+from removeDocStrings import rmDocStrings
 
 databasePath = '%s/smodels-database' % home
     
@@ -476,7 +476,7 @@ if __name__ == "__main__":
             run = Popen('chmod +x %s' %fnew,shell=True)
             run.wait()
             #Execute file
-            run = Popen(fnew+' -smodelsPath /home/lessa/smodels -utilsPath /home/lessa/smodels-utils',
+            run = Popen(fnew+' -smodelsPath %s/smodels -utilsPath %s/smodels-utils' % ( home, home ),
                         shell=True,cwd=rdir,stdout=PIPE,stderr=PIPE)
             
             rstatus = None
@@ -509,7 +509,7 @@ if __name__ == "__main__":
             continue
         
         
-        oldir = rdir.replace(databasePath,'/home/lessa/smodels-database-master')
+        oldir = rdir.replace(databasePath,'%s/smodels-database-master' % home )
         check = checkNewOutput(new=rdir,old=oldir,setValidated=True)
         if not check:
             print ( '\033[31m Error comparing %s \033[0m' %rdir )

@@ -89,4 +89,5 @@ def rmDocStrings(source):
         prev_toktype = token_type
         last_col = end_col
         last_lineno = end_line
+    out=out.replace ( "types.StringType", "str" )
     return out
