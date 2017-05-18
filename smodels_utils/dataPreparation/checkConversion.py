@@ -9,6 +9,7 @@
 
 """
 
+from __future__ import print_function
 
 import sys,os,filecmp
 import glob,time
@@ -159,9 +160,9 @@ def compareFields(new,old,ignoreFields=['susyProcess'],skipFields=[],reps=0.01):
         logger.error("Number of fields in %s differ" %new)
         for key in set(newFields.keys()).symmetric_difference(set(oldFields.keys())):
             if key in newFields:
-                print 'Missing in old:',key
+                print ( 'Missing in old:',key )
             else:
-                print 'Missing in new:',key
+                print ( 'Missing in new:',key )
         return False
     if sorted(newFields.keys()) != sorted(oldFields.keys()):
         logger.error("Fields in %s differ" %new)
@@ -300,7 +301,7 @@ if __name__ == "__main__":
                 ignore = True
                 break
         if ignore:
-            print "\033[31m Not checking %s \033[0m" %os.path.dirname(f)
+            print ( "\033[31m Not checking %s \033[0m" %os.path.dirname(f) )
             continue
 
 
@@ -309,7 +310,7 @@ if __name__ == "__main__":
         oldir = rdir.replace(databasePath,'/home/lessa/smodels-database-master')
         check = checkNewOutput(new=rdir,old=oldir,setValidated=False)
         if not check:
-            print '\033[31m Error comparing %s \033[0m' %rdir
+            print ( '\033[31m Error comparing %s \033[0m' %rdir )
             
-        print "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0)
+        print ( "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0) )
         

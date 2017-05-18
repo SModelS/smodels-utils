@@ -9,7 +9,11 @@
 .. moduleauthor:: http://code.activestate.com/recipes/576704/
 
 """
-import cStringIO,tokenize
+import tokenize
+try:
+    import cStringIO
+except ImportError as e:
+    from io import StringIO as cStringIO
 
 
 def rmDocStrings(source):
@@ -85,4 +89,5 @@ def rmDocStrings(source):
         prev_toktype = token_type
         last_col = end_col
         last_lineno = end_line
+    out=out.replace ( "types.StringType", "str" )
     return out
