@@ -8,18 +8,19 @@
 
 """
 
+from __future__ import print_function
+
 
 import sys,glob,os,time,math
 from subprocess import Popen,PIPE
-sys.path.append('/home/lessa/smodels-utils')
-sys.path.append('/home/lessa/smodels')
+home=os.environ["HOME"]
+sys.path.append('%s/smodels-utils' % home )
+sys.path.append('%s/smodels' % home )
 from smodels_utils.dataPreparation.inputObjects import TxNameInput
 from smodels_utils.dataPreparation.checkConversion import checkNewOutput
 from removeDocStrings import  rmDocStrings
 
-
-databasePath = '/home/lessa/smodels-database-hscp'
-
+databasePath = '%s/smodels-database' % home
     
     
 def getObjectNames(f,objType):
@@ -350,8 +351,8 @@ def main(f,fnew):
         try:
             exec(auxBlock)
         except Exception as e:
-            print 'Error evaluating auxBlock'
-            print e
+            print ( 'Error evaluating auxBlock' )
+            print ( e )
             return False
     
     #Write header
@@ -397,7 +398,7 @@ def main(f,fnew):
                 l = key + ' = ' + str(val)+'\n'                
                 fnew.write(l)
             else:
-                print 'Something wrong with line %s' %l
+                print ( 'Something wrong with line %s' %l )
                 return False
             
     
@@ -457,13 +458,14 @@ if __name__ == "__main__":
             continue
                         
         fnew = f.replace('convert.py','convertNew.py')
+        print ( 'create %s' % fnew )
         if not skipProduction:            
             if os.path.isfile(fnew):
                 os.remove(fnew)
             r = main(f,fnew)
                 
             if not r:
-                print '\033[31m Error generating %s \033[0m' %fnew
+                print ( '\033[31m Error generating %s \033[0m' %fnew )
                 sys.exit()        
 
         runConvert = True
@@ -483,18 +485,18 @@ if __name__ == "__main__":
                 rstatus = run.poll()
             if time.time() - t0 > timeOut:
                 run.terminate()
-                print '\033[31m Running %s exceeded timeout %s \033[0m' %(fnew,timeOut)
+                print ( '\033[31m Running %s exceeded timeout %s \033[0m' %(fnew,timeOut) )
                 sys.exit()
             
     
             if rstatus:
-                print '\033[31m Error running %s \033[0m' %fnew
-                print rstatus
+                print ( '\033[31m Error running %s \033[0m' %fnew )
+                print ( rstatus )
                 sys.exit()
             rerror = run.stderr.read()
             if rerror:
-                print '\033[31m Error running %s: \033[0m' %fnew
-                print rerror 
+                print ( '\033[31m Error running %s: \033[0m' %fnew )
+                print ( rerror )
                 sys.exit()
         
         ignore = False
@@ -503,16 +505,16 @@ if __name__ == "__main__":
                 ignore = True
                 break
         if ignore:
-            print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
+            print ( "\033[31m Not checking %s \033[0m" %f.replace('convert.py','') )
             continue
         
         
         oldir = rdir.replace(databasePath,'/home/lessa/smodels-database-master')
         check = checkNewOutput(new=rdir,old=oldir,setValidated=True)
         if not check:
-            print '\033[31m Error comparing %s \033[0m' %rdir
+            print ( '\033[31m Error comparing %s \033[0m' %rdir )
             sys.exit()
         
             
-        print "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0)
+        print ( "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0) )
         

@@ -2,7 +2,7 @@
 
 """
 .. module:: txNames
-   :synopsis: Holds a dictionary with decays for every txName and a 
+   :synopsis: Holds a dictionary with decays for every txName and a
               small object to read them.
 
 .. moduleauthor:: Veronika Magerl <v.magerl@gmx.at>
@@ -10,9 +10,11 @@
 
 """
 
+from __future__ import print_function
+
 import logging
-from prettyDescriptions import decayDict as decays
-from prettyDescriptions import highstrings,lowstrings,prettySMParticle,prettySUSYParticle,getIntermediates
+from smodels_utils.helper.prettyDescriptions import decayDict as decays
+from smodels_utils.helper.prettyDescriptions import highstrings,lowstrings,prettySMParticle,prettySUSYParticle,getIntermediates
 
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -23,22 +25,17 @@ logger.setLevel(level=logging.ERROR)
 
 
 class TxDecay(object):
-
     def __init__(self,txName):
-        
         self._name = txName
-        
+
     def __str__(self):
-        
         return self._name
-        
+
     def __nonzero__(self):
-        
         return self._name in decays
-        
+
     @property
     def doubledDecays(self):
-        
         compareDict = {key: value for (key, value) in decays.iteritems()\
         if not self.name == key}
         doubled = []
@@ -50,24 +47,24 @@ class TxDecay(object):
     @property
     def name(self):
         return self._name
-    
+
     @property
     def shortdecay(self):
         return self._shortdecay
-        
+
     @property
     def decay(self):
         return self._decay
-        
+
     @property
     def motherParticle(self):
         return self._motherParticle
-       
+
     @property
     def intermediateParticles(self):
         return self._intermediateParticles
-        
-        
+
+
     def _slackExpTopologyName(self):
         """Bypassing case sensitivity
         # ### FIX ME: doesn't know much at the moment. Is this still needed?
@@ -75,11 +72,11 @@ class TxDecay(object):
         if any(c in self._name for c in ['w', 'W', 'z', 'Z']):
             return self._name.replace("W","w").replace("Z","z" )
         return self._name
-        
+
     def _searchDecayDict(self):
         """Searches for topology name in descriptions.decay
-        :returns: dictionary entry without formatting 
-        
+        :returns: dictionary entry without formatting
+
         """
         if decays.has_key(self._name):
             logger.info('found decay for topology %s' %self._name)
@@ -89,14 +86,14 @@ class TxDecay(object):
             slack name %s' %(self._name, self._slackExpTopologyName()))
             return decays[self._slackExpTopologyName()]
         logger.warning('no decay found for topology %s' %self._name)
-        return None        
+        return None
 
     @property
     def _decay(self):
         """:returns: decay as string, formatted for ROOT.TLatex
-        
+
         """
-        
+
         decay = self._searchDecayDict()
         if isinstance(decay,str): return self._latexDecay(decay)
         if isinstance(decay,list):
@@ -106,7 +103,7 @@ class TxDecay(object):
             for line in decay:
                 if i != 1: decayString = decayString + '{'
                 if i != lenght:
-                    decayString = decayString +  '#splitline{' + self._latexDecay(line) 
+                    decayString = decayString +  '#splitline{' + self._latexDecay(line)
                 if i == lenght:
                     decayString = decayString + self._latexDecay(line)
                 decayString = decayString + '}'
@@ -114,11 +111,11 @@ class TxDecay(object):
                     decayString = decayString + '}'*(i-2)
                 i += 1
             return decayString
-            
+
     def _latexDecay(self, decayString):
         """Translates decay description as given in decays dictionary
         to a string readable by ROOT.TLatex object.
-        
+
         """
         for key, value in prettySUSYParticle.items():
             decayString = self._latexParticle(decayString,key,value)
@@ -130,11 +127,11 @@ class TxDecay(object):
             decayString = decayString.replace(key,value)
         decayString = decayString.replace('-->','#rightarrow')
         return decayString
-        
+
     def _latexParticle(self,decayString,key,value):
         """Translates particle description as given in decays dictionary
         to a string readable by ROOT.TLatex object.
-        
+
         """
         decayString = decayString.replace('anti' + key + ' ','#bar{' + value + '}')
         decayString = decayString.replace('anti' + key + '* ','#bar{' + value + '}*')
@@ -143,13 +140,13 @@ class TxDecay(object):
         decayString = decayString.replace(key + '^',value + '^')
         decayString = decayString.replace(key + '* ',value + '*')
         return decayString
-        
+
     @property
     def _motherParticle(self):
         """ :returns: mother particle in simple format as string or None
-        
+
         """
-        # ### FIX ME: This is not done yet! 
+        # ### FIX ME: This is not done yet!
         decay = self._searchDecayDict()
         if isinstance(decay,list): decay = decay[0]
         motherPart = decay.split('-->')[0]
@@ -174,13 +171,13 @@ class TxDecay(object):
             return 'c02c03'
         logger.error('could not identify mother particle for  %s' %self._name)
         return None
-        
+
     @property
     def shortdecay(self):
         """:returns: short version of decay as string
-        
+
         """
-        
+
         decay = self._searchDecayDict()
         if isinstance(decay,list): decay = decay[0]
         decaySteps = decay.split('-->')
@@ -196,11 +193,11 @@ class TxDecay(object):
                 if particle in decayStep: decay = decay + particle + ' '
         decay = decay + lsp
         return self._latexDecay(decay)
-        
+
     @property
     def _intermediateParticles(self):
         """:returns: dictionary with intermediate particles
-        
+
         """
 
         return getIntermediates(self._name)

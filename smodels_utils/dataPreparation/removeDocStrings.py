@@ -9,7 +9,11 @@
 .. moduleauthor:: http://code.activestate.com/recipes/576704/
 
 """
-import cStringIO,tokenize
+import tokenize
+try:
+    import cStringIO
+except ImportError as e:
+    from io import StringIO as cStringIO
 
 
 def rmDocStrings(source):
