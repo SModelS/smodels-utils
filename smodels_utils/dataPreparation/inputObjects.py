@@ -488,7 +488,7 @@ class TxNameInput(Locker):
                 infoStr = ";".join(infoList)
                 setattr(self,infoAttr,infoStr)
         
-        self.validated = 'Not done yet'
+        self.validated = 'TBD'
 
     def addDataFrom(self, plane, dataLabel):
 
