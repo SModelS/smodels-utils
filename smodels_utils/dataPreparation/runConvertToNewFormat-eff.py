@@ -10,29 +10,31 @@
 
 from __future__ import print_function
 
-
-import sys,glob,os,time,math
+import sys,glob,os,time,math,inspect
 from subprocess import Popen,PIPE
 home=os.environ["HOME"]
 sys.path.append('%s/smodels-utils' % home )
 sys.path.append('%s/smodels' % home )
+thisdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+thisdir = thisdir.replace ( "/smodels_utils/dataPreparation", "" )
+sys.path.append( thisdir )
 from smodels_utils.dataPreparation.inputObjects import TxNameInput
 from smodels_utils.dataPreparation.checkConversion import checkNewOutput
 from removeDocStrings import rmDocStrings
 
 databasePath = '%s/smodels-database' % home
-    
-    
+
+
 def getObjectNames(f,objType):
     """
     Reads the file and get the names of all objects of the type objType
-    
+
     :param f: file object
     :param objType: Object type (e.g. MetaInfoInput, TxNameInput,...)
-    
+
     :return: list with object names in file f
-    """    
-    
+    """
+
     if isinstance(f,list):
         lines = f
     else:
@@ -43,26 +45,26 @@ def getObjectNames(f,objType):
     for l in lines:
         if l.lstrip() and l.lstrip()[0] == '#':
             continue
-        
-        if objType+'(' in l:            
+
+        if objType+'(' in l:
             objName = l.split('=')[0].strip() #Store name of objType instance
             if objName:
-                objects.append(objName)        
-                
+                objects.append(objName)
+
     return objects
 
 def getObjectLines(f,objName,objType=None):
     """
-    Reads f and collects all lines (beginning with one with objName = objType 
+    Reads f and collects all lines (beginning with one with objName = objType
     and have objName.xxx. Stops searching when objName = xxx if found again.
-    
+
     :param f: file object
     :param objName: name of object in file (e.g. info, T1,..)
     :param objType: Object type (e.g. MetaInfoInput, TxNameInput,...)
-    
-    :return: string with all lines  
+
+    :return: string with all lines
     """
-    
+
     if isinstance(f,list):
         lines = f
     else:
@@ -72,19 +74,19 @@ def getObjectLines(f,objName,objType=None):
     instanceTag = "%s=%s(" %(objName,objType)
     start,stop = False,False
     if not objType:
-        start = True    
+        start = True
     for l in lines:
         if l.lstrip() and l.lstrip()[0] == '#':
-            continue        
+            continue
         if not start and instanceTag == l.replace(" ","")[:len(instanceTag)]:
             start = True
-            objLines.append(l)            
+            objLines.append(l)
             continue
         if not start:
             continue
         if stop:
             break
-        
+
         newl = l.replace(" ","")[:len(objName)+1] #Get beginning of line
         if  objName+'=' == newl and start:  #Object name is being redefined. Stop it
             stop = True
@@ -97,51 +99,51 @@ def getDatasetIds(f):
     """
     Reads f and finds all datasets defined by setSource.
     If none are found, returns empty list
-    
+
     :param f: file object
-    
+
     :return: list with dataset IDs or empty list if no datasets
             are found (for UL results).
     """
-    
+
     f.seek(0,0)
     #Collect datasets
     datasets = set()
     for l in f.readlines():
         if l.lstrip() and l.lstrip()[0] == '#':
             continue
-        
+
         if '.setSource(' in l and 'dataset' in l:
             dataId = l.split('dataset')[1]
             dataId = dataId[dataId.find('=')+1:]
             dataId = dataId[:dataId.find('"',2)]
-            dataId = dataId.strip().replace('"','').replace("'","")            
+            dataId = dataId.strip().replace('"','').replace("'","")
             if dataId:
                 datasets.add(dataId)
-    
+
     if not datasets:
         return [None]
     else:
         return list(datasets)
-    
+
 def getDatasetStatistics(dataLines):
     """
     Reads f and finds all datasets defined by setSource.
     If none are found, returns empty list
-    
+
     :param f: file object
-    
+
     :return: list with dataset IDs or empty list if no datasets
             are found (for UL results).
     """
-    
+
     statDict = {'observedN' : None, 'expectedBG' : None, 'bgError' : None}
-    
+
     dataBlock = "\n".join(dataLines)
     dataB = dataBlock.replace(" ","")
     i0 = dataB.find('.setStatistics(')+15
-    stat = dataB[i0:dataB.find(')',i0)]    
-        
+    stat = dataB[i0:dataB.find(')',i0)]
+
     statStr = stat.strip()
     for s in statStr.split(','):
         key,val = s.split('=')
@@ -149,14 +151,14 @@ def getDatasetStatistics(dataLines):
         val = eval(val)
         if key in statDict:
             statDict[key] = val
-    
+
     return statDict
-            
+
 def getDatasetBlock(f,datasetId):
-    
+
     f.seek(0,0)
     blocks = f.read().split('databaseCreator.create')
-    datasetLines = []    
+    datasetLines = []
     for b in blocks:
         if not '"'+datasetId+'"' in b:
             continue
@@ -164,7 +166,7 @@ def getDatasetBlock(f,datasetId):
             if not l.strip():
                 continue
             datasetLines.append(l+'\n')
-    
+
     return datasetLines
 
 def getValueFor(dataLines,key):
@@ -181,31 +183,31 @@ def getValueFor(dataLines,key):
             if isinstance(val,str):
                 val = '"'+val+'"'
             return val
-   
+
 def getSources(planeLines):
     """
     Reads the lines associated to a plane and extract the sources.
     Returns a unified setSources string in new format
-    
+
     :param planeLines: list with the lines associated to the plane
-    
+
     :return: string with the new setSources format
     """
-    
+
     dataLabelsDict = {}
     dataFormatsDict = {}
     dataFilesDict = {}
     unitsDict = {}
     objcNamesDict = {}
     indicesDict = {}
-    
+
     #First get units (if defined)
     for l in planeLines:
         if '.unit' in l:
             unit = l.split('=')[1].replace(" ","").replace('\n','').replace("'","").replace('"','')
             sourceName = l.split('.')[1]
             unitsDict[sourceName] = unit
-    
+
 
     for l in planeLines:
         if not '.setSource' in l:
@@ -226,14 +228,14 @@ def getSources(planeLines):
         for inputEntry in sInput:
             inputEntry = inputEntry.replace("'","").replace('"','')
             if 'orig/' in inputEntry:
-                dataFilesDict[sourceName] = inputEntry.split('=')[-1].strip()          
-            elif inputEntry.strip() in ['root','txt','svg','canvas','cMacro']:                
-                dataFormatsDict[sourceName] = inputEntry.split('=')[-1].strip()        
+                dataFilesDict[sourceName] = inputEntry.split('=')[-1].strip()
+            elif inputEntry.strip() in ['root','txt','svg','canvas','cMacro']:
+                dataFormatsDict[sourceName] = inputEntry.split('=')[-1].strip()
             elif 'objectName' in inputEntry:
                 objcNamesDict[sourceName] = inputEntry.split('=')[-1].strip()
             elif 'index' in inputEntry:
                 indicesDict[sourceName] = inputEntry.split('=')[-1].strip()
-    
+
     dataLabels = []
     dataFiles = []
     dataFormats = []
@@ -257,13 +259,13 @@ def getSources(planeLines):
             indices.append(None)
         else:
             indices.append(eval(indicesDict[sourceName]))
-        
-    
+
+
     newSourceStr = ".setSources(dataLabels= %s,\n\
                  dataFiles= %s,\n\
                  dataFormats= %s" %(dataLabels,dataFiles,dataFormats)
     if objNames.count(None) != len(objNames) and objNames.count('None') != len(objNames):
-        newSourceStr += ",objectNames= %s" %objNames                 
+        newSourceStr += ",objectNames= %s" %objNames
     if indices.count(None) != len(indices) and indices.count('None') != len(indices):
         newSourceStr += ",indices= %s" %indices
     if units.count(None) != len(units) and units.count('None') != len(units):
@@ -276,24 +278,24 @@ def addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint):
     Adds to fnew the lines corresponding to the
     off-shell txname
     """
-    
+
     hasConstraint = False
     for l in txOffLines:
         if "%s.off.constraint" %txname in l:
             hasConstraint = True
             break
-    
+
     #If no constraint has been defined, the off txname
     #was not properly defined and will be ignored:
     #(Sometimes the off topology is not properly commented out)
-    if not hasConstraint:        
+    if not hasConstraint:
         return False
-        
-    
-    #Ignore mass constraints for on-shell txname 
+
+
+    #Ignore mass constraints for on-shell txname
     #everytime off-shell also exists (include full data):
     fnew.write('%s.massConstraint = None\n' %txname)
-    
+
     #Define off-shell txname:
     fnew.write("%soff = dataset.addTxName('%soff')\n" %(txname,txname))
     for l in txOffLines:
@@ -309,29 +311,29 @@ def addTxnameOffLines(fnew,txname,txOffLines,onshellConstraint):
 def getMassConstraint(txname,constraint):
     """
     Get mass constraint for constraint appearing in lines
-    
+
     :param txname: Txname string
     :param constraint: Constraint string
-    
+
     :return: String for the massConstraint
     """
-    
+
     tx = TxNameInput(txname)
     tx.constraint = constraint
     tx._setMassConstraints()
-    
+
     if len(tx.massConstraints) == 1:
         massConstraints = tx.massConstraints[0]
     else:
         massConstraints = tx.massConstraints
-    
+
     return massConstraints
-    
-    
+
+
 def main(f,fnew):
-    
+
     fold = open(f,'r')
-    fnew = open(f.replace('convert.py','convertNew.py'),'w')    
+    fnew = open(f.replace('convert.py','convertNew.py'),'w')
     #Remove comments from old file:
     strClean = rmDocStrings(fold.read())
     fold.close()
@@ -340,7 +342,7 @@ def main(f,fnew):
     fold.write(strClean.replace('\n\n','\n'))
     fold.close()
     fold = open(ftemp,'r')
-    
+
     #Open template:
     ftemplate = open(f.replace('convert.py','convertNew_template.py'),'r')
     #Look for aulixiary information:
@@ -354,14 +356,14 @@ def main(f,fnew):
             print ( 'Error evaluating auxBlock' )
             print ( e )
             return False
-    
+
     #Write header
     header = template[:template.find('BEGIN')]
     fnew.write(header)
-    
+
     datasetBlock = template[template.find('BEGIN_BLOCK_TO_FILL'):template.find('END_BLOCK_TO_FILL')]
     templateLines = datasetBlock.replace('BEGIN_BLOCK_TO_FILL','').replace('END_BLOCK_TO_FILL','')
-    templateLines = templateLines.split('\n')    
+    templateLines = templateLines.split('\n')
     #Collect datasets
     datasets = getDatasetIds(fold)
     #Loop over datasets and write blocks:
@@ -372,11 +374,11 @@ def main(f,fnew):
                 continue
             l = l + '\n'
             datasetLines = getDatasetBlock(fold, dataset)
-            dataDict = {'dataset' : '"'+dataset+'"', 
+            dataDict = {'dataset' : '"'+dataset+'"',
                         'datasetFolder' : '"'+dataset.replace(" ","")+'"',
                         'datasetStr' : dataset}
             dataDict.update(getDatasetStatistics(datasetLines))
-            
+
             #Get variables:
             lineVars = l.split('$')
             lineVars = [v for v in lineVars[1::2] if v]
@@ -388,20 +390,20 @@ def main(f,fnew):
 
             if '.efficiencyMap.dataUrl' in l:
                 l = l.replace('efficiencyMap.dataUrl','dataUrl')
-                
+
             if not '$' in l:
                 fnew.write(l)
-                continue            
+                continue
             elif '$$' in l:
                 key = l.split('=')[0]
                 val = getValueFor(datasetLines,key)
-                l = key + ' = ' + str(val)+'\n'                
+                l = key + ' = ' + str(val)+'\n'
                 fnew.write(l)
             else:
                 print ( 'Something wrong with line %s' %l )
                 return False
-            
-    
+
+
     #Write footer
     writeToFile = False
     ftemplate.seek(0,0)
@@ -411,41 +413,41 @@ def main(f,fnew):
             continue
         if writeToFile:
             fnew.write(l)
-    
-    ftemplate.close()    
+
+    ftemplate.close()
     fold.close()
-    os.remove(ftemp)    
-    fnew.close()        
+    os.remove(ftemp)
+    fnew.close()
     return True
-    
-    
-    
+
+
+
 if __name__ == "__main__":
-    
-    
+
+
     skipList = ['ATLAS-SUSY-2013-16-eff', #Not all txnames have the same SRs (has to be assigned by hand)
                 'ATLAS-SUSY-2013-18-eff',#Same as above and the statistics for a single SR has to be set by hand
                 'ATLAS-SUSY-2013-21-eff', #Not all txnames have the same SRs (has to be assigned by hand)
                 'CMS-SUS-13-011-eff', #Statistics for a single SR has to be set by hand
                 'ATLAS-SUSY-2013-11-eff',
                 'ATLAS-SUSY-2013-02-eff'] #Statistics for a single SR has to be set by hand
-    
+
     ignoreList = []
-    
+
     #Set SMODELSNOUPDATE to avoid rewritting implementedBy and lastUpdate fields:
     os.environ["SMODELS_NOUPDATE"] = 'True'
     timeOut = 15000.
-    
+
     nres = 0
-    for f in sorted(glob.glob(databasePath+'/*/*/*/convertNew.py')):
-        
+    files = sorted(glob.glob(databasePath+'/*/*/*/convertNew.py')  )
+    for f in files:
         if not '-eff' in f:
 #             print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
             continue  #Skip UL results
-        
+
         if not 'ATLAS-SUSY-2013-04' in f: continue
-       
-        #Skip writing convertNew.py for the results in skipList        
+
+        #Skip writing convertNew.py for the results in skipList
         skipProduction = True #(ALWAYS SKIP SINCE ALL STATISTICS HAVE BEEN SET BY HAND)
         for skipRes in skipList+ignoreList:
             if skipRes in f:
@@ -453,20 +455,20 @@ if __name__ == "__main__":
                 break
 
         nres += 1
-        
+
         if nres < 0:
             continue
-                        
+
         fnew = f.replace('convert.py','convertNew.py')
         print ( 'create %s' % fnew )
-        if not skipProduction:            
+        if not skipProduction:
             if os.path.isfile(fnew):
                 os.remove(fnew)
             r = main(f,fnew)
-                
+
             if not r:
                 print ( '\033[31m Error generating %s \033[0m' %fnew )
-                sys.exit()        
+                sys.exit()
 
         runConvert = True
         rdir = fnew.replace(os.path.basename(fnew),'')
@@ -478,7 +480,7 @@ if __name__ == "__main__":
             #Execute file
             run = Popen(fnew+' -smodelsPath %s/smodels -utilsPath %s/smodels-utils' % ( home, home ),
                         shell=True,cwd=rdir,stdout=PIPE,stderr=PIPE)
-            
+
             rstatus = None
             while rstatus is None and ((time.time() - t0) < timeOut):
                 time.sleep(5)
@@ -487,8 +489,8 @@ if __name__ == "__main__":
                 run.terminate()
                 print ( '\033[31m Running %s exceeded timeout %s \033[0m' %(fnew,timeOut) )
                 sys.exit()
-            
-    
+
+
             if rstatus:
                 print ( '\033[31m Error running %s \033[0m' %fnew )
                 print ( rstatus )
@@ -498,23 +500,23 @@ if __name__ == "__main__":
                 print ( '\033[31m Error running %s: \033[0m' %fnew )
                 print ( rerror )
                 sys.exit()
-        
+
         ignore = False
         for igF in ignoreList:
-            if igF in f:                
+            if igF in f:
                 ignore = True
                 break
         if ignore:
             print ( "\033[31m Not checking %s \033[0m" %f.replace('convert.py','') )
             continue
-        
-        
+
+
         oldir = rdir.replace(databasePath,'%s/smodels-database-master' % home )
         check = checkNewOutput(new=rdir,old=oldir,setValidated=True)
         if not check:
             print ( '\033[31m Error comparing %s \033[0m' %rdir )
             sys.exit()
-        
-            
+
+
         print ( "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0) )
-        
+

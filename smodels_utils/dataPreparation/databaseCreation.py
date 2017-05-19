@@ -328,8 +328,10 @@ class DatabaseCreator(list):
                     if "SMODELS_NOUPDATE" in os.environ.keys():
                         self.timeStamp ( "SMODELS_NOUPDATE is set!", "error" )
                         break
-                    
-                    answer = raw_input(m)
+                    try: 
+                        answer = raw_input(m)
+                    except NameError as e:
+                        answer = input ( m )
                     if answer == 'y' or answer == 'n': break
                 if answer == 'n':
                     self.metaInfo.lastUpdate = lastUpdate

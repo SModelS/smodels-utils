@@ -13,6 +13,9 @@ import sys,glob,os,time
 from subprocess import Popen,PIPE
 sys.path.append('/home/lessa/smodels-utils')
 sys.path.append('/home/lessa/smodels')
+thisdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+thisdir = thisdir.replace ( "/smodels_utils/dataPreparation", "" )
+sys.path.append( thisdir )
 from smodels_utils.dataPreparation.inputObjects import TxNameInput
 from smodels_utils.dataPreparation.checkConversion import checkNewOutput
 from removeDocStrings import  rmDocStrings
