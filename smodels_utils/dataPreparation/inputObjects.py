@@ -26,7 +26,7 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
-logger.setLevel(level=logging.ERROR)
+logger.setLevel(level=logging.WARNING)
 
 class Locker(object):
     
@@ -524,6 +524,8 @@ class TxNameInput(Locker):
         
         dataList = []        
         for ptDict in dataHandler:
+            
+            
             if len(ptDict) != nvars+1:
                 logger.error("Number of free parameters in data and in axes do not match")
                 sys.exit()                
@@ -535,12 +537,13 @@ class TxNameInput(Locker):
             #Get the (upper limit, efficiency,..) value:
             value = [v for xv,v in ptDict.items() if  not xv in plane.xvars][0]
             massArray = plane.getParticleMasses(**xDict)
+            
             #Check if the massArray is positive and value is positive:
             if min([m for br  in massArray for m in br]) < 0.:
-                logger.warning("Negative mass value found. Point %s will be ignored." %str(massArray))
+                logger.warning("Negative mass value found for %s. Point %s will be ignored." %(self,massArray))
                 continue 
             if value < 0.:
-                logger.warning("Negative value for %s found. Point %s will be ignored." %(dataLabel,str(massArray)))
+                logger.warning("Negative value for %s found. Point %s will be ignored." %(self,str(massArray)))
                 continue
             #Check if mass array is consistent with the mass constraints given by the 
             #txname constraint. If not, skip this mass.
