@@ -11,7 +11,6 @@
 
 import sys
 import os
-import ROOT
 import logging
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -447,6 +446,7 @@ class DataHandler(object):
                          %type(self.objectName))
             sys.exit()
             
+        import ROOT
         rootFile = ROOT.TFile(self.path)
         obj = rootFile.Get(self.objectName)
         if not obj:
@@ -472,6 +472,7 @@ class DataHandler(object):
                          %type(self.objectName))
             sys.exit()
 
+        import ROOT
         ROOT.gROOT.SetBatch()
         ROOT.gROOT.ProcessLine(".x %s" %self.path)
         try:
@@ -499,6 +500,7 @@ class DataHandler(object):
             logger.error("index for listOfPrimitives should be of integer type and not %s"
                          %type(self.index))
             sys.exit()
+        import ROOT
         rootFile = ROOT.TFile(self.path, 'r')
         canvas = rootFile.Get(self.objectName)
         if not canvas:
@@ -521,6 +523,7 @@ class DataHandler(object):
         :param obj: Root object (THx or TGraph)
         :yield: [x-axes, y-axes,..., bin content]
         """
+        import ROOT
             
         if isinstance(obj,ROOT.TH1):
             return self._getHistoPoints(obj)
@@ -585,6 +588,7 @@ class DataHandler(object):
         :param graph: Root graph object (TGraphx)
         :yield: tgraph point
         """
+        import ROOT
         
         if self.dimensions >= 3:
             logger.error("Root graphs can not contain more than 2 axes. \

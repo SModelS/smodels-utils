@@ -13,7 +13,6 @@
 import sys
 import os
 import shutil
-import ROOT
 import logging
 import multiprocessing
 from datetime import date
@@ -178,22 +177,22 @@ class DatabaseCreator(list):
             children.append(p)
             p.start()
         for p in children:
-            p.join(timeout=500)
+            p.join(timeout=1000)
 
         if len(updatedDatasets) != len(self):
             logger.error("Error creating datasets")
             sys.exit()
-            
+        
         for dataset in updatedDatasets:
             self.updateDataset(dataset)
-        
         #Get all exclusion curves and write to sms.root:
         self.exclusions = self.getExclusionCurves()
         self._createSmsRoot(createAdditional)
 
     def createDatasets(self,datasetList,newDatasets):
         """
-        Creates a dataset folders for the datasets in datasetList and the correponsing txname and dataInfo files
+        Creates a dataset folders for the datasets in datasetList and the
+        correponsing txname and dataInfo files
         
         :param datasetList: List of DataSetInput objects
         """
@@ -254,6 +253,7 @@ class DatabaseCreator(list):
         
         :return: list with exclusion curves (TGraph objects)
         """
+        import ROOT
                 
         curves = []
         allCurves = []
@@ -401,6 +401,7 @@ class DatabaseCreator(list):
         mode="recreate"
         if update:
             mode="update"
+        import ROOT
 
         smsRoot = ROOT.TFile(self.base + self.smsrootFile,mode)
         for exclusion in self.exclusions:

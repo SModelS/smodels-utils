@@ -8,11 +8,14 @@
 
 """
 
+from __future__ import print_function
 
-import sys,glob,os,time
+import sys,glob,os,time,inspect
 from subprocess import Popen,PIPE
-sys.path.append('/home/lessa/smodels-utils')
-sys.path.append('/home/lessa/smodels')
+home=os.environ["HOME"]
+sys.path.append('%s/smodels-utils' % home )
+sys.path.append('%s/smodels' % home )
+
 thisdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 thisdir = thisdir.replace ( "/smodels_utils/dataPreparation", "" )
 sys.path.append( thisdir )
@@ -24,11 +27,7 @@ template = open("convertNew_template.py",'r')
 header = template.read()
 template.close()
 
-
-
-databasePath = '/home/lessa/smodels-database'
-
-    
+databasePath = '%s/smodels-database' % home
     
 def getObjectNames(f,objType):
     """
@@ -134,7 +133,7 @@ def newMassFormat(line):
     """
     
     if not 'mother' in line or not 'lsp' in line or not '(' or not ')':
-        print 'Line does not contain old format'
+        print ( 'Line does not contain old format' )
         return line
     
     #Get axes string
@@ -322,7 +321,7 @@ def main(f,fnew):
     #Get metainfo name:
     infoName = getObjectNames(fold, 'MetaInfoInput')
     if not infoName or len(infoName) > 1:
-        print 'MetaInfoInput not found or more than one instance found'
+        print ( 'MetaInfoInput not found or more than one instance found' )
         sys.exit()
     else:
         infoName = infoName[0]
@@ -349,7 +348,7 @@ def main(f,fnew):
         fnew.write(datasetStr+'\n\n')
         
     if datasets != [None]:
-        print 'efficiency map result not yet implemented (%s)' %f.replace('convert.py','')
+        print ( 'efficiency map result not yet implemented (%s)' %f.replace('convert.py','') )
         fold.close()
         fnew.close()        
         return None
@@ -359,7 +358,7 @@ def main(f,fnew):
     txnames = getObjectNames(fold, 'TxNameInput')
     for txname in txnames:
         if txnames.count(txname) > 1:
-            print 'Txname %s is defined multiple times' %txname
+            print ( 'Txname %s is defined multiple times' %txname )
             return False
         
         fnew.write("#+++++++ next txName block ++++++++++++++\n")
@@ -398,7 +397,7 @@ def main(f,fnew):
         for plane in massPlanes:
             fnew.write("#+++++++ next mass plane block ++++++++++++++\n")
             if massPlanes.count(plane) > 1:
-                print 'Plane %s for %s is defined multiple times' %(plane,txname)
+                print ( 'Plane %s for %s is defined multiple times' %(plane,txname) )
                 return False
             planeLines = getObjectLines(fold, plane, '%s.addMassPlane'%txname)
             hasDataUrl = False            
@@ -459,6 +458,7 @@ if __name__ == "__main__":
     timeOut = 150.
     
     for f in sorted(glob.glob(databasePath+'/*/*/*/convert.py'))[:]:               
+        print ( "now checking",f )
         
         if '-eff' in f:
 #             print "\033[31m Not checking EM result %s \033[0m" %f.replace('convert.py','')
@@ -480,7 +480,7 @@ if __name__ == "__main__":
             r = main(f,fnew)
                 
             if not r:
-                print '\033[31m Error generating %s \033[0m' %fnew
+                print ( '\033[31m Error generating %s \033[0m' %fnew )
                 sys.exit()        
                 
         #Make file executable
@@ -498,20 +498,20 @@ if __name__ == "__main__":
             rstatus = run.poll()
         if time.time() - t0 > timeOut:
             run.terminate()
-            print '\033[31m Running %s exceeded timeout %s \033[0m' %(fnew,timeOut)
+            print ('\033[31m Running %s exceeded timeout %s \033[0m' %(fnew,timeOut))
             sys.exit()
         
 #         print run.stdout.read()
 #         print run.stderr.read()
 
         if rstatus:
-            print '\033[31m Error running %s \033[0m' %fnew
-            print rstatus
+            print ('\033[31m Error running %s \033[0m' %fnew)
+            print (rstatus)
             sys.exit()
         rerror = run.stderr.read()
         if rerror:
-            print '\033[31m Error running %s: \033[0m' %fnew
-            print rerror 
+            print ('\033[31m Error running %s: \033[0m' %fnew)
+            print (rerror )
             sys.exit()
         
 
@@ -521,15 +521,15 @@ if __name__ == "__main__":
                 ignore = True
                 break
         if ignore:
-            print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
+            print ("\033[31m Not checking %s \033[0m" %f.replace('convert.py',''))
             continue
 
         
         oldir = rdir.replace(databasePath,'/home/lessa/smodels-database-master')
         check = checkNewOutput(new=rdir,old=oldir,setValidated=True)
         if not check:
-            print '\033[31m Error comparing %s \033[0m' %rdir
+            print ('\033[31m Error comparing %s \033[0m' %rdir)
             sys.exit()
             
-        print "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0)
+        print ("\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0))
         
