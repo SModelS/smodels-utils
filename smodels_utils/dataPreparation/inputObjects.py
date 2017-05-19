@@ -17,8 +17,6 @@ from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.particles import rEven, ptcDic
 from smodels.theory.element import Element
 
-
-
 import logging
 from smodels_utils.helper import prettyDescriptions
 
@@ -27,6 +25,9 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.WARNING)
+
+hscp=False ## central switch for smodels v1.1 versus smodels v1.2
+## smodels v1.2 has final states for hscp patch
 
 class Locker(object):
     
@@ -313,11 +314,15 @@ class DataSetInput(Locker):
         datasetElements = []
         for tx in self._txnameList:
             for el in elementsInStr(tx.constraint):
+                newEl = None
                 if hasattr(tx, 'finalState'):
                     fs = tx.finalState
                 else:
                     fs = ['MET','MET']
-                newEl = Element(el,fs)
+                if not hscp:
+                    newEl = Element(el)
+                else:
+                    newEl = Element(el,fs)
                 datasetElements.append(newEl)
         for iel,elA in enumerate(datasetElements):
             for jel,elB in enumerate(datasetElements):
@@ -325,7 +330,7 @@ class DataSetInput(Locker):
                     continue
                 
                 if elA.particlesMatch(elB):
-                    logger.error("Constraints (%s) appearing in dataset %s overlap (may result in double counting)" %(elA,self))
+                    logger.error("Constraints (%s <-> %s) appearing in dataset %s overlap (may result in double counting)" %(elA,elB,self))
                     return False
             
         return True
@@ -337,16 +342,21 @@ class TxNameInput(Locker):
     """
     
     
-    infoAttr = ['txName','constraint', 'finalState','condition','conditionDescription',
+    infoAttr = ['txName','constraint', 'condition','conditionDescription',
                 'susyProcess','checked','figureUrl','dataUrl','source',
                 'validated','axes','upperLimits',
                 'efficiencyMap','expectedUpperLimits']
     internalAttr = ['_name', 'name', '_txDecay','_planes','_goodPlanes',
-    '_branchcondition', 'onShell', 'offShell', 'constraint',
-    'condition', 'conditionDescription','massConstraint',
-    'upperLimits','efficiencyMap','expectedUpperLimits','massConstraints','_dataLabels']
+                    '_branchcondition', 'onShell', 'offShell', 'constraint',
+                    'condition', 'conditionDescription','massConstraint',
+                    'upperLimits','efficiencyMap','expectedUpperLimits',
+                    'massConstraints', '_dataLabels']
     
-    requiredAttr = ['constraint','condition','txName','axes','dataUrl','source','finalState']
+    requiredAttr = [ 'constraint','condition','txName','axes','dataUrl',
+                     'source' ]
+    if hscp:
+        infoAttr.append ( 'finalState' )
+        requiredAttr.append ( 'finalState' )
     
     
     def __init__(self,txName):
@@ -363,7 +373,8 @@ class TxNameInput(Locker):
         
         self._name = txName
         self.txName = txName
-        self.finalState = ['MET','MET']
+        if hscp:
+            self.finalState = ['MET','MET']
         self.susyProcess = prettyDescriptions.prettyTxname(txName,latex=False)
         self._txDecay = TxDecay(self._name)    
         if not self._txDecay:
