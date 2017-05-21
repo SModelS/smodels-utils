@@ -438,8 +438,10 @@ def main(f,fnew):
     
     
 if __name__ == "__main__":
-    dontRun = True ## dont run conversion scripts, just create them.
-    dontRun = False
+    import argparse
+    ap = argparse.ArgumentParser ( "convert to new format" )
+    ap.add_argument ( '-d', '--dont_run', help='just convert, dont run', action='store_true' )
+    args = ap.parse_args()
     
     skipList = ['ATLAS-CONF-2013-001', #T6bbWW only has off-shell data, so the on-shell massConstraint has to be set
                 'ATLAS-CONF-2013-007',  #Mass constraints are tricky and need to be fixed by hand
@@ -487,7 +489,7 @@ if __name__ == "__main__":
         #Make file executable
         run = Popen('chmod +x %s' %fnew,shell=True)
         run.wait()
-        if dontRun:
+        if args.dont_run:
             continue
         #Execute file
         rdir = fnew.replace(os.path.basename(fnew),'')
