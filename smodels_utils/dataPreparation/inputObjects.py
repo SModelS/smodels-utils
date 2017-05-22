@@ -246,10 +246,13 @@ class DataSetInput(Locker):
         lumi = getattr(databaseCreator.metaInfo,'lumi')
         if isinstance(lumi,str):
             lumi = eval(lumi,{'fb':fb,'pb': pb})
+        ntoys = 200000
+        alpha = .05
+        # ntoys = 100
         ul = statistics.upperLimit(self.observedN, self.expectedBG,
-                                   self.bgError, lumi, .05, 200000).asNumber(fb)
+                                   self.bgError, lumi, alpha, ntoys ).asNumber(fb)
         ulExpected = statistics.upperLimit(self.expectedBG, self.expectedBG,
-                                           self.bgError, lumi, .05, 200000).asNumber(fb)
+                                           self.bgError, lumi, alpha, ntoys ).asNumber(fb)
 
         #Round numbers:
         ul = round_list(ul, 3)

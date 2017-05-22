@@ -427,6 +427,7 @@ if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser ( "convert to new format" )
     ap.add_argument ( '-d', '--dont_run', help='just convert, dont run', action='store_true' )
+    ap.add_argument ( '-a', '--analysis', help='run only given analysis', type=str, default='all' )
     args = ap.parse_args()
 
     skipList = ['ATLAS-SUSY-2013-16-eff', #Not all txnames have the same SRs (has to be assigned by hand)
@@ -445,11 +446,13 @@ if __name__ == "__main__":
     nres = 0
     # files = sorted(glob.glob(databasePath+'/*/*/*/convertNew.py')  )
     files = sorted(glob.glob(databasePath+'/*/*/*/convert.py')  )
+    t0 = time.time()
     for f in files:
         if not '-eff' in f:
 #             print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
             continue  #Skip UL results
-        if not 'ATLAS-SUSY-2015-06-eff' in f: continue
+        if args.analysis != "all" and not args.analysis in f: 
+            continue
 
         #Skip writing convertNew.py for the results in skipList
         skipProduction = False #(ALWAYS SKIP SINCE ALL STATISTICS HAVE BEEN SET BY HAND)
@@ -475,7 +478,6 @@ if __name__ == "__main__":
                 sys.exit()
 
         rdir = fnew.replace(os.path.basename(fnew),'')
-        t0 = time.time()
         #Make file executable
         run = Popen('chmod +x %s' %fnew,shell=True)
         run.wait()
