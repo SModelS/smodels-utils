@@ -331,6 +331,7 @@ def getMassConstraint(txname,constraint):
 
 
 def main(f,fnew):
+    print ( "creating %s from %s" % ( fnew, f ) )
 
     fold = open(f,'r')
     fnew = open(f.replace('convert.py','convertNew.py'),'w')
@@ -423,7 +424,10 @@ def main(f,fnew):
 
 
 if __name__ == "__main__":
-
+    import argparse
+    ap = argparse.ArgumentParser ( "convert to new format" )
+    ap.add_argument ( '-d', '--dont_run', help='just convert, dont run', action='store_true' )
+    args = ap.parse_args()
 
     skipList = ['ATLAS-SUSY-2013-16-eff', #Not all txnames have the same SRs (has to be assigned by hand)
                 'ATLAS-SUSY-2013-18-eff',#Same as above and the statistics for a single SR has to be set by hand
@@ -439,16 +443,16 @@ if __name__ == "__main__":
     timeOut = 15000.
 
     nres = 0
-    files = sorted(glob.glob(databasePath+'/*/*/*/convertNew.py')  )
+    # files = sorted(glob.glob(databasePath+'/*/*/*/convertNew.py')  )
+    files = sorted(glob.glob(databasePath+'/*/*/*/convert.py')  )
     for f in files:
         if not '-eff' in f:
 #             print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
             continue  #Skip UL results
-
-        if not 'ATLAS-SUSY-2013-04' in f: continue
+        if not 'ATLAS-SUSY-2015-06-eff' in f: continue
 
         #Skip writing convertNew.py for the results in skipList
-        skipProduction = True #(ALWAYS SKIP SINCE ALL STATISTICS HAVE BEEN SET BY HAND)
+        skipProduction = False #(ALWAYS SKIP SINCE ALL STATISTICS HAVE BEEN SET BY HAND)
         for skipRes in skipList+ignoreList:
             if skipRes in f:
                 skipProduction = True
@@ -470,36 +474,36 @@ if __name__ == "__main__":
                 print ( '\033[31m Error generating %s \033[0m' %fnew )
                 sys.exit()
 
-        runConvert = True
         rdir = fnew.replace(os.path.basename(fnew),'')
         t0 = time.time()
-        if runConvert:
-            #Make file executable
-            run = Popen('chmod +x %s' %fnew,shell=True)
-            run.wait()
-            #Execute file
-            run = Popen(fnew+' -smodelsPath %s/smodels -utilsPath %s/smodels-utils' % ( home, home ),
-                        shell=True,cwd=rdir,stdout=PIPE,stderr=PIPE)
+        #Make file executable
+        run = Popen('chmod +x %s' %fnew,shell=True)
+        run.wait()
+        if args.dont_run:
+            continue
+        #Execute file
+        run = Popen(fnew+' -smodelsPath %s/smodels -utilsPath %s/smodels-utils' % ( home, home ),
+                    shell=True,cwd=rdir,stdout=PIPE,stderr=PIPE)
 
-            rstatus = None
-            while rstatus is None and ((time.time() - t0) < timeOut):
-                time.sleep(5)
-                rstatus = run.poll()
-            if time.time() - t0 > timeOut:
-                run.terminate()
-                print ( '\033[31m Running %s exceeded timeout %s \033[0m' %(fnew,timeOut) )
-                sys.exit()
+        rstatus = None
+        while rstatus is None and ((time.time() - t0) < timeOut):
+            time.sleep(5)
+            rstatus = run.poll()
+        if time.time() - t0 > timeOut:
+            run.terminate()
+            print ( '\033[31m Running %s exceeded timeout %s \033[0m' %(fnew,timeOut) )
+            sys.exit()
 
 
-            if rstatus:
-                print ( '\033[31m Error running %s \033[0m' %fnew )
-                print ( rstatus )
-                sys.exit()
-            rerror = run.stderr.read()
-            if rerror:
-                print ( '\033[31m Error running %s: \033[0m' %fnew )
-                print ( rerror )
-                sys.exit()
+        if rstatus:
+            print ( '\033[31m Error running %s \033[0m' %fnew )
+            print ( rstatus )
+            sys.exit()
+        rerror = run.stderr.read()
+        if rerror:
+            print ( '\033[31m Error running %s: \033[0m' %fnew )
+            print ( rerror )
+            sys.exit()
 
         ignore = False
         for igF in ignoreList:
@@ -517,6 +521,5 @@ if __name__ == "__main__":
             print ( '\033[31m Error comparing %s \033[0m' %rdir )
             sys.exit()
 
-
-        print ( "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0) )
+    print ( "\033[32m %s OK (runtime = %.1f s) \033[0m"%(f,time.time()-t0) )
 
