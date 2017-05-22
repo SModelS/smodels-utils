@@ -68,6 +68,13 @@ class DatabaseCreator(list):
         # colorScheme: light for dark background, dark for light background
         #              None for monochrome
         self.colorScheme = "light" ## "dark", None
+        self.ncpus = 1 ## the number of CPUs used
+      
+        try:
+            self.ncpus =  multiprocessing.cpu_count()
+        except:
+            self.ncpus = 1
+
         list.__init__(self)
 
     def timeStamp(self, txt, c="info"):
@@ -164,11 +171,7 @@ class DatabaseCreator(list):
             self._createValidationFolder()
         
         #Loop over datasets:
-        try:
-            ncpus =  multiprocessing.cpu_count()
-        except:
-            ncpus = 1
-        chunkedDatasets = [self[x::ncpus] for x in range(ncpus) if self[x::ncpus]]
+        chunkedDatasets = [self[x::self.ncpus] for x in range(self.ncpus) if self[x::self.ncpus]]
         manager = multiprocessing.Manager() 
         updatedDatasets = manager.list() #Stores the updated datasets for each process    
         children = []           
@@ -177,10 +180,11 @@ class DatabaseCreator(list):
             children.append(p)
             p.start()
         for p in children:
-            p.join(timeout=1000)
+            p.join(timeout=10000)
 
         if len(updatedDatasets) != len(self):
-            logger.error("Error creating datasets")
+            logger.error("Error, when creating datasets. Maybe some children didnt terminate within the timeout? I see %d out of %d children have terminated." % \
+                    ( len(updatedDatasets), len(self) ) )
             sys.exit()
         
         for dataset in updatedDatasets:
