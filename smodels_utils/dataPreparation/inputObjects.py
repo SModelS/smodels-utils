@@ -190,6 +190,7 @@ class DataSetInput(Locker):
 
     requiredAttr = ['dataType', 'dataId']
 
+    ntoys = 200000 ## number of toys in computing limits
 
     def __init__(self,name):
 
@@ -246,13 +247,11 @@ class DataSetInput(Locker):
         lumi = getattr(databaseCreator.metaInfo,'lumi')
         if isinstance(lumi,str):
             lumi = eval(lumi,{'fb':fb,'pb': pb})
-        ntoys = 200000
-        alpha = .05
-        # ntoys = 100
+        alpha = .05 
         ul = statistics.upperLimit(self.observedN, self.expectedBG,
-                                   self.bgError, lumi, alpha, ntoys ).asNumber(fb)
+                               self.bgError, lumi, alpha, self.ntoys ).asNumber(fb)
         ulExpected = statistics.upperLimit(self.expectedBG, self.expectedBG,
-                                           self.bgError, lumi, alpha, ntoys ).asNumber(fb)
+                               self.bgError, lumi, alpha, self.ntoys ).asNumber(fb)
 
         #Round numbers:
         ul = round_list(ul, 3)

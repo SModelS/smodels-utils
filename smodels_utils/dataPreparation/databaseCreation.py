@@ -183,7 +183,7 @@ class DatabaseCreator(list):
             p.join(timeout=10000)
 
         if len(updatedDatasets) != len(self):
-            logger.error("Error, when creating datasets. Maybe some children didnt terminate within the timeout? I see %d out of %d children have terminated." % \
+            logger.error("Error, when creating datasets: some children didnt terminate within the timeout. I see %d out of %d children have terminated." % \
                     ( len(updatedDatasets), len(self) ) )
             sys.exit()
         
@@ -484,7 +484,7 @@ class DatabaseCreator(list):
         #Check if all required attributes have been defined:
         for attr in obj.requiredAttr:
             if not hasattr(obj,attr):
-                logger.error("Attribute %s must be defined for object type %s" %(attr,type(obj)))
+                logger.error("Attribute %s must be defined for object type %s: ``%s''" %(attr,type(obj),name))
                 sys.exit()
 
         for attr in obj.infoAttr:
