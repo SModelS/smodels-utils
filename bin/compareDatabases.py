@@ -1,10 +1,16 @@
 #!/usr/bin/env python
 
+""" compare systematically two different databases. 
+    write out differences. """
+
 from __future__ import print_function
 from smodels.experiment.databaseObj import Database 
 from smodels.experiment.expResultObj import ExpResult
 from smodels.tools.colors import colors
+from smodels.tools.physicsUnits import fb
 colors.on = True
+
+tx = { "tot": 0, "err": 0 }
 
 def error ( text, col=colors.red ):
     print ( "%s%s%s" % ( col, text, colors.reset ) )
@@ -12,13 +18,18 @@ def error ( text, col=colors.red ):
 def getPath ( text ):
     return text[text.rfind("/")+1:]
 
-def unequal ( a, b ):
-    if abs ( a- b ) / a > 1e-5:
-        print ( "unequal: a,b=%f,%f" % ( a,b ) )
+def unequal ( a, b, label=None ):
+    if abs ( a- b ) / a > 1e-3:
+        l = ""
+        if label:
+            l=label
+        print ( "unequal %s: old,new = %f, %f -->" % ( l,a,b ) )
         return True
     return False
 
 def discussTxName ( ER, DS, oldTx, newTx ):
+    tx["tot"]+=1
+    fail = False
     # print ( "txname: %s/%s:%s" % ( ER, DS, oldTx.txName ) )
     if ( oldTx.txnameData.dataTag != newTx.txnameData.dataTag ):
         error ( "!dfojd" )
@@ -32,21 +43,41 @@ def discussTxName ( ER, DS, oldTx, newTx ):
     if ( oldTx.txnameData._1dim != newTx.txnameData._1dim ):
         error ( "txnameData differ in _1dim! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
         # sys.exit(-1)
-    if ( unequal ( sum ( oldTx.txnameData.xsec ), sum (newTx.txnameData.xsec ) ) ):
-        error ( "txnameData differ in xsec! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
+
+    ## xsecs
+    oldUnit = oldTx.txnameData.unit 
+    if type(oldUnit)!=int:
+        oldUnit = oldUnit.asNumber (fb)
+    newUnit = newTx.txnameData.unit
+    if type(newUnit)!=int:
+        newUnit = newUnit.asNumber (fb)
+    if ( unequal ( oldUnit * sum ( oldTx.txnameData.xsec ), newUnit * sum (newTx.txnameData.xsec ), "xsec" ) ):
+        error ( "--> txnameData differ in xsec! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
+        error ( "    ::: n(entries)=%d, %d" % ( len ( oldTx.txnameData.xsec ), len ( newTx.txnameData.xsec ) ) )
+        # error ( "units= %s %s" % ( oldUnit, newUnit ) )
         #sys.exit(-1)
-    if ( sum ( sum ( oldTx.txnameData.delta_x.A ) ) != \
-         sum ( sum (newTx.txnameData.delta_x.A ) ) ):
-        error ( "txnameData differ in delta_x! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
+        fail=True
+
+    ## delta_x
+    if ( unequal ( sum ( sum ( oldTx.txnameData.delta_x.A ) ),\
+                   sum ( sum (newTx.txnameData.delta_x.A ) ), "delta_x" ) ):
+        error ( "--> txnameData differ in delta_x! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
+        fail=True
         #sys.exit(-1)
+
     if ( oldTx.constraint != newTx.constraint ):
         error ( "txname differs in constraint! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
+        fail=True
         #sys.exit(-1)
     if ( oldTx.condition != newTx.condition ):
         error ( "txname differs in condition! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
+        fail=True
         #sys.exit(-1)
     if ( oldTx.conditionDescription != newTx.conditionDescription ):
         error ( "txname differs in conditionDescription! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
+        fail=True
+    if fail:
+        tx["err"]+=1
         #sys.exit(-1)
 
 def oldTxNotInNew ( ER, DS, Tx ):
@@ -129,6 +160,8 @@ def discussDBs ( oldD, newD ):
     for k,v in newERDict.items():
         if not k in oldERDict.keys():
             newResultNotInNew ( v )
+
+    print ( "%d/%d txnames failed." % ( tx["err"], tx["tot"] ) )
 
 oldDname = "/home/walten/git/branches/smodels-database"
 newDname = "/home/walten/git/smodels-database"
