@@ -30,6 +30,18 @@ def unequal ( a, b, label=None ):
 def discussTxName ( ER, DS, oldTx, newTx ):
     tx["tot"]+=1
     fail = False
+    if (ER, DS, oldTx.txName) == ("CMS-PAS-SUS-16-024","data","TChiWZoff"):
+        error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
+        return
+    if (ER, oldTx.txName) == ("CMS-SUS-13-013", "T1ttttoff"):
+        error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
+        return
+    if (ER, oldTx.txName) == ("CMS-SUS-13-012", "TChiZZ"):
+        error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
+        return
+    if (ER, oldTx.txName) == ("ATLAS-SUSY-2013-04", "T2tt"):
+        error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
+        return
     # print ( "txname: %s/%s:%s" % ( ER, DS, oldTx.txName ) )
     if ( oldTx.txnameData.dataTag != newTx.txnameData.dataTag ):
         error ( "!dfojd" )
@@ -54,7 +66,8 @@ def discussTxName ( ER, DS, oldTx, newTx ):
     if ( unequal ( oldUnit * sum ( oldTx.txnameData.xsec ), newUnit * sum (newTx.txnameData.xsec ), "xsec" ) ):
         error ( "--> txnameData differ in xsec! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
         error ( "    ::: n(entries)=%d, %d" % ( len ( oldTx.txnameData.xsec ), len ( newTx.txnameData.xsec ) ) )
-        # error ( "units= %s %s" % ( oldUnit, newUnit ) )
+        error ( " :ov=%s" % oldTx.txnameData.value[:88] )
+        error ( " :nv=%s" % newTx.txnameData.value[:88] )
         #sys.exit(-1)
         fail=True
 
