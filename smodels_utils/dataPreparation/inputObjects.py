@@ -299,7 +299,8 @@ class DataSetInput(Locker):
                     txDataTypes.add('efficiencyMap')
             txDataTypes = list(txDataTypes)
             if not txDataTypes:
-                logger.error("Txname %s has upperLimits or efficiencyMap data" %tx.txName)
+                logger.error("Txname %s has no upperLimits or efficiencyMap data?" %\
+                              tx.txName)
                 return False
             if len(txDataTypes) > 1:
                 logger.error("Txname %s has mixed data types" %tx.txName)
