@@ -32,32 +32,45 @@ def compareMatrices ( ER, DS, txname, a, b ):
     if a.shape != b.shape:
         error ( "the _Vs have different shapes!!" )
         return
+    return
     dx = 0.
     for x in range ( a.shape[0] ):
         for y in range ( a.shape[1] ):
-            dx += abs ( b[x][y] - a[x][y] ) / abs ( b[x][y] + a[x][y] ) 
+            dx += abs ( abs(b[x][y]) - abs(a[x][y]) )
     dx = dx / ( a.shape[0]*a.shape[1] )
     if ( dx > 1e-3 ):
     # if ( sum(sum( a != b ) ) ):
         error ( "Data differ in _V: %s/%s/%s: dx=%.2f" % ( ER, DS, txname, dx ) )
         #print ( type(a) )
-        #print ( a )
-        #print ( b )
+        print ( a )
+        print ( b )
         #sys.exit(-1)
 
 def discussTxName ( ER, DS, oldTx, newTx ):
     tx["tot"]+=1
     fail = False
-    if (ER, DS, oldTx.txName) == ("CMS-PAS-SUS-16-024","data","TChiWZoff"):
-        error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
-        return
+    checkedTriples = [ ("CMS-PAS-SUS-16-024","data","TChiWZoff"),
+    ]
+    for Z in checkedTriples:
+        if (ER, DS, oldTx.txName) == Z:
+            error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
+            return
     checkedPairs = [ ("CMS-SUS-13-013", "T1ttttoff"), 
-        ("CMS-SUS-13-012", "TChiZZ"), ("ATLAS-SUSY-2013-04", "T2tt")
+        ("CMS-SUS-13-012", "TChiZZ"), 
+        ("CMS-SUS-13-012", "TChiWW"), 
+        ("CMS-SUS-13-012", "TChiWZ"), 
+        ("CMS-SUS-13-012", "T5WWoff"), 
+        ("CMS-SUS-13-012", "T5WW"), 
+    #    ("CMS-SUS-13-012", "T5"), 
+        ("ATLAS-SUSY-2013-04", "T2tt"),
+        ("ATLAS-SUSY-2013-11","TSlepSlep" ),
+        ("ATLAS-SUSY-2013-11","TChiWW" ),
+        ("ATLAS-SUSY-2013-11","TChipChimSlepSnu" ),
     ]
     for Z in checkedPairs:
-    if (ER, oldTx.txName) == Z:
-        error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
-        return
+        if (ER, oldTx.txName) == Z:
+            error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
+            return
     # print ( "txname: %s/%s:%s" % ( ER, DS, oldTx.txName ) )
     if ( oldTx.txnameData.dataTag != newTx.txnameData.dataTag ):
         error ( "dataTags differ!" )
@@ -171,7 +184,7 @@ def newResultNotInNew ( r ):
             r.globalInfo.id, colors.yellow )
 
 def discussDBs ( oldD, newD ):
-    if False:
+    if True:
         print ( "old: %s" % oldD )
         print ( "new: %s" % newD )
 
