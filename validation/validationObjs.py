@@ -254,6 +254,9 @@ class ValidationPlot():
             return False
         slhaDir = self.getSLHAdir()  #Path to the folder containing the SLHA files
         logger.debug("SLHA files for validation at %s" %slhaDir)
+
+        #Get list of input files to be tested
+        fileList = modelTester.getAllInputFiles(slhaDir)
         
         #Set temporary outputdir:
         outputDir = tempfile.mkdtemp(dir=slhaDir,prefix='results_')
@@ -264,9 +267,6 @@ class ValidationPlot():
         
         #Read and check parameter file, exit parameterFile does not exist
         parser = modelTester.getParameters(parameterFile)
-
-        #Get list of input files to be tested
-        fileList = modelTester.getAllInputFiles(slhaDir)
 
         #Select the desired experimental result
         listOfExpRes = [self.expRes]
