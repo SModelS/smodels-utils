@@ -212,15 +212,15 @@ class ValidationPlot():
             self.ncpus  = -1
         
         if tempdir is None: tempdir = os.getcwd()
-        pf, parFile = tempfile.mkstemp(dir=tempdir,prefix='parameter_',suffix='.ini')
-        
-        os.write(pf,"[path]\ndatabasePath = %s\n" %self.databasePath)
-        os.write(pf,"[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n")
-        os.write(pf,"[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus)
-        os.write(pf,"[database]\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (expId,txname))
-        os.write(pf,"[printer]\noutputType = python\n")
-        os.write(pf,"[python-printer]\naddElementList = False\n")
-        
+        pf, parFile = tempfile.mkstemp(dir=tempdir,prefix='parameter_',suffix='.ini', text=True )
+        with open ( parFile, "w" ) as f:
+            f.write("[path]\ndatabasePath = %s\n" %self.databasePath)
+            f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n")
+            f.write("[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus)
+            f.write("[database]\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (expId,txname))
+            f.write("[printer]\noutputType = python\n")
+            f.write("[python-printer]\naddElementList = False\n")
+            f.close()
         os.close(pf)
         return parFile
     
@@ -286,9 +286,12 @@ class ValidationPlot():
             if not os.path.isfile(fout):
                 logger.error("No SModelS output found for %s " %slhafile)
                 continue            
-            f = open(fout,'r')
-            exec(f.read().replace('\n',''))
-            f.close()
+            # print ( "reading %s" % fout )
+            ff = open(fout,'r')
+            cmd = ff.read().replace('\n','')
+            # print ( "cmd=%s" % cmd )
+            exec( cmd, globals() )
+            ff.close()
             if not 'ExptRes' in smodelsOutput:
                 logger.debug("No results for %s " %slhafile)
                 continue 
