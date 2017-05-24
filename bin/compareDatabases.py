@@ -4,6 +4,7 @@
     write out differences. """
 
 from __future__ import print_function
+import sys
 from smodels.experiment.databaseObj import Database 
 from smodels.experiment.expResultObj import ExpResult
 from smodels.tools.colors import colors
@@ -27,31 +28,44 @@ def unequal ( a, b, label=None ):
         return True
     return False
 
+def compareMatrices ( ER, DS, txname, a, b ):
+    if a.shape != b.shape:
+        error ( "the _Vs have different shapes!!" )
+        return
+    dx = 0.
+    for x in range ( a.shape[0] ):
+        for y in range ( a.shape[1] ):
+            dx += abs ( b[x][y] - a[x][y] ) / abs ( b[x][y] + a[x][y] ) 
+    dx = dx / ( a.shape[0]*a.shape[1] )
+    if ( dx > 1e-3 ):
+    # if ( sum(sum( a != b ) ) ):
+        error ( "Data differ in _V: %s/%s/%s: dx=%.2f" % ( ER, DS, txname, dx ) )
+        #print ( type(a) )
+        #print ( a )
+        #print ( b )
+        #sys.exit(-1)
+
 def discussTxName ( ER, DS, oldTx, newTx ):
     tx["tot"]+=1
     fail = False
     if (ER, DS, oldTx.txName) == ("CMS-PAS-SUS-16-024","data","TChiWZoff"):
         error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
         return
-    if (ER, oldTx.txName) == ("CMS-SUS-13-013", "T1ttttoff"):
-        error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
-        return
-    if (ER, oldTx.txName) == ("CMS-SUS-13-012", "TChiZZ"):
-        error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
-        return
-    if (ER, oldTx.txName) == ("ATLAS-SUSY-2013-04", "T2tt"):
+    checkedPairs = [ ("CMS-SUS-13-013", "T1ttttoff"), 
+        ("CMS-SUS-13-012", "TChiZZ"), ("ATLAS-SUSY-2013-04", "T2tt")
+    ]
+    for Z in checkedPairs:
+    if (ER, oldTx.txName) == Z:
         error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
         return
     # print ( "txname: %s/%s:%s" % ( ER, DS, oldTx.txName ) )
     if ( oldTx.txnameData.dataTag != newTx.txnameData.dataTag ):
-        error ( "!dfojd" )
+        error ( "dataTags differ!" )
         #sys.exit(-1)
     #print ( type ( oldTx.txnameData._V ) )
     #import IPython
     #IPython.embed()
-    if ( sum(sum(oldTx.txnameData._V != newTx.txnameData._V ) ) ):
-        error ( "txnameData differ in _V: %s/%s/%s" % ( ER, DS, oldTx.txName ) )
-        #sys.exit(-1)
+    compareMatrices ( ER, DS, oldTx.txName, oldTx.txnameData._V, newTx.txnameData._V )
     if ( oldTx.txnameData._1dim != newTx.txnameData._1dim ):
         error ( "txnameData differ in _1dim! %s/%s/%s" % ( ER, DS, oldTx.txName ) )
         # sys.exit(-1)

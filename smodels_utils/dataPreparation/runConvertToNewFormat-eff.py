@@ -436,6 +436,7 @@ if __name__ == "__main__":
                 'CMS-SUS-13-011-eff', #Statistics for a single SR has to be set by hand
                 'ATLAS-SUSY-2013-11-eff',
                 'ATLAS-SUSY-2013-02-eff'] #Statistics for a single SR has to be set by hand
+    skipList = []
 
     ignoreList = []
 
@@ -447,11 +448,16 @@ if __name__ == "__main__":
     # files = sorted(glob.glob(databasePath+'/*/*/*/convertNew.py')  )
     files = sorted(glob.glob(databasePath+'/*/*/*/convert.py')  )
     t0 = time.time()
+    analysis = args.analysis
+    if analysis == ".":
+        cwd = os.getcwd()
+        analysis = os.path.basename ( os.getcwd() )
+        print ( ". -> %s" % analysis )
     for f in files:
         if not '-eff' in f:
 #             print "\033[31m Not checking %s \033[0m" %f.replace('convert.py','')
             continue  #Skip UL results
-        if args.analysis != "all" and not args.analysis in f: 
+        if analysis != "all" and not analysis in f: 
             continue
 
         #Skip writing convertNew.py for the results in skipList
@@ -476,6 +482,8 @@ if __name__ == "__main__":
             if not r:
                 print ( '\033[31m Error generating %s \033[0m' %fnew )
                 sys.exit()
+        else:
+            print ( '\033[31m Skipping %s \033[0m' % fnew )
 
         rdir = fnew.replace(os.path.basename(fnew),'')
         #Make file executable

@@ -9,14 +9,17 @@ import sys
 import os
 import argparse
 
-argparser = argparse.ArgumentParser(description =  
+argparser = argparse.ArgumentParser(description =
 'create info.txt, txname.txt, twiki.txt and sms.py')
-argparser.add_argument ('-utilsPath', '--utilsPath', 
-help = 'path to the package smodels_utils',\
-type = str )
-argparser.add_argument ('-smodelsPath', '--smodelsPath', 
-help = 'path to the package smodels_utils',\
-type = str )
+argparser.add_argument ('-utilsPath', '--utilsPath',
+    help = 'path to the package smodels_utils',\
+    type = str )
+argparser.add_argument ('-smodelsPath', '--smodelsPath',
+    help = 'path to the package smodels',\
+    type = str )
+argparser.add_argument ('-t', '--ntoys',
+    help = 'number of toys to throw',\
+    type = int, default=200000  )
 args = argparser.parse_args()
 
 if args.utilsPath:
@@ -34,3 +37,4 @@ from smodels_utils.dataPreparation.inputObjects import MetaInfoInput,DataSetInpu
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
 from smodels_utils.dataPreparation.massPlaneObjects import x, y, z
 
+DataSetInput.ntoys=args.ntoys
