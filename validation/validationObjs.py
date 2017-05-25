@@ -240,7 +240,7 @@ class ValidationPlot():
         f = open(datafile,'r')
         self.data = eval(f.read().replace("validationData = ",""))
         f.close()
-            
+          
     def getDataFromPlanes(self):
         """
         Runs SModelS on the SLHA files from self.slhaDir and store
@@ -327,8 +327,8 @@ class ValidationPlot():
                 observedN = dataset.dataInfo.observedN
                 bgError = dataset.dataInfo.bgError
                 lumi = expRes['lumi (fb-1)']
-                CLs = statistics.CLs(observedN, expectedBG, bgError, Dict['signal']*lumi, 10000)                    
-                Dict['CLs'] =CLs
+#                 CLs = statistics.CLs(observedN, expectedBG, bgError, Dict['signal']*lumi, 10000)                    
+#                 Dict['CLs'] =CLs
             self.data.append(Dict)
     
         #Remove temporary folder
