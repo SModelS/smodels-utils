@@ -44,7 +44,7 @@ def checkPlotsFor(txname,update):
 
     if not valPlots:
         logger.error('\033[36m       No plots found \033[0m')
-        return 'skip'
+#        return 'skip'
     else:
         for plot in missingPlots:
             logger.error('\033[36m        plot %s not found \033[0m' %valplot)
@@ -155,7 +155,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
         
         for txname in txnameList:
             txnameStr = txname.txName
-            if not txname.validated in check: continue
+#            if not txname.validated in check: continue
             logger.info("------------ \033[31m Checking  %s \033[0m" %txnameStr)
             if not showPlots:
                 continue

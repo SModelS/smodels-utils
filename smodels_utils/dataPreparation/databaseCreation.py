@@ -243,8 +243,8 @@ class DatabaseCreator(list):
                     self.timeStamp ( 'extended upperLimits to %s entries %s'\
                                    % ( len(upperLimits), self.describeMap ( upperLimits ) ),
                                 "info" )
-                if len(expectedUpperLimits)>0:
-                    expectedUpperLimits = self.extendDataList(expectedUpperLimits,\
+
+                expectedUpperLimits = self.extendDataList(expectedUpperLimits,\
                                                               plane, txName, 'expectedlimit')
                 if len(expectedUpperLimits)>0:
                     self.timeStamp ( 'extended expectedUpperLimits to %s entries %s'\
