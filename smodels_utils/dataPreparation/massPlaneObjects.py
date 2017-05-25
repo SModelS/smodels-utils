@@ -248,7 +248,7 @@ class MassPlane(object):
             for xvar,value in xyDict.items():
                 if xvar in xyArray:
                     #Check if x,y-values given by distinct branches agree:
-                    if abs(xyArray[xvar]-value)/abs(xyArray[xvar]+value) > 0.0001:
+                    if xyArray[xvar] != value and abs(xyArray[xvar]-value)/abs(xyArray[xvar]+value) > 0.0001:
                         return None
                 xyArray[xvar] = value
         
