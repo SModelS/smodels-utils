@@ -37,10 +37,12 @@ class TxDecay(object):
     @property
     def doubledDecays(self):
         
-        compareDict = {key: value for (key, value) in decays.iteritems()\
+        #compareDict = {key: value for (key, value) in decays.iteritems()\
+        compareDict = {key: value for (key, value) in decays.items()\
         if not self.name == key}
         doubled = []
-        for compTxName, compDecay in compareDict.iteritems():
+        for compTxName, compDecay in compareDict.items():
+        #for compTxName, compDecay in compareDict.iteritems():
             if decays[self.name] == compDecay:
                 doubled.append(compTxName)
         return doubled
@@ -79,10 +81,10 @@ class TxDecay(object):
         :returns: dictionary entry without formatting 
         
         """
-        if decays.has_key(self._name):
+        if self._name in decays.keys():
             logger.info('found decay for topology %s' %self._name)
             return decays[self._name]
-        if decays.has_key(self._slackExpTopologyName()):
+        if self._slackExpTopologyName() in decays.keys():
             logger.info('found decay for topology %s with \
             slack name %s' %(self._name, self._slackExpTopologyName()))
             return decays[self._slackExpTopologyName()]

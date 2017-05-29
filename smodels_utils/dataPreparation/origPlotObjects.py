@@ -11,7 +11,7 @@
 from __future__ import print_function
 import sys
 from sympy import var, Eq, lambdify, solve, sympify, N, Float
-from standardObjects import round_to_n
+from smodels_utils.dataPreparation.standardObjects import round_to_n
 import logging
 import inspect
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -263,7 +263,7 @@ class Axes(object):
             lspEq = Eq(lsp, N(lspMass,2))
         # print "lspEq=",lspEq
         interEqs = []
-        for k, v in interMasses.iteritems():
+        for k, v in interMasses.items():
             eq = Eq(var(k.replace('Mass','')), N(v,5) )
             interEqs.append(eq)
         interEqs = sorted(interEqs, key = lambda eq: eq.args[0].name)

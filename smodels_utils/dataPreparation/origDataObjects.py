@@ -87,7 +87,7 @@ class Orig(Locker):
         
         if self.allowNegativValues: return True
         for value in values:
-            if values < 0.0: 
+            if value < 0.0: 
                 Errors().negativValue(values, path)
                 return False
         return True

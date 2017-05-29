@@ -9,17 +9,22 @@
 
 """
 
+from __future__ import print_function
 import sys
 import os
 import ROOT
 from smodels_utils.dataPreparation.standardObjects import StandardDataList, \
      StandardExclusions, StandardTWiki, StandardDataInfo, round_to_n
 from smodels_utils.dataPreparation.vertexChecking import VertexChecker
-from preparationHelper import ObjectList
+from smodels_utils.dataPreparation.preparationHelper import ObjectList
 import logging
 from datetime import date
 from smodels.tools.physicsUnits import fb, pb
 import time
+try:
+    import commands
+except ImportError:
+    import subprocess as commands
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -411,18 +416,6 @@ class DatabaseCreator(list):
                 self.add_axes[tn] = True
             if len(offShellVertices)==0 and region.name == "onShell":
                 self.add_axes[tn] = True
-            """
-            print "[debug]"
-            print "[debug] region.name=",region.name
-            print "[debug] plane=",plane
-            print "[debug] tn=",tn
-            print "[debug] plane.onShell=",plane.onShell
-            print "[debug] plane.offShell=",plane.onShell
-            print "[debug] offShellVertices=",offShellVertices
-            print "[debug] txname=",txName,"region.name=",region.name,"offShell=",\
-                    len(offShellVertices)
-            print "[debug] add_axes=",self.add_axes[tn]
-            """
             if self.add_axes[tn]:
                 # print "[_computeKinRegions] add_axes for ",txName.name,plane
                 off="off" if region.name == "offShell" else ""
@@ -553,7 +546,11 @@ class DatabaseCreator(list):
                         self.timeStamp ( "SMODELS_NOUPDATE is set!", "error" )
                         break
                     if self.ask_for_name:
-                        answer = raw_input(m)
+                        answer = None
+                        if sys.version[0]=="3":
+                            answer = input ( m )
+                        else:
+                            answer = raw_input(m)
                     if answer == 'y' or answer == 'n': break
                 if answer == 'n':
                     self.metaInfo.lastUpdate = lastUpdate
@@ -628,7 +625,7 @@ class DatabaseCreator(list):
         """ create the validation folder and populate it with validate.py """
         if not os.path.exists ( self.validationPath ):
             os.mkdir ( self.validationPath )
-        import inspect, commands
+        import inspect
         path = inspect.getfile ( self._createValidationFolder )
         self.timeStamp ( "creating validation folder %s" % path )
         path=path.replace( "smodels_utils/dataPreparation/databaseCreation.py", "validation/scripts" )
@@ -637,8 +634,8 @@ class DatabaseCreator(list):
         for i in scripts:
             if not os.path.exists ( "%s/%s" % ( self.validationPath, i ) ):
                 cmd = "cp %s/%s %s" % ( path, i, self.validationPath )
-                print cmd
-                print commands.getoutput ( "cp %s/%s %s" % ( path, i, self.validationPath ) )
+                print (cmd)
+                print (commands.getoutput ( "cp %s/%s %s" % ( path, i, self.validationPath ) ))
         ### fixme add a few more, txname specific, only the plotting, etc ###
 
 

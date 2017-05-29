@@ -8,6 +8,7 @@
 
 """   
 
+from __future__ import print_function
 import sys
 from smodels_utils.dataPreparation.standardObjects import StandardDataList
 
@@ -195,8 +196,8 @@ class Errors(object):
 
 if __name__ == "__main__":
     checker = VertexChecker ( "T2tt", "[[['t+']],[['t-']]]" )
-    print checker.kinConstraints
+    print (checker.kinConstraints)
     checker = VertexChecker ( "T6bbWW", "[[['b','W+']],[['b','W-']]]" )
-    print checker.kinConstraints
+    print (checker.kinConstraints)
 
 
