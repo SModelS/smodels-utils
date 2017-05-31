@@ -244,9 +244,10 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChe
     txdata._V = None
     #Collects all points belonging to the plane:
     planeMasses = []
+    reducedData = []
     for tx in txnameObjs:
         data = tx.txnameData.tri.points  #Data grid of rotated points
-        for pt in data:
+        for i,pt in enumerate(data):
             #Switch back to original mass point
             mass = tx.txnameData._getMassArrayFrom(pt,unit=None)
             #Check if mass belong to the mass plane:
@@ -256,11 +257,9 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChe
             if xy is None or mass in planeMasses:
                 continue
             planeMasses.append(mass)
-    
-    reducedData = [[mass,numpy.asscalar(tx.txnameData.xsec[i])] 
-                   for i,mass in enumerate(planeMasses)]
+            reducedData.append([mass,numpy.asscalar(tx.txnameData.xsec[i])])
     #If there is no data, return empty list:
-    if len(txdata.tri.points) == 0:
+    if not reducedData:
         logger.warning("No data points found for plane.")
         return []
     else:
@@ -302,7 +301,7 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChe
             #Check if point is in the convexhull. If not, try another one
             if txdata.tri.find_simplex(pt) < 0:
                 continue
-            mass = txdata._getMassArrayFrom(pt,unit=None)            
+            mass = txdata._getMassArrayFrom(pt,unit=None)
             if not vertexChecker(mass):
                 continue
             if massPlane.getXYValues(mass) is None:
