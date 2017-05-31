@@ -439,7 +439,7 @@ class TxNameInput(Locker):
 
     def getDataFromPlanes(self,dataType):
         """
-        Loop over the defined the planes and collects the data.
+        Loop over the defined planes and collects the data.
         Reads the source file and stores the data.
         Stores which planes have data for this txname in _goodPlanes.
 
@@ -509,7 +509,7 @@ class TxNameInput(Locker):
 
         """
         extend the given data list by the values related to this type of list
-        examples for data lists are ; upperLimits, efficiencyMaps, ....
+        examples for data lists are: upperLimits, efficiencyMaps, ....
         The values held by the given mass plane are extended to the data list.
         If self does not contain the dataLabel, set this attribute.
 
@@ -678,7 +678,7 @@ class TxNameInput(Locker):
         Check if massArray satisfies the mass constraints defined in massConstraints
 
         If the txname constraint contains several elements, require that massArray
-        satisfied the constaint for at least one of the elements.
+        satisfies the constaint for at least one of the elements.
 
         :param massArray: array with masses to be checked. It must be consistend with the
                           topology of the txname constraint.
