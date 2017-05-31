@@ -180,7 +180,7 @@ class DatabaseCreator(list):
             children.append(p)
             p.start()
         for p in children:
-            p.join(timeout=10000)
+            p.join(timeout=100000)
 
         if len(updatedDatasets) != len(self):
             logger.error("Error, when creating datasets: some children didnt terminate within the timeout. I see %d out of %d children have terminated." % \
