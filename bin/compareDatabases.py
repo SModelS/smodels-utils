@@ -6,10 +6,12 @@
 from __future__ import print_function
 import sys
 from smodels.experiment.databaseObj import Database 
+from smodels.experiment.txnameObj import TxNameData
 from smodels.experiment.expResultObj import ExpResult
 from smodels.tools.colors import colors
 from smodels.tools.physicsUnits import fb
 colors.on = True
+TxNameData._keep_values = True
 
 tx = { "tot": 0, "err": 0 }
 
@@ -51,6 +53,7 @@ def discussTxName ( ER, DS, oldTx, newTx ):
     fail = False
     checkedTriples = [ ("CMS-PAS-SUS-16-024","data","TChiWZoff"),
     ]
+    checkedTriples = []
     for Z in checkedTriples:
         if (ER, DS, oldTx.txName) == Z:
             error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
@@ -67,6 +70,7 @@ def discussTxName ( ER, DS, oldTx, newTx ):
         ("ATLAS-SUSY-2013-11","TChiWW" ),
         ("ATLAS-SUSY-2013-11","TChipChimSlepSnu" ),
     ]
+    checkedPairs = [ ]
     for Z in checkedPairs:
         if (ER, oldTx.txName) == Z:
             error ( "skipping %s/%s/%s" % ( ER, DS, oldTx.txName ), colors.green )
