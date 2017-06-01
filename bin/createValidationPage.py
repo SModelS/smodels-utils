@@ -3,6 +3,7 @@
 """ very simple script that collects all validation plots in a simple 
     (local) validation html page """
 
+from __future__ import print_function
 import glob
     
 db = "/home/walten/git/smodels-database/"
