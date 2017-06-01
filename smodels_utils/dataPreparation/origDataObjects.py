@@ -88,7 +88,7 @@ class Orig(Locker):
         if self.allowNegativValues: return True
         for value in values:
             if value < 0.0: 
-                Errors().negativValue(values, path)
+                Errors().negativValue(values, self.path)
                 return False
         return True
         
@@ -964,7 +964,7 @@ class Errors(object):
         
     def negativValue(self, values, path):
     
-        m = m + 'skip negativ value: %s\n' %value
+        m = 'skip negativ value: %s\n' %values
         m = m + 'in orig data file: %s' %path
         print(m)
         
