@@ -84,7 +84,6 @@ def checkPlotsFor(txname,update):
 
     if not valPlots:
         logger.error('\033[36m       No plots found \033[0m')
-        return 'skip'
     else:
         for plot in missingPlots:
             logger.error('\033[36m        plot %s not found \033[0m' %valplot)
@@ -193,7 +192,9 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
         
         for txname in txnameList:
             txnameStr = txname.txName
-            if not txname.validated in check: continue
+            if not txname.validated in check:
+                print txname.validated,check
+                continue
             logger.info("------------ \033[31m Checking  %s \033[0m" %txnameStr)
             if not showPlots:
                 continue
@@ -233,7 +234,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
         validated_none = []
         #Only reload the database if files were updated:
         if update:
-            db = Database(databasePath,verbosity=verbosity)
+            db = Database(databasePath)
             expResList = db.getExpResults(analysisIDs, datasetIDs, txnames,
                       dataTypes, useSuperseded=True, useNonValidated=True)
         for expRes in expResList:
@@ -303,9 +304,12 @@ if __name__ == "__main__":
     check = []
     for c in parser.get("extra","check").split(','):
         try:
-            check.append(eval(c))
+            c = eval(c)
         except:
-            check.append(c)
+            pass
+        if isinstance(c,str):
+            c = c.lower()            
+        check.append(c)
             
     showPlots = parser.getboolean("extra","showPlots")
     update = parser.getboolean("extra","update")
