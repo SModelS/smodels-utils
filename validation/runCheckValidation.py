@@ -105,7 +105,7 @@ def checkPlotsFor(txname,update):
 
 
     val = ""
-    while not val.lower() in ['t','f','n','s','exit']:
+    while not val.lower() in ['t','f','n','s','tbd','exit']:
         val = raw_input("TxName is validated? (Current validation status: %s) \
         \n True/False/NA/TBD/Skip (t/f/n/tbd/s) \n (or type exit to stop)\n" %txname.validated)    
         if val.lower() == 't': validationResult = True
@@ -170,7 +170,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
     for expRes in expResList:
        
         expt0 = time.time()
-        logger.info("--------- \033[32m Checking  %s \033[0m" %expRes.globalInfo.id)
+        logger.info("--------- \033[32m Checking  %s \033[0m" %os.path.basename(expRes.path))
         txnameList = []
         txnameStrs = []
         for dataset in expRes.datasets:
@@ -224,7 +224,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
                 tf.close()
             
             logger.info("------------ \033[31m %s checked as validated = %s \033[0m" %(txnameStr,str(validationResult)))
-        logger.info("--------- \033[32m %s checked in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
+        logger.info("--------- \033[32m %s checked in %.1f min \033[0m" %(os.path.basename(expRes.path),(time.time()-expt0)/60.))
     logger.info("\n\n----- Finished checking in %.1f min." %((time.time()-tval0)/60.))
     
     #Print summary output, if selected.
