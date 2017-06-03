@@ -30,9 +30,8 @@ This page lists validation plots for all analyses and topologies available in th
 
 The validation procedure for upper limit maps used here is explained in [[http://arxiv.org/abs/arXiv:1312.4175|arXiv:1312.4175]][[http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5|EPJC May 2014, 74:2868]], section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. Experimental upper limit and theoretical prediction is compared for that signal region in order to draw conclusion.
  
-Individual tables, 13 TeV: [[#ATLASupperlimits13|ATLAS upper limits 13TeV]], [[#ATLASefficiencymaps13|ATLAS efficiency maps 13TeV]], [[#CMSupperlimits8|CMS upper limits 13TeV]], [[#CMSefficiencymaps8|CMS efficiency maps 13TeV]].
-
-Individual tables, 8 TeV: [[#ATLASupperlimits13|ATLAS upper limits 13TeV]], [[#ATLASefficiencymaps13|ATLAS efficiency maps 13TeV]], [[#CMSupperlimits8|CMS upper limits 13TeV]], [[#CMSefficiencymaps8|CMS efficiency maps 13TeV]].
+Individual tables: [[#ATLASupperlimits13|ATLAS upper limits 13TeV]], [[#ATLASefficiencymaps13|ATLAS efficiency maps 13TeV]], [[#CMSupperlimits8|CMS upper limits 13TeV]], [[#CMSefficiencymaps8|CMS efficiency maps 13TeV]].
+[[#ATLASupperlimits8|ATLAS upper limits 8TeV]], [[#ATLASefficiencymaps8|ATLAS efficiency maps 8TeV]], [[#CMSupperlimits8|CMS upper limits 8TeV]], [[#CMSefficiencymaps8|CMS efficiency maps 8TeV]].
 """)
 
 def writeTableHeader ( true_lines ):
@@ -104,11 +103,11 @@ def writeExpRes( expRes, nlines, true_lines, false_lines, databasePath, urldir )
         nlines += 1
 #         if nlines > 2: break
 
-def writeExperimentType ( sqrts, exp, type, expResList, wFile, nlines, true_lines, false_lines, databasePath, urldir ):
+def writeExperimentType ( sqrts, exp, tpe, expResList, wFile, nlines, true_lines, false_lines, databasePath, urldir ):
     print ( "\n\nexp",exp )
-    true_lines.append ( "\n== %s %s, %d TeV: %d results ==\n" % (exp,type,sqrts, len(expResList)) )
-    stype=type.replace(" ","")
-    true_lines.append ( "<<Anchor(%s%s%d)>>\n" % ( exp, stype,sqrts ) )
+    stype=tpe.replace(" ","")
+    true_lines.append ( "\n<<Anchor(%s%s%d)>>\n" % ( exp,stype,sqrts ) )
+    true_lines.append ( "== %s %s, %d TeV: %d results ==\n" % (exp,tpe,sqrts, len(expResList)) )
     writeTableHeader ( true_lines )
     expResList.sort()
     for expRes in expResList:
@@ -143,7 +142,7 @@ def main():
         for exp in [ "ATLAS", "CMS" ]:
             for tpe in [ "upper limits", "efficiency maps" ]:
                 dsids= [ None ]
-                if type == "efficiency maps":
+                if tpe == "efficiency maps":
                     dsids = [ 'all' ]
                 tmpList = database.getExpResults(datasetIDs=dsids )
                 # tpe = "upper limits"
