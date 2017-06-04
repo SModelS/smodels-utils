@@ -38,13 +38,26 @@ def writeTableList ( wFile, database ):
             for tpe in [ "upper limits", "efficiency maps" ]:
                 expResList = getExpList ( sqrts, exp, tpe, database )
                 stpe = tpe.replace ( " ", "" )
-                wFile.write ( " * [[#%s%s%d|%s %s, %d TeV]]: %d analyses\n" % \
-                        ( exp, stpe, sqrts, exp, tpe, sqrts, len(expResList) ) )
+
+                nres = 0
+                for expRes in expResList:
+                    for tn in expRes.getTxNames():
+                        validated = tn.getInfo('validated')
+                        if validated in [ "n/a" ]: continue
+                        if "efficiency" in tpe:
+                            dataset = getDatasetName ( tn )
+                            if dataset == "data": continue
+                        nres += 1
+
+                if nres > 0:
+                    wFile.write ( " * [[#%s%s%d|%s %s, %d TeV]]: %d analyses, %d results\n" % \
+                            ( exp, stpe, sqrts, exp, tpe, sqrts, len(expResList), nres ) )
 
 def getDatasetName ( txname ):
     dataset = txname.path [ : txname.path.rfind("/") ]
     dataset = dataset [ dataset.rfind("/")+1 : ]
     dataset = dataset.replace ( "HighPt", "!HighPt" )
+    dataset = dataset.replace ( "GtGrid", "!GtGrid" )
     return dataset
 
 def writeTableHeader ( true_lines, tpe ):
