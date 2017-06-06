@@ -28,11 +28,13 @@ def writeHeader ( wFile ):
 
 This page lists validation plots for all analyses and topologies available in the SMS results database of v1.1, including superseded and Fastlim results. The list has been created from the database version 1.1.1 and Fastlim tarball shipped separately.
 
-The validation procedure for upper limit maps used here is explained in [[http://arxiv.org/abs/arXiv:1312.4175|arXiv:1312.4175]][[http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5|EPJC May 2014, 74:2868]], section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. Experimental upper limit and theoretical prediction is compared for that signal region in order to draw conclusion.
+The validation procedure for upper limit maps used here is explained in [[http://arxiv.org/abs/arXiv:1312.4175|arXiv:1312.4175]][[http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5|EPJC May 2014, 74:2868]], section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. Experimental upper limit and theoretical prediction are compared for that signal region.
 """)
 
 def writeTableList ( wFile, database ):
     wFile.write ( "== Individual tables ==\n" )
+    wFile.write ( "(Results with validated='n/a' have been ignored.)\n\n" )
+
     for sqrts in [ 13, 8 ]:
         for exp in [ "ATLAS", "CMS" ]:
             for tpe in [ "upper limits", "efficiency maps" ]:
@@ -40,18 +42,22 @@ def writeTableList ( wFile, database ):
                 stpe = tpe.replace ( " ", "" )
 
                 nres = 0
+                nexpres = 0
                 for expRes in expResList:
+                    hasTn=False
                     for tn in expRes.getTxNames():
                         validated = tn.getInfo('validated')
                         if validated in [ "n/a" ]: continue
                         if "efficiency" in tpe:
                             dataset = getDatasetName ( tn )
                             if dataset == "data": continue
+                        hasTn=True
                         nres += 1
+                    if hasTn: nexpres += 1
 
                 if nres > 0:
                     wFile.write ( " * [[#%s%s%d|%s %s, %d TeV]]: %d analyses, %d results\n" % \
-                            ( exp, stpe, sqrts, exp, tpe, sqrts, len(expResList), nres ) )
+                            ( exp, stpe, sqrts, exp, tpe, sqrts, nexpres, nres ) )
 
 def getDatasetName ( txname ):
     dataset = txname.path [ : txname.path.rfind("/") ]
@@ -219,7 +225,7 @@ def main():
     print ( '--->Copy and paste the content to the SModelS wiki page.\n')
     print ( '--->(if xsel is installed, you should find the content in your clipboard.)\n' )
 
-    wFile.write ( "\n\n" )
+    wFile.write ( "\n" )
     wFile.close()
 
     C.getoutput ( "cat %s | xsel -i" % fName )
