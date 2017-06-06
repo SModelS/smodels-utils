@@ -13,6 +13,8 @@ import tempfile
 sys.path.insert(0,"../../smodels")
 from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import TeV
+from smodels.tools.smodelsLogging import setLogLevel
+setLogLevel("debug" )
 
 try:
     import commands as C
@@ -33,7 +35,7 @@ The validation procedure for upper limit maps used here is explained in [[http:/
 
 def writeTableList ( wFile, database ):
     wFile.write ( "== Individual tables ==\n" )
-    wFile.write ( "(Results with validated='n/a' have been ignored.)\n\n" )
+    wFile.write ( "(Results with validated='n/a' are ignored. For efficiency maps, we count the best data set only.)\n\n" )
 
     for sqrts in [ 13, 8 ]:
         for exp in [ "ATLAS", "CMS" ]:
@@ -45,12 +47,20 @@ def writeTableList ( wFile, database ):
                 nexpres = 0
                 for expRes in expResList:
                     hasTn=False
+                    txns = []
                     for tn in expRes.getTxNames():
                         validated = tn.getInfo('validated')
+                        tname = tn.txName
+                        #if "2015-0" in expRes.globalInfo.id:
+                        #    print ( "tname=",tname,"validated=",validated,"path=",tn.path, "tpe=",tpe )
+                        #    print ( "   `- info",tn._infoObj.dataType ) 
                         if validated in [ "n/a" ]: continue
                         if "efficiency" in tpe:
                             dataset = getDatasetName ( tn )
                             if dataset == "data": continue
+                        if tname in txns:
+                            continue
+                        txns.append ( tname )
                         hasTn=True
                         nres += 1
                     if hasTn: nexpres += 1
@@ -68,8 +78,8 @@ def getDatasetName ( txname ):
 
 def writeTableHeader ( true_lines, tpe ):
     fields = [ "Result", "Txname", "Validated?", "Validation plots", "comment" ]
-    if "efficiency" in tpe:
-        fields.insert(1, "Dataset" )
+    # if "efficiency" in tpe:
+    #        fields.insert(1, "Dataset" )
     ret=""
     for i in fields:
         ret=ret +  ( "||<#EEEEEE:> '''%s''' " % i )
@@ -83,20 +93,29 @@ def writeExpRes( expRes, nlines, true_lines, false_lines, databasePath, urldir, 
     id = expRes.getValuesFor('id')[0]
     txnames = expRes.getTxNames()
     ltxn = 0 ## len(txnames)
+    txns_discussed=[]
     for txname in txnames:
         validated = txname.getInfo('validated')
         if validated == "n/a": continue
+        txn = txname.txName
+        if txn in txns_discussed:
+            continue
+        txns_discussed.append ( txn )
         ltxn += 1
     line = "||<|%i> [[%s|%s]]" %( ltxn, expRes.getValuesFor('url')[0], id )
     hadTxname = False
+    txns_discussed=[]
     for txname in txnames:
+        txn = txname.txName
+        if txn in txns_discussed:
+            continue
+        txns_discussed.append ( txn )
         validated = txname.getInfo('validated')
         if validated == "n/a": continue
         color=""
         if validated is True: color = "#32CD32"
         elif validated in [ None, "n/a" ]: color = "#778899"
         elif validated in [ False, "tbd" ]: color = "#FF1100"
-        txn = txname.txName
         txnbrs = txn
         #if txnbrs == "TChiChipmStauL":
         #    txnbrs = "TChi-ChipmStauL"
@@ -106,11 +125,12 @@ def writeExpRes( expRes, nlines, true_lines, false_lines, databasePath, urldir, 
             if dataset == "data":
                 continue
             # print ( "txname=", dataset )
-            line += "|| %s " % dataset
+            # line += "|| %s " % dataset
         hadTxname = True
         line += '||[[SmsDictionary#%s|%s]]' % ( txn, txnbrs )
         line += '||<style="color: %s;"> %s ||' % ( color, sval )
         hasFig=False
+        dirPath =  os.path.join( urldir, valDir.replace(databasePath,""))
         for fig in glob.glob(valDir+"/"+txname.txName+"_*_pretty.pdf"):
             pngname = fig.replace(".pdf",".png" )
             if not os.path.exists ( pngname ):
@@ -118,7 +138,6 @@ def writeExpRes( expRes, nlines, true_lines, false_lines, databasePath, urldir, 
                 C.getoutput ( cmd )
             # figName = fig.replace(valDir+"/","")
             figName = pngname.replace(valDir+"/","").replace ( databasePath, "" )
-            dirPath =  os.path.join( urldir, valDir.replace(databasePath,""))
             figPath = dirPath+"/"+figName
             # print ( "figPath=",figPath, "txname=", txname.txName )
             #line += "[[http://smodels.hephy.at"+figPath+\
@@ -154,17 +173,24 @@ def writeExperimentType ( sqrts, exp, tpe, expResList, wFile, nlines, true_lines
 # print ( "\n\nexp",exp )
     stype=tpe.replace(" ","")
     nres = 0
+    nexpRes = 0
     for expRes in expResList:
+        txnames=[]
         for tn in expRes.getTxNames():
+            name = tn.txName
+            if name in txnames:
+                continue
             validated = tn.getInfo('validated')
             if validated in [ "n/a" ]: continue
             if "efficiency" in tpe:
                 dataset = getDatasetName ( tn )
                 if dataset == "data": continue
+            txnames.append ( name )
             nres += 1
+        if len(txnames)>0: nexpRes+=1
     if nres == 0:
             return
-    true_lines.append ( "== %s %s, %d TeV: %d analyses, %d results total ==\n" % (exp,tpe,sqrts, len(expResList), nres ) )
+    true_lines.append ( "== %s %s, %d TeV: %d analyses, %d results total ==\n" % (exp,tpe,sqrts, nexpRes, nres ) )
     true_lines.append ( "<<Anchor(%s%s%d)>>\n\n" % ( exp,stype,sqrts ) )
     writeTableHeader ( true_lines, tpe )
     expResList.sort()
@@ -177,7 +203,9 @@ def getExpList ( sqrts, exp, tpe, database ):
     dsids= [ None ]
     if tpe == "efficiency maps":
         dsids = [ 'all' ]
-    tmpList = database.getExpResults(datasetIDs=dsids )
+    T="upperLimit"
+    if "efficiency" in tpe: T="efficiencyMap"
+    tmpList = database.getExpResults( dataTypes=[ T ] ) # , datasetIDs=dsids )
     # tpe = "upper limits"
     #Load list of experimental results (DOES NOT INCLUDE efficiencies for now)
     expResList = []
