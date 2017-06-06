@@ -205,7 +205,7 @@ def getExpList ( sqrts, exp, tpe, database ):
         dsids = [ 'all' ]
     T="upperLimit"
     if "efficiency" in tpe: T="efficiencyMap"
-    tmpList = database.getExpResults( dataTypes=[ T ] ) # , datasetIDs=dsids )
+    tmpList = database.getExpResults( dataTypes=[ T ], useNonValidated=True ) # , datasetIDs=dsids )
     # tpe = "upper limits"
     #Load list of experimental results (DOES NOT INCLUDE efficiencies for now)
     expResList = []
