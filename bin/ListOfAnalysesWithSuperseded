@@ -7,13 +7,17 @@ The list has been created from the database version `1.1.1`.
 There is also an SmsDictionary.
 Link to list of results [[ListOfAnalyses|without superseded results]]
 == Individual tables ==
- * [[#ATLASupperlimits13|ATLAS upper limits, 13 TeV]]: 3 analyses, 3 results
- * [[#ATLASefficiencymaps13|ATLAS efficiency maps, 13 TeV]]: 2 analyses, 17 results
- * [[#CMSupperlimits13|CMS upper limits, 13 TeV]]: 9 analyses, 42 results
- * [[#ATLASupperlimits8|ATLAS upper limits, 8 TeV]]: 28 analyses, 58 results
- * [[#ATLASefficiencymaps8|ATLAS efficiency maps, 8 TeV]]: 20 analyses, 2306 results
- * [[#CMSupperlimits8|CMS upper limits, 8 TeV]]: 18 analyses, 65 results
- * [[#CMSefficiencymaps8|CMS efficiency maps, 8 TeV]]: 7 analyses, 828 results
+
+=== Run 2 - 13 TeV ===
+ * [[#ATLASupperlimits13|ATLAS upper limits]]: 3 analyses, 3 results
+ * [[#ATLASefficiencymaps13|ATLAS efficiency maps]]: 2 analyses, 17 results
+ * [[#CMSupperlimits13|CMS upper limits]]: 9 analyses, 42 results
+
+=== Run 1 - 8 TeV ===
+ * [[#ATLASupperlimits8|ATLAS upper limits]]: 28 analyses, 58 results
+ * [[#ATLASefficiencymaps8|ATLAS efficiency maps]]: 20 analyses, 2306 results
+ * [[#CMSupperlimits8|CMS upper limits]]: 18 analyses, 65 results
+ * [[#CMSefficiencymaps8|CMS efficiency maps]]: 7 analyses, 828 results
 
 == CMS, upper limits, 13 TeV (9 analyses) ==
 <<Anchor(CMSupperlimits13)>>

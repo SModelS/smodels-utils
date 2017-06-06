@@ -12,9 +12,13 @@ import sys,os,glob
 import tempfile
 sys.path.insert(0,"../../smodels")
 from smodels.experiment.databaseObj import Database
-from smodels.tools.physicsUnits import TeV
+from smodels.tools.physicsUnits import TeV, fb
 from smodels.tools.smodelsLogging import setLogLevel
 setLogLevel("debug" )
+
+
+
+debug=True ## debug mode shows also validated field.
 
 try:
     import commands as C
@@ -38,6 +42,9 @@ def writeTableList ( wFile, database ):
     wFile.write ( "(Results with validated='n/a' are ignored. For efficiency maps, we count the best data set only.)\n\n" )
 
     for sqrts in [ 13, 8 ]:
+        run=1
+        if sqrts == 13: run = 2
+        wFile.write ( "\n=== Run %d - %d TeV ===\n" % ( run, sqrts ) )
         for exp in [ "ATLAS", "CMS" ]:
             for tpe in [ "upper limits", "efficiency maps" ]:
                 expResList = getExpList ( sqrts, exp, tpe, database )
@@ -66,8 +73,10 @@ def writeTableList ( wFile, database ):
                     if hasTn: nexpres += 1
 
                 if nres > 0:
-                    wFile.write ( " * [[#%s%s%d|%s %s, %d TeV]]: %d analyses, %d results\n" % \
-                            ( exp, stpe, sqrts, exp, tpe, sqrts, nexpres, nres ) )
+                    wFile.write ( " * [[#%s%s%d|%s %s]]: %d analyses, %d results\n" % \
+                                  ( exp, stpe, sqrts, exp, tpe, nexpres, nres ) )
+                    #wFile.write ( " * [[#%s%s%d|%s %s, %d TeV]]: %d analyses, %d results\n" % \
+                    #                            ( exp, stpe, sqrts, exp, tpe, sqrts, nexpres, nres ) )
 
 def getDatasetName ( txname ):
     dataset = txname.path [ : txname.path.rfind("/") ]
@@ -77,7 +86,9 @@ def getDatasetName ( txname ):
     return dataset
 
 def writeTableHeader ( true_lines, tpe ):
-    fields = [ "Result", "Txname", "Validated?", "Validation plots", "comment" ]
+    fields = [ "Result", "Txname", "L [1/fb]", "Validation plots", "comment" ]
+    if debug:
+        fields.insert ( 3, "Validated?" )
     # if "efficiency" in tpe:
     #        fields.insert(1, "Dataset" )
     ret=""
@@ -128,7 +139,10 @@ def writeExpRes( expRes, nlines, true_lines, false_lines, databasePath, urldir, 
             # line += "|| %s " % dataset
         hadTxname = True
         line += '||[[SmsDictionary#%s|%s]]' % ( txn, txnbrs )
-        line += '||<style="color: %s;"> %s ||' % ( color, sval )
+        line += "||%.1f" % txname.globalInfo.lumi.asNumber(1/fb)
+        if debug:
+            line += '||<style="color: %s;"> %s ' % ( color, sval )
+        line += "||"
         hasFig=False
         dirPath =  os.path.join( urldir, valDir.replace(databasePath,""))
         for fig in glob.glob(valDir+"/"+txname.txName+"_*_pretty.pdf"):
@@ -205,7 +219,7 @@ def getExpList ( sqrts, exp, tpe, database ):
         dsids = [ 'all' ]
     T="upperLimit"
     if "efficiency" in tpe: T="efficiencyMap"
-    tmpList = database.getExpResults( dataTypes=[ T ], useNonValidated=True ) # , datasetIDs=dsids )
+    tmpList = database.getExpResults( dataTypes=[ T ], useNonValidated=debug ) # , datasetIDs=dsids )
     # tpe = "upper limits"
     #Load list of experimental results (DOES NOT INCLUDE efficiencies for now)
     expResList = []

@@ -48,6 +48,9 @@ There is also an SmsDictionary.
 def listTables ( f, anas ):
     f.write ( "== Individual tables ==\n" )
     for sqrts in [ 13, 8 ]:
+        run = 1
+        if sqrts == 13: run = 2
+        f.write ( "\n=== Run %d - %d TeV ===\n" % ( run, sqrts ) )
         for exp in [ "ATLAS", "CMS" ]:
             for tpe in [ "upper limits", "efficiency maps" ]:
                 stpe = tpe.replace(" ", "" )
@@ -56,11 +59,11 @@ def listTables ( f, anas ):
                 for A in a:
                     nres+= len ( A.getTxNames() )
                 if len(a) == 0: continue
-                f.write ( " * [[#%s%s%d|%s %s, %d TeV]]: %d analyses, %d results\n" % \
-                          ( exp, stpe, sqrts, exp, tpe, sqrts, len(a), nres ) )
+                f.write ( " * [[#%s%s%d|%s %s]]: %d analyses, %d results\n" % \
+                          ( exp, stpe, sqrts, exp, tpe, len(a), nres ) )
 
 def fields ( superseded ):
-    fields = [ "ID", "short description", "L", "Tx names" ]
+    fields = [ "ID", "short description", "L [1/fb]", "Tx names" ]
     # fields = [ "ID", "short description", "&radic;s", "L", "Tx names" ]
     if superseded:
         fields.append ( "superseded by" )
