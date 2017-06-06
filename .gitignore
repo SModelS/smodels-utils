@@ -23,3 +23,6 @@ distribution/smodels-v*
 .pydevproject
 validation/pythia_??????.card
 *~
+bin/OldListOfAnalyses
+bin/OldListOfAnalysesWithSuperseded
+
