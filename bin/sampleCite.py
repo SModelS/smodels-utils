@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 import bibtexparser
 
 def findCollaboration ( entry ):
@@ -19,7 +21,7 @@ def findCollaboration ( entry ):
     return collaboration
 
 def create ( entries, experiment ):
-    ret = "% This is latex code to cite all of "+experiment+" results\n"
+    ret = "% Use this LaTeX code to cite all non-superseded "+experiment+" results:\n"
     ret+= "% \cite{"
     for entry in entries:
         ID = entry["ID"]
@@ -32,15 +34,16 @@ def create ( entries, experiment ):
 
 def main ():
     f=open("database.bib")
-    f=open("database.bib")
+    print ( "\ndatabase.bib:" )
     bibtex=bibtexparser.load ( f )
     f.close()
-    print create ( bibtex.entries, "CMS" )
-    print create ( bibtex.entries, "ATLAS" )
+    print ( create ( bibtex.entries, "CMS" ) )
+    print ( create ( bibtex.entries, "ATLAS" ) )
+    print ( "\nreferences-fastlim.bib:" )
     f=open("references-fastlim.bib")
     bibtex=bibtexparser.load ( f )
     f.close()
-    print create ( bibtex.entries, "CMS" )
-    print create ( bibtex.entries, "ATLAS" )
+    # print ( create ( bibtex.entries, "CMS" ) )
+    print ( create ( bibtex.entries, "ATLAS" ) )
 
 main()

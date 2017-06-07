@@ -26,24 +26,25 @@ def yesno ( B ):
     return "?"
 
 def header( f, version, superseded ):
-    add="."
+    dotlessv = version.replace(".","")
     titleplus = ""
-    referToOther = "Link to list of results [[ListOfAnalysesWithSuperseded|including superseded results]]"
+    # titleplus = version
+    referToOther = "Link to list of results [[ListOfAnalysesv%sWithSuperseded|including superseded results]]" % dotlessv
     if superseded:
-        referToOther = "Link to list of results [[ListOfAnalyses|without superseded results]]"
+        referToOther = "Link to list of results [[ListOfAnalysesv%s|without superseded results]]" % dotlessv
         add=",including superseded results."
-        titleplus = " (including superseded results)"
+        titleplus = "(including superseded results)"
     f.write ( 
 # """#acl +DeveloperGroup:read,write,revert -All:write,read Default 
 """#acl +DeveloperGroup:read,write,revert -All:write +All:read Default 
 <<LockedPage()>>
 
-= List Of Analyses %s =
-List of analyses and topologies in the SMS results database of v1.1%s
+= List Of Analyses %s %s =
+List of analyses and topologies in the SMS results database.
 The list has been created from the database version `%s`.
 There is also an SmsDictionary.
 %s
-""" % ( titleplus, add, version, referToOther ) )
+""" % ( version, titleplus, version, referToOther ) )
 
 def listTables ( f, anas ):
     f.write ( "== Individual tables ==\n" )
