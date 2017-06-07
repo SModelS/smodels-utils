@@ -29,7 +29,8 @@ class WikiPageCreator:
                 "git/smodels-database/")
         self.db = Database( self.databasePath )
         self.localdir = "/var/www/validationWiki"
-        self.localdir = "/var/www/validation_v111"
+        self.localdir = "/var/www/validation_v%s" % \
+                         self.db.databaseVersion.replace(".","" )
         self.urldir = self.localdir.replace ( "/var/www", "" )
         self.fName = 'wikiFile.txt'
         if self.ugly:
@@ -71,12 +72,16 @@ class WikiPageCreator:
 """#acl +DeveloperGroup:read,write,revert -All:write,read Default
 <<LockedPage()>>""" )
         self.file.write( """
-= Validation plots for all analyses used by SModelS-v1.1.1 =
+= Validation plots for all analyses used by SModelS-v%s =
 
-This page lists validation plots for all analyses and topologies available in the SMS results database of v1.1, including superseded and Fastlim results. The list has been created from the database version 1.1.1 and Fastlim tarball shipped separately.
+This page lists validation plots for all analyses and topologies available in the SMS results database, including superseded and Fastlim results. The list has been created from the database version %s and Fastlim tarball shipped separately.
 
-The validation procedure for upper limit maps used here is explained in [[http://arxiv.org/abs/arXiv:1312.4175|arXiv:1312.4175]][[http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5|EPJC May 2014, 74:2868]], section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. Experimental upper limit and theoretical prediction are compared for that signal region.
-""")
+The validation procedure for upper limit maps used here is explained in [[http://arxiv.org/abs/arXiv:1312.4175|arXiv:1312.4175]][[http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5|EPJC May 2014, 74:2868]], section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. The experimental upper limits are compared with the theoretical predictions for that signal region.
+
+""" % ( self.db.databaseVersion, self.db.databaseVersion ) )
+        if self.ugly:
+            self.file.write ( "\nTo [[Validationv%s|official validation plots]]\n\n" % self.db.databaseVersion.replace(".","") )
+
     def writeTableHeader ( self, tpe ):
         fields = [ "Result", "Txname", "L [1/fb]", "Validation plots", "comment" ]
         if self.ugly:
@@ -89,7 +94,7 @@ The validation procedure for upper limit maps used here is explained in [[http:/
 
     def writeTableList ( self ):
         self.file.write ( "== Individual tables ==\n" )
-        self.file.write ( "(Results with validated='n/a' are ignored. For efficiency maps, we count the best data set only.)\n\n" )
+        # self.file.write ( "(Results with validated='n/a' are ignored. For efficiency maps, we count the best data set only.)\n\n" )
 
         for sqrts in [ 13, 8 ]:
             run=1
@@ -135,7 +140,8 @@ The validation procedure for upper limit maps used here is explained in [[http:/
         txns_discussed=[]
         for txname in txnames:
             validated = txname.getInfo('validated')
-            if validated == "n/a": continue
+            if not self.ugly and validated != True: continue
+            # if validated == "n/a": continue
             txn = txname.txName
             if txn in txns_discussed:
                 continue
@@ -150,7 +156,8 @@ The validation procedure for upper limit maps used here is explained in [[http:/
                 continue
             txns_discussed.append ( txn )
             validated = txname.getInfo('validated')
-            if validated == "n/a": continue
+            if not self.ugly and validated != True: continue
+            #if validated == "n/a": continue
             color=""
             if validated is True: color = "#32CD32"
             elif validated in [ None, "n/a" ]: color = "#778899"
@@ -172,8 +179,11 @@ The validation procedure for upper limit maps used here is explained in [[http:/
                 line += '||<style="color: %s;"> %s ' % ( color, sval )
             line += "||"
             hasFig=False
-            dirPath =  os.path.join( self.urldir, 
-                                     valDir.replace( self.databasePath,""))
+            ## print ( "databasePath=",self.databasePath )
+            vDir = valDir.replace ( self.databasePath,"")
+            altpath = self.databasePath.replace ( "/home", "/nfsdata" )
+            vDir = vDir.replace ( altpath, "" )
+            dirPath =  os.path.join( self.urldir, vDir )
             files = glob.glob(valDir+"/"+txname.txName+"_*_pretty.pdf")
             if self.ugly:
                 tmp = glob.glob(valDir+"/"+txname.txName+"_*.pdf")
@@ -230,7 +240,8 @@ The validation procedure for upper limit maps used here is explained in [[http:/
                 if name in txnames:
                     continue
                 validated = tn.getInfo('validated')
-                if validated in [ "n/a" ]: continue
+                if not self.ugly and validated != True: continue
+                # if validated in [ "n/a" ]: continue
                 if "efficiency" in tpe:
                     dataset = self.getDatasetName ( tn )
                     if dataset == "data": continue
