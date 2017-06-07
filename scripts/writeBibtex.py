@@ -50,6 +50,10 @@ def bibtexFromWikiUrl ( url, label=None ):
     lines = f.readlines()
     f.close()
     for l in lines:
+        if "preliminary results are superseded by the following paper" in l:
+            print ( "    %s: superseded !!!!! " % label )
+            return None
+    #    print ( l )
         if "nspire" in l:
             inspire = fetchInspireUrl ( l )
             print ( "   `- fetching from inspire", inspire )
@@ -58,15 +62,27 @@ def test():
     # print ( bibtexFromInspire ( "http://inspirehep.net/record/1469069", "ATLAS-SUSY-2015-02" ) )
     # print ( bibtexFromWikiUrl ( "https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/SUSY-2015-02/","ATLAS-SUSY-2015-02" ) )
     print ( bibtexFromWikiUrl ( "http://cms-results.web.cern.ch/cms-results/public-results/publications/SUS-15-002/index.html", "CMS-SUS-15-002" ) )
+    sys.exit()
 
 def main():
-    test()
-    sys.exit()
+    # test()
+    f=open ( "refs.bib", "w" )
     home = os.environ["HOME"]
-    db = Database ( "%s/git/smodels/test/tinydb" % home )
+    # db = Database ( "%s/git/smodels/test/tinydb" % home )
+    db = Database ( "%s/git/smodels-database" % home )
     res = db.getExpResults ()
     for expRes in res:
-        print ( expRes.globalInfo.url )
+        Id = expRes.globalInfo.id
+        url = expRes.globalInfo.url
+        if "superseded" in url:
+            print ( "superseded appears in URL!!" )
+            continue
+        print ( "Id,Url", Id, url )
+        bib = bibtexFromWikiUrl ( url, Id )
+        if bib:
+            f.write ( bib )
+            f.write ( "\n" )
+    f.close()
 
 if __name__ == "__main__":
     main()
