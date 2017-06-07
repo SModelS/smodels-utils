@@ -348,13 +348,13 @@ class TxNameInput(Locker):
 
     infoAttr = ['txName','constraint', 'condition','conditionDescription',
                 'susyProcess','checked','figureUrl','dataUrl','source',
-                'validated','axes','upperLimits',
+                'validated','axes','upperLimits', 
                 'efficiencyMap','expectedUpperLimits']
     internalAttr = ['_name', 'name', '_txDecay','_planes','_goodPlanes',
                     '_branchcondition', 'onShell', 'offShell', 'constraint',
                     'condition', 'conditionDescription','massConstraint',
                     'upperLimits','efficiencyMap','expectedUpperLimits',
-                    'massConstraints', '_dataLabels']
+                    'massConstraints', '_dataLabels', 'round_to' ]
 
     requiredAttr = [ 'constraint','condition','txName','axes','dataUrl',
                      'source' ]
@@ -374,7 +374,7 @@ class TxNameInput(Locker):
         the same decay chain
         """
 
-
+        self.round_to = 5 ## number of digits to round to
         self._name = txName
         self.txName = txName
         if hscp:

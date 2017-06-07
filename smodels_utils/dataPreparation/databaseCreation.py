@@ -508,7 +508,7 @@ class DatabaseCreator(list):
             value = getattr(obj,attr)
             if value=="":
                 continue
-            value = self._formatData(value,dataType=attr)
+            value = self._formatData(value,dataType=attr,n=obj.round_to)
             content = '%s%s%s%s\n' % (content, attr,\
                                        self.assignmentOperator, value)
 
@@ -566,7 +566,7 @@ class DatabaseCreator(list):
         return vStr
 
 
-def round_list(x, n=5):
+def round_list(x, n ):
     """
     Rounds all values in x down to n digits.
     :param x: value (float) or nested list of floats
@@ -576,7 +576,7 @@ def round_list(x, n=5):
     
     if isinstance(x,list):
         for i,pt in enumerate(x):
-            x[i] = round_list(pt)
+            x[i] = round_list(pt,n)
         return x
     else:
         if isinstance(x,Unum):
