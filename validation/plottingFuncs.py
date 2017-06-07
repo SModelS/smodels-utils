@@ -582,7 +582,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     
     
     #Count the number of entries in legend:
-    nleg = min(2,len(cgraphs)-cgraphs.values().count([])) + min(2,len(official))
+    nleg = min(2,len(cgraphs)-list(cgraphs.values()).count([])) + min(2,len(official))
     #Draw legend: 
     leg = TLegend(0.15,0.83-0.045*nleg,0.495,0.83)
     setOptions(leg)    
