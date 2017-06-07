@@ -72,9 +72,12 @@ class WikiPageCreator:
 """#acl +DeveloperGroup:read,write,revert -All:write,read Default
 <<LockedPage()>>""" )
         self.file.write( """
-= Validation plots for all analyses used by SModelS-v%s =
+= Validation plots for SModelS-v%s =
 
-This page lists validation plots for all analyses and topologies available in the SMS results database, including superseded and Fastlim results. The list has been created from the database version %s and Fastlim tarball shipped separately.
+This page lists validation plots for all analyses and topologies available in
+the SMS results database that can be validated against official results.
+Superseded and Fastlim results are included. The list has been created from the
+database version %s, including the Fastlim tarball that is shipped separately.
 
 The validation procedure for upper limit maps used here is explained in [[http://arxiv.org/abs/arXiv:1312.4175|arXiv:1312.4175]][[http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5|EPJC May 2014, 74:2868]], section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. The experimental upper limits are compared with the theoretical predictions for that signal region.
 
@@ -266,7 +269,7 @@ The validation procedure for upper limit maps used here is explained in [[http:/
         T="upperLimit"
         if "efficiency" in tpe: T="efficiencyMap"
         tmpList = self.db.getExpResults( dataTypes=[ T ], 
-                                         useNonValidated=self.ugly )
+                         useNonValidated=self.ugly, useSuperseded=True )
         expResList = []
         for i in tmpList:
             if not exp in i.globalInfo.id: continue
