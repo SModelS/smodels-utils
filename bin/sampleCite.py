@@ -21,7 +21,7 @@ def findCollaboration ( entry ):
     return collaboration
 
 def create ( entries, experiment ):
-    ret = "% Use this latex code to cite all "+experiment+" results\n"
+    ret = "% Use this LaTeX code to cite all non-superseded "+experiment+" results:\n"
     ret+= "% \cite{"
     for entry in entries:
         ID = entry["ID"]
