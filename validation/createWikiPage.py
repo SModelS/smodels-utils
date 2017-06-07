@@ -148,7 +148,7 @@ def writeExpRes( expRes, nlines, true_lines, false_lines, databasePath, urldir, 
         for fig in glob.glob(valDir+"/"+txname.txName+"_*_pretty.pdf"):
             pngname = fig.replace(".pdf",".png" )
             if not os.path.exists ( pngname ):
-                cmd = "convert -crop 600x420+250+10 %s %s" % ( fig, pngname )
+                cmd = "convert -trim %s %s" % ( fig, pngname )
                 C.getoutput ( cmd )
             # figName = fig.replace(valDir+"/","")
             figName = pngname.replace(valDir+"/","").replace ( databasePath, "" )
@@ -250,7 +250,7 @@ def main():
 
     #Set the address of the database folder
     databasePath = os.path.join(os.path.expanduser("~"),"git/smodels-database/")
-    database = Database(databasePath, progressbar=True )
+    database = Database(databasePath )
     nlines = 0
     writeTableList ( wFile, database )
 
