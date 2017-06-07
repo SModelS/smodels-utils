@@ -463,13 +463,13 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     if tgr.GetYmax() == tgr.GetYmin():
         logger.info("1d data detected, smearing Y values")
         buff = tgr.GetX()
-        buff.SetSize(sys.maxint)
+        buff.SetSize(sys.maxsize)
         xpts = numpy.frombuffer(buff,count=tgr.GetN())
         buff = tgr.GetY()
-        buff.SetSize(sys.maxint)
+        buff.SetSize(sys.maxsize)
         ypts = numpy.frombuffer(buff,count=tgr.GetN())
         buff = tgr.GetZ()
-        buff.SetSize(sys.maxint)
+        buff.SetSize(sys.maxsize)
         zpts = numpy.frombuffer(buff,count=tgr.GetN())
         for i in range(tgr.GetN()):
             tgr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,0.001),zpts[i])
@@ -477,13 +477,13 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     if tgr.GetXmax() == tgr.GetXmin():
         logger.info("1d data detected, smearing X values")
         buff = tgr.GetX()
-        buff.SetSize(sys.maxint)
+        buff.SetSize(sys.maxsize)
         xpts = numpy.frombuffer(buff,count=tgr.GetN())
         buff = tgr.GetY()
-        buff.SetSize(sys.maxint)
+        buff.SetSize(sys.maxsize)
         ypts = numpy.frombuffer(buff,count=tgr.GetN())
         buff = tgr.GetZ()
-        buff.SetSize(sys.maxint)
+        buff.SetSize(sys.maxsize)
         zpts = numpy.frombuffer(buff,count=tgr.GetN())
         for i in range(tgr.GetN()):
             tgr.SetPoint(i,xpts[i]+random.uniform(0.,0.001),ypts[i],zpts[i])
