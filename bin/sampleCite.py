@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 import bibtexparser
 
 def findCollaboration ( entry ):
@@ -35,12 +37,12 @@ def main ():
     f=open("database.bib")
     bibtex=bibtexparser.load ( f )
     f.close()
-    print create ( bibtex.entries, "CMS" )
-    print create ( bibtex.entries, "ATLAS" )
+    print ( create ( bibtex.entries, "CMS" ) )
+    print ( create ( bibtex.entries, "ATLAS" ) )
     f=open("references-fastlim.bib")
     bibtex=bibtexparser.load ( f )
     f.close()
-    print create ( bibtex.entries, "CMS" )
-    print create ( bibtex.entries, "ATLAS" )
+    print ( create ( bibtex.entries, "CMS" ) )
+    print ( create ( bibtex.entries, "ATLAS" ) )
 
 main()
