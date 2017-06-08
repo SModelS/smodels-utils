@@ -4,6 +4,11 @@ from __future__ import print_function
 from smodels.experiment.databaseObj import Database
 import urllib
 import os, sys
+import bibtexparser
+try:
+    import commands
+except ImportError:
+    import subprocess as commands
 
 """ write bibtex file of analysis references from the database itself """
 
@@ -12,6 +17,7 @@ class BibtexWriter:
         self.f=open ( "refs.bib", "w" )
         self.g=open ( "log.txt", "w" )
         self.h=open ( "failed.txt", "w" )
+        self.i=open ( "database.bib", "w" )
         self.npublications = 0
         self.nfailed = 0
         self.nsuperseded = 0
@@ -27,6 +33,12 @@ class BibtexWriter:
             "ATLAS-CONF-2013-089": "http://cds.cern.ch/record/1595272",
         }
 
+    def header ( self ):
+        self.i.write ( "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" )
+        self.i.write ( "% References for the analyses included in this version of the database %\n" )
+        self.i.write ( "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" )
+        self.i.write ( "\n" )
+
     def close ( self ):
         self.log ( "%d results in container." % len(self.res) )
         self.log ( "Summary: %d / %d successful." % \
@@ -36,7 +48,6 @@ class BibtexWriter:
         self.log ( "               %d not found" % self.not_found )
         self.log ( "               %d fastlim" % self.fastlim )
         self.log ( "               %d no match" % self.nomatch )
-        self.f.close()
         self.g.close()
         self.h.close()
 
@@ -62,7 +73,7 @@ class BibtexWriter:
                 continue
             if "author" in line and "Sirunyan" in line:
                 inAuthorList = True
-                line = '      author        = "CMS collaboration",\n'
+                line = '      author        = "{CMS collaboration}",\n'
                 ret.append ( line )
                 continue
             ret.append ( line )
@@ -245,13 +256,64 @@ class BibtexWriter:
         # db = Database ( "%s/git/smodels/test/tinydb" % home )
         self.db = Database ( "%s/git/smodels-database" % home )
         self.res = self.db.getExpResults ()
+        ids = []
         for expRes in self.res:
+            if expRes.globalInfo.id in ids:
+                continue
+            ids.append ( expRes.globalInfo.id )
 #            if not "CMS-PAS-SUS-16-033" in str(expRes):
 #                continue
             self.processExpRes ( expRes )
+        self.f.close()
+        self.addSummaries()
+
+    def findCollaboration ( self, entry ):
+        collaboration=""
+        ID = entry["ID"]
+        if "collaboration" in entry.keys():
+            t = entry["collaboration"]
+            if "ATLAS" in t:
+                collaboration = "ATLAS"
+            if "CMS" in t:
+                collaboration = "CMS"
+        else:
+            if "ATLAS" in ID:
+                collaboration = "ATLAS"
+            if "CMS" in ID:
+                collaboration = "CMS"
+        return collaboration
+
+    def createSummaryCitation ( self, entries, experiment ):
+        filtered = []
+        for entry in entries:
+            collaboration = self.findCollaboration ( entry )
+            if not experiment == collaboration:
+                continue
+            filtered.append ( entry )
+        ret = "% Use this LaTeX code to cite all " + str(len(filtered)) + " non-superseded "+experiment+" results:\n"
+        ret+= "% \cite{"
+        for entry in filtered:
+            ID = entry["ID"]
+            ret += "%s, " % ID
+        ret = ret[:-2]+"}"
+        return ret
+
+    def addSummaries ( self ):
+        f=open("refs.bib")
+        self.log ( "adding summaries to database.bib." )
+        self.header()
+        bibtex=bibtexparser.load ( f )
+        f.close()
+        self.i.write ( "\n" )
+        self.i.write ( self.createSummaryCitation ( bibtex.entries, "CMS" ) )
+        self.i.write ( "\n" )
+        self.i.write ( self.createSummaryCitation ( bibtex.entries, "ATLAS" ) )
+        self.i.write ( "\n" )
+        self.i.close()
+        commands.getoutput ( "cat refs.bib >> database.bib" )
+
 
 if __name__ == "__main__":
     writer = BibtexWriter()
-    # writer.test()
     writer.run()
     writer.close()
