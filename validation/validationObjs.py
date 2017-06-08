@@ -13,9 +13,11 @@ import logging,os,sys
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
 from smodels.tools import statistics, modelTester 
-from plottingFuncs import createPlot, getExclusionCurvesFor, createSpecialPlot, createTempPlot, createPrettyPlot
+from plottingFuncs import createPlot, getExclusionCurvesFor, createPrettyPlot
 import tempfile,tarfile,shutil,copy
-from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
+from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
+from sympy import var
+import string
 
 logger.setLevel(level=logging.ERROR)
 
@@ -40,10 +42,12 @@ class ValidationPlot():
         self.expRes = copy.deepcopy(ExptRes)
         self.txName = TxNameStr
         self.axes = Axes
+        self.niceAxes = self.getNiceAxes(Axes)
         self.slhaDir = None
         self.data = None
         self.officialCurves = self.getOfficialCurve( get_all = True )
         self.kfactor = kfactor
+        
         
         #Select the desired txname and corresponding datasets in the experimental result:
         for dataset in self.expRes.datasets:
@@ -66,13 +70,14 @@ class ValidationPlot():
             if not os.path.isdir(self.databasePath):
                 logger.error("Could not define databasePath folder")
                 sys.exit()
+                
 
     def __str__(self):
 
         vstr = "Validation plot for\n"
         vstr += 'id: '+self.expRes.getValuesFor('id')+'\n'
         vstr += 'TxName: '+self.txName+'\n'
-        vstr += 'Axes: '+self.axes
+        vstr += 'Axes: '+self.niceAxes
         return vstr
 
     def computeAgreementFactor ( self, looseness=1.2, signal_factor=1.0 ):
@@ -92,7 +97,7 @@ class ValidationPlot():
         elif isinstance(curve,list):
             for c in curve:                
                 objName = c.GetName()
-                if 'exclusion_' in objName:
+                if 'exclusion_' in objName.lower():
                     curve = c
                     break
         x0=ROOT.Double()
@@ -207,15 +212,15 @@ class ValidationPlot():
             self.ncpus  = -1
         
         if tempdir is None: tempdir = os.getcwd()
-        pf, parFile = tempfile.mkstemp(dir=tempdir,prefix='parameter_',suffix='.ini')
-        
-        os.write(pf,("[path]\ndatabasePath = %s\n" %self.databasePath).encode() )
-        os.write(pf,("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n").encode() )
-        os.write(pf,("[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus).encode() )
-        os.write(pf,("[database]\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (expId,txname)).encode() )
-        os.write(pf,("[printer]\noutputType = python\n").encode() )
-        os.write(pf,("[python-printer]\naddElementList = False\n").encode() )
-        
+        pf, parFile = tempfile.mkstemp(dir=tempdir,prefix='parameter_',suffix='.ini', text=True )
+        with open ( parFile, "w" ) as f:
+            f.write("[path]\ndatabasePath = %s\n" %self.databasePath)
+            f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n")
+            f.write("[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus)
+            f.write("[database]\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (expId,txname))
+            f.write("[printer]\noutputType = python\n")
+            f.write("[python-printer]\naddElementList = False\n")
+            f.close()
         os.close(pf)
         return parFile
     
@@ -225,13 +230,7 @@ class ValidationPlot():
         """
         
         validationDir = os.path.join(self.expRes.path,'validation')
-        title = self.expRes.getValuesFor('id')[0] + "_" \
-            + self.txName\
-            + "_" + self.axes   
-        datafile = title +'.py'
-        datafile = datafile.replace(self.expRes.getValuesFor('id')[0]+"_","")
-        datafile = os.path.join(validationDir,datafile)
-        datafile = datafile.replace("*","").replace(",","").replace("(","").replace(")","")
+        datafile = self.getDataFile(validationDir)
         if not os.path.isfile(datafile):
             logger.error("Validation datafile %s not found" %datafile)
             self.data = None
@@ -241,8 +240,8 @@ class ValidationPlot():
         f = open(datafile,'r')
         self.data = eval(f.read().replace("validationData = ",""))
         f.close()
-            
-    def getData(self):
+          
+    def getDataFromPlanes(self):
         """
         Runs SModelS on the SLHA files from self.slhaDir and store
         the relevant data in self.data.
@@ -255,6 +254,9 @@ class ValidationPlot():
             return False
         slhaDir = self.getSLHAdir()  #Path to the folder containing the SLHA files
         logger.debug("SLHA files for validation at %s" %slhaDir)
+
+        #Get list of input files to be tested
+        fileList = modelTester.getAllInputFiles(slhaDir)
         
         #Set temporary outputdir:
         outputDir = tempfile.mkdtemp(dir=slhaDir,prefix='results_')
@@ -266,9 +268,6 @@ class ValidationPlot():
         #Read and check parameter file, exit parameterFile does not exist
         parser = modelTester.getParameters(parameterFile)
 
-        #Get list of input files to be tested
-        fileList = modelTester.getAllInputFiles(slhaDir)
-
         #Select the desired experimental result
         listOfExpRes = [self.expRes]
 
@@ -277,7 +276,7 @@ class ValidationPlot():
                  listOfExpRes, 1000, False, parameterFile) 
 
         #Define original plot
-        origPlot = OrigPlot.fromString(self.axes)        
+        massPlane = MassPlane.fromString(self.txName,self.axes)        
         #Now read the output and collect the necessary data
         self.data = []
         for slhafile in os.listdir(slhaDir):
@@ -287,13 +286,12 @@ class ValidationPlot():
             if not os.path.isfile(fout):
                 logger.error("No SModelS output found for %s " %slhafile)
                 continue            
-            f = open(fout,'r')
-            exec(f.read().replace('\n',''), globals() )
-            f.close()
-            # print ( " fout=%s" % fout )
-            if not "smodelsOutput" in globals().keys():
-                logger.error ( "smodelsOutput not defined, from %s" % fout )
-                sys.exit()
+            # print ( "reading %s" % fout )
+            ff = open(fout,'r')
+            cmd = ff.read().replace('\n','')
+            # print ( "cmd=%s" % cmd )
+            exec( cmd, globals() )
+            ff.close()
             if not 'ExptRes' in smodelsOutput:
                 logger.debug("No results for %s " %slhafile)
                 continue 
@@ -311,9 +309,9 @@ class ValidationPlot():
                 return False
             
             mass = expRes['Mass (GeV)']                
-            v = origPlot.getXYValues(mass)            
+            v = massPlane.getXYValues(mass)            
             if v == None:
-                logger.debug("dropping %s, doesnt fall into the plane of %s." % (slhafile, origPlot.string ) )
+                logger.debug("dropping %s, doesnt fall into the plane of %s." % (slhafile, massPlane ) )
                 continue
             x,y = v
             Dict = {'slhafile' : slhafile, 'axes': [x,y], 'signal' : expRes['theory prediction (fb)'],
@@ -329,8 +327,8 @@ class ValidationPlot():
                 observedN = dataset.dataInfo.observedN
                 bgError = dataset.dataInfo.bgError
                 lumi = expRes['lumi (fb-1)']
-                CLs = statistics.CLs(observedN, expectedBG, bgError, Dict['signal']*lumi, 10000)                    
-                Dict['CLs'] =CLs
+#                 CLs = statistics.CLs(observedN, expectedBG, bgError, Dict['signal']*lumi, 10000)                    
+#                 Dict['CLs'] =CLs
             self.data.append(Dict)
     
         #Remove temporary folder
@@ -353,7 +351,7 @@ class ValidationPlot():
         :param silentMode: If True the plot will not be shown on the screen
         """
 
-        self.plot,self.base = createPlot(self,silentMode)
+        self.plot,self.base = createPlot(self,silentMode=silentMode)
         
     def getPrettyPlot(self,silentMode=True):
         """
@@ -362,32 +360,9 @@ class ValidationPlot():
         :param silentMode: If True the plot will not be shown on the screen
         """
 
-        self.plot,self.base = createPrettyPlot(self,silentMode)
-
-    def getSpecialPlot(self,silentMode=True,what = "bestregion", nthpoint = 1,signal_factor = 1.0 ):
-        """ get one of the special plots.
-            :param what: which special plot
-                         bestregion = best analysis/cut pair 
-                         upperlimits = upper limits on prod xsec (pb) 
-                         crosssections = theory prediction, in pb
-                         efficiencies = efficiency (=1 for UL results)
-            :param nthpoint: plot only every nth point
-            :param signal_factor: an additional factor that is multiplied with the signal cross section,
-        """
-        self.plot = createSpecialPlot( self, silentMode, 1.2, what, nthpoint, signal_factor )
+        self.plot,self.base = createPrettyPlot(self,silentMode=silentMode)
         
-    def getTempPlot(self,silentMode=True,what = "R", nthpoint = 1,signal_factor = 1.0 ):
-        """ get one of the special plots.
-            :param what: which special plot
-                         R = theory prediction/upper limit 
-                         upperlimits = upper limits on prod xsec (pb) 
-                         crosssections = theory prediction, in pb
-            :param nthpoint: plot only every nth point
-            :param signal_factor: an additional factor that is multiplied with the signal cross section,
-        """
-        self.plot = createTempPlot(self, silentMode, what, nthpoint, signal_factor)
-        
-    def savePlot(self,validationDir=None,format='pdf'):
+    def savePlot(self,validationDir=None,fformat='pdf'):
         """
         Saves the plot in .pdf format in the validationDir folder.
         If the folder does not exist, it will be created.
@@ -395,7 +370,7 @@ class ValidationPlot():
         analysis/validation/ folder
 
         :param validationDir: Folder where the plot will be saved
-        :param format: File format (accepted by ROOT), i.e. pdf, png, jpg...
+        :param fformat: File fformat (accepted by ROOT), i.e. pdf, png, jpg...
         """
 
 
@@ -411,18 +386,17 @@ class ValidationPlot():
             logger.debug("Creating validation folder "+vDir)
             os.mkdir(vDir)
 
-        filename = self.expRes.getValuesFor('id')[0] + "_" \
-            + self.txName + "_" + self.axes +'.'+format
-        filename = filename.replace(self.expRes.getValuesFor('id')[0]+"_","")
-        filename = os.path.join(vDir,filename)
-        filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
+        filename = self.getPlotFile(vDir,fformat)
+
         if not self.pretty:
+            self.plot.Print(filename)
+            filename = filename.replace('.'+fformat,'.png')
             self.plot.Print(filename)
         else:
             #Print pdf, png and root formats     
-            filename = filename.replace('.'+format,'_pretty.'+format)
+            filename = filename.replace('.'+fformat,'_pretty.'+fformat)
             self.plot.Print(filename)                             
-            filename = filename.replace('.'+format,'.png')
+            filename = filename.replace('.'+fformat,'.png')
             self.plot.Print(filename)                
             filename = filename.replace('.png','.root')
             self.plot.Print(filename)                
@@ -456,12 +430,7 @@ class ValidationPlot():
             os.mkdir(validationDir)
 
         if not datafile:
-            datafile = self.plot.GetTitle()+'.py'
-            datafile = datafile.replace(self.expRes.getValuesFor('id')[0]+"_","")
-            datafile = os.path.join(validationDir,datafile)
-            datafile = datafile.replace("*","").replace(",","").replace("(","").replace(")","")
-
-
+            datafile = self.getDataFile(validationDir)
         #Save data to file
         f = open(datafile,'w')
         dataStr = str(self.data)
@@ -472,5 +441,75 @@ class ValidationPlot():
 
         return True
 
+    def getDataFile(self,validationDir,fformat='.pdf'):
+        """
+        Defines the name of the .py file and returns it
+        
+        :param validationDir: Folder where the root file will be saved
+        
+        :return: name of the .py file
+        """
+        
+        datafile = self.getPlotFile(validationDir,fformat)
+        datafile = datafile.rstrip(fformat)
+        return datafile+'.py'
+    
+    def getPlotFile(self,validationDir,fformat='.pdf'):
+        """
+        Defines the name of the plot file and returns it
+        
+        :param validationDir: Folder where the root file will be saved
+        
+        :return: name of the plot file
+        """
+        
+        filename = self.expRes.getValuesFor('id')[0] + "_" + self.txName + "_"
+        filename += self.niceAxes.replace(",","").replace("(","").replace(")","")
+        filename += '.'+fformat
+        
+        filename = filename.replace(self.expRes.getValuesFor('id')[0]+"_","")
+        filename = os.path.join(validationDir,filename)
+        filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
+
+        return filename    
+
+    def getNiceAxes(self,axesStr):
+        """
+        Convert the axes definition format ('[[x,y],[x,y]]')
+        to a nicer format ('Eq(MassA,x)_Eq(MassB,y)_Eq(MassA,x)_Eq(MassB,y)')
+        
+        :param axesStr: string defining axes in the old format
+        
+        :return: string with a nicer representation of the axes (more suitable for printing)
+        """
+        
+        
+        x,y,z = var('x y z')
+        axes = eval(axesStr,{'x' : x, 'y' : y, 'z': z})
+        
+        eqList = []
+        for ib,br in enumerate(axes):
+            if ib == 0:
+                mStr = 'Mass'
+            else:
+                mStr = 'mass'
+            mList = []
+            for im,eq in enumerate(br):
+                mList.append('Eq(%s,%s)'
+                               %(var(mStr+string.ascii_uppercase[im]),eq))
+            mStr = "_".join(mList)
+            eqList.append(mStr)
+        
+        #Simplify symmetric branches:
+        if eqList[0].lower() == eqList[1].lower() and len(eqList) == 2:            
+            eqStr = "2*%s"%eqList[0]
+        else:
+            eqStr = "__".join(eqList)
+            
+        eqStr = eqStr.replace(" ","")
+            
+        return eqStr
+                
+                
 
 

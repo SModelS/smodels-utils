@@ -1,30 +1,24 @@
 #!/usr/bin/env python
 
 """
-.. module:: dataPreparation
+.. module:: databaseCreation
    :synopsis: Holds objects used by convert.py to create globalInfo.txt,
               sms.root, sms.py and newSms.py.
 
 .. moduleauthor:: Michael Traub <michael.traub@gmx.at>
+.. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
 """
 
-from __future__ import print_function
 import sys
 import os
-import ROOT
-from smodels_utils.dataPreparation.standardObjects import StandardDataList, \
-     StandardExclusions, StandardTWiki, StandardDataInfo, round_to_n
-from smodels_utils.dataPreparation.vertexChecking import VertexChecker
-from smodels_utils.dataPreparation.preparationHelper import ObjectList
+import shutil
 import logging
+import multiprocessing
 from datetime import date
-from smodels.tools.physicsUnits import fb, pb
+from math import floor, log10
+from unum import Unum
 import time
-try:
-    import commands
-except ImportError:
-    import subprocess as commands
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -34,21 +28,6 @@ logger.setLevel(level=logging.ERROR)
 
 limitCache={}
 
-def computeLimit ( observed, expected, error, lumi ):
-    """ compute limits and cache them """
-    from math import floor, log10
-    from smodels.tools import statistics
-    def r4 ( x ): ## round to four digits
-        if x==0.: return x
-        return round(x, -int(floor(log10(x))) + (4 - 1))
-    ## r4 = lambda x: round(x, -int(floor(log10(x))) + (4 - 1))
-    key = "%f %f %f %f" % ( r4(observed), r4(expected), r4(error), r4(lumi.asNumber(1/fb)) )
-    if key in limitCache:
-        return limitCache[key]
-    ul = statistics.upperLimit ( observed, expected, error, lumi, .05, 200000 ).asNumber ( fb )
-    ret=str(ul)+"*fb"
-    limitCache[key]=ret
-    return ret
 
 class DatabaseCreator(list):
 
@@ -80,23 +59,25 @@ class DatabaseCreator(list):
         self.metaInfo = None
         self.base = os.getcwd() + '/'
         self.origPath = './orig/'
-        self.twikitxtPath = self.origPath + 'twiki.txt'
         self.validationPath = './validation/'
         self.smsrootFile = "./sms.root"
-        self.infoFileDirectory = './data/'
         self.infoFileExtension = '.txt'
         self.metaInfoFileDirectory = './'
         self.metaInfoFileName = 'globalInfo'
         self.assignmentOperator = ': '
-        self.txNameField = 'txName'
-        self.add_axes= {}
-        self.addToSmsRootFile = set()
         # colorScheme: light for dark background, dark for light background
         #              None for monochrome
         self.colorScheme = "light" ## "dark", None
+        self.ncpus = 1 ## the number of CPUs used
+      
+        try:
+            self.ncpus =  multiprocessing.cpu_count()
+        except:
+            self.ncpus = 1
+
         list.__init__(self)
 
-    def timeStamp ( self, txt, c="info" ):
+    def timeStamp(self, txt, c="info"):
         color, reset = '\x1b[32m', '\x1b[39m'
         if self.colorScheme in [ None, "None", "mono" ]:
             color, reset = "", ""
@@ -117,19 +98,45 @@ class DatabaseCreator(list):
 
         dt = time.time() - self.t0
         name=""
-        # name="databaseCreation:"
         print ( "[%s%.1fs] %s%s%s" % ( name, dt, color, txt, reset ) )
 
-    def describeMap ( self, Map ):
-        """ simple method to describe quickly method in a string """
-        ret=""
-        if len(Map)==0:
-            return ret
-        m=str(Map[0]).replace("'","")
-        ret = ">>> %s ... " % m
-        return ret
-
-    def create(self, createAdditional=False, ask_for_name=True, create_dataInfo=True ):
+    def addDataset(self,datasetObject):
+        
+        """
+        Checks if databaseCreator already contains
+        a dataset object with the same id. If not, append dataset.
+        Otherwise, raises an error.
+        
+        :param datasetObject: DataSetInput object
+        :raise Error: if there is already a dataset instance with same name
+        """
+          
+        if datasetObject in self: 
+            logger.error("Dataset %s has already been defined" %datasetObject._name)
+            sys.exit()
+        else:
+            self.append(datasetObject)   
+                
+    def updateDataset(self,datasetObject):
+        
+        """
+        Checks if databaseCreator already contains
+        a dataset object with the same id. If it does, update the dataset.
+        Otherwise, raises an error.
+        
+        :param datasetObject: DataSetInput object
+        :raise Error: if there is already a dataset instance with same name
+        """
+        
+        if not datasetObject in self:
+            logger.error("Dataset %s can not be updated." %datasetObject._name)
+            sys.exit()
+            
+        #Find index of dataset with the same name
+        i = self.index(datasetObject)
+        self[i] = datasetObject
+                            
+    def create(self, createAdditional=False):
 
         """
         main method of the class
@@ -139,375 +146,152 @@ class DatabaseCreator(list):
         --date of last update is evaluated
         --old database files are deleted
         --write globalInfo.txt
-        --a empty StandardDataInfo-object is built
-        --a empty StandardTWiki-object is built
-        --a validation folder is created and a validate.py script is added
-        --loop over all txNames:
-        ----VertexChecker-object is build
-        ----empty StandardDataList objects are build for:
-            upperLimits, expectedUpperLimits and efficiencyMaps
-        ----self.exclusions is appended with an empty StandardExclusions-object
-        ----loop over all mass planes:
-        ------extending upperLimits, expectedUpperLimits and efficiencyMaps
-              and setting all kinematic region to True if the exist
-        ------checking published data
-        ------setting all kin region to False if the are not True until now
-        ------extending StandardExclusions
-        ------pass massplane to dataInfo
-        ------extending StandardTWiki
-        ----extend TxNames with some attributes, to be written to txName.txt
-        ----checking if constraint, condition and conditionDescription are set for
-            every existing kin. region
-        ----write txName.txt
-        --write sms.root
-        --write twiki.txt
-        --write dataInfo.txt
+        --loop over datasets
+        ----write dataInfo.txt
+        ----loop over all txNames:
+        ------load data from mass planes
+        ------define info for txname
+        ------write txname.txt
+        --get exclusion curves
+        --write sms.root wit
 
         :param createAdditional: if true, we dont delete, nor do we create sms.root
-        :param ask_for_name: if false, we assume 'ww' to be the author. Use with
-        great care!
-        :param createDataInfo: if false, we dont create dataInfo.txt
 
         :raise requiredError: If a region exist, but no constraint, condition
         or conditionDescription is set for this region
         """
-        self.ask_for_name = ask_for_name
 
         self.timeStamp ( 'create next database entry for %s' % self.metaInfo.id, "error" )
 
         if not createAdditional:
-            self._extendInfoAttr(self.metaInfo, 'lastUpdate')
             self._setLastUpdate()
             self._delete()
-            self._createInfoFile(self.metaInfoFileName, None, None, self.metaInfo)
-            self._createValidationFolder ()
+            self._createInfoFile(self.metaInfoFileName, self.metaInfo,
+                                 self.metaInfoFileDirectory)
+            self._createValidationFolder()
+        
+        #Loop over datasets:
+        chunkedDatasets = [self[x::self.ncpus] for x in range(self.ncpus) if self[x::self.ncpus]]
+        manager = multiprocessing.Manager() 
+        updatedDatasets = manager.list() #Stores the updated datasets for each process    
+        children = []           
+        for chunk in chunkedDatasets:            
+            p = multiprocessing.Process(target=self.createDatasets, args=(chunk,updatedDatasets))
+            children.append(p)
+            p.start()
+        for p in children:
+            p.join(timeout=100000)
 
-        self.tWiki = StandardTWiki(self.metaInfo)
+        if len(updatedDatasets) != len(self):
+            logger.error("Error, when creating datasets: some children didnt terminate within the timeout. I see %d out of %d children have terminated." % \
+                    ( len(updatedDatasets), len(self) ) )
+            sys.exit()
+        
+        for dataset in updatedDatasets:
+            self.updateDataset(dataset)
+        #Get all exclusion curves and write to sms.root:
+        self.exclusions = self.getExclusionCurves()
+        self._createSmsRoot(createAdditional)
 
-        publishedData = True
-
-        dataInfo = StandardDataInfo()
-
-        hasUpperLimits = False
-
-        # self.timeStamp ( "before going through txnames" )
-        for txName in self:
-            self.timeStamp ( "reading %s" % txName, "debug" )
-            dataset=None
-
-            if not hasattr(txName.on, 'constraint'):
-                Errors().missingOnConstraint(txName.name)
-            self.vertexChecker = VertexChecker(txName.name, txName.on.constraint )
-            upperLimits = StandardDataList()
-            ## print "upperLimits=",upperLimits
-            expectedUpperLimits = StandardDataList()
-            efficiencyMap = StandardDataList(valueUnit ='')
-            efficiencyMap3D = StandardDataList(valueUnit ='')
-
-            exclusions = ObjectList('name')
-            for region in txName.kinematicRegions:
-                exclusions.append\
-                (StandardExclusions(txName.name + region.topoExtension))
-
-            datasets = []
-
-            for plane in txName.planes:
-                if len(datasets)>0 and datasets[0] != plane.origEfficiencyMap.dataset:
-                    self.timeStamp ( "wrong dataset of plane!! %s" % plane.origEfficiencyMap.dataset )
-                    continue
-                datasets.append ( plane.origEfficiencyMap.dataset )
-                # print ( "what datasets do we have here? %s" % datasets  )
-
-                if plane.origEfficiencyMap and hasattr ( plane.origEfficiencyMap, "observedN" ):
-                    dataInfo.dataset = plane.origEfficiencyMap.dataset
-                    dataInfo.observedN = plane.origEfficiencyMap.observedN
-                    dataInfo.expectedBG = plane.origEfficiencyMap.expectedBG
-                    dataInfo.bgError = plane.origEfficiencyMap.bgError
-                    lumi=eval(self.metaInfo.lumi)
-                    if create_dataInfo:
-                        self.timeStamp ( "computing upper limit for %d/%.1f/%.1f" % ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError ) )
-                        dataInfo.upperLimit = computeLimit ( dataInfo.observedN, dataInfo.expectedBG, dataInfo.bgError, lumi )
-                        dataInfo.expectedUpperLimit = computeLimit ( dataInfo.expectedBG, dataInfo.expectedBG, dataInfo.bgError, lumi )
-                        self.timeStamp ( "done computing upper limit.", "debug" )
-
-                self.timeStamp ( 'Reading mass plane: %s, %s [%s][%s]' % (txName, plane.origPlot, str(plane.obsExclusion.path)[-30:], plane.origEfficiencyMap.dataset ) )
-
-                efficiencyMap = self.extendDataList (efficiencyMap, plane, txName)
-                if len ( efficiencyMap) > 0:
-                    self.timeStamp ( 'extended efficiencyMap of %s to %s entries %s'\
-                                    % ( plane.origEfficiencyMap.dataset, len(efficiencyMap), 
-                                     self.describeMap ( efficiencyMap ) ), "info" )
-                efficiencyMap3D = self.extendDataList\
-                (efficiencyMap3D, plane, txName)
-                self.timeStamp ( 'extended efficiencyMap3D of %s to %s entries %s'\
-                    % ( plane.origEfficiencyMap.dataset, len(efficiencyMap3D), 
-                        self.describeMap ( efficiencyMap3D ) ), "info" )
-                upperLimits = self.extendDataList\
-                (upperLimits, plane, txName, 'limit')
-                if len(upperLimits)>0:
-                    self.timeStamp ( 'extended upperLimits to %s entries %s'\
-                                   % ( len(upperLimits), self.describeMap ( upperLimits ) ),
-                                "info" )
-
-                expectedUpperLimits = self.extendDataList(expectedUpperLimits,\
-                                                              plane, txName, 'expectedlimit')
-                if len(expectedUpperLimits)>0:
-                    self.timeStamp ( 'extended expectedUpperLimits to %s entries %s'\
-                                    % ( len(expectedUpperLimits), 
-                                        self.describeMap ( expectedUpperLimits ) ) )
-                if plane.obsUpperLimit or plane.efficiencyMap or plane.efficiencyMap3D:
-                    if not plane.obsUpperLimit.dataUrl and \
-                    not plane.efficiencyMap.dataUrl and \
-                    not plane.efficiencyMap3D.dataUrl:
-                        publishedData = False
-
-                for region in txName.kinematicRegions:
-                    #if getattr(plane, region.name) == 'auto' \
-                    #or getattr(plane, region.name) == False:
-                    if getattr(plane, region.name) == False:
-                        setattr(plane, region.name, False)
-                    else:
-                        exclusions[getattr(region, self.txNameField)]\
-                        .addMassPlane(plane)
-                        #self.timeStamp ( 'Found region: %s' % ( region.name ) )
-
-                for excl in exclusions:
-                    self.timeStamp ( 'extend exclusionLines for %s to %s entries'\
-                        %(excl.name, len(excl)) )
-
-                self.timeStamp ( 'Now checking mass plane %s' % plane )
-                dataInfo.checkMassPlane(plane)
-                self.tWiki.addMassPlane(txName.name,plane)
-
-            for excl in exclusions:
-                if excl: self.exclusions.append(excl)
-            self._extendInfoAttr(txName, 'publishedData')
-            self._extendInfoAttr(txName, 'upperLimits')
-            self._extendInfoAttr(txName, 'expectedUpperLimits')
-            self._extendInfoAttr(txName, 'efficiencyMap')
-            self._extendInfoAttr(txName, 'efficiencyMap3D')
-            if upperLimits: txName.upperLimits = upperLimits
-            if expectedUpperLimits: txName.expectedUpperLimits =\
-            expectedUpperLimits
-            if efficiencyMap: txName.efficiencyMap = efficiencyMap
-            if efficiencyMap3D: txName.efficiencyMap3D = efficiencyMap3D
-            txName.publishedData = publishedData
-
-            self.timeStamp ( "we have %d kin regions" % 
-                             len (txName.kinematicRegions ) )
-            for region in txName.kinematicRegions:
-                if getattr(txName, region.name):
-                    if not hasattr(region, 'constraint'):
-                        Errors().required(txName.name, region, 'constraint')
-                    if not hasattr(region, 'condition'):
-                        Errors().required(txName.name, region, 'condition')
-                    if not hasattr(region, 'conditionDescription'):
-                        Errors().required(txName.name, region, 'conditionDescription')
-                    # print "dataInfo.dataId",dataInfo.dataId
-                    self._createInfoFile(getattr(region, self.txNameField), region.name, dataInfo.dataId, region, txName )
-                    region.figureUrl=""
-                    region.dataUrl=""
-                    region.axes=""
-        # self.timeStamp ( "after going through txnames" )
-        if create_dataInfo:
-            self._createInfoFile( dataInfo.name, None, dataInfo.dataId, dataInfo)
-        self._createSmsRoot( createAdditional )
-
-        if not createAdditional:
-            self._createTwikiTxt()
-        # self.timeStamp ( "done", "debug" )
-
-
-    def extendDataList(self, dataList, plane, txName, limitType = None):
-
+    def createDatasets(self,datasetList,newDatasets):
         """
-        extend the given data list by the values related to this type of list
-        examples for data lists are ; upperLimits, efficiencyMaps, ....
-        The values held by the given mass plane are extended to the data list
-
-        calls self._computeKinRegions to check the kin, regions
-
-        :param dataList: standardObjects.StandardDataList-object
-        :param plane: inputObjects.MetaInfoInput-object
-        :param vertexChecker: standardObjects.VertexChecker-object
-        :param txName: inputObjects.TxNameInput-object
-        :param limitType: type of the given data list, None for
-        efficiency maps, else: name of the related origData-object
-        :return: data list, extended by the values given by plane
+        Creates a dataset folders for the datasets in datasetList and the
+        correponsing txname and dataInfo files
+        
+        :param datasetList: List of DataSetInput objects
         """
+        
+        for dataset in datasetList:
+            newDatasets.append(self._createDatasetAt(dataset,'./'+dataset._name))
 
-        effMap3d=False
-
-        if limitType:
-            origData = plane.origLimits[limitType]
-        else:
-            origData = plane.origEfficiencyMap
-            if len(plane.origEfficiencyMap)>0 and len(plane.origEfficiencyMap3D)>0:
-               Errors().has2DAnd3DMap(plane)
-            if len(plane.origEfficiencyMap)>0:
-                origData = plane.origEfficiencyMap
-            if len(plane.origEfficiencyMap3D)>0:
-                origData = plane.origEfficiencyMap3D
-                effMap3d=True
-
-        if not origData: return dataList
-
-        if effMap3d:
-            for i,value in enumerate(origData):
-                x = value[0]
-                y = value[1]
-                z = value[2]
-                value = value[3]
-                massArray = plane.origPlot.getParticleMasses(x,y,z)
-                #massArray = [massPoints,massPoints]
-                dataList.append(massArray, value)
-                self._computeKinRegions(massArray, i, plane, txName, limitType )
-            return dataList
-
-        for i,value in enumerate(origData):
-            x = value[0]
-            y = value[1]
-            value = value[2]
-            massArray = plane.origPlot.getParticleMasses(x,y)
-            #massArray = [massPoints,massPoints]
-            # print ( "[databaseCreation] appending %s %s" % ( massArray, value ) )
-            dataList.append(massArray, value)
-            self._computeKinRegions(massArray, i, plane, txName, limitType )
-        return dataList
-
-    def _computeKinRegions(self, massArray, i, plane, txName, limitType ):
+    def _createDatasetAt(self,dataset,datasetFolder):
         """
-        checks to which kin region a mass array belongs
-        A mass array belongs not only to a kin. region, but also to
-        a mass plane. If a single mass array of a mass plane belongs
-        to a specific kin region, the whole mass plane belongs to that
-        region and the regionExist attr. is set to True
-
-        Only if the regionExist attr. is set to 'auto' this automated scan of
-        region is performed, else the predefined settings (True/False)
-        If the region exist (means at least one mass array belongs to it)
-        self._setRegionAttr is called to set the attributes
-        which belong to the region
-
-        :param massArray: list containing two other lists. Each list contains
-        floats, representing the masses of the particles of each branch in GeV
-        :param i: loop-index of outer loop
-        :param plane: inputObjects.MetaInfoInput-objects
-        :param vertexChecker: standardObjects.VertexChecker-object
-        :param txName: inputObjects.TxNameInput-object
-        :param limitType: type of limit (limit, expectedlimit, 
-                          or None for efficiencyMap)
-        :raise kinRegionSetterError: raised if the 'regionExist' is not 
-                                     True, False or 'auto'
+        Creates a dataset folder and the correponsing txname and dataInfo files
+        
+        :param dataset: DataSetInput object
+        :param datasetFolder: Path to the dataset folder
         """
+        
+        #Set current dataset folder (for writing all files below)
+        self.timeStamp ( "reading %s" % dataset, "debug" )            
+        #Create dataInfo.txt file:
+        if dataset.dataType == 'efficiencyMap':
+            if not hasattr(dataset,'upperLimit') or not hasattr(dataset,'expectedUpperLimit'):
+                self.timeStamp("computing upper limits for %s" %str(dataset))
+                dataset.computeStatistics()
+        #Write down dataInfo.txt
+        self._createInfoFile('dataInfo', dataset, datasetFolder)
+        
+        #Consistency checks:
+        if not dataset.checkConsistency():
+            logger.error("Dataset %s failed the consistency checks" %dataset)
+            sys.exit()
 
-        kinRegions = txName.kinematicRegions
-        for region in kinRegions:
-            offShellVertices = self.vertexChecker.getOffShellVertices(massArray)
-            #add_axes = True
-            #if len(offShellVertices)==0 and region.name == "offShell":
-            #    add_axes = False
-            #if len(offShellVertices)>0 and region.name == "onShell":
-            #    add_axes = False
-            tn = str(txName)+region.name+str(plane)
-            if not tn in self.add_axes:
-                self.add_axes[tn]=False
-            if len(offShellVertices)>0 and region.name == "offShell":
-                self.add_axes[tn] = True
-            if len(offShellVertices)==0 and region.name == "onShell":
-                self.add_axes[tn] = True
-            if self.add_axes[tn]:
-                # print "[_computeKinRegions] add_axes for ",txName.name,plane
-                off="off" if region.name == "offShell" else ""
-                adde = "%s%s/exclusion_%s" % (txName.name, off, plane)
-                self.addToSmsRootFile.add ( adde )
-            regionExist = getattr(plane, region.name)
-            if not regionExist == 'auto':
-                if not isinstance(regionExist , bool):
-                    Errors().kinRegionSetter(txName.name, region.name, \
-                    regionPreSet)
-                if regionExist == True and i == 0 and limitType != "expectedlimit":
-                    self._setRegionAttr(txName, region, plane, self.add_axes[tn] )
-                continue
-            if regionExist == 'auto':
-                self._setRegionAttr(txName, region, plane, self.add_axes[tn] )
+        #Loop over txnames in datasets:
+        for txName in dataset._txnameList:
+            if not hasattr(txName, 'constraint'):
+                logger.error('Missing constraint for txname %s' %str(txName))
+                sys.exit()
 
-            if not self.vertexChecker:
-                Errors().notAssigned(txName.name)
-            if region.checkoffShellVertices(offShellVertices) and \
-                       limitType != "expectedlimit":
-                setattr(plane, region.name, True )
-                ## setattr(plane, region.name, 'auto' )
-                self._setRegionAttr(txName, region, plane, self.add_axes[tn] )
+            #(getData has to be called first to define which planes contain data for this txname)
+            txName.getDataFromPlanes(dataType = dataset.dataType)  #Read source files and load data
+            txName.getMetaData()  #Set txname info attributes
+            #Write down txname.txt                
+            if txName.hasData(dataset.dataType): #Do not write empty txnames:
+                self._createTxnameFile(str(txName), txName, datasetFolder)
 
-        kinRegions = txName.kinematicRegions
+        #Remove lambda functions from objects
+        #Required for storing datasets through parallel processing
+        #(issue with pickling lambda functions)
+        for tx in dataset._txnameList:
+            for plane in tx._planes:
+                plane.branches = None 
 
+                
+        return dataset
 
-    def _setRegionAttr(self, txName, region, plane, add_axes ):
-
+    def getExclusionCurves(self):
         """
-        The list infoAttr of inputObjects.KinematicRegion-class
-        is extended by some attributes which will be written
-        to txname.txt
-
-        :param plane: inputObjects.MetaInfoInput-object
-        :param txName: inputObjects.TxNameInput-object
-        :param region: inputObjects.KinematicRegion-object
+        Get all exclusion curves defined. If there are multiple datasets,
+        does not include duplicated exclusion curves.
+        
+        :return: list with exclusion curves (TGraph objects)
         """
-        #self.timeStamp ( "_setRegionAttr %s add_axes=%d" % ( region, add_axes ) )
-
-        self._extendInfoAttr(region, self.txNameField,0)
-        setattr(region, self.txNameField, txName.name + region.topoExtension)
-        self._extendInfoAttr(region, 'validated')
-        region.validated = None
-        if add_axes:
-            self._extendRegionAttr(region, 'axes', str(plane.origPlot))
-            self._extendRegionAttr(region, 'figureUrl', plane.figureUrl)
-            if plane.obsUpperLimit.dataUrl:
-                self._extendRegionAttr(region, 'dataUrl', plane.obsUpperLimit.dataUrl)
-            if plane.efficiencyMap.dataUrl:
-                self._extendRegionAttr(region, 'dataUrl', plane.efficiencyMap.dataUrl)
-            if plane.efficiencyMap3D.dataUrl:
-                self._extendRegionAttr(region, 'dataUrl', plane.efficiencyMap3D.dataUrl)
-
-    def _extendRegionAttr(self, region, name, value):
-        if value in [ None, "" ]: ## we dont add None or empty strings
-            return
-        if hasattr(region, name):
-            previous =getattr (region, name )
-            if previous in [ "", None ]:
-                self._extendInfoAttr(region, name)
-            else:
-                if value in previous:
-                    value = previous
-                else:
-                    # dont duplicate entries
-                    value = previous + ";" + value
-        else:
-            self._extendInfoAttr(region, name)
-        setattr(region, name, value)
-
-
-    def _extendInfoAttr(self, obj, attr, position = None):
-
-        """
-        checks if an attribute is in the list  'infoAttr'
-        of the given object
-        If not: writes the attribute to the list.
-
-        :param obj: any instance of a child-class of preparationHelper.Locker
-        :param attr: name of the attribute as string
-        :position: position were do add the attribute, if None:
-                   add the attr. to the end of the list
-        """
-
-
-        if attr in obj.infoAttr: return
-        if position == None:
-            obj.infoAttr.append(attr)
-            return
-        obj.infoAttr.insert(position, attr)
-
+        import ROOT
+                
+        curves = []
+        allCurves = []
+        #Loop over datasets
+        for dataset in self:
+            #Loop over txnames
+            for txname in dataset._txnameList:
+                for plane in txname._goodPlanes:
+                    for exclusion in plane._exclusionCurves:
+                        if not exclusion:
+                            continue  #Exclusion source has not been defined                        
+                        name = '%s_%s' %(exclusion.name, plane.axes)
+                        label = [txname.txName,exclusion.name,plane.axes]
+                        if label in curves: #Curve already appears in dict
+                            continue
+                        stGraph = ROOT.TGraph()
+                        stGraph.SetName(name)
+                        stGraph.SetTitle(name)
+                        stGraph.name = exclusion.name
+                        stGraph.txname = txname.txName
+                        for i,pointDict in enumerate(exclusion):
+                            point = dict([[str(xv),v] for xv,v in pointDict.items()])
+                            stGraph.SetPoint(i,point['x'],point['y'])
+                        stGraph.SetLineColor(ROOT.kBlack)
+                        if 'expected' in exclusion.name:
+                            stGraph.SetLineColor(ROOT.kRed)
+                        stGraph.SetLineStyle(1)
+                        if 'P1' in exclusion.name or 'M1' in exclusion.name:
+                            stGraph.SetLineStyle(2)
+                        curves.append(label)  #Store curves (to avoid duplicates)
+                        allCurves.append(stGraph)
+                        
+                        
+        return allCurves
 
     def _setLastUpdate(self):
 
@@ -520,10 +304,13 @@ class DatabaseCreator(list):
         When last update is overwritten, self._setImplementedBy is called
         """
 
-        if os.path.isfile(self.base + self.infoFilePath(self.metaInfoFileName)):
+        if os.path.isfile(self.base + 
+                          self.infoFilePath(self.metaInfoFileName,
+                                            self.metaInfoFileDirectory)):
             lastUpdate = False
             implementedBy = False
-            oldInfo = open(self.base + self.infoFilePath(self.metaInfoFileName))
+            oldInfo = open(self.base + self.infoFilePath(self.metaInfoFileName,
+                                                         self.metaInfoFileDirectory))
             lines = oldInfo.readlines()
             oldInfo.close()
             for line in lines:
@@ -545,12 +332,10 @@ class DatabaseCreator(list):
                     if "SMODELS_NOUPDATE" in os.environ.keys():
                         self.timeStamp ( "SMODELS_NOUPDATE is set!", "error" )
                         break
-                    if self.ask_for_name:
-                        answer = None
-                        if sys.version[0]=="3":
-                            answer = input ( m )
-                        else:
-                            answer = raw_input(m)
+                    try: 
+                        answer = raw_input(m)
+                    except NameError as e:
+                        answer = input ( m )
                     if answer == 'y' or answer == 'n': break
                 if answer == 'n':
                     self.metaInfo.lastUpdate = lastUpdate
@@ -558,7 +343,7 @@ class DatabaseCreator(list):
                     else: self.metaInfo.implementedBy = implementedBy
                     return
         today = date.today()
-        today = '%s/%s/%s\n' %(today.year, today.month, today.day)
+        today = '%s/%s/%s' %(today.year, today.month, today.day)
         self.metaInfo.lastUpdate = today
         self._setImplementedBy()
 
@@ -569,27 +354,18 @@ class DatabaseCreator(list):
         from comand line
         """
 
-        while True:
-            answer = 'ww'
-            if self.ask_for_name:
-                answer = raw_input('enter your name or initials: ')
+        while True:        
+            answer = raw_input('enter your name or initials: ')
             if answer: break
         initialDict= { "ww": "Wolfgang Waltenberger",
-            "WW": "Wolfgang Waltenberger",
-            "AL": "Andre Lessa",
             "al": "Andre Lessa",
             "suk": "Suchita Kulkarni",
-            "SuK": "Suchita Kulkarni",
-            "SUK": "Suchita Kulkarni",
             "fa" : "Federico Ambrogi",
-            "ul" : "Ursula Laa",
-            "UL" : "Ursula Laa",
-            "FA" : "Federico Ambrogi" }
-        if answer in initialDict.keys():
-            answer=initialDict[answer]
+            "ul" : "Ursula Laa"}
+        if answer.lower() in initialDict.keys():
+            answer=initialDict[answer.lower()]
 
         self.metaInfo.implementedBy = answer
-
 
     def _delete(self):
 
@@ -597,47 +373,29 @@ class DatabaseCreator(list):
         deletes all old globalInfo.txt, txName.txt, sms.root and twiki.txt files
         """
 
+        #Remove files
         predefinedPaths = [
             self.base + self.smsrootFile,
-            self.base + self.twikitxtPath,
-            self.base + self.infoFilePath(self.metaInfoFileName)
+            self.base + self.infoFilePath(self.metaInfoFileName,
+                                          self.metaInfoFileDirectory)
             ]
+        #Remove dataset folders
+        datasetFolders = [os.path.join(self.base,dataset._name) for dataset in self]
         for path in predefinedPaths:
             if os.path.exists(path): os.remove(path)
-
-        try:
-            for entry in os.listdir(self.base + self.infoFileDirectory):
-                if not entry[-len(self.infoFileExtension):] == self.infoFileExtension:
-                    continue
-                compareLine = '%s%s%s\n' %(self.txNameField,\
-                self.assignmentOperator, entry[:-len(self.infoFileExtension):])
-                f = open( self.base + self.infoFileDirectory + entry,'r')
-                lines = f.readlines()
-                f.close()
-                if not compareLine in lines: continue
-                os.remove( self.base + self.infoFileDirectory + entry)
-        except OSError as e:
-            pass
+        for path in datasetFolders:
+            if os.path.isdir(path):
+                shutil.rmtree(path)
 
         self.timeStamp ( "cleaned up in %s " % self.base )
 
     def _createValidationFolder(self):
-        """ create the validation folder and populate it with validate.py """
-        if not os.path.exists ( self.validationPath ):
-            os.mkdir ( self.validationPath )
-        import inspect
-        path = inspect.getfile ( self._createValidationFolder )
-        self.timeStamp ( "creating validation folder %s" % path )
-        path=path.replace( "smodels_utils/dataPreparation/databaseCreation.py", "validation/scripts" )
-        # scripts = [ "validate.py", "validateSinglePlot.py"]#, "plotValidation.py" ]
-        scripts = [] # for now, no scripts
-        for i in scripts:
-            if not os.path.exists ( "%s/%s" % ( self.validationPath, i ) ):
-                cmd = "cp %s/%s %s" % ( path, i, self.validationPath )
-                print (cmd)
-                print (commands.getoutput ( "cp %s/%s %s" % ( path, i, self.validationPath ) ))
-        ### fixme add a few more, txname specific, only the plotting, etc ###
-
+        """
+        Create empty validation folder
+        """
+        
+        if not os.path.exists(self.validationPath):
+            os.mkdir(self.validationPath)
 
     def _createSmsRoot(self,update=False):
 
@@ -647,140 +405,257 @@ class DatabaseCreator(list):
         mode="recreate"
         if update:
             mode="update"
+        import ROOT
 
         smsRoot = ROOT.TFile(self.base + self.smsrootFile,mode)
-        for exclusions in self.exclusions:
-            dirname = exclusions.name
-            if smsRoot.Get( dirname )==None:
-                directory = smsRoot.mkdir( dirname, dirname )
-            smsRoot.cd ( dirname )
-            for exclusion in exclusions: 
-                fullname = "%s/%s" % ( dirname, exclusion.GetName() )
-                if fullname in self.addToSmsRootFile:
-                    if smsRoot.Get( fullname ) == None:
-                        self.timeStamp ( "add %s to sms.root" % fullname, "info" )
-                        exclusion.Write()
+        for exclusion in self.exclusions:
+            dirname = exclusion.txname
+            if smsRoot.Get(dirname)==None:
+                directory = smsRoot.mkdir(dirname, dirname)
+                if not directory:
+                    logger.error("Error creating root file")
+                    sys.exit()
+            smsRoot.cd(dirname)
+            fullname = "%s/%s" % (dirname, exclusion.GetName())
+            if smsRoot.Get(fullname) == None:
+                self.timeStamp("add %s to sms.root" % fullname, "info")
+                exclusion.Write()
         smsRoot.Close()
 
-    def _createTwikiTxt(self):
+    def _createInfoFile(self, name, obj, folder):
 
         """
-        creates the twiki.txt file
-        """
-        if not os.path.exists ( self.base + self.origPath ):
-            os.mkdir ( self.base + self.origPath )
-
-
-        twikiTxt = open(self.base + self.twikitxtPath,'w')
-        twikiTxt.write('%s' %self.tWiki)
-        twikiTxt.close()
-
-    def _createInfoFile(self, name, kinregname, dataid, *objects):
-
-        """
-        creates a file of type .txt
+        Creates a file of type .txt (globalInfo.txt or dataInfo.txt)
         all attributes defined in the list called 'infoAttr'
         of the given objects are written to this txt file
         :param name: name of the file (without extension)
-        :param *objects: objects containing attributes which will be
+        :param obj: object containing attributes which will be
         written to the file. The object must have a list called
         'infoAttr' to define what attributes should be written
         """
 
         content = ''
-        path=self.infoFilePath(name, dataid)
-        # self.timeStamp ( "we write to %s for %s" % (path, kinregname) )
-        for obj in objects: 
-            # in the case of Txname.txt, obj is a Kinematic region
-            # self.timeStamp ( "we write %s" % obj )
-            add_axes=False
-            for attr in obj.infoAttr:
-                if not attr in [ "upperLimits", "expectedUpperLimits", \
-                                 "efficiencyMap" ]:
-                    continue
-                add_axes=True
+        
+        path = self.infoFilePath(name,folder)
 
-            for attr in obj.infoAttr:
-                ## self.timeStamp ( "attr is %s" % attr )
-                if attr in [ "efficiencyMap3D" ]: continue
-                if not hasattr(obj, attr) and \
-                not hasattr(obj.__class__, attr) : continue
-                value=getattr(obj,attr)
-                if value=="":
-                    continue
-                if attr in [ "upperLimits", "expectedUpperLimits", "efficiencyMap" ]:
-                    ## the next line splits onshell from offshell data points
-                    value = self.vertexChecker.filterData( value, kinregname )
-                content = '%s%s%s%s\n' % ( content, attr,\
-                                           self.assignmentOperator, value )
+        #Check if all required attributes have been defined:
+        for attr in obj.requiredAttr:
+            if not hasattr(obj,attr):
+                logger.error("Attribute %s must be defined for object type %s" %(attr,type(obj)))
+                sys.exit()
 
-                if attr == "dataId":
-                    path = self.infoFilePath ( name, getattr ( obj, attr ) )
+        for attr in obj.infoAttr:
+            if not hasattr(obj, attr) and \
+            not hasattr(obj.__class__, attr) : continue
+            value = getattr(obj,attr)
+            if value=="":
+                continue
+            content = '%s%s%s%s\n' % (content, attr,\
+                                       self.assignmentOperator, value)
+
         infoFile = open(self.base + path, 'w')
         self.timeStamp ( "writing %s" % path )
         infoFile.write(content)
         infoFile.close()
+        
+    def _createTxnameFile(self, name, obj,folder):
 
-    def infoFilePath(self, infoFileName, dataid=None ):
+        """
+        Creates a file of type txname.txt
+        all attributes defined in the list called 'infoAttr'
+        of the given txname obj are written to this txt file.
+        The txname data is formatted before being written to the file.
+        :param name: name of the file (without extension)
+        :param obj: a TxNameInput object containing attributes which will be
+        written to the file. The object must have a list called
+        'infoAttr' to define what attributes should be written
+        """
+    
+        if not hasattr(obj,'_dataLabels'):
+            logger.error('Input obj must be a TxNameInput object')
+    
+        #Get the dataLabels stored in the txname 
+        #(e.g. efficiencyMap, upperLimits, expectedUpperLimits)
+        dataLabels = obj._dataLabels
+        content = ''
+        
+        path = self.infoFilePath(name,folder)
+
+        #Check if all required attributes have been defined:
+        for attr in obj.requiredAttr:
+            if not hasattr(obj,attr):
+                logger.error("Attribute %s must be defined for object type %s: ``%s''" %(attr,type(obj),name))
+                sys.exit()
+
+        for attr in obj.infoAttr:
+            if not hasattr(obj,attr) and not hasattr(obj.__class__,attr):
+                continue
+            value = getattr(obj,attr)
+            if value=="":
+                continue
+            #Leave data for last
+            if attr in dataLabels:
+                continue
+                value = self._formatData(value)            
+            
+            content = '%s%s%s%s\n' % (content, attr,\
+                                       self.assignmentOperator, value)
+        for attr in obj.infoAttr:
+            if not attr in dataLabels:
+                continue
+            if not hasattr(obj,attr) and not hasattr(obj.__class__,attr):
+                continue
+            value = getattr(obj,attr)
+            if value=="":
+                continue
+            value = self._formatData(value,dataType=attr,n=obj.round_to)
+            content = '%s%s%s%s\n' % (content, attr,\
+                                       self.assignmentOperator, value)
+
+
+        infoFile = open(self.base + path, 'w')
+        self.timeStamp ( "writing %s" % path )
+        infoFile.write(content)
+        infoFile.close()
+        
+    def infoFilePath(self, infoFileName,infoFolder):
         """
         :param infoFileName: name of requested file without extension
         :return: path of info-file with given name
         """
+        
+        directory = infoFolder            
 
-        directory = self.infoFileDirectory
-        if dataid: ## if dataid is given, we name the directory according to the dataid
-            directory = dataid + "/"
-        if infoFileName=="globalInfo":
-            directory = self.metaInfoFileDirectory
+        if not os.path.exists(directory):
+            os.mkdir(directory)
 
-        if not os.path.exists ( directory ):
-            os.mkdir ( directory )
-
-        path = '%s%s%s' %(directory, infoFileName, self.infoFileExtension)
-        # print "[infoFilePath]",path
+        path = os.path.join(directory, infoFileName.strip()+self.infoFileExtension.strip())
         return path
+
+    def _formatData(self,value,n=5,dataType=None):
+        """
+        Formats the data grid for nice printing in the txname.txt file
+        
+        :param value: value for the data (in list format)
+        :param n: number of digits to be kept (default = 5)
+        :param dataType: Specifies the type of data (upperLimits, efficiencyMap,...).
+                         Relevant only for removing repeated entries.
+        """
+        
+        if not isinstance(value,list):
+            logger.error("Data for TxNameInput must be in list format")
+            sys.exit()
+        
+        #First round numbers:
+        value = round_list(value,n)
+        
+        #Remove repeated mass entries:
+        value = removeRepeated(value,dataType)
+        
+        #Convert to string:
+        #Make sure unum numbers are printed with sufficient precision
+        Unum.VALUE_FORMAT = "%."+"%iE"%(n-1)  
+        vStr = str(value)
+        #Replace units:
+        vStr = vStr.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
+        vStr = vStr.replace('[fb]','*fb').replace('[pb]','*pb')        
+        #Break lines:
+        vStr = vStr.replace(" ","")
+        vStr = vStr.replace('],[[','],\n[[')
+
+        return vStr
+
+
+def round_list(x, n ):
+    """
+    Rounds all values in x down to n digits.
+    :param x: value (float) or nested list of floats
+    
+    :return: x, with all floats rounded to n digits
+    """
+    
+    if isinstance(x,list):
+        for i,pt in enumerate(x):
+            x[i] = round_list(pt,n)
+        return x
+    else:
+        if isinstance(x,Unum):
+            if not x.asNumber():
+                return x     
+            unit = x/x.asNumber()
+            x = x.asNumber()
+        elif isinstance(x,str):
+            return x            
+        else:
+            if not x:
+                return x
+            unit = 1.
+        
+        return round(x,-int(floor(log10(x))) + (n - 1))*unit
+
+
+def removeRepeated(datalist,dataType=None):
+    """
+    Loops over the data grid and remove points with identical
+    mass values. Issues an warning if points appear repeated
+    and with distinct values (upper limit value or efficiency value).
+    
+    :param datalist:  data grid list (e.g. [[massArray1,ul1],[massArray2,ul2],...]
+    :param dataType: Specifies the type of data (upperLimits, efficiencyMap,...).
+                     For repeated entries in efficiencyMaps, it will use the lowest
+                     value, while for the other cases it will use the highest value.
+                     This way the final grid is always conservative.
+    
+    
+    :return: New list with repeated values removed
+    """
+    
+    rev = True
+    if dataType and dataType == 'efficiencyMap':
+        rev = False 
+    
+    #First sort list (for performance)
+    #Sort first values, so when removing repeated entries the largest (smallest)
+    #values will be used for upper limits (efficiencies).
+    sortedValue = sorted(sorted(datalist, key = lambda pt: pt[1],reverse=rev), key = lambda pt: pt[0])
+    sortedIndices = sorted(sorted(range(len(datalist)), 
+                          key = lambda k: datalist[k][1],reverse=rev),
+                          key = lambda k: datalist[k][0])
+    
+    uniqueEntries = []
+    repeatedEntries = []
+    inconsistentEntries = []
+    for i,pt in enumerate(sortedValue):
+        originalIndex = sortedIndices[i]
+        m = pt[0]        
+        #Check if new mass is different from previous one:
+        if m != sortedValue[i-1][0]:
+            uniqueEntries.append(originalIndex)
+        else:
+            #Check if the values differ:
+            if pt[1] == sortedValue[i-1][1]:                    
+                repeatedEntries.append(originalIndex) #Entries are identical, but repeated
+            else:
+                inconsistentEntries.append(originalIndex) #Masses are identical, but with inconsistent values
+
+    if inconsistentEntries:
+        for j in inconsistentEntries:
+            logger.warning("Mass entry %s appears in data with distinct values"
+                             %(str(datalist[j][0]).replace(" ","")))
+            
+    if repeatedEntries:
+        for j in repeatedEntries:
+            logger.info("Entry %s appears in data repeated (after rounding)"
+                             %(str(datalist[j]).replace(" ","")))
+            
+
+    #Remove repeated entries:                    
+    newList = [pt for i,pt in enumerate(datalist) if i in uniqueEntries]
+
+    return newList
+
+
 
 databaseCreator = DatabaseCreator()
 
-class Errors(object):
 
-    def __init__(self):
-
-        self._starLine = '\n************************************\n'
-
-    def required(self, txName, kinObj, attr):
-
-        m = self._starLine
-        m = m + "there is an %s-region for %s " %(kinObj.name, txName)
-        m = m + "but no %s for this region\n" %attr
-        m = m + "use txName.%s.%s " %(kinObj.topoExtension, attr)
-        m = m + "to set %s" %attr
-        m = m + self._starLine
-        print(m)
-        sys.exit()
-
-    def kinRegionSetter(self, txName, name, value):
-
-        m = self._starLine
-        m = m + "in txName %s'\n" %txName
-        m = m + "setter for propertsy %s must be of bool type or 'auto'\n"\
-        %(name)
-        m = m + 'got: %s' %value
-        m = m + self._starLine
-        print(m)
-        sys.exit()
-
-    def has2DAnd3DMap(self, plane):
-        m= self._starLine
-        m = m + '%s has 2d and 3d plane' % ( plane )
-        print(m)
-        sys.exit()
-
-    def missingOnConstraint(self, txName):
-        m = self._starLine#
-        m = m + "in txName %s: on.constraint not set\n" %txName
-        m = m + "onShell constraint has to be set for automated splitting\n"
-        m = m + 'please use: %s.on.constraint =' %txName
-        m = m + self._starLine
-        print(m)
-        sys.exit()

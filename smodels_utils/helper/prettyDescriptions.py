@@ -9,12 +9,14 @@
 
 
 '''
-import logging,os,sys
-from smodels_utils.dataPreparation.origPlotObjects import Axes
+import logging
+from sympy import var
+#For evaluating axes expressions in prettyAxes:
+x,y,z = var('x y z')
 
 # pretty name of particle:
 
-prettyParticle = {
+prettySMParticle = {
 	'graviton':'G',         #graviton
 	'photon': '#gamma',             #photon
 	'gluon':'g',                    #gluon
@@ -42,7 +44,9 @@ prettyParticle = {
 	'electron-neutrino' : '#nu_{e}',               #electron-neutrino
 	'muon-neutrino' : '#nu_{#mu}',            #muon-neutrino
 	'tau-neutrino' : '#nu_{#tau}',          #tau-neutrino
+}
 
+prettySUSYParticle = {
     'lsp' : '#tilde{#chi}^{0}_{1}',  # lightesd SUSY particle
     'neutralino' : '#tilde{#chi}^{0}',      #neutralino
     'chargino' : '#tilde{#chi}',            #Chargino
@@ -69,6 +73,9 @@ prettyParticle = {
     'tau-sneutrino' : '#tilde{#nu}_{#tau}', #tau-sneutrino
    
 }
+
+prettyParticle = prettySMParticle.copy()
+prettyParticle.update(prettySUSYParticle)
 
 highstrings = {
     '^0' : '^{0}',
@@ -107,6 +114,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T2cc':'stop  --> charm lsp ',
     'T2tt': 'stop  --> top lsp ', 
     'T2ttoff': 'stop  --> top^* lsp ', 
+    'T5':'gluino  --> quark squark, squark --> quark lsp',
     'T5WW':'gluino  --> quark antiquark chargino^pm_1, chargino^pm_1 --> W lsp',
     'T5WWoff':'gluino  --> quark antiquark chargino^pm_1, chargino^pm_1 --> W^* lsp',
     'T5ZZ':'gluino  --> quark antiquark neutralino_2, neutralino_2 --> Z lsp',
@@ -117,12 +125,15 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T5tbtb':'gluino --> top stop, stop --> bottom lsp',
     'T5tbtt':'gluino gluino --> top stop top stop, stop --> bottom lsp, stop --> top lsp',
     'T5tctc':'gluino --> top stop, stop --> charm lsp',
+    'T5tctcoff':'gluino --> top^* stop, stop --> charm lsp',    
     'T5tttt':'gluino  --> antitop stop, stop --> top lsp',
     'T5ttttoff':'gluino  --> antitop^* stop, stop --> top^* lsp',
+    'T5ttofftt':'gluino --> antitop^* stop, stop -> top lsp',
     'T6WW': 'squark  --> quark chargino^pm_1, chargino^pm_1 --> W lsp',
     'T6WWoff': 'squark  --> quark chargino^pm_1, chargino^pm_1 --> W^* lsp',
     'T6ZZtt': 'stop_2  --> Z stop_1, stop_1 --> top lsp',
     'T6bbWW':'stop  --> bottom chargino_1^pm, chargino_1^pm --> W lsp',
+    'T6bbHH':'sbottom  --> bottom neutralino_2, neutralino_2 --> h lsp',
     'T6bbWWoff':'stop  --> bottom chargino_1^pm, chargino_1^pm --> W^* lsp',
     'T6ttWW':'sbottom  --> top chargino_1^pm, chargino_1^pm --> W lsp',
     'T6ttWWoff':'sbottom  --> top chargino_1^pm, chargino_1^pm --> W^* lsp',
@@ -133,6 +144,8 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tau stau neutrino stau, stau --> tau lsp',
     'TChiWH':'neutralino_2 chargino^pm_1 --> H W lsp lsp ',
     'TChiWW':'chargino^pm_1 --> W lsp lsp ',
+    'TChiZZ':'neutralino_2 --> Z lsp lsp ',
+    'TChiWWoff':'chargino^pm_1 --> W^* lsp lsp ',
     'TChiWZ':'neutralino_2 chargino^pm_1 --> Z W lsp lsp ',
     'TChiWZoff':'neutralino_2 chargino^pm_1 --> Z^* W^* lsp lsp ',
     'TChipChimSlepSnu':'chargino^pm_1 --> neutrino slepton ( lepton sneutrino ), slepton --> lepton lsp, sneutrino --> neutrino lsp ',
@@ -142,7 +155,12 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TGQbtq':'gluino gluino --> bottom top gluon lsp lsp ',
     'TGQqtt':'gluino gluino --> gluon top antitop lsp lsp ',
     'TScharm':'scharm  --> charm lsp ',
-    'TSlepSlep':'slepton  --> lepton lsp '    
+    'TSlepSlep':'slepton  --> lepton lsp ',
+    'THSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 'THSCPM3' : 'squark --> quark chargino_1', 'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau_1', 
+    'THSCPM7' : 'lsp chargino^pm_2 --> tau stau_1 chargino^pm_1, chargino^pm_1 --> nu stau_1',
+    'THSCPM8' : 'squark --> quark quark stau_1', 'THSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp',
+    'THSCPM4' : 'squark --> quark chargino_1 (quark lsp)',
+    'THSCPM6' : 'squark squark --> quark quark lsp lsp, lsp --> tau tau_1'
 }
 
 #Name of mother particles
@@ -169,19 +187,23 @@ motherDict = {"T1" :  "gluino",
     "T5WW" :  "gluino", 
     "T5WWoff" :  "gluino", 
     "T5ZZ" :  "gluino", 
+    "T5" :  "gluino", 
     "T5ZZoff" :  "gluino", 
     "T5bbbb" :  "gluino", 
     "T5bbbt" :  "gluino", 
     "T5btbt" :  "gluino", 
     "T5tbtb" :  "gluino", 
     "T5tbtt" :  "gluino", 
-    "T5tctc" :  "gluino", 
+    "T5tctc" :  "gluino",
+    "T5tctcoff" :  "gluino",      
     "T5tttt" :  "gluino", 
     "T5ttttoff" :  "gluino", 
+    "T5ttofftt" : "gluino",
     "T6WW" :  "squark", 
     "T6WWoff" :  "squark", 
     "T6ZZtt" :  "stop_2", 
-    "T6bbWW" :  "stop", 
+    "T6bbWW" :  "stop",
+    "T6bbHH" :  "sbottom",      
     "T6bbWWoff" :  "stop", 
     "T6ttWW" :  "sbottom", 
     "T6ttWWoff" :  "sbottom", 
@@ -191,8 +213,10 @@ motherDict = {"T1" :  "gluino",
     "TChiChipmStauL" :  "neutralino_2 chargino^pm_1", 
     "TChiChipmStauStau" :  "neutralino_2 chargino^pm_1", 
     "TChiWH" :  "neutralino_2 chargino^pm_1", 
-    "TChiWW" :  "chargino^pm_1 chargino^pm_1", 
+    "TChiWW" :  "chargino^+_1 chargino^-_1",
+    "TChiWWoff" :  "chargino^+_1 chargino^-_1", 
     "TChiWZ" :  "neutralino_2 chargino^pm_1", 
+    "TChiZZ" :  "neutralino_2",
     "TChiWZoff" :  "neutralino_2 chargino^pm_1", 
     "TChipChimSlepSnu" :   "chargino^pm_1 chargino^pm_1", 
     "TChipChimStauSnu" :  "chargino^pm_1 chargino^pm_1", 
@@ -201,7 +225,15 @@ motherDict = {"T1" :  "gluino",
     "TGQbtq" :  "gluino", 
     "TGQqtt" :  "gluino", 
     "TScharm" :  "scharm",
-    "TSlepSlep" : "slepton"
+    "TSlepSlep" : "slepton",
+    "THSCPM1" : "chargino^pm_1",
+    "THSCPM3" : "squark",
+    "THSCPM5" : "squark",
+    "THSCPM7" : "lsp chargino^pm_2",
+    "THSCPM8" : "squark",
+    "THSCPM2" : "lsp chargino^pm_1",
+    "THSCPM4" : "squark",
+    "THSCPM6" : "squark"
 }
 
 
@@ -271,14 +303,40 @@ def getIntermediates(txname):
 
     return inter
 
+def getDaughters(txname):
+    """
+    Returns the SUSY daughter particle(s) for the txname.
+    
+    :param txname: txname string (e.g. 'T1')
+    
+    :return: list of daughter particles in standard format (e.g. ['lsp', 'chargino^pm_1'])
+    """
+    
+    #Get the decays
+    decays = decayDict[txname].split(',')
+    #Find the subsequent decays:
+    moms = [d.split('-->')[0].strip() for d in decays]
+    daughters = set()
+    for d in decays:
+        for ptc in  d.split('-->')[1].split():
+            if not ptc in prettySUSYParticle:
+                continue
+            if ptc in moms:
+                continue       
+            daughters.add(ptc)
 
-def prettyProduction(txname):
+    return list(daughters)
+
+
+def prettyProduction(txname,latex=True):
     """
     Converts the txname string to the corresponding SUSY production process
     in latex form (using ROOT conventions)
     :param: txname (string) (e.g. 'T1')
+    :param latex: If True it will return the latex version, otherwise
+                 it will return a more human readable string
     
-    :return: latex string (e.g. p p #rightarrow #tilde{g} #tilde{g})
+    :return: string or latex string (e.g. p p #rightarrow #tilde{g} #tilde{g})
     """    
     if not txname in motherDict:
         logging.error("Txname %s not found in motherDict" %txname)
@@ -295,40 +353,52 @@ def prettyProduction(txname):
         return None
     
     prodString = "pp --> "+prodString
-    prodString = latexfy(prodString)
+    if latex:
+        prodString = latexfy(prodString)
     return prodString.lstrip().rstrip()
 
-def prettyDecay(txname):
+def prettyDecay(txname,latex=True):
     """
     Converts the txname string to the corresponding SUSY decay process
     in latex form (using ROOT conventions)
     :param: txname (string) (e.g. 'T1')
+    :param latex: If True it will return the latex version, otherwise
+                 it will return a more human readable string
     
-    :return: latex string (e.g. #tilde{g} #rightarrow q q #tilde{#chi}_{1}^{0})
+    
+    :return: string or latex string (e.g. #tilde{g} #rightarrow q q #tilde{#chi}_{1}^{0})
     """
     
     if not txname in decayDict:
         logging.error("Txname %s not found in decayDict" %txname)
         return None
-    decayString = latexfy(decayDict[txname])
+    decayString = decayDict[txname]
+    if latex:
+        decayString = latexfy(decayString)
     return decayString.lstrip().rstrip()
 
     
-def prettyTxname(txname):
+def prettyTxname(txname,latex=True):
     """
     Converts the txname string to the corresponding SUSY desctiption
     in latex form (using ROOT conventions)
     :param: txname (string) (e.g. 'T1')
+    :param latex: If True it will return the latex version, otherwise
+                 it will return a more human readable string
     
-    :return: latex string 
+    
+    :return: string or latex string 
              (e.g. pp #rightarrow #tilde{g} #tilde{g}, 
              #tilde{g} #rightarrow q q #tilde{#chi}_{1}^{0})
     """
 
-    prodString = prettyProduction(txname)
-    decayString = prettyDecay(txname)
+    prodString = prettyProduction(txname,latex)
+    decayString = prettyDecay(txname,latex)
     
-    return prodString + ", " + decayString
+    if prodString and decayString:    
+        return prodString + ", " + decayString
+    else:
+        return None
 
 def prettyAxes(txname,axes):
     """
@@ -343,24 +413,22 @@ def prettyAxes(txname,axes):
     """
     
     #Build axes object (depending on symmetric or asymmetric branches:
-    if axes[:2] == '2*':
-        ax = Axes.fromString(axes[2:])
-    elif ')+Eq(' in axes:
-        niceAxes = None
-        if txname == 'TGQ':
-            niceAxes = ['m_{#tilde{g}} = x, m_{#tilde{q}} = 0.96*x',
-                        'm_{#tilde{#chi}_{1}^{0}} = y']
-        elif txname == 'TChiChiSlepSlep':
-            niceAxes = ['m_{#tilde{#chi}_{3}^{0} = x+80.0, m_{#tilde{#chi}_{2}^{0} = x+75.0',
-                        'm_{#tilde{#l}} = x-y+80.0',
-                        'm_{#tilde{#chi}_{1}^{0}} = x']
-        else:
-            logging.error('Asymmetric branches are not yet automatized.')            
-#         axList = [Axes.fromString(axes.split(')+Eq(')[0] + ')')]
-#         axList.append(Axes.fromString('Eq(' + axes.split(')+Eq(')[1]))        
-        return niceAxes
-    else:
-        logging.error("Unknown axes format: %s" %axes)
+    axes = eval(axes)
+    if txname == 'TGQ':
+        return ['m_{#tilde{g}} = x, m_{#tilde{q}} = 0.96*x',
+                    'm_{#tilde{#chi}_{1}^{0}} = y']
+    elif txname == 'TChiChiSlepSlep':
+        return ['m_{#tilde{#chi}_{3}^{0} = x+80.0, m_{#tilde{#chi}_{2}^{0} = x+75.0',
+                    'm_{#tilde{#l}} = x-y+80.0',
+                    'm_{#tilde{#chi}_{1}^{0}} = x']
+    elif axes[0] != axes[1]:
+        logging.error('Asymmetric branches are not yet automatized.')
+        return None
+        
+    ax = axes[0]
+    if len(ax) > 3:
+        logging.error("Nice axes with more than one \
+        intermetiate particle is not available.")
         return None
 
     #Get mother particles:
@@ -374,16 +442,23 @@ def prettyAxes(txname,axes):
     interList = ['m_{'+latexfy(inter)+'}' for inter in interList]
     interStr = str(interList).replace(']','').replace('[','')
     #Daugther particles are always trivial:
-    lspList = ['m_{'+latexfy('lsp')+'}']
-    lspStr = str(lspList).replace(']','').replace('[','')
+    daughterList = list(set(getDaughters(txname)))
+    #Convert to latex for mass:
+    daughterList = ['m_{'+latexfy(daughter)+'}' for daughter in daughterList]
+    daughterStr = str(daughterList).replace(']','').replace('[','')
 
-    niceAxes = []
-    for eq in ax._equations:
-        axStr = str(eq).replace('mother',motherStr)
-        axStr = axStr.replace('==','=')
-        axStr = axStr.replace('lsp',lspStr)
-        axStr = axStr.replace('inter0',interStr)
-        niceAxes.append(str(axStr).replace("'",""))
+    #Define mass strings for each axes format:
+    if len(ax) == 1:
+        massStrings = [motherStr]
+    elif len(ax) == 2:
+        massStrings = [motherStr,daughterStr]
+    else:
+        massStrings = [motherStr,interStr,daughterStr]
+
+    niceAxes = []    
+    for i,eq in enumerate(ax):
+        axStr = massStrings[i].strip()+'='+str(eq)
+        niceAxes.append(axStr.replace("'",""))
     
     return niceAxes
         

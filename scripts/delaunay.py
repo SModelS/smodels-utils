@@ -7,21 +7,18 @@ from matplotlib import rc
 import matplotlib.pyplot as plt
 from smodels.tools.physicsUnits import GeV, pb
 
-anaid = "CMS-PAS-SUS-15-002"
+anaid = "CMS-SUS-PAS-15-002"
 topo = "T1ttttoff"
-#anaid = "ATLAS-SUSY-2013-23"
-#topo = "TChiWH"
+anaid = "ATLAS-SUSY-2013-23"
+topo = "TChiWH"
 #anaid = "CMS-SUS-13-013"
 #topo = "T6ttWW"
 
 def getData():
     from smodels.experiment.databaseObj import Database
-    from smodels.experiment.txnameObj import TxNameData
-    TxNameData._keep_values = True
     home=os.environ["HOME"]
-    db = "%s/git/smodels/test/tinydb/" % home
-    db = "%s/git/smodels/test/database/" % home
-    d=Database ( db, progressbar=True )
+    db = "./tinydb/"
+    d=Database ( db )
     results = d.getExpResults ( analysisIDs=[ anaid ] )
     res=results[0]
     ds=res.datasets[0]

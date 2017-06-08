@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 import bibtexparser
 
 def findCollaboration ( entry ):
@@ -19,28 +21,32 @@ def findCollaboration ( entry ):
     return collaboration
 
 def create ( entries, experiment ):
-    ret = "% This is latex code to cite all of "+experiment+" results\n"
-    ret+= "% \cite{"
+    filtered = []
     for entry in entries:
-        ID = entry["ID"]
         collaboration = findCollaboration ( entry )
         if not experiment == collaboration:
             continue
+        filtered.append ( entry )
+    ret = "% Use this LaTeX code to cite all " + str(len(filtered)) + " non-superseded "+experiment+" results:\n"
+    ret+= "% \cite{"
+    for entry in filtered:
+        ID = entry["ID"]
         ret += "%s, " % ID
     ret = ret[:-2]+"}"
     return ret
 
 def main ():
     f=open("database.bib")
-    f=open("database.bib")
+    print ( "\ndatabase.bib:" )
     bibtex=bibtexparser.load ( f )
     f.close()
-    print create ( bibtex.entries, "CMS" )
-    print create ( bibtex.entries, "ATLAS" )
-    f=open("references-fastlim.bib")
-    bibtex=bibtexparser.load ( f )
-    f.close()
-    print create ( bibtex.entries, "CMS" )
-    print create ( bibtex.entries, "ATLAS" )
+    print ( create ( bibtex.entries, "CMS" ) )
+    print ( create ( bibtex.entries, "ATLAS" ) )
+    #print ( "\nreferences-fastlim.bib:" )
+    #f=open("references-fastlim.bib")
+    #bibtex=bibtexparser.load ( f )
+    #f.close()
+    # print ( create ( bibtex.entries, "CMS" ) )
+    #print ( create ( bibtex.entries, "ATLAS" ) )
 
 main()

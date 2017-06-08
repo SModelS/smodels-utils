@@ -20,8 +20,8 @@ import tempfile
 import pyslha as modpyslha
 from smodels.theory import slhaDecomposer
 from smodels.tools.physicsUnits import fb, GeV, TeV
-from smodels.tools.xsecComputer import computeXSec,addXSecToFile
-from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
+from smodels.tools.xsecComputer import XSecComputer, LO, NLL
+from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from validation.pythiaCardGen import getPythiaCardFor
 
 class TemplateFile(object):
@@ -66,7 +66,7 @@ class TemplateFile(object):
         if self.motherPDGs:
             self.pythiaCard = getPythiaCardFor(self.motherPDGs)
         #Define original plot
-        self.origPlot = OrigPlot.fromString(self.axes)
+        self.massPlane = MassPlane.fromString(None,self.axes)
         
 
     def createFileFor(self,x,y,z=None,slhaname=None,computeXsecs=False, massesInFileName = False):
@@ -83,7 +83,7 @@ class TemplateFile(object):
         :return: SLHA file name if file has been successfully generated, False otherwise.
         """
 
-        masses = self.origPlot.getParticleMasses(x, y, z)
+        masses = self.massPlane.getParticleMasses(x=x, y=y, z=z)
         massDict = {}
         for ibr,br in enumerate(masses):
             if ibr == 0: massTag = 'M'
@@ -125,16 +125,17 @@ class TemplateFile(object):
         #Compute cross-sections
         if computeXsecs:
             if self.pythiaCard:
-                xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=1000, slhafile=slhaname,
-                                    pythiacard=self.pythiaCard)
-                addXSecToFile(xsecs,slhaname,comment="1k events (unit = pb)")         
-            xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=slhaname)
-            addXSecToFile(xsecs,slhaname,comment="10k events (unit = pb)")
-            xsecs = computeXSec(sqrts=8.*TeV, maxOrder=2, nevts=10000, slhafile=slhaname,
-                                loFromSlha=True)
-            addXSecToFile(xsecs,slhaname,comment="(unit = pb)")
-            
+                computerLO = XSecComputer(LO, 1000, 6)
+                xsecsLO = computerLO.compute(8*TeV, slhaname,pythiacard=self.pythiaCard)
+                computerLO.addXSecToFile(xsecsLO,slhaname,comment="1k events (unit = pb)")         
+                computerNLL = XSecComputer(NLL, 1000, 6)
+                xsecsNLL = computerNLL.compute(8*TeV, slhaname,loFromSlha=True,
+                                               pythiacard=self.pythiaCard)
+                computerNLL.addXSecToFile(xsecsNLL,slhaname,comment="(unit = pb)")         
+
+                    
         logger.info("File %s created." %slhaname)
+
         return slhaname
     
     def createFilesFor(self,pts,addXsecs=False, massesInFileName=False):
@@ -146,31 +147,23 @@ class TemplateFile(object):
         :return: list of SLHA file names generated.
         """
 
-        #First add the value of the mother masses for each (x,y) point:
-        mpts = []
+        slhafiles = []        
         for x,y in pts:
-            mother1 = self.origPlot.getParticleMasses(x,y)[0][0]
-            mother2 = self.origPlot.getParticleMasses(x,y)[1][0]
-            mpts.append([[mother1,mother2],x,y])
-        #Sort list of point by mother masses (to speed up xsec calculation):
-        sorted_pts = sorted(mpts, key=lambda pt: pt[0])        
-        slhafiles = []
-        for pt in sorted_pts:
-            x,y = pt[1],pt[2]
-            slhafile = self.createFileFor(x,y,massesInFileName=massesInFileName )
-            if slhafile: slhafiles.append(slhafile)
-            else: continue
-            if not addXsecs: continue
-            #Compute cross-sections every time the x-value changes
+            slhafile = self.createFileFor(x,y,massesInFileName=massesInFileName)
+            if slhafile:
+                slhafiles.append(slhafile)
+            else:
+                continue
+            if not addXsecs:
+                continue
             if self.pythiaCard:
-                xsecsProc = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=1000, slhafile=slhafile,
-                                    pythiacard=self.pythiaCard)
-                addXSecToFile(xsecsProc,slhafile,comment="1k events (unit = pb)")         
-            xsecsLO = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=slhafile)
-            addXSecToFile(xsecsLO,slhafile,comment="10k events (unit = pb)")
-            xsecsNLL = computeXSec(sqrts=8.*TeV, maxOrder=2, nevts=10000, slhafile=slhafile,
-                                   loFromSlha=True)
-            addXSecToFile(xsecsNLL,slhafile,comment="(unit = pb)")
+                computerLO = XSecComputer(LO, 1000, 6)
+                xsecsLO = computerLO.compute(8*TeV, slhafile,pythiacard=self.pythiaCard)
+                computerLO.addXSecToFile(xsecsLO,slhafile,comment="1k events (unit = pb)")         
+                computerNLL = XSecComputer(NLL, 1000, 6)
+                xsecsNLL = computerNLL.compute(8*TeV, slhafile,loFromSlha=True,
+                                               pythiacard=self.pythiaCard)
+                computerNLL.addXSecToFile(xsecsNLL,slhafile,comment="(unit = pb)")         
             #If the x-value did not change, simply add the previously computed xsecs to file
 
         return slhafiles
@@ -187,7 +180,7 @@ class TemplateFile(object):
         """
         
         
-        inmasses = self.origPlot.getParticleMasses(x, y, z)
+        inmasses = self.massPlane.getParticleMasses(x=x, y=y, z=z)
         #Add units:
         inmasses = [[m*GeV for m in br] for br in inmasses]
                 
@@ -197,14 +190,13 @@ class TemplateFile(object):
         #Add cross-sections to file running only mother pair production:
         #(to guarantee the mother cross-section value is reliable)
         if self.pythiaCard:        
-            xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=1000, slhafile=tempSLHA,
-                                pythiacard=self.pythiaCard)
-            addXSecToFile(xsecs,tempSLHA)
-        #Now add cross-sections to file running all MSSM processes:
-        #(to avoid too trivial results from the decomposition)
-        xsecs = computeXSec(sqrts=8.*TeV, maxOrder=0, nevts=10000, slhafile=tempSLHA)
-        addXSecToFile(xsecs,tempSLHA)
-        
+            computerLO = XSecComputer(LO, 1000, 6)
+            xsecsLO = computerLO.compute(8*TeV, tempSLHA,pythiacard=self.pythiaCard)
+            computerLO.addXSecToFile(xsecsLO,tempSLHA,comment="1k events (unit = pb)")         
+            computerNLL = XSecComputer(NLL, 1000, 6)
+            xsecsNLL = computerNLL.compute(8*TeV, tempSLHA,loFromSlha=True,
+                                           pythiacard=self.pythiaCard)
+            computerNLL.addXSecToFile(xsecsNLL,tempSLHA,comment="(unit = pb)")        
         #Run decomposition on the file:
         sigmacut = 0.*fb
         mingap = 2.*GeV

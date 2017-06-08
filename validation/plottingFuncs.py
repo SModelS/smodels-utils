@@ -17,7 +17,7 @@ from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,
                   TPolyLine3D,Double,TColor,gStyle,TH2D,TImage)
 from smodels.tools.physicsUnits import fb, GeV, pb
-from smodels_utils.dataPreparation.origPlotObjects import OrigPlot
+from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 
 #Set nice ROOT color palette for temperature plots:
@@ -73,8 +73,9 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):
         txnames[tx] = []
         for obj in txDir.GetListOfKeys():
             objName = obj.ReadObj().GetName()
-            if not 'exclusion' in objName: continue
-            if (not get_all) and (not 'exclusion_' in objName): continue
+            if not 'exclusion' in objName.lower(): continue
+            if (not get_all) and (not 'exclusion_' in objName.lower()): continue
+            if 'expexclusion' in objName.lower(): continue
             # print "[plottingFuncs.py] name=",objName
             if axes and not axes in objName: continue
             txnames[tx].append(obj.ReadObj())
@@ -187,7 +188,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
         base.Add(official, "L")
     title = what+"_"+validationPlot.expRes.getValuesFor('id')[0] + "_" \
             + validationPlot.txName\
-            + "_" + validationPlot.axes
+            + "_" + validationPlot.niceAxes
     figureUrl = getFigureUrl(validationPlot)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
     base.Draw("AP")
@@ -249,7 +250,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
         if what == "upperlimits": ## FIXME this doesnt work anymore
             olk=ROOT.TLatex ()
             olk.SetTextSize(.02)
-            origPlot = OrigPlot.fromString(validationPlot.axes)
+            massPlane = MassPlane.fromString(validationPlot.axes)
             txnameObjs = validationPlot.expRes.getTxnameWith({'txName': validationPlot.txName})
             for txnameObj in txnameObjs:
                 #print "txnameObj=",txnameObj,type(txnameObj),txnameObj.txName
@@ -260,7 +261,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
                 for (itr, (mass,ul)) in enumerate(txnameData ):
                     if itr% nthpoint != 0: continue
                     mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]            
-                    v=origPlot.getXYValues(mass_unitless)
+                    v=massPlane.getXYValues(mass_unitless)
                     if not v: continue
                     x,y = v
                     ul = ul.asNumber(pb)
@@ -294,7 +295,8 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
 
     plane.base = base
 
-    if not silentMode: ans = raw_input("Hit any key to close\n")
+    if not silentMode:
+        ans = raw_input("Hit any key to close\n")
 
     plane.labels=labels
     
@@ -377,7 +379,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             base.Add( i, "L")
     title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
             + validationPlot.txName\
-            + "_" + validationPlot.axes
+            + "_" + validationPlot.niceAxes
     subtitle = "datasetIds: "
     for dataset in validationPlot.expRes.datasets:
         ds_txnames = map ( str, dataset.txnameList )
@@ -413,7 +415,8 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor)
     base.l2=l2
 
-    if not silentMode: ans = raw_input("Hit any key to close\n")
+    if not silentMode:
+        ans = raw_input("Hit any key to close\n")
     
     return plane,base
 
@@ -606,7 +609,8 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     tgr.leg = leg
     plane.Update()  
 
-    if not silentMode: ans = raw_input("Hit any key to close\n")
+    if not silentMode:
+        ans = raw_input("Hit any key to close\n")
     
     return plane,tgr
 
@@ -681,7 +685,7 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
     base = grTemp
     title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
             + validationPlot.txName\
-            + "_" + validationPlot.axes
+            + "_" + validationPlot.niceAxes
     figureUrl = getFigureUrl(validationPlot)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
     plane.SetRightMargin(0.16)
@@ -715,7 +719,8 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
     plane.base = base
     plane.official = official
 
-    if not silentMode: ans = raw_input("Hit any key to close\n")
+    if not silentMode:
+        ans = raw_input("Hit any key to close\n")
     plane.Print("test.png")
     
     return plane

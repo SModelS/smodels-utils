@@ -16,7 +16,9 @@ import sys
 from short_descriptions import SDs
 from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
-setLogLevel("debug")
+from smodels.tools.physicsUnits import TeV
+
+# setLogLevel("debug")
     
 def yesno ( B ):
     if B in [ True, "True" ]: return "Yes"
@@ -24,30 +26,46 @@ def yesno ( B ):
     return "?"
 
 def header( f, version, superseded ):
-    add="."
+    dotlessv = version.replace(".","")
     titleplus = ""
-    referToOther = "Link to list of results [[ListOfAnalysesWithSuperseded|including superseded results]]"
+    # titleplus = version
+    referToOther = "Link to list of results [[ListOfAnalysesv%sWithSuperseded|including superseded results]]" % dotlessv
     if superseded:
-        referToOther = "Link to list of results [[ListOfAnalyses|without superseded results]]"
+        referToOther = "Link to list of results [[ListOfAnalysesv%s|without superseded results]]" % dotlessv
         add=",including superseded results."
-        titleplus = " (including superseded results)"
+        titleplus = "(including superseded results)"
     f.write ( 
 # """#acl +DeveloperGroup:read,write,revert -All:write,read Default 
-# <<LockedPage()>>
 """#acl +DeveloperGroup:read,write,revert -All:write +All:read Default 
+<<LockedPage()>>
 
-= List Of Analyses %s =
-List of analyses and topologies in the SMS results database of v1.1%s
+= List Of Analyses %s %s =
+List of analyses and topologies in the SMS results database.
 The list has been created from the database version `%s`.
 There is also an SmsDictionary.
 %s
+""" % ( version, titleplus, version, referToOther ) )
 
-Individual tables: [[#CMSupperLimit|CMS upper limits]], [[#CMSefficiencyMap|CMS efficiency maps]], [[#ATLASupperLimit|ATLAS upper limits]], [[#ATLASefficiencyMap|ATLAS efficiency maps]]
-
-""" % ( titleplus, add, version, referToOther ) )
+def listTables ( f, anas ):
+    f.write ( "== Individual tables ==\n" )
+    for sqrts in [ 13, 8 ]:
+        run = 1
+        if sqrts == 13: run = 2
+        f.write ( "\n=== Run %d - %d TeV ===\n" % ( run, sqrts ) )
+        for exp in [ "ATLAS", "CMS" ]:
+            for tpe in [ "upper limits", "efficiency maps" ]:
+                stpe = tpe.replace(" ", "" )
+                a = selectAnalyses ( anas, sqrts, exp, tpe )
+                nres = 0
+                for A in a:
+                    nres+= len ( A.getTxNames() )
+                if len(a) == 0: continue
+                f.write ( " * [[#%s%s%d|%s %s]]: %d analyses, %d results\n" % \
+                          ( exp, stpe, sqrts, exp, tpe, len(a), nres ) )
 
 def fields ( superseded ):
-    fields = [ "ID", "short description", "&radic;s", "L", "Tx names" ]
+    fields = [ "ID", "short description", "L [1/fb]", "Tx names" ]
+    # fields = [ "ID", "short description", "&radic;s", "L", "Tx names" ]
     if superseded:
         fields.append ( "superseded by" )
     return fields
@@ -58,13 +76,15 @@ def xsel( filename ):
     os.system ( cmd )
     print ( cmd )
 
-def experimentHeader ( f, experiment, Type, nr, superseded ):
+def experimentHeader ( f, experiment, Type, sqrts, nr, superseded ):
     f.write ( "\n" )
     stype = "efficiency maps"
     if Type == "upperLimit": 
         stype = "upper limits"
-    f.write ( "== %s, %s (%d analyses) ==\n" % (experiment,stype,nr ) )
-    f.write ( "<<Anchor(%s%s)>>\n" % (experiment, Type ) )
+    f.write ( "== %s, %s, %d TeV (%d analyses) ==\n" % \
+              (experiment,stype,sqrts,nr ) )
+    f.write ( "<<Anchor(%s%s%d)>>\n" % \
+              (experiment, stype.replace(" ",""), sqrts) )
     for i in fields ( superseded ):
         f.write ( "||<#EEEEEE:> '''%s'''" % i )
     f.write ( "||\n" )
@@ -83,17 +103,23 @@ def emptyLine( f, superseded, ana_name ):
     f.write ( " ||"*( len(fields(superseded) ) ) )
     f.write ( "\n" )
 
-def writeOneTable ( f, db, experiment, Type, anas, superseded ):
-    experimentHeader ( f, experiment, Type, len(anas), superseded )
-
+def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded ):
     keys, anadict = [], {}
     for ana in anas:
+        id = ana.globalInfo.id
+        xsqrts = int ( ana.globalInfo.sqrts.asNumber ( TeV ) )
+        # print ( "sqrts,xsqrts=", sqrts, xsqrts )
+        if xsqrts != sqrts:
+            continue
         id = ana.globalInfo.id
         if not experiment in id:
             continue
         keys.append ( id )
         anadict[id] = ana
     keys = list ( set ( keys ) )
+    if len(keys) == 0:
+        return
+    experimentHeader ( f, experiment, Type, sqrts, len(anas), superseded )
     keys.sort()
     # print ( keys )
     previous = keys[0]
@@ -118,7 +144,7 @@ def writeOneTable ( f, db, experiment, Type, anas, superseded ):
         # print ( topos )
         topos_s = ""
         for i in topos:
-            topos_s += ", [[SmsDictionary#%s|%s]]" % (i, i )
+            topos_s += ", [[SmsDictionary#%s|%s]]" % ( i, i )
         topos_s = topos_s[2:]
         if fastlim:
             topos_s = "(from fastlim)"
@@ -136,25 +162,48 @@ def writeOneTable ( f, db, experiment, Type, anas, superseded ):
         f.write ( "|| [[%s|%s]]<<Anchor(%s)>>" % ( url, Id, Id ) )
         short_desc = ""
         if Id in SDs: short_desc = SDs[Id]
-        f.write ( "|| %s || %d || %s || %s ||" % ( short_desc,
-               ana.globalInfo.sqrts.asNumber(), ana.globalInfo.lumi.asNumber(), topos_s ) )
+        f.write ( "|| %s || %s || %s ||" % ( short_desc,
+               ana.globalInfo.lumi.asNumber(), topos_s ) )
+        #f.write ( "|| %s || %d || %s || %s ||" % ( short_desc,
+        #       ana.globalInfo.sqrts.asNumber(), ana.globalInfo.lumi.asNumber(), topos_s ) )
         if superseded:
             f.write ( "%s ||" % ssuperseded )
         f.write ( "\n" )
 
-def writeExperiment ( f, db, experiment, superseded ):
+def selectAnalyses ( anas, sqrts, experiment, Type ):
+    ret = []
+    T=Type.replace(" ","" ).lower().replace("maps","map").replace("limits","limit" )
+    # print ( "select",len(anas),sqrts,experiment,T )
+    for ana in anas:
+        xsqrts = int ( ana.globalInfo.sqrts.asNumber ( TeV ) )
+        id = ana.globalInfo.id
+        if sqrts != xsqrts:
+            continue
+        # print ( id )
+        ds0 = ana.datasets[0]
+        dt = ana.datasets[0].dataInfo.dataType.lower().replace("maps","map")
+        # print ( "dt=",dt )
+        if not experiment in id or not T == dt:
+            continue
+        ret.append ( ana )
+    return ret
+
+def writeExperiment ( f, db, experiment, sqrts, superseded ):
     tanas = db.getExpResults( useSuperseded=superseded )
     for Type in [ "upperLimit", "efficiencyMap" ]:
         anas = []
         for ana in tanas:
             id = ana.globalInfo.id
+            xsqrts = int ( ana.globalInfo.sqrts.asNumber ( TeV ) )
+            if sqrts != xsqrts:
+                continue
             # print ( id )
             ds0 = ana.datasets[0]
             dt = ana.datasets[0].dataInfo.dataType
             if not experiment in id or not Type == dt:
                 continue
             anas.append ( ana )
-        writeOneTable ( f, db, experiment, Type, anas, superseded )
+        writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded )
 
 def backup( filename ):
     o = commands.getoutput ( "cp %s Old%s" % ( filename, filename ) )
@@ -179,10 +228,12 @@ def main():
     f = open ( filename, "w" )
     database = Database ( '../../smodels-database/' )
     header( f, database.databaseVersion, superSeded )
+    listTables ( f, database.getExpResults ( useSuperseded = superSeded ) )
     print ( "Database", database.databaseVersion )
     experiments=[ "CMS", "ATLAS" ]
-    for experiment in experiments:
-        writeExperiment ( f, database, experiment, superSeded )
+    for sqrts in [ 13, 8 ]:
+        for experiment in experiments:
+            writeExperiment ( f, database, experiment, sqrts, superSeded )
     f.close()
     diff( filename )
     xsel( filename )

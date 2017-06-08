@@ -7,10 +7,50 @@ import argparse
 import signal
 from ConfigParser import SafeConfigParser
 import time
-
+from sympy import var
+import string
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
+
+
+def getNiceAxes(axesStr):
+    """
+    Convert the axes definition format ('[[x,y],[x,y]]')
+    to a nicer format ('Eq(MassA,x)_Eq(MassB,y)_Eq(MassA,x)_Eq(MassB,y)')
+    
+    :param axesStr: string defining axes in the old format
+    
+    :return: string with a nicer representation of the axes (more suitable for printing)
+    """
+    
+    x,y,z = var('x y z')
+    axes = eval(axesStr,{'x' : x, 'y' : y, 'z': z})
+    
+    eqList = []
+    for ib,br in enumerate(axes):
+        if ib == 0:
+            mStr = 'Mass'
+        else:
+            mStr = 'mass'
+        mList = []
+        for im,eq in enumerate(br):
+            mList.append('Eq(%s,%s)'
+                           %(var(mStr+string.ascii_uppercase[im]),eq))
+        mStr = "_".join(mList)
+        eqList.append(mStr)
+    
+    #Simplify symmetric branches:
+    if eqList[0].lower() == eqList[1].lower() and len(eqList) == 2:            
+        eqStr = "2*%s"%eqList[0]
+    else:
+        eqStr = "__".join(eqList)
+        
+    eqStr = eqStr.replace(" ","")
+    
+    eqStr = eqStr.replace(",","").replace("(","").replace(")","")
+        
+    return eqStr.replace('*','')
 
 
 def checkPlotsFor(txname,update):
@@ -22,7 +62,7 @@ def checkPlotsFor(txname,update):
     :param txname: Txname object corresponding to the    
     :param update: option to update (rewrite) the txname.txt files (True/False)
     
-    :return: Validation result (True/False/None or skip)
+    :return: Validation result (True/False/NA/TBD or skip)
     """
 
 
@@ -32,8 +72,8 @@ def checkPlotsFor(txname,update):
     #Collect validation plots:
     valPlots = []
     missingPlots = []
-    for ax in axes:
-        ax = ax.replace("*","").replace(",","").replace("(","").replace(")","")
+    for axe in axes:
+        ax = getNiceAxes(axe)
         plotfile = txname.txName+"_"+ax+".pdf"
         valplot = os.path.join(txname.path,'../../validation/'+plotfile)
         valplot = os.path.abspath(valplot)
@@ -44,7 +84,6 @@ def checkPlotsFor(txname,update):
 
     if not valPlots:
         logger.error('\033[36m       No plots found \033[0m')
-#        return 'skip'
     else:
         for plot in missingPlots:
             logger.error('\033[36m        plot %s not found \033[0m' %valplot)
@@ -66,9 +105,9 @@ def checkPlotsFor(txname,update):
 
 
     val = ""
-    while not val.lower() in ['t','f','n','tbd','s','exit']:
+    while not val.lower() in ['t','f','n','s','tbd','exit']:
         val = raw_input("TxName is validated? (Current validation status: %s) \
-        \n True/False/NA(N/A)/TBD(To be done)/Skip (t/f/n/tbd/s) \n (or type exit to stop)\n" %txname.validated)    
+        \n True/False/NA/TBD/Skip (t/f/n/tbd/s) \n (or type exit to stop)\n" %txname.validated)    
         if val.lower() == 't': validationResult = True
         elif val.lower() == 'f': validationResult = False
         elif val.lower() == 'n': validationResult = 'N/A'
@@ -97,11 +136,11 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
     :param dataType: dataType of the analysis (all, efficiencyMap or upperLimit)
     :param txnames: list of txnames ([TChiWZ,...])
     :param databasePath: Path to the SModelS database
-    :param check: list containing which type of plots to check ([False,None,..])
+    :param check: list containing which type of plots to check ([False,'N/A',..])
     :param showPlots: option to open the plots or not (True/False)
     :param update: option to update (rewrite) the txname.txt files (True/False)
     :param printSummary: option to re-load the database and print the number of
-                        validated True/False/None txnames        
+                        validated True/False/Other txnames        
     :param verbosity: overall verbosity (e.g. error, warning, info, debug) 
     
     :return: True if all selected plots were checked, False otherwise 
@@ -129,19 +168,17 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
     expResList = sorted(expResList, key=lambda exp: exp.globalInfo.id)
     #Loop over experimental results and validate plots
     for expRes in expResList:
-        
-#        if (not hasattr(expRes.globalInfo,'contact')) or (not 'fastlim' in expRes.globalInfo.contact):
-#            continue
-#        if (hasattr(expRes.globalInfo,'contact')) and ('fastlim' in expRes.globalInfo.contact):
-#            continue
-
-        
+       
         expt0 = time.time()
-        logger.info("--------- \033[32m Checking  %s \033[0m" %expRes.globalInfo.id)
-        #Select only one dataset (for EM results avoid duplicated txnames)
-        dataset = expRes.datasets[0]
-        #Loop over pre-selected txnames:
-        txnameList = [tx for tx in dataset.txnameList if not 'assigned' in tx.constraint]
+        logger.info("--------- \033[32m Checking  %s \033[0m" %os.path.basename(expRes.path))
+        txnameList = []
+        txnameStrs = []
+        for dataset in expRes.datasets:
+            for tx in dataset.txnameList:
+                if tx.txName in txnameStrs:
+                    continue
+                txnameList.append(tx)
+                txnameStrs.append(tx.txName)
         txnameList = sorted(txnameList, key=lambda tx: tx.txName)
         if not txnameList:
             logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
@@ -155,7 +192,9 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
         
         for txname in txnameList:
             txnameStr = txname.txName
-#            if not txname.validated in check: continue
+            if not txname.validated in check:
+                print txname.validated,check
+                continue
             logger.info("------------ \033[31m Checking  %s \033[0m" %txnameStr)
             if not showPlots:
                 continue
@@ -185,7 +224,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
                 tf.close()
             
             logger.info("------------ \033[31m %s checked as validated = %s \033[0m" %(txnameStr,str(validationResult)))
-        logger.info("--------- \033[32m %s checked in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
+        logger.info("--------- \033[32m %s checked in %.1f min \033[0m" %(os.path.basename(expRes.path),(time.time()-expt0)/60.))
     logger.info("\n\n----- Finished checking in %.1f min." %((time.time()-tval0)/60.))
     
     #Print summary output, if selected.
@@ -207,12 +246,12 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
                     validated_true.append(txname)
                 elif txname.validated is False:
                     validated_false.append(txname)
-                elif txname.validated is None:
+                else:
                     validated_none.append(txname)
         #Print results
         logger.info('\033[32m %i Txnames with Validated = True \033[0m' %len(validated_true))
         logger.info('\033[32m %i Txnames with Validated = False \033[0m' %len(validated_false))
-        logger.info('\033[32m %i Txnames with Validated = None \033[0m' %len(validated_none))    
+        logger.info('\033[32m %i Txnames with Validated = "other" \033[0m' %len(validated_none))    
  
 
     
@@ -262,7 +301,16 @@ if __name__ == "__main__":
         
     databasePath = parser.get("path", "databasePath")
     
-    check = [eval(c) for c in parser.get("extra","check").split(',')]
+    check = []
+    for c in parser.get("extra","check").split(','):
+        try:
+            c = eval(c)
+        except:
+            pass
+        if isinstance(c,str):
+            c = c.lower()            
+        check.append(c)
+            
     showPlots = parser.getboolean("extra","showPlots")
     update = parser.getboolean("extra","update")
     printSummary = parser.getboolean("extra","printSummary")
