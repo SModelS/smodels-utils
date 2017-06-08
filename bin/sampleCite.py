@@ -21,13 +21,16 @@ def findCollaboration ( entry ):
     return collaboration
 
 def create ( entries, experiment ):
-    ret = "% Use this LaTeX code to cite all non-superseded "+experiment+" results:\n"
-    ret+= "% \cite{"
+    filtered = []
     for entry in entries:
-        ID = entry["ID"]
         collaboration = findCollaboration ( entry )
         if not experiment == collaboration:
             continue
+        filtered.append ( entry )
+    ret = "% Use this LaTeX code to cite all " + str(len(filtered)) + " non-superseded "+experiment+" results:\n"
+    ret+= "% \cite{"
+    for entry in filtered:
+        ID = entry["ID"]
         ret += "%s, " % ID
     ret = ret[:-2]+"}"
     return ret
