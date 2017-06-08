@@ -18,6 +18,14 @@ class BibtexWriter:
         self.not_found = 0
         self.success = 0
         self.nomatch = 0
+        self.fastlim = 0
+        self.specialcases = { 
+            "CMS-PAS-SUS-13-018": "https://cds.cern.ch/record/1693164",
+            "CMS-PAS-SUS-13-023": "http://cds.cern.ch/record/2044441",
+            "ATLAS-CONF-2013-007": "http://cds.cern.ch/record/1522430",
+            "ATLAS-CONF-2013-061": "http://cds.cern.ch/record/1557778",
+            "ATLAS-CONF-2013-089": "http://cds.cern.ch/record/1595272",
+        }
 
     def close ( self ):
         self.log ( "%d results in container." % len(self.res) )
@@ -26,6 +34,7 @@ class BibtexWriter:
         self.log ( "failed: %d" % self.nfailed )
         self.log ( " ... of which: %d superseded results" % self.nsuperseded )
         self.log ( "               %d not found" % self.not_found )
+        self.log ( "               %d fastlim" % self.fastlim )
         self.log ( "               %d no match" % self.nomatch )
         self.f.close()
         self.g.close()
@@ -109,7 +118,7 @@ class BibtexWriter:
         if pos1 < 1 or pos2 < pos1:
             return "failed to find pas url"
         ret = line[pos1+6:pos2-1]
-        self.log ( "PasUrl=%s" % ret )
+        self.log ( " * PasUrl: %s" % ret )
         return ret
 
     def fetchCDSUrl ( self, line, label ):
@@ -119,7 +128,7 @@ class BibtexWriter:
         if pos1 < 1 or pos2 < pos1:
             return "failed to find pas url"
         ret = line[pos1+6:pos2]
-        self.log ( "CDSUrl=%s" % ret )
+        self.log ( " * CDSUrl: %s" % ret )
         return ret
 
     def bibtexFromWikiUrl ( self, url, label=None ):
@@ -142,7 +151,7 @@ class BibtexWriter:
         #    print ( l )
             if "nspire" in l:
                 inspire = self.fetchInspireUrl ( l, label )
-                self.log ( "   `- fetching from inspire: %s" % inspire )
+                # self.log ( "   `- fetching from inspire: %s" % inspire )
                 if not "failed" in inspire:
                     return self.bibtexFromInspire ( inspire, label )
             if 'CDS record' in l:
@@ -168,22 +177,43 @@ class BibtexWriter:
 
     def searchOnCMSWiki ( self, Id ):
         """ search for the publication on the summary wiki page """
+        return None
+
+
 
     def processExpRes ( self, expRes ):
         self.npublications += 1
         Id = expRes.globalInfo.id
         self.log ( "\n\n\nNow processing %s" % Id )
-        self.log ( "===============================\n" )
+        self.log ( "==================================" )
         url = expRes.globalInfo.url
+        if Id in self.specialcases.keys():
+            self.log ( "Marked as special case!" )
+            bib = self.bibtexFromCDS ( self.specialcases[Id] )
+            if bib:
+                self.success += 1
+                self.log ( "Success!" )
+                self.f.write ( bib )
+                self.f.write ( "\n" )
+                return
+            else:
+                self.log ( "Special treatment failed." )
+            
+        contact = expRes.globalInfo.getInfo ( "contact" ) ## globalInfo.contact
+        if contact and "fastlim" in contact:
+            self.fastlim += 1
+            self.log ( "Fastlim. Skipping.\n" )
+            return 
         if "superseded" in url:
             self.log ( "superseded appears in URL (%s)" % Id )
+            self.log ( "   `-- %s" % url )
             self.log ( "Failed!" )
             self.h.write ( "%s failed. (superseded).\n" % Id )
             self.h.write ( "    `---- %s\n" % url )
             self.nfailed += 1
             self.nsuperseded += 1
             return
-        self.log ( "Id,Url=%s,%s" % ( Id, url ) )
+        self.log ( " * Id, Url: %s, %s" % ( Id, url ) )
         bib = self.bibtexFromWikiUrl ( url, Id )
         if bib:
             self.success += 1
@@ -194,12 +224,12 @@ class BibtexWriter:
         if "bin/view/CMSPublic" in url:
             oldurl = url
             url = "http://cms-results.web.cern.ch/cms-results/public-results/publications/%s/index.html" % ( Id.replace ( "CMS-", "" ) )
-            self.log ( "rewriting %s -> %s\n" % ( oldurl, url ) )
-            self.log ( "Id,Url=%s,%s" % ( Id, url ) )
+            self.log ( " * rewriting %s -> %s\n" % ( oldurl, url ) )
+            # self.log ( " * Id, Url: %s, %s" % ( Id, url ) )
             bib = self.bibtexFromWikiUrl ( url, Id )
             if bib:
                 self.success += 1
-                self.log ( "Success!" )
+                self.log ( "Success! (with url rewrite)" )
                 # self.log ( "Bib: %s" % bib[-100:] )
                 self.f.write ( bib )
                 self.f.write ( "\n" )
