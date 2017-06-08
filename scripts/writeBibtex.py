@@ -7,82 +7,183 @@ import os, sys
 
 """ write bibtex file of analysis references from the database itself """
 
-def bibtexFromInspire ( url, label=None ):
-    """ get the bibtex entry from an inspire record """
-    fullurl =  url+"/export/hx" 
-    # return fullurl
-    f=urllib.urlopen (fullurl)
-    lines = f.readlines()
-    f.close()
-    ret = []
-    hasBegin = False
-    for line in lines:
-        if "pagebodystripemiddle" in line:
-            hasBegin=True
-            continue
-        if not hasBegin:
-            continue
-        if "</pre>" in line:
-            hasBegin=False
-            continue
-        ret.append ( line )
-        if len (ret ) == 1 and label != None:
-            ret.append ( '      label          = "%s",\n' % label )
-    return "".join ( ret )
+class BibtexWriter:
+    def __init__ ( self ):
+        self.f=open ( "refs.bib", "w" )
+        self.g=open ( "log.txt", "w" )
+        self.h=open ( "failed.txt", "w" )
+        self.npublications = 0
+        self.nfailed = 0
 
-def fetchInspireUrl ( l ):
-    """ from line in html page, extract the inspire url """
-    pos1 = l.find ( "HREF=" )
-    pos2 = l.find ( "<B>" )
-    if pos1 > 0 and pos2 > pos1:
-        return l[pos1+6:pos2-2]
-    pos1 = l.find ( "href=" )
-    pos2 = l.find ( "inSPIRE" )
-    if pos1 > 0 and pos2 > pos1:
-        return l[pos1+6:pos2-2]
-    return "fetchInspireUrl failed"
+    def close ( self ):
+        self.log ( "Summary: %d / %d failures." % \
+                ( self.nfailed, self.npublications ) )
+        self.f.close()
+        self.g.close()
+        self.h.close()
 
+    def bibtexFromCDS ( self, url, label=None ):
+        """ get the bibtex entry from cds """
+        self.log ( " * fetching from CDS: %s" % url )
+        fullurl =  url+"/export/hx" 
+        f=urllib.urlopen (fullurl)
+        lines = f.readlines()
+        f.close()
+        ret = []
+        hasBegin = False
+        inAuthorList = False
+        for line in lines:
+            if "=" in line:
+                inAuthorList = False
+            if "@techreport" in line or "@article" in line:
+                hasBegin=True
+            if not hasBegin or inAuthorList:
+                continue
+            if "</pre>" in line:
+                hasBegin=False
+                continue
+            if "author" in line and "Sirunyan" in line:
+                inAuthorList = True
+                line = '      author        = "CMS collaboration",\n'
+                ret.append ( line )
+                continue
+            ret.append ( line )
+            if "@article" in line and label != None:
+                ret.append ( '      label          = "%s",\n' % label )
+            if "@techreport" in line and label != None:
+                ret.append ( '      label          = "%s",\n' % label )
+        return "".join ( ret )
 
-def bibtexFromWikiUrl ( url, label=None ):
-    """ get the bibtex entry from the atlas wiki """
-    print ( " * fetching from wiki", url )
-    f=urllib.urlopen ( url )
-    lines = f.readlines()
-    f.close()
-    for l in lines:
-        if "preliminary results are superseded by the following paper" in l:
-            print ( "    %s: superseded !!!!! " % label )
-            return None
-    #    print ( l )
-        if "nspire" in l:
-            inspire = fetchInspireUrl ( l )
-            print ( "   `- fetching from inspire", inspire )
-            return bibtexFromInspire ( inspire, label )
-def test():
-    # print ( bibtexFromInspire ( "http://inspirehep.net/record/1469069", "ATLAS-SUSY-2015-02" ) )
-    # print ( bibtexFromWikiUrl ( "https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/SUSY-2015-02/","ATLAS-SUSY-2015-02" ) )
-    print ( bibtexFromWikiUrl ( "http://cms-results.web.cern.ch/cms-results/public-results/publications/SUS-15-002/index.html", "CMS-SUS-15-002" ) )
-    sys.exit()
+    def bibtexFromInspire ( self, url, label=None ):
+        """ get the bibtex entry from an inspire record """
+        self.log ( " * fetching from Inspire: %s" % url )
+        fullurl =  url+"/export/hx" 
+        # return fullurl
+        f=urllib.urlopen (fullurl)
+        lines = f.readlines()
+        f.close()
+        ret = []
+        hasBegin = False
+        for line in lines:
+            if "pagebodystripemiddle" in line:
+                hasBegin=True
+                continue
+            if not hasBegin:
+                continue
+            if "</pre>" in line:
+                hasBegin=False
+                continue
+            ret.append ( line )
+            if "@article" in line and label != None:
+                ret.append ( '      label          = "%s",\n' % label )
+            if "@techreport" in line and label != None:
+                ret.append ( '      label          = "%s",\n' % label )
+        return "".join ( ret )
 
-def main():
-    # test()
-    f=open ( "refs.bib", "w" )
-    home = os.environ["HOME"]
-    # db = Database ( "%s/git/smodels/test/tinydb" % home )
-    db = Database ( "%s/git/smodels-database" % home )
-    res = db.getExpResults ()
-    for expRes in res:
+    def fetchInspireUrl ( self, l, label ):
+        """ from line in html page, extract the inspire url """
+        self.log ( " * fetching Inspire url: %s" % label )
+        pos1 = l.find ( "HREF=" )
+        pos2 = l.find ( "<B>" )
+        if pos1 > 0 and pos2 > pos1:
+            return l[pos1+6:pos2-2]
+        pos1 = l.find ( "href=" )
+        pos2 = l.find ( "inSPIRE" )
+        if pos1 > 0 and pos2 > pos1 and not "INSPIRE_ID" in l:
+            ret=l[pos1+6:pos2-2]
+            return ret
+        return "fetchInspireUrl failed"
+
+    def fetchPasUrl ( self, line ):
+        pos1 = line.find( 'href="' )
+        pos2 = line.find( ' target=' )
+        if pos1 < 1 or pos2 < pos1:
+            return "failed to find pas url"
+        ret = line[pos1+6:pos2-1]
+        self.log ( "PasUrl=%s" % ret )
+        return ret
+
+    def fetchCDSUrl ( self, line, label ):
+        self.log ( " * fetching CDS url: %s" % label )
+        pos1 = line.find( 'href="' )
+        pos2 = line.find( '">CDS' )
+        if pos1 < 1 or pos2 < pos1:
+            return "failed to find pas url"
+        ret = line[pos1+6:pos2]
+        self.log ( "CDSUrl=%s" % ret )
+        return ret
+
+    def bibtexFromWikiUrl ( self, url, label=None ):
+        """ get the bibtex entry from the atlas wiki """
+        self.log ( " * fetching from wiki: %s" % url )
+        f=urllib.urlopen ( url )
+        lines = f.readlines()
+        f.close()
+        for l in lines:
+            if "preliminary results are superseded by the following paper" in l:
+                self.log ( "    %s: superseded !!!!! " % label )
+                return None
+        #    print ( l )
+            if "nspire" in l:
+                inspire = self.fetchInspireUrl ( l, label )
+                self.log ( "   `- fetching from inspire: %s" % inspire )
+                if not "failed" in inspire:
+                    return self.bibtexFromInspire ( inspire, label )
+            if 'CDS record' in l:
+                cds = self.fetchCDSUrl ( l, label )
+                if not "failed" in cds:
+                    return self.bibtexFromCDS ( cds, label )
+            if 'target="_blank">Link to ' in l:
+                pas = self.fetchPasUrl ( l )
+                if not "failed" in pas:
+                    return self.bibtexFromCDS ( pas, label )
+
+    def log ( self, line ):
+        print ( line )
+        self.g.write ( line + "\n" )
+
+    def test( self ):
+        # print ( self.bibtexFromInspire ( "http://inspirehep.net/record/1469069", "ATLAS-SUSY-2015-02" ) )
+        # print ( self.bibtexFromWikiUrl ( "https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/SUSY-2015-02/","ATLAS-SUSY-2015-02" ) )
+        # print ( self.bibtexFromWikiUrl ( "http://cms-results.web.cern.ch/cms-results/public-results/publications/SUS-15-002/index.html", "CMS-SUS-15-002" ) )
+        print ( self.bibtexFromWikiUrl ( "http://cms-results.web.cern.ch/cms-results/public-results/publications/SUS-15-002/index.html", "CMS-SUS-15-002" ) )
+        sys.exit()
+
+    def processExpRes ( self, expRes ):
+        self.npublications += 1
         Id = expRes.globalInfo.id
+        self.log ( "\n\n\nNow processing %s" % Id )
+        self.log ( "===============================\n" )
         url = expRes.globalInfo.url
         if "superseded" in url:
-            print ( "superseded appears in URL!!" )
-            continue
-        print ( "Id,Url", Id, url )
-        bib = bibtexFromWikiUrl ( url, Id )
+            self.log ( "superseded appears in URL (%s)" % Id )
+            self.h.write ( "%s failed. (superseded).\n" % Id )
+            self.h.write ( "    `---- %s\n" % url )
+            self.nfailed += 1
+            return
+        self.log ( "Id,Url=%s,%s" % ( Id, url ) )
+        bib = self.bibtexFromWikiUrl ( url, Id )
         if bib:
-            f.write ( bib )
-            f.write ( "\n" )
-    f.close()
+            self.log ( "Bib: %s" % bib[-100:] )
+            self.f.write ( bib )
+            self.f.write ( "\n" )
+        else:
+            self.nfailed += 1
+            self.h.write ( "%s failed (no match).\n" % Id )
+            self.h.write ( "    `---- %s\n" % url )
+
+    def run( self ):
+        home = os.environ["HOME"]
+        # db = Database ( "%s/git/smodels/test/tinydb" % home )
+        db = Database ( "%s/git/smodels-database" % home )
+        res = db.getExpResults ()
+        for expRes in res:
+#            if not "CMS-PAS-SUS-16-033" in str(expRes):
+#                continue
+            self.processExpRes ( expRes )
 
 if __name__ == "__main__":
-    main()
+    writer = BibtexWriter()
+    # writer.test()
+    writer.run()
+    writer.close()
