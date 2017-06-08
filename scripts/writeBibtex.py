@@ -14,10 +14,19 @@ class BibtexWriter:
         self.h=open ( "failed.txt", "w" )
         self.npublications = 0
         self.nfailed = 0
+        self.nsuperseded = 0
+        self.not_found = 0
+        self.success = 0
+        self.nomatch = 0
 
     def close ( self ):
-        self.log ( "Summary: %d / %d failures." % \
-                ( self.nfailed, self.npublications ) )
+        self.log ( "%d results in container." % len(self.res) )
+        self.log ( "Summary: %d / %d successful." % \
+                ( self.success, self.npublications ) )
+        self.log ( "failed: %d" % self.nfailed )
+        self.log ( " ... of which: %d superseded results" % self.nsuperseded )
+        self.log ( "               %d not found" % self.not_found )
+        self.log ( "               %d no match" % self.nomatch )
         self.f.close()
         self.g.close()
         self.h.close()
@@ -122,6 +131,13 @@ class BibtexWriter:
         for l in lines:
             if "preliminary results are superseded by the following paper" in l:
                 self.log ( "    %s: superseded !!!!! " % label )
+                self.h.write ( "%s is superseded." % label )
+                self.nsuperseded += 1
+                return None
+            if "404 - Not found" in l:
+                self.log ( "    %s is not found!" % label )
+                #self.h.write ( "%s is not found!" % label )
+                #self.not_found += 1
                 return None
         #    print ( l )
             if "nspire" in l:
@@ -133,7 +149,8 @@ class BibtexWriter:
                 cds = self.fetchCDSUrl ( l, label )
                 if not "failed" in cds:
                     return self.bibtexFromCDS ( cds, label )
-            if 'target="_blank">Link to ' in l:
+            if 'target="_blank">' in l:
+            # if 'target="_blank">Link to ' in l:
                 pas = self.fetchPasUrl ( l )
                 if not "failed" in pas:
                     return self.bibtexFromCDS ( pas, label )
@@ -149,6 +166,9 @@ class BibtexWriter:
         print ( self.bibtexFromWikiUrl ( "http://cms-results.web.cern.ch/cms-results/public-results/publications/SUS-15-002/index.html", "CMS-SUS-15-002" ) )
         sys.exit()
 
+    def searchOnCMSWiki ( self, Id ):
+        """ search for the publication on the summary wiki page """
+
     def processExpRes ( self, expRes ):
         self.npublications += 1
         Id = expRes.globalInfo.id
@@ -157,27 +177,45 @@ class BibtexWriter:
         url = expRes.globalInfo.url
         if "superseded" in url:
             self.log ( "superseded appears in URL (%s)" % Id )
+            self.log ( "Failed!" )
             self.h.write ( "%s failed. (superseded).\n" % Id )
             self.h.write ( "    `---- %s\n" % url )
             self.nfailed += 1
+            self.nsuperseded += 1
             return
         self.log ( "Id,Url=%s,%s" % ( Id, url ) )
         bib = self.bibtexFromWikiUrl ( url, Id )
         if bib:
-            self.log ( "Bib: %s" % bib[-100:] )
+            self.success += 1
+            self.log ( "Success!" )
             self.f.write ( bib )
             self.f.write ( "\n" )
-        else:
-            self.nfailed += 1
-            self.h.write ( "%s failed (no match).\n" % Id )
-            self.h.write ( "    `---- %s\n" % url )
+            return
+        if "bin/view/CMSPublic" in url:
+            oldurl = url
+            url = "http://cms-results.web.cern.ch/cms-results/public-results/publications/%s/index.html" % ( Id.replace ( "CMS-", "" ) )
+            self.log ( "rewriting %s -> %s\n" % ( oldurl, url ) )
+            self.log ( "Id,Url=%s,%s" % ( Id, url ) )
+            bib = self.bibtexFromWikiUrl ( url, Id )
+            if bib:
+                self.success += 1
+                self.log ( "Success!" )
+                # self.log ( "Bib: %s" % bib[-100:] )
+                self.f.write ( bib )
+                self.f.write ( "\n" )
+                return
+        self.nfailed += 1
+        self.nomatch += 1
+        self.log ( "Failed!" )
+        self.h.write ( "%s failed (no match).\n" % Id )
+        self.h.write ( "    `---- %s\n" % url )
 
     def run( self ):
         home = os.environ["HOME"]
         # db = Database ( "%s/git/smodels/test/tinydb" % home )
-        db = Database ( "%s/git/smodels-database" % home )
-        res = db.getExpResults ()
-        for expRes in res:
+        self.db = Database ( "%s/git/smodels-database" % home )
+        self.res = self.db.getExpResults ()
+        for expRes in self.res:
 #            if not "CMS-PAS-SUS-16-033" in str(expRes):
 #                continue
             self.processExpRes ( expRes )
