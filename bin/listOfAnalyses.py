@@ -55,6 +55,13 @@ Results from FastLim are included. There is also an SmsDictionary.
 %s
 """ % ( version, titleplus, version, referToOther ) )
 
+def footer ( f ):
+    fastlim_topos = set(['T1', 'T1bbbb', 'T5btbt', 'T1bbqq', 'T5bbbt', 'T1bbbt', 'TGQbtq', 'TGQ', 'TGQqtt', 'T2tt', 'T5tttt', 'T1btqq', 'T1btbt', 'T1tttt', 'T2', 'T5tbtb', 'T5tbtt', 'TGQbbq', 'T2bt', 'T1bbtt', 'T5bbbb', 'T1qqtt', 'T1bttt', 'T2bb'])
+    f.write ( "\nThe !FastLim tarball consists of the following %d Tx names:\n" % len(fastlim_topos ) )
+    f.write ( "<<Anchor(FastLim)>>\n" )
+    f.write ( ", ".join ( [ "[[SmsDictionary#%s|%s]]" % ( i, i ) for i in fastlim_topos ] ) )
+    f.write ( "\n" )
+
 def listTables ( f, anas ):
     f.write ( "== Individual tables ==\n" )
     for sqrts in [ 13, 8 ]:
@@ -65,12 +72,24 @@ def listTables ( f, anas ):
             for tpe in [ "upper limits", "efficiency maps" ]:
                 stpe = tpe.replace(" ", "" )
                 a = selectAnalyses ( anas, sqrts, exp, tpe )
+                a_fastlim = 0
                 nres = 0
+                nfastlim = 0
                 for A in a:
-                    nres+= len ( A.getTxNames() )
+                    topos = set ( [ x.txName for x in A.getTxNames() ] )
+                    nres+= len ( topos )
+                    if hasattr ( A.globalInfo, "contact" ) and "fastlim" in \
+                        A.globalInfo.contact:
+                            nfastlim += len(topos)
+                            a_fastlim += 1
                 if len(a) == 0: continue
-                f.write ( " * [[#%s%s%d|%s %s]]: %d analyses, %d results\n" % \
-                          ( exp, stpe, sqrts, exp, tpe, len(a), nres ) )
+                flim=""
+                aflim=""
+                if nfastlim:
+                    flim = "(of which %d !FastLim)" % nfastlim
+                    aflim = "(of which %d !FastLim)" % a_fastlim
+                f.write ( " * [[#%s%s%d|%s %s]]: %d %s analyses, %s %s results\n" % \
+                          ( exp, stpe, sqrts, exp, tpe, len(a), aflim, nres, flim ) )
 
 def fields ( superseded ):
     fields = [ "ID", "short description", "L [1/fb]", "Tx names" ]
@@ -152,11 +171,14 @@ def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded ):
         topos.sort()
         # print ( topos )
         topos_s = ""
+        topos_names = set()
         for i in topos:
+            topos_names.add ( i )
             topos_s += ", [[SmsDictionary#%s|%s]]" % ( i, i )
         topos_s = topos_s[2:]
         if fastlim:
-            topos_s = "(from fastlim)"
+            # print ( "fastlim_topos=",topos_names )
+            topos_s = "[[#FastLim|(from fastlim)]]"
         url = ana.globalInfo.url
         if url.find ( " " ) > 0:
             url = url[:url.find(" ") ]
@@ -244,6 +266,7 @@ def main():
     for sqrts in [ 13, 8 ]:
         for experiment in experiments:
             writeExperiment ( f, database, experiment, sqrts, superSeded )
+    footer ( f )
     f.close()
     diff( filename )
     xsel( filename )
