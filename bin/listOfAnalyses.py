@@ -51,7 +51,7 @@ def header( f, version, superseded ):
 = List Of Analyses %s %s =
 List of analyses and topologies in the SMS results database.
 The list has been created from the database version `%s`.
-There is also an SmsDictionary.
+Results from FastLim are included. There is also an SmsDictionary.
 %s
 """ % ( version, titleplus, version, referToOther ) )
 

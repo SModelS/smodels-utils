@@ -21,7 +21,7 @@ def Print ( line ):
     log.write ( line + "\n" )
 
 def checkUrl ( url, id ):
-    if url == "Not defined":
+    if url in [ "Not defined", None, "None" ]:
         return
     Print ( "Now checking %s: %s" % (id, url ) )
     f=urlopen ( url )
@@ -31,6 +31,8 @@ def checkUrl ( url, id ):
     Print ( "first line: %s" % lines[0][:30] )
 
 def checkUrls ( urls, id ):
+    if urls == None:
+        return
     ret = urls
     if type ( urls ) == str:
         ret = urls.split ( ";" )
@@ -41,6 +43,12 @@ def checkUrls ( urls, id ):
 e = db.getExpResults( useNonValidated=True, useSuperseded=True )
 for expRes in e:
     id = expRes.globalInfo.id
+    resume=False
+    resume = True ## makes it possible to resume at later stage,
+    ## if set to False
+    if not resume and not "ATLAS-SUSY-2013-09" in id:
+        continue
+    resume = True
     if hasattr ( expRes.globalInfo, "publication" ):
         checkUrls ( expRes.globalInfo.publication, id )
     if hasattr ( expRes.globalInfo, "arxiv" ):

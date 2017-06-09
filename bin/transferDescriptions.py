@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+""" a small script that takes the descriptions from short_descriptions.py,
+    and feeds them into the database. WW """
+
 from short_descriptions import SDs
 import os, sys, glob
 

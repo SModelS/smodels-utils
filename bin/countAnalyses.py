@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 """
-.. module:: listOfAnalyses
-         :synopsis: Small script to produce the ListOfAnalyses wiki page
+.. module:: countAnalyses
+         :synopsis: Small script to produce a database statistics
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
@@ -30,6 +30,8 @@ def discussExperiment ( anas, experiment ):
         topos = set()
         for dataset in expRes.datasets:
             for i in dataset.txnameList:
+                if i.validated not in [ True, "N/A" ]:
+                    continue
                 topos.add ( i.txName )
         if expRes.datasets[0].dataInfo.dataType=="upperLimit":
             ul+=1
