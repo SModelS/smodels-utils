@@ -5,6 +5,9 @@ import os, sys, glob
 
 dbf = "/home/walten/git/smodels-database"
 
+ext=".test"
+ext=""
+
 def convert ( string ):
     ret = string.replace ( "&ge;", ">=" )
     ret = ret.replace ( "&alpha;", "alpha" )
@@ -19,7 +22,7 @@ for fle in files:
     f=open (fle,"r" )
     lines=f.readlines()
     f.close()
-    g=open ( fle,"w" )
+    g=open ( fle + ext ,"w" )
     Id = None
     ret = []
     hasPrettyName = False
@@ -29,7 +32,7 @@ for fle in files:
             print ( "Id=>%s<" % Id )
         if "prettyName" in line and Id in SDs.keys():
             oldline=line
-            line = "prettyName: %s\n" % SDs[Id]
+            line = "prettyName: %s\n" % convert(SDs[Id])
             print ( "replacing %s -> %s" % ( oldline, line ) )
             hasPrettyName = True
         ret.append ( line )
@@ -49,7 +52,7 @@ for fle in files:
     f=open (fle,"r" )
     lines=f.readlines()
     f.close()
-    g=open ( fle,"w" )
+    g=open ( fle + ext , "w" )
     Id = None
     ret = []
     hasPrettyName = False
@@ -62,7 +65,7 @@ for fle in files:
         if "info.prettyName" in line and Id in SDs.keys():
             hasPrettyName = True
             oldline=line
-            line = "info.prettyName = '%s'\n" % SDs[Id]
+            line = "info.prettyName = '%s'\n" % convert(SDs[Id])
             print ( "replacing %s -> %s" % ( oldline, line ) )
         ret.append ( line )
     newlines = ret
