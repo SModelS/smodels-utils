@@ -11,15 +11,24 @@
 
 from __future__ import print_function
 import setPath
-import commands 
+import commands
 import sys
-from short_descriptions import SDs
+## from short_descriptions import SDs
 from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
 from smodels.tools.physicsUnits import TeV
 
 # setLogLevel("debug")
-    
+
+def convert ( string ):
+    ret = string.replace ( ">=", "&ge;" )
+    ret = ret.replace ( "alphaT", "&alpha;,,T,," )
+    ret = ret.replace ( "alpha_T", "&alpha;,,T,," )
+    ret = ret.replace ( "_T", ",,T,," )
+    ret = ret.replace ( "_T2", ",,T2,," )
+    ret = ret.replace ( "_CT", ",,CT,," )
+    return ret
+
 def yesno ( B ):
     if B in [ True, "True" ]: return "Yes"
     if B in [ False, "False" ]: return "No"
@@ -34,9 +43,9 @@ def header( f, version, superseded ):
         referToOther = "Link to list of results [[ListOfAnalysesv%s|without superseded results]]" % dotlessv
         add=",including superseded results."
         titleplus = "(including superseded results)"
-    f.write ( 
-# """#acl +DeveloperGroup:read,write,revert -All:write,read Default 
-"""#acl +DeveloperGroup:read,write,revert -All:write +All:read Default 
+    f.write (
+# """#acl +DeveloperGroup:read,write,revert -All:write,read Default
+"""#acl +DeveloperGroup:read,write,revert -All:write +All:read Default
 <<LockedPage()>>
 
 = List Of Analyses %s %s =
@@ -79,7 +88,7 @@ def xsel( filename ):
 def experimentHeader ( f, experiment, Type, sqrts, nr, superseded ):
     f.write ( "\n" )
     stype = "efficiency maps"
-    if Type == "upperLimit": 
+    if Type == "upperLimit":
         stype = "upper limits"
     f.write ( "== %s, %s, %d TeV (%d analyses) ==\n" % \
               (experiment,stype,sqrts,nr ) )
@@ -123,7 +132,7 @@ def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded ):
     keys.sort()
     # print ( keys )
     previous = keys[0]
-            
+
     emptyLine( f, superseded, previous )
 
     for ana_name in keys:
@@ -160,8 +169,9 @@ def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded ):
                 t=t[:t.find(" ")]
             ssuperseded = "[[#%s|%s]]" % ( t, s )
         f.write ( "|| [[%s|%s]]<<Anchor(%s)>>" % ( url, Id, Id ) )
-        short_desc = ""
-        if Id in SDs: short_desc = SDs[Id]
+        # short_desc = ""
+        #if Id in SDs: short_desc = SDs[Id]
+        short_desc = convert ( ana.globalInfo.prettyName )
         f.write ( "|| %s || %s || %s ||" % ( short_desc,
                ana.globalInfo.lumi.asNumber(), topos_s ) )
         #f.write ( "|| %s || %d || %s || %s ||" % ( short_desc,
@@ -237,6 +247,6 @@ def main():
     f.close()
     diff( filename )
     xsel( filename )
-    
+
 if __name__ == '__main__':
-    main()    
+    main()

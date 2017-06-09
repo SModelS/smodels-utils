@@ -13,6 +13,7 @@
 Database.txt
 bin/SmsDictionary
 bin/ListOfAnalyses
+bin/ListOfAnalysesWithSuperseded
 *.py~
 old/
 slha/T*_*_*_slhas/

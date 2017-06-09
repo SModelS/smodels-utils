@@ -9,6 +9,10 @@ try:
     import commands
 except ImportError:
     import subprocess as commands
+try:
+    from urllib import urlopen
+except ImportError:
+    from urllib.request import urlopen
 
 """ write bibtex file of analysis references from the database itself """
 
@@ -55,7 +59,7 @@ class BibtexWriter:
         """ get the bibtex entry from cds """
         self.log ( " * fetching from CDS: %s" % url )
         fullurl =  url+"/export/hx" 
-        f=urllib.urlopen (fullurl)
+        f=urlopen (fullurl)
         lines = f.readlines()
         f.close()
         ret = []
@@ -88,7 +92,7 @@ class BibtexWriter:
         self.log ( " * fetching from Inspire: %s" % url )
         fullurl =  url+"/export/hx" 
         # return fullurl
-        f=urllib.urlopen (fullurl)
+        f=urlopen (fullurl)
         lines = f.readlines()
         f.close()
         ret = []
@@ -145,7 +149,7 @@ class BibtexWriter:
     def bibtexFromWikiUrl ( self, url, label=None ):
         """ get the bibtex entry from the atlas wiki """
         self.log ( " * fetching from wiki: %s" % url )
-        f=urllib.urlopen ( url )
+        f=urlopen ( url )
         lines = f.readlines()
         f.close()
         for l in lines:
