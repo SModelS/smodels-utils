@@ -56,11 +56,13 @@ Results from !FastLim are included. There is also an SmsDictionary.
 """ % ( version, titleplus, version, referToOther ) )
 
 def footer ( f ):
+    """
     fastlim_topos = set(['T1', 'T1bbbb', 'T5btbt', 'T1bbqq', 'T5bbbt', 'T1bbbt', 'TGQbtq', 'TGQ', 'TGQqtt', 'T2tt', 'T5tttt', 'T1btqq', 'T1btbt', 'T1tttt', 'T2', 'T5tbtb', 'T5tbtt', 'TGQbbq', 'T2bt', 'T1bbtt', 'T5bbbb', 'T1qqtt', 'T1bttt', 'T2bb'])
     f.write ( "\nThe !FastLim tarball consists of the following %d Tx names:\n" % len(fastlim_topos ) )
     f.write ( "<<Anchor(FastLim)>>\n" )
     f.write ( ", ".join ( [ "[[SmsDictionary#%s|%s]]" % ( i, i ) for i in fastlim_topos ] ) )
-    f.write ( "\n" )
+    """
+    f.write ( "[*] Please note that by default we discard zeroes-only results from !FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n" )
 
 def listTables ( f, anas ):
     f.write ( "== Individual tables ==\n" )
@@ -177,8 +179,10 @@ def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded ):
             topos_s += ", [[SmsDictionary#%s|%s]]" % ( i, i )
         topos_s = topos_s[2:]
         if fastlim:
+            topos_s += " (from !FastLim [*])"
             # print ( "fastlim_topos=",topos_names )
-            topos_s = "[[#FastLim|(from fastlim)]]"
+            # topos_s = "[[#FastLim|(from fastlim)]]"
+            pass
         url = ana.globalInfo.url
         if url.find ( " " ) > 0:
             url = url[:url.find(" ") ]
@@ -258,7 +262,7 @@ def main():
         filename = "ListOfAnalysesWithSuperseded"
     backup( filename )
     f = open ( filename, "w" )
-    database = Database ( '../../smodels-database/' )
+    database = Database ( '../../smodels-database/', discard_zeroes=True )
     header( f, database.databaseVersion, superSeded )
     listTables ( f, database.getExpResults ( useSuperseded = superSeded ) )
     print ( "Database", database.databaseVersion )
