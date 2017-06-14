@@ -26,6 +26,7 @@ def convert ( string ):
     ret = ret.replace ( "alpha_T", "&alpha;,,T,," )
     ret = ret.replace ( "_T", ",,T,," )
     ret = ret.replace ( "_T2", ",,T2,," )
+    ret = ret.replace ( "MT2", "M,,T2,," )
     ret = ret.replace ( "_CT", ",,CT,," )
     return ret
 
