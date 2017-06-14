@@ -1,21 +1,27 @@
 #!/usr/bin/python
 
 import os
+import IPython
 import numpy as np
 import IPython
 from matplotlib import rc
 import matplotlib.pyplot as plt
 from smodels.tools.physicsUnits import GeV, pb
+from smodels.experiment.databaseObj import Database
+from smodels.experiment.txnameObj import TxNameData
+from smodels.tools.smodelsLogging import setLogLevel, logger
+setLogLevel ( "debug" )
 
-anaid = "CMS-SUS-PAS-15-002"
+TxNameData._keep_values = True
+
+anaid = "CMS-PAS-SUS-15-002"
 topo = "T1ttttoff"
-anaid = "ATLAS-SUSY-2013-23"
-topo = "TChiWH"
+#anaid = "ATLAS-SUSY-2013-23"
+#topo = "TChiWH"
 #anaid = "CMS-SUS-13-013"
 #topo = "T6ttWW"
 
 def getData():
-    from smodels.experiment.databaseObj import Database
     home=os.environ["HOME"]
     db = "./tinydb/"
     d=Database ( db )
@@ -39,6 +45,7 @@ data = getData()
 values = eval ( data.value )
 
 ptsunits = [ x[0] for x in values ]
+xsecs = [ x[1].asNumber(pb) for x in values ]
 Points = []
 for p in ptsunits:
     t=[]
@@ -59,4 +66,7 @@ plt.title("Delaunay triangulation, %s (%s)" % (anaid,topo) )
 plt.xlabel ( "m$_\mathrm{mother}$ [GeV]" )
 plt.ylabel ( "m$_\mathrm{lsp}$ [GeV]" )
 #plt.show()
+for point,xsec in zip ( points,xsecs ):
+    ## add the xsecs to the points, as text
+    plt.text ( point[0], point[1], "%.2f" % xsec )
 plt.savefig ( "delaunay.pdf" )
