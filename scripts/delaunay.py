@@ -12,12 +12,13 @@ from smodels.experiment.txnameObj import TxNameData
 from smodels.tools.smodelsLogging import setLogLevel, logger
 from scipy.spatial import ConvexHull
 import pickle
-setLogLevel ( "debug" )
+# setLogLevel ( "debug" )
 
 TxNameData._keep_values = True
 
 anaid = "CMS-PAS-SUS-15-002"
 topo = "T1ttttoff"
+# topo = "T1hacked"
 #anaid = "ATLAS-SUSY-2013-23"
 #topo = "TChiWH"
 #anaid = "CMS-SUS-13-013"
@@ -48,6 +49,14 @@ values = eval ( data.value )
 
 ptsunits = [ x[0] for x in values ]
 xsecs = [ x[1].asNumber(pb) for x in values ]
+
+"""
+RemovePoints = [ 11 ]
+for r in RemovePoints:
+    xsecs.pop ( r )
+    ptsunits.pop ( r )
+"""
+
 Points = []
 for p in ptsunits:
     t=[]
@@ -68,9 +77,37 @@ for i,x in enumerate (xsecs ):
     if x < 1e-9:
         zeroes.append ( i )
         zero_Points.append ( Points[i] )
-# IPython.embed()
+
+# print ( "hull: %s" % hull.simplices )
+
+def allZeroSimplex ( simplex, zeroes ):
+    """ does a simplex have only zeroes? """
+    for idx in simplex:
+        if idx not in zeroes:
+            return False
+    return True
+    
+for s in tri.simplices:
+    if allZeroSimplex ( s, zeroes ):
+        print ( "simplex %s is all zeroes." % s )
+
+for i in zeroes:
+#for i in [ 11 ]:
+    inHull = i in hull
+    ct = 0
+    allSimplicesZero=True
+    for s in tri.simplices:
+        if i in s:
+            ct+=1
+            if not allZeroSimplex ( s, zeroes ):
+                allSimplicesZero = False
+    if allSimplicesZero:
+        print ( "we can remove point %d!!!" % i )
+
+    print ( "point %d: inHull: %d. in %d simplices." % ( i, inHull, ct ) )
 
 zero_points = np.array  ( zero_Points )
+# IPython.embed()
 
 plt.triplot(points[:,0], points[:,1], tri.simplices.copy(), linewidth=.4 )
 plt.plot(points[:,0], points[:,1], 'bo', markeredgecolor='#0000aa', ms=2.0 )
@@ -88,5 +125,7 @@ for i,(point,xsec) in enumerate ( zip ( points,xsecs ) ):
     col = "k"
     if i in zeroes:
         col="g"
+    if i in hull:
+        col="r"
     plt.text ( point[0], point[1], "%.2f" % xsec, fontdict = { "color": col} )
 plt.savefig ( "delaunay.pdf" )
