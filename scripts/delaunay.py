@@ -10,6 +10,7 @@ from smodels.tools.physicsUnits import GeV, pb
 from smodels.experiment.databaseObj import Database
 from smodels.experiment.txnameObj import TxNameData
 from smodels.tools.smodelsLogging import setLogLevel, logger
+from scipy.spatial import ConvexHull
 setLogLevel ( "debug" )
 
 TxNameData._keep_values = True
@@ -52,7 +53,7 @@ for p in ptsunits:
     for v in p:
         for v2 in v:
             t.append ( v2.asNumber(GeV) )
-    Points.append ( t )
+    Points.append ( t[:2] )
 points = np.array ( Points )
 # points = np.array([[0, 0], [0, 1.1], [1, 0], [1, 1]])
 from scipy.spatial import Delaunay
@@ -61,7 +62,12 @@ tri=data.tri
 
 plt.triplot(points[:,0], points[:,1], tri.simplices.copy(), linewidth=.4 )
 plt.plot(points[:,0], points[:,1], 'bo', markeredgecolor='#0000aa', ms=2.0 )
-corr_anaid = anaid.replace ( "CMS-SUS-PAS", "CMS-PAS-SUS-15-002" )
+
+hull = ConvexHull ( points )
+
+for simplex in hull.simplices:
+    plt.plot(points[simplex, 0], points[simplex, 1], 'r--')
+
 plt.title("Delaunay triangulation, %s (%s)" % (anaid,topo) )
 plt.xlabel ( "m$_\mathrm{mother}$ [GeV]" )
 plt.ylabel ( "m$_\mathrm{lsp}$ [GeV]" )
