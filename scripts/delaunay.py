@@ -11,6 +11,7 @@ from smodels.experiment.databaseObj import Database
 from smodels.experiment.txnameObj import TxNameData
 from smodels.tools.smodelsLogging import setLogLevel, logger
 from scipy.spatial import ConvexHull
+import pickle
 setLogLevel ( "debug" )
 
 TxNameData._keep_values = True
@@ -59,20 +60,33 @@ points = np.array ( Points )
 from scipy.spatial import Delaunay
 #tri = Delaunay(points)
 tri=data.tri
+hull = tri.convex_hull
+
+zeroes = [] ## all indices with zero xsecs
+zero_Points = [] ## points with zero xsec
+for i,x in enumerate (xsecs ):
+    if x < 1e-9:
+        zeroes.append ( i )
+        zero_Points.append ( Points[i] )
+# IPython.embed()
+
+zero_points = np.array  ( zero_Points )
 
 plt.triplot(points[:,0], points[:,1], tri.simplices.copy(), linewidth=.4 )
 plt.plot(points[:,0], points[:,1], 'bo', markeredgecolor='#0000aa', ms=2.0 )
+plt.plot(zero_points[:,0], zero_points[:,1], 'bo', markeredgecolor='#00aa00', ms=3.0 )
 
-hull = ConvexHull ( points )
-
-for simplex in hull.simplices:
+for simplex in hull:
     plt.plot(points[simplex, 0], points[simplex, 1], 'r--')
 
 plt.title("Delaunay triangulation, %s (%s)" % (anaid,topo) )
 plt.xlabel ( "m$_\mathrm{mother}$ [GeV]" )
 plt.ylabel ( "m$_\mathrm{lsp}$ [GeV]" )
 #plt.show()
-for point,xsec in zip ( points,xsecs ):
+for i,(point,xsec) in enumerate ( zip ( points,xsecs ) ):
     ## add the xsecs to the points, as text
-    plt.text ( point[0], point[1], "%.2f" % xsec )
+    col = "k"
+    if i in zeroes:
+        col="g"
+    plt.text ( point[0], point[1], "%.2f" % xsec, fontdict = { "color": col} )
 plt.savefig ( "delaunay.pdf" )
