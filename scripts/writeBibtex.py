@@ -91,7 +91,19 @@ class BibtexWriter:
                 ret.append ( '      label          = "%s",\n' % label )
             if "@techreport" in line and label != None:
                 ret.append ( '      label          = "%s",\n' % label )
-        return "".join ( ret )
+        return self.replaceUnicodes ( "".join ( ret ) )
+
+    def replaceUnicodes ( self, source ):
+        repls = { 8211: "--", 160: "", 8722: "-" }
+        for k,v in repls.items():
+            source = source.replace ( unichr(k), v )
+        for ctr,letter in enumerate(source):
+            o=ord(letter)
+            if o>127:
+                print ( "foreign letter %d: %s" % ( o, letter) )
+                sys.exit()
+        print ( source )
+        return source 
 
     def bibtexFromInspire ( self, url, label=None ):
         """ get the bibtex entry from an inspire record """
@@ -118,16 +130,6 @@ class BibtexWriter:
             if "@techreport" in line and label != None:
                 ret.append ( '      label          = "%s",\n' % label )
         r =  unicode ( "".join ( ret )  )
-        r = r.replace ( unichr(8211), "--" )
-        r = r.replace ( unichr(160), " " )
-        for ctr,letter in enumerate(r):
-            o=ord(letter)
-            if o>127:
-                print ( "foreign letter %d: %s" % ( o, letter) )
-        #    if o==8211
-        #        print ( o )
-        #r = r.replace ( u"\xe2", "---" )
-        print ( r)
         return r
 
     def fetchInspireUrl ( self, l, label ):
@@ -275,8 +277,8 @@ class BibtexWriter:
     def run( self ):
         home = os.environ["HOME"]
         # db = Database ( "%s/git/smodels/test/tinydb" % home )
-        # self.db = Database ( "%s/git/smodels-database" % home )
-        self.db = Database ( "./tinydb" )
+        self.db = Database ( "%s/git/smodels-database" % home )
+        # self.db = Database ( "./tinydb" )
         self.res = self.db.getExpResults ()
         ids = []
         for expRes in self.res:
@@ -284,7 +286,8 @@ class BibtexWriter:
                 continue
             ids.append ( expRes.globalInfo.id )
             if not "ATLAS-SUSY-2015-01" in str(expRes):
-                continue
+                pass
+                # continue
             self.processExpRes ( expRes )
         self.f.close()
         self.addSummaries()
