@@ -1,10 +1,16 @@
 #!/usr/bin/python
+# vim: set fileencoding=utf-8
+# vim: set encoding=utf-8
 
 from __future__ import print_function
 from smodels.experiment.databaseObj import Database
 import urllib
 import os, sys
 import bibtexparser
+
+reload(sys)
+sys.setdefaultencoding('utf8')
+
 try:
     import commands
 except ImportError:
@@ -111,7 +117,18 @@ class BibtexWriter:
                 ret.append ( '      label          = "%s",\n' % label )
             if "@techreport" in line and label != None:
                 ret.append ( '      label          = "%s",\n' % label )
-        return "".join ( ret )
+        r =  unicode ( "".join ( ret )  )
+        r = r.replace ( unichr(8211), "--" )
+        r = r.replace ( unichr(160), " " )
+        for ctr,letter in enumerate(r):
+            o=ord(letter)
+            if o>127:
+                print ( "foreign letter %d: %s" % ( o, letter) )
+        #    if o==8211
+        #        print ( o )
+        #r = r.replace ( u"\xe2", "---" )
+        print ( r)
+        return r
 
     def fetchInspireUrl ( self, l, label ):
         """ from line in html page, extract the inspire url """
@@ -258,15 +275,16 @@ class BibtexWriter:
     def run( self ):
         home = os.environ["HOME"]
         # db = Database ( "%s/git/smodels/test/tinydb" % home )
-        self.db = Database ( "%s/git/smodels-database" % home )
+        # self.db = Database ( "%s/git/smodels-database" % home )
+        self.db = Database ( "./tinydb" )
         self.res = self.db.getExpResults ()
         ids = []
         for expRes in self.res:
             if expRes.globalInfo.id in ids:
                 continue
             ids.append ( expRes.globalInfo.id )
-#            if not "CMS-PAS-SUS-16-033" in str(expRes):
-#                continue
+            if not "ATLAS-SUSY-2015-01" in str(expRes):
+                continue
             self.processExpRes ( expRes )
         self.f.close()
         self.addSummaries()
