@@ -35,6 +35,36 @@ def getData():
     data=tx.txnameData
     return data
 
+def checkRemovableVertices ( tri ):
+    t0=time.time()
+    ## first get indices of zeroes not on the hull
+    zeroes = self.zeroIndices( self.tri.convex_hull ) 
+    if len(zeroes)<2: # a single zero cannot be removable
+        return []
+    removables = []
+    zeroSimplices = [] ## all zero-only simplices, by index
+    verticesInSimplices = { x:[] for x in zeroes }
+    for ctr,s in enumerate(self.tri.simplices):
+        if self.checkZeroSimplex ( s, zeroes ):
+            zeroSimplices.append ( ctr )
+        for vtx in s: ## remember which vertex is in which simplex
+            if not vtx in zeroes: ## only needed for zeroes though
+                continue
+            verticesInSimplices[vtx].append ( ctr )
+
+    for vtx in zeroes: ## for all zero vertices
+        allSimplicesZero=True
+        simplices = verticesInSimplices[vtx]
+        for simplex in simplices: ## go through all simplces with our vtx
+            if not simplex in zeroSimplices: ## not a zero simplex?
+                allSimplicesZero=False
+                break
+        if allSimplicesZero:
+            removables.append ( vtx )
+    logger.error ( "checkRemovables spent %.3f s on %s simplices." \
+                   "We had %d zeroes. Found %d removables." % \
+                   ( time.time() - t0, ctr, len(zeroes), len(removables) ) )
+    return removables
 
 fig=plt.figure ( figsize=(340/72.,340/72.) )
 
@@ -47,16 +77,10 @@ rc('text',usetex=True)
 data = getData()
 values = eval ( data.value )
 
+# xsecs = [ x[1].asNumber(pb) for x in values ]
+xsecs = data.xsec
+
 ptsunits = [ x[0] for x in values ]
-xsecs = [ x[1].asNumber(pb) for x in values ]
-
-"""
-RemovePoints = [ 11 ]
-for r in RemovePoints:
-    xsecs.pop ( r )
-    ptsunits.pop ( r )
-"""
-
 Points = []
 for p in ptsunits:
     t=[]
@@ -64,6 +88,10 @@ for p in ptsunits:
         for v2 in v:
             t.append ( v2.asNumber(GeV) )
     Points.append ( t[:2] )
+print ( "Points=",Points )
+Points = [ x[0][0] for x in data.points ]
+print ( "Points=",Points )
+
 points = np.array ( Points )
 # points = np.array([[0, 0], [0, 1.1], [1, 0], [1, 1]])
 from scipy.spatial import Delaunay
