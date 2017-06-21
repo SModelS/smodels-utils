@@ -94,13 +94,15 @@ class BibtexWriter:
         return self.replaceUnicodes ( "".join ( ret ) )
 
     def replaceUnicodes ( self, source ):
-        repls = { 8211: "--", 160: "", 8722: "-" }
+        repls = { 8211:"--", 160:"", 8722:"-", 8201:"", 226:"-", 128:" ", 147:"-",
+                  137: "" }
         for k,v in repls.items():
             source = source.replace ( unichr(k), v )
         for ctr,letter in enumerate(source):
             o=ord(letter)
             if o>127:
                 print ( "foreign letter %d: %s" % ( o, letter) )
+                print ( "The context was: >>%s#%s<<" % ( source[ctr-20:ctr], source[ctr+1:ctr+20] ) )
                 sys.exit()
         print ( source )
         return source 
@@ -129,7 +131,7 @@ class BibtexWriter:
                 ret.append ( '      label          = "%s",\n' % label )
             if "@techreport" in line and label != None:
                 ret.append ( '      label          = "%s",\n' % label )
-        r =  unicode ( "".join ( ret )  )
+        r =  self.replaceUnicodes ( "".join ( ret )  )
         return r
 
     def fetchInspireUrl ( self, l, label ):
