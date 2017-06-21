@@ -43,10 +43,10 @@ class SmsDictWriter:
 
 = SMS dictionary =
 This page intends to collect information about how we map the SModelS description of
-events onto the Tx nomenclature. The list has been created from the database version %s.
+events onto the Tx nomenclature. The list has been created from the database version %s, considering also superseded results.
 
-There is also a ListOfAnalyses%s.
-""" % (self.database.databaseVersion, self.ver ) )
+There is also a ListOfAnalyses%s, and a ListOfAnalyses%sWithSuperseded.
+""" % (self.database.databaseVersion, self.ver, self.ver ) )
 
     def footer( self ):
         return
@@ -69,8 +69,8 @@ N.B.: Each "()" group corresponds to a branch
 
     def getTopos( self ):
         topos = {}
-        # expresults = database.getExpResults()
-        expresults = self.database.expResultList ## also non-validated
+        expresults = self.database.getExpResults( useSuperseded=True )
+        #expresults = self.database.expResultList ## also non-validated
         for expRes in expresults:
             for dataset in expRes.datasets:
                 for txname in dataset.txnameList:
@@ -155,13 +155,16 @@ N.B.: Each "()" group corresponds to a branch
         ## now "Appears in" column
         if self.hasResultsColumn:
             self.f.write ( "||" )
-            results = self.database.getExpResults ( txnames = txnames )
+            results = self.database.getExpResults ( txnames = txnames, useSuperseded = True )
             if len(results)>9:
                 self.f.write ( "[[ListOfAnalyses%s|many (%d)]]" % (self.ver,len(results)) )
             else:
                 l = []
                 for res in results:
-                    l.append ( "[[ListOfAnalyses%s#%s|%s]]" % ( self.ver, res.globalInfo.id, res.globalInfo.id ) )
+                    supers = ""
+                    if hasattr ( res.globalInfo, "supersededBy" ):
+                        supers="WithSuperseded"
+                    l.append ( "[[ListOfAnalyses%s%s#%s|%s]]" % ( self.ver, supers, res.globalInfo.id, res.globalInfo.id ) )
                 self.f.write ( "<<BR>>".join ( l ) )
         self.f.write ( "||\n" )
 
