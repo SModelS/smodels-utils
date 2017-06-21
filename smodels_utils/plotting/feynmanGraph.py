@@ -33,12 +33,14 @@ def printParticle_ ( label ):
     """ very simple method to rename a few particles for the asciidraw
             routine, do not call directly """
     ## print "label=",label
-    if label=="jet": label="q"
+    if label=="jet": label=r"q"
     if label in [ "hi", "higgs" ]: label="H"
     # if label in [ "nu" ]: label="$\\nu$"
     # if label in [ "f" ]: label = r"\Pelectron"
     if label in [ "f" ]: return r"\Pfermion"
-    if label in [ "b" ]: return r"\Pbeauty"
+    # if label in [ "f" ]: return r"f"
+    if label in [ "b" ]: return r"b"
+    # if label in [ "b" ]: return r"\Pbeauty"
     label=label+"     "
     return label[:3]
 
