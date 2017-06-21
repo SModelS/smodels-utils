@@ -20,11 +20,15 @@ except:
     import subprocess as C
 
 class SmsDictWriter:
-    def __init__ ( self, drawFeyn=False, xkcd=False ):
+    def __init__ ( self, database, drawFeyn, xkcd, results, addVer ):
+        self.databasePath = database
         self.drawFeyn = drawFeyn
         self.xkcd = xkcd
-        self.database = None
-        self.hasResultsColumn = False
+        self.database = Database ( database )
+        self.ver="v"+self.database.databaseVersion.replace(".","")
+        if not addVer:
+            self.ver=""
+        self.hasResultsColumn = results
         self.f=open("SmsDictionary","w" )
 
     def straight( self ):
@@ -41,8 +45,8 @@ class SmsDictWriter:
 This page intends to collect information about how we map the SModelS description of
 events onto the Tx nomenclature. The list has been created from the database version %s.
 
-There is also a ListOfAnalyses.
-""" % self.database.databaseVersion )
+There is also a ListOfAnalyses%s.
+""" % (self.database.databaseVersion, self.ver ) )
 
     def footer( self ):
         return
@@ -58,7 +62,7 @@ N.B.: Each "()" group corresponds to a branch
         # f.write ( '||<tableclass="sortable"> Tx Name || Topology || Graph || Results ||\n' )
         columns=[ "#", "Tx", "Topology", "Graph" ]
         if self.hasResultsColumn:
-            columns.append ( "Results" )
+            columns.append ( "Appears in" )
         for header in columns:
             self.f.write ( "||<#EEEEEE:> '''%s''' " % header )
         self.f.write ( "||\n" )
@@ -142,13 +146,23 @@ N.B.: Each "()" group corresponds to a branch
             for txname in txnames:
                 self.createFeynGraph ( txname, constraint )
         constraint = constraint.replace ( "]+[", "]+`<<BR>>`[" )
-        self.f.write ( "||`%s`" % constraint )
+        self.f.write ( "||`%s`" % constraint ) ## "Topology" column
         style = "straight"
         if self.xkcd:
             style = "xkcd"
+        ## now "Graph" column
         self.f.write ( '||{{http://smodels.hephy.at/feyn/%s/%s.png||width="150"}}' % ( style, txname ) )
-        ## for debugging
-        ## self.f.write  ( '{{http://smodels.hephy.at/feyn/xkcd/%s.png||width="150"}}' % txname )
+        ## now "Appears in" column
+        if self.hasResultsColumn:
+            self.f.write ( "||" )
+            results = self.database.getExpResults ( txnames = txnames )
+            if len(results)>9:
+                self.f.write ( "[[ListOfAnalyses%s|many (%d)]]" % (self.ver,len(results)) )
+            else:
+                l = []
+                for res in results:
+                    l.append ( "[[ListOfAnalyses%s#%s|%s]]" % ( self.ver, res.globalInfo.id, res.globalInfo.id ) )
+                self.f.write ( "<<BR>>".join ( l ) )
         self.f.write ( "||\n" )
 
 if __name__ == '__main__':
@@ -158,10 +172,16 @@ if __name__ == '__main__':
                              action='store_true' )
     argparser.add_argument ( '-x', '--xkcd', help='draw xkcd style (implies -f)',
                              action='store_true' )
+    argparser.add_argument ( '-r', '--results', help='dont add results column',
+                             action='store_false' )
+    argparser.add_argument ( '-d', '--database', help='path to database',
+                             type=str, default='../../smodels-database' )
+    argparser.add_argument ( '-v', '--version', 
+            help='dont add version labels to links', action='store_false' )
     args = argparser.parse_args()
     if args.xkcd:
         args.feynman = True
-    writer = SmsDictWriter( drawFeyn = args.feynman, xkcd = args.xkcd )
-    writer.database = Database ( "../../smodels-database" )
+    writer = SmsDictWriter( database=args.database, drawFeyn = args.feynman, 
+            xkcd = args.xkcd, results = args.results, addVer = args.version )
     print ( "database", writer.database.databaseVersion )
     writer.run()
