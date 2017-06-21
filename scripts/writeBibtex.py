@@ -94,8 +94,8 @@ class BibtexWriter:
         return self.replaceUnicodes ( "".join ( ret ) )
 
     def replaceUnicodes ( self, source ):
-        repls = { 8211:"--", 160:"", 8722:"-", 8201:"", 226:"-", 128:" ", 147:"-",
-                  137: "" }
+        repls = { 8211:"--", 160:" ", 8722:"-", 8201:" ", 226:"-", 128:" ", 147:"-",
+                  137: " " }
         for k,v in repls.items():
             source = source.replace ( unichr(k), v )
         for ctr,letter in enumerate(source):
@@ -105,6 +105,9 @@ class BibtexWriter:
                 print ( "The context was: >>%s#%s<<" % ( source[ctr-20:ctr], source[ctr+1:ctr+20] ) )
                 sys.exit()
         print ( source )
+        source=source.replace( "8TeV", "8 TeV" ).replace("Tev","TeV" )
+        source=source.replace ( "fb-1", "fb$^{-1}$" )
+        source=source.replace ( "AlphaT", "$\\alpha_{T}$" )
         return source 
 
     def bibtexFromInspire ( self, url, label=None ):
