@@ -28,6 +28,11 @@ def discussExperiment ( anas, experiment ):
     n_results_em = 0
     for expRes in anas:
         Id = expRes.globalInfo.id
+        contact = ""
+        if hasattr ( expRes.globalInfo, "contact" ):
+            contact = expRes.globalInfo.contact
+        #if not "SModelS" in contact:
+        #    continue
         if not Id in ianas:
             ianas.append ( Id )
         topos = set()

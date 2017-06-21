@@ -19,7 +19,7 @@ from smodels.tools.smodelsLogging import setLogLevel
 from smodels.tools.physicsUnits import TeV
 
 # setLogLevel("debug")
-
+                
 def convert ( string ):
     ret = string.replace ( ">=", "&ge;" )
     ret = ret.replace ( "alphaT", "&alpha;,,T,," )
@@ -63,7 +63,8 @@ def footer ( f ):
     f.write ( "<<Anchor(FastLim)>>\n" )
     f.write ( ", ".join ( [ "[[SmsDictionary#%s|%s]]" % ( i, i ) for i in fastlim_topos ] ) )
     """
-    f.write ( "[*] Please note that by default we discard zeroes-only results from !FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n" )
+    f.write ( "<<Anchor(A1)>>(1) ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like !MadAnalysis5 or CheckMATE.\n\n" )
+    f.write ( "<<Anchor(A2)>>(2) Please note that by default we discard zeroes-only results from !FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n" )
 
 def listTables ( f, anas ):
     f.write ( "== Individual tables ==\n" )
@@ -134,7 +135,7 @@ def emptyLine( f, superseded, ana_name ):
     f.write ( " ||"*( len(fields(superseded) ) ) )
     f.write ( "\n" )
 
-def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded ):
+def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, n_homegrown ):
     keys, anadict = [], {}
     for ana in anas:
         id = ana.globalInfo.id
@@ -171,16 +172,28 @@ def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded ):
         # print ( comment )
         fastlim = ( "created from fastlim" in comment )
         topos = list ( set ( map ( str, ana.getTxNames() ) ) )
+        homegrownd = {}
+        for i in ana.getTxNames():
+            if i.validated not in [ True, "n/a", "N/A" ]:
+                print ( "validated=",i.validated )
+                sys.exit()
+            homegrownd[str(i)] = ""
+            if hasattr ( i, "source" ) and "SModelS" in i.source:
+                homegrownd[str(i)] = " [[#A1|(1)]]"
+
         topos.sort()
         # print ( topos )
         topos_s = ""
         topos_names = set()
         for i in topos:
             topos_names.add ( i )
-            topos_s += ", [[SmsDictionary#%s|%s]]" % ( i, i )
+            homegrown = homegrownd[i]
+
+            if homegrown !="" : n_homegrown[0]+=1
+            topos_s += ", [[SmsDictionary#%s|%s]]%s" % ( i, i, homegrown )
         topos_s = topos_s[2:]
         if fastlim:
-            topos_s += " (from !FastLim [*])"
+            topos_s += " (from !FastLim [[#A2|(2)]])"
             # print ( "fastlim_topos=",topos_names )
             # topos_s = "[[#FastLim|(from fastlim)]]"
             pass
@@ -225,7 +238,7 @@ def selectAnalyses ( anas, sqrts, experiment, Type ):
         ret.append ( ana )
     return ret
 
-def writeExperiment ( f, db, experiment, sqrts, superseded ):
+def writeExperiment ( f, db, experiment, sqrts, superseded, n_homegrown ):
     tanas = db.getExpResults( useSuperseded=superseded )
     for Type in [ "upperLimit", "efficiencyMap" ]:
         anas = []
@@ -240,7 +253,8 @@ def writeExperiment ( f, db, experiment, sqrts, superseded ):
             if not experiment in id or not Type == dt:
                 continue
             anas.append ( ana )
-        writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded )
+        writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, \
+                        n_homegrown )
 
 def backup( filename ):
     o = commands.getoutput ( "cp %s Old%s" % ( filename, filename ) )
@@ -255,6 +269,7 @@ def diff( filename ):
     print ( "%s has changed (%d changes)" % ( filename, len(o.split() ) ) )
 
 def main():
+    n_homegrown=[0]
     superSeded=True
     for i in sys.argv[1:]:
         if i == "-n": superSeded=False
@@ -270,7 +285,9 @@ def main():
     experiments=[ "CMS", "ATLAS" ]
     for sqrts in [ 13, 8 ]:
         for experiment in experiments:
-            writeExperiment ( f, database, experiment, sqrts, superSeded )
+            writeExperiment ( f, database, experiment, sqrts, \
+                              superSeded, n_homegrown )
+    print ( "%d home-grown now" % n_homegrown[0] )
     footer ( f )
     f.close()
     diff( filename )
