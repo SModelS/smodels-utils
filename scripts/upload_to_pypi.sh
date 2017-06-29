@@ -5,5 +5,8 @@
 REPO=pypitest
 ## REPO=pypi
 
-python setup.py register -r $REPO
-python setup.py sdist upload -r $REPO
+rm -r dist/*
+# python setup.py register -r $REPO
+#python setup.py sdist upload -r $REPO
+python setup.py sdist bdist_wheel
+twine upload dist/* -r $REPO
