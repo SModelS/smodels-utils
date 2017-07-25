@@ -732,4 +732,3 @@ class ExclusionHandler(DataHandler):
                 x = (xorig-x0)/xGeV
                 y = (yorig-y0)/yGeV
                 yield [x,y]
-                

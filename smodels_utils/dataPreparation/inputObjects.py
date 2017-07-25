@@ -72,7 +72,7 @@ class MetaInfoInput(Locker):
 
     infoAttr = ['id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
     'publication', 'contact', 'supersededBy','supersedes', 'comment',
-    'private', 'implementedBy','lastUpdate']
+    'private', 'implementedBy','lastUpdate', 'datasetOrder', 'covariance' ]
     internalAttr = ['_sqrts', '_lumi']
 
     requiredAttr = ['sqrts', 'lumi', 'id', 'lastUpdate']
@@ -94,6 +94,11 @@ class MetaInfoInput(Locker):
         metaInfo = object.__new__(cls)
         databaseCreator.metaInfo = metaInfo
         return metaInfo
+
+    def createCovarianceMatrix ( self, filename, histoname ):
+        handler = CovarianceHandler ( filename, histoname )
+        self.datasetOrder = handler.datasetOrder
+        self.covariance = handler.covariance
 
     def __init__(self, ID):
 
