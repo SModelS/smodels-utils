@@ -95,10 +95,38 @@ class MetaInfoInput(Locker):
         databaseCreator.metaInfo = metaInfo
         return metaInfo
 
-    def createCovarianceMatrix ( self, filename, histoname ):
+    def createCovarianceMatrix ( self, filename, histoname, addOrder=True ):
+        class CovarianceHandler:
+            def __init__ ( self, filename, histoname ):
+                import ROOT
+                f=ROOT.TFile ( filename )
+                h=f.Get ( histoname )
+                xaxis = h.GetXaxis()
+                self.n=h.GetNbinsX()+1
+                self.n=min(6,self.n)
+                self.datasetOrder = []
+                self.covariance = []
+                for i in range ( 1, self.n ):
+                    self.datasetOrder.append ( xaxis.GetBinLabel(i) )
+                    row = []
+                    for j in range ( 1, self.n ):
+                        row.append ( h.GetBinContent ( i, j ) )
+                    self.covariance.append ( row )
+
         handler = CovarianceHandler ( filename, histoname )
-        self.datasetOrder = handler.datasetOrder
+        if addOrder:
+            self.datasetOrder = ", ".join ( [ '"%s"' % x for x in  handler.datasetOrder ] )
+        else:
+            self.datasetOrder = ", ".join ( [ '"sr%d"' % (x+1) for x in range ( handler.n-1 ) ] )
         self.covariance = handler.covariance
+        if True: ## pretty print
+            self.covariance = "["
+            for row in handler.covariance:
+                self.covariance += "["
+                for x in row:
+                    self.covariance += "%.4g, " % x
+                self.covariance = self.covariance[:-2] + "], "
+            self.covariance = self.covariance[:-2]+"]"
 
     def __init__(self, ID):
 

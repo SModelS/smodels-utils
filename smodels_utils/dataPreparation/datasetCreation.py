@@ -23,17 +23,25 @@ class DatasetCreator:
     class that produces the datasets
     """
 
-    def __init__( self, fname_obs, fname_bg, hname_obs, hname_bg ):
+    def __init__( self, observed_histo, bg_histo, readDatasetNames=True ):
         """
-        :param fname_obs: filename for root file with n_obs for datasets
-        :param fname_bg: filename for root file with bg estimates for datasets
-        :param hname_obs: histogram name of n_obs, in fname_obs
-        :param hname_bg: histogram name for bg estimates
+        :param observed_histo: filename and histogramname of observed event counts,
+            filename and name of histo are separated with a ":".
+        :param bg_histo: filename and histogramname of bg event counts,
+            filename and name of histo are separated with a ":".
+        :param readDatasetNames: try to retrieve dataset names from histogram
         """
+        fname_obs, hname_obs = observed_histo.split(":")
+        fname_bg, hname_bg = bg_histo.split(":")
         self.file_obs = ROOT.TFile ( fname_obs )
         self.file_bg = ROOT.TFile ( fname_bg )
         self.histo_obs = self.file_obs.Get ( hname_obs )
         self.histo_bg = self.file_bg.Get ( hname_bg )
+        self.readDatasetNames = readDatasetNames
+        if not self.histo_obs:
+            logger.error ( "could not get histo ``%s'' file ``%s''" % \
+                             ( hname_obs, fname_obs ) )
+            sys.exit()
         self.create()
 
     def create ( self ):
@@ -54,7 +62,9 @@ class DatasetCreator:
         self.counter += 1
         if self.counter > self.n:
             raise StopIteration ()
-        name = self.xaxis.GetBinLabel ( self.counter )
+        name = "sr%d" % self.counter
+        if self.readDatasetNames:
+            name = self.xaxis.GetBinLabel ( self.counter )
         nobs = self.histo_obs.GetBinContent ( self.counter )
         bg = self.histo_bg.GetBinContent ( self.counter )
         bgerr = self.histo_bg.GetBinError ( self.counter )
@@ -63,7 +73,8 @@ class DatasetCreator:
                 expectedBG=bg, bgError=bgerr )
         return dataset
 
-creator = DatasetCreator ( "CMS-SUS-16-033_Figure_009.root", \
-    "PostFitHistograms.root", "DataObs", "PostFitTotal" )
-for c in creator:
-    print ( c )
+if __name__ == "__main__":
+    creator = DatasetCreator ( "CMS-SUS-16-033_Figure_009.root:DataObs", \
+                               "PostFitHistograms.root:PostFitTotal" )
+    for c in creator:
+        print ( c )
