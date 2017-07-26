@@ -51,7 +51,7 @@ class DatasetsFromLatex:
         return line
 
     def __next__ ( self ):
-        if self.max_datasets and (self.counter + 1) >= self.max_datasets:
+        if self.max_datasets and self.counter >= self.max_datasets:
             # we are told not to produce more
             raise StopIteration()
         try:
