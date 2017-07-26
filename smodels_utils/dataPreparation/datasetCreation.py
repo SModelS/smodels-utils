@@ -10,6 +10,7 @@
 
 """
 
+import math
 import sys
 import ROOT
 sys.path.insert ( 0, "../../../smodels" )
@@ -18,9 +19,67 @@ from smodels.tools.smodelsLogging import logger
 from smodels.tools.statistics import upperLimit
 from smodels_utils.dataPreparation.inputObjects import MetaInfoInput,DataSetInput
 
-class DatasetCreator:
+class DatasetsFromLatex:
     """
-    class that produces the datasets
+    class that produces the datasets from LateX table
+    """
+    def __init__ ( self, texfile ):
+        self.texfile = texfile
+        self.create()
+    
+    def create ( self ):
+        f = open ( self.texfile )
+        self.lines = f.readlines()
+        f.close()
+
+    def __iter__ ( self ):
+        return self
+
+    def next ( self ): ## for python2
+        return self.__next__()
+
+    def clean ( self, line ):
+        line = line.replace ( "\\hline", "" )
+        line = line.replace ( "\\\\", "" )
+        line = line.strip()
+        return line
+
+    def __next__ ( self ):
+        try:
+            line = ""
+            while len(line)==0:
+                line = self.clean ( self.lines.pop(0) )
+        except IndexError as e:
+            raise StopIteration()
+        tokens = line.split ( "&" )
+        binnr = int ( tokens[0] )
+        nobs = int ( tokens[5] )
+        sbg = tokens[6].strip()
+        fst_sp = sbg.find(" " )
+        bg = float ( sbg [ : fst_sp ] )
+        sbgerrs = sbg[fst_sp:].strip()
+        errtokens = sbgerrs.split ( " " )
+        cltokens = [ x.replace("$","").replace("^","").replace("{","").replace("}","").replace("_","").replace("+","") for x in errtokens ]
+        ttokens = []
+        for t in cltokens:
+            if t!="":
+                ttokens.append ( t )
+        # print ( "clotkens=",ttokens )
+        stat_errs = list ( map ( float, ttokens[:2] ) )
+        sys_errs = list ( map ( float, ttokens[2:] ) )
+        #stat_errs = list ( map ( float, cltokens[0].split("-") ) )
+        #sys_errs = list ( map ( float, cltokens[1].split("-") ) )
+        tot_errs = [ math.sqrt ( stat_errs[i]**2 + sys_errs[i]**2  ) for i in range(2) ]
+        bgerr = max ( tot_errs )
+        name = "sr%d" % binnr 
+        dataset = DataSetInput ( name )
+        dataset.setInfo ( dataType="efficiencyMap", dataId = name, observedN = nobs,
+            expectedBG=bg, bgError=bgerr )
+        return dataset
+            
+class DatasetsFromRoot:
+    """
+    class that produces the datasets from root files.
     """
 
     def __init__( self, observed_histo, bg_histo, readDatasetNames=True ):

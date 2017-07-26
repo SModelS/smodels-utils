@@ -117,7 +117,7 @@ class MetaInfoInput(Locker):
         if addOrder:
             self.datasetOrder = ", ".join ( [ '"%s"' % x for x in  handler.datasetOrder ] )
         else:
-            self.datasetOrder = ", ".join ( [ '"sr%d"' % (x+1) for x in range ( handler.n-1 ) ] )
+            self.datasetOrder = ", ".join ( [ '"sr%d"' % (x) for x in range ( handler.n-1 ) ] )
         self.covariance = handler.covariance
         if True: ## pretty print
             self.covariance = "["
