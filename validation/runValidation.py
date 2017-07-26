@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+"""
+.. module:: runValidation.py
+   :synopsis: runs the validation procedure, defined in an ini file.
+
+"""
+
 import sys,os
 import logging
 import argparse,time
@@ -13,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 
-def validatePlot(expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,pretty=False,generateData=True):
+def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
+				          pretty=False,generateData=True):
     """
     Creates a validation plot and saves its output.
 
@@ -169,7 +176,7 @@ if __name__ == "__main__":
 
     ap = argparse.ArgumentParser(description="Produces validation plots and data for the selected results")
     ap.add_argument('-p', '--parfile',
-            help='parameter file specifying the validation options', default='./validation_parameters.ini')
+            help='parameter file specifying the validation options [validation_parameters.ini]', default='./validation_parameters.ini')
     ap.add_argument('-l', '--log',
             help='specifying the level of verbosity (error, warning,info, debug)',
             default = 'warning', type = str)
