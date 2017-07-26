@@ -133,7 +133,7 @@ class DatasetsFromRoot:
         return dataset
 
 if __name__ == "__main__":
-    creator = DatasetCreator ( "CMS-SUS-16-033_Figure_009.root:DataObs", \
+    creator = DatasetsFromRoot ( "CMS-SUS-16-033_Figure_009.root:DataObs", \
                                "PostFitHistograms.root:PostFitTotal" )
     for c in creator:
         print ( c )
