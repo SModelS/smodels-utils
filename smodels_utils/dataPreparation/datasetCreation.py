@@ -23,8 +23,14 @@ class DatasetsFromLatex:
     """
     class that produces the datasets from LateX table
     """
-    def __init__ ( self, texfile ):
+    def __init__ ( self, texfile, max_datasets=None ):
+        """
+        :param texfile: file to parse
+        :param max_datasets: consider a maximum of n datasets
+        """
         self.texfile = texfile
+        self.max_datasets = max_datasets
+        self.counter = 0
         self.create()
     
     def create ( self ):
@@ -45,6 +51,9 @@ class DatasetsFromLatex:
         return line
 
     def __next__ ( self ):
+        if self.max_datasets and (self.counter + 1) >= self.max_datasets:
+            # we are told not to produce more
+            raise StopIteration()
         try:
             line = ""
             while len(line)==0:
@@ -75,6 +84,7 @@ class DatasetsFromLatex:
         dataset = DataSetInput ( name )
         dataset.setInfo ( dataType="efficiencyMap", dataId = name, observedN = nobs,
             expectedBG=bg, bgError=bgerr )
+        self.counter += 1
         return dataset
             
 class DatasetsFromRoot:

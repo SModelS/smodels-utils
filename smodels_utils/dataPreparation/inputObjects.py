@@ -95,15 +95,17 @@ class MetaInfoInput(Locker):
         databaseCreator.metaInfo = metaInfo
         return metaInfo
 
-    def createCovarianceMatrix ( self, filename, histoname, addOrder=True ):
+    def createCovarianceMatrix ( self, filename, histoname, addOrder=True,
+                                 max_datasets=None ):
         class CovarianceHandler:
-            def __init__ ( self, filename, histoname ):
+            def __init__ ( self, filename, histoname, max_datasets=None ):
                 import ROOT
                 f=ROOT.TFile ( filename )
                 h=f.Get ( histoname )
                 xaxis = h.GetXaxis()
                 self.n=h.GetNbinsX()+1
-                self.n=min(6,self.n)
+                if max_datasets:
+                    self.n=min(max_datasets+1,self.n)
                 self.datasetOrder = []
                 self.covariance = []
                 for i in range ( 1, self.n ):
@@ -113,7 +115,7 @@ class MetaInfoInput(Locker):
                         row.append ( h.GetBinContent ( i, j ) )
                     self.covariance.append ( row )
 
-        handler = CovarianceHandler ( filename, histoname )
+        handler = CovarianceHandler ( filename, histoname, max_datasets )
         if addOrder:
             self.datasetOrder = ", ".join ( [ '"%s"' % x for x in  handler.datasetOrder ] )
         else:
