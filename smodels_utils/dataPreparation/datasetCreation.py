@@ -67,13 +67,14 @@ class DatasetsFromLatex:
         fst_sp = sbg.find(" " )
         bg = float ( sbg [ : fst_sp ] )
         sbgerrs = sbg[fst_sp:].strip()
+        sbgerrs = sbgerrs.replace("- ","-" )
         errtokens = sbgerrs.split ( " " )
         cltokens = [ x.replace("$","").replace("^","").replace("{","").replace("}","").replace("_","").replace("+","") for x in errtokens ]
         ttokens = []
         for t in cltokens:
             if t!="":
                 ttokens.append ( t )
-        # print ( "clotkens=",ttokens )
+        ## print ( "ttokens=",ttokens )
         stat_errs = list ( map ( float, ttokens[:2] ) )
         sys_errs = list ( map ( float, ttokens[2:] ) )
         #stat_errs = list ( map ( float, cltokens[0].split("-") ) )
