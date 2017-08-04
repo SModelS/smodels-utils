@@ -73,7 +73,7 @@ class MetaInfoInput(Locker):
     infoAttr = ['id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
     'publication', 'contact', 'supersededBy','supersedes', 'comment',
     'private', 'implementedBy','lastUpdate', 'datasetOrder', 'covariance',
-    'combinable_with' ]
+    'combinableWith' ]
     internalAttr = ['_sqrts', '_lumi']
 
     requiredAttr = ['sqrts', 'lumi', 'id', 'lastUpdate']
