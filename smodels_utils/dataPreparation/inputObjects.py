@@ -53,7 +53,7 @@ class Locker(object):
         if name in self.allowedAttr:
             object.__setattr__(self, name, attr)
             return
-        logger.error("Attribute %s in not allowed for %s" %(name,type(object)))
+        logger.error("Attribute %s is not allowed for %s" %(name,type(self)))
 
     @property
     def allowedAttr(self):
@@ -72,7 +72,8 @@ class MetaInfoInput(Locker):
 
     infoAttr = ['id','sqrts', 'lumi', 'prettyName', 'url', 'arxiv',
     'publication', 'contact', 'supersededBy','supersedes', 'comment',
-    'private', 'implementedBy','lastUpdate', 'datasetOrder', 'covariance' ]
+    'private', 'implementedBy','lastUpdate', 'datasetOrder', 'covariance',
+    'combinable_with' ]
     internalAttr = ['_sqrts', '_lumi']
 
     requiredAttr = ['sqrts', 'lumi', 'id', 'lastUpdate']
