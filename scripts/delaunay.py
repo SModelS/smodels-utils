@@ -17,6 +17,7 @@ import pickle
 TxNameData._keep_values = True
 
 anaid = "CMS-PAS-SUS-15-002"
+anaid = "FAKE-CMS-15-002"
 topo = "T1ttttoff"
 # topo = "T1hacked"
 #anaid = "ATLAS-SUSY-2013-23"
@@ -88,9 +89,10 @@ for p in ptsunits:
         for v2 in v:
             t.append ( v2.asNumber(GeV) )
     Points.append ( t[:2] )
-print ( "Points=",Points )
-Points = [ x[0][0] for x in data.points ]
-print ( "Points=",Points )
+#print ( "Points=",Points )
+# data.points = eval ( data.value )
+#print ( "data=",data.value )
+#Points = [ x[0][0] for x in data.points ]
 
 points = np.array ( Points )
 # points = np.array([[0, 0], [0, 1.1], [1, 0], [1, 1]])
@@ -129,7 +131,7 @@ for i in zeroes:
             ct+=1
             if not allZeroSimplex ( s, zeroes ):
                 allSimplicesZero = False
-    if allSimplicesZero:
+    if allSimplicesZero and not inHull:
         print ( "we can remove point %d!!!" % i )
 
     print ( "point %d: inHull: %d. in %d simplices." % ( i, inHull, ct ) )
@@ -139,7 +141,8 @@ zero_points = np.array  ( zero_Points )
 
 plt.triplot(points[:,0], points[:,1], tri.simplices.copy(), linewidth=.4 )
 plt.plot(points[:,0], points[:,1], 'bo', markeredgecolor='#0000aa', ms=2.0 )
-plt.plot(zero_points[:,0], zero_points[:,1], 'bo', markeredgecolor='#00aa00', ms=3.0 )
+if len (zero_points)>0:
+    plt.plot(zero_points[:,0], zero_points[:,1], 'bo', markeredgecolor='#00aa00', ms=3.0 )
 
 for simplex in hull:
     plt.plot(points[simplex, 0], points[simplex, 1], 'r--')
@@ -155,5 +158,6 @@ for i,(point,xsec) in enumerate ( zip ( points,xsecs ) ):
         col="g"
     if i in hull:
         col="r"
-    plt.text ( point[0], point[1], "%.2f" % xsec, fontdict = { "color": col} )
+    plt.text ( point[0], point[1], "%.2f" % (xsec), fontdict = { "color": col} )
+    #plt.text ( point[0], point[1], "%.2f [%d]" % (xsec,i), fontdict = { "color": col} )
 plt.savefig ( "delaunay.pdf" )
