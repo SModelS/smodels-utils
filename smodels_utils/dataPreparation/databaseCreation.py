@@ -172,20 +172,24 @@ class DatabaseCreator(list):
         
         #Loop over datasets:
         chunkedDatasets = [self[x::self.ncpus] for x in range(self.ncpus) if self[x::self.ncpus]]
-        manager = multiprocessing.Manager() 
-        updatedDatasets = manager.list() #Stores the updated datasets for each process    
-        children = []           
-        for chunk in chunkedDatasets:            
-            p = multiprocessing.Process(target=self.createDatasets, args=(chunk,updatedDatasets))
-            children.append(p)
-            p.start()
-        for p in children:
-            p.join(timeout=100000)
+        if self.ncpus == 1:
+            updatedDatasets = []
+            self.createDatasets ( chunkedDatasets[0], updatedDatasets )
+        else:
+            manager = multiprocessing.Manager() 
+            updatedDatasets = manager.list() #Stores the updated datasets for each process    
+            children = []           
+            for chunk in chunkedDatasets:            
+                p = multiprocessing.Process(target=self.createDatasets, args=(chunk,updatedDatasets))
+                children.append(p)
+                p.start()
+            for p in children:
+                p.join(timeout=100000)
 
-        if len(updatedDatasets) != len(self):
-            logger.error("Error, when creating datasets: some children didnt terminate within the timeout. I see %d out of %d children have terminated." % \
-                    ( len(updatedDatasets), len(self) ) )
-            sys.exit()
+            if len(updatedDatasets) != len(self):
+                logger.error("Error, when creating datasets: some children didnt terminate within the timeout. I see %d out of %d children have terminated." % \
+                        ( len(updatedDatasets), len(self) ) )
+                sys.exit()
         
         for dataset in updatedDatasets:
             self.updateDataset(dataset)
