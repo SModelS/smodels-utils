@@ -163,13 +163,17 @@ class DatabaseCreator(list):
 
         self.timeStamp ( 'create next database entry for %s' % self.metaInfo.id, "error" )
 
+        if hasattr ( self, "datasetCreator" ):
+            ## if we have a dataset creator, we let it define the order in globalInfo.txt.
+            self.datasetCreator.setDataSetOrder ( self.metaInfo )
+        
         if not createAdditional:
             self._setLastUpdate()
             self._delete()
             self._createInfoFile(self.metaInfoFileName, self.metaInfo,
                                  self.metaInfoFileDirectory)
             self._createValidationFolder()
-        
+
         #Loop over datasets:
         chunkedDatasets = [self[x::self.ncpus] for x in range(self.ncpus) if self[x::self.ncpus]]
         if self.ncpus == 1:

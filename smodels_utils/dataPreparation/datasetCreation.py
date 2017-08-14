@@ -18,6 +18,7 @@ sys.path.insert ( 0, "../.." )
 from smodels.tools.smodelsLogging import logger
 from smodels.tools.statistics import upperLimit
 from smodels_utils.dataPreparation.inputObjects import MetaInfoInput,DataSetInput
+from smodels_utils.dataPreparation.databaseCreation import databaseCreator
 
 class DatasetsFromLatex:
     """
@@ -37,12 +38,19 @@ class DatasetsFromLatex:
         self.c_bg = c_bg
         self.ds_name = ds_name
         self.counter = 0
+        self.datasetOrder = []
         self.create()
+        databaseCreator.datasetCreator = self
     
     def create ( self ):
         f = open ( self.texfile )
         self.lines = f.readlines()
         f.close()
+
+    def setDataSetOrder ( self, info ):
+        """ set the datasetOrder for the covariance matrix.
+            'info' is the MetaInfoInput object. """
+        info.datasetOrder = ",". join ( self.datasetOrder )
 
     def __iter__ ( self ):
         return self
@@ -97,6 +105,7 @@ class DatasetsFromLatex:
         dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
             expectedBG=bg, bgError=bgerr )
         self.counter += 1
+        self.datasetOrder.append ( '"%s"' % dataId )
         return dataset
             
 class DatasetsFromRoot:
@@ -124,6 +133,12 @@ class DatasetsFromRoot:
                              ( hname_obs, fname_obs ) )
             sys.exit()
         self.create()
+        databaseCreator.datasetCreator = self
+
+    def setDataSetOrder ( self, info ):
+        """ set the datasetOrder for the covariance matrix.
+            'info' is the MetaInfoInput object. """
+        info.datasetOrder = "FIXME: DatasetsFromRoot.setDataSetOrder not implemented"
 
     def create ( self ):
         self.n = self.histo_obs.GetNbinsX()
