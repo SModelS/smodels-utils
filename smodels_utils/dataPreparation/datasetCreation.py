@@ -23,13 +23,19 @@ class DatasetsFromLatex:
     """
     class that produces the datasets from LateX table
     """
-    def __init__ ( self, texfile, max_datasets=None ):
+    def __init__ ( self, texfile, max_datasets=None, c_obs=5, c_bg=6, ds_name="#1b#2HT#3MHT#4" ):
         """
         :param texfile: file to parse
         :param max_datasets: consider a maximum of n datasets
+        :param c_obs: number of column with observed events
+        :param c_bg: number of column with expected bg events and errors
+        :param ds_name: name of datasets, using #n as placeholders for value of nth column
         """
         self.texfile = texfile
         self.max_datasets = max_datasets
+        self.c_obs = c_obs
+        self.c_bg = c_bg
+        self.ds_name = ds_name
         self.counter = 0
         self.create()
     
@@ -62,8 +68,8 @@ class DatasetsFromLatex:
             raise StopIteration()
         tokens = line.split ( "&" )
         binnr = int ( tokens[0] )
-        nobs = int ( tokens[5] )
-        sbg = tokens[6].strip()
+        nobs = int ( tokens[self.c_obs] )
+        sbg = tokens[self.c_bg].strip()
         fst_sp = sbg.find(" " )
         bg = float ( sbg [ : fst_sp ] )
         sbgerrs = sbg[fst_sp:].strip()
@@ -82,8 +88,13 @@ class DatasetsFromLatex:
         tot_errs = [ math.sqrt ( stat_errs[i]**2 + sys_errs[i]**2  ) for i in range(2) ]
         bgerr = max ( tot_errs )
         name = "sr%d" % binnr 
+        dataId = self.ds_name
+        for i,token in enumerate ( tokens ):
+            ctoken = token.strip()
+            ctoken = ctoken.replace ( "-", "_" )
+            dataId = dataId.replace ( "#%d" % i, ctoken )
         dataset = DataSetInput ( name )
-        dataset.setInfo ( dataType="efficiencyMap", dataId = name, observedN = nobs,
+        dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
             expectedBG=bg, bgError=bgerr )
         self.counter += 1
         return dataset
