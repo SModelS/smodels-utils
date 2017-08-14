@@ -23,7 +23,7 @@ class DatasetsFromLatex:
     """
     class that produces the datasets from LateX table
     """
-    def __init__ ( self, texfile, max_datasets=None, c_obs=5, c_bg=6, ds_name="#1b#2HT#3MHT#4" ):
+    def __init__ ( self, texfile, max_datasets=None, c_obs=5, c_bg=6, ds_name="sr#0" ):
         """
         :param texfile: file to parse
         :param max_datasets: consider a maximum of n datasets
