@@ -46,7 +46,7 @@ def downGrade ( n ):
             ar = eval ( line[12:] )
             for row in ar[:n]:
                 newline += str(row[:n])+","
-            newline = newline[:-1]+"]]"
+            newline = newline[:-1]+"]"
             f.write ( newline+"\n" )
         else:
             f.write ( line )
