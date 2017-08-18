@@ -12,7 +12,7 @@ def restore ( ) :
     subprocess.getoutput ( "rm -r sr*" )
     subprocess.getoutput ( "cp -r .backup/globalInfo.txt .backup/sr* ." )
 
-def downGrade ( n ):
+def downGrade ( n, noCov ):
     if not os.path.exists ( ".backup" ):
         os.mkdir ( ".backup" )
     if not os.path.exists ( ".backup/globalInfo.txt" ):
@@ -44,6 +44,11 @@ def downGrade ( n ):
         elif "covariance:" in line:
             newline="covariance: ["
             ar = eval ( line[12:] )
+            if noCov:
+                for i in range(len(ar)):
+                    for j in range(len(ar)):
+                        if i!=j:
+                            ar[i][j]=0.
             for row in ar[:n]:
                 newline += str(row[:n])+","
             newline = newline[:-1]+"]"
@@ -57,8 +62,9 @@ def downGrade ( n ):
 
 
 if len(sys.argv)<2:
-    print ( "Usage: %s <n>" % sys.argv[0] )
+    print ( "Usage: %s <n> [-C]" % sys.argv[0] )
     print ( "  n: Number of datasets to keep. 0: restore from .backup." )
+    print ( " -C: Remove all covariances." )
     sys.exit()
 
 n = None
@@ -67,8 +73,13 @@ try:
 except Exception as e:
     pass
 
+noCov=False
+if len(sys.argv)>2:
+    if sys.argv[2]=="-C":
+        noCov=True
+
 if n>0:
-    downGrade ( n )
+    downGrade ( n, noCov=noCov )
 
 else:
     restore ()
