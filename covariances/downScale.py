@@ -9,10 +9,10 @@ def restore ( ) :
         print ( "trying to restore, but not .backup found" )
         return
     print ( "restoring from .backup." )
-    subprocess.getoutput ( "rm -r sr*" )
+    # subprocess.getoutput ( "rm -r sr*" )
     subprocess.getoutput ( "cp -r .backup/globalInfo.txt .backup/sr* ." )
 
-def downGrade ( n, noCov ):
+def downGrade ( n, noCov, skip="" ):
     if not os.path.exists ( ".backup" ):
         os.mkdir ( ".backup" )
     if not os.path.exists ( ".backup/globalInfo.txt" ):
@@ -57,29 +57,23 @@ def downGrade ( n, noCov ):
             f.write ( line )
     f.close()
 
+def main():
+    import argparse
+    argparser = argparse.ArgumentParser(description = "prepares expResults with subsets of datasets" )
+    argparser.add_argument ( "-C", "--no_cov", help="discard all covariances, keep only variances", action="store_true" )
+    argparser.add_argument ( "-r", "--restore", help="restore all datasets and globalInfo from .backup", action="store_true" )
+    argparser.add_argument ( "-n", "--keep", help="keep first <n> datasets", type=int, default=0 )
+    argparser.add_argument ( "-s", "--skip", help="skip entries (comma separated list)", type=str, default="" )
+    args = argparser.parse_args()
+    n=args.keep
+    skip=[]
+    if len(args.skip)>0:
+       skip=list ( map ( int, args.skip.split(",") ) )
 
-    #subprocess.getoutput ( "cp globalInfo
-
-
-if len(sys.argv)<2:
-    print ( "Usage: %s <n> [-C]" % sys.argv[0] )
-    print ( "  n: Number of datasets to keep. 0: restore from .backup." )
-    print ( " -C: Remove all covariances." )
-    sys.exit()
-
-n = None
-try:
-    n = int ( sys.argv[1] )
-except Exception as e:
-    pass
-
-noCov=False
-if len(sys.argv)>2:
-    if sys.argv[2]=="-C":
-        noCov=True
-
-if n>0:
-    downGrade ( n, noCov=noCov )
-
-else:
-    restore ()
+    if args.restore:
+        restore()
+    if n>0:
+        downGrade ( n, noCov=args.no_cov, skip=skip )
+    
+if __name__ == "__main__":
+    main()
