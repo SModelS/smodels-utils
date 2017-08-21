@@ -2,24 +2,29 @@
 
 """ downgrade an expResult in the database to the first n datasets. """
 
-import sys, subprocess, os, glob
+import sys, subprocess, os, glob, numpy
 
 def restore ( ) :
     if not os.path.exists ( ".backup" ):
         print ( "trying to restore, but not .backup found" )
         return
-    print ( "restoring from .backup." )
+    print ( "restoring from .backup ...", end="" )
     # subprocess.getoutput ( "rm -r sr*" )
     subprocess.getoutput ( "cp -r .backup/globalInfo.txt .backup/sr* ." )
+    print ( " done." )
 
-def downGrade ( n, noCov, skip="" ):
+def downGrade ( n, noCov, skip=[] ):
+    sskip="none"
+    if len(skip):
+        sskip=",".join(map(str,skip))
+    print ( "Downgrading to %d, skipping %s." % ( n, sskip ) )
     if not os.path.exists ( ".backup" ):
         os.mkdir ( ".backup" )
     if not os.path.exists ( ".backup/globalInfo.txt" ):
         subprocess.getoutput ( "cp globalInfo.txt .backup/" )
     for i in glob.iglob ( "sr*" ):
         srN = int ( i[2:] )
-        if srN >= n:
+        if srN >= n or srN in skip:
             if os.path.exists ( ".backup/%s" % i ):
                 subprocess.getoutput ( "rm -r %s" % i )
             else:
@@ -32,14 +37,19 @@ def downGrade ( n, noCov, skip="" ):
         if line == "":
             continue
         if "datasetOrder:" in line:
-            newline=""
+            newline="datasetOrder: "
             ctr=0
-            for char in line:
+            needsComma=False
+            for char in line[14:]:
                 if char==",":
                     ctr+=1
+                    if not needsComma:
+                        char=""
                 if ctr==n:
                     break
-                newline+=char
+                if ctr not in skip:
+                    newline+=char
+                    needsComma=True
             f.write ( newline + "\n" )
         elif "covariance:" in line:
             newline="covariance: ["
@@ -49,8 +59,26 @@ def downGrade ( n, noCov, skip="" ):
                     for j in range(len(ar)):
                         if i!=j:
                             ar[i][j]=0.
-            for row in ar[:n]:
-                newline += str(row[:n])+","
+            rows = ar[:n]
+            if len(skip)>0:
+                r = numpy.array ( rows )
+                bitarray = [ True ]*len(r)
+                for ctr,i in enumerate(bitarray):
+                    if ctr in skip:
+                        bitarray[ctr]=False
+                r=r[ bitarray ]
+                rows = r.tolist()
+            for row in rows:
+                columns = row[:n]
+                if len(skip)>0:
+                    r = numpy.array ( columns )
+                    bitarray = [ True ]*len(r)
+                    for ctr,i in enumerate(bitarray):
+                        if ctr in skip:
+                            bitarray[ctr]=False
+                    r=r[ bitarray ]
+                    columns = r.tolist()
+                newline += str(columns)+","
             newline = newline[:-1]+"]"
             f.write ( newline+"\n" )
         else:
