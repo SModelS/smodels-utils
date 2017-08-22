@@ -32,11 +32,11 @@ class DataHandler(object):
         initialize data-source attributes with None
         and allowNegativValues with False
         :param name: name as string
-        :param dimensions: Dimensions of the data (e.g., for x,y,value, dimensions =2).
-        :param coordinateMap: A dictionary mapping the index of the variables in the data and the
-                          corresponding x,y,.. coordinates used to define the plane axes.
-                          (e.g. {x : 0, y : 1, 'ul value' : 2} for a 3-column data,
-                          where x,y,.. are the sympy symbols and the value key can be anything)
+        :param dimensions: Dimensions of the data (e.g., for x,y,value, dimensions=2).
+        :param coordinateMap: A dictionary mapping the index of the variables
+              in the data and the corresponding x,y,.. coordinates used to define the
+              plane axes.  (e.g. {x : 0, y : 1, 'ul value' : 2} for a 3-column data,
+              where x,y,.. are the sympy symbols and the value key can be anything)
         :param xvars: List with x,y,.. variables (sympy symbols).
         """
         
