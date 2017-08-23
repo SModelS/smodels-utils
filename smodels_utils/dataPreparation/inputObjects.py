@@ -113,7 +113,12 @@ class MetaInfoInput(Locker):
                     self.datasetOrder.append ( xaxis.GetBinLabel(i) )
                     row = []
                     for j in range ( 1, self.n ):
-                        row.append ( h.GetBinContent ( i, j ) )
+                        el = h.GetBinContent ( i, j )
+                        if i==j and el < 1e-5:
+                           logger.error ( "variance in the covariance matrix at position %d has a very small (%g) value" % (i,el) )
+                            logger.error ( "will set it to 1e-5" )
+                            el = 1e-5
+                        row.append ( el )
                     self.covariance.append ( row )
 
         handler = CovarianceHandler ( filename, histoname, max_datasets )
