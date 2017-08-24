@@ -28,6 +28,10 @@ logger.setLevel(level=logging.ERROR)
 
 limitCache={}
 
+try:
+    input=raw_input ## make sure it works with python2 and 3!
+except Exception as e:
+    pass
 
 class DatabaseCreator(list):
 
@@ -341,7 +345,7 @@ class DatabaseCreator(list):
                         self.timeStamp ( "SMODELS_NOUPDATE is set!", "error" )
                         break
                     try: 
-                        answer = raw_input(m)
+                        answer = input(m)
                     except NameError as e:
                         answer = input ( m )
                     if answer == 'y' or answer == 'n': break
@@ -363,7 +367,7 @@ class DatabaseCreator(list):
         """
 
         while True:        
-            answer = raw_input('enter your name or initials: ')
+            answer = input('enter your name or initials: ')
             if answer: break
         initialDict= { "ww": "Wolfgang Waltenberger",
             "al": "Andre Lessa",

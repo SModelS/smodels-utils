@@ -24,13 +24,15 @@ class DatasetsFromLatex:
     """
     class that produces the datasets from LateX table
     """
-    def __init__ ( self, texfile, max_datasets=None, c_obs=5, c_bg=6, ds_name="sr#0" ):
+    def __init__( self, texfile, max_datasets=None, c_obs=5, c_bg=6, ds_name="sr#0"):
         """
         :param texfile: file to parse
         :param max_datasets: consider a maximum of n datasets
         :param c_obs: number of column with observed events
         :param c_bg: number of column with expected bg events and errors
-        :param ds_name: name of datasets, using #n as placeholders for value of nth column
+        :param ds_name: name of datasets, using #n as placeholders for value of
+                        nth column. If ds_name is an integer, interpret it as
+                        column number.
         """
         self.texfile = texfile
         self.max_datasets = max_datasets
@@ -64,20 +66,12 @@ class DatasetsFromLatex:
         line = line.strip()
         return line
 
-    def __next__ ( self ):
-        if self.max_datasets and self.counter >= self.max_datasets:
-            # we are told not to produce more
-            raise StopIteration()
-        try:
-            line = ""
-            while len(line)==0:
-                line = self.clean ( self.lines.pop(0) )
-        except IndexError as e:
-            raise StopIteration()
-        tokens = line.split ( "&" )
-        binnr = int ( tokens[0] )
-        nobs = int ( tokens[self.c_obs] )
-        sbg = tokens[self.c_bg].strip()
+    def getBGAndError ( self, sbg ):
+        if "\\pm" in sbg:
+            tokens = sbg.split ( "\\pm" )
+            bg = float ( tokens[0].replace("$","" ) )
+            bgerr = float ( tokens[1].replace("$","" ) )
+            return bg,bgerr
         fst_sp = sbg.find(" " )
         bg = float ( sbg [ : fst_sp ] )
         sbgerrs = sbg[fst_sp:].strip()
@@ -91,10 +85,29 @@ class DatasetsFromLatex:
         ## print ( "ttokens=",ttokens )
         stat_errs = list ( map ( float, ttokens[:2] ) )
         sys_errs = list ( map ( float, ttokens[2:] ) )
-        #stat_errs = list ( map ( float, cltokens[0].split("-") ) )
-        #sys_errs = list ( map ( float, cltokens[1].split("-") ) )
         tot_errs = [ math.sqrt ( stat_errs[i]**2 + sys_errs[i]**2  ) for i in range(2) ]
         bgerr = max ( tot_errs )
+        return bg,bgerr
+
+    def __next__ ( self ):
+        if self.max_datasets and self.counter >= self.max_datasets:
+            # we are told not to produce more
+            raise StopIteration()
+        try:
+            line = ""
+            while len(line)==0:
+                line = self.clean ( self.lines.pop(0) )
+        except IndexError as e:
+            raise StopIteration()
+        tokens = line.split ( "&" )
+        binnr = self.counter
+        try:
+            binnr = int ( tokens[0] )
+        except Exception as e:
+            pass
+        nobs = int ( tokens[self.c_obs] )
+        sbg = tokens[self.c_bg].strip()
+        bg, bgerr = self.getBGAndError ( sbg )
         name = "sr%d" % binnr 
         dataId = self.ds_name
         for i,token in enumerate ( tokens ):
