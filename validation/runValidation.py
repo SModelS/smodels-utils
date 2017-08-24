@@ -151,7 +151,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             else:
                 tgraphs = tgraphs[txnameStr]
             if not os.path.isfile(tarfile):
-                logger.error('Missing .tar file for %s' %txnameStr)
+                logger.error( 'Missing .tar file for %s. Should be in %s.' % \
+                              ( txnameStr, tarfile ) )
                 continue
 
             #Define k-factors
