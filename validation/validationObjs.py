@@ -296,11 +296,19 @@ class ValidationPlot():
                 logger.debug("No results for %s " %slhafile)
                 continue 
             res = smodelsOutput['ExptRes']
-            expRes = res[0]       
+            expRes = res[0]
             #Double checks (to make sure SModelS ran as expected):
             if len(res) != 1:
-                logger.warning("Something went wrong. More than one result found for %s \n" %slhafile)
-                return False                
+                logger.warning("Wait. We have multiple dataset Ids. Lets see if there is a combined result." )
+                found_combined=False
+                for eR in res:
+                    if eR["DataSetID"]=="combined":
+                        logger.error ( "found a combined result. will use it." )
+                        found_combined=True
+                        expRes = eR
+                if not found_combined:
+                    logger.warning("We have mulitple dataset ids, but not is a combined one. Dont know what to do." )
+                    return False 
             if expRes['AnalysisID'] != self.expRes.globalInfo.id:
                 logger.error("Something went wrong. Obtained results for the wrong analyses")
                 return False
@@ -319,14 +327,19 @@ class ValidationPlot():
                      'dataset': expRes['DataSetID']}                
             if expRes['dataType'] == 'efficiencyMap':
                 #Select the correct dataset (best SR):
-                dataset = [dset for dset in self.expRes.datasets if dset.dataInfo.dataId == expRes['DataSetID']][0]
+                dataset = [dset for dset in self.expRes.datasets if dset.dataInfo.dataId == expRes['DataSetID']]
+                if len(dataset)==1:
+                    dataset = dataset[0]
+                else: ## probably the combined case. we take any dataset. 
+                    dataset = self.expRes.datasets[0]
+                    
                 txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
                 massGeV = [[m*GeV for m in mbr] for mbr in mass]
                 Dict['efficiency'] = txname.txnameData.getValueFor(massGeV)
-                expectedBG = dataset.dataInfo.expectedBG
-                observedN = dataset.dataInfo.observedN
-                bgError = dataset.dataInfo.bgError
-                lumi = expRes['lumi (fb-1)']
+                #expectedBG = dataset.dataInfo.expectedBG
+                #observedN = dataset.dataInfo.observedN
+                #bgError = dataset.dataInfo.bgError
+                #lumi = expRes['lumi (fb-1)']
 #                 CLs = statistics.CLs(observedN, expectedBG, bgError, Dict['signal']*lumi, 10000)                    
 #                 Dict['CLs'] =CLs
             self.data.append(Dict)

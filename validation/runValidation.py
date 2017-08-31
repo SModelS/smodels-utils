@@ -221,6 +221,10 @@ if __name__ == "__main__":
     elif parser.get("database", "dataselector") == "upperLimit":
         dataTypes = ['upperLimit']
         datasetIDs = ['all']
+    elif parser.get("database", "dataselector") == "combined":
+        dataTypes = ['efficiencyMap']
+        # datasetIDs = ['combined']
+        datasetIDs = ['all']
     else:
         dataTypes = ['all']
         datasetIDs = parser.get("database", "dataselector").split(",")
