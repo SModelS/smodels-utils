@@ -380,14 +380,17 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
             + validationPlot.txName\
             + "_" + validationPlot.niceAxes
-    subtitle = "datasetIds: "
+    subtitle = "datasetIds[%d]: " % len(validationPlot.expRes.datasets)
     for dataset in validationPlot.expRes.datasets:
         ds_txnames = map ( str, dataset.txnameList )
         if not validationPlot.txName in ds_txnames:
             continue
         id = str(dataset.dataInfo.dataId)
         # print "[plottingFuncs.py] add to %s: %s, %s" % ( validationPlot.txName, id, str ( map ( str, dataset.txnameList  ) ) )
-        subtitle+=id+" "
+        subtitle+=id+", "
+    subtitle = subtitle[:-2]
+    if len(subtitle) > 100:
+        subtitle = subtitle[:100] + " ..."
     figureUrl = getFigureUrl(validationPlot)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
     base.Draw("AP")
@@ -400,14 +403,14 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     base.l=l
     l0=TLatex()
     l0.SetNDC()
-    l0.SetTextSize(.015)
-    l0.DrawLatex(.1,.905,subtitle)
+    l0.SetTextSize(.025)
+    l0.DrawLatex(.05,.905,subtitle)
     base.l0=l0
     if figureUrl:
         l1=TLatex()
         l1.SetNDC()
-        l1.SetTextSize(.025)
-        l1.DrawLatex(.12,.15,"%s" % figureUrl)
+        l1.SetTextSize(.02)
+        l1.DrawLatex(.06,.02,"%s" % figureUrl)
         base.l1=l1
     l2=TLatex()
     l2.SetNDC()
