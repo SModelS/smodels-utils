@@ -52,6 +52,9 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     else:
         valPlot.loadData()
     if not valPlot.data:
+        if generateData is None:
+            logger.info ( "data generation on demand was specified (generateData=None) and no data found. Lets generate!" )
+            valPlot.getDataFromPlanes()
         return None
     if pretty:
         valPlot.getPrettyPlot()
@@ -172,6 +175,26 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         logger.info("--------- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
     logger.info("\n\n----- Finished validation in %.1f min." %((time.time()-tval0)/60.))
 
+def _doGenerate ( parser ):
+    """ determine if we do want to force generation of data (True),
+    explicitly do not generate any data (False), or generate only on-demand
+    (None) """
+    if parser.has_section("options") and parser.has_option("options","generateData"):
+        generateData = parser.get("options", "generateData")
+        if generateData in [ None, True, False ]:
+            return generateData
+        if generateData.lower() in [ "none", "ondemand" ]:
+            return None
+        if generateData.lower() in [ "true", "yes" ]:
+            return True
+        if generateData.lower() in [ "false", "no" ]:
+            return False
+        if not generateData in [ None, True, False ]:
+            logger.error ( "generateData value %s is not understood. Set to 'ondemand'." % generateData )
+            return None
+    logger.info ( "generateData is not defined in ini file. Set to 'ondemand'." )
+    return None
+
 
 if __name__ == "__main__":
 
@@ -249,10 +272,7 @@ if __name__ == "__main__":
         pretty = parser.getboolean("options", "prettyPlots")
     else:
         pretty = False
-    if parser.has_section("options") and parser.has_option("options","generateData"):
-        generateData = parser.getboolean("options", "generateData")
-    else:
-        generateData = True
+    generateData = _doGenerate ( parser )
 
 #    try:
 #        import ROOT
