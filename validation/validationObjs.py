@@ -299,15 +299,15 @@ class ValidationPlot():
             expRes = res[0]
             #Double checks (to make sure SModelS ran as expected):
             if len(res) != 1:
-                logger.warning("Wait. We have multiple dataset Ids. Lets see if there is a combined result." )
+                logger.debug("Wait. We have multiple dataset Ids. Lets see if there is a combined result." )
                 found_combined=False
                 for eR in res:
                     if eR["DataSetID"]=="combined":
-                        logger.error ( "found a combined result. will use it." )
+                        logger.debug ( "found a combined result. will use it." )
                         found_combined=True
                         expRes = eR
                 if not found_combined:
-                    logger.warning("We have mulitple dataset ids, but not is a combined one. Dont know what to do." )
+                    logger.warning("We have multiple dataset ids, but none is a combined one. Dont know what to do." )
                     return False 
             if expRes['AnalysisID'] != self.expRes.globalInfo.id:
                 logger.error("Something went wrong. Obtained results for the wrong analyses")
