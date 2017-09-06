@@ -27,4 +27,4 @@ validation/pythia_??????.card
 bin/OldListOfAnalyses
 bin/OldListOfAnalysesWithSuperseded
 slha/*.tar
-
+slha/ls
