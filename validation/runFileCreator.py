@@ -198,6 +198,8 @@ if __name__ == "__main__":
     #Add smodels and smodels-utils to path
     smodelsPath = parser.get("path", "smodelsPath")
     utilsPath = parser.get("path", "utilsPath")    
+    smodelsPath = smodelsPath.replace ( "$HOME", os.environ["HOME"] )
+    utilsPath = utilsPath.replace ( "$HOME", os.environ["HOME"] )
     sys.path.append(smodelsPath)
     sys.path.append(utilsPath)
     from smodels.experiment.databaseObj import Database
