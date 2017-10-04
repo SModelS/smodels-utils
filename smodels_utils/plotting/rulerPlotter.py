@@ -229,7 +229,10 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
 
   os.unlink ( tmpf )
 
-def convertSLHAFile ( inputfile ):
+def convertSLHAFile ( inputfile, collapse_squarks ):
+    """
+    :param collapse_squarks: replace all light squarks with ~q
+    """
     outfile = "/tmp/masses.txt"
     logger.info ( "now converting slha file %s to %s" % (inputfile, outfile) )
     import pyslha
@@ -248,6 +251,11 @@ def convertSLHAFile ( inputfile ):
         n = n.replace ( "a0", "A^{0}" )
         n = n.replace ( "h1", "H" )
         n = n.replace ( "h2", "h" )
+        if n in [ "W", "b", "H", "Z" ]: ## skip SM particles
+            continue
+        if collapse_squarks: ## sum up all squarks
+            if namer.particleType ( key ) == "q":
+                n="~q"
         D[n]=mass
     g=open ( "/tmp/masses.txt", "w" )
     g.write ( str(D) )
@@ -273,6 +281,8 @@ if __name__ == "__main__":
     argparser.add_argument ( '-P', '--png', help='produce png', action='store_true' )
     argparser.add_argument ( '-mass', '--masses', help='write masses', 
                              action='store_true' )
+    argparser.add_argument ( '-squark', '--squark', 
+                             help='represent all squarks as ~q', action='store_true' )
     args=argparser.parse_args()
     Range=[args.min,args.max]
     formats= { "pdf":args.pdf, "eps":args.eps, "png":args.png }
@@ -283,5 +293,5 @@ if __name__ == "__main__":
     logging.config.fileConfig ( 
             SModelSUtils.installDirectory()+"/etc/commandline.conf" )
     if inputfile[-5:] == ".slha":
-        inputfile = convertSLHAFile ( inputfile )
+        inputfile = convertSLHAFile ( inputfile, args.squark )
     draw ( inputfile, args.output, Range, formats, args.masses )
