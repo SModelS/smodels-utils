@@ -2,6 +2,8 @@
 
 """ this sets the path so we can write e.g. "from smodels_utils.tools import blah """
 
+from __future__ import print_function
+
 def configure():
     """ get the path name of this file, remove setPath.py, 
         remove the last subdir, the remaining string should be the
@@ -18,4 +20,4 @@ def configure():
 configure()
 
 if __name__ == "__main__":
-    print configure()
+    print ( configure() )

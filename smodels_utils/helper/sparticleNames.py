@@ -9,6 +9,8 @@
 
 """
 
+from __future__ import print_function
+
 class SParticleNames:
     """ a class that assigns names to sparticles """
     def __init__ ( self ):
@@ -182,12 +184,12 @@ class SParticleNames:
 
 if __name__ == "__main__":
     """ as a script, we simply print out the paths """
-    print "sparticle names"
+    print ( "sparticle names" )
     namer = SParticleNames()
     ctr=0
     for (key,value) in namer.ids.items():
        ctr+=1
-       print "%8d %8s   |" % (key,value),
+       print ( "%8d %8s   |" % (key,value), end="" )
        if ctr==3:
          print
          ctr=0
