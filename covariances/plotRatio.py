@@ -3,9 +3,9 @@
 """ Plot the ratio between the upper limit from the UL map, and our 
 own upper limit computed from combining the efficiency maps. """
 
-import CMS16050.T2tt_60 as FromEff
+import CMS16050.T2tt_5 as FromEff
 import CMS16050.T2tt_ul as FromUl
-
+import math
 import matplotlib.pyplot as plt
 
 uls={}
@@ -33,7 +33,9 @@ for point in FromEff.validationData:
         ul = uls[h]
     # print "ul", axes, point["UL"], point["UL"] / point["efficiency"], ul
     if ul:
-        ratio = ( point["UL"] / point["efficiency"] ) / ul
+        ul_eff = point["UL"] / point["efficiency"]
+        ratio = ul_eff / ul
+        # ratio = math.log10 ( ul )
         x.append ( axes[1] )
         y.append ( axes[0] )
         col.append ( ratio )
