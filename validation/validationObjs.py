@@ -256,7 +256,11 @@ class ValidationPlot():
         logger.debug("SLHA files for validation at %s" %slhaDir)
 
         #Get list of input files to be tested
-        fileList = modelTester.getAllInputFiles(slhaDir)
+        try:
+            fileList, inDir = modelTester.getAllInputFiles(slhaDir)
+        except Exception: ## old version?
+            fileList = modelTester.getAllInputFiles(slhaDir)
+            inDir = slhaDir
 
         #Set temporary outputdir:
         outputDir = tempfile.mkdtemp(dir=slhaDir,prefix='results_')
@@ -272,7 +276,7 @@ class ValidationPlot():
         listOfExpRes = [self.expRes]
 
         """ Test all input points """
-        modelTester.testPoints(fileList, slhaDir, outputDir, parser, 'validation',
+        modelTester.testPoints(fileList, inDir, outputDir, parser, 'validation',
                  listOfExpRes, 1000, False, parameterFile)
 
         #Define original plot
@@ -282,6 +286,7 @@ class ValidationPlot():
         for slhafile in os.listdir(slhaDir):
             if not os.path.isfile(os.path.join(slhaDir,slhafile)):  #Exclude the results folder
                 continue
+            # print ( "slhafile", slhafile )
             fout = os.path.join(outputDir,slhafile + '.py')
             if not os.path.isfile(fout):
                 logger.error("No SModelS output found for %s (should be %s)" % \
