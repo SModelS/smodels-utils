@@ -1,12 +1,20 @@
 #!/usr/bin/env python
 
-import sys,os,shutil
+from __future__ import print_function
+
+import sys,os,shutil,time
 import logging,tempfile
 # logging.basicConfig(filename='val.out')
 import argparse
 home = os.path.expanduser("~")
-from ConfigParser import SafeConfigParser
-import commands,time
+try:
+    from ConfigParser import SafeConfigParser
+except ImportError as e:
+    from configparser import ConfigParser
+try:
+    import commands
+except ImportError as e:
+    import subprocess as commands
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
@@ -192,7 +200,10 @@ if __name__ == "__main__":
     else:
         logger.info("Reading validation parameters from %s" %args.parfile)
 
-    parser = SafeConfigParser()
+    try:
+        parser = ConfigParser( inline_comment_prefixes=( ';', ) )
+    except Exception as e:
+        parser = SafeConfigParser()
     parser.read(args.parfile) 
     
     #Add smodels and smodels-utils to path

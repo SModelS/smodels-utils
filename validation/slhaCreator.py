@@ -8,6 +8,8 @@
 
 """
 
+from __future__ import print_function
+
 import logging,os,sys,shutil
 sys.path.append('../../smodels/')
 sys.path.append('../../smodels-utils/')
@@ -17,7 +19,7 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.WARNING)
 import tempfile
-import pyslha as modpyslha
+import pyslha
 from smodels.theory import slhaDecomposer
 from smodels.tools.physicsUnits import fb, GeV, TeV
 from smodels.tools.xsecComputer import XSecComputer, LO, NLL
@@ -54,8 +56,8 @@ class TemplateFile(object):
             logger.error("Template file %s not found." %template)
             sys.exit()
         try:
-            self.slhaObj = modpyslha.readSLHAFile(template)
-        except modpyslha.ParseError,e:
+            self.slhaObj = pyslha.readSLHAFile(template)
+        except pyslha.ParseError as e:
             logger.error ( "This file cannot be parsed as an SLHA file: %s" % e )
             sys.exit()
         for pdg,mass in self.slhaObj.blocks['MASS'].items():
@@ -261,7 +263,7 @@ if __name__ == "__main__":
     if not os.path.exists ( templatefile ):
         templatefile="../slha/%s" % templatefile
         if not os.path.exists ( templatefile ):
-            print "[slhaCreator] error: templatefile does not exist."
+            print ( "[slhaCreator] error: templatefile does not exist." )
             sys.exit()
     tempf = TemplateFile(args.templatefile,args.axes)
     masses=[]
@@ -270,4 +272,4 @@ if __name__ == "__main__":
         for lsp in numpy.arange(args.ymin,args.ymax+1,args.dy):
             masses.append ( [ mother, lsp ] )
     slhafiles = tempf.createFilesFor( masses )
-    print slhafiles
+    print ( slhafiles )
