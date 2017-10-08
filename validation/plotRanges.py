@@ -28,7 +28,7 @@ def getMinMax ( tgraph ):
     if tgraph.GetN() == 0:
         return None
     xpts,ypts = tgraph.GetX(),tgraph.GetY()
-    print ( "xpts=",*xpts )
+    #print ( "xpts=",*xpts )
     minx = 0.8*min(tgraph.GetN(),*xpts)
     maxx = 1.2*max(tgraph.GetN(),*xpts)
     miny = 0.9*min(tgraph.GetN(),*ypts)
