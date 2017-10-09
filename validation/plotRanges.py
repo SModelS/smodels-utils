@@ -8,6 +8,8 @@
 
 """
 
+from __future__ import print_function
+
 import ROOT
 import numpy,math,copy
 import sys
@@ -26,10 +28,11 @@ def getMinMax ( tgraph ):
     if tgraph.GetN() == 0:
         return None
     xpts,ypts = tgraph.GetX(),tgraph.GetY()
-    minx = 0.8*ROOT.TMath.MinElement(tgraph.GetN(),xpts)
-    maxx = 1.2*ROOT.TMath.MaxElement(tgraph.GetN(),xpts)
-    miny = 0.9*ROOT.TMath.MinElement(tgraph.GetN(),ypts)
-    maxy = 1.2*ROOT.TMath.MaxElement(tgraph.GetN(),ypts)
+    #print ( "xpts=",*xpts )
+    minx = 0.8*min(tgraph.GetN(),*xpts)
+    maxx = 1.2*max(tgraph.GetN(),*xpts)
+    miny = 0.9*min(tgraph.GetN(),*ypts)
+    maxy = 1.2*max(tgraph.GetN(),*ypts)
     
     return { "x": [minx,maxx], "y": [miny,maxy] }
 
@@ -321,7 +324,7 @@ def draw ( graph, points ):
     # container=[]
     t=ROOT.TGraph()
     for ctr,point in enumerate(points):
-        print "draw",point
+        print ( "draw",point )
         # t=ROOT.TMarker ( point[0], point[1], 23 )
         # t.Draw()
         # container.append(t)
@@ -341,9 +344,9 @@ if __name__ == "__main__":
     graph=f.Get("%s/exclusion_%s" % ( txname, axes) )
     filename2="/home/walten/git/smodels-database/8TeV/ATLAS/ATLAS-SUSY-2013-05/sms.root"
     f2=ROOT.TFile(filename2)
-    print "ls=",f2.ls()
+    print ("ls=",f2.ls() )
     graph2=f2.Get("%s/exclusion_%s" % ( "T2bb", axes) )
-    print "graph1,2=",graph,graph2
+    print ("graph1,2=",graph,graph2 )
 
     pts = getPoints ( [graph, graph2], txname, axes, "[[[t+]],[[t-]]]", onshell=True, offshell=False )
     draw ( [graph, graph2] , pts )

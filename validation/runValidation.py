@@ -38,6 +38,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
 
     :param generateData: If True, run SModelS on the slha files.
                          If False, use the already existing *.py files in the validation folder.
+                         If None, run SModelS only if needed.
 
     :return: agreement factor
     """
@@ -47,15 +48,17 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor)
     valPlot.setSLHAdir(slhadir)
     valPlot.ncpus = ncpus
+    generatedData=False
     if generateData:
         valPlot.getDataFromPlanes()
+        generatedData=True
     else:
         valPlot.loadData()
     if not valPlot.data:
         if generateData is None:
             logger.info ( "data generation on demand was specified (generateData=None) and no data found. Lets generate!" )
             valPlot.getDataFromPlanes()
-        return None
+            generatedData=True
     if pretty:
         valPlot.getPrettyPlot()
         valPlot.pretty = True
@@ -63,7 +66,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
         valPlot.getPlot()
         valPlot.pretty = False
     valPlot.savePlot()
-    if generateData:
+    if generatedData:
         valPlot.saveData()
 
     return valPlot.computeAgreementFactor() # return agreement factor
@@ -91,7 +94,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param pretty: If True it will generate "pretty" plots
 
     :param generateData: If True, run SModelS on the slha files.
-                         If False, use the already existing *.py files in the validation folder.
+                   If False, use the already existing *.py files in the validation folder.
+                   None: generate them if needed
 
 
     :return: A dictionary containing the agreement factors

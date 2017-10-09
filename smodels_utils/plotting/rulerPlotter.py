@@ -2,25 +2,32 @@
 
 """ 
 .. module:: rulerPlot
-    :synopsis: Draws a ruler plot, like http://smodels.hephy.at/images/example_ruler.png.
+    :synopsis: Draws a ruler plot, like 
+               http://smodels.hephy.at/images/example_ruler.png.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
+
 """
+
+from __future__ import print_function
 
 import os, math, sys, tempfile, ROOT
 import logging
+    
+logger=logging.getLogger(__name__)
 
 def _printCanvas ( c1, filename ):
     """ tried to redirect stdout """
-    logger=logging.getLogger(__name__)
     logger.debug ( "printing canvas to %s" % filename )
     ROOT.gErrorIgnoreLevel=2000
     c1.Print(filename )
     ROOT.gErrorIgnoreLevel=-1
 
 def _execute ( command ):
-    import commands
-    logger=logging.getLogger(__name__)
+    try:
+        import commands
+    except ImportError:
+        import subprocess as commands
     logger.debug ( "now running %s" % command )
     out=commands.getoutput ( command )
     if len(out)!=0:
@@ -68,7 +75,7 @@ def _pprint ( name ):
     "~chi10":"#tilde{#chi}^{0}_{1}", "~chi1+":"#tilde{#chi}^{+}_{1}",
     "~chi2+":"#tilde{#chi}^{+}_{2}", "~chi3+":"#tilde{#chi}^{+}_{3}",
     "~chi4+":"#tilde{#chi}^{+}_{4}" }
-  if Dict.has_key ( name ): return Dict[name]
+  if name in Dict.keys (): return Dict[name]
 
   if name.find("~nu_e")==0: return "#tilde{#nu}_{e}"
   if name.find("~nu_mu")==0: return "#tilde{#nu}_{#mu}"
@@ -107,7 +114,6 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
   """
 
     
-  logger=logging.getLogger(__name__)
   f=open( inputfile )
   pmasses=eval(f.readline())
   f.close()
@@ -222,33 +228,70 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
       _execute ( "cp %s.eps %s.eps" % (tmpf, outputfile ) )
 
   os.unlink ( tmpf )
+
+def convertSLHAFile ( inputfile, collapse_squarks ):
+    """
+    :param collapse_squarks: replace all light squarks with ~q
+    """
+    outfile = "/tmp/masses.txt"
+    logger.info ( "now converting slha file %s to %s" % (inputfile, outfile) )
+    import pyslha
+    from smodels_utils.helper.sparticleNames import SParticleNames
+    namer = SParticleNames()
+    f = pyslha.read ( inputfile )
+    m = f.blocks["MASS"]
+    keys = m.keys()
+    D={}
+    for key in keys:
+        mass = m[key]
+        name = namer.name ( key )
+        n = name.replace( "_R", "_{R}" ).replace ( "_L", "_{L}" )
+        n = n.replace ( "_1", "_{1}" ).replace ( "_2", "_{2}" )
+        n = n.replace ( "h+", "H^{+}" )
+        n = n.replace ( "a0", "A^{0}" )
+        n = n.replace ( "h1", "H" )
+        n = n.replace ( "h2", "h" )
+        if n in [ "W", "b", "H", "Z" ]: ## skip SM particles
+            continue
+        if collapse_squarks: ## sum up all squarks
+            if namer.particleType ( key ) == "q":
+                n="~q"
+        D[n]=mass
+    g=open ( "/tmp/masses.txt", "w" )
+    g.write ( str(D) )
+    g.close()
+    return outfile
   
 if __name__ == "__main__":
     import argparse, types
     import setPath
-    from smodels_utils import SModelSTools
+    from smodels_utils import SModelSUtils
     argparser = argparse.ArgumentParser(description='Draws a "ruler-plot", i.e. particles arranged by their masses. See http://smodels.hephy.at/images/example_ruler.png.')
-    argparser.add_argument('inputfile', type=types.StringType, nargs=1,
+    argparser.add_argument('inputfile', type=str, nargs=1,
                     help='input masses text file name, for an example see "etc/example_masses.txt". "@@installdir@@" will be replaced with the installation directory of smodels-tools.')
     argparser.add_argument ( '-m', '--min',
-          help='minimal mass, -1 for automatic mode', type=types.IntType, default=-1 )
+          help='minimal mass, -1 for automatic mode', type=int, default=-1 )
     argparser.add_argument ( '-M', '--max',
-          help='maximum mass, -1 for automatic mode', type=types.IntType, default=-1 )
+          help='maximum mass, -1 for automatic mode', type=int, default=-1 )
     argparser.add_argument ( '-o', '--output',
-          help='output file name', type=types.StringType, default='ruler' )
+          help='output file name', type=str, default='ruler' )
     argparser.add_argument ( '-p', '--pdf', help='produce pdf', action='store_true' )
     argparser.add_argument ( '-e', '--eps', help='produce (=keep) eps', 
                              action='store_true' )
     argparser.add_argument ( '-P', '--png', help='produce png', action='store_true' )
     argparser.add_argument ( '-mass', '--masses', help='write masses', 
                              action='store_true' )
+    argparser.add_argument ( '-squark', '--squark', 
+                             help='represent all squarks as ~q', action='store_true' )
     args=argparser.parse_args()
     Range=[args.min,args.max]
     formats= { "pdf":args.pdf, "eps":args.eps, "png":args.png }
 
     inputfile=args.inputfile[0].replace("@@installdir@@",
-                                        SModelSTools.installDirectory() )
+                                        SModelSUtils.installDirectory() )
     import logging.config
     logging.config.fileConfig ( 
-            SModelSTools.installDirectory()+"/etc/commandline.conf" )
+            SModelSUtils.installDirectory()+"/etc/commandline.conf" )
+    if inputfile[-5:] == ".slha":
+        inputfile = convertSLHAFile ( inputfile, args.squark )
     draw ( inputfile, args.output, Range, formats, args.masses )

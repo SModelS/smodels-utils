@@ -1,12 +1,20 @@
 #!/usr/bin/env python
 
-import sys,os,shutil
+from __future__ import print_function
+
+import sys,os,shutil,time
 import logging,tempfile
 # logging.basicConfig(filename='val.out')
 import argparse
 home = os.path.expanduser("~")
-from ConfigParser import SafeConfigParser
-import commands,time
+try:
+    from ConfigParser import SafeConfigParser
+except ImportError as e:
+    from configparser import ConfigParser
+try:
+    import commands
+except ImportError as e:
+    import subprocess as commands
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
@@ -21,7 +29,8 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,xargs,Npts=300):
     :param txnameStr: String describing the txname (e.g. T2tt)
     :param templateFile: path to the txname template
     :param tarFile: name of the output file
-    :param xargs: argparse.Namespace object holding the options for the cross-section calculation
+    :param xargs: argparse.Namespace object holding the options for the 
+                  cross-section calculation
     :param Npts: Trial number of points for each plane.
                     
     :return: True if successful, False otherwise. 
@@ -113,7 +122,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
     :param Npts: Trial number of points for each plane.
     :param addToFile: If True it will add to the existing .tar file (or create a new one if there is no previous file)
     :param verbosity: overall verbosity (e.g. error, warning, info, debug)
-    :param xargs: argparse.Namespace object holding the options for the cross-section calculation
+    :param xargs: argparse.Namespace object holding the options for the 
+                  cross-section calculation
     
     :return: A dictionary containing the list of created .tar files 
     """
@@ -180,10 +190,11 @@ if __name__ == "__main__":
     
     ap = argparse.ArgumentParser(description="Produces SLHA files for the selected results and txnames")
     ap.add_argument('-p', '--parfile', 
-            help='parameter file specifying the file creation options', default='./validation_parameters.ini')
+            help='parameter file specifying the file creation options', 
+            default='./validation_parameters.ini')
     ap.add_argument('-l', '--log', 
             help='specifying the level of verbosity (error, warning,info, debug)', 
-            default = 'info', type = str)
+            default = 'warning', type = str)
            
     args = ap.parse_args()
     
@@ -192,7 +203,10 @@ if __name__ == "__main__":
     else:
         logger.info("Reading validation parameters from %s" %args.parfile)
 
-    parser = SafeConfigParser()
+    try:
+        parser = ConfigParser( inline_comment_prefixes=( ';', ) )
+    except Exception as e:
+        parser = SafeConfigParser()
     parser.read(args.parfile) 
     
     #Add smodels and smodels-utils to path
@@ -213,8 +227,7 @@ if __name__ == "__main__":
     logger.setLevel(level=numeric_level)
     plotRanges.logger.setLevel(level=numeric_level)
     from smodels.tools import smodelsLogging, xsecComputer
-    smodelsLogging.setLogLevel("error")
-    
+    smodelsLogging.setLogLevel( args.log )
     
     #Options for cross-section calculation:
     xargs = argparse.Namespace()
@@ -253,5 +266,5 @@ if __name__ == "__main__":
 
     #Run creation:
     main(analyses,datasetIDs,txnames,dataTypes,templatedir,slhadir,
-         databasePath,xargs,Npts,addToFile)
+         databasePath,xargs,Npts,addToFile,verbosity=args.log)
     

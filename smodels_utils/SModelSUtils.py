@@ -8,6 +8,8 @@
 
 """
 
+from __future__ import print_function
+
 def installDirectory():
     """ return the software installation directory, by looking at location of this method """
     import os
@@ -61,7 +63,7 @@ def addSModelSPath():
         # sys.path.append ( I )
         sys.path.append ( J )
         return J
-    except ImportError,e:
+    except ImportError as e:
         pass
     import commands
     O=commands.getoutput("smodels-config --pythondir")
@@ -72,12 +74,12 @@ def addSModelSPath():
     return ""
 
 def printHelp():
-    print "usage: smodels-tools-config [--help] [--installdir] [--smodelsdir]"
-    print ""
-    print "optional arguments:"
-    print "  --help          show this help message and exit"
-    print "  --installdir    print installation directory of smodels-tools"
-    print "  --smodelsdir    print installation directory of smodels"
+    print ("usage: smodels-tools-config [--help] [--installdir] [--smodelsdir]")
+    print ("")
+    print ("optional arguments:")
+    print ("  --help          show this help message and exit")
+    print ("  --installdir    print installation directory of smodels-tools")
+    print ("  --smodelsdir    print installation directory of smodels")
     import sys
     sys.exit(0)
 
@@ -87,10 +89,10 @@ if __name__ == "__main__":
     for i in sys.argv[1:]:
         if i=="--help": printHelp()
         if i=="--installdir":
-            print installDirectory()
+            print ( installDirectory() )
             sys.exit(0)
         if i=="--smodelsdir":
-            print addSModelSPath()
+            print ( addSModelSPath() )
             sys.exit(0)
     printHelp()
 
