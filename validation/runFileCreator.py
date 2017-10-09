@@ -29,7 +29,8 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,xargs,Npts=300):
     :param txnameStr: String describing the txname (e.g. T2tt)
     :param templateFile: path to the txname template
     :param tarFile: name of the output file
-    :param xargs: argparse.Namespace object holding the options for the cross-section calculation
+    :param xargs: argparse.Namespace object holding the options for the 
+                  cross-section calculation
     :param Npts: Trial number of points for each plane.
                     
     :return: True if successful, False otherwise. 
@@ -121,7 +122,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
     :param Npts: Trial number of points for each plane.
     :param addToFile: If True it will add to the existing .tar file (or create a new one if there is no previous file)
     :param verbosity: overall verbosity (e.g. error, warning, info, debug)
-    :param xargs: argparse.Namespace object holding the options for the cross-section calculation
+    :param xargs: argparse.Namespace object holding the options for the 
+                  cross-section calculation
     
     :return: A dictionary containing the list of created .tar files 
     """
@@ -188,10 +190,11 @@ if __name__ == "__main__":
     
     ap = argparse.ArgumentParser(description="Produces SLHA files for the selected results and txnames")
     ap.add_argument('-p', '--parfile', 
-            help='parameter file specifying the file creation options', default='./validation_parameters.ini')
+            help='parameter file specifying the file creation options', 
+            default='./validation_parameters.ini')
     ap.add_argument('-l', '--log', 
             help='specifying the level of verbosity (error, warning,info, debug)', 
-            default = 'info', type = str)
+            default = 'warning', type = str)
            
     args = ap.parse_args()
     
@@ -224,8 +227,7 @@ if __name__ == "__main__":
     logger.setLevel(level=numeric_level)
     plotRanges.logger.setLevel(level=numeric_level)
     from smodels.tools import smodelsLogging, xsecComputer
-    smodelsLogging.setLogLevel("error")
-    
+    smodelsLogging.setLogLevel( args.log )
     
     #Options for cross-section calculation:
     xargs = argparse.Namespace()
@@ -264,5 +266,5 @@ if __name__ == "__main__":
 
     #Run creation:
     main(analyses,datasetIDs,txnames,dataTypes,templatedir,slhadir,
-         databasePath,xargs,Npts,addToFile)
+         databasePath,xargs,Npts,addToFile,verbosity=args.log)
     
