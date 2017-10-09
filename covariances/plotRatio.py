@@ -3,9 +3,11 @@
 """ Plot the ratio between the upper limit from the UL map, and our 
 own upper limit computed from combining the efficiency maps. """
 
-import CMS16050.T2tt_5 as FromEff
-import CMS16050.T2tt_ul as FromUl
-import math
+#import CMS16050.T2tt_5 as FromEff
+#import CMS16050.T2tt_ul as FromUl
+import CMS16052.T2bbffff_44 as FromEff
+import CMS16052.T2bbffff_ul as FromUl
+import math, os
 import matplotlib.pyplot as plt
 
 uls={}
@@ -43,7 +45,12 @@ for point in FromEff.validationData:
 cm = plt.cm.get_cmap('RdYlBu')
 scatter = plt.scatter ( x, y, c=col, cmap=cm )
 plt.rc('text', usetex=True)
-plt.title ( "Ratio UL(eff) / UL(official), CMS-SUS-16-050, T2tt" )
+slhafile=FromEff.validationData[0]["slhafile"]
+Dir=os.path.dirname ( FromEff.__file__ )
+analysis=Dir[ Dir.rfind("/")+1: ]
+topo=slhafile[:slhafile.find("_")]
+
+plt.title ( "Ratio UL(eff) / UL(official), %s, %s" % ( analysis, topo) )
 plt.xlabel ( "m$_{mother}$ [GeV]" )
 plt.ylabel ( "m$_{LSP}$ [GeV]" )
 plt.colorbar()
