@@ -27,12 +27,23 @@ def getMinMax ( tgraph ):
     """ get the frame that tgraphs fits in nicely """
     if tgraph.GetN() == 0:
         return None
-    xpts,ypts = tgraph.GetX(),tgraph.GetY()
-    #print ( "xpts=",*xpts )
-    minx = 0.8*min(tgraph.GetN(),*xpts)
-    maxx = 1.2*max(tgraph.GetN(),*xpts)
-    miny = 0.9*min(tgraph.GetN(),*ypts)
-    maxy = 1.2*max(tgraph.GetN(),*ypts)
+    xpts,ypts=[],[]
+    n=tgraph.GetN()
+    for i in range(n):
+        x,y=ROOT.Double(),ROOT.Double()
+        tgraph.GetPoint(i,x,y)
+        xpts.append ( x )
+        ypts.append ( y )
+    minx = 0.8*min(xpts)
+    maxx = 1.2*max(xpts)
+    miny = 0.9*min(ypts)
+    maxy = 1.2*max(ypts)
+    ## logger.debug ( "done %f, %f, %f, %f" % ( minx, maxx, miny, maxy ) )
+    #xpts,ypts = tgraph.GetX(),tgraph.GetY() ## fixed: was leaky!
+    #minx = 0.8*min(n,*xpts)
+    #maxx = 1.2*max(n,*xpts)
+    #miny = 0.9*min(n,*ypts)
+    #maxy = 1.2*max(n,*ypts)
     
     return { "x": [minx,maxx], "y": [miny,maxy] }
 
@@ -122,7 +133,7 @@ def addQuotationMarks ( constraint ):
 
     return ret
 
-def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", Npts=300):
+def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
     """ given a TGraph object, returns list of points to probe. 
         :param txnameObjs: list of TxName objects
         :param axes: the axes used to transform x,y into mass parameters (for the check
@@ -130,14 +141,12 @@ def getPoints(tgraphs, txnameObjs, axes = "2*Eq(mother,x)_Eq(lsp,y)", Npts=300):
         :param Npts: Trial number of points for the plot.
     """
         
-        
     frame = getSuperFrame(tgraphs)
     extframe = getExtendedFrame(txnameObjs,axes)
     massPlane = MassPlane.fromString(txnameObjs[0].txName,axes)
     txnameInput = TxNameInput(txnameObjs[0].txName)
     txnameInput.constraint = txnameObjs[0].constraint
     vertexChecker = lambda mass: txnameInput.checkMassConstraints(mass)
-    
 
     #First generate points for the extended frame with a lower density:
     if extframe:

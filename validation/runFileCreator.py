@@ -71,6 +71,7 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,xargs,Npts=300):
        
     #Get SLHA points and create files for each axes
     tempdir = tempfile.mkdtemp(dir=os.getcwd())
+    logger.debug("tempdir is %s" % tempdir )
     for (axes,ntgraph) in tgraphs.items():
         pts = plotRanges.getPoints(ntgraph, txnameObjs, axes, Npts)
         logger.info("\033[31m %i SLHA files for axes %s \033[0m " %(len(pts),axes))
