@@ -5,8 +5,8 @@ own upper limit computed from combining the efficiency maps. """
 
 #import CMS16050.T2tt_5 as FromEff
 #import CMS16050.T2tt_ul as FromUl
-import CMS16052.T2bbffff_44 as FromEff
-import CMS16052.T2bbffff_ul as FromUl
+import CMS16052.T4bbffff_44 as FromEff
+import CMS16052.T4bbffff_ul as FromUl
 import math, os
 import matplotlib.pyplot as plt
 
@@ -22,7 +22,7 @@ def axisHash ( axes ):
 for point in FromUl.validationData:
     axes = point["axes"]
     h = axisHash ( axes )
-    uls[ h ] = point["UL" ]
+    uls[ h ] = point["UL" ] / point["signal"]
 
 
 x,y,col=[],[],[]
@@ -35,7 +35,7 @@ for point in FromEff.validationData:
         ul = uls[h]
     # print "ul", axes, point["UL"], point["UL"] / point["efficiency"], ul
     if ul:
-        ul_eff = point["UL"] / point["efficiency"]
+        ul_eff = point["UL"] / point["signal"] ##  point["efficiency"]
         ratio = ul_eff / ul
         # ratio = math.log10 ( ul )
         x.append ( axes[1] )
