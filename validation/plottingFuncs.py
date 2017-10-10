@@ -380,7 +380,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
             + validationPlot.txName\
             + "_" + validationPlot.niceAxes
-    subtitle = "datasetIds[%d]: " % len(validationPlot.expRes.datasets)
+    subtitle = "%d datasets: " % len(validationPlot.expRes.datasets)
     for dataset in validationPlot.expRes.datasets:
         ds_txnames = map ( str, dataset.txnameList )
         if not validationPlot.txName in ds_txnames:
