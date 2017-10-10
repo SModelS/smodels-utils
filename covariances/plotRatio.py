@@ -7,9 +7,16 @@ import math, os, numpy
 import matplotlib.pyplot as plt
 
 def main():
-    # import CMS16050.T2tt_all as FromEff
-    # import CMS16050.T2tt_ul as FromUl
-    analysis, topo, srs = "CMS16052", "T4bbffff", "44"
+    import argparse
+    argparser = argparse.ArgumentParser( description = "ratio plot" ) 
+    argparser.add_argument ( "-t", "--topo", help="topology", type=str, 
+                             default="T4bbffff" )
+    argparser.add_argument ( "-a", "--analysis", help="analysis", type=str, 
+                             default="CMS16052" )
+    argparser.add_argument ( "-s", "--sr", help="signal regions", type=str, 
+                             default="all" )
+    args = argparser.parse_args()
+    analysis, topo, srs = args.analysis, args.topo, args.sr
     # analysis, topo, srs = "CMS16050", "T2tt", "all"
     FromUl = __import__ ( "%s.%s_ul" % ( analysis, topo), fromlist="%s_ul" % topo )
     FromEff = __import__ ( "%s.%s_%s" % ( analysis, topo, srs ), 
