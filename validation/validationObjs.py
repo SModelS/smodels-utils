@@ -105,9 +105,18 @@ class ValidationPlot():
         x=ROOT.Double()
         y=ROOT.Double()
         curve.GetPoint ( 0, x0, y0 ) ## get the last point
+        ## close with line at y=0 (True) or x=0 (False)
+        close_on_x = True
+        if "x - y]" in self.axes:
+            close_on_x = False # if we have a delta_m on y axis, we know
+            ## we need to close to x=0, not y=0.
         curve.GetPoint ( curve.GetN()-1, x, y ) ## get the last point
-        curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
-        curve.SetPoint ( curve.GetN(), x0, 0. )  ## extend to first point
+        if close_on_x:
+            curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
+            curve.SetPoint ( curve.GetN(), x0, 0. )  ## extend to first point
+        else:
+            curve.SetPoint ( curve.GetN(), 0., y )  ## extend to x=0
+            curve.SetPoint ( curve.GetN(), 0., y0 )  ## extend to first point
 
         pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0, "not_excluded_inside": 0,
                "not_excluded_outside": 0, "wrong" : 0 }

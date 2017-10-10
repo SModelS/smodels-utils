@@ -391,6 +391,9 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     subtitle = subtitle[:-2]
     if len(subtitle) > 100:
         subtitle = subtitle[:100] + " ..."
+    if len(validationPlot.expRes.datasets) == 1 and type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
+        subtitle = "dataset: upper limit"
+        
     figureUrl = getFigureUrl(validationPlot)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
     base.Draw("AP")
