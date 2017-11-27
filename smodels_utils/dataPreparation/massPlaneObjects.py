@@ -452,7 +452,7 @@ class Axes(object):
         #Now check if the x,y,.. values computed give the massArray back:
         newMass = self.getParticleMasses(**xValues)
         for im,m in enumerate(newMass):
-            if abs(m-massArray[im])/m > 1e-2: # Masses differ by more than 1%
+            if m!=0. and abs(m-massArray[im])/m > 1e-2: # Masses differ by more than 1%
                 return None
         
         return xValues
