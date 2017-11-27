@@ -454,6 +454,8 @@ class Axes(object):
         for im,m in enumerate(newMass):
             if m!=0. and abs(m-massArray[im])/m > 1e-2: # Masses differ by more than 1%
                 return None
+            if m==0. and abs(massArray[im])>1.: ## masses differ by more than 1 GeV
+                return None
         
         return xValues
 
