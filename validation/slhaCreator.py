@@ -32,13 +32,14 @@ class TemplateFile(object):
     for generating SLHA files.
     """
 
-    def __init__(self,template,axes,tempdir=None):
+    def __init__(self,template,axes,tempdir=None,pythiaVersion=6):
         """
         :param template: path to the template file
         :param axes: string describing the axes for the template file 
                     (i.e. 2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,x-80.0))
         :param tempdir: Folder to store the SLHA files. If not set,
                         a temporary folder will be created at the current location.
+        :param pythiaVersion: Version of pythia to use (6 or 8). It specifies how the pythiaCard will be generated.
         """
         
         self.path = template
@@ -66,7 +67,7 @@ class TemplateFile(object):
                 if mass == 'M0' or mass == 'm0': self.motherPDGs.append(pdg)
 
         if self.motherPDGs:
-            self.pythiaCard = getPythiaCardFor(self.motherPDGs)
+            self.pythiaCard = getPythiaCardFor(self.motherPDGs,pythiaVersion=pythiaVersion)
         #Define original plot
         self.massPlane = MassPlane.fromString(None,self.axes)
         
