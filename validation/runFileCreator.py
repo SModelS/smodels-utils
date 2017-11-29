@@ -72,18 +72,22 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,xargs,Npts=300):
     #Get SLHA points and create files for each axes
     tempdir = tempfile.mkdtemp(dir=os.getcwd())
     logger.debug("tempdir is %s" % tempdir )
+    pythiaVersion = 6
+    if xargs.pythia6 and not xargs.pythia8:
+        pythiaVersion = 6
+    elif not xargs.pythia6 and xargs.pythia8:
+        pythiaVersion = 8
     for (axes,ntgraph) in tgraphs.items():
         pts = plotRanges.getPoints(ntgraph, txnameObjs, axes, Npts)
         logger.info("\033[31m %i SLHA files for axes %s \033[0m " %(len(pts),axes))
         if len(pts)==0:
             continue
-        tempf = slhaCreator.TemplateFile(templateFile,axes,tempdir)
+        tempf = slhaCreator.TemplateFile(templateFile,axes,tempdir,pythiaVersion=pythiaVersion)
         tempf.createFilesFor(pts, massesInFileName=True)
 
     #Set up cross-section options:
     xargs.colors = None
-    xargs.alltofile = False 
-    xargs.pythia6 = True
+    xargs.alltofile = False
     xargs.query = False
     xargs.NLL = False
     xargs.NLO = False
@@ -232,12 +236,23 @@ if __name__ == "__main__":
     
     #Options for cross-section calculation:
     xargs = argparse.Namespace()
+    #Set pythia6 as default:
+    xargs.pythia6 = True
+    xargs.pythia8 = False
     for name,value in parser.items("xsec"):
         setattr(xargs, name, value)
+        #If pythiaVersion has been defined, use it to select pythia version
+        if name.lower() == 'pythiaversion':
+            if eval(value) == 8:
+                xargs.pythia6 = False
+                xargs.pythia8 = True
+            elif eval(value) != 6:
+                logger.warning("pythiaVersion should be set to 6 or 8. Using default value 6")
+                 
     xargs.sqrts = [[eval(sqrts) for sqrts in xargs.sqrts.split(',')]]
     xargs.ncpus = int(xargs.ncpus)
-    xargs.nevents = int(xargs.nevents)    
-        
+    xargs.nevents = int(xargs.nevents)
+       
     
     analyses = parser.get("database", "analyses").split(",")
     txnames = parser.get("database", "txnames").split(",")

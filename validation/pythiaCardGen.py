@@ -12,7 +12,92 @@ import tempfile,os
 import logging
 logger = logging.getLogger(__name__)
 
-def getPythiaCardFor(momPDGs,filename=None):
+
+def getPythiaCardFor(momPDGs,filename=None,pythiaVersion=6):
+    """
+    Generates a pythia card to run only production of the process contaning the mother PDGs.
+    For Pythia 6 uses a pre-define dictionary, while for Pythia 8 simply restrict the production
+    channels using the mom PDGs.
+    :param momPDGs: list with one or two PDGs. If only one is defined, pair production
+                    of the same mother is assumed
+    :param filename: Name for the pythia.card file. If no name is defined, a temporary name will be
+                     assigned.
+    :param pythiaVersion: Version of Pythia to be used (6 or 8)
+    :return: Name of the file generated
+    """
+    
+    if pythiaVersion == 6:
+        return getPythia6CardFor(momPDGs,filename)
+    elif pythiaVersion == 8:
+        return getPythia8CardFor(momPDGs,filename)
+    else:
+        logger.error("Pythia version should be 6 or 8.")
+        return False
+
+def getPythia8CardFor(momPDGs,filename=None):
+    """
+    Generates a pythia card to run only production of the process contaning the mother PDGs.
+    The process is restricted to contain only the mom PDGs.
+    :param momPDGs: list with one or two PDGs. If only one is defined, pair production
+                    of the same mother is assumed
+    :param filename: Name for the pythia.card file. If no name is defined, a temporary name will be
+                     assigned.
+    :return: Name of the file generated
+    """
+
+    if not filename:
+        filename = tempfile.mkstemp(prefix="pythia_",suffix=".card",dir=os.getcwd())
+        os.close(filename[0])
+        filename = filename[1]
+    f = open(filename,'w')
+
+#Define initial block:
+    header = "! pythia8.cfg\n\
+! This file contains commands to be read in for a Pythia8 run.\n\
+! Lines not beginning with a letter or digit are comments.\n\
+! 1) Settings used in the main program.\n\
+Main:numberOfEvents = 100          ! number of events to generate\n\
+Main:timesAllowErrors = 3          ! how many aborts before run stops\n\
+! 2) Settings related to output in init(), next() and stat().\n\
+Init:showChangedSettings = off     ! list changed settings\n\
+Init:showChangedParticleData = off ! list changed particle data\n\
+Next:numberCount = 5000             ! print message every n events\n\
+Next:numberShowInfo = 0            ! print event information n times\n\
+Next:numberShowProcess = 0         ! print process record n times\n\
+Next:numberShowEvent = 0           ! print event record n times\n\
+\n\
+! 3) Beam parameter settings. Values below agree with default ones.\n\
+Beams:idA = 2212                   ! first beam, p = 2212, pbar = -2212\n\
+Beams:idB = 2212                   ! second beam, p = 2212, pbar = -2212\n\
+Beams:eCM = 8000.                  ! CM energy of collision\n\
+PDF:pSet = 7  ! default = 13, CTEQ6L = 7\n\
+\n\
+! 4) Read SLHA spectrum\n\
+SLHA:file = test.slha              ! Sample SLHA1 spectrum for CMSSM-10.1.1\n\
+SLHA:useDecayTable = off           ! Ignore decay table\n\
+SLHA:verbose = 0\n\
+\n\
+! 5) Process selection\n\
+SUSY:all = on                   ! Switches on ALL (~400) SUSY processes\n\
+SUSY:idA = %s\n\
+SUSY:idB = %s\n\
+\n\
+! 6) Settings for the event generation process in the Pythia8 library.\n\
+ProcessLevel:all = on\n\
+ProcessLevel:resonanceDecays = off\n\
+PartonLevel:all = on\n\
+HadronLevel:all = off\n\
+PhaseSpace:useBreitWigners = off" %(momPDGs[0],momPDGs[1])
+
+    f.write(header)
+    f.close()
+
+    return filename
+   
+
+
+
+def getPythia6CardFor(momPDGs,filename=None):
     """
     Uses the dictionary of pythia processes and generates a pythia card
     to run only production of the process contaning the mother PDGs
