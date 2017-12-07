@@ -284,6 +284,7 @@ class Axes(object):
     Holds the axes information for one branch of a singe mass plane.
     No units supported!
     """
+    allowed_dm = 0.000001
 
     def __init__(self, massEqs,massVars):
 
@@ -472,7 +473,7 @@ class Axes(object):
         #Now check if the x,y,.. values computed give the massArray back:
         newMass = self.getParticleMasses(**xValues)
         for im,m in enumerate(newMass):
-            if abs(m-massArray[im]) > 0.000001: #Masses differ
+            if abs(m-massArray[im]) > 0.11: #Masses differ
                 return None
         
         return xValues
