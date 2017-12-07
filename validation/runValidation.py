@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
-				          pretty=False,generateData=True):
+                  pretty=False,generateData=True):
     """
     Creates a validation plot and saves its output.
 
@@ -150,6 +150,14 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
                 tarfile = os.path.basename(tarfiles[itx])
             tarfile = os.path.join(slhadir,tarfile)
 
+            if not os.path.isfile(tarfile):
+                logger.info( 'Missing .tar file for %s. Trying to download to %s.' %\
+                              ( txnameStr, tarfile ) )
+                from slha.fetch import fetch
+                could_fetch = fetch ( [ txnameStr ] )
+                if not could_fetch:
+                    logger.error( 'Could not download .tar file for %s.'% txnameStr )
+                    continue
             #Collect exclusion curves
             tgraphs = plottingFuncs.getExclusionCurvesFor(expRes,txnameStr,get_all=False)
             if not tgraphs or not tgraphs[txnameStr]:
@@ -157,10 +165,6 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
                 continue
             else:
                 tgraphs = tgraphs[txnameStr]
-            if not os.path.isfile(tarfile):
-                logger.error( 'Missing .tar file for %s. Should be in %s.' % \
-                              ( txnameStr, tarfile ) )
-                continue
 
             #Define k-factors
             if txnameStr.lower() in kfactorDict:
