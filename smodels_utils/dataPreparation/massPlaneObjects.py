@@ -11,6 +11,7 @@
 
 import sys
 from sympy import var, Eq, lambdify, solve, N
+from scipy.spatial import Delaunay
 from itertools import permutations
 from smodels_utils.dataPreparation.dataHandlerObjects import DataHandler,ExclusionHandler
 import string
@@ -209,6 +210,25 @@ class MassPlane(object):
         #Store it as a mass plane attribute:            
         setattr(self,dataLabel,dataObject)
 
+    def _removePoints_ ( self, points, obj ):
+        hull = Delaunay ( points )
+        #print ( "upperLimits=%s" % type(obj) )
+        newdata=[]
+        for ctr,i in enumerate(obj.data):
+            p = [ i[x], i[y] ]
+            in_hull = hull.find_simplex ( p )
+            if in_hull == -1: ## not in a cut-out region
+                newdata.append ( i )
+            else:
+                logger.info ( "removing point %s as it is in cut-out region." % ( p ) )
+        obj.data = newdata
+
+    def removeArea(self,points):
+        """ remove all points within an area spanned by <points> """
+        points.append ( points[0] )
+        for i in [ "efficiencyMap", "upperLimits", "expectedUpperLimits" ]:
+            if hasattr ( self, i ):
+                self._removePoints_ ( points, getattr(self,i) )
         
     def getParticleMasses(self,**xMass):
 
