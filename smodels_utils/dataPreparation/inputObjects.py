@@ -9,6 +9,7 @@
 """
 
 import sys
+import string
 from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round_list
 from smodels.tools.physicsUnits import fb, pb, TeV, GeV
@@ -267,6 +268,9 @@ class DataSetInput(Locker):
         """initialize the dataset
         :param name: name of dataset (used as folder name)
         """
+        if type(name)!=str or len(name)<1 or name[0] not in string.ascii_letters:
+            logger.error ( "Illegal dataset name: ``%s''. Make sure it starts with a letter." % name )
+            sys.exit()
 
         self._name = name
         self._txnameList = []
