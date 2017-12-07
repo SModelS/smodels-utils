@@ -284,7 +284,6 @@ class Axes(object):
     Holds the axes information for one branch of a singe mass plane.
     No units supported!
     """
-    allowed_dm = 0.000001
 
     def __init__(self, massEqs,massVars):
 
