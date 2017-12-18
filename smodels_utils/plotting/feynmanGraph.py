@@ -29,11 +29,12 @@ class Redirector(object):
         self.file.write(data)
         self.file.flush()
 
-def printParticle_ ( label ):
+def printParticle_ ( label, jet ):
     """ very simple method to rename a few particles for the asciidraw
             routine, do not call directly """
     ## print "label=",label
-    if label=="jet": label=r"q"
+    if not jet and label=="jet": label=r"q"
+    if jet and label=="jet": label=r"jet"
     if label in [ "hi", "higgs" ]: label="H"
     # if label in [ "nu" ]: label="$\\nu$"
     # if label in [ "f" ]: label = r"\Pelectron"
@@ -90,7 +91,10 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
             for r,rr in replacements.items():
                 #label=label.replace ( r, "$%s%" % rr )
                 label=label.replace ( r, rr )
-            label="$%s$" % label
+            if label == "jet":
+                pass
+            else:
+                label="$%s$" % label
             fl.addLabel ( label, pos=0.9, displace=displace )
             # fl.addLabel ( "$%s$" % label, pos=0.9, displace=displace )
         return [ fl ]
@@ -153,10 +157,12 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
     return segs
 
 def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=False,
-           italic=False ):
+           italic=False, jet=False ):
     """ plot a lessagraph, write into pdf/eps/png file called <filename>
         :param straight: draw straight lines, or xkcd style
         :param inparts: draw the incoming lines and the big production blob?
+        :param italic: labels in italic
+        :param jet: write "jet" as label for jets. Default: "q"
     """
     try:
         import os, sys
@@ -225,9 +231,6 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
             for ( nvtx,insertions) in enumerate(branch.particles):
                 mark=None
                 if len(insertions)>0:
-                    #mark=None
-                    #jpg = bitmap.jpegimage( "%s/plots/blob2.jpg" % SModelS.installDirectory() )
-                    #c.insert(bitmap.bitmap( f*(nvtx+1)-.1,f*ct-.14 , jpg, compressmode=None))
                     mark=CIRCLE
                 # mark=None
                 v1=Vertex ( f*(nvtx+1),f*ct,mark=mark)
@@ -251,7 +254,7 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
                     p=Point ( x_c, y_c )
                     # print "add point at",x_c,y_c
                     ## print "branch=",branch
-                    label=printParticle_ ( insertion )
+                    label=printParticle_ ( insertion, jet )
                     ## ff=Fermion(v1,p).addLabel ( label )
                     # if italic: label="$%s$" % label
                     # print "label=",label
@@ -303,6 +306,8 @@ if __name__ == "__main__":
                                  action='store_true' )
         argparser.add_argument ( '-v', '--verbose', help='be verbose',
                                  action='store_true' )
+        argparser.add_argument ( '-j', '--jet', help='write "jet" instead of "q"',
+                                 action='store_true' )
         args=argparser.parse_args()
 
         from smodels.theory import lheReader, lheDecomposer, crossSection, element
@@ -323,4 +328,4 @@ if __name__ == "__main__":
         E = lheDecomposer.elementFromEvent( Event, crossSection.XSectionList() )
 
         draw ( E, args.output, straight=args.straight, inparts=args.incoming,
-               verbose=args.verbose, italic=args.italic )
+               verbose=args.verbose, italic=args.italic, jet=args.jet )
