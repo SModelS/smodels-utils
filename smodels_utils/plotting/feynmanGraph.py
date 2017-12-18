@@ -12,7 +12,7 @@
 from __future__ import print_function
 import logging
 logger = logging.getLogger(__name__)
-import sys
+import sys, copy
 
 class Redirector(object):
     def __init__(self, name, mode = "w" ):
@@ -223,8 +223,9 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
 
         # nbranches=len(element.B)
 
-        for (ct,branch) in enumerate(element.branches):
-            # print "branch",ct,branch,"with",branch.vertnumb,"vertices"
+        branches = copy.deepcopy ( element.branches )
+        branches.reverse() ## first branch is top, second branch is bottom
+        for (ct,branch) in enumerate(branches):
             # p1 = Point(0, ct)
             lastVertex=vtx1
             nvtx=0
