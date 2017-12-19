@@ -78,8 +78,7 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
     from pyx import bitmap
     from smodels_utils import SModelSUtils
 
-    if spin=="scalar" and not NamedLine.has_key ( spin ) and \
-                  NamedLine.has_key ( "higgs" ):
+    if spin=="scalar" and not spin in NamedLine and "higgs" in NamedLine:
         spin="higgs"
     if straight:
         fl=NamedLine[spin](p1,p2)
@@ -140,7 +139,7 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
             filename="%s/icons/questionmark.jpg" % SModelSUtils.installDirectory()
         try:
             jpg = bitmap.jpegimage( filename )
-        except Exception,e:
+        except Exception as e:
             logger.error ( "cant load %s: %s!" % (filename,e) )
             import sys
             sys.exit(0)
@@ -173,7 +172,7 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
         from pyfeyn.user import FeynDiagram, Point, Circle, HATCHED135, CIRCLE, \
             Vertex, WHITE, Fermion
         #sys.stdout=copy
-    except ImportError,e:
+    except ImportError as e:
         logger.error ( "cannot draw, pyfeyn not installed? %s" % e )
         return
     try:
@@ -275,7 +274,7 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
             import os
             os.system ( "convert %s %s" % ( pdffile, filename ) )
         # print "[feynmanGraph.py] %s created." % ( filename )
-    except Exception,e:
+    except Exception as e:
         logger.error ( "[draw] exception %s" % e )
 
 if __name__ == "__main__":
