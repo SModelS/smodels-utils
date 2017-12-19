@@ -349,6 +349,7 @@ class DataHandler(object):
         
         if self.allowNegativValues: return True        
         for value in values:
+            
             if value < 0.0:
                 logger.warning("Negative value %s in %s will be ignored"%(value,self.path))
                 return False
