@@ -25,10 +25,10 @@ BLOCK MASS
    2000003     1.00000000E+05   # ~s_R
    1000004     1.00000000E+05 # ~c_L
    2000004     1.00000000E+05   # ~c_R
-   1000005     1.00000000E+05    #    ~b_1
+   1000005     M0    #    ~b_1
    2000005     1.10000000E+05   # ~b_2
-   1000006     M1   # ~t_1
-   2000006     M0   # ~t_2
+   1000006     1.10000000E+05   # ~t_1
+   2000006     1.10000000E+05   # ~t_2
    1000011     1.00000000E+04   # ~e_L
    2000011     1.00000000E+04   # ~e_R
    1000012     1.00000000E+04   # ~nu_eL
@@ -43,7 +43,7 @@ BLOCK MASS
    1000023     1.00000000E+04   # ~chi_20
    1000025     1.00000000E+04   # ~chi_30
    1000035     1.00000000E+04   # ~chi_40
-   1000024     1.00000000E+04   # ~chi_1+
+   1000024     M1   # ~chi_1+
    1000037     1.00000000E+04   # ~chi_2+
  #
 BLOCK NMIX
@@ -137,36 +137,34 @@ BLOCK MSOFT Q=  2.90528802e+02
  48    3.95211849e+02
  49    3.90320031e+02
  
+ 
 #         PDG            Width
-DECAY   1000006     1.00000000E+00   # stop1 decays
+DECAY   1000006     0.00000000E+00   # stop1 decays
+DECAY   2000006     0.00000000E+00   # stop2 decays
+DECAY   1000005     1.00000000E+00   # sbottom1 decays
 #          BR         NDA      ID1       ID2
-     1.00000000E+00    2     1000022         6   # BR(~t_1 -> ~chi_10 t )
-DECAY   2000006     1.00000000E+00   # stop2 decays
-#          BR         NDA      ID1       ID2
-<<<<<<< HEAD
-     1.00000000E+00    2     1000006         25   # BR(~t_2 -> ~t_1 H )
-=======
-     1.00000000E+00    2     1000006         25   # BR(~t_2 -> ~t_1 h )
->>>>>>> develop
+     1.00000000E+00    3    -1000024     5  24   # BR(~b_1 -> ~chi_1- b W+ )
 
-DECAY   1000005     0.00000000E+00   # sbottom1 decays
 DECAY   2000005     0.00000000E+00   # sbottom2 decays
+#
+#         PDG            Width
 DECAY   1000011     0.00000000E+00   # selectron_L decays
 DECAY   2000011     0.00000000E+00   # selectron_R decays
 DECAY   1000013     0.00000000E+00   # smuon_L decays
 DECAY   2000013     0.00000000E+00   # smuon_R decays
 DECAY   1000015     0.00000000E+00   # stau_1 decays
 DECAY   2000015     0.00000000E+00   # stau_2 decays
+#
+#         PDG            Width
 DECAY   1000012     0.00000000E+00   # snu_elL decays
 DECAY   1000014     0.00000000E+00   # snu_muL decays
 DECAY   1000016     0.00000000E+00   # snu_tauL decays
 DECAY   1000021     0.00000000E+00   # gluino decays                 
-DECAY   1000024     0.00000000E+00   # chargino1+ decays
-           
+
+DECAY   1000024     1.00000000E+00   # chargino1+ decays
+#           BR         NDA      ID1       ID2       ID3
+      1.00000000E+00    2     1000022        24        # BR(~C1 -> N1 W)           
 ########################################################################
 
 
 DECAY   1000022     0.00000000E+00   # neutralino1 decays 
- 
-
-
