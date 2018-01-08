@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 
-import sys,os,shutil,time
+import sys,os,shutil,time,tarfile
 import logging,tempfile
 # logging.basicConfig(filename='val.out')
 import argparse
@@ -11,31 +11,27 @@ try:
     from ConfigParser import SafeConfigParser
 except ImportError as e:
     from configparser import ConfigParser
-try:
-    import commands
-except ImportError as e:
-    import subprocess as commands
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
 
 
 
-def createFiles(expResList,txnameStr,templateFile,tarFile,xargs,Npts=300):
+def createFiles(expResList,txnameStr,templateFile,tarFile,addToFile,xargs,Npts=300):
     """
-    Creates a .tar file for the txname using the data in expResults.
+    Creates a .tar.gz file for the txname using the data in expResults.
     
     :param expResults: a list of ExpResult objects
     :param txnameStr: String describing the txname (e.g. T2tt)
     :param templateFile: path to the txname template
     :param tarFile: name of the output file
+    :param addToFile: If True it will add to the existing .tar.gz file (or create a new one if there is no previous file)    
     :param xargs: argparse.Namespace object holding the options for the 
                   cross-section calculation
     :param Npts: Trial number of points for each plane.
                     
     :return: True if successful, False otherwise. 
     """
-
     
     #Create temp folder to store the SLHA files:
     tgraphs = {}
@@ -105,10 +101,21 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,xargs,Npts=300):
     xsecComputer.main(xargs)
     
     
-    commands.getoutput("cd %s && tar cf %s *.slha" % (tempdir,tarFile))
+    #Create tarfile:
+    if os.path.isfile(tarFile):
+        if addToFile:
+            #Extract old slhafiles to the same folder:
+            oldtar = tarfile.open(tarFile,'r:gz')
+            oldtar.extractall(path=tempdir)
+            oldtar.close()
+        os.remove(tarFile)
+        
+    tar = tarfile.open(tarFile,'w:gz')
+    for slhafile in os.listdir(tempdir):
+        tar.add(os.path.join(tempdir,slhafile),arcname=slhafile)
+    tar.close()
     #Remove temp folder containing the SLHA files:
     shutil.rmtree(tempdir)
-
     
     return True
 
@@ -116,21 +123,21 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,xargs,Npts=300):
 def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
          databasePath,xargs,Npts=300,addToFile=False,verbosity='error'):
     """
-    Creates .tar files for all the txnames and analyses.
+    Creates .tar.gz files for all the txnames and analyses.
 
     :param analysisIDs: list of analysis ids ([CMS-SUS-13-006,...])
     :param dataType: dataType of the analysis (all, efficiencyMap or upperLimit)
     :param txnames: list of txnames ([TChiWZ,...])
     :param templatedir: Path to the folder containing the txname.template files
-    :param slhadir: Path to the output folder holding the txname .tar files
+    :param slhadir: Path to the output folder holding the txname .tar.gz files
     :param databasePath: Path to the SModelS database
     :param Npts: Trial number of points for each plane.
-    :param addToFile: If True it will add to the existing .tar file (or create a new one if there is no previous file)
+    :param addToFile: If True it will add to the existing .tar.gz file (or create a new one if there is no previous file)
     :param verbosity: overall verbosity (e.g. error, warning, info, debug)
     :param xargs: argparse.Namespace object holding the options for the 
                   cross-section calculation
     
-    :return: A dictionary containing the list of created .tar files 
+    :return: A dictionary containing the list of created .tar.gz files 
     """
 
     if not os.path.isdir(databasePath):
@@ -161,29 +168,17 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
     if not txnameList:
         logger.error("No txnames found.")
     
-    #Loop over txnames and create tar files
+    #Loop over txnames and create tar.gz files
     for txname in txnameList:
         templateFile = os.path.join(templatedir,txname+'.template')
-        tarFile = os.path.join(slhadir,txname+'.tar')
-        oldTarFile = None
+        tarFile = os.path.join(slhadir,txname+'.tar.gz')
         if addToFile and os.path.isfile(tarFile):
-            oldTarFile = tempfile.mkstemp(suffix='_old.tar', dir=slhadir)
-            os.close(oldTarFile[0])
-            oldTarFile = oldTarFile[1]
-            os.rename(tarFile,oldTarFile)
             logger.info("--------  \033[32m Extending %s \033[0m" %tarFile)
         else:
             logger.info("--------  \033[32m Generating %s \033[0m" %tarFile)            
         t0 = time.time()
-        createFiles(expResList,txname,templateFile,tarFile,xargs,Npts)        
-        if oldTarFile:
-            tempdir = tempfile.mkdtemp(dir='./')
-            commands.getoutput("tar -xf %s -C %s" % (tarFile,tempdir))
-            commands.getoutput("tar -xf %s -C %s" % (oldTarFile,tempdir))
-            os.remove(oldTarFile)
-            os.remove(tarFile)
-            commands.getoutput("cd %s && tar -cf %s *.slha" % (tempdir,tarFile))
-            shutil.rmtree(tempdir)
+        createFiles(expResList,txname,templateFile,tarFile,addToFile,xargs,Npts)
+        if addToFile and os.path.isfile(tarFile):                
             logger.info("--------  \033[32m File %s extended in %.1f min. \033[0m \n" %(tarFile,(time.time()-t0)/60.))
         else:
             logger.info("--------  \033[32m File %s generated in %.1f min. \033[0m \n" %(tarFile,(time.time()-t0)/60.))            

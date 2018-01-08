@@ -1,24 +1,21 @@
 #!/usr/bin/python
 
-import sys,os,shutil
+import sys,os
 
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 
 from smodels.experiment.databaseObj import Database
-from plottingFuncs import getExclusionCurvesFor
-import glob, pyslha
+import pyslha,tarfile
 import ROOT
-import commands,tempfile
 
 
 
-txname="T6bbWWoff"
+txname="T6bbWW"
 
-tarball="../slha/%s.tar" % txname
-tempdir = tempfile.mkdtemp(prefix=os.getcwd()+'/')
-commands.getoutput ( "tar xvf %s -C %s" %(tarball,tempdir) )
-files=glob.iglob( "%s/%s_*.slha" %(tempdir,txname) )
+tarball="../slha/%s.tar.gz" % txname
+tar = tarfile.open(tarball,"r:gz")
+files = [f for f in tar.getnames() if '.slha' in f]
 
 xM = 1000006
 yM = 1000022
@@ -34,7 +31,9 @@ gr.SetMarkerStyle(20)
 
 
 for (ifile,f) in enumerate(files):
-    pyfile=pyslha.readSLHAFile ( f )
+    fobj = tar.extractfile(f)
+    pyfile=pyslha.readSLHA(fobj.read())
+    fobj.close()
     masses=pyfile.blocks["MASS"]
     xmass=masses[xM]
     ymass=masses[yM]
@@ -44,8 +43,7 @@ for (ifile,f) in enumerate(files):
     else:
         gr.SetPoint(ifile,xmass,ymass)
 
-print tempdir
-shutil.rmtree(tempdir)
+
 print gr.GetN()
 
 gr.GetYaxis().SetTitleFont(132)

@@ -29,7 +29,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     :param axes: the axes string describing the plane to be validated
      (i.e.  2*Eq(mother,x),Eq(lsp,y))
     :param slhadir: folder containing the SLHA files corresponding to txname
-    or the .tar file containing the SLHA files.
+    or the .tar.gz file containing the SLHA files.
     :param kfactor: optional global k-factor value to re-scale
                     all theory prediction values
     :param ncpus: Number of jobs to submit. ncpus = -1 means all processors.
@@ -81,13 +81,13 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param analysisIDs: list of analysis ids ([CMS-SUS-13-006,...])
     :param dataType: dataType of the analysis (all, efficiencyMap or upperLimit)
     :param txnames: list of txnames ([TChiWZ,...])
-    :param slhadir: Path to the folder containing the txname .tar files
+    :param slhadir: Path to the folder containing the txname .tar.gz files
     :param databasePath: Path to the SModelS database
     :param kfactorDict: kfactor dictionary to be applied to the theory cross-sections
                         (e.g. {'TChiWZ' : 1.2, 'T2' : 1.,..})
     :param tarfiles: Allows to define a specific list of tarballs to be used.
                      The list should match the txnames list.
-                     If set to None, it will use the default file (txname.tar).
+                     If set to None, it will use the default file (txname.tar.gz).
     :param ncpus: Number of jobs to submit. ncpus = -1 means all processors.
     :param verbosity: overall verbosity (e.g. error, warning, info, debug)
 
@@ -145,19 +145,14 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             txt0 = time.time()
             logger.info("------------ \033[31m validating  %s \033[0m" %txnameStr)
             if not tarfiles:
-                tarfile = txnameStr+".tar"
+                tarfile = txnameStr+".tar.gz"
             else:
                 tarfile = os.path.basename(tarfiles[itx])
             tarfile = os.path.join(slhadir,tarfile)
 
             if not os.path.isfile(tarfile):
-                logger.info( 'Missing .tar file for %s. Trying to download to %s.' %\
-                              ( txnameStr, tarfile ) )
-                from slha.fetch import fetch
-                could_fetch = fetch ( [ txnameStr ] )
-                if not could_fetch:
-                    logger.error( 'Could not download .tar file for %s.'% txnameStr )
-                    continue
+                logger.info( 'Missing .tar.gz file for %s.' %txnameStr)
+                continue
             #Collect exclusion curves
             tgraphs = plottingFuncs.getExclusionCurvesFor(expRes,txnameStr,get_all=False)
             if not tgraphs or not tgraphs[txnameStr]:

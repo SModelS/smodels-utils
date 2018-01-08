@@ -150,7 +150,7 @@ class ValidationPlot():
 
     def setSLHAdir(self,slhadir):
         """
-        Defines the folder or tar file containing all the slha files to be
+        Defines the folder or .tar.gz file containing all the slha files to be
         used to generate the validation plot
 
         :param slhadir: existing folder containing SLHA files
@@ -165,7 +165,7 @@ class ValidationPlot():
     def getSLHAdir(self):
         """
         Returns path to the folders containing the SLHA files.
-        If slhadir is a .tar file, returns a temporary folder where the files
+        If slhadir is a .tar.gz file, returns a temporary folder where the files
         have been extracted to.
 
         :param slhadir: path to the SLHA folder or the tar ball containing the files (string)
@@ -176,9 +176,10 @@ class ValidationPlot():
             return self.slhaDir
         elif os.path.isfile(self.slhaDir):
             try:
-                tar = tarfile.open(self.slhaDir)
+                tar = tarfile.open(self.slhaDir,'r:gz')
                 tempdir = tempfile.mkdtemp(dir=os.getcwd())
                 tar.extractall(path=tempdir)
+                tar.close()
                 logger.debug("SLHA files extracted to %s" %tempdir)
                 return tempdir
             except:
