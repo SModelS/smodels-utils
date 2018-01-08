@@ -196,8 +196,6 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     l=TLatex()
     l.SetNDC()
     l.SetTextSize(.04)
-    agreement = validationPlot.computeAgreementFactor( signal_factor = signal_factor )
-    l.DrawLatex(.15,.85,"validation agreement %.1f %s" % (agreement*100, "%"))
     base.l=l
     if figureUrl:
         # print "dawing figureUrl"
@@ -401,8 +399,6 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     l=TLatex()
     l.SetNDC()
     l.SetTextSize(.04)
-    agreement = validationPlot.computeAgreementFactor()
-    l.DrawLatex(.15,.85,"validation agreement %.1f %s" % (agreement*100, "%"))
     base.l=l
     l0=TLatex()
     l0.SetNDC()
