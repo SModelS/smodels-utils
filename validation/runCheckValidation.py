@@ -193,7 +193,6 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,databasePath,check,showPlots,u
         for txname in txnameList:
             txnameStr = txname.txName
             if not txname.validated in check:
-                print txname.validated,check
                 continue
             logger.info("------------ \033[31m Checking  %s \033[0m" %txnameStr)
             if not showPlots:
