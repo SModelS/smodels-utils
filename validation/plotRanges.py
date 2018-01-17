@@ -248,6 +248,9 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChe
     :return: List of x,y points belonging to the plot and the data grids.    
     """
     
+    #Get variable labels for the mass plane (e.g. 'x','y',..)
+    planeVars = sorted([str(v) for v in massPlane.xvars])
+
     #Create a dummy copy of a TxnameData object to hold all the data corresponding to the plane
     txdata = copy.deepcopy(txnameObjs[0].txnameData)
     txdata.dataTag = 'dummy'
@@ -263,10 +266,17 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChe
             #Switch back to original mass point
             mass = tx.txnameData._getMassArrayFrom(pt,unit=None)
             #Check if mass belong to the mass plane:
-            xy = massPlane.getXYValues(mass)
+            xy = massPlane.getXYValues(mass)            
+            if xy is None:
+                continue
+            #Use corresponding mass from massPlane to avoid rounding errors
+            #(ensures the mass exactly satisfies the plane relations)
+            xyDict = dict([[planeVars[i],xv] for i,xv in enumerate(xy)])
+            mass = massPlane.getParticleMasses(**xyDict)
+            #Add units:
             mass = [[m*GeV for m in br] for br in mass]
             #Does not include the same mass point twice from distinct signal regions
-            if xy is None or mass in planeMasses:
+            if mass in planeMasses:
                 continue
             planeMasses.append(mass)
             reducedData.append([mass,numpy.asscalar(tx.txnameData.xsec[i])])
