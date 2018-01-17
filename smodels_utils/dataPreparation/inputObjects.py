@@ -577,7 +577,8 @@ class TxNameInput(Locker):
                 infoStr = ";".join(infoList)
                 setattr(self,infoAttr,infoStr)
 
-        self.validated = 'TBD'
+        if not hasattr(self,'validated'):
+            self.validated = 'TBD'
 
     def addDataFrom(self, plane, dataLabel):
 

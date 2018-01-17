@@ -316,6 +316,11 @@ class DatabaseCreator(list):
         When last update is overwritten, self._setImplementedBy is called
         """
 
+        today = date.today()
+        today = '%s/%s/%s' %(today.year, today.month, today.day)
+        self.metaInfo.lastUpdate = today
+        self._setImplementedBy()
+
         if os.path.isfile(self.base + 
                           self.infoFilePath(self.metaInfoFileName,
                                             self.metaInfoFileDirectory)):
@@ -339,7 +344,7 @@ class DatabaseCreator(list):
                     m = m + 'number or name of txNames, arXiv, publication,'
                     m = m + ' upperLimits\n'
                     m = m + '(You can turn this off via the environment variable SMODELS_NOUPDATE)\n'
-                    m = m + 'overwrite lastUpdate (y/n)?:'
+                    m = m + 'overwrite lastUpdate (y/n)?: '
                     answer = 'n'
                     if "SMODELS_NOUPDATE" in os.environ.keys():
                         self.timeStamp ( "SMODELS_NOUPDATE is set!", "error" )
@@ -353,11 +358,33 @@ class DatabaseCreator(list):
                     self.metaInfo.lastUpdate = lastUpdate
                     if not implementedBy: self._setImplementedBy()
                     else: self.metaInfo.implementedBy = implementedBy
-                    return
-        today = date.today()
-        today = '%s/%s/%s' %(today.year, today.month, today.day)
-        self.metaInfo.lastUpdate = today
-        self._setImplementedBy()
+                
+                #Check if validation fields should be overwritten/reset
+                while True:
+                    m = 'If the data has changed, the validated fields should be reset.\n'
+                    m = m + 'Reset the validated fields (y/n)?: '
+                    answer = 'n'
+                    try: 
+                        answer = input(m)
+                    except NameError as e:
+                        answer = input(m)
+                    if answer == 'y' or answer == 'n': break
+                if answer == 'n':
+                    for dataset in self:
+                        for tx in dataset._txnameList:
+                            txold = os.path.join(self.base,dataset._name)
+                            txold =  os.path.join(txold,tx._name)
+                            if not '.txt' in txold: txold += '.txt'
+                            if not os.path.isfile(txold):
+                                continue
+                            txold = open(txold,'r')
+                            oldVal = txold.read().split('validated:')[1]
+                            oldVal = oldVal[:oldVal.find('\n')]
+                            oldVal = oldVal.strip()
+                            txold.close()
+                            setattr(tx,'validated',oldVal)                
+        return
+
 
     def _setImplementedBy(self):
 
