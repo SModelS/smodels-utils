@@ -324,6 +324,8 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChe
             if txdata.tri.find_simplex(pt) < 0:
                 continue
             mass = txdata._getMassArrayFrom(pt,unit=None)
+            #Round all masses (to be consistent with smodels)
+            mass = [[round(m,1) for m in br] for br in mass]
             if not vertexChecker(mass):
                 continue
             if massPlane.getXYValues(mass) is None:
