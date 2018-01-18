@@ -17,6 +17,7 @@ from plottingFuncs import createPlot, getExclusionCurvesFor, createPrettyPlot
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from sympy import var
+import pyslha
 import string
 
 logger.setLevel(level=logging.ERROR)
@@ -271,6 +272,7 @@ class ValidationPlot():
         except Exception: ## old version?
             fileList = modelTester.getAllInputFiles(slhaDir)
             inDir = slhaDir
+            
 
         #Set temporary outputdir:
         outputDir = tempfile.mkdtemp(dir=slhaDir,prefix='results_')
@@ -331,9 +333,21 @@ class ValidationPlot():
                 logger.error("Something went wrong. Obtained results for the wrong txname")
                 return False
 
-            mass = expRes['Mass (GeV)']
+            #Replaced rounded masses by original masses
+            #(skip rounding to check if mass is in the plane)
+            roundmass = expRes['Mass (GeV)']
+            mass = [br[:] for br in roundmass]
+            slhadata = pyslha.readSLHAFile(os.path.join(slhaDir,slhafile))
+            origmasses = list(set(slhadata.blocks['MASS'].values()))
+            for i,br in enumerate(mass):
+                for im,m in enumerate(br):
+                    for omass in origmasses:
+                        if round(omass,1) == m:
+                            mass[i][im] = omass
+                            break
+                                  
             v = massPlane.getXYValues(mass)
-            if v == None:
+            if v == None:                
                 logger.debug( "dropping %s, doesnt fall into the plane of %s." % \
                                (slhafile, massPlane ) )
                 continue
