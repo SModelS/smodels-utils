@@ -194,7 +194,7 @@ if __name__ == "__main__":
             default='./validation_parameters.ini')
     ap.add_argument('-l', '--log', 
             help='specifying the level of verbosity (error, warning,info, debug)', 
-            default = 'warning', type = str)
+            default = 'info', type = str)
            
     args = ap.parse_args()
     
