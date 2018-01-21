@@ -571,7 +571,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         l1=TLatex()
         l1.SetNDC()
         l1.SetTextSize(.025)
-        l1.DrawLatex(.01,0.023,"#splitline{official plot:}{%s}" % figureUrl)
+        """l1.DrawLatex(.01,0.023,"#splitline{official plot:}{%s}" % figureUrl)"""
         tgr.l1=l1
     if kfactor > 1.0:
         l2=TLatex()
@@ -706,7 +706,7 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
         figUrl=TLatex()
         figUrl.SetNDC()
         figUrl.SetTextSize(.02)
-        figUrl.DrawLatex(.12,.1,"%s" % figureUrl)
+        """figUrl.DrawLatex(.12,.1,"%s" % figureUrl)"""
         base.figUrl = figUrl
     if abs(signal_factor-1.0)>.0001:
         sigFac=TLatex()
