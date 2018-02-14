@@ -17,8 +17,8 @@ def getVersion():
     """
     Obtain the smodels version """
     sys.path.insert(0,"../")
+    return "1.1.2"
     from smodels import installation
-    # return "1.1.0"
     return installation.version()
 
 dummyRun=False ## True
@@ -186,7 +186,8 @@ def fetchDatabase():
     if dbversion.find("-")>0:
         dbversion=dbversion[:dbversion.find("-")]
     comment ( "git clone the database (this might take a while)" )
-    cmd = "cd %s; git clone -b v%s git@smodels.hephy.at:smodels-database"  % \
+    # cmd = "cd %s; git clone -b v%s git@smodels.hephy.at:smodels-database"  % 
+    cmd = "cd %s; git clone -b v%s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
             (dirname, dbversion)
             
     if dummyRun:
@@ -359,6 +360,33 @@ def testDocumentation():
     cmd="ls %s/docs/manual/build/html/index.html" % dirname
     run (cmd)
 
+def createDBRelease():
+    """
+    Create a tarball for distribution.
+    """
+    isDummy()
+    rmlog() ## first remove the log file
+    comment ( "Creating tarball for database distribution, version %s" % version )
+    makeClean()
+    rmdir()
+    mkdir() ## .. then create the temp dir
+    # clone() ## ... clone smodels into it ...
+    fetchDatabase() ## git clone the database
+    cleanDatabase() ## clean up database, remove orig, validated
+    splitDatabase() ## split database into official and optional
+    removeNonValidated() ## remove all non-validated analyses
+    clearTxtFiles() ## now clear up all txt files
+    #convertRecipes()
+    #makeDocumentation()
+    #rmExtraFiles() ## ... remove unneeded files ...
+    #rmpyc() ## ...  remove the pyc files created by makeDocumentation ...
+    #rmlog()  ##Make sure to remove log files
+    createTarball() ## here we go! create!
+    #test ()    
+    # rmdir(dirname)
+    #testDocumentation()
+    isDummy()
+
 def create():
     """
     Create a tarball for distribution.
@@ -387,11 +415,5 @@ def create():
     isDummy()
 
 if __name__ == "__main__":
-    create()
-    # clearGlobalInfos ( "%s/smodels-database/" % dirname )
-    # fetchDatabase()
-    # cleanDatabase()
-    # splitDatabase()
-    # cleanDatabase()
-    # clearGlobalInfo ( "./globalInfo.txt" )
-    # runExample()
+    createDBRelease()
+    # create()
