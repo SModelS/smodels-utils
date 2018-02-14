@@ -277,10 +277,17 @@ def clearTxtFiles():
 
 def createTarball():
     """
-    Create the tarball.
+    Create the tarball of smodels + database
     """
     comment ( "Create tarball smodels-v%s.tgz" % version )
     run ("tar czvf smodels-v%s.tgz %s" % (version, dirname))
+
+def createDBTarball():
+    """
+    Create the tarball of the database alone
+    """
+    comment ( "Create tarball smodels-database-v%s.tgz" % version )
+    run ("cd %s; tar czvf smodels-database-v%s.tgz smodels-database" % (dirname, version ))
 
 def rmExtraFiles():
     """
@@ -381,7 +388,7 @@ def createDBRelease():
     #rmExtraFiles() ## ... remove unneeded files ...
     #rmpyc() ## ...  remove the pyc files created by makeDocumentation ...
     #rmlog()  ##Make sure to remove log files
-    createTarball() ## here we go! create!
+    createDBTarball() ## here we go! create!
     #test ()    
     # rmdir(dirname)
     #testDocumentation()
@@ -394,7 +401,7 @@ def create():
     isDummy()
     rmlog() ## first remove the log file
     comment ( "Creating tarball for distribution, version %s" % version )
-    makeClean()
+    # makeClean()
     rmdir()
     mkdir() ## .. then create the temp dir
     clone() ## ... clone smodels into it ...
