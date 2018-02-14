@@ -35,6 +35,7 @@ def printParticle_ ( label, jet ):
     ## print "label=",label
     if not jet and label=="jet": label=r"q"
     if jet and label=="jet": label=r"jet"
+    if label in [ "gamma", "photon" ]: return "$\Pgamma$"
     if label in [ "hi", "higgs" ]: label="H"
     # if label in [ "nu" ]: label="$\\nu$"
     # if label in [ "f" ]: label = r"\Pelectron"
