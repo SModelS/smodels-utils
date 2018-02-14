@@ -286,18 +286,18 @@ if __name__ == "__main__":
         argparser.add_argument ( '-T', nargs='?',
                 help='Tx name, will look up lhe file in ../regression/Tx_1.lhe. '
                      'Will be overriden by the "--lhe" argument',
-                     type=types.StringType, default='T1' )
+                     type=str, default='T1' )
         argparser.add_argument ( '-l', '--lhe', nargs='?',
                       help='lhe file name, supplied directly. '
                           'Takes precedence over "-T" argument.',
-                      type=types.StringType, default='' )
+                      type=str, default='' )
         argparser.add_argument ( '-c', '--constraint', nargs='?',
                       help='create graph from SModelS constraint '
                           'Takes precedence over "-T" and "-l" arguments.',
-                      type=types.StringType, default='' )
+                      type=str, default='' )
         argparser.add_argument ( '-o', '--output', nargs='?',
                 help= 'output file, can be pdf or eps or png (via convert)',
-                type=types.StringType, default='out.pdf' )
+                type=str, default='out.pdf' )
         argparser.add_argument ( '-s', '--straight', help='straight, not xkcd style',
                                  action='store_true' )
         argparser.add_argument ( '-I', '--italic', action='store_true',
