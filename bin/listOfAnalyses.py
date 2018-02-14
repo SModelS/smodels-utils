@@ -268,11 +268,18 @@ def diff( filename ):
         return
     print ( "%s has changed (%d changes)" % ( filename, len(o.split() ) ) )
 
+def help():
+    print ( "Usage: %s [-n] [-h]" % sys.argv[0] )
+    print ( "       -n: dont add superseded results" )
+    print ( "       -h: show this help" )
+    sys.exit()
+
 def main():
     n_homegrown=[0]
     superSeded=True
     for i in sys.argv[1:]:
         if i == "-n": superSeded=False
+        if i == "-h": help()
     filename = "ListOfAnalyses"
     if superSeded:
         filename = "ListOfAnalysesWithSuperseded"

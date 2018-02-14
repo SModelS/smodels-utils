@@ -95,11 +95,14 @@ N.B.: Each "()" group corresponds to a branch
                 multipleNames[constraint] = set()
             multipleNames[constraint].add ( txname )
 
+        first=True
+
         for ctr,txname in enumerate( keys ):
             constraint = topos[txname]
             txnames = multipleNames [ constraint ]
             if txname == list(txnames)[0]: ## only write if first in line
-                self.writeTopo ( ctr+1, txnames, constraint )
+                self.writeTopo ( ctr+1, txnames, constraint, first )
+                first = False
 
     def run ( self ):
         self.header()
@@ -133,7 +136,8 @@ N.B.: Each "()" group corresponds to a branch
         feynmanGraph.draw ( e, feynfile, straight=writer.straight(),
                             inparts=True, verbose=False )
 
-    def writeTopo ( self, nr, txnames, constraint ):
+    def writeTopo ( self, nr, txnames, constraint, first ):
+        """ :param first: is this the first time I write a topo? """
         self.f.write ( "||%d||<:>" % nr )
         ltxes = []
         for txname in txnames:
@@ -151,11 +155,13 @@ N.B.: Each "()" group corresponds to a branch
         if self.xkcd:
             style = "xkcd"
         ## now "Graph" column
-        self.f.write ( '||{{http://smodels.hephy.at/feyn/%s/%s.png||width="150"}}' % ( style, txname ) )
+        self.f.write ( '||{{http://smodels.hephy.at/feyn/%s/%s.png||width="200"}}' % ( style, txname ) )
         ## now "Appears in" column
         if self.hasResultsColumn:
             self.f.write ( "||" )
             results = self.database.getExpResults ( txnames = txnames, useSuperseded = True )
+            if first:
+                self.f.write ( "<25%>" ) ## make sure the last column isnt too small
             if len(results)>9:
                 self.f.write ( "[[ListOfAnalyses%s|many (%d)]]" % (self.ver,len(results)) )
             else:
