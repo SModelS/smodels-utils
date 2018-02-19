@@ -8,8 +8,9 @@ import urllib
 import os, sys
 import bibtexparser
 
-reload(sys)
-sys.setdefaultencoding('utf8')
+if sys.version[0]=="2":
+    reload(sys)
+    sys.setdefaultencoding('utf8')
 
 try:
     import commands
@@ -38,6 +39,7 @@ class BibtexWriter:
         self.specialcases = { 
             "CMS-PAS-SUS-13-018": "https://cds.cern.ch/record/1693164",
             "CMS-PAS-SUS-13-023": "http://cds.cern.ch/record/2044441",
+            "CMS-SUS-16-050": "http://cds.cern.ch/record/2291344",
             "ATLAS-CONF-2013-007": "http://cds.cern.ch/record/1522430",
             "ATLAS-CONF-2013-061": "http://cds.cern.ch/record/1557778",
             "ATLAS-CONF-2013-089": "http://cds.cern.ch/record/1595272",
@@ -63,8 +65,10 @@ class BibtexWriter:
 
     def bibtexFromCDS ( self, url, label=None ):
         """ get the bibtex entry from cds """
-        self.log ( " * fetching from CDS: %s" % url )
         fullurl =  url+"/export/hx" 
+        fullurl = fullurl.replace ( "?ln=en", "" )
+        fullurl = fullurl.replace ( "?ln=de", "" )
+        self.log ( " * fetching from CDS: %s" % fullurl )
         f=urlopen (fullurl)
         lines = f.readlines()
         f.close()
