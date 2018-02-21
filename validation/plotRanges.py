@@ -81,8 +81,9 @@ def getExtendedFrame(txnameObjs,axes):
     """
     
     massPlane = MassPlane.fromString(txnameObjs[0].txName,axes)
-    minx, miny = None, None
-    maxx, maxy = None, None
+    xvars = massPlane.xvars
+    minVars = [None]*len(xvars)
+    maxVars = [None]*len(xvars)
     for txnameObj in txnameObjs:
         data = txnameObj.txnameData.tri.points  #Data grid of rotated points
         if len(data) == 0:
@@ -93,25 +94,25 @@ def getExtendedFrame(txnameObjs,axes):
             #Check if mass belong to the mass plane:
             xy = massPlane.getXYValues(mass)
             if xy is None: continue
-            else: x,y = xy
-            if minx is None:
-                minx, maxx = x, x
-                miny, maxy = y, y
-            minx = min(minx,x)
-            miny = min(miny,y)
-            maxx = max(maxx,x)
-            maxy = max(maxy,y)
+            for i,xv in enumerate(xy):
+                if minVars[i] is None:
+                    minVars[i] = xv
+                minVars[i] = min(minVars[i],xv)
+                maxVars[i] = max(maxVars[i],xv)
 
-    if minx is None:
+    if None in minVars or None in maxVars:
         logger.info("Could not find points for %s" %axes)
         return None
 
-    minx = 0.8*minx
-    maxx = 1.2*maxx
-    miny = 0.9*miny
-    maxy = 1.2*maxy
-    logger.info( "the extended frame is [%f,%f],[%f,%f]" % ( minx, maxx, miny, maxy ) )
-    return { "x": [ minx, maxx], "y": [ miny, maxy ] }
+    minVars = [0.8*x for x in minVars[:]]
+    maxVars = [1.2*x for x in maxVars[:]]
+    rangesDict = dict([[str(x),[minVars[i],maxVars[i]]] for i,x in enumerate(xvars)])
+    infoMsg = "the extended frame is:"
+    for xstr,r in list(rangesDict.items()):
+        infoMsg += " %0.2f < %s < %0.2f," %(r[0],str(xstr),r[1])
+    infoMsg = infoMsg.rstrip(',')    
+    logger.info( infoMsg)
+    return rangesDict
         
 def addQuotationMarks ( constraint ):
     """ [[[t+]],[[t-]]] -> [[['t+']],[['t-']]] """
@@ -168,63 +169,6 @@ def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
     
     return pts
 
-
-def generatePoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChecker):
-    """
-    Method to generate points between minx,maxx and miny,maxy.
-    Check if the points belong to the plane described by massPlane an obeys
-    the kinematical constraints defined by vertexChecker.
-    Also, requires the point to belong to at least one of the data grids in
-    txnameObjs.
-
-    :param Npts: Number of points to be tried
-    :param minx: Minimal x-value for the respective mass plane)
-    :param maxx: Maximal x-value for the respective mass plane)
-    :param miny: Minimal y-value for the respective mass plane)
-    :param maxy: Maximal y-value for the respective mass plane)
-    :param txnameObjs: List of Txname objects
-    :param massPlane: MassPlane object holding information about the plane
-    :param vertexChecker: function which evaluates mass constraints
-    :return: List of x,y points belonging to the plot and the data grids.    
-    """
-    
-    #Compute dx and dy values to generate the desired number of points
-    dx=(maxx-minx)/math.sqrt(float(Npts))
-    dy=(maxy-miny)/math.sqrt(float(Npts))
-    minx = round(minx/dx)*dx
-    miny = round(miny/dy)*dy
-    
-    
-    points=[]
-    if minx==float('inf') or abs(maxx)<1e-5:
-        return points
-    for i in numpy.arange ( minx, maxx+dx/2., dx ):
-        for j in numpy.arange ( miny, maxy+dy/2., dy ):
-            masses_unitless = massPlane.getParticleMasses(x=i,y=j)
-            #Skip points with zero masses (too slow when running pythia)
-            if min([br[-1] for br in masses_unitless]) <= 0.: continue
-            #Check off-shell vertices. If there are any, skip point
-            #(Important to skip possible off-shell points in the on-shell data grid)
-            if not vertexChecker(masses_unitless):
-                continue            
-            masses = [[m*GeV for m in mm] for mm in masses_unitless]
-            #Skip points which are outside any grid
-            inside=False
-            for txnameObj in txnameObjs:
-                val = txnameObj.txnameData.getValueFor(masses)
-                if type(val) in [ type(fb), float ]:
-                    inside=True 
-                    break
-            if not inside:
-                continue
-            ordered=True
-            for k in range(len(masses[0])-1):
-                if masses[0][k]<=masses[0][k+1]:
-                    ordered=False
-            if not ordered:
-                continue
-            points.append([i,j])
-    return points
 
 
 def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChecker):
