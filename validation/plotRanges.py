@@ -47,8 +47,8 @@ def getMinMax ( tgraph ):
     
     return { "x": [minx,maxx], "y": [miny,maxy] }
 
-def getSuperFrame ( tgraphs ):
-    """ get the all-enveloping frame of tgraphs """
+def getSuperFrame(tgraphs):
+    """get the all-enveloping frame of tgraphs"""
     if type ( tgraphs ) == ROOT.TGraph:
         return getMinMax ( tgraphs) 
     minx, miny = None, None
@@ -141,27 +141,27 @@ def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
                 of the kinematic region)
         :param Npts: Trial number of points for the plot.
     """
-        
-    frame = getSuperFrame(tgraphs)
-    extframe = getExtendedFrame(txnameObjs,axes)
+    
+    
     massPlane = MassPlane.fromString(txnameObjs[0].txName,axes)
     txnameInput = TxNameInput(txnameObjs[0].txName)
     txnameInput.constraint = txnameObjs[0].constraint
     vertexChecker = lambda mass: txnameInput.checkMassConstraints(mass)
 
     #First generate points for the extended frame with a lower density:
+    extframe = getExtendedFrame(txnameObjs,axes)
     if extframe:
-        minx,maxx=extframe["x"][0], extframe["x"][1]
-        miny,maxy=extframe["y"][0], extframe["y"][1]
-        ptsA = generateBetterPoints(Npts/3,minx,maxx,miny,maxy,
+        varRanges = extframe
+        ptsA = generateBetterPoints(Npts/3,varRanges,
                                     txnameObjs,massPlane,vertexChecker)
     else: ptsA = []
-    
+
     #Now generate points for the exclusion curve frame with a higher density:
-    if frame:
-        minx,maxx=frame["x"][0], frame["x"][1]
-        miny,maxy=frame["y"][0], frame["y"][1]    
-        ptsB = generateBetterPoints(Npts,minx,maxx,miny,maxy,
+    if tgraphs:
+        frame = getSuperFrame(tgraphs)
+        if frame:    
+            varRanges = frame
+            ptsB = generateBetterPoints(Npts,varRanges,
                                     txnameObjs,massPlane,vertexChecker)
     else: ptsB = []
     
@@ -171,7 +171,7 @@ def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
 
 
 
-def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChecker):
+def generateBetterPoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     """
     Method to generate points between minx,maxx and miny,maxy.
     Uses the PCA decomposition and rotated points in order to best estimate
@@ -182,10 +182,9 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChe
     txnameObjs.
     
     :param Npts: Number of points to be tried
-    :param minx: Minimal x-value for the respective mass plane)
-    :param maxx: Maximal x-value for the respective mass plane)
-    :param miny: Minimal y-value for the respective mass plane)
-    :param maxy: Maximal y-value for the respective mass plane)
+    :param varRanges: Dictionary with the labels and ranges for the plane variables
+                      (e.g. {'x' : [500.,1000.], 'y' : [100.,500.]} for 2D planes
+                      or {'x' : [10.,1000.]} for 1D planes)
     :param txnameObjs: List of Txname objects
     :param massPlane: MassPlane object holding information about the plane
     :param vertexChecker: function which evaluates mass constraints
@@ -233,6 +232,8 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChe
         txdata.loadData(reducedData)
     #Transform the min and max values to the rotated plane:
     extremes = []
+    for xvar in varRanges:
+        #####STOPPED HERE#####
     for x,y in [[minx,miny],[maxx,miny],[minx,maxy],[maxx,maxy]]:
         mass = [[m*GeV for m in br] for br in massPlane.getParticleMasses(x=x,y=y)]
         porig = txdata.flattenMassArray(mass)

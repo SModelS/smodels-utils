@@ -61,9 +61,7 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,addToFile,xargs,Npts=3
             tgraphs[naxes].append(tgraph[txnameStr][0])
 
     if not tgraphs:
-        logger.warning("No exclusion curves found for %s" %txnameStr)
-        return False
-
+        logger.info("No exclusion curves found for %s" %txnameStr)
        
     #Get SLHA points and create files for each axes
     tempdir = tempfile.mkdtemp(dir=os.getcwd())
