@@ -198,7 +198,7 @@ The validation procedure for upper limit maps used here is explained in [[http:/
                 pngname = fig.replace(".pdf",".png" )
                 if not os.path.exists ( pngname ):
                     cmd = "convert -trim %s %s" % ( fig, pngname )
-                #    C.getoutput ( cmd )
+                    C.getoutput ( cmd )
                 # figName = fig.replace(valDir+"/","")
                 figName = pngname.replace(valDir+"/","").replace ( \
                             self.databasePath, "" )
