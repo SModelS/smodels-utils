@@ -13,10 +13,12 @@ from __future__ import print_function
 import ROOT
 import numpy,math,copy
 import sys
+from smodels.experiment.txnameObj import TxNameData
 sys.path.insert(0,"../")
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.tools.physicsUnits import GeV,fb
 from smodels_utils.dataPreparation.inputObjects import TxNameInput
+import itertools
 import logging
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -194,12 +196,6 @@ def generateBetterPoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     #Get variable labels for the mass plane (e.g. 'x','y',..)
     planeVars = sorted([str(v) for v in massPlane.xvars])
 
-    #Create a dummy copy of a TxnameData object to hold all the data corresponding to the plane
-    txdata = copy.deepcopy(txnameObjs[0].txnameData)
-    txdata.dataTag = 'dummy'
-    txdata._id = 'dummy'
-    txdata._accept_errors_upto=0.05    
-    txdata._V = None
     #Collects all points belonging to the plane:
     planeMasses = []
     reducedData = []
@@ -228,62 +224,77 @@ def generateBetterPoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
         logger.warning("No data points found for plane.")
         return []
     else:
-    #Compute the PCA for the reduced dataset:
-        txdata.loadData(reducedData)
+        #Compute the PCA for the reduced dataset:        
+        txdata = TxNameData(reducedData,"dummy","dummy")
+        
+        
     #Transform the min and max values to the rotated plane:
-    extremes = []
-    for xvar in varRanges:
-        #####STOPPED HERE#####
-    for x,y in [[minx,miny],[maxx,miny],[minx,maxy],[maxx,maxy]]:
-        mass = [[m*GeV for m in br] for br in massPlane.getParticleMasses(x=x,y=y)]
+    extremePoints = []    
+    rangesList = list(varRanges.items())
+    ranges = [x[1] for x in rangesList]  #Collect the ranges in order
+    xvars = [x[0] for x in rangesList] #Collect the var labels in order
+    for x in list(itertools.product(*ranges)):
+        xvalues = dict(zip(xvars,x))
+        mass = [[m*GeV for m in br] for br in massPlane.getParticleMasses(**xvalues)]
         porig = txdata.flattenMassArray(mass)
         p=((numpy.matrix(porig)[0] - txdata.delta_x)).tolist()[0]
         P=numpy.dot(p,txdata._V)  ## rotated point
-        extremes.append(P)
-    #New values of extremes in the rotated plane (limit values by extremes in data):
-    Mp = txdata.tri.points
-    xdataMin = min(numpy.array(Mp)[:,0]) 
-    xdataMax = max(numpy.array(Mp)[:,0])
-    ydataMin = min(numpy.array(Mp)[:,1]) 
-    ydataMax = max(numpy.array(Mp)[:,1])
-    xmin = max(min(numpy.array(extremes)[:,0]),xdataMin)
-    xmax = min(max(numpy.array(extremes)[:,0]),xdataMax)
-    dx=(xmax-xmin)/math.sqrt(float(Npts))
-    ymin = max(min(numpy.array(extremes)[:,1]),ydataMin)
-    ymax = min(max(numpy.array(extremes)[:,1]),ydataMax)
-    dy=(ymax-ymin)/math.sqrt(float(Npts))
+        extremePoints.append(P)
+    #Limit extreme values by data:
+    Mp = numpy.array(txdata.tri.points)
+    extremePoints = numpy.array(extremePoints)
+    newRanges = []
+    steps = []
+    for iaxis in range(len(xvars)):
+        vminData = min(Mp[:,iaxis])
+        vmaxData = max(Mp[:,iaxis])
+        vminRange = min(extremePoints[:,iaxis])
+        vmaxRange = max(extremePoints[:,iaxis])
+        newRanges.append([max(vminData,vminRange),min(vmaxData,vmaxRange)])
+        dvar = abs(newRanges[-1][1]-newRanges[-1][0]) #Define the step in the variable
+        dvar = dvar/(float(Npts)**(1/len(xvars))) #The exponent makes sure the total numper of pts ~ Npts
+        steps.append(dvar)
+        
     #Check for extended 1D-data:
     if txdata.dimensionality == 2 and len(Mp) % 3 == 0:        
-        if ydataMax - ydataMin < 0.001:
-            logger.info("1D data detected. Collapsing y-dimension")            
-            ymin = ymax = (ydataMax+ydataMin)/2.
-            dy = 0.001
-    xmin = round(xmin/dx)*dx
-    ymin = round(ymin/dy)*dy
+        if abs(newRanges[1][0]-newRanges[1][1]) < 0.001:
+            logger.info("1D data detected. Collapsing y-dimension")
+            newRanges[1][0] = newRanges[1][1] = (min(Mp[:,1]) + max(Mp[:,0]))/2.
+            steps[1] = 0.001
+    
+    #Round minimum ranges    
+    for i,vrange in enumerate(newRanges):
+        newRanges[i][0] = round(vrange[0]/steps[i])*steps[i]
 
     points=[]
-    for i in numpy.arange(xmin, xmax+dx/2., dx):
-        for j in numpy.arange(ymin, ymax+dy/2., dy):
-            pt = [i,j]
-            #Check if point is in the convexhull. If not, try another one
-            if txdata.tri.find_simplex(pt) < 0:
-                continue
-            mass = txdata._getMassArrayFrom(pt,unit=None)
-            #Round all masses (to be consistent with smodels)
-            mass = [[round(m,1) for m in br] for br in mass]
-            if not vertexChecker(mass):
-                continue
-            if massPlane.getXYValues(mass) is None:
-                continue
-            inside = False
-            mass_unit = [[m*GeV for m in br] for br in mass]
-            for tx in txnameObjs:                
-                if not (tx.txnameData.getValueFor(mass_unit) is None):
-                    inside = True
-                    break
-            if not inside:
-                continue
-            points.append(massPlane.getXYValues(mass))
+    #Create an array with all var points:
+    allPoints = []
+    for i,vrange in enumerate(newRanges):
+        vmin,vmax = vrange
+        dv = steps[i]
+        allPoints.append([x for x in numpy.arange(vmin, vmax+dv/2., dv)])
+    
+    for pt in itertools.product(*allPoints):
+        pt = list(pt)
+        #Check if point is in the convexhull. If not, try another one
+        if txdata.tri.find_simplex(pt) < 0:
+            continue
+        mass = txdata._getMassArrayFrom(pt,unit=None)
+        #Round all masses (to be consistent with smodels)
+        mass = [[round(m,1) for m in br] for br in mass]
+        if not vertexChecker(mass):
+            continue
+        if massPlane.getXYValues(mass) is None:
+            continue
+        inside = False
+        mass_unit = [[m*GeV for m in br] for br in mass]
+        for tx in txnameObjs:                
+            if not (tx.txnameData.getValueFor(mass_unit) is None):
+                inside = True
+                break
+        if not inside:
+            continue
+        points.append(massPlane.getXYValues(mass))
     return points
 
 def draw ( graph, points ):
