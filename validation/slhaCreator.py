@@ -72,21 +72,19 @@ class TemplateFile(object):
         self.massPlane = MassPlane.fromString(None,self.axes)
         
 
-    def createFileFor(self,x,y,z=None,slhaname=None,computeXsecs=False, massesInFileName = False):
+    def createFileFor(self,ptDict,slhaname=None,computeXsecs=False, massesInFileName = False):
         """
         Creates a new SLHA file from the template.
-        The entries on the template are replaced by the x,y values.
+        The entries on the template are replaced by the x,y values in pt.
         OBS: The cross-sections blocks from the template file are never copied to the new file.
-        :param x: x value for the plot in GeV (i. e. mother mass)
-        :param y: y value for the plot in GeV (i. e. lsp mass)
-        :param z: z value for the plot in GeV (only for 3D grids)
+        :param ptDict: Dictionary with coordinate values (e.g. {'x' : 10., 'y': 200.})
         :param slhaname: filename for the new file. If None, a random name for the file will be generated,
                      with prefix template and suffix .slha
         :param computeXsecs: if True, will compute NLL cross-sections for the file using 10k events
         :return: SLHA file name if file has been successfully generated, False otherwise.
         """
 
-        masses = self.massPlane.getParticleMasses(x=x, y=y, z=z)
+        masses = self.massPlane.getParticleMasses(**ptDict)
         massDict = {}
         for ibr,br in enumerate(masses):
             if ibr == 0: massTag = 'M'
@@ -145,14 +143,14 @@ class TemplateFile(object):
         """
         Creates new SLHA files from the template for the respective (x,y) values in pts.
         For each distinct x value, new cross-sections will be computed.  
-        :param pts: list of [x,y] values for the plot in GeV (i. e. [mother mass, lsp mass])
+        :param pts: list of dicts with values for the plot in GeV (e.g. [{'x' : x1, 'y' : y1}, {'x' : x2, 'y' : y2}, ...])
         :param addXsecs: if True will compute the cross-sections and add them to the SLHA files.
         :return: list of SLHA file names generated.
         """
 
         slhafiles = []        
-        for x,y in pts:
-            slhafile = self.createFileFor(x,y,massesInFileName=massesInFileName)
+        for pt in pts:
+            slhafile = self.createFileFor(pt,massesInFileName=massesInFileName)
             if slhafile:
                 slhafiles.append(slhafile)
             else:

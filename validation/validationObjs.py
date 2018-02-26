@@ -12,7 +12,7 @@ import logging,os,sys
 
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
-from smodels.tools import statistics, modelTester
+from smodels.tools import modelTester
 from plottingFuncs import createPlot, getExclusionCurvesFor, createPrettyPlot
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -351,8 +351,7 @@ class ValidationPlot():
                 logger.debug( "dropping %s, doesnt fall into the plane of %s." % \
                                (slhafile, massPlane ) )
                 continue
-            x,y = v
-            Dict = {'slhafile' : slhafile, 'axes': [x,y],
+            Dict = {'slhafile' : slhafile, 'axes': v,
                     'signal': expRes['theory prediction (fb)'],
                     'UL': expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
                     'dataset': expRes['DataSetID'] }
@@ -370,12 +369,7 @@ class ValidationPlot():
                 massGeV = [[m*GeV for m in mbr] for mbr in mass]
                 if not "efficiency" in Dict.keys():
                     Dict['efficiency'] = txname.txnameData.getValueFor(massGeV)
-                #expectedBG = dataset.dataInfo.expectedBG
-                #observedN = dataset.dataInfo.observedN
-                #bgError = dataset.dataInfo.bgError
-                #lumi = expRes['lumi (fb-1)']
-#                 CLs = statistics.CLs(observedN, expectedBG, bgError, Dict['signal']*lumi, 10000)
-#                 Dict['CLs'] =CLs
+
             self.data.append(Dict)
 
         #Remove temporary folder
@@ -529,7 +523,6 @@ class ValidationPlot():
 
         :return: string with a nicer representation of the axes (more suitable for printing)
         """
-
 
         x,y,z = var('x y z')
         axes = eval(axesStr,{'x' : x, 'y' : y, 'z': z})

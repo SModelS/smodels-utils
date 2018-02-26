@@ -153,13 +153,6 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             if not os.path.isfile(tarfile):
                 logger.info( 'Missing .tar.gz file for %s.' %txnameStr)
                 continue
-            #Collect exclusion curves
-            tgraphs = plottingFuncs.getExclusionCurvesFor(expRes,txnameStr,get_all=False)
-            if not tgraphs or not tgraphs[txnameStr]:
-                logger.info("No exclusion curves found for %s" %txnameStr)
-                continue
-            else:
-                tgraphs = tgraphs[txnameStr]
 
             #Define k-factors
             if txnameStr.lower() in kfactorDict:
@@ -167,11 +160,12 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             else:
                 kfactor = 1.
 
-
-            #Loop over plots:
-            for tgraph in tgraphs:
-                ax = tgraph.GetName().split('_')[1]
-                if not ax in txname.axes: continue
+            #Loop over all axes:
+            if not isinstance(txname.axes,list):
+                axes = [txname.axes]
+            else:
+                axes = [txname.axes]          
+            for ax in axes:
                 agreement = validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,generateData)
                 logger.info('               agreement factor = %s' %str(agreement))
             logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))

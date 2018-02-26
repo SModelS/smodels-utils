@@ -51,16 +51,16 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,addToFile,xargs,Npts=3
             for ax in taxes:
                 if not ax in axes:
                     axes.append(ax)        
-        txnameObjs += txnameObj #Collect all txnames        
+        txnameObjs += txnameObj #Collect all txnames
         for naxes in axes:
             tgraph = getExclusionCurvesFor(expResult,txnameStr,naxes)
-            if not tgraph:
-                continue
             if not naxes in tgraphs:
-                tgraphs[naxes]=[]
-            tgraphs[naxes].append(tgraph[txnameStr][0])
+                tgraphs[naxes]=[]            
+            if tgraph:
+                tgraphs[naxes].append(tgraph[txnameStr][0])
 
-    if not tgraphs:
+    ngraphs = sum([len(tg) for tg in tgraphs.values()])
+    if ngraphs == 0:
         logger.info("No exclusion curves found for %s" %txnameStr)
        
     #Get SLHA points and create files for each axes

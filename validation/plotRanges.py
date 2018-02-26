@@ -11,7 +11,7 @@
 from __future__ import print_function
 
 import ROOT
-import numpy,math,copy
+import numpy
 import sys
 from smodels.experiment.txnameObj import TxNameData
 sys.path.insert(0,"../")
@@ -137,7 +137,10 @@ def addQuotationMarks ( constraint ):
     return ret
 
 def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
-    """ given a TGraph object, returns list of points to probe. 
+    """
+    Given a TGraph object, returns list of points to probe. If no tgraph
+    is given return zero points.    
+     
         :param txnameObjs: list of TxName objects
         :param axes: the axes used to transform x,y into mass parameters (for the check
                 of the kinematic region)
@@ -190,7 +193,8 @@ def generateBetterPoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     :param txnameObjs: List of Txname objects
     :param massPlane: MassPlane object holding information about the plane
     :param vertexChecker: function which evaluates mass constraints
-    :return: List of x,y points belonging to the plot and the data grids.    
+    :return: List of x,y points belonging to the plot and the data grids. Each point
+            is a dict: {'x' : xvalue, 'y': yvalue,...}.
     """
     
     #Get variable labels for the mass plane (e.g. 'x','y',..)
@@ -254,13 +258,6 @@ def generateBetterPoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
         dvar = abs(newRanges[-1][1]-newRanges[-1][0]) #Define the step in the variable
         dvar = dvar/(float(Npts)**(1/len(xvars))) #The exponent makes sure the total numper of pts ~ Npts
         steps.append(dvar)
-        
-    #Check for extended 1D-data:
-    if txdata.dimensionality == 2 and len(Mp) % 3 == 0:        
-        if abs(newRanges[1][0]-newRanges[1][1]) < 0.001:
-            logger.info("1D data detected. Collapsing y-dimension")
-            newRanges[1][0] = newRanges[1][1] = (min(Mp[:,1]) + max(Mp[:,0]))/2.
-            steps[1] = 0.001
     
     #Round minimum ranges    
     for i,vrange in enumerate(newRanges):
@@ -294,7 +291,7 @@ def generateBetterPoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
                 break
         if not inside:
             continue
-        points.append(massPlane.getXYValues(mass))
+        points.append(dict(zip(xvars,massPlane.getXYValues(mass))))
     return points
 
 def draw ( graph, points ):
