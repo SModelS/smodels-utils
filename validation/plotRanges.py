@@ -256,13 +256,14 @@ def generateBetterPoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
         vmaxRange = max(extremePoints[:,iaxis])
         newRanges.append([max(vminData,vminRange),min(vmaxData,vmaxRange)])
         dvar = abs(newRanges[-1][1]-newRanges[-1][0]) #Define the step in the variable
-        dvar = dvar/(float(Npts)**(1/len(xvars))) #The exponent makes sure the total numper of pts ~ Npts
+        dvar = dvar/(float(Npts)**(1./len(xvars))) #The exponent makes sure the total numper of pts ~ Npts
         steps.append(dvar)
     
     #Round minimum ranges    
     for i,vrange in enumerate(newRanges):
         newRanges[i][0] = round(vrange[0]/steps[i])*steps[i]
-
+        
+        
     points=[]
     #Create an array with all var points:
     allPoints = []
