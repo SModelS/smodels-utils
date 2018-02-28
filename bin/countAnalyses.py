@@ -11,14 +11,11 @@
 
 from __future__ import print_function
 import setPath
-import commands 
 import sys
-from short_descriptions import SDs
 from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
 setLogLevel("debug")
-import IPython
-    
+
 def discussExperiment ( anas, experiment ):
     print ( experiment )
     ianas = []
@@ -49,7 +46,7 @@ def discussExperiment ( anas, experiment ):
             em+=1
             n_results_em += len ( topos )
         n_results += len ( topos )
-            
+
     print ( "%d analyses." % len(ianas) )
     print ( "%d results total" % n_results )
     print ( "%d upper limits analyses" % ul )
@@ -66,7 +63,7 @@ def filter ( anas, really=True ):
     for ana in anas:
         contact = ""
         if hasattr ( ana.globalInfo, "contact" ):
-            contact = getattr ( ana.globalInfo, "contact" ) 
+            contact = getattr ( ana.globalInfo, "contact" )
         if "fastlim" in contact:
             continue
         ret.append ( ana )
@@ -109,4 +106,4 @@ def main():
             discuss ( superseded, filter_fastlim, db )
             countTopos ( superseded, filter_fastlim, db )
 if __name__ == '__main__':
-    main()    
+    main()
