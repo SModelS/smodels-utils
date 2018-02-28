@@ -19,7 +19,7 @@ def main():
     infofile = "official%s" % ver 
     f=open ( infofile, "w" )
     Dict = { "lastchanged": meta.mtime, "size": os.stat(args.filename).st_size, "url": "http://smodels.hephy.at/database/off%s.pcl" % ver }
-    f.write ( "%s\n" % Dict )
+    f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
     f.close()
     # cmd = "cp %s /var/www/database/off%s.pcl" % ( args.filename, ver )
     cmd = "cp %s /nfsdata/walten/database/off%s.pcl" % ( args.filename, ver )
