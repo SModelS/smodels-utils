@@ -12,6 +12,7 @@
 *.py.kate-swp
 Database.txt
 bin/SmsDictionary
+bin/Database
 bin/ListOfAnalyses
 bin/ListOfAnalysesWithSuperseded
 *.py~
