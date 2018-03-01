@@ -97,7 +97,7 @@ def discuss ( superseded, filter_fastlim, db, update ):
     discussExperiment ( cms, "CMS" )
     discussExperiment ( atlas, "ATLAS" )
 
-def countTopos ( superseded, filter_fastlim, db, update ):
+def countTopos ( superseded, filter_fastlim, db, update, verbose=True ):
     e = db.getExpResults( useSuperseded = superseded )
     anas = filter ( e, filter_fastlim, update )
     topos = set()
@@ -108,6 +108,8 @@ def countTopos ( superseded, filter_fastlim, db, update ):
             topos_roff.add ( t.txName.replace("off","") )
     print ( "%d topologies (%d, not counting off-shell separately)" % \
             ( len(topos), len(topos_roff) ) )
+    if verbose:
+        print ( ", ".join ( sorted ( topos ) ) )
 
 def main():
     import argparse
@@ -119,6 +121,7 @@ def main():
               type=str, default="" )
     argparser.add_argument ( '-f', '--fastlim', help='show fastlim results (yes/no/both)',
               type=str, default="both" )
+    argparser.add_argument ( '-v', '--verbose', help='be verbose', action='store_true' )
     argparser.add_argument ( '-d', '--database', help='path to database',
               type=str,default='http://smodels.hephy.at/database/official112' )
     args = argparser.parse_args()
@@ -132,6 +135,6 @@ def main():
     for filter_fastlim in fl:
         for superseded in ss:
             discuss ( superseded, filter_fastlim, db, args.update )
-            countTopos ( superseded, filter_fastlim, db, args.update )
+            countTopos ( superseded, filter_fastlim, db, args.update, args.verbose )
 if __name__ == '__main__':
     main()
