@@ -33,7 +33,7 @@ def header( w ):
 
 This page lists all databases that are accessible via http://smodels.hephy.at/database/XXX, where XXX is the database name:
 
-||<#EEEEEE:> '''Name''' ||<#EEEEEE:> '''Description''' ||<#EEEEEE:> '''Frozen''' ||<#EEEEEE:> '''Size''' ||
+||<#EEEEEE:> '''Name''' ||<#EEEEEE:> '''Description''' ||<#EEEEEE:> '''Frozen''' ||<#EEEEEE:> '''Size''' ||<#EEEEEE:> '''URL''' ||
 """ )
 
 def footer ( w ):
@@ -56,12 +56,13 @@ def main():
         j = json.load ( open(filen) )
         size=sizeof_fmt ( j["size"] )
         frozen="yes"
+        url="http://smodels.hephy.at/database/%s" % dbname
         if "test" in filen:
             description = "Small test database, %s" % ver
         if "unittest" in filen:
             description = "Database used for unit tests, %s" % ver
-        w.write ( "|| %s || %s || %s || %s ||\n" % \
-                  ( dbname, description, frozen, size ) )
+        w.write ( "|| %s || %s || %s || %s || %s ||\n" % \
+                  ( dbname, description, frozen, size, url ) )
     footer ( w )
     w.close()
     xsel()

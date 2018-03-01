@@ -56,7 +56,7 @@ def discussExperiment ( anas, experiment ):
 
     print ()
 
-def filter ( anas, really=True ):
+def filter ( anas, really=True, update="" ):
     if not really:
         return anas
     ret = []
@@ -64,12 +64,19 @@ def filter ( anas, really=True ):
         contact = ""
         if hasattr ( ana.globalInfo, "contact" ):
             contact = getattr ( ana.globalInfo, "contact" )
+        if update != "":
+            lu = getattr ( ana.globalInfo, "lastUpdate" )
+            from datetime import datetime
+            after = datetime.strptime ( update, "%Y/%m/%d" )
+            this = datetime.strptime ( lu, "%Y/%m/%d" )
+            if this < after:
+                continue
         if "fastlim" in contact:
             continue
         ret.append ( ana )
     return ret
 
-def discuss ( superseded, filter_fastlim, db ):
+def discuss ( superseded, filter_fastlim, db, update ):
     print ()
     print ( "---------------" )
     if superseded:
@@ -77,11 +84,11 @@ def discuss ( superseded, filter_fastlim, db ):
     else:
         print ( "Excluding superseded results" )
     if filter_fastlim:
-        print ( "Filtering out FastLim" )
+        print ( "Without FastLim" )
     else:
-        print ( "Leaving in FastLim" )
+        print ( "With FastLim" )
     anas = db.getExpResults( useSuperseded=superseded )
-    anas = filter ( anas, filter_fastlim )
+    anas = filter ( anas, filter_fastlim, update )
     cms,atlas=[],[]
     for expRes in anas:
         Id=expRes.globalInfo.id
@@ -90,20 +97,41 @@ def discuss ( superseded, filter_fastlim, db ):
     discussExperiment ( cms, "CMS" )
     discussExperiment ( atlas, "ATLAS" )
 
-def countTopos ( superseded, filter_fastlim, db ):
+def countTopos ( superseded, filter_fastlim, db, update ):
     e = db.getExpResults( useSuperseded = superseded )
-    anas = filter ( e, filter_fastlim )
+    anas = filter ( e, filter_fastlim, update )
     topos = set()
+    topos_roff = set()
     for i in anas:
         for t in i.getTxNames():
             topos.add ( t.txName )
-    print ( "%d topologies" % len(topos) )
+            topos_roff.add ( t.txName.replace("off","") )
+    print ( "%d topologies (%d, not counting off-shell separately)" % \
+            ( len(topos), len(topos_roff) ) )
 
 def main():
-    db = Database ( '../../smodels-database/' )
-    for filter_fastlim in [ False, True ]:
-        for superseded in [ True, False ]:
-            discuss ( superseded, filter_fastlim, db )
-            countTopos ( superseded, filter_fastlim, db )
+    import argparse
+    argparser = argparse.ArgumentParser( description=
+                                         'Count analyses in different ways' )
+    argparser.add_argument ( '-s', '--superseded', help='show superseded results (yes/no/both)',
+              type=str, default="both" )
+    argparser.add_argument ( '-u', '--update', help='consider entries only after this date (yyyy/mm/dd)',
+              type=str, default="" )
+    argparser.add_argument ( '-f', '--fastlim', help='show fastlim results (yes/no/both)',
+              type=str, default="both" )
+    argparser.add_argument ( '-d', '--database', help='path to database',
+              type=str,default='http://smodels.hephy.at/database/official112' )
+    args = argparser.parse_args()
+    db = Database ( args.database )
+    ss = [ True, False ]
+    fl = [ True, False ]
+    if args.superseded.lower() in [ "yes", "true" ]: ss = [ True ]
+    if args.superseded.lower() in [ "no", "false" ]: ss = [ False ]
+    if args.fastlim.lower() in [ "yes", "true" ]: fl = [ False ]
+    if args.fastlim.lower() in [ "no", "false" ]: fl = [ True ]
+    for filter_fastlim in fl:
+        for superseded in ss:
+            discuss ( superseded, filter_fastlim, db, args.update )
+            countTopos ( superseded, filter_fastlim, db, args.update )
 if __name__ == '__main__':
     main()
