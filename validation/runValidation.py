@@ -164,7 +164,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             if not isinstance(txname.axes,list):
                 axes = [txname.axes]
             else:
-                axes = [txname.axes]          
+                axes = txname.axes     
             for ax in axes:
                 validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,generateData)
             logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
