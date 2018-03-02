@@ -11,12 +11,14 @@
 from __future__ import print_function
 
 import ROOT
-import numpy,math,copy
+import numpy
 import sys
+from smodels.experiment.txnameObj import TxNameData
 sys.path.insert(0,"../")
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.tools.physicsUnits import GeV,fb
 from smodels_utils.dataPreparation.inputObjects import TxNameInput
+import itertools
 import logging
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -47,8 +49,8 @@ def getMinMax ( tgraph ):
     
     return { "x": [minx,maxx], "y": [miny,maxy] }
 
-def getSuperFrame ( tgraphs ):
-    """ get the all-enveloping frame of tgraphs """
+def getSuperFrame(tgraphs):
+    """get the all-enveloping frame of tgraphs"""
     if type ( tgraphs ) == ROOT.TGraph:
         return getMinMax ( tgraphs) 
     minx, miny = None, None
@@ -81,8 +83,8 @@ def getExtendedFrame(txnameObjs,axes):
     """
     
     massPlane = MassPlane.fromString(txnameObjs[0].txName,axes)
-    minx, miny = None, None
-    maxx, maxy = None, None
+    minVars = {}
+    maxVars = {}
     for txnameObj in txnameObjs:
         data = txnameObj.txnameData.tri.points  #Data grid of rotated points
         if len(data) == 0:
@@ -91,27 +93,30 @@ def getExtendedFrame(txnameObjs,axes):
             #Switch back to original mass point
             mass = txnameObj.txnameData._getMassArrayFrom(pt,unit=None)
             #Check if mass belong to the mass plane:
-            xy = massPlane.getXYValues(mass)
-            if xy is None: continue
-            else: x,y = xy
-            if minx is None:
-                minx, maxx = x, x
-                miny, maxy = y, y
-            minx = min(minx,x)
-            miny = min(miny,y)
-            maxx = max(maxx,x)
-            maxy = max(maxy,y)
+            varsDict = massPlane.getXYValues(mass)
+            if varsDict is None:
+                continue
+            for xLabel,xValue in varsDict.items():
+                if not xLabel in minVars:
+                    minVars[xLabel] = xValue
+                    maxVars[xLabel] = xValue
+                minVars[xLabel] = min(minVars[xLabel],xValue)
+                maxVars[xLabel] = max(maxVars[xLabel],xValue)
 
-    if minx is None:
+    if None in minVars or None in maxVars:
         logger.info("Could not find points for %s" %axes)
         return None
 
-    minx = 0.8*minx
-    maxx = 1.2*maxx
-    miny = 0.9*miny
-    maxy = 1.2*maxy
-    logger.info( "the extended frame is [%f,%f],[%f,%f]" % ( minx, maxx, miny, maxy ) )
-    return { "x": [ minx, maxx], "y": [ miny, maxy ] }
+    for xLabel in minVars:
+        minVars[xLabel] *= 0.8
+        maxVars[xLabel] *= 1.2
+    rangesDict = dict([[xLabel,[minVars[xLabel],maxVars[xLabel]]] for xLabel in minVars])
+    infoMsg = "the extended frame is:"
+    for xstr,r in list(rangesDict.items()):
+        infoMsg += " %0.2f < %s < %0.2f," %(r[0],str(xstr),r[1])
+    infoMsg = infoMsg.rstrip(',')    
+    logger.info( infoMsg)
+    return rangesDict
         
 def addQuotationMarks ( constraint ):
     """ [[[t+]],[[t-]]] -> [[['t+']],[['t-']]] """
@@ -134,33 +139,36 @@ def addQuotationMarks ( constraint ):
     return ret
 
 def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
-    """ given a TGraph object, returns list of points to probe. 
+    """
+    Given a TGraph object, returns list of points to probe. If no tgraph
+    is given return zero points.    
+     
         :param txnameObjs: list of TxName objects
         :param axes: the axes used to transform x,y into mass parameters (for the check
                 of the kinematic region)
         :param Npts: Trial number of points for the plot.
     """
-        
-    frame = getSuperFrame(tgraphs)
-    extframe = getExtendedFrame(txnameObjs,axes)
+    
+    
     massPlane = MassPlane.fromString(txnameObjs[0].txName,axes)
     txnameInput = TxNameInput(txnameObjs[0].txName)
     txnameInput.constraint = txnameObjs[0].constraint
     vertexChecker = lambda mass: txnameInput.checkMassConstraints(mass)
-
+    
     #First generate points for the extended frame with a lower density:
+    extframe = getExtendedFrame(txnameObjs,axes)
     if extframe:
-        minx,maxx=extframe["x"][0], extframe["x"][1]
-        miny,maxy=extframe["y"][0], extframe["y"][1]
-        ptsA = generateBetterPoints(Npts/3,minx,maxx,miny,maxy,
+        varRanges = extframe
+        ptsA = generatePoints(Npts/3,varRanges,
                                     txnameObjs,massPlane,vertexChecker)
     else: ptsA = []
-    
+
     #Now generate points for the exclusion curve frame with a higher density:
-    if frame:
-        minx,maxx=frame["x"][0], frame["x"][1]
-        miny,maxy=frame["y"][0], frame["y"][1]    
-        ptsB = generateBetterPoints(Npts,minx,maxx,miny,maxy,
+    if tgraphs:
+        frame = getSuperFrame(tgraphs)
+        if frame:    
+            varRanges = frame            
+            ptsB = generatePoints(Npts,varRanges,
                                     txnameObjs,massPlane,vertexChecker)
     else: ptsB = []
     
@@ -169,65 +177,8 @@ def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
     return pts
 
 
-def generatePoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChecker):
-    """
-    Method to generate points between minx,maxx and miny,maxy.
-    Check if the points belong to the plane described by massPlane an obeys
-    the kinematical constraints defined by vertexChecker.
-    Also, requires the point to belong to at least one of the data grids in
-    txnameObjs.
 
-    :param Npts: Number of points to be tried
-    :param minx: Minimal x-value for the respective mass plane)
-    :param maxx: Maximal x-value for the respective mass plane)
-    :param miny: Minimal y-value for the respective mass plane)
-    :param maxy: Maximal y-value for the respective mass plane)
-    :param txnameObjs: List of Txname objects
-    :param massPlane: MassPlane object holding information about the plane
-    :param vertexChecker: function which evaluates mass constraints
-    :return: List of x,y points belonging to the plot and the data grids.    
-    """
-    
-    #Compute dx and dy values to generate the desired number of points
-    dx=(maxx-minx)/math.sqrt(float(Npts))
-    dy=(maxy-miny)/math.sqrt(float(Npts))
-    minx = round(minx/dx)*dx
-    miny = round(miny/dy)*dy
-    
-    
-    points=[]
-    if minx==float('inf') or abs(maxx)<1e-5:
-        return points
-    for i in numpy.arange ( minx, maxx+dx/2., dx ):
-        for j in numpy.arange ( miny, maxy+dy/2., dy ):
-            masses_unitless = massPlane.getParticleMasses(x=i,y=j)
-            #Skip points with zero masses (too slow when running pythia)
-            if min([br[-1] for br in masses_unitless]) <= 0.: continue
-            #Check off-shell vertices. If there are any, skip point
-            #(Important to skip possible off-shell points in the on-shell data grid)
-            if not vertexChecker(masses_unitless):
-                continue            
-            masses = [[m*GeV for m in mm] for mm in masses_unitless]
-            #Skip points which are outside any grid
-            inside=False
-            for txnameObj in txnameObjs:
-                val = txnameObj.txnameData.getValueFor(masses)
-                if type(val) in [ type(fb), float ]:
-                    inside=True 
-                    break
-            if not inside:
-                continue
-            ordered=True
-            for k in range(len(masses[0])-1):
-                if masses[0][k]<=masses[0][k+1]:
-                    ordered=False
-            if not ordered:
-                continue
-            points.append([i,j])
-    return points
-
-
-def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChecker):
+def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     """
     Method to generate points between minx,maxx and miny,maxy.
     Uses the PCA decomposition and rotated points in order to best estimate
@@ -238,25 +189,17 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChe
     txnameObjs.
     
     :param Npts: Number of points to be tried
-    :param minx: Minimal x-value for the respective mass plane)
-    :param maxx: Maximal x-value for the respective mass plane)
-    :param miny: Minimal y-value for the respective mass plane)
-    :param maxy: Maximal y-value for the respective mass plane)
+    :param varRanges: Dictionary with the labels and ranges for the plane variables
+                      (e.g. {'x' : [500.,1000.], 'y' : [100.,500.]} for 2D planes
+                      or {'x' : [10.,1000.]} for 1D planes)
     :param txnameObjs: List of Txname objects
     :param massPlane: MassPlane object holding information about the plane
     :param vertexChecker: function which evaluates mass constraints
-    :return: List of x,y points belonging to the plot and the data grids.    
+    :return: List of x,y points belonging to the plot and the data grids. Each point
+            is a dict: {'x' : xvalue, 'y': yvalue,...}.
     """
     
-    #Get variable labels for the mass plane (e.g. 'x','y',..)
-    planeVars = sorted([str(v) for v in massPlane.xvars])
 
-    #Create a dummy copy of a TxnameData object to hold all the data corresponding to the plane
-    txdata = copy.deepcopy(txnameObjs[0].txnameData)
-    txdata.dataTag = 'dummy'
-    txdata._id = 'dummy'
-    txdata._accept_errors_upto=0.05    
-    txdata._V = None
     #Collects all points belonging to the plane:
     planeMasses = []
     reducedData = []
@@ -266,12 +209,9 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChe
             #Switch back to original mass point
             mass = tx.txnameData._getMassArrayFrom(pt,unit=None)
             #Check if mass belong to the mass plane:
-            xy = massPlane.getXYValues(mass)            
-            if xy is None:
+            xyDict = massPlane.getXYValues(mass)            
+            if xyDict is None:
                 continue
-            #Use corresponding mass from massPlane to avoid rounding errors
-            #(ensures the mass exactly satisfies the plane relations)
-            xyDict = dict([[planeVars[i],xv] for i,xv in enumerate(xy)])
             mass = massPlane.getParticleMasses(**xyDict)
             #Add units:
             mass = [[m*GeV for m in br] for br in mass]
@@ -285,60 +225,71 @@ def generateBetterPoints(Npts,minx,maxx,miny,maxy,txnameObjs,massPlane,vertexChe
         logger.warning("No data points found for plane.")
         return []
     else:
-    #Compute the PCA for the reduced dataset:
-        txdata.loadData(reducedData)
+        #Compute the PCA for the reduced dataset:        
+        txdata = TxNameData(reducedData,"dummy","dummy")
+        
+        
     #Transform the min and max values to the rotated plane:
-    extremes = []
-    for x,y in [[minx,miny],[maxx,miny],[minx,maxy],[maxx,maxy]]:
-        mass = [[m*GeV for m in br] for br in massPlane.getParticleMasses(x=x,y=y)]
+    extremePoints = []    
+    rangesList = list(varRanges.items())
+    ranges = [x[1] for x in rangesList]  #Collect the ranges in order
+    xvars = [x[0] for x in rangesList] #Collect the var labels in order
+    for x in list(itertools.product(*ranges)):
+        xvalues = dict(zip(xvars,x))
+        mass = [[m*GeV for m in br] for br in massPlane.getParticleMasses(**xvalues)]
         porig = txdata.flattenMassArray(mass)
         p=((numpy.matrix(porig)[0] - txdata.delta_x)).tolist()[0]
         P=numpy.dot(p,txdata._V)  ## rotated point
-        extremes.append(P)
-    #New values of extremes in the rotated plane (limit values by extremes in data):
-    Mp = txdata.tri.points
-    xdataMin = min(numpy.array(Mp)[:,0]) 
-    xdataMax = max(numpy.array(Mp)[:,0])
-    ydataMin = min(numpy.array(Mp)[:,1]) 
-    ydataMax = max(numpy.array(Mp)[:,1])
-    xmin = max(min(numpy.array(extremes)[:,0]),xdataMin)
-    xmax = min(max(numpy.array(extremes)[:,0]),xdataMax)
-    dx=(xmax-xmin)/math.sqrt(float(Npts))
-    ymin = max(min(numpy.array(extremes)[:,1]),ydataMin)
-    ymax = min(max(numpy.array(extremes)[:,1]),ydataMax)
-    dy=(ymax-ymin)/math.sqrt(float(Npts))
-    #Check for extended 1D-data:
-    if txdata.dimensionality == 2 and len(Mp) % 3 == 0:        
-        if ydataMax - ydataMin < 0.001:
-            logger.info("1D data detected. Collapsing y-dimension")            
-            ymin = ymax = (ydataMax+ydataMin)/2.
-            dy = 0.001
-    xmin = round(xmin/dx)*dx
-    ymin = round(ymin/dy)*dy
-
+        extremePoints.append(P)
+    #Limit extreme values by data:
+    Mp = numpy.array(txdata.tri.points)
+    extremePoints = numpy.array(extremePoints)
+    newRanges = []
+    steps = []
+    for iaxis in range(len(xvars)):
+        vminData = min(Mp[:,iaxis])
+        vmaxData = max(Mp[:,iaxis])
+        vminRange = min(extremePoints[:,iaxis])
+        vmaxRange = max(extremePoints[:,iaxis])
+        newRanges.append([max(vminData,vminRange),min(vmaxData,vmaxRange)])
+        dvar = abs(newRanges[-1][1]-newRanges[-1][0]) #Define the step in the variable
+        dvar = dvar/(float(Npts)**(1./len(xvars))) #The exponent makes sure the total numper of pts ~ Npts
+        steps.append(dvar)
+    
+    #Round minimum ranges    
+    for i,vrange in enumerate(newRanges):
+        newRanges[i][0] = round(vrange[0]/steps[i])*steps[i]
+        
+        
     points=[]
-    for i in numpy.arange(xmin, xmax+dx/2., dx):
-        for j in numpy.arange(ymin, ymax+dy/2., dy):
-            pt = [i,j]
-            #Check if point is in the convexhull. If not, try another one
-            if txdata.tri.find_simplex(pt) < 0:
-                continue
-            mass = txdata._getMassArrayFrom(pt,unit=None)
-            #Round all masses (to be consistent with smodels)
-            mass = [[round(m,1) for m in br] for br in mass]
-            if not vertexChecker(mass):
-                continue
-            if massPlane.getXYValues(mass) is None:
-                continue
-            inside = False
-            mass_unit = [[m*GeV for m in br] for br in mass]
-            for tx in txnameObjs:                
-                if not (tx.txnameData.getValueFor(mass_unit) is None):
-                    inside = True
-                    break
-            if not inside:
-                continue
-            points.append(massPlane.getXYValues(mass))
+    #Create an array with all var points:
+    allPoints = []
+    for i,vrange in enumerate(newRanges):
+        vmin,vmax = vrange
+        dv = steps[i]
+        allPoints.append([x for x in numpy.arange(vmin, vmax+dv/2., dv)])
+    
+    for pt in itertools.product(*allPoints):
+        pt = list(pt)
+        #Check if point is in the convexhull. If not, try another one
+        if txdata.tri.find_simplex(pt) < 0:
+            continue
+        mass = txdata._getMassArrayFrom(pt,unit=None)
+        #Round all masses (to be consistent with smodels)
+        mass = [[round(m,1) for m in br] for br in mass]
+        if not vertexChecker(mass):
+            continue
+        if massPlane.getXYValues(mass) is None:
+            continue
+        inside = False
+        mass_unit = [[m*GeV for m in br] for br in mass]
+        for tx in txnameObjs:                
+            if not (tx.txnameData.getValueFor(mass_unit) is None):
+                inside = True
+                break
+        if not inside:
+            continue
+        points.append(massPlane.getXYValues(mass))
     return points
 
 def draw ( graph, points ):

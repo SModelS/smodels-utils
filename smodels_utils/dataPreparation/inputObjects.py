@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.WARNING)
 
-hscp=False ## central switch for smodels v1.1 versus smodels v1.2
+hscp=True ## central switch for smodels v1.1 versus smodels v1.2
 ## smodels v1.2 has final states for hscp patch
 
 class Locker(object):

@@ -40,7 +40,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                          If False, use the already existing *.py files in the validation folder.
                          If None, run SModelS only if needed.
 
-    :return: agreement factor
+    :return: True
     """
 
     logger.info("Generating validation plot for " + expRes.getValuesFor('id')[0]
@@ -69,7 +69,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     if generatedData:
         valPlot.saveData()
 
-    return valPlot.computeAgreementFactor() # return agreement factor
+    return True
 
 
 
@@ -153,13 +153,6 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             if not os.path.isfile(tarfile):
                 logger.info( 'Missing .tar.gz file for %s.' %txnameStr)
                 continue
-            #Collect exclusion curves
-            tgraphs = plottingFuncs.getExclusionCurvesFor(expRes,txnameStr,get_all=False)
-            if not tgraphs or not tgraphs[txnameStr]:
-                logger.info("No exclusion curves found for %s" %txnameStr)
-                continue
-            else:
-                tgraphs = tgraphs[txnameStr]
 
             #Define k-factors
             if txnameStr.lower() in kfactorDict:
@@ -167,13 +160,13 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             else:
                 kfactor = 1.
 
-
-            #Loop over plots:
-            for tgraph in tgraphs:
-                ax = tgraph.GetName().split('_')[1]
-                if not ax in txname.axes: continue
-                agreement = validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,generateData)
-                logger.info('               agreement factor = %s' %str(agreement))
+            #Loop over all axes:
+            if not isinstance(txname.axes,list):
+                axes = [txname.axes]
+            else:
+                axes = txname.axes     
+            for ax in axes:
+                validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,generateData)
             logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--------- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
     logger.info("\n\n----- Finished validation in %.1f min." %((time.time()-tval0)/60.))

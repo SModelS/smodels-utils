@@ -142,7 +142,10 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
             if abs(kfactor - pt['kfactor'])> 1e-5:
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
-            x, y = pt['axes']
+            if len(pt['axes']) == 1:
+                x, y = pt['axes']['x'],pt['signal']/pt['UL']
+            else:
+                x, y = pt['axes']['x'],pt['axes']['y']
             if pt['condition'] and max(pt['condition'].values())> 0.05:
                 logger.warning("Condition violated for file " + pt['slhafile'])
                 cond_violated.SetPoint(cond_violated.GetN(), x, y)
@@ -217,7 +220,10 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
             if abs(kfactor - pt['kfactor'])> 1e-5:
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
-            x, y = pt['axes']
+            if len(pt['axes']) == 1:
+                x, y = pt['axes']['x'],pt['signal']/pt['UL']
+            else:
+                x, y = pt['axes']['x'],pt['axes']['y']
             import ROOT
             lk=ROOT.TLatex ()
             lk.SetTextSize(.01)
@@ -259,9 +265,10 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
                 for (itr, (mass,ul)) in enumerate(txnameData ):
                     if itr% nthpoint != 0: continue
                     mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]            
-                    v=massPlane.getXYValues(mass_unitless)
-                    if not v: continue
-                    x,y = v
+                    varsDict = massPlane.getXYValues(mass_unitless)
+                    if not varsDict:
+                        continue
+                    x ,y = varsDict['x'],varsDict['y']
                     ul = ul.asNumber(pb)
                     lk.DrawLatex(x, y, "#color[4]{%.2f}" % ul )
                 
@@ -294,7 +301,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     plane.base = base
 
     if not silentMode:
-        ans = raw_input("Hit any key to close\n")
+        _ = raw_input("Hit any key to close\n")
 
     plane.labels=labels
     
@@ -311,6 +318,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     """
         
     # Check if data has been defined:
+    xlabel, ylabel = 'x','y'
     excluded, allowed, excluded_border, allowed_border = TGraph(), TGraph(), TGraph(), TGraph()
     excluded.SetName("excluded")
     allowed.SetName("allowed")
@@ -331,18 +339,26 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             if abs(kfactor - pt['kfactor'])> 1e-5:
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
-            x, y = pt['axes']
+
+            xvals = pt['axes']
+            r = pt['signal']/pt ['UL']
+            if len(xvals) == 1:
+                x,y = xvals['x'],r
+                ylabel = "r = #sigma_{signal}/#sigma_{UL}"
+            else:
+                x,y = xvals['x'],xvals['y']
+
             if pt['condition'] and pt['condition'] > 0.05:
                 #print "pt['condition']",pt['condition']
                 logger.warning("Condition violated for file " + pt['slhafile'])
                 cond_violated.SetPoint(cond_violated.GetN(), x, y)
-            elif pt['signal'] > pt['UL']:
-                if pt['signal'] < pt ['UL']* looseness:
+            elif r > 1.:
+                if r < looseness:
                     excluded_border.SetPoint(excluded_border.GetN(), x, y)
                 else:
                     excluded.SetPoint(excluded.GetN(), x, y )
             else:
-                if pt['signal']*looseness > pt['UL']:
+                if r> 1./looseness:
                     allowed_border.SetPoint(allowed_border.GetN(), x, y)
                 else:
                     allowed.SetPoint(allowed.GetN(), x, y)
@@ -383,9 +399,9 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         ds_txnames = map ( str, dataset.txnameList )
         if not validationPlot.txName in ds_txnames:
             continue
-        id = str(dataset.dataInfo.dataId)
+        dataId = str(dataset.dataInfo.dataId)
         # print "[plottingFuncs.py] add to %s: %s, %s" % ( validationPlot.txName, id, str ( map ( str, dataset.txnameList  ) ) )
-        subtitle+=id+", "
+        subtitle+=dataId+", "
     subtitle = subtitle[:-2]
     if len(subtitle) > 100:
         subtitle = subtitle[:100] + " ..."
@@ -396,6 +412,8 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
     base.Draw("AP")
     base.SetTitle(title)
+    base.GetXaxis().SetTitle(xlabel)
+    base.GetYaxis().SetTitle(ylabel)    
     l=TLatex()
     l.SetNDC()
     l.SetTextSize(.04)
@@ -418,7 +436,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     base.l2=l2
 
     if not silentMode:
-        ans = raw_input("Hit any key to close\n")
+        _ = raw_input("Hit any key to close\n")
     
     return plane,base
 
@@ -435,6 +453,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     # Check if data has been defined:
     tgr = TGraph2D()
     kfactor=None
+    xlabel, ylabel, zlabel = 'x','y',"r = #sigma_{signal}/#sigma_{UL}"
     
     if not validationPlot.data:
         logger.error("Data for validation plot is not defined.")
@@ -448,12 +467,18 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             if abs(kfactor - pt['kfactor'])> 1e-5:
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
-            x, y = pt['axes']
-            z = pt['signal']/pt ['UL']
+            xvals = pt['axes']
+            r = pt['signal']/pt ['UL']
+            if len(xvals) == 1:
+                x,y = xvals['x'],r
+                ylabel = "r = #sigma_{signal}/#sigma_{UL}"
+            else:
+                x,y = xvals['x'],xvals['y']
+            
             if pt['condition'] and pt['condition'] > 0.05:
                 logger.warning("Condition violated for file " + pt['slhafile'])
             else:
-                tgr.SetPoint(tgr.GetN(), x, y, z)
+                tgr.SetPoint(tgr.GetN(), x, y, r)
 
     if tgr.GetN() == 0:
         logger.error("No good points for validation plot.")
@@ -461,7 +486,6 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
 
     #ROOT has trouble obtaining a histogram from a 1-d graph. So it is
     #necessary to smear the points if they rest in a single line.
-    oneX, oneY = False,False
     if tgr.GetYmax() == tgr.GetYmin():
         logger.info("1d data detected, smearing Y values")
         buff = tgr.GetX()
@@ -475,7 +499,6 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         zpts = numpy.frombuffer(buff,count=tgr.GetN())
         for i in range(tgr.GetN()):
             tgr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,0.001),zpts[i])
-        oneY = True
     if tgr.GetXmax() == tgr.GetXmin():
         logger.info("1d data detected, smearing X values")
         buff = tgr.GetX()
@@ -489,7 +512,6 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         zpts = numpy.frombuffer(buff,count=tgr.GetN())
         for i in range(tgr.GetN()):
             tgr.SetPoint(i,xpts[i]+random.uniform(0.,0.001),ypts[i],zpts[i])
-        oneX = True
 
     # Check if official exclusion curve has been defined:
     if not validationPlot.officialCurves:
@@ -530,9 +552,9 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     h = tgr.GetHistogram()
     setOptions(h,Type='pretty')
     h.GetZaxis().SetRangeUser(0., min(tgr.GetZmax(),3.))
-    h.GetXaxis().SetTitle("x")
-    h.GetYaxis().SetTitle("y")
-    h.GetZaxis().SetTitle("r = #sigma_{signal}/#sigma_{UL}")
+    h.GetXaxis().SetTitle(xlabel)
+    h.GetYaxis().SetTitle(ylabel)
+    h.GetZaxis().SetTitle(zlabel)
     h.SetContour(200)
     h.Draw("COLZ")
     palette = h.GetListOfFunctions().FindObject("palette")
@@ -645,7 +667,10 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
             if abs(kfactor - pt['kfactor'])> 1e-5:
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
-            x, y = pt['axes']
+            if len(pt['axes']) == 1:
+                x, y = pt['axes']['x'], pt['signal']/pt['UL']
+            else:
+                x, y = pt['axes']['x'],pt['axes']['y']
             pt['signal'] = pt['signal']*signal_factor
             if what == 'R':
                 z = pt['signal']/pt['UL']
@@ -726,9 +751,6 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
     plane.Print("test.png")
     
     return plane
-
-            
-
 
 
         
