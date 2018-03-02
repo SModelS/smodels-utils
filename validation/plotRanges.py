@@ -83,9 +83,8 @@ def getExtendedFrame(txnameObjs,axes):
     """
     
     massPlane = MassPlane.fromString(txnameObjs[0].txName,axes)
-    xvars = massPlane.xvars
-    minVars = [None]*len(xvars)
-    maxVars = [None]*len(xvars)
+    minVars = {}
+    maxVars = {}
     for txnameObj in txnameObjs:
         data = txnameObj.txnameData.tri.points  #Data grid of rotated points
         if len(data) == 0:
@@ -94,21 +93,24 @@ def getExtendedFrame(txnameObjs,axes):
             #Switch back to original mass point
             mass = txnameObj.txnameData._getMassArrayFrom(pt,unit=None)
             #Check if mass belong to the mass plane:
-            xy = massPlane.getXYValues(mass)
-            if xy is None: continue
-            for i,xv in enumerate(xy):
-                if minVars[i] is None:
-                    minVars[i] = xv
-                minVars[i] = min(minVars[i],xv)
-                maxVars[i] = max(maxVars[i],xv)
+            varsDict = massPlane.getXYValues(mass)
+            if varsDict is None:
+                continue
+            for xLabel,xValue in varsDict.items():
+                if not xLabel in minVars:
+                    minVars[xLabel] = xValue
+                    maxVars[xLabel] = xValue
+                minVars[xLabel] = min(minVars[xLabel],xValue)
+                maxVars[xLabel] = max(maxVars[xLabel],xValue)
 
     if None in minVars or None in maxVars:
         logger.info("Could not find points for %s" %axes)
         return None
 
-    minVars = [0.8*x for x in minVars[:]]
-    maxVars = [1.2*x for x in maxVars[:]]
-    rangesDict = dict([[str(x),[minVars[i],maxVars[i]]] for i,x in enumerate(xvars)])
+    for xLabel in minVars:
+        minVars[xLabel] *= 0.8
+        maxVars[xLabel] *= 1.2
+    rangesDict = dict([[xLabel,[minVars[xLabel],maxVars[xLabel]]] for xLabel in minVars])
     infoMsg = "the extended frame is:"
     for xstr,r in list(rangesDict.items()):
         infoMsg += " %0.2f < %s < %0.2f," %(r[0],str(xstr),r[1])
@@ -152,12 +154,12 @@ def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
     txnameInput = TxNameInput(txnameObjs[0].txName)
     txnameInput.constraint = txnameObjs[0].constraint
     vertexChecker = lambda mass: txnameInput.checkMassConstraints(mass)
-
+    
     #First generate points for the extended frame with a lower density:
     extframe = getExtendedFrame(txnameObjs,axes)
     if extframe:
         varRanges = extframe
-        ptsA = generateBetterPoints(Npts/3,varRanges,
+        ptsA = generatePoints(Npts/3,varRanges,
                                     txnameObjs,massPlane,vertexChecker)
     else: ptsA = []
 
@@ -165,8 +167,8 @@ def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
     if tgraphs:
         frame = getSuperFrame(tgraphs)
         if frame:    
-            varRanges = frame
-            ptsB = generateBetterPoints(Npts,varRanges,
+            varRanges = frame            
+            ptsB = generatePoints(Npts,varRanges,
                                     txnameObjs,massPlane,vertexChecker)
     else: ptsB = []
     
@@ -176,7 +178,7 @@ def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
 
 
 
-def generateBetterPoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
+def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     """
     Method to generate points between minx,maxx and miny,maxy.
     Uses the PCA decomposition and rotated points in order to best estimate
@@ -197,8 +199,6 @@ def generateBetterPoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
             is a dict: {'x' : xvalue, 'y': yvalue,...}.
     """
     
-    #Get variable labels for the mass plane (e.g. 'x','y',..)
-    planeVars = sorted([str(v) for v in massPlane.xvars])
 
     #Collects all points belonging to the plane:
     planeMasses = []
@@ -209,12 +209,9 @@ def generateBetterPoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
             #Switch back to original mass point
             mass = tx.txnameData._getMassArrayFrom(pt,unit=None)
             #Check if mass belong to the mass plane:
-            xy = massPlane.getXYValues(mass)            
-            if xy is None:
+            xyDict = massPlane.getXYValues(mass)            
+            if xyDict is None:
                 continue
-            #Use corresponding mass from massPlane to avoid rounding errors
-            #(ensures the mass exactly satisfies the plane relations)
-            xyDict = dict([[planeVars[i],xv] for i,xv in enumerate(xy)])
             mass = massPlane.getParticleMasses(**xyDict)
             #Add units:
             mass = [[m*GeV for m in br] for br in mass]
@@ -292,7 +289,7 @@ def generateBetterPoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
                 break
         if not inside:
             continue
-        points.append(dict(zip(xvars,massPlane.getXYValues(mass))))
+        points.append(massPlane.getXYValues(mass))
     return points
 
 def draw ( graph, points ):

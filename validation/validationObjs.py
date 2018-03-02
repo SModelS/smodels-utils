@@ -81,73 +81,6 @@ class ValidationPlot():
         vstr += 'Axes: '+self.niceAxes
         return vstr
 
-    def computeAgreementFactor ( self, looseness=1.2, signal_factor=1.0 ):
-        """ computes how much the plot agrees with the official exclusion curve
-            by counting the points that are inside/outside the official
-            exclusion curve, and comparing against the points' r values
-            ( upper limit / predict theory cross section )
-            :param looseness: how much do we loosen the criterion? I.e. by what factor do we
-            change the cross sections in favor of getting the right assignment?
-            :param signal_factor: an additional factor that is multiplied with the signal cross section,
-        """
-        import ROOT
-        curve = self.getOfficialCurve()
-        if not curve:
-            logger.error( "could not get official tgraph curve for %s %s %s" % ( self.expRes,self.txName,self.axes  ) )
-            return 1.0
-        elif isinstance(curve,list):
-            for c in curve:
-                objName = c.GetName()
-                if 'exclusion_' in objName.lower():
-                    curve = c
-                    break
-        x0=ROOT.Double()
-        y0=ROOT.Double()
-        x=ROOT.Double()
-        y=ROOT.Double()
-        curve.GetPoint ( 0, x0, y0 ) ## get the last point
-        ## close with line at y=0 (True) or x=0 (False)
-        close_on_x = True
-        if "x - y]" in self.axes:
-            close_on_x = False # if we have a delta_m on y axis, we know
-            ## we need to close to x=0, not y=0.
-        curve.GetPoint ( curve.GetN()-1, x, y ) ## get the last point
-        if close_on_x:
-            curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
-            curve.SetPoint ( curve.GetN(), x0, 0. )  ## extend to first point
-        else:
-            curve.SetPoint ( curve.GetN(), 0., y )  ## extend to x=0
-            curve.SetPoint ( curve.GetN(), 0., y0 )  ## extend to first point
-
-        pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0, "not_excluded_inside": 0,
-               "not_excluded_outside": 0, "wrong" : 0 }
-        for point in self.data:
-            x,y=point["axes"][0],point["axes"][1]
-            if y==0: y=1.5 ## to avoid points sitting on the line
-            excluded = point["UL"] < point["signal"]
-            really_excluded = looseness * point["UL"] < point["signal"] * signal_factor
-            really_not_excluded = point["UL"] > looseness * point["signal"] * signal_factor
-            inside = curve.IsInside ( x,y )
-            pts["total"]+=1
-            s=""
-            if excluded:
-                s="excluded"
-            else:
-                s="not_excluded"
-            if inside:
-                s+="_inside"
-            else:
-                s+="_outside"
-            pts[s]+=1
-            if really_excluded and not inside:
-                pts["wrong"]+=1
-            if really_not_excluded and inside:
-                pts["wrong"]+=1
-        #logger.debug ( "points in categories %s" % str(pts) )
-        #print ( "[validationObjs] points in categories %s" % str(pts) )
-        if pts["total"]==0:
-            return float("nan")
-        return 1.0 - float(pts["wrong"]) / float(pts["total"])
 
     def setSLHAdir(self,slhadir):
         """
@@ -346,12 +279,12 @@ class ValidationPlot():
                             mass[i][im] = omass
                             break
                                   
-            v = massPlane.getXYValues(mass)
-            if v == None:                
+            varsDict = massPlane.getXYValues(mass)
+            if varsDict is None:                
                 logger.debug( "dropping %s, doesnt fall into the plane of %s." % \
                                (slhafile, massPlane ) )
-                continue
-            Dict = {'slhafile' : slhafile, 'axes': v,
+                continue            
+            Dict = {'slhafile' : slhafile, 'axes' : varsDict,
                     'signal': expRes['theory prediction (fb)'],
                     'UL': expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
                     'dataset': expRes['DataSetID'] }

@@ -214,7 +214,7 @@ class MassPlane(object):
         hull = Delaunay ( points )
         #print ( "upperLimits=%s" % type(obj) )
         newdata=[]
-        for ctr,i in enumerate(obj.data):
+        for i in obj.data:
             p = [ i[x], i[y] ]
             in_hull = hull.find_simplex ( p )
             if in_hull == -1: ## not in a cut-out region
@@ -246,15 +246,15 @@ class MassPlane(object):
     def getXYValues(self,massArray):
 
         """
-        translate a mass array to a point of the plot
+        Translate a mass array to a point of the plot.
+        Returns a dictionary with the variable labels as keys and the values as values.
 
         :param massArray: list containing two other lists. Each list contains floats,
         representing the masses of the particles of each branch in GeV
         :raise massArrayLenError: if length of mass array is unequal 2
         :raise unequalXYValuesError: if the branches return different values for x or y
         :return: None if mass array do not met the conditions of one branch
-        else: [x-value in GeV as float, y-value in GeV,.. as floats].
-        The list is sorted alphabetically according to the variable labels
+        else: {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
         
         if len(massArray) != len(self.branches):
@@ -273,9 +273,7 @@ class MassPlane(object):
                         return None
                 xyArray[xvar] = value
         
-        xValues = [xvar[1] for xvar in sorted(xyArray.items(), key = lambda xx: xx[0])]
-        
-        return xValues
+        return xyArray
 
 
 class Axes(object):

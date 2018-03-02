@@ -142,7 +142,10 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
             if abs(kfactor - pt['kfactor'])> 1e-5:
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
-            x, y = pt['axes']
+            if len(pt['axes']) == 1:
+                x, y = pt['axes']['x'],pt['signal']/pt['UL']
+            else:
+                x, y = pt['axes']['x'],pt['axes']['y']
             if pt['condition'] and max(pt['condition'].values())> 0.05:
                 logger.warning("Condition violated for file " + pt['slhafile'])
                 cond_violated.SetPoint(cond_violated.GetN(), x, y)
@@ -217,7 +220,10 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
             if abs(kfactor - pt['kfactor'])> 1e-5:
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
-            x, y = pt['axes']
+            if len(pt['axes']) == 1:
+                x, y = pt['axes']['x'],pt['signal']/pt['UL']
+            else:
+                x, y = pt['axes']['x'],pt['axes']['y']
             import ROOT
             lk=ROOT.TLatex ()
             lk.SetTextSize(.01)
@@ -259,9 +265,10 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
                 for (itr, (mass,ul)) in enumerate(txnameData ):
                     if itr% nthpoint != 0: continue
                     mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]            
-                    v=massPlane.getXYValues(mass_unitless)
-                    if not v: continue
-                    x,y = v
+                    varsDict = massPlane.getXYValues(mass_unitless)
+                    if not varsDict:
+                        continue
+                    x ,y = varsDict['x'],varsDict['y']
                     ul = ul.asNumber(pb)
                     lk.DrawLatex(x, y, "#color[4]{%.2f}" % ul )
                 
@@ -311,7 +318,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     """
         
     # Check if data has been defined:
-    xlabel, ylabel, zlabel = 'x','y',"r = #sigma_{signal}/#sigma_{UL}"
+    xlabel, ylabel = 'x','y'
     excluded, allowed, excluded_border, allowed_border = TGraph(), TGraph(), TGraph(), TGraph()
     excluded.SetName("excluded")
     allowed.SetName("allowed")
@@ -336,10 +343,10 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             xvals = pt['axes']
             r = pt['signal']/pt ['UL']
             if len(xvals) == 1:
-                x,y = xvals[0],r
+                x,y = xvals['x'],r
                 ylabel = "r = #sigma_{signal}/#sigma_{UL}"
             else:
-                x,y = xvals[:2]
+                x,y = xvals['x'],xvals['y']
 
             if pt['condition'] and pt['condition'] > 0.05:
                 #print "pt['condition']",pt['condition']
@@ -463,10 +470,10 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             xvals = pt['axes']
             r = pt['signal']/pt ['UL']
             if len(xvals) == 1:
-                x,y = xvals[0],r
+                x,y = xvals['x'],r
                 ylabel = "r = #sigma_{signal}/#sigma_{UL}"
             else:
-                x,y = xvals[:2]
+                x,y = xvals['x'],xvals['y']
             
             if pt['condition'] and pt['condition'] > 0.05:
                 logger.warning("Condition violated for file " + pt['slhafile'])
@@ -660,7 +667,10 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
             if abs(kfactor - pt['kfactor'])> 1e-5:
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
-            x, y = pt['axes']
+            if len(pt['axes']) == 1:
+                x, y = pt['axes']['x'], pt['signal']/pt['UL']
+            else:
+                x, y = pt['axes']['x'],pt['axes']['y']
             pt['signal'] = pt['signal']*signal_factor
             if what == 'R':
                 z = pt['signal']/pt['UL']
