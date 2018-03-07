@@ -73,7 +73,7 @@ class DatabaseCreator(list):
         #              None for monochrome
         self.colorScheme = "light" ## "dark", None
         self.ncpus = 1 ## the number of CPUs used
-      
+
         try:
             self.ncpus =  multiprocessing.cpu_count()
         except:
@@ -90,12 +90,12 @@ class DatabaseCreator(list):
             #           "white": '\x1b[37m' }
             colors = {}
             if self.colorScheme == "light":
-                colors = { "info": '\x1b[33m', "error": '\x1b[31m', 
+                colors = { "info": '\x1b[33m', "error": '\x1b[31m',
                            "warn": '\x1b[34m', "debug": '\x1b[37m' }
             if self.colorScheme == "dark":
-                colors = { "info": '\x1b[33m', "error": '\x1b[31m', 
+                colors = { "info": '\x1b[33m', "error": '\x1b[31m',
                            "warn": '\x1b[34m', "debug": '\x1b[30m' }
-            if c in colors: 
+            if c in colors:
                 color = colors[c]
             else:
                 self.timeStamp ( "do not know message level %s" % c, "error" )
@@ -105,41 +105,41 @@ class DatabaseCreator(list):
         print ( "[%s%.1fs] %s%s%s" % ( name, dt, color, txt, reset ) )
 
     def addDataset(self,datasetObject):
-        
+
         """
         Checks if databaseCreator already contains
         a dataset object with the same id. If not, append dataset.
         Otherwise, raises an error.
-        
+
         :param datasetObject: DataSetInput object
         :raise Error: if there is already a dataset instance with same name
         """
-          
-        if datasetObject in self: 
+
+        if datasetObject in self:
             logger.error("Dataset %s has already been defined" %datasetObject._name)
             sys.exit()
         else:
-            self.append(datasetObject)   
-                
+            self.append(datasetObject)
+
     def updateDataset(self,datasetObject):
-        
+
         """
         Checks if databaseCreator already contains
         a dataset object with the same id. If it does, update the dataset.
         Otherwise, raises an error.
-        
+
         :param datasetObject: DataSetInput object
         :raise Error: if there is already a dataset instance with same name
         """
-        
+
         if not datasetObject in self:
             logger.error("Dataset %s can not be updated." %datasetObject._name)
             sys.exit()
-            
+
         #Find index of dataset with the same name
         i = self.index(datasetObject)
         self[i] = datasetObject
-                            
+
     def create(self, createAdditional=False):
 
         """
@@ -170,7 +170,7 @@ class DatabaseCreator(list):
         if hasattr ( self, "datasetCreator" ):
             ## if we have a dataset creator, we let it define the order in globalInfo.txt.
             self.datasetCreator.setDataSetOrder ( self.metaInfo )
-        
+
         if not createAdditional:
             self._setLastUpdate()
             self._delete()
@@ -184,10 +184,10 @@ class DatabaseCreator(list):
             updatedDatasets = []
             self.createDatasets ( chunkedDatasets[0], updatedDatasets )
         else:
-            manager = multiprocessing.Manager() 
-            updatedDatasets = manager.list() #Stores the updated datasets for each process    
-            children = []           
-            for chunk in chunkedDatasets:            
+            manager = multiprocessing.Manager()
+            updatedDatasets = manager.list() #Stores the updated datasets for each process
+            children = []
+            for chunk in chunkedDatasets:
                 p = multiprocessing.Process(target=self.createDatasets, args=(chunk,updatedDatasets))
                 children.append(p)
                 p.start()
@@ -198,7 +198,7 @@ class DatabaseCreator(list):
                 logger.error("Error, when creating datasets: some children didnt terminate within the timeout. I see %d out of %d children have terminated." % \
                         ( len(updatedDatasets), len(self) ) )
                 sys.exit()
-        
+
         for dataset in updatedDatasets:
             self.updateDataset(dataset)
         #Get all exclusion curves and write to sms.root:
@@ -209,23 +209,23 @@ class DatabaseCreator(list):
         """
         Creates a dataset folders for the datasets in datasetList and the
         correponsing txname and dataInfo files
-        
+
         :param datasetList: List of DataSetInput objects
         """
-        
+
         for dataset in datasetList:
             newDatasets.append(self._createDatasetAt(dataset,'./'+dataset._name))
 
     def _createDatasetAt(self,dataset,datasetFolder):
         """
         Creates a dataset folder and the correponsing txname and dataInfo files
-        
+
         :param dataset: DataSetInput object
         :param datasetFolder: Path to the dataset folder
         """
-        
+
         #Set current dataset folder (for writing all files below)
-        self.timeStamp ( "reading %s" % dataset, "debug" )            
+        self.timeStamp ( "reading %s" % dataset, "debug" )
         #Create dataInfo.txt file:
         if dataset.dataType == 'efficiencyMap':
             if not hasattr(dataset,'upperLimit') or not hasattr(dataset,'expectedUpperLimit'):
@@ -233,7 +233,7 @@ class DatabaseCreator(list):
                 dataset.computeStatistics()
         #Write down dataInfo.txt
         self._createInfoFile('dataInfo', dataset, datasetFolder)
-        
+
         #Consistency checks:
         if not dataset.checkConsistency():
             logger.error("Dataset %s failed the consistency checks" %dataset)
@@ -248,7 +248,7 @@ class DatabaseCreator(list):
             #(getData has to be called first to define which planes contain data for this txname)
             txName.getDataFromPlanes(dataType = dataset.dataType)  #Read source files and load data
             txName.getMetaData()  #Set txname info attributes
-            #Write down txname.txt                
+            #Write down txname.txt
             if txName.hasData(dataset.dataType): #Do not write empty txnames:
                 self._createTxnameFile(str(txName), txName, datasetFolder)
 
@@ -257,20 +257,20 @@ class DatabaseCreator(list):
         #(issue with pickling lambda functions)
         for tx in dataset._txnameList:
             for plane in tx._planes:
-                plane.branches = None 
+                plane.branches = None
 
-                
+
         return dataset
 
     def getExclusionCurves(self):
         """
         Get all exclusion curves defined. If there are multiple datasets,
         does not include duplicated exclusion curves.
-        
+
         :return: list with exclusion curves (TGraph objects)
         """
         import ROOT
-                
+
         curves = []
         allCurves = []
         #Loop over datasets
@@ -280,7 +280,7 @@ class DatabaseCreator(list):
                 for plane in txname._goodPlanes:
                     for exclusion in plane._exclusionCurves:
                         if not exclusion:
-                            continue  #Exclusion source has not been defined                        
+                            continue  #Exclusion source has not been defined
                         name = '%s_%s' %(exclusion.name, plane.axes)
                         label = [txname.txName,exclusion.name,plane.axes]
                         if label in curves: #Curve already appears in dict
@@ -301,8 +301,8 @@ class DatabaseCreator(list):
                             stGraph.SetLineStyle(2)
                         curves.append(label)  #Store curves (to avoid duplicates)
                         allCurves.append(stGraph)
-                        
-                        
+
+
         return allCurves
 
     def _setLastUpdate(self):
@@ -321,7 +321,7 @@ class DatabaseCreator(list):
         self.metaInfo.lastUpdate = today
         self._setImplementedBy()
 
-        if os.path.isfile(self.base + 
+        if os.path.isfile(self.base +
                           self.infoFilePath(self.metaInfoFileName,
                                             self.metaInfoFileDirectory)):
             lastUpdate = False
@@ -349,7 +349,7 @@ class DatabaseCreator(list):
                     if "SMODELS_NOUPDATE" in os.environ.keys():
                         self.timeStamp ( "SMODELS_NOUPDATE is set!", "error" )
                         break
-                    try: 
+                    try:
                         answer = input(m)
                     except NameError as e:
                         answer = input ( m )
@@ -358,13 +358,13 @@ class DatabaseCreator(list):
                     self.metaInfo.lastUpdate = lastUpdate
                     if not implementedBy: self._setImplementedBy()
                     else: self.metaInfo.implementedBy = implementedBy
-                
+
                 #Check if validation fields should be overwritten/reset
                 while True:
                     m = 'If the data has changed, the validated fields should be reset.\n'
                     m = m + 'Reset the validated fields (y/n)?: '
                     answer = 'n'
-                    try: 
+                    try:
                         answer = input(m)
                     except NameError as e:
                         answer = input(m)
@@ -382,7 +382,7 @@ class DatabaseCreator(list):
                             oldVal = oldVal[:oldVal.find('\n')]
                             oldVal = oldVal.strip()
                             txold.close()
-                            setattr(tx,'validated',oldVal)                
+                            setattr(tx,'validated',oldVal)
         return
 
 
@@ -393,7 +393,10 @@ class DatabaseCreator(list):
         from comand line
         """
 
-        while True:        
+        answer = ""
+        if "SMODELS_AUTHOR" in os.environ:
+            answer = os.environ["SMODELS_AUTHOR"]
+        while answer == "":
             answer = input('enter your name or initials: ')
             if answer: break
         initialDict= { "ww": "Wolfgang Waltenberger",
@@ -432,7 +435,7 @@ class DatabaseCreator(list):
         """
         Create empty validation folder
         """
-        
+
         if not os.path.exists(self.validationPath):
             os.mkdir(self.validationPath)
 
@@ -474,7 +477,7 @@ class DatabaseCreator(list):
         """
 
         content = ''
-        
+
         path = self.infoFilePath(name,folder)
 
         #Check if all required attributes have been defined:
@@ -496,7 +499,7 @@ class DatabaseCreator(list):
         self.timeStamp ( "writing %s" % path )
         infoFile.write(content)
         infoFile.close()
-        
+
     def _createTxnameFile(self, name, obj,folder):
 
         """
@@ -509,15 +512,15 @@ class DatabaseCreator(list):
         written to the file. The object must have a list called
         'infoAttr' to define what attributes should be written
         """
-    
+
         if not hasattr(obj,'_dataLabels'):
             logger.error('Input obj must be a TxNameInput object')
-    
-        #Get the dataLabels stored in the txname 
+
+        #Get the dataLabels stored in the txname
         #(e.g. efficiencyMap, upperLimits, expectedUpperLimits)
         dataLabels = obj._dataLabels
         content = ''
-        
+
         path = self.infoFilePath(name,folder)
 
         #Check if all required attributes have been defined:
@@ -535,8 +538,8 @@ class DatabaseCreator(list):
             #Leave data for last
             if attr in dataLabels:
                 continue
-                value = self._formatData(value)            
-            
+                value = self._formatData(value)
+
             content = '%s%s%s%s\n' % (content, attr,\
                                        self.assignmentOperator, value)
         for attr in obj.infoAttr:
@@ -556,14 +559,14 @@ class DatabaseCreator(list):
         self.timeStamp ( "writing %s" % path )
         infoFile.write(content)
         infoFile.close()
-        
+
     def infoFilePath(self, infoFileName,infoFolder):
         """
         :param infoFileName: name of requested file without extension
         :return: path of info-file with given name
         """
-        
-        directory = infoFolder            
+
+        directory = infoFolder
 
         if not os.path.exists(directory):
             os.mkdir(directory)
@@ -574,30 +577,30 @@ class DatabaseCreator(list):
     def _formatData(self,value,n=5,dataType=None):
         """
         Formats the data grid for nice printing in the txname.txt file
-        
+
         :param value: value for the data (in list format)
         :param n: number of digits to be kept (default = 5)
         :param dataType: Specifies the type of data (upperLimits, efficiencyMap,...).
                          Relevant only for removing repeated entries.
         """
-        
+
         if not isinstance(value,list):
             logger.error("Data for TxNameInput must be in list format")
             sys.exit()
-        
+
         #First round numbers:
         value = round_list(value,n)
-        
+
         #Remove repeated mass entries:
         value = removeRepeated(value,dataType)
-        
+
         #Convert to string:
         #Make sure unum numbers are printed with sufficient precision
-        Unum.VALUE_FORMAT = "%."+"%iE"%(n-1)  
+        Unum.VALUE_FORMAT = "%."+"%iE"%(n-1)
         vStr = str(value)
         #Replace units:
         vStr = vStr.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
-        vStr = vStr.replace('[fb]','*fb').replace('[pb]','*pb')        
+        vStr = vStr.replace('[fb]','*fb').replace('[pb]','*pb')
         #Break lines:
         vStr = vStr.replace(" ","")
         vStr = vStr.replace('],[[','],\n[[')
@@ -609,10 +612,10 @@ def round_list(x, n ):
     """
     Rounds all values in x down to n digits.
     :param x: value (float) or nested list of floats
-    
+
     :return: x, with all floats rounded to n digits
     """
-    
+
     if isinstance(x,list):
         for i,pt in enumerate(x):
             x[i] = round_list(pt,n)
@@ -620,16 +623,16 @@ def round_list(x, n ):
     else:
         if isinstance(x,Unum):
             if not x.asNumber():
-                return x     
+                return x
             unit = x/x.asNumber()
             x = x.asNumber()
         elif isinstance(x,str):
-            return x            
+            return x
         else:
             if not x:
                 return x
             unit = 1.
-        
+
         return round(x,-int(floor(log10(x))) + (n - 1))*unit
 
 
@@ -638,41 +641,41 @@ def removeRepeated(datalist,dataType=None):
     Loops over the data grid and remove points with identical
     mass values. Issues an warning if points appear repeated
     and with distinct values (upper limit value or efficiency value).
-    
+
     :param datalist:  data grid list (e.g. [[massArray1,ul1],[massArray2,ul2],...]
     :param dataType: Specifies the type of data (upperLimits, efficiencyMap,...).
                      For repeated entries in efficiencyMaps, it will use the lowest
                      value, while for the other cases it will use the highest value.
                      This way the final grid is always conservative.
-    
-    
+
+
     :return: New list with repeated values removed
     """
-    
+
     rev = True
     if dataType and dataType == 'efficiencyMap':
-        rev = False 
-    
+        rev = False
+
     #First sort list (for performance)
     #Sort first values, so when removing repeated entries the largest (smallest)
     #values will be used for upper limits (efficiencies).
     sortedValue = sorted(sorted(datalist, key = lambda pt: pt[1],reverse=rev), key = lambda pt: pt[0])
-    sortedIndices = sorted(sorted(range(len(datalist)), 
+    sortedIndices = sorted(sorted(range(len(datalist)),
                           key = lambda k: datalist[k][1],reverse=rev),
                           key = lambda k: datalist[k][0])
-    
+
     uniqueEntries = []
     repeatedEntries = []
     inconsistentEntries = []
     for i,pt in enumerate(sortedValue):
         originalIndex = sortedIndices[i]
-        m = pt[0]        
+        m = pt[0]
         #Check if new mass is different from previous one:
         if m != sortedValue[i-1][0]:
             uniqueEntries.append(originalIndex)
         else:
             #Check if the values differ:
-            if pt[1] == sortedValue[i-1][1]:                    
+            if pt[1] == sortedValue[i-1][1]:
                 repeatedEntries.append(originalIndex) #Entries are identical, but repeated
             else:
                 inconsistentEntries.append(originalIndex) #Masses are identical, but with inconsistent values
@@ -681,14 +684,14 @@ def removeRepeated(datalist,dataType=None):
         for j in inconsistentEntries:
             logger.warning("Mass entry %s appears in data with distinct values"
                              %(str(datalist[j][0]).replace(" ","")))
-            
+
     if repeatedEntries:
         for j in repeatedEntries:
             logger.info("Entry %s appears in data repeated (after rounding)"
                              %(str(datalist[j]).replace(" ","")))
-            
 
-    #Remove repeated entries:                    
+
+    #Remove repeated entries:
     newList = [pt for i,pt in enumerate(datalist) if i in uniqueEntries]
 
     return newList
