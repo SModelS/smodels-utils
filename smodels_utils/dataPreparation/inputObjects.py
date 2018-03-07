@@ -17,6 +17,7 @@ from smodels.theory.particleNames import elementsInStr
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.particles import rEven, ptcDic
 from smodels.theory.element import Element
+from smodels.installation import version
 import copy
 
 import logging
@@ -28,7 +29,9 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(level=logging.WARNING)
 
-hscp=True ## central switch for smodels v1.1 versus smodels v1.2
+hscp=False ## central switch for smodels v1.1 versus smodels v1.2
+if version()[:3]=="1.2":
+    hscp=True
 ## smodels v1.2 has final states for hscp patch
 
 class Locker(object):
