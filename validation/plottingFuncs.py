@@ -142,10 +142,13 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
             if abs(kfactor - pt['kfactor'])> 1e-5:
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
-            if len(pt['axes']) == 1:
-                x, y = pt['axes']['x'],pt['signal']/pt['UL']
+            if isinstance(pt['axes'],dict):
+                if len(pt['axes']) == 1:
+                    x, y = pt['axes']['x'],pt['signal']/pt['UL']
+                else:
+                    x, y = pt['axes']['x'],pt['axes']['y']
             else:
-                x, y = pt['axes']['x'],pt['axes']['y']
+                x,y = pt['axes']
             if pt['condition'] and max(pt['condition'].values())> 0.05:
                 logger.warning("Condition violated for file " + pt['slhafile'])
                 cond_violated.SetPoint(cond_violated.GetN(), x, y)
@@ -220,10 +223,13 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
             if abs(kfactor - pt['kfactor'])> 1e-5:
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
-            if len(pt['axes']) == 1:
-                x, y = pt['axes']['x'],pt['signal']/pt['UL']
+            if isinstance(pt['axes'],dict):
+                if len(pt['axes']) == 1:
+                    x, y = pt['axes']['x'],pt['signal']/pt['UL']
+                else:
+                    x, y = pt['axes']['x'],pt['axes']['y']
             else:
-                x, y = pt['axes']['x'],pt['axes']['y']
+                x,y = pt['axes']
             import ROOT
             lk=ROOT.TLatex ()
             lk.SetTextSize(.01)
@@ -342,11 +348,15 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
 
             xvals = pt['axes']
             r = pt['signal']/pt ['UL']
-            if len(xvals) == 1:
-                x,y = xvals['x'],r
-                ylabel = "r = #sigma_{signal}/#sigma_{UL}"
+            if isinstance(xvals,dict):
+                if len(xvals) == 1:
+                    x,y = xvals['x'],r
+                    ylabel = "r = #sigma_{signal}/#sigma_{UL}"
+                else:
+                    x,y = xvals['x'],xvals['y']
             else:
-                x,y = xvals['x'],xvals['y']
+                x,y = pt['axes']
+            
 
             if pt['condition'] and pt['condition'] > 0.05:
                 #print "pt['condition']",pt['condition']
@@ -469,11 +479,14 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
                 sys.exit()
             xvals = pt['axes']
             r = pt['signal']/pt ['UL']
-            if len(xvals) == 1:
-                x,y = xvals['x'],r
-                ylabel = "r = #sigma_{signal}/#sigma_{UL}"
+            if isinstance(xvals,dict):
+                if len(xvals) == 1:
+                    x,y = xvals['x'],r
+                    ylabel = "r = #sigma_{signal}/#sigma_{UL}"
+                else:
+                    x,y = xvals['x'],xvals['y']
             else:
-                x,y = xvals['x'],xvals['y']
+                x,y = xvals
             
             if pt['condition'] and pt['condition'] > 0.05:
                 logger.warning("Condition violated for file " + pt['slhafile'])
@@ -667,10 +680,14 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
             if abs(kfactor - pt['kfactor'])> 1e-5:
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
-            if len(pt['axes']) == 1:
-                x, y = pt['axes']['x'], pt['signal']/pt['UL']
+                
+            if isinstance(pt['axes'],dict):
+                if len(pt['axes']) == 1:
+                    x, y = pt['axes']['x'], pt['signal']/pt['UL']
+                else:
+                    x, y = pt['axes']['x'],pt['axes']['y']
             else:
-                x, y = pt['axes']['x'],pt['axes']['y']
+                x,y = pt['axes']
             pt['signal'] = pt['signal']*signal_factor
             if what == 'R':
                 z = pt['signal']/pt['UL']
