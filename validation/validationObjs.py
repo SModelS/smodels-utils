@@ -109,7 +109,6 @@ class ValidationPlot():
         :return: path to the folder containing the SLHA files
         """
 
-        print ( "here", self.slhaDir )
         if os.path.isdir(self.slhaDir):
             return self.slhaDir
         elif os.path.isfile(self.slhaDir):
