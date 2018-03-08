@@ -35,10 +35,12 @@ class ValidationPlot():
     :ivar databasePath: path to the database folder. If not defined, the path from ExptRes.path will be
                         used to extract the database path.
     :ivar kfactor: Common kfactor to be applied to all theory cross-sections (float)
+    :ivar limitPoints: limits tested model points to n randomly chosen ones. 
+                   If None or negative, take all points.
     """
 
     def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
-                 kfactor = 1.):
+                 kfactor = 1., limitPoints=None ):
 
         self.expRes = copy.deepcopy(ExptRes)
         self.txName = TxNameStr
@@ -48,6 +50,7 @@ class ValidationPlot():
         self.data = None
         self.officialCurves = self.getOfficialCurve( get_all = True )
         self.kfactor = kfactor
+        self.limitPoints = limitPoints
 
 
         #Select the desired txname and corresponding datasets in the experimental result:
@@ -106,18 +109,25 @@ class ValidationPlot():
         :return: path to the folder containing the SLHA files
         """
 
+        print ( "here", self.slhaDir )
         if os.path.isdir(self.slhaDir):
             return self.slhaDir
         elif os.path.isfile(self.slhaDir):
             try:
                 tar = tarfile.open(self.slhaDir,'r:gz')
                 tempdir = tempfile.mkdtemp(dir=os.getcwd())
-                tar.extractall(path=tempdir)
+                members=tar.getmembers()
+                if self.limitPoints != None and self.limitPoints > 0:
+                    import random
+                    random.shuffle ( members )
+                    members=members[:self.limitPoints]
+                tar.extractall(path=tempdir,members=members)
                 tar.close()
                 logger.debug("SLHA files extracted to %s" %tempdir)
                 return tempdir
-            except:
-                logger.error("Could not extract SLHA files from %s" %self.slhaDir)
+            except Exception as e:
+                logger.error("Could not extract SLHA files from %s: %s" %\
+                              ( self.slhaDir, e ) )
                 sys.exit()
         else:
             logger.error("%s is not a file nor a folder" %self.slhaDir)

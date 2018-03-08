@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
-                  pretty=False,generateData=True):
+                  pretty=False,generateData=True,limitPoints=None):
     """
     Creates a validation plot and saves its output.
 
@@ -37,15 +37,18 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     :param pretty: If True it will generate "pretty" plots
 
     :param generateData: If True, run SModelS on the slha files.
-                         If False, use the already existing *.py files in the validation folder.
-                         If None, run SModelS only if needed.
-
+                         If False, use the already existing *.py files in the
+                         validation folder.  If None, run SModelS only if
+                         needed.
+    :param limitPoints: Limit the total number of points to <n> (integer). 
+                        Points are chosen randomly.
+                        If None or negative, take all points.
     :return: True
     """
 
     logger.info("Generating validation plot for " + expRes.getValuesFor('id')[0]
                 +", "+txnameStr+", "+axes)
-    valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor)
+    valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor,limitPoints=limitPoints)
     valPlot.setSLHAdir(slhadir)
     valPlot.ncpus = ncpus
     generatedData=False
@@ -74,7 +77,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
 
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
-        tarfiles=None,ncpus=-1,verbosity='error',pretty=False,generateData=True):
+        tarfiles=None,ncpus=-1,verbosity='error',pretty=False,generateData=True,
+			  limitPoints=None):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -94,9 +98,10 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param pretty: If True it will generate "pretty" plots
 
     :param generateData: If True, run SModelS on the slha files.
-                   If False, use the already existing *.py files in the validation folder.
-                   None: generate them if needed
-
+	            If False, use the already existing *.py files in the validation folder.
+              None: generate them if needed.
+    :param limitPoints: Limit the number of tested model points to <n> randomly 
+              chosen points. If None or negative, test all points.
 
     :return: A dictionary containing the agreement factors
     """
@@ -166,7 +171,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             else:
                 axes = txname.axes     
             for ax in axes:
-                validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,generateData)
+                validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,
+							               generateData,limitPoints)
             logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--------- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
     logger.info("\n\n----- Finished validation in %.1f min." %((time.time()-tval0)/60.))
@@ -268,6 +274,9 @@ if __name__ == "__main__":
         pretty = parser.getboolean("options", "prettyPlots")
     else:
         pretty = False
+    limitPoints=None
+    if parser.has_section("options") and parser.has_option("options","limitPoints"):
+        limitPoints = parser.getint("options","limitPoints")
     generateData = _doGenerate ( parser )
 
 #    try:
@@ -282,7 +291,8 @@ if __name__ == "__main__":
 #        pass
 
 
+    print ("limitPoints=",limitPoints)
     #Run validation:
-    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,tarfiles,
-         ncpus,args.log.lower(),pretty,generateData)
+    main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
+         tarfiles,ncpus,args.log.lower(),pretty,generateData,limitPoints)
 
