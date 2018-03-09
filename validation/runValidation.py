@@ -291,7 +291,6 @@ if __name__ == "__main__":
 #        pass
 
 
-    print ("limitPoints=",limitPoints)
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
          tarfiles,ncpus,args.log.lower(),pretty,generateData,limitPoints)
