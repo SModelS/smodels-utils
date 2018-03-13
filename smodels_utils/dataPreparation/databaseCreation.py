@@ -555,6 +555,9 @@ class DatabaseCreator(list):
                                        self.assignmentOperator, value)
 
 
+        if len(content)>5000000:
+            logger.error ( "%s has more than 5M characters! This will likely " \
+                           "create problems!" % path )
         infoFile = open(self.base + path, 'w')
         self.timeStamp ( "writing %s" % path )
         infoFile.write(content)

@@ -2,7 +2,7 @@
 
 """
 .. module:: dataHandlerObjects
-   :synopsis: Holds objects for reading and processing the data in different formats 
+   :synopsis: Holds objects for reading and processing the data in different formats
 
 .. moduleauthor:: Michael Traub <michael.traub@gmx.at>
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
@@ -18,16 +18,16 @@ logger = logging.getLogger(__name__)
 
 
 class DataHandler(object):
-    
+
     """
     Iterable class
-    Super class used by other dataHandlerObjects.    
+    Super class used by other dataHandlerObjects.
     Holds attributes for describing original data types and
     methods to set the data source and preprocessing the data
     """
-    
+
     def __init__(self,dataLabel,coordinateMap,xvars):
-        
+
         """
         initialize data-source attributes with None
         and allowNegativValues with False
@@ -39,7 +39,7 @@ class DataHandler(object):
               where x,y,.. are the sympy symbols and the value key can be anything)
         :param xvars: List with x,y,.. variables (sympy symbols).
         """
-        
+
         self.name = dataLabel
         self.dimensions = len(xvars)
         self.coordinateMap = coordinateMap
@@ -55,10 +55,10 @@ class DataHandler(object):
         self._massUnit = 'GeV'
         self._unit = None  #Default unit
         self._rescaleFactors = None
-        
+
         if self.name == 'upperLimits' or self.name == 'expectedUpperLimits':
             self._unit = 'pb'
-            
+
         #Consistency checks:
         if len(coordinateMap) != self.dimensions+1:
             logger.error("Coordinate map %s is not consistent with number of dimensions (%i)"
@@ -68,38 +68,38 @@ class DataHandler(object):
             if not xv in coordinateMap:
                 logger.error("Coordinate %s has not been defined in coordinateMap" %xv)
                 sys.exit()
-                       
-                
+
+
     @property
     def unit(self):
-        
+
         """
         :return: unit as string
         """
-        
+
         return self._unit
-        
+
     @unit.setter
-    def unit(self, unitString):        
+    def unit(self, unitString):
         """
         Set unit. For upper limits the default is 'pb'.
-        For efficiency map the default is None. 
+        For efficiency map the default is None.
         :param unitString: 'fb','pb' or '', None
         """
-        
+
         if not unitString:
             return
-        
+
         if self.name != 'upperLimits' and self.name != 'expectedUpperLimits':
             logger.error("Units should only be defined for upper limits")
-            sys.exit()              
+            sys.exit()
 
-        if unitString:           
+        if unitString:
             units = ['fb','pb']
             if not unitString in units:
                 logger.error("Unit for upper limits must be in %s" %str(units))
                 sys.exit()
-            self._unit = unitString        
+            self._unit = unitString
 
     def loadData(self):
         """
@@ -109,7 +109,7 @@ class DataHandler(object):
         if not self.fileType:
             logger.error("File type for %s has not been defined" %self.path)
             sys.exit()
-        
+
         #Load data
         self.data = []
         for point in getattr(self,self.fileType)():
@@ -121,57 +121,57 @@ class DataHandler(object):
                 #Just check floats in the point elements which are not variables
                 values = [value for xv,value in ptDict.items() if not xv in self.xvars]
                 if self._positivValues(values):
-                    self.data.append(ptDict)       
-        
+                    self.data.append(ptDict)
+
 
     def __nonzero__(self):
-        
+
         """
         :returns: True if contains data
         """
-        
+
         if hasattr(self,'data') and len(self.data):
             return True
-        
+
         return False
 
     def __iter__(self):
-        
+
         """
         gives the entries of the original upper limit histograms
         :yield: [x-value in GeV, y-value in GeV,..., value]
         """
-        
+
         for point in self.data:
             yield point
- 
+
     def __getitem_(self,i):
         """
         Returns the point located at i=x.
-        
+
         :param i: Integer specifying the point index.
-        
-        :return: Point in dictionary format. 
+
+        :return: Point in dictionary format.
         """
-        
+
         return self.data[i]
-     
+
     def __len_(self):
         """
         Returns the data length.
-        
+
         :return: Integer (length)
-        """         
-        
+        """
+
         return len(self.data)
 
     def getX(self):
-        
+
         """
         Iterates over the x,y,.. values for the data
         :yield: {x : x-value, y: y-value,...}
         """
-        
+
         for point in self.data:
             xDict = {}
             for key,val in point.items():
@@ -179,63 +179,63 @@ class DataHandler(object):
                     continue
                 xDict[str(key)] = val
             yield xDict
-            
+
     def getValues(self):
-        
+
         """
         Iterates over the values for the data (e.g. upper limit for upperLimits,
         efficiency for efficiencyMap,...)
         :yield: {'value-keyword' : value}
         """
-        
+
         for point in self.data:
             vDict = {}
             for key,val in point.items():
                 if key in self.xvars:
                     continue
                 vDict[str(key)] = val
-            yield vDict            
+            yield vDict
 
     def getPointsWith(self,**xvals):
         """
         Returns point(s) with the properties defined by input.
         (e.g. x=200., y=100., will return all points with these values)
-        
+
         :param xvals: Values for the variables (e.g. x=x-float, y=y-float,...)
-        
-        :return: list of points which satisfy the requirements given by xvals. 
+
+        :return: list of points which satisfy the requirements given by xvals.
         """
-        
+
         points = []
         #Convert xvals from dictionary to sympy vars:
         varDict = dict([[str(v),v] for v in self.xvars])
         xv = dict([[eval(k,varDict),v] for k,v in xvals.items()])
         for point in self.data:
             addPoint = True
-            for key,val in xv.items():                
+            for key,val in xv.items():
                 if not key in point:
                     logger.error("Key %s not allowed for data" %key)
                     sys.exit()
                 if point[key] != val:
                     addPoint = False
                     break
-            
+
             if addPoint:
                 points.append(point)
-                
+
         return points
 
-    def reweightBy(self,data):        
+    def reweightBy(self,data):
         """
         Reweight the values in self by the values in data.
         If data is a float, apply the same rescaling for all points.
         If data is a DataHandler object, multiply the value for the points in self
         by the values for the same points in data. Mainly intended to be
         used to rescale efficiencies by acceptances or to rescale the whole data.
-        
+
         :param data: float or DataHandler object
         """
-                
+
         if isinstance(data,float):
             for i,value in enumerate(self.getValues()):
                 factor = data
@@ -260,20 +260,20 @@ class DataHandler(object):
                         oldpt[key] = oldpt[key]*factor  #Rescale values which do not appear in xvals
                     self.data[i] = oldpt #Store rescaled point
 
-            
+
     def mapPoint(self,point):
         """
         Convert a point in list format (e.g. [float,float,float])
         to a dictionary using the definitions in self.coordinateMap
-        
+
         :param point: list with floats
-        
-        :return: dictionary with coordinates and value 
+
+        :return: dictionary with coordinates and value
                  (e.g. {x : x-float, y : y-float, 'ul' : ul-float})
         """
 
         if len(point) < self.dimensions+1:
-            logger.error("Data should have at least %i dimensions (%i dimensions found)" 
+            logger.error("Data should have at least %i dimensions (%i dimensions found)"
                          %(self.dimensions+1,len(point)))
             sys.exit()
 
@@ -282,14 +282,14 @@ class DataHandler(object):
         for xvar,i in self.coordinateMap.items():
             #Skip variables without indices (relevant for exclusion curves)
             if i is None:
-                continue  
+                continue
             ptDict[xvar] = point[i]
-        
+
         return ptDict
-                
-    def setSource(self, path, fileType, objectName = None, 
+
+    def setSource(self, path, fileType, objectName = None,
                   index = None, unit = None, scale = None):
-        
+
         """set path and type of data source
         :param path: path to data file as string
         :param fileType: string describing type of file
@@ -299,14 +299,14 @@ class DataHandler(object):
         :param unit: string defining unit. If None, it will use the default values.
         :param scale: float to re-escale the data.
         """
-        
+
         if not os.path.isfile(path):
             logger.error("File %s not found" %path)
             sys.exit()
-            
+
         if unit:
             self.unit = unit
-                
+
         self.path = path
         self.fileType = fileType
         self.objectName = objectName
@@ -314,49 +314,49 @@ class DataHandler(object):
         self.loadData()
         if scale:
             self.reweightBy(scale)
-        
+
     @property
     def massUnit(self):
-        
+
         """
         :return: unit as string
         """
-        
+
         return self._massUnit
-        
+
     @massUnit.setter
     def massUnit(self, unitString):
-        
+
         """
         Set unit for upper limits, default: 'pb'.
-        If unitString is null, it will not set the property 
+        If unitString is null, it will not set the property
         :param unitString: 'GeV','TeV' or '', None
         """
-        
-        if unitString:           
+
+        if unitString:
             units = ['GeV','TeV']
             if not unitString in units:
                 logger.error('Mass units must be in %s' %str(units))
                 sys.exit()
             self._massUnit = unitString
-            
+
     def _positivValues(self, values):
-        
+
         """checks if values greater then zero
         :param value: float or integer
         :return: True if value >= 0 or allowNegativValues == True
-        """   
-        
-        if self.allowNegativValues: return True        
+        """
+
+        if self.allowNegativValues: return True
         for value in values:
-            
+
             if value < 0.0:
                 logger.warning("Negative value %s in %s will be ignored"%(value,self.path))
                 return False
         return True
-                
+
     def txt(self):
-        
+
         """
         iterable method
         preprocessing txt-files containing only columns with
@@ -364,7 +364,7 @@ class DataHandler(object):
 
         :yield: list with values as foat, one float for every column
         """
-        
+
         txtFile = open(self.path,'r')
         content = txtFile.readlines()
         txtFile.close
@@ -381,27 +381,27 @@ class DataHandler(object):
             except:
                 logger.error("Error reading file %s" %self.path)
                 sys.exit()
-            values = [value.strip() for value in values] 
+            values = [value.strip() for value in values]
             try:
                 values = [float(value) for value in values]
             except:
                 logger.error("Error evaluating values %s in file %s" %(values,self.path))
-                sys.exit() 
-                
-                            
-            yield values  
-            
+                sys.exit()
+
+
+            yield values
+
 
     def effi(self):
-        
+
         """
         iterable method
-        preprocessing txt-files containing fastlim efficiency maps 
+        preprocessing txt-files containing fastlim efficiency maps
         (only columns with floats)
 
         :yield: list with values as foat, one float for every column
         """
-        
+
         txtFile = open(self.path,'r')
         content = txtFile.readlines()
         txtFile.close
@@ -421,32 +421,32 @@ class DataHandler(object):
             except:
                 logger.error("Error reading file %s" %self.path)
                 sys.exit()
-            values = [value.strip() for value in values] 
+            values = [value.strip() for value in values]
             try:
                 values = [float(value) for value in values]
             except:
                 logger.error("Error evaluating values %s in file %s" %(values,self.path))
-                sys.exit() 
-            
+                sys.exit()
+
             if values[-2]<4*values[-1]:
                 logger.debug("Small efficiency value %s +- %s. Setting to zero." %(values[-2],values[-1]))
                 values[-2]= 0.0
-                            
-            yield values             
-    
+
+            yield values
+
     def root(self):
-        
+
         """
         preprocessing root-files containing root-objects
-        
+
         :return: ROOT-object
         """
-        
+
         if not isinstance(self.objectName, str):
             logger.error("objectName for root file should be of string type and not %s"
                          %type(self.objectName))
             sys.exit()
-            
+
         import ROOT
         rootFile = ROOT.TFile(self.path)
         obj = rootFile.Get(self.objectName)
@@ -456,18 +456,18 @@ class DataHandler(object):
         if not isinstance(obj,ROOT.TGraph):
             obj.SetDirectory(0)
         rootFile.Close()
-        
+
         for point in self._getPoints(obj):
-            yield point  
-        
+            yield point
+
     def cMacro(self):
-        
+
         """
         preprocessing root c-macros containing root-objects
-        
+
         :return: ROOT-object
         """
-        
+
         if not isinstance(self.objectName, str):
             logger.error("objectName for root file should be of string type and not %s"
                          %type(self.objectName))
@@ -481,18 +481,18 @@ class DataHandler(object):
         except:
             logger.error("Object %s not found in %s" %(self.objectName,self.path))
             sys.exit()
-            
+
         for point in self._getPoints(limit):
             yield point
-            
+
     def canvas(self):
-        
+
         """
         preprocessing root-file containing canvas with root-objects
-        
+
         :return: ROOT-object
         """
-        
+
         if not isinstance(self.objectName, str):
             logger.error("objectName for root file should be of string type and not %s"
                          %type(self.objectName))
@@ -513,19 +513,19 @@ class DataHandler(object):
             logger.error("ListOfPrimitives %s has not index %s"
                           %(self.objectName,self.index))
             sys.exit()
-        
+
         for point in self._getPoints(limit):
             yield point
-            
+
     def _getPoints(self,obj):
-        
+
         """
         Iterable metod for extracting points from root histograms
         :param obj: Root object (THx or TGraph)
         :yield: [x-axes, y-axes,..., bin content]
         """
         import ROOT
-            
+
         if isinstance(obj,ROOT.TH1):
             return self._getHistoPoints(obj)
         elif isinstance(obj,ROOT.TGraph) or isinstance(obj,ROOT.TGraph2D):
@@ -533,34 +533,59 @@ class DataHandler(object):
         else:
             logger.error("ROOT object must be a THx or TGraphx object")
             sys.exit()
-            
+
     def _getHistoPoints(self,hist):
-        
+
         """
         Iterable metod for extracting points from root histograms
         :param hist: Root histogram object (THx)
         :yield: [x-axes, y-axes,..., bin contend]
         """
-        
+
         if self.dimensions > 3:
             logger.error("Root histograms can not contain more than 3 axes. \
             (Data is defined as %i-th dimensional)" %self.dimensions)
-            sys.exit()        
-        
+            sys.exit()
+
         #Check dimensions:
         if not self.dimensions == hist.GetDimension():
             logger.error("Data dimensions and histogram dimensions do not match")
             sys.exit()
-        
+
         xAxis = hist.GetXaxis()
         xRange = range(1,xAxis.GetNbins() + 1)
+        n_bins = len(xRange)
+        max_nbins = 20000
         if self.dimensions > 1:
             yAxis = hist.GetYaxis()
             yRange = range(1,yAxis.GetNbins() + 1)
+            n_bins=n_bins * len(yRange )
+            print ( "n_bins=%d, n_dims=%d, xRange=%d, yRange=%d" % ( n_bins, self.dimensions, len(xRange), len(yRange) ) )
         if self.dimensions > 2:
             zAxis = hist.GetZaxis()
             zRange = range(1,zAxis.GetNbins() + 1)
-            
+            n_bins=n_bins * len(zRange )
+            if len ( n_bins ) > max_nbins:
+                if len(zRange)>100:
+                    logger.warning ( "Too large map (nbins=%d). Will trim z axis." % n_bins )
+                    n_bins = n_bins / len(zRange)
+                    zRange = range(1,zAxis.GetNbins() + 1,2)
+                    n_bins = n_bins * len(zRange)
+        if self.dimensions > 1 and n_bins > max_nbins:
+            if len(yRange)>200:
+                    logger.warning ( "Too large map (nbins=%d). Will trim y axis." % n_bins )
+                    n_bins = n_bins / len(yRange)
+                    yRange = range(1,yAxis.GetNbins() + 1,2 )
+                    n_bins = n_bins * len(yRange)
+        if n_bins > max_nbins:
+            logger.warning ( "Too large map (nbins=%d). Will trim x axis." % n_bins )
+            xRange = range(1,xAxis.GetNbins() + 1, 2)
+
+
+
+
+        print ( "n_bins=%d, n_dims=%d, xRange=%d" % ( n_bins, self.dimensions, len(xRange) ) )
+
         for xBin in xRange:
             x = xAxis.GetBinCenter(xBin)
             if self.dimensions == 1:
@@ -579,23 +604,23 @@ class DataHandler(object):
                             z = zAxis.GetBinCenter(zBin)
                             ul = hist.GetBinContent(xBin, yBin, zBin)
                             if ul == 0.: continue
-                            yield [x, y, z, ul]                     
+                            yield [x, y, z, ul]
 
 
     def _getGraphPoints(self,graph):
-        
+
         """
         Iterable metod for extracting points from root TGraph objects
         :param graph: Root graph object (TGraphx)
         :yield: tgraph point
         """
         import ROOT
-        
+
         if self.dimensions >= 3:
             logger.error("Root graphs can not contain more than 2 axes. \
             (Data is defined as %i-th dimensional)" %self.dimensions)
             sys.exit()
-            
+
         #Check dimensions:
         if self.dimensions == 1 and not isinstance(graph,ROOT.TGraph):
             logger.error("TGraph dimensions do not match data")
@@ -604,27 +629,27 @@ class DataHandler(object):
             logger.error("TGraph dimensions do not match data")
             sys.exit()
 
-        
+
         x, y, z = ROOT.Double(0.),ROOT.Double(0.),ROOT.Double(0.)
         for i in range(0, graph.GetN()):
             if isinstance(graph,ROOT.TGraph):
                 graph.GetPoint(i, x, y)
-                yield [float(x), float(y)]  
+                yield [float(x), float(y)]
             elif isinstance(graph,ROOT.TGraph2D):
                 graph.GetPoint(i, x, y, z)
-                yield [float(x), float(y), float(z)]                      
+                yield [float(x), float(y), float(z)]
 
-        
+
 class ExclusionHandler(DataHandler):
-    
+
     """
-    iterable class to hold and process exclusion curve data.    
+    iterable class to hold and process exclusion curve data.
     This Class is designed to iterate over the point of the
     exclusion line
     """
-    
+
     def __init__(self,name,coordinateMap,xvars):
-        
+
         """
         attributes 'sort' and 'reverse' are initialized with False
         :param name: name as string
@@ -632,17 +657,17 @@ class ExclusionHandler(DataHandler):
                           corresponding x,y,.. coordinates used to define the plane axes.
                           (e.g. {x : 0, y : 1, 'ul value' : 2} for a 3-column data,
                           where x,y,.. are the sympy symbols and the value key can be anything)
-        
+
         """
-        
+
         #Exclusion curve always has dimensions = 1 (x-value)
-        DataHandler.__init__(self,name,coordinateMap,xvars)  
+        DataHandler.__init__(self,name,coordinateMap,xvars)
         self.sort = False
         self.reverse = False
         self.dimensions = 1
-        
+
     def __iter__(self):
-        
+
         """
         Gives the point of the exclusion line
         if sort is set to True: points are sorted by x-values
@@ -650,7 +675,7 @@ class ExclusionHandler(DataHandler):
         if reverse is set to True: order of points is reversed
         :yield: [x-value, y-value]
         """
-        
+
         points = []
         for point in getattr(self,self.fileType)():
             points.append(point)
@@ -660,16 +685,16 @@ class ExclusionHandler(DataHandler):
             points = reversed(points)
         for point in points:
             yield self.mapPoint(point)
-            
+
     def svg(self):
-        
+
         """
         iterable method for  processing files with coordinates in svg format.
         first line in file needs scaling information and the data
         has to be of the form x,y value.
-        :yield: [x-value in GeV, y-value in GeV] 
+        :yield: [x-value in GeV, y-value in GeV]
         """
-        
+
         #Check dimensions
         if self.dimensions != 1:
             logger.error("svg format only implemented for x,value data (1D)")
@@ -686,7 +711,7 @@ class ExclusionHandler(DataHandler):
         elif 'M' in lines[0].split()[0]:
             relative = False
         else:
-            logger.error("Unknown svg format in %s:\n %s" 
+            logger.error("Unknown svg format in %s:\n %s"
                          %(self.path, lines[0].split()[0]))
             sys.exit()
         ticks = lines[0].split()
@@ -696,23 +721,23 @@ class ExclusionHandler(DataHandler):
             if tick.split(':')[0][:1] == 'x':
                 xticks.append([float(tick.split(':')[0][1:-3]),float(tick.split(':')[1])])
                 if tick.split(':')[0][-3:] != 'GeV':
-                    logger.error("Unknown mass unit in %s:\n %s" 
+                    logger.error("Unknown mass unit in %s:\n %s"
                                  %(self.path,tick.split(':')[0][-3:]))
                     sys.exit()
 
             elif tick.split(':')[0][:1] == 'y':
                 yticks.append([float(tick.split(':')[0][1:-3]),float(tick.split(':')[1])])
                 if tick.split(':')[0][-3:] != 'GeV':
-                    logger.error("Unknown mass unit in %s:\n %s" 
+                    logger.error("Unknown mass unit in %s:\n %s"
                                  %(self.path,tick.split(':')[0][-3:]))
                     sys.exit()
             else:
-                logger.error("Unknown axis in %s:\n %s" 
+                logger.error("Unknown axis in %s:\n %s"
                                  %(self.path,tick.split(':')[0][:1]))
                 sys.exit()
         if len(xticks) != 2 or len(yticks) != 2:
             logger.error("Unknown axis format %s" %self.path)
-            sys.exit()    
+            sys.exit()
         xGeV = (xticks[1][1]-xticks[0][1])/(xticks[1][0]-xticks[0][0])
         yGeV = (yticks[1][1]-yticks[0][1])/(yticks[1][0]-yticks[0][0])
         x0 = xticks[0][1] - xticks[0][0]*xGeV
