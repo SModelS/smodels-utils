@@ -8,7 +8,7 @@
 
 """
 
-import logging,os,sys
+import logging,os,sys,time
 
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
@@ -230,9 +230,11 @@ class ValidationPlot():
         #Select the desired experimental result
         listOfExpRes = [self.expRes]
 
+        t0=time.time()
         """ Test all input points """
         modelTester.testPoints(fileList, inDir, outputDir, parser, 'validation',
                  listOfExpRes, 1000, False, parameterFile)
+        dt=(time.time()-t0) / len(fileList) ## for now we just write out avg time
 
         #Define original plot
         massPlane = MassPlane.fromString(self.txName,self.axes)
@@ -294,7 +296,7 @@ class ValidationPlot():
                 logger.debug( "dropping %s, doesnt fall into the plane of %s." % \
                                (slhafile, massPlane ) )
                 continue            
-            Dict = {'slhafile' : slhafile, 'axes' : varsDict,
+            Dict = {'slhafile' : slhafile, 'axes' : varsDict, 't': dt,
                     'signal': expRes['theory prediction (fb)'],
                     'UL': expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
                     'dataset': expRes['DataSetID'] }
