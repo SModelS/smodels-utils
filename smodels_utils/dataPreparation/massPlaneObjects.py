@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 #This order can be changed using the coordinates keyword in setSources or addSource.
 allvars = x,y,z = var('x y z')
 
-     
+
 class MassPlane(object):
     """
     Holds all information related to one mass plane
@@ -34,13 +34,13 @@ class MassPlane(object):
     The variables defined in infoAttr are passed to the corresponding
     txname to be written in txname.txt
     """
-    
+
     infoAttr = ['figureUrl','dataUrl','axes']
     allowedDataLabels = ['efficiencyMap','upperLimits','expectedUpperLimits',
                          'acceptanceMap',
                         'obsExclusion','obsExclusionP1','obsExclusionM1',
                         'expExclusion','expExclusionP1','expExclusionM1']
-    
+
     def __init__(self,txDecay, massArray):
         """
         sets the branches to the given axes and initialize the mass plane related
@@ -48,14 +48,14 @@ class MassPlane(object):
         :param txDecay: object of type TxDecay
         :param massArray: the full mass array containing equations which relate the
         physical masses and the plane coordinates, using the pre-defined 'x','y',.. symbols.
-        (e.g. [[x,y],[x,y]])        
+        (e.g. [[x,y],[x,y]])
         :param lspMass: mass of lightest SUSY-particle as sympy.core.symbol.Symbol,
         containing only the variables 'x', 'y' and numbers as float
-        :param **interMasses: masses of the intermediated particles as 
+        :param **interMasses: masses of the intermediated particles as
                               sympy.core.symbol.Symbol, containing only the
                               variables 'x', 'y' and numbers as float
         """
-        
+
         self.branches = []
         self._txDecay = txDecay
         for i,brMasses in enumerate(massArray):
@@ -63,7 +63,7 @@ class MassPlane(object):
                 logger.error("Mass array must be in the format [[m1,m2,..],[m3,m4,..]]")
                 sys.exit()
             self.setBranch(branchNumber=i,branchMasses=brMasses)
-        
+
         self.axes = massArray
         #Store plane variables (x,y,..)
         xvars = []
@@ -72,8 +72,8 @@ class MassPlane(object):
                 if not xvar in xvars:
                     xvars.append(xvar)
         self.xvars = xvars #All variables used in defining the axes
-        self._exclusionCurves = []        
-         
+        self._exclusionCurves = []
+
 
 
     @classmethod
@@ -88,25 +88,25 @@ class MassPlane(object):
                       defining the mass array in terms of the x,y,.. variables
                       (e.g. [[x,y],[x,y]])
         """
-        
+
         massArray = eval(string)
         massPlane = MassPlane(txname,massArray)
-            
+
         return massPlane
-    
+
     def __str__(self):
-        return "%s" % ( self.axes )    
-        
+        return "%s" % ( self.axes )
+
     def setBranch(self,branchNumber, branchMasses):
-        
+
         """
         Set masses for branch branchNumber.
-        :param branchNumber: index of the branch        
+        :param branchNumber: index of the branch
         :param branchMasses: list containing the equations which relate the
         physical masses and the plane coordinates, using the pre-defined 'x','y',.. symbols.
-        (e.g. [x,y])        
+        (e.g. [x,y])
         """
-        
+
         if len(self.branches) <= branchNumber:
             if branchMasses == ['*']:
                 self.branches.append(WildAxes.fromConvert(branchMasses))
@@ -117,13 +117,13 @@ class MassPlane(object):
                 self.branches[branchNumber] = WildAxes.fromConvert(branchMasses)
             else:
                 self.branches[branchNumber] = Axes.fromConvert(branchMasses)
-            
+
 
     def setSources(self,dataLabels,dataFiles,dataFormats,
                    objectNames=None,indices=None,units=None,coordinates=None,scales=None):
         """
         Defines the data sources for the plane.
-        
+
         :param dataLabels: List of strings with the dataLabels
                           possible data labels are defined in allowedDataLabels
                           (e.g. efficiencyMap, upperLimits, expectedUpperLimits,...)
@@ -131,14 +131,14 @@ class MassPlane(object):
                           to the data files.
         :param dataFormats: List of strings with the file formats
                           for the data files.
-        
-        :param objectNames: List of object names stored in root-file or cMacro                         
+
+        :param objectNames: List of object names stored in root-file or cMacro
         :param indices: List of indices objects in listOfPrimitives of ROOT.TCanvas
         :param units: List of strings with units for objects (e.g. 'fb',None,'pb',...)
         :param coordinates: Lists of dictionaries with the mapping of txt file columns
-                            to the x,y,... coordinates (e.g. {x : 1, y: 2, 'value' :3})        
-        :param scales: Lists of floats to reescale the data (optional)        
-        
+                            to the x,y,... coordinates (e.g. {x : 1, y: 2, 'value' :3})
+        :param scales: Lists of floats to reescale the data (optional)
+
         """
 
         #Make sure input is consistent:
@@ -153,39 +153,39 @@ class MassPlane(object):
             elif len(allInput[i]) != len(dataFiles):
                 logger.error("Length of lists is inconsistent")
                 sys.exit()
-            
-            
+
+
         for i,dataFile in enumerate(dataFiles):
             dataLabel = allInput[1][i]
-            dataFormat = allInput[2][i]            
+            dataFormat = allInput[2][i]
             objectName = allInput[3][i]
             index = allInput[4][i]
             unit = allInput[5][i]
             coordinate = allInput[6][i]
             scale = allInput[7][i]
-            self.addSource(dataLabel,dataFile, dataFormat, 
+            self.addSource(dataLabel,dataFile, dataFormat,
                            objectName, index, unit, coordinate, scale)
 
     def addSource(self,dataLabel,dataFile,dataFormat,
                    objectName=None,index=None,unit=None,coordinateMap=None,scale=None):
         """
         Defines a single data sources for the plane.
-        
+
         :param dataLabel: Srings with the dataLabel
                           possible data labels are defined in allowedDataLabels
                           (e.g. efficiencyMap, upperLimits, expectedUpperLimits,...)
         :param dataFile: Strings with the file path to the data file.
         :param dataFormat: Strings with the file format for the data file.
-        
-        :param objectName: String with the object name stored in root-file or cMacro                         
+
+        :param objectName: String with the object name stored in root-file or cMacro
         :param index: Index for objects in listOfPrimitives of ROOT.TCanvas
         :param unit: Strings with unit for data (e.g. 'fb',None,'pb',...)
         :param coordinateMap: Dictionaries with the mapping of txt file columns
-                            to the x,y,... coordinates (e.g. {x : 0, y: 1, 'ul' :2})  
-        :param scale: Float to reescale the data                              
-        
+                            to the x,y,... coordinates (e.g. {x : 0, y: 1, 'ul' :2})
+        :param scale: Float to reescale the data
+
         """
-        
+
         dimensions = len(self.xvars)
         if not dataLabel in self.allowedDataLabels:
             logger.warning("Data label %s is not allowed and will be ignored" %dataLabel)
@@ -194,7 +194,7 @@ class MassPlane(object):
             #Define the default coordinate mapping:
             if not coordinateMap:
                 coordinateMap = dict([[xv,i] for i,xv in enumerate(allvars[:dimensions])])
-                coordinateMap['value'] = dimensions            
+                coordinateMap['value'] = dimensions
             #Initialize a data handler
             dataObject = DataHandler(dataLabel,coordinateMap,self.xvars)
         else:
@@ -203,11 +203,12 @@ class MassPlane(object):
                 coordinateMap = {x : 0, y : 1, 'value' : None}
             dataObject = ExclusionHandler(dataLabel,coordinateMap,[x,y])
             self._exclusionCurves.append(dataObject)
-        
+
+        dataObject.dataUrl = self.dataUrl
         #Set source of object
-        dataObject.setSource(dataFile, dataFormat, 
+        dataObject.setSource(dataFile, dataFormat,
                              objectName, index, unit, scale)
-        #Store it as a mass plane attribute:            
+        #Store it as a mass plane attribute:
         setattr(self,dataLabel,dataObject)
 
     def _removePoints_ ( self, points, obj ):
@@ -229,7 +230,7 @@ class MassPlane(object):
         for i in [ "efficiencyMap", "upperLimits", "expectedUpperLimits" ]:
             if hasattr ( self, i ):
                 self._removePoints_ ( points, getattr(self,i) )
-        
+
     def getParticleMasses(self,**xMass):
 
         """
@@ -239,10 +240,10 @@ class MassPlane(object):
         :return: list containing two other lists. Each list contains floats, representing
         the masses of the particles of each branch in GeV
         """
-        
+
         massArray = [br.getParticleMasses(**xMass) for br in self.branches]
         return massArray
-                  
+
     def getXYValues(self,massArray):
 
         """
@@ -256,7 +257,7 @@ class MassPlane(object):
         :return: None if mass array do not met the conditions of one branch
         else: {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
-        
+
         if len(massArray) != len(self.branches):
             logger.error("Mass array inconsistent with branches length")
             sys.exit()
@@ -267,12 +268,12 @@ class MassPlane(object):
                 return None
             for xvar,value in xyDict.items():
                 if xvar in xyArray:
-                    #Check if x,y-values given by distinct branches agree: 
-                    if xyArray[xvar] != value and (abs(xyArray[xvar]+value) == 0. 
+                    #Check if x,y-values given by distinct branches agree:
+                    if xyArray[xvar] != value and (abs(xyArray[xvar]+value) == 0.
                        or abs(xyArray[xvar]-value)/abs(xyArray[xvar]+value) > 1e-4):
                         return None
                 xyArray[xvar] = value
-        
+
         return xyArray
 
 
@@ -293,19 +294,19 @@ class Axes(object):
         :param massEqs: Full list of equations for the branch masses.
                         Each list entry must be a Equalty-object in terms of x,y,z.
         :param massVars: Full list of mass variables (sympy symbol object).
-                                
+
         """
-        
+
         if not isinstance(massEqs,list):
             logger.error("Masses must be a list")
             sys.exit()
 
         self._equations = massEqs[:] #Store equations
         self._massVars = massVars[:] #Store mass variables
-            
+
         #Already define the functions and plot dimensions:
         self._setXYFunction()
-        
+
     @classmethod
     def fromConvert(cls, massEqs):
 
@@ -317,26 +318,26 @@ class Axes(object):
         :return: Axes-object
         """
 
-                
+
         if not isinstance(massEqs,list):
             logger.error('Mass must be a list of equations')
-        
+
         #Define mass variables:
         massVars = []
-        for im in range(len(massEqs)):            
-            massVars.append(var('Mass'+string.ascii_uppercase[im]))        
-        
+        for im in range(len(massEqs)):
+            massVars.append(var('Mass'+string.ascii_uppercase[im]))
+
         #New format:
         allEqs = []
         for im,massEq in enumerate(massEqs):
             #Create mass variable (upper case for first branch and lower case for second)
-            eq = Eq(massVars[im],N(massEq,5))  
+            eq = Eq(massVars[im],N(massEq,5))
             allEqs.append(eq)
-            
+
             allEqs = sorted(allEqs, key = lambda eq: eq.args[0].name)
-        
+
         return cls(allEqs,massVars)
-        
+
     def _getMassFunction(self):
 
         """
@@ -344,7 +345,7 @@ class Axes(object):
         The input variables are the ones define in self._xvars.
         :return: lambdify function which returns the mass array given the input variables.
         """
-        
+
         #Mass variables:
         masses = self._massVars
         #Solve equation for masses
@@ -366,11 +367,11 @@ class Axes(object):
 
         if not self._equations:
             return []
-        
+
         #If mass function has not yet been created, create it now:
         if not '_massFunctions' in self.__dict__:
             self._getMassFunction()
-        
+
         #Create dictionary with input values
         xValues = {}
         for xv in self._xvars:
@@ -378,7 +379,7 @@ class Axes(object):
                 logger.error("Input variable %s missing for computing mass" %xv)
                 return None
             xValues[str(xv)] = xMass[str(xv)]
-    
+
         massArray = [mfunc(**xValues) for mfunc in self._massFunctions]
         return massArray
 
@@ -397,10 +398,10 @@ class Axes(object):
         self._nArguments = 0
         if not self._equations:
             return
-        
+
         xvars = []
-        for eq in self._equations:            
-            for v in eq.free_symbols:                
+        for eq in self._equations:
+            for v in eq.free_symbols:
                 if v in allvars and not v in xvars:
                     xvars.append(v)
 
@@ -419,9 +420,9 @@ class Axes(object):
                 logger.error("Something wrong with the result from solve: %s" %str(xy))
                 sys.exit()
             else:
-                xy = xy[0]            
+                xy = xy[0]
             #Check solution:
-            if len(xy) == nvars:                
+            if len(xy) == nvars:
                 break
             else:
                 xy = dict([[v,None] for v in xvars]) #Create dictionary with None values
@@ -431,11 +432,11 @@ class Axes(object):
                 logger.error("Could not solve the equations for the x,y,... values.\nCheck the mass plane definition.")
         self._xy = xy
         self._xvars = sorted(self._xy.keys(), key= lambda xv: str(xv))  #Variables appearing in branch in correct order
-        
+
         #Define xy function as dictionary:
         self._xyFunction = {}
         #dummify=False allows to keep MassA,MassB,... as valid argument keywords:
-        #(make sure the MassA,MassB,.. values are passed as keywords)        
+        #(make sure the MassA,MassB,.. values are passed as keywords)
         for xv in self._xvars:
             self._xyFunction[xv] = lambdify(self._massVars,xy[xv],'math',dummify=False)
         self._nArguments = nvars
@@ -448,31 +449,31 @@ class Axes(object):
         :param massArray: list containing  floats, representing
         the masses of the particles in GeV
         :return: None if the the mass array does not satify the mass equations.
-                Otherwise, returns a dictionary: 
+                Otherwise, returns a dictionary:
                 {'x' : x-value in GeV as float, 'y' : y-value in GeV as float,...}
         """
-        
+
         if not massArray:
             return {}
 
         if not '_xyFunction' in self.__dict__:
             self._setXYFunction()
-            
+
         #Define dictionary with mass variables and values
         massInput = dict([[str(self._massVars[im]),mass] for im,mass in enumerate(massArray)])
-        
+
         xValues = {}
         #Get the function for each x,y,.. variable and compute its value
         for xv,xfunc in self._xyFunction.items():
             xValues[str(xv)] = xfunc(**massInput)
-           
-        
+
+
         #Now check if the x,y,.. values computed give the massArray back:
         newMass = self.getParticleMasses(**xValues)
         for im,m in enumerate(newMass):
             if abs(m-massArray[im]) > 0.11: #Masses differ
                 return None
-        
+
         return xValues
 
     def __str__(self):
@@ -501,7 +502,7 @@ class WildAxes(Axes):
 
     def __init__(self, massEqs,massVars):
         Axes.__init__(self,massEqs,massVars)
-        
+
     @classmethod
     def fromConvert(cls, massEqs):
 
@@ -512,14 +513,14 @@ class WildAxes(Axes):
                         Each list entry must be a Equalty-object in terms of x,y,z.
         :return: Axes-object
         """
-        
+
         return cls([],[])
-        
-        
+
+
     def getXYValues(self,massArray):
-        
+
         return None
-    
+
     def getParticleMasses(self,**xMass):
-        
-        return '*'    
+
+        return '*'

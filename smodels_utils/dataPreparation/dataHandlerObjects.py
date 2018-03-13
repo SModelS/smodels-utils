@@ -302,8 +302,18 @@ class DataHandler(object):
 
         if not os.path.isfile(path):
             logger.error("File %s not found" %path)
-            print ( "source %s" % self.__dict__ )
-            sys.exit()
+            if type(self.dataUrl ) == str and os.path.basename(path) == os.path.basename ( self.dataUrl ):
+                logger.info( "But you supplied a dataUrl with same basename, so I try to fetch it" )
+                import requests
+                r = requests.get ( self.dataUrl )
+                if not r.status_code == 200:
+                    logger.error ( "retrieval failed: %d" % r.status_code )
+                    sys.exit()
+                with open ( path, "wb" ) as f:
+                    f.write ( r.content )
+                    f.close()
+            else:
+                sys.exit()
 
         if unit:
             self.unit = unit
