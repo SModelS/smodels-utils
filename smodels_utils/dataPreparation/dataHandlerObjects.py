@@ -302,6 +302,7 @@ class DataHandler(object):
 
         if not os.path.isfile(path):
             logger.error("File %s not found" %path)
+            print ( "source %s" % self.__dict__ )
             sys.exit()
 
         if unit:
@@ -560,7 +561,7 @@ class DataHandler(object):
             yAxis = hist.GetYaxis()
             yRange = range(1,yAxis.GetNbins() + 1)
             n_bins=n_bins * len(yRange )
-            print ( "n_bins=%d, n_dims=%d, xRange=%d, yRange=%d" % ( n_bins, self.dimensions, len(xRange), len(yRange) ) )
+            # print ( "n_bins=%d, n_dims=%d, xRange=%d, yRange=%d" % ( n_bins, self.dimensions, len(xRange), len(yRange) ) )
         if self.dimensions > 2:
             zAxis = hist.GetZaxis()
             zRange = range(1,zAxis.GetNbins() + 1)
@@ -584,7 +585,7 @@ class DataHandler(object):
 
 
 
-        print ( "n_bins=%d, n_dims=%d, xRange=%d" % ( n_bins, self.dimensions, len(xRange) ) )
+        # print ( "n_bins=%d, n_dims=%d, xRange=%d" % ( n_bins, self.dimensions, len(xRange) ) )
 
         for xBin in xRange:
             x = xAxis.GetBinCenter(xBin)
