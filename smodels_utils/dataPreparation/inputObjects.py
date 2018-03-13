@@ -110,7 +110,7 @@ class MetaInfoInput(Locker):
                 h=f.Get ( histoname )
                 if h: return h
                 if not "/" in histoname:
-                    logger.error ( "cannot find %s in %s" % ( histoname, f.name ) )
+                    logger.error ( "cannot find %s in %s" % (histoname, f.GetName()))
                     sys.exit()
                 tokens = histoname.split("/")
                 if not len(tokens)==2:
