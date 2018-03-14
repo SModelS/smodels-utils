@@ -295,7 +295,8 @@ class DataHandler(object):
         :param path: path to data file as string
         :param fileType: string describing type of file
         name of every public method of child-class can be used
-        :param objectName: name of object stored in root-file or cMacro,
+        :param objectName: name of object stored in root-file or cMacro, or string
+            appearing in title of csv table in a multi-table csv file.
         :param index: index of object in listOfPrimitives of ROOT.TCanvas
         :param unit: string defining unit. If None, it will use the default values.
         :param scale: float to re-escale the data.
