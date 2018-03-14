@@ -9,6 +9,7 @@
 
 """
 
+from __future__ import print_function
 import sys
 import os
 import logging
@@ -401,6 +402,43 @@ class DataHandler(object):
 
 
             yield values
+
+    def csv(self):
+        """
+        iterable method
+        preprocessing csv-files
+        floats
+
+        :yield: list with values as foat, one float for every column
+        """
+        import csv
+
+        waitFor = None
+        if hasattr ( self, "objectName" ):
+            waitFor = self.objectName
+        has_waited = False
+        if waitFor == None:
+            has_waited = True
+        with open(self.path,'r') as csvfile:
+            reader = csv.reader(filter(lambda row: row[0]!='#', csvfile))
+            for r in reader:
+                if len(r)<2:
+                    continue
+                if not has_waited:
+                    for i in r:
+                        if waitFor in i:
+                            has_waited=True
+                    continue
+                if r[0].startswith("'M("):
+                    continue
+                fr = []
+                for i in r:
+                    try:
+                        fr.append ( float(i) )
+                    except:
+                        fr.append ( i )
+                yield fr
+            csvfile.close()
 
 
     def effi(self):

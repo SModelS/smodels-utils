@@ -16,7 +16,6 @@ import ROOT
 sys.path.insert ( 0, "../../../smodels" )
 sys.path.insert ( 0, "../.." )
 from smodels.tools.smodelsLogging import logger
-from smodels.tools.statistics import upperLimit
 from smodels_utils.dataPreparation.inputObjects import MetaInfoInput,DataSetInput
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
 
