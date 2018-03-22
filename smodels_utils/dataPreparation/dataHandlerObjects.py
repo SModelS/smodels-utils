@@ -425,12 +425,17 @@ class DataHandler(object):
             for r in reader:
                 if len(r)<2:
                     continue
+                #print ( "line >>%s<< hw=%s, waitFor=>>%s<<" % ( r, has_waited, waitFor ) )
                 if not has_waited:
                     for i in r:
                         if waitFor in i:
                             has_waited=True
                     continue
+                #print ( "li 2 >>%s<< hw=%s, waitFor=>>%s<<" % ( r, has_waited, waitFor ) )
                 if r[0].startswith("'M("):
+                    if waitFor !=None and not waitFor in r[0]:
+                        #print ( "set back." )
+                        has_waited = False
                     continue
                 fr = []
                 for i in r:
@@ -438,6 +443,7 @@ class DataHandler(object):
                         fr.append ( float(i) )
                     except:
                         fr.append ( i )
+                # print ( "now yield!" )
                 yield fr
             csvfile.close()
 
