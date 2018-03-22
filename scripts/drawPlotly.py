@@ -74,7 +74,7 @@ def plotly_trisurf(x, y, z, simplices, colormap=cm.coolwarm, data=None, plot_edg
         #None separates data corresponding to two consecutive triangles
         lists_coord=[[[T[k%3][c] for k in range(4)]+[ None]   for T in tri_vertices]  for c in range(3)]
         #print ( "lists=", lists_coord )
-        #print ( "lists=", lists_coord[0] )
+        print ( "lists[0]=", lists_coord[0] )
         Xe, Ye, Ze=[reduce(lambda x,y: x+y, lists_coord[k], [] ) for k in range(3)]
 
         #define the lines to be plotted
