@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import os
 import numpy as np
@@ -10,11 +10,17 @@ import matplotlib.cm as cm
 import plotly.plotly as py
 import plotly.offline as offline
 import plotly.graph_objs as go
-from smodels.tools.physicsUnits import GeV, pb
+from smodels.tools.physicsUnits import GeV, pb, fb
 from mpl_toolkits.mplot3d import Axes3D
+import sys
+if sys.version[0]=="3":
+    from functools import reduce
 
-anaid = "CMS-SUS-13-013"
-topo = "T6ttWW"
+#anaid = "CMS-SUS-13-013"
+# topo = "T6ttWW"
+anaid = "FAKE-CMS-15-002"
+# anaid = "all"
+topo = "T1ttttoff"
 
 def map_z2color(zval, colormap, vmin, vmax):
     #map the normalized value zval to a corresponding color in the colormap
@@ -46,9 +52,11 @@ def plotly_trisurf(x, y, z, simplices, colormap=cm.coolwarm, data=None, plot_edg
     zmean=[np.mean(tri[:,2]) for tri in tri_vertices ]# mean values of z-coordinates of
                                                       #triangle vertices
     zman = []
-    for tri in tri_vertices[:10]:
+    for tri in list(tri_vertices)[:10]:
         tx,ty,tz=np.mean(tri[:,0]),np.mean(tri[:,1]),np.mean(tri[:,2])
-        v=data.getValueFor ( [ [ tx*GeV, ty*GeV, tz*GeV ], [ tx*GeV,ty*GeV, tz*GeV ] ] ).asNumber(pb)
+        v=data.getValueFor ( [ [ tx*GeV, ty*GeV ], [ tx*GeV,ty*GeV ] ] ).asNumber(pb)
+        # print ( "tx,ty,tz=",tx,ty,tz,v )
+        # v=data.getValueFor ( [ [ tx*GeV, ty*GeV, tz*GeV ], [ tx*GeV,ty*GeV, tz*GeV ] ] ) #.asNumber(pb)
         zmean.append ( v )
     #    print tri,tx,ty,tz,v
     # print len(zmean)
@@ -65,7 +73,9 @@ def plotly_trisurf(x, y, z, simplices, colormap=cm.coolwarm, data=None, plot_edg
         #define the lists Xe, Ye, Ze, of x, y, resp z coordinates of edge end points for each triangle
         #None separates data corresponding to two consecutive triangles
         lists_coord=[[[T[k%3][c] for k in range(4)]+[ None]   for T in tri_vertices]  for c in range(3)]
-        Xe, Ye, Ze=[reduce(lambda x,y: x+y, lists_coord[k]) for k in range(3)]
+        #print ( "lists=", lists_coord )
+        #print ( "lists=", lists_coord[0] )
+        Xe, Ye, Ze=[reduce(lambda x,y: x+y, lists_coord[k], [] ) for k in range(3)]
 
         #define the lines to be plotted
         lines=go.Scatter3d(x=Xe, y=Ye, z=Ze, mode='lines', name="vbdji",
@@ -93,7 +103,7 @@ def getData():
     return data
 
 def cleanPoints( data ):
-    values = eval ( data.value )
+    values = eval ( str(data.value) )
 
     ptsunits = [ x[0] for x in values ]
     Points = []
@@ -101,7 +111,10 @@ def cleanPoints( data ):
         t=[]
         for v in p:
             for v2 in v:
-                t.append ( v2.asNumber(GeV) )
+                if type(v2)==type(fb):
+                    t.append ( v2.asNumber(GeV) )
+                else:
+                    t.append ( v2 )
         Points.append ( t )
     points = np.array ( Points )
     return points
