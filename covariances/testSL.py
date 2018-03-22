@@ -4,14 +4,13 @@ from __future__ import print_function
 import sys
 import array
 import time
-import numpy
 import random
 from smodels.tools.SimplifiedLikelihoods import Model,UpperLimitComputer
 from smodels.tools.physicsUnits import fb
 import binned_model
-import ROOT
 import os
 import glob
+import numpy
 
 n_run=[0]
 
@@ -83,26 +82,27 @@ def iniNick():
     ROOT.includeQuadratic=True # False
     ROOT.outname="SL"
 
-def run( bins, rmin, rmax ):
+def runNick( bins, rmin, rmax ):
     #  from optparse import OptionParser
     #(options,args)=parser.parse_args()
+    import ROOT
     from ROOT import simplifiedLikelihoodLinear
     ROOT.outname="SL"
 
-    ROOT.RMIN= rmin ## 200. / len(bins)
+    # ROOT.RMIN= rmin ## 200. / len(bins)
     ROOT.RMAX= rmax ## 200. / len(bins)
 
     # HERE we build up the elements for the SL from a python file
     # model = __import__(options.model)
     # bins = list ( map ( int, options.model.split(",") ) )
-    print ( "bins=", bins )
+    print ( "[nick] bins=", bins )
     model = binned_model.create ( bins )
-    print ( "model=", model.name )
+    print ( "[nick] model=", model.name )
 
     # CHECK we don't go over the max
     if model.nbins > ROOT.MAXBINS: sys.exit("Too many bins (nbins > %d), you should modify MAXBINS in .C code"%ROOT.MAXBINS)
 
-    print ( "Simplified Likelihood for model file --> ", end="" )
+    print ( "[nick] Simplified Likelihood for model file --> ", end="" )
     try : print ( model.name )
     except : print ( " no named model file" )
 
@@ -120,6 +120,7 @@ def run( bins, rmin, rmax ):
     #if options.includeQuadratic: simplifiedLikelihoodQuadratic()
     #else: simplifiedLikelihoodLinear()
     ret=simplifiedLikelihoodLinear()
+    print ( "Nick reports: %s" % ret )
     Files=glob.glob("SL.root*")
     for f in Files:
         os.unlink(f)
@@ -156,13 +157,13 @@ def one_turn():
         ul10="%s %s" % (type(e), str(e) )
     t1b=time.time()
     t_marg10 = t1b-t1
-    print ( "- nicks code" )
     rmax=10.
     if type(ul)==float:
         rmax=2.*ul/100.
     nick=None
+    print ( "- nicks code with rmax=%s" % rmax )
     try:
-        nick=run( bins, rmin=-.5, rmax=rmax )
+        nick=runNick( bins, rmin=-.5, rmax=rmax )
     except Exception as e:
         print ( "Exception in Nicks code: %s" % e )
         nick=None
@@ -171,7 +172,8 @@ def one_turn():
     nickn=None
     print ( "- nicks code, narrow" )
     try:
-        nickn=run( bins, nick*.8, nick*1.2 )
+        nickn=runNick( bins, nick*.6, nick*1.3 )
+        # nickn=runNick( bins, rmin=nick*.8, rmax=nick*1.2 )
     except Exception as e:
         print ( "Exception in Nicks code: %s" % e )
         nickn="%s %s" % ( type(e), str(e) )
@@ -193,7 +195,7 @@ def one_turn():
 
 
 iniNick()
-R=10
+R=1000
 f=open("results%d.py" % R,"w")
 f.write ( "d=[" )
 for i in range(R):
