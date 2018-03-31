@@ -17,14 +17,20 @@ D=__import__("results%d" % n )
 data=D.d
 #from results20 import d as data
 
+#max number of bins
+bmax = max( [ x["nbins"] for x in data ] )
+
 xv,ym,yp,ym10,ymn=[],[],[],[],[]
-Tn,Tm,Tp,Tnn,Tm10={},{},{},{},{}
-for i in range(20):
-    Tn[i]=[]
-    Tm[i]=[]
-    Tp[i]=[]
-    Tnn[i]=[]
-    Tm10[i]=[]
+
+algos={ "nick": "k", "nickn": "k", "marg": "b", "marg10": "g", "prof": "r" }
+descs={ "nick": "Nick", "nickn": "Nick Lin", "prof": "Profile",
+        "marg": "Margin", "marg10": "Margin 10K" }
+
+T={}
+for a in algos.keys():
+    T[a]={}
+    for i in range(2,bmax+1):
+        T[a][i]=[]
 
 skip=[]
 for row in data:
@@ -33,7 +39,9 @@ for row in data:
     ulm=row["ul_marg"]
     ulm10=row["ul_marg10"]
     ulp=row["ul_prof"]
-    if type(ulm)!=float or type(ulp)!=float or type(ulnick)!=float or abs ( ulm/ulnick - 1 ) > .3:
+    if (ulp/ulnick-1)>.3:
+        print ( "Outlier found. #%d, ul(nick)=%s, ul(prof)=%s, ul(marg)=%s, r=%s" % ( row["#"], ulnick, ulp, ulm, ulp/ulnick ) )
+    if type(ulm)!=float or type(ulp)!=float or type(ulnick)!=float or abs ( ulm/ulnick - 1 ) > .3 or ulp<0.:
         skip.append( row["#"] )
         continue
     nbins =  len(row["bins"]) 
@@ -42,11 +50,9 @@ for row in data:
     yp.append ( ulp/ulnick )
     ym10.append ( ulm10/ulnick )
     ymn.append ( ulnickn/ulnick )
-    Tn[nbins].append ( row["t_nick"] )
-    Tnn[nbins].append ( row["t_nickn"] )
-    Tm10[nbins].append ( row["t_marg10"] )
-    Tm[nbins].append ( row["t_marg"] )
-    Tp[nbins].append ( row["t_prof"] )
+
+    for a in algos.keys():
+        T[a][nbins].append( row["t_%s" % a ] )
 
 print ( "skipped points %s" % skip )
 print ( "marginalizing", numpy.mean ( ym ), numpy.std ( ym ) )
@@ -57,15 +63,13 @@ plt.scatter ( [ i - .1 for i in xv ], ym )
 plt.scatter ( [ i + .1 for i in xv ], yp )
 plt.scatter ( [ i + .1 for i in xv ], ym10 )
 plt.legend ( [ "marginalizing", "profiling", "marginalizing 10K" ] )
-plt.savefig ( "comp.png" )
 plt.xlabel ( "number of signal regions" )
 plt.ylabel ( "ul / ul(nick)" )
+plt.savefig ( "comp.png" )
 plt.clf()
 fig,ax=plt.subplots()
-print ( "Tn values",len(Tn.values()) )
-print ( "Tn keys",len(Tn.keys()) )
-print ( "Tn keys",len( [ numpy.mean(x) for x in Tn.values() ] ) )
-M = max([numpy.mean(x+[0]) for x in Tm10.values()]) 
+M = max([numpy.mean(x+[0]) for x in T["marg10"].values()]) 
+print ( "max", M )
 plt.scatter ( [ i - .1 for i in xv ], [ random.uniform(0,M) for x in xv ], c='w' )
 
 legends=[]
@@ -81,11 +85,8 @@ def addLine ( X, c, legend, style='-' ):
                  linestyle=':', alpha=alpha )
     ax.add_line(lm)
 
-addLine ( Tn,  'k', "Nick" )
-addLine ( Tnn, 'k', "Nick Narrow", '-.' )
-addLine ( Tp, 'r', "Profiling" )
-addLine ( Tm, 'g', "Marginalizing" )
-addLine ( Tm10, 'cyan', "Marginal 10k" )
+for a,c in algos.items():
+    addLine( T[a], c, descs[a] )
 plt.xlabel ( "number of signal regions" )
 plt.ylabel ( "time per point [s]" )
 plt.legend (  )

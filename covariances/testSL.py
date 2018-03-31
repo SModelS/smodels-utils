@@ -47,6 +47,7 @@ def createBinnedModel(bins):
         C.append ( col )
     m = Model ( data=D, backgrounds=B, covariance=C, skewness=S,
                 efficiencies=sig, name="model%d" % n )
+    m._bins=bins
     return m
 
 def iniNick():
@@ -82,12 +83,13 @@ def iniNick():
     ROOT.includeQuadratic=True # False
     ROOT.outname="SL"
 
-def runNick( bins, rmin, rmax ):
+def runNick( bins, rmin, rmax, quadratic=True ):
     #  from optparse import OptionParser
     #(options,args)=parser.parse_args()
     import ROOT
     from ROOT import simplifiedLikelihoodLinear
     ROOT.outname="SL"
+    ROOT.includeQuadratic=quadratic
 
     # ROOT.RMIN= rmin ## 200. / len(bins)
     ROOT.RMAX= rmax ## 200. / len(bins)
@@ -126,15 +128,20 @@ def runNick( bins, rmin, rmax ):
         os.unlink(f)
     return ret
 
-def one_turn():
+def one_turn( m=None ):
+    """ run one round with model m. If none,
+        create it with random signal regions """
     n_run[0]=n_run[0]+1
     n=90
     b=range(n)
     random.shuffle ( b )
-    nn=20 ## should be n
+    nn=30 ## should be n
     nmax=int ( random.uniform(2,nn) )
     bins=b[:nmax]
-    m=createBinnedModel ( bins )
+    if not m:
+        m=createBinnedModel ( bins )
+    else:
+        bins=m._bins
     ulComp = UpperLimitComputer ( lumi = 1. / fb, ntoys=1000, cl=.95 )
     ulComp10K = UpperLimitComputer ( lumi = 1. / fb, ntoys=10000, cl=.95 )
     print ( "- Run #%d with %d bins:" % (n_run[0], len(bins)) )
@@ -172,7 +179,7 @@ def one_turn():
     nickn=None
     print ( "- nicks code, narrow" )
     try:
-        nickn=runNick( bins, nick*.6, nick*1.3 )
+        nickn=runNick( bins, nick*.6, nick*1.3, False )
         # nickn=runNick( bins, rmin=nick*.8, rmax=nick*1.2 )
     except Exception as e:
         print ( "Exception in Nicks code: %s" % e )
@@ -194,16 +201,31 @@ def one_turn():
     return ret
 
 
-iniNick()
-R=1000
-f=open("results%d.py" % R,"w")
-f.write ( "d=[" )
-for i in range(R):
-    r = one_turn()
-    if r == None:
-        continue
-    print (r)
-    f.write ( "%s,\n" % r )
-    f.flush()
-f.write ( "]\n" )
-f.close()
+if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser( description="Systematically test SL UL computer" )
+    ap.add_argument('-b', '--bins', type=str, default="",
+                    help='specify bins to be used (comma separated). If empty, choose randomly.' )
+    ap.add_argument('-N', '--nruns', type=int, default=1000,
+                    help='Number of runs. Effective only if bins is empty.' )
+    args=ap.parse_args()
+    iniNick()
+    # print ( "args.bins=", type(args.bins) )
+    if len(args.bins)>0:
+        bins=map(int,args.bins.split(","))
+        m=createBinnedModel(bins)
+        r=one_turn(m)
+        print("r=",r )
+        sys.exit()
+    R=args.nruns
+    f=open("results%d.py" % R,"w")
+    f.write ( "d=[" )
+    for i in range(R):
+        r = one_turn()
+        if r == None:
+            continue
+        print (r)
+        f.write ( "%s,\n" % r )
+        f.flush()
+    f.write ( "]\n" )
+    f.close()
