@@ -42,11 +42,13 @@ data=D.d
 #max number of bins
 bmax = max( [ x["nbins"] for x in data ] )
 
-xv,ym,yp,ym10,ymn,ym100=[],[],[],[],[],[]
+xv=[]
 
-algos={ "nick": "k", "nickn": "k", "marg": "b", "marg10": "g", "prof": "r", "marg100": "cyan" }
-descs={ "nick": "Nick", "nickn": "Nick Lin", "prof": "Profile",
-        "marg": "Margin", "marg10": "Margin 10K", "marg100": "Margin 100" }
+algos={ "nick": "k", "nickn": "k", "marg": "b", "marg10": "g", "prof": "r", 
+        "marg100": "cyan", "margl": "b", "profl": "r" }
+descs={ "nick": "Nick", "nickn": "Linear Nick", "prof": "Profile", "marg": "Margin", 
+        "marg10": "Margin 10K", "marg100": "Margin 100", "margl": "Linear Margin",
+        "profl": "Linear Profile" }
 
 R,T={},{}
 for a in algos.keys():
