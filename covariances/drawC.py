@@ -45,7 +45,7 @@ bmax = max( [ x["nbins"] for x in data ] )
 xv=[]
 
 algos={ "nick": "k", "nickn": "k", "marg": "b", "marg10": "g", "prof": "r", 
-        "marg100": "cyan", "margl": "b", "profl": "r" }
+        "marg100": "cyan", "margl": "magenta", "profl": "orange" }
 descs={ "nick": "Nick", "nickn": "Linear Nick", "prof": "Profile", "marg": "Margin", 
         "marg10": "Margin 10K", "marg100": "Margin 100", "margl": "Linear Margin",
         "profl": "Linear Profile" }
