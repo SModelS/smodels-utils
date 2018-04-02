@@ -115,7 +115,10 @@ def runNick( bins, rmin, rmax, quadratic=True ):
       ROOT.globalData[i]       = model.data[i]
       ROOT.globalBackground[i] = model.background[i]
       ROOT.globalSignal[i]     = model.signal[i]
-      if ROOT.includeQuadratic : ROOT.globalThirdMoments[i]     = model.third_moment[i]
+      if ROOT.includeQuadratic: 
+        ROOT.globalThirdMoments[i] = model.third_moment[i]
+      else: 
+        ROOT.globalThirdMoments[i] = 0.
 
     for j in range(model.nbins*model.nbins):
       ROOT.globalCovariance[j] = model.covariance[j]
@@ -191,9 +194,9 @@ def one_turn( m=None, maxbins=50 ):
     t2=time.time()
     t_nick = t2-t1b
     nickn=None
-    print ( "- nicks code, narrow" )
+    print ( "- nicks code, linear" )
     try:
-        nickn=runNick( bins, nick*.6, nick*1.3, False )
+        nickn=runNick( bins, nick*.4, nick*1.6, False )
         # nickn=runNick( bins, rmin=nick*.8, rmax=nick*1.2 )
     except Exception as e:
         print ( "Exception in Nicks code: %s" % e )
