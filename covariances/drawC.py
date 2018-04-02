@@ -8,15 +8,36 @@ from matplotlib.lines import Line2D
 import sys
 import random
 import numpy
-n=20
+n=1000
 
 if len(sys.argv)>1:
     n=int(sys.argv[1])
 
+def addLine ( X, c, legend, style='-', ul=False ):
+    l =Line2D ( list(X.keys()), [ numpy.mean(X[x]) for x in X.keys() ], c=c, linestyle=style, label=legend )
+    ax.add_line(l)
+    alpha=.5
+    if ul:
+        lp =Line2D ( list(X.keys()), [ numpy.mean(X[x])+numpy.std(X[x]) for x in X.keys() ], c=c, 
+                     linestyle=':', alpha=alpha )
+        ax.add_line(lp)
+        lm =Line2D ( list(X.keys()), [ numpy.mean(X[x])-numpy.std(X[x]) for x in X.keys() ], c=c, 
+                     linestyle=':', alpha=alpha )
+        ax.add_line(lm)
+
+def checkN ( fname ):
+    f=open(fname+".py")
+    l=f.readlines()[-1]
+    f.close()
+    if not "]" in l[-2:]:
+        f=open(fname+".py","a")
+        f.write("]\n" )
+        f.close()
+
 fname="results%d" % n
+checkN(fname )
 D=__import__( fname )
 data=D.d
-#from results20 import d as data
 
 #max number of bins
 bmax = max( [ x["nbins"] for x in data ] )
@@ -27,47 +48,38 @@ algos={ "nick": "k", "nickn": "k", "marg": "b", "marg10": "g", "prof": "r", "mar
 descs={ "nick": "Nick", "nickn": "Nick Lin", "prof": "Profile",
         "marg": "Margin", "marg10": "Margin 10K", "marg100": "Margin 100" }
 
-T={}
+R,T={},{}
 for a in algos.keys():
-    T[a]={}
+    R[a],T[a]={},{}
     for i in range(2,bmax+1):
         T[a][i]=[]
+        R[a][i]=[]
 
 skip=[]
 for row in data:
-    ulnick=row["ul_nick"] 
-    ulnickn=row["ul_nickn"] 
-    ulm=row["ul_marg"]
-    ulm10=row["ul_marg10"]
-    ulm100=row["ul_marg100"]
-    ulp=row["ul_prof"]
-    if (ulp/ulnick-1)>.3:
-        print ( "Outlier found. #%d, ul(nick)=%s, ul(prof)=%s, ul(marg)=%s, r=%s" % ( row["#"], ulnick, ulp, ulm, ulp/ulnick ) )
-    if type(ulm)!=float or type(ulp)!=float or type(ulnick)!=float or abs ( ulm/ulnick - 1 ) > .3 or ulp<0.:
-        skip.append( row["#"] )
-        continue
     nbins =  len(row["bins"]) 
     xv.append ( nbins )
-    ym.append ( ulm/ulnick )
-    yp.append ( ulp/ulnick )
-    ym10.append ( ulm10/ulnick )
-    ym100.append ( ulm100/ulnick )
-    ymn.append ( ulnickn/ulnick )
 
+    denom=row["ul_nick"]
     for a in algos.keys():
         T[a][nbins].append( row["t_%s" % a ] )
+        R[a][nbins].append( row["ul_%s" % a ] / denom )
 
-print ( "skipped points %s" % skip )
-print ( descs["marg"], numpy.mean ( ym ), numpy.std ( ym ) )
-print ( descs["prof"], numpy.mean ( yp ), numpy.std ( yp ) )
-print ( descs["marg10"], numpy.mean ( ym10 ), numpy.std ( ym10 ) )
-print ( descs["marg100"], numpy.mean ( ym100 ), numpy.std ( ym100 ) )
-print ( descs["nickn"], numpy.mean ( ymn ), numpy.std ( ymn ) )
-plt.scatter ( [ i - .1 for i in xv ], ym )
-plt.scatter ( [ i + .1 for i in xv ], yp )
-plt.scatter ( [ i + .1 for i in xv ], ym10 )
-plt.scatter ( [ i + .1 for i in xv ], ym100 )
-plt.legend ( [ descs["marg"], descs["prof"], descs["marg10"], descs["marg100"] ] )
+def mean ( Rx ):
+    x=[]
+    for k,v in Rx.items():
+        for i in v:
+            x.append ( i )
+    return numpy.mean(x), numpy.std(x)
+
+fig,ax=plt.subplots()
+#print ( "skipped points %s" % skip )
+plt.scatter ( [ i - .1 for i in xv ], [ random.uniform(.8,1.2) for x in xv ], c='w' )
+for a,c in algos.items():
+    print ( descs[a], mean ( R[a] ) )
+    if a not in [ "nickn", "marg100" ]:
+        addLine( R[a], c, descs[a], ul=True )
+plt.legend (  )
 plt.xlabel ( "number of signal regions" )
 plt.ylabel ( "ul / ul(nick)" )
 plt.savefig ( "comp.png" )
@@ -76,19 +88,6 @@ fig,ax=plt.subplots()
 M = max([numpy.mean(x+[0]) for x in T["marg10"].values()]) 
 print ( "max", M )
 plt.scatter ( [ i - .1 for i in xv ], [ random.uniform(0,M) for x in xv ], c='w' )
-
-legends=[]
-
-def addLine ( X, c, legend, style='-' ):
-    l =Line2D ( list(X.keys()), [ numpy.mean(X[x]) for x in X.keys() ], c=c, linestyle=style, label=legend )
-    ax.add_line(l)
-    alpha=.2
-    lp =Line2D ( list(X.keys()), [ numpy.mean(X[x])+numpy.std(X[x]) for x in X.keys() ], c=c, 
-                 linestyle=':', alpha=alpha )
-    ax.add_line(lp)
-    lm =Line2D ( list(X.keys()), [ numpy.mean(X[x])-numpy.std(X[x]) for x in X.keys() ], c=c, 
-                 linestyle=':', alpha=alpha )
-    ax.add_line(lm)
 
 for a,c in algos.items():
     addLine( T[a], c, descs[a] )
