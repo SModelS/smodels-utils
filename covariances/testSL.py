@@ -142,9 +142,20 @@ def one_turn( m=None ):
         m=createBinnedModel ( bins )
     else:
         bins=m._bins
+    ulComp100 = UpperLimitComputer ( lumi = 1. / fb, ntoys=100, cl=.95 )
     ulComp = UpperLimitComputer ( lumi = 1. / fb, ntoys=1000, cl=.95 )
     ulComp10K = UpperLimitComputer ( lumi = 1. / fb, ntoys=10000, cl=.95 )
     print ( "- Run #%d with %d bins:" % (n_run[0], len(bins)) )
+    print ( "- marginalizing 100" )
+    ul100 = None
+    tm=time.time()
+    try:
+        ul100 = ulComp100.ulSigma ( m ).asNumber(fb)
+    except Exception as e:
+        print ( "Exception at marginalization 100: %s" % e )
+        ul100="%s %s" % (type(e), str(e) )
+    t0=time.time()
+    t_marg100 = t0-tm
     print ( "- marginalizing" )
     ul = None
     t0=time.time()
@@ -196,7 +207,8 @@ def one_turn( m=None ):
     t3=time.time()
     t_prof = t3-t2b
     ret = { "#": n_run[0], "bins": bins, "ul_nick": 100.*nick, "t_nick": t_nick, "ul_marg10": ul10,
-            "t_marg10": t_marg10, "ul_nickn": 100.*nickn, "t_nickn": t_nickn,
+            "t_marg10": t_marg10, "ul_nickn": 100.*nickn, "t_nickn": t_nickn, "ul_marg100": ul100,
+            "t_marg100": t_marg100,
             "ul_marg": ul, "t_marg": t_marg, "ul_prof": ulP, "t_prof": t_prof, "nbins":len(bins) }
     return ret
 

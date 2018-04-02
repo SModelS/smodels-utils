@@ -13,18 +13,19 @@ n=20
 if len(sys.argv)>1:
     n=int(sys.argv[1])
 
-D=__import__("results%d" % n )
+fname="results%d" % n
+D=__import__( fname )
 data=D.d
 #from results20 import d as data
 
 #max number of bins
 bmax = max( [ x["nbins"] for x in data ] )
 
-xv,ym,yp,ym10,ymn=[],[],[],[],[]
+xv,ym,yp,ym10,ymn,ym100=[],[],[],[],[],[]
 
-algos={ "nick": "k", "nickn": "k", "marg": "b", "marg10": "g", "prof": "r" }
+algos={ "nick": "k", "nickn": "k", "marg": "b", "marg10": "g", "prof": "r", "marg100": "cyan" }
 descs={ "nick": "Nick", "nickn": "Nick Lin", "prof": "Profile",
-        "marg": "Margin", "marg10": "Margin 10K" }
+        "marg": "Margin", "marg10": "Margin 10K", "marg100": "Margin 100" }
 
 T={}
 for a in algos.keys():
@@ -38,6 +39,7 @@ for row in data:
     ulnickn=row["ul_nickn"] 
     ulm=row["ul_marg"]
     ulm10=row["ul_marg10"]
+    ulm100=row["ul_marg100"]
     ulp=row["ul_prof"]
     if (ulp/ulnick-1)>.3:
         print ( "Outlier found. #%d, ul(nick)=%s, ul(prof)=%s, ul(marg)=%s, r=%s" % ( row["#"], ulnick, ulp, ulm, ulp/ulnick ) )
@@ -49,6 +51,7 @@ for row in data:
     ym.append ( ulm/ulnick )
     yp.append ( ulp/ulnick )
     ym10.append ( ulm10/ulnick )
+    ym100.append ( ulm100/ulnick )
     ymn.append ( ulnickn/ulnick )
 
     for a in algos.keys():
@@ -58,11 +61,13 @@ print ( "skipped points %s" % skip )
 print ( descs["marg"], numpy.mean ( ym ), numpy.std ( ym ) )
 print ( descs["prof"], numpy.mean ( yp ), numpy.std ( yp ) )
 print ( descs["marg10"], numpy.mean ( ym10 ), numpy.std ( ym10 ) )
+print ( descs["marg100"], numpy.mean ( ym100 ), numpy.std ( ym100 ) )
 print ( descs["nickn"], numpy.mean ( ymn ), numpy.std ( ymn ) )
 plt.scatter ( [ i - .1 for i in xv ], ym )
 plt.scatter ( [ i + .1 for i in xv ], yp )
 plt.scatter ( [ i + .1 for i in xv ], ym10 )
-plt.legend ( [ descs["marg"], descs["prof"], descs["marg10"] ] )
+plt.scatter ( [ i + .1 for i in xv ], ym100 )
+plt.legend ( [ descs["marg"], descs["prof"], descs["marg10"], descs["marg100"] ] )
 plt.xlabel ( "number of signal regions" )
 plt.ylabel ( "ul / ul(nick)" )
 plt.savefig ( "comp.png" )
