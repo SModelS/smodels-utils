@@ -153,7 +153,7 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
         m=createBinnedModel ( bins )
     else:
         bins=m._bins
-    ret = { "#": n_run[0], "bins": bins }
+    ret = { "#": n_run[0], "bins": bins, "nbins": len(bins) }
     mc=copy.deepcopy ( m )
     mc.skewness = None
     mc.computeABC()
