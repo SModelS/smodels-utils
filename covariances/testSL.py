@@ -92,7 +92,7 @@ def runNick( bins, rmin, rmax, quadratic=True ):
     ROOT.outname="SL"
     ROOT.includeQuadratic=quadratic
 
-    # ROOT.RMIN= rmin ## 200. / len(bins)
+    ROOT.RMIN= rmin ## 200. / len(bins)
     ROOT.RMAX= rmax ## 200. / len(bins)
 
     # HERE we build up the elements for the SL from a python file
@@ -220,10 +220,10 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
         if type(ul)==float:
             r=2.*ul/100.
         ul=None
-        print ( "- nicks code, linear" )
+        print ( "- nicks code, linear, r=%s" % r )
         t0=time.time()
         try:
-            ul=100.*runNick( bins, r*.4, r*1.6, False )
+            ul=100.*runNick( bins, r*.1, r*2.1, False )
         except Exception as e:
             print ( "Exception in Nicks code: %s" % e )
             ul="%s %s" % ( type(e), str(e) )
