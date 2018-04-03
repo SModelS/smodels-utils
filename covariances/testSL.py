@@ -132,9 +132,17 @@ def runNick( bins, rmin, rmax, quadratic=True ):
         os.unlink(f)
     return ret
 
-def one_turn( m=None, maxbins=50 ):
+def one_turn( m=None, maxbins=50, algos=["all"] ):
     """ run one round with model m. If none,
         create it with random signal regions """
+
+    def runAlgo ( name ):
+        if "all" in algos:
+            return True
+        if name in algos:
+            return True
+        return False
+
     n_run[0]=n_run[0]+1
     n=90
     b=range(n)
@@ -143,100 +151,121 @@ def one_turn( m=None, maxbins=50 ):
     bins=b[:nmax]
     if not m:
         m=createBinnedModel ( bins )
-        mc=copy.deepcopy ( m )
-        mc.skewness = None
-        mc.computeABC()
     else:
         bins=m._bins
+    ret = { "#": n_run[0], "bins": bins }
+    mc=copy.deepcopy ( m )
+    mc.skewness = None
+    mc.computeABC()
     ulComp100 = UpperLimitComputer ( lumi = 1. / fb, ntoys=100, cl=.95 )
     ulComp = UpperLimitComputer ( lumi = 1. / fb, ntoys=1000, cl=.95 )
     ulComp10K = UpperLimitComputer ( lumi = 1. / fb, ntoys=10000, cl=.95 )
     print ( "- Run #%d with %d bins:" % (n_run[0], len(bins)) )
-    print ( "- marginalizing 100" )
-    ul100 = None
-    tm=time.time()
-    try:
-        ul100 = ulComp100.ulSigma ( m ).asNumber(fb)
-    except Exception as e:
-        print ( "Exception at marginalization 100: %s" % e )
-        ul100="%s %s" % (type(e), str(e) )
-    t0=time.time()
-    t_marg100 = t0-tm
-    print ( "- marginalizing" )
-    ul = None
-    t0=time.time()
-    try:
-        ul = ulComp.ulSigma ( m ).asNumber(fb)
-    except Exception as e:
-        print ( "Exception at marginalization: %s" % e )
-        ul="%s %s" % (type(e), str(e) )
-    t1=time.time()
-    t_marg = t1-t0
-    ul10=None
-    print ( "- marginalizing 10K" )
-    try:
-        ul10 = ulComp10K.ulSigma ( m ).asNumber(fb)
-    except Exception as e:
-        print ( "Exception at marginalization: %s" % e )
-        ul10="%s %s" % (type(e), str(e) )
-    t1b=time.time()
-    t_marg10 = t1b-t1
-    rmax=10.
-    if type(ul)==float:
-        rmax=2.*ul/100.
-    nick=None
-    print ( "- nicks code with rmax=%s" % rmax )
-    try:
-        nick=runNick( bins, rmin=-.5, rmax=rmax )
-    except Exception as e:
-        print ( "Exception in Nicks code: %s" % e )
-        nick=None
-    t2=time.time()
-    t_nick = t2-t1b
-    nickn=None
-    print ( "- nicks code, linear" )
-    try:
-        nickn=runNick( bins, nick*.4, nick*1.6, False )
-        # nickn=runNick( bins, rmin=nick*.8, rmax=nick*1.2 )
-    except Exception as e:
-        print ( "Exception in Nicks code: %s" % e )
-        nickn="%s %s" % ( type(e), str(e) )
-    t2b=time.time()
-    t_nickn = t2b-t2
-    print ( "- profiling" )
-    ulP = None
-    try:
-        ulP = ulComp.ulSigma ( m, marginalize=False ).asNumber(fb)
-    except Exception as e:
-        print ( "Exception at profiling: %s" % e )
-        ulP="%s %s" % (type(e), str(e) )
-    t3=time.time()
-    t_prof = t3-t2b
-    print ( "- profiling linear" )
-    ulPlin = None
-    try:
-        ulPlin = ulComp.ulSigma ( mc, marginalize=False ).asNumber(fb)
-    except Exception as e:
-        print ( "Exception at profiling: %s" % e )
-        ulPlin="%s %s" % (type(e), str(e) )
-    t4=time.time()
-    t_proflin = t4-t3
 
-    print ( "- marginalizing linear" )
-    ulMlin = None
-    try:
-        ulMlin = ulComp.ulSigma ( mc, marginalize=True ).asNumber(fb)
-    except Exception as e:
-        print ( "Exception at profiling: %s" % e )
-        ulMlin="%s %s" % (type(e), str(e) )
-    t5=time.time()
-    t_marglin = t5-t4
-    ret = { "#": n_run[0], "bins": bins, "ul_nick": 100.*nick, "t_nick": t_nick, 
-            "ul_marg10": ul10, "t_marg10": t_marg10, "ul_nickn": 100.*nickn, 
-            "t_nickn": t_nickn, "ul_marg100": ul100, "t_marg100": t_marg100, 
-            "ul_profl": ulPlin, "t_profl": t_proflin, "ul_marg": ul, "t_marg": t_marg, 
-            "ul_prof": ulP, "t_prof": t_prof, "nbins":len(bins), "t_margl": t_marglin,
-            "ul_margl": ulMlin }
+    if runAlgo ( "marg100" ):
+        print ( "- marginalizing 100" )
+        ul100 = None
+        tm=time.time()
+        try:
+            ul100 = ulComp100.ulSigma ( m ).asNumber(fb)
+        except Exception as e:
+            print ( "Exception at marginalization 100: %s" % e )
+            ul100="%s %s" % (type(e), str(e) )
+        t0=time.time()
+        t_marg100 = t0-tm
+        ret["ul_marg100"]=ul100
+        ret["t_marg100"]=t_marg100
+
+    if runAlgo ( "marg" ):
+        print ( "- marginalizing" )
+        ul = None
+        t0=time.time()
+        try:
+            ul = ulComp.ulSigma ( m ).asNumber(fb)
+        except Exception as e:
+            print ( "Exception at marginalization: %s" % e )
+            ul="%s %s" % (type(e), str(e) )
+        ret["ul_marg"]=ul
+        ret["t_marg"]=time.time()-t0
+
+    if runAlgo ( "marg10" ):
+        ul=None
+        print ( "- marginalizing 10K" )
+        t0=time.time()
+        try:
+            ul = ulComp10K.ulSigma ( m ).asNumber(fb)
+        except Exception as e:
+            print ( "Exception at marginalization: %s" % e )
+            ul="%s %s" % (type(e), str(e) )
+        ret["ul_marg10"]=ul
+        ret["t_marg10"]=time.time()-t0
+
+    if runAlgo ( "nick" ):
+        rmax=10.
+        if type(ul)==float:
+            rmax=2.*ul/100.
+        ul=None
+        print ( "- nicks code with rmax=%s" % rmax )
+        t0=time.time()
+        try:
+            ul=100.*runNick( bins, rmin=-.5, rmax=rmax )
+        except Exception as e:
+            print ( "Exception in Nicks code: %s" % e )
+            ul="Exception %s" % str(e)
+        ret["t_nick"]=time.time()-t0
+        ret["ul_nick"]=ul
+
+    if runAlgo ( "nickn" ):
+        r=10.
+        if type(ul)==float:
+            r=2.*ul/100.
+        ul=None
+        print ( "- nicks code, linear" )
+        t0=time.time()
+        try:
+            ul=100.*runNick( bins, r*.4, r*1.6, False )
+        except Exception as e:
+            print ( "Exception in Nicks code: %s" % e )
+            ul="%s %s" % ( type(e), str(e) )
+        ret["t_nickn"]=time.time()-t0
+        ret["ul_nickn"]=ul
+
+    if runAlgo("prof"):
+        print ( "- profiling" )
+        ul = None
+        t0=time.time()
+        try:
+            ul = ulComp.ulSigma ( m, marginalize=False ).asNumber(fb)
+        except Exception as e:
+            print ( "Exception at profiling: %s" % e )
+            ul="%s %s" % (type(e), str(e) )
+        ret["t_prof"]=time.time()-t0
+        ret["ul_prof"]=ul
+
+    if runAlgo("profl"):
+        print ( "- profiling linear" )
+        ul = None
+        t0=time.time()
+        try:
+            ul = ulComp.ulSigma ( mc, marginalize=False ).asNumber(fb)
+        except Exception as e:
+            print ( "Exception at profiling: %s" % e )
+            ul="%s %s" % (type(e), str(e) )
+        ret["t_profl"]=time.time()-t0
+        ret["ul_profl"]=ul
+
+    if runAlgo("margl"):
+        print ( "- marginalizing linear" )
+        ul = None
+        t0=time.time()
+        try:
+            ul = ulComp.ulSigma ( mc, marginalize=True ).asNumber(fb)
+        except Exception as e:
+            print ( "Exception at profiling: %s" % e )
+            ul="%s %s" % (type(e), str(e) )
+        ret["t_margl"]=time.time()-t0
+        ret["ul_margl"]=ul
+
     return ret
 
 
@@ -245,24 +274,27 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser( description="Systematically test SL UL computer" )
     ap.add_argument('-b', '--bins', type=str, default="",
                     help='specify bins to be used (comma separated). If empty, choose randomly.' )
+    ap.add_argument('-a', '--algos', type=str, default="all",
+                    help='specify algos, "all" for all.' )
     ap.add_argument('-m', '--max_bins', type=int, default=40,
                     help='specify maximum number of bins, when choosing randomly.' )
     ap.add_argument('-N', '--nruns', type=int, default=1000,
                     help='Number of runs. Effective only if bins is empty.' )
     args=ap.parse_args()
+    algos = [ x.strip() for x in args.algos.split(",") ]
     iniNick()
     # print ( "args.bins=", type(args.bins) )
     if len(args.bins)>0:
         bins=map(int,args.bins.split(","))
         m=createBinnedModel(bins)
-        r=one_turn(m)
+        r=one_turn(m,50,algos)
         print("r=",r )
         sys.exit()
     R=args.nruns
     f=open("results%d.py" % R,"w")
     f.write ( "d=[" )
     for i in range(R):
-        r = one_turn( None, args.max_bins )
+        r = one_turn( None, args.max_bins, algos )
         if r == None:
             continue
         print (r)

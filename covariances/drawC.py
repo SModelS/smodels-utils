@@ -44,8 +44,8 @@ bmax = max( [ x["nbins"] for x in data ] )
 
 xv=[]
 
-algos={ "nick": "k", "nickn": "k", "marg": "b", "marg10": "g", "prof": "r", 
-        "marg100": "cyan", "margl": "magenta", "profl": "orange" }
+algos={ "nick": "k", "nickn": "k", "marg": "b", "marg10": "cyan", "prof": "r", 
+        "marg100": "g", "margl": "magenta", "profl": "orange" }
 descs={ "nick": "Nick", "nickn": "Linear Nick", "prof": "Profile", "marg": "Margin", 
         "marg10": "Margin 10K", "marg100": "Margin 100", "margl": "Linear Margin",
         "profl": "Linear Profile" }
@@ -65,7 +65,11 @@ for row in data:
     denom=row["ul_nick"]
     for a in algos.keys():
         T[a][nbins].append( row["t_%s" % a ] )
-        R[a][nbins].append( row["ul_%s" % a ] / denom )
+        r = row["ul_%s" % a ]
+        if type(r)==float:
+            R[a][nbins].append( row["ul_%s" % a ] / denom )
+        else:
+            print ( "skipping ul: %s" % r )
 
 def mean ( Rx ):
     x=[]
@@ -79,7 +83,7 @@ fig,ax=plt.subplots()
 plt.scatter ( [ i - .1 for i in xv ], [ random.uniform(.8,1.2) for x in xv ], c='w' )
 for a,c in algos.items():
     print ( descs[a], mean ( R[a] ) )
-    if a not in [ "nickn", "marg100" ]:
+    if a not in [ "marg100" ]: ##  [ "nickn", "marg100" ]:
         addLine( R[a], c, descs[a], ul=True )
 plt.legend (  )
 plt.xlabel ( "number of signal regions" )
