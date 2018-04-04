@@ -163,19 +163,22 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
     ulComp10K = UpperLimitComputer ( lumi = 1. / fb, ntoys=10000, cl=.95 )
     print ( "- Run #%d with %d bins:" % (n_run[0], len(bins)) )
 
+    gul= [ None ]
+
     if runAlgo ( "marg100" ):
         print ( "- marginalizing 100" )
-        ul100 = None
+        ul = None
         tm=time.time()
         try:
-            ul100 = ulComp100.ulSigma ( m ).asNumber(fb)
+            ul = ulComp100.ulSigma ( m ).asNumber(fb)
         except Exception as e:
             print ( "Exception at marginalization 100: %s" % e )
-            ul100="%s %s" % (type(e), str(e) )
+            ul="%s %s" % (type(e), str(e) )
         t0=time.time()
         t_marg100 = t0-tm
-        ret["ul_marg100"]=ul100
+        ret["ul_marg100"]=ul
         ret["t_marg100"]=t_marg100
+        gul[0]=ul
 
     if runAlgo ( "marg" ):
         print ( "- marginalizing" )
@@ -188,6 +191,7 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
             ul="%s %s" % (type(e), str(e) )
         ret["ul_marg"]=ul
         ret["t_marg"]=time.time()-t0
+        gul[0]=ul
 
     if runAlgo ( "marg10" ):
         ul=None
@@ -200,10 +204,12 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
             ul="%s %s" % (type(e), str(e) )
         ret["ul_marg10"]=ul
         ret["t_marg10"]=time.time()-t0
+        gul[0]=ul
 
     if runAlgo ( "nick" ):
-        rmax=10.
-        if "ul" in globals().keys() and type(ul)==float:
+        rmin,rmax=-.5,100.
+        if type(gul[0])==float:
+            rmin=.2*ul
             rmax=2.*ul
         ul=None
         print ( "- nicks code with rmax=%s" % rmax )
@@ -211,11 +217,16 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
         try:
             ctr=0
             while ul==None:
-                ul=runNick( bins, rmin=-.5, rmax=rmax )
+                ul=runNick( bins, rmin=rmin, rmax=rmax )
                 delta_max = rmax - ul
+                delta_min = ul - rmin
                 if delta_max < .2:
                     print ( "hit the max on r, rerun with higher r" )
-                    rmax=4.*rmax
+                    rmin,rmax=2.*rmin,4.*rmax
+                    ul=None
+                if delta_min < .2:
+                    print ( "hit the min on r, rerun with lower r" )
+                    rmin,rmax=.15*rmin,.3*rmax
                     ul=None
                 if ctr>100:
                     # stop after 100
@@ -228,26 +239,26 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
         ret["ul_nick"]=ul
 
     if runAlgo ( "nickl" ):
-        r=2000.
-        if "ul" in globals().keys() and type(ul)==float:
-            r=2.*ul
+        rmin,rmax=2.,42.
+        if type(gul[0])==float:
+            rmin,rmax=.1*ul,2.1*ul
         ul=None
-        print ( "- nicks code, linear, r=%s" % r )
+        print ( "- nicks code, linear, rmax=%s" % rmax )
         t0=time.time()
         try:
             ctr=0
             while ul==None:
                 ctr+=1
-                ul=runNick( bins, r*.1, r*2.1, False )
-                delta_max =  r*2.1 - ul
-                delta_min =  ul - r*.1
+                ul=runNick( bins, rmin, rmax, False )
+                delta_max =  rmax - ul
+                delta_min =  ul - rmin
                 if delta_max < .2:
                     print ( "hit the max on r, rerun with higher r" )
-                    r=4.*r
+                    rmin,rmax=3.*rmin,5*rmax
                     ul=None
                 if delta_min < .2:
                     print ( "hit the minimum on r, rerun with lower r" )
-                    r=.25*r
+                    rmin,rmax=.15*rmin,.3*rmax
                     ul=None
                 if ctr>100:
                     # stop after 100
