@@ -211,7 +211,7 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
             ctr=0
             while ul==None:
                 ul=100.*runNick( bins, rmin=-.5, rmax=rmax )
-                delta_max =  rmax - ul
+                delta_max =  100.*rmax - ul
                 if delta_max < .05:
                     print ( "hit the max on r, rerun with higher r" )
                     rmax=4.*rmax
