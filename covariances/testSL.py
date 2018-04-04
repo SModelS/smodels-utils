@@ -213,7 +213,7 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
             while ul==None:
                 ul=runNick( bins, rmin=-.5, rmax=rmax )
                 delta_max = rmax - ul
-                if delta_max < .05:
+                if delta_max < .2:
                     print ( "hit the max on r, rerun with higher r" )
                     rmax=4.*rmax
                     ul=None
@@ -241,11 +241,11 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
                 ul=runNick( bins, r*.1, r*2.1, False )
                 delta_max =  r*2.1 - ul
                 delta_min =  ul - r*.1
-                if delta_max < .05:
+                if delta_max < .2:
                     print ( "hit the max on r, rerun with higher r" )
                     r=4.*r
                     ul=None
-                if delta_min < .05:
+                if delta_min < .2:
                     print ( "hit the minimum on r, rerun with lower r" )
                     r=.25*r
                     ul=None
