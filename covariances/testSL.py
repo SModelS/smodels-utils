@@ -130,6 +130,7 @@ def runNick( bins, rmin, rmax, quadratic=True ):
     Files=glob.glob("SL.root*")
     for f in Files:
         os.unlink(f)
+        pass
     return ret
 
 def one_turn( m=None, maxbins=50, algos=["all"] ):
@@ -203,15 +204,15 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
     if runAlgo ( "nick" ):
         rmax=10.
         if "ul" in globals().keys() and type(ul)==float:
-            rmax=2.*ul/100.
+            rmax=2.*ul
         ul=None
         print ( "- nicks code with rmax=%s" % rmax )
         t0=time.time()
         try:
             ctr=0
             while ul==None:
-                ul=100.*runNick( bins, rmin=-.5, rmax=rmax )
-                delta_max =  100.*rmax - ul
+                ul=runNick( bins, rmin=-.5, rmax=rmax )
+                delta_max = rmax - ul
                 if delta_max < .05:
                     print ( "hit the max on r, rerun with higher r" )
                     rmax=4.*rmax
@@ -227,9 +228,9 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
         ret["ul_nick"]=ul
 
     if runAlgo ( "nickl" ):
-        r=20.
+        r=2000.
         if "ul" in globals().keys() and type(ul)==float:
-            r=2.*ul/100.
+            r=2.*ul
         ul=None
         print ( "- nicks code, linear, r=%s" % r )
         t0=time.time()
@@ -237,9 +238,9 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
             ctr=0
             while ul==None:
                 ctr+=1
-                ul=100.*runNick( bins, r*.1, r*2.1, False )
-                delta_max =  r*210. - ul
-                delta_min =  ul - r*10.
+                ul=runNick( bins, r*.1, r*2.1, False )
+                delta_max =  r*2.1 - ul
+                delta_min =  ul - r*.1
                 if delta_max < .05:
                     print ( "hit the max on r, rerun with higher r" )
                     r=4.*r

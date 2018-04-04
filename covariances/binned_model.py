@@ -1,3 +1,7 @@
+""" creates a model by using the subset of the full model, for Nick's code.
+Also divides the signals by 100.
+"""
+
 def create ( bins ):
     import numpy as np
     import array
@@ -31,7 +35,7 @@ def create ( bins ):
     S=[]
     for i,s in enumerate(m9.signal.tolist() ):
         if i in bins:
-            S.append ( s )
+            S.append ( s/100. )
     ret.signal = array.array('d', S ) 
 
     ## first unflatten
