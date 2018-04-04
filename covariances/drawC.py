@@ -44,9 +44,9 @@ bmax = max( [ x["nbins"] for x in data ] )
 
 xv=[]
 
-algos={ "nick": "k", "nickn": "k", "marg": "b", "marg10": "cyan", "prof": "r", 
+algos={ "nick": "k", "nickl": "k", "marg": "b", "marg10": "cyan", "prof": "r", 
         "marg100": "g", "margl": "magenta", "profl": "orange" }
-descs={ "nick": "Nick", "nickn": "Linear Nick", "prof": "Profile", "marg": "Margin", 
+descs={ "nick": "Nick", "nickl": "Linear Nick", "prof": "Profile", "marg": "Margin", 
         "marg10": "Margin 10K", "marg100": "Margin 100", "margl": "Linear Margin",
         "profl": "Linear Profile" }
 
@@ -83,7 +83,7 @@ fig,ax=plt.subplots()
 plt.scatter ( [ i - .1 for i in xv ], [ random.uniform(.8,1.2) for x in xv ], c='w' )
 for a,c in algos.items():
     print ( descs[a], mean ( R[a] ) )
-    if a not in [ "marg100" ]: ##  [ "nickn", "marg100" ]:
+    if a not in [ "marg100" ]: ##  [ "nickl", "marg100" ]:
         addLine( R[a], c, descs[a], ul=True )
 plt.legend (  )
 plt.xlabel ( "number of signal regions" )

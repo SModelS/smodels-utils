@@ -202,33 +202,61 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
 
     if runAlgo ( "nick" ):
         rmax=10.
-        if type(ul)==float:
+        if "ul" in globals().keys() and type(ul)==float:
             rmax=2.*ul/100.
         ul=None
         print ( "- nicks code with rmax=%s" % rmax )
         t0=time.time()
         try:
-            ul=100.*runNick( bins, rmin=-.5, rmax=rmax )
+            ctr=0
+            while ul==None:
+                ul=100.*runNick( bins, rmin=-.5, rmax=rmax )
+                delta_max =  rmax - ul
+                if delta_max < .05:
+                    print ( "hit the max on r, rerun with higher r" )
+                    rmax=4.*rmax
+                    ul=None
+                if ctr>100:
+                    # stop after 100
+                    ul=-1.
+                    break
         except Exception as e:
             print ( "Exception in Nicks code: %s" % e )
             ul="Exception %s" % str(e)
         ret["t_nick"]=time.time()-t0
         ret["ul_nick"]=ul
 
-    if runAlgo ( "nickn" ):
-        r=10.
-        if type(ul)==float:
+    if runAlgo ( "nickl" ):
+        r=20.
+        if "ul" in globals().keys() and type(ul)==float:
             r=2.*ul/100.
         ul=None
         print ( "- nicks code, linear, r=%s" % r )
         t0=time.time()
         try:
-            ul=100.*runNick( bins, r*.1, r*2.1, False )
+            ctr=0
+            while ul==None:
+                ctr+=1
+                ul=100.*runNick( bins, r*.1, r*2.1, False )
+                delta_max =  r*210. - ul
+                delta_min =  ul - r*10.
+                if delta_max < .05:
+                    print ( "hit the max on r, rerun with higher r" )
+                    r=4.*r
+                    ul=None
+                if delta_min < .05:
+                    print ( "hit the minimum on r, rerun with lower r" )
+                    r=.25*r
+                    ul=None
+                if ctr>100:
+                    # stop after 100
+                    ul=-1.
+                    break
         except Exception as e:
             print ( "Exception in Nicks code: %s" % e )
             ul="%s %s" % ( type(e), str(e) )
-        ret["t_nickn"]=time.time()-t0
-        ret["ul_nickn"]=ul
+        ret["t_nickl"]=time.time()-t0
+        ret["ul_nickl"]=ul
 
     if runAlgo("prof"):
         print ( "- profiling" )
