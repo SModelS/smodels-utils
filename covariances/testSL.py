@@ -129,8 +129,10 @@ def runNick( bins, rmin, rmax, quadratic=True ):
     # print ( "Nick reports: %s" % ret )
     Files=glob.glob("SL.root*")
     for f in Files:
-        os.unlink(f)
-        pass
+        try:
+            os.unlink(f)
+        except Exception as e:
+            pass
     return ret
 
 def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
