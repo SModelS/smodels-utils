@@ -377,9 +377,9 @@ if __name__ == "__main__":
     iniNick()
     # print ( "args.bins=", type(args.bins) )
     if len(args.bins)>0:
-        bins=map(int,args.bins.split(","))
+        bins=list(map(int,args.bins.split(",")))
         m=createBinnedModel(bins)
-        r=one_turn(m,50,algos)
+        r=one_turn(0,m,50,algos)
         print("r=",r )
         sys.exit()
     ncpus = args.ncpus

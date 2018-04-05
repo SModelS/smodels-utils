@@ -122,7 +122,7 @@ def run ( n, selected, denominator, plot ):
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser( description="Draw various validation plots" )
-    ap.add_argument('-n', '--nruns', type=int, default=1000, 
+    ap.add_argument('-N', '--nruns', type=int, default=1000, 
                     help="which result file to access (result<nruns>.py)" )
     ap.add_argument('-a', '--algos', type=str, default="all",
                     help="which algos to plot (comma separated, or all)" )
