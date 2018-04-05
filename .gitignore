@@ -22,6 +22,7 @@ slha/T*_*_*_slhas/
 validation/twiki/twiki*.txt
 distribution/smodels-v*
 .project
+covariances/SL.root
 .pydevproject
 validation/pythia_??????.card
 *~
