@@ -58,12 +58,15 @@ void getCoefficiencts(double *A, double *B, double *C, int bin){
     double m1 = globalBackground[bin-1];
     double m2 = globalVariance[bin-1];
     double m3 = globalThirdMoments[bin-1];
-    if (8*m2*m2*m2 >= m3*m3) *C = -2*(TMath::Sqrt(2*m2))*TMath::Cos(4*pi/3. + 1./3. * TMath::ATan(TMath::Sqrt((8*m2*m2*m2-m3*m3)/(m3*m3))) );
-    else *C = -2*(TMath::Sqrt(2*m2))*TMath::CosH(-1/3.*TMath::ATanH(TMath::Sqrt((-8*m2*m2*m2+m3*m3)/(m3*m3)))) ;
-    if (m2 > (*C)*(*C)/2.) *B = TMath::Sqrt(m2-(*C)*(*C)/2.);
-    else *B = TMath::Sqrt(-m2+(*C)*(*C)/2.);
-    *A = m1 - (*C)/2.;
-    
+    //if (8*m2*m2*m2 >= m3*m3) *C = -2*(TMath::Sqrt(2*m2))*TMath::Cos(4*pi/3. + 1./3. * TMath::ATan(TMath::Sqrt((8*m2*m2*m2-m3*m3)/(m3*m3))) );
+    //else *C = -2*(TMath::Sqrt(2*m2))*TMath::CosH(-1/3.*TMath::ATanH(TMath::Sqrt((-8*m2*m2*m2+m3*m3)/(m3*m3)))) ;
+    double k = -TMath::Sign(1.,m3)*(TMath::Sqrt(2*m2));
+    double dm = TMath::Sqrt(8.*m2*m2*m2/(m3*m3) - 1. );
+    *C=-TMath::Sign(1.,m3)*(TMath::Sqrt(2*m2))*TMath::Cos(4*pi/3. + 1./3. * TMath::ATan(TMath::Sqrt(8.*m2*m2*m2/(m3*m3) - 1. )) );
+    //if (m2 > (*C)*(*C)/2.) *B = TMath::Sqrt(m2-(*C)*(*C)/2.);
+    //else *B = TMath::Sqrt(-m2+(*C)*(*C)/2.);
+    *B = TMath::Sqrt(m2-2.*(*C)*(*C));
+    *A = m1 - (*C);
 }
 void getCoefficienctsOld(double *A, double *B, double *C, int bin){
     // mean 
