@@ -35,7 +35,8 @@ def checkN ( fname ):
         return fname+"tmp"
     return fname
 
-def run ( n ):
+def run ( n, selected, denominator ):
+    """ run for results<n>.py, drawing <selected> algos. """
     fname="results%d" % n
     fname=checkN(fname )
     D=__import__( fname )
@@ -48,9 +49,11 @@ def run ( n ):
 
     algos={ "nick": "k", "nickl": "k", "marg": "b", "marg10": "cyan", "prof": "r", 
             "marg100": "g", "margl": "magenta", "profl": "orange", "nicka": "k" }
-    descs={ "nick": "Nick", "nickl": "Linear Nick", "prof": "Profile", "marg": "Margin", 
-            "marg10": "Margin 10K", "marg100": "Margin 100", "margl": "Linear Margin",
-            "profl": "Linear Profile", "nicka": "Nick Wide" }
+    descs={ "nick": "Nick", "nickl": "Linear Nick", "prof": "Profile", 
+            "marg": "Margin", "marg10": "Margin 10K", "marg100": "Margin 100", 
+            "margl": "Linear Margin", "profl": "Linear Profile", "nicka": "Nick Wide"}
+    if "all" in selected:
+        selected=algos.keys()
 
     R,T={},{}
     for a in algos.keys():
@@ -64,7 +67,7 @@ def run ( n ):
         nbins =  len(row["bins"]) 
         xv.append ( nbins )
 
-        denom=row["ul_nick"]
+        denom=row["ul_%s" % denominator ]
         for a in algos.keys():
             T[a][nbins].append( row["t_%s" % a ] )
             r = row["ul_%s" % a ]
@@ -82,10 +85,10 @@ def run ( n ):
 
     fig,ax=plt.subplots()
     #print ( "skipped points %s" % skip )
-    plt.scatter ( [ i - .1 for i in xv ], [ random.uniform(.8,1.2) for x in xv ], c='w' )
+    plt.scatter ( xv, [ random.uniform(.8,1.2) for x in xv ], c='w' )
     for a,c in algos.items():
         print ( descs[a], mean ( R[a] ) )
-        if a not in [ "marg100" ]: ##  [ "nickl", "marg100" ]:
+        if a in selected: 
             addLine( ax, R[a], c, descs[a], ul=True )
     plt.legend (  )
     plt.xlabel ( "number of signal regions" )
@@ -109,5 +112,9 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser( description="Draw various validation plots" )
     ap.add_argument('-n', '--nruns', type=int, default=1000, 
                     help="which result file to access (result<nruns>.py)" )
+    ap.add_argument('-a', '--algos', type=str, default="all",
+                    help="which algos to plot (comma separated, or all)" )
+    ap.add_argument('-d', '--denominator', type=str, default="nicka",
+                    help="which algo is the denominator" )
     args=ap.parse_args()
-    run ( args.nruns )
+    run ( args.nruns, [ x.strip() for x in args.algos.split(",") ], args.denominator )
