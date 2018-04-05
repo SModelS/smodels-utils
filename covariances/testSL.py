@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from __future__ import print_function
 import sys
@@ -14,7 +14,6 @@ import os
 import glob
 import numpy
 import copy
-import psutil
 
 def createBinnedModel(bins):
     """ create a sub-model with only <bins> (list of indices) """
@@ -146,7 +145,7 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
         return False
 
     n=90
-    b=range(n)
+    b=list(range(n))
     random.shuffle ( b )
     nmax=int ( random.uniform(2,maxbins) )
     bins=b[:nmax]
@@ -386,7 +385,7 @@ if __name__ == "__main__":
     ncpus = args.ncpus
     if ncpus == -1: ncpus = nCPUs()
     R=int(math.ceil( args.nruns / ncpus)) * ncpus
-    n= args.nruns / ncpus 
+    n= int ( args.nruns / ncpus  )
     print ( "Running %d jobs per process" % n )
     pids=[]
     for cpu in range(ncpus):
