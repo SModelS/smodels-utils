@@ -24,18 +24,19 @@ m=Model ( data=data,
           efficiencies=efficiencies,
           name="CMS-NOTE-2017-001 model" )
 
-llhdComp= LikelihoodComputer ( m )
+LC = LikelihoodComputer ( m )
 
-print ( "likelihood for no signal, marginalizing:", llhdComp.likelihood([0.]*m.n, marginalize=True ) )
-signals = [ 10.*x for x in efficiencies ]
-print ( "likelihood for given signal, profiling:", llhdComp.likelihood(signals, marginalize=False ) )
+print ( "likelihood for no signal, marginalizing:", LC.likelihood([0.]*m.n, marginalize=True ) )
+signal = [ 10.*x for x in efficiencies ]
+print ( "likelihood for given signal, profiling:", LC.likelihood(signal, marginalize=False ) )
 
 ulComp = UpperLimitComputer ( lumi = 1. / fb, cl=.95 )
 
-## compute upper limit with marginalized nuisances
-ulMarg = ulComp.ulSigma ( m )
-print ( "Marginalized UL=", ulMarg )
-
-## compute upper limit with profiled nuisances
+## compute upper limit on production cross section with profiled nuisances
 ulProf = ulComp.ulSigma ( m, marginalize=False )
 print ( "Profiled UL=", ulProf )
+
+## compute upper limit on production cross section with marginalized nuisances,
+## 5000 toys
+ulMarg = ulComp.ulSigma ( m, marginalize=True, toys=5000 )
+print ( "Marginalized UL=", ulMarg )
