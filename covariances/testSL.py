@@ -2,18 +2,19 @@
 
 from __future__ import print_function
 import sys
+import math
 import array
 import time
 import random
 from smodels.tools.SimplifiedLikelihoods import Model,UpperLimitComputer
 from smodels.tools.physicsUnits import fb
+from smodels.tools.runtime import nCPUs
 import binned_model
 import os
 import glob
 import numpy
 import copy
-
-n_run=[0]
+import psutil
 
 def createBinnedModel(bins):
     """ create a sub-model with only <bins> (list of indices) """
@@ -133,7 +134,7 @@ def runNick( bins, rmin, rmax, quadratic=True ):
         pass
     return ret
 
-def one_turn( m=None, maxbins=50, algos=["all"] ):
+def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
     """ run one round with model m. If none,
         create it with random signal regions """
 
@@ -144,7 +145,6 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
             return True
         return False
 
-    n_run[0]=n_run[0]+1
     n=90
     b=range(n)
     random.shuffle ( b )
@@ -154,14 +154,14 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
         m=createBinnedModel ( bins )
     else:
         bins=m._bins
-    ret = { "#": n_run[0], "bins": bins, "nbins": len(bins) }
+    ret = { "#": nrun, "bins": bins, "nbins": len(bins) }
     mc=copy.deepcopy ( m )
     mc.skewness = None
     mc.computeABC()
     ulComp100 = UpperLimitComputer ( lumi = 1. / fb, ntoys=100, cl=.95 )
     ulComp = UpperLimitComputer ( lumi = 1. / fb, ntoys=1000, cl=.95 )
     ulComp10K = UpperLimitComputer ( lumi = 1. / fb, ntoys=10000, cl=.95 )
-    print ( "- Run #%d with %d bins:" % (n_run[0], len(bins)) )
+    print ( "- Run #%d with %d bins:" % (nrun, len(bins)) )
 
     gul= [ None ]
     if runAlgo("profl"):
@@ -245,10 +245,10 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
         gul[0]=ul
 
     if runAlgo ( "nick" ):
-        rmin,rmax=-.5,100.
+        rmin,rmax=.5,2000.
         if type(gul[0])==float:
-            rmin=.4*ul
-            rmax=1.3*ul
+            rmin=-.5
+            rmax=5.*ul
         ul=None
         print ( "- nicks code in [%s,%s]" % ( rmin, rmax ) )
         t0=time.time()
@@ -276,13 +276,13 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
         ret["t_nick"]=time.time()-t0
         ret["ul_nick"]=ul
 
-    if runAlgo ( "nicka" ):
-        rmin,rmax=.5,2000.
+    if runAlgo ( "nickn" ):
+        rmin,rmax=-.5,100.
         if type(gul[0])==float:
-            rmin=-.5
-            rmax=5.*ul
+            rmin=.4*ul
+            rmax=1.3*ul
         ul=None
-        print ( "- nicks code in large [%s,%s]" % ( rmin, rmax ) )
+        print ( "- nicks code in narrow [%s,%s]" % ( rmin, rmax ) )
         t0=time.time()
         try:
             ctr=0
@@ -305,8 +305,9 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
         except Exception as e:
             print ( "Exception in Nicks code: %s" % e )
             ul="Exception %s" % str(e)
-        ret["t_nicka"]=time.time()-t0
-        ret["ul_nicka"]=ul
+        ret["t_nickn"]=time.time()-t0
+        ret["ul_nickn"]=ul
+
 
     if runAlgo ( "nickl" ):
         rmin,rmax=2.,42.
@@ -342,8 +343,24 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
 
     return ret
 
+def run ( R, n, sub, max_bins, algos ):
+    """ one run. """
+    import random
+    random.seed(sub)
+    f=open("results%d_%d.py" % (R,sub),"w")
+    # f.write ( "d=[" )
+    for i in range(n):
+        r = one_turn( i+n*sub, None, args.max_bins, algos )
+        if r == None:
+            continue
+        print (r)
+        f.write ( "%s,\n" % r )
+        f.flush()
+    # f.write ( "]\n" )
+    f.close()
 
 if __name__ == "__main__":
+
     import argparse
     ap = argparse.ArgumentParser( description="Systematically test SL UL computer" )
     ap.add_argument('-b', '--bins', type=str, default="",
@@ -352,6 +369,8 @@ if __name__ == "__main__":
                     help='specify algos, "all" for all.' )
     ap.add_argument('-m', '--max_bins', type=int, default=40,
                     help='specify maximum number of bins, when choosing randomly.' )
+    ap.add_argument('-c', '--ncpus', type=int, default=-1,
+                    help='specify number of CPUs, -1 means all avbailable.' )
     ap.add_argument('-N', '--nruns', type=int, default=1000,
                     help='Number of runs. Effective only if bins is empty.' )
     args=ap.parse_args()
@@ -364,15 +383,18 @@ if __name__ == "__main__":
         r=one_turn(m,50,algos)
         print("r=",r )
         sys.exit()
-    R=args.nruns
-    f=open("results%d.py" % R,"w")
-    f.write ( "d=[" )
-    for i in range(R):
-        r = one_turn( None, args.max_bins, algos )
-        if r == None:
-            continue
-        print (r)
-        f.write ( "%s,\n" % r )
-        f.flush()
-    f.write ( "]\n" )
-    f.close()
+    ncpus = args.ncpus
+    if ncpus == -1: ncpus = nCPUs()
+    R=int(math.ceil( args.nruns / ncpus)) * ncpus
+    n= args.nruns / ncpus 
+    print ( "Running %d jobs per process" % n )
+    pids=[]
+    for cpu in range(ncpus):
+        pid=os.fork()
+        if pid==0:
+            run ( R, n, cpu, args.max_bins, algos )
+            sys.exit()
+        else:
+            pids.append (pid)
+    for pid in pids:
+        os.waitpid ( pid, 0 )

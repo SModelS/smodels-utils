@@ -5,6 +5,7 @@
 from __future__ import print_function
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+import glob
 import sys
 import random
 import numpy
@@ -21,26 +22,29 @@ def addLine ( ax, X, c, legend, style='-', ul=False ):
                      linestyle=':', alpha=alpha )
         ax.add_line(lm)
 
-def checkN ( fname ):
-    f=open(fname+".py")
-    lines=f.readlines()
-    l=lines[-1]
-    f.close()
-    if not "]" in l[-2:]:
-        f=open(fname+"tmp.py","w")
-        for line in lines:
-            f.write ( line )
-        f.write("]\n" )
-        f.close()
-        return fname+"tmp"
-    return fname
-
-def run ( n, selected, denominator ):
-    """ run for results<n>.py, drawing <selected> algos. """
+def checkN ( n ):
     fname="results%d" % n
-    fname=checkN(fname )
+    files = glob.glob(fname+"_*.py")
+    lines=[]
+    for fil in files:
+        f = open ( fil, "r" )
+        for L in f.readlines():
+            lines.append ( L )
+        f.close()
+    g=open(fname+"tmp.py","w")
+    g.write ( "d=[" )
+    for line in lines:
+        g.write ( line )
+    g.write("]\n" )
+    g.close()
+    return fname+"tmp"
+
+def run ( n, selected, denominator, plot ):
+    """ run for results<n>.py, drawing <selected> algos. """
+    fname=checkN( n )
     D=__import__( fname )
     data=D.d
+    print ( "I have a total of %d points." % len(data) )
 
     #max number of bins
     bmax = max( [ x["nbins"] for x in data ] )
@@ -48,10 +52,11 @@ def run ( n, selected, denominator ):
     xv=[]
 
     algos={ "nick": "k", "nickl": "k", "marg": "b", "marg10": "cyan", "prof": "r", 
-            "marg100": "g", "margl": "magenta", "profl": "orange", "nicka": "k" }
+            "marg100": "g", "margl": "magenta", "profl": "orange", "nickn": "k" }
     descs={ "nick": "Nick", "nickl": "Linear Nick", "prof": "Profile", 
             "marg": "Margin", "marg10": "Margin 10K", "marg100": "Margin 100", 
-            "margl": "Linear Margin", "profl": "Linear Profile", "nicka": "Nick Wide"}
+            "margl": "Linear Margin", "profl": "Linear Profile", 
+            "nickn": "Nick Narrow" }
     if "all" in selected:
         selected=algos.keys()
 
@@ -67,7 +72,12 @@ def run ( n, selected, denominator ):
         nbins =  len(row["bins"]) 
         xv.append ( nbins )
 
-        denom=row["ul_%s" % denominator ]
+        denom=row["ul_nick"]
+        if denominator=="mean":
+            denom=numpy.mean ( [row["ul_nick"],row["ul_prof"],row["ul_marg10"] ] )
+        else:
+            denom= row["ul_%s" % denominator ]
+
         for a in algos.keys():
             T[a][nbins].append( row["t_%s" % a ] )
             r = row["ul_%s" % a ]
@@ -93,7 +103,8 @@ def run ( n, selected, denominator ):
     plt.legend (  )
     plt.xlabel ( "number of signal regions" )
     plt.ylabel ( "ul / ul(nick)" )
-    plt.savefig ( "comp.png" )
+    if plot in [ "all", "comp" ]:
+        plt.savefig ( "comp.png" )
     plt.clf()
     fig,ax=plt.subplots()
     M = max([numpy.mean(x+[0]) for x in T["marg10"].values()]) 
@@ -105,7 +116,8 @@ def run ( n, selected, denominator ):
     plt.xlabel ( "number of signal regions" )
     plt.ylabel ( "time per point [s]" )
     plt.legend (  )
-    fig.savefig ( "t.png" )
+    if plot in [ "all", "t" ]:
+        fig.savefig ( "t.png" )
 
 if __name__ == "__main__":
     import argparse
@@ -114,7 +126,10 @@ if __name__ == "__main__":
                     help="which result file to access (result<nruns>.py)" )
     ap.add_argument('-a', '--algos', type=str, default="all",
                     help="which algos to plot (comma separated, or all)" )
-    ap.add_argument('-d', '--denominator', type=str, default="nicka",
+    ap.add_argument('-p', '--plots', type=str, default="all",
+                    help="which plots (comp,t,all)" )
+    ap.add_argument('-d', '--denominator', type=str, default="nick",
                     help="which algo is the denominator" )
     args=ap.parse_args()
-    run ( args.nruns, [ x.strip() for x in args.algos.split(",") ], args.denominator )
+    run ( args.nruns, [ x.strip() for x in args.algos.split(",") ], 
+          args.denominator, args.plots )
