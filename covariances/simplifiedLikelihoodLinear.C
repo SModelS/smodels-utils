@@ -264,7 +264,7 @@ TH1F getData(RooWorkspace *w, TH1F *sigh){
   
 double simplifiedLikelihoodLinear(){
 	
-    std::cout << " Running SimplifiedLikelihoodLinear " << std::endl;
+    // std::cout << " Running SimplifiedLikelihoodLinear " << std::endl;
     gROOT->SetBatch(1);
     gStyle->SetOptStat(0);
     
@@ -723,12 +723,12 @@ double simplifiedLikelihoodLinear(){
 	fout->WriteTObject(can,"bestfit");
 	fout->WriteTObject(grLL,"TwoDeltaNLL");
 	fout->Close();
-	std::cout << " .... Saved stuff to " << outname << std::endl;
+	// std::cout << " .... Saved stuff to " << outname << std::endl;
 
-//	if (verb) {
+	if (verb) {
 	 if (justCalcLimit) std::cout << "Upper Limit 95% " << limit << std::endl;
 	 else std::cout << "RMIN = " << rMin << std::endl;
-//	}
+	}
 
 	return limit;
 }

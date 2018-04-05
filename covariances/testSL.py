@@ -98,16 +98,16 @@ def runNick( bins, rmin, rmax, quadratic=True ):
     # HERE we build up the elements for the SL from a python file
     # model = __import__(options.model)
     # bins = list ( map ( int, options.model.split(",") ) )
-    print ( "[nick] bins=", bins )
+    # print ( "[nick] bins=", bins )
     model = binned_model.create ( bins )
-    print ( "[nick] model=", model.name )
+    # print ( "[nick] model=", model.name )
 
     # CHECK we don't go over the max
     if model.nbins > ROOT.MAXBINS: sys.exit("Too many bins (nbins > %d), you should modify MAXBINS in .C code"%ROOT.MAXBINS)
 
-    print ( "[nick] Simplified Likelihood for model file --> ", end="" )
-    try : print ( model.name )
-    except : print ( " no named model file" )
+    # print ( "[nick] Simplified Likelihood for model file --> ", end="" )
+    #try : print ( model.name )
+    #except : print ( " no named model file" )
 
     ROOT.globalNbins      = model.nbins
 
@@ -126,7 +126,7 @@ def runNick( bins, rmin, rmax, quadratic=True ):
     #if options.includeQuadratic: simplifiedLikelihoodQuadratic()
     #else: simplifiedLikelihoodLinear()
     ret=simplifiedLikelihoodLinear()
-    print ( "Nick reports: %s" % ret )
+    # print ( "Nick reports: %s" % ret )
     Files=glob.glob("SL.root*")
     for f in Files:
         os.unlink(f)
@@ -164,6 +164,31 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
     print ( "- Run #%d with %d bins:" % (n_run[0], len(bins)) )
 
     gul= [ None ]
+    if runAlgo("profl"):
+        print ( "- profiling linear" )
+        ul = None
+        t0=time.time()
+        try:
+            ul = ulComp.ulSigma ( mc, marginalize=False ).asNumber(fb)
+        except Exception as e:
+            print ( "Exception at profiling: %s" % e )
+            ul="%s %s" % (type(e), str(e) )
+        ret["t_profl"]=time.time()-t0
+        ret["ul_profl"]=ul
+        gul[0]=ul
+
+    if runAlgo("margl"):
+        print ( "- marginalizing linear" )
+        ul = None
+        t0=time.time()
+        try:
+            ul = ulComp.ulSigma ( mc, marginalize=True ).asNumber(fb)
+        except Exception as e:
+            print ( "Exception at profiling: %s" % e )
+            ul="%s %s" % (type(e), str(e) )
+        ret["t_margl"]=time.time()-t0
+        ret["ul_margl"]=ul
+        gul[0]=ul
 
     if runAlgo ( "marg100" ):
         print ( "- marginalizing 100" )
@@ -206,13 +231,26 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
         ret["t_marg10"]=time.time()-t0
         gul[0]=ul
 
+    if runAlgo("prof"):
+        print ( "- profiling" )
+        ul = None
+        t0=time.time()
+        try:
+            ul = ulComp.ulSigma ( m, marginalize=False ).asNumber(fb)
+        except Exception as e:
+            print ( "Exception at profiling: %s" % e )
+            ul="%s %s" % (type(e), str(e) )
+        ret["t_prof"]=time.time()-t0
+        ret["ul_prof"]=ul
+        gul[0]=ul
+
     if runAlgo ( "nick" ):
         rmin,rmax=-.5,100.
         if type(gul[0])==float:
-            rmin=.2*ul
-            rmax=2.*ul
+            rmin=.4*ul
+            rmax=1.3*ul
         ul=None
-        print ( "- nicks code with rmax=%s" % rmax )
+        print ( "- nicks code in [%s,%s]" % ( rmin, rmax ) )
         t0=time.time()
         try:
             ctr=0
@@ -238,12 +276,44 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
         ret["t_nick"]=time.time()-t0
         ret["ul_nick"]=ul
 
+    if runAlgo ( "nicka" ):
+        rmin,rmax=.5,2000.
+        if type(gul[0])==float:
+            rmin=-.5
+            rmax=5.*ul
+        ul=None
+        print ( "- nicks code in large [%s,%s]" % ( rmin, rmax ) )
+        t0=time.time()
+        try:
+            ctr=0
+            while ul==None:
+                ul=runNick( bins, rmin=rmin, rmax=rmax )
+                delta_max = rmax - ul
+                delta_min = ul - rmin
+                if delta_max < .2:
+                    print ( "hit the max on r, rerun with higher r" )
+                    rmin,rmax=2.*rmin,4.*rmax
+                    ul=None
+                if delta_min < .2:
+                    print ( "hit the min on r, rerun with lower r" )
+                    rmin,rmax=.15*rmin,.3*rmax
+                    ul=None
+                if ctr>100:
+                    # stop after 100
+                    ul=-1.
+                    break
+        except Exception as e:
+            print ( "Exception in Nicks code: %s" % e )
+            ul="Exception %s" % str(e)
+        ret["t_nicka"]=time.time()-t0
+        ret["ul_nicka"]=ul
+
     if runAlgo ( "nickl" ):
         rmin,rmax=2.,42.
         if type(gul[0])==float:
             rmin,rmax=.1*ul,2.1*ul
         ul=None
-        print ( "- nicks code, linear, rmax=%s" % rmax )
+        print ( "- nicks linear code in [%s,%s]" % ( rmin, rmax ) )
         t0=time.time()
         try:
             ctr=0
@@ -269,42 +339,6 @@ def one_turn( m=None, maxbins=50, algos=["all"] ):
             ul="%s %s" % ( type(e), str(e) )
         ret["t_nickl"]=time.time()-t0
         ret["ul_nickl"]=ul
-
-    if runAlgo("prof"):
-        print ( "- profiling" )
-        ul = None
-        t0=time.time()
-        try:
-            ul = ulComp.ulSigma ( m, marginalize=False ).asNumber(fb)
-        except Exception as e:
-            print ( "Exception at profiling: %s" % e )
-            ul="%s %s" % (type(e), str(e) )
-        ret["t_prof"]=time.time()-t0
-        ret["ul_prof"]=ul
-
-    if runAlgo("profl"):
-        print ( "- profiling linear" )
-        ul = None
-        t0=time.time()
-        try:
-            ul = ulComp.ulSigma ( mc, marginalize=False ).asNumber(fb)
-        except Exception as e:
-            print ( "Exception at profiling: %s" % e )
-            ul="%s %s" % (type(e), str(e) )
-        ret["t_profl"]=time.time()-t0
-        ret["ul_profl"]=ul
-
-    if runAlgo("margl"):
-        print ( "- marginalizing linear" )
-        ul = None
-        t0=time.time()
-        try:
-            ul = ulComp.ulSigma ( mc, marginalize=True ).asNumber(fb)
-        except Exception as e:
-            print ( "Exception at profiling: %s" % e )
-            ul="%s %s" % (type(e), str(e) )
-        ret["t_margl"]=time.time()-t0
-        ret["ul_margl"]=ul
 
     return ret
 
