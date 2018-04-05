@@ -14,7 +14,6 @@ import os
 import glob
 import numpy
 import copy
-import psutil
 
 def createBinnedModel(bins):
     """ create a sub-model with only <bins> (list of indices) """
