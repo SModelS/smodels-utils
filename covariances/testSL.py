@@ -74,7 +74,7 @@ def iniNick():
     # Default ROOT minimizer options
     #ROOT.Math.MinimizerOptions.SetDefaultStrategy(2);
 
-    ROOT.RMIN=-.5
+    ROOT.RMIN=0.
 
     ROOT.gMultiplicative=False
     ROOT.ignoreCorrelation=False
@@ -244,9 +244,9 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
         gul[0]=ul
 
     if runAlgo ( "nick" ):
-        rmin,rmax=.5,2000.
+        rmin,rmax=0.,2000.
         if type(gul[0])==float:
-            rmin=-.5
+            rmin=0.
             rmax=5.*ul
         ul=None
         print ( "- nicks code in [%s,%s]" % ( rmin, rmax ) )
@@ -276,7 +276,7 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
         ret["ul_nick"]=ul
 
     if runAlgo ( "nickn" ):
-        rmin,rmax=-.5,100.
+        rmin,rmax=0.,100.
         if type(gul[0])==float:
             rmin=.4*ul
             rmax=1.3*ul
@@ -309,9 +309,9 @@ def one_turn( nrun, m=None, maxbins=50, algos=["all"] ):
 
 
     if runAlgo ( "nickl" ):
-        rmin,rmax=2.,42.
+        rmin,rmax=0.,42.
         if type(gul[0])==float:
-            rmin,rmax=.1*ul,2.1*ul
+            rmin,rmax=0.,2.1*ul
         ul=None
         print ( "- nicks linear code in [%s,%s]" % ( rmin, rmax ) )
         t0=time.time()
