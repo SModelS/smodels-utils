@@ -58,6 +58,8 @@ class MassPlane(object):
 
         self.branches = []
         self._txDecay = txDecay
+        self.figureUrl = None
+        self.dataUrl = None
         for i,brMasses in enumerate(massArray):
             if not isinstance(brMasses,list):
                 logger.error("Mass array must be in the format [[m1,m2,..],[m3,m4,..]]")
