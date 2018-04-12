@@ -19,17 +19,23 @@ X={}
 for d,l in zip (tr_data,tr_labels):
     X[Hash(d)]=l
 
+masses = [] 
+for i in range ( 600, 1000, 10 ):
+    masses.append ( [ i, 300 ] )
 
-mass = np.array( [ [ 600, 200 ], [ 700, 200 ], [ 800, 200 ], [ 900, 200 ], [ 1000, 200 ] ] )
+mass = np.array( masses )
 pX, pY, pYm = [], [], []
 
 model = keras.models.load_model ( "model.h5")
 preds=model.predict ( mass )
 
 for m,p in zip(mass,preds):
-    pX.append ( m[0] )
-    pY.append ( X[Hash(m)] )
-    pYm.append ( p )
+    try:
+        pY.append ( X[Hash(m)] )
+        pX.append ( m[0] )
+        pYm.append ( p )
+    except:
+        pass
 
 plt.scatter ( pX, pY )
 plt.scatter ( pX, pYm, c='r' )

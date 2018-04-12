@@ -16,7 +16,8 @@ import IPython
 ## define the network
 model = Sequential()
 model.add(Dense(4, activation="linear", input_shape=(2,)))
-# model.add(Dense(4, activation="relu"))
+model.add(Dense(16, activation="relu"))
+model.add(Dense(4, activation="relu"))
 model.add(Dense(1, activation="linear" ))
 model.summary()
 
@@ -47,7 +48,7 @@ cbk.set_model ( model )
 print ( "Now fitting ... " )
 history=model.fit ( np.array(tr_data), np.array(tr_labels), \
                     validation_data = ( np.array(val_data), np.array(val_labels) ), 
-                    batch_size=20, epochs=100, callbacks = [ cbk ] )
+                    batch_size=50, epochs=200, callbacks = [ cbk ] )
 print ( "Done fitting" )
 mass = np.array( [ [ 600, 200 ], [ 700, 200 ], [ 800, 200 ], [ 900, 200 ], [ 1000, 200 ] ] )
 preds=model.predict ( mass )
