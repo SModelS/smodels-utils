@@ -401,7 +401,7 @@ def create():
     isDummy()
     rmlog() ## first remove the log file
     comment ( "Creating tarball for distribution, version %s" % version )
-    # makeClean()
+    makeClean()
     rmdir()
     mkdir() ## .. then create the temp dir
     clone() ## ... clone smodels into it ...
@@ -422,5 +422,5 @@ def create():
     isDummy()
 
 if __name__ == "__main__":
-    createDBRelease()
-    # create()
+    # createDBRelease()
+    create()

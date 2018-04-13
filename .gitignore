@@ -7,10 +7,10 @@
 *.swp
 # *.tex
 *.pdf
-*.log
 *.dvi
 *.py.kate-swp
 Database.txt
+distribution/create.log
 bin/SmsDictionary
 bin/Database
 bin/ListOfAnalyses
