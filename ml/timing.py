@@ -17,7 +17,7 @@ print ( "Done loading database" )
 
 masses, massesG = [], []
 
-for i in range(100):
+for i in range(10000):
     mother = random.uniform ( 600, 1099 )
     lsp = random.uniform ( 1, mother )
     masses.append ( np.array ( [ mother, lsp ] ) )
@@ -30,17 +30,17 @@ for m in massesG:
     ul = expres.getUpperLimitFor ( txname="T1tttt", mass=m )
     ulF.append ( ul )
 t1=time.time()
+print ( "Keras batch ... " )
+ulB=model.predict ( np.array ( masses ) )
+t2=time.time()
 print ( "Keras ... " )
 for m in masses:
     pred=model.predict ( np.array ( [ m ] ) )
     ulK.append ( pred )
-t2=time.time()
-print ( "Keras batch ... " )
-ulB=model.predict ( np.array ( masses ) )
 t3=time.time()
 print ( "Keras chunk ... " )
-for i in range(10):
-    ul=model.predict ( np.array ( masses[i::10] ) )
+for i in range(100):
+    ul=model.predict ( np.array ( masses[i::100] ) )
     for x in ul:
         ulC.append ( x )
 t4=time.time()
