@@ -15,7 +15,8 @@ from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round
 from smodels.tools.physicsUnits import fb, pb, TeV, GeV
 from smodels.theory.particleNames import elementsInStr
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels.particles import rEven, ptcDic
+from smodels.particlesLoader import rEven
+from smodels.theory.particleNames import ptcDic
 from smodels.theory.element import Element
 from smodels.installation import version
 import copy
@@ -264,7 +265,7 @@ class DataSetInput(Locker):
 
     requiredAttr = ['dataType', 'dataId']
 
-    ntoys = 200000 ## number of toys in computing limits
+    ntoys = 20000 ## number of toys in computing limits
 
     def __init__(self,name):
 
@@ -308,8 +309,6 @@ class DataSetInput(Locker):
     def computeStatistics(self):
         """Compute expected and observed limits and store them """
 
-        from smodels.tools import statistics
-
         if not hasattr(databaseCreator, 'metaInfo'):
             logger.error('MetaInfo must be defined before computing statistics')
             sys.exit()
@@ -325,11 +324,11 @@ class DataSetInput(Locker):
         if isinstance(lumi,str):
             lumi = eval(lumi,{'fb':fb,'pb': pb})
         alpha = .05 
-        ul = statistics.upperLimit(self.observedN, self.expectedBG,
-                               self.bgError, lumi, alpha, self.ntoys ).asNumber(fb)
-        ulExpected = statistics.upperLimit(self.expectedBG, self.expectedBG,
-                               self.bgError, lumi, alpha, self.ntoys ).asNumber(fb)
-
+        from smodels.tools.SimplifiedLikelihoods import Model, UpperLimitComputer
+        comp = UpperLimitComputer ( lumi, self.ntoys, 1. - alpha )
+        m = Model ( self.observedN, self.expectedBG, self.bgError**2, None, 1. )
+        ul = comp.ulSigma ( m, marginalize=True ).asNumber ( fb )
+        ulExpected = comp.ulSigma ( m, marginalize=True, expected=True ).asNumber ( fb )
         #Round numbers:
         ul = round_list(ul, 3)
         ulExpected = round_list(ulExpected, 3)
