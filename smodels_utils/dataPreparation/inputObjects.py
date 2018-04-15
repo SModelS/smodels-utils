@@ -265,7 +265,7 @@ class DataSetInput(Locker):
 
     requiredAttr = ['dataType', 'dataId']
 
-    ntoys = 20000 ## number of toys in computing limits
+    ntoys = 50000 ## number of toys in computing limits
 
     def __init__(self,name):
 
@@ -323,12 +323,22 @@ class DataSetInput(Locker):
         lumi = getattr(databaseCreator.metaInfo,'lumi')
         if isinstance(lumi,str):
             lumi = eval(lumi,{'fb':fb,'pb': pb})
-        alpha = .05 
-        from smodels.tools.SimplifiedLikelihoods import Model, UpperLimitComputer
-        comp = UpperLimitComputer ( lumi, self.ntoys, 1. - alpha )
-        m = Model ( self.observedN, self.expectedBG, self.bgError**2, None, 1. )
-        ul = comp.ulSigma ( m, marginalize=True ).asNumber ( fb )
-        ulExpected = comp.ulSigma ( m, marginalize=True, expected=True ).asNumber ( fb )
+        alpha = .05
+        try:
+            from smodels.tools.SimplifiedLikelihoods import Model, UpperLimitComputer
+            comp = UpperLimitComputer ( lumi, self.ntoys, 1. - alpha )
+            m = Model ( self.observedN, self.expectedBG, self.bgError**2, None, 1. )
+            ul = comp.ulSigma ( m, marginalize=True ).asNumber ( fb )
+            ulExpected = comp.ulSigma ( m, marginalize=True, expected=True ).asNumber ( fb )
+        except ModuleNotFoundError as e:
+            ## maybe smodels < 1.1.2?
+            logger.error ( "cannot import SimplifiedLikelihoods module: %s. Maybe upgrade to smodels v1.1.2?" % e )
+						from smodels.tools import statistics
+            ul = statistics.upperLimit(self.observedN, self.expectedBG,
+                   self.bgError, lumi, alpha, self.ntoys ).asNumber(fb)
+            ulExpected = statistics.upperLimit(self.expectedBG, self.expectedBG,
+                   self.bgError, lumi, alpha, self.ntoys ).asNumber(fb)
+
         #Round numbers:
         ul = round_list(ul, 3)
         ulExpected = round_list(ulExpected, 3)
@@ -424,7 +434,7 @@ class TxNameInput(Locker):
 
     infoAttr = ['txName','constraint', 'condition','conditionDescription',
                 'susyProcess','checked','figureUrl','dataUrl','source',
-                'validated','axes','upperLimits', 
+                'validated','axes','upperLimits',
                 'efficiencyMap','expectedUpperLimits']
     internalAttr = ['_name', 'name', '_txDecay','_planes','_goodPlanes',
                     '_branchcondition', 'onShell', 'offShell', 'constraint',
