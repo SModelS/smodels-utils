@@ -179,7 +179,10 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'THSCPM7' : 'lsp chargino^pm_2 --> tau stau_1 chargino^pm_1, chargino^pm_1 --> nu stau_1',
     'THSCPM8' : 'squark --> quark quark stau_1', 'THSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp',
     'THSCPM4' : 'squark --> quark chargino_1 (quark lsp)',
-    'THSCPM6' : 'squark squark --> quark quark lsp lsp, lsp --> tau tau_1'
+    'THSCPM6' : 'squark squark --> quark quark lsp lsp, lsp --> tau tau_1',
+    'THSCPM1b' : 'stau stau --> stau stau',
+    'TRHadGM1' : 'gluino gluino --> gluino gluino',
+    'TRHadQM1' : 'stop stop --> stop stop'
 }
 
 #Name of mother particles
@@ -266,13 +269,16 @@ motherDict = {"T1" :  "gluino",
     "TScharm" :  "scharm",
     "TSlepSlep" : "slepton",
     "THSCPM1" : "chargino^pm_1",
+    "THSCPM1b" : "stau",
     "THSCPM3" : "squark",
     "THSCPM5" : "squark",
     "THSCPM7" : "lsp chargino^pm_2",
     "THSCPM8" : "squark",
     "THSCPM2" : "lsp chargino^pm_1",
     "THSCPM4" : "squark",
-    "THSCPM6" : "squark"
+    "THSCPM6" : "squark",
+    'TRHadGM1' : 'gluino',
+    'TRHadQM1' : 'stop'    
 }
 
 
