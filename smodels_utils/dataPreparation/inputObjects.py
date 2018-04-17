@@ -102,7 +102,14 @@ class MetaInfoInput(Locker):
         return metaInfo
 
     def createCovarianceMatrix ( self, filename, histoname, addOrder=True,
-                                 max_datasets=None ):
+                                 max_datasets=None, aggregate = None ):
+        """ create the covariance matrix from file <filename>, histo <histoname>,
+            allowing only a maximum of <max_datasets> datasets. If
+            aggregate is not None, aggregate the signal regions, given as 
+            a list of lists of signal region names, e.g. 
+            [ [ "sr1", "sr2" ], [ "sr3", "sr4" ] ] or as a list of lists of
+            signal numbers, e.g.  [ [ 1, 2 ], [ 3, 4 ] ]
+        """
         class CovarianceHandler:
             def getHistogram ( self, f, histoname ):
                 """ simple method to retrieve histogram
