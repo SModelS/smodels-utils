@@ -4,7 +4,11 @@
     (script needs to be run on the smodels server) """
 
 from __future__ import print_function
-import pickle, commands, os, sys, argparse
+import pickle, os, sys, argparse
+if sys.version[0]=="2":
+    import commands as CMD
+else:
+    import subprocess as CMD
 
 def main():
     ap = argparse.ArgumentParser( description="makes a database pickle file publically available (run it on the smodels)" )
@@ -12,7 +16,7 @@ def main():
     ap.add_argument('-d', '--dry_run', help='dont copy to final destionation', action="store_true" )
     ap.add_argument('-s', '--ssh', help='work remotely via ssh', action="store_true" )
     args = ap.parse_args()
-    p=open(args.filename)
+    p=open(args.filename,"rb")
     meta=pickle.load(p)
     print ( meta )
     ver = meta.databaseVersion.replace(".","") 
@@ -32,21 +36,21 @@ def main():
         cmd = "scp %s smodels.hephy.at:/nfsdata/walten/database/%s" % ( args.filename, pclfilename )
     print ( cmd )
     if not args.dry_run:
-        a=commands.getoutput ( cmd )
+        a=CMD.getoutput ( cmd )
         print ( a )
     cmd = "ln -s /nfsdata/walten/database/%s /var/www/database/" % ( pclfilename )
     if args.ssh:
         cmd = "ssh smodels.hephy.at ln -s /nfsdata/walten/database/%s /var/www/database/" % ( pclfilename )
     print ( cmd )
     if not args.dry_run:
-        a=commands.getoutput ( cmd )
+        a=CMD.getoutput ( cmd )
         print ( a )
     cmd = "cp %s /var/www/database/%s" % ( infofile, infofile )
     if args.ssh:
         cmd = "scp %s smodels.hephy.at:/var/www/database/%s" % ( infofile, infofile )
     print ( cmd )
     if not args.dry_run:
-        a=commands.getoutput ( cmd )
+        a=CMD.getoutput ( cmd )
         print ( a )
 
 main()
