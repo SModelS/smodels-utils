@@ -139,6 +139,19 @@ class MetaInfoInput(Locker):
                 logger.error ( "cannot interpret %s in %s" % \
                                 ( histoname, f.name ) )
                 sys.exit()
+                                        
+            def aggregateThis ( self, aggregate ):
+                newDSOrder=[]
+                nNew = len(aggregate)
+                newCov=[ [0.]*nNew ]*nNew
+                logger.error ( "aggregating cov matrix from %d to %d dims." % ( self.n,nNew) )
+                for ctr,agg in enumerate ( aggregate ):
+                    newDSOrder.append ( "ar%d" % ctr )
+                    V=0.
+                    for i,a in enumerate(agg):
+                        newCov[ctr][ctr]+=self.covariance[a][a]
+                self.covariance=newCov
+                self.datasetOrder=newDSOrder
 
             def __init__ ( self, filename, histoname, max_datasets=None ):
                 import ROOT
@@ -161,6 +174,11 @@ class MetaInfoInput(Locker):
                            el = 1e-5
                         row.append ( el )
                     self.covariance.append ( row )
+
+                if aggregate != None:
+                    ## aggregate the stuff
+                    self.aggregateThis ( aggregate )
+                                
 
         handler = CovarianceHandler ( filename, histoname, max_datasets )
         if addOrder:
@@ -340,7 +358,7 @@ class DataSetInput(Locker):
         except ModuleNotFoundError as e:
             ## maybe smodels < 1.1.2?
             logger.error ( "cannot import SimplifiedLikelihoods module: %s. Maybe upgrade to smodels v1.1.2?" % e )
-						from smodels.tools import statistics
+            from smodels.tools import statistics
             ul = statistics.upperLimit(self.observedN, self.expectedBG,
                    self.bgError, lumi, alpha, self.ntoys ).asNumber(fb)
             ulExpected = statistics.upperLimit(self.expectedBG, self.expectedBG,

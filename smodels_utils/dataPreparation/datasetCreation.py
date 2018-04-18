@@ -23,7 +23,8 @@ class DatasetsFromLatex:
     """
     class that produces the datasets from LateX table
     """
-    def __init__( self, texfile, max_datasets=None, c_obs=5, c_bg=6, ds_name="sr#0"):
+    def __init__( self, texfile, max_datasets=None, c_obs=5, c_bg=6, ds_name="sr#0",
+                  aggregate = None ):
         """
         :param texfile: file to parse
         :param max_datasets: consider a maximum of n datasets
@@ -32,12 +33,15 @@ class DatasetsFromLatex:
         :param ds_name: name of datasets, using #n as placeholders for value of
                         nth column. If ds_name is an integer, interpret it as
                         column number.
+        :param aggregate: aggregate signal regions, given by indices, e.g.
+         [[0,1,2],[3,4]] or signal region names, e.g.[["sr0","sr1"],["sr2"]].
         """
         self.texfile = texfile
         self.max_datasets = max_datasets
         self.c_obs = c_obs
         self.c_bg = c_bg
         self.ds_name = ds_name
+        self.aggregate = aggregate
         self.counter = 0
         self.datasetOrder = []
         self.create()
@@ -88,7 +92,43 @@ class DatasetsFromLatex:
         bgerr = max ( tot_errs )
         return bg,bgerr
 
+    def _nextAggregate ( self ):
+        """ return next aggregate dataset. """
+        if self.max_datasets and self.counter >= self.max_datasets:
+            # we are told not to produce more
+            raise StopIteration()
+        try:
+            line = ""
+            while len(line)==0:
+                line = self.clean ( self.lines.pop(0) )
+        except IndexError as e:
+            raise StopIteration()
+        tokens = line.split ( "&" )
+        binnr = self.counter
+        try:
+            binnr = int ( tokens[0] )
+        except Exception as e:
+            pass
+        nobs = int ( tokens[self.c_obs] )
+        sbg = tokens[self.c_bg].strip()
+        bg, bgerr = self.getBGAndError ( sbg )
+        name = "ar%d" % binnr 
+        dataId = self.ds_name
+        for i,token in enumerate ( tokens ):
+            ctoken = token.strip()
+            ctoken = ctoken.replace ( "-", "_" )
+            dataId = dataId.replace ( "#%d" % i, ctoken )
+        dataset = DataSetInput ( name )
+        dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
+            expectedBG=bg, bgError=bgerr )
+        self.counter += 1
+        self.datasetOrder.append ( '"%s"' % dataId )
+        return dataset
+
     def __next__ ( self ):
+        """ return next dataset. """
+        if self.aggregate != None:
+            return self._nextAggregate()
         if self.max_datasets and self.counter >= self.max_datasets:
             # we are told not to produce more
             raise StopIteration()
