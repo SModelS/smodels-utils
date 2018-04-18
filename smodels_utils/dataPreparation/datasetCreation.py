@@ -51,6 +51,7 @@ class DatasetsFromLatex:
         f = open ( self.texfile )
         self.lines = f.readlines()
         f.close()
+        self.createAllDatasets()
 
     def setDataSetOrder ( self, info ):
         """ set the datasetOrder for the covariance matrix.
@@ -97,33 +98,49 @@ class DatasetsFromLatex:
         if self.max_datasets and self.counter >= self.max_datasets:
             # we are told not to produce more
             raise StopIteration()
-        try:
-            line = ""
-            while len(line)==0:
-                line = self.clean ( self.lines.pop(0) )
-        except IndexError as e:
+        if self.max_datasets and self.counter >= self.max_datasets:
+            # we are told not to produce more
             raise StopIteration()
-        tokens = line.split ( "&" )
-        binnr = self.counter
-        try:
-            binnr = int ( tokens[0] )
-        except Exception as e:
-            pass
-        nobs = int ( tokens[self.c_obs] )
-        sbg = tokens[self.c_bg].strip()
-        bg, bgerr = self.getBGAndError ( sbg )
-        name = "ar%d" % binnr 
-        dataId = self.ds_name
-        for i,token in enumerate ( tokens ):
-            ctoken = token.strip()
-            ctoken = ctoken.replace ( "-", "_" )
-            dataId = dataId.replace ( "#%d" % i, ctoken )
-        dataset = DataSetInput ( name )
-        dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
-            expectedBG=bg, bgError=bgerr )
-        self.counter += 1
-        self.datasetOrder.append ( '"%s"' % dataId )
-        return dataset
+        if len(self.datasets)==0:
+            raise StopIteration()
+        self.counter+=1
+        return self.datasets.pop(0)
+
+    def createAllDatasets ( self ):
+        """ create all datasets in a single go. makes aggregation easier. """
+        logger.info ( "now creating all datasets" )
+        self.datasets = []
+        counter=0
+        for l in self.lines:
+            line = self.clean ( l )
+            if line == "":
+                continue
+            tokens = line.split ( "&" )
+            binnr = counter
+            try:
+                binnr = int ( tokens[0] )
+            except Exception as e:
+                pass
+            nobs = int ( tokens[self.c_obs] )
+            sbg = tokens[self.c_bg].strip()
+            bg, bgerr = self.getBGAndError ( sbg )
+            name = "sr%d" % binnr 
+            dataId = self.ds_name
+            for i,token in enumerate ( tokens ):
+                ctoken = token.strip()
+                ctoken = ctoken.replace ( "-", "_" )
+                dataId = dataId.replace ( "#%d" % i, ctoken )
+            dataset = DataSetInput ( name )
+            dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
+                expectedBG=bg, bgError=bgerr )
+            counter+=1
+            self.datasetOrder.append ( '"%s"' % dataId )
+            self.datasets.append ( dataset )
+        if self.aggregate != None:
+            self.origDatasetOrder = self.datasetOrder
+            dsorder = [ '"ar%d"' % x for x in range(len(self.aggregate)) ]
+            self.datasetOrder = dsorder
+
 
     def __next__ ( self ):
         """ return next dataset. """
@@ -132,33 +149,10 @@ class DatasetsFromLatex:
         if self.max_datasets and self.counter >= self.max_datasets:
             # we are told not to produce more
             raise StopIteration()
-        try:
-            line = ""
-            while len(line)==0:
-                line = self.clean ( self.lines.pop(0) )
-        except IndexError as e:
+        if len(self.datasets)==0:
             raise StopIteration()
-        tokens = line.split ( "&" )
-        binnr = self.counter
-        try:
-            binnr = int ( tokens[0] )
-        except Exception as e:
-            pass
-        nobs = int ( tokens[self.c_obs] )
-        sbg = tokens[self.c_bg].strip()
-        bg, bgerr = self.getBGAndError ( sbg )
-        name = "sr%d" % binnr 
-        dataId = self.ds_name
-        for i,token in enumerate ( tokens ):
-            ctoken = token.strip()
-            ctoken = ctoken.replace ( "-", "_" )
-            dataId = dataId.replace ( "#%d" % i, ctoken )
-        dataset = DataSetInput ( name )
-        dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
-            expectedBG=bg, bgError=bgerr )
-        self.counter += 1
-        self.datasetOrder.append ( '"%s"' % dataId )
-        return dataset
+        self.counter+=1
+        return self.datasets.pop(0)
             
 class DatasetsFromRoot:
     """
