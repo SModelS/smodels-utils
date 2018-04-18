@@ -70,6 +70,83 @@ class Locker(object):
 
         return self.infoAttr + self.internalAttr + self.requiredAttr
 
+class CovarianceHandler:
+    def __init__ ( self, filename, histoname, max_datasets=None,
+                   aggregate = None ):
+        import ROOT
+        f=ROOT.TFile ( filename )
+        h=self.getHistogram ( f, histoname )
+        xaxis = h.GetXaxis()
+        self.n=h.GetNbinsX()+1
+        if max_datasets:
+            self.n=min(max_datasets+1,self.n)
+        self.datasetOrder = []
+        self.covariance = []
+        for i in range ( 1, self.n ):
+            self.datasetOrder.append ( xaxis.GetBinLabel(i) )
+            row = []
+            for j in range ( 1, self.n ):
+                el = h.GetBinContent ( i, j )
+                if i==j and el < 1e-5:
+                   logger.error ( "variance in the covariance matrix at position %d has a very small (%g) value" % (i,el) )
+                   logger.error ( "will set it to 1e-5" )
+                   el = 1e-5
+                row.append ( el )
+            self.covariance.append ( row )
+
+        if aggregate != None:
+            ## aggregate the stuff
+            self.aggregateThis ( aggregate )
+
+    def aggregateThis ( self, aggregate ):
+        newDSOrder=[]
+        nNew = len(aggregate)
+        row = [0.]*nNew
+        newCov = []
+        for i in range(nNew):
+            newCov.append ( copy.deepcopy(row) )
+        logger.error ( "aggregating cov matrix from %d to %d dims." % ( self.n,nNew) )
+        for ctr,agg in enumerate ( aggregate ):
+            newDSOrder.append ( "ar%d" % ctr )
+            V=0.
+            newCov[ctr][ctr]=1.
+            #for i,a in enumerate(agg):
+            #    newCov[ctr][ctr]+=self.covariance[a][a]
+        self.covariance=newCov
+        self.datasetOrder=newDSOrder
+        logger.error("datasetOrder %s" % self.datasetOrder )
+
+    def getHistogram ( self, f, histoname ):
+        """ simple method to retrieve histogram
+        :param f: filehandle
+        """
+        h=f.Get ( histoname )
+        if h: return h
+        if not "/" in histoname:
+            logger.error ( "cannot find %s in %s" % (histoname, f.GetName()))
+            sys.exit()
+        tokens = histoname.split("/")
+        if not len(tokens)==2:
+            logger.error ( "cannot interpret histoname %s in %s" % \
+                            ( histoname, f.name ) )
+            sys.exit()
+        c= f.Get ( tokens[0] )
+        if not c:
+            logger.error ( "cannot retrieve %s from %s" % \
+                            ( histoname, f.name ) )
+            sys.exit()
+        if c.ClassName() == "TCanvas":
+            h=c.GetPrimitive ( tokens[1] )
+            if h: return h
+            logger.error ( "cannot retrieve %s from %s" % \
+                            ( histoname, f.name ) )
+            sys.exit()
+        logger.error ( "cannot interpret %s in %s" % \
+                        ( histoname, f.name ) )
+        sys.exit()
+
+
+
 class MetaInfoInput(Locker):
     """Holds all informations related to the publication
     (publication means: physic summary note or conference note)
@@ -105,86 +182,18 @@ class MetaInfoInput(Locker):
                                  max_datasets=None, aggregate = None ):
         """ create the covariance matrix from file <filename>, histo <histoname>,
             allowing only a maximum of <max_datasets> datasets. If
-            aggregate is not None, aggregate the signal regions, given as 
-            a list of lists of signal region names, e.g. 
+            aggregate is not None, aggregate the signal regions, given as
+            a list of lists of signal region names, e.g.
             [ [ "sr1", "sr2" ], [ "sr3", "sr4" ] ] or as a list of lists of
             signal numbers, e.g.  [ [ 1, 2 ], [ 3, 4 ] ]
         """
-        class CovarianceHandler:
-            def getHistogram ( self, f, histoname ):
-                """ simple method to retrieve histogram
-                :param f: filehandle
-                """
-                h=f.Get ( histoname )
-                if h: return h
-                if not "/" in histoname:
-                    logger.error ( "cannot find %s in %s" % (histoname, f.GetName()))
-                    sys.exit()
-                tokens = histoname.split("/")
-                if not len(tokens)==2:
-                    logger.error ( "cannot interpret histoname %s in %s" % \
-                                    ( histoname, f.name ) )
-                    sys.exit()
-                c= f.Get ( tokens[0] )
-                if not c:
-                    logger.error ( "cannot retrieve %s from %s" % \
-                                    ( histoname, f.name ) )
-                    sys.exit()
-                if c.ClassName() == "TCanvas":
-                    h=c.GetPrimitive ( tokens[1] )
-                    if h: return h
-                    logger.error ( "cannot retrieve %s from %s" % \
-                                    ( histoname, f.name ) )
-                    sys.exit()
-                logger.error ( "cannot interpret %s in %s" % \
-                                ( histoname, f.name ) )
-                sys.exit()
-                                        
-            def aggregateThis ( self, aggregate ):
-                newDSOrder=[]
-                nNew = len(aggregate)
-                newCov=[ [0.]*nNew ]*nNew
-                logger.error ( "aggregating cov matrix from %d to %d dims." % ( self.n,nNew) )
-                for ctr,agg in enumerate ( aggregate ):
-                    newDSOrder.append ( "ar%d" % ctr )
-                    V=0.
-                    for i,a in enumerate(agg):
-                        newCov[ctr][ctr]+=self.covariance[a][a]
-                self.covariance=newCov
-                self.datasetOrder=newDSOrder
 
-            def __init__ ( self, filename, histoname, max_datasets=None ):
-                import ROOT
-                f=ROOT.TFile ( filename )
-                h=self.getHistogram ( f, histoname )
-                xaxis = h.GetXaxis()
-                self.n=h.GetNbinsX()+1
-                if max_datasets:
-                    self.n=min(max_datasets+1,self.n)
-                self.datasetOrder = []
-                self.covariance = []
-                for i in range ( 1, self.n ):
-                    self.datasetOrder.append ( xaxis.GetBinLabel(i) )
-                    row = []
-                    for j in range ( 1, self.n ):
-                        el = h.GetBinContent ( i, j )
-                        if i==j and el < 1e-5:
-                           logger.error ( "variance in the covariance matrix at position %d has a very small (%g) value" % (i,el) )
-                           logger.error ( "will set it to 1e-5" )
-                           el = 1e-5
-                        row.append ( el )
-                    self.covariance.append ( row )
-
-                if aggregate != None:
-                    ## aggregate the stuff
-                    self.aggregateThis ( aggregate )
-                                
-
-        handler = CovarianceHandler ( filename, histoname, max_datasets )
+        handler = CovarianceHandler ( filename, histoname, max_datasets, aggregate )
         if addOrder:
             self.datasetOrder = ", ".join ( [ '"%s"' % x for x in  handler.datasetOrder ] )
         else:
             self.datasetOrder = ", ".join ( [ '"sr%d"' % (x) for x in range ( handler.n-1 ) ] )
+        print ( "the handlers cov=",len(handler.covariance) )
         self.covariance = handler.covariance
         if True: ## pretty print
             self.covariance = "["
