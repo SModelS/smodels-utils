@@ -365,7 +365,10 @@ class DatabaseCreator(list):
                     m = m + 'Reset the validated fields (y/n)?: '
                     answer = 'n'
                     try:
-                        answer = input(m)
+                        if "SMODELS_RESETVALIDATION" in os.environ.keys():
+                            answer = 'y'
+                        else:
+                            answer = input(m)
                     except NameError as e:
                         answer = input(m)
                     if answer == 'y' or answer == 'n': break

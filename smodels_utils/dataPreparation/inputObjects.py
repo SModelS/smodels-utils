@@ -105,7 +105,7 @@ class CovarianceHandler:
         newCov = []
         for i in range(nNew):
             newCov.append ( copy.deepcopy(row) )
-        logger.error ( "aggregating cov matrix from %d to %d dims." % ( self.n,nNew) )
+        #logger.error ( "aggregating cov matrix from %d to %d dims." % ( self.n,nNew) )
         for ctr,agg in enumerate ( aggregate ):
             newDSOrder.append ( "ar%d" % ctr )
             V=0.
@@ -114,7 +114,7 @@ class CovarianceHandler:
             #    newCov[ctr][ctr]+=self.covariance[a][a]
         self.covariance=newCov
         self.datasetOrder=newDSOrder
-        logger.error("datasetOrder %s" % self.datasetOrder )
+        #logger.error("datasetOrder %s" % self.datasetOrder )
 
     def getHistogram ( self, f, histoname ):
         """ simple method to retrieve histogram
@@ -193,7 +193,7 @@ class MetaInfoInput(Locker):
             self.datasetOrder = ", ".join ( [ '"%s"' % x for x in  handler.datasetOrder ] )
         else:
             self.datasetOrder = ", ".join ( [ '"sr%d"' % (x) for x in range ( handler.n-1 ) ] )
-        print ( "the handlers cov=",len(handler.covariance) )
+        # print ( "the handlers cov=",len(handler.covariance) )
         self.covariance = handler.covariance
         if True: ## pretty print
             self.covariance = "["
