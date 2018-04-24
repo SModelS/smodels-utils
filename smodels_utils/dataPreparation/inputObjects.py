@@ -97,6 +97,14 @@ class CovarianceHandler:
         if aggregate != None:
             ## aggregate the stuff
             self.aggregateThis ( aggregate )
+    
+    def computeAggCov ( self, agg1, agg2 ):
+        """ compute the covariance between agg1 and agg2 """
+        C=0.
+        for i in agg1:
+            for j in agg2:
+                C+=self.covariance[i][j]
+        return C
 
     def aggregateThis ( self, aggregate ):
         newDSOrder=[]
@@ -111,11 +119,14 @@ class CovarianceHandler:
             newDSOrder.append ( "ar%d" % ctr )
             V=0.
             for i in agg:
-                V+=self.covariance[i][i]
                 for j in agg:
-                    if j!=i:
-                        V+=self.covariance[i][j]
+                    V+=self.covariance[i][j]
             newCov[ctr][ctr]=V
+            for ctr2,agg2 in enumerate ( aggregate ):
+                if ctr == ctr2: continue
+                cov = self.computeAggCov ( agg, agg2 ) 
+                newCov[ctr][ctr2]=cov
+
             #for i,a in enumerate(agg):
             #    newCov[ctr][ctr]+=self.covariance[a][a]
         self.covariance=newCov

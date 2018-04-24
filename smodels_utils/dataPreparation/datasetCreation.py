@@ -142,12 +142,15 @@ class DatasetsFromLatex:
             aggregated += ds.dataId + "+"
         newds.observedN = observedN
         newds.expectedBG = expectedBG
-        logger.error ( "FIXME the bg error is still wrong." )
-        newds.bgError = math.sqrt ( bgError2 )
+        oldBgError = math.sqrt ( bgError2 )
+        bgErr2 = eval(databaseCreator.metaInfo.covariance)[ctr][ctr]
+        newds.bgError = math.sqrt ( bgErr2 )
+        if abs ( oldBgError - newds.bgError ) / newds.bgError > .2:
+            logger.info ( "directly computed error and error from covariance vary greatly.!" )
         ntoys, alpha = 50000, .05
         lumi = eval ( databaseCreator.metaInfo.lumi )
         comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
-        m = Model ( newds.observedN, newds.expectedBG, newds.bgError**2, None, 1. )
+        m = Model ( newds.observedN, newds.expectedBG, bgErr2, None, 1. )
         ul = comp.ulSigma ( m, marginalize=True ).asNumber ( fb )
         newds.upperLimit = str("%f*fb" % ul )
         ule = comp.ulSigma ( m, marginalize=True, expected=True ).asNumber ( fb )
