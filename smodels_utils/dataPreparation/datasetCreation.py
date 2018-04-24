@@ -17,9 +17,10 @@ import ROOT
 sys.path.insert ( 0, "../../../smodels" )
 sys.path.insert ( 0, "../.." )
 from smodels.tools.smodelsLogging import logger
+from smodels.tools.SimplifiedLikelihoods import Model, UpperLimitComputer
+from smodels.tools.physicsUnits import fb, pb
 from smodels_utils.dataPreparation.inputObjects import MetaInfoInput,DataSetInput
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
-
 class DatasetsFromLatex:
     """
     class that produces the datasets from LateX table
@@ -126,6 +127,34 @@ class DatasetsFromLatex:
             self.datasets.append ( dataset )
         if self.aggregate != None:
             self.aggregateDSs()
+
+    def aggregateToOne ( self, ctr, agg ):
+        """ aggregate one list to a single dataset. """
+        newds = copy.deepcopy ( self.origDataSets[ agg[0] ] )
+        newds._name = "ar%d" % ctr
+        aggregated = ""
+        observedN, expectedBG, bgError2 = 0, 0., 0.
+        for a in agg:
+            ds = self.origDataSets[ a ]
+            observedN += ds.observedN
+            expectedBG += ds.expectedBG
+            bgError2 += ds.bgError**2 ## FIXME this comes from the cov mat
+            aggregated += ds.dataId + "+"
+        newds.observedN = observedN
+        newds.expectedBG = expectedBG
+        logger.error ( "FIXME the bg error is still wrong." )
+        newds.bgError = math.sqrt ( bgError2 )
+        ntoys, alpha = 50000, .05
+        lumi = eval ( databaseCreator.metaInfo.lumi )
+        comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
+        m = Model ( newds.observedN, newds.expectedBG, newds.bgError**2, None, 1. )
+        ul = comp.ulSigma ( m, marginalize=True ).asNumber ( fb )
+        newds.upperLimit = str("%f*fb" % ul )
+        ule = comp.ulSigma ( m, marginalize=True, expected=True ).asNumber ( fb )
+        newds.expectedUpperLimit =  str("%f*fb" % ule ) 
+        newds.aggregated = aggregated[:-2]
+        newds.dataId = "ar%d" % ctr ## for now the dataset id is the agg region id
+        return newds
                 
     def aggregateDSs ( self ):
         """ now that the datasets are created, aggregate them. """
@@ -135,9 +164,7 @@ class DatasetsFromLatex:
         self.datasetOrder = dsorder
         self.datasets = [] ## rebuild
         for ctr,agg in enumerate(self.aggregate):
-            newds = copy.deepcopy ( self.origDataSets[ agg[0] ] )
-            newds._name = "ar%d" % ctr
-            self.datasets.append (  newds )
+            self.datasets.append (self.aggregateToOne ( ctr, agg ) )
         databaseCreator.clear() ## reset list in databasecreator
         for i in self.datasets:
             databaseCreator.addDataset ( i )
