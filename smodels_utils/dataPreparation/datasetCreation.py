@@ -11,6 +11,7 @@
 """
 
 import math
+import copy
 import sys
 import ROOT
 sys.path.insert ( 0, "../../../smodels" )
@@ -93,19 +94,6 @@ class DatasetsFromLatex:
         bgerr = max ( tot_errs )
         return bg,bgerr
 
-    def _nextAggregate ( self ):
-        """ return next aggregate dataset. """
-        if self.max_datasets and self.counter >= self.max_datasets:
-            # we are told not to produce more
-            raise StopIteration()
-        if self.max_datasets and self.counter >= self.max_datasets:
-            # we are told not to produce more
-            raise StopIteration()
-        if len(self.datasets)==0:
-            raise StopIteration()
-        self.counter+=1
-        return self.datasets.pop(0)
-
     def createAllDatasets ( self ):
         """ create all datasets in a single go. makes aggregation easier. """
         logger.info ( "now creating all datasets" )
@@ -137,22 +125,34 @@ class DatasetsFromLatex:
             self.datasetOrder.append ( '"%s"' % dataId )
             self.datasets.append ( dataset )
         if self.aggregate != None:
-            self.origDatasetOrder = self.datasetOrder
-            dsorder = [ '"ar%d"' % x for x in range(len(self.aggregate)) ]
-            self.datasetOrder = dsorder
-
+            self.aggregateDSs()
+                
+    def aggregateDSs ( self ):
+        """ now that the datasets are created, aggregate them. """
+        self.origDatasetOrder = copy.deepcopy ( self.datasetOrder )
+        self.origDataSets = copy.deepcopy ( self.datasets )
+        dsorder = [ '"ar%d"' % x for x in range(len(self.aggregate)) ]
+        self.datasetOrder = dsorder
+        self.datasets = [] ## rebuild
+        for ctr,agg in enumerate(self.aggregate):
+            newds = copy.deepcopy ( self.origDataSets[ agg[0] ] )
+            newds._name = "ar%d" % ctr
+            self.datasets.append (  newds )
+        databaseCreator.clear() ## reset list in databasecreator
+        for i in self.datasets:
+            databaseCreator.addDataset ( i )
+        logger.info ( "Aggregated %d to %d datasets" % ( len(self.origDataSets), len(self.datasets) ) )
 
     def __next__ ( self ):
         """ return next dataset. """
-        if self.aggregate != None:
-            return self._nextAggregate()
         if self.max_datasets and self.counter >= self.max_datasets:
             # we are told not to produce more
             raise StopIteration()
         if len(self.datasets)==0:
             raise StopIteration()
         self.counter+=1
-        return self.datasets.pop(0)
+        nxt = self.datasets.pop(0)
+        return nxt
             
 class DatasetsFromRoot:
     """

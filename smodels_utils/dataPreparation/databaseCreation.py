@@ -114,7 +114,6 @@ class DatabaseCreator(list):
         :param datasetObject: DataSetInput object
         :raise Error: if there is already a dataset instance with same name
         """
-
         if datasetObject in self:
             logger.error("Dataset %s has already been defined" %datasetObject._name)
             sys.exit()
