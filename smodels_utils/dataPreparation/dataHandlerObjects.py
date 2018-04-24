@@ -299,7 +299,7 @@ class DataHandler(object):
             appearing in title of csv table in a multi-table csv file.
         :param index: index of object in listOfPrimitives of ROOT.TCanvas
         :param unit: string defining unit. If None, it will use the default values.
-        :param scale: float to re-escale the data.
+        :param scale: float to re-scale the data.
         """
 
         if not os.path.isfile(path):

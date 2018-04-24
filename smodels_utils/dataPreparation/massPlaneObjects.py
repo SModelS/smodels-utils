@@ -169,8 +169,8 @@ class MassPlane(object):
             self.addSource(dataLabel,dataFile, dataFormat,
                            objectName, index, unit, coordinate, scale)
 
-    def addSource(self,dataLabel,dataFile,dataFormat,
-                   objectName=None,index=None,unit=None,coordinateMap=None,scale=None):
+    def addSource(self,dataLabel,dataFile,dataFormat, objectName=None,index=None,
+                  unit=None,coordinateMap=None,scale=None):
         """
         Defines a single data sources for the plane.
 
