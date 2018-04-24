@@ -17,6 +17,12 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
+def _Hash ( lst ): ## simple hash function for our masses
+    ret=0.
+    for l in lst:
+        ret=100000*ret+l
+    return ret
+
 
 class DataHandler(object):
 
@@ -297,6 +303,7 @@ class DataHandler(object):
         name of every public method of child-class can be used
         :param objectName: name of object stored in root-file or cMacro, or string
             appearing in title of csv table in a multi-table csv file.
+            If it is a list, then the elements of the list get aggregated.
         :param index: index of object in listOfPrimitives of ROOT.TCanvas
         :param unit: string defining unit. If None, it will use the default values.
         :param scale: float to re-scale the data.
@@ -497,17 +504,51 @@ class DataHandler(object):
 
         :return: ROOT-object
         """
+        if isinstance(self.objectName, list):
+            return self.rootByList ( self.objectName )
 
-        if not isinstance(self.objectName, str):
-            logger.error("objectName for root file should be of string type and not %s"
-                         %type(self.objectName))
-            sys.exit()
+        if isinstance(self.objectName, str):
+            return self.rootByName ( self.objectName )
 
+        logger.error ( "objectName must be a string or a list" )
+        sys.exit()
+
+    def rootByList(self, namelist ):
+        """ generator, but by list of names """
+        pts = {}
         import ROOT
         rootFile = ROOT.TFile(self.path)
-        obj = rootFile.Get(self.objectName)
+        hashes={}
+        for name in namelist:
+            obj = rootFile.Get(name)
+            if not obj:
+                logger.error("Object %s not found in %s" %(name,self.path))
+                sys.exit()
+            if not isinstance(obj,ROOT.TGraph):
+                obj.SetDirectory(0)
+
+            for point in self._getPoints(obj):
+                Hsh = _Hash(point[:-1])
+                if not Hsh in pts:
+                    pts[ Hsh ] = 0.
+                pts[ Hsh ] += point[-1]
+                hashes[ Hsh ] = point[:-1]
+        rootFile.Close()
+        ret = []
+        for k,v in hashes.items():
+            L = v
+            L.append ( pts[k] )
+            ret.append ( L )
+        for r in ret:
+            yield r
+
+    def rootByName(self, name):
+        """ generator, but by name """
+        import ROOT
+        rootFile = ROOT.TFile(self.path)
+        obj = rootFile.Get(name)
         if not obj:
-            logger.error("Object %s not found in %s" %(self.objectName,self.path))
+            logger.error("Object %s not found in %s" %(name,self.path))
             sys.exit()
         if not isinstance(obj,ROOT.TGraph):
             obj.SetDirectory(0)
