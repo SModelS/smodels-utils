@@ -103,13 +103,19 @@ class CovarianceHandler:
         nNew = len(aggregate)
         row = [0.]*nNew
         newCov = []
+        oldcov = copy.deepcopy ( self.covariance )
         for i in range(nNew):
             newCov.append ( copy.deepcopy(row) )
         #logger.error ( "aggregating cov matrix from %d to %d dims." % ( self.n,nNew) )
         for ctr,agg in enumerate ( aggregate ):
             newDSOrder.append ( "ar%d" % ctr )
             V=0.
-            newCov[ctr][ctr]=1.
+            for i in agg:
+                V+=self.covariance[i][i]
+                for j in agg:
+                    if j!=i:
+                        V+=self.covariance[i][j]
+            newCov[ctr][ctr]=V
             #for i,a in enumerate(agg):
             #    newCov[ctr][ctr]+=self.covariance[a][a]
         self.covariance=newCov
