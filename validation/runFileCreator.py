@@ -190,7 +190,7 @@ if __name__ == "__main__":
     ap.add_argument('-p', '--parfile', 
             help='parameter file specifying the file creation options', 
             default='./validation_parameters.ini')
-    ap.add_argument('-l', '--log', 
+    ap.add_argument('-v', '--verbose', 
             help='specifying the level of verbosity (error, warning,info, debug)', 
             default = 'info', type = str)
            
@@ -221,11 +221,11 @@ if __name__ == "__main__":
     
     
 
-    numeric_level = getattr(logging,args.log.upper(), None)
+    numeric_level = getattr(logging,args.verbose.upper(), None)
     logger.setLevel(level=numeric_level)
     plotRanges.logger.setLevel(level=numeric_level)
     from smodels.tools import smodelsLogging, xsecComputer
-    smodelsLogging.setLogLevel( args.log )
+    smodelsLogging.setLogLevel( args.verbose )
     
     #Options for cross-section calculation:
     xargs = argparse.Namespace()
@@ -275,5 +275,5 @@ if __name__ == "__main__":
 
     #Run creation:
     main(analyses,datasetIDs,txnames,dataTypes,templatedir,slhadir,
-         databasePath,xargs,Npts,addToFile,verbosity=args.log)
+         databasePath,xargs,Npts,addToFile,verbosity=args.verbose)
     
