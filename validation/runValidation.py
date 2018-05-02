@@ -230,7 +230,7 @@ if __name__ == "__main__":
     from smodels.experiment.databaseObj import Database
 
     #Control output level:
-    numeric_level = getattr(logging,args.log.upper(), None)
+    numeric_level = getattr(logging,args.verbose.upper(), None)
     logger.setLevel(level=numeric_level)
     plottingFuncs.logger.setLevel(level=numeric_level)
     validationObjs.logger.setLevel(level=numeric_level)
@@ -281,9 +281,9 @@ if __name__ == "__main__":
 
 #    try:
 #        import ROOT
-#        if args.log == 'warning':
+#        if args.verbose == 'warning':
 #            ROOT.gErrorIgnoreLevel = ROOT.kWarning
-#        elif args.log == 'error':
+#        elif args.verbose == 'error':
 #            ROOT.gErrorIgnoreLevel = ROOT.kError
 #        else:
 #            ROOT.gErrorIgnoreLevel = ROOT.kInfo
