@@ -27,6 +27,12 @@ def main():
         smodels_ver = "112"
         infofile = "unittest%s" % smodels_ver
         pclfilename = "%s.pcl" % infofile
+    else:
+        if "unittest" in ver:
+            smodels_ver = ver.replace("unittest","")
+            infofile = "unittest%s" % smodels_ver
+            pclfilename = "%s.pcl" % infofile
+            
     f=open ( infofile, "w" )
     Dict = { "lastchanged": meta.mtime, "size": os.stat(args.filename).st_size, "url": "http://smodels.hephy.at/database/%s" % pclfilename }
     f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
