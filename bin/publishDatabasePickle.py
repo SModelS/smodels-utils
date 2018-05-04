@@ -13,7 +13,7 @@ else:
 def main():
     ap = argparse.ArgumentParser( description="makes a database pickle file publically available (run it on the smodels)" )
     ap.add_argument('-f', '--filename', help='name of pickle file', default="database.pcl" )
-    ap.add_argument('-d', '--dry_run', help='dont copy to final destionation', action="store_true" )
+    ap.add_argument('-d', '--dry_run', help='dont copy to final destination', action="store_true" )
     ap.add_argument('-s', '--ssh', help='work remotely via ssh', action="store_true" )
     args = ap.parse_args()
     p=open(args.filename,"rb")
