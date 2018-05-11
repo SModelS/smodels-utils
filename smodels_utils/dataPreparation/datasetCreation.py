@@ -129,7 +129,7 @@ class DatasetsFromLatex:
             self.aggregateDSs()
 
     def aggregateToOne ( self, ctr, agg ):
-        """ aggregate one list to a single dataset. """
+        """ aggregate one list of datasets to a single dataset. """
         newds = copy.deepcopy ( self.origDataSets[ agg[0] ] )
         newds._name = "ar%d" % ctr
         aggregated = ""
