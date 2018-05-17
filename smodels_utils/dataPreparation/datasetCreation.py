@@ -151,9 +151,14 @@ class DatasetsFromLatex:
         lumi = eval ( databaseCreator.metaInfo.lumi )
         comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
         m = Model ( newds.observedN, newds.expectedBG, bgErr2, None, 1. )
-        ul = comp.ulSigma ( m, marginalize=True ).asNumber ( fb )
+        try:
+            ul = comp.ulSigma ( m, marginalize=False ).asNumber ( fb )
+        except Exception as e:
+            print ( "Exception", e )
+            print ( "observed:",newds.observedN )
+            sys.exit()
         newds.upperLimit = str("%f*fb" % ul )
-        ule = comp.ulSigma ( m, marginalize=True, expected=True ).asNumber ( fb )
+        ule = comp.ulSigma ( m, marginalize=False, expected=True ).asNumber ( fb )
         newds.expectedUpperLimit =  str("%f*fb" % ule ) 
         newds.aggregated = aggregated[:-2]
         newds.dataId = "ar%d" % ctr ## for now the dataset id is the agg region id
