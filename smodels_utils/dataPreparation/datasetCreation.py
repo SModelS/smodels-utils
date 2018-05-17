@@ -13,6 +13,7 @@
 import math
 import copy
 import sys
+import re
 import ROOT
 sys.path.insert ( 0, "../../../smodels" )
 sys.path.insert ( 0, "../.." )
@@ -73,26 +74,15 @@ class DatasetsFromLatex:
         return line
 
     def getBGAndError ( self, sbg ):
-        if "\\pm" in sbg:
-            tokens = sbg.split ( "\\pm" )
-            bg = float ( tokens[0].replace("$","" ) )
-            bgerr = float ( tokens[1].replace("$","" ) )
-            return bg,bgerr
-        fst_sp = sbg.find(" " )
-        bg = float ( sbg [ : fst_sp ] )
-        sbgerrs = sbg[fst_sp:].strip()
-        sbgerrs = sbgerrs.replace("- ","-" )
-        errtokens = sbgerrs.split ( " " )
-        cltokens = [ x.replace("$","").replace("^","").replace("{","").replace("}","").replace("_","").replace("+","") for x in errtokens ]
-        ttokens = []
-        for t in cltokens:
-            if t!="":
-                ttokens.append ( t )
-        ## print ( "ttokens=",ttokens )
-        stat_errs = list ( map ( float, ttokens[:2] ) )
-        sys_errs = list ( map ( float, ttokens[2:] ) )
-        tot_errs = [ math.sqrt ( stat_errs[i]**2 + sys_errs[i]**2  ) for i in range(2) ]
-        bgerr = max ( tot_errs )
+        sbg = re.sub("\\\\pm(\s[.\d]*)",r"+\1 -\1",sbg) ## replace "\pm x" with "+x -x"
+        sbg = sbg.replace("$","" ).replace("{","").replace("}","").replace("+"," ").replace("-"," ").replace("^", " " ).replace("_"," " ) ## remove dollars, brackets
+        tokens = sbg.split ()
+        tokens = list ( map ( float, tokens ) )
+        bg=tokens[0]
+        stat=max(tokens[1],tokens[2])
+        syst=max(tokens[3],tokens[4])
+        bgerr=math.sqrt(stat**2+syst**2)
+        #print ( "parsing in tex file: %s -> (bg,err)=%s,%s" % ( sbg, bg,bgerr) )
         return bg,bgerr
 
     def createAllDatasets ( self ):
