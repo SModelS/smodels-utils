@@ -139,7 +139,7 @@ class DatasetsFromLatex:
             observedN += ds.observedN
             expectedBG += ds.expectedBG
             bgError2 += ds.bgError**2 ## FIXME this comes from the cov mat
-            aggregated += ds.dataId + "+"
+            aggregated += ds.dataId + ";"
         newds.observedN = observedN
         newds.expectedBG = expectedBG
         oldBgError = math.sqrt ( bgError2 )
@@ -155,7 +155,7 @@ class DatasetsFromLatex:
         newds.upperLimit = str("%f*fb" % ul )
         ule = comp.ulSigma ( m, marginalize=True, expected=True ).asNumber ( fb )
         newds.expectedUpperLimit =  str("%f*fb" % ule ) 
-        newds.aggregated = aggregated[:-2]
+        newds.aggregated = aggregated[:-1]
         newds.dataId = "ar%d" % ctr ## for now the dataset id is the agg region id
         return newds
                 
