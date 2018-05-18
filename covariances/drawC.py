@@ -112,7 +112,8 @@ def run ( n, selected, denominator, plot ):
     plt.scatter ( [ i - .1 for i in xv ], [ random.uniform(0,M) for x in xv ], c='w' )
 
     for a,c in algos.items():
-        addLine( ax, T[a], c, descs[a] )
+        if a in selected: 
+            addLine( ax, T[a], c, descs[a] )
     plt.xlabel ( "number of signal regions" )
     plt.ylabel ( "time per point [s]" )
     plt.legend (  )
