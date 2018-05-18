@@ -240,15 +240,24 @@ class ValidationPlot():
         massPlane = MassPlane.fromString(self.txName,self.axes)
         #Now read the output and collect the necessary data
         self.data = []
-        for slhafile in os.listdir(slhaDir):
+        slhafiles= os.listdir(slhaDir)
+        ct_nooutput=0
+        for slhafile in slhafiles:
             if not os.path.isfile(os.path.join(slhaDir,slhafile)):  #Exclude the results folder
                 continue
             # print ( "slhafile", slhafile )
             fout = os.path.join(outputDir,slhafile + '.py')
             if not os.path.isfile(fout):
+                if ct_nooutput>4:
+                    ## suppress subsequently same error messages
+                    continue
                 logger.error("No SModelS output found for %s (should be %s)" % \
                               ( slhafile, fout ) )
+                ct_nooutput+=1
+                if ct_nooutput==5:
+                    logger.error("did not find SModelS output 5 times subsequently. Will quench error msgs from now on.")
                 continue
+            ct_nooutput=0
             # print ( "reading %s" % fout )
             ff = open(fout,'r')
             cmd = ff.read().replace('\n','')
