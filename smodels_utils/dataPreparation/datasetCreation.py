@@ -45,7 +45,7 @@ def createAggregationList ( aggregationborders ):
             continue
         if a<last:
             logger.error ( "borders not given in descending order?")
-            ss.exit()
+            sys.exit()
         ret.append ( R_(last,a) )
         last=a
     return ret
