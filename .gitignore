@@ -29,3 +29,5 @@ validation/pythia_??????.card
 bin/OldListOfAnalyses
 bin/OldListOfAnalysesWithSuperseded
 slha/ls
+*/.http*
+*/*pcl
