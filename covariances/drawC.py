@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 """ draw comparison between profiling, marginalizing and Nicks """
 
