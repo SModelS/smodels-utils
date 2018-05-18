@@ -22,6 +22,35 @@ from smodels.tools.SimplifiedLikelihoods import Model, UpperLimitComputer
 from smodels.tools.physicsUnits import fb, pb
 from smodels_utils.dataPreparation.inputObjects import MetaInfoInput,DataSetInput
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
+
+
+def createAggregationList ( aggregationborders ):
+    """
+    Very simple helper function that creates the lists of lists of aggregate
+    regions, given the "borders", e.g. aggregationborder=[3,6,8] results
+    in [[0,1,2],[3,4,5],[6,7,8]]
+
+    :param aggregationborder: the indices where to "break" the SRs and
+    start a new aggregate region.
+
+    :result: list of lists of aggregate regions
+    """
+    def R_ ( min, max ):
+        return list(range(min,max))
+
+    ret=[]
+    last=0
+    for i,a in enumerate(aggregationborders):
+        if a==0:
+            continue
+        if a<last:
+            logger.error ( "borders not given in descending order?")
+            ss.exit()
+        ret.append ( R_(last,a) )
+        last=a
+    return ret
+
+
 class DatasetsFromLatex:
     """
     class that produces the datasets from LateX table
@@ -49,7 +78,7 @@ class DatasetsFromLatex:
         self.datasetOrder = []
         self.create()
         databaseCreator.datasetCreator = self
-    
+
     def create ( self ):
         f = open ( self.texfile )
         self.lines = f.readlines()
@@ -103,7 +132,7 @@ class DatasetsFromLatex:
             nobs = int ( tokens[self.c_obs] )
             sbg = tokens[self.c_bg].strip()
             bg, bgerr = self.getBGAndError ( sbg )
-            name = "sr%d" % binnr 
+            name = "sr%d" % binnr
             dataId = self.ds_name
             for i,token in enumerate ( tokens ):
                 ctoken = token.strip()
@@ -149,11 +178,11 @@ class DatasetsFromLatex:
             sys.exit()
         newds.upperLimit = str("%f*fb" % ul )
         ule = comp.ulSigma ( m, marginalize=False, expected=True ).asNumber ( fb )
-        newds.expectedUpperLimit =  str("%f*fb" % ule ) 
+        newds.expectedUpperLimit =  str("%f*fb" % ule )
         newds.aggregated = aggregated[:-1]
         newds.dataId = "ar%d" % ctr ## for now the dataset id is the agg region id
         return newds
-                
+
     def aggregateDSs ( self ):
         """ now that the datasets are created, aggregate them. """
         self.origDatasetOrder = copy.deepcopy ( self.datasetOrder )
@@ -178,7 +207,7 @@ class DatasetsFromLatex:
         self.counter+=1
         nxt = self.datasets.pop(0)
         return nxt
-            
+
 class DatasetsFromRoot:
     """
     class that produces the datasets from root files.
