@@ -138,6 +138,7 @@ class DatasetsFromLatex:
                 ctoken = token.strip()
                 ctoken = ctoken.replace ( "-", "_" )
                 dataId = dataId.replace ( "#%d" % i, ctoken )
+            dataId = dataId.replace("$\\geq$",">=" )
             dataset = DataSetInput ( name )
             dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
