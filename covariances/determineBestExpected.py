@@ -20,17 +20,19 @@ result=results[0]
 def getDatasets():
     datasets={}
     for i,ds in enumerate ( result.datasets ):
-        print ( i, ds.dataId )
-        datasets[i]=ds.dataId
+        print ( i, ds.dataInfo.dataId )
+        datasets[i]=ds.dataInfo.dataId
     return datasets
 
 def createFile ():
-    topos=["T1tttt","T2tt"]
+    topos=["T1tttt","T2tt" ]
     random.shuffle ( topos )
     topo=topos[0]
     template="./template_%s.slha" % topo
     tempfile = "tmp.slha"
-    glu_lim = { "T1tttt": [ 61.5, 2162. ] } 
+    glu_lim = { "T1tttt": [ 61.5, 2162. ], "T5tctc": [ 61.5, 2162.5 ], "T2tt": [ -1., -1. ]  } 
+    stop_lim = { "T2tt": [ 187.5, 1162.5 ], "T5tctc":  [] }
+    lsp_lim = { "T2tt": [ 12.5 , 662.5 ] }
     mgl=random.uniform(61.5,2162.)
     mstop=random.uniform(187.5,1162.5)
     mlsp = random.uniform(12.5,min(1612.,mgl-35. ))
@@ -63,9 +65,8 @@ def runSingleFile():
 def main():
     subprocess.getoutput ( "cp results.txt results.bu" )
     datasets=getDatasets()
-    sys.exit()
     g=open("results.txt","w")
-    for i in range(5):
+    for i in range(1000):
         topo,mgl,mstop,mlsp=createFile()
         Id=runSingleFile()
         print ( "one file:", Id )
