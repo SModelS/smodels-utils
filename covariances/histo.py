@@ -19,10 +19,13 @@ while True:
     try:
         d=pickle.load(f)
         ctr+=1
-        id0,id1,id2=d["n0"],d["n1"],d["n2"]
-        add(id0,5)
-        add(id0,3)
-        add(id0,1)
+        id0,id1,id2,id3,id4,id5=d["n0"],d["n1"],d["n2"],d["n3"],d["n4"],d["n5"]
+        add(id0,11)
+        add(id1,9)
+        add(id2,7)
+        add(id3,5)
+        add(id4,3)
+        add(id5,1)
     except EOFError as e:
         break
 
