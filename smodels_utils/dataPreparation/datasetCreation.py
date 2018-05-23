@@ -56,7 +56,7 @@ class DatasetsFromLatex:
     class that produces the datasets from LateX table
     """
     def __init__( self, texfile, max_datasets=None, c_obs=5, c_bg=6, ds_name="sr#0",
-                  aggregate = None ):
+                  aggregate = None, blind_regions = None ):
         """
         :param texfile: file to parse
         :param max_datasets: consider a maximum of n datasets
@@ -67,6 +67,7 @@ class DatasetsFromLatex:
                         column number.
         :param aggregate: aggregate signal regions, given by indices, e.g.
          [[0,1,2],[3,4]] or signal region names, e.g.[["sr0","sr1"],["sr2"]].
+        :param blind_regions: regions to disregard, given as vector e.g [0,5,9].
         """
         self.texfile = texfile
         self.max_datasets = max_datasets
@@ -76,6 +77,9 @@ class DatasetsFromLatex:
         self.aggregate = aggregate
         self.counter = 0
         self.datasetOrder = []
+        self.blinded_regions = blind_regions
+        if blind_regions == None:
+            self.blinded_regions = []
         self.create()
         databaseCreator.datasetCreator = self
 
@@ -200,6 +204,9 @@ class DatasetsFromLatex:
 
     def __next__ ( self ):
         """ return next dataset. """
+        if self.counter in self.blinded_regions:
+            ## skip regions marked as blinded
+            return self.__next__()
         if self.max_datasets and self.counter >= self.max_datasets:
             # we are told not to produce more
             raise StopIteration()

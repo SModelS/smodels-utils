@@ -14,7 +14,7 @@ import pickle
 dbname="http://smodels.hephy.at/database/official113"
 dbname="/home/walten/git/smodels-database-test"
 d=Database( dbname )
-ids= ['CMS-SUS-16-050' ]
+ids= ['CMS-PAS-SUS-16-052' ]
 results=d.getExpResults( analysisIDs=ids )
 result=results[0]
 
@@ -27,14 +27,16 @@ def getDatasets():
     return datasets
 
 def createFile ():
-    topos=["T1tttt","T2tt" ]
+    topos=[ "T2bbffff" ]
+    # topos=["T1tttt","T2tt" ]
     random.shuffle ( topos )
     topo=topos[0]
     template="./template_%s.slha" % topo
     tempfile = "tmp.slha"
-    glu_lim = { "T1tttt": [ 61.5, 2162. ], "T5tctc": [ 61.5, 2162.5 ], "T2tt": [ -1., -1. ]  } 
-    stop_lim = { "T2tt": [ 187.5, 1162.5 ], "T5tctc":  [] }
-    lsp_lim = { "T2tt": [ 12.5 , 662.5 ] }
+    glu_lim = { "T1tttt": [ 61.5, 2162. ], "T5tctc": [ 61.5, 2162.5 ], "T2tt": [ -1., -1. ],
+                "T2bbffff": [-1.,-1.], "T4bbffff": [ 250., 800. ]  } 
+    stop_lim = { "T2tt": [ 187.5, 1162.5 ], "T5tctc":  [], "T2bbffff": [-1.,-1.] }
+    lsp_lim = { "T2tt": [ 12.5 , 662.5 ], "T2bbffff": [ 240., 720. ] }
     mgl=random.uniform(61.5,2162.)
     mstop=random.uniform(187.5,1162.5)
     mlsp = random.uniform(12.5,min(1612.,mgl-35. ))
@@ -67,13 +69,12 @@ def runSingleFile():
     return dpreds
 
 def main():
-    subprocess.getoutput ( "cp results.txt .results.bu" )
-    subprocess.getoutput ( "cp results.pcl .results.pcl.bu" )
+    subprocess.getoutput ( "cp %s.txt .%s.bu" % ( ids[0], ids[0] ) )
+    subprocess.getoutput ( "cp %s.pcl .%s.pcl.bu" % ( ids[0], ids[0] ) )
     datasets=getDatasets()
     print ( datasets ) 
-    sys.exit()
-    g=open("results.txt","w")
-    g2=open("results.pcl","wb")
+    g=open("%s.txt" % ids[0],"w")
+    g2=open("%s.pcl" % ids[0],"wb")
     for i in range(2000):
         topo,mgl,mstop,mlsp=createFile()
         preds=runSingleFile()
