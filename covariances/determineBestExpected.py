@@ -11,17 +11,18 @@ import random
 import IPython
 import pickle
 
-dbname="http://smodels.hephy.at/database/official113"
+# dbname="http://smodels.hephy.at/database/official113"
 dbname="/home/walten/git/smodels-database-test"
 d=Database( dbname )
 ids= ['CMS-PAS-SUS-16-052' ]
-results=d.getExpResults( analysisIDs=ids )
+results=d.getExpResults( analysisIDs=ids, dataTypes=["efficiencyMap"],
+                         useNonValidated=True )
 result=results[0]
 
 def getDatasets():
     datasets={}
     for i,ds in enumerate ( result.datasets ):
-        print ( i, ds.dataInfo.dataId )
+#        print ( i, ds.dataInfo.dataId )
         datasets[i]=ds.dataInfo.dataId
         datasets[ ds.dataInfo.dataId ] = i
     return datasets
@@ -64,6 +65,8 @@ def runSingleFile():
         return None
     dpreds={}
     for pred in preds:
+        if pred.dataType() == "upperLimit":
+            continue
         r=int(pred.getRValue(expected=True)*10**6)
         dpreds[r]=pred.dataId()
     return dpreds
@@ -72,10 +75,11 @@ def main():
     subprocess.getoutput ( "cp %s.txt .%s.bu" % ( ids[0], ids[0] ) )
     subprocess.getoutput ( "cp %s.pcl .%s.pcl.bu" % ( ids[0], ids[0] ) )
     datasets=getDatasets()
-    print ( datasets ) 
+    # print ( datasets ) 
     g=open("%s.txt" % ids[0],"w")
     g2=open("%s.pcl" % ids[0],"wb")
-    for i in range(2000):
+    i=0
+    while True:
         topo,mgl,mstop,mlsp=createFile()
         preds=runSingleFile()
         D={ "nr": i, "t": topo, "mgl": mgl, "mstop": mstop, "mlsp": mlsp }
@@ -84,17 +88,21 @@ def main():
         keys = list ( set ( preds.keys() ) )
         keys.sort( reverse=True )
         sid=""
-        for ctr,k in enumerate(keys[:3]):
+        first_n = 8
+        for ctr,k in enumerate(keys[:first_n]):
             sid+="id%d='%s'; r%d=%.2f; n%d=%d; " % ( ctr, preds[k], ctr, float(k)/10**6, ctr, datasets[preds[k]] )
             D["r%d" % ctr]= float(k)/10**6
             D["n%d" % ctr] = datasets[preds[k]]
             D["id%d" % ctr] = preds[k] 
         sid=sid[:-2]
-        print ( "one file:", keys[:3] )
+        print ( "one file:", keys[:first_n] )
         line="X: nr=%d; t='%s'; mgl=%.1f; mstop=%.1f; mlsp=%.1f; %s.\n" % ( i, topo, mgl, mstop, mlsp, sid ) 
         g.write ( line )
         g.flush()
         pickle.dump ( D, g2 )
+        i+=1
+        if i>3000:
+            break
     g2.close()
     g.close()
 

@@ -14,9 +14,11 @@ import pickle
 fname = "results"
 fname = "CMS-PAS-SUS-16-052"
 f=open("%s.pcl" % fname,"rb")
+ctr=0
 while True:
     try:
         d=pickle.load(f)
+        ctr+=1
         id0,id1,id2=d["n0"],d["n1"],d["n2"]
         add(id0,5)
         add(id0,3)
@@ -24,6 +26,7 @@ while True:
     except EOFError as e:
         break
 
+print ( "read",ctr,"lines" )
 print ( histo )
 
 never = []
