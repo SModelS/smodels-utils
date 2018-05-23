@@ -17,7 +17,7 @@ bin/ListOfAnalyses
 bin/ListOfAnalysesWithSuperseded
 *.py~
 old/
-slha/T*_*_*_slhas/
+slha/T*.slha
 validation/twiki/twiki*.txt
 distribution/smodels-v*
 .project
