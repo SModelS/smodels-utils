@@ -4,18 +4,23 @@
     are marked as one of the first three bests """
 
 histo={}
-for i in range(84):
-    histo[i]=0
+
+def add ( Id, n ):
+    if not Id in histo.keys():
+        histo[Id]=0
+    histo[Id]+=n
 
 import pickle
-f=open("results.pcl","rb")
+fname = "results"
+fname = "CMS-PAS-SUS-16-052"
+f=open("%s.pcl" % fname,"rb")
 while True:
     try:
         d=pickle.load(f)
         id0,id1,id2=d["n0"],d["n1"],d["n2"]
-        histo[id0]+=5
-        histo[id1]+=3
-        histo[id2]+=1
+        add(id0,5)
+        add(id0,3)
+        add(id0,1)
     except EOFError as e:
         break
 
