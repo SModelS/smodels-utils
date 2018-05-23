@@ -75,7 +75,7 @@ class DatasetsFromLatex:
         self.c_bg = c_bg
         self.ds_name = ds_name
         self.aggregate = aggregate
-        self.counter = 0
+        self.counter = 0 ## counter for regions that are written out
         self.datasetOrder = []
         self.blinded_regions = blind_regions
         if blind_regions == None:
@@ -107,13 +107,16 @@ class DatasetsFromLatex:
         return line
 
     def getBGAndError ( self, sbg ):
-        sbg = re.sub("\\\\pm(\s[.\d]*)",r"+\1 -\1",sbg) ## replace "\pm x" with "+x -x"
-        sbg = sbg.replace("$","" ).replace("{","").replace("}","").replace("+"," ").replace("-"," ").replace("^", " " ).replace("_"," " ) ## remove dollars, brackets
+        sbg = sbg.replace("$","" ).replace("{","").replace("}","")
+        sbg = re.sub("\\\\pm\s*([.\d]*)",r"+\1 -\1",sbg) ## replace "\pm x" with "+x -x"
+        sbg = sbg.replace("+"," ").replace("-"," ").replace("^", " " ).replace("_"," " ) ## remove dollars, brackets
         tokens = sbg.split ()
         tokens = list ( map ( float, tokens ) )
         bg=tokens[0]
         stat=max(tokens[1],tokens[2])
-        syst=max(tokens[3],tokens[4])
+        syst=0.        
+        if len(tokens)>4:
+            syst=max(tokens[3],tokens[4])
         bgerr=math.sqrt(stat**2+syst**2)
         #print ( "parsing in tex file: %s -> (bg,err)=%s,%s" % ( sbg, bg,bgerr) )
         return bg,bgerr
@@ -121,8 +124,10 @@ class DatasetsFromLatex:
     def createAllDatasets ( self ):
         """ create all datasets in a single go. makes aggregation easier. """
         logger.info ( "now creating all datasets" )
+        print ( "now creating all datasets" )
         self.datasets = []
         counter=0
+        count_all = 0
         for l in self.lines:
             line = self.clean ( l )
             if line == "":
@@ -143,12 +148,14 @@ class DatasetsFromLatex:
                 ctoken = ctoken.replace ( "-", "_" )
                 dataId = dataId.replace ( "#%d" % i, ctoken )
             dataId = dataId.replace("$\\geq$",">=" )
-            dataset = DataSetInput ( name )
-            dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
+            if not count_all in self.blinded_regions:
+                counter+=1
+                dataset = DataSetInput ( name )
+                dataset.setInfo ( dataType="efficiencyMap", dataId = dataId, observedN = nobs,
                 expectedBG=bg, bgError=bgerr )
-            counter+=1
-            self.datasetOrder.append ( '"%s"' % dataId )
-            self.datasets.append ( dataset )
+                self.datasetOrder.append ( '"%s"' % dataId )
+                self.datasets.append ( dataset )
+            count_all+=1
         if self.aggregate != None:
             self.aggregateDSs()
 
@@ -204,9 +211,6 @@ class DatasetsFromLatex:
 
     def __next__ ( self ):
         """ return next dataset. """
-        if self.counter in self.blinded_regions:
-            ## skip regions marked as blinded
-            return self.__next__()
         if self.max_datasets and self.counter >= self.max_datasets:
             # we are told not to produce more
             raise StopIteration()

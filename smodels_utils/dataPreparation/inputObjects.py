@@ -84,13 +84,15 @@ class CovarianceHandler:
         self.covariance = []
         self.blinded_regions = blind_regions
         if blind_regions == None:
-            self.blind_regions = []
+            self.blinded_regions = []
         for i in range ( 1, self.n ):
             if (i-1) in self.blinded_regions:
                 continue
             self.datasetOrder.append ( xaxis.GetBinLabel(i) )
             row = []
             for j in range ( 1, self.n ):
+                if (j-1) in self.blinded_regions:
+                    continue
                 el = h.GetBinContent ( i, j )
                 if i==j and el < 1e-5:
                    logger.error ( "variance in the covariance matrix at position %d has a very small (%g) value" % (i,el) )
@@ -201,7 +203,7 @@ class MetaInfoInput(Locker):
         return metaInfo
 
     def createCovarianceMatrix ( self, filename, histoname, addOrder=True,
-                                 max_datasets=None, aggregate = None, blind_regions = None ):
+                          max_datasets=None, aggregate = None, blind_regions = None ):
         """ create the covariance matrix from file <filename>, histo <histoname>,
         allowing only a maximum of <max_datasets> datasets. If
         aggregate is not None, aggregate the signal regions, given as
