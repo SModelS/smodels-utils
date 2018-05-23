@@ -9,6 +9,7 @@ from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels.theory.slhaDecomposer import decompose
 import random
 import IPython
+import pickle
 
 dbname="http://smodels.hephy.at/database/official113"
 dbname="/home/walten/git/smodels-database-test"
@@ -22,6 +23,7 @@ def getDatasets():
     for i,ds in enumerate ( result.datasets ):
         print ( i, ds.dataInfo.dataId )
         datasets[i]=ds.dataInfo.dataId
+        datasets[ ds.dataInfo.dataId ] = i
     return datasets
 
 def createFile ():
@@ -54,25 +56,45 @@ def runSingleFile():
     slhafile = "tmp.slha"
     smstoplist = decompose ( slhafile )
 
-    preds = theoryPredictionsFor ( result, smstoplist )
+    preds = theoryPredictionsFor ( result, smstoplist, useBestDataset=False, 
+                                   combinedResults=False )
     if preds == None:
         return None
+    dpreds={}
     for pred in preds:
-        if pred.dataId() == "combined":
-            continue
-        return pred.dataId()
+        r=int(pred.getRValue(expected=True)*10**6)
+        dpreds[r]=pred.dataId()
+    return dpreds
 
 def main():
-    subprocess.getoutput ( "cp results.txt results.bu" )
+    subprocess.getoutput ( "cp results.txt .results.bu" )
+    subprocess.getoutput ( "cp results.pcl .results.pcl.bu" )
     datasets=getDatasets()
+    print ( datasets ) 
+    sys.exit()
     g=open("results.txt","w")
-    for i in range(1000):
+    g2=open("results.pcl","wb")
+    for i in range(2000):
         topo,mgl,mstop,mlsp=createFile()
-        Id=runSingleFile()
-        print ( "one file:", Id )
-        if Id != None:
-            line="nr=%d; t='%s'; mgl=%.1f; mstop=%.1f; mlsp=%.1f; id='%s'\n" % ( i, topo, mgl, mstop, mlsp, Id ) 
-            g.write ( line )
+        preds=runSingleFile()
+        D={ "nr": i, "t": topo, "mgl": mgl, "mstop": mstop, "mlsp": mlsp }
+        if preds==None:
+            continue
+        keys = list ( set ( preds.keys() ) )
+        keys.sort( reverse=True )
+        sid=""
+        for ctr,k in enumerate(keys[:3]):
+            sid+="id%d='%s'; r%d=%.2f; n%d=%d; " % ( ctr, preds[k], ctr, float(k)/10**6, ctr, datasets[preds[k]] )
+            D["r%d" % ctr]= float(k)/10**6
+            D["n%d" % ctr] = datasets[preds[k]]
+            D["id%d" % ctr] = preds[k] 
+        sid=sid[:-2]
+        print ( "one file:", keys[:3] )
+        line="X: nr=%d; t='%s'; mgl=%.1f; mstop=%.1f; mlsp=%.1f; %s.\n" % ( i, topo, mgl, mstop, mlsp, sid ) 
+        g.write ( line )
+        g.flush()
+        pickle.dump ( D, g2 )
+    g2.close()
     g.close()
 
 main()
