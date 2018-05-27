@@ -15,6 +15,7 @@ import pickle
 dbname="/home/walten/git/smodels-database-test"
 d=Database( dbname )
 ids= ['CMS-PAS-SUS-16-052' ]
+# ids= ['CMS-SUS-16-050' ]
 results=d.getExpResults( analysisIDs=ids, dataTypes=["efficiencyMap"],
                          useNonValidated=True )
 result=results[0]
@@ -29,7 +30,8 @@ def getDatasets():
 
 def createFile ():
     topos=[ "T2bbffff" ]
-    # topos=["T1tttt","T2tt" ]
+    if "16-050" in ids[0]:
+        topos=["T1tttt","T2tt" ]
     random.shuffle ( topos )
     topo=topos[0]
     template="./template_%s.slha" % topo
@@ -101,7 +103,7 @@ def main():
         g.flush()
         pickle.dump ( D, g2 )
         i+=1
-        if i>3000:
+        if i>1000:
             break
     g2.close()
     g.close()

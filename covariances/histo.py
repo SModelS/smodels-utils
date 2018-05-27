@@ -1,18 +1,32 @@
 #!/usr/bin/python3
 
 """ simple script that produces a histogram of which signal regions 
-    are marked as one of the first three bests """
+    are marked as one of the first <n> bests (i.e. highest expected r values) """
+
+import sys
 
 histo={}
 
 def add ( Id, n ):
-    if not Id in histo.keys():
-        histo[Id]=0
+    for i in range(Id+1):
+        if not i in histo.keys():
+            histo[i]=0
     histo[Id]+=n
 
 import pickle
 fname = "CMS-PAS-SUS-16-052"
-#fname = "SUS16050"
+# fname = "CMS-SUS-16-050"
+
+if len(sys.argv)>1:
+    fname=sys.argv[1]
+    if sys.argv[1]=="-h" or sys.argv[1]=="--help":
+        print ( "usage: histo.py [CMS-PAS-SUS-16-052|CMS-SUS-16-050]" )
+        sys.exit()
+
+regions = { "CMS-PAS-SUS-16-052": 44, "CMS-SUS-16-050": 84 }
+for i in range(regions[fname]):
+    histo[i]=0
+print ( "opening",fname )
 f=open("%s.pcl" % fname,"rb")
 ctr=0
 while True:
@@ -41,4 +55,4 @@ for Id,occ in histo.items():
         never.append ( Id )
 
 
-print ( "%s SRs were never: " % len(never), never )
+print ( "%s SRs have zero points: " % len(never), never )
