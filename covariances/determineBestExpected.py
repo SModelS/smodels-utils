@@ -95,7 +95,7 @@ def main():
             D["n%d" % ctr] = datasets[preds[k]]
             D["id%d" % ctr] = preds[k] 
         sid=sid[:-2]
-        print ( "one file:", keys[:first_n] )
+        print ( "file",i,"->", keys[:first_n] )
         line="X: nr=%d; t='%s'; mgl=%.1f; mstop=%.1f; mlsp=%.1f; %s.\n" % ( i, topo, mgl, mstop, mlsp, sid ) 
         g.write ( line )
         g.flush()

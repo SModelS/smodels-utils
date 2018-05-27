@@ -11,8 +11,8 @@ def add ( Id, n ):
     histo[Id]+=n
 
 import pickle
-fname = "results"
 fname = "CMS-PAS-SUS-16-052"
+#fname = "SUS16050"
 f=open("%s.pcl" % fname,"rb")
 ctr=0
 while True:
