@@ -16,13 +16,19 @@ dbname="/home/walten/git/smodels-database-test"
 d=Database( dbname )
 ids= ['CMS-PAS-SUS-16-052' ]
 # ids= ['CMS-SUS-16-050' ]
+if len(sys.argv)>1:
+    ids = [ sys.argv[1] ]
+    if sys.argv[1]=="-h" or sys.argv[1]=="--help":
+        print ( "usage: histo.py [CMS-PAS-SUS-16-052|CMS-SUS-16-050]" )
+        sys.exit()
 results=d.getExpResults( analysisIDs=ids, dataTypes=["efficiencyMap"],
                          useNonValidated=True )
 result=results[0]
 
 def getDatasets():
     datasets={}
-    for i,ds in enumerate ( result.datasets ):
+    for _,ds in enumerate ( result.datasets ):
+        i=_+1
 #        print ( i, ds.dataInfo.dataId )
         datasets[i]=ds.dataInfo.dataId
         datasets[ ds.dataInfo.dataId ] = i
@@ -77,7 +83,8 @@ def main():
     subprocess.getoutput ( "cp %s.txt .%s.bu" % ( ids[0], ids[0] ) )
     subprocess.getoutput ( "cp %s.pcl .%s.pcl.bu" % ( ids[0], ids[0] ) )
     datasets=getDatasets()
-    # print ( datasets ) 
+    #print ( datasets ) 
+    #sys.exit()
     g=open("%s.txt" % ids[0],"w")
     g2=open("%s.pcl" % ids[0],"wb")
     i=0
@@ -103,7 +110,7 @@ def main():
         g.flush()
         pickle.dump ( D, g2 )
         i+=1
-        if i>1000:
+        if i>2000:
             break
     g2.close()
     g.close()

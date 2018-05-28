@@ -8,7 +8,7 @@ import sys
 histo={}
 
 def add ( Id, n ):
-    for i in range(Id+1):
+    for i in range(1,Id+1):
         if not i in histo.keys():
             histo[i]=0
     histo[Id]+=n
@@ -24,7 +24,7 @@ if len(sys.argv)>1:
         sys.exit()
 
 regions = { "CMS-PAS-SUS-16-052": 44, "CMS-SUS-16-050": 84 }
-for i in range(regions[fname]):
+for i in range(1,regions[fname]+1):
     histo[i]=0
 print ( "opening",fname )
 f=open("%s.pcl" % fname,"rb")
@@ -47,12 +47,24 @@ while True:
         break
 
 print ( "read",ctr,"lines" )
-print ( histo )
 
 never = []
+occurs = {}
 for Id,occ in histo.items():
-    if occ==0: 
+    if not occ in occurs:
+        occurs[occ]=[]
+    occurs[occ].append ( Id )
+    if occ<1000:
         never.append ( Id )
 
+keys = list ( occurs.keys() )
+keys.sort()
 
-print ( "%s SRs have zero points: " % len(never), never )
+for k in keys:
+    v = occurs[k]
+    SRs="%s" % v
+    if len(v) == 1:
+        SRs = "%s" % v[0]
+    print ( "%d points: %s" % ( k, SRs ) )
+
+print ( "%s SRs have < x points: " % len(never), never )
