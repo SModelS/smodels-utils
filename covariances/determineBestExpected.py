@@ -44,11 +44,15 @@ def createFile ():
     tempfile = "tmp.slha"
     glu_lim = { "T1tttt": [ 61.5, 2162. ], "T5tctc": [ 61.5, 2162.5 ], "T2tt": [ -1., -1. ],
                 "T2bbffff": [-1.,-1.], "T4bbffff": [ 250., 800. ]  } 
-    stop_lim = { "T2tt": [ 187.5, 1162.5 ], "T5tctc":  [], "T2bbffff": [-1.,-1.] }
+    stop_lim = { "T2tt": [ 187.5, 1162.5 ], "T5tctc":  [], "T2bbffff": [250.,800] }
     lsp_lim = { "T2tt": [ 12.5 , 662.5 ], "T2bbffff": [ 240., 720. ] }
-    mgl=random.uniform(61.5,2162.)
-    mstop=random.uniform(187.5,1162.5)
-    mlsp = random.uniform(12.5,min(1612.,mgl-35. ))
+    mgl = -1.
+    mstop=random.uniform(  stop_lim[topo][0], stop_lim[topo][1] )
+    mlsp = random.uniform( mstop-80, mstop-10 )
+    if "16-050" in ids[0]:
+        mgl=random.uniform( glu_lim[topo][0], glu_lim[topo][1] )
+        mstop=random.uniform( stop_lim[topo][0], stop_lim[topo][1] )
+        mlsp = random.uniform( lsp_lim[topo][0], lsp_lim[topo][1] )
     f=open(template,"r")
     lines=f.readlines()
     f.close()
@@ -66,7 +70,6 @@ def createFile ():
 def runSingleFile():
     slhafile = "tmp.slha"
     smstoplist = decompose ( slhafile )
-
     preds = theoryPredictionsFor ( result, smstoplist, useBestDataset=False, 
                                    combinedResults=False )
     if preds == None:
@@ -93,6 +96,7 @@ def main():
         preds=runSingleFile()
         D={ "nr": i, "t": topo, "mgl": mgl, "mstop": mstop, "mlsp": mlsp }
         if preds==None:
+            print ( "skip", topo, mgl, mstop, mlsp )
             continue
         keys = list ( set ( preds.keys() ) )
         keys.sort( reverse=True )
