@@ -86,12 +86,12 @@ class CovarianceHandler:
         if blind_regions == None:
             self.blinded_regions = []
         for i in range ( 1, self.n ):
-            if (i-1) in self.blinded_regions:
+            if i in self.blinded_regions:
                 continue
             self.datasetOrder.append ( xaxis.GetBinLabel(i) )
             row = []
             for j in range ( 1, self.n ):
-                if (j-1) in self.blinded_regions:
+                if j in self.blinded_regions:
                     continue
                 el = h.GetBinContent ( i, j )
                 if i==j and el < 1e-5:

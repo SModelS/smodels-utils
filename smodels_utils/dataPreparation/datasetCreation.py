@@ -148,6 +148,7 @@ class DatasetsFromLatex:
                 ctoken = ctoken.replace ( "-", "_" )
                 dataId = dataId.replace ( "#%d" % i, ctoken )
             dataId = dataId.replace("$\\geq$",">=" )
+            count_all+=1
             if not count_all in self.blinded_regions:
                 counter+=1
                 dataset = DataSetInput ( name )
@@ -155,7 +156,6 @@ class DatasetsFromLatex:
                 expectedBG=bg, bgError=bgerr )
                 self.datasetOrder.append ( '"%s"' % dataId )
                 self.datasets.append ( dataset )
-            count_all+=1
         if self.aggregate != None:
             self.aggregateDSs()
 
