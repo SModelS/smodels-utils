@@ -283,6 +283,13 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     l2.SetNDC()
     l2.SetTextSize(.04)
     l2.DrawLatex(.15,.78,"k-factor %.2f" % kfactor)
+    if True: ## a timestamp, on the right border
+        l4=TLatex()
+        l4.SetNDC()
+        l4.SetTextSize(.03)
+        l4.SetTextAngle(90.)
+        l4.SetTextColor(ROOT.kGray )
+        l4.DrawLatex ( .97, .1, time.strftime("%b %d, %Y, %H:%M") )
     base.l2=l2
     l3=TLatex()
     l3.SetNDC()
