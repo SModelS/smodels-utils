@@ -283,13 +283,6 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     l2.SetNDC()
     l2.SetTextSize(.04)
     l2.DrawLatex(.15,.78,"k-factor %.2f" % kfactor)
-    if True: ## a timestamp, on the right border
-        l4=TLatex()
-        l4.SetNDC()
-        l4.SetTextSize(.03)
-        l4.SetTextAngle(90.)
-        l4.SetTextColor(ROOT.kGray )
-        l4.DrawLatex ( .97, .1, time.strftime("%b %d, %Y, %H:%M") )
     base.l2=l2
     l3=TLatex()
     l3.SetNDC()
@@ -451,6 +444,15 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     l2.SetTextSize(.04)
     l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor)
     base.l2=l2
+    if True: ## a timestamp, on the right border
+        import time
+        l9=TLatex()
+        l9.SetNDC()
+        l9.SetTextSize(.025)
+        l9.SetTextAngle(90.)
+        l9.SetTextColor( kGray )
+        l9.DrawLatex ( .93, .7, time.strftime("%b %d, %Y, %H:%M") )
+        base.l9 = l9
 
     if not silentMode:
         _ = raw_input("Hit any key to close\n")

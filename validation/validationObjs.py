@@ -386,7 +386,11 @@ class ValidationPlot():
         if not self.pretty:
             self.plot.Print(filename)
             filename = filename.replace('.'+fformat,'.png')
-            self.plot.Print(filename)
+            try:
+                self.plot.Print(filename)
+            except Exception as e:
+                # if fails because of missing dep, then just proceed
+                pass
         else:
             #Print pdf, png and root formats
             filename = filename.replace('.'+fformat,'_pretty.'+fformat)
