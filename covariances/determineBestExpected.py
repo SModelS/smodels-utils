@@ -13,6 +13,8 @@ from smodels.theory.slhaDecomposer import decompose
 import random
 import IPython
 import pickle
+import tempfile
+import os
 
 # dbname="http://smodels.hephy.at/database/official113"
 dbname="/home/walten/git/smodels-database-test"
@@ -44,15 +46,18 @@ def createFile ():
     random.shuffle ( topos )
     topo=topos[0]
     template="./template_%s.slha" % topo
-    tempfile = "tmp.slha"
+    # tempfile = "tmp.slha"
+    tfile = tempfile.mktemp(suffix=".slha")
     glu_lim = { "T1tttt": [ 1800., 2162. ], "T5tctc": [ 61.5, 2162.5 ], "T2tt": [ 1e6, 1e6 ],
                 "T2bbffff": [1e6,1e6], "T4bbffff": [ 250., 800. ]  } 
     stop_lim = { "T2tt": [ 400.5, 1162.5 ], "T5tctc":  [], "T2bbffff": [250.,800], \
                  "T1tttt": [ 1e6, 1e6 ] }
     lsp_lim = { "T1tttt": [ 12.5, 1400. ], "T2tt": [ 12.5 , 662.5 ], "T2bbffff": [ 240., 720. ] }
-    mgl = -1.
+    mgl = random.uniform( glu_lim[topo][0], glu_lim[topo][1] )
     mstop=random.uniform(  stop_lim[topo][0], stop_lim[topo][1] )
     mlsp = random.uniform( lsp_lim[topo][0], lsp_lim[topo][1] )
+    if "16-052" in ids[0]:
+        mlsp = random.uniform ( mstop - 80, mstop-10. )
     if "16-050" in ids[0]:
         mgl=random.uniform( glu_lim[topo][0], glu_lim[topo][1] )
         mstop=random.uniform( stop_lim[topo][0], stop_lim[topo][1] )
@@ -64,7 +69,7 @@ def createFile ():
     f=open(template,"r")
     lines=f.readlines()
     f.close()
-    g=open(tempfile,"w")
+    g=open(tfile,"w")
     for line in lines:
         line=line.replace("MGLUINO","%s" % mgl )
         line=line.replace("MSTOP","%s" % mstop )
@@ -72,11 +77,11 @@ def createFile ():
         line=line.replace("MLSP","%s" % mlsp )
         g.write ( line )
     g.close()
-    return topo,mgl,mstop,mlsp
+    return topo,mgl,mstop,mlsp,tfile
 
 
-def runSingleFile():
-    slhafile = "tmp.slha"
+def runSingleFile( slhafile ):
+    # slhafile = "tmp.slha"
     # print ( "now computing cross sections for %s" % slhafile )
     computer = XSecComputer ( LO, 10000, 8 )
     sqrts = [ 8, 13 ]
@@ -93,6 +98,7 @@ def runSingleFile():
             continue
         r=int(pred.getRValue(expected=True)*10**6)
         dpreds[r]=pred.dataId()
+    os.unlink ( slhafile )
     return dpreds
 
 def main():
@@ -105,8 +111,8 @@ def main():
     g2=open("%s.pcl" % ids[0],"wb")
     i=0
     while True:
-        topo,mgl,mstop,mlsp=createFile()
-        preds=runSingleFile()
+        topo,mgl,mstop,mlsp,tfile=createFile()
+        preds=runSingleFile(tfile)
         D={ "nr": i, "t": topo, "mgl": mgl, "mstop": mstop, "mlsp": mlsp }
         if preds==None:
             print ( "skip", topo, mgl, mstop, mlsp )
