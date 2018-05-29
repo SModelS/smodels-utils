@@ -239,5 +239,3 @@ DECAY   1000023     0.00000000E+00   # chargino1+ decays
 DECAY   1000037     0.00000000E+00   # chargino2+ decays
 DECAY   1000022     0.00000000E+00   # neutralino1 decays
 DECAY   1000025     0.00000000E+00   # neutralino3 decays
-
-     

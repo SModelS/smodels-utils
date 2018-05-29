@@ -39,7 +39,7 @@ def createAggregationList ( aggregationborders ):
         return list(range(min,max))
 
     ret=[]
-    last=0
+    last=1
     for i,a in enumerate(aggregationborders):
         if a==0:
             continue
@@ -123,7 +123,7 @@ class DatasetsFromLatex:
 
     def createAllDatasets ( self ):
         """ create all datasets in a single go. makes aggregation easier. """
-        logger.info ( "now creating all datasets" )
+        # logger.info ( "now creating all datasets" )
         print ( "now creating all datasets" )
         self.datasets = []
         counter=0
@@ -162,11 +162,11 @@ class DatasetsFromLatex:
     def aggregateToOne ( self, ctr, agg ):
         """ aggregate one list of datasets to a single dataset. """
         newds = copy.deepcopy ( self.origDataSets[ agg[0] ] )
-        newds._name = "ar%d" % ctr
+        newds._name = "ar%d" % (ctr+1)
         aggregated = ""
         observedN, expectedBG, bgError2 = 0, 0., 0.
         for a in agg:
-            ds = self.origDataSets[ a ]
+            ds = self.origDataSets[ (a-1) ]
             observedN += ds.observedN
             expectedBG += ds.expectedBG
             bgError2 += ds.bgError**2 ## FIXME this comes from the cov mat
@@ -177,7 +177,7 @@ class DatasetsFromLatex:
         bgErr2 = eval(databaseCreator.metaInfo.covariance)[ctr][ctr]
         newds.bgError = math.sqrt ( bgErr2 )
         if abs ( oldBgError - newds.bgError ) / newds.bgError > .2:
-            logger.info ( "directly computed error and error from covariance vary greatly.!" )
+            logger.info ( "directly computed error and error from covariance vary greatly: %s != %s!" % ( oldBgError, newds.bgError  ) )
         ntoys, alpha = 50000, .05
         lumi = eval ( databaseCreator.metaInfo.lumi )
         comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
@@ -192,14 +192,14 @@ class DatasetsFromLatex:
         ule = comp.ulSigma ( m, marginalize=False, expected=True ).asNumber ( fb )
         newds.expectedUpperLimit =  str("%f*fb" % ule )
         newds.aggregated = aggregated[:-1]
-        newds.dataId = "ar%d" % ctr ## for now the dataset id is the agg region id
+        newds.dataId = "ar%d" % (ctr+1) ## for now the dataset id is the agg region id
         return newds
 
     def aggregateDSs ( self ):
         """ now that the datasets are created, aggregate them. """
         self.origDatasetOrder = copy.deepcopy ( self.datasetOrder )
         self.origDataSets = copy.deepcopy ( self.datasets )
-        dsorder = [ '"ar%d"' % x for x in range(len(self.aggregate)) ]
+        dsorder = [ '"ar%d"' % (x+1) for x in range(len(self.aggregate)) ]
         self.datasetOrder = dsorder
         self.datasets = [] ## rebuild
         for ctr,agg in enumerate(self.aggregate):

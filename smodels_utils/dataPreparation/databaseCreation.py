@@ -73,6 +73,7 @@ class DatabaseCreator(list):
         #              None for monochrome
         self.colorScheme = "light" ## "dark", None
         self.ncpus = 1 ## the number of CPUs used
+        self.removeOldDataSetDirs()
 
         try:
             self.ncpus =  multiprocessing.cpu_count()
@@ -80,6 +81,18 @@ class DatabaseCreator(list):
             self.ncpus = 1
 
         list.__init__(self)
+
+    def removeOldDataSetDirs ( self ):
+        files = os.listdir(".")
+        dirs = []
+        for f in files:
+            if os.path.isdir ( f ) and not f in [ "validation", "orig" ]:
+                subdir = os.listdir ( f )
+                if "dataInfo.txt" in subdir:
+                    dirs.append ( f )
+                    shutil.rmtree ( f )
+        if len(dirs)>0:
+            logger.warning ( "removed old dataset dirs: %s" % ", ".join(dirs) )
 
     def timeStamp(self, txt, c="info"):
         color, reset = '\x1b[32m', '\x1b[39m'

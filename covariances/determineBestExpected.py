@@ -5,6 +5,9 @@
 
 import sys, numpy, subprocess
 from smodels.experiment.databaseObj import Database
+from smodels.tools.xsecComputer import XSecComputer
+from smodels.theory.crossSection import NLL, LO
+from smodels.tools.physicsUnits import TeV
 from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels.theory.slhaDecomposer import decompose
 import random
@@ -13,7 +16,7 @@ import pickle
 
 # dbname="http://smodels.hephy.at/database/official113"
 dbname="/home/walten/git/smodels-database-test"
-d=Database( dbname )
+d=Database( dbname, subpickle=True )
 ids= ['CMS-PAS-SUS-16-052' ]
 # ids= ['CMS-SUS-16-050' ]
 if len(sys.argv)>1:
@@ -42,11 +45,11 @@ def createFile ():
     topo=topos[0]
     template="./template_%s.slha" % topo
     tempfile = "tmp.slha"
-    glu_lim = { "T1tttt": [ 1800., 2162. ], "T5tctc": [ 61.5, 2162.5 ], "T2tt": [ -1., -1. ],
-                "T2bbffff": [-1.,-1.], "T4bbffff": [ 250., 800. ]  } 
-    stop_lim = { "T2tt": [ 187.5, 1162.5 ], "T5tctc":  [], "T2bbffff": [250.,800], \
-                 "T1tttt": [ -1., -1. ] }
-    lsp_lim = { "T1tttt": [ 12.5, 1300. ], "T2tt": [ 12.5 , 662.5 ], "T2bbffff": [ 240., 720. ] }
+    glu_lim = { "T1tttt": [ 1800., 2162. ], "T5tctc": [ 61.5, 2162.5 ], "T2tt": [ 1e6, 1e6 ],
+                "T2bbffff": [1e6,1e6], "T4bbffff": [ 250., 800. ]  } 
+    stop_lim = { "T2tt": [ 400.5, 1162.5 ], "T5tctc":  [], "T2bbffff": [250.,800], \
+                 "T1tttt": [ 1e6, 1e6 ] }
+    lsp_lim = { "T1tttt": [ 12.5, 1400. ], "T2tt": [ 12.5 , 662.5 ], "T2bbffff": [ 240., 720. ] }
     mgl = -1.
     mstop=random.uniform(  stop_lim[topo][0], stop_lim[topo][1] )
     mlsp = random.uniform( lsp_lim[topo][0], lsp_lim[topo][1] )
@@ -54,6 +57,10 @@ def createFile ():
         mgl=random.uniform( glu_lim[topo][0], glu_lim[topo][1] )
         mstop=random.uniform( stop_lim[topo][0], stop_lim[topo][1] )
         mlsp = random.uniform( lsp_lim[topo][0], lsp_lim[topo][1] )
+        if mstop < 900. and topo=="T2tt":
+            mlsp = random.uniform ( mstop/2. - 100., mstop/2. + 100. )
+        if topo == "T1tttt" and mgl < 1800.:
+            mlsp = random.uniform ( 900., 1300. )
     f=open(template,"r")
     lines=f.readlines()
     f.close()
@@ -70,6 +77,11 @@ def createFile ():
 
 def runSingleFile():
     slhafile = "tmp.slha"
+    # print ( "now computing cross sections for %s" % slhafile )
+    computer = XSecComputer ( LO, 10000, 8 )
+    sqrts = [ 8, 13 ]
+    computer.computeForOneFile ( sqrtses = sqrts, inputFile = slhafile,\
+            unlink = True, lOfromSLHA = False, tofile=True )
     smstoplist = decompose ( slhafile )
     preds = theoryPredictionsFor ( result, smstoplist, useBestDataset=False, 
                                    combinedResults=False )
@@ -115,7 +127,7 @@ def main():
         g.flush()
         pickle.dump ( D, g2 )
         i+=1
-        if i>=5000:
+        if i>=1000:
             break
     g2.close()
     g.close()

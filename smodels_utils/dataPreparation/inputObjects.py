@@ -110,7 +110,7 @@ class CovarianceHandler:
         C=0.
         for i in agg1:
             for j in agg2:
-                C+=self.covariance[i][j]
+                C+=self.covariance[i-1][j-1]
         return C
 
     def aggregateThis ( self, aggregate ):
@@ -127,7 +127,7 @@ class CovarianceHandler:
             V=0.
             for i in agg:
                 for j in agg:
-                    V+=self.covariance[i][j]
+                    V+=self.covariance[i-1][j-1]
             newCov[ctr][ctr]=V
             for ctr2,agg2 in enumerate ( aggregate ):
                 if ctr == ctr2: continue

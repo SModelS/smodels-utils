@@ -37,6 +37,10 @@ while True:
         ctr+=1
         id0,id1,id2,id3,id4,id5=d["n0"],d["n1"],d["n2"],d["n3"],d["n4"],d["n5"]
         id6,id7=d["n6"],d["n7"]
+        r0 = d["r0"]
+        if r0 > 10. or r0 < 0.01:
+            print ( "skip %d: r=%f" % ( ctr, r0 ) )
+            continue
         add(id0,21)
         add(id1,15)
         add(id2,11)

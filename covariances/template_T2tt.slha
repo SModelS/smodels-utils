@@ -230,14 +230,3 @@ DECAY   1000023     0.00000000E+00   # chargino1+ decays
 DECAY   1000037     0.00000000E+00   # chargino2+ decays
 DECAY   1000022     0.00000000E+00   # neutralino1 decays
 DECAY   1000025     0.00000000E+00   # neutralino3 decay
-XSECTION  8.00E+03  2212 2212 2 -1000006 1000006   # Nevts: 50000 xsec unit: pb
-  0  0  0  0  0  0    4.32245270E-01 SModelS 1.0.93
-
-XSECTION  1.30E+04  2212 2212 2 -1000006 1000006   # Nevts: 50000 xsec unit: pb
-  0  0  0  0  0  0    2.07909500E+00 SModelS 1.0.93
-
-XSECTION  8.00E+03  2212 2212 2 -1000006 1000006   # Nevts: 50000 xsec unit: pb
-  0  2  0  0  0  0    7.34600836E-01 SModelS 1.0.93
-
-XSECTION  1.30E+04  2212 2212 2 -1000006 1000006   # Nevts: 50000 xsec unit: pb
-  0  2  0  0  0  0    3.26584243E+00 SModelS 1.0.93
