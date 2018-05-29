@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 
 """ simple script that produces a histogram of which signal regions 
-    are marked as one of the first <n> bests (i.e. highest expected r values) """
+    are marked as one of the first <n> bests (i.e. highest expected r values).
+    Suggests also aggregate regions.
+"""
 
 import sys
 
@@ -46,25 +48,44 @@ while True:
     except EOFError as e:
         break
 
-print ( "read",ctr,"lines" )
+tot_points = sum ( histo.values() )
+print ( "read %d lines. %d points total." % ( ctr, tot_points) )
 
 never = []
 occurs = {}
+threshold = 1000
 for Id,occ in histo.items():
     if not occ in occurs:
         occurs[occ]=[]
     occurs[occ].append ( Id )
-    if occ<1000:
+    if occ<threshold:
         never.append ( Id )
 
 keys = list ( occurs.keys() )
 keys.sort()
 
-for k in keys:
+for ctr,k in enumerate(keys[::-1]):
     v = occurs[k]
     SRs="%s" % v
     if len(v) == 1:
         SRs = "%s" % v[0]
-    print ( "%d points: %s" % ( k, SRs ) )
+    if ctr<3:
+        print ( "%d points: %s" % ( k, SRs ) )
 
-print ( "%s SRs have < x points: " % len(never), never )
+agg=[]
+
+tmp = []
+cur = 0
+for k in keys[::-1]:
+    v = occurs[k]
+    for vi in v:
+        tmp.append ( vi )
+    cur += k
+    if cur >= tot_points/14.:
+        agg.append( tmp )
+        tmp=[]
+        cur = 0
+
+print ( "proposed aggregation %s SRs: %s" % ( len(agg), agg ) )
+
+print ( "%s SRs have < %s points: %s" % ( len(never), threshold, never ) )

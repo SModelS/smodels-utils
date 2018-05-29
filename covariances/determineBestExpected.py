@@ -115,7 +115,7 @@ def main():
         g.flush()
         pickle.dump ( D, g2 )
         i+=1
-        if i>5000:
+        if i>=5000:
             break
     g2.close()
     g.close()
