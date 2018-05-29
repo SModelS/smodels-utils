@@ -451,7 +451,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         l9.SetTextSize(.025)
         l9.SetTextAngle(90.)
         l9.SetTextColor( kGray )
-        l9.DrawLatex ( .93, .7, time.strftime("%b %d, %Y, %H:%M") )
+        l9.DrawLatex ( .93, .65, time.strftime("%b %d, %Y, %H:%M") )
         base.l9 = l9
 
     if not silentMode:
