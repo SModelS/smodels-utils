@@ -141,7 +141,7 @@ class DatasetsFromLatex:
             nobs = int ( tokens[self.c_obs] )
             sbg = tokens[self.c_bg].strip()
             bg, bgerr = self.getBGAndError ( sbg )
-            name = "sr%d" % binnr
+            name = "sr%d" % (binnr+1)
             dataId = self.ds_name
             for i,token in enumerate ( tokens ):
                 ctoken = token.strip()
@@ -270,7 +270,7 @@ class DatasetsFromRoot:
         self.counter += 1
         if self.counter > self.n:
             raise StopIteration ()
-        name = "sr%d" % self.counter
+        name = "sr%d" % ( self.counter )
         if self.readDatasetNames:
             name = self.xaxis.GetBinLabel ( self.counter )
         nobs = self.histo_obs.GetBinContent ( self.counter )
