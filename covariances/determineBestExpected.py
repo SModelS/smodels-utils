@@ -42,13 +42,14 @@ def createFile ():
     topo=topos[0]
     template="./template_%s.slha" % topo
     tempfile = "tmp.slha"
-    glu_lim = { "T1tttt": [ 61.5, 2162. ], "T5tctc": [ 61.5, 2162.5 ], "T2tt": [ -1., -1. ],
+    glu_lim = { "T1tttt": [ 1800., 2162. ], "T5tctc": [ 61.5, 2162.5 ], "T2tt": [ -1., -1. ],
                 "T2bbffff": [-1.,-1.], "T4bbffff": [ 250., 800. ]  } 
-    stop_lim = { "T2tt": [ 187.5, 1162.5 ], "T5tctc":  [], "T2bbffff": [250.,800] }
-    lsp_lim = { "T2tt": [ 12.5 , 662.5 ], "T2bbffff": [ 240., 720. ] }
+    stop_lim = { "T2tt": [ 187.5, 1162.5 ], "T5tctc":  [], "T2bbffff": [250.,800], \
+                 "T1tttt": [ -1., -1. ] }
+    lsp_lim = { "T1tttt": [ 12.5, 1300. ], "T2tt": [ 12.5 , 662.5 ], "T2bbffff": [ 240., 720. ] }
     mgl = -1.
     mstop=random.uniform(  stop_lim[topo][0], stop_lim[topo][1] )
-    mlsp = random.uniform( mstop-80, mstop-10 )
+    mlsp = random.uniform( lsp_lim[topo][0], lsp_lim[topo][1] )
     if "16-050" in ids[0]:
         mgl=random.uniform( glu_lim[topo][0], glu_lim[topo][1] )
         mstop=random.uniform( stop_lim[topo][0], stop_lim[topo][1] )
@@ -101,7 +102,7 @@ def main():
         keys = list ( set ( preds.keys() ) )
         keys.sort( reverse=True )
         sid=""
-        first_n = 8
+        first_n = 10
         for ctr,k in enumerate(keys[:first_n]):
             sid+="id%d='%s'; r%d=%.2f; n%d=%d; " % ( ctr, preds[k], ctr, float(k)/10**6, ctr, datasets[preds[k]] )
             D["r%d" % ctr]= float(k)/10**6
@@ -114,7 +115,7 @@ def main():
         g.flush()
         pickle.dump ( D, g2 )
         i+=1
-        if i>2000:
+        if i>5000:
             break
     g2.close()
     g.close()
