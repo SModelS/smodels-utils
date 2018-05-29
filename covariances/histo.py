@@ -25,6 +25,9 @@ if len(sys.argv)>1:
         print ( "usage: histo.py [CMS-PAS-SUS-16-052|CMS-SUS-16-050]" )
         sys.exit()
 
+# onlyTopo = "T2tt"
+onlyTopo = None
+
 regions = { "CMS-PAS-SUS-16-052": 44, "CMS-SUS-16-050": 84 }
 for i in range(1,regions[fname]+1):
     histo[i]=0
@@ -37,6 +40,9 @@ while True:
         ctr+=1
         id0,id1,id2,id3,id4,id5=d["n0"],d["n1"],d["n2"],d["n3"],d["n4"],d["n5"]
         id6,id7=d["n6"],d["n7"]
+        topo=d["t"]
+        if onlyTopo != None and topo != onlyTopo:
+            continue
         r0 = d["r0"]
         if r0 > 5. or r0 < 0.05:
             print ( "skip %d: r=%f" % ( ctr, r0 ) )
@@ -53,16 +59,17 @@ while True:
         break
 
 tot_points = sum ( histo.values() )
-print ( "read %d lines. %d points total." % ( ctr, tot_points) )
+print ( "read %d lines. %d points total. topo: %s" % ( ctr, tot_points, onlyTopo) )
 
 never = []
 occurs = {}
-threshold = tot_points / 200
+threshold = tot_points / 10
 for Id,occ in histo.items():
     if not occ in occurs:
         occurs[occ]=[]
     occurs[occ].append ( Id )
-    if occ<threshold:
+#    if occ<threshold:
+    if occ==0.:
         never.append ( Id )
 
 keys = list ( occurs.keys() )
