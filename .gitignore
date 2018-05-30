@@ -5,7 +5,6 @@
 *.aux
 *.swp
 # *.tex
-*.pdf
 *.dvi
 *.py.kate-swp
 Database.txt
