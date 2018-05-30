@@ -126,7 +126,7 @@ class CovarianceHandler:
         except Exception as e:
             logger.error ( "Inversion failed. %s" % e )
             sys.exit()
-       try:
+        try:
             from scipy import stats
             l=stats.multivariate_normal.logpdf([0.]*n,mean=[0.]*n,cov=m.covariance)
         except Exception as e:
