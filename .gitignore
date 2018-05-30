@@ -21,6 +21,7 @@ validation/results
 validation/tmp*
 covariances/.CMS*
 distribution/smodels-v*
+smodels_utils/plotting/T*pdf
 .project
 covariances/SL.root
 .pydevproject

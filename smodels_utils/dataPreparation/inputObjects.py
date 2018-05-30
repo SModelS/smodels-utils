@@ -94,10 +94,10 @@ class CovarianceHandler:
                 if j in self.blinded_regions:
                     continue
                 el = h.GetBinContent ( i, j )
-                if i==j and el < 1e-5:
+                if i==j and el < 1e-4:
                    logger.error ( "variance in the covariance matrix at position %d has a very small (%g) value" % (i,el) )
-                   logger.error ( "will set it to 1e-5" )
-                   el = 1e-5
+                   logger.error ( "will set it to 1e-4" )
+                   el = 1e-4
                 row.append ( el )
             self.covariance.append ( row )
 
@@ -106,7 +106,7 @@ class CovarianceHandler:
             self.aggregateThis ( aggregate )
 
         self.checkCovarianceMatrix()
-    
+
     def computeAggCov ( self, agg1, agg2 ):
         """ compute the covariance between agg1 and agg2 """
         C=0.
@@ -126,6 +126,15 @@ class CovarianceHandler:
         except Exception as e:
             logger.error ( "Inversion failed. %s" % e )
             sys.exit()
+       try:
+            from scipy import stats
+            l=stats.multivariate_normal.logpdf([0.]*n,mean=[0.]*n,cov=m.covariance)
+        except Exception as e:
+            import numpy
+            logger.error ( "computation of logpdf failed: %s" % e )
+            logger.error ( "the diagonal reads: %s " % ( numpy.diag ( m.covariance ) ) )
+            sys.exit()
+
 
     def aggregateThis ( self, aggregate ):
         newDSOrder=[]
@@ -145,7 +154,7 @@ class CovarianceHandler:
             newCov[ctr][ctr]=V
             for ctr2,agg2 in enumerate ( aggregate ):
                 if ctr == ctr2: continue
-                cov = self.computeAggCov ( agg, agg2 ) 
+                cov = self.computeAggCov ( agg, agg2 )
                 newCov[ctr][ctr2]=cov
 
             #for i,a in enumerate(agg):
