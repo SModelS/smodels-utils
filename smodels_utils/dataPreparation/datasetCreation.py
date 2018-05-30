@@ -133,7 +133,7 @@ class DatasetsFromLatex:
             if line == "":
                 continue
             tokens = line.split ( "&" )
-            binnr = counter
+            binnr = counter+1
             try:
                 binnr = int ( tokens[0] )
             except Exception as e:
@@ -141,7 +141,7 @@ class DatasetsFromLatex:
             nobs = int ( tokens[self.c_obs] )
             sbg = tokens[self.c_bg].strip()
             bg, bgerr = self.getBGAndError ( sbg )
-            name = "sr%d" % (binnr+1)
+            name = "sr%d" % (binnr)
             dataId = self.ds_name
             for i,token in enumerate ( tokens ):
                 ctoken = token.strip()
@@ -161,7 +161,7 @@ class DatasetsFromLatex:
 
     def aggregateToOne ( self, ctr, agg ):
         """ aggregate one list of datasets to a single dataset. """
-        newds = copy.deepcopy ( self.origDataSets[ agg[0] ] )
+        newds = copy.deepcopy ( self.origDataSets[ agg[0]-1 ] )
         newds._name = "ar%d" % (ctr+1)
         aggregated = ""
         observedN, expectedBG, bgError2 = 0, 0., 0.
