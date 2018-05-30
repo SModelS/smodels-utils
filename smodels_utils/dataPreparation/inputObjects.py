@@ -104,6 +104,8 @@ class CovarianceHandler:
         if aggregate != None:
             ## aggregate the stuff
             self.aggregateThis ( aggregate )
+
+        self.checkCovarianceMatrix()
     
     def computeAggCov ( self, agg1, agg2 ):
         """ compute the covariance between agg1 and agg2 """
@@ -112,6 +114,18 @@ class CovarianceHandler:
             for j in agg2:
                 C+=self.covariance[i-1][j-1]
         return C
+
+    def checkCovarianceMatrix( self ):
+        """ a quick check if the covariance matrix is invertible. """
+        from smodels.tools.SimplifiedLikelihoods import Model
+        n=len(self.covariance)
+        m=Model( [0.]*n, [0.]*n, self.covariance )
+        logger.info ( "Check %d-dim covariance matrix for positive definiteness." % n )
+        try:
+            I=(m.covariance)**(-1)
+        except Exception as e:
+            logger.error ( "Inversion failed. %s" % e )
+            sys.exit()
 
     def aggregateThis ( self, aggregate ):
         newDSOrder=[]
