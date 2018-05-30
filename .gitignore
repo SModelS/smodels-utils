@@ -1,7 +1,6 @@
 *.pyc
 *.dot
 *.eps
-*.png
 *.ps
 *.aux
 *.swp
