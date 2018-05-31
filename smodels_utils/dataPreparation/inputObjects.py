@@ -72,7 +72,7 @@ class Locker(object):
 
 class CovarianceHandler:
     def __init__ ( self, filename, histoname, max_datasets=None,
-                   aggregate = None, blind_regions = None ):
+                   aggregate = None ):
         import ROOT
         f=ROOT.TFile ( filename )
         h=self.getHistogram ( f, histoname )
@@ -82,9 +82,7 @@ class CovarianceHandler:
             self.n=min(max_datasets+1,self.n)
         self.datasetOrder = []
         self.covariance = []
-        self.blinded_regions = blind_regions
-        if blind_regions == None:
-            self.blinded_regions = []
+        self.blinded_regions = []
         for i in range ( 1, self.n ):
             if i in self.blinded_regions:
                 continue
@@ -226,7 +224,7 @@ class MetaInfoInput(Locker):
         return metaInfo
 
     def createCovarianceMatrix ( self, filename, histoname, addOrder=True,
-                          max_datasets=None, aggregate = None, blind_regions = None ):
+                          max_datasets=None, aggregate = None ):
         """ create the covariance matrix from file <filename>, histo <histoname>,
         allowing only a maximum of <max_datasets> datasets. If
         aggregate is not None, aggregate the signal regions, given as
@@ -235,10 +233,9 @@ class MetaInfoInput(Locker):
         signal numbers, e.g.  [ [ 1, 2 ], [ 3, 4 ] ]
         :param aggregate: aggregate signal regions, given by indices, e.g.
          [[0,1,2],[3,4]] or signal region names, e.g.[["sr0","sr1"],["sr2"]].
-        :param blind_regions: regions to disregard, given as vector e.g [0,5,9].
         """
 
-        handler = CovarianceHandler ( filename, histoname, max_datasets, aggregate, blind_regions )
+        handler = CovarianceHandler ( filename, histoname, max_datasets, aggregate )
         if addOrder:
             self.datasetOrder = ", ".join ( [ '"%s"' % x for x in  handler.datasetOrder ] )
         else:
