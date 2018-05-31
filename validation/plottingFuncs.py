@@ -432,6 +432,9 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     l0.SetNDC()
     l0.SetTextSize(.025)
     l0.DrawLatex(.05,.905,subtitle)
+    signal_factor = 1. # an additional factor that is multiplied with the signal cross section
+    agreement = validationPlot.computeAgreementFactor( signal_factor = signal_factor )
+    logger.info ( "Agreement: %.2f " % agreement )
     base.l0=l0
     if figureUrl:
         l1=TLatex()
@@ -441,8 +444,11 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         base.l1=l1
     l2=TLatex()
     l2.SetNDC()
-    l2.SetTextSize(.04)
-    l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor)
+    l2.SetTextSize(.025)
+    l2.SetTextAngle(90.)
+    l2.SetTextColor( kGray )
+    l2.DrawLatex(.93,.15,"k-factor %.2f" % kfactor)
+    #l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor)
     base.l2=l2
     if True: ## a timestamp, on the right border
         import time

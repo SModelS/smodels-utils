@@ -102,8 +102,6 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
               None: generate them if needed.
     :param limitPoints: Limit the number of tested model points to <n> randomly 
               chosen points. If None or negative, test all points.
-
-    :return: A dictionary containing the agreement factors
     """
 
     if not os.path.isdir(databasePath):
