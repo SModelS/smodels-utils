@@ -46,7 +46,7 @@ def createBinnedModel(bins):
             if j in bins:
                 col.append ( e )
         C.append ( col )
-    m = Model ( data=D, backgrounds=B, covariance=C, skewness=S,
+    m = Model ( data=D, backgrounds=B, covariance=C, third_moment=S,
                 efficiencies=sig, name="model%d" % n )
     m._bins=bins
     return m
