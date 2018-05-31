@@ -445,7 +445,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False 
         lex.SetTextSize(.025)
         import socket
         hn=socket.gethostname()
-        lex.DrawLatex(.64,.15,"agreement: %d%s, t~%.1fs [%s]" % (agreement, "%", tavg, hn ) )
+        lex.DrawLatex(.59,.12,"agreement: %d%s, t~%.1fs [%s]" % (agreement, "%", tavg, hn ) )
         base.lex=lex
     base.l0=l0
     if figureUrl:
