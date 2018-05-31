@@ -313,7 +313,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     
     return plane
             
-def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
+def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate the exclusion plot
@@ -332,6 +332,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     allowed_border.SetName("allowed_border")
     cond_violated=TGraph()
     kfactor=None
+    tavg = 0.
 
     if not validationPlot.data:
         logger.error("Data for validation plot is not defined.")
@@ -347,6 +348,8 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
                 sys.exit()
 
             xvals = pt['axes']
+            if "t" in pt:
+                tavg += pt["t"]
             r = pt['signal']/pt ['UL']
             if isinstance(xvals,dict):
                 if len(xvals) == 1:
@@ -373,7 +376,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
                 else:
                     allowed.SetPoint(allowed.GetN(), x, y)
 
-        
+    tavg = tavg / len (validationPlot.data )
 
     # Check if official exclusion curve has been defined:
     if not validationPlot.officialCurves:
@@ -433,8 +436,17 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     l0.SetTextSize(.025)
     l0.DrawLatex(.05,.905,subtitle)
     signal_factor = 1. # an additional factor that is multiplied with the signal cross section
-    agreement = validationPlot.computeAgreementFactor( signal_factor = signal_factor )
-    logger.info ( "Agreement: %d%s" % (round(100.*agreement),"%") )
+    agreement = round(100.*validationPlot.computeAgreementFactor( signal_factor = signal_factor ))
+    logger.info ( "Agreement: %d%s" % (agreement,"%") )
+    if extraInfo:
+        lex=TLatex()
+        lex.SetNDC()
+        lex.SetTextColor( kGray )
+        lex.SetTextSize(.025)
+        import socket
+        hn=socket.gethostname()
+        lex.DrawLatex(.64,.15,"agreement: %d%s, t~%.1fs [%s]" % (agreement, "%", tavg, hn ) )
+        base.lex=lex
     base.l0=l0
     if figureUrl:
         l1=TLatex()
@@ -450,7 +462,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     l2.DrawLatex(.93,.15,"k-factor %.2f" % kfactor)
     #l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor)
     base.l2=l2
-    if True: ## a timestamp, on the right border
+    if extraInfo: ## a timestamp, on the right border
         import time
         l9=TLatex()
         l9.SetNDC()

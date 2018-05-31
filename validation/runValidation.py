@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
-                  pretty=False,generateData=True,limitPoints=None):
+                  pretty=False,generateData=True,limitPoints=None,extraInfo=False):
     """
     Creates a validation plot and saves its output.
 
@@ -43,12 +43,14 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     :param limitPoints: Limit the total number of points to <n> (integer). 
                         Points are chosen randomly.
                         If None or negative, take all points.
+    :param extraInfo: add additional info to plot: agreement factor, time spent,
+                      time stamp, hostname
     :return: True
     """
 
     logger.info("Generating validation plot for " + expRes.getValuesFor('id')[0]
                 +", "+txnameStr+", "+axes)
-    valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor,limitPoints=limitPoints)
+    valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor,limitPoints=limitPoints,extraInfo=extraInfo)
     valPlot.setSLHAdir(slhadir)
     valPlot.ncpus = ncpus
     generatedData=False
@@ -78,7 +80,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
         tarfiles=None,ncpus=-1,verbosity='error',pretty=False,generateData=True,
-			  limitPoints=None):
+			  limitPoints=None,extraInfo=False):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -102,6 +104,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
               None: generate them if needed.
     :param limitPoints: Limit the number of tested model points to <n> randomly 
               chosen points. If None or negative, test all points.
+    :param extraInfo: add additional info to plot: agreement factor, time spent,
+              time stamp, hostname
     """
 
     if not os.path.isdir(databasePath):
@@ -170,7 +174,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
                 axes = txname.axes     
             for ax in axes:
                 validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,
-							               generateData,limitPoints)
+							               generateData,limitPoints,extraInfo)
             logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--------- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
     logger.info("\n\n----- Finished validation in %.1f min." %((time.time()-tval0)/60.))
@@ -278,6 +282,9 @@ if __name__ == "__main__":
     limitPoints=None
     if parser.has_section("options") and parser.has_option("options","limitPoints"):
         limitPoints = parser.getint("options","limitPoints")
+    extraInfo = False
+    if parser.has_section("options") and parser.has_option("options","extraInfo"):
+        extraInfo = parser.getboolean("options", "extraInfo")
     generateData = _doGenerate ( parser )
 
 #    try:
@@ -293,5 +300,5 @@ if __name__ == "__main__":
 
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
-         tarfiles,ncpus,args.verbose.lower(),pretty,generateData,limitPoints)
+         tarfiles,ncpus,args.verbose.lower(),pretty,generateData,limitPoints,extraInfo)
 

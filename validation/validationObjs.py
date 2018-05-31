@@ -37,10 +37,12 @@ class ValidationPlot():
     :ivar kfactor: Common kfactor to be applied to all theory cross-sections (float)
     :ivar limitPoints: limits tested model points to n randomly chosen ones. 
                    If None or negative, take all points.
+    :ivar extraInfo: add additional info to plot: agreement factor, time spent,
+                      time stamp, hostname
     """
 
     def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
-                 kfactor = 1., limitPoints=None ):
+                 kfactor = 1., limitPoints=None, extraInfo=False ):
 
         self.expRes = copy.deepcopy(ExptRes)
         self.txName = TxNameStr
@@ -51,7 +53,7 @@ class ValidationPlot():
         self.officialCurves = self.getOfficialCurve( get_all = True )
         self.kfactor = kfactor
         self.limitPoints = limitPoints
-
+        self.extraInfo = extraInfo
 
         #Select the desired txname and corresponding datasets in the experimental result:
         for dataset in self.expRes.datasets:
@@ -417,7 +419,7 @@ class ValidationPlot():
         :param silentMode: If True the plot will not be shown on the screen
         """
 
-        self.plot,self.base = createPlot(self,silentMode=silentMode)
+        self.plot,self.base = createPlot(self,silentMode=silentMode,extraInfo=self.extraInfo)
 
     def getPrettyPlot(self,silentMode=True):
         """
