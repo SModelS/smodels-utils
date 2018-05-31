@@ -112,8 +112,16 @@ class ValidationPlot():
         y=ROOT.Double()
         curve.GetPoint ( 0, x0, y0 ) ## get the last point
         curve.GetPoint ( curve.GetN()-1, x, y ) ## get the last point
-        curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
-        curve.SetPoint ( curve.GetN(), x0, 0. )  ## extend to first point
+        closeWithXAxis=True ## close with x-axis (y=0) or y-axis (x=0)
+        if self.txName in [ "T2bbffff" ]: ## T2bbffff tends to close with y-axis
+            closeWithXAxis = False
+
+        if closeWithXAxis:
+            curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
+            curve.SetPoint ( curve.GetN(), x0, 0. )  ## extend to first point
+        else:
+            curve.SetPoint ( curve.GetN(), 0., y )  ## extend to x=0
+            curve.SetPoint ( curve.GetN(), 0., y0 )  ## extend to first point
 
         pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0, "not_excluded_inside": 0,
                "not_excluded_outside": 0, "wrong" : 0 }

@@ -434,7 +434,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     l0.DrawLatex(.05,.905,subtitle)
     signal_factor = 1. # an additional factor that is multiplied with the signal cross section
     agreement = validationPlot.computeAgreementFactor( signal_factor = signal_factor )
-    logger.info ( "Agreement: %.2f " % agreement )
+    logger.info ( "Agreement: %d%s" % (round(100.*agreement),"%") )
     base.l0=l0
     if figureUrl:
         l1=TLatex()

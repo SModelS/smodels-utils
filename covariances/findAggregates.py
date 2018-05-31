@@ -53,7 +53,7 @@ corrs.sort(reverse=True)
 done = []
 aggs = []
     
-frac=.4
+frac=.7
 
 for k in corrs:
     #if k < .1:

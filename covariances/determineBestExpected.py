@@ -24,7 +24,7 @@ ids= ['CMS-PAS-SUS-16-052' ]
 if len(sys.argv)>1:
     ids = [ sys.argv[1] ]
     if sys.argv[1]=="-h" or sys.argv[1]=="--help":
-        print ( "usage: histo.py [CMS-PAS-SUS-16-052|CMS-SUS-16-050]" )
+        print ( "usage: determineBestExpeced.py [CMS-PAS-SUS-16-052|CMS-SUS-16-050]" )
         sys.exit()
 results=d.getExpResults( analysisIDs=ids, dataTypes=["efficiencyMap"],
                          useNonValidated=True )
@@ -50,7 +50,7 @@ def createFile ():
     tfile = tempfile.mktemp(suffix=".slha")
     glu_lim = { "T1tttt": [ 1800., 2162. ], "T5tctc": [ 61.5, 2162.5 ], "T2tt": [ 1e6, 1e6 ],
                 "T2bbffff": [1e6,1e6], "T4bbffff": [ 250., 800. ]  } 
-    stop_lim = { "T2tt": [ 400.5, 1162.5 ], "T5tctc":  [], "T2bbffff": [250.,800], \
+    stop_lim = { "T2tt": [ 400.5, 1162.5 ], "T5tctc":  [], "T2bbffff": [350.,600], \
                  "T1tttt": [ 1e6, 1e6 ] }
     lsp_lim = { "T1tttt": [ 12.5, 1400. ], "T2tt": [ 12.5 , 662.5 ], "T2bbffff": [ 240., 720. ] }
     mgl = random.uniform( glu_lim[topo][0], glu_lim[topo][1] )
@@ -120,14 +120,14 @@ def main():
         keys = list ( set ( preds.keys() ) )
         keys.sort( reverse=True )
         sid=""
-        first_n = 10
+        first_n = 20
         for ctr,k in enumerate(keys[:first_n]):
             sid+="id%d='%s'; r%d=%.2f; n%d=%d; " % ( ctr, preds[k], ctr, float(k)/10**6, ctr, datasets[preds[k]] )
             D["r%d" % ctr]= float(k)/10**6
             D["n%d" % ctr] = datasets[preds[k]]
             D["id%d" % ctr] = preds[k] 
         sid=sid[:-2]
-        print ( "file",i,"->", keys[:first_n] )
+        print ( "file %d, topo=%s, m=%d,%d,%d -> %s" % ( i, topo, mgl,mstop, mlsp, keys[:first_n] ) )
         line="X: nr=%d; t='%s'; mgl=%.1f; mstop=%.1f; mlsp=%.1f; %s.\n" % ( i, topo, mgl, mstop, mlsp, sid ) 
         g.write ( line )
         g.flush()
