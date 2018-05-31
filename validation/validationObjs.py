@@ -126,7 +126,10 @@ class ValidationPlot():
         pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0, "not_excluded_inside": 0,
                "not_excluded_outside": 0, "wrong" : 0 }
         for point in self.data:
-            x,y=point["axes"]['x'],point["axes"]['y']
+            try: ## we seem to have two different ways of writing the x,y values
+                x,y=point["axes"]['x'],point["axes"]['y']
+            except Exception as e:
+                x,y=point["axes"][0],point["axes"][1]
             if y==0: y=1.5 ## to avoid points sitting on the line
             excluded = point["UL"] < point["signal"]
             really_excluded = looseness * point["UL"] < point["signal"] * signal_factor
