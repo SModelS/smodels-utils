@@ -432,7 +432,7 @@ class DataSetInput(Locker):
     def addTxName(self,txname):
         """
         Adds txname to dataset. Checks if txname already exists and
-        raise a error if it does.
+        raise an error if it does.
 
         :param txname: txname (string)
 

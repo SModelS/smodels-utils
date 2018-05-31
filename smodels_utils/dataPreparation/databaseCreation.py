@@ -83,6 +83,7 @@ class DatabaseCreator(list):
         list.__init__(self)
 
     def removeOldDataSetDirs ( self ):
+        """ remove old sr*, ar*, and similar directories """
         files = os.listdir(".")
         dirs = []
         for f in files:
