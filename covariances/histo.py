@@ -19,12 +19,16 @@ def main():
         histo[Id]+=n
 
     ap = argparse.ArgumentParser( description= "histogramming signal regions." )
-    ap.add_argument('-a','--analysis',help="name of analysis to histogram",
+    ap.add_argument('-a','--analysis',help="name of analysis to histogram [CMS-SUS-16-050]",
                     default = "CMS-SUS-16-050", type=str )
-    ap.add_argument('-t','--topo',help="specify a topology",
+    ap.add_argument('-t','--topo',help="specify a topology [all]",
                     default = "all", type=str )
     args = ap.parse_args()
     fname = args.analysis
+    if fname == "052":
+        fname = "CMS-PAS-SUS-16-052"
+    if fname == "050":
+        fname = "CMS-SUS-16-050"
     # fname = "CMS-PAS-SUS-16-052"
     # fname = "CMS-SUS-16-050"
 

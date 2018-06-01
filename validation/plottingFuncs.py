@@ -416,6 +416,8 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False 
         # print "[plottingFuncs.py] add to %s: %s, %s" % ( validationPlot.txName, id, str ( map ( str, dataset.txnameList  ) ) )
         subtitle+=dataId+", "
     subtitle = subtitle[:-2]
+    if hasattr ( validationPlot.expRes.globalInfo, "covariance" ):
+        subtitle = "%d aggregate regions" % len(validationPlot.expRes.datasets)
     if len(subtitle) > 100:
         subtitle = subtitle[:100] + " ..."
     if len(validationPlot.expRes.datasets) == 1 and type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
