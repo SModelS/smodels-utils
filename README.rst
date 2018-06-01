@@ -2,7 +2,7 @@
 smodels-utils
 =============
 
-**The smodels-utils repository**
+**Welcome to the smodels-utils repository**
 
 This is a repository to store and preserve and code and data that 
 *around* smodels that is not actual part of smodels-proper.
