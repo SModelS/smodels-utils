@@ -17,7 +17,7 @@ import tempfile
 import os
 
 # dbname="http://smodels.hephy.at/database/official113"
-dbname="/home/walten/git/smodels-database-test"
+dbname="/home/walten/git/smodels-database"
 d=Database( dbname, subpickle=True )
 ids= ['CMS-PAS-SUS-16-052' ]
 # ids= ['CMS-SUS-16-050' ]
