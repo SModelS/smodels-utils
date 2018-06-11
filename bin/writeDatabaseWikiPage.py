@@ -45,7 +45,8 @@ def main():
     w=open("Database","w" )
     header ( w )
     Dir = "/var/www/database/"
-    globs=glob.glob("%s*" % Dir )
+    globs=list ( glob.glob("%s*" % Dir ) )
+    globs.sort()
 
     for filen in globs:
         if ".pcl" in filen: continue

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """ makes a database pickle file publically available 
     (script needs to be run on the smodels server) """
@@ -14,9 +14,19 @@ def main():
     ap = argparse.ArgumentParser( description="makes a database pickle file publically available (run it on the smodels)" )
     ap.add_argument('-f', '--filename', help='name of pickle file', default="database.pcl" )
     ap.add_argument('-d', '--dry_run', help='dont copy to final destination', action="store_true" )
+    ap.add_argument('-b', '--build', help='build pickle file, assume filename is directory name', action="store_true" )
     ap.add_argument('-s', '--ssh', help='work remotely via ssh', action="store_true" )
     args = ap.parse_args()
-    p=open(args.filename,"rb")
+    dbname = args.filename
+    if args.build:
+        if not os.path.isdir ( dbname ):
+            print ( "supplied --build option, but %s is not a directory." % dbname )
+            sys.exit()
+        from smodels.experiment.databaseObj import Database
+        d = Database ( dbname )
+        dbname = d.pcl_meta.pathname
+
+    p=open(dbname,"rb")
     meta=pickle.load(p)
     print ( meta )
     ver = meta.databaseVersion.replace(".","") 
@@ -34,12 +44,12 @@ def main():
             pclfilename = "%s.pcl" % infofile
             
     f=open ( infofile, "w" )
-    Dict = { "lastchanged": meta.mtime, "size": os.stat(args.filename).st_size, "url": "http://smodels.hephy.at/database/%s" % pclfilename }
+    Dict = { "lastchanged": meta.mtime, "size": os.stat(dbname).st_size, "url": "http://smodels.hephy.at/database/%s" % pclfilename }
     f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
     f.close()
-    cmd = "cp %s /nfsdata/walten/database/%s" % ( args.filename, pclfilename )
+    cmd = "cp %s /nfsdata/walten/database/%s" % ( dbname, pclfilename )
     if args.ssh:
-        cmd = "scp %s smodels.hephy.at:/nfsdata/walten/database/%s" % ( args.filename, pclfilename )
+        cmd = "scp %s smodels.hephy.at:/nfsdata/walten/database/%s" % ( dbname, pclfilename )
     print ( cmd )
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
