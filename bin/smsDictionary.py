@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2  
 
 """
 .. module:: smsDictionary
@@ -9,6 +9,8 @@
 
 
 """
+
+## python2 needed because of pyfeyn!
 
 from __future__ import print_function
 import setPath
@@ -86,7 +88,7 @@ N.B.: Each "()" group corresponds to a branch
         if not os.path.exists ( "feyn/" ):
             C.getoutput ( "mkdir feyn" )
         topos = writer.getTopos()
-        keys = topos.keys()
+        keys = list ( topos.keys() )
         keys.sort()
         multipleNames = {}
         for txname in keys:
