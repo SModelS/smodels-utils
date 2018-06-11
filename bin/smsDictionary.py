@@ -168,11 +168,16 @@ N.B.: Each "()" group corresponds to a branch
                 self.f.write ( "[[ListOfAnalyses%s|many (%d)]]" % (self.ver,len(results)) )
             else:
                 l = []
+                hi = [] ## remove dupes
                 for res in results:
+                    ID = res.globalInfo.id
+                    if ID in hi:
+                        continue
+                    hi.append ( ID )
                     supers = ""
                     if hasattr ( res.globalInfo, "supersededBy" ):
                         supers="WithSuperseded"
-                    l.append ( "[[ListOfAnalyses%s%s#%s|%s]]" % ( self.ver, supers, res.globalInfo.id, res.globalInfo.id ) )
+                    l.append ( "[[ListOfAnalyses%s%s#%s|%s]]" % ( self.ver, supers, ID, ID ) )
                 self.f.write ( "<<BR>>".join ( l ) )
         self.f.write ( "||\n" )
 
