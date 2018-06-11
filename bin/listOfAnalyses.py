@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 .. module:: listOfAnalyses
@@ -11,7 +11,10 @@
 
 from __future__ import print_function
 import setPath
-import commands
+try:
+    import subprocess as C
+except:
+    import commands as C
 import sys
 ## from short_descriptions import SDs
 from smodels.experiment.databaseObj import Database
@@ -175,8 +178,8 @@ def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, n_homegrow
         homegrownd = {}
         for i in ana.getTxNames():
             if i.validated not in [ True, "n/a", "N/A" ]:
-                print ( "validated=",i.validated )
-                sys.exit()
+                print ( "Error: validated is %s in %s. Dont know how to handle." % ( i.validated, ana.globalInfo.id ) )
+                sys.exit(-1)
             homegrownd[str(i)] = ""
             if hasattr ( i, "source" ) and "SModelS" in i.source:
                 homegrownd[str(i)] = " [[#A1|(1)]]"
@@ -239,6 +242,7 @@ def selectAnalyses ( anas, sqrts, experiment, Type ):
     return ret
 
 def writeExperiment ( f, db, experiment, sqrts, superseded, n_homegrown ):
+    print ( "Experiment:", experiment )
     tanas = db.getExpResults( useSuperseded=superseded )
     for Type in [ "upperLimit", "efficiencyMap" ]:
         anas = []
@@ -257,12 +261,12 @@ def writeExperiment ( f, db, experiment, sqrts, superseded, n_homegrown ):
                         n_homegrown )
 
 def backup( filename ):
-    o = commands.getoutput ( "cp %s Old%s" % ( filename, filename ) )
+    o = C.getoutput ( "cp %s Old%s" % ( filename, filename ) )
     if len(o):
         print ( "backup: %s" % o )
 
 def diff( filename ):
-    o = commands.getoutput ( "diff %s Old%s" % ( filename, filename ) )
+    o = C.getoutput ( "diff %s Old%s" % ( filename, filename ) )
     if len(o)==0:
         print ( "No changes in %s since last call." % filename )
         return
@@ -277,18 +281,27 @@ def help():
 def main():
     n_homegrown=[0]
     superSeded=True
+    import argparse
+    argparser = argparse.ArgumentParser(description='Create list of analyses in wiki format, see http://smodels.hephy.at/wiki/ListOfAnalyses')
+    argparser.add_argument ( '-n', '--no_superseded', help='ignore superseded results', action='store_true' )
+    argparser.add_argument ( '-d', '--database', help='path to database [../../smodels-database]',
+                             type=str, default='../../smodels-database' )
+    args = argparser.parse_args()
+    superSeded = not args.no_superseded
+    """
     for i in sys.argv[1:]:
         if i == "-n": superSeded=False
         if i == "-h": help()
+    """
     filename = "ListOfAnalyses"
     if superSeded:
         filename = "ListOfAnalysesWithSuperseded"
     backup( filename )
     f = open ( filename, "w" )
-    database = Database ( '../../smodels-database/', discard_zeroes=True )
+    database = Database ( args.database, discard_zeroes=True )
     header( f, database.databaseVersion, superSeded )
     listTables ( f, database.getExpResults ( useSuperseded = superSeded ) )
-    print ( "Database", database.databaseVersion )
+    print ( "Database:", database.databaseVersion )
     experiments=[ "CMS", "ATLAS" ]
     for sqrts in [ 13, 8 ]:
         for experiment in experiments:
