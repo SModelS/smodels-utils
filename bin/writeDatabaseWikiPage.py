@@ -51,9 +51,9 @@ def main():
     for filen in globs:
         if ".pcl" in filen: continue
         dbname = filen.replace(Dir,"" )
-        ver = dbname.translate(DD)
-        ver = "v" + ver[0]+"."+ver[1]+"."+ver[2:]
-        description="Official database, %s" % ver
+        Ver = dbname.translate(DD)
+        ver = "v" + Ver[0]+"."+Ver[1]+"."+Ver[2:]
+        description="[[ListOfAnalysesv%s%s%s|Official database, %s]]" % ( Ver[0],Ver[1],Ver[2:], ver )
         j = json.load ( open(filen) )
         size=sizeof_fmt ( j["size"] )
         frozen="yes"
