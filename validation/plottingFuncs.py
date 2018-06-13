@@ -443,8 +443,8 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False 
     if extraInfo:
         lex=TLatex()
         lex.SetNDC()
-        lex.SetTextColor( kGray )
-        lex.SetTextSize(.025)
+        # lex.SetTextColor( kGray )
+        lex.SetTextSize(.026 )
         import socket
         hn=socket.gethostname()
         lex.DrawLatex(.59,.12,"agreement: %d%s, t~%.1fs [%s]" % (agreement, "%", tavg, hn ) )
