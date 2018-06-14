@@ -67,7 +67,8 @@ def footer ( f ):
     f.write ( ", ".join ( [ "[[SmsDictionary#%s|%s]]" % ( i, i ) for i in fastlim_topos ] ) )
     """
     f.write ( "<<Anchor(A1)>>(1) ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like !MadAnalysis5 or CheckMATE.\n\n" )
-    f.write ( "<<Anchor(A2)>>(2) Please note that by default we discard zeroes-only results from !FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n" )
+    f.write ( "<<Anchor(A2)>>(2) Please note that by default we discard zeroes-only results from !FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
+    f.write ( "<<Anchor(A3)>>(3) Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n" )
 
 def listTables ( f, anas ):
     f.write ( "== Individual tables ==\n" )
@@ -183,6 +184,8 @@ def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, n_homegrow
             homegrownd[str(i)] = ""
             if hasattr ( i, "source" ) and "SModelS" in i.source:
                 homegrownd[str(i)] = " [[#A1|(1)]]"
+            if hasattr ( i, "source" ) and "SModelS" in i.source and "agg" in ana_name:
+                homegrownd[str(i)] = " [[#A3|(3)]]"
 
         topos.sort()
         # print ( topos )
