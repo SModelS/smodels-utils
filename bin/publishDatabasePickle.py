@@ -32,7 +32,7 @@ def main():
     ver = meta.databaseVersion.replace(".","") 
     p.close()
     infofile = "official%s" % ver 
-    pclfilename = "off%s.pcl" % ver
+    pclfilename = "official%s.pcl" % ver
     if ver == "unittest":
         smodels_ver = "112"
         infofile = "unittest%s" % smodels_ver
