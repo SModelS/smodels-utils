@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 from __future__ import print_function
-import sys, os, glob, json, string
+import sys, os, glob, json, string, re
 
 
 class Del:
@@ -51,16 +51,24 @@ def main():
     for filen in globs:
         if ".pcl" in filen: continue
         dbname = filen.replace(Dir,"" )
-        Ver = dbname.translate(DD)
+        # Ver = dbname.translate(DD)
+        m = re.search("\d",dbname)
+        if m == None:
+            Ver = dbname.translate(DD)
+        else:
+            Ver = dbname[m.start():]
         ver = "v" + Ver[0]+"."+Ver[1]+"."+Ver[2:]
+        print ( "->", dbname, Ver, ver )
         description="[[ListOfAnalysesv%s%s%s|Official database, %s]]" % ( Ver[0],Ver[1],Ver[2:], ver )
         j = json.load ( open(filen) )
         size=sizeof_fmt ( j["size"] )
         frozen="yes"
         url="http://smodels.hephy.at/database/%s" % dbname
         if "test" in filen:
+            continue ## skip them
             description = "Small test database, %s" % ver
         if "unittest" in filen:
+            continue ## skip them
             description = "Database used for unit tests, %s" % ver
         w.write ( "|| %s || %s || %s || %s || %s ||\n" % \
                   ( dbname, description, frozen, size, url ) )
