@@ -660,13 +660,13 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     #    subtitle = "%d aggregate regions" % len(validationPlot.expRes.datasets)
     #if len(subtitle) > 100:
     #    subtitle = subtitle[:100] + " ..."
-    #if len(validationPlot.expRes.datasets) == 1 and type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
+    if len(validationPlot.expRes.datasets) == 1 and type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
         subtitle = "upper limit"
     lsub=TLatex()
     lsub.SetNDC()
+    lsub.SetTextAlign(31)
     lsub.SetTextSize(.025)
-    lsub.DrawLatex(.9,.1,subtitle)
-    lsub.SetTextAlign(12)
+    lsub.DrawLatex(.98,.086,subtitle)
     tgr.lsub=lsub
     
     
