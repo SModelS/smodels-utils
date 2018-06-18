@@ -42,7 +42,7 @@ class ValidationPlot():
     """
 
     def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
-                 kfactor = 1., limitPoints=None, extraInfo=False ):
+                 kfactor = 1., limitPoints=None, extraInfo=False, combine=False ):
 
         self.expRes = copy.deepcopy(ExptRes)
         self.txName = TxNameStr
@@ -54,6 +54,7 @@ class ValidationPlot():
         self.kfactor = kfactor
         self.limitPoints = limitPoints
         self.extraInfo = extraInfo
+        self.combine = combine
 
         #Select the desired txname and corresponding datasets in the experimental result:
         for dataset in self.expRes.datasets:
@@ -240,9 +241,12 @@ class ValidationPlot():
 
         if tempdir is None: tempdir = os.getcwd()
         pf, parFile = tempfile.mkstemp(dir=tempdir,prefix='parameter_',suffix='.ini', text=True )
+        combine = "False"  
+        if self.combine:
+            combine = "True"
         with open ( parFile, "w" ) as f:
             f.write("[path]\ndatabasePath = %s\n" %self.databasePath)
-            f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\n")
+            f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\ncombineSRs = %s\n" % combine )
             f.write("[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus)
             f.write("[database]\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (expId,txname))
             f.write("[printer]\noutputType = python\n")

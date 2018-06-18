@@ -645,6 +645,29 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         l2.DrawLatex(0.16,0.6,"k-factor = %.2f" % kfactor)
         tgr.l2=l2
     
+    subtitle = "%d datasets" % len(validationPlot.expRes.datasets)
+    if validationPlot.expRes.datasets[0].dataInfo.dataId.startswith("ar"):
+        subtitle = "%d aggregate datasets" % len(validationPlot.expRes.datasets)
+    #for dataset in validationPlot.expRes.datasets:
+    #    ds_txnames = map ( str, dataset.txnameList )
+    #    if not validationPlot.txName in ds_txnames:
+    #        continue
+        dataId = str(dataset.dataInfo.dataId)
+    #    # print "[plottingFuncs.py] add to %s: %s, %s" % ( validationPlot.txName, id, str ( map ( str, dataset.txnameList  ) ) )
+    #    subtitle+=dataId+", "
+    #subtitle = subtitle[:-2]
+    #if hasattr ( validationPlot.expRes.globalInfo, "covariance" ):
+    #    subtitle = "%d aggregate regions" % len(validationPlot.expRes.datasets)
+    #if len(subtitle) > 100:
+    #    subtitle = subtitle[:100] + " ..."
+    #if len(validationPlot.expRes.datasets) == 1 and type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
+        subtitle = "upper limit"
+    lsub=TLatex()
+    lsub.SetNDC()
+    lsub.SetTextSize(.025)
+    lsub.DrawLatex(.9,.1,subtitle)
+    lsub.SetTextAlign(12)
+    tgr.lsub=lsub
     
     
     #Count the number of entries in legend:
