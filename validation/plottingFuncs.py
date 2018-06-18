@@ -650,7 +650,9 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     #Count the number of entries in legend:
     nleg = min(2,len(cgraphs)-list(cgraphs.values()).count([])) + min(2,len(official))
     #Draw legend: 
-    leg = TLegend(0.15,0.83-0.045*nleg,0.495,0.83)
+    dx = 0. ## top, left
+    dx = .33 ## top, right
+    leg = TLegend(0.15+dx,0.83-0.045*nleg,0.495+dx,0.83)
     setOptions(leg)    
     leg.SetFillStyle(0)
     leg.SetTextSize(0.04)
@@ -665,9 +667,9 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             added = True
     added = False
     for gr in official:
-        if 'exclusion_' in gr.GetTitle():
+        if 'xclusion_' in gr.GetTitle():
             leg.AddEntry(gr,"exclusion (official)","L")
-        elif 'exclusionP1_' in gr.GetTitle() or 'exclusionM1_' in gr.GetTitle() and not added:
+        elif 'xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle() and not added:
             leg.AddEntry(gr,"#pm1#sigma (official)","L")
             added = True
     
