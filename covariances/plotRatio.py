@@ -6,6 +6,9 @@ own upper limit computed from combining the efficiency maps. """
 import math, os, numpy, copy
 import matplotlib.pyplot as plt
 import ROOT
+import logging
+
+logger = logging.getLogger(__name__)
 
 def getExclusionsFrom ( rootpath, txname, axes=None ):
     """
@@ -136,7 +139,7 @@ def main():
     #print ( "x_v=", x_v )
     #print ( "y_v=", y_v )
     plt.plot ( x_v, y_v, color='k', linestyle='-', linewidth=2 )
-    plt.savefig ( "ratio.png" )
+    plt.savefig ( "%s_%s.png" % ( analysis, topo ) )
 
     print ( "ratio=%s +/- %s" % ( numpy.mean(col), numpy.std(col) ) )
     # plt.show()
