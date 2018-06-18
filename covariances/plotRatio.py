@@ -3,7 +3,7 @@
 """ Plot the ratio between the upper limit from the UL map, and our
 own upper limit computed from combining the efficiency maps. """
 
-import math, os, numpy, copy
+import math, os, numpy, copy, sys
 import matplotlib.pyplot as plt
 import ROOT
 import logging
@@ -24,6 +24,7 @@ def getExclusionsFrom ( rootpath, txname, axes=None ):
         txnames[objName] = obj.ReadObj()
     if not txnames:
         logger.warning("Exclusion curve for %s not found in %s" %(txname,rootpath))
+        sys.exit()
         return False
 
     #For each Txname/Directory get list of exclusion curves
@@ -132,9 +133,9 @@ def main():
     plt.xlabel ( "m$_{mother}$ [GeV]" )
     label = "m$_{LSP}$ [GeV]"
     if "052" in analysis:
-    	label = "$\Delta m$(mother, daughter) [GeV]"
+      label = "$\Delta m$(mother, daughter) [GeV]"
     plt.ylabel ( label )
-    	
+      
     plt.colorbar()
     #print ( "x_v=", x_v )
     #print ( "y_v=", y_v )

@@ -23,7 +23,7 @@ prettySMParticle = {
 	'w' : 'W',                  #W
 	'z' : 'Z',                  #Z
 	'higgs' : 'H',                  #higgs
-	
+
 	'quark': 'q',           #quark
     'antiquark': '#bar{q}',
 	'up': 'u',           #up
@@ -34,12 +34,12 @@ prettySMParticle = {
     'antitop': '#bar{t}',
 	'bottom': 'b',           #bottom
     'antibottom': '#bar{b}',
-	
+
 	'lepton' : 'l',             #lepton
 	'electron' : 'e',               #electron
 	'muon' : '#mu',            #muon
 	'tau' : '#tau',  #tau
-	
+
 	'neutrino' : '#nu',                     #neutrino
 	'electron-neutrino' : '#nu_{e}',               #electron-neutrino
 	'muon-neutrino' : '#nu_{#mu}',            #muon-neutrino
@@ -53,7 +53,7 @@ prettySUSYParticle = {
     'gravitino':'#tilde{G}',              #gravitino
     'gluino': '#tilde{g}',        #gluino
     'higgsino' : '#tilde{H}',       #higgsino
-    
+
     'squark': '#tilde{q}',  #squark
     'sup': '#tilde{u}',  #sup
     'sdown': '#tilde{d}',  #sdown
@@ -61,17 +61,17 @@ prettySUSYParticle = {
     'sstrange': '#tilde{s}',  #sstarnge
     'stop': '#tilde{t}',  #stop
     'sbottom': '#tilde{b}',  #sbottom
-    
+
     'slepton' : '#tilde{l}',    #slepton
     'selectron' : '#tilde{e}',      #selectron
     'smuon' : '#tilde{#mu}',   #smuon
     'stau' : '#tilde{#tau}', #stau
-    
+
     'sneutrino' : '#tilde{#nu}',            #sneutrino
     'electron-sneutrino' : '#tilde{#nu}_{e}',      #electron-sneutrino
     'muon-sneutrino' : '#tilde{#nu}_{#mu}',   #muon-sneutrino
     'tau-sneutrino' : '#tilde{#nu}_{#tau}', #tau-sneutrino
-   
+
 }
 
 prettyParticle = prettySMParticle.copy()
@@ -113,11 +113,11 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T2bbffff':'stop  --> bottom f f lsp ',
     'T2bt':'sbottom sbottom  --> bottom top lsp lsp',
     'T2cc':'stop  --> charm lsp ',
-    'T2tt': 'stop  --> top lsp ', 
+    'T2tt': 'stop  --> top lsp ',
     'T2ttC': 'stop -->  b f fbar lsp',
     'T2bWC': 'stop -->  b chargino, chargino --> f fbar lsp',
     'T2ttoff': 'stop  --> top^* lsp ',
-    'T3GQon' : 'gluino squark --> quark squark squark, squark --> quark LSP',          
+    'T3GQon' : 'gluino squark --> quark squark squark, squark --> quark LSP',
     'T4bbWW':'stop --> bottom chargino^pm_1, chargino^pm_1 --> W lsp',
     'T4bbWWoff':'stop --> bottom chargino^pm_1, chargino^pm_1 --> W^* lsp',
     'T4bbffff':'stop --> bottom chargino^pm_1, chargino^pm_1 --> f f lsp',
@@ -139,7 +139,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T5tctc':'gluino --> top stop, stop --> charm lsp',
     'T5tqtq':'gluino --> top stop, stop --> quark lsp',
     'T5gg':'gluino --> quark lsp',
-    'T5tctcoff':'gluino --> top^* stop, stop --> charm lsp',    
+    'T5tctcoff':'gluino --> top^* stop, stop --> charm lsp',
     'T5tttt':'gluino  --> antitop stop, stop --> top lsp',
     'T5ttcc':'gluino --> antitop stop, stop --> charm lsp',
     'T5ttttoff':'gluino  --> antitop^* stop, stop --> top^* lsp',
@@ -153,6 +153,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T6bbWW':'stop  --> bottom chargino_1^pm, chargino_1^pm --> W lsp',
     'T6bbHH':'sbottom  --> bottom neutralino_2, neutralino_2 --> h lsp',
     'T6bbWWoff':'stop  --> bottom chargino_1^pm, chargino_1^pm --> W^* lsp',
+    'T6bbWWoffSemiLep':'stop  --> bottom chargino_1^pm, chargino_1^pm --> W^*_l lsp',
     'T6ttWW':'sbottom  --> top chargino_1^pm, chargino_1^pm --> W lsp',
     'T6ttWWoff':'sbottom  --> top chargino_1^pm, chargino_1^pm --> W^* lsp',
     'T6ttoffWW':'sbottom  --> top^* chargino_1^pm, chargino_1^pm --> W lsp',
@@ -164,7 +165,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T6ttZZoff': 'stop --> t neutralino_2 , neutralino_2 --> Z^* lsp',
     'T6ttWW':'sbottom  --> top chargino_1^pm, chargino_1^pm --> W lsp',
     'T6ttWWoff':'sbottom  --> top chargino_1^pm, chargino_1^pm --> W^* lsp',
-    'T6ttoffWW':'sbottom  --> top^* chargino_1^pm, chargino_1^pm --> W lsp',              
+    'T6ttoffWW':'sbottom  --> top^* chargino_1^pm, chargino_1^pm --> W lsp',
     'TChiChiSlepSlep':'neutralino_3 neutralino_2  --> lepton slepton lepton slepton, slepton --> lepton lsp',
     'TChiChipmSlepL':'neutralino_2 chargino^pm_1  --> lepton slepton ( neutrino sneutrino ) lepton sneutrino ( neutrino slepton ), slepton --> lepton lsp, sneutrino --> neutrino lsp',
     'TChiChipmSlepStau':'neutralino_2 chargino^pm_1  --> lepton slepton neutrino stau, slepton --> lepton lsp, stau --> tau lsp',
@@ -179,13 +180,13 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TChipChimSlepSnu':'chargino^pm_1 --> neutrino slepton ( lepton sneutrino ), slepton --> lepton lsp, sneutrino --> neutrino lsp ',
     'TChipChimStauSnu':'chargino^pm_1 --> neutrino stau ( tau sneutrino ), stau --> tau lsp, sneutrino --> neutrino lsp ',
     'TGQ':'gluino squark --> quark quark antiquark lsp lsp ',
-    'TGN':'gluino lsp --> quark quark lsp lsp',              
+    'TGN':'gluino lsp --> quark quark lsp lsp',
     'TGQbbq':'gluino gluino --> bottom antibottom gluon lsp lsp ',
     'TGQbtq':'gluino gluino --> bottom top gluon lsp lsp ',
     'TGQqtt':'gluino gluino --> gluon top antitop lsp lsp ',
     'TScharm':'scharm  --> charm lsp ',
     'TSlepSlep':'slepton  --> lepton lsp ',
-    'THSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 'THSCPM3' : 'squark --> quark chargino_1', 'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau_1', 
+    'THSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 'THSCPM3' : 'squark --> quark chargino_1', 'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau_1',
     'THSCPM7' : 'lsp chargino^pm_2 --> tau stau_1 chargino^pm_1, chargino^pm_1 --> nu stau_1',
     'THSCPM8' : 'squark --> quark quark stau_1', 'THSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp',
     'THSCPM4' : 'squark --> quark chargino_1 (quark lsp)',
@@ -197,66 +198,67 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
 
 #Name of mother particles
 
-motherDict = {"T1" :  "gluino", 
-    "T1bbbb" :  "gluino", 
-    "T1bbbt" :  "gluino", 
-    "T1bbqq" :  "gluino", 
-    "T1bbtt" :  "gluino", 
-    "T1btbt" :  "gluino", 
-    "T1btqq" :  "gluino", 
-    "T1bttt" :  "gluino", 
-    "T1qqtt" :  "gluino", 
-    "T1tttt" :  "gluino", 
-    "T1ttttoff" :  "gluino", 
-    "T2" :  "squark", 
-    "T2bb" :  "sbottom", 
-    "T2bbWW" :  "stop", 
-    "T2bbffff" :  "stop", 
-    "T2bbWWoff" :  "stop", 
-    "T2bt" :  "sbottom", 
-    "T2cc" :  "stop", 
-    "T2tt" :  "stop", 
+motherDict = {"T1" :  "gluino",
+    "T1bbbb" :  "gluino",
+    "T1bbbt" :  "gluino",
+    "T1bbqq" :  "gluino",
+    "T1bbtt" :  "gluino",
+    "T1btbt" :  "gluino",
+    "T1btqq" :  "gluino",
+    "T1bttt" :  "gluino",
+    "T1qqtt" :  "gluino",
+    "T1tttt" :  "gluino",
+    "T1ttttoff" :  "gluino",
+    "T2" :  "squark",
+    "T2bb" :  "sbottom",
+    "T2bbWW" :  "stop",
+    "T2bbffff" :  "stop",
+    "T2bbWWoff" :  "stop",
+    "T2bt" :  "sbottom",
+    "T2cc" :  "stop",
+    "T2tt" :  "stop",
     "T2ttC": "stop",
     "T2bWC": "stop",
-    "T2ttoff" :  "stop", 
-    "T2bbWWoff" :  "stop", 
-    "T4bbffff" :  "stop", 
-    "T4bbWW" :  "stop", 
-    "T4bbWWoff" :  "stop", 
-    "T5WW" :  "gluino", 
-    "T5WWoff" :  "gluino", 
-    "T5ttbbWW" :  "gluino", 
-    "T5ttbbWWoff" :  "gluino", 
-    "T5ZZ" :  "gluino", 
-    "T5ZZG" :  "gluino", 
-    "T5" :  "gluino", 
-    "T5tctc" :  "gluino", 
+    "T2ttoff" :  "stop",
+    "T2bbWWoff" :  "stop",
+    "T4bbffff" :  "stop",
+    "T4bbWW" :  "stop",
+    "T4bbWWoff" :  "stop",
+    "T5WW" :  "gluino",
+    "T5WWoff" :  "gluino",
+    "T5ttbbWW" :  "gluino",
+    "T5ttbbWWoff" :  "gluino",
+    "T5ZZ" :  "gluino",
+    "T5ZZG" :  "gluino",
+    "T5" :  "gluino",
+    "T5tctc" :  "gluino",
     "T5gg": "gluino",
     "T6gg":"squark",
-    "T5ZZoff" :  "gluino", 
-    "T5bbbb" :  "gluino", 
-    "T5bbbt" :  "gluino", 
-    "T5btbt" :  "gluino", 
-    "T5tbtb" :  "gluino", 
-    "T5tbtt" :  "gluino", 
+    "T5ZZoff" :  "gluino",
+    "T5bbbb" :  "gluino",
+    "T5bbbt" :  "gluino",
+    "T5btbt" :  "gluino",
+    "T5tbtb" :  "gluino",
+    "T5tbtt" :  "gluino",
     "T5tctc" :  "gluino",
     "T5tqtq" :  "gluino",
     "T5gg": "gluino",
-    "T5tctcoff" :  "gluino",      
+    "T5tctcoff" :  "gluino",
     "T5ttcc": "gluino",
-    "T5tttt" :  "gluino", 
-    "T5ttttoff" :  "gluino", 
+    "T5tttt" :  "gluino",
+    "T5ttttoff" :  "gluino",
     "T5ttofftt" : "gluino",
-    "T6WW" :  "squark", 
-    "T6WWoff" :  "squark", 
-    "T6ZZtt" :  "stop_2", 
-    "T6ZZofftt" :  "stop_2", 
-    "T6HHtt" :  "stop_2", 
+    "T6WW" :  "squark",
+    "T6WWoff" :  "squark",
+    "T6ZZtt" :  "stop_2",
+    "T6ZZofftt" :  "stop_2",
+    "T6HHtt" :  "stop_2",
     "T6bbWW" :  "stop",
-    "T6bbHH" :  "sbottom",      
-    "T6bbWWoff" :  "stop", 
-    "T6ttWW" :  "sbottom", 
-    "T6ttWWoff" :  "sbottom", 
+    "T6bbHH" :  "sbottom",
+    "T6bbWWoff" :  "stop",
+    "T6bbWWoffSemiLep" :  "stop",
+    "T6ttWW" :  "sbottom",
+    "T6ttWWoff" :  "sbottom",
     "T6ttoffWW" :  "sbottom",
     "T6ttZZ": 'stop',
     "T6ttoffZZ": 'stop',
@@ -269,26 +271,26 @@ motherDict = {"T1" :  "gluino",
     "T6WWttoff":'sbottom',
     "T6ZZtt": 'stop_2',
     "T6ZZofftt": 'stop_2',
-    "T6ZZttoff": 'stop_2',              
-    "TChiChiSlepSlep" :  "neutralino_3 neutralino_2", 
-    "TChiChipmSlepL" :  "neutralino_2 chargino^pm_1", 
-    "TChiChipmSlepStau" :   "neutralino_2 chargino^pm_1", 
-    "TChiChipmStauL" :  "neutralino_2 chargino^pm_1", 
-    "TChiChipmStauStau" :  "neutralino_2 chargino^pm_1", 
-    "TChiWH" :  "neutralino_2 chargino^pm_1", 
+    "T6ZZttoff": 'stop_2',
+    "TChiChiSlepSlep" :  "neutralino_3 neutralino_2",
+    "TChiChipmSlepL" :  "neutralino_2 chargino^pm_1",
+    "TChiChipmSlepStau" :   "neutralino_2 chargino^pm_1",
+    "TChiChipmStauL" :  "neutralino_2 chargino^pm_1",
+    "TChiChipmStauStau" :  "neutralino_2 chargino^pm_1",
+    "TChiWH" :  "neutralino_2 chargino^pm_1",
     "TChiWW" :  "chargino^+_1 chargino^-_1",
-    "TChiWWoff" :  "chargino^+_1 chargino^-_1", 
-    "TChiWZ" :  "neutralino_2 chargino^pm_1", 
+    "TChiWWoff" :  "chargino^+_1 chargino^-_1",
+    "TChiWZ" :  "neutralino_2 chargino^pm_1",
     "TChiZZ" :  "neutralino_2",
-    "TChiWZoff" :  "neutralino_2 chargino^pm_1", 
-    "TChipChimSlepSnu" :   "chargino^pm_1 chargino^pm_1", 
+    "TChiWZoff" :  "neutralino_2 chargino^pm_1",
+    "TChipChimSlepSnu" :   "chargino^pm_1 chargino^pm_1",
     "TChipChimStauSnu" :  "chargino^pm_1 chargino^pm_1",
     "T3GQon": "gluino squark",
-    "TGQ" :  "gluino squark", 
-    "TGQbbq" :  "gluino", 
-    "TGQbtq" :  "gluino", 
+    "TGQ" :  "gluino squark",
+    "TGQbbq" :  "gluino",
+    "TGQbtq" :  "gluino",
     "TGQqtt" :  "gluino",
-    "TGN":'gluino lsp',              
+    "TGN":'gluino lsp',
     "TScharm" :  "scharm",
     "TSlepSlep" : "slepton",
     "THSCPM1" : "chargino^pm_1",
@@ -301,7 +303,7 @@ motherDict = {"T1" :  "gluino",
     "THSCPM4" : "squark",
     "THSCPM6" : "squark",
     'TRHadGM1' : 'gluino',
-    'TRHadQM1' : 'stop'    
+    'TRHadQM1' : 'stop'
 }
 
 
@@ -309,12 +311,12 @@ def latexfy(instr):
     """
     Tries to convert the string to its latex form,
     using ROOT conventions
-    
+
     :param instr: Input string
-    
+
     :return: String converted to its latex form (if possible)
     """
-    
+
     outstr = ' '+instr[:]
     for key,rep in highstrings.items():
         if key in outstr:
@@ -322,13 +324,13 @@ def latexfy(instr):
     for key,rep in lowstrings.items():
         if key in outstr:
             outstr = outstr.replace(key,rep)
-    #Make sure that the largest replacement happen first 
+    #Make sure that the largest replacement happen first
     #(e.g. stau -> #tilde{#tau} happens before tau -> #tilde{#tau}
-    for key,rep in sorted(prettyParticle.items(),  
+    for key,rep in sorted(prettyParticle.items(),
                           key=lambda pair: len(pair[0]), reverse=True):
         if ' '+key in outstr:
             outstr = outstr.replace(' '+key,' '+rep)
-    
+
     outstr = outstr.replace('-->','#rightarrow')
 
 
@@ -337,27 +339,27 @@ def latexfy(instr):
 def getMothers(txname):
     """
     Returns the SUSY mother particle(s) for the txname.
-    
+
     :param txname: txname string (e.g. 'T1')
-    
+
     :return: list of mother particles in standard format (e.g. ['gluino', 'gluino'])
     """
-    
+
     mothers = motherDict[txname].lstrip().rstrip().split()
     if len(mothers) == 1:
         mothers = mothers*2
-    
+
     return mothers
 
 def getIntermediates(txname):
     """
     Returns the SUSY intermediate particle(s) for the txname.
-    
+
     :param txname: txname string (e.g. 'T1')
-    
+
     :return: list of intermediate particles in standard format (e.g. ['stop', 'chargino^pm_1'])
     """
-    
+
     #Get the decays
     decays = decayDict[txname].split(',')
     #Find the subsequent decays:
@@ -374,12 +376,12 @@ def getIntermediates(txname):
 def getDaughters(txname):
     """
     Returns the SUSY daughter particle(s) for the txname.
-    
+
     :param txname: txname string (e.g. 'T1')
-    
+
     :return: list of daughter particles in standard format (e.g. ['lsp', 'chargino^pm_1'])
     """
-    
+
     #Get the decays
     decays = decayDict[txname].split(',')
     #Find the subsequent decays:
@@ -390,7 +392,7 @@ def getDaughters(txname):
             if not ptc in prettySUSYParticle:
                 continue
             if ptc in moms:
-                continue       
+                continue
             daughters.add(ptc)
 
     return list(daughters)
@@ -403,13 +405,13 @@ def prettyProduction(txname,latex=True):
     :param: txname (string) (e.g. 'T1')
     :param latex: If True it will return the latex version, otherwise
                  it will return a more human readable string
-    
+
     :return: string or latex string (e.g. p p #rightarrow #tilde{g} #tilde{g})
-    """    
+    """
     if not txname in motherDict:
         logging.error("Txname %s not found in motherDict" %txname)
         return None
-    
+
     prodString = motherDict[txname].lstrip().rstrip().split()
     #Check if a single mother was given. If so, duplicate it
     if len(prodString) == 1:
@@ -419,7 +421,7 @@ def prettyProduction(txname,latex=True):
     else:
         logging.error("More than two mothers given: %s" %motherDict[txname])
         return None
-    
+
     prodString = "pp --> "+prodString
     if latex:
         prodString = latexfy(prodString)
@@ -432,11 +434,11 @@ def prettyDecay(txname,latex=True):
     :param: txname (string) (e.g. 'T1')
     :param latex: If True it will return the latex version, otherwise
                  it will return a more human readable string
-    
-    
+
+
     :return: string or latex string (e.g. #tilde{g} #rightarrow q q #tilde{#chi}_{1}^{0})
     """
-    
+
     if not txname in decayDict:
         logging.error("Txname %s not found in decayDict" %txname)
         return None
@@ -445,7 +447,7 @@ def prettyDecay(txname,latex=True):
         decayString = latexfy(decayString)
     return decayString.lstrip().rstrip()
 
-    
+
 def prettyTxname(txname,latex=True):
     """
     Converts the txname string to the corresponding SUSY desctiption
@@ -453,17 +455,17 @@ def prettyTxname(txname,latex=True):
     :param: txname (string) (e.g. 'T1')
     :param latex: If True it will return the latex version, otherwise
                  it will return a more human readable string
-    
-    
-    :return: string or latex string 
-             (e.g. pp #rightarrow #tilde{g} #tilde{g}, 
+
+
+    :return: string or latex string
+             (e.g. pp #rightarrow #tilde{g} #tilde{g},
              #tilde{g} #rightarrow q q #tilde{#chi}_{1}^{0})
     """
 
     prodString = prettyProduction(txname,latex)
     decayString = prettyDecay(txname,latex)
-    
-    if prodString and decayString:    
+
+    if prodString and decayString:
         return prodString + ", " + decayString
     else:
         return None
@@ -474,12 +476,12 @@ def prettyAxes(txname,axes):
     in latex form (using ROOT conventions)
     :param txname: txname string  (e.g. 'T1')
     :param axes: axes string (e.g. '2*Eq(mother,x)_Eq(inter0,0.05*x+0.95*y)_Eq(lsp,y)')
-    
-    :return: dictionary with the latex labels 
+
+    :return: dictionary with the latex labels
              (e.g. {'x' : m_{#tilde{g}}, 'y' : m_{#tilde{#chi}_{1}^{0}}
              'constraints' : [m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}]})
     """
-    
+
     #Build axes object (depending on symmetric or asymmetric branches:
     axes = eval(axes)
     if txname == 'TGQ':
@@ -492,7 +494,7 @@ def prettyAxes(txname,axes):
     elif axes[0] != axes[1]:
         logging.error('Asymmetric branches are not yet automatized.')
         return None
-        
+
     ax = axes[0]
     if len(ax) > 3:
         logging.error("Nice axes with more than one \
@@ -523,10 +525,10 @@ def prettyAxes(txname,axes):
     else:
         massStrings = [motherStr,interStr,daughterStr]
 
-    niceAxes = []    
+    niceAxes = []
     for i,eq in enumerate(ax):
         axStr = massStrings[i].strip()+'='+str(eq)
         niceAxes.append(axStr.replace("'",""))
-    
+
     return niceAxes
-        
+
