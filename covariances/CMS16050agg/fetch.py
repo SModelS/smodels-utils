@@ -15,6 +15,9 @@ for dir in dirs:
     #    continue
     ars = glob.glob ( "%s/13TeV/CMS/CMS-SUS-16-050-agg/ar*" % dir )
     nr = len ( ars )
+    f=open("__init__.py","w")
+    f.write ( "nSRs=%d\n" % nr )
+    f.close()
     files = glob.glob ( "%s/13TeV/CMS/CMS-SUS-16-050-agg/validation/T*py" % dir )
     print ( nr, dir, files )
     for f in files:

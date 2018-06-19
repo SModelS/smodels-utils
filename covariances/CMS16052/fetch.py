@@ -9,12 +9,8 @@ dirs = glob.glob ( "%s/git/smodels-database-develop" % home )
 anaId="CMS-PAS-SUS-16-052-eff"
 
 for dir in dirs:
-    # nr = dir [ dir.find("covdb")+5: ].replace("_","")
-    # nr = 56
-    #if len(nr)==0:
-    #    continue
-    path = "%s/13TeV/CMS/%s/sr*" % (dir, anaId )
-    ars = glob.glob ( path )
+    path = "%s/13TeV/CMS/%s" % ( dir, anaId )
+    ars = glob.glob ( "%s/sr*" % path )
     nr = len ( ars ) 
     f=open("__init__.py","w")
     f.write ( "nSRs=%d\n" % nr )
