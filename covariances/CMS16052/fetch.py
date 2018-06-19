@@ -5,20 +5,22 @@ import subprocess as commands
 
 home=os.environ["HOME"]
 
-#dirs = glob.glob ( "%s/git/smodels/test/covdb*" % home )
 dirs = glob.glob ( "%s/git/smodels-database-develop" % home )
+anaId="CMS-PAS-SUS-16-052-eff"
 
 for dir in dirs:
     # nr = dir [ dir.find("covdb")+5: ].replace("_","")
     # nr = 56
     #if len(nr)==0:
     #    continue
-    ars = glob.glob ( "%s/13TeV/CMS/CMS-SUS-16-050-eff/sr*" % dir )
+    path = "%s/13TeV/CMS/%s/sr*" % (dir, anaId )
+    ars = glob.glob ( path )
     nr = len ( ars ) 
     f=open("__init__.py","w")
     f.write ( "nSRs=%d\n" % nr )
     f.close()
-    files = glob.glob ( "%s/13TeV/CMS/CMS-SUS-16-050-eff/validation/T*py" % dir )
+    commands.getoutput ( "cp %s/sms.root ." % path )
+    files = glob.glob ( "%s/validation/T*py" % ( path ) )
     print ( nr, dir, files )
     for f in files:
         fname = os.path.basename ( f )
@@ -26,6 +28,7 @@ for dir in dirs:
         topo = fname [ :tpos ]
         cmd = "cp %s ./%s_%s.py" % ( f, topo, nr )
         print ( cmd )
-        if not os.path.exists ( "./%s_all.py" % ( topo ) ):
-            commands.getoutput ( "ln -s ./%s_%s.py ./%s_all.py" % ( topo, nr, topo ) )
         commands.getoutput ( cmd )
+        if os.path.exists ( "./%s_all.py" % ( topo ) ):
+            commands.getoutput ( "rm -f ./%s_all.py" % ( topo ) )
+        commands.getoutput ( "ln -s ./%s_%s.py ./%s_all.py" % ( topo, nr, topo ) )

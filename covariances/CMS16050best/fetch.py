@@ -13,12 +13,9 @@ for dir in dirs:
     # nr = 56
     #if len(nr)==0:
     #    continue
-    ars = glob.glob ( "%s/13TeV/CMS/CMS-SUS-16-050-eff/sr*" % dir )
-    nr = len ( ars ) 
-    f=open("__init__.py","w")
-    f.write ( "nSRs=%d\n" % nr )
-    f.close()
-    files = glob.glob ( "%s/13TeV/CMS/CMS-SUS-16-050-eff/validation/T*py" % dir )
+    ars = glob.glob ( "%s/13TeV/CMS/CMS-SUS-16-050-best/*" % dir )
+    nr = len ( ars )
+    files = glob.glob ( "%s/13TeV/CMS/CMS-SUS-16-050-best/validation/T*py" % dir )
     print ( nr, dir, files )
     for f in files:
         fname = os.path.basename ( f )

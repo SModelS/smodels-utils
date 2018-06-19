@@ -73,6 +73,11 @@ def main():
     FromEff = __import__ ( "%s.%s_%s" % ( analysis, topo, srs ),
                            fromlist="%s_%s" % ( topo, srs ) )
     uls={}
+    nsr=""
+    try:
+        nsr = "%d SRs" % ( __import__ ( "%s" % ( analysis ) ).nSRs )
+    except Exception as e:
+        print ( str(e) )
 
 
     def convertNewAxes ( newa ):
@@ -114,14 +119,15 @@ def main():
         # print "ul", axes, point["UL"], point["UL"] / point["efficiency"], ul
         if ul:
             ul_eff = point["UL"] / point["signal"] ##  point["efficiency"]
-            ratio = ul_eff / ul
+            # ratio = ul_eff / ul
+            ratio = ul / ul_eff
             # ratio = math.log10 ( ul )
             x.append ( axes[1] )
             y.append ( axes[0] )
             col.append ( ratio )
 
-    # cm = plt.cm.get_cmap('RdYlBu')
-    cm = plt.cm.get_cmap('RdYlGn')
+    cm = plt.cm.get_cmap('jet')
+    # cm = plt.cm.get_cmap('RdYlGn')
     scatter = plt.scatter ( x, y, c=col, cmap=cm, vmin=0.5, vmax=1.5 )
     plt.rc('text', usetex=True)
     slhafile=FromEff.validationData[0]["slhafile"]
@@ -131,7 +137,8 @@ def main():
 
     x_v,y_v = getExclusionLine ( "%s/sms.root" % analysis, topo )
 
-    plt.title ( "Ratio UL(SModelS) / UL(official), %s, %s" % ( analysis, topo) )
+    plt.title ( "Ratio UL(official) / UL(SModelS), %s, %s" % ( analysis, topo) )
+    # plt.title ( "Ratio UL(SModelS) / UL(official), %s, %s" % ( analysis, topo) )
     plt.xlabel ( "m$_{mother}$ [GeV]" )
     label = "m$_{LSP}$ [GeV]"
     if "052" in analysis:
@@ -142,7 +149,11 @@ def main():
     #print ( "x_v=", x_v )
     #print ( "y_v=", y_v )
     plt.plot ( x_v, y_v, color='k', linestyle='-', linewidth=2 )
-    plt.savefig ( "%s_%s.png" % ( analysis, topo ) )
+    if nsr != "":
+        plt.text ( .98*max(x_v), 1.0*min(y_v)-.27*(max(y_v)-min(y_v)), "%s" % ( nsr) , fontsize=12 )
+    figname = "%s_%s.png" % ( analysis, topo )
+    print ( "Saving to %s" % figname )
+    plt.savefig ( figname )
     if args.copy:
       cmd="scp %s_%s.png smodels.hephy.at:/var/www/images/combination/" % ( analysis, topo )
       subprocess.getoutput ( cmd )
