@@ -10,14 +10,18 @@ if sys.version[0]=="2":
 else:
     import subprocess as CMD
 
+
 def main():
     ap = argparse.ArgumentParser( description="makes a database pickle file publically available (run it on the smodels)" )
     ap.add_argument('-f', '--filename', help='name of pickle file', default="database.pcl" )
     ap.add_argument('-d', '--dry_run', help='dont copy to final destination', action="store_true" )
     ap.add_argument('-b', '--build', help='build pickle file, assume filename is directory name', action="store_true" )
     ap.add_argument('-s', '--ssh', help='work remotely via ssh', action="store_true" )
+    ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder', default=None )
     args = ap.parse_args()
     dbname = args.filename
+    if args.smodelsPath:
+        sys.path.append(os.path.abspath(args.smodelsPath))
     if args.build:
         if not os.path.isdir ( dbname ):
             print ( "supplied --build option, but %s is not a directory." % dbname )
