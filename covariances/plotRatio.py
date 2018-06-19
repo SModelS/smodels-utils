@@ -7,6 +7,7 @@ import math, os, numpy, copy, sys
 import matplotlib.pyplot as plt
 import ROOT
 import logging
+import subprocess
 
 logger = logging.getLogger(__name__)
 
@@ -58,12 +59,13 @@ def getExclusionLine ( rootpath, txname, axes=None ):
 def main():
     import argparse
     argparser = argparse.ArgumentParser( description = "ratio plot" )
-    argparser.add_argument ( "-t", "--topo", help="topology", type=str,
-                             default="T4bbffff" )
-    argparser.add_argument ( "-a", "--analysis", help="analysis", type=str,
-                             default="CMS16052" )
-    argparser.add_argument ( "-s", "--sr", help="signal regions", type=str,
+    argparser.add_argument ( "-t", "--topo", help="topology [T2tt]", type=str,
+                             default="T2tt" )
+    argparser.add_argument ( "-a", "--analysis", help="analysis [CMS16050]", type=str,
+                             default="CMS16050" )
+    argparser.add_argument ( "-s", "--sr", help="signal regions [all]", type=str,
                              default="all" )
+    argparser.add_argument ( "-c", "--copy", help="scp to smodels server, as it appears in http://smodels.hephy.at/wiki/CombinationComparisons", action="store_true" )
     args = argparser.parse_args()
     analysis, topo, srs = args.analysis, args.topo, args.sr
     # analysis, topo, srs = "CMS16050", "T2tt", "all"
@@ -135,13 +137,15 @@ def main():
     if "052" in analysis:
       label = "$\Delta m$(mother, daughter) [GeV]"
     plt.ylabel ( label )
-      
+
     plt.colorbar()
     #print ( "x_v=", x_v )
     #print ( "y_v=", y_v )
     plt.plot ( x_v, y_v, color='k', linestyle='-', linewidth=2 )
     plt.savefig ( "%s_%s.png" % ( analysis, topo ) )
-
+    if args.copy:
+      cmd="scp %s_%s.png smodels.hephy.at:/var/www/images/combination/" % ( analysis, topo )
+      subprocess.getoutput ( cmd )
     print ( "ratio=%s +/- %s" % ( numpy.mean(col), numpy.std(col) ) )
     # plt.show()
 
