@@ -443,8 +443,8 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False 
     if extraInfo:
         lex=TLatex()
         lex.SetNDC()
-        lex.SetTextColor( kGray )
-        lex.SetTextSize(.025)
+        # lex.SetTextColor( kGray )
+        lex.SetTextSize(.026 )
         import socket
         hn=socket.gethostname()
         lex.DrawLatex(.59,.12,"agreement: %d%s, t~%.1fs [%s]" % (agreement, "%", tavg, hn ) )
@@ -645,12 +645,39 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         l2.DrawLatex(0.16,0.6,"k-factor = %.2f" % kfactor)
         tgr.l2=l2
     
+    subtitle = "%d datasets" % len(validationPlot.expRes.datasets)
+    if validationPlot.expRes.datasets[0].dataInfo.dataId.startswith("ar"):
+        subtitle = "%d aggregate datasets" % len(validationPlot.expRes.datasets)
+    #for dataset in validationPlot.expRes.datasets:
+    #    ds_txnames = map ( str, dataset.txnameList )
+    #    if not validationPlot.txName in ds_txnames:
+    #        continue
+        dataId = str(dataset.dataInfo.dataId)
+    #    # print "[plottingFuncs.py] add to %s: %s, %s" % ( validationPlot.txName, id, str ( map ( str, dataset.txnameList  ) ) )
+    #    subtitle+=dataId+", "
+    #subtitle = subtitle[:-2]
+    #if hasattr ( validationPlot.expRes.globalInfo, "covariance" ):
+    #    subtitle = "%d aggregate regions" % len(validationPlot.expRes.datasets)
+    #if len(subtitle) > 100:
+    #    subtitle = subtitle[:100] + " ..."
+    if len(validationPlot.expRes.datasets) == 1 and type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
+        subtitle = "upper limit"
+    if validationPlot.combine == False and len(validationPlot.expRes.datasets) > 1:
+        subtitle = "best SR"
+    lsub=TLatex()
+    lsub.SetNDC()
+    lsub.SetTextAlign(31)
+    lsub.SetTextSize(.025)
+    lsub.DrawLatex(.98,.086,subtitle)
+    tgr.lsub=lsub
     
     
     #Count the number of entries in legend:
     nleg = min(2,len(cgraphs)-list(cgraphs.values()).count([])) + min(2,len(official))
     #Draw legend: 
-    leg = TLegend(0.15,0.83-0.045*nleg,0.495,0.83)
+    dx = 0. ## top, left
+    dx = .33 ## top, right
+    leg = TLegend(0.15+dx,0.83-0.045*nleg,0.495+dx,0.83)
     setOptions(leg)    
     leg.SetFillStyle(0)
     leg.SetTextSize(0.04)
@@ -665,9 +692,9 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             added = True
     added = False
     for gr in official:
-        if 'exclusion_' in gr.GetTitle():
+        if 'xclusion_' in gr.GetTitle():
             leg.AddEntry(gr,"exclusion (official)","L")
-        elif 'exclusionP1_' in gr.GetTitle() or 'exclusionM1_' in gr.GetTitle() and not added:
+        elif 'xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle() and not added:
             leg.AddEntry(gr,"#pm1#sigma (official)","L")
             added = True
     

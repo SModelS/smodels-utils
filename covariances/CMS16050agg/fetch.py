@@ -6,16 +6,16 @@ import subprocess as commands
 home=os.environ["HOME"]
 
 #dirs = glob.glob ( "%s/git/smodels/test/covdb*" % home )
-dirs = glob.glob ( "%s/git/smodels-database-develop" % home )
+dirs = glob.glob ( "%s/git/smodels-database" % home )
 
 for dir in dirs:
     # nr = dir [ dir.find("covdb")+5: ].replace("_","")
     # nr = 56
     #if len(nr)==0:
     #    continue
-    ars = glob.glob ( "%s/13TeV/CMS/CMS-SUS-16-050-eff/*" % dir )
-    nr = len ( ars ) - 2
-    files = glob.glob ( "%s/13TeV/CMS/CMS-SUS-16-050-eff/validation/T*py" % dir )
+    ars = glob.glob ( "%s/13TeV/CMS/CMS-SUS-16-050-agg/ar*" % dir )
+    nr = len ( ars )
+    files = glob.glob ( "%s/13TeV/CMS/CMS-SUS-16-050-agg/validation/T*py" % dir )
     print ( nr, dir, files )
     for f in files:
         fname = os.path.basename ( f )
