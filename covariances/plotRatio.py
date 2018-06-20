@@ -79,6 +79,8 @@ def main():
     except Exception as e:
         print ( str(e) )
 
+    if srs != "all":
+        nsr=srs
 
     def convertNewAxes ( newa ):
         """ convert new types of axes (dictionary) to old (lists) """
@@ -137,7 +139,9 @@ def main():
 
     x_v,y_v = getExclusionLine ( "%s/sms.root" % analysis, topo )
 
-    plt.title ( "Ratio UL(official) / UL(SModelS), %s, %s" % ( analysis, topo) )
+    s_ana = analysis
+    s_ana = s_ana.replace("agg"," (agg)" )
+    plt.title ( "UL(official) / UL(SModelS), %s, %s" % ( s_ana, topo) )
     # plt.title ( "Ratio UL(SModelS) / UL(official), %s, %s" % ( analysis, topo) )
     plt.xlabel ( "m$_{mother}$ [GeV]" )
     label = "m$_{LSP}$ [GeV]"
@@ -146,18 +150,19 @@ def main():
     plt.ylabel ( label )
 
     plt.colorbar()
-    #print ( "x_v=", x_v )
-    #print ( "y_v=", y_v )
     plt.plot ( x_v, y_v, color='k', linestyle='-', linewidth=2 )
     if nsr != "":
-        plt.text ( .98*max(x_v), 1.0*min(y_v)-.27*(max(y_v)-min(y_v)), "%s" % ( nsr) , fontsize=12 )
+        plt.text ( .97*max(x), 1.0*min(y)-.17*(max(y)-min(y)), "%s" % ( nsr) , fontsize=12 )
     figname = "%s_%s.png" % ( analysis, topo )
+    if srs !="all":
+        figname = "%s_%s_%s.png" % ( analysis, topo, srs )
+    plt.text ( .82*max(x), max(y), "r: %.2f +/- %.2f" % ( numpy.mean(col), numpy.std(col)  ), fontsize=11)
     print ( "Saving to %s" % figname )
     plt.savefig ( figname )
     if args.copy:
-      cmd="scp %s_%s.png smodels.hephy.at:/var/www/images/combination/" % ( analysis, topo )
+      cmd="scp %s smodels.hephy.at:/var/www/images/combination/" % ( figname )
       subprocess.getoutput ( cmd )
-    print ( "ratio=%s +/- %s" % ( numpy.mean(col), numpy.std(col) ) )
+    print ( "ratio=%.2f +/- %.2f" % ( numpy.mean(col), numpy.std(col) ) )
     # plt.show()
 
 main()
