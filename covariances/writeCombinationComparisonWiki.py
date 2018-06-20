@@ -27,7 +27,10 @@ def xsel():
 def body():
   plots = { "16050": [ "T1tttt", "T2tt", "T5tctc" ], "16052": [ "T2bbWWoff", "T6bbWWoffSemiLep" ] }
   names = { "16050": "CMS-SUS-16-050", "16052": "CMS-PAS-SUS-16-052" }
-  columns = [ "Combined, aggregated", "Combined, full", "Best SR" ]
+  addBest=True
+  columns = [ "Combined, aggregated", "Combined, full" ]
+  if addBest:
+  	columns.append ( "Best SR" )
   for name,topos in plots.items():
     f.write ( "\n= %s =\n" % (names[name]) )
     f.write ( "||<#EEEEEE:> '''Name''' " ) 
@@ -36,9 +39,9 @@ def body():
     f.write ( "||\n" )
     for topo in topos:
       url="http://smodels.hephy.at/images/combination/"
-      f.write ( '|| %s || {{%sCMS%sagg_%s.png||width="500"}} || {{%sCMS%s_%s.png||width="500"}} ' % \
-                ( topo, url, name, topo, url, name, topo ) )
-      if "Best SR" in columns:
+      f.write ( '|| {{%s%s.png}} || {{%sCMS%sagg_%s.png||width="500"}} || {{%sCMS%s_%s.png||width="500"}} ' % \
+                ( url, topo, url, name, topo, url, name, topo ) )
+      if addBest:
       	f.write ( '|| {{%sCMS%sbest_%s.png||width="500"}} ' % ( url, name, topo ) )
       f.write ( "||\n" )
 

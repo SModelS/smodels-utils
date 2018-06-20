@@ -18,6 +18,10 @@ ratioplots:
 	./plotRatio.py -a CMS16052best -t T2bbWWoff -c
 	./plotRatio.py -a CMS16052best -t T6bbWWoffSemiLep -c
 
+
+labels:
+	tex2im -o T2ttO.png '\mathrm{T2tt}'
+
 comp:
 	latex comp.tex
 

@@ -65,7 +65,8 @@ def main():
                              default="CMS16050" )
     argparser.add_argument ( "-s", "--sr", help="signal regions [all]", type=str,
                              default="all" )
-    argparser.add_argument ( "-c", "--copy", help="scp to smodels server, as it appears in http://smodels.hephy.at/wiki/CombinationComparisons", action="store_true" )
+    argparser.add_argument ( "-c", "--copy", action="store_true", 
+            help="scp to smodels server, as it appears in http://smodels.hephy.at/wiki/CombinationComparisons" )
     args = argparser.parse_args()
     analysis, topo, srs = args.analysis, args.topo, args.sr
     # analysis, topo, srs = "CMS16050", "T2tt", "all"

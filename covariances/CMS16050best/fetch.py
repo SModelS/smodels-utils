@@ -13,7 +13,7 @@ for dir in dirs:
     # nr = 56
     #if len(nr)==0:
     #    continue
-    ars = glob.glob ( "%s/13TeV/CMS/CMS-SUS-16-050-best/*" % dir )
+    ars = glob.glob ( "%s/13TeV/CMS/CMS-SUS-16-050-best/sr*" % dir )
     nr = len ( ars )
     files = glob.glob ( "%s/13TeV/CMS/CMS-SUS-16-050-best/validation/T*py" % dir )
     print ( nr, dir, files )

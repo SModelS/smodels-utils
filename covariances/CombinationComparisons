@@ -5,11 +5,11 @@
 
 = CMS-SUS-16-050 =
 ||<#EEEEEE:> '''Name''' ||<#EEEEEE:> '''Combined, aggregated''' ||<#EEEEEE:> '''Combined, full''' ||<#EEEEEE:> '''Best SR''' ||
-|| T1tttt || {{http://smodels.hephy.at/images/combination/CMS16050agg_T1tttt.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16050_T1tttt.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16050best_T1tttt.png||width="500"}} ||
-|| T2tt || {{http://smodels.hephy.at/images/combination/CMS16050agg_T2tt.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16050_T2tt.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16050best_T2tt.png||width="500"}} ||
-|| T5tctc || {{http://smodels.hephy.at/images/combination/CMS16050agg_T5tctc.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16050_T5tctc.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16050best_T5tctc.png||width="500"}} ||
+|| {{http://smodels.hephy.at/images/combination/T1tttt.png}} || {{http://smodels.hephy.at/images/combination/CMS16050agg_T1tttt.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16050_T1tttt.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16050best_T1tttt.png||width="500"}} ||
+|| {{http://smodels.hephy.at/images/combination/T2tt.png}} || {{http://smodels.hephy.at/images/combination/CMS16050agg_T2tt.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16050_T2tt.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16050best_T2tt.png||width="500"}} ||
+|| {{http://smodels.hephy.at/images/combination/T5tctc.png}} || {{http://smodels.hephy.at/images/combination/CMS16050agg_T5tctc.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16050_T5tctc.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16050best_T5tctc.png||width="500"}} ||
 
 = CMS-PAS-SUS-16-052 =
 ||<#EEEEEE:> '''Name''' ||<#EEEEEE:> '''Combined, aggregated''' ||<#EEEEEE:> '''Combined, full''' ||<#EEEEEE:> '''Best SR''' ||
-|| T2bbWWoff || {{http://smodels.hephy.at/images/combination/CMS16052agg_T2bbWWoff.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16052_T2bbWWoff.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16052best_T2bbWWoff.png||width="500"}} ||
-|| T6bbWWoffSemiLep || {{http://smodels.hephy.at/images/combination/CMS16052agg_T6bbWWoffSemiLep.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16052_T6bbWWoffSemiLep.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16052best_T6bbWWoffSemiLep.png||width="500"}} ||
+|| {{http://smodels.hephy.at/images/combination/T2bbWWoff.png}} || {{http://smodels.hephy.at/images/combination/CMS16052agg_T2bbWWoff.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16052_T2bbWWoff.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16052best_T2bbWWoff.png||width="500"}} ||
+|| {{http://smodels.hephy.at/images/combination/T6bbWWoffSemiLep.png}} || {{http://smodels.hephy.at/images/combination/CMS16052agg_T6bbWWoffSemiLep.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16052_T6bbWWoffSemiLep.png||width="500"}} || {{http://smodels.hephy.at/images/combination/CMS16052best_T6bbWWoffSemiLep.png||width="500"}} ||
