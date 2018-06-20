@@ -130,7 +130,7 @@ def main():
 
     cm = plt.cm.get_cmap('jet')
     # cm = plt.cm.get_cmap('RdYlGn')
-    scatter = plt.scatter ( x, y, c=col, cmap=cm, vmin=0.5, vmax=1.5 )
+    scatter = plt.scatter ( x, y, s=35., c=col, cmap=cm, vmin=0.5, vmax=1.5 )
     plt.rc('text', usetex=True)
     slhafile=FromEff.validationData[0]["slhafile"]
     Dir=os.path.dirname ( FromEff.__file__ )
@@ -152,7 +152,8 @@ def main():
     plt.colorbar()
     plt.plot ( x_v, y_v, color='k', linestyle='-', linewidth=2 )
     if nsr != "":
-        plt.text ( .97*max(x), 1.0*min(y)-.17*(max(y)-min(y)), "%s" % ( nsr) , fontsize=12 )
+        # plt.text ( .98*max(x_v), 1.0*min(y_v)-.27*(max(y_v)-min(y_v)), "%s" % ( nsr) , fontsize=12 )
+        plt.text ( .98*max(x), min(y)-.17*(max(y)-min(y)), "%s" % ( nsr) , fontsize=12 )
     figname = "%s_%s.png" % ( analysis, topo )
     if srs !="all":
         figname = "%s_%s_%s.png" % ( analysis, topo, srs )
