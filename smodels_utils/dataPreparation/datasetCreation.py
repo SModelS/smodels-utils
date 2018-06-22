@@ -18,7 +18,7 @@ import ROOT
 sys.path.insert ( 0, "../../../smodels" )
 sys.path.insert ( 0, "../.." )
 from smodels.tools.smodelsLogging import logger
-from smodels.tools.SimplifiedLikelihoods import Model, UpperLimitComputer
+from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
 from smodels.tools.physicsUnits import fb, pb
 from smodels_utils.dataPreparation.inputObjects import MetaInfoInput,DataSetInput
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator
@@ -177,16 +177,19 @@ class DatasetsFromLatex:
             logger.info ( "directly computed error and error from covariance vary greatly: %s != %s!" % ( oldBgError, newds.bgError  ) )
         ntoys, alpha = 50000, .05
         lumi = eval ( databaseCreator.metaInfo.lumi )
-        comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
-        m = Model ( newds.observedN, newds.expectedBG, bgErr2, None, 1. )
+        # comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
+        comp = UpperLimitComputer ( ntoys, 1. - alpha )
+        m = Data ( newds.observedN, newds.expectedBG, bgErr2, None, 1. )
         try:
-            ul = comp.ulSigma ( m, marginalize=False ).asNumber ( fb )
+            ul = comp.ulSigma ( m, marginalize=False ) / lumi.asNumber ( 1./fb )
+            #ul = comp.ulSigma ( m, marginalize=False ).asNumber ( fb )
         except Exception as e:
             print ( "Exception", e )
             print ( "observed:",newds.observedN )
             sys.exit()
         newds.upperLimit = str("%f*fb" % ul )
-        ule = comp.ulSigma ( m, marginalize=False, expected=True ).asNumber ( fb )
+        # ule = comp.ulSigma ( m, marginalize=False, expected=True ).asNumber ( fb )
+        ule = comp.ulSigma ( m, marginalize=False, expected=True ) / lumi.asNumber(1./fb)
         newds.expectedUpperLimit =  str("%f*fb" % ule )
         newds.aggregated = aggregated[:-1]
         newds.dataId = "ar%d" % (ctr+1) ## for now the dataset id is the agg region id

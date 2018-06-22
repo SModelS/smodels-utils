@@ -115,9 +115,9 @@ class CovarianceHandler:
 
     def checkCovarianceMatrix( self ):
         """ a quick check if the covariance matrix is invertible. """
-        from smodels.tools.SimplifiedLikelihoods import Model
+        from smodels.tools.simplifiedLikelihoods import Data
         n=len(self.covariance)
-        m=Model( [0.]*n, [0.]*n, self.covariance )
+        m=Data( [0.]*n, [0.]*n, self.covariance )
         logger.info ( "Check %d-dim covariance matrix for positive definiteness." % n )
         try:
             I=(m.covariance)**(-1)
@@ -406,14 +406,14 @@ class DataSetInput(Locker):
             lumi = eval(lumi,{'fb':fb,'pb': pb})
         alpha = .05
         try:
-            from smodels.tools.SimplifiedLikelihoods import Model, UpperLimitComputer
+            from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
             comp = UpperLimitComputer ( lumi, self.ntoys, 1. - alpha )
             m = Model ( self.observedN, self.expectedBG, self.bgError**2, None, 1. )
             ul = comp.ulSigma ( m, marginalize=True ).asNumber ( fb )
             ulExpected = comp.ulSigma ( m, marginalize=True, expected=True ).asNumber ( fb )
         except ModuleNotFoundError as e:
             ## maybe smodels < 1.1.2?
-            logger.error ( "cannot import SimplifiedLikelihoods module: %s. Maybe upgrade to smodels v1.1.2?" % e )
+            logger.error ( "cannot import simplifiedLikelihoods module: %s. Maybe upgrade to smodels v1.1.3?" % e )
             from smodels.tools import statistics
             ul = statistics.upperLimit(self.observedN, self.expectedBG,
                    self.bgError, lumi, alpha, self.ntoys ).asNumber(fb)

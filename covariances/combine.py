@@ -26,7 +26,7 @@ def combined95UL ( theorypreds ):
     llhd=0.
     llhds=[]
     mu_v = numpy.arange ( 0., 5., .1 )
-    for mu in mu_v
+    for mu in mu_v:
         tmp=1.
         for p in theorypreds:
             tmp=tmp*p.llhd ( mu )

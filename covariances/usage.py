@@ -1,8 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import print_function
-from smodels.tools.SimplifiedLikelihoods import Model, UpperLimitComputer, fb, LikelihoodComputer
-# from SimplifiedLikelihoods import Model, UpperLimitComputer
+from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer, fb, LikelihoodComputer
 
 C=[ 18774.2, -2866.97, -5807.3, -4460.52, -2777.25, -1572.97, -846.653, -442.531,
    -2866.97, 496.273, 900.195, 667.591, 403.92, 222.614, 116.779, 59.5958,
@@ -17,12 +16,12 @@ backgrounds=[2006.4,836.4,350.,147.1,62.0,26.2,11.1,4.7]
 signals=[47,29.4,21.1,14.3,9.4,7.1,4.7,4.3 ]
 efficiencies=[.47,.29,.21,.14,.094,.071,.047,.043 ]
 
-m=Model ( data=data,
-          backgrounds=backgrounds,
-          covariance= C,
-          skewness = None,
-          efficiencies=efficiencies,
-          name="CMS-NOTE-2017-001 model" )
+m=Data ( observed=data,
+         backgrounds=backgrounds,
+         covariance= C,
+         skewness = None,
+         efficiencies=efficiencies,
+         name="CMS-NOTE-2017-001 model" )
 
 LC = LikelihoodComputer ( m )
 

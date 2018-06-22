@@ -6,7 +6,7 @@ import math
 import array
 import time
 import random
-from smodels.tools.SimplifiedLikelihoods import Model,UpperLimitComputer
+from smodels.tools.simplifiedLikelihoods import Data,UpperLimitComputer
 from smodels.tools.physicsUnits import fb
 from smodels.tools.runtime import nCPUs
 import binned_model
@@ -18,7 +18,7 @@ import copy
 def createBinnedModel(bins):
     """ create a sub-model with only <bins> (list of indices) """
     import model_90 as m9
-    m=Model( m9.data, m9.background, m9.covariance, m9.third_moment, m9.signal,"o90")
+    m=Data( m9.data, m9.background, m9.covariance, m9.third_moment, m9.signal,"o90")
     S=[]
     for i,s in enumerate ( m9.third_moment ):
         if i in bins:
@@ -46,7 +46,7 @@ def createBinnedModel(bins):
             if j in bins:
                 col.append ( e )
         C.append ( col )
-    m = Model ( data=D, backgrounds=B, covariance=C, third_moment=S,
+    m = Data ( observed=D, backgrounds=B, covariance=C, third_moment=S,
                 efficiencies=sig, name="model%d" % n )
     m._bins=bins
     return m
