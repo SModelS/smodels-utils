@@ -407,10 +407,10 @@ class DataSetInput(Locker):
         alpha = .05
         try:
             from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
-            comp = UpperLimitComputer ( lumi, self.ntoys, 1. - alpha )
-            m = Model ( self.observedN, self.expectedBG, self.bgError**2, None, 1. )
-            ul = comp.ulSigma ( m, marginalize=True ).asNumber ( fb )
-            ulExpected = comp.ulSigma ( m, marginalize=True, expected=True ).asNumber ( fb )
+            comp = UpperLimitComputer ( self.ntoys, 1. - alpha )
+            m = Data ( self.observedN, self.expectedBG, self.bgError**2, None, 1. )
+            ul = comp.ulSigma ( m, marginalize=True ) / lumi.asNumber ( 1. / fb )
+            ulExpected = comp.ulSigma ( m, marginalize=True, expected=True ) / lumi.asNumber ( 1. / fb )
         except ModuleNotFoundError as e:
             ## maybe smodels < 1.1.2?
             logger.error ( "cannot import simplifiedLikelihoods module: %s. Maybe upgrade to smodels v1.1.3?" % e )
