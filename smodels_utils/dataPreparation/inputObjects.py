@@ -224,7 +224,7 @@ class MetaInfoInput(Locker):
         return metaInfo
 
     def createCovarianceMatrix ( self, filename, histoname, addOrder=True,
-                          max_datasets=None, aggregate = None ):
+                          max_datasets=None, aggregate = None, datasets = None ):
         """ create the covariance matrix from file <filename>, histo <histoname>,
         allowing only a maximum of <max_datasets> datasets. If
         aggregate is not None, aggregate the signal regions, given as
@@ -233,6 +233,8 @@ class MetaInfoInput(Locker):
         signal numbers, e.g.  [ [ 1, 2 ], [ 3, 4 ] ]
         :param aggregate: aggregate signal regions, given by indices, e.g.
          [[0,1,2],[3,4]] or signal region names, e.g.[["sr0","sr1"],["sr2"]].
+        :param datasets: list of datasets, so we can cross-check the covariance
+         matrix with the errors given per signal region
         """
 
         handler = CovarianceHandler ( filename, histoname, max_datasets, aggregate )
@@ -244,12 +246,26 @@ class MetaInfoInput(Locker):
         self.covariance = handler.covariance
         if True: ## pretty print
             self.covariance = "["
-            for row in handler.covariance:
+            for rowctr,row in enumerate(handler.covariance):
                 self.covariance += "["
-                for x in row:
+                for colctr,x in enumerate(row):
+                    if rowctr==colctr:
+                        logger.debug ( "variance(%d,%d)=%f" % ( rowctr+1, colctr+1, x ) )
+                        if datasets != None:
+                            dsSigma = (datasets[rowctr].bgError)
+                            dsVar = (datasets[rowctr].bgError)**2
+                            if dsVar > 1.2 * x:
+                                logger.error ( "variance determined from table (%.2g) is more than 1.2*variance in covariance matrix (%.2g) var #(%d,%d). replace variance in covariance matrix with more conservative estimate." % ( dsVar, x, rowctr+1, colctr+1 ) )
+                                x = dsVar
+                            logger.debug ( "dataset(%d)^2=%f^2=%f" % ( rowctr+1, dsSigma, dsVar ) )
+                            off = max ( dsVar,x ) / min ( dsVar,x)
+                            logger.debug ( "it is a factor of %.1f off" % off )
+                            err = 2.*(dsVar-x ) / (dsVar+x)
+                            logger.debug ( "relative error on variance %.1f percent" % (100.*err) )
                     self.covariance += "%.4g, " % x
                 self.covariance = self.covariance[:-2] + "], "
             self.covariance = self.covariance[:-2]+"]"
+        # sys.exit()
 
     def __init__(self, ID):
 
