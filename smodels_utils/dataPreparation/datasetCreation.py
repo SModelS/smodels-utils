@@ -174,7 +174,10 @@ class DatasetsFromLatex:
         bgErr2 = eval(databaseCreator.metaInfo.covariance)[ctr][ctr]
         newds.bgError = math.sqrt ( bgErr2 )
         if abs ( oldBgError - newds.bgError ) / newds.bgError > .2:
-            logger.info ( "directly computed error and error from covariance vary greatly: %s != %s!" % ( oldBgError, newds.bgError  ) )
+            logger.error ( "directly computed error and error from covariance vary greatly: %s != %s!" % ( oldBgError, newds.bgError  ) )
+            if oldBgError > newds.bgError:
+                logger.error ( "since direct computation is more conservative, I will use that one." )
+                newds.bgError = oldBgError
         ntoys, alpha = 50000, .05
         lumi = eval ( databaseCreator.metaInfo.lumi )
         # comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
