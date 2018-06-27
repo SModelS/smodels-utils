@@ -21,6 +21,10 @@ ratioplots:
 
 labels:
 	tex2im -o T2ttO.png '\mathrm{T2tt}'
+	tex2im -o T2bbWWoffSemiLepO.png '\mathrm{T2bbWWoffSemiLep}'
+	convert -rotate 270 T2bbWWoffSemiLepO.png T2bbWWoffSemiLep.png
+	convert -rotate 270 T2ttO.png T2tt.png
+	scp T2bbWWoffSemiLep.png T2tt.png smodels.hephy.at:/var/www/images/combination/
 
 comp:
 	latex comp.tex
