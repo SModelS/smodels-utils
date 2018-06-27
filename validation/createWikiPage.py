@@ -27,12 +27,22 @@ class WikiPageCreator:
     def __init__ ( self, ugly, database ):
         self.ugly = ugly ## ugly mode
         self.databasePath = database.replace ( "~", os.path.expanduser("~") )
-        #self.databasePath = os.path.join(os.path.expanduser("~"),\
-        #        "git/smodels-database/")
         self.db = Database( self.databasePath )
-        self.localdir = "/var/www/validationWiki"
+        # self.localdir = "/var/www/validationWiki"
         self.localdir = "/var/www/validation_v%s" % \
                          self.db.databaseVersion.replace(".","" )
+        if not os.path.exists ( self.localdir ):
+            print ( "%s does not exist. will try to create it." % self.localdir )
+            cmd = "mkdir %s" % self.localdir
+            a= C.getoutput ( cmd )
+            print ( "%s: %s" % ( cmd, a ) )
+        if not "version" in os.listdir( self.localdir ):
+            print ( "Copying database." )
+            cmd = "cp -r %s/* %s" % ( self.databasePath, self.localdir )
+            a= C.getoutput ( cmd )
+            print ( "%s: %s" % ( cmd, a ) )
+        else:
+            print ( "Database seems already copied to %s. Good." % self.localdir )
         self.urldir = self.localdir.replace ( "/var/www", "" )
         self.fName = 'wikiFile.txt'
         if self.ugly:
@@ -190,6 +200,8 @@ The validation procedure for upper limit maps used here is explained in [[http:/
             vDir = valDir.replace ( self.databasePath,"")
             altpath = self.databasePath.replace ( "/home", "/nfsdata" )
             vDir = vDir.replace ( altpath, "" )
+            if vDir[0]=="/":
+                vDir = vDir[1:]
             dirPath =  os.path.join( self.urldir, vDir )
             files = glob.glob(valDir+"/"+txname.txName+"_*_pretty.pdf")
             if self.ugly:
@@ -202,6 +214,7 @@ The validation procedure for upper limit maps used here is explained in [[http:/
                 pngname = fig.replace(".pdf",".png" )
                 if not os.path.exists ( pngname ):
                     cmd = "convert -trim %s %s" % ( fig, pngname )
+                    print ( cmd )
                     C.getoutput ( cmd )
                 # figName = fig.replace(valDir+"/","")
                 figName = pngname.replace(valDir+"/","").replace ( \
@@ -211,7 +224,7 @@ The validation procedure for upper limit maps used here is explained in [[http:/
                 #line += "[[http://smodels.hephy.at"+figPath+\
                 #        "|"+figName+"]]<<BR>>"
                 figC = "http://smodels.hephy.at"+figPath
-                line += "[[%s|{{%s||width=200}}]]" % ( figC, figC )
+                line += "[[%s|{{%s||width=400}}]]" % ( figC, figC )
                 #line += "{{http://smodels.hephy.at"+figPath+\
                 #        "||width=300}}"
                 line += "<<BR>>"
