@@ -87,6 +87,9 @@ class DatabaseCreator(list):
         files = os.listdir(".")
         dirs = []
         for f in files:
+            if f.startswith(".db") and f.endswith ( ".pcl" ):
+                os.unlink ( f )
+
             if os.path.isdir ( f ) and not f in [ "validation", "orig" ]:
                 subdir = os.listdir ( f )
                 if "dataInfo.txt" in subdir:
