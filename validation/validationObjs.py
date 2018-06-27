@@ -459,6 +459,7 @@ class ValidationPlot():
             os.mkdir(vDir)
 
         filename = self.getPlotFile(vDir,fformat)
+        logger.info ( "saving plot in %s" % filename )
 
         if not self.pretty:
             self.plot.Print(filename)
