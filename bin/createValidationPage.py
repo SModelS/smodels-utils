@@ -1,12 +1,13 @@
 #!/usr/bin/python
 
 """ very simple script that collects all validation plots in a simple 
-    (local) validation html page """
+    (local) validation html page. FIXME seems obsolete, check out 
+    smodels-utils/validation/createWikiPage.py """
 
 from __future__ import print_function
 import glob
 import time
-import os
+import os, sys
 import commands as C
     
 def copy( db, outfile ):
@@ -37,6 +38,8 @@ def write( db, outfile ):
     copy( db, outfile )
 
 if __name__ == "__main__":
+    print ( "Probably obsolete" )
+    sys.exit()
     db = "/home/walten/git/smodels-database/"
     outfile = "newFormat"
     write( db, outfile )

@@ -459,9 +459,9 @@ class ValidationPlot():
             os.mkdir(vDir)
 
         filename = self.getPlotFile(vDir,fformat)
-        logger.info ( "saving plot in %s" % filename )
 
         if not self.pretty:
+            logger.info ( "saving plot in %s" % filename )
             self.plot.Print(filename)
             filename = filename.replace('.'+fformat,'.png')
             try:
@@ -472,6 +472,7 @@ class ValidationPlot():
         else:
             #Print pdf, png and root formats
             filename = filename.replace('.'+fformat,'_pretty.'+fformat)
+            logger.info ( "saving plot in %s" % filename )
             self.plot.Print(filename)
             filename = filename.replace('.'+fformat,'.png')
             self.plot.Print(filename)

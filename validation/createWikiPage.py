@@ -1,8 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 .. module:: createWikiPage.py
-   :synopsis: create the wiki page listing the validation plots
+   :synopsis: create the wiki page listing the validation plots, like
+              http://smodels.hephy.at/wiki/Validation
 
 """
 
@@ -23,10 +24,11 @@ except ImportError:
 
 class WikiPageCreator:
     ### starting to write a creator class
-    def __init__ ( self, ugly ):
+    def __init__ ( self, ugly, database ):
         self.ugly = ugly ## ugly mode
-        self.databasePath = os.path.join(os.path.expanduser("~"),\
-                "git/smodels-database/")
+        self.databasePath = database.replace ( "~", os.path.expanduser("~") )
+        #self.databasePath = os.path.join(os.path.expanduser("~"),\
+        #        "git/smodels-database/")
         self.db = Database( self.databasePath )
         self.localdir = "/var/www/validationWiki"
         self.localdir = "/var/www/validation_v%s" % \
@@ -63,7 +65,9 @@ class WikiPageCreator:
         print ( '--->(if xsel is installed, you should find the content in your clipboard.)\n' )
         self.file.write ( "\n" )
         self.file.close()
-        C.getoutput ( "cat %s | xsel -i" % self.fName )
+        cmd = "cat %s | xsel -i" % self.fName
+        print ( cmd )
+        C.getoutput ( cmd )
 
     def writeHeader ( self ):
         print ( 'Creating wiki file (%s)....' % self.fName )
@@ -292,8 +296,15 @@ The validation procedure for upper limit maps used here is explained in [[http:/
 
 if __name__ == "__main__":
     import argparse
-    ap = argparse.ArgumentParser( description= "creates validation wiki pages." )
+    ap = argparse.ArgumentParser( description= "creates validation wiki pages, see e.g. http://smodels.hephy.at/wiki/Validation" )
     ap.add_argument('-u', '--ugly', help='ugly mode', action='store_true')
+    ap.add_argument('-v', '--verbose',
+            help='specifying the level of verbosity (error, warning, info, debug)',
+            default = 'info', type = str)
+    ap.add_argument('-d', '--database',
+            help='specify the location of the database [~/git/smodels-database]',
+            default = '~/git/smodels-database', type = str )
     args = ap.parse_args()
-    creator = WikiPageCreator( args.ugly )
+    setLogLevel ( args.verbose )
+    creator = WikiPageCreator( args.ugly, args.database )
     creator.run()

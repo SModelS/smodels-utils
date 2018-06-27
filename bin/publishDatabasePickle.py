@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-""" makes a database pickle file publically available 
-    (script needs to be run on the smodels server) """
+""" makes a database pickle file publically available  """
 
 from __future__ import print_function
 import pickle, os, sys, argparse
@@ -10,6 +9,22 @@ if sys.version[0]=="2":
 else:
     import subprocess as CMD
 
+def checkNonValidated( database ):
+    """ check if there are results with e.g. "tbd" as their validated field.
+    """
+    has_nonValidated = False
+    expResults = database.getExpResults( useNonValidated=True )
+    has_nonValidated = False
+    for e in expResults:
+        for ds in e.datasets:
+            for tx in ds.txnameList:
+                if tx.validated in [ False, True, "N/A", "n/a" ]:
+                    continue
+                print ( "Non-validated result: %s,%s, %s: %s " % \
+                        ( e.globalInfo.id, ds, tx, tx.validated) )
+                has_nonValidated = True
+    return has_nonValidated
+        
 
 def main():
     ap = argparse.ArgumentParser( description="makes a database pickle file publically available (run it on the smodels)" )
@@ -22,6 +37,7 @@ def main():
     dbname = args.filename
     if args.smodelsPath:
         sys.path.append(os.path.abspath(args.smodelsPath))
+    has_nonValidated = False
     if args.build:
         if not os.path.isdir ( dbname ):
             print ( "supplied --build option, but %s is not a directory." % dbname )
@@ -29,6 +45,7 @@ def main():
         from smodels.experiment.databaseObj import Database
         d = Database ( dbname )
         dbname = d.pcl_meta.pathname
+        has_nonValidated = checkNonValidated ( d )
 
     p=open(dbname,"rb")
     meta=pickle.load(p)
@@ -51,6 +68,9 @@ def main():
     Dict = { "lastchanged": meta.mtime, "size": os.stat(dbname).st_size, "url": "http://smodels.hephy.at/database/%s" % pclfilename }
     f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
     f.close()
+    if has_nonValidated:
+        print ( "has non-validated results. Stopping the procedure." )
+        sys.exit()
     cmd = "cp %s /nfsdata/walten/database/%s" % ( dbname, pclfilename )
     if args.ssh:
         cmd = "scp %s smodels.hephy.at:/nfsdata/walten/database/%s" % ( dbname, pclfilename )
