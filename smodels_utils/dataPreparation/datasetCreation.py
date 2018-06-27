@@ -173,8 +173,8 @@ class DatasetsFromLatex:
         oldBgError = math.sqrt ( bgError2 )
         bgErr2 = eval(databaseCreator.metaInfo.covariance)[ctr][ctr]
         newds.bgError = math.sqrt ( bgErr2 )
-        if abs ( oldBgError - newds.bgError ) / newds.bgError > .2:
-            logger.error ( "directly computed error and error from covariance vary greatly: %s != %s!" % ( oldBgError, newds.bgError  ) )
+        if ( oldBgError - newds.bgError ) / newds.bgError > .2:
+            logger.error ( "directly computed error and error from covariance vary greatly for ar%d: %s != %s!" % ( ctr+1, oldBgError, newds.bgError  ) )
             if oldBgError > newds.bgError:
                 logger.error ( "since direct computation is more conservative, I will use that one." )
                 newds.bgError = oldBgError
