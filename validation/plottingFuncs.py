@@ -646,7 +646,8 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         tgr.l2=l2
     
     subtitle = "%d datasets" % len(validationPlot.expRes.datasets)
-    if validationPlot.expRes.datasets[0].dataInfo.dataId.startswith("ar"):
+    dId = validationPlot.expRes.datasets[0].dataInfo.dataId
+    if type(dId) == str and dId.startswith("ar"):
         subtitle = "%d aggregate datasets" % len(validationPlot.expRes.datasets)
     #for dataset in validationPlot.expRes.datasets:
     #    ds_txnames = map ( str, dataset.txnameList )
