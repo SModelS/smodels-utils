@@ -5,7 +5,7 @@ import subprocess as commands
 
 home=os.environ["HOME"]
 
-dirs = glob.glob ( "%s/git/smodels-database-develop" % home )
+dirs = glob.glob ( "%s/git/smodels-database-covariances" % home )
 anaId="CMS-PAS-SUS-16-052-eff"
 
 for dir in dirs:
