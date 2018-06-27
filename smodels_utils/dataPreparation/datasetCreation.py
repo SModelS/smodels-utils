@@ -120,8 +120,8 @@ class DatasetsFromLatex:
 
     def createAllDatasets ( self ):
         """ create all datasets in a single go. makes aggregation easier. """
-        # logger.info ( "now creating all datasets" )
-        print ( "now creating all datasets" )
+        logger.debug ( "now creating all datasets" )
+        # print ( "now creating all datasets" )
         self.datasets = []
         counter=0
         count_all = 0
