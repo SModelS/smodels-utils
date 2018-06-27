@@ -14,18 +14,23 @@ import os
 import argparse
 
 def main():
-    # dbname="http://smodels.hephy.at/database/official113"
-    dbname="/home/walten/git/smodels-database"
-    d=Database( dbname, subpickle=True )
-
     ap = argparse.ArgumentParser( description= "find aggregate regions based on correlations." )
     ap.add_argument('-a','--analysis',help="name of analysis to discuss [CMS-SUS-16-050]",
                     default = "CMS-SUS-16-050", type=str )
     ap.add_argument('-c','--corr',help="correlation needed to cluster [.5]",
                     default = .5, type=float )
+    ap.add_argument('-d','--database',help="path to database [official]",
+                    default = "official", type=str )
     args = ap.parse_args()
-    if args.analysis == "052":
+    # dbname="http://smodels.hephy.at/database/official113"
+    # dbname="/home/walten/git/smodels-database"
+    # d=Database( dbname, subpickle=True )
+    d=Database( args.database )
+
+    if "52" in args.analysis:
         args.analysis = "CMS-PAS-SUS-16-052"
+    if "50" in args.analysis:
+        args.analysis = "CMS-SUS-16-050"
     ids = [ args.analysis ]
     results=d.getExpResults( analysisIDs=ids, dataTypes=["efficiencyMap"],
                              useNonValidated=True )
