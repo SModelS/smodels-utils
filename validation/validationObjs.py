@@ -350,7 +350,8 @@ class ValidationPlot():
                 logger.debug("Wait. We have multiple dataset Ids. Lets see if there is a combined result." )
                 found_combined=False
                 for eR in res:
-                    if eR["DataSetID"]=="combined":
+                    print ( "debug: eR=%s" % eR )
+                    if "combined" in eR["DataSetID"]:
                         logger.debug ( "found a combined result. will use it." )
                         found_combined=True
                         expRes = eR
