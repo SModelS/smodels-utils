@@ -210,8 +210,8 @@ if __name__ == "__main__":
     ap.add_argument('-p', '--parfile',
             help='parameter file specifying the validation options [validation_parameters.ini]', default='./validation_parameters.ini')
     ap.add_argument('-v', '--verbose',
-            help='specifying the level of verbosity (error, warning, info, debug)',
-            default = 'warning', type = str)
+            help='specifying the level of verbosity (error, warning, info, debug) [info]',
+            default = 'info', type = str)
 
     args = ap.parse_args()
 
