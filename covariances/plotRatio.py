@@ -162,7 +162,7 @@ def main():
     figname = "%s_%s.png" % ( analysis, topo )
     if srs !="all":
         figname = "%s_%s_%s.png" % ( analysis, topo, srs )
-    plt.text ( min(x)+.75*(max(x)-min(x)), max(y), "r: %.2f +/- %.2f" % ( numpy.mean(col), numpy.std(col)  ), fontsize=11)
+    plt.text ( min(x)+.70*(max(x)-min(x)), max(y), "f$_{UL}$: %.2f +/- %.2f" % ( numpy.mean(col), numpy.std(col)  ), fontsize=11)
     print ( "Saving to %s" % figname )
     plt.savefig ( figname )
     if args.copy:
