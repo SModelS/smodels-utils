@@ -46,15 +46,42 @@ def getExclusionsFrom ( rootpath, txname, axes=None ):
         return False
     return txnames[txname][0] ## here we only need the central
 
-def getExclusionLine ( rootpath, txname, axes=None ):
-    line = getExclusionsFrom ( rootpath, txname, axes )
+
+def getSModelSExclusion ( rootpath ):
+    """ obtain the smodels exclusion line  from validation plot. """
+    rootFile = ROOT.TFile(rootpath)
+    if not rootFile.IsOpen():
+        return []
+    vp = rootFile.Get("Validation Plot")
+    ret = []
+    for i in range(1,9):
+        line = vp.GetListOfPrimitives().At(i)
+        col = line.GetLineColor()
+        sty = line.GetLineStyle()
+        wdh = line.GetLineWidth()
+        if sty == 1 and col == 922:
+            ret.append ( line )
+    return ret
+
+
+def getExclusionLine ( line ):
+    """ get the values of exclusion line from tgraphs.
+    :params line: either a tgraph, or a list of tgraphs
+    """
+    # line = getExclusionsFrom ( rootpath, txname, axes )
+    if type(line)==list:
+        x = []
+        for l in line:
+            xs = getExclusionLine ( l )[0]
+            x.append ( xs )
+        return x
     x,y=ROOT.Double(),ROOT.Double()
     x_v,y_v=[],[]
     for i in range(line.GetN()):
       line.GetPoint(i,x,y)
       x_v.append(copy.deepcopy(x))
       y_v.append(copy.deepcopy(y))
-    return x_v, y_v
+    return [ { "x": x_v, "y": y_v } ]
 
 def main():
     import argparse
@@ -141,8 +168,8 @@ def main():
     Dir=os.path.dirname ( FromEff.__file__ )
     analysis=Dir[ Dir.rfind("/")+1: ]
     topo=slhafile[:slhafile.find("_")]
+    line = getExclusionsFrom ( "%s/sms.root" % analysis, topo )
 
-    x_v,y_v = getExclusionLine ( "%s/sms.root" % analysis, topo )
 
     s_ana = analysis
     s_ana = s_ana.replace("agg"," (agg)" )
@@ -155,7 +182,14 @@ def main():
     plt.ylabel ( label )
 
     plt.colorbar()
-    plt.plot ( x_v, y_v, color='k', linestyle='-', linewidth=2 )
+    el = getExclusionLine ( line )
+    for E in el:
+        plt.plot ( E["x"], E["y"], color='k', linestyle='-', linewidth=2 )
+    smodels_line = getSModelSExclusion ( "%s/%s.root" % ( analysis, topo ) )
+    el2 = getExclusionLine ( smodels_line )
+    for E in el2:
+        plt.plot ( E["x"], E["y"], color='grey', linestyle='-', linewidth=2 )
+
     if nsr != "":
         # plt.text ( .98*max(x_v), 1.0*min(y_v)-.27*(max(y_v)-min(y_v)), "%s" % ( nsr) , fontsize=12 )
         plt.text ( .97*max(x), min(y)-.17*(max(y)-min(y)), "%s" % ( nsr) , fontsize=12 )
