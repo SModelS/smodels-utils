@@ -54,13 +54,16 @@ def getSModelSExclusion ( rootpath ):
         return []
     vp = rootFile.Get("Validation Plot")
     ret = []
-    for i in range(1,9):
-        line = vp.GetListOfPrimitives().At(i)
-        col = line.GetLineColor()
-        sty = line.GetLineStyle()
-        wdh = line.GetLineWidth()
-        if sty == 1 and col == 922:
-            ret.append ( line )
+    try:
+        for i in range(1,99):
+            line = vp.GetListOfPrimitives().At(i)
+            col = line.GetLineColor()
+            sty = line.GetLineStyle()
+            wdh = line.GetLineWidth()
+            if sty == 1 and col == 922:
+                ret.append ( line )
+    except Exception as e:
+        pass
     return ret
 
 
@@ -150,7 +153,6 @@ def main():
         ul = None
         if h in uls.keys():
             ul = uls[h]
-        # print "ul", axes, point["UL"], point["UL"] / point["efficiency"], ul
         if ul:
             ul_eff = point["UL"] / point["signal"] ##  point["efficiency"]
             # ratio = ul_eff / ul
@@ -159,6 +161,8 @@ def main():
             x.append ( axes[1] )
             y.append ( axes[0] )
             col.append ( ratio )
+        else:
+            print ( "cannot find data for point", point["slhafile"] )
 
     cm = plt.cm.get_cmap('jet')
     # cm = plt.cm.get_cmap('RdYlGn')
@@ -185,8 +189,10 @@ def main():
     el = getExclusionLine ( line )
     for E in el:
         plt.plot ( E["x"], E["y"], color='k', linestyle='-', linewidth=2 )
-    smodels_line = getSModelSExclusion ( "%s/%s.root" % ( analysis, topo ) )
+    smodels_root = "%s/%s.root" % ( analysis, topo ) 
+    smodels_line = getSModelSExclusion ( smodels_root )
     el2 = getExclusionLine ( smodels_line )
+    print ( "Found SModelS exclusion line with %d points." % ( len(el2) ) )
     for E in el2:
         plt.plot ( E["x"], E["y"], color='grey', linestyle='-', linewidth=2 )
 
