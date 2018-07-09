@@ -146,6 +146,7 @@ def main():
 
 
     x,y,col=[],[],[]
+    err_msgs = 0
 
     for point in FromEff.validationData:
         axes = convertNewAxes ( point["axes"] )
@@ -162,7 +163,11 @@ def main():
             y.append ( axes[0] )
             col.append ( ratio )
         else:
-            print ( "cannot find data for point", point["slhafile"] )
+            err_msgs += 1
+            #if err_msgs < 5:
+            #    print ( "cannot find data for point", point["slhafile"] )
+    if err_msgs > 0:
+        print ( "couldnt find data for %d/%d points" % (err_msgs, len( FromEff.validationData ) ) )
 
     cm = plt.cm.get_cmap('jet')
     # cm = plt.cm.get_cmap('RdYlGn')
@@ -187,23 +192,35 @@ def main():
 
     plt.colorbar()
     el = getExclusionLine ( line )
+    label = "official exclusion"
     for E in el:
-        plt.plot ( E["x"], E["y"], color='k', linestyle='-', linewidth=2 )
+        plt.plot ( E["x"], E["y"], color='k', linestyle='-', linewidth=4, label=label )
+        label = ""
     smodels_root = "%s/%s.root" % ( analysis, topo ) 
     smodels_line = getSModelSExclusion ( smodels_root )
     el2 = getExclusionLine ( smodels_line )
     print ( "Found SModelS exclusion line with %d points." % ( len(el2) ) )
+    label="SModelS exclsuion"
     for E in el2:
-        plt.plot ( E["x"], E["y"], color='grey', linestyle='-', linewidth=2 )
+        plt.plot ( E["x"], E["y"], color='grey', linestyle='-', linewidth=4, label=label )
+        label=""
 
+    maxx = max(x)
+    maxy = max(y)
+    miny = min(y)
+    if abs ( miny - 10. ) < 3.:
+        miny = 10.15
+    if abs ( maxy - 80. ) < 3.:
+        maxy = 79.9
     if nsr != "":
         # plt.text ( .98*max(x_v), 1.0*min(y_v)-.27*(max(y_v)-min(y_v)), "%s" % ( nsr) , fontsize=12 )
-        plt.text ( .97*max(x), min(y)-.17*(max(y)-min(y)), "%s" % ( nsr) , fontsize=12 )
+        plt.text ( .97*maxx, miny-.17*(maxy-miny), "%s" % ( nsr) , fontsize=12 )
     figname = "%s_%s.png" % ( analysis, topo )
     if srs !="all":
         figname = "%s_%s_%s.png" % ( analysis, topo, srs )
     plt.text ( min(x)+.70*(max(x)-min(x)), max(y), "f$_{UL}$: %.2f +/- %.2f" % ( numpy.mean(col), numpy.std(col)  ), fontsize=11)
     print ( "Saving to %s" % figname )
+    plt.legend()
     plt.savefig ( figname )
     if args.copy:
       cmd="scp %s smodels.hephy.at:/var/www/images/combination/" % ( figname )
