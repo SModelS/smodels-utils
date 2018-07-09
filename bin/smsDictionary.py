@@ -69,6 +69,13 @@ N.B.: Each "()" group corresponds to a branch
             self.f.write ( "||<#EEEEEE:> '''%s''' " % header )
         self.f.write ( "||\n" )
 
+    def cleanUp ( self, constr ):
+        pos = constr.find("*")
+        if pos > 0:
+            constr = constr[pos+1:]
+        constr=constr.replace("(","").replace(")","")
+        return constr
+
     def getTopos( self ):
         topos = {}
         expresults = self.database.getExpResults( useSuperseded=True )
@@ -81,7 +88,12 @@ N.B.: Each "()" group corresponds to a branch
                         if txname.constraint != topos[stxname]:
                             print ( "txnames for %s mismatch: %s != %s" %
                                     ( txname, txname.constraint, topos[stxname] ) )
-                    topos[stxname]=txname.constraint
+                    if not stxname in topos.keys():
+                        topos[stxname]=set()
+                    con =  self.cleanUp ( txname.constraint  )
+                    topos[stxname].add ( con )
+        for k,v in topos.items():
+            topos[k]="; ".join ( v )
         return topos
 
     def writeTopos ( self ):
