@@ -28,3 +28,15 @@ for dir in dirs:
         if os.path.exists ( "./%s_all.py" % ( topo ) ):
             commands.getoutput ( "rm -f ./%s_all.py" % ( topo ) )
         commands.getoutput ( "ln -s ./%s_%s.py ./%s_all.py" % ( topo, nr, topo ) )
+    rootfiles = glob.glob ( "%s/13TeV/CMS/%s/validation/T*root" % (dir, anaId ) )
+    for f in rootfiles:
+        fname = os.path.basename ( f )
+        tpos = fname.find ( "_" )
+        topo = fname [ :tpos ]
+        cmd = "cp %s ./%s.root" % ( f, topo )
+        print ( cmd )
+        commands.getoutput ( cmd )
+    smsFile = "%s/13TeV/CMS/%s/sms.root" % ( dir, anaId )
+    cmd = "cp %s %s" % ( smsFile, "." )
+    print ( cmd )
+    commands.getoutput ( cmd )

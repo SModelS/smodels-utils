@@ -201,6 +201,7 @@ def main():
     plt.savefig ( figname )
     if args.copy:
       cmd="scp %s smodels.hephy.at:/var/www/images/combination/" % ( figname )
+      print ( cmd )
       subprocess.getoutput ( cmd )
     print ( "ratio=%.2f +/- %.2f" % ( numpy.mean(col), numpy.std(col) ) )
     # plt.show()

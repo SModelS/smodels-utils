@@ -7,6 +7,7 @@ home=os.environ["HOME"]
 
 #dirs = glob.glob ( "%s/git/smodels/test/covdb*" % home )
 dirs = glob.glob ( "%s/git/smodels-database" % home )
+anaId="CMS-SUS-16-050-agg"
 
 for dir in dirs:
     # nr = dir [ dir.find("covdb")+5: ].replace("_","")
@@ -28,4 +29,12 @@ for dir in dirs:
         print ( cmd )
         if not os.path.exists ( "./%s_all.py" % ( topo ) ):
             commands.getoutput ( "ln -s ./%s_%s.py ./%s_all.py" % ( topo, nr, topo ) )
+        commands.getoutput ( cmd )
+    rootfiles = glob.glob ( "%s/13TeV/CMS/%s/validation/T*root" % (dir, anaId ) )
+    for f in rootfiles:
+        fname = os.path.basename ( f )
+        tpos = fname.find ( "_" )
+        topo = fname [ :tpos ]
+        cmd = "cp %s ./%s.root" % ( f, topo )
+        print ( cmd )
         commands.getoutput ( cmd )
