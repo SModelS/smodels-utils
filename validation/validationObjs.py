@@ -245,10 +245,9 @@ class ValidationPlot():
         if self.combine:
             combine = "True"
         with open ( parFile, "w" ) as f:
-            f.write("[path]\ndatabasePath = %s\n" %self.databasePath)
             f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\ncombineSRs = %s\n" % combine )
             f.write("[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus)
-            f.write("[database]\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (expId,txname))
+            f.write("[database]\npath = %s\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (self.databasePath,expId,txname))
             f.write("[printer]\noutputType = python\n")
             f.write("[python-printer]\naddElementList = False\n")
             f.close()
