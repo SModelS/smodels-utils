@@ -17,7 +17,7 @@ def getVersion():
     """
     Obtain the smodels version """
     sys.path.insert(0,"../")
-    return "1.1.2"
+    return "1.1.3"
     from smodels import installation
     return installation.version()
 
