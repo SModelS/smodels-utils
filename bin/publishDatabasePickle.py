@@ -1,6 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 
-""" makes a database pickle file publically available  """
+""" makes a database pickle file publically available. 
+The script is deliberately run with python2. That way we get 
+a pickle file that should work with both python2 and python3. """
 
 from __future__ import print_function
 import pickle, os, sys, argparse
@@ -38,12 +40,15 @@ def main():
     if args.smodelsPath:
         sys.path.append(os.path.abspath(args.smodelsPath))
     has_nonValidated = False
+    discard_zeroes=True
+    if "test" in dbname:
+        discard_zeroes = False
     if args.build:
         if not os.path.isdir ( dbname ):
             print ( "supplied --build option, but %s is not a directory." % dbname )
             sys.exit()
         from smodels.experiment.databaseObj import Database
-        d = Database ( dbname )
+        d = Database ( dbname, discard_zeroes=discard_zeroes )
         dbname = d.pcl_meta.pathname
         has_nonValidated = checkNonValidated ( d )
 
