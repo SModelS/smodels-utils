@@ -78,7 +78,13 @@ def main():
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
-    cmd = "ln -s /nfsdata/walten/database/%s /var/www/database/" % ( pclfilename )
+    symlinkfile = "/var/www/database/%s" % pclfilename 
+    cmd = "rm -f %s" % symlinkfile
+    if args.ssh:
+        cmd = "ssh smodels.hephy.at %s" % cmd
+    a = CMD.getoutput ( cmd )
+    print ( a )
+    cmd = "ln -s /nfsdata/walten/database/%s %s" % ( pclfilename, symlinkfile )
     if args.ssh:
         cmd = "ssh smodels.hephy.at ln -s /nfsdata/walten/database/%s /var/www/database/" % ( pclfilename )
     print ( cmd )
