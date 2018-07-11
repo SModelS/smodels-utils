@@ -422,5 +422,5 @@ def create():
     isDummy()
 
 if __name__ == "__main__":
-    # createDBRelease()
-    create()
+    createDBRelease()
+    ## create()
