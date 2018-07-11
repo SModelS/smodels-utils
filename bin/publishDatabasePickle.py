@@ -79,11 +79,11 @@ def main():
         a=CMD.getoutput ( cmd )
         print ( a )
     symlinkfile = "/var/www/database/%s" % pclfilename 
-    if os.path.exists ( symlinkfile ):
-        print ( "removing old symlink %s" % symlinkfile )
-        cmd = "rm %s" % symlinkfile
-        a = CMD.getoutput ( cmd )
-        print ( a )
+    cmd = "rm -f %s" % symlinkfile
+    if args.ssh:
+        cmd = "ssh smodels.hephy.at %s" % cmd
+    a = CMD.getoutput ( cmd )
+    print ( a )
     cmd = "ln -s /nfsdata/walten/database/%s %s" % ( pclfilename, symlinkfile )
     if args.ssh:
         cmd = "ssh smodels.hephy.at ln -s /nfsdata/walten/database/%s /var/www/database/" % ( pclfilename )
