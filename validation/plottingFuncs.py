@@ -427,8 +427,11 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False 
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
     base.Draw("AP")
     base.SetTitle(title)
-    base.GetXaxis().SetTitle(xlabel)
-    base.GetYaxis().SetTitle(ylabel)    
+    try:
+        base.GetXaxis().SetTitle(xlabel)
+        base.GetYaxis().SetTitle(ylabel)
+    except:
+        pass    
     l=TLatex()
     l.SetNDC()
     l.SetTextSize(.04)
