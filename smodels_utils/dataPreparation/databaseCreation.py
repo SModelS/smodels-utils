@@ -73,7 +73,6 @@ class DatabaseCreator(list):
         #              None for monochrome
         self.colorScheme = "light" ## "dark", None
         self.ncpus = 1 ## the number of CPUs used
-        self.removeOldDataSetDirs()
 
         try:
             self.ncpus =  multiprocessing.cpu_count()
@@ -95,6 +94,7 @@ class DatabaseCreator(list):
                 if "dataInfo.txt" in subdir:
                     dirs.append ( f )
                     shutil.rmtree ( f )
+
         if len(dirs)>0:
             logger.warning ( "removed old dataset dirs: %s" % ", ".join(dirs) )
 
@@ -433,6 +433,8 @@ class DatabaseCreator(list):
         """
         deletes all old globalInfo.txt, txName.txt, sms.root and twiki.txt files
         """
+
+        self.removeOldDataSetDirs()
 
         #Remove files
         predefinedPaths = [
