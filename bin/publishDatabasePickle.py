@@ -32,6 +32,7 @@ def main():
     ap = argparse.ArgumentParser( description="makes a database pickle file publically available (run it on the smodels)" )
     ap.add_argument('-f', '--filename', help='name of pickle file [database.pcl]', default="database.pcl" )
     ap.add_argument('-d', '--dry_run', help='dont copy to final destination', action="store_true" )
+    # ap.add_argument('-l', '--fastlim', help='add fastlim results when pickling', action="store_true" )
     ap.add_argument('-b', '--build', help='build pickle file, assume filename is directory name', action="store_true" )
     ap.add_argument('-s', '--ssh', help='work remotely via ssh', action="store_true" )
     ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default=None )
@@ -43,6 +44,7 @@ def main():
     discard_zeroes=True
     if "test" in dbname:
         discard_zeroes = False
+    fastlim = True
     if args.build:
         if not os.path.isdir ( dbname ):
             print ( "supplied --build option, but %s is not a directory." % dbname )
@@ -51,14 +53,18 @@ def main():
         d = Database ( dbname, discard_zeroes=discard_zeroes )
         dbname = d.pcl_meta.pathname
         has_nonValidated = checkNonValidated ( d )
+        fastlim = d.pcl_meta.hasFastLim
 
     p=open(dbname,"rb")
     meta=pickle.load(p)
     print ( meta )
     ver = meta.databaseVersion.replace(".","") 
     p.close()
-    infofile = "official%s" % ver 
-    pclfilename = "official%s.pcl" % ver
+    sfastlim=""
+    if fastlim:
+        sfastlim="_fastlim"
+    infofile = "official%s%s" % ( ver, sfastlim )
+    pclfilename = "official%s%s.pcl" % ( ver, sfastlim )
     if ver == "unittest":
         smodels_ver = "112"
         infofile = "unittest%s" % smodels_ver
@@ -79,8 +85,8 @@ def main():
     cmd = "cp %s /nfsdata/walten/database/%s" % ( dbname, pclfilename )
     if args.ssh:
         cmd = "scp %s smodels.hephy.at:/nfsdata/walten/database/%s" % ( dbname, pclfilename )
-    print ( cmd )
     if not args.dry_run:
+        print ( cmd )
         a=CMD.getoutput ( cmd )
         print ( a )
     symlinkfile = "/var/www/database/%s" % pclfilename 
@@ -92,14 +98,17 @@ def main():
     cmd = "ln -s /nfsdata/walten/database/%s %s" % ( pclfilename, symlinkfile )
     if args.ssh:
         cmd = "ssh smodels.hephy.at ln -s /nfsdata/walten/database/%s /var/www/database/" % ( pclfilename )
-    print ( cmd )
+    sexec="executing:"
+    if args.dry_run:
+        sexec="suppressing execution of:"
+    print ( sexec, cmd )
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
     cmd = "cp %s /var/www/database/%s" % ( infofile, infofile )
     if args.ssh:
         cmd = "scp %s smodels.hephy.at:/var/www/database/%s" % ( infofile, infofile )
-    print ( cmd )
+    print ( sexec, cmd )
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )

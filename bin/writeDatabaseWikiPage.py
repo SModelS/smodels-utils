@@ -38,7 +38,7 @@ This page lists all databases that are accessible via http://smodels.hephy.at/da
 
 def footer ( w ):
     w.write ( """
-The unfrozen databases are synched automatically.
+Unfrozen databases are synched automatically.
 """ )
 
 def main():
@@ -70,8 +70,10 @@ def main():
         if "unittest" in filen:
             continue ## skip them
             description = "Database used for unit tests, %s" % ver
-        fastlim="yes"
-        fastlim="&#10004;"
+        fastlim="no"
+        if "fastlim" in description:
+            fastlim="yes"
+        # fastlim="&#10004;"
         w.write ( "|| %s || %s || %s || %s || %s || %s ||\n" % \
                   ( dbname, description, frozen, fastlim, size, url ) )
     footer ( w )

@@ -38,7 +38,7 @@ def write( db, outfile ):
     copy( db, outfile )
 
 if __name__ == "__main__":
-    print ( "Probably obsolete" )
+    print ( "Probably obsolete. checkout out ../validation/createWikiPage.py" )
     sys.exit()
     db = "/home/walten/git/smodels-database/"
     outfile = "newFormat"
