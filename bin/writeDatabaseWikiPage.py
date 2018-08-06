@@ -33,12 +33,12 @@ def header( w ):
 
 This page lists all databases that are accessible via http://smodels.hephy.at/database/XXX, where XXX is the database name:
 
-||<#EEEEEE:> '''Name''' ||<#EEEEEE:> '''Description''' ||<#EEEEEE:> '''Frozen''' ||<#EEEEEE:> '''Size''' ||<#EEEEEE:> '''URL''' ||
+||<#EEEEEE:> '''Name''' ||<#EEEEEE:> '''Description''' ||<#EEEEEE:> '''Frozen''' ||<#EEEEEE:> '''Fastlim''' ||<#EEEEEE:> '''Size''' ||<#EEEEEE:> '''URL''' ||
 """ )
 
 def footer ( w ):
     w.write ( """
-The (unfrozen) databases are synched automatically.
+The unfrozen databases are synched automatically.
 """ )
 
 def main():
@@ -70,8 +70,10 @@ def main():
         if "unittest" in filen:
             continue ## skip them
             description = "Database used for unit tests, %s" % ver
-        w.write ( "|| %s || %s || %s || %s || %s ||\n" % \
-                  ( dbname, description, frozen, size, url ) )
+        fastlim="yes"
+        fastlim="&#10004;"
+        w.write ( "|| %s || %s || %s || %s || %s || %s ||\n" % \
+                  ( dbname, description, frozen, fastlim, size, url ) )
     footer ( w )
     w.close()
     xsel()
