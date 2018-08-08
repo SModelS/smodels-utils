@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 .. module:: addLogoToPlots
@@ -8,6 +8,7 @@
 
 """
 
+from __future__ import print_function
 import glob,os
 
 
@@ -45,7 +46,7 @@ def addLogo(filename,logo):
         os.rename('temp_test_logo.pdf', filename)
 
     elif '.png' in filename:
-        import Image
+        from PIL import Image
         #Open original plot
         im = Image.open(filename)
         if im.mode != 'RGBA':
@@ -69,7 +70,7 @@ if __name__ == '__main__':
     
     files = glob.glob('../../smodels-database/*/*/*/validation/*_pretty.*')
     if not files:
-        print 'No files found'
+        print ( 'No files found' )
         
     for filename in files:
         if '_pretty.pdf' in filename:
@@ -80,4 +81,4 @@ if __name__ == '__main__':
             addLogo(filename,logo)
         else:
             continue
-        print "Adding logo to",os.path.basename(filename)
+        print ( "Adding logo to",os.path.basename(filename) )

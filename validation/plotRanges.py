@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 .. module:: plotRanges
@@ -271,7 +271,10 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
             if hasattr(tx.txnameData, 'y_values'):
                 reducedData.append([mass,tx.txnameData.y_values[i]])
             else:
-                reducedData.append([mass,numpy.asscalar(tx.txnameData.xsec[i])])
+                if hasattr(tx.txnameData, 'xsecUnitless'):
+                    reducedData.append([mass,tx.txnameData.xsecUnitless[i]])
+                else:
+                    reducedData.append([mass,numpy.asscalar(tx.txnameData.xsec[i])])
     #If there is no data, return empty list:
     if not reducedData:
         logger.warning("No data points found for plane.")
