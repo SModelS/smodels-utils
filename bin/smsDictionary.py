@@ -76,17 +76,11 @@ N.B.: Each "()" group corresponds to a branch
         if pos > 0 and pos2 > pos:
             constr = constr[pos+1:]
         constr=constr.replace("(","").replace(")","")
-        fStates=""
+        fs = [ "MET", "MET" ]
         if hasattr ( txname, "finalState" ):
             fs = txname.finalState
-            non_met = False
-            for f in fs:
-                if f == "MET":
-                    continue
-                non_met = True
-            if non_met:
-                constr = "%s<<BR>>(%s))" % (constr, ", ".join ( fs ) )
-        return constr
+        ret = "%s`<<BR>>`(%s)" % (constr, ", ".join ( fs ) )
+        return ret
 
     def getTopos( self ):
         topos = {}
@@ -171,7 +165,7 @@ N.B.: Each "()" group corresponds to a branch
         self.f.write ( "<<BR>>".join ( ltxes ) )
         constraint = constraint[constraint.find("["):]
         constraint = constraint.replace( " ", "" )
-        if constraint[-1]==")": constraint = constraint[:-1]
+        # if constraint[-1]==")": constraint = constraint[:-1]
         if self.drawFeyn:
             for txname in txnames:
                 self.createFeynGraph ( txname, constraint )
