@@ -139,16 +139,21 @@ N.B.: Each "()" group corresponds to a branch
         print ( cmd )
 
     def createFeynGraph ( self, txname, constraint ):
-        # return
         from smodels_utils.plotting import feynmanGraph
         c=constraint
+        p=c.find("<<BR>>" )
+        if p>-1:
+            c=c[:p]
         p=c.find("]+")
         if p>-1:
             c=c[:p+1]
         p=c.find("] +")
         if p>-1:
             c=c[:p+1]
-        c=c.replace("71.*","").replace("(","").replace(")","")
+        c=c.replace("71.*","").replace("(","").replace(")","").replace("`","")
+        p=c.find(";")
+        if p>-1:
+            c=c[:p+1]
         feynfile="feyn/"+txname+".png"
         print ( "drawing",feynfile,"from",c )
         from smodels.theory import element
@@ -210,12 +215,12 @@ if __name__ == '__main__':
                              action='store_false' )
     argparser.add_argument ( '-d', '--database', help='path to database',
                              type=str, default='../../smodels-database' )
-    argparser.add_argument ( '-v', '--version', 
+    argparser.add_argument ( '-v', '--version',
             help='dont add version labels to links', action='store_false' )
     args = argparser.parse_args()
     if args.xkcd:
         args.feynman = True
-    writer = SmsDictWriter( database=args.database, drawFeyn = args.feynman, 
+    writer = SmsDictWriter( database=args.database, drawFeyn = args.feynman,
             xkcd = args.xkcd, results = args.results, addVer = args.version )
     print ( "database", writer.database.databaseVersion )
     writer.run()

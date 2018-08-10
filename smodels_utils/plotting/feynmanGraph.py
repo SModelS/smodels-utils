@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 .. module:: feynmanGraph
@@ -164,6 +164,10 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
         :param italic: labels in italic
         :param jet: write "jet" as label for jets. Default: "q"
     """
+    import logging
+    px =  logging.getLogger("pyx")
+    px.setLevel ( logging.ERROR )
+
     try:
         import os, sys
         #f = open(os.devnull, 'w')
@@ -273,7 +277,7 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
         # del redir
         if pdffile!=filename:
             import os
-            os.system ( "convert %s %s" % ( pdffile, filename ) )
+            os.system ( "convert -quiet %s %s" % ( pdffile, filename ) )
         # print "[feynmanGraph.py] %s created." % ( filename )
     except Exception as e:
         logger.error ( "[draw] exception %s" % e )
