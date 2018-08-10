@@ -22,7 +22,7 @@ from smodels.tools.smodelsLogging import setLogLevel
 from smodels.tools.physicsUnits import TeV
 
 # setLogLevel("debug")
-                
+
 def convert ( string ):
     ret = string.replace ( ">=", "&ge;" )
     ret = ret.replace ( "alphaT", "&alpha;,,T,," )
@@ -38,8 +38,10 @@ def yesno ( B ):
     if B in [ False, "False" ]: return "No"
     return "?"
 
-def header( f, version, superseded ):
-    dotlessv = version.replace(".","")
+def header( f, version, superseded, add_version ):                                                                                            
+    dotlessv = ""                                                                                                                             
+    if add_version:                                                                                                                           
+        dotlessv = version.replace(".","")
     titleplus = ""
     # titleplus = version
     referToOther = "Link to list of results [[ListOfAnalysesv%sWithSuperseded|including superseded results]]" % dotlessv
@@ -55,9 +57,9 @@ def header( f, version, superseded ):
 = List Of Analyses %s %s =
 List of analyses and topologies in the SMS results database.
 The list has been created from the database version `%s`.
-Results from !FastLim are included. There is also an SmsDictionary.
+Results from !FastLim are included. There is also an  [[SmsDictionary%s|sms dictionary]].
 %s
-""" % ( version, titleplus, version, referToOther ) )
+""" % ( version, titleplus, version, dotlessv, referToOther ) )
 
 def footer ( f ):
     """
@@ -82,22 +84,36 @@ def listTables ( f, anas ):
                 a = selectAnalyses ( anas, sqrts, exp, tpe )
                 a_fastlim = 0
                 nres = 0
+                nres_hscp = set()
                 nfastlim = 0
                 for A in a:
                     topos = set ( [ x.txName for x in A.getTxNames() ] )
+                    for _ in A.getTxNames():
+                        if hasattr ( _, "finalState" ):
+                            fState = _.finalState
+                            nonMet = False
+                            for fs in fState:
+                                if fs != "MET":
+                                    nonMet = True
+                            if nonMet:
+                                nres_hscp.add ( _.txName )
                     nres+= len ( topos )
                     if hasattr ( A.globalInfo, "contact" ) and "fastlim" in \
                         A.globalInfo.contact:
                             nfastlim += len(topos)
                             a_fastlim += 1
                 if len(a) == 0: continue
+                nres_hscp = len ( nres_hscp )
                 flim=""
                 aflim=""
+                llp=""
                 if nfastlim:
                     flim = "(of which %d !FastLim)" % nfastlim
                     aflim = "(of which %d !FastLim)" % a_fastlim
-                f.write ( " * [[#%s%s%d|%s %s]]: %d %s analyses, %s %s results\n" % \
-                          ( exp, stpe, sqrts, exp, tpe, len(a), aflim, nres, flim ) )
+                if nres_hscp>0:
+                    llp="(of which %d LLP)" % nres_hscp
+                f.write ( " * [[#%s%s%d|%s %s]]: %d %s analyses, %s %s%s results\n" % \
+                          ( exp, stpe, sqrts, exp, tpe, len(a), aflim, nres, flim, llp ) )
 
 def fields ( superseded ):
     fields = [ "ID", "short description", "L [1/fb]", "Tx names" ]
@@ -139,7 +155,11 @@ def emptyLine( f, superseded, ana_name ):
     f.write ( " ||"*( len(fields(superseded) ) ) )
     f.write ( "\n" )
 
-def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, n_homegrown ):
+def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, n_homegrown,
+                    version, add_version ):
+    dotlessv = ""
+    if add_version:
+        dotlessv = version.replace(".","")
     keys, anadict = [], {}
     for ana in anas:
         id = ana.globalInfo.id
@@ -196,7 +216,7 @@ def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, n_homegrow
             homegrown = homegrownd[i]
 
             if homegrown !="" : n_homegrown[0]+=1
-            topos_s += ", [[SmsDictionary#%s|%s]]%s" % ( i, i, homegrown )
+            topos_s += ", [[SmsDictionary%s#%s|%s]]%s" % ( dotlessv, i, i, homegrown )
         topos_s = topos_s[2:]
         if fastlim:
             topos_s += " (from !FastLim [[#A2|(2)]])"
@@ -244,7 +264,7 @@ def selectAnalyses ( anas, sqrts, experiment, Type ):
         ret.append ( ana )
     return ret
 
-def writeExperiment ( f, db, experiment, sqrts, superseded, n_homegrown ):
+def writeExperiment ( f, db, experiment, sqrts, superseded, n_homegrown, version, add_version ):
     print ( "Experiment:", experiment )
     tanas = db.getExpResults( useSuperseded=superseded )
     for Type in [ "upperLimit", "efficiencyMap" ]:
@@ -261,7 +281,7 @@ def writeExperiment ( f, db, experiment, sqrts, superseded, n_homegrown ):
                 continue
             anas.append ( ana )
         writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, \
-                        n_homegrown )
+                        n_homegrown, version, add_version )
 
 def backup( filename ):
     o = C.getoutput ( "cp %s Old%s" % ( filename, filename ) )
@@ -289,6 +309,7 @@ def main():
     argparser.add_argument ( '-n', '--no_superseded', help='ignore superseded results', action='store_true' )
     argparser.add_argument ( '-d', '--database', help='path to database [../../smodels-database]',
                              type=str, default='../../smodels-database' )
+    argparser.add_argument ( '-a', '--add_version', help='add version labels to links', action='store_true' )
     args = argparser.parse_args()
     superSeded = not args.no_superseded
     """
@@ -302,14 +323,14 @@ def main():
     backup( filename )
     f = open ( filename, "w" )
     database = Database ( args.database, discard_zeroes=True )
-    header( f, database.databaseVersion, superSeded )
+    header( f, database.databaseVersion, superSeded, args.add_version )
     listTables ( f, database.getExpResults ( useSuperseded = superSeded ) )
     print ( "Database:", database.databaseVersion )
     experiments=[ "CMS", "ATLAS" ]
     for sqrts in [ 13, 8 ]:
         for experiment in experiments:
             writeExperiment ( f, database, experiment, sqrts, \
-                              superSeded, n_homegrown )
+                              superSeded, n_homegrown, database.databaseVersion, args.add_version )
     print ( "%d home-grown now" % n_homegrown[0] )
     footer ( f )
     f.close()
