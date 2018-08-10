@@ -11,8 +11,12 @@
 
 from __future__ import print_function
 import logging
+import math, random, os
 logger = logging.getLogger(__name__)
 import sys, copy
+from pyfeyn.user import FeynDiagram, Point, Circle, HATCHED135, CIRCLE, \
+    Vertex, WHITE, Fermion, color, NamedLine, RED, BLUE, Scalar
+from pyx import text, bitmap, unit
 
 class Redirector(object):
     def __init__(self, name, mode = "w" ):
@@ -32,6 +36,7 @@ class Redirector(object):
 def printParticle_ ( label, jet ):
     """ very simple method to rename a few particles for the asciidraw
             routine, do not call directly """
+    label = str ( label )
     ## print "label=",label
     if not jet and label=="jet": label=r"q"
     if jet and label=="jet": label=r"jet"
@@ -47,20 +52,18 @@ def printParticle_ ( label, jet ):
     return label[:3]
 
 def segment_ ( p1, p2, spin, Bend=None ):
-    from pyfeyn.user import NamedLine
     l=NamedLine[spin](p1,p2)#
     if Bend: l.bend(Bend)
     return l
 
 def zero_ ():
     """ a super simple convenience thing to mark the (0,0) coordinates """
-    from pyfeyn.user import Vertex, CIRCLE, RED, BLUE
     c=Vertex(0.,0., mark=CIRCLE, fill=[ RED ] ) ## , radius=.01)
     c1=Vertex(1.0,0., mark=CIRCLE, fill=[ BLUE ] ) ## , radius=.01)
     c1=Vertex(0.,1., mark=CIRCLE, fill=[ BLUE ] ) ## , radius=.01)
 
 def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=True,\
-               verbose=False, nspec=None, displace=None ):
+               verbose=False, nspec=None, displace=None, col=color.rgb.black ):
     """ simple: draw a line from p1 to p2
 
             :param canvas: the pyx canvas to draw on
@@ -71,18 +74,18 @@ def connect_ ( canvas, p1, p2, straight=True, label=None, spin="fermion", bend=T
             :param nspec: specify the number of segment_s,
                           None is draw the number randomly
             :param displace: displace at fixed distance?
+            :param color: color of line
 
             :returns: array of all line segment_s
     """
-    import math, random, os
-    from pyfeyn.user import NamedLine, Fermion, Scalar, WHITE
-    from pyx import bitmap
     from smodels_utils import SModelSUtils
 
     if spin=="scalar" and not spin in NamedLine and "higgs" in NamedLine:
         spin="higgs"
     if straight:
         fl=NamedLine[spin](p1,p2)
+        if col != color.rgb.black:
+            fl.setStyles([ col ] )
         if displace==None: displace=.05
         if label:
             # print "before replacement",label
@@ -173,9 +176,6 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
         #f = open(os.devnull, 'w')
         #copy=sys.stdout
         #sys.stdout = f
-        from pyx import text, bitmap, unit
-        from pyfeyn.user import FeynDiagram, Point, Circle, HATCHED135, CIRCLE, \
-            Vertex, WHITE, Fermion
         #sys.stdout=copy
     except ImportError as e:
         logger.error ( "cannot draw, pyfeyn not installed? %s" % e )
@@ -230,6 +230,9 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
         branches = copy.deepcopy ( element.branches )
         branches.reverse() ## first branch is top, second branch is bottom
         for (ct,branch) in enumerate(branches):
+            if str(branch) == "[*]":
+                ## inclusive branch! skip it.
+                continue
             # p1 = Point(0, ct)
             lastVertex=vtx1
             nvtx=0
@@ -266,7 +269,20 @@ def draw ( element, filename="bla.pdf", straight=False, inparts=True, verbose=Fa
                     connect_ ( c, v1, p, straight=straight, label=label, displace=.1 )
 
             pl = Point ( nvtx+2,ct )
-            connect_ ( c, lastVertex,pl, straight=straight, spin="scalar" )
+            fState = "MET"
+            if hasattr ( branch, "finalState" ):
+                fState = branch.finalState
+            c = color.rgb.black
+            s = "scalar"
+            colors = { "MET": color.rgb.black, "HSCP": color.rgb.red, "RHadronG": color.rgb.red,
+                       "RHadronQ": color.rgb.red }
+            spins = { "MET": "scalar", "HSCP": "scalar", "RHadronG": "vector",
+                       "RHadronQ": "fermion" }
+            if fState in colors:
+                c = colors[fState]
+            if fState in spins:
+                s = spins[fState]
+            connect_ ( c, lastVertex,pl, straight=straight, spin=s, col=c )
         extensions = [ "png", "svg", "jpg", "jpeg" ]
         pdffile=filename
         for e in extensions: pdffile=pdffile.replace( e, "pdf" )

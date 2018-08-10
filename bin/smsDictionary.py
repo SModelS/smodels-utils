@@ -140,10 +140,12 @@ N.B.: Each "()" group corresponds to a branch
 
     def createFeynGraph ( self, txname, constraint ):
         from smodels_utils.plotting import feynmanGraph
+        fstate=["MET","MET"]
         c=constraint
         p=c.find("<<BR>>" )
         if p>-1:
             c=c[:p]
+            fstate = eval ( constraint[p+7:].replace("(","['").replace(")","']").replace(",","','") )
         p=c.find("]+")
         if p>-1:
             c=c[:p+1]
@@ -155,9 +157,12 @@ N.B.: Each "()" group corresponds to a branch
         if p>-1:
             c=c[:p+1]
         feynfile="feyn/"+txname+".png"
-        print ( "drawing",feynfile,"from",c )
+        print ( "drawing",feynfile,"from",c,"with final state",fstate )
         from smodels.theory import element
-        e=element.Element(c)
+        try:
+            e=element.Element(c,fstate )
+        except:
+            e=element.Element(c)
         feynmanGraph.draw ( e, feynfile, straight=writer.straight(),
                             inparts=True, verbose=False )
 
@@ -211,6 +216,8 @@ if __name__ == '__main__':
                              action='store_true' )
     argparser.add_argument ( '-x', '--xkcd', help='draw xkcd style (implies -f)',
                              action='store_true' )
+    argparser.add_argument ( '-u', '--upload', help='upload create Feynman graphs (implies -f)',
+                             action='store_true' )
     argparser.add_argument ( '-r', '--results', help='dont add results column',
                              action='store_false' )
     argparser.add_argument ( '-d', '--database', help='path to database',
@@ -224,3 +231,16 @@ if __name__ == '__main__':
             xkcd = args.xkcd, results = args.results, addVer = args.version )
     print ( "database", writer.database.databaseVersion )
     writer.run()
+    if args.upload:
+        import socket
+        hostname = socket.gethostname()
+        dest="straight"
+        if args.xkcd:
+            dest="xkcd"
+        cmd = "cp feyn/T*p* /var/www/feyn/%s/" % dest
+        if hostname != "smodels":
+            cmd = "scp feyn/T*p* smodels.hephy.at:/var/www/feyn/%s/" % dest
+        import subprocess
+        print ( cmd )
+        a = subprocess.getoutput ( cmd )
+        print ( a )
