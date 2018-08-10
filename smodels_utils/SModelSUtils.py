@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 .. module:: SModelSUtils
@@ -65,7 +65,10 @@ def addSModelSPath():
         return J
     except ImportError as e:
         pass
-    import commands
+    try:
+        import subprocess as commands
+    except:
+        import commands
     O=commands.getoutput("smodels-config --pythondir")
     if O.find("not found")==-1:
         import sys
