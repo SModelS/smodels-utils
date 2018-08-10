@@ -69,11 +69,23 @@ N.B.: Each "()" group corresponds to a branch
             self.f.write ( "||<#EEEEEE:> '''%s''' " % header )
         self.f.write ( "||\n" )
 
-    def cleanUp ( self, constr ):
+    def cleanUp ( self, txname ):
+        constr = txname.constraint
         pos = constr.find("*")
-        if pos > 0:
+        pos2 = constr.find("[")
+        if pos > 0 and pos2 > pos:
             constr = constr[pos+1:]
         constr=constr.replace("(","").replace(")","")
+        fStates=""
+        if hasattr ( txname, "finalState" ):
+            fs = txname.finalState
+            non_met = False
+            for f in fs:
+                if f == "MET":
+                    continue
+                non_met = True
+            if non_met:
+                constr = "%s<<BR>>(%s))" % (constr, ", ".join ( fs ) )
         return constr
 
     def getTopos( self ):
@@ -90,7 +102,7 @@ N.B.: Each "()" group corresponds to a branch
                                     ( txname, txname.constraint, topos[stxname] ) )
                     if not stxname in topos.keys():
                         topos[stxname]=set()
-                    con =  self.cleanUp ( txname.constraint  )
+                    con =  self.cleanUp ( txname )
                     topos[stxname].add ( con )
         for k,v in topos.items():
             topos[k]="; ".join ( v )
