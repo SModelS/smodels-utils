@@ -26,6 +26,9 @@ from smodels.tools.physicsUnits import TeV
 def convert ( string ):
     ret = string.replace ( ">=", "&ge;" )
     ret = ret.replace ( "alphaT", "&alpha;,,T,," )
+    ret = ret.replace ( "phi", "&phi;" )
+    ret = ret.replace ( "\\Phi", "&Phi;" )
+    ret = ret.replace ( "\\Delta", "&Delta;" )
     ret = ret.replace ( "alpha_T", "&alpha;,,T,," )
     ret = ret.replace ( "_T", ",,T,," )
     ret = ret.replace ( "_T2", ",,T2,," )
