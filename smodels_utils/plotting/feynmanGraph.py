@@ -24,6 +24,8 @@ def printParticle_ ( label, jet ):
     ## print "label=",label
     if not jet and label=="jet": label=r"q"
     if jet and label=="jet": label=r"jet"
+    # if label == "*": label=r"$\\mathrm{any}$"
+    if label == "*": label=r"any"
     if label in [ "gamma", "photon" ]: return "$\Pgamma$"
     if label in [ "hi", "higgs" ]: label="H"
     # if label in [ "nu" ]: label="$\\nu$"
@@ -52,6 +54,8 @@ class Drawer:
     def __init__ ( self, element, verbose ):
         self.element = element
         self.verbose = verbose
+        self.f=1.0 ## no idea what that scales.
+
 
     def connect_ ( self, p1, p2, label=None, spin="fermion", bend=True,\
                    nspec=None, displace=None, col=color.rgb.black ):
@@ -154,6 +158,44 @@ class Drawer:
             canvas.insert(bitmap.bitmap(pt.x()+displace, pt.y(), jpg, compressmode=None))
         return segs
 
+    def drawProtons ( self ):
+        """ draw the incoming proton lines """
+        from pyfeyn.user import Fermion
+        from pyx import unit
+        straight = self.straight
+        vtx1=self.vtx1
+        in1=self.in1
+        in2=self.in2
+        f=self.f
+        f=.72
+        if straight:
+            P1a = Fermion(in1, vtx1 ).addLabel("P$_1$")
+            P1a.addParallelArrow( pos=.44,displace=.0003,
+                    length=unit.length(1.75*f), size=.0001)
+            P1a.addParallelArrow( pos=.44,displace=-.0003,
+                    length=unit.length(1.75*f), size=.0001)
+        else:
+            P1a = self.connect_ ( vtx1, in1, label="P$_1$", displace=.42 )
+
+            for i in P1a:
+                a1=i.addParallelArrow( pos=.44,displace=.0003,
+                        length=unit.length(1.60*f / float(len(P1a))), size=.0001)
+                a2=i.addParallelArrow( pos=.44,displace=-.0003,
+                        length=unit.length(1.60*f / float(len(P1a))), size=.0001)
+        if straight:
+            P2a = Fermion(in2, vtx1 ).addLabel("P$_2$",displace=.3)
+            P2a.addParallelArrow( pos=.44,displace=.0003,
+                    length=unit.length(1.75*f), size=.0001)
+            P2a.addParallelArrow( pos=.44,displace=-.0003,
+                    length=unit.length(1.75*f), size=.0001)
+        else:
+            P2a = self.connect_ ( vtx1, in2, label="P$_2$", displace=.3 )
+            for i in P2a:
+                a1=i.addParallelArrow( pos=.44,displace=.0003,
+                        length=unit.length(1.60*f / float(len(P2a))), size=.0001)
+                a2=i.addParallelArrow( pos=.44,displace=-.0003,
+                        length=unit.length(1.60*f / float(len(P2a))), size=.0001)
+
     def draw ( self, filename="bla.pdf", straight=False, inparts=True, 
                      italic=False, jet=False ):
         """ plot a lessagraph, write into pdf/eps/png file called <filename>
@@ -164,6 +206,7 @@ class Drawer:
         """
         verbose = self.verbose
         element = self.element
+        f = self.f
         self.straight = straight
         import logging
         px =  logging.getLogger("pyx")
@@ -178,43 +221,18 @@ class Drawer:
         try:
             fd = FeynDiagram()
             # jpg = bitmap.jpegimage("/home/walten/propaganda/cms/traverse.jpeg")
-            f=1.0
-
 
             in1    = Point(-1*f, -.75*f)
             in2    = Point(-1*f, 1.75*f)
             vtx1 = Circle(0,.5*f, radius=0.3*f).setFillStyle(HATCHED135)
+            self.vtx1 = vtx1
+            self.in1 = in1
+            self.in2 = in2
             c=fd.currentCanvas
             self.canvas=c
             from pyx import unit
             if inparts:
-                if straight:
-                    P1a = Fermion(in1, vtx1 ).addLabel("P$_1$")
-                    P1a.addParallelArrow( pos=.44,displace=.0003,
-                            length=unit.length(1.75*f), size=.0001)
-                    P1a.addParallelArrow( pos=.44,displace=-.0003,
-                            length=unit.length(1.75*f), size=.0001)
-                else:
-                    P1a = self.connect_ ( vtx1, in1, label="P$_1$", displace=.42 )
-
-                    for i in P1a:
-                        a1=i.addParallelArrow( pos=.44,displace=.0003,
-                                length=unit.length(1.60*f / float(len(P1a))), size=.0001)
-                        a2=i.addParallelArrow( pos=.44,displace=-.0003,
-                                length=unit.length(1.60*f / float(len(P1a))), size=.0001)
-                if straight:
-                    P2a = Fermion(in2, vtx1 ).addLabel("P$_2$",displace=.3)
-                    P2a.addParallelArrow( pos=.44,displace=.0003,
-                            length=unit.length(1.75*f), size=.0001)
-                    P2a.addParallelArrow( pos=.44,displace=-.0003,
-                            length=unit.length(1.75*f), size=.0001)
-                else:
-                    P2a = self.connect_ ( vtx1, in2, label="P$_2$", displace=.3 )
-                    for i in P2a:
-                        a1=i.addParallelArrow( pos=.44,displace=.0003,
-                                length=unit.length(1.60*f / float(len(P2a))), size=.0001)
-                        a2=i.addParallelArrow( pos=.44,displace=-.0003,
-                                length=unit.length(1.60*f / float(len(P2a))), size=.0001)
+                self.drawProtons()
 
             # nbranches=len(element.B)
 
