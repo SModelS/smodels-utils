@@ -163,8 +163,8 @@ N.B.: Each "()" group corresponds to a branch
             e=element.Element(c,fstate )
         except:
             e=element.Element(c)
-        feynmanGraph.draw ( e, feynfile, straight=writer.straight(),
-                            inparts=True, verbose=False )
+        drawer = feynmanGraph.Drawer ( e, verbose=False )
+        drawer.draw ( feynfile, straight=writer.straight(), inparts=True )
 
     def writeTopo ( self, nr, txnames, constraint, first ):
         """ :param first: is this the first time I write a topo? """
