@@ -51,6 +51,8 @@ def getPythia8CardFor(momPDGs,filename=None):
         filename = filename[1]
     f = open(filename,'w')
 
+    if len(momPDGs) == 1:
+        momPDGs.append ( momPDGs[0] )
 #Define initial block:
     header = "! pythia8.cfg\n\
 ! This file contains commands to be read in for a Pythia8 run.\n\
