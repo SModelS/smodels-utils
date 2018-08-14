@@ -26,7 +26,23 @@ def checkNonValidated( database ):
                         ( e.globalInfo.id, ds, tx, tx.validated) )
                 has_nonValidated = True
     return has_nonValidated
-        
+
+def removeFastLim ( db ):
+    """ remove fastlim results """
+    print ( "before removal",len(db.getExpResults()),"results" )
+    filteredList = []
+    for e in db.getExpResults():
+        gI = e.globalInfo
+        if hasattr ( gI, "contact" ) and "fastlim" in gI.contact.lower():
+            print ( "removing", gI.id )
+        else:
+                
+            filteredList.append ( e )
+    db.expResultList = filteredList
+    print ( "after removal",len(db.getExpResults()),"results" )
+    db.pcl_meta.hasFastLim = False
+    db.createBinaryFile()
+    return db
 
 def main():
     ap = argparse.ArgumentParser( description="makes a database pickle file publically available (run it on the smodels)" )
@@ -34,6 +50,7 @@ def main():
     ap.add_argument('-d', '--dry_run', help='dont copy to final destination', action="store_true" )
     # ap.add_argument('-l', '--fastlim', help='add fastlim results when pickling', action="store_true" )
     ap.add_argument('-b', '--build', help='build pickle file, assume filename is directory name', action="store_true" )
+    ap.add_argument('-r', '--remove_fastlim', help='build pickle file, remove fastlim results', action="store_true" )
     ap.add_argument('-s', '--ssh', help='work remotely via ssh', action="store_true" )
     ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default=None )
     args = ap.parse_args()
@@ -49,15 +66,21 @@ def main():
         if not os.path.isdir ( dbname ):
             print ( "supplied --build option, but %s is not a directory." % dbname )
             sys.exit()
+        import smodels
+        print ( "[publishDatabasePickle] building database with %s" % os.path.dirname ( smodels.__file__ ) )
         from smodels.experiment.databaseObj import Database
         d = Database ( dbname, discard_zeroes=discard_zeroes )
+        if args.remove_fastlim:
+            d = removeFastLim ( d )
         dbname = d.pcl_meta.pathname
         has_nonValidated = checkNonValidated ( d )
         fastlim = d.pcl_meta.hasFastLim
 
     p=open(dbname,"rb")
     meta=pickle.load(p)
-    print ( meta )
+    fastlim = meta.hasFastLim
+    print ( metx )
+    print ( "[publishDatabasePickle] database size", os.stat(dbname).st_size )
     ver = meta.databaseVersion.replace(".","") 
     p.close()
     sfastlim=""
@@ -86,29 +109,29 @@ def main():
     if args.ssh:
         cmd = "scp %s smodels.hephy.at:/nfsdata/walten/database/%s" % ( dbname, pclfilename )
     if not args.dry_run:
-        print ( cmd )
+        print ( "[publishDatabasePickle] %s" % cmd )
         a=CMD.getoutput ( cmd )
-        print ( a )
+        print ( "[publishDatabasePickle] %s" % a )
     symlinkfile = "/var/www/database/%s" % pclfilename 
     cmd = "rm -f %s" % symlinkfile
     if args.ssh:
         cmd = "ssh smodels.hephy.at %s" % cmd
     a = CMD.getoutput ( cmd )
-    print ( a )
+    print ( "[publishDatabasePickle] %s" % a )
     cmd = "ln -s /nfsdata/walten/database/%s %s" % ( pclfilename, symlinkfile )
     if args.ssh:
         cmd = "ssh smodels.hephy.at ln -s /nfsdata/walten/database/%s /var/www/database/" % ( pclfilename )
     sexec="executing:"
     if args.dry_run:
         sexec="suppressing execution of:"
-    print ( sexec, cmd )
+    print ( "[publishDatabasePickle] %s %s" % ( sexec, cmd ) )
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
     cmd = "cp %s /var/www/database/%s" % ( infofile, infofile )
     if args.ssh:
         cmd = "scp %s smodels.hephy.at:/var/www/database/%s" % ( infofile, infofile )
-    print ( sexec, cmd )
+    print ( "[publishDatabasePickle] %s %s" % ( sexec, cmd ) )
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )

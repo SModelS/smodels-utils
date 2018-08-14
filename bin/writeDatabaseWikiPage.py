@@ -97,7 +97,7 @@ def main():
 def oldmain():
     """ the old main, for moin moin wiki, as used in smodels.hephy.at """
     w=open("Database","w" )
-    header ( w )
+    oldheader ( w )
     Dir = "/var/www/database/"
     globs=list ( glob.glob("%s*" % Dir ) )
     globs.sort()
@@ -134,4 +134,4 @@ def oldmain():
     w.close()
     xsel()
 
-main()
+oldmain()
