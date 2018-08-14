@@ -24,10 +24,13 @@ except ImportError:
 
 class WikiPageCreator:
     ### starting to write a creator class
-    def __init__ ( self, ugly, database ):
+    def __init__ ( self, ugly, database, add_version ):
         self.ugly = ugly ## ugly mode
         self.databasePath = database.replace ( "~", os.path.expanduser("~") )
         self.db = Database( self.databasePath )
+        self.dotlessv = ""
+        if add_version:
+            self.dotlessv = self.db.databaseVersion.replace(".","" )
         # self.localdir = "/var/www/validationWiki"
         self.localdir = "/var/www/validation_v%s" % \
                          self.db.databaseVersion.replace(".","" )
@@ -190,7 +193,7 @@ The validation procedure for upper limit maps used here is explained in [[http:/
                 # print ( "txname=", dataset )
                 # line += "|| %s " % dataset
             hadTxname = True
-            line += '||[[SmsDictionary#%s|%s]]' % ( txn, txnbrs )
+            line += '||[[SmsDictionary%s#%s|%s]]' % ( self.dotlessv, txn, txnbrs )
             line += "||%.1f" % txname.globalInfo.lumi.asNumber(1/fb)
             if self.ugly:
                 line += '||<style="color: %s;"> %s ' % ( color, sval )
@@ -311,6 +314,7 @@ if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser( description= "creates validation wiki pages, see e.g. http://smodels.hephy.at/wiki/Validation" )
     ap.add_argument('-u', '--ugly', help='ugly mode', action='store_true')
+    ap.add_argument('-a', '--add_version', help='add version labels in links', action='store_true')
     ap.add_argument('-v', '--verbose',
             help='specifying the level of verbosity (error, warning, info, debug)',
             default = 'info', type = str)
@@ -319,5 +323,5 @@ if __name__ == "__main__":
             default = '~/git/smodels-database', type = str )
     args = ap.parse_args()
     setLogLevel ( args.verbose )
-    creator = WikiPageCreator( args.ugly, args.database )
+    creator = WikiPageCreator( args.ugly, args.database, args.add_version )
     creator.run()
