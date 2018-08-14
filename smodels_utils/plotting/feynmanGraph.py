@@ -84,7 +84,7 @@ class Drawer:
             fl=NamedLine[spin](p1,p2)
             if col != color.rgb.black:
                 fl.setStyles([ col ] )
-                if spin != "scalar":
+                if spin in [ "vector" ]:
                     fl.setAmplitude(.1)
             if displace==None: displace=.05
             if label:

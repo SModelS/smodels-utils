@@ -141,6 +141,9 @@ N.B.: Each "()" group corresponds to a branch
     def createFeynGraph ( self, txname, constraint ):
         from smodels_utils.plotting import feynmanGraph
         fstate=["MET","MET"]
+        p=constraint.find(";")
+        if p>-1:
+            constraint=constraint[:p]
         c=constraint
         p=c.find("<<BR>>" )
         if p>-1:
@@ -153,9 +156,6 @@ N.B.: Each "()" group corresponds to a branch
         if p>-1:
             c=c[:p+1]
         c=c.replace("71.*","").replace("(","").replace(")","").replace("`","")
-        p=c.find(";")
-        if p>-1:
-            c=c[:p+1]
         feynfile="feyn/"+txname+".png"
         print ( "drawing",feynfile,"from",c,"with final state",fstate )
         from smodels.theory import element
