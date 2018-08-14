@@ -220,15 +220,15 @@ if __name__ == '__main__':
                              action='store_true' )
     argparser.add_argument ( '-r', '--results', help='dont add results column',
                              action='store_false' )
-    argparser.add_argument ( '-d', '--database', help='path to database',
+    argparser.add_argument ( '-d', '--database', help='path to database [../../smodels-database]',
                              type=str, default='../../smodels-database' )
-    argparser.add_argument ( '-v', '--version',
-            help='dont add version labels to links', action='store_false' )
+    argparser.add_argument ( '-a', '--add_version',
+            help='add version labels to links', action='store_true' )
     args = argparser.parse_args()
     if args.xkcd:
         args.feynman = True
     writer = SmsDictWriter( database=args.database, drawFeyn = args.feynman,
-            xkcd = args.xkcd, results = args.results, addVer = args.version )
+            xkcd = args.xkcd, results = args.results, addVer = args.add_version )
     print ( "database", writer.database.databaseVersion )
     writer.run()
     if args.upload:

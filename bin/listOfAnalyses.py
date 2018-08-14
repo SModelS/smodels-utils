@@ -44,12 +44,12 @@ def yesno ( B ):
 def header( f, version, superseded, add_version ):                                                                                            
     dotlessv = ""                                                                                                                             
     if add_version:                                                                                                                           
-        dotlessv = version.replace(".","")
+        dotlessv = "v"+version.replace(".","")
     titleplus = ""
     # titleplus = version
-    referToOther = "Link to list of results [[ListOfAnalysesv%sWithSuperseded|including superseded results]]" % dotlessv
+    referToOther = "Link to list of results [[ListOfAnalyses%sWithSuperseded|including superseded results]]" % dotlessv
     if superseded:
-        referToOther = "Link to list of results [[ListOfAnalysesv%s|without superseded results]]" % dotlessv
+        referToOther = "Link to list of results [[ListOfAnalyses%s|without superseded results]]" % dotlessv
         add=",including superseded results."
         titleplus = "(including superseded results)"
     f.write (
