@@ -79,7 +79,7 @@ def main():
     p=open(dbname,"rb")
     meta=pickle.load(p)
     fastlim = meta.hasFastLim
-    print ( metx )
+    print ( meta )
     print ( "[publishDatabasePickle] database size", os.stat(dbname).st_size )
     ver = meta.databaseVersion.replace(".","") 
     p.close()
