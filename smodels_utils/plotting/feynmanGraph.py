@@ -25,7 +25,6 @@ def printParticle_ ( label, jet ):
     if not jet and label=="jet": label=r"q"
     if jet and label=="jet": label=r"jet"
     # if label == "*": label=r"$\\mathrm{any}$"
-    if label == "*": label=r"any"
     if label in [ "gamma", "photon" ]: return "$\Pgamma$"
     if label in [ "hi", "higgs" ]: label="H"
     # if label in [ "nu" ]: label="$\\nu$"
@@ -38,6 +37,7 @@ def printParticle_ ( label, jet ):
     return label[:3]
 
 def segment_ ( p1, p2, spin, Bend=None ):
+    from pyfeyn.user import NamedLine
     l=NamedLine[spin](p1,p2)#
     if Bend: l.bend(Bend)
     return l
@@ -73,7 +73,7 @@ class Drawer:
                 :returns: array of all line segment_s
         """
         from smodels_utils import SModelSUtils
-        from pyfeyn.user import NamedLine
+        from pyfeyn.user import NamedLine, Fermion
         canvas = self.canvas
         verbose = self.verbose
         straight = self.straight
@@ -84,11 +84,13 @@ class Drawer:
             fl=NamedLine[spin](p1,p2)
             if col != color.rgb.black:
                 fl.setStyles([ col ] )
+                if spin != "scalar":
+                    fl.setAmplitude(.1)
             if displace==None: displace=.05
             if label:
                 # print "before replacement",label
                 replacements = { "nu": "\\nu", "+": "^{+}", "-":"^{-}", "ta": "\\tau",
-                                 "mu": "\\mu" }
+                                 "mu": "\\mu", "*": "\\mathrm{any}" }
                 for r,rr in replacements.items():
                     #label=label.replace ( r, "$%s%" % rr )
                     label=label.replace ( r, rr )
@@ -240,6 +242,10 @@ class Drawer:
             branches.reverse() ## first branch is top, second branch is bottom
             for (ct,branch) in enumerate(branches):
                 if str(branch) == "[*]":
+                    ## inclusive branch! draw joker
+                    v1=Vertex ( f,f*ct,mark=CIRCLE)
+                    f1 = self.connect_ ( vtx1, v1, spin="fermion", bend=True, nspec=3,
+                           label = "*" ) ## "\\mathrm{any branch}" )
                     ## inclusive branch! skip it.
                     continue
                 # p1 = Point(0, ct)
@@ -322,6 +328,9 @@ if __name__ == "__main__":
                       help='create graph from SModelS constraint '
                           'Takes precedence over "-T" and "-l" arguments.',
                       type=str, default='' )
+        argparser.add_argument ( '-f', '--final_state', nargs='?',
+                      help='specify final state. Used only in combination with -c.',
+                      type=str, default='("MET","MET")' )
         argparser.add_argument ( '-o', '--output', nargs='?',
                 help= 'output file, can be pdf or eps or png (via convert)',
                 type=str, default='out.pdf' )
@@ -342,7 +351,9 @@ if __name__ == "__main__":
         import sys
 
         if args.constraint!="":
-            E=element.Element ( args.constraint )
+            fs = args.final_state.replace("(","[").replace(")","]")
+            fs = eval (fs )
+            E=element.Element ( args.constraint, fs )
             drawer = Drawer ( E, args.verbose )
             drawer.draw ( args.output, straight=args.straight, inparts=args.incoming,
                           italic=args.italic )
