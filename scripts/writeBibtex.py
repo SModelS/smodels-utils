@@ -1,9 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # vim: set fileencoding=utf-8
 # vim: set encoding=utf-8
 
 from __future__ import print_function
 from smodels.experiment.databaseObj import Database
+from smodels.tools.smodelsLogging import setLogLevel
 import urllib
 import os, sys
 import bibtexparser
@@ -26,10 +27,6 @@ except ImportError:
 class BibtexWriter:
     def __init__ ( self, databasepath ):
         self.databasepath = databasepath
-        self.f=open ( "refs.bib", "w" )
-        self.g=open ( "log.txt", "w" )
-        self.h=open ( "failed.txt", "w" )
-        self.i=open ( "database.bib", "w" )
         self.npublications = 0
         self.nfailed = 0
         self.nsuperseded = 0
@@ -37,7 +34,7 @@ class BibtexWriter:
         self.success = 0
         self.nomatch = 0
         self.fastlim = 0
-        self.specialcases = { 
+        self.specialcases = {
             "CMS-PAS-SUS-13-018": "https://cds.cern.ch/record/1693164",
             "CMS-PAS-SUS-13-023": "http://cds.cern.ch/record/2044441",
             "CMS-SUS-16-050": "http://cds.cern.ch/record/2291344",
@@ -45,6 +42,13 @@ class BibtexWriter:
             "ATLAS-CONF-2013-061": "http://cds.cern.ch/record/1557778",
             "ATLAS-CONF-2013-089": "http://cds.cern.ch/record/1595272",
         }
+        self.g=open ( "log.txt", "w" )
+
+    def openHandles ( self ):
+        """ open all file handles. """ 
+        self.f=open ( "refs.bib", "w" )
+        self.h=open ( "failed.txt", "w" )
+        self.i=open ( "database.bib", "w" )
 
     def header ( self ):
         self.i.write ( "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" )
@@ -52,21 +56,35 @@ class BibtexWriter:
         self.i.write ( "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" )
         self.i.write ( "\n" )
 
+    def copy ( self ):
+        """ copy the files to the database path. """
+        if os.path.isdir ( self.databasepath ) and os.path.exists ( "database.bib" ) and os.path.exists ( "refs.bib" ) and os.stat ( "database.bib" ).st_size > 0 and os.stat ( "refs.bib" ).st_size > 0:
+            self.log ( "Copying database.bib to %s" % self.databasepath )
+            cmd = "cp ./database.bib %s" % self.databasepath
+            o = commands.getoutput ( cmd )
+            if len(o) != 0:
+                self.log ( "cp: %s" % o )
+            else:
+                self.log ( "Success!" )
+        else:
+            self.log ( "Did not copy ./database.bib and ./refs.bib. Something seems wrong. Maybe you did not generate them?" )
+
+
     def close ( self ):
         self.log ( "%d results in container." % len(self.res) )
         self.log ( "Summary: %d / %d successful." % \
                 ( self.success, self.npublications ) )
-        self.log ( "failed: %d" % self.nfailed )
         self.log ( " ... of which: %d superseded results" % self.nsuperseded )
         self.log ( "               %d not found" % self.not_found )
         self.log ( "               %d fastlim" % self.fastlim )
         self.log ( "               %d no match" % self.nomatch )
+        self.log ( "failed: %d" % self.nfailed )
         self.g.close()
         self.h.close()
 
     def bibtexFromCDS ( self, url, label=None ):
         """ get the bibtex entry from cds """
-        fullurl =  url+"/export/hx" 
+        fullurl =  url+"/export/hx"
         fullurl = fullurl.replace ( "?ln=en", "" )
         fullurl = fullurl.replace ( "?ln=de", "" )
         self.log ( " * fetching from CDS: %s" % fullurl )
@@ -77,6 +95,7 @@ class BibtexWriter:
         hasBegin = False
         inAuthorList = False
         for line in lines:
+            line=line.decode()
             if "=" in line:
                 inAuthorList = False
             if "@techreport" in line or "@article" in line:
@@ -102,7 +121,10 @@ class BibtexWriter:
         repls = { 8211:"--", 160:" ", 8722:"-", 8201:" ", 226:"-", 128:" ", 147:"-",
                   137: " " }
         for k,v in repls.items():
-            source = source.replace ( unichr(k), v )
+            try:
+                source = source.replace ( chr(k), v )
+            except: ## python2
+                source = source.replace ( unichr(k), v )
         for ctr,letter in enumerate(source):
             o=ord(letter)
             if o>127:
@@ -113,12 +135,12 @@ class BibtexWriter:
         source=source.replace( "8TeV", "8 TeV" ).replace("Tev","TeV" )
         source=source.replace ( "fb-1", "fb$^{-1}$" )
         source=source.replace ( "AlphaT", "$\\alpha_{T}$" )
-        return source 
+        return source
 
     def bibtexFromInspire ( self, url, label=None ):
         """ get the bibtex entry from an inspire record """
         self.log ( " * fetching from Inspire: %s" % url )
-        fullurl =  url+"/export/hx" 
+        fullurl =  url+"/export/hx"
         # return fullurl
         f=urlopen (fullurl)
         lines = f.readlines()
@@ -126,6 +148,7 @@ class BibtexWriter:
         ret = []
         hasBegin = False
         for line in lines:
+            line=line.decode()
             if "pagebodystripemiddle" in line:
                 hasBegin=True
                 continue
@@ -139,7 +162,7 @@ class BibtexWriter:
                 ret.append ( '      label          = "%s",\n' % label )
             if "@techreport" in line and label != None:
                 ret.append ( '      label          = "%s",\n' % label )
-        r =  self.replaceUnicodes ( "".join ( ret )  )
+        r =  str(self.replaceUnicodes ( "".join ( ret )  ))
         return r
 
     def fetchInspireUrl ( self, l, label ):
@@ -182,6 +205,7 @@ class BibtexWriter:
         lines = f.readlines()
         f.close()
         for l in lines:
+            l=str(l)
             if "preliminary results are superseded by the following paper" in l:
                 self.log ( "    %s: superseded !!!!! " % label )
                 self.h.write ( "%s is superseded." % label )
@@ -223,13 +247,31 @@ class BibtexWriter:
         """ search for the publication on the summary wiki page """
         return None
 
-
+    def tryFetchFromBackup ( self, Id ):
+        """ there is a local file with the entry?
+        convenient! we use it! """
+        fname = "bibtexs/%s.tex" % Id
+        if not os.path.exists ( fname ):
+            return False
+        self.log ( "A backup file exists. We use it." )
+        f=open( fname, "r" )
+        txt=f.read()
+        f.close()
+        return txt
 
     def processExpRes ( self, expRes ):
         self.npublications += 1
         Id = expRes.globalInfo.id
         self.log ( "\n\n\nNow processing %s" % Id )
         self.log ( "==================================" )
+        backup = self.tryFetchFromBackup( Id )
+        if backup != False:
+            self.success += 1
+            self.log ( "Success!" )
+            self.f.write ( str(backup) )
+            self.f.write ( "\n" )
+            return
+
         url = expRes.globalInfo.url
         if Id in self.specialcases.keys():
             self.log ( "Marked as special case!" )
@@ -237,17 +279,18 @@ class BibtexWriter:
             if bib:
                 self.success += 1
                 self.log ( "Success!" )
-                self.f.write ( bib )
+                self.f.write ( str(bib) )
                 self.f.write ( "\n" )
                 return
             else:
                 self.log ( "Special treatment failed." )
-            
+
         contact = expRes.globalInfo.getInfo ( "contact" ) ## globalInfo.contact
         if contact and "fastlim" in contact:
             self.fastlim += 1
+            self.success += 1
             self.log ( "Fastlim. Skipping.\n" )
-            return 
+            return
         if "superseded" in url:
             self.log ( "superseded appears in URL (%s)" % Id )
             self.log ( "   `-- %s" % url )
@@ -262,7 +305,7 @@ class BibtexWriter:
         if bib:
             self.success += 1
             self.log ( "Success!" )
-            self.f.write ( bib )
+            self.f.write ( str(bib) )
             self.f.write ( "\n" )
             return
         if "bin/view/CMSPublic" in url:
@@ -275,7 +318,7 @@ class BibtexWriter:
                 self.success += 1
                 self.log ( "Success! (with url rewrite)" )
                 # self.log ( "Bib: %s" % bib[-100:] )
-                self.f.write ( bib )
+                self.f.write ( str(bib) )
                 self.f.write ( "\n" )
                 return
         self.nfailed += 1
@@ -285,15 +328,16 @@ class BibtexWriter:
         self.h.write ( "    `---- %s\n" % url )
 
     def run( self ):
+        self.openHandles()
         home = os.environ["HOME"]
         # self.db = Database ( "%s/git/smodels-database" % home )
         self.db = Database ( self.databasepath )
         self.res = self.db.getExpResults ()
-        ids = []
+        ids = set()
         for expRes in self.res:
             if expRes.globalInfo.id in ids:
                 continue
-            ids.append ( expRes.globalInfo.id )
+            ids.add ( expRes.globalInfo.id )
             if not "ATLAS-SUSY-2015-01" in str(expRes):
                 pass
                 # continue
@@ -318,18 +362,18 @@ class BibtexWriter:
         return collaboration
 
     def createSummaryCitation ( self, entries, experiment ):
-        filtered = []
+        filtered = set()
         for entry in entries:
             collaboration = self.findCollaboration ( entry )
             if not experiment == collaboration:
                 continue
-            filtered.append ( entry )
+            filtered.add ( entry )
         ret = "% Use this LaTeX code to cite all " + str(len(filtered)) + " non-superseded "+experiment+" results:\n"
         ret+= "% \cite{"
         for entry in filtered:
             ID = entry["ID"]
             ret += "%s, " % ID
-        ret = ret[:-2]+"}"
+        ret = str(ret[:-2]+"}")
         return ret
 
     def addSummaries ( self ):
@@ -349,10 +393,21 @@ class BibtexWriter:
 
 if __name__ == "__main__":
     import argparse
-    argparser = argparse.ArgumentParser(description='write bib file with database entries' )
-    argparser.add_argument ( '-d', '--database', help='path to database [../../smodels-database]',                                                              
-                                         type=str, default='../../smodels-database' )
+    argparser = argparse.ArgumentParser(description='write bibtex files for database' )
+    argparser.add_argument ( '-d', '--database',
+            help='path to database [../../smodels-database]',
+            type=str, default='../../smodels-database' )
+    argparser.add_argument ( '-v', '--verbose',
+            help='specifying the level of verbosity (error, warning, info, debug) [info]',
+            default = 'info', type = str )
+    argparser.add_argument ( "-c", "--copy",
+            help="copy bibtex files to database folder (does not generate the files, however)",
+            action="store_true" )
     args = argparser.parse_args()
+    setLogLevel ( args.verbose )
     writer = BibtexWriter( args.database )
-    writer.run()
-    writer.close()
+    if args.copy:
+        writer.copy()
+    else:
+        writer.run()
+        writer.close()
