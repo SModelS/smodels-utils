@@ -362,12 +362,12 @@ class BibtexWriter:
         return collaboration
 
     def createSummaryCitation ( self, entries, experiment ):
-        filtered = set()
+        filtered = []
         for entry in entries:
             collaboration = self.findCollaboration ( entry )
             if not experiment == collaboration:
                 continue
-            filtered.add ( entry )
+            filtered.append ( entry )
         ret = "% Use this LaTeX code to cite all " + str(len(filtered)) + " non-superseded "+experiment+" results:\n"
         ret+= "% \cite{"
         for entry in filtered:
