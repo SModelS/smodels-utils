@@ -24,7 +24,8 @@ except ImportError:
 """ write bibtex file of analysis references from the database itself """
 
 class BibtexWriter:
-    def __init__ ( self ):
+    def __init__ ( self, databasepath ):
+        self.databasepath = databasepath
         self.f=open ( "refs.bib", "w" )
         self.g=open ( "log.txt", "w" )
         self.h=open ( "failed.txt", "w" )
@@ -285,9 +286,8 @@ class BibtexWriter:
 
     def run( self ):
         home = os.environ["HOME"]
-        # db = Database ( "%s/git/smodels/test/tinydb" % home )
-        self.db = Database ( "%s/git/smodels-database" % home )
-        # self.db = Database ( "./tinydb" )
+        # self.db = Database ( "%s/git/smodels-database" % home )
+        self.db = Database ( self.databasepath )
         self.res = self.db.getExpResults ()
         ids = []
         for expRes in self.res:
@@ -348,6 +348,11 @@ class BibtexWriter:
 
 
 if __name__ == "__main__":
-    writer = BibtexWriter()
+    import argparse
+    argparser = argparse.ArgumentParser(description='write bib file with database entries' )
+    argparser.add_argument ( '-d', '--database', help='path to database [../../smodels-database]',                                                              
+                                         type=str, default='../../smodels-database' )
+    args = argparser.parse_args()
+    writer = BibtexWriter( args.database )
     writer.run()
     writer.close()
