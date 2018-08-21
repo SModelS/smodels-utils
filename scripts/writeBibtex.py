@@ -25,7 +25,9 @@ except ImportError:
 """ write bibtex file of analysis references from the database itself """
 
 class BibtexWriter:
-    def __init__ ( self, databasepath ):
+    def __init__ ( self, databasepath, verbose ):
+        self.verbose = verbose.lower()
+        setLogLevel ( self.verbose )
         self.databasepath = databasepath
         self.npublications = 0
         self.nfailed = 0
@@ -131,7 +133,8 @@ class BibtexWriter:
                 print ( "foreign letter %d: %s" % ( o, letter) )
                 print ( "The context was: >>%s#%s<<" % ( source[ctr-20:ctr], source[ctr+1:ctr+20] ) )
                 sys.exit()
-        print ( source )
+        if self.verbose in [ "debug", "info" ]:
+            print ( source )
         source=source.replace( "8TeV", "8 TeV" ).replace("Tev","TeV" )
         source=source.replace ( "fb-1", "fb$^{-1}$" )
         source=source.replace ( "AlphaT", "$\\alpha_{T}$" )
@@ -195,7 +198,7 @@ class BibtexWriter:
         if pos1 < 1 or pos2 < pos1:
             return "failed to find pas url"
         ret = line[pos1+6:pos2]
-        self.log ( " * CDSUrl: %s" % ret )
+        self.log ( " * CDS url: %s" % ret )
         return ret
 
     def bibtexFromWikiUrl ( self, url, label=None ):
@@ -216,7 +219,6 @@ class BibtexWriter:
                 #self.h.write ( "%s is not found!" % label )
                 #self.not_found += 1
                 return None
-        #    print ( l )
             if "nspire" in l:
                 inspire = self.fetchInspireUrl ( l, label )
                 # self.log ( "   `- fetching from inspire: %s" % inspire )
@@ -233,13 +235,11 @@ class BibtexWriter:
                     return self.bibtexFromCDS ( pas, label )
 
     def log ( self, line ):
-        print ( line )
+        if self.verbose in [ "debug", "info" ]:
+            print ( line )
         self.g.write ( line + "\n" )
 
     def test( self ):
-        # print ( self.bibtexFromInspire ( "http://inspirehep.net/record/1469069", "ATLAS-SUSY-2015-02" ) )
-        # print ( self.bibtexFromWikiUrl ( "https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/SUSY-2015-02/","ATLAS-SUSY-2015-02" ) )
-        # print ( self.bibtexFromWikiUrl ( "http://cms-results.web.cern.ch/cms-results/public-results/publications/SUS-15-002/index.html", "CMS-SUS-15-002" ) )
         print ( self.bibtexFromWikiUrl ( "http://cms-results.web.cern.ch/cms-results/public-results/publications/SUS-15-002/index.html", "CMS-SUS-15-002" ) )
         sys.exit()
 
@@ -259,7 +259,14 @@ class BibtexWriter:
         f.close()
         return txt
 
-    def processExpRes ( self, expRes ):
+    def writeCache ( self, Id, bib ):
+        self.log ( "Now write cache file bibtexs/%s.tex" % Id )
+        cachef = open ( "bibtexs/%s.tex" % Id, "w" )
+        cachef.write ( str(bib) )
+        cachef.write ( "\n" )
+        cachef.close()
+
+    def processExpRes ( self, expRes, write_cache ):
         self.npublications += 1
         Id = expRes.globalInfo.id
         self.log ( "\n\n\nNow processing %s" % Id )
@@ -268,7 +275,7 @@ class BibtexWriter:
         if backup != False:
             self.success += 1
             self.log ( "Success!" )
-            self.f.write ( str(backup) )
+            self.f.write ( backup )
             self.f.write ( "\n" )
             return
 
@@ -279,8 +286,10 @@ class BibtexWriter:
             if bib:
                 self.success += 1
                 self.log ( "Success!" )
-                self.f.write ( str(bib) )
+                self.f.write ( bib )
                 self.f.write ( "\n" )
+                if write_cache:
+                    self.writeCache ( Id, bib )
                 return
             else:
                 self.log ( "Special treatment failed." )
@@ -300,13 +309,15 @@ class BibtexWriter:
             self.nfailed += 1
             self.nsuperseded += 1
             return
-        self.log ( " * Id, Url: %s, %s" % ( Id, url ) )
+        self.log ( " * Id, url: %s, %s" % ( Id, url ) )
         bib = self.bibtexFromWikiUrl ( url, Id )
         if bib:
             self.success += 1
             self.log ( "Success!" )
             self.f.write ( str(bib) )
             self.f.write ( "\n" )
+            if write_cache:
+                self.writeCache ( Id, bib )
             return
         if "bin/view/CMSPublic" in url:
             oldurl = url
@@ -327,7 +338,7 @@ class BibtexWriter:
         self.h.write ( "%s failed (no match).\n" % Id )
         self.h.write ( "    `---- %s\n" % url )
 
-    def run( self ):
+    def run( self, write_cache ):
         self.openHandles()
         home = os.environ["HOME"]
         # self.db = Database ( "%s/git/smodels-database" % home )
@@ -341,7 +352,7 @@ class BibtexWriter:
             if not "ATLAS-SUSY-2015-01" in str(expRes):
                 pass
                 # continue
-            self.processExpRes ( expRes )
+            self.processExpRes ( expRes, write_cache )
         self.f.close()
         self.addSummaries()
 
@@ -403,11 +414,13 @@ if __name__ == "__main__":
     argparser.add_argument ( "-c", "--copy",
             help="copy bibtex files to database folder (does not generate the files, however)",
             action="store_true" )
+    argparser.add_argument ( "-w", "--write_cache",
+            help="cache the retrieved results in bibtexs/",
+            action="store_true" )
     args = argparser.parse_args()
-    setLogLevel ( args.verbose )
-    writer = BibtexWriter( args.database )
+    writer = BibtexWriter( args.database, args.verbose )
     if args.copy:
         writer.copy()
     else:
-        writer.run()
+        writer.run( args.write_cache )
         writer.close()
