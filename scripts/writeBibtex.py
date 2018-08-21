@@ -261,7 +261,7 @@ class BibtexWriter:
 
     def writeCache ( self, Id, bib ):
         self.log ( "Now write cache file bibtexs/%s.tex" % Id )
-        cachef = open ( "bibtexs/%s.tex" % Id, "w" )
+        cachef = open ( "bibtexs/unused/%s.tex" % Id, "w" )
         cachef.write ( str(bib) )
         cachef.write ( "\n" )
         cachef.close()
