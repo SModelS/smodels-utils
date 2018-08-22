@@ -1,0 +1,12 @@
+Bootstrap: docker
+From: ubuntu:18.04
+
+%runscript
+    echo "This is what happens when you run the container..."
+
+%post
+    echo "Hello from inside the container"
+    echo "Install additional software here"
+		apt-get update
+		apt-get install -y git python3-pip gfortran build-essential zsh screen finger
+		pip3 install pyslha unum smodels ipython jupyter matplotlib plotly docutils numpy scipy argparse nbconvert sphinx_rtd_theme
