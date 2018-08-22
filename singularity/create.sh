@@ -1,4 +1,4 @@
 #!/bin/sh
 
 rm -rf smodels.simg
-sudo singularity build smodels.simg Singularity.smodels
+sudo singularity build --writable smodels.simg Singularity.smodels

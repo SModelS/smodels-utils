@@ -1,0 +1,1 @@
+singularity shell smodels.simg
