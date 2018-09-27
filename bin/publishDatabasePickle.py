@@ -53,6 +53,7 @@ def main():
     ap.add_argument('-r', '--remove_fastlim', help='build pickle file, remove fastlim results', action="store_true" )
     ap.add_argument('-s', '--ssh', help='work remotely via ssh', action="store_true" )
     ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default=None )
+    ap.add_argument('-V', '--skipValidation', help='if set will skip the check of validation flags [False]', default=False, action="store_true" )
     args = ap.parse_args()
     dbname = args.filename
     if args.smodelsPath:
@@ -73,7 +74,10 @@ def main():
         if args.remove_fastlim:
             d = removeFastLim ( d )
         dbname = d.pcl_meta.pathname
-        has_nonValidated = checkNonValidated ( d )
+        if not args.skipValidation:
+            has_nonValidated = checkNonValidated(d)
+        else:
+            has_nonValidated = False
         fastlim = d.pcl_meta.hasFastLim
 
     p=open(dbname,"rb")
