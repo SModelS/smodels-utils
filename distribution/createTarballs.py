@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 .. module:: createTarballs
@@ -9,23 +9,13 @@
 """
 
 import sys
-import commands
+import subprocess
 import os
 import time
+import argparse
 
-def getVersion():
-    """
-    Obtain the smodels version """
-    sys.path.insert(0,"../")
-    return "1.1.3"
-    from smodels import installation
-    return installation.version()
 
 dummyRun=False ## True
-version = getVersion()
-dirname = "smodels-v%s" % version
-# fastlimdir = "smodels-v%s-fastlim-1.0" % version[:3]
-
 RED = "\033[31;11m"
 GREEN = "\033[32;11m"
 YELLOW = "\033[33;11m"
@@ -38,44 +28,44 @@ def comment( text, urgency="info" ):
     if "err" in urgency.lower():
         pre="ERROR: "
         col=RED
-    print "%s[%s] %s%s %s" % ( col, time.asctime(), pre, text, RESET )
+    print("%s[%s] %s%s %s" %( col, time.asctime(), pre, text, RESET ))
     f=open("create.log","a")
-    f.write (  "[%s] %s\n" % ( time.asctime(),text ) )
+    f.write(  "[%s] %s\n" %( time.asctime(),text ) )
     f.close()
     if col == RED:
         sys.exit(-1)
 
-def isDummy ( ):
+def isDummy( ):
     if dummyRun:
-        comment ( "DUMMY RUN!!!!" )
+        comment( "DUMMY RUN!!!!" )
     return dummyRun
 
-def run ( cmd ):
+def run( cmd ):
     cmd=cmd.strip()
-    print ( "%scmd: %s%s" % (GREEN,cmd,RESET) )
+    print( "%scmd: %s%s" %(GREEN,cmd,RESET) )
     f=open("create.log","a")
-    f.write ( "cmd: %s\n" % (cmd) )
-    o=commands.getoutput ( cmd )
+    f.write( "cmd: %s\n" %(cmd) )
+    print('CMD=',cmd)
+    o=subprocess.check_output( cmd, shell=True )
     if len(o)>0:
-        print (o)
-        f.write ( o + "\n" )
+        print(o)
+        f.write( str(o) + "\n" )
     f.close()
-    return o
+    return str(o)
 
-def removeNonValidated():
+def removeNonValidated(dirname):
     """ remove all non-validated analyses from
         database """
-    comment ( "Now remove non-validated results." )
+    comment( "Now remove non-validated results." )
     from smodels.experiment.databaseObj import Database
-    # d = Database ( "%s/smodels-database" % dirname )
-    d = Database ( "%s/smodels-database" % dirname, force_load = "txt" )
+    d = Database( "%s/smodels-database" % dirname, force_load = "txt" )
     ers = d.expResultList
-    comment ( "Loaded the database with %d results." % ( len(ers) ) )
+    comment( "Loaded the database with %d results." %( len(ers) ) )
     for er in ers:
-        if hasattr ( er.globalInfo, "private" ) and er.globalInfo.private:
-            comment ( "%s is private. delete!" % ( er.globalInfo.id ) )
-            cmd = "rm -r %s" % ( er.path )
-            run ( cmd )
+        if hasattr( er.globalInfo, "private" ) and er.globalInfo.private:
+            comment( "%s is private. delete!" %( er.globalInfo.id ) )
+            cmd = "rm -r %s" %( er.path )
+            run( cmd )
         else:
             hasDataSets=False
             for dataset in er.datasets:
@@ -83,344 +73,351 @@ def removeNonValidated():
                 for txn in dataset.txnameList:
 #                    if txn.validated in [ None, False ]:
                     if txn.validated in [ False ]:
-                        comment ( "%s/%s/%s is not validated. Delete it." % \
-                                  ( er, dataset, txn ) )
+                        comment( "%s/%s/%s is not validated. Delete it." % \
+                                 ( er, dataset, txn ) )
                         cmd="rm %s" % txn.path
-                        run ( cmd )
+                        run( cmd )
                     else:
                         hasTxNames=True
                 if not hasTxNames:
-                        comment ( "%s/%s has no validated txnames. remove folder." %\
-                                  (er, dataset ) )
+                        comment( "%s/%s has no validated txnames. remove folder." %\
+                                 (er, dataset ) )
                         cmd = "rm -rf %s" % dataset.path
-                        run ( cmd )
+                        run( cmd )
                 if hasTxNames:
                     hasDataSets=True
             if not hasDataSets:
-                comment ( "%s has no validated datasets. remove folder." % \
-                          (er) )
+                comment( "%s has no validated datasets. remove folder." % \
+                         (er) )
                 cmd = "rm -rf %s" % er.path
-                run ( cmd )
-    # comment ( "base=%s" % d.base )
-    for tev in os.listdir ( d.base ):
-        fullpath = os.path.join ( d.base, tev )
-        if not os.path.isdir ( fullpath ):
+                run( cmd )
+    # comment( "base=%s" % d.base )
+    for tev in os.listdir( d.base ):
+        fullpath = os.path.join( d.base, tev )
+        if not os.path.isdir( fullpath ):
             continue
         tevHasResults=False
-        for experiment in os.listdir ( fullpath ):
-            exppath = os.path.join ( fullpath, experiment )
-            if not os.path.isdir ( exppath ):
+        for experiment in os.listdir( fullpath ):
+            exppath = os.path.join( fullpath, experiment )
+            if not os.path.isdir( exppath ):
                 continue
-            if os.listdir ( exppath ) == []:
-                comment ( "%s/%s is empty. Delete it!" % ( tev, experiment ) )
+            if os.listdir( exppath ) == []:
+                comment( "%s/%s is empty. Delete it!" %( tev, experiment ) )
                 cmd = "rm -rf %s" % exppath
-                run ( cmd )
+                run( cmd )
             else:
                 tevHasResults=True
         if not tevHasResults:
-            comment ( "%s is empty. Delete it!" % ( tev ) )
+            comment( "%s is empty. Delete it!" %( tev ) )
             cmd = "rm -rf %s" % fullpath
-            run ( cmd )
+            run( cmd )
 
-def rmlog():
+def rmlog(dirname):
     """ clear the log file """
     cmd="rm -f create.log"
-    commands.getoutput ( cmd )
-    cmd="rm -f %s/smodels-database/create.log" % dirname
-    commands.getoutput ( cmd )
+    if os.path.isfile('create.log'):
+        os.remove('create.log')
+    if os.path.isfile('%s/smodels-database/create.log' %dirname):
+        os.remove('%s/smodels-database/create.log' %dirname)
 
-
-def mkdir():
+def mkdir(dirname):
     """
     Create a temporary directory for creating the tarball.
     """
-    ## for i in ( dirname, fastlimdir ):
-    for i in ( [ dirname ] ): ## , fastlimdir ):
-        comment ("Creating temporary directory %s" % i )
-        run ( "mkdir -p %s" % i )
+    ## for i in( dirname, fastlimdir ):
+    for i in( [ dirname ] ): ## , fastlimdir ):
+        comment("Creating temporary directory %s" % i )
+        run( "mkdir -p %s" % i )
 
-def rmdir():
+def rmdir(dirname):
     """
     Remove the temporary directories
     """
-    for i in ( dirname, ): ## fastlimdir ):
+    for i in( dirname, ): ## fastlimdir ):
         if os.path.exists(i):
-            comment ( "Removing temporary directory %s" % i )
-            run ("rm -rf %s" % i )
+            comment( "Removing temporary directory %s" % i )
+            run("rm -rf %s" % i )
 
-def clone():
+def clone(dirname):
     """
     Git clone smodels itself into dirname, then remove .git, .gitignore,
     distribution, and test.
     """
-    comment ( "Git-cloning smodels into %s (this might take a while)" % dirname )
-    cmd = "git clone -b v%s https://github.com/SModelS/smodels.git %s" % (version, dirname)
-#     cmd = "git clone git@smodels.hephy.at:smodels %s" % (dirname)
+    comment( "Git-cloning smodels into %s(this might take a while)" % dirname )
+    cmd = "git clone -b v%s https://github.com/SModelS/smodels.git %s" %(version, dirname)
+#     cmd = "git clone git@smodels.hephy.at:smodels %s" %(dirname)
     if dummyRun:
-        cmd = "cp -a ../../smodels-v%s/* %s" % ( version, dirname )
-    run ( cmd )
+        cmd = "cp -a ../../smodels-v%s/* %s" %( version, dirname )
+    run( cmd )
     for i in os.listdir( dirname ):
         if i in [".git", ".gitignore", "distribution", "test" ]:
-            run ( "rm -rf %s/%s" % (dirname,i) )
+            run( "rm -rf %s/%s" %(dirname,i) )
 
-def rmpyc ():
+def rmpyc(dirname):
     """
     Remove .pyc files.
     """
-    comment ( "Removing all pyc files ... " )
-    run ("cd %s; rm -f *.pyc */*.pyc */*/*.pyc" % dirname )
+    comment( "Removing all pyc files ... " )
+    run("cd %s; rm -f *.pyc */*.pyc */*/*.pyc" % dirname )
 
-
-def makeClean ():
+def makeClean(dirname):
     """
     Execute 'make clean' in host directory.
     """
-    comment ( "Make clean ...." )
-    run ("cd ../lib/ ; make clean")
+    comment( "Make clean ...." )
+    run("cd ../lib/ ; make clean")
 
-def fetchDatabase():
+def fetchDatabase(tag,dirname):
     """
     Execute 'git clone' to retrieve the database.
     """
-    dbversion = version
-    if dbversion.find("-")>0:
-        dbversion=dbversion[:dbversion.find("-")]
-    comment ( "git clone the database (this might take a while)" )
+    dbversion = tag
+    comment( "git clone the database(this might take a while)" )
     # cmd = "cd %s; git clone -b v%s git@smodels.hephy.at:smodels-database"  % 
     cmd = "cd %s; git clone -b v%s git+ssh://git@github.com/SModelS/smodels-database.git"  % \
-            (dirname, dbversion)
+           (dirname, dbversion)
             
     if dummyRun:
         cmd = "cd %s; cp -a ../../../smodels-database-v%s smodels-database" % \
-              ( dirname, version )
-    run ( cmd )
+             ( dirname, dbversion )
+    run( cmd )
     rmcmd = "cd %s/smodels-database; " \
             "rm -rf .git .gitignore *.py *.sh *.tar *.pyc" % \
-             ( dirname )
-    run ( rmcmd )
+            ( dirname )
+    run( rmcmd )
 
 
-def clearGlobalInfo ( filename ):
+def clearGlobalInfo(filename):
     f=open(filename)
     lines=f.readlines()
     f.close()
     g=open("/tmp/tmp.txt","w")
     skip = [ "publishedData", "comment", "private", "checked", \
              "prettyName", "susyProcess", "dataUrl" ]
-    #skip.append ( "validated" )
-    #skip.append ( "axes" )
+    #skip.append( "validated" )
+    #skip.append( "axes" )
     for line in lines:
         to_skip = False
         for s in skip:
             if line.find(s)==0:
                 to_skip = True
         if not to_skip:
-            g.write ( line )
+            g.write( line )
     g.close()
     cmd = "cp /tmp/tmp.txt %s" % filename
-    run ( cmd )
+    run( cmd )
 
-def cleanDatabase():
+def cleanDatabase(dirname):
     """
     Clean up the database, e.g. remove orig and validation folders
     """
-    comment ( "Now cleaning up database in %s/smodels-database" % dirname )
+    comment( "Now cleaning up database in %s/smodels-database" % dirname )
     fullpath = "%s/smodels-database" % dirname
-    walker = os.walk ( fullpath )
+    walker = os.walk( fullpath )
     for record in walker:
         File=record[0]
-        # comment ( "Now in %s" % File )
-        # comment ( "Now in %s: %s" % (File, record[1] ) )
+        # comment( "Now in %s" % File )
+        # comment( "Now in %s: %s" %(File, record[1] ) )
         removals = [ "orig", ".git", "validation" ]
         rmFiles = [ "run_convert.sh", "checkFastlimValidation.py",  \
                     "checkFastlimValidation.ipynb", "convert.py","convertCMS.py", "sms.root", "general.comment" ]
         for r in removals:
             if r in File:
                 cmd = "rm -rf %s" % File
-                run ( cmd )
+                run( cmd )
         for rf in rmFiles:
-            fullpath = os.path.join ( File, rf )
-            if os.path.exists ( fullpath):
-                os.unlink ( fullpath )
+            fullpath = os.path.join( File, rf )
+            if os.path.exists( fullpath):
+                os.unlink( fullpath )
 
-def clearGlobalInfos( path ):
-    walker = os.walk ( path )
+def clearGlobalInfos(path):
+    walker = os.walk(path)
     for record in walker:
         File=record[0]
-        # print ( "record=",record )
+        # print( "record=",record )
         for i in record[2]:
             if i[0]=="T" and i[-4:]==".txt":        
-                fullpath = os.path.join ( File, i )
-                clearGlobalInfo ( fullpath )
-        gIpath = os.path.join ( File, "globalInfo.txt" )
-        if os.path.exists ( gIpath ):
-            clearGlobalInfo ( gIpath )
+                fullpath = os.path.join( File, i )
+                clearGlobalInfo( fullpath )
+        gIpath = os.path.join( File, "globalInfo.txt" )
+        if os.path.exists( gIpath ):
+            clearGlobalInfo( gIpath )
 
-def splitDatabase():
+def splitDatabase(filename,dirname):
     """
     Split up between the official database and the optional database
     """
-    comment ( "Now move all the non-official entries in the database." )
+    comment( "Now move all the non-official entries in the database." )
     cwd=os.getcwd()
-    comment ( "debug cwd: %s" % cwd )
-    comment ( "debug dirname: %s" % dirname )
+    comment( "debug cwd: %s" % cwd )
+    comment( "debug dirname: %s" % dirname )
     cmd = "cd %s/smodels-database/; %s/moveFastlimResults.py" % \
-          ( dirname, cwd )
-    run ( cmd )
-    cmd = "mv ./smodels-fastlim.tgz %s/smodels-v%s-fastlim-1.0.tgz" % \
-          ( cwd, version[:3] )
-    run ( cmd )
+         ( dirname, cwd )
+    run( cmd )
+    cmd = "mv ./smodels-fastlim.tgz %s/%s-fastlim-1.0.tgz" % \
+         (cwd, filename)
+    run( cmd )
 
-def clearTxtFiles():
-    clearGlobalInfos ( "%s/smodels-database/" % dirname )
-    clearGlobalInfos ( "./smodels-fastlim/" )
+def clearTxtFiles(dirname):
+    clearGlobalInfos( "%s/smodels-database/" % dirname )
+    clearGlobalInfos( "./smodels-fastlim/" )
 
-def createTarball():
+def createTarball(filename,dirname):
     """
     Create the tarball of smodels + database
     """
-    comment ( "Create tarball smodels-v%s.tgz" % version )
-    run ("tar czvf smodels-v%s.tgz %s" % (version, dirname))
+    comment( "Create tarball %s.tgz" % filename )
+    run("tar czvf %s.tgz %s" %(filename, dirname))
 
-def createDBTarball():
+def createDBTarball(filename,dirname):
     """
     Create the tarball of the database alone
     """
-    comment ( "Create tarball smodels-database-v%s.tgz" % version )
-    run ("cd %s; tar czvf smodels-database-v%s.tgz smodels-database" % (dirname, version ))
+    comment( "Create tarball %s.tgz" %filename )
+    run("cd %s; tar czvf %s.tgz smodels-database" %(dirname, filename ))
 
-def rmExtraFiles():
+def rmExtraFiles(dirname):
     """
     Remove additional files.
     """
-    comment ( "Remove a few unneeded files" )
+    comment( "Remove a few unneeded files" )
     extras = [ "inputFiles/slha/nobdecay.slha", "inputFiles/slha/broken.slha", 
                "docs/documentation/smodels.log", "inputFiles/slha/complicated.slha" ]
     for i in extras:
-        cmd = "rm -rf %s/%s" % ( dirname, i )
-        run ( cmd )
+        cmd = "rm -rf %s/%s" %( dirname, i )
+        run( cmd )
 
-def convertRecipes():
+def convertRecipes(dirname):
     """
     Compile recipes from .ipynb to .py and .html.
     """
-    comment ( "Converting the recipes" )
+    comment( "Converting the recipes" )
     cmd = "cd %s/docs/manual/source/recipes/; make convert remove_ipynb" % dirname
-    run (cmd)
+    run(cmd)
 
-def makeDocumentation():
+def makeDocumentation(dirname):
     """
     create the documentation via sphinx """
-    comment ( "Creating the documentation" )
+    comment( "Creating the documentation" )
     cmd = "cd %s/docs/manual/; make clean html; rm -r make.bat Makefile source " % dirname
-    run (cmd)
+    run(cmd)
     cmd = "cd %s/docs/documentation/; make clean html; rm -r make.bat  Makefile source update" % dirname
-    run (cmd)
+    run(cmd)
 
-def explode ():
+def explode(filename):
     """
     Explode the tarball.
     """
-    comment ( "Explode the tarball ..." )
-    cmd = "tar xzvf smodels-v%s.tgz" % version
-    run (cmd)
+    comment( "Explode the tarball ..." )
+    cmd = "tar xzvf %s" %filename
+    run(cmd)
 
-def make ():
+def make(dirname):
     """
     Execute 'make' in dirname/lib.
     """
-    comment ( "Now run make in dirname/lib ..." )
+    comment( "Now run make in dirname/lib ..." )
     cmd = "cd %s/lib; make" % dirname
-    run (cmd)
+    run(cmd)
 
-def runExample ():
+def runExample(dirname):
     """
     Execute Example.py.
     """
-    comment ( "Now run Example.py ..." )
+    comment( "Now run Example.py ..." )
     cmd = "cd %s/; ./Example.py 2>&1 | tee out.log" % dirname
-    run (cmd)
-    comment ( "Now check diff" )
+    run(cmd)
+    comment( "Now check diff" )
     cmd = "diff -u default.log %s/out.log" % dirname
-    d = run ( cmd )
-    if len ( d ) > 4:
-        comment ( "Example test failed!!", "error" )
+    d = run( cmd )
+    if len( d ) > 4:
+        comment( "Example test failed!!", "error" )
     else:
-        comment ( "Looking good." )
+        comment( "Looking good." )
 
 
-def test ():
+def test(filename,dirname):
     """
     Test the tarball, explode it, execute 'make', and 'runSModelS.py'.
     """
-    comment ( "--------------------------" )
-    comment ( "    Test the setup ...    " )
-    comment ( "--------------------------" )
-    rmdir ()
-    explode ()
-    make ()
-    runExample()
+    comment( "--------------------------" )
+    comment( "    Test the setup ...    " )
+    comment( "--------------------------" )
+    rmdir(dirname)
+    explode(filename.strip()+'.tgz')
+    make(dirname)
+    runExample(dirname)
 
-def testDocumentation():
+def testDocumentation(dirname):
     """ Test the documentation """
-    comment ( "Test the documentation" )
+    comment( "Test the documentation" )
     cmd="ls %s/docs/manual/build/html/index.html" % dirname
-    run (cmd)
+    run(cmd)
 
-def createDBRelease():
+def createDBRelease(output,tag):
     """
     Create a tarball for distribution.
     """
+
+    dirname = output
+    if os.path.isdir(dirname):
+        comment('Folder %s already exists. Remove it before creating the tarball %s.tgz' %(output,output))
+        return False
+    
     isDummy()
-    rmlog() ## first remove the log file
-    comment ( "Creating tarball for database distribution, version %s" % version )
-    makeClean()
-    rmdir()
-    mkdir() ## .. then create the temp dir
-    # clone() ## ... clone smodels into it ...
-    fetchDatabase() ## git clone the database
-    cleanDatabase() ## clean up database, remove orig, validated
-    splitDatabase() ## split database into official and optional
-    removeNonValidated() ## remove all non-validated analyses
-    clearTxtFiles() ## now clear up all txt files
-    #convertRecipes()
-    #makeDocumentation()
-    #rmExtraFiles() ## ... remove unneeded files ...
-    #rmpyc() ## ...  remove the pyc files created by makeDocumentation ...
-    #rmlog()  ##Make sure to remove log files
-    createDBTarball() ## here we go! create!
-    #test ()    
-    # rmdir(dirname)
-    #testDocumentation()
+    rmlog(dirname) ## first remove the log file
+    comment( "Creating tarball for database distribution, version v%s" %tag )
+    rmdir(dirname)
+    mkdir(dirname) ## .. then create the temp dir
+    fetchDatabase(tag,dirname) ## git clone the database
+    cleanDatabase(dirname) ## clean up database, remove orig, validated
+    splitDatabase(output,dirname) ## split database into official and optional
+    removeNonValidated(dirname) ## remove all non-validated analyses
+    clearTxtFiles(dirname) ## now clear up all txt files
+    createDBTarball(output,dirname) ## here we go! create!
     isDummy()
 
-def create():
+def create(output,tag):
     """
     Create a tarball for distribution.
     """
+    
+    dirname = output
+    if os.path.isdir(dirname):
+        comment('Folder %s already exists. Remove it before creating the tarball %s.tgz' %(output,output))
+        return False
     isDummy()
     rmlog() ## first remove the log file
-    comment ( "Creating tarball for distribution, version %s" % version )
-    makeClean()
-    rmdir()
-    mkdir() ## .. then create the temp dir
-    clone() ## ... clone smodels into it ...
-    fetchDatabase() ## git clone the database
-    cleanDatabase() ## clean up database, remove orig, validated
-    splitDatabase() ## split database into official and optional
-    removeNonValidated() ## remove all non-validated analyses
-    clearTxtFiles() ## now clear up all txt files
-    convertRecipes()
-    makeDocumentation()
-    rmExtraFiles() ## ... remove unneeded files ...
-    rmpyc() ## ...  remove the pyc files created by makeDocumentation ...
-    rmlog()  ##Make sure to remove log files
-    createTarball() ## here we go! create!
-    test ()    
+    comment( "Creating tarball for distribution, version %s" % version )
+    makeClean(dirname)
+    rmdir(dirname)
+    mkdir(dirname) ## .. then create the temp dir
+    clone(dirname) ## ... clone smodels into it ...
+    fetchDatabase(tag,dirname) ## git clone the database
+    cleanDatabase(dirname) ## clean up database, remove orig, validated
+    splitDatabase(otuput,dirname) ## split database into official and optional
+    removeNonValidated(dirname) ## remove all non-validated analyses
+    clearTxtFiles(dirname) ## now clear up all txt files
+    convertRecipes(dirname)
+    makeDocumentation(dirname)
+    rmExtraFiles(dirname) ## ... remove unneeded files ...
+    rmpyc(dirname) ## ...  remove the pyc files created by makeDocumentation ...
+    rmlog(dirname)  ##Make sure to remove log files
+    createTarball(output,dirname) ## here we go! create!
+    test(output,dirname)    
     # rmdir(dirname)
-    testDocumentation()
+    testDocumentation(dirname)
     isDummy()
+
+def main():
+    ap = argparse.ArgumentParser( description="makes a database tarball for public release" )
+    ap.add_argument('-o', '--output', help='name of tarball filename [database]', default="database" )
+    ap.add_argument('-t', '--tag', help='database version [1.2.0]', default='1.2.0')
+    ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default='../../smodels')
+
+    args = ap.parse_args()
+    sys.path.insert(0,os.path.abspath(args.smodelsPath))
+    createDBRelease(args.output,args.tag)
 
 if __name__ == "__main__":
-    createDBRelease()
-    ## create()
+    main()
