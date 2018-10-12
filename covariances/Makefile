@@ -1,5 +1,7 @@
-all: comp
+all: plot
 
+plot:
+	./plotRatio.py -a CMS16052 -t T2bbWWoff 
 
 ratioplots:
 	./plotRatio.py -a CMS16050 -t T1tttt -c

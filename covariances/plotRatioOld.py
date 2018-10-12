@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 import ROOT
 import logging
 import subprocess
-from scipy.interpolate import griddata
-import itertools
 
 logger = logging.getLogger(__name__)
 
@@ -147,12 +145,10 @@ def main():
         uls[ h ] = point["UL" ] / point["signal"]
 
 
+    x,y,col=[],[],[]
     err_msgs = 0
 
-    ipoints = FromEff.validationData
-    points = []
-
-    for point in ipoints:
+    for point in FromEff.validationData:
         axes = convertNewAxes ( point["axes"] )
         h = axisHash ( axes )
         ul = None
@@ -162,33 +158,20 @@ def main():
             ul_eff = point["UL"] / point["signal"] ##  point["efficiency"]
             # ratio = ul_eff / ul
             ratio = ul / ul_eff
-            points.append ( (axes[0],axes[1],ratio ) )
+            # ratio = math.log10 ( ul )
+            x.append ( axes[1] )
+            y.append ( axes[0] )
+            col.append ( ratio )
         else:
             err_msgs += 1
             #if err_msgs < 5:
             #    print ( "cannot find data for point", point["slhafile"] )
-
-    points.sort()
-    points = numpy.array ( points )
-    x = points[::,1].tolist()
-    y = points[::,0].tolist()
-    col = points[::,2].tolist()
-    x_ = numpy.arange ( min(x), max(x), 5. )
-    y_ = numpy.arange ( min(y), max(y), .5 )
-    yx = numpy.array(list(itertools.product(y_,x_)) )
-    x = yx[::,1]
-    y = yx[::,0]
-    col = griddata ( points[::,0:2], points[::,2], yx )
-    print ( "col=", col )
-
     if err_msgs > 0:
         print ( "couldnt find data for %d/%d points" % (err_msgs, len( FromEff.validationData ) ) )
 
     cm = plt.cm.get_cmap('jet')
     # cm = plt.cm.get_cmap('RdYlGn')
-    # scatter = plt.contourf( x, y, col, cmap=cm, vmin=0.5, vmax=1.5, gridsize=30, bins=None )
-    # scatter = plt.hexbin( x, y, C=col, cmap=cm, vmin=0.5, vmax=1.5, gridsize=80, bins=None )
-    scatter = plt.scatter ( x, y, s=5., c=col, marker="s", cmap=cm, vmin=0.5, vmax=1.5 )
+    scatter = plt.scatter ( x, y, s=35., c=col, cmap=cm, vmin=0.5, vmax=1.5 )
     plt.rc('text', usetex=True)
     slhafile=FromEff.validationData[0]["slhafile"]
     Dir=os.path.dirname ( FromEff.__file__ )
@@ -235,8 +218,7 @@ def main():
     figname = "%s_%s.png" % ( analysis, topo )
     if srs !="all":
         figname = "%s_%s_%s.png" % ( analysis, topo, srs )
-    plt.text ( max(x)+.30*(max(x)-min(x)), .7*max(y), "f$_{UL}$: %.2f +/- %.2f" % ( numpy.nanmean(col), numpy.nanstd(col)  ), fontsize=11, rotation = 90)
-    # plt.text ( min(x)+.70*(max(x)-min(x)), max(y), "f$_{UL}$: %.2f +/- %.2f" % ( numpy.mean(col), numpy.std(col)  ), fontsize=11)
+    plt.text ( min(x)+.70*(max(x)-min(x)), max(y), "f$_{UL}$: %.2f +/- %.2f" % ( numpy.mean(col), numpy.std(col)  ), fontsize=11)
     print ( "Saving to %s" % figname )
     plt.legend()
     plt.savefig ( figname )
@@ -244,7 +226,7 @@ def main():
       cmd="scp %s smodels.hephy.at:/var/www/images/combination/" % ( figname )
       print ( cmd )
       subprocess.getoutput ( cmd )
-    print ( "ratio=%.2f +/- %.2f" % ( numpy.nanmean(col), numpy.nanstd(col) ) )
+    print ( "ratio=%.2f +/- %.2f" % ( numpy.mean(col), numpy.std(col) ) )
     # plt.show()
 
 main()
