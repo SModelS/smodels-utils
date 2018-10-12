@@ -173,8 +173,8 @@ def main():
     x = points[::,1].tolist()
     y = points[::,0].tolist()
     col = points[::,2].tolist()
-    x_ = numpy.arange ( min(x), max(x), 5. )
-    y_ = numpy.arange ( min(y), max(y), .5 )
+    x_ = numpy.arange ( min(x), max(x), 3. )
+    y_ = numpy.arange ( min(y), max(y), .05 )
     yx = numpy.array(list(itertools.product(y_,x_)) )
     x = yx[::,1]
     y = yx[::,0]
@@ -188,7 +188,7 @@ def main():
     # cm = plt.cm.get_cmap('RdYlGn')
     # scatter = plt.contourf( x, y, col, cmap=cm, vmin=0.5, vmax=1.5, gridsize=30, bins=None )
     # scatter = plt.hexbin( x, y, C=col, cmap=cm, vmin=0.5, vmax=1.5, gridsize=80, bins=None )
-    scatter = plt.scatter ( x, y, s=5., c=col, marker="s", cmap=cm, vmin=0.5, vmax=1.5 )
+    scatter = plt.scatter ( x, y, s=0.25, c=col, marker="s", cmap=cm, vmin=0.5, vmax=1.5 )
     plt.rc('text', usetex=True)
     slhafile=FromEff.validationData[0]["slhafile"]
     Dir=os.path.dirname ( FromEff.__file__ )
