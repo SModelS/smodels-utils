@@ -117,7 +117,7 @@ def main():
     try:
         t = __import__ ( "%s" % ( analysis ) ).nSRs
         if t == "best": 
-            nsr = t
+            nsr = t + " signal region"
         else:
             nsr = "%s signal regions" % ( t )
     except Exception as e:
@@ -192,25 +192,29 @@ def main():
         print ( "couldnt find data for %d/%d points" % (err_msgs, len( FromEff.validationData ) ) )
 
     cm = plt.cm.get_cmap('jet')
-    # cm = plt.cm.get_cmap('RdYlGn')
-    # scatter = plt.contourf( x, y, col, cmap=cm, vmin=0.5, vmax=1.5, gridsize=30, bins=None )
-    # scatter = plt.hexbin( x, y, C=col, cmap=cm, vmin=0.5, vmax=1.5, gridsize=80, bins=None )
-    scatter = plt.scatter ( x, y, s=0.25, c=col, marker="o", cmap=cm, vmin=0.5, vmax=1.5 )
     plt.rc('text', usetex=True)
+    scatter = plt.scatter ( x, y, s=0.25, c=col, marker="o", cmap=cm, vmin=0.5, vmax=1.5 )
+    ax = plt.gca()
+    ax.set_xticklabels(map(int,ax.get_xticks()), { "fontweight": "normal", "fontsize": 14 } )
+    ax.set_yticklabels(map(int,ax.get_yticks()), { "fontweight": "normal", "fontsize": 14 } )
+    plt.rcParams.update({'font.size': 14})
+    #plt.rcParams['xtick.labelsize'] = 14
+    #plt.rcParams['ytick.labelsize'] = 14
     slhafile=FromEff.validationData[0]["slhafile"]
     Dir=os.path.dirname ( FromEff.__file__ )
     analysis=Dir[ Dir.rfind("/")+1: ]
     topo=slhafile[:slhafile.find("_")]
     line = getExclusionsFrom ( "%s/sms.root" % analysis, topo )
-    stopo = topo + ": " + prettyDescriptions.prettyTxname ( topo, outputtype="latex" )
+    stopo = prettyDescriptions.prettyTxname ( topo, outputtype="latex" ).replace("*","^{*}" )
     
-    plt.title ( "Comparison of upper limits, %s, \n%s" % ( s_ana, stopo) )
-    # plt.title ( "Ratio UL(SModelS) / UL(official), %s, %s" % ( analysis, topo) )
-    plt.xlabel ( "m$_{mother}$ [GeV]" )
+    plt.title ( "$f_{UL}$: %s, %s" % ( s_ana, stopo) )
+    plt.xlabel ( "m$_{mother}$ [GeV]", fontsize=13 )
+    plt.rc('text', usetex=True)
     label = "m$_{LSP}$ [GeV]"
     if "052" in analysis:
-      label = "$\Delta m$(mother, daughter) [GeV]"
-    plt.ylabel ( label )
+      # label = "$\Delta m$(mother, daughter) [GeV]"
+      label = "m$_{mother}$ - m$_{daughter}$ [GeV]"
+    plt.ylabel ( label, fontsize=13 )
 
     plt.colorbar()
     el = getExclusionLine ( line )
@@ -235,13 +239,11 @@ def main():
     if abs ( maxy - 80. ) < 3.:
         maxy = 79.9
     if nsr != "":
-        # plt.text ( .98*max(x_v), 1.0*min(y_v)-.27*(max(y_v)-min(y_v)), "%s" % ( nsr) , fontsize=12 )
-        plt.text ( .90*maxx, miny-.17*(maxy-miny), "%s" % ( nsr) , fontsize=12 )
+        plt.text ( .90*maxx, miny-.19*(maxy-miny), "%s" % ( nsr) , fontsize=14 )
     figname = "%s_%s.png" % ( analysis, topo )
     if srs !="all":
         figname = "%s_%s_%s.png" % ( analysis, topo, srs )
-    plt.text ( max(x)+.30*(max(x)-min(x)), .8*max(y), "UL (official) / UL (SModelS)", fontsize=11, rotation = 90)
-    # plt.text ( max(x)+.30*(max(x)-min(x)), .7*max(y), "f$_{UL}$: %.2f +/- %.2f" % ( numpy.nanmean(col), numpy.nanstd(col)  ), fontsize=11, rotation = 90)
+    plt.text ( max(x)+.30*(max(x)-min(x)), .9*max(y), "$f_{UL}$ = $\sigma_{95}$ (CMS) / $\sigma_{95}$ (SModelS)", fontsize=13, rotation = 90)
     print ( "Saving to %s" % figname )
     plt.legend()
     plt.savefig ( figname )
@@ -250,6 +252,5 @@ def main():
       print ( cmd )
       subprocess.getoutput ( cmd )
     print ( "ratio=%.2f +/- %.2f" % ( numpy.nanmean(col), numpy.nanstd(col) ) )
-    # plt.show()
 
 main()

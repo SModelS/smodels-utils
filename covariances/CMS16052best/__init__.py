@@ -1,2 +1,2 @@
 nSRs="best"
-name="CMS-PAS-SUS-16-052"
+analysis="CMS-PAS-SUS-16-052"

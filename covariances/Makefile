@@ -3,6 +3,12 @@ all: plot
 plot:
 	./plotRatio.py -a CMS16052 -t T2bbWWoff 
 
+plots16052:
+	./plotRatio.py -a CMS16052agg -t T2bbWWoff -c
+	./plotRatio.py -a CMS16052best -t T2bbWWoff -c
+	./plotRatio.py -a CMS16052 -t T2bbWWoff -c
+	./push.sh
+
 ratioplots:
 	./plotRatio.py -a CMS16050 -t T1tttt -c
 	./plotRatio.py -a CMS16050 -t T2tt -c
