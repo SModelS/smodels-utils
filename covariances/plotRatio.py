@@ -10,6 +10,7 @@ import logging
 import subprocess
 from scipy.interpolate import griddata
 import itertools
+from smodels_utils.helper import prettyDescriptions
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +102,12 @@ def main():
             help="scp to smodels server, as it appears in http://smodels.hephy.at/wiki/CombinationComparisons" )
     args = argparser.parse_args()
     analysis, topo, srs = args.analysis, args.topo, args.sr
+    s_ana = analysis
+    s_ana = s_ana.replace("agg"," (agg)" )
+    try:
+        s_ana = __import__ ( "%s" % ( analysis ) ).analysis
+    except:
+        pass
     # analysis, topo, srs = "CMS16050", "T2tt", "all"
     FromUl = __import__ ( "%s.%s_ul" % ( analysis, topo), fromlist="%s_ul" % topo )
     FromEff = __import__ ( "%s.%s_%s" % ( analysis, topo, srs ),
@@ -112,7 +119,7 @@ def main():
         if t == "best": 
             nsr = t
         else:
-            nsr = "%s SRs" % ( t )
+            nsr = "%s signal regions" % ( t )
     except Exception as e:
         print ( str(e) )
 
@@ -179,7 +186,7 @@ def main():
     x = yx[::,1]
     y = yx[::,0]
     col = griddata ( points[::,0:2], points[::,2], yx )
-    print ( "col=", col )
+    # print ( "col=", col )
 
     if err_msgs > 0:
         print ( "couldnt find data for %d/%d points" % (err_msgs, len( FromEff.validationData ) ) )
@@ -195,11 +202,9 @@ def main():
     analysis=Dir[ Dir.rfind("/")+1: ]
     topo=slhafile[:slhafile.find("_")]
     line = getExclusionsFrom ( "%s/sms.root" % analysis, topo )
-
-
-    s_ana = analysis
-    s_ana = s_ana.replace("agg"," (agg)" )
-    plt.title ( "UL(official) / UL(SModelS), %s, %s" % ( s_ana, topo) )
+    stopo = topo + ": " + prettyDescriptions.prettyTxname ( topo, outputtype="latex" )
+    
+    plt.title ( "Comparison of upper limits, %s, \n%s" % ( s_ana, stopo) )
     # plt.title ( "Ratio UL(SModelS) / UL(official), %s, %s" % ( analysis, topo) )
     plt.xlabel ( "m$_{mother}$ [GeV]" )
     label = "m$_{LSP}$ [GeV]"
@@ -231,12 +236,12 @@ def main():
         maxy = 79.9
     if nsr != "":
         # plt.text ( .98*max(x_v), 1.0*min(y_v)-.27*(max(y_v)-min(y_v)), "%s" % ( nsr) , fontsize=12 )
-        plt.text ( .97*maxx, miny-.17*(maxy-miny), "%s" % ( nsr) , fontsize=12 )
+        plt.text ( .90*maxx, miny-.17*(maxy-miny), "%s" % ( nsr) , fontsize=12 )
     figname = "%s_%s.png" % ( analysis, topo )
     if srs !="all":
         figname = "%s_%s_%s.png" % ( analysis, topo, srs )
-    plt.text ( max(x)+.30*(max(x)-min(x)), .7*max(y), "f$_{UL}$: %.2f +/- %.2f" % ( numpy.nanmean(col), numpy.nanstd(col)  ), fontsize=11, rotation = 90)
-    # plt.text ( min(x)+.70*(max(x)-min(x)), max(y), "f$_{UL}$: %.2f +/- %.2f" % ( numpy.mean(col), numpy.std(col)  ), fontsize=11)
+    plt.text ( max(x)+.30*(max(x)-min(x)), .8*max(y), "UL (official) / UL (SModelS)", fontsize=11, rotation = 90)
+    # plt.text ( max(x)+.30*(max(x)-min(x)), .7*max(y), "f$_{UL}$: %.2f +/- %.2f" % ( numpy.nanmean(col), numpy.nanstd(col)  ), fontsize=11, rotation = 90)
     print ( "Saving to %s" % figname )
     plt.legend()
     plt.savefig ( figname )

@@ -406,6 +406,7 @@ def getDaughters(txname):
 
 def prettyProduction(txname,latex=True):
     """
+    FIXME fix the "latex" mode, it is a "root" mode.
     Converts the txname string to the corresponding SUSY production process
     in latex form (using ROOT conventions)
     :param: txname (string) (e.g. 'T1')
@@ -435,6 +436,7 @@ def prettyProduction(txname,latex=True):
 
 def prettyDecay(txname,latex=True):
     """
+    FIXME fix the "latex" mode, it is a "root" mode.
     Converts the txname string to the corresponding SUSY decay process
     in latex form (using ROOT conventions)
     :param: txname (string) (e.g. 'T1')
@@ -454,22 +456,33 @@ def prettyDecay(txname,latex=True):
     return decayString.lstrip().rstrip()
 
 
-def prettyTxname(txname,latex=True):
+def prettyTxname(txname,outputtype="root"):
     """
     Converts the txname string to the corresponding SUSY desctiption
     in latex form (using ROOT conventions)
     :param: txname (string) (e.g. 'T1')
-    :param latex: If True it will return the latex version, otherwise
-                 it will return a more human readable string
-
+    :param outputtype: root: return a ROOT string
+                       latex: return a latex string
+                       text: return a human readable string
 
     :return: string or latex string
              (e.g. pp #rightarrow #tilde{g} #tilde{g},
              #tilde{g} #rightarrow q q #tilde{#chi}_{1}^{0})
     """
+    if not outputtype in [ "root", "latex", "text" ]:
+        logging.error ( "Unknown output type: %s. Known types: root, latex, text" % outputtype )
+        import sys
+        sys.exit()
+
+    latex=False
+    if outputtype in [ "root", "latex" ]:
+        latex=True
 
     prodString = prettyProduction(txname,latex)
     decayString = prettyDecay(txname,latex)
+    if outputtype == "latex":
+        prodString = "$" + prodString.replace("#","\\" ) + "$"
+        decayString = "$" + decayString.replace("#","\\" ) + "$"
 
     if prodString and decayString:
         return prodString + ", " + decayString

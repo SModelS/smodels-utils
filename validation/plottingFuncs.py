@@ -627,7 +627,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     ltx.SetNDC()
     ltx.SetTextSize(.035)
     ltx.SetTextFont(12)
-    txStr = validationPlot.txName +' : '+prettyTxname(validationPlot.txName)
+    txStr = validationPlot.txName +' : '+prettyTxname(validationPlot.txName,outputtype="root")
     axStr = prettyAxes(validationPlot.txName,validationPlot.axes)
     axStr = str(axStr).replace(']','').replace('[','').replace("'","")
     infoStr = "#splitline{"+txStr+'}{'+axStr+'}'

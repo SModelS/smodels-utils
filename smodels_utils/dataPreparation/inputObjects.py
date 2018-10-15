@@ -562,7 +562,7 @@ class TxNameInput(Locker):
         self.txName = txName
         if hscp:
             self.finalState = ['MET','MET']
-        self.susyProcess = prettyDescriptions.prettyTxname(txName,latex=False)
+        self.susyProcess = prettyDescriptions.prettyTxname(txName,outputtype="text")
         self._txDecay = TxDecay(self._name)
         if not self._txDecay:
             logger.error("Unknown txname %s" %self._name)
