@@ -72,7 +72,7 @@ def main():
             Ver = dbname[m.start():]
         ver2 = Ver[2:].replace("_fastlim","")
         ver = "v" + Ver[0]+"."+Ver[1]+"."+ver2
-        description="[Official database, %s](ListOfAnalysesv%s%s%s)" % ( ver, Ver[0],Ver[1],ver2 )
+        description="[Official database, %s](ListOfAnalyses%s%s%s)" % ( ver, Ver[0],Ver[1],ver2 )
         j = json.load ( open(filen) )
         size=sizeof_fmt ( j["size"] )
         frozen="yes"
@@ -113,7 +113,7 @@ def oldmain():
             Ver = dbname[m.start():]
         ver2 = Ver[2:].replace("_fastlim","")
         ver = "v" + Ver[0]+"."+Ver[1]+"."+ver2
-        description="[[ListOfAnalysesv%s%s%s|Official database, %s]]" % ( Ver[0],Ver[1],ver2, ver )
+        description="[[ListOfAnalyses%s%s%s|Official database, %s]]" % ( Ver[0],Ver[1],ver2, ver )
         j = json.load ( open(filen) )
         size=sizeof_fmt ( j["size"] )
         frozen="yes"

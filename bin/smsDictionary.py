@@ -27,6 +27,7 @@ class SmsDictWriter:
         self.drawFeyn = drawFeyn
         self.xkcd = xkcd
         self.database = Database ( database )
+        self.ver=self.database.databaseVersion.replace(".","")
         self.ver="v"+self.database.databaseVersion.replace(".","")
         if not addVer:
             self.ver=""
