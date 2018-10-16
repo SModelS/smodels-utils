@@ -41,10 +41,12 @@ def yesno ( B ):
     if B in [ False, "False" ]: return "No"
     return "?"
 
-def header( f, version, superseded, add_version ):                                                                                            
-    dotlessv = ""                                                                                                                             
-    if add_version:                                                                                                                           
-        dotlessv = "v"+version.replace(".","")
+def header( f, database, superseded, add_version ):
+    version = database.databaseVersion
+    dotlessv = ""
+    if add_version:
+        dotlessv = version.replace(".","")
+        #dotlessv = "v"+version.replace(".","")
     titleplus = ""
     # titleplus = version
     referToOther = "Link to list of results [[ListOfAnalyses%sWithSuperseded|including superseded results]]" % dotlessv
@@ -52,17 +54,30 @@ def header( f, version, superseded, add_version ):
         referToOther = "Link to list of results [[ListOfAnalyses%s|without superseded results]]" % dotlessv
         add=",including superseded results."
         titleplus = "(including superseded results)"
+    n_results = 0
+    n_topos = set()
+    n_anas = set()
+    expRs = database.getExpResults( useSuperseded = superseded )
+    for expR in expRs:
+        n_anas.add ( expR.id() )
+        for t in expR.getTxNames():
+            n_topos.add ( t.txName )
+        for d in expR.getValuesFor ( "dataId" ):
+            ds = expR.getDataset ( d )
+            n_results += len ( ds.txnameList )
     f.write (
 # """#acl +DeveloperGroup:read,write,revert -All:write,read Default
 """#acl +DeveloperGroup:read,write,revert -All:write +All:read Default
 <<LockedPage()>>
 
 = List Of Analyses %s %s =
-List of analyses and topologies in the SMS results database.
+List of analyses and topologies in the SMS results database,
+comprising %d individual maps with %d topologies, from %d analyses.
 The list has been created from the database version `%s`.
 Results from !FastLim are included. There is also an  [[SmsDictionary%s|sms dictionary]].
-%s
-""" % ( version, titleplus, version, dotlessv, referToOther ) )
+%s.
+""" % ( version, titleplus, n_results, len(n_topos), len(n_anas), version, \
+        dotlessv, referToOther ) )
 
 def footer ( f ):
     """
@@ -326,7 +341,7 @@ def main():
     backup( filename )
     f = open ( filename, "w" )
     database = Database ( args.database, discard_zeroes=True )
-    header( f, database.databaseVersion, superSeded, args.add_version )
+    header( f, database, superSeded, args.add_version )
     listTables ( f, database.getExpResults ( useSuperseded = superSeded ) )
     print ( "Database:", database.databaseVersion )
     experiments=[ "CMS", "ATLAS" ]

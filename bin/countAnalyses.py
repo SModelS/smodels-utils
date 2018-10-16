@@ -123,7 +123,7 @@ def main():
               type=str, default="both" )
     argparser.add_argument ( '-v', '--verbose', help='be verbose', action='store_true' )
     argparser.add_argument ( '-d', '--database', help='path to database',
-              type=str,default='http://smodels.hephy.at/database/official112' )
+              type=str,default='official' )
     args = argparser.parse_args()
     db = Database ( args.database )
     ss = [ True, False ]
