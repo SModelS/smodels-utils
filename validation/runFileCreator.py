@@ -92,12 +92,13 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,addToFile,xargs,Npts=3
     xargs.filename = tempdir
     xargs.verbosity = 30
     #Compute LO cross-sections
-    xsecComputer.main(xargs)
+    if computexsecs:
+        xsecComputer.main(xargs)
     #Compute NLL cross-sections
     xargs.NLL = True
     xargs.LOfromSLHA = True    
-    xsecComputer.main(xargs)
-    
+    if computexsecs:
+        xsecComputer.main(xargs)
     
     #Create tarfile:
     if os.path.isfile(tarFile):
@@ -119,21 +120,24 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,addToFile,xargs,Npts=3
 
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
-         databasePath,xargs,Npts=300,addToFile=False,verbosity='error'):
+         databasePath,xargs,Npts=300,addToFile=False,verbosity='error',
+         computexsecs=True):
     """
     Creates .tar.gz files for all the txnames and analyses.
 
     :param analysisIDs: list of analysis ids ([CMS-SUS-13-006,...])
-    :param dataType: dataType of the analysis (all, efficiencyMap or upperLimit)
+    :param datasetIDs: list of dataset IDS ( [SR1,SR2,...] )
     :param txnames: list of txnames ([TChiWZ,...])
+    :param dataType: dataType of the analysis (all, efficiencyMap or upperLimit)
     :param templatedir: Path to the folder containing the txname.template files
     :param slhadir: Path to the output folder holding the txname .tar.gz files
     :param databasePath: Path to the SModelS database
+    :param xargs: argparse.Namespace object holding the options for the 
+                  cross-section calculation
     :param Npts: Trial number of points for each plane.
     :param addToFile: If True it will add to the existing .tar.gz file (or create a new one if there is no previous file)
     :param verbosity: overall verbosity (e.g. error, warning, info, debug)
-    :param xargs: argparse.Namespace object holding the options for the 
-                  cross-section calculation
+    :param computexsecs: do we compute xsecs and add to files?
     
     :return: A dictionary containing the list of created .tar.gz files 
     """
@@ -193,6 +197,8 @@ if __name__ == "__main__":
     ap.add_argument('-v', '--verbose', 
             help='specify level of verbosity (error, warning, info, debug) [info]', 
             default = 'info', type = str)
+    ap.add_argument ( '-n', '--no_xsecs', help='do not run cross section calculator', 
+            action='store_true' )
            
     args = ap.parse_args()
     
@@ -275,5 +281,5 @@ if __name__ == "__main__":
 
     #Run creation:
     main(analyses,datasetIDs,txnames,dataTypes,templatedir,slhadir,
-         databasePath,xargs,Npts,addToFile,verbosity=args.verbose)
-    
+         databasePath,xargs,Npts,addToFile,verbosity=args.verbose,
+         computexsecs = not args.no_xsecs )
