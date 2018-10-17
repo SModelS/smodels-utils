@@ -1,5 +1,2 @@
 sudo singularity build ubuntu.simg Singularity
-
-
-
 sudo singularity bootstrap ubuntu.img Singularity
