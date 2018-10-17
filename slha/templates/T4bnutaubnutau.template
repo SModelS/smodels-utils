@@ -213,7 +213,7 @@ DECAY   1000003     0.00000000E+00   # sstrange_L decays
 DECAY   1000004     0.00000000E+00   # scharm_L decays
 DECAY   1000006     1.00000000E+00   # stop1 decays
 #          BR         NDA      ID1       ID2
-     1.0               3     1000015         -5   18  # BR(~t_1 -> ~tau b nu_tau )
+     1.0               3     1000015         -5   16  # BR(~t_1 -> ~tau b nu_tau )
 DECAY   2000006     0.00000000E+00   # stop2 decays
 DECAY   1000005     0.00000000E+00   # sbottom1 decays
 DECAY   2000005     0.00000000E+00   # sbottom2 decays
