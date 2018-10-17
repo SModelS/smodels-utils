@@ -32,3 +32,9 @@ bin/OldListOfAnalyses
 bin/OldListOfAnalysesWithSuperseded
 slha/ls
 */.http*
+scripts/database.bib
+scripts/failed.txt
+scripts/log.txt
+scripts/refs.bib
+singularity/smodels.simg
+bin/downloads.csv
