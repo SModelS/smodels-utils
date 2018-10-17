@@ -683,7 +683,8 @@ class TxNameInput(Locker):
                     planeHasInfo = True
                     infoList[i] = str(getattr(plane, infoAttr))
             if planeHasInfo:
-                infoStr = ";".join(infoList)
+                infoStr = " ".join(infoList) ## new version
+                # infoStr = ";".join(infoList) ## old version
                 setattr(self,infoAttr,infoStr)
 
         if not hasattr(self,'validated'):
