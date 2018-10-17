@@ -38,6 +38,7 @@ prettySMParticle = {
 	'lepton' : 'l',             #lepton
 	'electron' : 'e',               #electron
 	'muon' : '#mu',            #muon
+	'nu' : '#nu',            #neutrino
 	'tau' : '#tau',  #tau
 
 	'neutrino' : '#nu',                     #neutrino
