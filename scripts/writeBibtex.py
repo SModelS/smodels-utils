@@ -261,6 +261,10 @@ class BibtexWriter:
 
     def writeCache ( self, Id, bib ):
         self.log ( "Now write cache file bibtexs/%s.tex" % Id )
+        if not os.path.exists ( "bibtexs/" ):
+            os.mkdir("bibtexs/" )
+        if not os.path.exists ( "bibtexs/unused/" ):
+            os.mkdir("bibtexs/unused/" )
         cachef = open ( "bibtexs/unused/%s.tex" % Id, "w" )
         cachef.write ( str(bib) )
         cachef.write ( "\n" )
