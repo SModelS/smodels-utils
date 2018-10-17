@@ -22,12 +22,13 @@ except:
     import subprocess as C
 
 class SmsDictWriter:
-    def __init__ ( self, database, drawFeyn, xkcd, results, addVer ):
+    def __init__ ( self, database, drawFeyn, xkcd, results, addVer, private ):
         self.databasePath = database
         self.drawFeyn = drawFeyn
         self.xkcd = xkcd
         self.database = Database ( database )
         self.ver=self.database.databaseVersion.replace(".","")
+        self.private = private
         # self.ver="v"+self.database.databaseVersion.replace(".","")
         if not addVer:
             self.ver=""
@@ -41,15 +42,18 @@ class SmsDictWriter:
         self.f.close()
 
     def header( self ):
+        protected = "+All:read"
+        if self.private:
+            protected = "-All:read"
         self.f.write (
-"""#acl +DeveloperGroup:read,write,revert -All:write +All:read Default
+"""#acl +DeveloperGroup:read,write,revert -All:write %s Default
 
 = SMS dictionary =
 This page intends to collect information about how we map the SModelS description of
 events onto the Tx nomenclature. The list has been created from the database version %s, considering also superseded results.
 
 There is also a ListOfAnalyses%s, and a ListOfAnalyses%sWithSuperseded.
-""" % (self.database.databaseVersion, self.ver, self.ver ) )
+""" % ( protected, self.database.databaseVersion, self.ver, self.ver ) )
 
     def footer( self ):
         return
@@ -219,6 +223,7 @@ if __name__ == '__main__':
                              action='store_true' )
     argparser.add_argument ( '-u', '--upload', help='upload create Feynman graphs (implies -f)',
                              action='store_true' )
+    argparser.add_argument ( '-p', '--private', help='declare as private (add wiki acl line on top)', action='store_true' )
     argparser.add_argument ( '-r', '--results', help='dont add results column',
                              action='store_false' )
     argparser.add_argument ( '-d', '--database', help='path to database [../../smodels-database]',
@@ -229,7 +234,8 @@ if __name__ == '__main__':
     if args.xkcd:
         args.feynman = True
     writer = SmsDictWriter( database=args.database, drawFeyn = args.feynman,
-            xkcd = args.xkcd, results = args.results, addVer = args.add_version )
+            xkcd = args.xkcd, results = args.results, addVer = args.add_version,
+            private = args.private  )
     print ( "database", writer.database.databaseVersion )
     writer.run()
     if args.upload:
