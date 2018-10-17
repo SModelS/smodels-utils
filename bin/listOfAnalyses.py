@@ -21,8 +21,6 @@ from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
 from smodels.tools.physicsUnits import TeV
 
-# setLogLevel("debug")
-
 def convert ( string ):
     ret = string.replace ( ">=", "&ge;" )
     ret = ret.replace ( "alphaT", "&alpha;,,T,," )
@@ -227,7 +225,7 @@ def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, n_homegrow
         homegrownd = {}
         for i in ana.getTxNames():
             if i.validated not in [ True, "n/a", "N/A" ]:
-                print ( "Error: validated is %s in %s. Dont know how to handle." % ( i.validated, ana.globalInfo.id ) )
+                print ( "Error: validated is %s in %s. Don't know how to handle." % ( i.validated, ana.globalInfo.id ) )
                 sys.exit(-1)
             homegrownd[str(i)] = ""
             if hasattr ( i, "source" ) and "SModelS" in i.source:
@@ -338,8 +336,10 @@ def main():
     argparser.add_argument ( '-p', '--private', help='declare as private (add wiki acl line on top)', action='store_true' )
     argparser.add_argument ( '-d', '--database', help='path to database [../../smodels-database]',
                              type=str, default='../../smodels-database' )
+    argparser.add_argument ( '-v', '--verbose', help='verbosity level (error, warning, info, debug) [info]', type=str, default='info' )
     argparser.add_argument ( '-a', '--add_version', help='add version labels to links', action='store_true' )
     args = argparser.parse_args()
+    setLogLevel ( args.verbose )
     superSeded = not args.no_superseded
     filename = "ListOfAnalyses"
     if superSeded:
