@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 
-def createFiles(expResList,txnameStr,templateFile,tarFile,addToFile,xargs,Npts=300):
+def createFiles(expResList,txnameStr,templateFile,tarFile,addToFile,xargs,Npts=300,
+                computexsecs=True):
     """
     Creates a .tar.gz file for the txname using the data in expResults.
     
@@ -29,6 +30,7 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,addToFile,xargs,Npts=3
     :param xargs: argparse.Namespace object holding the options for the 
                   cross-section calculation
     :param Npts: Trial number of points for each plane.
+    :param computexsecs: do we compute xsecs and add to files?
                     
     :return: True if successful, False otherwise. 
     """
@@ -94,11 +96,15 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,addToFile,xargs,Npts=3
     #Compute LO cross-sections
     if computexsecs:
         xsecComputer.main(xargs)
+    else:
+        logger.info ( "skipping computation of cross section (--no_xsecs)." )
     #Compute NLL cross-sections
     xargs.NLL = True
     xargs.LOfromSLHA = True    
     if computexsecs:
         xsecComputer.main(xargs)
+    else:
+        logger.info ( "skipping computation of cross section (--no_xsecs)." )
     
     #Create tarfile:
     if os.path.isfile(tarFile):
@@ -179,7 +185,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
         else:
             logger.info("--------  \033[32m Generating %s \033[0m" %tarFile)            
         t0 = time.time()
-        createFiles(expResList,txname,templateFile,tarFile,addToFile,xargs,Npts)
+        createFiles(expResList,txname,templateFile,tarFile,addToFile,xargs,Npts,computexsecs)
         if addToFile and os.path.isfile(tarFile):                
             logger.info("--------  \033[32m File %s extended in %.1f min. \033[0m \n" %(tarFile,(time.time()-t0)/60.))
         else:
