@@ -41,7 +41,12 @@ def yesno ( B ):
     if B in [ False, "False" ]: return "No"
     return "?"
 
-def header( f, database, superseded, add_version ):
+def header( f, database, superseded, add_version, private ):
+    """
+    :params f: file handle
+    :params database: database handle
+    :params private: mark wiki page as private (-All:read)
+    """
     version = database.databaseVersion
     dotlessv = ""
     if add_version:
@@ -67,9 +72,12 @@ def header( f, database, superseded, add_version ):
             ds = expR.getDataset ( d )
             n_results += 1
             n_maps += len ( ds.txnameList )
+    protected="+All:read"
+    if private:
+        protected="-All:read"
     f.write (
 # """#acl +DeveloperGroup:read,write,revert -All:write,read Default
-"""#acl +DeveloperGroup:read,write,revert -All:write +All:read Default
+"""#acl +DeveloperGroup:read,write,revert -All:write %s Default
 <<LockedPage()>>
 
 = List Of Analyses %s %s =
@@ -78,8 +86,8 @@ comprising %d individual maps from %d distinct signal regions, %d different SMS 
 The list has been created from the database version `%s`.
 Results from !FastLim are included. There is also an  [[SmsDictionary%s|sms dictionary]].
 %s.
-""" % ( version, titleplus, n_maps, n_results, len(n_topos), len(n_anas), version, \
-        dotlessv, referToOther ) )
+""" % ( protected, version, titleplus, n_maps, n_results, len(n_topos), 
+        len(n_anas), version, dotlessv, referToOther ) )
 
 def footer ( f ):
     """
@@ -327,23 +335,19 @@ def main():
     import argparse
     argparser = argparse.ArgumentParser(description='Create list of analyses in wiki format, see http://smodels.hephy.at/wiki/ListOfAnalyses')
     argparser.add_argument ( '-n', '--no_superseded', help='ignore superseded results', action='store_true' )
+    argparser.add_argument ( '-p', '--private', help='declare as private (add wiki acl line on top)', action='store_true' )
     argparser.add_argument ( '-d', '--database', help='path to database [../../smodels-database]',
                              type=str, default='../../smodels-database' )
     argparser.add_argument ( '-a', '--add_version', help='add version labels to links', action='store_true' )
     args = argparser.parse_args()
     superSeded = not args.no_superseded
-    """
-    for i in sys.argv[1:]:
-        if i == "-n": superSeded=False
-        if i == "-h": help()
-    """
     filename = "ListOfAnalyses"
     if superSeded:
         filename = "ListOfAnalysesWithSuperseded"
     backup( filename )
     f = open ( filename, "w" )
     database = Database ( args.database, discard_zeroes=True )
-    header( f, database, superSeded, args.add_version )
+    header( f, database, superSeded, args.add_version, args.private )
     listTables ( f, database.getExpResults ( useSuperseded = superSeded ) )
     print ( "Database:", database.databaseVersion )
     experiments=[ "CMS", "ATLAS" ]

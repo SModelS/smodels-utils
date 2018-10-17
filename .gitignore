@@ -6,6 +6,7 @@
 *.swp
 # *.tex
 *.dvi
+tmp/
 *.py.kate-swp
 Database.txt
 distribution/create.log
