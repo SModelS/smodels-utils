@@ -108,8 +108,8 @@ N.B.: Each "()" group corresponds to a branch
         return topos
 
     def writeTopos ( self ):
-        if not os.path.exists ( "feyn/" ):
-            C.getoutput ( "mkdir feyn" )
+        if not os.path.exists ( "../feyn/" ):
+            C.getoutput ( "mkdir ../feyn" )
         topos = writer.getTopos()
         keys = list ( topos.keys() )
         keys.sort()
@@ -161,7 +161,7 @@ N.B.: Each "()" group corresponds to a branch
         if p>-1:
             c=c[:p+1]
         c=c.replace("71.*","").replace("(","").replace(")","").replace("`","")
-        feynfile="feyn/"+txname+".png"
+        feynfile="../feyn/"+txname+".png"
         sfstate = str(fstate).replace(" ","").replace("'","")
         print ( "[smsDictionary.py] draw",feynfile,"from",c,"with",sfstate )
         from smodels.theory import element
@@ -245,11 +245,11 @@ if __name__ == '__main__':
         dest="straight"
         if args.xkcd:
             dest="xkcd"
-        cmd = "cp feyn/T*p* /var/www/feyn/%s/" % dest
+        cmd = "cp ../feyn/T*p* /var/www/feyn/%s/" % dest
         if hostname == "smodels":
             print ( "WARNING: made the plots on smodels, via X tunneling. this may create problems (a bug in pyfeyn?). Check the plots! Or make the plots from your desktop." )
         if hostname != "smodels":
-            cmd = "scp feyn/T*p* smodels.hephy.at:/var/www/feyn/%s/" % dest
+            cmd = "scp ../feyn/T*p* smodels.hephy.at:/var/www/feyn/%s/" % dest
         import subprocess
         print ( cmd )
         a = subprocess.getoutput ( cmd )

@@ -250,7 +250,7 @@ class BibtexWriter:
     def tryFetchFromBackup ( self, Id ):
         """ there is a local file with the entry?
         convenient! we use it! """
-        fname = "bibtexs/%s.tex" % Id
+        fname = "../bibtexs/%s.tex" % Id
         if not os.path.exists ( fname ):
             return False
         self.log ( "A backup file exists. We use it." )
@@ -260,12 +260,12 @@ class BibtexWriter:
         return txt
 
     def writeCache ( self, Id, bib ):
-        self.log ( "Now write cache file bibtexs/%s.tex" % Id )
-        if not os.path.exists ( "bibtexs/" ):
-            os.mkdir("bibtexs/" )
-        if not os.path.exists ( "bibtexs/unused/" ):
-            os.mkdir("bibtexs/unused/" )
-        cachef = open ( "bibtexs/unused/%s.tex" % Id, "w" )
+        self.log ( "Now write cache file ../bibtexs/%s.tex" % Id )
+        if not os.path.exists ( "../bibtexs/" ):
+            os.mkdir("../bibtexs/" )
+        if not os.path.exists ( "../bibtexs/unused/" ):
+            os.mkdir("../bibtexs/unused/" )
+        cachef = open ( "../bibtexs/unused/%s.tex" % Id, "w" )
         cachef.write ( str(bib) )
         cachef.write ( "\n" )
         cachef.close()
@@ -419,7 +419,7 @@ if __name__ == "__main__":
             help="copy bibtex files to database folder (does not generate the files, however)",
             action="store_true" )
     argparser.add_argument ( "-w", "--write_cache",
-            help="cache the retrieved results in bibtexs/",
+            help="cache the retrieved results in ../bibtexs/",
             action="store_true" )
     args = argparser.parse_args()
     writer = BibtexWriter( args.database, args.verbose )

@@ -91,7 +91,7 @@ def getData():
     from smodels.experiment.txnameObj import TxNameData
     TxNameData._keep_values = True
     home=os.environ["HOME"]
-    db = "./tinydb/"
+    db = "../tinydb/"
     #db = "%s/git/smodels-database//" % home
     d=Database ( db )
     results = d.getExpResults ( analysisIDs=[ anaid ], useSuperseded=True, useNonValidated=True )

@@ -27,7 +27,7 @@ topo = "T1ttttoff"
 
 def getData():
     home=os.environ["HOME"]
-    db = "./tinydb/"
+    db = "../tinydb/"
     d=Database ( db )
     results = d.getExpResults ( analysisIDs=[ anaid ] )
     res=results[0]
