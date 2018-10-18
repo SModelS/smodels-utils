@@ -31,6 +31,7 @@ validation/pythia_??????.card
 bin/OldListOfAnalyses
 bin/OldListOfAnalysesWithSuperseded
 slha/ls
+validation/Validation*
 */.http*
 scripts/database.bib
 scripts/failed.txt
