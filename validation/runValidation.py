@@ -76,7 +76,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
         if generatedData:
             valPlot.saveData()
             if pngAlso:
-                valPlot.saveData(fformat="png")
+                valPlot.savePlot(fformat="png")
     if pretty in [ False, "both" ]:
         valPlot.getPlot()
         valPlot.pretty = False
@@ -84,7 +84,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
         if generatedData:
             valPlot.saveData()
             if pngAlso:
-                valPlot.saveData(fformat="png")
+                valPlot.savePlot(fformat="png")
 
     return True
 
