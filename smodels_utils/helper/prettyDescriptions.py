@@ -17,34 +17,31 @@ x,y,z = var('x y z')
 # pretty name of particle:
 
 prettySMParticle = {
-	'graviton':'G',         #graviton
-	'photon': '#gamma',             #photon
-	'gluon':'g',                    #gluon
-	'w' : 'W',                  #W
-	'z' : 'Z',                  #Z
-	'higgs' : 'H',                  #higgs
-
-	'quark': 'q',           #quark
-    'antiquark': '#bar{q}',
-	'up': 'u',           #up
-	'down': 'd',           #down
-	'charm': 'c',           #charm
-	'strange': 's',           #strange
-	'top': 't',           #top
-    'antitop': '#bar{t}',
-	'bottom': 'b',           #bottom
-    'antibottom': '#bar{b}',
-
-	'lepton' : 'l',             #lepton
-	'electron' : 'e',               #electron
-	'muon' : '#mu',            #muon
-	'nu' : '#nu',            #neutrino
-	'tau' : '#tau',  #tau
-
-	'neutrino' : '#nu',                     #neutrino
-	'electron-neutrino' : '#nu_{e}',               #electron-neutrino
-	'muon-neutrino' : '#nu_{#mu}',            #muon-neutrino
-	'tau-neutrino' : '#nu_{#tau}',          #tau-neutrino
+ 'graviton':'G',         #graviton
+ 'photon': '#gamma',             #photon
+ 'gluon':'g',                    #gluon
+ 'w' : 'W',                  #W
+ 'z' : 'Z',                  #Z
+ 'higgs' : 'H',                  #higgs
+ 'quark': 'q',           #quark
+  'antiquark': '#bar{q}',
+ 'up': 'u',           #up
+ 'down': 'd',           #down
+ 'charm': 'c',           #charm
+ 'strange': 's',           #strange
+ 'top': 't',           #top
+ 'antitop': '#bar{t}',
+ 'bottom': 'b',           #bottom
+ 'antibottom': '#bar{b}',
+ 'lepton' : 'l',             #lepton
+ 'electron' : 'e',               #electron
+ 'muon' : '#mu',            #muon
+ 'nu' : '#nu',            #neutrino
+ 'tau' : '#tau',  #tau
+ 'neutrino' : '#nu',                     #neutrino
+ 'electron-neutrino' : '#nu_{e}',               #electron-neutrino
+ 'muon-neutrino' : '#nu_{#mu}',            #muon-neutrino
+ 'tau-neutrino' : '#nu_{#tau}',          #tau-neutrino
 }
 
 prettySUSYParticle = {
@@ -120,7 +117,8 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T2ttC': 'stop -->  b f fbar lsp',
     'T2bWC': 'stop -->  b chargino, chargino --> f fbar lsp',
     'T2ttoff': 'stop  --> top^* lsp ',
-    'T3GQ' : 'gluino squark --> quark squark squark, squark --> quark LSP',
+    'T3GQ' : 'gluino --> squark quark, squark --> quark LSP',
+    'T3GQon' : 'gluino --> squark quark, squark --> quark LSP',
     'T4bbWW':'stop --> bottom chargino^pm_1, chargino^pm_1 --> W lsp',
     'T4bbWWoff':'stop --> bottom chargino^pm_1, chargino^pm_1 --> W^* lsp',
     'T4bbffff':'stop --> bottom chargino^pm_1, chargino^pm_1 --> f f lsp',
@@ -292,6 +290,7 @@ motherDict = {"T1" :  "gluino",
     "TChipChimSlepSnu" :   "chargino^pm_1 chargino^pm_1",
     "TChipChimStauSnu" :  "chargino^pm_1 chargino^pm_1",
     "T3GQ": "gluino squark",
+    "T3GQon": "gluino squark",
     "TGQ" :  "gluino squark",
     "TGQbbq" :  "gluino",
     "TGQbtq" :  "gluino",
