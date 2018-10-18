@@ -20,7 +20,8 @@ logger = logging.getLogger(__name__)
 
 
 def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
-                  pretty=False,generateData=True,limitPoints=None,extraInfo=False,combine=False):
+                  pretty=False,generateData=True,limitPoints=None,extraInfo=False,
+                  combine=False,pngAlso = False):
     """
     Creates a validation plot and saves its output.
 
@@ -34,7 +35,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                     all theory prediction values
     :param ncpus: Number of jobs to submit. ncpus = -1 means all processors.
 
-    :param pretty: If True it will generate "pretty" plots
+    :param pretty: If True it will generate "pretty" plots, if "both", will 
+                   generate pretty *and* non-pretty
 
     :param generateData: If True, run SModelS on the slha files.
                          If False, use the already existing *.py files in the
@@ -46,6 +48,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     :param extraInfo: add additional info to plot: agreement factor, time spent,
                       time stamp, hostname
     :param combine: combine signal regions, or use best signal region
+    :param pngAlso: save also pngs
     :return: True
     """
 
@@ -66,15 +69,22 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
             logger.info ( "data generation on demand was specified (generateData=None) and no data found. Lets generate!" )
             valPlot.getDataFromPlanes()
             generatedData=True
-    if pretty:
+    if pretty in [ True, "both" ]:
         valPlot.getPrettyPlot()
         valPlot.pretty = True
-    else:
+        valPlot.savePlot()
+        if generatedData:
+            valPlot.saveData()
+            if pngAlso:
+                valPlot.saveData(fformat="png")
+    if pretty in [ False, "both" ]:
         valPlot.getPlot()
         valPlot.pretty = False
-    valPlot.savePlot()
-    if generatedData:
-        valPlot.saveData()
+        valPlot.savePlot()
+        if generatedData:
+            valPlot.saveData()
+            if pngAlso:
+                valPlot.saveData(fformat="png")
 
     return True
 
@@ -82,7 +92,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
         tarfiles=None,ncpus=-1,verbosity='error',pretty=False,generateData=True,
-        limitPoints=None,extraInfo=False,combine=False):
+        limitPoints=None,extraInfo=False,combine=False,pngAlso=False):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -110,6 +120,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
               time stamp, hostname
 
     :param combine: combine signal regions, or use best signal region
+    :param pngAlso: save also pngs
     """
 
     if not os.path.isdir(databasePath):
@@ -178,7 +189,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
                 axes = txname.axes     
             for ax in axes:
                 validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,
-                             generateData,limitPoints,extraInfo,combine)
+                             generateData,limitPoints,extraInfo,combine,pngAlso)
             logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--------- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
     logger.info("\n\n----- Finished validation in %.1f min." %((time.time()-tval0)/60.))
@@ -281,8 +292,16 @@ if __name__ == "__main__":
     else:
         ncpus = -1
     """
+    pngAlso = False
+    if parser.has_section("options") and parser.has_option("options","pngPlots"):
+        pngAlso = parser.getboolean("options", "pngPlots" )
+
     if parser.has_section("options") and parser.has_option("options","prettyPlots"):
-        pretty = parser.getboolean("options", "prettyPlots")
+        spretty = parser.get("options", "prettyPlots" ).lower()
+        if spretty in [ "true", "yes", "1" ]:
+            pretty = True
+        if spretty in [ "*", "all", "both" ]:
+            pretty = "both"
     else:
         pretty = False
     limitPoints=None
@@ -306,5 +325,6 @@ if __name__ == "__main__":
 
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
-         tarfiles,ncpus,args.verbose.lower(),pretty,generateData,limitPoints,extraInfo,combine)
+         tarfiles,ncpus,args.verbose.lower(),pretty,generateData,limitPoints,
+         extraInfo,combine,pngAlso)
 
