@@ -162,7 +162,8 @@ N.B.: Each "()" group corresponds to a branch
             c=c[:p+1]
         c=c.replace("71.*","").replace("(","").replace(")","").replace("`","")
         feynfile="feyn/"+txname+".png"
-        print ( "drawing",feynfile,"from",c,"with final state",fstate )
+        sfstate = str(fstate).replace(" ","").replace("'","")
+        print ( "[smsDictionary.py] draw",feynfile,"from",c,"with",sfstate )
         from smodels.theory import element
         try:
             e=element.Element(c,fstate )
@@ -236,7 +237,7 @@ if __name__ == '__main__':
     writer = SmsDictWriter( database=args.database, drawFeyn = args.feynman,
             xkcd = args.xkcd, results = args.results, addVer = args.add_version,
             private = args.private  )
-    print ( "database", writer.database.databaseVersion )
+    print ( "[smsDictionary.py] Database", writer.database.databaseVersion )
     writer.run()
     if args.upload:
         import socket
@@ -245,6 +246,8 @@ if __name__ == '__main__':
         if args.xkcd:
             dest="xkcd"
         cmd = "cp feyn/T*p* /var/www/feyn/%s/" % dest
+        if hostname == "smodels":
+            print ( "WARNING: made the plots on smodels, via X tunneling. this may create problems (a bug in pyfeyn?). Check the plots! Or make the plots from your desktop." )
         if hostname != "smodels":
             cmd = "scp feyn/T*p* smodels.hephy.at:/var/www/feyn/%s/" % dest
         import subprocess
