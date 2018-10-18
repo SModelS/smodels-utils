@@ -25,10 +25,11 @@ except ImportError:
 
 class WikiPageCreator:
     ### starting to write a creator class
-    def __init__ ( self, ugly, database, add_version, private ):
+    def __init__ ( self, ugly, database, add_version, private, force_upload ):
         self.ugly = ugly ## ugly mode
         self.databasePath = database.replace ( "~", os.path.expanduser("~") )
         self.db = Database( self.databasePath )
+        self.force_upload = force_upload
         self.private = private
         if self.ugly: ## ugly mode is always private mode
             self.private = True
@@ -38,6 +39,7 @@ class WikiPageCreator:
         # self.localdir = "/var/www/validationWiki"
         self.localdir = "/var/www/validation_v%s" % \
                          self.db.databaseVersion.replace(".","" )
+        has_uploaded = False
         if not os.path.exists ( self.localdir ):
             print ( "%s does not exist. will try to create it." % self.localdir )
             cmd = "mkdir %s" % self.localdir
@@ -47,11 +49,12 @@ class WikiPageCreator:
             print ( "Creating %s" % self.localdir )
             cmd = "mkdir %s" % self.localdir
             subprocess.getoutput ( cmd )
-        if not "version" in os.listdir( self.localdir ):
-            print ( "Copying database." )
+        if not "version" in os.listdir( self.localdir ) or self.force_upload:
+            print ( "Copying database from %s to %s." % (self.databasePath, self.localdir )  )
             cmd = "cp -r %s/* %s" % ( self.databasePath, self.localdir )
             a= C.getoutput ( cmd )
             print ( "%s: %s" % ( cmd, a ) )
+            has_uploaded = True
         else:
             print ( "Database seems already copied to %s. Good." % self.localdir )
         self.urldir = self.localdir.replace ( "/var/www", "" )
@@ -61,8 +64,9 @@ class WikiPageCreator:
         self.file = open ( self.fName, 'w' )
         self.nlines = 0
         print ( "\n" )
-        print ( 'MAKE SURE THE VALIDATION PLOTS IN '
-                'smodels.hephy.at:%s ARE UPDATED\n' % self.localdir  )
+        if not has_uploaded:
+            print ( 'MAKE SURE THE VALIDATION PLOTS IN '
+                    'smodels.hephy.at:%s ARE UPDATED\n' % self.localdir  )
         self.true_lines = []
         self.false_lines = []
         self.none_lines = []
@@ -110,7 +114,7 @@ The validation procedure for upper limit maps used here is explained in [[http:/
 
 """ % ( self.db.databaseVersion, self.db.databaseVersion, self.dotlessv, self.dotlessv ) )
         if self.ugly:
-            self.file.write ( "\nTo [[Validationv%s|official validation plots]]\n\n" % self.db.databaseVersion.replace(".","") )
+            self.file.write ( "\nTo [[Validation%s|official validation plots]]\n\n" % self.db.databaseVersion.replace(".","") )
 
     def writeTableHeader ( self, tpe ):
         fields = [ "Result", "Txname", "L [1/fb]", "Validation plots", "comment" ]
@@ -228,7 +232,10 @@ The validation procedure for upper limit maps used here is explained in [[http:/
                 if not os.path.exists ( pngname ):
                     cmd = "convert -trim %s %s" % ( fig, pngname )
                     print ( cmd )
-                    C.getoutput ( cmd )
+                    a = C.getoutput ( cmd )
+                    if a != "":
+                        print ( "Error on format conversion of %s: %s" % ( fig, a ) ) 
+                        sys.exit()
                 # figName = fig.replace(valDir+"/","")
                 figName = pngname.replace(valDir+"/","").replace ( \
                             self.databasePath, "" )
@@ -328,6 +335,9 @@ if __name__ == "__main__":
                 ' sets private mode, uses ugly plots)', action='store_true')
     ap.add_argument('-p', '--private', help='private mode',
                     action='store_true')
+    ap.add_argument('-f', '--force_upload', 
+                    help='force upload of database to web server',
+                    action='store_true')
     ap.add_argument('-a', '--add_version', help='add version labels in links', 
                     action='store_true')
     ap.add_argument('-v', '--verbose',
@@ -339,5 +349,5 @@ if __name__ == "__main__":
     args = ap.parse_args()
     setLogLevel ( args.verbose )
     creator = WikiPageCreator( args.ugly, args.database, args.add_version, 
-                               args.private )
+                               args.private, args.force_upload )
     creator.run()

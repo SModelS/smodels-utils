@@ -14,6 +14,7 @@ import logging
 import math, random, os
 logger = logging.getLogger(__name__)
 import sys, copy
+import subprocess
 
 from pyfeyn.user import color
 
@@ -99,7 +100,6 @@ class Drawer:
                 else:
                     label="$%s$" % label
                 fl.addLabel ( label, pos=0.9, displace=displace )
-                # fl.addLabel ( "$%s$" % label, pos=0.9, displace=displace )
             return [ fl ]
 
         fl=Fermion(p1,p2)
@@ -305,8 +305,11 @@ class Drawer:
             fd.draw( pdffile )
             fd.draw( epsfile )
             if pdffile!=filename:
-                os.system ( "convert -quiet %s %s" % ( pdffile, filename ) )
-            # print "[feynmanGraph.py] %s created." % ( filename )
+                cmd = "convert -quiet %s %s" % ( pdffile, filename )
+                a = subprocess.getoutput ( cmd )
+                if a != "":
+                    logger.error ( "file format conversion failed: %s" % a )
+                    sys.exit()
         except Exception as e:
             logger.error ( "[draw] exception %s" % e )
 
