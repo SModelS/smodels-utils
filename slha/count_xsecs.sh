@@ -11,4 +11,4 @@ for i in `ls T*slha`; do
 	[ "$H" -eq "0" ] && ZEROES=$(($ZEROES + 1))
 done
 
-echo $ZEROES / $TOTAL have no xsecs.
+echo $ZEROES / $TOTAL have no xsecs. | tee log

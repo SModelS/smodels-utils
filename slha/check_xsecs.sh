@@ -5,5 +5,5 @@
 
 for i in `ls T*slha | shuf`; do
 	H=`cat $i | grep -i xsection | wc -l`
-	[ "$H" -eq "0" ] && { echo "[check_xsecs.sh] no xsecs found in $i"; ~/git/smodels/smodelsTools.py xseccomputer -f $i -8 -P -N -e 10000; }
+	[ "$H" -eq "0" ] && { echo "[check_xsecs.sh] no xsecs found in $i"; ~/git/smodels/smodelsTools.py xseccomputer -f $i -8 -P -N -e 50000; }
 done
