@@ -52,8 +52,8 @@ class SmsDictWriter:
 This page intends to collect information about how we map the SModelS description of
 events onto the Tx nomenclature. The list has been created from the database version %s, considering also superseded results.
 
-There is also a ListOfAnalyses%s, and a ListOfAnalyses%sWithSuperseded.
-""" % ( protected, self.database.databaseVersion, self.ver, self.ver ) )
+There is also a ListOfAnalyses%s, a ListOfAnalyses%sWithSuperseded, and [[Validation%s|Validation%s]].
+""" % ( protected, self.database.databaseVersion, self.ver, self.ver, self.ver, self.ver ) )
 
     def footer( self ):
         return
