@@ -15,6 +15,7 @@ sys.path.insert(0,"../../smodels")
 from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import TeV, fb
 from smodels.tools.smodelsLogging import setLogLevel
+import subprocess
 setLogLevel("debug" )
 
 try:
@@ -39,6 +40,10 @@ class WikiPageCreator:
             cmd = "mkdir %s" % self.localdir
             a= C.getoutput ( cmd )
             print ( "%s: %s" % ( cmd, a ) )
+        if not os.path.exists ( self.localdir ):
+            print ( "Creating %s" % self.localdir )
+            cmd = "mkdir %s" % self.localdir
+            subprocess.getoutput ( cmd )
         if not "version" in os.listdir( self.localdir ):
             print ( "Copying database." )
             cmd = "cp -r %s/* %s" % ( self.databasePath, self.localdir )
