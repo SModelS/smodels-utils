@@ -95,10 +95,12 @@ This page lists validation plots for all analyses and topologies available in
 the SMS results database that can be validated against official results.
 Superseded and Fastlim results are included. The list has been created from the
 database version %s, including the Fastlim tarball that is shipped separately.
+The list of all analyses can also be found [[ListOfAnalyses%s|here]], all
+SMS topologies are listed [[SmsDictionary%s|here]].
 
 The validation procedure for upper limit maps used here is explained in [[http://arxiv.org/abs/arXiv:1312.4175|arXiv:1312.4175]][[http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5|EPJC May 2014, 74:2868]], section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. The experimental upper limits are compared with the theoretical predictions for that signal region.
 
-""" % ( self.db.databaseVersion, self.db.databaseVersion ) )
+""" % ( self.db.databaseVersion, self.db.databaseVersion, self.dotlessv, self.dotlessv ) )
         if self.ugly:
             self.file.write ( "\nTo [[Validationv%s|official validation plots]]\n\n" % self.db.databaseVersion.replace(".","") )
 
@@ -313,7 +315,7 @@ The validation procedure for upper limit maps used here is explained in [[http:/
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser( description= "creates validation wiki pages, see e.g. http://smodels.hephy.at/wiki/Validation" )
-    ap.add_argument('-u', '--ugly', help='ugly mode', action='store_true')
+    ap.add_argument('-u', '--ugly', help='ugly mode (gives more private info, sets also private mode)', action='store_true')
     ap.add_argument('-a', '--add_version', help='add version labels in links', action='store_true')
     ap.add_argument('-v', '--verbose',
             help='specifying the level of verbosity (error, warning, info, debug)',
