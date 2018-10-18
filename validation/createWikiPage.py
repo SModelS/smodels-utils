@@ -25,10 +25,15 @@ except ImportError:
 
 class WikiPageCreator:
     ### starting to write a creator class
-    def __init__ ( self, ugly, database, add_version, private, force_upload ):
+    def __init__ ( self, ugly, database, add_version, private, force_upload,
+                   comparison_database ):
         self.ugly = ugly ## ugly mode
         self.databasePath = database.replace ( "~", os.path.expanduser("~") )
         self.db = Database( self.databasePath )
+        self.comparison_dbPath = comparison_database
+        self.comparison_db = None
+        if self.comparison_dbPath:
+            self.comparison_db = Database ( self.comparison_dbPath )
         self.force_upload = force_upload
         self.private = private
         if self.ugly: ## ugly mode is always private mode
@@ -58,9 +63,9 @@ class WikiPageCreator:
         else:
             print ( "Database seems already copied to %s. Good." % self.localdir )
         self.urldir = self.localdir.replace ( "/var/www", "" )
-        self.fName = 'wikiFile.txt'
+        self.fName = 'Validation%s' % self.dotlessv
         if self.ugly:
-            self.fName = 'uglyFile.txt'
+            self.fName = 'ValidationUgly%s' % self.dotless
         self.file = open ( self.fName, 'w' )
         self.nlines = 0
         print ( "\n" )
@@ -255,6 +260,11 @@ The validation procedure for upper limit maps used here is explained in [[http:/
                 line += "  ||"
             else:
                 line = line[:line.rfind("<<BR>>")] + "||"
+
+            ## add comments
+            if self.isNewAnaID ( id, txname.txName, tpe ):
+                line += " {{http://smodels.hephy.at/images/new.png}} new since %s! " % ( self.comparison_db.databaseVersion )
+            ## from comments file
             if os.path.isfile(valDir+"/"+txname.txName+".comment"):
                 commentPath = dirPath+"/"+txname.txName+".comment"
                 line += "[[http://smodels.hephy.at"+commentPath+\
@@ -268,6 +278,40 @@ The validation procedure for upper limit maps used here is explained in [[http:/
         elif "#FF0000" in line: self.false_lines.append(line)
         else: self.true_lines.append(line)
         self.nlines += 1
+
+    def isNewAnaID ( self, id, txname, tpe ):
+        """ is analysis id <id> new? """
+        if self.comparison_db == None:
+            # no comparison database given. So nothing is new.
+            return False
+        if not hasattr ( self, "OldAnaIds" ):
+            expRs = self.comparison_db.getExpResults( useSuperseded = True, useNonValidated = self.ugly )
+            anaIds = [ x.globalInfo.id for x in expRs ]
+            self.OldAnaIds = set ( anaIds )
+            self.topos = {}
+            for r in expRs:
+                anaId = r.globalInfo.id
+                if not anaId in self.topos.keys():
+                    self.topos[anaId]=[]
+                topos = r.getTxNames()
+                Type = "-ul"
+                if len(r.datasets) > 1 or r.datasets[0].dataInfo.dataId != None:
+                    Type = "-eff"
+                for t in topos:
+                    name = t.txName+Type 
+                    self.topos[anaId].append ( name )
+            ## print ( "the old analysis ids are", self.OldAnaIds )
+        if not id in self.OldAnaIds: ## whole ana is new?
+            return True
+        myType = "-ul"
+        if "eff" in tpe:
+            myType = "-eff"
+        ## FIXME need to check also topo
+        txtpe = txname+myType
+        if not txtpe in self.topos[id]:
+            ## txname is new
+            return True
+        return False
 
     def writeExperimentType ( self, sqrts, exp, tpe, expResList ):
         stype=tpe.replace(" ","")
@@ -343,11 +387,15 @@ if __name__ == "__main__":
     ap.add_argument('-v', '--verbose',
             help='specifying the level of verbosity (error, warning, info, debug)'\
                  ' [info]', default = 'info', type = str)
+    ap.add_argument('-c', '--comparison_database',
+            help='specify database to compare to (to flag "new analyses") [default: ""]',
+            default = '', type = str )
     ap.add_argument('-d', '--database',
             help='specify the location of the database [~/git/smodels-database]',
             default = '~/git/smodels-database', type = str )
     args = ap.parse_args()
     setLogLevel ( args.verbose )
     creator = WikiPageCreator( args.ugly, args.database, args.add_version, 
-                               args.private, args.force_upload )
+                               args.private, args.force_upload,
+                               args.comparison_database )
     creator.run()
