@@ -25,10 +25,13 @@ except ImportError:
 
 class WikiPageCreator:
     ### starting to write a creator class
-    def __init__ ( self, ugly, database, add_version ):
+    def __init__ ( self, ugly, database, add_version, private ):
         self.ugly = ugly ## ugly mode
         self.databasePath = database.replace ( "~", os.path.expanduser("~") )
         self.db = Database( self.databasePath )
+        self.private = private
+        if self.ugly: ## ugly mode is always private mode
+            self.private = True
         self.dotlessv = ""
         if add_version:
             self.dotlessv = self.db.databaseVersion.replace(".","" )
@@ -89,7 +92,7 @@ class WikiPageCreator:
 
     def writeHeader ( self ):
         print ( 'Creating wiki file (%s)....' % self.fName )
-        if self.ugly:
+        if self.private:
             self.file.write ( 
 """#acl +DeveloperGroup:read,write,revert -All:write,read Default
 <<LockedPage()>>""" )
@@ -319,16 +322,22 @@ The validation procedure for upper limit maps used here is explained in [[http:/
 
 if __name__ == "__main__":
     import argparse
-    ap = argparse.ArgumentParser( description= "creates validation wiki pages, see e.g. http://smodels.hephy.at/wiki/Validation" )
-    ap.add_argument('-u', '--ugly', help='ugly mode (gives more private info, sets also private mode)', action='store_true')
-    ap.add_argument('-a', '--add_version', help='add version labels in links', action='store_true')
+    ap = argparse.ArgumentParser( description= "creates validation wiki pages,"\
+                " see e.g. http://smodels.hephy.at/wiki/Validation" )
+    ap.add_argument('-u', '--ugly', help='ugly mode (gives more private info,'\
+                ' sets private mode, uses ugly plots)', action='store_true')
+    ap.add_argument('-p', '--private', help='private mode',
+                    action='store_true')
+    ap.add_argument('-a', '--add_version', help='add version labels in links', 
+                    action='store_true')
     ap.add_argument('-v', '--verbose',
-            help='specifying the level of verbosity (error, warning, info, debug)',
-            default = 'info', type = str)
+            help='specifying the level of verbosity (error, warning, info, debug)'\
+                 ' [info]', default = 'info', type = str)
     ap.add_argument('-d', '--database',
             help='specify the location of the database [~/git/smodels-database]',
             default = '~/git/smodels-database', type = str )
     args = ap.parse_args()
     setLogLevel ( args.verbose )
-    creator = WikiPageCreator( args.ugly, args.database, args.add_version )
+    creator = WikiPageCreator( args.ugly, args.database, args.add_version, 
+                               args.private )
     creator.run()
