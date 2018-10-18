@@ -695,12 +695,12 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         elif (cval == looseness or cval == 1./looseness) and not added:
             leg.AddEntry(grlist[0],"#pm20% (SModelS)","L")
             added = True
-    added = False
     if official != None:
+        added = False
         for gr in official:
             if 'xclusion_' in gr.GetTitle():
                 leg.AddEntry(gr,"exclusion (official)","L")
-            elif 'xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle() and not added:
+            elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and (not added):
                 leg.AddEntry(gr,"#pm1#sigma (official)","L")
                 added = True
     
