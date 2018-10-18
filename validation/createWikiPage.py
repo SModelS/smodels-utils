@@ -95,8 +95,8 @@ This page lists validation plots for all analyses and topologies available in
 the SMS results database that can be validated against official results.
 Superseded and Fastlim results are included. The list has been created from the
 database version %s, including the Fastlim tarball that is shipped separately.
-The list of all analyses can also be found [[ListOfAnalyses%s|here]], all
-SMS topologies are listed [[SmsDictionary%s|here]].
+There is also a [[ListOfAnalyses%s|list of all analyses]], and
+a list of [[SmsDictionary%s|all SMS topologies]].
 
 The validation procedure for upper limit maps used here is explained in [[http://arxiv.org/abs/arXiv:1312.4175|arXiv:1312.4175]][[http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5|EPJC May 2014, 74:2868]], section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. The experimental upper limits are compared with the theoretical predictions for that signal region.
 

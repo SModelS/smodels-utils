@@ -82,10 +82,10 @@ def header( f, database, superseded, add_version, private ):
 List of analyses and topologies in the SMS results database,
 comprising %d individual maps from %d distinct signal regions, %d different SMS topologies, from a total of %d analyses.
 The list has been created from the database version `%s`.
-Results from !FastLim are included. There is also an  [[SmsDictionary%s|sms dictionary]].
+Results from !FastLim are included. There is also an  [[SmsDictionary%s|sms dictionary]] and a [[Validation%s|validation page]].
 %s.
 """ % ( protected, version, titleplus, n_maps, n_results, len(n_topos), 
-        len(n_anas), version, dotlessv, referToOther ) )
+        len(n_anas), version, dotlessv, dotlessv, referToOther ) )
 
 def footer ( f ):
     """
