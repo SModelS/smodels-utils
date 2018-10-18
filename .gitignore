@@ -39,3 +39,8 @@ scripts/log.txt
 scripts/refs.bib
 singularity/smodels.simg
 bin/downloads.csv
+
+bin/database.bib
+bin/failed.txt
+bin/log.txt
+bin/refs.bib

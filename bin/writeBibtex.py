@@ -350,7 +350,8 @@ class BibtexWriter:
         self.res = self.db.getExpResults ()
         ids = set()
         for expRes in self.res:
-            if expRes.globalInfo.id in ids:
+            ID = expRes.globalInfo.id.replace("-eff","").replace("-agg","")
+            if ID in ids:
                 continue
             ids.add ( expRes.globalInfo.id )
             if not "ATLAS-SUSY-2015-01" in str(expRes):

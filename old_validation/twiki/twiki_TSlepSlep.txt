@@ -1,6 +1,0 @@
-([[SmsDictionary#TSlepSlep|TSlepSlep]])
-||'''Analysis  <<BR>>  (√s,lum)''' ||'''mass parametrization''' ||'''published data | checked''' ||'''plot''' ||'''comment''' ||
-||[[https://twiki.cern.ch/twiki/bin/view/CMSPublic/PhysicsResultsSUS12022|SUS-12-022]] <<BR>> (weakinos, 8.0 TeV, 9.20/fb)||None||YES | YES||done with 10000 events <<BR>> [[attachment:TSlepSlepSUS12022new.png|LO * 1.2]]||not yet done||
-||[[https://twiki.cern.ch/twiki/bin/view/CMSPublic/PhysicsResultsSUS13006|SUS-13-006]] <<BR>> (weakinos, 8.0 TeV, 19.50/fb)||None||YES | NO||done with 10000 events <<BR>> [[attachment:TSlepSlepSUS13006new.png|LO * 1.2]]||not yet done||
-||[[https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/CONFNOTES/ATLAS-CONF-2013-049/|ATLAS-CONF-2013-049]] <<BR>> (ATLAS OS e/\mu, 8.0 TeV, 20.30/fb)||None||YES | YES||done with 10000 events <<BR>> [[attachment:TSlepSlepATLAS_CONF_2013_049new.png|LO * 1.2]]||not yet done||
-||[[https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/SUSY-2013-11/|SUSY-2013-11]] <<BR>> (ATLAS dilepton, 8.0 TeV, 20.30/fb)||None||YES | NO||done with 10000 events <<BR>> [[attachment:TSlepSlepSUSY_2013_11new.png|LO * 1.2]]||not yet done||
