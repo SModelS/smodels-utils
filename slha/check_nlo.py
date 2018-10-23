@@ -30,7 +30,8 @@ for f in files:
         print  ("%s has only LO" % f )
         cmd = "~/git/smodels/smodelsTools.py xseccomputer -N -P -8 -O -f %s" % f
         if not pretend:
-            subprocess.getoutput ( cmd )
+            a = subprocess.getoutput ( cmd )
+            print ( a )
         ctr += 1
 
 print ( "%d/%d with LO only." % ( ctr, total ) )

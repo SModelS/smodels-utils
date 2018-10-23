@@ -45,12 +45,12 @@ class WikiPageCreator:
         self.localdir = "/var/www/validation_v%s" % \
                          self.db.databaseVersion.replace(".","" )
         has_uploaded = False
-        if not os.path.exists ( self.localdir ):
+        if not os.path.exists ( self.localdir ) and self.force_upload:
             print ( "%s does not exist. will try to create it." % self.localdir )
             cmd = "mkdir %s" % self.localdir
             a= C.getoutput ( cmd )
             print ( "%s: %s" % ( cmd, a ) )
-        if not os.path.exists ( self.localdir ):
+        if not os.path.exists ( self.localdir ) and self.force_upload:
             print ( "Creating %s" % self.localdir )
             cmd = "mkdir %s" % self.localdir
             subprocess.getoutput ( cmd )
@@ -65,7 +65,7 @@ class WikiPageCreator:
         self.urldir = self.localdir.replace ( "/var/www", "" )
         self.fName = 'Validation%s' % self.dotlessv
         if self.ugly:
-            self.fName = 'ValidationUgly%s' % self.dotless
+            self.fName = 'ValidationUgly%s' % self.dotlessv
         self.file = open ( self.fName, 'w' )
         self.nlines = 0
         print ( "\n" )
@@ -380,7 +380,7 @@ if __name__ == "__main__":
     ap.add_argument('-p', '--private', help='private mode',
                     action='store_true')
     ap.add_argument('-f', '--force_upload', 
-                    help='force upload of database to web server',
+                    help='force upload of database to web server. forces also creation of /var/www/ on server.',
                     action='store_true')
     ap.add_argument('-a', '--add_version', help='add version labels in links', 
                     action='store_true')
