@@ -54,7 +54,7 @@ class WikiPageCreator:
             print ( "Creating %s" % self.localdir )
             cmd = "mkdir %s" % self.localdir
             subprocess.getoutput ( cmd )
-        if not "version" in os.listdir( self.localdir ) or self.force_upload:
+        if os.path.exists ( self.localdir) and (not "version" in os.listdir( self.localdir )) and self.force_upload:
             print ( "Copying database from %s to %s." % (self.databasePath, self.localdir )  )
             cmd = "cp -r %s/* %s" % ( self.databasePath, self.localdir )
             a= C.getoutput ( cmd )
