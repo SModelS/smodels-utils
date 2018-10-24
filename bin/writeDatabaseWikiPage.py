@@ -13,7 +13,7 @@ class Del:
 DD = Del()
 
 def xsel( ):
-    cmd="cat Database | xsel -i"
+    cmd="cat Databases | xsel -i"
     os.system ( cmd )
     print ( cmd )
     
@@ -55,7 +55,7 @@ Unfrozen databases are synched automatically.
 
 def main():
     """ the wiki page, in markdown syntax. fit for github.com """
-    w=open("Database","w" )
+    w=open("Databases","w" )
     header ( w )
     Dir = "/var/www/database/"
     globs=list ( glob.glob("%s*" % Dir ) )
@@ -96,7 +96,7 @@ def main():
 
 def oldmain():
     """ the old main, for moin moin wiki, as used in smodels.hephy.at """
-    w=open("Database","w" )
+    w=open("Databases","w" )
     oldheader ( w )
     Dir = "/var/www/database/"
     globs=list ( glob.glob("%s*" % Dir ) )
