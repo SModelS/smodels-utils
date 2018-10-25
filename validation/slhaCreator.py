@@ -2,7 +2,8 @@
 
 """
 .. module:: slhaCreator
-   :synopsis: Main methods for generating SLHA files for a given Txname from a template
+   :synopsis: Main methods for generating SLHA files for a given Txname from a 
+              template
 
 .. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
