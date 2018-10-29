@@ -60,6 +60,12 @@ class WikiPageCreator:
             a= C.getoutput ( cmd )
             print ( "%s: %s" % ( cmd, a ) )
             has_uploaded = True
+        if self.force_upload:
+            print ( "Copying database from %s to %s." % (self.databasePath, self.localdir )  )
+            cmd = "cp -r %s/* %s" % ( self.databasePath, self.localdir )
+            a= C.getoutput ( cmd )
+            print ( "%s: %s" % ( cmd, a ) )
+            has_uploaded = True
         else:
             print ( "Database seems already copied to %s. Good." % self.localdir )
         self.urldir = self.localdir.replace ( "/var/www", "" )
