@@ -198,8 +198,8 @@ if __name__ == "__main__":
     
     ap = argparse.ArgumentParser(description="Produces SLHA files for the selected results and txnames")
     ap.add_argument('-p', '--parfile', 
-            help='parameter file specifying the file creation options [./validation_parameters.ini]', 
-            default='./validation_parameters.ini')
+            help='parameter file specifying the file creation options [./filecreation_parameters.ini]', 
+            default='./filecreation_parameters.ini')
     ap.add_argument('-v', '--verbose', 
             help='specify level of verbosity (error, warning, info, debug) [info]', 
             default = 'info', type = str)
