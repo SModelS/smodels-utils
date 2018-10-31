@@ -14,7 +14,7 @@ import tempfile
 sys.path.insert(0,"../../smodels")
 from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import TeV, fb
-from smodels.tools.smodelsLogging import setLogLevel
+from smodels.tools.smodelsLogging import setLogLevel, logger
 import subprocess
 setLogLevel("debug" )
 
@@ -195,6 +195,7 @@ The validation procedure for upper limit maps used here is explained in [[http:/
         line = "||<|%i> [[%s|%s]]" %( ltxn, expRes.getValuesFor('url')[0], id )
         hadTxname = False
         txns_discussed=[]
+        nfigs = 0
         for txname in txnames:
             txn = txname.txName
             if txn in txns_discussed:
@@ -231,15 +232,16 @@ The validation procedure for upper limit maps used here is explained in [[http:/
             if vDir[0]=="/":
                 vDir = vDir[1:]
             dirPath =  os.path.join( self.urldir, vDir )
-            files = glob.glob(valDir+"/"+txname.txName+"_*_pretty.pdf")
+            files = glob.glob(valDir+"/"+txname.txName+"_*_pretty.png")
             if self.ugly:
-                tmp = glob.glob(valDir+"/"+txname.txName+"_*.pdf")
+                tmp = glob.glob(valDir+"/"+txname.txName+"_*.png")
                 files = []
                 for i in tmp:
                     if not "pretty" in i:
                         files.append ( i )
             for fig in files:
                 pngname = fig.replace(".pdf",".png" )
+                """ moved to png files now
                 if not os.path.exists ( pngname ):
                     cmd = "convert -trim %s %s" % ( fig, pngname )
                     print ( cmd )
@@ -247,6 +249,7 @@ The validation procedure for upper limit maps used here is explained in [[http:/
                     if a != "":
                         print ( "Error on format conversion of %s: %s" % ( fig, a ) ) 
                         sys.exit()
+                """
                 # figName = fig.replace(valDir+"/","")
                 figName = pngname.replace(valDir+"/","").replace ( \
                             self.databasePath, "" )
@@ -260,6 +263,7 @@ The validation procedure for upper limit maps used here is explained in [[http:/
                 #        "||width=300}}"
                 line += "<<BR>>"
                 hasFig=True
+                nfigs += 1
             if hasFig:
                 line = line[:-6] ## remove last BR
             if not "attachment" in line:  #In case there are no plots
@@ -284,6 +288,7 @@ The validation procedure for upper limit maps used here is explained in [[http:/
         elif "#FF0000" in line: self.false_lines.append(line)
         else: self.true_lines.append(line)
         self.nlines += 1
+        logger.debug ( "add %s with %d figs" % ( id, nfigs ) )
 
     def isNewAnaID ( self, id, txname, tpe ):
         """ is analysis id <id> new? """
