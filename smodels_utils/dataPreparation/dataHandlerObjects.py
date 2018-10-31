@@ -750,10 +750,11 @@ class ExclusionHandler(DataHandler):
         """
         attributes 'sort' and 'reverse' are initialized with False
         :param name: name as string
-        :param coordinateMap: A dictionary mapping the index of the variables in the data and the
-                          corresponding x,y,.. coordinates used to define the plane axes.
-                          (e.g. {x : 0, y : 1, 'ul value' : 2} for a 3-column data,
-                          where x,y,.. are the sympy symbols and the value key can be anything)
+        :param coordinateMap: A dictionary mapping the index of the variables 
+               in the data and the
+               corresponding x,y,.. coordinates used to define the plane axes.
+               (e.g. {x : 0, y : 1, 'ul value' : 2} for a 3-column data,
+               where x,y,.. are the sympy symbols and the value key can be anything)
 
         """
 
