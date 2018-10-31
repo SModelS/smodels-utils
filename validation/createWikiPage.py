@@ -26,11 +26,12 @@ except ImportError:
 class WikiPageCreator:
     ### starting to write a creator class
     def __init__ ( self, ugly, database, add_version, private, force_upload,
-                   comparison_database ):
+                   comparison_database, ignore_superseded ):
         self.ugly = ugly ## ugly mode
         self.databasePath = database.replace ( "~", os.path.expanduser("~") )
         self.db = Database( self.databasePath )
         self.comparison_dbPath = comparison_database
+        self.ignore_superseded = ignore_superseded
         self.comparison_db = None
         if self.comparison_dbPath:
             self.comparison_db = Database ( self.comparison_dbPath )
@@ -107,6 +108,9 @@ class WikiPageCreator:
 
     def writeHeader ( self ):
         print ( 'Creating wiki file (%s)....' % self.fName )
+        whatIsIncluded = "Superseded and Fastlim results are included"
+        if self.ignore_superseded:
+            whatIsIncluded = "Fastlim results are listed; superseded results have been skipped"
         if self.private:
             self.file.write ( 
 """#acl +DeveloperGroup:read,write,revert -All:write,read Default
@@ -116,14 +120,15 @@ class WikiPageCreator:
 
 This page lists validation plots for all analyses and topologies available in
 the SMS results database that can be validated against official results.
-Superseded and Fastlim results are included. The list has been created from the
+%s. The list has been created from the
 database version %s, including the Fastlim tarball that is shipped separately.
 There is also a [[ListOfAnalyses%s|list of all analyses]], and
 a list of [[SmsDictionary%s|all SMS topologies]].
 
 The validation procedure for upper limit maps used here is explained in [[http://arxiv.org/abs/arXiv:1312.4175|arXiv:1312.4175]][[http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5|EPJC May 2014, 74:2868]], section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. The experimental upper limits are compared with the theoretical predictions for that signal region.
 
-""" % ( self.db.databaseVersion, self.db.databaseVersion, self.dotlessv, self.dotlessv ) )
+""" % ( self.db.databaseVersion, whatIsIncluded, self.db.databaseVersion, 
+        self.dotlessv, self.dotlessv ) )
         if self.ugly:
             self.file.write ( "\nTo [[Validation%s|official validation plots]]\n\n" % self.db.databaseVersion.replace(".","") )
 
@@ -351,6 +356,9 @@ The validation procedure for upper limit maps used here is explained in [[http:/
         expResList.sort()
         for expRes in expResList:
             # print ( "id=",expRes.globalInfo.id )
+            if self.ignore_superseded and hasattr(expRes.globalInfo,'supersededBy'):
+                logger.debug ( "skip superseded %s" % expRes.globalInfo.id )
+                continue
             self.writeExpRes ( expRes, tpe )
 
 
@@ -395,6 +403,8 @@ if __name__ == "__main__":
                     action='store_true')
     ap.add_argument('-a', '--add_version', help='add version labels in links', 
                     action='store_true')
+    ap.add_argument('-i', '--ignore_superseded', help='ignore superseded results', 
+                    action='store_true')
     ap.add_argument('-v', '--verbose',
             help='specifying the level of verbosity (error, warning, info, debug)'\
                  ' [info]', default = 'info', type = str)
@@ -408,5 +418,5 @@ if __name__ == "__main__":
     setLogLevel ( args.verbose )
     creator = WikiPageCreator( args.ugly, args.database, args.add_version, 
                                args.private, args.force_upload,
-                               args.comparison_database )
+                               args.comparison_database, args.ignore_superseded )
     creator.run()
