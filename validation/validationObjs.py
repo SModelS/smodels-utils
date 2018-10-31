@@ -84,7 +84,7 @@ class ValidationPlot():
     def __str__(self):
 
         vstr = "Validation plot for\n"
-        vstr += 'id: '+self.expRes.getValuesFor('id')+'\n'
+        vstr += 'id: %s\n' % self.expRes.getValuesFor('id')[0]
         vstr += 'TxName: '+self.txName+'\n'
         vstr += 'Axes: '+self.niceAxes
         return vstr
@@ -471,9 +471,9 @@ class ValidationPlot():
         else:
             #Print pdf, png and root formats
             filename = filename.replace('.'+fformat,'_pretty.'+fformat)
-            logger.info ( "saving plot in %s" % filename )
             self.plot.Print(filename)
             filename = filename.replace('.'+fformat,'.png')
+            logger.info ( "saving plot in %s (and pdf and root)" % filename )
             self.plot.Print(filename)
             filename = filename.replace('.png','.root')
             self.plot.Print(filename)

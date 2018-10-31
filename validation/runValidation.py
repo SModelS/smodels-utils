@@ -56,7 +56,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                 +", "+txnameStr+", "+axes)
     valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor,
                     limitPoints=limitPoints,extraInfo=extraInfo,combine=combine)
-    valPlot.setSLHAdir(slhadir)
+    if generateData != False:
+        valPlot.setSLHAdir(slhadir)
     valPlot.ncpus = ncpus
     generatedData=False
     if generateData:
@@ -172,7 +173,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
                 tarfile = os.path.basename(tarfiles[itx])
             tarfile = os.path.join(slhadir,tarfile)
 
-            if not os.path.isfile(tarfile):
+            if not os.path.isfile(tarfile) and generateData != False:
                 logger.info( 'Missing .tar.gz file for %s.' %txnameStr)
                 continue
 
