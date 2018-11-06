@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 
 """ makes a database pickle file publically available. 
 The script is deliberately run with python2. That way we get 
@@ -9,6 +9,7 @@ import pickle, os, sys, argparse
 if sys.version[0]=="2":
     import commands as CMD
 else:
+    print ( "you sure you want to run this with python3?" )
     import subprocess as CMD
 
 def checkNonValidated( database ):
