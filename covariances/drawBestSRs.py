@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+""" simple plot of best signal region, should be turned into 
+a full blown script """
+
 import matplotlib.pyplot as plt
 import copy
 import numpy
