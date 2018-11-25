@@ -684,7 +684,16 @@ class TxNameInput(Locker):
                     infoList[i] = str(getattr(plane, infoAttr))
             if planeHasInfo:
                 # infoStr = " ".join(infoList) ## new version
-                infoStr = ";".join(infoList) ## old version
+                myInfoList = []
+                hasNone = False
+                for i in infoList:
+                    if i not in [ None, "None" ]:
+                        myInfoList.append ( i )
+                        continue
+                    if not hasNone: ## only one None
+                        myInfoList.append ( i )
+                        hasNone=True
+                infoStr = ";".join(myInfoList) ## old version
                 setattr(self,infoAttr,infoStr)
 
         if not hasattr(self,'validated'):
