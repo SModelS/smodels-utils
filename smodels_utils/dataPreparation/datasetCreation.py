@@ -178,7 +178,7 @@ class DatasetsFromLatex:
             if oldBgError > newds.bgError:
                 logger.error ( "since direct computation is more conservative, I will use that one." )
                 newds.bgError = oldBgError
-        ntoys, alpha = 50000, .05
+        ntoys, alpha = 200000, .05
         lumi = eval ( databaseCreator.metaInfo.lumi )
         # comp = UpperLimitComputer ( lumi, ntoys, 1. - alpha )
         comp = UpperLimitComputer ( ntoys, 1. - alpha )

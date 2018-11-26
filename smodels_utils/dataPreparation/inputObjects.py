@@ -362,7 +362,7 @@ class DataSetInput(Locker):
 
     requiredAttr = ['dataType', 'dataId']
 
-    ntoys = 50000 ## number of toys in computing limits
+    ntoys = 200000 ## number of toys in computing limits
 
     def __init__(self,name):
 
