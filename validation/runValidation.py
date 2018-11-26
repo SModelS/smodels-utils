@@ -287,12 +287,10 @@ if __name__ == "__main__":
             tarfiles = tarfiles.split(',')
 
     ncpus = 1
-    """
     if parser.has_section("options") and parser.has_option("options","ncpus"):
         ncpus = parser.getint("options","ncpus")
-    else:
-        ncpus = -1
-    """
+    #else:
+    #    ncpus = -1
     pngAlso = False
     if parser.has_section("options") and parser.has_option("options","pngPlots"):
         pngAlso = parser.getboolean("options", "pngPlots" )
