@@ -14,7 +14,7 @@ from array import array
 
 logger = logging.getLogger(__name__)
 from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
-                  TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,
+                  TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,kWhite,
                   TPolyLine3D,Double,TColor,gStyle,TH2D,TImage)
 from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -535,7 +535,9 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         logger.info("1d data detected, smearing Y values")
         buff = tgr.GetX()
         buff.SetSize(sys.maxsize)
+        print ( "tgr.GetN",tgr.GetN() )
         xpts = numpy.frombuffer(buff,count=tgr.GetN())
+        print ( "xpts=",xpts )
         buff = tgr.GetY()
         buff.SetSize(sys.maxsize)
         ypts = numpy.frombuffer(buff,count=tgr.GetN())
@@ -684,7 +686,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     dx = .33 ## top, right
     leg = TLegend(0.15+dx,0.83-0.045*nleg,0.495+dx,0.83)
     setOptions(leg)    
-    leg.SetFillStyle(0)
+    # leg.SetFillStyle(0)
     leg.SetTextSize(0.04)
     added = False    
     for cval,grlist in cgraphs.items():        
@@ -867,10 +869,10 @@ def setOptions(obj,Type=None):
         obj.SetMargin(0.35)
         obj.SetTextFont(132)
         obj.SetTextSize(0.05)
-        obj.SetLineColor(1)
+        obj.SetLineColor(kBlack)
         obj.SetLineStyle(1)
         obj.SetLineWidth(1)
-        obj.SetFillColor(0)
+        obj.SetFillColorAlpha(kWhite,.7)
         obj.SetFillStyle(1001)
     elif isinstance(obj,TGraph2D) or isinstance(obj,TH2D):
         obj.GetZaxis().SetTitleFont(132)
