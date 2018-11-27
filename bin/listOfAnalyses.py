@@ -15,7 +15,7 @@ try:
     import subprocess as C
 except:
     import commands as C
-import sys
+import sys, os
 ## from short_descriptions import SDs
 from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
@@ -310,6 +310,8 @@ def writeExperiment ( f, db, experiment, sqrts, superseded, n_homegrown, version
                         n_homegrown, version, add_version )
 
 def backup( filename ):
+    if not os.path.exists ( filename ):
+        return
     o = C.getoutput ( "cp %s Old%s" % ( filename, filename ) )
     if len(o):
         print ( "backup: %s" % o )
@@ -341,12 +343,15 @@ def main():
     args = argparser.parse_args()
     setLogLevel ( args.verbose )
     superSeded = not args.no_superseded
-    filename = "ListOfAnalyses"
+    database = Database ( args.database, discard_zeroes=True )
+    ver = ""
+    if args.add_version:
+        ver = database.databaseVersion.replace(".","")
+    filename = "ListOfAnalyses%s" % ver
     if superSeded:
-        filename = "ListOfAnalysesWithSuperseded"
+        filename = "ListOfAnalyses%sWithSuperseded" % ver
     backup( filename )
     f = open ( filename, "w" )
-    database = Database ( args.database, discard_zeroes=True )
     header( f, database, superSeded, args.add_version, args.private )
     listTables ( f, database.getExpResults ( useSuperseded = superSeded ) )
     print ( "Database:", database.databaseVersion )
