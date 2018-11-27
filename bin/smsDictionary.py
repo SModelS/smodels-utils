@@ -33,7 +33,8 @@ class SmsDictWriter:
         if not addVer:
             self.ver=""
         self.hasResultsColumn = results
-        self.f=open("SmsDictionary","w" )
+        self.fname = "SmsDictionary%s" % self.ver
+        self.f=open(self.fname,"w" )
 
     def straight( self ):
         return (not self.xkcd)
@@ -139,7 +140,7 @@ N.B.: Each "()" group corresponds to a branch
 
     def xsel( self ):
         import os
-        cmd="cat SmsDictionary | xsel -i"
+        cmd="cat %s | xsel -i" % self.fname
         os.system ( cmd )
         print ( cmd )
 
