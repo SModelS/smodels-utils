@@ -684,7 +684,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     #Draw legend: 
     dx = 0. ## top, left
     dx = .33 ## top, right
-    leg = TLegend(0.15+dx,0.83-0.045*nleg,0.495+dx,0.83)
+    leg = TLegend(0.15+dx,0.75-0.040*nleg,0.495+dx,0.83)
     setOptions(leg)    
     # leg.SetFillStyle(0)
     leg.SetTextSize(0.04)
