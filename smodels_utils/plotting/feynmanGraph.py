@@ -303,7 +303,7 @@ class Drawer:
             for e in extensions: pdffile=pdffile.replace( e, "pdf" )
             epsfile=pdffile.replace("pdf","eps")
             fd.draw( pdffile )
-            fd.draw( epsfile )
+            # fd.draw( epsfile )
             if pdffile!=filename:
                 cmd = "convert -quiet %s %s" % ( pdffile, filename )
                 a = subprocess.getoutput ( cmd )
@@ -332,7 +332,7 @@ if __name__ == "__main__":
                           'Takes precedence over "-T" and "-l" arguments.',
                       type=str, default='' )
         argparser.add_argument ( '-f', '--final_state', nargs='?',
-                      help='specify final state. Used only in combination with -c.',
+                      help='specify final state ("MET","MET"). Used only in combination with -c.',
                       type=str, default='("MET","MET")' )
         argparser.add_argument ( '-o', '--output', nargs='?',
                 help= 'output file, can be pdf or eps or png (via convert)',
