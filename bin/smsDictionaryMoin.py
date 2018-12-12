@@ -3,8 +3,8 @@
 """
 .. module:: smsDictionary
          :synopsis: Small script to produce the SmsDictionary wiki page,
-                    see http://smodels.github.io/SmsDictionary.
-                    New markdown syntax.
+                    see http://smodels.hephy.at/wiki/SmsDictionary
+                    Old MoinMoin syntax!
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
@@ -48,14 +48,14 @@ class SmsDictWriter:
         if self.private:
             protected = "-All:read"
         self.f.write (
-"""
+"""#acl +DeveloperGroup:read,write,revert -All:write %s Default
 
-# SMS dictionary
+= SMS dictionary =
 This page intends to collect information about how we map the SModelS description of
 events onto the Tx nomenclature. The list has been created from the database version %s, considering also superseded results.
 
-There is also a [ListOfAnalyses%s], a [ListOfAnalyses%sWithSuperseded], and [Validation%s](Validation%s).
-""" % ( self.database.databaseVersion, self.ver, self.ver, self.ver, self.ver ) )
+There is also a ListOfAnalyses%s, a ListOfAnalyses%sWithSuperseded, and [[Validation%s|Validation%s]].
+""" % ( protected, self.database.databaseVersion, self.ver, self.ver, self.ver, self.ver ) )
 
     def footer( self ):
         return
@@ -68,19 +68,13 @@ N.B.: Each "()" group corresponds to a branch
     )
 
     def tableHeader ( self ):
+        # f.write ( '||<tableclass="sortable"> Tx Name || Topology || Graph || Results ||\n' )
         columns=[ "#", "Tx", "Topology", "Graph" ]
         if self.hasResultsColumn:
             columns.append ( "Appears in" )
-        lengths=[]
         for header in columns:
-            #self.f.write ( "|<#EEEEEE:> **%s** " % header )
-            self.f.write ( "| **%s** " % header )
-            lengths.append ( len(header)+15 )
-        self.f.write ( "|\n" )
-        for l in lengths:
-            self.f.write ( "| "+"-"*l+ " " )
-        self.f.write ( "|\n" )
-        
+            self.f.write ( "||<#EEEEEE:> '''%s''' " % header )
+        self.f.write ( "||\n" )
 
     def cleanUp ( self, txname ):
         constr = txname.constraint
@@ -92,7 +86,7 @@ N.B.: Each "()" group corresponds to a branch
         fs = [ "MET", "MET" ]
         if hasattr ( txname, "finalState" ):
             fs = txname.finalState
-        ret = "%s`<BR>`(%s)" % (constr, ", ".join ( fs ) )
+        ret = "%s`<<BR>>`(%s)" % (constr, ", ".join ( fs ) )
         return ret
 
     def getTopos( self ):
@@ -182,32 +176,32 @@ N.B.: Each "()" group corresponds to a branch
 
     def writeTopo ( self, nr, txnames, constraint, first ):
         """ :param first: is this the first time I write a topo? """
-        self.f.write ( "|%d|<:>" % nr )
+        self.f.write ( "||%d||<:>" % nr )
         ltxes = []
         for txname in txnames:
-            ltxes.append ( "**%s**<Anchor(%s)>" % ( txname, txname ) )
-        self.f.write ( "<BR>".join ( ltxes ) )
+            ltxes.append ( "'''%s'''<<Anchor(%s)>>" % ( txname, txname ) )
+        self.f.write ( "<<BR>>".join ( ltxes ) )
         constraint = constraint[constraint.find("["):]
         constraint = constraint.replace( " ", "" )
         # if constraint[-1]==")": constraint = constraint[:-1]
         if self.drawFeyn:
             for txname in txnames:
                 self.createFeynGraph ( txname, constraint )
-        constraint = constraint.replace ( "]+[", "]+`<BR>`[" )
-        self.f.write ( "|`%s`" % constraint ) ## "Topology" column
+        constraint = constraint.replace ( "]+[", "]+`<<BR>>`[" )
+        self.f.write ( "||`%s`" % constraint ) ## "Topology" column
         style = "straight"
         if self.xkcd:
             style = "xkcd"
         ## now "Graph" column
-        self.f.write ( '|<img src="http://www.hephy.at/user/wwaltenberger/feyn/%s/%s.png" width="200">' % ( style, txname ) )
+        self.f.write ( '||{{http://smodels.hephy.at/feyn/%s/%s.png||width="200"}}' % ( style, txname ) )
         ## now "Appears in" column
         if self.hasResultsColumn:
-            self.f.write ( "|" )
+            self.f.write ( "||" )
             results = self.database.getExpResults ( txnames = txnames, useSuperseded = True )
             if first:
                 self.f.write ( "<25%>" ) ## make sure the last column isnt too small
             if len(results)>9:
-                self.f.write ( "[many (%d)](ListOfAnalyses%s)" % (len(results),self.ver) )
+                self.f.write ( "[[ListOfAnalyses%s|many (%d)]]" % (self.ver,len(results)) )
             else:
                 l = []
                 hi = [] ## remove dupes
@@ -219,9 +213,9 @@ N.B.: Each "()" group corresponds to a branch
                     supers = ""
                     if hasattr ( res.globalInfo, "supersededBy" ):
                         supers="WithSuperseded"
-                    l.append ( "[%s](ListOfAnalyses%s%s#%s)" % ( ID, self.ver, supers, ID ) )
-                self.f.write ( "<BR>".join ( l ) )
-        self.f.write ( "|\n" )
+                    l.append ( "[[ListOfAnalyses%s%s#%s|%s]]" % ( self.ver, supers, ID, ID ) )
+                self.f.write ( "<<BR>>".join ( l ) )
+        self.f.write ( "||\n" )
 
 if __name__ == '__main__':
     import argparse
