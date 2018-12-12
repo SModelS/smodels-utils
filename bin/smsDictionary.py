@@ -54,8 +54,9 @@ class SmsDictWriter:
 This page intends to collect information about how we map the SModelS description of
 events onto the Tx nomenclature. The list has been created from the database version %s, considering also superseded results.
 
-There is also a [ListOfAnalyses%s], a [ListOfAnalyses%sWithSuperseded], and [Validation%s](Validation%s).
-""" % ( self.database.databaseVersion, self.ver, self.ver, self.ver, self.ver ) )
+There is also a [ListOfAnalyses%s](https://smodels.github.io/docs/ListOfAnalyses%s), a [ListOfAnalyses%sWithSuperseded](https://smodels.github.io/docs/ListOfAnalysesWithSuperseded%s), and [Validation%s](Validation%s).
+
+""" % ( self.database.databaseVersion, self.ver, self.ver, self.ver, self.ver, self.ver, self.ver ) )
 
     def footer( self ):
         return
@@ -75,7 +76,7 @@ N.B.: Each "()" group corresponds to a branch
         for header in columns:
             #self.f.write ( "|<#EEEEEE:> **%s** " % header )
             self.f.write ( "| **%s** " % header )
-            lengths.append ( len(header)+15 )
+            lengths.append ( len(header)+4 )
         self.f.write ( "|\n" )
         for l in lengths:
             self.f.write ( "| "+"-"*l+ " " )
@@ -172,6 +173,17 @@ N.B.: Each "()" group corresponds to a branch
         feynfile="../feyn/"+txname+".png"
         sfstate = str(fstate).replace(" ","").replace("'","")
         print ( "[smsDictionary.py] draw",feynfile,"from",c,"with",sfstate )
+        exe = "../smodels_utils/plotting/feynmanGraph.py -i "
+        cmd = exe
+        if writer.straight():
+            cmd += " -s"
+        br = c.find("<BR")
+        constr = c[:br]
+        cmd += ' -c "%s"' % constr
+        cmd += " -f '%s'" % str(fstate).replace("[","(").replace("]",")").replace("'",'"')
+        cmd += " -o %s" % feynfile
+        a = C.getoutput ( cmd )
+        """ nicer way, just doesnt clear the canvas in bulk mode
         from smodels.theory import element
         try:
             e=element.Element(c,fstate )
@@ -179,13 +191,16 @@ N.B.: Each "()" group corresponds to a branch
             e=element.Element(c)
         drawer = feynmanGraph.Drawer ( e, verbose=False )
         drawer.draw ( feynfile, straight=writer.straight(), inparts=True )
+        """
 
     def writeTopo ( self, nr, txnames, constraint, first ):
         """ :param first: is this the first time I write a topo? """
-        self.f.write ( "|%d|<:>" % nr )
+        # self.f.write ( "| %d | <:>" % nr )
+        self.f.write ( "| %d | " % nr )
         ltxes = []
         for txname in txnames:
-            ltxes.append ( "**%s**<Anchor(%s)>" % ( txname, txname ) )
+            ltxes.append ( "**%s**" % ( txname ) )
+            # ltxes.append ( "**%s**<Anchor(%s)>" % ( txname, txname ) )
         self.f.write ( "<BR>".join ( ltxes ) )
         constraint = constraint[constraint.find("["):]
         constraint = constraint.replace( " ", "" )
@@ -194,18 +209,19 @@ N.B.: Each "()" group corresponds to a branch
             for txname in txnames:
                 self.createFeynGraph ( txname, constraint )
         constraint = constraint.replace ( "]+[", "]+`<BR>`[" )
-        self.f.write ( "|`%s`" % constraint ) ## "Topology" column
+        self.f.write ( " | `%s`" % constraint ) ## "Topology" column
         style = "straight"
         if self.xkcd:
             style = "xkcd"
         ## now "Graph" column
-        self.f.write ( '|<img src="http://www.hephy.at/user/wwaltenberger/feyn/%s/%s.png" width="200">' % ( style, txname ) )
+        self.f.write ( ' | ![%s](../feyn/%s/%s.png)' % ( txname, style, txname ) )
         ## now "Appears in" column
         if self.hasResultsColumn:
-            self.f.write ( "|" )
+            self.f.write ( " | " )
             results = self.database.getExpResults ( txnames = txnames, useSuperseded = True )
             if first:
-                self.f.write ( "<25%>" ) ## make sure the last column isnt too small
+                # self.f.write ( "<25%>" ) ## make sure the last column isnt too small
+                pass
             if len(results)>9:
                 self.f.write ( "[many (%d)](ListOfAnalyses%s)" % (len(results),self.ver) )
             else:
