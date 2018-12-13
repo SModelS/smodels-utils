@@ -204,7 +204,7 @@ N.B.: Each "()" group corresponds to a branch
         ltxes = []
         for txname in txnames:
             txnameabb = txname
-            if len ( txnameabb ) > 8:
+            if len ( txnameabb ) > 9:
                 pos = 8
                 unabbrv = [ "tau", "off", "Chim", "Chip", "Slep" ]
                 for ua in unabbrv:
