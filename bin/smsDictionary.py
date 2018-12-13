@@ -206,7 +206,7 @@ N.B.: Each "()" group corresponds to a branch
             txnameabb = txname
             if len ( txnameabb ) > 9:
                 pos = 8
-                unabbrv = [ "tau", "off", "Chim", "Chip", "Slep" ]
+                unabbrv = [ "tau", "off", "Chim", "Chip", "Slep", "Stau" ]
                 for ua in unabbrv:
                     if txnameabb.find ( ua ) in [6,7,9]:
                         pos = txnameabb.find ( ua )
