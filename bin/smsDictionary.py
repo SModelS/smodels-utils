@@ -203,17 +203,33 @@ N.B.: Each "()" group corresponds to a branch
         self.f.write ( "| %d | " % nr )
         ltxes = []
         for txname in txnames:
-            ltxes.append ( '**%s**<br><a name="%s"></a>' % ( txname, txname ) )
+            txnameabb = txname
+            if len ( txnameabb ) > 8:
+                pos = 8
+                unabbrv = [ "tau", "off", "Chim", "Chip", "Slep" ]
+                for ua in unabbrv:
+                    if txnameabb.find ( ua ) in [6,7,9]:
+                        pos = txnameabb.find ( ua )
+                txnameabb=txnameabb[:pos]+"-<br>"+txnameabb[pos:]
+            ltxes.append ( '<a name="%s"></a>**%s**<br>' % ( txname, txnameabb ) )
             # ltxes.append ( '<a name="%s"><b>%s</b></a>' % ( txname, txname ) )
         self.f.write ( "<BR>".join ( ltxes ) )
         constraint = constraint[constraint.find("["):]
         constraint = constraint.replace( " ", "" )
+        constraint = constraint.replace ( "jet", "q" )
+        constraint = constraint.replace ( "photon", "y" )
+        constraint = constraint.replace ( "higgs", "h" )
         # if constraint[-1]==")": constraint = constraint[:-1]
         if self.drawFeyn:
             for txname in txnames:
                 self.createFeynGraph ( txname, constraint )
         constraint = constraint.replace ( "]+[", "]+`<BR>`[" )
-        self.f.write ( " | `%s`" % constraint ) ## "Topology" column
+        constraint = constraint.replace ( ";",";`<BR>`" )
+        constraint = "`" + constraint + "`"
+        #if len(constraint)>20:
+        #    print ( "constraint", constraint )
+        #    constraint = constraint[:20]+"`<BR>`"+constraint[20:]
+        self.f.write ( " | %s" % constraint ) ## "Topology" column
         style = "straight"
         if self.xkcd:
             style = "xkcd"
@@ -233,8 +249,11 @@ N.B.: Each "()" group corresponds to a branch
                 hi = [] ## remove dupes
                 for res in results:
                     ID = res.globalInfo.id
+                    ID = ID.replace("-agg","" )
                     if ID in hi:
                         continue
+                    #ID = ID.replace("CMS-","**C**-" )
+                    #ID = ID.replace("ATLAS-","**A**-" )
                     hi.append ( ID )
                     supers = ""
                     if hasattr ( res.globalInfo, "supersededBy" ):

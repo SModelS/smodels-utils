@@ -158,12 +158,10 @@ def experimentHeader ( f, experiment, Type, sqrts, nr, superseded ):
     stype = "efficiency maps"
     if Type == "upperLimit":
         stype = "upper limits"
-    f.write ( '<a name="%s%s%d"></a>\n\n' % \
+    f.write ( '<a name="%s%s%d"></a>\n' % \
               (experiment, stype.replace(" ",""), sqrts) )
-    f.write ( "## %s, %s, %d TeV (%d analyses)\n" % \
+    f.write ( "## %s, %s, %d TeV (%d analyses)\n\n" % \
               (experiment,stype,sqrts,nr ) )
-    #f.write ( "<<Anchor(%s%s%d)>>\n" % \
-    #          (experiment, stype.replace(" ",""), sqrts) )
     lengths = []
     for i in fields ( superseded ):
         # f.write ( "||<#EEEEEE:> '''%s'''" % i )
@@ -252,7 +250,7 @@ def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, n_homegrow
 
             if homegrown !="" : n_homegrown[0]+=1
             # topos_s += ", [[SmsDictionary%s#%s|%s]]%s" % ( dotlessv, i, i, homegrown )
-            topos_s += ", [%s](SmsDictionary%s)%s" % ( i, dotlessv, homegrown )
+            topos_s += ", [%s](SmsDictionary%s#%s)%s" % ( i, dotlessv, i, homegrown )
         topos_s = topos_s[2:]
         if fastlim:
             # topos_s += " (from FastLim (2))"
