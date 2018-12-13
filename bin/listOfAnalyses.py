@@ -79,7 +79,7 @@ def header( f, database, superseded, add_version, private ):
 List of analyses and topologies in the SMS results database,
 comprising %d individual maps from %d distinct signal regions, %d different SMS topologies, from a total of %d analyses.
 The list has been created from the database version `%s`.
-Results from !FastLim are included. There is also an  [sms dictionary](SmsDictionary%s) and a [validation page](Validation%s).
+Results from FastLim are included. There is also an  [sms dictionary](SmsDictionary%s) and a [validation page](Validation%s).
 %s.
 """ % ( version, titleplus, n_maps, n_results, len(n_topos), 
         len(n_anas), version, dotlessv, dotlessv, referToOther ) )
@@ -88,9 +88,9 @@ def footer ( f ):
     #f.write ( "<<Anchor(A1)>>(1) ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like !MadAnalysis5 or CheckMATE.\n\n" )
     #f.write ( "<<Anchor(A2)>>(2) Please note that by default we discard zeroes-only results from !FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
     #f.write ( "<<Anchor(A3)>>(3) Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n" )
-    f.write ( "\n\n<a name=A1>(1)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like !MadAnalysis5 or CheckMATE.\n" )
-    f.write ( "<a name=A2>(2)</a> Please note that by default we discard zeroes-only results from !FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n" )
-    f.write ( "<a name=A3>(3)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n" )
+    f.write ( "\n\n<a name='A1'>(1)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like !MadAnalysis5 or CheckMATE.\n\n" )
+    f.write ( "<a name='A2'>(2)</a> Please note that by default we discard zeroes-only results from FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
+    f.write ( "<a name='A3'>(3)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n" )
 
 def listTables ( f, anas ):
     f.write ( "## Individual tables\n" )
@@ -128,13 +128,13 @@ def listTables ( f, anas ):
                 aflim=""
                 llp=""
                 if nfastlim:
-                    flim = "(of which %d !FastLim)" % nfastlim
-                    aflim = "(of which %d !FastLim)" % a_fastlim
+                    flim = "(of which %d FastLim)" % nfastlim
+                    aflim = "(of which %d FastLim)" % a_fastlim
                 if nres_hscp>0:
                     llp="(of which %d LLP)" % nres_hscp
                 #f.write ( " * [[#%s%s%d|%s %s]]: %d %s analyses, %s %s%s results\n" % \
                 #          ( exp, stpe, sqrts, exp, tpe, len(a), aflim, nres, flim, llp ) )
-                f.write ( " * [%s %s](%s%s%d): %d %s analyses, %s %s%s results\n" % \
+                f.write ( " * [%s %s](#%s%s%d): %d %s analyses, %s %s%s results\n" % \
                           ( exp, tpe, exp, stpe, sqrts, len(a), aflim, nres, flim, llp ) )
 
 def fields ( superseded ):
@@ -158,6 +158,8 @@ def experimentHeader ( f, experiment, Type, sqrts, nr, superseded ):
     stype = "efficiency maps"
     if Type == "upperLimit":
         stype = "upper limits"
+    f.write ( '<a name="%s%s%d"></a>\n\n' % \
+              (experiment, stype.replace(" ",""), sqrts) )
     f.write ( "## %s, %s, %d TeV (%d analyses)\n" % \
               (experiment,stype,sqrts,nr ) )
     #f.write ( "<<Anchor(%s%s%d)>>\n" % \
@@ -165,9 +167,9 @@ def experimentHeader ( f, experiment, Type, sqrts, nr, superseded ):
     lengths = []
     for i in fields ( superseded ):
         # f.write ( "||<#EEEEEE:> '''%s'''" % i )
-        f.write ( " | **%s**" % i )
+        f.write ( "| **%s** " % i )
         lengths.append ( len(i)+6 )
-    f.write ( " |\n " )
+    f.write ( "|\n" )
     for l in lengths:
         f.write ( "|" +"-"*l )
     f.write ( "|\n" )
@@ -182,7 +184,7 @@ def emptyLine( f, superseded, ana_name ):
         label = "PAS"
     if "CONF" in ana_name:
         label = "Conf Notes"
-    f.write ( " | %s" % "**%s**" % label )
+    f.write ( "| %s" % "**%s**" % label )
     f.write ( " |"*( len(fields(superseded) ) ) )
     f.write ( "\n" )
 
@@ -235,9 +237,9 @@ def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, n_homegrow
             homegrownd[str(i)] = ""
             if hasattr ( i, "source" ) and "SModelS" in i.source:
                 # homegrownd[str(i)] = " [[#A1|(1)]]"
-                homegrownd[str(i)] = " (1)"
+                homegrownd[str(i)] = " [(1)](#A1)"
             if hasattr ( i, "source" ) and "SModelS" in i.source and "agg" in ana_name:
-                homegrownd[str(i)] = " (3)"
+                homegrownd[str(i)] = " [(3)](#A3)"
                 #homegrownd[str(i)] = " [[#A3|(3)]]"
 
         topos.sort()
@@ -253,8 +255,8 @@ def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, n_homegrow
             topos_s += ", [%s](SmsDictionary%s)%s" % ( i, dotlessv, homegrown )
         topos_s = topos_s[2:]
         if fastlim:
-            topos_s += " (from !FastLim (2))"
-            # topos_s += " (from !FastLim [[#A2|(2)]])"
+            # topos_s += " (from FastLim (2))"
+            topos_s += " (from FastLim [(2)](#A2))"
             pass
         url = ana.globalInfo.url
         if url.find ( " " ) > 0:
@@ -269,7 +271,7 @@ def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, n_homegrow
             # ssuperseded = "[[#%s|%s]]" % ( t, s )
             ssuperseded = "[%s](#%s)" % ( s, t )
         # f.write ( "|| [[%s|%s]]<<Anchor(%s)>>" % ( url, Id, Id ) )
-        f.write ( " | [%s](%s)" % ( Id, url ) )
+        f.write ( '| [%s](%s)<a name="%s"></a>' % ( Id, url, Id ) )
         short_desc = convert ( ana.globalInfo.prettyName )
         f.write ( " | %s | %s | %s |" % ( short_desc,
                ana.globalInfo.lumi.asNumber(), topos_s ) )

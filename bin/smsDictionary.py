@@ -151,6 +151,10 @@ N.B.: Each "()" group corresponds to a branch
         cmd="cat %s | xsel -i" % self.fname
         os.system ( cmd )
         print ( cmd )
+        cmd="cp %s ../../smodels.github.io/docs/%s.md" % ( self.fname, self.fname )
+        os.system ( cmd )
+        print ( cmd )
+
 
     def createFeynGraph ( self, txname, constraint ):
         from smodels_utils.plotting import feynmanGraph
@@ -199,8 +203,8 @@ N.B.: Each "()" group corresponds to a branch
         self.f.write ( "| %d | " % nr )
         ltxes = []
         for txname in txnames:
-            ltxes.append ( "**%s**" % ( txname ) )
-            # ltxes.append ( "**%s**<Anchor(%s)>" % ( txname, txname ) )
+            ltxes.append ( '**%s**<br><a name="%s"></a>' % ( txname, txname ) )
+            # ltxes.append ( '<a name="%s"><b>%s</b></a>' % ( txname, txname ) )
         self.f.write ( "<BR>".join ( ltxes ) )
         constraint = constraint[constraint.find("["):]
         constraint = constraint.replace( " ", "" )
