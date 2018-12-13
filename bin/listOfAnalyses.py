@@ -85,10 +85,10 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         len(n_anas), version, dotlessv, dotlessv, referToOther ) )
 
 def footer ( f ):
-    #f.write ( "<<Anchor(A1)>>(1) ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like !MadAnalysis5 or CheckMATE.\n\n" )
+    #f.write ( "<<Anchor(A1)>>(1) ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
     #f.write ( "<<Anchor(A2)>>(2) Please note that by default we discard zeroes-only results from !FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
     #f.write ( "<<Anchor(A3)>>(3) Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n" )
-    f.write ( "\n\n<a name='A1'>(1)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like !MadAnalysis5 or CheckMATE.\n\n" )
+    f.write ( "\n\n<a name='A1'>(1)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
     f.write ( "<a name='A2'>(2)</a> Please note that by default we discard zeroes-only results from FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
     f.write ( "<a name='A3'>(3)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n" )
 
