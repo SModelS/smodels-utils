@@ -58,13 +58,13 @@ for d,ver in releases():
         Bin = binlabels[d]
         # print ( "release %s at %s" % ( ver, Bin ) )
         l=ROOT.TLine ( Bin, Min, Bin, Max )
-        l.SetLineColor ( ROOT.kBlue )
+        l.SetLineColor ( ROOT.kRed )
         l.SetLineWidth( 2 )
         l.SetLineStyle ( 2 )
         l.Draw()
         pos=.8
         t=ROOT.TText ( Bin, pos*Max, ver )
-        t.SetTextColor ( ROOT.kBlue )
+        t.SetTextColor ( ROOT.kRed )
         t.SetTextSize(.04)
         t.SetTextAngle(90.)
         t.Draw()
@@ -72,3 +72,4 @@ for d,ver in releases():
 ROOT.c1.Modified()
 
 ROOT.c1.Print("downloads.png")
+ROOT.c1.Print("../../smodels.github.io/logos/downloads.png")
