@@ -10,8 +10,8 @@
 ## SmsDictionary page
 ./smsDictionary.py -a 
 ./smsDictionary.py 
-#./publishDatabasePickle.py -f ~/git/smodels-database/db31.pcl
-#./publishDatabasePickle.py -r -f ~/git/smodels-database/db31.pcl
+./publishDatabasePickle.py -b -f ~/git/smodels-database/
+./publishDatabasePickle.py -r -b -f ~/git/smodels-database/
 #./writeDatabaseWikiPage.py
 
 cd ../validation

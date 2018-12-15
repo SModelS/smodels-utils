@@ -133,9 +133,11 @@ def main():
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
-    cmd = "cp %s /var/www/database/%s" % ( infofile, infofile )
+    # cmd = "cp %s /var/www/database/%s" % ( infofile, infofile )
+    cmd = "cp %s ../../smodels.github.io/database/%s" % ( infofile, infofile )
     if args.ssh:
-        cmd = "scp %s smodels.hephy.at:/var/www/database/%s" % ( infofile, infofile )
+        pass
+        # cmd = "scp %s smodels.hephy.at:/var/www/database/%s" % ( infofile, infofile )
     print ( "[publishDatabasePickle] %s %s" % ( sexec, cmd ) )
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
