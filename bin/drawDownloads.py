@@ -18,6 +18,7 @@ n=t.ReadFile( "./.reverse.log", "d/C[12]:p/D", ",")
 hi = ROOT.TH2F ( "h", "SModelS: pip downloads", n, 0, n, 10, Min, Max )
 hi.SetYTitle ( "Downloads per day" )
 xa=hi.GetXaxis()
+xa.SetTickSize(.007)
 lastdate=""
 values=[]
 for i in range(1,n):
@@ -43,11 +44,12 @@ for i in range(1,n):
     if i % 5 != 0:
         continue
     if lastdate != date:
+        xa.ChangeLabel ( i, 90. )
         xa.SetBinLabel( i, date )
         lastdate=date
 
 hi.Draw()
-t.SetLineWidth(2)
+t.SetLineWidth(3)
 t.Draw("p:d","","Lsame" )
 for d,ver in releases():
     if "post" in ver:
