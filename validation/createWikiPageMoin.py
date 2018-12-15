@@ -99,13 +99,10 @@ class WikiPageCreator:
     def close ( self ):
         print ( 'Done.\n' )
         print ( '--->Copy and paste the content to the SModelS wiki page.\n')
-        #print ( '--->(if xsel is installed, you should find the content in your clipboard.)\n' )
+        print ( '--->(if xsel is installed, you should find the content in your clipboard.)\n' )
         self.file.write ( "\n" )
         self.file.close()
-        #cmd = "cat %s | xsel -i" % self.fName
-        #print ( cmd )
-        #C.getoutput ( cmd )
-        cmd = "cp %s ../../smodels.github.io/docs/%s.md" % ( self.fName, self.fName )
+        cmd = "cat %s | xsel -i" % self.fName
         print ( cmd )
         C.getoutput ( cmd )
 
@@ -114,52 +111,45 @@ class WikiPageCreator:
         whatIsIncluded = "Superseded and Fastlim results are included"
         if self.ignore_superseded:
             whatIsIncluded = "Fastlim results are listed; superseded results have been skipped"
-#        if self.private:
-#            self.file.write ( 
-#"""#acl +DeveloperGroup:read,write,revert -All:write,read Default
-#<<LockedPage()>>""" )
+        if self.private:
+            self.file.write ( 
+"""#acl +DeveloperGroup:read,write,revert -All:write,read Default
+<<LockedPage()>>""" )
         self.file.write( """
-# Validation plots for SModelS-v%s 
+= Validation plots for SModelS-v%s =
 
 This page lists validation plots for all analyses and topologies available in
 the SMS results database that can be validated against official results.
 %s. The list has been created from the
 database version %s, including the Fastlim tarball that is shipped separately.
-There is also a [list of all analyses](ListOfAnalyses%s), and
-a list of [all SMS topologies](SmsDictionary%s).
+There is also a [[ListOfAnalyses%s|list of all analyses]], and
+a list of [[SmsDictionary%s|all SMS topologies]].
 
-The validation procedure for upper limit maps used here is explained in [arXiv:1312.4175](http://arxiv.org/abs/arXiv:1312.4175),  [EPJC May 2014, 74:2868](http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5), section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. The experimental upper limits are compared with the theoretical predictions for that signal region.
+The validation procedure for upper limit maps used here is explained in [[http://arxiv.org/abs/arXiv:1312.4175|arXiv:1312.4175]][[http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5|EPJC May 2014, 74:2868]], section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. The experimental upper limits are compared with the theoretical predictions for that signal region.
 
 """ % ( self.db.databaseVersion, whatIsIncluded, self.db.databaseVersion, 
         self.dotlessv, self.dotlessv ) )
         if self.ugly:
-            self.file.write ( "\nTo [official validation plots](Validation%s)\n\n" % self.db.databaseVersion.replace(".","") )
+            self.file.write ( "\nTo [[Validation%s|official validation plots]]\n\n" % self.db.databaseVersion.replace(".","") )
 
     def writeTableHeader ( self, tpe ):
         fields = [ "Result", "Txname", "L [1/fb]", "Validation plots", "comment" ]
         if self.ugly:
             fields.insert ( 3, "Validated?" )
         ret=""
-        lengths = []
         for i in fields:
-            #ret=ret +  ( "||<#EEEEEE:> '''%s''' " % i )
-            ret=ret +  ( "| **%s** " % i )
-            lengths.append ( len(i)+6 )
-        ret = ret + ( "|\n" )
-        self.true_lines.append ( ret )
-        ret=""
-        for l in lengths:
-            ret=ret+"|"+"-"*l
-        ret=ret + ( "|\n" )
+            ret=ret +  ( "||<#EEEEEE:> '''%s''' " % i )
+        ret = ret + ( "||\n" )
         self.true_lines.append ( ret )
 
     def writeTableList ( self ):
-        self.file.write ( "## Individual tables\n" )
+        self.file.write ( "== Individual tables ==\n" )
+        # self.file.write ( "(Results with validated='n/a' are ignored. For efficiency maps, we count the best data set only.)\n\n" )
 
         for sqrts in [ 13, 8 ]:
             run=1
             if sqrts == 13: run = 2
-            self.file.write ( "\n### Run %d - %d TeV\n" % ( run, sqrts ) )
+            self.file.write ( "\n=== Run %d - %d TeV ===\n" % ( run, sqrts ) )
             for exp in [ "ATLAS", "CMS" ]:
                 for tpe in [ "upper limits", "efficiency maps" ]:
                     expResList = self.getExpList ( sqrts, exp, tpe )
@@ -188,8 +178,8 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                         if hasTn: nexpres += 1
 
                     if nres > 0:
-                        self.file.write ( " * [%s %s](#%s%s%d): %d analyses, %d results\n" % \
-                                      ( exp, tpe, exp, stpe, sqrts, nexpres, nres ) )
+                        self.file.write ( " * [[#%s%s%d|%s %s]]: %d analyses, %d results\n" % \
+                                      ( exp, stpe, sqrts, exp, tpe, nexpres, nres ) )
 
     def writeExpRes( self, expRes, tpe ):
         valDir = os.path.join(expRes.path,'validation').replace("\n","")
@@ -207,8 +197,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 continue
             txns_discussed.append ( txn )
             ltxn += 1
-        #line = "||<|%i> [[%s|%s]]" %( ltxn, expRes.getValuesFor('url')[0], id )
-        line = "| [%s](%s)" %( id, expRes.getValuesFor('url')[0] )
+        line = "||<|%i> [[%s|%s]]" %( ltxn, expRes.getValuesFor('url')[0], id )
         hadTxname = False
         txns_discussed=[]
         nfigs = 0
@@ -234,18 +223,12 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                     continue
                 # print ( "txname=", dataset )
                 # line += "|| %s " % dataset
-            if hadTxname: ## not the first txname for this expres?
-                line += "| "
             hadTxname = True
-            # line += '||[[SmsDictionary%s#%s|%s]]' % ( self.dotlessv, txn, txnbrs )
-            line += '| [%s](SmsDictionary%s#%s)' % ( txnbrs, self.dotlessv, txn )
-            #line += "||%.1f" % txname.globalInfo.lumi.asNumber(1/fb)
-            line += "| %.1f" % txname.globalInfo.lumi.asNumber(1/fb)
+            line += '||[[SmsDictionary%s#%s|%s]]' % ( self.dotlessv, txn, txnbrs )
+            line += "||%.1f" % txname.globalInfo.lumi.asNumber(1/fb)
             if self.ugly:
-                line += '| %s ' % ( sval )
-                #line += '||<style="color: %s;"> %s ' % ( color, sval )
-            line += "|"
-            #line += "||"
+                line += '||<style="color: %s;"> %s ' % ( color, sval )
+            line += "||"
             hasFig=False
             ## print ( "databasePath=",self.databasePath )
             vDir = valDir.replace ( self.databasePath,"")
@@ -263,41 +246,50 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                         files.append ( i )
             for fig in files:
                 pngname = fig.replace(".pdf",".png" )
+                """ moved to png files now
+                if not os.path.exists ( pngname ):
+                    cmd = "convert -trim %s %s" % ( fig, pngname )
+                    print ( cmd )
+                    a = C.getoutput ( cmd )
+                    if a != "":
+                        print ( "Error on format conversion of %s: %s" % ( fig, a ) ) 
+                        sys.exit()
+                """
+                # figName = fig.replace(valDir+"/","")
                 figName = pngname.replace(valDir+"/","").replace ( \
                             self.databasePath, "" )
                 figPath = dirPath+"/"+figName
+                # print ( "figPath=",figPath, "txname=", txname.txName )
+                #line += "[[http://smodels.hephy.at"+figPath+\
+                #        "|"+figName+"]]<<BR>>"
                 figC = "http://smodels.hephy.at"+figPath
-                line += '<a href="%s"><img src="%s"></img></a>' % ( figC, figC )
-                #line += "[[%s|{{%s||width=400}}]]" % ( figC, figC )
-                line += "<BR>"
-                #line += "<<BR>>"
+                line += "[[%s|{{%s||width=400}}]]" % ( figC, figC )
+                #line += "{{http://smodels.hephy.at"+figPath+\
+                #        "||width=300}}"
+                line += "<<BR>>"
                 hasFig=True
                 nfigs += 1
             if hasFig:
-                line = line[:-4] ## remove last BR
+                line = line[:-6] ## remove last BR
             if not "attachment" in line:  #In case there are no plots
-                line += "  |"
-                #line += "  ||"
+                line += "  ||"
             else:
-                #line = line[:line.rfind("<<BR>>")] + "||"
-                line = line[:line.rfind("<<BR>>")] + "|"
+                line = line[:line.rfind("<<BR>>")] + "||"
 
             ## add comments
             if self.isNewAnaID ( id, txname.txName, tpe ):
-                # line += " {{http://smodels.hephy.at/images/new.png}} in %s! " % ( self.db.databaseVersion )
-                line += " <img src=http://smodels.hephy.at/images/new.png></img> in %s! " % ( self.db.databaseVersion )
+                line += " {{http://smodels.hephy.at/images/new.png}} in %s! " % ( self.db.databaseVersion )
             ## from comments file
             if os.path.isfile(valDir+"/"+txname.txName+".comment"):
                 commentPath = dirPath+"/"+txname.txName+".comment"
-                line += "[comment](http://smodels.hephy.at"+commentPath+\
-                        ") |\n"
-                #line += "[[http://smodels.hephy.at"+commentPath+\
-                #        "|comment"+"]] ||\n"
+                line += "[[http://smodels.hephy.at"+commentPath+\
+                        "|comment"+"]] ||\n"
+                #        "|"+txname.txName+".comment"+"]] ||\n"
             else:
-                line += " |\n" #In case there are no comments
-                #line += " ||\n" #In case there are no comments
+                line += " ||\n" #In case there are no comments
         if not hadTxname: return
         if "XXX#778899" in line: self.none_lines.append(line)
+        # if "#778899" in line: self.none_lines.append(line)
         elif "#FF0000" in line: self.false_lines.append(line)
         else: self.true_lines.append(line)
         self.nlines += 1
@@ -358,8 +350,8 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
             if len(txnames)>0: nexpRes+=1
         if nres == 0:
                 return
-        self.true_lines.append ( '\n\n<a name="%s%s%d"></a>\n' % ( exp,stype,sqrts ) )
-        self.true_lines.append ( "## %s %s, %d TeV: %d analyses, %d results total\n\n" % (exp,tpe,sqrts, nexpRes, nres ) )
+        self.true_lines.append ( "== %s %s, %d TeV: %d analyses, %d results total ==\n" % (exp,tpe,sqrts, nexpRes, nres ) )
+        self.true_lines.append ( "<<Anchor(%s%s%d)>>\n\n" % ( exp,stype,sqrts ) )
         self.writeTableHeader ( tpe )
         expResList.sort()
         for expRes in expResList:
