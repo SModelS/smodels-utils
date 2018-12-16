@@ -285,7 +285,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
             ## add comments
             if self.isNewAnaID ( id, txname.txName, tpe ):
                 # line += " {{http://smodels.hephy.at/images/new.png}} in %s! " % ( self.db.databaseVersion )
-                line += " <img src=http://smodels.hephy.at/images/new.png></img> in %s! " % ( self.db.databaseVersion )
+                line += ' <img src="http://smodels.hephy.at/images/new.png"></img> in %s! ' % ( self.db.databaseVersion )
             ## from comments file
             if os.path.isfile(valDir+"/"+txname.txName+".comment"):
                 commentPath = dirPath+"/"+txname.txName+".comment"
