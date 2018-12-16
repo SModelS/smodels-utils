@@ -72,4 +72,4 @@ for d,ver in releases():
 ROOT.c1.Modified()
 
 ROOT.c1.Print("downloads.png")
-ROOT.c1.Print("../../smodels.github.io/logos/downloads.png")
+ROOT.c1.Print("../../smodels.github.io/pics/downloads.png")
