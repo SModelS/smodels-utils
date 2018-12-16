@@ -128,7 +128,7 @@ database version %s, including the Fastlim tarball that is shipped separately.
 There is also a [list of all analyses](ListOfAnalyses%s), and
 a list of [all SMS topologies](SmsDictionary%s).
 
-The validation procedure for upper limit maps used here is explained in [arXiv:1312.4175](http://arxiv.org/abs/arXiv:1312.4175),  [EPJC May 2014, 74:2868](http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5), section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. The experimental upper limits are compared with the theoretical predictions for that signal region.
+The validation procedure for upper limit maps used here is explained in [arXiv:1312.4175](http://arxiv.org/abs/1312.4175),  [EPJC May 2014, 74:2868](http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5), section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. The experimental upper limits are compared with the theoretical predictions for that signal region.
 
 """ % ( self.db.databaseVersion, whatIsIncluded, self.db.databaseVersion, 
         self.dotlessv, self.dotlessv ) )
