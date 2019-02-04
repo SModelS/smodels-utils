@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 """ makes a database pickle file publically available. 
 The script is deliberately run with python2. That way we get 
@@ -104,7 +104,8 @@ def main():
             pclfilename = "%s.pcl" % infofile
             
     f=open ( infofile, "w" )
-    Dict = { "lastchanged": meta.mtime, "size": os.stat(dbname).st_size, "url": "http://smodels.hephy.at/database/%s" % pclfilename }
+    # Dict = { "lastchanged": meta.mtime, "size": os.stat(dbname).st_size, "url": "http://smodels.hephy.at/database/%s" % pclfilename }
+    Dict = { "lastchanged": meta.mtime, "size": os.stat(dbname).st_size, "url": "https://smodels.web.cern.ch/smodels/database/%s" % pclfilename }
     f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
     f.close()
     if has_nonValidated:
@@ -112,7 +113,9 @@ def main():
         sys.exit()
     cmd = "cp %s /nfsdata/walten/database/%s" % ( dbname, pclfilename )
     if args.ssh:
-        cmd = "scp %s smodels.hephy.at:/nfsdata/walten/database/%s" % ( dbname, pclfilename )
+        # cmd = "scp %s smodels.hephy.at:/nfsdata/walten/database/%s" % ( dbname, pclfilename )
+        cmd = "scp %s lxplus.cern.ch:/eos/project/s/smodels/www/database/%s" % ( dbname, pclfilename )
+        # print ( "(might have to do this by hand, if no password-less ssh is configured)" )
     if not args.dry_run:
         print ( "[publishDatabasePickle] %s" % cmd )
         a=CMD.getoutput ( cmd )
@@ -123,16 +126,19 @@ def main():
         cmd = "ssh smodels.hephy.at %s" % cmd
     a = CMD.getoutput ( cmd )
     print ( "[publishDatabasePickle] %s" % a )
-    cmd = "ln -s /nfsdata/walten/database/%s %s" % ( pclfilename, symlinkfile )
-    if args.ssh:
-        cmd = "ssh smodels.hephy.at ln -s /nfsdata/walten/database/%s /var/www/database/" % ( pclfilename )
     sexec="executing:"
     if args.dry_run:
         sexec="suppressing execution of:"
+    ## not needed at CERN server
+    """
+    cmd = "ln -s /nfsdata/walten/database/%s %s" % ( pclfilename, symlinkfile )
+    if args.ssh:
+        cmd = "ssh smodels.hephy.at ln -s /nfsdata/walten/database/%s /var/www/database/" % ( pclfilename )
     print ( "[publishDatabasePickle] %s %s" % ( sexec, cmd ) )
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
+    """
     # cmd = "cp %s /var/www/database/%s" % ( infofile, infofile )
     cmd = "cp %s ../../smodels.github.io/database/%s" % ( infofile, infofile )
     if args.ssh:
