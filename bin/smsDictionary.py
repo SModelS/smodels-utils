@@ -158,6 +158,8 @@ N.B.: Each "()" group corresponds to a branch
 
     def createFeynGraph ( self, txname, constraint ):
         from smodels_utils.plotting import feynmanGraph
+        fcon = constraint
+        print ( "WARNING: please implement search for shortest constraint here" )
         fstate=["MET","MET"]
         p=constraint.find(";")
         if p>-1:
@@ -178,7 +180,7 @@ N.B.: Each "()" group corresponds to a branch
         """
         feynfile="../feyn/"+txname+".png"
         sfstate = str(fstate).replace(" ","").replace("'","")
-        print ( "[smsDictionary.py] draw",feynfile,"from",c,"with",sfstate )
+        # print ( "[smsDictionary.py] draw",feynfile,"from",c,"with",sfstate,"(full constraint reads",fcon,")" )
         exe = "../smodels_utils/plotting/feynmanGraph.py -i "
         cmd = exe
         if writer.straight():

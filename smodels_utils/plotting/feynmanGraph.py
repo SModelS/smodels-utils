@@ -401,7 +401,7 @@ if __name__ == "__main__":
                 if len(constraints)>2:
                     ny = 2
                 C = "pdfjam %s --nup %dx%s --landscape --outfile %s" % ( mergefiles, nx, ny, args.output )
-                print ( "C=", C )
+                # print ( "C=", C )
                 subprocess.getoutput ( C )
                 C = "rm %s" % delfiles
                 subprocess.getoutput ( C )
