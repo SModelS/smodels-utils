@@ -316,9 +316,9 @@ class Drawer:
             extensions = [ "png", "svg", "jpg", "jpeg" ]
             pdffile=filename
             for e in extensions: pdffile=pdffile.replace( e, "pdf" )
-            epsfile=pdffile.replace("pdf","eps")
+            # epsfile=pdffile.replace("pdf","eps")
             fd.draw( pdffile )
-            # fd.draw( epsfile )
+            #fd.draw( epsfile )
             if pdffile!=filename:
                 cmd = "convert -quiet %s %s" % ( pdffile, filename )
                 a = subprocess.getoutput ( cmd )
@@ -369,6 +369,8 @@ if __name__ == "__main__":
         import sys
 
         strt = args.straight
+        outdir = os.path.dirname( args.output )
+        outfile = os.path.basename ( args.output )
 
         if args.constraint!="":
             fs = args.final_state.replace("(","[").replace(")","]")
@@ -379,7 +381,8 @@ if __name__ == "__main__":
                 constraints = constraint.split("]+[")
                 print ( "[feynmanGraph] sum of elements" )
                 for i,c in enumerate(constraints):
-                    out = args.output.replace(".","%d." % i )
+                    out = outdir + "/" + outfile.replace(".","%d." % i ).replace(".png",".pdf")
+                    df = outdir + "/"+  outfile.replace(".","%d." % i )
                     mergefiles += out + " "
                     delfiles += out + " "
                     if i < (len(constraints)-1):
@@ -388,7 +391,7 @@ if __name__ == "__main__":
                     if i > 0:
                         c="["+c
                     cc = cleanConstraint ( c ) 
-                    print ( "element",i,cc )
+                    print ( "element",i,cc, out )
                     E = element.Element ( cc )
                     drawer = Drawer ( E, args.verbose )
                     drawer.draw ( out, straight=strt, inparts=args.incoming,
@@ -400,15 +403,28 @@ if __name__ == "__main__":
                     if nx == 1: nx = 2
                 if len(constraints)>2:
                     ny = 2
-                C = "pdfjam %s --nup %dx%s --landscape --outfile %s" % ( mergefiles, nx, ny, args.output )
-                # print ( "C=", C )
-                subprocess.getoutput ( C )
+                pdfout = args.output.replace(".png",".pdf")
+                C = "pdfjam %s --nup %dx%s --landscape --outfile %s" % ( mergefiles, nx, ny, pdfout )
+                print ( "C=", C )
+                o = subprocess.getoutput ( C )
+                if len(o)>0:
+                    print ( "o=", o )
                 C = "rm %s" % delfiles
-                subprocess.getoutput ( C )
-                C = "pdfcrop %s tmp.pdf" % ( args.output )
-                subprocess.getoutput ( C )
-                C = "mv tmp.pdf %s" % ( args.output )
-                subprocess.getoutput ( C )
+                o = subprocess.getoutput ( C )
+                #if len(o)>0:
+                #    print ( "o=", o )
+                C = "pdfcrop %s tmp.pdf" % ( pdfout )
+                o = subprocess.getoutput ( C )
+                if len(o)>0:
+                    print ( "o=", o )
+                C = "mv tmp.pdf %s" % ( pdfout )
+                o = subprocess.getoutput ( C )
+                if len(o)>0:
+                    print ( "o=", o )
+                if ".png" in args.output:
+                    C="convert %s %s" % ( pdfout ,args.output )
+                    o = subprocess.getoutput ( C )
+                    print ( "o=", o )
                 sys.exit()
             constraint = cleanConstraint ( args.constraint )
             E=element.Element ( constraint, fs )

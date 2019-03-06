@@ -159,47 +159,37 @@ N.B.: Each "()" group corresponds to a branch
     def createFeynGraph ( self, txname, constraint ):
         from smodels_utils.plotting import feynmanGraph
         fcon = constraint
-        print ( "WARNING: please implement search for shortest constraint here" )
+        constrs = fcon.split ( ";" )
         fstate=["MET","MET"]
-        p=constraint.find(";")
-        if p>-1:
-            constraint=constraint[:p]
-        c=constraint
+        # print ( "constrs=", constrs )
+        c = constrs[0]
+        for i in constrs:
+            if len(i)<len(c):
+                c=i
+        print ( "[smsDictionary] shortest constraint for",txname,"is",c )
+        #p=constraint.find(";")
+        #if p>-1:
+        #    constraint=constraint[:p]
+        #c=constraint
         p=c.find("<<BR>>" )
         if p>-1:
             c=c[:p]
             fstate = eval ( constraint[p+7:].replace("(","['").replace(")","']").replace(",","','") )
-        """ this code moved to feynmanGraph
-        p=c.find("]+")
-        if p>-1:
-            c=c[:p+1]
-        p=c.find("] +")
-        if p>-1:
-            c=c[:p+1]
-        c=c.replace("71.*","").replace("(","").replace(")","").replace("`","")
-        """
         feynfile="../feyn/"+txname+".png"
         sfstate = str(fstate).replace(" ","").replace("'","")
-        # print ( "[smsDictionary.py] draw",feynfile,"from",c,"with",sfstate,"(full constraint reads",fcon,")" )
+        print ( "[smsDictionary.py] draw",feynfile,"from",c,"with",sfstate,"(full constraint reads",fcon,")" )
         exe = "../smodels_utils/plotting/feynmanGraph.py -i "
         cmd = exe
         if writer.straight():
             cmd += " -s"
         br = c.find("<BR")
-        constr = c[:br]
+        constr = c[:br].replace("`","")
         cmd += ' -c "%s"' % constr
         cmd += " -f '%s'" % str(fstate).replace("[","(").replace("]",")").replace("'",'"')
         cmd += " -o %s" % feynfile
+        print ( "[smsDictionary]", cmd )
         a = C.getoutput ( cmd )
-        """ nicer way, just doesnt clear the canvas in bulk mode
-        from smodels.theory import element
-        try:
-            e=element.Element(c,fstate )
-        except:
-            e=element.Element(c)
-        drawer = feynmanGraph.Drawer ( e, verbose=False )
-        drawer.draw ( feynfile, straight=writer.straight(), inparts=True )
-        """
+        print ( "  `-",a )
 
     def writeTopo ( self, nr, txnames, constraint, first ):
         """ :param first: is this the first time I write a topo? """
@@ -273,7 +263,7 @@ if __name__ == '__main__':
                              action='store_true' )
     argparser.add_argument ( '-x', '--xkcd', help='draw xkcd style (implies -f)',
                              action='store_true' )
-    argparser.add_argument ( '-u', '--upload', help='upload create Feynman graphs (implies -f)',
+    argparser.add_argument ( '-c', '--copy', help='copy Feynman graphs to ../../smodels.github.io/feyn/straight/ (implies -f)',
                              action='store_true' )
     argparser.add_argument ( '-p', '--private', help='declare as private (add wiki acl line on top)', action='store_true' )
     argparser.add_argument ( '-r', '--results', help='dont add results column',
@@ -290,17 +280,18 @@ if __name__ == '__main__':
             private = args.private  )
     print ( "[smsDictionary.py] Database", writer.database.databaseVersion )
     writer.run()
-    if args.upload:
-        import socket
-        hostname = socket.gethostname()
+    if args.copy:
+        #import socket
+        #hostname = socket.gethostname()
         dest="straight"
         if args.xkcd:
             dest="xkcd"
-        cmd = "cp ../feyn/T*p* /var/www/feyn/%s/" % dest
-        if hostname == "smodels":
-            print ( "WARNING: made the plots on smodels, via X tunneling. this may create problems (a bug in pyfeyn?). Check the plots! Or make the plots from your desktop." )
-        if hostname != "smodels":
-            cmd = "scp ../feyn/T*p* smodels.hephy.at:/var/www/feyn/%s/" % dest
+        cmd = "cp ../feyn/T*.p* ../../smodels.github.io/feyn/straight/"
+        #cmd = "cp ../feyn/T*p* /var/www/feyn/%s/" % dest
+        #if hostname == "smodels":
+        #    print ( "WARNING: made the plots on smodels, via X tunneling. this may create problems (a bug in pyfeyn?). Check the plots! Or make the plots from your desktop." )
+        #if hostname != "smodels":
+        #    cmd = "scp ../feyn/T*p* smodels.hephy.at:/var/www/feyn/%s/" % dest
         import subprocess
         print ( cmd )
         a = subprocess.getoutput ( cmd )
