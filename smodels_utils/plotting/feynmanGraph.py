@@ -385,7 +385,7 @@ if __name__ == "__main__":
                     delfiles += out + " "
                     if i < (len(constraints)-1):
                         c+="]"
-                        mergefiles += "plus.pdf "
+                        # mergefiles += "plus.pdf "
                     if i > 0:
                         c="["+c
                     cc = cleanConstraint ( c ) 
@@ -399,7 +399,7 @@ if __name__ == "__main__":
                 print ( "C=", C )
                 subprocess.getoutput ( C )
                 C = "rm %s" % delfiles
-                subprocess.getoutput ( C )
+                # subprocess.getoutput ( C )
                 C = "pdfcrop %s tmp.pdf" % ( args.output )
                 subprocess.getoutput ( C )
                 C = "mv tmp.pdf %s" % ( args.output )
