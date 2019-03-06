@@ -374,7 +374,6 @@ if __name__ == "__main__":
             fs = args.final_state.replace("(","[").replace(")","]")
             fs = eval (fs )
             constraint = args.constraint.replace(" ","" )
-            print ( "c=",constraint)
             mergefiles, delfiles = "", ""
             if "]+[" in constraint:
                 constraints = constraint.split("]+[")
@@ -395,11 +394,17 @@ if __name__ == "__main__":
                     drawer.draw ( out, straight=strt, inparts=args.incoming,
                                   italic=args.italic )
                     del drawer
-                C = "pdfjam %s --nup %dx1 --landscape --outfile %s" % ( mergefiles, len(constraints)*2-1, args.output )
+                nx,ny = 1,1
+                if len(constraints)>1:
+                    nx = math.ceil ( len(constraints) / 2. )
+                    if nx == 1: nx = 2
+                if len(constraints)>2:
+                    ny = 2
+                C = "pdfjam %s --nup %dx%s --landscape --outfile %s" % ( mergefiles, nx, ny, args.output )
                 print ( "C=", C )
                 subprocess.getoutput ( C )
                 C = "rm %s" % delfiles
-                # subprocess.getoutput ( C )
+                subprocess.getoutput ( C )
                 C = "pdfcrop %s tmp.pdf" % ( args.output )
                 subprocess.getoutput ( C )
                 C = "mv tmp.pdf %s" % ( args.output )
