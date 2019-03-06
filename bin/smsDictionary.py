@@ -167,6 +167,7 @@ N.B.: Each "()" group corresponds to a branch
         if p>-1:
             c=c[:p]
             fstate = eval ( constraint[p+7:].replace("(","['").replace(")","']").replace(",","','") )
+        """ this code moved to feynmanGraph
         p=c.find("]+")
         if p>-1:
             c=c[:p+1]
@@ -174,6 +175,7 @@ N.B.: Each "()" group corresponds to a branch
         if p>-1:
             c=c[:p+1]
         c=c.replace("71.*","").replace("(","").replace(")","").replace("`","")
+        """
         feynfile="../feyn/"+txname+".png"
         sfstate = str(fstate).replace(" ","").replace("'","")
         print ( "[smsDictionary.py] draw",feynfile,"from",c,"with",sfstate )

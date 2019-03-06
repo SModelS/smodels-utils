@@ -18,6 +18,23 @@ import subprocess
 
 from pyfeyn.user import color
 
+
+def cleanConstraint ( inp ):
+    """ cleanup constraint string """
+    c = inp
+    # c = c.replace ( '[[[e+]],[[e-]]]+[[[mu+]],[[mu-]]]','[[[l+]],[[l-]]]' )
+    # c = c.replace ( '[[[mu+,mu-]],[[l,nu]]]+[[[e+,e-]],[[l,nu]]]','[[[mu+,mu-]],[[l,nu]]]'
+    p=c.find("]+")
+    if p>-1:
+        c=c[:p+1]
+    p=c.find("] +")
+    if p>-1:
+        c=c[:p+1]
+    c=c.replace("71.*","").replace("(","").replace(")","").replace("`","")
+    if c != inp:
+        print ( "[feynmanGraph] modified", inp, "->", c )
+    return c
+
 def printParticle_ ( label, jet ):
     """ very simple method to rename a few particles for the asciidraw
             routine, do not call directly """
@@ -356,7 +373,8 @@ if __name__ == "__main__":
         if args.constraint!="":
             fs = args.final_state.replace("(","[").replace(")","]")
             fs = eval (fs )
-            E=element.Element ( args.constraint, fs )
+            constraint = cleanConstraint ( args.constraint )
+            E=element.Element ( constraint, fs )
             drawer = Drawer ( E, args.verbose )
             drawer.draw ( args.output, straight=args.straight, inparts=args.incoming,
                           italic=args.italic )
