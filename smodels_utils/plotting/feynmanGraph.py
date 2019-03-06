@@ -399,7 +399,11 @@ if __name__ == "__main__":
                 print ( "C=", C )
                 subprocess.getoutput ( C )
                 C = "rm %s" % delfiles
-                # subprocess.getoutput ( C )
+                subprocess.getoutput ( C )
+                C = "pdfcrop %s tmp.pdf" % ( args.output )
+                subprocess.getoutput ( C )
+                C = "mv tmp.pdf %s" % ( args.output )
+                subprocess.getoutput ( C )
                 sys.exit()
             constraint = cleanConstraint ( args.constraint )
             E=element.Element ( constraint, fs )
