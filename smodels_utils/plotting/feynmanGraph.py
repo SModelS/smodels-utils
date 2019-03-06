@@ -22,14 +22,12 @@ from pyfeyn.user import color
 def cleanConstraint ( inp ):
     """ cleanup constraint string """
     c = inp
-    # c = c.replace ( '[[[e+]],[[e-]]]+[[[mu+]],[[mu-]]]','[[[l+]],[[l-]]]' )
-    # c = c.replace ( '[[[mu+,mu-]],[[l,nu]]]+[[[e+,e-]],[[l,nu]]]','[[[mu+,mu-]],[[l,nu]]]'
-    p=c.find("]+")
-    if p>-1:
-        c=c[:p+1]
-    p=c.find("] +")
-    if p>-1:
-        c=c[:p+1]
+    #p=c.find("]+")
+    #if p>-1:
+    #    c=c[:p+1]
+    #p=c.find("] +")
+    #if p>-1:
+    #    c=c[:p+1]
     c=c.replace("71.*","").replace("(","").replace(")","").replace("`","")
     if c != inp:
         print ( "[feynmanGraph] modified", inp, "->", c )
@@ -370,13 +368,43 @@ if __name__ == "__main__":
         from smodels_utils import SModelSUtils
         import sys
 
+        strt = args.straight
+
         if args.constraint!="":
             fs = args.final_state.replace("(","[").replace(")","]")
             fs = eval (fs )
+            constraint = args.constraint.replace(" ","" )
+            print ( "c=",constraint)
+            mergefiles, delfiles = "", ""
+            if "]+[" in constraint:
+                constraints = constraint.split("]+[")
+                print ( "[feynmanGraph] sum of elements" )
+                for i,c in enumerate(constraints):
+                    out = args.output.replace(".","%d." % i )
+                    mergefiles += out + " "
+                    delfiles += out + " "
+                    if i < (len(constraints)-1):
+                        c+="]"
+                        mergefiles += "plus.pdf "
+                    if i > 0:
+                        c="["+c
+                    cc = cleanConstraint ( c ) 
+                    print ( "element",i,cc )
+                    E = element.Element ( cc )
+                    drawer = Drawer ( E, args.verbose )
+                    drawer.draw ( out, straight=strt, inparts=args.incoming,
+                                  italic=args.italic )
+                    del drawer
+                C = "pdfjam %s --nup %dx1 --landscape --outfile %s" % ( mergefiles, len(constraints)*2-1, args.output )
+                print ( "C=", C )
+                subprocess.getoutput ( C )
+                C = "rm %s" % delfiles
+                # subprocess.getoutput ( C )
+                sys.exit()
             constraint = cleanConstraint ( args.constraint )
             E=element.Element ( constraint, fs )
             drawer = Drawer ( E, args.verbose )
-            drawer.draw ( args.output, straight=args.straight, inparts=args.incoming,
+            drawer.draw ( args.output, straight=strt, inparts=args.incoming,
                           italic=args.italic )
             del drawer ## no fucking clue why this is needed
             sys.exit()
