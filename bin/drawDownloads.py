@@ -74,3 +74,5 @@ ROOT.c1.Modified()
 
 ROOT.c1.Print("downloads.png")
 ROOT.c1.Print("../../smodels.github.io/pics/downloads.png")
+
+a=C.getoutput ( "rm .reverse.log" )
