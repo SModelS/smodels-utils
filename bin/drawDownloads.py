@@ -6,7 +6,8 @@ try:
     import commands as C
 except:
     import subprocess as C
-a=C.getoutput ( "tac ../log/pip_backup.log > ./.reverse.log" )
+a=C.getoutput ( "tac ../log/pip_downloads.log > ./.reverse.log" )
+print ( a )
 
 ROOT.gStyle.SetOptStat(0000)
 Min,Max = 0.,400.
@@ -63,12 +64,12 @@ for d,ver in releases():
         l.SetLineStyle ( 2 )
         l.Draw()
         pos=.8
-        t=ROOT.TText ( Bin, pos*Max, ver )
-        t.SetTextColor ( ROOT.kRed )
-        t.SetTextSize(.04)
-        t.SetTextAngle(90.)
-        t.Draw()
-        values.append ( (l,t) )
+        tt=ROOT.TText ( Bin, pos*Max, ver )
+        tt.SetTextColor ( ROOT.kRed )
+        tt.SetTextSize(.04)
+        tt.SetTextAngle(90.)
+        tt.Draw()
+        values.append ( (l,tt) )
 ROOT.c1.Modified()
 
 ROOT.c1.Print("downloads.png")
