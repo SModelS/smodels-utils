@@ -56,12 +56,17 @@ class Writer:
         self.prettyNames = prettyNames
         self.n_anas = 0 ## counter for analyses
         self.n_topos = 0 ## counter fo topologies
+        self.lasts = None ## last sqrt-s (for hline )
 
     def writeSingleAna ( self, ana ):
         """ write the entry of a single analysis """
+        lines= [ "" ]
+        sqrts = int ( ana.globalInfo.sqrts.asNumber(TeV) ) 
+        if sqrts != self.lasts and self.lasts != None:
+            lines[0] = "\\hline\n"
+            
         self.n_anas += 1
         ret = ""
-        lines= [ "" ]
         txnobjs = ana.getTxNames() 
         t_txnames = [ x.txName for x in txnobjs ]
         t_txnames.sort()
@@ -74,18 +79,19 @@ class Writer:
             else:
                 if not isIn ( i, txnames ):
                     txnames.append ( i )
-        alltxes = "%d" % len(txnames)
-        if not self.prettyNames:
-            alltxes += ": "
-            first=True
-            for i in txnames:
-                if not first:
-                    alltxes+=", "
-                first=False
-                alltxes+= "%s" % i
-                if len(alltxes)>40: # 40
-                    alltxes+="..."
-                    break
+        alltxes = "%d: " % len(txnames)
+        maxn = 40
+        if self.prettyNames:
+            maxn=15
+        first=True
+        for i in txnames:
+            if not first:
+                alltxes+=", "
+            first=False
+            alltxes+= "%s" % i
+            if len(alltxes)>maxn:
+                alltxes+="..."
+                break
 
         prettyName = ana.globalInfo.prettyName
         dataType = ana.datasets[0].dataInfo.dataType
@@ -104,9 +110,21 @@ class Writer:
         lines[0] += "%s & " % Id
         if self.prettyNames:
             pn = prettyName.replace(">","$>$").replace("<","$<$")
+            pn = pn.replace("photon photon","$\gamma\gamma$" )
+            pn = pn.replace("jet multiplicity","n$_{jets}$" )
+            pn = pn.replace("Higgs","H" )
+            pn = pn.replace("searches in","to" )
+            pn = pn.replace("leptons","l's" )
+            pn = pn.replace("lepton","l" )
+            pn = pn.replace("dilepton","di\-l" )
+            pn = pn.replace("productions with decays to","prod, to ")
             pn = pn.replace("photon","$\gamma$" )
             pn = pn.replace("Photon","$\gamma$" )
-            pn = pn.replace("\\Delt","$\Delta$" )
+            pn = pn.replace("-$>$","$\\rightarrow$" )
+            pn = pn.replace("final states","")
+            pn = pn.replace("final state","")
+            pn = pn.replace("ETmiss","$\\not{\!\!E}_T$")
+            pn = pn.replace("Etmiss","$\\not{\!\!E}_T$")
             pn = pn.replace("M_CT","M$_CT$" )
             pn = pn.replace("alpha_T","$\\alpha_T$" )
             if pn[-1]==")":
@@ -116,7 +134,8 @@ class Writer:
             lines[0] += "%s &" % pn
         lines[0] += "%s & %s & %s & %s \\\\\n" % \
                      ( alltxes, dt, ana.globalInfo.lumi.asNumber(1/fb), 
-                       int ( ana.globalInfo.sqrts.asNumber(TeV) ) )
+                       sqrts )
+        self.lasts = sqrts
         self.n_topos += len(txnames)
         return "\\n".join ( lines ), len(txnames)
 
