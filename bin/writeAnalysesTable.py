@@ -38,16 +38,30 @@ def isIn ( i, txnames ):
 
 
 class Writer:
-    def __init__ ( self, experiment ):
+    def __init__ ( self, db, experiment, keep, caption, numbers, prettyNames ):
+        """ writer class
+        :param caption: write figure caption (bool)
+        :param keep: keep latex files (bool)
+        :param numbers: enumerate analysis (bool)
+        :param description: add column for descriptions (bool)
+        """
+        from smodels.experiment.databaseObj import Database
+        database = Database ( args.database )
+        #Creat analyses list:
+        self.listOfAnalyses = database.getExpResults()
         self.experiment = experiment 
+        self.keep = keep
+        self.caption = caption
+        self.numbers = numbers
+        self.prettyNames = prettyNames
+        self.n_anas = 0 ## counter for analyses
+        self.n_topos = 0 ## counter fo topologies
 
     def writeSingleAna ( self, ana ):
         """ write the entry of a single analysis """
-        #IPython.embed()
-        #sys.exit()
+        self.n_anas += 1
         ret = ""
         lines= [ "" ]
-        # print ana.globalInfo.id
         txnobjs = ana.getTxNames() 
         t_txnames = [ x.txName for x in txnobjs ]
         t_txnames.sort()
@@ -60,17 +74,20 @@ class Writer:
             else:
                 if not isIn ( i, txnames ):
                     txnames.append ( i )
-        alltxes = "%d: " % len(txnames)
-        first=True
-        for i in txnames:
-            if not first:
-                alltxes+=", "
-            first=False
-            alltxes+= "%s" % i
-            if len(alltxes)>25: # 40
-                alltxes+="..."
-                break
+        alltxes = "%d" % len(txnames)
+        if not self.prettyNames:
+            alltxes += ": "
+            first=True
+            for i in txnames:
+                if not first:
+                    alltxes+=", "
+                first=False
+                alltxes+= "%s" % i
+                if len(alltxes)>40: # 40
+                    alltxes+="..."
+                    break
 
+        prettyName = ana.globalInfo.prettyName
         dataType = ana.datasets[0].dataInfo.dataType
         dt = "eff" if dataType == "efficiencyMap" else "ul"
         # ref = "\\href{%s}{[%d]}" % ( ana.globalInfo.url, nr )
@@ -82,32 +99,56 @@ class Writer:
         #    Url="http://www.google.com"
         #    gi_id="vvv"
         Id = "\\href{%s}{%s}" % ( Url, gi_id )
-        lines[0] += "%s & %s & %s & %s & %s \\\\\n" % \
-                     ( Id, alltxes, dt, ana.globalInfo.lumi.asNumber(1/fb), 
+        if self.numbers:
+            lines[0]+="%d &" % self.n_anas
+        lines[0] += "%s & " % Id
+        if self.prettyNames:
+            pn = prettyName.replace(">","$>$").replace("<","$<$")
+            pn = pn.replace("photon","$\gamma$" )
+            pn = pn.replace("Photon","$\gamma$" )
+            pn = pn.replace("\\Delt","$\Delta$" )
+            pn = pn.replace("M_CT","M$_CT$" )
+            pn = pn.replace("alpha_T","$\\alpha_T$" )
+            if pn[-1]==")":
+                pos = pn.rfind ( "(" )
+                pn = pn[:pos]
+            # pn = prettyName[:30]
+            lines[0] += "%s &" % pn
+        lines[0] += "%s & %s & %s & %s \\\\\n" % \
+                     ( alltxes, dt, ana.globalInfo.lumi.asNumber(1/fb), 
                        int ( ana.globalInfo.sqrts.asNumber(TeV) ) )
+        self.n_topos += len(txnames)
         return "\\n".join ( lines ), len(txnames)
 
-    def generateAnalysisTable(self, listOfAnalyses ):
+    def generateAnalysisTable(self ):
         """ Generates a raw latex table with all the analyses in listOfAnalyses,
         writes it to texfile (if not None), and returns it as its return value. """
         texfile = "tab.tex"
-        toprint = "\\begin{longtable}{|l|l|c|c|c|}\n\hline\n"
+        frmt = "|l|l|c|c|c|"
+        if self.prettyNames:
+            frmt = "|l|l|l|c|c|c|"
+        if self.numbers:
+            frmt = "|r" + frmt
+        toprint = "\\begin{longtable}{%s}\n\hline\n" % frmt
+        if self.numbers:
+            toprint +="{\\bf \#} &"
+        toprint += "{\\bf ID} & "
+        if self.prettyNames:
+            toprint += "{\\bf pretty name} & "
+            
 
-        toprint += "{\\bf ID} & {\\bf Topologies} & {\\bf Type} & {\\bf $\\mathcal{L}$ [fb$^{-1}$] } & {\\bf $\\sqrt s$ }"
+        toprint += "{\\bf Topologies} & {\\bf Type} & {\\bf $\\mathcal{L}$ [fb$^{-1}$] } & {\\bf $\\sqrt s$ }"
         toprint += "\\\\\n\hline\n"
-        num_analyses = 0
-        num_topos = 0
-        for ana in listOfAnalyses:
+        for ana in self.listOfAnalyses:
             if self.experiment == "both" or self.experiment in ana.globalInfo.id:
                 tp, n_topos = self.writeSingleAna ( ana )
                 toprint += tp
-                num_topos += n_topos
-                num_analyses += 1
         toprint += "\\hline\n"
-        caption = "\\caption{SModelS database"
-        if self.experiment != "both": caption += " (%s)" % self.experiment
-        toprint += "%s}\n" % caption
-        toprint += "\\label{tab:SModelS database}\n"
+        if self.caption:
+            caption = "\\caption{SModelS database"
+            if self.experiment != "both": caption += " (%s)" % self.experiment
+            toprint += "%s}\n" % caption
+            toprint += "\\label{tab:SModelS database}\n"
         toprint += "\\end{longtable}\n"
 
         if texfile:
@@ -116,16 +157,17 @@ class Writer:
             outfile.close()
 
         self.createLatexDocument ( texfile )
-        print ( "Number of analyses",num_analyses )
-        print ( "Number of topos",num_topos )
+        print ( "Number of analyses",self.n_anas )
+        print ( "Number of topos",self.n_topos )
         return toprint
 
-    def createPdfFile ( self, no_unlink ):
+    def createPdfFile ( self ):
         texfile = "tab.tex"
         base = "smodels"
         if self.experiment != "both":
             base = self.experiment
         print ( "now latexing smodels.tex" )
+        C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
         C.getoutput ( "latex -interaction=nonstopmode smodels.tex" )
         #if os.path.isfile("smodels.dvi"):
         #    C.getoutput( "dvipdf smodels.dvi" )
@@ -135,7 +177,7 @@ class Writer:
             # C.getoutput ( "mv smodels.ps %s.ps" % experiment )
         for i in [ "smodels.log", "smodels.out", "smodels.aux" ]:
             os.unlink ( i ) 
-        if not no_unlink:
+        if not self.keep:
             for i in [ "smodels.tex", "tab.tex" ]:
                 os.unlink ( i )
 
@@ -145,7 +187,7 @@ class Writer:
         C.getoutput ( cmd )
 
 
-    def createPngFile ( self, no_unlink ):
+    def createPngFile ( self ):
         base = "smodels"
         if self.experiment != "both":
             base = self.experiment
@@ -166,7 +208,7 @@ if __name__ == "__main__":
         argparser.add_argument ( '-d', '--database', nargs='?', 
                             help='path to database [%s]' % dbpath, type=str, 
                             default=dbpath )
-        argparser.add_argument('-n', '--no_unlink', help='do not remove tex file', 
+        argparser.add_argument('-k', '--keep', help='keep tex files', 
                             action='store_true' )
         argparser.add_argument ( '-e', '--experiment', nargs='?', 
                             help='experiment [both]', type=str, default='both')
@@ -174,16 +216,21 @@ if __name__ == "__main__":
                             action='store_true' )
         argparser.add_argument('-P', '--png', help='produce png file', 
                             action='store_true' )
+        argparser.add_argument('-c', '--caption', help='add figure caption', 
+                            action='store_true' )
+        argparser.add_argument('-n', '--enumerate', help='enumerate analyses', 
+                            action='store_true' )
+        argparser.add_argument('-N', '--prettyNames', 
+                            help='add column for description of analyses', 
+                            action='store_true' )
         args=argparser.parse_args()
-        from smodels.experiment.databaseObj import Database
-        database = Database ( args.database )
-        #Creat analyses list:
-        listOfAnalyses = database.getExpResults()
-        writer = Writer( experiment=args.experiment )
+        writer = Writer( db = args.database, experiment=args.experiment,
+                         keep = args.keep, caption = args.caption,
+                         numbers = args.enumerate, prettyNames=args.prettyNames )
         #Generate table:
-        writer.generateAnalysisTable( listOfAnalyses )
+        writer.generateAnalysisTable()
         # create pdf
         if args.pdf or args.png: 
-            writer.createPdfFile ( args.no_unlink )
+            writer.createPdfFile()
         if args.png:
-            writer.createPngFile ( args.no_unlink )
+            writer.createPngFile()
