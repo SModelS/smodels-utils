@@ -41,7 +41,8 @@ def isIn ( i, txnames ):
 
 
 class Writer:
-    def __init__ ( self, db, experiment, keep, caption, numbers, prettyNames ):
+    def __init__ ( self, db, experiment, keep, caption, numbers, prettyNames,
+                         superseded ):
         """ writer class
         :param caption: write figure caption (bool)
         :param keep: keep latex files (bool)
@@ -51,7 +52,7 @@ class Writer:
         from smodels.experiment.databaseObj import Database
         database = Database ( args.database )
         #Creat analyses list:
-        self.listOfAnalyses = database.getExpResults()
+        self.listOfAnalyses = database.getExpResults( useSuperseded=superseded )
         self.experiment = experiment 
         self.keep = keep
         self.caption = caption
@@ -60,6 +61,7 @@ class Writer:
         self.n_anas = 0 ## counter for analyses
         self.n_topos = 0 ## counter fo topologies
         self.lasts = None ## last sqrt-s (for hline )
+        self.last_ana = None ## last ana id ( for counting )
 
     def writeSingleAna ( self, ana ):
         """ write the entry of a single analysis """
@@ -67,8 +69,12 @@ class Writer:
         sqrts = int ( ana.globalInfo.sqrts.asNumber(TeV) ) 
         if sqrts != self.lasts and self.lasts != None:
             lines[0] = "\\hline\n"
-            
-        self.n_anas += 1
+        ananr=""
+        anaid = ana.globalInfo.id
+        if anaid != self.last_ana: 
+            self.n_anas += 1
+            self.last_ana = anaid
+            ananr="%d" % self.n_anas
         ret = ""
         txnobjs = ana.getTxNames() 
         t_txnames = [ x.txName for x in txnobjs ]
@@ -109,12 +115,13 @@ class Writer:
         #    gi_id="vvv"
         Id = "\\href{%s}{%s}" % ( Url, gi_id )
         if self.numbers:
-            lines[0]+="%d &" % self.n_anas
+            lines[0]+="%s &" % ananr
         lines[0] += "%s & " % Id
         if self.prettyNames:
             pn = prettyName.replace(">","$>$").replace("<","$<$")
             pn = pn.replace("0 or $>$=1 leptons +","" )
             pn = pn.replace("photon photon","$\gamma\gamma$" )
+            pn = pn.replace("SF OS","SFOS" )
             pn = pn.replace("jet multiplicity","n$_{jets}$" )
             pn = pn.replace("Higgs","H" )
             pn = pn.replace("searches in","to" )
@@ -161,7 +168,7 @@ class Writer:
             toprint +="{\\bf \#} &"
         toprint += "{\\bf ID} & "
         if self.prettyNames:
-            toprint += "{\\bf pretty name} & "
+            toprint += "{\\bf Pretty Name} & "
             
 
         toprint += "{\\bf Topologies} & {\\bf Type} & {\\bf $\\mathcal{L}$ [fb$^{-1}$] } & {\\bf $\\sqrt s$ }"
@@ -243,6 +250,8 @@ if __name__ == "__main__":
                             action='store_true' )
         argparser.add_argument('-P', '--png', help='produce png file', 
                             action='store_true' )
+        argparser.add_argument('-s', '--superseded', help='add superseded results', 
+                            action='store_true' )
         argparser.add_argument('-c', '--caption', help='add figure caption', 
                             action='store_true' )
         argparser.add_argument('-n', '--enumerate', help='enumerate analyses', 
@@ -253,7 +262,8 @@ if __name__ == "__main__":
         args=argparser.parse_args()
         writer = Writer( db = args.database, experiment=args.experiment,
                          keep = args.keep, caption = args.caption,
-                         numbers = args.enumerate, prettyNames=args.prettyNames )
+                         numbers = args.enumerate, prettyNames=args.prettyNames,
+                         superseded = args.superseded )
         #Generate table:
         writer.generateAnalysisTable()
         # create pdf
