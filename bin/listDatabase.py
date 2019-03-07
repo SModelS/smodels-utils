@@ -1,7 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """ This is a simple tool that I (WW)need to work out with the CMS susy group
 what digitized results are not yet published """
+
+from __future__ import print_function
 
 import sys
 sys.path.append("../../smodels/")
@@ -134,7 +136,7 @@ def run():
         txnames = expResult.getTxNames()
         if hasattr(expResult.globalInfo,'contact'):
             if 'fastlim' in expResult.globalInfo.contact  and removeFastlim:
-                print 'skipping fastlim result:',expId
+                print ( 'skipping fastlim result:',expId )
                 continue
 
         if wasATLAS and not isATLAS(expId):
