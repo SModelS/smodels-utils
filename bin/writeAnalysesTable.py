@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-
+#!/usr/bin/env python3
 # vim: fileencoding=latin1
 
 """
@@ -10,17 +9,21 @@
 
 """
 
+from __future__ import print_function
 import sys
-import commands
+try:
+    import subprocess as C
+except:
+    import commands as C
 from smodels.tools.physicsUnits import fb, TeV
 import IPython
 
 try:
     from ordered_set import OrderedSet
-except ExceptionError,e:
-    print "exception",e
-    print "please install ordered_set, e.g. via:"
-    print "pip install --user ordered_set"
+except Exception as e:
+    print ( "exception",e )
+    print ( "please install ordered_set, e.g. via:" )
+    print ( "pip install --user ordered_set" )
     sys.exit()
 
 def isIn ( i, txnames ):
@@ -106,29 +109,29 @@ def generateAnalysisTable(listOfAnalyses, texfile=None, experiment = "both" ):
         outfile.close()
 
     createLatexDocument ( texfile )
-    print "Number of analyses",num_analyses
-    print "Number of topos",num_topos
+    print ( "Number of analyses",num_analyses )
+    print ( "Number of topos",num_topos )
     return toprint
 
 
 def createLatexDocument ( texfile ):
     repl="@@@TEXFILE@@@"
-    cmd="cat template.tex | sed -e 's/%s/%s/' > /tmp/smodels.tex" % ( repl, texfile )
-    commands.getoutput ( cmd )
+    cmd="cat ../share/AnalysesListTemplate.tex | sed -e 's/%s/%s/' > /tmp/smodels.tex" % ( repl, texfile )
+    C.getoutput ( cmd )
 
 def createPdfFile ( texfile, no_unlink, experiment ):
     pdffile=texfile.replace(".tex",".pdf" )
     #repl="@@@TEXFILE@@@"
     #cmd="cat template.tex | sed -e 's/%s/%s/' > /tmp/smodels.tex" % ( repl, texfile )
-    #commands.getoutput ( cmd )
-    print "now latexing"
-    commands.getoutput ( "latex -interaction=nonstopmode /tmp/smodels.tex" )
+    #C.getoutput ( cmd )
+    print ( "now latexing /tmp/smodels.tex" )
+    C.getoutput ( "latex -interaction=nonstopmode /tmp/smodels.tex" )
     if os.path.isfile("smodels.dvi"):
-        commands.getoutput( "dvips smodels.dvi" )
-    print "done latexing"
+        C.getoutput( "dvipdf smodels.dvi" )
+    print ( "done latexing, see smodels.pdf" )
     if experiment != "both":
-        commands.getoutput ( "cp smodels.pdf %s.pdf" % experiment )
-        commands.getoutput ( "cp smodels.ps %s.ps" % experiment )
+        C.getoutput ( "cp smodels.pdf %s.pdf" % experiment )
+        C.getoutput ( "cp smodels.ps %s.ps" % experiment )
     os.unlink ( "smodels.log" )
     os.unlink ( "smodels.aux" )
     if not no_unlink:
@@ -139,16 +142,17 @@ if __name__ == "__main__":
 
         argparser = argparse.ArgumentParser(description=
                       'simple tool to generate a latex table with all analysis used')
-        dbpath = os.path.abspath( '../../../smodels-database/' )
+        dbpath = os.path.abspath( '../../smodels-database/' )
         argparser.add_argument ( '-d', '--database', nargs='?', 
-                            help='path to database', 
-                            type=types.StringType, default=dbpath )
-        argparser.add_argument ( '-o', '--output', nargs='?', help='output file', 
-                            type=types.StringType, default='tab.tex')
+                            help='path to database [%s]' % dbpath, type=str, 
+                            default=dbpath )
+        argparser.add_argument ( '-o', '--output', nargs='?', 
+                            help='output file [tab.tex]', 
+                            type=str, default='tab.tex')
         argparser.add_argument('-n', '--no_unlink', help='do not remove tex file', 
                             action='store_true' )
-        argparser.add_argument ( '-e', '--experiment', nargs='?', help='experiment', 
-                            type=types.StringType, default='both')
+        argparser.add_argument ( '-e', '--experiment', nargs='?', 
+                            help='experiment [both]', type=str, default='both')
         argparser.add_argument('-p', '--pdf', help='produce pdf file', 
                             action='store_true' )
         args=argparser.parse_args()
