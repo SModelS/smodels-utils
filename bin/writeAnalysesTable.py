@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # vim: fileencoding=latin1
 
+## todo in pretty names: ETmiss vs Etmiss vs MET. 0 or >=1 leptons? WTF?
+## same-sign versus same sign versus SS FIXME
+
 """
 .. module:: analysesTable
      :synopsis: generates a latex table with all analyses.
@@ -110,10 +113,14 @@ class Writer:
         lines[0] += "%s & " % Id
         if self.prettyNames:
             pn = prettyName.replace(">","$>$").replace("<","$<$")
+            pn = pn.replace("0 or $>$=1 leptons +","" )
             pn = pn.replace("photon photon","$\gamma\gamma$" )
             pn = pn.replace("jet multiplicity","n$_{jets}$" )
             pn = pn.replace("Higgs","H" )
             pn = pn.replace("searches in","to" )
+            pn = pn.replace("same-sign","SS" )
+            pn = pn.replace("Multilepton","multi-l" )
+            pn = pn.replace("multilepton","multi-l" )
             pn = pn.replace("leptons","l's" )
             pn = pn.replace("lepton","l" )
             pn = pn.replace("dilepton","di\-l" )
@@ -125,6 +132,7 @@ class Writer:
             pn = pn.replace("final state","")
             pn = pn.replace("ETmiss","$\\not{\!\!E}_T$")
             pn = pn.replace("Etmiss","$\\not{\!\!E}_T$")
+            pn = pn.replace("MET","$\\not{\!\!E}_T$")
             pn = pn.replace("M_CT","M$_CT$" )
             pn = pn.replace("alpha_T","$\\alpha_T$" )
             if pn[-1]==")":
