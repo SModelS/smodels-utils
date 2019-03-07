@@ -221,7 +221,7 @@ class Writer:
         pngfile= base + ".png"
         pdffile= base + ".pdf"
         print ( "now creating %s-X.png" % base )
-        cmd = "convert %s %s" % ( pdffile, pngfile )
+        cmd = "convert -trim %s %s" % ( pdffile, pngfile )
         o = C.getoutput ( cmd )
         if len(o)>0:
             print ( o )
