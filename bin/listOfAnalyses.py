@@ -270,6 +270,10 @@ def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, n_homegrow
             ssuperseded = "[%s](#%s)" % ( s, t )
         # f.write ( "|| [[%s|%s]]<<Anchor(%s)>>" % ( url, Id, Id ) )
         f.write ( '| [%s](%s)<a name="%s"></a>' % ( Id, url, Id ) )
+        if not hasattr ( ana.globalInfo, "prettyName" ):
+            print ( "Analysis %s has no pretty name defined." % ana.globalInfo.id )
+            print ( "Please add a pretty name and repeat." )
+            sys.exit()
         short_desc = convert ( ana.globalInfo.prettyName )
         f.write ( " | %s | %s | %s |" % ( short_desc,
                ana.globalInfo.lumi.asNumber(), topos_s ) )
