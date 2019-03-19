@@ -51,8 +51,8 @@ def main():
 
     if not A.no_pickle:
         print ( "\nCreate and publish database pickle" )
-        exec ( [ "./publishDatabasePickle.py", "-b", "-f", db ] )
-        exec ( [ "./publishDatabasePickle.py", "-r", "-b", "-f", db ] )
+        exec ( [ "./publishDatabasePickle.py", "-b", "-s", "-f", db ] )
+        exec ( [ "./publishDatabasePickle.py", "-r", "-b", "-s", "-f", db ] )
 
     print ( "create Validation wiki" )
     exec ( [ "../validation/createWikiPage.py", "-c", ref_db, "-a", "-i", "-f" ] )
