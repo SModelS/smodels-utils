@@ -295,14 +295,13 @@ if __name__ == "__main__":
     if parser.has_section("options") and parser.has_option("options","pngPlots"):
         pngAlso = parser.getboolean("options", "pngPlots" )
 
+    pretty = False
     if parser.has_section("options") and parser.has_option("options","prettyPlots"):
         spretty = parser.get("options", "prettyPlots" ).lower()
         if spretty in [ "true", "yes", "1" ]:
             pretty = True
         if spretty in [ "*", "all", "both" ]:
             pretty = "both"
-    else:
-        pretty = False
     limitPoints=None
     if parser.has_section("options") and parser.has_option("options","limitPoints"):
         limitPoints = parser.getint("options","limitPoints")
