@@ -3,7 +3,7 @@
 """
 .. module:: createWikiPage.py
    :synopsis: create the wiki page listing the validation plots, like
-              http://smodels.hephy.at/wiki/Validation
+              https://smodels.github.io/docs/Validation
 
 """
 
@@ -42,9 +42,9 @@ class WikiPageCreator:
         self.dotlessv = ""
         if add_version:
             self.dotlessv = self.db.databaseVersion.replace(".","" )
-        # self.localdir = "/var/www/validationWiki"
-        self.localdir = "/var/www/validation_v%s" % \
-                         self.db.databaseVersion.replace(".","" )
+        #self.localdir = "/var/www/validation_v%s" % \
+        #                 self.db.databaseVersion.replace(".","" )
+        self.localdir = "../../smodels.github.io/validation/%s" %self.db.databaseVersion.replace(".","" )
         has_uploaded = False
         if not os.path.exists ( self.localdir ) and self.force_upload:
             print ( "%s does not exist. will try to create it." % self.localdir )
@@ -57,19 +57,21 @@ class WikiPageCreator:
             subprocess.getoutput ( cmd )
         if os.path.exists ( self.localdir) and (not "version" in os.listdir( self.localdir )) and self.force_upload:
             print ( "Copying database from %s to %s." % (self.databasePath, self.localdir )  )
-            cmd = "cp -r %s/* %s" % ( self.databasePath, self.localdir )
+            cmd = "rsync -a --prune-empty-dirs --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*orig\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
             a= C.getoutput ( cmd )
             print ( "%s: %s" % ( cmd, a ) )
             has_uploaded = True
-        if self.force_upload:
+        if self.force_upload and not has_uploaded:
             print ( "Copying database from %s to %s." % (self.databasePath, self.localdir )  )
-            cmd = "cp -r %s/* %s" % ( self.databasePath, self.localdir )
+            # cmd = "cp -r %s/* %s" % ( self.databasePath, self.localdir )
+            cmd = "rsync -a --prune-empty-dirs --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*orig\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
             a= C.getoutput ( cmd )
             print ( "%s: %s" % ( cmd, a ) )
             has_uploaded = True
         else:
             print ( "Database seems already copied to %s. Good." % self.localdir )
-        self.urldir = self.localdir.replace ( "/var/www", "" )
+        # self.urldir = self.localdir.replace ( "/var/www", "" )
+        self.urldir = self.localdir.replace ( "../../smodels.github.io", "" )
         self.fName = 'Validation%s' % self.dotlessv
         if self.ugly:
             self.fName = 'ValidationUgly%s' % self.dotlessv
@@ -78,7 +80,7 @@ class WikiPageCreator:
         print ( "\n" )
         if not has_uploaded:
             print ( 'MAKE SURE THE VALIDATION PLOTS IN '
-                    'smodels.hephy.at:%s ARE UPDATED\n' % self.localdir  )
+                    'smodels.github.io:%s ARE UPDATED\n' % self.localdir  )
         self.true_lines = []
         self.false_lines = []
         self.none_lines = []
@@ -114,10 +116,6 @@ class WikiPageCreator:
         whatIsIncluded = "Superseded and Fastlim results are included"
         if self.ignore_superseded:
             whatIsIncluded = "Fastlim results are listed; superseded results have been skipped"
-#        if self.private:
-#            self.file.write ( 
-#"""#acl +DeveloperGroup:read,write,revert -All:write,read Default
-#<<LockedPage()>>""" )
         self.file.write( """
 # Validation plots for SModelS-v%s 
 
@@ -266,33 +264,26 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 figName = pngname.replace(valDir+"/","").replace ( \
                             self.databasePath, "" )
                 figPath = dirPath+"/"+figName
-                figC = "http://smodels.hephy.at"+figPath
+                figC = "https://smodels.github.io"+figPath
                 line += '<a href="%s"><img src="%s" /></a>' % ( figC, figC )
-                #line += "[[%s|{{%s||width=400}}]]" % ( figC, figC )
                 line += "<BR>"
-                #line += "<<BR>>"
                 hasFig=True
                 nfigs += 1
             if hasFig:
                 line = line[:-4] ## remove last BR
             if not "attachment" in line:  #In case there are no plots
                 line += "  |"
-                #line += "  ||"
             else:
-                #line = line[:line.rfind("<<BR>>")] + "||"
                 line = line[:line.rfind("<<BR>>")] + "|"
 
             ## add comments
             if self.isNewAnaID ( id, txname.txName, tpe ):
-                # line += " {{http://smodels.hephy.at/images/new.png}} in %s! " % ( self.db.databaseVersion )
-                line += ' <img src="http://smodels.hephy.at/images/new.png" /> in %s! ' % ( self.db.databaseVersion )
+                line += ' <img src="https://smodels.github.io/pics/new.png" /> in %s! ' % ( self.db.databaseVersion )
             ## from comments file
             if os.path.isfile(valDir+"/"+txname.txName+".comment"):
                 commentPath = dirPath+"/"+txname.txName+".comment"
-                line += "[comment](http://smodels.hephy.at"+commentPath+\
+                line += "[comment](https://smodels.github.io"+commentPath+\
                         ") |\n"
-                #line += "[[http://smodels.hephy.at"+commentPath+\
-                #        "|comment"+"]] ||\n"
             else:
                 line += " |\n" #In case there are no comments
                 #line += " ||\n" #In case there are no comments
@@ -390,6 +381,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         for sqrts in [ 13, 8 ]:
             for exp in [ "ATLAS", "CMS" ]:
                 for tpe in [ "upper limits", "efficiency maps" ]:
+                    print ( "Writing %s TeV, %s, %s" % ( sqrts, exp, tpe ) )
                     expResList = self.getExpList ( sqrts, exp, tpe )
                     self.writeExperimentType ( sqrts, exp, tpe, expResList )
 
@@ -401,7 +393,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser( description= "creates validation wiki pages,"\
-                " see e.g. http://smodels.hephy.at/wiki/Validation" )
+                " see e.g. http://smodels.github.io/docs/Validation" )
     ap.add_argument('-u', '--ugly', help='ugly mode (gives more private info,'\
                 ' sets private mode, uses ugly plots)', action='store_true')
     ap.add_argument('-p', '--private', help='private mode',

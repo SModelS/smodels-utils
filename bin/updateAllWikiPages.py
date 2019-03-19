@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+
+## a super simple script to update all wiki pages in a single go.
+
+import sys, subprocess, argparse, os
+
+def execute(cmd):
+    popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
+    for stdout_line in iter(popen.stdout.readline, ""):
+        yield stdout_line 
+    popen.stdout.close()
+    return_code = popen.wait()
+    if return_code:
+        raise subprocess.CalledProcessError(return_code, cmd)
+
+def exec(cmd):
+    for line in execute ( cmd ):
+        print ( line, end="" )
+
+def main():
+    import argparse
+    argparser = argparse.ArgumentParser(
+            description='Bulk update of many if not all wiki pages')
+    argparser.add_argument ( '-n', '--non_versioned', 
+            help='update the non-versioned files also (eg Validation.md)',
+            action='store_true' )
+    argparser.add_argument ( '-P', '--no_pickle', 
+            help='Skip creation of pickle files',
+            action='store_true' )
+    A = argparser.parse_args()
+    db = "~/git/smodels-database/"
+    ref_db = "~/git/smodels-database-release/"
+    db = os.path.expanduser( db )
+    ref_db = os.path.expanduser( ref_db )
+    ## list of analyses, with and without superseded
+    print ( "\nCreate list of analyses" )
+    exec ( [ "./listOfAnalyses.py", "-a" ] )
+    exec ( [ "./listOfAnalyses.py", "-n", "-a" ] )
+    if A.non_versioned:
+        print ( "Update also the non-versioned files" )
+        exec ( [ "./listOfAnalyses.py" ] )
+        exec ( [ "./listOfAnalyses.py", "-n" ] )
+    else:
+        print ( "Update only versioned files" )
+
+    ## SmsDictionary page
+    print ( "\nCreate SmsDictionary" )
+    exec ( [ "./smsDictionary.py", "-a" ] )
+    if A.non_versioned:
+        exec ( [ "./smsDictionary.py" ] )
+
+    if not A.no_pickle:
+        print ( "\nCreate and publish database pickle" )
+        exec ( [ "./publishDatabasePickle.py", "-b", "-f", db ] )
+        exec ( [ "./publishDatabasePickle.py", "-r", "-b", "-f", db ] )
+
+    print ( "create Validation wiki" )
+    exec ( [ "../validation/createWikiPage.py", "-c", ref_db, "-a", "-i", "-f" ] )
+    exec ( [ "../validation/createWikiPage.py", "-c", ref_db, "-a", "-u" ] )
+    if A.non_versioned:
+        exec ( [ "../validation/createWikiPage.py", "-c", ref_db, "-i", "-f" ] )
+        exec ( [ "../validation/createWikiPage.py", "-c", ref_db, "-u" ] )
+
+
+if __name__ == "__main__":
+    main()
