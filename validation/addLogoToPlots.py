@@ -81,4 +81,5 @@ if __name__ == '__main__':
             addLogo(filename,logo)
         else:
             continue
-        print ( "Adding logo to",os.path.basename(filename) )
+        print ( "Adding logo to",filename )
+        #print ( "Adding logo to",os.path.basename(filename) )
