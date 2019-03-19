@@ -115,8 +115,9 @@ def main():
     if args.ssh:
         # cmd = "scp %s smodels.hephy.at:/nfsdata/walten/database/%s" % ( dbname, pclfilename )
         cmd = "scp %s lxplus.cern.ch:/eos/project/s/smodels/www/database/%s" % ( dbname, pclfilename )
-        # print ( "(might have to do this by hand, if no password-less ssh is configured)" )
-    if not args.dry_run:
+        print ( "[publishDatabasePickle] %s" % cmd )
+        print ( "(might have to do this by hand, if no password-less ssh is configured)" )
+    if not args.dry_run and not args.ssh:
         print ( "[publishDatabasePickle] %s" % cmd )
         a=CMD.getoutput ( cmd )
         print ( "[publishDatabasePickle] %s" % a )
@@ -141,9 +142,9 @@ def main():
     """
     # cmd = "cp %s /var/www/database/%s" % ( infofile, infofile )
     cmd = "cp %s ../../smodels.github.io/database/%s" % ( infofile, infofile )
-    if args.ssh:
-        pass
-        # cmd = "scp %s smodels.hephy.at:/var/www/database/%s" % ( infofile, infofile )
+    #if args.ssh:
+    #    pass
+    #    # cmd = "scp %s smodels.hephy.at:/var/www/database/%s" % ( infofile, infofile )
     print ( "[publishDatabasePickle] %s %s" % ( sexec, cmd ) )
     if not args.dry_run:
         a=CMD.getoutput ( cmd )

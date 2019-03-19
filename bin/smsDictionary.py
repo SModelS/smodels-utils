@@ -151,7 +151,7 @@ N.B.: Each "()" group corresponds to a branch
         cmd="cat %s | xsel -i" % self.fname
         os.system ( cmd )
         print ( cmd )
-        cmd="cp %s ../../smodels.github.io/docs/%s.md" % ( self.fname, self.fname )
+        cmd="mv %s ../../smodels.github.io/docs/%s.md" % ( self.fname, self.fname )
         os.system ( cmd )
         print ( cmd )
 
