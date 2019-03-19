@@ -280,10 +280,19 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
             if self.isNewAnaID ( id, txname.txName, tpe ):
                 line += ' <img src="https://smodels.github.io/pics/new.png" /> in %s! ' % ( self.db.databaseVersion )
             ## from comments file
-            if os.path.isfile(valDir+"/"+txname.txName+".comment"):
+            cFile = valDir+"/"+txname.txName+".comment"
+            if os.path.isfile(cFile):
                 commentPath = dirPath+"/"+txname.txName+".comment"
-                line += "[comment](https://smodels.github.io"+commentPath+\
+                txtPath = commentPath.replace(".comment", ".txt" )
+                githubRepo = "../../smodels.github.io"
+                mvCmd = "mv %s/%s %s/%s" % ( githubRepo, commentPath, githubRepo, txtPath )
+                subprocess.getoutput ( mvCmd )
+                line += "[comment](https://smodels.github.io"+txtPath+\
                         ") |\n"
+                #f = open ( cFile, "r" )
+                #line += ", ". join ( f.readlines() ).replace("\n","")
+                #f.close()
+                #line += " |\n" # close it
             else:
                 line += " |\n" #In case there are no comments
                 #line += " ||\n" #In case there are no comments
