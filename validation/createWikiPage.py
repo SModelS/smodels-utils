@@ -107,7 +107,7 @@ class WikiPageCreator:
         #cmd = "cat %s | xsel -i" % self.fName
         #print ( cmd )
         #C.getoutput ( cmd )
-        cmd = "cp %s ../../smodels.github.io/docs/%s.md" % ( self.fName, self.fName )
+        cmd = "mv %s ../../smodels.github.io/docs/%s.md" % ( self.fName, self.fName )
         print ( cmd )
         C.getoutput ( cmd )
 

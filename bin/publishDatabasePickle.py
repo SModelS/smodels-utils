@@ -111,13 +111,13 @@ def main():
     if has_nonValidated:
         print ( "has non-validated results. Stopping the procedure." )
         sys.exit()
-    cmd = "cp %s /nfsdata/walten/database/%s" % ( dbname, pclfilename )
+    cmd = "cp %s ./%s" % ( dbname, pclfilename )
     if args.ssh:
         # cmd = "scp %s smodels.hephy.at:/nfsdata/walten/database/%s" % ( dbname, pclfilename )
-        cmd = "scp %s lxplus.cern.ch:/eos/project/s/smodels/www/database/%s" % ( dbname, pclfilename )
-        print ( "[publishDatabasePickle] %s" % cmd )
+        cmd2 = "scp %s lxplus.cern.ch:/eos/project/s/smodels/www/database/%s" % ( pclfilename, pclfilename )
+        print ( "[publishDatabasePickle] Do: %s" % cmd2 )
         print ( "(might have to do this by hand, if no password-less ssh is configured)" )
-    if not args.dry_run and not args.ssh:
+    if not args.dry_run:
         print ( "[publishDatabasePickle] %s" % cmd )
         a=CMD.getoutput ( cmd )
         print ( "[publishDatabasePickle] %s" % a )

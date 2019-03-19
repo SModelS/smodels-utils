@@ -149,7 +149,7 @@ def xsel( filename ):
     cmd="cat %s | xsel -i" % filename
     os.system ( cmd )
     print ( cmd )
-    cmd="cp %s ../../smodels.github.io/docs/%s.md" % ( filename, filename )
+    cmd="mv %s ../../smodels.github.io/docs/%s.md" % ( filename, filename )
     os.system ( cmd )
     print ( cmd )
 
