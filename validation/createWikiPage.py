@@ -100,8 +100,8 @@ class WikiPageCreator:
 
     def close ( self ):
         print ( 'Done.\n' )
-        print ( '--->Copy and paste the content to the SModelS wiki page.\n')
-        #print ( '--->(if xsel is installed, you should find the content in your clipboard.)\n' )
+        # print ( '--->Copy and paste the content to the SModelS wiki page.\n')
+        # print ( '--->(if xsel is installed, you should find the content in your clipboard.)\n' )
         self.file.write ( "\n" )
         self.file.close()
         #cmd = "cat %s | xsel -i" % self.fName
