@@ -111,7 +111,7 @@ def main():
     if has_nonValidated:
         print ( "has non-validated results. Stopping the procedure." )
         sys.exit()
-    cmd = "cp %s ./%s" % ( dbname, pclfilename )
+    cmd = "mv %s ./%s" % ( dbname, pclfilename )
     if args.ssh:
         # cmd = "scp %s smodels.hephy.at:/nfsdata/walten/database/%s" % ( dbname, pclfilename )
         cmd2 = "scp %s lxplus.cern.ch:/eos/project/s/smodels/www/database/%s" % ( pclfilename, pclfilename )
@@ -141,7 +141,7 @@ def main():
         print ( a )
     """
     # cmd = "cp %s /var/www/database/%s" % ( infofile, infofile )
-    cmd = "cp %s ../../smodels.github.io/database/%s" % ( infofile, infofile )
+    cmd = "mv %s ../../smodels.github.io/database/%s" % ( infofile, infofile )
     #if args.ssh:
     #    pass
     #    # cmd = "scp %s smodels.hephy.at:/var/www/database/%s" % ( infofile, infofile )
