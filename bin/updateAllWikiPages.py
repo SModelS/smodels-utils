@@ -57,7 +57,7 @@ def main():
         exec ( [ "./publishDatabasePickle.py", "-b", "-f", db ] )
         exec ( [ "./publishDatabasePickle.py", "-r", "-b", "-f", db ] )
 
-    print ( "create Validation wiki" )
+    gprint ( "create Validation wiki" )
     exec ( [ "../validation/createWikiPage.py", "-c", ref_db, "-a", "-i", "-f" ] )
     exec ( [ "../validation/createWikiPage.py", "-c", ref_db, "-a", "-u" ] )
     if A.non_versioned:
