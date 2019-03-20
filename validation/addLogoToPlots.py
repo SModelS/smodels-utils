@@ -10,15 +10,21 @@
 
 from __future__ import print_function
 import glob,os
+import tempfile
 
-
-def addLogo(filename,logo):
+def addLogo(filename,logo = None ):
     """
     Add the logo image to the original plot.
     
     :param filename: path to the original plot (pdf or png)
-    :param logo: path to the logo png image
+    :param logo: path to the logo png image. If None, use default.
     """
+
+    if logo == None:
+        if 'pdf' in filename:
+            logo = 'smodels-bannerRotated.png'
+        else:
+            logo = 'smodels-banner.png'
     
     if '.pdf' in filename:
         from reportlab.pdfgen import canvas
@@ -39,11 +45,12 @@ def addLogo(filename,logo):
         # add page from input file to output document
         output_file.addPage(input_page)
         # finally, write "output" to document-output.pdf
-        with open('temp_test_logo.pdf', "wb") as outputStream:
+        tempF = tempfile.mktemp(suffix=".pdf", dir="./")
+        with open( tempF, "wb") as outputStream:
             output_file.write(outputStream)
-            
-        os.remove("watermark.pdf")
-        os.rename('temp_test_logo.pdf', filename)
+        os.rename( tempF, filename)
+        if os.path.exists ( "watermark.pdf" ):
+            os.remove("watermark.pdf")
 
     elif '.png' in filename:
         from PIL import Image
@@ -60,11 +67,13 @@ def addLogo(filename,logo):
         
         #Create a new layer
         layer = Image.new('RGBA', im.size, (0,0,0,0))
-        #Copy logo to layer            
-        layer.paste(mark, (546, 96))
+        #Copy logo to layer, 0,0 is upper left corner        
+        # layer.paste(mark, (546, 96))
+        layer.paste(mark, (0, 500))
         #Merge original image and layer and save
-        Image.composite(layer, im, layer).save('temp_test_logo.png')
-        os.rename('temp_test_logo.png', filename)
+        tmpF = tempfile.mktemp(suffix=".png",dir="./")
+        Image.composite(layer, im, layer).save( tmpF )
+        os.rename( tmpF, filename)
         
 if __name__ == '__main__':
     

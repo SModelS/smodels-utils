@@ -533,18 +533,19 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     #necessary to smear the points if they rest in a single line.
     if tgr.GetYmax() == tgr.GetYmin():
         logger.info("1d data detected, smearing Y values")
+        tgrN = tgr.GetN()
         buff = tgr.GetX()
-        buff.SetSize(sys.maxsize)
-        print ( "tgr.GetN",tgr.GetN() )
-        xpts = numpy.frombuffer(buff,count=tgr.GetN())
-        print ( "xpts=",xpts )
+        buff.SetSize(tgrN)
+        #print ( "tgr.GetN",tgrN )
+        xpts = numpy.frombuffer(buff,count=tgrN)
+        #print ( "xpts=",xpts )
         buff = tgr.GetY()
-        buff.SetSize(sys.maxsize)
-        ypts = numpy.frombuffer(buff,count=tgr.GetN())
+        buff.SetSize(tgrN)
+        ypts = numpy.frombuffer(buff,count=tgrN)
         buff = tgr.GetZ()
-        buff.SetSize(sys.maxsize)
-        zpts = numpy.frombuffer(buff,count=tgr.GetN())
-        for i in range(tgr.GetN()):
+        buff.SetSize(tgrN)
+        zpts = numpy.frombuffer(buff,count=tgrN)
+        for i in range(tgrN):
             tgr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,0.001),zpts[i])
     if tgr.GetXmax() == tgr.GetXmin():
         logger.info("1d data detected, smearing X values")

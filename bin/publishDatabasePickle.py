@@ -6,11 +6,21 @@ a pickle file that should work with both python2 and python3. """
 
 from __future__ import print_function
 import pickle, os, sys, argparse
+import colorama
 if sys.version[0]=="2":
     import commands as CMD
 else:
     print ( "you sure you want to run this with python3?" )
     import subprocess as CMD
+
+def sizeof_fmt(num, suffix='B'):                                              
+    for unit in [ '','K','M','G','T','P' ]:                                   
+        if abs(num) < 1024.:                                                  
+            return "%3.1f%s%s" % (num, unit, suffix)                          
+        num /= 1024.0                                                         
+    return "%.1f%s%s" % (num, 'Yi', suffix)
+
+eosdir = "/eos/project/s/smodels/www/database/"
 
 def checkNonValidated( database ):
     """ check if there are results with e.g. "tbd" as their validated field.
@@ -32,16 +42,22 @@ def removeFastLim ( db ):
     """ remove fastlim results """
     print ( "before removal",len(db.getExpResults()),"results" )
     filteredList = []
+    ctr = 0
     for e in db.getExpResults():
         gI = e.globalInfo
         if hasattr ( gI, "contact" ) and "fastlim" in gI.contact.lower():
-            print ( "removing", gI.id )
+            ctr+=1
+            if ctr < 4:
+                print ( "removing", gI.id )
+            if ctr == 4:
+                print ( "(removing more ... )" )
         else:
                 
             filteredList.append ( e )
     db.expResultList = filteredList
     print ( "after removal",len(db.getExpResults()),"results" )
     db.pcl_meta.hasFastLim = False
+    db.txt_meta.hasFastLim = False
     db.createBinaryFile()
     return db
 
@@ -52,7 +68,6 @@ def main():
     # ap.add_argument('-l', '--fastlim', help='add fastlim results when pickling', action="store_true" )
     ap.add_argument('-b', '--build', help='build pickle file, assume filename is directory name', action="store_true" )
     ap.add_argument('-r', '--remove_fastlim', help='build pickle file, remove fastlim results', action="store_true" )
-    ap.add_argument('-s', '--ssh', help='work remotely via ssh', action="store_true" )
     ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default=None )
     ap.add_argument('-V', '--skipValidation', help='if set will skip the check of validation flags [False]', default=False, action="store_true" )
     args = ap.parse_args()
@@ -74,6 +89,8 @@ def main():
         d = Database ( dbname, discard_zeroes=discard_zeroes )
         if args.remove_fastlim:
             d = removeFastLim ( d )
+            d.pcl_meta.hasFastLim = False
+            d.txt_meta.hasFastLim = False
         dbname = d.pcl_meta.pathname
         if not args.skipValidation:
             has_nonValidated = checkNonValidated(d)
@@ -85,7 +102,7 @@ def main():
     meta=pickle.load(p)
     fastlim = meta.hasFastLim
     print ( meta )
-    print ( "[publishDatabasePickle] database size", os.stat(dbname).st_size )
+    print ( "[publishDatabasePickle] database size", sizeof_fmt ( os.stat(dbname).st_size ) )
     ver = meta.databaseVersion.replace(".","") 
     p.close()
     sfastlim=""
@@ -112,45 +129,36 @@ def main():
         print ( "has non-validated results. Stopping the procedure." )
         sys.exit()
     cmd = "mv %s ./%s" % ( dbname, pclfilename )
-    if args.ssh:
-        # cmd = "scp %s smodels.hephy.at:/nfsdata/walten/database/%s" % ( dbname, pclfilename )
-        cmd2 = "scp %s lxplus.cern.ch:/eos/project/s/smodels/www/database/%s" % ( pclfilename, pclfilename )
-        print ( "[publishDatabasePickle] Do:" )
-        print ( cmd2 )
-        print ( "(might have to do this by hand, if no password-less ssh is configured)" )
-        print ( "then do also:" )
-        print ( "ssh lxplus.cern.ch smodels/www/database/create.py" )
+    ssh = True
+    if os.path.exists ( eosdir ): ## eos exists locally? copy!
+        ssh = False
     if not args.dry_run:
         print ( "[publishDatabasePickle] %s" % cmd )
         a=CMD.getoutput ( cmd )
         print ( "[publishDatabasePickle] %s" % a )
-    symlinkfile = "/var/www/database/%s" % pclfilename 
-    cmd = "rm -f %s" % symlinkfile
-    if args.ssh:
-        cmd = "ssh smodels.hephy.at %s" % cmd
-    a = CMD.getoutput ( cmd )
-    print ( "[publishDatabasePickle] %s" % a )
     sexec="executing:"
     if args.dry_run:
         sexec="suppressing execution of:"
-    ## not needed at CERN server
-    """
-    cmd = "ln -s /nfsdata/walten/database/%s %s" % ( pclfilename, symlinkfile )
-    if args.ssh:
-        cmd = "ssh smodels.hephy.at ln -s /nfsdata/walten/database/%s /var/www/database/" % ( pclfilename )
-    print ( "[publishDatabasePickle] %s %s" % ( sexec, cmd ) )
-    if not args.dry_run:
+    if not ssh:
+        print ( "eos exists on this machine! copy file!" )
+        cmd = "cp %s %s/" % ( pcfilename, eosdir )
         a=CMD.getoutput ( cmd )
-        print ( a )
-    """
-    # cmd = "cp %s /var/www/database/%s" % ( infofile, infofile )
+        if len(a)>0:
+            print ( "[publishDatabasePickle] %s" % a )
     cmd = "mv %s ../../smodels.github.io/database/%s" % ( infofile, infofile )
-    #if args.ssh:
-    #    pass
-    #    # cmd = "scp %s smodels.hephy.at:/var/www/database/%s" % ( infofile, infofile )
     print ( "[publishDatabasePickle] %s %s" % ( sexec, cmd ) )
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
+    if ssh:
+        cmd2 = "scp %s lxplus.cern.ch:%s%s" % ( pclfilename, eosdir, pclfilename )
+        print ( "%s[publishDatabasePickle] Now please execute manually:%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
+        print ( cmd2 )
+        print ( )
+        print ( "[publishDatabasePickle] (have to do this by hand, if no password-less ssh is configured)" )
+        print ( "%s[publishDatabasePickle] then do also manually:%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
+        print ( "ssh lxplus.cern.ch smodels/www/database/create.py" )
+        print ( )
+
 
 main()

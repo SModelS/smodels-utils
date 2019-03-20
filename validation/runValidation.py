@@ -135,7 +135,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         sys.exit()
 
 
-    logger.info('----- Running validation...')
+    logger.info('-- Running validation...')
 
     #Select experimental results, txnames and datatypes:
     expResList = db.getExpResults( analysisIDs, datasetIDs, txnames,
@@ -148,7 +148,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     #Loop over experimental results and validate plots
     for expRes in expResList:
         expt0 = time.time()
-        logger.info("--------- \033[32m validating  %s \033[0m" %expRes.globalInfo.id)
+        logger.info("--- \033[32m validating  %s \033[0m" %expRes.globalInfo.id)
         #Loop over pre-selected txnames:
         txnamesStr = []
         txnames = []
@@ -166,7 +166,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         for itx,txname in enumerate(txnames):
             txnameStr = txname.txName
             txt0 = time.time()
-            logger.info("------------ \033[31m validating  %s \033[0m" %txnameStr)
+            logger.info("------ \033[31m validating  %s \033[0m" %txnameStr)
             if not tarfiles:
                 tarfile = txnameStr+".tar.gz"
             else:
@@ -191,9 +191,9 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
             for ax in axes:
                 validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,
                              generateData,limitPoints,extraInfo,combine,pngAlso)
-            logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
-        logger.info("--------- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
-    logger.info("\n\n----- Finished validation in %.1f min." %((time.time()-tval0)/60.))
+            logger.info("------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
+        logger.info("--- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
+    logger.info("\n\n-- Finished validation in %.1f min." %((time.time()-tval0)/60.))
 
 def _doGenerate ( parser ):
     """ determine if we do want to force generation of data (True),

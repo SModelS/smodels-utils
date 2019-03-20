@@ -469,14 +469,18 @@ class ValidationPlot():
                 # if fails because of missing dep, then just proceed
                 pass
         else:
+            from addLogoToPlots import addLogo
             #Print pdf, png and root formats
             filename = filename.replace('.'+fformat,'_pretty.'+fformat)
             self.plot.Print(filename)
+            addLogo ( filename )
             filename = filename.replace('.'+fformat,'.png')
             logger.info ( "saving plot in %s (and pdf and root)" % filename )
             self.plot.Print(filename)
+            addLogo ( filename )
             filename = filename.replace('.png','.root')
             self.plot.Print(filename)
+            addLogo ( filename )
 
         return True
 
