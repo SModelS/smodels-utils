@@ -511,7 +511,7 @@ def prettyAxes(txname,axes):
         return ['m_{#tilde{g}} = x, m_{#tilde{q}} = 0.96*x',
                     'm_{#tilde{#chi}_{1}^{0}} = y']
     elif txname == 'TChiChiSlepSlep':
-        return ['m_{#tilde{#chi}_{3}^{0} = x+80.0, m_{#tilde{#chi}_{2}^{0} = x+75.0',
+        return ['m_{#tilde{#chi}_{3}^{0}} = x+80.0, m_{#tilde{#chi}_{2}^{0}} = x+75.0',
                     'm_{#tilde{#l}} = x-y+80.0',
                     'm_{#tilde{#chi}_{1}^{0}} = x']
     elif axes[0] != axes[1]:

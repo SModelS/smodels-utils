@@ -503,6 +503,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         ## sys.exit()
     else:
         # Get excluded and allowed points:
+        condV = 0
         for pt in validationPlot.data:
             if kfactor == None:
                 kfactor = pt ['kfactor']
@@ -521,7 +522,11 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
                 x,y = xvals
             
             if pt['condition'] and pt['condition'] > 0.05:
-                logger.warning("Condition violated for file " + pt['slhafile'])
+                condV += 1
+                if condV < 5:
+                    logger.warning("Condition violated for file " + pt['slhafile'])
+                if condV == 5:
+                    logger.warning("Condition violated for more points (not shown)")
             else:
                 tgr.SetPoint(tgr.GetN(), x, y, r)
 

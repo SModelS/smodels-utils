@@ -30,10 +30,11 @@ def addLogo(filename,logo = None ):
         from reportlab.pdfgen import canvas
         from PyPDF2 import PdfFileWriter, PdfFileReader
         # Create the watermark from an image
-        c = canvas.Canvas('watermark.pdf')
-        #Draw logo watermark
-        c.drawImage(logo, 87, 645, width=35,height=80)
-        c.save()            
+        if not os.path.exists ( "watermark.pdf" ):
+            c = canvas.Canvas('watermark.pdf')
+            #Draw logo watermark
+            c.drawImage(logo, 87, 645, width=35,height=80)
+            c.save()            
         # Get the watermark file you just created
         watermark = PdfFileReader(open("watermark.pdf", "rb"))
         #Get the original file:
@@ -49,8 +50,8 @@ def addLogo(filename,logo = None ):
         with open( tempF, "wb") as outputStream:
             output_file.write(outputStream)
         os.rename( tempF, filename)
-        if os.path.exists ( "watermark.pdf" ):
-            os.remove("watermark.pdf")
+        #if os.path.exists ( "watermark.pdf" ):
+        #    os.remove("watermark.pdf")
 
     elif '.png' in filename:
         from PIL import Image
