@@ -525,7 +525,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             else:
                 tgr.SetPoint(tgr.GetN(), x, y, r)
 
-    if tgr.GetN() == 0:
+    if tgr.GetN() < 4:
         logger.error("No good points for validation plot.")
         return (None,None)
 
@@ -592,7 +592,6 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     gStyle.SetTitleSize(0.045,"t")
     gStyle.SetTitleY(1.005)
    
-    
     #Get contour graphs:
     contVals = [1./looseness,1.,looseness]
     cgraphs = getContours(tgr,contVals)
@@ -959,7 +958,9 @@ def getContours(tgr,contVals):
         return None
     
     cVals = sorted(contVals)
-    #Draw temp plot:
+    if tgr.GetN() < 4:
+        print ( "Error: Cannot create a contour with fewer than 3 input vertices" )
+        return None
     h = tgr.GetHistogram()    
     #Get contour graphs:
     c1 = TCanvas()
