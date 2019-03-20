@@ -70,7 +70,7 @@ def addLogo(filename,logo = None ):
         layer = Image.new('RGBA', im.size, (0,0,0,0))
         #Copy logo to layer, 0,0 is upper left corner        
         # layer.paste(mark, (546, 96))
-        layer.paste(mark, (0, 500))
+        layer.paste(mark, (0, 505))
         #Merge original image and layer and save
         tmpF = tempfile.mktemp(suffix=".png",dir="./")
         Image.composite(layer, im, layer).save( tmpF )
