@@ -498,31 +498,37 @@ def prettyAxes(txname,axes):
     Converts the axes string to the axes labels (plus additional constraints)
     in latex form (using ROOT conventions)
     :param txname: txname string  (e.g. 'T1')
-    :param axes: axes string (e.g. '2*Eq(mother,x)_Eq(inter0,0.05*x+0.95*y)_Eq(lsp,y)')
+    :param axes: axes string (e.g. '[[x, y], [1150, x, y]]')
 
     :return: dictionary with the latex labels
              (e.g. {'x' : m_{#tilde{g}}, 'y' : m_{#tilde{#chi}_{1}^{0}}
              'constraints' : [m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}]})
     """
+    # print ( "pretty axes txname=", txname, type(txname) )
+    # print ( "pretty axes axes=", axes, type(axes) )
 
     #Build axes object (depending on symmetric or asymmetric branches:
     axes = eval(axes)
     if txname == 'TGQ':
         return ['m_{#tilde{g}} = x, m_{#tilde{q}} = 0.96*x',
                     'm_{#tilde{#chi}_{1}^{0}} = y']
-    elif txname == 'TChiChiSlepSlep':
+    if txname == 'T3GQ':
+        ret = ['m_{#tilde{g}} = %s, m_{#tilde{q}} = x' % str(axes[1][0]),
+               'm_{#tilde{#chi}_{1}^{0}} = y']
+        return ret
+    if txname == 'TChiChiSlepSlep':
         return ['m_{#tilde{#chi}_{3}^{0}} = x+80.0, m_{#tilde{#chi}_{2}^{0}} = x+75.0',
                     'm_{#tilde{#l}} = x-y+80.0',
                     'm_{#tilde{#chi}_{1}^{0}} = x']
-    elif axes[0] != axes[1]:
+    if axes[0] != axes[1]:
         logging.error('Asymmetric branches are not yet automatized.')
-        return None
+        return "N/A"
 
     ax = axes[0]
     if len(ax) > 3:
         logging.error("Nice axes with more than one \
         intermetiate particle is not available.")
-        return None
+        return "N/A"
 
     #Get mother particles:
     motherList = list(set(getMothers(txname)))
@@ -553,5 +559,6 @@ def prettyAxes(txname,axes):
         axStr = massStrings[i].strip()+'='+str(eq)
         niceAxes.append(axStr.replace("'",""))
 
+    # print ( "return=", niceAxes )
     return niceAxes
 
