@@ -11,7 +11,6 @@
 import logging,os,sys,numpy,random
 sys.path.append('../')
 from array import array
-
 logger = logging.getLogger(__name__)
 from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,kWhite,
@@ -604,6 +603,12 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     h = tgr.GetHistogram()
     setOptions(h,Type='pretty')
     h.GetZaxis().SetRangeUser(0., min(tgr.GetZmax(),3.))
+    h.GetXaxis().SetTitleFont(42)
+    h.GetYaxis().SetTitleFont(42)
+    h.GetXaxis().SetTitleOffset(1.)
+    h.GetYaxis().SetTitleOffset(1.1)
+    h.GetXaxis().SetTitleSize(.04)
+    h.GetYaxis().SetTitleSize(.04)
     h.GetXaxis().SetTitle(xlabel)
     h.GetYaxis().SetTitle(ylabel)
     h.GetZaxis().SetTitle(zlabel)
@@ -633,12 +638,17 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     ltx=TLatex()
     ltx.SetNDC()
     ltx.SetTextSize(.035)
-    ltx.SetTextFont(12)
-    txStr = validationPlot.txName +' : '+prettyTxname(validationPlot.txName,outputtype="root")
+    ltx.SetTextFont(42)
+    ltx2 = ltx.Clone()
+    ltx2.SetTextAlign(31)
+    txStr = validationPlot.txName +': '+prettyTxname(validationPlot.txName,outputtype="root")
     axStr = prettyAxes(validationPlot.txName,validationPlot.axes)
     axStr = str(axStr).replace(']','').replace('[','').replace("'","")
     infoStr = "#splitline{"+txStr+'}{'+axStr+'}'
-    ltx.DrawLatex(.03,.89,infoStr)
+    # print ( "draw latex", infoStr )
+    #ltx.DrawLatex(.03,.89,infoStr)
+    ltx.DrawLatex(.03,.88,txStr)
+    ltx2.DrawLatex(.96,.88,axStr)
     tgr.ltx = ltx
     figureUrl = getFigureUrl(validationPlot)
     if figureUrl:

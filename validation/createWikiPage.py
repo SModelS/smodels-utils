@@ -9,7 +9,7 @@
 
 from __future__ import print_function
 #Import basic functions (this file must be run under the installation folder)
-import sys,os,glob
+import sys,os,glob,time
 import tempfile
 sys.path.insert(0,"../../smodels")
 from smodels.experiment.databaseObj import Database
@@ -100,13 +100,8 @@ class WikiPageCreator:
 
     def close ( self ):
         print ( 'Done.\n' )
-        # print ( '--->Copy and paste the content to the SModelS wiki page.\n')
-        # print ( '--->(if xsel is installed, you should find the content in your clipboard.)\n' )
-        self.file.write ( "\n" )
+        self.file.write ( "This page was created %s\n" % time.asctime() )
         self.file.close()
-        #cmd = "cat %s | xsel -i" % self.fName
-        #print ( cmd )
-        #C.getoutput ( cmd )
         cmd = "mv %s ../../smodels.github.io/docs/%s.md" % ( self.fName, self.fName )
         print ( cmd )
         C.getoutput ( cmd )
