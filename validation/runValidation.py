@@ -91,7 +91,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
 
     return True
 
-def runOverChunkOfAnalyses ( expResList ):
+def run ( expResList ):
     #Loop over experimental results and validate plots
     for expRes in expResList:
         expt0 = time.time()
@@ -200,7 +200,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     logger.info ( "ncpus=%d, n(expRes)=%d, genData=%d" % ( ncpus, len(expResList), generateData ) )
 
     tval0 = time.time()
-    runOverChunkOfAnalyses ( expResList )
+    run ( expResList )
     logger.info("\n\n-- Finished validation in %.1f min." %((time.time()-tval0)/60.))
 
 def _doGenerate ( parser ):
