@@ -79,8 +79,7 @@ class WikiPageCreator:
         self.nlines = 0
         print ( "\n" )
         if not has_uploaded:
-            print ( 'MAKE SURE THE VALIDATION PLOTS IN '
-                    'smodels.github.io:%s ARE UPDATED\n' % self.localdir  )
+            print ( 'MAKE SURE THE VALIDATION PLOTS IN %s ARE UPDATED\n' % self.localdir  )
         self.true_lines = []
         self.false_lines = []
         self.none_lines = []
@@ -403,7 +402,7 @@ if __name__ == "__main__":
     ap.add_argument('-p', '--private', help='private mode',
                     action='store_true')
     ap.add_argument('-f', '--force_upload', 
-                    help='force upload of database to web server. forces also creation of /var/www/ on server.',
+                    help='force upload of pics to ../../smodels.github.io.',
                     action='store_true')
     ap.add_argument('-a', '--add_version', help='add version labels in links', 
                     action='store_true')
