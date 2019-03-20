@@ -100,7 +100,7 @@ class WikiPageCreator:
 
     def close ( self ):
         print ( 'Done.\n' )
-        self.file.write ( "This page was created %s\n" % time.asctime() )
+        self.file.write ( "\nThis page was created %s\n" % time.asctime() )
         self.file.close()
         cmd = "mv %s ../../smodels.github.io/docs/%s.md" % ( self.fName, self.fName )
         print ( cmd )
