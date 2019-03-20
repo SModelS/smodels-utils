@@ -112,7 +112,10 @@ N.B.: Each "()" group corresponds to a branch
                         topos[stxname]=set()
                     con =  self.cleanUp ( txname )
                     topos[stxname].add ( con )
-        for k,v in topos.items():
+        keys = list(topos.keys())
+        keys.sort()
+        for k in keys:
+            v = topos[k]
             topos[k]="; ".join ( v )
         return topos
 
@@ -144,13 +147,9 @@ N.B.: Each "()" group corresponds to a branch
         self.writeTopos ( )
         self.footer()
         self.close()
-        self.xsel()
+        self.move()
 
-    def xsel( self ):
-        import os
-        cmd="cat %s | xsel -i" % self.fname
-        os.system ( cmd )
-        print ( cmd )
+    def move( self ):
         cmd="mv %s ../../smodels.github.io/docs/%s.md" % ( self.fname, self.fname )
         os.system ( cmd )
         print ( cmd )
