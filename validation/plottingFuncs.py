@@ -682,9 +682,13 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     #if len(subtitle) > 100:
     #    subtitle = subtitle[:100] + " ..."
     if len(validationPlot.expRes.datasets) == 1 and type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
-        subtitle = "upper limit"
+        subtitle = "" ## no extra info, so leave it blank
+        # subtitle = "upper limit"
     if validationPlot.combine == False and len(validationPlot.expRes.datasets) > 1:
-        subtitle = "best SR"
+        if "combined" in validationPlot.data[0]["dataset"]:
+            logger.warning ( "asked for an efficiencyMap-type plot, but the cached validationData is for a combined plot. Will label it as 'combined'." )
+        else:
+            subtitle = "best SR"
     lsub=TLatex()
     lsub.SetNDC()
     lsub.SetTextAlign(31)
