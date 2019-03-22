@@ -306,9 +306,16 @@ class DatabaseCreator(list):
                         stGraph.SetTitle(name)
                         stGraph.name = exclusion.name
                         stGraph.txname = txname.txName
-                        for i,pointDict in enumerate(exclusion):
+                        i=0
+                        for pointDict in exclusion:
                             point = dict([[str(xv),v] for xv,v in pointDict.items()])
+                            try:
+                                fx,fy = float(point['x']),float(point['y'])
+                            except ValueError:
+                                logger.info ( "cannot convert to coordinates: %s" % point )
+                                continue
                             stGraph.SetPoint(i,point['x'],point['y'])
+                            i+=1
                         stGraph.SetLineColor(ROOT.kBlack)
                         if 'expected' in exclusion.name:
                             stGraph.SetLineColor(ROOT.kRed)

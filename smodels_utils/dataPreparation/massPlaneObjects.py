@@ -133,14 +133,13 @@ class MassPlane(object):
                           to the data files.
         :param dataFormats: List of strings with the file formats
                           for the data files.
-
         :param objectNames: List of object names stored in root-file or cMacro. 
                             String appearing in title of csv table in csv files.
         :param indices: List of indices objects in listOfPrimitives of ROOT.TCanvas
         :param units: List of strings with units for objects (e.g. 'fb', None, ...)
         :param coordinates: Lists of dictionaries with the mapping of txt file columns
                           to the x,y,... coordinates (e.g. {x : 1, y: 2, 'value' :3})
-        :param scales: Lists of floats to rescale the data (optional)
+        :param scales: Lists of floats to rescale the data
 
         """
 
