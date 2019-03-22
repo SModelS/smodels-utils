@@ -536,7 +536,8 @@ class TxNameInput(Locker):
                     '_branchcondition', 'onShell', 'offShell', 'constraint',
                     'condition', 'conditionDescription','massConstraint',
                     'upperLimits','efficiencyMap','expectedUpperLimits',
-                    'massConstraints', '_dataLabels', 'round_to' ]
+                    'massConstraints', '_dataLabels', 'round_to',
+                    '_smallerThanError' ]
 
     requiredAttr = [ 'constraint','condition','txName','axes','dataUrl',
                      'source' ]
@@ -558,6 +559,7 @@ class TxNameInput(Locker):
 
         self.round_to = 5 ## number of digits to round to
         self._name = txName
+        self._smallerThanError = 0
         self.txName = txName
         if hscp:
             self.finalState = ['MET','MET']
@@ -894,7 +896,11 @@ class TxNameInput(Locker):
                 for iv,vertex in enumerate(br):
                     massDiff = massArray[ib][iv]-massArray[ib][iv+1]
                     if massDiff < 0.:
-                        logger.error("Parent mass is smaller than daughter mass for %s" %str(self))
+                        self._smallerThanError += 1
+                        if self._smallerThanError < 4:
+                            logger.error("Parent mass (%.1f) is smaller than daughter mass (%.1f) for %s" % (massArray[ib][iv],massArray[ib][iv+1],str(self)))
+                        if self._smallerThanError == 4:
+                            logger.error("(I quenched a few more error msgs as the one above)" )
                         return False
                     #Evaluate the inequality replacing m by the mass difference:
                     check = eval(vertex,{'dm' : massDiff})
