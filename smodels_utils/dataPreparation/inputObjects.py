@@ -12,11 +12,10 @@ import sys
 import string
 from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round_list
+from smodels_utils.dataPreparation.particleNames import elementsInStr, ptcDic
+from smodels_utils.dataPreparation.particles import rEven
 from smodels.tools.physicsUnits import fb, pb, TeV, GeV
-from smodels.theory.particleNames import elementsInStr
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels.particlesLoader import rEven
-from smodels.theory.particleNames import ptcDic
 from smodels.theory.element import Element
 from smodels.installation import version
 import copy
