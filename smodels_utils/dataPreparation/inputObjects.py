@@ -583,13 +583,15 @@ class TxNameInput(Locker):
         add a MassPlane object with given axes to self.planes.
         Add new attributes to the MassPlane.
         :param txDecay: object of type TxDecay
-        :param plane: A MassPlane object or the full mass array containing equations which relate the
-        physical masses and the plane coordinates, using the pre-defined 'x','y',.. symbols.
+        :param plane: A MassPlane object or the full mass array containing 
+                      equations which relate the physical masses and the plane 
+                      coordinates, using the pre-defined 'x','y',.. symbols.
         (e.g. [[x,y],[x,y]]).
         :raise missingMassError: if one mass entry is missing
         :raise onlyOnePlaneError: if a second mass plane is given and the related mass space
         have only 2 dimensions
-        :raise interMediateParticleError: if a interMasses are given and the related mass space
+        :raise interMediateParticleError: if a interMasses are given and the related 
+                                          mass space
         have only 2 dimensions
         :return: MassPlane-object
         """
