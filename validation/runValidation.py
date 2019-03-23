@@ -197,7 +197,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
 
     if ncpus < 0: 
         ncpus = runtime.nCPUs() + ncpus + 1
-    logger.info ( "ncpus=%d, n(expRes)=%d, genData=%d" % ( ncpus, len(expResList), generateData ) )
+    # logger.info ( "ncpus=%d, n(expRes)=%d, genData=%d" % ( ncpus, len(expResList), generateData ) )
 
     tval0 = time.time()
     run ( expResList )

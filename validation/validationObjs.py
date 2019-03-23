@@ -333,7 +333,6 @@ class ValidationPlot():
                 if ct_nooutput==5:
                     logger.error("did not find SModelS output 5 times subsequently. Will quench error msgs from now on.")
                 continue
-            ct_nooutput=0
             # print ( "reading %s" % fout )
             ff = open(fout,'r')
             cmd = ff.read().replace('\n','')
