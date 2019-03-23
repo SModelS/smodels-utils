@@ -17,7 +17,11 @@ import sys
 from smodels.experiment.txnameObj import TxNameData
 sys.path.insert(0,"../")
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels.tools.physicsUnits import GeV,fb
+from smodels.tools.physicsUnits import GeV,fb,standardUnits
+try: ## smodels >= 200
+    from smodels.theory.auxiliaryFunctions import removeUnits
+except ImportError:
+    pass
 from smodels_utils.dataPreparation.inputObjects import TxNameInput
 import itertools
 import logging
@@ -281,7 +285,7 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
         return []
     else:
         #Compute the PCA for the reduced dataset:        
-        txdata = TxNameData(reducedData,"dummy","dummy")
+        txdata = TxNameData(reducedData,"upperLimit","dummy")
         
         
     #Transform the min and max values to the rotated plane:
@@ -295,7 +299,10 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
         if hasattr(txdata, 'flattenMassArray'):
             porig = txdata.flattenMassArray(mass)
         else:
-            mass = txdata.removeUnits(mass)
+            if hasattr(txdata,"removeUnits"):
+                mass = txdata.removeUnits(mass)
+            else:
+                mass = removeUnits(mass,standardUnits)
             porig = txdata.flattenArray(mass)
         p=((numpy.matrix(porig)[0] - txdata.delta_x)).tolist()[0]
         P=numpy.dot(p,txdata._V)  ## rotated point

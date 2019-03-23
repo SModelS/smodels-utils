@@ -21,7 +21,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.WARNING)
 import tempfile
 import pyslha
-from smodels.theory import slhaDecomposer
+try: ## smodels <= 122
+    from smodels.theory import slhaDecomposer as decomposer
+except ImportError: ## smodels >= 200
+    from smodels.theory import decomposer
 from smodels.tools.physicsUnits import fb, GeV, TeV
 from smodels.tools.xsecComputer import XSecComputer, LO, NLL
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -202,7 +205,7 @@ class TemplateFile(object):
         #Run decomposition on the file:
         sigmacut = 0.*fb
         mingap = 2.*GeV
-        smstoplist = slhaDecomposer.decompose(tempSLHA, sigmacut,\
+        smstoplist = decomposer.decompose(tempSLHA, sigmacut,\
                         doCompress=True,doInvisible=True, minmassgap=mingap)
         
         #Delete the temporary SLHA file and pythia card
