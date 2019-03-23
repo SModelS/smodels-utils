@@ -10,7 +10,7 @@
 """
 
 import sys
-from sympy import var, Eq, lambdify, solve, N
+from sympy import var, Eq, lambdify, solve, N, And
 from scipy.spatial import Delaunay
 from itertools import permutations
 from smodels_utils.dataPreparation.dataHandlerObjects import DataHandler,ExclusionHandler
@@ -324,17 +324,24 @@ class Axes(object):
         if not isinstance(massEqs,list):
             logger.error('Mass must be a list of equations')
 
-        #Define mass variables:
-        massVars = []
+        #Define mass and lifetime variables:
+        massVars,lifetimeVars = [], []
         for im in range(len(massEqs)):
             massVars.append(var('Mass'+string.ascii_uppercase[im]))
+            lifetimeVars.append(var('Lifetime'+string.ascii_uppercase[im]))
 
         #New format:
         allEqs = []
         for im,massEq in enumerate(massEqs):
             #Create mass variable (upper case for first branch and lower case for second)
-            eq = Eq(massVars[im],N(massEq,5))
-            allEqs.append(eq)
+            if type(massEq) == tuple:
+                eq1 = Eq(massVars[im],N(massEq[0],5))
+                eq2 = Eq(lifetimeVars[im],N(massEq[1],5))
+                allEqs.append(eq1)
+                allEqs.append(eq2)
+            else:
+                eq = Eq(massVars[im],N(massEq,5))
+                allEqs.append(eq)
 
             allEqs = sorted(allEqs, key = lambda eq: eq.args[0].name)
 
