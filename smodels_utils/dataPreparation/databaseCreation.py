@@ -647,24 +647,28 @@ def round_list(x, n ):
     :return: x, with all floats rounded to n digits
     """
 
+    if isinstance(x,tuple):
+        tmp = []
+        for pt in x:
+            tmp.append ( round_list(pt,n) )
+        return tuple ( tmp )
     if isinstance(x,list):
         for i,pt in enumerate(x):
             x[i] = round_list(pt,n)
         return x
-    else:
-        if isinstance(x,Unum):
-            if not x.asNumber():
-                return x
-            unit = x/x.asNumber()
-            x = x.asNumber()
-        elif isinstance(x,str):
+    if isinstance(x,Unum):
+        if not x.asNumber():
             return x
-        else:
-            if not x:
-                return x
-            unit = 1.
+        unit = x/x.asNumber()
+        x = x.asNumber()
+    elif isinstance(x,str):
+        return x
+    else:
+        if not x:
+            return x
+        unit = 1.
 
-        return round(x,-int(floor(log10(x))) + (n - 1))*unit
+    return round(x,-int(floor(log10(x))) + (n - 1))*unit
 
 
 def removeRepeated(datalist,dataType=None):

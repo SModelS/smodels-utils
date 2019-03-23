@@ -286,7 +286,7 @@ class Axes(object):
     No units supported!
     """
 
-    def __init__(self, massEqs,massVars):
+    def __init__(self, massEqs,massVars,lifetimeVars):
 
         """
         Initialize a list of sympy.core.relational.Equality-object
@@ -305,6 +305,7 @@ class Axes(object):
 
         self._equations = massEqs[:] #Store equations
         self._massVars = massVars[:] #Store mass variables
+        self._lifetimeVars = lifetimeVars[:] #Store mass variables
 
         #Already define the functions and plot dimensions:
         self._setXYFunction()
@@ -345,25 +346,39 @@ class Axes(object):
 
             allEqs = sorted(allEqs, key = lambda eq: eq.args[0].name)
 
-        return cls(allEqs,massVars)
+        return cls(allEqs,massVars,lifetimeVars)
 
     def _getMassFunction(self):
 
         """
         Build a function to compute the mass array for given x,y, .. values.
-        The input variables are the ones define in self._xvars.
+        The input variables are the ones defined in self._xvars.
         :return: lambdify function which returns the mass array given the input variables.
         """
 
         #Mass variables:
         masses = self._massVars
+        lifetimes = self._lifetimeVars
         #Solve equation for masses
         s = solve(self._equations,masses,dict=True)[0]
-        #dummify=False allows to keep x,y,z... as valid argument keywords:
-        #(make sure the x,y,z values are passed as keywords)
         self._massFunctions = []
+        self._lifetimeFunctions = []
+        self._lifetimeIndices = [] ## take note of where lifetime info was given
         for m in self._massVars:
             self._massFunctions.append(lambdify(self._xvars,s[m],'math',dummify=False))
+        tall = solve(self._equations,lifetimes,dict=True)
+        if len(tall)==0:
+            return
+        t=tall[0]
+        for i,m in enumerate(self._lifetimeVars):
+            # x=0.
+            try:
+                x=lambdify(self._xvars,t[m],'math',dummify=False)
+                self._lifetimeFunctions.append ( x )
+                self._lifetimeIndices.append ( i )
+            except KeyError: ## does not have to be given!
+                pass
+            # self._lifetimeFunctions.append ( x )
 
     def getParticleMasses(self,**xMass):
 
@@ -390,7 +405,15 @@ class Axes(object):
             xValues[str(xv)] = xMass[str(xv)]
 
         massArray = [mfunc(**xValues) for mfunc in self._massFunctions]
-        return massArray
+        lifetimeArray = [mfunc(**xValues) for mfunc in self._lifetimeFunctions]
+        # print ( "lifetime funcs", self._lifetimeFunctions, xValues )
+        combinedArray = []
+        for i,m in enumerate(massArray):
+            tmp = m
+            if i in self._lifetimeIndices:
+                tmp = (m,lifetimeArray[i])
+            combinedArray.append ( tmp )
+        return combinedArray
 
     def _setXYFunction(self):
 
