@@ -14,7 +14,8 @@ from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round_list
 from smodels_utils.dataPreparation.particleNames import elementsInStr, ptcDic
 from smodels_utils.dataPreparation.particles import rEven
-from smodels.tools.physicsUnits import fb, pb, TeV, GeV, ns
+from smodels_utils.dataPreparation.dataHandlerObjects import hbar
+from smodels.tools.physicsUnits import fb, pb, TeV, GeV
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.theory.element import Element
 from smodels.installation import version
@@ -30,10 +31,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.WARNING)
 
 hscp=False ## central switch for smodels v1.1 versus smodels v1.2
-if version()[:3]=="1.2":
+if version()[:3]=="1.2" or version()[0]=="2":
     hscp=True
 ## smodels v1.2 has final states for hscp patch
-
+                            
 class Locker(object):
 
     """Super-class to 'lock' a class.
@@ -784,7 +785,6 @@ class TxNameInput(Locker):
                             # M[1] is in ATLAS-SUSY_2016-08 given in [ns], 
                             # m1 = M[1]*eval(dataHandler.lifetimeUnit,{'ns': ns})
                             # lets convert it to a width [GeV]
-                            hbar = 4.135667662e-15 # (GeV * ns )
                             m1 = hbar / M[1] * GeV ## width in GeV
                             # m1 = 4.3135
                             M = ( m0, m1 )
