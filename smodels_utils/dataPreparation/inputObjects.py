@@ -781,9 +781,12 @@ class TxNameInput(Locker):
                             self._countErrors += 1
                             if self._countErrors < 4:
                                 logger.error ( "FIXME whats the units we are using for lifetime?" )
-                            # in meters
-                            # m1 = M[1]*3*10**8*m/s*eval(dataHandler.lifetimeUnit,{'ns': ns})
-                            m1 = M[1]*eval(dataHandler.lifetimeUnit,{'ns': ns})
+                            # M[1] is in ATLAS-SUSY_2016-08 given in [ns], 
+                            # m1 = M[1]*eval(dataHandler.lifetimeUnit,{'ns': ns})
+                            # lets convert it to a width [GeV]
+                            hbar = 4.135667662e-15 # (GeV * ns )
+                            m1 = hbar / M[1] * GeV ## width in GeV
+                            # m1 = 4.3135
                             M = ( m0, m1 )
                         if isinstance(M,(float,int)):
                             M = M*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
