@@ -14,7 +14,7 @@ from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round_list
 from smodels_utils.dataPreparation.particleNames import elementsInStr, ptcDic
 from smodels_utils.dataPreparation.particles import rEven
-from smodels.tools.physicsUnits import fb, pb, TeV, GeV
+from smodels.tools.physicsUnits import fb, pb, TeV, GeV, ns
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.theory.element import Element
 from smodels.installation import version
@@ -537,7 +537,7 @@ class TxNameInput(Locker):
                     'condition', 'conditionDescription','massConstraint',
                     'upperLimits','efficiencyMap','expectedUpperLimits',
                     'massConstraints', '_dataLabels', 'round_to',
-                    '_smallerThanError' ]
+                    '_smallerThanError', '_countErrors' ]
 
     requiredAttr = [ 'constraint','condition','txName','axes','dataUrl',
                      'source' ]
@@ -560,6 +560,7 @@ class TxNameInput(Locker):
         self.round_to = 5 ## number of digits to round to
         self._name = txName
         self._smallerThanError = 0
+        self._countErrors = 0
         self.txName = txName
         if hscp:
             self.finalState = ['MET','MET']
@@ -751,12 +752,12 @@ class TxNameInput(Locker):
             massArray = plane.getParticleMasses(**xDict)
 
             for br in massArray:
-                for m in br:
+                for M in br:
             #Check if the massArray is positive and value is positive:
-                    if (type(m) == float and m<0.) or type(m) == tuple and m[0]<0.:
+                    if (type(M) == float and M<0.) or type(M) == tuple and M[0]<0.:
                         logger.warning("Negative mass value found for %s. Point %s will be ignored." %(self,massArray))
                         continue
-                    if type(m) == tuple and m[1]<0.:
+                    if type(M) == tuple and M[1]<0.:
                         logger.warning("Negative lifetime found for %s. Point %s will be ignored." %(self,massArray))
                         continue
             if value < 0.:
@@ -774,15 +775,19 @@ class TxNameInput(Locker):
                 for i,br in enumerate(massArray):
                     if isinstance(br,str):  #Allow for string identifiers in the mass array
                         continue
-                    for j,m in enumerate(br):
-                        if isinstance(m,tuple):
-                            m0 = m[0]*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
-                            logger.error ( "FIXME whats the units we are using for lifetime?" )
-                            m1 = m[1]*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
-                            m = ( m0, m1 )
-                        if isinstance(m,(float,int)):
-                            m = m*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
-                        massArray[i][j] = m
+                    for j,M in enumerate(br):
+                        if isinstance(M,tuple):
+                            m0 = M[0]*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
+                            self._countErrors += 1
+                            if self._countErrors < 4:
+                                logger.error ( "FIXME whats the units we are using for lifetime?" )
+                            # in meters
+                            # m1 = M[1]*3*10**8*m/s*eval(dataHandler.lifetimeUnit,{'ns': ns})
+                            m1 = M[1]*eval(dataHandler.lifetimeUnit,{'ns': ns})
+                            M = ( m0, m1 )
+                        if isinstance(M,(float,int)):
+                            M = M*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
+                        massArray[i][j] = M
             dataList.append([massArray, value])
 
         if not dataList:

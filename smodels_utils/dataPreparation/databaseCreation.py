@@ -631,6 +631,7 @@ class DatabaseCreator(list):
         vStr = str(value)
         #Replace units:
         vStr = vStr.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
+        vStr = vStr.replace('[m]','*m').replace('[ns]','*ns')
         vStr = vStr.replace('[fb]','*fb').replace('[pb]','*pb')
         #Break lines:
         vStr = vStr.replace(" ","")

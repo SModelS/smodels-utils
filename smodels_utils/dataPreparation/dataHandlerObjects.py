@@ -60,6 +60,7 @@ class DataHandler(object):
         self.allowNegativValues = False
         self.dataset=None
         self._massUnit = 'GeV'
+        self._lifetimeUnit = 'ns'
         self._unit = None  #Default unit
         self._rescaleFactors = None
 
@@ -348,7 +349,7 @@ class DataHandler(object):
     def massUnit(self, unitString):
 
         """
-        Set unit for upper limits, default: 'pb'.
+        Set unit for masses, default: 'GeV'.
         If unitString is null, it will not set the property
         :param unitString: 'GeV','TeV' or '', None
         """
@@ -359,6 +360,30 @@ class DataHandler(object):
                 logger.error('Mass units must be in %s' %str(units))
                 sys.exit()
             self._massUnit = unitString
+
+    @property
+    def lifetimeUnit(self):
+
+        """
+        :return: unit as string
+        """
+        return self._lifetimeUnit
+
+    @lifetimeUnit.setter
+    def lifetimeUnit(self, unitString):
+
+        """
+        Set unit for upper limits, default: 'ns'.
+        If unitString is null, it will not set the property
+        :param unitString: 'ns','s' or '', None
+        """
+
+        if unitString:
+            units = ['ns','s']
+            if not unitString in units:
+                logger.error('Lifetime units must be in %s' %str(units))
+                sys.exit()
+            self._lifetimeUnit = unitString
 
     def _positivValues(self, values):
 
