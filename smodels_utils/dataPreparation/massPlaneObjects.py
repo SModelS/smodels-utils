@@ -190,8 +190,8 @@ class MassPlane(object):
 
         dimensions = len(self.xvars)
         if not dataLabel in self.allowedDataLabels:
-            logger.warning("Data label %s is not allowed and will be ignored" %dataLabel)
-            return False
+            logger.error("Data label %s is not allowed." %dataLabel)
+            sys.exit()
         if not 'exclusion' in dataLabel.lower():
             #Define the default coordinate mapping:
             if not coordinateMap:
@@ -503,6 +503,7 @@ class Axes(object):
         #Now check if the x,y,.. values computed give the massArray back:
         newMass = self.getParticleMasses(**xValues)
         for im,m in enumerate(newMass):
+            if type(m)==tuple: m=m[0]
             if abs(m-massArray[im]) > 0.11: #Masses differ
                 return None
 
