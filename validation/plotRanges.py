@@ -158,18 +158,21 @@ def massListToArray(massList,axes):
     e.g.  massList = [5.,10.], massShape = ['*',[x,y]] -> return ['*',[5.,10.]]
     e.g.  massList = [5.,10.], massShape = [[x],[x]] -> return [[5.],[10.]]
     
-    :param massList: 1D list of floats (dimension should match number of numerical entries in axes
+    :param massList: 1D list of floats (dimension should match number of numerical 
+                     entries in axes
     :param axes: Nested list describing the axes (e.g. [[x],[x]] or ['*',[x]])
     
-    :return: Nested mass array with entries from massList and shape from axes (e.g. [[5.],[10.]]) 
+    :return: Nested mass array with entries from massList and shape from axes 
+             (e.g. [[5.],[10.]]) 
     """
     
     if isinstance(axes,(list,numpy.ndarray)):
         return [massListToArray(massList,m) for m in axes]
-    elif isinstance(axes,str):
+    if isinstance(axes,(tuple,numpy.ndarray)):
+        return tuple([massListToArray(massList,m) for m in axes])
+    if isinstance(axes,str):
         return axes
-    else:
-        return massList.pop(0)
+    return massList.pop(0)
         
     
         
