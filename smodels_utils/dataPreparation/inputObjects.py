@@ -538,7 +538,7 @@ class TxNameInput(Locker):
                     'condition', 'conditionDescription','massConstraint',
                     'upperLimits','efficiencyMap','expectedUpperLimits',
                     'massConstraints', '_dataLabels', 'round_to',
-                    '_smallerThanError', '_countErrors' ]
+                    '_smallerThanError' ] # , '_countErrors' ]
 
     requiredAttr = [ 'constraint','condition','txName','axes','dataUrl',
                      'source' ]
@@ -561,7 +561,7 @@ class TxNameInput(Locker):
         self.round_to = 5 ## number of digits to round to
         self._name = txName
         self._smallerThanError = 0
-        self._countErrors = 0
+#        self._countErrors = 0
         self.txName = txName
         if hscp:
             self.finalState = ['MET','MET']
@@ -779,9 +779,9 @@ class TxNameInput(Locker):
                     for j,M in enumerate(br):
                         if isinstance(M,tuple):
                             m0 = M[0]*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
-                            self._countErrors += 1
-                            if self._countErrors < 4:
-                                logger.error ( "FIXME whats the units we are using for lifetime?" )
+#                            self._countErrors += 1
+#                            if self._countErrors < 4:
+#                                logger.error ( "FIXME whats the units we are using for lifetime?" )
                             # M[1] is in ATLAS-SUSY_2016-08 given in [ns], 
                             # m1 = M[1]*eval(dataHandler.lifetimeUnit,{'ns': ns})
                             # lets convert it to a width [GeV]

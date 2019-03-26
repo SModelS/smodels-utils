@@ -286,7 +286,7 @@ class Axes(object):
     No units supported!
     """
 
-    def __init__(self, massEqs,massVars,lifetimeVars):
+    def __init__(self, massEqs,massVars,widthVars):
 
         """
         Initialize a list of sympy.core.relational.Equality-object
@@ -305,7 +305,7 @@ class Axes(object):
 
         self._equations = massEqs[:] #Store equations
         self._massVars = massVars[:] #Store mass variables
-        self._lifetimeVars = lifetimeVars[:] #Store mass variables
+        self._widthVars = widthVars[:] #Store mass variables
 
         #Already define the functions and plot dimensions:
         self._setXYFunction()
@@ -325,11 +325,11 @@ class Axes(object):
         if not isinstance(massEqs,list):
             logger.error('Mass must be a list of equations')
 
-        #Define mass and lifetime variables:
-        massVars,lifetimeVars = [], []
+        #Define mass and width variables:
+        massVars,widthVars = [], []
         for im in range(len(massEqs)):
             massVars.append(var('Mass'+string.ascii_uppercase[im]))
-            lifetimeVars.append(var('Lifetime'+string.ascii_uppercase[im]))
+            widthVars.append(var('Width'+string.ascii_uppercase[im]))
 
         #New format:
         allEqs = []
@@ -337,7 +337,7 @@ class Axes(object):
             #Create mass variable (upper case for first branch and lower case for second)
             if type(massEq) == tuple:
                 eq1 = Eq(massVars[im],N(massEq[0],5))
-                eq2 = Eq(lifetimeVars[im],N(massEq[1],5))
+                eq2 = Eq(widthVars[im],N(massEq[1],5))
                 allEqs.append(eq1)
                 allEqs.append(eq2)
             else:
@@ -346,7 +346,7 @@ class Axes(object):
 
             allEqs = sorted(allEqs, key = lambda eq: eq.args[0].name)
 
-        return cls(allEqs,massVars,lifetimeVars)
+        return cls(allEqs,massVars,widthVars)
 
     def _getMassFunction(self):
 
@@ -358,27 +358,27 @@ class Axes(object):
 
         #Mass variables:
         masses = self._massVars
-        lifetimes = self._lifetimeVars
+        widths = self._widthVars
         #Solve equation for masses
         s = solve(self._equations,masses,dict=True)[0]
         self._massFunctions = []
-        self._lifetimeFunctions = []
-        self._lifetimeIndices = [] ## take note of where lifetime info was given
+        self._widthFunctions = []
+        self._widthIndices = [] ## take note of where width info was given
         for m in self._massVars:
             self._massFunctions.append(lambdify(self._xvars,s[m],'math',dummify=False))
-        tall = solve(self._equations,lifetimes,dict=True)
+        tall = solve(self._equations,widths,dict=True)
         if len(tall)==0:
             return
         t=tall[0]
-        for i,m in enumerate(self._lifetimeVars):
+        for i,m in enumerate(self._widthVars):
             # x=0.
             try:
                 x=lambdify(self._xvars,t[m],'math',dummify=False)
-                self._lifetimeFunctions.append ( x )
-                self._lifetimeIndices.append ( i )
+                self._widthFunctions.append ( x )
+                self._widthIndices.append ( i )
             except KeyError: ## does not have to be given!
                 pass
-            # self._lifetimeFunctions.append ( x )
+            # self._widthFunctions.append ( x )
 
     def getParticleMasses(self,**xMass):
 
@@ -405,13 +405,13 @@ class Axes(object):
             xValues[str(xv)] = xMass[str(xv)]
 
         massArray = [mfunc(**xValues) for mfunc in self._massFunctions]
-        lifetimeArray = [mfunc(**xValues) for mfunc in self._lifetimeFunctions]
-        # print ( "lifetime funcs", self._lifetimeFunctions, xValues )
+        widthArray = [mfunc(**xValues) for mfunc in self._widthFunctions]
+        # print ( "width funcs", self._widthFunctions, xValues )
         combinedArray = []
         for i,m in enumerate(massArray):
             tmp = m
-            if i in self._lifetimeIndices:
-                tmp = (m,lifetimeArray[i])
+            if i in self._widthIndices:
+                tmp = (m,widthArray[i])
             combinedArray.append ( tmp )
         return combinedArray
 
