@@ -315,7 +315,6 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     for x in list(itertools.product(*ranges)):
         xvalues = dict(zip(xvars,x))
         mass = _addUnits ( massPlane.getParticleMasses(**xvalues) )
-        # mass = [[m*GeV for m in br] for br in massPlane.getParticleMasses(**xvalues)]
         if hasattr(txdata, 'flattenMassArray'):
             porig = txdata.flattenMassArray(mass)
         else:
@@ -324,21 +323,15 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
             else:
                 mass = removeUnits(mass,standardUnits)
             porig = txdata.flattenArray(mass)
-        # print ( "porig=", porig )
         p=((numpy.matrix(porig)[0] - txdata.delta_x)).tolist()[0]
         P=numpy.dot(p,txdata._V)  ## rotated point
         extremePoints.append(P)
     #Limit extreme values by data:
-    #print ( "points", txdata.tri.points )
     Mp = numpy.array(txdata.tri.points)
     extremePoints = numpy.array(extremePoints)
     newRanges = []
     steps = []
-    #print ( "xvars=", xvars )
     for iaxis in range(len(xvars)):
-        #print ( "iaxes=", iaxis )
-        #print ( "Mp=", Mp )
-        #print ( "Mp[:]=", Mp[:,iaxis] )
         vminData = min(Mp[:,iaxis])
         vmaxData = max(Mp[:,iaxis])
         vminRange = min(extremePoints[:,iaxis])
@@ -368,13 +361,18 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
             continue
         mass = getMassArrayFor(pt,massPlane,txdata,unit=None)
         #Round all masses (to be consistent with smodels)
-        mass = [[round(m,1) for m in br] for br in mass]
+        def roundme ( x ):
+            if type(x) in (float,int):
+                return round(x,1)
+            return ( round(x[0],1), x[1] )
+        mass = [[roundme(m) for m in br] for br in mass]
         if not vertexChecker(mass):
             continue
         if massPlane.getXYValues(mass) is None:
             continue
         inside = False
-        mass_unit = [[m*GeV for m in br] for br in mass]
+        mass_unit = _addUnits ( mass )
+        # mass_unit = [[m*GeV for m in br] for br in mass]
         for tx in txnameObjs:                
             if not (tx.txnameData.getValueFor(mass_unit) is None):
                 inside = True

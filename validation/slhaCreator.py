@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.WARNING)
 import tempfile
 import pyslha
+import math
 try: ## smodels <= 122
     from smodels.theory import slhaDecomposer as decomposer
 except ImportError: ## smodels >= 200
@@ -91,9 +92,14 @@ class TemplateFile(object):
         masses = self.massPlane.getParticleMasses(**ptDict)
         massDict = {}
         for ibr,br in enumerate(masses):
-            if ibr == 0: massTag = 'M'
-            elif ibr == 1: massTag = 'm'
-            for im,m in enumerate(br): massDict[massTag+str(im)] = m 
+            massTag, widthTag = 'M', 'W'
+            if ibr == 1: massTag, widthTag = 'm','W'
+            for im,m in enumerate(br): 
+                if type(m)==tuple:
+                    massDict[massTag+str(im)] = m[0]
+                    massDict[widthTag+str(im)] = math.exp(m[1])
+                else:
+                    massDict[massTag+str(im)] = m 
             
         #First check if all the axes labels defined in the template appears in massDict
         if not set(self.tags).issubset(set(massDict.keys())):
@@ -116,7 +122,11 @@ class TemplateFile(object):
             else:
                 slhaname = "%s" % (templateName)
                 for br in masses:
-                    for m in br: slhaname += "_%d" % m
+                    for m in br: 
+                        if type(m)==tuple:
+                            slhaname += "_%d_%.4f" % (m[0],m[1] )
+                        else:
+                            slhaname += "_%d" % m
                 slhaname += ".slha"
                 slhaname = os.path.join(self.tempdir,slhaname)
 
