@@ -69,6 +69,7 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,addToFile,xargs,Npts=3
     tempdir = tempfile.mkdtemp(dir=os.getcwd())
     logger.debug("tempdir is %s" % tempdir )
     pythiaVersion = 6
+    totalPoints = 0
     if xargs.pythia6 and not xargs.pythia8:
         pythiaVersion = 6
     elif not xargs.pythia6 and xargs.pythia8:
@@ -76,10 +77,15 @@ def createFiles(expResList,txnameStr,templateFile,tarFile,addToFile,xargs,Npts=3
     for (axes,ntgraph) in tgraphs.items():
         pts = plotRanges.getPoints(ntgraph, txnameObjs, axes, Npts)
         logger.info("\033[31m %i SLHA files for axes %s \033[0m " %(len(pts),axes))
+        totalPoints += len(pts)
         if len(pts)==0:
             continue
         tempf = slhaCreator.TemplateFile(templateFile,axes,tempdir,pythiaVersion=pythiaVersion)
         tempf.createFilesFor(pts, massesInFileName=True)
+
+    if totalPoints == 0:
+        logger.error ( "no SLHA files need to created?" )
+        sys.exit()
 
     #Set up cross-section options:
     xargs.colors = None
@@ -153,8 +159,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,templatedir,slhadir,
     
     try:
         db = Database(databasePath)
-    except:
-        logger.error("Error loading database at %s" %databasePath)
+    except Exception as e:
+        logger.error("Error loading database at %s: %s" % (databasePath,e) )
         
     
     logger.info('----- Running creation...')
