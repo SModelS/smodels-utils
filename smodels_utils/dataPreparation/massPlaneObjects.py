@@ -10,7 +10,7 @@
 """
 
 import sys
-from sympy import var, Eq, lambdify, solve, N, And
+from sympy import var, Eq, lambdify, solve, N, And, sqrt
 from scipy.spatial import Delaunay
 from itertools import permutations
 from smodels_utils.dataPreparation.dataHandlerObjects import DataHandler,ExclusionHandler
@@ -470,7 +470,7 @@ class Axes(object):
         #dummify=False allows to keep MassA,MassB,... as valid argument keywords:
         #(make sure the MassA,MassB,.. values are passed as keywords)
         for xv in self._xvars:
-            self._xyFunction[xv] = lambdify(self._massVars,xy[xv],'math',dummify=False)
+            self._xyFunction[xv] = lambdify(self._massVars+self._widthVars,xy[xv],'math',dummify=False)
         self._nArguments = nvars
 
     def getXYValues(self,massArray):
@@ -491,20 +491,40 @@ class Axes(object):
         if not '_xyFunction' in self.__dict__:
             self._setXYFunction()
 
+        massInput = {}
+        for im,mass in enumerate(massArray):
+            if type(mass)==tuple:
+                massInput[ str(self._massVars[im]) ] = mass[0]
+                massInput[ str(self._widthVars[im]) ] = mass[1]
+            else:
+                massInput[ str(self._massVars[im]) ] = mass
+                massInput[ str(self._widthVars[im]) ] = None
         #Define dictionary with mass variables and values
-        massInput = dict([[str(self._massVars[im]),mass] for im,mass in enumerate(massArray)])
+        #massInput = dict([[str(self._massVars[im]),mass] for im,mass in enumerate(massArray)])
 
         xValues = {}
         #Get the function for each x,y,.. variable and compute its value
         for xv,xfunc in self._xyFunction.items():
             xValues[str(xv)] = xfunc(**massInput)
 
-
         #Now check if the x,y,.. values computed give the massArray back:
         newMass = self.getParticleMasses(**xValues)
+        
+        def distance ( x, y ):
+            assert ( type(x) == type(y) )
+            if type(x)==float:
+                return abs(x-y)
+            assert ( type(x) == tuple )
+            d=0.
+            for xi,yi in zip ( x, y ):
+                d+= ( xi-yi)**2
+            return sqrt ( d)
+
+
         for im,m in enumerate(newMass):
-            if type(m)==tuple: m=m[0]
-            if abs(m-massArray[im]) > 0.11: #Masses differ
+            ma=massArray[im]
+            d = distance(m,ma )
+            if d > 0.11: #Masses differ
                 return None
 
         return xValues

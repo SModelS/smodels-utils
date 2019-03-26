@@ -234,6 +234,21 @@ def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
     
     return pts
 
+def _addUnits ( masses ):
+    """ add units to scalars in nested containers """
+    newmasses = []
+    for br in masses:
+        tmp = []
+        for m in br:
+            if type(m) in ( float, int ):
+                m=m*GeV
+            else:
+                m=tuple([m[0]*GeV,m[1]*GeV])
+            tmp.append(m)
+        newmasses.append ( tmp )
+    return newmasses
+
+
 def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     """
     Method to generate points between minx,maxx and miny,maxy.
@@ -268,9 +283,10 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
             xyDict = massPlane.getXYValues(mass)            
             if xyDict is None:
                 continue
-            mass = massPlane.getParticleMasses(**xyDict)
+            tmpmass = massPlane.getParticleMasses(**xyDict)
             #Add units:
-            mass = [[m*GeV for m in br] for br in mass]
+            mass = _addUnits ( tmpmass )
+            # mass = [[m*GeV for m in br] for br in tmpmass]
             #Does not include the same mass point twice from distinct signal regions
             if mass in planeMasses:
                 continue
@@ -298,7 +314,8 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     xvars = [x[0] for x in rangesList] #Collect the var labels in order
     for x in list(itertools.product(*ranges)):
         xvalues = dict(zip(xvars,x))
-        mass = [[m*GeV for m in br] for br in massPlane.getParticleMasses(**xvalues)]
+        mass = _addUnits ( massPlane.getParticleMasses(**xvalues) )
+        # mass = [[m*GeV for m in br] for br in massPlane.getParticleMasses(**xvalues)]
         if hasattr(txdata, 'flattenMassArray'):
             porig = txdata.flattenMassArray(mass)
         else:
@@ -307,15 +324,21 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
             else:
                 mass = removeUnits(mass,standardUnits)
             porig = txdata.flattenArray(mass)
+        # print ( "porig=", porig )
         p=((numpy.matrix(porig)[0] - txdata.delta_x)).tolist()[0]
         P=numpy.dot(p,txdata._V)  ## rotated point
         extremePoints.append(P)
     #Limit extreme values by data:
+    #print ( "points", txdata.tri.points )
     Mp = numpy.array(txdata.tri.points)
     extremePoints = numpy.array(extremePoints)
     newRanges = []
     steps = []
+    #print ( "xvars=", xvars )
     for iaxis in range(len(xvars)):
+        #print ( "iaxes=", iaxis )
+        #print ( "Mp=", Mp )
+        #print ( "Mp[:]=", Mp[:,iaxis] )
         vminData = min(Mp[:,iaxis])
         vmaxData = max(Mp[:,iaxis])
         vminRange = min(extremePoints[:,iaxis])
