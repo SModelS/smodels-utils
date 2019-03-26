@@ -140,6 +140,7 @@ class TemplateFile(object):
         #Compute cross-sections
         if computeXsecs:
             if self.pythiaCard:
+                print ( "143 add xsecs" )
                 computerLO = XSecComputer(LO, 1000, 6)
                 xsecsLO = computerLO.compute(8*TeV, slhaname,pythiacard=self.pythiaCard)
                 computerLO.addXSecToFile(xsecsLO,slhaname,comment="1k events (unit = pb)")         
@@ -153,12 +154,13 @@ class TemplateFile(object):
 
         return slhaname
     
-    def createFilesFor(self,pts,addXsecs=False, massesInFileName=False):
+    def createFilesFor( self, pts, massesInFileName=False ):
         """
-        Creates new SLHA files from the template for the respective (x,y) values in pts.
+        Creates new SLHA files from the template for the respective (x,y) values 
+        in pts.
         For each distinct x value, new cross-sections will be computed.  
-        :param pts: list of dicts with values for the plot in GeV (e.g. [{'x' : x1, 'y' : y1}, {'x' : x2, 'y' : y2}, ...])
-        :param addXsecs: if True will compute the cross-sections and add them to the SLHA files.
+        :param pts: list of dicts with values for the plot in GeV 
+                    (e.g. [{'x' : x1, 'y' : y1}, {'x' : x2, 'y' : y2}, ...])
         :return: list of SLHA file names generated.
         """
 
@@ -167,19 +169,6 @@ class TemplateFile(object):
             slhafile = self.createFileFor(pt,massesInFileName=massesInFileName)
             if slhafile:
                 slhafiles.append(slhafile)
-            else:
-                continue
-            if not addXsecs:
-                continue
-            if self.pythiaCard:
-                computerLO = XSecComputer(LO, 1000, 6)
-                xsecsLO = computerLO.compute(8*TeV, slhafile,pythiacard=self.pythiaCard)
-                computerLO.addXSecToFile(xsecsLO,slhafile,comment="1k events (unit = pb)")         
-                computerNLL = XSecComputer(NLL, 1000, 6)
-                xsecsNLL = computerNLL.compute(8*TeV, slhafile,loFromSlha=True,
-                                               pythiacard=self.pythiaCard)
-                computerNLL.addXSecToFile(xsecsNLL,slhafile,comment="(unit = pb)")         
-            #If the x-value did not change, simply add the previously computed xsecs to file
 
         return slhafiles
 
@@ -205,6 +194,7 @@ class TemplateFile(object):
         #Add cross-sections to file running only mother pair production:
         #(to guarantee the mother cross-section value is reliable)
         if self.pythiaCard:        
+            print ( "208 add xsecs" )
             computerLO = XSecComputer(LO, 1000, 6)
             xsecsLO = computerLO.compute(8*TeV, tempSLHA,pythiacard=self.pythiaCard)
             computerLO.addXSecToFile(xsecsLO,tempSLHA,comment="1k events (unit = pb)")         

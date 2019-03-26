@@ -200,10 +200,7 @@ BLOCK MSOFT Q=  2.90528802E+02  # The soft SUSY breaking masses at the scale Q
 #         PDG            Width
 DECAY   1000021     W0 # ~g + decays
 #           BR         NDA      ID1       ID2       ID3
-      2.50000000e-01   2    1000001   -1
-      2.50000000e-01   2    1000002   -2
-      2.50000000e-01   2    1000003   -3
-      2.50000000e-01   2    1000004   -4
+      1.0              3    1000001   -1 1
 
 #         PDG            Width
 DECAY   1000001     1.00000000E+00   # sdown_L decays
