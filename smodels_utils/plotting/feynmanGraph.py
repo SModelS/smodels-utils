@@ -266,7 +266,7 @@ class Drawer:
                 # p1 = Point(0, ct)
                 lastVertex=vtx1
                 nvtx=0
-                for ( nvtx,insertions) in enumerate(branch.particles):
+                for ( nvtx,insertions) in enumerate(branch.evenParticles):
                     mark=None
                     if len(insertions)>0:
                         mark=CIRCLE
@@ -364,7 +364,7 @@ if __name__ == "__main__":
                                  action='store_true' )
         args=argparser.parse_args()
 
-        from smodels.theory import lheReader, lheDecomposer, crossSection, element
+        from smodels.theory import lheReader, crossSection, element
         from smodels_utils import SModelSUtils
         import sys
 
@@ -434,9 +434,12 @@ if __name__ == "__main__":
             del drawer ## no fucking clue why this is needed
             sys.exit()
 
+        print ( "LHE mode currently not working." )
+        """
         filename="%s/lhe/%s_1.lhe" % (SModelSUtils.installDirectory(), args.T )
         if args.lhe!="": filename=args.lhe
 
+        import lheDecomposer
         reader = lheReader.LheReader( filename )
         Event = reader.next()
         E = lheDecomposer.elementFromEvent( Event, crossSection.XSectionList() )
@@ -444,3 +447,4 @@ if __name__ == "__main__":
         drawer.draw ( args.output, straight=args.straight, inparts=args.incoming,
                       italic=args.italic, jet=args.jet )
         del drawer ## no fucking clue why this is needed
+        """
