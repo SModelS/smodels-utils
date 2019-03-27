@@ -124,7 +124,7 @@ class TemplateFile(object):
                 for br in masses:
                     for m in br: 
                         if type(m)==tuple:
-                            slhaname += "_%d_%.4f" % (m[0],m[1] )
+                            slhaname += "_%d_%.2g" % (m[0],m[1] )
                         else:
                             slhaname += "_%d" % m
                 slhaname += ".slha"

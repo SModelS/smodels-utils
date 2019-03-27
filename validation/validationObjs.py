@@ -249,6 +249,7 @@ class ValidationPlot():
             f.write("[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus)
             f.write("[database]\npath = %s\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (self.databasePath,expId,txname))
             f.write("[printer]\noutputType = python\n")
+            f.write("[particles]\nmodel=share.models.mssm\npromptWidth=1.1\n" )
             f.write("[python-printer]\naddElementList = False\n")
             f.close()
         os.close(pf)
