@@ -258,8 +258,9 @@ class Drawer:
                     v1=Vertex ( f*(nvtx+1),f*ct,mark=mark)
                     col = color.rgb.black
                     if oddptcl.label == "longlived":
-                        from pyfeyn.user import BLUE
-                        col = BLUE
+                        col = color.rgb.blue
+                        #from pyfeyn.user import BLUE
+                        #col = BLUE
                     # f1 = Scalar    ( lastVertex,v1) ## .addLabel ( "x")
                     f1 = self.connect_ ( lastVertex,v1, spin="scalar",
                                          bend=True, nspec=3, col=col )
