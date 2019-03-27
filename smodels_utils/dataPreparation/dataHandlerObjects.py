@@ -17,7 +17,8 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
-hbar = 4.135667662e-15 # in GeV * ns
+# h = 4.135667662e-15 # in GeV * ns
+hbar = 6.582119514e-16 # in GeV * ns
 
 def _Hash ( lst ): ## simple hash function for our masses
     ret=0.
