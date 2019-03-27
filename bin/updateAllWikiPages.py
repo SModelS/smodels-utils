@@ -62,11 +62,14 @@ def main():
         exec ( [ "./publishDatabasePickle.py", "-r", "-b", "-f", db ] )
 
     gprint ( "create Validation wiki" )
-    exec ( [ "../validation/createWikiPage.py", "-c", ref_db, "-a", "-i", "-f" ] )
-    exec ( [ "../validation/createWikiPage.py", "-c", ref_db, "-a", "-u" ] )
+    cmd = [ "../validation/createWikiPage.py", "-c", ref_db ]
+    if A.ignore:
+        cmd += [ "-i" ]
+    exec ( cmd + [ "-a", "-s", "-f" ] )
+    exec ( cmd + [ "-a", "-u" ] )
     if A.non_versioned:
-        exec ( [ "../validation/createWikiPage.py", "-c", ref_db, "-i", "-f" ] )
-        exec ( [ "../validation/createWikiPage.py", "-c", ref_db, "-u" ] )
+        exec ( cmd + [ "-s", "-f" ] )
+        exec ( cmd + [ "-u" ] )
 
 
 if __name__ == "__main__":

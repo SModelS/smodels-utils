@@ -26,24 +26,23 @@ except ImportError:
 class WikiPageCreator:
     ### starting to write a creator class
     def __init__ ( self, ugly, database, add_version, private, force_upload,
-                   comparison_database, ignore_superseded ):
+                   comparison_database, ignore_superseded, ignore ):
         self.ugly = ugly ## ugly mode
         self.databasePath = database.replace ( "~", os.path.expanduser("~") )
         self.db = Database( self.databasePath )
         self.comparison_dbPath = comparison_database
         self.ignore_superseded = ignore_superseded
+        self.ignore_validated = ignore
+        if ugly: ## in ugly mode we always ignore validated, and superseded
+            self.ignore_validated = True
+            self.ignore_validated = True
         self.comparison_db = None
         if self.comparison_dbPath:
             self.comparison_db = Database ( self.comparison_dbPath )
         self.force_upload = force_upload
-        self.private = private
-        if self.ugly: ## ugly mode is always private mode
-            self.private = True
         self.dotlessv = ""
         if add_version:
             self.dotlessv = self.db.databaseVersion.replace(".","" )
-        #self.localdir = "/var/www/validation_v%s" % \
-        #                 self.db.databaseVersion.replace(".","" )
         self.localdir = "../../smodels.github.io/validation/%s" %self.db.databaseVersion.replace(".","" )
         has_uploaded = False
         if not os.path.exists ( self.localdir ) and self.force_upload:
@@ -77,9 +76,9 @@ class WikiPageCreator:
             self.fName = 'ValidationUgly%s' % self.dotlessv
         self.file = open ( self.fName, 'w' )
         self.nlines = 0
-        print ( "\n" )
-        if not has_uploaded:
-            print ( 'MAKE SURE THE VALIDATION PLOTS IN %s ARE UPDATED\n' % self.localdir  )
+        print ( )
+        #if not has_uploaded:
+        #    print ( 'MAKE SURE THE VALIDATION PLOTS IN %s ARE UPDATED\n' % self.localdir  )
         self.true_lines = []
         self.false_lines = []
         self.none_lines = []
@@ -165,10 +164,8 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                         for tn in expRes.getTxNames():
                             validated = tn.getInfo('validated')
                             tname = tn.txName
-                            #if "2015-0" in expRes.globalInfo.id:
-                            #    print ( "tname=",tname,"validated=",validated,"path=",tn.path, "tpe=",tpe )
-                            #    print ( "   `- info",tn._infoObj.dataType ) 
-                            if validated in [ "n/a" ]: continue
+                            if not self.ignore_validated and validated in [ "n/a" ]: 
+                                continue
                             if "efficiency" in tpe:
                                 dataset = self.getDatasetName ( tn )
                                 if dataset == "data": continue
@@ -192,7 +189,8 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         txns_discussed=[]
         for txname in txnames:
             validated = txname.getInfo('validated')
-            if not self.ugly and validated != True: continue
+            if not self.ignore_validated and validated != True: 
+                continue
             # if validated == "n/a": continue
             txn = txname.txName
             if txn in txns_discussed:
@@ -210,7 +208,8 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 continue
             txns_discussed.append ( txn )
             validated = txname.getInfo('validated')
-            if not self.ugly and validated != True: continue
+            if not self.ignore_validated and validated != True: 
+                continue
             #if validated == "n/a": continue
             color=""
             if validated is True: color = "#32CD32"
@@ -224,14 +223,10 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 dataset = self.getDatasetName ( txname )
                 if dataset == "data":
                     continue
-                # print ( "txname=", dataset )
-                # line += "|| %s " % dataset
             if hadTxname: ## not the first txname for this expres?
                 line += "| "
             hadTxname = True
-            # line += '||[[SmsDictionary%s#%s|%s]]' % ( self.dotlessv, txn, txnbrs )
             line += '| [%s](SmsDictionary%s#%s)' % ( txnbrs, self.dotlessv, txn )
-            #line += "||%.1f" % txname.globalInfo.lumi.asNumber(1/fb)
             line += "| %.1f" % txname.globalInfo.lumi.asNumber(1/fb)
             if self.ugly:
                 line += '| %s ' % ( sval )
@@ -303,7 +298,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
             # no comparison database given. So nothing is new.
             return False
         if not hasattr ( self, "OldAnaIds" ):
-            expRs = self.comparison_db.getExpResults( useSuperseded = True, useNonValidated = self.ugly )
+            expRs = self.comparison_db.getExpResults( useSuperseded = True, useNonValidated = self.ignore_validated )
             anaIds = [ x.globalInfo.id for x in expRs ]
             self.OldAnaIds = set ( anaIds )
             self.topos = {}
@@ -342,7 +337,8 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 if name in txnames:
                     continue
                 validated = tn.getInfo('validated')
-                if not self.ugly and validated != True: continue
+                if not self.ignore_validated and validated != True: 
+                    continue
                 # if validated in [ "n/a" ]: continue
                 if "efficiency" in tpe:
                     dataset = self.getDatasetName ( tn )
@@ -371,7 +367,8 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         T="upperLimit"
         if "efficiency" in tpe: T="efficiencyMap"
         tmpList = self.db.getExpResults( dataTypes=[ T ], 
-                         useNonValidated=self.ugly, useSuperseded=True )
+                         useNonValidated=self.ignore_validated, 
+                         useSuperseded=True )
         expResList = []
         for i in tmpList:
             if not exp in i.globalInfo.id: continue
@@ -398,7 +395,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser( description= "creates validation wiki pages,"\
                 " see e.g. http://smodels.github.io/docs/Validation" )
     ap.add_argument('-u', '--ugly', help='ugly mode (gives more private info,'\
-                ' sets private mode, uses ugly plots)', action='store_true')
+                ' plots everything, uses ugly plots)', action='store_true')
     ap.add_argument('-p', '--private', help='private mode',
                     action='store_true')
     ap.add_argument('-f', '--force_upload', 
@@ -406,8 +403,9 @@ if __name__ == "__main__":
                     action='store_true')
     ap.add_argument('-a', '--add_version', help='add version labels in links', 
                     action='store_true')
-    ap.add_argument('-i', '--ignore_superseded', help='ignore superseded results', 
+    ap.add_argument('-s', '--ignore_superseded', help='ignore superseded results', 
                     action='store_true')
+    ap.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
     ap.add_argument('-v', '--verbose',
             help='specifying the level of verbosity (error, warning, info, debug)'\
                  ' [info]', default = 'info', type = str)
@@ -421,5 +419,6 @@ if __name__ == "__main__":
     setLogLevel ( args.verbose )
     creator = WikiPageCreator( args.ugly, args.database, args.add_version, 
                                args.private, args.force_upload,
-                               args.comparison_database, args.ignore_superseded )
+                               args.comparison_database, args.ignore_superseded,
+                               args.ignore )
     creator.run()
