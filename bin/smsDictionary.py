@@ -156,7 +156,6 @@ N.B.: Each "()" group corresponds to a branch
 
 
     def createFeynGraph ( self, txname, constraint ):
-        from smodels_utils.plotting import feynmanGraph
         fcon = constraint
         constrs = fcon.split ( ";" )
         fstate=["MET","MET"]
@@ -166,10 +165,6 @@ N.B.: Each "()" group corresponds to a branch
             if len(i)<len(c):
                 c=i
         print ( "[smsDictionary] shortest constraint for",txname,"is",c )
-        #p=constraint.find(";")
-        #if p>-1:
-        #    constraint=constraint[:p]
-        #c=constraint
         p=c.find("<<BR>>" )
         if p>-1:
             c=c[:p]
@@ -184,6 +179,8 @@ N.B.: Each "()" group corresponds to a branch
         br = c.find("<BR")
         constr = c[:br].replace("`","")
         cmd += ' -c "%s"' % constr
+        if txname == "T5Disp":
+            cmd += ' -L "[[0],[0]]"'
         cmd += " -f '%s'" % str(fstate).replace("[","(").replace("]",")").replace("'",'"')
         cmd += " -o %s" % feynfile
         print ( "[smsDictionary]", cmd )
