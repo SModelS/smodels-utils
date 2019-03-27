@@ -30,6 +30,7 @@ def main():
     argparser.add_argument ( '-P', '--no_pickle', 
             help='Skip creation of pickle files',
             action='store_true' )
+    argparser.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
     A = argparser.parse_args()
     db = "~/git/smodels-database/"
     ref_db = "~/git/smodels-database-release/"
@@ -37,8 +38,11 @@ def main():
     ref_db = os.path.expanduser( ref_db )
     ## list of analyses, with and without superseded
     gprint ( "\nCreate list of analyses" )
-    exec ( [ "./listOfAnalyses.py", "-a" ] )
-    exec ( [ "./listOfAnalyses.py", "-n", "-a" ] )
+    cmd = [ "./listOfAnalyses.py", "-a" ]
+    if A.ignore:
+        cmd += [ "-i" ]
+    exec ( cmd )
+    exec ( cmd + [ "-n" ] )
     if A.non_versioned:
         print ( "Update also the non-versioned files" )
         exec ( [ "./listOfAnalyses.py" ] )

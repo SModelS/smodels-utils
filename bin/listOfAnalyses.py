@@ -39,11 +39,10 @@ def yesno ( B ):
     if B in [ False, "False" ]: return "No"
     return "?"
 
-def header( f, database, superseded, add_version, private ):
+def header( f, database, superseded, add_version ):
     """
     :params f: file handle
     :params database: database handle
-    :params private: mark wiki page as private (-All:read)
     """
     version = database.databaseVersion
     dotlessv = ""
@@ -68,9 +67,6 @@ def header( f, database, superseded, add_version, private ):
             ds = expR.getDataset ( d )
             n_results += 1
             n_maps += len ( ds.txnameList )
-    protected="+All:read"
-    if private:
-        protected="-All:read"
     f.write (
 # """#acl +DeveloperGroup:read,write,revert -All:write,read Default
 """
@@ -187,7 +183,7 @@ def emptyLine( f, superseded, ana_name ):
     f.write ( "\n" )
 
 def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, n_homegrown,
-                    version, add_version ):
+                    version, add_version, ignore ):
     dotlessv = ""
     if add_version:
         dotlessv = version.replace(".","")
@@ -229,7 +225,7 @@ def writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, n_homegrow
         topos = list ( set ( map ( str, ana.getTxNames() ) ) )
         homegrownd = {}
         for i in ana.getTxNames():
-            if i.validated not in [ True, "n/a", "N/A" ]:
+            if not ignore and i.validated not in [ True, "n/a", "N/A" ]:
                 print ( "Error: validated is %s in %s. Don't know how to handle." % ( i.validated, ana.globalInfo.id ) )
                 sys.exit(-1)
             homegrownd[str(i)] = ""
@@ -301,7 +297,7 @@ def selectAnalyses ( anas, sqrts, experiment, Type ):
         ret.append ( ana )
     return ret
 
-def writeExperiment ( f, db, experiment, sqrts, superseded, n_homegrown, version, add_version ):
+def writeExperiment ( f, db, experiment, sqrts, superseded, n_homegrown, version, add_version, ignore ):
     print ( "Experiment:", experiment )
     tanas = db.getExpResults( useSuperseded=superseded )
     for Type in [ "upperLimit", "efficiencyMap" ]:
@@ -318,7 +314,7 @@ def writeExperiment ( f, db, experiment, sqrts, superseded, n_homegrown, version
                 continue
             anas.append ( ana )
         writeOneTable ( f, db, experiment, Type, sqrts, anas, superseded, \
-                        n_homegrown, version, add_version )
+                        n_homegrown, version, add_version, ignore )
 
 def backup( filename ):
     if not os.path.exists ( filename ):
@@ -346,10 +342,10 @@ def main():
     import argparse
     argparser = argparse.ArgumentParser(description='Create list of analyses in wiki format, see http://smodels.hephy.at/wiki/ListOfAnalyses')
     argparser.add_argument ( '-n', '--no_superseded', help='ignore superseded results', action='store_true' )
-    argparser.add_argument ( '-p', '--private', help='declare as private (add wiki acl line on top)', action='store_true' )
     argparser.add_argument ( '-d', '--database', help='path to database [../../smodels-database]',
                              type=str, default='../../smodels-database' )
     argparser.add_argument ( '-v', '--verbose', help='verbosity level (error, warning, info, debug) [info]', type=str, default='info' )
+    argparser.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
     argparser.add_argument ( '-a', '--add_version', help='add version labels to links', action='store_true' )
     args = argparser.parse_args()
     setLogLevel ( args.verbose )
@@ -363,14 +359,15 @@ def main():
         filename = "ListOfAnalyses%sWithSuperseded" % ver
     backup( filename )
     f = open ( filename, "w" )
-    header( f, database, superSeded, args.add_version, args.private )
+    header( f, database, superSeded, args.add_version )
     listTables ( f, database.getExpResults ( useSuperseded = superSeded ) )
     print ( "Database:", database.databaseVersion )
     experiments=[ "CMS", "ATLAS" ]
     for sqrts in [ 13, 8 ]:
         for experiment in experiments:
             writeExperiment ( f, database, experiment, sqrts, \
-                              superSeded, n_homegrown, database.databaseVersion, args.add_version )
+                              superSeded, n_homegrown, database.databaseVersion, 
+                              args.add_version, args.ignore )
     print ( "%d home-grown now" % n_homegrown[0] )
     footer ( f )
     f.close()
