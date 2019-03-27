@@ -116,7 +116,7 @@ class ValidationPlot():
         curve.GetPoint ( 0, x0, y0 ) ## get the last point
         curve.GetPoint ( curve.GetN()-1, x, y ) ## get the last point
         closeWithXAxis=True ## close with x-axis (y=0) or y-axis (x=0)
-        if self.txName in [ "T2bbffff" ]: ## T2bbffff tends to close with y-axis
+        if self.txName in [ "T2bbffff", "T5Disp" ]: ## these tend to close with y-axis
             closeWithXAxis = False
 
         if closeWithXAxis:
