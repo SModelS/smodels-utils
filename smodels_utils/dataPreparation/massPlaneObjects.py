@@ -511,8 +511,16 @@ class Axes(object):
         newMass = self.getParticleMasses(**xValues)
         
         def distance ( x, y ):
-            assert ( type(x) == type(y) )
-            if type(x)==float:
+            ## the distance between x and y
+            ## I dont fully understand why there cases where x has a width
+            ## and y doesnt ....
+            #print  ( "types", type(x), type(y), x, y )
+            #assert ( type(x) == type(y) )
+            if type(x)==float and type(y)==tuple:
+                return abs(x-y[0])
+            if type(y)==float and type(x)==tuple:
+                return abs(x[0]-y)
+            if type(x)==float and type(y)==float:
                 return abs(x-y)
             assert ( type(x) == tuple )
             d=0.
