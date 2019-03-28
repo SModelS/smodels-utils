@@ -412,18 +412,21 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False 
         if not validationPlot.txName in ds_txnames:
             continue
         dataId = str(dataset.dataInfo.dataId)
-        # print "[plottingFuncs.py] add to %s: %s, %s" % ( validationPlot.txName, id, str ( map ( str, dataset.txnameList  ) ) )
         subtitle+=dataId+", "
     subtitle = subtitle[:-2]
     if hasattr ( validationPlot.expRes.globalInfo, "covariance" ):
         subtitle = "%d aggregate regions" % len(validationPlot.expRes.datasets)
     if len(subtitle) > 100:
         subtitle = subtitle[:100] + " ..."
-    if len(validationPlot.expRes.datasets) == 1 and type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
+    if len(validationPlot.expRes.datasets) == 1 and \
+            type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
         subtitle = "dataset: upper limit"
         
     figureUrl = getFigureUrl(validationPlot)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
+    if y>1e-21 and y<1e-6:
+        ## assume that its a "width" axis
+        plane.SetLogy()
     base.Draw("AP")
     base.SetTitle(title)
     try:
@@ -440,7 +443,8 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False 
     l0.SetTextSize(.025)
     l0.DrawLatex(.05,.905,subtitle)
     signal_factor = 1. # an additional factor that is multiplied with the signal cross section
-    agreement = round(100.*validationPlot.computeAgreementFactor( signal_factor = signal_factor ))
+    agreement = round(100.*validationPlot.computeAgreementFactor( 
+                       signal_factor = signal_factor ))
     logger.info ( "Agreement: %d%s" % (agreement,"%") )
     if extraInfo:
         lex=TLatex()
