@@ -243,12 +243,23 @@ def _addUnits ( masses ):
             if type(m) in ( float, int ):
                 m=m*GeV
             else:
+                # m=tuple([m[0]*GeV,numpy.exp(m[1])*GeV])
                 m=tuple([m[0]*GeV,m[1]*GeV])
             tmp.append(m)
         newmasses.append ( tmp )
     return newmasses
 
-
+def _exponentiateWidths ( masses ):
+    """ exponentiates the logs of the widths """
+    newmasses = []
+    for br in masses:
+        tmp = []
+        for m in br:
+            if type(m) is tuple:
+                m=tuple([m[0],numpy.exp(m[1])])
+            tmp.append(m)
+        newmasses.append ( tmp )
+    return newmasses
 def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     """
     Method to generate points between minx,maxx and miny,maxy.
@@ -371,7 +382,7 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
         if massPlane.getXYValues(mass) is None:
             continue
         inside = False
-        mass_unit = _addUnits ( mass )
+        mass_unit = _addUnits ( _exponentiateWidths ( mass ) )
         # mass_unit = [[m*GeV for m in br] for br in mass]
         for tx in txnameObjs:                
             if not (tx.txnameData.getValueFor(mass_unit) is None):
