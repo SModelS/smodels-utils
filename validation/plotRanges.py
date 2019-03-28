@@ -137,12 +137,15 @@ def getMassArrayFor(pt,massPlane,txnameData,unit=None):
                          %(len(pt),txnameData.dimensionality))
             return None
         fullpt = numpy.append(pt,[0.]*(txnameData.full_dimensionality-len(pt)))        
-        mass = numpy.dot(txnameData._V,fullpt) + txnameData.delta_x        
-        mass = mass.tolist()[0]
+        mass = txnameData.coordinatesToMasses(fullpt)
+        # mass = numpy.dot(txnameData._V,fullpt) + txnameData.delta_x        
+        # mass = mass.tolist()[0]
+        # print ( "mass=",mass )
         if not unit is None and isinstance(unit,unum.Unum):
             mass = [m*unit for m in mass]        
-        
-        return massListToArray(mass,massPlane.axes)
+        ret = massListToArray(mass,massPlane.axes)
+        # print ( "mass array for %s in %s is %s then %s" % ( pt, massPlane, mass, ret ) )
+        return ret
             
 
 def massListToArray(massList,axes):
@@ -326,11 +329,19 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
         else:
             if hasattr(txdata,"removeUnits"):
                 mass = txdata.removeUnits(mass)
+                porig = txdata.flattenArray(mass)
+                p=((numpy.matrix(porig)[0] - txdata.delta_x)).tolist()[0]
+                P=numpy.dot(p,txdata._V)  ## rotated point
+            elif hasattr(txdata,"massesToCoordinates"):
+                P = txdata.massesToCoordinates(mass)
+            """
             else:
+                ## should never be here
                 mass = removeUnits(mass,standardUnits)
-            porig = txdata.flattenArray(mass)
-        p=((numpy.matrix(porig)[0] - txdata.delta_x)).tolist()[0]
-        P=numpy.dot(p,txdata._V)  ## rotated point
+                porig = txdata.flattenArray(mass)
+                p=((numpy.matrix(porig)[0] - txdata.delta_x)).tolist()[0]
+                P=numpy.dot(p,txdata._V)  ## rotated point
+            """
         extremePoints.append(P)
     #Limit extreme values by data:
     Mp = numpy.array(txdata.tri.points)
@@ -377,7 +388,7 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
         if massPlane.getXYValues(mass) is None:
             continue
         inside = False
-        mass_unit = _addUnits ( _exponentiateWidths ( mass ) )
+        mass_unit = _addUnits ( mass )
         # mass_unit = [[m*GeV for m in br] for br in mass]
         for tx in txnameObjs:                
             if not (tx.txnameData.getValueFor(mass_unit) is None):

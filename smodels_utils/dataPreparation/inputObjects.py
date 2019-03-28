@@ -785,7 +785,8 @@ class TxNameInput(Locker):
                             # M[1] is in ATLAS-SUSY_2016-08 given in [ns], 
                             # m1 = M[1]*eval(dataHandler.lifetimeUnit,{'ns': ns})
                             # lets convert it to a width [GeV]
-                            m1 = hbar / M[1] * GeV ## width in GeV
+                            m1 = M[1] * GeV ## width in GeV
+                            # m1 = hbar / M[1] * GeV ## width in GeV
                             # m1 = 4.3135
                             M = ( m0, m1 )
                         if isinstance(M,(float,int)):

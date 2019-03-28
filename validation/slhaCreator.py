@@ -98,7 +98,7 @@ class TemplateFile(object):
             for im,m in enumerate(br): 
                 if type(m)==tuple:
                     massDict[massTag+str(im)] = m[0]
-                    massDict[widthTag+str(im)] = coordinateToWidth(m[1])
+                    massDict[widthTag+str(im)] = m[1] ## coordinateToWidth(m[1])
                 else:
                     massDict[massTag+str(im)] = m 
             
