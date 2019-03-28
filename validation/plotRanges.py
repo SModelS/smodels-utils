@@ -75,7 +75,7 @@ def getSuperFrame(tgraphs):
     if minx is None:
         logger.info("Could not find points for %s" %str(tgraphs))
         return None
-    logger.info ( "the super frame is [%f,%f],[%f,%f]" % ( minx, maxx, miny, maxy ) )
+    logger.info ( "the super frame (which covers all exclusion curves) is %g < x < %g, %g < y < %g" % ( minx, maxx, miny, maxy ) )
     return { "x": [ minx, maxx], "y": [ miny, maxy ] }
 
 def getExtendedFrame(txnameObjs,axes):
@@ -116,9 +116,9 @@ def getExtendedFrame(txnameObjs,axes):
         minVars[xLabel] *= 0.8
         maxVars[xLabel] *= 1.2
     rangesDict = dict([[xLabel,[minVars[xLabel],maxVars[xLabel]]] for xLabel in minVars])
-    infoMsg = "the extended frame is:"
+    infoMsg = "the extended frame (which covers all data points) is:"
     for xstr,r in list(rangesDict.items()):
-        infoMsg += " %0.2f < %s < %0.2f," %(r[0],str(xstr),r[1])
+        infoMsg += " %g < %s < %g," %(r[0],str(xstr),r[1])
     infoMsg = infoMsg.rstrip(',')    
     logger.info( infoMsg)
     return rangesDict
