@@ -13,7 +13,7 @@ sys.path.append('../')
 from array import array
 logger = logging.getLogger(__name__)
 from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
-                  TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,kWhite,
+                  TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,kWhite,gPad,
                   TPolyLine3D,Double,TColor,gStyle,TH2D,TImage)
 from smodels.tools.physicsUnits import fb, GeV, pb
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -593,6 +593,11 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     title = title + "  #scale[0.8]{("+resultType+")}"  
     tgr.SetTitle(title)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
+    y_is_widths = False
+    if tgr.GetYmax() < 1e-6:
+        y_is_widths = True
+        ## assume that its a "width" axis
+        plane.SetLogy()
     plane.SetRightMargin(0.16)
     plane.SetTopMargin(0.16)
     plane.SetBottomMargin(0.16)
@@ -605,6 +610,10 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     cgraphs = getContours(tgr,contVals)
     #Draw temp plot:
     h = tgr.GetHistogram()
+    if y_is_widths:
+        # h.GetYaxis().SetLimits(1e-19,1e-2)
+        h.GetYaxis().SetLimits(.8*tgr.GetYmin()+1e-20,tgr.GetYmax()*1.1 )
+        
     setOptions(h,Type='pretty')
     h.GetZaxis().SetRangeUser(0., min(tgr.GetZmax(),3.))
     h.GetXaxis().SetTitleFont(42)
@@ -673,19 +682,9 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     dId = validationPlot.expRes.datasets[0].dataInfo.dataId
     if type(dId) == str and dId.startswith("ar"):
         subtitle = "%d aggregate datasets" % len(validationPlot.expRes.datasets)
-    #for dataset in validationPlot.expRes.datasets:
-    #    ds_txnames = map ( str, dataset.txnameList )
-    #    if not validationPlot.txName in ds_txnames:
-    #        continue
         dataId = str(dataset.dataInfo.dataId)
-    #    # print "[plottingFuncs.py] add to %s: %s, %s" % ( validationPlot.txName, id, str ( map ( str, dataset.txnameList  ) ) )
-    #    subtitle+=dataId+", "
-    #subtitle = subtitle[:-2]
-    #if hasattr ( validationPlot.expRes.globalInfo, "covariance" ):
-    #    subtitle = "%d aggregate regions" % len(validationPlot.expRes.datasets)
-    #if len(subtitle) > 100:
-    #    subtitle = subtitle[:100] + " ..."
-    if len(validationPlot.expRes.datasets) == 1 and type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
+    if len(validationPlot.expRes.datasets) == 1 and \
+            type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
         subtitle = "" ## no extra info, so leave it blank
         # subtitle = "upper limit"
     if validationPlot.combine == False and len(validationPlot.expRes.datasets) > 1:
