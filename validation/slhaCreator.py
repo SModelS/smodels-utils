@@ -28,6 +28,7 @@ except ImportError: ## smodels >= 200
     from smodels.theory import decomposer
 from smodels.tools.physicsUnits import fb, GeV, TeV
 from smodels.tools.xsecComputer import XSecComputer, LO, NLL
+from smodels.experiment.txnameObj import coordinateToWidth
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from validation.pythiaCardGen import getPythiaCardFor
 
@@ -97,7 +98,7 @@ class TemplateFile(object):
             for im,m in enumerate(br): 
                 if type(m)==tuple:
                     massDict[massTag+str(im)] = m[0]
-                    massDict[widthTag+str(im)] = math.exp(m[1])
+                    massDict[widthTag+str(im)] = coordinateToWidth(m[1])
                 else:
                     massDict[massTag+str(im)] = m 
             

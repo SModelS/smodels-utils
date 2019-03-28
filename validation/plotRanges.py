@@ -18,6 +18,7 @@ from smodels.experiment.txnameObj import TxNameData
 sys.path.insert(0,"../")
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.tools.physicsUnits import GeV,fb,standardUnits
+from smodels.experiment.txnameObj import coordinateToWidth
 try: ## smodels >= 200
     from smodels.theory.auxiliaryFunctions import removeUnits
 except ImportError:
@@ -45,12 +46,6 @@ def getMinMax ( tgraph ):
     maxx = 1.2*max(xpts)
     miny = 0.9*min(ypts)
     maxy = 1.2*max(ypts)
-    ## logger.debug ( "done %f, %f, %f, %f" % ( minx, maxx, miny, maxy ) )
-    #xpts,ypts = tgraph.GetX(),tgraph.GetY() ## fixed: was leaky!
-    #minx = 0.8*min(n,*xpts)
-    #maxx = 1.2*max(n,*xpts)
-    #miny = 0.9*min(n,*ypts)
-    #maxy = 1.2*max(n,*ypts)
     
     return { "x": [minx,maxx], "y": [miny,maxy] }
 
@@ -65,13 +60,13 @@ def getSuperFrame(tgraphs):
         if not frame:
             continue
         if minx is None:
-            minx, maxx = int(frame["x"][0]),int(frame["x"][1])
-            miny, maxy = int(frame["y"][0]),int(frame["y"][1])
+            minx, maxx = frame["x"][0],frame["x"][1]
+            miny, maxy = frame["y"][0],frame["y"][1]
             
-        minx = int(min(minx,frame["x"][0]))
-        maxx = int(max(maxx,frame["x"][1]))
-        miny = int(min(miny,frame["y"][0]))
-        maxy = int(max(maxy,frame["y"][1]))
+        minx = min(minx,frame["x"][0])
+        maxx = max(maxx,frame["x"][1])
+        miny = min(miny,frame["y"][0])
+        maxy = max(maxy,frame["y"][1])
     if minx is None:
         logger.info("Could not find points for %s" %str(tgraphs))
         return None
@@ -256,7 +251,7 @@ def _exponentiateWidths ( masses ):
         tmp = []
         for m in br:
             if type(m) is tuple:
-                m=tuple([m[0],numpy.exp(m[1])])
+                m=tuple([m[0],coordinateToWidth(m[1])])
             tmp.append(m)
         newmasses.append ( tmp )
     return newmasses
