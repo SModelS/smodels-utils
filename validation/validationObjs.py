@@ -8,7 +8,7 @@
 
 """
 
-import logging,os,sys,time
+import logging,os,sys,time,math,numpy
 
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
@@ -153,8 +153,28 @@ class ValidationPlot():
             curve.SetPoint ( curve.GetN(), 0., y )  ## extend to x=0
             curve.SetPoint ( curve.GetN(), 0., y0 )  ## extend to first point
                 
-        pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0, "not_excluded_inside": 0,
-               "not_excluded_outside": 0, "wrong" : 0 }
+        pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0, 
+               "not_excluded_inside": 0, "not_excluded_outside": 0, "wrong" : 0 }
+        """ 
+        # we could weight the point with the area of its voronoi partition 
+        points = []
+        for point in self.data:
+            try: ## we seem to have two different ways of writing the x,y values
+                x,y=point["axes"]['x'],point["axes"]['y']
+            except Exception as e:
+                x,y=point["axes"][0],point["axes"][1]
+            points.append ( [x,y] )
+        xy=numpy.array ( points )
+        logY=False
+        if max ( xy[::,1] ) < 1e-6:
+            logY=True
+            points = [ [ x,math.log10(y) ] for x,y in points ]
+
+        from scipy.spatial import Voronoi
+        vor = Voronoi ( points )
+        ## FIXME now get the bounding box of a point, then
+        ## get the area of the bounding box. weight the points with that area.
+        """
         for point in self.data:
             try: ## we seem to have two different ways of writing the x,y values
                 x,y=point["axes"]['x'],point["axes"]['y']
