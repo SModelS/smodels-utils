@@ -10,7 +10,8 @@
 
 '''
 import logging
-from sympy import var
+from sympy import var, Symbol
+from math import floor, log10
 #For evaluating axes expressions in prettyAxes:
 x,y,z = var('x y z')
 
@@ -506,9 +507,6 @@ def prettyAxes(txname,axes):
              (e.g. {'x' : m_{#tilde{g}}, 'y' : m_{#tilde{#chi}_{1}^{0}}
              'constraints' : [m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}]})
     """
-    # print ( "pretty axes txname=", txname, type(txname) )
-    # print ( "pretty axes axes=", axes, type(axes) )
-
     #Build axes object (depending on symmetric or asymmetric branches:
     axes = eval(axes)
     if txname == 'TGQ':
@@ -557,10 +555,20 @@ def prettyAxes(txname,axes):
         massStrings = [motherStr,interStr,daughterStr]
 
     niceAxes = []
+    def roundme ( x ):
+        if type(x) == float:
+            round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1))
+            r = round_to_n(x,2)
+            return r
+        if type(x) == tuple:
+            tmp = [ roundme(i) for i in x ]
+            return tuple(tmp)
+        return x
+            
     for i,eq in enumerate(ax):
+        eq = roundme(eq )
         axStr = massStrings[i].strip()+'='+str(eq)
         niceAxes.append(axStr.replace("'",""))
 
-    # print ( "return=", niceAxes )
     return niceAxes
 

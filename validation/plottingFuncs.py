@@ -11,6 +11,7 @@
 import logging,os,sys,numpy,random
 sys.path.append('../')
 from array import array
+import math
 logger = logging.getLogger(__name__)
 from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,kWhite,gPad,
@@ -498,7 +499,15 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     # Check if data has been defined:
     tgr = TGraph2D()
     kfactor=None
-    xlabel, ylabel, zlabel = 'x','y',"r = #sigma_{signal}/#sigma_{UL}"
+    xlabel, ylabel, zlabel = 'x [GeV]','y [GeV]',"r = #sigma_{signal}/#sigma_{UL}"
+    logY = False
+    p1 = validationPlot.axes.find("(")
+    p2 = validationPlot.axes.find(")")
+    py = validationPlot.axes.find("y")
+    if p1 < py < p2:
+        logY = True
+        xlabel = "x [mass, GeV]"
+        ylabel = "y [width, GeV]"
     
     if not validationPlot.data:
         logger.error("Data for validation plot is not defined.")
@@ -523,6 +532,8 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
                     x,y = xvals['x'],xvals['y']
             else:
                 x,y = xvals
+            if logY:
+                y = math.log10(y)
             
             if pt['condition'] and pt['condition'] > 0.05:
                 condV += 1
@@ -593,11 +604,6 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     title = title + "  #scale[0.8]{("+resultType+")}"  
     tgr.SetTitle(title)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
-    y_is_widths = False
-    if tgr.GetYmax() < 1e-6:
-        y_is_widths = True
-        ## assume that its a "width" axis
-        plane.SetLogy()
     plane.SetRightMargin(0.16)
     plane.SetTopMargin(0.16)
     plane.SetBottomMargin(0.16)
@@ -610,23 +616,32 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     cgraphs = getContours(tgr,contVals)
     #Draw temp plot:
     h = tgr.GetHistogram()
-    if y_is_widths:
-        # h.GetYaxis().SetLimits(1e-19,1e-2)
-        h.GetYaxis().SetLimits(.8*tgr.GetYmin()+1e-20,tgr.GetYmax()*1.1 )
-        
     setOptions(h,Type='pretty')
     h.GetZaxis().SetRangeUser(0., min(tgr.GetZmax(),3.))
     h.GetXaxis().SetTitleFont(42)
-    h.GetYaxis().SetTitleFont(42)
-    h.GetXaxis().SetTitleOffset(1.)
-    h.GetYaxis().SetTitleOffset(1.1)
-    h.GetXaxis().SetTitleSize(.04)
-    h.GetYaxis().SetTitleSize(.04)
-    h.GetXaxis().SetTitle(xlabel)
-    h.GetYaxis().SetTitle(ylabel)
+    xa,ya = h.GetXaxis(),h.GetYaxis()
+    ya.SetTitleFont(42)
+    xa.SetTitleOffset(1.)
+    ya.SetTitleOffset(1.2)
+    xa.SetTitleSize(.04)
+    ya.SetTitleSize(.04)
+    xa.SetTitle(xlabel)
+    ya.SetTitle(ylabel)
     h.GetZaxis().SetTitle(zlabel)
     h.SetContour(200)
     h.Draw("COLZ")
+    ya = h.GetYaxis()
+    if logY:
+        ya.SetLabelSize(.06)
+        nbins = ya.GetNbins()
+        last = 0
+        for i in range( 1, nbins ):
+            fcenter = ya.GetBinCenter(i) 
+            center = int ( round ( ya.GetBinCenter(i) ) )
+            delta = abs ( fcenter - center )
+            if center != last and delta < .1:
+                ya.SetBinLabel( i, "10^{%d}" % center )
+                last = center
     palette = h.GetListOfFunctions().FindObject("palette")
     palette.SetX1NDC(0.845)
     palette.SetX2NDC(0.895)
@@ -658,8 +673,6 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     axStr = prettyAxes(validationPlot.txName,validationPlot.axes)
     axStr = str(axStr).replace(']','').replace('[','').replace("'","")
     infoStr = "#splitline{"+txStr+'}{'+axStr+'}'
-    # print ( "draw latex", infoStr )
-    #ltx.DrawLatex(.03,.89,infoStr)
     ltx.DrawLatex(.03,.88,txStr)
     ltx2.DrawLatex(.96,.88,axStr)
     tgr.ltx = ltx
