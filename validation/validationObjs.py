@@ -90,6 +90,85 @@ class ValidationPlot():
         vstr += 'Axes: '+self.niceAxes
         return vstr
 
+    def completeGraph ( self, curve ):
+        """ complete the given graph at the ends to cross the axes """
+        assert ( curve.GetN() > 6 )
+        #print ( "completing from" )
+        #self.printCurve ( curve )
+        import ROOT
+        x1,y1=ROOT.Double(),ROOT.Double()
+        x2,y2=ROOT.Double(),ROOT.Double()
+        # first compute k of the first three points
+        curve.GetPoint ( 0, x1, y1 ) ## get first point
+        curve.GetPoint ( 2, x2, y2 ) ## get third point
+        logY=False
+        ax1, ay1 = copy.deepcopy(x1), copy.deepcopy(y1)
+        ax2, ay2 = copy.deepcopy(x2), copy.deepcopy(y2)
+        tx1, ty1 = copy.deepcopy(x1), copy.deepcopy(y1)
+        if max(y2,y1)<1e-6:
+            logY=True
+            ay2 = 10.*math.log10(ay2)
+            ay1 = 10.*math.log10(ay1)
+        if ax2 == ax1:
+            ax2 = ax1 + 1e-16
+        k = (ay2 - ay1) / ( ax2 - ax1 )
+        if abs(k) > 1:
+            ## the curve is more vertical -- close with the x-axis (y=0)
+            self.addPointInFront ( curve, tx1, 0. )
+        else:
+            ## the curve is more horizontal -- close with the y-axis (x=0)
+            self.addPointInFront ( curve, 0., ty1 )
+
+        n = curve.GetN()
+        curve.GetPoint ( n-2, x1, y1 ) ## get third last point
+        curve.GetPoint ( n, x2, y2 ) ## get last point
+        tx1, ty1 = copy.deepcopy(x1), copy.deepcopy(y1)
+        if max(y2,y1)<1e-6:
+            logY=True
+            y2 = 10.*math.log10(y2)
+            y1 = 10.*math.log10(y1)
+        if x2 == x1:
+            x2 = x1 + 1e-16
+        k = (y2 - y1) / ( x2 - x1 )
+        if abs(k) > 1:
+            ## the curve is more vertical -- close with the x-axis (y=0)
+            curve.SetPoint ( n, tx1, 0. )
+        else:
+            ## the curve is more horizontal -- close with the y-axis (x=0)
+            curve.SetPoint ( n, 0., ty1 )
+        curve.SetPoint ( n+1, 0., 0. )
+        #print ( "completing to" )
+        #self.printCurve ( curve )
+
+    def completeGraphOld ( self, curve ):
+        """ complete the given graph at the ends to cross the axes,
+            old version """
+        import ROOT
+        x0=ROOT.Double()
+        y0=ROOT.Double()
+        x=ROOT.Double()
+        y=ROOT.Double()
+        curve.GetPoint ( 0, x0, y0 ) ## get the last point
+        curve.GetPoint ( curve.GetN()-1, x, y ) ## get the last point
+        closeWithXAxis=True ## close with x-axis (y=0) or y-axis (x=0)
+        if self.txName in [ "T2bbffff" ]: ## these tend to close with y-axis
+            closeWithXAxis = False
+        if self.txName in [ "T5Disp" ]:
+            closeWithXAxis = False
+            if "6.5821" in self.axes:
+                self.addPointInFront ( curve, 0., y0 )
+                self.addPointInFront ( curve, 0., 0. )
+                curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
+                closeWithXAxis = None
+
+        if closeWithXAxis == True:
+            curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
+            curve.SetPoint ( curve.GetN(), x0, 0. )  ## extend to first point
+        if closeWithXAxis == False:
+            curve.SetPoint ( curve.GetN(), 0., y )  ## extend to x=0
+            curve.SetPoint ( curve.GetN(), 0., y0 )  ## extend to first point
+
+
     def addPointInFront ( self, curve, x, y ):
         """ add a point at position 0 in tgraph """
         import ROOT
@@ -106,9 +185,14 @@ class ValidationPlot():
         import ROOT
         n=curve.GetN()
         xt,yt=ROOT.Double(),ROOT.Double()
-        for i in range(n):
+        #indices = list(range(n))
+        indices = list(range(3))+list(range(n-3,n))
+        for i in indices:
             curve.GetPoint(i,xt,yt)
-            print ( "%d: %f,%f" % ( i, xt, yt ) )
+            y = copy.deepcopy(yt)
+            if 0. < y < 1e-6:
+                y = math.log10(y)
+            print ( "%d: %f,%f" % ( i, xt, y ) )
         
     def computeHulls ( self ):
         """ compute the convex hulls from the Voronoi 
@@ -150,6 +234,8 @@ class ValidationPlot():
 
     def computeWeight ( self, point ):
         """ compute the weight of a point by computing the area of its voronoi cell """
+        if 0.<point[1]<1e-6:
+            point[1]=math.log10( point[1] )
         for i,hull in enumerate(self.hulls):
             if point_in_hull ( point, hull ):
                 return self.volumes[i]
@@ -175,29 +261,8 @@ class ValidationPlot():
                 if 'exclusion_' in objName:
                     curve = c
                     break
-        x0=ROOT.Double()
-        y0=ROOT.Double()
-        x=ROOT.Double()
-        y=ROOT.Double()
-        curve.GetPoint ( 0, x0, y0 ) ## get the last point
-        curve.GetPoint ( curve.GetN()-1, x, y ) ## get the last point
-        closeWithXAxis=True ## close with x-axis (y=0) or y-axis (x=0)
-        if self.txName in [ "T2bbffff" ]: ## these tend to close with y-axis
-            closeWithXAxis = False
-        if self.txName in [ "T5Disp" ]:
-            closeWithXAxis = False
-            if "6.5821" in self.axes:
-                self.addPointInFront ( curve, 0., y0 )
-                self.addPointInFront ( curve, 0., 0. )
-                curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
-                closeWithXAxis = None
 
-        if closeWithXAxis == True:
-            curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
-            curve.SetPoint ( curve.GetN(), x0, 0. )  ## extend to first point
-        if closeWithXAxis == False:
-            curve.SetPoint ( curve.GetN(), 0., y )  ## extend to x=0
-            curve.SetPoint ( curve.GetN(), 0., y0 )  ## extend to first point
+        self.completeGraph ( curve )
                 
         pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0, 
                "not_excluded_inside": 0, "not_excluded_outside": 0, "wrong" : 0 }
