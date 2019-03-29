@@ -89,6 +89,26 @@ class ValidationPlot():
         vstr += 'Axes: '+self.niceAxes
         return vstr
 
+    def addPointInFront ( self, curve, x, y ):
+        """ add a point at position 0 in tgraph """
+        import ROOT
+        n=curve.GetN()+1
+        xt,yt=ROOT.Double(),ROOT.Double()
+        xtn,ytn=ROOT.Double(),ROOT.Double()
+        xtn,ytn=copy.deepcopy(x),copy.deepcopy(y)
+        for i in range(n):
+            curve.GetPoint(i,xt,yt)
+            curve.SetPoint(i,xtn,ytn)
+            xtn,ytn=copy.deepcopy(xt),copy.deepcopy(yt)
+
+    def printCurve ( self, curve ):
+        import ROOT
+        n=curve.GetN()
+        xt,yt=ROOT.Double(),ROOT.Double()
+        for i in range(n):
+            curve.GetPoint(i,xt,yt)
+            print ( "%d: %f,%f" % ( i, xt, yt ) )
+
     def computeAgreementFactor ( self, looseness=1.2, signal_factor=1.0 ):
         """ computes how much the plot agrees with the official exclusion curve
             by counting the points that are inside/outside the official
@@ -116,16 +136,23 @@ class ValidationPlot():
         curve.GetPoint ( 0, x0, y0 ) ## get the last point
         curve.GetPoint ( curve.GetN()-1, x, y ) ## get the last point
         closeWithXAxis=True ## close with x-axis (y=0) or y-axis (x=0)
-        if self.txName in [ "T2bbffff", "T5Disp" ]: ## these tend to close with y-axis
+        if self.txName in [ "T2bbffff" ]: ## these tend to close with y-axis
             closeWithXAxis = False
+        if self.txName in [ "T5Disp" ]:
+            closeWithXAxis = False
+            if "6.5821" in self.axes:
+                self.addPointInFront ( curve, 0., y0 )
+                self.addPointInFront ( curve, 0., 0. )
+                curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
+                closeWithXAxis = None
 
-        if closeWithXAxis:
+        if closeWithXAxis == True:
             curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
             curve.SetPoint ( curve.GetN(), x0, 0. )  ## extend to first point
-        else:
+        if closeWithXAxis == False:
             curve.SetPoint ( curve.GetN(), 0., y )  ## extend to x=0
             curve.SetPoint ( curve.GetN(), 0., y0 )  ## extend to first point
-
+                
         pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0, "not_excluded_inside": 0,
                "not_excluded_outside": 0, "wrong" : 0 }
         for point in self.data:
@@ -153,10 +180,9 @@ class ValidationPlot():
                 pts["wrong"]+=1
             if really_not_excluded and inside:
                 pts["wrong"]+=1
-        #logger.debug ( "points in categories %s" % str(pts) )
-        #print ( "[validationObjs] points in categories %s" % str(pts) )
         if pts["total"]==0:
             return float("nan")
+        print ( "pts=", pts )
         return 1.0 - float(pts["wrong"]) / float(pts["total"])
 
     def setSLHAdir(self,slhadir):
