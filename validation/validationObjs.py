@@ -22,7 +22,8 @@ import string
 
 logger.setLevel(level=logging.ERROR)
 
-
+def point_in_hull(point, hull, tolerance=1e-12):
+    return all( (numpy.dot(eq[:-1], point) + eq[-1] <= tolerance) for eq in hull.equations)
 
 class ValidationPlot():
     """
@@ -108,6 +109,51 @@ class ValidationPlot():
         for i in range(n):
             curve.GetPoint(i,xt,yt)
             print ( "%d: %f,%f" % ( i, xt, yt ) )
+        
+    def computeHulls ( self ):
+        """ compute the convex hulls from the Voronoi 
+            partition, so we can later weight points with the areas of the 
+            Voronoi cell """
+        # we could weight the point with the area of its voronoi partition 
+        points = []
+        for point in self.data:
+            try: ## we seem to have two different ways of writing the x,y values
+                x,y=point["axes"]['x'],point["axes"]['y']
+            except Exception as e:
+                x,y=point["axes"][0],point["axes"][1]
+            points.append ( [x,y] )
+        xy=numpy.array ( points )
+        logY=False
+        if max ( xy[::,1] ) < 1e-6:
+            logY=True
+            points = [ [ x,math.log10(y) ] for x,y in points ]
+
+        from scipy.spatial import Voronoi, ConvexHull
+        vor = Voronoi ( points )
+        ## FIXME now get the bounding box of a point, then
+        ## get the area of the bounding box. weight the points with that area.
+        # now check for [ 1700. -15. ]
+        self.hulls = []
+        self.volumes = []
+        totalarea = 0.
+        n_points = 0
+        for i, reg_num in enumerate(vor.point_region):
+            indices = vor.regions[reg_num]
+            if not (-1 in indices): # s me regions can be opened
+                hull = ConvexHull(vor.vertices[indices])
+                n_points += 1
+                self.hulls.append ( hull )
+                vol = hull.volume
+                self.volumes.append ( vol )
+                totalarea += vol
+        self.average_area = totalarea / n_points
+
+    def computeWeight ( self, point ):
+        """ compute the weight of a point by computing the area of its voronoi cell """
+        for i,hull in enumerate(self.hulls):
+            if point_in_hull ( point, hull ):
+                return self.volumes[i]
+        return self.average_area
 
     def computeAgreementFactor ( self, looseness=1.2, signal_factor=1.0 ):
         """ computes how much the plot agrees with the official exclusion curve
@@ -155,37 +201,22 @@ class ValidationPlot():
                 
         pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0, 
                "not_excluded_inside": 0, "not_excluded_outside": 0, "wrong" : 0 }
-        """ 
-        # we could weight the point with the area of its voronoi partition 
-        points = []
-        for point in self.data:
-            try: ## we seem to have two different ways of writing the x,y values
-                x,y=point["axes"]['x'],point["axes"]['y']
-            except Exception as e:
-                x,y=point["axes"][0],point["axes"][1]
-            points.append ( [x,y] )
-        xy=numpy.array ( points )
-        logY=False
-        if max ( xy[::,1] ) < 1e-6:
-            logY=True
-            points = [ [ x,math.log10(y) ] for x,y in points ]
 
-        from scipy.spatial import Voronoi
-        vor = Voronoi ( points )
-        ## FIXME now get the bounding box of a point, then
-        ## get the area of the bounding box. weight the points with that area.
-        """
+        self.computeHulls()
+
         for point in self.data:
             try: ## we seem to have two different ways of writing the x,y values
                 x,y=point["axes"]['x'],point["axes"]['y']
             except Exception as e:
                 x,y=point["axes"][0],point["axes"][1]
+            # w = 1.
+            w = self.computeWeight ( [x,y] )
             if y==0: y=1.5 ## to avoid points sitting on the line
             excluded = point["UL"] < point["signal"]
             really_excluded = looseness * point["UL"] < point["signal"] * signal_factor
             really_not_excluded = point["UL"] > looseness * point["signal"] * signal_factor
             inside = curve.IsInside ( x,y )
-            pts["total"]+=1
+            pts["total"]+=w
             s=""
             if excluded:
                 s="excluded"
@@ -195,11 +226,11 @@ class ValidationPlot():
                 s+="_inside"
             else:
                 s+="_outside"
-            pts[s]+=1
+            pts[s]+=w
             if really_excluded and not inside:
-                pts["wrong"]+=1
+                pts["wrong"]+=w
             if really_not_excluded and inside:
-                pts["wrong"]+=1
+                pts["wrong"]+=w
         if pts["total"]==0:
             return float("nan")
         return 1.0 - float(pts["wrong"]) / float(pts["total"])
