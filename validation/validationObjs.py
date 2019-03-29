@@ -182,7 +182,6 @@ class ValidationPlot():
                 pts["wrong"]+=1
         if pts["total"]==0:
             return float("nan")
-        print ( "pts=", pts )
         return 1.0 - float(pts["wrong"]) / float(pts["total"])
 
     def setSLHAdir(self,slhadir):
