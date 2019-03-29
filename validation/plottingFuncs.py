@@ -588,6 +588,13 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         official = validationPlot.officialCurves
         logger.debug("Official curves have length %d" % len (official) )
     
+    if logY:
+        for contour in official:
+            x, y = Double(), Double()
+            n = contour.GetN()
+            for i in range(n):
+                contour.GetPoint(i,x,y)
+                contour.SetPoint(i,x,math.log10(y) )
     
     if silentMode: gROOT.SetBatch()  
     setOptions(tgr, Type='allowed')
@@ -614,6 +621,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     #Get contour graphs:
     contVals = [1./looseness,1.,looseness]
     cgraphs = getContours(tgr,contVals)
+                
     #Draw temp plot:
     h = tgr.GetHistogram()
     setOptions(h,Type='pretty')
