@@ -144,27 +144,32 @@ class MassPlane(object):
         """
 
         #Make sure input is consistent:
-        optionalInput = [objectNames,indices,units,coordinates,scales]
-        allInput = [dataFiles,dataLabels,dataFormats] + optionalInput
-        for i,inputList in enumerate(allInput):
-            if inputList is None and inputList in optionalInput:
-                allInput[i] = [None]*len(dataFiles)
-            if not isinstance(allInput[i],list):
-                logger.error("Input must be a list")
+        optionalInput = { "objectNames": objectNames, "indices": indices,
+                         "units": units,"coordinates": coordinates,"scales": scales }
+        # optionalInput = [objectNames,indices,units,coordinates,scales]
+        #allInput = [dataFiles,dataLabels,dataFormats] + optionalInput
+        allInput = { "dataFiles": dataFiles, "dataLabels": dataLabels, 
+                     "dataFormats": dataFormats }
+        allInput.update ( optionalInput )
+        for i,(key,inputList) in enumerate(allInput.items()):
+            if inputList is None and key in optionalInput.keys():
+                allInput[key] = [None]*len(dataFiles)
+            if not isinstance(allInput[key],list):
+                logger.error("Input %s must be a list" % key )
                 sys.exit()
-            elif len(allInput[i]) != len(dataFiles):
-                logger.error("Length of lists is inconsistent")
+            elif len(allInput[key]) != len(dataFiles):
+                logger.error("Length of lists is inconsistent: ``%s'' has %d entries -- should have %d.." % ( key, len(allInput[key]),len(dataFiles) ) )
                 sys.exit()
 
 
         for i,dataFile in enumerate(dataFiles):
-            dataLabel = allInput[1][i]
-            dataFormat = allInput[2][i]
-            objectName = allInput[3][i]
-            index = allInput[4][i]
-            unit = allInput[5][i]
-            coordinate = allInput[6][i]
-            scale = allInput[7][i]
+            dataLabel = allInput["dataLabels"][i]
+            dataFormat = allInput["dataFormats"][i]
+            objectName = allInput["objectNames"][i]
+            index = allInput["indices"][i]
+            unit = allInput["units"][i]
+            coordinate = allInput["coordinates"][i]
+            scale = allInput["scales"][i]
             self.addSource(dataLabel,dataFile, dataFormat,
                            objectName, index, unit, coordinate, scale)
 
