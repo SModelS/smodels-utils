@@ -17,6 +17,8 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
+from sympy import var
+x,y,z = var('x y z')
 # h = 4.135667662e-15 # in GeV * ns
 hbar = 6.582119514e-16 # in GeV * ns
 
@@ -63,7 +65,6 @@ class DataHandler(object):
         self.allowNegativValues = False
         self.dataset=None
         self._massUnit = 'GeV'
-        # self._lifetimeUnit = 'ns'
         self._unit = None  #Default unit
         self._rescaleFactors = None
 
@@ -815,7 +816,14 @@ class ExclusionHandler(DataHandler):
         if self.reverse:
             points = reversed(points)
         for point in points:
-            yield self.mapPoint(point)
+            ret = self.mapPoint(point)
+            if type(self.unit)==tuple:
+                assert ( self.unit[0], "GeV" )
+                if self.unit[1]=="ns":
+                    ret[y]=hbar/ret[y]
+                else:
+                    assert ( self.unit[1], "GeV" )
+            yield ret
 
     def svg(self):
 
