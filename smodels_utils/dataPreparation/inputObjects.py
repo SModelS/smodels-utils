@@ -516,7 +516,10 @@ class DataSetInput(Locker):
                 if jel <= iel:
                     continue
 
-                if elA.particlesMatch(elB):
+                if hasattr ( elA, "particlesMatch" ) and elA.particlesMatch(elB):
+                        logger.error("Constraints (%s <-> %s) appearing in dataset %s overlap (may result in double counting)" %(elA,elB,self))
+                        return False
+                if elA == elB:
                     logger.error("Constraints (%s <-> %s) appearing in dataset %s overlap (may result in double counting)" %(elA,elB,self))
                     return False
 

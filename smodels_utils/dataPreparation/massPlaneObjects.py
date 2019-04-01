@@ -286,7 +286,7 @@ class Axes(object):
     No units supported!
     """
 
-    def __init__(self, massEqs,massVars,widthVars):
+    def __init__(self, massEqs,massVars,widthVars=None ):
 
         """
         Initialize a list of sympy.core.relational.Equality-object
@@ -305,7 +305,8 @@ class Axes(object):
 
         self._equations = massEqs[:] #Store equations
         self._massVars = massVars[:] #Store mass variables
-        self._widthVars = widthVars[:] #Store mass variables
+        if widthVars:
+            self._widthVars = widthVars[:] #Store mass variables
 
         #Already define the functions and plot dimensions:
         self._setXYFunction()
