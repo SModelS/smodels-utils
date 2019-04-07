@@ -6,7 +6,7 @@
 
 """
 
-import sys,os
+import sys,os,copy
 import logging
 import argparse,time
 from smodels.tools import runtime
@@ -73,6 +73,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
             valPlot.getDataFromPlanes()
             generatedData=True
     if pretty in [ True, "both" ]:
+        tmp = copy.deepcopy ( valPlot ) # work around ROOT quirks
         valPlot.getPrettyPlot()
         valPlot.pretty = True
         valPlot.savePlot()
@@ -80,6 +81,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
             valPlot.saveData()
             if pngAlso:
                 valPlot.savePlot(fformat="png")
+        valPlot = tmp # work around ROOT quirks
     if pretty in [ False, "both" ]:
         valPlot.getPlot()
         valPlot.pretty = False
@@ -308,6 +310,9 @@ if __name__ == "__main__":
             pretty = True
         if spretty in [ "*", "all", "both" ]:
             pretty = "both"
+        if pretty == False and spretty not in [ "false", "0", "no" ]:
+            logger.error ( "prettyPlots %s unknown" % spretty )
+            sys.exit()
     limitPoints=None
     if parser.has_section("options") and parser.has_option("options","limitPoints"):
         limitPoints = parser.getint("options","limitPoints")
