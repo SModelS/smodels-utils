@@ -17,6 +17,7 @@ from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,kWhite,gPad,
                   TPolyLine3D,Double,TColor,gStyle,TH2D,TImage)
 from smodels.tools.physicsUnits import fb, GeV, pb
+from smodels.theory.auxiliaryFunctions import coordinateToWidth,widthToCoordinate
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 
@@ -174,7 +175,6 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     else:
         official = validationPlot.officialCurves
         if isinstance(official,list): official = official[0]
-        # print "[plottingFuncs.py] official=",len(official)
     
     if silentMode: gROOT.SetBatch()    
     setOptions(allowed, Type='allowed')
@@ -204,7 +204,6 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     l.SetTextSize(.04)
     base.l=l
     if figureUrl:
-        # print "dawing figureUrl"
         l1=TLatex()
         l1.SetNDC()
         l1.SetTextSize(.02)
@@ -236,14 +235,12 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
             if what in [ "bestregion", "bestcut" ]:
                 bestregion=pt["dataset"].replace("ANA","").replace("CUT","")
                 lk.DrawLatex(x, y, bestregion )
-#                 print "draw",x,y,pt["dataset"]
             elif what == "upperlimits":
                 ul=pt["UL"].asNumber(pb)
                 lk.DrawLatex(x, y, str(ul) )
             elif what == "crosssections":
                 signalxsec=pt['signal'].asNumber(pb)
                 lk.DrawLatex(x, y, str(signalxsec) )
-                # print "point",pt["axes"],pt["signal"]
             elif what == "efficiencies":
                 eff = pt['efficiency']
                 if isinstance(eff,float):
@@ -263,9 +260,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
             massPlane = MassPlane.fromString(validationPlot.axes)
             txnameObjs = validationPlot.expRes.getTxnameWith({'txName': validationPlot.txName})
             for txnameObj in txnameObjs:
-                #print "txnameObj=",txnameObj,type(txnameObj),txnameObj.txName
                 txnameData = txnameObj.txnameData.data
-                #print "txnameData=",txnameData
                 if txnameData==None:
                         continue
                 for (itr, (mass,ul)) in enumerate(txnameData ):
@@ -362,7 +357,6 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False 
             
 
             if pt['condition'] and pt['condition'] > 0.05:
-                #print "pt['condition']",pt['condition']
                 logger.warning("Condition violated for file " + pt['slhafile'])
                 cond_violated.SetPoint(cond_violated.GetN(), x, y)
             elif r > 1.:
@@ -542,7 +536,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             else:
                 x,y = xvals
             if logY:
-                y = math.log10(y)
+                y = widthToCoordinate(y)
             
             if pt['condition'] and pt['condition'] > 0.05:
                 condV += 1
@@ -564,9 +558,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         tgrN = tgr.GetN()
         buff = tgr.GetX()
         buff.SetSize(tgrN)
-        #print ( "tgr.GetN",tgrN )
         xpts = numpy.frombuffer(buff,count=tgrN)
-        #print ( "xpts=",xpts )
         buff = tgr.GetY()
         buff.SetSize(tgrN)
         ypts = numpy.frombuffer(buff,count=tgrN)
@@ -603,7 +595,8 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             n = contour.GetN()
             for i in range(n):
                 contour.GetPoint(i,x,y)
-                contour.SetPoint(i,x,math.log10(y) )
+                # print ( "y",y,widthToCoordinate(y) )
+                contour.SetPoint(i,x,widthToCoordinate(y) )
     
     if silentMode: gROOT.SetBatch()  
     setOptions(tgr, Type='allowed')
@@ -653,12 +646,14 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         nbins = ya.GetNbins()
         last = 0
         for i in range( 1, nbins ):
-            fcenter = ya.GetBinCenter(i) 
-            center = int ( round ( ya.GetBinCenter(i) ) )
-            delta = abs ( fcenter - center )
-            if center != last and delta < .1:
-                ya.SetBinLabel( i, "10^{%d}" % center )
-                last = center
+            center = ya.GetBinCenter(i) 
+            width = coordinateToWidth ( center )
+            center10 = math.log10 ( width )
+            r_center = int ( round ( center10 ) )
+            delta = abs ( center10 - r_center ) 
+            if r_center != last and delta < .1:
+                ya.SetBinLabel( i, "10^{%d}" % r_center )
+                last = r_center
     palette = h.GetListOfFunctions().FindObject("palette")
     palette.SetX1NDC(0.845)
     palette.SetX2NDC(0.895)
@@ -676,7 +671,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             gr.Draw("L SAME")
     if official:
         for gr in official:
-            validationPlot.completeGraph ( completed )
+            # validationPlot.completeGraph ( gr )
             setOptions(gr, Type='official')
             gr.Draw("L SAME")
     
