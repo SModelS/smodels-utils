@@ -13,9 +13,12 @@ import logging,os,sys,time,math,numpy
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
 from smodels.tools import modelTester
+from smodels.theory.auxiliaryFunctions import coordinateToWidth,widthToCoordinate
 from plottingFuncs import createPlot, getExclusionCurvesFor, createPrettyPlot
+from plotRanges import _addUnits
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
+from smodels.experiment.exceptions import SModelSExperimentError as SModelSError              
 from sympy import var
 import pyslha
 import string
@@ -36,7 +39,7 @@ class ValidationPlot():
     :ivar databasePath: path to the database folder. If not defined, the path from ExptRes.path will be
                         used to extract the database path.
     :ivar kfactor: Common kfactor to be applied to all theory cross-sections (float)
-    :ivar limitPoints: limits tested model points to n randomly chosen ones. 
+    :ivar limitPoints: limits tested model points to n randomly chosen ones.
                    If None or negative, take all points.
     :ivar extraInfo: add additional info to plot: agreement factor, time spent,
                       time stamp, hostname
@@ -93,8 +96,6 @@ class ValidationPlot():
     def completeGraph ( self, curve ):
         """ complete the given graph at the ends to cross the axes """
         assert ( curve.GetN() > 6 )
-        #print ( "completing from" )
-        #self.printCurve ( curve )
         import ROOT
         x1,y1=ROOT.Double(),ROOT.Double()
         x2,y2=ROOT.Double(),ROOT.Double()
@@ -105,10 +106,10 @@ class ValidationPlot():
         ax1, ay1 = copy.deepcopy(x1), copy.deepcopy(y1)
         ax2, ay2 = copy.deepcopy(x2), copy.deepcopy(y2)
         tx1, ty1 = copy.deepcopy(x1), copy.deepcopy(y1)
-        if max(y2,y1)<1e-6:
+        if max(abs(y2),abs(y1))<1e-6:
             logY=True
-            ay2 = 10.*math.log10(ay2)
-            ay1 = 10.*math.log10(ay1)
+            ay2 = widthToCoordinate(ay2)
+            ay1 = widthToCoordinate(ay1)
         if ax2 == ax1:
             ax2 = ax1 + 1e-16
         k = (ay2 - ay1) / ( ax2 - ax1 )
@@ -120,25 +121,26 @@ class ValidationPlot():
             self.addPointInFront ( curve, 0., ty1 )
 
         n = curve.GetN()
-        curve.GetPoint ( n-2, x1, y1 ) ## get third last point
-        curve.GetPoint ( n, x2, y2 ) ## get last point
+        curve.GetPoint ( n-3, x1, y1 ) ## get third last point
+        curve.GetPoint ( n-1, x2, y2 ) ## get last point
         tx1, ty1 = copy.deepcopy(x1), copy.deepcopy(y1)
-        if max(y2,y1)<1e-6:
-            logY=True
-            y2 = 10.*math.log10(y2)
-            y1 = 10.*math.log10(y1)
+        tx2, ty2 = copy.deepcopy(x2), copy.deepcopy(y2)
+        if logY:
+            y2 = widthToCoordinate(y2)
+            y1 = widthToCoordinate(y1)
         if x2 == x1:
             x2 = x1 + 1e-16
         k = (y2 - y1) / ( x2 - x1 )
-        if abs(k) > 1:
+        if k > 1 or k < -1:
             ## the curve is more vertical -- close with the x-axis (y=0)
-            curve.SetPoint ( n, tx1, 0. )
+            curve.SetPoint ( n, tx2, 0. )
+        elif k < 0:
+            ## the curve is more horizontal -- close with the y-axis (x=0)
+            curve.SetPoint ( n, tx2, 0. )
         else:
             ## the curve is more horizontal -- close with the y-axis (x=0)
-            curve.SetPoint ( n, 0., ty1 )
+            curve.SetPoint ( n, 0., ty2 )
         curve.SetPoint ( n+1, 0., 0. )
-        #print ( "completing to" )
-        #self.printCurve ( curve )
 
     def completeGraphOld ( self, curve ):
         """ complete the given graph at the ends to cross the axes,
@@ -190,15 +192,18 @@ class ValidationPlot():
         for i in indices:
             curve.GetPoint(i,xt,yt)
             y = copy.deepcopy(yt)
-            if 0. < y < 1e-6:
-                y = math.log10(y)
-            print ( "%d: %f,%f" % ( i, xt, y ) )
-        
+            if y < 0.:
+                y = coordinateToWidth(y)
+            #if 0. < y < 1e-6:
+            #    y = coordinateToWidth(y)
+            # print ( "%d: %f,%f" % ( i, xt, y ) )
+            print ( "%d: %f,%g" % ( i, xt, y ) )
+
     def computeHulls ( self ):
-        """ compute the convex hulls from the Voronoi 
-            partition, so we can later weight points with the areas of the 
+        """ compute the convex hulls from the Voronoi
+            partition, so we can later weight points with the areas of the
             Voronoi cell """
-        # we could weight the point with the area of its voronoi partition 
+        # we could weight the point with the area of its voronoi partition
         points = []
         for point in self.data:
             try: ## we seem to have two different ways of writing the x,y values
@@ -210,7 +215,7 @@ class ValidationPlot():
         logY=False
         if max ( xy[::,1] ) < 1e-6:
             logY=True
-            points = [ [ x,math.log10(y) ] for x,y in points ]
+            points = [ [ x,widthToCoordinate(y) ] for x,y in points ]
 
         from scipy.spatial import Voronoi, ConvexHull
         vor = Voronoi ( points )
@@ -235,7 +240,7 @@ class ValidationPlot():
     def computeWeight ( self, point ):
         """ compute the weight of a point by computing the area of its voronoi cell """
         if 0.<point[1]<1e-6:
-            point[1]=math.log10( point[1] )
+            point[1]=widthToCoordinate( point[1] )
         for i,hull in enumerate(self.hulls):
             if point_in_hull ( point, hull ):
                 return self.volumes[i]
@@ -251,20 +256,20 @@ class ValidationPlot():
             :param signal_factor: an additional factor that is multiplied with the signal cross section,
         """
         import ROOT
-        curve = self.getOfficialCurve( get_all = False )        
+        curve = self.getOfficialCurve( get_all = False )
         if not curve:
             logger.error( "could not get official tgraph curve for %s %s %s" % ( self.expRes,self.txName,self.axes  ) )
             return 1.0
         elif isinstance(curve,list):
-            for c in curve:                
+            for c in curve:
                 objName = c.GetName()
                 if 'exclusion_' in objName:
                     curve = c
                     break
 
         self.completeGraph ( curve )
-                
-        pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0, 
+
+        pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0,
                "not_excluded_inside": 0, "not_excluded_outside": 0, "wrong" : 0 }
 
         self.computeHulls()
@@ -274,8 +279,8 @@ class ValidationPlot():
                 x,y=point["axes"]['x'],point["axes"]['y']
             except Exception as e:
                 x,y=point["axes"][0],point["axes"][1]
-            # w = 1.
-            w = self.computeWeight ( [x,y] )
+            w = 1.
+            # w = self.computeWeight ( [x,y] )
             if y==0: y=1.5 ## to avoid points sitting on the line
             excluded = point["UL"] < point["signal"]
             really_excluded = looseness * point["UL"] < point["signal"] * signal_factor
@@ -382,7 +387,7 @@ class ValidationPlot():
 
         if tempdir is None: tempdir = os.getcwd()
         pf, parFile = tempfile.mkstemp(dir=tempdir,prefix='parameter_',suffix='.ini', text=True )
-        combine = "False"  
+        combine = "False"
         if self.combine:
             combine = "True"
         with open ( parFile, "w" ) as f:
@@ -433,7 +438,7 @@ class ValidationPlot():
         except Exception: ## old version?
             fileList = modelTester.getAllInputFiles(slhaDir)
             inDir = slhaDir
-            
+
 
         #Set temporary outputdir:
         outputDir = tempfile.mkdtemp(dir=slhaDir,prefix='results_')
@@ -516,12 +521,12 @@ class ValidationPlot():
                         if round(omass,1) == m:
                             mass[i][im] = omass
                             break
-                                  
+
             varsDict = massPlane.getXYValues(mass)
-            if varsDict is None:                
+            if varsDict is None:
                 logger.debug( "dropping %s, doesnt fall into the plane of %s." % \
                                (slhafile, massPlane ) )
-                continue            
+                continue
             Dict = {'slhafile' : slhafile, 'axes' : varsDict, 't': dt,
                     'signal': expRes['theory prediction (fb)'],
                     'UL': expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
@@ -537,11 +542,17 @@ class ValidationPlot():
                     dataset = self.expRes.datasets[0]
 
                 txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
-                massGeV = [[m*GeV for m in mbr] for mbr in mass]
+                massGeV = _addUnits ( mass )
+                # massGeV = [[m*GeV for m in mbr] for mbr in mass]
                 if not "efficiency" in Dict.keys():
-                    Dict['efficiency'] = txname.txnameData.getValueFor(massGeV)
+                    try:
+                        Dict['efficiency'] = txname.txnameData.getValueFor(massGeV)
+                    except SModelSError as e:
+                        logger.error ( "could not handle %s: %s" % ( slhafile, e ) )
+                        Dict=None
 
-            self.data.append(Dict)
+            if Dict:
+                self.data.append(Dict)
 
         #Remove temporary folder
         if slhaDir != self.slhaDir: shutil.rmtree(slhaDir)

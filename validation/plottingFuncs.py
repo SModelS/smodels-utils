@@ -8,7 +8,7 @@
 
 """
 
-import logging,os,sys,numpy,random
+import logging,os,sys,numpy,random,copy
 sys.path.append('../')
 from array import array
 import math
@@ -425,10 +425,19 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False 
         
     figureUrl = getFigureUrl(validationPlot)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
-    if y>1e-21 and y<1e-6:
+    if y>1e-24 and y<1e-6:
         ## assume that its a "width" axis
         plane.SetLogy()
-    base.Draw("AP")
+    base.Draw("APsame")
+    for i in official:
+        completed = copy.deepcopy ( i )
+        validationPlot.completeGraph ( completed )
+        completed.SetLineColor( kGray ) 
+        completed.SetLineStyle( 3 ) # show also how plot is completed
+        completed.Draw("LP SAME" )
+        i.Draw("LP SAME" )
+        base.completed = completed
+    #base.Draw("Psame")
     base.SetTitle(title)
     try:
         base.GetXaxis().SetTitle(xlabel)
@@ -667,6 +676,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             gr.Draw("L SAME")
     if official:
         for gr in official:
+            validationPlot.completeGraph ( completed )
             setOptions(gr, Type='official')
             gr.Draw("L SAME")
     
