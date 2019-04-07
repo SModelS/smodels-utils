@@ -246,14 +246,18 @@ class ValidationPlot():
                 return self.volumes[i]
         return self.average_area
 
-    def computeAgreementFactor ( self, looseness=1.2, signal_factor=1.0 ):
+    def computeAgreementFactor ( self, looseness=1.2, signal_factor=1.0,
+                                 weighted = False ):
         """ computes how much the plot agrees with the official exclusion curve
             by counting the points that are inside/outside the official
             exclusion curve, and comparing against the points' r values
             ( upper limit / predict theory cross section )
             :param looseness: how much do we loosen the criterion? I.e. by what factor do we
-            change the cross sections in favor of getting the right assignment?
-            :param signal_factor: an additional factor that is multiplied with the signal cross section,
+                   change the cross sections in favor of getting the right assignment?
+            :param signal_factor: an additional factor that is multiplied with
+                   the signal cross section,
+            :param weighted: weight the points with the areas of their Voronoi cells
+
         """
         import ROOT
         curve = self.getOfficialCurve( get_all = False )
@@ -280,7 +284,8 @@ class ValidationPlot():
             except Exception as e:
                 x,y=point["axes"][0],point["axes"][1]
             w = 1.
-            # w = self.computeWeight ( [x,y] )
+            if weighted:
+                w = self.computeWeight ( [x,y] )
             if y==0: y=1.5 ## to avoid points sitting on the line
             excluded = point["UL"] < point["signal"]
             really_excluded = looseness * point["UL"] < point["signal"] * signal_factor

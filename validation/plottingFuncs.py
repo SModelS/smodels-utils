@@ -447,8 +447,9 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False 
     l0.SetTextSize(.025)
     l0.DrawLatex(.05,.905,subtitle)
     signal_factor = 1. # an additional factor that is multiplied with the signal cross section
+    weighted = False # compute weighted agreement factor?
     agreement = round(100.*validationPlot.computeAgreementFactor( 
-                       signal_factor = signal_factor ))
+                       signal_factor = signal_factor, weighted = weighted ))
     logger.info ( "Agreement: %d%s" % (agreement,"%") )
     if extraInfo:
         lex=TLatex()
