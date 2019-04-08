@@ -257,7 +257,7 @@ class Drawer:
                     # mark=None
                     v1=Vertex ( f*(nvtx+1),f*ct,mark=mark)
                     col = color.rgb.black
-                    if oddptcl.label == "longlived":
+                    if oddptcl.label in [ "longlived" ]:
                         col = color.rgb.red
                         #from pyfeyn.user import BLUE
                         #col = BLUE
@@ -291,6 +291,8 @@ class Drawer:
                 fState = "MET"
                 if hasattr ( branch, "finalState" ):
                     fState = branch.finalState
+                if hasattr ( element, "getFinalStates" ):
+                    fState = str ( element.getFinalStates()[ct] )
                 c = color.rgb.black
                 s = "scalar"
                 colors = { "MET": color.rgb.black, "HSCP": color.rgb.red, "RHadronG": color.rgb.red,

@@ -159,16 +159,20 @@ N.B.: Each "()" group corresponds to a branch
         fcon = constraint
         constrs = fcon.split ( ";" )
         fstate=["MET","MET"]
-        # print ( "constrs=", constrs )
+        print ( "createFeynGraph", txname, fstate, constraint )
         c = constrs[0]
         for i in constrs:
             if len(i)<len(c):
                 c=i
         print ( "[smsDictionary] shortest constraint for",txname,"is",c )
         p=c.find("<<BR>>" )
+        p7=p+7
+        if p == -1:
+            p=c.find("<BR>" )
+            p7 = p + 5
         if p>-1:
             c=c[:p]
-            fstate = eval ( constraint[p+7:].replace("(","['").replace(")","']").replace(",","','") )
+            fstate = eval ( constraint[p7:].replace("(","['").replace(")","']").replace(",","','") )
         feynfile="../feyn/"+txname+".png"
         sfstate = str(fstate).replace(" ","").replace("'","")
         print ( "[smsDictionary.py] draw",feynfile,"from",c,"with",sfstate,"(full constraint reads",fcon,")" )
