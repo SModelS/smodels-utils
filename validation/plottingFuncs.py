@@ -697,12 +697,12 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         l1.SetTextSize(.025)
         """l1.DrawLatex(.01,0.023,"#splitline{official plot:}{%s}" % figureUrl)"""
         tgr.l1=l1
-    if kfactor > 1.0:
+    if abs ( kfactor - 1.) > .01:
         l2=TLatex()
         l2.SetNDC()
         l2.SetTextFont(132)
         l2.SetTextSize(.04)
-        l2.DrawLatex(0.16,0.6,"k-factor = %.2f" % kfactor)
+        l2.DrawLatex(0.16,0.2,"k-factor = %.2f" % kfactor)
         tgr.l2=l2
     
     subtitle = "%d datasets" % len(validationPlot.expRes.datasets)
