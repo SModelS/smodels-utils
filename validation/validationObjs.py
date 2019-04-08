@@ -46,7 +46,12 @@ class ValidationPlot():
     """
 
     def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
-                 kfactor = 1., limitPoints=None, extraInfo=False, combine=False ):
+                 kfactor = 1., limitPoints=None, extraInfo=False, combine=False,
+                 weightedAgreementFactor=True ):
+        """
+        :param weightedAgreementFactor: when computing the agreement factor,
+            weight points by the area of their Voronoi cell
+        """
 
         self.expRes = copy.deepcopy(ExptRes)
         self.txName = TxNameStr
@@ -58,6 +63,7 @@ class ValidationPlot():
         self.kfactor = kfactor
         self.limitPoints = limitPoints
         self.extraInfo = extraInfo
+        self.weightedAF = weightedAgreementFactor
         self.combine = combine
 
         #Select the desired txname and corresponding datasets in the experimental result:
@@ -579,7 +585,8 @@ class ValidationPlot():
         :param silentMode: If True the plot will not be shown on the screen
         """
 
-        self.plot,self.base = createPlot(self,silentMode=silentMode,extraInfo=self.extraInfo)
+        self.plot,self.base = createPlot(self,silentMode=silentMode,
+                extraInfo=self.extraInfo,weightedAgreementFactor=self.weightedAF )
 
     def getPrettyPlot(self,silentMode=True):
         """

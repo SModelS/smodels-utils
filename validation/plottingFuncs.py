@@ -308,13 +308,16 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     
     return plane
             
-def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False ):
+def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
+                weightedAgreementFactor=False ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate the exclusion plot
     
     :param validationPlot: ValidationPlot object
     :param silentMode: If True the plot will not be shown on the screen
+    :param weightedAgreementFactor: weight points for the agreement factor with
+                                    the area of their Voronoi cell
     :return: TCanvas object containing the plot
     """
         
@@ -447,7 +450,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False 
     l0.SetTextSize(.025)
     l0.DrawLatex(.05,.905,subtitle)
     signal_factor = 1. # an additional factor that is multiplied with the signal cross section
-    weighted = False # compute weighted agreement factor?
+    weighted = weightedAgreementFactor # compute weighted agreement factor?
     agreement = round(100.*validationPlot.computeAgreementFactor( 
                        signal_factor = signal_factor, weighted = weighted ))
     logger.info ( "Agreement: %d%s" % (agreement,"%") )
