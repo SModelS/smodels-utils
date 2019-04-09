@@ -1,0 +1,4 @@
+install fastjet
+install fastjet-contrib
+install PAD
+# install PADForMA5tune

@@ -1,0 +1,8 @@
+quit
+install fastjet
+y
+quit
+install fastjet
+y
+install PADForMA5tune
+quit
