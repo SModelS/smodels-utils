@@ -49,7 +49,7 @@ def install():
 def clean():
     import glob
     for file in glob.glob ( "*" ):
-        if file not in [ "install.py", "install.script" ]:
+        if file not in [ "make.py", "install.script", "Makefile" ]:
             cmd = "rm -rf %s" % file
             subprocess.getoutput ( cmd )
 
