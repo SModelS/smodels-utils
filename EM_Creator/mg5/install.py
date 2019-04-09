@@ -28,11 +28,14 @@ def install():
 def clean():
     import glob
     for file in glob.glob ( "*" ):
-        if file not in [ "install.py", "install.txt" ]:
+        if file not in [ "install.py", "install.script" ]:
             cmd = "rm -rf %s" % file
             subprocess.getoutput ( cmd )
 
 if __name__ == "__main__":
+    import inspect
+    D = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) 
+    os.chdir ( D )
     if len(sys.argv)>1 and sys.argv[1]=="clean":
         clean()
     else:
