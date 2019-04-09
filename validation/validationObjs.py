@@ -333,7 +333,6 @@ class ValidationPlot():
                 if ct_nooutput==5:
                     logger.error("did not find SModelS output 5 times subsequently. Will quench error msgs from now on.")
                 continue
-            ct_nooutput=0
             # print ( "reading %s" % fout )
             ff = open(fout,'r')
             cmd = ff.read().replace('\n','')
@@ -469,14 +468,18 @@ class ValidationPlot():
                 # if fails because of missing dep, then just proceed
                 pass
         else:
+            from addLogoToPlots import addLogo
             #Print pdf, png and root formats
             filename = filename.replace('.'+fformat,'_pretty.'+fformat)
             self.plot.Print(filename)
+            addLogo ( filename )
             filename = filename.replace('.'+fformat,'.png')
             logger.info ( "saving plot in %s (and pdf and root)" % filename )
             self.plot.Print(filename)
+            addLogo ( filename )
             filename = filename.replace('.png','.root')
             self.plot.Print(filename)
+            addLogo ( filename )
 
         return True
 

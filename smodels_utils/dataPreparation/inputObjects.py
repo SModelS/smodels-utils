@@ -12,11 +12,11 @@ import sys
 import string
 from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round_list
+from smodels_utils.dataPreparation.particleNames import elementsInStr, ptcDic
+from smodels_utils.dataPreparation.particles import rEven
+from smodels_utils.dataPreparation.dataHandlerObjects import hbar
 from smodels.tools.physicsUnits import fb, pb, TeV, GeV
-from smodels.theory.particleNames import elementsInStr
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels.particlesLoader import rEven
-from smodels.theory.particleNames import ptcDic
 from smodels.theory.element import Element
 from smodels.installation import version
 import copy
@@ -31,10 +31,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.WARNING)
 
 hscp=False ## central switch for smodels v1.1 versus smodels v1.2
-if version()[:3]=="1.2":
+if version()[:3]=="1.2" or version()[0]=="2":
     hscp=True
 ## smodels v1.2 has final states for hscp patch
-
+                            
 class Locker(object):
 
     """Super-class to 'lock' a class.
@@ -537,7 +537,8 @@ class TxNameInput(Locker):
                     '_branchcondition', 'onShell', 'offShell', 'constraint',
                     'condition', 'conditionDescription','massConstraint',
                     'upperLimits','efficiencyMap','expectedUpperLimits',
-                    'massConstraints', '_dataLabels', 'round_to' ]
+                    'massConstraints', '_dataLabels', 'round_to',
+                    '_smallerThanError' ] # , '_countErrors' ]
 
     requiredAttr = [ 'constraint','condition','txName','axes','dataUrl',
                      'source' ]
@@ -559,6 +560,8 @@ class TxNameInput(Locker):
 
         self.round_to = 5 ## number of digits to round to
         self._name = txName
+        self._smallerThanError = 0
+#        self._countErrors = 0
         self.txName = txName
         if hscp:
             self.finalState = ['MET','MET']
@@ -582,13 +585,15 @@ class TxNameInput(Locker):
         add a MassPlane object with given axes to self.planes.
         Add new attributes to the MassPlane.
         :param txDecay: object of type TxDecay
-        :param plane: A MassPlane object or the full mass array containing equations which relate the
-        physical masses and the plane coordinates, using the pre-defined 'x','y',.. symbols.
+        :param plane: A MassPlane object or the full mass array containing 
+                      equations which relate the physical masses and the plane 
+                      coordinates, using the pre-defined 'x','y',.. symbols.
         (e.g. [[x,y],[x,y]]).
         :raise missingMassError: if one mass entry is missing
         :raise onlyOnePlaneError: if a second mass plane is given and the related mass space
         have only 2 dimensions
-        :raise interMediateParticleError: if a interMasses are given and the related mass space
+        :raise interMediateParticleError: if a interMasses are given and the related 
+                                          mass space
         have only 2 dimensions
         :return: MassPlane-object
         """
@@ -613,7 +618,7 @@ class TxNameInput(Locker):
             if str(br) == '[*]':  #Ignore wildcard branches
                 continue
             if len(massArray[ibr]) != br.vertnumb+1:
-                logger.error("Mass array definition is not consistent with the txname constraint")
+                logger.error("Mass array definition (%d-dim) is not consistent with the txname constraint (%d-dim)" % ( len(massArray[ibr]), br.vertnumb+1 ))
                 sys.exit()
         #Create mass plane for new input
         massPlane = MassPlane(self._txDecay,massArray)
@@ -747,10 +752,15 @@ class TxNameInput(Locker):
             value = [v for xv,v in ptDict.items() if  not xv in plane.xvars][0]
             massArray = plane.getParticleMasses(**xDict)
 
+            for br in massArray:
+                for M in br:
             #Check if the massArray is positive and value is positive:
-            if min([m for br  in massArray for m in br]) < 0.:
-                logger.warning("Negative mass value found for %s. Point %s will be ignored." %(self,massArray))
-                continue
+                    if (type(M) == float and M<0.) or type(M) == tuple and M[0]<0.:
+                        logger.warning("Negative mass value found for %s. Point %s will be ignored." %(self,massArray))
+                        continue
+                    if type(M) == tuple and M[1]<0.:
+                        logger.warning("Negative lifetime found for %s. Point %s will be ignored." %(self,massArray))
+                        continue
             if value < 0.:
                 logger.warning("Negative value for %s found. Point %s will be ignored." %(self,str(massArray)))
                 continue
@@ -766,10 +776,21 @@ class TxNameInput(Locker):
                 for i,br in enumerate(massArray):
                     if isinstance(br,str):  #Allow for string identifiers in the mass array
                         continue
-                    for j,m in enumerate(br):
-                        if isinstance(m,(float,int)):
-                            m = m*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
-                        massArray[i][j] = m
+                    for j,M in enumerate(br):
+                        if isinstance(M,tuple):
+                            m0 = M[0]*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
+#                            self._countErrors += 1
+#                            if self._countErrors < 4:
+#                                logger.error ( "FIXME whats the units we are using for lifetime?" )
+                            # M[1] is in ATLAS-SUSY_2016-08 given in [ns], 
+                            # m1 = M[1]*eval(dataHandler.lifetimeUnit,{'ns': ns})
+                            # lets convert it to a width [GeV]
+                            m1 = hbar / M[1] * GeV ## width in GeV
+                            # m1 = 4.3135
+                            M = ( m0, m1 )
+                        if isinstance(M,(float,int)):
+                            M = M*eval(dataHandler.massUnit,{'GeV': GeV,'TeV': TeV})
+                        massArray[i][j] = M
             dataList.append([massArray, value])
 
         if not dataList:
@@ -893,9 +914,19 @@ class TxNameInput(Locker):
             goodMasses = True
             for ib,br in enumerate(elMass):
                 for iv,vertex in enumerate(br):
-                    massDiff = massArray[ib][iv]-massArray[ib][iv+1]
+                    m1 = massArray[ib][iv]
+                    if type(m1) == tuple:
+                        m1 = m1[0]
+                    m2 = massArray[ib][iv+1]
+                    if type(m2) == tuple:
+                        m2 = m2[0]
+                    massDiff = m1-m2
                     if massDiff < 0.:
-                        logger.error("Parent mass is smaller than daughter mass for %s" %str(self))
+                        self._smallerThanError += 1
+                        if self._smallerThanError < 4:
+                            logger.error("Parent mass (%.1f) is smaller than daughter mass (%.1f) for %s" % (m1,m2,str(self)))
+                        if self._smallerThanError == 4:
+                            logger.error("(I quenched a few more error msgs as the one above)" )
                         return False
                     #Evaluate the inequality replacing m by the mass difference:
                     check = eval(vertex,{'dm' : massDiff})

@@ -11,7 +11,6 @@
 import logging,os,sys,numpy,random
 sys.path.append('../')
 from array import array
-
 logger = logging.getLogger(__name__)
 from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,kWhite,
@@ -503,6 +502,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         ## sys.exit()
     else:
         # Get excluded and allowed points:
+        condV = 0
         for pt in validationPlot.data:
             if kfactor == None:
                 kfactor = pt ['kfactor']
@@ -521,11 +521,15 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
                 x,y = xvals
             
             if pt['condition'] and pt['condition'] > 0.05:
-                logger.warning("Condition violated for file " + pt['slhafile'])
+                condV += 1
+                if condV < 5:
+                    logger.warning("Condition violated for file " + pt['slhafile'])
+                if condV == 5:
+                    logger.warning("Condition violated for more points (not shown)")
             else:
                 tgr.SetPoint(tgr.GetN(), x, y, r)
 
-    if tgr.GetN() == 0:
+    if tgr.GetN() < 4:
         logger.error("No good points for validation plot.")
         return (None,None)
 
@@ -533,18 +537,19 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     #necessary to smear the points if they rest in a single line.
     if tgr.GetYmax() == tgr.GetYmin():
         logger.info("1d data detected, smearing Y values")
+        tgrN = tgr.GetN()
         buff = tgr.GetX()
-        buff.SetSize(sys.maxsize)
-        print ( "tgr.GetN",tgr.GetN() )
-        xpts = numpy.frombuffer(buff,count=tgr.GetN())
-        print ( "xpts=",xpts )
+        buff.SetSize(tgrN)
+        #print ( "tgr.GetN",tgrN )
+        xpts = numpy.frombuffer(buff,count=tgrN)
+        #print ( "xpts=",xpts )
         buff = tgr.GetY()
-        buff.SetSize(sys.maxsize)
-        ypts = numpy.frombuffer(buff,count=tgr.GetN())
+        buff.SetSize(tgrN)
+        ypts = numpy.frombuffer(buff,count=tgrN)
         buff = tgr.GetZ()
-        buff.SetSize(sys.maxsize)
-        zpts = numpy.frombuffer(buff,count=tgr.GetN())
-        for i in range(tgr.GetN()):
+        buff.SetSize(tgrN)
+        zpts = numpy.frombuffer(buff,count=tgrN)
+        for i in range(tgrN):
             tgr.SetPoint(i,xpts[i],ypts[i]+random.uniform(0.,0.001),zpts[i])
     if tgr.GetXmax() == tgr.GetXmin():
         logger.info("1d data detected, smearing X values")
@@ -591,7 +596,6 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     gStyle.SetTitleSize(0.045,"t")
     gStyle.SetTitleY(1.005)
    
-    
     #Get contour graphs:
     contVals = [1./looseness,1.,looseness]
     cgraphs = getContours(tgr,contVals)
@@ -599,6 +603,12 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     h = tgr.GetHistogram()
     setOptions(h,Type='pretty')
     h.GetZaxis().SetRangeUser(0., min(tgr.GetZmax(),3.))
+    h.GetXaxis().SetTitleFont(42)
+    h.GetYaxis().SetTitleFont(42)
+    h.GetXaxis().SetTitleOffset(1.)
+    h.GetYaxis().SetTitleOffset(1.1)
+    h.GetXaxis().SetTitleSize(.04)
+    h.GetYaxis().SetTitleSize(.04)
     h.GetXaxis().SetTitle(xlabel)
     h.GetYaxis().SetTitle(ylabel)
     h.GetZaxis().SetTitle(zlabel)
@@ -628,12 +638,17 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     ltx=TLatex()
     ltx.SetNDC()
     ltx.SetTextSize(.035)
-    ltx.SetTextFont(12)
-    txStr = validationPlot.txName +' : '+prettyTxname(validationPlot.txName,outputtype="root")
+    ltx.SetTextFont(42)
+    ltx2 = ltx.Clone()
+    ltx2.SetTextAlign(31)
+    txStr = validationPlot.txName +': '+prettyTxname(validationPlot.txName,outputtype="root")
     axStr = prettyAxes(validationPlot.txName,validationPlot.axes)
     axStr = str(axStr).replace(']','').replace('[','').replace("'","")
     infoStr = "#splitline{"+txStr+'}{'+axStr+'}'
-    ltx.DrawLatex(.03,.89,infoStr)
+    # print ( "draw latex", infoStr )
+    #ltx.DrawLatex(.03,.89,infoStr)
+    ltx.DrawLatex(.03,.88,txStr)
+    ltx2.DrawLatex(.96,.88,axStr)
     tgr.ltx = ltx
     figureUrl = getFigureUrl(validationPlot)
     if figureUrl:
@@ -667,9 +682,13 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     #if len(subtitle) > 100:
     #    subtitle = subtitle[:100] + " ..."
     if len(validationPlot.expRes.datasets) == 1 and type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
-        subtitle = "upper limit"
+        subtitle = "" ## no extra info, so leave it blank
+        # subtitle = "upper limit"
     if validationPlot.combine == False and len(validationPlot.expRes.datasets) > 1:
-        subtitle = "best SR"
+        if "combined" in validationPlot.data[0]["dataset"]:
+            logger.warning ( "asked for an efficiencyMap-type plot, but the cached validationData is for a combined plot. Will label it as 'combined'." )
+        else:
+            subtitle = "best SR"
     lsub=TLatex()
     lsub.SetNDC()
     lsub.SetTextAlign(31)
@@ -958,7 +977,9 @@ def getContours(tgr,contVals):
         return None
     
     cVals = sorted(contVals)
-    #Draw temp plot:
+    if tgr.GetN() < 4:
+        print ( "Error: Cannot create a contour with fewer than 3 input vertices" )
+        return None
     h = tgr.GetHistogram()    
     #Get contour graphs:
     c1 = TCanvas()

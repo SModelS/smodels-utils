@@ -17,6 +17,8 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
+hbar = 4.135667662e-15 # in GeV * ns
+
 def _Hash ( lst ): ## simple hash function for our masses
     ret=0.
     for l in lst:
@@ -60,6 +62,7 @@ class DataHandler(object):
         self.allowNegativValues = False
         self.dataset=None
         self._massUnit = 'GeV'
+        # self._lifetimeUnit = 'ns'
         self._unit = None  #Default unit
         self._rescaleFactors = None
 
@@ -91,20 +94,21 @@ class DataHandler(object):
         """
         Set unit. For upper limits the default is 'pb'.
         For efficiency map the default is None.
+        For exclusion lines it defines the units on the x and y axes.
         :param unitString: 'fb','pb' or '', None
         """
 
         if not unitString:
             return
 
-        if self.name != 'upperLimits' and self.name != 'expectedUpperLimits':
-            logger.error("Units should only be defined for upper limits")
+        if "fficienc" in self.name:
+            logger.error("Units should not be defined for efficiency maps" )
             sys.exit()
 
         if unitString:
-            units = ['fb','pb']
+            units = ['fb','pb',('GeV','GeV'),('GeV','ns'),('ns','GeV')]
             if not unitString in units:
-                logger.error("Unit for upper limits must be in %s" %str(units))
+                logger.error("Units must be in %s, not %s" % (str(units),unitString) )
                 sys.exit()
             self._unit = unitString
 
@@ -348,7 +352,7 @@ class DataHandler(object):
     def massUnit(self, unitString):
 
         """
-        Set unit for upper limits, default: 'pb'.
+        Set unit for masses, default: 'GeV'.
         If unitString is null, it will not set the property
         :param unitString: 'GeV','TeV' or '', None
         """
@@ -359,6 +363,30 @@ class DataHandler(object):
                 logger.error('Mass units must be in %s' %str(units))
                 sys.exit()
             self._massUnit = unitString
+
+    #@property
+    #def lifetimeUnit(self):
+
+    #    """
+    #    :return: unit as string
+    #    """
+    #    return self._lifetimeUnit
+
+    #@lifetimeUnit.setter
+    #def lifetimeUnit(self, unitString):
+
+    #    """
+    #    Set unit for upper limits, default: 'ns'.
+    #    If unitString is null, it will not set the property
+    #    :param unitString: 'ns','s' or '', None
+    #    """
+
+    #    if unitString:
+    #        units = ['ns','s']
+    #        if not unitString in units:
+    #            logger.error('Lifetime units must be in %s' %str(units))
+    #            sys.exit()
+    #        self._lifetimeUnit = unitString
 
     def _positivValues(self, values):
 
@@ -450,7 +478,11 @@ class DataHandler(object):
                         fr.append ( float(i) )
                     except:
                         fr.append ( i )
-                # print ( "now yield!" )
+                if type ( self.unit) == tuple:
+                    if self.unit[1]=="ns":
+                        fr[1] = hbar / fr[1]
+                    if self.unit[0]=="ns":
+                        fr[0] = hbar / fr[0]
                 yield fr
             csvfile.close()
 

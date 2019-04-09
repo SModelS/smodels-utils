@@ -9,6 +9,8 @@
 import sys,os
 import logging
 import argparse,time
+from smodels.tools import runtime
+
 try:
     from ConfigParser import SafeConfigParser
 except ImportError as e:
@@ -89,6 +91,55 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
 
     return True
 
+def run ( expResList ):
+    #Loop over experimental results and validate plots
+    for expRes in expResList:
+        expt0 = time.time()
+        logger.info("--- \033[32m validating  %s \033[0m" %expRes.globalInfo.id)
+        #Loop over pre-selected txnames:
+        txnamesStr = []
+        txnames = []
+        for tx in expRes.getTxNames():
+            if 'assigned' in tx.constraint:
+                continue  #Skip not assigned constraints
+            if tx.txName in txnamesStr:
+                continue #Do not include a txname twice (if it appears in more than one dataset)
+            txnames.append(tx)
+            txnamesStr.append(tx.txName)
+
+        if not txnames:
+            logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
+            continue
+        for itx,txname in enumerate(txnames):
+            txnameStr = txname.txName
+            txt0 = time.time()
+            logger.info("------ \033[31m validating  %s \033[0m" %txnameStr)
+            if not tarfiles:
+                tarfile = txnameStr+".tar.gz"
+            else:
+                tarfile = os.path.basename(tarfiles[itx])
+            tarfile = os.path.join(slhadir,tarfile)
+
+            if not os.path.isfile(tarfile) and generateData != False:
+                logger.info( 'Missing .tar.gz file for %s.' %txnameStr)
+                continue
+
+            #Define k-factors
+            if txnameStr.lower() in kfactorDict:
+                kfactor = float(kfactorDict[txnameStr.lower()])
+            else:
+                kfactor = 1.
+
+            #Loop over all axes:
+            if not isinstance(txname.axes,list):
+                axes = [txname.axes]
+            else:
+                axes = txname.axes     
+            for ax in axes:
+                validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,
+                             generateData,limitPoints,extraInfo,combine,pngAlso)
+            logger.info("------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
+        logger.info("--- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
 
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
@@ -135,7 +186,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         sys.exit()
 
 
-    logger.info('----- Running validation...')
+    logger.info('-- Running validation...')
 
     #Select experimental results, txnames and datatypes:
     expResList = db.getExpResults( analysisIDs, datasetIDs, txnames,
@@ -144,56 +195,13 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     if not expResList:
         logger.error("No experimental results found.")
 
+    if ncpus < 0: 
+        ncpus = runtime.nCPUs() + ncpus + 1
+    # logger.info ( "ncpus=%d, n(expRes)=%d, genData=%d" % ( ncpus, len(expResList), generateData ) )
+
     tval0 = time.time()
-    #Loop over experimental results and validate plots
-    for expRes in expResList:
-        expt0 = time.time()
-        logger.info("--------- \033[32m validating  %s \033[0m" %expRes.globalInfo.id)
-        #Loop over pre-selected txnames:
-        txnamesStr = []
-        txnames = []
-        for tx in expRes.getTxNames():
-            if 'assigned' in tx.constraint:
-                continue  #Skip not assigned constraints
-            if tx.txName in txnamesStr:
-                continue #Do not include a txname twice (if it appears in more than one dataset)
-            txnames.append(tx)
-            txnamesStr.append(tx.txName)
-
-        if not txnames:
-            logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
-            continue
-        for itx,txname in enumerate(txnames):
-            txnameStr = txname.txName
-            txt0 = time.time()
-            logger.info("------------ \033[31m validating  %s \033[0m" %txnameStr)
-            if not tarfiles:
-                tarfile = txnameStr+".tar.gz"
-            else:
-                tarfile = os.path.basename(tarfiles[itx])
-            tarfile = os.path.join(slhadir,tarfile)
-
-            if not os.path.isfile(tarfile) and generateData != False:
-                logger.info( 'Missing .tar.gz file for %s.' %txnameStr)
-                continue
-
-            #Define k-factors
-            if txnameStr.lower() in kfactorDict:
-                kfactor = float(kfactorDict[txnameStr.lower()])
-            else:
-                kfactor = 1.
-
-            #Loop over all axes:
-            if not isinstance(txname.axes,list):
-                axes = [txname.axes]
-            else:
-                axes = txname.axes     
-            for ax in axes:
-                validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,
-                             generateData,limitPoints,extraInfo,combine,pngAlso)
-            logger.info("------------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
-        logger.info("--------- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
-    logger.info("\n\n----- Finished validation in %.1f min." %((time.time()-tval0)/60.))
+    run ( expResList )
+    logger.info("\n\n-- Finished validation in %.1f min." %((time.time()-tval0)/60.))
 
 def _doGenerate ( parser ):
     """ determine if we do want to force generation of data (True),
@@ -286,23 +294,20 @@ if __name__ == "__main__":
         else:
             tarfiles = tarfiles.split(',')
 
-    ncpus = 1
+    ncpus = -1
     if parser.has_section("options") and parser.has_option("options","ncpus"):
         ncpus = parser.getint("options","ncpus")
-    #else:
-    #    ncpus = -1
     pngAlso = False
     if parser.has_section("options") and parser.has_option("options","pngPlots"):
         pngAlso = parser.getboolean("options", "pngPlots" )
 
+    pretty = False
     if parser.has_section("options") and parser.has_option("options","prettyPlots"):
         spretty = parser.get("options", "prettyPlots" ).lower()
         if spretty in [ "true", "yes", "1" ]:
             pretty = True
         if spretty in [ "*", "all", "both" ]:
             pretty = "both"
-    else:
-        pretty = False
     limitPoints=None
     if parser.has_section("options") and parser.has_option("options","limitPoints"):
         limitPoints = parser.getint("options","limitPoints")

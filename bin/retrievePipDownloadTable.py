@@ -25,6 +25,7 @@ if len(oldlines)>0:
 
 g=open("../log/pip_downloads.log","w")
 
+ctr = 0
 for line in lines:
     sline=line.decode().strip()
     if len(sline)==0:
@@ -47,7 +48,9 @@ for line in lines:
         lastDate = sline
     else:
         thisline = "%s, %s" % ( lastDate, sline )
-        print ( thisline )
+        ctr+=1
+        if ctr<10:
+            print ( thisline )
         if lastDate > datefirst:
             g.write ( thisline + "\n" )
 

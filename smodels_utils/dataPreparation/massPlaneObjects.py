@@ -10,7 +10,7 @@
 """
 
 import sys
-from sympy import var, Eq, lambdify, solve, N
+from sympy import var, Eq, lambdify, solve, N, And
 from scipy.spatial import Delaunay
 from itertools import permutations
 from smodels_utils.dataPreparation.dataHandlerObjects import DataHandler,ExclusionHandler
@@ -133,14 +133,13 @@ class MassPlane(object):
                           to the data files.
         :param dataFormats: List of strings with the file formats
                           for the data files.
-
         :param objectNames: List of object names stored in root-file or cMacro. 
                             String appearing in title of csv table in csv files.
         :param indices: List of indices objects in listOfPrimitives of ROOT.TCanvas
         :param units: List of strings with units for objects (e.g. 'fb', None, ...)
         :param coordinates: Lists of dictionaries with the mapping of txt file columns
                           to the x,y,... coordinates (e.g. {x : 1, y: 2, 'value' :3})
-        :param scales: Lists of floats to rescale the data (optional)
+        :param scales: Lists of floats to rescale the data
 
         """
 
@@ -191,8 +190,8 @@ class MassPlane(object):
 
         dimensions = len(self.xvars)
         if not dataLabel in self.allowedDataLabels:
-            logger.warning("Data label %s is not allowed and will be ignored" %dataLabel)
-            return False
+            logger.error("Data label %s is not allowed." %dataLabel)
+            sys.exit()
         if not 'exclusion' in dataLabel.lower():
             #Define the default coordinate mapping:
             if not coordinateMap:
@@ -287,7 +286,7 @@ class Axes(object):
     No units supported!
     """
 
-    def __init__(self, massEqs,massVars):
+    def __init__(self, massEqs,massVars,widthVars):
 
         """
         Initialize a list of sympy.core.relational.Equality-object
@@ -306,6 +305,7 @@ class Axes(object):
 
         self._equations = massEqs[:] #Store equations
         self._massVars = massVars[:] #Store mass variables
+        self._widthVars = widthVars[:] #Store mass variables
 
         #Already define the functions and plot dimensions:
         self._setXYFunction()
@@ -325,39 +325,60 @@ class Axes(object):
         if not isinstance(massEqs,list):
             logger.error('Mass must be a list of equations')
 
-        #Define mass variables:
-        massVars = []
+        #Define mass and width variables:
+        massVars,widthVars = [], []
         for im in range(len(massEqs)):
             massVars.append(var('Mass'+string.ascii_uppercase[im]))
+            widthVars.append(var('Width'+string.ascii_uppercase[im]))
 
         #New format:
         allEqs = []
         for im,massEq in enumerate(massEqs):
             #Create mass variable (upper case for first branch and lower case for second)
-            eq = Eq(massVars[im],N(massEq,5))
-            allEqs.append(eq)
+            if type(massEq) == tuple:
+                eq1 = Eq(massVars[im],N(massEq[0],5))
+                eq2 = Eq(widthVars[im],N(massEq[1],5))
+                allEqs.append(eq1)
+                allEqs.append(eq2)
+            else:
+                eq = Eq(massVars[im],N(massEq,5))
+                allEqs.append(eq)
 
             allEqs = sorted(allEqs, key = lambda eq: eq.args[0].name)
 
-        return cls(allEqs,massVars)
+        return cls(allEqs,massVars,widthVars)
 
     def _getMassFunction(self):
 
         """
         Build a function to compute the mass array for given x,y, .. values.
-        The input variables are the ones define in self._xvars.
+        The input variables are the ones defined in self._xvars.
         :return: lambdify function which returns the mass array given the input variables.
         """
 
         #Mass variables:
         masses = self._massVars
+        widths = self._widthVars
         #Solve equation for masses
         s = solve(self._equations,masses,dict=True)[0]
-        #dummify=False allows to keep x,y,z... as valid argument keywords:
-        #(make sure the x,y,z values are passed as keywords)
         self._massFunctions = []
+        self._widthFunctions = []
+        self._widthIndices = [] ## take note of where width info was given
         for m in self._massVars:
             self._massFunctions.append(lambdify(self._xvars,s[m],'math',dummify=False))
+        tall = solve(self._equations,widths,dict=True)
+        if len(tall)==0:
+            return
+        t=tall[0]
+        for i,m in enumerate(self._widthVars):
+            # x=0.
+            try:
+                x=lambdify(self._xvars,t[m],'math',dummify=False)
+                self._widthFunctions.append ( x )
+                self._widthIndices.append ( i )
+            except KeyError: ## does not have to be given!
+                pass
+            # self._widthFunctions.append ( x )
 
     def getParticleMasses(self,**xMass):
 
@@ -384,7 +405,15 @@ class Axes(object):
             xValues[str(xv)] = xMass[str(xv)]
 
         massArray = [mfunc(**xValues) for mfunc in self._massFunctions]
-        return massArray
+        widthArray = [mfunc(**xValues) for mfunc in self._widthFunctions]
+        # print ( "width funcs", self._widthFunctions, xValues )
+        combinedArray = []
+        for i,m in enumerate(massArray):
+            tmp = m
+            if i in self._widthIndices:
+                tmp = (m,widthArray[i])
+            combinedArray.append ( tmp )
+        return combinedArray
 
     def _setXYFunction(self):
 
@@ -474,6 +503,7 @@ class Axes(object):
         #Now check if the x,y,.. values computed give the massArray back:
         newMass = self.getParticleMasses(**xValues)
         for im,m in enumerate(newMass):
+            if type(m)==tuple: m=m[0]
             if abs(m-massArray[im]) > 0.11: #Masses differ
                 return None
 

@@ -306,9 +306,16 @@ class DatabaseCreator(list):
                         stGraph.SetTitle(name)
                         stGraph.name = exclusion.name
                         stGraph.txname = txname.txName
-                        for i,pointDict in enumerate(exclusion):
+                        i=0
+                        for pointDict in exclusion:
                             point = dict([[str(xv),v] for xv,v in pointDict.items()])
+                            try:
+                                fx,fy = float(point['x']),float(point['y'])
+                            except ValueError:
+                                logger.info ( "cannot convert to coordinates: %s" % point )
+                                continue
                             stGraph.SetPoint(i,point['x'],point['y'])
+                            i+=1
                         stGraph.SetLineColor(ROOT.kBlack)
                         if 'expected' in exclusion.name:
                             stGraph.SetLineColor(ROOT.kRed)
@@ -624,6 +631,7 @@ class DatabaseCreator(list):
         vStr = str(value)
         #Replace units:
         vStr = vStr.replace('[GeV]','*GeV').replace('[TeV]','*TeV')
+        vStr = vStr.replace('[m]','*m').replace('[ns]','*ns')
         vStr = vStr.replace('[fb]','*fb').replace('[pb]','*pb')
         #Break lines:
         vStr = vStr.replace(" ","")
@@ -640,24 +648,28 @@ def round_list(x, n ):
     :return: x, with all floats rounded to n digits
     """
 
+    if isinstance(x,tuple):
+        tmp = []
+        for pt in x:
+            tmp.append ( round_list(pt,n) )
+        return tuple ( tmp )
     if isinstance(x,list):
         for i,pt in enumerate(x):
             x[i] = round_list(pt,n)
         return x
-    else:
-        if isinstance(x,Unum):
-            if not x.asNumber():
-                return x
-            unit = x/x.asNumber()
-            x = x.asNumber()
-        elif isinstance(x,str):
+    if isinstance(x,Unum):
+        if not x.asNumber():
             return x
-        else:
-            if not x:
-                return x
-            unit = 1.
+        unit = x/x.asNumber()
+        x = x.asNumber()
+    elif isinstance(x,str):
+        return x
+    else:
+        if not x:
+            return x
+        unit = 1.
 
-        return round(x,-int(floor(log10(x))) + (n - 1))*unit
+    return round(x,-int(floor(log10(x))) + (n - 1))*unit
 
 
 def removeRepeated(datalist,dataType=None):

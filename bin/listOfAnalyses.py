@@ -146,10 +146,10 @@ def fields ( superseded ):
 
 def xsel( filename ):
     import os
-    cmd="cat %s | xsel -i" % filename
-    os.system ( cmd )
-    print ( cmd )
-    cmd="cp %s ../../smodels.github.io/docs/%s.md" % ( filename, filename )
+    #cmd="cat %s | xsel -i" % filename
+    #os.system ( cmd )
+    #print ( cmd )
+    cmd="mv %s ../../smodels.github.io/docs/%s.md" % ( filename, filename )
     os.system ( cmd )
     print ( cmd )
 
