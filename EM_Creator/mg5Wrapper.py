@@ -22,7 +22,7 @@ class MG5Wrapper:
         self.executable = self.mg5install + "/bin/mg5_aMC"
         if not os.path.exists ( self.executable ):
             self.info ( "cannot find mg5 installation at %s" % self.mg5install )
-            self.exe ( "mg5/install.py" )
+            self.exe ( "mg5/make.py" )
         self.templateDir = "templates/"
         self.pythiaParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
                               'NEVENTS': '10', 'MAXJETFLAVOR': '5', 

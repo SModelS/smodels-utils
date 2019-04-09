@@ -1,8 +1,8 @@
-all: install
+all: compile
 
-install:
-	./install.py
+compile:
+	./make.py
 
 clean:
-	./install.py clean
+	./make.py clean
 
