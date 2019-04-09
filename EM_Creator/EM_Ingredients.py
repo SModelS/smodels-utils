@@ -6,7 +6,7 @@ This Module contains all the Input Parameters that are used by MadGraph5+Pythia 
 Home_Dir = os.getcwd()
 
 
-Output_Dir = 'CIAO'      
+Output_Dir = 'output'      
 
 SLHA_InputDir   	  = Home_Dir + '/Input/slha' # TODO this can also be hard coded directly in the functions once we fix the structure of the script/folder 
 Templates_Folder 	  = Home_Dir + '/Input/' 
@@ -24,14 +24,14 @@ MG5_tar      = 'MG5_aMC_v2.3.3.tar'
 '''
 MadAnalysis5 and MadGraph dir and versions if the installation is set to OFF 
 '''
-MG5_Dir         = '/home/federico/Desktop/TESTING_EM_Creator/Programs_Installation/MG5_aMC_v2_2_3/'                  # Absolute path of the directory where MG5 is installed (user's local configuration)
+MG5_Dir         = '/home/walten/git/smodels-utils/EM_Creator/Programs_Installation/MG5_aMC_v2_2_3/'                  # Absolute path of the directory where MG5 is installed (user's local configuration)
 MG5_Version     = 'v2_2_3'
 Pythia_Version  = 'Pythia6'           # pythia-pgs version included in the standard Mg5 installation 
 
-MA5_Dir		= '/home/federico/Desktop/TESTING_EM_Creator/Programs_Installation/madanalysis5/'                  # Absolute path of the directory where MA5 is located (user's local configuration)
+MA5_Dir		= '/home/walten/git/smodels-utils/EM_Creator/Programs_Installation/madanalysis5/'                  # Absolute path of the directory where MA5 is located (user's local configuration)
 MA5_Version     = '1.1.11'
 
-CM_Dir          = '/home/federico/Desktop/TESTING_EM_Creator/CheckMATE-1.2.2'
+CM_Dir          = '/home/walten/git/smodels-utils/EM_Creator/CheckMATE-1.2.2'
 CM_Version      = '1.2.2'
 CM_Data         = CM_Dir+'/data' # this is where information about Obs, Bkg events is stored
 

@@ -21,7 +21,7 @@ from Softwares_Installator 	import *
 print '\n***** EM_Baking: ready to produce Efficiency Maps ***** \n'
 os.system("echo $HOSTNAME")
 
-author = ''
+author = os.environ["USER"]
 while ( not author):
       author = raw_input('*** Please enter your name *** : ')
 
