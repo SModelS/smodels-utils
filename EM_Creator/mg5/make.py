@@ -10,6 +10,7 @@ ver="2_6_5"
 
 def install_plugins():
     print ( "installing plugins (tail -f /tmp/mg5.install to monitor) ... " )
+    # modifyBoostInstaller()
     f=open("install.script","r")
     lines=f.readlines()
     f.close()
@@ -48,6 +49,22 @@ def install():
         sys.exit()
     install_plugins()
 
+def modifyBoostInstaller():
+    ## seems to get overwritten again
+    boostscript = "HEPTools/HEPToolsInstallers/installBOOST.sh"
+    if not os.path.exists ( boostscript ):
+        return
+    f=open(boostscript,"r")
+    lines=f.readlines()
+    f.close()
+    f=open("/tmp/boostinstaller","w")
+    for line in lines:
+        f.write ( line.replace("b2 install", "b2 -j`nproc` install" ) )
+    f.close()
+    cmd = "cp /tmp/boostinstaller %s" % boostscript
+    a=subprocess.getoutput ( cmd )
+    print ( cmd, a, os.getcwd() )
+
 def clean():
     import glob
     for file in glob.glob ( "*" ):
@@ -61,5 +78,8 @@ if __name__ == "__main__":
     os.chdir ( D )
     if len(sys.argv)>1 and sys.argv[1]=="clean":
         clean()
-    else:
-        install()
+        sys.exit()
+    if len(sys.argv)>1 and sys.argv[1]=="plugins":
+        install_plugins()
+        sys.exit()
+    install()
