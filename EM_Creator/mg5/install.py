@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-""" Simple script that handles the installation of MadGraph5.
-FIXME not finished yet. """
+""" Simple script that handles the installation of MadGraph5,
+    and its plugins.
+"""
 
 import subprocess, os, sys
     
@@ -9,8 +10,17 @@ ver="2_6_5"
 
 def install_plugins():
     print ( "installing plugins (This might take a while) ... " )
-    cmd = "bin/mg5_aMC -f install.script"
-    subprocess.getoutput ( cmd )
+    f=open("install.script","r")
+    lines=f.readlines()
+    f.close()
+    for line in lines:
+        print ( " - %s" % line.strip() )
+        f=open("install.txt","w")
+        f.write(line)
+        f.close()
+        cmd = "bin/mg5_aMC -f install.txt"
+        subprocess.getoutput ( cmd )
+    os.unlink ( "install.txt" )
 
 def install():
     if os.path.exists ( "bin/mg5_aMC" ):
@@ -28,6 +38,8 @@ def install():
     cmd = "tar xzvf %s" % tarball
     subprocess.getoutput ( cmd )
     cmd = "mv MG5_aMC_v%s/* ."  % ver
+    subprocess.getoutput ( cmd )
+    cmd = "rmdir MG5_aMC_v%s" % ver
     subprocess.getoutput ( cmd )
     if not os.path.exists ( "bin/mg5_aMC" ):
         print ( "something went wrong with the install. please check manually" )
