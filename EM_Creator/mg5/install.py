@@ -9,16 +9,18 @@ import subprocess, os, sys
 ver="2_6_5"
 
 def install_plugins():
-    print ( "installing plugins (This might take a while) ... " )
+    print ( "installing plugins (tail -f /tmp/mg5.install to monitor) ... " )
     f=open("install.script","r")
     lines=f.readlines()
     f.close()
     for line in lines:
+        if line[0]=="#":
+            continue
         print ( " - %s" % line.strip() )
         f=open("install.txt","w")
         f.write(line)
         f.close()
-        cmd = "bin/mg5_aMC -f install.txt"
+        cmd = "bin/mg5_aMC -f install.txt 2>&1 | tee /tmp/mg5.install"
         subprocess.getoutput ( cmd )
     os.unlink ( "install.txt" )
 
