@@ -7,10 +7,18 @@ import subprocess, os, sys
     
 ver="2_6_5"
 
+def install_plugins():
+    print ( "installing plugins (This might take a while) ... " )
+    cmd = "bin/mg5_aMC -f install.script"
+    subprocess.getoutput ( cmd )
+
 def install():
     if os.path.exists ( "bin/mg5_aMC" ):
         ## seems like we have an install
+        if not os.path.exists ( "HEPTools" ):
+            install_plugins()
         return
+    print ( "installing mg5 ..." )
     verdot = ver.replace("_",".")
     url="http://smodels.hephy.at/downloads/tarballs/"
     tarball = "MG5_aMC_v%s.tar.gz" % verdot
@@ -24,6 +32,7 @@ def install():
     if not os.path.exists ( "bin/mg5_aMC" ):
         print ( "something went wrong with the install. please check manually" )
         sys.exit()
+    install_plugins()
 
 def clean():
     import glob
