@@ -20,8 +20,8 @@ class MG5Wrapper:
         if not os.path.isdir ( self.mg5install ):
             self.error ( "mg5 install is missing??" )
         self.executable = self.mg5install + "/bin/mg5_aMC"
-        if not os.path.exists ( executable ):
-            self.info ( "cannot find mg5 installation at %s" % mg5install )
+        if not os.path.exists ( self.executable ):
+            self.info ( "cannot find mg5 installation at %s" % self.mg5install )
             self.exe ( "mg5/install.py" )
         self.templateDir = "templates/"
         self.pythiaParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
