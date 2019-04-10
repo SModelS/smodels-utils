@@ -24,9 +24,9 @@ class MG5Wrapper:
             self.info ( "cannot find mg5 installation at %s" % self.mg5install )
             self.exe ( "mg5/make.py" )
         self.templateDir = "templates/"
-        self.pythiaParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
-                              'NEVENTS': '10', 'MAXJETFLAVOR': '5', 
-                              'PDFLABEL': 'cteq6l1', 'XQCUT': '50', 'qcut': '90' }
+        self.mgParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
+                          'NEVENTS': '10', 'MAXJETFLAVOR': '5', 
+                          'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } #, 'qcut': '90' }
         self.commandfile = "mg5commands.txt"
         self.info ( "initialised" )
 
@@ -53,7 +53,8 @@ class MG5Wrapper:
         """ this method writes the pythia card for within mg5.
         :param process: fixme (eg T2_1jet)
         """
-        filename = "pythia.runcard"
+        filename = "run_card.dat" 
+        # filename = "%s/Cards/run_card.dat" % process
         self.debug ( "writing pythia run card %s" % filename )
         if os.path.exists ( filename ):
             os.unlink ( filename )
@@ -65,12 +66,12 @@ class MG5Wrapper:
         tfile.close()
         g = open ( filename, "w" )
         for line in lines:
-            for k,v in self.pythiaParams.items():
+            for k,v in self.mgParams.items():
                 if k in line:
-                    line = line.replace(k,v)
+                    line = line.replace("@@%s@@" % k,v)
             g.write ( line )
         g.close()
-        self.info ( "wrote pythia run card %s" % filename )
+        self.info ( "wrote run card %s" % filename )
 
     def writeCommandFile ( self, process = "" ):
         """ this method writes the commands file for mg5.
@@ -80,7 +81,8 @@ class MG5Wrapper:
         f.write('set automatic_html_opening False\n' )
         f.write('launch '+ process+'\n')
         f.write('shower=Pythia8\n')
-        f.write('detector=Delphes\n')
+        f.write('detector=OFF\n')
+        #f.write('detector=Delphes\n')
         #f.write('pythia=ON\n')
         #f.write('madspin=OFF\n')
         f.write('0\n')
@@ -125,6 +127,7 @@ class MG5Wrapper:
         self.exe ( cmd )
         ## copy slha file
         shutil.copyfile(slhaFile, process+'/Cards/param_card.dat' )
+        shutil.copyfile("run_card.dat", process+'/Cards/run_card.dat' )
         if (os.path.isdir(process+'/Events/run_01')):
             shutil.rmtree(process+'/Events/run_01')
         cmd = "%s %s" % ( self.executable, self.commandfile )
@@ -134,4 +137,5 @@ class MG5Wrapper:
 if __name__ == "__main__":
     mg5 = MG5Wrapper()
     process = "T2tt_1jet"
-    mg5.run( "slha/T2tt_997_213_997_213.slha", process )
+    # process = "T2tt_1jet"
+    mg5.run( "slha/T2tt.slha", process )
