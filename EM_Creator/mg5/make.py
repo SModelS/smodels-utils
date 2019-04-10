@@ -10,7 +10,6 @@ ver="2_6_5"
 
 def install_plugins():
     print ( "installing plugins (tail -f /tmp/mg5.install to monitor) ... " )
-    # modifyBoostInstaller()
     f=open("install.script","r")
     lines=f.readlines()
     f.close()
@@ -23,7 +22,8 @@ def install_plugins():
         f.close()
         cmd = "bin/mg5_aMC -f install.txt 2>&1 | tee /tmp/mg5.install"
         subprocess.getoutput ( cmd )
-    os.unlink ( "install.txt" )
+    if os.path.exists ( "install.txt" ):
+        os.unlink ( "install.txt" )
 
 def install():
     if os.path.exists ( "bin/mg5_aMC" ):
@@ -49,26 +49,27 @@ def install():
         sys.exit()
     install_plugins()
 
-def modifyBoostInstaller():
-    ## seems to get overwritten again
-    boostscript = "HEPTools/HEPToolsInstallers/installBOOST.sh"
-    if not os.path.exists ( boostscript ):
-        return
-    f=open(boostscript,"r")
-    lines=f.readlines()
-    f.close()
-    f=open("/tmp/boostinstaller","w")
-    for line in lines:
-        f.write ( line.replace("b2 install", "b2 -j`nproc` install" ) )
-    f.close()
-    cmd = "cp /tmp/boostinstaller %s" % boostscript
-    a=subprocess.getoutput ( cmd )
-    print ( cmd, a, os.getcwd() )
+#def modifyBoostInstaller():
+#    ## seems to get overwritten again
+#    boostscript = "HEPTools/HEPToolsInstallers/installBOOST.sh"
+#    if not os.path.exists ( boostscript ):
+#        return
+#    f=open(boostscript,"r")
+#    lines=f.readlines()
+#    f.close()
+#    f=open("/tmp/boostinstaller","w")
+#    for line in lines:
+#        f.write ( line.replace("b2 install", "b2 -j`nproc` install" ) )
+#    f.close()
+#    cmd = "cp /tmp/boostinstaller %s" % boostscript
+#    a=subprocess.getoutput ( cmd )
+#    print ( cmd, a, os.getcwd() )
 
 def clean():
+    print ( "cleaning up ... " )
     import glob
-    for file in glob.glob ( "*" ):
-        if file not in [ "make.py", "install.script", "Makefile" ]:
+    for f in glob.glob ( "*" ):
+        if f not in [ "make.py", "install.script", "Makefile" ]:
             cmd = "rm -rf %s" % file
             subprocess.getoutput ( cmd )
 

@@ -20,3 +20,6 @@ Template
 input
 MG5_aMC*
 HEPTools
+Delphes.tgz
+Delphes/
+py.py
