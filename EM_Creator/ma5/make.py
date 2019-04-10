@@ -59,5 +59,8 @@ if __name__ == "__main__":
     os.chdir ( D )
     if len(sys.argv)>1 and sys.argv[1]=="clean":
         clean()
-    else:
-        install()
+        sys.exit()
+    if len(sys.argv)>1 and sys.argv[1]=="plugins":
+        install_plugins()
+        sys.exit()
+    install()

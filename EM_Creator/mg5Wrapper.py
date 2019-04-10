@@ -13,7 +13,7 @@ import os, sys, colorama, subprocess, shutil
 class MG5Wrapper:
     def __init__ ( self, ver="2_6_5" ):
         """ 
-        :param mg5install: installation path to mg5
+        :param ver: version of mg5
         """
         self.mg5install = "./mg5"
         self.ver = ver
@@ -29,10 +29,6 @@ class MG5Wrapper:
                           'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } #, 'qcut': '90' }
         self.commandfile = "mg5commands.txt"
         self.info ( "initialised" )
-
-    def fetch ( self ):
-        cmd = "wget -O %s http://smodels.hephy.at/downloads/tarballs/%s" % ( self.tarball, self.tarball )
-        self.exe ( cmd )
 
     def info ( self, *msg ):
         print ( "%s[mg5Wrapper] %s%s" % ( colorama.Fore.YELLOW, " ".join ( msg ), \
@@ -89,9 +85,6 @@ class MG5Wrapper:
         f.write('0\n')
         f.close()
 
-    def run( self ):
-        pass
-
     def run( self, slhaFile, process ):
         """ Run MG5 over an slhaFile, specifying the process """
         # first write pythia card
@@ -100,10 +93,6 @@ class MG5Wrapper:
         self.writeCommandFile( process=process )
         # then run madgraph5
         self.execute ( slhaFile, process )
-
-    def install ( self ):
-        """ install the software """
-        pass ## need to write this still
 
     def exe ( self, cmd ):
         self.msg ( "now execute: %s" % cmd )

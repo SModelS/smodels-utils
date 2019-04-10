@@ -1,4 +1,5 @@
 install fastjet
-install fastjet-contrib
-install PAD
-# install PADForMA5tune
+install delphesMA5tune
+# install fastjet-contrib
+# install PAD
+install PADForMA5tune
