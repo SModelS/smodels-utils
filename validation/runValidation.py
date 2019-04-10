@@ -272,7 +272,9 @@ if __name__ == "__main__":
 
     #Selected plots for validation:
     analyses = parser.get("database", "analyses").split(",")
+    analyses = [ x.strip() for x in analyses ]
     txnames = parser.get("database", "txnames").split(",")
+    txnames = [ x.strip() for x in txnames ]
     combine=False
     if parser.get("database", "dataselector") == "efficiencyMap":
         dataTypes = ['efficiencyMap']
