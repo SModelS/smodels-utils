@@ -818,11 +818,11 @@ class ExclusionHandler(DataHandler):
         for point in points:
             ret = self.mapPoint(point)
             if type(self.unit)==tuple:
-                assert ( self.unit[0], "GeV" )
+                assert ( self.unit[0] == "GeV" )
                 if self.unit[1]=="ns":
                     ret[y]=hbar/ret[y]
                 else:
-                    assert ( self.unit[1], "GeV" )
+                    assert ( self.unit[1] == "GeV" )
             yield ret
 
     def svg(self):
