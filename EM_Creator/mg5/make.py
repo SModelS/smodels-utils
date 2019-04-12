@@ -9,6 +9,8 @@ import subprocess, os, sys
 ver="2_6_5"
 
 def install_plugins():
+    ## use modified installer script
+    ## modifyBoostInstaller()
     print ( "installing plugins (tail -f /tmp/mg5.install to monitor) ... " )
     f=open("install.script","r")
     lines=f.readlines()
@@ -25,7 +27,7 @@ def install_plugins():
     if os.path.exists ( "install.txt" ):
         os.unlink ( "install.txt" )
 
-def install():
+def install( plugins = True ):
     if os.path.exists ( "bin/mg5_aMC" ):
         ## seems like we have an install
         if not os.path.exists ( "HEPTools" ):
@@ -47,30 +49,33 @@ def install():
     if not os.path.exists ( "bin/mg5_aMC" ):
         print ( "something went wrong with the install. please check manually" )
         sys.exit()
-    install_plugins()
+    if plugins:
+        install_plugins()
 
-#def modifyBoostInstaller():
-#    ## seems to get overwritten again
-#    boostscript = "HEPTools/HEPToolsInstallers/installBOOST.sh"
-#    if not os.path.exists ( boostscript ):
-#        return
-#    f=open(boostscript,"r")
-#    lines=f.readlines()
-#    f.close()
-#    f=open("/tmp/boostinstaller","w")
-#    for line in lines:
-#        f.write ( line.replace("b2 install", "b2 -j`nproc` install" ) )
-#    f.close()
-#    cmd = "cp /tmp/boostinstaller %s" % boostscript
-#    a=subprocess.getoutput ( cmd )
-#    print ( cmd, a, os.getcwd() )
+def modifyBoostInstaller():
+    ## seems to get overwritten again
+    boostscript = "HEPTools/HEPToolsInstallers/installBOOST.sh"
+    if not os.path.exists ( boostscript ):
+        return
+    f=open(boostscript,"r")
+    lines=f.readlines()
+    f.close()
+    f=open("/tmp/boostinstaller","w")
+    for line in lines:
+        f.write ( line.replace("b2 install", "b2 -j`nproc` install" ) )
+    f.close()
+    cmd = "cp /tmp/boostinstaller %s" % boostscript
+    a=subprocess.getoutput ( cmd )
+    cmd = "chmod 500 %s" % boostscript
+    a2=subprocess.getoutput ( cmd )
+    print ( "cmd", cmd, a, a2, os.getcwd() )
 
 def clean():
     print ( "cleaning up ... " )
     import glob
     for f in glob.glob ( "*" ):
         if f not in [ "make.py", "install.script", "Makefile" ]:
-            cmd = "rm -rf %s" % file
+            cmd = "rm -rf %s" % f
             subprocess.getoutput ( cmd )
 
 if __name__ == "__main__":
@@ -82,5 +87,8 @@ if __name__ == "__main__":
         sys.exit()
     if len(sys.argv)>1 and sys.argv[1]=="plugins":
         install_plugins()
+        sys.exit()
+    if len(sys.argv)>1 and sys.argv[1]=="noplugins":
+        install(plugins=False)
         sys.exit()
     install()
