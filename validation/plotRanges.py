@@ -136,7 +136,7 @@ def getMassArrayFor(pt,massPlane,txnameData,unit=None):
                          %(len(pt),txnameData.dimensionality))
             return None
         fullpt = numpy.append(pt,[0.]*(txnameData.full_dimensionality-len(pt)))
-        mass = txnameData.coordinatesToData(fullpt)
+        mass = txnameData.coordinatesToData(fullpt,txnameData._V,txnameData.delta_x)
         # mass = numpy.dot(txnameData._V,fullpt) + txnameData.delta_x
         # mass = mass.tolist()[0]
         if not unit is None and isinstance(unit,unum.Unum):
@@ -238,6 +238,9 @@ def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
 def _addUnits ( masses ):
     """ add units to scalars in nested containers """
     newmasses = []
+    if type(masses[0]) in [ float, numpy.float64, numpy.float32 ]:
+        return [ x*GeV for x in masses ]
+        
     for br in masses:
         tmp = []
         for m in br:
