@@ -18,7 +18,6 @@ from smodels.experiment.txnameObj import TxNameData
 sys.path.insert(0,"../")
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.tools.physicsUnits import GeV,fb,standardUnits
-from smodels.experiment.txnameObj import coordinateToWidth
 try: ## smodels >= 200
     from smodels.theory.auxiliaryFunctions import removeUnits
 except ImportError:
@@ -137,7 +136,7 @@ def getMassArrayFor(pt,massPlane,txnameData,unit=None):
                          %(len(pt),txnameData.dimensionality))
             return None
         fullpt = numpy.append(pt,[0.]*(txnameData.full_dimensionality-len(pt)))
-        mass = txnameData.coordinatesToMasses(fullpt)
+        mass = txnameData.coordinatesToData(fullpt)
         # mass = numpy.dot(txnameData._V,fullpt) + txnameData.delta_x
         # mass = mass.tolist()[0]
         if not unit is None and isinstance(unit,unum.Unum):
@@ -169,7 +168,11 @@ def massListToArray(massList,axes):
         return tuple([massListToArray(massList,m) for m in axes])
     if isinstance(axes,str):
         return axes
+    if isinstance(axes,float):
+        return axes
+    print ( "plotRanges, pop", axes, type(axes), massList )
     return massList.pop(0)
+
 
 
 
@@ -247,17 +250,6 @@ def _addUnits ( masses ):
         newmasses.append ( tmp )
     return newmasses
 
-def _exponentiateWidths ( masses ):
-    """ exponentiates the logs of the widths """
-    newmasses = []
-    for br in masses:
-        tmp = []
-        for m in br:
-            if type(m) is tuple:
-                m=tuple([m[0],coordinateToWidth(m[1])])
-            tmp.append(m)
-        newmasses.append ( tmp )
-    return newmasses
 def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     """
     Method to generate points between minx,maxx and miny,maxy.
