@@ -17,12 +17,9 @@ import sys
 from smodels.experiment.txnameObj import TxNameData
 sys.path.insert(0,"../")
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels.tools.physicsUnits import GeV,fb,standardUnits
-try: ## smodels >= 200
-    from smodels.theory.auxiliaryFunctions import removeUnits
-except ImportError:
-    pass
+from smodels.tools.physicsUnits import GeV
 from smodels_utils.dataPreparation.inputObjects import TxNameInput
+from smodels.theory.auxiliaryFunctions import removeUnits, addUnit
 import itertools
 import logging
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
@@ -85,12 +82,15 @@ def getExtendedFrame(txnameObjs,axes):
     minVars = {}
     maxVars = {}
     for txnameObj in txnameObjs:
-        data = txnameObj.txnameData.tri.points  #Data grid of rotated points
+        txnameData = txnameObj.txnameData
+        data = txnameData.tri.points  #Data grid of rotated points
         if len(data) == 0:
             continue
         for pt in data:
             #Switch back to original mass point
-            mass = getMassArrayFor(pt,massPlane,txnameObj.txnameData,unit=None)
+            mass = txnameData.coordinatesToData(pt,rotMatrix=txnameData._V,
+                                                transVector=txnameData.delta_x)
+            mass = removeUnits(mass,standardUnits=GeV)
             #Check if mass belong to the mass plane:
             varsDict = massPlane.getXYValues(mass)
             if varsDict is None:
@@ -116,65 +116,6 @@ def getExtendedFrame(txnameObjs,axes):
     infoMsg = infoMsg.rstrip(',')
     logger.info( infoMsg)
     return rangesDict
-
-def getMassArrayFor(pt,massPlane,txnameData,unit=None):
-        """
-        Transforms the point pt in the PCA space to the original mass array
-        :param pt: point with the dimentions of the data dimensionality (e.g. [x,y])
-        :param txnameData: TxnameData object holding information about the PCA
-        :param massPlane: MassPlane object holding information about the original axes.
-        :param unit: Unit for returning the mass array. If None, it will be
-                     returned unitless
-        :return: Mass array (e.g. [[mass1,mass2],[mass3,mass4]])
-        """
-
-        if txnameData._V is None:
-            logger.error("Data has not been loaded")
-            return None
-        if len(pt) != txnameData.dimensionality:
-            logger.error("Wrong point dimensions (%i), it should be %i"
-                         %(len(pt),txnameData.dimensionality))
-            return None
-        fullpt = numpy.append(pt,[0.]*(txnameData.full_dimensionality-len(pt)))
-        mass = txnameData.coordinatesToData(fullpt,txnameData._V,txnameData.delta_x)
-        # mass = numpy.dot(txnameData._V,fullpt) + txnameData.delta_x
-        # mass = mass.tolist()[0]
-        if not unit is None and isinstance(unit,unum.Unum):
-            mass = [m*unit for m in mass]
-        ret = massListToArray(mass,massPlane.axes)
-        # print ( "mass array for %s in %s is %s then %s" % ( pt, massPlane, mass, ret ) )
-        return ret
-
-
-def massListToArray(massList,axes):
-    """
-    Tries to convert a flattened list of floats into a mass array
-    according to massShape. If massShape has string elements, these will
-    be used instead of the entries in massList.
-    e.g.  massList = [5.,10.], massShape = ['*',[x,y]] -> return ['*',[5.,10.]]
-    e.g.  massList = [5.,10.], massShape = [[x],[x]] -> return [[5.],[10.]]
-
-    :param massList: 1D list of floats (dimension should match number of numerical
-                     entries in axes
-    :param axes: Nested list describing the axes (e.g. [[x],[x]] or ['*',[x]])
-
-    :return: Nested mass array with entries from massList and shape from axes
-             (e.g. [[5.],[10.]])
-    """
-
-    if isinstance(axes,(list,numpy.ndarray)):
-        return [massListToArray(massList,m) for m in axes]
-    if isinstance(axes,(tuple,numpy.ndarray)):
-        return tuple([massListToArray(massList,m) for m in axes])
-    if isinstance(axes,str):
-        return axes
-    if isinstance(axes,float):
-        return axes
-    print ( "plotRanges, pop", axes, type(axes), massList )
-    return massList.pop(0)
-
-
-
 
 def addQuotationMarks ( constraint ):
     """ [[[t+]],[[t-]]] -> [[['t+']],[['t-']]] """
@@ -235,24 +176,6 @@ def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
 
     return pts
 
-def _addUnits ( masses ):
-    """ add units to scalars in nested containers """
-    newmasses = []
-    if type(masses[0]) in [ float, numpy.float64, numpy.float32 ]:
-        return [ x*GeV for x in masses ]
-        
-    for br in masses:
-        tmp = []
-        for m in br:
-            if type(m) in ( float, int ):
-                m=m*GeV
-            else:
-                # m=tuple([m[0]*GeV,numpy.exp(m[1])*GeV])
-                m=tuple([m[0]*GeV,m[1]*GeV])
-            tmp.append(m)
-        newmasses.append ( tmp )
-    return newmasses
-
 def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     """
     Method to generate points between minx,maxx and miny,maxy.
@@ -279,17 +202,20 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     planeMasses = []
     reducedData = []
     for tx in txnameObjs:
-        data = tx.txnameData.tri.points  #Data grid of rotated points
+        txnameData = tx.txnameData
+        data = txnameData.tri.points  #Data grid of rotated points
         for i,pt in enumerate(data):
             #Switch back to original mass point
-            mass = getMassArrayFor(pt,massPlane,tx.txnameData,unit=None)
+            mass = txnameData.coordinatesToData(pt,rotMatrix=txnameData._V,
+                                                transVector=txnameData.delta_x)
+            mass = removeUnits(mass,standardUnits=GeV)
             #Check if mass belong to the mass plane:
             xyDict = massPlane.getXYValues(mass)
             if xyDict is None:
                 continue
             tmpmass = massPlane.getParticleMasses(**xyDict)
             #Add units:
-            mass = _addUnits ( tmpmass )
+            mass = addUnit(tmpmass,GeV)
             # mass = [[m*GeV for m in br] for br in tmpmass]
             #Does not include the same mass point twice from distinct signal regions
             if mass in planeMasses:
@@ -318,26 +244,10 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     xvars = [x[0] for x in rangesList] #Collect the var labels in order
     for x in list(itertools.product(*ranges)):
         xvalues = dict(zip(xvars,x))
-        mass = _addUnits ( massPlane.getParticleMasses(**xvalues) )
-        if hasattr(txdata, 'flattenMassArray'):
-            porig = txdata.flattenMassArray(mass)
-        else:
-            if hasattr(txdata,"removeUnits"):
-                mass = txdata.removeUnits(mass)
-                porig = txdata.flattenArray(mass)
-                p=((numpy.matrix(porig)[0] - txdata.delta_x)).tolist()[0]
-                P=numpy.dot(p,txdata._V)  ## rotated point
-            elif hasattr(txdata,"massesToCoordinates"):
-                P = txdata.massesToCoordinates(mass)
-            """
-            else:
-                ## should never be here
-                mass = removeUnits(mass,standardUnits)
-                porig = txdata.flattenArray(mass)
-                p=((numpy.matrix(porig)[0] - txdata.delta_x)).tolist()[0]
-                P=numpy.dot(p,txdata._V)  ## rotated point
-            """
+        mass = addUnit(massPlane.getParticleMasses(**xvalues),GeV)
+        P = txdata.dataToCoordinates(mass)
         extremePoints.append(P)
+
     #Limit extreme values by data:
     Mp = numpy.array(txdata.tri.points)
     extremePoints = numpy.array(extremePoints)
@@ -371,7 +281,9 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
         #Check if point is in the convexhull. If not, try another one
         if txdata.tri.find_simplex(pt) < 0:
             continue
-        mass = getMassArrayFor(pt,massPlane,txdata,unit=None)
+        mass = txdata.coordinatesToData(pt,rotMatrix=txdata._V,
+                                        transVector=txdata.delta_x)
+        mass = removeUnits(mass,standardUnits=GeV)
         #Round all masses (to be consistent with smodels)
         def roundme ( x ):
             if type(x) in (float,int):
@@ -383,7 +295,7 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
         if massPlane.getXYValues(mass) is None:
             continue
         inside = False
-        mass_unit = _addUnits ( mass )
+        mass_unit = addUnit(mass,GeV)
         # mass_unit = [[m*GeV for m in br] for br in mass]
         for tx in txnameObjs:
             if not (tx.txnameData.getValueFor(mass_unit) is None):
