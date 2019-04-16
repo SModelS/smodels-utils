@@ -13,9 +13,8 @@ import logging,os,sys,time,math,numpy
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
 from smodels.tools import modelTester
-from smodels.theory.auxiliaryFunctions import coordinateToWidth,widthToCoordinate
+from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
 from plottingFuncs import createPlot, getExclusionCurvesFor, createPrettyPlot
-from plotRanges import _addUnits
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.experiment.exceptions import SModelSExperimentError as SModelSError              
@@ -114,8 +113,8 @@ class ValidationPlot():
         tx1, ty1 = copy.deepcopy(x1), copy.deepcopy(y1)
         if max(abs(y2),abs(y1))<1e-6:
             logY=True
-            ay2 = widthToCoordinate(ay2)
-            ay1 = widthToCoordinate(ay1)
+            ay2 = rescaleWidth(ay2)
+            ay1 = rescaleWidth(ay1)
         if ax2 == ax1:
             ax2 = ax1 + 1e-16
         k = (ay2 - ay1) / ( ax2 - ax1 )
@@ -132,8 +131,8 @@ class ValidationPlot():
         tx1, ty1 = copy.deepcopy(x1), copy.deepcopy(y1)
         tx2, ty2 = copy.deepcopy(x2), copy.deepcopy(y2)
         if logY:
-            y2 = widthToCoordinate(y2)
-            y1 = widthToCoordinate(y1)
+            y2 = rescaleWidth(y2)
+            y1 = rescaleWidth(y1)
         if x2 == x1:
             x2 = x1 + 1e-16
         k = (y2 - y1) / ( x2 - x1 )
@@ -199,9 +198,9 @@ class ValidationPlot():
             curve.GetPoint(i,xt,yt)
             y = copy.deepcopy(yt)
             if y < 0.:
-                y = coordinateToWidth(y)
+                y = unscaleWidth(y)
             #if 0. < y < 1e-6:
-            #    y = coordinateToWidth(y)
+            #    y = unscaleWidth(y)
             # print ( "%d: %f,%f" % ( i, xt, y ) )
             print ( "%d: %f,%g" % ( i, xt, y ) )
 
@@ -221,7 +220,7 @@ class ValidationPlot():
         logY=False
         if max ( xy[::,1] ) < 1e-6:
             logY=True
-            points = [ [ x,widthToCoordinate(y) ] for x,y in points ]
+            points = [ [ x,rescaleWidth(y) ] for x,y in points ]
 
         from scipy.spatial import Voronoi, ConvexHull
         vor = Voronoi ( points )
@@ -246,7 +245,7 @@ class ValidationPlot():
     def computeWeight ( self, point ):
         """ compute the weight of a point by computing the area of its voronoi cell """
         if 0.<point[1]<1e-6:
-            point[1]=widthToCoordinate( point[1] )
+            point[1]=rescaleWidth( point[1] )
         for i,hull in enumerate(self.hulls):
             if point_in_hull ( point, hull ):
                 return self.volumes[i]
@@ -553,7 +552,7 @@ class ValidationPlot():
                     dataset = self.expRes.datasets[0]
 
                 txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
-                massGeV = _addUnits ( mass )
+                massGeV = addUnit ( mass, GeV )
                 # massGeV = [[m*GeV for m in mbr] for mbr in mass]
                 if not "efficiency" in Dict.keys():
                     try:
