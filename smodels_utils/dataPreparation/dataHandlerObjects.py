@@ -480,11 +480,13 @@ class DataHandler(object):
                         fr.append ( float(i) )
                     except:
                         fr.append ( i )
-                if type ( self.unit) == tuple:
-                    if self.unit[1]=="ns":
-                        fr[1] = hbar / fr[1]
-                    if self.unit[0]=="ns":
-                        fr[0] = hbar / fr[0]
+                #if type ( self.unit) == tuple:
+                    #if self.unit[1]=="ns":
+                    #    pass
+                        #print ( "ns to GeV", fr[1], hbar/fr[1] )
+                        # fr[1] = hbar / fr[1]
+                    #if self.unit[0]=="ns":
+                    #    fr[0] = hbar / fr[0]
                 yield fr
             csvfile.close()
 
