@@ -18,7 +18,7 @@ from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TPolyLine3D,Double,TColor,gStyle,TH2D,TImage)
 from smodels.tools.physicsUnits import fb, GeV, pb
 #from smodels.theory.auxiliaryFunctions import coordinateToWidth,withToCoordinate
-#from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
+from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
 
@@ -349,6 +349,9 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
             xvals = pt['axes']
             if "t" in pt:
                 tavg += pt["t"]
+            if pt["UL"] == None:
+                logger.warning ( "No upper limit for %s" % xvals )
+                continue
             r = pt['signal']/pt ['UL']
             if isinstance(xvals,dict):
                 if len(xvals) == 1:
@@ -531,6 +534,8 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
             xvals = pt['axes']
+            if pt["UL"]==None:
+                logger.warning( "no UL for %s" % xvals )
             r = pt['signal']/pt ['UL']
             if isinstance(xvals,dict):
                 if len(xvals) == 1:
@@ -653,6 +658,8 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         for i in range( 1, nbins ):
             center = ya.GetBinCenter(i) 
             width = unscaleWidth ( center )
+            if type(width) == type(GeV):
+                width = float ( width.asNumber(GeV) )
             center10 = math.log10 ( width )
             r_center = int ( round ( center10 ) )
             delta = abs ( center10 - r_center ) 

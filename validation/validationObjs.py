@@ -13,7 +13,7 @@ import logging,os,sys,time,math,numpy
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
 from smodels.tools import modelTester
-from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
+from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth,addUnit
 from plottingFuncs import createPlot, getExclusionCurvesFor, createPrettyPlot
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -522,6 +522,7 @@ class ValidationPlot():
             #Replaced rounded masses by original masses
             #(skip rounding to check if mass is in the plane)
             roundmass = expRes['Mass (GeV)']
+            width = expRes['Width (GeV)']
             mass = [br[:] for br in roundmass]
             slhadata = pyslha.readSLHAFile(os.path.join(slhaDir,slhafile))
             origmasses = list(set(slhadata.blocks['MASS'].values()))
@@ -532,7 +533,7 @@ class ValidationPlot():
                             mass[i][im] = omass
                             break
 
-            varsDict = massPlane.getXYValues(mass)
+            varsDict = massPlane.getXYValues(mass,width)
             if varsDict is None:
                 logger.debug( "dropping %s, doesnt fall into the plane of %s." % \
                                (slhafile, massPlane ) )
@@ -733,13 +734,19 @@ class ValidationPlot():
         eqList = []
         for ib,br in enumerate(axes):
             if ib == 0:
-                mStr = 'Mass'
+                mStr,wStr = 'Mass','Width'
             else:
-                mStr = 'mass'
+                mStr,wStr = 'mass','width'
             mList = []
             for im,eq in enumerate(br):
-                mList.append('Eq(%s,%s)'
-                               %(var(mStr+string.ascii_uppercase[im]),eq))
+                if type(eq)==tuple:
+                    mList.append('Eq(%s,%s)'
+                                   %(var(mStr+string.ascii_uppercase[im]),eq[0]))
+                    mList.append('Eq(%s,%s)'
+                                   %(var(wStr+string.ascii_uppercase[im]),eq[1]))
+                else:
+                    mList.append('Eq(%s,%s)'
+                                   %(var(mStr+string.ascii_uppercase[im]),eq))
             mStr = "_".join(mList)
             eqList.append(mStr)
 

@@ -1,3 +1,4 @@
+install zlib
 install fastjet
 install delphesMA5tune
 # install fastjet-contrib

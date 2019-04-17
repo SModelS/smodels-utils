@@ -133,7 +133,7 @@ class MassPlane(object):
                           to the data files.
         :param dataFormats: List of strings with the file formats
                           for the data files.
-        :param objectNames: List of object names stored in root-file or cMacro. 
+        :param objectNames: List of object names stored in root-file or cMacro.
                             String appearing in title of csv table in csv files.
         :param indices: List of indices objects in listOfPrimitives of ROOT.TCanvas
         :param units: List of strings with units for objects (e.g. 'fb', None, ...)
@@ -148,7 +148,7 @@ class MassPlane(object):
                          "units": units,"coordinates": coordinates,"scales": scales }
         # optionalInput = [objectNames,indices,units,coordinates,scales]
         #allInput = [dataFiles,dataLabels,dataFormats] + optionalInput
-        allInput = { "dataFiles": dataFiles, "dataLabels": dataLabels, 
+        allInput = { "dataFiles": dataFiles, "dataLabels": dataLabels,
                      "dataFormats": dataFormats }
         allInput.update ( optionalInput )
         for i,(key,inputList) in enumerate(allInput.items()):
@@ -220,7 +220,6 @@ class MassPlane(object):
 
     def _removePoints_ ( self, points, obj ):
         hull = Delaunay ( points )
-        #print ( "upperLimits=%s" % type(obj) )
         newdata=[]
         for i in obj.data:
             p = [ i[x], i[y] ]
@@ -251,7 +250,7 @@ class MassPlane(object):
         massArray = [br.getParticleMasses(**xMass) for br in self.branches]
         return massArray
 
-    def getXYValues(self,massArray):
+    def getXYValues(self,massArray,widthArray):
 
         """
         Translate a mass array to a point of the plot.
@@ -268,9 +267,12 @@ class MassPlane(object):
         if len(massArray) != len(self.branches):
             logger.error("Mass array inconsistent with branches length")
             sys.exit()
+        if len(widthArray) != len(self.branches):
+            logger.error("Width array inconsistent with branches length")
+            sys.exit()
         xyArray = {}
-        for i,mass in enumerate(massArray):
-            xyDict = self.branches[i].getXYValues(mass)
+        for i,(mass,width) in enumerate(zip(massArray,widthArray)):
+            xyDict = self.branches[i].getXYValues(mass,width)
             if xyDict is None:
                 return None
             for xvar,value in xyDict.items():
@@ -311,7 +313,7 @@ class Axes(object):
         self._equations = massEqs[:] #Store equations
         self._massVars = massVars[:] #Store mass variables
         if widthVars:
-            self._widthVars = widthVars[:] #Store mass variables
+            self._widthVars = widthVars[:] #Store width variables
 
         #Already define the functions and plot dimensions:
         self._setXYFunction()
@@ -412,7 +414,6 @@ class Axes(object):
 
         massArray = [mfunc(**xValues) for mfunc in self._massFunctions]
         widthArray = [mfunc(**xValues) for mfunc in self._widthFunctions]
-        # print ( "width funcs", self._widthFunctions, xValues )
         combinedArray = []
         for i,m in enumerate(massArray):
             tmp = m
@@ -479,7 +480,7 @@ class Axes(object):
             self._xyFunction[xv] = lambdify(self._massVars+self._widthVars,xy[xv],'math',dummify=False)
         self._nArguments = nvars
 
-    def getXYValues(self,massArray):
+    def getXYValues(self,massArray,widthArray):
 
         """
         translate a mass array (for single branch) to a point of the plot
@@ -499,12 +500,13 @@ class Axes(object):
 
         massInput = {}
         for im,mass in enumerate(massArray):
-            if type(mass)==tuple:
+            if type(mass)==tuple: ## the old way
                 massInput[ str(self._massVars[im]) ] = mass[0]
                 massInput[ str(self._widthVars[im]) ] = mass[1]
             else:
-                massInput[ str(self._massVars[im]) ] = mass
-                massInput[ str(self._widthVars[im]) ] = None
+                    massInput[ str(self._massVars[im]) ] = mass
+        for im,width in enumerate(widthArray):
+            massInput[ str(self._widthVars[im]) ] = width
         #Define dictionary with mass variables and values
         #massInput = dict([[str(self._massVars[im]),mass] for im,mass in enumerate(massArray)])
 
@@ -515,12 +517,11 @@ class Axes(object):
 
         #Now check if the x,y,.. values computed give the massArray back:
         newMass = self.getParticleMasses(**xValues)
-        
+
         def distance ( x, y ):
             ## the distance between x and y
             ## I dont fully understand why there cases where x has a width
             ## and y doesnt ....
-            #print  ( "types", type(x), type(y), x, y )
             #assert ( type(x) == type(y) )
             if type(x)==float and type(y)==tuple:
                 return abs(x-y[0])
@@ -547,7 +548,6 @@ class Axes(object):
 
         string =''
         for equation in self._equations:
-            # print "equation=%s %s" % ( type(equation),equation )
             if not "==" in str(equation):
                 if len(string)>0:
                     string+="_"
@@ -557,7 +557,6 @@ class Axes(object):
                 string = '%sEq(%s,%s)' %(string, \
                 str(equation).split('==')[0].strip().replace(' ',''), \
                 str(equation).split('==')[1].strip().replace(' ',''))
-                #print "string= >>%s<<" % string
         return string
 
 class WildAxes(Axes):
