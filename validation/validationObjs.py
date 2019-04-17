@@ -208,6 +208,8 @@ class ValidationPlot():
         """ compute the convex hulls from the Voronoi
             partition, so we can later weight points with the areas of the
             Voronoi cell """
+        if not self.weightedAF:
+            return
         # we could weight the point with the area of its voronoi partition
         points = []
         for point in self.data:
