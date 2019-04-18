@@ -555,8 +555,13 @@ class ValidationPlot():
                     dataset = self.expRes.datasets[0]
 
                 txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
-                massGeV = addUnit ( mass, GeV )
-                # massGeV = [[m*GeV for m in mbr] for mbr in mass]
+                mnw=[]
+                for bm,bw in zip(mass,width):
+                    br=[]
+                    for m,w in zip(bm,bw):
+                        br.append( (m,w) )
+                    mnw.append(br)
+                massGeV = addUnit ( mnw, GeV )
                 if not "efficiency" in Dict.keys():
                     try:
                         Dict['efficiency'] = txname.txnameData.getValueFor(massGeV)
