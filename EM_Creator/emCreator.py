@@ -37,6 +37,7 @@ class emCreator:
         f=open(summaryfile,"r")
         lines=f.readlines()
         f.close()
+        effs={}
         for line in lines:
             p=line.find("#")
             if p>=0:
@@ -44,15 +45,22 @@ class emCreator:
             line=line.strip()
             if len(line)==0:
                 continue
-            line = line.replace("signal region","signal_region").
+            if "control region" in line:
+                continue
+            line = line.replace("signal region","signal_region")
             line = line.replace("control region ","control_region_")
             line = line.replace("signal region ","signal_region_" )
             line = line.replace("control region","control_region" )
-            line = line.replace("SRSS07_lPP_Njets0_MT0to100_PTll50toInf_MET100to150-1","SRSS07_lPP_Njets0_MT0to100_PTll50toInf_MET100to150 -1")
-            line = line.replace("SRSS07_lMM_Njets0_MT0to100_PTll50toInf_MET100to150-1","SRSS07_lMM_Njets0_MT0to100_PTll50toInf_MET100to150 -1")
+            line = line.replace("150-1","150 -1")
             tokens=line.split()
-            print ( "entry", tokens, len(tokens) )
             dsname,ananame,sr,sig95exp,sig95obs,pp,eff,statunc,systunc,totunc=tokens
+            eff=float(eff)
+            if eff == 0.:
+                continue
+            if not ananame in effs:
+                effs[ananame]={}
+            effs[ananame][sr]=eff
+        return effs
 
     def exe ( self, cmd ):
         self.msg ( "now execute: %s" % cmd )
@@ -68,4 +76,5 @@ class emCreator:
 
 if __name__ == "__main__":
     creator = emCreator()
-    creator.extract()
+    effs = creator.extract()
+    print ( effs )
