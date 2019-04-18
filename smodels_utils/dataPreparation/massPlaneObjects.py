@@ -345,7 +345,7 @@ class Axes(object):
             #Create mass variable (upper case for first branch and lower case for second)
             if type(massEq) == tuple:
                 eq1 = Eq(massVars[im],N(massEq[0],5))
-                eq2 = Eq(widthVars[im],N(massEq[1],5))
+                eq2 = Eq(widthVars[im],N(massEq[1],2))
                 allEqs.append(eq1)
                 allEqs.append(eq2)
             else:
