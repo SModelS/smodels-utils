@@ -30,10 +30,29 @@ class emCreator:
         sys.exit()
 
     def extract ( self ):
-        ma5resultsDir = "ma5/ANALYSIS_0/Output/defaultset/"
-        analyses = [ "atlas_susy_2016_07" ]
-        for analysis in analyses:
-            saf_file = ma5resultsDir + analysis + "/" + analysis + ".saf"
+        summaryfile = "ma5/ANALYSIS_0/Output/CLs_output_summary.dat"
+        if not os.path.exists ( summaryfile):
+            self.error ( "could not find ma5 summary file %s" % summaryfile )
+            sys.exit()
+        f=open(summaryfile,"r")
+        lines=f.readlines()
+        f.close()
+        for line in lines:
+            p=line.find("#")
+            if p>=0:
+                line=line[:p]
+            line=line.strip()
+            if len(line)==0:
+                continue
+            line = line.replace("signal region","signal_region").
+            line = line.replace("control region ","control_region_")
+            line = line.replace("signal region ","signal_region_" )
+            line = line.replace("control region","control_region" )
+            line = line.replace("SRSS07_lPP_Njets0_MT0to100_PTll50toInf_MET100to150-1","SRSS07_lPP_Njets0_MT0to100_PTll50toInf_MET100to150 -1")
+            line = line.replace("SRSS07_lMM_Njets0_MT0to100_PTll50toInf_MET100to150-1","SRSS07_lMM_Njets0_MT0to100_PTll50toInf_MET100to150 -1")
+            tokens=line.split()
+            print ( "entry", tokens, len(tokens) )
+            dsname,ananame,sr,sig95exp,sig95obs,pp,eff,statunc,systunc,totunc=tokens
 
     def exe ( self, cmd ):
         self.msg ( "now execute: %s" % cmd )
