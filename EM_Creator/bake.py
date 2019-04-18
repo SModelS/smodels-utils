@@ -8,11 +8,16 @@
 """
 
 import argparse
+import numpy
+from mg5Wrapper import MG5Wrapper
+from ma5Wrapper import MA5Wrapper
+from emCreator import emCreator
 
 def main():
     topology = "T2tt"
     analysis="atlas_sus_2016_07"
     print ( "baking %s:%s" % (analysis,topology ) )
+    motherRange = numpy.arange(500, 2500, 50 )
 
 if __name__ == "__main__":
     main()

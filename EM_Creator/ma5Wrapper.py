@@ -67,11 +67,8 @@ class MA5Wrapper:
         f.write('submit'+'\n')
         f.close()
 
-    def run( self ):
-        pass
-
-    def run( self, hepmcfile ):
-        """ Run MA5 over an slhaFile, specifying the process """
+    def run( self, hepmcfile, topo ):
+        """ Run MA5 over an hepmcfile, specifying the process """
         self.writeRecastingCard ()
         # then write command file
         hepmcfile = os.path.abspath ( hepmcfile )
@@ -81,6 +78,7 @@ class MA5Wrapper:
         cmd = "%s -R -s %s 2>&1 | tee /tmp/ma5.run" % (self.executable, \
                 self.commandfile )
         self.exe ( cmd )
+        shutil.move ( "ANALYSIS_0", "ANA_%s" % topo )
         os.chdir ( "../" )
 
     def exe ( self, cmd ):
@@ -97,4 +95,4 @@ class MA5Wrapper:
 
 if __name__ == "__main__":
     ma5 = MA5Wrapper()
-    ma5.run( "T2tt_1jet/Events/run_01/tag_1_pythia8_events.hepmc.gz" )
+    ma5.run( "T2tt_1jet/Events/run_01/tag_1_pythia8_events.hepmc.gz", "T2tt" )

@@ -125,6 +125,6 @@ class MG5Wrapper:
 
 if __name__ == "__main__":
     mg5 = MG5Wrapper()
-    process = "T2tt_1jet"
+    process = "T2tt_1jet_500_200"
     # process = "T2tt_1jet"
     mg5.run( "slha/T2tt.slha", process )
