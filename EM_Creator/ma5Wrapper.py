@@ -28,8 +28,6 @@ class MA5Wrapper:
             self.info ( "cannot find ma5 installation at %s" % self.ma5install )
             self.exe ( "ma5/make.py" )
         self.templateDir = "templates/"
-        # self.commandfile = "ma5commands.txt"
-        self.commandfile = tempfile.mktemp ( prefix="ma5", dir="./" )
         self.info ( "initialised" )
 
     def info ( self, *msg ):
@@ -74,6 +72,7 @@ class MA5Wrapper:
 
     def run( self, masses, pid=None ):
         """ Run MA5 over an hepmcfile, specifying the process """
+        self.commandfile = tempfile.mktemp ( prefix="ma5", dir="./" )
         process = "%s_%djet" % ( self.topo, self.njets )
         self.writeRecastingCard ()
         # then write command file
@@ -128,7 +127,7 @@ if __name__ == "__main__":
     nm = len(masses)
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
     ma5 = MA5Wrapper( args.topo, args.njets )
-    ma5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
+    # ma5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
     djobs = int(len(masses)/nprocesses)
 
     def runChunk ( chunk, pid ):

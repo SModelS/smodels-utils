@@ -23,3 +23,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    ## T2, mother 300-1800, daughter 0 - 1800
