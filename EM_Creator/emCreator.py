@@ -63,7 +63,7 @@ class emCreator:
             dsname,ananame,sr,sig95exp,sig95obs,pp,eff,statunc,systunc,totunc=tokens
             eff=float(eff)
             if eff == 0.:
-                print ( "zero efficiency for", ananame,sr )
+                # print ( "zero efficiency for", ananame,sr )
                 continue
             if not ananame in effs:
                 effs[ananame]={}
@@ -91,7 +91,17 @@ if __name__ == "__main__":
                              type=str, default="T2" )
     argparser.add_argument ( '-a', '--analyses', help='analyses, comma separated [atlas_sus_2016_07]',
                              type=str, default="atlas_susy_2016_07" )
+    mdefault = "(500,510,10),(100,110,10)"
+    argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted [%s]' % mdefault,
+                             type=str, default=mdefault )
     args = argparser.parse_args()
+    masses = bakeryHelpers.parseMasses ( args.masses )
     creator = emCreator( args.analyses, args.topo, args.njets )
-    effs = creator.extract( [ 500, 100 ] )
+    effs={}
+    for m in masses:
+        eff = creator.extract( [ 500, 100 ] )
+        for k,v in eff.items():
+            if not k in effs:
+                effs[k]={}
+            effs[k][m]=v
     print ( effs )
