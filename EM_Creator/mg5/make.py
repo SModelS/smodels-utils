@@ -22,7 +22,7 @@ def install_plugins():
         f=open("install.txt","w")
         f.write(line)
         f.close()
-        cmd = "bin/mg5_aMC -f install.txt 2>&1 | tee /tmp/mg5.install"
+        cmd = "python2 bin/mg5_aMC -f install.txt 2>&1 | tee /tmp/mg5.install"
         subprocess.getoutput ( cmd )
     if os.path.exists ( "install.txt" ):
         os.unlink ( "install.txt" )
