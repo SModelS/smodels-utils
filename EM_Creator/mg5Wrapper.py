@@ -76,7 +76,7 @@ class MG5Wrapper:
         """ this method writes the commands file for mg5.
         :param process: fixme (eg T2tt_1jet)
         """
-        self.commandfile = tempfile.mktemp ( prefix="mg5", dir="./" )
+        self.commandfile = tempfile.mktemp ( prefix="mg5cmd", dir="./" )
         f = open(self.commandfile,'w')
         f.write('set automatic_html_opening False\n' )
         f.write('launch %s\n' % bakeryHelpers.dirName(process,masses))
@@ -161,14 +161,14 @@ class MG5Wrapper:
         if os.path.exists ( Dir ):
             subprocess.getoutput ( "rm -rf %s" % Dir )
         self.info ( "run mg5 for %s" % tempf )
-        cmd = "%s %s" % ( self.executable, tempf )
+        cmd = "python2 %s %s" % ( self.executable, tempf )
         self.exe ( cmd )
         ## copy slha file
         shutil.copyfile(slhaFile, Dir+'/Cards/param_card.dat' )
         shutil.copyfile("run_card.dat", Dir+'/Cards/run_card.dat' )
         if (os.path.isdir(Dir+'/Events/run_01')):
             shutil.rmtree(Dir+'/Events/run_01')
-        cmd = "%s %s" % ( self.executable, self.commandfile )
+        cmd = "python2 %s %s" % ( self.executable, self.commandfile )
         self.exe ( cmd )
         if os.path.exists ( tempf ):
             subprocess.getoutput ( "rm -rf %s" % tempf )
