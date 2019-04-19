@@ -9,6 +9,7 @@
 """
 
 import os, sys, colorama, subprocess, shutil
+import bakeryHelpers
 
 class emCreator:
     def __init__ ( self ):
@@ -29,8 +30,9 @@ class emCreator:
                    colorama.Fore.RESET ) )
         sys.exit()
 
-    def extract ( self ):
-        summaryfile = "ma5/ANALYSIS_0/Output/CLs_output_summary.dat"
+    def extract ( self, process, masses ):
+        dirname = bakeryHelpers.dirName ( process, masses )
+        summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
         if not os.path.exists ( summaryfile):
             self.error ( "could not find ma5 summary file %s" % summaryfile )
             sys.exit()
@@ -56,6 +58,7 @@ class emCreator:
             dsname,ananame,sr,sig95exp,sig95obs,pp,eff,statunc,systunc,totunc=tokens
             eff=float(eff)
             if eff == 0.:
+                print ( "zero efficiency for", ananame,sr )
                 continue
             if not ananame in effs:
                 effs[ananame]={}
@@ -76,5 +79,5 @@ class emCreator:
 
 if __name__ == "__main__":
     creator = emCreator()
-    effs = creator.extract()
+    effs = creator.extract( "T2tt_1jet", [ 500, 100 ] )
     print ( effs )

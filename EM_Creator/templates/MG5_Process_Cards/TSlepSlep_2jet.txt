@@ -11,7 +11,3 @@ add process p p > el- el+ j j
 add process p p > er- er+ j j
 add process p p > mul- mul+ j j
 add process p p > mur- mur+ j j
-output TSlepSlep_2jet
-
-
-

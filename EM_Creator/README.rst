@@ -1,1 +1,2 @@
-The efficiency map bakery. Hopefully everything is explained in EM_Baking_Instructions.pdf.
+The efficiency map bakery, v2.
+To bake, run ./bake.py

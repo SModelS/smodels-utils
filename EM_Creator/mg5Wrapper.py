@@ -28,7 +28,8 @@ class MG5Wrapper:
         self.mgParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
                           'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5', 
                           'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } #, 'qcut': '90' }
-        self.commandfile = "mg5commands.txt"
+        # self.commandfile = "mg5commands.txt"
+        self.commandfile = tempfile.mktemp ( prefix="mg5", dir="./" )
         self.info ( "initialised" )
 
     def info ( self, *msg ):
@@ -92,7 +93,8 @@ class MG5Wrapper:
         f=open(slhaTemplate,"r")
         lines=f.readlines()
         f.close()
-        f=open("./this.slha","w")
+        self.slhafile = tempfile.mktemp(suffix=".slha",dir="./" )
+        f=open( self.slhafile,"w")
         n=len(masses)
         for line in lines:
             for i in range(n):
@@ -100,18 +102,22 @@ class MG5Wrapper:
             f.write ( line )
         f.close()
 
-    def run( self, slhaTemplate, process, masses ):
-        """ Run MG5 over an slhaTemplate, specifying the process,
-        giving also the masses, fixme maybe to plug into slhafile.
+    # def run( self, slhaTemplate, process, masses ):
+    def run( self, topo, njets, masses ):
+        """ Run MG5 for topo, with njets additional ISR jets, giving
+        also the masses as a list.
         """
+        process = "%s_%djet" % ( topo, njets )
+        slhaTemplate = "slha/%s_template.slha" % topo
         self.pluginMasses( slhaTemplate, masses )
         # first write pythia card
         self.writePythiaCard ( process=process )
         # then write command file
         self.writeCommandFile( process=process, masses=masses )
         # then run madgraph5
-        self.execute ( "./this.slha", process, masses )
-        # self.move ( process, masses )
+        self.execute ( self.slhafile, process, masses )
+        if os.path.exists ( self.slhafile ):
+            os.unlink ( self.slhafile )
 
     def move(self, process, masses ):
         """ Move the output to a different location """
@@ -142,7 +148,7 @@ class MG5Wrapper:
         f=open(templatefile,"r")
         lines=f.readlines()
         f.close()
-        tempf = tempfile.mktemp(dir="./")
+        tempf = tempfile.mktemp(prefix="mg5proc",dir="./")
         f=open(tempf,"w")
         for line in lines:
             f.write ( line )
@@ -163,10 +169,14 @@ class MG5Wrapper:
         self.exe ( cmd )
         if os.path.exists ( tempf ):
             subprocess.getoutput ( "rm -rf %s" % tempf )
-
+        if os.path.exists ( self.commandfile ):
+            subprocess.getoutput ( "rm %s" % self.commandfile )
 
 if __name__ == "__main__":
-    mg5 = MG5Wrapper(nevents=10)
-    process = "T2tt_1jet"
-    # process = "T2tt_1jet"
-    mg5.run( "slha/T2tt_template.slha", process, [ 500, 100 ] )
+    mg5 = MG5Wrapper(nevents=100)
+    topo = "T2"
+    njets=1
+    mg5.run( topo, njets, [ 500, 100 ] )
+    #process = "T2_1jet"
+    #slhatemplate = "slha/T2_template.slha"
+    # mg5.run( slhatemplate, process, [ 500, 100 ] )

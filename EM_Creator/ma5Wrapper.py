@@ -64,7 +64,7 @@ class MA5Wrapper:
         """
         f = open(self.ma5install + "/" + self.commandfile,'w')
         f.write('set main.recast = on\n')
-        f.write('set main.recast.card_path = recasting_card.dat\n' )
+        f.write('set main.recast.card_path = recasting.dat\n' )
         f.write('import '+hepmcfile+'\n')
         f.write('submit ANA_%s\n' % bakeryHelpers.dirName(process,masses)  )
         f.close()
@@ -110,4 +110,3 @@ if __name__ == "__main__":
     topo = "T2tt"
     masses= [500, 100]
     ma5.run( process, masses, topo )
-    # ma5.run( "T2tt_1jet/Events/run_01/tag_1_pythia8_events.hepmc.gz", "T2tt" )
