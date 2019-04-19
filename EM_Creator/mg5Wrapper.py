@@ -11,7 +11,7 @@
 import os, sys, colorama, subprocess, shutil
 
 class MG5Wrapper:
-    def __init__ ( self, ver="2_6_5" ):
+    def __init__ ( self, nevents=10, ver="2_6_5" ):
         """ 
         :param ver: version of mg5
         """
@@ -25,7 +25,7 @@ class MG5Wrapper:
             self.exe ( "mg5/make.py" )
         self.templateDir = "templates/"
         self.mgParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
-                          'NEVENTS': '10', 'MAXJETFLAVOR': '5', 
+                          'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5', 
                           'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } #, 'qcut': '90' }
         self.commandfile = "mg5commands.txt"
         self.info ( "initialised" )
@@ -69,9 +69,9 @@ class MG5Wrapper:
         g.close()
         self.info ( "wrote run card %s" % filename )
 
-    def writeCommandFile ( self, process = "" ):
+    def writeCommandFile ( self, process = "", masses = None ):
         """ this method writes the commands file for mg5.
-        :param process: fixme (eg T2_11jet)
+        :param process: fixme (eg T2tt_1jet)
         """
         f = open(self.commandfile,'w')
         f.write('set automatic_html_opening False\n' )
@@ -85,14 +85,41 @@ class MG5Wrapper:
         f.write('0\n')
         f.close()
 
-    def run( self, slhaFile, process ):
-        """ Run MG5 over an slhaFile, specifying the process """
+    def pluginMasses( self, slhaTemplate, masses ):
+        """ take the template slha file and plug in 
+            masses """
+        f=open(slhaTemplate,"r")
+        lines=f.readlines()
+        f.close()
+        f=open("./this.slha","w")
+        n=len(masses)
+        for line in lines:
+            for i in range(n):
+                line = line.replace ( "M%d" % (n-i-1), str(masses[i]) )
+            f.write ( line )
+        f.close()
+
+    def run( self, slhaTemplate, process, masses ):
+        """ Run MG5 over an slhaTemplate, specifying the process,
+        giving also the masses, fixme maybe to plug into slhafile.
+        """
+        self.pluginMasses( slhaTemplate, masses )
         # first write pythia card
         self.writePythiaCard ( process=process )
         # then write command file
-        self.writeCommandFile( process=process )
+        self.writeCommandFile( process=process, masses=masses )
         # then run madgraph5
-        self.execute ( slhaFile, process )
+        self.execute ( "./this.slha", process )
+        self.move ( process, masses )
+
+    def move(self, process, masses ):
+        """ Move the output to a different location """
+        source = process
+        dest = process + "." + "_".join(map(str,masses))
+        if os.path.exists ( dest ):
+            subprocess.getoutput ( "rm -rf %s" % dest )
+        print ( "moving %s to %s" % ( source, dest ) )
+        shutil.move ( source, dest )
 
     def exe ( self, cmd ):
         self.msg ( "now execute: %s" % cmd )
@@ -111,6 +138,8 @@ class MG5Wrapper:
         templatefile = self.templateDir + '/MG5_Process_Cards/'+process+'.txt'
         if not os.path.isfile( templatefile ):
             self.error ( "The process card %s does not exist." % templatefile )
+        if os.path.exists ( process ):
+            subprocess.getoutput ( "rm -rf %s" % process )
         self.info ( "run mg5 for %s" % process )
         cmd = "%s %s" % ( self.executable, templatefile )
         self.exe ( cmd )
@@ -124,7 +153,7 @@ class MG5Wrapper:
 
 
 if __name__ == "__main__":
-    mg5 = MG5Wrapper()
-    process = "T2tt_1jet_500_200"
+    mg5 = MG5Wrapper(nevents=10)
+    process = "T2tt_1jet"
     # process = "T2tt_1jet"
-    mg5.run( "slha/T2tt.slha", process )
+    mg5.run( "slha/T2tt_template.slha", process, [ 500, 100 ] )
