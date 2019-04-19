@@ -190,7 +190,7 @@ if __name__ == "__main__":
     argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted [%s]' % mdefault,
                              type=str, default=mdefault )
     args = argparser.parse_args()
-    masses = bakeryHelpers.parseMasses ( args.masses )
+    masses = bakeryHelpers.parseMasses ( args.masses, filterOrder=True )
     nm = len(masses)
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
     mg5 = MG5Wrapper( args.nevents, args.topo, args.njets )
