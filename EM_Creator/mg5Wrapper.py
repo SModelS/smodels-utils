@@ -31,8 +31,6 @@ class MG5Wrapper:
         self.mgParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
                           'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5',
                           'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } #, 'qcut': '90' }
-        # self.commandfile = "mg5commands.txt"
-        self.commandfile = tempfile.mktemp ( prefix="mg5", dir="./" )
         self.info ( "initialised" )
 
     def info ( self, *msg ):
@@ -78,6 +76,7 @@ class MG5Wrapper:
         """ this method writes the commands file for mg5.
         :param process: fixme (eg T2tt_1jet)
         """
+        self.commandfile = tempfile.mktemp ( prefix="mg5", dir="./" )
         f = open(self.commandfile,'w')
         f.write('set automatic_html_opening False\n' )
         f.write('launch %s\n' % bakeryHelpers.dirName(process,masses))
@@ -195,7 +194,7 @@ if __name__ == "__main__":
     nm = len(masses)
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
     mg5 = MG5Wrapper( args.nevents, args.topo, args.njets )
-    mg5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
+    # mg5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
     djobs = int(len(masses)/nprocesses)
 
     def runChunk ( chunk, pid ):
