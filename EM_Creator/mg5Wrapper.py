@@ -9,13 +9,16 @@
 """
 
 import os, sys, colorama, subprocess, shutil, tempfile
+import multiprocessing
 import bakeryHelpers
 
 class MG5Wrapper:
-    def __init__ ( self, nevents=10, ver="2_6_5" ):
-        """ 
+    def __init__ ( self, nevents, topo, njets, ver="2_6_5" ):
+        """
         :param ver: version of mg5
         """
+        self.topo = topo
+        self.njets = njets
         self.mg5install = "./mg5"
         self.ver = ver
         if not os.path.isdir ( self.mg5install ):
@@ -26,7 +29,7 @@ class MG5Wrapper:
             self.exe ( "mg5/make.py" )
         self.templateDir = "templates/"
         self.mgParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
-                          'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5', 
+                          'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5',
                           'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } #, 'qcut': '90' }
         # self.commandfile = "mg5commands.txt"
         self.commandfile = tempfile.mktemp ( prefix="mg5", dir="./" )
@@ -51,7 +54,7 @@ class MG5Wrapper:
         """ this method writes the pythia card for within mg5.
         :param process: fixme (eg T2_1jet)
         """
-        filename = "run_card.dat" 
+        filename = "run_card.dat"
         # filename = "%s/Cards/run_card.dat" % process
         self.debug ( "writing pythia run card %s" % filename )
         if os.path.exists ( filename ):
@@ -88,7 +91,7 @@ class MG5Wrapper:
         f.close()
 
     def pluginMasses( self, slhaTemplate, masses ):
-        """ take the template slha file and plug in 
+        """ take the template slha file and plug in
             masses """
         f=open(slhaTemplate,"r")
         lines=f.readlines()
@@ -103,12 +106,13 @@ class MG5Wrapper:
         f.close()
 
     # def run( self, slhaTemplate, process, masses ):
-    def run( self, topo, njets, masses ):
+    def run( self, masses, pid=None ):
         """ Run MG5 for topo, with njets additional ISR jets, giving
         also the masses as a list.
         """
-        process = "%s_%djet" % ( topo, njets )
-        slhaTemplate = "slha/%s_template.slha" % topo
+        self.info ( "running on %s in job #%s" % (masses, pid ) )
+        process = "%s_%djet" % ( self.topo, self.njets )
+        slhaTemplate = "slha/%s_template.slha" % self.topo
         self.pluginMasses( slhaTemplate, masses )
         # first write pythia card
         self.writePythiaCard ( process=process )
@@ -173,10 +177,37 @@ class MG5Wrapper:
             subprocess.getoutput ( "rm %s" % self.commandfile )
 
 if __name__ == "__main__":
-    mg5 = MG5Wrapper(nevents=100)
-    topo = "T2"
-    njets=1
-    mg5.run( topo, njets, [ 500, 100 ] )
-    #process = "T2_1jet"
-    #slhatemplate = "slha/T2_template.slha"
-    # mg5.run( slhatemplate, process, [ 500, 100 ] )
+    import argparse
+    argparser = argparse.ArgumentParser(description='madgraph5 runner.')
+    argparser.add_argument ( '-n', '--nevents', help='number of events to generate [10]',
+                             type=int, default=10 )
+    argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
+                             type=int, default=0 )
+    argparser.add_argument ( '-p', '--nprocesses', help='number of process to run in parallel. 0 means 1 per CPU [1]',
+                             type=int, default=1 )
+    argparser.add_argument ( '-t', '--topo', help='topology [T2]',
+                             type=str, default="T2" )
+    mdefault = "(500,510,10),(100,110,10)"
+    argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted [%s]' % mdefault,
+                             type=str, default=mdefault )
+    args = argparser.parse_args()
+    masses = bakeryHelpers.parseMasses ( args.masses )
+    nm = len(masses)
+    nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
+    mg5 = MG5Wrapper( args.nevents, args.topo, args.njets )
+    mg5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
+    djobs = int(len(masses)/nprocesses)
+
+    def runChunk ( chunk, pid ):
+        for c in chunk:
+            mg5.run ( c, pid )
+
+    jobs=[]
+    for i in range(nprocesses):
+        chunk = masses[djobs*i:djobs*(i+1)]
+        if i == nprocesses-1:
+            chunk = masses[djobs*i:]
+        p = multiprocessing.Process(target=runChunk, args=(chunk,i))
+        jobs.append ( p )
+        p.start()
+    # mg5.run( [ 500, 100 ] )

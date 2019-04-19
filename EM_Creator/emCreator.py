@@ -12,8 +12,10 @@ import os, sys, colorama, subprocess, shutil
 import bakeryHelpers
 
 class emCreator:
-    def __init__ ( self ):
-        pass
+    def __init__ ( self, analyses, topo, njets ):
+        self.analyses = analyses
+        self.topo = topo
+        self.njets = njets
 
     def info ( self, *msg ):
         print ( "%s[emCreator] %s%s" % ( colorama.Fore.YELLOW, " ".join ( msg ), \
@@ -30,7 +32,10 @@ class emCreator:
                    colorama.Fore.RESET ) )
         sys.exit()
 
-    def extract ( self, process, masses ):
+    def extract ( self, masses ):
+        topo = self.topo
+        njets = self.njets
+        process = "%s_%djet" % ( topo, njets )
         dirname = bakeryHelpers.dirName ( process, masses )
         summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
         if not os.path.exists ( summaryfile):
@@ -78,6 +83,15 @@ class emCreator:
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
 
 if __name__ == "__main__":
-    creator = emCreator()
-    effs = creator.extract( "T2tt_1jet", [ 500, 100 ] )
+    import argparse
+    argparser = argparse.ArgumentParser(description='efficiency map extractor.')
+    argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
+                             type=int, default=0 )
+    argparser.add_argument ( '-t', '--topo', help='topology [T2]',
+                             type=str, default="T2" )
+    argparser.add_argument ( '-a', '--analyses', help='analyses, comma separated [atlas_sus_2016_07]',
+                             type=str, default="atlas_susy_2016_07" )
+    args = argparser.parse_args()
+    creator = emCreator( args.analyses, args.topo, args.njets )
+    effs = creator.extract( [ 500, 100 ] )
     print ( effs )

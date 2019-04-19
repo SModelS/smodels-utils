@@ -9,13 +9,16 @@
 """
 
 import os, sys, colorama, subprocess, shutil, tempfile
+import multiprocessing
 import bakeryHelpers
 
 class MA5Wrapper:
-    def __init__ ( self, ver="1.7" ):
+    def __init__ ( self, topo, njets, ver="1.7" ):
         """ 
         :param ver: version of ma5
         """
+        self.topo = topo
+        self.njets = njets
         self.ma5install = "./ma5/"
         self.ver = ver
         if not os.path.isdir ( self.ma5install ):
@@ -69,9 +72,9 @@ class MA5Wrapper:
         f.write('submit ANA_%s\n' % bakeryHelpers.dirName(process,masses)  )
         f.close()
 
-    # def run( self, hepmcfile, topo ):
-    def run( self, process, masses, topo ):
+    def run( self, masses, pid=None ):
         """ Run MA5 over an hepmcfile, specifying the process """
+        process = "%s_%djet" % ( self.topo, self.njets )
         self.writeRecastingCard ()
         # then write command file
         Dir = bakeryHelpers.dirName ( process, masses ) 
@@ -105,8 +108,38 @@ class MA5Wrapper:
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
 
 if __name__ == "__main__":
-    ma5 = MA5Wrapper()
-    process = "T2tt_1jet"
-    topo = "T2tt"
-    masses= [500, 100]
-    ma5.run( process, masses, topo )
+    import argparse
+    argparser = argparse.ArgumentParser(description='madanalysis5 runner.')
+    argparser.add_argument ( '-n', '--nevents', help='number of events to generate [10]',
+                             type=int, default=10 )
+    argparser.add_argument ( '-a', '--analyses', help='analyses, comma separated [atlas_sus_2016_07]',
+                             type=str, default="atlas_susy_2016_07" )
+    argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
+                             type=int, default=0 )
+    argparser.add_argument ( '-t', '--topo', help='topology [T2]',
+                             type=str, default="T2" )
+    mdefault = "(500,510,10),(100,110,10)"
+    argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted [%s]' % mdefault,
+                             type=str, default=mdefault )
+    argparser.add_argument ( '-p', '--nprocesses', help='number of process to run in parallel. 0 means 1 per CPU [1]',
+                             type=int, default=1 )
+    args = argparser.parse_args()
+    masses = bakeryHelpers.parseMasses ( args.masses )
+    nm = len(masses)
+    nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
+    ma5 = MA5Wrapper( args.topo, args.njets )
+    ma5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
+    djobs = int(len(masses)/nprocesses)
+
+    def runChunk ( chunk, pid ):
+        for c in chunk:
+            ma5.run ( c, pid )
+
+    jobs=[]
+    for i in range(nprocesses):
+        chunk = masses[djobs*i:djobs*(i+1)]
+        if i == nprocesses-1:
+            chunk = masses[djobs*i:]
+        p = multiprocessing.Process(target=runChunk, args=(chunk,i))
+        jobs.append ( p )
+        p.start()
