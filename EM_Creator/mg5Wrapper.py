@@ -8,7 +8,8 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 """
 
-import os, sys, colorama, subprocess, shutil
+import os, sys, colorama, subprocess, shutil, tempfile
+import bakeryHelpers
 
 class MG5Wrapper:
     def __init__ ( self, nevents=10, ver="2_6_5" ):
@@ -75,7 +76,7 @@ class MG5Wrapper:
         """
         f = open(self.commandfile,'w')
         f.write('set automatic_html_opening False\n' )
-        f.write('launch '+ process+'\n')
+        f.write('launch %s\n' % bakeryHelpers.dirName(process,masses))
         f.write('shower=Pythia8\n')
         f.write('detector=OFF\n')
         #f.write('detector=Delphes\n')
@@ -109,13 +110,13 @@ class MG5Wrapper:
         # then write command file
         self.writeCommandFile( process=process, masses=masses )
         # then run madgraph5
-        self.execute ( "./this.slha", process )
-        self.move ( process, masses )
+        self.execute ( "./this.slha", process, masses )
+        # self.move ( process, masses )
 
     def move(self, process, masses ):
         """ Move the output to a different location """
         source = process
-        dest = process + "." + "_".join(map(str,masses))
+        dest = bakeryHelpers.dirName ( process, masses )
         if os.path.exists ( dest ):
             subprocess.getoutput ( "rm -rf %s" % dest )
         print ( "moving %s to %s" % ( source, dest ) )
@@ -134,22 +135,34 @@ class MG5Wrapper:
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
         # self.msg ( " `- %s ... %s" % ( ret[:maxLength/2-1], ret[-maxLength/2-1:] ) )
 
-    def execute ( self, slhaFile, process ):
+    def execute ( self, slhaFile, process, masses ):
         templatefile = self.templateDir + '/MG5_Process_Cards/'+process+'.txt'
         if not os.path.isfile( templatefile ):
             self.error ( "The process card %s does not exist." % templatefile )
-        if os.path.exists ( process ):
-            subprocess.getoutput ( "rm -rf %s" % process )
-        self.info ( "run mg5 for %s" % process )
-        cmd = "%s %s" % ( self.executable, templatefile )
+        f=open(templatefile,"r")
+        lines=f.readlines()
+        f.close()
+        tempf = tempfile.mktemp(dir="./")
+        f=open(tempf,"w")
+        for line in lines:
+            f.write ( line )
+        Dir = bakeryHelpers.dirName ( process, masses )
+        f.write ( "output %s\n" % Dir )
+        f.close()
+        if os.path.exists ( Dir ):
+            subprocess.getoutput ( "rm -rf %s" % Dir )
+        self.info ( "run mg5 for %s" % tempf )
+        cmd = "%s %s" % ( self.executable, tempf )
         self.exe ( cmd )
         ## copy slha file
-        shutil.copyfile(slhaFile, process+'/Cards/param_card.dat' )
-        shutil.copyfile("run_card.dat", process+'/Cards/run_card.dat' )
-        if (os.path.isdir(process+'/Events/run_01')):
-            shutil.rmtree(process+'/Events/run_01')
+        shutil.copyfile(slhaFile, Dir+'/Cards/param_card.dat' )
+        shutil.copyfile("run_card.dat", Dir+'/Cards/run_card.dat' )
+        if (os.path.isdir(Dir+'/Events/run_01')):
+            shutil.rmtree(Dir+'/Events/run_01')
         cmd = "%s %s" % ( self.executable, self.commandfile )
         self.exe ( cmd )
+        if os.path.exists ( tempf ):
+            subprocess.getoutput ( "rm -rf %s" % tempf )
 
 
 if __name__ == "__main__":
