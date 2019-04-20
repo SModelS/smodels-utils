@@ -70,3 +70,17 @@ def nJobs ( nproc, npoints ):
     if ret > npoints:
         ret = npoints
     return ret
+
+def getListOfMasses(topo, njets):
+    """ get a list of the masses of an mg5 scan. to be used for e.g. ma5. """
+    import glob
+    ret=[]
+    files = glob.glob("%s_%djet.*" % ( topo, njets ) )
+    for f in files:
+        p=f.find("jet.")
+        masses = tuple(map(int,f[p+4:].split("_")))
+        ret.append ( masses )
+    return ret
+
+if __name__ == "__main__":
+    print ( getListOfMasses("T2",0) )

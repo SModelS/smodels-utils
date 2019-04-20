@@ -8,7 +8,7 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 """
 
-import os, sys, colorama, subprocess, shutil, tempfile
+import os, sys, colorama, subprocess, shutil, tempfile, time
 import multiprocessing
 import bakeryHelpers
 
@@ -72,25 +72,30 @@ class MA5Wrapper:
 
     def run( self, masses, pid=None ):
         """ Run MA5 over an hepmcfile, specifying the process """
-        self.commandfile = tempfile.mktemp ( prefix="ma5", dir="./" )
+        if pid!=None:
+            time.sleep(pid*10) ## all the compiling ...
+        self.commandfile = tempfile.mktemp ( prefix="ma5cmd", dir="./" )
+        self.teefile = tempfile.mktemp ( prefix="ma5", suffix=".run", dir="/tmp" )
         process = "%s_%djet" % ( self.topo, self.njets )
         self.writeRecastingCard ()
         # then write command file
         Dir = bakeryHelpers.dirName ( process, masses ) 
         hepmcfile = "%s/Events/run_01/tag_1_pythia8_events.hepmc.gz" % Dir
         hepmcfile = os.path.abspath ( hepmcfile )
-        print ( "hepmcfile at", hepmcfile )
+        print ( "Found hepmcfile at", hepmcfile )
         if not os.path.exists ( hepmcfile ):
             print ( "Error cannot find hepmc file at %s" % hepmcfile )
             sys.exit()
         self.writeCommandFile( hepmcfile, process, masses )
         # then run madgraph5
         os.chdir ( "ma5/" )
-        cmd = "%s -R -s %s 2>&1 | tee /tmp/ma5.run" % (self.executable, \
-                self.commandfile )
+        cmd = "%s -R -s %s 2>&1 | tee %s" % (self.executable, \
+                self.commandfile, self.teefile )
         self.exe ( cmd )
         if os.path.exists ( self.commandfile ):
             subprocess.getoutput ( "rm -r %s" % self.commandfile )
+        if os.path.exists ( self.teefile ):
+            subprocess.getoutput ( "rm -r %s" % self.teefile )
         #shutil.move ( "ANALYSIS_0", "ANA_%s" % Dir )
         os.chdir ( "../" )
 
@@ -117,13 +122,16 @@ if __name__ == "__main__":
                              type=int, default=0 )
     argparser.add_argument ( '-t', '--topo', help='topology [T2]',
                              type=str, default="T2" )
-    mdefault = "(500,510,10),(100,110,10)"
-    argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted [%s]' % mdefault,
+    mdefault = "all"
+    argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted. "all" means: search for mg5 directories, and consider all. [%s]' % mdefault,
                              type=str, default=mdefault )
     argparser.add_argument ( '-p', '--nprocesses', help='number of process to run in parallel. 0 means 1 per CPU [1]',
                              type=int, default=1 )
     args = argparser.parse_args()
-    masses = bakeryHelpers.parseMasses ( args.masses )
+    if args.masses == "all":
+        masses = bakeryHelpers.getListOfMasses ( args.topo, args.njets )
+    else:
+        masses = bakeryHelpers.parseMasses ( args.masses )
     nm = len(masses)
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
     ma5 = MA5Wrapper( args.topo, args.njets )
