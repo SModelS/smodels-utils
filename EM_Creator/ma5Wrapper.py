@@ -118,7 +118,7 @@ if __name__ == "__main__":
                              type=int, default=10 )
     argparser.add_argument ( '-a', '--analyses', help='analyses, comma separated [atlas_sus_2016_07]',
                              type=str, default="atlas_susy_2016_07" )
-    argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
+    argparser.add_argument ( '-j', '--njets', help='number of ISR jets [0]',
                              type=int, default=0 )
     argparser.add_argument ( '-t', '--topo', help='topology [T2]',
                              type=str, default="T2" )
