@@ -82,10 +82,10 @@ class MA5Wrapper:
         Dir = bakeryHelpers.dirName ( process, masses ) 
         hepmcfile = "%s/Events/run_01/tag_1_pythia8_events.hepmc.gz" % Dir
         hepmcfile = os.path.abspath ( hepmcfile )
-        print ( "Found hepmcfile at", hepmcfile )
         if not os.path.exists ( hepmcfile ):
             print ( "Error cannot find hepmc file at %s" % hepmcfile )
             sys.exit()
+        print ( "Found hepmcfile at", hepmcfile )
         self.writeCommandFile( hepmcfile, process, masses )
         # then run madgraph5
         os.chdir ( "ma5/" )

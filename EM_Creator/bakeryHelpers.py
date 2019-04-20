@@ -8,13 +8,15 @@
 """
 
 import numpy
+import sys
+sys.path.insert(0,"../../smodels" )
 from smodels.tools.runtime import nCPUs
 
 def dirName ( process, masses ):
     """ the name of the directory of one process + masses """
     return process + "." + "_".join(map(str,masses))
 
-def parseMasses ( massstring, filterOrder=False ):
+def parseMasses ( massstring, filterOrder=True ):
     """ parse the mass string, e.g. (500,510,10),(100,110,10).
     :param filterOrder: if trrue, discard vectors with daughters more massive than their
      mothers.
@@ -32,6 +34,7 @@ def parseMasses ( massstring, filterOrder=False ):
         tmp=[]
         if type(mtuple) in [ int, float ]:
             tmp.append ( mtuple )
+            lists.append ( tuple(tmp) )
             continue
         if len(mtuple) == 1:
             tmp.append ( mtuple[0] )
@@ -83,4 +86,5 @@ def getListOfMasses(topo, njets):
     return ret
 
 if __name__ == "__main__":
-    print ( getListOfMasses("T2",0) )
+    # print ( getListOfMasses("T2",0) )
+    print ( parseMasses("500,100"))

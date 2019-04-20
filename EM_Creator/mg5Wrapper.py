@@ -13,11 +13,12 @@ import multiprocessing
 import bakeryHelpers
 
 class MG5Wrapper:
-    def __init__ ( self, nevents, topo, njets, ver="2_6_5" ):
+    def __init__ ( self, nevents, topo, njets, keep, ver="2_6_5" ):
         """
         :param ver: version of mg5
         """
         self.topo = topo
+        self.keep = keep
         self.njets = njets
         self.mg5install = "./mg5"
         self.ver = ver
@@ -104,7 +105,6 @@ class MG5Wrapper:
             f.write ( line )
         f.close()
 
-    # def run( self, slhaTemplate, process, masses ):
     def run( self, masses, pid=None ):
         """ Run MG5 for topo, with njets additional ISR jets, giving
         also the masses as a list.
@@ -119,17 +119,24 @@ class MG5Wrapper:
         self.writeCommandFile( process=process, masses=masses )
         # then run madgraph5
         self.execute ( self.slhafile, process, masses )
-        if os.path.exists ( self.slhafile ):
-            os.unlink ( self.slhafile )
+        self.unlink ( self.slhafile )
 
-    def move(self, process, masses ):
-        """ Move the output to a different location """
-        source = process
-        dest = bakeryHelpers.dirName ( process, masses )
-        if os.path.exists ( dest ):
-            subprocess.getoutput ( "rm -rf %s" % dest )
-        print ( "moving %s to %s" % ( source, dest ) )
-        shutil.move ( source, dest )
+    def unlink ( self, f ):
+        """ remove a file, if keep is not true """
+        if self.keep:
+            return
+        if os.path.exists ( f ):
+            subprocess.getoutput ( "rm -rf %s" % f )
+            # os.unlink ( f )
+
+    #def move(self, process, masses ):
+    #    """ Move the output to a different location """
+    #    source = process
+    #    dest = bakeryHelpers.dirName ( process, masses )
+    #    if os.path.exists ( dest ):
+    #        subprocess.getoutput ( "rm -rf %s" % dest )
+    #    print ( "moving %s to %s" % ( source, dest ) )
+    #    shutil.move ( source, dest )
 
     def exe ( self, cmd ):
         self.msg ( "now execute: %s" % cmd )
@@ -170,10 +177,8 @@ class MG5Wrapper:
             shutil.rmtree(Dir+'/Events/run_01')
         cmd = "python2 %s %s" % ( self.executable, self.commandfile )
         self.exe ( cmd )
-        if os.path.exists ( tempf ):
-            subprocess.getoutput ( "rm -rf %s" % tempf )
-        if os.path.exists ( self.commandfile ):
-            subprocess.getoutput ( "rm %s" % self.commandfile )
+        self.unlink ( self.commandfile )
+        self.unlink ( tempf )
 
 if __name__ == "__main__":
     import argparse
@@ -186,6 +191,8 @@ if __name__ == "__main__":
                              type=int, default=1 )
     argparser.add_argument ( '-t', '--topo', help='topology [T2]',
                              type=str, default="T2" )
+    argparser.add_argument ( '-k', '--keep', help='keep temporary files',
+                             action="store_true" )
     mdefault = "(500,510,10),(100,110,10)"
     argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted [%s]' % mdefault,
                              type=str, default=mdefault )
@@ -193,7 +200,7 @@ if __name__ == "__main__":
     masses = bakeryHelpers.parseMasses ( args.masses, filterOrder=True )
     nm = len(masses)
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
-    mg5 = MG5Wrapper( args.nevents, args.topo, args.njets )
+    mg5 = MG5Wrapper( args.nevents, args.topo, args.njets, args.keep )
     # mg5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
     djobs = int(len(masses)/nprocesses)
 
