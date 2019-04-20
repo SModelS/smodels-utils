@@ -193,10 +193,16 @@ if __name__ == "__main__":
                              type=str, default="T2" )
     argparser.add_argument ( '-k', '--keep', help='keep temporary files',
                              action="store_true" )
+    argparser.add_argument ( '-c', '--clean', help='clean all temporary files, then quit',
+                             action="store_true" )
     mdefault = "(500,510,10),(100,110,10)"
     argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted [%s]' % mdefault,
                              type=str, default=mdefault )
     args = argparser.parse_args()
+    if args.clean:
+        subprocess.getoutput ( "rm -rf mg5cmd* mg5proc* tmp*slha" )
+        print ( "Cleaned temporary files." )
+        sys.exit()
     masses = bakeryHelpers.parseMasses ( args.masses, filterOrder=True )
     nm = len(masses)
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
