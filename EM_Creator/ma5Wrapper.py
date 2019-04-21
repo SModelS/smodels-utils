@@ -114,8 +114,6 @@ class MA5Wrapper:
 if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(description='madanalysis5 runner.')
-    argparser.add_argument ( '-n', '--nevents', help='number of events to generate [10]',
-                             type=int, default=10 )
     argparser.add_argument ( '-a', '--analyses', help='analyses, comma separated [atlas_sus_2016_07]',
                              type=str, default="atlas_susy_2016_07" )
     argparser.add_argument ( '-j', '--njets', help='number of ISR jets [0]',

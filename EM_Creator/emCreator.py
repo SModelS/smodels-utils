@@ -39,8 +39,8 @@ class emCreator:
         dirname = bakeryHelpers.dirName ( process, masses )
         summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
         if not os.path.exists ( summaryfile):
-            self.error ( "could not find ma5 summary file %s" % summaryfile )
-            sys.exit()
+            self.error ( "could not find ma5 summary file %s. Skipping." % summaryfile )
+            return {}
         f=open(summaryfile,"r")
         lines=f.readlines()
         f.close()

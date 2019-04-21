@@ -21,7 +21,8 @@ def install_plugins():
         f.write(line)
         f.close()
         cmd = "python2 bin/ma5 -s -f install.txt 2>&1 | tee /tmp/ma5.install"
-        subprocess.getoutput ( cmd )
+        a = subprocess.getoutput ( cmd )
+        print ( a )
     os.unlink ( "install.txt" )
 
 def install():
