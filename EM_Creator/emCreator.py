@@ -91,15 +91,18 @@ if __name__ == "__main__":
                              type=str, default="T2" )
     argparser.add_argument ( '-a', '--analyses', help='analyses, comma separated [atlas_sus_2016_07]',
                              type=str, default="atlas_susy_2016_07" )
-    mdefault = "(500,510,10),(100,110,10)"
-    argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted [%s]' % mdefault,
+    mdefault = "all"
+    argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted. "all" means, try to find out yourself [%s]' % mdefault,
                              type=str, default=mdefault )
     args = argparser.parse_args()
-    masses = bakeryHelpers.parseMasses ( args.masses )
+    if args.masses == "all":
+        masses = bakeryHelpers.getListOfMasses ( args.topo, args.njets )
+    else:
+        masses = bakeryHelpers.parseMasses ( args.masses )
     creator = emCreator( args.analyses, args.topo, args.njets )
     effs={}
     for m in masses:
-        eff = creator.extract( [ 500, 100 ] )
+        eff = creator.extract( m )
         for k,v in eff.items():
             if not k in effs:
                 effs[k]={}

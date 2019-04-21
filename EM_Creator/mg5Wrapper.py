@@ -110,15 +110,15 @@ class MG5Wrapper:
         also the masses as a list.
         """
         self.info ( "running on %s in job #%s" % (masses, pid ) )
-        process = "%s_%djet" % ( self.topo, self.njets )
+        self.process = "%s_%djet" % ( self.topo, self.njets )
         slhaTemplate = "slha/%s_template.slha" % self.topo
         self.pluginMasses( slhaTemplate, masses )
         # first write pythia card
-        self.writePythiaCard ( process=process )
+        self.writePythiaCard ( process=self.process )
         # then write command file
-        self.writeCommandFile( process=process, masses=masses )
+        self.writeCommandFile( process=self.process, masses=masses )
         # then run madgraph5
-        self.execute ( self.slhafile, process, masses )
+        self.execute ( self.slhafile, masses )
         self.unlink ( self.slhafile )
 
     def unlink ( self, f ):
@@ -127,16 +127,6 @@ class MG5Wrapper:
             return
         if os.path.exists ( f ):
             subprocess.getoutput ( "rm -rf %s" % f )
-            # os.unlink ( f )
-
-    #def move(self, process, masses ):
-    #    """ Move the output to a different location """
-    #    source = process
-    #    dest = bakeryHelpers.dirName ( process, masses )
-    #    if os.path.exists ( dest ):
-    #        subprocess.getoutput ( "rm -rf %s" % dest )
-    #    print ( "moving %s to %s" % ( source, dest ) )
-    #    shutil.move ( source, dest )
 
     def exe ( self, cmd ):
         self.msg ( "now execute: %s" % cmd )
@@ -151,8 +141,8 @@ class MG5Wrapper:
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
         # self.msg ( " `- %s ... %s" % ( ret[:maxLength/2-1], ret[-maxLength/2-1:] ) )
 
-    def execute ( self, slhaFile, process, masses ):
-        templatefile = self.templateDir + '/MG5_Process_Cards/'+process+'.txt'
+    def execute ( self, slhaFile, masses ):
+        templatefile = self.templateDir + '/MG5_Process_Cards/'+self.topo+'.txt'
         if not os.path.isfile( templatefile ):
             self.error ( "The process card %s does not exist." % templatefile )
         f=open(templatefile,"r")
@@ -162,7 +152,23 @@ class MG5Wrapper:
         f=open(tempf,"w")
         for line in lines:
             f.write ( line )
-        Dir = bakeryHelpers.dirName ( process, masses )
+        if self.njets > 0:
+            for line in lines:
+                if "generate" in line:
+                    line = line.replace ( "generate ", "add process " )
+                    f.write ( line.strip() + " j\n" )
+        if self.njets > 1:
+            for line in lines:
+                if "generate" in line:
+                    line = line.replace ( "generate ", "add process " )
+                    f.write ( line.strip() + " j j\n" )
+        if self.njets > 2:
+            for line in lines:
+                if "generate" in line:
+                    line = line.replace ( "generate ", "add process " )
+                    f.write ( line.strip() + " j j j\n" )
+
+        Dir = bakeryHelpers.dirName ( self.process, masses )
         f.write ( "output %s\n" % Dir )
         f.close()
         if os.path.exists ( Dir ):
