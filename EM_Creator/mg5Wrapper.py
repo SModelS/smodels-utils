@@ -53,25 +53,23 @@ class MG5Wrapper:
         """ this method writes the pythia card for within mg5.
         :param process: fixme (eg T2_1jet)
         """
-        filename = "run_card.dat"
+        self.runcard = tempfile.mktemp ( prefix="run", suffix=".card", dir="./" )
         # filename = "%s/Cards/run_card.dat" % process
-        self.debug ( "writing pythia run card %s" % filename )
-        if os.path.exists ( filename ):
-            os.unlink ( filename )
+        self.debug ( "writing pythia run card %s" % self.runcard )
         templatefile = self.templateDir+'/template_run_card.dat'
         if not os.path.exists ( templatefile ):
             self.error ( "cannot find %s" % templatefile )
         tfile = open( templatefile,'r')
         lines = tfile.readlines()
         tfile.close()
-        g = open ( filename, "w" )
+        g = open ( self.runcard, "w" )
         for line in lines:
             for k,v in self.mgParams.items():
                 if k in line:
                     line = line.replace("@@%s@@" % k,v)
             g.write ( line )
         g.close()
-        self.info ( "wrote run card %s" % filename )
+        self.info ( "wrote run card %s" % self.runcard )
 
     def writeCommandFile ( self, process = "", masses = None ):
         """ this method writes the commands file for mg5.
@@ -142,6 +140,9 @@ class MG5Wrapper:
         # self.msg ( " `- %s ... %s" % ( ret[:maxLength/2-1], ret[-maxLength/2-1:] ) )
 
     def execute ( self, slhaFile, masses ):
+        if self.hasHEPMC ( masses ):
+            self.info ( "hepmc file for %s exists. skipping." % str(masses) )
+            return
         templatefile = self.templateDir + '/MG5_Process_Cards/'+self.topo+'.txt'
         if not os.path.isfile( templatefile ):
             self.error ( "The process card %s does not exist." % templatefile )
@@ -177,14 +178,24 @@ class MG5Wrapper:
         cmd = "python2 %s %s" % ( self.executable, tempf )
         self.exe ( cmd )
         ## copy slha file
-        shutil.copyfile(slhaFile, Dir+'/Cards/param_card.dat' )
-        shutil.copyfile("run_card.dat", Dir+'/Cards/run_card.dat' )
+        shutil.move(slhaFile, Dir+'/Cards/param_card.dat' )
+        shutil.move(self.runcard, Dir+'/Cards/run_card.dat' )
         if (os.path.isdir(Dir+'/Events/run_01')):
             shutil.rmtree(Dir+'/Events/run_01')
         cmd = "python2 %s %s" % ( self.executable, self.commandfile )
         self.exe ( cmd )
         self.unlink ( self.commandfile )
         self.unlink ( tempf )
+
+    def hasHEPMC ( self, masses ):
+        """ does it have a valid HEPMC file? if yes, then skip the point """
+        hepmcfile = bakeryHelpers.dirName(self.process,masses)+"/Events/run_01/tag_1_pythia8_events.hepmc.gz"
+        if not os.path.exists ( hepmcfile ):
+            return False
+        if os.stat ( hepmcfile ).st_size < 100:
+            ## too small to be real
+            return False
+        return True
 
 if __name__ == "__main__":
     import argparse
@@ -208,11 +219,11 @@ if __name__ == "__main__":
                              type=str, default=mdefault )
     args = argparser.parse_args()
     if args.clean:
-        subprocess.getoutput ( "rm -rf mg5cmd* mg5proc* tmp*slha" )
+        subprocess.getoutput ( "rm -rf mg5cmd* mg5proc* tmp*slha run*card" )
         print ( "Cleaned temporary files." )
         sys.exit()
     if args.clean_all:
-        subprocess.getoutput ( "rm -rf mg5cmd* mg5proc* tmp*slha T*jet*" )
+        subprocess.getoutput ( "rm -rf mg5cmd* mg5proc* tmp*slha T*jet* run*card" )
         print ( "Cleaned temporary files." )
         sys.exit()
     masses = bakeryHelpers.parseMasses ( args.masses, filterOrder=True )
