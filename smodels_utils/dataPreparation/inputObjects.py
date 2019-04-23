@@ -34,6 +34,17 @@ hscp=False ## central switch for smodels v1.1 versus smodels v1.2
 if version()[:3]=="1.2" or version()[0]=="2":
     hscp=True
 ## smodels v1.2 has final states for hscp patch
+
+def getSignalRegionsEMBaked ( filename ):
+    """ from an embaked file, get the names of the signal regions """
+    ret = set()
+    f=open( filename,"r")
+    values=list(eval(f.read()).values())
+    f.close()
+    for v in values:
+        for k in v:
+            ret.add(k)
+    return ret
                             
 class Locker(object):
 
