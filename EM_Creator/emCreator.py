@@ -109,8 +109,19 @@ if __name__ == "__main__":
             effs[k][m]=v
     print ( effs )
     for ana,values in effs.items():
-        fname = "%s.embaked" % ana
+        fname = "%s.%s.embaked" % (ana, args.topo )
         print ( "baking %s" % fname )
         f=open(fname,"w")
         f.write ( "%s\n" % values )
         f.close()
+        sqrts = 13
+        experiment = "CMS"
+        if "atlas" in ana.lower():
+            experiment = "ATLAS"
+        sana = ana.replace("_","-").replace("atlas","ATLAS").replace("susy","SUSY")
+        Dirname = "../../smodels-database/%dTeV/%s/%s-eff/orig/" % ( sqrts, experiment, sana )
+        if os.path.exists (Dirname):
+            dest = "%s/%s.embaked" % ( Dirname, args.topo )
+            print ( "Copying embaked to %s" % dest )
+            cmd = "cp %s %s" % ( fname, dest )
+            subprocess.getoutput ( cmd )
