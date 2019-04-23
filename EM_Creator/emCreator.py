@@ -32,6 +32,11 @@ class emCreator:
                    colorama.Fore.RESET ) )
         sys.exit()
 
+    def getStatistics ( self ):
+        ### obtain nobs, nb, etc from the PAD info files, e.g.
+        ### ma5/tools/PAD/Build/SampleAnalyzer/User/Analyzer/atlas_susy_2016_07.info
+        return { "nobs": 5 }
+
     def extract ( self, masses ):
         topo = self.topo
         njets = self.njets
