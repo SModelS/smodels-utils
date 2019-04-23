@@ -490,6 +490,25 @@ class DataHandler(object):
                 yield fr
             csvfile.close()
 
+    def embaked(self):
+        """
+        iterable method
+        preprocessing python dictionaries as defined by the em bakery
+        floats
+
+        :yield: list with values as foat, one float for every column
+        """
+        SR = self.objectName
+        with open(self.path) as f:
+            D=eval(f.read())
+        for pt,values in D.items():
+            ret = list(pt)
+            eff = 0.
+            if SR in values.keys():
+                eff = values[SR]
+            ret += [ eff ]
+            yield ret
+        
 
     def effi(self):
 
