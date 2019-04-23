@@ -35,7 +35,19 @@ class emCreator:
     def getStatistics ( self ):
         ### obtain nobs, nb, etc from the PAD info files, e.g.
         ### ma5/tools/PAD/Build/SampleAnalyzer/User/Analyzer/atlas_susy_2016_07.info
-        return { "nobs": 5 }
+        import xml.etree.ElementTree as ET
+        Dir = "ma5/tools/PAD/Build/SampleAnalyzer/User/Analyzer/"
+        tree = ET.parse("%s/atlas_susy_2016_07.info" % Dir )
+        root = tree.getroot()
+        children = root.getchildren()
+        ret = {}
+        for child in children:
+            if child.get("type") != "signal":
+                continue
+            Id = child.get("id" )
+            signal={}
+            ret[Id]=signal
+        return ret
 
     def extract ( self, masses ):
         topo = self.topo
