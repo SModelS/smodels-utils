@@ -108,3 +108,9 @@ if __name__ == "__main__":
                 effs[k]={}
             effs[k][m]=v
     print ( effs )
+    for ana,values in effs.items():
+        fname = "%s.embaked" % ana
+        print ( "baking %s" % fname )
+        f=open(fname,"w")
+        f.write ( "%s\n" % values )
+        f.close()
