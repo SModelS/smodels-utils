@@ -13,12 +13,13 @@ import multiprocessing
 import bakeryHelpers
 
 class MG5Wrapper:
-    def __init__ ( self, nevents, topo, njets, keep, ver="2_6_5" ):
+    def __init__ ( self, nevents, topo, njets, keep, rerun, ver="2_6_5" ):
         """
         :param ver: version of mg5
         """
         self.topo = topo
         self.keep = keep
+        self.rerun = rerun
         self.njets = njets
         self.mg5install = "./mg5"
         self.ver = ver
@@ -141,8 +142,11 @@ class MG5Wrapper:
 
     def execute ( self, slhaFile, masses ):
         if self.hasHEPMC ( masses ):
-            self.info ( "hepmc file for %s exists. skipping." % str(masses) )
-            return
+            if not self.rerun:
+                self.info ( "hepmc file for %s exists. skipping." % str(masses) )
+                return
+            else:
+                self.info ( "hepmc file for %s exists, but rerun requested." % str(masses) )
         templatefile = self.templateDir + '/MG5_Process_Cards/'+self.topo+'.txt'
         if not os.path.isfile( templatefile ):
             self.error ( "The process card %s does not exist." % templatefile )
@@ -215,6 +219,8 @@ if __name__ == "__main__":
                              action="store_true" )
     argparser.add_argument ( '-C', '--clean_all', help='clean all temporary files, even Tx directories, then quit',
                              action="store_true" )
+    argparser.add_argument ( '-r', '--rerun', help='force rerun, even if there is a summary file already',
+                             action="store_true" )
     mdefault = "(500,510,10),(100,110,10)"
     argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted [%s]' % mdefault,
                              type=str, default=mdefault )
@@ -230,7 +236,7 @@ if __name__ == "__main__":
     masses = bakeryHelpers.parseMasses ( args.masses, filterOrder=True )
     nm = len(masses)
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
-    mg5 = MG5Wrapper( args.nevents, args.topo, args.njets, args.keep )
+    mg5 = MG5Wrapper( args.nevents, args.topo, args.njets, args.keep, args.rerun )
     # mg5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
     djobs = int(len(masses)/nprocesses)
 

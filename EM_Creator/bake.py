@@ -15,7 +15,7 @@ from emCreator import emCreator
 
 def main():
     topology = "T2tt"
-    analysis="atlas_sus_2016_07"
+    analysis="atlas_susy_2016_07"
     nevents = 10
     print ( "baking %s:%s" % (analysis,topology ) )
     motherRange = numpy.arange(500, 2500, 50 )
