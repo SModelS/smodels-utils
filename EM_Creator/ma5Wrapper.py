@@ -13,12 +13,13 @@ import multiprocessing
 import bakeryHelpers
 
 class MA5Wrapper:
-    def __init__ ( self, topo, njets, ver="1.7" ):
+    def __init__ ( self, topo, njets, rerun, ver="1.7" ):
         """ 
         :param ver: version of ma5
         """
         self.topo = topo
         self.njets = njets
+        self.rerun = rerun
         self.ma5install = "./ma5/"
         self.ver = ver
         if not os.path.isdir ( self.ma5install ):
@@ -77,6 +78,13 @@ class MA5Wrapper:
         self.commandfile = tempfile.mktemp ( prefix="ma5cmd", dir="./" )
         self.teefile = tempfile.mktemp ( prefix="ma5", suffix=".run", dir="/tmp" )
         process = "%s_%djet" % ( self.topo, self.njets )
+        dirname = bakeryHelpers.dirName ( process, masses )
+        summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
+        if os.path.exists ( summaryfile ) and os.stat(summaryfile).st_size>10:
+            print ( "It seems like there is already a summary file %s" % summaryfile )
+            if not self.rerun:
+                print ( "Skip it." )
+                return
         self.writeRecastingCard ()
         # then write command file
         Dir = bakeryHelpers.dirName ( process, masses ) 
@@ -125,6 +133,8 @@ if __name__ == "__main__":
                              type=str, default=mdefault )
     argparser.add_argument ( '-p', '--nprocesses', help='number of process to run in parallel. 0 means 1 per CPU [1]',
                              type=int, default=1 )
+    argparser.add_argument ( '-r', '--rerun', help='force rerun, even if there is a summary file already',
+                             action="store_true" )
     args = argparser.parse_args()
     if args.masses == "all":
         masses = bakeryHelpers.getListOfMasses ( args.topo, args.njets )
@@ -132,7 +142,7 @@ if __name__ == "__main__":
         masses = bakeryHelpers.parseMasses ( args.masses )
     nm = len(masses)
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
-    ma5 = MA5Wrapper( args.topo, args.njets )
+    ma5 = MA5Wrapper( args.topo, args.njets, args.rerun )
     # ma5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
     djobs = int(len(masses)/nprocesses)
 
