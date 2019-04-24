@@ -32,20 +32,22 @@ class emCreator:
                    colorama.Fore.RESET ) )
         sys.exit()
 
-    def getStatistics ( self ):
+    def getStatistics ( self, ana = "atlas_susy_2016_07" ):
         ### obtain nobs, nb, etc from the PAD info files, e.g.
         ### ma5/tools/PAD/Build/SampleAnalyzer/User/Analyzer/atlas_susy_2016_07.info
         import xml.etree.ElementTree as ET
         Dir = "ma5/tools/PAD/Build/SampleAnalyzer/User/Analyzer/"
-        tree = ET.parse("%s/atlas_susy_2016_07.info" % Dir )
+        tree = ET.parse("%s/%s.info" % ( Dir, ana ) )
         root = tree.getroot()
-        children = root.getchildren()
         ret = {}
-        for child in children:
+        for child in root:
             if child.get("type") != "signal":
                 continue
             Id = child.get("id" )
             signal={}
+            for vk in child:
+                if vk.tag in [ "nobs", "nb", "deltanb" ]:
+                    signal[vk.tag]=float(vk.text)
             ret[Id]=signal
         return ret
 
@@ -137,8 +139,19 @@ if __name__ == "__main__":
             experiment = "ATLAS"
         sana = ana.replace("_","-").replace("atlas","ATLAS").replace("susy","SUSY")
         Dirname = "../../smodels-database/%dTeV/%s/%s-eff/orig/" % ( sqrts, experiment, sana )
+        stats = creator.getStatistics ( ana )
+        # print ( "Statistics for", ana, ":", stats )
+        print ( "Obtained statistics for", ana )
+
         if os.path.exists (Dirname):
             dest = "%s/%s.embaked" % ( Dirname, args.topo )
             print ( "Copying embaked to %s" % dest )
             cmd = "cp %s %s" % ( fname, dest )
             subprocess.getoutput ( cmd )
+            statsfile = "%s/statsEM.py" % (Dirname )
+            f = open ( statsfile, "w" )
+            f.write ( "%s\n" % stats )
+            f.close()
+            print ( "Wrote stats to %s" % statsfile )
+
+    

@@ -36,7 +36,7 @@ if version()[:3]=="1.2" or version()[0]=="2":
 ## smodels v1.2 has final states for hscp patch
 
 def getSignalRegionsEMBaked ( filename ):
-    """ from an embaked file, get the names of the signal regions """
+    """ from an emBaked file, retrieve the names of the signal regions """
     ret = set()
     f=open( filename,"r")
     values=list(eval(f.read()).values())
@@ -45,6 +45,17 @@ def getSignalRegionsEMBaked ( filename ):
         for k in v:
             ret.add(k)
     return ret
+
+def getStatsEMBaked ( ):
+    """ retrieve the stats from an emBaked stats file """
+    statsfile = "orig/statsEM.py"
+    if not os.path.exists ( statsfile ):
+        print ( "ERROR: cannot find %s" % statsfile )
+        return None
+    f=open( statsfile )
+    g=eval(f.read())
+    f.close()
+    return g
                             
 class Locker(object):
 
