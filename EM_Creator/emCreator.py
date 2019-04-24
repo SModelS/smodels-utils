@@ -58,8 +58,9 @@ class emCreator:
         dirname = bakeryHelpers.dirName ( process, masses )
         summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
         if not os.path.exists ( summaryfile):
-            self.error ( "could not find ma5 summary file %s. Skipping." % summaryfile )
-            return {}
+            self.info ( "could not find ma5 summary file %s. Skipping." % summaryfile )
+            ret = {}
+            return ret
         f=open(summaryfile,"r")
         lines=f.readlines()
         f.close()
@@ -126,7 +127,7 @@ if __name__ == "__main__":
             if not k in effs:
                 effs[k]={}
             effs[k][m]=v
-    print ( effs )
+    print ( "I have efficiencies for %s" % ",".join(list(effs.keys())) )
     for ana,values in effs.items():
         fname = "%s.%s.embaked" % (ana, args.topo )
         print ( "baking %s" % fname )

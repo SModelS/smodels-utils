@@ -73,7 +73,7 @@ class MA5Wrapper:
     def run( self, masses, pid=None ):
         """ Run MA5 over an hepmcfile, specifying the process """
         if pid!=None:
-            time.sleep(pid*10) ## all the compiling ...
+            time.sleep(pid*30) ## all the compiling ...
         self.commandfile = tempfile.mktemp ( prefix="ma5cmd", dir="./" )
         self.teefile = tempfile.mktemp ( prefix="ma5", suffix=".run", dir="/tmp" )
         process = "%s_%djet" % ( self.topo, self.njets )
@@ -87,8 +87,12 @@ class MA5Wrapper:
             sys.exit()
         print ( "Found hepmcfile at", hepmcfile )
         self.writeCommandFile( hepmcfile, process, masses )
+        # tempdir = tempfile.mkdtemp(dir="./",prefix="ma5dir") 
+        tempdir = "ma5_%s" % Dir
+        subprocess.getoutput ( "mkdir %s" % tempdir )
+        subprocess.getoutput ( "cp -r ma5.template/* %s" % tempdir )
         # then run madgraph5
-        os.chdir ( "ma5/" )
+        os.chdir ( tempdir )
         cmd = "%s -R -s %s 2>&1 | tee %s" % (self.executable, \
                 self.commandfile, self.teefile )
         self.exe ( cmd )
@@ -96,7 +100,14 @@ class MA5Wrapper:
             subprocess.getoutput ( "rm -r %s" % self.commandfile )
         if os.path.exists ( self.teefile ):
             subprocess.getoutput ( "rm -r %s" % self.teefile )
-        #shutil.move ( "ANALYSIS_0", "ANA_%s" % Dir )
+        source = "ANA_%s" % Dir
+        dest = "../ma5/%s" % source
+        if os.path.exists ( dest ):
+            print ( "Destination %s exists. I remove it." % dest )
+            subprocess.getoutput ( "rm -rf %s" % dest )
+        if not os.path.exists ( source ):
+            print ( "Source dir %s does not exist." % source )
+        shutil.move ( "ANA_%s" % Dir, "../ma5/" )
         os.chdir ( "../" )
 
     def exe ( self, cmd ):
