@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 
-import glob
+import glob, time
+
+def pprint ( text ):
+    print ( text )
+    f=open("logs/prod_%s.txt" % time.asctime().replace(" ","_"), "a" )
+    f.write ( text +"\n" )
+    f.close()
 
 def ma5():
     ma5Files = glob.glob ( "ma5/ANA_T**/Output/CLs_output_summary.dat" )
@@ -11,9 +17,9 @@ def ma5():
         if not process in ma5Stats:
             ma5Stats[process]=0
         ma5Stats[process]+=1
-    print ( "ma5 production:" )
+    pprint ( "ma5 production:" )
     for k,v in ma5Stats.items():
-        print ( " - %s: %s summary.dat files" % ( k, v ) )
+        pprint ( " - %s: %s summary.dat files" % ( k, v ) )
 
 def mg5():
     mg5Files = glob.glob ( "T*jet.*/Events/run_01/tag_1_pythia8_events.hepmc.gz" )
@@ -25,9 +31,9 @@ def mg5():
         if not process in mg5Stats:
             mg5Stats[process]=0
         mg5Stats[process]+=1
-    print ( "mg5 production:" )
+    pprint ( "mg5 production:" )
     for k,v in mg5Stats.items():
-        print ( " - %s: %s hepmc files" % ( k, v ) )
+        pprint ( " - %s: %s hepmc files" % ( k, v ) )
 
 def main():
     mg5()
