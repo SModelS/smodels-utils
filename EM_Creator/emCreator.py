@@ -8,7 +8,7 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 """
 
-import os, sys, colorama, subprocess, shutil
+import os, sys, colorama, subprocess, shutil, time
 import bakeryHelpers
 
 class emCreator:
@@ -129,9 +129,17 @@ if __name__ == "__main__":
             effs[k][m]=v
     print ( "I have efficiencies for %s" % ",".join(list(effs.keys())) )
     for ana,values in effs.items():
+        if len(values.keys()) == 0:
+            continue
         fname = "%s.%s.embaked" % (ana, args.topo )
-        print ( "baking %s" % fname )
+        print ( "baking %s: %d points." % ( fname, len(values) ) )
+        SRs = set()
+        for k,v in values.items():
+            for sr in v.keys():
+                SRs.add(sr)
         f=open(fname,"w")
+        f.write ( "# EM-Baked %s. %d points, %d signal regions.\n" % \
+                   ( time.asctime(), len(values.keys()), len(SRs) ) )
         f.write ( "%s\n" % values )
         f.close()
         sqrts = 13
