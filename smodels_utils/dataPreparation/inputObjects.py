@@ -9,6 +9,7 @@
 """
 
 import sys
+import os
 import string
 from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round_list
