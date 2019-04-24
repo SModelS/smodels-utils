@@ -101,8 +101,10 @@ class MA5Wrapper:
         # tempdir = tempfile.mkdtemp(dir="./",prefix="ma5dir") 
         tempdir = "ma5_%s" % Dir
         a=subprocess.getoutput ( "mkdir %s" % tempdir )
-        print ( "mkdir %s: %s" % ( tempdir, a ) )
+        # print ( "mkdir %s: %s" % ( tempdir, a ) )
         a = subprocess.getoutput ( "cp -r ma5.template/* %s" % tempdir )
+        a = subprocess.getoutput ( "cp -r ma5/ma5cmd* %s" % tempdir )
+        a = subprocess.getoutput ( "cp -r ma5/recast* %s" % tempdir )
         # then run madgraph5
         os.chdir ( tempdir )
         cmd = "%s -R -s %s 2>&1 | tee %s" % (self.executable, \
