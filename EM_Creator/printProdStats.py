@@ -7,7 +7,7 @@ def ma5():
     ma5Stats={}
     for f in ma5Files:
         p1,p2 = f.find("ANA_"),f.find("jet")
-        process = f[p1:p2]
+        process = f[p1+4:p2]
         if not process in ma5Stats:
             ma5Stats[process]=0
         ma5Stats[process]+=1
