@@ -151,21 +151,22 @@ class MG5Wrapper:
         f.close()
         tempf = tempfile.mktemp(prefix="mg5proc",dir="./")
         f=open(tempf,"w")
+        f.write ( "import model_v4 mssm\n" )
         for line in lines:
             f.write ( line )
         if self.njets > 0:
             for line in lines:
-                if "generate" in line:
+                if "generate" in line or "add process" in line:
                     line = line.replace ( "generate ", "add process " )
                     f.write ( line.strip() + " j\n" )
         if self.njets > 1:
             for line in lines:
-                if "generate" in line:
+                if "generate" in line or "add process" in line:
                     line = line.replace ( "generate ", "add process " )
                     f.write ( line.strip() + " j j\n" )
         if self.njets > 2:
             for line in lines:
-                if "generate" in line:
+                if "generate" in line or "add process" in line:
                     line = line.replace ( "generate ", "add process " )
                     f.write ( line.strip() + " j j j\n" )
 
