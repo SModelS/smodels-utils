@@ -125,7 +125,7 @@ class MA5Wrapper:
         os.chdir ( "../" )
 
     def exe ( self, cmd ):
-        self.msg ( "now execute: %s" % cmd )
+        self.msg ( "now execute: %s/%s" % (os.getcwd(), cmd ) )
         ret = subprocess.getoutput ( cmd )
         if len(ret)==0:
             return
