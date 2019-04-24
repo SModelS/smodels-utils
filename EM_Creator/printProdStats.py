@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+
+import glob
+
+def ma5():
+    ma5Files = glob.glob ( "ma5/ANA_T**/Output/CLs_output_summary.dat" )
+    ma5Stats={}
+    for f in ma5Files:
+        p1,p2 = f.find("ANA_"),f.find("jet")
+        process = f[p1:p2]
+        if not process in ma5Stats:
+            ma5Stats[process]=0
+        ma5Stats[process]+=1
+    print ( "ma5 production:" )
+    for k,v in ma5Stats.items():
+        print ( " - %s: %s summary.dat files" % ( k, v ) )
+
+def mg5():
+    mg5Files = glob.glob ( "T*jet.*/Events/run_01/tag_1_pythia8_events.hepmc.gz" )
+    mg5Stats={}
+    for f in mg5Files:
+        p1,p2 = f.find("_"),f.find("jet")
+        process = f[:p2]
+        #topo,njets = f[:p1],f[p1+1:p2]
+        if not process in mg5Stats:
+            mg5Stats[process]=0
+        mg5Stats[process]+=1
+    print ( "mg5 production:" )
+    for k,v in mg5Stats.items():
+        print ( " - %s: %s hepmc files" % ( k, v ) )
+
+def main():
+    mg5()
+    ma5()
+
+if __name__ == "__main__":
+    main()
