@@ -49,7 +49,9 @@ class MA5Wrapper:
     def writeRecastingCard ( self ):
         """ this method writes the recasting card, which defines which analyses
         are being recast. """
-        filename = self.ma5install + "recasting.dat" 
+        self.recastfile = tempfile.mktemp ( dir=self.ma5install, prefix="recast" )
+        filename = self.recastfile
+        # filename = self.ma5install + "recasting.dat" 
         self.debug ( "writing recasting card %s" % filename )
         if os.path.exists ( filename ):
             os.unlink ( filename )
@@ -66,15 +68,16 @@ class MA5Wrapper:
         """
         f = open(self.ma5install + "/" + self.commandfile,'w')
         f.write('set main.recast = on\n')
-        f.write('set main.recast.card_path = recasting.dat\n' )
+        filename = self.recastfile.replace(self.ma5install,"./")
+        f.write('set main.recast.card_path = %s\n' % filename )
         f.write('import '+hepmcfile+'\n')
         f.write('submit ANA_%s\n' % bakeryHelpers.dirName(process,masses)  )
         f.close()
 
     def run( self, masses, pid=None ):
         """ Run MA5 over an hepmcfile, specifying the process """
-        if pid!=None:
-            time.sleep(pid*30) ## all the compiling ...
+        #if pid!=None:
+        #    time.sleep(pid*30) ## all the compiling ...
         self.commandfile = tempfile.mktemp ( prefix="ma5cmd", dir="./" )
         self.teefile = tempfile.mktemp ( prefix="ma5", suffix=".run", dir="/tmp" )
         process = "%s_%djet" % ( self.topo, self.njets )
@@ -97,8 +100,9 @@ class MA5Wrapper:
         self.writeCommandFile( hepmcfile, process, masses )
         # tempdir = tempfile.mkdtemp(dir="./",prefix="ma5dir") 
         tempdir = "ma5_%s" % Dir
-        subprocess.getoutput ( "mkdir %s" % tempdir )
-        subprocess.getoutput ( "cp -r ma5.template/* %s" % tempdir )
+        a=subprocess.getoutput ( "mkdir %s" % tempdir )
+        print ( "mkdir %s: %s" % ( tempdir, a ) )
+        a = subprocess.getoutput ( "cp -r ma5.template/* %s" % tempdir )
         # then run madgraph5
         os.chdir ( tempdir )
         cmd = "%s -R -s %s 2>&1 | tee %s" % (self.executable, \
