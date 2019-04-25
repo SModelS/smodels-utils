@@ -229,6 +229,8 @@ def main():
                              type=str, default="T2" )
     argparser.add_argument ( '-k', '--keep', help='keep temporary files',
                              action="store_true" )
+    argparser.add_argument ( '--show', help='show production stats',
+                             action="store_true" )
     argparser.add_argument ( '-a', '--ma5', help='run also ma5 after producing the events',
                              action="store_true" )
     argparser.add_argument ( '-c', '--clean', help='clean all temporary files, then quit',
@@ -247,6 +249,10 @@ def main():
     argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted [%s]' % mdefault,
                              type=str, default=mdefault )
     args = argparser.parse_args()
+    if args.show:
+        import printProdStats
+        printProdStats.main()
+        sys.exit()
     if args.clean:
         subprocess.getoutput ( "rm -rf mg5cmd* mg5proc* tmp*slha run*card" )
         print ( "Cleaned temporary files." )
