@@ -30,7 +30,7 @@ class MA5Wrapper:
             self.info ( "cannot find ma5 installation at %s" % self.ma5install )
             self.exe ( "ma5/make.py" )
         self.templateDir = "templates/"
-        self.info ( "initialised" )
+        # self.info ( "initialised" )
 
     def info ( self, *msg ):
         print ( "%s[ma5Wrapper] %s%s" % ( colorama.Fore.YELLOW, " ".join ( msg ), \
@@ -139,6 +139,13 @@ class MA5Wrapper:
             return
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
 
+    def clean ( self ):
+        subprocess.getoutput ( "rm -rf ma5.template/recast*" )
+        subprocess.getoutput ( "rm -rf ma5.template/ma5cmd*" )
+    def clean_all ( self ):
+        self.clean()
+        subprocess.getoutput ( "rm -rf ma5/ANA*" )
+
 if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(description='madanalysis5 runner.')
@@ -148,6 +155,10 @@ if __name__ == "__main__":
                              type=int, default=0 )
     argparser.add_argument ( '-t', '--topo', help='topology [T2]',
                              type=str, default="T2" )
+    argparser.add_argument ( '-c', '--clean', help='clean all temporary files, then quit',
+                             action="store_true" )
+    argparser.add_argument ( '-C', '--clean_all', help='clean all temporary files, even results directories, then quit',
+                             action="store_true" )
     mdefault = "all"
     argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted. "all" means: search for mg5 directories, and consider all. [%s]' % mdefault,
                              type=str, default=mdefault )
@@ -156,6 +167,14 @@ if __name__ == "__main__":
     argparser.add_argument ( '-r', '--rerun', help='force rerun, even if there is a summary file already',
                              action="store_true" )
     args = argparser.parse_args()
+    if args.clean:
+        ma5 = MA5Wrapper( args.topo, args.njets, args.rerun )
+        ma5.clean()
+        sys.exit()
+    if args.clean_all:
+        ma5 = MA5Wrapper( args.topo, args.njets, args.rerun )
+        ma5.clean_all()
+        sys.exit()
     if args.masses == "all":
         masses = bakeryHelpers.getListOfMasses ( args.topo, args.njets )
     else:

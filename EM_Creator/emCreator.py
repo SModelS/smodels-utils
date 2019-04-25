@@ -102,13 +102,15 @@ class emCreator:
             return
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
 
-if __name__ == "__main__":
+def main():
     import argparse
     argparser = argparse.ArgumentParser(description='efficiency map extractor.')
     argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
                              type=int, default=0 )
     argparser.add_argument ( '-t', '--topo', help='topology [T2]',
                              type=str, default="T2" )
+    argparser.add_argument ( '-c', '--copy', help='copy embaked file to smodels-database',
+                             action="store_true" )
     argparser.add_argument ( '-a', '--analyses', help='analyses, comma separated [atlas_sus_2016_07]',
                              type=str, default="atlas_susy_2016_07" )
     mdefault = "all"
@@ -150,9 +152,9 @@ if __name__ == "__main__":
         Dirname = "../../smodels-database/%dTeV/%s/%s-eff/orig/" % ( sqrts, experiment, sana )
         stats = creator.getStatistics ( ana )
         # print ( "Statistics for", ana, ":", stats )
-        print ( "Obtained statistics for", ana )
+        print ( "Obtained statistics for", ana, "in", fname )
 
-        if os.path.exists (Dirname):
+        if args.copy and os.path.exists (Dirname):
             dest = "%s/%s.embaked" % ( Dirname, args.topo )
             print ( "Copying embaked to %s" % dest )
             cmd = "cp %s %s" % ( fname, dest )
@@ -163,4 +165,5 @@ if __name__ == "__main__":
             f.close()
             print ( "Wrote stats to %s" % statsfile )
 
-    
+if __name__ == "__main__":
+    main()

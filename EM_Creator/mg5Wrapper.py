@@ -233,6 +233,8 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-c', '--clean', help='clean all temporary files, then quit',
                              action="store_true" )
+    argparser.add_argument ( '-b', '--bake', help='call emCreator, bake .embaked files',
+                             action="store_true" )
     argparser.add_argument ( '-C', '--clean_all', help='clean all temporary files, even Tx directories, then quit',
                              action="store_true" )
     argparser.add_argument ( '-r', '--rerun', help='force rerun, even if there is a summary file already',
@@ -274,6 +276,10 @@ def main():
         jobs.append ( p )
         p.start()
     # mg5.run( [ 500, 100 ] )
+    if args.bake:
+        from emCreator import emCreator
+        analyses = "atlas_susy_2016_07"
+        # creator = emCreator (  analyses, args.topo, args.njets )
 
 if __name__ == "__main__":
     main()
