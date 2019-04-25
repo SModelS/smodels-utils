@@ -20,7 +20,10 @@ def ma5():
             ma5Stats[process]=0
         ma5Stats[process]+=1
     pprint ( "ma5 production:" )
-    for k,v in ma5Stats.items():
+    keys = list ( ma5Stats.keys() )
+    keys.sort()
+    for k in keys:
+        v=ma5Stats[k]
         pprint ( " - %s: %s summary.dat files" % ( k, v ) )
 
 def mg5():
@@ -34,7 +37,10 @@ def mg5():
             mg5Stats[process]=0
         mg5Stats[process]+=1
     pprint ( "mg5 production:" )
-    for k,v in mg5Stats.items():
+    keys = list ( mg5Stats.keys() )
+    keys.sort()
+    for k in keys:
+        v=mg5Stats[k]
         pprint ( " - %s: %s hepmc files" % ( k, v ) )
 
 def main():
