@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-import glob, time
+import glob, time, subprocess, os
 
 def pprint ( text ):
+    if not os.path.exists ( "logs/" ):
+        subprocess.getoutput ( "mkdir logs" )
     print ( text )
     f=open("logs/prod_%s.txt" % time.asctime().replace(" ","_"), "a" )
     f.write ( text +"\n" )
