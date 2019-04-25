@@ -13,13 +13,14 @@ import multiprocessing
 import bakeryHelpers
 
 class MG5Wrapper:
-    def __init__ ( self, nevents, topo, njets, keep, rerun, ver="2_6_5" ):
+    def __init__ ( self, nevents, topo, njets, keep, rerun, ma5, ver="2_6_5" ):
         """
         :param ver: version of mg5
         """
         self.topo = topo
         self.keep = keep
         self.rerun = rerun
+        self.ma5 = ma5
         self.njets = njets
         self.mg5install = "./mg5"
         self.ver = ver
@@ -119,6 +120,16 @@ class MG5Wrapper:
         # then run madgraph5
         self.execute ( self.slhafile, masses )
         self.unlink ( self.slhafile )
+        self.runMA5 ( masses )
+
+    def runMA5 ( self, masses ):
+        """ run ma5, if desired """
+        if not self.ma5:
+            return
+        from ma5Wrapper import MA5Wrapper
+        ma5 = MA5Wrapper ( args.topo, args.njets, args.rerun )
+        print ( "[mg5Wrapper] now call ma5Wrapper" )
+        ma5.run ( masses )
 
     def unlink ( self, f ):
         """ remove a file, if keep is not true """
@@ -138,7 +149,6 @@ class MG5Wrapper:
             self.msg ( " `- %s" % ret )
             return
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
-        # self.msg ( " `- %s ... %s" % ( ret[:maxLength/2-1], ret[-maxLength/2-1:] ) )
 
     def execute ( self, slhaFile, masses ):
         if self.hasHEPMC ( masses ):
@@ -189,11 +199,12 @@ class MG5Wrapper:
         if (os.path.isdir(Dir+'/Events/run_01')):
             shutil.rmtree(Dir+'/Events/run_01')
         logfile2 = tempfile.mktemp ()
-        cmd = "python2 %s %s 2>&" % ( self.executable, self.commandfile )
+        cmd = "python2 %s %s 2>&1 | tee %s" % ( self.executable, self.commandfile, logfile2 )
         self.exe ( cmd )
         self.unlink ( self.commandfile )
         self.unlink ( tempf )
         self.unlink ( logfile )
+        self.unlink ( logfile2 )
 
     def hasHEPMC ( self, masses ):
         """ does it have a valid HEPMC file? if yes, then skip the point """
@@ -218,6 +229,8 @@ if __name__ == "__main__":
                              type=str, default="T2" )
     argparser.add_argument ( '-k', '--keep', help='keep temporary files',
                              action="store_true" )
+    argparser.add_argument ( '-a', '--ma5', help='run also ma5 after producing the events',
+                             action="store_true" )
     argparser.add_argument ( '-c', '--clean', help='clean all temporary files, then quit',
                              action="store_true" )
     argparser.add_argument ( '-C', '--clean_all', help='clean all temporary files, even Tx directories, then quit',
@@ -239,7 +252,7 @@ if __name__ == "__main__":
     masses = bakeryHelpers.parseMasses ( args.masses, filterOrder=True )
     nm = len(masses)
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
-    mg5 = MG5Wrapper( args.nevents, args.topo, args.njets, args.keep, args.rerun )
+    mg5 = MG5Wrapper( args.nevents, args.topo, args.njets, args.keep, args.rerun, args.ma5 )
     # mg5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
     djobs = int(len(masses)/nprocesses)
 
