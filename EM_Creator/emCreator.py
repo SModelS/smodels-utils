@@ -142,6 +142,13 @@ def run ( args ):
 
         if args.copy and os.path.exists (Dirname):
             dest = "%s/%s.embaked" % ( Dirname, args.topo )
+            prevN = 0
+            if os.path.exists (dest ):
+                f=open(dest,"r")
+                g=eval(f.read())
+                f.close()
+                prevN=len(g.keys())
+            print ( "Previous number of data points: %d" % prevN )
             print ( "Copying embaked to %s" % dest )
             cmd = "cp %s %s" % ( fname, dest )
             subprocess.getoutput ( cmd )
