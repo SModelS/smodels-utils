@@ -142,6 +142,13 @@ def run ( args ):
 
         if args.copy and os.path.exists (Dirname):
             dest = "%s/%s.embaked" % ( Dirname, args.topo )
+            prevN = 0
+            if os.path.exists (dest ):
+                f=open(dest,"r")
+                g=eval(f.read())
+                f.close()
+                prevN=len(g.keys())
+            print ( "Previous number of data points: %d" % prevN )
             print ( "Copying embaked to %s" % dest )
             cmd = "cp %s %s" % ( fname, dest )
             subprocess.getoutput ( cmd )
@@ -155,7 +162,7 @@ def main():
     import argparse
     argparser = argparse.ArgumentParser(description='efficiency map extractor.')
     argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
-                             type=int, default=0 )
+                             type=int, default=1 )
     argparser.add_argument ( '-t', '--topo', help='topology [T2]',
                              type=str, default="T2" )
     argparser.add_argument ( '-c', '--copy', help='copy embaked file to smodels-database',
