@@ -11,3 +11,4 @@ logs/prod*
 run*card
 MG5_debug
 ME5_debug
+py.py

@@ -180,17 +180,20 @@ class MG5Wrapper:
         if os.path.exists ( Dir ):
             subprocess.getoutput ( "rm -rf %s" % Dir )
         self.info ( "run mg5 for %s" % tempf )
-        cmd = "python2 %s %s" % ( self.executable, tempf )
+        logfile = tempfile.mktemp ()
+        cmd = "python2 %s %s 2>&1 | tee %s" % ( self.executable, tempf, logfile )
         self.exe ( cmd )
         ## copy slha file
         shutil.move(slhaFile, Dir+'/Cards/param_card.dat' )
         shutil.move(self.runcard, Dir+'/Cards/run_card.dat' )
         if (os.path.isdir(Dir+'/Events/run_01')):
             shutil.rmtree(Dir+'/Events/run_01')
-        cmd = "python2 %s %s" % ( self.executable, self.commandfile )
+        logfile2 = tempfile.mktemp ()
+        cmd = "python2 %s %s 2>&" % ( self.executable, self.commandfile )
         self.exe ( cmd )
         self.unlink ( self.commandfile )
         self.unlink ( tempf )
+        self.unlink ( logfile )
 
     def hasHEPMC ( self, masses ):
         """ does it have a valid HEPMC file? if yes, then skip the point """
