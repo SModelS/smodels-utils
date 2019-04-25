@@ -5,6 +5,7 @@
 import sys, subprocess, argparse, os, colorama
 
 def execute(cmd):
+    print ( "[cmd] %s" % " ".join ( cmd ) )
     popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
     for stdout_line in iter(popen.stdout.readline, ""):
         yield stdout_line 
@@ -23,7 +24,7 @@ def gprint ( line ):
 def main():
     import argparse
     argparser = argparse.ArgumentParser(
-            description='Bulk update of many if not all wiki pages')
+            description='Bulk update of all wiki pages. Calls listOfAnalyses.py, ../validation/createWikiPage.py, smsDictionary.py, publishDatabasePickle.py.')
     argparser.add_argument ( '-n', '--non_versioned', 
             help='update the non-versioned files also (eg Validation.md, not just Validation211.md)',
             action='store_true' )
@@ -45,8 +46,13 @@ def main():
     exec ( cmd + [ "-n" ] )
     if A.non_versioned:
         print ( "Update also the non-versioned files" )
-        exec ( [ "./listOfAnalyses.py" ] )
-        exec ( [ "./listOfAnalyses.py", "-n" ] )
+        cmd = [ "./listOfAnalyses.py" ]
+        if A.ignore:
+            cmd += [ "-i" ]
+        exec ( cmd )
+        exec ( cmd + [ "-n" ] )
+        #exec ( [ "./listOfAnalyses.py" ] )
+        #exec ( [ "./listOfAnalyses.py", "-n" ] )
     else:
         print ( "Update only versioned files" )
 
