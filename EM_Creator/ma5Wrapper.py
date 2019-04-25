@@ -122,10 +122,10 @@ class MA5Wrapper:
             print ( "Source dir %s does not exist." % source )
         shutil.move ( "ANA_%s" % Dir, "../ma5/" )
         os.chdir ( "../" )
-        a = subprocess.getoutput ( "rm ma5/ma5cmd* %s" % tempdir )
-        a = subprocess.getoutput ( "rm ma5/recast* %s" % tempdir )
-        a = subprocess.getoutput ( "rm ma5.template/ma5cmd* %s" % tempdir )
-        a = subprocess.getoutput ( "rm ma5.template/recast* %s" % tempdir )
+        a = subprocess.getoutput ( "rm ma5/ma5cmd*" )
+        a = subprocess.getoutput ( "rm ma5/recast*" )
+        # a = subprocess.getoutput ( "rm ma5.template/ma5cmd*" )
+        # a = subprocess.getoutput ( "rm ma5.template/recast*" )
 
     def exe ( self, cmd ):
         self.msg ( "now execute: %s/%s" % (os.getcwd(), cmd ) )
