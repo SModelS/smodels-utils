@@ -127,7 +127,7 @@ class MG5Wrapper:
         if not self.ma5:
             return
         from ma5Wrapper import MA5Wrapper
-        ma5 = MA5Wrapper ( args.topo, args.njets, args.rerun )
+        ma5 = MA5Wrapper ( self.topo, self.njets, self.rerun )
         print ( "[mg5Wrapper] now call ma5Wrapper" )
         ma5.run ( masses )
 
