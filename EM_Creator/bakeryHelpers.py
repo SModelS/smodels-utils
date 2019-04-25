@@ -85,6 +85,21 @@ def getListOfMasses(topo, njets):
         ret.append ( masses )
     return ret
 
+def nRequiredMasses(topo):
+    """ find out how many masses a topology requires """
+    M=set()
+    with open("slha/%s_template.slha" % topo, "r" ) as f:
+        for line in f.readlines():
+            if not "M" in line:
+                continue
+            p = line.find("M")
+            num=line[p+1]
+            if num not in list(map(str,range(6))):
+                continue
+            M.add(num)
+    return len(M)
+
 if __name__ == "__main__":
     # print ( getListOfMasses("T2",0) )
-    print ( parseMasses("500,100"))
+    #print ( parseMasses("500,100"))
+    print ( nRequiredMasses("T5ZZ") )

@@ -216,7 +216,7 @@ class MG5Wrapper:
             return False
         return True
 
-if __name__ == "__main__":
+def main():
     import argparse
     argparser = argparse.ArgumentParser(description='madgraph5 runner.')
     argparser.add_argument ( '-n', '--nevents', help='number of events to generate [10]',
@@ -249,8 +249,13 @@ if __name__ == "__main__":
         subprocess.getoutput ( "rm -rf mg5cmd* mg5proc* tmp*slha T*jet* run*card" )
         print ( "Cleaned temporary files." )
         sys.exit()
+    nReqM = bakeryHelpers.nRequiredMasses ( args.topo )
     masses = bakeryHelpers.parseMasses ( args.masses, filterOrder=True )
     nm = len(masses)
+    if nReqM != len(masses[0]):
+        print ( "Error: you gave %d masses, but %d are required for %s." % \
+                ( len(masses[0]), nReqM, args.topo ) )
+        sys.exit()
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
     mg5 = MG5Wrapper( args.nevents, args.topo, args.njets, args.keep, args.rerun, args.ma5 )
     # mg5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
@@ -269,3 +274,6 @@ if __name__ == "__main__":
         jobs.append ( p )
         p.start()
     # mg5.run( [ 500, 100 ] )
+
+if __name__ == "__main__":
+    main()

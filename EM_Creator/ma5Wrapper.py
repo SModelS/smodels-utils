@@ -20,7 +20,8 @@ class MA5Wrapper:
         self.topo = topo
         self.njets = njets
         self.rerun = rerun
-        self.ma5install = "./ma5/"
+        self.ma5results = "./ma5/"
+        self.ma5install = "./ma5.template/"
         self.ver = ver
         if not os.path.isdir ( self.ma5install ):
             self.error ( "ma5 install is missing??" )
@@ -53,14 +54,16 @@ class MA5Wrapper:
         filename = self.recastfile
         # filename = self.ma5install + "recasting.dat" 
         self.debug ( "writing recasting card %s" % filename )
-        if os.path.exists ( filename ):
-            os.unlink ( filename )
         templatefile = self.templateDir+'/recasting_card.dat'
         if not os.path.exists ( templatefile ):
             self.error ( "cannot find %s" % templatefile )
         ## for now simply copy the recasting card
         shutil.copy ( templatefile, filename )
         self.info ( "wrote recasting card %s" % filename )
+
+    def unlink ( self, f ):
+        if os.path.exists ( f ):
+            subprocess.getoutput ( "rm -rf %s" % f )
 
     def writeCommandFile ( self, hepmcfile, process, masses ):
         """ this method writes the commands file for ma5.
@@ -98,10 +101,8 @@ class MA5Wrapper:
             sys.exit()
         print ( "Found hepmcfile at", hepmcfile )
         self.writeCommandFile( hepmcfile, process, masses )
-        # tempdir = tempfile.mkdtemp(dir="./",prefix="ma5dir") 
         tempdir = "ma5_%s" % Dir
         a=subprocess.getoutput ( "mkdir %s" % tempdir )
-        # print ( "mkdir %s: %s" % ( tempdir, a ) )
         a = subprocess.getoutput ( "cp -r ma5.template/* %s" % tempdir )
         a = subprocess.getoutput ( "cp -r ma5/ma5cmd* %s" % tempdir )
         a = subprocess.getoutput ( "cp -r ma5/recast* %s" % tempdir )
@@ -110,10 +111,8 @@ class MA5Wrapper:
         cmd = "%s -R -s %s 2>&1 | tee %s" % (self.executable, \
                 self.commandfile, self.teefile )
         self.exe ( cmd )
-        if os.path.exists ( self.commandfile ):
-            subprocess.getoutput ( "rm -r %s" % self.commandfile )
-        if os.path.exists ( self.teefile ):
-            subprocess.getoutput ( "rm -r %s" % self.teefile )
+        self.unlink ( self.commandfile )
+        self.unlink ( self.teefile )
         source = "ANA_%s" % Dir
         dest = "../ma5/%s" % source
         if os.path.exists ( dest ):
@@ -123,6 +122,8 @@ class MA5Wrapper:
             print ( "Source dir %s does not exist." % source )
         shutil.move ( "ANA_%s" % Dir, "../ma5/" )
         os.chdir ( "../" )
+        a = subprocess.getoutput ( "rm ma5/ma5cmd* %s" % tempdir )
+        a = subprocess.getoutput ( "rm ma5/recast* %s" % tempdir )
 
     def exe ( self, cmd ):
         self.msg ( "now execute: %s/%s" % (os.getcwd(), cmd ) )

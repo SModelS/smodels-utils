@@ -36,7 +36,7 @@ class emCreator:
         ### obtain nobs, nb, etc from the PAD info files, e.g.
         ### ma5/tools/PAD/Build/SampleAnalyzer/User/Analyzer/atlas_susy_2016_07.info
         import xml.etree.ElementTree as ET
-        Dir = "ma5/tools/PAD/Build/SampleAnalyzer/User/Analyzer/"
+        Dir = "ma5.template/tools/PAD/Build/SampleAnalyzer/User/Analyzer/"
         tree = ET.parse("%s/%s.info" % ( Dir, ana ) )
         root = tree.getroot()
         ret = {}
@@ -82,9 +82,9 @@ class emCreator:
             tokens=line.split()
             dsname,ananame,sr,sig95exp,sig95obs,pp,eff,statunc,systunc,totunc=tokens
             eff=float(eff)
-            if eff == 0.:
+            #if eff == 0.:
                 # print ( "zero efficiency for", ananame,sr )
-                continue
+            #    continue
             if not ananame in effs:
                 effs[ananame]={}
             effs[ananame][sr]=eff
