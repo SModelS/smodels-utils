@@ -155,7 +155,7 @@ def main():
     import argparse
     argparser = argparse.ArgumentParser(description='efficiency map extractor.')
     argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
-                             type=int, default=0 )
+                             type=int, default=1 )
     argparser.add_argument ( '-t', '--topo', help='topology [T2]',
                              type=str, default="T2" )
     argparser.add_argument ( '-c', '--copy', help='copy embaked file to smodels-database',
