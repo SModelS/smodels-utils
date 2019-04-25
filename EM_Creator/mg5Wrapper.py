@@ -237,6 +237,10 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-C', '--clean_all', help='clean all temporary files, even Tx directories, then quit',
                              action="store_true" )
+    argparser.add_argument ( '--copy', help='copy embaked file to smodels-database',
+                             action="store_true" )
+    argparser.add_argument ( '--analyses', help='analyses, comma separated [atlas_sus_2016_07]',
+                             type=str, default="atlas_susy_2016_07" )
     argparser.add_argument ( '-r', '--rerun', help='force rerun, even if there is a summary file already',
                              action="store_true" )
     mdefault = "(500,510,10),(100,110,10)"
@@ -277,9 +281,12 @@ def main():
         p.start()
     # mg5.run( [ 500, 100 ] )
     if args.bake:
-        from emCreator import emCreator
+        from emCreator import run
+        from types import SimpleNamespace
         analyses = "atlas_susy_2016_07"
-        # creator = emCreator (  analyses, args.topo, args.njets )
+        args = SimpleNamespace ( masses=args.masses, topo=args.topo, njets=args.njets, \
+                analyses = analyses, copy=args.copy )
+        run ( args )
 
 if __name__ == "__main__":
     main()

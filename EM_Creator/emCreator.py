@@ -102,21 +102,7 @@ class emCreator:
             return
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
 
-def main():
-    import argparse
-    argparser = argparse.ArgumentParser(description='efficiency map extractor.')
-    argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
-                             type=int, default=0 )
-    argparser.add_argument ( '-t', '--topo', help='topology [T2]',
-                             type=str, default="T2" )
-    argparser.add_argument ( '-c', '--copy', help='copy embaked file to smodels-database',
-                             action="store_true" )
-    argparser.add_argument ( '-a', '--analyses', help='analyses, comma separated [atlas_sus_2016_07]',
-                             type=str, default="atlas_susy_2016_07" )
-    mdefault = "all"
-    argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted. "all" means, try to find out yourself [%s]' % mdefault,
-                             type=str, default=mdefault )
-    args = argparser.parse_args()
+def run ( args ):
     if args.masses == "all":
         masses = bakeryHelpers.getListOfMasses ( args.topo, args.njets )
     else:
@@ -164,6 +150,24 @@ def main():
             f.write ( "%s\n" % stats )
             f.close()
             print ( "Wrote stats to %s" % statsfile )
+
+def main():
+    import argparse
+    argparser = argparse.ArgumentParser(description='efficiency map extractor.')
+    argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
+                             type=int, default=0 )
+    argparser.add_argument ( '-t', '--topo', help='topology [T2]',
+                             type=str, default="T2" )
+    argparser.add_argument ( '-c', '--copy', help='copy embaked file to smodels-database',
+                             action="store_true" )
+    argparser.add_argument ( '-a', '--analyses', help='analyses, comma separated [atlas_sus_2016_07]',
+                             type=str, default="atlas_susy_2016_07" )
+    mdefault = "all"
+    argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted. "all" means, try to find out yourself [%s]' % mdefault,
+                             type=str, default=mdefault )
+    args = argparser.parse_args()
+    run ( args )
+
 
 if __name__ == "__main__":
     main()
