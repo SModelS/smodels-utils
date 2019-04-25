@@ -219,10 +219,10 @@ class MG5Wrapper:
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description='madgraph5 runner.')
-    argparser.add_argument ( '-n', '--nevents', help='number of events to generate [10]',
-                             type=int, default=10 )
-    argparser.add_argument ( '-j', '--njets', help='number of ISR jets [0]',
-                             type=int, default=0 )
+    argparser.add_argument ( '-n', '--nevents', help='number of events to generate [10000]',
+                             type=int, default=10000 )
+    argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
+                             type=int, default=1 )
     argparser.add_argument ( '-p', '--nprocesses', help='number of process to run in parallel. 0 means 1 per CPU [1]',
                              type=int, default=1 )
     argparser.add_argument ( '-t', '--topo', help='topology [T2]',
