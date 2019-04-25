@@ -676,8 +676,10 @@ class TxNameInput(Locker):
                             self._goodPlanes.append(plane)
             elif dataType == 'efficiencyMap':
                 if not hasattr(plane,'efficiencyMap'):
-                    logger.error('%s source not defined for plane %s' %(dataType,plane))
-                    sys.exit()
+                    logger.warning('%s source not defined for plane %s' %(dataType,plane))
+                    if not plane in self._goodPlanes:
+                        self._goodPlanes.append(plane)
+                    # sys.exit()
                 else:
                     if self.addDataFrom(plane,'efficiencyMap'):
                         self._dataLabels.append('efficiencyMap')

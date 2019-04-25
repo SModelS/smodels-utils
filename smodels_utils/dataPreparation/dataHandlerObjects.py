@@ -108,7 +108,7 @@ class DataHandler(object):
             sys.exit()
 
         if unitString:
-            units = ['fb','pb',('GeV','GeV'),('GeV','ns'),('ns','GeV')]
+            units = ['fb','pb',('GeV','GeV'),('GeV','ns'),('ns','GeV'),('GeV','X:60')]
             if not unitString in units:
                 logger.error("Units must be in %s, not %s" % (str(units),unitString) )
                 sys.exit()
@@ -468,8 +468,7 @@ class DataHandler(object):
                         if waitFor in i:
                             has_waited=True
                     continue
-                #print ( "li 2 >>%s<< hw=%s, waitFor=>>%s<<" % ( r, has_waited, waitFor ) )
-                if r[0].startswith("'M("):
+                if r[0].startswith("'M(") or r[0].startswith("M("):
                     if waitFor !=None and not waitFor in r[0]:
                         #print ( "set back." )
                         has_waited = False
@@ -487,6 +486,10 @@ class DataHandler(object):
                         # fr[1] = hbar / fr[1]
                     #if self.unit[0]=="ns":
                     #    fr[0] = hbar / fr[0]
+                if type ( self.unit) == tuple:
+                    if self.unit[1]=="X:60":
+                        frx = fr[0]*fr[1]+60.*( 1.-fr[1] )
+                        fr[1]=frx
                 yield fr
             csvfile.close()
 
@@ -550,6 +553,7 @@ class DataHandler(object):
                 logger.debug("Small efficiency value %s +- %s. Setting to zero." %(values[-2],values[-1]))
                 values[-2]= 0.0
 
+            print ( "value", values )
             yield values
 
     def root(self):
@@ -842,8 +846,6 @@ class ExclusionHandler(DataHandler):
                 assert ( self.unit[0] == "GeV" )
                 if self.unit[1]=="ns":
                     ret[y]=hbar/ret[y]
-                else:
-                    assert ( self.unit[1] == "GeV" )
             yield ret
 
     def svg(self):

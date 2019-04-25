@@ -568,6 +568,14 @@ class DatabaseCreator(list):
                 continue
                 value = self._formatData(value)
 
+            if attr == "axes":
+                ## remove full 3d entries
+                if "z" in value:
+                    logger.warning ( "There is a 3d axis. Will try to remove it." )
+                    value = value.replace ( "[[x, y, z], [x, y, z]];", "" )
+                    value = value.replace ( "[[x, y, z], [x, y, z]]", ""  )
+                    if "z" in value:
+                        logger.error ( "Attempt at removal was not successful. Please fix in convert.py." )
             content = '%s%s%s%s\n' % (content, attr,\
                                        self.assignmentOperator, value)
         for attr in obj.infoAttr:
