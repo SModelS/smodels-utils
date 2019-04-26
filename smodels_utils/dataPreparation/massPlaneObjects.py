@@ -250,7 +250,7 @@ class MassPlane(object):
         massArray = [br.getParticleMasses(**xMass) for br in self.branches]
         return massArray
 
-    def getXYValues(self,massArray,widthArray):
+    def getXYValues(self,massArray,widthArray=None):
 
         """
         Translate a mass array to a point of the plot.
@@ -258,6 +258,9 @@ class MassPlane(object):
 
         :param massArray: list containing two other lists. Each list contains floats,
         representing the masses of the particles of each branch in GeV
+        :param widthArray: list containing two other lists. Each list contains floats,
+        representing the widths of the particles of each branch in GeV. If None, 
+        we assume a width-independent plane.
         :raise massArrayLenError: if length of mass array is unequal 2
         :raise unequalXYValuesError: if the branches return different values for x or y
         :return: None if mass array do not met the conditions of one branch
@@ -267,10 +270,23 @@ class MassPlane(object):
         if len(massArray) != len(self.branches):
             logger.error("Mass array inconsistent with branches length")
             sys.exit()
-        if len(widthArray) != len(self.branches):
+        if widthArray != None and len(widthArray) != len(self.branches):
             logger.error("Width array inconsistent with branches length")
             sys.exit()
         xyArray = {}
+        if widthArray == None:
+            for i,mass in enumerate(massArray):
+                xyDict = self.branches[i].getXYValues(mass)
+                if xyDict is None:
+                    return None
+                for xvar,value in xyDict.items():
+                    if xvar in xyArray:
+                        #Check if x,y-values given by distinct branches agree:
+                        if xyArray[xvar] != value and (abs(xyArray[xvar]+value) == 0.
+                           or abs(xyArray[xvar]-value)/abs(xyArray[xvar]+value) > 1e-4):
+                            return None
+                    xyArray[xvar] = value
+            return xyArray
         for i,(mass,width) in enumerate(zip(massArray,widthArray)):
             xyDict = self.branches[i].getXYValues(mass,width)
             if xyDict is None:
@@ -480,7 +496,7 @@ class Axes(object):
             self._xyFunction[xv] = lambdify(self._massVars+self._widthVars,xy[xv],'math',dummify=False)
         self._nArguments = nvars
 
-    def getXYValues(self,massArray,widthArray):
+    def getXYValues(self,massArray,widthArray=None):
 
         """
         translate a mass array (for single branch) to a point of the plot
@@ -505,8 +521,12 @@ class Axes(object):
                 massInput[ str(self._widthVars[im]) ] = mass[1]
             else:
                     massInput[ str(self._massVars[im]) ] = mass
-        for im,width in enumerate(widthArray):
-            massInput[ str(self._widthVars[im]) ] = width
+        if widthArray is None:
+            for im,width in enumerate(massArray):
+                massInput[ str(self._widthVars[im]) ] = None
+        else:
+            for im,width in enumerate(widthArray):
+                massInput[ str(self._widthVars[im]) ] = width
         #Define dictionary with mass variables and values
         #massInput = dict([[str(self._massVars[im]),mass] for im,mass in enumerate(massArray)])
 
