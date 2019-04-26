@@ -718,14 +718,15 @@ class TxNameInput(Locker):
             if planeHasInfo:
                 # infoStr = " ".join(infoList) ## new version
                 myInfoList = []
-                hasNone = False
+                hasNone = False 
+                ## remove Nones, but only if there are other values.
                 for i in infoList:
                     if i not in [ None, "None" ]:
                         myInfoList.append ( i )
-                        continue
-                    if not hasNone: ## only one None
-                        myInfoList.append ( i )
-                        hasNone=True
+                    else:
+                        hasNone = True
+                if hasNone and len(myInfoList)==0:
+                    myInfoList = [ "None" ]
                 infoStr = ";".join(myInfoList) ## old version
                 setattr(self,infoAttr,infoStr)
 
