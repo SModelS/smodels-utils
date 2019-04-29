@@ -62,7 +62,7 @@ def main():
     gprint ( "\nCreate SmsDictionary" )
     cmd = [ "./smsDictionary.py", "-a" ]
     if A.feynman:
-        cmd += [ "-f" ]
+        cmd += [ "-f", "-c" ]
     exec ( cmd )
     if A.non_versioned:
         exec ( [ "./smsDictionary.py" ] )
