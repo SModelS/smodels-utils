@@ -543,11 +543,11 @@ class Axes(object):
             ## I dont fully understand why there cases where x has a width
             ## and y doesnt ....
             #assert ( type(x) == type(y) )
-            if type(x)==float and type(y)==tuple:
+            if type(x) in [ float, int ] and type(y)==tuple:
                 return abs(x-y[0])
-            if type(y)==float and type(x)==tuple:
+            if type(y) in [ float, int ] and type(x)==tuple:
                 return abs(x[0]-y)
-            if type(x)==float and type(y)==float:
+            if type(x) in [ float, int ] and type(y) in [ float, int ]:
                 return abs(x-y)
             assert ( type(x) == tuple )
             d=0.
