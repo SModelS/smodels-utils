@@ -127,8 +127,7 @@ class MA5Wrapper:
         os.chdir ( "../" )
         a = subprocess.getoutput ( "rm ma5/ma5cmd*" )
         a = subprocess.getoutput ( "rm ma5/recast*" )
-        # a = subprocess.getoutput ( "rm ma5.template/ma5cmd*" )
-        # a = subprocess.getoutput ( "rm ma5.template/recast*" )
+        a = subprocess.getoutput ( "rm -r %s" % tempdir )
 
     def exe ( self, cmd ):
         self.msg ( "now execute: %s/%s" % (os.getcwd(), cmd ) )
