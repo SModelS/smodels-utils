@@ -14,7 +14,7 @@ import bakeryHelpers
 
 class MA5Wrapper:
     def __init__ ( self, topo, njets, rerun, ver="1.7" ):
-        """ 
+        """
         :param ver: version of ma5
         """
         self.topo = topo
@@ -52,7 +52,7 @@ class MA5Wrapper:
         are being recast. """
         self.recastfile = tempfile.mktemp ( dir=self.ma5install, prefix="recast" )
         filename = self.recastfile
-        # filename = self.ma5install + "recasting.dat" 
+        # filename = self.ma5install + "recasting.dat"
         self.debug ( "writing recasting card %s" % filename )
         templatefile = self.templateDir+'/recasting_card.dat'
         if not os.path.exists ( templatefile ):
@@ -93,7 +93,7 @@ class MA5Wrapper:
                 return
         self.writeRecastingCard ()
         # then write command file
-        Dir = bakeryHelpers.dirName ( process, masses ) 
+        Dir = bakeryHelpers.dirName ( process, masses )
         hepmcfile = "%s/Events/run_01/tag_1_pythia8_events.hepmc.gz" % Dir
         hepmcfile = os.path.abspath ( hepmcfile )
         if not os.path.exists ( hepmcfile ):
@@ -103,14 +103,17 @@ class MA5Wrapper:
         self.writeCommandFile( hepmcfile, process, masses )
         tempdir = "ma5_%s" % Dir
         a=subprocess.getoutput ( "mkdir %s" % tempdir )
-        a = subprocess.getoutput ( "cp -r ma5.template/* %s" % tempdir )
-        a = subprocess.getoutput ( "cp -r ma5/ma5cmd* %s" % tempdir )
-        a = subprocess.getoutput ( "cp -r ma5/recast* %s" % tempdir )
+        a = subprocess.getoutput ( "cp -r ma5.template/bin ma5.template/madanalysis ma5.template/tools %s" % tempdir )
+        a = subprocess.getoutput ( "cp -r %s %s" % ( self.recastfile, tempdir ) )
+        a = subprocess.getoutput ( "cp -r ma5.template/%s %s" % ( self.commandfile, tempdir ) )
+
         # then run madgraph5
         os.chdir ( tempdir )
         cmd = "%s -R -s %s 2>&1 | tee %s" % (self.executable, \
                 self.commandfile, self.teefile )
         self.exe ( cmd )
+        self.unlink ( self.recastfile )
+        self.unlink ( "ma5.template/%s" % self.commandfile )
         self.unlink ( self.commandfile )
         self.unlink ( self.teefile )
         source = "ANA_%s" % Dir
