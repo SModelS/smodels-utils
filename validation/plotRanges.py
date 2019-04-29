@@ -229,9 +229,29 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
                 else:
                     reducedData.append([mass,numpy.asscalar(tx.txnameData.xsec[i])])
     #If there is no data, return empty list:
+    rangesList = list(varRanges.items())
+    ranges = [x[1] for x in rangesList]  #Collect the ranges in order
+    xvars = [x[0] for x in rangesList] #Collect the var labels in order
+
+    def dressPoint ( pt ):
+        pt=addUnit ( pt, GeV )
+        return ( [ mP, 0.1 ] )
+
     if not reducedData:
         logger.warning("No data points found for plane.")
         return []
+        """
+        reducedData = [ ]
+        import random
+
+        for i in range(1000):
+            d={}
+            for var in xvars:
+                d[var]=random.uniform ( varRanges[var][0], varRanges[var][1] )
+            mP = massPlane.getParticleMasses( **d )
+            reducedData.append ( dressPoint ( mP ) )
+        txdata = TxNameData(reducedData,"upperLimit","dummy")
+        """
     else:
         #Compute the PCA for the reduced dataset:
         txdata = TxNameData(reducedData,"upperLimit","dummy")
@@ -239,9 +259,6 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
 
     #Transform the min and max values to the rotated plane:
     extremePoints = []
-    rangesList = list(varRanges.items())
-    ranges = [x[1] for x in rangesList]  #Collect the ranges in order
-    xvars = [x[0] for x in rangesList] #Collect the var labels in order
     for x in list(itertools.product(*ranges)):
         xvalues = dict(zip(xvars,x))
         mass = addUnit(massPlane.getParticleMasses(**xvalues),GeV)
@@ -266,7 +283,6 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     #Round minimum ranges
     for i,vrange in enumerate(newRanges):
         newRanges[i][0] = round(vrange[0]/steps[i])*steps[i]
-
 
     points=[]
     #Create an array with all var points:
