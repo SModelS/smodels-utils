@@ -28,6 +28,8 @@ def main():
     argparser.add_argument ( '-n', '--non_versioned', 
             help='update the non-versioned files also (eg Validation.md, not just Validation211.md)',
             action='store_true' )
+    argparser.add_argument ( '-f', '--feynman', help='also create Feynman Graphs when calling smsDictionary',
+                             action='store_true' )
     argparser.add_argument ( '-P', '--no_pickle', 
             help='Skip creation of pickle files',
             action='store_true' )
@@ -58,7 +60,10 @@ def main():
 
     ## SmsDictionary page
     gprint ( "\nCreate SmsDictionary" )
-    exec ( [ "./smsDictionary.py", "-a" ] )
+    cmd = [ "./smsDictionary.py", "-a" ]
+    if A.feynman:
+        cmd += [ "-f" ]
+    exec ( cmd )
     if A.non_versioned:
         exec ( [ "./smsDictionary.py" ] )
 
