@@ -44,7 +44,8 @@ class TemplateFile(object):
                     (i.e. 2*Eq(mother,x)_Eq(inter0,y)_Eq(lsp,x-80.0))
         :param tempdir: Folder to store the SLHA files. If not set,
                         a temporary folder will be created at the current location.
-        :param pythiaVersion: Version of pythia to use (6 or 8). It specifies how the pythiaCard will be generated.
+        :param pythiaVersion: Version of pythia to use (6 or 8). It specifies how 
+                              the pythiaCard will be generated.
         """
         
         self.path = template
@@ -239,40 +240,45 @@ class TemplateFile(object):
         
         return True
         
-
-
 if __name__ == "__main__":
     import argparse, types
     argparser = argparse.ArgumentParser(description="creates slha files from template file in given mass ranges")
     argparser.add_argument ( '-T', '--templatefile', nargs='?', help='path to template file', 
-        type=types.StringType, default='T1' )
+        type=str, default='T1' )
     argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description', 
-        type=types.StringType, default='2*Eq(mother,x)_Eq(lsp,y)' )
+        type=str, default='2*Eq(mother,x)_Eq(lsp,y)' )
     argparser.add_argument ( '--xmin', nargs='?', help='minimum value for x', 
-        type=types.FloatType, default=100. )
+        type=float, default=100. )
     argparser.add_argument ( '--xmax', nargs='?', help='maximum value for x', 
-        type=types.FloatType, default=300. )
+        type=float, default=300. )
     argparser.add_argument ( '--dx', nargs='?', help='binning in x', 
-        type=types.FloatType, default=25. )
+        type=float, default=25. )
     argparser.add_argument ( '--ymin', nargs='?', help='minimum value for y', 
-        type=types.FloatType, default=100. )
+        type=float, default=100. )
     argparser.add_argument ( '--ymax', nargs='?', help='maximum value for y', 
-        type=types.FloatType, default=300. )
+        type=float, default=300. )
     argparser.add_argument ( '--dy', nargs='?', help='binning in y', 
-        type=types.FloatType, default=25. )
+        type=float, default=25. )
+    argparser.add_argument('-6', '--pythia6', action='store_true',                 
+        help="use pythia6 for LO cross sections")                                     
+    argparser.add_argument('-8', '--pythia8', action='store_true',                 
+        help="use pythia8 for LO cross sections (default)")    
     args=argparser.parse_args()
+    pythiaVersion = 8
+    if args.pythia6:
+        pythiaVersion = 6
 
     templatefile = args.templatefile
     if not os.path.exists ( templatefile ):
-        templatefile="../slha/%s" % templatefile
+        templatefile="../slha/templates/%s.template" % args.templatefile
         if not os.path.exists ( templatefile ):
-            print ( "[slhaCreator] error: templatefile does not exist." )
+            print ( "[slhaCreator] error: templatefile %s not found." % args.templatefile )
             sys.exit()
-    tempf = TemplateFile(args.templatefile,args.axes)
+    tempf = TemplateFile(templatefile,args.axes,pythiaVersion=pythiaVersion)
     masses=[]
     import numpy
     for mother in numpy.arange(args.xmin,args.xmax+1,args.dx):
         for lsp in numpy.arange(args.ymin,args.ymax+1,args.dy):
-            masses.append ( [ mother, lsp ] )
-    slhafiles = tempf.createFilesFor( masses )
+            masses.append ( { "x": mother, "y": lsp } )
+    slhafiles = tempf.createFilesFor( masses, massesInFileName=True )
     print ( slhafiles )

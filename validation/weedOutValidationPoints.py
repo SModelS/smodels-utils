@@ -28,7 +28,7 @@ def weed ( dists, maxDistance ):
         if sd1 in keepIt: ## can only be false
             continue
         keepIt[sd1]=True
-        maxi = min(len(dists),x+1000)
+        # maxi = min(len(dists),x+1000)
         maxi = len(dists)
         for y,d2 in enumerate(dists[x+1:maxi]):
             sd2 = mkstring(d2)
@@ -38,7 +38,7 @@ def weed ( dists, maxDistance ):
             if d < maxDistance:
                 keepIt[sd2]=False
                 nWeeded+=1
-                break
+                # break
     ret=[]
     for k,v in keepIt.items():
         if v:
@@ -48,10 +48,10 @@ def weed ( dists, maxDistance ):
 def main():
     ap = argparse.ArgumentParser(description="Weed out validation tarballs.")
     ap.add_argument ( '-t', '--topo', 
-            help='specify the topology to be thinned out.',
+            help='specify the topology to be thinned out [T5WW].',
             default = 'T5WW', type = str )
     ap.add_argument ( '-d', '--distance', 
-            help='max tolerated distance (GeV) from other point',
+            help='max tolerated distance (GeV) from other point [10.]',
             default = 10., type = float )
     args = ap.parse_args()
     tarball = "../slha/%s.tar.gz" % args.topo
