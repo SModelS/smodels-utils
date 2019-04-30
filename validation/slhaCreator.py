@@ -50,6 +50,7 @@ class TemplateFile(object):
 
         self.path = template
         self.slhaObj = None
+        self.nprocesses = -1
         self.tags = []
         self.axes = axes
         self.motherPDGs = []
@@ -172,7 +173,7 @@ class TemplateFile(object):
                     xargs.pythia6 = True
                     xargs.pythia8 = False
                 xargs.sqrts = [[8, 13]]
-                xargs.ncpus = runtime.nCPUs()
+                xargs.ncpus = self.nprocesses
                 xargs.nevents = 10000
                 xargs.pythiacard = self.pythiaCard
                 xargs.NLL = True
@@ -273,6 +274,8 @@ if __name__ == "__main__":
         type=float, default=300. )
     argparser.add_argument ( '--dy', nargs='?', help='binning in y',
         type=float, default=25. )
+    argparser.add_argument ( '-p', '--nprocesses', nargs='?', help='number of processes, -1 means one per CPU [-1].',
+        type=int, default=-1 )
     argparser.add_argument('-c', '--clear', action='store_true',
         help="clear cruft files")
     argparser.add_argument('-6', '--pythia6', action='store_true',
@@ -293,6 +296,9 @@ if __name__ == "__main__":
                 templatefile )
         sys.exit()
     tempf = TemplateFile(templatefile,args.axes,pythiaVersion=pythiaVersion)
+    tempf.nprocesses = args.nprocesses
+    if args.nprocesses < 0:
+        tempf.nprocesses = runtime.nCPUs() + args.nprocesses + 1
     masses=[]
     for mother in numpy.arange(args.xmin,args.xmax+1,args.dx):
         for lsp in numpy.arange(args.ymin,args.ymax+1,args.dy):
