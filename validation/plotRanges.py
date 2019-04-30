@@ -233,14 +233,14 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     ranges = [x[1] for x in rangesList]  #Collect the ranges in order
     xvars = [x[0] for x in rangesList] #Collect the var labels in order
 
-    def dressPoint ( pt ):
-        pt=addUnit ( pt, GeV )
-        return ( [ mP, 0.1 ] )
-
     if not reducedData:
         logger.warning("No data points found for plane.")
         return []
         """
+        def dressPoint ( pt ):
+            pt=addUnit ( pt, GeV )
+            return ( [ mP, 0.1 ] )
+
         reducedData = [ ]
         import random
 
