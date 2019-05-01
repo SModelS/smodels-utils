@@ -27,11 +27,20 @@ def parseMasses ( massstring, filterOrder=True ):
     except NameError as e:
         masses = ""
     if type(masses) != tuple or len(masses)<2:
+        mdefault = "(500,510,10),(100,110,10)"
         print ( "Error: masses need to be given as e.g. %s (you will need to put it under parentheses)" % mdefault )
         sys.exit()
     lists=[]
-    for mtuple in masses: ## tuple by tuple
+    for ctr,mtuple in enumerate(masses): ## tuple by tuple
         tmp=[]
+        if type(mtuple) in [ str ]: ## descriptive strings
+            if mtuple == "half" and ctr == 1:
+                tmp.append ( mtuple )
+                lists.append ( tuple(tmp) )
+                continue
+            else:
+                print ( "error: i know only 'half' for a string, and only in middle position" )
+                sys.exit()
         if type(mtuple) in [ int, float ]:
             tmp.append ( mtuple )
             lists.append ( tuple(tmp) )
@@ -44,7 +53,14 @@ def parseMasses ( massstring, filterOrder=True ):
         for i in numpy.arange(mtuple[0],mtuple[1],mtuple[2] ):
             tmp.append ( i )
         lists.append ( tuple(tmp) )
-    mesh = numpy.meshgrid ( *lists )
+    # mesh = numpy.meshgrid ( *lists )
+    if lists[1][0]=="half":
+        ret = []
+        for x  in lists[0]:
+            for z in lists[2]:
+                y=.5*x+.5*z
+                ret.append ( (x,y,z) )
+        return ret
     ret = []
     if len(lists)==2:
         for x in range ( len(lists[0] ) ):
