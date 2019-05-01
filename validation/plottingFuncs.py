@@ -313,7 +313,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
                 weightedAgreementFactor=False ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
-    in validationPlot.officialCurves to generate the exclusion plot
+    in validationPlot.officialCurves to generate the "ugly" exclusion plot
     
     :param validationPlot: ValidationPlot object
     :param silentMode: If True the plot will not be shown on the screen
@@ -339,48 +339,50 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
         logger.error("Data for validation plot is not defined.")
         return (None,None)
         ## sys.exit()
-    else:
-        # Get excluded and allowed points:
-        for pt in validationPlot.data:
-            if "error" in pt.keys():
-                continue
-            countPts += 1
-            if kfactor == None:
-                kfactor = pt ['kfactor']
-            if abs(kfactor - pt['kfactor'])> 1e-5:
-                logger.error("kfactor not a constant throughout the plane!")
-                sys.exit()
 
-            xvals = pt['axes']
-            if "t" in pt:
-                tavg += pt["t"]
-            if pt["UL"] == None:
-                logger.warning ( "No upper limit for %s" % xvals )
-                continue
-            r = pt['signal']/pt ['UL']
-            if isinstance(xvals,dict):
-                if len(xvals) == 1:
-                    x,y = xvals['x'],r
-                    ylabel = "r = #sigma_{signal}/#sigma_{UL}"
-                else:
-                    x,y = xvals['x'],xvals['y']
-            else:
-                x,y = pt['axes']
-            
+    nErrors = 0
+    # Get excluded and allowed points:
+    for pt in validationPlot.data:
+        if "error" in pt.keys():
+            nErrors += 1
+            continue
+        countPts += 1
+        if kfactor == None:
+            kfactor = pt ['kfactor']
+        if abs(kfactor - pt['kfactor'])> 1e-5:
+            logger.error("kfactor not a constant throughout the plane!")
+            sys.exit()
 
-            if pt['condition'] and pt['condition'] > 0.05:
-                logger.warning("Condition violated for file " + pt['slhafile'])
-                cond_violated.SetPoint(cond_violated.GetN(), x, y)
-            elif r > 1.:
-                if r < looseness:
-                    excluded_border.SetPoint(excluded_border.GetN(), x, y)
-                else:
-                    excluded.SetPoint(excluded.GetN(), x, y )
+        xvals = pt['axes']
+        if "t" in pt:
+            tavg += pt["t"]
+        if pt["UL"] == None:
+            logger.warning ( "No upper limit for %s" % xvals )
+            continue
+        r = pt['signal']/pt ['UL']
+        if isinstance(xvals,dict):
+            if len(xvals) == 1:
+                x,y = xvals['x'],r
+                ylabel = "r = #sigma_{signal}/#sigma_{UL}"
             else:
-                if r> 1./looseness:
-                    allowed_border.SetPoint(allowed_border.GetN(), x, y)
-                else:
-                    allowed.SetPoint(allowed.GetN(), x, y)
+                x,y = xvals['x'],xvals['y']
+        else:
+            x,y = pt['axes']
+        
+
+        if pt['condition'] and pt['condition'] > 0.05:
+            logger.warning("Condition violated for file " + pt['slhafile'])
+            cond_violated.SetPoint(cond_violated.GetN(), x, y)
+        elif r > 1.:
+            if r < looseness:
+                excluded_border.SetPoint(excluded_border.GetN(), x, y)
+            else:
+                excluded.SetPoint(excluded.GetN(), x, y )
+        else:
+            if r> 1./looseness:
+                allowed_border.SetPoint(allowed_border.GetN(), x, y)
+            else:
+                allowed.SetPoint(allowed.GetN(), x, y)
 
     if countPts == 0:
         logger.warning ( "no good points??" )
@@ -491,8 +493,16 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     l2.SetTextAngle(90.)
     l2.SetTextColor( kGray )
     l2.DrawLatex(.93,.15,"k-factor %.2f" % kfactor)
+
+    l3=TLatex()
+    l3.SetNDC()
+    l3.SetTextSize(.025)
+    l3.SetTextColor( kGray )
+    l3.DrawLatex(.12,.86,"points with no results: %d" % nErrors)
+
     #l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor)
     base.l2=l2
+    base.l3=l3
     if extraInfo: ## a timestamp, on the right border
         import time
         l9=TLatex()
