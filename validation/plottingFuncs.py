@@ -465,6 +465,9 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
         lex.SetTextSize(.026 )
         import socket
         hn=socket.gethostname()
+        phn = hn.find(".")
+        if phn > 0:
+            hn = hn[:phn]
         lex.DrawLatex(.59,.12,"agreement: %d%s, t~%.1fs [%s]" % (agreement, "%", tavg, hn ) )
         base.lex=lex
     base.l0=l0
