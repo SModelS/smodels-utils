@@ -260,8 +260,8 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="creates slha files from template file in given mass ranges")
     argparser.add_argument ( '-T', '--topology', nargs='?', help='topology to create SLHA files for',
         type=str, default='T1' )
-    argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description',
-        type=str, default='2*[[x, y]]' )
+    argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description 2*[[x, y, 60.]]',
+        type=str, default='2*[[x, y, 60.]]' )
     argparser.add_argument ( '--xmin', nargs='?', help='minimum value for x',
         type=float, default=100. )
     argparser.add_argument ( '--xmax', nargs='?', help='maximum value for x',
