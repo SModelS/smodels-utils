@@ -17,9 +17,10 @@ def dirName ( process, masses ):
     return process + "." + "_".join(map(str,masses))
 
 def parseMasses ( massstring, filterOrder=True ):
-    """ parse the mass string, e.g. (500,510,10),(100,110,10).
-    :param filterOrder: if trrue, discard vectors with daughters more massive than their
-     mothers.
+    """ parse the mass string, e.g. (500,510,10),(100,110,10). keywords like "half" are 
+        accepted.
+    :param filterOrder: if true, discard vectors with daughters more massive than their
+                           mothers.
     :returns: a list of all model points. E.g. [ (500,100),(510,100),(500,110),(510,110)].
     """
     try:
