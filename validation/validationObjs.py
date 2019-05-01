@@ -286,6 +286,8 @@ class ValidationPlot():
         self.computeHulls()
 
         for point in self.data:
+            if "error" in point.keys():
+                continue
             try: ## we seem to have two different ways of writing the x,y values
                 x,y=point["axes"]['x'],point["axes"]['y']
             except Exception as e:
@@ -480,7 +482,6 @@ class ValidationPlot():
         for slhafile in slhafiles:
             if not os.path.isfile(os.path.join(slhaDir,slhafile)):  #Exclude the results folder
                 continue
-            # print ( "slhafile", slhafile )
             fout = os.path.join(outputDir,slhafile + '.py')
             if not os.path.isfile(fout):
                 if ct_nooutput>4:
@@ -499,6 +500,9 @@ class ValidationPlot():
             ff.close()
             if not 'ExptRes' in smodelsOutput:
                 logger.debug("No results for %s " %slhafile)
+                ## log also the errors in the py file
+                Dict = { 'slhafile': slhafile, 'error': 'no results' }
+                self.data.append ( Dict )
                 continue
             res = smodelsOutput['ExptRes']
             expRes = res[0]
@@ -581,6 +585,8 @@ class ValidationPlot():
 
         #Apply k-factors to theory prediction (default is 1)
         for ipt,pt in enumerate(self.data):
+            if "error" in pt.keys():
+                continue
             pt['signal'] *= self.kfactor
             self.data[ipt] = pt
             self.data[ipt]['kfactor'] = self.kfactor

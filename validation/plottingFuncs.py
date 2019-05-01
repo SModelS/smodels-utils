@@ -332,6 +332,8 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     cond_violated=TGraph()
     kfactor=None
     tavg = 0.
+        
+    countPts = 0 ## count good points
 
     if not validationPlot.data:
         logger.error("Data for validation plot is not defined.")
@@ -340,6 +342,9 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     else:
         # Get excluded and allowed points:
         for pt in validationPlot.data:
+            if "error" in pt.keys():
+                continue
+            countPts += 1
             if kfactor == None:
                 kfactor = pt ['kfactor']
             if abs(kfactor - pt['kfactor'])> 1e-5:
@@ -377,6 +382,9 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
                 else:
                     allowed.SetPoint(allowed.GetN(), x, y)
 
+    if countPts == 0:
+        logger.warning ( "no good points??" )
+        return ( None, None )
     tavg = tavg / len (validationPlot.data )
 
     # Check if official exclusion curve has been defined:
@@ -531,6 +539,8 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         # Get excluded and allowed points:
         condV = 0
         for pt in validationPlot.data:
+            if "error" in pt.keys():
+                continue
             if kfactor == None:
                 kfactor = pt ['kfactor']
             if abs(kfactor - pt['kfactor'])> 1e-5:
