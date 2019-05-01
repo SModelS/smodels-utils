@@ -545,40 +545,39 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         logger.error("Data for validation plot is not defined.")
         return (None,None)
         ## sys.exit()
-    else:
-        # Get excluded and allowed points:
-        condV = 0
-        for pt in validationPlot.data:
-            if "error" in pt.keys():
-                continue
-            if kfactor == None:
-                kfactor = pt ['kfactor']
-            if abs(kfactor - pt['kfactor'])> 1e-5:
-                logger.error("kfactor not a constant throughout the plane!")
-                sys.exit()
-            xvals = pt['axes']
-            if pt["UL"]==None:
-                logger.warning( "no UL for %s" % xvals )
-            r = pt['signal']/pt ['UL']
-            if isinstance(xvals,dict):
-                if len(xvals) == 1:
-                    x,y = xvals['x'],r
-                    ylabel = "r = #sigma_{signal}/#sigma_{UL}"
-                else:
-                    x,y = xvals['x'],xvals['y']
+    # Get excluded and allowed points:
+    condV = 0
+    for pt in validationPlot.data:
+        if "error" in pt.keys():
+            continue
+        if kfactor == None:
+            kfactor = pt ['kfactor']
+        if abs(kfactor - pt['kfactor'])> 1e-5:
+            logger.error("kfactor not a constant throughout the plane!")
+            sys.exit()
+        xvals = pt['axes']
+        if pt["UL"]==None:
+            logger.warning( "no UL for %s" % xvals )
+        r = pt['signal']/pt ['UL']
+        if isinstance(xvals,dict):
+            if len(xvals) == 1:
+                x,y = xvals['x'],r
+                ylabel = "r = #sigma_{signal}/#sigma_{UL}"
             else:
-                x,y = xvals
-            if logY:
-                y = rescaleWidth(y)
-            
-            if pt['condition'] and pt['condition'] > 0.05:
-                condV += 1
-                if condV < 5:
-                    logger.warning("Condition violated for file " + pt['slhafile'])
-                if condV == 5:
-                    logger.warning("Condition violated for more points (not shown)")
-            else:
-                tgr.SetPoint(tgr.GetN(), x, y, r)
+                x,y = xvals['x'],xvals['y']
+        else:
+            x,y = xvals
+        if logY:
+            y = rescaleWidth(y)
+        
+        if pt['condition'] and pt['condition'] > 0.05:
+            condV += 1
+            if condV < 5:
+                logger.warning("Condition violated for file " + pt['slhafile'])
+            if condV == 5:
+                logger.warning("Condition violated for more points (not shown)")
+        else:
+            tgr.SetPoint(tgr.GetN(), x, y, r)
 
     if tgr.GetN() < 4:
         logger.error("No good points for validation plot.")
@@ -749,7 +748,11 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         subtitle = "" ## no extra info, so leave it blank
         # subtitle = "upper limit"
     if validationPlot.combine == False and len(validationPlot.expRes.datasets) > 1:
-        if "combined" in validationPlot.data[0]["dataset"]:
+        for ctr,x in enumerate(validationPlot.data):
+            if "error" in x.keys():
+                continue
+            break
+        if "combined" in validationPlot.data[ctr]["dataset"]:
             logger.warning ( "asked for an efficiencyMap-type plot, but the cached validationData is for a combined plot. Will label it as 'combined'." )
         else:
             subtitle = "best SR"
