@@ -275,7 +275,7 @@ DECAY        37     5.46962813E-01   # H+ decays
 #         PDG            Width
 DECAY   1000021     5.50675438E+00   # gluino decays
 #          BR         NDA      ID1       ID2
-     1.000000000000    3     1000024    1   -2   # BR(~g -> ~chi1+ ubar d)
+     1.000000000000    3     1000023    1   -1   # BR(~g -> ~chi1+ ubar d)
 #
 #         PDG            Width
 DECAY   1000006     2.02159578E+00   # stop1 decays
