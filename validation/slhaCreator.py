@@ -258,7 +258,7 @@ class TemplateFile(object):
 if __name__ == "__main__":
     import argparse, types
     argparser = argparse.ArgumentParser(description="creates slha files from template file in given mass ranges")
-    argparser.add_argument ( '-T', '--topology', nargs='?', help='topology to create SLHA files for',
+    argparser.add_argument ( '-t', '--topology', nargs='?', help='topology to create SLHA files for',
         type=str, default='T1' )
     argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description 2*[[x, y, 60.]]',
         type=str, default='2*[[x, y, 60.]]' )
@@ -279,16 +279,16 @@ if __name__ == "__main__":
     argparser.add_argument('-c', '--clear', action='store_true',
         help="clear cruft files")
     argparser.add_argument('-6', '--pythia6', action='store_true',
-        help="use pythia6 for LO cross sections")
+        help="use pythia6 for LO cross sections [default]")
     argparser.add_argument('-8', '--pythia8', action='store_true',
-        help="use pythia8 for LO cross sections (default)")
+        help="use pythia8 for LO cross sections")
     args=argparser.parse_args()
     if args.clear:
         subprocess.getoutput ( "rm -rf tmp* pythia*card" )
         sys.exit()
-    pythiaVersion = 8
-    if args.pythia6:
-        pythiaVersion = 6
+    pythiaVersion = 6
+    if args.pythia8:
+        pythiaVersion = 8
 
     templatefile="../slha/templates/%s.template" % args.topology
     if not os.path.exists ( templatefile ):
