@@ -498,7 +498,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     l3.SetNDC()
     l3.SetTextSize(.025)
     l3.SetTextColor( kGray )
-    l3.DrawLatex(.12,.86,"points with no results: %d" % nErrors)
+    l3.DrawLatex(.12,.86,"%d / %d points with no results" % (nErrors, len(validationPlot.data) ) )
 
     #l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor)
     base.l2=l2
