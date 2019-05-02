@@ -8,7 +8,7 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 """
 
-import os, sys, colorama, subprocess, shutil, tempfile
+import os, sys, colorama, subprocess, shutil, tempfile, time
 import multiprocessing
 import bakeryHelpers
 
@@ -261,6 +261,8 @@ def main():
         subprocess.getoutput ( "rm -rf mg5cmd* mg5proc* tmp*slha T*jet* run*card" )
         print ( "Cleaned temporary files." )
         sys.exit()
+    with open("baking.log","a") as f:
+        f.write ( "%s: started %s\n" % ( time.asctime(), " ".join ( sys.argv  ) ) )
     nReqM = bakeryHelpers.nRequiredMasses ( args.topo )
     masses = bakeryHelpers.parseMasses ( args.masses, filterOrder=True )
     nm = len(masses)
@@ -293,6 +295,8 @@ def main():
         args = SimpleNamespace ( masses=args.masses, topo=args.topo, njets=args.njets, \
                 analyses = analyses, copy=args.copy )
         run ( args )
+    with open("baking.log","a") as f:
+        f.write ( "%s: ended: %s\n" % ( time.asctime(), " ".join ( sys.argv  ) ) )
 
 if __name__ == "__main__":
     main()
