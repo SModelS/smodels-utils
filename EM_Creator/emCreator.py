@@ -104,11 +104,13 @@ class emCreator:
 
 def run ( args ):
     if args.masses == "all":
-        masses = bakeryHelpers.getListOfMasses ( args.topo, args.njets )
+        masses = bakeryHelpers.getListOfMasses ( args.topo, args.njets, postMA5=True )
     else:
         masses = bakeryHelpers.parseMasses ( args.masses )
     creator = emCreator( args.analyses, args.topo, args.njets )
     effs={}
+    if args.verbose:
+        print ( "%d mass points considered" % len(masses) )
     for m in masses:
         eff = creator.extract( m )
         for k,v in eff.items():
@@ -165,6 +167,8 @@ def main():
                              type=int, default=1 )
     argparser.add_argument ( '-t', '--topo', help='topology [T2]',
                              type=str, default="T2" )
+    argparser.add_argument ( '-v', '--verbose', help='be verbose',
+                             action="store_true" )
     argparser.add_argument ( '-c', '--copy', help='copy embaked file to smodels-database',
                              action="store_true" )
     argparser.add_argument ( '-a', '--analyses', help='analyses, comma separated [atlas_sus_2016_07]',

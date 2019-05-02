@@ -17,7 +17,7 @@ def dirName ( process, masses ):
     return process + "." + "_".join(map(str,masses))
 
 def parseMasses ( massstring, filterOrder=True ):
-    """ parse the mass string, e.g. (500,510,10),(100,110,10). keywords like "half" are 
+    """ parse the mass string, e.g. (500,510,10),(100,110,10). keywords like "half" are
         accepted.
     :param filterOrder: if true, discard vectors with daughters more massive than their
                            mothers.
@@ -91,11 +91,16 @@ def nJobs ( nproc, npoints ):
         ret = npoints
     return ret
 
-def getListOfMasses(topo, njets):
-    """ get a list of the masses of an mg5 scan. to be used for e.g. ma5. """
+def getListOfMasses(topo, njets, postMA5=False ):
+    """ get a list of the masses of an mg5 scan. to be used for e.g. ma5.
+    :param postMA5: query the ma5 output, not mg5 output.
+    """
     import glob
     ret=[]
-    files = glob.glob("%s_%djet.*" % ( topo, njets ) )
+    fname = "%s_%djet.*" % ( topo, njets )
+    if postMA5:
+        fname="ma5/ANA_"+fname
+    files = glob.glob( fname )
     for f in files:
         p=f.find("jet.")
         masses = tuple(map(int,map(float,f[p+4:].split("_"))))
