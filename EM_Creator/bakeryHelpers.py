@@ -59,7 +59,7 @@ def parseMasses ( massstring, filterOrder=True ):
         ret = []
         for x  in lists[0]:
             for z in lists[2]:
-                y=.5*x+.5*z
+                y=int(.5*x+.5*z)
                 ret.append ( (x,y,z) )
         return ret
     ret = []
@@ -98,7 +98,7 @@ def getListOfMasses(topo, njets):
     files = glob.glob("%s_%djet.*" % ( topo, njets ) )
     for f in files:
         p=f.find("jet.")
-        masses = tuple(map(int,f[p+4:].split("_")))
+        masses = tuple(map(int,map(float,f[p+4:].split("_"))))
         ret.append ( masses )
     return ret
 
