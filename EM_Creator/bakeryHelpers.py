@@ -60,7 +60,7 @@ def parseMasses ( massstring, filterOrder=True ):
         for x  in lists[0]:
             for z in lists[2]:
                 y=int(.5*x+.5*z)
-                ret.append ( (x,y,z) )
+                ret.append ( (int(x),y,int(z)) )
         return ret
     ret = []
     if len(lists)==2:
@@ -68,7 +68,7 @@ def parseMasses ( massstring, filterOrder=True ):
             for y in range ( len(lists[1]) ):
                 if filterOrder and lists[1][y] > lists[0][x]:
                     continue
-                ret.append ( (lists[0][x],lists[1][y]) )
+                ret.append ( (int(lists[0][x]),int(lists[1][y])) )
     if len(lists)==3:
         for x in range ( len(lists[0] ) ):
             for y in range ( len(lists[1]) ):
@@ -77,7 +77,7 @@ def parseMasses ( massstring, filterOrder=True ):
                 for z in range ( len(lists[2]) ):
                     if filterOrder and lists[2][z] > lists[1][y]:
                         continue
-                    ret.append ( (lists[0][x],lists[1][y],lists[2][z]) )
+                    ret.append ( (int(lists[0][x]),int(lists[1][y]),int(lists[2][z])) )
     return ret
 
 def nJobs ( nproc, npoints ):
