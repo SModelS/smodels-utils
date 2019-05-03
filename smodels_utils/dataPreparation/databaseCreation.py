@@ -577,8 +577,8 @@ class DatabaseCreator(list):
                     for t in tokens:
                         if not "z" in t:
                             value+= t+"; "
-                    if value[-1]==";":
-                        value=value[:-1]
+                    if value[-2:]=="; ":
+                        value=value[:-2]
                     if "z" in value:
                         logger.error ( "Attempt at removal was not successful. Please fix in convert.py." )
                         sys.exit()
