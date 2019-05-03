@@ -54,8 +54,8 @@ class ValidationPlot():
 
         self.expRes = copy.deepcopy(ExptRes)
         self.txName = TxNameStr
-        self.axes = Axes
-        self.niceAxes = self.getNiceAxes(Axes)
+        self.axes = Axes.strip()
+        self.niceAxes = self.getNiceAxes(Axes.strip())
         self.slhaDir = None
         self.data = None
         self.officialCurves = self.getOfficialCurve( get_all = True )
