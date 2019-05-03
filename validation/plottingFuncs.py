@@ -41,30 +41,30 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):
     Reads sms.root and returns the TGraph objects for the exclusion
     curves. If txname is defined, returns only the curves corresponding
     to the respective txname. If axes is defined, only returns the curves
-    
+
     :param expResult: an ExpResult object
     :param txname: the TxName in string format (i.e. T1tttt)
     :param axes: the axes definition in string format (i.e. 2*Eq(mother,x)_Eq(lsp,y))
     :param get_all: Get also the +-1 sigma curves?
-    
+
     :return: a dictionary, where the keys are the TxName strings
             and the values are the respective list of TGraph objects.
     """
-    
+
     if type(expResult)==list:
         expResult=expResult[0]
     rootpath = os.path.join(expResult.path,'sms.root')
     if not os.path.isfile(rootpath):
         logger.error("Root file %s not found" %rootpath)
         return False
-    
+
     rootFile = TFile(rootpath)
     txnames = {}
     #Get list of TxNames (directories in root file)
-    for obj in rootFile.GetListOfKeys():        
+    for obj in rootFile.GetListOfKeys():
         objName = obj.ReadObj().GetName()
         if txname and txname != objName: continue
-        txnames[objName] = obj.ReadObj()      
+        txnames[objName] = obj.ReadObj()
     if not txnames:
         logger.warning("Exclusion curve for %s not found in %s" %(txname,rootpath))
         return False
@@ -85,11 +85,11 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):
     if not nplots:
         logger.warning("No exclusion curve found.")
         return False
-    
+
     return txnames
 
 def getFigureUrl(validationPlot ):
-    
+
     txname = validationPlot.expRes.datasets[0].txnameList[0]
     txurl = txname.getInfo("figureUrl")
     txaxes = txname.getInfo("axes")
@@ -104,23 +104,23 @@ def getFigureUrl(validationPlot ):
     elif isinstance(txurl,list) and len(txurl) != len(txaxes):
         logger.error("figureUrl (%s) and axes (%s) are not of the same length" %(txurl,
                        txaxes))
-        return None 
+        return None
     if not validationPlot.axes in txaxes:
         return None
     pos = [i for i,x in enumerate(txaxes) if x==validationPlot.axes ]
-    
+
     if len(pos)!=1:
         logger.error("found axes %d times" % len(pos))
         sys.exit()
     return txurl[pos[0]]
 
-def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestregion", nthpoint =1, 
+def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestregion", nthpoint =1,
        signal_factor = 1. ):
     """
     Uses the data in validationPlot.data and the official exclusion curve
     in validationPlot.officialCurves to generate "special" plots, showing
     e.g. upper limits or best signal region
-    
+
     :param validationPlot: ValidationPlot object
     :param silentMode: If True the plot will not be shown on the screen
     :param what: what is to be plotted("bestregion", "upperlimits", "crosssections")
@@ -132,7 +132,8 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     """
     kfactor=None
 
-    excluded, allowed, excluded_border, allowed_border = TGraph(), TGraph(), TGraph(), TGraph()
+    excluded, allowed = TGraph(), TGraph()
+    excluded_border, allowed_border = TGraph(), TGraph()
     cond_violated=TGraph()
     if not validationPlot.data:
         logger.warning("Data for validation plot is not defined.")
@@ -176,8 +177,8 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     else:
         official = validationPlot.officialCurves
         if isinstance(official,list): official = official[0]
-    
-    if silentMode: gROOT.SetBatch()    
+
+    if silentMode: gROOT.SetBatch()
     setOptions(allowed, Type='allowed')
     setOptions(cond_violated, Type='cond_violated')
     setOptions(allowed_border, Type='allowed_border')
@@ -198,7 +199,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
             + "_" + validationPlot.niceAxes
             # + "_" + validationPlot.axes
     figureUrl = getFigureUrl(validationPlot)
-    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
+    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
     base.Draw("AP")
     base.SetTitle(title)
     l=TLatex()
@@ -217,7 +218,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     else:
         # Get excluded and allowed points:
         for ctr,pt in enumerate(validationPlot.data):
-            if ctr%nthpoint != 0: 
+            if ctr%nthpoint != 0:
                 continue
             if kfactor == None:
                 kfactor = pt ['kfactor']
@@ -267,14 +268,14 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
                         continue
                 for (itr, (mass,ul)) in enumerate(txnameData ):
                     if itr% nthpoint != 0: continue
-                    mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]            
+                    mass_unitless = [[(m/GeV).asNumber() for m in mm] for mm in mass]
                     varsDict = massPlane.getXYValues(mass_unitless)
                     if not varsDict:
                         continue
                     x ,y = varsDict['x'],varsDict['y']
                     ul = ul.asNumber(pb)
                     lk.DrawLatex(x, y, "#color[4]{%.2f}" % ul )
-                
+
 
     l2=TLatex()
     l2.SetNDC()
@@ -291,7 +292,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     if what in [ "bestregion", "bestcut" ]:
         drawingwhat="best signal region"
     else:
-        drawingwhat = what        
+        drawingwhat = what
     l3.DrawLatex(.15,.7, drawingwhat )
     base.l3=l3
     if abs(signal_factor-1.0)>.0001:
@@ -307,37 +308,54 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
         _ = raw_input("Hit any key to close\n")
 
     plane.labels=labels
-    
+
     return plane
-            
+
+def getXYFromSLHAFile ( slhafile, vPlot ):
+    """ get coordinates from the slhafile name, given
+        a validationPlot object vPlot """
+    tokens = slhafile.replace(".slha","").split("_" )
+    masses = list ( map ( float, tokens[1:] ) )
+    massPlane = MassPlane.fromString( vPlot.txName, vPlot.axes )
+    branchSplit = int ( len(masses)/2 )
+    if len(masses) % 2 != 0:
+        logger.warning("asymmetrical branch. Dont know how to handle" )
+    varsDict = massPlane.getXYValues([ masses[:branchSplit], masses[branchSplit:] ])
+    # print ( "from slha: %s, %s -> %s" % ( massPlane, masses, varsDict ) )
+    ## FIXME take into account axis
+    return varsDict
+
 def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
                 weightedAgreementFactor=False ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate the "ugly" exclusion plot
-    
+
     :param validationPlot: ValidationPlot object
     :param silentMode: If True the plot will not be shown on the screen
     :param weightedAgreementFactor: weight points for the agreement factor with
                                     the area of their Voronoi cell
     :return: TCanvas object containing the plot
     """
-        
+
     # Check if data has been defined:
     xlabel, ylabel = 'x','y'
     excluded, allowed, excluded_border, allowed_border = TGraph(), TGraph(), TGraph(), TGraph()
+    noresult = TGraph() ## queried but got no result
     excluded.SetName("excluded")
     allowed.SetName("allowed")
+    noresult.SetName("noresult")
     excluded_border.SetName("excluded_border")
     allowed_border.SetName("allowed_border")
     cond_violated=TGraph()
     kfactor=None
     tavg = 0.
-        
+
     countPts = 0 ## count good points
 
     if not validationPlot.data:
         logger.error("Data for validation plot is not defined.")
+        x,y = get
         return (None,None)
         ## sys.exit()
 
@@ -345,6 +363,11 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     # Get excluded and allowed points:
     for pt in validationPlot.data:
         if "error" in pt.keys():
+            vD = getXYFromSLHAFile ( pt["slhafile"], validationPlot )
+            if vD != None:
+                # print ( "adding no-result point", noresult.GetN(), vD )
+                x_, y_ = copy.deepcopy ( vD["x"] ), copy.deepcopy ( vD["y"] )
+                noresult.SetPoint(noresult.GetN(), x_, y_ )
             nErrors += 1
             continue
         countPts += 1
@@ -369,7 +392,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
                 x,y = xvals['x'],xvals['y']
         else:
             x,y = pt['axes']
-        
+
 
         if pt['condition'] and pt['condition'] > 0.05:
             logger.warning("Condition violated for file " + pt['slhafile'])
@@ -397,22 +420,35 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     else:
         official = validationPlot.officialCurves
         logger.debug("Official curves have length %d" % len (official) )
-    
-    if silentMode: gROOT.SetBatch()    
+
+    if silentMode: gROOT.SetBatch()
     setOptions(allowed, Type='allowed')
     setOptions(cond_violated, Type='cond_violated')
     setOptions(allowed_border, Type='allowed_border')
     setOptions(excluded, Type='excluded')
     setOptions(excluded_border, Type='excluded_border')
+    setOptions(noresult, Type='noresult')
     if official:
         for i in official:
             setOptions( i, Type='official')
     base = TMultiGraph()
-    if allowed.GetN()>0: base.Add(allowed, "P")
-    if excluded.GetN()>0: base.Add(excluded, "P")
-    if allowed_border.GetN()>0: base.Add(allowed_border, "P")
-    if excluded_border.GetN()>0: base.Add(excluded_border, "P")
-    if cond_violated.GetN()>0: base.Add(cond_violated, "P")
+    dx = .33 ## top, right
+    nleg = 1
+    leg = TLegend(0.15+dx,0.75-0.040*nleg,0.495+dx,0.83)
+    setOptions(leg)
+    leg.SetTextSize(0.04)
+    if allowed.GetN()>0: 
+        base.Add(allowed, "P")
+    if excluded.GetN()>0: 
+        base.Add(excluded, "P")
+    if allowed_border.GetN()>0: 
+        base.Add(allowed_border, "P")
+    if excluded_border.GetN()>0: 
+        base.Add(excluded_border, "P")
+    if cond_violated.GetN()>0: 
+        base.Add(cond_violated, "P")
+    if noresult.GetN()>0: 
+        base.Add(noresult, "P")
     if official:
         for i in official:
             base.Add( i, "L")
@@ -435,28 +471,30 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     if len(validationPlot.expRes.datasets) == 1 and \
             type(validationPlot.expRes.datasets[0].dataInfo.dataId)==type(None):
         subtitle = "dataset: upper limit"
-        
+
     figureUrl = getFigureUrl(validationPlot)
-    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)    
+    plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
     if y>1e-24 and y<1e-6:
         ## assume that its a "width" axis
         plane.SetLogy()
     base.Draw("APsame")
+    leg.Draw()
     for i in official:
         completed = copy.deepcopy ( i )
         validationPlot.completeGraph ( completed )
-        completed.SetLineColor( kGray ) 
+        completed.SetLineColor( kGray )
         completed.SetLineStyle( 3 ) # show also how plot is completed
         completed.Draw("LP SAME" )
         i.Draw("LP SAME" )
         base.completed = completed
     #base.Draw("Psame")
+    base.leg = leg
     base.SetTitle(title)
     try:
         base.GetXaxis().SetTitle(xlabel)
         base.GetYaxis().SetTitle(ylabel)
     except:
-        pass    
+        pass
     l=TLatex()
     l.SetNDC()
     l.SetTextSize(.04)
@@ -467,7 +505,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     l0.DrawLatex(.05,.905,subtitle)
     signal_factor = 1. # an additional factor that is multiplied with the signal cross section
     weighted = weightedAgreementFactor # compute weighted agreement factor?
-    agreement = round(100.*validationPlot.computeAgreementFactor( 
+    agreement = round(100.*validationPlot.computeAgreementFactor(
                        signal_factor = signal_factor, weighted = weighted ))
     logger.info ( "\033[32mAgreement: %d%s\033[0m (with %d points)" % (agreement,"%",len(validationPlot.data)) )
     if extraInfo:
@@ -517,14 +555,14 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
 
     if not silentMode:
         _ = raw_input("Hit any key to close\n")
-    
+
     return plane,base
 
 def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate a pretty exclusion plot
-    
+
     :param validationPlot: ValidationPlot object
     :param silentMode: If True the plot will not be shown on the screen
     :return: TCanvas object containing the plot
@@ -542,7 +580,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         logY = True
         xlabel = "x [mass, GeV]"
         ylabel = "y [width, GeV]"
-    
+
     if not validationPlot.data:
         logger.error("Data for validation plot is not defined.")
         return (None,None)
@@ -571,7 +609,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             x,y = xvals
         if logY:
             y = rescaleWidth(y)
-        
+
         if pt['condition'] and pt['condition'] > 0.05:
             condV += 1
             if condV < 5:
@@ -622,7 +660,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     else:
         official = validationPlot.officialCurves
         logger.debug("Official curves have length %d" % len (official) )
-    
+
     if logY:
         for contour in official:
             x, y = Double(), Double()
@@ -631,8 +669,8 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
                 contour.GetPoint(i,x,y)
                 # print ( "y",y,rescaleWidth(y) )
                 contour.SetPoint(i,x,rescaleWidth(y) )
-    
-    if silentMode: gROOT.SetBatch()  
+
+    if silentMode: gROOT.SetBatch()
     setOptions(tgr, Type='allowed')
     title = validationPlot.expRes.getValuesFor('id')[0]
     types = []
@@ -644,7 +682,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     types = list(set(types))
     if len(types) == 1: types = types[0]
     resultType = "%s" %str(types)
-    title = title + "  #scale[0.8]{("+resultType+")}"  
+    title = title + "  #scale[0.8]{("+resultType+")}"
     tgr.SetTitle(title)
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
     plane.SetRightMargin(0.16)
@@ -653,11 +691,11 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     plane.SetLeftMargin(0.12)
     gStyle.SetTitleSize(0.045,"t")
     gStyle.SetTitleY(1.005)
-   
+
     #Get contour graphs:
     contVals = [1./looseness,1.,looseness]
     cgraphs = getContours(tgr,contVals)
-                
+
     #Draw temp plot:
     h = tgr.GetHistogram()
     setOptions(h,Type='pretty')
@@ -680,13 +718,13 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         nbins = ya.GetNbins()
         last = 0
         for i in range( 1, nbins ):
-            center = ya.GetBinCenter(i) 
+            center = ya.GetBinCenter(i)
             width = unscaleWidth ( center )
             if type(width) == type(GeV):
                 width = float ( width.asNumber(GeV) )
             center10 = math.log10 ( width )
             r_center = int ( round ( center10 ) )
-            delta = abs ( center10 - r_center ) 
+            delta = abs ( center10 - r_center )
             if r_center != last and delta < .1:
                 ya.SetBinLabel( i, "10^{%d}" % r_center )
                 last = r_center
@@ -710,8 +748,8 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             # validationPlot.completeGraph ( gr )
             setOptions(gr, Type='official')
             gr.Draw("L SAME")
-    
-    #Draw additional info      
+
+    #Draw additional info
     ltx=TLatex()
     ltx.SetNDC()
     ltx.SetTextSize(.035)
@@ -739,7 +777,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         l2.SetTextSize(.04)
         l2.DrawLatex(0.16,0.2,"k-factor = %.2f" % kfactor)
         tgr.l2=l2
-    
+
     subtitle = "%d datasets" % len(validationPlot.expRes.datasets)
     dId = validationPlot.expRes.datasets[0].dataInfo.dataId
     if type(dId) == str and dId.startswith("ar"):
@@ -764,20 +802,20 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     lsub.SetTextSize(.025)
     lsub.DrawLatex(.98,.086,subtitle)
     tgr.lsub=lsub
-    
+
     nleg = 1
     if cgraphs != None and official != None:
     #Count the number of entries in legend:
         nleg = min(2,len(cgraphs)-list(cgraphs.values()).count([])) + min(2,len(official))
-    #Draw legend: 
+    #Draw legend:
     dx = 0. ## top, left
     dx = .33 ## top, right
     leg = TLegend(0.15+dx,0.75-0.040*nleg,0.495+dx,0.83)
-    setOptions(leg)    
+    setOptions(leg)
     # leg.SetFillStyle(0)
     leg.SetTextSize(0.04)
-    added = False    
-    for cval,grlist in cgraphs.items():        
+    added = False
+    for cval,grlist in cgraphs.items():
         if not grlist:
             continue
         if cval == 1.0:
@@ -793,14 +831,14 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             elif ('xclusionP1_' in gr.GetTitle() or 'xclusionM1_' in gr.GetTitle()) and (not added):
                 leg.AddEntry(gr,"#pm1#sigma (official)","L")
                 added = True
-    
+
     leg.Draw()
     tgr.leg = leg
-    plane.Update()  
+    plane.Update()
 
     if not silentMode:
         ans = raw_input("Hit any key to close\n")
-    
+
     return plane,tgr
 
 def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signal_factor =1.):
@@ -808,7 +846,7 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
     Uses the data in validationPlot.data and the official exclusion curve
     in validationPlot.officialCurves to generate temperature plots, showing
     e.g. upper limits or R values
-    
+
     :param validationPlot: ValidationPlot object
     :param silentMode: If True the plot will not be shown on the screen
     :param what: what is to be plotted ("upperlimits", "crosssections", "R")
@@ -832,7 +870,7 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
             if abs(kfactor - pt['kfactor'])> 1e-5:
                 logger.error("kfactor not a constant throughout the plane!")
                 sys.exit()
-                
+
             if isinstance(pt['axes'],dict):
                 if len(pt['axes']) == 1:
                     x, y = pt['axes']['x'], pt['signal']/pt['UL']
@@ -854,7 +892,7 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
             if pt['signal'] > pt['UL']:
                 excluded.SetPoint(excluded.GetN(), x, y )
 
-    zlabel = ""            
+    zlabel = ""
     if what == "R":
         zlabel = "#sigma_{theory}/#sigma_{UL}"
     elif what == "crosssections":
@@ -870,12 +908,12 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
         official = validationPlot.officialCurves
         if isinstance(official,list): official = official[0]
     #Get envelopes:
-    exclenvelop = TGraph(getEnvelope(excluded)) 
+    exclenvelop = TGraph(getEnvelope(excluded))
     setOptions(exclenvelop, Type='excluded')
-    
+
     if silentMode: gROOT.SetBatch()
-    setOptions(grTemp, Type='temperature')        
-    if official:        
+    setOptions(grTemp, Type='temperature')
+    if official:
         setOptions(official, Type='official')
 
     base = grTemp
@@ -887,10 +925,10 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
     plane = TCanvas("Validation Plot", title, 0, 0, 800, 600)
     plane.SetRightMargin(0.16)
     plane.SetLeftMargin(0.15)
-    plane.SetBottomMargin(0.15)    
-    set_palette(gStyle) 
+    plane.SetBottomMargin(0.15)
+    set_palette(gStyle)
     h = grTemp.GetHistogram()
-    setOptions(h, Type='temperature') 
+    setOptions(h, Type='temperature')
     h.Draw("COLZ")
     h.GetZaxis().SetTitle(zlabel)
     if official:
@@ -919,19 +957,19 @@ def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signa
     if not silentMode:
         ans = raw_input("Hit any key to close\n")
     plane.Print("test.png")
-    
+
     return plane
 
 
-        
+
 def setOptions(obj,Type=None):
     """
     Define global options for the plotting object according to its type.
     :param obj: a plotting object (TGraph, TMultiGraph, TCanvas,...)
     :param type: a string defining the object (allowed, excluded, official,...)
     """
-    
-#Defaul settings:    
+
+#Defaul settings:
     if isinstance(obj,TCanvas):
         obj.SetLeftMargin(0.1097891)
         obj.SetRightMargin(0.02700422)
@@ -987,30 +1025,34 @@ def setOptions(obj,Type=None):
 #Type-specific settings:
     if not Type: return True
     elif Type == 'allowed':
-        obj.SetMarkerStyle(20)    
+        obj.SetMarkerStyle(20)
         obj.SetMarkerColor(kGreen)
+    elif Type == 'noresult':
+        obj.SetMarkerStyle(20)
+        obj.SetMarkerSize(.5)
+        obj.SetMarkerColor(kGray)
     elif Type == 'cond_violated':
         obj.SetMarkerStyle(23)
         obj.SetMarkerColor(kGreen)
     elif Type == 'excluded':
-        obj.SetMarkerStyle(20)    
+        obj.SetMarkerStyle(20)
         obj.SetMarkerColor(kRed)
 #        obj.SetFillColorAlpha(kRed,0.15)
         obj.SetLineColor(kRed)
         obj.SetLineWidth(4)
         obj.SetLineStyle(2)
     elif Type == 'allowed_border':
-        obj.SetMarkerStyle(20)    
+        obj.SetMarkerStyle(20)
         obj.SetMarkerColor(kGreen+3)
     elif Type == 'excluded_border':
-        obj.SetMarkerStyle(20)    
+        obj.SetMarkerStyle(20)
         obj.SetMarkerColor(kOrange+1)
     elif Type == 'official':
         obj.SetLineWidth(4)
         obj.SetLineColor(kBlack)
     elif Type == 'smodels':
         obj.SetLineWidth(4)
-        obj.SetLineColor(kRed)        
+        obj.SetLineColor(kRed)
     elif Type == 'temperature':
         obj.SetMarkerStyle(20)
         obj.SetMarkerSize(1.5)
@@ -1019,7 +1061,7 @@ def setOptions(obj,Type=None):
         obj.GetXaxis().SetTitleFont(12)
         obj.GetXaxis().SetTitleOffset(0.7)
         obj.GetYaxis().SetTitleFont(12)
-        obj.GetYaxis().SetTitleOffset(0.8)    
+        obj.GetYaxis().SetTitleOffset(0.8)
         obj.GetZaxis().CenterTitle()
         obj.GetZaxis().SetTitleOffset(1.05)
         obj.GetXaxis().SetLabelSize(0.045)
@@ -1028,7 +1070,7 @@ def setOptions(obj,Type=None):
         obj.GetXaxis().SetTitleSize(0.06)
         obj.GetYaxis().SetTitleSize(0.06)
         obj.GetZaxis().SetTitleSize(0.051)
- 
+
 
 def getContours(tgr,contVals):
     """
@@ -1036,21 +1078,21 @@ def getContours(tgr,contVals):
     contour values contVals from the input TGraph2D object
     :param tgr: ROOT TGraph2D object containing the x,y,r points
     :param contVals: r-values for the contour graphs
-     
+
     :return: a dictionary, where the keys are the contour values
              and the values are a list of TGraph objects containing the curves
              for the respective contour value (e.g. {1. : [TGraph1,TGraph2],...})
     """
-    
+
     if tgr.GetN() == 0:
         logger.info("No excluded points found for %s" %tgr.GetName())
         return None
-    
+
     cVals = sorted(contVals)
     if tgr.GetN() < 4:
         print ( "Error: Cannot create a contour with fewer than 3 input vertices" )
         return None
-    h = tgr.GetHistogram()    
+    h = tgr.GetHistogram()
     #Get contour graphs:
     c1 = TCanvas()
     h.SetContour(3,array('d',cVals))
@@ -1086,7 +1128,7 @@ def getEnvelope(excludedGraph):
     x1, y1 = Double(), Double()
     curve.GetPoint(0, x1, y1)
     yline = []
-    for ipt in range(curve.GetN() + 1): 
+    for ipt in range(curve.GetN() + 1):
         x, y = Double(), Double()
         dmin = 0.
         if ipt < curve.GetN(): curve.GetPoint(ipt, x, y)
@@ -1098,7 +1140,7 @@ def getEnvelope(excludedGraph):
                 newy = max(yline)
                 if len(dy) > 2: dmin = min([abs(yline[i] - yline[i + 1]) for i in range(len(yline) - 1)])
             else:
-                newy = max(yline)     
+                newy = max(yline)
         #        dmin = min(dy)
                 dmin = sum(dy) / float(len(dy))
                 for iD in range(len(dy) - 1):
@@ -1112,13 +1154,13 @@ def getEnvelope(excludedGraph):
     x2, y2 = Double(), Double()
     envelop.GetPoint(envelop.GetN() - 1, x2, y2)
     envelop.SetPoint(envelop.GetN(), x2, 0.)  #Close exclusion curve at zero
-    return envelop        
+    return envelop
 
 def set_palette(gStyle, ncontours=999):
     """Set a color palette from a given RGB list
     stops, red, green and blue should all be lists of the same length
     see set_decent_colors for an example"""
-    
+
     # default palette, looks cool
     stops = [0.00, 0.34, 0.61, 0.84, 1.00]
     red   = [0.00, 0.00, 0.87, 1.00, 0.51]
