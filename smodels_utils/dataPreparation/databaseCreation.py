@@ -572,10 +572,16 @@ class DatabaseCreator(list):
                 ## remove full 3d entries
                 if "z" in value:
                     logger.warning ( "There is a 3d axis. Will try to remove it." )
-                    value = value.replace ( "[[x, y, z], [x, y, z]];", "" )
-                    value = value.replace ( "[[x, y, z], [x, y, z]]", ""  )
+                    tokens = value.split(";")
+                    value=""
+                    for t in tokens:
+                        if not "z" in t:
+                            value+= t+"; "
+                    if value[-1]==";":
+                        value=value[:-1]
                     if "z" in value:
                         logger.error ( "Attempt at removal was not successful. Please fix in convert.py." )
+                        sys.exit()
             content = '%s%s%s%s\n' % (content, attr,\
                                        self.assignmentOperator, value)
         for attr in obj.infoAttr:
