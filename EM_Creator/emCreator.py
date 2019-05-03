@@ -130,7 +130,11 @@ def run ( args ):
         f=open(fname,"w")
         f.write ( "# EM-Baked %s. %d points, %d signal regions.\n" % \
                    ( time.asctime(), len(values.keys()), len(SRs) ) )
-        f.write ( "%s\n" % values )
+        # f.write ( "%s\n" % values )
+        f.write ( "{" )
+        for k,v in values.items():
+            f.write ( "%s: %s, \n" % ( k,v ) )
+        f.write ( "}\n" )
         f.close()
         sqrts = 13
         experiment = "CMS"
