@@ -104,9 +104,14 @@ class ValidationPlot():
         import ROOT
         x1,y1=ROOT.Double(),ROOT.Double()
         x2,y2=ROOT.Double(),ROOT.Double()
+        xl,yl=ROOT.Double(),ROOT.Double()
         # first compute k of the first three points
         curve.GetPoint ( 0, x1, y1 ) ## get first point
         curve.GetPoint ( 2, x2, y2 ) ## get third point
+        curve.GetPoint ( curve.GetN()-1, xl, yl ) ## get last point
+        if (( x1 - xl )**2 + ( y1 - yl ) ** 2 ) < 50.:
+            ## need not completion
+            return
         logY=False
         ax1, ay1 = copy.deepcopy(x1), copy.deepcopy(y1)
         ax2, ay2 = copy.deepcopy(x2), copy.deepcopy(y2)

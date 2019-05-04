@@ -17,16 +17,36 @@ def distance ( d1, d2 ):
 def mkstring ( d ):
     return "_".join ( map(str,map(int,d)))
 
-def weed ( dists, maxDistance ):
+def weed ( dists, maxDistance, massgaps ):
+    if len(dists)==0:
+        return
     keepIt = {}
     t0=time.time()
     nWeeded = 0
+    mgaps = [0.] * (int(len(dists[0])/2.)-1)
+    if massgaps != "":
+        mgaps = eval(massgaps)
+    print ( "[weed] massgap considered", mgaps )
     for x,d1 in enumerate(dists):
         if x % 200 == 0:
             print ( "Checking point #%d %.1f [s]. weeded: %d" % (x,time.time()-t0, nWeeded ) )
         sd1=mkstring(d1)
         if sd1 in keepIt: ## can only be false
             continue
+        nhalf = int(len(d1)/2)
+        for idx,dcur in enumerate(d1[:nhalf]):
+            if idx == 0:
+                continue
+            if dcur > d1[idx-1]:
+                print ( "Inverted masses %s" % d1 )
+                keepIt[sd1]=False
+                nWeeded+=1
+                break
+            if dcur > d1[idx-1] - mgaps[idx-1]:
+                print ( "Massgap not fulfilled %s" % d1 )
+                keepIt[sd1]=False
+                nWeeded+=1
+                break
         keepIt[sd1]=True
         # maxi = min(len(dists),x+1000)
         maxi = len(dists)
@@ -51,8 +71,11 @@ def main():
             help='specify the topology to be thinned out [T5WW].',
             default = 'T5WW', type = str )
     ap.add_argument ( '-d', '--distance', 
-            help='max tolerated distance (GeV) from other point [10.]',
-            default = 10., type = float )
+            help='max tolerated distance (GeV) from other point [24.]',
+            default = 24., type = float )
+    ap.add_argument ( '-g', '--massgaps', 
+            help='require mass gaps, e.g. (0,80.). Auto means, guess from topo name. [""]',
+            default = "", type = str )
     args = ap.parse_args()
     tarball = "../slha/%s.tar.gz" % args.topo
     if not os.path.exists ( tarball ):
@@ -70,7 +93,13 @@ def main():
     dists.sort()
     print ( "%d points before weeding." % ( len(dists ) ) )
     t0=time.time()
-    weeded = weed ( dists, args.distance**2 )
+    massgaps = args.massgaps
+    if massgaps == "auto":
+        if args.topo in [ "T6WW", "T6WZh" ]:
+            massgaps = "(0.,80.)"
+    if massgaps == "auto": ## still?
+        massgaps = ""
+    weeded = weed ( dists, args.distance**2, massgaps )
     print ( "%d points after weeding." % ( len(weeded ) ) )
     print ( "(Took %d seconds)" % ( time.time() - t0 ) )
     a = open("weed.pcl","wb")
