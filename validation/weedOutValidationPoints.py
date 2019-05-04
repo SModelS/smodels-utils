@@ -7,6 +7,7 @@ import subprocess
 import argparse
 import glob, os, sys, time, pickle
 import tempfile
+from math import sqrt
 
 def distance ( d1, d2 ):
     ret=0.
@@ -59,7 +60,7 @@ def weed ( dists, maxDistance, massgaps, verbose ):
             d= distance(d1,d2)
             if d < maxDistance:
                 if verbose:
-                    print ( "kick out %s: too close to %s." % (sd2,sd1) )
+                    print ( "kick out %s: too close to %s (d=%.1f)." % (sd2,sd1,sqrt(d)) )
                 keepIt[sd2]=False
                 nWeeded+=1
                 # break
