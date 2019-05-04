@@ -432,23 +432,30 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
         for i in official:
             setOptions( i, Type='official')
     base = TMultiGraph()
-    dx = .33 ## top, right
-    nleg = 1
-    leg = TLegend(0.15+dx,0.75-0.040*nleg,0.495+dx,0.83)
+    dx = .12 ## top, right
+    nleg = 5
+    leg = TLegend( dx,0.82-0.040*nleg,0.35+dx,0.88)
     setOptions(leg)
     leg.SetTextSize(0.04)
     if allowed.GetN()>0: 
         base.Add(allowed, "P")
+        leg.AddEntry ( allowed, "allowed", "P" )
     if excluded.GetN()>0: 
         base.Add(excluded, "P")
+        leg.AddEntry ( excluded, "excluded", "P" )
     if allowed_border.GetN()>0: 
         base.Add(allowed_border, "P")
+        leg.AddEntry(allowed_border, "allowed (but close)", "P")
     if excluded_border.GetN()>0: 
         base.Add(excluded_border, "P")
+        leg.AddEntry(excluded_border, "excluded (but close)", "P")
     if cond_violated.GetN()>0: 
         base.Add(cond_violated, "P")
+        base.Add(noresult, "P")
+        leg.AddEntry( noresult, "condition violated", "P" )
     if noresult.GetN()>0: 
         base.Add(noresult, "P")
+        leg.AddEntry( noresult, "no result", "P" )
     if official:
         for i in official:
             base.Add( i, "L")
@@ -479,13 +486,15 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
         plane.SetLogy()
     base.Draw("APsame")
     leg.Draw()
-    for i in official:
+    for ctr,i in enumerate(official):
         completed = copy.deepcopy ( i )
         validationPlot.completeGraph ( completed )
         completed.SetLineColor( kGray )
         completed.SetLineStyle( 3 ) # show also how plot is completed
         completed.Draw("LP SAME" )
         i.Draw("LP SAME" )
+        if ctr == 0:
+            leg.AddEntry ( i, "official exclusion", "L" )
         base.completed = completed
     #base.Draw("Psame")
     base.leg = leg
@@ -538,7 +547,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     l3.SetNDC()
     l3.SetTextSize(.025)
     l3.SetTextColor( kGray )
-    l3.DrawLatex(.12,.86,"%d / %d points with no results" % (nErrors, len(validationPlot.data) ) )
+    l3.DrawLatex(.68,.87,"%d / %d points with no results" % (nErrors, len(validationPlot.data) ) )
 
     #l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor)
     base.l2=l2
