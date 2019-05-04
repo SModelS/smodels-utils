@@ -37,7 +37,7 @@ def weed ( dists, maxDistance, massgaps ):
         for idx,dcur in enumerate(d1[:nhalf]):
             if idx == 0:
                 continue
-            if dcur > d1[idx-1]:
+            if dcur >= d1[idx-1]:
                 print ( "Inverted masses %s" % d1 )
                 keepIt[sd1]=False
                 nWeeded+=1
@@ -74,8 +74,8 @@ def main():
             help='max tolerated distance (GeV) from other point [24.]',
             default = 24., type = float )
     ap.add_argument ( '-g', '--massgaps', 
-            help='require mass gaps, e.g. (0,80.). Auto means, guess from topo name. [""]',
-            default = "", type = str )
+            help='require mass gaps, e.g. (0,80.). Auto means, guess from topo name. [auto]',
+            default = "auto", type = str )
     args = ap.parse_args()
     tarball = "../slha/%s.tar.gz" % args.topo
     if not os.path.exists ( tarball ):
@@ -95,7 +95,7 @@ def main():
     t0=time.time()
     massgaps = args.massgaps
     if massgaps == "auto":
-        if args.topo in [ "T6WW", "T6WZh" ]:
+        if args.topo in [ "T6WW", "T6WZh", "T5WW", "T5ZZ", "T6ZZ", "T5WZh" ]:
             massgaps = "(0.,80.)"
     if massgaps == "auto": ## still?
         massgaps = ""
