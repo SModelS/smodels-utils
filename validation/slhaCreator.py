@@ -82,7 +82,7 @@ class TemplateFile(object):
 
 
     def createFileFor( self,ptDict,slhaname=None,computeXsecs=False,
-                       massesInFileName = False):
+                       massesInFileName = False, nevents = 10000 ):
         """
         Creates a new SLHA file from the template.
         The entries on the template are replaced by the x,y values in pt.
@@ -92,6 +92,7 @@ class TemplateFile(object):
                      with prefix template and suffix .slha
         :param computeXsecs: if True, will compute NLL cross-sections for the file using 10k events
         :param massesInFileName: if True, put the masses in the name of the slha file (eg T5WW_2200_1300_60_2200_1300_60.slha)
+        :param nevents: how many events to generate
         :return: SLHA file name if file has been successfully generated, False otherwise.
         """
 
@@ -147,20 +148,22 @@ class TemplateFile(object):
 
         return slhaname
 
-    def createFilesFor( self, pts, massesInFileName=False, computeXsecs=False ):
+    def createFilesFor( self, pts, massesInFileName=False, computeXsecs=False,
+                        nevents = 10000 ):
         """
         Creates new SLHA files from the template for the respective (x,y) values
         in pts.
         For each distinct x value, new cross-sections will be computed.
         :param pts: list of dicts with values for the plot in GeV
                     (e.g. [{'x' : x1, 'y' : y1}, {'x' : x2, 'y' : y2}, ...])
+        :param nevents: number of events to generate
         :return: list of SLHA file names generated.
         """
 
         slhafiles = []
         for pt in pts:
             slhafile = self.createFileFor( pt, computeXsecs=False,
-                                           massesInFileName=massesInFileName )
+                                      massesInFileName=massesInFileName, nevents=nevents )
             if slhafile:
                 slhafiles.append(slhafile)
         #Compute cross-sections
@@ -174,7 +177,7 @@ class TemplateFile(object):
                     xargs.pythia8 = False
                 xargs.sqrts = [[8, 13]]
                 xargs.ncpus = self.nprocesses
-                xargs.nevents = 10000
+                xargs.nevents = nevents
                 xargs.pythiacard = self.pythiaCard
                 xargs.NLL = True
                 xargs.tofile = False
@@ -274,10 +277,14 @@ if __name__ == "__main__":
         type=float, default=300. )
     argparser.add_argument ( '--dy', nargs='?', help='binning in y',
         type=float, default=25. )
+    argparser.add_argument ( '-n', '--nevents', help='number of events to generate',
+        type=int, default=10000 )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?', help='number of processes, -1 means one per CPU [-1].',
         type=int, default=-1 )
     argparser.add_argument('-c', '--clear', action='store_true',
         help="clear cruft files")
+    argparser.add_argument('-k', '--keep', action='store_true',
+        help="keep temp files")
     argparser.add_argument('-6', '--pythia6', action='store_true',
         help="use pythia6 for LO cross sections [default]")
     argparser.add_argument('-8', '--pythia8', action='store_true',
@@ -303,15 +310,17 @@ if __name__ == "__main__":
     for mother in numpy.arange(args.xmin,args.xmax+1,args.dx):
         for lsp in numpy.arange(args.ymin,args.ymax+1,args.dy):
             masses.append ( { "x": mother, "y": lsp } )
-    slhafiles = tempf.createFilesFor( masses, computeXsecs=True, massesInFileName=True )
+    slhafiles = tempf.createFilesFor( masses, computeXsecs=True, massesInFileName=True,
+                                      nevents=args.nevents )
     print ( "Produced %s slha files" % len(slhafiles ) )
     newtemp = tempfile.mkdtemp(dir="./" )
-    print ( "Now build new tarball in %s" % newtemp )
+    print ( "Now build new tarball in %s/" % newtemp )
     subprocess.getoutput ( "cd %s; tar xzvf ../../slha/%s.tar.gz" % \
                            ( newtemp, args.topology ) )
-    subprocess.getoutput ( "mv %s/%s*.slha %s" % ( tempf.tempdir, args.topology, newtemp ) )
-    subprocess.getoutput ( "rm -rf %s" % tempf.tempdir )
+    subprocess.getoutput ( "cp %s/%s*.slha %s" % ( tempf.tempdir, args.topology, newtemp ) )
     subprocess.getoutput ( "cd %s; tar czvf ../%s.tar.gz %s*slha" % ( newtemp, args.topology, args.topology ) )
     print ( "New tarball %s.tar.gz" % args.topology )
-    subprocess.getoutput ( "rm -rf %s" % newtemp )
+    if not args.keep:
+        subprocess.getoutput ( "rm -rf %s" % tempf.tempdir )
+        subprocess.getoutput ( "rm -rf %s" % newtemp )
 

@@ -267,7 +267,10 @@ def main():
     with open("baking.log","a") as f:
         f.write ( "[%s] %s: started %s\n" % ( hname, time.asctime(), " ".join ( sys.argv  ) ) )
     nReqM = bakeryHelpers.nRequiredMasses ( args.topo )
-    masses = bakeryHelpers.parseMasses ( args.masses, filterOrder=True )
+    keepOrder=True
+    if args.topo == "TGQ":
+        keepOrder=False
+    masses = bakeryHelpers.parseMasses ( args.masses, filterOrder=keepOrder )
     nm = len(masses)
     if nReqM != len(masses[0]):
         print ( "Error: you gave %d masses, but %d are required for %s." % \
