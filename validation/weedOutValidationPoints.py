@@ -127,9 +127,9 @@ def main():
     weeded = weed ( dists, args.distance**2, massgaps, args.verbose )
     print ( "%d points after weeding, from %d points before." % ( len(weeded ), npoints ) )
     print ( "(Took %d seconds)" % ( time.time() - t0 ) )
-    a = open("weed.pcl","wb")
-    pickle.dump(weeded,a)
-    a.close()
+    #a = open("weed.pcl","wb")
+    # pickle.dump(weeded,a)
+    # a.close()
     for fname in files:
         f = fname.replace(args.topo+"_","").replace(".slha","")
         f = f.replace(tempdir+"/","")
