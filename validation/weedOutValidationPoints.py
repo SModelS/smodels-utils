@@ -50,6 +50,8 @@ def weed ( dists, maxDistance, massgaps, verbose ):
                 keepIt[sd1]=False
                 nWeeded+=1
                 break
+        if sd1 in keepIt: ## can only be false
+            continue
         keepIt[sd1]=True
         # maxi = min(len(dists),x+1000)
         maxi = len(dists)
