@@ -50,6 +50,22 @@ def weed ( dists, maxDistance, massgaps, verbose ):
                 keepIt[sd1]=False
                 nWeeded+=1
                 break
+        dhalf = d1[nhalf:]
+        for idx,dcur in enumerate(dhalf):
+            if idx == 0:
+                continue
+            if dcur >= dhalf[idx-1]:
+                if verbose:
+                    print ( "Inverted masses %s" % d1 )
+                keepIt[sd1]=False
+                nWeeded+=1
+                break
+            if dcur > dhalf[idx-1] - mgaps[idx-1]:
+                if verbose:
+                    print ( "Massgap not fulfilled %s" % d1 )
+                keepIt[sd1]=False
+                nWeeded+=1
+                break
         if sd1 in keepIt: ## can only be false
             continue
         keepIt[sd1]=True
