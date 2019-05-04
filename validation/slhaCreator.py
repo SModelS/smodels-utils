@@ -259,7 +259,7 @@ class TemplateFile(object):
         return True
 
 if __name__ == "__main__":
-    import argparse, types
+    import argparse
     argparser = argparse.ArgumentParser(description="creates slha files from template file in given mass ranges")
     argparser.add_argument ( '-t', '--topology', nargs='?', help='topology to create SLHA files for',
         type=str, default='T1' )
