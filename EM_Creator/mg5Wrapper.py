@@ -245,7 +245,7 @@ def main():
                              type=str, default="atlas_susy_2016_07" )
     argparser.add_argument ( '-r', '--rerun', help='force rerun, even if there is a summary file already',
                              action="store_true" )
-    mdefault = "(500,510,10),(100,110,10)"
+    mdefault = "(2000,1000,10),(2000,1000,10)"
     argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted. Keyword "half" is accepted for intermediate masses. [%s]' % mdefault,
                              type=str, default=mdefault )
     args = argparser.parse_args()
@@ -302,7 +302,13 @@ def main():
                 analyses = analyses, copy=args.copy )
         run ( args )
     with open("baking.log","a") as f:
-        f.write ( "[%s] %s: ended: %s\n" % ( hname, time.asctime(), " ".join ( sys.argv  ) ) )
+        cmd = ""
+        for i,a in enumerate(sys.argv):
+            if i>0 and sys.argv[i-1] == "-m":
+                a="'%s'" % a
+            cmd += a + " "
+        cmd = cmd[:-1]
+        f.write ( "[%s] %s: ended: %s\n" % ( hname, time.asctime(), cmd ) )
 
 if __name__ == "__main__":
     main()
