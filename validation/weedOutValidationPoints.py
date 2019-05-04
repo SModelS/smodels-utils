@@ -17,7 +17,7 @@ def distance ( d1, d2 ):
 def mkstring ( d ):
     return "_".join ( map(str,map(int,d)))
 
-def weed ( dists, maxDistance, massgaps ):
+def weed ( dists, maxDistance, massgaps, verbose ):
     if len(dists)==0:
         return
     keepIt = {}
@@ -56,6 +56,8 @@ def weed ( dists, maxDistance, massgaps ):
                 continue
             d= distance(d1,d2)
             if d < maxDistance:
+                if verbose:
+                    print ( "kick out %s: too close to %s." % (sd2,sd1) )
                 keepIt[sd2]=False
                 nWeeded+=1
                 # break
@@ -76,6 +78,7 @@ def main():
     ap.add_argument ( '-g', '--massgaps', 
             help='require mass gaps, e.g. (0,80.). Auto means, guess from topo name. [auto]',
             default = "auto", type = str )
+    ap.add_argument ( '-v', '--verbose', help='be verbose', action='store_true' )
     args = ap.parse_args()
     tarball = "../slha/%s.tar.gz" % args.topo
     if not os.path.exists ( tarball ):
@@ -99,7 +102,7 @@ def main():
             massgaps = "(0.,80.)"
     if massgaps == "auto": ## still?
         massgaps = ""
-    weeded = weed ( dists, args.distance**2, massgaps )
+    weeded = weed ( dists, args.distance**2, massgaps, args.verbose )
     print ( "%d points after weeding." % ( len(weeded ) ) )
     print ( "(Took %d seconds)" % ( time.time() - t0 ) )
     a = open("weed.pcl","wb")
