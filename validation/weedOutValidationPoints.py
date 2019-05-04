@@ -38,12 +38,14 @@ def weed ( dists, maxDistance, massgaps, verbose ):
             if idx == 0:
                 continue
             if dcur >= d1[idx-1]:
-                print ( "Inverted masses %s" % d1 )
+                if verbose:
+                    print ( "Inverted masses %s" % d1 )
                 keepIt[sd1]=False
                 nWeeded+=1
                 break
             if dcur > d1[idx-1] - mgaps[idx-1]:
-                print ( "Massgap not fulfilled %s" % d1 )
+                if verbose:
+                    print ( "Massgap not fulfilled %s" % d1 )
                 keepIt[sd1]=False
                 nWeeded+=1
                 break
@@ -94,7 +96,8 @@ def main():
         tokens = list(map(float,f.split("_")))
         dists.append ( tokens )
     dists.sort()
-    print ( "%d points before weeding." % ( len(dists ) ) )
+    npoints=len(dists)
+    print ( "%d points before weeding." % ( npoints ) )
     t0=time.time()
     massgaps = args.massgaps
     if massgaps == "auto":
@@ -103,7 +106,7 @@ def main():
     if massgaps == "auto": ## still?
         massgaps = ""
     weeded = weed ( dists, args.distance**2, massgaps, args.verbose )
-    print ( "%d points after weeding." % ( len(weeded ) ) )
+    print ( "%d points after weeding, from %d points before." % ( len(weeded ), npoints ) )
     print ( "(Took %d seconds)" % ( time.time() - t0 ) )
     a = open("weed.pcl","wb")
     pickle.dump(weeded,a)
@@ -115,6 +118,10 @@ def main():
             subprocess.getoutput ( "rm %s/%s_%s.slha" % ( tempdir, args.topo, f ) )
     subprocess.getoutput ( "cd %s; tar czvf ../%s.tar.gz %s*slha" % ( tempdir, args.topo, args.topo ) )
     subprocess.getoutput ( "rm -rf %s" % tempdir )
+    print ( "To keep the changes: " )
+    cmd = "cp %s.tar.gz ../slha/" % args.topo
+    print ( cmd )
+    subprocess.getoutput ( "echo '%s' | xsel -i" % cmd )
 
 
 if __name__ == "__main__":
