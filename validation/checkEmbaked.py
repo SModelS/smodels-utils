@@ -23,9 +23,13 @@ def main():
     argparser = argparse.ArgumentParser(description="Check an embaked files")
     argparser.add_argument ( '-t', '--topology', nargs='?', help='topology to check [T1]',
                              type=str, default='T1' )
+    argparser.add_argument ( '-a', '--analysis', nargs='?', help='analysis to check [ATLAS-SUSY-2016-07]',
+                             type=str, default='ATLAS-SUSY-2016-07' )
     args=argparser.parse_args()
-    ana = "ATLAS-SUSY-2016-07-eff"
+    ana = "%s-eff" % args.analysis
     exp = "ATLAS"
+    if "CMS" in ana:
+        exp = "CMS"
     sqrts="13"
     topo=args.topology
     fname = "../../smodels-database/%sTeV/%s/%s/orig/%s.embaked" % ( sqrts, exp, ana, topo)
