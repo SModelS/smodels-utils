@@ -432,8 +432,14 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
         for i in official:
             setOptions( i, Type='official')
     base = TMultiGraph()
-    dx = .12 ## top, right
+    dx = .12 ## top, left
     nleg = 5
+    from sympy import var
+    xvar_,yvar_,zvar_ = var( "xvar_ yvar_ zvar_" )
+    g=eval(validationPlot.axes.replace("x","xvar_").replace("y","yvar_").replace("z","zvar_"))
+    reverse = (g[1][0]==yvar_) ## do reverse if [x,*],[y,*] type of plot (eg TGQ)
+    if reverse: ## if it is an [x,*],[y,*] plot, put legend to right, not left
+        dx = .53
     leg = TLegend( dx,0.82-0.040*nleg,0.35+dx,0.88)
     setOptions(leg)
     leg.SetTextSize(0.04)
@@ -547,7 +553,11 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     l3.SetNDC()
     l3.SetTextSize(.025)
     l3.SetTextColor( kGray )
-    l3.DrawLatex(.68,.87,"%d / %d points with no results" % (nErrors, len(validationPlot.data) ) )
+    dxpnr=.68 ## top, right
+    if reverse: ## if reverse put this line at left of plot
+        dxpnr = .12
+    l3.DrawLatex( dxpnr,.87,"%d / %d points with no results" % \
+                  (nErrors, len(validationPlot.data) ) )
 
     #l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor)
     base.l2=l2
