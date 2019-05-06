@@ -11,6 +11,7 @@
 '''
 import logging
 from sympy import var
+from math import floor, log10
 #For evaluating axes expressions in prettyAxes:
 x,y,z = var('x y z')
 
