@@ -26,3 +26,6 @@ Thu May  2 13:57:12 2019: ./bake.py -t TGQ -a -p 2 -m 1800,(1600,2300,200),(100,
 [smodels] Sun May  5 11:27:58 2019: ended: ./bake.py -t T5WZh -a -m '(400,2400,50),145,60' -p 6
 [smodels] Sun May  5 19:35:43 2019: started ./bake.py -t T6WW -a -m (200,2400,50),145,60 -p 6
 [smodels] Sun May  5 19:35:43 2019: ended: ./bake.py -t T6WW -a -m '(200,2400,50),145,60' -p 6
+[hepgpu01] Mon May  6 10:44:11 2019: started ./bake.py -t T5ZZ -a -p 10 -m (2100,2400,100),(100,2400,200),(0,235~0,200)
+[hepgpu01] Mon May  6 10:44:14 2019: started ./bake.py -t T5ZZ -a -p 10 -m (2100,2400,100),(100,2400,200),(0,2350,200)
+[hepgpu01] Mon May  6 10:44:14 2019: ended: ./bake.py -t T5ZZ -a -p 10 -m '(2100,2400,100),(100,2400,200),(0,2350,200)'
