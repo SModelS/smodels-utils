@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import glob, time, subprocess, os
+import glob, time, subprocess, os, colorama
 
 def pprint ( text ):
     if not os.path.exists ( "logs/" ):
@@ -25,6 +25,11 @@ def ma5():
     for k in keys:
         v=ma5Stats[k]
         pprint ( " - %s: %s summary.dat files" % ( k, v ) )
+    goodkeys = {}
+    for k in keys:
+        p=k.find("_")
+        goodkeys[ k[:p] ]=ma5Stats[k]
+    return goodkeys
 
 def mg5():
     mg5Files = glob.glob ( "T*jet.*/Events/run_01/tag_1_pythia8_events.hepmc.gz" )
@@ -51,6 +56,7 @@ def mg5():
 def inDatabase( topos_c ):
     """ whats in the database, but print only topos_c topologies """
     print ("In database" )
+    # print ( topos_c )
     dbFiles=glob.glob ("../../smodels-database/13TeV/ATLAS/ATLAS-SUSY-2016-07-eff/orig/T*embaked" )
     stats={}
     for i in dbFiles:
@@ -62,14 +68,17 @@ def inDatabase( topos_c ):
     ks = list ( stats.keys() )
     ks.sort()
     for k in ks:
-        if not k in topos_c:
+        if not k in topos_c.keys():
             continue
-        pprint ( " - %s: %d points" % ( k, stats[k] ) )
+        beg,end="",""
+        if stats[k] < topos_c[k]:
+            beg,end=colorama.Fore.GREEN,colorama.Fore.RESET
+        pprint ( "%s - %s: %d points (%d) %s" % ( beg, k, stats[k], topos_c[k], end ) )
 
 
 def main():
-    topos = mg5()
-    ma5()
+    mg5()
+    topos = ma5()
     inDatabase( topos )
 
 if __name__ == "__main__":
