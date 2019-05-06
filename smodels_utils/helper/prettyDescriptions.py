@@ -10,8 +10,7 @@
 
 '''
 import logging
-from sympy import var, Symbol
-from math import floor, log10
+from sympy import var
 #For evaluating axes expressions in prettyAxes:
 x,y,z = var('x y z')
 
@@ -125,16 +124,16 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T4bbWWoff':'stop --> bottom chargino^pm_1, chargino^pm_1 --> W^* lsp',
     'T4bbffff':'stop --> bottom chargino^pm_1, chargino^pm_1 --> f f lsp',
     'T4bnutaubnutau': 'stop --> b nu stau, stau --> tau lsp',
+	'T5Chi': 'gluino --> quark antiquark neutralino_2, neutralino_2 --> photon neutralino_1',
     'T5':'gluino  --> quark squark, squark --> quark lsp',
     'T5Disp':'gluino  --> quark quark lsp',
     'T5gg':'gluino --> quark lsp',
     'T6gg':' squark --> quark lsp',
     'T5WW':'gluino  --> quark antiquark chargino^pm_1, chargino^pm_1 --> W lsp',
-    'T5WZ':'gluino  --> quark antiquark chargino^pm_1 | neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z lsp',
-    'T5WZh':'gluino  --> quark antiquark chargino^pm_1 | neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z|h lsp',
     'T5WWoff':'gluino  --> quark antiquark  chargino^pm_1, chargino^pm_1 --> W^* lsp',
     'T5ttbbWW':'gluino  --> top bottom chargino^pm_1, chargino^pm_1 --> W lsp',
     'T5ttbbWWoff':'gluino  --> top bottom chargino^pm_1, chargino^pm_1 --> W^* lsp',
+	'T5WZ':'gluino  --> quark quark antiquark antiquark chargino^pm_1 neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z lsp',
     'T5ZZ':'gluino  --> quark antiquark neutralino_2, neutralino_2 --> Z lsp',
     'T5ZZG':'gluino  --> quark antiquark neutralino_1, neutralino_1 --> Z gravitino',
     'T5ZZoff':'gluino  --> quark antiquark neutralino_2, neutralino_2 --> Z^* lsp',
@@ -151,10 +150,11 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T5ttcc':'gluino --> antitop stop, stop --> charm lsp',
     'T5ttttoff':'gluino  --> antitop^* stop, stop --> top^* lsp',
     'T5ttofftt':'gluino --> antitop^* stop, stop --> top lsp',
+	'T5ZGamma': 'gluino --> quark antiquark neutralino_2, neutralino_2 --> Z/photon neutralino_1',
+	'T6Chi': 'squark --> quark neutralino_2, neutralino_2 --> photon neutralino_1',
     'T6gg':' squark --> quark lsp',
     'T6WW': 'squark  --> quark chargino^pm_1, chargino^pm_1 --> W lsp',
-    'T6WZ': 'squark  --> quark chargino^pm_1 | neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z lsp',
-    'T6WZh': 'squark  --> quark chargino^pm_1 | neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z|h lsp',
+	'T6WZ': 'squark  --> quark antiquark chargino^pm_1 neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z lsp',
     'T6ZZ': 'squark  --> quark neutralino_2, neutralino_2 --> Z lsp',
     'T6WWoff': 'squark  --> quark chargino^pm_1, chargino^pm_1 --> W^* lsp',
     'T6ZZtt': 'stop_2  --> Z stop_1, stop_1 --> top lsp',
@@ -176,6 +176,9 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T6ttWW':'sbottom  --> top chargino_1^pm, chargino_1^pm --> W lsp',
     'T6ttWWoff':'sbottom  --> top chargino_1^pm, chargino_1^pm --> W^* lsp',
     'T6ttoffWW':'sbottom  --> top^* chargino_1^pm, chargino_1^pm --> W lsp',
+	'TChipChimGamma': 'chargino^pm_2 chargino^mp_2/neutralino_3 --> W neutralino_2 W/Z/h neutralino_2, neutralino_2 --> photon neutralino_1',
+	'TChiChipmSlepSlep': 'neutralino_2 chargino^pm_1 --> neutrino slepton lepton slepton, slepton --> lepton lsp',
+	'TChipChimSlepSlep': 'chargino^pm_1 chargino^pm_1 --> neutrino slepton neutrino slepton, slepton --> lepton lsp',
     'TChiChiSlepSlep':'neutralino_3 neutralino_2  --> lepton slepton lepton slepton, slepton --> lepton lsp',
     'TChiChipmSlepL':'neutralino_2 chargino^pm_1  --> lepton slepton ( neutrino sneutrino ) lepton sneutrino ( neutrino slepton ), slepton --> lepton lsp, sneutrino --> neutrino lsp',
     'TChiChipmSlepStau':'neutralino_2 chargino^pm_1  --> lepton slepton neutrino stau, slepton --> lepton lsp, stau --> tau lsp',
@@ -183,6 +186,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tau stau neutrino stau, stau --> tau lsp',
     'TChiWH':'neutralino_2 chargino^pm_1 --> H W lsp lsp ',
     'TChiWW':'chargino^pm_1 --> W lsp lsp ',
+	'TChiZ': 'neutralino_1 --> Z gravitino',
     'TChiZZ':'neutralino_2 --> Z lsp lsp ',
     'TChiWWoff':'chargino^pm_1 --> W^* lsp lsp ',
     'TChiWZ':'neutralino_2 chargino^pm_1 --> Z W lsp lsp ',
@@ -197,7 +201,6 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TScharm':'scharm  --> charm lsp ',
     'TSlepSlep':'slepton  --> lepton lsp ',
     'THSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 'THSCPM3' : 'squark --> quark chargino_1', 'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau_1',
-    'THSCPM1Disp' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 'THSCPM3' : 'squark --> quark chargino_1', 'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau_1',
     'THSCPM7' : 'lsp chargino^pm_2 --> tau stau_1 chargino^pm_1, chargino^pm_1 --> nu stau_1',
     'THSCPM8' : 'squark --> quark quark stau_1', 'THSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp', 'THSCPM2b' : 'stau lsp --> stau lsp',
     'THSCPM4' : 'squark --> quark chargino_1 (quark lsp)',
@@ -239,8 +242,6 @@ motherDict = {"T1" :  "gluino",
     "T4bbWWoff" :  "stop",
     'T4bnutaubnutau': 'stop',
     "T5WW" :  "gluino",
-    "T5WZh" :  "gluino",
-    "T5WZ" :  "gluino",
     "T5Disp" :  "gluino",
     "T5WWoff" :  "gluino",
     "T5ttbbWW" :  "gluino",
@@ -251,6 +252,7 @@ motherDict = {"T1" :  "gluino",
     "T5tctc" :  "gluino",
     "T5gg": "gluino",
     "T6gg":"squark",
+	"T5Chi": "gluino",
     "T5ZZoff" :  "gluino",
     "T5bbbb" :  "gluino",
     "T5bbbt" :  "gluino",
@@ -265,10 +267,11 @@ motherDict = {"T1" :  "gluino",
     "T5tttt" :  "gluino",
     "T5ttttoff" :  "gluino",
     "T5ttofftt" : "gluino",
+	"T5WZ" :  "gluino",
+	"T5ZGamma" :  "gluino",
+	"T6Chi" :  "squark",
     "T6WW" :  "squark",
-    "T6WZ" :  "squark",
-    "T6WZh" :  "squark",
-    "T6WW" :  "squark",
+	"T6WZ" :  "squark",
     "T6ZZ" :  "squark",
     "T6WWoff" :  "squark",
     "T6ZZtt" :  "stop_2",
@@ -293,6 +296,9 @@ motherDict = {"T1" :  "gluino",
     "T6ZZtt": 'stop_2',
     "T6ZZofftt": 'stop_2',
     "T6ZZttoff": 'stop_2',
+	"TChiChipmSlepSlep" :  "neutralino_2 chargino^pm_1",
+	"TChipChimSlepSlep" :  "chargino^pm_1",
+	"TChipChimGamma" :  "chargino^pm_2 chargino^mp_2/neutralino_3",
     "TChiChiSlepSlep" :  "neutralino_3 neutralino_2",
     "TChiChipmSlepL" :  "neutralino_2 chargino^pm_1",
     "TChiChipmSlepStau" :   "neutralino_2 chargino^pm_1",
@@ -302,6 +308,7 @@ motherDict = {"T1" :  "gluino",
     "TChiWW" :  "chargino^+_1 chargino^-_1",
     "TChiWWoff" :  "chargino^+_1 chargino^-_1",
     "TChiWZ" :  "neutralino_2 chargino^pm_1",
+	"TChiZ" :  "neutralino_1",
     "TChiZZ" :  "neutralino_2",
     "TChiWZoff" :  "neutralino_2 chargino^pm_1",
     "TChipChimSlepSnu" :   "chargino^pm_1 chargino^pm_1",
@@ -316,7 +323,6 @@ motherDict = {"T1" :  "gluino",
     "TScharm" :  "scharm",
     "TSlepSlep" : "slepton",
     "THSCPM1" : "chargino^pm_1",
-    "THSCPM1Disp" : "chargino^pm_1",
     "THSCPM1b" : "stau",
     "THSCPM3" : "squark",
     "THSCPM5" : "squark",
@@ -518,6 +524,9 @@ def prettyAxes(txname,axes):
              (e.g. {'x' : m_{#tilde{g}}, 'y' : m_{#tilde{#chi}_{1}^{0}}
              'constraints' : [m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}]})
     """
+    # print ( "pretty axes txname=", txname, type(txname) )
+    # print ( "pretty axes axes=", axes, type(axes) )
+
     #Build axes object (depending on symmetric or asymmetric branches:
     axes = eval(axes)
     if txname == 'TGQ':
@@ -566,20 +575,10 @@ def prettyAxes(txname,axes):
         massStrings = [motherStr,interStr,daughterStr]
 
     niceAxes = []
-    def roundme ( x ):
-        if type(x) == float:
-            round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1))
-            r = round_to_n(x,2)
-            return r
-        if type(x) == tuple:
-            tmp = [ roundme(i) for i in x ]
-            return tuple(tmp)
-        return x
-            
     for i,eq in enumerate(ax):
-        eq = roundme(eq )
         axStr = massStrings[i].strip()+'='+str(eq)
         niceAxes.append(axStr.replace("'",""))
 
+    # print ( "return=", niceAxes )
     return niceAxes
 
