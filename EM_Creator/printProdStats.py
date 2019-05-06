@@ -73,7 +73,7 @@ def inDatabase( topos_c ):
         beg,end="",""
         if stats[k] < topos_c[k]:
             beg,end=colorama.Fore.GREEN,colorama.Fore.RESET
-        pprint ( "%s - %s: %d points (%d) %s" % ( beg, k, stats[k], topos_c[k], end ) )
+        pprint ( "%s - %s: %d points --> now %d %s" % ( beg, k, stats[k], topos_c[k], end ) )
 
 
 def main():
