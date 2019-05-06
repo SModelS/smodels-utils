@@ -133,7 +133,8 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T5WWoff':'gluino  --> quark antiquark  chargino^pm_1, chargino^pm_1 --> W^* lsp',
     'T5ttbbWW':'gluino  --> top bottom chargino^pm_1, chargino^pm_1 --> W lsp',
     'T5ttbbWWoff':'gluino  --> top bottom chargino^pm_1, chargino^pm_1 --> W^* lsp',
-	'T5WZ':'gluino  --> quark quark antiquark antiquark chargino^pm_1 neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z lsp',
+	  'T5WZ':'gluino  --> quark quark antiquark antiquark chargino^pm_1 neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z lsp',
+	  'T5WZh':'gluino  --> quark quark antiquark antiquark chargino^pm_1 neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z|h lsp',
     'T5ZZ':'gluino  --> quark antiquark neutralino_2, neutralino_2 --> Z lsp',
     'T5ZZG':'gluino  --> quark antiquark neutralino_1, neutralino_1 --> Z gravitino',
     'T5ZZoff':'gluino  --> quark antiquark neutralino_2, neutralino_2 --> Z^* lsp',
@@ -155,6 +156,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T6gg':' squark --> quark lsp',
     'T6WW': 'squark  --> quark chargino^pm_1, chargino^pm_1 --> W lsp',
 	'T6WZ': 'squark  --> quark antiquark chargino^pm_1 neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z lsp',
+	'T6WZh': 'squark  --> quark antiquark chargino^pm_1 neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z|h lsp',
     'T6ZZ': 'squark  --> quark neutralino_2, neutralino_2 --> Z lsp',
     'T6WWoff': 'squark  --> quark chargino^pm_1, chargino^pm_1 --> W^* lsp',
     'T6ZZtt': 'stop_2  --> Z stop_1, stop_1 --> top lsp',
@@ -201,6 +203,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TScharm':'scharm  --> charm lsp ',
     'TSlepSlep':'slepton  --> lepton lsp ',
     'THSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 'THSCPM3' : 'squark --> quark chargino_1', 'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau_1',
+    'THSCPM1Disp' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 'THSCPM3' : 'squark --> quark chargino_1', 'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau_1',
     'THSCPM7' : 'lsp chargino^pm_2 --> tau stau_1 chargino^pm_1, chargino^pm_1 --> nu stau_1',
     'THSCPM8' : 'squark --> quark quark stau_1', 'THSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp', 'THSCPM2b' : 'stau lsp --> stau lsp',
     'THSCPM4' : 'squark --> quark chargino_1 (quark lsp)',
@@ -267,11 +270,13 @@ motherDict = {"T1" :  "gluino",
     "T5tttt" :  "gluino",
     "T5ttttoff" :  "gluino",
     "T5ttofftt" : "gluino",
-	"T5WZ" :  "gluino",
-	"T5ZGamma" :  "gluino",
-	"T6Chi" :  "squark",
+	  "T5WZ" :  "gluino",
+	  "T5WZh" :  "gluino",
+	  "T5ZGamma" :  "gluino",
+	  "T6Chi" :  "squark",
     "T6WW" :  "squark",
-	"T6WZ" :  "squark",
+	  "T6WZ" :  "squark",
+	  "T6WZh" :  "squark",
     "T6ZZ" :  "squark",
     "T6WWoff" :  "squark",
     "T6ZZtt" :  "stop_2",
@@ -323,6 +328,7 @@ motherDict = {"T1" :  "gluino",
     "TScharm" :  "scharm",
     "TSlepSlep" : "slepton",
     "THSCPM1" : "chargino^pm_1",
+    "THSCPM1Disp" : "chargino^pm_1",
     "THSCPM1b" : "stau",
     "THSCPM3" : "squark",
     "THSCPM5" : "squark",
@@ -575,7 +581,18 @@ def prettyAxes(txname,axes):
         massStrings = [motherStr,interStr,daughterStr]
 
     niceAxes = []
+   def roundme ( x ):
+        if type(x) == float:
+            round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1))
+            r = round_to_n(x,2)
+            return r
+        if type(x) == tuple:
+            tmp = [ roundme(i) for i in x ]
+            return tuple(tmp)
+        return x
+
     for i,eq in enumerate(ax):
+        eq = roundme(eq )
         axStr = massStrings[i].strip()+'='+str(eq)
         niceAxes.append(axStr.replace("'",""))
 
