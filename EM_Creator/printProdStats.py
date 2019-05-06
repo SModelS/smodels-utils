@@ -42,10 +42,35 @@ def mg5():
     for k in keys:
         v=mg5Stats[k]
         pprint ( " - %s: %s hepmc files" % ( k, v ) )
+    goodkeys = []
+    for k in keys:
+        p=k.find("_")
+        goodkeys.append ( k[:p] )
+    return goodkeys
+
+def inDatabase( topos_c ):
+    """ whats in the database, but print only topos_c topologies """
+    print ("In database" )
+    dbFiles=glob.glob ("../../smodels-database/13TeV/ATLAS/ATLAS-SUSY-2016-07-eff/orig/T*embaked" )
+    stats={}
+    for i in dbFiles:
+        f=open(i)
+        g=eval(f.read())
+        f.close()
+        topo = os.path.basename ( i ).replace(".embaked","")
+        stats[topo]=len(g.keys())
+    ks = list ( stats.keys() )
+    ks.sort()
+    for k in ks:
+        if not k in topos_c:
+            continue
+        pprint ( " - %s: %d points" % ( k, stats[k] ) )
+
 
 def main():
-    mg5()
+    topos = mg5()
     ma5()
+    inDatabase( topos )
 
 if __name__ == "__main__":
     main()
