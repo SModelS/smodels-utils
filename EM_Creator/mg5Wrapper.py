@@ -265,7 +265,13 @@ def main():
     if hname.find(".")>0:
         hname=hname[:hname.find(".")]
     with open("baking.log","a") as f:
-        f.write ( "[%s] %s: started %s\n" % ( hname, time.asctime(), " ".join ( sys.argv  ) ) )
+        cmd = ""
+        for i,a in enumerate(sys.argv):
+            if i>0 and sys.argv[i-1] == "-m":
+                a="'%s'" % a
+            cmd += a + " "
+        cmd = cmd[:-1]
+        f.write ( "[%s] %s: started: %s\n" % ( hname, time.asctime(), cmd ) )
     nReqM = bakeryHelpers.nRequiredMasses ( args.topo )
     keepOrder=True
     if args.topo == "TGQ":
