@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+""" store the theory predictions in pickle """
+
 from smodels.theory import decomposer
 from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels.share.models.SMparticles import SMList
@@ -22,8 +24,8 @@ topos = decomposer.decompose ( model, sigmacut, minmassgap=mingap )
 
 print ( "Decmoposed", topos )
 
-# database=Database("../smodels-database/") 
-database=Database("./test/database/") 
+database=Database("../../smodels-database/") 
+# database=Database("../../smodels/test/database/") 
 listOfExpRes = database.getExpResults()
 
 likelihoods = []
@@ -36,13 +38,6 @@ for expRes in listOfExpRes:
         if prediction.likelihood != None:
             likelihoods.append ( prediction )
 
-f=open("topos.pcl", "wb" )
+f=open("predictions.pcl", "wb" )
 pickle.dump ( likelihoods, f )
 f.close()
-
-for prediction in likelihoods:
-        print ( "ana", prediction.analysisId() )
-        print ( "dataset", prediction.dataset )
-        print ( "llhd", prediction.likelihood )
-
-    
