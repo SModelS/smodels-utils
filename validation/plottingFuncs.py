@@ -355,7 +355,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
 
     if not validationPlot.data:
         logger.error("Data for validation plot is not defined.")
-        x,y = get
+        # x,y = get
         return (None,None)
         ## sys.exit()
 
@@ -492,16 +492,17 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
         plane.SetLogy()
     base.Draw("APsame")
     leg.Draw()
-    for ctr,i in enumerate(official):
-        completed = copy.deepcopy ( i )
-        validationPlot.completeGraph ( completed )
-        completed.SetLineColor( kGray )
-        completed.SetLineStyle( 3 ) # show also how plot is completed
-        completed.Draw("LP SAME" )
-        i.Draw("LP SAME" )
-        if ctr == 0:
-            leg.AddEntry ( i, "official exclusion", "L" )
-        base.completed = completed
+    if not official == None:
+        for ctr,i in enumerate(official):
+            completed = copy.deepcopy ( i )
+            validationPlot.completeGraph ( completed )
+            completed.SetLineColor( kGray )
+            completed.SetLineStyle( 3 ) # show also how plot is completed
+            completed.Draw("LP SAME" )
+            i.Draw("LP SAME" )
+            if ctr == 0:
+                leg.AddEntry ( i, "official exclusion", "L" )
+            base.completed = completed
     #base.Draw("Psame")
     base.leg = leg
     base.SetTitle(title)
