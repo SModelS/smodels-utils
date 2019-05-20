@@ -683,7 +683,11 @@ def round_list(x, n ):
             return x
         unit = 1.
 
-    return round(x,-int(floor(log10(x))) + (n - 1))*unit
+    sgn=1.
+    if x<0.:
+        sgn = -1.
+        x = abs(x)
+    return sgn * ( round(x,-int(floor(log10(x))) + (n - 1))*unit )
 
 
 def removeRepeated(datalist,dataType=None):
