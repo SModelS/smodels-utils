@@ -36,6 +36,9 @@ if version()[:3]=="1.2" or version()[0]=="2":
     hscp=True
 ## smodels v1.2 has final states for hscp patch
 
+quenchNegativeMasses = False ## set to true, if you wish to 
+# quench the warning about negative masses
+
 def getSignalRegionsEMBaked ( filename ):
     """ from an emBaked file, retrieve the names of the signal regions """
     ret = set()
@@ -785,7 +788,8 @@ class TxNameInput(Locker):
                 for M in br:
             #Check if the massArray is positive and value is positive:
                     if (type(M) == float and M<0.) or type(M) == tuple and M[0]<0.:
-                        logger.warning("Negative mass value found for %s. Point %s will be ignored." %(self,massArray))
+                        if not quenchNegativeMasses:
+                            logger.warning("Negative mass value found for %s. Point %s will be ignored." %(self,massArray))
                         continue
                     if type(M) == tuple and M[1]<0.:
                         logger.warning("Negative lifetime found for %s. Point %s will be ignored." %(self,massArray))
