@@ -9,7 +9,7 @@ from smodels.particlesLoader import BSMList
 from smodels.tools.physicsUnits import fb, GeV
 from smodels.experiment.databaseObj import Database
 from smodels.theory.model import Model
-import pickle, numpy
+import pickle, numpy, math
 import IPython
 
 f=open("predictions.pcl", "rb" )
@@ -24,20 +24,41 @@ def getExperimentName ( pred ):
         return "ATLAS"
     return "???"
 
-def canCombine ( predA, predB ):
-    """ method that defines what we allow to combine """
+def canCombine ( predA, predB, strategy="conservative" ):
+    """ can we combine predA and predB? predA and predB can be
+        individual predictions, or lists of predictions.
+    :param strategy: combination strategy, can be conservative, moderate, aggressive
+    """
     if type(predA) == list:
         for pA in predA:
-            ret = canCombine ( pA, predB )
+            ret = canCombine ( pA, predB, strategy )
             if ret == False:
                 return False
         return True
     if type(predB) == list:
         for pB in predB:
-            ret = canCombine ( predA, pB )
+            ret = canCombine ( predA, pB, strategy )
             if ret == False:
                 return False
         return True
+    if strategy == "conservative":
+        return canCombineConservative ( predA, predB )
+    return canCombineAggressive ( predA, predB )
+
+def canCombineAggressive ( predA, predB ):
+    """ method that defines what we allow to combine, conservative version.
+         """
+    if predA.expResult.globalInfo.sqrts != predB.expResult.globalInfo.sqrts:
+        return True
+    if getExperimentName(predA) != getExperimentName(predB):
+        return True
+    anaidA = predA.expResult.globalInfo.id
+    anaidB = predB.expResult.globalInfo.id
+    return False
+
+def canCombineConservative ( predA, predB ):
+    """ method that defines what we allow to combine, conservative version.
+         """
     if predA.expResult.globalInfo.sqrts != predB.expResult.globalInfo.sqrts:
         return True
     if getExperimentName(predA) != getExperimentName(predB):
@@ -91,13 +112,29 @@ def discussCombinations ( combinables ):
     for k,v in count.items():
         print ( "%d combinations with %d predictions" % ( v, k ) )
 
-def get95CL ( combination, expected=False ):
+def getCombinedLikelihood ( combination, mu, expected=False, nll=False ):
+    """ get the combined likelihood for a signal strength mu 
+    :param nll: compute the negative log likelihood
+    """
+    ret = numpy.prod ( [ c.getLikelihood(mu,expected=expected) for c in combination ] )
+    if nll:
+        ret = - math.log ( ret )
+    return ret
+
+def findMuHat ( combination ):
+    """ find the maximum likelihood estimate for the signal strength mu """
+    def getNLL ( mu ):
+        return getCombinedLikelihood ( combination, mu, nll=True )
+    ret = optimize.minimize ( getNLL, 1. )
+    return ret
+
+def get95CL ( combination ):
     """ compute the CLsb value for one specific combination """
     llhds={}
-    for mu in numpy.arange(.8,3.0,.03): ## scan mu
-        L=1.
-        for c in combination:
-            L=L*c.getLikelihood(mu,expected=expected)
+    muhat = findMuHat ( combination )
+    print ( "muhat=", muhat )
+    for mu in numpy.arange(.5,2.,.05): ## scan mu
+        L = getCombinedLikelihood ( combination, mu, expected=True )
         llhds[mu]=L
     Sm = sum ( llhds.values() )
     C = 0.
