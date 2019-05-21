@@ -91,13 +91,13 @@ def discussCombinations ( combinables ):
     for k,v in count.items():
         print ( "%d combinations with %d predictions" % ( v, k ) )
 
-def get95CL ( combination ):
+def get95CL ( combination, expected=False ):
     """ compute the CLsb value for one specific combination """
     llhds={}
-    for mu in numpy.arange(.5,2.,.05): ## scan mu
+    for mu in numpy.arange(.8,3.0,.03): ## scan mu
         L=1.
         for c in combination:
-            L=L*c.getLikelihood(mu)
+            L=L*c.getLikelihood(mu,expected=expected)
         llhds[mu]=L
     Sm = sum ( llhds.values() )
     C = 0.
@@ -112,12 +112,12 @@ def findBestCombo ( combinations ):
     # compute CLsb for all combinations 
     lowestv,lowest=float("inf"),""
     for c in combinations:
-        cl_mu = get95CL ( c )
-        print ( "95%s CL for mu for %s is %.2f" % ( "%", getLetterCode(c), cl_mu) )
+        cl_mu = get95CL ( c, expected=True )
+        print ( "95%s expected CL for mu for %s is %.2f" % ( "%", getLetterCode(c), cl_mu) )
         if cl_mu < lowestv:
             lowestv = cl_mu
             lowest = c
-    return lowest
+    return lowest,lowestv
 
 ## assign a letter to every prediction. for debugging
 letters={}
@@ -136,8 +136,11 @@ def getComboDescription ( combination ):
     return ",".join( [ x.expResult.globalInfo.id for x in combination ] )
 
 combinables = findCombinations ( predictions )
+## optionally, add individual predictions
+combinables += [ [x] for x in predictions ]
 discussCombinations ( combinables )
-bestCombo = findBestCombo ( combinables )
-print ( "best combo is %s: %s" % ( getLetterCode(bestCombo), getComboDescription(bestCombo) ) ) 
+bestCombo,ulexp = findBestCombo ( combinables )
+ulobs = get95CL ( bestCombo, expected=False )
+print ( "best combo is %s: %s: [ul_obs=%.2f, ul_exp=%.2f]" % ( getLetterCode(bestCombo), getComboDescription(bestCombo), ulobs, ulexp ) ) 
 
 # IPython.embed()
