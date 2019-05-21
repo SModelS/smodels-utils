@@ -1,10 +1,12 @@
 """ Code that decides which analyses can be combined and which cannot """
 
-def getExperimentName ( pred ):
+from smodels.theory.theoryPrediction import TheoryPrediction
+
+def getExperimentName ( globI ):
     """ returns name of experiment of exp result """
-    if "CMS" in pred.expResult.globalInfo.id:
+    if "CMS" in globI.id:
         return "CMS"
-    if "ATLAS" in pred.expResult.globalInfo.id:
+    if "ATLAS" in globI.id:
         return "ATLAS"
     return "???"
 
@@ -25,6 +27,10 @@ def canCombine ( predA, predB, strategy="conservative" ):
             if ret == False:
                 return False
         return True
+    if type(predA)==TheoryPrediction:
+        predA = predA.expResult.globalInfo
+    if type(predB)==TheoryPrediction:
+        predB = predB.expResult.globalInfo
     if strategy == "conservative":
         return canCombineConservative ( predA, predB )
     if strategy == "moderate":
@@ -34,15 +40,15 @@ def canCombine ( predA, predB, strategy="conservative" ):
         return None
     return canCombineAggressive ( predA, predB )
 
-def canCombineModerate ( predA, predB ):
+def canCombineModerate ( globA, globB ):
     """ method that defines what we allow to combine, moderate version.
          """
-    if predA.expResult.globalInfo.sqrts != predB.expResult.globalInfo.sqrts:
+    if globA.sqrts != globB.sqrts:
         return True
-    if getExperimentName(predA) != getExperimentName(predB):
+    if getExperimentName(globA) != getExperimentName(globB):
         return True
-    anaidA = predA.expResult.globalInfo.id
-    anaidB = predB.expResult.globalInfo.id
+    anaidA = globA.id
+    anaidB = globB.id
     allowCombination = { "ATLAS-SUSY-2013-02": [ "ATLAS-SUSY-2013-11" ],
                          "CMS-SUS-13-012": [ "CMS-SUS-13-007" ] }
     if anaidA in allowCombination.keys():
@@ -53,15 +59,15 @@ def canCombineModerate ( predA, predB ):
             return True
     return False
 
-def canCombineAggressive ( predA, predB ):
+def canCombineAggressive ( globA, globB ):
     """ method that defines what we allow to combine, aggressive version.
          """
-    if predA.expResult.globalInfo.sqrts != predB.expResult.globalInfo.sqrts:
+    if globA.sqrts != globB.sqrts:
         return True
-    if getExperimentName(predA) != getExperimentName(predB):
+    if getExperimentName(globA) != getExperimentName(globB):
         return True
-    anaidA = predA.expResult.globalInfo.id
-    anaidB = predB.expResult.globalInfo.id
+    anaidA = globA.id
+    anaidB = globB.id
     allowCombination = { "ATLAS-SUSY-2013-02": [ "ATLAS-SUSY-2013-04", "ATLAS-SUSY-2013-11" ],
                          "CMS-SUS-13-012": [ "CMS-SUS-13-007", "CMS-SUS-13-013" ],
                          "CMS-SUS-12-024": [ "CMS-SUS-13-007", "CMS-SUS-13-013" ],
@@ -80,11 +86,11 @@ def canCombineAggressive ( predA, predB ):
             return True
     return False
 
-def canCombineConservative ( predA, predB ):
+def canCombineConservative ( globA, globB ):
     """ method that defines what we allow to combine, conservative version.
          """
-    if predA.expResult.globalInfo.sqrts != predB.expResult.globalInfo.sqrts:
+    if globA.sqrts != globB.sqrts:
         return True
-    if getExperimentName(predA) != getExperimentName(predB):
+    if getExperimentName(globA) != getExperimentName(globB):
         return True
     return False
