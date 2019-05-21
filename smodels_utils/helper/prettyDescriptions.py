@@ -52,7 +52,6 @@ prettySUSYParticle = {
     'gravitino':'#tilde{G}',              #gravitino
     'gluino': '#tilde{g}',        #gluino
     'higgsino' : '#tilde{H}',       #higgsino
-
     'squark': '#tilde{q}',  #squark
     'sup': '#tilde{u}',  #sup
     'sdown': '#tilde{d}',  #sdown
@@ -107,7 +106,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T1ttttoff': 'gluino  --> top^* antitop^* lsp ',
     'T1ttofftt': 'gluino  --> top^* antitop^* lsp ',
     'T2':'squark  --> quark lsp ',
-    'T2onesquark':'sup_{L}  --> u lsp, sdown_{L} --> d lsp ',
+    'T2onesquark':'squark  --> q lsp ',
     'T2bb':'sbottom  --> bottom lsp ',
     'T2bbWW':'stop  --> bottom W lsp ',
     'T2bbWWoff':'stop  --> bottom W^* lsp ',
