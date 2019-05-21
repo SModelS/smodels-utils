@@ -1,6 +1,7 @@
 """ Code that decides which analyses can be combined and which cannot """
 
 from smodels.theory.theoryPrediction import TheoryPrediction
+import fnmatch
 
 def getExperimentName ( globI ):
     """ returns name of experiment of exp result """
@@ -68,20 +69,46 @@ def canCombineAggressive ( globA, globB ):
         return True
     anaidA = globA.id
     anaidB = globB.id
-    allowCombination = { "ATLAS-SUSY-2013-02": [ "ATLAS-SUSY-2013-04", "ATLAS-SUSY-2013-11" ],
-                         "CMS-SUS-13-012": [ "CMS-SUS-13-007", "CMS-SUS-13-013" ],
-                         "CMS-SUS-12-024": [ "CMS-SUS-13-007", "CMS-SUS-13-013" ],
-                         "CMS-SUS-13-007": [ "CMS-SUS-12-024", "CMS-SUS-13-012", "CMS-SUS-13-013" ],
+    allowCombinationATLAS8TeV = { "ATLAS-SUSY-2013-02": [ "ATLAS-SUSY-2013-04", "ATLAS-SUSY-2013-11" ],
                          "ATLAS-CONF-2013-024": [ "ATLAS-CONF-2013-037", "ATLAS-CONF-2013-048", "ATLAS-CONF-2013-062", "ATLAS-CONF-2013-093" ],
                          "ATLAS-CONF-2013-037": [ "ATLAS-CONF-2013-024", "ATLAS-CONF-2013-047", "ATLAS-CONF-2013-048", "ATLAS-CONF-2013-053", "ATLAS-CONF-2013-054" ],
                          "ATLAS-CONF-2013-047": [ "ATLAS-CONF-2013-037", "ATLAS-CONF-2013-048", "ATLAS-CONF-2013-062", "ATLAS-CONF-2013-093" ],
                          "ATLAS-CONF-2013-048": [ "ATLAS-CONF-2013-024", "ATLAS-CONF-2013-037", "ATLAS-CONF-2013-047", "ATLAS-CONF-2013-053", "ATLAS-CONF-2013-054", "ATLAS-CONF-2013-062", "ATLAS-CONF-2013-093" ],
                          "ATLAS-CONF-2013-053": [ "ATLAS-CONF-2013-062", "ATLAS-CONF-2013-093" ],
-                         "ATLAS-CONF-2013-054": [ "ATLAS-CONF-2013-062", "ATLAS-CONF-2013-093" ] }
+                         "ATLAS-CONF-2013-054": [ "ATLAS-CONF-2013-062", "ATLAS-CONF-2013-093" ], 
+                         "ATLAS-SUSY-2013-02": [ "ATLAS-SUSY-2013-09", "ATLAS-SUSY-2013-11", "ATLAS-SUSY-2013-12", "ATLAS-SUSY-2013-15", "ATLAS-SUSY-2013-19", "ATLAS-SUSY-2013-23" ],
+                         "ATLAS-SUSY-2013-04": [ "ATLAS-SUSY-2013-09", "ATLAS-SUSY-2013-11", "ATLAS-SUSY-2013-12", "ATLAS-SUSY-2013-15", "ATLAS-SUSY-2013-19", "ATLAS-SUSY-2013-23" ],
+                         "ATLAS-SUSY-2013-05": [ "ATLAS-SUSY-2013-09", "ATLAS-SUSY-2013-11", "ATLAS-SUSY-2013-12", "ATLAS-SUSY-2013-15", "ATLAS-SUSY-2013-19", "ATLAS-SUSY-2013-23" ],
+                         "ATLAS-SUSY-2013-09": [ "ATLAS-SUSY-2013-02", "ATLAS-SUSY-2013-04", "ATLAS-SUSY-2013-05", "ATLAS-SUSY-2013-12", "ATLAS-SUSY-2013-15", "ATLAS-SUSY-2013-16", "ATLAS-SUSY-2013-18", "ATLAS-SUSY-2013-19", "ATLAS-SUSY-2013-23" ],
+                         "ATLAS-SUSY-2013-11": [ "ATLAS-SUSY-2013-02", "ATLAS-SUSY-2013-04", "ATLAS-SUSY-2013-05", "ATLAS-SUSY-2013-12", "ATLAS-SUSY-2013-15", "ATLAS-SUSY-2013-16", "ATLAS-SUSY-2013-18", "ATLAS-SUSY-2013-23" ],
+                         "ATLAS-SUSY-2013-12": [ "ATLAS-SUSY-2013-02", "ATLAS-SUSY-2013-04", "ATLAS-SUSY-2013-05", "ATLAS-SUSY-2013-08", "ATLAS-SUSY-2013-09", "ATLAS-SUSY-2013-11", "ATLAS-SUSY-2013-15", "ATLAS-SUSY-2013-16", "ATLAS-SUSY-2013-18", "ATLAS-SUSY-2013-19", "ATLAS-SUSY-2013-23", "ATLAS-CONF-2013-007", "ATLAS-CONF-2013-089" ],
+                         "ATLAS-SUSY-2013-15": [ "ATLAS-SUSY-2013-02", "ATLAS-SUSY-2013-04", "ATLAS-SUSY-2013-05", "ATLAS-SUSY-2013-09", "ATLAS-SUSY-2013-11", "ATLAS-SUSY-2013-12", "ATLAS-SUSY-2013-16", "ATLAS-SUSY-2013-19", "ATLAS-CONF-2013-007", "ATLAS-CONF-2013-089" ],
+                         "ATLAS-SUSY-2013-16": [ "ATLAS-SUSY-2013-02", "ATLAS-SUSY-2013-09", "ATLAS-SUSY-2013-11", "ATLAS-SUSY-2013-12", "ATLAS-SUSY-2013-15", "ATLAS-SUSY-2013-19", "ATLAS-SUSY-2013-23" ],
+                         "ATLAS-SUSY-2013-18": [ "ATLAS-SUSY-2013-09", "ATLAS-SUSY-2013-11", "ATLAS-SUSY-2013-12", "ATLAS-SUSY-2013-19", "ATLAS-SUSY-2013-23" ],
+
+    }
+    allowCombinationCMS8TeV = {
+                         "CMS-SUS-13-012": [ "CMS-SUS-13-007", "CMS-SUS-13-013" ],
+                         "CMS-SUS-12-024": [ "CMS-SUS-13-007", "CMS-SUS-13-013" ],
+                         "CMS-SUS-13-007": [ "CMS-SUS-12-024", "CMS-SUS-13-012", "CMS-SUS-13-013" ] }
+    allowCombinationCMS13TeV = { 
+        "CMS-PAS-EXO-16-036": [ "CMS-PAS-SUS-*", "CMS-SUS-*" ],
+        "CMS-PAS-SUS-16-022": [ "CMS-PAS-EXO-16-036" ] 
+    }
+    allowCombinationATLAS13TeV = { }
+    allowCombination = {}
+    allowCombination.update ( allowCombinationATLAS8TeV )
+    allowCombination.update ( allowCombinationCMS8TeV )
+    allowCombination.update ( allowCombinationATLAS13TeV )
+    allowCombination.update ( allowCombinationCMS13TeV )
     if anaidA in allowCombination.keys():
-        if anaidB in allowCombination[anaidA]:
-            return True
+        for i in allowCombination[anaidA]:
+            if len ( fnmatch.filter ( [anaidB ], i ) ) == 1:
+                return True
     if anaidB in allowCombination.keys():
+        for i in allowCombination[anaidB]:
+            if len ( fnmatch.filter ( [anaidA ], i ) ) == 1:
+                return True
         if anaidA in allowCombination[anaidB]:
             return True
     return False
