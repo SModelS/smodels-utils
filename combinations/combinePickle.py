@@ -10,6 +10,7 @@ from smodels.tools.physicsUnits import fb, GeV
 from smodels.experiment.databaseObj import Database
 from smodels.theory.model import Model
 import pickle, numpy, math
+from scipy import optimize
 import IPython
 
 f=open("predictions.pcl", "rb" )
@@ -125,23 +126,51 @@ def findMuHat ( combination ):
     """ find the maximum likelihood estimate for the signal strength mu """
     def getNLL ( mu ):
         return getCombinedLikelihood ( combination, mu, nll=True )
-    ret = optimize.minimize ( getNLL, 1. )
+    ret = optimize.minimize ( getNLL, 1., bounds=[(0.,None)] )
+    if ret.status==0:
+        return ret.x[0]
+    print ( "error finding mu hat" )
     return ret
 
-def get95CL ( combination ):
-    """ compute the CLsb value for one specific combination """
+def printLLhds ( llhds ):
+    keys = list ( llhds.keys() )
+    keys.sort()
+    for k in keys:
+        v=llhds[k]
+        print ( "%.2f: %.3g" % ( k, v ) )
+
+def get95CL ( combination, expected ):
+    """ compute the CLsb value for one specific combination 
+    :param expected: compute expected instead of observed value
+    """
     llhds={}
     muhat = findMuHat ( combination )
-    print ( "muhat=", muhat )
-    for mu in numpy.arange(.5,2.,.05): ## scan mu
-        L = getCombinedLikelihood ( combination, mu, expected=True )
+    Lmuhat = getCombinedLikelihood ( combination, muhat, expected=expected )
+    # mumin=muhat/3.
+    # Lmumin = getCombinedLikelihood ( combination, mumin, expected=expected )
+    mumin = 0.
+    mumax = muhat
+    while True:
+        mumax=2.*mumax+0.5
+        Lmumax = getCombinedLikelihood ( combination, mumax, expected=expected )
+        if Lmumax / Lmuhat < 1e-3: ## less than 1 permille? stop!
+            break
+    dmu = ( mumax - mumin ) / 30.
+    for mu in numpy.arange(mumin,mumax,dmu): ## scan mu
+        L = getCombinedLikelihood ( combination, mu, expected=expected )
         llhds[mu]=L
+    # printLLhds ( llhds )
     Sm = sum ( llhds.values() )
     C = 0.
-    for k,v in llhds.items():
+    for x,v in llhds.items():
+        Cold = C
         C+=v/Sm
         if C>.95:
-            return k
+            k = v/Sm / ( x - xold )
+            d = C - k*x
+            return ( 0.95 - d ) / k
+            # return xold + ( x - xold ) * ( C - Cold )
+        xold = x
     return 1.
             
 def findBestCombo ( combinations ):
