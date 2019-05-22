@@ -12,6 +12,53 @@ import ROOT
 import IPython
 import ctypes
 
+def sortOutDupes ( results ):
+    """ If an analysis id appears more than once in the list,
+    keep only the one with likelihoods. """
+    isIn = set() ## mark result as being "in"
+    ids = set() ## the analysis ids that are already in isIn
+    ids_withoutLLHD = set()
+    ret_withoutLLHD = {}
+    for res in results:
+        ID = res.globalInfo.id
+        if ID in ids: ## already in
+            continue
+        hasllhd = hasLLHD ( res )
+        if hasllhd and not ID in ids:
+            ## not in and should be in: add!
+            ids.add ( ID )
+            isIn.add ( res.globalInfo.path )
+            continue
+        if not ID in ids and not hasllhd:
+            ## not in but shouldnt be in: add to waiting list
+            ids_withoutLLHD.add ( ID )
+            ret_withoutLLHD[ID]= res.globalInfo.path
+    for i in ids_withoutLLHD:
+        if not i in ids: ## nothing with llhd is in, so add!
+            isIn.add ( ret_withoutLLHD[i] )
+            ids.add ( i )
+    ## now sort them like in the original container!
+    ret = []
+    for res in results:
+        if res.globalInfo.path in isIn:
+            ret.append ( res )
+    return ret
+
+def hasLLHD ( analysis ) : 
+    """ can one create likelihoods from analyses?
+        true for efficiency maps and upper limits with expected values. """
+    if len ( analysis.datasets)>1:
+        return True
+
+    ds=analysis.datasets[0]
+    if ds.dataInfo.dataType=="efficiencyMap":
+        return True
+    for tx in ds.txnameList:
+        if tx.hasLikelihood():
+            return True
+    return False
+
+
 def draw( strategy, databasepath ):
     ROOT.gStyle.SetOptStat(0000)
 
@@ -30,6 +77,8 @@ def draw( strategy, databasepath ):
     d=Database( dir, discard_zeroes = True )
     print(d)
     results = d.getExpResults()
+    results = sortOutDupes ( results )
+
     #results.sort()
     nres = len ( results )
 
@@ -45,25 +94,17 @@ def draw( strategy, databasepath ):
     xaxis.SetLabelSize(.014)
     yaxis.SetLabelSize(.014)
 
-    def hasLLHD ( analysis ) : 
-        """ can one create likelihoods from analyses?
-            true for efficiency maps and upper limits with expected values. """
-        if len ( analysis.datasets)>1:
-            return True
-
-        ds=analysis.datasets[0]
-        if ds.dataInfo.dataType=="efficiencyMap":
-            return True
-        for tx in ds.txnameList:
-            if tx.hasLikelihood():
-                return True
-        return False
-
     for x,e in enumerate(results):
         label = e.globalInfo.id
         hasLikelihood = hasLLHD ( e )
-        if e.globalInfo.sqrts.asNumber(TeV) > 10.:
-            label = "#color[12]{%s}" % e.globalInfo.id#+ "[%d]" % e.globalInfo.sqrts.asNumber(TeV)
+        ana = analysisCombiner.getExperimentName ( e.globalInfo )
+        sqrts = e.globalInfo.sqrts.asNumber(TeV)
+        color = ROOT.kCyan+2
+        if ana == "ATLAS":
+            color = ROOT.kBlue+1
+        if sqrts > 10.:
+            color += 3
+        label = "#color[%d]{%s}" % (color, label )
         xaxis.SetBinLabel(x+1, label )
         yaxis.SetBinLabel(x+1, label )
         for y,f in enumerate(results):
@@ -84,6 +125,7 @@ def draw( strategy, databasepath ):
     ROOT.tl.SetTextSize(.02)
     ROOT.tl.DrawLatex(.1,.92,"green: uncorrelated, red: correlated, white: no likelihood" )
     ROOT.gPad.SetGrid()
+    print ( "Plotting to matrix_%s.png" % strategy )
     ROOT.c1.Print("matrix_%s.png" % strategy )
     ROOT.c1.Print("matrix_%s.pdf" % strategy )
 
