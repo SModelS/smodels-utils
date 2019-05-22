@@ -82,8 +82,8 @@ def findMuHat ( combination ):
     ret = optimize.minimize ( getNLL, 1., bounds=[(0.,None)] )
     if ret.status==0:
         return ret.x[0]
-    print ( "error finding mu hat" )
-    return ret
+    print ( "error finding mu hat for %s" % getLetterCode(combination) )
+    return None
 
 def printLLhds ( llhds ):
     keys = list ( llhds.keys() )
@@ -98,6 +98,8 @@ def get95CL ( combination, expected ):
     """
     llhds={}
     muhat = findMuHat ( combination )
+    if muhat == None:
+        return None
     Lmuhat = getCombinedLikelihood ( combination, muhat, expected=expected )
     # mumin=muhat/3.
     # Lmumin = getCombinedLikelihood ( combination, mumin, expected=expected )
@@ -125,17 +127,42 @@ def get95CL ( combination, expected ):
             # return xold + ( x - xold ) * ( C - Cold )
         xold = x
     return 1.
-            
+
+def isSubset ( small, big ):
+    """ is the small combo a subset of the big combo? """
+    for s in small:
+        if not s in big:
+            return False
+    return True
+
+def hasAlreadyDone ( small, combos ):
+    """ is the small combo already a subset of any of the
+        combos in 'combos'? """
+    for c in combos:
+        if isSubset ( small, c ):
+            return True
+    return False
+
 def findBestCombo ( combinations ):
     """ find the best combo, by computing CLsb values """
+    combinations.sort ( key=len, reverse=True ) ## sort them first be length
     # compute CLsb for all combinations 
     lowestv,lowest=float("inf"),""
+    alreadyDone = [] ## list of combos that have already been looked at.
+    ## we will not look at combos that are subsets.
     for c in combinations:
+        if hasAlreadyDone ( c, alreadyDone ):
+            pass
+            # print ( "%s is subset of bigger combo. skip." % getLetterCode(c) )
+            # continue
         cl_mu = get95CL ( c, expected=True )
-        # print ( "95%s expected CL for mu for %s is %.2f" % ( "%", getLetterCode(c), cl_mu) )
+        if cl_mu == None:
+            continue
+        print ( "95%s expected CL for mu for %s is %.2f" % ( "%", getLetterCode(c), cl_mu) )
         if cl_mu < lowestv:
             lowestv = cl_mu
             lowest = c
+        alreadyDone.append ( c )
     return lowest,lowestv
 
 def getLetterCode ( combination ):
@@ -147,18 +174,27 @@ def getLetterCode ( combination ):
 def getComboDescription ( combination ):
     return ",".join( [ x.expResult.globalInfo.id for x in combination ] )
 
-## assign a letter to every prediction. for debugging
-letters={}
-letter=65
-for p in predictions:
-    letters[p]=chr(letter)
-    print ( "Prediction %s: %s" % ( letters[p], p ) )
-    letter+=1
+def getLetters( predictions ):
+    ## assign a letter to every prediction. for debugging
+    letters={}
+    letter=65
+    print ( "Letters assigned to results:" )
+    for p in predictions:
+        letters[p]=chr(letter)
+        print ( "Prediction %s: %s" % ( letters[p], p.expResult.globalInfo.id ) )
+        letter+=1
+    return letters
 
-for strategy in [ "conservative", "moderate", "aggressive" ]:
+letters = getLetters ( predictions )
+
+# for strategy in [ "conservative", "moderate", "aggressive" ]:
+for strategy in [ "aggressive" ]:
+    print ()
+    print ( "Combine: %s" % strategy )
     combinables = findCombinations ( predictions, strategy )
+    singlepreds = [ [x] for x in predictions ]
     ## optionally, add individual predictions
-    combinables += [ [x] for x in predictions ]
+    combinables = singlepreds + combinables
     discussCombinations ( combinables )
     bestCombo,ulexp = findBestCombo ( combinables )
     ulobs = get95CL ( bestCombo, expected=False )
