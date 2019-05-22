@@ -11,7 +11,7 @@ from smodels.experiment.databaseObj import Database
 from smodels.theory.model import Model
 import analysisCombiner
 import pickle, numpy, math
-from scipy import optimize
+from scipy import optimize, stats
 import IPython
 
 f=open("predictions.pcl", "rb" )
@@ -152,18 +152,52 @@ def findBestCombo ( combinations ):
     ## we will not look at combos that are subsets.
     for c in combinations:
         if hasAlreadyDone ( c, alreadyDone ):
-            pass
             # print ( "%s is subset of bigger combo. skip." % getLetterCode(c) )
-            # continue
+            continue
         cl_mu = get95CL ( c, expected=True )
         if cl_mu == None:
             continue
-        print ( "95%s expected CL for mu for %s is %.2f" % ( "%", getLetterCode(c), cl_mu) )
+        # print ( "95%s expected CL for mu for %s is %.2f" % ( "%", getLetterCode(c), cl_mu) )
         if cl_mu < lowestv:
             lowestv = cl_mu
             lowest = c
         alreadyDone.append ( c )
     return lowest,lowestv
+
+def getSignificance ( combo ):
+    """ obtain the significance of this combo """
+    muhat = findMuHat ( combo )
+    if muhat == None:
+        return 0.
+    LH0 = numpy.prod ( [ c.getLikelihood(0.,expected=False) for c in combo ] )
+    LH1 = numpy.prod ( [ c.getLikelihood(muhat,expected=False) for c in combo ] )
+    chi2 = 2 * ( math.log ( LH1 ) - math.log ( LH0 ) ) ## chi2 with one degree of freedom
+    p = stats.chi2.cdf ( chi2, 1. )
+    Z = stats.norm.ppf ( p )
+    ## FIXME compute significance from chi2
+    return chi2
+
+def findLargestSignificance ( combinations ):
+    """ find the combo with the most significant deviation """
+    combinations.sort ( key=len, reverse=True ) ## sort them first be length
+    # compute CLsb for all combinations 
+    highestZ,highest=0.,""
+    alreadyDone = [] ## list of combos that have already been looked at.
+    ## we will not look at combos that are subsets.
+    for c in combinations:
+        if hasAlreadyDone ( c, alreadyDone ):
+            # print ( "%s is subset of bigger combo. skip." % getLetterCode(c) )
+            continue
+        Z = getSignificance ( c )
+        if Z == None:
+            continue
+        print ( "significance for %s is %.2f" % ( getLetterCode(c), Z ) )
+        if Z > highestZ:
+            highestZ = Z
+            highest = c
+        alreadyDone.append ( c )
+    return highest,highestZ
+
 
 def getLetterCode ( combination ):
     """ get the letter code of a combination """
@@ -196,8 +230,11 @@ for strategy in [ "aggressive" ]:
     ## optionally, add individual predictions
     combinables = singlepreds + combinables
     discussCombinations ( combinables )
-    bestCombo,ulexp = findBestCombo ( combinables )
-    ulobs = get95CL ( bestCombo, expected=False )
-    print ( "best combo for strategy ``%s'' is %s: %s: [ul_obs=%.2f, ul_exp=%.2f]" % ( strategy, getLetterCode(bestCombo), getComboDescription(bestCombo), ulobs, ulexp ) ) 
+    bestCombo,Z = findLargestSignificance ( combinables )
+    print ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( strategy, getLetterCode(bestCombo), getComboDescription(bestCombo), Z ) ) 
+
+    #bestCombo,ulexp = findBestCombo ( combinables )
+    #ulobs = get95CL ( bestCombo, expected=False )
+    #print ( "best combo for strategy ``%s'' is %s: %s: [ul_obs=%.2f, ul_exp=%.2f]" % ( strategy, getLetterCode(bestCombo), getComboDescription(bestCombo), ulobs, ulexp ) ) 
 
 # IPython.embed()
