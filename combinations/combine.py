@@ -172,10 +172,12 @@ def getSignificance ( combo ):
     LH0 = numpy.prod ( [ c.getLikelihood(0.,expected=False) for c in combo ] )
     LH1 = numpy.prod ( [ c.getLikelihood(muhat,expected=False) for c in combo ] )
     chi2 = 2 * ( math.log ( LH1 ) - math.log ( LH0 ) ) ## chi2 with one degree of freedom
-    p = stats.chi2.cdf ( chi2, 1. )
-    Z = stats.norm.ppf ( p )
+    # p = 1 - stats.chi2.cdf ( chi2, 1. )
+    # Z = stats.norm.ppf ( p )
+    Z = numpy.sqrt ( chi2 )
+    # print ( "chi2,Z=", chi2, Z )
     ## FIXME compute significance from chi2
-    return chi2
+    return Z
 
 def findLargestSignificance ( combinations ):
     """ find the combo with the most significant deviation """
