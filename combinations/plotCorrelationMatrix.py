@@ -103,7 +103,7 @@ def draw( strategy, databasepath ):
         if ana == "ATLAS":
             color = ROOT.kBlue+1
         if sqrts > 10.:
-            color += 3
+            color += 2
         label = "#color[%d]{%s}" % (color, label )
         xaxis.SetBinLabel(x+1, label )
         yaxis.SetBinLabel(x+1, label )
