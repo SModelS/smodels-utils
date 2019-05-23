@@ -22,15 +22,15 @@ class RandomWalker:
         self.save_hiscore = hiscore
         self.strategy = strategy
         self.names = { 1000001: "~q", 2000001: "~q", 1000002: "~q",
-                       2000002: "~q", 1000003: "~q", 2000003: "~q",
-                       1000004: "~q", 2000004: "~q", 1000005: "~b",
-                       2000005: "~b", 1000006: "~t", 2000006: "~t",
-                       1000011: "~e", 2000011: "~e", 1000012: "~nu",
-                       1000013: "~mu", 2000013: "~mu", 1000014: "~nu",
-                       1000015: "~tau", 2000015: "~tau", 1000016: "~nu",
+                       2000002: "~qR", 1000003: "~q", 2000003: "~qR",
+                       1000004: "~c", 2000004: "~cR", 1000005: "~b",
+                       2000005: "~bR", 1000006: "~t", 2000006: "~tR",
+                       1000011: "~e", 2000011: "~eR", 1000012: "~nu",
+                       1000013: "~mu", 2000013: "~muR", 1000014: "~nu",
+                       1000015: "~tau", 2000015: "~tauR", 1000016: "~nu",
                        1000021: "~g", 1000022: "~chi10", 1000023: "~chi20",
                        1000025: "~chi30", 1000035: "~chi40", 1000024: "~chi1+",
-                  1000037: "~chi2+" }
+                       1000037: "~chi2+" }
         self.highestZ = -1. ## keep track of hiscore!
         self.maxsteps = nsteps
         self.templateSLHA = "template.slha"
@@ -76,6 +76,15 @@ class RandomWalker:
         self.Z = 0.
         self.takeStep() ## the first step should be considered as "taken"
 
+    def removeDataFromBestCombo ( self, bestCombo ):
+        """ remove the data from all theory predictions, we dont need them. """
+        for combo in bestCombo:
+            eR = combo.expResult
+            for ds in eR.datasets:
+                for tx in ds.txnameList:
+                    del tx.txnameData
+        return bestCombo
+
     def frozenParticles ( self ):
         """ returns a list of all particles that can be regarded as frozen
             (ie mass greater than 1e5 GeV) """
@@ -115,7 +124,7 @@ class RandomWalker:
         unfrozen.remove ( self.LSP )
         p = random.choice ( unfrozen )
         self.masses[p]=1e6
-        print ( "[walk] Freezing %s: m=%f" % ( self.getParticleName(p), self.masses[p] ) )
+        print ( "[walk] Freezing %s." % ( self.getParticleName(p) ) )
 
     def randomlyChangeBranchings ( self ):
         """ randomly change the branchings of a single particle """
@@ -144,7 +153,7 @@ class RandomWalker:
             S+=br
         self.decays[p][ openChannels[-1] ] = 1. - S
 
-        print ( "[walk] changed branchings of ", p )
+        self.pprint ( "changed branchings of %s." % self.getParticleName(p) )
         # print ( "[walk] we have %d open channels" % nChannels )
         for dpid,br in self.decays[p].items():
             if dpid in self.unFrozenParticles():
@@ -190,7 +199,7 @@ class RandomWalker:
 
     def onestep ( self ):
         self.step+=1
-        self.pprint ( "Step %d has %d unfrozen particles." % ( self.step, len ( self.unFrozenParticles() ) ) )
+        self.pprint ( "Step %d has %d unfrozen particles: %s" % ( self.step, len ( self.unFrozenParticles() ), ", ".join ( map ( self.getParticleName, self.unFrozenParticles() ) ) ) )
         u = random.uniform(0,1)
         if u > .9:
             # in about every tenth step unfreeze random particle
@@ -209,15 +218,18 @@ class RandomWalker:
         # self.pprint ( "I got %d predictions" % ( len(predictions) ) )
         combiner = Combiner()
         bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, self.strategy )
-        self.bestCombo = bestCombo
+        self.bestCombo = self.removeDataFromBestCombo ( bestCombo )
         self.llhd = (1. - llhd ) ## we wish to minimize likelihood, find the most unexpected fluctuation
         self.Z = Z
         if self.Z > self.highestZ and self.save_hiscore:
-            self.pprint ( "new hiscore! save it" )
+            self.pprint ( "new hiscore! save it to hiscore.pcl." )
+            #if os.path.exists ( "hiscore.pcl" ):
+            #    subprocess.getoutput ("mv -f hiscore.pcl oldhiscore.pcl" )
             f=open("hiscore.pcl","wb")
             pickle.dump( self, f )
             f.close()
             self.highestZ = Z
+            subprocess.getoutput ( "current.slha", "hiscore.slha" )
         self.computePrior()
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, combiner.getLetterCode(bestCombo), combiner.getComboDescription(bestCombo), Z ) )
 
@@ -258,7 +270,14 @@ class RandomWalker:
             self.onestep()
             self.computePrior()
             self.pprint ( "prior times llhd, before versus after: %f -> %f" % ( self.oldPriorTimesLlhd(), self.priorTimesLlhd() ) )
-            ratio = self.priorTimesLlhd() / self.oldPriorTimesLlhd()
+            ratio = 1.
+            if self.oldZ > 0.:
+                ratio = self.Z / self.oldZ
+            # ratio = self.priorTimesLlhd() / self.oldPriorTimesLlhd()
+            if self.oldZ > 0. and self.Z == 0.:
+                self.pprint ( "Z=%.2f -> 0. Revert." % self.oldZ )
+                self.revert()
+                continue
 
             if ratio >= 1.:
                 self.pprint ( "Z: %.3f -> %.3f: take the step" % ( self.oldZ, self.Z ) )

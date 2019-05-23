@@ -150,6 +150,8 @@ class Combiner:
         chi2 = 2 * ( math.log ( LH1 ) - math.log ( LH0 ) ) ## chi2 with one degree of freedom
         # p = 1 - stats.chi2.cdf ( chi2, 1. )
         # Z = stats.norm.ppf ( p )
+        if chi2 < 0.:
+            chi2 = 0.
         Z = numpy.sqrt ( chi2 )
         # print ( "chi2,Z=", chi2, Z )
         ## FIXME compute significance from chi2
