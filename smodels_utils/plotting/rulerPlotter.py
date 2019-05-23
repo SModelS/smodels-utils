@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """ 
 .. module:: rulerPlot
@@ -14,7 +14,17 @@ from __future__ import print_function
 import os, math, sys, tempfile, ROOT
 import logging
     
-logger=logging.getLogger(__name__)
+def setLogLevel ( logger, verbose ):
+    if "err" in verbose:
+        logger.setLevel(logging.ERROR)
+        return
+    if "warn" in verbose:
+        logger.setLevel(logging.WARN)
+        return
+    if "deb" in verbose:
+        logger.setLevel(logging.DEBUG)
+        return
+    logger.setLevel(logging.INFO)
 
 def _printCanvas ( c1, filename ):
     """ tried to redirect stdout """
@@ -274,7 +284,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-M', '--max',
           help='maximum mass, -1 for automatic mode', type=int, default=-1 )
     argparser.add_argument ( '-o', '--output',
-          help='output file name', type=str, default='ruler' )
+          help='output file name [ruler.png]', type=str, default='ruler.png' )
+    argparser.add_argument ( '-v', '--verbosity',
+          help='verbosity -- debug, info, warning, error [info]', type=str, default='info' )
     argparser.add_argument ( '-p', '--pdf', help='produce pdf', action='store_true' )
     argparser.add_argument ( '-e', '--eps', help='produce (=keep) eps', 
                              action='store_true' )
@@ -284,6 +296,11 @@ if __name__ == "__main__":
     argparser.add_argument ( '-squark', '--squark', 
                              help='represent all squarks as ~q', action='store_true' )
     args=argparser.parse_args()
+    if not args.pdf and not args.eps:
+        args.png = True ## if nothing, then pngs
+    if args.output.endswith(".png"):
+        args.png = True
+        args.output = args.output.replace(".png","")
     Range=[args.min,args.max]
     formats= { "pdf":args.pdf, "eps":args.eps, "png":args.png }
 
@@ -292,6 +309,8 @@ if __name__ == "__main__":
     import logging.config
     logging.config.fileConfig ( 
             SModelSUtils.installDirectory()+"/etc/commandline.conf" )
+    logger=logging.getLogger(__name__)
+    setLogLevel ( logger, args.verbosity.lower() )
     if inputfile[-5:] == ".slha":
         inputfile = convertSLHAFile ( inputfile, args.squark )
     draw ( inputfile, args.output, Range, formats, args.masses )

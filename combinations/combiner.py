@@ -147,6 +147,10 @@ class Combiner:
             return 0.
         LH0 = numpy.prod ( [ c.getLikelihood(0.,expected=False) for c in combo ] )
         LH1 = numpy.prod ( [ c.getLikelihood(muhat,expected=False) for c in combo ] )
+        if LH0 <= 0.:
+            LH0 = 1e-80
+        if LH1 <= 0.:
+            LH1 = 1e-80
         chi2 = 2 * ( math.log ( LH1 ) - math.log ( LH0 ) ) ## chi2 with one degree of freedom
         # p = 1 - stats.chi2.cdf ( chi2, 1. )
         # Z = stats.norm.ppf ( p )

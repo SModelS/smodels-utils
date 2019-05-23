@@ -2,7 +2,7 @@
 
 """ a first start at the random walk idea """
 
-import random, subprocess, copy, pickle, sys, numpy, os
+import random, subprocess, copy, pickle, sys, numpy, os, tempfile
 from predictor import predict
 from combiner import Combiner
 from smodels.tools.xsecComputer import XSecComputer, LO
@@ -20,6 +20,7 @@ class RandomWalker:
                   1000016, 1000021, 1000022, 1000023, 1000025, 1000035, 1000024,
                   1000037 ]
         self.save_hiscore = hiscore
+        self.currentSLHA = tempfile.mktemp(prefix="cur",suffix=".slha",dir="./")
         self.strategy = strategy
         self.names = { 1000001: "~q", 2000001: "~q", 1000002: "~q",
                        2000002: "~qR", 1000003: "~q", 2000003: "~qR",
@@ -106,6 +107,8 @@ class RandomWalker:
     def unfreezeRandomParticle ( self ):
         """ unfreezes a random frozen particle """
         frozen = self.frozenParticles()
+        if len(frozen)==0:
+            return
         p = random.choice ( frozen )
         self.masses[p]=random.uniform ( self.masses[self.LSP], 3000. )
         print ( "[walk] Unfreezing %s: m=%f" % ( self.getParticleName(p), self.masses[p] ) )
@@ -172,7 +175,7 @@ class RandomWalker:
         f=open( self.templateSLHA )
         lines=f.readlines()
         f.close()
-        f=open("current.slha","w")
+        f=open(self.currentSLHA,"w")
         for line in lines:
             for m,v in self.masses.items():
                 line=line.replace("M%d" % m,"%.1f" % v )
@@ -183,15 +186,26 @@ class RandomWalker:
 
     def computeXSecs ( self ):
         """ compute xsecs for current.slha """
-        # print ( "[walk] computing xsecs for current.slha" )
+        # print ( "[walk] computing xsecs for %s" % self.currentSLHA )
         computer = XSecComputer ( LO, 2000, 6 )
-        computer.computeForOneFile ( [8,13], "current.slha",
+        computer.computeForOneFile ( [8,13], self.currentSLHA,
                 unlink=True, lOfromSLHA=False, tofile=True )
 
     def computePrior ( self ):
         """ compute the prior for the current model.
         """
         self.prior = 1. / ( len(self.unFrozenParticles()))
+
+    def getZFromPickle ( self ):
+        """ get the high score Z from pickle file """
+        if not os.path.exists ( "hiscore.pcl" ):
+            return -1.
+        if os.stat( "hiscore.pcl" ).st_size < 100:
+            return -1.
+        f=open("hiscore.pcl","rb")
+        hi = pickle.load ( f )
+        f.close()
+        return hi.Z
 
     def pprint ( self, *args ):
         """ logging """
@@ -214,7 +228,7 @@ class RandomWalker:
             self.takeRandomMassStep()
         self.createSLHAFile()
         self.computeXSecs()
-        predictions = predict ( "current.slha" )
+        predictions = predict ( self.currentSLHA )
         # self.pprint ( "I got %d predictions" % ( len(predictions) ) )
         combiner = Combiner()
         bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, self.strategy )
@@ -222,14 +236,18 @@ class RandomWalker:
         self.llhd = (1. - llhd ) ## we wish to minimize likelihood, find the most unexpected fluctuation
         self.Z = Z
         if self.Z > self.highestZ and self.save_hiscore:
-            self.pprint ( "new hiscore! save it to hiscore.pcl." )
-            #if os.path.exists ( "hiscore.pcl" ):
-            #    subprocess.getoutput ("mv -f hiscore.pcl oldhiscore.pcl" )
-            f=open("hiscore.pcl","wb")
-            pickle.dump( self, f )
-            f.close()
-            self.highestZ = Z
-            subprocess.getoutput ( "cp current.slha hiscore.slha" )
+            ## check also the pickle file
+            hiZ = self.getZFromPickle ()
+            if self.Z > hiZ: ## also higher than what is in the pickle file.
+                self.pprint ( "new hiscore! save it to hiscore.pcl." )
+                self.highestZ = Z
+                if os.path.exists ( "hiscore.pcl" ):
+                    subprocess.getoutput ("mv -f hiscore.pcl oldhiscore.pcl" )
+                f=open("hiscore.pcl","wb")
+                pickle.dump( self, f )
+                f.close()
+                subprocess.getoutput ( "cp hiscore.slha oldhiscore.slha" )
+                subprocess.getoutput ( "cp %s.slha hiscore.slha" % self.currentSLHA )
         self.computePrior()
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, combiner.getLetterCode(bestCombo), combiner.getComboDescription(bestCombo), Z ) )
 
@@ -270,11 +288,14 @@ class RandomWalker:
             self.onestep()
             self.computePrior()
             self.pprint ( "prior times llhd, before versus after: %f -> %f" % ( self.oldPriorTimesLlhd(), self.priorTimesLlhd() ) )
+            #ratio = 1.
+            #if self.oldZ > 0.:
+            #    ratio = self.Z / self.oldZ
             ratio = 1.
-            if self.oldZ > 0.:
-                ratio = self.Z / self.oldZ
-            # ratio = self.priorTimesLlhd() / self.oldPriorTimesLlhd()
-            if self.oldZ > 0. and self.Z == 0.:
+            if self.oldPriorTimesLlhd() > 0.:
+                ratio = self.priorTimesLlhd() / self.oldPriorTimesLlhd()
+            if self.oldZ > 0. and self.Z < 0.7 * self.oldZ:
+                ## no big steps taken here.
                 self.pprint ( "Z=%.2f -> 0. Revert." % self.oldZ )
                 self.revert()
                 continue
