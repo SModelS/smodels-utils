@@ -46,7 +46,7 @@ class Combiner:
         """
         combinables=[]
         n=len(predictions)
-        print ( "[Combiner] %d predictions" % n )
+        # print ( "[Combiner] %d predictions" % n )
         for iA,predA in enumerate(predictions):
             combo = [ predA ]
             nexti = iA + 1 
@@ -62,7 +62,11 @@ class Combiner:
             if not n in count.keys():
                 count[n]=0
             count[n]+=1
-        print ( "[Combiner] %d combinations" % len(combinables) )
+        npred = 0
+        if 1 in count.keys():
+            npred = count[1]
+        print ( "[Combiner] %d combinations from %d predictions" % \
+                (len(combinables),npred) )
         #for k,v in count.items():
         #    print ( "[Combiner] %d combinations with %d predictions" % ( v, k ) )
 
@@ -72,6 +76,8 @@ class Combiner:
         """
         ret = numpy.prod ( [ c.getLikelihood(mu,expected=expected) for c in combination ] )
         if nll:
+            if ret <= 0.:
+                ret = 1e-70
             ret = - math.log ( ret )
         return ret
 
@@ -236,7 +242,7 @@ class Combiner:
         self.discussCombinations ( combinables )
         bestCombo,Z = self._findLargestZ ( combinables )
         ## compute a likelihood equivalent for Z
-        llhd = stats.norm.pdf(1.)
+        llhd = stats.norm.pdf(Z)
         return bestCombo,Z,llhd
 
     def findStrongestExclusion ( self, predictions, strategy ):

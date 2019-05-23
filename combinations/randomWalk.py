@@ -2,7 +2,7 @@
 
 """ a first start at the random walk idea """
 
-import random, subprocess, copy, pickle, sys, numpy
+import random, subprocess, copy, pickle, sys, numpy, os
 from predictor import predict
 from combiner import Combiner
 from smodels.tools.xsecComputer import XSecComputer, LO
@@ -10,31 +10,34 @@ from scipy import stats
 
 class RandomWalker:
     LSP = 1000022
-    def __init__ ( self, nsteps=500 ):
-        """ initialise the walker 
+    def __init__ ( self, nsteps=500, strategy="aggressive", hiscore=False ):
+        """ initialise the walker
         :param nsteps: maximum number of steps to perform
         """
-        self.particles = [ 1000001, 2000001, 1000002, 2000002, 1000003, 2000003, 
-                  1000004, 2000004, 1000005, 2000005, 1000006, 2000006, 1000011, 
-                  2000011, 1000012, 1000013, 2000013, 1000014, 1000015, 2000015, 
-                  1000016, 1000021, 1000022, 1000023, 1000025, 1000035, 1000024, 
+        self.particles = [ 1000001, 2000001, 1000002, 2000002, 1000003, 2000003,
+                  1000004, 2000004, 1000005, 2000005, 1000006, 2000006, 1000011,
+                  2000011, 1000012, 1000013, 2000013, 1000014, 1000015, 2000015,
+                  1000016, 1000021, 1000022, 1000023, 1000025, 1000035, 1000024,
                   1000037 ]
-        self.names = { 1000001: "~q", 2000001: "~q", 1000002: "~q", 
-                       2000002: "~q", 1000003: "~q", 2000003: "~q", 
-                       1000004: "~q", 2000004: "~q", 1000005: "~b", 
-                       2000005: "~b", 1000006: "~t", 2000006: "~t", 
-                       1000011: "~e", 2000011: "~e", 1000012: "~nu", 
-                       1000013: "~mu", 2000013: "~mu", 1000014: "~nu", 
-                       1000015: "~tau", 2000015: "~tau", 1000016: "~nu", 
-                       1000021: "~g", 1000022: "~chi10", 1000023: "~chi20", 
-                       1000025: "~chi30", 1000035: "~chi40", 1000024: "~chi1+", 
+        self.save_hiscore = hiscore
+        self.strategy = strategy
+        self.names = { 1000001: "~q", 2000001: "~q", 1000002: "~q",
+                       2000002: "~q", 1000003: "~q", 2000003: "~q",
+                       1000004: "~q", 2000004: "~q", 1000005: "~b",
+                       2000005: "~b", 1000006: "~t", 2000006: "~t",
+                       1000011: "~e", 2000011: "~e", 1000012: "~nu",
+                       1000013: "~mu", 2000013: "~mu", 1000014: "~nu",
+                       1000015: "~tau", 2000015: "~tau", 1000016: "~nu",
+                       1000021: "~g", 1000022: "~chi10", 1000023: "~chi20",
+                       1000025: "~chi30", 1000035: "~chi40", 1000024: "~chi1+",
                   1000037: "~chi2+" }
+        self.highestZ = -1. ## keep track of hiscore!
         self.maxsteps = nsteps
         self.templateSLHA = "template.slha"
         self.onesquark = True ## only one light squark
         if self.onesquark:
-            self.particles = [ 1000001, 1000005, 1000006, 1000011, 1000012, 
-                      1000013, 1000014, 1000015,  1000016, 1000021, 1000022, 
+            self.particles = [ 1000001, 1000005, 1000006, 1000011, 1000012,
+                      1000013, 1000014, 1000015,  1000016, 1000021, 1000022,
                       1000023, 1000025, 1000024, 1000037 ]
             self.templateSLHA = "template_1q.slha"
         self.possibledecays = {} ## list all possible decay channels
@@ -68,12 +71,10 @@ class RandomWalker:
 
         ## the LSP we need from the beginning
         self.masses[self.LSP]=random.uniform(50,500)
-        self.oldmasses = copy.deepcopy (self.masses ) ## the state of the previous step
-        self.oldZ = 0. ## Z of the previous step
-        self.oldllhd = stats.norm.pdf( self.oldZ ) ## llhd of previous step
-        self.olddecays = copy.deepcopy ( self.decays )
-        self.oldpossibledecays = copy.deepcopy ( self.possibledecays )
-        self.oldprior = 1. ## prior of previous step (we start with one free param)
+        self.computePrior()
+        self.llhd=0.
+        self.Z = 0.
+        self.takeStep() ## the first step should be considered as "taken"
 
     def frozenParticles ( self ):
         """ returns a list of all particles that can be regarded as frozen
@@ -98,7 +99,13 @@ class RandomWalker:
         frozen = self.frozenParticles()
         p = random.choice ( frozen )
         self.masses[p]=random.uniform ( self.masses[self.LSP], 3000. )
-        print ( "[walk] Unfreezing %d: m=%f" % ( p, self.masses[p] ) )
+        print ( "[walk] Unfreezing %s: m=%f" % ( self.getParticleName(p), self.masses[p] ) )
+
+    def getParticleName ( self, p ):
+        sp = str(p)
+        if p in self.names:
+            sp = self.names[p]
+        return sp
 
     def freezeRandomParticle ( self ):
         """ freezes a random unfrozen particle """
@@ -108,7 +115,7 @@ class RandomWalker:
         unfrozen.remove ( self.LSP )
         p = random.choice ( unfrozen )
         self.masses[p]=1e6
-        print ( "[walk] Freezing %d: m=%f" % ( p, self.masses[p] ) )
+        print ( "[walk] Freezing %s: m=%f" % ( self.getParticleName(p), self.masses[p] ) )
 
     def randomlyChangeBranchings ( self ):
         """ randomly change the branchings of a single particle """
@@ -136,7 +143,7 @@ class RandomWalker:
             self.decays[p][i]=br
             S+=br
         self.decays[p][ openChannels[-1] ] = 1. - S
-            
+
         print ( "[walk] changed branchings of ", p )
         # print ( "[walk] we have %d open channels" % nChannels )
         for dpid,br in self.decays[p].items():
@@ -144,8 +151,8 @@ class RandomWalker:
                 openChannels.append ( dpid )
             # print ( "[walk] new `- pid,br", dpid, br, dpid in self.unFrozenParticles() )
 
-    def takeRandomStep ( self ):
-        """ take a random step for all unfrozen particles """
+    def takeRandomMassStep ( self ):
+        """ take a random step in mass space for all unfrozen particles """
         dx = 20. / numpy.sqrt ( len(self.unFrozenParticles() ) )
         for i in self.unFrozenParticles():
             self.masses[i]=self.masses[i]+random.uniform(-dx,dx)
@@ -167,9 +174,9 @@ class RandomWalker:
 
     def computeXSecs ( self ):
         """ compute xsecs for current.slha """
-        print ( "[walk] computing xsecs for current.slha" )
+        # print ( "[walk] computing xsecs for current.slha" )
         computer = XSecComputer ( LO, 2000, 6 )
-        computer.computeForOneFile ( [8,13], "current.slha", 
+        computer.computeForOneFile ( [8,13], "current.slha",
                 unlink=True, lOfromSLHA=False, tofile=True )
 
     def computePrior ( self ):
@@ -179,10 +186,11 @@ class RandomWalker:
 
     def pprint ( self, *args ):
         """ logging """
-        print ( "[walk] %s" % args )
+        print ( "[walk] %s" % (" ".join(map(str,args))) )
 
     def onestep ( self ):
         self.step+=1
+        self.pprint ( "Step %d has %d unfrozen particles." % ( self.step, len ( self.unFrozenParticles() ) ) )
         u = random.uniform(0,1)
         if u > .9:
             # in about every tenth step unfreeze random particle
@@ -194,19 +202,24 @@ class RandomWalker:
             # in about every tenth step randomly change branchings of a particle
             self.freezeRandomParticle()
         else:
-            self.takeRandomStep()
+            self.takeRandomMassStep()
         self.createSLHAFile()
         self.computeXSecs()
         predictions = predict ( "current.slha" )
-        self.pprint ( "I got %d predictions" % ( len(predictions) ) )
+        # self.pprint ( "I got %d predictions" % ( len(predictions) ) )
         combiner = Combiner()
-        strategy = "aggressive"
-        bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, strategy )
+        bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, self.strategy )
         self.bestCombo = bestCombo
         self.llhd = (1. - llhd ) ## we wish to minimize likelihood, find the most unexpected fluctuation
         self.Z = Z
+        if self.Z > self.highestZ and self.save_hiscore:
+            self.pprint ( "new hiscore! save it" )
+            f=open("hiscore.pcl","wb")
+            pickle.dump( self, f )
+            f.close()
+            self.highestZ = Z
         self.computePrior()
-        print ( "[walk] best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( strategy, combiner.getLetterCode(bestCombo), combiner.getComboDescription(bestCombo), Z ) )
+        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, combiner.getLetterCode(bestCombo), combiner.getComboDescription(bestCombo), Z ) )
 
     def revert ( self ):
         """ revert the last step. go back. """
@@ -225,7 +238,7 @@ class RandomWalker:
         self.oldZ = self.Z
         self.olddecays = copy.deepcopy ( self.decays )
         self.oldpossibledecays = copy.deepcopy ( self.possibledecays )
-        
+
     def priorTimesLlhd( self ):
         return self.prior * self.llhd
 
@@ -244,17 +257,17 @@ class RandomWalker:
         while self.step<self.maxsteps:
             self.onestep()
             self.computePrior()
-            print ( "[walk] prior times llhd, before versus after: %f -> %f" % ( self.oldPriorTimesLlhd(), self.priorTimesLlhd() ) )
+            self.pprint ( "prior times llhd, before versus after: %f -> %f" % ( self.oldPriorTimesLlhd(), self.priorTimesLlhd() ) )
             ratio = self.priorTimesLlhd() / self.oldPriorTimesLlhd()
 
             if ratio >= 1.:
-                print ( "[walk] Z: %.2f -> %.2f: take the step" % ( self.oldZ, self.Z ) )
-                if self.Z < self.oldZ:
-                    print ( " `- weird, though, Z decreases. Please check." )
-                    print ( "oldllhd", self.oldllhd )
-                    print ( "oldprior", self.oldprior )
-                    print ( "llhd", self.llhd )
-                    print ( "prior", self.prior )
+                self.pprint ( "Z: %.3f -> %.3f: take the step" % ( self.oldZ, self.Z ) )
+                if self.Z < 0.95 * self.oldZ:
+                    self.pprint ( " `- weird, though, Z decreases. Please check." )
+                    self.pprint ( "oldllhd %f" % self.oldllhd )
+                    self.pprint ( "oldprior", self.oldprior )
+                    self.pprint ( "llhd", self.llhd )
+                    self.pprint ( "prior", self.prior )
                     sys.exit()
                 self.takeStep()
             else:
@@ -269,11 +282,25 @@ class RandomWalker:
 
 
 if __name__ == "__main__":
-    continueOld = False
-    if continueOld and os.path.exists ( "state.pcl" ):
+    import argparse
+    argparser = argparse.ArgumentParser(
+            description='model walker. builds BSM models of interest')
+    argparser.add_argument ( '-s', '--strategy',
+            help='combination strategy [aggressive]',
+            type=str, default="aggressive" )
+    argparser.add_argument ( '-n', '--nsteps',
+            help='number of steps [500]',                                                           type=int, default=500 )
+    argparser.add_argument ( '-c', '--cont',
+            help='continue with last save state [False]',
+            action="store_true" )
+    argparser.add_argument ( '-S', '--hiscore',
+            help='save states with highest Zs [False]',
+            action="store_true" )
+    args = argparser.parse_args()
+    if args.cont and os.path.exists ( "state.pcl" ) and os.stat("state.pcl").st_size > 100:
         f=open("state.pcl","rb")
-        walker = pickle.load ( self, f )
+        walker = pickle.load ( f )
         f.close()
     else:
-        walker = RandomWalker()
+        walker = RandomWalker( args.nsteps, args.strategy, args.hiscore )
     walker.walk()
