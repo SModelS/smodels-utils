@@ -28,6 +28,7 @@ g=open("../log/pip_downloads.log","w")
 ctr = 0
 for line in lines:
     sline=line.decode().strip()
+    print ( "line >>>%s<<<" % line )
     if len(sline)==0:
         continue
     if not hasPassedTotal and "Total downloads" in sline:
