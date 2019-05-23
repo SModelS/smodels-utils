@@ -6,6 +6,7 @@ import random, subprocess, copy, pickle, sys, numpy, os, tempfile
 from predictor import predict
 from combiner import Combiner
 from smodels.tools.xsecComputer import XSecComputer, LO
+from smodels.tools.runtime import nCPUs
 from scipy import stats
 
 class RandomWalker:
@@ -108,10 +109,11 @@ class RandomWalker:
         """ unfreezes a random frozen particle """
         frozen = self.frozenParticles()
         if len(frozen)==0:
-            return
+            return 0
         p = random.choice ( frozen )
         self.masses[p]=random.uniform ( self.masses[self.LSP], 3000. )
         print ( "[walk] Unfreezing %s: m=%f" % ( self.getParticleName(p), self.masses[p] ) )
+        return 1
 
     def getParticleName ( self, p ):
         sp = str(p)
@@ -123,18 +125,19 @@ class RandomWalker:
         """ freezes a random unfrozen particle """
         unfrozen = self.unFrozenParticles()
         if len(unfrozen)<3:
-            return ## freeze only if at least 3 unfrozen particles exist
+            return 0 ## freeze only if at least 3 unfrozen particles exist
         unfrozen.remove ( self.LSP )
         p = random.choice ( unfrozen )
         self.masses[p]=1e6
         print ( "[walk] Freezing %s." % ( self.getParticleName(p) ) )
+        return 1
 
     def randomlyChangeBranchings ( self ):
         """ randomly change the branchings of a single particle """
         unfrozenparticles = self.unFrozenParticles()
         if len(unfrozenparticles)<2:
             print ( "[walk] not enough unfrozen particles to change random branching" )
-            return
+            return 0
         unfrozenparticles.remove ( self.LSP )
         p = random.choice ( unfrozenparticles )
         openChannels = []
@@ -144,7 +147,7 @@ class RandomWalker:
             # print ( "[walk] old `- pid,br", dpid, br, dpid in self.unFrozenParticles() )
         if len(openChannels) < 2:
             # not enough channels open to tamper with branchings!
-            return
+            return 0
         dx =.1/numpy.sqrt(len(openChannels)) ## maximum change per channel
         S=0.
         for i in openChannels[:-1]:
@@ -162,6 +165,7 @@ class RandomWalker:
             if dpid in self.unFrozenParticles():
                 openChannels.append ( dpid )
             # print ( "[walk] new `- pid,br", dpid, br, dpid in self.unFrozenParticles() )
+        return 1
 
     def takeRandomMassStep ( self ):
         """ take a random step in mass space for all unfrozen particles """
@@ -175,6 +179,8 @@ class RandomWalker:
         f=open( self.templateSLHA )
         lines=f.readlines()
         f.close()
+        if not hasattr ( self, "currentSLHA" ):
+            self.currentSLHA = tempfile.mktemp(prefix="cur",suffix=".slha",dir="./")
         f=open(self.currentSLHA,"w")
         for line in lines:
             for m,v in self.masses.items():
@@ -213,18 +219,24 @@ class RandomWalker:
 
     def onestep ( self ):
         self.step+=1
-        self.pprint ( "Step %d has %d unfrozen particles: %s" % ( self.step, len ( self.unFrozenParticles() ), ", ".join ( map ( self.getParticleName, self.unFrozenParticles() ) ) ) )
-        u = random.uniform(0,1)
-        if u > .9:
+        nUnfrozen = len ( self.unFrozenParticles() )
+        nTotal = len ( self.masses.keys() )
+        self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.step, nUnfrozen, nTotal, ", ".join ( map ( self.getParticleName, self.unFrozenParticles() ) ) ) )
+        # uUnfreeze = random.uniform(0,1)
+        nChanges = 0
+        uUnfreeze = random.gauss(.5,.5)
+        if uUnfreeze > nUnfrozen/float(nTotal):
             # in about every tenth step unfreeze random particle
-            self.unfreezeRandomParticle()
-        elif .8 < u < .9:
+            nChanges += self.unfreezeRandomParticle()
+        uBranch = random.uniform(0,1)
+        if uBranch > .75:
+            nChanges += self.randomlyChangeBranchings()
+        # uFreeze = random.uniform(0,1)
+        uFreeze = random.gauss(.5,.5)
+        if uFreeze < nUnfrozen/float(nTotal):
             # in about every tenth step randomly change branchings of a particle
-            self.randomlyChangeBranchings()
-        elif .7 < u < .8:
-            # in about every tenth step randomly change branchings of a particle
-            self.freezeRandomParticle()
-        else:
+            nChanges+=self.freezeRandomParticle()
+        if nChanges == 0:
             self.takeRandomMassStep()
         self.createSLHAFile()
         self.computeXSecs()
@@ -302,7 +314,7 @@ class RandomWalker:
 
             if ratio >= 1.:
                 self.pprint ( "Z: %.3f -> %.3f: take the step" % ( self.oldZ, self.Z ) )
-                if self.Z < 0.95 * self.oldZ:
+                if self.Z < 0.7 * self.oldZ:
                     self.pprint ( " `- weird, though, Z decreases. Please check." )
                     self.pprint ( "oldllhd %f" % self.oldllhd )
                     self.pprint ( "oldprior", self.oldprior )
@@ -329,7 +341,11 @@ if __name__ == "__main__":
             help='combination strategy [aggressive]',
             type=str, default="aggressive" )
     argparser.add_argument ( '-n', '--nsteps',
-            help='number of steps [500]',                                                           type=int, default=500 )
+            help='number of steps [500]',
+            type=int, default=500 )
+    argparser.add_argument ( '-p', '--ncpus',
+            help='number of CPUs. -1 means all. [1]',
+            type=int, default=1 )
     argparser.add_argument ( '-c', '--cont',
             help='continue with last save state [False]',
             action="store_true" )
@@ -337,6 +353,9 @@ if __name__ == "__main__":
             help='save states with highest Zs [False]',
             action="store_true" )
     args = argparser.parse_args()
+    ncpus = args.ncpus
+    if ncpus < 0:
+        ncpus = nCPUs() + ncpus + 1
     if args.cont and os.path.exists ( "state.pcl" ) and os.stat("state.pcl").st_size > 100:
         f=open("state.pcl","rb")
         walker = pickle.load ( f )
