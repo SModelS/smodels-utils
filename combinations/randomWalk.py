@@ -229,7 +229,7 @@ class RandomWalker:
             pickle.dump( self, f )
             f.close()
             self.highestZ = Z
-            subprocess.getoutput ( "current.slha", "hiscore.slha" )
+            subprocess.getoutput ( "cp current.slha hiscore.slha" )
         self.computePrior()
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, combiner.getLetterCode(bestCombo), combiner.getComboDescription(bestCombo), Z ) )
 
@@ -292,7 +292,7 @@ class RandomWalker:
             else:
                 u=random.uniform(0.,1.)
                 if u > ratio:
-                    print ( "[walk] u=%.2f > %.2f; Z: %.2f -> %.2f: go back" % (u,ratio,self.oldZ, self.Z) )
+                    print ( "[walk] u=%.2f > %.2f; Z: %.2f -> %.2f: revert." % (u,ratio,self.oldZ, self.Z) )
                     self.revert()
                 else:
                     print ( "[walk] u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.oldZ,self.Z) )
