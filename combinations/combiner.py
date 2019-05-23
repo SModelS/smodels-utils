@@ -63,8 +63,8 @@ class Combiner:
                 count[n]=0
             count[n]+=1
         print ( "[Combiner] %d combinations" % len(combinables) )
-        for k,v in count.items():
-            print ( "[Combiner] %d combinations with %d predictions" % ( v, k ) )
+        #for k,v in count.items():
+        #    print ( "[Combiner] %d combinations with %d predictions" % ( v, k ) )
 
     def getCombinedLikelihood ( self, combination, mu, expected=False, nll=False ):
         """ get the combined likelihood for a signal strength mu 
@@ -123,10 +123,10 @@ class Combiner:
         ## assign a letter to every prediction. for debugging
         letters={}
         letter=65
-        print ( "[Combiner] Letters assigned to results:" )
+        # print ( "[Combiner] Letters assigned to results:" )
         for p in predictions:
             letters[p]=chr(letter)
-            print ( "[Combiner] Prediction %s: %s" % ( letters[p], p.expResult.globalInfo.id ) )
+            # print ( "[Combiner] Prediction %s: %s" % ( letters[p], p.expResult.globalInfo.id ) )
             letter+=1
         return letters
 
@@ -163,7 +163,7 @@ class Combiner:
             Z = self.getSignificance ( c )
             if Z == None:
                 continue
-            print ( "[Combiner] significance for %s is %.2f" % ( self.getLetterCode(c), Z ) )
+            # print ( "[Combiner] significance for %s is %.2f" % ( self.getLetterCode(c), Z ) )
             if Z > highestZ:
                 highestZ = Z
                 highest = c
