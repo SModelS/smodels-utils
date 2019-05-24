@@ -42,20 +42,23 @@ class SPhenoReader:
       1000037: "~chi2+", 1000025: "~chi30",
       1000035: "~chi40"
     }
+    tmp = {}
     for (key,value) in self.ids.items():
-      self.ids[value]=key
+      tmp[value]=key
+    for k,v in tmp.items():
+        self.ids[k]=v
 
   def parseNamesAndMasses( self ):
     try:
       self.setIds()
       masses=self.pyslha.blocks["MASS"] ## pyslha[1]
-      for pdgid in masses.keys():
-        self.masses[pdgid]=float(masses[pdgid])
-        # if masses[pdgid].mass: self.masses[pdgid]=float(masses[pdgid].mass)
+      tmp = {}
+      for pdgid,value in masses.items():
+        self.masses[pdgid]=float(value)
     except Exception as e:
-        logger.error ( "exception in ``parseNamesAndMasses'': %s" % e )
+        logger.error ( "Exception in ``parseNamesAndMasses'': %s" % e )
 
-  def parseNamesAndMassesOld( self ):
+  def _parseNamesAndMassesOld( self ):
     self.setIds()
     massBlocks=False
     f=open(self.filename)
@@ -147,7 +150,7 @@ class SPhenoReader:
     for nsteps in range(2):
       ret3id=copy.deepcopy(ret2id)
       for i in ret2id:
-        if not i in self.decays.keys ( ):
+        if not i in self.decays.keys ():
           continue
         for (daughter,right) in self.decays[i].items():
           for (radiator,r) in right.items():

@@ -150,13 +150,13 @@ class DecayDrawer:
             first=True
             percentage=0
             for (radiator,r) in right.items():
-                if self.ps.count ( name ) and self.ps.count ( daughter ):
+                if list (self.ps).count ( name ) and list(self.ps).count ( daughter ):
                     if r < 0.01:
                         continue
                     if not first:
                         label+=","
                     rname=self.prettyName(radiator).replace(" ","")
-                    if self.extra.has_key ( rname ):
+                    if rname in self.extra.keys ( ):
                         rname += "->" + self.extra[rname]
                     percentage+=r
                     label+=rname
