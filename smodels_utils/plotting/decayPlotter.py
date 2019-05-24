@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
+from __future__ import print_function
 
 """
 .. module:: decayPlotter
@@ -28,7 +30,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
                          "dot", "neato", "pdf", "nopng", "nopercentage", "simple", "squarks",\
                          "sleptons", "weakinos", "zconstraints", "tex", "color",\
                          "masses", "html" ]:
-        if not options.has_key ( i ): options[i]=False
+        if not i in options.keys(): options[i]=False
 
     verbosereader=False
     if options["verbose"]==True and not options["html"]: verbosereader=True
@@ -92,9 +94,9 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
     htmlbegin="<font size=-2 color='green'>"
     htmlend="</font>"
     if options["verbose"]:
-        if options["html"]: print "<br>",htmlbegin
+        if options["html"]: print ( "<br>", htmlbegin )
         logger.info ( "We start from %s" % starters )
-        if options["html"]: print htmlend,"<br>"
+        if options["html"]: print ( htmlend,"<br>" )
     drawer=decayPlots.DecayDrawer ( options, ps, offset, extra )
 
     if options["tex"]:
@@ -114,7 +116,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
 
     if options["verbose"] and options["html"]:
         sout=out
-        print htmlbegin,"[decayPlotter] now we draw!",sout,htmlend,"<br>"
+        print ( htmlbegin,"[decayPlotter] now we draw!",sout,htmlend,"<br>" )
     drawer.draw ( out )
 
     if options["dot"] and options["tex"]:
@@ -125,7 +127,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
 
 if __name__ == "__main__":
     """ the script calls the drawing routine """
-    import argparse, types
+    import argparse
 
     argparser = argparse.ArgumentParser(description='SLHA to dot converter.')
     argparser.add_argument ( '-v', '--verbose', help='be verbose',
@@ -141,7 +143,7 @@ if __name__ == "__main__":
     argparser.add_argument ( '-Z', '--zconstraints',
             help='write down Z/W decay constraints',action='store_true' )
     argparser.add_argument ( '-P', '--pickle',
-            help='get xsecs from pickle file', type=types.StringType, default='' )
+            help='get xsecs from pickle file', type=str, default='' )
     argparser.add_argument ( '-l', '--leptons', help='have separate lepton flavors',\
             action='store_true' )
     argparser.add_argument ( '-i', '--integratesquarks',
@@ -164,19 +166,19 @@ if __name__ == "__main__":
             action='store_true' )
     argparser.add_argument ( '-c', '--color', help='use color',action='store_true' )
     argparser.add_argument ( '-O', '--offset', help='an offset in x in the plot',
-                                                     type=types.IntType, default=0 )
+                             type=int, default=0 )
     argparser.add_argument ( '-f', '--filename', nargs='?', \
             help='slha input filename (spheno.slha)',
-            type=types.StringType, default="spheno.slha" )
+            type=str, default="spheno.slha" )
 
     argparser.add_argument ( '-o', '--outfile', nargs='?', \
             help='output filename (if not specified we use the slha filename '\
-                 'with a different extension)', type=types.StringType, default="" )
+                 'with a different extension)', type=str, default="" )
     args=argparser.parse_args()
     Dict=args.__dict__
     options={}
     for (key,value) in Dict.items():
-        if type(value)==types.BooleanType:
+        if type(value)==bool:
             options[key]=value
 
     draw( args.filename, args.outfile, options, args.pickle, args.offset )
