@@ -2,3 +2,6 @@ obsolete/
 predictions.pcl
 matrix*png
 matrix*pdf
+paper/document.log
+paper/document.out
+paper/document.pdf
