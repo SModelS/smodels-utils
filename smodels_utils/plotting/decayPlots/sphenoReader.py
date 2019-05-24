@@ -6,8 +6,9 @@
 
 """
 
+from __future__ import print_function
+
 from pyparsing import Word, nums, ParseException, Optional, alphanums 
-import types
 import pyslha
 import logging
 logger = logging.getLogger(__name__)
@@ -51,7 +52,7 @@ class SPhenoReader:
       for pdgid in masses.keys():
         self.masses[pdgid]=float(masses[pdgid])
         # if masses[pdgid].mass: self.masses[pdgid]=float(masses[pdgid].mass)
-    except Exception,e:
+    except Exception as e:
         logger.error ( "exception in ``parseNamesAndMasses'': %s" % e )
 
   def parseNamesAndMassesOld( self ):
@@ -103,7 +104,7 @@ class SPhenoReader:
         if self.verbose:
           logger.debug ( "adding %s pdg=%d m=%s" % ( name, pdgid, str(mass) ) )
         self.masses[pdgid]=mass
-      except ParseException,e:
+      except ParseException as e:
         logger.error ( "exception caught with ``%s'': %s" % (line,e) )
         logger.debug ( "tried to interpret it as a mass line" )
 
@@ -111,7 +112,7 @@ class SPhenoReader:
   
   def fullName ( self, pdgid, integrated=False ):
     """ get the full name of pdgid """
-    if type(pdgid)==type(1) and self.ids.has_key ( pdgid ):
+    if type(pdgid)==type(1) and pdgid in self.ids.keys ( ):
       return self.ids[pdgid]
     return str(pdgid)
 
@@ -123,7 +124,7 @@ class SPhenoReader:
       return "q"
     if self.integrateLeptons and type(pdgid)==type(1) and abs(pdgid)==11:
       return "l"
-    if type(pdgid)==type(1) and self.ids.has_key ( pdgid ):
+    if type(pdgid)==type(1) and pdgid in self.ids.keys ( ):
       return self.ids[pdgid]
     return str(pdgid)
 
@@ -136,7 +137,7 @@ class SPhenoReader:
       m=self.pdgId ( mother )
       if len(self.getDecays(m))>0:
         ret2[mother]=1
-      if not self.decays.has_key ( m ):
+      if not m in self.decays.keys ( ):
         continue
       for (daughter,right) in self.decays[m].items():
         for (radiator,r) in right.items():
@@ -146,7 +147,7 @@ class SPhenoReader:
     for nsteps in range(2):
       ret3id=copy.deepcopy(ret2id)
       for i in ret2id:
-        if not self.decays.has_key ( i ):
+        if not i in self.decays.keys ( ):
           continue
         for (daughter,right) in self.decays[i].items():
           for (radiator,r) in right.items():
@@ -157,14 +158,14 @@ class SPhenoReader:
     return ret2.keys()
 
   def printMassTable ( self ):
-    print "SPhenoReader Mass Table"
-    print "-----------------------"
+    print ( "SPhenoReader Mass Table" )
+    print ( "-----------------------" )
     for (k,v) in self.masses.items():
-      print "%10s: %d GeV" % ( self.name ( k ), v )
+      print ( "%10s: %d GeV" % ( self.name ( k ), v ) )
 
   def getMass ( self, name ):
      pdgid=self.pdgId ( name )
-     if self.masses.has_key ( pdgid ):
+     if pdgid in self.masses.keys ( ):
        return self.masses[pdgid]
      return 0.
 
@@ -209,7 +210,7 @@ class SPhenoReader:
 
   def printDecay ( self, mother, rmin=0.0 ):
       m=self.pdgId ( mother )
-      if not self.decays.has_key ( m ):
+      if not m in self.decays.keys ( ):
         logger.error ( "[printDecay] no decays for %s" % self.name (m ) )
         return
       rtotal=0.
@@ -221,8 +222,8 @@ class SPhenoReader:
           rtotal+=r
 
   def printDecays ( self ):
-    print "SPhenoReader Decay Table"
-    print "--------------------------"
+    print ( "SPhenoReader Decay Table" )
+    print ( "--------------------------" )
     for mother in self.decays:
       self.printDecay ( mother )
 
@@ -284,7 +285,7 @@ class SPhenoReader:
         if line.find("#    br")==0:
           # title line
           continue
-        if not self.decays.has_key ( pdgIdMother ):
+        if not pdgIdMother in self.decays.keys ( ):
           self.decays[pdgIdMother]={}
           self.fulldecays[pdgIdMother]={}
         nbody=Word ( nums+"eE+-." )+Word ( nums+"-" )+ Word ( nums+"-" ) +\
@@ -307,41 +308,41 @@ class SPhenoReader:
               logger.debug ( "%d -> %d  %d   (%s)" % ( pdgIdMother, ps[0], ps[1], r ) )
             else:
               logger.debug ( "%d -> %d  %d  %d  (%s) radiate=%s fradiate=%s" % ( pdgIdMother, ps[0], ps[1], ps[2], r, radiate, fradiate ) )
-          if not self.decays[pdgIdMother].has_key ( ps[0] ):
+          if not ps[0] in self.decays[pdgIdMother].keys ( ):
             self.decays[pdgIdMother][ps[0]]={}
             self.fulldecays[pdgIdMother][ps[0]]={}
-          if not self.decays[pdgIdMother][ps[0]].has_key ( radiate ):
-            if type(r)==types.FloatType:
+          if not radiate in self.decays[pdgIdMother][ps[0]].keys ( ):
+            if type(r)==float:
               self.decays[pdgIdMother][ps[0]][radiate]=0.
               self.fulldecays[pdgIdMother][ps[0]][fradiate]=0.
           self.decays[pdgIdMother][ps[0]][radiate]+=r
           self.fulldecays[pdgIdMother][ps[0]][fradiate]+=r
-        except ParseException,e:
+        except ParseException as e:
           logger.error ( "error, failed while trying to interpret "\
                 "the following line as a decay line" )
           logger.debug ( "line >>%s<<" % line )
       self.checkDecayTable()
-    except Exception,e:
+    except Exception as e:
       logger.error ( "exception in ``parseBranchings'': %s" %e )
 
   def pdgId ( self, name ):
     if type(name)==type(3):
       return name
-    if self.ids.has_key ( name ):
+    if name in self.ids.keys ( ):
       return self.ids[name]
     return 0
 
   def exists ( self, name ):
     """ is this name listed? """
     if type(name)==type("a"):
-      return self.ids.has_key ( name )
+      return name in self.ids.keys()
 
   def filterNames ( self, lst ):
     """ taking list <lst>, this returns a list of all names
         in <lst> that do exist """
     ret=[]
     for i in lst:
-      if self.ids.has_key ( i ):
+      if i in self.ids.keys ( ):
         ret.append ( i )
     return ret
   
@@ -349,12 +350,12 @@ class SPhenoReader:
     """ get all decays, we're e.g. talking simplified models here """
     p=self.pdgId ( particle )
     ret={}
-    if not self.decays.has_key ( p ):
+    if not p in self.decays.keys ():
       return ret
     for (daughter,right) in self.decays[p].items():
       dname=self.name ( daughter )
       for (radiator,r) in right.items():
-        if not ret.has_key ( dname ):
+        if not dname in ret.keys ( ):
           ret[dname]={}
         ret[dname][radiator]=r
     return ret
@@ -385,7 +386,7 @@ class SPhenoReader:
         is covered """
     ret={}
     p=self.pdgId ( particle )
-    if not self.decays.has_key ( p ):
+    if not p in self.decays.keys ():
       return ret
 
     ## sort by value (hightest branchings first 
@@ -401,7 +402,7 @@ class SPhenoReader:
         if r<.01:
           continue
         t=int(r*10000)
-        while sorted_decays.has_key ( t ):
+        while t in sorted_decays.keys ():
           t+=1
         sorted_decays[t]=daughter
     s=sorted(sorted_decays)
@@ -411,12 +412,12 @@ class SPhenoReader:
     has_counted={}
     for t in s:
       daughter=sorted_decays[t]
-      if not has_counted.has_key(daughter):
+      if not daughter in has_counted.keys():
         has_counted[daughter]={}
       right=self.decays[p][daughter]
       if full:
         right=self.fulldecays[p][daughter]
-      if has_counted[daughter].has_key ( str(right) ):
+      if str(right) in has_counted[daughter].keys ():
         continue
       has_counted[daughter][str(right)]=True
       for (radiator,r) in right.items():
@@ -425,7 +426,7 @@ class SPhenoReader:
           dname=self.name ( daughter )
           if full:
             dname=self.fullName ( daughter )
-          if not ret.has_key ( dname ):
+          if not dname in ret.keys ( ):
             ret[dname]={}
           ret[dname][radiator]=r
           ret_r+=r

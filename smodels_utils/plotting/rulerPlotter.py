@@ -2,8 +2,8 @@
 
 """ 
 .. module:: rulerPlot
-    :synopsis: Draws a ruler plot, like 
-               http://smodels.hephy.at/images/example_ruler.png.
+    :synopsis: Draws a ruler plot from e.g. an SLHA file, like 
+               http://smodels.github.io/pics/example_ruler.png
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
@@ -113,17 +113,22 @@ def _pprint ( name ):
       name=w+"}"
   return name
 
+def createDictionaryFromSLHA ( inputfile ):
+    import pyslha
+    print ( "creating dictionary" )
+    sys.exit()
+
 def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1], 
            formats={ "png": True }, printmass=False ):
   """ entry point: draw the masses 
-      :param inputfile: the inputfilename, must contain a simple dictionary. 
+      :param inputfile: the inputfilename, must contain a simple dictionary. If
+                        the filename ends with .slha, create the ditionary on the fly.
       :param output: the output filename, without the extension.
       :param Range:  the range of the ruler, [min,max], given in GeV. -1 is for automatic mode (the script decides by itself).
       :param formats: the formats, as a dictionary. Supported are: eps, pdf, png.
       :param printmass: draw also mass values (in GeV)?
   """
 
-    
   f=open( inputfile )
   pmasses=eval(f.readline())
   f.close()
@@ -276,9 +281,9 @@ if __name__ == "__main__":
     import argparse, types
     import setPath
     from smodels_utils import SModelSUtils
-    argparser = argparse.ArgumentParser(description='Draws a "ruler-plot", i.e. particles arranged by their masses. See http://smodels.hephy.at/images/example_ruler.png.')
+    argparser = argparse.ArgumentParser(description='Draws a "ruler-plot", i.e. particles arranged by their masses. See http://smodels.github.io/pics/example_ruler.png.')
     argparser.add_argument('inputfile', type=str, nargs=1,
-                    help='input masses text file name, for an example see "etc/example_masses.txt". "@@installdir@@" will be replaced with the installation directory of smodels-tools.')
+                    help='input masses text file name, for an example see "etc/example_masses.txt". "@@installdir@@" will be replaced with the installation directory of smodels-utils. SLHA files are accepted, also.')
     argparser.add_argument ( '-m', '--min',
           help='minimal mass, -1 for automatic mode', type=int, default=-1 )
     argparser.add_argument ( '-M', '--max',
@@ -311,6 +316,6 @@ if __name__ == "__main__":
             SModelSUtils.installDirectory()+"/etc/commandline.conf" )
     logger=logging.getLogger(__name__)
     setLogLevel ( logger, args.verbosity.lower() )
-    if inputfile[-5:] == ".slha":
+    if inputfile.endswith ( ".slha" ):
         inputfile = convertSLHAFile ( inputfile, args.squark )
     draw ( inputfile, args.output, Range, formats, args.masses )
