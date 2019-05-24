@@ -25,6 +25,8 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
     out=os.path.basename ( slhafile ).replace(".slha","")
     if outfile!="":
         out=outfile
+        if out.endswith(".png"):
+            out = out.replace(".png","")
 
     for i in [ "leptons", "integratesquarks", "separatecharm", "verbose",
                          "dot", "neato", "pdf", "nopng", "nopercentage", "simple", "squarks",\

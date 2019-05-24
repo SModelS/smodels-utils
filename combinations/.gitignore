@@ -3,5 +3,6 @@ predictions.pcl
 matrix*png
 matrix*pdf
 paper/document.log
+debug.log
 paper/document.out
 paper/document.pdf
