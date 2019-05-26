@@ -282,7 +282,7 @@ class DecayDrawer:
 
     def dot2tex ( self, out ):
         # import os
-        import commands, os
+        import subprocess, os
         logger.debug ( "calling dot2tex now" )
         #    if self.html: print "<br>"
         cmd="dot2tex --autosize --nominsize --crop %s.dot -traw -o %s.tex" % (out, out )
@@ -291,7 +291,7 @@ class DecayDrawer:
         #cmd+="    --figpreamble '\\begin{Large}' --figpostamble '\\end{Large}'"
         #longcmd="%s --preproc %s.dot | %s -o %s.tex" % ( cmd, out, cmd, out )
         logger.debug (  "cmd=%s " % cmd )
-        output=commands.getoutput( cmd )
+        output=subprocess.getoutput( cmd )
         logger.debug ( output )
         logger.debug ( "now meddle with tex file" )
         self.meddleWithTexFile(out)
@@ -299,10 +299,10 @@ class DecayDrawer:
         pdfcmd="pdflatex -interaction nonstopmode -output-directory %s %s.tex " % \
                 ( outdir, out )
         logger.debug (  "pdfcmd=%s" % pdfcmd )
-        output=commands.getoutput(pdfcmd )
+        output=subprocess.getoutput(pdfcmd )
         logger.debug ( output )
 
         if self.options["nopng"]==False:
             cmd="convert -antialias -density 300x300 %s.pdf %s.png" % ( out, out )
-            import commands
-            commands.getoutput ( cmd )
+            import subprocess
+            subprocess.getoutput ( cmd )

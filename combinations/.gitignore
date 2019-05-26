@@ -4,5 +4,7 @@ matrix*png
 matrix*pdf
 paper/document.log
 debug.log
+paper/decays.log
+paper/decays.pdf
 paper/document.out
 paper/document.pdf

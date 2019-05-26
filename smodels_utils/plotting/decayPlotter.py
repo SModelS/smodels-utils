@@ -5,7 +5,7 @@ from __future__ import print_function
 """
 .. module:: decayPlotter
         :synopsis: With this module decay plots like 
-        http://smodels.hephy.at/images/example_decay.png
+        http://smodels.github.io/pics/example_decay.png
         can be created.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com> 
@@ -29,9 +29,9 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
             out = out.replace(".png","")
 
     for i in [ "leptons", "integratesquarks", "separatecharm", "verbose",
-                         "dot", "neato", "pdf", "nopng", "nopercentage", "simple", "squarks",\
-                         "sleptons", "weakinos", "zconstraints", "tex", "color",\
-                         "masses", "html" ]:
+               "dot", "neato", "pdf", "nopng", "nopercentage", "simple", "squarks",\
+               "sleptons", "weakinos", "zconstraints", "tex", "color",\
+               "masses", "html" ]:
         if not i in options.keys(): options[i]=False
 
     verbosereader=False

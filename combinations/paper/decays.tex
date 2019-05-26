@@ -1,0 +1,62 @@
+\documentclass{article}
+\usepackage[x11names, rgb]{xcolor}
+\usepackage[utf8]{inputenc}
+\usepackage{tikz}
+\usetikzlibrary{snakes,arrows,shapes}
+\usepackage{amsmath}
+%
+%
+
+\usepackage[active,tightpage]{preview}
+\PreviewEnvironment{tikzpicture}
+\setlength\PreviewBorder{0pt}%
+
+%
+
+\begin{document}
+\pagestyle{empty}
+%
+%
+%
+
+% Start of code
+% \begin{tikzpicture}[anchor=mid,>=latex',line join=bevel,]
+\begin{tikzpicture}[>=latex',line join=bevel,]
+  \pgfsetlinewidth{1bp}
+%%
+\pgfsetcolor{black}
+  % Edge: ~g -> ~chi10
+  \draw [->] (19.722bp,103.96bp) .. controls (21.733bp,92.155bp) and (24.843bp,76.485bp)  .. (29.0bp,63.0bp) .. controls (29.842bp,60.267bp) and (30.803bp,57.466bp)  .. (35.491bp,45.34bp);
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (41.0bp,73.0bp) node {\large{q}\large{q}};
+  % Edge: ~b_1 -> ~chi10
+  \draw [->] (68.85bp,100.9bp) .. controls (64.986bp,87.643bp) and (59.923bp,70.27bp)  .. (52.646bp,45.304bp);
+  \draw (72.0bp,73.0bp) node {\large{b}};
+  % Node: ~b_1
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.8};
+  \pgfsetstrokecolor{strokecol}
+  \draw (75.0bp,122.0bp) node {\Huge{\textbf{$\tilde{\mathrm{b}}_{1}$}}};
+\end{scope}
+  % Node: ~chi10
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.6,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (46.0bp,22.5bp) node {\Huge{\textbf{$\tilde{\mathrm{\chi}}^{0}_{1}$}}};
+\end{scope}
+  % Node: ~g
+\begin{scope}
+  \definecolor{strokecol}{rgb}{1.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (17.0bp,122.0bp) node {\Huge{\textbf{$\tilde{\mathrm{g}}$}}};
+\end{scope}
+%
+\end{tikzpicture}
+% End of code
+
+%
+\end{document}
+%
+
+

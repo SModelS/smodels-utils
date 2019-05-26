@@ -2,27 +2,110 @@
 
 """ a first start at the random walk idea """
 
-import random, subprocess, copy, pickle, sys, numpy, os, tempfile
+import random, subprocess, copy, pickle, sys, numpy, os, tempfile, fcntl, time
+import multiprocessing
 from predictor import predict
 from combiner import Combiner
 from smodels.tools.xsecComputer import XSecComputer, LO
 from smodels.tools.runtime import nCPUs
 from scipy import stats
 
-class RandomWalker:
-    LSP = 1000022
-    def __init__ ( self, nsteps=500, strategy="aggressive", hiscore=False ):
-        """ initialise the walker
-        :param nsteps: maximum number of steps to perform
+class Hiscore:
+    """ encapsulates the hiscore list. """
+    def __init__ ( self, save_hiscores ):
+        self.save_hiscores = save_hiscores
+        self.nkeep = 20 ## how many do we keep.
+        self.hiscores = {}
+        self.fileAttempts = 0 ## unsucessful attempts at reading or writing
+        self.updateListFromPickle ( )
+
+    def currentMinZ ( self ):
+        """ the current minimum Z to make it into the list. """
+        if len(self.hiscores)==0:
+            return 0.
+        return min ( self.hiscores.keys() )
+
+    def addResult ( self, model ):
+        """ add a result to the list """
+        while model.Z in self.hiscores.keys():
+            model.Z = model.Z-1e-20
+        self.hiscores[model.Z]=copy.deepcopy(model)
+        self.trimList()
+
+    def trimList ( self ):
+        keys = list ( self.hiscores.keys() )
+        if len(keys)<= self.nkeep:
+            return
+        keys.sort( reverse=True )
+        tmp = {}
+        for k in keys[:self.nkeep]:
+            tmp[k]=copy.deepcopy ( self.hiscores[k] )
+        self.hiscores = tmp
+
+    def updateListFromPickle ( self ):
+        """ fetch the list from the pickle file """
+        if not os.path.exists ( "hiscore.pcl" ):
+            return
+        try:
+            f=open("hiscore.pcl","rb")
+            fcntl.lockf( f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            self.hiscores = pickle.load ( f )
+            fcntl.lockf( f, fcntl.LOCK_UN)
+            f.close()
+            self.fileAttempts=0
+        except OSError or BlockingIOError:
+            self.fileAttempts+=1
+            if self.fileAttempts<5: # try again
+                time.sleep (.01 )
+                self.updateListFromPickle()
+
+    def writeListToPickle ( self ):
+        """ dump the list to the pickle file """
+        self.pprint ( "saving new hiscore list." )
+        try:
+            f=open("hiscore.pcl","wb" )
+            fcntl.lockf( f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            pickle.dump ( self.hiscores, f )
+            fcntl.lockf( f, fcntl.LOCK_UN )
+            f.close()
+            self.fileAttempts=0
+        except OSError or BlockingIOError:
+            self.fileAttempts+=1
+            if self.fileAttempts<5: # try again
+                time.sleep (.01 )
+                self.writeListToPickle()
+
+    def newResult ( self, model ):
+        """ see if new result makes it into hiscore list. If yes, then add.
         """
+        # self.pprint ( "New result with Z=%.2f, %s" % (model.Z, self.save_hiscores ) )
+        if not self.save_hiscores:
+            return
+        if model.Z <= 0.: ## we ignore models with Z==0.
+            return
+        if len ( self.hiscores.keys() ) > 0 and \
+            model.Z < self.currentMinZ():
+                return ## clearly out
+
+        self.addResult ( model )
+        self.writeListToPickle()
+
+    def pprint ( self, *args ):
+        """ logging """
+        print ( "[hiscore] %s" % (" ".join(map(str,args))) )
+
+class Model:
+    """ encodes on theoretical model, i.e. the particles, their masses, their branchings.
+    """
+    LSP = 1000022
+    def __init__ ( self ):
+        self.maxMass = 2400. ## maximum masses we consider
+        self.step = 0 ## count the steps
         self.particles = [ 1000001, 2000001, 1000002, 2000002, 1000003, 2000003,
                   1000004, 2000004, 1000005, 2000005, 1000006, 2000006, 1000011,
                   2000011, 1000012, 1000013, 2000013, 1000014, 1000015, 2000015,
                   1000016, 1000021, 1000022, 1000023, 1000025, 1000035, 1000024,
                   1000037 ]
-        self.save_hiscore = hiscore
-        self.currentSLHA = tempfile.mktemp(prefix="cur",suffix=".slha",dir="./")
-        self.strategy = strategy
         self.names = { 1000001: "~q", 2000001: "~q", 1000002: "~q",
                        2000002: "~qR", 1000003: "~q", 2000003: "~qR",
                        1000004: "~c", 2000004: "~cR", 1000005: "~b",
@@ -33,9 +116,6 @@ class RandomWalker:
                        1000021: "~g", 1000022: "~chi10", 1000023: "~chi20",
                        1000025: "~chi30", 1000035: "~chi40", 1000024: "~chi1+",
                        1000037: "~chi2+" }
-        self.highestZ = -1. ## keep track of hiscore!
-        self.maxsteps = nsteps
-        self.templateSLHA = "template.slha"
         self.onesquark = True ## only one light squark
         if self.onesquark:
             self.particles = [ 1000001, 1000005, 1000006, 1000011, 1000012,
@@ -45,7 +125,9 @@ class RandomWalker:
         self.possibledecays = {} ## list all possible decay channels
         self.decays = {} ## the actual branchings
         self.masses = {}
-        self.step = 0 ## count the steps
+        self.llhd=0.
+        self.Z = 0.
+
         slhaf = open ( self.templateSLHA )
         tmp = slhaf.readlines()
         slhalines = []
@@ -67,25 +149,17 @@ class RandomWalker:
                     dpid = int ( line[_:] )
                     decays.append ( dpid )
                     self.decays[p][dpid]=0.
-                    if dpid == self.LSP:
+                    if dpid == Model.LSP:
                         self.decays[p][dpid]=1.
             self.possibledecays[p]=decays
 
         ## the LSP we need from the beginning
-        self.masses[self.LSP]=random.uniform(50,500)
+        self.masses[Model.LSP]=random.uniform(50,500)
         self.computePrior()
-        self.llhd=0.
-        self.Z = 0.
-        self.takeStep() ## the first step should be considered as "taken"
 
-    def removeDataFromBestCombo ( self, bestCombo ):
-        """ remove the data from all theory predictions, we dont need them. """
-        for combo in bestCombo:
-            eR = combo.expResult
-            for ds in eR.datasets:
-                for tx in ds.txnameList:
-                    del tx.txnameData
-        return bestCombo
+    def pprint ( self, *args ):
+        """ logging """
+        print ( "[model] %s" % (" ".join(map(str,args))) )
 
     def frozenParticles ( self ):
         """ returns a list of all particles that can be regarded as frozen
@@ -95,6 +169,9 @@ class RandomWalker:
             if abs(v)>1e5:
                 ret.append(m)
         return ret
+
+    def priorTimesLlhd( self ):
+        return self.prior * self.llhd
 
     def unFrozenParticles ( self ):
         """ returns a list of all particles that can be regarded as unfrozen
@@ -111,7 +188,7 @@ class RandomWalker:
         if len(frozen)==0:
             return 0
         p = random.choice ( frozen )
-        self.masses[p]=random.uniform ( self.masses[self.LSP], 3000. )
+        self.masses[p]=random.uniform ( self.masses[Model.LSP], self.maxMass )
         print ( "[walk] Unfreezing %s: m=%f" % ( self.getParticleName(p), self.masses[p] ) )
         return 1
 
@@ -126,7 +203,7 @@ class RandomWalker:
         unfrozen = self.unFrozenParticles()
         if len(unfrozen)<3:
             return 0 ## freeze only if at least 3 unfrozen particles exist
-        unfrozen.remove ( self.LSP )
+        unfrozen.remove ( Model.LSP )
         p = random.choice ( unfrozen )
         self.masses[p]=1e6
         print ( "[walk] Freezing %s." % ( self.getParticleName(p) ) )
@@ -138,7 +215,7 @@ class RandomWalker:
         if len(unfrozenparticles)<2:
             print ( "[walk] not enough unfrozen particles to change random branching" )
             return 0
-        unfrozenparticles.remove ( self.LSP )
+        unfrozenparticles.remove ( Model.LSP )
         p = random.choice ( unfrozenparticles )
         openChannels = []
         for dpid,br in self.decays[p].items():
@@ -171,7 +248,12 @@ class RandomWalker:
         """ take a random step in mass space for all unfrozen particles """
         dx = 20. / numpy.sqrt ( len(self.unFrozenParticles() ) )
         for i in self.unFrozenParticles():
-            self.masses[i]=self.masses[i]+random.uniform(-dx,dx)
+            tmp = self.masses[i]+random.uniform(-dx,dx)
+            if tmp > self.maxMass:
+                tmp = self.maxMass
+            if tmp < 10.:
+                tmp = 10.
+            self.masses[i]=tmp
 
     def createSLHAFile ( self ):
         """ from the template.slha file, create the slha file of the current
@@ -202,6 +284,27 @@ class RandomWalker:
         """
         self.prior = 1. / ( len(self.unFrozenParticles()))
 
+class RandomWalker:
+    def __init__ ( self, nsteps=500, strategy="aggressive", hiscore=False ):
+        """ initialise the walker
+        :param nsteps: maximum number of steps to perform
+        """
+        self.model = Model()
+        self.strategy = strategy
+        self.hiscoreList = Hiscore( hiscore )
+        self.maxsteps = nsteps
+        self.takeStep() ## the first step should be considered as "taken"
+
+    def removeDataFromBestCombo ( self, bestCombo ):
+        """ remove the data from all theory predictions, we dont need them. """
+        for combo in bestCombo:
+            eR = combo.expResult
+            for ds in eR.datasets:
+                for tx in ds.txnameList:
+                    del tx.txnameData
+        return bestCombo
+
+
     def getZFromPickle ( self ):
         """ get the high score Z from pickle file """
         if not os.path.exists ( "hiscore.pcl" ):
@@ -218,74 +321,46 @@ class RandomWalker:
         print ( "[walk] %s" % (" ".join(map(str,args))) )
 
     def onestep ( self ):
-        self.step+=1
-        nUnfrozen = len ( self.unFrozenParticles() )
-        nTotal = len ( self.masses.keys() )
-        self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.step, nUnfrozen, nTotal, ", ".join ( map ( self.getParticleName, self.unFrozenParticles() ) ) ) )
+        self.model.step+=1
+        nUnfrozen = len ( self.model.unFrozenParticles() )
+        nTotal = len ( self.model.masses.keys() )
+        self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.model.step, nUnfrozen, nTotal, ", ".join ( map ( self.model.getParticleName, self.model.unFrozenParticles() ) ) ) )
         # uUnfreeze = random.uniform(0,1)
         nChanges = 0
         uUnfreeze = random.gauss(.5,.5)
         if uUnfreeze > nUnfrozen/float(nTotal):
             # in about every tenth step unfreeze random particle
-            nChanges += self.unfreezeRandomParticle()
+            nChanges += self.model.unfreezeRandomParticle()
         uBranch = random.uniform(0,1)
         if uBranch > .75:
-            nChanges += self.randomlyChangeBranchings()
+            nChanges += self.model.randomlyChangeBranchings()
         # uFreeze = random.uniform(0,1)
         uFreeze = random.gauss(.5,.5)
         if uFreeze < nUnfrozen/float(nTotal):
             # in about every tenth step randomly change branchings of a particle
-            nChanges+=self.freezeRandomParticle()
+            nChanges+=self.model.freezeRandomParticle()
         if nChanges == 0:
-            self.takeRandomMassStep()
-        self.createSLHAFile()
-        self.computeXSecs()
-        predictions = predict ( self.currentSLHA )
+            self.model.takeRandomMassStep()
+        self.model.createSLHAFile()
+        self.model.computeXSecs()
+        predictions = predict ( self.model.currentSLHA )
         # self.pprint ( "I got %d predictions" % ( len(predictions) ) )
         combiner = Combiner()
         bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, self.strategy )
-        self.bestCombo = self.removeDataFromBestCombo ( bestCombo )
-        self.llhd = (1. - llhd ) ## we wish to minimize likelihood, find the most unexpected fluctuation
-        self.Z = Z
-        if self.Z > self.highestZ and self.save_hiscore:
-            ## check also the pickle file
-            hiZ = self.getZFromPickle ()
-            if self.Z > hiZ: ## also higher than what is in the pickle file.
-                self.pprint ( "new hiscore! save it to hiscore.pcl." )
-                self.highestZ = Z
-                if os.path.exists ( "hiscore.pcl" ):
-                    subprocess.getoutput ("mv -f hiscore.pcl oldhiscore.pcl" )
-                f=open("hiscore.pcl","wb")
-                pickle.dump( self, f )
-                f.close()
-                subprocess.getoutput ( "cp hiscore.slha oldhiscore.slha" )
-                subprocess.getoutput ( "cp %s.slha hiscore.slha" % self.currentSLHA )
-        self.computePrior()
+        self.model.bestCombo = self.removeDataFromBestCombo ( bestCombo )
+        self.model.llhd = (1. - llhd ) ## we wish to minimize likelihood, find the most unexpected fluctuation
+        self.model.Z = Z
+        self.hiscoreList.newResult ( self.model ) ## add to high score list
+        self.model.computePrior()
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, combiner.getLetterCode(bestCombo), combiner.getComboDescription(bestCombo), Z ) )
 
     def revert ( self ):
         """ revert the last step. go back. """
-        self.masses = copy.deepcopy ( self.oldmasses )
-        self.prior = self.oldprior
-        self.llhd = self.oldllhd
-        self.Z = self.oldZ
-        self.decays = copy.deepcopy ( self.olddecays )
-        self.possibledecays = copy.deepcopy ( self.oldpossibledecays )
+        self.model = copy.deepcopy ( self.oldmodel )
 
     def takeStep ( self ):
         """ take the step, save it as last step """
-        self.oldmasses = copy.deepcopy ( self.masses )
-        self.oldprior = self.prior
-        self.oldllhd = self.llhd
-        self.oldZ = self.Z
-        self.olddecays = copy.deepcopy ( self.decays )
-        self.oldpossibledecays = copy.deepcopy ( self.possibledecays )
-
-    def priorTimesLlhd( self ):
-        return self.prior * self.llhd
-
-    def oldPriorTimesLlhd ( self ):
-        return self.oldprior * self.oldllhd
+        self.oldmodel = copy.deepcopy ( self.model )
 
     def saveState ( self ):
         """ write out current state, for later retrieval """
@@ -295,43 +370,45 @@ class RandomWalker:
 
     def walk ( self ):
         """ Now perform the random walk """
-        self.unfreezeRandomParticle() ## start with unfreezing a random particle
-        while self.step<self.maxsteps:
+        self.model.unfreezeRandomParticle() ## start with unfreezing a random particle
+        while self.model.step<self.maxsteps:
             self.onestep()
-            self.computePrior()
-            self.pprint ( "prior times llhd, before versus after: %f -> %f" % ( self.oldPriorTimesLlhd(), self.priorTimesLlhd() ) )
+            self.model.computePrior()
+            self.pprint ( "prior times llhd, before versus after: %f -> %f" % ( self.oldmodel.priorTimesLlhd(), self.model.priorTimesLlhd() ) )
             #ratio = 1.
-            #if self.oldZ > 0.:
-            #    ratio = self.Z / self.oldZ
+            #if self.oldmodel.Z > 0.:
+            #    ratio = self.Z / self.oldmodel.Z
             ratio = 1.
-            if self.oldPriorTimesLlhd() > 0.:
-                ratio = self.priorTimesLlhd() / self.oldPriorTimesLlhd()
-            if self.oldZ > 0. and self.Z < 0.7 * self.oldZ:
+            if self.oldmodel.priorTimesLlhd() > 0.:
+                ratio = self.model.priorTimesLlhd() / self.oldmodel.priorTimesLlhd()
+            if self.oldmodel.Z > 0. and self.model.Z < 0.7 * self.oldmodel.Z:
                 ## no big steps taken here.
-                self.pprint ( "Z=%.2f -> 0. Revert." % self.oldZ )
+                self.pprint ( "Z=%.2f -> 0. Revert." % self.oldmodel.Z )
                 self.revert()
                 continue
 
             if ratio >= 1.:
-                self.pprint ( "Z: %.3f -> %.3f: take the step" % ( self.oldZ, self.Z ) )
-                if self.Z < 0.7 * self.oldZ:
+                self.pprint ( "Z: %.3f -> %.3f: take the step" % ( self.oldmodel.Z, self.model.Z ) )
+                if self.model.Z < 0.7 * self.oldmodel.Z:
                     self.pprint ( " `- weird, though, Z decreases. Please check." )
-                    self.pprint ( "oldllhd %f" % self.oldllhd )
-                    self.pprint ( "oldprior", self.oldprior )
-                    self.pprint ( "llhd", self.llhd )
-                    self.pprint ( "prior", self.prior )
+                    self.pprint ( "oldllhd %f" % self.oldmodel.llhd )
+                    self.pprint ( "oldprior", self.oldmodel.prior )
+                    self.pprint ( "llhd", self.model.llhd )
+                    self.pprint ( "prior", self.model.prior )
                     sys.exit()
                 self.takeStep()
             else:
                 u=random.uniform(0.,1.)
                 if u > ratio:
-                    print ( "[walk] u=%.2f > %.2f; Z: %.2f -> %.2f: revert." % (u,ratio,self.oldZ, self.Z) )
+                    print ( "[walk] u=%.2f > %.2f; Z: %.2f -> %.2f: revert." % (u,ratio,self.oldmodel.Z, self.model.Z) )
                     self.revert()
                 else:
-                    print ( "[walk] u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.oldZ,self.Z) )
+                    print ( "[walk] u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.oldmodel.Z,self.model.Z) )
                     self.takeStep()
         self.saveState()
 
+def _run ( w ):
+    w.walk()
 
 if __name__ == "__main__":
     import argparse
@@ -349,9 +426,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-c', '--cont',
             help='continue with last save state [False]',
             action="store_true" )
-    argparser.add_argument ( '-S', '--hiscore',
-            help='save states with highest Zs [False]',
-            action="store_true" )
+    #argparser.add_argument ( '-S', '--hiscore',
+    #        help='save states with highest Zs [False]',
+    #        action="store_true" )
     args = argparser.parse_args()
     ncpus = args.ncpus
     if ncpus < 0:
@@ -361,5 +438,13 @@ if __name__ == "__main__":
         walker = pickle.load ( f )
         f.close()
     else:
-        walker = RandomWalker( args.nsteps, args.strategy, args.hiscore )
-    walker.walk()
+        walker = RandomWalker( args.nsteps, args.strategy, True )
+    if ncpus == 1:
+        walker.walk()
+    else:
+        walkers = []
+        for w in range(ncpus):
+            walkers.append ( copy.deepcopy ( walker ) )
+        p = multiprocessing.Pool ( ncpus )
+
+        p.map ( _run, walkers ) 
