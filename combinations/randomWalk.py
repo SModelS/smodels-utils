@@ -342,7 +342,7 @@ class RandomWalker:
         nChanges = 0
         uUnfreeze = random.gauss(.5,.5)
         if uUnfreeze > nUnfrozen/float(nTotal):
-            # in about every tenth step unfreeze random particle
+            # in every nth step unfreeze random particle
             nChanges += self.model.unfreezeRandomParticle()
         uBranch = random.uniform(0,1)
         if uBranch > .75:
@@ -350,8 +350,11 @@ class RandomWalker:
         # uFreeze = random.uniform(0,1)
         uFreeze = random.gauss(.5,.5)
         if uFreeze < nUnfrozen/float(nTotal):
-            # in about every tenth step randomly change branchings of a particle
-            nChanges+=self.model.freezeRandomParticle()
+            # in every nth step freeze random particle
+            if random.uniform(0,1)<.5:
+                nChanges+=self.model.freezeMostMassiveParticle()
+            else:
+                nChanges+=self.model.freezeRandomParticle()
         if nChanges == 0:
             self.model.takeRandomMassStep()
         self.model.createSLHAFile()
@@ -431,8 +434,8 @@ if __name__ == "__main__":
             help='combination strategy [aggressive]',
             type=str, default="aggressive" )
     argparser.add_argument ( '-n', '--nsteps',
-            help='number of steps [500]',
-            type=int, default=500 )
+            help='number of steps [10000]',
+            type=int, default=10000 )
     argparser.add_argument ( '-p', '--ncpus',
             help='number of CPUs. -1 means all. [1]',
             type=int, default=1 )
