@@ -209,6 +209,17 @@ class Model:
         print ( "[walk] Freezing %s." % ( self.getParticleName(p) ) )
         return 1
 
+    def freezeMostMassiveParticle ( self ):
+        """ freezes the most massive unfrozen particle """
+        unfrozen = self.unFrozenParticles()
+        if len(unfrozen)<3:
+            return 0 ## freeze only if at least 3 unfrozen particles exist
+        unfrozen.remove ( self.LSP )
+        p = random.choice ( unfrozen )
+        self.masses[p]=1e6
+        print ( "[walk] Freezing %s." % ( self.getParticleName(p) ) )
+        return 1
+
     def randomlyChangeBranchings ( self ):
         """ randomly change the branchings of a single particle """
         unfrozenparticles = self.unFrozenParticles()
@@ -234,6 +245,8 @@ class Model:
             if br > 1.: br = 1.
             self.decays[p][i]=br
             S+=br
+        for i in self.frozenParticles(): ## frozen particles have 0 branchings
+            self.decays[p][i]=0.
         self.decays[p][ openChannels[-1] ] = 1. - S
 
         self.pprint ( "changed branchings of %s." % self.getParticleName(p) )
@@ -436,6 +449,7 @@ if __name__ == "__main__":
     if args.cont and os.path.exists ( "state.pcl" ) and os.stat("state.pcl").st_size > 100:
         f=open("state.pcl","rb")
         walker = pickle.load ( f )
+        walker.maxsteps = args.nsteps ## overwrite nsteps
         f.close()
     else:
         walker = RandomWalker( args.nsteps, args.strategy, True )
