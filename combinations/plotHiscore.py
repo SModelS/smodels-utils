@@ -13,20 +13,29 @@ def obtain ( number ):
     keys = list ( hiscores.keys() )
     keys.sort( reverse=True )
     Z = keys[number]
-    print ( "obtaining #%d: Z=%.2f" % (number, Z ) )
+    print ( "[plotHiscore] obtaining #%d: Z=%.2f" % (number, Z ) )
     return hiscores[ Z ]
+    
+def discussPredictions ( model ):
+    print ( "How the Z comes about. Best combo:" )
+    combo = model.bestCombo
+    for pred in combo:
+        print ( "theory pred: %s:%s" % ( pred.expResult.globalInfo.id, ",".join ( map ( str, pred.txnames ) ) ) )
+        # print ( "     `- ", pred.expResult.globalInfo.id, "ana", pred.analysis, "masses", pred.mass, "txnames", pred.txnames, "type", pred.dataType() )
 
-def plot ( number ):
+
+def plot ( number, verbosity ):
     ## plot hiscore number "number"
     model = obtain ( number )
-    print ( "[plot] create slha file" )
+    print ( "[plotHiscore] create slha file" )
     model.createSLHAFile ( "plot.slha" )
-    print ( "[plot] now draw ruler plot" )
-    rulerPlotter.draw ( "./plot.slha", "ruler.png" )
-    print ( "[plot] now draw decay plot" )
+    print ( "[plotHiscore] now draw ruler.png" )
+    # rulerPlotter.draw ( "./plot.slha", "ruler.png" )
+    print ( "[plotHiscore] now draw decays.png" )
     options = { "tex": True, "color": True, "dot": True }
     ## FIXME add cross sections.
-    decayPlotter.draw ( "./plot.slha", "decays.png", options )
+    # decayPlotter.draw ( "./plot.slha", "decays.png", options )
+    discussPredictions ( model )
 
 if __name__ == "__main__":
     import argparse
@@ -35,5 +44,8 @@ if __name__ == "__main__":
     argparser.add_argument ( '-n', '--number',
             help='which hiscore to plot [0]',
             type=int, default=0 )
+    argparser.add_argument ( '-v', '--verbosity',
+            help='verbosity -- debug, info, warn, err [info]',
+            type=str, default="info" )
     args = argparser.parse_args()
-    plot ( args.number ) 
+    plot ( args.number, args.verbosity ) 

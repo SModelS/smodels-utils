@@ -58,7 +58,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0.,
 
     if options["verbose"]==True and not options["html"]:
         reader.printDecay("~g")
-        logger.info ( "%s" % reader.getDecays("~g",0.9) )
+        logger.debug ( "%s" % reader.getDecays("~g",0.9) )
 
     tmp=[    "~g", "~q", "~b", "~t", "~t_1", "~t_2", "~b_1", "~b_2" ]
     if options["squarks"]:
@@ -110,7 +110,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0.,
     htmlend="</font>"
     if options["verbose"]:
         if options["html"]: print ( "<br>", htmlbegin )
-        logger.info ( "We start from %s" % starters )
+        logger.debug ( "We start from %s" % starters )
         if options["html"]: print ( htmlend,"<br>" )
     drawer=decayPlots.DecayDrawer ( options, ps, offset, extra, verbosity )
 
@@ -137,9 +137,6 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0.,
     if options["dot"] and options["tex"]:
         logger.debug ( "calling dot2tex." )
         drawer.dot2tex ( out )
-
-    print ( "[decayPlotter] done drawing" )
-
 
 if __name__ == "__main__":
     """ the script calls the drawing routine """
