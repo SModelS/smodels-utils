@@ -5,9 +5,9 @@ from randomWalk import Model # RandomWalker
 sys.path.insert(0,"../" )
 from smodels_utils.plotting import rulerPlotter, decayPlotter
 
-def obtain ( number ):
+def obtain ( number, picklefile ):
     """ obtain hiscore number <number> """
-    f=open("hiscore.pcl","rb" )
+    f=open( picklefile,"rb" )
     hiscores = pickle.load ( f )
     f.close()
     keys = list ( hiscores.keys() )
@@ -24,9 +24,9 @@ def discussPredictions ( model ):
         # print ( "     `- ", pred.expResult.globalInfo.id, "ana", pred.analysis, "masses", pred.mass, "txnames", pred.txnames, "type", pred.dataType() )
 
 
-def plot ( number, verbosity ):
+def plot ( number, verbosity, picklefile ):
     ## plot hiscore number "number"
-    model = obtain ( number )
+    model = obtain ( number, picklefile )
     print ( "[plotHiscore] create slha file" )
     model.createSLHAFile ( "plot.slha" )
     print ( "[plotHiscore] now draw ruler.png" )
@@ -44,8 +44,11 @@ if __name__ == "__main__":
     argparser.add_argument ( '-n', '--number',
             help='which hiscore to plot [0]',
             type=int, default=0 )
+    argparser.add_argument ( '-f', '--picklefile',
+            help='pickle file to draw from [hiscore.pcl]',
+            type=str, default="hiscore.pcl" )
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug, info, warn, err [info]',
             type=str, default="info" )
     args = argparser.parse_args()
-    plot ( args.number, args.verbosity ) 
+    plot ( args.number, args.verbosity, args.picklefile ) 
