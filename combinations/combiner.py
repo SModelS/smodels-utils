@@ -10,7 +10,7 @@ from smodels.tools.physicsUnits import fb, GeV
 from smodels.experiment.databaseObj import Database
 from smodels.theory.model import Model
 import analysisCombiner
-import pickle, numpy, math
+import pickle, numpy, math, colorama
 from scipy import optimize, stats
 import IPython
 
@@ -222,10 +222,12 @@ class Combiner:
         """ find the maximum likelihood estimate for the signal strength mu """
         def getNLL ( mu ):
             return self.getCombinedLikelihood ( combination, mu, nll=True )
-        ret = optimize.minimize ( getNLL, 1., bounds=[(0.,None)] )
-        if ret.status==0:
-            return ret.x[0]
-        print ( "[combine] error finding mu hat for %s" % self.getLetterCode(combination) )
+        start = 1.
+        for start in [ 1., .1, 10., 1e-3 ]:
+            ret = optimize.minimize ( getNLL, start, bounds=[(0.,None)] )
+            if ret.status==0:
+                return ret.x[0]
+        print ( "[combine] %serror finding mu hat for %s%s" % (colorama.Fore.RED, self.getLetterCode(combination), colorama.Fore.RESET ) )
         return None
 
     def getLetterCode ( self, combination ):

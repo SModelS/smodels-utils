@@ -80,9 +80,9 @@ class RandomWalker:
         if nChanges == 0:
             self.log ( "take random mass step" )
             self.model.takeRandomMassStep()
-        self.log ( "now create slha file %s" % self.model.currentSLHA )
+        self.log ( "now create slha file" )
         self.model.createSLHAFile()
-        self.log ( "now create xsecs" )
+        self.log ( "now create xsecs for %s" % self.model.currentSLHA )
         self.model.computeXSecs()
         self.log ( "done computing xsecs" )
         predictions = predict ( self.model.currentSLHA )
