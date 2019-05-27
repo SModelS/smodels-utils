@@ -9,13 +9,20 @@ import pygraphviz, sys, math
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
-import logging
-logger = logging.getLogger(__name__)
-
 class DecayDrawer:
     """ a class that encapsulates the decay plot drawing
     """
-    def __init__ ( self, options, ps, offset, extra={}, verbose=False, html=False ):
+    def __init__ ( self, options, ps, offset, extra={}, verbose="info", html=False ):
+        import logging
+        self.logger = logging.getLogger(__name__)
+        verbosity = verbose.lower()
+        levels = { "err": logging.ERROR, "warn": logging.WARN, "info": logging.INFO,
+                   "debug": logging.DEBUG }
+        logLevel = 0
+        for k,v in levels.items():
+            if k in verbosity:
+                logLevel = v
+                self.logger.setLevel ( logLevel )
         self.options=options
         self.maxmass = 10000.
         self.minmass = 0.
@@ -50,14 +57,14 @@ class DecayDrawer:
         # print "wout=",wout,"dprog=",dprog,"args=",dargs
         if self.options["nopng"]==False:
             self.G.draw(wout,prog=dprog,args=dargs)
-            logger.debug ( "%s created with %s." % ( wout, prog ) )
+            self.logger.debug ( "%s created with %s." % ( wout, prog ) )
 
         if self.options["dot"]:
             # wout=out+".dot"
             wout=out+".dot"
             # print "[drawer.py] write to",wout
             self.G.write(wout)
-            logger.debug ( "%s created with dot." % ( wout ) )
+            self.logger.debug ( "%s created with dot." % ( wout ) )
 
         #if not self.options["nopng"]:
             ## wout=out+".dot.png"
@@ -67,8 +74,7 @@ class DecayDrawer:
             wout=out+".pdf"
 
             self.G.draw(wout,prog='dot')
-            if self.verbose:
-                logger.log ( "%s created with dot." % ( wout ) )
+            self.logger.log ( "%s created with dot." % ( wout ) )
 
     def xvalue ( self, mass, ctr, n_relevant, name ):
         """ where on the axis should particle with mass <mass> go? """
@@ -269,7 +275,7 @@ class DecayDrawer:
 
     def meddleWithTexFile ( self,out ):
         """ this changes the tex file! """
-        logger.debug ( "[meddleWithTexFile] rewriting tex file!" )
+        self.logger.debug ( "[meddleWithTexFile] rewriting tex file!" )
         f=open("%s.tex"%out)
         lines=f.readlines()
         f.close()
@@ -283,24 +289,26 @@ class DecayDrawer:
     def dot2tex ( self, out ):
         # import os
         import subprocess, os
-        logger.debug ( "calling dot2tex now" )
+        self.logger.debug ( "calling dot2tex now" )
         #    if self.html: print "<br>"
         cmd="dot2tex --autosize --nominsize --crop %s.dot -traw -o %s.tex" % (out, out )
         # cmd="dot2tex -c -traw"
         #cmd+=" --docpreamble '\\usepackage{scrextend}\n\\changefontsizes[12pt]{14pt}' "
         #cmd+="    --figpreamble '\\begin{Large}' --figpostamble '\\end{Large}'"
         #longcmd="%s --preproc %s.dot | %s -o %s.tex" % ( cmd, out, cmd, out )
-        logger.debug (  "cmd=%s " % cmd )
+        self.logger.debug (  "cmd=%s " % cmd )
         output=subprocess.getoutput( cmd )
-        logger.debug ( output )
-        logger.debug ( "now meddle with tex file" )
+        self.logger.debug ( output )
+        self.logger.debug ( "now meddle with tex file" )
         self.meddleWithTexFile(out)
         outdir=os.path.dirname ( out ) 
+        if outdir=="":
+            outdir="./"
         pdfcmd="pdflatex -interaction nonstopmode -output-directory %s %s.tex " % \
                 ( outdir, out )
-        logger.debug (  "pdfcmd=%s" % pdfcmd )
+        self.logger.debug (  "info, pdfcmd=%s" % pdfcmd )
         output=subprocess.getoutput(pdfcmd )
-        logger.debug ( output )
+        self.logger.debug ( output )
 
         if self.options["nopng"]==False:
             cmd="convert -antialias -density 300x300 %s.pdf %s.png" % ( out, out )

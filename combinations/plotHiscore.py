@@ -21,12 +21,12 @@ def plot ( number ):
     model = obtain ( number )
     print ( "[plot] create slha file" )
     model.createSLHAFile ( "plot.slha" )
-    print ( "[plot] now draw ruler" )
+    print ( "[plot] now draw ruler plot" )
     rulerPlotter.draw ( "./plot.slha", "ruler.png" )
-    print ( "[plot] done with the ruler" )
+    print ( "[plot] now draw decay plot" )
     options = { "tex": True, "color": True, "dot": True }
     ## FIXME add cross sections.
-    # decayPlotter.draw ( "./plot.slha", "decays.png", options )
+    decayPlotter.draw ( "./plot.slha", "decays.png", options )
 
 if __name__ == "__main__":
     import argparse

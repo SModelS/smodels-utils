@@ -12,13 +12,26 @@ from __future__ import print_function
 
 """
 
-import logging
-logger = logging.getLogger(__name__)
-
-def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
+def draw( slhafile, outfile, options, xsecpickle=None, offset=0.,
+          verbosity="info" ):
     """ draw a decay plot from an slhafile
             :param offset: FIXME what does that one do?
     """
+    import logging
+    import logging.config
+    from smodels_utils import SModelSUtils
+    logging.config.fileConfig (
+            SModelSUtils.installDirectory()+"/etc/commandline.conf" )
+    logger = logging.getLogger(__name__)
+    verbosity = verbosity.lower()
+    levels = { "err": logging.ERROR, "warn": logging.WARN, "info": logging.INFO,
+               "debug": logging.DEBUG }
+    logLevel = 0
+    for k,v in levels.items():
+        if k in verbosity:
+            logLevel = v
+            logger.setLevel ( logLevel )
+
     import setPath
     from smodels_utils.plotting import decayPlots
     import os
@@ -33,6 +46,8 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
                "sleptons", "weakinos", "zconstraints", "tex", "color",\
                "masses", "html" ]:
         if not i in options.keys(): options[i]=False
+    if logLevel > 15:
+        options["verbose"]=True
 
     verbosereader=False
     if options["verbose"]==True and not options["html"]: verbosereader=True
@@ -97,7 +112,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
         if options["html"]: print ( "<br>", htmlbegin )
         logger.info ( "We start from %s" % starters )
         if options["html"]: print ( htmlend,"<br>" )
-    drawer=decayPlots.DecayDrawer ( options, ps, offset, extra )
+    drawer=decayPlots.DecayDrawer ( options, ps, offset, extra, verbosity )
 
     if options["tex"]:
         drawer.tex=True
@@ -131,8 +146,9 @@ if __name__ == "__main__":
     import argparse
 
     argparser = argparse.ArgumentParser(description='SLHA to dot converter.')
-    argparser.add_argument ( '-v', '--verbose', help='be verbose',
-            action='store_true' )
+    argparser.add_argument ( '-v', '--verbosity', 
+            help='verbosity level -- debug, info, warning, error [info]',
+            type=str, default="info" )
     argparser.add_argument ( '-sq', '--squarks',
             help='add squarks to list',action='store_true' )
     argparser.add_argument ( '-sl', '--sleptons',
@@ -182,4 +198,5 @@ if __name__ == "__main__":
         if type(value)==bool:
             options[key]=value
 
-    draw( args.filename, args.outfile, options, args.pickle, args.offset )
+    draw( args.filename, args.outfile, options, args.pickle, args.offset,
+          args.verbosity )

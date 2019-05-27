@@ -214,7 +214,6 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
                 x=coord[1]+offset
                 xm=coord[2]+2*offset
         t.SetTextColor(col)
-        print ( "name",name,_pprint(name))
         t.DrawLatex(x,y-.01,_pprint(name))
         if printmass: t.DrawLatex(xm,y-.01,str(int(round(m,0))))
         written.append((y,x,xm))
