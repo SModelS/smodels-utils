@@ -44,6 +44,7 @@ class Model:
         self.possibledecays = {} ## list all possible decay channels
         self.decays = {} ## the actual branchings
         self.masses = {}
+        self.ssmultipliers = {} ## signal strength multipliers
         self.llhd=0.
         self.Z = 0.
 
@@ -60,6 +61,7 @@ class Model:
 
         for p in self.particles:
             self.masses[p]=1e6
+            self.ssmultipliers[p]=1. ## signal strength multipliers
             decays = []
             self.decays[p]={}
             for line in slhalines:
@@ -125,7 +127,7 @@ class Model:
         unfrozen.remove ( Model.LSP )
         p = random.choice ( unfrozen )
         self.masses[p]=1e6
-        self.pprint ( "Freezing %s." % ( self.getParticleName(p) ) )
+        self.pprint ( "Freezing %s (keep branchings)." % ( self.getParticleName(p) ) )
         return 1
 
     def freezeMostMassiveParticle ( self ):
@@ -137,6 +139,19 @@ class Model:
         p = random.choice ( unfrozen )
         self.masses[p]=1e6
         self.pprint ( "Freezing %s." % ( self.getParticleName(p) ) )
+        return 1
+
+    def randomlyChangeSignalStrengths ( self ):
+        """ randomly change one of the signal strengths """
+        unfrozenparticles = self.unFrozenParticles()
+        if len(unfrozenparticles)<2:
+            self.pprint ( "not enough unfrozen particles to change random signal strength" )
+            return 0
+        unfrozenparticles.remove ( Model.LSP )
+        p = random.choice ( unfrozenparticles )
+        newSSM=self.ssmultipliers[p]*random.gauss(1.,.1)
+        self.ssmultipliers[p]=newSSM
+        self.pprint ( "changed signal strength multiplier of %s: %.2f." % (self.getParticleName(p), newSSM ) )
         return 1
 
     def randomlyChangeBranchings ( self ):
@@ -164,16 +179,29 @@ class Model:
             if br > 1.: br = 1.
             self.decays[p][i]=br
             S+=br
+        if S > 1.: ## correct for too large sums
+            for i in self.decays[p].keys():
+                self.decays[p][i] = self.decays[p][i] / S
+            S = 1.
         for i in self.frozenParticles(): ## frozen particles have 0 branchings
             self.decays[p][i]=0.
         self.decays[p][ openChannels[-1] ] = 1. - S
-
-        self.pprint ( "changed branchings of %s." % self.getParticleName(p) )
+        control = sum ( [  x for x in self.decays[p].values() ] )
+        if abs ( control - 1.0 ) > 1e-5:
+            self.pprint ( "control %s" % control )
+            sys.exit()
+        brvec=[]
+        for x in self.decays[p].values():
+            if x<1e-5:
+                brvec.append("")
+            else:
+                brvec.append("%.2f" % x )
+        self.pprint ( "changed branchings of %s: %s." % (self.getParticleName(p), ",".join( brvec  ) ) )
         # print ( "[walk] we have %d open channels" % nChannels )
-        for dpid,br in self.decays[p].items():
-            if dpid in self.unFrozenParticles():
-                openChannels.append ( dpid )
-            # print ( "[walk] new `- pid,br", dpid, br, dpid in self.unFrozenParticles() )
+        #for dpid,br in self.decays[p].items():
+        #    if dpid in self.unFrozenParticles():
+        #        openChannels.append ( dpid )
+        #    # print ( "[walk] new `- pid,br", dpid, br, dpid in self.unFrozenParticles() )
         return 1
 
     def takeRandomMassStep ( self ):
@@ -196,16 +224,16 @@ class Model:
         f=open( self.templateSLHA )
         lines=f.readlines()
         f.close()
-        if outputSLHA == None:
-            outputSLHA = self.currentSLHA
         if not hasattr ( self, "currentSLHA" ):
             self.currentSLHA = tempfile.mktemp(prefix=".cur",suffix=".slha",dir="./")
+        if outputSLHA == None:
+            outputSLHA = self.currentSLHA
         f=open(outputSLHA,"w")
         for line in lines:
             for m,v in self.masses.items():
                 line=line.replace("M%d" % m,"%.1f" % v )
                 for dpid,dbr in self.decays[m].items():
-                    line=line.replace("D%d_%d" % ( m, dpid), "%.1f" % dbr )
+                    line=line.replace("D%d_%d" % ( m, dpid), "%.5f" % dbr )
             f.write ( line )
         f.close()
 
@@ -214,7 +242,8 @@ class Model:
         # print ( "[walk] computing xsecs for %s" % self.currentSLHA )
         computer = XSecComputer ( LO, 2000, 6 )
         computer.computeForOneFile ( [8,13], self.currentSLHA,
-                unlink=True, lOfromSLHA=False, tofile=True )
+                unlink=True, lOfromSLHA=False, tofile=True,
+                ssmultipliers  = self.ssmultipliers )
 
     def computePrior ( self ):
         """ compute the prior for the current model.

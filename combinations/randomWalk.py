@@ -43,7 +43,7 @@ class RandomWalker:
 
     def pprint ( self, *args ):
         """ logging """
-        print ( "[walk:%d] %s" % ( self.walkerid, " ".join(map(str,args))) )
+        print ( "[walk:%d-%s] %s" % ( self.walkerid, time.strftime("%H:%M"), " ".join(map(str,args))) )
         self.log ( *args )
 
     def onestep ( self ):
@@ -56,26 +56,40 @@ class RandomWalker:
         uUnfreeze = random.gauss(.5,.5)
         if uUnfreeze > nUnfrozen/float(nTotal):
             # in every nth step unfreeze random particle
+            self.log ( "unfreeze random particle" )
             nChanges += self.model.unfreezeRandomParticle()
         uBranch = random.uniform(0,1)
-        if uBranch > .75:
+        if uBranch > .5: # do this often
+            self.log ( "randomly change branchings" )
             nChanges += self.model.randomlyChangeBranchings()
+        uSSM = random.uniform(0,1)
+        if uSSM > .75: # do this less often
+            self.log ( "randomly change signal strengths" )
+            nChanges += self.model.randomlyChangeSignalStrengths()
+
         # uFreeze = random.uniform(0,1)
         uFreeze = random.gauss(.5,.5)
         if uFreeze < nUnfrozen/float(nTotal):
             # in every nth step freeze random particle
             if random.uniform(0,1)<.5:
+                self.log ( "freeze most massive particle" )
                 nChanges+=self.model.freezeMostMassiveParticle()
             else:
+                self.log ( "freeze random particle" )
                 nChanges+=self.model.freezeRandomParticle()
         if nChanges == 0:
+            self.log ( "take random mass step" )
             self.model.takeRandomMassStep()
+        self.log ( "now create slha file %s" % self.model.currentSLHA )
         self.model.createSLHAFile()
+        self.log ( "now create xsecs" )
         self.model.computeXSecs()
+        self.log ( "done computing xsecs" )
         predictions = predict ( self.model.currentSLHA )
-        # self.pprint ( "I got %d predictions" % ( len(predictions) ) )
+        self.log ( "I got %d predictions" % ( len(predictions) ) )
         combiner = Combiner()
         bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, self.strategy )
+        self.log ( "found highest Z" )
         self.model.bestCombo = self.removeDataFromBestCombo ( bestCombo )
         self.model.llhd = (1. - llhd ) ## we wish to minimize likelihood, find the most unexpected fluctuation
         self.model.Z = Z
