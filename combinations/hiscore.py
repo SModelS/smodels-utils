@@ -3,7 +3,7 @@
 """ A class that centralizes access to the hiscore list over multiple threads.
 """
 
-import random, copy, pickle, os, fcntl, time
+import random, copy, pickle, os, fcntl, time, subprocess
 
 class Hiscore:
     """ encapsulates the hiscore list. """
@@ -41,7 +41,7 @@ class Hiscore:
 
     def updateListFromPickle ( self ):
         """ fetch the list from the pickle file """
-        if not os.path.exists ( self.pickleFile ):
+        if not os.path.exists ( self.pickleFile ) or os.stat ( self.pickleFile ).st_size < 100:
             return
         try:
             f=open( self.pickleFile,"rb")
@@ -63,6 +63,7 @@ class Hiscore:
         """ dump the list to the pickle file """
         self.pprint ( "saving new hiscore list." )
         try:
+            subprocess.getoutput ( "cp %s old.pcl" % self.pickleFile )
             f=open( self.pickleFile,"wb" )
             fcntl.lockf( f, fcntl.LOCK_EX | fcntl.LOCK_NB)
             pickle.dump ( self.hiscores, f )

@@ -28,6 +28,7 @@ def setLogLevel ( logger, verbose ):
 
 def _printCanvas ( c1, filename ):
     """ tried to redirect stdout """
+    logger=logging.getLogger(__name__)
     logger.debug ( "printing canvas to %s" % filename )
     ROOT.gErrorIgnoreLevel=2000
     c1.Print(filename )
@@ -38,6 +39,7 @@ def _execute ( command ):
         import commands
     except ImportError:
         import subprocess as commands
+    logger=logging.getLogger(__name__)
     logger.debug ( "now running %s" % command )
     out=commands.getoutput ( command )
     if len(out)!=0:
@@ -77,7 +79,12 @@ def _pprint ( name ):
         "~chi4+":"#tilde{#chi}^{+}_{4}"
     }
 
-    if name in Dict.keys (): return Dict[name]
+    if name in Dict.keys (): 
+        return Dict[name]
+    ## allow curly brackets in name
+    rawname=name.replace("{","").replace("}","")
+    if rawname in Dict.keys (): 
+        return Dict[rawname]
 
     if name.find("~nu_e")==0: return "#tilde{#nu}_{e}"
     if name.find("~nu_mu")==0: return "#tilde{#nu}_{#mu}"
@@ -111,7 +118,7 @@ def createDictionaryFromSLHA ( inputfile ):
     sys.exit()
 
 def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
-           formats={ "png": True }, printmass=False ):
+           formats={ "png": True }, printmass=False, mergesquark=True ):
     """ entry point: draw the masses
       :param inputfile: the inputfilename, must contain a simple dictionary. If
                         the filename ends with .slha, create the ditionary on the fly.
@@ -119,13 +126,14 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
       :param Range:  the range of the ruler, [min,max], given in GeV. -1 is for automatic mode (the script decides by itself).
       :param formats: the formats, as a dictionary. Supported are: eps, pdf, png.
       :param printmass: draw also mass values (in GeV)?
+      :param mergesquark: If true, draw them as ~q
     """
     if outputfile.endswith ( ".png" ):
-    outputfile = outputfile.replace(".png","")
-    formats["png"]=True
+        outputfile = outputfile.replace(".png","")
+        formats["png"]=True
 
     if inputfile.endswith ( ".slha" ):
-    inputfile = convertSLHAFile ( inputfile, args.squark )
+        inputfile = convertSLHAFile ( inputfile, mergesquark )
     f=open( inputfile )
     pmasses=eval(f.readline())
     f.close()
@@ -140,6 +148,7 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
     if maxvalue>3100:
         maxvalue=3100.
     minvalue=min(masses.values())*0.80
+    logger=logging.getLogger(__name__)
     logger.info ( "range is [%d,%d]" % ( minvalue, maxvalue ) )
     if Range[0] >=0:
         minvalue=Range[0]
@@ -181,33 +190,34 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
     written=[]
 
     for (name,m) in masses.items():
-    if name[:5]=="width":
-        continue
-    y=(abs(m)-minvalue)/(maxvalue-minvalue)
-    col=_color (name )
-    l=ROOT.TLine(xline0,y,xline1,y)
-    l.SetLineColor(col)
-    if ydic[y]<4:
-        offset=0.07
-        t.SetTextSize(0.05)
-    elif ydic[y]==4:
-        offset=0.05
-        t.SetTextSize(0.04)
-    else:
-        offset=0.04
-        t.SetTextSize(0.03)
-    l.Draw()
-    lines.append(l)
-    x=xtext
-    xm=0.6
-    for coord in written:
-        if math.fabs(coord[0]-y)<0.02:
-            x=coord[1]+offset
-            xm=coord[2]+2*offset
-    t.SetTextColor(col)
-    t.DrawLatex(x,y-.01,_pprint(name))
-    if printmass: t.DrawLatex(xm,y-.01,str(int(round(m,0))))
-    written.append((y,x,xm))
+        if name[:5]=="width":
+            continue
+        y=(abs(m)-minvalue)/(maxvalue-minvalue)
+        col=_color (name )
+        l=ROOT.TLine(xline0,y,xline1,y)
+        l.SetLineColor(col)
+        if ydic[y]<4:
+            offset=0.07
+            t.SetTextSize(0.05)
+        elif ydic[y]==4:
+            offset=0.05
+            t.SetTextSize(0.04)
+        else:
+            offset=0.04
+            t.SetTextSize(0.03)
+        l.Draw()
+        lines.append(l)
+        x=xtext
+        xm=0.6
+        for coord in written:
+            if math.fabs(coord[0]-y)<0.02:
+                x=coord[1]+offset
+                xm=coord[2]+2*offset
+        t.SetTextColor(col)
+        print ( "name",name,_pprint(name))
+        t.DrawLatex(x,y-.01,_pprint(name))
+        if printmass: t.DrawLatex(xm,y-.01,str(int(round(m,0))))
+        written.append((y,x,xm))
 
     t.SetTextColor(ROOT.kBlack)
     for i in range ( int ( math.ceil ( minvalue / 100. )) * 100, \
@@ -232,7 +242,7 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
         formats["eps"]=True
         crop=""
         if True and not printmass:
-        crop="-crop 270x1200+0+0"
+            crop="-crop 270x1200+0+0"
         logger.info ( "producing %s.png" % outputfile )
         _execute ( "convert %s %s.eps %s.png" % ( crop, tmpf, outputfile ) )
     if formats["eps"]:
@@ -246,6 +256,7 @@ def convertSLHAFile ( inputfile, collapse_squarks ):
     :param collapse_squarks: replace all light squarks with ~q
     """
     outfile = "/tmp/masses.txt"
+    logger=logging.getLogger(__name__)
     logger.info ( "now converting slha file %s to %s" % (inputfile, outfile) )
     import pyslha
     from smodels_utils.helper.sparticleNames import SParticleNames
@@ -313,4 +324,4 @@ if __name__ == "__main__":
             SModelSUtils.installDirectory()+"/etc/commandline.conf" )
     logger=logging.getLogger(__name__)
     setLogLevel ( logger, args.verbosity.lower() )
-    draw ( inputfile, args.output, Range, formats, args.masses )
+    draw ( inputfile, args.output, Range, formats, args.masses, args.squark )

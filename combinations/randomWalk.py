@@ -2,7 +2,7 @@
 
 """ a first start at the random walk idea """
 
-import random, subprocess, copy, pickle, sys, os, time
+import random, copy, pickle, sys, os, time
 import multiprocessing
 from predictor import predict
 from combiner import Combiner
@@ -16,6 +16,9 @@ class RandomWalker:
         """ initialise the walker
         :param nsteps: maximum number of steps to perform
         """
+        if type(walkerid) != int or type(nsteps) != int or type(strategy)!= str:
+            self.pprint ( "Wrong call of constructor: %s, %s, %s" % ( walkerid, nsteps, strategy ) )
+            sys.exit()
         self.walkerid = walkerid ## walker id, for parallel runs
         self.model = Model( self.walkerid )
         self.strategy = strategy
@@ -25,7 +28,7 @@ class RandomWalker:
 
     @classmethod
     def fromModel(cls, model, nsteps=10000, strategy="aggressive", hiscore=False, walkerid=0 ):
-        ret = cls( nsteps, strategy, hiscore, walkerid )
+        ret = cls( walkerid, nsteps, strategy )
         ret.model = model
         return ret
 
@@ -100,9 +103,10 @@ class RandomWalker:
         pickle.dump ( self, f )
         f.close()
 
-    def highlight ( self, *args ):
+    def highlight ( self, msgType = "info", *args ):
         """ logging, hilit """
-        print ( "%s[walk:%d] %s%s" % ( colorama.Fore.GREEN, self.walkerid, " ".join(map(str,args)), colorama.Fore.RESET ) )
+        col = colorama.Fore.GREEN
+        print ( "%s[walk:%d] %s%s" % ( col, self.walkerid, " ".join(map(str,args)), colorama.Fore.RESET ) )
 
     def log ( self, *args ):
         """ logging to file """
@@ -125,12 +129,12 @@ class RandomWalker:
                 ratio = self.model.priorTimesLlhd() / self.oldmodel.priorTimesLlhd()
             if self.oldmodel.Z > 0. and self.model.Z < 0.7 * self.oldmodel.Z:
                 ## no big steps taken here.
-                self.pprint ( "Z=%.2f -> 0. Revert." % self.oldmodel.Z )
+                self.highlight ( "info", "Z=%.2f -> 0. Revert." % self.oldmodel.Z )
                 self.revert()
                 continue
 
             if ratio >= 1.:
-                self.highlight ( "Z: %.3f -> %.3f: take the step" % ( self.oldmodel.Z, self.model.Z ) )
+                self.highlight ( "info", "Z: %.3f -> %.3f: take the step" % ( self.oldmodel.Z, self.model.Z ) )
                 if self.model.Z < 0.7 * self.oldmodel.Z:
                     self.pprint ( " `- weird, though, Z decreases. Please check." )
                     self.pprint ( "oldllhd %f" % self.oldmodel.llhd )
@@ -179,8 +183,11 @@ if __name__ == "__main__":
         f=open( args.cont, "rb" )
         hiscores = pickle.load ( f )
         f.close()
-        for k,v in hiscores.items():
+        for ctr,(k,v) in enumerate(hiscores.items()):
+            if ctr >= ncpus:
+                break
             walkers.append ( RandomWalker.fromModel ( v ) )
+            walkers[-1].walkerid = ctr
     else:
         for w in range(ncpus):
             walkers.append ( RandomWalker( w, args.nsteps, args.strategy ) )

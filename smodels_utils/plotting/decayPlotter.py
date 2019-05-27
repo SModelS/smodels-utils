@@ -45,8 +45,6 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
         reader.printDecay("~g")
         logger.info ( "%s" % reader.getDecays("~g",0.9) )
 
-    #tmp=[ "~g" ]
-    #tmp.append ("~q" )
     tmp=[    "~g", "~q", "~b", "~t", "~t_1", "~t_2", "~b_1", "~b_2" ]
     if options["squarks"]:
         for i in [ "u", "d", "c", "s", "b", "t", "q" ]:
@@ -125,6 +123,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0. ):
         logger.debug ( "calling dot2tex." )
         drawer.dot2tex ( out )
 
+    print ( "[decayPlotter] done drawing" )
 
 
 if __name__ == "__main__":

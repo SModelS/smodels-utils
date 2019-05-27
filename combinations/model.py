@@ -187,15 +187,20 @@ class Model:
                 tmp = 10.
             self.masses[i]=tmp
 
-    def createSLHAFile ( self ):
+    def createSLHAFile ( self, outputSLHA=None ):
         """ from the template.slha file, create the slha file of the current
-            model. """
+            model.
+        :param outputSLHA: if not None, write into that file. else, write into
+            currentSLHA file.
+        """
         f=open( self.templateSLHA )
         lines=f.readlines()
         f.close()
+        if outputSLHA == None:
+            outputSLHA = self.currentSLHA
         if not hasattr ( self, "currentSLHA" ):
             self.currentSLHA = tempfile.mktemp(prefix=".cur",suffix=".slha",dir="./")
-        f=open(self.currentSLHA,"w")
+        f=open(outputSLHA,"w")
         for line in lines:
             for m,v in self.masses.items():
                 line=line.replace("M%d" % m,"%.1f" % v )

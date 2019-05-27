@@ -12,7 +12,7 @@ def configure():
     import sys, os
     curpath = os.path.abspath(".")
     p = curpath.find("smodels-utils")
-    ret="../../" ## fallback, if no smodels-utils is found
+    ret="../" ## fallback, if no smodels-utils is found
     if p > -1:
         ret = curpath[:p+14]
     sys.path.append ( ret )
