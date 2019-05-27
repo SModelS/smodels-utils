@@ -29,12 +29,16 @@ def plot ( number, verbosity, picklefile ):
     model = obtain ( number, picklefile )
     print ( "[plotHiscore] create slha file" )
     model.createSLHAFile ( "plot.slha" )
-    print ( "[plotHiscore] now draw ruler.png" )
-    # rulerPlotter.draw ( "./plot.slha", "ruler.png" )
-    print ( "[plotHiscore] now draw decays.png" )
-    options = { "tex": True, "color": True, "dot": True }
-    ## FIXME add cross sections.
-    # decayPlotter.draw ( "./plot.slha", "decays.png", options )
+    plotRuler = True
+    if plotRuler:
+        print ( "[plotHiscore] now draw ruler.png" )
+        rulerPlotter.draw ( "./plot.slha", "ruler.png" )
+    plotDecays = True
+    if plotDecays:
+        print ( "[plotHiscore] now draw decays.png" )
+        options = { "tex": True, "color": True, "dot": True }
+        ## FIXME add cross sections.
+        decayPlotter.draw ( "./plot.slha", "decays.png", options )
     discussPredictions ( model )
 
 if __name__ == "__main__":

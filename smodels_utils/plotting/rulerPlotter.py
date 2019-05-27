@@ -147,13 +147,15 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
     maxvalue=max (hmasses)*1.05 #  max(masses.values())*1.05
     if maxvalue>3100:
         maxvalue=3100.
-    minvalue=min(masses.values())*0.80
+    minvalue=min(masses.values())*0.80-30.
+    if minvalue < 0.:
+        minvalue = 0.
     logger=logging.getLogger(__name__)
-    logger.info ( "range is [%d,%d]" % ( minvalue, maxvalue ) )
     if Range[0] >=0:
         minvalue=Range[0]
     if Range[1] >=0:
         maxvalue=Range[1]
+    logger.info ( "range is [%d,%d]" % ( minvalue, maxvalue ) )
 
     ROOT.gROOT.SetBatch()
     ROOT.gROOT.SetStyle("Plain")
