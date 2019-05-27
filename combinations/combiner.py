@@ -65,10 +65,10 @@ class Combiner:
         npred = 0
         if 1 in count.keys():
             npred = count[1]
-        print ( "[Combiner] %d combinations from %d predictions" % \
+        print ( "[combiner] %d combinations from %d predictions" % \
                 (len(combinables),npred) )
         #for k,v in count.items():
-        #    print ( "[Combiner] %d combinations with %d predictions" % ( v, k ) )
+        #    print ( "[combine] %d combinations with %d predictions" % ( v, k ) )
 
     def getCombinedLikelihood ( self, combination, mu, expected=False, nll=False ):
         """ get the combined likelihood for a signal strength mu 
@@ -86,7 +86,7 @@ class Combiner:
         keys.sort()
         for k in keys:
             v=llhds[k]
-            print ( "[Combiner] %.2f: %.3g" % ( k, v ) )
+            print ( "[combiner] %.2f: %.3g" % ( k, v ) )
 
 
     def isSubset ( self, small, big ):
@@ -129,10 +129,10 @@ class Combiner:
         ## assign a letter to every prediction. for debugging
         letters={}
         letter=65
-        # print ( "[Combiner] Letters assigned to results:" )
+        # print ( "[combine] Letters assigned to results:" )
         for p in predictions:
             letters[p]=chr(letter)
-            # print ( "[Combiner] Prediction %s: %s" % ( letters[p], p.expResult.globalInfo.id ) )
+            # print ( "[combine] Prediction %s: %s" % ( letters[p], p.expResult.globalInfo.id ) )
             letter+=1
         return letters
 
@@ -175,7 +175,7 @@ class Combiner:
             Z = self.getSignificance ( c )
             if Z == None:
                 continue
-            # print ( "[Combiner] significance for %s is %.2f" % ( self.getLetterCode(c), Z ) )
+            # print ( "[combine] significance for %s is %.2f" % ( self.getLetterCode(c), Z ) )
             if Z > highestZ:
                 highestZ = Z
                 highest = c
@@ -225,7 +225,7 @@ class Combiner:
         ret = optimize.minimize ( getNLL, 1., bounds=[(0.,None)] )
         if ret.status==0:
             return ret.x[0]
-        print ( "[Combiner] error finding mu hat for %s" % self.getLetterCode(combination) )
+        print ( "[combine] error finding mu hat for %s" % self.getLetterCode(combination) )
         return None
 
     def getLetterCode ( self, combination ):
@@ -256,7 +256,7 @@ class Combiner:
         find the combo with strongest exclusion """
         self.letters = getLetters ( predictions )
         print ()
-        print ( "[Combiner] Find the strongest exclusion using strategy: %s" % strategy )
+        print ( "[combine] Find the strongest exclusion using strategy: %s" % strategy )
         combinables = self.findCombinations ( predictions, strategy )
         singlepreds = [ [x] for x in predictions ]
         ## optionally, add individual predictions
@@ -264,7 +264,7 @@ class Combiner:
         discussCombinations ( combinables )
         bestCombo,ulexp = findBestCombo ( combinables )
         ulobs = get95CL ( bestCombo, expected=False )
-        print ( "[Combiner] best combo for strategy ``%s'' is %s: %s: [ul_obs=%.2f, ul_exp=%.2f]" % ( strategy, self.getLetterCode(bestCombo), self.getComboDescription(bestCombo), ulobs, ulexp ) ) 
+        print ( "[combine] best combo for strategy ``%s'' is %s: %s: [ul_obs=%.2f, ul_exp=%.2f]" % ( strategy, self.getLetterCode(bestCombo), self.getComboDescription(bestCombo), ulobs, ulexp ) ) 
         return bestCombo,ulexp,ulobs
 
 if __name__ == "__main__":

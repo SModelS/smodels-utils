@@ -1,5 +1,7 @@
 obsolete/
 cur*slha
+.cur*slha
+walker*log
 predictions.pcl
 matrix*png
 matrix*pdf
