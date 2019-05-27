@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-""" 
+"""
 .. module:: rulerPlot
-    :synopsis: Draws a ruler plot from e.g. an SLHA file, like 
+    :synopsis: Draws a ruler plot from e.g. an SLHA file, like
                http://smodels.github.io/pics/example_ruler.png
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
@@ -13,7 +13,7 @@ from __future__ import print_function
 
 import os, math, sys, tempfile, ROOT
 import logging
-    
+
 def setLogLevel ( logger, verbose ):
     if "err" in verbose:
         logger.setLevel(logging.ERROR)
@@ -59,131 +59,128 @@ def _color ( name ):
         "~g":kRed,"~q":kBlue+2,"~u":kBlue+2,"~d":kBlue+2,"~c":kBlue+2,
         "~s":kBlue+2,"~t":kBlue+1,"~b":kBlue+1,"~e":kOrange+2,"~l":kOrange+2 }
     for (mname,color) in Dict.items():
-        if name.find(mname)==0: return color 
+        if name.find(mname)==0: return color
     return kBlack
 
 def _pprint ( name ):
-  """ find ROOT.TLatex names for various common names used in
+    """ find ROOT.TLatex names for various common names used in
       the comments in slha files  """
-  #Dict={ "A0":"a^{0}", "A1":"a^{1}", "H+":"h^{#pm}", "Hp":"h^{#pm}", 
-  #  "H2":"h^{3}", "H":"h^{2}", "h":"h^{1}", "~e":"#tilde{e}", 
-  #  "~g":"#tilde{g}", "~mu":"#tilde{#mu}", "~mu_L":"#tilde{#mu}_{L}",
-  #  "~mu_R":"#tilde{#mu}_{R}", "~e_L":"#tilde{e}_{L}","~e_R":"#tilde{e}_{R}",
-  #  "~tau_L":"#tilde{#tau}_{L}","~tau_R":"#tilde{#tau}_{R}",
-  #  "~chi20":"#tilde{#chi}^{0}_{2}", "~chi30":"#tilde{#chi}^{0}_{3}",
-  #  "~chi40":"#tilde{#chi}^{0}_{4}", "~chi50":"#tilde{#chi}^{0}_{5}",
-  #  "~chi10":"#tilde{#chi}^{0}_{1}", "~chi1+":"#tilde{#chi}^{+}_{1}",
-  #  "~chi2+":"#tilde{#chi}^{+}_{2}", "~chi3+":"#tilde{#chi}^{+}_{3}",
-  #  "~chi4+":"#tilde{#chi}^{+}_{4}" }
-  Dict={ "A0":"A", "A1":"A^{1}", "H+":"H^{#pm}", "Hp":"H^{#pm}", 
-    "H2":"H^{2}", "H":"H", "h":"h", "~e":"#tilde{e}", 
-    "~g":"#tilde{g}", "~mu":"#tilde{#mu}", "~mu_L":"#tilde{#mu}_{L}",
-    "~mu_R":"#tilde{#mu}_{R}", "~e_L":"#tilde{e}_{L}","~e_R":"#tilde{e}_{R}",
-    "~tau_L":"#tilde{#tau}_{L}","~tau_R":"#tilde{#tau}_{R}",
-    "~chi20":"#tilde{#chi}^{0}_{2}", "~chi30":"#tilde{#chi}^{0}_{3}",
-    "~chi40":"#tilde{#chi}^{0}_{4}", "~chi50":"#tilde{#chi}^{0}_{5}",
-    "~chi10":"#tilde{#chi}^{0}_{1}", "~chi1+":"#tilde{#chi}^{+}_{1}",
-    "~chi2+":"#tilde{#chi}^{+}_{2}", "~chi3+":"#tilde{#chi}^{+}_{3}",
-    "~chi4+":"#tilde{#chi}^{+}_{4}" }
-  if name in Dict.keys (): return Dict[name]
+    Dict={ "A0":"A", "A1":"A^{1}", "H+":"H^{#pm}", "Hp":"H^{#pm}",
+        "H2":"H^{2}", "H":"H", "h":"h", "~e":"#tilde{e}",
+        "~g":"#tilde{g}", "~mu":"#tilde{#mu}", "~mu_L":"#tilde{#mu}_{L}",
+        "~mu_R":"#tilde{#mu}_{R}", "~e_L":"#tilde{e}_{L}","~e_R":"#tilde{e}_{R}",
+        "~tau_L":"#tilde{#tau}_{L}","~tau_R":"#tilde{#tau}_{R}",
+        "~chi20":"#tilde{#chi}^{0}_{2}", "~chi30":"#tilde{#chi}^{0}_{3}",
+        "~chi40":"#tilde{#chi}^{0}_{4}", "~chi50":"#tilde{#chi}^{0}_{5}",
+        "~chi10":"#tilde{#chi}^{0}_{1}", "~chi1+":"#tilde{#chi}^{+}_{1}",
+        "~chi2+":"#tilde{#chi}^{+}_{2}", "~chi3+":"#tilde{#chi}^{+}_{3}",
+        "~chi4+":"#tilde{#chi}^{+}_{4}"
+    }
 
-  if name.find("~nu_e")==0: return "#tilde{#nu}_{e}"
-  if name.find("~nu_mu")==0: return "#tilde{#nu}_{#mu}"
-  if name.find("~nu_tau")==0: return "#tilde{#nu}_{#tau}"
-  if name.find("~d")==0: return _squarkname("d",name[2:])
-  if name.find("~u")==0: return _squarkname("u",name[2:])
-  if name.find("~s")==0: return _squarkname("s",name[2:])
-  if name.find("~c")==0: return _squarkname("c",name[2:])
-  if name.find("~t")==0: return _squarkname("t",name[2:])
-  if name.find("~b")==0: return _squarkname("b",name[2:])
+    if name in Dict.keys (): return Dict[name]
 
-  if name.find("~")>-1:
-      w=name.replace("~","#tilde{")
-      w=w.replace("chi40", "chi^{0}_{4}" )
-      w=w.replace("chi30", "chi^{0}_{3}" )
-      w=w.replace("chi20", "chi^{0}_{2}" )
-      w=w.replace("chi10", "chi^{0}_{1}" )
-      w=w.replace("chi1+", "chi^{+}_{1}" )
-      w=w.replace("chi2+", "chi^{+}_{2}" )
-      w=w.replace("L", "_{L}" )
-      w=w.replace("R", "_{R}" )
-      w=w.replace("1", "_{1}" )
-      w=w.replace("2", "_{2}" )
-      w=w.replace("chi", "#chi" )
-      name=w+"}"
-  return name
+    if name.find("~nu_e")==0: return "#tilde{#nu}_{e}"
+    if name.find("~nu_mu")==0: return "#tilde{#nu}_{#mu}"
+    if name.find("~nu_tau")==0: return "#tilde{#nu}_{#tau}"
+    if name.find("~d")==0: return _squarkname("d",name[2:])
+    if name.find("~u")==0: return _squarkname("u",name[2:])
+    if name.find("~s")==0: return _squarkname("s",name[2:])
+    if name.find("~c")==0: return _squarkname("c",name[2:])
+    if name.find("~t")==0: return _squarkname("t",name[2:])
+    if name.find("~b")==0: return _squarkname("b",name[2:])
+
+    if name.find("~")>-1:
+        w=name.replace("~","#tilde{")
+        w=w.replace("chi40", "chi^{0}_{4}" )
+        w=w.replace("chi30", "chi^{0}_{3}" )
+        w=w.replace("chi20", "chi^{0}_{2}" )
+        w=w.replace("chi10", "chi^{0}_{1}" )
+        w=w.replace("chi1+", "chi^{+}_{1}" )
+        w=w.replace("chi2+", "chi^{+}_{2}" )
+        w=w.replace("L", "_{L}" )
+        w=w.replace("R", "_{R}" )
+        w=w.replace("1", "_{1}" )
+        w=w.replace("2", "_{2}" )
+        w=w.replace("chi", "#chi" )
+        name=w+"}"
+    return name
 
 def createDictionaryFromSLHA ( inputfile ):
     import pyslha
     print ( "creating dictionary" )
     sys.exit()
 
-def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1], 
+def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
            formats={ "png": True }, printmass=False ):
-  """ entry point: draw the masses 
+    """ entry point: draw the masses
       :param inputfile: the inputfilename, must contain a simple dictionary. If
                         the filename ends with .slha, create the ditionary on the fly.
       :param output: the output filename, without the extension.
       :param Range:  the range of the ruler, [min,max], given in GeV. -1 is for automatic mode (the script decides by itself).
       :param formats: the formats, as a dictionary. Supported are: eps, pdf, png.
       :param printmass: draw also mass values (in GeV)?
-  """
+    """
+    if outputfile.endswith ( ".png" ):
+    outputfile = outputfile.replace(".png","")
+    formats["png"]=True
 
-  f=open( inputfile )
-  pmasses=eval(f.readline())
-  f.close()
+    if inputfile.endswith ( ".slha" ):
+    inputfile = convertSLHAFile ( inputfile, args.squark )
+    f=open( inputfile )
+    pmasses=eval(f.readline())
+    f.close()
 
-  masses={}
-  # masses=pmasses
-  for (key,value) in pmasses.items():
-      if key.find("width")==-1:
-          masses[key]=abs(value)
-  hmasses= [ m for m in masses.values() if m<3000. ]
-  maxvalue=max (hmasses)*1.05 #  max(masses.values())*1.05
-  if maxvalue>3100:
-      maxvalue=3100.
-  minvalue=min(masses.values())*0.80
-  logger.info ( "range is [%d,%d]" % ( minvalue, maxvalue ) )
-  if Range[0] >=0:
-      minvalue=Range[0]
-  if Range[1] >=0:
-      maxvalue=Range[1]
+    masses={}
+    # masses=pmasses
+    for (key,value) in pmasses.items():
+        if key.find("width")==-1:
+            masses[key]=abs(value)
+    hmasses= [ m for m in masses.values() if m<3000. ]
+    maxvalue=max (hmasses)*1.05 #  max(masses.values())*1.05
+    if maxvalue>3100:
+        maxvalue=3100.
+    minvalue=min(masses.values())*0.80
+    logger.info ( "range is [%d,%d]" % ( minvalue, maxvalue ) )
+    if Range[0] >=0:
+        minvalue=Range[0]
+    if Range[1] >=0:
+        maxvalue=Range[1]
 
-  ROOT.gROOT.SetBatch()
-  ROOT.gROOT.SetStyle("Plain")
+    ROOT.gROOT.SetBatch()
+    ROOT.gROOT.SetStyle("Plain")
 
-  c1=ROOT.TCanvas("c1","c1",300,600)
+    c1=ROOT.TCanvas("c1","c1",300,600)
 
-  lines=[]
+    lines=[]
 
-  t=ROOT.TLatex()
-  t.SetTextSize(0.05)
+    t=ROOT.TLatex()
+    t.SetTextSize(0.05)
 
-  ##set positions of lines & captions
-  if printmass:
-      xline0=0.20 #start of line
-      xline1=0.35 #end of line
-      xtext=0.37  #start of caption
-  else:
-      xline0=0.23
-      xline1=0.40
-      xtext=0.42
+    ##set positions of lines & captions
+    if printmass:
+        xline0=0.20 #start of line
+        xline1=0.35 #end of line
+        xtext=0.37  #start of caption
+    else:
+        xline0=0.23
+        xline1=0.40
+        xtext=0.42
 
-  ylist=[]
-  for (name,m) in masses.items():
-      y=(abs(m)-minvalue)/(maxvalue-minvalue)
-      ylist.append(y)  
+    ylist=[]
+    for (name,m) in masses.items():
+        y=(abs(m)-minvalue)/(maxvalue-minvalue)
+        ylist.append(y)
 
-  ydic={}
-  for y in ylist:
+    ydic={}
+    for y in ylist:
       n=0
       for y2 in ylist:
           if math.fabs(y2-y)<0.02: n+=1
       ydic[y]=n
 
-  written=[]
+    written=[]
 
-  for (name,m) in masses.items():
+    for (name,m) in masses.items():
     if name[:5]=="width":
         continue
     y=(abs(m)-minvalue)/(maxvalue-minvalue)
@@ -204,45 +201,45 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
     x=xtext
     xm=0.6
     for coord in written:
-      if math.fabs(coord[0]-y)<0.02:
-          x=coord[1]+offset
-          xm=coord[2]+2*offset
+        if math.fabs(coord[0]-y)<0.02:
+            x=coord[1]+offset
+            xm=coord[2]+2*offset
     t.SetTextColor(col)
     t.DrawLatex(x,y-.01,_pprint(name))
     if printmass: t.DrawLatex(xm,y-.01,str(int(round(m,0))))
     written.append((y,x,xm))
 
-  t.SetTextColor(ROOT.kBlack)
-  for i in range ( int ( math.ceil ( minvalue / 100. )) * 100, \
+    t.SetTextColor(ROOT.kBlack)
+    for i in range ( int ( math.ceil ( minvalue / 100. )) * 100, \
                    int ( math.floor ( maxvalue / 100. )) * 100 +1, 100 ):
-    y=(float(i)-minvalue)/(maxvalue-minvalue)
-    l=ROOT.TLine ( 0.13,y,0.16,y)
-    l.SetLineWidth(3)
-    l.Draw()
-    t.DrawLatex ( 0.02,y-0.01, str(i) )
-    lines.append(l)
+        y=(float(i)-minvalue)/(maxvalue-minvalue)
+        l=ROOT.TLine ( 0.13,y,0.16,y)
+        l.SetLineWidth(3)
+        l.Draw()
+        t.DrawLatex ( 0.02,y-0.01, str(i) )
+        lines.append(l)
 
-  tmpf=tempfile.mkstemp()[1]
+    tmpf=tempfile.mkstemp()[1]
 
-  _printCanvas ( c1, tmpf+".eps" )
-  for i in [ "pdf", "png", "eps" ]: 
-      if not i in formats: formats[i]=False
+    _printCanvas ( c1, tmpf+".eps" )
+    for i in [ "pdf", "png", "eps" ]:
+        if not i in formats: formats[i]=False
 
-  if formats["pdf"]:
-      logger.info ( "producing %s.pdf" % outputfile )
-      _execute ( "epspdf %s.eps %s.pdf" % ( tmpf, outputfile ) )
-  if formats["png"]:
-      formats["eps"]=True
-      crop=""
-      if True and not printmass:
+    if formats["pdf"]:
+        logger.info ( "producing %s.pdf" % outputfile )
+        _execute ( "epspdf %s.eps %s.pdf" % ( tmpf, outputfile ) )
+    if formats["png"]:
+        formats["eps"]=True
+        crop=""
+        if True and not printmass:
         crop="-crop 270x1200+0+0"
-      logger.info ( "producing %s.png" % outputfile )
-      _execute ( "convert %s %s.eps %s.png" % ( crop, tmpf, outputfile ) )
-  if formats["eps"]:
-      logger.info ( "producing %s.eps" % outputfile )
-      _execute ( "cp %s.eps %s.eps" % (tmpf, outputfile ) )
+        logger.info ( "producing %s.png" % outputfile )
+        _execute ( "convert %s %s.eps %s.png" % ( crop, tmpf, outputfile ) )
+    if formats["eps"]:
+        logger.info ( "producing %s.eps" % outputfile )
+        _execute ( "cp %s.eps %s.eps" % (tmpf, outputfile ) )
 
-  os.unlink ( tmpf )
+    os.unlink ( tmpf )
 
 def convertSLHAFile ( inputfile, collapse_squarks ):
     """
@@ -276,7 +273,7 @@ def convertSLHAFile ( inputfile, collapse_squarks ):
     g.write ( str(D) )
     g.close()
     return outfile
-  
+
 if __name__ == "__main__":
     import argparse, types
     import setPath
@@ -293,12 +290,12 @@ if __name__ == "__main__":
     argparser.add_argument ( '-v', '--verbosity',
           help='verbosity -- debug, info, warning, error [info]', type=str, default='info' )
     argparser.add_argument ( '-p', '--pdf', help='produce pdf', action='store_true' )
-    argparser.add_argument ( '-e', '--eps', help='produce (=keep) eps', 
+    argparser.add_argument ( '-e', '--eps', help='produce (=keep) eps',
                              action='store_true' )
     argparser.add_argument ( '-P', '--png', help='produce png', action='store_true' )
-    argparser.add_argument ( '-mass', '--masses', help='write masses', 
+    argparser.add_argument ( '-mass', '--masses', help='write masses',
                              action='store_true' )
-    argparser.add_argument ( '-squark', '--squark', 
+    argparser.add_argument ( '-squark', '--squark',
                              help='represent all squarks as ~q', action='store_true' )
     args=argparser.parse_args()
     if not args.pdf and not args.eps:
@@ -312,10 +309,8 @@ if __name__ == "__main__":
     inputfile=args.inputfile[0].replace("@@installdir@@",
                                         SModelSUtils.installDirectory() )
     import logging.config
-    logging.config.fileConfig ( 
+    logging.config.fileConfig (
             SModelSUtils.installDirectory()+"/etc/commandline.conf" )
     logger=logging.getLogger(__name__)
     setLogLevel ( logger, args.verbosity.lower() )
-    if inputfile.endswith ( ".slha" ):
-        inputfile = convertSLHAFile ( inputfile, args.squark )
     draw ( inputfile, args.output, Range, formats, args.masses )
