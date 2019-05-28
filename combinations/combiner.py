@@ -258,11 +258,16 @@ class Combiner:
 
     def removeDataFromBestCombo ( self, bestCombo ):
         """ remove the data from all theory predictions, we dont need them. """
-        for combo in bestCombo:
-            eR = combo.expResult
+        for ctr,combo in enumerate(bestCombo):
+            if hasattr ( combo, "elements" ):
+                del bestCombo[ctr].elements
+            eR = bestCombo[ctr].expResult
             for ds in eR.datasets:
                 for tx in ds.txnameList:
-                    del tx.txnameData
+                    if hasattr ( tx, "txnameData" ):
+                        del tx.txnameData
+                    if hasattr ( tx, "txnameDataExp" ):
+                        del tx.txnameDataExp
         return bestCombo
 
     def findStrongestExclusion ( self, predictions, strategy ):

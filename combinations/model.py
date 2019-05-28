@@ -81,6 +81,15 @@ class Model:
         self.masses[Model.LSP]=random.uniform(50,500)
         self.computePrior()
 
+    def getLetterCodeBestCombo ( self ):
+        """ get the letter code of the best combo """
+        return self.combiner.getLetterCode(self.bestCombo)
+
+    def getBestComboDescription ( self ):
+        """ get description of best combo """
+        return self.combiner.getComboDescription(self.bestCombo)
+
+
     def pprint ( self, *args ):
         """ logging """
         print ( "[model:%d] %s" % (self.walkerid, " ".join(map(str,args))) )
@@ -102,9 +111,9 @@ class Model:
         if not hasattr ( self, "combiner" ):
             self.combiner = Combiner( self.walkerid )
         bestCombo,Z,llhd = self.combiner.findHighestSignificance ( predictions, strategy )
-        self.bestCombo = self.combiner.removeDataFromBestCombo ( bestCombo )
+        self.bestCombo = bestCombo # self.combiner.removeDataFromBestCombo ( bestCombo )
         self.Z = Z
-        self.model.llhd = 1. - llhd
+        self.llhd = 1. - llhd
         # return (bestCombo,Z,llhd)
 
     def priorTimesLlhd( self ):

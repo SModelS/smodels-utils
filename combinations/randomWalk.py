@@ -2,13 +2,17 @@
 
 """ a first start at the random walk idea """
 
-import random, copy, pickle, sys, os, time
+import random, copy, pickle, sys, os, time, subprocess
 import multiprocessing
 from predictor import predict
 from smodels.tools.runtime import nCPUs
 import colorama
 from hiscore import Hiscore
 from model import Model
+
+def cleanDirectory ():
+    subprocess.getoutput ( "rm -rf .cur*slha" )
+    subprocess.getoutput ( "mv walker*.log tmp/" )
 
 class RandomWalker:
     def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive" ):
@@ -77,14 +81,14 @@ class RandomWalker:
         #self.log ( "I got %d predictions" % ( len(predictions) ) )
         # bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, self.strategy )
         self.model.predict( self.strategy )
-        self.log ( "found highest Z: %.2f" % Z )
+        self.log ( "found highest Z: %.2f" % self.model.Z )
         # self.model.bestCombo = self.model.combiner.removeDataFromBestCombo ( bestCombo )
         # self.model.llhd = (1. - llhd ) ## we wish to minimize likelihood, find the most unexpected fluctuation
         if self.hiscoreList != None:
             self.log ( "check if result goes into hiscore list" )
             self.hiscoreList.newResult ( self.model ) ## add to high score list
         self.model.computePrior()
-        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.model.combiner.getLetterCode(bestCombo), self.model.combiner.getComboDescription(bestCombo), self.model.Z ) )
+        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.model.getLetterCodeBestCombo(), self.model.getBestComboDescription(), self.model.Z ) )
         self.log ( "step %d finished." % self.model.step )
 
     def revert ( self ):
@@ -176,6 +180,7 @@ if __name__ == "__main__":
             help='continue with saved states [""]',
             type=str, default="" )
     args = argparser.parse_args()
+    cleanDirectory()
     ncpus = args.ncpus
     if ncpus < 0:
         ncpus = nCPUs() + ncpus + 1

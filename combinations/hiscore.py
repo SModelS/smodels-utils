@@ -82,7 +82,7 @@ class Hiscore:
             pickleFile = self.pickleFile
         self.pprint ( "saving new hiscore list to %s" % pickleFile )
         try:
-            subprocess.getoutput ( "cp %s old.pcl" % pickleFile )
+            subprocess.getoutput ( "mv -f %s old.pcl" % pickleFile )
             f=open( pickleFile, "wb" )
             fcntl.lockf( f, fcntl.LOCK_EX | fcntl.LOCK_NB)
             pickle.dump ( self.hiscores, f )
