@@ -1,9 +1,6 @@
 all: run
 
 run:
-	./randomWalk.py
-
-clean: .PHONY
-	rm cur*slha
+	./randomWalk.py -p 10
 
 .PHONY:

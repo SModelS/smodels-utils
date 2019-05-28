@@ -130,7 +130,10 @@ class RandomWalker:
             try:
                 self.onestep()
             except Exception as e:
-                self.pprint ( "taking a step resulted in exception %s" % e )
+                self.pprint ( "taking a step resulted in exception: %s, %s" % (type(e), e ) )
+                f=open("exceptions.log","a")
+                f.write ( "taking a step resulted in exception: %s, %s\n" % (type(e), e ) )
+                f.close()
             self.model.computePrior()
             self.pprint ( "prior times llhd, before versus after: %f -> %f" % ( self.oldmodel.priorTimesLlhd(), self.model.priorTimesLlhd() ) )
             #ratio = 1.

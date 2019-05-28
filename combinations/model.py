@@ -258,7 +258,7 @@ class Model:
             S = 1.
         #for i in self.frozenParticles(): ## frozen particles have 0 branchings
         #    self.decays[p][i]=0.
-        self.decays[p][ self.decays[p][-1] ] = 1. - S
+        # self.decays[p][ self.decays[p][-1] ] = 1. - S
         #self.decays[p][ openChannels[-1] ] = 1. - S
         control = sum ( [  x for x in self.decays[p].values() ] )
         if abs ( control - 1.0 ) > 1e-5:
