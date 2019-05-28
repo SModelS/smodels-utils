@@ -297,14 +297,15 @@ class Model:
         unfrozen = self.unFrozenParticles()
         unfrozen.remove ( Model.LSP )
         ndiscarded=0
+        oldZ = self.Z
         for pid in unfrozen:
             self.pprint ( "trying to freeze %s (%.1f)" % ( self.getParticleName(pid), self.masses[pid] ) )
             oldmass = self.masses[pid]
             self.masses[pid]=1e6
             self.createSLHAFile()
-            bestCombo,Z,llhd = self.predict ( strategy )
-            self.pprint ( "when trying to remove %d, Z changed: %.3f -> %.3f" % ( pid, self.Z, Z ) )
-            if Z > (1. - maxloss)*self.Z:
+            self.predict ( strategy )
+            self.pprint ( "when trying to remove %d, Z changed: %.3f -> %.3f" % ( pid, oldZ, self.Z ) )
+            if self.Z > (1. - maxloss)*oldZ:
                 self.pprint ( "discarding %s" % self.getParticleName(pid) )
                 ndiscarded+=1
             else:

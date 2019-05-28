@@ -49,17 +49,17 @@ def plot ( number, verbosity, picklefile ):
     ## plot hiscore number "number"
     model = obtain ( number, picklefile )
     print ( "[plotHiscore] create slha file" )
-    model.createSLHAFile ( "plot.slha" )
+    model.createSLHAFile ()
     plotRuler = True
     if plotRuler:
         print ( "[plotHiscore] now draw ruler.png" )
-        rulerPlotter.draw ( "./plot.slha", "ruler.png", Range=(0.,None) )
+        rulerPlotter.draw ( model.currentSLHA, "ruler.png", Range=(0.,None) )
     plotDecays = True
     if plotDecays:
         print ( "[plotHiscore] now draw decays.png" )
         options = { "tex": True, "color": True, "dot": True }
         ## FIXME add cross sections.
-        decayPlotter.draw ( "./plot.slha", "decays.png", options )
+        decayPlotter.draw ( model.currentSLHA, "decays.png", options )
     discussPredictions ( model )
     writeIndexHtml ( model )
     copyFilesToGithub()
