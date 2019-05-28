@@ -2,7 +2,7 @@
 
 """ Class that encapsulates a BSM model. """
 
-import random, numpy, tempfile, os, copy, time
+import random, numpy, tempfile, os, copy, time, sys
 from smodels.tools.xsecComputer import XSecComputer, LO
 from combiner import Combiner
 from predictor import predict
@@ -243,11 +243,13 @@ class Model:
             return 0
         dx =.1/numpy.sqrt(len(openChannels)) ## maximum change per channel
         S=0.
-        for i in openChannels[:-1]:
+        for i in self.decays[p].keys(): ## openChannels[:-1]:
             oldbr = self.decays[p][i]
-            br = oldbr+random.uniform(-dx,dx)
-            if br < 0.: br = 0.
-            if br > 1.: br = 1.
+            Min,Max = max(0.,oldbr-dx), min(oldbr+dx,1.)
+            br = random.uniform ( Min, Max )
+            #br = oldbr+random.uniform(-dx,dx)
+            #if br < 0.: br = 0.
+            #if br > 1.: br = 1.
             self.decays[p][i]=br
             S+=br
         if S > 1.: ## correct for too large sums
@@ -256,11 +258,12 @@ class Model:
             S = 1.
         #for i in self.frozenParticles(): ## frozen particles have 0 branchings
         #    self.decays[p][i]=0.
-        self.decays[p][ openChannels[-1] ] = 1. - S
+        self.decays[p][ self.decays[p][-1] ] = 1. - S
+        #self.decays[p][ openChannels[-1] ] = 1. - S
         control = sum ( [  x for x in self.decays[p].values() ] )
         if abs ( control - 1.0 ) > 1e-5:
             self.pprint ( "control %s" % control )
-            sys.exit()
+        #    sys.exit()
         brvec=[]
         for x in self.decays[p].values():
             if x<1e-5:
