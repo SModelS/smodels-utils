@@ -88,7 +88,7 @@ class RandomWalker:
             self.log ( "check if result goes into hiscore list" )
             self.hiscoreList.newResult ( self.model ) ## add to high score list
         self.model.computePrior()
-        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.model.getLetterCodeBestCombo(), self.model.getBestComboDescription(), self.model.Z ) )
+        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.model.letters, self.model.description, self.model.Z ) )
         self.log ( "step %d finished." % self.model.step )
 
     def revert ( self ):

@@ -48,7 +48,6 @@ class Model:
         self.masses = {}
         self.ssmultipliers = {} ## signal strength multipliers
         self.llhd=0.
-        self.combiner = Combiner( walkerid )
         self.Z = 0.
 
         slhaf = open ( self.templateSLHA )
@@ -81,15 +80,6 @@ class Model:
         self.masses[Model.LSP]=random.uniform(50,500)
         self.computePrior()
 
-    def getLetterCodeBestCombo ( self ):
-        """ get the letter code of the best combo """
-        return self.combiner.getLetterCode(self.bestCombo)
-
-    def getBestComboDescription ( self ):
-        """ get description of best combo """
-        return self.combiner.getComboDescription(self.bestCombo)
-
-
     def pprint ( self, *args ):
         """ logging """
         print ( "[model:%d] %s" % (self.walkerid, " ".join(map(str,args))) )
@@ -108,12 +98,13 @@ class Model:
         if not os.path.exists ( self.currentSLHA ):
             self.createSLHAFile()
         predictions = predict ( self.currentSLHA )
-        if not hasattr ( self, "combiner" ):
-            self.combiner = Combiner( self.walkerid )
-        bestCombo,Z,llhd = self.combiner.findHighestSignificance ( predictions, strategy )
-        self.bestCombo = bestCombo # self.combiner.removeDataFromBestCombo ( bestCombo )
+        combiner = Combiner( self.walkerid )
+        bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, strategy )
+        self.bestCombo = bestCombo # combiner.removeDataFromBestCombo ( bestCombo )
         self.Z = Z
         self.llhd = 1. - llhd
+        self.letters = combiner.getLetterCode(self.bestCombo)
+        self.description = combiner.getComboDescription(self.bestCombo)
         # return (bestCombo,Z,llhd)
 
     def priorTimesLlhd( self ):

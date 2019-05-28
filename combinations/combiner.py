@@ -258,10 +258,10 @@ class Combiner:
 
     def removeDataFromBestCombo ( self, bestCombo ):
         """ remove the data from all theory predictions, we dont need them. """
-        for ctr,combo in enumerate(bestCombo):
+        for ci,combo in enumerate(bestCombo):
             if hasattr ( combo, "elements" ):
-                del bestCombo[ctr].elements
-            eR = bestCombo[ctr].expResult
+                del bestCombo[ci].elements
+            eR = bestCombo[ci].expResult
             for ds in eR.datasets:
                 for tx in ds.txnameList:
                     if hasattr ( tx, "txnameData" ):

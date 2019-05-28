@@ -11,7 +11,7 @@ def discuss ( model, name ):
 def detailedDiscussion ( model ):
     """ a detailed discussion of number 1 """
     p = 1. - stats.norm.cdf ( model.Z )
-    print ( "Current winner: %.3f. p=%.2g [%d/%d unfrozen particles] " % \
+    print ( "Current winner: %.3f, p=%.2g [%d/%d unfrozen particles] " % \
             (model.Z, p, len(model.unFrozenParticles()),len(model.masses.keys()) ) )
 
 def main():
