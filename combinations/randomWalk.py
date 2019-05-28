@@ -89,14 +89,16 @@ class RandomWalker:
         self.log ( "I got %d predictions" % ( len(predictions) ) )
         combiner = Combiner()
         bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, self.strategy )
-        self.log ( "found highest Z" )
+        self.log ( "found highest Z: %.2f" % Z )
         self.model.bestCombo = self.removeDataFromBestCombo ( bestCombo )
         self.model.llhd = (1. - llhd ) ## we wish to minimize likelihood, find the most unexpected fluctuation
         self.model.Z = Z
         if self.hiscoreList != None:
+            self.log ( "check if result goes into hiscore list" )
             self.hiscoreList.newResult ( self.model ) ## add to high score list
         self.model.computePrior()
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, combiner.getLetterCode(bestCombo), combiner.getComboDescription(bestCombo), Z ) )
+        self.log ( "step %d finished." % self.model.step )
 
     def revert ( self ):
         """ revert the last step. go back. """
