@@ -15,8 +15,8 @@ from scipy import optimize, stats
 import IPython
 
 class Combiner:
-    def __init__ ( self ):
-        pass
+    def __init__ ( self, walkerid=0 ):
+        self.walkerid = walkerid
 
     def findCompatibles ( self, predA, predictions, strategy ):
         """ return list of all elements in predictions
@@ -54,10 +54,14 @@ class Combiner:
             combinables += compatibles
         return combinables
 
+    def pprint ( self, *args ):
+        """ logging """
+        print ( "[combine:%d] %s" % (self.walkerid, " ".join(map(str,args))) )
+
     def discussCombinations ( self, combinables ):
         count={}
         for i in combinables:
-            # print ( "combo %s" % ", ".join ( [ x.expResult.globalInfo.id for x in i ] ))
+            # self.pprint ( "combo %s" % ", ".join ( [ x.expResult.globalInfo.id for x in i ] ))
             n =len(i)
             if not n in count.keys():
                 count[n]=0
@@ -65,10 +69,10 @@ class Combiner:
         npred = 0
         if 1 in count.keys():
             npred = count[1]
-        print ( "[combiner] %d combinations from %d predictions" % \
-                (len(combinables),npred) )
+        self.pprint ( "%d combinations from %d predictions" % \
+                      (len(combinables),npred) )
         #for k,v in count.items():
-        #    print ( "[combine] %d combinations with %d predictions" % ( v, k ) )
+        #    self.pprint ( "%d combinations with %d predictions" % ( v, k ) )
 
     def getCombinedLikelihood ( self, combination, mu, expected=False, nll=False ):
         """ get the combined likelihood for a signal strength mu 
@@ -86,7 +90,7 @@ class Combiner:
         keys.sort()
         for k in keys:
             v=llhds[k]
-            print ( "[combiner] %.2f: %.3g" % ( k, v ) )
+            self.pprint ( "%.2f: %.3g" % ( k, v ) )
 
 
     def isSubset ( self, small, big ):
@@ -113,12 +117,12 @@ class Combiner:
         ## we will not look at combos that are subsets.
         for c in combinations:
             if self.hasAlreadyDone ( c, alreadyDone ):
-                # print ( "%s is subset of bigger combo. skip." % getLetterCode(c) )
+                # self.pprint ( "%s is subset of bigger combo. skip." % getLetterCode(c) )
                 continue
             cl_mu = self.get95CL ( c, expected=True )
             if cl_mu == None:
                 continue
-            # print ( "95%s expected CL for mu for %s is %.2f" % ( "%", getLetterCode(c), cl_mu) )
+            # self.pprint ( "95%s expected CL for mu for %s is %.2f" % ( "%", getLetterCode(c), cl_mu) )
             if cl_mu < lowestv:
                 lowestv = cl_mu
                 lowest = c
@@ -129,10 +133,10 @@ class Combiner:
         ## assign a letter to every prediction. for debugging
         letters={}
         letter=65
-        # print ( "[combine] Letters assigned to results:" )
+        # self.pprint ( "[combine] Letters assigned to results:" )
         for p in predictions:
             letters[p]=chr(letter)
-            # print ( "[combine] Prediction %s: %s" % ( letters[p], p.expResult.globalInfo.id ) )
+            # self.pprint ( "[combine] Prediction %s: %s" % ( letters[p], p.expResult.globalInfo.id ) )
             letter+=1
         return letters
 
@@ -157,7 +161,7 @@ class Combiner:
         if chi2 < 0.:
             chi2 = 0.
         Z = numpy.sqrt ( chi2 )
-        # print ( "chi2,Z=", chi2, Z )
+        # self.pprint ( "chi2,Z=", chi2, Z )
         ## FIXME compute significance from chi2
         return Z
 
@@ -170,12 +174,12 @@ class Combiner:
         ## we will not look at combos that are subsets.
         for c in combinations:
             if self.hasAlreadyDone ( c, alreadyDone ):
-                # print ( "%s is subset of bigger combo. skip." % getLetterCode(c) )
+                # self.pprint ( "%s is subset of bigger combo. skip." % getLetterCode(c) )
                 continue
             Z = self.getSignificance ( c )
             if Z == None:
                 continue
-            # print ( "[combine] significance for %s is %.2f" % ( self.getLetterCode(c), Z ) )
+            # self.pprint ( "[combine] significance for %s is %.2f" % ( self.getLetterCode(c), Z ) )
             if Z > highestZ:
                 highestZ = Z
                 highest = c
@@ -227,7 +231,7 @@ class Combiner:
             ret = optimize.minimize ( getNLL, start, bounds=[(0.,None)] )
             if ret.status==0:
                 return ret.x[0]
-        print ( "[combine] %serror finding mu hat for %s%s" % (colorama.Fore.RED, self.getLetterCode(combination), colorama.Fore.RESET ) )
+        self.pprint ( "%serror finding mu hat for %s%s" % (colorama.Fore.RED, self.getLetterCode(combination), colorama.Fore.RESET ) )
         return None
 
     def getLetterCode ( self, combination ):
@@ -257,8 +261,7 @@ class Combiner:
         """ for the given list of predictions and employing the given strategy,
         find the combo with strongest exclusion """
         self.letters = getLetters ( predictions )
-        print ()
-        print ( "[combine] Find the strongest exclusion using strategy: %s" % strategy )
+        self.pprint ( "Find the strongest exclusion using strategy: %s" % strategy )
         combinables = self.findCombinations ( predictions, strategy )
         singlepreds = [ [x] for x in predictions ]
         ## optionally, add individual predictions
@@ -266,7 +269,7 @@ class Combiner:
         discussCombinations ( combinables )
         bestCombo,ulexp = findBestCombo ( combinables )
         ulobs = get95CL ( bestCombo, expected=False )
-        print ( "[combine] best combo for strategy ``%s'' is %s: %s: [ul_obs=%.2f, ul_exp=%.2f]" % ( strategy, self.getLetterCode(bestCombo), self.getComboDescription(bestCombo), ulobs, ulexp ) ) 
+        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [ul_obs=%.2f, ul_exp=%.2f]" % ( strategy, self.getLetterCode(bestCombo), self.getComboDescription(bestCombo), ulobs, ulexp ) ) 
         return bestCombo,ulexp,ulobs
 
 if __name__ == "__main__":

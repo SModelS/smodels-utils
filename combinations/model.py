@@ -48,7 +48,7 @@ class Model:
         self.masses = {}
         self.ssmultipliers = {} ## signal strength multipliers
         self.llhd=0.
-        self.combiner = Combiner()
+        self.combiner = Combiner( walkerid )
         self.Z = 0.
 
         slhaf = open ( self.templateSLHA )
@@ -99,6 +99,8 @@ class Model:
         if not os.path.exists ( self.currentSLHA ):
             self.createSLHAFile()
         predictions = predict ( self.currentSLHA )
+        if not hasattr ( self, "combiner" ):
+            self.combiner = Combiner( self.walkerid )
         bestCombo,Z,llhd = self.combiner.findHighestSignificance ( predictions, strategy )
         return (bestCombo,Z,llhd)
 
@@ -207,7 +209,7 @@ class Model:
                 brvec.append("")
             else:
                 brvec.append("%.2f" % x )
-        self.pprint ( "changed branchings of %s: %s." % (self.getParticleName(p), ",".join( brvec  ) ) )
+        self.pprint ( "changed branchings of %s: %s: s=%.2f" % (self.getParticleName(p), ",".join( brvec  ), control ) )
         # print ( "[walk] we have %d open channels" % nChannels )
         #for dpid,br in self.decays[p].items():
         #    if dpid in self.unFrozenParticles():
@@ -239,7 +241,7 @@ class Model:
             self.currentSLHA = tempfile.mktemp(prefix=".cur",suffix=".slha",dir="./")
         if outputSLHA == None:
             outputSLHA = self.currentSLHA
-        print ( "create %s from %s" % (outputSLHA, self.templateSLHA ) )
+        self.pprint ( "create %s from %s" % (outputSLHA, self.templateSLHA ) )
         f=open(outputSLHA,"w")
         for line in lines:
             for m,v in self.masses.items():
@@ -249,6 +251,7 @@ class Model:
                     line=line.replace("D%d_%d" % ( m, dpid), "%.5f" % dbr )
             f.write ( line )
         f.close()
+        self.computeXSecs()
 
     def trim ( self, strategy="aggressive" ):
         """ see if you can trim the model """

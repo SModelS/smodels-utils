@@ -5,7 +5,6 @@
 import random, copy, pickle, sys, os, time
 import multiprocessing
 from predictor import predict
-from combiner import Combiner
 from smodels.tools.runtime import nCPUs
 import colorama
 from hiscore import Hiscore
@@ -27,7 +26,8 @@ class RandomWalker:
         self.takeStep() ## the first step should be considered as "taken"
 
     @classmethod
-    def fromModel(cls, model, nsteps=10000, strategy="aggressive", hiscore=False, walkerid=0 ):
+    def fromModel( cls, model, nsteps=10000, strategy="aggressive", 
+                        hiscore=False, walkerid=0 ):
         ret = cls( walkerid, nsteps, strategy )
         ret.model = model
         return ret
@@ -82,12 +82,8 @@ class RandomWalker:
             self.model.takeRandomMassStep()
         self.log ( "now create slha file" )
         self.model.createSLHAFile()
-        self.log ( "now create xsecs for %s" % self.model.currentSLHA )
-        self.model.computeXSecs()
-        self.log ( "done computing xsecs" )
         #predictions = predict ( self.model.currentSLHA )
         #self.log ( "I got %d predictions" % ( len(predictions) ) )
-        #combiner = Combiner()
         # bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, self.strategy )
         bestCombo,Z,llhd = self.model.predict( self.strategy )
         self.log ( "found highest Z: %.2f" % Z )
@@ -98,7 +94,7 @@ class RandomWalker:
             self.log ( "check if result goes into hiscore list" )
             self.hiscoreList.newResult ( self.model ) ## add to high score list
         self.model.computePrior()
-        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, combiner.getLetterCode(bestCombo), combiner.getComboDescription(bestCombo), Z ) )
+        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.model.combiner.getLetterCode(bestCombo), self.model.combiner.getComboDescription(bestCombo), Z ) )
         self.log ( "step %d finished." % self.model.step )
 
     def revert ( self ):

@@ -30,7 +30,7 @@ def predict ( inputFile ):
 
     ret = []
     for expRes in listOfExpRes:
-        predictions = theoryPredictionsFor ( expRes, topos )
+        predictions = theoryPredictionsFor ( expRes, topos, useBestDataset=True )
         if predictions == None:
             continue
         for prediction in predictions:
