@@ -2,7 +2,7 @@
 
 """ Class that encapsulates a BSM model. """
 
-import random, numpy, tempfile, os
+import random, numpy, tempfile, os, copy
 from smodels.tools.xsecComputer import XSecComputer, LO
 from combiner import Combiner
 from predictor import predict
@@ -102,7 +102,10 @@ class Model:
         if not hasattr ( self, "combiner" ):
             self.combiner = Combiner( self.walkerid )
         bestCombo,Z,llhd = self.combiner.findHighestSignificance ( predictions, strategy )
-        return (bestCombo,Z,llhd)
+        self.bestCombo = self.combiner.removeDataFromBestCombo ( bestCombo )
+        self.Z = Z
+        self.model.llhd = 1. - llhd
+        # return (bestCombo,Z,llhd)
 
     def priorTimesLlhd( self ):
         return self.prior * self.llhd
@@ -123,8 +126,34 @@ class Model:
             return 0
         p = random.choice ( frozen )
         self.masses[p]=random.uniform ( self.masses[Model.LSP], self.maxMass )
+        self.normalizeAllBranchings() ## adjust everything
         self.pprint ( "Unfreezing %s: m=%f" % ( self.getParticleName(p), self.masses[p] ) )
         return 1
+
+    def normalizeBranchings ( self, pid ):
+        """ normalize branchings of a particle, after freezing and unfreezing
+            particles """
+        unfrozen = self.unFrozenParticles()
+        S=0.
+        for dpid,br in self.decays[pid].items():
+            if dpid in unfrozen:
+                S+=br
+            else:
+                self.decays[pid][dpid]=0.
+        for dpid,br in self.decays[pid].items():
+                tmp = self.decays[pid][dpid]
+                self.decays[pid][dpid] = tmp / S
+
+        ## adjust the signal strength multipliers to keep everything else
+        ## as it was
+        if pid in self.ssmultipliers.keys():
+            t = self.ssmultipliers[pid]
+            self.ssmultipliers[pid]=t*S
+
+    def normalizeAllBranchings ( self ):
+        """ normalize all branchings, after freezing or unfreezing particles """
+        for pid in self.masses.keys():
+            self.normalizeBranchings ( pid )
 
     def getParticleName ( self, p ):
         sp = str(p)
@@ -140,6 +169,7 @@ class Model:
         unfrozen.remove ( Model.LSP )
         p = random.choice ( unfrozen )
         self.masses[p]=1e6
+        self.normalizeAllBranchings() ## adjust everything
         self.pprint ( "Freezing %s (keep branchings)." % ( self.getParticleName(p) ) )
         return 1
 
@@ -149,9 +179,15 @@ class Model:
         if len(unfrozen)<3:
             return 0 ## freeze only if at least 3 unfrozen particles exist
         unfrozen.remove ( self.LSP )
-        p = random.choice ( unfrozen )
-        self.masses[p]=1e6
-        self.pprint ( "Freezing %s." % ( self.getParticleName(p) ) )
+        pid,minmass=0,0
+        for i in unfrozen:
+            if self.masses[i]>minmass:
+                minmass = self.masses[i]
+                pid = i
+        # p = random.choice ( unfrozen )
+        self.masses[pid]=1e6
+        self.normalizeAllBranchings() ## adjust everything
+        self.pprint ( "Freezing most massive %s (%.1f)" % ( self.getParticleName(pid), minmass ) )
         return 1
 
     def randomlyChangeSignalStrengths ( self ):
@@ -253,10 +289,28 @@ class Model:
         f.close()
         self.computeXSecs()
 
-    def trim ( self, strategy="aggressive" ):
-        """ see if you can trim the model """
-        bestCombo,Z,llhd = self.predict ( strategy )
-        print ( "current Z is at %.2f" % Z )
+    def trim ( self, strategy="aggressive", maxloss=.01 ):
+        """ see if you can trim the model, accept losses smaller than maxloss
+        on Z.
+        """
+        # currentMasses = copy.deepcopy ( self.masses )
+        unfrozen = self.unFrozenParticles()
+        unfrozen.remove ( Model.LSP )
+        ndiscarded=0
+        for pid in unfrozen:
+            self.pprint ( "trying to freeze %s (%.1f)" % ( self.getParticleName(pid), self.masses[pid] ) )
+            oldmass = self.masses[pid]
+            self.masses[pid]=1e6
+            self.createSLHAFile()
+            bestCombo,Z,llhd = self.predict ( strategy )
+            self.pprint ( "when trying to remove %d, Z changed: %.3f -> %.3f" % ( pid, self.Z, Z ) )
+            if Z > (1. - maxloss)*self.Z:
+                self.pprint ( "discarding %s" % self.getParticleName(pid) )
+                ndiscarded+=1
+            else:
+                self.pprint ( "not discarding %s" % self.getParticleName(pid) )
+                self.masses[pid]=oldmass
+        self.pprint ( "froze %d particles. %d/%d particles are still unfrozen." % ( ndiscarded, len(self.unFrozenParticles()),len(self.masses) )  )
 
     def computeXSecs ( self ):
         """ compute xsecs for current.slha """

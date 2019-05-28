@@ -7,7 +7,6 @@ from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels.share.models.SMparticles import SMList
 from smodels.particlesLoader import BSMList
 from smodels.tools.physicsUnits import fb, GeV
-from smodels.experiment.databaseObj import Database
 from smodels.theory.model import Model
 import analysisCombiner
 import pickle, numpy, math, colorama
@@ -255,7 +254,16 @@ class Combiner:
         bestCombo,Z = self._findLargestZ ( combinables )
         ## compute a likelihood equivalent for Z
         llhd = stats.norm.pdf(Z)
-        return bestCombo,Z,llhd
+        return self.removeDataFromBestCombo(bestCombo),Z,llhd
+
+    def removeDataFromBestCombo ( self, bestCombo ):
+        """ remove the data from all theory predictions, we dont need them. """
+        for combo in bestCombo:
+            eR = combo.expResult
+            for ds in eR.datasets:
+                for tx in ds.txnameList:
+                    del tx.txnameData
+        return bestCombo
 
     def findStrongestExclusion ( self, predictions, strategy ):
         """ for the given list of predictions and employing the given strategy,
@@ -270,7 +278,7 @@ class Combiner:
         bestCombo,ulexp = findBestCombo ( combinables )
         ulobs = get95CL ( bestCombo, expected=False )
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [ul_obs=%.2f, ul_exp=%.2f]" % ( strategy, self.getLetterCode(bestCombo), self.getComboDescription(bestCombo), ulobs, ulexp ) ) 
-        return bestCombo,ulexp,ulobs
+        return self.removeDataFromBestCombo(bestCombo),ulexp,ulobs
 
 if __name__ == "__main__":
     f=open("predictions.pcl", "rb" )

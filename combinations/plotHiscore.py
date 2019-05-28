@@ -53,7 +53,7 @@ def plot ( number, verbosity, picklefile ):
     plotRuler = True
     if plotRuler:
         print ( "[plotHiscore] now draw ruler.png" )
-        rulerPlotter.draw ( "./plot.slha", "ruler.png" )
+        rulerPlotter.draw ( "./plot.slha", "ruler.png", Range=(0.,None) )
     plotDecays = True
     if plotDecays:
         print ( "[plotHiscore] now draw decays.png" )

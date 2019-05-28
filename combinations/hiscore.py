@@ -7,13 +7,13 @@ import random, copy, pickle, os, fcntl, time, subprocess
 
 class Hiscore:
     """ encapsulates the hiscore list. """
-    def __init__ ( self, walkerid, save_hiscores ):
+    def __init__ ( self, walkerid, save_hiscores, picklefile="hiscore.pcl" ):
         self.walkerid = walkerid
         self.save_hiscores = save_hiscores
         self.nkeep = 20 ## how many do we keep.
         self.hiscores = {}
         self.fileAttempts = 0 ## unsucessful attempts at reading or writing
-        self.pickleFile = "hiscore.pcl"
+        self.pickleFile = picklefile
         self.updateListFromPickle ( )
 
     def currentMinZ ( self ):
@@ -30,6 +30,7 @@ class Hiscore:
         self.trimList()
 
     def trimList ( self ):
+        """ trim the list down to <nkeep> entries. """
         keys = list ( self.hiscores.keys() )
         if len(keys)<= self.nkeep:
             return
@@ -45,7 +46,7 @@ class Hiscore:
             return
         try:
             f=open( self.pickleFile,"rb")
-            oldhiscores = copy.deepcopy ( self.hiscores )
+            # oldhiscores = copy.deepcopy ( self.hiscores )
             self.hiscores = pickle.load ( f )
             self.pprint ( "loaded %d hiscores from file." % ( len(self.hiscores.keys()) ) )
             f.close()
@@ -59,12 +60,30 @@ class Hiscore:
             else:
                 raise(e)
 
-    def writeListToPickle ( self ):
-        """ dump the list to the pickle file """
-        self.pprint ( "saving new hiscore list." )
+    def trimModels ( self ):
+        """ trim all the models in the list """
+        for k,v in self.hiscores.items():
+            v.trim()
+
+    def getModelNr ( self, nr ):
+        """ get the nth model in the hiscore list """
+        if nr < 0 or nr >= self.nkeep:
+            self.pprint ( "asking for model nr %d: does not exist." % nr )
+            return None
+        keys = list ( self.hiscores.keys() )
+        keys.sort ( reverse=True )
+        return self.hiscores[keys[nr]]
+
+    def writeListToPickle ( self, pickleFile=None ):
+        """ dump the list to the pickle file <pickleFile>.
+            If pickleFile is None, then self.pickleFile is used.
+        """
+        if pickleFile==None:
+            pickleFile = self.pickleFile
+        self.pprint ( "saving new hiscore list to %s" % pickleFile )
         try:
-            subprocess.getoutput ( "cp %s old.pcl" % self.pickleFile )
-            f=open( self.pickleFile,"wb" )
+            subprocess.getoutput ( "cp %s old.pcl" % pickleFile )
+            f=open( pickleFile, "wb" )
             fcntl.lockf( f, fcntl.LOCK_EX | fcntl.LOCK_NB)
             pickle.dump ( self.hiscores, f )
             fcntl.lockf( f, fcntl.LOCK_UN )
@@ -74,7 +93,7 @@ class Hiscore:
             self.fileAttempts+=1
             if self.fileAttempts<5: # try again
                 time.sleep ( .2 )
-                self.writeListToPickle()
+                self.writeListToPickle( pickleFile )
 
     def newResult ( self, model ):
         """ see if new result makes it into hiscore list. If yes, then add.

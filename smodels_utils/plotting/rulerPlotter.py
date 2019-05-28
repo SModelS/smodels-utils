@@ -117,13 +117,13 @@ def createDictionaryFromSLHA ( inputfile ):
     print ( "creating dictionary" )
     sys.exit()
 
-def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
+def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
            formats={ "png": True }, printmass=False, mergesquark=True ):
     """ entry point: draw the masses
       :param inputfile: the inputfilename, must contain a simple dictionary. If
                         the filename ends with .slha, create the ditionary on the fly.
       :param output: the output filename, without the extension.
-      :param Range:  the range of the ruler, [min,max], given in GeV. -1 is for automatic mode (the script decides by itself).
+      :param Range:  the range of the ruler, (min,max), given in GeV. -1 and None are for automatic mode (the script decides by itself).
       :param formats: the formats, as a dictionary. Supported are: eps, pdf, png.
       :param printmass: draw also mass values (in GeV)?
       :param mergesquark: If true, draw them as ~q
@@ -151,9 +151,9 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
     if minvalue < 0.:
         minvalue = 0.
     logger=logging.getLogger(__name__)
-    if Range[0] >=0:
+    if Range[0] != None and Range[0] >=0.:
         minvalue=Range[0]
-    if Range[1] >=0:
+    if Range[1] != None and Range[1] >=0.:
         maxvalue=Range[1]
     logger.info ( "range is [%d,%d]" % ( minvalue, maxvalue ) )
 

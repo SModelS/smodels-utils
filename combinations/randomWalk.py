@@ -32,15 +32,6 @@ class RandomWalker:
         ret.model = model
         return ret
 
-    def removeDataFromBestCombo ( self, bestCombo ):
-        """ remove the data from all theory predictions, we dont need them. """
-        for combo in bestCombo:
-            eR = combo.expResult
-            for ds in eR.datasets:
-                for tx in ds.txnameList:
-                    del tx.txnameData
-        return bestCombo
-
     def pprint ( self, *args ):
         """ logging """
         print ( "[walk:%d-%s] %s" % ( self.walkerid, time.strftime("%H:%M"), " ".join(map(str,args))) )
@@ -71,7 +62,7 @@ class RandomWalker:
         uFreeze = random.gauss(.5,.5)
         if uFreeze < nUnfrozen/float(nTotal):
             # in every nth step freeze random particle
-            if random.uniform(0,1)<.5:
+            if random.uniform(0,1)<.3:
                 self.log ( "freeze most massive particle" )
                 nChanges+=self.model.freezeMostMassiveParticle()
             else:
@@ -85,16 +76,15 @@ class RandomWalker:
         #predictions = predict ( self.model.currentSLHA )
         #self.log ( "I got %d predictions" % ( len(predictions) ) )
         # bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, self.strategy )
-        bestCombo,Z,llhd = self.model.predict( self.strategy )
+        self.model.predict( self.strategy )
         self.log ( "found highest Z: %.2f" % Z )
-        self.model.bestCombo = self.removeDataFromBestCombo ( bestCombo )
-        self.model.llhd = (1. - llhd ) ## we wish to minimize likelihood, find the most unexpected fluctuation
-        self.model.Z = Z
+        # self.model.bestCombo = self.model.combiner.removeDataFromBestCombo ( bestCombo )
+        # self.model.llhd = (1. - llhd ) ## we wish to minimize likelihood, find the most unexpected fluctuation
         if self.hiscoreList != None:
             self.log ( "check if result goes into hiscore list" )
             self.hiscoreList.newResult ( self.model ) ## add to high score list
         self.model.computePrior()
-        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.model.combiner.getLetterCode(bestCombo), self.model.combiner.getComboDescription(bestCombo), Z ) )
+        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.model.combiner.getLetterCode(bestCombo), self.model.combiner.getComboDescription(bestCombo), self.model.Z ) )
         self.log ( "step %d finished." % self.model.step )
 
     def revert ( self ):
