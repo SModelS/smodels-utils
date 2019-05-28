@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import pickle, os, sys
+import pickle, os, sys, subprocess, time
 from randomWalk import Model # RandomWalker
 sys.path.insert(0,"../" )
 from smodels_utils.plotting import rulerPlotter, decayPlotter
@@ -23,6 +23,27 @@ def discussPredictions ( model ):
         print ( "theory pred: %s:%s" % ( pred.expResult.globalInfo.id, ",".join ( map ( str, pred.txnames ) ) ) )
         # print ( "     `- ", pred.expResult.globalInfo.id, "ana", pred.analysis, "masses", pred.mass, "txnames", pred.txnames, "type", pred.dataType() )
 
+def writeIndexHtml ( model ):
+    ssm = []
+    for k,v in model.ssmultipliers.items():
+        if abs(v-1.)<1e-5:
+            continue
+        ssm.append ( "%s: %.2f" % (model.getParticleName(k),v) )
+    f=open("index.html","w")
+    f.write ( "<html>\n" )
+    f.write ( "<body>\n" )
+    f.write ( "<h1>Current best model: Z=%.2f</h1>\n" % model.Z )
+    f.write ( "Model produced in step %d<br>" % model.step )
+    f.write ( "<br>Signal strength multipliers: %s\n" % ", ".join ( ssm ) )
+    f.write ( "<p>\n" )
+    f.write ( "<img src=./ruler.png><img src=./decays.png>\n" )
+    f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
+    f.write ( "</body>\n" )
+    f.write ( "</html>\n" )
+    f.close()
+
+def copyFilesToGithub():
+    subprocess.getoutput ( "cp index.html matrix_aggressive.png decays.png ruler.png ../../smodels.github.io/models/" )
 
 def plot ( number, verbosity, picklefile ):
     ## plot hiscore number "number"
@@ -40,6 +61,8 @@ def plot ( number, verbosity, picklefile ):
         ## FIXME add cross sections.
         decayPlotter.draw ( "./plot.slha", "decays.png", options )
     discussPredictions ( model )
+    writeIndexHtml ( model )
+    copyFilesToGithub()
 
 if __name__ == "__main__":
     import argparse
@@ -49,8 +72,8 @@ if __name__ == "__main__":
             help='which hiscore to plot [0]',
             type=int, default=0 )
     argparser.add_argument ( '-f', '--picklefile',
-            help='pickle file to draw from [hiscore.pcl]',
-            type=str, default="hiscore.pcl" )
+            help='pickle file to draw from [best.pcl]',
+            type=str, default="best.pcl" )
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug, info, warn, err [info]',
             type=str, default="info" )

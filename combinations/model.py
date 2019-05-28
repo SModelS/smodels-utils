@@ -2,12 +2,14 @@
 
 """ Class that encapsulates a BSM model. """
 
-import random, numpy, tempfile
+import random, numpy, tempfile, os
 from smodels.tools.xsecComputer import XSecComputer, LO
+from combiner import Combiner
+from predictor import predict
 
 class Model:
-    """ encodes on theoretical model, i.e. the particles, their masses, their
-        branchings.
+    """ encodes one theoretical model, i.e. the particles, their masses, their
+        branchings, their signal strength modifiers.
     """
     LSP = 1000022 ## the LSP is hard coded
     def __init__ ( self, walkerid ):
@@ -46,6 +48,7 @@ class Model:
         self.masses = {}
         self.ssmultipliers = {} ## signal strength multipliers
         self.llhd=0.
+        self.combiner = Combiner()
         self.Z = 0.
 
         slhaf = open ( self.templateSLHA )
@@ -90,6 +93,14 @@ class Model:
             if abs(v)>1e5:
                 ret.append(m)
         return ret
+
+    def predict ( self, strategy ):
+        """ compute best combo, llhd, and significance """
+        if not os.path.exists ( self.currentSLHA ):
+            self.createSLHAFile()
+        predictions = predict ( self.currentSLHA )
+        bestCombo,Z,llhd = self.combiner.findHighestSignificance ( predictions, strategy )
+        return (bestCombo,Z,llhd)
 
     def priorTimesLlhd( self ):
         return self.prior * self.llhd
@@ -228,14 +239,21 @@ class Model:
             self.currentSLHA = tempfile.mktemp(prefix=".cur",suffix=".slha",dir="./")
         if outputSLHA == None:
             outputSLHA = self.currentSLHA
+        print ( "create %s from %s" % (outputSLHA, self.templateSLHA ) )
         f=open(outputSLHA,"w")
         for line in lines:
             for m,v in self.masses.items():
                 line=line.replace("M%d" % m,"%.1f" % v )
                 for dpid,dbr in self.decays[m].items():
+                    # print ( "m,d = br", m, dpid, dbr )
                     line=line.replace("D%d_%d" % ( m, dpid), "%.5f" % dbr )
             f.write ( line )
         f.close()
+
+    def trim ( self, strategy="aggressive" ):
+        """ see if you can trim the model """
+        bestCombo,Z,llhd = self.predict ( strategy )
+        print ( "current Z is at %.2f" % Z )
 
     def computeXSecs ( self ):
         """ compute xsecs for current.slha """

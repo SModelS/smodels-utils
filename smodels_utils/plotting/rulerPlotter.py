@@ -147,7 +147,7 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=[-1,-1],
     maxvalue=max (hmasses)*1.05 #  max(masses.values())*1.05
     if maxvalue>3100:
         maxvalue=3100.
-    minvalue=min(masses.values())*0.80-30.
+    minvalue=min(masses.values())*0.80-60.
     if minvalue < 0.:
         minvalue = 0.
     logger=logging.getLogger(__name__)

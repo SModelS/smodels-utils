@@ -4,7 +4,7 @@ import pickle, os, sys
 from randomWalk import Model # RandomWalker
 import IPython
 
-picklefile = "hiscore.pcl"
+picklefile = "best.pcl"
 if len(sys.argv)>1:
     picklefile = sys.argv[1]
 
