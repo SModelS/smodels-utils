@@ -123,13 +123,15 @@ class Model:
     def priorTimesLlhd( self ):
         return self.prior * self.llhd
 
-    def unFrozenParticles ( self ):
+    def unFrozenParticles ( self, withLSP=True ):
         """ returns a list of all particles that can be regarded as unfrozen
             (ie mass less than 5e3 GeV) """
         ret = []
         for m,v in self.masses.items():
             if abs(v)<5e3:
                 ret.append(m)
+        if not withLSP:
+            ret.remove(self.LSP)
         return ret
 
     def unfreezeRandomParticle ( self ):
@@ -146,7 +148,7 @@ class Model:
     def normalizeBranchings ( self, pid ):
         """ normalize branchings of a particle, after freezing and unfreezing
             particles """
-        unfrozen = self.unFrozenParticles()
+        # unfrozen = self.unFrozenParticles( withLSP = False )
         S=0.
         for dpid,br in self.decays[pid].items():
             S+=br
@@ -154,6 +156,9 @@ class Model:
             #    S+=br
             #else:
             #    self.decays[pid][dpid]=0.
+        if S == 0.:
+            return ## happens when never been unfrozen, I think
+            self.pprint ( "total sum of branchings for %d is %.2f!!" % (pid,S) )
         for dpid,br in self.decays[pid].items():
                 tmp = self.decays[pid][dpid]
                 self.decays[pid][dpid] = tmp / S
@@ -162,12 +167,16 @@ class Model:
         ## as it was
         if pid in self.ssmultipliers.keys():
             t = self.ssmultipliers[pid]
+            if t == 0.:
+                self.pprint ( "huh, when normalizing we find ssmultipliers of 0? change to 1! S=%.4g" % S )
+                t=1.
             self.ssmultipliers[pid]=t*S
 
     def normalizeAllBranchings ( self ):
         """ normalize all branchings, after freezing or unfreezing particles """
         for pid in self.masses.keys():
-            self.normalizeBranchings ( pid )
+            if not pid == self.LSP:
+                self.normalizeBranchings ( pid )
 
     def getParticleName ( self, p ):
         sp = str(p)
@@ -177,10 +186,9 @@ class Model:
 
     def freezeRandomParticle ( self ):
         """ freezes a random unfrozen particle """
-        unfrozen = self.unFrozenParticles()
-        if len(unfrozen)<3:
+        unfrozen = self.unFrozenParticles( withLSP = False )
+        if len(unfrozen)<2:
             return 0 ## freeze only if at least 3 unfrozen particles exist
-        unfrozen.remove ( Model.LSP )
         p = random.choice ( unfrozen )
         self.masses[p]=1e6
         self.normalizeAllBranchings() ## adjust everything
@@ -189,10 +197,9 @@ class Model:
 
     def freezeMostMassiveParticle ( self ):
         """ freezes the most massive unfrozen particle """
-        unfrozen = self.unFrozenParticles()
-        if len(unfrozen)<3:
+        unfrozen = self.unFrozenParticles( withLSP=False )
+        if len(unfrozen)<2:
             return 0 ## freeze only if at least 3 unfrozen particles exist
-        unfrozen.remove ( self.LSP )
         pid,minmass=0,0
         for i in unfrozen:
             if self.masses[i]>minmass:
@@ -206,24 +213,25 @@ class Model:
 
     def randomlyChangeSignalStrengths ( self ):
         """ randomly change one of the signal strengths """
-        unfrozenparticles = self.unFrozenParticles()
+        unfrozenparticles = self.unFrozenParticles( withLSP=False )
         if len(unfrozenparticles)<2:
             self.pprint ( "not enough unfrozen particles to change random signal strength" )
             return 0
-        unfrozenparticles.remove ( Model.LSP )
         p = random.choice ( unfrozenparticles )
         newSSM=self.ssmultipliers[p]*random.gauss(1.,.1)
+        if newSSM == 0.:
+            self.pprint ( "Huh? ssmultiplier is 0?? Change to 1." )
+            newSSM = 1.
         self.ssmultipliers[p]=newSSM
         self.pprint ( "changed signal strength multiplier of %s: %.2f." % (self.getParticleName(p), newSSM ) )
         return 1
 
     def randomlyChangeBranchings ( self ):
         """ randomly change the branchings of a single particle """
-        unfrozenparticles = self.unFrozenParticles()
+        unfrozenparticles = self.unFrozenParticles( withLSP=False )
         if len(unfrozenparticles)<2:
             self.pprint ( "not enough unfrozen particles to change random branching" )
             return 0
-        unfrozenparticles.remove ( Model.LSP )
         p = random.choice ( unfrozenparticles )
         openChannels = []
         for dpid,br in self.decays[p].items():
@@ -260,11 +268,6 @@ class Model:
             else:
                 brvec.append("%.2f" % x )
         self.pprint ( "changed branchings of %s: %s: s=%.2f" % (self.getParticleName(p), ",".join( brvec  ), control ) )
-        # print ( "[walk] we have %d open channels" % nChannels )
-        #for dpid,br in self.decays[p].items():
-        #    if dpid in self.unFrozenParticles():
-        #        openChannels.append ( dpid )
-        #    # print ( "[walk] new `- pid,br", dpid, br, dpid in self.unFrozenParticles() )
         return 1
 
     def takeRandomMassStep ( self ):
@@ -311,9 +314,7 @@ class Model:
         """ see if you can trim the model, accept losses smaller than maxloss
         on Z.
         """
-        # currentMasses = copy.deepcopy ( self.masses )
-        unfrozen = self.unFrozenParticles()
-        unfrozen.remove ( Model.LSP )
+        unfrozen = self.unFrozenParticles( withLSP=False )
         ndiscarded=0
         oldZ = self.Z
         for pid in unfrozen:
