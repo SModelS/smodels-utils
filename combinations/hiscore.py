@@ -51,14 +51,15 @@ class Hiscore:
             self.pprint ( "loaded %d hiscores from file." % ( len(self.hiscores.keys()) ) )
             f.close()
             self.fileAttempts=0
-        except OSError or BlockingIOError or EOFError or pickle.UnpicklingError as e:
+        except Exception as e:
+        # except OSError or BlockingIOError or EOFError or pickle.UnpicklingError or TypeError as e:
             self.fileAttempts+=1
-            if self.fileAttempts<10: # try again
-                self.pprint ( "Waiting for %s file" % self.pickleFile )
-                time.sleep ( (.2 + random.uniform(0.,.1))*self.fileAttempts )
+            if self.fileAttempts<20: # try again
+                self.pprint ( "Exception %s: Waiting for %s file, %d" % (str(e),self.pickleFile,self.fileAttempts) )
+                time.sleep ( (.2 + random.uniform(0.,1.))*self.fileAttempts )
                 self.updateListFromPickle()
             else:
-                raise(e)
+                self.pprint ( "Timed out when try to get hiscores!" )
 
     def trimModels ( self, n=None ):
         """ trim the first <n> models in the list """
@@ -119,3 +120,10 @@ class Hiscore:
     def pprint ( self, *args ):
         """ logging """
         print ( "[hiscore:%d] %s" % ( self.walkerid, " ".join(map(str,args))) )
+        self.log ( *args )
+
+    def log ( self, *args ):
+        """ logging to file """
+        f=open( "walker%d.log" % self.walkerid, "a" )
+        f.write ( "[hiscore:%d - %s] %s\n" % ( self.walkerid, time.asctime(), " ".join(map(str,args)) ) )
+        f.close()

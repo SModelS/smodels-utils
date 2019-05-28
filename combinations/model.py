@@ -2,7 +2,7 @@
 
 """ Class that encapsulates a BSM model. """
 
-import random, numpy, tempfile, os, copy
+import random, numpy, tempfile, os, copy, time
 from smodels.tools.xsecComputer import XSecComputer, LO
 from combiner import Combiner
 from predictor import predict
@@ -83,6 +83,13 @@ class Model:
     def pprint ( self, *args ):
         """ logging """
         print ( "[model:%d] %s" % (self.walkerid, " ".join(map(str,args))) )
+        self.log ( *args )
+
+    def log ( self, *args ):
+        """ logging to file """
+        f=open( "walker%d.log" % self.walkerid, "a" )
+        f.write ( "[model:%d - %s] %s\n" % ( self.walkerid, time.asctime(), " ".join(map(str,args)) ) )
+        f.close()
 
     def frozenParticles ( self ):
         """ returns a list of all particles that can be regarded as frozen
@@ -95,8 +102,8 @@ class Model:
 
     def predict ( self, strategy ):
         """ compute best combo, llhd, and significance """
-        if not os.path.exists ( self.currentSLHA ):
-            self.createSLHAFile()
+        # if not os.path.exists ( self.currentSLHA ):
+        self.createSLHAFile()
         predictions = predict ( self.currentSLHA )
         combiner = Combiner( self.walkerid )
         bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, strategy )

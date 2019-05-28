@@ -13,6 +13,7 @@ from model import Model
 def cleanDirectory ():
     subprocess.getoutput ( "rm -rf .cur*slha" )
     subprocess.getoutput ( "mv walker*.log tmp/" )
+    subprocess.getoutput ( "mv exceptions.log tmp/" )
 
 class RandomWalker:
     def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive" ):
@@ -76,7 +77,7 @@ class RandomWalker:
             self.log ( "take random mass step" )
             self.model.takeRandomMassStep()
         self.log ( "now create slha file" )
-        self.model.createSLHAFile()
+        # self.model.createSLHAFile()
         #predictions = predict ( self.model.currentSLHA )
         #self.log ( "I got %d predictions" % ( len(predictions) ) )
         # bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, self.strategy )
@@ -87,6 +88,7 @@ class RandomWalker:
         if self.hiscoreList != None:
             self.log ( "check if result goes into hiscore list" )
             self.hiscoreList.newResult ( self.model ) ## add to high score list
+            self.log ( "done check for result to go into hiscore list" )
         self.model.computePrior()
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.model.letters, self.model.description, self.model.Z ) )
         self.log ( "step %d finished." % self.model.step )
@@ -125,7 +127,10 @@ class RandomWalker:
         """ Now perform the random walk """
         self.model.unfreezeRandomParticle() ## start with unfreezing a random particle
         while self.model.step<self.maxsteps:
-            self.onestep()
+            try:
+                self.onestep()
+            except Exception as e:
+                self.pprint ( "taking a step resulted in exception %s" % e )
             self.model.computePrior()
             self.pprint ( "prior times llhd, before versus after: %f -> %f" % ( self.oldmodel.priorTimesLlhd(), self.model.priorTimesLlhd() ) )
             #ratio = 1.
@@ -161,7 +166,16 @@ class RandomWalker:
         self.saveState()
 
 def _run ( w ):
-    w.walk()
+    try:
+        w.walk()
+    except Exception as e:
+        import time
+        f=open("exceptions.log","a")
+        f.write ( "time %s\n" % time.asctime() )
+        f.write ( "walker %d threw\n: %s" % ( w.walkerid, e ) ) 
+        if hasattr ( w.model, "currentSLHA" ):
+            f.write ("slha file was %s\n" % w.model.currentSLHA )
+        f.close()
 
 if __name__ == "__main__":
     import argparse
