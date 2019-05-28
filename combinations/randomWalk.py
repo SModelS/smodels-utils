@@ -49,13 +49,13 @@ class RandomWalker:
         self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.model.step, nUnfrozen, nTotal, ", ".join ( map ( self.model.getParticleName, self.model.unFrozenParticles() ) ) ) )
         # uUnfreeze = random.uniform(0,1)
         nChanges = 0
-        uUnfreeze = random.gauss(.5,.5)
+        uUnfreeze = random.gauss(.3,.5)
         if uUnfreeze > nUnfrozen/float(nTotal):
             # in every nth step unfreeze random particle
             self.log ( "unfreeze random particle" )
             nChanges += self.model.unfreezeRandomParticle()
         uBranch = random.uniform(0,1)
-        if uBranch > .5: # do this often
+        if uBranch > .3: # do this often
             self.log ( "randomly change branchings" )
             nChanges += self.model.randomlyChangeBranchings()
         uSSM = random.uniform(0,1)
@@ -64,7 +64,7 @@ class RandomWalker:
             nChanges += self.model.randomlyChangeSignalStrengths()
 
         # uFreeze = random.uniform(0,1)
-        uFreeze = random.gauss(.5,.5)
+        uFreeze = random.gauss(.3,.5)
         if uFreeze < nUnfrozen/float(nTotal):
             # in every nth step freeze random particle
             if random.uniform(0,1)<.3:
@@ -208,6 +208,8 @@ if __name__ == "__main__":
         for ctr,(k,v) in enumerate(hiscores.items()):
             if ctr >= ncpus:
                 break
+            v.createNewSLHAFileName()
+            v.walkerid = ctr
             walkers.append ( RandomWalker.fromModel ( v ) )
             walkers[-1].walkerid = ctr
     else:

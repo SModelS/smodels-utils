@@ -32,7 +32,8 @@ class Model:
                        1000025: "~chi30", 1000035: "~chi40", 1000024: "~chi1+",
                        1000037: "~chi2+" }
         self.onesquark = False ## only one light squark
-        self.twosquark = True  ## a few squarks, but not all
+        self.twosquark = False  ## a few squarks, but not all
+        self.manysquark = True ## many squarks
         if self.onesquark:
             self.particles = [ 1000001, 1000005, 1000006, 1000011, 1000012,
                       1000013, 1000014, 1000015,  1000016, 1000021, 1000022,
@@ -42,7 +43,12 @@ class Model:
             self.particles = [ 1000001, 1000002, 1000004, 1000005, 1000006, 1000011, 
                       1000012, 1000013, 1000014, 1000015, 1000016, 1000021, 1000022,
                       1000023, 1000025, 1000024, 1000037 ]
-            self.templateSLHA = "template.slha"
+            self.templateSLHA = "template_2q.slha"
+        if self.manysquark:
+            self.particles = [ 1000001, 1000002, 1000003, 1000004, 1000005, 1000006, 
+                      2000005, 2000006, 1000011, 1000012, 1000013, 1000014, 1000015, 
+                      1000016, 1000021, 1000022, 1000023, 1000025, 1000024, 1000037 ]
+            self.templateSLHA = "template_many.slha"
         self.possibledecays = {} ## list all possible decay channels
         self.decays = {} ## the actual branchings
         self.masses = {}
@@ -143,10 +149,11 @@ class Model:
         unfrozen = self.unFrozenParticles()
         S=0.
         for dpid,br in self.decays[pid].items():
-            if dpid in unfrozen:
-                S+=br
-            else:
-                self.decays[pid][dpid]=0.
+            S+=br
+            #if dpid in unfrozen:
+            #    S+=br
+            #else:
+            #    self.decays[pid][dpid]=0.
         for dpid,br in self.decays[pid].items():
                 tmp = self.decays[pid][dpid]
                 self.decays[pid][dpid] = tmp / S
@@ -239,8 +246,8 @@ class Model:
             for i in self.decays[p].keys():
                 self.decays[p][i] = self.decays[p][i] / S
             S = 1.
-        for i in self.frozenParticles(): ## frozen particles have 0 branchings
-            self.decays[p][i]=0.
+        #for i in self.frozenParticles(): ## frozen particles have 0 branchings
+        #    self.decays[p][i]=0.
         self.decays[p][ openChannels[-1] ] = 1. - S
         control = sum ( [  x for x in self.decays[p].values() ] )
         if abs ( control - 1.0 ) > 1e-5:
@@ -271,6 +278,10 @@ class Model:
                 tmp = 10.
             self.masses[i]=tmp
 
+    def createNewSLHAFileName ( self ):
+        """ create a new SLHA file name. Needed when e.g. unpickling """
+        self.currentSLHA = tempfile.mktemp(prefix=".cur",suffix=".slha",dir="./")
+
     def createSLHAFile ( self, outputSLHA=None ):
         """ from the template.slha file, create the slha file of the current
             model.
@@ -281,7 +292,7 @@ class Model:
         lines=f.readlines()
         f.close()
         if not hasattr ( self, "currentSLHA" ):
-            self.currentSLHA = tempfile.mktemp(prefix=".cur",suffix=".slha",dir="./")
+            self.createNewSLHAFileName()
         if outputSLHA == None:
             outputSLHA = self.currentSLHA
         self.pprint ( "create %s from %s" % (outputSLHA, self.templateSLHA ) )
