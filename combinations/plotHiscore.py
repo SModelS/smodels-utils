@@ -27,7 +27,7 @@ def discussPredictions ( model ):
 def writeIndexHtml ( model ):
     ssm = []
     for k,v in model.ssmultipliers.items():
-        if abs(v-1.)<1e-5:
+        if abs(v-1.)<1e-3:
             continue
         ssm.append ( "%s: %.2f" % (model.getParticleName(k),v) )
     f=open("index.html","w")
