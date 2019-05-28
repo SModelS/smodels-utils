@@ -2,6 +2,7 @@
 
 import pickle, os, sys, subprocess, time
 from randomWalk import Model # RandomWalker
+from smodels.tools.physicsUnits import GeV
 sys.path.insert(0,"../" )
 from smodels_utils.plotting import rulerPlotter, decayPlotter
 
@@ -41,6 +42,7 @@ def writeIndexHtml ( model ):
     f.write ( "</body>\n" )
     f.write ( "</html>\n" )
     f.close()
+    print ( "Wrote index.html" )
 
 def copyFilesToGithub():
     subprocess.getoutput ( "cp index.html matrix_aggressive.png decays.png ruler.png ../../smodels.github.io/models/" )
@@ -50,10 +52,27 @@ def plot ( number, verbosity, picklefile ):
     model = obtain ( number, picklefile )
     print ( "[plotHiscore] create slha file" )
     model.createSLHAFile ()
+    
+    def massToPid ( mass ):
+        """ convert mass to pid """
+        for pid,mm in model.masses.items():
+            if abs(mass-mm)<.2:
+                return pid
+        return None
+
     plotRuler = True
     if plotRuler:
+        resultsFor = {}
+        for tpred in model.bestCombo:
+            for branch in tpred.mass:
+                mmass = branch[0].asNumber(GeV)
+                mother = massToPid ( mmass )
+                if not mmass in resultsFor:
+                    resultsFor[mmass]=set()
+                resultsFor[mmass].add ( tpred.expResult.globalInfo.id)
         print ( "[plotHiscore] now draw ruler.png" )
-        rulerPlotter.draw ( model.currentSLHA, "ruler.png", Range=(0.,None) )
+        rulerPlotter.draw ( model.currentSLHA, "ruler.png", Range=(0.,None),
+                            hasResultsFor = resultsFor )
     plotDecays = True
     if plotDecays:
         print ( "[plotHiscore] now draw decays.png" )

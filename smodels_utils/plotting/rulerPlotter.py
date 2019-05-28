@@ -118,7 +118,8 @@ def createDictionaryFromSLHA ( inputfile ):
     sys.exit()
 
 def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
-           formats={ "png": True }, printmass=False, mergesquark=True ):
+           formats={ "png": True }, printmass=False, mergesquark=True,
+           hasResultsFor = None ):
     """ entry point: draw the masses
       :param inputfile: the inputfilename, must contain a simple dictionary. If
                         the filename ends with .slha, create the ditionary on the fly.
@@ -127,6 +128,8 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
       :param formats: the formats, as a dictionary. Supported are: eps, pdf, png.
       :param printmass: draw also mass values (in GeV)?
       :param mergesquark: If true, draw them as ~q
+      :param hasResultsFor: a dictionary of what results exist for what mother 
+           masses, e.g. { 504.4: {'ATLAS-SUSY-2015-02', 'ATLAS-SUSY-2015-03'} }
     """
     if outputfile.endswith ( ".png" ):
         outputfile = outputfile.replace(".png","")
@@ -216,7 +219,15 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
                 x=coord[1]+offset
                 xm=coord[2]+2*offset
         t.SetTextColor(col)
-        t.DrawLatex(x,y-.01,_pprint(name))
+        label = _pprint(name)
+        t.DrawLatex(x,y-.01,label )
+        for mana,analyses in hasResultsFor.items():
+            if abs(m-mana)<.2:
+                for ctr,ana in enumerate(analyses):
+                    t2 = ROOT.TLatex()
+                    t2.SetTextColor(col)
+                    t2.SetTextSize(.03)
+                    t2.DrawLatex(x-.07,y-.037-.018*ctr,ana )
         if printmass: t.DrawLatex(xm,y-.01,str(int(round(m,0))))
         written.append((y,x,xm))
 

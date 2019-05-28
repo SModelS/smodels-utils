@@ -60,10 +60,16 @@ class Hiscore:
             else:
                 raise(e)
 
-    def trimModels ( self ):
-        """ trim all the models in the list """
-        for k,v in self.hiscores.items():
-            v.trim()
+    def trimModels ( self, n=None ):
+        """ trim the first <n> models in the list """
+        if n == None:
+            n = len(self.hiscores)
+        if n < 0:
+            n = len(self.hiscores)
+        if n > len(self.hiscores):
+            n = len(self.hiscores)
+        for i in range(n):
+            self.getModelNr(i).trim()
 
     def getModelNr ( self, nr ):
         """ get the nth model in the hiscore list """
