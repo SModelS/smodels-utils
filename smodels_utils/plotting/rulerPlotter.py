@@ -147,10 +147,12 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
         if key.find("width")==-1:
             masses[key]=abs(value)
     hmasses= [ m for m in masses.values() if m<3000. ]
-    maxvalue=max (hmasses)*1.05 #  max(masses.values())*1.05
+    maxvalue=max (hmasses)*1.05
+    minvalue=min(masses.values())
     if maxvalue>3100:
         maxvalue=3100.
-    minvalue=min(masses.values())*0.80-60.
+    dm = maxvalue - minvalue
+    minvalue=minvalue - 0.05 * dm
     if minvalue < 0.:
         minvalue = 0.
     logger=logging.getLogger(__name__)
@@ -172,13 +174,13 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
 
     ##set positions of lines & captions
     if printmass:
-        xline0=0.20 #start of line
+        xline0=0.27 #start of line
         xline1=0.35 #end of line
-        xtext=0.37  #start of caption
+        xtext=0.39  #start of caption
     else:
-        xline0=0.23
-        xline1=0.40
-        xtext=0.42
+        xline0=0.32
+        xline1=0.51
+        xtext=0.48
 
     ylist=[]
     for (name,m) in masses.items():
@@ -194,14 +196,21 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
 
     written=[]
 
+    sortedmasses = []
     for (name,m) in masses.items():
         if name[:5]=="width":
             continue
         if m > 5000.:
             continue
+        sortedmasses.append((m,name))
+    sortedmasses.sort()
+
+    # onTheLeft=False
+    for ctr,(m,name) in enumerate(sortedmasses):
         y=(abs(m)-minvalue)/(maxvalue-minvalue)
         col=_color (name )
         l=ROOT.TLine(xline0,y,xline1,y)
+        l.SetLineWidth(3)
         l.SetLineColor(col)
         if ydic[y]<4:
             offset=0.07
@@ -216,13 +225,19 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
         lines.append(l)
         x=xtext
         xm=0.6
+        dx = 0.
+        if ctr % 2 == 1: ## all odd ones on the left
+            x = xtext - .25
+        else:
+            dx = .1
         for coord in written:
             if math.fabs(coord[0]-y)<0.02:
                 x=coord[1]+offset
                 xm=coord[2]+2*offset
+        # print ( "ctr,x",ctr,x )
         t.SetTextColor(col)
         label = _pprint(name)
-        t.DrawLatex(x,y-.01,label )
+        t.DrawLatex(x+dx,y-.01,label )
         ctr=0
         keys = []
         for mana,analyses in hasResultsFor.items():
@@ -246,8 +261,10 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
     for i in range ( int ( math.ceil ( minvalue / 100. )) * 100, \
                    int ( math.floor ( maxvalue / 100. )) * 100 +1, 100 ):
         y=(float(i)-minvalue)/(maxvalue-minvalue)
-        l=ROOT.TLine ( 0.13,y,0.16,y)
-        l.SetLineWidth(3)
+        l=ROOT.TLine ( 0.11,y,0.24,y) ## the black lines
+        # l=ROOT.TLine ( 0.13,y,0.16,y)
+        l.SetLineWidth(1)
+        l.SetLineStyle(2)
         l.Draw()
         t.DrawLatex ( 0.02,y-0.01, str(i) )
         lines.append(l)

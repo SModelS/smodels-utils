@@ -31,11 +31,14 @@ def writeIndexHtml ( model ):
     f=open("index.html","w")
     f.write ( "<html>\n" )
     f.write ( "<body>\n" )
+    f.write ( "<center>\n" )
     f.write ( "<h1>Current best model: Z=%.2f</h1>\n" % model.Z )
+    f.write ( "</center>\n" )
     f.write ( "Model produced in step %d<br>" % model.step )
     f.write ( "<br>Signal strength multipliers: %s\n" % ", ".join ( ssm ) )
-    f.write ( "<p>\n" )
-    f.write ( "<img src=./ruler.png><img src=./decays.png>\n" )
+    f.write ( "<p><table>\n" )
+    f.write ( "<td width=30%><img src=./ruler.png><td width=60%><img src=./decays.png>\n" )
+    f.write ( "</table>\n" )
     f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
     f.write ( "</body>\n" )
     f.write ( "</html>\n" )
@@ -70,7 +73,7 @@ def plot ( number, verbosity, picklefile ):
                 resultsFor[mmass].add ( tpred.expResult.globalInfo.id)
                 # print ( "add", mmass, mother, tpred.expResult.globalInfo.id )
         print ( "[plotHiscore] now draw ruler.png" )
-        rulerPlotter.draw ( model.currentSLHA, "ruler.png", Range=(0.,None),
+        rulerPlotter.draw ( model.currentSLHA, "ruler.png", Range=(None,None),
                             mergesquark = False,
                             hasResultsFor = resultsFor )
     plotDecays = True
