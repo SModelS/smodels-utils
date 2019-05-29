@@ -68,13 +68,17 @@ def plot ( number, verbosity, picklefile ):
                 if not mmass in resultsFor:
                     resultsFor[mmass]=set()
                 resultsFor[mmass].add ( tpred.expResult.globalInfo.id)
+                # print ( "add", mmass, mother, tpred.expResult.globalInfo.id )
         print ( "[plotHiscore] now draw ruler.png" )
         rulerPlotter.draw ( model.currentSLHA, "ruler.png", Range=(0.,None),
+                            mergesquark = False,
                             hasResultsFor = resultsFor )
     plotDecays = True
     if plotDecays:
         print ( "[plotHiscore] now draw decays.png" )
-        options = { "tex": True, "color": True, "dot": True }
+        options = { "tex": True, "color": True, "dot": True, "squarks": True,
+                    "weakinos": True, "sleptons": True, "neato": True,
+                    "integratesquarks": False, "leptons": True }
         ## FIXME add cross sections.
         decayPlotter.draw ( model.currentSLHA, "decays.png", options )
     discussPredictions ( model )

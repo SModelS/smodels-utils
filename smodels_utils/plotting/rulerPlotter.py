@@ -197,6 +197,8 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
     for (name,m) in masses.items():
         if name[:5]=="width":
             continue
+        if m > 5000.:
+            continue
         y=(abs(m)-minvalue)/(maxvalue-minvalue)
         col=_color (name )
         l=ROOT.TLine(xline0,y,xline1,y)
@@ -221,13 +223,22 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
         t.SetTextColor(col)
         label = _pprint(name)
         t.DrawLatex(x,y-.01,label )
+        ctr=0
+        keys = []
         for mana,analyses in hasResultsFor.items():
-            if abs(m-mana)<.2:
-                for ctr,ana in enumerate(analyses):
+            # print ( "m,mana",m,mana )
+            if abs(m-mana)<10.:
+                if abs(m-mana)>.1:
+                    print ( "WARNING: clustering particles. hope its ok. check it." )
+                keys.append ( mana )
+                for ana in analyses:
                     t2 = ROOT.TLatex()
                     t2.SetTextColor(col)
                     t2.SetTextSize(.03)
                     t2.DrawLatex(x-.07,y-.037-.018*ctr,ana )
+                    ctr+=1
+        for k in keys:
+            hasResultsFor.pop ( k ) ## dont print them several times
         if printmass: t.DrawLatex(xm,y-.01,str(int(round(m,0))))
         written.append((y,x,xm))
 

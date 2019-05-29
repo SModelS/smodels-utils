@@ -21,13 +21,13 @@ class Model:
                   2000011, 1000012, 1000013, 2000013, 1000014, 1000015, 2000015,
                   1000016, 1000021, 1000022, 1000023, 1000025, 1000035, 1000024,
                   1000037 ]
-        self.names = { 1000001: "~q", 2000001: "~q", 1000002: "~q",
-                       2000002: "~qR", 1000003: "~q", 2000003: "~qR",
-                       1000004: "~c", 2000004: "~cR", 1000005: "~b",
-                       2000005: "~bR", 1000006: "~t", 2000006: "~tR",
-                       1000011: "~e", 2000011: "~eR", 1000012: "~nu",
-                       1000013: "~mu", 2000013: "~muR", 1000014: "~nu",
-                       1000015: "~tau", 2000015: "~tauR", 1000016: "~nu",
+        self.names = { 1000001: "~dL", 2000001: "~dR", 1000002: "~uL",
+                       2000002: "~uR", 1000003: "~sL", 2000003: "~sR",
+                       1000004: "~cL", 2000004: "~cR", 1000005: "~b1",
+                       2000005: "~b2", 1000006: "~t1", 2000006: "~t2",
+                       1000011: "~eL", 2000011: "~eR", 1000012: "~nu",
+                       1000013: "~muL", 2000013: "~muR", 1000014: "~nu",
+                       1000015: "~tauL", 2000015: "~tauR", 1000016: "~nu",
                        1000021: "~g", 1000022: "~chi10", 1000023: "~chi20",
                        1000025: "~chi30", 1000035: "~chi40", 1000024: "~chi1+",
                        1000037: "~chi2+" }
@@ -128,6 +128,7 @@ class Model:
         self._backup = { "llhd": self.llhd, "letters": self.letters, "Z": self.Z,
                         "prior": self.prior, "description": self.description,
                         "bestCombo": self.bestCombo, "masses": self.masses }
+        self.pprint ( "backing up state" )
 
     def restore ( self ):
         """ restore from the backup """
@@ -135,7 +136,6 @@ class Model:
             raise Exception ( "no backup available" )
         for k,v in self._backup.items():
             setattr ( self, k, v )
-        del self._backup
 
     def priorTimesLlhd( self ):
         return self.prior * self.llhd
@@ -337,6 +337,7 @@ class Model:
         unfrozen = self.unFrozenParticles( withLSP=False )
         ndiscarded=0
         self.backup()
+        oldZ = self.Z
         for pid in unfrozen:
             self.pprint ( "trying to freeze %s (%.1f)" % \
                           ( self.getParticleName(pid), self.masses[pid] ) )
@@ -344,14 +345,16 @@ class Model:
             self.masses[pid]=1e6
             self.createSLHAFile()
             self.predict ( strategy )
-            self.pprint ( "when trying to remove %d, Z changed: %.3f -> %.3f" % ( pid, self._backup["Z"], self.Z ) )
-            if self.Z > (1. - maxloss)*self._backup["Z"]:
+            self.pprint ( "when trying to remove %s, Z changed: %.3f -> %.3f" % ( self.getParticleName(pid), oldZ, self.Z ) )
+            if self.Z > (1. - maxloss)*oldZ:
                 self.pprint ( "discarding %s" % self.getParticleName(pid) )
                 ndiscarded+=1
             else:
                 self.pprint ( "not discarding %s" % self.getParticleName(pid) )
                 self.masses[pid]=oldmass
                 self.restore()
+        if hasattr ( self, "_backup" ):
+            del self._backup
         self.pprint ( "froze %d particles. %d/%d particles are still unfrozen." % ( ndiscarded, len(self.unFrozenParticles()),len(self.masses) )  )
 
     def computeXSecs ( self ):
