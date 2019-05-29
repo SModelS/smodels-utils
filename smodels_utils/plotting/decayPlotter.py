@@ -12,10 +12,11 @@ from __future__ import print_function
 
 """
 
-def draw( slhafile, outfile, options, xsecpickle=None, offset=0.,
-          verbosity="info" ):
+def draw( slhafile, outfile, options, offset=0.,
+          verbosity="info", ssmultipliers = None ):
     """ draw a decay plot from an slhafile
-            :param offset: FIXME what does that one do?
+    :param offset: FIXME what does that one do?
+    :param ssmultipliers: signal strength multipliers
     """
     import logging
     import logging.config
@@ -91,6 +92,7 @@ def draw( slhafile, outfile, options, xsecpickle=None, offset=0.,
     colorizer=decayPlots.ByNameColorizer ( )
 
     ps=reader.getRelevantParticles ( reader.filterNames(starters) )
+    # print ( "ps", ps )
 
     extra={}
     if options["zconstraints"]:
@@ -156,8 +158,6 @@ if __name__ == "__main__":
             help='add mass labels',action='store_true' )
     argparser.add_argument ( '-Z', '--zconstraints',
             help='write down Z/W decay constraints',action='store_true' )
-    argparser.add_argument ( '-P', '--pickle',
-            help='get xsecs from pickle file', type=str, default='' )
     argparser.add_argument ( '-l', '--leptons', help='have separate lepton flavors',\
             action='store_true' )
     argparser.add_argument ( '-i', '--integratesquarks',
@@ -195,5 +195,5 @@ if __name__ == "__main__":
         if type(value)==bool:
             options[key]=value
 
-    draw( args.filename, args.outfile, options, args.pickle, args.offset,
+    draw( args.filename, args.outfile, options, args.offset,
           args.verbosity )

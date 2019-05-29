@@ -36,8 +36,8 @@ def writeIndexHtml ( model ):
     f.write ( "</center>\n" )
     f.write ( "Model produced in step %d<br>" % model.step )
     f.write ( "<br>Signal strength multipliers: %s\n" % ", ".join ( ssm ) )
-    f.write ( "<p><table>\n" )
-    f.write ( "<td width=30%><img src=./ruler.png><td width=60%><img src=./decays.png>\n" )
+    f.write ( '<p><table style="width:80%">\n' )
+    f.write ( "<td width=35%><img src=./ruler.png><td width=65%><img width=100% src=./decays.png>\n" )
     f.write ( "</table>\n" )
     f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
     f.write ( "</body>\n" )
@@ -83,7 +83,8 @@ def plot ( number, verbosity, picklefile ):
                     "weakinos": True, "sleptons": True, "neato": True,
                     "integratesquarks": False, "leptons": True }
         ## FIXME add cross sections.
-        decayPlotter.draw ( model.currentSLHA, "decays.png", options )
+        decayPlotter.draw ( model.currentSLHA, "decays.png", options, 
+                            ssmultipliers = model.ssmultipliers )
     discussPredictions ( model )
     writeIndexHtml ( model )
     copyFilesToGithub()

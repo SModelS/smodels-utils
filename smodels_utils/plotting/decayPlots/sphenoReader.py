@@ -137,28 +137,29 @@ class SPhenoReader:
         ret2={}
         ret2id={}
         for mother in start:
-          m=self.pdgId ( mother )
-          if len(self.getDecays(m))>0:
-            ret2[mother]=1
-          if not m in self.decays.keys ( ):
-            continue
-          for (daughter,right) in self.decays[m].items():
-            for (radiator,r) in right.items():
-              if r>rmin:
-                ret2[self.name(daughter)]=1
-                ret2id[daughter]=1
-        for nsteps in range(2):
-          ret3id=copy.deepcopy(ret2id)
-          for i in ret2id:
-            if not i in self.decays.keys ():
-              continue
-            for (daughter,right) in self.decays[i].items():
+            m=self.pdgId ( mother )
+            if len(self.getDecays(m))>0:
+                ret2[mother]=1
+            if not m in self.decays.keys ( ):
+                continue
+            for (daughter,right) in self.decays[m].items():
               for (radiator,r) in right.items():
                 if r>rmin:
-                  ret2[self.name(daughter)]=1
-                  ret3id[daughter]=1
-          ret2id=copy.deepcopy(ret3id)
-        return ret2.keys()
+                    ret2[self.name(daughter)]=1
+                    ret2id[daughter]=1
+        for nsteps in range(2):
+            ret3id=copy.deepcopy(ret2id)
+            for i in ret2id:
+                if not i in self.decays.keys ():
+                    continue
+                for (daughter,right) in self.decays[i].items():
+                    for (radiator,r) in right.items():
+                        if r>rmin:
+                            ret2[self.name(daughter)]=1
+                            ret3id[daughter]=1
+            ret2id=copy.deepcopy(ret3id)
+        names = list( ret2.keys() )
+        return names
 
     def printMassTable ( self ):
         print ( "SPhenoReader Mass Table" )
