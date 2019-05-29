@@ -298,9 +298,18 @@ class Model:
             tmp = self.masses[i]+random.uniform(-dx,dx)
             if tmp > self.maxMass:
                 tmp = self.maxMass
-            if tmp < 10.:
-                tmp = 10.
+            if tmp < self.masses[self.LSP]: ## the LSP is the LSP.
+                tmp = self.masses[self.LSP]
             self.masses[i]=tmp
+        for squark in [ 1, 2, 3, 4, 5, 6 ]:
+            sq1,sq2=1000000+squark,2000000+squark
+            if not sq1 in self.masses or not sq2 in self.masses:
+                continue
+            msq1,msq2 = self.masses[sq1], self.masses[sq2]
+            if msq2 < msq1:
+            ### sq1 should always be lighter than sq2
+             self.masses[sq2]=msq1
+             self.masses[sq1]=msq2
 
     def createNewSLHAFileName ( self ):
         """ create a new SLHA file name. Needed when e.g. unpickling """
