@@ -84,6 +84,9 @@ class Model:
 
         ## the LSP we need from the beginning
         self.masses[Model.LSP]=random.uniform(50,500)
+        ## for now we start with a stop1 at around 700 --
+        ## we know this works well.
+        self.masses[1000006]=random.uniform(500,900)
         self.computePrior()
 
     def pprint ( self, *args ):
@@ -119,6 +122,20 @@ class Model:
         self.letters = combiner.getLetterCode(self.bestCombo)
         self.description = combiner.getComboDescription(self.bestCombo)
         # return (bestCombo,Z,llhd)
+
+    def backup ( self ):
+        """ backup the current state """
+        self._backup = { "llhd": self.llhd, "letters": self.letters, "Z": self.Z,
+                        "prior": self.prior, "description": self.description,
+                        "bestCombo": self.bestCombo, "masses": self.masses }
+
+    def restore ( self ):
+        """ restore from the backup """
+        if not hasattr ( self, "_backup" ):
+            raise Exception ( "no backup available" )
+        for k,v in self._backup.items():
+            setattr ( self, k, v )
+        del self._backup
 
     def priorTimesLlhd( self ):
         return self.prior * self.llhd
@@ -313,26 +330,28 @@ class Model:
         f.close()
         self.computeXSecs()
 
-    def trim ( self, strategy="aggressive", maxloss=.01 ):
+    def trim ( self, strategy="aggressive", maxloss=.001 ):
         """ see if you can trim the model, accept losses smaller than maxloss
         on Z.
         """
         unfrozen = self.unFrozenParticles( withLSP=False )
         ndiscarded=0
-        oldZ = self.Z
+        self.backup()
         for pid in unfrozen:
-            self.pprint ( "trying to freeze %s (%.1f)" % ( self.getParticleName(pid), self.masses[pid] ) )
+            self.pprint ( "trying to freeze %s (%.1f)" % \
+                          ( self.getParticleName(pid), self.masses[pid] ) )
             oldmass = self.masses[pid]
             self.masses[pid]=1e6
             self.createSLHAFile()
             self.predict ( strategy )
-            self.pprint ( "when trying to remove %d, Z changed: %.3f -> %.3f" % ( pid, oldZ, self.Z ) )
-            if self.Z > (1. - maxloss)*oldZ:
+            self.pprint ( "when trying to remove %d, Z changed: %.3f -> %.3f" % ( pid, self._backup["Z"], self.Z ) )
+            if self.Z > (1. - maxloss)*self._backup["Z"]:
                 self.pprint ( "discarding %s" % self.getParticleName(pid) )
                 ndiscarded+=1
             else:
                 self.pprint ( "not discarding %s" % self.getParticleName(pid) )
                 self.masses[pid]=oldmass
+                self.restore()
         self.pprint ( "froze %d particles. %d/%d particles are still unfrozen." % ( ndiscarded, len(self.unFrozenParticles()),len(self.masses) )  )
 
     def computeXSecs ( self ):

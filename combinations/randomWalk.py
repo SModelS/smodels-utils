@@ -9,9 +9,11 @@ from smodels.tools.runtime import nCPUs
 import colorama
 from hiscore import Hiscore
 from model import Model
+from history import History
 
 def cleanDirectory ():
-    subprocess.getoutput ( "rm -rf .cur*slha" )
+    subprocess.getoutput ( "mkdir -p tmp" )
+    subprocess.getoutput ( "mv .cur*slha tmp/" )
     subprocess.getoutput ( "mv walker*.log tmp/" )
     subprocess.getoutput ( "mv exceptions.log tmp/" )
 
@@ -27,11 +29,13 @@ class RandomWalker:
         self.model = Model( self.walkerid )
         self.strategy = strategy
         self.hiscoreList = None
+        self.history = History ( walkerid )
+        self.record_history = False
         self.maxsteps = nsteps
         self.takeStep() ## the first step should be considered as "taken"
 
     @classmethod
-    def fromModel( cls, model, nsteps=10000, strategy="aggressive", 
+    def fromModel( cls, model, nsteps=10000, strategy="aggressive",
                         hiscore=False, walkerid=0 ):
         ret = cls( walkerid, nsteps, strategy )
         ret.model = model
@@ -127,10 +131,15 @@ class RandomWalker:
         """ Now perform the random walk """
         self.model.unfreezeRandomParticle() ## start with unfreezing a random particle
         while self.model.step<self.maxsteps:
+            ## only the first walker records history
+            if self.record_history:
+                self.history.add ( self.model )
             try:
                 self.onestep()
             except Exception as e:
                 self.pprint ( "taking a step resulted in exception: %s, %s" % (type(e), e ) )
+                import traceback
+                traceback.print_stack( limit=None )
                 f=open("exceptions.log","a")
                 f.write ( "taking a step resulted in exception: %s, %s\n" % (type(e), e ) )
                 f.close()
@@ -161,10 +170,10 @@ class RandomWalker:
             else:
                 u=random.uniform(0.,1.)
                 if u > ratio:
-                    print ( "[walk] u=%.2f > %.2f; Z: %.2f -> %.2f: revert." % (u,ratio,self.oldmodel.Z, self.model.Z) )
+                    self.pprint ( "u=%.2f > %.2f; Z: %.2f -> %.2f: revert." % (u,ratio,self.oldmodel.Z, self.model.Z) )
                     self.revert()
                 else:
-                    print ( "[walk] u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.oldmodel.Z,self.model.Z) )
+                    self.pprint ( "u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.oldmodel.Z,self.model.Z) )
                     self.takeStep()
         self.saveState()
 
@@ -175,7 +184,7 @@ def _run ( w ):
         import time
         f=open("exceptions.log","a")
         f.write ( "time %s\n" % time.asctime() )
-        f.write ( "walker %d threw\n: %s" % ( w.walkerid, e ) ) 
+        f.write ( "walker %d threw: %s\n" % ( w.walkerid, e ) )
         if hasattr ( w.model, "currentSLHA" ):
             f.write ("slha file was %s\n" % w.model.currentSLHA )
         f.close()
@@ -196,13 +205,15 @@ if __name__ == "__main__":
     argparser.add_argument ( '-c', '--cont',
             help='continue with saved states [""]',
             type=str, default="" )
+    argparser.add_argument ( '-H', '--history', help='record history',
+                             action="store_true" )
     args = argparser.parse_args()
     cleanDirectory()
     ncpus = args.ncpus
     if ncpus < 0:
         ncpus = nCPUs() + ncpus + 1
     walkers = []
-        
+
     if args.cont!="" and os.path.exists ( args.cont ) and \
                    os.stat( args.cont ).st_size > 100:
         f=open( args.cont, "rb" )
@@ -222,9 +233,12 @@ if __name__ == "__main__":
     hiscore = Hiscore ( 0, True )
     for w in walkers:
         w.supplyHiscoreList ( hiscore )
-            
+
+    if args.history:
+        walkers[0].record_history = True
+
     if len ( walkers ) == 1:
         walkers[0].walk() ## just one, start directly
     else:
         p = multiprocessing.Pool ( ncpus )
-        p.map ( _run, walkers ) 
+        p.map ( _run, walkers )

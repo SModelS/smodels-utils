@@ -18,17 +18,17 @@ def main():
     f=open("hiscore.pcl","rb")
     walkers = pickle.load ( f )
     f.close()
-    keys = list ( walkers.keys() )
-    keys.sort( reverse=True )
     names = { 0: "highest", 1: "second", 2: "third" }
-    for c,k in enumerate(keys):
+    for c,model in enumerate(walkers):
+        if model == None:
+            break
         sc = "%dth" % (c+1)
         if c in names.keys():
             sc = names[c]
         if c==0:
-            detailedDiscussion ( walkers[k] )
+            detailedDiscussion ( model )
         else:
-            discuss ( walkers[k], sc )
+            discuss ( model, sc )
 
 if __name__ == "__main__":
     main()

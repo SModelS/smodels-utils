@@ -11,34 +11,34 @@ class Hiscore:
         self.walkerid = walkerid
         self.save_hiscores = save_hiscores
         self.nkeep = 20 ## how many do we keep.
-        self.hiscores = {}
+        self.hiscores = [ None ]*self.nkeep
         self.fileAttempts = 0 ## unsucessful attempts at reading or writing
         self.pickleFile = picklefile
         self.updateListFromPickle ( )
 
     def currentMinZ ( self ):
         """ the current minimum Z to make it into the list. """
-        if len(self.hiscores)==0:
+        if self.hiscores[-1] == None:
             return 0.
-        return min ( self.hiscores.keys() )
+        return self.hiscores[-1].Z
 
     def addResult ( self, model ):
         """ add a result to the list """
-        while model.Z in self.hiscores.keys():
-            model.Z = model.Z-1e-20
-        self.hiscores[model.Z]=copy.deepcopy(model)
-        self.trimList()
-
-    def trimList ( self ):
-        """ trim the list down to <nkeep> entries. """
-        keys = list ( self.hiscores.keys() )
-        if len(keys)<= self.nkeep:
-            return
-        keys.sort( reverse=True )
-        tmp = {}
-        for k in keys[:self.nkeep]:
-            tmp[k]=copy.deepcopy ( self.hiscores[k] )
-        self.hiscores = tmp
+        if model.Z <= self.currentMinZ():
+            return ## doesnt pass minimum requirement
+        for i,mi in enumerate(self.hiscores):
+            if mi==None or model.Z > mi.Z: ## ok, <i>th best result!
+                self.demote ( i )
+                self.hiscores[i] = copy.deepcopy ( model )
+                break
+            
+    def demote ( self, i ):
+        """ demote everything from i+1 on, 
+            i.e (i+1)->(i+2), (i+2)->(i+3) and so on """
+        for j in range(self.nkeep-1,i,-1):
+            m = copy.deepcopy ( self.hiscores[j-1] )
+            self.hiscores[j]= m
+        assert ( len(self.hiscores) == self.nkeep )
 
     def updateListFromPickle ( self ):
         """ fetch the list from the pickle file """
@@ -46,10 +46,10 @@ class Hiscore:
             return
         try:
             f=open( self.pickleFile,"rb")
-            # oldhiscores = copy.deepcopy ( self.hiscores )
             self.hiscores = pickle.load ( f )
-            self.pprint ( "loaded %d hiscores from file." % ( len(self.hiscores.keys()) ) )
+            self.pprint ( "loaded %d hiscores from file." % ( len(self.hiscores) ) )
             f.close()
+            assert ( len(self.hiscores) == self.nkeep )
             self.fileAttempts=0
         except Exception as e:
         # except OSError or BlockingIOError or EOFError or pickle.UnpicklingError or TypeError as e:
@@ -63,23 +63,11 @@ class Hiscore:
 
     def trimModels ( self, n=None ):
         """ trim the first <n> models in the list """
-        if n == None:
-            n = len(self.hiscores)
-        if n < 0:
-            n = len(self.hiscores)
-        if n > len(self.hiscores):
-            n = len(self.hiscores)
+        if n == None or n < 0 or n > self.nkeep:
+            n = self.nkeep
         for i in range(n):
-            self.getModelNr(i).trim()
-
-    def getModelNr ( self, nr ):
-        """ get the nth model in the hiscore list """
-        if nr < 0 or nr >= self.nkeep:
-            self.pprint ( "asking for model nr %d: does not exist." % nr )
-            return None
-        keys = list ( self.hiscores.keys() )
-        keys.sort ( reverse=True )
-        return self.hiscores[keys[nr]]
+            if self.hiscores[i]!=None:
+                self.hiscores[i].trim()
 
     def writeListToPickle ( self, pickleFile=None ):
         """ dump the list to the pickle file <pickleFile>.
@@ -108,12 +96,9 @@ class Hiscore:
         # self.pprint ( "New result with Z=%.2f, %s" % (model.Z, self.save_hiscores ) )
         if not self.save_hiscores:
             return
-        if model.Z <= 0.: ## we ignore models with Z==0.
-            return
-        if len ( self.hiscores.keys() ) > 0 and \
-            model.Z < self.currentMinZ():
-                return ## clearly out
-        self.updateListFromPickle() ## load the current version again
+        if model.Z <= self.currentMinZ():
+            return ## clearly out
+        self.updateListFromPickle() ## reload the hiscores 
         self.addResult ( model )
         self.writeListToPickle() ## and write it
 

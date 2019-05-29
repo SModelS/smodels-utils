@@ -11,11 +11,9 @@ def obtain ( number, picklefile ):
     f=open( picklefile,"rb" )
     hiscores = pickle.load ( f )
     f.close()
-    keys = list ( hiscores.keys() )
-    keys.sort( reverse=True )
-    Z = keys[number]
+    Z = hiscores[number].Z
     print ( "[plotHiscore] obtaining #%d: Z=%.2f" % (number, Z ) )
-    return hiscores[ Z ]
+    return hiscores[ number ]
     
 def discussPredictions ( model ):
     print ( "How the Z comes about. Best combo:" )

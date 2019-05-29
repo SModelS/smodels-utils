@@ -20,12 +20,12 @@ def main():
     argparser.add_argument ( '-s', '--save', help='save the updated hiscore list under this filename [None]',
                              type=str,default=None )
     args = argparser.parse_args()
-    hiscore = Hiscore ( 0, False, args.picklefile )
+    h = Hiscore ( 0, False, args.picklefile )
     if args.trim>0:
-        hiscore.trimModels( args.trim )
+        h.trimModels( args.trim )
     if args.save not in  [ "", None ]:
-        hiscore.writeListToPickle( args.save )
-    print ( "Check variable: hiscore" )
+        h.writeListToPickle( args.save )
+    print ( "Check variable: h" )
     if args.interactive:
         IPython.embed()
 
