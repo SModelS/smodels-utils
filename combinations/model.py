@@ -14,6 +14,7 @@ class Model:
     LSP = 1000022 ## the LSP is hard coded
     def __init__ ( self, walkerid ):
         self.walkerid = walkerid
+        self.version = 1 ## version of this class
         self.maxMass = 2400. ## maximum masses we consider
         self.step = 0 ## count the steps
         self.particles = [ 1000001, 2000001, 1000002, 2000002, 1000003, 2000003,
@@ -348,6 +349,9 @@ class Model:
             self.pprint ( "when trying to remove %s, Z changed: %.3f -> %.3f" % ( self.getParticleName(pid), oldZ, self.Z ) )
             if self.Z > (1. - maxloss)*oldZ:
                 self.pprint ( "discarding %s" % self.getParticleName(pid) )
+                if pid in self.ssmultipliers:
+                    #popping from multipliers also
+                    self.ssmultipliers.pop(pid)
                 ndiscarded+=1
             else:
                 self.pprint ( "not discarding %s" % self.getParticleName(pid) )
