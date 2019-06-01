@@ -2,6 +2,7 @@ obsolete/
 cur*slha
 .cur*slha
 walker*log
+*pcl
 predictions.pcl
 matrix*png
 matrix*pdf
