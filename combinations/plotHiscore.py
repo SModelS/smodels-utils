@@ -28,12 +28,15 @@ def plotSSMultipliers ( model ):
         if abs(v-1.)<1e-3:
             continue
         pname = model.getParticleName(k)
-        rpls = { "L": "_{L}", "R": "_{R}", "1": "_{1}", "2": "_{2}" }
-        if pname.find("~")==0:
-            pname="\\tilde{"+pname[1]+"}"+pname[2:]
+        rpls = { "L": "_{L}", "R": "_{R}", "1": "_{1}", "2": "_{2}", "~nu": "\\tilde{\\nu}",
+                 "~chi": "\\tilde{\\chi}", "~mu": "\\tilde{\\mu}", "+": "^{+}", 
+                 "-": "^{-}" }
         for kr,vr in rpls.items():
             pname = pname.replace(kr,vr)
-        ## print ( pname )
+        if pname.find("~")==0:
+            p1,p2=1,2
+            pname="\\tilde{"+pname[p1:p2]+"}"+pname[p2:]
+        # print ( model.getParticleName(k), pname )
         ssm.append ( "%s = %.2f" % (pname,v) )
     import tex2png
     src = "Signal strength multipliers: $" + ", ".join ( ssm ) + "$"
@@ -44,11 +47,11 @@ def plotSSMultipliers ( model ):
     f.close()
 
 def writeIndexHtml ( model ):
-    #ssm = []
-    #for k,v in model.ssmultipliers.items():
-    #    if abs(v-1.)<1e-3:
-    #        continue
-    #    ssm.append ( "%s: %.2f" % (model.getParticleName(k),v) )
+    ssm = []
+    for k,v in model.ssmultipliers.items():
+        if abs(v-1.)<1e-3:
+            continue
+        ssm.append ( "%s: %.2f" % (model.getParticleName(k),v) )
     f=open("index.html","w")
     f.write ( "<html>\n" )
     f.write ( "<body>\n" )
@@ -57,7 +60,8 @@ def writeIndexHtml ( model ):
     f.write ( "</center>\n" )
     f.write ( "Model produced in step %d<br>" % model.step )
     #f.write ( "<br>Signal strength multipliers: %s\n" % ", ".join ( ssm ) )
-    f.write ( "<br><img height=32pt src=./ssmultipliers.png>\n" )
+    height = 32*int((len(ssm)+3)/4)
+    f.write ( "<br><img height=%dpt src=./ssmultipliers.png>\n" % height )
     f.write ( '<p><table style="width:80%">\n' )
     f.write ( "<td width=35%><img src=./ruler.png><td width=65%><img width=100% src=./decays.png>\n" )
     f.write ( "</table>\n" )

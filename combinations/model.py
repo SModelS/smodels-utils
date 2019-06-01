@@ -2,7 +2,7 @@
 
 """ Class that encapsulates a BSM model. """
 
-import random, numpy, tempfile, os, copy, time, sys
+import random, numpy, tempfile, os, copy, time, sys, colorama
 from smodels.tools.xsecComputer import XSecComputer, LO
 from combiner import Combiner
 from predictor import predict
@@ -91,6 +91,11 @@ class Model:
         self.masses[1000002]=random.uniform(800,1200)
         self.masses[1000024]=random.uniform(500,1000)
         self.computePrior()
+
+    def highlight ( self, msgType = "info", *args ):
+        """ logging, hilit """
+        col = colorama.Fore.GREEN
+        print ( "%s[model:%d - %s] %s%s" % ( col, self.walkerid, time.asctime(), " ".join(map(str,args)), colorama.Fore.RESET ) )
 
     def pprint ( self, *args ):
         """ logging """
@@ -370,35 +375,70 @@ class Model:
         on Z.
         """
         unfrozen = self.unFrozenParticles( withLSP=False )
-        ndiscarded=0
+        ndiscarded,ndiscardedBR=0,0
         self.backup()
         oldZ = self.Z
+        self.whatif = {} ## save the scores for the non-discarded particles.
+        ## aka: what would happen to the score if I removed particle X?
         frozen = self.frozenParticles()
         for pid in frozen:
             ## remove ssmultipliers for frozen particles
             if pid in self.ssmultipliers:
                 self.ssmultipliers.pop(pid)
-        for pid in unfrozen:
-            self.pprint ( "trying to freeze %s (%.1f)" % \
-                          ( self.getParticleName(pid), self.masses[pid] ) )
+        # unfrozen = [] ## FIXME was only needed for checking branching trimmer
+        for cpid,pid in enumerate(unfrozen):
+            self.highlight ( "info", "trying to freeze %d/%d: %s (%.1f)" % \
+                   ( (cpid+1),len(unfrozen), self.getParticleName(pid), self.masses[pid] ) )
             oldmass = self.masses[pid]
             self.masses[pid]=1e6
-            self.createSLHAFile()
+            # self.createSLHAFile()
             self.predict ( strategy )
             self.pprint ( "when trying to remove %s, Z changed: %.3f -> %.3f" % ( self.getParticleName(pid), oldZ, self.Z ) )
             if self.Z > (1. - maxloss)*oldZ:
-                self.pprint ( "discarding %s" % self.getParticleName(pid) )
+                ndiscarded+=1
+                self.pprint ( "discarding #%d: %s" % ( ndiscarded, self.getParticleName(pid) ) )
                 if pid in self.ssmultipliers:
                     #popping from multipliers also
                     self.ssmultipliers.pop(pid)
-                ndiscarded+=1
             else:
+                self.whatif[pid]=self.Z
                 self.pprint ( "not discarding %s" % self.getParticleName(pid) )
                 self.masses[pid]=oldmass
                 self.restore()
+        unfrozen = self.unFrozenParticles( withLSP=False )
+        self.pprint ( "now try to trim the branchings of %d particles" % len(unfrozen) )
+        # unfrozen = [] ## turn it off
+        for cpid,pid in enumerate(unfrozen):
+            decays = self.decays[pid]
+            self.highlight ( "info", "trying to trim %d/%d branchings of %s" % ( (cpid+1),len(unfrozen),self.getParticleName(pid) ) )
+            for dpid,dbr in decays.items():
+                if dbr < 1e-5: ## small values set automatically to zero
+                    self.decays[pid][dpid]=0. ## correct for it.
+                    S = sum ( self.decays[pid].values() )
+                    for k,v in self.decays[pid].items():
+                        self.decays[pid][k]=v/S
+                    continue
+                if dbr > 1e-5 and (dbr < .01 or self.masses[dpid]>self.masses[pid]):
+                    self.pprint ( "decay %s -> %s (br=%.2f) has small branching or is offshell. Try to take out." % (self.getParticleName(pid),self.getParticleName(dpid),dbr) )
+                    oldZ = self.Z
+                    self.backup()
+                    self.decays[pid][dpid]=0.
+                    S = sum ( self.decays[pid].values() )
+                    for k,v in self.decays[pid].items():
+                        self.decays[pid][k]=v/S
+                    # self.createSLHAFile()
+                    self.predict ( strategy )
+                    if self.Z > (1. - maxloss)*oldZ:
+                        dbr = 0.
+                        ndiscardedBR+=1
+                        self.pprint ( "discarding small BR %s -> %s: %.2f: Z changed %.3f -> %.3f" % ( self.getParticleName(pid),self.getParticleName(dpid), dbr, oldZ, self.Z ) )
+                    else:
+                        self.pprint ( "not discarding small BR %s -> %s: %.2f Z changed %.3f -> %.3f" % ( self.getParticleName(pid), self.getParticleName(dpid), dbr, oldZ, self.Z ) )
+                        self.restore()
+                        
+        self.pprint ( "froze %d particles. %d/%d particles are still unfrozen. discarded %d branchings." % ( ndiscarded, len(self.unFrozenParticles()),len(self.masses),ndiscardedBR )  )
         if hasattr ( self, "_backup" ):
             del self._backup
-        self.pprint ( "froze %d particles. %d/%d particles are still unfrozen." % ( ndiscarded, len(self.unFrozenParticles()),len(self.masses) )  )
 
     def computeXSecs ( self ):
         """ compute xsecs for current.slha """

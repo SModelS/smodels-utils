@@ -239,6 +239,8 @@ class DecayDrawer:
         if first=="~": return huge ( math ( tilde ( name[1:] ) ) )
         if name=="gamma": return large ( math ( "\gamma" ) )
         if name=="nu": return large ( math ( "\\\\nu" ) )
+        if name=="mu": return large ( math ( "\\\\mu" ) )
+        if name=="tau": return large ( math ( "\\\\tau" ) )
         if name=="h1": return large ( "h" )
         if name=="h2": return large ( "H" )
         if name=="a0": return large ( math("A") )
