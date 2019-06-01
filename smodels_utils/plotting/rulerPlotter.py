@@ -240,18 +240,19 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
         t.DrawLatex(x+dx,y-.01,label )
         ctr=0
         keys = []
-        for mana,analyses in hasResultsFor.items():
-            # print ( "m,mana",m,mana )
-            if abs(m-mana)<10.:
-                if abs(m-mana)>.1:
-                    print ( "WARNING: clustering particles. hope its ok. check it." )
-                keys.append ( mana )
-                for ana in analyses:
-                    t2 = ROOT.TLatex()
-                    t2.SetTextColor(col)
-                    t2.SetTextSize(.03)
-                    t2.DrawLatex(x-.07,y-.037-.018*ctr,ana )
-                    ctr+=1
+        if hasResultsFor != None:
+            for mana,analyses in hasResultsFor.items():
+                # print ( "m,mana",m,mana )
+                if abs(m-mana)<10.:
+                    if abs(m-mana)>.1:
+                        print ( "WARNING: clustering particles. hope its ok. check it." )
+                    keys.append ( mana )
+                    for ana in analyses:
+                        t2 = ROOT.TLatex()
+                        t2.SetTextColor(col)
+                        t2.SetTextSize(.03)
+                        t2.DrawLatex(x-.07,y-.037-.018*ctr,ana )
+                        ctr+=1
         for k in keys:
             hasResultsFor.pop ( k ) ## dont print them several times
         if printmass: t.DrawLatex(xm,y-.01,str(int(round(m,0))))
