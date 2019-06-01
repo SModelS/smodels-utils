@@ -2,7 +2,7 @@
 
 """ a first start at the random walk idea """
 
-import random, copy, pickle, sys, os, time, subprocess
+import random, copy, pickle, sys, os, time, subprocess, math
 import multiprocessing
 from predictor import predict
 from smodels.tools.runtime import nCPUs
@@ -51,24 +51,24 @@ class RandomWalker:
         nUnfrozen = len ( self.model.unFrozenParticles() )
         nTotal = len ( self.model.masses.keys() )
         self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.model.step, nUnfrozen, nTotal, ", ".join ( map ( self.model.getParticleName, self.model.unFrozenParticles() ) ) ) )
-        # uUnfreeze = random.uniform(0,1)
         nChanges = 0
-        uUnfreeze = random.gauss(.3,.5)
+        mu = 1. - .7 / (self.model.Z+1.) ## make it more unlikely when Z is high
+        uUnfreeze = random.gauss( mu ,.5)
         if uUnfreeze > nUnfrozen/float(nTotal):
             # in every nth step unfreeze random particle
             self.log ( "unfreeze random particle" )
             nChanges += self.model.unfreezeRandomParticle()
         uBranch = random.uniform(0,1)
-        if uBranch > .3: # do this often
+        if uBranch > .3: # do this about every third time
             self.log ( "randomly change branchings" )
             nChanges += self.model.randomlyChangeBranchings()
         uSSM = random.uniform(0,1)
-        if uSSM > .75: # do this less often
+        if uSSM > .75: # do this everytime else
             self.log ( "randomly change signal strengths" )
             nChanges += self.model.randomlyChangeSignalStrengths()
 
-        # uFreeze = random.uniform(0,1)
-        uFreeze = random.gauss(.3,.5)
+        mu = .4 / (self.model.Z+1.) ## make it more unlikely when Z is high
+        uFreeze = random.gauss(mu,.5)
         if uFreeze < nUnfrozen/float(nTotal):
             # in every nth step freeze random particle
             if random.uniform(0,1)<.3:
@@ -81,14 +81,8 @@ class RandomWalker:
             self.log ( "take random mass step" )
             self.model.takeRandomMassStep()
         self.log ( "now create slha file" )
-        # self.model.createSLHAFile()
-        #predictions = predict ( self.model.currentSLHA )
-        #self.log ( "I got %d predictions" % ( len(predictions) ) )
-        # bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, self.strategy )
         self.model.predict( self.strategy )
         self.log ( "found highest Z: %.2f" % self.model.Z )
-        # self.model.bestCombo = self.model.combiner.removeDataFromBestCombo ( bestCombo )
-        # self.model.llhd = (1. - llhd ) ## we wish to minimize likelihood, find the most unexpected fluctuation
         if self.hiscoreList != None:
             self.log ( "check if result goes into hiscore list" )
             self.hiscoreList.newResult ( self.model ) ## add to high score list
@@ -150,7 +144,8 @@ class RandomWalker:
             #    ratio = self.Z / self.oldmodel.Z
             ratio = 1.
             if self.oldmodel.priorTimesLlhd() > 0.:
-                ratio = self.model.priorTimesLlhd() / self.oldmodel.priorTimesLlhd()
+                ratio = math.exp ( - self.oldmodel.priorTimesLlhd()) / math.exp ( - self.model.priorTimesLlhd() )
+                # ratio = self.model.priorTimesLlhd() / self.oldmodel.priorTimesLlhd()
             if self.oldmodel.Z > 0. and self.model.Z < 0.7 * self.oldmodel.Z:
                 ## no big steps taken here.
                 self.highlight ( "info", "Z=%.2f -> 0. Revert." % self.oldmodel.Z )
@@ -219,13 +214,14 @@ if __name__ == "__main__":
         f=open( args.cont, "rb" )
         hiscores = pickle.load ( f )
         f.close()
-        for ctr,(k,v) in enumerate(hiscores.items()):
+        for ctr,v in enumerate(hiscores): # .items()):
             if ctr >= ncpus:
                 break
             v.createNewSLHAFileName()
             v.walkerid = ctr
             walkers.append ( RandomWalker.fromModel ( v ) )
             walkers[-1].walkerid = ctr
+            walkers[-1].takeStep() # make last step a taken one
     else:
         for w in range(ncpus):
             walkers.append ( RandomWalker( w, args.nsteps, args.strategy ) )

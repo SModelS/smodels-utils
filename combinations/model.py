@@ -293,7 +293,7 @@ class Model:
 
     def takeRandomMassStep ( self ):
         """ take a random step in mass space for all unfrozen particles """
-        dx = 20. / numpy.sqrt ( len(self.unFrozenParticles() ) )
+        dx = 40. / numpy.sqrt ( len(self.unFrozenParticles() ) ) / ( self.Z + 1. )
         for i in self.unFrozenParticles():
             tmp = self.masses[i]+random.uniform(-dx,dx)
             if tmp > self.maxMass:
@@ -310,6 +310,12 @@ class Model:
             ### sq1 should always be lighter than sq2
              self.masses[sq2]=msq1
              self.masses[sq1]=msq2
+        if 1000023 in self.masses and 1000025 in self.masses:
+            mchi20 = self.masses[1000023]
+            mchi30 = self.masses[1000025]
+            if mchi20 > mchi30:
+                self.masses[1000023] = mchi30
+                self.masses[1000025] = mchi20
 
     def createNewSLHAFileName ( self ):
         """ create a new SLHA file name. Needed when e.g. unpickling """
