@@ -22,12 +22,33 @@ def discussPredictions ( model ):
         print ( "theory pred: %s:%s" % ( pred.expResult.globalInfo.id, ",".join ( map ( str, pred.txnames ) ) ) )
         # print ( "     `- ", pred.expResult.globalInfo.id, "ana", pred.analysis, "masses", pred.mass, "txnames", pred.txnames, "type", pred.dataType() )
 
-def writeIndexHtml ( model ):
+def plotSSMultipliers ( model ):
     ssm = []
     for k,v in model.ssmultipliers.items():
         if abs(v-1.)<1e-3:
             continue
-        ssm.append ( "%s: %.2f" % (model.getParticleName(k),v) )
+        pname = model.getParticleName(k)
+        rpls = { "L": "_{L}", "R": "_{R}", "1": "_{1}", "2": "_{2}" }
+        if pname.find("~")==0:
+            pname="\\tilde{"+pname[1]+"}"+pname[2:]
+        for kr,vr in rpls.items():
+            pname = pname.replace(kr,vr)
+        ## print ( pname )
+        ssm.append ( "%s = %.2f" % (pname,v) )
+    import tex2png
+    src = "Signal strength multipliers: $" + ", ".join ( ssm ) + "$"
+    # src = "$\\tilde{u}_L = 1.1, \\tilde{t}_2 = 0.85$"
+    p = tex2png.Latex ( src, 600 ).write()
+    f = open ( "ssmultipliers.png", "wb" ) 
+    f.write ( p[0] )
+    f.close()
+
+def writeIndexHtml ( model ):
+    #ssm = []
+    #for k,v in model.ssmultipliers.items():
+    #    if abs(v-1.)<1e-3:
+    #        continue
+    #    ssm.append ( "%s: %.2f" % (model.getParticleName(k),v) )
     f=open("index.html","w")
     f.write ( "<html>\n" )
     f.write ( "<body>\n" )
@@ -35,7 +56,8 @@ def writeIndexHtml ( model ):
     f.write ( "<h1>Current best model: Z=%.2f</h1>\n" % model.Z )
     f.write ( "</center>\n" )
     f.write ( "Model produced in step %d<br>" % model.step )
-    f.write ( "<br>Signal strength multipliers: %s\n" % ", ".join ( ssm ) )
+    #f.write ( "<br>Signal strength multipliers: %s\n" % ", ".join ( ssm ) )
+    f.write ( "<br><img height=32pt src=./ssmultipliers.png>\n" )
     f.write ( '<p><table style="width:80%">\n' )
     f.write ( "<td width=35%><img src=./ruler.png><td width=65%><img width=100% src=./decays.png>\n" )
     f.write ( "</table>\n" )
@@ -46,7 +68,7 @@ def writeIndexHtml ( model ):
     print ( "Wrote index.html" )
 
 def copyFilesToGithub():
-    subprocess.getoutput ( "cp index.html matrix_aggressive.png decays.png ruler.png ../../smodels.github.io/models/" )
+    subprocess.getoutput ( "cp index.html matrix_aggressive.png decays.png ruler.png ssmultipliers.png ../../smodels.github.io/models/" )
 
 def plotRuler( model ):
     resultsForPIDs = {}
@@ -93,6 +115,7 @@ def plot ( number, verbosity, picklefile, options ):
     if options["predictions"]:
         discussPredictions ( model )
     if options["html"]:
+        plotSSMultipliers ( model )
         writeIndexHtml ( model )
     if options["copy"]:
         copyFilesToGithub()
@@ -113,7 +136,19 @@ if __name__ == "__main__":
     argparser.add_argument ( '-H', '--nohtml',
             help='do not produce index.html',
             action="store_true" )
+    argparser.add_argument ( '-R', '--noruler',
+            help='do not produce ruler plot',
+            action="store_true" )
+    argparser.add_argument ( '-D', '--nodecays',
+            help='do not produce decays plot',
+            action="store_true" )
+    argparser.add_argument ( '-s', '--scp',
+            help='scp to smodels',
+            action="store_true" )
     args = argparser.parse_args()
-    options = { "ruler": True, "decays": True, "predictions": True, 
-                "html": not args.nohtml }
+    options = { "ruler": not args.noruler, "decays": not args.nodecays, 
+                "predictions": False, "html": not args.nohtml }
     plot ( args.number, args.verbosity, args.picklefile, options ) 
+    if args.scp:
+        print ( "scp to smodels" )
+        subprocess.getoutput ( "scp *.png index.html smodels.hephy.at:/var/www/walten/models/" )
