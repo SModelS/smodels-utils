@@ -178,8 +178,8 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
         xline1=0.35 #end of line
         xtext=0.39  #start of caption
     else:
-        xline0=0.32
-        xline1=0.51
+        xline0=0.34
+        xline1=0.43
         xtext=0.48
 
     ylist=[]
@@ -238,7 +238,7 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
         t.SetTextColor(col)
         label = _pprint(name)
         t.DrawLatex(x+dx,y-.01,label )
-        ctr=0
+        lctr=0
         keys = []
         if hasResultsFor != None:
             for mana,analyses in hasResultsFor.items():
@@ -249,10 +249,14 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
                     keys.append ( mana )
                     for ana in analyses:
                         t2 = ROOT.TLatex()
+                        ddx=0.
+                        if ctr % 2 == 0: ## all odd ones on the left
+                            ddx=.29
+                            t2.SetTextAlign(31)
                         t2.SetTextColor(col)
-                        t2.SetTextSize(.03)
-                        t2.DrawLatex(x-.07,y-.037-.018*ctr,ana )
-                        ctr+=1
+                        t2.SetTextSize(.025)
+                        t2.DrawLatex(x-.07+ddx,y-.037-.016*lctr,ana.replace("201","1") )
+                        lctr+=1
         for k in keys:
             hasResultsFor.pop ( k ) ## dont print them several times
         if printmass: t.DrawLatex(xm,y-.01,str(int(round(m,0))))
@@ -262,12 +266,11 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
     for i in range ( int ( math.ceil ( minvalue / 100. )) * 100, \
                    int ( math.floor ( maxvalue / 100. )) * 100 +1, 100 ):
         y=(float(i)-minvalue)/(maxvalue-minvalue)
-        l=ROOT.TLine ( 0.11,y,0.24,y) ## the black lines
-        # l=ROOT.TLine ( 0.13,y,0.16,y)
+        l=ROOT.TLine ( 0.12,y,0.15,y) ## the black lines
         l.SetLineWidth(1)
         l.SetLineStyle(2)
         l.Draw()
-        t.DrawLatex ( 0.02,y-0.01, str(i) )
+        t.DrawLatex ( 0.01,y-0.01, str(i) )
         lines.append(l)
 
     tmpf=tempfile.mkstemp()[1]

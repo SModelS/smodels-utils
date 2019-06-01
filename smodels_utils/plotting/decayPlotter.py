@@ -126,7 +126,7 @@ def draw( slhafile, outfile, options, offset=0.,
             color=colorizer.getColor ( name )
         drawer.addNode ( reader.getMass ( name ), name, \
                 options["masses"], color, reader.fermionic ( name ) )
-        decs=reader.getDecays ( name, rmin=0.9 )
+        decs=reader.getDecays ( name, rmin=0.95 )
         drawer.addEdges ( name, decs )
 
     ## drawer.addMassScale ( )

@@ -433,6 +433,7 @@ class SPhenoReader:
               if not dname in ret.keys ( ):
                 ret[dname]={}
               ret[dname][radiator]=r
+              # print ( "adding",particle,dname,radiator,r )
               ret_r+=r
               if ret_r>rmin:
                 return ret

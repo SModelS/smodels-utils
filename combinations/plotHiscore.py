@@ -48,50 +48,54 @@ def writeIndexHtml ( model ):
 def copyFilesToGithub():
     subprocess.getoutput ( "cp index.html matrix_aggressive.png decays.png ruler.png ../../smodels.github.io/models/" )
 
-def plot ( number, verbosity, picklefile ):
+def plotRuler( model ):
+    resultsForPIDs = {}
+    for tpred in model.bestCombo:
+        for pid in tpred.PIDs:
+            apid = abs(pid)
+            if not apid in resultsForPIDs:
+                resultsForPIDs[apid]=set()
+            resultsForPIDs[apid].add ( tpred.analysisId() )
+    resultsFor = {}
+    for pid,values in resultsForPIDs.items():
+        resultsFor[ model.masses[pid] ] = values
+    
+    print ( "[plotHiscore] now draw ruler.png" )
+    rulerPlotter.draw ( model.currentSLHA, "ruler.png", Range=(None,None),
+                        mergesquark = False,
+                        hasResultsFor = resultsFor )
+
+def plotDecays ( model ):
+    print ( "[plotHiscore] now draw decays.png" )
+    options = { "tex": True, "color": True, "dot": True, "squarks": True,
+                "weakinos": True, "sleptons": True, "neato": True,
+                "integratesquarks": False, "leptons": True }
+    ## FIXME add cross sections.
+    decayPlotter.draw ( model.currentSLHA, "decays.png", options, 
+                        ssmultipliers = model.ssmultipliers )
+
+def plot ( number, verbosity, picklefile, options ):
     ## plot hiscore number "number"
     model = obtain ( number, picklefile )
     print ( "[plotHiscore] create slha file" )
     model.createSLHAFile ()
+    opts = [ "ruler", "decays", "predictions", "copy", "html" ]
+    for i in opts:
+        if not i in options:
+            options[i]=True
     
-    def massToPid ( mass ):
-        """ convert mass to pid """
-        for pid,mm in model.masses.items():
-            if abs(mass-mm)<.2:
-                return pid
-        return None
-
-    plotRuler = True
-    if plotRuler:
-        resultsForPIDs = {}
-        for tpred in model.bestCombo:
-            for pid in tpred.PIDs:
-                apid = abs(pid)
-                if not apid in resultsForPIDs:
-                    resultsForPIDs[apid]=set()
-                resultsForPIDs[apid].add ( tpred.analysisId() )
-                    #resultsFor[mmass].add ( tpred.analysisId() )
-                    #print ( "add", mmass, mother, tpred.analysisId(), tpred.dataId(), tpred.PIDs )
-        resultsFor = {}
-        for pid,values in resultsForPIDs.items():
-            resultsFor[ model.masses[pid] ] = values
-        
-        print ( "[plotHiscore] now draw ruler.png" )
-        rulerPlotter.draw ( model.currentSLHA, "ruler.png", Range=(None,None),
-                            mergesquark = False,
-                            hasResultsFor = resultsFor )
-    plotDecays = True
-    if plotDecays:
-        print ( "[plotHiscore] now draw decays.png" )
-        options = { "tex": True, "color": True, "dot": True, "squarks": True,
-                    "weakinos": True, "sleptons": True, "neato": True,
-                    "integratesquarks": False, "leptons": True }
-        ## FIXME add cross sections.
-        decayPlotter.draw ( model.currentSLHA, "decays.png", options, 
-                            ssmultipliers = model.ssmultipliers )
-    discussPredictions ( model )
-    writeIndexHtml ( model )
-    copyFilesToGithub()
+    plotruler = options["ruler"]
+    if plotruler:
+        plotRuler ( model )
+    plotdecays = options["decays"]
+    if plotdecays:
+        plotDecays ( model )
+    if options["predictions"]:
+        discussPredictions ( model )
+    if options["html"]:
+        writeIndexHtml ( model )
+    if options["copy"]:
+        copyFilesToGithub()
 
 if __name__ == "__main__":
     import argparse
@@ -106,5 +110,10 @@ if __name__ == "__main__":
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug, info, warn, err [info]',
             type=str, default="info" )
+    argparser.add_argument ( '-H', '--nohtml',
+            help='do not produce index.html',
+            action="store_true" )
     args = argparser.parse_args()
-    plot ( args.number, args.verbosity, args.picklefile ) 
+    options = { "ruler": True, "decays": True, "predictions": True, 
+                "html": not args.nohtml }
+    plot ( args.number, args.verbosity, args.picklefile, options ) 
