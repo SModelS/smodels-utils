@@ -136,7 +136,9 @@ class Model:
             if r > 1.:
                 self.pprint ( "analysis %s excludes the model. r=%.1f" % ( theorypred.expResult.globalInfo.id, r ) )
                 self.Z = 0.
+                self.llhd = 0.
                 self.letters = "?"
+                self.description = "?"
                 return True
         self.pprint ( "check if excluded, %d predictions: no" % len(predictions) )
         return False
