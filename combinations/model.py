@@ -117,6 +117,9 @@ class Model:
         # if not os.path.exists ( self.currentSLHA ):
         self.createSLHAFile()
         predictions = predict ( self.currentSLHA )
+        excluded = self.checkForExcluded ( predictions )
+        if excluded:
+            return 
         combiner = Combiner( self.walkerid )
         bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, strategy )
         self.bestCombo = bestCombo # combiner.removeDataFromBestCombo ( bestCombo )
@@ -125,6 +128,18 @@ class Model:
         self.letters = combiner.getLetterCode(self.bestCombo)
         self.description = combiner.getComboDescription(self.bestCombo)
         # return (bestCombo,Z,llhd)
+
+    def checkForExcluded ( self, predictions ):
+        """ check if any of the predictions excludes the point """
+        for theorypred in predictions:
+            r = theorypred.getRValue(expected=False)
+            if r > 1.:
+                self.pprint ( "analysis %s excludes the model. r=%.1f" % ( theorypred.expResult.globalInfo.id, r ) )
+                self.Z = 0.
+                self.letters = "?"
+                return True
+        self.pprint ( "check if excluded, %d predictions: no" % len(predictions) )
+        return False
 
     def backup ( self ):
         """ backup the current state """
