@@ -88,6 +88,8 @@ class Model:
         ## for now we start with a stop1 at around 700 --
         ## we know this works well.
         self.masses[1000006]=random.uniform(500,900)
+        self.masses[1000002]=random.uniform(800,1200)
+        self.masses[1000024]=random.uniform(500,1000)
         self.computePrior()
 
     def pprint ( self, *args ):
