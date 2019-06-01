@@ -373,6 +373,11 @@ class Model:
         ndiscarded=0
         self.backup()
         oldZ = self.Z
+        frozen = self.frozenParticles()
+        for pid in frozen:
+            ## remove ssmultipliers for frozen particles
+            if pid in self.ssmultipliers:
+                self.ssmultipliers.pop(pid)
         for pid in unfrozen:
             self.pprint ( "trying to freeze %s (%.1f)" % \
                           ( self.getParticleName(pid), self.masses[pid] ) )

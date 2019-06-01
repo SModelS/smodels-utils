@@ -27,7 +27,11 @@ def main():
         h.writeListToPickle( args.save )
     print ( "Check variable: h" )
     if args.interactive:
-        IPython.embed()
+        # IPython.embed( using= False )
+        from traitlets.config import get_config
+        c = get_config()
+        c.InteractiveShellEmbed.colors = "Linux"
+        IPython.embed(config=c)
 
 if __name__ == "__main__":
     main()
