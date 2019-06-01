@@ -6,6 +6,12 @@ walker*log
 predictions.pcl
 matrix*png
 matrix*pdf
+decays.log
+ruler.png
+index.html
+decays.pdf
+decays.png
+decays.tex
 paper/document.log
 debug.log
 paper/decays.log
