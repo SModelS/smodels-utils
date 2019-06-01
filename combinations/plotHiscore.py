@@ -66,11 +66,12 @@ def plot ( number, verbosity, picklefile ):
         resultsFor = {}
         for tpred in model.bestCombo:
             for branch in tpred.mass:
-                mmass = branch[0].asNumber(GeV)
-                mother = massToPid ( mmass )
-                if not mmass in resultsFor:
-                    resultsFor[mmass]=set()
-                resultsFor[mmass].add ( tpred.expResult.globalInfo.id)
+                for vtx in branch[:-1]:
+                    mmass = vtx.asNumber(GeV)
+                    mother = massToPid ( mmass )
+                    if not mmass in resultsFor:
+                        resultsFor[mmass]=set()
+                    resultsFor[mmass].add ( tpred.expResult.globalInfo.id)
                 # print ( "add", mmass, mother, tpred.expResult.globalInfo.id )
         print ( "[plotHiscore] now draw ruler.png" )
         rulerPlotter.draw ( model.currentSLHA, "ruler.png", Range=(None,None),
