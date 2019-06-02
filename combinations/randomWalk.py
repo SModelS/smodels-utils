@@ -9,6 +9,7 @@ import colorama
 from hiscore import Hiscore
 from model import Model
 from history import History
+import helpers
 
 def cleanDirectory ():
     subprocess.getoutput ( "mkdir -p tmp" )
@@ -49,7 +50,7 @@ class RandomWalker:
         self.model.step+=1
         nUnfrozen = len ( self.model.unFrozenParticles() )
         nTotal = len ( self.model.masses.keys() )
-        self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.model.step, nUnfrozen, nTotal, ", ".join ( map ( self.model.getParticleName, self.model.unFrozenParticles() ) ) ) )
+        self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.model.step, nUnfrozen, nTotal, ", ".join ( map ( helpers.getParticleName, self.model.unFrozenParticles() ) ) ) )
         nChanges = 0
         mu = 1. - .7 / (self.model.Z+1.) ## make it more unlikely when Z is high
         uUnfreeze = random.gauss( mu ,.5)

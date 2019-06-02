@@ -6,6 +6,7 @@ import random, numpy, tempfile, os, copy, time, sys, colorama
 from smodels.tools.xsecComputer import XSecComputer, LO
 from combiner import Combiner
 from predictor import Predictor
+import helpers
 
 class Model:
     """ encodes one theoretical model, i.e. the particles, their masses, their
@@ -23,16 +24,6 @@ class Model:
                   2000011, 1000012, 1000013, 2000013, 1000014, 1000015, 2000015,
                   1000016, 1000021, 1000022, 1000023, 1000025, 1000035, 1000024,
                   1000037 ]
-        self.names = { 1000001: "~dL", 2000001: "~dR", 1000002: "~uL",
-                       2000002: "~uR", 1000003: "~sL", 2000003: "~sR",
-                       1000004: "~cL", 2000004: "~cR", 1000005: "~b1",
-                       2000005: "~b2", 1000006: "~t1", 2000006: "~t2",
-                       1000011: "~eL", 2000011: "~eR", 1000012: "~nu",
-                       1000013: "~muL", 2000013: "~muR", 1000014: "~nu",
-                       1000015: "~tauL", 2000015: "~tauR", 1000016: "~nu",
-                       1000021: "~g", 1000022: "~chi10", 1000023: "~chi20",
-                       1000025: "~chi30", 1000035: "~chi40", 1000024: "~chi1+",
-                       1000037: "~chi2+" }
         self.onesquark = False ## only one light squark
         self.twosquark = False  ## a few squarks, but not all
         self.manysquark = True ## many squarks
@@ -167,8 +158,8 @@ class Model:
                 self.pprint ( "analysis %s:%s excludes the model. r=%.1f (r_exp=%s)" % ( theorypred.analysisId(), theorypred.dataId(), r, rexp ) )
                 self.Z = 0.
                 self.llhd = 0.
-                self.letters = "?"
-                self.description = "?"
+                self.letters = "excluded"
+                self.description = "excluded"
                 return True
         self.pprint ( "check if excluded, %d predictions: no" % len(predictions) )
         return False
@@ -209,7 +200,7 @@ class Model:
         p = random.choice ( frozen )
         self.masses[p]=random.uniform ( self.masses[Model.LSP], self.maxMass )
         self.normalizeAllBranchings() ## adjust everything
-        self.pprint ( "Unfreezing %s: m=%f" % ( self.getParticleName(p), self.masses[p] ) )
+        self.pprint ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.masses[p] ) )
         return 1
 
     def normalizeBranchings ( self, pid ):
@@ -245,12 +236,6 @@ class Model:
             if not pid == self.LSP:
                 self.normalizeBranchings ( pid )
 
-    def getParticleName ( self, p ):
-        sp = str(p)
-        if p in self.names:
-            sp = self.names[p]
-        return sp
-
     def freezeRandomParticle ( self ):
         """ freezes a random unfrozen particle """
         unfrozen = self.unFrozenParticles( withLSP = False )
@@ -259,7 +244,7 @@ class Model:
         p = random.choice ( unfrozen )
         self.masses[p]=1e6
         self.normalizeAllBranchings() ## adjust everything
-        self.pprint ( "Freezing %s (keep branchings)." % ( self.getParticleName(p) ) )
+        self.pprint ( "Freezing %s (keep branchings)." % ( helpers.getParticleName(p) ) )
         return 1
 
     def freezeMostMassiveParticle ( self ):
@@ -275,7 +260,7 @@ class Model:
         # p = random.choice ( unfrozen )
         self.masses[pid]=1e6
         self.normalizeAllBranchings() ## adjust everything
-        self.pprint ( "Freezing most massive %s (%.1f)" % ( self.getParticleName(pid), minmass ) )
+        self.pprint ( "Freezing most massive %s (%.1f)" % ( helpers.getParticleName(pid), minmass ) )
         return 1
 
     def randomlyChangeSignalStrengths ( self ):
@@ -290,7 +275,7 @@ class Model:
             self.pprint ( "Huh? ssmultiplier is 0?? Change to 1." )
             newSSM = 1.
         self.ssmultipliers[p]=newSSM
-        self.pprint ( "changed signal strength multiplier of %s: %.2f." % (self.getParticleName(p), newSSM ) )
+        self.pprint ( "changed signal strength multiplier of %s: %.2f." % (helpers.getParticleName(p), newSSM ) )
         return 1
 
     def randomlyChangeBranchings ( self ):
@@ -337,7 +322,7 @@ class Model:
                 brvec.append("")
             else:
                 brvec.append("%.2f" % x )
-        self.pprint ( "changed branchings of %s: %s: s=%.2f" % (self.getParticleName(p), ",".join( brvec  ), control ) )
+        self.pprint ( "changed branchings of %s: %s: s=%.2f" % (helpers.getParticleName(p), ",".join( brvec  ), control ) )
         return 1
 
     def takeRandomMassStep ( self ):
