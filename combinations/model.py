@@ -133,6 +133,8 @@ class Model:
         # get the predictions that determine whether model is excluded:
         # best results only, also non-likelihood results
         self.log ( "check if excluded" )
+        if not hasattr ( self, "predictor" ):
+            self.predictor = Predictor ( self.walkerid )
         bestpreds = self.predictor.predict ( self.currentSLHA, allpreds=False, 
                                              llhdonly=False )
         self.log ( "received best preds" )
@@ -144,14 +146,14 @@ class Model:
         # but need llhd
         predictions = self.predictor.predict ( self.currentSLHA, allpreds=True, llhdonly=True )
         combiner = Combiner( self.walkerid )
-        self.log ( "now find highest significance" )
+        self.log ( "now find highest significance for %d predictions" % len(predictions) )
         bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, strategy )
         self.bestCombo = bestCombo # combiner.removeDataFromBestCombo ( bestCombo )
         self.Z = Z
         self.llhd = llhd
         self.letters = combiner.getLetterCode(self.bestCombo)
         self.description = combiner.getComboDescription(self.bestCombo)
-        self.log ( "done with prediction. Z=%.2f" % self.Z )
+        self.log ( "done with prediction. best Z=%.2f." % self.Z )
 
     def checkForExcluded ( self, predictions ):
         """ check if any of the predictions excludes the point """

@@ -89,7 +89,7 @@ class Hiscore:
             subprocess.getoutput ( "mv -f %s old.pcl" % pickleFile )
             self.clean()
             f=open( pickleFile, "wb" )
-            fcntl.lockf( f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.lockf( f, fcntl.LOCK_EX ) # | fcntl.LOCK_NB)
             pickle.dump ( self.hiscores, f )
             fcntl.lockf( f, fcntl.LOCK_UN )
             f.close()
