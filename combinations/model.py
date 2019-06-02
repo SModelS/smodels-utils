@@ -95,7 +95,7 @@ class Model:
     def highlight ( self, msgType = "info", *args ):
         """ logging, hilit """
         col = colorama.Fore.GREEN
-        print ( "%s[model:%d - %s] %s%s" % ( col, self.walkerid, time.asctime(), " ".join(map(str,args)), colorama.Fore.RESET ) )
+        print ( "%s[model:%d - %s] %s%s" % ( col, self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)), colorama.Fore.RESET ) )
 
     def pprint ( self, *args ):
         """ logging """
