@@ -29,9 +29,16 @@ def predict ( inputFile ):
 
     ret = []
     for expRes in listOfExpRes:
-        predictions = theoryPredictionsFor ( expRes, topos, useBestDataset=True )
+        #predictions = theoryPredictionsFor ( expRes, topos, useBestDataset=True,
+        #                                     combinedResults=True )
+        predictions = theoryPredictionsFor ( expRes, topos, useBestDataset=False,
+                                             combinedResults=False )
         if predictions == None:
             continue
+        combpred = theoryPredictionsFor ( expRes, topos, useBestDataset=False,
+                                             combinedResults=True )
+        if combpred != None:
+            for c in combpred: predictions.append ( c )
         for prediction in predictions:
             prediction.computeStatistics()
             if prediction.likelihood != None:
