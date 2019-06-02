@@ -5,7 +5,7 @@
 import random, numpy, tempfile, os, copy, time, sys, colorama
 from smodels.tools.xsecComputer import XSecComputer, LO
 from combiner import Combiner
-from predictor import predict
+from predictor import Predictor
 
 class Model:
     """ encodes one theoretical model, i.e. the particles, their masses, their
@@ -16,6 +16,7 @@ class Model:
         self.walkerid = walkerid
         self.version = 1 ## version of this class
         self.maxMass = 2400. ## maximum masses we consider
+        self.predictor = Predictor( walkerid )
         self.step = 0 ## count the steps
         self.particles = [ 1000001, 2000001, 1000002, 2000002, 1000003, 2000003,
                   1000004, 2000004, 1000005, 2000005, 1000006, 2000006, 1000011,
@@ -85,11 +86,10 @@ class Model:
 
         ## the LSP we need from the beginning
         self.masses[Model.LSP]=random.uniform(50,500)
-        ## for now we start with a stop1 at around 700 --
-        ## we know this works well.
-        self.masses[1000006]=random.uniform(500,900)
-        self.masses[1000002]=random.uniform(800,1200)
-        self.masses[1000024]=random.uniform(500,1000)
+        if False: # cheat, to get a head start
+            self.masses[1000006]=random.uniform(500,900)
+            self.masses[1000002]=random.uniform(800,1200)
+            self.masses[1000024]=random.uniform(500,1000)
         self.computePrior()
 
     def highlight ( self, msgType = "info", *args ):
@@ -105,7 +105,7 @@ class Model:
     def log ( self, *args ):
         """ logging to file """
         f=open( "walker%d.log" % self.walkerid, "a" )
-        f.write ( "[model:%d - %s] %s\n" % ( self.walkerid, time.asctime(), " ".join(map(str,args)) ) )
+        f.write ( "[model:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
         f.close()
 
     def frozenParticles ( self ):
@@ -117,29 +117,54 @@ class Model:
                 ret.append(m)
         return ret
 
+    def clean ( self ):
+        """ remove unneeded stuff before storing """
+        combiner = Combiner( self.walkerid )
+        self.bestCombo = combiner.removeDataFromBestCombo ( self.bestCombo )
+        if hasattr ( self, "_backup" ):
+            del self._backup
+        if hasattr ( self, "predictor" ):
+            del self.predictor
+
     def predict ( self, strategy ):
         """ compute best combo, llhd, and significance """
         # if not os.path.exists ( self.currentSLHA ):
         self.createSLHAFile()
-        predictions = predict ( self.currentSLHA )
-        excluded = self.checkForExcluded ( predictions )
+        # get the predictions that determine whether model is excluded:
+        # best results only, also non-likelihood results
+        self.log ( "check if excluded" )
+        if not hasattr ( self, "predictor" ):
+            self.predictor = Predictor ( self.walkerid )
+        bestpreds = self.predictor.predict ( self.currentSLHA, allpreds=False, 
+                                             llhdonly=False )
+        self.log ( "received best preds" )
+        excluded = self.checkForExcluded ( bestpreds )
+        self.log ( "model is excluded? %s" % str(excluded) )
         if excluded:
-            return 
+            return
+        # now get the predictions that determine the Z of the model. allpreds,
+        # but need llhd
+        predictions = self.predictor.predict ( self.currentSLHA, allpreds=True, llhdonly=True )
         combiner = Combiner( self.walkerid )
+        self.log ( "now find highest significance for %d predictions" % len(predictions) )
         bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, strategy )
         self.bestCombo = bestCombo # combiner.removeDataFromBestCombo ( bestCombo )
         self.Z = Z
-        self.llhd = 1. - llhd
+        self.llhd = llhd
         self.letters = combiner.getLetterCode(self.bestCombo)
         self.description = combiner.getComboDescription(self.bestCombo)
-        # return (bestCombo,Z,llhd)
+        self.log ( "done with prediction. best Z=%.2f." % self.Z )
 
     def checkForExcluded ( self, predictions ):
         """ check if any of the predictions excludes the point """
         for theorypred in predictions:
             r = theorypred.getRValue(expected=False)
+            rexp = theorypred.getRValue(expected=True)
+            if r == None:
+                self.pprint ( "I received %s as r. What do I do with this?" % r )
+                r = 2.
             if r > 1.:
-                self.pprint ( "analysis %s excludes the model. r=%.1f" % ( theorypred.expResult.globalInfo.id, r ) )
+                self.pprint ( "analysis %s:%s excludes the model. r=%.1f (r_exp=%s)" % ( theorypred.analysisId(), theorypred.dataId(), r, rexp ) )
                 self.Z = 0.
                 self.llhd = 0.
                 self.letters = "?"
@@ -294,9 +319,9 @@ class Model:
             #if br > 1.: br = 1.
             self.decays[p][i]=br
             S+=br
-        if S > 1.: ## correct for too large sums
-            for i in self.decays[p].keys():
-                self.decays[p][i] = self.decays[p][i] / S
+        if True: # S > 1.: ## correct for too large sums
+            for i,v in self.decays[p].items():
+                self.decays[p][i] = v / S
             S = 1.
         #for i in self.frozenParticles(): ## frozen particles have 0 branchings
         #    self.decays[p][i]=0.
@@ -372,11 +397,13 @@ class Model:
 
     def computeXSecs ( self ):
         """ compute xsecs for current.slha """
+        self.log ( "computing xsecs" )
         # print ( "[walk] computing xsecs for %s" % self.currentSLHA )
         computer = XSecComputer ( LO, 2000, 6 )
         computer.computeForOneFile ( [8,13], self.currentSLHA,
                 unlink=True, lOfromSLHA=False, tofile=True,
                 ssmultipliers  = self.ssmultipliers )
+        self.log ( "done computing xsecs" )
 
     def computePrior ( self ):
         """ compute the prior for the current model.
