@@ -4,7 +4,6 @@
 
 import random, copy, pickle, sys, os, time, subprocess, math
 import multiprocessing
-from predictor import predict
 from smodels.tools.runtime import nCPUs
 import colorama
 from hiscore import Hiscore
@@ -43,7 +42,7 @@ class RandomWalker:
 
     def pprint ( self, *args ):
         """ logging """
-        print ( "[walk:%d-%s] %s" % ( self.walkerid, time.strftime("%H:%M"), " ".join(map(str,args))) )
+        print ( "[walk:%d-%s] %s" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args))) )
         self.log ( *args )
 
     def onestep ( self ):
@@ -118,7 +117,7 @@ class RandomWalker:
     def log ( self, *args ):
         """ logging to file """
         f=open( "walker%d.log" % self.walkerid, "a" )
-        f.write ( "[walk:%d - %s] %s\n" % ( self.walkerid, time.asctime(), " ".join(map(str,args)) ) )
+        f.write ( "[walk:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
         f.close()
 
     def walk ( self ):
@@ -131,9 +130,14 @@ class RandomWalker:
             try:
                 self.onestep()
             except Exception as e:
+                # https://bioinfoexpert.com/2016/01/18/tracing-exceptions-in-multiprocessing-in-python/
                 self.pprint ( "taking a step resulted in exception: %s, %s" % (type(e), e ) )
                 import traceback
                 traceback.print_stack( limit=None )
+                except_type, except_class, tb = sys.exc_info()
+                extracted = traceback.extract_tb(tb)
+                for point in extracted:
+                    self.pprint ( "extracted: %s" % point )
                 f=open("exceptions.log","a")
                 f.write ( "taking a step resulted in exception: %s, %s\n" % (type(e), e ) )
                 f.close()
@@ -185,6 +189,7 @@ def _run ( w ):
         f.close()
 
 if __name__ == "__main__":
+    print ( "[walk] ramping up" )
     import argparse
     argparser = argparse.ArgumentParser(
             description='model walker. builds BSM models of interest')
@@ -192,8 +197,8 @@ if __name__ == "__main__":
             help='combination strategy [aggressive]',
             type=str, default="aggressive" )
     argparser.add_argument ( '-n', '--nsteps',
-            help='number of steps [10000]',
-            type=int, default=10000 )
+            help='number of steps [100000]',
+            type=int, default=100000 )
     argparser.add_argument ( '-p', '--ncpus',
             help='number of CPUs. -1 means all. [1]',
             type=int, default=1 )
@@ -233,6 +238,7 @@ if __name__ == "__main__":
     if args.history:
         walkers[0].record_history = True
 
+    print ( "[walk] start the walkers" )
     if len ( walkers ) == 1:
         walkers[0].walk() ## just one, start directly
     else:

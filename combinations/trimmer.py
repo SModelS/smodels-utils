@@ -72,6 +72,7 @@ class Trimmer:
         self.trimParticles ( )
         if trimbranchings:
             self.trimBranchings ( )
+        self.clean()
 
     def trimBranchings ( ):
         """ now trim the branchings """
@@ -106,9 +107,6 @@ class Trimmer:
                         self.model.restore()
                         
         self.pprint ( "froze %d particles. %d/%d particles are still unfrozen. discarded %d branchings." % ( ndiscarded, len(self.model.unFrozenParticles()),len(self.model.masses),ndiscardedBR )  )
-        if hasattr ( self.model, "_backup" ):
-            del self.model._backup
-
 
     def getParticleName( self, pid ):
         """ convenience method to get particle name """

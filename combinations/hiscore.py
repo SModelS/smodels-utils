@@ -72,6 +72,12 @@ class Hiscore:
                 trimmer.trim( trimbranchings=False )
                 self.hiscores[i] = trimmer.model
 
+    def clean ( self ):
+        """ clean hiscore list, i.e. remove cruft from models """
+        for h in self.hiscores:
+            if h != None:
+                h.clean()
+
     def writeListToPickle ( self, pickleFile=None ):
         """ dump the list to the pickle file <pickleFile>.
             If pickleFile is None, then self.pickleFile is used.
@@ -81,6 +87,7 @@ class Hiscore:
         self.pprint ( "saving new hiscore list to %s" % pickleFile )
         try:
             subprocess.getoutput ( "mv -f %s old.pcl" % pickleFile )
+            self.clean()
             f=open( pickleFile, "wb" )
             fcntl.lockf( f, fcntl.LOCK_EX | fcntl.LOCK_NB)
             pickle.dump ( self.hiscores, f )

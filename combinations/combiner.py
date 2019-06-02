@@ -254,7 +254,7 @@ class Combiner:
         bestCombo,Z = self._findLargestZ ( combinables )
         ## compute a likelihood equivalent for Z
         llhd = stats.norm.pdf(Z)
-        return self.removeDataFromBestCombo(bestCombo),Z,llhd
+        return bestCombo,Z,llhd
 
     def removeDataFromBestCombo ( self, bestCombo ):
         """ remove the data from all theory predictions, we dont need them. """
@@ -283,7 +283,7 @@ class Combiner:
         bestCombo,ulexp = findBestCombo ( combinables )
         ulobs = get95CL ( bestCombo, expected=False )
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [ul_obs=%.2f, ul_exp=%.2f]" % ( strategy, self.getLetterCode(bestCombo), self.getComboDescription(bestCombo), ulobs, ulexp ) ) 
-        return self.removeDataFromBestCombo(bestCombo),ulexp,ulobs
+        return bestCombo,ulexp,ulobs
 
 if __name__ == "__main__":
     f=open("predictions.pcl", "rb" )

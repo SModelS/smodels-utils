@@ -9,45 +9,73 @@ from smodels.particlesLoader import BSMList
 from smodels.tools.physicsUnits import fb, GeV
 from smodels.experiment.databaseObj import Database
 from smodels.theory.model import Model
-import pickle
+import pickle, time
 
-def predict ( inputFile ):
-    """ taken an slha input file, return theory predictions """
-    model = Model ( BSMList, SMList )
-    model.updateParticles ( inputFile=inputFile )
+class Predictor:
+    def __init__ ( self, walkerid ):
+        self.walkerid = walkerid
+        self.database=Database("../../smodels-database/") 
 
-    mingap=10*GeV
-    sigmacut=0.02*fb
+    def pprint ( self, *args ):
+        """ logging """
+        print ( "[predict:%d] %s" % (self.walkerid, " ".join(map(str,args))) )
+        self.log ( *args )
 
-    # print ( "[predict] Now decomposing" )
-    topos = decomposer.decompose ( model, sigmacut, minmassgap=mingap )
-    # print ( "[predict] decomposed model into %d topologies." % len(topos) )
+    def log ( self, *args ):
+        """ logging to file """
+        f=open( "walker%d.log" % self.walkerid, "a" )
+        f.write ( "[predict:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
+        f.close()
 
-    database=Database("../../smodels-database/") 
-    # database=Database("../../smodels/test/database/") 
-    listOfExpRes = database.getExpResults()
+    def predict ( self, inputFile, allpreds=False, llhdonly=True ):
+        """ taken an slha input file, return theory predictions 
+        :param allpreds: return all predictions, not just best + combined
+        :param llhdonly: return only predictions with llhds
+        :returns: list of predictions
+        """
+        model = Model ( BSMList, SMList )
+        model.updateParticles ( inputFile=inputFile )
 
-    ret = []
-    for expRes in listOfExpRes:
-        #predictions = theoryPredictionsFor ( expRes, topos, useBestDataset=True,
-        #                                     combinedResults=True )
-        predictions = theoryPredictionsFor ( expRes, topos, useBestDataset=False,
-                                             combinedResults=False )
-        if predictions == None:
-            continue
-        combpred = theoryPredictionsFor ( expRes, topos, useBestDataset=False,
-                                             combinedResults=True )
-        if combpred != None:
-            for c in combpred: predictions.append ( c )
-        for prediction in predictions:
-            prediction.computeStatistics()
-            if prediction.likelihood != None:
-                ret.append ( prediction )
-    return ret
+        mingap=10*GeV
+        sigmacut=0.02*fb
+
+        self.log ( "Now decomposing" )
+        topos = decomposer.decompose ( model, sigmacut, minmassgap=mingap )
+        self.log ( "decomposed model into %d topologies." % len(topos) )
+
+        listOfExpRes = self.database.getExpResults()
+
+        bestDataSet=True
+        combinedRes=True
+
+        if allpreds:
+            bestDataSet=False
+            combinedRes=False
+
+        preds = []
+        self.log ( "start getting preds" )
+        for expRes in listOfExpRes:
+            predictions = theoryPredictionsFor ( expRes, topos, useBestDataset=bestDataSet,
+                                                 combinedResults=combinedRes )
+            if predictions == None:
+                predictions = []
+            if allpreds:
+                combpreds = theoryPredictionsFor ( expRes, topos, useBestDataset=False,
+                                                   combinedResults=True )
+                if combpreds != None:
+                    for c in combpreds:
+                        predictions.append ( c )
+            for prediction in predictions:
+                prediction.computeStatistics()
+                if (not llhdonly) or (prediction.likelihood != None):
+                    preds.append ( prediction )
+        # self.log ( "return %s" % str(preds) )
+        return preds
 
 if __name__ == "__main__":
     inputFile="gluino_squarks.slha"
-    predictions = predict ( inputFile )
+    p = Predictor ()
+    predictions = p.predict ( inputFile )
 
     f=open("predictions.pcl", "wb" )
     pickle.dump ( predictions, f )
