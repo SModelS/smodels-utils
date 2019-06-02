@@ -9,8 +9,9 @@ matrix*pdf
 decays.log
 ruler.png
 index.html
-ssmultipliers.dvi
-ssmultipliers.log
+texdoc.dvi
+texdoc.log
+texdoc.png
 decays.pdf
 decays.png
 decays.tex
@@ -20,3 +21,4 @@ paper/decays.log
 paper/decays.pdf
 paper/document.out
 paper/document.pdf
+history_old.py

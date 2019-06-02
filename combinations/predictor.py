@@ -21,7 +21,7 @@ def predict ( inputFile ):
 
     # print ( "[predict] Now decomposing" )
     topos = decomposer.decompose ( model, sigmacut, minmassgap=mingap )
-    print ( "[predict] Decomposed model into %d topologies." % len(topos) )
+    # print ( "[predict] decomposed model into %d topologies." % len(topos) )
 
     database=Database("../../smodels-database/") 
     # database=Database("../../smodels/test/database/") 

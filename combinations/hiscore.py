@@ -4,6 +4,7 @@
 """
 
 import random, copy, pickle, os, fcntl, time, subprocess
+from trimmer import Trimmer
 
 class Hiscore:
     """ encapsulates the hiscore list. """
@@ -67,7 +68,9 @@ class Hiscore:
             n = self.nkeep
         for i in range(n):
             if self.hiscores[i]!=None:
-                self.hiscores[i].trim()
+                trimmer = Trimmer( self.hiscores[i], "aggressive", .002 )
+                trimmer.trim( trimbranchings=False )
+                self.hiscores[i] = trimmer.model
 
     def writeListToPickle ( self, pickleFile=None ):
         """ dump the list to the pickle file <pickleFile>.
