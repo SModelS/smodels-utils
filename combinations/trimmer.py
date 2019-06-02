@@ -4,6 +4,7 @@
 
 import time, colorama, copy
 from model import Model
+import helpers
 
 class Trimmer:
     """ Class that trims models down, to decrease free parameters,
@@ -45,22 +46,22 @@ class Trimmer:
         # unfrozen = [] ## FIXME was only needed for checking branching trimmer
         for cpid,pid in enumerate(unfrozen):
             self.highlight ( "info", "trying to freeze %d/%d: %s (%.1f)" % \
-                   ( (cpid+1),len(unfrozen), self.getParticleName(pid), 
+                   ( (cpid+1),len(unfrozen), helpers.getParticleName(pid), 
                      self.model.masses[pid] ) )
             oldmass = self.model.masses[pid]
             self.model.masses[pid]=1e6
             # self.createSLHAFile()
             self.model.predict ( self.strategy )
-            self.pprint ( "when trying to remove %s, Z changed: %.3f -> %.3f" % ( self.getParticleName(pid), oldZ, self.model.Z ) )
+            self.pprint ( "when trying to remove %s, Z changed: %.3f -> %.3f" % ( helpers.getParticleName(pid), oldZ, self.model.Z ) )
             if self.model.Z > (1. - self.maxloss)*oldZ:
                 ndiscarded+=1
-                self.pprint ( "discarding #%d: %s" % ( ndiscarded, self.getParticleName(pid) ) )
+                self.pprint ( "discarding #%d: %s" % ( ndiscarded, helpers.getParticleName(pid) ) )
                 if pid in self.model.ssmultipliers:
                     #popping from multipliers also
                     self.model.ssmultipliers.pop(pid)
             else:
                 self.model.whatif[pid]=self.model.Z
-                self.pprint ( "not discarding %s" % self.getParticleName(pid) )
+                self.pprint ( "not discarding %s" % helpers.getParticleName(pid) )
                 self.model.masses[pid]=oldmass
                 self.model.restore()
 
@@ -81,7 +82,7 @@ class Trimmer:
         # unfrozen = [] ## turn it off
         for cpid,pid in enumerate(unfrozen):
             decays = self.model.decays[pid]
-            self.highlight ( "info", "trying to trim %d/%d branchings of %s" % ( (cpid+1),len(unfrozen),self.getParticleName(pid) ) )
+            self.highlight ( "info", "trying to trim %d/%d branchings of %s" % ( (cpid+1),len(unfrozen),helpers.getParticleName(pid) ) )
             for dpid,dbr in decays.items():
                 if dbr < 1e-5: ## small values set automatically to zero
                     self.model.decays[pid][dpid]=0. ## correct for it.
@@ -90,7 +91,7 @@ class Trimmer:
                         self.model.decays[pid][k]=v/S
                     continue
                 if dbr > 1e-5 and (dbr < .01 or self.model.masses[dpid]>self.model.masses[pid]):
-                    self.pprint ( "decay %s -> %s (br=%.2f) has small branching or is offshell. Try to take out." % (self.getParticleName(pid),self.getParticleName(dpid),dbr) )
+                    self.pprint ( "decay %s -> %s (br=%.2f) has small branching or is offshell. Try to take out." % (helpers.getParticleName(pid),helpers.getParticleName(dpid),dbr) )
                     oldZ = self.model.Z
                     self.model.backup()
                     self.model.decays[pid][dpid]=0.
@@ -101,13 +102,9 @@ class Trimmer:
                     if self.model.Z > (1. - self.maxloss)*oldZ:
                         dbr = 0.
                         ndiscardedBR+=1
-                        self.pprint ( "discarding small BR %s -> %s: %.2f: Z changed %.3f -> %.3f" % ( self.getParticleName(pid),self.getParticleName(dpid), dbr, oldZ, self.model.Z ) )
+                        self.pprint ( "discarding small BR %s -> %s: %.2f: Z changed %.3f -> %.3f" % ( helpers.getParticleName(pid),helpers.getParticleName(dpid), dbr, oldZ, self.model.Z ) )
                     else:
-                        self.pprint ( "not discarding small BR %s -> %s: %.2f Z changed %.3f -> %.3f" % ( self.getParticleName(pid), self.getParticleName(dpid), dbr, oldZ, self.model.Z ) )
+                        self.pprint ( "not discarding small BR %s -> %s: %.2f Z changed %.3f -> %.3f" % ( helpers.getParticleName(pid), helpers.getParticleName(dpid), dbr, oldZ, self.model.Z ) )
                         self.model.restore()
                         
         self.pprint ( "froze %d particles. %d/%d particles are still unfrozen. discarded %d branchings." % ( ndiscarded, len(self.model.unFrozenParticles()),len(self.model.masses),ndiscardedBR )  )
-
-    def getParticleName( self, pid ):
-        """ convenience method to get particle name """
-        return self.model.getParticleName ( pid )

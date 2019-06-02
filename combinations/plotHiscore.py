@@ -5,6 +5,7 @@ from randomWalk import Model # RandomWalker
 from smodels.tools.physicsUnits import GeV
 sys.path.insert(0,"../" )
 from smodels_utils.plotting import rulerPlotter, decayPlotter
+import helpers
 
 def obtain ( number, picklefile ):
     """ obtain hiscore number <number> """
@@ -40,7 +41,7 @@ def writeTex ( model ):
     for k,v in model.ssmultipliers.items():
         if abs(v-1.)<1e-3:
             continue
-        pname = toLatex ( model.getParticleName(k) )
+        pname = toLatex ( helpers.getParticleName(k) )
         ssm.append ( "%s = %.2f" % (pname,v) )
 
     whatifs = ""
@@ -49,7 +50,7 @@ def writeTex ( model ):
         #whatifs+="Contributions by particles: $"
         tok = []
         for k,v in model.whatif.items():
-            tok.append ( "%s = %.2f" % ( toLatex(model.getParticleName(k)), model.Z - v ) )
+            tok.append ( "%s = %.2f" % ( toLatex(helpers.getParticleName(k)), model.Z - v ) )
         whatifs+= ", ".join ( tok )
         whatifs+="$"
 
@@ -66,7 +67,7 @@ def writeIndexHtml ( model ):
     for k,v in model.ssmultipliers.items():
         if abs(v-1.)<1e-3:
             continue
-        ssm.append ( "%s: %.2f" % (model.getParticleName(k),v) )
+        ssm.append ( "%s: %.2f" % (helpers.getParticleName(k),v) )
     f=open("index.html","w")
     f.write ( "<html>\n" )
     f.write ( "<body>\n" )
