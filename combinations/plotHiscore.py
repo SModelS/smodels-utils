@@ -23,25 +23,13 @@ def discussPredictions ( model ):
         print ( "theory pred: %s:%s" % ( pred.expResult.globalInfo.id, ",".join ( map ( str, pred.txnames ) ) ) )
         # print ( "     `- ", pred.expResult.globalInfo.id, "ana", pred.analysis, "masses", pred.mass, "txnames", pred.txnames, "type", pred.dataType() )
 
-def toLatex ( pname ):
-    """ get the latex version of particle name """
-    rpls = { "L": "_{L}", "R": "_{R}", "1": "_{1}", "2": "_{2}", "~nu": "\\tilde{\\nu}",
-             "~chi": "\\tilde{\\chi}", "~mu": "\\tilde{\\mu}", "+": "^{+}", "3": "_{3}", 
-             "0": "^{0}", "-": "^{-}" }
-    for kr,vr in rpls.items():
-        pname = pname.replace(kr,vr)
-    if pname.find("~")==0:
-        p1,p2=1,2
-        pname="\\tilde{"+pname[p1:p2]+"}"+pname[p2:]
-    return pname
-
 def writeTex ( model ):
     """ write the comment about ss multipliers and contributions, in tex """
     ssm = []
     for k,v in model.ssmultipliers.items():
         if abs(v-1.)<1e-3:
             continue
-        pname = toLatex ( helpers.getParticleName(k) )
+        pname = helpers.toLatex ( k )
         ssm.append ( "%s = %.2f" % (pname,v) )
 
     whatifs = ""
@@ -50,7 +38,7 @@ def writeTex ( model ):
         #whatifs+="Contributions by particles: $"
         tok = []
         for k,v in model.whatif.items():
-            tok.append ( "%s = %.2f" % ( toLatex(helpers.getParticleName(k)), model.Z - v ) )
+            tok.append ( "%s = %.2f" % ( helpers.toLatex(k), model.Z - v ) )
         whatifs+= ", ".join ( tok )
         whatifs+="$"
 
@@ -96,6 +84,8 @@ def plotRuler( model ):
     resultsForPIDs = {}
     for tpred in model.bestCombo:
         for pid in tpred.PIDs:
+            if type(pid) in [ list, tuple ]:
+                pid = pid[0]
             apid = abs(pid)
             if not apid in resultsForPIDs:
                 resultsForPIDs[apid]=set()

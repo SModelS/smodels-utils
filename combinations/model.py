@@ -374,8 +374,13 @@ class Model:
             for m,v in self.masses.items():
                 line=line.replace("M%d" % m,"%.1f" % v )
                 for dpid,dbr in self.decays[m].items():
-                    # print ( "m,d = br", m, dpid, dbr )
                     line=line.replace("D%d_%d" % ( m, dpid), "%.5f" % dbr )
+                D_ = "D%d_" % m 
+                if D_ in line:
+                    p1= line.find(D_)
+                    p2 = line[p1+1:].find(" ")
+                    print ( "remaining token: %s: set to zero." % line[p1:p1+p2-1] )
+                    line=line.replace( line[p1:p1+p2-1], "0." )
             f.write ( line )
         f.close()
         self.computeXSecs()

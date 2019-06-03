@@ -16,4 +16,23 @@ def getParticleName ( pid ):
     pid = abs(pid)
     if pid in names:
         return names[pid]
+
+def toLatex ( pname, addDollars=False ):
+    """ get the latex version of particle name 
+    :param addDollars: add dollars before and after
+    """
+    if type(pname)==int:
+        pname = getParticleName(pname)
+    rpls = { "L": "_{L}", "R": "_{R}", "1": "_{1}", "2": "_{2}", "~nu": "\\tilde{\\nu}",
+             "~chi": "\\tilde{\\chi}", "~mu": "\\tilde{\\mu}", "+": "^{+}", "3": "_{3}", 
+             "0": "^{0}", "-": "^{-}" }
+    for kr,vr in rpls.items():
+        pname = pname.replace(kr,vr)
+    if pname.find("~")==0:
+        p1,p2=1,2
+        pname="\\tilde{"+pname[p1:p2]+"}"+pname[p2:]
+    if addDollars:
+        pname = "$" + pname + "$"
+    return pname
+
     return str(pid)
