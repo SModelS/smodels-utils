@@ -42,7 +42,8 @@ class Drawer:
         self.walk = np.array ( tmp )
 
     def save ( self, plt, ax, fig, ndim, nsteps, j ):
-        filename = "pics/%dd_%03d%d.png" % ( ndim, nsteps, j )
+        filename = "pics/%03d%d.png" % ( nsteps-1, j )
+        #filename = "pics/%dd_%03d%d.png" % ( ndim, nsteps, j )
         #azim = -60 + 10 * math.sin ( nsteps * 2* math.pi / 2000. )
         # ax.view_init( azim= -60 )
         plt.savefig ( filename, dpi=dpi )
@@ -71,15 +72,19 @@ class Drawer:
             coords = np.array( coords )
         return min(coords),max(coords[coords<3000])
 
-    def draw3d( self, n = 80 ):
+    def getCoords ( self, j, n ):
+        """ FIXME what exactly does this do? """
         xc, yc, zc = self.walk[::,0], self.walk[::,1], self.walk[::,2]
+        xcoords=self.cutCoords ( xc, (j+1)/10., n )
+        ycoords=self.cutCoords ( yc, (j+1)/10., n )
+        zcoords=self.cutCoords ( zc, (j+1)/10., n )
+        return xcoords,ycoords,zcoords
+
+    def draw3d( self, n = 80 ):
         for j in range(0,10):
             fig = plt.figure(dpi=dpi )
             ax = fig.add_subplot ( 111, projection="3d" )
-            xcoords=self.cutCoords ( xc, (j+1)/10., n )
-            ycoords=self.cutCoords ( yc, (j+1)/10., n )
-            zcoords=self.cutCoords ( zc, (j+1)/10., n )
-            # print ( "n=",n,"j=",j,"xcoord",len(xcoords) )
+            xcoords,ycoords,zcoords = self.getCoords ( j, n )
             for i in range(n):
                 ax.plot( xcoords[i:i+2], ycoords[i:i+2], zcoords[i:i+2], c=cm.binary(.3+.6*i/n) )
             ax.plot( [xcoords[-1]], [ycoords[-1]], [zcoords[-1]], "*", color='r' )
@@ -89,9 +94,9 @@ class Drawer:
             ax.set_xlim(self.minMax(xcoords))
             ax.set_ylim(self.minMax(ycoords))
             ax.set_zlim(self.minMax(zcoords))
-            ax.set_xlabel ( helpers.toLatex(self.coordinates[0],True) )
-            ax.set_ylabel ( helpers.toLatex(self.coordinates[1],True) )
-            ax.set_zlabel ( helpers.toLatex(self.coordinates[2],True) )
+            ax.set_xlabel ( helpers.toLatex(self.coordinates[0],True,True) )
+            ax.set_ylabel ( helpers.toLatex(self.coordinates[1],True,True) )
+            ax.set_zlabel ( helpers.toLatex(self.coordinates[2],True,True) )
             ax.grid(False)
             title = "MCMC walk, after %d steps" % n 
             ax.text( 10., 7., 0., title, horizontalalignment="center",
@@ -103,13 +108,10 @@ class Drawer:
     def draw2d( self, n = 40 ):
         fig = plt.figure(dpi=dpi)
         ax = fig.add_subplot ( 111, projection="3d" )
-        xc, yc, zc = self.walk[::,0], self.walk[::,1], [0.]*(n+1)
         for j in range(10):
             fig = plt.figure( dpi=dpi )
             ax = fig.add_subplot ( 111, projection="3d" )
-            xcoords=self.cutCoords ( xc, (j+1)/10., n )
-            ycoords=self.cutCoords ( yc, (j+1)/10., n )
-            zcoords=self.cutCoords ( zc, (j+1)/10., n )
+            xcoords,ycoords,zcoords = self.getCoords ( j, n )
             for i in range(n-1):
                 ax.plot( xcoords[i:i+2], ycoords[i:i+2], zcoords[i:i+2], c=cm.binary(.3+.6*i/n) )
             ax.plot( [xcoords[n-1]], [ycoords[n-1]], [zcoords[n-1]], "*", color='r' )
@@ -122,8 +124,8 @@ class Drawer:
             ax.set_xlim(self.minMax(xcoords))
             ax.set_ylim(self.minMax(ycoords))
             ax.set_zlim(self.minMax(zcoords))
-            ax.set_xlabel ( helpers.toLatex(self.coordinates[0],True) )
-            ax.set_ylabel ( helpers.toLatex(self.coordinates[1],True) )
+            ax.set_xlabel ( helpers.toLatex(self.coordinates[0],True,True) )
+            ax.set_ylabel ( helpers.toLatex(self.coordinates[1],True,True) )
             ax.w_zaxis.line.set_lw(0.)
             ax.grid(False)
             ax.set_zticks([])
@@ -137,13 +139,10 @@ class Drawer:
     def draw1d( self, n = 5 ):
         fig = plt.figure( dpi=dpi )
         ax = fig.add_subplot ( 111, projection="3d" )
-        xc, yc, zc = self.walk[::,0], [0.]*(n+1), [0.]*(n+1)
         for j in range(10):
             fig = plt.figure( dpi=dpi )
             ax = fig.add_subplot ( 111, projection="3d" )
-            xcoords=self.cutCoords ( xc, (j+1)/10., n )
-            ycoords=self.cutCoords ( yc, (j+1)/10., n )
-            zcoords=self.cutCoords ( zc, (j+1)/10., n )
+            xcoords,ycoords,zcoords = self.getCoords ( j, n )
             for i in range(n):
                 ax.plot( xcoords[i:i+2], ycoords[i:i+2], zcoords[i:i+2], c=cm.binary(.3+.6*i/n) )
             ax.plot( [xcoords[-1]], [ycoords[-1]], [zcoords[-1]], "*", color='r' )
@@ -158,7 +157,7 @@ class Drawer:
             ax.set_xlim(self.minMax(xcoords))
             ax.set_ylim(self.minMax(ycoords))
             ax.set_zlim(self.minMax(zcoords))
-            ax.set_xlabel ( helpers.toLatex(self.coordinates[0],True) )
+            ax.set_xlabel ( helpers.toLatex(self.coordinates[0],True,True) )
             ax.w_zaxis.line.set_lw(0.)
             ax.w_yaxis.line.set_lw(0.)
             ax.grid(False)
