@@ -376,11 +376,11 @@ class Model:
                 for dpid,dbr in self.decays[m].items():
                     line=line.replace("D%d_%d" % ( m, dpid), "%.5f" % dbr )
                 D_ = "D%d_" % m 
-                if D_ in line:
+                if D_ in line and not line[0]=="#":
                     p1= line.find(D_)
                     p2 = line[p1+1:].find(" ")
-                    print ( "remaining token: %s: set to zero." % line[p1:p1+p2-1] )
-                    line=line.replace( line[p1:p1+p2-1], "0." )
+                    print ( "remaining token: %s: set to zero." % line[p1:p1+p2+1] )
+                    line=line.replace( line[p1:p1+p2+1], "0." )
             f.write ( line )
         f.close()
         self.computeXSecs()

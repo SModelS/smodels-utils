@@ -44,7 +44,7 @@ def writeTex ( model ):
 
     import tex2png
     src = "Signal strength multipliers: $" + ", ".join ( ssm ) + "$" + whatifs
-    print ( "src=>>>>%s<<<<" % src )
+    # print ( "src=>>>>%s<<<<" % src )
     p = tex2png.Latex ( src, 600 ).write()
     f = open ( "texdoc.png", "wb" ) 
     f.write ( p[0] )
