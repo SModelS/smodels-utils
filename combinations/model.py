@@ -154,7 +154,7 @@ class Model:
             if r == None:
                 self.pprint ( "I received %s as r. What do I do with this?" % r )
                 r = 2.
-            if r > 1.:
+            if r > 1.5:
                 self.pprint ( "analysis %s:%s excludes the model. r=%.1f (r_exp=%s)" % ( theorypred.analysisId(), theorypred.dataId(), r, rexp ) )
                 self.Z = 0.
                 self.llhd = 0.
