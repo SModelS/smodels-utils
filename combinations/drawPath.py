@@ -16,10 +16,11 @@ import helpers
 Writer = animation.writers["ffmpeg"]
 
 class Drawer:
-    def __init__ ( self, picklefile, nmin, nmax ):
+    def __init__ ( self, picklefile, nmin, nmax, save ):
         # self.dpi = 200
         # self.dpi = 100
         self.dpi = 75
+        self.save = save
         self.nmin = nmin
         self.nmax = nmax
         self.counter = nmin
@@ -71,12 +72,13 @@ class Drawer:
         self.walk = np.array ( tmp )
 
     def save ( self, plt, ndim, nsteps, j ):
-        filename = "pics/%03d%d.png" % ( nsteps-1, j )
         #azim = -60 + 10 * math.sin ( nsteps * 2* math.pi / 2000. )
         # ax.view_init( azim= -60 )
         #import IPython
         #IPython.embed()
-        plt.savefig ( filename, dpi=self.dpi )
+        if self.save:
+            filename = "pics/%03d%d.png" % ( nsteps-1, j )
+            plt.savefig ( filename, dpi=self.dpi )
         for t in self.ax.texts + self.ax.lines:
             t.set_visible(False)
 
@@ -166,16 +168,18 @@ if __name__ == "__main__":
     parser = ArgumentParser( description="plot pics for movie" )
     parser.add_argument("-f", "--file", type=str,
             help='history file to use [history.pcl]', default="history.pcl")
-    parser.add_argument("-nmin", "--nmin", type=int,
+    parser.add_argument("-n", "--nmin", type=int,
             help='first step [1]', default=1 )
-    parser.add_argument("-nmax", "--nmax", type=int,
+    parser.add_argument("-N", "--nmax", type=int,
             help='last step [100]', default=100 )
-    parser.add_argument("-clear", "--clear", action="store_true",
+    parser.add_argument("-c", "--clear", action="store_true",
             help='clear the pics folder before starting' )
+    parser.add_argument("-s", "--save", action="store_true",
+            help='keep the individual images as pngs in pics/' )
     args = parser.parse_args()
     if args.clear:
         subprocess.getoutput ("rm pics/*png" )
-    drawer = Drawer ( args.file, args.nmin, args.nmax )
+    drawer = Drawer ( args.file, args.nmin, args.nmax, args.save )
     print ( "draw the pics" )
     drawer.run()
     print ( "now animate the thing" )
