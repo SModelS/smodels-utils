@@ -28,6 +28,7 @@ def _Hash ( lst ): ## simple hash function for our masses
         ret=100000*ret+l
     return ret
 
+allowTrimming=True ## allow big grids to be trimmed down
 
 class DataHandler(object):
 
@@ -723,19 +724,30 @@ class DataHandler(object):
             n_bins=n_bins * len(zRange )
             if len ( n_bins ) > max_nbins:
                 if len(zRange)>100:
-                    logger.warning ( "Too large map (nbins=%d). Will trim z axis." % n_bins )
-                    n_bins = n_bins / len(zRange)
-                    zRange = range(1,zAxis.GetNbins() + 1,2)
-                    n_bins = n_bins * len(zRange)
+                    if allowTrimming:
+                        logger.warning ( "Too large map (nbins=%d). Will trim z axis." % n_bins )
+                        n_bins = n_bins / len(zRange)
+                        zRange = range(1,zAxis.GetNbins() + 1,2)
+                        n_bins = n_bins * len(zRange)
+                    else:
+                        logger.warning ( "Very large map (nbins in z is %d), but trimming turned off." % n_bins )
         if self.dimensions > 1 and n_bins > max_nbins:
             if len(yRange)>200:
+                if allowTrimming:
                     logger.warning ( "Too large map (nbins=%d). Will trim y axis." % n_bins )
                     n_bins = n_bins / len(yRange)
                     yRange = range(1,yAxis.GetNbins() + 1,2 )
                     n_bins = n_bins * len(yRange)
+                else:
+                    logger.warning ( "Very large map (nbins in y is %d), but trimming turned off." % n_bins )
         if n_bins > max_nbins:
-            logger.warning ( "Too large map (nbins=%d). Will trim x axis." % n_bins )
-            xRange = range(1,xAxis.GetNbins() + 1, 2)
+            if allowTrimming:
+                logger.warning ( "Too large map (nbins=%d). Will trim x axis." % n_bins )
+
+                xRange = range(1,xAxis.GetNbins() + 1, 2)
+            else:
+                logger.warning ( "Very large map (nbins in x is %d), but trimming turned off." % n_bins )
+                
 
 
 
