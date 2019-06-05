@@ -98,6 +98,8 @@ def draw( strategy, databasepath ):
         label = e.globalInfo.id
         hasLikelihood = hasLLHD ( e )
         ana = analysisCombiner.getExperimentName ( e.globalInfo )
+        if not hasLikelihood:
+            print ( "no likelihood: %s" % label )
         sqrts = e.globalInfo.sqrts.asNumber(TeV)
         color = ROOT.kCyan+2
         if ana == "ATLAS":

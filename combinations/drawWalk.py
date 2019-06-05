@@ -20,7 +20,7 @@ class Drawer:
         # self.dpi = 200
         # self.dpi = 100
         self.dpi = 75
-        self.save = save
+        self.savePlots = save
         self.nmin = nmin
         self.nmax = nmax
         self.counter = nmin
@@ -76,7 +76,7 @@ class Drawer:
         # ax.view_init( azim= -60 )
         #import IPython
         #IPython.embed()
-        if self.save:
+        if self.savePlots:
             filename = "pics/%03d%d.png" % ( nsteps-1, j )
             plt.savefig ( filename, dpi=self.dpi )
         for t in self.ax.texts + self.ax.lines:
@@ -117,7 +117,7 @@ class Drawer:
         for j in range(0,10):
             # self.initFigure()
             title = "MCMC walk, after %d steps" % n
-            t = self.ax.text( 2500., 7., 0., title, horizontalalignment="center",
+            t = self.ax.text( 2800., 7., 0., title, horizontalalignment="center",
                    verticalalignment="bottom", transform = self.ax.transAxes )
             p = [ t ]
             xcoords,ycoords,zcoords = self.getCoords ( j, n )
@@ -184,5 +184,6 @@ if __name__ == "__main__":
     drawer.run()
     print ( "now animate the thing" )
     animator = animation.ArtistAnimation( drawer.fig, drawer.history, interval=50, 
-                                          repeat_delay=3000, blit=True)
+                                          repeat_delay=3000, blit=False )
     animator.save("movie.mp4")
+    print ( "mplayer movie.mp4" )
