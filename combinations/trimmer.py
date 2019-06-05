@@ -73,7 +73,7 @@ class Trimmer:
         self.trimParticles ( )
         if trimbranchings:
             self.trimBranchings ( )
-        self.clean()
+        self.model.clean()
 
     def trimBranchings ( ):
         """ now trim the branchings """
