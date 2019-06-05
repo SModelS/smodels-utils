@@ -140,7 +140,9 @@ class ValidationPlot():
             y1 = rescaleWidth(y1)
         if x2 == x1:
             x2 = x1 + 1e-16
-        k = (y2 - y1) / ( x2 - x1 )
+        k = 99999.
+        if x2 != x1:
+            k = (y2 - y1) / ( x2 - x1 )
         if k > 1 or k < -1:
             ## the curve is more vertical -- close with the x-axis (y=0)
             curve.SetPoint ( n, tx2, 0. )
