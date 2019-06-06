@@ -154,12 +154,15 @@ if __name__ == "__main__":
     argparser.add_argument ( '-D', '--nodecays',
             help='do not produce decays plot',
             action="store_true" )
+    argparser.add_argument ( '-p', '--predictions',
+            help='list all predictions',
+            action="store_true" )
     argparser.add_argument ( '-s', '--scp',
             help='scp to smodels',
             action="store_true" )
     args = argparser.parse_args()
     options = { "ruler": not args.noruler, "decays": not args.nodecays, 
-                "predictions": False, "html": not args.nohtml }
+                "predictions": args.predictions, "html": not args.nohtml }
     plot ( args.number, args.verbosity, args.picklefile, options ) 
     if args.scp:
         print ( "scp to smodels" )
