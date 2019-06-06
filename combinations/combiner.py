@@ -9,7 +9,7 @@ from smodels.particlesLoader import BSMList
 from smodels.tools.physicsUnits import fb, GeV
 from smodels.theory.model import Model
 import analysisCombiner
-import pickle, numpy, math, colorama
+import pickle, numpy, math, colorama, copy
 from scipy import optimize, stats
 import IPython
 
@@ -270,9 +270,10 @@ class Combiner:
                         del tx.txnameDataExp
         return bestCombo
 
-    def removeDataFromTheoryPred ( self, theorypred ):
+    def removeDataFromTheoryPred ( self, tp ):
         """ remove unnecessary stuff from a theoryprediction object.
             for storage. """
+        theorypred = copy.deepcopy( tp )
         if hasattr ( theorypred, "elements" ):
             del theorypred.elements
         eR = theorypred.expResult
@@ -282,6 +283,7 @@ class Combiner:
                     del tx.txnameData
                 if hasattr ( tx, "txnameDataExp" ):
                     del tx.txnameDataExp
+        return theorypred
 
     def findStrongestExclusion ( self, predictions, strategy ):
         """ for the given list of predictions and employing the given strategy,

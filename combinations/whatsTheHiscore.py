@@ -8,11 +8,14 @@ def discuss ( model, name ):
     print ( "Currently %7s Z is: %.3f [%d/%d unfrozen particles, %d predictions] " % \
             (name, model.Z, len(model.unFrozenParticles()),len(model.masses.keys()),len(model.bestCombo) ) )
 
-def discussBest ( model ):
+def discussBest ( model, detailed ):
     """ a detailed discussion of number 1 """
     p = 1. - stats.norm.cdf ( model.Z )
     print ( "Current best: %.3f, p=%.2g [%d/%d unfrozen particles, %d predictions] " % \
             (model.Z, p, len(model.unFrozenParticles()),len(model.masses.keys()),len(model.bestCombo) ) )
+    if detailed:
+        for i in model.bestCombo:
+            print ( "  prediction in best combo: %s" % i.analysisId() )
 
 def main():
     import argparse
@@ -35,7 +38,7 @@ def main():
         if c in names.keys():
             sc = names[c]
         if c==0:
-            discussBest ( model )
+            discussBest ( model, args.detailed )
         else:
             discuss ( model, sc )
 
