@@ -193,17 +193,6 @@ class Model:
             ret.remove(self.LSP)
         return ret
 
-    def unfreezeRandomParticle ( self ):
-        """ unfreezes a random frozen particle """
-        frozen = self.frozenParticles()
-        if len(frozen)==0:
-            return 0
-        p = random.choice ( frozen )
-        self.masses[p]=random.uniform ( self.masses[Model.LSP], self.maxMass )
-        self.normalizeAllBranchings() ## adjust everything
-        self.pprint ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.masses[p] ) )
-        return 1
-
     def normalizeBranchings ( self, pid ):
         """ normalize branchings of a particle, after freezing and unfreezing
             particles """

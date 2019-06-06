@@ -231,9 +231,21 @@ class RandomWalker:
                 self.model.masses[1000023] = mchi30
                 self.model.masses[1000025] = mchi20
 
+    def unfreezeRandomParticle ( self ):
+        """ unfreezes a random frozen particle """
+        frozen = self.model.frozenParticles()
+        if len(frozen)==0:
+            return 0
+        p = random.choice ( frozen )
+        self.model.masses[p]=random.uniform ( self.model.masses[Model.LSP], self.model.maxMass )
+        self.normalizeAllBranchings() ## adjust everything
+        self.pprint ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.model.masses[p] ) )
+        return 1
+
+
     def walk ( self ):
         """ Now perform the random walk """
-        self.model.unfreezeRandomParticle() ## start with unfreezing a random particle
+        self.unfreezeRandomParticle() ## start with unfreezing a random particle
         while self.model.step<self.maxsteps:
             ## only the first walker records history
             if self.record_history:
@@ -307,6 +319,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-s', '--strategy',
             help='combination strategy [aggressive]',
             type=str, default="aggressive" )
+    argparser.add_argument ( '-v', '--verbosity',
+            help='verbosity -- debug,info,warn,error [info]',
+            type=str, default="info" )
     argparser.add_argument ( '-n', '--nsteps',
             help='number of steps [100000]',
             type=int, default=100000 )
