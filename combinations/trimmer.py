@@ -11,7 +11,7 @@ class Trimmer:
         *after* an MCMC walk.
     """
     def __init__ ( self, model, strategy="aggressive", maxloss=.001 ):
-        self.model = model
+        self.model = copy.deepcopy ( model )
         self.strategy = strategy
         self.maxloss = maxloss 
 
@@ -32,10 +32,12 @@ class Trimmer:
         f.close()
         
     def trimParticles ( self ):
+        """ this function checks if particle can be taken out without
+            significantly worsening Z """
         unfrozen = self.model.unFrozenParticles( withLSP=False )
-        ndiscarded,ndiscardedBR=0,0
-        self.model.backup()
+        ndiscarded=0
         oldZ = self.model.Z
+        self.model.backup()
         self.model.whatif = {} ## save the scores for the non-discarded particles.
         ## aka: what would happen to the score if I removed particle X?
         frozen = self.model.frozenParticles()
@@ -47,15 +49,16 @@ class Trimmer:
         pidsnmasses = [ (x,self.model.masses[x]) for x in unfrozen ]
         pidsnmasses.sort ( key=lambda x: x[1], reverse=True )
         for cpid,(pid,mass) in enumerate(pidsnmasses):
-            self.highlight ( "info", "trying to freeze %d/%d: %s (%.1f)" % \
-                   ( (cpid+1),len(unfrozen), helpers.getParticleName(pid), 
-                     self.model.masses[pid] ) )
+            self.highlight ( "info", "trying to freeze %s (%.1f): [%d/%d]" % \
+                   ( helpers.getParticleName(pid), 
+                     self.model.masses[pid],(cpid+1),len(unfrozen) ) )
             oldmass = self.model.masses[pid]
             self.model.masses[pid]=1e6
             # self.createSLHAFile()
             self.model.predict ( self.strategy )
             self.pprint ( "when trying to remove %s, Z changed: %.3f -> %.3f" % ( helpers.getParticleName(pid), oldZ, self.model.Z ) )
             if self.model.Z > (1. - self.maxloss)*oldZ:
+                ## the Z is still good enough? discard!
                 ndiscarded+=1
                 self.pprint ( "discarding #%d: %s" % ( ndiscarded, helpers.getParticleName(pid) ) )
                 if pid in self.model.ssmultipliers:
@@ -63,7 +66,7 @@ class Trimmer:
                     self.model.ssmultipliers.pop(pid)
             else:
                 self.model.whatif[pid]=self.model.Z
-                self.pprint ( "not discarding %s" % helpers.getParticleName(pid) )
+                self.pprint ( "keeping %s" % helpers.getParticleName(pid) )
                 self.model.masses[pid]=oldmass
                 self.model.restore()
 
@@ -75,16 +78,18 @@ class Trimmer:
         self.trimParticles ( )
         if trimbranchings:
             self.trimBranchings ( )
+        self.model.trimmedBranchings = trimbranchings
         self.model.clean()
 
-    def trimBranchings ( ):
+    def trimBranchings ( self ):
         """ now trim the branchings """
         unfrozen = self.model.unFrozenParticles( withLSP=False )
+        ndiscardedBR=0
         self.pprint ( "now try to trim the branchings of %d particles" % len(unfrozen) )
         # unfrozen = [] ## turn it off
         for cpid,pid in enumerate(unfrozen):
             decays = self.model.decays[pid]
-            self.highlight ( "info", "trying to trim %d/%d branchings of %s" % ( (cpid+1),len(unfrozen),helpers.getParticleName(pid) ) )
+            self.highlight ( "info", "trying to trim branchings of %s [%d/%d]" % ( helpers.getParticleName(pid),(cpid+1),len(unfrozen) ) )
             for dpid,dbr in decays.items():
                 if dbr < 1e-5: ## small values set automatically to zero
                     self.model.decays[pid][dpid]=0. ## correct for it.
@@ -109,4 +114,4 @@ class Trimmer:
                         self.pprint ( "not discarding small BR %s -> %s: %.2f Z changed %.3f -> %.3f" % ( helpers.getParticleName(pid), helpers.getParticleName(dpid), dbr, oldZ, self.model.Z ) )
                         self.model.restore()
                         
-        self.pprint ( "froze %d particles. %d/%d particles are still unfrozen. discarded %d branchings." % ( ndiscarded, len(self.model.unFrozenParticles()),len(self.model.masses),ndiscardedBR )  )
+        self.pprint ( "%d/%d particles are still unfrozen. discarded %d branchings." % ( len(self.model.unFrozenParticles()),len(self.model.masses),ndiscardedBR )  )

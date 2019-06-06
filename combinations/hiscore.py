@@ -10,13 +10,13 @@ class Hiscore:
     """ encapsulates the hiscore list. """
     def __init__ ( self, walkerid, save_hiscores, picklefile="hiscore.pcl" ):
         self.walkerid = walkerid
+        self.trimmed = {}
         self.save_hiscores = save_hiscores
         self.nkeep = 20 ## how many do we keep.
         self.hiscores = [ None ]*self.nkeep
         self.fileAttempts = 0 ## unsucessful attempts at reading or writing
         self.pickleFile = picklefile
         self.updateListFromPickle ( )
-        self.trimmed = {} ## optionally also keep trimmed versions
 
     def currentMinZ ( self ):
         """ the current minimum Z to make it into the list. """
@@ -32,8 +32,8 @@ class Hiscore:
             if mi==None or model.Z > mi.Z: ## ok, <i>th best result!
                 self.demote ( i )
                 self.hiscores[i] = copy.deepcopy ( model )
-                if i == 0 and model.Z > 3.0: ## awesome new hiscore? trim it!
-                    self.trimModels(1)
+                if False and i == 0 and model.Z > 3.0: ## awesome new hiscore? trim it!
+                    self.trimModels(1,True)
                 break
             
     def demote ( self, i ):
@@ -124,7 +124,7 @@ class Hiscore:
             return ## clearly out
         self.updateListFromPickle() ## reload the hiscores 
         self.addResult ( model )
-        self.writeListToPickle() ## and write it
+        self.save() ## and write it
 
     def pprint ( self, *args ):
         """ logging """

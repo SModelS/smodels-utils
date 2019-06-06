@@ -11,8 +11,8 @@ def main():
     argparser = argparse.ArgumentParser(
             description='hiscore checker. allows a few modifications to be performed on the hiscore list' )
     argparser.add_argument ( '-f', '--picklefile',
-            help='pickle file with hiscores [best.pcl]',
-            type=str, default="best.pcl" )
+            help='pickle file with hiscores [hiscore.pcl]',
+            type=str, default="hiscore.pcl" )
     argparser.add_argument ( '-i', '--interactive', help='start interactive session',
                              action="store_true" )
     argparser.add_argument ( '-t', '--trim', help='trim the hiscore list to the nth entry',

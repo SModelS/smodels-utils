@@ -46,6 +46,7 @@ class Model:
         self.decays = {} ## the actual branchings
         self.masses = {}
         self.ssmultipliers = {} ## signal strength multipliers
+        self.rvalues = [] ## store the r values of the exclusion attempt
         self.llhd=0.
         self.Z = 0.
 
@@ -149,9 +150,11 @@ class Model:
 
     def checkForExcluded ( self, predictions ):
         """ check if any of the predictions excludes the point """
+        self.rvalues=[]
         for theorypred in predictions:
             r = theorypred.getRValue(expected=False)
             rexp = theorypred.getRValue(expected=True)
+            self.rvalues.append ( (r, rexp, theorypred.analysisId() ) )
             if r == None:
                 self.pprint ( "I received %s as r. What do I do with this?" % r )
                 r = 2.
@@ -169,7 +172,8 @@ class Model:
         """ backup the current state """
         self._backup = { "llhd": self.llhd, "letters": self.letters, "Z": self.Z,
                         "prior": self.prior, "description": self.description,
-                        "bestCombo": self.bestCombo, "masses": self.masses }
+                        "bestCombo": self.bestCombo, "masses": self.masses, 
+                        "rvalues": self.rvalues }
         self.pprint ( "backing up state" )
 
     def restore ( self ):
