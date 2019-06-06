@@ -17,17 +17,21 @@ def getParticleName ( pid ):
     if pid in names:
         return names[pid]
 
-def toLatex ( pname, addDollars=False, addM=False ):
+def toLatex ( pid, addDollars=False, addM=False ):
     """ get the latex version of particle name 
     :param addDollars: add dollars before and after
     :param addM: make it m(particle)
     """
-    if type(pname)==int:
-        pname = getParticleName(pname)
-    rpls = { "L": "_{L}", "R": "_{R}", "1": "_{1}", "2": "_{2}", "~nu": "\\tilde{\\nu}",
+    pname = pid
+    if type(pid)==int:
+        pname = getParticleName(pid)
+    rpls = { "~nutau": "\\tilde{\\nu}_{\\tau}", "L": "_{L}", "R": "_{R}", "1": "_{1}", "2": "_{2}", "~nu": "\\tilde{\\nu}",
              "~chi": "\\tilde{\\chi}", "~mu": "\\tilde{\\mu}", "+": "^{+}", "3": "_{3}", 
              "0": "^{0}", "-": "^{-}" }
-    for kr,vr in rpls.items():
+    keys = list ( rpls.keys() )
+    keys.sort(key=len,reverse=True)
+    for kr in keys:
+        vr=rpls[kr]
         pname = pname.replace(kr,vr)
     if pname.find("~")==0:
         p1,p2=1,2

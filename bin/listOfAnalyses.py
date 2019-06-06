@@ -40,9 +40,12 @@ class Lister:
         return ret
 
     def yesno ( self, B ):
-        if B in [ True, "True" ]: return "Yes"
-        if B in [ False, "False" ]: return "No"
+        if B in [ True, "True" ]: return "&#10004;"
+        if B in [ False, "False" ]: return ""
         return "?"
+        #if B in [ True, "True" ]: return "Yes"
+        #if B in [ False, "False" ]: return "No"
+        #return "?"
 
     def header( self ):
         """
@@ -75,11 +78,11 @@ class Lister:
     """
 
 # List Of Analyses %s %s
-    List of analyses and topologies in the SMS results database,
-    comprising %d individual maps from %d distinct signal regions, %d different SMS topologies, from a total of %d analyses.
-    The list has been created from the database version `%s`.
-    Results from FastLim are included. There is also an  [sms dictionary](SmsDictionary%s) and a [validation page](Validation%s).
-    %s.
+List of analyses and topologies in the SMS results database,
+comprising %d individual maps from %d distinct signal regions, %d different SMS topologies, from a total of %d analyses.
+The list has been created from the database version `%s`.
+Results from FastLim are included. There is also an  [sms dictionary](SmsDictionary%s) and a [validation page](Validation%s).
+%s.
     """ % ( version, titleplus, n_maps, n_results, len(n_topos),
             len(n_anas), version, dotlessv, dotlessv, referToOther ) )
 
@@ -138,7 +141,7 @@ class Lister:
         if self.superSeded:
             ret.append ( "superseded by" )
         if self.likelihoods:
-            ret.append ( "likelihoods" )
+            ret.append ( "llhds" )
         return ret
 
     def moveToGithub( self ):

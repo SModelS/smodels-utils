@@ -78,7 +78,7 @@ def writeIndexHtml ( model ):
     print ( "Wrote index.html" )
 
 def copyFilesToGithub():
-    subprocess.getoutput ( "cp index.html matrix_aggressive.png decays.png ruler.png ssmultipliers.png ../../smodels.github.io/models/" )
+    subprocess.getoutput ( "cp index.html matrix_aggressive.png decays.png ruler.png texdoc.png ../../smodels.github.io/models/" )
 
 def plotRuler( model ):
     resultsForPIDs = {}
