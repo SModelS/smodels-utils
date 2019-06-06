@@ -3,9 +3,8 @@
 """ a first start at the random walk idea """
 
 import random, copy, pickle, sys, os, time, subprocess, math
-import multiprocessing
+import multiprocessing, numpy, colorama
 from smodels.tools.runtime import nCPUs
-import colorama
 from hiscore import Hiscore
 from model import Model
 from history import History
@@ -238,7 +237,7 @@ class RandomWalker:
             return 0
         p = random.choice ( frozen )
         self.model.masses[p]=random.uniform ( self.model.masses[Model.LSP], self.model.maxMass )
-        self.normalizeAllBranchings() ## adjust everything
+        self.model.normalizeAllBranchings() ## adjust everything
         self.pprint ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.model.masses[p] ) )
         return 1
 
@@ -364,7 +363,7 @@ if __name__ == "__main__":
     if args.history:
         walkers[0].record_history = True
 
-    print ( "[walk] start the walkers" )
+    print ( "[walk] start %d walkers" % len(walkers) )
     if len ( walkers ) == 1:
         walkers[0].walk() ## just one, start directly
     else:
