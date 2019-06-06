@@ -33,13 +33,13 @@ class Model:
                       1000023, 1000025, 1000024, 1000037 ]
             self.templateSLHA = "template_1q.slha"
         if self.twosquark:
-            self.particles = [ 1000001, 1000002, 1000004, 1000005, 1000006, 1000011, 
+            self.particles = [ 1000001, 1000002, 1000004, 1000005, 1000006, 1000011,
                       1000012, 1000013, 1000014, 1000015, 1000016, 1000021, 1000022,
                       1000023, 1000025, 1000024, 1000037 ]
             self.templateSLHA = "template_2q.slha"
         if self.manysquark:
-            self.particles = [ 1000001, 1000002, 1000003, 1000004, 1000005, 1000006, 
-                      2000005, 2000006, 1000011, 1000012, 1000013, 1000014, 1000015, 
+            self.particles = [ 1000001, 1000002, 1000003, 1000004, 1000005, 1000006,
+                      2000005, 2000006, 1000011, 1000012, 1000013, 1000014, 1000015,
                       1000016, 1000021, 1000022, 1000023, 1000025, 1000024, 1000037 ]
             self.templateSLHA = "template_many.slha"
         self.possibledecays = {} ## list all possible decay channels
@@ -126,7 +126,7 @@ class Model:
         self.log ( "check if excluded" )
         if not hasattr ( self, "predictor" ):
             self.predictor = Predictor ( self.walkerid )
-        bestpreds = self.predictor.predict ( self.currentSLHA, allpreds=False, 
+        bestpreds = self.predictor.predict ( self.currentSLHA, allpreds=False,
                                              llhdonly=False )
         self.log ( "received best preds" )
         excluded = self.checkForExcluded ( bestpreds )
@@ -135,7 +135,8 @@ class Model:
             return
         # now get the predictions that determine the Z of the model. allpreds,
         # but need llhd
-        predictions = self.predictor.predict ( self.currentSLHA, allpreds=True, llhdonly=True )
+        predictions = self.predictor.predict ( self.currentSLHA, allpreds=False,
+                                               llhdonly=True )
         combiner = Combiner( self.walkerid )
         self.log ( "now find highest significance for %d predictions" % len(predictions) )
         bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, strategy )
@@ -236,121 +237,6 @@ class Model:
             if not pid == self.LSP:
                 self.normalizeBranchings ( pid )
 
-    def freezeRandomParticle ( self ):
-        """ freezes a random unfrozen particle """
-        unfrozen = self.unFrozenParticles( withLSP = False )
-        if len(unfrozen)<2:
-            return 0 ## freeze only if at least 3 unfrozen particles exist
-        p = random.choice ( unfrozen )
-        self.masses[p]=1e6
-        self.normalizeAllBranchings() ## adjust everything
-        self.pprint ( "Freezing %s (keep branchings)." % ( helpers.getParticleName(p) ) )
-        return 1
-
-    def freezeMostMassiveParticle ( self ):
-        """ freezes the most massive unfrozen particle """
-        unfrozen = self.unFrozenParticles( withLSP=False )
-        if len(unfrozen)<2:
-            return 0 ## freeze only if at least 3 unfrozen particles exist
-        pid,minmass=0,0
-        for i in unfrozen:
-            if self.masses[i]>minmass:
-                minmass = self.masses[i]
-                pid = i
-        # p = random.choice ( unfrozen )
-        self.masses[pid]=1e6
-        self.normalizeAllBranchings() ## adjust everything
-        self.pprint ( "Freezing most massive %s (%.1f)" % ( helpers.getParticleName(pid), minmass ) )
-        return 1
-
-    def randomlyChangeSignalStrengths ( self ):
-        """ randomly change one of the signal strengths """
-        unfrozenparticles = self.unFrozenParticles( withLSP=False )
-        if len(unfrozenparticles)<2:
-            self.pprint ( "not enough unfrozen particles to change random signal strength" )
-            return 0
-        p = random.choice ( unfrozenparticles )
-        newSSM=self.ssmultipliers[p]*random.gauss(1.,.1)
-        if newSSM == 0.:
-            self.pprint ( "Huh? ssmultiplier is 0?? Change to 1." )
-            newSSM = 1.
-        self.ssmultipliers[p]=newSSM
-        self.pprint ( "changed signal strength multiplier of %s: %.2f." % (helpers.getParticleName(p), newSSM ) )
-        return 1
-
-    def randomlyChangeBranchings ( self ):
-        """ randomly change the branchings of a single particle """
-        unfrozenparticles = self.unFrozenParticles( withLSP=False )
-        if len(unfrozenparticles)<2:
-            self.pprint ( "not enough unfrozen particles to change random branching" )
-            return 0
-        p = random.choice ( unfrozenparticles )
-        openChannels = []
-        for dpid,br in self.decays[p].items():
-            if dpid in self.unFrozenParticles():
-                openChannels.append ( dpid )
-            # print ( "[walk] old `- pid,br", dpid, br, dpid in self.unFrozenParticles() )
-        if len(openChannels) < 2:
-            # not enough channels open to tamper with branchings!
-            return 0
-        dx =.1/numpy.sqrt(len(openChannels)) ## maximum change per channel
-        S=0.
-        for i in self.decays[p].keys(): ## openChannels[:-1]:
-            oldbr = self.decays[p][i]
-            Min,Max = max(0.,oldbr-dx), min(oldbr+dx,1.)
-            br = random.uniform ( Min, Max )
-            #br = oldbr+random.uniform(-dx,dx)
-            #if br < 0.: br = 0.
-            #if br > 1.: br = 1.
-            self.decays[p][i]=br
-            S+=br
-        if True: # S > 1.: ## correct for too large sums
-            for i,v in self.decays[p].items():
-                self.decays[p][i] = v / S
-            S = 1.
-        #for i in self.frozenParticles(): ## frozen particles have 0 branchings
-        #    self.decays[p][i]=0.
-        # self.decays[p][ self.decays[p][-1] ] = 1. - S
-        #self.decays[p][ openChannels[-1] ] = 1. - S
-        control = sum ( [  x for x in self.decays[p].values() ] )
-        if abs ( control - 1.0 ) > 1e-5:
-            self.pprint ( "control %s" % control )
-        #    sys.exit()
-        brvec=[]
-        for x in self.decays[p].values():
-            if x<1e-5:
-                brvec.append("")
-            else:
-                brvec.append("%.2f" % x )
-        self.pprint ( "changed branchings of %s: %s: s=%.2f" % (helpers.getParticleName(p), ",".join( brvec  ), control ) )
-        return 1
-
-    def takeRandomMassStep ( self ):
-        """ take a random step in mass space for all unfrozen particles """
-        dx = 40. / numpy.sqrt ( len(self.unFrozenParticles() ) ) / ( self.Z + 1. )
-        for i in self.unFrozenParticles():
-            tmp = self.masses[i]+random.uniform(-dx,dx)
-            if tmp > self.maxMass:
-                tmp = self.maxMass
-            if tmp < self.masses[self.LSP]: ## the LSP is the LSP.
-                tmp = self.masses[self.LSP]
-            self.masses[i]=tmp
-        for squark in [ 1, 2, 3, 4, 5, 6 ]:
-            sq1,sq2=1000000+squark,2000000+squark
-            if not sq1 in self.masses or not sq2 in self.masses:
-                continue
-            msq1,msq2 = self.masses[sq1], self.masses[sq2]
-            if msq2 < msq1:
-            ### sq1 should always be lighter than sq2
-             self.masses[sq2]=msq1
-             self.masses[sq1]=msq2
-        if 1000023 in self.masses and 1000025 in self.masses:
-            mchi20 = self.masses[1000023]
-            mchi30 = self.masses[1000025]
-            if mchi20 > mchi30:
-                self.masses[1000023] = mchi30
-                self.masses[1000025] = mchi20
-
     def createNewSLHAFileName ( self ):
         """ create a new SLHA file name. Needed when e.g. unpickling """
         self.currentSLHA = tempfile.mktemp(prefix=".cur",suffix=".slha",dir="./")
@@ -375,7 +261,7 @@ class Model:
                 line=line.replace("M%d" % m,"%.1f" % v )
                 for dpid,dbr in self.decays[m].items():
                     line=line.replace("D%d_%d" % ( m, dpid), "%.5f" % dbr )
-                D_ = "D%d_" % m 
+                D_ = "D%d_" % m
                 if D_ in line and not line[0]=="#":
                     p1= line.find(D_)
                     p2 = line[p1+1:].find(" ")

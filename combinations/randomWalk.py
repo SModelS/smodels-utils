@@ -46,6 +46,33 @@ class RandomWalker:
         print ( "[walk:%d-%s] %s" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args))) )
         self.log ( *args )
 
+    def freezeRandomParticle ( self ):
+        """ freezes a random unfrozen particle """
+        unfrozen = self.model.unFrozenParticles( withLSP = False )
+        if len(unfrozen)<2:
+            return 0 ## freeze only if at least 3 unfrozen particles exist
+        p = random.choice ( unfrozen )
+        self.model.masses[p]=1e6
+        self.model.normalizeAllBranchings() ## adjust everything
+        self.pprint ( "Freezing %s (keep branchings)." % ( helpers.getParticleName(p) ) )
+        return 1
+
+    def freezeMostMassiveParticle ( self ):
+        """ freezes the most massive unfrozen particle """
+        unfrozen = self.model.unFrozenParticles( withLSP=False )
+        if len(unfrozen)<2:
+            return 0 ## freeze only if at least 3 unfrozen particles exist
+        pid,minmass=0,0
+        for i in unfrozen:
+            if self.model.masses[i]>minmass:
+                minmass = self.model.masses[i]
+                pid = i
+        # p = random.choice ( unfrozen )
+        self.model.masses[pid]=1e6
+        self.model.normalizeAllBranchings() ## adjust everything
+        self.pprint ( "Freezing most massive %s (%.1f)" % ( helpers.getParticleName(pid), minmass ) )
+        return 1
+
     def onestep ( self ):
         self.model.step+=1
         nUnfrozen = len ( self.model.unFrozenParticles() )
@@ -57,15 +84,15 @@ class RandomWalker:
         if uUnfreeze > nUnfrozen/float(nTotal):
             # in every nth step unfreeze random particle
             self.log ( "unfreeze random particle" )
-            nChanges += self.model.unfreezeRandomParticle()
+            nChanges += self.unfreezeRandomParticle()
         uBranch = random.uniform(0,1)
         if uBranch > .3: # do this about every third time
             self.log ( "randomly change branchings" )
-            nChanges += self.model.randomlyChangeBranchings()
+            nChanges += self.randomlyChangeBranchings()
         uSSM = random.uniform(0,1)
         if uSSM > .75: # do this everytime else
             self.log ( "randomly change signal strengths" )
-            nChanges += self.model.randomlyChangeSignalStrengths()
+            nChanges += self.randomlyChangeSignalStrengths()
 
         mu = .4 / (self.model.Z+1.) ## make it more unlikely when Z is high
         uFreeze = random.gauss(mu,.5)
@@ -73,13 +100,13 @@ class RandomWalker:
             # in every nth step freeze random particle
             if random.uniform(0,1)<.3:
                 self.log ( "freeze most massive particle" )
-                nChanges+=self.model.freezeMostMassiveParticle()
+                nChanges+=self.freezeMostMassiveParticle()
             else:
                 self.log ( "freeze random particle" )
-                nChanges+=self.model.freezeRandomParticle()
+                nChanges+=self.freezeRandomParticle()
         if nChanges == 0:
             self.log ( "take random mass step" )
-            self.model.takeRandomMassStep()
+            self.takeRandomMassStep()
         self.log ( "now create slha file" )
         self.model.predict( self.strategy )
         self.log ( "found highest Z: %.2f" % self.model.Z )
@@ -120,6 +147,89 @@ class RandomWalker:
         f=open( "walker%d.log" % self.walkerid, "a" )
         f.write ( "[walk:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
         f.close()
+
+    def randomlyChangeSignalStrengths ( self ):
+        """ randomly change one of the signal strengths """
+        unfrozenparticles = self.model.unFrozenParticles( withLSP=False )
+        if len(unfrozenparticles)<2:
+            self.pprint ( "not enough unfrozen particles to change random signal strength" )
+            return 0
+        p = random.choice ( unfrozenparticles )
+        newSSM=self.model.ssmultipliers[p]*random.gauss(1.,.1)
+        if newSSM == 0.:
+            self.pprint ( "Huh? ssmultiplier is 0?? Change to 1." )
+            newSSM = 1.
+        self.model.ssmultipliers[p]=newSSM
+        self.pprint ( "changed signal strength multiplier of %s: %.2f." % (helpers.getParticleName(p), newSSM ) )
+        return 1
+
+    def randomlyChangeBranchings ( self ):
+        """ randomly change the branchings of a single particle """
+        unfrozenparticles = self.model.unFrozenParticles( withLSP=False )
+        if len(unfrozenparticles)<2:
+            self.pprint ( "not enough unfrozen particles to change random branching" )
+            return 0
+        p = random.choice ( unfrozenparticles )
+        openChannels = []
+        for dpid,br in self.model.decays[p].items():
+            if dpid in self.model.unFrozenParticles():
+                openChannels.append ( dpid )
+        if len(openChannels) < 2:
+            # not enough channels open to tamper with branchings!
+            return 0
+        dx =.1/numpy.sqrt(len(openChannels)) ## maximum change per channel
+        S=0.
+        for i in self.model.decays[p].keys(): ## openChannels[:-1]:
+            oldbr = self.model.decays[p][i]
+            Min,Max = max(0.,oldbr-dx), min(oldbr+dx,1.)
+            br = random.uniform ( Min, Max )
+            #br = oldbr+random.uniform(-dx,dx)
+            #if br < 0.: br = 0.
+            #if br > 1.: br = 1.
+            self.model.decays[p][i]=br
+            S+=br
+        if True: # S > 1.: ## correct for too large sums
+            for i,v in self.model.decays[p].items():
+                self.model.decays[p][i] = v / S
+            S = 1.
+        control = sum ( [  x for x in self.model.decays[p].values() ] )
+        if abs ( control - 1.0 ) > 1e-5:
+            self.pprint ( "control %s" % control )
+        #    sys.exit()
+        brvec=[]
+        for x in self.model.decays[p].values():
+            if x<1e-5:
+                brvec.append("")
+            else:
+                brvec.append("%.2f" % x )
+        self.pprint ( "changed branchings of %s: %s: s=%.2f" % (helpers.getParticleName(p), ",".join( brvec  ), control ) )
+        return 1
+
+    def takeRandomMassStep ( self ):
+        """ take a random step in mass space for all unfrozen particles """
+        dx = 40. / numpy.sqrt ( len(self.model.unFrozenParticles() ) ) / ( self.Z + 1. )
+        for i in self.model.unFrozenParticles():
+            tmp = self.model.masses[i]+random.uniform(-dx,dx)
+            if tmp > self.model.maxMass:
+                tmp = self.model.maxMass
+            if tmp < self.model.masses[self.model.LSP]: ## the LSP is the LSP.
+                tmp = self.model.masses[self.model.LSP]
+            self.model.masses[i]=tmp
+        for squark in [ 1, 2, 3, 4, 5, 6 ]:
+            sq1,sq2=1000000+squark,2000000+squark
+            if not sq1 in self.model.masses or not sq2 in self.model.masses:
+                continue
+            msq1,msq2 = self.model.masses[sq1], self.model.masses[sq2]
+            if msq2 < msq1:
+            ### sq1 should always be lighter than sq2
+             self.model.masses[sq2]=msq1
+             self.model.masses[sq1]=msq2
+        if 1000023 in self.model.masses and 1000025 in self.model.masses:
+            mchi20 = self.model.masses[1000023]
+            mchi30 = self.model.masses[1000025]
+            if mchi20 > mchi30:
+                self.model.masses[1000023] = mchi30
+                self.model.masses[1000025] = mchi20
 
     def walk ( self ):
         """ Now perform the random walk """
