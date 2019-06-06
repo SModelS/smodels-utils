@@ -206,7 +206,7 @@ class RandomWalker:
 
     def takeRandomMassStep ( self ):
         """ take a random step in mass space for all unfrozen particles """
-        dx = 40. / numpy.sqrt ( len(self.model.unFrozenParticles() ) ) / ( self.Z + 1. )
+        dx = 40. / numpy.sqrt ( len(self.model.unFrozenParticles() ) ) / ( self.model.Z + 1. )
         for i in self.model.unFrozenParticles():
             tmp = self.model.masses[i]+random.uniform(-dx,dx)
             if tmp > self.model.maxMass:
@@ -267,7 +267,7 @@ class RandomWalker:
             self.pprint ( "prior times llhd, before versus after: %f -> %f" % ( self.oldmodel.priorTimesLlhd(), self.model.priorTimesLlhd() ) )
             #ratio = 1.
             #if self.oldmodel.Z > 0.:
-            #    ratio = self.Z / self.oldmodel.Z
+            #    ratio = self.model.Z / self.oldmodel.Z
             ratio = 1.
             if self.oldmodel.priorTimesLlhd() > 0.:
                 ratio = math.exp ( - self.oldmodel.priorTimesLlhd()) / math.exp ( - self.model.priorTimesLlhd() )
@@ -363,7 +363,7 @@ if __name__ == "__main__":
     if args.history:
         walkers[0].record_history = True
 
-    print ( "[walk] start %d walkers" % len(walkers) )
+    print ( "[walk] starting %d walkers" % len(walkers) )
     if len ( walkers ) == 1:
         walkers[0].walk() ## just one, start directly
     else:

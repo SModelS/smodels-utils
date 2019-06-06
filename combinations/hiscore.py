@@ -16,6 +16,7 @@ class Hiscore:
         self.fileAttempts = 0 ## unsucessful attempts at reading or writing
         self.pickleFile = picklefile
         self.updateListFromPickle ( )
+        self.trimmed = {} ## optionally also keep trimmed versions
 
     def currentMinZ ( self ):
         """ the current minimum Z to make it into the list. """
@@ -31,6 +32,8 @@ class Hiscore:
             if mi==None or model.Z > mi.Z: ## ok, <i>th best result!
                 self.demote ( i )
                 self.hiscores[i] = copy.deepcopy ( model )
+                if i == 0 and model.Z > 3.0: ## awesome new hiscore? trim it!
+                    self.trimModels(1)
                 break
             
     def demote ( self, i ):
@@ -39,6 +42,11 @@ class Hiscore:
         for j in range(self.nkeep-1,i,-1):
             m = copy.deepcopy ( self.hiscores[j-1] )
             self.hiscores[j]= m
+            if (j-1) in self.trimmed.keys():
+                self.trimmed[j] = copy.deepcopy ( self.trimmed[j-1] )
+            else:
+                if j in self.trimmed:
+                    self.trimmed.pop(j)
         assert ( len(self.hiscores) == self.nkeep )
 
     def updateListFromPickle ( self ):
@@ -48,7 +56,8 @@ class Hiscore:
         try:
             f=open( self.pickleFile,"rb")
             self.hiscores = pickle.load ( f )
-            self.pprint ( "loaded %d hiscores from file." % ( len(self.hiscores) ) )
+            self.trimmed = pickle.load ( f )
+            self.pprint ( "loaded %d hiscores from file, and %s trimmed ones." % ( len(self.hiscores),len(self.trimmed) ) )
             f.close()
             assert ( len(self.hiscores) == self.nkeep )
             self.fileAttempts=0
@@ -62,21 +71,25 @@ class Hiscore:
             else:
                 self.pprint ( "Timed out when try to get hiscores!" )
 
-    def trimModels ( self, n=None ):
+    def trimModels ( self, n=None, trimbranchings=False ):
         """ trim the first <n> models in the list """
         if n == None or n < 0 or n > self.nkeep:
             n = self.nkeep
         for i in range(n):
             if self.hiscores[i]!=None:
                 trimmer = Trimmer( self.hiscores[i], "aggressive", .002 )
-                trimmer.trim( trimbranchings=False )
-                self.hiscores[i] = trimmer.model
+                trimmer.trim( trimbranchings=trimbranchings )
+                self.trimmed[i] = trimmer.model
 
     def clean ( self ):
         """ clean hiscore list, i.e. remove cruft from models """
         for h in self.hiscores:
             if h != None:
                 h.clean()
+
+    def save ( self ):
+        """ compatibility thing """
+        self.writeListToPickle()
 
     def writeListToPickle ( self, pickleFile=None ):
         """ dump the list to the pickle file <pickleFile>.
@@ -91,6 +104,7 @@ class Hiscore:
             f=open( pickleFile, "wb" )
             fcntl.lockf( f, fcntl.LOCK_EX ) # | fcntl.LOCK_NB)
             pickle.dump ( self.hiscores, f )
+            pickle.dump ( self.trimmed, f )
             fcntl.lockf( f, fcntl.LOCK_UN )
             f.close()
             self.fileAttempts=0
