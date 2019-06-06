@@ -49,6 +49,7 @@ class Drawer:
         self.ax.set_ylabel ( helpers.toLatex(self.coordinates[1],True,True) )
         self.ax.set_zlabel ( helpers.toLatex(self.coordinates[2],True,True) )
         self.ax.zaxis.set_visible(False)
+
         return self.fig
 
     def next ( self ):
@@ -74,14 +75,18 @@ class Drawer:
 
     def save ( self, plt, ndim, nsteps, j ):
         #azim = -60 + 10 * math.sin ( nsteps * 2* math.pi / 2000. )
-        # ax.view_init( azim= -60 )
-        #import IPython
-        #IPython.embed()
+        #self.ax.view_init( azim= azim )
         if self.savePlots:
             filename = "pics/%03d%d.png" % ( nsteps-1, j )
             plt.savefig ( filename, dpi=self.dpi )
+        # self.ipython()
         for t in self.ax.texts + self.ax.lines:
             t.set_visible(False)
+
+    def ipython ( self ):
+        import IPython
+        IPython.embed()
+        sys.exit()
 
     def cutCoords ( self, x, f, n ):
         """ cut the last line to fraction f """
@@ -134,12 +139,6 @@ class Drawer:
                 self.ax.yaxis.set_visible(True)
 
             zminmax = self.minMax(zcoords)
-            """
-            print ( "pane", self.ax.xaxis.pane.get_alpha() )
-            import IPython
-            IPython.embed()
-            sys.exit()
-            """
             if abs(zminmax[1])<1e-5:
                 # print ( "make z axis invisible" )
                 self.ax.zaxis.set_visible(False)
@@ -193,7 +192,7 @@ if __name__ == "__main__":
     print ( "draw the pics" )
     drawer.run()
     print ( "now animate the thing" )
-    animator = animation.ArtistAnimation( drawer.fig, drawer.history, interval=50, 
+    animator = animation.ArtistAnimation( drawer.fig, drawer.history, interval=50,
                                           repeat_delay=3000, blit=False )
     animator.save("movie.mp4")
     print ( "mplayer movie.mp4" )
