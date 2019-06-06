@@ -40,14 +40,16 @@ class Drawer:
         self.fig = plt.figure(dpi=self.dpi )
         self.ax = self.fig.add_subplot ( 111, projection="3d" )
         self.ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
-        self.ax.set_xlim( 0., 2500. )
-        self.ax.set_ylim( 0., 2500. )
-        self.ax.set_zlim( 0., 2500. )
+        self.mMax = 2500.
+        self.ax.set_xlim( 0., self.mMax )
+        self.ax.set_ylim( 0., self.mMax )
+        self.ax.set_zlim( 0., self.mMax )
         self.ax.set_xlabel ( helpers.toLatex(self.coordinates[0],True,True) )
         self.ax.grid(False)
         self.ax.set_ylabel ( helpers.toLatex(self.coordinates[1],True,True) )
         self.ax.set_zlabel ( helpers.toLatex(self.coordinates[2],True,True) )
         self.ax.zaxis.set_visible(False)
+
         return self.fig
 
     def next ( self ):
@@ -73,14 +75,18 @@ class Drawer:
 
     def save ( self, plt, ndim, nsteps, j ):
         #azim = -60 + 10 * math.sin ( nsteps * 2* math.pi / 2000. )
-        # ax.view_init( azim= -60 )
-        #import IPython
-        #IPython.embed()
+        #self.ax.view_init( azim= azim )
         if self.savePlots:
             filename = "pics/%03d%d.png" % ( nsteps-1, j )
             plt.savefig ( filename, dpi=self.dpi )
+        # self.ipython()
         for t in self.ax.texts + self.ax.lines:
             t.set_visible(False)
+
+    def ipython ( self ):
+        import IPython
+        IPython.embed()
+        sys.exit()
 
     def cutCoords ( self, x, f, n ):
         """ cut the last line to fraction f """
@@ -132,11 +138,8 @@ class Drawer:
             else:
                 self.ax.yaxis.set_visible(True)
 
-            # ax.set_ylim( yminmax )
             zminmax = self.minMax(zcoords)
-            # print ( "zminmax=",zminmax )
-            #ax.set_zlim(zminmax)
-            if False: # abs(zminmax[1])<1e-5:
+            if abs(zminmax[1])<1e-5:
                 # print ( "make z axis invisible" )
                 self.ax.zaxis.set_visible(False)
                 self.ax.w_zaxis.line.set_lw(0.)
@@ -146,6 +149,12 @@ class Drawer:
                 self.ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
             else:
                 self.ax.zaxis.set_visible(True)
+                self.ax.w_zaxis.line.set_lw(0.8)
+                panecol = (0.95, 0.95, 0.95, 0.5)
+                self.ax.xaxis.set_pane_color( panecol )
+                self.ax.yaxis.set_pane_color( panecol )
+                self.ax.zaxis.set_pane_color( panecol )
+                self.ax.set_zticks( np.arange ( 0., self.mMax+1, 500. ) )
                 self.ax.set_zlabel ( helpers.toLatex(self.coordinates[2],True,True) )
                 self.ax.zaxis.set_major_formatter(FormatStrFormatter('%d'))
 
@@ -183,7 +192,7 @@ if __name__ == "__main__":
     print ( "draw the pics" )
     drawer.run()
     print ( "now animate the thing" )
-    animator = animation.ArtistAnimation( drawer.fig, drawer.history, interval=50, 
+    animator = animation.ArtistAnimation( drawer.fig, drawer.history, interval=50,
                                           repeat_delay=3000, blit=False )
     animator.save("movie.mp4")
     print ( "mplayer movie.mp4" )
