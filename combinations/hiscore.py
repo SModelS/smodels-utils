@@ -57,7 +57,11 @@ class Hiscore:
             f=open( self.pickleFile,"rb")
             self.hiscores = pickle.load ( f )
             self.trimmed = pickle.load ( f )
-            self.pprint ( "loaded %d hiscores from file, and %s trimmed ones." % ( len(self.hiscores),len(self.trimmed) ) )
+            nhs = 0
+            for i in self.hiscores:
+                if i != None:
+                    nhs += 1
+            self.pprint ( "loaded %d hiscores from file, and %s trimmed ones." % ( nhs,len(self.trimmed) ) )
             f.close()
             assert ( len(self.hiscores) == self.nkeep )
             self.fileAttempts=0
