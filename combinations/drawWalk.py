@@ -40,9 +40,10 @@ class Drawer:
         self.fig = plt.figure(dpi=self.dpi )
         self.ax = self.fig.add_subplot ( 111, projection="3d" )
         self.ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
-        self.ax.set_xlim( 0., 2500. )
-        self.ax.set_ylim( 0., 2500. )
-        self.ax.set_zlim( 0., 2500. )
+        self.mMax = 2500.
+        self.ax.set_xlim( 0., self.mMax )
+        self.ax.set_ylim( 0., self.mMax )
+        self.ax.set_zlim( 0., self.mMax )
         self.ax.set_xlabel ( helpers.toLatex(self.coordinates[0],True,True) )
         self.ax.grid(False)
         self.ax.set_ylabel ( helpers.toLatex(self.coordinates[1],True,True) )
@@ -132,11 +133,14 @@ class Drawer:
             else:
                 self.ax.yaxis.set_visible(True)
 
-            # ax.set_ylim( yminmax )
             zminmax = self.minMax(zcoords)
-            # print ( "zminmax=",zminmax )
-            #ax.set_zlim(zminmax)
-            if False: # abs(zminmax[1])<1e-5:
+            """
+            print ( "pane", self.ax.xaxis.pane.get_alpha() )
+            import IPython
+            IPython.embed()
+            sys.exit()
+            """
+            if abs(zminmax[1])<1e-5:
                 # print ( "make z axis invisible" )
                 self.ax.zaxis.set_visible(False)
                 self.ax.w_zaxis.line.set_lw(0.)
@@ -146,6 +150,12 @@ class Drawer:
                 self.ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
             else:
                 self.ax.zaxis.set_visible(True)
+                self.ax.w_zaxis.line.set_lw(0.8)
+                panecol = (0.95, 0.95, 0.95, 0.5)
+                self.ax.xaxis.set_pane_color( panecol )
+                self.ax.yaxis.set_pane_color( panecol )
+                self.ax.zaxis.set_pane_color( panecol )
+                self.ax.set_zticks( np.arange ( 0., self.mMax+1, 500. ) )
                 self.ax.set_zlabel ( helpers.toLatex(self.coordinates[2],True,True) )
                 self.ax.zaxis.set_major_formatter(FormatStrFormatter('%d'))
 
