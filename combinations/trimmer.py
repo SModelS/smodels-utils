@@ -2,7 +2,7 @@
 
 """ Class that trims models down """
 
-import time, colorama, copy
+import time, colorama, copy, sys
 from model import Model
 import helpers
 
@@ -44,7 +44,9 @@ class Trimmer:
             if pid in self.model.ssmultipliers:
                 self.model.ssmultipliers.pop(pid)
         # unfrozen = [] ## FIXME was only needed for checking branching trimmer
-        for cpid,pid in enumerate(unfrozen):
+        pidsnmasses = [ (x,self.model.masses[x]) for x in unfrozen ]
+        pidsnmasses.sort ( key=lambda x: x[1], reverse=True )
+        for cpid,(pid,mass) in enumerate(pidsnmasses):
             self.highlight ( "info", "trying to freeze %d/%d: %s (%.1f)" % \
                    ( (cpid+1),len(unfrozen), helpers.getParticleName(pid), 
                      self.model.masses[pid] ) )
