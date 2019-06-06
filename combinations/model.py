@@ -151,10 +151,11 @@ class Model:
     def checkForExcluded ( self, predictions ):
         """ check if any of the predictions excludes the point """
         self.rvalues=[]
+        combiner = Combiner( self.walkerid )
         for theorypred in predictions:
             r = theorypred.getRValue(expected=False)
             rexp = theorypred.getRValue(expected=True)
-            self.rvalues.append ( (r, rexp, theorypred.analysisId() ) )
+            self.rvalues.append ( (r, rexp, combiner.removeDataFromTheoryPred ( theorypred ) ) )
             if r == None:
                 self.pprint ( "I received %s as r. What do I do with this?" % r )
                 r = 2.

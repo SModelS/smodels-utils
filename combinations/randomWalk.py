@@ -154,6 +154,8 @@ class RandomWalker:
             self.pprint ( "not enough unfrozen particles to change random signal strength" )
             return 0
         p = random.choice ( unfrozenparticles )
+        if not p in self.model.ssmultipliers:
+            self.model.ssmultipliers[p]=1.
         newSSM=self.model.ssmultipliers[p]*random.gauss(1.,.1)
         if newSSM == 0.:
             self.pprint ( "Huh? ssmultiplier is 0?? Change to 1." )

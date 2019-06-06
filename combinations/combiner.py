@@ -270,6 +270,19 @@ class Combiner:
                         del tx.txnameDataExp
         return bestCombo
 
+    def removeDataFromTheoryPred ( self, theorypred ):
+        """ remove unnecessary stuff from a theoryprediction object.
+            for storage. """
+        if hasattr ( theorypred, "elements" ):
+            del theorypred.elements
+        eR = theorypred.expResult
+        for ds in eR.datasets:
+            for tx in ds.txnameList:
+                if hasattr ( tx, "txnameData" ):
+                    del tx.txnameData
+                if hasattr ( tx, "txnameDataExp" ):
+                    del tx.txnameDataExp
+
     def findStrongestExclusion ( self, predictions, strategy ):
         """ for the given list of predictions and employing the given strategy,
         find the combo with strongest exclusion """
