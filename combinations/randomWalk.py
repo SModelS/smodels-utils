@@ -349,6 +349,12 @@ if __name__ == "__main__":
         for ctr,v in enumerate(hiscores): # .items()):
             if ctr >= ncpus:
                 break
+            if v == None:
+                # no hiscore? start from scratch!
+                walker = RandomWalker( ctr, args.nsteps, args.strategy )
+                walker.takeStep()
+                walkers.append ( walker )
+                continue
             v.createNewSLHAFileName()
             v.walkerid = ctr
             walkers.append ( RandomWalker.fromModel ( v ) )
