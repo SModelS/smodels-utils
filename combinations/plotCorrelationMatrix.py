@@ -7,6 +7,7 @@ from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
 from smodels.tools.physicsUnits import TeV
 from smodels.tools.colors import colors
+from smodels_utils.helper.various import hasLLHD
 import analysisCombiner
 import ROOT
 import IPython
@@ -44,21 +45,6 @@ def sortOutDupes ( results ):
             ret.append ( res )
     return ret
 
-def hasLLHD ( analysis ) : 
-    """ can one create likelihoods from analyses?
-        true for efficiency maps and upper limits with expected values. """
-    if len ( analysis.datasets)>1:
-        return True
-
-    ds=analysis.datasets[0]
-    if ds.dataInfo.dataType=="efficiencyMap":
-        return True
-    for tx in ds.txnameList:
-        if tx.hasLikelihood():
-            return True
-    return False
-
-
 def draw( strategy, databasepath ):
     ROOT.gStyle.SetOptStat(0000)
 
@@ -83,8 +69,12 @@ def draw( strategy, databasepath ):
     nres = len ( results )
 
     ROOT.c1=ROOT.TCanvas("c1","c1",1600,1500)
-    ROOT.c1.SetLeftMargin(0.17)
-    ROOT.c1.SetBottomMargin(0.17)
+    #ROOT.c1.SetLeftMargin(0.17)
+    #ROOT.c1.SetBottomMargin(0.17)
+    ROOT.c1.SetLeftMargin(0.12)
+    ROOT.c1.SetBottomMargin(0.15)
+    ROOT.c1.SetTopMargin(0.09)
+    ROOT.c1.SetRightMargin(0.015)
 
     h=ROOT.TH2F ( "Correlations", 
                   "Correlations between analyses, combination strategy: ,,%s''" % strategy, 
