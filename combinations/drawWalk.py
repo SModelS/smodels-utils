@@ -187,6 +187,8 @@ if __name__ == "__main__":
             help='clear the pics folder before starting' )
     parser.add_argument("-s", "--save", action="store_true",
             help='keep the individual images as pngs in pics/' )
+    parser.add_argument("-u", "--upload", action="store_true",
+            help='upload movie to smodels' )
     args = parser.parse_args()
     if args.clear:
         subprocess.getoutput ("rm pics/*png" )
@@ -198,3 +200,5 @@ if __name__ == "__main__":
                                           repeat_delay=3000, blit=True )
     animator.save("movie.mp4")
     print ( "mplayer movie.mp4" )
+    if args.upload:
+        subprocess.getoutput ( "scp movie.mp4 smodels.hephy.at:/var/www/walten/" )
