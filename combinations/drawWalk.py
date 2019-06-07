@@ -34,7 +34,6 @@ class Drawer:
         self.current_indices = ( True, True, True )
         self.getHistory()
         self.initFigure()
-        self.history = []
 
     def initFigure ( self ):
         # plt.style.use("dark_background")
@@ -53,17 +52,20 @@ class Drawer:
 
         return self.fig
 
-    def next ( self ):
+    def next ( self, i=None ):
+        ## set the old stuff to invisible
+        self.ax.texts = []
+        for t in self.ax.texts + self.ax.lines:
+            t.set_visible(False)
         self.j += 1
         if self.j >= 10:
             self.counter += 1
             self.j = 0 ## reset intermediate counter
+        if self.counter % 10 == 0 and self.j==0:
+            print ( "[drawWalk] pic %d/%d" % ( self.counter, self.nmax ) )
             
-        if self.counter > self.nmax:
-            raise StopIteration ( "reached step #%d" % self.nmax )
         self.draw ()
         return self.lastartists
-        # self.draw ( self.counter )
 
     def getHistory( self ):
         """ load the history """
@@ -81,14 +83,9 @@ class Drawer:
         self.walk = np.array ( tmp )
 
     def save ( self, plt, ndim, nsteps, j ):
-        #azim = -60 + 10 * math.sin ( nsteps * 2* math.pi / 2000. )
-        #self.ax.view_init( azim= azim )
         if self.savePlots:
             filename = "pics/%03d%d.png" % ( nsteps-1, j )
             plt.savefig ( filename, dpi=self.dpi )
-        # self.ipython()
-        for t in self.ax.texts + self.ax.lines:
-            t.set_visible(False)
 
     def ipython ( self ):
         import IPython
@@ -123,13 +120,13 @@ class Drawer:
         xcoords = self.cutCoords ( xc, (j+1)/10., n )
         ycoords = self.cutCoords ( yc, (j+1)/10., n )
         zcoords = self.cutCoords ( zc, (j+1)/10., n )
-        # self.pprint ( "getting coordinates %d/%d: %s" % (j,n,xcoords[0]) )
         return [ xcoords,ycoords,zcoords ]
 
     def draw( self ):
         j = self.j
         n = self.counter
-        # self.initFigure()
+        azim = -60 + 10 * math.sin ( (j+10*n) * 2 / (10*self.nmax) )
+        self.ax.view_init( azim= azim )
         title = "MCMC walk, after %d steps" % n
         t = self.ax.text( 2800., 7., 0., title, horizontalalignment="center",
                verticalalignment="bottom", transform = self.ax.transAxes )
@@ -166,15 +163,12 @@ class Drawer:
             self.ax.set_zlabel ( helpers.toLatex(self.coordinates[2],True,True) )
             self.ax.zaxis.set_major_formatter(FormatStrFormatter('%d'))
 
-        self.save ( plt, 3, n, j )
-        self.history.append ( p )
         self.lastartists = p
+        self.save ( plt, 3, n, j )
 
     def run ( self ):
         try:
             while True:
-                if self.counter % 10 == 0 and self.j==0:
-                    print ( "[drawWalk] pic %d/%d" % ( self.counter, self.nmax ) )
                 self.next()
         except StopIteration:
             pass
@@ -203,12 +197,8 @@ if __name__ == "__main__":
         subprocess.getoutput ("rm pics/*png" )
     drawer = Drawer ( args.file, args.nmin, args.nmax, args.save )
     print ( "[drawWalk] starting" )
-    drawer.run()
-    print ( "[drawWalk] now animate the thing" )
-    animator = animation.ArtistAnimation( drawer.fig, drawer.history, interval=50,
-                                          repeat_delay=3000, blit=True )
-    #animator = animation.FuncAnimation( drawer.fig, drawer.history, interval=50,
-    #                                      repeat_delay=3000, blit=True )
+    animator = animation.FuncAnimation( drawer.fig, drawer.next, 
+            range(args.nmin*10,args.nmax*10), interval=50, blit=False )
     animator.save("movie.mp4")
     print ( "mplayer movie.mp4" )
     if args.upload:
