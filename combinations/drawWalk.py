@@ -83,9 +83,10 @@ class Drawer:
         self.walk = np.array ( tmp )
 
     def save ( self, plt, ndim, nsteps, j ):
-        if self.savePlots:
-            filename = "pics/%03d%d.png" % ( nsteps-1, j )
-            plt.savefig ( filename, dpi=self.dpi )
+        if not self.savePlots:
+            return
+        filename = "pics/%03d%d.png" % ( nsteps-1, j )
+        plt.savefig ( filename, dpi=self.dpi )
 
     def ipython ( self ):
         import IPython
@@ -165,13 +166,6 @@ class Drawer:
 
         self.lastartists = p
         self.save ( plt, 3, n, j )
-
-    def run ( self ):
-        try:
-            while True:
-                self.next()
-        except StopIteration:
-            pass
 
     def pprint ( self, *args ):
         """ logging """
