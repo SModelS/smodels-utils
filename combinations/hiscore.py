@@ -74,13 +74,13 @@ class Hiscore:
             else:
                 self.pprint ( "Timed out when try to get hiscores!" )
 
-    def trimModels ( self, n=None, trimbranchings=False ):
+    def trimModels ( self, n=None, trimbranchings=False, maxloss=.01 ):
         """ trim the first <n> models in the list """
         if n == None or n < 0 or n > self.nkeep:
             n = self.nkeep
         for i in range(n):
             if self.hiscores[i]!=None:
-                trimmer = Trimmer( self.hiscores[i], "aggressive", .002 )
+                trimmer = Trimmer( self.hiscores[i], "aggressive", maxloss )
                 trimmer.trim( trimbranchings=trimbranchings )
                 self.trimmed[i] = trimmer.model
 

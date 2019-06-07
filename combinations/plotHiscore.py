@@ -9,11 +9,15 @@ import helpers
 
 def obtain ( number, picklefile ):
     """ obtain hiscore number <number> """
-    f=open( picklefile,"rb" )
-    hiscores = pickle.load ( f )
-    f.close()
+    with open( picklefile,"rb" ) as f:
+        hiscores = pickle.load ( f )
+        trimmed = pickle.load ( f )
+    if number in trimmed:
+        Z = trimmed[number].Z
+        print ( "[plotHiscore] obtaining trimmed #%d: Z=%.2f" % (number, Z ) )
+        return trimmed[number]
     Z = hiscores[number].Z
-    print ( "[plotHiscore] obtaining #%d: Z=%.2f" % (number, Z ) )
+    print ( "[plotHiscore] obtaining untrimmed #%d: Z=%.2f" % (number, Z ) )
     return hiscores[ number ]
     
 def discussPredictions ( model ):
@@ -62,8 +66,16 @@ def writeIndexHtml ( model ):
     f.write ( "<center>\n" )
     f.write ( "<h1>Current best model: Z=%.2f</h1>\n" % model.Z )
     f.write ( "</center>\n" )
-    f.write ( "Model produced in step %d<br>" % model.step )
-    #f.write ( "<br>Signal strength multipliers: %s\n" % ", ".join ( ssm ) )
+    f.write ( "Model produced in step %d<br>\n" % model.step )
+    if hasattr ( model, "rvalues" ):
+        rvalues=model.rvalues
+        rvalues.sort(key=lambda x: x[0],reverse=True )
+        f.write ( "%d predictions available. Highest r values are:<br>" % len(rvalues) )
+        for rv in rvalues[:5]:
+            f.write ( "%s:%s r=%.2f<br>\n" % ( rv[2].analysisId(), ",".join ( map(str,rv[2].txnames) ), rv[0] ) )
+    else:
+        print ( "[plotHiscore] model has no r values!" )
+
     height = 32*int((len(ssm)+3)/4)
     if hasattr ( model, "whatif" ):
         height += 32
@@ -75,7 +87,7 @@ def writeIndexHtml ( model ):
     f.write ( "</body>\n" )
     f.write ( "</html>\n" )
     f.close()
-    print ( "Wrote index.html" )
+    print ( "[plotHiscore] Wrote index.html" )
 
 def copyFilesToGithub():
     subprocess.getoutput ( "cp index.html matrix_aggressive.png decays.png ruler.png texdoc.png ../../smodels.github.io/models/" )
@@ -140,8 +152,8 @@ if __name__ == "__main__":
             help='which hiscore to plot [0]',
             type=int, default=0 )
     argparser.add_argument ( '-f', '--picklefile',
-            help='pickle file to draw from [best.pcl]',
-            type=str, default="best.pcl" )
+            help='pickle file to draw from [hiscore.pcl]',
+            type=str, default="hiscore.pcl" )
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug, info, warn, err [info]',
             type=str, default="info" )

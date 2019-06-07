@@ -164,6 +164,8 @@ class Drawer:
     def run ( self ):
         try:
             while True:
+                if self.counter % 10 == 0:
+                    print ( "[drawWalk] pic %d/%d" % ( self.counter, self.nmax ) )
                 self.next()
         except StopIteration:
             pass
@@ -189,10 +191,10 @@ if __name__ == "__main__":
     if args.clear:
         subprocess.getoutput ("rm pics/*png" )
     drawer = Drawer ( args.file, args.nmin, args.nmax, args.save )
-    print ( "draw the pics" )
+    print ( "[drawWalk] draw the pics" )
     drawer.run()
-    print ( "now animate the thing" )
+    print ( "[drawWalk] now animate the thing" )
     animator = animation.ArtistAnimation( drawer.fig, drawer.history, interval=50,
-                                          repeat_delay=3000, blit=False )
+                                          repeat_delay=3000, blit=True )
     animator.save("movie.mp4")
     print ( "mplayer movie.mp4" )
