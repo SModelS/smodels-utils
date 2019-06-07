@@ -54,9 +54,11 @@ class Hiscore:
         if not os.path.exists ( self.pickleFile ) or os.stat ( self.pickleFile ).st_size < 100:
             return
         try:
-            with open( self.pickleFile,"rb") as f:
+            with open( self.pickleFile,"rb+") as f:
+                fcntl.lockf( f, fcntl.LOCK_EX )
                 self.hiscores = pickle.load ( f )
                 self.trimmed = pickle.load ( f )
+                fcntl.lockf( f, fcntl.LOCK_UN )
             nhs = 0
             for i in self.hiscores:
                 if i != None:
@@ -105,7 +107,7 @@ class Hiscore:
             subprocess.getoutput ( "mv -f %s old.pcl" % pickleFile )
             self.clean()
             with open( pickleFile, "wb" ) as f:
-                fcntl.lockf( f, fcntl.LOCK_EX ) # | fcntl.LOCK_NB)
+                fcntl.lockf( f, fcntl.LOCK_EX )
                 pickle.dump ( self.hiscores, f )
                 pickle.dump ( self.trimmed, f )
                 fcntl.lockf( f, fcntl.LOCK_UN )

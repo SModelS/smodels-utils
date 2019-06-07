@@ -6,10 +6,19 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+class RegressionHelper:
+    def __init__(self):
+        pass
+    def countDegreesOfFreedom ( self, slhafile ):
+        with open(slhafile,"r") as f:
+            lines=f.readlines()
+        for line in lines
+            
+
 class Model(torch.nn.Module):
     def __init__(self):
         super(Model, self).__init__()
-        self.linear = torch.nn.Linear(2, 1)
+        self.linear = torch.nn.Linear(20, 1)
 
     def forward(self, x):
         y_pred = F.sigmoid(self.linear(x))
@@ -34,4 +43,6 @@ class Regressor:
         return self.model.forward ( x_data )
 
 if __name__ == "__main__":
-    regressor = Regressor()
+    helper = RegressionHelper ()
+    print ( helper.countDegreesOfFreedom ( "template_many.slha" ) )
+    # regressor = Regressor()

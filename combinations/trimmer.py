@@ -90,6 +90,8 @@ class Trimmer:
             decays = self.model.decays[pid]
             self.highlight ( "info", "trying to trim branchings of %s [%d/%d]" % ( helpers.getParticleName(pid),(cpid+1),len(unfrozen) ) )
             for dpid,dbr in decays.items():
+                if not dpid in self.model.masses:
+                    self.model.masses[dpid]=1e6
                 if dbr < 1e-5: ## small values set automatically to zero
                     self.model.decays[pid][dpid]=0. ## correct for it.
                     S = sum ( self.model.decays[pid].values() )
