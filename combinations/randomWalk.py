@@ -132,9 +132,8 @@ class RandomWalker:
 
     def saveState ( self ):
         """ write out current state, for later retrieval """
-        f=open("state.pcl","wb")
-        pickle.dump ( self, f )
-        f.close()
+        with open("state.pcl","wb") as f:
+            pickle.dump ( self, f )
 
     def highlight ( self, msgType = "info", *args ):
         """ logging, hilit """
@@ -143,9 +142,8 @@ class RandomWalker:
 
     def log ( self, *args ):
         """ logging to file """
-        f=open( "walker%d.log" % self.walkerid, "a" )
-        f.write ( "[walk:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
-        f.close()
+        with open( "walker%d.log" % self.walkerid, "a" ) as f:
+            f.write ( "[walk:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def randomlyChangeSignalStrengths ( self ):
         """ randomly change one of the signal strengths """
@@ -262,9 +260,8 @@ class RandomWalker:
                 extracted = traceback.extract_tb(tb)
                 for point in extracted:
                     self.pprint ( "extracted: %s" % point )
-                f=open("exceptions.log","a")
-                f.write ( "taking a step resulted in exception: %s, %s\n" % (type(e), e ) )
-                f.close()
+                with open("exceptions.log","a") as f:
+                    f.write ( "taking a step resulted in exception: %s, %s\n" % (type(e), e ) )
             self.model.computePrior()
             self.pprint ( "prior times llhd, before versus after: %f -> %f" % ( self.oldmodel.priorTimesLlhd(), self.model.priorTimesLlhd() ) )
             #ratio = 1.
@@ -305,12 +302,11 @@ def _run ( w ):
         w.walk()
     except Exception as e:
         import time
-        f=open("exceptions.log","a")
-        f.write ( "time %s\n" % time.asctime() )
-        f.write ( "walker %d threw: %s\n" % ( w.walkerid, e ) )
-        if hasattr ( w.model, "currentSLHA" ):
-            f.write ("slha file was %s\n" % w.model.currentSLHA )
-        f.close()
+        with open("exceptions.log","a") as f:
+            f.write ( "time %s\n" % time.asctime() )
+            f.write ( "walker %d threw: %s\n" % ( w.walkerid, e ) )
+            if hasattr ( w.model, "currentSLHA" ):
+                f.write ("slha file was %s\n" % w.model.currentSLHA )
 
 if __name__ == "__main__":
     print ( "[walk] ramping up" )
@@ -343,9 +339,8 @@ if __name__ == "__main__":
 
     if args.cont!="" and os.path.exists ( args.cont ) and \
                    os.stat( args.cont ).st_size > 100:
-        f=open( args.cont, "rb" )
-        hiscores = pickle.load ( f )
-        f.close()
+        with open( args.cont, "rb" ) as f:
+            hiscores = pickle.load ( f )
         for ctr,v in enumerate(hiscores): # .items()):
             if ctr >= ncpus:
                 break

@@ -301,9 +301,8 @@ class Combiner:
         return bestCombo,ulexp,ulobs
 
 if __name__ == "__main__":
-    f=open("predictions.pcl", "rb" )
-    predictions = pickle.load ( f )
-    f.close()
+    with open("predictions.pcl", "rb" ) as f:
+        predictions = pickle.load ( f )
     algo = Combiner ()
     print ()
     strategy = "aggressive"

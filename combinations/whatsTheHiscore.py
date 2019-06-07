@@ -14,6 +14,7 @@ def discussBest ( model, detailed ):
     print ( "Current best: %.3f, p=%.2g [%d/%d unfrozen particles, %d predictions] " % \
             (model.Z, p, len(model.unFrozenParticles()),len(model.masses.keys()),len(model.bestCombo) ) )
     if detailed:
+        print ( "Solution was found in step #%d" % model.step )
         for i in model.bestCombo:
             print ( "  prediction in best combo: %s" % i.analysisId() )
 

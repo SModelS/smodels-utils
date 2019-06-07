@@ -27,9 +27,8 @@ class Trimmer:
 
     def log ( self, *args ):
         """ logging to file """
-        f=open( "walker%d.log" % self.model.walkerid, "a" )
-        f.write ( "[model:%d - %s] %s\n" % ( self.model.walkerid, time.asctime(), " ".join(map(str,args)) ) )
-        f.close()
+        with open( "walker%d.log" % self.model.walkerid, "a" ) as f:
+            f.write ( "[model:%d - %s] %s\n" % ( self.model.walkerid, time.asctime(), " ".join(map(str,args)) ) )
         
     def trimParticles ( self ):
         """ this function checks if particle can be taken out without

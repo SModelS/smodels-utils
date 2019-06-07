@@ -50,16 +50,15 @@ class Model:
         self.llhd=0.
         self.Z = 0.
 
-        slhaf = open ( self.templateSLHA )
-        tmp = slhaf.readlines()
-        slhalines = []
-        for line in tmp:
-            p = line.find("#" )
-            if p > -1:
-                line = line[:p]
-            if "D" in line and not "DECAY" in line:
-                slhalines.append ( line.strip().split(" ")[0] )
-        slhaf.close()
+        with open ( self.templateSLHA ) as slhaf:
+            tmp = slhaf.readlines()
+            slhalines = []
+            for line in tmp:
+                p = line.find("#" )
+                if p > -1:
+                    line = line[:p]
+                if "D" in line and not "DECAY" in line:
+                    slhalines.append ( line.strip().split(" ")[0] )
 
         for p in self.particles:
             self.masses[p]=1e6
@@ -96,9 +95,8 @@ class Model:
 
     def log ( self, *args ):
         """ logging to file """
-        f=open( "walker%d.log" % self.walkerid, "a" )
-        f.write ( "[model:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
-        f.close()
+        with open( "walker%d.log" % self.walkerid, "a" ) as f:
+            f.write ( "[model:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def frozenParticles ( self ):
         """ returns a list of all particles that can be regarded as frozen
@@ -241,28 +239,27 @@ class Model:
         :param outputSLHA: if not None, write into that file. else, write into
             currentSLHA file.
         """
-        f=open( self.templateSLHA )
-        lines=f.readlines()
-        f.close()
+        with open( self.templateSLHA ) as f:
+            lines=f.readlines()
         if not hasattr ( self, "currentSLHA" ):
             self.createNewSLHAFileName()
         if outputSLHA == None:
             outputSLHA = self.currentSLHA
         self.pprint ( "create %s from %s" % (outputSLHA, self.templateSLHA ) )
-        f=open(outputSLHA,"w")
-        for line in lines:
-            for m,v in self.masses.items():
-                line=line.replace("M%d" % m,"%.1f" % v )
-                for dpid,dbr in self.decays[m].items():
-                    line=line.replace("D%d_%d" % ( m, dpid), "%.5f" % dbr )
-                D_ = "D%d_" % m
-                if D_ in line and not line[0]=="#":
-                    p1= line.find(D_)
-                    p2 = line[p1+1:].find(" ")
-                    print ( "remaining token: %s: set to zero." % line[p1:p1+p2+1] )
-                    line=line.replace( line[p1:p1+p2+1], "0." )
-            f.write ( line )
-        f.close()
+        with open(outputSLHA,"w") as f:
+            for line in lines:
+                for m,v in self.masses.items():
+                    line=line.replace("M%d" % m,"%.1f" % v )
+                    for dpid,dbr in self.decays[m].items():
+                        line=line.replace("D%d_%d" % ( m, dpid), "%.5f" % dbr )
+                    D_ = "D%d_" % m
+                    if D_ in line and not line[0]=="#":
+                        p1= line.find(D_)
+                        p2 = line[p1+1:].find(" ")
+                        print ( "remaining token: %s: set to zero." % \
+                                line[p1:p1+p2+1] )
+                        line=line.replace( line[p1:p1+p2+1], "0." )
+                f.write ( line )
         self.computeXSecs()
 
     def computeXSecs ( self ):

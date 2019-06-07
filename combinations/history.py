@@ -23,13 +23,17 @@ class History:
     def pprint ( self, *args ):
         """ logging """
         print ( "[history:%d] %s" % ( self.walkerid, " ".join(map(str,args))) )
-        # self.log ( *args )
+        self.log ( *args )
+
+    def log ( self, *args ):
+        """ logging to file """
+        with open( "walker%d.log" % self.walkerid, "a" ) as f:
+            f.write ( "[history:%d - %s] %s\n" % ( self.walkerid, time.asctime(), " ".join(map(str,args)) ) )
 
     def save ( self ):
         self.pprint ( "saving history" )
-        f=open("history.pcl","wb")
-        pickle.dump(self.history,f)
-        f.close()
+        with open("history.pcl","wb") as f:
+            pickle.dump(self.history,f)
 
     def load ( self ):
         f=open("history.pcl","rb" )

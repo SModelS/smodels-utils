@@ -54,15 +54,14 @@ class Hiscore:
         if not os.path.exists ( self.pickleFile ) or os.stat ( self.pickleFile ).st_size < 100:
             return
         try:
-            f=open( self.pickleFile,"rb")
-            self.hiscores = pickle.load ( f )
-            self.trimmed = pickle.load ( f )
+            with open( self.pickleFile,"rb") as f:
+                self.hiscores = pickle.load ( f )
+                self.trimmed = pickle.load ( f )
             nhs = 0
             for i in self.hiscores:
                 if i != None:
                     nhs += 1
             self.pprint ( "loaded %d hiscores from file, and %s trimmed ones." % ( nhs,len(self.trimmed) ) )
-            f.close()
             assert ( len(self.hiscores) == self.nkeep )
             self.fileAttempts=0
         except Exception as e:
@@ -105,12 +104,11 @@ class Hiscore:
         try:
             subprocess.getoutput ( "mv -f %s old.pcl" % pickleFile )
             self.clean()
-            f=open( pickleFile, "wb" )
-            fcntl.lockf( f, fcntl.LOCK_EX ) # | fcntl.LOCK_NB)
-            pickle.dump ( self.hiscores, f )
-            pickle.dump ( self.trimmed, f )
-            fcntl.lockf( f, fcntl.LOCK_UN )
-            f.close()
+            with open( pickleFile, "wb" ) as f:
+                fcntl.lockf( f, fcntl.LOCK_EX ) # | fcntl.LOCK_NB)
+                pickle.dump ( self.hiscores, f )
+                pickle.dump ( self.trimmed, f )
+                fcntl.lockf( f, fcntl.LOCK_UN )
             self.fileAttempts=0
         except OSError or BlockingIOError:
             self.fileAttempts+=1
@@ -142,6 +140,5 @@ class Hiscore:
 
     def log ( self, *args ):
         """ logging to file """
-        f=open( "walker%d.log" % self.walkerid, "a" )
-        f.write ( "[hiscore:%d - %s] %s\n" % ( self.walkerid, time.asctime(), " ".join(map(str,args)) ) )
-        f.close()
+        with open( "walker%d.log" % self.walkerid, "a" ) as f:
+            f.write ( "[hiscore:%d - %s] %s\n" % ( self.walkerid, time.asctime(), " ".join(map(str,args)) ) )

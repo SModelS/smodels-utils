@@ -23,9 +23,8 @@ class Predictor:
 
     def log ( self, *args ):
         """ logging to file """
-        f=open( "walker%d.log" % self.walkerid, "a" )
-        f.write ( "[predict:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
-        f.close()
+        with open( "walker%d.log" % self.walkerid, "a" ) as f:
+            f.write ( "[predict:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def predict ( self, inputFile, allpreds=False, llhdonly=True ):
         """ taken an slha input file, return theory predictions 
@@ -77,6 +76,5 @@ if __name__ == "__main__":
     p = Predictor ()
     predictions = p.predict ( inputFile )
 
-    f=open("predictions.pcl", "wb" )
-    pickle.dump ( predictions, f )
-    f.close()
+    with open("predictions.pcl", "wb" ) as f:
+        pickle.dump ( predictions, f )
