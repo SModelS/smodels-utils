@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import pickle, os
+import pickle, os, fcntl
 from randomWalk import Model # RandomWalker
 from scipy import stats
 
@@ -31,9 +31,11 @@ def main():
     argparser.add_argument ( '-d', '--detailed',
             help='detailed descriptions', action="store_true" )
     args = argparser.parse_args()
-    f=open(args.picklefile,"rb")
-    models = pickle.load ( f )
-    f.close()
+    with open(args.picklefile,"rb") as f:
+        fcntl.lockf( f, fcntl.LOCK_EX )
+        models = pickle.load ( f )
+        trimmed = pickle.load ( f )
+        fcntl.lockf( f, fcntl.LOCK_UN )
     names = { 0: "highest", 1: "second", 2: "third" }
     for c,model in enumerate(models):
         if c >= args.nmax:

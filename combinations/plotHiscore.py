@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import pickle, os, sys, subprocess, time
+import pickle, os, sys, subprocess, time, fcntl
 from randomWalk import Model # RandomWalker
 from smodels.tools.physicsUnits import GeV
 sys.path.insert(0,"../" )
@@ -10,8 +10,10 @@ import helpers
 def obtain ( number, picklefile ):
     """ obtain hiscore number <number> """
     with open( picklefile,"rb" ) as f:
+        fcntl.lockf( f, fcntl.LOCK_EX )
         hiscores = pickle.load ( f )
         trimmed = pickle.load ( f )
+        fcntl.lockf( f, fcntl.LOCK_UN )
     if number in trimmed:
         Z = trimmed[number].Z
         print ( "[plotHiscore] obtaining trimmed #%d: Z=%.2f" % (number, Z ) )
@@ -19,7 +21,7 @@ def obtain ( number, picklefile ):
     Z = hiscores[number].Z
     print ( "[plotHiscore] obtaining untrimmed #%d: Z=%.2f" % (number, Z ) )
     return hiscores[ number ]
-    
+
 def discussPredictions ( model ):
     print ( "How the Z comes about. Best combo:" )
     combo = model.bestCombo
@@ -50,7 +52,7 @@ def writeTex ( model ):
     src = "Signal strength multipliers: $" + ", ".join ( ssm ) + "$" + whatifs
     # print ( "src=>>>>%s<<<<" % src )
     p = tex2png.Latex ( src, 600 ).write()
-    f = open ( "texdoc.png", "wb" ) 
+    f = open ( "texdoc.png", "wb" )
     f.write ( p[0] )
     f.close()
 
@@ -105,7 +107,7 @@ def plotRuler( model ):
     resultsFor = {}
     for pid,values in resultsForPIDs.items():
         resultsFor[ model.masses[pid] ] = values
-    
+
     print ( "[plotHiscore] now draw ruler.png" )
     rulerPlotter.draw ( model.currentSLHA, "ruler.png", Range=(None,None),
                         mergesquark = False,
@@ -117,7 +119,7 @@ def plotDecays ( model ):
                 "weakinos": True, "sleptons": True, "neato": True,
                 "integratesquarks": False, "leptons": True }
     ## FIXME add cross sections.
-    decayPlotter.draw ( model.currentSLHA, "decays.png", options, 
+    decayPlotter.draw ( model.currentSLHA, "decays.png", options,
                         ssmultipliers = model.ssmultipliers )
 
 def plot ( number, verbosity, picklefile, options ):
@@ -129,7 +131,7 @@ def plot ( number, verbosity, picklefile, options ):
     for i in opts:
         if not i in options:
             options[i]=True
-    
+
     plotruler = options["ruler"]
     if plotruler:
         plotRuler ( model )
@@ -173,9 +175,9 @@ if __name__ == "__main__":
             help='scp to smodels',
             action="store_true" )
     args = argparser.parse_args()
-    options = { "ruler": not args.noruler, "decays": not args.nodecays, 
+    options = { "ruler": not args.noruler, "decays": not args.nodecays,
                 "predictions": args.predictions, "html": not args.nohtml }
-    plot ( args.number, args.verbosity, args.picklefile, options ) 
+    plot ( args.number, args.verbosity, args.picklefile, options )
     if args.scp:
         print ( "scp to smodels" )
         subprocess.getoutput ( "scp *.png index.html smodels.hephy.at:/var/www/walten/models/" )

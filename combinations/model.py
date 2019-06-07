@@ -251,7 +251,9 @@ class Model:
                 for m,v in self.masses.items():
                     line=line.replace("M%d" % m,"%.1f" % v )
                     if not m in self.decays:
-                        continue
+                        self.highlight ( "error: could not find %s in decays" % m )
+                        ## FIXME what is this???
+                        self.decays[m]={ self.LSP: 1.0 }
                     for dpid,dbr in self.decays[m].items():
                         line=line.replace("D%d_%d" % ( m, dpid), "%.5f" % dbr )
                     D_ = "D%d_" % m
