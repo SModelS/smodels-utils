@@ -24,6 +24,7 @@ class Drawer:
         self.nmin = nmin
         self.nmax = nmax
         self.counter = nmin
+        self.j = 0 ## intermediate steps
         self.picklefile = picklefile
         ## the coordinates that we possibly visualise
         self.coordinates = ( 1000006, 1000001, 1000005 )
@@ -53,10 +54,16 @@ class Drawer:
         return self.fig
 
     def next ( self ):
-        if self.counter >= self.nmax:
+        self.j += 1
+        if self.j >= 10:
+            self.counter += 1
+            self.j = 0 ## reset intermediate counter
+            
+        if self.counter > self.nmax:
             raise StopIteration ( "reached step #%d" % self.nmax )
-        self.draw ( self.counter )
-        self.counter+=1
+        self.draw ()
+        return self.lastartists
+        # self.draw ( self.counter )
 
     def getHistory( self ):
         """ load the history """
@@ -119,52 +126,54 @@ class Drawer:
         # self.pprint ( "getting coordinates %d/%d: %s" % (j,n,xcoords[0]) )
         return [ xcoords,ycoords,zcoords ]
 
-    def draw( self, n ):
-        for j in range(0,10):
-            # self.initFigure()
-            title = "MCMC walk, after %d steps" % n
-            t = self.ax.text( 2800., 7., 0., title, horizontalalignment="center",
-                   verticalalignment="bottom", transform = self.ax.transAxes )
-            p = [ t ]
-            xcoords,ycoords,zcoords = self.getCoords ( j, n )
-            for i in range(n):
-                p += self.ax.plot( xcoords[i:i+2], ycoords[i:i+2], zcoords[i:i+2], \
-                         c=cm.binary(.3+.6*i/n) )
-            p += self.ax.plot( [xcoords[-1]], [ycoords[-1]], [zcoords[-1]], "*", color='r' )
-            self.ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
-            yminmax = self.minMax(ycoords)
-            if abs(yminmax[1])<1e-5:
-                self.ax.yaxis.set_visible(False)
-            else:
-                self.ax.yaxis.set_visible(True)
+    def draw( self ):
+        j = self.j
+        n = self.counter
+        # self.initFigure()
+        title = "MCMC walk, after %d steps" % n
+        t = self.ax.text( 2800., 7., 0., title, horizontalalignment="center",
+               verticalalignment="bottom", transform = self.ax.transAxes )
+        p = [ t ]
+        xcoords,ycoords,zcoords = self.getCoords ( j, n )
+        for i in range(n):
+            p += self.ax.plot( xcoords[i:i+2], ycoords[i:i+2], zcoords[i:i+2], \
+                     c=cm.binary(.3+.6*i/n) )
+        p += self.ax.plot( [xcoords[-1]], [ycoords[-1]], [zcoords[-1]], "*", color='r' )
+        self.ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+        yminmax = self.minMax(ycoords)
+        if abs(yminmax[1])<1e-5:
+            self.ax.yaxis.set_visible(False)
+        else:
+            self.ax.yaxis.set_visible(True)
 
-            zminmax = self.minMax(zcoords)
-            if abs(zminmax[1])<1e-5:
-                # print ( "make z axis invisible" )
-                self.ax.zaxis.set_visible(False)
-                self.ax.w_zaxis.line.set_lw(0.)
-                self.ax.set_zticks([])
-                self.ax.set_zlabel ( "" )
-                self.ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-                self.ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-            else:
-                self.ax.zaxis.set_visible(True)
-                self.ax.w_zaxis.line.set_lw(0.8)
-                panecol = (0.95, 0.95, 0.95, 0.5)
-                self.ax.xaxis.set_pane_color( panecol )
-                self.ax.yaxis.set_pane_color( panecol )
-                self.ax.zaxis.set_pane_color( panecol )
-                self.ax.set_zticks( np.arange ( 0., self.mMax+1, 500. ) )
-                self.ax.set_zlabel ( helpers.toLatex(self.coordinates[2],True,True) )
-                self.ax.zaxis.set_major_formatter(FormatStrFormatter('%d'))
+        zminmax = self.minMax(zcoords)
+        if abs(zminmax[1])<1e-5:
+            # print ( "make z axis invisible" )
+            self.ax.zaxis.set_visible(False)
+            self.ax.w_zaxis.line.set_lw(0.)
+            self.ax.set_zticks([])
+            self.ax.set_zlabel ( "" )
+            self.ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+            self.ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        else:
+            self.ax.zaxis.set_visible(True)
+            self.ax.w_zaxis.line.set_lw(0.8)
+            panecol = (0.95, 0.95, 0.95, 0.5)
+            self.ax.xaxis.set_pane_color( panecol )
+            self.ax.yaxis.set_pane_color( panecol )
+            self.ax.zaxis.set_pane_color( panecol )
+            self.ax.set_zticks( np.arange ( 0., self.mMax+1, 500. ) )
+            self.ax.set_zlabel ( helpers.toLatex(self.coordinates[2],True,True) )
+            self.ax.zaxis.set_major_formatter(FormatStrFormatter('%d'))
 
-            self.save ( plt, 3, n, j )
-            self.history.append ( p )
+        self.save ( plt, 3, n, j )
+        self.history.append ( p )
+        self.lastartists = p
 
     def run ( self ):
         try:
             while True:
-                if self.counter % 10 == 0:
+                if self.counter % 10 == 0 and self.j==0:
                     print ( "[drawWalk] pic %d/%d" % ( self.counter, self.nmax ) )
                 self.next()
         except StopIteration:
@@ -193,12 +202,15 @@ if __name__ == "__main__":
     if args.clear:
         subprocess.getoutput ("rm pics/*png" )
     drawer = Drawer ( args.file, args.nmin, args.nmax, args.save )
-    print ( "[drawWalk] draw the pics" )
+    print ( "[drawWalk] starting" )
     drawer.run()
     print ( "[drawWalk] now animate the thing" )
     animator = animation.ArtistAnimation( drawer.fig, drawer.history, interval=50,
                                           repeat_delay=3000, blit=True )
+    #animator = animation.FuncAnimation( drawer.fig, drawer.history, interval=50,
+    #                                      repeat_delay=3000, blit=True )
     animator.save("movie.mp4")
     print ( "mplayer movie.mp4" )
     if args.upload:
+        print ( "[drawWalk] upload movie to smodels" )
         subprocess.getoutput ( "scp movie.mp4 smodels.hephy.at:/var/www/walten/" )
