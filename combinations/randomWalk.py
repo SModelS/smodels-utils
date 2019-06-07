@@ -110,7 +110,7 @@ class RandomWalker:
         self.model.predict( self.strategy )
         self.log ( "found highest Z: %.2f" % self.model.Z )
         if self.hiscoreList != None:
-            self.log ( "check if result goes into hiscore list" )
+            self.log ( "check if result goes into hiscore list %s" % type(self.hiscoreList) )
             self.hiscoreList.newResult ( self.model ) ## add to high score list
             self.log ( "done check for result to go into hiscore list" )
         self.model.computePrior()

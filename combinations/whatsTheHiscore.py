@@ -24,14 +24,19 @@ def main():
     argparser.add_argument ( '-f', '--picklefile',
             help='pickle file with hiscores [hiscore.pcl]',
             type=str, default="hiscore.pcl" )
+    argparser.add_argument ( '-n', '--nmax',
+            help='maximum number of entries to show [20]',
+            type=int, default=20 )
     argparser.add_argument ( '-d', '--detailed',
             help='detailed descriptions', action="store_true" )
     args = argparser.parse_args()
     f=open(args.picklefile,"rb")
-    walkers = pickle.load ( f )
+    models = pickle.load ( f )
     f.close()
     names = { 0: "highest", 1: "second", 2: "third" }
-    for c,model in enumerate(walkers):
+    for c,model in enumerate(models):
+        if c >= args.nmax:
+            break
         if model == None:
             break
         sc = "%dth" % (c+1)
