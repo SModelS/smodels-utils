@@ -261,6 +261,8 @@ class Combiner:
         for ci,combo in enumerate(bestCombo):
             if hasattr ( combo, "elements" ):
                 del bestCombo[ci].elements
+            if hasattr ( combo, "avgElement" ):
+                del bestCombo[ci].avgElement
             eR = bestCombo[ci].expResult
             for ds in eR.datasets:
                 for tx in ds.txnameList:
@@ -276,6 +278,8 @@ class Combiner:
         theorypred = copy.deepcopy( tp )
         if hasattr ( theorypred, "elements" ):
             del theorypred.elements
+        if hasattr ( theorypred, "avgElement" ):
+            del theorypred.avgElement
         eR = theorypred.expResult
         for ds in eR.datasets:
             for tx in ds.txnameList:

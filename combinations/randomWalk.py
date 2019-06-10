@@ -8,6 +8,7 @@ from smodels.tools.runtime import nCPUs
 from hiscore import Hiscore
 from model import Model
 from history import History
+from regressor import Regressor
 import helpers
 
 def cleanDirectory ():
@@ -31,6 +32,7 @@ class RandomWalker:
         self.history = History ( walkerid )
         self.record_history = False
         self.maxsteps = nsteps
+        self.regressor = Regressor ()
         self.takeStep() ## the first step should be considered as "taken"
 
     @classmethod
@@ -113,9 +115,16 @@ class RandomWalker:
             self.log ( "check if result goes into hiscore list" )
             self.hiscoreList.newResult ( self.model ) ## add to high score list
             self.log ( "done check for result to go into hiscore list" )
+        self.train ()
         self.model.computePrior()
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.model.letters, self.model.description, self.model.Z ) )
         self.log ( "step %d finished." % self.model.step )
+
+    def train ( self ):
+        """ train the regressor """
+        self.regressor.train ( self.model, self.model.Z )
+        if self.model.step % 100 == 0 or self.model.step == 3 or self.model.step == 20:
+            self.regressor.save()
 
     def revert ( self ):
         """ revert the last step. go back. """
@@ -359,12 +368,15 @@ if __name__ == "__main__":
         for w in range(ncpus):
             walkers.append ( RandomWalker( w, args.nsteps, args.strategy ) )
 
+    print ( "[walk] loading hiscores" )
     hiscore = Hiscore ( 0, True )
     for w in walkers:
         w.supplyHiscoreList ( hiscore )
-
+    onoff="off"
     if args.history:
+        onoff="on"
         walkers[0].record_history = True
+    print ( "[walk] record histories is %s" % onoff )
 
     print ( "[walk] starting %d walkers" % len(walkers) )
     if len ( walkers ) == 1:

@@ -76,11 +76,12 @@ class Model:
             self.possibledecays[p]=decays
 
         ## the LSP we need from the beginning
-        self.masses[Model.LSP]=random.uniform(50,500)
-        if False: # cheat, to get a head start
-            self.masses[1000006]=random.uniform(500,900)
+        self.masses[Model.LSP]=random.uniform(250,500)
+        if True: # cheat, to get a head start
+            self.masses[1000006]=random.uniform(700,900)
+            self.masses[1000005]=random.uniform(500,700)
             self.masses[1000002]=random.uniform(800,1200)
-            self.masses[1000024]=random.uniform(500,1000)
+            # self.masses[1000024]=random.uniform(500,1000)
         self.computePrior()
 
     def highlight ( self, msgType = "info", *args ):

@@ -31,7 +31,7 @@ def main():
     argparser.add_argument ( '-d', '--detailed',
             help='detailed descriptions', action="store_true" )
     args = argparser.parse_args()
-    with open(args.picklefile,"rb") as f:
+    with open(args.picklefile,"rb+") as f:
         fcntl.lockf( f, fcntl.LOCK_EX )
         models = pickle.load ( f )
         trimmed = pickle.load ( f )

@@ -16,6 +16,7 @@ class Hiscore:
         self.hiscores = [ None ]*self.nkeep
         self.fileAttempts = 0 ## unsucessful attempts at reading or writing
         self.pickleFile = picklefile
+        self.mtime = 0 ## last modification time of current list
         self.updateListFromPickle ( )
 
     def currentMinZ ( self ):
@@ -51,14 +52,21 @@ class Hiscore:
 
     def updateListFromPickle ( self ):
         """ fetch the list from the pickle file """
-        if not os.path.exists ( self.pickleFile ) or os.stat ( self.pickleFile ).st_size < 100:
+        if not os.path.exists ( self.pickleFile ) or \
+            os.stat ( self.pickleFile ).st_size < 100:
             return
+        mtime = os.stat ( self.pickleFile ).st_mtime
+        if mtime > 0 and mtime == self.mtime:
+            ## no modification. return
+            return
+            
         try:
             with open( self.pickleFile,"rb+") as f:
                 fcntl.lockf( f, fcntl.LOCK_EX )
                 self.hiscores = pickle.load ( f )
                 self.trimmed = pickle.load ( f )
                 fcntl.lockf( f, fcntl.LOCK_UN )
+            self.mtime = mtime
             nhs = 0
             for i in self.hiscores:
                 if i != None:
@@ -111,6 +119,7 @@ class Hiscore:
                 pickle.dump ( self.hiscores, f )
                 pickle.dump ( self.trimmed, f )
                 fcntl.lockf( f, fcntl.LOCK_UN )
+            self.mtime = os.stat ( self.pickleFile ).st_mtime
             self.fileAttempts=0
         except OSError or BlockingIOError:
             self.fileAttempts+=1
