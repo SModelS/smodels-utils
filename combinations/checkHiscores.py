@@ -4,7 +4,7 @@ import pickle, os, sys
 from randomWalk import Model # RandomWalker
 from hiscore import Hiscore
 import IPython
-from pympler.asizeof import asizeof
+# from pympler.asizeof import asizeof
 
 def main():
     import argparse

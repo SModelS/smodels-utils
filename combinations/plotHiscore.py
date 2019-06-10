@@ -10,10 +10,10 @@ import helpers
 def obtain ( number, picklefile ):
     """ obtain hiscore number <number> """
     with open( picklefile,"rb" ) as f:
-        fcntl.lockf( f, fcntl.LOCK_EX )
+        #fcntl.lockf( f, fcntl.LOCK_EX )
         hiscores = pickle.load ( f )
         trimmed = pickle.load ( f )
-        fcntl.lockf( f, fcntl.LOCK_UN )
+        #fcntl.lockf( f, fcntl.LOCK_UN )
     if number in trimmed:
         Z = trimmed[number].Z
         print ( "[plotHiscore] obtaining trimmed #%d: Z=%.2f" % (number, Z ) )
@@ -74,7 +74,10 @@ def writeIndexHtml ( model ):
         rvalues.sort(key=lambda x: x[0],reverse=True )
         f.write ( "%d predictions available. Highest r values are:<br>" % len(rvalues) )
         for rv in rvalues[:5]:
-            f.write ( "%s:%s r=%.2f<br>\n" % ( rv[2].analysisId(), ",".join ( map(str,rv[2].txnames) ), rv[0] ) )
+            srv="N/A"
+            if type(rv[1])==float:
+                srv="%.2f" % rv[1]
+            f.write ( "%s:%s r=%.2f, r<sub>exp</sub>=%s<br>\n" % ( rv[2].analysisId(), ",".join ( map(str,rv[2].txnames) ), rv[0], srv ) )
     else:
         print ( "[plotHiscore] model has no r values!" )
 
