@@ -2,6 +2,7 @@
 
 """ The pytorch-based regressor for Z. So we can walk along its gradient. """
 
+import os
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -63,13 +64,15 @@ class PyTorchModel(torch.nn.Module):
 
 class Regressor:
     """ this is our nice regressor """
-    def __init__ ( self, variables=None ):
+    def __init__ ( self, variables=None, walkerid=0 ):
         if variables == None:
             helper = RegressionHelper ()
             variables = helper.freeParameters( "template_many.slha" )
         self.torchmodel = PyTorchModel( variables )
+        self.load() ## if a model exists we load it
         self.criterion = torch.nn.MSELoss(reduction="mean")
-        self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.001)
+        self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.01 )
+        self.walkerid = walkerid
 
     def convert ( self, theorymodel ):
         """ convert a theory model to x_data """
@@ -79,7 +82,7 @@ class Regressor:
                 print ( "error, dont know what to do with M%d" % k )
                 sys.exit()
             idx = self.torchmodel.variables.index( "M%d" % k)
-            ret[idx]=v
+            ret[idx]= np.log(v+1e-5) / 10. # a bit of a normalization
         for k,v in theorymodel.ssmultipliers.items():
             if not "SS%d" % k in self.torchmodel.variables:
                 print ( "error, dont know what to do with M%d" % k )
@@ -99,21 +102,32 @@ class Regressor:
                 ret[c]=0.
         return torch.Tensor(ret)
 
+    def pprint ( self, *args ):
+        """ logging """
+        print ( "[regressor:%d] %s" % (self.walkerid, " ".join(map(str,args))) )
+
+    def log ( self, *args ):
+        """ logging to file """
+        with open( "walker%d.log" % self.walkerid, "a" ) as f:
+            f.write ( "[regressor:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
+
     def train ( self, model, Z ):
         """ train y_label with x_data """
         x_data = self.convert ( model )
         y_pred = self.torchmodel(x_data)
         y_label = torch.Tensor ( [Z] )
         loss = self.criterion ( y_pred, y_label )
+        self.pprint ( "training. predicted %s, target %s, loss %s" % ( float(y_pred), float(y_label), float(loss) ) )
         self.adam.zero_grad()
         loss.backward()
         self.adam.step()
 
     def save ( self ):
-        torch.save ( self.torchmodel.state_dict(), 'model.ckpt' )
+        torch.save ( self.torchmodel, 'model.ckpt' )
 
     def load ( self ):
-        self.torchmodel = torch.load ( "model.ckpt" )
+        if os.path.exists ( "model.ckpt" ):
+            self.torchmodel = torch.load ( "model.ckpt" )
 
     def predict ( self, model ):
         x_data = self.convert ( model )

@@ -18,7 +18,8 @@ def cleanDirectory ():
     subprocess.getoutput ( "mv exceptions.log tmp/" )
 
 class RandomWalker:
-    def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive" ):
+    def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive",
+                   use_regressor=False ):
         """ initialise the walker
         :param nsteps: maximum number of steps to perform
         """
@@ -32,7 +33,9 @@ class RandomWalker:
         self.history = History ( walkerid )
         self.record_history = False
         self.maxsteps = nsteps
-        self.regressor = Regressor ()
+        self.regressor = None
+        if use_regressor:
+            self.regressor = Regressor ( walkerid=walkerid )
         self.takeStep() ## the first step should be considered as "taken"
 
     @classmethod
@@ -122,7 +125,13 @@ class RandomWalker:
 
     def train ( self ):
         """ train the regressor """
+        if self.regressor == None:
+            return
+        predictedZ = float ( self.regressor.predict ( self.model ) )
+        self.pprint ( "Before training step, predicted vs computed Z: %s, %s" % ( predictedZ, self.model.Z ) )
         self.regressor.train ( self.model, self.model.Z )
+        predictedZ = float ( self.regressor.predict ( self.model ) )
+        self.pprint ( "After training step, predicted vs computed Z: %s, %s" % ( predictedZ, self.model.Z ) )
         if self.model.step % 100 == 0 or self.model.step == 3 or self.model.step == 20:
             self.regressor.save()
 
@@ -272,7 +281,7 @@ class RandomWalker:
                 with open("exceptions.log","a") as f:
                     f.write ( "taking a step resulted in exception: %s, %s\n" % (type(e), e ) )
             self.model.computePrior()
-            self.pprint ( "prior times llhd, before versus after: %f -> %f" % ( self.oldmodel.priorTimesLlhd(), self.model.priorTimesLlhd() ) )
+            # self.pprint ( "prior times llhd, before versus after: %f -> %f" % ( self.oldmodel.priorTimesLlhd(), self.model.priorTimesLlhd() ) )
             #ratio = 1.
             #if self.oldmodel.Z > 0.:
             #    ratio = self.model.Z / self.oldmodel.Z
@@ -334,6 +343,8 @@ if __name__ == "__main__":
     argparser.add_argument ( '-p', '--ncpus',
             help='number of CPUs. -1 means all. [1]',
             type=int, default=1 )
+    argparser.add_argument ( '-r', '--regressor',
+            help='use the NN regressor', action='store_true' )
     argparser.add_argument ( '-c', '--cont',
             help='continue with saved states [""]',
             type=str, default="" )
@@ -355,7 +366,7 @@ if __name__ == "__main__":
                 break
             if v == None:
                 # no hiscore? start from scratch!
-                walker = RandomWalker( ctr, args.nsteps, args.strategy )
+                walker = RandomWalker( ctr, args.nsteps, args.strategy, args.regressor )
                 walker.takeStep()
                 walkers.append ( walker )
                 continue
