@@ -2,7 +2,7 @@
 
 """ The pytorch-based regressor for Z. So we can walk along its gradient. """
 
-import os
+import os, time
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -74,6 +74,7 @@ class Regressor:
     """ this is our nice regressor """
     def __init__ ( self, variables=None, walkerid=0 ):
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu' )
+        self.training = 0
         if variables == None:
             helper = RegressionHelper ()
             variables = helper.freeParameters( "template_many.slha" )
@@ -82,7 +83,7 @@ class Regressor:
         self.criterion = torch.nn.MSELoss(reduction="sum")
         self.criterion.to(self.device)
         # self.adam = torch.optim.SGD(self.torchmodel.parameters(), lr=0.01 )
-        self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.01 )
+        self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.005 )
         self.walkerid = walkerid
 
     def convert ( self, theorymodel ):
@@ -125,6 +126,7 @@ class Regressor:
     def train ( self, model, Z ):
         """ train y_label with x_data """
         #self.log ( "training step starts bytes(model)=%d, bytes(regressor)=%d" % ( asizeof(self.torchmodel), asizeof(self) ) )
+        self.training += 1
         x_data = self.convert ( model )
         y_pred = self.torchmodel(x_data)
         y_pred = y_pred.to(self.device)

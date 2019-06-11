@@ -37,8 +37,13 @@ class RandomWalker:
         self.use_regressor = use_regressor
         self.regressor = None
         if use_regressor:
-            self.regressor = Regressor ( walkerid=walkerid )
+            self.turnOnRegress()
         self.takeStep() ## the first step should be considered as "taken"
+
+    def turnOnRegress ( self ):
+        self.use_regressor=True
+        self.regressor = Regressor ( walkerid=self.walkerid )
+
 
     @classmethod
     def fromModel( cls, model, nsteps=10000, strategy="aggressive",
@@ -140,7 +145,7 @@ class RandomWalker:
         self.regressor.train ( self.model, self.model.Z )
         predictedZ = float ( self.regressor.predict ( self.model ) )
         self.pprint ( "After training step, predicted vs computed Z: %.5f, %.5f" % ( predictedZ, self.model.Z ) )
-        if self.model.step % 100 == 0 or self.model.step == 3 or self.model.step == 20:
+        if self.regressor.training % 100 == 0 or self.regressor.training == 3 or self.regressor.training == 20:
             self.regressor.save()
 
     def revert ( self ):
@@ -328,6 +333,8 @@ class RandomWalker:
         self.saveState()
 
 def _run ( w ):
+    if w.walkerid==0 and args.regressor:
+        w.turnOnRegress()
     try:
         w.walk()
     except Exception as e:
@@ -378,29 +385,21 @@ if __name__ == "__main__":
             for v in hiscores: # .items()):
                 if ctr >= ncpus:
                     break
-                regress = args.regressor
-                if ctr > 0:
-                    ## only first one for now
-                    regress = False
                 if v == None:
                     # no hiscore? start from scratch!
-                    walker = RandomWalker( ctr, args.nsteps, args.strategy, regress )
+                    walker = RandomWalker( ctr, args.nsteps, args.strategy, False )
                     walker.takeStep()
                     walkers.append ( walker )
                     continue
                 v.createNewSLHAFileName()
                 v.walkerid = ctr
-                walkers.append ( RandomWalker.fromModel ( v, use_regressor=regress ) )
+                walkers.append ( RandomWalker.fromModel ( v, use_regressor=False ) )
                 walkers[-1].walkerid = ctr
                 walkers[-1].takeStep() # make last step a taken one
                 ctr+=1
     else:
         for w in range(ncpus):
-            regress = args.regressor
-            if w > 0:
-                ## only first one for now
-                regress = False
-            walkers.append ( RandomWalker( w, args.nsteps, args.strategy, regress ) )
+            walkers.append ( RandomWalker( w, args.nsteps, args.strategy, False ) )
 
     print ( "[walk] loading hiscores" )
     hiscore = Hiscore ( 0, True )

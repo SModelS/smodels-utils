@@ -50,7 +50,9 @@ class Hiscore:
             else:
                 if j in self.trimmed:
                     self.trimmed.pop(j)
-        assert ( len(self.hiscores) == self.nkeep )
+        if len(self.hiscores)>self.nkeep:
+            self.hiscores = self.hiscores[:self.nkeep]
+        # assert ( len(self.hiscores) == self.nkeep )
 
     def updateListFromPickle ( self ):
         """ fetch the list from the pickle file """
@@ -74,7 +76,7 @@ class Hiscore:
                 if i != None:
                     nhs += 1
             self.pprint ( "loaded %d hiscores from file, and %s trimmed ones." % ( nhs,len(self.trimmed) ) )
-            assert ( len(self.hiscores) == self.nkeep )
+            # assert ( len(self.hiscores) == self.nkeep )
             self.fileAttempts=0
         except Exception as e:
         # except OSError or BlockingIOError or EOFError or pickle.UnpicklingError or TypeError as e:
@@ -83,6 +85,7 @@ class Hiscore:
                 self.pprint ( "Exception %s: Waiting for %s file, %d" % (str(e),self.pickleFile,self.fileAttempts) )
                 time.sleep ( (.2 + random.uniform(0.,1.))*self.fileAttempts )
                 self.updateListFromPickle()
+                self.pprint ( "Loading hiscores worked this time" )
             else:
                 self.pprint ( "Timed out when try to get hiscores!" )
 
