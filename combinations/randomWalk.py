@@ -10,6 +10,7 @@ from model import Model
 from history import History
 from regressor import Regressor
 import helpers
+from pympler.asizeof import asizeof
 
 def cleanDirectory ():
     subprocess.getoutput ( "mkdir -p tmp" )
@@ -81,10 +82,14 @@ class RandomWalker:
         return 1
 
     def onestep ( self ):
+        self.model.clean()
         self.model.step+=1
         nUnfrozen = len ( self.model.unFrozenParticles() )
         nTotal = len ( self.model.masses.keys() )
         self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.model.step, nUnfrozen, nTotal, ", ".join ( map ( helpers.getParticleName, self.model.unFrozenParticles() ) ) ) )
+        if False:
+            self.pprint ( "memory footprint (kb): walker %d, model %d, hiscore %d, regressor %d, history %d, oldmodel %d" %\
+                    ( asizeof(self)/1024,asizeof(self.model)/1024,asizeof(self.hiscoreList)/1024,asizeof(self.regressor)/1024, asizeof(self.history)/1024,asizeof(self.oldmodel)/1024 ) )
         nChanges = 0
         mu = 1. - .7 / (self.model.Z+1.) ## make it more unlikely when Z is high
         uUnfreeze = random.gauss( mu ,.5)
@@ -131,15 +136,17 @@ class RandomWalker:
         if self.regressor == None:
             return
         predictedZ = float ( self.regressor.predict ( self.model ) )
-        self.pprint ( "Before training step, predicted vs computed Z: %s, %s" % ( predictedZ, self.model.Z ) )
+        self.pprint ( "Before training step, predicted vs computed Z: %.5f, %.5f" % ( predictedZ, self.model.Z ) )
         self.regressor.train ( self.model, self.model.Z )
         predictedZ = float ( self.regressor.predict ( self.model ) )
-        self.pprint ( "After training step, predicted vs computed Z: %s, %s" % ( predictedZ, self.model.Z ) )
+        self.pprint ( "After training step, predicted vs computed Z: %.5f, %.5f" % ( predictedZ, self.model.Z ) )
         if self.model.step % 100 == 0 or self.model.step == 3 or self.model.step == 20:
             self.regressor.save()
 
     def revert ( self ):
         """ revert the last step. go back. """
+        if not hasattr ( self, "oldmodel" ):
+            self.pprint ( "I have been asked to revert to old model, but i dont have one" )
         self.model = copy.deepcopy ( self.oldmodel )
 
     def supplyHiscoreList ( self, Hiscorelist ):
@@ -150,6 +157,7 @@ class RandomWalker:
     def takeStep ( self ):
         """ take the step, save it as last step """
         self.oldmodel = copy.deepcopy ( self.model )
+        self.oldmodel.clean()
 
     def saveState ( self ):
         """ write out current state, for later retrieval """

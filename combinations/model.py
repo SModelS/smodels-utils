@@ -112,7 +112,8 @@ class Model:
     def clean ( self ):
         """ remove unneeded stuff before storing """
         combiner = Combiner( self.walkerid )
-        self.bestCombo = combiner.removeDataFromBestCombo ( self.bestCombo )
+        if hasattr ( self, "bestCombo" ):
+            self.bestCombo = combiner.removeDataFromBestCombo ( self.bestCombo )
         if hasattr ( self, "_backup" ):
             del self._backup
         if hasattr ( self, "predictor" ):
@@ -141,12 +142,13 @@ class Model:
         combiner = Combiner( self.walkerid )
         self.log ( "now find highest significance for %d predictions" % len(predictions) )
         bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, strategy )
-        self.bestCombo = bestCombo # combiner.removeDataFromBestCombo ( bestCombo )
+        self.bestCombo = combiner.removeDataFromBestCombo ( bestCombo )
         self.Z = Z
         self.llhd = llhd
         self.letters = combiner.getLetterCode(self.bestCombo)
         self.description = combiner.getComboDescription(self.bestCombo)
         self.log ( "done with prediction. best Z=%.2f." % self.Z )
+        self.clean()
 
     def checkForExcluded ( self, predictions ):
         """ check if any of the predictions excludes the point """

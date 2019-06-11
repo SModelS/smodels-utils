@@ -81,8 +81,8 @@ class Regressor:
         self.load() ## if a model exists we load it
         self.criterion = torch.nn.MSELoss(reduction="sum")
         self.criterion.to(self.device)
-        self.adam = torch.optim.SGD(self.torchmodel.parameters(), lr=0.01 )
-        # self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.01 )
+        # self.adam = torch.optim.SGD(self.torchmodel.parameters(), lr=0.01 )
+        self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.01 )
         self.walkerid = walkerid
 
     def convert ( self, theorymodel ):
@@ -124,22 +124,18 @@ class Regressor:
 
     def train ( self, model, Z ):
         """ train y_label with x_data """
-        self.pprint ( "training step starts bytes(model)=%d, bytes(regressor)=%d" % ( asizeof(self.torchmodel), asizeof(self) ) )
+        #self.log ( "training step starts bytes(model)=%d, bytes(regressor)=%d" % ( asizeof(self.torchmodel), asizeof(self) ) )
         x_data = self.convert ( model )
         y_pred = self.torchmodel(x_data)
         y_pred = y_pred.to(self.device)
         y_label = torch.Tensor ( [np.log10(1.+Z)] ).to ( self.device )
         loss = self.criterion ( y_pred, y_label )
-        self.pprint ( "training. predicted %s, target %s, loss %s" % ( float(y_pred), float(y_label), float(loss) ) )
+        self.log ( "training. predicted %.3f, target %.3f, loss %.3f" % ( float(y_pred), float(y_label), float(loss) ) )
         self.adam.zero_grad()
         loss.backward()
         self.adam.step()
-        self.pprint ( "training step ends   bytes(model)=%d, bytes(regressor)=%d" % ( asizeof(self.torchmodel), asizeof(self) ) )
-        del x_data
-        del y_pred
-        del y_label
-        del loss
-        self.pprint ( "training step post d bytes(model)=%d, bytes(regressor)=%d" % ( asizeof(self.torchmodel), asizeof(self) ) )
+        #self.log ( "training step ends   bytes(model)=%d, bytes(regressor)=%d" % ( asizeof(self.torchmodel), asizeof(self) ) )
+        #self.log ( "training step post d bytes(model)=%d, bytes(regressor)=%d" % ( asizeof(self.torchmodel), asizeof(self) ) )
 
     def save ( self ):
         torch.save ( self.torchmodel, 'model.ckpt' )
