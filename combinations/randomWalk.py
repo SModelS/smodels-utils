@@ -380,8 +380,8 @@ if __name__ == "__main__":
                    os.stat( args.cont ).st_size > 100:
         with open( args.cont, "rb" ) as f:
             hiscores = pickle.load ( f )
+        ctr=0
         while len(walkers)<ncpus:
-            ctr=0
             for v in hiscores: # .items()):
                 if ctr >= ncpus:
                     break
