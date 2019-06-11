@@ -12,7 +12,7 @@ class Hiscore:
         self.walkerid = walkerid
         self.trimmed = {}
         self.save_hiscores = save_hiscores
-        self.nkeep = 20 ## how many do we keep.
+        self.nkeep = 10 ## how many do we keep.
         self.hiscores = [ None ]*self.nkeep
         self.fileAttempts = 0 ## unsucessful attempts at reading or writing
         self.pickleFile = picklefile

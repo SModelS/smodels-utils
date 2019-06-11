@@ -365,24 +365,27 @@ if __name__ == "__main__":
                    os.stat( args.cont ).st_size > 100:
         with open( args.cont, "rb" ) as f:
             hiscores = pickle.load ( f )
-        for ctr,v in enumerate(hiscores): # .items()):
-            if ctr >= ncpus:
-                break
-            regress = args.regressor
-            if ctr > 0:
-                ## only first one for now
-                regress = False
-            if v == None:
-                # no hiscore? start from scratch!
-                walker = RandomWalker( ctr, args.nsteps, args.strategy, regress )
-                walker.takeStep()
-                walkers.append ( walker )
-                continue
-            v.createNewSLHAFileName()
-            v.walkerid = ctr
-            walkers.append ( RandomWalker.fromModel ( v, use_regressor=regress ) )
-            walkers[-1].walkerid = ctr
-            walkers[-1].takeStep() # make last step a taken one
+        while len(walkers)<ncpus:
+            ctr=0
+            for v in hiscores: # .items()):
+                if ctr >= ncpus:
+                    break
+                regress = args.regressor
+                if ctr > 0:
+                    ## only first one for now
+                    regress = False
+                if v == None:
+                    # no hiscore? start from scratch!
+                    walker = RandomWalker( ctr, args.nsteps, args.strategy, regress )
+                    walker.takeStep()
+                    walkers.append ( walker )
+                    continue
+                v.createNewSLHAFileName()
+                v.walkerid = ctr
+                walkers.append ( RandomWalker.fromModel ( v, use_regressor=regress ) )
+                walkers[-1].walkerid = ctr
+                walkers[-1].takeStep() # make last step a taken one
+                ctr+=1
     else:
         for w in range(ncpus):
             regress = args.regressor
