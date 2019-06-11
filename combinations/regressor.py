@@ -6,6 +6,7 @@ import os
 import numpy as np
 import torch
 import torch.nn.functional as F
+from pympler.asizeof import asizeof
 
 class RegressionHelper:
     def __init__(self):
@@ -41,13 +42,20 @@ class PyTorchModel(torch.nn.Module):
     def __init__(self, variables ):
         super(PyTorchModel, self).__init__()
         self.variables = variables
+        self.walkerid = 0
         dim = self.inputDimension()
+        self.pprint ( "input dimension is %d" % dim )
         dim4 = int ( dim/4)
         dim16= int ( dim4/4)
+        # self.linear1 = torch.nn.Linear( dim, dim16 )
         self.linear1 = torch.nn.Linear( dim, dim4 )
         self.linear2 = torch.nn.Linear( dim4, dim16 )
         self.relu = torch.nn.ReLU()
         self.linear3 = torch.nn.Linear( dim16, 1 )
+
+    def pprint ( self, *args ):
+        """ logging """
+        print ( "[torchmodel:%d] %s" % (self.walkerid, " ".join(map(str,args))) )
 
     def inputDimension(self):
         """ returns the dimensionality of the input """
@@ -65,13 +73,16 @@ class PyTorchModel(torch.nn.Module):
 class Regressor:
     """ this is our nice regressor """
     def __init__ ( self, variables=None, walkerid=0 ):
+        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu' )
         if variables == None:
             helper = RegressionHelper ()
             variables = helper.freeParameters( "template_many.slha" )
-        self.torchmodel = PyTorchModel( variables )
+        self.torchmodel = PyTorchModel( variables ).to ( self.device )
         self.load() ## if a model exists we load it
-        self.criterion = torch.nn.MSELoss(reduction="mean")
-        self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.01 )
+        self.criterion = torch.nn.MSELoss(reduction="sum")
+        self.criterion.to(self.device)
+        self.adam = torch.optim.SGD(self.torchmodel.parameters(), lr=0.01 )
+        # self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.01 )
         self.walkerid = walkerid
 
     def convert ( self, theorymodel ):
@@ -100,7 +111,7 @@ class Regressor:
             if i==None:
                 ## FIXME make sure it only happens when irrelevant
                 ret[c]=0.
-        return torch.Tensor(ret)
+        return torch.Tensor(ret).to(self.device)
 
     def pprint ( self, *args ):
         """ logging """
@@ -113,25 +124,34 @@ class Regressor:
 
     def train ( self, model, Z ):
         """ train y_label with x_data """
+        self.pprint ( "training step starts bytes(model)=%d, bytes(regressor)=%d" % ( asizeof(self.torchmodel), asizeof(self) ) )
         x_data = self.convert ( model )
         y_pred = self.torchmodel(x_data)
-        y_label = torch.Tensor ( [Z] )
+        y_pred = y_pred.to(self.device)
+        y_label = torch.Tensor ( [np.log10(1.+Z)] ).to ( self.device )
         loss = self.criterion ( y_pred, y_label )
         self.pprint ( "training. predicted %s, target %s, loss %s" % ( float(y_pred), float(y_label), float(loss) ) )
         self.adam.zero_grad()
         loss.backward()
         self.adam.step()
+        self.pprint ( "training step ends   bytes(model)=%d, bytes(regressor)=%d" % ( asizeof(self.torchmodel), asizeof(self) ) )
+        del x_data
+        del y_pred
+        del y_label
+        del loss
+        self.pprint ( "training step post d bytes(model)=%d, bytes(regressor)=%d" % ( asizeof(self.torchmodel), asizeof(self) ) )
 
     def save ( self ):
         torch.save ( self.torchmodel, 'model.ckpt' )
 
     def load ( self ):
         if os.path.exists ( "model.ckpt" ):
-            self.torchmodel = torch.load ( "model.ckpt" )
+            self.torchmodel = torch.load ( "model.ckpt" ).to ( self.device )
 
     def predict ( self, model ):
         x_data = self.convert ( model )
-        return self.torchmodel.forward ( x_data )
+        ret = self.torchmodel.forward ( x_data )
+        return 10**ret-1.
 
 if __name__ == "__main__":
     helper = RegressionHelper ()

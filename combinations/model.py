@@ -7,6 +7,7 @@ from smodels.tools.xsecComputer import XSecComputer, LO
 from combiner import Combiner
 from predictor import Predictor
 import helpers
+from pympler.asizeof import asizeof
 
 class Model:
     """ encodes one theoretical model, i.e. the particles, their masses, their
@@ -265,17 +266,17 @@ class Model:
                                 line[p1:p1+p2+1] )
                         line=line.replace( line[p1:p1+p2+1], "0." )
                 f.write ( line )
-        self.computeXSecs()
+        self.computeXSecs( )
 
-    def computeXSecs ( self ):
+    def computeXSecs ( self, nevents=2000 ):
         """ compute xsecs for current.slha """
         self.log ( "computing xsecs" )
         # print ( "[walk] computing xsecs for %s" % self.currentSLHA )
-        computer = XSecComputer ( LO, 2000, 6 )
+        computer = XSecComputer ( LO, nevents, 6 )
         computer.computeForOneFile ( [8,13], self.currentSLHA,
                 unlink=True, lOfromSLHA=False, tofile=True,
                 ssmultipliers  = self.ssmultipliers )
-        self.log ( "done computing xsecs" )
+        self.log ( "done computing xsecs, size of computer %d" % asizeof(computer) )
 
     def computePrior ( self ):
         """ compute the prior for the current model.
