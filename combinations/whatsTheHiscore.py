@@ -11,7 +11,7 @@ def discuss ( model, name ):
 def discussBest ( model, detailed ):
     """ a detailed discussion of number 1 """
     p = 1. - stats.norm.cdf ( model.Z )
-    print ( "Current best: %.3f, p=%.2g [%d/%d unfrozen particles, %d predictions] " % \
+    print ( "Current           best: %.3f, p=%.2g [%d/%d unfrozen particles, %d predictions] " % \
             (model.Z, p, len(model.unFrozenParticles()),len(model.masses.keys()),len(model.bestCombo) ) )
     if detailed:
         print ( "Solution was found in step #%d" % model.step )
