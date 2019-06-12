@@ -12,6 +12,10 @@ class RegressionHelper:
     def __init__(self):
         pass
 
+    def device ( self ):
+        return torch.device("cpu")
+        # return torch.device('cuda:0' if torch.cuda.is_available() else 'cpu' )
+
     def freeParameters ( self, slhafile ):
         with open(slhafile,"r") as f:
             lines=f.readlines()
@@ -72,16 +76,19 @@ class PyTorchModel(torch.nn.Module):
 
 class Regressor:
     """ this is our nice regressor """
-    def __init__ ( self, variables=None, walkerid=0 ):
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu' )
+    def __init__ ( self, variables=None, walkerid=0, torchmodel=None ):
+        helper = RegressionHelper ()
+        # self.device = helper.device()
         self.training = 0
         if variables == None:
-            helper = RegressionHelper ()
             variables = helper.freeParameters( "template_many.slha" )
-        self.torchmodel = PyTorchModel( variables ).to ( self.device )
+        self.torchmodel = torchmodel
+        if torchmodel == None:
+            self.torchmodel = PyTorchModel( variables )# .to ( self.device )
+        # self.torchmodel.share_memory()
         self.load() ## if a model exists we load it
         self.criterion = torch.nn.MSELoss(reduction="sum")
-        self.criterion.to(self.device)
+        self.criterion# .to(self.device)
         # self.adam = torch.optim.SGD(self.torchmodel.parameters(), lr=0.01 )
         self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.005 )
         self.walkerid = walkerid
@@ -112,7 +119,9 @@ class Regressor:
             if i==None:
                 ## FIXME make sure it only happens when irrelevant
                 ret[c]=0.
-        return torch.Tensor(ret).to(self.device)
+        # self.pprint ( "returning a tensor for %s, to %s" % ( ret[:3], self.device ) )
+        tmp = torch.Tensor(ret)
+        return tmp#.to(self.device)
 
     def pprint ( self, *args ):
         """ logging """
@@ -129,8 +138,8 @@ class Regressor:
         self.training += 1
         x_data = self.convert ( model )
         y_pred = self.torchmodel(x_data)
-        y_pred = y_pred.to(self.device)
-        y_label = torch.Tensor ( [np.log10(1.+Z)] ).to ( self.device )
+        #y_pred = y_pred.to(self.device)
+        y_label = torch.Tensor ( [np.log10(1.+Z)] )#.to ( self.device )
         loss = self.criterion ( y_pred, y_label )
         self.log ( "training. predicted %.3f, target %.3f, loss %.3f" % ( float(y_pred), float(y_label), float(loss) ) )
         self.adam.zero_grad()
@@ -144,7 +153,7 @@ class Regressor:
 
     def load ( self ):
         if os.path.exists ( "model.ckpt" ):
-            self.torchmodel = torch.load ( "model.ckpt" ).to ( self.device )
+            self.torchmodel = torch.load ( "model.ckpt" )#.to ( self.device )
 
     def predict ( self, model ):
         x_data = self.convert ( model )

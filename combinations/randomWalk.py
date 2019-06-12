@@ -8,7 +8,7 @@ from smodels.tools.runtime import nCPUs
 from hiscore import Hiscore
 from model import Model
 from history import History
-from regressor import Regressor
+from regressor import Regressor, RegressionHelper, PyTorchModel
 import helpers
 from pympler.asizeof import asizeof
 from torch import multiprocessing
@@ -21,7 +21,7 @@ def cleanDirectory ():
 
 class RandomWalker:
     def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive",
-                   use_regressor=False ):
+                   use_regressor=False, torchmodel=None ):
         """ initialise the walker
         :param nsteps: maximum number of steps to perform
         """
@@ -38,21 +38,19 @@ class RandomWalker:
         self.use_regressor = use_regressor
         self.regressor = None
         if use_regressor:
-            self.turnOnRegress()
+            self.turnOnRegress( torchmodel )
         self.takeStep() ## the first step should be considered as "taken"
 
-    def turnOnRegress ( self ):
+    def turnOnRegress ( self, torchmodel=None ):
         self.use_regressor=True
-        self.regressor = Regressor ( walkerid=self.walkerid )
-
+        self.regressor = Regressor ( walkerid=self.walkerid, torchmodel=torchmodel )
 
     @classmethod
     def fromModel( cls, model, nsteps=10000, strategy="aggressive",
-                        hiscore=False, walkerid=0, use_regressor=False ):
-        ret = cls( walkerid, nsteps, strategy, use_regressor )
+                        hiscore=False, walkerid=0, use_regressor=False,
+                        torchmodel = None ):
+        ret = cls( walkerid, nsteps, strategy, use_regressor, torchmodel )
         ret.model = model
-        if use_regressor:
-            ret.regressor = Regressor ( walkerid=walkerid )
         return ret
 
     def pprint ( self, *args ):
@@ -325,18 +323,18 @@ class RandomWalker:
                     self.takeStep()
         self.saveState()
 
-def _run ( w ):
+def _run ( walker ):
     # print ( "[_run] walkerid %d regressor %d" % ( w.walkerid, args.regressor ) )
-    if w.walkerid==0 and args.regressor:
-        w.turnOnRegress()
+    #if walker.walkerid==0 and args.regressor:
+    #    walker.turnOnRegress()
     try:
-        w.walk()
+        walker.walk()
     except Exception as e:
         import time
         with open("exceptions.log","a") as f:
             f.write ( "time %s\n" % time.asctime() )
-            f.write ( "walker %d threw: %s\n" % ( w.walkerid, e ) )
-            if hasattr ( w.model, "currentSLHA" ):
+            f.write ( "walker %d threw: %s\n" % ( walker.walkerid, e ) )
+            if hasattr ( walker.model, "currentSLHA" ):
                 f.write ("slha file was %s\n" % w.model.currentSLHA )
 
 if __name__ == "__main__":
@@ -369,6 +367,12 @@ if __name__ == "__main__":
     if ncpus < 0:
         ncpus = nCPUs() + ncpus + 1
     walkers = []
+    torchmodel = None
+    if args.regressor:
+        helper = RegressionHelper ()
+        variables = helper.freeParameters( "template_many.slha" )    
+        torchmodel = PyTorchModel( variables ).to ( helper.device() )
+        torchmodel.share_memory()
 
     if args.cont!="" and os.path.exists ( args.cont ) and \
                    os.stat( args.cont ).st_size > 100:
@@ -381,19 +385,22 @@ if __name__ == "__main__":
                     break
                 if v == None:
                     # no hiscore? start from scratch!
-                    walker = RandomWalker( ctr, args.nsteps, args.strategy, False )
+                    walker = RandomWalker( ctr, args.nsteps, args.strategy, args.regressor,
+                                           torchmodel=torchmodel )
                     walker.takeStep()
                     walkers.append ( walker )
                     continue
                 v.createNewSLHAFileName()
                 v.walkerid = ctr
-                walkers.append ( RandomWalker.fromModel ( v, use_regressor=False ) )
+                walkers.append ( RandomWalker.fromModel ( v, use_regressor=args.regressor,
+                                 torchmodel=torchmodel ) )
                 walkers[-1].walkerid = ctr
                 walkers[-1].takeStep() # make last step a taken one
                 ctr+=1
     else:
         for w in range(ncpus):
-            walkers.append ( RandomWalker( w, args.nsteps, args.strategy, False ) )
+            walkers.append ( RandomWalker( w, args.nsteps, args.strategy, args.regressor, 
+                             torchmodel = torchmodel ) )
 
     print ( "[walk] loading hiscores" )
     hiscore = Hiscore ( 0, True )
@@ -410,5 +417,12 @@ if __name__ == "__main__":
         _run ( walkers[0] )
         # walkers[0].walk() ## just one, start directly
     else:
-        p = multiprocessing.Pool ( ncpus )
-        p.map ( _run, walkers )
+        processes=[]
+        for walker in walkers:
+            p = multiprocessing.Process ( target=_run, args=( walker, ) )
+            p.start()
+            processes.append(p)
+        for p in processes:
+            p.join()
+        # p = multiprocessing.Pool ( ncpus )
+        #p.map ( _run, walkers )
