@@ -139,12 +139,15 @@ class RandomWalker:
         """ train the regressor """
         if self.regressor == None:
             return
+        ## fetch the model from the queue
+        self.regressor.torchmodel = self.queue.get()[0]
         predictedZ = float ( self.regressor.predict ( self.model ) )
-        self.pprint ( "Before training step, predicted vs computed Z: %.5f, %.5f" % ( predictedZ, self.model.Z ) )
+        self.pprint ( "Before training step #%d, predicted vs computed Z: %.5f, %.5f" % ( self.regressor.torchmodel.training, predictedZ, self.model.Z ) )
         self.regressor.train ( self.model, self.model.Z )
         predictedZ = float ( self.regressor.predict ( self.model ) )
-        self.pprint ( "After training step, predicted vs computed Z: %.5f, %.5f" % ( predictedZ, self.model.Z ) )
-        if self.regressor.training % 100 == 0 or self.regressor.training == 3 or self.regressor.training == 20:
+        self.pprint ( "After training step #%d, predicted vs computed Z: %.5f, %.5f" % ( self.regressor.torchmodel.training, predictedZ, self.model.Z ) )
+        self.queue.put ( [ self.regressor.torchmodel ] )
+        if self.regressor.torchmodel.training % 100 == 0 or self.regressor.torchmodel.training == 3 or self.regressor.torchmodel.training == 20:
             self.regressor.save()
 
     def supplyHiscoreList ( self, Hiscorelist ):
@@ -323,10 +326,11 @@ class RandomWalker:
                     self.takeStep()
         self.saveState()
 
-def _run ( walker ):
+def _run ( walker, queue ):
     # print ( "[_run] walkerid %d regressor %d" % ( w.walkerid, args.regressor ) )
     #if walker.walkerid==0 and args.regressor:
     #    walker.turnOnRegress()
+    walker.queue = queue
     try:
         walker.walk()
     except Exception as e:
@@ -367,12 +371,14 @@ if __name__ == "__main__":
     if ncpus < 0:
         ncpus = nCPUs() + ncpus + 1
     walkers = []
-    torchmodel = None
+    torchmodel, adam = None, None
     if args.regressor:
         helper = RegressionHelper ()
         variables = helper.freeParameters( "template_many.slha" )    
-        torchmodel = PyTorchModel( variables ).to ( helper.device() )
+        torchmodel = PyTorchModel( variables )# .to ( helper.device() )
         torchmodel.share_memory()
+    queue = multiprocessing.Queue()
+    queue.put ( [ torchmodel ] )
 
     if args.cont!="" and os.path.exists ( args.cont ) and \
                    os.stat( args.cont ).st_size > 100:
@@ -419,7 +425,7 @@ if __name__ == "__main__":
     else:
         processes=[]
         for walker in walkers:
-            p = multiprocessing.Process ( target=_run, args=( walker, ) )
+            p = multiprocessing.Process ( target=_run, args=( walker, queue ) )
             p.start()
             processes.append(p)
         for p in processes:

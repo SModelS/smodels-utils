@@ -47,6 +47,7 @@ class PyTorchModel(torch.nn.Module):
         super(PyTorchModel, self).__init__()
         self.variables = variables
         self.walkerid = 0
+        self.training = 0 # count training steps
         dim = self.inputDimension()
         self.pprint ( "input dimension is %d" % dim )
         dim4 = int ( dim/4)
@@ -79,7 +80,6 @@ class Regressor:
     def __init__ ( self, variables=None, walkerid=0, torchmodel=None ):
         helper = RegressionHelper ()
         # self.device = helper.device()
-        self.training = 0
         if variables == None:
             variables = helper.freeParameters( "template_many.slha" )
         self.torchmodel = torchmodel
@@ -135,13 +135,14 @@ class Regressor:
     def train ( self, model, Z ):
         """ train y_label with x_data """
         #self.log ( "training step starts bytes(model)=%d, bytes(regressor)=%d" % ( asizeof(self.torchmodel), asizeof(self) ) )
-        self.training += 1
+        self.torchmodel.training += 1
         x_data = self.convert ( model )
         y_pred = self.torchmodel(x_data)
         #y_pred = y_pred.to(self.device)
         y_label = torch.Tensor ( [np.log10(1.+Z)] )#.to ( self.device )
         loss = self.criterion ( y_pred, y_label )
         self.log ( "training. predicted %.3f, target %.3f, loss %.3f" % ( float(y_pred), float(y_label), float(loss) ) )
+        self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.005 )
         self.adam.zero_grad()
         loss.backward()
         self.adam.step()
