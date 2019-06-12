@@ -33,7 +33,7 @@ class Hiscore:
             if mi==None or model.Z > mi.Z: ## ok, <i>th best result!
                 self.demote ( i )
                 self.hiscores[i] = copy.deepcopy ( model )
-                self.hiscores[i].clean()
+                self.hiscores[i].clean( all=True )
                 if False and i == 0 and model.Z > 3.0: ## awesome new hiscore? trim it!
                     self.trimModels(1,True)
                 break
@@ -46,7 +46,7 @@ class Hiscore:
             self.hiscores[j]= m
             if (j-1) in self.trimmed.keys():
                 self.trimmed[j] = copy.deepcopy ( self.trimmed[j-1] )
-                self.trimmed[j].clean() # just in case
+                self.trimmed[j].clean( all=True ) # just in case
             else:
                 if j in self.trimmed:
                     self.trimmed.pop(j)
@@ -103,7 +103,7 @@ class Hiscore:
         """ clean hiscore list, i.e. remove cruft from models """
         for h in self.hiscores:
             if h != None:
-                h.clean()
+                h.clean( all=True )
 
     def save ( self ):
         """ compatibility thing """

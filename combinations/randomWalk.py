@@ -3,7 +3,7 @@
 """ a first start at the random walk idea """
 
 import random, copy, pickle, sys, os, time, subprocess, math
-import multiprocessing, numpy, colorama
+import numpy, colorama
 from smodels.tools.runtime import nCPUs
 from hiscore import Hiscore
 from model import Model
@@ -11,6 +11,7 @@ from history import History
 from regressor import Regressor
 import helpers
 from pympler.asizeof import asizeof
+from torch import multiprocessing
 
 def cleanDirectory ():
     subprocess.getoutput ( "mkdir -p tmp" )
@@ -92,9 +93,9 @@ class RandomWalker:
         nUnfrozen = len ( self.model.unFrozenParticles() )
         nTotal = len ( self.model.masses.keys() )
         self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.model.step, nUnfrozen, nTotal, ", ".join ( map ( helpers.getParticleName, self.model.unFrozenParticles() ) ) ) )
-        if False:
-            self.pprint ( "memory footprint (kb): walker %d, model %d, hiscore %d, regressor %d, history %d, oldmodel %d" %\
-                    ( asizeof(self)/1024,asizeof(self.model)/1024,asizeof(self.hiscoreList)/1024,asizeof(self.regressor)/1024, asizeof(self.history)/1024,asizeof(self.oldmodel)/1024 ) )
+        if True:
+            self.pprint ( "memory footprint (kb): walker %d, model %d, hiscore %d, regressor %d, history %d" %\
+                    ( asizeof(self)/1024,asizeof(self.model)/1024,asizeof(self.hiscoreList)/1024,asizeof(self.regressor)/1024, asizeof(self.history)/1024 ) )
         nChanges = 0
         mu = 1. - .7 / (self.model.Z+1.) ## make it more unlikely when Z is high
         uUnfreeze = random.gauss( mu ,.5)
@@ -148,12 +149,6 @@ class RandomWalker:
         if self.regressor.training % 100 == 0 or self.regressor.training == 3 or self.regressor.training == 20:
             self.regressor.save()
 
-    def revert ( self ):
-        """ revert the last step. go back. """
-        if not hasattr ( self, "oldmodel" ):
-            self.pprint ( "I have been asked to revert to old model, but i dont have one" )
-        self.model = copy.deepcopy ( self.oldmodel )
-
     def supplyHiscoreList ( self, Hiscorelist ):
         """ supply hiscore list, to avoid loading n times. """
         self.hiscoreList = Hiscorelist
@@ -161,8 +156,7 @@ class RandomWalker:
 
     def takeStep ( self ):
         """ take the step, save it as last step """
-        self.oldmodel = copy.deepcopy ( self.model )
-        self.oldmodel.clean()
+        self.model.backup()
 
     def saveState ( self ):
         """ write out current state, for later retrieval """
@@ -298,41 +292,41 @@ class RandomWalker:
                     f.write ( "taking a step resulted in exception: %s, %s\n" % (type(e), e ) )
                 sys.exit(-1)
             self.model.computePrior()
-            # self.pprint ( "prior times llhd, before versus after: %f -> %f" % ( self.oldmodel.priorTimesLlhd(), self.model.priorTimesLlhd() ) )
-            #ratio = 1.
-            #if self.oldmodel.Z > 0.:
-            #    ratio = self.model.Z / self.oldmodel.Z
             ratio = 1.
-            if self.oldmodel.priorTimesLlhd() > 0.:
-                ratio = math.exp ( - self.oldmodel.priorTimesLlhd()) / math.exp ( - self.model.priorTimesLlhd() )
+            if self.model.oldPriorTimesLlhd() > 0.:
+            # if self.oldmodel.priorTimesLlhd() > 0.:
+                ratio = math.exp ( - self.model.oldPriorTimesLlhd()) / math.exp ( - self.model.priorTimesLlhd() )
+                # ratio = math.exp ( - self.oldmodel.priorTimesLlhd()) / math.exp ( - self.model.priorTimesLlhd() )
                 # ratio = self.model.priorTimesLlhd() / self.oldmodel.priorTimesLlhd()
-            if self.oldmodel.Z > 0. and self.model.Z < 0.7 * self.oldmodel.Z:
+            if self.model.oldZ() > 0. and self.model.Z < 0.7 * self.model.oldZ():
+            # if self.oldmodel.Z > 0. and self.model.Z < 0.7 * self.oldmodel.Z:
                 ## no big steps taken here.
-                self.highlight ( "info", "Z=%.2f -> 0. Revert." % self.oldmodel.Z )
-                self.revert()
+                self.highlight ( "info", "Z=%.2f -> 0. Revert." % self.model.oldZ() )
+                self.model.restore()
                 continue
 
             if ratio >= 1.:
-                self.highlight ( "info", "Z: %.3f -> %.3f: take the step" % ( self.oldmodel.Z, self.model.Z ) )
-                if self.model.Z < 0.7 * self.oldmodel.Z:
+                self.highlight ( "info", "Z: %.3f -> %.3f: take the step" % ( self.model.oldZ(), self.model.oldZ() ) )
+                if self.model.Z < 0.7 * self.model.oldZ():
                     self.pprint ( " `- weird, though, Z decreases. Please check." )
-                    self.pprint ( "oldllhd %f" % self.oldmodel.llhd )
-                    self.pprint ( "oldprior", self.oldmodel.prior )
-                    self.pprint ( "llhd", self.model.llhd )
-                    self.pprint ( "prior", self.model.prior )
+                    #self.pprint ( "oldllhd %f" % self.model.llhd )
+                    #self.pprint ( "oldprior", self.oldmodel.prior )
+                    #self.pprint ( "llhd", self.model.llhd )
+                    #self.pprint ( "prior", self.model.prior )
                     sys.exit()
                 self.takeStep()
             else:
                 u=random.uniform(0.,1.)
                 if u > ratio:
-                    self.pprint ( "u=%.2f > %.2f; Z: %.2f -> %.2f: revert." % (u,ratio,self.oldmodel.Z, self.model.Z) )
-                    self.revert()
+                    self.pprint ( "u=%.2f > %.2f; Z: %.2f -> %.2f: revert." % (u,ratio,self.model.oldZ(), self.model.Z) )
+                    self.model.restore()
                 else:
-                    self.pprint ( "u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.oldmodel.Z,self.model.Z) )
+                    self.pprint ( "u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.model.oldZ(),self.model.Z) )
                     self.takeStep()
         self.saveState()
 
 def _run ( w ):
+    # print ( "[_run] walkerid %d regressor %d" % ( w.walkerid, args.regressor ) )
     if w.walkerid==0 and args.regressor:
         w.turnOnRegress()
     try:
@@ -413,7 +407,8 @@ if __name__ == "__main__":
 
     print ( "[walk] starting %d walkers" % len(walkers) )
     if len ( walkers ) == 1:
-        walkers[0].walk() ## just one, start directly
+        _run ( walkers[0] )
+        # walkers[0].walk() ## just one, start directly
     else:
         p = multiprocessing.Pool ( ncpus )
         p.map ( _run, walkers )

@@ -50,6 +50,10 @@ class Model:
         self.rvalues = [] ## store the r values of the exclusion attempt
         self.llhd=0.
         self.Z = 0.
+        self.letters = ""
+        self.description = ""
+        self.prior = 0.
+        self.bestCombo = None
 
         with open ( self.templateSLHA ) as slhaf:
             tmp = slhaf.readlines()
@@ -109,12 +113,12 @@ class Model:
                 ret.append(m)
         return ret
 
-    def clean ( self ):
+    def clean ( self, all=False ):
         """ remove unneeded stuff before storing """
         combiner = Combiner( self.walkerid )
-        if hasattr ( self, "bestCombo" ):
+        if hasattr ( self, "bestCombo" ) and self.bestCombo != None:
             self.bestCombo = combiner.removeDataFromBestCombo ( self.bestCombo )
-        if hasattr ( self, "_backup" ):
+        if all and hasattr ( self, "_backup" ):
             del self._backup
         if hasattr ( self, "predictor" ):
             del self.predictor
@@ -185,6 +189,18 @@ class Model:
             raise Exception ( "no backup available" )
         for k,v in self._backup.items():
             setattr ( self, k, v )
+
+    def oldPriorTimesLlhd( self ):
+        if not hasattr ( self, "_backup" ):
+            self.pprint ( "asked for old prior times llhd, but no backup available" )
+            sys.exit()
+        return self._backup["llhd"]*self._backup["prior"]
+
+    def oldZ( self ):
+        if not hasattr ( self, "_backup" ):
+            self.pprint ( "asked for old Z, but no backup available" )
+            sys.exit()
+        return self._backup["Z"]
 
     def priorTimesLlhd( self ):
         return self.prior * self.llhd

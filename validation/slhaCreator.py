@@ -112,7 +112,7 @@ class TemplateFile(object):
         if not set(self.tags).issubset(set(massDict.keys())):
             logger.error("Labels do not match the ones defined in %s. keys=%s. tags=%s." % \
                 ( self.path, str(set(massDict.keys())), str(set(self.tags))) )
-            return False
+            sys.exit()
         #Replace the axes labels by their mass values:
         ftemplate = open(self.path,'r')
         fdata = ftemplate.read()
@@ -261,23 +261,25 @@ class TemplateFile(object):
 if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(description="creates slha files from template file in given mass ranges")
-    argparser.add_argument ( '-t', '--topology', nargs='?', help='topology to create SLHA files for',
+    argparser.add_argument ( '-t', '--topology', nargs='?', help='topology to create SLHA files for [T1]',
         type=str, default='T1' )
     argparser.add_argument ( '-a', '--axes', nargs='?', help='axes description 2*[[x, y, 60.]]',
         type=str, default='2*[[x, y, 60.]]' )
-    argparser.add_argument ( '--xmin', nargs='?', help='minimum value for x',
+    argparser.add_argument ( '--xmin', nargs='?', help='minimum value for x [100]',
         type=float, default=100. )
-    argparser.add_argument ( '--xmax', nargs='?', help='maximum value for x',
+    argparser.add_argument ( '--xmax', nargs='?', help='maximum value for x [300]',
         type=float, default=300. )
-    argparser.add_argument ( '--dx', nargs='?', help='binning in x',
+    argparser.add_argument ( '--dx', nargs='?', help='binning in x [25]',
         type=float, default=25. )
-    argparser.add_argument ( '--ymin', nargs='?', help='minimum value for y',
+    argparser.add_argument ( '--ymin', nargs='?', help='minimum value for y [100]',
         type=float, default=100. )
-    argparser.add_argument ( '--ymax', nargs='?', help='maximum value for y',
+    argparser.add_argument ( '--ymax', nargs='?', help='maximum value for y [300]',
         type=float, default=300. )
-    argparser.add_argument ( '--dy', nargs='?', help='binning in y',
+    argparser.add_argument ( '--dy', nargs='?', help='binning in y [25]',
         type=float, default=25. )
-    argparser.add_argument ( '-n', '--nevents', help='number of events to generate',
+    argparser.add_argument( '-ly', '--logy', action='store_true',
+        help="logarithmic scale for y axis (in which case dy is multiplicative)" )
+    argparser.add_argument ( '-n', '--nevents', help='number of events to generate [10000]',
         type=int, default=10000 )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?', help='number of processes, -1 means one per CPU [-1].',
         type=int, default=-1 )
