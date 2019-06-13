@@ -30,7 +30,6 @@ class RandomWalker:
         self.walkerid = walkerid ## walker id, for parallel runs
         self.model = Model( self.walkerid )
         self.strategy = strategy
-        self.hiscoreList = None
         self.history = History ( walkerid )
         self.record_history = False
         self.maxsteps = nsteps
@@ -42,8 +41,6 @@ class RandomWalker:
         self.walkerid = Id
         self.model.walkerid = Id
         self.history.walkerid = Id
-        if self.hiscoreList != None:
-            self.hiscoreList.walkerid = Id
         if self.regressor != None:
             self.regressor.walkerid = Id
 
@@ -52,10 +49,10 @@ class RandomWalker:
         self.regressor = regressor
 
     @classmethod
-    def fromModel( cls, model, nsteps=10000, strategy="aggressive",
-                        hiscore=False, walkerid=0 ):
+    def fromModel( cls, model, nsteps=10000, strategy="aggressive", walkerid=0 ):
         ret = cls( walkerid, nsteps, strategy )
         ret.model = model
+        ret.model.walkerid = walkerid
         return ret
 
     def pprint ( self, *args ):
@@ -98,7 +95,7 @@ class RandomWalker:
         self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.model.step, nUnfrozen, nTotal, ", ".join ( map ( helpers.getParticleName, self.model.unFrozenParticles() ) ) ) )
         if True:
             self.pprint ( "memory footprint (kb): walker %d, model %d, hiscore %d, regressor %d, history %d" %\
-                    ( asizeof(self)/1024,asizeof(self.model)/1024,asizeof(self.hiscoreList)/1024,asizeof(self.regressor)/1024, asizeof(self.history)/1024 ) )
+                    ( asizeof(self)/1024,asizeof(self.model)/1024,asizeof(self.hiqueue)/1024,asizeof(self.regressor)/1024, asizeof(self.history)/1024 ) )
         nChanges = 0
         mu = 1. - .7 / (self.model.Z+1.) ## make it more unlikely when Z is high
         uUnfreeze = random.gauss( mu ,.5)
@@ -131,10 +128,12 @@ class RandomWalker:
         self.log ( "now create slha file" )
         self.model.predict( self.strategy )
         self.log ( "found highest Z: %.2f" % self.model.Z )
-        if self.hiscoreList != None:
+        hiscoreList = self.hiqueue.get()[0]
+        if hiscoreList != None:
             self.log ( "check if result goes into hiscore list" )
-            self.hiscoreList.newResult ( self.model ) ## add to high score list
+            hiscoreList.newResult ( self.model ) ## add to high score list
             self.log ( "done check for result to go into hiscore list" )
+        self.hiqueue.put( [ hiscoreList ] )
         self.train ()
         self.model.computePrior()
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.model.letters, self.model.description, self.model.Z ) )
@@ -151,7 +150,7 @@ class RandomWalker:
         self.regressor.train ( self.model, self.model.Z )
         predictedZ = float ( self.regressor.predict ( self.model ) )
         self.pprint ( "After training step #%d, predicted vs computed Z: %.5f, %.5f, loss=%.3f" % ( self.regressor.training, predictedZ, self.model.Z, self.regressor.loss ) )
-        if self.model.Z > 3.0 and self.regressor.loss < .001:
+        if self.regressor.loss < .001: # and self.model.Z > 1.
             self.gradientAscent()
         self.queue.put ( [ self.regressor ] )
         if self.regressor.training % 100 == 0 or self.regressor.training == 3 or self.regressor.training == 20:
@@ -160,11 +159,6 @@ class RandomWalker:
     def gradientAscent ( self ):
         """ Z is big enough, the loss is small enough. use the gradient. """
         self.pprint ( "performing a gradient ascent (not yet implemented)" )
-
-    def supplyHiscoreList ( self, Hiscorelist ):
-        """ supply hiscore list, to avoid loading n times. """
-        self.hiscoreList = Hiscorelist
-        self.hiscoreList.walkerid = self.walkerid
 
     def takeStep ( self ):
         """ take the step, save it as last step """
@@ -337,11 +331,9 @@ class RandomWalker:
                     self.takeStep()
         self.saveState()
 
-def _run ( walker, queue ):
-    # print ( "[_run] walkerid %d regressor %d" % ( w.walkerid, args.regressor ) )
-    #if walker.walkerid==0 and args.regressor:
-    #    walker.turnOnRegress()
+def _run ( walker, queue, hiqueue ):
     walker.queue = queue
+    walker.hiqueue = hiqueue
     try:
         walker.walk()
     except Exception as e:
@@ -393,14 +385,14 @@ if __name__ == "__main__":
                 if ctr >= ncpus:
                     break
                 if v == None:
-                    # no hiscore? start from scratch!
+                    # no state? start from scratch!
                     walker = RandomWalker( ctr, args.nsteps, args.strategy )
                     walker.takeStep()
                     walkers.append ( walker )
                     continue
                 v.createNewSLHAFileName()
                 v.walkerid = ctr
-                walkers.append ( RandomWalker.fromModel ( v ) )
+                walkers.append ( RandomWalker.fromModel ( v, walkerid = ctr ) )
                 walkers[-1].setWalkerId ( ctr )
                 walkers[-1].takeStep() # make last step a taken one
                 ctr+=1
@@ -421,8 +413,8 @@ if __name__ == "__main__":
 
     print ( "[walk] loading hiscores" )
     hiscore = Hiscore ( 0, True )
-    for w in walkers:
-        w.supplyHiscoreList ( hiscore )
+    hiqueue = multiprocessing.Queue()
+    hiqueue.put ( [ hiscore ] )
     onoff="off"
     if args.history:
         onoff="on"
@@ -430,16 +422,10 @@ if __name__ == "__main__":
     print ( "[walk] record histories is %s" % onoff )
 
     print ( "[walk] starting %d walkers" % len(walkers) )
-    if False: # len ( walkers ) == 1:
-        _run ( walkers[0] )
-        # walkers[0].walk() ## just one, start directly
-    else:
-        processes=[]
-        for walker in walkers:
-            p = multiprocessing.Process ( target=_run, args=( walker, queue ) )
-            p.start()
-            processes.append(p)
-        for p in processes:
-            p.join()
-        # p = multiprocessing.Pool ( ncpus )
-        #p.map ( _run, walkers )
+    processes=[]
+    for walker in walkers:
+        p = multiprocessing.Process ( target=_run, args=( walker, queue, hiqueue ) )
+        p.start()
+        processes.append(p)
+    for p in processes:
+        p.join()

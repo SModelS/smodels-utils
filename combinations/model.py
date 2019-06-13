@@ -125,6 +125,7 @@ class Model:
 
     def predict ( self, strategy ):
         """ compute best combo, llhd, and significance """
+        self.log ( "predict" )
         # if not os.path.exists ( self.currentSLHA ):
         self.createSLHAFile()
         # get the predictions that determine whether model is excluded:

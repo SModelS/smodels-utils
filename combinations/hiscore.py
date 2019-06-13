@@ -141,9 +141,9 @@ class Hiscore:
             return
         if model.Z <= self.currentMinZ():
             return ## clearly out
-        self.log ( "seems to qualify for hiscore. lets reload list." )
-        self.updateListFromPickle() ## reload the hiscores 
-        self.log ( "loaded the list. now add" )
+        #self.log ( "seems to qualify for hiscore. lets reload list." )
+        #self.updateListFromPickle() ## reload the hiscores 
+        #self.log ( "loaded the list. now add" )
         self.addResult ( model )
         self.log ( "now save list" )
         self.save() ## and write it
