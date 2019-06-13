@@ -54,7 +54,7 @@ class PyTorchModel(torch.nn.Module):
         # self.linear1 = torch.nn.Linear( dim, dim16 )
         self.linear1 = torch.nn.Linear( dim, dim4 )
         self.linear2 = torch.nn.Linear( dim4, dim16 )
-        self.relu = torch.nn.ReLU()
+        self.relu = torch.nn.LeakyReLU()
         self.linear3 = torch.nn.Linear( dim16, 1 )
 
     def pprint ( self, *args ):
@@ -134,21 +134,18 @@ class Regressor:
 
     def train ( self, model, Z ):
         """ train y_label with x_data """
-        #self.log ( "training step starts bytes(model)=%d, bytes(regressor)=%d" % ( asizeof(self.torchmodel), asizeof(self) ) )
         self.training += 1
         x_data = self.convert ( model )
         y_pred = self.torchmodel(x_data)
         #y_pred = y_pred.to(self.device)
         y_label = torch.Tensor ( [np.log10(1.+Z)] )#.to ( self.device )
         loss = self.criterion ( y_pred, y_label )
+        # self.pprint ( "With x=%s y_pred=%s, label=%s, loss=%s" % ( x_data[:5], y_pred, y_label, loss.data ) ) 
         self.loss = loss.data
         self.log ( "training. predicted %.3f, target %.3f, loss %.3f" % ( float(y_pred), float(y_label), float(loss) ) )
-        # self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.005 )
         self.adam.zero_grad()
         loss.backward()
         self.adam.step()
-        #self.log ( "training step ends   bytes(model)=%d, bytes(regressor)=%d" % ( asizeof(self.torchmodel), asizeof(self) ) )
-        #self.log ( "training step post d bytes(model)=%d, bytes(regressor)=%d" % ( asizeof(self.torchmodel), asizeof(self) ) )
 
     def save ( self ):
         torch.save ( self.torchmodel, 'model.ckpt' )

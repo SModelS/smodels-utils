@@ -145,6 +145,9 @@ class RandomWalker:
         #    return
         ## fetch the model from the queue
         self.regressor = self.queue.get()[0]
+        if self.regressor == None: # start a new one
+            self.queue.put( [ None ] )
+            return
         predictedZ = float ( self.regressor.predict ( self.model ) )
         self.pprint ( "Before training step #%d, predicted vs computed Z: %.5f, %.5f" % ( self.regressor.training, predictedZ, self.model.Z ) )
         self.regressor.train ( self.model, self.model.Z )
