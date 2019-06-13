@@ -141,7 +141,7 @@ class RandomWalker:
         self.regressor.train ( self.model, self.model.Z )
         predictedZ = float ( self.regressor.predict ( self.model ) )
         self.pprint ( "After training step #%d, predicted vs computed Z: %.5f, %.5f, loss=%.3f" % ( self.regressor.training, predictedZ, self.model.Z, self.regressor.loss ) )
-        if self.mode.Z > 3.0 and self.regressor.loss < .01:
+        if self.model.Z > 3.0 and self.regressor.loss < .001:
             self.gradientAscent()
         self.queue.put ( [ self.regressor ] )
         if self.regressor.training % 100 == 0 or self.regressor.training == 3 or self.regressor.training == 20:
@@ -376,10 +376,10 @@ if __name__ == "__main__":
     if args.cont!="" and os.path.exists ( args.cont ) and \
                    os.stat( args.cont ).st_size > 100:
         with open( args.cont, "rb" ) as f:
-            hiscores = pickle.load ( f )
+            states = pickle.load ( f )
         ctr=0
         while len(walkers)<ncpus:
-            for v in hiscores: # .items()):
+            for v in states: # .items()):
                 if ctr >= ncpus:
                     break
                 if v == None:
@@ -395,8 +395,8 @@ if __name__ == "__main__":
                 walkers[-1].takeStep() # make last step a taken one
                 ctr+=1
     else:
-        for w in range(ncpus):
-            walkers.append ( RandomWalker( w, args.nsteps, args.strategy ) )
+        for ctr in range(ncpus):
+            walkers.append ( RandomWalker( ctr, args.nsteps, args.strategy ) )
 
     regressor = None
     if args.regressor:
