@@ -38,6 +38,16 @@ class RandomWalker:
         self.regressor = None
         self.takeStep() ## the first step should be considered as "taken"
 
+    def setWalkerId ( self, Id ):
+        self.walkerid = Id
+        self.model.walkerid = Id
+        self.history.walkerid = Id
+        if self.hiscoreList != None:
+            self.hiscoreList.walkerid = Id
+        if self.regressor != None:
+            self.regressor.walkerid = Id
+
+
     def turnOnRegress ( self, regressor=None ):
         self.regressor = regressor
 
@@ -391,7 +401,7 @@ if __name__ == "__main__":
                 v.createNewSLHAFileName()
                 v.walkerid = ctr
                 walkers.append ( RandomWalker.fromModel ( v ) )
-                walkers[-1].walkerid = ctr
+                walkers[-1].setWalkerId ( ctr )
                 walkers[-1].takeStep() # make last step a taken one
                 ctr+=1
     else:
