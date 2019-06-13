@@ -20,8 +20,7 @@ def cleanDirectory ():
     subprocess.getoutput ( "mv exceptions.log tmp/" )
 
 class RandomWalker:
-    def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive",
-                   use_regressor=False, torchmodel=None ):
+    def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive" ):
         """ initialise the walker
         :param nsteps: maximum number of steps to perform
         """
@@ -35,21 +34,17 @@ class RandomWalker:
         self.history = History ( walkerid )
         self.record_history = False
         self.maxsteps = nsteps
-        self.use_regressor = use_regressor
+        self.use_regressor = False
         self.regressor = None
-        if use_regressor:
-            self.turnOnRegress( torchmodel )
         self.takeStep() ## the first step should be considered as "taken"
 
-    def turnOnRegress ( self, torchmodel=None ):
-        self.use_regressor=True
-        self.regressor = Regressor ( walkerid=self.walkerid, torchmodel=torchmodel )
+    def turnOnRegress ( self, regressor=None ):
+        self.regressor = regressor
 
     @classmethod
     def fromModel( cls, model, nsteps=10000, strategy="aggressive",
-                        hiscore=False, walkerid=0, use_regressor=False,
-                        torchmodel = None ):
-        ret = cls( walkerid, nsteps, strategy, use_regressor, torchmodel )
+                        hiscore=False, walkerid=0 ):
+        ret = cls( walkerid, nsteps, strategy )
         ret.model = model
         return ret
 
@@ -137,18 +132,24 @@ class RandomWalker:
 
     def train ( self ):
         """ train the regressor """
-        if self.regressor == None:
-            return
+        #if self.regressor == None:
+        #    return
         ## fetch the model from the queue
-        self.regressor.torchmodel = self.queue.get()[0]
+        self.regressor = self.queue.get()[0]
         predictedZ = float ( self.regressor.predict ( self.model ) )
-        self.pprint ( "Before training step #%d, predicted vs computed Z: %.5f, %.5f" % ( self.regressor.torchmodel.training, predictedZ, self.model.Z ) )
+        self.pprint ( "Before training step #%d, predicted vs computed Z: %.5f, %.5f" % ( self.regressor.training, predictedZ, self.model.Z ) )
         self.regressor.train ( self.model, self.model.Z )
         predictedZ = float ( self.regressor.predict ( self.model ) )
-        self.pprint ( "After training step #%d, predicted vs computed Z: %.5f, %.5f" % ( self.regressor.torchmodel.training, predictedZ, self.model.Z ) )
-        self.queue.put ( [ self.regressor.torchmodel ] )
-        if self.regressor.torchmodel.training % 100 == 0 or self.regressor.torchmodel.training == 3 or self.regressor.torchmodel.training == 20:
+        self.pprint ( "After training step #%d, predicted vs computed Z: %.5f, %.5f, loss=%.3f" % ( self.regressor.training, predictedZ, self.model.Z, self.regressor.loss ) )
+        if self.mode.Z > 3.0 and self.regressor.loss < .01:
+            self.gradientAscent()
+        self.queue.put ( [ self.regressor ] )
+        if self.regressor.training % 100 == 0 or self.regressor.training == 3 or self.regressor.training == 20:
             self.regressor.save()
+
+    def gradientAscent ( self ):
+        """ Z is big enough, the loss is small enough. use the gradient. """
+        self.pprint ( "performing a gradient ascent (not yet implemented)" )
 
     def supplyHiscoreList ( self, Hiscorelist ):
         """ supply hiscore list, to avoid loading n times. """
@@ -371,14 +372,6 @@ if __name__ == "__main__":
     if ncpus < 0:
         ncpus = nCPUs() + ncpus + 1
     walkers = []
-    torchmodel, adam = None, None
-    if args.regressor:
-        helper = RegressionHelper ()
-        variables = helper.freeParameters( "template_many.slha" )    
-        torchmodel = PyTorchModel( variables )# .to ( helper.device() )
-        torchmodel.share_memory()
-    queue = multiprocessing.Queue()
-    queue.put ( [ torchmodel ] )
 
     if args.cont!="" and os.path.exists ( args.cont ) and \
                    os.stat( args.cont ).st_size > 100:
@@ -391,22 +384,30 @@ if __name__ == "__main__":
                     break
                 if v == None:
                     # no hiscore? start from scratch!
-                    walker = RandomWalker( ctr, args.nsteps, args.strategy, args.regressor,
-                                           torchmodel=torchmodel )
+                    walker = RandomWalker( ctr, args.nsteps, args.strategy )
                     walker.takeStep()
                     walkers.append ( walker )
                     continue
                 v.createNewSLHAFileName()
                 v.walkerid = ctr
-                walkers.append ( RandomWalker.fromModel ( v, use_regressor=args.regressor,
-                                 torchmodel=torchmodel ) )
+                walkers.append ( RandomWalker.fromModel ( v ) )
                 walkers[-1].walkerid = ctr
                 walkers[-1].takeStep() # make last step a taken one
                 ctr+=1
     else:
         for w in range(ncpus):
-            walkers.append ( RandomWalker( w, args.nsteps, args.strategy, args.regressor, 
-                             torchmodel = torchmodel ) )
+            walkers.append ( RandomWalker( w, args.nsteps, args.strategy ) )
+
+    regressor = None
+    if args.regressor:
+        torchmodel, adam = None, None
+        helper = RegressionHelper ()
+        variables = helper.freeParameters( "template_many.slha" )    
+        torchmodel = PyTorchModel( variables )# .to ( helper.device() )
+        torchmodel.share_memory()
+        regressor = Regressor ( variables, 0, torchmodel )
+    queue = multiprocessing.Queue()
+    queue.put ( [ regressor ] )
 
     print ( "[walk] loading hiscores" )
     hiscore = Hiscore ( 0, True )
@@ -419,7 +420,7 @@ if __name__ == "__main__":
     print ( "[walk] record histories is %s" % onoff )
 
     print ( "[walk] starting %d walkers" % len(walkers) )
-    if len ( walkers ) == 1:
+    if False: # len ( walkers ) == 1:
         _run ( walkers[0] )
         # walkers[0].walk() ## just one, start directly
     else:
