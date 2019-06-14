@@ -55,7 +55,7 @@ class PyTorchModel(torch.nn.Module):
         self.linear1 = torch.nn.Linear( dim, dim4 )
         self.linear2 = torch.nn.Linear( dim4, dim16 )
         self.relu = torch.nn.LeakyReLU()
-        self.linear3 = torch.nn.Linear( dim16, 1 )
+        self.linear3 = torch.nn.Linear( dim16, 2 )
 
     def pprint ( self, *args ):
         """ logging """
@@ -132,17 +132,17 @@ class Regressor:
         with open( "walker%d.log" % self.walkerid, "a" ) as f:
             f.write ( "[regressor:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
-    def train ( self, model, Z ):
+    def train ( self, model, Z, rmax ):
         """ train y_label with x_data """
         self.training += 1
         x_data = self.convert ( model )
         y_pred = self.torchmodel(x_data)
         #y_pred = y_pred.to(self.device)
-        y_label = torch.Tensor ( [np.log10(1.+Z)] )#.to ( self.device )
+        y_label = torch.Tensor ( [np.log10(1.+Z),np.log10(1+rmax)] )#.to ( self.device )
         loss = self.criterion ( y_pred, y_label )
         # self.pprint ( "With x=%s y_pred=%s, label=%s, loss=%s" % ( x_data[:5], y_pred, y_label, loss.data ) ) 
         self.loss = loss.data
-        self.log ( "training. predicted %.3f, target %.3f, loss %.3f" % ( float(y_pred), float(y_label), float(loss) ) )
+        self.log ( "training. predicted %s, target %s, loss %.3f" % ( y_pred, y_label, float(loss) ) )
         self.adam.zero_grad()
         loss.backward()
         self.adam.step()
@@ -157,7 +157,7 @@ class Regressor:
     def predict ( self, model ):
         x_data = self.convert ( model )
         ret = self.torchmodel.forward ( x_data )
-        return 10**ret-1.
+        return 10**ret[0]-1.,10**ret[1]-1.
 
 if __name__ == "__main__":
     helper = RegressionHelper ()

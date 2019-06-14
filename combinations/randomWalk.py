@@ -148,11 +148,11 @@ class RandomWalker:
         if self.regressor == None: # start a new one
             self.queue.put( [ None ] )
             return
-        predictedZ = float ( self.regressor.predict ( self.model ) )
-        self.pprint ( "Before training step #%d, predicted vs computed Z: %.5f, %.5f" % ( self.regressor.training, predictedZ, self.model.Z ) )
-        self.regressor.train ( self.model, self.model.Z )
-        predictedZ = float ( self.regressor.predict ( self.model ) )
-        self.pprint ( "After training step #%d, predicted vs computed Z: %.5f, %.5f, loss=%.3f" % ( self.regressor.training, predictedZ, self.model.Z, self.regressor.loss ) )
+        predictedZ,predictedRMax = float ( self.regressor.predict ( self.model )[0] ), float ( self.regressor.predict ( self.model )[1] )
+        self.pprint ( "Before training step #%d, predicted vs computed Z,rmax: %.5f,%.5f: %.5f,%.5f" % ( self.regressor.training, predictedZ, predictedRMax,self.model.Z,self.model.rmax ) )
+        self.regressor.train ( self.model, self.model.Z, self.model.rmax )
+        predictedZ,predictedRMax = float ( self.regressor.predict ( self.model )[0] ), float ( self.regressor.predict ( self.model )[1] )
+        self.pprint ( "After  training step #%d, predicted vs computed Z,rmax: %.5f,%.5f: %.5f,%.5f" % ( self.regressor.training, predictedZ, predictedRMax,self.model.Z,self.model.rmax ) )
         if self.regressor.loss < .001: # and self.model.Z > 1.
             self.gradientAscent()
         self.queue.put ( [ self.regressor ] )
@@ -307,6 +307,10 @@ class RandomWalker:
                 ratio = math.exp ( - self.model.oldPriorTimesLlhd()) / math.exp ( - self.model.priorTimesLlhd() )
                 # ratio = math.exp ( - self.oldmodel.priorTimesLlhd()) / math.exp ( - self.model.priorTimesLlhd() )
                 # ratio = self.model.priorTimesLlhd() / self.oldmodel.priorTimesLlhd()
+            if self.model.rmax > 1.5:
+                self.highlight ( "info", "rmax=%.2f -> 0. Revert." % self.model.rmax )
+                self.model.restore()
+                continue
             if self.model.oldZ() > 0. and self.model.Z < 0.7 * self.model.oldZ():
             # if self.oldmodel.Z > 0. and self.model.Z < 0.7 * self.oldmodel.Z:
                 ## no big steps taken here.
