@@ -507,7 +507,6 @@ class Axes(object):
                 Otherwise, returns a dictionary:
                 {'x' : x-value in GeV as float, 'y' : y-value in GeV as float,...}
         """
-
         if not massArray:
             return {}
 
@@ -522,14 +521,16 @@ class Axes(object):
             else:
                     massInput[ str(self._massVars[im]) ] = mass
         if widthArray is None:
-            for im,width in enumerate(massArray):
-                massInput[ str(self._widthVars[im]) ] = None
+            wv = str(self._widthVars[im])
+            if not wv in massInput:
+                massInput[wv]=None
+            #for im,width in enumerate(massArray):
+            #    massInput[ str(self._widthVars[im]) ] = None
         else:
             for im,width in enumerate(widthArray):
                 massInput[ str(self._widthVars[im]) ] = width
         #Define dictionary with mass variables and values
         #massInput = dict([[str(self._massVars[im]),mass] for im,mass in enumerate(massArray)])
-
         xValues = {}
         #Get the function for each x,y,.. variable and compute its value
         for xv,xfunc in self._xyFunction.items():
@@ -554,7 +555,6 @@ class Axes(object):
             for xi,yi in zip ( x, y ):
                 d+= ( xi-yi)**2
             return sqrt ( d)
-
 
         for im,m in enumerate(newMass):
             ma=massArray[im]
