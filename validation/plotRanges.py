@@ -147,12 +147,12 @@ def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
                 of the kinematic region)
         :param Npts: Trial number of points for the plot.
     """
-
-
     massPlane = MassPlane.fromString(txnameObjs[0].txName,axes)
     txnameInput = TxNameInput(txnameObjs[0].txName)
     txnameInput.constraint = txnameObjs[0].constraint
     vertexChecker = lambda mass: txnameInput.checkMassConstraints(mass)
+
+    logger.debug ( "get points %s" % massPlane )    
 
     # First generate points for the extended frame (= from the ul/eff maps)
     # with a lower density:
@@ -173,6 +173,8 @@ def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
     else: ptsB = []
 
     pts = ptsA + ptsB
+
+    logger.debug( "pts=%s" % pts )
 
     return pts
 
@@ -255,9 +257,11 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     else:
         #Compute the PCA for the reduced dataset:
         txdata = TxNameData(reducedData,"upperLimit","dummy")
+        ## FIXME maybe this guy doesnt know anything about widths?
 
 
     #Transform the min and max values to the rotated plane:
+
     extremePoints = []
     for x in list(itertools.product(*ranges)):
         xvalues = dict(zip(xvars,x))
@@ -291,6 +295,9 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
         vmin,vmax = vrange
         dv = steps[i]
         allPoints.append([x for x in numpy.arange(vmin, vmax+dv/2., dv)])
+
+    print ( "extreme points", extremePoints )
+    print ( "all points", *allPoints )
 
     for pt in itertools.product(*allPoints):
         pt = list(pt)
