@@ -162,7 +162,23 @@ class RandomWalker:
 
     def gradientAscent ( self ):
         """ Z is big enough, the loss is small enough. use the gradient. """
-        self.pprint ( "performing a gradient ascent (not yet implemented)" )
+        self.pprint ( "performing a gradient ascent. Z before %.2f" % self.model.Z )
+        oldZ = self.model.Z
+        self.model.backup()
+        self.regressor.plusDeltaM ( self.model ) ## move!!
+        try:
+            self.model.predict ( self.strategy )
+        except Exception as e:
+            self.pprint ( "could not get prediction for gradient ascended model. revert" )
+            self.model.restore()
+            return
+        self.pprint ( "Z after gradient ascent %.2f" % self.model.Z )
+        if oldZ > self.model.Z:
+            self.pprint ( "old value was better. revert" )
+            self.model.restore()
+        else:
+            self.pprint ( "keep gradient ascended model" )
+
 
     def takeStep ( self ):
         """ take the step, save it as last step """

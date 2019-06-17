@@ -93,6 +93,34 @@ class Regressor:
         self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.005 )
         self.walkerid = walkerid
 
+    def plusDeltaM ( self, theorymodel, rate=-1. ):
+        """ move the theorymodel parameters in the direction
+            of the gradient. """
+        grad = self.grad.tolist()
+        for k,v in theorymodel.masses.items():
+            if not "M%d" % k in self.torchmodel.variables:
+                print ( "error, dont know what to do with M%d" % k )
+                sys.exit()
+            idx = self.torchmodel.variables.index( "M%d" % k)
+            t = 10. * grad[idx] * ( v + 1e-5 ) # the inverse of the normalization
+            theorymodel.masses[k]+= t * rate
+        for k,v in theorymodel.ssmultipliers.items():
+            if not "SS%d" % k in self.torchmodel.variables:
+                print ( "error, dont know what to do with M%d" % k )
+                sys.exit()
+            idx = self.torchmodel.variables.index( "SS%d" % k)
+            t = grad[idx]
+            theorymodel.ssmultipliers[k]+= t * rate
+        for pid,decays in theorymodel.decays.items():
+            for dpid,dbr in decays.items():
+                if not "D%d_%d" % ( pid, dpid ) in self.torchmodel.variables:
+                    print ( "error dont know what to do with D%d_%d" % ( pid, dpid ) )
+                    sys.exit()
+                idx = self.torchmodel.variables.index( "D%d_%d" % (pid,dpid) )
+                t=grad[idx]
+                theorymodel.decays[pid][dpid]+=t*rate
+        return theorymodel
+
     def convert ( self, theorymodel ):
         """ convert a theory model to x_data """
         ret = [ None ]* len(self.torchmodel.variables)

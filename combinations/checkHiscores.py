@@ -22,7 +22,7 @@ def main():
     args = argparser.parse_args()
     h = Hiscore ( 0, False, args.picklefile )
     if args.trim>0:
-        h.trimModels( args.trim )
+        h.trimModels( args.trim, True )
     if args.save not in  [ "", None ]:
         h.writeListToPickle( args.save )
     print ( "Check variable: h" )
