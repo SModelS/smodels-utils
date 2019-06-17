@@ -136,6 +136,7 @@ class Regressor:
         """ train y_label with x_data """
         self.training += 1
         x_data = self.convert ( model )
+        x_data.requires_grad = True ## needs this to have dZ/dx in the end
         y_pred = self.torchmodel(x_data)
         #y_pred = y_pred.to(self.device)
         y_label = torch.Tensor ( [np.log10(1.+Z),np.log10(1+rmax)] )#.to ( self.device )
@@ -146,6 +147,7 @@ class Regressor:
         self.adam.zero_grad()
         loss.backward()
         self.adam.step()
+        self.grad = x_data.grad ## store the gradient!
 
     def save ( self ):
         torch.save ( self.torchmodel, 'model.ckpt' )

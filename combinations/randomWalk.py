@@ -153,7 +153,7 @@ class RandomWalker:
         self.regressor.train ( self.model, self.model.Z, self.model.rmax )
         predictedZ,predictedRMax = float ( self.regressor.predict ( self.model )[0] ), float ( self.regressor.predict ( self.model )[1] )
         self.pprint ( "After  training step #%d, predicted vs computed Z,rmax: %.5f,%.5f: %.5f,%.5f" % ( self.regressor.training, predictedZ, predictedRMax,self.model.Z,self.model.rmax ) )
-        if self.regressor.loss < .001: # and self.model.Z > 1.
+        if True: # self.regressor.loss < .001: # and self.model.Z > 1.
             self.gradientAscent()
         self.queue.put ( [ self.regressor ] )
         if self.regressor.training % 100 == 0 or self.regressor.training == 3 or self.regressor.training == 20:
