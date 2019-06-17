@@ -141,7 +141,7 @@ class Combiner:
 
 
     def getComboDescription ( self, combination ):
-        return ",".join( [ x.expResult.globalInfo.id for x in combination ] )
+        return ",".join( [ x.analysisId() for x in combination ] )
 
     def getSignificance ( self, combo ):
         """ obtain the significance of this combo """
