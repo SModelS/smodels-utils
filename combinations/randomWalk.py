@@ -149,11 +149,12 @@ class RandomWalker:
             self.queue.put( [ None ] )
             return
         predictedZ,predictedRMax = float ( self.regressor.predict ( self.model )[0] ), float ( self.regressor.predict ( self.model )[1] )
-        self.pprint ( "Before training step #%d, predicted vs computed Z,rmax: %.5f,%.5f: %.5f,%.5f" % ( self.regressor.training, predictedZ, predictedRMax,self.model.Z,self.model.rmax ) )
+        self.pprint ( "Before training step #%d, predicted vs computed Z: %.5f <-> %.5f   rmax: %.5f <-> %.5f" % ( self.regressor.training, predictedZ, self.model.Z, predictedRMax,self.model.rmax ) )
         self.regressor.train ( self.model, self.model.Z, self.model.rmax )
         predictedZ,predictedRMax = float ( self.regressor.predict ( self.model )[0] ), float ( self.regressor.predict ( self.model )[1] )
-        self.pprint ( "After  training step #%d, predicted vs computed Z,rmax: %.5f,%.5f: %.5f,%.5f" % ( self.regressor.training, predictedZ, predictedRMax,self.model.Z,self.model.rmax ) )
-        if True: # self.regressor.loss < .001: # and self.model.Z > 1.
+        self.pprint ( "After  training step #%d, predicted vs computed Z: %.5f <-> %.5f   rmax: %.5f <-> %.5f" % ( self.regressor.training, predictedZ, self.model.Z, predictedRMax,self.model.rmax ) )
+        
+        if True: ## self.regressor.loss < .001: # and self.model.Z > 1.
             self.gradientAscent()
         self.queue.put ( [ self.regressor ] )
         if self.regressor.training % 100 == 0 or self.regressor.training == 3 or self.regressor.training == 20:
@@ -368,8 +369,8 @@ if __name__ == "__main__":
     argparser.add_argument ( '-p', '--ncpus',
             help='number of CPUs. -1 means all. [1]',
             type=int, default=1 )
-    argparser.add_argument ( '-r', '--regressor',
-            help='use the NN regressor', action='store_true' )
+    argparser.add_argument ( '-N', '--no_regressor',
+            help='do not use the NN regressor', action='store_true' )
     argparser.add_argument ( '-c', '--cont',
             help='continue with saved states [""]',
             type=str, default="" )
@@ -408,7 +409,8 @@ if __name__ == "__main__":
             walkers.append ( RandomWalker( ctr, args.nsteps, args.strategy ) )
 
     regressor = None
-    if args.regressor:
+    regress = not args.no_regressor 
+    if regress:
         torchmodel, adam = None, None
         helper = RegressionHelper ()
         variables = helper.freeParameters( "template_many.slha" )    

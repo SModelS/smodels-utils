@@ -6,6 +6,7 @@ import random, numpy, tempfile, os, copy, time, sys, colorama
 from smodels.tools.xsecComputer import XSecComputer, LO
 from combiner import Combiner
 from predictor import Predictor
+import pyslha
 import helpers
 from pympler.asizeof import asizeof
 
@@ -296,6 +297,11 @@ class Model:
         self.log ( "computing xsecs" )
         # print ( "[walk] computing xsecs for %s" % self.currentSLHA )
         computer = XSecComputer ( LO, nevents, 6 )
+        try:
+            f = pyslha.readSLHAFile ( self.currentSLHA )
+            m = f.blocks["MASS"]
+        except Exception as e:
+            self.pprint ( "could not read SLHA file %s: %s" % ( self.currentSLHA, e ) )
         computer.computeForOneFile ( [8,13], self.currentSLHA,
                 unlink=True, lOfromSLHA=False, tofile=True,
                 ssmultipliers  = self.ssmultipliers )
