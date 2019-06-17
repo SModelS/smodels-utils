@@ -189,6 +189,8 @@ class Model:
                         "prior": self.prior, "description": self.description,
                         "bestCombo": self.bestCombo, "masses": self.masses, 
                         "rvalues": self.rvalues }
+        if hasattr ( self, "rmax" ):
+            self._backup["rmax"]=self.rmax
         # self.pprint ( "backing up state" )
 
     def restore ( self ):

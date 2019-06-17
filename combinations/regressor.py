@@ -2,7 +2,7 @@
 
 """ The pytorch-based regressor for Z. So we can walk along its gradient. """
 
-import os, time
+import os, time, sys
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -129,6 +129,9 @@ class Regressor:
                 print ( "error, dont know what to do with M%d" % k )
                 sys.exit()
             idx = self.torchmodel.variables.index( "M%d" % k)
+            #if type(v) not in [ float, int ]:
+            #    self.pprint ( "in convert: dealing with %s: %s" % (type(v),v) )
+            #    sys.exit()
             ret[idx]= np.log(v+1e-5) / 10. # a bit of a normalization
         for k,v in theorymodel.ssmultipliers.items():
             if not "SS%d" % k in self.torchmodel.variables:
@@ -167,7 +170,8 @@ class Regressor:
         x_data.requires_grad = True ## needs this to have dZ/dx in the end
         y_pred = self.torchmodel(x_data)
         #y_pred = y_pred.to(self.device)
-        y_label = torch.Tensor ( [np.log10(1.+Z),np.log10(1+rmax)] )#.to ( self.device )
+        # y_label = torch.Tensor ( [np.log10(1.+Z),np.log10(1+rmax)] )#.to ( self.device )
+        y_label = torch.Tensor ( [np.log10(1.+Z),1./(1+rmax)] )#.to ( self.device )
         loss = self.criterion ( y_pred, y_label )
         # self.pprint ( "With x=%s y_pred=%s, label=%s, loss=%s" % ( x_data[:5], y_pred, y_label, loss.data ) ) 
         self.loss = loss.data
@@ -187,7 +191,8 @@ class Regressor:
     def predict ( self, model ):
         x_data = self.convert ( model )
         ret = self.torchmodel.forward ( x_data )
-        return 10**ret[0]-1.,10**ret[1]-1.
+        #return 10**ret[0]-1.,10**ret[1]-1.
+        return 10**ret[0]-1.,1./ret[1]-1.
 
 if __name__ == "__main__":
     helper = RegressionHelper ()
