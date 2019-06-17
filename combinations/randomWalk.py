@@ -166,7 +166,12 @@ class RandomWalker:
         oldZ = self.model.Z
         self.model.backup()
         self.regressor.plusDeltaM ( self.model ) ## move!!
-        self.model.predict ( self.strategy )
+        try:
+            self.model.predict ( self.strategy )
+        except Exception as e:
+            self.pprint ( "could not get prediction for gradient ascended model. revert" )
+            self.model.restore()
+            return
         self.pprint ( "Z after gradient ascent %.2f" % self.model.Z )
         if oldZ > self.model.Z:
             self.pprint ( "old value was better. revert" )
