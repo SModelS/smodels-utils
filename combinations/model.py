@@ -172,13 +172,15 @@ class Model:
             if r == None:
                 self.pprint ( "I received %s as r. What do I do with this?" % r )
                 r = 2.
-            if r > 1.5:
+            #if r > 1.5:
                 # self.pprint ( "analysis %s:%s excludes the model. r=%.1f (r_exp=%s)" % ( theorypred.analysisId(), theorypred.dataId(), r, rexp ) )
-                self.Z = 0.
-                self.llhd = 0.
-                self.letters = "excluded"
-                self.description = "excluded"
+            #    self.Z = 0.
+            #    self.llhd = 0.
+            #    self.letters = "excluded"
+            #    self.description = "excluded"
         # self.pprint ( "check if excluded, %d predictions: no" % len(predictions) )
+        if len(robs)==0:
+            return 0.
         return max(robs)
 
     def backup ( self ):
@@ -187,7 +189,7 @@ class Model:
                         "prior": self.prior, "description": self.description,
                         "bestCombo": self.bestCombo, "masses": self.masses, 
                         "rvalues": self.rvalues }
-        self.pprint ( "backing up state" )
+        # self.pprint ( "backing up state" )
 
     def restore ( self ):
         """ restore from the backup """
