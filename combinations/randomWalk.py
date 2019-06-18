@@ -154,14 +154,14 @@ class RandomWalker:
         predictedZ,predictedRMax = float ( self.regressor.predict ( self.model )[0] ), float ( self.regressor.predict ( self.model )[1] )
         self.pprint ( "After  training step #%d, predicted vs computed Z: %.5f <-> %.5f   rmax: %.5f <-> %.5f" % ( self.regressor.training, predictedZ, self.model.Z, predictedRMax,self.model.rmax ) )
         
-        if True: ## self.regressor.loss < .001: # and self.model.Z > 1.
-            self.gradientAscent()
         self.queue.put ( [ self.regressor ] )
         if self.regressor.training % 100 == 0 or self.regressor.training == 3 or self.regressor.training == 20:
             self.regressor.save()
 
     def gradientAscent ( self ):
         """ Z is big enough, the loss is small enough. use the gradient. """
+        if self.regressor.loss > 10.:
+            return ## dont make gradient ascent when regressor loss is too high
         self.pprint ( "performing a gradient ascent. Z before %.2f" % self.model.Z )
         oldZ = self.model.Z
         self.model.backup()
@@ -178,7 +178,6 @@ class RandomWalker:
             self.model.restore()
         else:
             self.pprint ( "keep gradient ascended model" )
-
 
     def takeStep ( self ):
         """ take the step, save it as last step """
@@ -353,6 +352,7 @@ class RandomWalker:
                 else:
                     self.pprint ( "u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.model.oldZ(),self.model.Z) )
                     self.takeStep()
+            self.gradientAscent()
         self.saveState()
 
 def _run ( walker, queue, hiqueue ):

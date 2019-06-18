@@ -188,6 +188,7 @@ class Model:
         self._backup = { "llhd": self.llhd, "letters": self.letters, "Z": self.Z,
                         "prior": self.prior, "description": self.description,
                         "bestCombo": self.bestCombo, "masses": self.masses, 
+                        "ssmultipliers": self.ssmultipliers, "decays": self.decays,
                         "rvalues": self.rvalues }
         if hasattr ( self, "rmax" ):
             self._backup["rmax"]=self.rmax
@@ -314,5 +315,9 @@ class Model:
     def computePrior ( self ):
         """ compute the prior for the current model.
         """
-        self.prior = 1. / ( len(self.unFrozenParticles()))
+        nunfrozen = len(self.unFrozenParticles())
+        if nunfrozen==0:
+            self.pprint ( "weird. no unfrozen particles?? %s" % self.masses )
+            nunfrozen = 1
+        self.prior = 1. / nunfrozen
 
