@@ -307,6 +307,9 @@ class Model:
             m = f.blocks["MASS"]
         except Exception as e:
             self.pprint ( "could not read SLHA file %s: %s" % ( self.currentSLHA, e ) )
+            self.pprint ( "lets restore old state" )
+            self.restore()
+
         computer.computeForOneFile ( [8,13], self.currentSLHA,
                 unlink=True, lOfromSLHA=False, tofile=True,
                 ssmultipliers  = self.ssmultipliers )

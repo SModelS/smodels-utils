@@ -165,14 +165,14 @@ class RandomWalker:
         self.pprint ( "performing a gradient ascent. Z before %.2f" % self.model.Z )
         oldZ = self.model.Z
         self.model.backup()
-        self.regressor.plusDeltaM ( self.model ) ## move!!
+        self.regressor.plusDeltaM ( self.model, rate=.1 ) ## move!!
         try:
             self.model.predict ( self.strategy )
         except Exception as e:
             self.pprint ( "could not get prediction for gradient ascended model. revert" )
             self.model.restore()
             return
-        self.pprint ( "Z after gradient ascent %.2f" % self.model.Z )
+        self.pprint ( "Z after gradient ascent %.2f, before was %.2f" % ( self.model.Z, oldZ ) )
         if oldZ > self.model.Z:
             self.pprint ( "old value was better. revert" )
             self.model.restore()
@@ -181,6 +181,8 @@ class RandomWalker:
 
     def takeStep ( self ):
         """ take the step, save it as last step """
+        if self.regressor != None:
+            self.oldgrad = self.regressor.grad
         self.model.backup()
 
     def saveState ( self ):
@@ -326,12 +328,16 @@ class RandomWalker:
             if self.model.rmax > 1.5:
                 self.highlight ( "info", "rmax=%.2f -> 0. Revert." % self.model.rmax )
                 self.model.restore()
+                if hasattr ( self, "oldgrad" ) and self.regressor != None:
+                    self.regressor.grad = self.oldgrad
                 continue
             if self.model.oldZ() > 0. and self.model.Z < 0.7 * self.model.oldZ():
             # if self.oldmodel.Z > 0. and self.model.Z < 0.7 * self.oldmodel.Z:
                 ## no big steps taken here.
                 self.highlight ( "info", "Z=%.2f -> 0. Revert." % self.model.oldZ() )
                 self.model.restore()
+                if hasattr ( self, "oldgrad" ) and self.regressor != None:
+                    self.regressor.grad = self.oldgrad
                 continue
 
             if ratio >= 1.:
@@ -349,6 +355,8 @@ class RandomWalker:
                 if u > ratio:
                     self.pprint ( "u=%.2f > %.2f; Z: %.2f -> %.2f: revert." % (u,ratio,self.model.oldZ(), self.model.Z) )
                     self.model.restore()
+                    if hasattr ( self, "oldgrad" ) and self.regressor != None:
+                        self.regressor.grad = self.oldgrad
                 else:
                     self.pprint ( "u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.model.oldZ(),self.model.Z) )
                     self.takeStep()
@@ -366,7 +374,7 @@ def _run ( walker, queue, hiqueue ):
             f.write ( "time %s\n" % time.asctime() )
             f.write ( "walker %d threw: %s\n" % ( walker.walkerid, e ) )
             if hasattr ( walker.model, "currentSLHA" ):
-                f.write ("slha file was %s\n" % w.model.currentSLHA )
+                f.write ("slha file was %s\n" % walker.model.currentSLHA )
 
 if __name__ == "__main__":
     print ( "[walk] ramping up" )

@@ -93,7 +93,7 @@ class Regressor:
         self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.005 )
         self.walkerid = walkerid
 
-    def plusDeltaM ( self, theorymodel, rate=-1. ):
+    def plusDeltaM ( self, theorymodel, rate= 1. ):
         """ move the theorymodel parameters in the direction
             of the gradient. """
         grad = self.grad.tolist()
