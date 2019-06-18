@@ -310,10 +310,15 @@ class Model:
             self.pprint ( "lets restore old state" )
             self.restore()
 
-        computer.computeForOneFile ( [8,13], self.currentSLHA,
-                unlink=True, lOfromSLHA=False, tofile=True,
-                ssmultipliers  = self.ssmultipliers )
-        self.log ( "done computing xsecs, size of computer %d" % asizeof(computer) )
+        try:
+            computer.computeForOneFile ( [8,13], self.currentSLHA,
+                    unlink=True, lOfromSLHA=False, tofile=True,
+                    ssmultipliers  = self.ssmultipliers )
+            self.log ( "done computing xsecs, size of computer %d" % asizeof(computer) )
+        except Exception as e:
+            self.pprint ( "could not compute xsecs %s: %s" % ( self.currentSLHA, e ) )
+            self.pprint ( "lets restore old state" )
+            self.restore()
 
     def computePrior ( self ):
         """ compute the prior for the current model.

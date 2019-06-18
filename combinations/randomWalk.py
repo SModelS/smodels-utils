@@ -144,7 +144,13 @@ class RandomWalker:
         #if self.regressor == None:
         #    return
         ## fetch the model from the queue
-        self.regressor = self.queue.get()[0]
+        try:
+            self.regressor = self.queue.get()[0]
+        except EOFError as e:
+            self.pprint ( "EOFError, while waiting to get the regressor. lets just not train" )
+            if self.queue.empty():
+                self.queue.put ( [ self.regressor ] )
+            return 
         if self.regressor == None: # start a new one
             self.queue.put( [ None ] )
             return
@@ -326,7 +332,7 @@ class RandomWalker:
                 # ratio = math.exp ( - self.oldmodel.priorTimesLlhd()) / math.exp ( - self.model.priorTimesLlhd() )
                 # ratio = self.model.priorTimesLlhd() / self.oldmodel.priorTimesLlhd()
             if self.model.rmax > 1.5:
-                self.highlight ( "info", "rmax=%.2f -> 0. Revert." % self.model.rmax )
+                self.highlight ( "info", "rmax=%.2f > 1.5. Revert." % self.model.rmax )
                 self.model.restore()
                 if hasattr ( self, "oldgrad" ) and self.regressor != None:
                     self.regressor.grad = self.oldgrad
