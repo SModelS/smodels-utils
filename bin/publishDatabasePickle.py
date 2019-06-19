@@ -148,6 +148,8 @@ def main():
             print ( "[publishDatabasePickle] %s" % a )
     cmd = "mv %s ../../smodels.github.io/database/%s" % ( infofile, infofile )
     print ( "[publishDatabasePickle] %s %s" % ( sexec, cmd ) )
+    print("\n\t -----> The json file has to be updated in the smodels.github.io:master/database repository.\n")
+    print("\n\t -----> The .pcl file can be uploaded through https://cernbox.cern.ch/index.php/s/jt7xJCepuXTRWPL\n\n")
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )
