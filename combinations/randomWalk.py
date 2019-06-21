@@ -125,10 +125,19 @@ class RandomWalker:
         if nChanges == 0:
             self.log ( "take random mass step" )
             self.takeRandomMassStep()
-        self.log ( "now create slha file" )
-        self.model.predict( self.strategy )
+        self.log ( "now create slha file via predict" )
+        try:
+            self.model.predict( self.strategy )
+        except Exception as e:
+            self.pprint ( "error %s encountered when trying to predict. lets revert" % str(e) )
+            self.model.restore()
+            return
+
         self.log ( "found highest Z: %.2f" % self.model.Z )
-        hiscoreList = self.hiqueue.get()[0]
+        try:
+            hiscoreList = self.hiqueue.get( timeout=30. )[0]
+        except Exception as e:
+            hiscoreList = Hiscore ( 0, True )
         if hiscoreList != None:
             self.log ( "check if result goes into hiscore list" )
             hiscoreList.newResult ( self.model ) ## add to high score list
@@ -144,10 +153,11 @@ class RandomWalker:
         #if self.regressor == None:
         #    return
         ## fetch the model from the queue
+        self.log ( "now train the NN" )
         try:
-            self.regressor = self.queue.get()[0]
-        except EOFError as e:
-            self.pprint ( "EOFError, while waiting to get the regressor. lets just not train" )
+            self.regressor = self.queue.get( timeout=30. )[0]
+        except Exception as e:
+            self.pprint ( "Error, while waiting to get the regressor. lets just not train" )
             if self.queue.empty():
                 self.queue.put ( [ self.regressor ] )
             return 

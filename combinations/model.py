@@ -223,7 +223,7 @@ class Model:
         for m,v in self.masses.items():
             if abs(v)<5e3:
                 ret.append(m)
-        if not withLSP:
+        if not withLSP and self.LSP in ret:
             ret.remove(self.LSP)
         return ret
 

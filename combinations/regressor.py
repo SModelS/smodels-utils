@@ -49,13 +49,15 @@ class PyTorchModel(torch.nn.Module):
         self.walkerid = 0
         dim = self.inputDimension()
         self.pprint ( "input dimension is %d" % dim )
-        dim4 = int ( dim/4)
-        dim16= int ( dim4/4)
+        dim3 = int ( dim/3 )
+        dim9 = int ( dim/9 )
+        dim27= int ( dim/27 )
         # self.linear1 = torch.nn.Linear( dim, dim16 )
-        self.linear1 = torch.nn.Linear( dim, dim4 )
-        self.linear2 = torch.nn.Linear( dim4, dim16 )
+        self.linear1 = torch.nn.Linear( dim, dim3 )
+        self.linear2 = torch.nn.Linear( dim3, dim9 )
+        self.linear3 = torch.nn.Linear( dim9, dim27 )
         self.relu = torch.nn.LeakyReLU()
-        self.linear3 = torch.nn.Linear( dim16, 2 )
+        self.linear4 = torch.nn.Linear( dim27, 2 )
 
     def pprint ( self, *args ):
         """ logging """
@@ -71,7 +73,9 @@ class PyTorchModel(torch.nn.Module):
         out2 = self.linear2 ( act1 )
         act2 = self.relu ( out2 )
         out3 = self.linear3 ( act2 )
-        y_pred = torch.sigmoid( out3 )
+        act3 = self.relu ( out3 )
+        out4 = self.linear4 ( act3 )
+        y_pred = torch.sigmoid( out4 )
         return y_pred
 
 class Regressor:
