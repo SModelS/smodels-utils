@@ -135,7 +135,8 @@ class RandomWalker:
 
         self.log ( "found highest Z: %.2f" % self.model.Z )
         try:
-            hiscoreList = self.hiqueue.get( timeout=30. )[0]
+            hiscoreList = self.hiqueue.get( timeout=70. )[0]
+            hiscoreList.walkerid = self.walkerid ## to identify which walker causes problems
         except Exception as e:
             hiscoreList = Hiscore ( 0, True )
         if hiscoreList != None:
@@ -164,11 +165,11 @@ class RandomWalker:
         if self.regressor == None: # start a new one
             self.queue.put( [ None ] )
             return
-        predictedZ,predictedRMax = float ( self.regressor.predict ( self.model )[0] ), float ( self.regressor.predict ( self.model )[1] )
-        self.pprint ( "Before training step #%d, predicted vs computed Z: %.5f <-> %.5f   rmax: %.5f <-> %.5f" % ( self.regressor.training, predictedZ, self.model.Z, predictedRMax,self.model.rmax ) )
+        predictedZ = float ( self.regressor.predict ( self.model ) )
+        self.pprint ( "Before training step #%d, predicted vs computed Z: %.5f <-> %.5f" % ( self.regressor.training, predictedZ, self.model.Z ) )
         self.regressor.train ( self.model, self.model.Z, self.model.rmax )
-        predictedZ,predictedRMax = float ( self.regressor.predict ( self.model )[0] ), float ( self.regressor.predict ( self.model )[1] )
-        self.pprint ( "After  training step #%d, predicted vs computed Z: %.5f <-> %.5f   rmax: %.5f <-> %.5f" % ( self.regressor.training, predictedZ, self.model.Z, predictedRMax,self.model.rmax ) )
+        predictedZ = float ( self.regressor.predict ( self.model ) )
+        self.pprint ( "After  training step #%d, predicted vs computed Z: %.5f <-> %.5f" % ( self.regressor.training, predictedZ, self.model.Z ) )
         
         self.queue.put ( [ self.regressor ] )
         if self.regressor.training % 100 == 0 or self.regressor.training == 3 or self.regressor.training == 20:
@@ -176,7 +177,9 @@ class RandomWalker:
 
     def gradientAscent ( self ):
         """ Z is big enough, the loss is small enough. use the gradient. """
-        if self.regressor.loss > 10.:
+        self.log ( "shall we perform gradient ascent?" )
+        self.log ( "attrs %s %s" % ( self.regressor.loss, self.regressor.torchmodel.last_ypred ) )
+        if self.regressor.loss > 1. or ( hasattr ( self.regressor.torchmodel, "last_ypred" ) and self.regressor.torchmodel.last_ypred in [ float("nan"), None ] ):
             return ## dont make gradient ascent when regressor loss is too high
         self.pprint ( "performing a gradient ascent. Z before %.2f" % self.model.Z )
         oldZ = self.model.Z
@@ -360,10 +363,6 @@ class RandomWalker:
                 self.highlight ( "info", "Z: %.3f -> %.3f: take the step" % ( self.model.oldZ(), self.model.oldZ() ) )
                 if self.model.Z < 0.7 * self.model.oldZ():
                     self.pprint ( " `- weird, though, Z decreases. Please check." )
-                    #self.pprint ( "oldllhd %f" % self.model.llhd )
-                    #self.pprint ( "oldprior", self.oldmodel.prior )
-                    #self.pprint ( "llhd", self.model.llhd )
-                    #self.pprint ( "prior", self.model.prior )
                     sys.exit()
                 self.takeStep()
             else:

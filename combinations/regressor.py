@@ -49,15 +49,25 @@ class PyTorchModel(torch.nn.Module):
         self.walkerid = 0
         dim = self.inputDimension()
         self.pprint ( "input dimension is %d" % dim )
+        #dim3 = int ( dim/3 )
+        #dim9 = int ( dim/9 )
+        #dim27= int ( dim/27 )
+        # self.linear1 = torch.nn.Linear( dim, dim16 )
+        #self.linear1 = torch.nn.Linear( dim, dim3 )
+        #self.linear2 = torch.nn.Linear( dim3, dim9 )
+        #self.linear3 = torch.nn.Linear( dim9, dim27 )
         dim3 = int ( dim/3 )
         dim9 = int ( dim/9 )
         dim27= int ( dim/27 )
+        dim54= int ( dim/54 )
         # self.linear1 = torch.nn.Linear( dim, dim16 )
         self.linear1 = torch.nn.Linear( dim, dim3 )
         self.linear2 = torch.nn.Linear( dim3, dim9 )
         self.linear3 = torch.nn.Linear( dim9, dim27 )
         self.relu = torch.nn.LeakyReLU()
-        self.linear4 = torch.nn.Linear( dim27, 2 )
+        self.linear4 = torch.nn.Linear( dim27, dim54 )
+        self.linear5 = torch.nn.Linear( dim54, 1 )
+        self.last_ypred = None
 
     def pprint ( self, *args ):
         """ logging """
@@ -75,7 +85,10 @@ class PyTorchModel(torch.nn.Module):
         out3 = self.linear3 ( act2 )
         act3 = self.relu ( out3 )
         out4 = self.linear4 ( act3 )
-        y_pred = torch.sigmoid( out4 )
+        act4 = self.relu ( out4 )
+        out5 = self.linear5 ( act4 )
+        y_pred = torch.sigmoid( out5 )
+        self.last_ypred = float( y_pred.data )
         return y_pred
 
 class Regressor:
@@ -175,10 +188,11 @@ class Regressor:
         y_pred = self.torchmodel(x_data)
         #y_pred = y_pred.to(self.device)
         # y_label = torch.Tensor ( [np.log10(1.+Z),np.log10(1+rmax)] )#.to ( self.device )
-        y_label = torch.Tensor ( [np.log10(1.+Z),1./(1+rmax)] )#.to ( self.device )
+        y_label = torch.Tensor ( [ np.log10(1.+Z) ] )#.to ( self.device )
+        # y_label = torch.Tensor ( [np.log10(1.+Z),1./(1+rmax)] )#.to ( self.device )
         loss = self.criterion ( y_pred, y_label )
         # self.pprint ( "With x=%s y_pred=%s, label=%s, loss=%s" % ( x_data[:5], y_pred, y_label, loss.data ) ) 
-        self.loss = loss.data
+        self.loss = float( loss.data )
         self.log ( "training. predicted %s, target %s, loss %.3f" % ( y_pred, y_label, float(loss) ) )
         self.adam.zero_grad()
         loss.backward()
@@ -195,8 +209,8 @@ class Regressor:
     def predict ( self, model ):
         x_data = self.convert ( model )
         ret = self.torchmodel.forward ( x_data )
-        #return 10**ret[0]-1.,10**ret[1]-1.
-        return 10**ret[0]-1.,1./ret[1]-1.
+        # return 10**ret[0]-1.,1./ret[1]-1.
+        return 10**ret[0]-1.
 
 if __name__ == "__main__":
     helper = RegressionHelper ()

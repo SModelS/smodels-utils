@@ -297,6 +297,11 @@ class Model:
                 f.write ( line )
         self.computeXSecs( )
 
+    def dict ( self ):
+        """ return the dictionary that can be written out """
+        return { "masses": self.masses, "ssmultipliers": self.ssmultipliers,
+                 "decays": self.decays }
+
     def computeXSecs ( self, nevents=2000 ):
         """ compute xsecs for current.slha """
         self.log ( "computing xsecs" )
