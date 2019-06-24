@@ -155,9 +155,9 @@ class RandomWalker:
         ## fetch the model from the queue
         self.log ( "now train the NN" )
         try:
-            self.regressor = self.queue.get( timeout=30. )[0]
+            self.regressor = self.queue.get( timeout=70. )[0]
         except Exception as e:
-            self.pprint ( "Error, while waiting to get the regressor. lets just not train" )
+            self.pprint ( "Error, while waiting to get the regressor: %s. lets just not train" % str(e) )
             if self.queue.empty():
                 self.queue.put ( [ self.regressor ] )
             return 
