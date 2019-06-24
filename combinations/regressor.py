@@ -2,7 +2,7 @@
 
 """ The pytorch-based regressor for Z. So we can walk along its gradient. """
 
-import os, time, sys
+import os, time, sys, gzip
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -203,9 +203,9 @@ class Regressor:
         """ dump the model with the compute Z, so we can train offline on it. """
         D = model.dict()
         D["Z"] = self.torchmodel.last_ypred
-        line = str(D)+"\n"
-        with open("training.txt","a") as f:
-            f.write ( line )
+        line = "%s\n" % D
+        with gzip.open("training.gz","ab") as f:
+            f.write ( line.encode() )
 
     def save ( self ):
         torch.save ( self.torchmodel, 'model.ckpt' )
