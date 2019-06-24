@@ -199,6 +199,14 @@ class Regressor:
         self.adam.step()
         self.grad = x_data.grad ## store the gradient!
 
+    def dumpTrainingData ( self, model ):
+        """ dump the model with the compute Z, so we can train offline on it. """
+        D = model.dict()
+        D["Z"] = self.torchmodel.last_ypred
+        line = str(D)+"\n"
+        with open("training.txt","a") as f:
+            f.write ( line )
+
     def save ( self ):
         torch.save ( self.torchmodel, 'model.ckpt' )
 
