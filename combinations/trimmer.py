@@ -43,6 +43,7 @@ class Trimmer:
             ## remove ssmultipliers for frozen particles
             if pid in self.model.ssmultipliers:
                 self.model.ssmultipliers.pop(pid)
+            self.model.masses[pid]=1e6 ## renormalize
         # unfrozen = [] ## FIXME was only needed for checking branching trimmer
         pidsnmasses = [ (x,self.model.masses[x]) for x in unfrozen ]
         pidsnmasses.sort ( key=lambda x: x[1], reverse=True )

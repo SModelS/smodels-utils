@@ -165,7 +165,7 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
     ROOT.gROOT.SetBatch()
     ROOT.gROOT.SetStyle("Plain")
 
-    c1=ROOT.TCanvas("c1","c1",300,600)
+    c1=ROOT.TCanvas("c1","c1",600,1000)
 
     lines=[]
 
@@ -285,10 +285,12 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
     if formats["png"]:
         formats["eps"]=True
         crop=""
+        _printCanvas ( c1, outputfile+"_direct.png" )
         if True and not printmass:
-            crop="-crop 270x1200+0+0"
-        logger.info ( "producing %s.png" % outputfile )
-        _execute ( "convert %s %s.eps %s.png" % ( crop, tmpf, outputfile ) )
+            crop="-crop 430x1200+0+0"
+        _execute ( "convert %s %s_direct.png %s.png" % ( crop, outputfile, outputfile ) )
+        #else:
+        #    _execute ( "convert %s %s.eps %s_conv.png" % ( crop, tmpf, outputfile ) )
     if formats["eps"]:
         logger.info ( "producing %s.eps" % outputfile )
         _execute ( "cp %s.eps %s.eps" % (tmpf, outputfile ) )

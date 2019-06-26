@@ -182,5 +182,7 @@ if __name__ == "__main__":
                 "predictions": args.predictions, "html": not args.nohtml }
     plot ( args.number, args.verbosity, args.picklefile, options )
     if args.scp:
-        print ( "scp to smodels" )
-        subprocess.getoutput ( "scp *.png index.html smodels.hephy.at:/var/www/walten/models/" )
+        cmd = "scp *.png index.html smodels.hephy.at:/var/www/walten/models/"
+        cmd = "scp *.png index.html gpu:/afs/hephy.at/user/w/wwaltenberger/www/models"
+        print ( cmd )
+        subprocess.getoutput ( cmd )
