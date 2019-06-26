@@ -166,6 +166,7 @@ class Model:
         robs=[]
         for theorypred in predictions:
             r = theorypred.getRValue(expected=False)
+            # print ( "checkForExcluded: %s %s %s: %s, %s" % ( theorypred.analysisId(), theorypred.dataType(), "", theorypred.xsection.value, theorypred.PIDs ) )
             robs.append ( r )
             rexp = theorypred.getRValue(expected=True)
             self.rvalues.append ( (r, rexp, combiner.removeDataFromTheoryPred ( theorypred ) ) )
@@ -179,6 +180,7 @@ class Model:
             #    self.letters = "excluded"
             #    self.description = "excluded"
         # self.pprint ( "check if excluded, %d predictions: no" % len(predictions) )
+        # sys.exit()
         if len(robs)==0:
             return 0.
         return max(robs)
@@ -187,9 +189,11 @@ class Model:
         """ backup the current state """
         self._backup = { "llhd": self.llhd, "letters": self.letters, "Z": self.Z,
                         "prior": self.prior, "description": self.description,
-                        "bestCombo": self.bestCombo, "masses": self.masses, 
-                        "ssmultipliers": self.ssmultipliers, "decays": self.decays,
-                        "rvalues": self.rvalues }
+                        "bestCombo": copy.deepcopy(self.bestCombo), 
+                        "masses": copy.deepcopy(self.masses), 
+                        "ssmultipliers": copy.deepcopy(self.ssmultipliers), 
+                        "decays": copy.deepcopy(self.decays),
+                        "rvalues": copy.deepcopy(self.rvalues) }
         if hasattr ( self, "rmax" ):
             self._backup["rmax"]=self.rmax
         # self.pprint ( "backing up state" )
@@ -264,7 +268,7 @@ class Model:
         """ create a new SLHA file name. Needed when e.g. unpickling """
         self.currentSLHA = tempfile.mktemp(prefix=".cur",suffix=".slha",dir="./")
 
-    def createSLHAFile ( self, outputSLHA=None ):
+    def createSLHAFile ( self, outputSLHA=None, nevents=2000 ):
         """ from the template.slha file, create the slha file of the current
             model.
         :param outputSLHA: if not None, write into that file. else, write into
@@ -295,7 +299,7 @@ class Model:
                                 line[p1:p1+p2+1] )
                         line=line.replace( line[p1:p1+p2+1], "0." )
                 f.write ( line )
-        self.computeXSecs( )
+        self.computeXSecs( nevents )
 
     def dict ( self ):
         """ return the dictionary that can be written out """

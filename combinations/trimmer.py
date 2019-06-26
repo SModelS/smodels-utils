@@ -36,7 +36,6 @@ class Trimmer:
         unfrozen = self.model.unFrozenParticles( withLSP=False )
         ndiscarded=0
         oldZ = self.model.Z
-        self.model.backup()
         self.model.whatif = {} ## save the scores for the non-discarded particles.
         ## aka: what would happen to the score if I removed particle X?
         frozen = self.model.frozenParticles()
@@ -48,6 +47,7 @@ class Trimmer:
         pidsnmasses = [ (x,self.model.masses[x]) for x in unfrozen ]
         pidsnmasses.sort ( key=lambda x: x[1], reverse=True )
         for cpid,(pid,mass) in enumerate(pidsnmasses):
+            self.model.backup()
             self.highlight ( "info", "trying to freeze %s (%.1f): [%d/%d]" % \
                    ( helpers.getParticleName(pid), 
                      self.model.masses[pid],(cpid+1),len(unfrozen) ) )
@@ -107,6 +107,11 @@ class Trimmer:
                     for k,v in self.model.decays[pid].items():
                         self.model.decays[pid][k]=v/S
                     self.model.predict ( self.strategy )
+                    if self.model.rmax > 1.5:
+                        self.pprint ( "running into exclusion if I try to take it out. Leave in." )
+                        self.model.restore()
+                        continue
+
                     if self.model.Z > (1. - self.maxloss)*oldZ:
                         dbr = 0.
                         ndiscardedBR+=1

@@ -14,6 +14,8 @@ def main():
     argparser.add_argument ( '-f', '--picklefile',
             help='pickle file with hiscores [hiscore.pcl]',
             type=str, default="hiscore.pcl" )
+    argparser.add_argument ( '-t', '--topos',
+            help='list also topologies', action="store_true" )
     args = argparser.parse_args()
     h = Hiscore ( 0, False, args.picklefile )
     if not 0 in h.trimmed:
@@ -35,7 +37,8 @@ def main():
             if len(M)>2:
                 M=M[:-2]
         #print ( "     masses: %s" % ( M ) )
-        #print ( "    txnames: %s" % ( pred.txnames ) )
+        if args.topos:
+            print ( "    txnames: %s" % ( pred.txnames ) )
         tx = pred.txnames[0]
         print ( "       nobs: %s, nbg: %s +/- %s" %  (tx._infoObj.getInfo("observedN" ),
                     tx._infoObj.getInfo("expectedBG"),tx._infoObj.getInfo("bgError") ) )
