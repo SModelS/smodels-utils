@@ -60,9 +60,9 @@ class RegressionHelper:
                 if len(modelsbatch)>=10:
                     trainer.batchTrain ( modelsbatch, Zbatch )
                     modelsbatch,Zbatch=[],[]
-                    if i % 100  == 0:
-                        print ( "training with Z=%.2f, loss=%.5f" % (d["Z"], trainer.loss ) )
-                        trainer.save("test.ckpt" )
+                if i > 0 and i % 10  == 0:
+                    print ( "training %d, loss=%.5f" % (i, trainer.loss ) )
+                    trainer.save("test.ckpt" )
                 if False: # i > 10:
                     break
 
@@ -112,7 +112,7 @@ class PyTorchModel(torch.nn.Module):
         act4 = self.relu ( out4 )
         out5 = self.linear5 ( act4 )
         y_pred = torch.sigmoid( out5 )
-        self.last_ypred = float( y_pred.data )
+        self.last_ypred = y_pred.data.tolist()
         return y_pred
 
 class Regressor:
