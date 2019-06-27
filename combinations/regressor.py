@@ -46,7 +46,7 @@ class RegressionHelper:
         trainer = Regressor()
         with gzip.open("training.gz","rb") as f:
             lines = f.readlines()
-        for epoch in range(100):
+        for epoch in range(1000):
             print ( "Epoch %d" % epoch )
             modelsbatch,Zbatch=[],[]
             for i,line in enumerate(lines):
@@ -261,9 +261,9 @@ class Regressor:
     def save ( self, name = "model.ckpt" ):
         torch.save ( self.torchmodel, name )
 
-    def load ( self ):
-        if os.path.exists ( "model.ckpt" ):
-            self.torchmodel = torch.load ( "model.ckpt" )#.to ( self.device )
+    def load ( self, name = "model.ckpt" ):
+        if os.path.exists ( name ):
+            self.torchmodel = torch.load ( name )#.to ( self.device )
 
     def predict ( self, model ):
         x_data = self.convert ( model )
