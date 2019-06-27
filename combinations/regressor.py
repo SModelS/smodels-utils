@@ -2,7 +2,7 @@
 
 """ The pytorch-based regressor for Z. So we can walk along its gradient. """
 
-import os, time, sys, gzip
+import os, time, sys, gzip, time
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -14,8 +14,8 @@ class RegressionHelper:
         pass
 
     def device ( self ):
-        return torch.device("cpu")
-        # return torch.device('cuda:0' if torch.cuda.is_available() else 'cpu' )
+        # return torch.device("cpu")
+        return torch.device('cuda:0' if torch.cuda.is_available() else 'cpu' )
 
     def freeParameters ( self, slhafile ):
         with open(slhafile,"r") as f:
@@ -43,33 +43,44 @@ class RegressionHelper:
         return len ( self.freeParameters( slhafile ) )
 
     def trainOffline ( self ):
-        trainer = Regressor()
+        trainer = Regressor( torchmodel = "test.ckpt" )
         with gzip.open("training.gz","rb") as f:
             lines = f.readlines()
         for epoch in range(1000):
+            losses=[]
             print ( "Epoch %d" % epoch )
             modelsbatch,Zbatch=[],[]
+            dt=0.
+            m=Model(0 )
             for i,line in enumerate(lines):
                 d = eval(line)
-                m=Model(0 )
                 m.masses = d["masses"]
                 m.ssmultipliers = d["ssmultipliers"]
                 m.decays = d["decays"]
                 modelsbatch.append ( m )
                 Zbatch.append ( d["Z"] )
-                if len(modelsbatch)>=10:
+                if len(modelsbatch)>=200:
+                    t0=time.time()
                     trainer.batchTrain ( modelsbatch, Zbatch )
+                    t1=time.time()-t0
+                    dt += t1
                     modelsbatch,Zbatch=[],[]
-                if i > 0 and i % 10  == 0:
-                    print ( "training %d, loss=%.5f" % (i, trainer.loss ) )
-                    trainer.save("test.ckpt" )
-                if False: # i > 10:
-                    break
+                    losses.append ( trainer.loss )
+                if i > 0 and i % 2000  == 0:
+                    print ( "training %d, loss=%.5f. training took %.1fs." % (i, trainer.loss, dt ) )
+                    dt = 0.
+                if i > 0 and i % 10000 == 0:
+                    trainer.save( name="test.ckpt" )
+            print ( "End of epoch %d: losses=%.2f+-%.2f" % ( epoch, np.mean(losses),np.std(losses) ) )
+
 
 class PyTorchModel(torch.nn.Module):
-    def __init__(self, variables ):
+    def __init__(self, variables = None ):
         super(PyTorchModel, self).__init__()
         self.variables = variables
+        if type(variables) == type(None):
+            helper = RegressionHelper()
+            self.variables = helper.freeParameters( "template_many.slha" )
         self.walkerid = 0
         dim = self.inputDimension()
         self.pprint ( "input dimension is %d" % dim )
@@ -117,21 +128,27 @@ class PyTorchModel(torch.nn.Module):
 
 class Regressor:
     """ this is our nice regressor """
-    def __init__ ( self, variables=None, walkerid=0, torchmodel=None ):
+    def __init__ ( self, variables=None, walkerid=0, torchmodel=None, 
+                   device=None ):
         helper = RegressionHelper ()
         self.training = 0
-        # self.device = helper.device()
+        self.device = device
+        if device == None:
+            self.device = helper.device()
         if variables == None:
             variables = helper.freeParameters( "template_many.slha" )
         self.torchmodel = torchmodel
         if torchmodel == None:
-            self.torchmodel = PyTorchModel( variables )# .to ( self.device )
-        # self.torchmodel.share_memory()
-        self.load() ## if a model exists we load it
-        self.criterion = torch.nn.MSELoss(reduction="sum")
-        self.criterion# .to(self.device)
+            self.torchmodel = PyTorchModel( variables ).to ( self.device )
+        if type(torchmodel)==str:
+            self.torchmodel = PyTorchModel( variables ).to ( self.device )
+            self.load ( torchmodel )
+        else:
+            self.load() ## if a model exists we load it
+        self.torchmodel.eval()
+        self.criterion = torch.nn.MSELoss(reduction="sum").to(self.device)
         # self.adam = torch.optim.SGD(self.torchmodel.parameters(), lr=0.01 )
-        self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.005 )
+        self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.003 )
         self.walkerid = walkerid
 
     def plusDeltaM ( self, theorymodel, rate= 1. ):
@@ -197,7 +214,7 @@ class Regressor:
         if tolist:
             return ret
         tmp = torch.Tensor(ret)
-        return tmp#.to(self.device)
+        return tmp.to(self.device)
 
     def pprint ( self, *args ):
         """ logging """
@@ -238,6 +255,8 @@ class Regressor:
         y_pred = self.torchmodel(x_data)
         tmp = []
         for Z in Zs:
+            if type(Z) in [ list, tuple ] and len(Z)==1:
+                Z=Z[0]
             tmp.append ( [ np.log10(1.+Z) ] )
         y_label = torch.Tensor ( tmp )
         # y_label = torch.Tensor ( [np.log10(1.+Z),1./(1+rmax)] )#.to ( self.device )
@@ -259,11 +278,15 @@ class Regressor:
             f.write ( line.encode() )
 
     def save ( self, name = "model.ckpt" ):
-        torch.save ( self.torchmodel, name )
+        print ( "saving model", name )
+        torch.save ( self.torchmodel.state_dict(), name )
 
     def load ( self, name = "model.ckpt" ):
         if os.path.exists ( name ):
-            self.torchmodel = torch.load ( name )#.to ( self.device )
+            print ( "loading model", name )
+            self.torchmodel = PyTorchModel()
+            self.torchmodel.load_state_dict ( torch.load ( name ) )
+            self.torchmodel.eval()
 
     def predict ( self, model ):
         x_data = self.convert ( model )

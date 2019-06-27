@@ -456,7 +456,7 @@ if __name__ == "__main__":
         variables = helper.freeParameters( "template_many.slha" )    
         torchmodel = PyTorchModel( variables )# .to ( helper.device() )
         torchmodel.share_memory()
-        regressor = Regressor ( variables, 0, torchmodel )
+        regressor = Regressor ( variables, 0, torchmodel, device="cpu" )
     queue = multiprocessing.Queue()
     queue.put ( [ regressor ] )
 
