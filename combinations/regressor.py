@@ -48,18 +48,23 @@ class RegressionHelper:
             lines = f.readlines()
         for epoch in range(100):
             print ( "Epoch %d" % epoch )
+            modelsbatch,Zbatch=[],[]
             for i,line in enumerate(lines):
                 d = eval(line)
                 m=Model(0 )
                 m.masses = d["masses"]
                 m.ssmultipliers = d["ssmultipliers"]
                 m.decays = d["decays"]
-                trainer.train ( m, d["Z"] )
-                if i % 100  == 0:
-                    print ( "training with Z=%.2f, loss=%.5f" % (d["Z"], trainer.loss ) )
+                modelsbatch.append ( m )
+                Zbatch.append ( d["Z"] )
+                if len(modelsbatch)>=10:
+                    trainer.batchTrain ( modelsbatch, Zbatch )
+                    modelsbatch,Zbatch=[],[]
+                    if i % 100  == 0:
+                        print ( "training with Z=%.2f, loss=%.5f" % (d["Z"], trainer.loss ) )
+                        trainer.save("test.ckpt" )
                 if False: # i > 10:
                     break
-            trainer.save("test.ckpt" )
 
 class PyTorchModel(torch.nn.Module):
     def __init__(self, variables ):
@@ -157,8 +162,10 @@ class Regressor:
                 theorymodel.decays[pid][dpid]+=t*rate
         return theorymodel
 
-    def convert ( self, theorymodel ):
-        """ convert a theory model to x_data """
+    def convert ( self, theorymodel, tolist=False ):
+        """ convert a theory model to x_data 
+        :param tolist: if true, return as list, not as tensor
+        """
         ret = [ None ]* len(self.torchmodel.variables)
         for k,v in theorymodel.masses.items():
             if not "M%d" % k in self.torchmodel.variables:
@@ -187,6 +194,8 @@ class Regressor:
                 ## FIXME make sure it only happens when irrelevant
                 ret[c]=0.
         # self.pprint ( "returning a tensor for %s, to %s" % ( ret[:3], self.device ) )
+        if tolist:
+            return ret
         tmp = torch.Tensor(ret)
         return tmp#.to(self.device)
 
@@ -208,6 +217,29 @@ class Regressor:
         #y_pred = y_pred.to(self.device)
         # y_label = torch.Tensor ( [np.log10(1.+Z),np.log10(1+rmax)] )#.to ( self.device )
         y_label = torch.Tensor ( [ np.log10(1.+Z) ] )#.to ( self.device )
+        # y_label = torch.Tensor ( [np.log10(1.+Z),1./(1+rmax)] )#.to ( self.device )
+        loss = self.criterion ( y_pred, y_label )
+        # self.pprint ( "With x=%s y_pred=%s, label=%s, loss=%s" % ( x_data[:5], y_pred, y_label, loss.data ) ) 
+        self.loss = float( loss.data )
+        self.log ( "training. predicted %s, target %s, loss %.3f" % ( y_pred, y_label, float(loss) ) )
+        self.adam.zero_grad()
+        loss.backward()
+        self.adam.step()
+        self.grad = x_data.grad ## store the gradient!
+
+    def batchTrain ( self, models, Zs, rmax=None ):
+        """ train y_label with x_data for a minibatch of models """
+        self.training += 1
+        tmp = []
+        for model in models:
+            tmp.append ( self.convert ( model, tolist=True ) )
+        x_data = torch.Tensor ( tmp )
+        x_data.requires_grad = True ## needs this to have dZ/dx in the end
+        y_pred = self.torchmodel(x_data)
+        tmp = []
+        for Z in Zs:
+            tmp.append ( [ np.log10(1.+Z) ] )
+        y_label = torch.Tensor ( tmp )
         # y_label = torch.Tensor ( [np.log10(1.+Z),1./(1+rmax)] )#.to ( self.device )
         loss = self.criterion ( y_pred, y_label )
         # self.pprint ( "With x=%s y_pred=%s, label=%s, loss=%s" % ( x_data[:5], y_pred, y_label, loss.data ) ) 
