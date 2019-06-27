@@ -7,6 +7,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from pympler.asizeof import asizeof
+from model import Model
 
 class RegressionHelper:
     def __init__(self):
@@ -40,7 +41,25 @@ class RegressionHelper:
 
     def countDegreesOfFreedom ( self, slhafile ):
         return len ( self.freeParameters( slhafile ) )
-            
+
+    def trainOffline ( self ):
+        trainer = Regressor()
+        with gzip.open("training.gz","rb") as f:
+            lines = f.readlines()
+        for epoch in range(100):
+            print ( "Epoch %d" % epoch )
+            for i,line in enumerate(lines):
+                d = eval(line)
+                m=Model(0 )
+                m.masses = d["masses"]
+                m.ssmultipliers = d["ssmultipliers"]
+                m.decays = d["decays"]
+                trainer.train ( m, d["Z"] )
+                if i % 100  == 0:
+                    print ( "training with Z=%.2f, loss=%.5f" % (d["Z"], trainer.loss ) )
+                if False: # i > 10:
+                    break
+            trainer.save("test.ckpt" )
 
 class PyTorchModel(torch.nn.Module):
     def __init__(self, variables ):
@@ -180,7 +199,7 @@ class Regressor:
         with open( "walker%d.log" % self.walkerid, "a" ) as f:
             f.write ( "[regressor:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
-    def train ( self, model, Z, rmax ):
+    def train ( self, model, Z, rmax=None ):
         """ train y_label with x_data """
         self.training += 1
         x_data = self.convert ( model )
@@ -207,8 +226,8 @@ class Regressor:
         with gzip.open("training.gz","ab") as f:
             f.write ( line.encode() )
 
-    def save ( self ):
-        torch.save ( self.torchmodel, 'model.ckpt' )
+    def save ( self, name = "model.ckpt" ):
+        torch.save ( self.torchmodel, name )
 
     def load ( self ):
         if os.path.exists ( "model.ckpt" ):
@@ -222,5 +241,6 @@ class Regressor:
 
 if __name__ == "__main__":
     helper = RegressionHelper ()
-    print ( helper.countDegreesOfFreedom ( "template_many.slha" ) )
-    regressor = Regressor ( helper.freeParameters( "template_many.slha" ) ) 
+    helper.trainOffline()
+    #print ( helper.countDegreesOfFreedom ( "template_many.slha" ) )
+    #regressor = Regressor ( helper.freeParameters( "template_many.slha" ) ) 
