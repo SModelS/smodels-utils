@@ -151,6 +151,7 @@ class RandomWalker:
 
     def train ( self ):
         """ train the regressor """
+        return # we dont train for now
         #if self.regressor == None:
         #    return
         ## fetch the model from the queue
@@ -178,6 +179,7 @@ class RandomWalker:
 
     def gradientAscent ( self ):
         """ Z is big enough, the loss is small enough. use the gradient. """
+        return
         self.log ( "shall we perform gradient ascent?" )
         self.log ( "attrs %s %s" % ( self.regressor.loss, self.regressor.torchmodel.last_ypred ) )
         if self.regressor.loss > 1. or ( hasattr ( self.regressor.torchmodel, "last_ypred" ) and self.regressor.torchmodel.last_ypred in [ float("nan"), None ] ):
@@ -434,14 +436,14 @@ if __name__ == "__main__":
                     break
                 if v == None:
                     # no state? start from scratch!
-                    walker = RandomWalker( ctr, args.nsteps, args.strategy )
+                    walker = RandomWalker( ctr+1, args.nsteps, args.strategy )
                     walker.takeStep()
                     walkers.append ( walker )
                     continue
                 v.createNewSLHAFileName()
-                v.walkerid = ctr
-                walkers.append ( RandomWalker.fromModel ( v, walkerid = ctr ) )
-                walkers[-1].setWalkerId ( ctr )
+                v.walkerid = ctr+1
+                walkers.append ( RandomWalker.fromModel ( v, walkerid = ctr+1 ) )
+                walkers[-1].setWalkerId ( ctr+1 )
                 walkers[-1].takeStep() # make last step a taken one
                 ctr+=1
     else:

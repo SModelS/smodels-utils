@@ -274,6 +274,7 @@ class Model:
         :param outputSLHA: if not None, write into that file. else, write into
             currentSLHA file.
         """
+        self.log ( "create SLHA file at %s" % outputSLHA )
         with open( self.templateSLHA ) as f:
             lines=f.readlines()
         if not hasattr ( self, "currentSLHA" ):
