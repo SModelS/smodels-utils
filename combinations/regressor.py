@@ -73,7 +73,7 @@ class RegressionHelper:
                     trainer.save( name="test.ckpt" )
             print ( "End of epoch %d: losses=%.4f+-%.4f" % ( epoch, np.mean(losses),np.std(losses) ) )
             with open("regress.log","at") as f:
-                f.write ( "[%s] End of epoch %d: losses=%.4f+-%.4f\n" % ( time.asctime(), epoch, np.mean(losses),np.std(losses) ) )
+                f.write ( "[%s] End of epoch %d: losses=%.5f+-%.5f\n" % ( time.asctime(), epoch, np.mean(losses),np.std(losses) ) )
 
 
 class PyTorchModel(torch.nn.Module):
