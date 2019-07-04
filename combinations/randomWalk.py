@@ -151,7 +151,7 @@ class RandomWalker:
 
     def train ( self ):
         """ train the regressor """
-        return # we dont train for now
+        # return # we dont train for now
         #if self.regressor == None:
         #    return
         ## fetch the model from the queue
@@ -169,9 +169,9 @@ class RandomWalker:
         predictedZ = float ( self.regressor.predict ( self.model ) )
         self.regressor.dumpTrainingData ( self.model )
         self.pprint ( "Before training step #%d, predicted vs computed Z: %.5f <-> %.5f" % ( self.regressor.training, predictedZ, self.model.Z ) )
-        self.regressor.train ( self.model, self.model.Z, self.model.rmax )
-        predictedZ = float ( self.regressor.predict ( self.model ) )
-        self.pprint ( "After  training step #%d, predicted vs computed Z: %.5f <-> %.5f" % ( self.regressor.training, predictedZ, self.model.Z ) )
+        #self.regressor.train ( self.model, self.model.Z, self.model.rmax )
+        #predictedZ = float ( self.regressor.predict ( self.model ) )
+        #self.pprint ( "After  training step #%d, predicted vs computed Z: %.5f <-> %.5f" % ( self.regressor.training, predictedZ, self.model.Z ) )
         
         self.queue.put ( [ self.regressor ] )
         if self.regressor.training % 100 == 0 or self.regressor.training == 3 or self.regressor.training == 20:
@@ -179,7 +179,6 @@ class RandomWalker:
 
     def gradientAscent ( self ):
         """ Z is big enough, the loss is small enough. use the gradient. """
-        return
         self.log ( "shall we perform gradient ascent?" )
         self.log ( "attrs %s %s" % ( self.regressor.loss, self.regressor.torchmodel.last_ypred ) )
         if self.regressor.loss > 1. or ( hasattr ( self.regressor.torchmodel, "last_ypred" ) and self.regressor.torchmodel.last_ypred in [ float("nan"), None ] ):
@@ -378,7 +377,7 @@ class RandomWalker:
                 else:
                     self.pprint ( "u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.model.oldZ(),self.model.Z) )
                     self.takeStep()
-            self.gradientAscent()
+            # self.gradientAscent()
         self.saveState()
 
 def _run ( walker, queue, hiqueue ):
@@ -448,7 +447,7 @@ if __name__ == "__main__":
                 ctr+=1
     else:
         for ctr in range(ncpus):
-            walkers.append ( RandomWalker( ctr, args.nsteps, args.strategy ) )
+            walkers.append ( RandomWalker( ctr+1, args.nsteps, args.strategy ) )
 
     regressor = None
     regress = not args.no_regressor 

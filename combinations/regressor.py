@@ -46,7 +46,7 @@ class RegressionHelper:
         trainer = Regressor( torchmodel = "test.ckpt" )
         with gzip.open("training.gz","rb") as f:
             lines = f.readlines()
-        for epoch in range(10000):
+        for epoch in range(20000):
             losses=[]
             print ( "Epoch %d" % epoch )
             modelsbatch,Zbatch=[],[]
@@ -102,6 +102,7 @@ class PyTorchModel(torch.nn.Module):
         self.linear5 = torch.nn.Linear( dim16,dim32 )
         self.linear6 = torch.nn.Linear( dim32,dim64 )
         self.linear7 = torch.nn.Linear( dim64, 1 )
+        self.dropout = torch.nn.Dropout ( .1 )
         self.last_ypred = None
 
     def pprint ( self, *args ):
@@ -127,6 +128,7 @@ class PyTorchModel(torch.nn.Module):
         out6 = self.linear6 ( act5 )
         act6 = self.act ( out6 )
         out7 = self.linear7 ( act6 )
+        out8 = self.dropout ( out7 )
         y_pred = torch.sigmoid( out7 )
         self.last_ypred = y_pred.data.tolist()
         return y_pred
@@ -227,7 +229,7 @@ class Regressor:
 
     def log ( self, *args ):
         """ logging to file """
-        with open( "walker%d.log" % self.walkerid, "a" ) as f:
+        with open( "regression%d.log" % self.walkerid, "a" ) as f:
             f.write ( "[regressor:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def train ( self, model, Z, rmax=None ):
