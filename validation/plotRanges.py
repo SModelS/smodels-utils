@@ -294,10 +294,9 @@ def generatePoints(Npts,varRanges,txnameObjs,massPlane,vertexChecker):
     for i,vrange in enumerate(newRanges):
         vmin,vmax = vrange
         dv = steps[i]
+        if vmax < vmin and dv > 0.: ## swap sign
+            dv = - dv
         allPoints.append([x for x in numpy.arange(vmin, vmax+dv/2., dv)])
-
-    print ( "extreme points", extremePoints )
-    print ( "all points", *allPoints )
 
     for pt in itertools.product(*allPoints):
         pt = list(pt)
