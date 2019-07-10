@@ -174,7 +174,7 @@ def getPoints(tgraphs, txnameObjs, axes = "[[x, x - y], [x, x - y]]", Npts=300):
 
     pts = ptsA + ptsB
 
-    logger.debug( "pts=%s" % pts )
+    logger.debug( "pts[:3]=%s" % pts[:3] )
 
     return pts
 
