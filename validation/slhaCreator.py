@@ -287,17 +287,19 @@ if __name__ == "__main__":
         help="clear cruft files")
     argparser.add_argument('-k', '--keep', action='store_true',
         help="keep temp files")
+    argparser.add_argument('-d', '--dry_run', action='store_true',
+        help="dry run, only show which points would be created")
     argparser.add_argument('-6', '--pythia6', action='store_true',
-        help="use pythia6 for LO cross sections [default]")
+        help="use pythia6 for LO cross sections")
     argparser.add_argument('-8', '--pythia8', action='store_true',
-        help="use pythia8 for LO cross sections")
+        help="use pythia8 for LO cross sections [default]")
     args=argparser.parse_args()
     if args.clear:
         subprocess.getoutput ( "rm -rf tmp* pythia*card" )
         sys.exit()
-    pythiaVersion = 6
-    if args.pythia8:
-        pythiaVersion = 8
+    pythiaVersion = 8
+    if args.pythia6:
+        pythiaVersion = 6
 
     templatefile="../slha/templates/%s.template" % args.topology
     if not os.path.exists ( templatefile ):
@@ -309,9 +311,26 @@ if __name__ == "__main__":
     if args.nprocesses < 0:
         tempf.nprocesses = runtime.nCPUs() + args.nprocesses + 1
     masses=[]
+    if args.ymax < args.ymin:
+        logger.error ( "ymax < ymin" )
+        sys.exit()
     for mother in numpy.arange(args.xmin,args.xmax+1,args.dx):
-        for lsp in numpy.arange(args.ymin,args.ymax+1,args.dy):
-            masses.append ( { "x": mother, "y": lsp } )
+        if args.logy:
+            if args.dy < 1.:
+                logger.error ( "y axis is log scale, but dy < 1. Did you mean 1/dy?" )
+                sys.exit()
+            lsp = args.ymin
+            while lsp < args.ymax:
+                masses.append ( { "x": mother, "y": lsp } )
+                lsp = lsp * args.dy
+        else:
+            for lsp in numpy.arange(args.ymin,args.ymax+1,args.dy):
+                masses.append ( { "x": mother, "y": lsp } )
+    if args.dry_run:
+        print ( "Dry-run: would create the following points:" )
+        for pt in masses:
+            print ( " * x: %s, y: %s" % (pt["x"], pt["y"]) )
+        sys.exit()
     slhafiles = tempf.createFilesFor( masses, computeXsecs=True, massesInFileName=True,
                                       nevents=args.nevents )
     print ( "Produced %s slha files" % len(slhafiles ) )
