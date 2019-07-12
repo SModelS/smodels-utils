@@ -861,7 +861,8 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
 
     return plane,tgr
 
-def createTempPlot(validationPlot,silentMode=True,what = "R", nthpoint =1, signal_factor =1.):
+def createTempPlot( validationPlot, silentMode=True, what = "R", nthpoint =1,
+                    signal_factor =1.):
     """
     Uses the data in validationPlot.data and the official exclusion curve
     in validationPlot.officialCurves to generate temperature plots, showing

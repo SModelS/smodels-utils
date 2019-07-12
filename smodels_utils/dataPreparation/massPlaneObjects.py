@@ -533,6 +533,9 @@ class Axes(object):
         #massInput = dict([[str(self._massVars[im]),mass] for im,mass in enumerate(massArray)])
         xValues = {}
         #Get the function for each x,y,.. variable and compute its value
+        for l in [ "A", "B" ]:
+            if not "Width%s" % l in massInput.keys(): ## FIXME why is this needed???
+                massInput["Width%s" % l ]=None
         for xv,xfunc in self._xyFunction.items():
             xValues[str(xv)] = xfunc(**massInput)
 
