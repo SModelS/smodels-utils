@@ -8,10 +8,15 @@ import pyslha
 import IPython
 
 pretend = False
+pat = "T*slha"
 if len(sys.argv)>1 and sys.argv[1] in [ "-p", "--pretend" ]:
     pretend = True
+if len(sys.argv)>1 and sys.argv[1] not in [ "-p", "--pretend" ]:
+    pat = sys.argv[1]
 
-files = glob.glob ( "T*slha" )
+print ( "checking for %s" % pat )
+
+files = glob.glob ( pat )
 random.shuffle ( files )
 # files = glob.glob ( "T5ZZ_1566_877_1_1566_877_1.slha" )
 total = len (files)
