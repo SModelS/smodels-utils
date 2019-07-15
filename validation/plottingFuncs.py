@@ -395,7 +395,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
 
 
         if pt['condition'] and pt['condition'] > 0.05:
-            logger.warning("Condition violated for file " + pt['slhafile'])
+            logger.warning("Condition violated at %f for file %s" % ( pt['condition'], pt['slhafile']) )
             cond_violated.SetPoint(cond_violated.GetN(), x, y)
         elif r > 1.:
             if r < looseness:

@@ -236,8 +236,8 @@ DECAY   2000003     1.00000000E+00   # sstrange_L decays
 #         PDG            Width
 DECAY   2000004     1.00000000E+00   # scharm_L decays
 #          BR         NDA      ID1       ID2
-     0.50000000E+00    2     1000024         4   # BR(~c_R -> ~chi_10 c)
-     0.50000000E+00    2     1000023         3   # BR(~c_R -> ~chi_10 c)
+     0.50000000E+00    2     1000024         3   # BR(~c_R -> ~chi_10 c)
+     0.50000000E+00    2     1000023         4   # BR(~c_R -> ~chi_10 c)
 
 DECAY   1000024     1.00000000E+00   # chargino1+ decays
 #           BR         NDA      ID1       ID2       ID3

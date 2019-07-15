@@ -160,9 +160,9 @@ DECAY   1000016     0.00000000E+00   # snu_tauL decays
 #         PDG            Width
 DECAY   1000021     1.00000000E+00   # gluino decays
 #           BR         NDA      ID1       ID2       ID3
-      3.33333333e-01    3     1000024        -2    1   # BR(~gl -> C1+ ubar d) 
-      3.33333333e-01    3    -1000024         2   -1   # BR(~gl -> C1- u dbar)
-      3.33333333e-01    3     1000023        -2    2   # BR(~gl -> N2  u ubar)                 
+      0.25              3     1000024        -2    1   # BR(~gl -> C1+ ubar d) 
+      0.25              3    -1000024         2   -1   # BR(~gl -> C1- u dbar)
+      0.5               3     1000023        -2    2   # BR(~gl -> N2  u ubar)                 
 
 DECAY   1000024     1.00000000E+00   # chargino1+ decays
 #           BR         NDA      ID1       ID2       ID3
