@@ -23,9 +23,11 @@ except:
     import subprocess as C
 
 class SmsDictWriter:
-    def __init__ ( self, database, drawFeyn, xkcd, results, addVer, private ):
+    def __init__ ( self, database, drawFeyn, xkcd, results, addVer, private,
+                   dryrun ):
         self.databasePath = database
         self.drawFeyn = drawFeyn
+        self.dryrun =  dryrun
         self.xkcd = xkcd
         self.database = Database ( database )
         self.ver=self.database.databaseVersion.replace(".","")
@@ -165,14 +167,19 @@ N.B.: Each "()" group corresponds to a branch
             if len(i)<len(c):
                 c=i
         print ( "[smsDictionary] shortest constraint for",txname,"is",c )
-        p=c.find("<<BR>>" )
+        p=constraint.find("<<BR>>" )
         p7=p+7
         if p == -1:
-            p=c.find("<BR>" )
+            p=constraint.find("<BR>" )
             p7 = p + 5
         if p>-1:
             c=c[:p]
-            fstate = eval ( constraint[p7:].replace("(","['").replace(")","']").replace(",","','") )
+            lastc = len(constraint)
+            if ";" in constraint:
+                lastc=constraint.find(";")
+            print ( "constraint %s " % constraint, "p7", p7, "lastc", lastc, "p", p )
+            print ( "fs",constraint[p7:lastc] )
+            fstate = eval ( constraint[p7:lastc].replace("(","['").replace(")","']").replace(",","','") )
         feynfile="../feyn/"+txname+".png"
         sfstate = str(fstate).replace(" ","").replace("'","")
         print ( "[smsDictionary.py] draw",feynfile,"from",c,"with",sfstate,"(full constraint reads",fcon,")" )
@@ -188,8 +195,9 @@ N.B.: Each "()" group corresponds to a branch
         cmd += " -f '%s'" % str(fstate).replace("[","(").replace("]",")").replace("'",'"')
         cmd += " -o %s" % feynfile
         print ( "[smsDictionary]", cmd )
-        a = C.getoutput ( cmd )
-        print ( "  `-",a )
+        if not self.dryrun:
+            a = C.getoutput ( cmd )
+            print ( "  `-",a )
 
     def writeTopo ( self, nr, txnames, constraint, first ):
         """ :param first: is this the first time I write a topo? """
@@ -263,6 +271,8 @@ if __name__ == '__main__':
                              action='store_true' )
     argparser.add_argument ( '-x', '--xkcd', help='draw xkcd style (implies -f)',
                              action='store_true' )
+    argparser.add_argument ( '-D', '--dry_run', help='dry run, dont actually draw',
+                             action='store_true' )
     argparser.add_argument ( '-c', '--copy', help='copy Feynman graphs to ../../smodels.github.io/feyn/straight/ (implies -f)',
                              action='store_true' )
     argparser.add_argument ( '-p', '--private', help='declare as private (add wiki acl line on top)', action='store_true' )
@@ -277,7 +287,7 @@ if __name__ == '__main__':
         args.feynman = True
     writer = SmsDictWriter( database=args.database, drawFeyn = args.feynman,
             xkcd = args.xkcd, results = args.results, addVer = args.add_version,
-            private = args.private  )
+            private = args.private, dryrun = args.dry_run  )
     print ( "[smsDictionary.py] Database", writer.database.databaseVersion )
     writer.run()
     if args.copy:
