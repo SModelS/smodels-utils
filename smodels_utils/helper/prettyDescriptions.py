@@ -599,8 +599,11 @@ def prettyAxes(txname,axes):
     niceAxes = []
     def roundme ( x ):
         if type(x) == float:
-            round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1))
-            r = round_to_n(x,2)
+            if x != 0.:
+              round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1))
+              r = round_to_n(x,2)
+            else:
+              r = x
             return r
         if type(x) == tuple:
             tmp = [ roundme(i) for i in x ]
