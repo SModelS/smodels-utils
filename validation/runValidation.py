@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                   pretty=False,generateData=True,limitPoints=None,extraInfo=False,
                   combine=False,pngAlso = False, weightedAgreementFactor = True,
-                  model = "mssm" ):
+                  model = "default" ):
     """
     Creates a validation plot and saves its output.
 
@@ -60,7 +60,6 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
 
     logger.info("Generating validation plot for " + expRes.getValuesFor('id')[0]
                 +", "+txnameStr+", "+axes)
-    model = "mssm"
     valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor,
                     limitPoints=limitPoints,extraInfo=extraInfo,combine=combine,
                     weightedAgreementFactor = weightedAgreementFactor,
@@ -155,7 +154,7 @@ def run ( expResList ):
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
         tarfiles=None,ncpus=-1,verbosity='error',pretty=False,generateData=True,
         limitPoints=None,extraInfo=False,combine=False,pngAlso=False,
-        weightedAgreementFactor=True, model = "mssm" ):
+        weightedAgreementFactor=True, model = "default" ):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -333,7 +332,7 @@ if __name__ == "__main__":
         extraInfo = parser.getboolean("options", "extraInfo")
     generateData = _doGenerate ( parser )
     weightedAgreementFactor = False
-    model = "mssm"
+    model = "default"
     if parser.has_section("options"):
         if parser.has_option("options","weightedAgreementFactor"):
             weightedAgreementFactor = parser.getboolean("options", "weightedAgreementFactor")

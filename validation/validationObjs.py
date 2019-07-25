@@ -46,7 +46,7 @@ class ValidationPlot():
 
     def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
                  kfactor = 1., limitPoints=None, extraInfo=False, combine=False,
-                 weightedAgreementFactor=True, model="mssm" ):
+                 weightedAgreementFactor=True, model="default" ):
         """
         :param weightedAgreementFactor: when computing the agreement factor,
             weight points by the area of their Voronoi cell
@@ -412,13 +412,16 @@ class ValidationPlot():
         combine = "False"
         if self.combine:
             combine = "True"
+        model = self.model
+        if model == "default":
+            model = "mssm"
         with open ( parFile, "w" ) as f:
             f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\ncombineSRs = %s\n" % combine )
             f.write("[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus)
             f.write("[database]\npath = %s\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (self.databasePath,expId,txname))
             f.write("[printer]\noutputType = python\n")
             f.write("[particles]\nmodel=share.models.%s\npromptWidth=1.1\n" % \
-                     self.model )
+                     model )
             f.write("[python-printer]\naddElementList = False\n")
             f.close()
         os.close(pf)
