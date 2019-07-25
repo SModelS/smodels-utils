@@ -23,7 +23,8 @@ logger = logging.getLogger(__name__)
 
 def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                   pretty=False,generateData=True,limitPoints=None,extraInfo=False,
-                  combine=False,pngAlso = False, weightedAgreementFactor = True ):
+                  combine=False,pngAlso = False, weightedAgreementFactor = True,
+                  model = "mssm" ):
     """
     Creates a validation plot and saves its output.
 
@@ -53,14 +54,17 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     :param pngAlso: save also pngs
     :param weightedAgreementFactor: when computing the agreement factor,
                                     weight points by the area of their Voronoi cell
+    :param model: the model to use (e.g. mssm, nmssm, idm)
     :return: True
     """
 
     logger.info("Generating validation plot for " + expRes.getValuesFor('id')[0]
                 +", "+txnameStr+", "+axes)
+    model = "mssm"
     valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor,
                     limitPoints=limitPoints,extraInfo=extraInfo,combine=combine,
-                    weightedAgreementFactor = weightedAgreementFactor )
+                    weightedAgreementFactor = weightedAgreementFactor,
+                    model = model )
     if generateData != False:
         valPlot.setSLHAdir(slhadir)
     valPlot.ncpus = ncpus
@@ -143,7 +147,7 @@ def run ( expResList ):
             for ax in axes:
                 validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,
                              generateData,limitPoints,extraInfo,combine,pngAlso,
-                             weightedAgreementFactor )
+                             weightedAgreementFactor, model )
             logger.info("------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
 
@@ -151,7 +155,7 @@ def run ( expResList ):
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
         tarfiles=None,ncpus=-1,verbosity='error',pretty=False,generateData=True,
         limitPoints=None,extraInfo=False,combine=False,pngAlso=False,
-        weightedAgreementFactor=True ):
+        weightedAgreementFactor=True, model = "mssm" ):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -180,6 +184,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
 
     :param combine: combine signal regions, or use best signal region
     :param pngAlso: save also pngs
+    :param model: the model to use (mssm, nmssm, idm, ... )
     """
 
     if not os.path.isdir(databasePath):
@@ -328,8 +333,12 @@ if __name__ == "__main__":
         extraInfo = parser.getboolean("options", "extraInfo")
     generateData = _doGenerate ( parser )
     weightedAgreementFactor = False
-    if parser.has_section("options") and parser.has_option("options","weightedAgreementFactor"):
-        weightedAgreementFactor = parser.getboolean("options", "weightedAgreementFactor")
+    model = "mssm"
+    if parser.has_section("options"):
+        if parser.has_option("options","weightedAgreementFactor"):
+            weightedAgreementFactor = parser.getboolean("options", "weightedAgreementFactor")
+        if parser.has_option("options","model" ):
+            model = parser.get("options","model")
 
 #    try:
 #        import ROOT
@@ -345,5 +354,5 @@ if __name__ == "__main__":
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
          tarfiles,ncpus,args.verbose.lower(),pretty,generateData,limitPoints,
-         extraInfo,combine,pngAlso,weightedAgreementFactor)
+         extraInfo,combine,pngAlso,weightedAgreementFactor, model)
 

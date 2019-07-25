@@ -46,13 +46,14 @@ class ValidationPlot():
 
     def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
                  kfactor = 1., limitPoints=None, extraInfo=False, combine=False,
-                 weightedAgreementFactor=True ):
+                 weightedAgreementFactor=True, model="mssm" ):
         """
         :param weightedAgreementFactor: when computing the agreement factor,
             weight points by the area of their Voronoi cell
         """
 
         self.expRes = copy.deepcopy(ExptRes)
+        self.model = model
         self.txName = TxNameStr
         self.axes = Axes.strip()
         self.niceAxes = self.getNiceAxes(Axes.strip())
@@ -416,7 +417,8 @@ class ValidationPlot():
             f.write("[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus)
             f.write("[database]\npath = %s\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (self.databasePath,expId,txname))
             f.write("[printer]\noutputType = python\n")
-            f.write("[particles]\nmodel=share.models.mssm\npromptWidth=1.1\n" )
+            f.write("[particles]\nmodel=share.models.%s\npromptWidth=1.1\n" % \
+                     self.model )
             f.write("[python-printer]\naddElementList = False\n")
             f.close()
         os.close(pf)
@@ -467,6 +469,7 @@ class ValidationPlot():
         #Get parameter file:
         parameterFile = self.getParameterFile(tempdir=outputDir)
         logger.debug("Parameter file: %s" %parameterFile)
+        print ("Parameter file: %s" %parameterFile)
 
         #Read and check parameter file, exit parameterFile does not exist
         parser = modelTester.getParameters(parameterFile)
