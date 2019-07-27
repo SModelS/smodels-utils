@@ -266,6 +266,7 @@ class MassPlane(object):
         :return: None if mass array do not met the conditions of one branch
         else: {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
+        # print ( "widthArray", widthArray )
 
         if len(massArray) != len(self.branches):
             logger.error("Mass array inconsistent with branches length")
@@ -514,12 +515,16 @@ class Axes(object):
             self._setXYFunction()
 
         massInput = {}
+        #print ( "X massArray", massArray )
+        #print ( "X widthArray", widthArray )
+        #print ( "X _massVars", self._massVars )
+        #print ( "X _widthVars", self._widthVars )
         for im,mass in enumerate(massArray):
             if type(mass)==tuple: ## the old way
                 massInput[ str(self._massVars[im]) ] = mass[0]
                 massInput[ str(self._widthVars[im]) ] = mass[1]
             else:
-                    massInput[ str(self._massVars[im]) ] = mass
+                massInput[ str(self._massVars[im]) ] = mass
         if widthArray is None:
             wv = str(self._widthVars[im])
             if not wv in massInput:
@@ -534,8 +539,10 @@ class Axes(object):
         xValues = {}
         #Get the function for each x,y,.. variable and compute its value
         for l in [ "A", "B" ]:
-            if not "Width%s" % l in massInput.keys(): ## FIXME why is this needed???
+            if "Mass%s" % l in massInput.keys() and \
+                not "Width%s" % l in massInput.keys(): ## FIXME why is this needed???
                 massInput["Width%s" % l ]=None
+        # print ( "massInput", massInput )
         for xv,xfunc in self._xyFunction.items():
             xValues[str(xv)] = xfunc(**massInput)
 

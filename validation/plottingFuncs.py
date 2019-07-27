@@ -317,11 +317,18 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
     tokens = slhafile.replace(".slha","").split("_" )
     masses = list ( map ( float, tokens[1:] ) )
     massPlane = MassPlane.fromString( vPlot.txName, vPlot.axes )
-    branchSplit = int ( len(masses)/2 )
+    nM = int ( len(masses)/2 ) ## number of masses per branch
     if len(masses) % 2 != 0:
         logger.warning("asymmetrical branch. Dont know how to handle" )
-    varsDict = massPlane.getXYValues([ masses[:branchSplit], masses[branchSplit:] ])
-    # print ( "from slha: %s, %s -> %s" % ( massPlane, masses, varsDict ) )
+    if masses[:nM] != masses[nM:]:
+        logger.warning("asymmetrical branch. Dont know how to handle" )
+    widths = None
+    if "(" in vPlot.axes and ")" in vPlot.axes: ## width dependent result
+        widths = masses[1::2] ## interpret every second number as a width
+        masses = masses[0::2]
+        nM=int(nM/2)
+    #print ( "massPlane", massPlane, "txname", vPlot.txName, "axes", vPlot.axes, "masses", masses, "tokens", tokens, "m1", masses, "m2", masses[nM:], "nM", nM, "widths", widths )
+    varsDict = massPlane.getXYValues( [ masses[:nM], masses[nM:] ], [ widths[:nM], widths[nM:] ] ) 
     ## FIXME take into account axis
     return varsDict
 
