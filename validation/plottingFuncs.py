@@ -327,8 +327,9 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
         widths = masses[1::2] ## interpret every second number as a width
         masses = masses[0::2]
         nM=int(nM/2)
+        widths = [ widths[:nM], widths[nM:] ]
     #print ( "massPlane", massPlane, "txname", vPlot.txName, "axes", vPlot.axes, "masses", masses, "tokens", tokens, "m1", masses, "m2", masses[nM:], "nM", nM, "widths", widths )
-    varsDict = massPlane.getXYValues( [ masses[:nM], masses[nM:] ], [ widths[:nM], widths[nM:] ] ) 
+    varsDict = massPlane.getXYValues( [ masses[:nM], masses[nM:] ], widths ) 
     ## FIXME take into account axis
     return varsDict
 
@@ -344,6 +345,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
                                     the area of their Voronoi cell
     :return: TCanvas object containing the plot
     """
+    # validationPlot.axes="[[(x,y)], [(x,y)]]"
 
     # Check if data has been defined:
     xlabel, ylabel = 'x','y'
@@ -371,9 +373,15 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     for pt in validationPlot.data:
         if "error" in pt.keys():
             vD = getXYFromSLHAFile ( pt["slhafile"], validationPlot )
+            # print ( "vD", vD, pt["slhafile"], validationPlot.axes )
             if vD != None:
                 # print ( "adding no-result point", noresult.GetN(), vD )
-                x_, y_ = copy.deepcopy ( vD["x"] ), copy.deepcopy ( vD["y"] )
+                x_, y_ = copy.deepcopy ( vD["x"] ), None
+                if "y" in vD.keys():
+                    y_ = copy.deepcopy ( vD["y"] )
+                if y_ is None:
+                    logger.error ( "the data is 1d. FIXME cannot handle" )
+                    y_ = 0.
                 noresult.SetPoint(noresult.GetN(), x_, y_ )
             nErrors += 1
             continue

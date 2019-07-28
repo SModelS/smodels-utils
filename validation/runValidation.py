@@ -19,8 +19,6 @@ except ImportError as e:
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
 
-
-
 def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                   pretty=False,generateData=True,limitPoints=None,extraInfo=False,
                   combine=False,pngAlso = False, weightedAgreementFactor = True,
@@ -31,7 +29,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     :param expRes: a ExpResult object containing the result to be validated
     :param txnameStr: String describing the txname (e.g. T2tt)
     :param axes: the axes string describing the plane to be validated
-     (i.e.  2*Eq(mother,x),Eq(lsp,y))
+                 (e.g.  2*[[x,y]])
     :param slhadir: folder containing the SLHA files corresponding to txname
     or the .tar.gz file containing the SLHA files.
     :param kfactor: optional global k-factor value to re-scale
@@ -99,8 +97,11 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
 
     return True
 
-def run ( expResList ):
-    #Loop over experimental results and validate plots
+def run ( expResList, axis ):
+    """
+    Loop over experimental results and validate plots
+    :param axis: Plot only for these axes. If none, get axes from sms.root
+    """
     for expRes in expResList:
         expt0 = time.time()
         logger.info("--- \033[32m validating  %s \033[0m" %expRes.globalInfo.id)
@@ -143,7 +144,15 @@ def run ( expResList ):
                 axes = [txname.axes]
             else:
                 axes = txname.axes     
-            for ax in axes:
+            if axis is None:
+                for ax in axes:
+                    validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,
+                                 generateData,limitPoints,extraInfo,combine,pngAlso,
+                                 weightedAgreementFactor, model )
+            else:
+                from sympy import var
+                x,y,z = var("x y z")
+                ax = str(eval(axis)) ## standardize the string
                 validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,
                              generateData,limitPoints,extraInfo,combine,pngAlso,
                              weightedAgreementFactor, model )
@@ -154,7 +163,7 @@ def run ( expResList ):
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
         tarfiles=None,ncpus=-1,verbosity='error',pretty=False,generateData=True,
         limitPoints=None,extraInfo=False,combine=False,pngAlso=False,
-        weightedAgreementFactor=True, model = "default" ):
+        weightedAgreementFactor=True, model = "default", axis=None ):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -184,6 +193,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param combine: combine signal regions, or use best signal region
     :param pngAlso: save also pngs
     :param model: the model to use (mssm, nmssm, idm, ... )
+    :param axis: specify the axes, if None get them from sms.root
     """
 
     if not os.path.isdir(databasePath):
@@ -195,7 +205,6 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         logger.error("Error loading database at %s" %databasePath)
         logger.error("Error: %s" % str(e) )
         sys.exit()
-
 
     logger.info('-- Running validation...')
 
@@ -211,7 +220,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     # logger.info ( "ncpus=%d, n(expRes)=%d, genData=%d" % ( ncpus, len(expResList), generateData ) )
 
     tval0 = time.time()
-    run ( expResList )
+    run ( expResList, axis )
     logger.info("\n\n-- Finished validation in %.1f min." %((time.time()-tval0)/60.))
 
 def _doGenerate ( parser ):
@@ -307,37 +316,39 @@ if __name__ == "__main__":
         else:
             tarfiles = tarfiles.split(',')
 
-    ncpus = -1
-    if parser.has_section("options") and parser.has_option("options","ncpus"):
-        ncpus = parser.getint("options","ncpus")
-    pngAlso = False
-    if parser.has_section("options") and parser.has_option("options","pngPlots"):
-        pngAlso = parser.getboolean("options", "pngPlots" )
-
-    pretty = False
-    if parser.has_section("options") and parser.has_option("options","prettyPlots"):
-        spretty = parser.get("options", "prettyPlots" ).lower()
-        if spretty in [ "true", "yes", "1" ]:
-            pretty = True
-        if spretty in [ "*", "all", "both" ]:
-            pretty = "both"
-        if pretty == False and spretty not in [ "false", "0", "no" ]:
-            logger.error ( "prettyPlots %s unknown" % spretty )
-            sys.exit()
-    limitPoints=None
-    if parser.has_section("options") and parser.has_option("options","limitPoints"):
-        limitPoints = parser.getint("options","limitPoints")
-    extraInfo = False
-    if parser.has_section("options") and parser.has_option("options","extraInfo"):
-        extraInfo = parser.getboolean("options", "extraInfo")
-    generateData = _doGenerate ( parser )
-    weightedAgreementFactor = False
-    model = "default"
+    ncpus = -1 ## number of processes, if negative, subtract that number from number of cores on the machine minus one.
+    pngAlso = False ## only pdf plots?
+    axis = None ## the axes to plot. If not given, take from sms.root
+    pretty = False ## only pretty plots, only ugly plots, or both
+    limitPoints=None ## limit the number of points to run on
+    extraInfo = False ## add extra info to the plot?
+    weightedAgreementFactor = False ## do we weight the points for the agreement factor?
+    model = "default" ## which model to use (default = mssm)
     if parser.has_section("options"):
+        if parser.has_option("options","ncpus"):
+            ncpus = parser.getint("options","ncpus")
+        if parser.has_option("options","pngPlots"):
+            pngAlso = parser.getboolean("options", "pngPlots" )
+        if parser.has_option("options","axis"):
+            axis = parser.get("options","axis" )
+        if parser.has_option("options","prettyPlots"):
+            spretty = parser.get("options", "prettyPlots" ).lower()
+            if spretty in [ "true", "yes", "1" ]:
+                pretty = True
+            if spretty in [ "*", "all", "both" ]:
+                pretty = "both"
+            if pretty == False and spretty not in [ "false", "0", "no" ]:
+                logger.error ( "prettyPlots %s unknown" % spretty )
+                sys.exit()
+        if parser.has_option("options","limitPoints"):
+            limitPoints = parser.getint("options","limitPoints")
+        if parser.has_option("options","extraInfo"):
+            extraInfo = parser.getboolean("options", "extraInfo")
         if parser.has_option("options","weightedAgreementFactor"):
             weightedAgreementFactor = parser.getboolean("options", "weightedAgreementFactor")
         if parser.has_option("options","model" ):
             model = parser.get("options","model")
+    generateData = _doGenerate ( parser )
 
 #    try:
 #        import ROOT
@@ -353,5 +364,4 @@ if __name__ == "__main__":
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
          tarfiles,ncpus,args.verbose.lower(),pretty,generateData,limitPoints,
-         extraInfo,combine,pngAlso,weightedAgreementFactor, model)
-
+         extraInfo,combine,pngAlso,weightedAgreementFactor, model, axis )

@@ -515,10 +515,16 @@ class Axes(object):
             self._setXYFunction()
 
         massInput = {}
-        #print ( "X massArray", massArray )
-        #print ( "X widthArray", widthArray )
-        #print ( "X _massVars", self._massVars )
-        #print ( "X _widthVars", self._widthVars )
+        # print ( "X massArray", massArray )
+        # print ( "X widthArray", widthArray )
+        # print ( "X _massVars", self._massVars )
+        # print ( "X _widthVars", self._widthVars )
+        if len(massArray)>len(self._massVars) and len(self._widthVars)>0 and \
+            len(massArray) == len(self._massVars) + len(self._widthVars) and \
+            widthArray == None:
+                ## it seems the widths ended up in the mass array
+            widthArray = massArray[1::2]
+            massArray = massArray[0::2]
         for im,mass in enumerate(massArray):
             if type(mass)==tuple: ## the old way
                 massInput[ str(self._massVars[im]) ] = mass[0]
