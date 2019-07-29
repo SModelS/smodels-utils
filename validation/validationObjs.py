@@ -414,7 +414,11 @@ class ValidationPlot():
             combine = "True"
         model = self.model
         if model == "default":
+            ## FIXME here we could define different defaults for eg T5Gamma
             model = "mssm"
+            if txname in [ "T5Gamma", "T5ZGamma", "T5ZZG", "T3Gamma", "T3ZGamma", "T4Gamma", "T6Gamma" ]:
+                model = "nmssm"
+                logger.warning ( "For %s we use the %s model, not the mssm." % ( txname, model ) )
         with open ( parFile, "w" ) as f:
             f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\ncombineSRs = %s\n" % combine )
             f.write("[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus)
