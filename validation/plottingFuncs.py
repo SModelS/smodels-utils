@@ -315,13 +315,17 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
     """ get coordinates from the slhafile name, given
         a validationPlot object vPlot """
     tokens = slhafile.replace(".slha","").split("_" )
+    if vPlot.txName in [ "THSCPM1b" ]:
+        ## work around an issue with THSCPM1b, they only
+        ## give one branch in the slha file names
+        tokens += tokens[-2:]
     masses = list ( map ( float, tokens[1:] ) )
     massPlane = MassPlane.fromString( vPlot.txName, vPlot.axes )
     nM = int ( len(masses)/2 ) ## number of masses per branch
     if len(masses) % 2 != 0:
         logger.warning("asymmetrical branch. Dont know how to handle" )
     if masses[:nM] != masses[nM:]:
-        logger.warning("asymmetrical branch. Dont know how to handle" )
+        logger.warning("asymmetrical branch %s != %s. Dont know how to handle" % ( masses[:nM], masses[nM:] ) )
     widths = None
     if "(" in vPlot.axes and ")" in vPlot.axes: ## width dependent result
         widths = masses[1::2] ## interpret every second number as a width
@@ -697,6 +701,9 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         logger.debug("Official curves have length %d" % len (official) )
 
     if logY:
+        if official is None:
+            logger.errorr("could not find any exclusion lines for %s" % validationPlot.txName )
+            official = []
         for contour in official:
             x, y = Double(), Double()
             n = contour.GetN()
