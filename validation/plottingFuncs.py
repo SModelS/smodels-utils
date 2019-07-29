@@ -702,7 +702,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
 
     if logY:
         if official is None:
-            logger.errorr("could not find any exclusion lines for %s" % validationPlot.txName )
+            logger.error("could not find any exclusion lines for %s" % validationPlot.txName )
             official = []
         for contour in official:
             x, y = Double(), Double()
