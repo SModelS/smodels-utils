@@ -432,10 +432,13 @@ class Axes(object):
         massArray = [mfunc(**xValues) for mfunc in self._massFunctions]
         widthArray = [mfunc(**xValues) for mfunc in self._widthFunctions]
         combinedArray = []
+        # print ( "massArray", massArray, "widthArray", widthArray, "widthIndices", self._widthIndices, "xmass", xMass )
+        widthCtr=0
         for i,m in enumerate(massArray):
             tmp = m
             if i in self._widthIndices:
-                tmp = (m,widthArray[i])
+                tmp = (m,widthArray[widthCtr])
+                widthCtr+=1
             combinedArray.append ( tmp )
         return combinedArray
 
