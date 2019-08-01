@@ -622,7 +622,7 @@ class WildAxes(Axes):
         return cls([],[])
 
 
-    def getXYValues(self,massArray):
+    def getXYValues(self,massArray, width=None):
 
         return None
 

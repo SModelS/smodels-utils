@@ -315,7 +315,7 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
     """ get coordinates from the slhafile name, given
         a validationPlot object vPlot """
     tokens = slhafile.replace(".slha","").split("_" )
-    if vPlot.txName in [ "THSCPM1b" ]:
+    if vPlot.txName in [ "THSCPM1b", "THSCPM2b" ]:
         ## work around an issue with THSCPM1b, they only
         ## give one branch in the slha file names
         tokens += tokens[-2:]
@@ -332,8 +332,9 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
         masses = masses[0::2]
         nM=int(nM/2)
         widths = [ widths[:nM], widths[nM:] ]
-    #print ( "massPlane", massPlane, "txname", vPlot.txName, "axes", vPlot.axes, "masses", masses, "tokens", tokens, "m1", masses, "m2", masses[nM:], "nM", nM, "widths", widths )
+    # print ( "massPlane", massPlane, "txname", vPlot.txName, "axes", vPlot.axes, "masses", masses, "tokens", tokens, "m1", masses, "m2", masses[nM:], "nM", nM, "widths", widths )
     varsDict = massPlane.getXYValues( [ masses[:nM], masses[nM:] ], widths ) 
+    # print ( "varsDict", varsDict )
     ## FIXME take into account axis
     return varsDict
 
@@ -375,6 +376,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     nErrors = 0
     # Get excluded and allowed points:
     for pt in validationPlot.data:
+        print ( "pt", pt )
         if "error" in pt.keys():
             vD = getXYFromSLHAFile ( pt["slhafile"], validationPlot )
             # print ( "vD", vD, pt["slhafile"], validationPlot.axes )
@@ -403,6 +405,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
             logger.warning ( "No upper limit for %s" % xvals )
             continue
         r = pt['signal']/pt ['UL']
+        print ( "x,y,r",r )
         if isinstance(xvals,dict):
             if len(xvals) == 1:
                 x,y = xvals['x'],r
