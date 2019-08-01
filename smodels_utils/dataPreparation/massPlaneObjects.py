@@ -518,10 +518,10 @@ class Axes(object):
             self._setXYFunction()
 
         massInput = {}
-        # print ( "X massArray", massArray )
-        # print ( "X widthArray", widthArray )
-        # print ( "X _massVars", self._massVars )
-        # print ( "X _widthVars", self._widthVars )
+        #print ( "X massArray", massArray )
+        #print ( "X widthArray", widthArray )
+        #print ( "X _massVars", self._massVars )
+        #print ( "X _widthVars", self._widthVars )
         if len(massArray)>len(self._massVars) and len(self._widthVars)>0 and \
             len(massArray) == len(self._massVars) + len(self._widthVars) and \
             widthArray == None:
@@ -551,6 +551,7 @@ class Axes(object):
             if "Mass%s" % l in massInput.keys() and \
                 not "Width%s" % l in massInput.keys(): ## FIXME why is this needed???
                 massInput["Width%s" % l ]=None
+        # print ( "massInput", massInput )
         # print ( "massInput", massInput )
         for xv,xfunc in self._xyFunction.items():
             xValues[str(xv)] = xfunc(**massInput)

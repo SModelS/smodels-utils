@@ -320,6 +320,7 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
         ## give one branch in the slha file names
         tokens += tokens[-2:]
     masses = list ( map ( float, tokens[1:] ) )
+    # print ( "masses after listifying", masses )
     massPlane = MassPlane.fromString( vPlot.txName, vPlot.axes )
     nM = int ( len(masses)/2 ) ## number of masses per branch
     if len(masses) % 2 != 0:
@@ -328,13 +329,37 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
         logger.warning("asymmetrical branch %s != %s. Dont know how to handle" % ( masses[:nM], masses[nM:] ) )
     widths = None
     if "(" in vPlot.axes and ")" in vPlot.axes: ## width dependent result
-        widths = masses[1::2] ## interpret every second number as a width
-        masses = masses[0::2]
-        nM=int(nM/2)
-        widths = [ widths[:nM], widths[nM:] ]
-    # print ( "massPlane", massPlane, "txname", vPlot.txName, "axes", vPlot.axes, "masses", masses, "tokens", tokens, "m1", masses, "m2", masses[nM:], "nM", nM, "widths", widths )
-    varsDict = massPlane.getXYValues( [ masses[:nM], masses[nM:] ], widths ) 
-    # print ( "varsDict", varsDict )
+        from sympy import var
+        x__,y__,z__ = var( "x y z" )
+        ax = eval ( vPlot.axes )
+        widths = []
+        widthsbr, massbr = [], []
+        tmpmasses = []
+        # print ( "ax=", ax )
+        ctr = 0
+        for br in ax:
+            for v in br:
+                if type(v) == tuple:
+                    massbr.append ( masses[ctr] )
+                    ctr += 1
+                    widthsbr.append ( masses[ctr] )
+                else:
+                    massbr.append ( masses[ctr] )
+                ctr += 1
+            widths.append ( widthsbr )
+            widthsbr = []
+            tmpmasses.append ( massbr )
+            massbr = []
+        masses = tmpmasses
+        #widths = masses[1::2] ## interpret every second number as a width
+        #masses = masses[0::2]
+        #nM=int(nM/2)
+        #widths = [ widths[:nM], widths[nM:] ]
+    else:
+        masses = [ masses[:nM], masses[nM:] ]
+    # print ( "[plottingFuncs] massPlane", massPlane, "txname", vPlot.txName, "axes", vPlot.axes, "masses", masses, "tokens", tokens, "m1", masses, "m2", masses[nM:], "nM", nM, "widths", widths )
+    varsDict = massPlane.getXYValues( masses, widths ) 
+    # print ( "[plottingFuncs] varsDict", varsDict )
     ## FIXME take into account axis
     return varsDict
 
@@ -376,7 +401,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     nErrors = 0
     # Get excluded and allowed points:
     for pt in validationPlot.data:
-        print ( "pt", pt )
+        # print ( "pt", pt )
         if "error" in pt.keys():
             vD = getXYFromSLHAFile ( pt["slhafile"], validationPlot )
             # print ( "vD", vD, pt["slhafile"], validationPlot.axes )
@@ -405,7 +430,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
             logger.warning ( "No upper limit for %s" % xvals )
             continue
         r = pt['signal']/pt ['UL']
-        print ( "x,y,r",r )
+        # print ( "x,y,r",r )
         if isinstance(xvals,dict):
             if len(xvals) == 1:
                 x,y = xvals['x'],r

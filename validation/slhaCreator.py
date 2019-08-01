@@ -87,7 +87,7 @@ class TemplateFile(object):
     def findWidthTags ( self, filename ):
         """ in a template file <template>, search for "width tags",
         e.g. W0, W1 """
-        print ( "find width tags" )
+        # print ( "find width tags" )
         with open(filename) as f:
             lines = f.readlines()
             for line in lines:
@@ -99,7 +99,7 @@ class TemplateFile(object):
                 if not "w" in line.lower():
                     continue
                 tokens = line.split()
-                print ( tokens )
+                # print ( tokens )
                 for t in tokens:
                     if t.startswith("W") or t.startswith("w"):
                         self.tags.append(t)
@@ -121,23 +121,24 @@ class TemplateFile(object):
 
         masses = self.massPlane.getParticleMasses(**ptDict)
         massDict = {}
-        print ( "masses=", masses )
+        # print ( "masses=", masses )
         for ibr,br in enumerate(masses):
             massTag, widthTag = 'M', 'W'
             if ibr == 1: massTag, widthTag = 'm','W'
             for im,m in enumerate(br):
-                print ( "[slhaCreator] m", m, type(m), "tag", widthTag, "im", im )
+                # print ( "[slhaCreator] m", m, type(m), "tag", widthTag, "im", im )
                 if type(m)==tuple:
                     massDict[massTag+str(im)] = m[0]
                     massDict[widthTag+str(im)] = m[1] ## coordinateToWidth(m[1])
                 else:
                     massDict[massTag+str(im)] = m
 
+        # print ( "massDict", massDict )
         #First check if all the axes labels defined in the template appears in massDict
         if not set(self.tags).issubset(set(massDict.keys())):
-            logger.error("Labels do not match the ones defined in %s. keys=%s. tags=%s." % \
+            logger.info("Labels do not match the ones defined in %s. keys=%s. tags=%s (might imply only that we labels that wont get used)." % \
                 ( self.path, str(set(massDict.keys())), str(set(self.tags))) )
-            sys.exit()
+            # sys.exit()
         #Replace the axes labels by their mass values:
         ftemplate = open(self.path,'r')
         fdata = ftemplate.read()
@@ -286,18 +287,54 @@ class TemplateFile(object):
 def createMassRanges ( args ):
     """ from the commandline arguments, create the mass ranges """
     masses=[]
-    for mother in numpy.arange(args.xmin,args.xmax+1,args.dx):
+    if args.zmin is None:
+        ## only x and y are given
+        for x in numpy.arange(args.xmin,args.xmax+1,args.dx):
+            if args.logy:
+                if args.dy < 1.:
+                    logger.error ( "y axis is log scale, but dy < 1. Did you mean 1/dy?" )
+                    sys.exit()
+                y = args.ymin
+                while y < args.ymax:
+                    masses.append ( { "x": x, "y": y } )
+                    y = y * args.dy
+            else:
+                for y in numpy.arange(args.ymin,args.ymax+1,args.dy):
+                    masses.append ( { "x": x, "y": y } )
+        return masses
+    # x,y and z are given
+    for x in numpy.arange(args.xmin,args.xmax+1,args.dx):
         if args.logy:
             if args.dy < 1.:
                 logger.error ( "y axis is log scale, but dy < 1. Did you mean 1/dy?" )
                 sys.exit()
-            lsp = args.ymin
-            while lsp < args.ymax:
-                masses.append ( { "x": mother, "y": lsp } )
-                lsp = lsp * args.dy
-        else:
-            for lsp in numpy.arange(args.ymin,args.ymax+1,args.dy):
-                masses.append ( { "x": mother, "y": lsp } )
+            y = args.ymin
+            while y < args.ymax:
+                if args.logz:
+                    if args.dz < 1.:
+                        logger.error ( "z axis is log scale, but dz < 1. Did you mean 1/dz?" )
+                        sys.exit()
+                    z = args.zmin
+                    while z < args.zmax:
+                        masses.append ( { "x": x, "y": y, "z": z } )
+                        z = z * args.dz
+                else:
+                    for z in numpy.arange(args.zmin,args.zmax+1,args.dz):
+                        masses.append ( { "x": x, "y": y, "z": z } )
+                y = y * args.dy
+        else: ## y is not log scale, so y should be below x, we assume
+            for y in numpy.arange(args.ymin,min(args.ymax+1.,x),args.dy):
+                if args.logz:
+                    if args.dz < 1.:
+                        logger.error ( "z axis is log scale, but dz < 1. Did you mean 1/dz?" )
+                        sys.exit()
+                    z = args.zmin
+                    while z < args.zmax:
+                        masses.append ( { "x": x, "y": y, "z": z } )
+                        z = z * args.dz
+                else:
+                    for z in numpy.arange(args.zmin,args.zmax+1,args.dz):
+                        masses.append ( { "x": x, "y": y, "z": z } )
     return masses
 
 if __name__ == "__main__":
