@@ -74,12 +74,35 @@ class TemplateFile(object):
             if isinstance(mass,str):
                 self.tags.append(mass)
                 if mass == 'M0' or mass == 'm0': self.motherPDGs.append(pdg)
+        ## the tags for the widths are harder to get
+        self.findWidthTags( template )
+
 
         if self.motherPDGs:
             self.pythiaCard = getPythiaCardFor(self.motherPDGs,pythiaVersion=pythiaVersion)
         #Define original plot
         self.massPlane = MassPlane.fromString(None,self.axes)
 
+
+    def findWidthTags ( self, filename ):
+        """ in a template file <template>, search for "width tags",
+        e.g. W0, W1 """
+        print ( "find width tags" )
+        with open(filename) as f:
+            lines = f.readlines()
+            for line in lines:
+                p = line.find("#")
+                if p > -1:
+                    line = line[:p]
+                if not "decay" in line.lower():
+                    continue
+                if not "w" in line.lower():
+                    continue
+                tokens = line.split()
+                print ( tokens )
+                for t in tokens:
+                    if t.startswith("W") or t.startswith("w"):
+                        self.tags.append(t)
 
     def createFileFor( self,ptDict,slhaname=None,computeXsecs=False,
                        massesInFileName = False, nevents = 10000 ):
@@ -98,10 +121,12 @@ class TemplateFile(object):
 
         masses = self.massPlane.getParticleMasses(**ptDict)
         massDict = {}
+        print ( "masses=", masses )
         for ibr,br in enumerate(masses):
             massTag, widthTag = 'M', 'W'
             if ibr == 1: massTag, widthTag = 'm','W'
             for im,m in enumerate(br):
+                print ( "[slhaCreator] m", m, type(m), "tag", widthTag, "im", im )
                 if type(m)==tuple:
                     massDict[massTag+str(im)] = m[0]
                     massDict[widthTag+str(im)] = m[1] ## coordinateToWidth(m[1])
@@ -258,6 +283,23 @@ class TemplateFile(object):
 
         return True
 
+def createMassRanges ( args ):
+    """ from the commandline arguments, create the mass ranges """
+    masses=[]
+    for mother in numpy.arange(args.xmin,args.xmax+1,args.dx):
+        if args.logy:
+            if args.dy < 1.:
+                logger.error ( "y axis is log scale, but dy < 1. Did you mean 1/dy?" )
+                sys.exit()
+            lsp = args.ymin
+            while lsp < args.ymax:
+                masses.append ( { "x": mother, "y": lsp } )
+                lsp = lsp * args.dy
+        else:
+            for lsp in numpy.arange(args.ymin,args.ymax+1,args.dy):
+                masses.append ( { "x": mother, "y": lsp } )
+    return masses
+
 if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(description="creates slha files from template file in given mass ranges")
@@ -279,6 +321,14 @@ if __name__ == "__main__":
         type=float, default=25. )
     argparser.add_argument( '-ly', '--logy', action='store_true',
         help="logarithmic scale for y axis (in which case dy is multiplicative)" )
+    argparser.add_argument ( '--zmin', nargs='?', help='minimum value for z [None]',
+        type=float, default=None )
+    argparser.add_argument ( '--zmax', nargs='?', help='maximum value for z [None]',
+        type=float, default=None )
+    argparser.add_argument ( '--dz', nargs='?', help='binning in z [50]',
+        type=float, default=50. )
+    argparser.add_argument( '-lz', '--logz', action='store_true',
+        help="logarithmic scale for z axis (in which case dz is multiplicative)" )
     argparser.add_argument ( '-n', '--nevents', help='number of events to generate [10000]',
         type=int, default=10000 )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?', help='number of processes, -1 means one per CPU [-1].',
@@ -310,26 +360,23 @@ if __name__ == "__main__":
     tempf.nprocesses = args.nprocesses
     if args.nprocesses < 0:
         tempf.nprocesses = runtime.nCPUs() + args.nprocesses + 1
-    masses=[]
+    if args.xmax < args.xmin:
+        logger.error ( "xmax < xmin" )
+        sys.exit()
     if args.ymax < args.ymin:
         logger.error ( "ymax < ymin" )
         sys.exit()
-    for mother in numpy.arange(args.xmin,args.xmax+1,args.dx):
-        if args.logy:
-            if args.dy < 1.:
-                logger.error ( "y axis is log scale, but dy < 1. Did you mean 1/dy?" )
-                sys.exit()
-            lsp = args.ymin
-            while lsp < args.ymax:
-                masses.append ( { "x": mother, "y": lsp } )
-                lsp = lsp * args.dy
-        else:
-            for lsp in numpy.arange(args.ymin,args.ymax+1,args.dy):
-                masses.append ( { "x": mother, "y": lsp } )
+    if args.zmin is not None and args.zmax < args.zmin:
+        logger.error ( "zmax < zmin" )
+        sys.exit()
+    masses = createMassRanges ( args )
     if args.dry_run:
         print ( "Dry-run: would create the following points:" )
         for pt in masses:
-            print ( " * x: %s, y: %s" % (pt["x"], pt["y"]) )
+            if "z" in pt:
+                print ( " * x: %s, y: %s, z: %s" % (pt["x"], pt["y"], pt["z"]) )
+            else:
+                print ( " * x: %s, y: %s" % (pt["x"], pt["y"]) )
         sys.exit()
     slhafiles = tempf.createFilesFor( masses, computeXsecs=True, massesInFileName=True,
                                       nevents=args.nevents )
