@@ -16,7 +16,7 @@ def discussBest ( model, detailed ):
     if detailed:
         print ( "Solution was found in step #%d" % model.step )
         for i in model.bestCombo:
-            print ( "  prediction in best combo: %s" % i.analysisId() )
+            print ( "  prediction in best combo: %s (%s)" % ( i.analysisId(), i.dataType() ) )
 
 def main():
     import argparse
