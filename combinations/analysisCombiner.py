@@ -159,4 +159,13 @@ if __name__ == "__main__":
     from smodels.experiment.databaseObj import Database
     db = Database ( "official" )
     results = db.getExpResults()
-    print ( "results", len(results) )
+    strategy="aggressive"
+    ctr,combinable=0,0
+    for x,e in enumerate(results):
+        for y,f in enumerate(results):
+            if y <= x:
+                continue
+            ctr += 1
+            isUn = canCombine ( e.globalInfo, f.globalInfo, strategy )
+            combinable+=isUn
+    print ( "Can combine %d/%d results" % ( combinable, ctr ) )
