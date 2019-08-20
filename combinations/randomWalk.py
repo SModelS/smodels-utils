@@ -412,6 +412,8 @@ if __name__ == "__main__":
             type=int, default=1 )
     argparser.add_argument ( '-N', '--no_regressor',
             help='do not use the NN regressor', action='store_true' )
+    argparser.add_argument ( '-e', '--expected',
+            help='run only with expected values', action='store_true' )
     argparser.add_argument ( '-c', '--cont',
             help='continue with saved states [""]',
             type=str, default="" )
