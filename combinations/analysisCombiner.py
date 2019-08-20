@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """ Code that decides which analyses can be combined and which cannot """
 
 from smodels.theory.theoryPrediction import TheoryPrediction
@@ -152,3 +154,9 @@ def canCombineConservative ( globA, globB ):
     if getExperimentName(globA) != getExperimentName(globB):
         return True
     return False
+
+if __name__ == "__main__":
+    from smodels.experiment.databaseObj import Database
+    db = Database ( "official" )
+    results = db.getExpResults()
+    print ( "results", len(results) )
