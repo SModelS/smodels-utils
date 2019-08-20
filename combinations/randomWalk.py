@@ -355,14 +355,14 @@ class RandomWalker:
             if self.model.oldZ() > 0. and self.model.Z < 0.7 * self.model.oldZ():
             # if self.oldmodel.Z > 0. and self.model.Z < 0.7 * self.oldmodel.Z:
                 ## no big steps taken here.
-                self.highlight ( "info", "Z=%.2f -> 0. Revert." % self.model.oldZ() )
+                self.highlight ( "info", "Z=%.2f -> %.2f. Revert." % ( self.model.oldZ(), self.model.Z ) )
                 self.model.restore()
                 if hasattr ( self, "oldgrad" ) and self.regressor != None:
                     self.regressor.grad = self.oldgrad
                 continue
 
             if ratio >= 1.:
-                self.highlight ( "info", "Z: %.3f -> %.3f: take the step" % ( self.model.oldZ(), self.model.oldZ() ) )
+                self.highlight ( "info", "Z: %.3f -> %.3f: take the step" % ( self.model.oldZ(), self.model.Z ) )
                 if self.model.Z < 0.7 * self.model.oldZ():
                     self.pprint ( " `- weird, though, Z decreases. Please check." )
                     sys.exit()
