@@ -143,13 +143,15 @@ class Combiner:
     def getComboDescription ( self, combination ):
         return ",".join( [ x.analysisId() for x in combination ] )
 
-    def getSignificance ( self, combo ):
-        """ obtain the significance of this combo """
+    def getSignificance ( self, combo, expected=False ):
+        """ obtain the significance of this combo 
+        :param expected: get the expected significance, not observed
+        """
         muhat = self.findMuHat ( combo )
         if muhat == None:
             return 0.
-        LH0 = numpy.prod ( [ c.getLikelihood(0.,expected=False) for c in combo ] )
-        LH1 = numpy.prod ( [ c.getLikelihood(muhat,expected=False) for c in combo ] )
+        LH0 = numpy.prod ( [ c.getLikelihood(0.,expected=expected) for c in combo ] )
+        LH1 = numpy.prod ( [ c.getLikelihood(muhat,expected=expected) for c in combo ] )
         if LH0 <= 0.:
             LH0 = 1e-80
         if LH1 <= 0.:
@@ -164,8 +166,10 @@ class Combiner:
         ## FIXME compute significance from chi2
         return Z
 
-    def _findLargestZ ( self, combinations ):
-        """ find the combo with the most significant deviation """
+    def _findLargestZ ( self, combinations, expected=False ):
+        """ find the combo with the most significant deviation 
+        :param expected: find the combo with the most significant expected deviation
+        """
         combinations.sort ( key=len, reverse=True ) ## sort them first be length
         # compute CLsb for all combinations 
         highestZ,highest=0.,""
@@ -175,7 +179,7 @@ class Combiner:
             if self.hasAlreadyDone ( c, alreadyDone ):
                 # self.pprint ( "%s is subset of bigger combo. skip." % getLetterCode(c) )
                 continue
-            Z = self.getSignificance ( c )
+            Z = self.getSignificance ( c, expected=expected )
             if Z == None:
                 continue
             # self.pprint ( "[combine] significance for %s is %.2f" % ( self.getLetterCode(c), Z ) )
@@ -240,9 +244,10 @@ class Combiner:
             ret += self.letters[c]
         return ret
 
-    def findHighestSignificance ( self, predictions, strategy ):
+    def findHighestSignificance ( self, predictions, strategy, expected=False ):
         """ for the given list of predictions and employing the given strategy,
         find the combo with highest significance 
+        :param expected: find the highest expected significance, not observed
         :returns: best combination, significance, likelihood equivalent
         """
         self.letters = self.getLetters ( predictions )
@@ -251,7 +256,7 @@ class Combiner:
         ## optionally, add individual predictions
         combinables = singlepreds + combinables
         self.discussCombinations ( combinables )
-        bestCombo,Z = self._findLargestZ ( combinables )
+        bestCombo,Z = self._findLargestZ ( combinables, expected=expected )
         ## compute a likelihood equivalent for Z
         llhd = stats.norm.pdf(Z)
         return bestCombo,Z,llhd

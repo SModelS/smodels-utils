@@ -150,7 +150,8 @@ class Model:
                                                llhdonly=True )
         combiner = Combiner( self.walkerid )
         self.log ( "now find highest significance for %d predictions" % len(predictions) )
-        bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, strategy )
+        ## find highest observed significance
+        bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, strategy, expected=False )
         self.bestCombo = combiner.removeDataFromBestCombo ( bestCombo )
         self.Z = Z
         self.llhd = llhd
