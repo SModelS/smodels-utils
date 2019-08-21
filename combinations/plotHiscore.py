@@ -99,7 +99,7 @@ def writeIndexHtml ( model ):
         print ( "[plotHiscore] contributions are defined" )
         f.write ( "<td><br><b>Contributions per analysis:</b><br>\n<ul>\n" )
         for k,v in model.contributions.items():
-            f.write ( "<li> %s:%s " % ( k, v ) )
+            f.write ( "<li> %s: %s%s\n" % ( k, int(round(100.*v)), "%" ) )
         # f.write ( "</table>\n" )
     else:
         print ( "[plotHiscore] contributions are not defined" )
@@ -113,7 +113,7 @@ def writeIndexHtml ( model ):
     f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
     f.write ( "</table>" )
     f.write ( '<table style="width:80%">\n' )
-    f.write ( "<td width=45%><img height=40% src=./ruler.png><td width=55%><img height=35% src=./decays.png>\n" )
+    f.write ( "<td width=45%><img height=700px src=./ruler.png><td width=55%><img with=100% src=./decays.png>\n" )
     f.write ( "</table>\n" )
     # f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
     f.write ( "</body>\n" )
