@@ -38,7 +38,7 @@ class Trimmer:
         combiner = Combiner()
         for ctr,pred in enumerate(self.model.bestCombo):
             combo = self.model.bestCombo[:ctr]+self.model.bestCombo[ctr+1:]
-            Z = combiner.getSignificance ( combo )
+            Z = 1. # combiner.getSignificance ( combo )
             contributions[ pred.analysisId() ] = Z
         self.model.contributions = contributions
         return self.model
