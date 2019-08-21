@@ -3,6 +3,7 @@
 """ Class that trims models down """
 
 import time, colorama, copy, sys
+from combiner import Combiner
 from model import Model
 import helpers
 
@@ -34,8 +35,11 @@ class Trimmer:
         """ compute the contributions to Z of the individual analyses """
         print ( "[trimmer] now computing analysis contributions" )
         contributions = {}
-        for pred in self.model.bestCombo:
-            contributions[ pred.analysisId() ] = 1.
+        combiner = Combiner()
+        for ctr,pred in enumerate(self.model.bestCombo):
+            combo = self.model.bestCombo[:ctr]+self.model.bestCombo[ctr+1:]
+            Z = combiner.getSignificance ( combo )
+            contributions[ pred.analysisId() ] = Z
         self.model.contributions = contributions
         return self.model
         
