@@ -15,6 +15,8 @@ def main():
             type=str, default="hiscore.pcl" )
     argparser.add_argument ( '-i', '--interactive', help='start interactive session',
                              action="store_true" )
+    argparser.add_argument ( '-c', '--contributions', help='analysis of contributions of analyses of first trimmed model',
+                             action="store_true" )
     argparser.add_argument ( '-t', '--trim', help='trim the hiscore list to the nth entry',
                              type=int, default=0 )
     argparser.add_argument ( '-s', '--save', help='save the updated hiscore list under this filename [None]',
@@ -23,6 +25,10 @@ def main():
     h = Hiscore ( 0, False, args.picklefile )
     if args.trim>0:
         h.trimModels( args.trim, True )
+    if args.contributions and len (h.trimmed)>0:
+        from trimmer import Trimmer
+        trimmer = Trimmer( h.trimmed[0] )
+        h.trimmed[0] = trimmer.computeAnalysisContributions ( )
     if args.save not in  [ "", None ]:
         h.writeListToPickle( args.save )
     print ( "Check variable: h" )

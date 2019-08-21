@@ -29,6 +29,15 @@ class Trimmer:
         """ logging to file """
         with open( "walker%d.log" % self.model.walkerid, "a" ) as f:
             f.write ( "[model:%d - %s] %s\n" % ( self.model.walkerid, time.asctime(), " ".join(map(str,args)) ) )
+
+    def computeAnalysisContributions ( self ):
+        """ compute the contributions to Z of the individual analyses """
+        print ( "[trimmer] now computing analysis contributions" )
+        contributions = {}
+        for pred in self.model.bestCombo:
+            contributions[ pred.analysisId() ] = 1.
+        self.model.contributions = contributions
+        return self.model
         
     def trimParticles ( self ):
         """ this function checks if particle can be taken out without
@@ -109,7 +118,7 @@ class Trimmer:
                         self.model.decays[pid][k]=v/S
                     self.model.predict ( self.strategy )
                     if self.model.rmax > 1.5:
-                        self.pprint ( "running into exclusion if I try to take it out. Leave in." )
+                        self.pprint ( "running into exclusion if I try to take it out (rmax=%.1f). Leave in." % self.model.rmax )
                         self.model.restore()
                         continue
 

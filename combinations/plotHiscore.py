@@ -40,21 +40,33 @@ def writeTex ( model ):
 
     whatifs = ""
     if hasattr ( model, "whatif" ):
-        whatifs+="\\\\Contributions by particles: $"
-        #whatifs+="Contributions by particles: $"
+        print ( "[plotHiscore] has whatifs defined" )
+        #whatifs+="\\\\Contributions by particles: $"
+        whatifs+="\\\\"
+        whatifs+="Contributions by particles: $"
+        totalcont = 0. ## to normalize contributions
+        for k,v in model.whatif.items():
+            totalcont += (model.Z - v) 
         tok = []
         for k,v in model.whatif.items():
-            tok.append ( "%s = %.2f" % ( helpers.toLatex(k), model.Z - v ) )
+            tok.append ( "%s = %d%s" % ( helpers.toLatex(k), round(100.*(model.Z - v)/totalcont ), "\%" ) )
         whatifs+= ", ".join ( tok )
         whatifs+="$"
+    else:
+        print ( "[plotHiscore] model has no whatif defined (did you use an untrimmed model?)" )
 
     import tex2png
+    if ssm == []:
+        ssm = [ "\\mathrm{none}" ]
     src = "Signal strength multipliers: $" + ", ".join ( ssm ) + "$" + whatifs
-    # print ( "src=>>>>%s<<<<" % src )
-    p = tex2png.Latex ( src, 600 ).write()
-    f = open ( "texdoc.png", "wb" )
-    f.write ( p[0] )
-    f.close()
+    # print ( "[plotHiscore] texdoc source in src=>>>>%s<<<<" % src )
+    try:
+        p = tex2png.Latex ( src, 600 ).write()
+        f = open ( "texdoc.png", "wb" )
+        f.write ( p[0] )
+        f.close()
+    except Exception as e:
+        print ( "[plotHiscore] Exception when latexing: %s" % e )
 
 def writeIndexHtml ( model ):
     ssm = []
@@ -68,27 +80,42 @@ def writeIndexHtml ( model ):
     f.write ( "<center>\n" )
     f.write ( "<h1>Current best model: Z=%.2f</h1>\n" % model.Z )
     f.write ( "</center>\n" )
-    f.write ( "Model produced in step %d<br>\n" % model.step )
+    f.write ( "<table width=80%>\n<tr><td>\n" )
+    f.write ( "<b>Model produced in step %d</b><br>\n" % model.step )
     if hasattr ( model, "rvalues" ):
         rvalues=model.rvalues
         rvalues.sort(key=lambda x: x[0],reverse=True )
-        f.write ( "%d predictions available. Highest r values are:<br>" % len(rvalues) )
+        f.write ( "<br><b>%d predictions available. Highest r values are:</b><br><ul>\n" % len(rvalues) )
         for rv in rvalues[:5]:
             srv="N/A"
             if type(rv[1])==float:
                 srv="%.2f" % rv[1]
-            f.write ( "%s:%s r=%.2f, r<sub>exp</sub>=%s<br>\n" % ( rv[2].analysisId(), ",".join ( map(str,rv[2].txnames) ), rv[0], srv ) )
+            f.write ( "<li>%s:%s r=%.2f, r<sub>exp</sub>=%s<br>\n" % ( rv[2].analysisId(), ",".join ( map(str,rv[2].txnames) ), rv[0], srv ) )
+        f.write("</ul>\n")
     else:
         print ( "[plotHiscore] model has no r values!" )
 
+    if hasattr ( model, "contributions" ):
+        print ( "[plotHiscore] contributions are defined" )
+        f.write ( "<td><br><b>Contributions per analysis:</b><br>\n<ul>\n" )
+        for k,v in model.contributions.items():
+            f.write ( "<li> %s:%s " % ( k, v ) )
+        # f.write ( "</table>\n" )
+    else:
+        print ( "[plotHiscore] contributions are not defined" )
+
     height = 32*int((len(ssm)+3)/4)
+    if ssm == []:
+        height = 32
     if hasattr ( model, "whatif" ):
         height += 32
-    f.write ( "<br><img height=%dpt src=./texdoc.png>\n" % height )
-    f.write ( '<p><table style="width:80%">\n' )
-    f.write ( "<td width=35%><img src=./ruler.png><td width=65%><img width=100% src=./decays.png>\n" )
-    f.write ( "</table>\n" )
+    f.write ( "<td><img height=%dpt src=./texdoc.png>\n" % height )
     f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
+    f.write ( "</table>" )
+    f.write ( '<table style="width:80%">\n' )
+    f.write ( "<td width=45%><img height=40% src=./ruler.png><td width=55%><img height=35% src=./decays.png>\n" )
+    f.write ( "</table>\n" )
+    # f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
     f.write ( "</body>\n" )
     f.write ( "</html>\n" )
     f.close()
@@ -101,7 +128,7 @@ def plotRuler( model ):
     resultsForPIDs = {}
     for tpred in model.bestCombo:
         for pid in tpred.PIDs:
-            if type(pid) in [ list, tuple ]:
+            while type(pid) in [ list, tuple ]:
                 pid = pid[0]
             apid = abs(pid)
             if not apid in resultsForPIDs:
@@ -175,14 +202,13 @@ if __name__ == "__main__":
             help='list all predictions',
             action="store_true" )
     argparser.add_argument ( '-s', '--scp',
-            help='scp to smodels',
+            help='scp to GPU server, afs www space',
             action="store_true" )
     args = argparser.parse_args()
     options = { "ruler": not args.noruler, "decays": not args.nodecays,
                 "predictions": args.predictions, "html": not args.nohtml }
     plot ( args.number, args.verbosity, args.picklefile, options )
     if args.scp:
-        cmd = "scp *.png index.html smodels.hephy.at:/var/www/walten/models/"
         cmd = "scp *.png index.html gpu:/afs/hephy.at/user/w/wwaltenberger/www/models"
         print ( cmd )
         subprocess.getoutput ( cmd )

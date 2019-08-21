@@ -300,7 +300,7 @@ class DecayDrawer:
         #longcmd="%s --preproc %s.dot | %s -o %s.tex" % ( cmd, out, cmd, out )
         self.logger.debug (  "cmd=%s " % cmd )
         output=subprocess.getoutput( cmd )
-        self.logger.debug ( output )
+        self.logger.debug ( "out=%s" % output )
         self.logger.debug ( "now meddle with tex file" )
         self.meddleWithTexFile(out)
         outdir=os.path.dirname ( out ) 
@@ -313,6 +313,8 @@ class DecayDrawer:
         self.logger.debug ( output )
 
         if self.options["nopng"]==False:
-            cmd="convert -antialias -density 300x300 %s.pdf %s.png" % ( out, out )
+            cmd='convert +profile "*" -antialias -density 300x300 %s.pdf %s.png' % ( out, out )
             import subprocess
-            subprocess.getoutput ( cmd )
+            o = subprocess.getoutput ( cmd )
+            if len(o)>0:
+                self.logger.error ( "conversion output %s" % o )
