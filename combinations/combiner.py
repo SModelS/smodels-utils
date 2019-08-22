@@ -3,7 +3,6 @@
 """ Try out combinations from pickle file. """
 
 from smodels.theory import decomposer
-from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels.share.models.SMparticles import SMList
 from smodels.particlesLoader import BSMList
 from smodels.tools.physicsUnits import fb, GeV
@@ -57,6 +56,10 @@ class Combiner:
         """ logging """
         print ( "[combine:%d] %s" % (self.walkerid, " ".join(map(str,args))) )
 
+    def debug ( self, *args ):
+        """ logging """
+        pass # default is, do nothing
+
     def discussCombinations ( self, combinables ):
         count={}
         for i in combinables:
@@ -77,7 +80,8 @@ class Combiner:
         """ get the combined likelihood for a signal strength mu 
         :param nll: compute the negative log likelihood
         """
-        ret = numpy.prod ( [ c.getLikelihood(mu,expected=expected) for c in combination ] )
+        llhds = numpy.array ( [ c.getLikelihood(mu,expected=expected) for c in combination ] )
+        ret = numpy.prod ( llhds[llhds!=None] )
         if nll:
             if ret <= 0.:
                 ret = 1e-70
@@ -150,8 +154,10 @@ class Combiner:
         muhat = self.findMuHat ( combo )
         if muhat == None:
             return 0.
-        LH0 = numpy.prod ( [ c.getLikelihood(0.,expected=expected) for c in combo ] )
-        LH1 = numpy.prod ( [ c.getLikelihood(muhat,expected=expected) for c in combo ] )
+        l0 = numpy.array ( [ c.getLikelihood(0.,expected=expected) for c in combo ] )
+        LH0 = numpy.prod ( l0[l0!=None] )
+        l1 = numpy.array ( [ c.getLikelihood(muhat,expected=expected) for c in combo ] )
+        LH1 = numpy.prod ( l1[l1!=None] )
         if LH0 <= 0.:
             LH0 = 1e-80
         if LH1 <= 0.:
@@ -263,6 +269,7 @@ class Combiner:
 
     def removeDataFromBestCombo ( self, bestCombo ):
         """ remove the data from all theory predictions, we dont need them. """
+        self.debug ( "removing Data from best Combo " )
         for ci,combo in enumerate(bestCombo):
             if hasattr ( combo, "elements" ):
                 del bestCombo[ci].elements
@@ -280,6 +287,7 @@ class Combiner:
     def removeDataFromTheoryPred ( self, tp ):
         """ remove unnecessary stuff from a theoryprediction object.
             for storage. """
+        self.debug ( "removing data from theory pred %s" % tp.analysisId() )
         theorypred = copy.deepcopy( tp )
         if hasattr ( theorypred, "elements" ):
             del theorypred.elements

@@ -38,20 +38,22 @@ class Trimmer:
         #anas = set()
         #for pred in self.model.bestCombo:
         #    anas.add ( pred.analysisId() )
-        #from smodels.experiment.databaseObj import Database
+        from smodels.tools import runtime
+        runtime._experimental = True
         #from smodels.theory.theoryPrediction import theoryPredictionsFor
         #db = Database ( "../../smodels-database" )
         #results = db.getExpResults ( analysisIDs = anas )
         #print ( "[trimmer] got %d results" % len(results))
         origZ = self.model.Z # to be sure
         self.model.Z = -23.
-        self.model.predict( strategy="aggressive" )
+        self.model.predict( strategy="aggressive", keep_meta = True )
         print ( "[trimmer] Z=%.2f, old=%.2f" % ( self.model.Z, origZ ) )
         contributions = {}
         combiner = Combiner()
         dZtot = 0.
-        for ctr,pred in enumerate(self.model.bestCombo):
-            combo = self.model.bestCombo[:ctr]+self.model.bestCombo[ctr+1:]
+        bestCombo = copy.deepcopy ( self.model.bestCombo )
+        for ctr,pred in enumerate(bestCombo):
+            combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:] 
             Z = combiner.getSignificance ( combo )
             dZ = origZ - Z
             dZtot += dZ

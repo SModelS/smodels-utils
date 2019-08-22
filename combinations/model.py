@@ -125,7 +125,7 @@ class Model:
         if hasattr ( self, "predictor" ):
             del self.predictor
 
-    def predict ( self, strategy ):
+    def predict ( self, strategy, keep_meta = False ):
         """ compute best combo, llhd, and significance """
         self.log ( "predict" )
         # if not os.path.exists ( self.currentSLHA ):
@@ -152,13 +152,17 @@ class Model:
         self.log ( "now find highest significance for %d predictions" % len(predictions) )
         ## find highest observed significance
         bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, strategy, expected=False )
-        self.bestCombo = combiner.removeDataFromBestCombo ( bestCombo )
+        if keep_meta:
+            self.bestCombo = bestCombo
+        else:
+            self.bestCombo = combiner.removeDataFromBestCombo ( bestCombo )
         self.Z = Z
         self.llhd = llhd
         self.letters = combiner.getLetterCode(self.bestCombo)
         self.description = combiner.getComboDescription(self.bestCombo)
         self.log ( "done with prediction. best Z=%.2f." % self.Z )
-        self.clean()
+        if not keep_meta:
+            self.clean()
 
     def checkForExcluded ( self, predictions ):
         """ check if any of the predictions excludes the point """

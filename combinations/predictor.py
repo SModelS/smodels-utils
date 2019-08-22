@@ -53,6 +53,8 @@ class Predictor:
 
         preds = []
         self.log ( "start getting preds" )
+        from smodels.tools import runtime
+        runtime._experimental = True
         for expRes in listOfExpRes:
             predictions = theoryPredictionsFor ( expRes, topos, useBestDataset=bestDataSet,
                                                  combinedResults=combinedRes )
