@@ -14,7 +14,7 @@ class Trimmer:
     def __init__ ( self, model, strategy="aggressive", maxloss=.001 ):
         self.model = copy.deepcopy ( model )
         self.strategy = strategy
-        self.maxloss = maxloss 
+        self.maxloss = maxloss
 
     def highlight ( self, msgType = "info", *args ):
         """ logging, hilit """
@@ -34,15 +34,36 @@ class Trimmer:
     def computeAnalysisContributions ( self ):
         """ compute the contributions to Z of the individual analyses """
         print ( "[trimmer] now computing analysis contributions" )
+        print ( "[trimmer] step 1: recompute the full Z. Old one at %.2f." % self.model.Z )
+        #anas = set()
+        #for pred in self.model.bestCombo:
+        #    anas.add ( pred.analysisId() )
+        #from smodels.experiment.databaseObj import Database
+        #from smodels.theory.theoryPrediction import theoryPredictionsFor
+        #db = Database ( "../../smodels-database" )
+        #results = db.getExpResults ( analysisIDs = anas )
+        #print ( "[trimmer] got %d results" % len(results))
+        origZ = self.model.Z # to be sure
+        self.model.Z = -23.
+        self.model.predict( strategy="aggressive" )
+        print ( "[trimmer] Z=%.2f, old=%.2f" % ( self.model.Z, origZ ) )
         contributions = {}
         combiner = Combiner()
+        dZtot = 0.
         for ctr,pred in enumerate(self.model.bestCombo):
             combo = self.model.bestCombo[:ctr]+self.model.bestCombo[ctr+1:]
-            Z = 1. # combiner.getSignificance ( combo )
+            Z = combiner.getSignificance ( combo )
+            dZ = origZ - Z
+            dZtot += dZ
             contributions[ pred.analysisId() ] = Z
+        for k,v in contributions.items():
+            perc = (origZ-v) / dZtot
+            print ( "[trimmer] without %s we get %.2f (%d%s)" % ( k, v, 100.*perc,"%" ) )
+            contributions[ k ] = perc
         self.model.contributions = contributions
+        print ( "[trimmer] stored %d contributions" % len(contributions) )
         return self.model
-        
+
     def trimParticles ( self ):
         """ this function checks if particle can be taken out without
             significantly worsening Z """
@@ -63,7 +84,7 @@ class Trimmer:
         for cpid,(pid,mass) in enumerate(pidsnmasses):
             self.model.backup()
             self.highlight ( "info", "trying to freeze %s (%.1f): [%d/%d]" % \
-                   ( helpers.getParticleName(pid), 
+                   ( helpers.getParticleName(pid),
                      self.model.masses[pid],(cpid+1),len(unfrozen) ) )
             oldmass = self.model.masses[pid]
             self.model.masses[pid]=1e6
@@ -133,5 +154,36 @@ class Trimmer:
                     else:
                         self.pprint ( "not discarding small BR %s -> %s: %.2f Z changed %.3f -> %.3f" % ( helpers.getParticleName(pid), helpers.getParticleName(dpid), dbr, oldZ, self.model.Z ) )
                         self.model.restore()
-                        
+
         self.pprint ( "%d/%d particles are still unfrozen. discarded %d branchings." % ( len(self.model.unFrozenParticles()),len(self.model.masses),ndiscardedBR )  )
+
+def main():
+    import argparse
+    argparser = argparse.ArgumentParser(
+            description='trimmer. if called from commandline, it currently computes the analysis contributions (yes, this is quite confusing)' )
+    argparser.add_argument ( '-f', '--picklefile',
+            help='pickle file with hiscores [hiscore.pcl]',
+            type=str, default="hiscore.pcl" )
+    args = argparser.parse_args()
+    from hiscore import Hiscore
+    h = Hiscore ( 0, False, args.picklefile )
+    model = h.hiscores[0]
+    useTrimmed = False
+    if len ( h.trimmed ) > 0:
+        print ( "[trimmer] trimmed models available." )
+        model = h.trimmed[0]
+        useTrimmed = True
+    else:
+        print ( "[trimmer] no trimmed models available, falling back to untrimmed." )
+    print ( "model: %s" % model.description )
+    tr = Trimmer ( model )
+    model = tr.computeAnalysisContributions ()
+    if useTrimmed:
+        h.trimmed[0] = model
+    else:
+        h.hiscores[0] = model
+    h.save()
+
+if __name__ == "__main__":
+    main()
+

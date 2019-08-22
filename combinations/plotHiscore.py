@@ -109,11 +109,11 @@ def writeIndexHtml ( model ):
         height = 32
     if hasattr ( model, "whatif" ):
         height += 32
-    f.write ( "<td><img height=%dpt src=./texdoc.png>\n" % height )
+    f.write ( "<td><img width=600px src=./texdoc.png>\n" ) #  % height )
     f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
     f.write ( "</table>" )
     f.write ( '<table style="width:80%">\n' )
-    f.write ( "<td width=45%><img height=700px src=./ruler.png><td width=55%><img with=100% src=./decays.png>\n" )
+    f.write ( "<td width=45%><img height=700px src=./ruler.png><td width=55%><img width=80% src=./decays.png>\n" )
     f.write ( "</table>\n" )
     # f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
     f.write ( "</body>\n" )
