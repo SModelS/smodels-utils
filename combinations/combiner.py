@@ -145,7 +145,9 @@ class Combiner:
 
 
     def getComboDescription ( self, combination ):
-        return ",".join( [ x.analysisId() for x in combination ] )
+        def describe ( x ):
+            return "%s(%s)" % ( x.analysisId(), x.dataType().replace("upperLimit", "ul" ).replace ( "efficiencyMap", "em" ).replace ( "combined", "comb" ) )
+        return ",".join( [ describe(x) for x in combination ] )
 
     def getSignificance ( self, combo, expected=False ):
         """ obtain the significance of this combo 
