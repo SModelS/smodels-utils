@@ -56,7 +56,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     :return: True
     """
 
-    logger.info("Generating validation plot for " + expRes.getValuesFor('id')[0]
+    logger.info("Generating validation plot for " + expRes.globalInfo.id
                 +", "+txnameStr+", "+axes)
     valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor,
                     limitPoints=limitPoints,extraInfo=extraInfo,combine=combine,

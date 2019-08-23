@@ -184,7 +184,7 @@ The validation procedure for upper limit maps used here is explained in [[http:/
     def writeExpRes( self, expRes, tpe ):
         valDir = os.path.join(expRes.path,'validation').replace("\n","")
         if not os.path.isdir(valDir): return
-        id = expRes.getValuesFor('id')[0]
+        id = expRes.globalInfo.id
         txnames = expRes.getTxNames()
         ltxn = 0 ## len(txnames)
         txns_discussed=[]
@@ -197,7 +197,7 @@ The validation procedure for upper limit maps used here is explained in [[http:/
                 continue
             txns_discussed.append ( txn )
             ltxn += 1
-        line = "||<|%i> [[%s|%s]]" %( ltxn, expRes.getValuesFor('url')[0], id )
+        line = "||<|%i> [[%s|%s]]" %( ltxn, expRes.globalInfo.id, id )
         hadTxname = False
         txns_discussed=[]
         nfigs = 0

@@ -194,7 +194,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     if cond_violated.GetN()>0: base.Add(cond_violated, "P")
     if official:
         base.Add(official, "L")
-    title = what+"_"+validationPlot.expRes.getValuesFor('id')[0] + "_" \
+    title = what+"_"+validationPlot.expRes.globalInfo.id + "_" \
             + validationPlot.txName\
             + "_" + validationPlot.niceAxes
             # + "_" + validationPlot.axes
@@ -512,7 +512,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     if official:
         for i in official:
             base.Add( i, "L")
-    title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
+    title = validationPlot.expRes.globalInfo.id + "_" \
             + validationPlot.txName\
             + "_" + validationPlot.axes
             #+ "_" + validationPlot.niceAxes
@@ -742,7 +742,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
 
     if silentMode: gROOT.SetBatch()
     setOptions(tgr, Type='allowed')
-    title = validationPlot.expRes.getValuesFor('id')[0]
+    title = validationPlot.expRes.globalInfo.id
     types = []
     for dataset in validationPlot.expRes.datasets:
         ds_txnames = map ( str, dataset.txnameList )
@@ -988,7 +988,7 @@ def createTempPlot( validationPlot, silentMode=True, what = "R", nthpoint =1,
         setOptions(official, Type='official')
 
     base = grTemp
-    title = validationPlot.expRes.getValuesFor('id')[0] + "_" \
+    title = validationPlot.expRes.globalInfo.id + "_" \
             + validationPlot.txName\
             + "_" + validationPlot.niceAxes
             # + "_" + validationPlot.axes

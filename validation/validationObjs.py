@@ -80,7 +80,7 @@ class ValidationPlot():
                 sys.exit()
         #Try to guess the path:
         else:
-            anaID = ExptRes.getValuesFor('id')[0]
+            anaID = ExptRes.globalInfo.id
             self.databasePath = ExptRes.path[:ExptRes.path.find('/'+anaID)]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
@@ -94,7 +94,7 @@ class ValidationPlot():
     def __str__(self):
 
         vstr = "Validation plot for\n"
-        vstr += 'id: %s\n' % self.expRes.getValuesFor('id')[0]
+        vstr += 'id: %s\n' % self.expRes.globalInfo.id
         vstr += 'TxName: '+self.txName+'\n'
         vstr += 'Axes: '+self.niceAxes
         return vstr
@@ -738,11 +738,11 @@ class ValidationPlot():
         :return: name of the plot file
         """
 
-        filename = self.expRes.getValuesFor('id')[0] + "_" + self.txName + "_"
+        filename = self.expRes.globalInfo.id + "_" + self.txName + "_"
         filename += self.niceAxes.replace(",","").replace("(","").replace(")","")
         filename += '.'+fformat
 
-        filename = filename.replace(self.expRes.getValuesFor('id')[0]+"_","")
+        filename = filename.replace(self.expRes.globalInfo.id+"_","")
         filename = os.path.join(validationDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
 

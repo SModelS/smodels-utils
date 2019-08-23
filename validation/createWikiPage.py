@@ -183,7 +183,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
     def writeExpRes( self, expRes, tpe ):
         valDir = os.path.join(expRes.path,'validation').replace("\n","")
         if not os.path.isdir(valDir): return
-        id = expRes.getValuesFor('id')[0]
+        id = expRes.globalInfo.id
         txnames = expRes.getTxNames()
         ltxn = 0 ## len(txnames)
         txns_discussed=[]
