@@ -47,7 +47,7 @@ class Combiner:
         # print ( "[Combiner] %d predictions" % n )
         for iA,predA in enumerate(predictions):
             combo = [ predA ]
-            nexti = iA + 1 
+            nexti = iA + 1
             compatibles = self.findCompatibles ( predA, predictions[nexti:], strategy )
             combinables += compatibles
         return combinables
@@ -77,7 +77,7 @@ class Combiner:
         #    self.pprint ( "%d combinations with %d predictions" % ( v, k ) )
 
     def getCombinedLikelihood ( self, combination, mu, expected=False, nll=False ):
-        """ get the combined likelihood for a signal strength mu 
+        """ get the combined likelihood for a signal strength mu
         :param nll: compute the negative log likelihood
         """
         llhds = numpy.array ( [ c.getLikelihood(mu,expected=expected) for c in combination ] )
@@ -114,7 +114,7 @@ class Combiner:
     def findBestCombo ( self, combinations ):
         """ find the best combo, by computing CLsb values """
         combinations.sort ( key=len, reverse=True ) ## sort them first be length
-        # compute CLsb for all combinations 
+        # compute CLsb for all combinations
         lowestv,lowest=float("inf"),""
         alreadyDone = [] ## list of combos that have already been looked at.
         ## we will not look at combos that are subsets.
@@ -150,7 +150,7 @@ class Combiner:
         return ",".join( [ describe(x) for x in combination ] )
 
     def getSignificance ( self, combo, expected=False ):
-        """ obtain the significance of this combo 
+        """ obtain the significance of this combo
         :param expected: get the expected significance, not observed
         """
         muhat = self.findMuHat ( combo )
@@ -175,11 +175,11 @@ class Combiner:
         return Z
 
     def _findLargestZ ( self, combinations, expected=False ):
-        """ find the combo with the most significant deviation 
+        """ find the combo with the most significant deviation
         :param expected: find the combo with the most significant expected deviation
         """
         combinations.sort ( key=len, reverse=True ) ## sort them first be length
-        # compute CLsb for all combinations 
+        # compute CLsb for all combinations
         highestZ,highest=0.,""
         alreadyDone = [] ## list of combos that have already been looked at.
         ## we will not look at combos that are subsets.
@@ -198,7 +198,7 @@ class Combiner:
         return highest,highestZ
 
     def get95CL ( self, combination, expected ):
-        """ compute the CLsb value for one specific combination 
+        """ compute the CLsb value for one specific combination
         :param expected: compute expected instead of observed value
         """
         llhds={}
@@ -254,7 +254,7 @@ class Combiner:
 
     def findHighestSignificance ( self, predictions, strategy, expected=False ):
         """ for the given list of predictions and employing the given strategy,
-        find the combo with highest significance 
+        find the combo with highest significance
         :param expected: find the highest expected significance, not observed
         :returns: best combination, significance, likelihood equivalent
         """
@@ -316,10 +316,11 @@ class Combiner:
         discussCombinations ( combinables )
         bestCombo,ulexp = findBestCombo ( combinables )
         ulobs = get95CL ( bestCombo, expected=False )
-        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [ul_obs=%.2f, ul_exp=%.2f]" % ( strategy, self.getLetterCode(bestCombo), self.getComboDescription(bestCombo), ulobs, ulexp ) ) 
+        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [ul_obs=%.2f, ul_exp=%.2f]" % ( strategy, self.getLetterCode(bestCombo), self.getComboDescription(bestCombo), ulobs, ulexp ) )
         return bestCombo,ulexp,ulobs
 
-if __name__ == "__main__":
+def oldmain():
+    """ old main routine """
     with open("predictions.pcl", "rb" ) as f:
         predictions = pickle.load ( f )
     algo = Combiner ()
@@ -327,4 +328,31 @@ if __name__ == "__main__":
     strategy = "aggressive"
     print ( "Find highest significance for: %s" % strategy )
     bestCombo,Z,llhd = algo.findHighestSignificance ( predictions, strategy )
-    print ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( strategy, algo.getLetterCode(bestCombo), algo.getComboDescription(bestCombo), Z ) ) 
+    print ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( strategy, algo.getLetterCode(bestCombo), algo.getComboDescription(bestCombo), Z ) )
+
+if __name__ == "__main__":
+    import argparse
+    argparser = argparse.ArgumentParser(
+            description='combiner. if called from commandline, computes the highest Z' )
+    argparser.add_argument ( '-f', '--slhafile',
+            help='slha file to test [test.slha]',
+            type=str, default="test.slha" )
+    argparser.add_argument ( '-d', '--database',
+            help='path to database [../../smodels-database]',
+            type=str, default="../../smodels-database" )
+    args = argparser.parse_args()
+    from smodels.experiment.databaseObj import Database
+    from smodels.theory import decomposer
+    from smodels.particlesLoader import BSMList
+    from smodels.share.models.SMparticles import SMList
+    from smodels.theory.model import Model
+    model = Model(BSMparticles=BSMList, SMparticles=SMList)
+    model.updateParticles(inputFile=args.slhafile)
+    db = Database ( args.database )
+    expRes = db.getExpResults()
+    smses = decomposer.decompose ( model )
+    from smodels.theory.theoryPrediction import theoryPredictionsFor
+    preds = theoryPredictionsFor ( expRes, smses )
+    comb = Combiner()
+
+

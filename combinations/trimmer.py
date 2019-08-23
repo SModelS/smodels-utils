@@ -69,6 +69,8 @@ class Trimmer:
     def trimParticles ( self ):
         """ this function checks if particle can be taken out without
             significantly worsening Z """
+        from smodels.tools import runtime
+        runtime._experimental = True
         unfrozen = self.model.unFrozenParticles( withLSP=False )
         ndiscarded=0
         oldZ = self.model.Z
@@ -119,6 +121,8 @@ class Trimmer:
 
     def trimBranchings ( self ):
         """ now trim the branchings """
+        from smodels.tools import runtime
+        runtime._experimental = True
         unfrozen = self.model.unFrozenParticles( withLSP=False )
         ndiscardedBR=0
         self.pprint ( "now try to trim the branchings of %d particles" % len(unfrozen) )
