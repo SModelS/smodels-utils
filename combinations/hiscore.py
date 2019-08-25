@@ -66,7 +66,7 @@ class Hiscore:
             
         try:
             with open( self.pickleFile,"rb+") as f:
-                fcntl.flock ( f, fcntl.LOCK_EX )
+                fcntl.flock ( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
                 self.hiscores = pickle.load ( f )
                 self.trimmed = pickle.load ( f )
                 fcntl.flock ( f, fcntl.LOCK_UN )
@@ -107,7 +107,7 @@ class Hiscore:
 
     def save ( self ):
         """ compatibility thing """
-        self.writeListToPickle()
+        return self.writeListToPickle()
 
     def writeListToPickle ( self, pickleFile=None ):
         """ dump the list to the pickle file <pickleFile>.
@@ -115,22 +115,30 @@ class Hiscore:
         """
         if pickleFile==None:
             pickleFile = self.pickleFile
+        mtime = os.stat ( self.pickleFile ).st_mtime
+        if mtime > self.mtime:
+            self.pprint ( "while writing to pickle file I see that it has changed" )
+            self.updateListFromPickle()
+            return False
         self.pprint ( "saving new hiscore list to %s" % pickleFile )
         try:
             subprocess.getoutput ( "mv -f %s old.pcl" % pickleFile )
             self.clean()
             with open( pickleFile, "wb" ) as f:
-                fcntl.flock ( f, fcntl.LOCK_EX )
+                fcntl.flock ( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
                 pickle.dump ( self.hiscores, f )
                 pickle.dump ( self.trimmed, f )
                 fcntl.flock ( f, fcntl.LOCK_UN )
             self.mtime = os.stat ( self.pickleFile ).st_mtime
             self.fileAttempts=0
+            return True
         except OSError or BlockingIOError:
             self.fileAttempts+=1
             if self.fileAttempts<5: # try again
                 time.sleep ( .2 )
                 self.writeListToPickle( pickleFile )
+            return False
+        return False
 
     def newResult ( self, model ):
         """ see if new result makes it into hiscore list. If yes, then add.
