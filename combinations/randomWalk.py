@@ -147,11 +147,18 @@ class RandomWalker:
         self.train ()
         self.model.computePrior()
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.model.letters, self.model.description, self.model.Z ) )
+        if self.model.Z > 29.:
+            self.pprint ( "Z is greater than 29! stop it, stop it all!!!" )
+            self.model.createSLHAFile ( "anomaly.slha" )
+            subprocess.getoutput ( "killall python3" )
+            subprocess.getoutput ( "killall randomWalk.py" )
+            subprocess.getoutput ( "killall -9 python3" )
+            subprocess.getoutput ( "killall -9 randomWalk.py" )
         self.log ( "step %d finished." % self.model.step )
 
     def train ( self ):
         """ train the regressor """
-        # return # we dont train for now
+        return # we dont train for now
         #if self.regressor == None:
         #    return
         ## fetch the model from the queue

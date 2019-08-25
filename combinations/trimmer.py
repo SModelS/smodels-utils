@@ -3,6 +3,8 @@
 """ Class that trims models down """
 
 import time, colorama, copy, sys
+from smodels.tools import runtime
+runtime._experimental = True
 from combiner import Combiner
 from model import Model
 import helpers
@@ -38,16 +40,14 @@ class Trimmer:
         #anas = set()
         #for pred in self.model.bestCombo:
         #    anas.add ( pred.analysisId() )
-        from smodels.tools import runtime
-        runtime._experimental = True
         #from smodels.theory.theoryPrediction import theoryPredictionsFor
         #db = Database ( "../../smodels-database" )
         #results = db.getExpResults ( analysisIDs = anas )
         #print ( "[trimmer] got %d results" % len(results))
         origZ = self.model.Z # to be sure
         self.model.Z = -23.
-        self.model.predict( strategy="aggressive", keep_meta = True )
-        print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions" % ( self.model.Z, origZ, len(self.model.bestCombo) ) )
+        self.model.predict( strategy=self.strategy, keep_meta = True )
+        print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions, experimental=%d" % ( self.model.Z, origZ, len(self.model.bestCombo), runtime._experimental ) )
         contributions = {}
         combiner = Combiner()
         dZtot = 0.
@@ -57,10 +57,10 @@ class Trimmer:
             Z = combiner.getSignificance ( combo )
             dZ = origZ - Z
             dZtot += dZ
-            contributions[ pred.analysisId() ] = Z
+            contributions[ ctr ] = Z
         for k,v in contributions.items():
             perc = (origZ-v) / dZtot
-            print ( "[trimmer] without %s we get %.2f (%d%s)" % ( k, v, 100.*perc,"%" ) )
+            print ( "[trimmer] without %s(%s) we get %.2f (%d%s)" % ( self.model.bestCombo[k].analysisId(), self.model.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
             contributions[ k ] = perc
         self.model.contributions = contributions
         print ( "[trimmer] stored %d contributions" % len(contributions) )
@@ -170,6 +170,8 @@ def main():
     argparser.add_argument ( '-f', '--picklefile',
             help='pickle file with hiscores [hiscore.pcl]',
             type=str, default="hiscore.pcl" )
+    argparser.add_argument ( '-s', '--save',
+            help='save the analysis contributed result', action='store_true' )
     args = argparser.parse_args()
     from hiscore import Hiscore
     h = Hiscore ( 0, False, args.picklefile )
@@ -188,7 +190,8 @@ def main():
         h.trimmed[0] = model
     else:
         h.hiscores[0] = model
-    h.save()
+    if args.save:
+        h.save()
 
 if __name__ == "__main__":
     main()

@@ -70,7 +70,7 @@ class Predictor:
                 prediction.computeStatistics()
                 if (not llhdonly) or (prediction.likelihood != None):
                     preds.append ( prediction )
-        # self.log ( "return %s" % str(preds) )
+        self.log ( "return %s" % str(preds) )
         return preds
 
 if __name__ == "__main__":

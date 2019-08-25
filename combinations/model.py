@@ -279,13 +279,13 @@ class Model:
         :param outputSLHA: if not None, write into that file. else, write into
             currentSLHA file.
         """
-        self.log ( "create SLHA file at %s" % outputSLHA )
         with open( self.templateSLHA ) as f:
             lines=f.readlines()
         if not hasattr ( self, "currentSLHA" ):
             self.createNewSLHAFileName()
         if outputSLHA == None:
             outputSLHA = self.currentSLHA
+        self.log ( "create SLHA file at %s" % outputSLHA )
         self.pprint ( "create %s from %s" % (outputSLHA, self.templateSLHA ) )
         with open(outputSLHA,"w") as f:
             for line in lines:

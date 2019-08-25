@@ -52,6 +52,16 @@ class Combiner:
             combinables += compatibles
         return combinables
 
+    def highlight ( self, msgType = "info", *args ):
+        """ logging, hilit """
+        col = colorama.Fore.GREEN
+        print ( "%s[walk:%d] %s%s" % ( col, self.walkerid, " ".join(map(str,args)), colorama.Fore.RESET ) )
+
+    def error ( self, msgType = "info", *args ):
+        """ logging, hilit """
+        col = colorama.Fore.GREEN
+        print ( "%s[walk:%d] %s%s" % ( col, self.walkerid, " ".join(map(str,args)), colorama.Fore.RESET ) )
+
     def pprint ( self, *args ):
         """ logging """
         print ( "[combine:%d] %s" % (self.walkerid, " ".join(map(str,args))) )
@@ -63,7 +73,6 @@ class Combiner:
     def discussCombinations ( self, combinables ):
         count={}
         for i in combinables:
-            # self.pprint ( "combo %s" % ", ".join ( [ x.expResult.globalInfo.id for x in i ] ))
             n =len(i)
             if not n in count.keys():
                 count[n]=0
@@ -73,8 +82,6 @@ class Combiner:
             npred = count[1]
         self.pprint ( "%d combinations from %d predictions" % \
                       (len(combinables),npred) )
-        #for k,v in count.items():
-        #    self.pprint ( "%d combinations with %d predictions" % ( v, k ) )
 
     def getCombinedLikelihood ( self, combination, mu, expected=False, nll=False ):
         """ get the combined likelihood for a signal strength mu
@@ -161,8 +168,10 @@ class Combiner:
         l1 = numpy.array ( [ c.getLikelihood(muhat,expected=expected) for c in combo ] )
         LH1 = numpy.prod ( l1[l1!=None] )
         if LH0 <= 0.:
+            logger.error ( "likelihood for SM was 0. Set to 1e-80" )
             LH0 = 1e-80
         if LH1 <= 0.:
+            logger.error ( "likelihood for muhat was 0. Set to 1e-80, muhat was %s" % muhat )
             LH1 = 1e-80
         chi2 = 2 * ( math.log ( LH1 ) - math.log ( LH0 ) ) ## chi2 with one degree of freedom
         # p = 1 - stats.chi2.cdf ( chi2, 1. )
@@ -172,6 +181,8 @@ class Combiner:
         Z = numpy.sqrt ( chi2 )
         # self.pprint ( "chi2,Z=", chi2, Z )
         ## FIXME compute significance from chi2
+        if Z > 29.:
+           self.pprint ( "I just computed the significance. It is %.2f. What the fuck. lh1=%g, lh0=%g" % (Z, LH1, LH0 ) )
         return Z
 
     def _findLargestZ ( self, combinations, expected=False ):
@@ -304,9 +315,10 @@ class Combiner:
                     del tx.txnameDataExp
         return theorypred
 
+    """
     def findStrongestExclusion ( self, predictions, strategy ):
-        """ for the given list of predictions and employing the given strategy,
-        find the combo with strongest exclusion """
+        # for the given list of predictions and employing the given strategy,
+        # find the combo with strongest exclusion
         self.letters = getLetters ( predictions )
         self.pprint ( "Find the strongest exclusion using strategy: %s" % strategy )
         combinables = self.findCombinations ( predictions, strategy )
@@ -318,9 +330,11 @@ class Combiner:
         ulobs = get95CL ( bestCombo, expected=False )
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [ul_obs=%.2f, ul_exp=%.2f]" % ( strategy, self.getLetterCode(bestCombo), self.getComboDescription(bestCombo), ulobs, ulexp ) )
         return bestCombo,ulexp,ulobs
+    """
 
+"""
 def oldmain():
-    """ old main routine """
+    # old main routine 
     with open("predictions.pcl", "rb" ) as f:
         predictions = pickle.load ( f )
     algo = Combiner ()
@@ -329,6 +343,7 @@ def oldmain():
     print ( "Find highest significance for: %s" % strategy )
     bestCombo,Z,llhd = algo.findHighestSignificance ( predictions, strategy )
     print ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( strategy, algo.getLetterCode(bestCombo), algo.getComboDescription(bestCombo), Z ) )
+"""
 
 if __name__ == "__main__":
     import argparse
@@ -349,11 +364,14 @@ if __name__ == "__main__":
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
     model.updateParticles(inputFile=args.slhafile)
     db = Database ( args.database )
-    expRes = db.getExpResults()
+    listOfExpRes = db.getExpResults()
     smses = decomposer.decompose ( model )
     from smodels.theory.theoryPrediction import theoryPredictionsFor
-    preds = theoryPredictionsFor ( expRes, smses )
-    print ( "%s has %d predictions" % ( args.slhafile, len(preds) ) )
+    for expRes in listOfExpRes:
+        preds = theoryPredictionsFor ( expRes, smses )
+        if preds == None:
+            continue
+        print ( "%s, %s has %d predictions" % ( args.slhafile, expRes, len(preds) ) )
     comb = Combiner()
 
 
