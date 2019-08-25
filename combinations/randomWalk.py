@@ -448,9 +448,10 @@ if __name__ == "__main__":
                     walker.takeStep()
                     walkers.append ( walker )
                     continue
-                v.createNewSLHAFileName()
-                v.walkerid = ctr+1
-                walkers.append ( RandomWalker.fromModel ( v, walkerid = ctr+1 ) )
+                v2 = copy.deepcopy ( v )
+                v2.createNewSLHAFileName()
+                v2.walkerid = ctr+1
+                walkers.append ( RandomWalker.fromModel ( v2, walkerid = ctr+1 ) )
                 walkers[-1].setWalkerId ( ctr+1 )
                 walkers[-1].takeStep() # make last step a taken one
                 ctr+=1
