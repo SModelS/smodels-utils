@@ -48,7 +48,7 @@ class Trimmer:
         self.model.Z = -23.
         self.model.predict( strategy=self.strategy, keep_meta = True )
         print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions, experimental=%d" % ( self.model.Z, origZ, len(self.model.bestCombo), runtime._experimental ) )
-        if oriZ > 0. and abs ( origZ - self.model.Z ) / origZ > 0.001:
+        if origZ > 0. and abs ( origZ - self.model.Z ) / origZ > 0.001:
             print  ( "[trimmer] error!! Zs do not match! Will not save" )
             args.save = False
         contributions = {}
