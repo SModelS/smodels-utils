@@ -353,6 +353,7 @@ if __name__ == "__main__":
     smses = decomposer.decompose ( model )
     from smodels.theory.theoryPrediction import theoryPredictionsFor
     preds = theoryPredictionsFor ( expRes, smses )
+    print ( "%s has %d predictions" % ( args.slhafile, len(preds) ) )
     comb = Combiner()
 
 
