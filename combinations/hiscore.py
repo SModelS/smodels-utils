@@ -66,10 +66,10 @@ class Hiscore:
             
         try:
             with open( self.pickleFile,"rb+") as f:
-                fcntl.lockf( f, fcntl.LOCK_EX )
+                fcntl.flock ( f, fcntl.LOCK_EX )
                 self.hiscores = pickle.load ( f )
                 self.trimmed = pickle.load ( f )
-                fcntl.lockf( f, fcntl.LOCK_UN )
+                fcntl.flock ( f, fcntl.LOCK_UN )
             self.mtime = mtime
             nhs = 0
             for i in self.hiscores:
@@ -120,10 +120,10 @@ class Hiscore:
             subprocess.getoutput ( "mv -f %s old.pcl" % pickleFile )
             self.clean()
             with open( pickleFile, "wb" ) as f:
-                fcntl.lockf( f, fcntl.LOCK_EX )
+                fcntl.flock ( f, fcntl.LOCK_EX )
                 pickle.dump ( self.hiscores, f )
                 pickle.dump ( self.trimmed, f )
-                fcntl.lockf( f, fcntl.LOCK_UN )
+                fcntl.flock ( f, fcntl.LOCK_UN )
             self.mtime = os.stat ( self.pickleFile ).st_mtime
             self.fileAttempts=0
         except OSError or BlockingIOError:

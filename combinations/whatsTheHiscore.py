@@ -32,10 +32,10 @@ def main():
             help='detailed descriptions', action="store_true" )
     args = argparser.parse_args()
     with open(args.picklefile,"rb+") as f:
-        fcntl.lockf( f, fcntl.LOCK_EX )
+        fcntl.flock( f, fcntl.LOCK_EX )
         models = pickle.load ( f )
         trimmed = pickle.load ( f )
-        fcntl.lockf( f, fcntl.LOCK_UN )
+        fcntl.flock( f, fcntl.LOCK_UN )
     names = { 0: "highest", 1: "second", 2: "third" }
     for c,model in enumerate(models):
         if c >= args.nmax:

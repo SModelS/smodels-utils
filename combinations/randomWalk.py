@@ -421,7 +421,7 @@ if __name__ == "__main__":
             help='do not use the NN regressor', action='store_true' )
     argparser.add_argument ( '-e', '--expected',
             help='run only with expected values', action='store_true' )
-    argparser.add_argument ( '-c', '--cont',
+    argparser.add_argument ( '-f', '-c', '--cont',
             help='continue with saved states [""]',
             type=str, default="" )
     argparser.add_argument ( '-H', '--history', help='record history',

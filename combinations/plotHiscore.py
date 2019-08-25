@@ -10,10 +10,10 @@ import helpers
 def obtain ( number, picklefile ):
     """ obtain hiscore number <number> """
     with open( picklefile,"rb" ) as f:
-        #fcntl.lockf( f, fcntl.LOCK_EX )
+        #fcntl.flock( f, fcntl.LOCK_EX )
         hiscores = pickle.load ( f )
         trimmed = pickle.load ( f )
-        #fcntl.lockf( f, fcntl.LOCK_UN )
+        #fcntl.flock( f, fcntl.LOCK_UN )
     if number in trimmed:
         Z = trimmed[number].Z
         print ( "[plotHiscore] obtaining trimmed #%d: Z=%.2f" % (number, Z ) )
