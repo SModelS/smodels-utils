@@ -47,7 +47,7 @@ class Trimmer:
         origZ = self.model.Z # to be sure
         self.model.Z = -23.
         self.model.predict( strategy="aggressive", keep_meta = True )
-        print ( "[trimmer] Z=%.2f, old=%.2f" % ( self.model.Z, origZ ) )
+        print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions" % ( self.model.Z, origZ, len(self.model.bestCombo) ) )
         contributions = {}
         combiner = Combiner()
         dZtot = 0.
