@@ -66,7 +66,7 @@ class Hiscore:
             
         try:
             with open( self.pickleFile,"rb+") as f:
-                fcntl.flock ( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
+                fcntl.flock ( f, fcntl.LOCK_EX )
                 self.hiscores = pickle.load ( f )
                 self.trimmed = pickle.load ( f )
                 fcntl.flock ( f, fcntl.LOCK_UN )
@@ -125,7 +125,7 @@ class Hiscore:
             subprocess.getoutput ( "mv -f %s old.pcl" % pickleFile )
             self.clean()
             with open( pickleFile, "wb" ) as f:
-                fcntl.flock ( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
+                fcntl.flock ( f, fcntl.LOCK_EX )
                 pickle.dump ( self.hiscores, f )
                 pickle.dump ( self.trimmed, f )
                 fcntl.flock ( f, fcntl.LOCK_UN )
