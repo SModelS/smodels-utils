@@ -115,11 +115,12 @@ class Hiscore:
         """
         if pickleFile==None:
             pickleFile = self.pickleFile
-        mtime = os.stat ( self.pickleFile ).st_mtime
-        if mtime > self.mtime:
-            self.pprint ( "while writing to pickle file I see that it has changed" )
-            self.updateListFromPickle()
-            return False
+        if os.path.exists ( self.pickleFile ):
+            mtime = os.stat ( self.pickleFile ).st_mtime
+            if mtime > self.mtime:
+                self.pprint ( "while writing to pickle file I see that it has changed" )
+                self.updateListFromPickle()
+                return False
         self.pprint ( "saving new hiscore list to %s" % pickleFile )
         try:
             subprocess.getoutput ( "mv -f %s old.pcl" % pickleFile )
