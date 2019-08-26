@@ -12,7 +12,7 @@ class Hiscore:
         self.walkerid = walkerid
         self.trimmed = {}
         self.save_hiscores = save_hiscores
-        self.nkeep = 5 ## how many do we keep.
+        self.nkeep = 3 ## how many do we keep.
         self.hiscores = [ None ]*self.nkeep
         self.fileAttempts = 0 ## unsucessful attempts at reading or writing
         self.pickleFile = picklefile
@@ -100,8 +100,9 @@ class Hiscore:
                 self.trimmed[i] = trimmer.model
 
     def clean ( self ):
-        """ clean hiscore list, i.e. remove cruft from models """
-        for h in self.hiscores:
+        """ clean hiscore list, i.e. remove cruft from models. 
+            leave first one as it is """
+        for h in self.hiscores[1:]:
             if h != None:
                 h.clean( all=True )
 
