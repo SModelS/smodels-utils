@@ -28,6 +28,7 @@ class RandomWalker:
             self.pprint ( "Wrong call of constructor: %s, %s, %s" % ( walkerid, nsteps, strategy ) )
             sys.exit()
         self.walkerid = walkerid ## walker id, for parallel runs
+        self.hiscoreList = Hiscore ( walkerid, True, "hi%d.pcl" % walkerid )
         self.model = Model( self.walkerid )
         self.strategy = strategy
         self.history = History ( walkerid )
@@ -94,8 +95,8 @@ class RandomWalker:
         nTotal = len ( self.model.masses.keys() )
         self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.model.step, nUnfrozen, nTotal, ", ".join ( map ( helpers.getParticleName, self.model.unFrozenParticles() ) ) ) )
         if True:
-            self.pprint ( "memory footprint (kb): walker %d, model %d, hiscore %d, regressor %d, history %d" %\
-                    ( asizeof(self)/1024,asizeof(self.model)/1024,asizeof(self.hiqueue)/1024,asizeof(self.regressor)/1024, asizeof(self.history)/1024 ) )
+            self.pprint ( "memory footprint (kb): walker %d, model %d, regressor %d, history %d" %\
+                    ( asizeof(self)/1024,asizeof(self.model)/1024,asizeof(self.regressor)/1024, asizeof(self.history)/1024 ) )
         nChanges = 0
         mu = 1. - .7 / (self.model.Z+1.) ## make it more unlikely when Z is high
         uUnfreeze = random.gauss( mu ,.5)
@@ -134,17 +135,18 @@ class RandomWalker:
             return
 
         self.log ( "found highest Z: %.2f" % self.model.Z )
-        try:
-            hiscoreList = self.hiqueue.get( timeout=70. )[0]
-            hiscoreList.walkerid = self.walkerid ## to identify which walker causes problems
-        except Exception as e:
-            hiscoreList = Hiscore ( 0, True )
-        if hiscoreList != None:
+        
+        #try:
+        #    hiscoreList = self.hiqueue.get( timeout=70. )[0]
+        #    hiscoreList.walkerid = self.walkerid ## to identify which walker causes problems
+        #except Exception as e:
+        #    hiscoreList = Hiscore ( 0, True )
+        if self.hiscoreList != None:
             self.log ( "check if result goes into hiscore list" )
-            hiscoreList.newResult ( self.model ) ## add to high score list
+            self.hiscoreList.newResult ( self.model ) ## add to high score list
             self.log ( "done check for result to go into hiscore list" )
-        self.hiqueue.put( [ hiscoreList ] )
-        self.train ()
+        # self.hiqueue.put( [ hiscoreList ] )
+        # self.train ()
         self.model.computePrior()
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.model.letters, self.model.description, self.model.Z ) )
         if self.model.Z > 29.:
@@ -387,9 +389,9 @@ class RandomWalker:
             # self.gradientAscent()
         self.saveState()
 
-def _run ( walker, queue, hiqueue ):
+def _run ( walker, queue ):
     walker.queue = queue
-    walker.hiqueue = hiqueue
+    # walker.hiqueue = hiqueue
     try:
         walker.walk()
     except Exception as e:
@@ -472,9 +474,9 @@ if __name__ == "__main__":
     queue.put ( [ regressor ] )
 
     print ( "[walk] loading hiscores" )
-    hiscore = Hiscore ( 0, True )
-    hiqueue = multiprocessing.Queue()
-    hiqueue.put ( [ hiscore ] )
+    #hiscore = Hiscore ( 0, True )
+    #hiqueue = multiprocessing.Queue()
+    #hiqueue.put ( [ hiscore ] )
     onoff="off"
     if args.history:
         onoff="on"
@@ -484,7 +486,7 @@ if __name__ == "__main__":
     print ( "[walk] starting %d walkers" % len(walkers) )
     processes=[]
     for walker in walkers:
-        p = multiprocessing.Process ( target=_run, args=( walker, queue, hiqueue ) )
+        p = multiprocessing.Process ( target=_run, args=( walker, queue, ) )
         p.start()
         processes.append(p)
     for p in processes:

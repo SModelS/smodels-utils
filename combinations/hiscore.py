@@ -124,7 +124,7 @@ class Hiscore:
                 return False
         self.pprint ( "saving new hiscore list to %s" % pickleFile )
         try:
-            subprocess.getoutput ( "mv -f %s old.pcl" % pickleFile )
+            subprocess.getoutput ( "mv -f %s old_%s" % ( pickleFile, pickleFile ) )
             self.clean()
             with open( pickleFile, "wb" ) as f:
                 fcntl.flock ( f, fcntl.LOCK_EX )
