@@ -332,20 +332,9 @@ class Combiner:
         return bestCombo,ulexp,ulobs
     """
 
-"""
-def oldmain():
-    # old main routine 
-    with open("predictions.pcl", "rb" ) as f:
-        predictions = pickle.load ( f )
-    algo = Combiner ()
-    print ()
-    strategy = "aggressive"
-    print ( "Find highest significance for: %s" % strategy )
-    bestCombo,Z,llhd = algo.findHighestSignificance ( predictions, strategy )
-    print ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( strategy, algo.getLetterCode(bestCombo), algo.getComboDescription(bestCombo), Z ) )
-"""
-
 if __name__ == "__main__":
+    from smodels.tools import runtime
+    runtime._experimental = True
     import argparse
     argparser = argparse.ArgumentParser(
             description='combiner. if called from commandline, computes the highest Z' )
@@ -361,17 +350,24 @@ if __name__ == "__main__":
     from smodels.particlesLoader import BSMList
     from smodels.share.models.SMparticles import SMList
     from smodels.theory.model import Model
+    from smodels.tools.physicsUnits import fb
     model = Model(BSMparticles=BSMList, SMparticles=SMList)
     model.updateParticles(inputFile=args.slhafile)
+    print ( "[combiner] loading database", args.database )
     db = Database ( args.database )
+    print ( "[combiner] done loading database" )
     listOfExpRes = db.getExpResults()
-    smses = decomposer.decompose ( model )
+    smses = decomposer.decompose ( model, .01*fb )
+    print ( "[combiner] decomposed into %d topos" % len(smses) )
     from smodels.theory.theoryPrediction import theoryPredictionsFor
     for expRes in listOfExpRes:
         preds = theoryPredictionsFor ( expRes, smses )
         if preds == None:
             continue
-        print ( "%s, %s has %d predictions" % ( args.slhafile, expRes, len(preds) ) )
+        print ( "%s has %d predictions" % ( expRes.globalInfo.id, len(preds) ) )
+        for pred in preds:
+            pred.computeStatistics()
+            print ( "likelihood %s %s %s" % ( pred.dataType(True), pred.getLikelihood(0.), pred.getLikelihood(1.) ) )
     comb = Combiner()
 
 
