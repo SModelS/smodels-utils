@@ -18,24 +18,42 @@ def discussBest ( model, detailed ):
         for i in model.bestCombo:
             print ( "  prediction in best combo: %s (%s)" % ( i.analysisId(), i.dataType() ) )
 
+def compile():
+    """ compile the list from individual hi*pcl """
+    import glob
+    files = glob.glob ( "hi?.pcl" ) + glob.glob ( "hi??.pcl" )
+    allmodels,alltrimmed=[],[]
+    for f in files:
+        with open( f,"rb+") as f:
+            fcntl.flock( f, fcntl.LOCK_EX )
+            models = pickle.load ( f )
+            trimmed = pickle.load ( f )
+            fcntl.flock( f, fcntl.LOCK_UN )
+            allmodels += models
+            alltrimmed += trimmed
+    return allmodels, alltrimmed
+
 def main():
     import argparse
     argparser = argparse.ArgumentParser(
             description='Lists the current hiscores.' )
     argparser.add_argument ( '-f', '--picklefile',
-            help='pickle file with hiscores [hiscore.pcl]',
-            type=str, default="hiscore.pcl" )
+            help='pickle file with hiscores [None]. If None, compile from hi*pcl',
+            type=str, default=None )
     argparser.add_argument ( '-n', '--nmax',
             help='maximum number of entries to show [20]',
             type=int, default=20 )
     argparser.add_argument ( '-d', '--detailed',
             help='detailed descriptions', action="store_true" )
     args = argparser.parse_args()
-    with open(args.picklefile,"rb+") as f:
-        fcntl.flock( f, fcntl.LOCK_EX )
-        models = pickle.load ( f )
-        trimmed = pickle.load ( f )
-        fcntl.flock( f, fcntl.LOCK_UN )
+    if args.picklefile == None:
+        models,trimmed = compile()
+    else:
+        with open(args.picklefile,"rb+") as f:
+            fcntl.flock( f, fcntl.LOCK_EX )
+            models = pickle.load ( f )
+            trimmed = pickle.load ( f )
+            fcntl.flock( f, fcntl.LOCK_UN )
     names = { 0: "highest", 1: "second", 2: "third" }
     for c,model in enumerate(models):
         if c >= args.nmax:
