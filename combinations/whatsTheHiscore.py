@@ -18,6 +18,10 @@ def discussBest ( model, detailed ):
         for i in model.bestCombo:
             print ( "  prediction in best combo: %s (%s)" % ( i.analysisId(), i.dataType() ) )
 
+def sortByZ ( models ):
+    models.sort ( reverse=True, key = lambda x: x.Z )
+    return models
+
 def compile():
     """ compile the list from individual hi*pcl """
     import glob
@@ -31,6 +35,8 @@ def compile():
             fcntl.flock( f, fcntl.LOCK_UN )
             allmodels += models
             alltrimmed += trimmed
+    allmodels = sortByZ ( allmodels )
+    alltrimmed = sortByZ ( alltrimmed )
     return allmodels, alltrimmed
 
 def main():
@@ -41,8 +47,8 @@ def main():
             help='pickle file with hiscores [None]. If None, compile from hi*pcl',
             type=str, default=None )
     argparser.add_argument ( '-n', '--nmax',
-            help='maximum number of entries to show [20]',
-            type=int, default=20 )
+            help='maximum number of entries to show [10]',
+            type=int, default=10 )
     argparser.add_argument ( '-d', '--detailed',
             help='detailed descriptions', action="store_true" )
     args = argparser.parse_args()
