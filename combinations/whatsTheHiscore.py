@@ -5,18 +5,27 @@ from randomWalk import Model # RandomWalker
 from scipy import stats
 
 def discuss ( model, name ):
-    print ( "Currently %7s Z is: %.3f [%d/%d unfrozen particles, %d predictions] " % \
-            (name, model.Z, len(model.unFrozenParticles()),len(model.masses.keys()),len(model.bestCombo) ) )
+    print ( "Currently %7s Z is: %.3f [%d/%d unfrozen particles, %d predictions] (walker #%d)" % \
+            (name, model.Z, len(model.unFrozenParticles()),len(model.masses.keys()),len(model.bestCombo), model.walkerid ) )
 
 def discussBest ( model, detailed ):
     """ a detailed discussion of number 1 """
     p = 1. - stats.norm.cdf ( model.Z )
-    print ( "Current           best: %.3f, p=%.2g [%d/%d unfrozen particles, %d predictions] " % \
-            (model.Z, p, len(model.unFrozenParticles()),len(model.masses.keys()),len(model.bestCombo) ) )
+    print ( "Current           best: %.3f, p=%.2g [%d/%d unfrozen particles, %d predictions] (walker #%d)" % \
+            (model.Z, p, len(model.unFrozenParticles()),len(model.masses.keys()),len(model.bestCombo), model.walkerid ) )
     if detailed:
         print ( "Solution was found in step #%d" % model.step )
         for i in model.bestCombo:
             print ( "  prediction in best combo: %s (%s)" % ( i.analysisId(), i.dataType() ) )
+
+def store ( models, trimmed, savefile, nmax ):
+    """ store the best models in another hiscore file """
+    from hiscore import Hiscore
+    h = Hiscore ( 0, True, savefile )
+    h.hiscores = models[:nmax]
+    h.trimmed = trimmed[:nmax]
+    h.save()
+
 
 def sortByZ ( models ):
     models.sort ( reverse=True, key = lambda x: x.Z )
@@ -46,8 +55,11 @@ def main():
     argparser.add_argument ( '-f', '--picklefile',
             help='pickle file with hiscores [None]. If None, compile from hi*pcl',
             type=str, default=None )
+    argparser.add_argument ( '-s', '--savefile',
+            help='save compiled list to file [None]. If None, dont save',
+            type=str, default=None )
     argparser.add_argument ( '-n', '--nmax',
-            help='maximum number of entries to show [10]',
+            help='maximum number of entries to show. Also maximum number of entries to store, if -s [10]',
             type=int, default=10 )
     argparser.add_argument ( '-d', '--detailed',
             help='detailed descriptions', action="store_true" )
@@ -73,6 +85,8 @@ def main():
             discussBest ( model, args.detailed )
         else:
             discuss ( model, sc )
+    if args.savefile is not None:
+        store ( models, trimmed, args.savefile, args.nmax )
 
 if __name__ == "__main__":
     main()
