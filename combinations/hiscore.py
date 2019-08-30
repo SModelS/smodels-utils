@@ -97,6 +97,8 @@ class Hiscore:
             if self.hiscores[i]!=None:
                 trimmer = Trimmer( self.hiscores[i], "aggressive", maxloss )
                 trimmer.trim( trimbranchings=trimbranchings )
+                while len(self.trimmed)<=i:
+                    self.trimmed.append ( None )
                 self.trimmed[i] = trimmer.model
 
     def clean ( self ):
