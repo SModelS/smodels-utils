@@ -10,7 +10,7 @@ from smodels.theory.model import Model
 import analysisCombiner
 import pickle, numpy, math, colorama, copy
 from scipy import optimize, stats
-import IPython
+# import IPython
 
 class Combiner:
     def __init__ ( self, walkerid=0 ):

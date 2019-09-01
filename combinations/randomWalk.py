@@ -2,16 +2,22 @@
 
 """ a first start at the random walk idea """
 
-import random, copy, pickle, sys, os, time, subprocess, math
+import random, copy, pickle, sys, os, time, math
+if sys.version_info[0]==2:
+    import commands as subprocess # python2.7
+else:
+    import subprocess
 import numpy, colorama
 from smodels.tools.runtime import nCPUs
 from hiscore import Hiscore
 from model import Model
 from history import History
-from regressor import Regressor, RegressionHelper, PyTorchModel
 import helpers
 from pympler.asizeof import asizeof
-from torch import multiprocessing
+try:
+    from torch import multiprocessing
+except:
+    import multiprocessing
 
 def cleanDirectory ():
     subprocess.getoutput ( "mkdir -p tmp" )
@@ -464,6 +470,7 @@ if __name__ == "__main__":
     regressor = None
     regress = not args.no_regressor 
     if regress:
+        from regressor import Regressor, RegressionHelper, PyTorchModel
         torchmodel, adam = None, None
         helper = RegressionHelper ()
         variables = helper.freeParameters( "template_many.slha" )    
