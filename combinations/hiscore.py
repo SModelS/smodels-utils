@@ -75,7 +75,8 @@ class Hiscore:
             for i in self.hiscores:
                 if i != None:
                     nhs += 1
-            self.pprint ( "loaded %d hiscores from file, and %s trimmed ones." % ( nhs,len(self.trimmed) ) )
+            self.pprint ( "loaded %d hiscores from %s, and %s trimmed ones." % \
+                          ( nhs, self.pickleFile, len(self.trimmed) ) )
             # assert ( len(self.hiscores) == self.nkeep )
             self.fileAttempts=0
         except Exception as e:
