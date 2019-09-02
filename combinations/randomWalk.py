@@ -26,7 +26,8 @@ def cleanDirectory ():
     subprocess.getoutput ( "mv exceptions.log tmp/" )
 
 class RandomWalker:
-    def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive" ):
+    def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive",
+                   cheat=False ):
         """ initialise the walker
         :param nsteps: maximum number of steps to perform
         """
@@ -35,7 +36,7 @@ class RandomWalker:
             sys.exit()
         self.walkerid = walkerid ## walker id, for parallel runs
         self.hiscoreList = Hiscore ( walkerid, True, "hi%d.pcl" % walkerid )
-        self.model = Model( self.walkerid )
+        self.model = Model( self.walkerid, cheat )
         self.strategy = strategy
         self.history = History ( walkerid )
         self.record_history = False
@@ -429,6 +430,9 @@ if __name__ == "__main__":
             help='do not use the NN regressor', action='store_true' )
     argparser.add_argument ( '-e', '--expected',
             help='run only with expected values', action='store_true' )
+    argparser.add_argument ( '-C', '--cheat',
+            help='cheat, i.e. start with sensible models. Disregarded, if --cont.', 
+            action='store_true' )
     argparser.add_argument ( '-f', '-c', '--cont',
             help='continue with saved states [""]',
             type=str, default="" )
@@ -452,7 +456,8 @@ if __name__ == "__main__":
                     break
                 if v == None:
                     # no state? start from scratch!
-                    walker = RandomWalker( ctr+1, args.nsteps, args.strategy )
+                    walker = RandomWalker( ctr+1, args.nsteps, args.strategy, 
+                                           args.cheat )
                     walker.takeStep()
                     walkers.append ( walker )
                     continue
@@ -465,7 +470,7 @@ if __name__ == "__main__":
                 ctr+=1
     else:
         for ctr in range(ncpus):
-            walkers.append ( RandomWalker( ctr+1, args.nsteps, args.strategy ) )
+            walkers.append ( RandomWalker( ctr+1, args.nsteps, args.strategy, args.cheat ) )
 
     regressor = None
     regress = not args.no_regressor 
