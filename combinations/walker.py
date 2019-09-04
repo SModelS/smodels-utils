@@ -26,7 +26,7 @@ def cleanDirectory ():
     subprocess.getoutput ( "mv exceptions.log tmp/" )
 
 class RandomWalker:
-    def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive", dump_training = False, cheat = False ):
+    def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive", dump_training = False, cheat = 0, dbpath = "../../smodels-database/" ):
         """ initialise the walker
         :param nsteps: maximum number of steps to perform
         """
@@ -35,7 +35,7 @@ class RandomWalker:
             sys.exit(-2)
         self.walkerid = walkerid ## walker id, for parallel runs
         self.hiscoreList = Hiscore ( walkerid, True, "H%d.pcl" % walkerid )
-        self.model = Model( self.walkerid, cheat=cheat )
+        self.model = Model( self.walkerid, cheat=cheat, dbpath = dbpath )
         self.strategy = strategy
         self.history = History ( walkerid )
         self.record_history = False
@@ -60,10 +60,12 @@ class RandomWalker:
 
     @classmethod
     def fromModel( cls, model, nsteps=10000, strategy="aggressive", walkerid=0, 
-                   dump_training = False ):
+                   dump_training = False, dbpath="../../smodels-database/" ):
         ret = cls( walkerid, nsteps, strategy, dump_training )
         ret.model = model
         ret.model.walkerid = walkerid
+        ret.model.dbpath = dbpath
+        ret.model.initializePredictor()
         if dump_training:
             ## we use the regressor only to dump the training data
             from regressor import Regressor
@@ -83,7 +85,7 @@ class RandomWalker:
         p = random.choice ( unfrozen )
         self.model.masses[p]=1e6
         self.model.normalizeAllBranchings() ## adjust everything
-        self.pprint ( "Freezing %s (keep branchings)." % ( helpers.getParticleName(p) ) )
+        self.log ( "Freezing %s (keep branchings)." % ( helpers.getParticleName(p) ) )
         return 1
 
     def freezeMostMassiveParticle ( self ):
@@ -108,7 +110,7 @@ class RandomWalker:
         nUnfrozen = len ( self.model.unFrozenParticles() )
         nTotal = len ( self.model.masses.keys() )
         self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.model.step, nUnfrozen, nTotal, ", ".join ( map ( helpers.getParticleName, self.model.unFrozenParticles() ) ) ) )
-        if True:
+        if False:
             self.pprint ( "memory footprint (kb): walker %d, model %d, regressor %d, history %d" %\
                     ( asizeof(self)/1024,asizeof(self.model)/1024,asizeof(self.regressor)/1024, asizeof(self.history)/1024 ) )
         nChanges = 0
@@ -244,7 +246,7 @@ class RandomWalker:
             self.pprint ( "Huh? ssmultiplier is 0?? Change to 1." )
             newSSM = 1.
         self.model.ssmultipliers[p]=newSSM
-        self.pprint ( "changed signal strength multiplier of %s: %.2f." % (helpers.getParticleName(p), newSSM ) )
+        self.log ( "changing signal strength multiplier of %s: %.2f." % (helpers.getParticleName(p), newSSM ) )
         return 1
 
     def randomlyChangeBranchings ( self ):
@@ -323,7 +325,7 @@ class RandomWalker:
         p = random.choice ( frozen )
         self.model.masses[p]=random.uniform ( self.model.masses[Model.LSP], self.model.maxMass )
         self.model.normalizeAllBranchings() ## adjust everything
-        self.pprint ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.model.masses[p] ) )
+        self.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.model.masses[p] ) )
         return 1
 
 
@@ -353,7 +355,11 @@ class RandomWalker:
             if self.model.oldZ() > 0.:
                 ratio = self.model.Z / self.model.oldZ()
             if self.model.rmax > 1.5:
-                self.highlight ( "info", "rmax=%.2f > %.1f (r2=%.2f). Revert." % (self.model.rmax, rthresholds[0], self.model.r2) )
+                tp = self.model.rvalues[0][2]
+                ana="%s(%s,%s)" % \
+                     ( tp.analysisId(), ",".join( map ( str, tp.txnames ) ), tp.dataType(True) )
+                self.highlight ( "info", "rmax[%s]=%.2f > %.1f (r2=%.2f): revert." % \
+                        ( ana, self.model.rmax, rthresholds[0], self.model.r2 ) )
                 self.model.restore()
                 if hasattr ( self, "oldgrad" ) and self.regressor != None:
                     self.regressor.grad = self.oldgrad
@@ -410,6 +416,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-s', '--strategy',
             help='combination strategy [aggressive]',
             type=str, default="aggressive" )
+    argparser.add_argument ( '-d', '--database',
+            help='path to database [../../smodels-database]',
+            type=str, default="aggressive" )
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug,info,warn,error [info]',
             type=str, default="info" )
@@ -424,8 +433,8 @@ if __name__ == "__main__":
     argparser.add_argument ( '-e', '--expected',
             help='run only with expected values', action='store_true' )
     argparser.add_argument ( '-C', '--cheat',
-            help='cheat, i.e. start with sensible models. Disregarded, if --cont.', 
-            action='store_true' )
+            help='cheat mode, 0 means, dont cheat. Disregarded, if --cont. [0]', 
+            type=int, default=0 )
     argparser.add_argument ( '-f', '-c', '--cont',
             help='continue with saved states [""]',
             type=str, default="" )
@@ -450,20 +459,21 @@ if __name__ == "__main__":
                     break
                 if v == None:
                     # no state? start from scratch!
-                    walker = RandomWalker( ctr+1, args.nsteps, args.strategy, dump_training = dump_training, cheat = args.cheat )
+                    walker = RandomWalker( ctr+1, args.nsteps, args.strategy, dump_training = dump_training, cheat = args.cheat, dbpath = args.database )
                     walker.takeStep()
                     walkers.append ( walker )
                     continue
                 v2 = copy.deepcopy ( v )
                 v2.createNewSLHAFileName()
                 v2.walkerid = ctr+1
-                walkers.append ( RandomWalker.fromModel ( v2, walkerid = ctr+1, dump_training = dump_training ) )
+                walkers.append ( RandomWalker.fromModel ( v2, walkerid = ctr+1, 
+                            dump_training = dump_training, dbpath = args.database ) )
                 walkers[-1].setWalkerId ( ctr+1 )
                 walkers[-1].takeStep() # make last step a taken one
                 ctr+=1
     else:
         for ctr in range(ncpus):
-            walkers.append ( RandomWalker( ctr+1, args.nsteps, args.strategy, dump_training, args.cheat ) )
+            walkers.append ( RandomWalker( ctr+1, args.nsteps, args.strategy, dump_training, args.cheat, dbpath = args.database ) )
 
     # regressor = None
     #if regress:
@@ -476,13 +486,12 @@ if __name__ == "__main__":
     #    regressor = Regressor ( variables, 0, torchmodel, device="cpu" )
     # queue = multiprocessing.Queue()
     # queue.put ( [ regressor ] )
-
-    print ( "[walk] loading hiscores" )
+    #print ( "[walk] loading hiscores" )
     onoff="off"
     if args.history:
         onoff="on"
         walkers[0].record_history = True
-    print ( "[walk] record histories is %s" % onoff )
+    print ( "[walk] history recording is %s" % onoff )
 
     print ( "[walk] starting %d walkers" % len(walkers) )
     processes=[]

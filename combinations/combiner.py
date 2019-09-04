@@ -80,8 +80,8 @@ class Combiner:
         npred = 0
         if 1 in count.keys():
             npred = count[1]
-        self.pprint ( "%d combinations from %d predictions" % \
-                      (len(combinables),npred) )
+        self.debug ( "%d combinations from %d predictions" % \
+                     (len(combinables),npred) )
 
     def getCombinedLikelihood ( self, combination, mu, expected=False, nll=False ):
         """ get the combined likelihood for a signal strength mu

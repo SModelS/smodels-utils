@@ -238,41 +238,7 @@ def printModels ( models, detailed ):
         else:
             discuss ( model, sc )
 
-if __name__ == "__main__":
-    import argparse
-    argparser = argparse.ArgumentParser(
-            description='hiscore class. as a commandline tool it allows for '
-                        'merging, trimming, printing, and checking of hiscore list' )
-    argparser.add_argument ( '-i', '--infile',
-            help='Specify the input pickle file to start with. If none, start with hi<n>.pcl. [None]',
-            type=str, default=None )
-    argparser.add_argument ( '-o', '--outfile',
-            help='pickle file with hiscores. If none, dont pickle. [hiscore.pcl]',
-            type=str, default="hiscore.pcl" )
-    argparser.add_argument ( '-n', '--nmax',
-            help='maximum number of entries to store [10]',
-            type=int, default=10 )
-    argparser.add_argument ( '-c', '--check',
-            help='check if we can reproduce Z value of first entry',
-            action="store_true" )
-    argparser.add_argument ( '-C', '--analysis_contributions',
-            help='compute analysis contributions',
-            action="store_true" )
-    argparser.add_argument ( '-f', '--fetch',
-            help='fetch hi<n>.pcl from gpu server',
-            action="store_true" )
-    argparser.add_argument ( '-t', '--trim',
-            help='trim leading model, but only particles', action="store_true" )
-    argparser.add_argument ( '-T', '--trim_branchings',
-            help='trim leading model, also branchings',
-            action="store_true" )
-    argparser.add_argument ( '-p', '--print',
-            help='print list to stdout', action="store_true" )
-    argparser.add_argument ( '-d', '--detailed',
-            help='detailed descriptions (requires -p)', action="store_true" )
-    argparser.add_argument ( '-I', '--interactive', help='start interactive session',
-                             action="store_true" )
-    args = argparser.parse_args()
+def main ( *args ):
     if args.detailed:
         args.print = True
     if args.outfile.lower() in [ "none", "", "false" ]:
@@ -343,3 +309,41 @@ if __name__ == "__main__":
         print ( "[hiscore] starting interactive session. Variables: models, trimmed" )
         import IPython
         Ipython.embed()
+
+if __name__ == "__main__":
+    import argparse
+    argparser = argparse.ArgumentParser(
+            description='hiscore class. as a commandline tool it allows for '
+                        'merging, trimming, printing, and checking of hiscore list' )
+    argparser.add_argument ( '-i', '--infile',
+            help='Specify the input pickle file to start with. If none, start with hi<n>.pcl. [None]',
+            type=str, default=None )
+    argparser.add_argument ( '-o', '--outfile',
+            help='pickle file with hiscores. If none, dont pickle. [hiscore.pcl]',
+            type=str, default="hiscore.pcl" )
+    argparser.add_argument ( '-n', '--nmax',
+            help='maximum number of entries to store [10]',
+            type=int, default=10 )
+    argparser.add_argument ( '-c', '--check',
+            help='check if we can reproduce Z value of first entry',
+            action="store_true" )
+    argparser.add_argument ( '-C', '--analysis_contributions',
+            help='compute analysis contributions',
+            action="store_true" )
+    argparser.add_argument ( '-f', '--fetch',
+            help='fetch hi<n>.pcl from gpu server',
+            action="store_true" )
+    argparser.add_argument ( '-t', '--trim',
+            help='trim leading model, but only particles', action="store_true" )
+    argparser.add_argument ( '-T', '--trim_branchings',
+            help='trim leading model, also branchings',
+            action="store_true" )
+    argparser.add_argument ( '-p', '--print',
+            help='print list to stdout', action="store_true" )
+    argparser.add_argument ( '-d', '--detailed',
+            help='detailed descriptions (requires -p)', action="store_true" )
+    argparser.add_argument ( '-I', '--interactive', help='start interactive session',
+                             action="store_true" )
+    args = argparser.parse_args()
+
+    main ( *args )

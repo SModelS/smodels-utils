@@ -18,11 +18,12 @@ class Model:
         branchings, their signal strength modifiers.
     """
     LSP = 1000022 ## the LSP is hard coded
-    def __init__ ( self, walkerid, cheat=False ):
+    def __init__ ( self, walkerid, cheat=0, dbpath="../../smodels-database/" ):
         self.walkerid = walkerid
+        self.dbpath = dbpath
         self.version = 1 ## version of this class
         self.maxMass = 2400. ## maximum masses we consider
-        self.predictor = Predictor( walkerid )
+        self.initializePredictor()
         self.step = 0 ## count the steps
         self.particles = [ 1000001, 2000001, 1000002, 2000002, 1000003, 2000003,
                   1000004, 2000004, 1000005, 2000005, 1000006, 2000006, 1000011,
@@ -87,28 +88,37 @@ class Model:
 
         ## the LSP we need from the beginning
         self.masses[Model.LSP]=random.uniform(250,500)
-        if cheat: # True: # cheat, to get a head start
-            cheatmode = 2
-            if cheatmode == 1:
-                self.pprint ( "cheat mode (1), start with stop, sbottom, sup." )
+        if cheat>0: # True: # cheat, to get a head start
+            if cheat == 1:
+                self.highlight ( "red", "cheat mode (1), start with stop, sbottom, sup." )
                 self.masses[1000006]=random.uniform(700,900)
                 self.masses[1000005]=random.uniform(500,700)
                 self.masses[1000002]=random.uniform(800,1200)
                 # self.masses[1000024]=random.uniform(500,1000)
-            if cheatmode == 2:
-                self.pprint ( "cheat mode (2), start with Z=3.23 point (roughly)." )
+            if cheat == 2:
+                self.highlight ( "red", "cheat mode (2), start with Z=3.23 point (roughly)." )
                 self.masses[1000006]=830.
                 self.masses[1000005]=600.
                 self.masses[1000001]=1070.
                 self.masses[1000002]=920.
                 self.masses[1000004]=450.
                 self.masses[1000022]=380.
+                self.ssmultipliers[1000005]=.65
                 # self.masses[1000024]=random.uniform(500,1000)
         self.computePrior()
+
+    def initializePredictor ( self ):
+        """ initialize the predictor """
+        self.pprint ( "initializing predictor #%d with database at %s" % ( self.walkerid, self.dbpath ) )
+        self.predictor = Predictor( self.walkerid, dbpath=self.dbpath )
 
     def highlight ( self, msgType = "info", *args ):
         """ logging, hilit """
         col = colorama.Fore.GREEN
+        if msgType.lower() in [ "error", "red" ]:
+            col = colorama.Fore.RED
+        if msgType.lower() in [ "warn", "warning", "yellow" ]:
+            col = colorama.Fore.YELLOW
         print ( "%s[model:%d - %s] %s%s" % ( col, self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)), colorama.Fore.RESET ) )
 
     def pprint ( self, *args ):
@@ -149,7 +159,7 @@ class Model:
         # best results only, also non-likelihood results
         self.log ( "check if excluded" )
         if not hasattr ( self, "predictor" ):
-            self.predictor = Predictor ( self.walkerid )
+            self.predictor = Predictor ( self.walkerid, self.dbpath )
         bestpreds = self.predictor.predict ( self.currentSLHA, allpreds=False,
                                              llhdonly=False )
         rs = self.checkForExcluded ( bestpreds )
@@ -195,6 +205,7 @@ class Model:
             rexp = theorypred.getRValue(expected=True)
             robs.append ( r )
             self.rvalues.append ( (r, rexp, combiner.removeDataFromTheoryPred ( theorypred ) ) )
+        self.rvalues.sort ( reverse = True )
         robs.sort(reverse=True)
         return robs
 
@@ -314,6 +325,7 @@ class Model:
                         line=line.replace( line[p1:p1+p2+1], "0." )
                 f.write ( line )
         self.computeXSecs( nevents )
+        return outputSLHA
 
     def dict ( self ):
         """ return the dictionary that can be written out """

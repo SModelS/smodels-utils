@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import pickle, os, sys, subprocess, time, fcntl
-from randomWalk import Model # RandomWalker
+from walker import Model # RandomWalker
 from smodels.tools.physicsUnits import GeV
 sys.path.insert(0,"../" )
 from smodels_utils.plotting import rulerPlotter, decayPlotter
@@ -9,6 +9,13 @@ import helpers
 
 def obtain ( number, picklefile ):
     """ obtain hiscore number <number> """
+    if not os.path.exists ( picklefile ):
+        print ( "[plotHiscore] hiscore.pcl does not exist. Trying to produce now with ./hiscore.py" )
+        from argparse import Namespace
+        args = Namespace()
+        import hiscore
+        hiscore.main ( *args )
+
     with open( picklefile,"rb" ) as f:
         #fcntl.flock( f, fcntl.LOCK_EX )
         hiscores = pickle.load ( f )
@@ -81,7 +88,7 @@ def writeIndexHtml ( model ):
     f.write ( "<h1>Current best model: Z=%.2f</h1>\n" % model.Z )
     f.write ( "</center>\n" )
     f.write ( "<table width=80%>\n<tr><td>\n" )
-    f.write ( "<b>Model produced in step %d</b><br>\n" % model.step )
+    f.write ( "<b><a href=./hiscore.slha>Model</a> produced in step %d</b><br>\n" % model.step )
     if hasattr ( model, "rvalues" ):
         rvalues=model.rvalues
         rvalues.sort(key=lambda x: x[0],reverse=True )
@@ -122,7 +129,7 @@ def writeIndexHtml ( model ):
     print ( "[plotHiscore] Wrote index.html" )
 
 def copyFilesToGithub():
-    subprocess.getoutput ( "cp index.html matrix_aggressive.png decays.png ruler.png texdoc.png ../../smodels.github.io/models/" )
+    subprocess.getoutput ( "cp hiscore.slha index.html matrix_aggressive.png decays.png ruler.png texdoc.png ../../smodels.github.io/models/" )
 
 def plotRuler( model ):
     resultsForPIDs = {}
@@ -156,7 +163,8 @@ def plot ( number, verbosity, picklefile, options ):
     ## plot hiscore number "number"
     model = obtain ( number, picklefile )
     print ( "[plotHiscore] create slha file" )
-    model.createSLHAFile ()
+    fname = model.createSLHAFile ()
+    subprocess.getoutput ( "cp %s hiscore.slha" % fname )
     opts = [ "ruler", "decays", "predictions", "copy", "html" ]
     for i in opts:
         if not i in options:
@@ -202,13 +210,13 @@ if __name__ == "__main__":
             help='list all predictions',
             action="store_true" )
     argparser.add_argument ( '-s', '--scp',
-            help='scp to GPU server, afs www space',
+            help='upload to GPU server, afs www space. To appear at http://www.hephy.at/user/wwaltenberger/models/',
             action="store_true" )
     args = argparser.parse_args()
     options = { "ruler": not args.noruler, "decays": not args.nodecays,
                 "predictions": args.predictions, "html": not args.nohtml }
     plot ( args.number, args.verbosity, args.picklefile, options )
     if args.scp:
-        cmd = "scp *.png index.html gpu:/afs/hephy.at/user/w/wwaltenberger/www/models"
+        cmd = "scp *.png hiscore.slha index.html gpu:/afs/hephy.at/user/w/wwaltenberger/www/models"
         print ( cmd )
         subprocess.getoutput ( cmd )

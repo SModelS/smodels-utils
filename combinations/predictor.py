@@ -12,9 +12,9 @@ from smodels.theory.model import Model
 import pickle, time
 
 class Predictor:
-    def __init__ ( self, walkerid ):
+    def __init__ ( self, walkerid, dbpath = "../../smodels-database/" ):
         self.walkerid = walkerid
-        self.database=Database("../../smodels-database/") 
+        self.database=Database( dbpath ) 
 
     def pprint ( self, *args ):
         """ logging """
