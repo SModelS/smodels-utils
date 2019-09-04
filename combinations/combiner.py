@@ -159,8 +159,10 @@ class Combiner:
         return lowest,lowestv
 
     def getLetters( self, predictions ):
-        ## assign a letter to every prediction. for debugging
         letters={}
+        if predictions is None:
+            return letters
+        ## assign a letter to every prediction. for debugging
         letter=65
         # self.pprint ( "[combine] Letters assigned to results:" )
         for p in predictions:
@@ -187,7 +189,7 @@ class Combiner:
         l0 = numpy.array ( [ c.getLikelihood(0.,expected=expected) for c in combo ] )
         LH0 = numpy.prod ( l0[l0!=None] )
         l1 = numpy.array ( [ c.getLikelihood(muhat,expected=expected) for c in combo ] )
-        print ( "combo", len(combo), "muhat", muhat, "l0", l0, "l1", l1 )
+        # print ( "combo", len(combo), "muhat", muhat, "l0", l0, "l1", l1 )
         LH1 = numpy.prod ( l1[l1!=None] )
         if LH0 <= 0.:
             self.error ( "likelihood for SM was 0. Set to 1e-80" )
@@ -382,14 +384,24 @@ if __name__ == "__main__":
     anaIds = [ "CMS-SUS-16-033" ]
     anaIds = [ "all" ]
     dts = [ "all" ]
-    dts = [ "upperLimit" ]
+    dts = [ "efficiencyMap" ]
+    # dts = [ "upperLimit" ]
     listOfExpRes = db.getExpResults( analysisIDs = anaIds, dataTypes = dts,
      onlyWithExpected= True )
     smses = decomposer.decompose ( model, .01*fb )
     #print ( "[combiner] decomposed into %d topos" % len(smses) )
     from smodels.theory.theoryPrediction import theoryPredictionsFor
     combiner = Combiner()
-    #print ( "[combiner] global Z is %.2f" % Z )
+    allps = []
+    for expRes in listOfExpRes:
+        preds = theoryPredictionsFor ( expRes, smses )
+        if preds == None:
+            continue
+        for pred in preds:
+            allps.append ( pred )
+    #print ( "allpreds", allps )
+    combo,globalZ,llhd = combiner.findHighestSignificance ( allps, "aggressive" )
+    print ( "[combiner] global Z is %.2f" % globalZ )
     for expRes in listOfExpRes:
         preds = theoryPredictionsFor ( expRes, smses )
         if preds == None:
