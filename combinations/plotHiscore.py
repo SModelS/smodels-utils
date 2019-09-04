@@ -88,9 +88,10 @@ def writeIndexHtml ( model ):
     f.write ( "<h1>Current best model: Z=%.2f</h1>\n" % model.Z )
     f.write ( "</center>\n" )
     f.write ( "<table width=80%>\n<tr><td>\n" )
-    import IPython
-    IPython.embed()
-    f.write ( "<b><a href=./hiscore.slha>Model</a> produced with database %s in step %d</b><br>\n" % ( "???", model.step ) )
+    dbver = "???"
+    if hasattr ( model, "dbversion" ):
+        dbver = model.dbversion
+    f.write ( "<b><a href=./hiscore.slha>Model</a> produced with database %s in step %d</b><br>\n" % ( dbver, model.step ) )
     if hasattr ( model, "rvalues" ):
         rvalues=model.rvalues
         rvalues.sort(key=lambda x: x[0],reverse=True )

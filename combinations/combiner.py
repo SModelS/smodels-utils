@@ -42,9 +42,18 @@ class Combiner:
         :param predictions: list of predictions
         :returns: a list of combinations
         """
+        tmp = []
+        if False: ## remove UL results
+            rm = "upperLimit"
+            for pred in predictions:
+                if pred.dataType() == rm:
+                    continue
+                tmp.append ( pred )
+            sef.pprint ( "removed %s, %d/%d remain" % \
+                         ( rm, len(tmp), len(predictions) ) )
+            predictions = tmp
         combinables=[]
         n=len(predictions)
-        # print ( "[Combiner] %d predictions" % n )
         for iA,predA in enumerate(predictions):
             combo = [ predA ]
             nexti = iA + 1
@@ -367,7 +376,7 @@ if __name__ == "__main__":
         print ( "%s has %d predictions" % ( expRes.globalInfo.id, len(preds) ) )
         for pred in preds:
             pred.computeStatistics()
-            print ( "likelihood %s %s %s" % ( pred.dataType(True), pred.getLikelihood(0.), pred.getLikelihood(1.) ) )
+            print ( "likelihood [%s] SM=%s BSM=%s" % ( pred.dataType(True), pred.getLikelihood(0.), pred.getLikelihood(1.) ) )
     comb = Combiner()
 
 
