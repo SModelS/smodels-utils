@@ -111,6 +111,7 @@ class Model:
         """ initialize the predictor """
         self.pprint ( "initializing predictor #%d with database at %s" % ( self.walkerid, self.dbpath ) )
         self.predictor = Predictor( self.walkerid, dbpath=self.dbpath )
+        self.dbversion = self.predictor.database.databaseVersion
 
     def highlight ( self, msgType = "info", *args ):
         """ logging, hilit """
