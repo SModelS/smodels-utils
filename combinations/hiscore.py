@@ -238,7 +238,7 @@ def printModels ( models, detailed ):
         else:
             discuss ( model, sc )
 
-def main ( *args ):
+def main ( args ):
     if args.detailed:
         args.print = True
     if args.outfile.lower() in [ "none", "", "false" ]:
@@ -346,4 +346,4 @@ if __name__ == "__main__":
                              action="store_true" )
     args = argparser.parse_args()
 
-    main ( *args )
+    main ( args )
