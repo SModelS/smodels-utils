@@ -278,7 +278,8 @@ class Regressor:
     def dumpTrainingData ( self, model ):
         """ dump the model with the compute Z, so we can train offline on it. """
         D = model.dict()
-        D["Z"] = self.torchmodel.last_ypred
+        # D["Z"] = self.torchmodel.last_ypred
+        D["Z"] = model.Z
         line = "%s\n" % D
         with gzip.open("training_%d.gz" % self.walkerid,"ab") as f:
             f.write ( line.encode() )
