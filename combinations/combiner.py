@@ -373,6 +373,8 @@ if __name__ == "__main__":
             help='use only upper limits results', action='store_true' )
     argparser.add_argument ( '-e', '--efficiencyMaps',
             help='use only efficiency maps results', action='store_true' )
+    argparser.add_argument ( '-E', '--expected',
+            help='expected values, not observed', action='store_true' )
     args = argparser.parse_args()
     if args.upper_limits and args.efficiencyMaps:
         print ( "[combiner] -u and -e are mutually exclusive" )
@@ -409,17 +411,17 @@ if __name__ == "__main__":
         for pred in preds:
             allps.append ( pred )
     #print ( "allpreds", allps )
-    combo,globalZ,llhd = combiner.findHighestSignificance ( allps, "aggressive" )
+    combo,globalZ,llhd = combiner.findHighestSignificance ( allps, "aggressive", expected=args.expected )
     print ( "[combiner] global Z is %.2f: %s" % (globalZ, combiner.getComboDescription(combo) ) )
     for expRes in listOfExpRes:
         preds = theoryPredictionsFor ( expRes, smses )
         if preds == None:
             continue
-        Z = combiner.getSignificance ( preds )
+        Z = combiner.getSignificance ( preds, expected=args.expected )
         print ( "%s has %d predictions, local Z is %.2f" % ( expRes.globalInfo.id, len(preds), Z ) )
         for pred in preds:
             pred.computeStatistics()
             tpe = pred.dataType(True)
             tpe += ":" + ",".join ( map ( str, pred.txnames ) )
-            print ( "  `- llhd [%s] SM=%.3g BSM=%.3g" % ( tpe, pred.getLikelihood(0.), pred.getLikelihood(1.) ) )
+            print ( "  `- llhd [%s] SM=%.3g BSM=%.3g" % ( tpe, pred.getLikelihood(0.,expected=args.expected), pred.getLikelihood(1.,expected=args.expected) ) )
     comb = Combiner()
