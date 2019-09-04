@@ -26,7 +26,7 @@ def cleanDirectory ():
     subprocess.getoutput ( "mv exceptions.log tmp/" )
 
 class RandomWalker:
-    def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive", dump_training = False ):
+    def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive", dump_training = False, cheat = False ):
         """ initialise the walker
         :param nsteps: maximum number of steps to perform
         """
@@ -35,7 +35,7 @@ class RandomWalker:
             sys.exit(-2)
         self.walkerid = walkerid ## walker id, for parallel runs
         self.hiscoreList = Hiscore ( walkerid, True, "H%d.pcl" % walkerid )
-        self.model = Model( self.walkerid )
+        self.model = Model( self.walkerid, cheat=cheat )
         self.strategy = strategy
         self.history = History ( walkerid )
         self.record_history = False
@@ -61,7 +61,7 @@ class RandomWalker:
     @classmethod
     def fromModel( cls, model, nsteps=10000, strategy="aggressive", walkerid=0, 
                    dump_training = False ):
-        ret = cls( walkerid, nsteps, strategy )
+        ret = cls( walkerid, nsteps, strategy, dump_training )
         ret.model = model
         ret.model.walkerid = walkerid
         if dump_training:
@@ -450,7 +450,7 @@ if __name__ == "__main__":
                     break
                 if v == None:
                     # no state? start from scratch!
-                    walker = RandomWalker( ctr+1, args.nsteps, args.strategy, dump_training = dump_training )
+                    walker = RandomWalker( ctr+1, args.nsteps, args.strategy, dump_training = dump_training, cheat = args.cheat )
                     walker.takeStep()
                     walkers.append ( walker )
                     continue
@@ -463,7 +463,7 @@ if __name__ == "__main__":
                 ctr+=1
     else:
         for ctr in range(ncpus):
-            walkers.append ( RandomWalker( ctr+1, args.nsteps, args.strategy, dump_training ) )
+            walkers.append ( RandomWalker( ctr+1, args.nsteps, args.strategy, dump_training, args.cheat ) )
 
     # regressor = None
     #if regress:
