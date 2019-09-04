@@ -423,6 +423,9 @@ if __name__ == "__main__":
             help='do not dump data for training', action='store_true' )
     argparser.add_argument ( '-e', '--expected',
             help='run only with expected values', action='store_true' )
+    argparser.add_argument ( '-C', '--cheat',
+            help='cheat, i.e. start with sensible models. Disregarded, if --cont.', 
+            action='store_true' )
     argparser.add_argument ( '-f', '-c', '--cont',
             help='continue with saved states [""]',
             type=str, default="" )
