@@ -10,7 +10,7 @@ else:
 import numpy, colorama
 from smodels.tools.runtime import nCPUs
 from hiscore import Hiscore
-from model import Model
+from model import Model, rthresholds
 from history import History
 import helpers
 from pympler.asizeof import asizeof
@@ -26,22 +26,25 @@ def cleanDirectory ():
     subprocess.getoutput ( "mv exceptions.log tmp/" )
 
 class RandomWalker:
-    def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive" ):
+    def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive", dump_training = False ):
         """ initialise the walker
         :param nsteps: maximum number of steps to perform
         """
         if type(walkerid) != int or type(nsteps) != int or type(strategy)!= str:
             self.pprint ( "Wrong call of constructor: %s, %s, %s" % ( walkerid, nsteps, strategy ) )
-            sys.exit()
+            sys.exit(-2)
         self.walkerid = walkerid ## walker id, for parallel runs
-        self.hiscoreList = Hiscore ( walkerid, True, "hi%d.pcl" % walkerid )
+        self.hiscoreList = Hiscore ( walkerid, True, "H%d.pcl" % walkerid )
         self.model = Model( self.walkerid )
         self.strategy = strategy
         self.history = History ( walkerid )
         self.record_history = False
         self.maxsteps = nsteps
-        self.use_regressor = False
         self.regressor = None
+        if dump_training:
+            from regressor import Regressor
+            ## we use the regressor only to dump the training data
+            self.regressor = Regressor ( walkerid= walkerid )
         self.takeStep() ## the first step should be considered as "taken"
 
     def setWalkerId ( self, Id ):
@@ -52,14 +55,19 @@ class RandomWalker:
             self.regressor.walkerid = Id
 
 
-    def turnOnRegress ( self, regressor=None ):
-        self.regressor = regressor
+    #def turnOnRegress ( self, regressor=None ):
+    #    self.regressor = regressor
 
     @classmethod
-    def fromModel( cls, model, nsteps=10000, strategy="aggressive", walkerid=0 ):
+    def fromModel( cls, model, nsteps=10000, strategy="aggressive", walkerid=0, 
+                   dump_training = False ):
         ret = cls( walkerid, nsteps, strategy )
         ret.model = model
         ret.model.walkerid = walkerid
+        if dump_training:
+            ## we use the regressor only to dump the training data
+            from regressor import Regressor
+            self.regressor = Regressor ( walkerid= walkerid )
         return ret
 
     def pprint ( self, *args ):
@@ -136,61 +144,47 @@ class RandomWalker:
         try:
             self.model.predict( self.strategy )
         except Exception as e:
-            self.pprint ( "error %s encountered when trying to predict. lets revert" % str(e) )
+            self.pprint ( "error ``%s'' (%s) encountered when trying to predict. lets revert" % (str(e),type(e) ) )
             self.model.restore()
             return
 
         self.log ( "found highest Z: %.2f" % self.model.Z )
         
-        #try:
-        #    hiscoreList = self.hiqueue.get( timeout=70. )[0]
-        #    hiscoreList.walkerid = self.walkerid ## to identify which walker causes problems
-        #except Exception as e:
-        #    hiscoreList = Hiscore ( 0, True )
         if self.hiscoreList != None:
             self.log ( "check if result goes into hiscore list" )
             self.hiscoreList.newResult ( self.model ) ## add to high score list
             self.log ( "done check for result to go into hiscore list" )
         # self.hiqueue.put( [ hiscoreList ] )
-        # self.train ()
+        self.train ()
         self.model.computePrior()
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.model.letters, self.model.description, self.model.Z ) )
-        if self.model.Z > 29.:
-            self.pprint ( "Z is greater than 29! stop it, stop it all!!!" )
-            self.model.createSLHAFile ( "anomaly.slha" )
-            subprocess.getoutput ( "killall python3" )
-            subprocess.getoutput ( "killall randomWalk.py" )
-            subprocess.getoutput ( "killall -9 python3" )
-            subprocess.getoutput ( "killall -9 randomWalk.py" )
-        self.log ( "step %d finished." % self.model.step )
+        self.log ( "step %d/%d finished." % ( self.model.step, self.maxsteps ) )
 
     def train ( self ):
         """ train the regressor """
+        ## currently we dont train, we just dump the data
+        self.regressor.dumpTrainingData ( self.model )
         return # we dont train for now
         #if self.regressor == None:
         #    return
         ## fetch the model from the queue
-        self.log ( "now train the NN" )
-        try:
-            self.regressor = self.queue.get( timeout=70. )[0]
-        except Exception as e:
-            self.pprint ( "Error, while waiting to get the regressor: %s. lets just not train" % str(e) )
-            if self.queue.empty():
-                self.queue.put ( [ self.regressor ] )
-            return 
-        if self.regressor == None: # start a new one
-            self.queue.put( [ None ] )
-            return
-        predictedZ = float ( self.regressor.predict ( self.model ) )
-        self.regressor.dumpTrainingData ( self.model )
-        self.pprint ( "Before training step #%d, predicted vs computed Z: %.5f <-> %.5f" % ( self.regressor.training, predictedZ, self.model.Z ) )
-        #self.regressor.train ( self.model, self.model.Z, self.model.rmax )
+        #self.log ( "now train the NN" )
+        #try:
+        #    self.regressor = self.queue.get( timeout=70. )[0]
+        #except Exception as e:
+        #    self.pprint ( "Error, while waiting to get the regressor: %s. lets just not train" % str(e) )
+        #    if self.queue.empty():
+        #        self.queue.put ( [ self.regressor ] )
+        #    return 
+        #if self.regressor == None: # start a new one
+        #    self.queue.put( [ None ] )
+        #    return
         #predictedZ = float ( self.regressor.predict ( self.model ) )
-        #self.pprint ( "After  training step #%d, predicted vs computed Z: %.5f <-> %.5f" % ( self.regressor.training, predictedZ, self.model.Z ) )
-        
-        self.queue.put ( [ self.regressor ] )
-        if self.regressor.training % 100 == 0 or self.regressor.training == 3 or self.regressor.training == 20:
-            self.regressor.save()
+        #self.pprint ( "Before training step #%d, predicted vs computed Z: %.5f <-> %.5f" % ( self.regressor.training, predictedZ, self.model.Z ) )
+        #
+        #self.queue.put ( [ self.regressor ] )
+        #if self.regressor.training % 100 == 0 or self.regressor.training == 3 or self.regressor.training == 20:
+        #    self.regressor.save()
 
     def gradientAscent ( self ):
         """ Z is big enough, the loss is small enough. use the gradient. """
@@ -217,7 +211,7 @@ class RandomWalker:
 
     def takeStep ( self ):
         """ take the step, save it as last step """
-        if self.regressor != None:
+        if self.regressor != None and hasattr ( self.regressor, "grad" ):
             self.oldgrad = self.regressor.grad
         self.model.backup()
 
@@ -285,7 +279,7 @@ class RandomWalker:
         control = sum ( [  x for x in self.model.decays[p].values() ] )
         if abs ( control - 1.0 ) > 1e-5:
             self.pprint ( "control %s" % control )
-        #    sys.exit()
+        #    sys.exit(-5)
         brvec=[]
         for x in self.model.decays[p].values():
             if x<1e-5:
@@ -356,31 +350,28 @@ class RandomWalker:
                 sys.exit(-1)
             self.model.computePrior()
             ratio = 1.
-            if self.model.oldPriorTimesLlhd() > 0.:
-            # if self.oldmodel.priorTimesLlhd() > 0.:
-                ratio = math.exp ( - self.model.oldPriorTimesLlhd()) / math.exp ( - self.model.priorTimesLlhd() )
-                # ratio = math.exp ( - self.oldmodel.priorTimesLlhd()) / math.exp ( - self.model.priorTimesLlhd() )
-                # ratio = self.model.priorTimesLlhd() / self.oldmodel.priorTimesLlhd()
+            if self.model.oldZ() > 0.:
+                ratio = self.model.Z / self.model.oldZ()
             if self.model.rmax > 1.5:
-                self.highlight ( "info", "rmax=%.2f > 1.5. Revert." % self.model.rmax )
+                self.highlight ( "info", "rmax=%.2f > %.1f (r2=%.2f). Revert." % (self.model.rmax, rthresholds[0], self.model.r2) )
                 self.model.restore()
                 if hasattr ( self, "oldgrad" ) and self.regressor != None:
                     self.regressor.grad = self.oldgrad
                 continue
-            if self.model.oldZ() > 0. and self.model.Z < 0.7 * self.model.oldZ():
+            #if self.model.oldZ() > 0. and self.model.Z < 0.7 * self.model.oldZ():
             # if self.oldmodel.Z > 0. and self.model.Z < 0.7 * self.oldmodel.Z:
-                ## no big steps taken here.
-                self.highlight ( "info", "Z=%.2f -> %.2f. Revert." % ( self.model.oldZ(), self.model.Z ) )
-                self.model.restore()
-                if hasattr ( self, "oldgrad" ) and self.regressor != None:
-                    self.regressor.grad = self.oldgrad
-                continue
+            #    ## no big steps taken here.
+            #    self.highlight ( "info", "Z=%.2f -> %.2f. Revert." % ( self.model.oldZ(), self.model.Z ) )
+            #    self.model.restore()
+            #    if hasattr ( self, "oldgrad" ) and self.regressor != None:
+            #        self.regressor.grad = self.oldgrad
+            #    continue
 
             if ratio >= 1.:
                 self.highlight ( "info", "Z: %.3f -> %.3f: take the step" % ( self.model.oldZ(), self.model.Z ) )
                 if self.model.Z < 0.7 * self.model.oldZ():
                     self.pprint ( " `- weird, though, Z decreases. Please check." )
-                    sys.exit()
+                    sys.exit(-2)
                 self.takeStep()
             else:
                 u=random.uniform(0.,1.)
@@ -394,9 +385,10 @@ class RandomWalker:
                     self.takeStep()
             # self.gradientAscent()
         self.saveState()
+        self.pprint ( "Was asked to stop after %d steps" % self.maxsteps )
 
-def _run ( walker, queue ):
-    walker.queue = queue
+def _run ( walker ):
+    # walker.queue = queue
     # walker.hiqueue = hiqueue
     try:
         walker.walk()
@@ -407,6 +399,8 @@ def _run ( walker, queue ):
             f.write ( "walker %d threw: %s\n" % ( walker.walkerid, e ) )
             if hasattr ( walker.model, "currentSLHA" ):
                 f.write ("slha file was %s\n" % walker.model.currentSLHA )
+        import colorama
+        print ( "%swalker %d threw: %s%s\n" % ( colorama.Fore.RED, walker.walkerid, e, colorama.Fore.RESET ) )
 
 if __name__ == "__main__":
     print ( "[walk] ramping up" )
@@ -425,8 +419,8 @@ if __name__ == "__main__":
     argparser.add_argument ( '-p', '--ncpus',
             help='number of CPUs. -1 means all. [1]',
             type=int, default=1 )
-    argparser.add_argument ( '-N', '--no_regressor',
-            help='do not use the NN regressor', action='store_true' )
+    argparser.add_argument ( '-D', '--no_dump_training',
+            help='do not dump data for training', action='store_true' )
     argparser.add_argument ( '-e', '--expected',
             help='run only with expected values', action='store_true' )
     argparser.add_argument ( '-f', '-c', '--cont',
@@ -436,6 +430,7 @@ if __name__ == "__main__":
                              action="store_true" )
     args = argparser.parse_args()
     cleanDirectory()
+    dump_training = not args.no_dump_training
     ncpus = args.ncpus
     if ncpus < 0:
         ncpus = nCPUs() + ncpus + 1
@@ -452,38 +447,34 @@ if __name__ == "__main__":
                     break
                 if v == None:
                     # no state? start from scratch!
-                    walker = RandomWalker( ctr+1, args.nsteps, args.strategy )
+                    walker = RandomWalker( ctr+1, args.nsteps, args.strategy, dump_training = dump_training )
                     walker.takeStep()
                     walkers.append ( walker )
                     continue
                 v2 = copy.deepcopy ( v )
                 v2.createNewSLHAFileName()
                 v2.walkerid = ctr+1
-                walkers.append ( RandomWalker.fromModel ( v2, walkerid = ctr+1 ) )
+                walkers.append ( RandomWalker.fromModel ( v2, walkerid = ctr+1, dump_training = dump_training ) )
                 walkers[-1].setWalkerId ( ctr+1 )
                 walkers[-1].takeStep() # make last step a taken one
                 ctr+=1
     else:
         for ctr in range(ncpus):
-            walkers.append ( RandomWalker( ctr+1, args.nsteps, args.strategy ) )
+            walkers.append ( RandomWalker( ctr+1, args.nsteps, args.strategy, dump_training ) )
 
-    regressor = None
-    regress = not args.no_regressor 
-    if regress:
-        from regressor import Regressor, RegressionHelper, PyTorchModel
-        torchmodel, adam = None, None
-        helper = RegressionHelper ()
-        variables = helper.freeParameters( "template_many.slha" )    
-        torchmodel = PyTorchModel( variables )# .to ( helper.device() )
-        torchmodel.share_memory()
-        regressor = Regressor ( variables, 0, torchmodel, device="cpu" )
-    queue = multiprocessing.Queue()
-    queue.put ( [ regressor ] )
+    # regressor = None
+    #if regress:
+    #    from regressor import Regressor, RegressionHelper, PyTorchModel
+    #    torchmodel, adam = None, None
+    #    helper = RegressionHelper ()
+    #    variables = helper.freeParameters( "template_many.slha" )    
+    #    torchmodel = PyTorchModel( variables )# .to ( helper.device() )
+    #    torchmodel.share_memory()
+    #    regressor = Regressor ( variables, 0, torchmodel, device="cpu" )
+    # queue = multiprocessing.Queue()
+    # queue.put ( [ regressor ] )
 
     print ( "[walk] loading hiscores" )
-    #hiscore = Hiscore ( 0, True )
-    #hiqueue = multiprocessing.Queue()
-    #hiqueue.put ( [ hiscore ] )
     onoff="off"
     if args.history:
         onoff="on"
@@ -493,7 +484,7 @@ if __name__ == "__main__":
     print ( "[walk] starting %d walkers" % len(walkers) )
     processes=[]
     for walker in walkers:
-        p = multiprocessing.Process ( target=_run, args=( walker, queue, ) )
+        p = multiprocessing.Process ( target=_run, args=( walker, ) )
         p.start()
         processes.append(p)
     for p in processes:

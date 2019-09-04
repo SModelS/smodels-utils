@@ -5,6 +5,7 @@
 
 import random, copy, pickle, os, fcntl, time, subprocess
 from trimmer import Trimmer
+from scipy import stats
 
 class Hiscore:
     """ encapsulates the hiscore list. """
@@ -37,9 +38,9 @@ class Hiscore:
                 if False and i == 0 and model.Z > 3.0: ## awesome new hiscore? trim it!
                     self.trimModels(1,True)
                 break
-            
+
     def demote ( self, i ):
-        """ demote everything from i+1 on, 
+        """ demote everything from i+1 on,
             i.e (i+1)->(i+2), (i+2)->(i+3) and so on """
         for j in range(self.nkeep-1,i,-1):
             m = copy.deepcopy ( self.hiscores[j-1] )
@@ -63,7 +64,7 @@ class Hiscore:
         if mtime > 0 and mtime == self.mtime:
             ## no modification. return
             return
-            
+
         try:
             with open( self.pickleFile,"rb+") as f:
                 fcntl.flock ( f, fcntl.LOCK_EX )
@@ -103,7 +104,7 @@ class Hiscore:
                 self.trimmed[i] = trimmer.model
 
     def clean ( self ):
-        """ clean hiscore list, i.e. remove cruft from models. 
+        """ clean hiscore list, i.e. remove cruft from models.
             leave first one as it is """
         for h in self.hiscores[1:]:
             if h != None:
@@ -174,3 +175,171 @@ class Hiscore:
         """ logging to file """
         with open( "walker%d.log" % self.walkerid, "a" ) as f:
             f.write ( "[hiscore:%d - %s] %s\n" % ( self.walkerid, time.asctime(), " ".join(map(str,args)) ) )
+
+def compileList():
+    """ compile the list from individual hi*pcl """
+    import glob
+    files = glob.glob ( "H*.pcl" )
+    allmodels,alltrimmed=[],[]
+    for f in files:
+        try:
+            with open( f,"rb+") as f:
+                fcntl.flock( f, fcntl.LOCK_EX )
+                models = pickle.load ( f )
+                trimmed = pickle.load ( f )
+                fcntl.flock( f, fcntl.LOCK_UN )
+                ## add models, but without the Nones
+                allmodels += list ( filter ( None.__ne__, models ) )
+                alltrimmed += list ( filter ( None.__ne__, models ) )
+        except:
+            print ( "could not open %s. ignore." % f.name )
+    allmodels = sortByZ ( allmodels )
+    alltrimmed = sortByZ ( alltrimmed )
+    return allmodels, alltrimmed
+
+def storeList ( models, trimmed, savefile, nmax ):
+    """ store the best models in another hiscore file """
+    from hiscore import Hiscore
+    h = Hiscore ( 0, True, savefile )
+    h.hiscores = models[:nmax]
+    h.trimmed = trimmed[:nmax]
+    h.save()
+
+def sortByZ ( models ):
+    models.sort ( reverse=True, key = lambda x: x.Z )
+    return models
+
+def discuss ( model, name ):
+    print ( "Currently %7s Z is: %.3f [%d/%d unfrozen particles, %d predictions] (walker #%d)" % \
+            (name, model.Z, len(model.unFrozenParticles()),len(model.masses.keys()),len(model.bestCombo), model.walkerid ) )
+
+def discussBest ( model, detailed ):
+    """ a detailed discussion of number 1 """
+    p = 1. - stats.norm.cdf ( model.Z )
+    print ( "Current           best: %.3f, p=%.2g [%d/%d unfrozen particles, %d predictions] (walker #%d)" % \
+            (model.Z, p, len(model.unFrozenParticles()),len(model.masses.keys()),len(model.bestCombo), model.walkerid ) )
+    if detailed:
+        print ( "Solution was found in step #%d" % model.step )
+        for i in model.bestCombo:
+            print ( "  prediction in best combo: %s (%s)" % ( i.analysisId(), i.dataType() ) )
+
+def printModels ( models, detailed ):
+    names = { 0: "highest", 1: "second", 2: "third" }
+    for c,model in enumerate(models):
+        if c >= args.nmax:
+            break
+        if model == None:
+            break
+        sc = "%dth" % (c+1)
+        if c in names.keys():
+            sc = names[c]
+        if c==0:
+            discussBest ( model, detailed )
+        else:
+            discuss ( model, sc )
+
+if __name__ == "__main__":
+    import argparse
+    argparser = argparse.ArgumentParser(
+            description='hiscore class. as a commandline tool it allows for '
+                        'merging, trimming, printing, and checking of hiscore list' )
+    argparser.add_argument ( '-i', '--infile',
+            help='Specify the input pickle file to start with. If none, start with hi<n>.pcl. [None]',
+            type=str, default=None )
+    argparser.add_argument ( '-o', '--outfile',
+            help='pickle file with hiscores. If none, dont pickle. [hiscore.pcl]',
+            type=str, default="hiscore.pcl" )
+    argparser.add_argument ( '-n', '--nmax',
+            help='maximum number of entries to store [10]',
+            type=int, default=10 )
+    argparser.add_argument ( '-c', '--check',
+            help='check if we can reproduce Z value of first entry',
+            action="store_true" )
+    argparser.add_argument ( '-C', '--analysis_contributions',
+            help='compute analysis contributions',
+            action="store_true" )
+    argparser.add_argument ( '-f', '--fetch',
+            help='fetch hi<n>.pcl from gpu server',
+            action="store_true" )
+    argparser.add_argument ( '-t', '--trim',
+            help='trim leading model, but only particles', action="store_true" )
+    argparser.add_argument ( '-T', '--trim_branchings',
+            help='trim leading model, also branchings',
+            action="store_true" )
+    argparser.add_argument ( '-p', '--print',
+            help='print list to stdout', action="store_true" )
+    argparser.add_argument ( '-d', '--detailed',
+            help='detailed descriptions (requires -p)', action="store_true" )
+    argparser.add_argument ( '-I', '--interactive', help='start interactive session',
+                             action="store_true" )
+    args = argparser.parse_args()
+    if args.detailed:
+        args.print = True
+    if args.outfile.lower() in [ "none", "", "false" ]:
+        args.outfile = None
+    if type(args.infile) is str and args.infile.lower() in [ "none", "" ]:
+        args.infile = None
+
+    if args.fetch:
+        import subprocess
+        cmd = "scp gpu:/local/wwaltenberger/git/smodels-utils/combinations/H*.pcl ."
+        out = subprocess.getoutput ( cmd )
+        print ( out )
+
+    if args.infile is None:
+        models,trimmed = compileList() ## compile list from H<n>.pcl files
+    else:
+        with open(args.infile,"rb+") as f:
+            fcntl.flock( f, fcntl.LOCK_EX )
+            models = pickle.load ( f )
+            trimmed = pickle.load ( f )
+            fcntl.flock( f, fcntl.LOCK_UN )
+
+    if args.trim:
+        model = models[0]
+        tr = Trimmer ( model )
+        tr.trimParticles()
+        trimmed[0] = tr.model
+
+    if args.trim_branchings:
+        if 0 in trimmed:
+            ## already has a trimmed model? trim only branchings
+            model = trimmed[0]
+            tr = Trimmer ( model )
+            tr.trimBranchings()
+            trimmed[0] = tr.model
+        else:
+            model = models[0]
+            tr = Trimmer ( model )
+            tr.trimParticles()
+            tr.trimBranchings()
+            trimmed[0] = tr.model
+
+    if args.analysis_contributions:
+        model = models[0]
+        if 0 in trimmed:
+            model = trimmed[0]
+        tr = Trimmer ( model )
+        model = tr.computeAnalysisContributions ()
+        if 0 in trimmed:
+            trimmed[0] = model
+        else:
+            models[0] = model
+
+    if args.outfile is not None:
+        storeList ( models, trimmed, args.outfile, args.nmax )
+
+    if args.check:
+        model = models[0]
+        if len(trimmed)>0:
+            model = trimmed[0]
+        tr = Trimmer ( model )
+        tr.checkZ()
+
+    if args.print:
+        printModels ( models, args.detailed )
+
+    if args.interactive:
+        print ( "[hiscore] starting interactive session. Variables: models, trimmed" )
+        import IPython
+        Ipython.embed()

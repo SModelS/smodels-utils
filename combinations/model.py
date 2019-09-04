@@ -10,6 +10,9 @@ import pyslha
 import helpers
 from pympler.asizeof import asizeof
 
+## the thresholds for exclusion
+rthresholds = (1.5,)
+
 class Model:
     """ encodes one theoretical model, i.e. the particles, their masses, their
         branchings, their signal strength modifiers.
@@ -137,13 +140,15 @@ class Model:
             self.predictor = Predictor ( self.walkerid )
         bestpreds = self.predictor.predict ( self.currentSLHA, allpreds=False,
                                              llhdonly=False )
-        self.log ( "received best preds" )
-        rmax = self.checkForExcluded ( bestpreds )
-        self.rmax = rmax
-        excluded = rmax > 1.5
+        rs = self.checkForExcluded ( bestpreds )
+        srs = "%s" % ", ".join ( [ "%.2f" % x for x in rs[:3] ] )
+        self.log ( "received r values %s" % srs )
+        self.rmax = rs[0]
+        self.r2 = rs[1]
+        excluded = self.rmax > rthresholds[0]
         self.log ( "model is excluded? %s" % str(excluded) )
-        #if excluded:
-        #    return
+        if excluded:
+            return
         # now get the predictions that determine the Z of the model. allpreds,
         # but need llhd
         predictions = self.predictor.predict ( self.currentSLHA, allpreds=False,
@@ -166,29 +171,20 @@ class Model:
 
     def checkForExcluded ( self, predictions ):
         """ check if any of the predictions excludes the point """
+        self.log ( "checking %d predictions for exlusion" % len(predictions) )
         self.rvalues=[]
         combiner = Combiner( self.walkerid )
         robs=[]
         for theorypred in predictions:
             r = theorypred.getRValue(expected=False)
-            # print ( "checkForExcluded: %s %s %s: %s, %s" % ( theorypred.analysisId(), theorypred.dataType(), "", theorypred.xsection.value, theorypred.PIDs ) )
-            robs.append ( r )
-            rexp = theorypred.getRValue(expected=True)
-            self.rvalues.append ( (r, rexp, combiner.removeDataFromTheoryPred ( theorypred ) ) )
             if r == None:
                 self.pprint ( "I received %s as r. What do I do with this?" % r )
-                r = 2.
-            #if r > 1.5:
-                # self.pprint ( "analysis %s:%s excludes the model. r=%.1f (r_exp=%s)" % ( theorypred.analysisId(), theorypred.dataId(), r, rexp ) )
-            #    self.Z = 0.
-            #    self.llhd = 0.
-            #    self.letters = "excluded"
-            #    self.description = "excluded"
-        # self.pprint ( "check if excluded, %d predictions: no" % len(predictions) )
-        # sys.exit()
-        if len(robs)==0:
-            return 0.
-        return max(robs)
+                r = 23.
+            rexp = theorypred.getRValue(expected=True)
+            robs.append ( r )
+            self.rvalues.append ( (r, rexp, combiner.removeDataFromTheoryPred ( theorypred ) ) )
+        robs.sort(reverse=True)
+        return robs
 
     def backup ( self ):
         """ backup the current state """
@@ -213,13 +209,13 @@ class Model:
     def oldPriorTimesLlhd( self ):
         if not hasattr ( self, "_backup" ):
             self.pprint ( "asked for old prior times llhd, but no backup available" )
-            sys.exit()
+            sys.exit(-1)
         return self._backup["llhd"]*self._backup["prior"]
 
     def oldZ( self ):
         if not hasattr ( self, "_backup" ):
             self.pprint ( "asked for old Z, but no backup available" )
-            sys.exit()
+            sys.exit(-1)
         return self._backup["Z"]
 
     def priorTimesLlhd( self ):

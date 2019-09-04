@@ -33,17 +33,18 @@ class Trimmer:
         with open( "walker%d.log" % self.model.walkerid, "a" ) as f:
             f.write ( "[model:%d - %s] %s\n" % ( self.model.walkerid, time.asctime(), " ".join(map(str,args)) ) )
 
+    def checkZ ( self ):
+        print ( "[trimmer] Check significance Z ... " )
+        origZ = self.model.Z # to be sure
+        self.model.Z = -23.
+        self.model.predict( strategy=self.strategy, keep_meta = True )
+        print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions, experimental=%d" % ( self.model.Z, origZ, len(self.model.bestCombo), runtime._experimental ) )
+        return abs ( (origZ - self.model.Z) / ( origZ +1e-10 ) ) < 1e-7
+
     def computeAnalysisContributions ( self ):
         """ compute the contributions to Z of the individual analyses """
         print ( "[trimmer] now computing analysis contributions" )
         print ( "[trimmer] step 1: recompute the full Z. Old one at %.2f." % self.model.Z )
-        #anas = set()
-        #for pred in self.model.bestCombo:
-        #    anas.add ( pred.analysisId() )
-        #from smodels.theory.theoryPrediction import theoryPredictionsFor
-        #db = Database ( "../../smodels-database" )
-        #results = db.getExpResults ( analysisIDs = anas )
-        #print ( "[trimmer] got %d results" % len(results))
         origZ = self.model.Z # to be sure
         self.model.Z = -23.
         self.model.predict( strategy=self.strategy, keep_meta = True )
@@ -165,6 +166,7 @@ class Trimmer:
 
         self.pprint ( "%d/%d particles are still unfrozen. discarded %d branchings." % ( len(self.model.unFrozenParticles()),len(self.model.masses),ndiscardedBR )  )
 
+""" now done by hiscore.py
 def main():
     import argparse
     argparser = argparse.ArgumentParser(
@@ -197,4 +199,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
+"""

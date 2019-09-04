@@ -165,14 +165,14 @@ class Regressor:
         for k,v in theorymodel.masses.items():
             if not "M%d" % k in self.torchmodel.variables:
                 print ( "error, dont know what to do with M%d" % k )
-                sys.exit()
+                sys.exit(-5)
             idx = self.torchmodel.variables.index( "M%d" % k)
             t = 10. * grad[idx] * ( v + 1e-5 ) # the inverse of the normalization
             theorymodel.masses[k]+= t * rate
         for k,v in theorymodel.ssmultipliers.items():
             if not "SS%d" % k in self.torchmodel.variables:
                 print ( "error, dont know what to do with M%d" % k )
-                sys.exit()
+                sys.exit(-3)
             idx = self.torchmodel.variables.index( "SS%d" % k)
             t = grad[idx]
             theorymodel.ssmultipliers[k]+= t * rate
@@ -180,7 +180,7 @@ class Regressor:
             for dpid,dbr in decays.items():
                 if not "D%d_%d" % ( pid, dpid ) in self.torchmodel.variables:
                     print ( "error dont know what to do with D%d_%d" % ( pid, dpid ) )
-                    sys.exit()
+                    sys.exit(-7)
                 idx = self.torchmodel.variables.index( "D%d_%d" % (pid,dpid) )
                 t=grad[idx]
                 theorymodel.decays[pid][dpid]+=t*rate
@@ -194,23 +194,23 @@ class Regressor:
         for k,v in theorymodel.masses.items():
             if not "M%d" % k in self.torchmodel.variables:
                 print ( "error, dont know what to do with M%d" % k )
-                sys.exit()
+                sys.exit(-9)
             idx = self.torchmodel.variables.index( "M%d" % k)
             #if type(v) not in [ float, int ]:
             #    self.pprint ( "in convert: dealing with %s: %s" % (type(v),v) )
-            #    sys.exit()
+            #    sys.exit(-100)
             ret[idx]= np.log(v+1e-5) / 10. # a bit of a normalization
         for k,v in theorymodel.ssmultipliers.items():
             if not "SS%d" % k in self.torchmodel.variables:
                 print ( "error, dont know what to do with M%d" % k )
-                sys.exit()
+                sys.exit(-22)
             idx = self.torchmodel.variables.index( "SS%d" % k)
             ret[idx]=v
         for pid,decays in theorymodel.decays.items():
             for dpid,dbr in decays.items():
                 if not "D%d_%d" % ( pid, dpid ) in self.torchmodel.variables:
                     print ( "error dont know what to do with D%d_%d" % ( pid, dpid ) )
-                    sys.exit()
+                    sys.exit(-55)
                 idx = self.torchmodel.variables.index( "D%d_%d" % (pid,dpid) )
                 ret[idx]=dbr
         for c,i in enumerate(ret):
@@ -280,7 +280,7 @@ class Regressor:
         D = model.dict()
         D["Z"] = self.torchmodel.last_ypred
         line = "%s\n" % D
-        with gzip.open("training.gz","ab") as f:
+        with gzip.open("training_%d.gz" % self.walkerid,"ab") as f:
             f.write ( line.encode() )
 
     def save ( self, name = "model.ckpt" ):
@@ -291,9 +291,12 @@ class Regressor:
         if os.path.exists ( name ):
             print ( "loading model", name )
             self.torchmodel = PyTorchModel()
-            self.torchmodel.load_state_dict ( torch.load ( name ) )
-            self.torchmodel.to ( self.device )
-            self.torchmodel.eval()
+            try:
+                self.torchmodel.load_state_dict ( torch.load ( name ) )
+                self.torchmodel.to ( self.device )
+                self.torchmodel.eval()
+            except Exception as e:
+                print ( "couldnt load %s. will ignore it." % name )
 
     def predict ( self, model ):
         x_data = self.convert ( model )
