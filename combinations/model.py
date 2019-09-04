@@ -88,11 +88,22 @@ class Model:
         ## the LSP we need from the beginning
         self.masses[Model.LSP]=random.uniform(250,500)
         if cheat: # True: # cheat, to get a head start
-            self.pprint ( "cheat mode, start with stop, sbottom, sup." )
-            self.masses[1000006]=random.uniform(700,900)
-            self.masses[1000005]=random.uniform(500,700)
-            self.masses[1000002]=random.uniform(800,1200)
-            # self.masses[1000024]=random.uniform(500,1000)
+            cheatmode = 2
+            if cheatmode == 1:
+                self.pprint ( "cheat mode (1), start with stop, sbottom, sup." )
+                self.masses[1000006]=random.uniform(700,900)
+                self.masses[1000005]=random.uniform(500,700)
+                self.masses[1000002]=random.uniform(800,1200)
+                # self.masses[1000024]=random.uniform(500,1000)
+            if cheatmode == 2:
+                self.pprint ( "cheat mode (2), start with Z=3.23 point (roughly)." )
+                self.masses[1000006]=830.
+                self.masses[1000005]=600.
+                self.masses[1000001]=1070.
+                self.masses[1000002]=920.
+                self.masses[1000004]=450.
+                self.masses[1000022]=380.
+                # self.masses[1000024]=random.uniform(500,1000)
         self.computePrior()
 
     def highlight ( self, msgType = "info", *args ):
