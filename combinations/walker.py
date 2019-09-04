@@ -61,7 +61,8 @@ class RandomWalker:
     @classmethod
     def fromModel( cls, model, nsteps=10000, strategy="aggressive", walkerid=0, 
                    dump_training = False, dbpath="../../smodels-database/" ):
-        ret = cls( walkerid, nsteps, strategy, dump_training )
+        ret = cls( walkerid, cheat = 0, dbpath = dbpath )
+        # ret = cls( walkerid, nsteps, strategy, dump_training, dbpath )
         ret.model = model
         ret.model.walkerid = walkerid
         ret.model.dbpath = dbpath
@@ -418,7 +419,7 @@ if __name__ == "__main__":
             type=str, default="aggressive" )
     argparser.add_argument ( '-d', '--database',
             help='path to database [../../smodels-database]',
-            type=str, default="aggressive" )
+            type=str, default="../../smodels-database" )
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug,info,warn,error [info]',
             type=str, default="info" )
@@ -473,7 +474,8 @@ if __name__ == "__main__":
                 ctr+=1
     else:
         for ctr in range(ncpus):
-            walkers.append ( RandomWalker( ctr+1, args.nsteps, args.strategy, dump_training, args.cheat, dbpath = args.database ) )
+            print ("db", args.database )
+            walkers.append ( RandomWalker( ctr+1, args.nsteps, strategy = args.strategy, dump_training = dump_training, cheat = args.cheat, dbpath = args.database ) )
 
     # regressor = None
     #if regress:

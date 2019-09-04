@@ -160,7 +160,7 @@ class Model:
         # best results only, also non-likelihood results
         self.log ( "check if excluded" )
         if not hasattr ( self, "predictor" ):
-            self.predictor = Predictor ( self.walkerid, self.dbpath )
+            self.predictor = Predictor ( self.walkerid, dbpath = self.dbpath )
         bestpreds = self.predictor.predict ( self.currentSLHA, allpreds=False,
                                              llhdonly=False )
         rs = self.checkForExcluded ( bestpreds )
