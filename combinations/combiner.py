@@ -410,14 +410,16 @@ if __name__ == "__main__":
             allps.append ( pred )
     #print ( "allpreds", allps )
     combo,globalZ,llhd = combiner.findHighestSignificance ( allps, "aggressive" )
-    print ( "[combiner] global Z is %.2f" % globalZ )
+    print ( "[combiner] global Z is %.2f: %s" % (globalZ, combiner.getComboDescription(combo) ) )
     for expRes in listOfExpRes:
         preds = theoryPredictionsFor ( expRes, smses )
         if preds == None:
             continue
         Z = combiner.getSignificance ( preds )
-        print ( "%s has %d predictions, global Z is %.2f" % ( expRes.globalInfo.id, len(preds), Z ) )
+        print ( "%s has %d predictions, local Z is %.2f" % ( expRes.globalInfo.id, len(preds), Z ) )
         for pred in preds:
             pred.computeStatistics()
-            print ( "  `- likelihood [%s] SM=%s BSM=%s" % ( pred.dataType(True), pred.getLikelihood(0.), pred.getLikelihood(1.) ) )
+            tpe = pred.dataType(True)
+            tpe += ":" + ",".join ( map ( str, pred.txnames ) )
+            print ( "  `- llhd [%s] SM=%.3g BSM=%.3g" % ( tpe, pred.getLikelihood(0.), pred.getLikelihood(1.) ) )
     comb = Combiner()
