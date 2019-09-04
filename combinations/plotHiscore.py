@@ -91,7 +91,8 @@ def writeIndexHtml ( model ):
     dbver = "???"
     if hasattr ( model, "dbversion" ):
         dbver = model.dbversion
-    f.write ( "<b><a href=./hiscore.slha>Model</a> produced with database %s in step %d</b><br>\n" % ( dbver, model.step ) )
+        dotlessv = dbver.replace(".","")
+    f.write ( "<b><a href=./hiscore.slha>Model</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a> in step %d</b><br>\n" % ( dotlessv, dbver, model.step ) )
     if hasattr ( model, "rvalues" ):
         rvalues=model.rvalues
         rvalues.sort(key=lambda x: x[0],reverse=True )
