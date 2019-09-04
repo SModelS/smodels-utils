@@ -474,7 +474,7 @@ if __name__ == "__main__":
                 ctr+=1
     else:
         for ctr in range(ncpus):
-            print ("db", args.database )
+            # print ("db", args.database )
             walkers.append ( RandomWalker( ctr+1, args.nsteps, strategy = args.strategy, dump_training = dump_training, cheat = args.cheat, dbpath = args.database ) )
 
     # regressor = None

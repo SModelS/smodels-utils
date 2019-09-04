@@ -8,7 +8,7 @@ from smodels.particlesLoader import BSMList
 from smodels.tools.physicsUnits import fb, GeV
 from smodels.theory.model import Model
 import analysisCombiner
-import pickle, numpy, math, colorama, copy
+import pickle, numpy, math, colorama, copy, sys
 from scipy import optimize, stats
 # import IPython
 
@@ -369,7 +369,14 @@ if __name__ == "__main__":
     argparser.add_argument ( '-d', '--database',
             help='path to database [../../smodels-database]',
             type=str, default="../../smodels-database" )
+    argparser.add_argument ( '-u', '--upper_limits',
+            help='use only upper limits results', action='store_true' )
+    argparser.add_argument ( '-e', '--efficiencyMaps',
+            help='use only efficiency maps results', action='store_true' )
     args = argparser.parse_args()
+    if args.upper_limits and args.efficiencyMaps:
+        print ( "[combiner] -u and -e are mutually exclusive" )
+        sys.exit()
     from smodels.experiment.databaseObj import Database
     from smodels.theory import decomposer
     from smodels.particlesLoader import BSMList
@@ -384,10 +391,12 @@ if __name__ == "__main__":
     anaIds = [ "CMS-SUS-16-033" ]
     anaIds = [ "all" ]
     dts = [ "all" ]
-    dts = [ "efficiencyMap" ]
-    # dts = [ "upperLimit" ]
+    if args.upper_limits:
+        dts = [ "upperLimit" ]
+    if args.efficiencyMaps:
+        dts = [ "efficiencyMap" ]
     listOfExpRes = db.getExpResults( analysisIDs = anaIds, dataTypes = dts,
-     onlyWithExpected= True )
+                                     onlyWithExpected= True )
     smses = decomposer.decompose ( model, .01*fb )
     #print ( "[combiner] decomposed into %d topos" % len(smses) )
     from smodels.theory.theoryPrediction import theoryPredictionsFor
