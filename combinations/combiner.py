@@ -36,22 +36,29 @@ class Combiner:
                         ret.append ( d )
         return ret
 
+    def removeDataType ( self, predictions, dataType ):
+        """ remove from the predictions all the ones 
+        that match dataType """
+        if predictions is None:
+            return predictions
+        tmp = []
+        for pred in predictions:
+            if pred.dataType() == dataType:
+                continue
+            tmp.append ( pred )
+        self.pprint ( "removed %s, %d/%d remain" % \
+                     ( dataType, len(tmp), len(predictions) ) )
+        return tmp
+
+
     def findCombinations ( self, predictions, strategy ):
         """ finds all allowed combinations of predictions, for
             the given strategy
         :param predictions: list of predictions
         :returns: a list of combinations
         """
-        tmp = []
         if False: ## remove UL results
-            rm = "upperLimit"
-            for pred in predictions:
-                if pred.dataType() == rm:
-                    continue
-                tmp.append ( pred )
-            sef.pprint ( "removed %s, %d/%d remain" % \
-                         ( rm, len(tmp), len(predictions) ) )
-            predictions = tmp
+            predictions = self.removeDataType ( predictions, "upperLimit" )
         combinables=[]
         n=len(predictions)
         for iA,predA in enumerate(predictions):
@@ -66,7 +73,10 @@ class Combiner:
         col = colorama.Fore.GREEN
         print ( "%s[walk:%d] %s%s" % ( col, self.walkerid, " ".join(map(str,args)), colorama.Fore.RESET ) )
 
-    def error ( self, msgType = "info", *args ):
+    def error ( self, *args ):
+        self.highlight ( "error", *args )
+
+    def highlight( self, msgType = "info", *args ):
         """ logging, hilit """
         col = colorama.Fore.GREEN
         print ( "%s[walk:%d] %s%s" % ( col, self.walkerid, " ".join(map(str,args)), colorama.Fore.RESET ) )
@@ -169,18 +179,21 @@ class Combiner:
         """ obtain the significance of this combo
         :param expected: get the expected significance, not observed
         """
+        if len(combo)==0.:
+            return 0.
         muhat = self.findMuHat ( combo )
-        if muhat == None:
+        if muhat is None:
             return 0.
         l0 = numpy.array ( [ c.getLikelihood(0.,expected=expected) for c in combo ] )
         LH0 = numpy.prod ( l0[l0!=None] )
         l1 = numpy.array ( [ c.getLikelihood(muhat,expected=expected) for c in combo ] )
+        print ( "combo", len(combo), "muhat", muhat, "l0", l0, "l1", l1 )
         LH1 = numpy.prod ( l1[l1!=None] )
         if LH0 <= 0.:
-            logger.error ( "likelihood for SM was 0. Set to 1e-80" )
+            self.error ( "likelihood for SM was 0. Set to 1e-80" )
             LH0 = 1e-80
         if LH1 <= 0.:
-            logger.error ( "likelihood for muhat was 0. Set to 1e-80, muhat was %s" % muhat )
+            self.error ( "likelihood for muhat was 0. Set to 1e-80, muhat was %s" % muhat )
             LH1 = 1e-80
         chi2 = 2 * ( math.log ( LH1 ) - math.log ( LH0 ) ) ## chi2 with one degree of freedom
         # p = 1 - stats.chi2.cdf ( chi2, 1. )
@@ -190,8 +203,8 @@ class Combiner:
         Z = numpy.sqrt ( chi2 )
         # self.pprint ( "chi2,Z=", chi2, Z )
         ## FIXME compute significance from chi2
-        if Z > 29.:
-           self.pprint ( "I just computed the significance. It is %.2f. What the fuck. lh1=%g, lh0=%g" % (Z, LH1, LH0 ) )
+        #if Z > 29.:
+        #   self.pprint ( "I just computed the significance. It is %.2f. What the fuck. lh1=%g, lh0=%g" % (Z, LH1, LH0 ) )
         return Z
 
     def _findLargestZ ( self, combinations, expected=False ):
@@ -256,10 +269,11 @@ class Combiner:
     def findMuHat ( self, combination ):
         """ find the maximum likelihood estimate for the signal strength mu """
         def getNLL ( mu ):
-            return self.getCombinedLikelihood ( combination, mu, nll=True )
-        start = 1.
-        for start in [ 1., .1, 10., 1e-3 ]:
+            ret = self.getCombinedLikelihood ( combination, mu, nll=True )
+            return ret
+        for start in [ -1., 0., 1., 10., .1, 1e-2, 1e-3 ]:
             ret = optimize.minimize ( getNLL, start, bounds=[(0.,None)] )
+            # print ( "findMuHat combo %s start=%f, ret=%s" % ( combination, start, ret.fun ) )
             if ret.status==0:
                 return ret.x[0]
         self.pprint ( "%serror finding mu hat for %s%s" % (colorama.Fore.RED, self.getLetterCode(combination), colorama.Fore.RESET ) )
@@ -365,18 +379,24 @@ if __name__ == "__main__":
     print ( "[combiner] loading database", args.database )
     db = Database ( args.database )
     print ( "[combiner] done loading database" )
-    listOfExpRes = db.getExpResults()
+    anaIds = [ "CMS-SUS-16-033" ]
+    anaIds = [ "all" ]
+    dts = [ "all" ]
+    dts = [ "upperLimit" ]
+    listOfExpRes = db.getExpResults( analysisIDs = anaIds, dataTypes = dts,
+     onlyWithExpected= True )
     smses = decomposer.decompose ( model, .01*fb )
-    print ( "[combiner] decomposed into %d topos" % len(smses) )
+    #print ( "[combiner] decomposed into %d topos" % len(smses) )
     from smodels.theory.theoryPrediction import theoryPredictionsFor
+    combiner = Combiner()
+    #print ( "[combiner] global Z is %.2f" % Z )
     for expRes in listOfExpRes:
         preds = theoryPredictionsFor ( expRes, smses )
         if preds == None:
             continue
-        print ( "%s has %d predictions" % ( expRes.globalInfo.id, len(preds) ) )
+        Z = combiner.getSignificance ( preds )
+        print ( "%s has %d predictions, global Z is %.2f" % ( expRes.globalInfo.id, len(preds), Z ) )
         for pred in preds:
             pred.computeStatistics()
-            print ( "likelihood [%s] SM=%s BSM=%s" % ( pred.dataType(True), pred.getLikelihood(0.), pred.getLikelihood(1.) ) )
+            print ( "  `- likelihood [%s] SM=%s BSM=%s" % ( pred.dataType(True), pred.getLikelihood(0.), pred.getLikelihood(1.) ) )
     comb = Combiner()
-
-
