@@ -273,7 +273,7 @@ class Combiner:
         def getNLL ( mu ):
             ret = self.getCombinedLikelihood ( combination, mu, nll=True )
             return ret
-        for start in [ -1., 0., 1., 10., .1, 1e-2, 1e-3 ]:
+        for start in [ 0., 1., 10., .1, 1e-2, 1e-3 ]:
             ret = optimize.minimize ( getNLL, start, bounds=[(0.,None)] )
             # print ( "findMuHat combo %s start=%f, ret=%s" % ( combination, start, ret.fun ) )
             if ret.status==0:
