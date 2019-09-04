@@ -316,7 +316,7 @@ if __name__ == "__main__":
             description='hiscore class. as a commandline tool it allows for '
                         'merging, trimming, printing, and checking of hiscore list' )
     argparser.add_argument ( '-i', '--infile',
-            help='Specify the input pickle file to start with. If none, start with hi<n>.pcl. [None]',
+            help='Specify the input pickle file to start with. If none, start with H<n>.pcl. [None]',
             type=str, default=None )
     argparser.add_argument ( '-o', '--outfile',
             help='pickle file with hiscores. If none, dont pickle. [hiscore.pcl]',
