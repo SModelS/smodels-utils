@@ -331,7 +331,7 @@ if __name__ == "__main__":
             help='compute analysis contributions',
             action="store_true" )
     argparser.add_argument ( '-f', '--fetch',
-            help='fetch hi<n>.pcl from gpu server',
+            help='fetch H<n>.pcl from gpu server',
             action="store_true" )
     argparser.add_argument ( '-t', '--trim',
             help='trim leading model, but only particles', action="store_true" )
