@@ -84,7 +84,7 @@ class RandomWalker:
         if dump_training:
             ## we use the regressor only to dump the training data
             from regressor import Regressor
-            self.regressor = Regressor ( walkerid= walkerid )
+            ret.regressor = Regressor ( walkerid= walkerid )
         return ret
 
     def pprint ( self, *args ):
