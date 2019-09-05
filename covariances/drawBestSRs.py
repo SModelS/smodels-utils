@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import copy
 import numpy
 import importlib
+import warnings
 
 def convertNewAxes ( newa ):
     """ convert new types of axes (dictionary) to old (lists) """
@@ -22,6 +23,7 @@ def convertNewAxes ( newa ):
     return None
 
 def draw( validationfile ):
+    warnings.simplefilter("ignore")
     anaId = "???"
     coll = "CMS"
     p = validationfile.find ( "ATLAS" )
@@ -31,19 +33,28 @@ def draw( validationfile ):
         p = validationfile.find ( "CMS" )
     p2 = validationfile.find("-eff" )
     anaId = validationfile[p+1+len(coll):p2]
+    p3 = validationfile.find("validation/")
+    p4 = validationfile[p3+10:].find("_")
+    topo = validationfile[p3+10+1:p3+p4+10]
+    print ( "plotting %s (%s)" % ( anaId, topo ) )
     spec = importlib.util.spec_from_file_location( "output", validationfile )
     output_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(output_module)
     validationData = output_module.validationData
     bestSRs = []
     nbsrs = []
+    skipped, err = 0, None
     for point in validationData:
         if "error" in point:
+            skipped += 1
+            err = point["error"]
             # print ( "skipping %s: %s" % ( point["slhafile"], point["error"] ) )
             continue
         axes = convertNewAxes ( point["axes"] )
         bestSRs.append ( ( axes[1], axes[0], point["dataset"] ) )
         nbsrs.append ( ( axes[1], axes[0], 0 ) )
+    if skipped > 0:
+        print ( "skipped %d points: %s" % ( skipped, err ) )
     bestSRs.sort()
     nbsrs = numpy.array ( nbsrs )
     srDict, nrDict = {}, {}
@@ -68,8 +79,9 @@ def draw( validationfile ):
         plt.scatter ( x, y, s=25, c=[colors[n]]*len(x), label=nrDict[n] )
     plt.legend( loc="upper right" )
     plt.xlabel ( "m$_{mother}$ [GeV]" )
-    plt.ylabel ( "$\\Delta$m [GeV]" )
-    plt.title ( "Best Signal Region, %s" % anaId )
+    plt.ylabel ( "m$_{daughter}$ [GeV]" )
+    #plt.ylabel ( "$\\Delta$m [GeV]" )
+    plt.title ( "Best Signal Region, %s (%s)" % ( anaId, topo ) )
     plt.savefig ( "bestSRs.png" )
     
 if __name__ == "__main__":
