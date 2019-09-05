@@ -116,7 +116,7 @@ class RandomWalker:
         # p = random.choice ( unfrozen )
         self.model.masses[pid]=1e6
         self.model.normalizeAllBranchings() ## adjust everything
-        self.pprint ( "Freezing most massive %s (%.1f)" % ( helpers.getParticleName(pid), minmass ) )
+        self.log ( "Freezing most massive %s (%.1f)" % ( helpers.getParticleName(pid), minmass ) )
         return 1
 
     def onestep ( self ):
@@ -306,7 +306,7 @@ class RandomWalker:
                 brvec.append("")
             else:
                 brvec.append("%.2f" % x )
-        self.pprint ( "changed branchings of %s: %s: s=%.2f" % (helpers.getParticleName(p), ",".join( brvec  ), control ) )
+        self.log ( "changed branchings of %s: %s: s=%.2f" % (helpers.getParticleName(p), ",".join( brvec  ), control ) )
         return 1
 
     def takeRandomMassStep ( self ):
