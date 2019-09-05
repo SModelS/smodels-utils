@@ -21,8 +21,16 @@ def convertNewAxes ( newa ):
     print ( "cannot convert this axis" )
     return None
 
-def draw( anaId, validationfile ):
-    # from CMS16052best.T2bbWWoff_44 import validationData
+def draw( validationfile ):
+    anaId = "???"
+    coll = "CMS"
+    p = validationfile.find ( "ATLAS" )
+    if p > 0:
+        coll = "ATLAS"
+    else:
+        p = validationfile.find ( "CMS" )
+    p2 = validationfile.find("-eff" )
+    anaId = validationfile[p+1+len(coll):p2]
     spec = importlib.util.spec_from_file_location( "output", validationfile )
     output_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(output_module)
@@ -31,7 +39,7 @@ def draw( anaId, validationfile ):
     nbsrs = []
     for point in validationData:
         if "error" in point:
-            print ( "skipping %s: %s" % ( point["slhafile"], point["error"] ) )
+            # print ( "skipping %s: %s" % ( point["slhafile"], point["error"] ) )
             continue
         axes = convertNewAxes ( point["axes"] )
         bestSRs.append ( ( axes[1], axes[0], point["dataset"] ) )
@@ -48,8 +56,8 @@ def draw( anaId, validationfile ):
         nbsrs[ctr][0] = x[0]
         nbsrs[ctr][1] = x[1]
         nbsrs[ctr][2] = srDict[x[2]]
-    for x in nbsrs:
-        print ( x )
+    #for x in nbsrs:
+    #    print ( x )
     colors = ( "r", "g", "b", "c", "m", "y" )
     for n in nrDict.keys():
         x,y=[],[]
@@ -63,10 +71,10 @@ def draw( anaId, validationfile ):
     plt.ylabel ( "$\\Delta$m [GeV]" )
     plt.title ( "Best Signal Region, %s" % anaId )
     plt.savefig ( "bestSRs.png" )
-
+    
 if __name__ == "__main__":
+    dbpath = "../../smodels-database/"
     anaId = "ATLAS-SUSY-2016-15"
-    filename = "CMS16052best/T2bbWWoff_44.py"
-    filename = "ATLAS201615/T2ttoff_2EqMassAx_EqMassBy.py"
-    filename = "../../smodels-database/13TeV/ATLAS/ATLAS-SUSY-2016-15-eff/validation/T2ttoff_2EqMassAx_EqMassBy.py"
-    draw( anaId, filename )
+    filename = "%s/13TeV/ATLAS/%s-eff/validation/T2ttoff_2EqMassAx_EqMassBy.py" % \
+               ( dbpath, anaId )
+    draw( filename )
