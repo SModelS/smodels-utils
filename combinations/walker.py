@@ -29,11 +29,14 @@ class RandomWalker:
     def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive", 
                    dump_training = False, cheat = 0, 
                    dbpath = "../../smodels-database/", expected = False,
-                   select = "all" ):
+                   select = "all", catch_exceptions = True ):
         """ initialise the walker
         :param nsteps: maximum number of steps to perform
+        :param cheat: cheat mode. 0 is no cheating, 1 is with ranges, 2
+                      is the Z323 model.
         :param expected: remove possible signals from database
         :param select: select only subset of results
+        :param catch_exceptions: should we catch exceptions
         """
         if type(walkerid) != int or type(nsteps) != int or type(strategy)!= str:
             self.pprint ( "Wrong call of constructor: %s, %s, %s" % ( walkerid, nsteps, strategy ) )
@@ -43,6 +46,7 @@ class RandomWalker:
         self.model = Model( self.walkerid, cheat=cheat, dbpath = dbpath, 
                             expected = expected, select = select )
         self.strategy = strategy
+        self.catch_exceptions = catch_exceptions
         self.history = History ( walkerid )
         self.record_history = False
         self.maxsteps = nsteps
@@ -67,8 +71,9 @@ class RandomWalker:
     @classmethod
     def fromModel( cls, model, nsteps=10000, strategy="aggressive", walkerid=0, 
                    dump_training = False, dbpath="../../smodels-database/",
-                   expected = False, select = "all" ):
-        ret = cls( walkerid, cheat = 0, dbpath = dbpath )
+                   expected = False, select = "all", catch_exceptions = True ):
+        ret = cls( walkerid, cheat = 0, dbpath = dbpath, 
+                   catch_exceptions = catch_exceptions )
         # ret = cls( walkerid, nsteps, strategy, dump_training, dbpath )
         ret.model = model
         ret.model.expected = expected
@@ -153,12 +158,15 @@ class RandomWalker:
             self.log ( "take random mass step" )
             self.takeRandomMassStep()
         self.log ( "now create slha file via predict" )
-        try:
-            self.model.predict( self.strategy )
-        except Exception as e:
-            self.pprint ( "error ``%s'' (%s) encountered when trying to predict. lets revert" % (str(e),type(e) ) )
-            self.model.restore()
-            return
+        if self.catch_exceptions: 
+            try:
+                self.model.predict( self.strategy )
+            except Exception as e:
+                self.pprint ( "error ``%s'' (%s) encountered when trying to predict. lets revert" % (str(e),type(e) ) )
+                self.model.restore()
+                return
+        else:
+            self.model.predict ( self.strategy )
 
         self.log ( "found highest Z: %.2f" % self.model.Z )
         
@@ -441,6 +449,8 @@ if __name__ == "__main__":
     argparser.add_argument ( '-p', '--ncpus',
             help='number of CPUs. -1 means all. [1]',
             type=int, default=1 )
+    argparser.add_argument ( '-E', '--no_catch',
+            help='do not catch exceptions', action='store_true' )
     argparser.add_argument ( '-D', '--no_dump_training',
             help='do not dump data for training', action='store_true' )
     argparser.add_argument ( '-e', '--expected',
@@ -456,6 +466,7 @@ if __name__ == "__main__":
     args = argparser.parse_args()
     cleanDirectory()
     select = args.select.lower()
+    catchem = not args.no_catch ## catch exceptions?
     if "efficien" in select:
         select = "em"
     if "upper" in select:
@@ -486,7 +497,8 @@ if __name__ == "__main__":
                                            cheat = args.cheat, 
                                            dbpath = args.database, 
                                            expected = args.expected,
-                                           select = select )
+                                           select = select, 
+                                           catch_exceptions = catchem )
                     walker.takeStep()
                     walkers.append ( walker )
                     continue
@@ -495,7 +507,8 @@ if __name__ == "__main__":
                 v2.walkerid = ctr+1
                 walkers.append ( RandomWalker.fromModel ( v2, walkerid = ctr+1, 
                             dump_training = dump_training, dbpath = args.database,
-                            expected = args.expected, select = select ) )
+                            expected = args.expected, select = select,
+                            catch_exceptions = catchem ) )
                 walkers[-1].setWalkerId ( ctr+1 )
                 walkers[-1].takeStep() # make last step a taken one
                 ctr+=1
@@ -507,7 +520,8 @@ if __name__ == "__main__":
                                     cheat = args.cheat, 
                                     dbpath = args.database, 
                                     expected = args.expected, 
-                                    select = select ) )
+                                    select = select,
+                                    catch_exceptions = catchem ) )
 
     # regressor = None
     #if regress:
