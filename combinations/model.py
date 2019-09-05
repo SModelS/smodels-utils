@@ -173,8 +173,10 @@ class Model:
         rs = self.checkForExcluded ( bestpreds )
         srs = "%s" % ", ".join ( [ "%.2f" % x for x in rs[:3] ] )
         self.log ( "received r values %s" % srs )
-        self.rmax = rs[0]
+        self.rmax = 0.
         self.r2 = 0.
+        if len(rs)>0:
+            self.rmax = rs[0]
         if len(rs)>1:
             self.r2 = rs[1]
         excluded = self.rmax > rthresholds[0]
