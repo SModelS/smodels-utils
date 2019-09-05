@@ -18,8 +18,14 @@ class Model:
         branchings, their signal strength modifiers.
     """
     LSP = 1000022 ## the LSP is hard coded
-    def __init__ ( self, walkerid, cheat=0, dbpath="../../smodels-database/" ):
+    def __init__ ( self, walkerid, cheat=0, dbpath="../../smodels-database/",
+                   expected = False, select = "all" ):
+        """
+        :param expected: if True, run with observations drawn from expected values 
+        """
         self.walkerid = walkerid
+        self.expected = expected
+        self.select = select
         self.dbpath = dbpath
         self.version = 1 ## version of this class
         self.maxMass = 2400. ## maximum masses we consider
@@ -110,7 +116,8 @@ class Model:
     def initializePredictor ( self ):
         """ initialize the predictor """
         self.pprint ( "initializing predictor #%d with database at %s" % ( self.walkerid, self.dbpath ) )
-        self.predictor = Predictor( self.walkerid, dbpath=self.dbpath )
+        self.predictor = Predictor( self.walkerid, dbpath=self.dbpath, 
+                                    expected=self.expected, select=self.select )
         self.dbversion = self.predictor.database.databaseVersion
 
     def highlight ( self, msgType = "info", *args ):
@@ -166,8 +173,12 @@ class Model:
         rs = self.checkForExcluded ( bestpreds )
         srs = "%s" % ", ".join ( [ "%.2f" % x for x in rs[:3] ] )
         self.log ( "received r values %s" % srs )
-        self.rmax = rs[0]
-        self.r2 = rs[1]
+        self.rmax = 0.
+        self.r2 = 0.
+        if len(rs)>0:
+            self.rmax = rs[0]
+        if len(rs)>1:
+            self.r2 = rs[1]
         excluded = self.rmax > rthresholds[0]
         self.log ( "model is excluded? %s" % str(excluded) )
         if excluded:

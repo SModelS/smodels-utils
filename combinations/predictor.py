@@ -12,8 +12,15 @@ from smodels.theory.model import Model
 import pickle, time
 
 class Predictor:
-    def __init__ ( self, walkerid, dbpath = "../../smodels-database/" ):
+    def __init__ ( self, walkerid, dbpath = "../../smodels-database/",
+                   expected = False, select = "all" ):
         self.walkerid = walkerid
+        self.modifier = None
+        self.select = select
+        if expected:
+            from expResModifier import ExpResModifier
+            self.modifier = ExpResModifier()
+        self.expected = expected
         self.database=Database( dbpath ) 
 
     def pprint ( self, *args ):
@@ -42,7 +49,15 @@ class Predictor:
         topos = decomposer.decompose ( model, sigmacut, minmassgap=mingap )
         self.log ( "decomposed model into %d topologies." % len(topos) )
 
-        listOfExpRes = self.database.getExpResults()
+        dataTypes = [ "all" ]
+        if self.select == "em":
+            dataTypes = [ "efficiencyMap" ]
+        if self.select == "ul":
+            dataTypes = [ "upperLimit" ]
+
+        listOfExpRes = self.database.getExpResults( dataTypes = dataTypes )
+        if self.modifier:
+            listOfExpRes = self.modifier.modify ( listOfExpRes )
 
         bestDataSet=True
         combinedRes=True

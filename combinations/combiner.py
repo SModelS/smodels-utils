@@ -57,8 +57,6 @@ class Combiner:
         :param predictions: list of predictions
         :returns: a list of combinations
         """
-        if False: ## remove UL results
-            predictions = self.removeDataType ( predictions, "upperLimit" )
         combinables=[]
         n=len(predictions)
         for iA,predA in enumerate(predictions):
@@ -273,7 +271,7 @@ class Combiner:
         def getNLL ( mu ):
             ret = self.getCombinedLikelihood ( combination, mu, nll=True )
             return ret
-        for start in [ 0., 1., 10., .1, 1e-2, 1e-3 ]:
+        for start in [ 0., 1., .1, 10., 1e-2, 1e-3 ]:
             ret = optimize.minimize ( getNLL, start, bounds=[(0.,None)] )
             # print ( "findMuHat combo %s start=%f, ret=%s" % ( combination, start, ret.fun ) )
             if ret.status==0:

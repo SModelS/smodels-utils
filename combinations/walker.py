@@ -26,17 +26,27 @@ def cleanDirectory ():
     subprocess.getoutput ( "mv exceptions.log tmp/" )
 
 class RandomWalker:
-    def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive", dump_training = False, cheat = 0, dbpath = "../../smodels-database/" ):
+    def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive", 
+                   dump_training = False, cheat = 0, 
+                   dbpath = "../../smodels-database/", expected = False,
+                   select = "all", catch_exceptions = True ):
         """ initialise the walker
         :param nsteps: maximum number of steps to perform
+        :param cheat: cheat mode. 0 is no cheating, 1 is with ranges, 2
+                      is the Z323 model.
+        :param expected: remove possible signals from database
+        :param select: select only subset of results
+        :param catch_exceptions: should we catch exceptions
         """
         if type(walkerid) != int or type(nsteps) != int or type(strategy)!= str:
             self.pprint ( "Wrong call of constructor: %s, %s, %s" % ( walkerid, nsteps, strategy ) )
             sys.exit(-2)
         self.walkerid = walkerid ## walker id, for parallel runs
         self.hiscoreList = Hiscore ( walkerid, True, "H%d.pcl" % walkerid )
-        self.model = Model( self.walkerid, cheat=cheat, dbpath = dbpath )
+        self.model = Model( self.walkerid, cheat=cheat, dbpath = dbpath, 
+                            expected = expected, select = select )
         self.strategy = strategy
+        self.catch_exceptions = catch_exceptions
         self.history = History ( walkerid )
         self.record_history = False
         self.maxsteps = nsteps
@@ -60,17 +70,21 @@ class RandomWalker:
 
     @classmethod
     def fromModel( cls, model, nsteps=10000, strategy="aggressive", walkerid=0, 
-                   dump_training = False, dbpath="../../smodels-database/" ):
-        ret = cls( walkerid, cheat = 0, dbpath = dbpath )
+                   dump_training = False, dbpath="../../smodels-database/",
+                   expected = False, select = "all", catch_exceptions = True ):
+        ret = cls( walkerid, cheat = 0, dbpath = dbpath, 
+                   catch_exceptions = catch_exceptions )
         # ret = cls( walkerid, nsteps, strategy, dump_training, dbpath )
         ret.model = model
+        ret.model.expected = expected
+        ret.model.select = select
         ret.model.walkerid = walkerid
         ret.model.dbpath = dbpath
         ret.model.initializePredictor()
         if dump_training:
             ## we use the regressor only to dump the training data
             from regressor import Regressor
-            self.regressor = Regressor ( walkerid= walkerid )
+            ret.regressor = Regressor ( walkerid= walkerid )
         return ret
 
     def pprint ( self, *args ):
@@ -102,7 +116,7 @@ class RandomWalker:
         # p = random.choice ( unfrozen )
         self.model.masses[pid]=1e6
         self.model.normalizeAllBranchings() ## adjust everything
-        self.pprint ( "Freezing most massive %s (%.1f)" % ( helpers.getParticleName(pid), minmass ) )
+        self.log ( "Freezing most massive %s (%.1f)" % ( helpers.getParticleName(pid), minmass ) )
         return 1
 
     def onestep ( self ):
@@ -144,12 +158,15 @@ class RandomWalker:
             self.log ( "take random mass step" )
             self.takeRandomMassStep()
         self.log ( "now create slha file via predict" )
-        try:
-            self.model.predict( self.strategy )
-        except Exception as e:
-            self.pprint ( "error ``%s'' (%s) encountered when trying to predict. lets revert" % (str(e),type(e) ) )
-            self.model.restore()
-            return
+        if self.catch_exceptions: 
+            try:
+                self.model.predict( self.strategy )
+            except Exception as e:
+                self.pprint ( "error ``%s'' (%s) encountered when trying to predict. lets revert" % (str(e),type(e) ) )
+                self.model.restore()
+                return
+        else:
+            self.model.predict ( self.strategy )
 
         self.log ( "found highest Z: %.2f" % self.model.Z )
         
@@ -289,7 +306,7 @@ class RandomWalker:
                 brvec.append("")
             else:
                 brvec.append("%.2f" % x )
-        self.pprint ( "changed branchings of %s: %s: s=%.2f" % (helpers.getParticleName(p), ",".join( brvec  ), control ) )
+        self.log ( "changed branchings of %s: %s: s=%.2f" % (helpers.getParticleName(p), ",".join( brvec  ), control ) )
         return 1
 
     def takeRandomMassStep ( self ):
@@ -417,6 +434,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-s', '--strategy',
             help='combination strategy [aggressive]',
             type=str, default="aggressive" )
+    argparser.add_argument ( '-S', '--select',
+            help='select only a subset of results (all,ul,em) [all]',
+            type=str, default="all" )
     argparser.add_argument ( '-d', '--database',
             help='path to database [../../smodels-database]',
             type=str, default="../../smodels-database" )
@@ -429,6 +449,8 @@ if __name__ == "__main__":
     argparser.add_argument ( '-p', '--ncpus',
             help='number of CPUs. -1 means all. [1]',
             type=int, default=1 )
+    argparser.add_argument ( '-E', '--no_catch',
+            help='do not catch exceptions', action='store_true' )
     argparser.add_argument ( '-D', '--no_dump_training',
             help='do not dump data for training', action='store_true' )
     argparser.add_argument ( '-e', '--expected',
@@ -443,6 +465,16 @@ if __name__ == "__main__":
                              action="store_true" )
     args = argparser.parse_args()
     cleanDirectory()
+    select = args.select.lower()
+    catchem = not args.no_catch ## catch exceptions?
+    if "efficien" in select:
+        select = "em"
+    if "upper" in select:
+        select = "ul"
+    if "none" in select:
+        select = "all"
+    if select == "":
+        select = "all"
     dump_training = not args.no_dump_training
     ncpus = args.ncpus
     if ncpus < 0:
@@ -460,7 +492,13 @@ if __name__ == "__main__":
                     break
                 if v == None:
                     # no state? start from scratch!
-                    walker = RandomWalker( ctr+1, args.nsteps, args.strategy, dump_training = dump_training, cheat = args.cheat, dbpath = args.database )
+                    walker = RandomWalker( ctr+1, args.nsteps, args.strategy, 
+                                           dump_training = dump_training, 
+                                           cheat = args.cheat, 
+                                           dbpath = args.database, 
+                                           expected = args.expected,
+                                           select = select, 
+                                           catch_exceptions = catchem )
                     walker.takeStep()
                     walkers.append ( walker )
                     continue
@@ -468,14 +506,22 @@ if __name__ == "__main__":
                 v2.createNewSLHAFileName()
                 v2.walkerid = ctr+1
                 walkers.append ( RandomWalker.fromModel ( v2, walkerid = ctr+1, 
-                            dump_training = dump_training, dbpath = args.database ) )
+                            dump_training = dump_training, dbpath = args.database,
+                            expected = args.expected, select = select,
+                            catch_exceptions = catchem ) )
                 walkers[-1].setWalkerId ( ctr+1 )
                 walkers[-1].takeStep() # make last step a taken one
                 ctr+=1
     else:
         for ctr in range(ncpus):
-            # print ("db", args.database )
-            walkers.append ( RandomWalker( ctr+1, args.nsteps, strategy = args.strategy, dump_training = dump_training, cheat = args.cheat, dbpath = args.database ) )
+            walkers.append ( RandomWalker( ctr+1, args.nsteps, 
+                                    strategy = args.strategy, 
+                                    dump_training = dump_training, 
+                                    cheat = args.cheat, 
+                                    dbpath = args.database, 
+                                    expected = args.expected, 
+                                    select = select,
+                                    catch_exceptions = catchem ) )
 
     # regressor = None
     #if regress:
