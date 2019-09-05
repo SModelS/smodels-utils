@@ -6,6 +6,7 @@ a full blown script """
 import matplotlib.pyplot as plt
 import copy
 import numpy
+import importlib
 
 def convertNewAxes ( newa ):
     """ convert new types of axes (dictionary) to old (lists) """
@@ -20,11 +21,18 @@ def convertNewAxes ( newa ):
     print ( "cannot convert this axis" )
     return None
 
-def draw():
-    from CMS16052best.T2bbWWoff_44 import validationData
+def draw( anaId, validationfile ):
+    # from CMS16052best.T2bbWWoff_44 import validationData
+    spec = importlib.util.spec_from_file_location( "output", validationfile )
+    output_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(output_module)
+    validationData = output_module.validationData
     bestSRs = []
     nbsrs = []
     for point in validationData:
+        if "error" in point:
+            print ( "skipping %s: %s" % ( point["slhafile"], point["error"] ) )
+            continue
         axes = convertNewAxes ( point["axes"] )
         bestSRs.append ( ( axes[1], axes[0], point["dataset"] ) )
         nbsrs.append ( ( axes[1], axes[0], 0 ) )
@@ -53,8 +61,12 @@ def draw():
     plt.legend( loc="upper right" )
     plt.xlabel ( "m$_{mother}$ [GeV]" )
     plt.ylabel ( "$\\Delta$m [GeV]" )
-    plt.title ( "Best Signal Region, CMS-PAS-SUS-16-052" )
+    plt.title ( "Best Signal Region, %s" % anaId )
     plt.savefig ( "bestSRs.png" )
 
-    
-draw()
+if __name__ == "__main__":
+    anaId = "ATLAS-SUSY-2016-15"
+    filename = "CMS16052best/T2bbWWoff_44.py"
+    filename = "ATLAS201615/T2ttoff_2EqMassAx_EqMassBy.py"
+    filename = "../../smodels-database/13TeV/ATLAS/ATLAS-SUSY-2016-15-eff/validation/T2ttoff_2EqMassAx_EqMassBy.py"
+    draw( anaId, filename )
