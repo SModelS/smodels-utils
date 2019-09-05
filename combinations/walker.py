@@ -26,16 +26,22 @@ def cleanDirectory ():
     subprocess.getoutput ( "mv exceptions.log tmp/" )
 
 class RandomWalker:
-    def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive", dump_training = False, cheat = 0, dbpath = "../../smodels-database/" ):
+    def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive", 
+                   dump_training = False, cheat = 0, 
+                   dbpath = "../../smodels-database/", expected = False,
+                   select = "all" ):
         """ initialise the walker
         :param nsteps: maximum number of steps to perform
+        :param expected: remove possible signals from database
+        :param select: select only subset of results
         """
         if type(walkerid) != int or type(nsteps) != int or type(strategy)!= str:
             self.pprint ( "Wrong call of constructor: %s, %s, %s" % ( walkerid, nsteps, strategy ) )
             sys.exit(-2)
         self.walkerid = walkerid ## walker id, for parallel runs
         self.hiscoreList = Hiscore ( walkerid, True, "H%d.pcl" % walkerid )
-        self.model = Model( self.walkerid, cheat=cheat, dbpath = dbpath )
+        self.model = Model( self.walkerid, cheat=cheat, dbpath = dbpath, 
+                            expected = expected, select = select )
         self.strategy = strategy
         self.history = History ( walkerid )
         self.record_history = False
@@ -60,10 +66,13 @@ class RandomWalker:
 
     @classmethod
     def fromModel( cls, model, nsteps=10000, strategy="aggressive", walkerid=0, 
-                   dump_training = False, dbpath="../../smodels-database/" ):
+                   dump_training = False, dbpath="../../smodels-database/",
+                   expected = False, select = "all" ):
         ret = cls( walkerid, cheat = 0, dbpath = dbpath )
         # ret = cls( walkerid, nsteps, strategy, dump_training, dbpath )
         ret.model = model
+        ret.model.expected = expected
+        ret.model.select = select
         ret.model.walkerid = walkerid
         ret.model.dbpath = dbpath
         ret.model.initializePredictor()
@@ -417,6 +426,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-s', '--strategy',
             help='combination strategy [aggressive]',
             type=str, default="aggressive" )
+    argparser.add_argument ( '-S', '--select',
+            help='select only a subset of results (all,ul,em) [all]',
+            type=str, default="all" )
     argparser.add_argument ( '-d', '--database',
             help='path to database [../../smodels-database]',
             type=str, default="../../smodels-database" )
@@ -443,6 +455,15 @@ if __name__ == "__main__":
                              action="store_true" )
     args = argparser.parse_args()
     cleanDirectory()
+    select = args.select.lower()
+    if "efficien" in select:
+        select = "em"
+    if "upper" in select:
+        select = "ul"
+    if "none" in select:
+        select = "all"
+    if select == "":
+        select = "all"
     dump_training = not args.no_dump_training
     ncpus = args.ncpus
     if ncpus < 0:
@@ -460,7 +481,12 @@ if __name__ == "__main__":
                     break
                 if v == None:
                     # no state? start from scratch!
-                    walker = RandomWalker( ctr+1, args.nsteps, args.strategy, dump_training = dump_training, cheat = args.cheat, dbpath = args.database )
+                    walker = RandomWalker( ctr+1, args.nsteps, args.strategy, 
+                                           dump_training = dump_training, 
+                                           cheat = args.cheat, 
+                                           dbpath = args.database, 
+                                           expected = args.expected,
+                                           select = select )
                     walker.takeStep()
                     walkers.append ( walker )
                     continue
@@ -468,14 +494,20 @@ if __name__ == "__main__":
                 v2.createNewSLHAFileName()
                 v2.walkerid = ctr+1
                 walkers.append ( RandomWalker.fromModel ( v2, walkerid = ctr+1, 
-                            dump_training = dump_training, dbpath = args.database ) )
+                            dump_training = dump_training, dbpath = args.database,
+                            expected = args.expected, select = select ) )
                 walkers[-1].setWalkerId ( ctr+1 )
                 walkers[-1].takeStep() # make last step a taken one
                 ctr+=1
     else:
         for ctr in range(ncpus):
-            # print ("db", args.database )
-            walkers.append ( RandomWalker( ctr+1, args.nsteps, strategy = args.strategy, dump_training = dump_training, cheat = args.cheat, dbpath = args.database ) )
+            walkers.append ( RandomWalker( ctr+1, args.nsteps, 
+                                    strategy = args.strategy, 
+                                    dump_training = dump_training, 
+                                    cheat = args.cheat, 
+                                    dbpath = args.database, 
+                                    expected = args.expected, 
+                                    select = select ) )
 
     # regressor = None
     #if regress:

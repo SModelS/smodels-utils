@@ -57,8 +57,6 @@ class Combiner:
         :param predictions: list of predictions
         :returns: a list of combinations
         """
-        if False: ## remove UL results
-            predictions = self.removeDataType ( predictions, "upperLimit" )
         combinables=[]
         n=len(predictions)
         for iA,predA in enumerate(predictions):
