@@ -3,7 +3,7 @@
 """ A class that centralizes access to the hiscore list over multiple threads.
 """
 
-import random, copy, pickle, os, fcntl, time, subprocess
+import random, copy, pickle, os, fcntl, time, subprocess, colorama
 from trimmer import Trimmer
 from scipy import stats
 
@@ -45,18 +45,14 @@ class Hiscore:
         for j in range(self.nkeep-1,i,-1):
             m = copy.deepcopy ( self.hiscores[j-1] )
             self.hiscores[j]= m
+            while len(self.trimmed)<j:
+                self.trimmed.append(None)
             n = copy.deepcopy ( self.trimmed[j-1] )
             self.trimmed[j]= n
-            #if (j-1) in self.trimmed.keys():
-            #    self.trimmed[j] = copy.deepcopy ( self.trimmed[j-1] )
-            #    self.trimmed[j].clean( all=True ) # just in case
-            #else:
-            #    if j in self.trimmed:
-            #        self.trimmed.pop(j)
         if len(self.hiscores)>self.nkeep:
             self.hiscores = self.hiscores[:self.nkeep]
         if len(self.trimmed)>self.nkeep:
-            self.trimmed = self.hiscores[:self.nkeep]
+            self.trimmed = self.trimmed[:self.nkeep]
         # assert ( len(self.hiscores) == self.nkeep )
 
     def updateListFromPickle ( self ):
@@ -320,7 +316,8 @@ def main ( args ):
         printModels ( models, args.detailed )
 
     if args.interactive:
-        print ( "[hiscore] starting interactive session. Variables: models, trimmed" )
+        print ( "[hiscore] starting interactive session. Variables: %smodels, trimmed%s" % \
+                ( colorama.Fore.RED, colorama.Fore.RESET ) )
         import IPython
         IPython.embed()
 
