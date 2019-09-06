@@ -178,7 +178,7 @@ class Hiscore:
         with open( "walker%d.log" % self.walkerid, "a" ) as f:
             f.write ( "[hiscore:%d - %s] %s\n" % ( self.walkerid, time.asctime(), " ".join(map(str,args)) ) )
 
-def compileList():
+def compileList( nmax ):
     """ compile the list from individual hi*pcl """
     import glob
     files = glob.glob ( "H*.pcl" )
@@ -197,6 +197,11 @@ def compileList():
             print ( "could not open %s. ignore." % f.name )
     allmodels = sortByZ ( allmodels )
     alltrimmed = sortByZ ( alltrimmed )
+    if nmax > 0:
+        while len(allmodels)<nmax:
+            allmodels.append ( None )
+        while len(alltrimmed)<nmax:
+            alltrimmed.append ( None )
     return allmodels, alltrimmed
 
 def storeList ( models, trimmed, savefile ):
@@ -260,7 +265,7 @@ def main ( args ):
         print ( out )
 
     if args.infile is None:
-        models,trimmed = compileList() ## compile list from H<n>.pcl files
+        models,trimmed = compileList( args.nmax ) ## compile list from H<n>.pcl files
     else:
         with open(args.infile,"rb+") as f:
             fcntl.flock( f, fcntl.LOCK_EX )
