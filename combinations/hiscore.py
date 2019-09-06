@@ -238,6 +238,10 @@ def printModels ( models, detailed ):
         else:
             discuss ( model, sc )
 
+def produceNewSLHAFileNames ( models ):
+    for m in models:
+        m.createNewSLHAFileName()
+
 def main ( args ):
     if args.detailed:
         args.print = True
@@ -260,6 +264,9 @@ def main ( args ):
             models = pickle.load ( f )
             trimmed = pickle.load ( f )
             fcntl.flock( f, fcntl.LOCK_UN )
+
+    produceNewSLHAFileNames ( models )
+    produceNewSLHAFileNames ( trimmed )
 
     if args.trim:
         model = models[0]

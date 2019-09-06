@@ -221,6 +221,13 @@ if __name__ == "__main__":
                 "predictions": args.predictions, "html": not args.nohtml }
     plot ( args.number, args.verbosity, args.picklefile, options )
     if args.scp:
-        cmd = "scp *.png hiscore.slha index.html gpu:/afs/hephy.at/user/w/wwaltenberger/www/models"
+        import socket
+        hostname = socket.gethostname()
+        D = "/afs/hephy.at/user/w/wwaltenberger/www/models"
+        F = "*.png hiscore.slha index.html"
+        if "gpu" in hostname:
+            cmd = "cp %s %s" % (F, D )
+        else:
+            cmd = "scp %s gpu:%s" % ( F, D )
         print ( cmd )
         subprocess.getoutput ( cmd )

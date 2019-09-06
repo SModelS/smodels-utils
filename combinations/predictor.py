@@ -17,11 +17,28 @@ class Predictor:
         self.walkerid = walkerid
         self.modifier = None
         self.select = select
+        self.expected = expected
         if expected:
             from expResModifier import ExpResModifier
             self.modifier = ExpResModifier()
-        self.expected = expected
         self.database=Database( dbpath ) 
+        self.fetchResults()
+
+    def fetchResults ( self ):
+        """ fetch the list of results, perform all selecting
+            and modding """
+
+        dataTypes = [ "all" ]
+        if self.select == "em":
+            dataTypes = [ "efficiencyMap" ]
+        if self.select == "ul":
+            dataTypes = [ "upperLimit" ]
+
+        listOfExpRes = self.database.getExpResults( dataTypes = dataTypes )
+        if self.modifier:
+            listOfExpRes = self.modifier.modify ( listOfExpRes )
+
+        self.listOfExpRes = listOfExpRes
 
     def pprint ( self, *args ):
         """ logging """
@@ -49,15 +66,6 @@ class Predictor:
         topos = decomposer.decompose ( model, sigmacut, minmassgap=mingap )
         self.log ( "decomposed model into %d topologies." % len(topos) )
 
-        dataTypes = [ "all" ]
-        if self.select == "em":
-            dataTypes = [ "efficiencyMap" ]
-        if self.select == "ul":
-            dataTypes = [ "upperLimit" ]
-
-        listOfExpRes = self.database.getExpResults( dataTypes = dataTypes )
-        if self.modifier:
-            listOfExpRes = self.modifier.modify ( listOfExpRes )
 
         bestDataSet=True
         combinedRes=True
@@ -70,13 +78,15 @@ class Predictor:
         self.log ( "start getting preds" )
         from smodels.tools import runtime
         runtime._experimental = True
-        for expRes in listOfExpRes:
-            predictions = theoryPredictionsFor ( expRes, topos, useBestDataset=bestDataSet,
+        for expRes in self.listOfExpRes:
+            predictions = theoryPredictionsFor ( expRes, topos, 
+                                                 useBestDataset=bestDataSet,
                                                  combinedResults=combinedRes )
             if predictions == None:
                 predictions = []
             if allpreds:
-                combpreds = theoryPredictionsFor ( expRes, topos, useBestDataset=False,
+                combpreds = theoryPredictionsFor ( expRes, topos, 
+                                                   useBestDataset=False,
                                                    combinedResults=True )
                 if combpreds != None:
                     for c in combpreds:

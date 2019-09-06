@@ -102,14 +102,14 @@ class Model:
                 self.masses[1000002]=random.uniform(800,1200)
                 # self.masses[1000024]=random.uniform(500,1000)
             if cheat == 2:
-                self.highlight ( "red", "cheat mode (2), start with Z=3.23 point (roughly)." )
+                self.highlight ( "red", "cheat mode (2), start with Z=2.82 point (roughly)." )
                 self.masses[1000006]=830.
-                self.masses[1000005]=600.
+                self.masses[1000005]=1100.
                 self.masses[1000001]=1070.
                 self.masses[1000002]=920.
                 self.masses[1000004]=450.
-                self.masses[1000022]=380.
-                self.ssmultipliers[1000005]=.65
+                self.masses[1000022]=410.
+                self.ssmultipliers[1000005]=1.01
                 # self.masses[1000024]=random.uniform(500,1000)
         self.computePrior()
 

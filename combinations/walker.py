@@ -76,6 +76,7 @@ class RandomWalker:
                    catch_exceptions = catch_exceptions )
         # ret = cls( walkerid, nsteps, strategy, dump_training, dbpath )
         ret.model = model
+        ret.model.createNewSLHAFileName()
         ret.model.expected = expected
         ret.model.select = select
         ret.model.walkerid = walkerid
