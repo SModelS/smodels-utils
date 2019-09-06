@@ -44,7 +44,7 @@ class Hiscore:
         for j in range(self.nkeep-1,i,-1):
             m = copy.deepcopy ( self.hiscores[j-1] )
             self.hiscores[j]= m
-            while len(self.trimmed)=<j:
+            while len(self.trimmed)<=j:
                 self.trimmed.append(None)
             n = copy.deepcopy ( self.trimmed[j-1] )
             self.trimmed[j]= n
@@ -242,7 +242,8 @@ def printModels ( models, detailed ):
 
 def produceNewSLHAFileNames ( models ):
     for m in models:
-        m.createNewSLHAFileName()
+        if m is not None:
+            m.createNewSLHAFileName()
 
 def main ( args ):
     if args.detailed:
