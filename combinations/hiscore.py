@@ -72,12 +72,15 @@ class Hiscore:
                 self.trimmed = pickle.load ( f )
                 fcntl.flock ( f, fcntl.LOCK_UN )
             self.mtime = mtime
-            nhs = 0
+            nhs, ntr = 0, 0
             for i in self.hiscores:
                 if i != None:
                     nhs += 1
-            self.pprint ( "loaded %d hiscores from %s, and %s trimmed ones." % \
-                          ( nhs, self.pickleFile, len(self.trimmed) ) )
+            for v in self.trimmed:
+                if v != None:
+                    ntr += 1
+            self.pprint ( "loaded %d hiscores from %s, and %d trimmed ones." % \
+                          ( nhs, self.pickleFile, ntr ) )
             # assert ( len(self.hiscores) == self.nkeep )
             self.fileAttempts=0
         except Exception as e:
@@ -315,7 +318,7 @@ def main ( args ):
     if args.interactive:
         print ( "[hiscore] starting interactive session. Variables: models, trimmed" )
         import IPython
-        Ipython.embed()
+        IPython.embed()
 
 if __name__ == "__main__":
     import argparse
