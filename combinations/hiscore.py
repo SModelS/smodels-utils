@@ -35,8 +35,7 @@ class Hiscore:
                 self.demote ( i )
                 self.hiscores[i] = copy.deepcopy ( model )
                 self.hiscores[i].clean( all=True )
-                if False and i == 0 and model.Z > 3.0: ## awesome new hiscore? trim it!
-                    self.trimModels(1,True)
+                self.trimmed[i] = None
                 break
 
     def demote ( self, i ):
@@ -45,7 +44,7 @@ class Hiscore:
         for j in range(self.nkeep-1,i,-1):
             m = copy.deepcopy ( self.hiscores[j-1] )
             self.hiscores[j]= m
-            while len(self.trimmed)<j:
+            while len(self.trimmed)=<j:
                 self.trimmed.append(None)
             n = copy.deepcopy ( self.trimmed[j-1] )
             self.trimmed[j]= n
@@ -200,12 +199,12 @@ def compileList():
     alltrimmed = sortByZ ( alltrimmed )
     return allmodels, alltrimmed
 
-def storeList ( models, trimmed, savefile, nmax ):
+def storeList ( models, trimmed, savefile ):
     """ store the best models in another hiscore file """
     from hiscore import Hiscore
     h = Hiscore ( 0, True, savefile )
-    h.hiscores = models[:nmax]
-    h.trimmed = trimmed[:nmax]
+    h.hiscores = models
+    h.trimmed = trimmed
     h.save()
 
 def sortByZ ( models ):
@@ -302,8 +301,12 @@ def main ( args ):
         else:
             models[0] = model
 
+    if args.nmax > 0:
+        models = models[:args.nmax]
+        trimmed = trimmed[:args.nmax]
+
     if args.outfile is not None:
-        storeList ( models, trimmed, args.outfile, args.nmax )
+        storeList ( models, trimmed, args.outfile )
 
     if args.check:
         model = models[0]
