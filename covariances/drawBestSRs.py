@@ -54,7 +54,7 @@ def draw( validationfile ):
         bestSRs.append ( ( axes[1], axes[0], point["dataset"] ) )
         nbsrs.append ( ( axes[1], axes[0], 0 ) )
     if skipped > 0:
-        print ( "skipped %d points: %s" % ( skipped, err ) )
+        print ( "skipped %d/%d points: %s" % ( skipped, len(validationData), err ) )
     bestSRs.sort()
     nbsrs = numpy.array ( nbsrs )
     srDict, nrDict = {}, {}
@@ -73,6 +73,7 @@ def draw( validationfile ):
     for n in nrDict.keys():
         x,y=[],[]
         for x_,y_,z_ in nbsrs:
+            # print ( "x,y,z,n",x_,y_,int(z_),n )
             if n == int(z_):
                 x.append ( x_ )
                 y.append ( y_ )
@@ -87,6 +88,7 @@ def draw( validationfile ):
 if __name__ == "__main__":
     dbpath = "../../smodels-database/"
     anaId = "ATLAS-SUSY-2016-15"
-    filename = "%s/13TeV/ATLAS/%s-eff/validation/T2ttoff_2EqMassAx_EqMassBy.py" % \
-               ( dbpath, anaId )
+    topo = "T2tt"
+    filename = "%s/13TeV/ATLAS/%s-eff/validation/%s_2EqMassAx_EqMassBy.py" % \
+               ( dbpath, anaId, topo )
     draw( filename )
