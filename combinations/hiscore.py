@@ -11,9 +11,9 @@ class Hiscore:
     """ encapsulates the hiscore list. """
     def __init__ ( self, walkerid, save_hiscores, picklefile="hiscore.pcl" ):
         self.walkerid = walkerid
-        self.trimmed = {}
         self.save_hiscores = save_hiscores
         self.nkeep = 3 ## how many do we keep.
+        self.trimmed = {}
         self.hiscores = [ None ]*self.nkeep
         self.fileAttempts = 0 ## unsucessful attempts at reading or writing
         self.pickleFile = picklefile
@@ -191,21 +191,34 @@ def compileList():
                 models = pickle.load ( f )
                 trimmed = pickle.load ( f )
                 fcntl.flock( f, fcntl.LOCK_UN )
+                if type(trimmed)==dict:
+                    tmp=[]
+                    for k in range(max(trimmed.keys())):
+                        if k in trimmed.keys():
+                            tmp.append(trimmed[k])
+                        else:
+                            tmp.append(None)
+                    trimmed = tmp
+                    
                 ## add models, but without the Nones
                 allmodels += list ( filter ( None.__ne__, models ) )
-                alltrimmed += list ( filter ( None.__ne__, models ) )
+                alltrimmed += list ( filter ( None.__ne__, trimmed ) )
         except:
             print ( "could not open %s. ignore." % f.name )
     allmodels = sortByZ ( allmodels )
     alltrimmed = sortByZ ( alltrimmed )
-    return allmodels, alltrimmed
+    return allmodels, { x:y for x,y in enumerate(alltrimmed) }
 
 def storeList ( models, trimmed, savefile, nmax ):
     """ store the best models in another hiscore file """
     from hiscore import Hiscore
     h = Hiscore ( 0, True, savefile )
     h.hiscores = models[:nmax]
-    h.trimmed = trimmed[:nmax]
+    # h.trimmed = trimmed[:nmax]
+    h.trimmed = trimmed
+    for k,v in h.trimmed:
+        if k > nmax:
+            h.trimmed.pop(k)
     h.save()
 
 def sortByZ ( models ):
