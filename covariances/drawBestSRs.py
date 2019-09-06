@@ -8,6 +8,7 @@ import copy
 import numpy
 import importlib
 import warnings
+from matplotlib import colors as C
 
 def convertNewAxes ( newa ):
     """ convert new types of axes (dictionary) to old (lists) """
@@ -67,9 +68,12 @@ def draw( validationfile ):
         nbsrs[ctr][0] = x[0]
         nbsrs[ctr][1] = x[1]
         nbsrs[ctr][2] = srDict[x[2]]
-    #for x in nbsrs:
-    #    print ( x )
-    colors = ( "r", "g", "b", "c", "m", "y" )
+    colors = [ "r", "g", "b", "c", "m", "y", "k" ]
+    ctr = 0
+    while len(nrDict.keys()) > len(colors):
+        print ( "ERROR: not enough colors defined!!" )
+        colors.append ( list(C.cnames.keys())[ctr] )
+        ctr += 1
     for n in nrDict.keys():
         x,y=[],[]
         for x_,y_,z_ in nbsrs:
