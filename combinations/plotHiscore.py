@@ -60,7 +60,7 @@ def writeTex ( model ):
         whatifs+= ", ".join ( tok )
         whatifs+="$"
     else:
-        print ( "[plotHiscore] model has no whatif defined (did you use an untrimmed model?)" )
+        print ( "[plotHiscore] model has no ``whatif'' defined (did you use an untrimmed model?)" )
 
     import tex2png
     if ssm == []:
@@ -213,14 +213,14 @@ if __name__ == "__main__":
     argparser.add_argument ( '-p', '--predictions',
             help='list all predictions',
             action="store_true" )
-    argparser.add_argument ( '-s', '--scp',
+    argparser.add_argument ( '-u', '--upload',
             help='upload to GPU server, afs www space. To appear at http://www.hephy.at/user/wwaltenberger/models/',
             action="store_true" )
     args = argparser.parse_args()
     options = { "ruler": not args.noruler, "decays": not args.nodecays,
                 "predictions": args.predictions, "html": not args.nohtml }
     plot ( args.number, args.verbosity, args.picklefile, options )
-    if args.scp:
+    if args.upload:
         import socket
         hostname = socket.gethostname()
         D = "/afs/hephy.at/user/w/wwaltenberger/www/models"

@@ -25,9 +25,13 @@ def toLatex ( pid, addDollars=False, addM=False ):
     pname = pid
     if type(pid)==int:
         pname = getParticleName(pid)
-    rpls = { "~nutau": "\\tilde{\\nu}_{\\tau}", "L": "_{L}", "R": "_{R}", "1": "_{1}", "2": "_{2}", "~nu": "\\tilde{\\nu}",
-             "~chi": "\\tilde{\\chi}", "~mu": "\\tilde{\\mu}", "+": "^{+}", "3": "_{3}", 
-             "0": "^{0}", "-": "^{-}" }
+    # oldp = pname
+    rpls = { "~nutau": "\\tilde{\\nu}_{\\tau}", "L": "_{L}", "R": "_{R}", 
+             "1": "_{1}", "2": "_{2}", "~nu": "\\tilde{\\nu}", 
+             "~nue": "\\tilde{\\nu}_{e}", "~tauL": "\\tilde{\\tau}L",
+             "~numu": "\\tilde{\\nu}_{\\mu}",
+             "~chi": "\\tilde{\\chi}", "~mu": "\\tilde{\\mu}", "+": "^{+}", 
+             "3": "_{3}", "0": "^{0}", "-": "^{-}" }
     keys = list ( rpls.keys() )
     keys.sort(key=len,reverse=True)
     for kr in keys:
@@ -40,6 +44,7 @@ def toLatex ( pid, addDollars=False, addM=False ):
         pname = "m(" + pname + ")"
     if addDollars:
         pname = "$" + pname + "$"
+    # print ( "tolatex", pid, pname, oldp )
     return pname
 
     return str(pid)
