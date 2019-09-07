@@ -448,6 +448,24 @@ class ValidationPlot():
         self.data = eval(f.read().replace("validationData = ",""))
         f.close()
 
+    def getMassesFromSLHAFileName ( self, filename ):
+        """ try to guess the mass vector from the SLHA file name """
+        tokens = filename.replace(".slha","").split("_")
+        if not tokens[0].startswith ( "T" ):
+            print ( "why does token 0 not start with a T??? %s" % tokens[0] )
+            sys.exit(-1)
+        masses = list ( map ( float, tokens[1:] ) )
+        for m in masses:
+            if m>0. and m<1e-10:
+                print ( "it seems there are widths in the vector. implement this." )
+                sys.exit()
+        if len(masses) % 2 != 0:
+            print ( "mass vector is assymetrical. dont know what to do" )
+            sys.exit(-1)
+        n=int(len(masses)/2)
+        ret = [ masses[:n], masses[n:] ]
+        return ret
+
     def getDataFromPlanes(self):
         """
         Runs SModelS on the SLHA files from self.slhaDir and store
@@ -517,6 +535,7 @@ class ValidationPlot():
             ff.close()
             if not 'ExptRes' in smodelsOutput:
                 logger.debug("No results for %s " %slhafile)
+                ## still get the masses from the slhafile name
                 ## log also the errors in the py file
                 Dict = { 'slhafile': slhafile, 'error': 'no results' }
                 self.data.append ( Dict )
@@ -546,6 +565,14 @@ class ValidationPlot():
             #(skip rounding to check if mass is in the plane)
             roundmass = expRes['Mass (GeV)']
             width = expRes['Width (GeV)']
+            if roundmass is None:
+                import inspect
+                frame = inspect.currentframe()
+                line = frame.f_lineno
+                #print ( "roundmass is not given in validationObjs.py:%s" % line )
+                #print ( "we try to extract the info from the slha file name %s" % \
+                #        slhafile )
+                roundmass = self.getMassesFromSLHAFileName ( slhafile )
             mass = [br[:] for br in roundmass]
             slhadata = pyslha.readSLHAFile(os.path.join(slhaDir,slhafile))
             origmasses = list(set(slhadata.blocks['MASS'].values()))
