@@ -38,12 +38,15 @@ def discussPredictions ( model ):
 
 def writeTex ( model ):
     """ write the comment about ss multipliers and contributions, in tex """
-    ssm = []
+    ssm = {}
     for k,v in model.ssmultipliers.items():
         if abs(v-1.)<1e-3:
             continue
         pname = helpers.toLatex ( k )
-        ssm.append ( "%s = %.2f" % (pname,v) )
+        token = "%s = %.2f" % ( pname, v )
+        if v in ssm.keys():
+            v+=1e-10
+        ssm[v] = token
 
     whatifs = ""
     if hasattr ( model, "whatif" ):
@@ -53,19 +56,34 @@ def writeTex ( model ):
         whatifs+="Contributions by particles: $"
         totalcont = 0. ## to normalize contributions
         for k,v in model.whatif.items():
-            totalcont += (model.Z - v) 
-        tok = []
+            totalcont += (model.Z - v)
+        tok = {}
         for k,v in model.whatif.items():
-            tok.append ( "%s = %d%s" % ( helpers.toLatex(k), round(100.*(model.Z - v)/totalcont ), "\%" ) )
-        whatifs+= ", ".join ( tok )
+            if v in tok.keys():
+                v+=1e-6
+            tok[v] = "%s = %d%s" % ( helpers.toLatex(k), round(100.*(model.Z - v)/totalcont ), "\%" )
+        keys = list ( tok.keys() )
+        keys.sort()
+        for v in keys:
+            whatifs+= tok[v] + ", "
+        if len(keys)>0:
+            whatifs = whatifs[:-2]
+        #whatifs+= ", ".join ( tok )
         whatifs+="$"
     else:
         print ( "[plotHiscore] model has no ``whatif'' defined (did you use an untrimmed model?)" )
 
     import tex2png
-    if ssm == []:
-        ssm = [ "\\mathrm{none}" ]
-    src = "Signal strength multipliers: $" + ", ".join ( ssm ) + "$" + whatifs
+    if len(ssm) == 0:
+        ssm = { 0: "\\mathrm{none}" }
+    sssm = ""
+    keys = list ( ssm.keys() )
+    keys.sort( reverse=True )
+    for k in keys:
+        sssm += ssm[k] + ", "
+    if len(keys)>0:
+        sssm = sssm[:-2]
+    src = "Signal strength multipliers: $" + sssm + "$" + whatifs
     # print ( "[plotHiscore] texdoc source in src=>>>>%s<<<<" % src )
     try:
         p = tex2png.Latex ( src, 600 ).write()
