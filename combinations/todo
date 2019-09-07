@@ -1,4 +1,4 @@
--) currently I cannot reproduce the Z scores. I think the upper limits results are only taken into account when running randomWalk.py, not when running e.g. trimmer.py
--) chase the Z>30 bug. I assume it is all about likelihoods being set to e.g. 1e-80 when actually zero.
--) why do upper limit results not make any impact at all?
--) add "expected" mode
+-) sort contributions, signal strengh multipliers by particles in plotHiscore.py
+-) add axes in validation dictionaries for points with errors
+-) put hacked imagemagick policy xml file in singularity container
+-) why can we not produce correct decays.png plot in singularity container?
