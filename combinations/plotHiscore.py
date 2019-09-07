@@ -151,7 +151,14 @@ def writeIndexHtml ( model ):
     print ( "[plotHiscore] Wrote index.html" )
 
 def copyFilesToGithub():
-    subprocess.getoutput ( "cp hiscore.slha index.html matrix_aggressive.png decays.png ruler.png texdoc.png ../../smodels.github.io/models/" )
+    files = [ "hiscore.slha", "index.html", "matrix_aggressive.png", "decays.png", 
+              "ruler.png", "texdoc.png" ]
+    for f in files:
+        if not os.path.exists ( f ):
+            continue
+        O = subprocess.getoutput ( "cp %s ../../smodels.github.io/models/" % f )
+        if len(O)>0:
+            print ( "[plotHiscore.py] when copying files: %s" % O )
 
 def plotRuler( model ):
     resultsForPIDs = {}
@@ -248,4 +255,6 @@ if __name__ == "__main__":
         else:
             cmd = "scp %s gpu:%s" % ( F, D )
         print ( cmd )
-        subprocess.getoutput ( cmd )
+        O = subprocess.getoutput ( cmd )
+        if len(O)>0:
+            print ( "[plotHiscore.py] when uploading files: %s" % O )
