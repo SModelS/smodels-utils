@@ -13,7 +13,7 @@ class Trimmer:
     """ Class that trims models down, to decrease free parameters,
         *after* an MCMC walk.
     """
-    def __init__ ( self, model, strategy="aggressive", maxloss=.001 ):
+    def __init__ ( self, model, strategy="aggressive", maxloss=.003 ):
         self.model = copy.deepcopy ( model )
         self.strategy = strategy
         self.maxloss = maxloss
