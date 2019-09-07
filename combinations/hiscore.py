@@ -204,6 +204,9 @@ def compileList( nmax ):
             alltrimmed.append ( None )
     return allmodels, alltrimmed
 
+def count ( models ):
+    return len(models)-models.count(None)
+
 def storeList ( models, trimmed, savefile ):
     """ store the best models in another hiscore file """
     from hiscore import Hiscore
@@ -211,7 +214,7 @@ def storeList ( models, trimmed, savefile ):
     h.hiscores = models
     h.trimmed = trimmed
     print ( "[hiscore] saving %d models and %d trimmed ones to %s" % \
-            ( len(models),len(trimmed), savefile ) )
+            ( count(models),count(trimmed), savefile ) )
     h.save()
 
 def sortByZ ( models ):
