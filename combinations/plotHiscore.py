@@ -142,7 +142,7 @@ def writeIndexHtml ( model ):
     f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
     f.write ( "</table>" )
     f.write ( '<table style="width:80%">\n' )
-    f.write ( "<td width=45%><img height=650px src=./ruler.png><td width=55%><img heigh=650px src=./decays.png>\n" )
+    f.write ( "<td width=45%><img height=650px src=./ruler.png><td width=55%><img height=650px src=./decays.png>\n" )
     f.write ( "</table>\n" )
     # f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
     f.write ( "</body>\n" )
