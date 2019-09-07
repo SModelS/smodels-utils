@@ -21,7 +21,7 @@ def obtain ( number, picklefile ):
         hiscores = pickle.load ( f )
         trimmed = pickle.load ( f )
         #fcntl.flock( f, fcntl.LOCK_UN )
-    if number < len(trimmed):
+    if number < len(trimmed) and trimmed[number] is not None:
         Z = trimmed[number].Z
         print ( "[plotHiscore] obtaining trimmed #%d: Z=%.2f" % (number, Z ) )
         return trimmed[number]

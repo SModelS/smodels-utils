@@ -211,7 +211,7 @@ def storeList ( models, trimmed, savefile ):
     h.hiscores = models
     h.trimmed = trimmed
     print ( "[hiscore] saving %d models and %d trimmed ones to %s" % \
-            ( len(models),len(trimmed), savelist ) )
+            ( len(models),len(trimmed), savefile ) )
     h.save()
 
 def sortByZ ( models ):
