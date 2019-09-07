@@ -210,6 +210,8 @@ def storeList ( models, trimmed, savefile ):
     h = Hiscore ( 0, True, savefile )
     h.hiscores = models
     h.trimmed = trimmed
+    print ( "[hiscore] saving %d models and %d trimmed ones to %s" % \
+            ( len(models),len(trimmed), savelist ) )
     h.save()
 
 def sortByZ ( models ):
@@ -283,7 +285,7 @@ def main ( args ):
         trimmed[0] = tr.model
 
     if args.trim_branchings:
-        if 0 in trimmed:
+        if len(trimmed)>0 and trimmed[0] is not None:
             ## already has a trimmed model? trim only branchings
             model = trimmed[0]
             tr = Trimmer ( model )
@@ -294,6 +296,8 @@ def main ( args ):
             tr = Trimmer ( model )
             tr.trimParticles()
             tr.trimBranchings()
+            if len(trimmed)==0:
+                trimmed = [ None ]
             trimmed[0] = tr.model
 
     if args.analysis_contributions:
@@ -316,7 +320,7 @@ def main ( args ):
 
     if args.check:
         model = models[0]
-        if len(trimmed)>0:
+        if len(trimmed)>0 and trimmed[0] is not None:
             model = trimmed[0]
         tr = Trimmer ( model )
         tr.checkZ()

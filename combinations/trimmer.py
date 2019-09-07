@@ -110,6 +110,7 @@ class Trimmer:
                 self.pprint ( "keeping %s" % helpers.getParticleName(pid) )
                 self.model.masses[pid]=oldmass
                 self.model.restore()
+        self.pprint ( "discarded %d/%d particles." % ( ndiscarded, len(pidsnmasses) ) )
 
     def trim ( self, trimbranchings=False ):
         """ see if you can trim the model, accept losses smaller than maxloss
