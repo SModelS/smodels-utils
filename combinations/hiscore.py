@@ -305,11 +305,13 @@ def main ( args ):
 
     if args.analysis_contributions:
         model = models[0]
+        useTrimmed = False
         if len(trimmed)>0 and trimmed[0] is not None:
+            useTrimmed = True
             model = trimmed[0]
         tr = Trimmer ( model )
         model = tr.computeAnalysisContributions ()
-        if 0 in trimmed:
+        if useTrimmed:
             trimmed[0] = model
         else:
             models[0] = model
