@@ -64,11 +64,15 @@ class Trimmer:
             dZ = origZ - Z
             dZtot += dZ
             contributions[ ctr ] = Z
+            # contributions[ ctr ] = Z
         for k,v in contributions.items():
             perc = (origZ-v) / dZtot
             print ( "[trimmer] without %s(%s) we get %.2f (%d%s)" % ( self.model.bestCombo[k].analysisId(), self.model.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
             contributions[ k ] = perc
-        self.model.contributions = contributions
+        contrsWithNames = {}
+        for k,v in contributions.items():
+            contrsWithNames [ self.model.bestCombo[k].analysisId() ] = v
+        self.model.contributions = contrsWithNames
         print ( "[trimmer] stored %d contributions" % len(contributions) )
         return self.model
 
