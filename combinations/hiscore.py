@@ -283,7 +283,7 @@ def main ( args ):
 
     if args.trim:
         model = models[0]
-        tr = Trimmer ( model )
+        tr = Trimmer ( model, maxloss=args.maxloss )
         tr.trimParticles()
         trimmed[0] = tr.model
 
@@ -291,7 +291,7 @@ def main ( args ):
         if len(trimmed)>0 and trimmed[0] is not None:
             ## already has a trimmed model? trim only branchings
             model = trimmed[0]
-            tr = Trimmer ( model )
+            tr = Trimmer ( model, maxloss = args.maxloss )
             tr.trimBranchings()
             trimmed[0] = tr.model
         else:
@@ -351,6 +351,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-n', '--nmax',
             help='maximum number of entries to store [10]',
             type=int, default=10 )
+    argparser.add_argument ( '-m', '--maxloss',
+            help='maximum loss as a fraction that we allow in trimming [.005]',
+            type=float, default=.005 )
     argparser.add_argument ( '-c', '--check',
             help='check if we can reproduce Z value of first entry',
             action="store_true" )
