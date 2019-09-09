@@ -655,17 +655,22 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     # Get excluded and allowed points:
     condV = 0
     for pt in validationPlot.data:
-        if "error" in pt.keys():
-            continue
+        #if "error" in pt.keys():
+        #    continue
         if kfactor == None:
-            kfactor = pt ['kfactor']
-        if abs(kfactor - pt['kfactor'])> 1e-5:
+            if "kfactor" in pt.keys():
+                kfactor = pt ['kfactor']
+            else:
+                kfactor = 1.
+        if "kfactor" in pt.keys() and abs(kfactor - pt['kfactor'])> 1e-5:
             logger.error("kfactor not a constant throughout the plane!")
             sys.exit()
         xvals = pt['axes']
-        if pt["UL"]==None:
+        if (not "UL" in pt.keys() or pt["UL"]==None) and (not "error" in pt.keys()):
             logger.warning( "no UL for %s" % xvals )
-        r = pt['signal']/pt ['UL']
+        r = 0.
+        if not "error" in pt.keys():
+            r = pt['signal']/pt ['UL']
         if isinstance(xvals,dict):
             if len(xvals) == 1:
                 x,y = xvals['x'],r
@@ -677,7 +682,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         if logY:
             y = rescaleWidth(y)
 
-        if pt['condition'] and pt['condition'] > 0.05:
+        if "condition" in pt.keys() and pt['condition'] and pt['condition'] > 0.05:
             condV += 1
             if condV < 5:
                 logger.warning("Condition violated for file " + pt['slhafile'])
