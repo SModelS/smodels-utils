@@ -127,7 +127,11 @@ def writeIndexHtml ( model ):
     if hasattr ( model, "contributions" ):
         print ( "[plotHiscore] contributions are defined" )
         f.write ( "<td><br><b>Contributions per analysis:</b><br>\n<ul>\n" )
+        conts = []
         for k,v in model.contributions.items():
+            conts.append ( ( v, k ) )
+        conts.sort( reverse=True )
+        for v,k in conts:
             f.write ( "<li> %s: %s%s\n" % ( k, int(round(100.*v)), "%" ) )
         # f.write ( "</table>\n" )
     else:
