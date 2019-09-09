@@ -43,13 +43,15 @@ def draw( validationfile ):
     spec.loader.exec_module(output_module)
     validationData = output_module.validationData
     bestSRs = []
+    noResults = []
     nbsrs = []
     skipped, err = 0, None
     for point in validationData:
         if "error" in point:
             skipped += 1
             err = point["error"]
-            # print ( "skipping %s: %s" % ( point["slhafile"], point["error"] ) )
+            axes = convertNewAxes ( point["axes"] )
+            noResults.append ( ( axes[1], axes[0] ) )
             continue
         axes = convertNewAxes ( point["axes"] )
         bestSRs.append ( ( axes[1], axes[0], point["dataset"] ) )
@@ -74,6 +76,10 @@ def draw( validationfile ):
         print ( "ERROR: not enough colors defined!!" )
         colors.append ( list(C.cnames.keys())[ctr] )
         ctr += 1
+    noRx, noRy = [], []
+    for i in noResults:
+        noRx.append ( i[0] )
+        noRy.append ( i[1] )
     for n in nrDict.keys():
         x,y=[],[]
         for x_,y_,z_ in nbsrs:
@@ -82,6 +88,7 @@ def draw( validationfile ):
                 x.append ( x_ )
                 y.append ( y_ )
         plt.scatter ( x, y, s=25, c=[colors[n]]*len(x), label=nrDict[n] )
+    plt.scatter ( noRx, noRy, s=2, c=["grey"]*len(noRx), label="no result" )
     plt.legend( loc="upper right" )
     plt.xlabel ( "m$_{mother}$ [GeV]" )
     plt.ylabel ( "m$_{daughter}$ [GeV]" )
