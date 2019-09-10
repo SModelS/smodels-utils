@@ -212,7 +212,7 @@ class DecayDrawer:
         def blue(x,usecol): 
             if not usecol:
                 return x
-            return "\\color{blue}%s" % x
+            return "\\color[rgb]{0,0,.5}%s" % x
         def brown(x,usecol): 
             if not usecol:
                 return x
