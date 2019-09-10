@@ -44,16 +44,26 @@ class RegressionHelper:
 
     def trainOffline ( self ):
         trainer = Regressor( torchmodel = "test.ckpt" )
-        with gzip.open("training.gz","rb") as f:
-            lines = f.readlines()
+        #with gzip.open("training.gz","rb") as f:
+        #    lines = f.readlines()
+        with open("training.pcl","rb") as f:
+            import pickle
+            lines=[]
+            try:
+                while True:
+                    line = pickle.load ( f )
+                    lines.append ( line )
+            except EOFError:
+                pass
         for epoch in range(20000):
             losses=[]
             print ( "Epoch %d" % epoch )
             modelsbatch,Zbatch=[],[]
             dt=0.
             m=Model(0 )
-            for i,line in enumerate(lines):
-                d = eval(line)
+            # for i,line in enumerate(lines):
+            for i,d in enumerate(lines):
+                # d = eval(line)
                 m.masses = d["masses"]
                 m.ssmultipliers = d["ssmultipliers"]
                 m.decays = d["decays"]
@@ -66,10 +76,10 @@ class RegressionHelper:
                     dt += t1
                     modelsbatch,Zbatch=[],[]
                     losses.append ( trainer.loss )
-                if i > 0 and i % 2000  == 0:
+                if i > 0 and i % 10000  == 0:
                     print ( "training %d, loss=%.5f. training took %.1fs." % (i, trainer.loss, dt ) )
                     dt = 0.
-                if i > 0 and i % 20000 == 0:
+                if i > 0 and i % 50000 == 0:
                     trainer.save( name="test.ckpt" )
             print ( "End of epoch %d: losses=%.4f+-%.4f" % ( epoch, np.mean(losses),np.std(losses) ) )
             with open("regress.log","at") as f:
