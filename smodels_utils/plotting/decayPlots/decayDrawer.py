@@ -190,19 +190,37 @@ class DecayDrawer:
         # print name,"->",nname
         return nname
 
-    def texName ( self, name ):
-        """ map slha particle names to latex names """
+    def texName ( self, name, color = False ):
+        """ map slha particle names to latex names
+        :param color: add color tag
+        """
         if name.find(" ")>-1:
             names=name.split()
             texed=[]
             for n in names:
-                texed.append ( self.texName ( n ) )
+                texed.append ( self.texName ( n, color ) )
             return " ".join ( texed )
         def huge(x):
             return "\\\\Huge{\\\\textbf{%s}}" % x
         def large(x):
             return "\\\\large{%s}" % x
         def math(x): return "$%s$" % x
+        def green(x,usecol): 
+            if not usecol:
+                return x
+            return "\\color[rgb]{0,.5,0}%s" % x
+        def blue(x,usecol): 
+            if not usecol:
+                return x
+            return "\\color{blue}%s" % x
+        def brown(x,usecol): 
+            if not usecol:
+                return x
+            return "\\color{brown}%s" % x
+        def red(x,usecol): 
+            if not usecol:
+                return x
+            return "\\color[rgb]{.5,0,0}%s" % x
         def tilde(x): ## x is in tilde
             return "\\\\tilde{\\\\mathrm{%s}}" % (x)
         name=name.replace("_","")
@@ -214,28 +232,28 @@ class DecayDrawer:
             sup,sub="",""
             if tsup in [ "+", "-", "0" ]: sup="^{%s}" % tsup
             if tsub in [ "1", "2", "3", "4", "5" ]: sub="_{%s}" % tsub
-            return huge ( math ( tilde ( "\\\\chi" ) + sup + sub )  )
+            return huge ( green ( math ( tilde ( "\\\\chi" ) + sup + sub ), color ) )
 
         squarks = [ "u", "d", "c", "s", "t", "b", "e" ]
         if first=="~" and second in squarks: # squarks and selectron
             sub=""
             if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup 
-            return huge ( math ( tilde ( second ) + sub ) )
+            return huge ( blue ( math ( tilde ( second ) + sub ), color ) )
         if name[:3]=="~mu": # smuon
             sub=""
             if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup 
-            return huge ( math ( tilde ( "\\\\mu" ) + sub ) )
+            return huge ( brown ( math ( tilde ( "\\\\mu" ) + sub ), color ) )
         if name[:4]=="~tau": # stau
             sub=""
             if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup 
-            return huge ( math ( tilde ( "\\\\tau" ) + sub ) )
-        if name=="~g": return huge ( math ( tilde ( "g" ) ) )
+            return huge ( brown ( math ( tilde ( "\\\\tau" ) + sub ), color ) )
+        if name=="~g": return huge ( red ( math ( tilde ( "g" ) ), color ) )
         if name[:3]=="~nu": # sneutrinos:
             flavor=name[3:-1]
             if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
             if flavor in [ "mu", "tau" ]: sub="_{\\\\%s%s}" % (flavor,sub)
             if flavor in [ "e" ]: sub="_{%s%s}" % (flavor,sub)
-            return huge ( math ( tilde ( "\\\\nu" ) + sub ) ) 
+            return huge ( brown ( math ( tilde ( "\\\\nu" ) + sub ), color ) ) 
         if first=="~": return huge ( math ( tilde ( name[1:] ) ) )
         if name=="gamma": return large ( math ( "\gamma" ) )
         if name=="nu": return large ( math ( "\\\\nu" ) )
@@ -272,7 +290,9 @@ class DecayDrawer:
             return self.simpleName ( name )
         if self.tex:
             # return self.simpleName ( name )
-            return self.texName ( name )
+            ret = self.texName ( name, self.options["color"] )
+            # print ( "ret", name, ret )
+            return ret
         return self.htmlName ( name )
 
     def meddleWithTexFile ( self,out ):
