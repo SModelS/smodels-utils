@@ -170,10 +170,11 @@ class Regressor:
             self.load ( torchmodel )
         #else:
         #    self.load() ## if a model exists we load it
-        self.torchmodel.eval()
-        self.criterion = torch.nn.MSELoss(reduction="mean").to(self.device)
+        if self.torchmodel != None:
+            self.torchmodel.eval()
+            self.criterion = torch.nn.MSELoss(reduction="mean").to(self.device)
         # self.adam = torch.optim.SGD(self.torchmodel.parameters(), lr=0.01 )
-        self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.001 )
+            self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.001 )
         self.walkerid = walkerid
 
     def plusDeltaM ( self, theorymodel, rate= 1. ):
