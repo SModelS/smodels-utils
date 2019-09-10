@@ -107,10 +107,11 @@ def writeIndexHtml ( model ):
     f.write ( "</center>\n" )
     f.write ( "<table width=80%>\n<tr><td>\n" )
     dbver = "???"
+    strategy = "aggressive"
     if hasattr ( model, "dbversion" ):
         dbver = model.dbversion
         dotlessv = dbver.replace(".","")
-    f.write ( "<b><a href=./hiscore.slha>Model</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a> in step %d</b><br>\n" % ( dotlessv, dbver, model.step ) )
+    f.write ( "<b><a href=./hiscore.slha>Model</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, <br>combination strategy <a href=./matrix_%s.png>%s</a> in step %d</b><br>\n" % ( dotlessv, dbver, strategy, strategy, model.step ) )
     if hasattr ( model, "rvalues" ):
         rvalues=model.rvalues
         rvalues.sort(key=lambda x: x[0],reverse=True )
