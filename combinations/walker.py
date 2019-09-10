@@ -212,13 +212,20 @@ class RandomWalker:
 
     def gradientAscent ( self ):
         """ Z is big enough, the loss is small enough. use the gradient. """
-        if self.regressor.torchmodel == None or self.regressor.torchmodel.is_trained == False:
+        self.pprint ( "gradient ascent!" )
+        if self.regressor.torchmodel == None or self.regressor.is_trained == False:
             ## we dont have a (trained) model, we dont ascend
             return
-        self.log ( "shall we perform gradient ascent?" )
-        self.log ( "attrs %s %s" % ( self.regressor.loss, self.regressor.torchmodel.last_ypred ) )
-        if self.regressor.loss > 1. or ( hasattr ( self.regressor.torchmodel, "last_ypred" ) and self.regressor.torchmodel.last_ypred in [ float("nan"), None ] ):
-            return ## dont make gradient ascent when regressor loss is too high
+        self.regressor.train ( self.model, self.model.Z ) # only done to get gradient
+        predictedZ = float ( self.regressor.predict ( self.model ) )
+        self.pprint ( "Gradient ascent predicted vs computed Z: %.5f <-> %.5f" % ( predictedZ, self.model.Z ) )
+        if not hasattr ( self.regressor, "grad" ) or self.regressor.grad == None:
+            self.pprint ( "regressor has no grad" )
+            return
+        # self.log ( "shall we perform gradient ascent?" )
+        # self.log ( "attrs %s %s" % ( self.regressor.loss, self.regressor.torchmodel.last_ypred ) )
+        #if self.regressor.loss > 1. or ( hasattr ( self.regressor.torchmodel, "last_ypred" ) and self.regressor.torchmodel.last_ypred in [ float("nan"), None ] ):
+        #    return ## dont make gradient ascent when regressor loss is too high
         self.pprint ( "performing a gradient ascent. Z before %.2f" % self.model.Z )
         oldZ = self.model.Z
         self.model.backup()
@@ -418,7 +425,10 @@ class RandomWalker:
         self.saveState()
         self.pprint ( "Was asked to stop after %d steps" % self.maxsteps )
 
-def _run ( walker ):
+def _run ( walker, catchem ):
+    if not catchem:
+        walker.walk()
+        return
     try:
         walker.walk()
     except Exception as e:
@@ -548,7 +558,7 @@ if __name__ == "__main__":
     print ( "[walk] starting %d walkers" % len(walkers) )
     processes=[]
     for walker in walkers:
-        p = multiprocessing.Process ( target=_run, args=( walker, ) )
+        p = multiprocessing.Process ( target=_run, args=( walker, catchem ) )
         p.start()
         processes.append(p)
     for p in processes:

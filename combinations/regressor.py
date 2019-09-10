@@ -104,6 +104,7 @@ class PyTorchModel(torch.nn.Module):
         dim64= int ( dim/64 )
         # self.linear1 = torch.nn.Linear( dim, dim16 )
         self.linear1 = torch.nn.Linear( dim, dim2 )
+        # self.bn = torch.nn.LayerNorm( dim2 )
         self.bn = torch.nn.BatchNorm1d( dim2 )
         self.linear2 = torch.nn.Linear( dim2, dim4 )
         self.linear3 = torch.nn.Linear( dim4, dim8 )
@@ -124,9 +125,12 @@ class PyTorchModel(torch.nn.Module):
         return len ( self.variables ) 
 
     def forward(self, x):
+        # print ( "forward", x.shape )
         out1 = self.linear1 ( x )
+        # print ( "out1", out1.shape )
         bn1 = self.bn ( out1 )
-        act1 = self.act ( bn1 )
+        # print ( "bn1", bn1.shape )
+        act1 = self.act ( out1 )
         out2 = self.linear2 ( act1 )
         act2 = self.act ( out2 )
         out3 = self.linear3 ( act2 )
@@ -154,6 +158,7 @@ class Regressor:
                            gradient ascent
         """
         helper = RegressionHelper ()
+        self.walkerid = walkerid
         self.training = 0
         self.dump_training = dump_training
         self.is_trained = is_trained
@@ -239,7 +244,7 @@ class Regressor:
         # self.pprint ( "returning a tensor for %s, to %s" % ( ret[:3], self.device ) )
         if tolist:
             return ret
-        tmp = torch.Tensor(ret)
+        tmp = torch.Tensor([ ret ] )
         return tmp.to(self.device)
 
     def pprint ( self, *args ):
@@ -311,18 +316,21 @@ class Regressor:
 
     def load ( self, name = "model.ckpt" ):
         if os.path.exists ( name ):
-            print ( "loading model", name )
+            self.pprint ( "attempting to load model %s" % name )
             self.torchmodel = PyTorchModel()
             try:
-                self.torchmodel.load_state_dict ( torch.load ( name ) )
+                self.torchmodel.load_state_dict ( torch.load ( name, map_location = self.device ) )
                 self.torchmodel.to ( self.device )
                 self.torchmodel.eval()
             except Exception as e:
-                print ( "couldnt load %s. will ignore it." % name )
+                self.pprint ( "couldnt load %s: %s. Will ignore it." % ( name, e ) )
 
     def predict ( self, model ):
         x_data = self.convert ( model )
+        #print ( "x_data", x_data.shape )
         ret = self.torchmodel.forward ( x_data )
+        #print ( "ret", ret )
+        self.grad = x_data.grad ## store the gradient!
         return - ret[0]/(ret[0]-1.)
         # return 10**ret[0]-1.,1./ret[1]-1.
         # return 10**ret[0]-1.
