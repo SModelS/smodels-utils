@@ -54,7 +54,9 @@ class RandomWalker:
         if dump_training:
             from regressor import Regressor
             ## we use the regressor only to dump the training data
-            self.regressor = Regressor ( walkerid= walkerid )
+            self.regressor = Regressor ( walkerid= walkerid, 
+                                dump_training= True,
+                                is_trained = False  )
         self.takeStep() ## the first step should be considered as "taken"
 
     def setWalkerId ( self, Id ):
@@ -85,7 +87,8 @@ class RandomWalker:
         if dump_training:
             ## we use the regressor only to dump the training data
             from regressor import Regressor
-            ret.regressor = Regressor ( walkerid= walkerid )
+            ret.regressor = Regressor ( walkerid= walkerid, dump_training=True,
+                                        is_trained = False )
         return ret
 
     def pprint ( self, *args ):
@@ -209,6 +212,9 @@ class RandomWalker:
 
     def gradientAscent ( self ):
         """ Z is big enough, the loss is small enough. use the gradient. """
+        if self.regressor.torchmodel == None or self.regressor.torchmodel.is_trained == False:
+            ## we dont have a (trained) model, we dont ascend
+            return
         self.log ( "shall we perform gradient ascent?" )
         self.log ( "attrs %s %s" % ( self.regressor.loss, self.regressor.torchmodel.last_ypred ) )
         if self.regressor.loss > 1. or ( hasattr ( self.regressor.torchmodel, "last_ypred" ) and self.regressor.torchmodel.last_ypred in [ float("nan"), None ] ):
@@ -408,13 +414,11 @@ class RandomWalker:
                 else:
                     self.pprint ( "u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.model.oldZ(),self.model.Z) )
                     self.takeStep()
-            # self.gradientAscent()
+            self.gradientAscent()
         self.saveState()
         self.pprint ( "Was asked to stop after %d steps" % self.maxsteps )
 
 def _run ( walker ):
-    # walker.queue = queue
-    # walker.hiqueue = hiqueue
     try:
         walker.walk()
     except Exception as e:
@@ -444,6 +448,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug,info,warn,error [info]',
             type=str, default="info" )
+    argparser.add_argument ( '-r', '--regressor',
+            help='use regressor to perform gradient ascent, supply pickle file name [None]',
+            type=str, default="" )
     argparser.add_argument ( '-n', '--nsteps',
             help='number of steps [100000]',
             type=int, default=100000 )
@@ -524,17 +531,13 @@ if __name__ == "__main__":
                                     select = select,
                                     catch_exceptions = catchem ) )
 
-    # regressor = None
-    #if regress:
-    #    from regressor import Regressor, RegressionHelper, PyTorchModel
-    #    torchmodel, adam = None, None
-    #    helper = RegressionHelper ()
-    #    variables = helper.freeParameters( "template_many.slha" )    
-    #    torchmodel = PyTorchModel( variables )# .to ( helper.device() )
-    #    torchmodel.share_memory()
-    #    regressor = Regressor ( variables, 0, torchmodel, device="cpu" )
-    # queue = multiprocessing.Queue()
-    # queue.put ( [ regressor ] )
+    if args.regressor not in [ "", "none", "None" ]:
+        from regressor import Regressor
+        for walker in walkers:
+            walker.regressor = Regressor ( walkerid = walker.walkerid, 
+                                           torchmodel = args.regressor,
+                                           dump_training = dump_training,
+                                           is_trained = True )
     #print ( "[walk] loading hiscores" )
     onoff="off"
     if args.history:

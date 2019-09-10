@@ -7,7 +7,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from pympler.asizeof import asizeof
-from model import Model
+from model import Model, rthresholds
 
 class RegressionHelper:
     def __init__(self):
@@ -146,22 +146,30 @@ class PyTorchModel(torch.nn.Module):
 class Regressor:
     """ this is our nice regressor """
     def __init__ ( self, variables=None, walkerid=0, torchmodel=None, 
-                   device=None ):
+                   device=None, dump_training = True,
+                   is_trained = False ):
+        """
+        :param dump_training: if True, regularly dump training data
+        :param is_trained: if True, then we have a trained model, and can perform
+                           gradient ascent
+        """
         helper = RegressionHelper ()
         self.training = 0
+        self.dump_training = dump_training
+        self.is_trained = is_trained
         self.device = device
         if device == None:
             self.device = helper.device()
         if variables == None:
             variables = helper.freeParameters( "template_many.slha" )
         self.torchmodel = torchmodel
-        if torchmodel == None:
-            self.torchmodel = PyTorchModel( variables ).to ( self.device )
+       # if torchmodel == None:
+       #     self.torchmodel = PyTorchModel( variables ).to ( self.device )
         if type(torchmodel)==str:
             self.torchmodel = PyTorchModel( variables ).to ( self.device )
             self.load ( torchmodel )
-        else:
-            self.load() ## if a model exists we load it
+        #else:
+        #    self.load() ## if a model exists we load it
         self.torchmodel.eval()
         self.criterion = torch.nn.MSELoss(reduction="mean").to(self.device)
         # self.adam = torch.optim.SGD(self.torchmodel.parameters(), lr=0.01 )
@@ -290,6 +298,8 @@ class Regressor:
         D = model.dict()
         # D["Z"] = self.torchmodel.last_ypred
         D["Z"] = model.Z
+        if model.rmax > rthresholds[0]: ## put it to zero
+            D["Z"]=0.
         line = "%s\n" % D
         with gzip.open("training_%d.gz" % self.walkerid,"ab") as f:
             f.write ( line.encode() )
