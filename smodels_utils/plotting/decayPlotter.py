@@ -21,17 +21,15 @@ def draw( slhafile, outfile, options, offset=0.,
     import logging
     import logging.config
     from smodels_utils import SModelSUtils
-    logging.config.fileConfig (
-            SModelSUtils.installDirectory()+"/etc/commandline.conf" )
-    logger = logging.getLogger(__name__)
     verbosity = verbosity.lower()
     levels = { "err": logging.ERROR, "warn": logging.WARN, "info": logging.INFO,
                "debug": logging.DEBUG }
-    logLevel = 0
+    logLevel = 20
     for k,v in levels.items():
         if k in verbosity:
             logLevel = v
-            logger.setLevel ( logLevel )
+            logging.basicConfig ( level = logLevel )
+    logger = logging.getLogger(__name__)
 
     import setPath
     from smodels_utils.plotting import decayPlots
@@ -47,7 +45,7 @@ def draw( slhafile, outfile, options, offset=0.,
                "sleptons", "weakinos", "zconstraints", "tex", "color",\
                "masses", "html" ]:
         if not i in options.keys(): options[i]=False
-    if logLevel > 15:
+    if logLevel < 25:
         options["verbose"]=True
 
     verbosereader=False
