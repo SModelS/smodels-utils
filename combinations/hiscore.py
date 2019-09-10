@@ -266,6 +266,7 @@ def main ( args ):
     if args.fetch:
         import subprocess
         cmd = "scp gpu:/local/wwaltenberger/git/smodels-utils/combinations/H*.pcl ."
+        print ( "[hiscore] %s" % cmd )
         out = subprocess.getoutput ( cmd )
         print ( out )
 
