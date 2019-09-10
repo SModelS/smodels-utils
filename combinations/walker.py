@@ -212,10 +212,11 @@ class RandomWalker:
 
     def gradientAscent ( self ):
         """ Z is big enough, the loss is small enough. use the gradient. """
-        self.pprint ( "gradient ascent!" )
         if self.regressor.torchmodel == None or self.regressor.is_trained == False:
             ## we dont have a (trained) model, we dont ascend
+            self.pprint ( "gradient ascent? no!" )
             return
+        self.pprint ( "gradient ascent? yes!" )
         self.regressor.train ( self.model, self.model.Z ) # only done to get gradient
         predictedZ = float ( self.regressor.predict ( self.model ) )
         self.pprint ( "Gradient ascent predicted vs computed Z: %.5f <-> %.5f" % ( predictedZ, self.model.Z ) )
