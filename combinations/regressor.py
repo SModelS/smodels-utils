@@ -42,8 +42,8 @@ class RegressionHelper:
     def countDegreesOfFreedom ( self, slhafile ):
         return len ( self.freeParameters( slhafile ) )
 
-    def trainOffline ( self, trainingfile, modelfile ):
-        trainer = Regressor( torchmodel = modelfile )
+    def trainOffline ( self, trainingfile, modelfile, verbosity ):
+        trainer = Regressor( torchmodel = modelfile, verbosity=verbosity )
         with open( trainingfile, "rb" ) as f:
             import pickle
             lines=[]
@@ -65,7 +65,7 @@ class RegressionHelper:
                 m.decays = d["decays"]
                 modelsbatch.append ( m )
                 Zbatch.append ( d["Z"] )
-                if len(modelsbatch)>=200:
+                if len(modelsbatch)>=20:
                     t0=time.time()
                     trainer.batchTrain ( modelsbatch, Zbatch )
                     t1=time.time()-t0
@@ -98,10 +98,8 @@ class PyTorchModel(torch.nn.Module):
         dim16= int ( dim/16 )
         dim32= int ( dim/32 )
         dim64= int ( dim/64 )
-        # self.linear1 = torch.nn.Linear( dim, dim16 )
         self.linear1 = torch.nn.Linear( dim, dim2 )
-        # self.bn = torch.nn.LayerNorm( dim2 )
-        self.bn = torch.nn.BatchNorm1d( dim2 )
+        self.bn1 = torch.nn.BatchNorm1d( dim2 )
         self.linear2 = torch.nn.Linear( dim2, dim4 )
         self.linear3 = torch.nn.Linear( dim4, dim8 )
         self.act = torch.nn.LeakyReLU(.1)
@@ -109,8 +107,22 @@ class PyTorchModel(torch.nn.Module):
         self.linear5 = torch.nn.Linear( dim16,dim32 )
         self.linear6 = torch.nn.Linear( dim32,dim64 )
         self.linear7 = torch.nn.Linear( dim64, 1 )
-        self.dropout = torch.nn.Dropout ( .1 )
+        self.dropout1 = torch.nn.Dropout ( .2 )
+        self.dropout2 = torch.nn.Dropout ( .2 )
+        self.dropout3 = torch.nn.Dropout ( .2 )
+        self.dropout4 = torch.nn.Dropout ( .2 )
+        self.dropout5 = torch.nn.Dropout ( .2 )
+        self.dropout6 = torch.nn.Dropout ( .2 )
+        self.dropout7 = torch.nn.Dropout ( .2 )
+        self.relu = torch.nn.ReLU()
         self.last_ypred = None
+        torch.nn.init.xavier_uniform_(self.linear1.weight)
+        torch.nn.init.xavier_uniform_(self.linear2.weight)
+        torch.nn.init.xavier_uniform_(self.linear3.weight)
+        torch.nn.init.xavier_uniform_(self.linear4.weight)
+        torch.nn.init.xavier_uniform_(self.linear5.weight)
+        torch.nn.init.xavier_uniform_(self.linear6.weight)
+        torch.nn.init.xavier_uniform_(self.linear7.weight)
 
     def pprint ( self, *args ):
         """ logging """
@@ -121,12 +133,10 @@ class PyTorchModel(torch.nn.Module):
         return len ( self.variables ) 
 
     def forward(self, x):
-        # print ( "forward", x.shape )
         out1 = self.linear1 ( x )
-        # print ( "out1", out1.shape )
-        bn1 = self.bn ( out1 )
-        # print ( "bn1", bn1.shape )
-        act1 = self.act ( out1 )
+        do1 = self.dropout1 ( out1 )
+        act1 = self.act ( do1 )
+        bn1 = self.bn1 ( act1 )
         out2 = self.linear2 ( act1 )
         act2 = self.act ( out2 )
         out3 = self.linear3 ( act2 )
@@ -138,17 +148,16 @@ class PyTorchModel(torch.nn.Module):
         out6 = self.linear6 ( act5 )
         act6 = self.act ( out6 )
         out7 = self.linear7 ( act6 )
-        out8 = self.dropout ( out7 )
-        y_pred = self.act( out7 )
-        # y_pred = torch.sigmoid( out7 )
-        self.last_ypred = y_pred.data.tolist()
+        out8 = self.dropout7 ( out7 )
+        y_pred = self.act ( out8 ) ## no negative numbers
+        # self.last_ypred = y_pred.data.tolist()
         return y_pred
 
 class Regressor:
     """ this is our nice regressor """
     def __init__ ( self, variables=None, walkerid=0, torchmodel=None, 
                    device=None, dump_training = True,
-                   is_trained = False ):
+                   is_trained = False, verbosity = "info" ):
         """
         :param dump_training: if True, regularly dump training data
         :param is_trained: if True, then we have a trained model, and can perform
@@ -156,6 +165,7 @@ class Regressor:
         """
         helper = RegressionHelper ()
         self.walkerid = walkerid
+        self.verbosity = verbosity
         self.training = 0
         self.dump_training = dump_training
         self.is_trained = is_trained
@@ -290,7 +300,13 @@ class Regressor:
             tmp.append ( [ Z ] )
             # tmp.append ( [ Z / ( 1. + Z ) ] )
         y_label = torch.Tensor ( tmp ).to(self.device)
-        # print ( "Z_pred, Z_true", float(y_pred[0][0]), Zs[0] )
+        if self.verbosity in [ "debug" ]:
+            import random
+            i = random.choice(range(len(Zs)))
+            Zpred = float(y_pred[i])
+            Zsi = Zs[i]
+            d = abs(Zpred - Zsi)
+            print ( "[regressor] i:%2d, Z_pred:%.2f Z_true:%.2f d:%.2f" % ( i, Zpred, Zsi, d ) )
         # print ( "y_pred", y_pred.shape, self.unfold ( y_pred[0][0] ) )
         # print ( "y_label", y_label.shape, y_label[0][0] )
         # y_label = torch.Tensor ( [np.log10(1.+Z),1./(1+rmax)] )#.to ( self.device )
@@ -331,12 +347,8 @@ class Regressor:
 
     def predict ( self, model ):
         x_data = self.convert ( model )
-        # print ( "x_data", x_data.shape )
         ret = self.torchmodel.forward ( x_data )
-        # print ( "[predict] input=", x_data.shape, "ret=", ret )
-        # self.grad = x_data.grad ## store the gradient!
         return ret[0]
-        # return - ret[0]/(ret[0]-1.)
 
 if __name__ == "__main__":
     import argparse
@@ -348,9 +360,12 @@ if __name__ == "__main__":
     argparser.add_argument ( '-m', '--modelfile',
             help='specify model file to train [test.ckpt]',
             type=str, default="test.ckpt" )
+    argparser.add_argument ( '-v', '--verbosity',
+            help='verbosity -- debug,info,warn,error [info]',
+            type=str, default="info" )
     args = argparser.parse_args()
     
     helper = RegressionHelper ()
-    helper.trainOffline( args.picklefile, args.modelfile )
+    helper.trainOffline( args.picklefile, args.modelfile, args.verbosity )
     #print ( helper.countDegreesOfFreedom ( "template_many.slha" ) )
     #regressor = Regressor ( helper.freeParameters( "template_many.slha" ) ) 
