@@ -42,11 +42,9 @@ class RegressionHelper:
     def countDegreesOfFreedom ( self, slhafile ):
         return len ( self.freeParameters( slhafile ) )
 
-    def trainOffline ( self ):
-        trainer = Regressor( torchmodel = "test.ckpt" )
-        #with gzip.open("training.gz","rb") as f:
-        #    lines = f.readlines()
-        with open("training.pcl","rb") as f:
+    def trainOffline ( self, trainingfile, modelfile ):
+        trainer = Regressor( torchmodel = modelfile )
+        with open( trainingfile, "rb" ) as f:
             import pickle
             lines=[]
             try:
@@ -61,9 +59,7 @@ class RegressionHelper:
             modelsbatch,Zbatch=[],[]
             dt=0.
             m=Model(0 )
-            # for i,line in enumerate(lines):
             for i,d in enumerate(lines):
-                # d = eval(line)
                 m.masses = d["masses"]
                 m.ssmultipliers = d["ssmultipliers"]
                 m.decays = d["decays"]
@@ -108,7 +104,7 @@ class PyTorchModel(torch.nn.Module):
         self.bn = torch.nn.BatchNorm1d( dim2 )
         self.linear2 = torch.nn.Linear( dim2, dim4 )
         self.linear3 = torch.nn.Linear( dim4, dim8 )
-        self.act = torch.nn.ELU()
+        self.act = torch.nn.LeakyReLU(.1)
         self.linear4 = torch.nn.Linear( dim8, dim16 )
         self.linear5 = torch.nn.Linear( dim16,dim32 )
         self.linear6 = torch.nn.Linear( dim32,dim64 )
@@ -143,7 +139,8 @@ class PyTorchModel(torch.nn.Module):
         act6 = self.act ( out6 )
         out7 = self.linear7 ( act6 )
         out8 = self.dropout ( out7 )
-        y_pred = torch.sigmoid( out7 )
+        y_pred = self.act( out7 )
+        # y_pred = torch.sigmoid( out7 )
         self.last_ypred = y_pred.data.tolist()
         return y_pred
 
@@ -192,7 +189,8 @@ class Regressor:
                 sys.exit(-5)
             idx = self.torchmodel.variables.index( "M%d" % k)
             # print ( "idx", idx, "grad=", len(grad), len(grad[0]) )
-            t = 10. * grad[0][idx] * ( v + 1e-5 ) # the inverse of the normalization
+            t = 10. * grad[0][idx] # the inverse of the normalization
+            # t = 10. * grad[0][idx] * ( v + 1e-5 ) # the inverse of the normalization
             theorymodel.masses[k]+= t * rate
         for k,v in theorymodel.ssmultipliers.items():
             if not "SS%d" % k in self.torchmodel.variables:
@@ -263,9 +261,8 @@ class Regressor:
         x_data = self.convert ( model )
         x_data.requires_grad = True ## needs this to have dZ/dx in the end
         y_pred = self.torchmodel(x_data).to(self.device)
-        #y_pred = y_pred.to(self.device)
-        # y_label = torch.Tensor ( [np.log10(1.+Z),np.log10(1+rmax)] )#.to ( self.device )
-        y_label = torch.Tensor ( [ [ Z / ( Z + 1. ) ] ] ).to ( self.device )
+        y_label = torch.Tensor ( [ [ Z ] ] ).to ( self.device )
+        # y_label = torch.Tensor ( [ [ Z / ( Z + 1. ) ] ] ).to ( self.device )
         loss = self.criterion ( y_pred, y_label )
         # self.pprint ( "With x=%s y_pred=%s, label=%s, loss=%s" % ( x_data[:5], y_pred, y_label, loss.data ) ) 
         self.loss = float( loss.data )
@@ -278,6 +275,7 @@ class Regressor:
 
     def batchTrain ( self, models, Zs, rmax=None ):
         """ train y_label with x_data for a minibatch of models """
+        # print ( "batchtrain" )
         self.training += 1
         tmp = []
         for model in models:
@@ -289,8 +287,12 @@ class Regressor:
         for Z in Zs:
             if type(Z) in [ list, tuple ] and len(Z)==1:
                 Z=Z[0]
-            tmp.append ( [ Z / ( 1. + Z ) ] )
+            tmp.append ( [ Z ] )
+            # tmp.append ( [ Z / ( 1. + Z ) ] )
         y_label = torch.Tensor ( tmp ).to(self.device)
+        # print ( "Z_pred, Z_true", float(y_pred[0][0]), Zs[0] )
+        # print ( "y_pred", y_pred.shape, self.unfold ( y_pred[0][0] ) )
+        # print ( "y_label", y_label.shape, y_label[0][0] )
         # y_label = torch.Tensor ( [np.log10(1.+Z),1./(1+rmax)] )#.to ( self.device )
         loss = self.criterion ( y_pred, y_label )
         # self.pprint ( "With x=%s y_pred=%s, label=%s, loss=%s" % ( x_data[:5], y_pred, y_label, loss.data ) ) 
@@ -333,10 +335,22 @@ class Regressor:
         ret = self.torchmodel.forward ( x_data )
         # print ( "[predict] input=", x_data.shape, "ret=", ret )
         # self.grad = x_data.grad ## store the gradient!
-        return - ret[0]/(ret[0]-1.)
+        return ret[0]
+        # return - ret[0]/(ret[0]-1.)
 
 if __name__ == "__main__":
+    import argparse
+    argparser = argparse.ArgumentParser(
+            description='regressor, used for training when called from command line ' )
+    argparser.add_argument ( '-f', '--picklefile',
+            help='specify pickle file with training data [training.pcl]',
+            type=str, default="training.pcl" )
+    argparser.add_argument ( '-m', '--modelfile',
+            help='specify model file to train [test.ckpt]',
+            type=str, default="test.ckpt" )
+    args = argparser.parse_args()
+    
     helper = RegressionHelper ()
-    helper.trainOffline()
+    helper.trainOffline( args.picklefile, args.modelfile )
     #print ( helper.countDegreesOfFreedom ( "template_many.slha" ) )
     #regressor = Regressor ( helper.freeParameters( "template_many.slha" ) ) 
