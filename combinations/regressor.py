@@ -79,7 +79,7 @@ class RegressionHelper:
                 if i > 0 and i % 10000  == 0:
                     print ( "training %d, loss=%.5f. training took %.1fs." % (i, trainer.loss, dt ) )
                     dt = 0.
-                if i > 0 and i % 50000 == 0:
+                if i > 0 and i % 100000 == 0:
                     trainer.save( name="test.ckpt" )
             print ( "End of epoch %d: losses=%.4f+-%.4f" % ( epoch, np.mean(losses),np.std(losses) ) )
             with open("regress.log","at") as f:
@@ -191,14 +191,15 @@ class Regressor:
                 print ( "error, dont know what to do with M%d" % k )
                 sys.exit(-5)
             idx = self.torchmodel.variables.index( "M%d" % k)
-            t = 10. * grad[idx] * ( v + 1e-5 ) # the inverse of the normalization
+            # print ( "idx", idx, "grad=", len(grad), len(grad[0]) )
+            t = 10. * grad[0][idx] * ( v + 1e-5 ) # the inverse of the normalization
             theorymodel.masses[k]+= t * rate
         for k,v in theorymodel.ssmultipliers.items():
             if not "SS%d" % k in self.torchmodel.variables:
                 print ( "error, dont know what to do with M%d" % k )
                 sys.exit(-3)
             idx = self.torchmodel.variables.index( "SS%d" % k)
-            t = grad[idx]
+            t = grad[0][idx]
             theorymodel.ssmultipliers[k]+= t * rate
         for pid,decays in theorymodel.decays.items():
             for dpid,dbr in decays.items():
@@ -206,7 +207,7 @@ class Regressor:
                     print ( "error dont know what to do with D%d_%d" % ( pid, dpid ) )
                     sys.exit(-7)
                 idx = self.torchmodel.variables.index( "D%d_%d" % (pid,dpid) )
-                t=grad[idx]
+                t=grad[0][idx]
                 theorymodel.decays[pid][dpid]+=t*rate
         return theorymodel
 
@@ -264,7 +265,7 @@ class Regressor:
         y_pred = self.torchmodel(x_data).to(self.device)
         #y_pred = y_pred.to(self.device)
         # y_label = torch.Tensor ( [np.log10(1.+Z),np.log10(1+rmax)] )#.to ( self.device )
-        y_label = torch.Tensor ( [ Z / ( Z + 1. ) ] ).to ( self.device )
+        y_label = torch.Tensor ( [ [ Z / ( Z + 1. ) ] ] ).to ( self.device )
         loss = self.criterion ( y_pred, y_label )
         # self.pprint ( "With x=%s y_pred=%s, label=%s, loss=%s" % ( x_data[:5], y_pred, y_label, loss.data ) ) 
         self.loss = float( loss.data )
@@ -272,6 +273,7 @@ class Regressor:
         self.adam.zero_grad()
         loss.backward()
         self.adam.step()
+        # print ( "[regressor] storing grad %s" % type(x_data.grad) )
         self.grad = x_data.grad ## store the gradient!
 
     def batchTrain ( self, models, Zs, rmax=None ):
@@ -327,14 +329,11 @@ class Regressor:
 
     def predict ( self, model ):
         x_data = self.convert ( model )
-        #print ( "x_data", x_data.shape )
+        # print ( "x_data", x_data.shape )
         ret = self.torchmodel.forward ( x_data )
-        #print ( "ret", ret )
-        self.grad = x_data.grad ## store the gradient!
+        # print ( "[predict] input=", x_data.shape, "ret=", ret )
+        # self.grad = x_data.grad ## store the gradient!
         return - ret[0]/(ret[0]-1.)
-        # return 10**ret[0]-1.,1./ret[1]-1.
-        # return 10**ret[0]-1.
-        # return 10**ret[0]-1.
 
 if __name__ == "__main__":
     helper = RegressionHelper ()

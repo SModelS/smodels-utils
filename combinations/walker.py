@@ -217,11 +217,12 @@ class RandomWalker:
             self.pprint ( "gradient ascent? no!" )
             return
         self.pprint ( "gradient ascent? yes!" )
-        self.regressor.train ( self.model, self.model.Z ) # only done to get gradient
         predictedZ = float ( self.regressor.predict ( self.model ) )
         self.pprint ( "Gradient ascent predicted vs computed Z: %.5f <-> %.5f" % ( predictedZ, self.model.Z ) )
-        if not hasattr ( self.regressor, "grad" ) or self.regressor.grad == None:
-            self.pprint ( "regressor has no grad" )
+        self.regressor.train ( self.model, self.model.Z ) # only done to get gradient
+        if not hasattr ( self.regressor, "grad" ) or type(self.regressor.grad) == type(None):
+            self.pprint ( "regressor has no grad %d" % hasattr ( self.regressor, "grad" ) )
+            sys.exit()
             return
         # self.log ( "shall we perform gradient ascent?" )
         # self.log ( "attrs %s %s" % ( self.regressor.loss, self.regressor.torchmodel.last_ypred ) )
@@ -366,6 +367,7 @@ class RandomWalker:
         """ Now perform the random walk """
         self.unfreezeRandomParticle() ## start with unfreezing a random particle
         while self.model.step<self.maxsteps:
+            # self.gradientAscent() # perform at begining
             ## only the first walker records history
             if self.record_history:
                 self.history.add ( self.model )
@@ -422,7 +424,7 @@ class RandomWalker:
                 else:
                     self.pprint ( "u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.model.oldZ(),self.model.Z) )
                     self.takeStep()
-            self.gradientAscent()
+            # self.gradientAscent()
         self.saveState()
         self.pprint ( "Was asked to stop after %d steps" % self.maxsteps )
 
