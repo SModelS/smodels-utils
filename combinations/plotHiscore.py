@@ -50,7 +50,7 @@ def writeTex ( model ):
 
     whatifs = ""
     if hasattr ( model, "whatif" ):
-        print ( "[plotHiscore] has whatifs defined" )
+        print ( "[plotHiscore] contributions-by-particle are defined" )
         #whatifs+="\\\\Contributions by particles: $"
         whatifs+="\\\\"
         whatifs+="Contributions by particles: $"
@@ -126,7 +126,7 @@ def writeIndexHtml ( model ):
         print ( "[plotHiscore] model has no r values!" )
 
     if hasattr ( model, "contributions" ):
-        print ( "[plotHiscore] contributions are defined" )
+        print ( "[plotHiscore] contributions-per-analysis are defined" )
         f.write ( "<td><br><b>Contributions per analysis:</b><br>\n<ul>\n" )
         conts = []
         for k,v in model.contributions.items():
@@ -255,7 +255,22 @@ if __name__ == "__main__":
         hostname = socket.gethostname()
         D = "/afs/hephy.at/user/w/wwaltenberger/www/models"
         F = "*.png hiscore.slha index.html"
+        ## first the backup
         if "gpu" in hostname:
+            ## make backup
+            cmd = "cp %s/* %s/backup/" % ( D, D )
+        else:
+            cmd = "ssh gpu cp %s/* %s/backup/" % ( D, D )
+        print ( cmd )
+        # now the new stuff
+        O = subprocess.getoutput ( cmd )
+        if len(O)>0:
+            print ( "[plotHiscore.py] when uploading files: %s" % O )
+
+        if "gpu" in hostname:
+            ## make backup
+            cmd = "cp %s/* %s/backup/" % ( D, D )
+            subprocess.getoutput ( cmd )
             cmd = "cp %s %s" % (F, D )
         else:
             cmd = "scp %s gpu:%s" % ( F, D )
