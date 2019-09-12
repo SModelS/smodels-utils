@@ -2,7 +2,7 @@
 
 """ The pytorch-based regressor for Z. So we can walk along its gradient. """
 
-import os, time, sys, gzip, time
+import os, time, sys, gzip, time, copy
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -53,21 +53,27 @@ class RegressionHelper:
                     lines.append ( line )
             except EOFError:
                 pass
-        m=Model(0 )
+        M=Model(0 )
         for epoch in range(20000):
             losses=[]
+            if epoch % 10 == 0:
+                trainer.clearScores()
             # print ( "Epoch %d" % epoch )
             modelsbatch,Zbatch=[],[]
             dt=0.
             for i,d in enumerate(lines):
+                m = copy.deepcopy(M)
                 m.masses = d["masses"]
                 m.ssmultipliers = d["ssmultipliers"]
                 m.decays = d["decays"]
                 modelsbatch.append ( m )
                 Zbatch.append ( d["Z"] )
-                if len(modelsbatch)>=200:
+                if len(modelsbatch)>=20:
                     t0=time.time()
-                    trainer.batchTrain ( modelsbatch, Zbatch )
+                    writeScores = False
+                    if epoch % 10 == 0:
+                        writeScores = True
+                    trainer.batchTrain ( modelsbatch, Zbatch, epoch, writeScores )
                     t1=time.time()-t0
                     dt += t1
                     modelsbatch,Zbatch=[],[]
@@ -109,9 +115,9 @@ class PyTorchModel(torch.nn.Module):
         self.linear4 = torch.nn.Linear( dim8, dim16 )
         self.bn4 = torch.nn.BatchNorm1d( dim16 )
         self.linear5 = torch.nn.Linear( dim16,dim32 )
-        self.bn5 = torch.nn.BatchNorm1d( dim32 )
+        # self.bn5 = torch.nn.BatchNorm1d( dim32 )
         self.linear6 = torch.nn.Linear( dim32,dim64 )
-        self.bn6 = torch.nn.BatchNorm1d( dim64 )
+        # self.bn6 = torch.nn.BatchNorm1d( dim64 )
         self.linear7 = torch.nn.Linear( dim64, 1 )
         self.dropout1 = torch.nn.Dropout ( .5 )
         self.dropout2 = torch.nn.Dropout ( .2 )
@@ -158,12 +164,12 @@ class PyTorchModel(torch.nn.Module):
         out5 = self.linear5 ( bn4 )
         do5  = self.dropout5 ( out5 )
         act5 = self.act ( do5 )
-        bn5  = self.bn5 ( act5 )
-        out6 = self.linear6 ( bn5 )
+        # bn5  = self.bn5 ( act5 )
+        out6 = self.linear6 ( act5 )
         do6  = self.dropout6 ( out6 )
         act6 = self.act ( do6 )
-        bn6  = self.bn6 ( act6 )
-        out7 = self.linear7 ( bn6 )
+        # bn6  = self.bn6 ( act6 )
+        out7 = self.linear7 ( act6 )
         do7  = self.dropout7 ( out7 )
         y_pred = self.act ( do7 ) ## no negative numbers
         # self.last_ypred = y_pred.data.tolist()
@@ -189,6 +195,7 @@ class Regressor:
         self.dump_training = dump_training
         self.is_trained = is_trained
         self.device = device
+        self.clearScores()
         if device == None:
             self.device = helper.device()
         if variables == None:
@@ -213,13 +220,14 @@ class Regressor:
         """ move the theorymodel parameters in the direction
             of the gradient. """
         grad = self.grad.tolist()
+        # print ( "grad", grad )
         for k,v in theorymodel.masses.items():
             if not "M%d" % k in self.torchmodel.variables:
                 print ( "error, dont know what to do with M%d" % k )
                 sys.exit(-5)
             idx = self.torchmodel.variables.index( "M%d" % k)
             # print ( "idx", idx, "grad=", len(grad), len(grad[0]) )
-            t = 10. * grad[0][idx] # the inverse of the normalization
+            t = grad[0][idx] 
             # t = 10. * grad[0][idx] * ( v + 1e-5 ) # the inverse of the normalization
             theorymodel.masses[k]+= t * rate
         for k,v in theorymodel.ssmultipliers.items():
@@ -252,7 +260,8 @@ class Regressor:
             #if type(v) not in [ float, int ]:
             #    self.pprint ( "in convert: dealing with %s: %s" % (type(v),v) )
             #    sys.exit(-100)
-            ret[idx]= np.log(v+1e-5) / 10. # a bit of a normalization
+            ret[idx]= v
+            # ret[idx]= np.log(v+1e-5) / 10. # a bit of a normalization
         for k,v in theorymodel.ssmultipliers.items():
             if not "SS%d" % k in self.torchmodel.variables:
                 print ( "error, dont know what to do with M%d" % k )
@@ -303,14 +312,33 @@ class Regressor:
         # print ( "[regressor] storing grad %s" % type(x_data.grad) )
         self.grad = x_data.grad ## store the gradient!
 
-    def batchTrain ( self, models, Zs, rmax=None ):
-        """ train y_label with x_data for a minibatch of models """
+    def clearScores ( self ):
+        """ remove old scores file """
+        if os.path.exists ( "scores.csv" ):
+            os.unlink ( "scores.csv" )
+
+    def writeScores ( self, pred, truth, epoch ):
+        """ write out predicted versus true Z values,
+        for debugging """
+        with open("scores.csv","at") as f:
+            for p,t in zip(pred,truth):
+                f.write("%d,%.2f,%.2f\n" % ( epoch, p, t ) )
+
+    def batchTrain ( self, models, Zs, epoch = 0, writeScores = False ):
+        """ train y_label with x_data for a minibatch of models 
+        :param writeScores: write out the predicted and true Z values,
+                            for debugging
+        """
         self.training += 1
         tmp = []
-        for model in models:
+        for ctr,model in enumerate(models):
+            # print ( "model", ctr, sum ( model.masses.values() ) + sum ( model.ssmultipliers.values() ) )
             tmp.append ( self.convert ( model, tolist=True ) )
         x_data = torch.Tensor ( tmp ).to ( self.device )
         x_data.requires_grad = True ## needs this to have dZ/dx in the end
+        #print ( "_xdata", x_data.shape )
+        #print ( "x_data[0]", x_data[0][:10] )
+        #print ( "x_data[1]", x_data[1][:10] )
         y_pred = self.torchmodel(x_data).to ( self.device )
         tmp = []
         for Z in Zs:
@@ -326,11 +354,11 @@ class Regressor:
             Zsi = Zs[i]
             d = abs(Zpred - Zsi)
             print ( "[regressor] i:%2d, Z_pred:%.2f Z_true:%.2f d:%.2f" % ( i, Zpred, Zsi, d ) )
-        # print ( "y_pred", y_pred.shape, self.unfold ( y_pred[0][0] ) )
-        # print ( "y_label", y_label.shape, y_label[0][0] )
-        # y_label = torch.Tensor ( [np.log10(1.+Z),1./(1+rmax)] )#.to ( self.device )
+        # print ( "y_pred", y_pred.shape, y_label.shape )
+        # print ( " --", y_pred[:10], y_label[:10] )
         loss = self.criterion ( y_pred, y_label )
-        # self.pprint ( "With x=%s y_pred=%s, label=%s, loss=%s" % ( x_data[:5], y_pred, y_label, loss.data ) ) 
+        if writeScores:
+            self.writeScores ( y_pred, y_label, epoch )
         self.loss = float( loss.data )
         self.log ( "training. predicted %s, target %s, loss %.3f" % ( y_pred, y_label, float(loss) ) )
         self.adam.zero_grad()

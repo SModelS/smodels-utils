@@ -13,6 +13,8 @@ from pympler.asizeof import asizeof
 ## the thresholds for exclusion
 rthresholds = (1.5,)
 
+predictor = [ None ]
+
 class Model:
     """ encodes one theoretical model, i.e. the particles, their masses, their
         branchings, their signal strength modifiers.
@@ -116,9 +118,10 @@ class Model:
     def initializePredictor ( self ):
         """ initialize the predictor """
         self.pprint ( "initializing predictor #%d with database at %s" % ( self.walkerid, self.dbpath ) )
-        self.predictor = Predictor( self.walkerid, dbpath=self.dbpath, 
+        if predictor [ 0 ] == None:
+            predictor[0] = Predictor( self.walkerid, dbpath=self.dbpath, 
                                     expected=self.expected, select=self.select )
-        self.dbversion = self.predictor.database.databaseVersion
+        self.dbversion = predictor[0].database.databaseVersion
 
     def highlight ( self, msgType = "info", *args ):
         """ logging, hilit """
@@ -155,8 +158,8 @@ class Model:
             self.bestCombo = combiner.removeDataFromBestCombo ( self.bestCombo )
         if all and hasattr ( self, "_backup" ):
             del self._backup
-        if hasattr ( self, "predictor" ):
-            del self.predictor
+        #if hasattr ( self, "predictor" ):
+        #    del self.predictor
 
     def predict ( self, strategy, keep_meta = False ):
         """ compute best combo, llhd, and significance """
@@ -166,9 +169,10 @@ class Model:
         # get the predictions that determine whether model is excluded:
         # best results only, also non-likelihood results
         self.log ( "check if excluded" )
-        if not hasattr ( self, "predictor" ):
-            self.predictor = Predictor ( self.walkerid, dbpath = self.dbpath )
-        bestpreds = self.predictor.predict ( self.currentSLHA, allpreds=False,
+        #if not hasattr ( self, "predictor" ):
+        #    self.predictor = Predictor ( self.walkerid, dbpath = self.dbpath )
+        # bestpreds = self.predictor.predict ( self.currentSLHA, allpreds=False,
+        bestpreds = predictor[0].predict ( self.currentSLHA, allpreds=False,
                                              llhdonly=False )
         rs = self.checkForExcluded ( bestpreds )
         srs = "%s" % ", ".join ( [ "%.2f" % x for x in rs[:3] ] )
@@ -185,7 +189,8 @@ class Model:
             return
         # now get the predictions that determine the Z of the model. allpreds,
         # but need llhd
-        predictions = self.predictor.predict ( self.currentSLHA, allpreds=False,
+        #predictions = self.predictor.predict ( self.currentSLHA, allpreds=False,
+        predictions = predictor[0].predict ( self.currentSLHA, allpreds=False,
                                                llhdonly=True )
         combiner = Combiner( self.walkerid )
         self.log ( "now find highest significance for %d predictions" % len(predictions) )
