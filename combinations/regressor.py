@@ -53,30 +53,31 @@ class RegressionHelper:
                     lines.append ( line )
             except EOFError:
                 pass
+        m=Model(0 )
         for epoch in range(20000):
             losses=[]
-            print ( "Epoch %d" % epoch )
+            # print ( "Epoch %d" % epoch )
             modelsbatch,Zbatch=[],[]
             dt=0.
-            m=Model(0 )
             for i,d in enumerate(lines):
                 m.masses = d["masses"]
                 m.ssmultipliers = d["ssmultipliers"]
                 m.decays = d["decays"]
                 modelsbatch.append ( m )
                 Zbatch.append ( d["Z"] )
-                if len(modelsbatch)>=20:
+                if len(modelsbatch)>=200:
                     t0=time.time()
                     trainer.batchTrain ( modelsbatch, Zbatch )
                     t1=time.time()-t0
                     dt += t1
                     modelsbatch,Zbatch=[],[]
                     losses.append ( trainer.loss )
-                if i > 0 and i % 10000  == 0:
+                if i > 0 and i % 20000  == 0:
                     print ( "training %d, loss=%.5f. training took %.1fs." % (i, trainer.loss, dt ) )
                     dt = 0.
-                if i > 0 and i % 100000 == 0:
-                    trainer.save( name="test.ckpt" )
+                if i > 0 and i % 200000 == 0:
+                    trainer.save( name="temp.ckpt" )
+            trainer.save( name=modelfile )
             print ( "End of epoch %d: losses=%.4f+-%.4f" % ( epoch, np.mean(losses),np.std(losses) ) )
             with open("regress.log","at") as f:
                 f.write ( "[%s] End of epoch %d: losses=%.5f+-%.5f\n" % ( time.asctime(), epoch, np.mean(losses),np.std(losses) ) )
@@ -101,13 +102,18 @@ class PyTorchModel(torch.nn.Module):
         self.linear1 = torch.nn.Linear( dim, dim2 )
         self.bn1 = torch.nn.BatchNorm1d( dim2 )
         self.linear2 = torch.nn.Linear( dim2, dim4 )
+        self.bn2 = torch.nn.BatchNorm1d( dim4 )
         self.linear3 = torch.nn.Linear( dim4, dim8 )
+        self.bn3 = torch.nn.BatchNorm1d( dim8 )
         self.act = torch.nn.LeakyReLU(.1)
         self.linear4 = torch.nn.Linear( dim8, dim16 )
+        self.bn4 = torch.nn.BatchNorm1d( dim16 )
         self.linear5 = torch.nn.Linear( dim16,dim32 )
+        self.bn5 = torch.nn.BatchNorm1d( dim32 )
         self.linear6 = torch.nn.Linear( dim32,dim64 )
+        self.bn6 = torch.nn.BatchNorm1d( dim64 )
         self.linear7 = torch.nn.Linear( dim64, 1 )
-        self.dropout1 = torch.nn.Dropout ( .2 )
+        self.dropout1 = torch.nn.Dropout ( .5 )
         self.dropout2 = torch.nn.Dropout ( .2 )
         self.dropout3 = torch.nn.Dropout ( .2 )
         self.dropout4 = torch.nn.Dropout ( .2 )
@@ -137,19 +143,29 @@ class PyTorchModel(torch.nn.Module):
         do1 = self.dropout1 ( out1 )
         act1 = self.act ( do1 )
         bn1 = self.bn1 ( act1 )
-        out2 = self.linear2 ( act1 )
-        act2 = self.act ( out2 )
-        out3 = self.linear3 ( act2 )
-        act3 = self.act ( out3 )
-        out4 = self.linear4 ( act3 )
-        act4 = self.act ( out4 )
-        out5 = self.linear5 ( act4 )
-        act5 = self.act ( out5 )
-        out6 = self.linear6 ( act5 )
-        act6 = self.act ( out6 )
-        out7 = self.linear7 ( act6 )
-        out8 = self.dropout7 ( out7 )
-        y_pred = self.act ( out8 ) ## no negative numbers
+        out2 = self.linear2 ( bn1 )
+        do2 = self.dropout2 ( out2 )
+        act2 = self.act ( do2 )
+        bn2 = self.bn2 ( act2 )
+        out3 = self.linear3 ( bn2 )
+        do3  = self.dropout3 ( out3 )
+        act3 = self.act ( do3 )
+        bn3 = self.bn3 ( act3 )
+        out4 = self.linear4 ( bn3 )
+        do4  = self.dropout4 ( out4 )
+        act4 = self.act ( do4 )
+        bn4  = self.bn4 ( act4 )
+        out5 = self.linear5 ( bn4 )
+        do5  = self.dropout5 ( out5 )
+        act5 = self.act ( do5 )
+        bn5  = self.bn5 ( act5 )
+        out6 = self.linear6 ( bn5 )
+        do6  = self.dropout6 ( out6 )
+        act6 = self.act ( do6 )
+        bn6  = self.bn6 ( act6 )
+        out7 = self.linear7 ( bn6 )
+        do7  = self.dropout7 ( out7 )
+        y_pred = self.act ( do7 ) ## no negative numbers
         # self.last_ypred = y_pred.data.tolist()
         return y_pred
 
@@ -285,7 +301,6 @@ class Regressor:
 
     def batchTrain ( self, models, Zs, rmax=None ):
         """ train y_label with x_data for a minibatch of models """
-        # print ( "batchtrain" )
         self.training += 1
         tmp = []
         for model in models:
