@@ -120,8 +120,8 @@ class PyTorchModel(torch.nn.Module):
         self.dropout5 = torch.nn.Dropout ( .2 )
         self.dropout6 = torch.nn.Dropout ( .2 )
         self.dropout7 = torch.nn.Dropout ( .2 )
-        self.relu = torch.nn.ReLU()
-        self.last_ypred = None
+        # self.relu = torch.nn.ReLU()
+        # self.last_ypred = None
         torch.nn.init.xavier_uniform_(self.linear1.weight)
         torch.nn.init.xavier_uniform_(self.linear2.weight)
         torch.nn.init.xavier_uniform_(self.linear3.weight)
@@ -202,7 +202,8 @@ class Regressor:
             self.torchmodel.eval()
             self.criterion = torch.nn.MSELoss(reduction="mean").to(self.device)
         # self.adam = torch.optim.SGD(self.torchmodel.parameters(), lr=0.01 )
-            self.adam = torch.optim.Adam(self.torchmodel.parameters(), lr=0.001 )
+            self.adam = torch.optim.Adam( self.torchmodel.parameters(), lr=0.001,
+                                          weight_decay = .005  )
         self.walkerid = walkerid
 
     def plusDeltaM ( self, theorymodel, rate= 1. ):
