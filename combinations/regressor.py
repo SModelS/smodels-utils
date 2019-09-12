@@ -2,7 +2,7 @@
 
 """ The pytorch-based regressor for Z. So we can walk along its gradient. """
 
-import os, time, sys, gzip, time, copy
+import os, time, sys, gzip, time, copy, random
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -61,6 +61,7 @@ class RegressionHelper:
             # print ( "Epoch %d" % epoch )
             modelsbatch,Zbatch=[],[]
             dt=0.
+            random.shuffle ( lines )
             for i,d in enumerate(lines):
                 m = copy.deepcopy(M)
                 m.masses = d["masses"]
@@ -99,11 +100,11 @@ class PyTorchModel(torch.nn.Module):
         self.walkerid = 0
         dim = self.inputDimension()
         self.pprint ( "input dimension is %d" % dim )
-        dim2 = int ( dim/2 )
-        dim4 = int ( dim/4 )
-        dim8 = int ( dim/8 )
-        dim16= int ( dim/16 )
-        dim32= int ( dim/32 )
+        dim2 = int ( 2*dim )
+        dim4 = int ( dim/2 )
+        dim8 = int ( dim/4 )
+        dim16= int ( dim/8 )
+        dim32= int ( dim/16 )
         dim64= int ( dim/64 )
         self.linear1 = torch.nn.Linear( dim, dim2 )
         self.bn1 = torch.nn.BatchNorm1d( dim2 )
@@ -115,9 +116,9 @@ class PyTorchModel(torch.nn.Module):
         self.linear4 = torch.nn.Linear( dim8, dim16 )
         self.bn4 = torch.nn.BatchNorm1d( dim16 )
         self.linear5 = torch.nn.Linear( dim16,dim32 )
-        # self.bn5 = torch.nn.BatchNorm1d( dim32 )
+        self.bn5 = torch.nn.BatchNorm1d( dim32 )
         self.linear6 = torch.nn.Linear( dim32,dim64 )
-        # self.bn6 = torch.nn.BatchNorm1d( dim64 )
+        self.bn6 = torch.nn.BatchNorm1d( dim64 )
         self.linear7 = torch.nn.Linear( dim64, 1 )
         self.dropout1 = torch.nn.Dropout ( .5 )
         self.dropout2 = torch.nn.Dropout ( .2 )
@@ -164,14 +165,15 @@ class PyTorchModel(torch.nn.Module):
         out5 = self.linear5 ( bn4 )
         do5  = self.dropout5 ( out5 )
         act5 = self.act ( do5 )
-        # bn5  = self.bn5 ( act5 )
-        out6 = self.linear6 ( act5 )
+        bn5  = self.bn5 ( act5 )
+        out6 = self.linear6 ( bn5 )
         do6  = self.dropout6 ( out6 )
         act6 = self.act ( do6 )
-        # bn6  = self.bn6 ( act6 )
-        out7 = self.linear7 ( act6 )
+        bn6  = self.bn6 ( act6 )
+        out7 = self.linear7 ( bn6 )
         do7  = self.dropout7 ( out7 )
-        y_pred = self.act ( do7 ) ## no negative numbers
+        y_pred = 5. * self.act ( do7 ) ## 5, so we can learn Zs up to ~ 5 easily
+        # out8 = .0 * self.act ( do7 ) ## 5, so we can learn Zs up to ~ 5 easily
         # self.last_ypred = y_pred.data.tolist()
         return y_pred
 
