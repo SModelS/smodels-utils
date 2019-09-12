@@ -69,7 +69,7 @@ class RegressionHelper:
                 m.decays = d["decays"]
                 modelsbatch.append ( m )
                 Zbatch.append ( d["Z"] )
-                if len(modelsbatch)>=20:
+                if len(modelsbatch)>=100:
                     t0=time.time()
                     writeScores = False
                     if epoch % 10 == 0:
