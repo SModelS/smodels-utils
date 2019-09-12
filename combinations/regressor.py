@@ -182,6 +182,9 @@ class Regressor:
         helper = RegressionHelper ()
         self.walkerid = walkerid
         self.verbosity = verbosity
+        translate = { "debug": 10, "info": 20, "warning": 30, "error": 40 }
+        if verbosity in translate.keys():
+            self.verbosity = translate[verbosity]
         self.training = 0
         self.dump_training = dump_training
         self.is_trained = is_trained
@@ -316,7 +319,7 @@ class Regressor:
             tmp.append ( [ Z ] )
             # tmp.append ( [ Z / ( 1. + Z ) ] )
         y_label = torch.Tensor ( tmp ).to(self.device)
-        if self.verbosity in [ "debug" ]:
+        if self.verbosity < 15:
             import random
             i = random.choice(range(len(Zs)))
             Zpred = float(y_pred[i])
@@ -347,7 +350,8 @@ class Regressor:
             f.write ( line.encode() )
 
     def save ( self, name = "model.ckpt" ):
-        print ( "saving model", name )
+        if self.verbosity < 15:
+            print ( "saving model", name )
         torch.save ( self.torchmodel.state_dict(), name )
 
     def load ( self, name = "model.ckpt" ):
