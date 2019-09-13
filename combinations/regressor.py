@@ -404,9 +404,31 @@ if __name__ == "__main__":
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug,info,warn,error [info]',
             type=str, default="info" )
+    argparser.add_argument ( '-C', '--checkfile',
+            help='choose where to get model from for checking [hiscore.pcl]', 
+            type=str, default="hiscore.pcl" )
+    argparser.add_argument ( '-c', '--check',
+            help='simply check the model, dont train (you may use -f to choose where to get model from)', action='store_true' )
     args = argparser.parse_args()
     
     helper = RegressionHelper ()
+    if args.check:
+        import pickle
+        print ( "checking the torch model" )
+        regressor = Regressor ( torchmodel = args.modelfile )
+        picklefile = args.checkfile
+        print ( "fetching model from %s" % picklefile )
+        with open( picklefile,"rb") as f:
+            models = pickle.load ( f )
+            trimmed = pickle.load ( f )
+        model = trimmed[0]
+        use="trimmed"
+        if model == None:
+            use="untrimmed"
+            model = models[0]
+        print ( "Taking %s model %.2f" % ( use, model.Z ) )
+        predictedZ = regressor.predict ( model )
+        print ( " `- predicted value: %.2f" % predictedZ )
+        sys.exit()
+        
     helper.trainOffline( args.picklefile, args.modelfile, args.verbosity )
-    #print ( helper.countDegreesOfFreedom ( "template_many.slha" ) )
-    #regressor = Regressor ( helper.freeParameters( "template_many.slha" ) ) 
