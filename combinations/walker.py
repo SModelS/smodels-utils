@@ -44,7 +44,8 @@ class RandomWalker:
         self.walkerid = walkerid ## walker id, for parallel runs
         self.hiscoreList = Hiscore ( walkerid, True, "H%d.pcl" % walkerid )
         self.model = Model( self.walkerid, cheat=cheat, dbpath = dbpath, 
-                            expected = expected, select = select )
+                            expected = expected, select = select,
+                            keep_meta = True )
         self.strategy = strategy
         self.catch_exceptions = catch_exceptions
         self.history = History ( walkerid )
@@ -73,9 +74,11 @@ class RandomWalker:
     @classmethod
     def fromModel( cls, model, nsteps=10000, strategy="aggressive", walkerid=0, 
                    dump_training = False, dbpath="../../smodels-database/",
-                   expected = False, select = "all", catch_exceptions = True ):
+                   expected = False, select = "all", catch_exceptions = True,
+                   keep_meta = True ):
         ret = cls( walkerid, cheat = 0, dbpath = dbpath, 
-                   catch_exceptions = catch_exceptions )
+                   catch_exceptions = catch_exceptions,
+                   keep_meta = keep_meta )
         # ret = cls( walkerid, nsteps, strategy, dump_training, dbpath )
         ret.model = model
         ret.model.createNewSLHAFileName()
@@ -189,26 +192,6 @@ class RandomWalker:
         ## currently we dont train, we just dump the data
         self.regressor.dumpTrainingData ( self.model )
         return # we dont train for now
-        #if self.regressor == None:
-        #    return
-        ## fetch the model from the queue
-        #self.log ( "now train the NN" )
-        #try:
-        #    self.regressor = self.queue.get( timeout=70. )[0]
-        #except Exception as e:
-        #    self.pprint ( "Error, while waiting to get the regressor: %s. lets just not train" % str(e) )
-        #    if self.queue.empty():
-        #        self.queue.put ( [ self.regressor ] )
-        #    return 
-        #if self.regressor == None: # start a new one
-        #    self.queue.put( [ None ] )
-        #    return
-        #predictedZ = float ( self.regressor.predict ( self.model ) )
-        #self.pprint ( "Before training step #%d, predicted vs computed Z: %.5f <-> %.5f" % ( self.regressor.training, predictedZ, self.model.Z ) )
-        #
-        #self.queue.put ( [ self.regressor ] )
-        #if self.regressor.training % 100 == 0 or self.regressor.training == 3 or self.regressor.training == 20:
-        #    self.regressor.save()
 
     def gradientAscent ( self ):
         """ Z is big enough, the loss is small enough. use the gradient. """
@@ -529,7 +512,8 @@ if __name__ == "__main__":
                 walkers.append ( RandomWalker.fromModel ( v2, walkerid = ctr+1, 
                             dump_training = dump_training, dbpath = args.database,
                             expected = args.expected, select = select,
-                            catch_exceptions = catchem ) )
+                            catch_exceptions = catchem,
+                            keep_meta = True ) )
                 walkers[-1].setWalkerId ( ctr+1 )
                 walkers[-1].takeStep() # make last step a taken one
                 ctr+=1

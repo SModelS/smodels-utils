@@ -2,7 +2,7 @@
 
 """ The pytorch-based regressor for Z. So we can walk along its gradient. """
 
-import os, time, sys, gzip, time, copy, random
+import os, time, sys, gzip, time, copy, random, math
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -53,41 +53,43 @@ class RegressionHelper:
                     lines.append ( line )
             except EOFError:
                 pass
-        M=Model(0 )
+        M=Model(0, keep_meta = False )
+        models = []
+        for i,d in enumerate(lines):
+            m = copy.deepcopy(M)
+            m.masses = d["masses"]
+            m.ssmultipliers = d["ssmultipliers"]
+            m.decays = d["decays"]
+            models.append ( ( trainer.convert ( m, tolist=True ), d["Z"] ) )
+
         for epoch in range(20000):
             losses=[]
             if epoch % 10 == 0:
                 trainer.clearScores()
             # print ( "Epoch %d" % epoch )
-            modelsbatch,Zbatch=[],[]
-            dt=0.
-            random.shuffle ( lines )
-            for i,d in enumerate(lines):
-                m = copy.deepcopy(M)
-                m.masses = d["masses"]
-                m.ssmultipliers = d["ssmultipliers"]
-                m.decays = d["decays"]
-                modelsbatch.append ( m )
-                Zbatch.append ( d["Z"] )
-                if len(modelsbatch)>=100:
-                    t0=time.time()
-                    writeScores = False
-                    if epoch % 10 == 0:
-                        writeScores = True
-                    trainer.batchTrain ( modelsbatch, Zbatch, epoch, writeScores )
-                    t1=time.time()-t0
-                    dt += t1
-                    modelsbatch,Zbatch=[],[]
-                    losses.append ( trainer.loss )
-                if i > 0 and i % 20000  == 0:
-                    print ( "training %d, loss=%.5f. training took %.1fs." % (i, trainer.loss, dt ) )
-                    dt = 0.
-                if i > 0 and i % 200000 == 0:
-                    trainer.save( name="temp.ckpt" )
-            trainer.save( name=modelfile )
-            print ( "End of epoch %d: losses=%.4f+-%.4f" % ( epoch, np.mean(losses),np.std(losses) ) )
-            with open("regress.log","at") as f:
-                f.write ( "[%s] End of epoch %d: losses=%.5f+-%.5f\n" % ( time.asctime(), epoch, np.mean(losses),np.std(losses) ) )
+            dt,tT=0.,0.
+            indices = list(range(len(models)))
+            random.shuffle ( indices ) ## random indices
+            batchsize = 100
+            nbatches = int(math.ceil(len(models)/batchsize))
+            writeScores = False
+            if epoch % 10 == 0:
+                writeScores = True
+            for mbatch in range(nbatches):
+                beg = mbatch*batchsize
+                end = (mbatch+1)*batchsize
+                modelsbatch = [ models[x][0] for x in indices[beg:end] ]
+                Zbatch = [ [ models[x][1] ] for x in indices[beg:end] ]
+                t0=time.time()
+                tt=trainer.batchTrain ( modelsbatch, Zbatch, epoch, writeScores )
+                tT+=tt
+                dt+=time.time()-t0
+                losses.append ( trainer.loss )
+            print ( "End of epoch %d: losses=%.4f+-%.4f (%.1fs/%.1fs)" % ( epoch, np.mean(losses),np.std(losses), dt, tT ) )
+            if writeScores:
+                trainer.save( name=modelfile )
+                with open("regress.log","at") as f:
+                    f.write ( "[%s] End of epoch %d: losses=%.5f+-%.5f\n" % ( time.asctime(), epoch, np.mean(losses),np.std(losses) ) )
 
 
 class PyTorchModel(torch.nn.Module):
@@ -332,23 +334,11 @@ class Regressor:
                             for debugging
         """
         self.training += 1
-        tmp = []
-        for ctr,model in enumerate(models):
-            # print ( "model", ctr, sum ( model.masses.values() ) + sum ( model.ssmultipliers.values() ) )
-            tmp.append ( self.convert ( model, tolist=True ) )
-        x_data = torch.Tensor ( tmp ).to ( self.device )
-        x_data.requires_grad = True ## needs this to have dZ/dx in the end
-        #print ( "_xdata", x_data.shape )
-        #print ( "x_data[0]", x_data[0][:10] )
-        #print ( "x_data[1]", x_data[1][:10] )
+        t0 = time.time()
+        x_data = torch.Tensor ( models ).to ( self.device )
         y_pred = self.torchmodel(x_data).to ( self.device )
-        tmp = []
-        for Z in Zs:
-            if type(Z) in [ list, tuple ] and len(Z)==1:
-                Z=Z[0]
-            tmp.append ( [ Z ] )
-            # tmp.append ( [ Z / ( 1. + Z ) ] )
-        y_label = torch.Tensor ( tmp ).to(self.device)
+        y_label = torch.Tensor ( Zs ).to(self.device)
+        t1 = time.time()
         if self.verbosity < 15:
             import random
             i = random.choice(range(len(Zs)))
@@ -356,17 +346,19 @@ class Regressor:
             Zsi = Zs[i]
             d = abs(Zpred - Zsi)
             print ( "[regressor] i:%2d, Z_pred:%.2f Z_true:%.2f d:%.2f" % ( i, Zpred, Zsi, d ) )
-        # print ( "y_pred", y_pred.shape, y_label.shape )
-        # print ( " --", y_pred[:10], y_label[:10] )
+        #t0 = time.time()
         loss = self.criterion ( y_pred, y_label )
-        if writeScores:
-            self.writeScores ( y_pred, y_label, epoch )
-        self.loss = float( loss.data )
-        self.log ( "training. predicted %s, target %s, loss %.3f" % ( y_pred, y_label, float(loss) ) )
         self.adam.zero_grad()
         loss.backward()
         self.adam.step()
-        self.grad = x_data.grad ## store the gradient!
+        #t1 = time.time()
+        if writeScores:
+            self.writeScores ( y_pred, y_label, epoch )
+        self.loss = float( loss.data )
+        # self.log ( "training. predicted %s, target %s, loss %.3f (%d)" % ( y_pred, y_label, self.loss, writeScores ) )
+        tm = t1 - t0
+        # self.grad = x_data.grad ## store the gradient!
+        return tm
 
     def dumpTrainingData ( self, model ):
         """ dump the model with the compute Z, so we can train offline on it. """

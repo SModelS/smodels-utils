@@ -21,13 +21,14 @@ class Model:
     """
     LSP = 1000022 ## the LSP is hard coded
     def __init__ ( self, walkerid, cheat=0, dbpath="../../smodels-database/",
-                   expected = False, select = "all" ):
+                   expected = False, select = "all", keep_meta = True ):
         """
         :param expected: if True, run with observations drawn from expected values 
         """
         self.walkerid = walkerid
         self.expected = expected
         self.select = select
+        self.keep_meta = keep_meta ## keep all meta info? big!
         self.dbpath = dbpath
         self.version = 1 ## version of this class
         self.maxMass = 2400. ## maximum masses we consider
@@ -153,15 +154,17 @@ class Model:
 
     def clean ( self, all=False ):
         """ remove unneeded stuff before storing """
+        if all and hasattr ( self, "_backup" ):
+            del self._backup
+        if self.keep_meta:
+            return ## dont remove best combo
         combiner = Combiner( self.walkerid )
         if hasattr ( self, "bestCombo" ) and self.bestCombo != None:
             self.bestCombo = combiner.removeDataFromBestCombo ( self.bestCombo )
-        if all and hasattr ( self, "_backup" ):
-            del self._backup
         #if hasattr ( self, "predictor" ):
         #    del self.predictor
 
-    def predict ( self, strategy, keep_meta = False ):
+    def predict ( self, strategy ):
         """ compute best combo, llhd, and significance """
         self.log ( "predict" )
         # if not os.path.exists ( self.currentSLHA ):
@@ -196,7 +199,7 @@ class Model:
         self.log ( "now find highest significance for %d predictions" % len(predictions) )
         ## find highest observed significance
         bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, strategy, expected=False )
-        if keep_meta:
+        if self.keep_meta:
             self.bestCombo = bestCombo
         else:
             self.bestCombo = combiner.removeDataFromBestCombo ( bestCombo )
@@ -205,8 +208,7 @@ class Model:
         self.letters = combiner.getLetterCode(self.bestCombo)
         self.description = combiner.getComboDescription(self.bestCombo)
         self.log ( "done with prediction. best Z=%.2f." % self.Z )
-        if not keep_meta:
-            self.clean()
+        self.clean()
 
     def checkForExcluded ( self, predictions ):
         """ check if any of the predictions excludes the point """
