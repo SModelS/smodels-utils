@@ -158,7 +158,7 @@ class RegressionHelper:
             models.append ( ( trainer.convert ( m, tolist=True ), d["Z"] ) )
 
         for epoch in range(20000):
-            losses=[]
+            errs=[]
             if epoch % 10 == 0:
                 trainer.clearScores()
             # print ( "Epoch %d" % epoch )
@@ -179,9 +179,9 @@ class RegressionHelper:
                 tt=trainer.batchTrain ( modelsbatch, Zbatch, epoch, writeScores )
                 tT+=tt
                 dt+=time.time()-t0
-                losses.append ( trainer.loss )
+                errs.append ( np.sqrt(trainer.loss) )
             if epoch % 5 == 0:
-                print ( "End of epoch %d: losses=%.4f+-%.4f (%.1fs/%.1fs)" % ( epoch, np.mean(losses),np.std(losses), dt, tT ) )
+                print ( "End of epoch %d: stderr=%.4f+-%.4f (%.1fs/%.1fs)" % ( epoch, np.mean(errs),np.std(errs), dt, tT ) )
             if writeScores:
                 trainer.save( name=modelfile )
                 with open("regress.log","at") as f:
