@@ -85,7 +85,8 @@ class RegressionHelper:
                 tT+=tt
                 dt+=time.time()-t0
                 losses.append ( trainer.loss )
-            print ( "End of epoch %d: losses=%.4f+-%.4f (%.1fs/%.1fs)" % ( epoch, np.mean(losses),np.std(losses), dt, tT ) )
+            if epoch % 5 == 0:
+                print ( "End of epoch %d: losses=%.4f+-%.4f (%.1fs/%.1fs)" % ( epoch, np.mean(losses),np.std(losses), dt, tT ) )
             if writeScores:
                 trainer.save( name=modelfile )
                 with open("regress.log","at") as f:
@@ -175,8 +176,6 @@ class PyTorchModel(torch.nn.Module):
         out7 = self.linear7 ( bn6 )
         do7  = self.dropout7 ( out7 )
         y_pred = 5. * self.act ( do7 ) ## 5, so we can learn Zs up to ~ 5 easily
-        # out8 = .0 * self.act ( do7 ) ## 5, so we can learn Zs up to ~ 5 easily
-        # self.last_ypred = y_pred.data.tolist()
         return y_pred
 
 class Regressor:
