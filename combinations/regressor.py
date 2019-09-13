@@ -9,6 +9,101 @@ import torch.nn.functional as F
 from pympler.asizeof import asizeof
 from model import Model, rthresholds
 
+class PyTorchModel(torch.nn.Module):
+    def __init__(self, variables = None ):
+        super(PyTorchModel, self).__init__()
+        self.variables = variables
+        if type(variables) == type(None):
+            helper = RegressionHelper()
+            self.variables = helper.freeParameters( "template_many.slha" )
+        self.walkerid = 0
+        dim = self.inputDimension()
+        self.pprint ( "input dimension is %d" % dim )
+        dim2 = int ( 2*dim )
+        dim4 = int ( dim/2 )
+        dim8 = int ( dim/4 )
+        dim16= int ( dim/8 )
+        dim32= int ( dim/16 )
+        dim64= int ( dim/64 )
+        self.linear1 = torch.nn.Linear( dim, dim2 )
+        self.bn1 = torch.nn.BatchNorm1d( dim2 )
+        self.linear2 = torch.nn.Linear( dim2, dim4 )
+        self.bn2 = torch.nn.BatchNorm1d( dim4 )
+        self.linear3 = torch.nn.Linear( dim4, dim8 )
+        self.bn3 = torch.nn.BatchNorm1d( dim8 )
+        self.act = torch.nn.LeakyReLU(.1)
+        self.linear4 = torch.nn.Linear( dim8, dim16 )
+        self.bn4 = torch.nn.BatchNorm1d( dim16 )
+        self.linear5 = torch.nn.Linear( dim16,dim32 )
+        self.bn5 = torch.nn.BatchNorm1d( dim32 )
+        self.linear6 = torch.nn.Linear( dim32,dim64 )
+        self.bn6 = torch.nn.BatchNorm1d( dim64 )
+        self.linear7 = torch.nn.Linear( dim64, 1 )
+        self.dropout1 = torch.nn.Dropout ( .5 )
+        self.dropout2 = torch.nn.Dropout ( .2 )
+        self.dropout3 = torch.nn.Dropout ( .2 )
+        self.dropout4 = torch.nn.Dropout ( .2 )
+        self.dropout5 = torch.nn.Dropout ( .2 )
+        self.dropout6 = torch.nn.Dropout ( .2 )
+        self.dropout7 = torch.nn.Dropout ( .2 )
+        # self.relu = torch.nn.ReLU()
+        # self.last_ypred = None
+        torch.nn.init.xavier_uniform_(self.linear1.weight)
+        torch.nn.init.xavier_uniform_(self.linear2.weight)
+        torch.nn.init.xavier_uniform_(self.linear3.weight)
+        torch.nn.init.xavier_uniform_(self.linear4.weight)
+        torch.nn.init.xavier_uniform_(self.linear5.weight)
+        torch.nn.init.xavier_uniform_(self.linear6.weight)
+        torch.nn.init.xavier_uniform_(self.linear7.weight)
+
+    def my_load_state_dict ( self, dct ):
+        """ my own routine for loading state dicts. 
+        Dunno why, but this fixes the state dict loading issue.
+        """
+        self.pprint ( "now loading state dict with %d entries" % len(dct) )
+        self.load_state_dict ( dct )
+        self.pprint ( "done loading dct" )
+        return
+
+    def pprint ( self, *args ):
+        """ logging """
+        print ( "[torchmodel:%d] %s" % (self.walkerid, " ".join(map(str,args))) )
+
+    def inputDimension(self):
+        """ returns the dimensionality of the input """
+        return len ( self.variables ) 
+
+    def forward(self, x):
+        out1 = self.linear1 ( x )
+        do1 = self.dropout1 ( out1 )
+        act1 = self.act ( do1 )
+        bn1 = self.bn1 ( act1 )
+        out2 = self.linear2 ( bn1 )
+        do2 = self.dropout2 ( out2 )
+        act2 = self.act ( do2 )
+        bn2 = self.bn2 ( act2 )
+        out3 = self.linear3 ( bn2 )
+        do3  = self.dropout3 ( out3 )
+        act3 = self.act ( do3 )
+        bn3 = self.bn3 ( act3 )
+        out4 = self.linear4 ( bn3 )
+        do4  = self.dropout4 ( out4 )
+        act4 = self.act ( do4 )
+        bn4  = self.bn4 ( act4 )
+        out5 = self.linear5 ( bn4 )
+        do5  = self.dropout5 ( out5 )
+        act5 = self.act ( do5 )
+        bn5  = self.bn5 ( act5 )
+        out6 = self.linear6 ( bn5 )
+        do6  = self.dropout6 ( out6 )
+        act6 = self.act ( do6 )
+        bn6  = self.bn6 ( act6 )
+        out7 = self.linear7 ( bn6 )
+        do7  = self.dropout7 ( out7 )
+        y_pred = 5. * self.act ( do7 ) ## 5, so we can learn Zs up to ~ 5 easily
+        return y_pred
+
+
 class RegressionHelper:
     def __init__(self):
         pass
@@ -91,92 +186,6 @@ class RegressionHelper:
                 trainer.save( name=modelfile )
                 with open("regress.log","at") as f:
                     f.write ( "[%s] End of epoch %d: losses=%.5f+-%.5f\n" % ( time.asctime(), epoch, np.mean(losses),np.std(losses) ) )
-
-
-class PyTorchModel(torch.nn.Module):
-    def __init__(self, variables = None ):
-        super(PyTorchModel, self).__init__()
-        self.variables = variables
-        if type(variables) == type(None):
-            helper = RegressionHelper()
-            self.variables = helper.freeParameters( "template_many.slha" )
-        self.walkerid = 0
-        dim = self.inputDimension()
-        self.pprint ( "input dimension is %d" % dim )
-        dim2 = int ( 2*dim )
-        dim4 = int ( dim/2 )
-        dim8 = int ( dim/4 )
-        dim16= int ( dim/8 )
-        dim32= int ( dim/16 )
-        dim64= int ( dim/64 )
-        self.linear1 = torch.nn.Linear( dim, dim2 )
-        self.bn1 = torch.nn.BatchNorm1d( dim2 )
-        self.linear2 = torch.nn.Linear( dim2, dim4 )
-        self.bn2 = torch.nn.BatchNorm1d( dim4 )
-        self.linear3 = torch.nn.Linear( dim4, dim8 )
-        self.bn3 = torch.nn.BatchNorm1d( dim8 )
-        self.act = torch.nn.LeakyReLU(.1)
-        self.linear4 = torch.nn.Linear( dim8, dim16 )
-        self.bn4 = torch.nn.BatchNorm1d( dim16 )
-        self.linear5 = torch.nn.Linear( dim16,dim32 )
-        self.bn5 = torch.nn.BatchNorm1d( dim32 )
-        self.linear6 = torch.nn.Linear( dim32,dim64 )
-        self.bn6 = torch.nn.BatchNorm1d( dim64 )
-        self.linear7 = torch.nn.Linear( dim64, 1 )
-        self.dropout1 = torch.nn.Dropout ( .5 )
-        self.dropout2 = torch.nn.Dropout ( .2 )
-        self.dropout3 = torch.nn.Dropout ( .2 )
-        self.dropout4 = torch.nn.Dropout ( .2 )
-        self.dropout5 = torch.nn.Dropout ( .2 )
-        self.dropout6 = torch.nn.Dropout ( .2 )
-        self.dropout7 = torch.nn.Dropout ( .2 )
-        # self.relu = torch.nn.ReLU()
-        # self.last_ypred = None
-        torch.nn.init.xavier_uniform_(self.linear1.weight)
-        torch.nn.init.xavier_uniform_(self.linear2.weight)
-        torch.nn.init.xavier_uniform_(self.linear3.weight)
-        torch.nn.init.xavier_uniform_(self.linear4.weight)
-        torch.nn.init.xavier_uniform_(self.linear5.weight)
-        torch.nn.init.xavier_uniform_(self.linear6.weight)
-        torch.nn.init.xavier_uniform_(self.linear7.weight)
-
-    def pprint ( self, *args ):
-        """ logging """
-        print ( "[torchmodel:%d] %s" % (self.walkerid, " ".join(map(str,args))) )
-
-    def inputDimension(self):
-        """ returns the dimensionality of the input """
-        return len ( self.variables ) 
-
-    def forward(self, x):
-        out1 = self.linear1 ( x )
-        do1 = self.dropout1 ( out1 )
-        act1 = self.act ( do1 )
-        bn1 = self.bn1 ( act1 )
-        out2 = self.linear2 ( bn1 )
-        do2 = self.dropout2 ( out2 )
-        act2 = self.act ( do2 )
-        bn2 = self.bn2 ( act2 )
-        out3 = self.linear3 ( bn2 )
-        do3  = self.dropout3 ( out3 )
-        act3 = self.act ( do3 )
-        bn3 = self.bn3 ( act3 )
-        out4 = self.linear4 ( bn3 )
-        do4  = self.dropout4 ( out4 )
-        act4 = self.act ( do4 )
-        bn4  = self.bn4 ( act4 )
-        out5 = self.linear5 ( bn4 )
-        do5  = self.dropout5 ( out5 )
-        act5 = self.act ( do5 )
-        bn5  = self.bn5 ( act5 )
-        out6 = self.linear6 ( bn5 )
-        do6  = self.dropout6 ( out6 )
-        act6 = self.act ( do6 )
-        bn6  = self.bn6 ( act6 )
-        out7 = self.linear7 ( bn6 )
-        do7  = self.dropout7 ( out7 )
-        y_pred = 5. * self.act ( do7 ) ## 5, so we can learn Zs up to ~ 5 easily
-        return y_pred
 
 class Regressor:
     """ this is our nice regressor """
@@ -380,7 +389,8 @@ class Regressor:
             self.pprint ( "attempting to load model %s" % name )
             self.torchmodel = PyTorchModel()
             try:
-                self.torchmodel.load_state_dict ( torch.load ( name, map_location = self.device ) )
+                sd = torch.load ( name, map_location = self.device )
+                self.torchmodel.my_load_state_dict ( sd )
                 self.torchmodel.to ( self.device )
                 self.torchmodel.eval()
             except Exception as e:
