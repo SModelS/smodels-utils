@@ -185,7 +185,7 @@ class RegressionHelper:
             if writeScores:
                 trainer.save( name=modelfile )
                 with open("regress.log","at") as f:
-                    f.write ( "[%s] End of epoch %d: losses=%.5f+-%.5f\n" % ( time.asctime(), epoch, np.mean(losses),np.std(losses) ) )
+                    f.write ( "[%s] End of epoch %d: errs=%.5f+-%.5f\n" % ( time.asctime(), epoch, np.mean(errs),np.std(errs) ) )
 
 class Regressor:
     """ this is our nice regressor """
