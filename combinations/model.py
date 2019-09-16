@@ -165,7 +165,7 @@ class Model:
         """ remove unneeded stuff before storing """
         if all and hasattr ( self, "_backup" ):
             del self._backup
-        if self.keep_meta:
+        if hasattr ( self, "keep_meta" ) and self.keep_meta:
             return ## dont remove best combo
         combiner = Combiner( self.walkerid )
         if hasattr ( self, "bestCombo" ) and self.bestCombo != None:
@@ -210,7 +210,7 @@ class Model:
         self.log ( "now find highest significance for %d predictions" % len(predictions) )
         ## find highest observed significance
         bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, strategy, expected=False )
-        if self.keep_meta:
+        if hasattr ( self, "keep_meta" ) and self.keep_meta:
             self.bestCombo = bestCombo
         else:
             self.bestCombo = combiner.removeDataFromBestCombo ( bestCombo )

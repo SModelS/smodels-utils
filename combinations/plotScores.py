@@ -6,7 +6,14 @@ import matplotlib.pyplot as plt
 import math, time
 
 def main():
-    with open("scores.csv") as f:
+    import argparse
+    argparser = argparse.ArgumentParser(
+            description='NN score plotter' )
+    argparser.add_argument ( '-f', '--csvfile',
+            help='input csv file [scores.csv]',
+            type=str, default="scores.csv" )
+    args = argparser.parse_args()
+    with open( args.csvfile ) as f:
         lines=f.readlines()
     x,y=[],[]
     epoch = 0
@@ -28,5 +35,5 @@ def main():
     plt.savefig ( "scatter%d.png" % epoch )
     plt.savefig ( "scatter.png" )
 
-
-main()
+if __name__ == "__main__":
+    main()
