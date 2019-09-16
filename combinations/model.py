@@ -123,6 +123,9 @@ class Model:
                 self.masses[1000004]=440.
                 self.masses[1000022]=375.
                 self.ssmultipliers[1000001]=0.93
+                self.ssmultipliers[1000005]=0.8
+                self.decays[1000005][1000006]=0.25
+                self.decays[1000005][1000022]=0.75
         self.computePrior()
 
     def initializePredictor ( self ):

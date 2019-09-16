@@ -39,6 +39,11 @@ class Predictor:
             listOfExpRes = self.modifier.modify ( listOfExpRes )
 
         self.listOfExpRes = listOfExpRes
+        if False:
+            f=open("expresults.txt","wt")
+            for expRes in self.listOfExpRes:
+                f.write ( "%s %s\n" % (expRes.id(), expRes.datasets[0] ) )
+            f.close()
 
     def pprint ( self, *args ):
         """ logging """

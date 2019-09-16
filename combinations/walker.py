@@ -346,6 +346,24 @@ class RandomWalker:
         self.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.model.masses[p] ) )
         return 1
 
+    def randomlyTamperWithTheseParticles ( self, pids, r ):
+        """ the critic gave us feedback, the culprits are the given
+            pids. So tamper only with these. r is our usual theoryprediction/ul
+            ratio, and can help us guide how strong a change we have to make.
+        """
+        ## we can tamper with the masses, the signal strengths, or
+        ## the decays, so which is it gonna be? 
+        u = uniform.random ( 0., 1. )
+        if u <= 0.333:
+            ### so we change some masses
+            pass
+        if u > 0.333 and u <= 0.666:
+            #### so we tamper with some ss multipliers
+            pass
+        if u > 0.666:
+            #### ok, its the decays
+            pass
+        return
 
     def walk ( self ):
         """ Now perform the random walk """
