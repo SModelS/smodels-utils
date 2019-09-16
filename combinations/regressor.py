@@ -185,7 +185,7 @@ class RegressionHelper:
             batchsize = 1000
             nbatches = int(math.ceil(len(models)/batchsize))
             writeScores = False
-            if epoch % 10 == 0:
+            if epoch % 50 == 0:
                 writeScores = True
             for mbatch in range(nbatches):
                 beg = mbatch*batchsize
@@ -197,7 +197,7 @@ class RegressionHelper:
                 tT+=tt
                 dt+=time.time()-t0
                 errs.append ( np.sqrt(trainer.loss) )
-            if epoch % 5 == 0:
+            if epoch % 10 == 0:
                 print ( "End of epoch %d: stderr=%.4f+-%.4f (%.1fs/%.1fs)" % ( epoch, np.mean(errs),np.std(errs), dt, tT ) )
             if writeScores:
                 trainer.save( name=modelfile )
