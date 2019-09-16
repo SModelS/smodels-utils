@@ -1,4 +1,5 @@
--) sort contributions, signal strengh multipliers by particles in plotHiscore.py
--) add axes in validation dictionaries for points with errors
--) put hacked imagemagick policy xml file in singularity container
--) why can we not produce correct decays.png plot in singularity container?
+-) for rmax-rejected points, use the detailed information to do sth smarter in the walk
+-) replace the nested hypothesis test for a simple hypothesis test,
+   and/or try to jump to mu_max
+-) write out rmax in training.gz
+-) analyse the learned weights in the network

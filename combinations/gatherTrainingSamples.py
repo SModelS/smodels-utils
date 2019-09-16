@@ -2,14 +2,24 @@
 
 import gzip, glob, pickle
 
-def write():
+def write( alsoZeroes = False ):
+    """
+    :param alsoZeroes: write out even if Z=0.
+    """
+    print ( "gathering files, include zeroes in Z? %s" % alsoZeroes )
     files = glob.glob ( "training_*.gz" ) 
     All = []
     for fname in files:
+        print ( "gathering file %s" % fname )
         with gzip.open ( fname, "r" ) as f:
             lines = f.readlines()
             for line in lines:
-                All.append ( line )
+                evaled = eval(line)
+                if alsoZeroes:
+                    All.append ( line )
+                else:
+                    if evaled["Z"]>0.:
+                        All.append ( line )
     with open ( "training.pcl", "wb" ) as g:
         for line in All:
             pickle.dump ( eval(line), g, pickle.HIGHEST_PROTOCOL )
