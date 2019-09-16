@@ -106,14 +106,23 @@ class Model:
                 # self.masses[1000024]=random.uniform(500,1000)
             if cheat == 2:
                 self.highlight ( "red", "cheat mode (2), start with Z=2.82 point (roughly)." )
-                self.masses[1000006]=830.
                 self.masses[1000005]=1100.
                 self.masses[1000001]=1070.
                 self.masses[1000002]=920.
+                self.masses[1000006]=830.
                 self.masses[1000004]=450.
                 self.masses[1000022]=410.
                 self.ssmultipliers[1000005]=1.01
                 # self.masses[1000024]=random.uniform(500,1000)
+            if cheat == 3:
+                self.highlight ( "red", "cheat mode (3), start with Z=3.25 point (roughly)." )
+                self.masses[1000001]=1070.
+                self.masses[1000002]=920.
+                self.masses[1000006]=830.
+                self.masses[1000005]=600.
+                self.masses[1000004]=440.
+                self.masses[1000022]=375.
+                self.ssmultipliers[1000001]=0.93
         self.computePrior()
 
     def initializePredictor ( self ):
@@ -172,6 +181,8 @@ class Model:
         # get the predictions that determine whether model is excluded:
         # best results only, also non-likelihood results
         self.log ( "check if excluded" )
+        if predictor[0] == None:
+            self.initializePredictor()
         #if not hasattr ( self, "predictor" ):
         #    self.predictor = Predictor ( self.walkerid, dbpath = self.dbpath )
         # bestpreds = self.predictor.predict ( self.currentSLHA, allpreds=False,
