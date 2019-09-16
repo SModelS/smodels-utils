@@ -2,7 +2,7 @@
 
 """ The pytorch-based regressor for Z. So we can walk along its gradient. """
 
-import os, time, sys, gzip, time, copy, random, math
+import os, time, sys, gzip, time, copy, random, math, subprocess
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -13,18 +13,27 @@ class PyTorchModel(torch.nn.Module):
     def __init__(self, variables = None ):
         super(PyTorchModel, self).__init__()
         self.variables = variables
+        self.nmasses = 0
+        self.ndecays = 0
+        for k in variables:
+            if "M" in k:
+                self.nmasses+=1
+            if "D" in k:
+                self.ndecays+=1
         if type(variables) == type(None):
             helper = RegressionHelper()
             self.variables = helper.freeParameters( "template_many.slha" )
+            self.nmasses = helper.nmasses ## store how many masses we have
+            self.ndecays = helper.ndecays ## store how many branchings we have
         self.walkerid = 0
         dim = self.inputDimension()
-        self.pprint ( "input dimension is %d" % dim )
+        self.pprint ( "input dimension is %d (%d masses, %d decays)" % ( dim, self.nmasses, self.ndecays ) )
         dim2 = int ( 2*dim )
-        dim4 = int ( dim/2 )
-        dim8 = int ( dim/4 )
-        dim16= int ( dim/8 )
-        dim32= int ( dim/16 )
-        dim64= int ( dim/64 )
+        dim4 = int ( 4*dim )
+        dim8 = int ( dim )
+        dim16= int ( dim/2 )
+        dim32= int ( dim/4 )
+        dim64= int ( dim/8 )
         self.linear1 = torch.nn.Linear( dim, dim2 )
         self.bn1 = torch.nn.BatchNorm1d( dim2 )
         self.linear2 = torch.nn.Linear( dim2, dim4 )
@@ -39,13 +48,13 @@ class PyTorchModel(torch.nn.Module):
         self.linear6 = torch.nn.Linear( dim32,dim64 )
         self.bn6 = torch.nn.BatchNorm1d( dim64 )
         self.linear7 = torch.nn.Linear( dim64, 1 )
-        self.dropout1 = torch.nn.Dropout ( .5 )
-        self.dropout2 = torch.nn.Dropout ( .2 )
-        self.dropout3 = torch.nn.Dropout ( .2 )
-        self.dropout4 = torch.nn.Dropout ( .2 )
-        self.dropout5 = torch.nn.Dropout ( .2 )
-        self.dropout6 = torch.nn.Dropout ( .2 )
-        self.dropout7 = torch.nn.Dropout ( .2 )
+        self.dropout1 = torch.nn.Dropout ( .01 )
+        self.dropout2 = torch.nn.Dropout ( .1 )
+        self.dropout3 = torch.nn.Dropout ( .1 )
+        self.dropout4 = torch.nn.Dropout ( .1 )
+        self.dropout5 = torch.nn.Dropout ( .1 )
+        self.dropout6 = torch.nn.Dropout ( .1 )
+        self.dropout7 = torch.nn.Dropout ( .1 )
         # self.relu = torch.nn.ReLU()
         # self.last_ypred = None
         torch.nn.init.xavier_uniform_(self.linear1.weight)
@@ -100,7 +109,9 @@ class PyTorchModel(torch.nn.Module):
         bn6  = self.bn6 ( act6 )
         out7 = self.linear7 ( bn6 )
         do7  = self.dropout7 ( out7 )
-        y_pred = 5. * self.act ( do7 ) ## 5, so we can learn Zs up to ~ 5 easily
+        # y_pred = torch.nn.Sigmoid() ( do7 ) 
+        y_pred = self.act ( do7 ) ## 5, so we can learn Zs up to ~ 5 easily
+        # return y_pred / ( 1. + y_pred )
         return y_pred
 
 
@@ -117,11 +128,15 @@ class RegressionHelper:
             lines=f.readlines()
         variables = {}
         t=[]
+        self.nmasses = 0 ## count the number of masses
+        self.ndecays = 0 ## count the number of branchings
         for line in lines:
             p = line.find("#")
             if p>-1:
                 line = line[:p]
             line = line.strip()
+            #if not "M1" in line and not "M2" in line:
+            #    continue ## for now no decays
             if not "D1" in line and not "M1" in line and not "D2" in line and \
                    not "M2" in line:
                 continue
@@ -129,7 +144,9 @@ class RegressionHelper:
             for i in tokens:
                 if i.startswith("D"):
                     t.append ( i )
+                    self.ndecays += 1
                 if i.startswith("M"):
+                    self.nmasses += 1
                     t.append ( i )
                     t.append ( i.replace("M","SS" ) )
         return t
@@ -165,7 +182,7 @@ class RegressionHelper:
             dt,tT=0.,0.
             indices = list(range(len(models)))
             random.shuffle ( indices ) ## random indices
-            batchsize = 100
+            batchsize = 1000
             nbatches = int(math.ceil(len(models)/batchsize))
             writeScores = False
             if epoch % 10 == 0:
@@ -224,7 +241,7 @@ class Regressor:
             self.torchmodel.eval()
             self.criterion = torch.nn.MSELoss(reduction="mean").to(self.device)
         # self.adam = torch.optim.SGD(self.torchmodel.parameters(), lr=0.01 )
-            self.adam = torch.optim.Adam( self.torchmodel.parameters(), lr=0.001,
+            self.adam = torch.optim.Adam( self.torchmodel.parameters(), lr=0.003,
                                           weight_decay = .005  )
         self.walkerid = walkerid
 
@@ -272,6 +289,8 @@ class Regressor:
             #if type(v) not in [ float, int ]:
             #    self.pprint ( "in convert: dealing with %s: %s" % (type(v),v) )
             #    sys.exit(-100)
+            if v > 3000.: 
+                v = 3000. ## set masses to 3000 max
             ret[idx]= v
             # ret[idx]= np.log(v+1e-5) / 10. # a bit of a normalization
         for k,v in theorymodel.ssmultipliers.items():
@@ -279,14 +298,15 @@ class Regressor:
                 print ( "error, dont know what to do with M%d" % k )
                 sys.exit(-22)
             idx = self.torchmodel.variables.index( "SS%d" % k)
-            ret[idx]=v
-        for pid,decays in theorymodel.decays.items():
-            for dpid,dbr in decays.items():
-                if not "D%d_%d" % ( pid, dpid ) in self.torchmodel.variables:
-                    print ( "error dont know what to do with D%d_%d" % ( pid, dpid ) )
-                    sys.exit(-55)
-                idx = self.torchmodel.variables.index( "D%d_%d" % (pid,dpid) )
-                ret[idx]=dbr
+            ret[idx]= v
+        if True:
+            for pid,decays in theorymodel.decays.items():
+                for dpid,dbr in decays.items():
+                    if not "D%d_%d" % ( pid, dpid ) in self.torchmodel.variables:
+                        print ( "error dont know what to do with D%d_%d" % ( pid, dpid ) )
+                        sys.exit(-55)
+                    idx = self.torchmodel.variables.index( "D%d_%d" % (pid,dpid) )
+                    ret[idx]= dbr
         for c,i in enumerate(ret):
             if i==None:
                 ## FIXME make sure it only happens when irrelevant
@@ -295,6 +315,7 @@ class Regressor:
         if tolist:
             return ret
         tmp = torch.Tensor([ ret ] )
+        #print ( "conversion", tmp )
         return tmp.to(self.device)
 
     def pprint ( self, *args ):
@@ -327,7 +348,8 @@ class Regressor:
     def clearScores ( self ):
         """ remove old scores file """
         if os.path.exists ( "scores.csv" ):
-            os.unlink ( "scores.csv" )
+            cmd = "mv scores.csv oldscores.csv"
+            subprocess.getoutput ( cmd )
 
     def writeScores ( self, pred, truth, epoch ):
         """ write out predicted versus true Z values,
@@ -373,6 +395,7 @@ class Regressor:
         D = model.dict()
         # D["Z"] = self.torchmodel.last_ypred
         D["Z"] = model.Z
+        D["rmax"] = model.rmax
         if model.rmax > rthresholds[0]: ## put it to zero
             D["Z"]=0.
         line = "%s\n" % D
