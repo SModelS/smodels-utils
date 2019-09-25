@@ -40,7 +40,7 @@ class Trimmer:
         print ( "[trimmer] Check significance Z ... " )
         origZ = self.model.Z # to be sure
         self.model.Z = -23.
-        self.model.predict( strategy=self.strategy, keep_meta = True )
+        self.model.predict( strategy=self.strategy ) # , keep_meta = True )
         print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions, experimental=%d" % ( self.model.Z, origZ, len(self.model.bestCombo), runtime._experimental ) )
         return abs ( (origZ - self.model.Z) / ( origZ +1e-10 ) ) < 1e-7
 
