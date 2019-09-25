@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 .. module:: tools.checkDocStrings.py
@@ -81,9 +81,9 @@ nshort = 0
 badFiles = []
 for fname in sorted(info.keys()):
     finfo = info[fname]    
-    print '-----------File:',fname
+    print('-----------File:',fname)
     if not finfo['docstrings']:
-        print 'No doc strings'
+        print('No doc strings')
         continue
     for idoc,doc in enumerate(finfo['docstrings']):
         if not badBlocks[fname]['short docstring'][idoc] and not badBlocks[fname]['missing docstring'][idoc]: continue
@@ -92,20 +92,20 @@ for fname in sorted(info.keys()):
             if 'if__name__=="__main__":' in finfo['codesnippet'][idoc].replace(" ",''): continue #Ignore main descriptions
             nmissing += 1
             if not fname in badFiles: badFiles.append(fname)     
-            print '---Code snippet (missing doc string):',finfo['codesnippet'][idoc]
-            print '---Doc string:',doc            
+            print('---Code snippet (missing doc string):',finfo['codesnippet'][idoc])
+            print('---Doc string:',doc)            
         elif badBlocks[fname]['short docstring'][idoc]:
             nshort += 1
             if not fname in badFiles: badFiles.append(fname)
-            print '---Code snippet:',finfo['codesnippet'][idoc]
-            print '---Doc string (too short):',doc
+            print('---Code snippet:',finfo['codesnippet'][idoc])
+            print('---Doc string (too short):',doc)
             
-print '\n\n\n'
-print 'Number of files = ',len(info)
-print 'Number of bad files = ',len(badFiles)
-print 'Number of docstrings = ',sum([len(info[fname]['docstrings']) for fname in info.keys()])
-print 'Number of missing docstrings = ',nmissing
-print 'Number of short docstrings = ',nshort
-print '\n Bad files:\n'
-for f in sorted(badFiles): print f
+print('\n\n\n')
+print('Number of files = ',len(info))
+print('Number of bad files = ',len(badFiles))
+print('Number of docstrings = ',sum([len(info[fname]['docstrings']) for fname in list(info.keys())]))
+print('Number of missing docstrings = ',nmissing)
+print('Number of short docstrings = ',nshort)
+print('\n Bad files:\n')
+for f in sorted(badFiles): print(f)
             

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 .. module:: tools.checkInterpolation.py
@@ -9,7 +9,7 @@ import sys,os
 home = os.path.expanduser("~")
 sys.path.append(os.path.join(home,'smodels'))
 
-from smodels.experiment.databaseObjects import Database
+from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import GeV, fb, TeV, pb
 import random
 from ROOT import TCanvas, TGraph2D, TLatex, gPad, gStyle, TH1F
@@ -181,7 +181,7 @@ def checkInterpolationFor(expIds = ['all'], txnames=['all'], datasetIDs = ['all'
     
     #Print results
     for itx,txname in enumerate(txnames):
-        print txname,'\nmax rel. error=',maxErrors[itx]
+        print ( txname,'\nmax rel. error=',maxErrors[itx] )
         
     #Plot results
     allPts = []
@@ -191,13 +191,8 @@ def checkInterpolationFor(expIds = ['all'], txnames=['all'], datasetIDs = ['all'
         
     createHist(allPts,silentMode=False) 
         
-        
 if __name__ == "__main__":
-    
     expIds = ['all']
     txnames = ['all']
     datasetIDs = ['all']
     checkInterpolationFor(expIds,txnames,datasetIDs)    
-
-    
-        
