@@ -83,7 +83,8 @@ def main():
     dbpath = "../../../smodels-database"
     db = Database ( dbpath )
     expRes = db.getExpResults ( analysisIDs = [ "ATLAS-SUSY-2016-07" ],
-                                dataTypes = [ "efficiencyMap" ] )
+                                dataTypes = [ "efficiencyMap" ],
+                                useNonValidated=True )
     if len(expRes)!= 1:
         print ( "error, I have %d results. dont know what to do" % len(expRes) )
         sys.exit()
