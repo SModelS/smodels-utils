@@ -15,16 +15,16 @@ class PyTorchModel(torch.nn.Module):
         self.variables = variables
         self.nmasses = 0
         self.ndecays = 0
-        for k in variables:
-            if "M" in k:
-                self.nmasses+=1
-            if "D" in k:
-                self.ndecays+=1
         if type(variables) == type(None):
             helper = RegressionHelper()
             self.variables = helper.freeParameters( "template_many.slha" )
             self.nmasses = helper.nmasses ## store how many masses we have
             self.ndecays = helper.ndecays ## store how many branchings we have
+        for k in self.variables:
+            if "M" in k:
+                self.nmasses+=1
+            if "D" in k:
+                self.ndecays+=1
         self.walkerid = 0
         dim = self.inputDimension()
         self.pprint ( "input dimension is %d (%d masses, %d decays)" % ( dim, self.nmasses, self.ndecays ) )
