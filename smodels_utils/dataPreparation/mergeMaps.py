@@ -67,6 +67,7 @@ def writeTextFile ( dataset, dbpath, effs ):
         f.write ( "susyProcess: T1+T2+TGQ\n" )
         f.write ( "validated: True\n" )
         f.write ( "finalState: ['MET', 'MET']\n" )
+        f.write ( "axes: [[x, 0.0], [y, 0.0]]; [[x, 695.0], [y, 695.0]]; [[x, 995.0], [y, 995.0]]\n" )
         f.write ( "efficiencyMap: [" )
         for ctr,eff in enumerate(effs):
             mgluino, msquark,mN, E= eff
