@@ -204,8 +204,8 @@ class Combiner:
         # self.pprint ( "chi2,Z=", chi2, Z )
         ## FIXME compute significance from chi2
         #if Z > 29.:
-        #   self.pprint ( "I just computed the significance. It is %.2f. What the fuck. lh1=%g, lh0=%g" % (Z, LH1, LH0 ) )
-        return Z
+        # self.pprint ( "I just computed the significance. It is %.2f, muhat=%.2f. lh1=%g, lh0=%g" % (Z, muhat, LH1, LH0 ) )
+        return Z, muhat
 
     def _findLargestZ ( self, combinations, expected=False ):
         """ find the combo with the most significant deviation
@@ -213,22 +213,23 @@ class Combiner:
         """
         combinations.sort ( key=len, reverse=True ) ## sort them first be length
         # compute CLsb for all combinations
-        highestZ,highest=0.,""
+        highestZ,highest,muhat=0.,"",0.
         alreadyDone = [] ## list of combos that have already been looked at.
         ## we will not look at combos that are subsets.
         for c in combinations:
             if self.hasAlreadyDone ( c, alreadyDone ):
                 # self.pprint ( "%s is subset of bigger combo. skip." % getLetterCode(c) )
                 continue
-            Z = self.getSignificance ( c, expected=expected )
+            Z,muhat_ = self.getSignificance ( c, expected=expected )
             if Z == None:
                 continue
             # self.pprint ( "[combine] significance for %s is %.2f" % ( self.getLetterCode(c), Z ) )
             if Z > highestZ:
                 highestZ = Z
                 highest = c
+                muhat = muhat_
             alreadyDone.append ( c )
-        return highest,highestZ
+        return highest,highestZ,muhat
 
     def get95CL ( self, combination, expected ):
         """ compute the CLsb value for one specific combination
@@ -298,10 +299,10 @@ class Combiner:
         ## optionally, add individual predictions
         combinables = singlepreds + combinables
         self.discussCombinations ( combinables )
-        bestCombo,Z = self._findLargestZ ( combinables, expected=expected )
+        bestCombo,Z,muhat = self._findLargestZ ( combinables, expected=expected )
         ## compute a likelihood equivalent for Z
         llhd = stats.norm.pdf(Z)
-        return bestCombo,Z,llhd
+        return bestCombo,Z,llhd,muhat
 
     def removeDataFromBestCombo ( self, bestCombo ):
         """ remove the data from all theory predictions, we dont need them. """
@@ -409,8 +410,8 @@ if __name__ == "__main__":
         for pred in preds:
             allps.append ( pred )
     #print ( "allpreds", allps )
-    combo,globalZ,llhd = combiner.findHighestSignificance ( allps, "aggressive", expected=args.expected )
-    print ( "[combiner] global Z is %.2f: %s" % (globalZ, combiner.getComboDescription(combo) ) )
+    combo,globalZ,llhd,muhat = combiner.findHighestSignificance ( allps, "aggressive", expected=args.expected )
+    print ( "[combiner] global Z is %.2f: %s (muhat=%.2f)" % (globalZ, combiner.getComboDescription(combo),muhat ) )
     for expRes in listOfExpRes:
         preds = theoryPredictionsFor ( expRes, smses )
         if preds == None:

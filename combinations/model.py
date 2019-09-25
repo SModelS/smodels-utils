@@ -212,7 +212,7 @@ class Model:
         combiner = Combiner( self.walkerid )
         self.log ( "now find highest significance for %d predictions" % len(predictions) )
         ## find highest observed significance
-        bestCombo,Z,llhd = combiner.findHighestSignificance ( predictions, strategy, expected=False )
+        bestCombo,Z,llhd,muhat = combiner.findHighestSignificance ( predictions, strategy, expected=False )
         if hasattr ( self, "keep_meta" ) and self.keep_meta:
             self.bestCombo = bestCombo
         else:
@@ -221,7 +221,7 @@ class Model:
         self.llhd = llhd
         self.letters = combiner.getLetterCode(self.bestCombo)
         self.description = combiner.getComboDescription(self.bestCombo)
-        self.log ( "done with prediction. best Z=%.2f." % self.Z )
+        self.log ( "done with prediction. best Z=%.2f (muhat=%.2f)" % ( self.Z, muhat ) )
         self.clean()
 
     def checkForExcluded ( self, predictions ):
