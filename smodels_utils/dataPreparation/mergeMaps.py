@@ -54,6 +54,26 @@ def mergeDataset( dataset ):
     print ( "[ds] ", dataset )
     return effs
 
+def copyExclusionline ( expRes ):
+    """ copy the exclusion line in sms.root """
+    smsfile = expRes.globalInfo.path.replace("globalInfo.txt","sms.root" )
+    print ( "[mergeMaps] sms file is", smsfile )
+    import ROOT, subprocess
+    f=ROOT.TFile ( smsfile )
+    t = f.Get("TGQ" )
+    n = t.GetListOfKeys().GetSize()
+    keys = []
+    for i in range(n):
+        keys.append ( t.GetListOfKeys().At(i).Clone() )
+    f2 = ROOT.TFile ( "new.root", "recreate" )
+    f2.mkdir ("TGQ12" )
+    f2.cd ( "TGQ12" )
+    for k in keys:
+        k.Write()
+    f2.Write()
+    f2.Close()
+    subprocess.getoutput ( "cp new.root %s" % smsfile )
+
 def writeTextFile ( dataset, dbpath, effs ):
     """ write the TGQ12.txt text file """
     Txname = "%s.txt" % dataset.dataInfo.dataId
@@ -89,6 +109,7 @@ def main():
         print ( "error, I have %d results. dont know what to do" % len(expRes) )
         sys.exit()
     expRes = expRes[0]
+    copyExclusionline ( expRes )
     for dataset in expRes.datasets:
         effs = mergeDataset ( dataset )
         writeTextFile ( dataset, dbpath, effs )
