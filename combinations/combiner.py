@@ -186,7 +186,7 @@ class Combiner:
         if muhat is None:
             return 0.
         if muhat > mumax:
-            self.log ( "muhat(%.2f) > mumax(%.2f). use mumax" % ( muhat, mumax ) )
+            self.debug ( "muhat(%.2f) > mumax(%.2f). use mumax" % ( muhat, mumax ) )
             muhat = mumax
         l0 = numpy.array ( [ c.getLikelihood(0.,expected=expected) for c in combo ] )
         LH0 = numpy.prod ( l0[l0!=None] )
