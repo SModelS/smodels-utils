@@ -64,7 +64,9 @@ def copyExclusionline ( expRes ):
     n = t.GetListOfKeys().GetSize()
     keys = []
     for i in range(n):
-        keys.append ( t.GetListOfKeys().At(i).Clone() )
+        name = t.GetListOfKeys().At(i).GetName()
+        keys.append ( f.Get("TGQ/%s" % name ) )
+        # keys.append ( t.GetListOfKeys().At(i).Clone() )
     f2 = ROOT.TFile ( "new.root", "recreate" )
     f2.mkdir ("TGQ12" )
     f2.cd ( "TGQ12" )
@@ -110,6 +112,7 @@ def main():
         sys.exit()
     expRes = expRes[0]
     copyExclusionline ( expRes )
+    # return
     for dataset in expRes.datasets:
         effs = mergeDataset ( dataset )
         writeTextFile ( dataset, dbpath, effs )
