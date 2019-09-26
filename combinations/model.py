@@ -230,6 +230,9 @@ class Model:
         """ multiply the signal strength multipliers with muhat, then set muhat to 1. """
         if not hasattr ( self, "muhat" ):
             return
+        if self.muhat == 0.:
+            self.pprint ( "muhat is exactly zero??? set to one." )
+            self.muhat = 1.
         if abs ( self.muhat - 1.0 ) < 1e-5:
             return
         self.pprint ( "resolve the muhat of %.2f" % self.muhat )
