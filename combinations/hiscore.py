@@ -28,6 +28,7 @@ class Hiscore:
 
     def addResult ( self, model ):
         """ add a result to the list """
+        model.resolveMuhat() ## add only with resolved muhats
         if model.Z <= self.currentMinZ():
             return ## doesnt pass minimum requirement
         for i,mi in enumerate(self.hiscores):

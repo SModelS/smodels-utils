@@ -30,26 +30,32 @@ def canCombine ( predA, predB, strategy="conservative" ):
             if ret == False:
                 return False
         return True
+    elA, elB = None, None
     if type(predA)==TheoryPrediction:
+        elA = predA.elements
         predA = predA.expResult.globalInfo
     if type(predB)==TheoryPrediction:
+        elB = predB.elements
         predB = predB.expResult.globalInfo
     if strategy == "conservative":
-        return canCombineConservative ( predA, predB )
+        return canCombineConservative ( predA, predB, elA, elB )
     if strategy == "moderate":
-        return canCombineModerate ( predA, predB )
+        return canCombineModerate ( predA, predB, elA, elB )
     if strategy != "aggressive":
         print ( "Error: strategy ``%s'' unknown" % strategy )
         return None
-    return canCombineAggressive ( predA, predB )
+    return canCombineAggressive ( predA, predB, elA, elB )
 
-def canCombineModerate ( globA, globB ):
+def canCombineModerate ( globA, globB, elA, elB ):
     """ method that defines what we allow to combine, moderate version.
          """
     if globA.sqrts != globB.sqrts:
         return True
     if getExperimentName(globA) != getExperimentName(globB):
         return True
+    if hasOverlap ( elA, elB, globA, globB ):
+        ## overlap in the constraints? then for sure a no!
+        return False
     anaidA = globA.id
     anaidB = globB.id
     allowCombination = { "ATLAS-SUSY-2013-02": [ "ATLAS-SUSY-2013-11" ],
@@ -62,13 +68,27 @@ def canCombineModerate ( globA, globB ):
             return True
     return False
 
-def canCombineAggressive ( globA, globB ):
+def hasOverlap ( elA, elB, globA = None, globB = None ):
+    """ is there an overlap in the elements in A and in B? """
+    if elA is None or elB is None:
+        return False
+    for eA in elA:
+        for eB in elB:
+            # print ( "el %s is el %s? %s! %s!" % ( eA, eB, eA.__cmp__ ( eB ), eA == eB ) )
+            if eA == eB: ## an element of elA is in elB
+                return True
+    return False
+
+def canCombineAggressive ( globA, globB, elA, elB ):
     """ method that defines what we allow to combine, aggressive version.
          """
     if globA.sqrts != globB.sqrts:
         return True
     if getExperimentName(globA) != getExperimentName(globB):
         return True
+    if hasOverlap ( elA, elB, globA, globB ):
+        ## overlap in the constraints? then for sure a no!
+        return False
     anaidA = globA.id
     anaidB = globB.id
     allowCombinationATLAS8TeV = { "ATLAS-SUSY-2013-02": [ "ATLAS-SUSY-2013-04", "ATLAS-SUSY-2013-11" ],
@@ -146,7 +166,7 @@ def canCombineAggressive ( globA, globB ):
             return True
     return False
 
-def canCombineConservative ( globA, globB ):
+def canCombineConservative ( globA, globB, elA, elB ):
     """ method that defines what we allow to combine, conservative version.
          """
     if globA.sqrts != globB.sqrts:
