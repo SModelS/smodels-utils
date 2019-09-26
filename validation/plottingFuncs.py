@@ -325,8 +325,8 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
     nM = int ( len(masses)/2 ) ## number of masses per branch
     if len(masses) % 2 != 0:
         logger.warning("asymmetrical branch. Dont know how to handle" )
-    if masses[:nM] != masses[nM:]:
-        logger.warning("asymmetrical branch %s != %s. Dont know how to handle" % ( masses[:nM], masses[nM:] ) )
+    #if masses[:nM] != masses[nM:]: ## actually seems to work
+    #    logger.warning("asymmetrical branch %s != %s. Dont know how to handle" % ( masses[:nM], masses[nM:] ) )
     widths = None
     if "(" in vPlot.axes and ")" in vPlot.axes: ## width dependent result
         from sympy import var

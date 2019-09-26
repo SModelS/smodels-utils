@@ -39,8 +39,8 @@ def mergeDataset( dataset ):
             continue
         maps[txn]=tx
     effs = []
-    for mgluino in range ( 200, 2500, 100 ):
-        for msquark in range ( 200, 2500, 100 ):
+    for mgluino in range ( 200, 5050, 100 ):
+        for msquark in range ( 200, 5050, 100 ):
             for mN in [ 0, 695, 995 ]:
                 e = getEffs ( maps, mgluino, msquark, mN )
                 w = getWeights ( mgluino, msquark )
@@ -76,11 +76,13 @@ def copyExclusionline ( expRes ):
     f2.Close()
     subprocess.getoutput ( "cp new.root %s" % smsfile )
 
-def writeTextFile ( dataset, dbpath, effs ):
+def writeTextFile ( dataset, effs ):
     """ write the TGQ12.txt text file """
     Txname = "%s.txt" % dataset.dataInfo.dataId
     # print ( "path", dataset.dataInfo.path )
     Txname = dataset.dataInfo.path.replace("dataInfo","TGQ12" )
+    if True:
+        Txname = Txname.replace("branches/","")
     with open ( Txname, "wt" ) as f:
         f.write ( "txName: TGQ12\n" )
         f.write ( "constraint: [[[q]],[[q,q]]]+[[[q]],[[q]]]+[[[q,q]],[[q,q]]]\n" )
@@ -102,7 +104,8 @@ def writeTextFile ( dataset, dbpath, effs ):
             f.write ( line )
 
 def main():
-    dbpath = "../../../smodels-database"
+    # dbpath = "../../../smodels-database"
+    dbpath = "/home/walten/git/branches/smodels-database"
     db = Database ( dbpath )
     expRes = db.getExpResults ( analysisIDs = [ "ATLAS-SUSY-2016-07" ],
                                 dataTypes = [ "efficiencyMap" ],
@@ -111,11 +114,12 @@ def main():
         print ( "error, I have %d results. dont know what to do" % len(expRes) )
         sys.exit()
     expRes = expRes[0]
-    copyExclusionline ( expRes )
+    if False:
+        copyExclusionline ( expRes )
     # return
     for dataset in expRes.datasets:
         effs = mergeDataset ( dataset )
-        writeTextFile ( dataset, dbpath, effs )
+        writeTextFile ( dataset, effs )
     # IPython.embed()
 
 if __name__ == "__main__":

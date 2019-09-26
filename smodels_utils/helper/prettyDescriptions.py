@@ -564,6 +564,10 @@ def prettyAxes(txname,axes):
         return ['m_{#tilde{#chi}_{3}^{0}} = x+80.0, m_{#tilde{#chi}_{2}^{0}} = x+75.0',
                     'm_{#tilde{#l}} = x-y+80.0',
                     'm_{#tilde{#chi}_{1}^{0}} = x']
+    if txname in [ "TGQ12" ] and axes[0][1] == axes[1][1]:
+        ret = ['m_{#tilde{g}} = x, m_{#tilde{q}} = y',
+               'm_{#tilde{#chi}_{1}^{0}} = %s' % str(axes[0][1]) ]
+        return ret
     if axes[0] != axes[1]:
         logging.error('Asymmetric branches are not yet automatized.')
         return "N/A"
