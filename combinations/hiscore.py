@@ -110,6 +110,7 @@ class Hiscore:
             leave first one as it is """
         for h in self.hiscores[1:]:
             if h != None:
+                h.resolveMuhat()
                 h.clean( all=True )
 
     def save ( self ):

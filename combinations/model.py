@@ -63,6 +63,7 @@ class Model:
         self.ssmultipliers = {} ## signal strength multipliers
         self.rvalues = [] ## store the r values of the exclusion attempt
         self.llhd=0.
+        self.muhat = 1.
         self.Z = 0.
         self.rmax = 0.
         self.letters = ""
@@ -212,17 +213,30 @@ class Model:
         combiner = Combiner( self.walkerid )
         self.log ( "now find highest significance for %d predictions" % len(predictions) )
         ## find highest observed significance
-        bestCombo,Z,llhd,muhat = combiner.findHighestSignificance ( predictions, strategy, expected=False )
+        bestCombo,Z,llhd,muhat = combiner.findHighestSignificance ( predictions, strategy, expected=False, mumax = 1.5 / self.rmax )
         if hasattr ( self, "keep_meta" ) and self.keep_meta:
             self.bestCombo = bestCombo
         else:
             self.bestCombo = combiner.removeDataFromBestCombo ( bestCombo )
         self.Z = Z
         self.llhd = llhd
+        self.muhat = muhat
         self.letters = combiner.getLetterCode(self.bestCombo)
         self.description = combiner.getComboDescription(self.bestCombo)
         self.log ( "done with prediction. best Z=%.2f (muhat=%.2f)" % ( self.Z, muhat ) )
         self.clean()
+
+    def resolveMuhat ( self ):
+        """ multiply the signal strength multipliers with muhat, then set muhat to 1. """
+        if not hasattr ( self, "muhat" ):
+            return
+        if abs ( self.muhat - 1.0 ) < 1e-5:
+            return
+        self.pprint ( "resolve the muhat of %.2f" % self.muhat )
+        for k,v in self.ssmultipliers.items():
+            v = v * self.muhat
+        self.muhat = 1.
+
 
     def checkForExcluded ( self, predictions ):
         """ check if any of the predictions excludes the point """
@@ -251,6 +265,8 @@ class Model:
                         "ssmultipliers": copy.deepcopy(self.ssmultipliers), 
                         "decays": copy.deepcopy(self.decays),
                         "rvalues": copy.deepcopy(self.rvalues) }
+        if hasattr ( self, "muhat" ):
+            self._backup["muhat"]=self.muhat
         if hasattr ( self, "rmax" ):
             self._backup["rmax"]=self.rmax
         # self.pprint ( "backing up state" )

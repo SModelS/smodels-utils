@@ -233,6 +233,9 @@ class RandomWalker:
         """ take the step, save it as last step """
         if self.regressor != None and hasattr ( self.regressor, "grad" ):
             self.oldgrad = self.regressor.grad
+        ## the muhat multiplier gets multiplied into the signal strengths
+        self.model.resolveMuhat()
+        ## and backup!
         self.model.backup()
 
     def saveState ( self ):
