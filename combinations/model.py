@@ -213,7 +213,10 @@ class Model:
         combiner = Combiner( self.walkerid )
         self.log ( "now find highest significance for %d predictions" % len(predictions) )
         ## find highest observed significance
-        bestCombo,Z,llhd,muhat = combiner.findHighestSignificance ( predictions, strategy, expected=False, mumax = 1.5 / self.rmax )
+        mumax = float("inf")
+        if self.rmax > 0.:
+            mumax = 1.5 / self.rmax
+        bestCombo,Z,llhd,muhat = combiner.findHighestSignificance ( predictions, strategy, expected=False, mumax = mumax )
         if hasattr ( self, "keep_meta" ) and self.keep_meta:
             self.bestCombo = bestCombo
         else:
