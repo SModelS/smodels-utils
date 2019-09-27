@@ -17,7 +17,8 @@ import IPython
 
 def getWeights ( mgluino, msquark ):
     """ get the weights for T1, T2, TGQ production, normalized to 1. """
-    return { "T1": 1/3, "T2": 1/3, "TGQ": 1/3 }
+    # return { "T1": 1/3, "T2": 1/3, "TGQ": 1/3 }
+    return { "T1": 1, "T2": 1, "TGQ": 1 }
 
 def getEffs ( maps, mgluino, msquark, mN ):
     """ get the efficiencies for T1, T2, TGQ, for the dataset/masses """
@@ -95,7 +96,7 @@ def writeTextFile ( dataset, effs ):
         f.write ( "efficiencyMap: [" )
         for ctr,eff in enumerate(effs):
             mgluino, msquark,mN, E= eff
-            line = "[[[%s*GeV,%s*GeV],[%s*GeV,%s*GeV]],%g]" % \
+            line = "[[[%.1f*GeV,%.1f*GeV],[%.1f*GeV,%.1f*GeV]],%g]" % \
                     ( mgluino, mN, msquark, mN, E ) 
             if ctr == len(effs)-1:
                 line += "]\n"

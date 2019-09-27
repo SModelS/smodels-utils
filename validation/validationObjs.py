@@ -467,13 +467,13 @@ class ValidationPlot():
         return ret
 
     def getXYFromSLHAFileName ( self, filename ):
-        """ try to guess the mass vector from the SLHA file name """
-        tokens = filename.replace(".slha","").split("_")
-        if not tokens[0].startswith ( "T" ):
-            print ( "why does token 0 not start with a T??? %s" % tokens[0] )
-            sys.exit(-1)
-        xy = list ( map ( float, tokens[1:] ) )
-        return xy
+        """ get the 'axes' from the slha file name. uses .getMassesFromSLHAFileName.
+        Meant as fallback for when no ExptRes is available.
+        """
+        masses = self.getMassesFromSLHAFileName ( filename )
+        if "TGQ12" in filename:
+            return [ masses[0][0], masses[1][0] ]
+        return [ masses[0][0], masses[0][1] ]
 
     def getDataFromPlanes(self):
         """
@@ -548,11 +548,7 @@ class ValidationPlot():
                 xy = self.getXYFromSLHAFileName ( slhafile )
                 ## log also the errors in the py file
                 axes = { 'x': xy[0], 'y': xy[1] }
-                Dict = { 'slhafile': slhafile, 'error': 'no results' }
-                if True:
-                    Dict["axes"] = axes
-                    # Dict["kfactord"] = 1.
-                    # Dict["UL"] = 
+                Dict = { 'slhafile': slhafile, 'error': 'no results', 'axes': axes }
                 self.data.append ( Dict )
                 continue
             res = smodelsOutput['ExptRes']
@@ -580,7 +576,10 @@ class ValidationPlot():
             #(skip rounding to check if mass is in the plane)
             roundmass = expRes['Mass (GeV)']
             width = expRes['Width (GeV)']
-            if roundmass is None:
+            #print ( "roundmass", slhafile, roundmass )
+            #print ( "expRes", expRes )
+            if roundmass is None or "TGQ12" in slhafile:
+                ## FIXME, for TGQ12 why cant i use exptres?
                 import inspect
                 frame = inspect.currentframe()
                 line = frame.f_lineno
@@ -588,6 +587,7 @@ class ValidationPlot():
                 #print ( "we try to extract the info from the slha file name %s" % \
                 #        slhafile )
                 roundmass = self.getMassesFromSLHAFileName ( slhafile )
+            # print ( "after", slhafile, roundmass )
             mass = [br[:] for br in roundmass]
             slhadata = pyslha.readSLHAFile(os.path.join(slhaDir,slhafile))
             origmasses = list(set(slhadata.blocks['MASS'].values()))
