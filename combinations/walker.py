@@ -85,7 +85,7 @@ class RandomWalker:
                    dump_training = False, dbpath="../../smodels-database/",
                    expected = False, select = "all", catch_exceptions = True,
                    keep_meta = True ):
-        ret = cls( walkerid, cheat = 0, dbpath = dbpath, 
+        ret = cls( walkerid, nsteps=nsteps, cheat = 0, dbpath = dbpath, 
                    catch_exceptions = catch_exceptions )
                    # keep_meta = keep_meta )
         # ret = cls( walkerid, nsteps, strategy, dump_training, dbpath )
