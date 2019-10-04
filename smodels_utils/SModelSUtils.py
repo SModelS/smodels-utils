@@ -54,6 +54,10 @@ def addSModelSPath():
     if os.path.isdir(smodelsDir):
         sys.path.append(smodelsDir)
         return smodelsDir
+    smodelsDir = os.path.join(home,'git','smodels')
+    if os.path.isdir(smodelsDir):
+        sys.path.append(smodelsDir)
+        return smodelsDir
             
     try:
         from smodels import SModelS

@@ -2,12 +2,17 @@
 
 """ a first start at the random walk idea """
 
-import random, copy, pickle, sys, os, time, math
+import random, copy, pickle, sys, os, time, math, socket
 if sys.version_info[0]==2:
     import commands as subprocess # python2.7
 else:
     import subprocess
 import numpy, colorama
+try:
+    import smodels
+except:
+    import setPath
+sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels-utils/combinations/")
 from smodels.tools.runtime import nCPUs
 from hiscore import Hiscore
 from model import Model, rthresholds
@@ -61,6 +66,9 @@ class RandomWalker:
                                 is_trained = False  )
         self.takeStep() ## the first step should be considered as "taken"
 
+    def hostname ( self ):
+        return socket.gethostname()
+
     def setWalkerId ( self, Id ):
         self.walkerid = Id
         self.model.walkerid = Id
@@ -97,7 +105,7 @@ class RandomWalker:
 
     def pprint ( self, *args ):
         """ logging """
-        print ( "[walk:%d-%s] %s" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args))) )
+        print ( "[walk:%d:%s-%s] %s" % ( self.walkerid, self.hostname(), time.strftime("%H:%M:%S"), " ".join(map(str,args))) )
         self.log ( *args )
 
     def freezeRandomParticle ( self ):
@@ -449,6 +457,16 @@ def _run ( walker, catchem ):
         import colorama
         print ( "%swalker %d threw: %s%s\n" % ( colorama.Fore.RED, walker.walkerid, e, colorama.Fore.RESET ) )
 
+def startWalkers ( walkers ):
+    catchem=False
+    processes=[]
+    for walker in walkers:
+        p = multiprocessing.Process ( target=_run, args=( walker, catchem ) )
+        p.start()
+        processes.append(p)
+    for p in processes:
+        p.join()
+
 if __name__ == "__main__":
     print ( "[walk] ramping up" )
     import argparse
@@ -565,10 +583,4 @@ if __name__ == "__main__":
     print ( "[walk] history recording is %s" % onoff )
 
     print ( "[walk] starting %d walkers" % len(walkers) )
-    processes=[]
-    for walker in walkers:
-        p = multiprocessing.Process ( target=_run, args=( walker, catchem ) )
-        p.start()
-        processes.append(p)
-    for p in processes:
-        p.join()
+    startWalkers ( walkers )

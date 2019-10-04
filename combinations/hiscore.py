@@ -4,6 +4,7 @@
 """
 
 import random, copy, pickle, os, fcntl, time, subprocess, colorama
+import setPath
 from trimmer import Trimmer
 from scipy import stats
 

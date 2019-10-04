@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """ this sets the path so we can write e.g. 
     "from smodels_utils.plotting import blah """
@@ -19,9 +19,9 @@ def configure():
     from smodels_utils import SModelSUtils
     SModelSUtils.addInstallDirectory()
     SModelSUtils.addSModelSPath()
+    # sys.path.insert(0,"../../smodels")
     return ret
     
-
 configure()
 
 if __name__ == "__main__":
