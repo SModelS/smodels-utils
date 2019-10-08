@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
+
 def main( nmin, nmax, cont ):
+    import os
     pfile, states = None, None
     if cont.lower() not in [ "none", "" ]:
         if not os.path.exists ( cont ):
-            print ( "error: supplied a save states file %s, but it doesnt exist" % args.cont )
+            print ( "error: supplied a save states file %s, but it doesnt exist" % cont )
         else:
             import pickle
             try:
@@ -29,7 +31,7 @@ def main( nmin, nmax, cont ):
             walkers.append ( w )
         else:
             nstates = len(states )
-            ctr = ( i - args.min ) % nstates
+            ctr = ( i - nmin ) % nstates
             print ( "fromModel %d: loading %d/%d" % ( i, ctr, nstates ) )
             w = walker.RandomWalker.fromModel ( states[ctr], 10000, "aggressive", 
                     True, False )

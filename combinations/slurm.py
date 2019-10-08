@@ -48,9 +48,9 @@ def main():
         for line in lines:
             f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
     os.chmod( tf, 0o755 )
-    cmd = "srun --mem-per-cpu 15G  %s" % tf
+    cmd = "srun --mem 50G --time 300 %s" % tf
     print ( cmd )
-    if not args.dry_run:
+    if False: # not args.dry_run:
         a=subprocess.getoutput ( cmd )
         print ( a )
     remove ( tf, args.keep )
