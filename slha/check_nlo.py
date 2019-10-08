@@ -8,27 +8,9 @@ import glob
 import random
 import pyslha
 import IPython
+import math
 
-def main():
-    import argparse
-    argparser = argparse.ArgumentParser()
-
-    argparser.add_argument('-f', '--files', 
-                           help = 'file pattern to glob [T*.slha]',
-                           type=str,default = "T*.slha" )
-    argparser.add_argument('-p', '--pretend', help="pretend, dry-run",
-                           action="store_true" )
-    args = argparser.parse_args()
-    pretend = False
-    pat = "T*slha"
-    pretend = args.pretend
-    pat = args.files
-
-    print ( "checking for %s" % pat )
-
-    files = glob.glob ( pat )
-    random.shuffle ( files )
-
+def process ( files, pretend ):
     total = len (files)
     not_lo, not_nlo = 0, 0
 
@@ -63,5 +45,40 @@ def main():
     print ( "%d/%d with NLL." % ( total - not_lo - not_nlo, total ) )
     print ( "%d/%d with LO only." %  ( not_nlo, total ) )
     print ( "%d/%d with no xsecs." % ( not_lo, total ) )
+
+def main():
+    import argparse, multiprocessing
+    argparser = argparse.ArgumentParser()
+
+    argparser.add_argument('-f', '--files', 
+                           help = 'file pattern to glob [T*.slha]',
+                           type=str,default = "T*.slha" )
+    argparser.add_argument('-p', '--pretend', help="pretend, dry-run",
+                           action="store_true" )
+    argparser.add_argument('-n', '--nprocesses', help="number of processes [1]",
+                           type=int, default = 1 )
+    args = argparser.parse_args()
+    pretend = False
+    pat = "T*slha"
+    pretend = args.pretend
+    pat = args.files
+    print ( "checking for %s" % pat )
+
+    files = glob.glob ( pat )
+    random.shuffle ( files )
+
+    if args.nprocesses == 1: ## multiprocess
+        process ( files, pretend )
+        return
+    p = multiprocessing.Pool ( args.nprocesses )
+    ps = []
+    delta = int(math.ceil(len(files)/args.nprocesses))
+    for i in range(args.nprocesses):
+        chunk = files[delta*i:delta*(i+1)]
+        p=multiprocessing.Process(target=process, args=(chunk,pretend) )
+        p.start()
+        ps.append ( p )
+    for p in ps:
+        p.join()
 
 main()
