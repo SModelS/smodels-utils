@@ -48,7 +48,8 @@ def main():
         for line in lines:
             f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
     os.chmod( tf, 0o755 )
-    cmd = "srun --mem 50G --time 300 %s" % tf
+    ram = max ( 50, 3 * ( nmax - nmin ) )
+    cmd = "srun --mem %dG --time 480 %s" % ( ram, tf )
     print ( cmd )
     if False: # not args.dry_run:
         a=subprocess.getoutput ( cmd )

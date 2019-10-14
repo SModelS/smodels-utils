@@ -96,6 +96,7 @@ class RandomWalker:
         ret.model.walkerid = walkerid
         ret.model.dbpath = dbpath
         ret.model.initializePredictor()
+        ret.model.backup()
         if dump_training:
             ## we use the regressor only to dump the training data
             from regressor import Regressor
@@ -105,6 +106,8 @@ class RandomWalker:
 
     def pprint ( self, *args ):
         """ logging """
+        if not hasattr ( self, "walkerid" ):
+            self.walkerid=-1
         print ( "[walk:%d:%s-%s] %s" % ( self.walkerid, self.hostname(), time.strftime("%H:%M:%S"), " ".join(map(str,args))) )
         self.log ( *args )
 

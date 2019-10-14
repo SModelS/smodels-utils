@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 
-
 def main( nmin, nmax, cont ):
+    import sys
+    sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels/")
+    sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels-utils/")
+    sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels-utils/combinations/")
+    import os
+    os.chdir ( "/users/wolfgan.waltenberger/git/smodels-utils/combinations/" )
     import os
     pfile, states = None, None
     if cont.lower() not in [ "none", "" ]:
@@ -16,25 +21,22 @@ def main( nmin, nmax, cont ):
             except Exception as e:
                 print ( "error when trying to load pickle file %s: %s" % ( cont, e ) )
                 pfile = None
+    print ( "[walkingWorker] called main with %s, pfile is %s" % ( cont, pfile ) )
     import socket, copy
     print ( "I am already inside the python script! Hostname is", socket.gethostname()  )
-    import sys
-    sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels/")
-    sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels-utils/")
-    import os
-    os.chdir ( "/users/wolfgan.waltenberger/git/smodels-utils/combinations/" )
     from combinations import walker
     walkers = []
     for i in range(nmin,nmax):
         if pfile is None:
+            print ( "[walkingWorker] from zero %d" % ( i ) )
             w = walker.RandomWalker( walkerid=i, dump_training = True,  )
             walkers.append ( w )
         else:
             nstates = len(states )
             ctr = ( i - nmin ) % nstates
-            print ( "fromModel %d: loading %d/%d" % ( i, ctr, nstates ) )
+            print ( "[walkingWorker] fromModel %d: loading %d/%d" % ( i, ctr, nstates ) )
             w = walker.RandomWalker.fromModel ( states[ctr], 10000, "aggressive", 
-                    True, False )
+                    walkerid = i, dump_training=True, expected = False )
             walkers.append ( w )
     walker.startWalkers ( walkers )
 
