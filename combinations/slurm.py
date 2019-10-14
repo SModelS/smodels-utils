@@ -32,6 +32,8 @@ def main():
                         type=int, default=10 )
     argparser.add_argument ( '-f', '--cont', help='continue with saved states [""]',
                         type=str, default="" )
+    argparser.add_argument ( '-D', '--dbpath', help='path to database ["../../smodels-database/"]',
+                        type=str, default="../../smodels-database/" )
     args=argparser.parse_args()
     with open("run_walker.sh","rt") as f:
         lines=f.readlines()
@@ -40,7 +42,8 @@ def main():
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import walkingWorker\n" )
-        f.write ( "walkingWorker.main ( %d, %d, '%s' )\n" % ( nmin, nmax, cont ) )
+        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s' )\n" % \
+                  ( nmin, nmax, cont, args.dbpath ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
 
     tf = tempfile.mktemp(prefix="RUN_",suffix=".sh", dir="./" )

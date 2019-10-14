@@ -32,7 +32,22 @@ class Hiscore:
         model.resolveMuhat() ## add only with resolved muhats
         if model.Z <= self.currentMinZ():
             return ## doesnt pass minimum requirement
+        if model.Z == 0.:
+            return ## just to be sure, should be taken care of above, though
         for i,mi in enumerate(self.hiscores):
+            if mi!=None and mi.almostSameAs ( model ):
+                ### this model is essentially the model in hiscorelist.
+                ### Skip!
+                self.pprint ( "the model seems to be already in highscore list. skip" )
+                return
+            if mi!=None and abs ( model.Z - mi.Z ) / model.Z < 1e-6:
+                ## pretty much exactly same score? number of particles wins!!
+                if len ( model.unFrozenParticles() ) < len ( mi.unFrozenParticles() ):
+                    self.demote ( i )
+                    self.hiscores[i] = copy.deepcopy ( model )
+                    self.hiscores[i].clean( all=True )
+                    self.trimmed[i] = None
+                    break
             if mi==None or model.Z > mi.Z: ## ok, <i>th best result!
                 self.demote ( i )
                 self.hiscores[i] = copy.deepcopy ( model )

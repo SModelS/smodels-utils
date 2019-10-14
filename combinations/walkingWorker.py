@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-def main( nmin, nmax, cont ):
+def main( nmin, nmax, cont, dbpath = "../../smodels-database/" ):
     import sys
     sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels/")
     sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels-utils/")
@@ -29,14 +29,16 @@ def main( nmin, nmax, cont ):
     for i in range(nmin,nmax):
         if pfile is None:
             print ( "[walkingWorker] from zero %d" % ( i ) )
-            w = walker.RandomWalker( walkerid=i, dump_training = True,  )
+            w = walker.RandomWalker( walkerid=i, dump_training = True, 
+                                     dbpath = dbpath  )
             walkers.append ( w )
         else:
             nstates = len(states )
             ctr = ( i - nmin ) % nstates
             print ( "[walkingWorker] fromModel %d: loading %d/%d" % ( i, ctr, nstates ) )
             w = walker.RandomWalker.fromModel ( states[ctr], 10000, "aggressive", 
-                    walkerid = i, dump_training=True, expected = False )
+                    walkerid = i, dump_training=True, expected = False,
+                    dbpath = dbpath )
             walkers.append ( w )
     walker.startWalkers ( walkers )
 

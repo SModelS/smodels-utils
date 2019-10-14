@@ -262,6 +262,63 @@ class Model:
         robs.sort(reverse=True)
         return robs
 
+    def almostSameAs ( self, other ):
+        """ check if a model is essentially the same as <other> """
+        if len ( self.masses.keys() ) != len ( other.masses.keys() ):
+            return False
+        ## check the masses
+        for pid,m in self.masses.items():
+            om = other.masses[pid]
+            if m == 0.:
+                if om == 0.:
+                    continue
+                else:
+                    return False
+            if abs ( om - m ) / m > 1e-5:
+                return False
+        ## now check ssmultipliers
+        pids = set ( self.ssmultipliers.keys() )
+        pids = pids.union ( set ( other.ssmultipliers.keys() ) )
+        for pid in pids:
+            ss = 1.
+            if pid in self.ssmultipliers.keys():
+                ss = self.ssmultipliers[pid]
+            os = 1.
+            if pid in other.ssmultipliers.keys():
+                os = other.ssmultipliers[pid]
+            if ss == 0.:
+                if os == 0.:
+                    continue
+                else:
+                    return False
+                if abs ( ss - os ) / ss > 1e-6:
+                    return False
+        ## now check decays
+        pids = set ( self.decays.keys() )
+        pids = pids.union ( set ( other.decays.keys() ) )
+        for pid in pids:
+            sdecays, odecays = {}, {}
+            if pid in self.decays:
+                sdecays = self.decays[pid]
+            if pid in other.decays:
+                odecays = other.decays[pid]
+            dpids = set ( sdecays.keys() )
+            dpid = dpids.union ( set ( odecays.keys() ) )
+            for dpid in dpids:
+                sbr, obr = 0., 0.
+                if dpid in sdecays:
+                    sbr = sdecays[dpid]
+                if dpid in odecays:
+                    obr = odecays[dpid]
+                if sbr == 0.:
+                    if obr < 1e-6:
+                        continue
+                    else:
+                        return False
+                if abs ( sbr - obr ) / sbr > 1e-6:
+                    return False
+        return True
+
     def backup ( self ):
         """ backup the current state """
         self._backup = { "llhd": self.llhd, "letters": self.letters, "Z": self.Z,
