@@ -60,14 +60,14 @@ class Trimmer:
         bestCombo = copy.deepcopy ( self.model.bestCombo )
         for ctr,pred in enumerate(bestCombo):
             combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:] 
-            Z = combiner.getSignificance ( combo )
+            Z, muhat_ = combiner.getSignificance ( combo )
             dZ = origZ - Z
             dZtot += dZ
             contributions[ ctr ] = Z
             # contributions[ ctr ] = Z
         for k,v in contributions.items():
             perc = (origZ-v) / dZtot
-            print ( "[trimmer] without %s(%s) we get %.2f (%d%s)" % ( self.model.bestCombo[k].analysisId(), self.model.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
+            print ( "[trimmer] without %s(%s) we get %s (%d%s)" % ( self.model.bestCombo[k].analysisId(), self.model.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
             contributions[ k ] = perc
         contrsWithNames = {}
         for k,v in contributions.items():

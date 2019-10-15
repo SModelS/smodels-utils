@@ -211,7 +211,7 @@ def compileList( nmax ):
                 ## add models, but without the Nones
                 allmodels += list ( filter ( None.__ne__, models ) )
                 alltrimmed += list ( filter ( None.__ne__, trimmed ) )
-        except:
+        except ( IOError, OSError, FileNotFoundError, EOFError ) as e:
             print ( "could not open %s. ignore." % f.name )
     allmodels = sortByZ ( allmodels )
     alltrimmed = sortByZ ( alltrimmed )
@@ -253,10 +253,10 @@ def discussBest ( model, detailed ):
         for i in model.bestCombo:
             print ( "  prediction in best combo: %s (%s)" % ( i.analysisId(), i.dataType() ) )
 
-def printModels ( models, detailed ):
+def printModels ( models, detailed, nmax=10 ):
     names = { 0: "highest", 1: "second", 2: "third" }
     for c,model in enumerate(models):
-        if c >= args.nmax:
+        if c >= nmax:
             break
         if model == None:
             break
@@ -350,7 +350,7 @@ def main ( args ):
         tr.checkZ()
 
     if args.print:
-        printModels ( models, args.detailed )
+        printModels ( models, args.detailed, args.nmax )
 
     if args.interactive:
         print ( "[hiscore] starting interactive session. Variables: %smodels, trimmed%s" % \

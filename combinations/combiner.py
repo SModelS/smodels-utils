@@ -183,6 +183,8 @@ class Combiner:
         if len(combo)==0.:
             return 0.
         muhat = self.findMuHat ( combo )
+        if mumax is None:
+            mumax = float("inf")
         if muhat is None:
             return 0.
         if muhat > mumax:
@@ -291,7 +293,8 @@ class Combiner:
             ret += self.letters[c]
         return ret
 
-    def findHighestSignificance ( self, predictions, strategy, expected=False, mumax = None ):
+    def findHighestSignificance ( self, predictions, strategy, expected=False, 
+                                  mumax = None ):
         """ for the given list of predictions and employing the given strategy,
         find the combo with highest significance
         :param expected: find the highest expected significance, not observed
@@ -422,7 +425,7 @@ if __name__ == "__main__":
         preds = theoryPredictionsFor ( expRes, smses )
         if preds == None:
             continue
-        Z = combiner.getSignificance ( preds, expected=args.expected )
+        Z, muhat_ = combiner.getSignificance ( preds, expected=args.expected, mumax = None )
         print ( "%s has %d predictions, local Z is %.2f" % ( expRes.globalInfo.id, len(preds), Z ) )
         for pred in preds:
             pred.computeStatistics()
