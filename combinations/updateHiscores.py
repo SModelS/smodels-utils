@@ -12,7 +12,7 @@ def update():
     args.print = True
     args.detailed = False
     args.interactive = False
-    args.trim_branchings = False
+    args.trim_branchings = True
     args.trim = True
     args.fetch = False
     args.analysis_contributions = True
@@ -26,6 +26,6 @@ def update():
 def main():
     while True:
         update()
-        time.sleep(60.)
+        time.sleep(600.) ## only every 10 mins
 
 main()

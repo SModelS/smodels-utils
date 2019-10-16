@@ -260,7 +260,7 @@ if __name__ == "__main__":
             ## make backup
             cmd = "cp %s/* %s/backup/" % ( D, D )
         else:
-            cmd = "ssh gpu cp %s/* %s/backup/" % ( D, D )
+            cmd = "ssh hepgpu01.hephy.oeaw.ac.at cp %s/* %s/backup/" % ( D, D )
         print ( cmd )
         # now the new stuff
         O = subprocess.getoutput ( cmd )
@@ -273,7 +273,7 @@ if __name__ == "__main__":
             subprocess.getoutput ( cmd )
             cmd = "cp %s %s" % (F, D )
         else:
-            cmd = "scp %s gpu:%s" % ( F, D )
+            cmd = "scp %s hepgpu01.hephy.oeaw.ac.at:%s" % ( F, D )
         print ( cmd )
         O = subprocess.getoutput ( cmd )
         if len(O)>0:
