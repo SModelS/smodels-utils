@@ -118,6 +118,10 @@ class RandomWalker:
             return 0 ## freeze only if at least 3 unfrozen particles exist
         p = random.choice ( unfrozen )
         self.model.masses[p]=1e6
+        ## take it out in all decays of other particles!
+        for mpid,mdecays in self.model.decays.items():
+            if p in mdecays:
+                self.model.decays[mpid][p]=0.
         self.model.normalizeAllBranchings() ## adjust everything
         self.log ( "Freezing %s (keep branchings)." % ( helpers.getParticleName(p) ) )
         return 1
