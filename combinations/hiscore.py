@@ -280,6 +280,9 @@ def main ( args ):
         args.outfile = None
     if type(args.infile) is str and args.infile.lower() in [ "none", "" ]:
         args.infile = None
+    if args.outfile == args.infile:
+        print ( "[hiscore] outputfile is same as input file. will assume that you do not want me to write out at all." )
+        args.outfile = None
 
     if args.fetch:
         import subprocess
