@@ -23,7 +23,7 @@ def obtain ( number, picklefile ):
         #fcntl.flock( f, fcntl.LOCK_UN )
     if number < len(trimmed) and trimmed[number] is not None:
         Z = trimmed[number].Z
-        print ( "[plotHiscore] obtaining trimmed #%d: Z=%.2f" % (number, Z ) )
+        print ( "[plotHiscore] obtaining trimmed model #%d: Z=%.2f (%d particles)" % (number, Z, len ( trimmed[number].unFrozenParticles() ) ) )
         return trimmed[number]
     Z = hiscores[number].Z
     print ( "[plotHiscore] obtaining untrimmed #%d: Z=%.2f" % (number, Z ) )
@@ -218,7 +218,7 @@ def plot ( number, verbosity, picklefile, options ):
     if options["copy"]:
         copyFilesToGithub()
 
-if __name__ == "__main__":
+def main ():
     import argparse
     argparser = argparse.ArgumentParser(
             description='hiscore model plotter')
@@ -244,17 +244,61 @@ if __name__ == "__main__":
             help='list all predictions',
             action="store_true" )
     argparser.add_argument ( '-u', '--upload',
-            help='upload to GPU server, afs www space. To appear at http://www.hephy.at/user/wwaltenberger/models/',
-            action="store_true" )
+            help='upload to one of the following destinations: none, gpu, github, interesting [none]. run --destinations to learn more', 
+            type=str, default="" )
+    argparser.add_argument ( "--destinations", 
+            help="learn more about the upload destinations", action="store_true" )
     args = argparser.parse_args()
+    if args.destinations:
+        print ( "Upload destinations: " )
+        print ( "      none: no upload" )
+        print ( "       gpu: upload to GPU server, afs space." )
+        print ( "            Result can be seen at http://www.hephy.at/user/wwaltenberger/models/" )
+        print ( "    github: upload to github git directory." ) 
+        print ( "            Result can be seen at https://smodels.github.io/models" )
+        print ( "interesting: upload to github git directory, 'interesting' folder." )
+        print ( "             Result can be seen at https://smodels.github.io/models/interesting" )
+        return
+    upload = args.upload.lower()
+    if upload in [ "none", "" ]:
+        upload = None
+
     options = { "ruler": not args.noruler, "decays": not args.nodecays,
                 "predictions": args.predictions, "html": not args.nohtml }
+
     plot ( args.number, args.verbosity, args.picklefile, options )
-    if args.upload:
+    if upload is None:
+        return
+    F = "*.png hiscore.slha index.html"
+    if upload == "github":
+        cmd = "cp %s ../../smodels.github.io/models/" % F
+        a = subprocess.getoutput ( cmd )
+        if a != "":
+            print ( "error: %s" % a )
+            sys.exit()
+        print ( "[plotHiscore] done. now please do yourself: " )
+        print ( "cd ../../smodels.github.io/models/" )
+        print ( "git commit -am 'update'" )
+        print ( "git push" )
+        return
+
+    if upload == "interesting":
+        print ( "[plotHiscore] copying to 'interesting'" )
+        cmd = "cp %s ../../smodels.github.io/models/interesting/"  % F
+        a = subprocess.getoutput ( cmd )
+        if a != "":
+            print ( "error: %s" % a )
+            return
+        print ( "[plotHiscore] done. now please do yourself: " )
+        print ( "cd ../../smodels.github.io/models/interesting/" )
+        print ( "git commit -am 'update'" )
+        print ( "git push" )
+        return
+
+    if upload == "gpu":
         import socket
         hostname = socket.gethostname()
         D = "/afs/hephy.at/user/w/wwaltenberger/www/models"
-        F = "*.png hiscore.slha index.html"
         ## first the backup
         if "gpu" in hostname:
             ## make backup
@@ -278,3 +322,8 @@ if __name__ == "__main__":
         O = subprocess.getoutput ( cmd )
         if len(O)>0:
             print ( "[plotHiscore.py] when uploading files: %s" % O )
+        return
+    print ( "error, dont know what to do with upload sink '%s'" % upload )
+
+if __name__ == "__main__":
+    main()
