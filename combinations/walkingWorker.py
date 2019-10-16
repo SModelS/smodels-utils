@@ -7,7 +7,6 @@ def main( nmin, nmax, cont, dbpath = "../../smodels-database/" ):
     sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels-utils/combinations/")
     import os
     os.chdir ( "/users/wolfgan.waltenberger/git/smodels-utils/combinations/" )
-    import os
     pfile, states = None, None
     if cont.lower() not in [ "none", "" ]:
         if not os.path.exists ( cont ):

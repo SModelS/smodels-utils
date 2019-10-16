@@ -3,9 +3,13 @@
 """ simple script that perpetually updates hiscore list
     from H<n>.pcl, and trims leading model """
 
-import time, types
-import hiscore
+import time, types, sys, os
 
+def setup():
+    sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels/")
+    sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels-utils/")
+    sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels-utils/combinations/")
+    os.chdir ( "/users/wolfgan.waltenberger/git/smodels-utils/combinations/" )
 
 def updateHiscores():
     args = types.SimpleNamespace()
@@ -21,6 +25,7 @@ def updateHiscores():
     args.outfile = "hiscore.pcl"
     args.infile = None
     args.maxloss = .005
+    import hiscore
     hiscore.main ( args )
 
 def updateStates():
@@ -37,9 +42,11 @@ def updateStates():
     args.outfile = "states.pcl"
     args.infile = None
     args.maxloss = .005
+    import hiscore
     hiscore.main ( args )
 
 def main():
+    setup()
     while True:
         updateHiscores()
         updateStates()
