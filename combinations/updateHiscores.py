@@ -6,11 +6,13 @@
 import time, types, sys, os
 
 def setup():
-    sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels/")
-    sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels-utils/")
-    sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels-utils/combinations/")
+    codedir = "/mnt/hephy/pheno/ww/git/"
+    sys.path.insert(0,"%ssmodels/" % codedir )
+    sys.path.insert(0,"%ssmodels-utils/" % codedir )
+    sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
     # os.chdir ( "/mnt/hephy/pheno/ww/git/smodels-utils/combinations" )
-    os.chdir ( "/mnt/hephy/pheno/ww/rundir" )
+    rundir = "/mnt/hephy/pheno/ww/rundir"
+    os.chdir ( rundir )
 
 def updateHiscores():
     args = types.SimpleNamespace()

@@ -7,6 +7,15 @@ sys.path.insert(0,"../" )
 from smodels_utils.plotting import rulerPlotter, decayPlotter
 import helpers
 
+def setup():
+    codedir = "/mnt/hephy/pheno/ww/git/"
+    sys.path.insert(0,"%ssmodels/" % codedir )
+    sys.path.insert(0,"%ssmodels-utils/" % codedir )
+    sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
+    # os.chdir ( "/mnt/hephy/pheno/ww/git/smodels-utils/combinations" )
+    rundir = "/mnt/hephy/pheno/ww/rundir"
+    os.chdir ( rundir )
+
 def obtain ( number, picklefile ):
     """ obtain hiscore number <number> """
     if not os.path.exists ( picklefile ):
@@ -230,6 +239,7 @@ def plot ( number, verbosity, picklefile, options ):
     #    copyFilesToGithub()
 
 def main ():
+    rundir = "/mnt/hephy/pheno/ww/rundir/"
     import argparse
     argparser = argparse.ArgumentParser(
             description='hiscore model plotter')
@@ -237,8 +247,8 @@ def main ():
             help='which hiscore to plot [0]',
             type=int, default=0 )
     argparser.add_argument ( '-f', '--picklefile',
-            help='pickle file to draw from [hiscore.pcl]',
-            type=str, default="hiscore.pcl" )
+            help='pickle file to draw from [%shiscore.pcl]' % rundir,
+            type=str, default="%shiscore.pcl" % rundir )
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug, info, warn, err [info]',
             type=str, default="info" )
