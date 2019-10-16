@@ -432,8 +432,9 @@ class Model:
                     if D_ in line and not line[0]=="#":
                         p1= line.find(D_)
                         p2 = line[p1+1:].find(" ")
-                        self.pprint ( "remaining token %s set to zero." % \
-                                line[p1:p1+p2+1] )
+                        if not "D" in line[p1:p1+p2+1]:
+                            self.pprint ( "remaining token %s set to zero." % \
+                                    line[p1:p1+p2+1] )
                         line=line.replace( line[p1:p1+p2+1], "0." )
                 f.write ( line )
         self.computeXSecs( nevents )

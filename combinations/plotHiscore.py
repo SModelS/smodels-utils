@@ -29,6 +29,17 @@ def obtain ( number, picklefile ):
     print ( "[plotHiscore] obtaining untrimmed #%d: Z=%.2f" % (number, Z ) )
     return hiscores[ number ]
 
+def gitCommit ( dest, wanted ):
+    """ if wanted, then git commit and git push to smodels.githuib.io """
+    if not wanted:
+        return False
+    cmd = "cd %s ; git commit -am 'update'; git push " % dest
+    print ( "[plotHiscore] git-commit %s" % cmd )
+    out = subprocess.getoutput ( cmd )
+    if out != "":
+        print ( "[plotHiscore] %s" % out )
+    return True
+
 def discussPredictions ( model ):
     print ( "How the Z comes about. Best combo:" )
     combo = model.bestCombo
@@ -215,8 +226,8 @@ def plot ( number, verbosity, picklefile, options ):
     if options["html"]:
         writeTex ( model )
         writeIndexHtml ( model )
-    if options["copy"]:
-        copyFilesToGithub()
+    #if options["copy"]:
+    #    copyFilesToGithub()
 
 def main ():
     import argparse
@@ -246,6 +257,9 @@ def main ():
     argparser.add_argument ( '-u', '--upload',
             help='upload to one of the following destinations: none, gpu, github, interesting [none]. run --destinations to learn more', 
             type=str, default="" )
+    argparser.add_argument ( '-c', '--commit',
+            help='also commit and push to smodels.github.io (works only with -u github or interesting)',
+            action="store_true" )
     argparser.add_argument ( "--destinations", 
             help="learn more about the upload destinations", action="store_true" )
     args = argparser.parse_args()
@@ -270,29 +284,25 @@ def main ():
     if upload is None:
         return
     F = "*.png hiscore.slha index.html"
+    dest = ""
     if upload == "github":
-        cmd = "cp %s ../../smodels.github.io/models/" % F
+        dest = "../../smodels.github.io/models/"
+    if upload == "interesting":
+        dest = "../../smodels.github.io/models/interesting/"
+
+    if dest != "":
+        print ( "[plotHiscore] copying to %s" % dest )
+        cmd = "cp %s %s" % ( F, dest )
         a = subprocess.getoutput ( cmd )
         if a != "":
             print ( "error: %s" % a )
             sys.exit()
-        print ( "[plotHiscore] done. now please do yourself: " )
-        print ( "cd ../../smodels.github.io/models/" )
-        print ( "git commit -am 'update'" )
-        print ( "git push" )
-        return
-
-    if upload == "interesting":
-        print ( "[plotHiscore] copying to 'interesting'" )
-        cmd = "cp %s ../../smodels.github.io/models/interesting/"  % F
-        a = subprocess.getoutput ( cmd )
-        if a != "":
-            print ( "error: %s" % a )
-            return
-        print ( "[plotHiscore] done. now please do yourself: " )
-        print ( "cd ../../smodels.github.io/models/interesting/" )
-        print ( "git commit -am 'update'" )
-        print ( "git push" )
+        r = gitCommit( dest, args.commit )
+        if not r:
+            print ( "[plotHiscore] done. now please do yourself: " )
+            print ( "cd %s" % dest )
+            print ( "git commit -am 'update'" )
+            print ( "git push" )
         return
 
     if upload == "gpu":
