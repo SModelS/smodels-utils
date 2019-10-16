@@ -203,7 +203,10 @@ def compileList( nmax ):
     allmodels,alltrimmed=[],[]
     print ( "Loading ", end="", flush=True )
     for ctr,f in enumerate(files):
-        print ( ".", end="", flush=True )
+        s = "."
+        if ctr % 10 == 0:
+            s = "x"
+        print ( x, end="", flush=True )
         try:
             with open( f,"rb+") as f:
                 fcntl.flock( f, fcntl.LOCK_EX )
