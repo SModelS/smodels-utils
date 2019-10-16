@@ -211,8 +211,8 @@ def compileList( nmax ):
                 ## add models, but without the Nones
                 allmodels += list ( filter ( None.__ne__, models ) )
                 alltrimmed += list ( filter ( None.__ne__, trimmed ) )
-        except ( IOError, OSError, FileNotFoundError, EOFError ) as e:
-            print ( "could not open %s. ignore." % f.name )
+        except ( IOError, OSError, FileNotFoundError, EOFError, pickle.UnpicklingError ) as e:
+            print ( "[hiscore] could not open %s (%s). ignore." % ( f.name, e ) )
     allmodels = sortByZ ( allmodels )
     alltrimmed = sortByZ ( alltrimmed )
     if nmax > 0:

@@ -12,7 +12,7 @@ try:
     import smodels
 except:
     import setPath
-sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels-utils/combinations/")
+sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels-utils/combinations/")
 from smodels.tools.runtime import nCPUs
 from hiscore import Hiscore
 from model import Model, rthresholds

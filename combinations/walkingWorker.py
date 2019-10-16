@@ -2,11 +2,11 @@
 
 def main( nmin, nmax, cont, dbpath = "../../smodels-database/" ):
     import sys
-    sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels/")
-    sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels-utils/")
-    sys.path.insert(0,"/users/wolfgan.waltenberger/git/smodels-utils/combinations/")
+    sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels/")
+    sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels-utils/")
+    sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels-utils/combinations/")
     import os
-    os.chdir ( "/users/wolfgan.waltenberger/git/smodels-utils/combinations/" )
+    os.chdir ( "/mnt/hephy/pheno/ww/git/smodels-utils/combinations/" )
     pfile, states = None, None
     if cont.lower() not in [ "none", "" ]:
         if not os.path.exists ( cont ):
@@ -20,7 +20,7 @@ def main( nmin, nmax, cont, dbpath = "../../smodels-database/" ):
             except Exception as e:
                 print ( "error when trying to load pickle file %s: %s" % ( cont, e ) )
                 pfile = None
-    print ( "[walkingWorker] called main with %s, pfile is %s" % ( cont, pfile ) )
+    print ( "[walkingWorker] called main with '%s', pfile is '%s'" % ( cont, pfile ) )
     import socket, copy
     print ( "I am already inside the python script! Hostname is", socket.gethostname()  )
     from combinations import walker
