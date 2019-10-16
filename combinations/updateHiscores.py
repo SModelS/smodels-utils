@@ -7,7 +7,7 @@ import time, types
 import hiscore
 
 
-def update():
+def updateHiscores():
     args = types.SimpleNamespace()
     args.print = True
     args.detailed = False
@@ -17,15 +17,32 @@ def update():
     args.fetch = False
     args.analysis_contributions = True
     args.check = False
-    args.nmax = 10
+    args.nmax = 1
     args.outfile = "hiscore.pcl"
+    args.infile = None
+    args.maxloss = .005
+    hiscore.main ( args )
+
+def updateStates():
+    args = types.SimpleNamespace()
+    args.print = True
+    args.detailed = False
+    args.interactive = False
+    args.trim_branchings = False
+    args.trim = False
+    args.fetch = False
+    args.analysis_contributions = False
+    args.check = False
+    args.nmax = 20
+    args.outfile = "states.pcl"
     args.infile = None
     args.maxloss = .005
     hiscore.main ( args )
 
 def main():
     while True:
-        update()
-        time.sleep(600.) ## only every 10 mins
+        updateHiscores()
+        updateStates()
+        time.sleep(1200.)
 
 main()

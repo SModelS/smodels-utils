@@ -77,7 +77,7 @@ class Trimmer:
         return self.model
 
     def trimParticles ( self ):
-        """ this function checks if particle can be taken out without
+        """ this function checks if a particle can be taken out without
             significantly worsening Z """
         from smodels.tools import runtime
         runtime._experimental = True
@@ -102,6 +102,14 @@ class Trimmer:
                      self.model.masses[pid],(cpid+1),len(unfrozen) ) )
             oldmass = self.model.masses[pid]
             self.model.masses[pid]=1e6
+            ## also branchings need to be taken out.
+            olddecays = copy.deepcopy ( self.model.decays ) ## keep a copy of all, is easier
+            for dpid,decays in self.model.decays.items():
+                if pid in decays.keys():
+                    br = 1. - decays[pid] ## need to correct for what we loose
+                    self.model.decays[dpid].pop(pid)
+                    for dp_,dbr_ in self.model.decays[dpid].items():
+                        self.model.decays[dpid][dp_] = self.model.decays[dpid][dp_] / br
             # self.createSLHAFile()
             self.model.predict ( self.strategy )
             self.pprint ( "when trying to remove %s, Z changed: %.3f -> %.3f" % ( helpers.getParticleName(pid), oldZ, self.model.Z ) )
@@ -116,6 +124,7 @@ class Trimmer:
                 self.model.whatif[pid]=self.model.Z
                 self.pprint ( "keeping %s" % helpers.getParticleName(pid) )
                 self.model.masses[pid]=oldmass
+                self.model.decays = olddecays
                 self.model.restore()
         self.pprint ( "discarded %d/%d particles." % ( ndiscarded, len(pidsnmasses) ) )
 
