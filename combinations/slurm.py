@@ -19,7 +19,7 @@ def remove( fname, keep):
     except:
         pass
 
-def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep ):
+def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time ):
     """ prepare everything for a single job 
     :params pid: process id, integer that idenfies the process
     :param jmin: id of first walker
@@ -29,6 +29,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep ):
     :param lines: lines of run_walker.sh
     :param dry_run: dont act, just tell us what you would do
     :param keep: keep temporary files, for debugging
+    :param time: time in hours
     """
     print ( "[runOneJob:%d] run walkers [%d,%d] " % ( pid, jmin, jmax ) )
     runner = tempfile.mktemp(prefix="RUNNER",suffix=".py", dir="./" )
@@ -45,7 +46,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep ):
             f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
     os.chmod( tf, 0o755 )
     ram = max ( 50, 3 * ( jmax - jmin ) )
-    cmd = [ "srun", "--mem", "%dG" % ram, "--time", "480", "%s" % tf ]
+    cmd = [ "srun", "--mem", "%dG" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
     print ( " ".join ( cmd ) )
     if not dry_run:
         a=subprocess.run ( cmd )
@@ -65,6 +66,8 @@ def main():
                         type=int, default=0 )
     argparser.add_argument ( '-N', '--nmax', nargs='?', help='maximum worker id [10]',
                         type=int, default=10 )
+    argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [8]',
+                        type=int, default=8 )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?', 
             help='number of processes to split task up to, 0 means one per worker [1]',
             type=int, default=1 )
@@ -82,7 +85,7 @@ def main():
         nprocesses = nworkers
     if nprocesses == 1:
         runOneJob ( 0, nmin, nmax, cont, args.dbpath, lines, args.dry_run,
-                    args.keep )
+                    args.keep, args.time )
     else:
         import multiprocessing
         nwalkers = int ( math.ceil ( nworkers / nprocesses ) )
@@ -92,7 +95,7 @@ def main():
             imax = imin + nwalkers
             p = multiprocessing.Process ( target = runOneJob, 
                     args = ( i, imin, imax, cont, args.dbpath, lines, args.dry_run,
-                             args.keep ) )
+                             args.keep, args.time ) )
             jobs.append ( p )
             p.start()
 
