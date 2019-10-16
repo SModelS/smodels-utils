@@ -32,15 +32,22 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time ):
     :param time: time in hours
     """
     print ( "[runOneJob:%d] run walkers [%d,%d] " % ( pid, jmin, jmax ) )
-    runner = tempfile.mktemp(prefix="RUNNER",suffix=".py", dir="./" )
+    rundir = "/mnt/hephy/pheno/ww/rundir/"
+    codedir = "/mnt/hephy/pheno/ww/git/smodels-utils/combinations/"
+    #runner = tempfile.mktemp(prefix="RUNNER",suffix=".py", dir="./" )
+    runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
+        f.write ( "import os, sys\n" )
+        f.write ( "sys.path.insert(0,'%s')\n" % codedir )
+        f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import walkingWorker\n" )
         f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s' )\n" % \
                   ( jmin, jmax, cont, dbpath ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
 
-    tf = tempfile.mktemp(prefix="RUN_",suffix=".sh", dir="./" )
+    #tf = tempfile.mktemp(prefix="RUN_",suffix=".sh", dir="./" )
+    tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
     with open(tf,"wt") as f:
         for line in lines:
             f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
@@ -54,8 +61,11 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time ):
     remove ( tf, keep )
     remove ( runner, keep )
             
-def runUpdater():
-    cmd = [ "srun", "--mem", "50G", "./run_hiscore_updater.sh" ]
+def runUpdater( dry_run ):
+    cmd = [ "srun", "--mem", "120G", "./run_hiscore_updater.sh" ]
+    print ( "updater: " + " ".join ( cmd ) )
+    if dry_run:
+        return
     subprocess.run ( cmd )
 
 def main():
@@ -78,11 +88,11 @@ def main():
             type=int, default=1 )
     argparser.add_argument ( '-f', '--cont', help='continue with saved states [""]',
                         type=str, default="" )
-    argparser.add_argument ( '-D', '--dbpath', help='path to database ["../../smodels-database/"]',
-                        type=str, default="../../smodels-database/" )
+    argparser.add_argument ( '-D', '--dbpath', help='path to database ["/mnt/hephy/pheno/ww/git/smodels-database/"]',
+                        type=str, default="/mnt/hephy/pheno/ww/git/smodels-database/" )
     args=argparser.parse_args()
     if args.updater:
-        runUpdater()
+        runUpdater( args.dry_run )
         return
     with open("run_walker.sh","rt") as f:
         lines=f.readlines()

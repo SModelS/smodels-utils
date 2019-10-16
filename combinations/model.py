@@ -57,6 +57,7 @@ class Model:
                       2000005, 2000006, 1000011, 1000012, 1000013, 1000014, 1000015,
                       1000016, 1000021, 1000022, 1000023, 1000025, 1000024, 1000037 ]
             self.templateSLHA = "template_many.slha"
+        self.templateSLHA = os.path.join ( os.path.dirname ( __file__ ), self.templateSLHA )
         self.possibledecays = {} ## list all possible decay channels
         self.decays = {} ## the actual branchings
         self.masses = {}

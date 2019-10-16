@@ -228,7 +228,8 @@ class Regressor:
         if device == None:
             self.device = helper.device()
         if variables == None:
-            variables = helper.freeParameters( "template_many.slha" )
+            slhaf = os.path.join ( os.path.dirname ( __file__ ), "template_many.slha" )
+            variables = helper.freeParameters( slhaf )
         self.torchmodel = torchmodel
        # if torchmodel == None:
        #     self.torchmodel = PyTorchModel( variables ).to ( self.device )

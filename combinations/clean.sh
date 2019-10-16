@@ -1,3 +1,3 @@
 #!/bin/sh
 
-rm -r old*pcl .cur* RUN*
+rm -rf old*pcl .cur* RUN* walker*log
