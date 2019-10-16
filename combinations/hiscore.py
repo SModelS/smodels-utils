@@ -201,7 +201,9 @@ def compileList( nmax ):
     import glob
     files = glob.glob ( "H*.pcl" )
     allmodels,alltrimmed=[],[]
-    for f in files:
+    print ( "Loading ", end="", flush=True )
+    for ctr,f in enumerate(files):
+        print ( ".", end="", flush=True )
         try:
             with open( f,"rb+") as f:
                 fcntl.flock( f, fcntl.LOCK_EX )
@@ -213,6 +215,7 @@ def compileList( nmax ):
                 alltrimmed += list ( filter ( None.__ne__, trimmed ) )
         except ( IOError, OSError, FileNotFoundError, EOFError, pickle.UnpicklingError ) as e:
             print ( "[hiscore] could not open %s (%s). ignore." % ( f.name, e ) )
+    print ( )
     allmodels = sortByZ ( allmodels )
     alltrimmed = sortByZ ( alltrimmed )
     if nmax > 0:
