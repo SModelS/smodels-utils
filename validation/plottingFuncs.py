@@ -34,7 +34,20 @@ b = array('d', blue)
 TColor.CreateGradientColorTable(len(s), s, r, g, b, 999)
 gStyle.SetNumberContours(999)
 
-
+def clean ( obj ):
+    """ check for some issues with the exclusion line """
+    ret = obj.ReadObj()
+    n = ret.GetN()
+    x, y = Double(), Double()
+    for i in range(n):
+        ret.GetPoint(i,x,y)
+        if x < 0.:
+            print ( "[plottingFuncs] ERROR: x value %s of exclusion line smaller than zero? do you really want this? Will set to zero." % x )
+            ret.SetPoint ( i, 0., y )
+        if y < 0.:
+            print ( "[plottingFuncs] ERROR: y value %s of exclusion line smaller than zero? do you really want this? Will set to zero." % y )
+            ret.SetPoint ( i, x, 0. )
+    return ret
 
 def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):
     """
@@ -80,7 +93,9 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):
             if 'expexclusion' in objName.lower(): continue
             # print "[plottingFuncs.py] name=",objName
             if axes and not axes in objName: continue
-            txnames[tx].append(obj.ReadObj())
+            T = clean ( obj )
+            txnames[tx].append( T )
+            # txnames[tx].append(obj.ReadObj())
             nplots += 1
     if not nplots:
         logger.warning("No exclusion curve found.")
