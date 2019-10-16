@@ -54,6 +54,9 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time ):
     remove ( tf, keep )
     remove ( runner, keep )
             
+def runUpdater():
+    cmd = [ "srun", "--mem", "50G", "./run_hiscore_updater.sh" ]
+    subprocess.run ( cmd )
 
 def main():
     import argparse
@@ -61,6 +64,8 @@ def main():
     argparser.add_argument ( '-d','--dry_run', help='dry-run, dont actually call srun',
                              action="store_true" )
     argparser.add_argument ( '-k','--keep', help='keep calling scripts',
+                             action="store_true" )
+    argparser.add_argument ( '-U','--updater', help='run the updater',
                              action="store_true" )
     argparser.add_argument ( '-n', '--nmin', nargs='?', help='minimum worker id [0]',
                         type=int, default=0 )
@@ -76,6 +81,9 @@ def main():
     argparser.add_argument ( '-D', '--dbpath', help='path to database ["../../smodels-database/"]',
                         type=str, default="../../smodels-database/" )
     args=argparser.parse_args()
+    if args.updater:
+        runUpdater()
+        return
     with open("run_walker.sh","rt") as f:
         lines=f.readlines()
     nmin, nmax, cont = args.nmin, args.nmax, args.cont

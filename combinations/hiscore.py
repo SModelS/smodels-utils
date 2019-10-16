@@ -206,7 +206,7 @@ def compileList( nmax ):
         s = "."
         if ctr % 10 == 0:
             s = "x"
-        print ( x, end="", flush=True )
+        print ( s, end="", flush=True )
         try:
             with open( f,"rb+") as f:
                 fcntl.flock( f, fcntl.LOCK_EX )

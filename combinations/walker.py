@@ -48,7 +48,7 @@ class RandomWalker:
             sys.exit(-2)
         self.walkerid = walkerid ## walker id, for parallel runs
         self.hiscoreList = Hiscore ( walkerid, True, "H%d.pcl" % walkerid )
-        self.hiscoreList.nkeep = 2
+        self.hiscoreList.nkeep = 1
         self.model = Model( self.walkerid, cheat=cheat, dbpath = dbpath, 
                             expected = expected, select = select,
                             keep_meta = True )
