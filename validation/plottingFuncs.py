@@ -675,9 +675,9 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         if kfactor == None:
             if "kfactor" in pt.keys():
                 kfactor = pt ['kfactor']
-            else:
+            elif not "error" in pt.keys():
                 kfactor = 1.
-        if "kfactor" in pt.keys() and abs(kfactor - pt['kfactor'])> 1e-5:
+        if (not "error" in pt.keys()) and ("kfactor" in pt.keys()) and (abs(kfactor - pt['kfactor'])> 1e-5):
             logger.error("kfactor not a constant throughout the plane!")
             sys.exit()
         xvals = pt['axes']
