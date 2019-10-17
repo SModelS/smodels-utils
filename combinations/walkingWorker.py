@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
 def main( nmin, nmax, cont, dbpath = "../../smodels-database/" ):
-    import sys
+    import sys, os
     sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels/")
     sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels-utils/")
     sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels-utils/combinations/")
-    # import os
     # os.chdir ( "/mnt/hephy/pheno/ww/git/smodels-utils/combinations/" )
     pfile, states = None, None
     if cont.lower() not in [ "none", "" ]:
