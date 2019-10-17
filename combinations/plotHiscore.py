@@ -265,10 +265,10 @@ def main ():
             help='list all predictions',
             action="store_true" )
     argparser.add_argument ( '-u', '--upload',
-            help='upload to one of the following destinations: none, gpu, github, interesting [none]. run --destinations to learn more', 
+            help='upload to one of the following destinations: none, gpu, github, anomaly, interesting [none]. run --destinations to learn more', 
             type=str, default="" )
     argparser.add_argument ( '-c', '--commit',
-            help='also commit and push to smodels.github.io (works only with -u github or interesting)',
+            help='also commit and push to smodels.github.io (works only with -u github, anomaly, or interesting)',
             action="store_true" )
     argparser.add_argument ( "--destinations", 
             help="learn more about the upload destinations", action="store_true" )
@@ -282,6 +282,8 @@ def main ():
         print ( "            Result can be seen at https://smodels.github.io/models" )
         print ( "interesting: upload to github git directory, 'interesting' folder." )
         print ( "             Result can be seen at https://smodels.github.io/models/interesting" )
+        print ( "anomaly: upload to github git directory, 'anomaly' folder." )
+        print ( "             Result can be seen at https://smodels.github.io/models/anomaly" )
         return
     upload = args.upload.lower()
     if upload in [ "none", "" ]:
@@ -297,8 +299,8 @@ def main ():
     dest = ""
     if upload == "github":
         dest = "../../smodels.github.io/models/"
-    if upload == "interesting":
-        dest = "../../smodels.github.io/models/interesting/"
+    if upload in [ "interesting", "anomaly" ]:
+        dest = "../../smodels.github.io/models/%s/" % upload
 
     if dest != "":
         print ( "[plotHiscore] copying to %s" % dest )
