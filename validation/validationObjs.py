@@ -523,6 +523,7 @@ class ValidationPlot():
         self.data = []
         slhafiles= os.listdir(slhaDir)
         ct_nooutput=0
+        slhafiles.sort() ## make sure we also go in the same order
         for slhafile in slhafiles:
             if not os.path.isfile(os.path.join(slhaDir,slhafile)):  #Exclude the results folder
                 continue
