@@ -461,8 +461,8 @@ if __name__ == "__main__":
             help='choose where to get model from for checking [%s/hiscore.pcl]' % rundir, 
             type=str, default="%s/hiscore.pcl" % rundir )
     argparser.add_argument ( '-d', '--dbpath',
-            help='path to database [../../smodels-database/]', 
-            type=str, default="../../smodels-database/" )
+            help='path to database [%s/database.pcl]' % rundir, 
+            type=str, default="%s/database.pcl" % rundir )
     argparser.add_argument ( '-c', '--check',
             help='simply check the model, dont train (you may use -f to choose where to get model from)', action='store_true' )
     args = argparser.parse_args()

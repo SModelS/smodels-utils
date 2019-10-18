@@ -11,7 +11,7 @@ import helpers
 from pympler.asizeof import asizeof
 
 ## the thresholds for exclusion
-rthresholds = (1.5,)
+rthresholds = (1.7,)
 
 predictor = [ None ]
 
