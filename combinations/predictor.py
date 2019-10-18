@@ -21,7 +21,10 @@ class Predictor:
         if expected:
             from expResModifier import ExpResModifier
             self.modifier = ExpResModifier()
-        self.database=Database( dbpath ) 
+        force_load = None
+        if dbpath.endswith ( ".pcl" ):
+            force_load = "pcl"
+        self.database=Database( dbpath, force_load = force_load ) 
         self.fetchResults()
 
     def fetchResults ( self ):

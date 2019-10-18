@@ -14,8 +14,8 @@ def setup():
     sys.path.insert(0,"%ssmodels-utils/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
     rundir = "/mnt/hephy/pheno/ww/rundir/"
-    if os.path.exists ( "./rundir" ):
-        with open ( "./rundir" ) as f:
+    if os.path.exists ( "./rundir.conf" ):
+        with open ( "./rundir.conf" ) as f:
             rundir = f.read().strip()
     os.chdir ( rundir )
     return rundir
@@ -171,7 +171,7 @@ class RegressionHelper:
         return len ( self.freeParameters( ) )
 
     def trainOffline ( self, trainingfile, modelfile, verbosity ):
-        from model import Model, rthresholds
+        from model import Model
         trainer = Regressor( torchmodel = modelfile, verbosity=verbosity, 
                              rundir = rundir )
         with open( trainingfile, "rb" ) as f:
@@ -411,6 +411,7 @@ class Regressor:
 
     def dumpTrainingData ( self, model ):
         """ dump the model with the compute Z, so we can train offline on it. """
+        from model import rthresholds
         D = model.dict()
         # D["Z"] = self.torchmodel.last_ypred
         D["Z"] = model.Z

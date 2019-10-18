@@ -9,20 +9,23 @@ def setup():
     sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
     # os.chdir ( "/mnt/hephy/pheno/ww/git/smodels-utils/combinations" )
     rundir = "/mnt/hephy/pheno/ww/rundir"
-    if os.path.exists ( "./rundir" ):
-        with open ( "./rundir" ) as f:
+    if os.path.exists ( "./rundir.conf" ):
+        with open ( "./rundir.conf" ) as f:
             rundir = f.read().strip()
     os.chdir ( rundir )
     return rundir
 
-def write( rundir, alsoZeroes = False ):
+def write( rundir, nmax, alsoZeroes = False ):
     """
     :param alsoZeroes: write out even if Z=0.
     """
     print ( "gathering files, include zeroes in Z? %s" % alsoZeroes )
     files = glob.glob ( "training_*.gz" ) 
     All = []
+    brk = False
     for fname in files:
+        if brk:
+            break
         print ( "gathering file %s" % fname )
         try:
             with gzip.open ( fname, "r" ) as f:
@@ -34,6 +37,9 @@ def write( rundir, alsoZeroes = False ):
                     else:
                         if evaled["Z"]>0.:
                             All.append ( line )
+                    if len(All) >= nmax:
+                        brk = True
+                        break
         except ( EOFError, OSError ) as e:
             print ( "skipped %s: %s" % ( fname, e ) )
     with open ( "%s/training.pcl" % rundir, "wb" ) as g:
@@ -60,6 +66,9 @@ if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(
             description='collect the training samples into one big pickle file' )
+    argparser.add_argument ( '-n', '--nmax',
+            help='maximum number of entries to collect. 0 means all. [0]',
+            type=int, default=0 )
     argparser.add_argument ( '-r', '--read',
             help='read and check training.pcl, instead of producing it', 
             action="store_true" )
@@ -67,4 +76,4 @@ if __name__ == "__main__":
     if args.read:
         read( rundir )
     else:
-        write( rundir )
+        write( rundir, args.nmax, alsoZeroes=False )

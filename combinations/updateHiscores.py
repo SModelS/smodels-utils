@@ -12,8 +12,8 @@ def setup():
     sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
     rundir = "/mnt/hephy/pheno/ww/rundir/"
     # rundir = "./"
-    if os.path.exists ( "./rundir" ):
-        with open ( "./rundir" ) as f:
+    if os.path.exists ( "./rundir.conf" ):
+        with open ( "./rundir.conf" ) as f:
             rundir = f.read().strip()
     os.chdir ( rundir )
 

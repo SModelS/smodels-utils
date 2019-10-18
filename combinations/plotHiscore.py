@@ -12,9 +12,11 @@ def setup():
     sys.path.insert(0,"%ssmodels/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
-    # os.chdir ( "/mnt/hephy/pheno/ww/git/smodels-utils/combinations" )
-    rundir = "/mnt/hephy/pheno/ww/rundir"
+    if os.path.exists ( "./rundir.conf" ):
+        with open ( "./rundir.conf" ) as f:
+            rundir = f.read().strip()
     os.chdir ( rundir )
+    return rundir
 
 def obtain ( number, picklefile ):
     """ obtain hiscore number <number> """
@@ -240,10 +242,7 @@ def plot ( number, verbosity, picklefile, options ):
     #    copyFilesToGithub()
 
 def main ():
-    rundir = "/mnt/hephy/pheno/ww/rundir/"
-    if os.path.exists ( "./rundir" ):
-        with open ( "./rundir" ) as f:
-            rundir = f.read().strip()
+    rundir = setup()
     import argparse
     argparser = argparse.ArgumentParser(
             description='hiscore model plotter')
