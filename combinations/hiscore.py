@@ -216,11 +216,11 @@ def compileList( nmax ):
                 ## add models, but without the Nones
                 allmodels += list ( filter ( None.__ne__, models ) )
                 alltrimmed += list ( filter ( None.__ne__, trimmed ) )
+                allmodels = sortByZ ( allmodels )
+                alltrimmed = sortByZ ( alltrimmed )
         except ( IOError, OSError, FileNotFoundError, EOFError, pickle.UnpicklingError ) as e:
             print ( "[hiscore] could not open %s (%s). ignore." % ( fname, e ) )
     print ( )
-    allmodels = sortByZ ( allmodels )
-    alltrimmed = sortByZ ( alltrimmed )
     if nmax > 0:
         while len(allmodels)<nmax:
             allmodels.append ( None )
@@ -243,7 +243,7 @@ def storeList ( models, trimmed, savefile ):
 
 def sortByZ ( models ):
     models.sort ( reverse=True, key = lambda x: x.Z )
-    return models
+    return models[:20] ## only 20
 
 def discuss ( model, name ):
     print ( "Currently %7s Z is: %.3f [%d/%d unfrozen particles, %d predictions] (walker #%d)" % \
