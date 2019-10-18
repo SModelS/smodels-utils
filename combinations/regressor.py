@@ -449,8 +449,8 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(
             description='regressor, used for training when called from command line ' )
     argparser.add_argument ( '-f', '--picklefile',
-            help='specify pickle file with training data [training.pcl]',
-            type=str, default="training.pcl" )
+            help='specify pickle file with training data [%s/training.pcl]' % rundir,
+            type=str, default="%s/training.pcl" % rundir )
     argparser.add_argument ( '-m', '--modelfile',
             help='specify model file to train [test.ckpt]',
             type=str, default="test.ckpt" )
@@ -458,8 +458,8 @@ if __name__ == "__main__":
             help='verbosity -- debug,info,warn,error [info]',
             type=str, default="info" )
     argparser.add_argument ( '-C', '--checkfile',
-            help='choose where to get model from for checking [hiscore.pcl]', 
-            type=str, default="hiscore.pcl" )
+            help='choose where to get model from for checking [%s/hiscore.pcl]' % rundir, 
+            type=str, default="%s/hiscore.pcl" % rundir )
     argparser.add_argument ( '-d', '--dbpath',
             help='path to database [../../smodels-database/]', 
             type=str, default="../../smodels-database/" )

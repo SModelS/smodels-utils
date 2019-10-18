@@ -68,6 +68,13 @@ def runUpdater( dry_run ):
         return
     subprocess.run ( cmd )
 
+def runRegressor( dry_run ):
+    cmd = [ "srun", "--mem", "120G", "./regressor.py" ]
+    print ( "regressor: " + " ".join ( cmd ) )
+    if dry_run:
+        return
+    subprocess.run ( cmd )
+
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description="slurm-run a walker")
@@ -76,6 +83,8 @@ def main():
     argparser.add_argument ( '-k','--keep', help='keep calling scripts',
                              action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the updater',
+                             action="store_true" )
+    argparser.add_argument ( '-R','--regressor', help='run the regressor',
                              action="store_true" )
     argparser.add_argument ( '-n', '--nmin', nargs='?', help='minimum worker id [0]',
                         type=int, default=0 )
@@ -93,6 +102,9 @@ def main():
     args=argparser.parse_args()
     if args.updater:
         runUpdater( args.dry_run )
+        return
+    if args.regressor:
+        runRegressor ( args.dry_run )
         return
     with open("run_walker.sh","rt") as f:
         lines=f.readlines()
