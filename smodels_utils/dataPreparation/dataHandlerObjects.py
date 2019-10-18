@@ -80,6 +80,8 @@ class DataHandler(object):
         for xv in self.xvars:
             if not xv in coordinateMap:
                 logger.error("Coordinate %s has not been defined in coordinateMap" %xv)
+                if xv in [ x, y, z ]:
+                    logger.error ( "Maybe you wrote '%s' instead of %s (i.e. a string instead of a sympy Symbol?)" % ( xv, xv ) )
                 sys.exit()
 
 
