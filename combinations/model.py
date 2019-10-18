@@ -405,12 +405,30 @@ class Model:
         """ create a new SLHA file name. Needed when e.g. unpickling """
         self.currentSLHA = tempfile.mktemp(prefix=".cur",suffix=".slha",dir="./")
 
+    def checkTemplateSLHA ( self ):
+        if not os.path.exists ( self.templateSLHA ):
+            if "/mnt/hephy/" in self.templateSLHA:
+                trySLHA = self.templateSLHA.replace("/mnt/hephy/pheno/ww/git/smodels-utils/combinations/","./" )
+                if os.path.exists ( trySLHA ):
+                    self.templateSLHA = trySLHA
+                    return
+
+    def printMasses( self ):
+        """ convenience function to print masses with particle names """
+        particles = []
+        for pid,m in self.masses.items():
+            if m > 99000:
+                continue
+            particles.append ( "%s: %d" % (  helpers.getParticleName ( pid ), m ) )
+        print ( ", ".join ( particles ) )
+
     def createSLHAFile ( self, outputSLHA=None, nevents=2000 ):
         """ from the template.slha file, create the slha file of the current
             model.
         :param outputSLHA: if not None, write into that file. else, write into
             currentSLHA file.
         """
+        self.checkTemplateSLHA()
         with open( self.templateSLHA ) as f:
             lines=f.readlines()
         if not hasattr ( self, "currentSLHA" ):

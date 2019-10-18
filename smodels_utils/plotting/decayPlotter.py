@@ -40,6 +40,9 @@ def draw( slhafile, outfile, options, offset=0.,
         if out.endswith(".png"):
             out = out.replace(".png","")
 
+    if not "rmin" in options:
+        options["rmin"]=0.
+
     for i in [ "leptons", "integratesquarks", "separatecharm", "verbose",
                "dot", "neato", "pdf", "nopng", "nopercentage", "simple", "squarks",\
                "sleptons", "weakinos", "zconstraints", "tex", "color",\
@@ -89,13 +92,13 @@ def draw( slhafile, outfile, options, offset=0.,
 
     colorizer=decayPlots.ByNameColorizer ( )
 
-    ps=reader.getRelevantParticles ( reader.filterNames(starters) )
-    # print ( "ps", ps )
+    ps=reader.getRelevantParticles ( reader.filterNames(starters), 
+                                     rmin = options["rmin"] )
 
     extra={}
     if options["zconstraints"]:
         for i in [ 23, 24 ]:
-            ds=reader.getDecays ( i, full=True )
+            ds=reader.getDecays ( i, full=True, rmin = options["rmin"] )
             l=""
             first=True
             for d in ds:
@@ -124,8 +127,9 @@ def draw( slhafile, outfile, options, offset=0.,
             color=colorizer.getColor ( name )
         drawer.addNode ( reader.getMass ( name ), name, \
                 options["masses"], color, reader.fermionic ( name ) )
-        decs=reader.getDecays ( name, rmin=0.95 )
-        drawer.addEdges ( name, decs )
+        decs=reader.getDecays ( name, rmin=options["rmin"] )
+        # print ( "decays for", name, options["rmin"], decs )
+        drawer.addEdges ( name, decs, rmin=options["rmin"] )
 
     ## drawer.addMassScale ( )
 
@@ -179,6 +183,8 @@ if __name__ == "__main__":
     argparser.add_argument ( '-c', '--color', help='use color',action='store_true' )
     argparser.add_argument ( '-O', '--offset', help='an offset in x in the plot',
                              type=int, default=0 )
+    argparser.add_argument ( '-r', '--rmin', help='minimum br to still plot [0.]',
+                             type=float, default=0. )
     argparser.add_argument ( '-f', '--filename', nargs='?', \
             help='slha input filename (spheno.slha)',
             type=str, default="spheno.slha" )
@@ -192,6 +198,8 @@ if __name__ == "__main__":
     for (key,value) in Dict.items():
         if type(value)==bool:
             options[key]=value
+
+    options["rmin"] = args.rmin
 
     draw( args.filename, args.outfile, options, args.offset,
           args.verbosity )

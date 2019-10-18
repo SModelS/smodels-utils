@@ -137,8 +137,8 @@ class DecayDrawer:
         #    node.attr['shape']="box" # 'egg'
         node.attr['label']="%s" % label
 
-    def addOneEdge ( self, name, daughter, percentage, label ):
-        if percentage < 0.1:
+    def addOneEdge ( self, name, daughter, percentage, label, rmin = 0. ):
+        if percentage < rmin:
             return
         l=label
         if percentage < 0.9 and not self.options["nopercentage"]:
@@ -150,14 +150,14 @@ class DecayDrawer:
         edge=self.G.get_edge ( name, daughter )
         edge.attr['label']=l
 
-    def addEdges ( self, name, decs ):
+    def addEdges ( self, name, decs, rmin = 0.0 ):
         for (daughter,right) in decs.items():
             label=""
             first=True
             percentage=0
             for (radiator,r) in right.items():
                 if list (self.ps).count ( name ) and list(self.ps).count ( daughter ):
-                    if r < 0.01:
+                    if r < rmin:
                         continue
                     if not first:
                         label+=","
@@ -167,7 +167,8 @@ class DecayDrawer:
                     percentage+=r
                     label+=rname
                     first=False
-            self.addOneEdge ( name, daughter, percentage, label )
+                    # print ( "adding", name, daughter, percentage )
+                    self.addOneEdge ( name, daughter, percentage, label, rmin )
 
     def addMassScale ( self ):
         """ add a ruler that lists the masses """

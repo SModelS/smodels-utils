@@ -12,6 +12,9 @@ def setup():
     sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
     # os.chdir ( "/mnt/hephy/pheno/ww/git/smodels-utils/combinations" )
     rundir = "/mnt/hephy/pheno/ww/rundir"
+    if os.path.exists ( "./rundir" ):
+        with open ( "./rundir" ) as f:
+            rundir = f.read().strip()
     os.chdir ( rundir )
 
 def updateHiscores():

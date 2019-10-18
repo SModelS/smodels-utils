@@ -209,6 +209,7 @@ def plotDecays ( model ):
     options = { "tex": True, "color": True, "dot": True, "squarks": True,
                 "weakinos": True, "sleptons": True, "neato": True,
                 "integratesquarks": False, "leptons": True }
+    options["rmin"] = 0.
     ## FIXME add cross sections.
     decayPlotter.draw ( model.currentSLHA, "decays.png", options,
                         ssmultipliers = model.ssmultipliers )
@@ -216,7 +217,7 @@ def plotDecays ( model ):
 def plot ( number, verbosity, picklefile, options ):
     ## plot hiscore number "number"
     model = obtain ( number, picklefile )
-    print ( "[plotHiscore] create slha file" )
+    # print ( "[plotHiscore] create slha file" )
     fname = model.createSLHAFile ()
     subprocess.getoutput ( "cp %s hiscore.slha" % fname )
     opts = [ "ruler", "decays", "predictions", "copy", "html" ]
@@ -240,6 +241,9 @@ def plot ( number, verbosity, picklefile, options ):
 
 def main ():
     rundir = "/mnt/hephy/pheno/ww/rundir/"
+    if os.path.exists ( "./rundir" ):
+        with open ( "./rundir" ) as f:
+            rundir = f.read().strip()
     import argparse
     argparser = argparse.ArgumentParser(
             description='hiscore model plotter')

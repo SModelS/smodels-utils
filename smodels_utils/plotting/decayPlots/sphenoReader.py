@@ -425,7 +425,7 @@ class SPhenoReader:
             continue
           has_counted[daughter][str(right)]=True
           for (radiator,r) in right.items():
-            if r>0.01:
+            if r>rmin:
               # add this to return table!
               dname=self.name ( daughter )
               if full:
@@ -435,8 +435,8 @@ class SPhenoReader:
               ret[dname][radiator]=r
               # print ( "adding",particle,dname,radiator,r )
               ret_r+=r
-              if ret_r>rmin:
-                return ret
+              #if ret_r>rmin:
+              #  return ret
         return ret
 
     def __init__ ( self, filename, integrateLeptons=True, \
