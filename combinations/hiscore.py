@@ -202,13 +202,13 @@ def compileList( nmax ):
     files = glob.glob ( "H*.pcl" )
     allmodels,alltrimmed=[],[]
     print ( "Loading ", end="", flush=True )
-    for ctr,f in enumerate(files):
+    for ctr,fname in enumerate(files):
         s = "."
         if ctr % 10 == 0:
             s = "x"
         print ( s, end="", flush=True )
         try:
-            with open( f,"rb+") as f:
+            with open( fname,"rb+") as f:
                 fcntl.flock( f, fcntl.LOCK_EX )
                 models = pickle.load ( f )
                 trimmed = pickle.load ( f )
@@ -217,7 +217,7 @@ def compileList( nmax ):
                 allmodels += list ( filter ( None.__ne__, models ) )
                 alltrimmed += list ( filter ( None.__ne__, trimmed ) )
         except ( IOError, OSError, FileNotFoundError, EOFError, pickle.UnpicklingError ) as e:
-            print ( "[hiscore] could not open %s (%s). ignore." % ( f.name, e ) )
+            print ( "[hiscore] could not open %s (%s). ignore." % ( fname, e ) )
     print ( )
     allmodels = sortByZ ( allmodels )
     alltrimmed = sortByZ ( alltrimmed )

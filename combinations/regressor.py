@@ -7,17 +7,29 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from pympler.asizeof import asizeof
-from model import Model, rthresholds
+
+def setup():
+    codedir = "/mnt/hephy/pheno/ww/git/"
+    sys.path.insert(0,"%ssmodels/" % codedir )
+    sys.path.insert(0,"%ssmodels-utils/" % codedir )
+    sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
+    rundir = "/mnt/hephy/pheno/ww/rundir/"
+    if os.path.exists ( "./rundir" ):
+        with open ( "./rundir" ) as f:
+            rundir = f.read().strip()
+    os.chdir ( rundir )
+    return rundir
 
 class PyTorchModel(torch.nn.Module):
-    def __init__(self, variables = None ):
+    def __init__(self, variables = None, rundir = "./" ):
         super(PyTorchModel, self).__init__()
         self.variables = variables
         self.nmasses = 0
         self.ndecays = 0
         if type(variables) == type(None):
-            helper = RegressionHelper()
-            self.variables = helper.freeParameters( "template_many.slha" )
+            helper = RegressionHelper( )
+            slhaf = os.path.join ( os.path.dirname ( __file__ ), "template_many.slha" )
+            self.variables = helper.freeParameters( )
             self.nmasses = helper.nmasses ## store how many masses we have
             self.ndecays = helper.ndecays ## store how many branchings we have
         for k in self.variables:
@@ -116,14 +128,18 @@ class PyTorchModel(torch.nn.Module):
 
 
 class RegressionHelper:
-    def __init__(self):
-        pass
+    def __init__(self, dbpath = "../../smodels-database" ):
+        self.dbpath = dbpath
 
     def device ( self ):
         # return torch.device("cpu")
         return torch.device('cuda:0' if torch.cuda.is_available() else 'cpu' )
 
-    def freeParameters ( self, slhafile ):
+    def freeParameters ( self, slhafile = None ):
+        if slhafile == None:
+            import helpers
+            dname = os.path.dirname ( os.path.realpath ( helpers.__file__ ) )
+            slhafile = os.path.join ( dname, "template_many.slha" ) 
         with open(slhafile,"r") as f:
             lines=f.readlines()
         variables = {}
@@ -152,10 +168,12 @@ class RegressionHelper:
         return t
 
     def countDegreesOfFreedom ( self, slhafile ):
-        return len ( self.freeParameters( slhafile ) )
+        return len ( self.freeParameters( ) )
 
     def trainOffline ( self, trainingfile, modelfile, verbosity ):
-        trainer = Regressor( torchmodel = modelfile, verbosity=verbosity )
+        from model import Model, rthresholds
+        trainer = Regressor( torchmodel = modelfile, verbosity=verbosity, 
+                             rundir = rundir )
         with open( trainingfile, "rb" ) as f:
             import pickle
             lines=[]
@@ -165,7 +183,7 @@ class RegressionHelper:
                     lines.append ( line )
             except EOFError:
                 pass
-        M=Model(0, keep_meta = False )
+        M=Model(0, dbpath = self.dbpath, keep_meta = False )
         models = []
         for i,d in enumerate(lines):
             m = copy.deepcopy(M)
@@ -208,13 +226,15 @@ class Regressor:
     """ this is our nice regressor """
     def __init__ ( self, variables=None, walkerid=0, torchmodel=None, 
                    device=None, dump_training = True,
-                   is_trained = False, verbosity = "info" ):
+                   is_trained = False, verbosity = "info", 
+                   rundir = "./" ):
         """
         :param dump_training: if True, regularly dump training data
         :param is_trained: if True, then we have a trained model, and can perform
                            gradient ascent
         """
         helper = RegressionHelper ()
+        self.rundir = rundir
         self.walkerid = walkerid
         self.verbosity = verbosity
         translate = { "debug": 10, "info": 20, "warning": 30, "error": 40 }
@@ -228,13 +248,11 @@ class Regressor:
         if device == None:
             self.device = helper.device()
         if variables == None:
-            slhaf = os.path.join ( os.path.dirname ( __file__ ), "template_many.slha" )
-            variables = helper.freeParameters( slhaf )
+            import helpers
+            variables = helper.freeParameters( )
         self.torchmodel = torchmodel
-       # if torchmodel == None:
-       #     self.torchmodel = PyTorchModel( variables ).to ( self.device )
         if type(torchmodel)==str:
-            self.torchmodel = PyTorchModel( variables ).to ( self.device )
+            self.torchmodel = PyTorchModel( variables, self.rundir ).to ( self.device )
             self.load ( torchmodel )
         #else:
         #    self.load() ## if a model exists we load it
@@ -411,7 +429,7 @@ class Regressor:
     def load ( self, name = "model.ckpt" ):
         if os.path.exists ( name ):
             self.pprint ( "attempting to load model %s" % name )
-            self.torchmodel = PyTorchModel()
+            self.torchmodel = PyTorchModel( rundir = self.rundir )
             try:
                 sd = torch.load ( name, map_location = self.device )
                 self.torchmodel.my_load_state_dict ( sd )
@@ -426,6 +444,7 @@ class Regressor:
         return ret[0]
 
 if __name__ == "__main__":
+    rundir = setup()
     import argparse
     argparser = argparse.ArgumentParser(
             description='regressor, used for training when called from command line ' )
@@ -441,15 +460,18 @@ if __name__ == "__main__":
     argparser.add_argument ( '-C', '--checkfile',
             help='choose where to get model from for checking [hiscore.pcl]', 
             type=str, default="hiscore.pcl" )
+    argparser.add_argument ( '-d', '--dbpath',
+            help='path to database [../../smodels-database/]', 
+            type=str, default="../../smodels-database/" )
     argparser.add_argument ( '-c', '--check',
             help='simply check the model, dont train (you may use -f to choose where to get model from)', action='store_true' )
     args = argparser.parse_args()
     
-    helper = RegressionHelper ()
+    helper = RegressionHelper ( dbpath = args.dbpath )
     if args.check:
         import pickle
         print ( "checking the torch model" )
-        regressor = Regressor ( torchmodel = args.modelfile )
+        regressor = Regressor ( torchmodel = args.modelfile, rundir = rundir )
         picklefile = args.checkfile
         print ( "fetching model from %s" % picklefile )
         with open( picklefile,"rb") as f:
