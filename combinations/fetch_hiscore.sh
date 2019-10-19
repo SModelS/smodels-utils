@@ -1,3 +1,3 @@
 #!/bin/sh
 
-scp wolfgan.waltenberger@bio:/mnt/hephy/pheno/ww/rundir/hiscore.pcl .
+scp wolfgan.waltenberger@cbe.vbc.ac.at:/mnt/hephy/pheno/ww/rundir/hiscore.pcl .
