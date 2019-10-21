@@ -300,10 +300,11 @@ def main ():
         return
     F = "*.png hiscore.slha index.html"
     dest = ""
+    destdir = "%s/git" % os.environ["HOME"]
     if upload == "github":
-        dest = "../../smodels.github.io/models/"
+        dest = "%s/smodels.github.io/models/" % destdir
     if upload in [ "interesting", "anomaly" ]:
-        dest = "../../smodels.github.io/models/%s/" % upload
+        dest = "%s/smodels.github.io/models/%s/" % ( destdir, upload )
 
     if dest != "":
         print ( "[plotHiscore] copying to %s" % dest )

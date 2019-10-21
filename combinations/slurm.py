@@ -86,6 +86,8 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-R','--regressor', help='run the regressor',
                              action="store_true" )
+    argparser.add_argument ( '-r','--restart', help='restart worker jobs n times [0]',
+                             type=int, default=0 )
     argparser.add_argument ( '-n', '--nmin', nargs='?', help='minimum worker id [0]',
                         type=int, default=0 )
     argparser.add_argument ( '-N', '--nmax', nargs='?', help='maximum worker id [10]',
@@ -113,23 +115,31 @@ def main():
     nprocesses = min ( args.nprocesses, nworkers )
     if nprocesses == 0:
         nprocesses = nworkers
-    if nprocesses == 1:
-        runOneJob ( 0, nmin, nmax, cont, args.dbpath, lines, args.dry_run,
-                    args.keep, args.time )
-    else:
-        import multiprocessing
-        nwalkers = int ( math.ceil ( nworkers / nprocesses ) )
-        jobs = []
-        for i in range(nprocesses):
-            imin = nmin + i*(nwalkers)
-            imax = imin + nwalkers
-            p = multiprocessing.Process ( target = runOneJob, 
-                    args = ( i, imin, imax, cont, args.dbpath, lines, args.dry_run,
-                             args.keep, args.time ) )
-            jobs.append ( p )
-            p.start()
 
-        for j in jobs:
-            j.join()
+    restartctr = 0 
+    while True:
+        if nprocesses == 1:
+            runOneJob ( 0, nmin, nmax, cont, args.dbpath, lines, args.dry_run,
+                        args.keep, args.time )
+        else:
+            import multiprocessing
+            nwalkers = int ( math.ceil ( nworkers / nprocesses ) )
+            jobs = []
+            for i in range(nprocesses):
+                imin = nmin + i*(nwalkers)
+                imax = imin + nwalkers
+                p = multiprocessing.Process ( target = runOneJob, 
+                        args = ( i, imin, imax, cont, args.dbpath, lines, args.dry_run,
+                                 args.keep, args.time ) )
+                jobs.append ( p )
+                p.start()
+
+            for j in jobs:
+                j.join()
+        if args.restart < 1:
+            break
+        restartctr+=1
+        if restartctr>args.restart:
+            break
 
 main()
