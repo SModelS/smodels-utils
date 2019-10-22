@@ -125,7 +125,7 @@ def writeIndexHtml ( model ):
     f.write ( "<html>\n" )
     f.write ( "<body>\n" )
     f.write ( "<center>\n" )
-    f.write ( "<h1>Current best model: Z=%.2f</h1>\n" % model.Z )
+    f.write ( "<h1>Current best proto-model: Z=%.2f</h1>\n" % model.Z )
     f.write ( "</center>\n" )
     f.write ( "<table width=80%>\n<tr><td>\n" )
     dbver = "???"
