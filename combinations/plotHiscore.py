@@ -34,7 +34,7 @@ def obtain ( number, picklefile ):
         #fcntl.flock( f, fcntl.LOCK_UN )
     if number < len(trimmed) and trimmed[number] is not None:
         Z = trimmed[number].Z
-        print ( "[plotHiscore] obtaining trimmed model #%d: Z=%.2f (%d particles)" % (number, Z, len ( trimmed[number].unFrozenParticles() ) ) )
+        print ( "[plotHiscore] obtaining trimmed protomodel #%d: Z=%.2f (%d particles)" % (number, Z, len ( trimmed[number].unFrozenParticles() ) ) )
         return trimmed[number]
     Z = hiscores[number].Z
     print ( "[plotHiscore] obtaining untrimmed #%d: Z=%.2f" % (number, Z ) )
@@ -51,17 +51,17 @@ def gitCommit ( dest, wanted ):
         print ( "[plotHiscore] %s" % out )
     return True
 
-def discussPredictions ( model ):
+def discussPredictions ( protomodel ):
     print ( "How the Z comes about. Best combo:" )
-    combo = model.bestCombo
+    combo = protomodel.bestCombo
     for pred in combo:
         print ( "theory pred: %s:%s" % ( pred.expResult.globalInfo.id, ",".join ( map ( str, pred.txnames ) ) ) )
         # print ( "     `- ", pred.expResult.globalInfo.id, "ana", pred.analysis, "masses", pred.mass, "txnames", pred.txnames, "type", pred.dataType() )
 
-def writeTex ( model ):
+def writeTex ( protomodel ):
     """ write the comment about ss multipliers and contributions, in tex """
     ssm = {}
-    for k,v in model.ssmultipliers.items():
+    for k,v in protomodel.ssmultipliers.items():
         if abs(v-1.)<1e-3:
             continue
         pname = helpers.toLatex ( k )
@@ -71,19 +71,19 @@ def writeTex ( model ):
         ssm[v] = token
 
     whatifs = ""
-    if hasattr ( model, "whatif" ):
+    if hasattr ( protomodel, "whatif" ):
         print ( "[plotHiscore] contributions-by-particle are defined" )
         #whatifs+="\\\\Contributions by particles: $"
         whatifs+="\\\\"
         whatifs+="Contributions by particles: $"
         totalcont = 0. ## to normalize contributions
-        for k,v in model.whatif.items():
-            totalcont += (model.Z - v)
+        for k,v in protomodel.whatif.items():
+            totalcont += (protomodel.Z - v)
         tok = {}
-        for k,v in model.whatif.items():
+        for k,v in protomodel.whatif.items():
             if v in tok.keys():
                 v+=1e-6
-            tok[v] = "%s = %d%s" % ( helpers.toLatex(k), round(100.*(model.Z - v)/totalcont ), "\%" )
+            tok[v] = "%s = %d%s" % ( helpers.toLatex(k), round(100.*(protomodel.Z - v)/totalcont ), "\%" )
         keys = list ( tok.keys() )
         keys.sort()
         for v in keys:
@@ -93,7 +93,7 @@ def writeTex ( model ):
         #whatifs+= ", ".join ( tok )
         whatifs+="$"
     else:
-        print ( "[plotHiscore] model has no ``whatif'' defined (did you use an untrimmed model?)" )
+        print ( "[plotHiscore] protomodel has no ``whatif'' defined (did you use an untrimmed protomodel?)" )
 
     import tex2png
     if len(ssm) == 0:
@@ -115,9 +115,9 @@ def writeTex ( model ):
     except Exception as e:
         print ( "[plotHiscore] Exception when latexing: %s" % e )
 
-def writeIndexHtml ( model ):
+def writeIndexHtml ( protomodel ):
     ssm = []
-    for k,v in model.ssmultipliers.items():
+    for k,v in protomodel.ssmultipliers.items():
         if abs(v-1.)<1e-3:
             continue
         ssm.append ( "%s: %.2f" % (helpers.getParticleName(k),v) )
@@ -125,17 +125,17 @@ def writeIndexHtml ( model ):
     f.write ( "<html>\n" )
     f.write ( "<body>\n" )
     f.write ( "<center>\n" )
-    f.write ( "<h1>Current best proto-model: Z=%.2f</h1>\n" % model.Z )
+    f.write ( "<h1>Current best protomodel: Z=%.2f</h1>\n" % protomodel.Z )
     f.write ( "</center>\n" )
     f.write ( "<table width=80%>\n<tr><td>\n" )
     dbver = "???"
     strategy = "aggressive"
-    if hasattr ( model, "dbversion" ):
-        dbver = model.dbversion
+    if hasattr ( protomodel, "dbversion" ):
+        dbver = protomodel.dbversion
         dotlessv = dbver.replace(".","")
-    f.write ( "<b><a href=./hiscore.slha>Model</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, <br>combination strategy <a href=./matrix_%s.png>%s</a> in step %d</b><br>\n" % ( dotlessv, dbver, strategy, strategy, model.step ) )
-    if hasattr ( model, "rvalues" ):
-        rvalues=model.rvalues
+    f.write ( "<b><a href=./hiscore.slha>ProtoModel</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, <br>combination strategy <a href=./matrix_%s.png>%s</a> in step %d</b><br>\n" % ( dotlessv, dbver, strategy, strategy, protomodel.step ) )
+    if hasattr ( protomodel, "rvalues" ):
+        rvalues=protomodel.rvalues
         rvalues.sort(key=lambda x: x[0],reverse=True )
         f.write ( "<br><b>%d predictions available. Highest r values are:</b><br><ul>\n" % len(rvalues) )
         for rv in rvalues[:5]:
@@ -145,13 +145,13 @@ def writeIndexHtml ( model ):
             f.write ( "<li>%s:%s r=%.2f, r<sub>exp</sub>=%s<br>\n" % ( rv[2].analysisId(), ",".join ( map(str,rv[2].txnames) ), rv[0], srv ) )
         f.write("</ul>\n")
     else:
-        print ( "[plotHiscore] model has no r values!" )
+        print ( "[plotHiscore] protomodel has no r values!" )
 
-    if hasattr ( model, "contributions" ):
+    if hasattr ( protomodel, "contributions" ):
         print ( "[plotHiscore] contributions-per-analysis are defined" )
         f.write ( "<td><br><b>Contributions per analysis:</b><br>\n<ul>\n" )
         conts = []
-        for k,v in model.contributions.items():
+        for k,v in protomodel.contributions.items():
             conts.append ( ( v, k ) )
         conts.sort( reverse=True )
         for v,k in conts:
@@ -163,7 +163,7 @@ def writeIndexHtml ( model ):
     height = 32*int((len(ssm)+3)/4)
     if ssm == []:
         height = 32
-    if hasattr ( model, "whatif" ):
+    if hasattr ( protomodel, "whatif" ):
         height += 32
     f.write ( "<td><img width=600px src=./texdoc.png>\n" ) #  % height )
     f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
@@ -183,13 +183,13 @@ def copyFilesToGithub():
     for f in files:
         if not os.path.exists ( f ):
             continue
-        O = subprocess.getoutput ( "cp %s ../../smodels.github.io/models/" % f )
+        O = subprocess.getoutput ( "cp %s ../../smodels.github.io/protomodels/" % f )
         if len(O)>0:
             print ( "[plotHiscore.py] when copying files: %s" % O )
 
-def plotRuler( model ):
+def plotRuler( protomodel ):
     resultsForPIDs = {}
-    for tpred in model.bestCombo:
+    for tpred in protomodel.bestCombo:
         for pid in tpred.PIDs:
             while type(pid) in [ list, tuple ]:
                 pid = pid[0]
@@ -199,28 +199,28 @@ def plotRuler( model ):
             resultsForPIDs[apid].add ( tpred.analysisId() )
     resultsFor = {}
     for pid,values in resultsForPIDs.items():
-        resultsFor[ model.masses[pid] ] = values
+        resultsFor[ protomodel.masses[pid] ] = values
 
     print ( "[plotHiscore] now draw ruler.png" )
-    rulerPlotter.draw ( model.currentSLHA, "ruler.png", Range=(None,None),
+    rulerPlotter.draw ( protomodel.currentSLHA, "ruler.png", Range=(None,None),
                         mergesquark = False,
                         hasResultsFor = resultsFor )
 
-def plotDecays ( model ):
+def plotDecays ( protomodel ):
     print ( "[plotHiscore] now draw decays.png" )
     options = { "tex": True, "color": True, "dot": True, "squarks": True,
                 "weakinos": True, "sleptons": True, "neato": True,
                 "integratesquarks": False, "leptons": True }
     options["rmin"] = 0.
     ## FIXME add cross sections.
-    decayPlotter.draw ( model.currentSLHA, "decays.png", options,
-                        ssmultipliers = model.ssmultipliers )
+    decayPlotter.draw ( protomodel.currentSLHA, "decays.png", options,
+                        ssmultipliers = protomodel.ssmultipliers )
 
 def plot ( number, verbosity, picklefile, options ):
     ## plot hiscore number "number"
-    model = obtain ( number, picklefile )
+    protomodel = obtain ( number, picklefile )
     # print ( "[plotHiscore] create slha file" )
-    fname = model.createSLHAFile ()
+    fname = protomodel.createSLHAFile ()
     subprocess.getoutput ( "cp %s hiscore.slha" % fname )
     opts = [ "ruler", "decays", "predictions", "copy", "html" ]
     for i in opts:
@@ -229,15 +229,15 @@ def plot ( number, verbosity, picklefile, options ):
 
     plotruler = options["ruler"]
     if plotruler:
-        plotRuler ( model )
+        plotRuler ( protomodel )
     plotdecays = options["decays"]
     if plotdecays:
-        plotDecays ( model )
+        plotDecays ( protomodel )
     if options["predictions"]:
-        discussPredictions ( model )
+        discussPredictions ( protomodel )
     if options["html"]:
-        writeTex ( model )
-        writeIndexHtml ( model )
+        writeTex ( protomodel )
+        writeIndexHtml ( protomodel )
     #if options["copy"]:
     #    copyFilesToGithub()
 
@@ -245,7 +245,7 @@ def main ():
     rundir = setup()
     import argparse
     argparser = argparse.ArgumentParser(
-            description='hiscore model plotter')
+            description='hiscore proto-model plotter')
     argparser.add_argument ( '-n', '--number',
             help='which hiscore to plot [0]',
             type=int, default=0 )
@@ -280,13 +280,13 @@ def main ():
         print ( "Upload destinations: " )
         print ( "      none: no upload" )
         print ( "       gpu: upload to GPU server, afs space." )
-        print ( "            Result can be seen at http://www.hephy.at/user/wwaltenberger/models/" )
+        print ( "            Result can be seen at http://www.hephy.at/user/wwaltenberger/protomodels/" )
         print ( "    github: upload to github git directory." ) 
-        print ( "            Result can be seen at https://smodels.github.io/models" )
+        print ( "            Result can be seen at https://smodels.github.io/protomodels" )
         print ( "interesting: upload to github git directory, 'interesting' folder." )
-        print ( "             Result can be seen at https://smodels.github.io/models/interesting" )
+        print ( "             Result can be seen at https://smodels.github.io/protomodels/interesting" )
         print ( "anomaly: upload to github git directory, 'anomaly' folder." )
-        print ( "             Result can be seen at https://smodels.github.io/models/anomaly" )
+        print ( "             Result can be seen at https://smodels.github.io/protomodels/anomaly" )
         return
     upload = args.upload.lower()
     if upload in [ "none", "" ]:
@@ -302,9 +302,9 @@ def main ():
     dest = ""
     destdir = "%s/git" % os.environ["HOME"]
     if upload == "github":
-        dest = "%s/smodels.github.io/models/" % destdir
+        dest = "%s/smodels.github.io/protomodels/" % destdir
     if upload in [ "interesting", "anomaly" ]:
-        dest = "%s/smodels.github.io/models/%s/" % ( destdir, upload )
+        dest = "%s/smodels.github.io/protomodels/%s/" % ( destdir, upload )
 
     if dest != "":
         print ( "[plotHiscore] copying to %s" % dest )
@@ -324,7 +324,7 @@ def main ():
     if upload == "gpu":
         import socket
         hostname = socket.gethostname()
-        D = "/afs/hephy.at/user/w/wwaltenberger/www/models"
+        D = "/afs/hephy.at/user/w/wwaltenberger/www/protomodels"
         ## first the backup
         if "gpu" in hostname:
             ## make backup

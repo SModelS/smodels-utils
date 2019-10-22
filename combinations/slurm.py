@@ -54,10 +54,12 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time ):
     os.chmod( tf, 0o755 )
     ram = max ( 50, 3 * ( jmax - jmin ) )
     cmd = [ "srun" ]
+    qos = "c_short"
     if time > 48:
-        cmd += [ "--qos", "long" ]
+        qos = "c_long"
     if 8 < time <= 48:
-        cmd += [ "--qos", "medium" ]
+        qos = "c_medium"
+    cmd += [ "--qos", qos ]
     cmd += [ "--mem", "%dG" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
     print ( " ".join ( cmd ) )
     if not dry_run:
@@ -66,8 +68,13 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time ):
     remove ( tf, keep )
     remove ( runner, keep )
             
-def runUpdater( dry_run ):
-    cmd = [ "srun", "--mem", "120G", "./run_hiscore_updater.sh" ]
+def runUpdater( dry_run, time ):
+    qos = "c_short"
+    if time > 48:
+        qos = "c_long"
+    if 8 < time <= 48:
+        qos = "c_medium"
+    cmd = [ "srun", "--qos", qos, "--time", "%s" % ( time*60-1 ), "--mem", "120G", "./run_hiscore_updater.sh" ]
     print ( "updater: " + " ".join ( cmd ) )
     if dry_run:
         return
@@ -108,7 +115,7 @@ def main():
                         type=str, default="/mnt/hephy/pheno/ww/git/smodels-database/" )
     args=argparser.parse_args()
     if args.updater:
-        runUpdater( args.dry_run )
+        runUpdater( args.dry_run, args.time )
         return
     if args.regressor:
         runRegressor ( args.dry_run )
