@@ -53,7 +53,12 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time ):
             f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
     os.chmod( tf, 0o755 )
     ram = max ( 50, 3 * ( jmax - jmin ) )
-    cmd = [ "srun", "--mem", "%dG" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
+    cmd = [ "srun" ]
+    if time > 48:
+        cmd += [ "--qos", "long" ]
+    if 8 < time <= 48:
+        cmd += [ "--qos", "medium" ]
+    cmd += [ "--mem", "%dG" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
     print ( " ".join ( cmd ) )
     if not dry_run:
         a=subprocess.run ( cmd )
