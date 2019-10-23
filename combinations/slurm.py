@@ -52,7 +52,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time ):
         for line in lines:
             f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
     os.chmod( tf, 0o755 )
-    ram = max ( 40, 2.5 * ( jmax - jmin ) )
+    ram = max ( 35, 2.0 * ( jmax - jmin ) )
     cmd = [ "srun" ]
     qos = "c_short"
     if time > 48:
