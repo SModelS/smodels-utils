@@ -455,7 +455,8 @@ class DataHandler(object):
         import csv
 
         waitFor = None
-        if hasattr ( self, "objectName" ):
+        if hasattr ( self, "objectName" ) and self.objectName is not None:
+            print ( "[dataHandlerObjects] warning, object name %s supplied for an exclusion line. This is used to wait for a key word, not to give the object a name." % self.objectName )
             waitFor = self.objectName
         has_waited = False
         if waitFor == None:
