@@ -197,14 +197,18 @@ def copyFilesToGithub():
 
 def plotRuler( protomodel ):
     resultsForPIDs = {}
+    LSP = 1000022
     for tpred in protomodel.bestCombo:
-        for pid in tpred.PIDs:
-            while type(pid) in [ list, tuple ]:
-                pid = pid[0]
-            apid = abs(pid)
-            if not apid in resultsForPIDs:
-                resultsForPIDs[apid]=set()
-            resultsForPIDs[apid].add ( tpred.analysisId() )
+        # print ( "tpres", tpred.analysisId(), "pids", tpred.PIDs )
+        for pids in tpred.PIDs:
+            # print ( "pid", pids, type(pids) )
+            for br in pids:
+                for pid in br:
+                    apid = abs(pid)
+                    if not apid in resultsForPIDs and not apid == LSP:
+                        resultsForPIDs[apid]=set()
+                    if not apid == LSP:
+                        resultsForPIDs[apid].add ( tpred.analysisId() )
     resultsFor = {}
     for pid,values in resultsForPIDs.items():
         resultsFor[ protomodel.masses[pid] ] = values
