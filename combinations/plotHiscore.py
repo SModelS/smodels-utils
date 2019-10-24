@@ -35,10 +35,10 @@ def obtain ( number, picklefile ):
     if number < len(trimmed) and trimmed[number] is not None:
         Z = trimmed[number].Z
         print ( "[plotHiscore] obtaining trimmed protomodel #%d: Z=%.2f (%d particles)" % (number, Z, len ( trimmed[number].unFrozenParticles() ) ) )
-        return trimmed[number]
+        return trimmed[number],True
     Z = hiscores[number].Z
     print ( "[plotHiscore] obtaining untrimmed #%d: Z=%.2f" % (number, Z ) )
-    return hiscores[ number ]
+    return hiscores[ number ],False
 
 def gitCommit ( dest, wanted ):
     """ if wanted, then git commit and git push to smodels.githuib.io """
@@ -115,7 +115,11 @@ def writeTex ( protomodel ):
     except Exception as e:
         print ( "[plotHiscore] Exception when latexing: %s" % e )
 
-def writeIndexHtml ( protomodel ):
+def writeIndexHtml ( protomodel, gotTrimmed ):
+    """ write the index.html file, see e.g.
+        https://smodels.github.io/protomodels/
+    :param gotTrimmed: is the model a trimmed model?
+    """
     ssm = []
     for k,v in protomodel.ssmultipliers.items():
         if abs(v-1.)<1e-3:
@@ -133,7 +137,11 @@ def writeIndexHtml ( protomodel ):
     if hasattr ( protomodel, "dbversion" ):
         dbver = protomodel.dbversion
         dotlessv = dbver.replace(".","")
-    f.write ( "<b><a href=./hiscore.slha>ProtoModel</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, <br>combination strategy <a href=./matrix_%s.png>%s</a> in step %d</b><br>\n" % ( dotlessv, dbver, strategy, strategy, protomodel.step ) )
+    trimmed="Untrimmed"
+    if gotTrimmed:
+        trimmed = "Trimmed"
+    f.write ( "%s <b><a href=./hiscore.slha>ProtoModel</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, <br>combination strategy <a href=./matrix_%s.png>%s</a> in step %d</b><br>\n" % \
+            ( trimmed, dotlessv, dbver, strategy, strategy, protomodel.step ) )
     if hasattr ( protomodel, "rvalues" ):
         rvalues=protomodel.rvalues
         rvalues.sort(key=lambda x: x[0],reverse=True )
@@ -218,7 +226,7 @@ def plotDecays ( protomodel ):
 
 def plot ( number, verbosity, picklefile, options ):
     ## plot hiscore number "number"
-    protomodel = obtain ( number, picklefile )
+    protomodel, trimmed = obtain ( number, picklefile )
     # print ( "[plotHiscore] create slha file" )
     fname = protomodel.createSLHAFile ()
     subprocess.getoutput ( "cp %s hiscore.slha" % fname )
@@ -237,7 +245,7 @@ def plot ( number, verbosity, picklefile, options ):
         discussPredictions ( protomodel )
     if options["html"]:
         writeTex ( protomodel )
-        writeIndexHtml ( protomodel )
+        writeIndexHtml ( protomodel, trimmed )
     #if options["copy"]:
     #    copyFilesToGithub()
 
