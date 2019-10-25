@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import pickle, os, sys, subprocess, time, fcntl
-from walker import Model # RandomWalker
+from protomodel import ProtoModel # RandomWalker
 from smodels.tools.physicsUnits import GeV
 sys.path.insert(0,"../" )
 from smodels_utils.plotting import rulerPlotter, decayPlotter

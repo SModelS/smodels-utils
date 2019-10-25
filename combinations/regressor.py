@@ -172,7 +172,7 @@ class RegressionHelper:
         return len ( self.freeParameters( ) )
 
     def trainOffline ( self, trainingfile, modelfile, verbosity ):
-        from model import Model
+        from protomodel import ProtoModel
         trainer = Regressor( torchmodel = modelfile, verbosity=verbosity, 
                              rundir = rundir )
         with open( trainingfile, "rb" ) as f:
@@ -184,14 +184,14 @@ class RegressionHelper:
                     lines.append ( line )
             except EOFError:
                 pass
-        M=Model(0, dbpath = self.dbpath, keep_meta = False )
-        models = []
+        M=ProtoModel(0, dbpath = self.dbpath, keep_meta = False )
+        protomodels = []
         for i,d in enumerate(lines):
             m = copy.deepcopy(M)
             m.masses = d["masses"]
             m.ssmultipliers = d["ssmultipliers"]
             m.decays = d["decays"]
-            models.append ( ( trainer.convert ( m, tolist=True ), d["Z"] ) )
+            protomodels.append ( ( trainer.convert ( m, tolist=True ), d["Z"] ) )
 
         for epoch in range(20000):
             errs=[]
@@ -199,18 +199,18 @@ class RegressionHelper:
                 trainer.clearScores()
             # print ( "Epoch %d" % epoch )
             dt,tT=0.,0.
-            indices = list(range(len(models)))
+            indices = list(range(len(protomodels)))
             random.shuffle ( indices ) ## random indices
             batchsize = 1000
-            nbatches = int(math.ceil(len(models)/batchsize))
+            nbatches = int(math.ceil(len(protomodels)/batchsize))
             writeScores = False
             if epoch % 10 == 0:
                 writeScores = True
             for mbatch in range(nbatches):
                 beg = mbatch*batchsize
                 end = (mbatch+1)*batchsize
-                modelsbatch = [ models[x][0] for x in indices[beg:end] ]
-                Zbatch = [ [ models[x][1] ] for x in indices[beg:end] ]
+                modelsbatch = [ protomodels[x][0] for x in indices[beg:end] ]
+                Zbatch = [ [ protomodels[x][1] ] for x in indices[beg:end] ]
                 t0=time.time()
                 tt=trainer.batchTrain ( modelsbatch, Zbatch, epoch, writeScores )
                 tT+=tt
@@ -265,12 +265,12 @@ class Regressor:
                                           weight_decay = .005  )
         self.walkerid = walkerid
 
-    def plusDeltaM ( self, theorymodel, rate= 1. ):
-        """ move the theorymodel parameters in the direction
+    def plusDeltaM ( self, protomodel, rate= 1. ):
+        """ move the protomodel parameters in the direction
             of the gradient. """
         grad = self.grad.tolist()
         # print ( "grad", grad )
-        for k,v in theorymodel.masses.items():
+        for k,v in protomodel.masses.items():
             if not "M%d" % k in self.torchmodel.variables:
                 print ( "error, dont know what to do with M%d" % k )
                 sys.exit(-5)
@@ -278,30 +278,30 @@ class Regressor:
             # print ( "idx", idx, "grad=", len(grad), len(grad[0]) )
             t = grad[0][idx] 
             # t = 10. * grad[0][idx] * ( v + 1e-5 ) # the inverse of the normalization
-            theorymodel.masses[k]+= t * rate
-        for k,v in theorymodel.ssmultipliers.items():
+            protomodel.masses[k]+= t * rate
+        for k,v in protomodel.ssmultipliers.items():
             if not "SS%d" % k in self.torchmodel.variables:
                 print ( "error, dont know what to do with M%d" % k )
                 sys.exit(-3)
             idx = self.torchmodel.variables.index( "SS%d" % k)
             t = grad[0][idx]
-            theorymodel.ssmultipliers[k]+= t * rate
-        for pid,decays in theorymodel.decays.items():
+            protomodel.ssmultipliers[k]+= t * rate
+        for pid,decays in protomodel.decays.items():
             for dpid,dbr in decays.items():
                 if not "D%d_%d" % ( pid, dpid ) in self.torchmodel.variables:
                     print ( "error dont know what to do with D%d_%d" % ( pid, dpid ) )
                     sys.exit(-7)
                 idx = self.torchmodel.variables.index( "D%d_%d" % (pid,dpid) )
                 t=grad[0][idx]
-                theorymodel.decays[pid][dpid]+=t*rate
-        return theorymodel
+                protomodel.decays[pid][dpid]+=t*rate
+        return protomodel
 
-    def convert ( self, theorymodel, tolist=False ):
+    def convert ( self, protomodel, tolist=False ):
         """ convert a theory model to x_data 
         :param tolist: if true, return as list, not as tensor
         """
         ret = [ None ]* len(self.torchmodel.variables)
-        for k,v in theorymodel.masses.items():
+        for k,v in protomodel.masses.items():
             if not "M%d" % k in self.torchmodel.variables:
                 print ( "error, dont know what to do with M%d" % k )
                 sys.exit(-9)
@@ -313,14 +313,14 @@ class Regressor:
                 v = 3000. ## set masses to 3000 max
             ret[idx]= v
             # ret[idx]= np.log(v+1e-5) / 10. # a bit of a normalization
-        for k,v in theorymodel.ssmultipliers.items():
+        for k,v in protomodel.ssmultipliers.items():
             if not "SS%d" % k in self.torchmodel.variables:
                 print ( "error, dont know what to do with M%d" % k )
                 sys.exit(-22)
             idx = self.torchmodel.variables.index( "SS%d" % k)
             ret[idx]= v
         if True:
-            for pid,decays in theorymodel.decays.items():
+            for pid,decays in protomodel.decays.items():
                 for dpid,dbr in decays.items():
                     if not "D%d_%d" % ( pid, dpid ) in self.torchmodel.variables:
                         print ( "error dont know what to do with D%d_%d" % ( pid, dpid ) )
@@ -347,10 +347,10 @@ class Regressor:
         with open( "regression%d.log" % self.walkerid, "a" ) as f:
             f.write ( "[regressor:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
-    def train ( self, model, Z, rmax=None ):
+    def train ( self, protomodel, Z, rmax=None ):
         """ train y_label with x_data """
         self.training += 1
-        x_data = self.convert ( model )
+        x_data = self.convert ( protomodel )
         x_data.requires_grad = True ## needs this to have dZ/dx in the end
         y_pred = self.torchmodel(x_data).to(self.device)
         y_label = torch.Tensor ( [ [ Z ] ] ).to ( self.device )
@@ -410,14 +410,14 @@ class Regressor:
         # self.grad = x_data.grad ## store the gradient!
         return tm
 
-    def dumpTrainingData ( self, model ):
+    def dumpTrainingData ( self, protomodel ):
         """ dump the model with the compute Z, so we can train offline on it. """
-        from model import rthresholds
-        D = model.dict()
+        from protomodel import rthresholds
+        D = protomodel.dict()
         # D["Z"] = self.torchmodel.last_ypred
-        D["Z"] = model.Z
-        D["rmax"] = model.rmax
-        if model.rmax > rthresholds[0]: ## put it to zero
+        D["Z"] = protomodel.Z
+        D["rmax"] = protomodel.rmax
+        if protomodel.rmax > rthresholds[0]: ## put it to zero
             D["Z"]=0.
         line = "%s\n" % D
         with gzip.open("training_%d.gz" % self.walkerid,"ab") as f:

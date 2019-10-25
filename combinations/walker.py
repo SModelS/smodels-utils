@@ -15,7 +15,7 @@ except:
 sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels-utils/combinations/")
 from smodels.tools.runtime import nCPUs
 from hiscore import Hiscore
-from model import Model, rthresholds
+from protomodel import ProtoModel, rthresholds
 from history import History
 import helpers
 from pympler.asizeof import asizeof
@@ -49,7 +49,7 @@ class RandomWalker:
         self.walkerid = walkerid ## walker id, for parallel runs
         self.hiscoreList = Hiscore ( walkerid, True, "H%d.pcl" % walkerid )
         self.hiscoreList.nkeep = 1
-        self.model = Model( self.walkerid, cheat=cheat, dbpath = dbpath, 
+        self.protomodel = ProtoModel( self.walkerid, cheat=cheat, dbpath = dbpath, 
                             expected = expected, select = select,
                             keep_meta = True )
         self.strategy = strategy
@@ -71,7 +71,7 @@ class RandomWalker:
 
     def setWalkerId ( self, Id ):
         self.walkerid = Id
-        self.model.walkerid = Id
+        self.protomodel.walkerid = Id
         self.history.walkerid = Id
         if self.regressor != None:
             self.regressor.walkerid = Id
@@ -81,22 +81,22 @@ class RandomWalker:
     #    self.regressor = regressor
 
     @classmethod
-    def fromModel( cls, model, nsteps=10000, strategy="aggressive", walkerid=0, 
-                   dump_training = False, dbpath="../../smodels-database/",
-                   expected = False, select = "all", catch_exceptions = True,
-                   keep_meta = True ):
+    def fromProtoModel( cls, protomodel, nsteps=10000, strategy="aggressive", 
+                   walkerid=0, dump_training = False, 
+                   dbpath="../../smodels-database/", expected = False, 
+                   select = "all", catch_exceptions = True, keep_meta = True ):
         ret = cls( walkerid, nsteps=nsteps, cheat = 0, dbpath = dbpath, 
                    catch_exceptions = catch_exceptions )
                    # keep_meta = keep_meta )
         # ret = cls( walkerid, nsteps, strategy, dump_training, dbpath )
-        ret.model = model
-        ret.model.createNewSLHAFileName()
-        ret.model.expected = expected
-        ret.model.select = select
-        ret.model.walkerid = walkerid
-        ret.model.dbpath = dbpath
-        ret.model.initializePredictor()
-        ret.model.backup()
+        ret.protomodel = protomodel
+        ret.protomodel.createNewSLHAFileName()
+        ret.protomodel.expected = expected
+        ret.protomodel.select = select
+        ret.protomodel.walkerid = walkerid
+        ret.protomodel.dbpath = dbpath
+        ret.protomodel.initializePredictor()
+        ret.protomodel.backup()
         if dump_training:
             ## we use the regressor only to dump the training data
             from regressor import Regressor
@@ -113,46 +113,46 @@ class RandomWalker:
 
     def freezeRandomParticle ( self ):
         """ freezes a random unfrozen particle """
-        unfrozen = self.model.unFrozenParticles( withLSP = False )
+        unfrozen = self.protomodel.unFrozenParticles( withLSP = False )
         if len(unfrozen)<2:
             return 0 ## freeze only if at least 3 unfrozen particles exist
         p = random.choice ( unfrozen )
-        self.model.masses[p]=1e6
+        self.protomodel.masses[p]=1e6
         ## take it out in all decays of other particles!
-        for mpid,mdecays in self.model.decays.items():
+        for mpid,mdecays in self.protomodel.decays.items():
             if p in mdecays:
-                self.model.decays[mpid][p]=0.
-        self.model.normalizeAllBranchings() ## adjust everything
+                self.protomodel.decays[mpid][p]=0.
+        self.protomodel.normalizeAllBranchings() ## adjust everything
         self.log ( "Freezing %s (keep branchings)." % ( helpers.getParticleName(p) ) )
         return 1
 
     def freezeMostMassiveParticle ( self ):
         """ freezes the most massive unfrozen particle """
-        unfrozen = self.model.unFrozenParticles( withLSP=False )
+        unfrozen = self.protomodel.unFrozenParticles( withLSP=False )
         if len(unfrozen)<2:
             return 0 ## freeze only if at least 3 unfrozen particles exist
         pid,minmass=0,0
         for i in unfrozen:
-            if self.model.masses[i]>minmass:
-                minmass = self.model.masses[i]
+            if self.protomodel.masses[i]>minmass:
+                minmass = self.protomodel.masses[i]
                 pid = i
         # p = random.choice ( unfrozen )
-        self.model.masses[pid]=1e6
-        self.model.normalizeAllBranchings() ## adjust everything
+        self.protomodel.masses[pid]=1e6
+        self.protomodel.normalizeAllBranchings() ## adjust everything
         self.log ( "Freezing most massive %s (%.1f)" % ( helpers.getParticleName(pid), minmass ) )
         return 1
 
     def onestep ( self ):
-        self.model.clean()
-        self.model.step+=1
-        nUnfrozen = len ( self.model.unFrozenParticles() )
-        nTotal = len ( self.model.masses.keys() )
-        self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.model.step, nUnfrozen, nTotal, ", ".join ( map ( helpers.getParticleName, self.model.unFrozenParticles() ) ) ) )
+        self.protomodel.clean()
+        self.protomodel.step+=1
+        nUnfrozen = len ( self.protomodel.unFrozenParticles() )
+        nTotal = len ( self.protomodel.masses.keys() )
+        self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.protomodel.step, nUnfrozen, nTotal, ", ".join ( map ( helpers.getParticleName, self.protomodel.unFrozenParticles() ) ) ) )
         if False:
             self.pprint ( "memory footprint (kb): walker %d, model %d, regressor %d, history %d" %\
-                    ( asizeof(self)/1024,asizeof(self.model)/1024,asizeof(self.regressor)/1024, asizeof(self.history)/1024 ) )
+                    ( asizeof(self)/1024,asizeof(self.protomodel)/1024,asizeof(self.regressor)/1024, asizeof(self.history)/1024 ) )
         nChanges = 0
-        mu = 1. - .7 / (self.model.Z+1.) ## make it more unlikely when Z is high
+        mu = 1. - .7 / (self.protomodel.Z+1.) ## make it more unlikely when Z is high
         uUnfreeze = random.gauss( mu ,.5)
         if uUnfreeze > nUnfrozen/float(nTotal):
             # in every nth step unfreeze random particle
@@ -167,7 +167,7 @@ class RandomWalker:
             self.log ( "randomly change signal strengths" )
             nChanges += self.randomlyChangeSignalStrengths()
 
-        mu = .4 / (self.model.Z+1.) ## make it more unlikely when Z is high
+        mu = .4 / (self.protomodel.Z+1.) ## make it more unlikely when Z is high
         uFreeze = random.gauss(mu,.5)
         if uFreeze < nUnfrozen/float(nTotal):
             # in every nth step freeze random particle
@@ -183,30 +183,30 @@ class RandomWalker:
         self.log ( "now create slha file via predict" )
         if self.catch_exceptions: 
             try:
-                self.model.predict( self.strategy )
+                self.protomodel.predict( self.strategy )
             except Exception as e:
                 self.pprint ( "error ``%s'' (%s) encountered when trying to predict. lets revert" % (str(e),type(e) ) )
-                self.model.restore()
+                self.protomodel.restore()
                 return
         else:
-            self.model.predict ( self.strategy )
+            self.protomodel.predict ( self.strategy )
 
-        self.log ( "found highest Z: %.2f" % self.model.Z )
+        self.log ( "found highest Z: %.2f" % self.protomodel.Z )
         
         if self.hiscoreList != None:
             self.log ( "check if result goes into hiscore list" )
-            self.hiscoreList.newResult ( self.model ) ## add to high score list
+            self.hiscoreList.newResult ( self.protomodel ) ## add to high score list
             self.log ( "done check for result to go into hiscore list" )
         # self.hiqueue.put( [ hiscoreList ] )
         self.train ()
-        self.model.computePrior()
-        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.model.letters, self.model.description, self.model.Z ) )
-        self.log ( "step %d/%d finished." % ( self.model.step, self.maxsteps ) )
+        self.protomodel.computePrior()
+        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.protomodel.letters, self.protomodel.description, self.protomodel.Z ) )
+        self.log ( "step %d/%d finished." % ( self.protomodel.step, self.maxsteps ) )
 
     def train ( self ):
         """ train the regressor """
         ## currently we dont train, we just dump the data
-        self.regressor.dumpTrainingData ( self.model )
+        self.regressor.dumpTrainingData ( self.protomodel )
         return # we dont train for now
 
     def gradientAscent ( self ):
@@ -216,9 +216,9 @@ class RandomWalker:
             self.pprint ( "gradient ascent? no!" )
             return
         self.pprint ( "gradient ascent? yes!" )
-        predictedZ = float ( self.regressor.predict ( self.model ) )
-        self.pprint ( "Gradient ascent predicted vs computed Z: %.5f <-> %.5f" % ( predictedZ, self.model.Z ) )
-        self.regressor.train ( self.model, self.model.Z ) # only done to get gradient
+        predictedZ = float ( self.regressor.predict ( self.protomodel ) )
+        self.pprint ( "Gradient ascent predicted vs computed Z: %.5f <-> %.5f" % ( predictedZ, self.protomodel.Z ) )
+        self.regressor.train ( self.protomodel, self.protomodel.Z ) # only done to get gradient
         if not hasattr ( self.regressor, "grad" ) or type(self.regressor.grad) == type(None):
             self.pprint ( "regressor has no grad %d" % hasattr ( self.regressor, "grad" ) )
             sys.exit()
@@ -227,20 +227,20 @@ class RandomWalker:
         # self.log ( "attrs %s %s" % ( self.regressor.loss, self.regressor.torchmodel.last_ypred ) )
         #if self.regressor.loss > 1. or ( hasattr ( self.regressor.torchmodel, "last_ypred" ) and self.regressor.torchmodel.last_ypred in [ float("nan"), None ] ):
         #    return ## dont make gradient ascent when regressor loss is too high
-        self.pprint ( "performing a gradient ascent. Z before %.2f" % self.model.Z )
-        oldZ = self.model.Z
-        self.model.backup()
-        self.regressor.plusDeltaM ( self.model, rate=.1 ) ## move!!
+        self.pprint ( "performing a gradient ascent. Z before %.2f" % self.protomodel.Z )
+        oldZ = self.protomodel.Z
+        self.protomodel.backup()
+        self.regressor.plusDeltaM ( self.protomodel, rate=.1 ) ## move!!
         try:
-            self.model.predict ( self.strategy )
+            self.protomodel.predict ( self.strategy )
         except Exception as e:
             self.pprint ( "could not get prediction for gradient ascended model. revert" )
-            self.model.restore()
+            self.protomodel.restore()
             return
-        self.pprint ( "Z after gradient ascent %.2f, before was %.2f" % ( self.model.Z, oldZ ) )
-        if oldZ > self.model.Z:
+        self.pprint ( "Z after gradient ascent %.2f, before was %.2f" % ( self.protomodel.Z, oldZ ) )
+        if oldZ > self.protomodel.Z:
             self.pprint ( "old value was better. revert" )
-            self.model.restore()
+            self.protomodel.restore()
         else:
             self.pprint ( "keep gradient ascended model" )
 
@@ -249,9 +249,9 @@ class RandomWalker:
         if self.regressor != None and hasattr ( self.regressor, "grad" ):
             self.oldgrad = self.regressor.grad
         ## the muhat multiplier gets multiplied into the signal strengths
-        self.model.resolveMuhat()
+        self.protomodel.resolveMuhat()
         ## and backup!
-        self.model.backup()
+        self.protomodel.backup()
 
     def saveState ( self ):
         """ write out current state, for later retrieval """
@@ -270,56 +270,56 @@ class RandomWalker:
 
     def randomlyChangeSignalStrengths ( self ):
         """ randomly change one of the signal strengths """
-        unfrozenparticles = self.model.unFrozenParticles( withLSP=False )
+        unfrozenparticles = self.protomodel.unFrozenParticles( withLSP=False )
         if len(unfrozenparticles)<2:
             self.pprint ( "not enough unfrozen particles to change random signal strength" )
             return 0
         p = random.choice ( unfrozenparticles )
-        if not p in self.model.ssmultipliers:
-            self.model.ssmultipliers[p]=1.
-        newSSM=self.model.ssmultipliers[p]*random.gauss(1.,.1)
+        if not p in self.protomodel.ssmultipliers:
+            self.protomodel.ssmultipliers[p]=1.
+        newSSM=self.protomodel.ssmultipliers[p]*random.gauss(1.,.1)
         if newSSM == 0.:
             self.pprint ( "Huh? ssmultiplier is 0?? Change to 1." )
             newSSM = 1.
-        self.model.ssmultipliers[p]=newSSM
+        self.protomodel.ssmultipliers[p]=newSSM
         self.log ( "changing signal strength multiplier of %s: %.2f." % (helpers.getParticleName(p), newSSM ) )
         return 1
 
     def randomlyChangeBranchings ( self ):
         """ randomly change the branchings of a single particle """
-        unfrozenparticles = self.model.unFrozenParticles( withLSP=False )
+        unfrozenparticles = self.protomodel.unFrozenParticles( withLSP=False )
         if len(unfrozenparticles)<2:
             self.pprint ( "not enough unfrozen particles to change random branching" )
             return 0
         p = random.choice ( unfrozenparticles )
         openChannels = []
-        for dpid,br in self.model.decays[p].items():
-            if dpid in self.model.unFrozenParticles():
+        for dpid,br in self.protomodel.decays[p].items():
+            if dpid in self.protomodel.unFrozenParticles():
                 openChannels.append ( dpid )
         if len(openChannels) < 2:
             # not enough channels open to tamper with branchings!
             return 0
         dx =.1/numpy.sqrt(len(openChannels)) ## maximum change per channel
         S=0.
-        for i in self.model.decays[p].keys(): ## openChannels[:-1]:
-            oldbr = self.model.decays[p][i]
+        for i in self.protomodel.decays[p].keys(): ## openChannels[:-1]:
+            oldbr = self.protomodel.decays[p][i]
             Min,Max = max(0.,oldbr-dx), min(oldbr+dx,1.)
             br = random.uniform ( Min, Max )
             #br = oldbr+random.uniform(-dx,dx)
             #if br < 0.: br = 0.
             #if br > 1.: br = 1.
-            self.model.decays[p][i]=br
+            self.protomodel.decays[p][i]=br
             S+=br
         if True: # S > 1.: ## correct for too large sums
-            for i,v in self.model.decays[p].items():
-                self.model.decays[p][i] = v / S
+            for i,v in self.protomodel.decays[p].items():
+                self.protomodel.decays[p][i] = v / S
             S = 1.
-        control = sum ( [  x for x in self.model.decays[p].values() ] )
+        control = sum ( [  x for x in self.protomodel.decays[p].values() ] )
         if abs ( control - 1.0 ) > 1e-5:
             self.pprint ( "control %s" % control )
         #    sys.exit(-5)
         brvec=[]
-        for x in self.model.decays[p].values():
+        for x in self.protomodel.decays[p].values():
             if x<1e-5:
                 brvec.append("")
             else:
@@ -329,39 +329,39 @@ class RandomWalker:
 
     def takeRandomMassStep ( self ):
         """ take a random step in mass space for all unfrozen particles """
-        dx = 40. / numpy.sqrt ( len(self.model.unFrozenParticles() ) ) / ( self.model.Z + 1. )
-        for i in self.model.unFrozenParticles():
-            tmp = self.model.masses[i]+random.uniform(-dx,dx)
-            if tmp > self.model.maxMass:
-                tmp = self.model.maxMass
-            if tmp < self.model.masses[self.model.LSP]: ## the LSP is the LSP.
-                tmp = self.model.masses[self.model.LSP]
-            self.model.masses[i]=tmp
+        dx = 40. / numpy.sqrt ( len(self.protomodel.unFrozenParticles() ) ) / ( self.protomodel.Z + 1. )
+        for i in self.protomodel.unFrozenParticles():
+            tmp = self.protomodel.masses[i]+random.uniform(-dx,dx)
+            if tmp > self.protomodel.maxMass:
+                tmp = self.protomodel.maxMass
+            if tmp < self.protomodel.masses[self.protomodel.LSP]: ## the LSP is the LSP.
+                tmp = self.protomodel.masses[self.protomodel.LSP]
+            self.protomodel.masses[i]=tmp
         for squark in [ 1, 2, 3, 4, 5, 6 ]:
             sq1,sq2=1000000+squark,2000000+squark
-            if not sq1 in self.model.masses or not sq2 in self.model.masses:
+            if not sq1 in self.protomodel.masses or not sq2 in self.protomodel.masses:
                 continue
-            msq1,msq2 = self.model.masses[sq1], self.model.masses[sq2]
+            msq1,msq2 = self.protomodel.masses[sq1], self.protomodel.masses[sq2]
             if msq2 < msq1:
             ### sq1 should always be lighter than sq2
-             self.model.masses[sq2]=msq1
-             self.model.masses[sq1]=msq2
-        if 1000023 in self.model.masses and 1000025 in self.model.masses:
-            mchi20 = self.model.masses[1000023]
-            mchi30 = self.model.masses[1000025]
+             self.protomodel.masses[sq2]=msq1
+             self.protomodel.masses[sq1]=msq2
+        if 1000023 in self.protomodel.masses and 1000025 in self.protomodel.masses:
+            mchi20 = self.protomodel.masses[1000023]
+            mchi30 = self.protomodel.masses[1000025]
             if mchi20 > mchi30:
-                self.model.masses[1000023] = mchi30
-                self.model.masses[1000025] = mchi20
+                self.protomodel.masses[1000023] = mchi30
+                self.protomodel.masses[1000025] = mchi20
 
     def unfreezeRandomParticle ( self ):
         """ unfreezes a random frozen particle """
-        frozen = self.model.frozenParticles()
+        frozen = self.protomodel.frozenParticles()
         if len(frozen)==0:
             return 0
         p = random.choice ( frozen )
-        self.model.masses[p]=random.uniform ( self.model.masses[Model.LSP], self.model.maxMass )
-        self.model.normalizeAllBranchings() ## adjust everything
-        self.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.model.masses[p] ) )
+        self.protomodel.masses[p]=random.uniform ( self.protomodel.masses[ProtoModel.LSP], self.protomodel.maxMass )
+        self.protomodel.normalizeAllBranchings() ## adjust everything
+        self.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.protomodel.masses[p] ) )
         return 1
 
     def randomlyTamperWithTheseParticles ( self, pids, r ):
@@ -386,11 +386,11 @@ class RandomWalker:
     def walk ( self ):
         """ Now perform the random walk """
         self.unfreezeRandomParticle() ## start with unfreezing a random particle
-        while self.model.step<self.maxsteps:
+        while self.protomodel.step<self.maxsteps:
             # self.gradientAscent() # perform at begining
             ## only the first walker records history
             if self.record_history:
-                self.history.add ( self.model )
+                self.history.add ( self.protomodel )
             try:
                 self.onestep()
             except Exception as e:
@@ -405,44 +405,44 @@ class RandomWalker:
                 with open("exceptions.log","a") as f:
                     f.write ( "taking a step resulted in exception: %s, %s\n" % (type(e), e ) )
                 sys.exit(-1)
-            self.model.computePrior()
+            self.protomodel.computePrior()
             ratio = 1.
-            if self.model.oldZ() > 0.:
-                ratio = self.model.Z / self.model.oldZ()
-            if self.model.rmax > 1.5:
-                tp = self.model.rvalues[0][2]
+            if self.protomodel.oldZ() > 0.:
+                ratio = self.protomodel.Z / self.protomodel.oldZ()
+            if self.protomodel.rmax > 1.5:
+                tp = self.protomodel.rvalues[0][2]
                 ana="%s(%s,%s)" % \
                      ( tp.analysisId(), ",".join( map ( str, tp.txnames ) ), tp.dataType(True) )
                 self.highlight ( "info", "rmax[%s]=%.2f > %.1f (r2=%.2f): revert." % \
-                        ( ana, self.model.rmax, rthresholds[0], self.model.r2 ) )
-                self.model.restore()
+                        ( ana, self.protomodel.rmax, rthresholds[0], self.protomodel.r2 ) )
+                self.protomodel.restore()
                 if hasattr ( self, "oldgrad" ) and self.regressor != None:
                     self.regressor.grad = self.oldgrad
                 continue
-            #if self.model.oldZ() > 0. and self.model.Z < 0.7 * self.model.oldZ():
-            # if self.oldmodel.Z > 0. and self.model.Z < 0.7 * self.oldmodel.Z:
+            #if self.protomodel.oldZ() > 0. and self.protomodel.Z < 0.7 * self.protomodel.oldZ():
+            # if self.oldmodel.Z > 0. and self.protomodel.Z < 0.7 * self.oldmodel.Z:
             #    ## no big steps taken here.
-            #    self.highlight ( "info", "Z=%.2f -> %.2f. Revert." % ( self.model.oldZ(), self.model.Z ) )
-            #    self.model.restore()
+            #    self.highlight ( "info", "Z=%.2f -> %.2f. Revert." % ( self.protomodel.oldZ(), self.protomodel.Z ) )
+            #    self.protomodel.restore()
             #    if hasattr ( self, "oldgrad" ) and self.regressor != None:
             #        self.regressor.grad = self.oldgrad
             #    continue
 
             if ratio >= 1.:
-                self.highlight ( "info", "Z: %.3f -> %.3f: take the step" % ( self.model.oldZ(), self.model.Z ) )
-                if self.model.Z < 0.7 * self.model.oldZ():
+                self.highlight ( "info", "Z: %.3f -> %.3f: take the step" % ( self.protomodel.oldZ(), self.protomodel.Z ) )
+                if self.protomodel.Z < 0.7 * self.protomodel.oldZ():
                     self.pprint ( " `- weird, though, Z decreases. Please check." )
                     sys.exit(-2)
                 self.takeStep()
             else:
                 u=random.uniform(0.,1.)
                 if u > ratio:
-                    self.pprint ( "u=%.2f > %.2f; Z: %.2f -> %.2f: revert." % (u,ratio,self.model.oldZ(), self.model.Z) )
-                    self.model.restore()
+                    self.pprint ( "u=%.2f > %.2f; Z: %.2f -> %.2f: revert." % (u,ratio,self.protomodel.oldZ(), self.protomodel.Z) )
+                    self.protomodel.restore()
                     if hasattr ( self, "oldgrad" ) and self.regressor != None:
                         self.regressor.grad = self.oldgrad
                 else:
-                    self.pprint ( "u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.model.oldZ(),self.model.Z) )
+                    self.pprint ( "u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.protomodel.oldZ(),self.protomodel.Z) )
                     self.takeStep()
             # self.gradientAscent()
         self.saveState()
@@ -556,7 +556,7 @@ if __name__ == "__main__":
                 v2 = copy.deepcopy ( v )
                 v2.createNewSLHAFileName()
                 v2.walkerid = ctr+1
-                walkers.append ( RandomWalker.fromModel ( v2, walkerid = ctr+1, 
+                walkers.append ( RandomWalker.fromProtoModel ( v2, walkerid = ctr+1, 
                             dump_training = dump_training, dbpath = args.database,
                             expected = args.expected, select = select,
                             catch_exceptions = catchem,
