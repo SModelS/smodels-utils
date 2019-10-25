@@ -27,30 +27,30 @@ class Hiscore:
             return 0.
         return self.hiscores[-1].Z
 
-    def addResult ( self, model ):
+    def addResult ( self, protomodel ):
         """ add a result to the list """
-        model.resolveMuhat() ## add only with resolved muhats
-        if model.Z <= self.currentMinZ():
+        protomodel.resolveMuhat() ## add only with resolved muhats
+        if protomodel.Z <= self.currentMinZ():
             return ## doesnt pass minimum requirement
-        if model.Z == 0.:
+        if protomodel.Z == 0.:
             return ## just to be sure, should be taken care of above, though
         for i,mi in enumerate(self.hiscores):
-            if mi!=None and mi.almostSameAs ( model ):
-                ### this model is essentially the model in hiscorelist.
+            if mi!=None and mi.almostSameAs ( protomodel ):
+                ### this protomodel is essentially the protomodel in hiscorelist.
                 ### Skip!
-                self.pprint ( "the model seems to be already in highscore list. skip" )
+                self.pprint ( "the protomodel seems to be already in highscore list. skip" )
                 return
-            if mi!=None and abs ( model.Z - mi.Z ) / model.Z < 1e-6:
+            if mi!=None and abs ( protomodel.Z - mi.Z ) / protomodel.Z < 1e-6:
                 ## pretty much exactly same score? number of particles wins!!
-                if len ( model.unFrozenParticles() ) < len ( mi.unFrozenParticles() ):
+                if len ( protomodel.unFrozenParticles() ) < len ( mi.unFrozenParticles() ):
                     self.demote ( i )
-                    self.hiscores[i] = copy.deepcopy ( model )
+                    self.hiscores[i] = copy.deepcopy ( protomodel )
                     self.hiscores[i].clean( all=True )
                     self.trimmed[i] = None
                     break
-            if mi==None or model.Z > mi.Z: ## ok, <i>th best result!
+            if mi==None or protomodel.Z > mi.Z: ## ok, <i>th best result!
                 self.demote ( i )
-                self.hiscores[i] = copy.deepcopy ( model )
+                self.hiscores[i] = copy.deepcopy ( protomodel )
                 self.hiscores[i].clean( all=True )
                 self.trimmed[i] = None
                 break
@@ -110,8 +110,8 @@ class Hiscore:
             else:
                 self.pprint ( "Timed out when try to get hiscores!" )
 
-    def trimModels ( self, n=None, trimbranchings=False, maxloss=.01 ):
-        """ trim the first <n> models in the list """
+    def trimprotomodels ( self, n=None, trimbranchings=False, maxloss=.01 ):
+        """ trim the first <n> protomodels in the list """
         if n == None or n < 0 or n > self.nkeep:
             n = self.nkeep
         for i in range(n):
@@ -120,10 +120,10 @@ class Hiscore:
                 trimmer.trim( trimbranchings=trimbranchings )
                 while len(self.trimmed)<=i:
                     self.trimmed.append ( None )
-                self.trimmed[i] = trimmer.model
+                self.trimmed[i] = trimmer.protomodel
 
     def clean ( self ):
-        """ clean hiscore list, i.e. remove cruft from models.
+        """ clean hiscore list, i.e. remove cruft from protomodels.
             leave first one as it is """
         for h in self.hiscores[1:]:
             if h != None:
@@ -166,19 +166,19 @@ class Hiscore:
             return False
         return False
 
-    def newResult ( self, model ):
+    def newResult ( self, protomodel ):
         """ see if new result makes it into hiscore list. If yes, then add.
         """
-        # self.pprint ( "New result with Z=%.2f, %s" % (model.Z, self.save_hiscores ) )
+        # self.pprint ( "New result with Z=%.2f, %s" % (protomodel.Z, self.save_hiscores ) )
         self.log("lets see if it is above threshold" )
         if not self.save_hiscores:
             return
-        if model.Z <= self.currentMinZ():
+        if protomodel.Z <= self.currentMinZ():
             return ## clearly out
         ret = False
         ctr = 0
         while not ret:
-            self.addResult ( model )
+            self.addResult ( protomodel )
             self.log ( "now save list" )
             ret = self.save() ## and write it
             ctr+=1
@@ -200,7 +200,7 @@ def compileList( nmax ):
     """ compile the list from individual hi*pcl """
     import glob
     files = glob.glob ( "H*.pcl" )
-    allmodels,alltrimmed=[],[]
+    allprotomodels,alltrimmed=[],[]
     print ( "Loading ", end="", flush=True )
     for ctr,fname in enumerate(files):
         s = "."
@@ -210,72 +210,72 @@ def compileList( nmax ):
         try:
             with open( fname,"rb+") as f:
                 fcntl.flock( f, fcntl.LOCK_EX )
-                models = pickle.load ( f )
+                protomodels = pickle.load ( f )
                 trimmed = pickle.load ( f )
                 fcntl.flock( f, fcntl.LOCK_UN )
-                ## add models, but without the Nones
-                allmodels += list ( filter ( None.__ne__, models ) )
+                ## add protomodels, but without the Nones
+                allprotomodels += list ( filter ( None.__ne__, protomodels ) )
                 alltrimmed += list ( filter ( None.__ne__, trimmed ) )
-                allmodels = sortByZ ( allmodels )
+                allprotomodels = sortByZ ( allprotomodels )
                 alltrimmed = sortByZ ( alltrimmed )
         except ( IOError, OSError, FileNotFoundError, EOFError, pickle.UnpicklingError ) as e:
             print ( "[hiscore] could not open %s (%s). ignore." % ( fname, e ) )
     print ( )
     if nmax > 0:
-        while len(allmodels)<nmax:
-            allmodels.append ( None )
+        while len(allprotomodels)<nmax:
+            allprotomodels.append ( None )
         while len(alltrimmed)<nmax:
             alltrimmed.append ( None )
-    return allmodels, alltrimmed
+    return allprotomodels, alltrimmed
 
-def count ( models ):
-    return len(models)-models.count(None)
+def count ( protomodels ):
+    return len(protomodels)-protomodels.count(None)
 
-def storeList ( models, trimmed, savefile ):
-    """ store the best models in another hiscore file """
+def storeList ( protomodels, trimmed, savefile ):
+    """ store the best protomodels in another hiscore file """
     from hiscore import Hiscore
     h = Hiscore ( 0, True, savefile )
-    h.hiscores = models
+    h.hiscores = protomodels
     h.trimmed = trimmed
-    print ( "[hiscore] saving %d models and %d trimmed ones to %s" % \
-            ( count(models),count(trimmed), savefile ) )
+    print ( "[hiscore] saving %d protomodels and %d trimmed ones to %s" % \
+            ( count(protomodels),count(trimmed), savefile ) )
     h.save()
 
-def sortByZ ( models ):
-    models.sort ( reverse=True, key = lambda x: x.Z )
-    return models[:20] ## only 20
+def sortByZ ( protomodels ):
+    protomodels.sort ( reverse=True, key = lambda x: x.Z )
+    return protomodels[:20] ## only 20
 
-def discuss ( model, name ):
+def discuss ( protomodel, name ):
     print ( "Currently %7s Z is: %.3f [%d/%d unfrozen particles, %d predictions] (walker #%d)" % \
-            (name, model.Z, len(model.unFrozenParticles()),len(model.masses.keys()),len(model.bestCombo), model.walkerid ) )
+            (name, protomodel.Z, len(protomodel.unFrozenParticles()),len(protomodel.masses.keys()),len(protomodel.bestCombo), protomodel.walkerid ) )
 
-def discussBest ( model, detailed ):
+def discussBest ( protomodel, detailed ):
     """ a detailed discussion of number 1 """
-    p = 1. - stats.norm.cdf ( model.Z )
+    p = 1. - stats.norm.cdf ( protomodel.Z )
     print ( "Current           best: %.3f, p=%.2g [%d/%d unfrozen particles, %d predictions] (walker #%d)" % \
-            (model.Z, p, len(model.unFrozenParticles()),len(model.masses.keys()),len(model.bestCombo), model.walkerid ) )
+            (protomodel.Z, p, len(protomodel.unFrozenParticles()),len(protomodel.masses.keys()),len(protomodel.bestCombo), protomodel.walkerid ) )
     if detailed:
-        print ( "Solution was found in step #%d" % model.step )
-        for i in model.bestCombo:
+        print ( "Solution was found in step #%d" % protomodel.step )
+        for i in protomodel.bestCombo:
             print ( "  prediction in best combo: %s (%s)" % ( i.analysisId(), i.dataType() ) )
 
-def printModels ( models, detailed, nmax=10 ):
+def printprotomodels ( protomodels, detailed, nmax=10 ):
     names = { 0: "highest", 1: "second", 2: "third" }
-    for c,model in enumerate(models):
+    for c,protomodel in enumerate(protomodels):
         if c >= nmax:
             break
-        if model == None:
+        if protomodel == None:
             break
         sc = "%dth" % (c+1)
         if c in names.keys():
             sc = names[c]
         if c==0:
-            discussBest ( model, detailed )
+            discussBest ( protomodel, detailed )
         else:
-            discuss ( model, sc )
+            discuss ( protomodel, sc )
 
-def produceNewSLHAFileNames ( models ):
-    for m in models:
+def produceNewSLHAFileNames ( protomodels ):
+    for m in protomodels:
         if m is not None:
             m.createNewSLHAFileName()
 
@@ -292,77 +292,77 @@ def main ( args ):
 
     if args.fetch:
         import subprocess
-        cmd = "scp gpu:/local/wwaltenberger/git/smodels-utils/combinations/H*.pcl ."
+        cmd = "scp gpu:/local/wwaltenberger/git/sprotomodels-utils/combinations/H*.pcl ."
         print ( "[hiscore] %s" % cmd )
         out = subprocess.getoutput ( cmd )
         print ( out )
 
     if args.infile is None:
-        models,trimmed = compileList( args.nmax ) ## compile list from H<n>.pcl files
+        protomodels,trimmed = compileList( args.nmax ) ## compile list from H<n>.pcl files
     else:
         with open(args.infile,"rb+") as f:
             fcntl.flock( f, fcntl.LOCK_EX )
-            models = pickle.load ( f )
+            protomodels = pickle.load ( f )
             trimmed = pickle.load ( f )
             fcntl.flock( f, fcntl.LOCK_UN )
 
-    produceNewSLHAFileNames ( models )
+    produceNewSLHAFileNames ( protomodels )
     produceNewSLHAFileNames ( trimmed )
 
     if args.trim:
-        model = models[0]
-        tr = Trimmer ( model, maxloss=args.maxloss )
+        protomodel = protomodels[0]
+        tr = Trimmer ( protomodel, maxloss=args.maxloss )
         tr.trimParticles()
-        trimmed[0] = tr.model
+        trimmed[0] = tr.protomodel
 
     if args.trim_branchings:
         if len(trimmed)>0 and trimmed[0] is not None:
-            ## already has a trimmed model? trim only branchings
-            model = trimmed[0]
-            tr = Trimmer ( model, maxloss = args.maxloss )
+            ## already has a trimmed protomodel? trim only branchings
+            protomodel = trimmed[0]
+            tr = Trimmer ( protomodel, maxloss = args.maxloss )
             tr.trimBranchings()
-            trimmed[0] = tr.model
+            trimmed[0] = tr.protomodel
         else:
-            model = models[0]
-            tr = Trimmer ( model )
+            protomodel = protomodels[0]
+            tr = Trimmer ( protomodel )
             tr.trimParticles()
             tr.trimBranchings()
             if len(trimmed)==0:
                 trimmed = [ None ]
-            trimmed[0] = tr.model
+            trimmed[0] = tr.protomodel
 
     if args.analysis_contributions:
-        model = models[0]
+        protomodel = protomodels[0]
         useTrimmed = False
         if len(trimmed)>0 and trimmed[0] is not None:
             useTrimmed = True
-            model = trimmed[0]
-        tr = Trimmer ( model )
-        model = tr.computeAnalysisContributions ()
+            protomodel = trimmed[0]
+        tr = Trimmer ( protomodel )
+        protomodel = tr.computeAnalysisContributions ()
         if useTrimmed:
-            trimmed[0] = model
+            trimmed[0] = protomodel
         else:
-            models[0] = model
+            protomodels[0] = protomodel
 
     if args.nmax > 0:
-        models = models[:args.nmax]
+        protomodels = protomodels[:args.nmax]
         trimmed = trimmed[:args.nmax]
 
     if args.outfile is not None:
-        storeList ( models, trimmed, args.outfile )
+        storeList ( protomodels, trimmed, args.outfile )
 
     if args.check:
-        model = models[0]
+        protomodel = protomodels[0]
         if len(trimmed)>0 and trimmed[0] is not None:
-            model = trimmed[0]
-        tr = Trimmer ( model )
+            protomodel = trimmed[0]
+        tr = Trimmer ( protomodel )
         tr.checkZ()
 
     if args.print:
-        printModels ( models, args.detailed, args.nmax )
+        printprotomodels ( protomodels, args.detailed, args.nmax )
 
     if args.interactive:
-        print ( "[hiscore] starting interactive session. Variables: %smodels, trimmed%s" % \
+        print ( "[hiscore] starting interactive session. Variables: %sprotomodels, trimmed%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
         import IPython
         IPython.embed()
@@ -394,9 +394,9 @@ if __name__ == "__main__":
             help='fetch H<n>.pcl from gpu server',
             action="store_true" )
     argparser.add_argument ( '-t', '--trim',
-            help='trim leading model, but only particles', action="store_true" )
+            help='trim leading protomodel, but only particles', action="store_true" )
     argparser.add_argument ( '-T', '--trim_branchings',
-            help='trim leading model, also branchings',
+            help='trim leading protomodel, also branchings',
             action="store_true" )
     argparser.add_argument ( '-p', '--print',
             help='print list to stdout', action="store_true" )
