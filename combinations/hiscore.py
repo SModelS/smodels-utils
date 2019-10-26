@@ -259,7 +259,7 @@ def discussBest ( protomodel, detailed ):
         for i in protomodel.bestCombo:
             print ( "  prediction in best combo: %s (%s)" % ( i.analysisId(), i.dataType() ) )
 
-def printprotomodels ( protomodels, detailed, nmax=10 ):
+def printProtoModels ( protomodels, detailed, nmax=10 ):
     names = { 0: "highest", 1: "second", 2: "third" }
     for c,protomodel in enumerate(protomodels):
         if c >= nmax:
@@ -359,7 +359,7 @@ def main ( args ):
         tr.checkZ()
 
     if args.print:
-        printprotomodels ( protomodels, args.detailed, args.nmax )
+        printProtoModels ( trimmed, args.detailed, args.nmax )
 
     if args.interactive:
         print ( "[hiscore] starting interactive session. Variables: %sprotomodels, trimmed%s" % \

@@ -34,7 +34,7 @@ def main( nmin, nmax, cont, dbpath = "../../smodels-database/" ):
             nstates = len(states )
             ctr = i % nstates
             print ( "[walkingWorker] fromModel %d: loading %d/%d" % ( i, ctr, nstates ) )
-            w = walker.RandomWalker.fromModel ( states[ctr], 100000, "aggressive", 
+            w = walker.RandomWalker.fromProtoModel ( states[ctr], 100000, "aggressive", 
                     walkerid = i, dump_training=True, expected = False,
                     dbpath = dbpath )
             walkers.append ( w )
