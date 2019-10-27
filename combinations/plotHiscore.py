@@ -4,6 +4,9 @@ import pickle, os, sys, subprocess, time, fcntl
 from protomodel import ProtoModel # RandomWalker
 from smodels.tools.physicsUnits import GeV
 sys.path.insert(0,"../" )
+import smodels_utils.helper.sparticleNames
+import smodels_utils.SModelSUtils
+import smodels_utils.plotting.decayPlots
 from smodels_utils.plotting import rulerPlotter, decayPlotter
 import helpers
 

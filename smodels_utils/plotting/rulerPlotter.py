@@ -11,7 +11,7 @@
 
 from __future__ import print_function
 
-import os, math, sys, tempfile, ROOT
+import os, math, sys, tempfile
 import logging
 
 def setLogLevel ( logger, verbose ):
@@ -30,6 +30,7 @@ def _printCanvas ( c1, filename ):
     """ tried to redirect stdout """
     logger=logging.getLogger(__name__)
     logger.debug ( "printing canvas to %s" % filename )
+    import ROOT
     ROOT.gErrorIgnoreLevel=2000
     c1.Print(filename )
     ROOT.gErrorIgnoreLevel=-1
@@ -162,6 +163,7 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
         maxvalue=Range[1]
     logger.info ( "range is [%d,%d]" % ( minvalue, maxvalue ) )
 
+    import ROOT
     ROOT.gROOT.SetBatch()
     ROOT.gROOT.SetStyle("Plain")
 
