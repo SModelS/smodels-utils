@@ -48,7 +48,7 @@ def gitCommit ( dest, wanted ):
     if not wanted:
         return False
     cmd = "cd %s ; git commit -am 'update'; git push " % dest
-    print ( "[plotHiscore] git-commit %s" % cmd )
+    print ( "[plotHiscore] now git-commit: %s" % cmd )
     out = subprocess.getoutput ( cmd )
     if out != "":
         print ( "[plotHiscore] %s" % out )
