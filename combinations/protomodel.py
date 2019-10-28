@@ -178,11 +178,11 @@ class ProtoModel:
         #if hasattr ( self, "predictor" ):
         #    del self.predictor
 
-    def predict ( self, strategy ):
+    def predict ( self, strategy = "aggressive", nevents = 2000 ):
         """ compute best combo, llhd, and significance """
         self.log ( "predict" )
         # if not os.path.exists ( self.currentSLHA ):
-        self.createSLHAFile()
+        self.createSLHAFile( nevents = nevents )
         # get the predictions that determine whether model is excluded:
         # best results only, also non-likelihood results
         self.log ( "check if excluded" )
