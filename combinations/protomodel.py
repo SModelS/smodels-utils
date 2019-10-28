@@ -196,6 +196,7 @@ class ProtoModel:
         rs = self.checkForExcluded ( bestpreds )
         srs = "%s" % ", ".join ( [ "%.2f" % x for x in rs[:3] ] )
         self.log ( "received r values %s" % srs )
+        self.nevents = nevents
         self.rmax = 0.
         self.r2 = 0.
         if len(rs)>0:
