@@ -198,20 +198,33 @@ def copyFilesToGithub():
         if len(O)>0:
             print ( "[plotHiscore.py] when copying files: %s" % O )
 
+def getPIDsOfTPred ( tpred, ret ):
+    """ get the list of PIDs that the theory prediction should be assigned to """
+    LSP = 1000022
+    for pids in tpred.PIDs:
+        for br in pids:
+            for pid in br:
+                if type(pid) in [ list ]:
+                    for pp in pid:
+                        apid = abs(pp)
+                        if not apid in ret and not apid == LSP:
+                            ret[apid]=set()
+                        if not apid == LSP:
+                            ret[apid].add ( tpred.analysisId() )
+                else:
+                    apid = abs(pid)
+                    if not apid in ret and not apid == LSP:
+                        ret[apid]=set()
+                    if not apid == LSP:
+                        ret[apid].add ( tpred.analysisId() )
+    return ret
+
 def plotRuler( protomodel ):
     resultsForPIDs = {}
-    LSP = 1000022
     for tpred in protomodel.bestCombo:
-        # print ( "tpres", tpred.analysisId(), "pids", tpred.PIDs )
-        for pids in tpred.PIDs:
-            # print ( "pid", pids, type(pids) )
-            for br in pids:
-                for pid in br:
-                    apid = abs(pid)
-                    if not apid in resultsForPIDs and not apid == LSP:
-                        resultsForPIDs[apid]=set()
-                    if not apid == LSP:
-                        resultsForPIDs[apid].add ( tpred.analysisId() )
+        resultsForPIDs =  getPIDsOfTPred ( tpred, resultsForPIDs )
+        # print ( "p", pidsofpred )
+        # resultsForPIDs.union ( getPIDsOfTPred ( tpred ) )
     resultsFor = {}
     for pid,values in resultsForPIDs.items():
         resultsFor[ protomodel.masses[pid] ] = values
