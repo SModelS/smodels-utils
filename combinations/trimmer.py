@@ -40,7 +40,7 @@ class Trimmer:
         print ( "[trimmer] Check significance Z ... " )
         origZ = self.protomodel.Z # to be sure
         self.protomodel.Z = -23.
-        self.protomodel.predict( strategy=self.strategy ) # , keep_meta = True )
+        self.protomodel.predict( strategy=self.strategy, nevents=10000 ) # , keep_meta = True )
         print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions, experimental=%d" % ( self.protomodel.Z, origZ, len(self.protomodel.bestCombo), runtime._experimental ) )
         return abs ( (origZ - self.protomodel.Z) / ( origZ +1e-10 ) ) < 1e-7
 
@@ -50,7 +50,7 @@ class Trimmer:
         print ( "[trimmer] step 1: recompute the full Z. Old one at %.2f." % self.protomodel.Z )
         origZ = self.protomodel.Z # to be sure
         self.protomodel.Z = -23.
-        self.protomodel.predict( strategy=self.strategy ) # , keep_meta = True )
+        self.protomodel.predict( strategy=self.strategy, nevents=10000 ) # , keep_meta = True )
         print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions, experimental=%d" % ( self.protomodel.Z, origZ, len(self.protomodel.bestCombo), runtime._experimental ) )
         if origZ > 0. and abs ( origZ - self.protomodel.Z ) / origZ > 0.001:
             print  ( "[trimmer] error!! Zs do not match! Should not save" )
@@ -111,7 +111,8 @@ class Trimmer:
                     for dp_,dbr_ in self.protomodel.decays[dpid].items():
                         self.protomodel.decays[dpid][dp_] = self.protomodel.decays[dpid][dp_] / br
             # self.createSLHAFile()
-            self.protomodel.predict ( self.strategy )
+            ## when trimming we want to increase statistics
+            self.protomodel.predict ( self.strategy, nevents = 10000 )
             self.pprint ( "when trying to remove %s, Z changed: %.3f -> %.3f" % ( helpers.getParticleName(pid), oldZ, self.protomodel.Z ) )
             if self.protomodel.Z > (1. - self.maxloss)*oldZ:
                 ## the Z is still good enough? discard!
@@ -167,7 +168,7 @@ class Trimmer:
                     S = sum ( self.protomodel.decays[pid].values() )
                     for k,v in self.protomodel.decays[pid].items():
                         self.protomodel.decays[pid][k]=v/S
-                    self.protomodel.predict ( self.strategy )
+                    self.protomodel.predict ( self.strategy, nevents=10000 )
                     if self.protomodel.rmax > 1.5:
                         self.pprint ( "running into exclusion if I try to take it out (rmax=%.1f). Leave in." % self.protomodel.rmax )
                         self.protomodel.restore()

@@ -34,6 +34,10 @@ class Hiscore:
             return ## doesnt pass minimum requirement
         if protomodel.Z == 0.:
             return ## just to be sure, should be taken care of above, though
+        if protomodel.Z > 2.5:
+            ## for values > 2.5 we now predict again with larger statistics.
+            protomodel.predict ( nevents = 10000 )
+
         for i,mi in enumerate(self.hiscores):
             if mi!=None and mi.almostSameAs ( protomodel ):
                 ### this protomodel is essentially the protomodel in hiscorelist.
