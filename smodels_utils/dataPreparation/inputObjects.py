@@ -647,7 +647,7 @@ class TxNameInput(Locker):
             if str(br) == '[*]':  #Ignore wildcard branches
                 continue
             if len(massArray[ibr]) != br.vertnumb+1:
-                logger.error("Mass array definition (%d-dim) is not consistent with the txname constraint (%d-dim)" % ( len(massArray[ibr]), br.vertnumb+1 ))
+                logger.error("Mass array definition (%d-dim) is not consistent with the txname constraint (%d-dim) in %s [%s]" % ( len(massArray[ibr]), br.vertnumb+1, self._txDecay, plane ))
                 sys.exit()
         #Create mass plane for new input
         massPlane = MassPlane(self._txDecay,massArray)
