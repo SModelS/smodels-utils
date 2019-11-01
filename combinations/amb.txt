@@ -1,0 +1,20 @@
+Artificial proto-modelling
+==========================
+
+The goal of this project is to arrive at plausible precursors of the Next Standard
+Model, constructed purely from data. Technically, the project consists of four
+components a "builder", a "critic", a "combiner", and a "predictor".
+
+-) a proto-model builder: a Monte-Carlo Markov Chain-type algorithm that constructs
+proto-models in a random walk, arbitrarily changing the particle content of the theory,
+	the masses, cross sections, and branching ratios of the hypothetical new particles.
+Once a model is constructed, it is passed on to the critic.
+
+-) the critic takes the model from the builder, and uses SModelS to confront it against
+the SModelS database of simplified models results from about 100 searches. The aim 
+of the critic is to reject models that are excluded by any of the plethora of results 
+in the database. As a means of robustification, models that are excluded by one result
+by allowed by similar, other results, will not be rejected. In case of acceptance of
+the model, the critic passes the model to the combiner, alongside with the information
+about 
+
