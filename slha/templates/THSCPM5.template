@@ -475,7 +475,7 @@ DECAY   2000013     8.24561769E+00   # smuon_R decays
      0.00000000E+00    2    -1000037        14   # BR(~mu_R -> ~chi_2- nu_mu)
 #
 #         PDG            Width
-DECAY   1000015     0.00000000E+00   # stau_1 decays
+DECAY   1000015     W2               # stau_1 decays
 #
 #         PDG            Width
 DECAY   2000015     2.09439148E+00   # stau_2 decays
