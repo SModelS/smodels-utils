@@ -71,4 +71,6 @@ Depending on the composition of the group, the PhD can specialize either in more
 aspects of the entire program, or those aspects that require a deeper knowledge of 
 (theoretical) physics.
 
+-) In a later stage of the project we wish to bring in information from measurements (as opposed to searches) via likelihoods on Wilson coefficients. 
+
 [1] Insert a link to a recent talk
