@@ -860,7 +860,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         l1.SetTextSize(.025)
         """l1.DrawLatex(.01,0.023,"#splitline{official plot:}{%s}" % figureUrl)"""
         tgr.l1=l1
-    if abs ( kfactor - 1.) > .01:
+    if kfactor is not None and abs ( kfactor - 1.) > .01:
         l2=TLatex()
         l2.SetNDC()
         l2.SetTextFont(132)
@@ -882,7 +882,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             if "error" in x.keys():
                 continue
             break
-        if "combined" in validationPlot.data[ctr]["dataset"]:
+        if "dataset" in validationPlot.data[ctr].keys() and "combined" in validationPlot.data[ctr]["dataset"]:
             logger.warning ( "asked for an efficiencyMap-type plot, but the cached validationData is for a combined plot. Will label it as 'combined'." )
         else:
             subtitle = "best SR"
