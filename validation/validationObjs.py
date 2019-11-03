@@ -457,8 +457,8 @@ class ValidationPlot():
         masses = list ( map ( float, tokens[1:] ) )
         for m in masses:
             if m>0. and m<1e-10:
-                print ( "it seems there are widths in the vector. implement this." )
-                sys.exit()
+                print ( "[validationObjs] it seems there are widths in the vector. make sure we use them correctly." )
+                # sys.exit()
         if len(masses) % 2 != 0:
             print ( "mass vector is assymetrical. dont know what to do" )
             sys.exit(-1)
@@ -473,6 +473,8 @@ class ValidationPlot():
         masses = self.getMassesFromSLHAFileName ( filename )
         if "TGQ12" in filename:
             return [ masses[0][0], masses[1][0] ]
+        if "THSCPM6" in filename:
+            return [ masses[0][0], masses[0][2] ]
         return [ masses[0][0], masses[0][1] ]
 
     def getDataFromPlanes(self):

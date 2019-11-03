@@ -334,6 +334,10 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
         ## work around an issue with THSCPM1b, they only
         ## give one branch in the slha file names
         tokens += tokens[-2:]
+    if vPlot.txName in [ "THSCPM6" ]:
+        ## work around an issue with THSCPM1b, they only
+        ## give one branch in the slha file names
+        tokens = tokens[:5] + [ tokens[5] ]*2 + [ tokens [ 6 ] ] * 2
     masses = list ( map ( float, tokens[1:] ) )
     # print ( "masses after listifying", masses )
     massPlane = MassPlane.fromString( vPlot.txName, vPlot.axes )
@@ -366,15 +370,13 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
             tmpmasses.append ( massbr )
             massbr = []
         masses = tmpmasses
-        #widths = masses[1::2] ## interpret every second number as a width
-        #masses = masses[0::2]
-        #nM=int(nM/2)
-        #widths = [ widths[:nM], widths[nM:] ]
     else:
         masses = [ masses[:nM], masses[nM:] ]
     # print ( "[plottingFuncs] massPlane", massPlane, "txname", vPlot.txName, "axes", vPlot.axes, "masses", masses, "tokens", tokens, "m1", masses, "m2", masses[nM:], "nM", nM, "widths", widths )
+    if vPlot.txName in [ "THSCPM6" ]:
+        masses = [ list(map(float,tokens[1:4 ] ) ) ] * 2
+        widths = [ list(map(float,[ tokens[5] ] ) ) ] * 2
     varsDict = massPlane.getXYValues( masses, widths ) 
-    # print ( "[plottingFuncs] varsDict", varsDict )
     ## FIXME take into account axis
     return varsDict
 
