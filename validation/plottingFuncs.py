@@ -376,6 +376,9 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
     if vPlot.txName in [ "THSCPM6" ]:
         masses = [ list(map(float,tokens[1:4 ] ) ) ] * 2
         widths = [ list(map(float,[ tokens[5] ] ) ) ] * 2
+    if vPlot.txName in [ "THSCPM5" ]:
+        masses = [ list(map(float,tokens[1:4 ] ) ) ] * 2
+        widths = [ list(map(float,[ tokens[4] ] ) ) ] * 2
     varsDict = massPlane.getXYValues( masses, widths ) 
     ## FIXME take into account axis
     return varsDict
@@ -660,6 +663,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     p1 = validationPlot.axes.find("(")
     p2 = validationPlot.axes.find(")")
     py = validationPlot.axes.find("y")
+    # print ( "Label check", p1, py, p2 )
     if p1 < py < p2:
         logY = True
         xlabel = "x [mass, GeV]"
