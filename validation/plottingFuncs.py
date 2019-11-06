@@ -660,11 +660,12 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     kfactor=None
     xlabel, ylabel, zlabel = 'x [GeV]','y [GeV]',"r = #sigma_{signal}/#sigma_{UL}"
     logY = False
-    p1 = validationPlot.axes.find("(")
-    p2 = validationPlot.axes.find(")")
-    py = validationPlot.axes.find("y")
-    # print ( "Label check", p1, py, p2 )
-    if p1 < py < p2:
+    A = validationPlot.axes.replace(" ","")
+    p1 = A.find("(")
+    p2 = A.find(")")
+    py = A.find("y")
+    #print ( "axes", A )
+    if p1 < py < p2 and A[py-1]==",":
         logY = True
         xlabel = "x [mass, GeV]"
         ylabel = "y [width, GeV]"
