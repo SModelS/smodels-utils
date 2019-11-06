@@ -751,7 +751,7 @@ class TxNameInput(Locker):
 
         #Get dimension of the plot:
         nvars = len(plane.xvars)
-        if nvars < 1 or nvars > 3:
+        if nvars < 1 or nvars > 4:
             logger.error('Can not deal with %i variables' %nvars)
             sys.exit()
 

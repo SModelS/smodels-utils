@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 #(The ordering is the default order assumed for columns in source txt files,
 # or the x,y,.. bins in ROOT histograms or the x,y values in ROOT TGraphs and svg files)
 #This order can be changed using the coordinates keyword in setSources or addSource.
-allvars = x,y,z = var('x y z')
+allvars = x,y,z,w = var('x y z w')
 
 
 class MassPlane(object):
