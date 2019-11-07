@@ -287,6 +287,7 @@ class TemplateFile(object):
 def createMassRanges ( args ):
     """ from the commandline arguments, create the mass ranges """
     masses=[]
+    excludeInvertedMasses=True # if true, dont allow daughters heavier than mothers
     if args.zmin is None:
         ## only x and y are given
         for x in numpy.arange(args.xmin,args.xmax+1,args.dx):
@@ -300,6 +301,8 @@ def createMassRanges ( args ):
                     y = y * args.dy
             else:
                 for y in numpy.arange(args.ymin,args.ymax+1,args.dy):
+                    if excludeInvertedMasses and y > x:
+                        break
                     masses.append ( { "x": x, "y": y } )
         return masses
     # x,y and z are given
@@ -323,7 +326,9 @@ def createMassRanges ( args ):
                         masses.append ( { "x": x, "y": y, "z": z } )
                 y = y * args.dy
         else: ## y is not log scale, so y should be below x, we assume
-            for y in numpy.arange(args.ymin,min(args.ymax+1.,x),args.dy):
+            for y in numpy.arange(args.ymin,args.ymax+1.,args.dy):
+                if excludeInvertedMasses and y > x:
+                    break
                 if args.logz:
                     if args.dz < 1.:
                         logger.error ( "z axis is log scale, but dz < 1. Did you mean 1/dz?" )
@@ -334,6 +339,8 @@ def createMassRanges ( args ):
                         z = z * args.dz
                 else:
                     for z in numpy.arange(args.zmin,args.zmax+1,args.dz):
+                        if excludeInvertedMasses and z > y:
+                            break
                         masses.append ( { "x": x, "y": y, "z": z } )
     return masses
 
