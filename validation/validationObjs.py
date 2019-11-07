@@ -101,7 +101,7 @@ class ValidationPlot():
 
     def completeGraph ( self, curve ):
         """ complete the given graph at the ends to cross the axes """
-        assert ( curve.GetN() > 6 )
+        assert ( curve.GetN() > 3 )
         import ROOT
         x1,y1=ROOT.Double(),ROOT.Double()
         x2,y2=ROOT.Double(),ROOT.Double()
@@ -475,6 +475,8 @@ class ValidationPlot():
             return [ masses[0][0], masses[1][0] ]
         if "THSCPM6" in filename:
             return [ masses[0][0], masses[0][2] ]
+        if "THSCPM1b" in filename:
+            return [ masses[0][0], masses[1][0] ]
         return [ masses[0][0], masses[0][1] ]
 
     def getDataFromPlanes(self):
