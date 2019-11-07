@@ -687,6 +687,11 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
         if (not "error" in pt.keys()) and ("kfactor" in pt.keys()) and (abs(kfactor - pt['kfactor'])> 1e-5):
             logger.error("kfactor not a constant throughout the plane!")
             sys.exit()
+        #import IPython
+        # IPython.embed()
+        if not "axes" in pt:
+            ## try to get axes from slha file
+            pt["axes"] = getXYFromSLHAFile ( pt["slhafile"], validationPlot ) 
         xvals = pt['axes']
         if (not "UL" in pt.keys() or pt["UL"]==None) and (not "error" in pt.keys()):
             logger.warning( "no UL for %s" % xvals )
