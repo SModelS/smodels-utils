@@ -18,7 +18,8 @@ def process ( files, pretend ):
     if True:
         ## suppress everything but ( '*200000?', '*100000?' )
         D = { ('*1000015', '*'): 0., ('*1000022', '*' ): 0., ('*1000023', '*' ): 0.,
-              ('*10000*', '*10000*' ): 0., ('*20000*', '*20000*' ): 0. }
+              ('*10000*', '*10000*' ): 0., ('*20000*', '*20000*' ): 0.,
+              ('*100000?', '*200000?' ): 1. }
         ssmultipliers = ' --ssmultipliers "%s" ' % str(D)
         # print ( "ssm", ssmultipliers )
     for f in files:
