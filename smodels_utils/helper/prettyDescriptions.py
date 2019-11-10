@@ -206,10 +206,14 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TGQqtt':'gluino gluino --> gluon top antitop lsp lsp ',
     'TScharm':'scharm  --> charm lsp ',
     'TSlepSlep':'slepton  --> lepton lsp ',
-    'THSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 'THSCPM3' : 'squark --> quark chargino_1', 'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau_1',
-    'THSCPM1Disp' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 'THSCPM3' : 'squark --> quark chargino_1', 'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau_1',
+    'THSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 
+    'THSCPM3' : 'squark --> quark chargino_1', 
+    'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau_1',
+    'THSCPM1Disp' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1',
     'THSCPM7' : 'lsp chargino^pm_2 --> tau stau_1 chargino^pm_1, chargino^pm_1 --> nu stau_1',
-    'THSCPM8' : 'squark --> quark quark stau_1', 'THSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp', 'THSCPM2b' : 'stau lsp --> stau lsp',
+    'THSCPM8' : 'squark --> quark quark stau_1', 
+    'THSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp', 
+    'THSCPM2b' : 'stau lsp --> stau lsp',
     'THSCPM4' : 'squark --> quark chargino_1 (quark lsp)',
     'THSCPM6' : 'squark squark --> quark quark lsp lsp, lsp --> tau tau_1',
     'THSCPM1b' : 'stau stau --> stau stau',
@@ -345,14 +349,14 @@ motherDict = {"T1" :  "gluino",
     "THSCPM1" : "chargino^pm_1",
     "THSCPM1Disp" : "chargino^pm_1",
     "THSCPM1b" : "stau",
-    "THSCPM3" : "squark",
-    "THSCPM5" : "squark",
-    "THSCPM7" : "lsp chargino^pm_2",
-    "THSCPM8" : "squark",
     "THSCPM2" : "lsp chargino^pm_1",
     "THSCPM2b" : "lsp stau",
+    "THSCPM3" : "squark",
     "THSCPM4" : "squark",
+    "THSCPM5" : "squark",
     "THSCPM6" : "squark",
+    "THSCPM7" : "lsp chargino^pm_2",
+    "THSCPM8" : "squark",
     'TRHadGM1' : 'gluino',
     'TRHadQM1' : 'stop',
 	"T5Gamma" : "gluino",
@@ -557,6 +561,12 @@ def prettyAxes(txname,axes):
 
     #Build axes object (depending on symmetric or asymmetric branches:
     axes = eval(axes)
+    if txname == 'THSCPM5':
+        return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
+                'm_{#tilde{#tau}} = (y,1e-16)' ]
+    if txname == 'THSCPM6':
+        return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
+                'm_{#tilde{#tau}} = (y,1e-16)' ]
     if txname == 'TGQ':
         return ['m_{#tilde{g}} = x, m_{#tilde{q}} = 0.96*x',
                     'm_{#tilde{#chi}_{1}^{0}} = y']

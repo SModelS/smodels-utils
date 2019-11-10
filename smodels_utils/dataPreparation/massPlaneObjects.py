@@ -26,6 +26,10 @@ logger = logging.getLogger(__name__)
 #This order can be changed using the coordinates keyword in setSources or addSource.
 allvars = x,y,z,w = var('x y z w')
 
+def _lambdify ( a, b, c, dummify ):
+    f = lambdify ( a, b, c, dummify=dummify )
+    f.expr = "%s: %s" % ( a, b )
+    return f
 
 class MassPlane(object):
     """
@@ -266,7 +270,8 @@ class MassPlane(object):
         :return: None if mass array do not met the conditions of one branch
         else: {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
-        # print ( "widthArray", widthArray )
+        #print ( ">> widthArray", widthArray )
+        #print ( ">> massArray", massArray )
 
         if len(massArray) != len(self.branches):
             logger.error("Mass array inconsistent with branches length")
@@ -289,6 +294,8 @@ class MassPlane(object):
                     xyArray[xvar] = value
             return xyArray
         for i,(mass,width) in enumerate(zip(massArray,widthArray)):
+            if self.axes[i]==['*']: ## skip the "any" branches
+                continue
             xyDict = self.branches[i].getXYValues(mass,width)
             if xyDict is None:
                 return None
@@ -390,7 +397,7 @@ class Axes(object):
         self._widthFunctions = []
         self._widthIndices = [] ## take note of where width info was given
         for m in self._massVars:
-            self._massFunctions.append(lambdify(self._xvars,s[m],'math',dummify=False))
+            self._massFunctions.append(_lambdify(self._xvars,s[m],'math',dummify=False))
         tall = solve(self._equations,widths,dict=True)
         if len(tall)==0:
             return
@@ -398,7 +405,7 @@ class Axes(object):
         for i,m in enumerate(self._widthVars):
             # x=0.
             try:
-                x=lambdify(self._xvars,t[m],'math',dummify=False)
+                x=_lambdify(self._xvars,t[m],'math',dummify=False)
                 self._widthFunctions.append ( x )
                 self._widthIndices.append ( i )
             except KeyError: ## does not have to be given!
@@ -497,7 +504,7 @@ class Axes(object):
         #dummify=False allows to keep MassA,MassB,... as valid argument keywords:
         #(make sure the MassA,MassB,.. values are passed as keywords)
         for xv in self._xvars:
-            self._xyFunction[xv] = lambdify(self._massVars+self._widthVars,xy[xv],'math',dummify=False)
+            self._xyFunction[xv] = _lambdify(self._massVars+self._widthVars,xy[xv],'math',dummify=False)
         self._nArguments = nvars
 
     def getXYValues(self,massArray,widthArray=None):
@@ -548,12 +555,15 @@ class Axes(object):
         xValues = {}
         #Get the function for each x,y,.. variable and compute its value
         for l in [ "A", "B", "C" ]:
+            if not "Mass%s" % l in massInput.keys():
+                massInput["Mass%s" % l] = None
             if "Mass%s" % l in massInput.keys() and \
                 not "Width%s" % l in massInput.keys(): ## FIXME why is this needed???
                 massInput["Width%s" % l ]=None
-        # print ( "massInput", massInput )
-        # print ( "massInput", massInput )
+        #print ( "[getXYValues] massInput", massInput )
+        #print ( "[getXYValues] xyFunc", self._xyFunction )
         for xv,xfunc in self._xyFunction.items():
+            #print ( ". xv", xv, "func", xfunc.expr )
             xValues[str(xv)] = xfunc(**massInput)
 
         #Now check if the x,y,.. values computed give the massArray back:

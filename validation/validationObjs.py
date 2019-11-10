@@ -457,7 +457,8 @@ class ValidationPlot():
         masses = list ( map ( float, tokens[1:] ) )
         for m in masses:
             if m>0. and m<1e-10:
-                print ( "[validationObjs] it seems there are widths in the vector. make sure we use them correctly." )
+                pass
+                # print ( "[validationObjs] it seems there are widths in the vector. make sure we use them correctly." )
                 # sys.exit()
         if len(masses) % 2 != 0:
             print ( "mass vector is assymetrical. dont know what to do" )
@@ -603,7 +604,9 @@ class ValidationPlot():
                             mass[i][im] = omass
                             break
 
+            #print ( "get xy", mass, width )
             varsDict = massPlane.getXYValues(mass,width)
+            #print ( "varsdict", varsDict )
             if varsDict is None:
                 logger.debug( "dropping %s, doesnt fall into the plane of %s." % \
                                (slhafile, massPlane ) )
