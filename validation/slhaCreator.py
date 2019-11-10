@@ -381,6 +381,8 @@ if __name__ == "__main__":
         help="clear cruft files")
     argparser.add_argument('-k', '--keep', action='store_true',
         help="keep temp files")
+    argparser.add_argument('-N', '--no_xsecs', action='store_true',
+        help="dont compute cross sections")
     argparser.add_argument('-d', '--dry_run', action='store_true',
         help="dry run, only show which points would be created")
     argparser.add_argument('-6', '--pythia6', action='store_true',
@@ -422,8 +424,8 @@ if __name__ == "__main__":
             else:
                 print ( " * x: %s, y: %s" % (pt["x"], pt["y"]) )
         sys.exit()
-    slhafiles = tempf.createFilesFor( masses, computeXsecs=True, massesInFileName=True,
-                                      nevents=args.nevents )
+    slhafiles = tempf.createFilesFor( masses, computeXsecs=not args.no_xsecs, 
+                       massesInFileName=True, nevents=args.nevents )
     print ( "Produced %s slha files" % len(slhafiles ) )
     newtemp = tempfile.mkdtemp(dir="./" )
     print ( "Now build new tarball in %s/" % newtemp )

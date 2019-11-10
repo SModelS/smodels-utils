@@ -13,6 +13,8 @@ def main():
         f.close()
         g = open ( fl, "wt" )
         for line in lines:
+            if "Signal strength" in line:
+                continue
             if "XSECTION" in line:
                 break
             g.write ( line )

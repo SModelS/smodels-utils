@@ -7,5 +7,5 @@ cd /mnt/hephy/pheno/ww/git/smodels-utils/validation
 echo "starting slha creator for thscpm6 at `hostname`"
 echo "working dir: `pwd`"
 echo "python3: `which python3`"
-./slhaCreator.py -t THSCPM6 -a "[[x,x-100., (y, 1e-16)], [x, x-100, (y, 1e-16)]]" --xmin 900. --xmax 2500. --dx 100. --ymin 325. --ymax 2400. --dy 100. -n 5000 -8 -p 70
+./slhaCreator.py -t THSCPM6 -a "[[x,x-100., (y, 1e-16)], [x, x-100, (y, 1e-16)]]" --xmin 900. --xmax 2500. --dx 100. --ymin 325. --ymax 2400. --dy 100. -n 5000 -8 -p 10 --no_xsecs
 echo "done slha creator"
