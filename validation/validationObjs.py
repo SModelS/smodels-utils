@@ -123,7 +123,10 @@ class ValidationPlot():
             ay1 = rescaleWidth(ay1)
         if ax2 == ax1:
             ax2 = ax1 + 1e-16
-        k = (ay2 - ay1) / ( ax2 - ax1 )
+        dx = ax2 - ax1
+        if dx == 0.:
+            dx=1e-6
+        k = (ay2 - ay1) / dx
         if abs(k) > 1:
             ## the curve is more vertical -- close with the x-axis (y=0)
             self.addPointInFront ( curve, tx1, 0. )

@@ -49,6 +49,7 @@ prettySUSYParticle = {
     'lsp' : '#tilde{#chi}^{0}_{1}',  # lightesd SUSY particle
     'neutralino' : '#tilde{#chi}^{0}',      #neutralino
     'chargino' : '#tilde{#chi}',            #Chargino
+    'chargino^pm_1' : '#tilde{#chi}^{#pm}_{0}',            #Chargino
     'gravitino':'#tilde{G}',              #gravitino
     'gluino': '#tilde{g}',        #gluino
     'higgsino' : '#tilde{H}',       #higgsino
@@ -64,7 +65,7 @@ prettySUSYParticle = {
     'selectron' : '#tilde{e}',      #selectron
     'smuon' : '#tilde{#mu}',   #smuon
     'stau' : '#tilde{#tau}', #stau
-
+    'stau_1' : '#tilde{#tau}_{1}', #stau
     'sneutrino' : '#tilde{#nu}',            #sneutrino
     'electron-sneutrino' : '#tilde{#nu}_{e}',      #electron-sneutrino
     'muon-sneutrino' : '#tilde{#nu}_{#mu}',   #muon-sneutrino
@@ -207,15 +208,15 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TScharm':'scharm  --> charm lsp ',
     'TSlepSlep':'slepton  --> lepton lsp ',
     'THSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 
-    'THSCPM3' : 'squark --> quark chargino_1', 
-    'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau_1',
+    'THSCPM3' : 'squark --> quark chargino^pm_1', 
+    'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau',
     'THSCPM1Disp' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1',
     'THSCPM7' : 'lsp chargino^pm_2 --> tau stau_1 chargino^pm_1, chargino^pm_1 --> nu stau_1',
     'THSCPM8' : 'squark --> quark quark stau_1', 
     'THSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp', 
     'THSCPM2b' : 'stau lsp --> stau lsp',
-    'THSCPM4' : 'squark --> quark chargino_1 (quark lsp)',
-    'THSCPM6' : 'squark squark --> quark quark lsp lsp, lsp --> tau tau_1',
+    'THSCPM4' : 'squark --> quark chargino^pm_1 (quark lsp)',
+    'THSCPM6' : 'squark squark --> quark quark lsp lsp, lsp --> tau stau_1',
     'THSCPM1b' : 'stau stau --> stau stau',
     'TRHadGM1' : 'gluino gluino --> gluino gluino',
     'TRHadQM1' : 'stop stop --> stop stop',
@@ -556,8 +557,6 @@ def prettyAxes(txname,axes):
              (e.g. {'x' : m_{#tilde{g}}, 'y' : m_{#tilde{#chi}_{1}^{0}}
              'constraints' : [m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}]})
     """
-    # print ( "pretty axes txname=", txname, type(txname) )
-    # print ( "pretty axes axes=", axes, type(axes) )
 
     #Build axes object (depending on symmetric or asymmetric branches:
     axes = eval(axes)
@@ -635,6 +634,4 @@ def prettyAxes(txname,axes):
         axStr = massStrings[i].strip()+'='+str(eq)
         niceAxes.append(axStr.replace("'",""))
 
-    # print ( "return=", niceAxes )
     return niceAxes
-

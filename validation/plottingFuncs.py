@@ -379,7 +379,7 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
     if vPlot.txName in [ "THSCPM5" ]:
         masses = [ list(map(float,tokens[1:4 ] ) ) ] * 2
         widths = [ list(map(float,[ tokens[4] ] ) ) ] * 2
-    if vPlot.txName in [ "THSCPM8" ]:
+    if vPlot.txName in [ "THSCPM8", "THSCPM3" ]:
         masses = [ list(map(float,tokens[1:3 ] ) ) ] * 2
         widths = [ list(map(float,[ tokens[3] ] ) ) ] * 2
     varsDict = massPlane.getXYValues( masses, widths ) 
