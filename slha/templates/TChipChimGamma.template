@@ -54,11 +54,12 @@ BLOCK MINPAR  # Input parameters - minimal models
 #
 BLOCK MASS  # Mass Spectrum
 # PDG code           mass       particle
-        22     1.00000000E+04
-        25     1.00000000E+05
+#        22     1.00000000E+05
+#        25     1.00000000E+05
         35     1.00000000E+05
         36     1.00000000E+05
         37     1.00000000E+05
+#   1000039	   1.00000000E+05	# ~G
    1000001     1.00000000E+05   # ~d_L
    2000001     1.00000000E+05   # ~d_R
    1000002     1.00000000E+05   # ~u_L
@@ -86,13 +87,7 @@ BLOCK MASS  # Mass Spectrum
    1000024     1.00000000E+05	# ~chi_1+
    1000025     M0			    # ~chi_30
    1000035     1.00000000E+05   # ~chi_40
-   1000037     M0			    # ~chi_2+
-   2000012     1.00000000E+05   # ~nu_eR
-   2000014     1.00000000E+05   # ~nu_muR
-   2000016     1.00000000E+05   # ~nu_tauR
-   1000045     1.00000000E+05   # ~chi_50
-   45     	   1.00000000E+05  	# ?
-   46     	   1.00000000E+05   # ?
+   1000037     M0  			    # ~chi_2+
 # /
 BLOCK NMIX  # Neutralino Mixing Matrix
   1  1     9.79183656E-01   # N_11
@@ -187,17 +182,17 @@ BLOCK MSOFT Q=  2.90528802E+02  # The soft SUSY breaking masses at the scale Q
 
 # DECAY TABLE
 #         PDG            Width
-DECAY   1000025     	  1.0   # neutralino2 decays
+DECAY   1000025     	  1.0   # N3 decays
 #           BR         NDA      ID1       ID2
      	   0.5	   		2     1000023      23	   # BR(N3 -> N2 Z)
      	   0.5	   		2     1000023      25      # BR(N3 -> N2 h)
 #
 #         PDG            Width
-DECAY   1000037     	  1.0   # chargino1+ decays
+DECAY   1000037     	  1.0   # C2 decays
 #           BR         NDA      ID1       ID2
      		1.0    		2    	1000023	   24	   # BR(C2 -> N2 W)
 #    
 #         PDG            Width
-DECAY   1000023     	  1.0   # neutralino2 decays
+DECAY   1000023     	  1.0   # N2 decays
 #            BR        NDA      ID1       ID2
       		1.0    		2     1000022      22 		# BR(N2 -> N1 gamma)
