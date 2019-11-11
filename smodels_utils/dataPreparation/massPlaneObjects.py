@@ -555,8 +555,8 @@ class Axes(object):
         xValues = {}
         #Get the function for each x,y,.. variable and compute its value
         for l in [ "A", "B", "C" ]:
-            if not "Mass%s" % l in massInput.keys():
-                massInput["Mass%s" % l] = None
+            #if not "Mass%s" % l in massInput.keys():
+            #    massInput["Mass%s" % l] = None
             if "Mass%s" % l in massInput.keys() and \
                 not "Width%s" % l in massInput.keys(): ## FIXME why is this needed???
                 massInput["Width%s" % l ]=None
