@@ -9,7 +9,6 @@
 import sys,os,copy
 import logging
 import argparse,time
-from smodels.tools import runtime
 
 try:
     from ConfigParser import SafeConfigParser
@@ -216,6 +215,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         logger.error("No experimental results found.")
 
     if ncpus < 0: 
+        from smodels.tools import runtime
         ncpus = runtime.nCPUs() + ncpus + 1
     # logger.info ( "ncpus=%d, n(expRes)=%d, genData=%d" % ( ncpus, len(expResList), generateData ) )
 
