@@ -563,7 +563,7 @@ def prettyAxes(txname,axes):
     #Build axes object (depending on symmetric or asymmetric branches:
     axes = eval(axes)
     if txname == 'THSCPM2b':
-        return ['m_{#tilde{#tau}} = (x,1e-16)', ]
+        return ['m_{#tilde{#tau}} = (x,y)', ]
     if txname == 'THSCPM4':
         return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{#pm}} = (y,1e-16)', ]
     if txname == 'THSCPM5':
