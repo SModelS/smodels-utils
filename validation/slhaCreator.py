@@ -143,7 +143,9 @@ class TemplateFile(object):
         ftemplate = open(self.path,'r')
         fdata = ftemplate.read()
         ftemplate.close()
-        for tag in massDict: fdata = fdata.replace(tag,str(massDict[tag]))
+        for tag in massDict: 
+            fdata = fdata.replace(tag+"-5",str(massDict[tag]-5))
+            fdata = fdata.replace(tag,str(massDict[tag]))
 
         #Create SLHA filename (if not defined)
         if not slhaname:

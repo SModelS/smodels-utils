@@ -209,16 +209,16 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TScharm':'scharm  --> charm lsp ',
     'TSlepSlep':'slepton  --> lepton lsp ',
     'THSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 
-    'THSCPM3' : 'squark --> quark chargino^pm_1', 
-    'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau',
+    'THSCPM1b' : 'stau stau --> stau stau',
     'THSCPM1Disp' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1',
-    'THSCPM7' : 'lsp chargino^pm_2 --> tau stau_1 chargino^pm_1, chargino^pm_1 --> nu stau_1',
-    'THSCPM8' : 'squark --> quark quark stau_1', 
     'THSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp', 
     'THSCPM2b' : 'stau lsp --> stau lsp',
-    'THSCPM4' : 'squark --> quark chargino^pm_1 (quark lsp)',
+    'THSCPM3' : 'squark --> quark chargino^pm_1', 
+    'THSCPM4' : 'squark --> quark chargino^pm_1, squark --> quark lsp',
+    'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau',
     'THSCPM6' : 'squark squark --> quark quark lsp lsp, lsp --> tau stau_1',
-    'THSCPM1b' : 'stau stau --> stau stau',
+    'THSCPM7' : 'lsp chargino^pm_2 --> tau stau_1 chargino^pm_1, chargino^pm_1 --> nu stau_1',
+    'THSCPM8' : 'squark --> quark quark stau_1', 
     'TRHadGM1' : 'gluino gluino --> gluino gluino',
     'TRHadQM1' : 'stop stop --> stop stop',
 	"T5Gamma" :	"gluino --> neutralino_1 quark antiquark, neutralino_1 --> gravitino y",
@@ -562,6 +562,10 @@ def prettyAxes(txname,axes):
 
     #Build axes object (depending on symmetric or asymmetric branches:
     axes = eval(axes)
+    if txname == 'THSCPM2b':
+        return ['m_{#tilde{#tau}} = (x,1e-16)', ]
+    if txname == 'THSCPM4':
+        return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{#pm}} = (y,1e-16)', ]
     if txname == 'THSCPM5':
         return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
                 'm_{#tilde{#tau}} = (y,1e-16)' ]
