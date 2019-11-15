@@ -217,7 +217,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'THSCPM4' : 'squark --> quark chargino^pm_1, squark --> quark lsp',
     'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau',
     'THSCPM6' : 'squark squark --> quark quark lsp lsp, lsp --> tau stau_1',
-    'THSCPM7' : 'lsp chargino^pm_2 --> tau stau_1 chargino^pm_1, chargino^pm_1 --> nu stau_1',
+    'THSCPM7' : 'squark --> quark chargino_1 | quark neutralino_1, neutralino_1 --> W chargino_1',
     'THSCPM8' : 'squark --> quark quark stau_1', 
     'TRHadGM1' : 'gluino gluino --> gluino gluino',
     'TRHadQM1' : 'stop stop --> stop stop',
@@ -358,7 +358,7 @@ motherDict = {"T1" :  "gluino",
     "THSCPM4" : "squark",
     "THSCPM5" : "squark",
     "THSCPM6" : "squark",
-    "THSCPM7" : "lsp chargino^pm_2",
+    "THSCPM7" : "squark",
     "THSCPM8" : "squark",
     'TRHadGM1' : 'gluino',
     'TRHadQM1' : 'stop',
@@ -569,6 +569,9 @@ def prettyAxes(txname,axes):
     if txname == 'THSCPM5':
         return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
                 'm_{#tilde{#tau}} = (y,1e-16)' ]
+    if txname == 'THSCPM7':
+        return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
+                'm_{#tilde{#chi}_{1}^{#pm}} = (y,1e-16)' ]
     if txname == 'THSCPM6':
         return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
                 'm_{#tilde{#tau}} = (y,1e-16)' ]

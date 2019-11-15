@@ -463,10 +463,14 @@ class ValidationPlot():
                 pass
                 # print ( "[validationObjs] it seems there are widths in the vector. make sure we use them correctly." )
                 # sys.exit()
-        if len(masses) % 2 != 0:
-            print ( "mass vector is assymetrical. dont know what to do" )
-            sys.exit(-1)
         n=int(len(masses)/2)
+        if len(masses) % 2 != 0:
+            if "THSCPM7" in filename:
+                n+=1 # for THSCPM7 we have [M1,M2,(M3,W3)],[M1,(M3,W3) ]
+                ## so all works out if we just slice at one after the half
+            else:
+                print ( "mass vector %s is asymmetrical. dont know what to do" % masses )
+            # sys.exit(-1)
         ret = [ masses[:n], masses[n:] ]
         return ret
 

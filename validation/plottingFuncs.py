@@ -343,7 +343,7 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
     massPlane = MassPlane.fromString( vPlot.txName, vPlot.axes )
     nM = int ( len(masses)/2 ) ## number of masses per branch
     if len(masses) % 2 != 0:
-        logger.warning("asymmetrical branch. Dont know how to handle" )
+        logger.debug("asymmetrical branch. Dont know how to handle" )
     #if masses[:nM] != masses[nM:]: ## actually seems to work
     #    logger.warning("asymmetrical branch %s != %s. Dont know how to handle" % ( masses[:nM], masses[nM:] ) )
     widths = None
@@ -379,10 +379,17 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
     if vPlot.txName in [ "THSCPM5" ]:
         masses = [ list(map(float,tokens[1:4 ] ) ) ] * 2
         widths = [ list(map(float,[ tokens[4] ] ) ) ] * 2
+    if vPlot.txName in [ "THSCPM7" ]:
+        masses = list(map(float,tokens[1:4 ] ) ), [ float(tokens[1]), float(tokens[3]) ]
+        # masses = [ [ float(tokens[1]), float(tokens[3]) ], [ list(map(float,tokens[1:4 ] ) ) ] ]
+        widths = [ list(map(float,[ tokens[4] ] ) ) ] * 2
     if vPlot.txName in [ "THSCPM8", "THSCPM3" ]:
         masses = [ list(map(float,tokens[1:3 ] ) ) ] * 2
         widths = [ list(map(float,[ tokens[3] ] ) ) ] * 2
+    #print ( "-> masses", masses )
+    #print ( "-> widths", widths )
     varsDict = massPlane.getXYValues( masses, widths ) 
+    #print ( "-> vars", varsDict )
     ## FIXME take into account axis
     return varsDict
 
