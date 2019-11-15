@@ -20,6 +20,20 @@ class ProtoModel:
         branchings, their signal strength modifiers.
     """
     LSP = 1000022 ## the LSP is hard coded
+    def hasAntiParticle ( self, pid ):
+        """ for a given pid, do i also have to consider its antiparticle
+            -pid in the signal strength multipliers? """
+        if pid in [ 1000021, 1000022, 1000023, 1000025, 1000035, 1000012, 
+                    1000014, 1000016, 2000012, 2000014, 2000016 ]:
+            return False
+        return True
+
+    def toTuple ( self, pid1, pid2 ):
+        """ turn pid1, pid2 into a sorted tuple """
+        a=[pid1,pid2]
+        a.sort()
+        return tuple(a)
+
     def __init__ ( self, walkerid, cheat=0, dbpath="../../smodels-database/",
                    expected = False, select = "all", keep_meta = True ):
         """
@@ -84,7 +98,15 @@ class ProtoModel:
 
         for p in self.particles:
             self.masses[p]=1e6
-            self.ssmultipliers[p]=1. ## signal strength multipliers
+            for q in self.particles:
+                self.ssmultipliers[ self.toTuple(p,q) ]=1. ## signal strength multipliers
+                if self.hasAntiParticle ( q ):
+                    self.ssmultipliers[ self.toTuple(p,-q) ]=1.
+            if self.hasAntiParticle ( p ):
+                for q in self.particles:
+                    self.ssmultipliers[ self.toTuple(-p,q) ]=1. ## signal strength multipliers
+                    if self.hasAntiParticle ( q ):
+                        self.ssmultipliers[ self.toTuple ( -p, -q ) ]=1.
             decays = []
             self.decays[p]={}
             for line in slhalines:
@@ -114,7 +136,7 @@ class ProtoModel:
                 self.masses[1000006]=830.
                 self.masses[1000004]=450.
                 self.masses[1000022]=410.
-                self.ssmultipliers[1000005]=1.01
+                self.ssmultipliers[(1000005,1000005)]=1.
                 # self.masses[1000024]=random.uniform(500,1000)
             if cheat == 3:
                 self.highlight ( "red", "cheat mode (3), start with Z=3.25 point (roughly)." )
@@ -124,10 +146,7 @@ class ProtoModel:
                 self.masses[1000005]=600.
                 self.masses[1000004]=440.
                 self.masses[1000022]=375.
-                self.ssmultipliers[1000001]=0.93
-                self.ssmultipliers[1000005]=0.8
-                self.decays[1000005][1000006]=0.25
-                self.decays[1000005][1000022]=0.75
+                self.ssmultipliers[(1000001,1000001)]=1.0
         self.computePrior()
 
     def initializePredictor ( self ):
@@ -279,15 +298,15 @@ class ProtoModel:
             if abs ( om - m ) / m > 1e-5:
                 return False
         ## now check ssmultipliers
-        pids = set ( self.ssmultipliers.keys() )
-        pids = pids.union ( set ( other.ssmultipliers.keys() ) )
-        for pid in pids:
+        pidpairs = set ( self.ssmultipliers.keys() )
+        pidpairs = pidpairs.union ( set ( other.ssmultipliers.keys() ) )
+        for pidpair in pidpairs:
             ss = 1.
-            if pid in self.ssmultipliers.keys():
-                ss = self.ssmultipliers[pid]
+            if pidpair in self.ssmultipliers.keys():
+                ss = self.ssmultipliers[pidpair]
             os = 1.
-            if pid in other.ssmultipliers.keys():
-                os = other.ssmultipliers[pid]
+            if pidpair in other.ssmultipliers.keys():
+                os = other.ssmultipliers[pidpair]
             if ss == 0.:
                 if os == 0.:
                     continue
@@ -389,12 +408,29 @@ class ProtoModel:
 
         ## adjust the signal strength multipliers to keep everything else
         ## as it was
-        if pid in self.ssmultipliers.keys():
-            t = self.ssmultipliers[pid]
+        """
+        if pidpairs in self.ssmultipliers.keys():
+            t = self.ssmultipliers[pidpairs]
             if t == 0.:
                 self.pprint ( "huh, when normalizing we find ssmultipliers of 0? change to 1! S=%.4g" % S )
                 t=1.
-            self.ssmultipliers[pid]=t*S
+            self.ssmultipliers[pidpairs]=t*S
+        """
+        self.checkSSMultipliers()
+        for pidpair,ssm in self.ssmultipliers.items():
+            if (pid in pidpair) or (-pid in pidpair):
+                if ssm == 0.:
+                    self.pprint ( "huh, when normalizing we find ssmultipliers of 0? change to 1! S=%.4g" % S )
+                    ssm=1.
+                self.ssmultipliers[pidpair]=ssm*S
+        self.checkSSMultipliers()
+
+    def checkSSMultipliers ( self ):
+        """ only for debugging, try to find out why we have non-pairs as keys """
+        for k,v in self.ssmultipliers.items():
+            if type(k) != tuple:
+                print ( "error, we have %s(%s) as key" % ( k, type(k) ) )
+                raise Exception ( "error, we have %s(%s) as key" % ( k, type(k) ) ) 
 
     def normalizeAllBranchings ( self ):
         """ normalize all branchings, after freezing or unfreezing particles """
@@ -479,6 +515,7 @@ class ProtoModel:
             self.restore()
 
         try:
+            self.checkSSMultipliers()
             computer.computeForOneFile ( [8,13], self.currentSLHA,
                     unlink=True, lOfromSLHA=False, tofile=True,
                     ssmultipliers  = self.ssmultipliers )

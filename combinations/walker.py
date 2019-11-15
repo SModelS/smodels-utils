@@ -275,14 +275,20 @@ class RandomWalker:
             self.pprint ( "not enough unfrozen particles to change random signal strength" )
             return 0
         p = random.choice ( unfrozenparticles )
-        if not p in self.protomodel.ssmultipliers:
-            self.protomodel.ssmultipliers[p]=1.
-        newSSM=self.protomodel.ssmultipliers[p]*random.gauss(1.,.1)
+        q = random.choice ( unfrozenparticles )
+        if self.protomodel.hasAntiParticle(p) and random.uniform(0,1)<.5:
+            p = -p
+        if self.protomodel.hasAntiParticle(q) and random.uniform(0,1)<.5:
+            q = -q
+        pair = self.protomodel.toTuple(p,q)
+        if not pair in self.protomodel.ssmultipliers:
+            self.protomodel.ssmultipliers[pair]=1.
+        newSSM=self.protomodel.ssmultipliers[pair]*random.gauss(1.,.1)
         if newSSM == 0.:
             self.pprint ( "Huh? ssmultiplier is 0?? Change to 1." )
             newSSM = 1.
-        self.protomodel.ssmultipliers[p]=newSSM
-        self.log ( "changing signal strength multiplier of %s: %.2f." % (helpers.getParticleName(p), newSSM ) )
+        self.protomodel.ssmultipliers[pair]=newSSM
+        self.log ( "changing signal strength multiplier of %s,%s: %.2f." % (helpers.getParticleName(pair[0]), helpers.getParticleName(pair[1]), newSSM ) )
         return 1
 
     def randomlyChangeBranchings ( self ):
