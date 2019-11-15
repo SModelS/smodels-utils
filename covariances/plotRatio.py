@@ -257,7 +257,7 @@ def main():
     cm = plt.cm.get_cmap('jet')
     plt.rc('text', usetex=True)
     vmax = 1.5
-    vmax = 50.
+    vmax = max ( col )*1.1
     scatter = plt.scatter ( x, y, s=0.25, c=col, marker="o", cmap=cm, 
                             vmin=0.5, vmax=vmax )
     ax = plt.gca()
@@ -274,7 +274,8 @@ def main():
     # print ( "smsrootfile", smsrootfile )
     stopo = prettyDescriptions.prettyTxname ( topo, outputtype="latex" ).replace("*","^{*}" )
     
-    plt.title ( "ratio $f$: %s, %s" % ( s_ana1.replace("-andre",""), stopo) )
+    plt.title ( "$f$: %s, %s" % ( s_ana1.replace("-andre",""), topo) )
+    # plt.title ( "$f$: %s, %s %s" % ( s_ana1.replace("-andre",""), topo, stopo) )
     plt.xlabel ( "m$_{mother}$ [GeV]", fontsize=13 )
     plt.rc('text', usetex=True)
     label = "m$_{LSP}$ [GeV]"
