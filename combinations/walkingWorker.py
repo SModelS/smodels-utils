@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-def main( nmin, nmax, cont, dbpath = "../../smodels-database/" ):
+def main( nmin, nmax, cont, dbpath = "/mnt/hephy/pheno/ww/git/smodels-database/" ):
     import sys, os
     sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels/")
     sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels-utils/")
     sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels-utils/combinations/")
-    # os.chdir ( "/mnt/hephy/pheno/ww/git/smodels-utils/combinations/" )
+    os.chdir ( "/mnt/hephy/pheno/ww/rundir" )
     pfile, states = None, None
     if cont.lower() not in [ "none", "" ]:
         if not os.path.exists ( cont ):
