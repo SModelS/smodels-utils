@@ -2,7 +2,7 @@
 
 """ helper functions """
 
-def getParticleName ( pid, addSign ):
+def getParticleName ( pid, addSign=False ):
     if type ( pid ) in [ list, tuple ]:
         # a list of pids? latexify them individually and concatenate
         pids = []

@@ -98,7 +98,7 @@ class Trimmer:
         for cpid,(pid,mass) in enumerate(pidsnmasses):
             self.protomodel.backup()
             self.highlight ( "info", "trying to freeze %s (%.1f): [%d/%d]" % \
-                   ( helpers.getParticleName(pid),
+                   ( helpers.getParticleName(pid,addSign=False),
                      self.protomodel.masses[pid],(cpid+1),len(unfrozen) ) )
             oldmass = self.protomodel.masses[pid]
             self.protomodel.masses[pid]=1e6
