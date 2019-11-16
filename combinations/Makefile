@@ -11,6 +11,6 @@ hiscore:
 
 # start ten typical workers from scratch
 run:
-	./walker.py --nmin 0 --nmax 10
+	./walkingWorker.py --nmin 0 --nmax 10
 
 .PHONY:
