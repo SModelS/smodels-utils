@@ -114,7 +114,7 @@ def writeTex ( protomodel, keep_tex ):
         sssm += ssm[k] + ", "
     if len(sssm)>2:
         sssm = sssm[:-2]
-    src = "5 largest signal strength multipliers: $" + sssm + "$" # + whatifs
+    src = "%d largest signal strength multipliers: $" % nm + sssm + "$" # + whatifs
     # src = "%d most extreme signal strength multipliers: $" % nm + sssm + "$" + whatifs
     # print ( "[plotHiscore] texdoc source in src=>>>>%s<<<<" % src )
     sssm = ""
