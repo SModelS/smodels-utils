@@ -18,8 +18,9 @@ def setup():
     if os.path.exists ( "./rundir.conf" ):
         with open ( "./rundir.conf" ) as f:
             rundir = f.read().strip()
-    os.chdir ( rundir )
-    return rundir
+            os.chdir ( rundir )
+        return rundir
+    return ""
 
 def obtain ( number, picklefile ):
     """ obtain hiscore number <number> """
@@ -64,10 +65,10 @@ def discussPredictions ( protomodel ):
 def writeTex ( protomodel ):
     """ write the comment about ss multipliers and contributions, in tex """
     ssm = {}
-    for k,v in protomodel.ssmultipliers.items():
+    for pids,v in protomodel.ssmultipliers.items():
         if abs(v-1.)<1e-3:
             continue
-        pname = helpers.toLatex ( k )
+        pname = helpers.toLatex ( pids )
         token = "%s = %.2f" % ( pname, v )
         if v in ssm.keys():
             v+=1e-10
@@ -104,11 +105,13 @@ def writeTex ( protomodel ):
     sssm = ""
     keys = list ( ssm.keys() )
     keys.sort( reverse=True )
-    for k in keys:
+    # keys.sort( key = lambda x: abs(x-1.), reverse=True )
+    for k in keys[:5]:
+        # print ( "k", k, "v", ssm[k][:10] )
         sssm += ssm[k] + ", "
-    if len(keys)>0:
+    if len(sssm)>2:
         sssm = sssm[:-2]
-    src = "Signal strength multipliers: $" + sssm + "$" + whatifs
+    src = "5 largest signal strength multipliers: $" + sssm + "$" + whatifs
     # print ( "[plotHiscore] texdoc source in src=>>>>%s<<<<" % src )
     try:
         p = tex2png.Latex ( src, 600 ).write()
