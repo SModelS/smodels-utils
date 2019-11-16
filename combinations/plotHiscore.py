@@ -104,14 +104,16 @@ def writeTex ( protomodel ):
         ssm = { 0: "\\mathrm{none}" }
     sssm = ""
     keys = list ( ssm.keys() )
-    keys.sort( reverse=True )
-    # keys.sort( key = lambda x: abs(x-1.), reverse=True )
-    for k in keys[:5]:
+    # keys.sort( reverse=True )
+    keys.sort( key = lambda x: abs(x-1.), reverse=True )
+    nm= 7
+    for k in keys[:nm]:
         # print ( "k", k, "v", ssm[k][:10] )
         sssm += ssm[k] + ", "
     if len(sssm)>2:
         sssm = sssm[:-2]
-    src = "5 largest signal strength multipliers: $" + sssm + "$" + whatifs
+    # src = "5 largest signal strength multipliers: $" + sssm + "$" + whatifs
+    src = "%d most extreme signal strength multipliers: $" % nm + sssm + "$" + whatifs
     # print ( "[plotHiscore] texdoc source in src=>>>>%s<<<<" % src )
     try:
         p = tex2png.Latex ( src, 600 ).write()

@@ -8,7 +8,7 @@ def getParticleName ( pid ):
         pids = []
         for p in pid:
             pids.append ( getParticleName ( p ) )
-        return ", ".join ( pids )
+        return "(" + ",".join ( pids ) + ")"
     names = { 1000001: "~dL", 2000001: "~dR", 1000002: "~uL",
               2000002: "~uR", 1000003: "~sL", 2000003: "~sR",
               1000004: "~cL", 2000004: "~cR", 1000005: "~b1",
@@ -33,7 +33,7 @@ def toLatex ( pid, addDollars=False, addM=False ):
         pids = []
         for p in pid:
             pids.append ( toLatex ( p, addDollars, addM ) )
-        return ", ".join ( pids )
+        return "(" + ",".join ( pids ) + ")"
     pname = pid
     if type(pid)==int:
         pname = getParticleName(pid)
