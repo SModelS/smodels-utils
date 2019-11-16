@@ -108,7 +108,7 @@ def writeTex ( protomodel, keep_tex ):
     keys = list ( ssm.keys() )
     keys.sort( reverse=True )
     # keys.sort( key = lambda x: abs(x-1.), reverse=True )
-    nm= 5
+    nm= 7
     for k in keys[:nm]:
         # print ( "k", k, "v", ssm[k][:10] )
         sssm += ssm[k] + ", "
@@ -117,6 +117,7 @@ def writeTex ( protomodel, keep_tex ):
     src = "5 largest signal strength multipliers: $" + sssm + "$" # + whatifs
     # src = "%d most extreme signal strength multipliers: $" % nm + sssm + "$" + whatifs
     # print ( "[plotHiscore] texdoc source in src=>>>>%s<<<<" % src )
+    sssm = ""
 
     keys.sort( key = lambda x: abs(x-1.), reverse=True )
     for k in keys[:nm]:
@@ -125,7 +126,7 @@ def writeTex ( protomodel, keep_tex ):
     if len(sssm)>2:
         sssm = sssm[:-2]
     # src = "5 largest signal strength multipliers: $" + sssm + "$" + whatifs
-    src += "\\"
+    src += "\\\\"
     src += "\n%d smallest signal strength multipliers: $" % nm + sssm + "$" + whatifs
     if keep_tex:
         with open("texdoc.tex","wt") as f:
@@ -165,7 +166,7 @@ def writeIndexHtml ( protomodel, gotTrimmed ):
     trimmed="Untrimmed"
     if gotTrimmed:
         trimmed = "Trimmed"
-    f.write ( "%s <b><a href=./hiscore.slha>ProtoModel</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, <br>combination strategy <a href=./matrix_%s.png>%s</a> in step %d</b><br>\n" % \
+    f.write ( "%s <b><a href=./hiscore.slha>ProtoModel</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d</b><br>\n" % \
             ( trimmed, dotlessv, dbver, strategy, strategy, protomodel.step ) )
     f.write ( "<table width=80%>\n<tr><td>\n" )
     if hasattr ( protomodel, "rvalues" ):

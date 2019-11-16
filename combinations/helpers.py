@@ -58,6 +58,7 @@ def toLatex ( pid, addDollars=False, addM=False, addSign=False ):
              "1": "_{1}", "2": "_{2}", "~nu": "\\tilde{\\nu}", 
              "~nue": "\\tilde{\\nu}_{e}", "~tauL": "\\tilde{\\tau}L",
              "~numu": "\\tilde{\\nu}_{\\mu}",
+             "bar": "^{*}",
              "~chi": "\\tilde{\\chi}", "~mu": "\\tilde{\\mu}", "+": "^{+}", 
              "3": "_{3}", "0": "^{0}", "-": "^{-}" }
     keys = list ( rpls.keys() )
@@ -65,12 +66,13 @@ def toLatex ( pid, addDollars=False, addM=False, addSign=False ):
     for kr in keys:
         vr=rpls[kr]
         pname = pname.replace(kr,vr)
+    if False and pname.find("~")==0 and pname.find("bar")>0:
+        p1,p2=1,2
+        pname = pname.replace("bar","")
+        pname="\\tilde{"+pname[p1:p2]+"}^{*}"+pname[p2:]
     if pname.find("~")==0:
         p1,p2=1,2
         pname="\\tilde{"+pname[p1:p2]+"}"+pname[p2:]
-    if pname.find("bar")>0:
-        pname = pname.replace("bar","")
-        pname = "\\bar{"+pname+"}"
     if addM:
         pname = "m(" + pname + ")"
     if addDollars:
