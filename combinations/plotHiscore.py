@@ -62,13 +62,15 @@ def discussPredictions ( protomodel ):
         print ( "theory pred: %s:%s" % ( pred.expResult.globalInfo.id, ",".join ( map ( str, pred.txnames ) ) ) )
         # print ( "     `- ", pred.expResult.globalInfo.id, "ana", pred.analysis, "masses", pred.mass, "txnames", pred.txnames, "type", pred.dataType() )
 
-def writeTex ( protomodel ):
-    """ write the comment about ss multipliers and contributions, in tex """
+def writeTex ( protomodel, keep_tex ):
+    """ write the comment about ss multipliers and contributions, in tex 
+    :param keep_tex: keep tex source of texdoc.png
+    """
     ssm = {}
     for pids,v in protomodel.ssmultipliers.items():
         if abs(v-1.)<1e-3:
             continue
-        pname = helpers.toLatex ( pids )
+        pname = helpers.toLatex ( pids, addSign = True )
         token = "%s = %.2f" % ( pname, v )
         if v in ssm.keys():
             v+=1e-10
@@ -104,17 +106,32 @@ def writeTex ( protomodel ):
         ssm = { 0: "\\mathrm{none}" }
     sssm = ""
     keys = list ( ssm.keys() )
-    # keys.sort( reverse=True )
+    keys.sort( reverse=True )
+    # keys.sort( key = lambda x: abs(x-1.), reverse=True )
+    nm= 5
+    for k in keys[:nm]:
+        # print ( "k", k, "v", ssm[k][:10] )
+        sssm += ssm[k] + ", "
+    if len(sssm)>2:
+        sssm = sssm[:-2]
+    src = "5 largest signal strength multipliers: $" + sssm + "$" # + whatifs
+    # src = "%d most extreme signal strength multipliers: $" % nm + sssm + "$" + whatifs
+    # print ( "[plotHiscore] texdoc source in src=>>>>%s<<<<" % src )
+
     keys.sort( key = lambda x: abs(x-1.), reverse=True )
-    nm= 7
     for k in keys[:nm]:
         # print ( "k", k, "v", ssm[k][:10] )
         sssm += ssm[k] + ", "
     if len(sssm)>2:
         sssm = sssm[:-2]
     # src = "5 largest signal strength multipliers: $" + sssm + "$" + whatifs
-    src = "%d most extreme signal strength multipliers: $" % nm + sssm + "$" + whatifs
-    # print ( "[plotHiscore] texdoc source in src=>>>>%s<<<<" % src )
+    src += "\\"
+    src += "\n%d smallest signal strength multipliers: $" % nm + sssm + "$" + whatifs
+    if keep_tex:
+        with open("texdoc.tex","wt") as f:
+            f.write ( src+"\n" )
+            f.close()
+        print ( "[plotHiscore] wrote %s/texdoc.tex" % os.getcwd() )
     try:
         p = tex2png.Latex ( src, 600 ).write()
         f = open ( "texdoc.png", "wb" )
@@ -127,19 +144,19 @@ def writeIndexHtml ( protomodel, gotTrimmed ):
     """ write the index.html file, see e.g.
         https://smodels.github.io/protomodels/
     :param gotTrimmed: is the model a trimmed model?
+    :param keep_tex: keep tex files
     """
     ssm = []
     for k,v in protomodel.ssmultipliers.items():
         if abs(v-1.)<1e-3:
             continue
-        ssm.append ( "%s: %.2f" % (helpers.getParticleName(k),v) )
+        ssm.append ( "%s: %.2f" % (helpers.getParticleName(k,addSign=True),v) )
     f=open("index.html","w")
     f.write ( "<html>\n" )
     f.write ( "<body>\n" )
     f.write ( "<center>\n" )
     f.write ( "<h1>Current best protomodel: Z=%.2f</h1>\n" % protomodel.Z )
     f.write ( "</center>\n" )
-    f.write ( "<table width=80%>\n<tr><td>\n" )
     dbver = "???"
     strategy = "aggressive"
     if hasattr ( protomodel, "dbversion" ):
@@ -150,6 +167,7 @@ def writeIndexHtml ( protomodel, gotTrimmed ):
         trimmed = "Trimmed"
     f.write ( "%s <b><a href=./hiscore.slha>ProtoModel</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, <br>combination strategy <a href=./matrix_%s.png>%s</a> in step %d</b><br>\n" % \
             ( trimmed, dotlessv, dbver, strategy, strategy, protomodel.step ) )
+    f.write ( "<table width=80%>\n<tr><td>\n" )
     if hasattr ( protomodel, "rvalues" ):
         rvalues=protomodel.rvalues
         rvalues.sort(key=lambda x: x[0],reverse=True )
@@ -269,7 +287,7 @@ def plot ( number, verbosity, picklefile, options ):
     if options["predictions"]:
         discussPredictions ( protomodel )
     if options["html"]:
-        writeTex ( protomodel )
+        writeTex ( protomodel, options["keep_tex"] )
         writeIndexHtml ( protomodel, trimmed )
     #if options["copy"]:
     #    copyFilesToGithub()
@@ -300,6 +318,9 @@ def main ():
     argparser.add_argument ( '-p', '--predictions',
             help='list all predictions',
             action="store_true" )
+    argparser.add_argument ( '-k', '--keep',
+            help='keep latex files',
+            action="store_true" )
     argparser.add_argument ( '-u', '--upload',
             help='upload to one of the following destinations: none, gpu, github, anomaly, interesting [none]. run --destinations to learn more', 
             type=str, default="" )
@@ -326,7 +347,8 @@ def main ():
         upload = None
 
     options = { "ruler": not args.noruler, "decays": not args.nodecays,
-                "predictions": args.predictions, "html": not args.nohtml }
+                "predictions": args.predictions, "html": not args.nohtml,
+                "keep_tex": args.keep }
 
     plot ( args.number, args.verbosity, args.picklefile, options )
     if upload is None:
