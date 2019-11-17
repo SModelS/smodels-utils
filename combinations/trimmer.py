@@ -50,8 +50,11 @@ class Trimmer:
         print ( "[trimmer] step 1: recompute the full Z. Old one at %.2f." % self.protomodel.Z )
         origZ = self.protomodel.Z # to be sure
         self.protomodel.Z = -23.
-        self.protomodel.predict( strategy=self.strategy, nevents=10000 ) # , keep_meta = True )
-        print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions, experimental=%d" % ( self.protomodel.Z, origZ, len(self.protomodel.bestCombo), runtime._experimental ) )
+        hasPred = self.protomodel.predict( strategy=self.strategy, nevents=10000,
+                                           check_thresholds = False )
+        if not hasPred:
+            print ( "[trimmer] I dont understand, why do I not get a pred anymore? r=%.2f" % ( self.protomodel.rmax ) )
+        print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions, has a pred? %d, experimental=%d" % ( self.protomodel.Z, origZ, len(self.protomodel.bestCombo), hasPred, runtime._experimental ) )
         if origZ > 0. and abs ( origZ - self.protomodel.Z ) / origZ > 0.001:
             print  ( "[trimmer] error!! Zs do not match! Should not save" )
         contributions = {}

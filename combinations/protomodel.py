@@ -197,8 +197,13 @@ class ProtoModel:
         #if hasattr ( self, "predictor" ):
         #    del self.predictor
 
-    def predict ( self, strategy = "aggressive", nevents = 2000 ):
-        """ compute best combo, llhd, and significance """
+    def predict ( self, strategy = "aggressive", nevents = 2000,
+                  check_thresholds = True ):
+        """ compute best combo, llhd, and significance 
+        :param rthres 
+        :returns: False, if not prediction (e.g. because the model is excluded), 
+                  True if prediction was possible
+        """
         self.log ( "predict" )
         # if not os.path.exists ( self.currentSLHA ):
         self.createSLHAFile( nevents = nevents )
@@ -224,8 +229,10 @@ class ProtoModel:
             self.r2 = rs[1]
         excluded = self.rmax > rthresholds[0]
         self.log ( "model is excluded? %s" % str(excluded) )
-        if excluded:
-            return
+        if check_thresholds and excluded:
+            return False
+        if not check_thresholds  and excluded:
+            self.pprint ( "we dont check thresholds, but the model would actually be excluded with rmax=%.2f" % self.rmax )
         # now get the predictions that determine the Z of the model. allpreds,
         # but need llhd
         #predictions = self.predictor.predict ( self.currentSLHA, allpreds=False,
@@ -236,7 +243,7 @@ class ProtoModel:
         ## find highest observed significance
         mumax = float("inf")
         if self.rmax > 0.:
-            mumax = 1.5 / self.rmax
+            mumax = rthresholds[0] / self.rmax
         bestCombo,Z,llhd,muhat = combiner.findHighestSignificance ( predictions, strategy, expected=False, mumax = mumax )
         if hasattr ( self, "keep_meta" ) and self.keep_meta:
             self.bestCombo = bestCombo
@@ -249,6 +256,7 @@ class ProtoModel:
         self.description = combiner.getComboDescription(self.bestCombo)
         self.log ( "done with prediction. best Z=%.2f (muhat=%.2f)" % ( self.Z, muhat ) )
         self.clean()
+        return True
 
     def resolveMuhat ( self ):
         """ multiply the signal strength multipliers with muhat, then set muhat to 1. """
