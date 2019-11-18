@@ -8,7 +8,7 @@
 
 """
 
-import os
+import os, sys
 
 def getPathName ( dbpath, analysis, valfile ):
     """ get the path name, given a dbpath, an analysis id, and a valfile name 

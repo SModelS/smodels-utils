@@ -106,6 +106,20 @@ def draw( validationfile ):
     print ( "[drawBestSRs} saving to %s" % fname )
     plt.savefig ( fname )
     return fname
+
+def pushBestSRs():
+    import glob
+    Dir = "../../smodels.github.io/ratioplots/"
+    files = glob.glob("%sbestSR*png" % Dir )
+    with open ( "%sbestSRs.md" % Dir, "wt" ) as g:
+        g.write ( "= best signal region plots =\n" )
+        for f in files:
+            g.write ( '<img src="%s%s" />\n' % ( Dir, f ) )
+        g.close()
+    cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit' ; git push"
+    o = ""
+    o = subprocess.getoutput ( cmd )
+    print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
     
 if __name__ == "__main__":
     import argparse
@@ -130,6 +144,4 @@ if __name__ == "__main__":
         o = subprocess.getoutput ( cmd )
         print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
     if args.push:
-        cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit' ; git push"
-        o = subprocess.getoutput ( cmd )
-        print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
+        pushBestSRs()
