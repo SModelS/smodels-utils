@@ -9,6 +9,7 @@ import numpy
 import importlib
 import warnings
 from matplotlib import colors as C
+from smodels_utils.helper.various import getPathName
 
 def convertNewAxes ( newa ):
     """ convert new types of axes (dictionary) to old (lists) """
@@ -97,9 +98,18 @@ def draw( validationfile ):
     plt.savefig ( "bestSRs.png" )
     
 if __name__ == "__main__":
-    dbpath = "../../smodels-database/"
-    anaId = "ATLAS-SUSY-2016-15"
-    topo = "T2tt"
-    filename = "%s/13TeV/ATLAS/%s-eff/validation/%s_2EqMassAx_EqMassBy.py" % \
-               ( dbpath, anaId, topo )
-    draw( filename )
+    import argparse
+    argparser = argparse.ArgumentParser( description = "plot of best (expected) signal region per point" )
+    argparser.add_argument ( "-d", "--dbpath", help="path to database [../../smodels-database/]", type=str,
+                             default="../../smodels-database/" )
+    argparser.add_argument ( "-a", "--analysis", 
+            help="first analysis name, like the directory name [CMS-EXO-13-006-andre]", 
+            type=str, default="CMS-EXO-13-006-andre" )
+    argparser.add_argument ( "-v", "--validationfile", 
+            help="first validation file [THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py]", 
+            type=str, default="THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py" )
+    argparser.add_argument ( "-c", "--copy", action="store_true", 
+            help="cp to smodels.github.io, as it appears in https://smodels.github.io/combination/" )
+    args = argparser.parse_args()
+    ipath = getPathName ( args.dbpath, args.analysis, args.validationfile )
+    draw( ipath )

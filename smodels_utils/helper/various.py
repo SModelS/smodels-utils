@@ -8,6 +8,37 @@
 
 """
 
+import os
+
+def getPathName ( dbpath, analysis, valfile ):
+    """ get the path name, given a dbpath, an analysis id, and a valfile name 
+        potentially with wildcards """
+    import glob
+    if not valfile.endswith(".py"): valfile += ".py"
+    analysis = analysis.replace("agg"," (agg)" )
+    experiment = "ATLAS"
+    if "CMS" in analysis:
+        experiment = "CMS"
+    sqrts = 8
+    for sqrts in [ 8, 13, 14, -1 ]:
+        anadir = "%s%dTeV/%s/%s" % ( dbpath, sqrts, experiment, analysis )
+        if os.path.exists ( anadir ):
+            break
+    if sqrts == -1:
+        print ( "could not find analysis %s. Did you forget e.g. '-eff' at the end?" % analysis1 )
+        sys.exit()
+    ipath = "%s%dTeV/%s/%s/validation/%s" % \
+             ( dbpath, sqrts, experiment, analysis, valfile )
+    files = glob.glob ( ipath )
+    if len(files)==0:
+        print ( "could not find validation file %s" % ipath )
+        sys.exit()
+    if len(files)>1:
+        print ( "[plotRatio] globbing %s resulted in %d files. please specify." % ( ipath, len(files) ) )
+        sys.exit()
+    ipath = files[0]
+    return ipath
+
 def hasLLHD ( analysis ) :
     """ can one create likelihoods from analyses?
         true for efficiency maps and upper limits with expected values. """
