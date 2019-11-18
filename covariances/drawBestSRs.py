@@ -8,6 +8,7 @@ import copy
 import numpy
 import importlib
 import warnings
+import subprocess
 from matplotlib import colors as C
 from smodels_utils.helper.various import getPathName
 
@@ -34,11 +35,13 @@ def draw( validationfile ):
     else:
         p = validationfile.find ( "CMS" )
     p2 = validationfile.find("-eff" )
+    p2b = validationfile.find("-andre" )
+    if p2 < 1:
+        p2 = p2b
     anaId = validationfile[p+1+len(coll):p2]
     p3 = validationfile.find("validation/")
     p4 = validationfile[p3+10:].find("_")
     topo = validationfile[p3+10+1:p3+p4+10]
-    print ( "plotting %s (%s)" % ( anaId, topo ) )
     spec = importlib.util.spec_from_file_location( "output", validationfile )
     output_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(output_module)
@@ -58,7 +61,7 @@ def draw( validationfile ):
         bestSRs.append ( ( axes[1], axes[0], point["dataset"] ) )
         nbsrs.append ( ( axes[1], axes[0], 0 ) )
     if skipped > 0:
-        print ( "skipped %d/%d points: %s" % ( skipped, len(validationData), err ) )
+        print ( "[drawBestSRs] skipped %d/%d points: %s" % ( skipped, len(validationData), err ) )
     bestSRs.sort()
     nbsrs = numpy.array ( nbsrs )
     srDict, nrDict = {}, {}
@@ -94,8 +97,15 @@ def draw( validationfile ):
     plt.xlabel ( "m$_{mother}$ [GeV]" )
     plt.ylabel ( "m$_{daughter}$ [GeV]" )
     #plt.ylabel ( "$\\Delta$m [GeV]" )
+    print ( "[drawBestSRs] plotting %s (%s)" % ( anaId, topo ) )
     plt.title ( "Best Signal Region, %s (%s)" % ( anaId, topo ) )
-    plt.savefig ( "bestSRs.png" )
+    andre=""
+    if "andre" in validationfile:
+        andre="-andre"
+    fname = "bestSR_%s%s_%s.png" % ( anaId, andre, topo )
+    print ( "[drawBestSRs} saving to %s" % fname )
+    plt.savefig ( fname )
+    return fname
     
 if __name__ == "__main__":
     import argparse
@@ -109,7 +119,17 @@ if __name__ == "__main__":
             help="first validation file [THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py]", 
             type=str, default="THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py" )
     argparser.add_argument ( "-c", "--copy", action="store_true", 
-            help="cp to smodels.github.io, as it appears in https://smodels.github.io/combination/" )
+            help="cp to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
+    argparser.add_argument ( "-p", "--push", action="store_true", 
+            help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
     args = argparser.parse_args()
     ipath = getPathName ( args.dbpath, args.analysis, args.validationfile )
-    draw( ipath )
+    fname = draw( ipath )
+    if args.copy:
+        cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
+        o = subprocess.getoutput ( cmd )
+        print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
+    if args.push:
+        cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit' ; git push"
+        o = subprocess.getoutput ( cmd )
+        print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
