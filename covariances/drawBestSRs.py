@@ -9,6 +9,7 @@ import numpy
 import importlib
 import warnings
 import subprocess
+import time
 from matplotlib import colors as C
 from smodels_utils.helper.various import getPathName
 
@@ -98,10 +99,10 @@ def draw( validationfile ):
     plt.ylabel ( "m$_{daughter}$ [GeV]" )
     #plt.ylabel ( "$\\Delta$m [GeV]" )
     print ( "[drawBestSRs] plotting %s (%s)" % ( anaId, topo ) )
-    plt.title ( "Best Signal Region, %s (%s)" % ( anaId, topo ) )
     andre=""
     if "andre" in validationfile:
         andre="-andre"
+    plt.title ( "Best Signal Region, %s (%s)" % ( anaId+andre, topo ) )
     fname = "bestSR_%s%s_%s.png" % ( anaId, andre, topo )
     print ( "[drawBestSRs} saving to %s" % fname )
     plt.savefig ( fname )
@@ -111,11 +112,23 @@ def pushBestSRs():
     import glob
     Dir = "../../smodels.github.io/ratioplots/"
     files = glob.glob("%sbestSR*png" % Dir )
+    topos = set()
+    for f in files:
+        p = f.rfind ( "_" )
+        topos.add ( f[p+1:-4] )
+    # print ( topos )
     with open ( "%sbestSRs.md" % Dir, "wt" ) as g:
-        g.write ( "= best signal region plots =\n" )
-        for f in files:
-            g.write ( '<img src="%s%s" />\n' % ( Dir, f ) )
-        g.close()
+        g.write ( "# plots of best expected signal regions\n" )
+        g.write ( "as of %s\n" % time.asctime() )
+        for topo in topos:
+            g.write ( "\n## Topology: %s\n" % topo )
+            g.write ( "<table><tr>\n" )
+            for f in files:
+                src = f.replace( Dir, "" )
+                if not topo in src:
+                    continue
+                g.write ( '<td><img src="%s" />\n' % ( src ) )
+            g.write ( "</tr></table>\n" )
     cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit' ; git push"
     o = ""
     o = subprocess.getoutput ( cmd )
