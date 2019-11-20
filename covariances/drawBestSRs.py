@@ -108,7 +108,7 @@ def draw( validationfile ):
     plt.savefig ( fname )
     return fname
 
-def pushBestSRs():
+def writeBestSRs( push = False ):
     import glob
     Dir = "../../smodels.github.io/ratioplots/"
     files = glob.glob("%sbestSR*png" % Dir )
@@ -120,18 +120,21 @@ def pushBestSRs():
     with open ( "%sbestSRs.md" % Dir, "wt" ) as g:
         g.write ( "# plots of best expected signal regions\n" )
         g.write ( "as of %s\n" % time.asctime() )
-        for topo in topos:
-            g.write ( "\n## Topology: %s\n" % topo )
-            g.write ( "<table><tr>\n" )
+        tsorted = list(topos)
+        tsorted.sort() ## why???
+        for topo in tsorted:
+            g.write ( "\n## Topology: %s\n\n" % topo )
+            g.write ( "| andre | suchi |\n" )
             for f in files:
                 src = f.replace( Dir, "" )
                 if not topo in src:
                     continue
-                g.write ( '<td><img src="%s" />\n' % ( src ) )
-            g.write ( "</tr></table>\n" )
+                g.write ( '| <img src="%s" /> ' % ( src ) )
+            g.write ( "|\n" )
     cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit' ; git push"
     o = ""
-    o = subprocess.getoutput ( cmd )
+    if push:
+        o = subprocess.getoutput ( cmd )
     print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
     
 if __name__ == "__main__":
@@ -145,16 +148,31 @@ if __name__ == "__main__":
     argparser.add_argument ( "-v", "--validationfile", 
             help="first validation file [THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py]", 
             type=str, default="THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py" )
+    argparser.add_argument ( "-D", "--default", action="store_true", 
+            help="default run on arguments. currently set to be the exo 13 006 plots" )
     argparser.add_argument ( "-c", "--copy", action="store_true", 
             help="cp to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
     argparser.add_argument ( "-p", "--push", action="store_true", 
             help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
     args = argparser.parse_args()
-    ipath = getPathName ( args.dbpath, args.analysis, args.validationfile )
-    fname = draw( ipath )
+    if args.default:
+        for a in [ "CMS-EXO-13-006-andre", "CMS-EXO-13-006-eff" ]:
+            for v in [ "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py" ]:
+                if "M1b" in v:
+                    continue
+                print ( "[drawBestSRs:default] now drawing %s:%s" % (a, v ) )
+                ipath = getPathName ( args.dbpath, a, v )
+                fname = draw( ipath )
+                if args.copy:
+                    cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
+                    o = subprocess.getoutput ( cmd )
+                    print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
+    else:
+        ipath = getPathName ( args.dbpath, args.analysis, args.validationfile )
+        fname = draw( ipath )
+        if args.copy:
+            cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
+            o = subprocess.getoutput ( cmd )
+            print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
     if args.copy:
-        cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
-        o = subprocess.getoutput ( cmd )
-        print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
-    if args.push:
-        pushBestSRs()
+        writeBestSRs( args.push )
