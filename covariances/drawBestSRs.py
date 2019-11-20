@@ -106,6 +106,7 @@ def draw( validationfile ):
     fname = "bestSR_%s%s_%s.png" % ( anaId, andre, topo )
     print ( "[drawBestSRs} saving to %s" % fname )
     plt.savefig ( fname )
+    plt.clf()
     return fname
 
 def writeBestSRs( push = False ):
