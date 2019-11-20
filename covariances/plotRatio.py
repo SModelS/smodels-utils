@@ -13,6 +13,7 @@ import itertools
 import importlib
 import setPath
 from smodels_utils.helper import prettyDescriptions
+from smodels_utils.helper.various import getPathName
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -112,68 +113,23 @@ def main():
     argparser.add_argument ( "-c", "--copy", action="store_true", 
             help="cp to smodels.github.io, as it appears in https://smodels.github.io/combination/" )
     args = argparser.parse_args()
+
     analysis1, valfile1 = args.analysis1, args.validationfile1
     analysis2, valfile2 = args.analysis2, args.validationfile2
     if valfile2 in [ "", "none", "None", None ]:
         valfile2 = valfile1
-    if not valfile1.endswith(".py"): valfile1 += ".py"
-    if not valfile2.endswith(".py"): valfile2 += ".py"
-    s_ana1 = analysis1
-    s_ana1 = s_ana1.replace("agg"," (agg)" )
-    experiment1 = "ATLAS"
-    if "CMS" in analysis1:
-        experiment1 = "CMS"
-    experiment2 = "ATLAS"
-    if "CMS" in analysis2:
-        experiment2 = "CMS"
-    sqrts1 = 8
-    for sqrts1 in [ 8, 13, 14, -1 ]:
-        anadir = "%s%dTeV/%s/%s" % ( args.dbpath, sqrts1, experiment1, analysis1 )
-        if os.path.exists ( anadir ):
-            break
-    if sqrts1 == -1:
-        print ( "could not find analysis %s. Did you forget e.g. '-eff' at the end?" % analysis1 )
-        sys.exit()
-    sqrts2 = 8
-    s_ana2 = analysis2
-    s_ana2 = s_ana2.replace("agg"," (agg)" )
-    for sqrts2 in [ 8, 13, 14, -1 ]:
-        anadir = "%s%dTeV/%s/%s" % ( args.dbpath, sqrts2, experiment2, analysis2 )
-        if os.path.exists ( anadir ):
-            break
-    if sqrts2 == -1:
-        print ( "could not find analysis %s. Did you forget e.g. '-eff' at the end?" % analysis2 )
-        sys.exit()
+    ipath1 = getPathName ( args.dbpath, analysis1, valfile1 )
+    ipath2 = getPathName ( args.dbpath, analysis2, valfile2 )
     try:
-        ipath = "%s%dTeV/%s/%s/validation/%s" % \
-                 ( args.dbpath, sqrts1, experiment1, analysis1, valfile1 )
-        files = glob.glob ( ipath )
-        if len(files)==0:
-            print ( "could not find validation file %s" % ipath )
-            sys.exit()
-        if len(files)>1:
-            print ( "[plotRatio] globbing %s resulted in %d files. please specify." % ( ipath, len(files) ) )
-            sys.exit()
-        ipath = files[0]
-        spec = importlib.util.spec_from_file_location( "validationData", ipath )
-        imp1 = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(imp1)
+        spec1 = importlib.util.spec_from_file_location( "validationData", ipath1 )
+        imp1 = importlib.util.module_from_spec(spec1)
+        spec1.loader.exec_module(imp1)
     except Exception as e:
         print ( "Could not import validation file 1: %s" % e )
     try:
-        ipath = "%s%dTeV/%s/%s/validation/%s" % \
-                 ( args.dbpath, sqrts2, experiment2, analysis2, valfile2 )
-        files = glob.glob ( ipath )
-        if len(files)==0:
-            print ( "could not find validation file %s" % ipath )
-            sys.exit()
-        if len(files)>1:
-            print ( "[plotRatio] globbing %s resulted in %d files. specify." % ( ipath, len(files) ) )
-            sys.exit()
-        ipath = files[0]
-        spec = importlib.util.spec_from_file_location( "validationData", ipath )
-        imp2 = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(imp2)
+        spec2 = importlib.util.spec_from_file_location( "validationData", ipath2 )
+        imp2 = importlib.util.module_from_spec(spec2)
+        spec2.loader.exec_module(imp2)
     except Exception as e:
         print ( "Could not import validation file 2: %s" % e )
     uls={}
@@ -274,7 +230,7 @@ def main():
     # print ( "smsrootfile", smsrootfile )
     stopo = prettyDescriptions.prettyTxname ( topo, outputtype="latex" ).replace("*","^{*}" )
     
-    plt.title ( "$f$: %s, %s" % ( s_ana1.replace("-andre",""), topo) )
+    plt.title ( "$f$: %s, %s" % ( analysis1.replace("-andre",""), topo) )
     # plt.title ( "$f$: %s, %s %s" % ( s_ana1.replace("-andre",""), topo, stopo) )
     plt.xlabel ( "m$_{mother}$ [GeV]", fontsize=13 )
     plt.rc('text', usetex=True)
@@ -319,9 +275,9 @@ def main():
     #    figname = "%s_%s_%s.png" % ( analysis, topo, srs )
     a1, a2 = "$a_1$", "$a_2$"
     for ide,label in { "andre": "andre", "eff": "suchi" }.items():
-        if ide in s_ana1:
+        if ide in analysis1:
             a1 = label
-        if ide in s_ana2:
+        if ide in analysis2:
             a2 = label
     plt.text ( max(x)+.30*(max(x)-min(x)), .2*max(y), "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 ), fontsize=13, rotation = 90)
     print ( "[plotRatio] Saving to %s" % figname )
