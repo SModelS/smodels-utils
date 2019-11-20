@@ -55,8 +55,9 @@ def draw( validationfile ):
         if "error" in point:
             skipped += 1
             err = point["error"]
-            axes = convertNewAxes ( point["axes"] )
-            noResults.append ( ( axes[1], axes[0] ) )
+            if "axes" in point:
+                axes = convertNewAxes ( point["axes"] )
+                noResults.append ( ( axes[1], axes[0] ) )
             continue
         axes = convertNewAxes ( point["axes"] )
         bestSRs.append ( ( axes[1], axes[0], point["dataset"] ) )
@@ -159,8 +160,6 @@ if __name__ == "__main__":
     if args.default:
         for a in [ "CMS-EXO-13-006-andre", "CMS-EXO-13-006-eff" ]:
             for v in [ "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py" ]:
-                if "M1b" in v:
-                    continue
                 print ( "[drawBestSRs:default] now drawing %s:%s" % (a, v ) )
                 ipath = getPathName ( args.dbpath, a, v )
                 fname = draw( ipath )
