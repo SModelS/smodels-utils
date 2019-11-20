@@ -68,8 +68,15 @@ def draw( validationfile ):
     nbsrs = numpy.array ( nbsrs )
     srDict, nrDict = {}, {}
     srNum = 0
+    predefined = {}
+    predefined = { "c000": 3, "c100": 2, "c200": 0, "c300": 1 }
+    for k,v in predefined.items():
+        srDict[k]=v
+        nrDict[v]=k
     for ctr,x in enumerate(bestSRs):
         if x[2] not in srDict.keys():
+            while srNum in nrDict:
+                srNum+=1
             srDict[x[2]]=srNum
             nrDict[srNum]=x[2]
             srNum+=1
@@ -89,10 +96,11 @@ def draw( validationfile ):
     for n in nrDict.keys():
         x,y=[],[]
         for x_,y_,z_ in nbsrs:
-            # print ( "x,y,z,n",x_,y_,int(z_),n )
             if n == int(z_):
                 x.append ( x_ )
                 y.append ( y_ )
+        if len(x)==0:
+            continue
         plt.scatter ( x, y, s=25, c=[colors[n]]*len(x), label=nrDict[n] )
     plt.scatter ( noRx, noRy, s=2, c=["grey"]*len(noRx), label="no result" )
     plt.legend( loc="upper right" )
@@ -114,6 +122,7 @@ def writeBestSRs( push = False ):
     import glob
     Dir = "../../smodels.github.io/ratioplots/"
     files = glob.glob("%sbestSR*png" % Dir )
+    files.sort()
     topos = set()
     for f in files:
         p = f.rfind ( "_" )
