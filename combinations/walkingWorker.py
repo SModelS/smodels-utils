@@ -50,4 +50,7 @@ if __name__ == "__main__":
     argparser.add_argument ( '-f', '--cont', help='continue with saved states [""]',
                         type=str, default="" )
     args=argparser.parse_args()
-    main( args.nmin, args.nmax, args.cont )
+    cont = args.cont
+    if cont == "default":
+        cont = "/mnt/hephy/pheno/ww/rundir/states.pcl"
+    main( args.nmin, args.nmax, cont )
