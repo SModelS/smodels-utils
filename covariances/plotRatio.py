@@ -255,6 +255,7 @@ def draw ( imp1, imp2, copy ):
       print ( cmd )
       subprocess.getoutput ( cmd )
     print ( "[plotRatio] ratio=%.2f +/- %.2f" % ( numpy.nanmean(col), numpy.nanstd(col) ) )
+    plt.clf()
 
 def getModuleFromPath ( ipath, analysis ):
     try:
@@ -285,6 +286,8 @@ def writeMDPage( copy ):
             f.write ( '| <img src="%s" /> ' % src )
             if ctr % 2 == 1:
                 f.write ( "|\n" )
+        if ctr % 2 == 0:
+            f.write ( " | |\n" )
         f.close()
     if copy:
         cmd = "cp ratioplots.md ../../smodels.github.io/ratioplots/README.md" 
