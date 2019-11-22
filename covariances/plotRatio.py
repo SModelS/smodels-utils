@@ -5,6 +5,7 @@ own upper limit computed from combining the efficiency maps. """
 
 import math, os, numpy, copy, sys, glob
 import matplotlib.pyplot as plt
+import matplotlib
 import ROOT
 import logging
 import subprocess
@@ -214,8 +215,11 @@ def main():
     plt.rc('text', usetex=True)
     vmax = 1.5
     vmax = max ( col )*1.1
+    opts = { }
+    if vmax > 5.:
+        opts = { "norm": matplotlib.colors.LogNorm()  }
     scatter = plt.scatter ( x, y, s=0.25, c=col, marker="o", cmap=cm, 
-                            vmin=0.5, vmax=vmax )
+                            vmin=0.5, vmax=vmax, **opts )
     ax = plt.gca()
     ax.set_xticklabels(map(int,ax.get_xticks()), { "fontweight": "normal", "fontsize": 14 } )
     ax.set_yticklabels(map(int,ax.get_yticks()), { "fontweight": "normal", "fontsize": 14 } )
@@ -241,6 +245,7 @@ def main():
     plt.ylabel ( label, fontsize=13 )
 
     plt.colorbar()
+    # plt.colorbar( format="%.1g" )
     el = []
     hasLegend = False
     line = getExclusionsFrom ( smsrootfile, topo )
