@@ -565,16 +565,16 @@ def prettyAxes(txname,axes):
     if txname == 'THSCPM2b':
         return ['m_{#tilde{#tau}} = (x,y)', ]
     if txname == 'THSCPM4':
-        return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{#pm}} = (y,1e-16)', ]
+        return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{#pm}} = (y,1e-22)', ]
     if txname == 'THSCPM5':
         return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
-                'm_{#tilde{#tau}} = (y,1e-16)' ]
+                'm_{#tilde{#tau}} = (y,1e-22)' ]
     if txname == 'THSCPM7':
         return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
-                'm_{#tilde{#chi}_{1}^{#pm}} = (y,1e-16)' ]
+                'm_{#tilde{#chi}_{1}^{#pm}} = (y,1e-22)' ]
     if txname == 'THSCPM6':
         return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
-                'm_{#tilde{#tau}} = (y,1e-16)' ]
+                'm_{#tilde{#tau}} = (y,1e-22)' ]
     if txname == 'TGQ':
         return ['m_{#tilde{g}} = x, m_{#tilde{q}} = 0.96*x',
                     'm_{#tilde{#chi}_{1}^{0}} = y']

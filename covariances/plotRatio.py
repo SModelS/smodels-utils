@@ -5,7 +5,9 @@ own upper limit computed from combining the efficiency maps. """
 
 import math, os, numpy, copy, sys, glob
 import matplotlib.pyplot as plt
+import matplotlib
 import ROOT
+import time
 import logging
 import subprocess
 from scipy.interpolate import griddata
@@ -18,6 +20,26 @@ import warnings
 warnings.filterwarnings("ignore")
 
 logger = logging.getLogger(__name__)
+
+def convertNewAxes ( newa ):
+    """ convert new types of axes (dictionary) to old (lists) """
+    axes = copy.deepcopy(newa)
+    if type(newa)==list:
+        return axes[::-1]
+    if type(newa)==dict:
+        axes = [ newa["x"], newa["y"] ]
+        if "z" in newa:
+            axes.append ( newa["z"] )
+        return axes[::-1]
+    print ( "cannot convert this axis" )
+    return None
+
+def axisHash ( axes_ ):
+    ret = 0
+    axes = convertNewAxes ( axes_ )
+    for ctr,a in enumerate(axes):
+        ret += 10**(3*ctr)*int(a)
+    return ret
 
 def getExclusionsFrom ( rootpath, txname, axes=None ):
     """
@@ -93,69 +115,9 @@ def getExclusionLine ( line ):
       y_v.append(copy.deepcopy(y))
     return [ { "x": x_v, "y": y_v } ]
 
-def main():
-    import argparse
-    argparser = argparse.ArgumentParser( description = "ratio plot" )
-    argparser.add_argument ( "-v1", "--validationfile1", 
-            help="first validation file [THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py]", 
-            type=str, default="THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py" )
-    argparser.add_argument ( "-v2", "--validationfile2", 
-            help="second validation file. If empty, then same as v1. [""]", 
-            type=str, default="" )
-    argparser.add_argument ( "-a1", "--analysis1", 
-            help="first analysis name, like the directory name [CMS-EXO-13-006-andre]", 
-            type=str, default="CMS-EXO-13-006-andre" )
-    argparser.add_argument ( "-a2", "--analysis2", 
-            help="second analysis name, like the directory name [CMS-EXO-13-006-eff]", 
-            type=str, default="CMS-EXO-13-006-eff" )
-    argparser.add_argument ( "-d", "--dbpath", help="path to database [../../smodels-database/]", type=str,
-                             default="../../smodels-database/" )
-    argparser.add_argument ( "-c", "--copy", action="store_true", 
-            help="cp to smodels.github.io, as it appears in https://smodels.github.io/combination/" )
-    args = argparser.parse_args()
-
-    analysis1, valfile1 = args.analysis1, args.validationfile1
-    analysis2, valfile2 = args.analysis2, args.validationfile2
-    if valfile2 in [ "", "none", "None", None ]:
-        valfile2 = valfile1
-    ipath1 = getPathName ( args.dbpath, analysis1, valfile1 )
-    ipath2 = getPathName ( args.dbpath, analysis2, valfile2 )
-    try:
-        spec1 = importlib.util.spec_from_file_location( "validationData", ipath1 )
-        imp1 = importlib.util.module_from_spec(spec1)
-        spec1.loader.exec_module(imp1)
-    except Exception as e:
-        print ( "Could not import validation file 1: %s" % e )
-    try:
-        spec2 = importlib.util.spec_from_file_location( "validationData", ipath2 )
-        imp2 = importlib.util.module_from_spec(spec2)
-        spec2.loader.exec_module(imp2)
-    except Exception as e:
-        print ( "Could not import validation file 2: %s" % e )
+def draw ( imp1, imp2, copy ):
     uls={}
     nsr=""
-
-    def convertNewAxes ( newa ):
-        """ convert new types of axes (dictionary) to old (lists) """
-        axes = copy.deepcopy(newa)
-        if type(newa)==list:
-            return axes[::-1]
-        if type(newa)==dict:
-            axes = [ newa["x"], newa["y"] ]
-            if "z" in newa:
-                axes.append ( newa["z"] )
-            return axes[::-1]
-        print ( "cannot convert this axis" )
-        return None
-
-
-    def axisHash ( axes_ ):
-        ret = 0
-        axes = convertNewAxes ( axes_ )
-        for ctr,a in enumerate(axes):
-            ret += 10**(3*ctr)*int(a)
-        return ret
-
     noaxes = 0
     for point in imp1.validationData:
         if not "axes" in point:
@@ -214,8 +176,11 @@ def main():
     plt.rc('text', usetex=True)
     vmax = 1.5
     vmax = max ( col )*1.1
-    scatter = plt.scatter ( x, y, s=0.25, c=col, marker="o", cmap=cm, 
-                            vmin=0.5, vmax=vmax )
+    opts = { }
+    if vmax > 5.:
+        opts = { "norm": matplotlib.colors.LogNorm()  }
+    scatter = plt.scatter ( x, y, s=0.25, c=col, marker="o", cmap=cm,
+                            vmin=0.5, vmax=vmax, **opts )
     ax = plt.gca()
     ax.set_xticklabels(map(int,ax.get_xticks()), { "fontweight": "normal", "fontsize": 14 } )
     ax.set_yticklabels(map(int,ax.get_yticks()), { "fontweight": "normal", "fontsize": 14 } )
@@ -229,8 +194,8 @@ def main():
     topo=slhafile[:slhafile.find("_")]
     # print ( "smsrootfile", smsrootfile )
     stopo = prettyDescriptions.prettyTxname ( topo, outputtype="latex" ).replace("*","^{*}" )
-    
-    plt.title ( "$f$: %s, %s" % ( analysis1.replace("-andre",""), topo) )
+
+    plt.title ( "$f$: %s, %s" % ( imp1.ana.replace("-andre",""), topo) )
     # plt.title ( "$f$: %s, %s %s" % ( s_ana1.replace("-andre",""), topo, stopo) )
     plt.xlabel ( "m$_{mother}$ [GeV]", fontsize=13 )
     plt.rc('text', usetex=True)
@@ -241,6 +206,7 @@ def main():
     plt.ylabel ( label, fontsize=13 )
 
     plt.colorbar()
+    # plt.colorbar( format="%.1g" )
     el = []
     hasLegend = False
     line = getExclusionsFrom ( smsrootfile, topo )
@@ -251,7 +217,7 @@ def main():
         hasLegend = True
         plt.plot ( E["x"], E["y"], color='k', linestyle='-', linewidth=4, label=label )
         label = ""
-    smodels_root = "%s/%s.root" % ( analysis, topo ) 
+    smodels_root = "%s/%s.root" % ( analysis, topo )
     smodels_line = getSModelSExclusion ( smodels_root )
     el2 = getExclusionLine ( smodels_line )
     print ( "[plotRatio] Found SModelS exclusion line with %d points." % ( len(el2) ) )
@@ -270,24 +236,103 @@ def main():
         maxy = 79.9
     if nsr != "":
         plt.text ( .90*maxx, miny-.19*(maxy-miny), "%s" % ( nsr) , fontsize=14 )
-    figname = "%s_%s.png" % ( analysis, topo )
+    figname = "%s_%s.png" % ( analysis.replace("validation","ratio" ), topo )
     #if srs1 !="all":
     #    figname = "%s_%s_%s.png" % ( analysis, topo, srs )
     a1, a2 = "$a_1$", "$a_2$"
     for ide,label in { "andre": "andre", "eff": "suchi" }.items():
-        if ide in analysis1:
+        if ide in imp1.ana:
             a1 = label
-        if ide in analysis2:
+        if ide in imp2.ana:
             a2 = label
     plt.text ( max(x)+.30*(max(x)-min(x)), .2*max(y), "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 ), fontsize=13, rotation = 90)
     print ( "[plotRatio] Saving to %s" % figname )
     if hasLegend:
         plt.legend()
     plt.savefig ( figname )
-    if args.copy:
+    if copy:
       cmd="cp %s ../../smodels.github.io/ratioplots/" % ( figname )
       print ( cmd )
       subprocess.getoutput ( cmd )
     print ( "[plotRatio] ratio=%.2f +/- %.2f" % ( numpy.nanmean(col), numpy.nanstd(col) ) )
+
+def getModuleFromPath ( ipath, analysis ):
+    try:
+        spec = importlib.util.spec_from_file_location( "validationData", ipath )
+        imp = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(imp)
+        imp.ana = analysis
+    except Exception as e:
+        print ( "Could not import validation file 1: %s" % e )
+    return imp
+
+def getModule ( dbpath, analysis, validationfile ):
+    """ get the python module from the path to database, analysis name,
+        name of validation file (with globs) """
+    ipath = getPathName ( dbpath, analysis, validationfile )
+    imp = getModuleFromPath ( ipath, analysis )
+    return imp
+
+def writeMDPage( copy ):
+    """ write the markdown page that lists all plots """ 
+    with open("ratioplots.md","wt") as f:
+        f.write ( "# ratio plots\n" )
+        f.write ( "as of %s\n" % time.asctime() )
+        f.write ( "see also [best signal regions](bestSRs)\n\n" )
+        f.write ( "| topo | topo |\n" )
+        for ctr,i in enumerate(glob.glob("ratio_*.png" )):
+            src = "https://smodels.github.io/ratioplots/%s" % i
+            f.write ( '| <img src="%s" /> ' % src )
+            if ctr %2 == 0:
+                f.write ( "|\n" )
+        f.close()
+    if copy:
+        cmd = "cp ratioplots.md ../../smodels.github.io/ratioplots/README.md" 
+        subprocess.getoutput ( cmd )
+
+def main():
+    import argparse
+    argparser = argparse.ArgumentParser( description = "ratio plot" )
+    argparser.add_argument ( "-v1", "--validationfile1",
+            help="first validation file [THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py]",
+            type=str, default="THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py" )
+    argparser.add_argument ( "-v2", "--validationfile2",
+            help="second validation file. If empty, then same as v1. [""]",
+            type=str, default="" )
+    argparser.add_argument ( "-a1", "--analysis1",
+            help="first analysis name, like the directory name [CMS-EXO-13-006-andre]",
+            type=str, default="CMS-EXO-13-006-andre" )
+    argparser.add_argument ( "-a2", "--analysis2",
+            help="second analysis name, like the directory name [CMS-EXO-13-006-eff]",
+            type=str, default="CMS-EXO-13-006-eff" )
+    argparser.add_argument ( "-d", "--dbpath", help="path to database [../../smodels-database/]", type=str,
+                             default="../../smodels-database/" )
+    argparser.add_argument ( "-D", "--default", action="store_true",
+            help="default run on arguments. currently set to be the exo 13 006 plots" )
+    argparser.add_argument ( "-c", "--copy", action="store_true",
+            help="cp to smodels.github.io, as it appears in https://smodels.github.io/combination/" )
+    argparser.add_argument ( "-p", "--push", action="store_true", 
+            help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
+    args = argparser.parse_args()
+
+    valfiles = [ args.validationfile1 ]
+    if args.default:
+        valfiles = [ "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py" ] # "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM2b_*.py" ]
+    for valfile1 in valfiles:
+        valfile2 = args.validationfile2
+        if valfile2 in [ "", "none", "None", None ]:
+            valfile2 = valfile1
+        imp1 = getModule ( args.dbpath, args.analysis1, valfile1 )
+        imp2 = getModule ( args.dbpath, args.analysis2, valfile2 )
+
+        draw ( imp1, imp2, args.copy )
+
+    writeMDPage( args.copy )
+
+    cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit' ; git push"
+    o = ""
+    if args.push:
+        o = subprocess.getoutput ( cmd )
+    print ( "[plotRatio] cmd %s: %s" % (cmd, o ) )
 
 main()
