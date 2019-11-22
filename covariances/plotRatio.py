@@ -283,7 +283,7 @@ def writeMDPage( copy ):
         for ctr,i in enumerate(glob.glob("ratio_*.png" )):
             src = "https://smodels.github.io/ratioplots/%s" % i
             f.write ( '| <img src="%s" /> ' % src )
-            if ctr %2 == 0:
+            if ctr % 2 == 1:
                 f.write ( "|\n" )
         f.close()
     if copy:
