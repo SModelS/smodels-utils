@@ -7,6 +7,7 @@ import math, os, numpy, copy, sys, glob
 import matplotlib.pyplot as plt
 import matplotlib
 import ROOT
+import time
 import logging
 import subprocess
 from scipy.interpolate import griddata
@@ -235,7 +236,7 @@ def draw ( imp1, imp2, copy ):
         maxy = 79.9
     if nsr != "":
         plt.text ( .90*maxx, miny-.19*(maxy-miny), "%s" % ( nsr) , fontsize=14 )
-    figname = "%s_%s.png" % ( analysis, topo )
+    figname = "%s_%s.png" % ( analysis.replace("validation","ratio" ), topo )
     #if srs1 !="all":
     #    figname = "%s_%s_%s.png" % ( analysis, topo, srs )
     a1, a2 = "$a_1$", "$a_2$"
@@ -255,7 +256,7 @@ def draw ( imp1, imp2, copy ):
       subprocess.getoutput ( cmd )
     print ( "[plotRatio] ratio=%.2f +/- %.2f" % ( numpy.nanmean(col), numpy.nanstd(col) ) )
 
-def getModule ( ipath, analysis ):
+def getModuleFromPath ( ipath, analysis ):
     try:
         spec = importlib.util.spec_from_file_location( "validationData", ipath )
         imp = importlib.util.module_from_spec(spec)
@@ -264,6 +265,30 @@ def getModule ( ipath, analysis ):
     except Exception as e:
         print ( "Could not import validation file 1: %s" % e )
     return imp
+
+def getModule ( dbpath, analysis, validationfile ):
+    """ get the python module from the path to database, analysis name,
+        name of validation file (with globs) """
+    ipath = getPathName ( dbpath, analysis, validationfile )
+    imp = getModuleFromPath ( ipath, analysis )
+    return imp
+
+def writeMDPage( copy ):
+    """ write the markdown page that lists all plots """ 
+    with open("ratioplots.md","wt") as f:
+        f.write ( "# ratio plots\n" )
+        f.write ( "as of %s\n" % time.asctime() )
+        f.write ( "see also [best signal regions](bestSRs)\n\n" )
+        f.write ( "| topo | topo |\n" )
+        for ctr,i in enumerate(glob.glob("ratio_*.png" )):
+            src = "https://smodels.github.io/ratioplots/%s" % i
+            f.write ( '| <img src="%s" /> ' % src )
+            if ctr %2 == 0:
+                f.write ( "|\n" )
+        f.close()
+    if copy:
+        cmd = "cp ratioplots.md ../../smodels.github.io/ratioplots/README.md" 
+        subprocess.getoutput ( cmd )
 
 def main():
     import argparse
@@ -286,16 +311,28 @@ def main():
             help="default run on arguments. currently set to be the exo 13 006 plots" )
     argparser.add_argument ( "-c", "--copy", action="store_true",
             help="cp to smodels.github.io, as it appears in https://smodels.github.io/combination/" )
+    argparser.add_argument ( "-p", "--push", action="store_true", 
+            help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
     args = argparser.parse_args()
 
-    valfile2 = args.validationfile2
-    if valfile2 in [ "", "none", "None", None ]:
-        valfile2 = args.validationfile1
-    ipath1 = getPathName ( args.dbpath, args.analysis1, args.validationfile1 )
-    ipath2 = getPathName ( args.dbpath, args.analysis2, valfile2 )
-    imp1 = getModule ( ipath1, args.analysis1 )
-    imp2 = getModule ( ipath2, args.analysis2 )
+    valfiles = [ args.validationfile1 ]
+    if args.default:
+        valfiles = [ "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py" ] # "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM2b_*.py" ]
+    for valfile1 in valfiles:
+        valfile2 = args.validationfile2
+        if valfile2 in [ "", "none", "None", None ]:
+            valfile2 = valfile1
+        imp1 = getModule ( args.dbpath, args.analysis1, valfile1 )
+        imp2 = getModule ( args.dbpath, args.analysis2, valfile2 )
 
-    draw ( imp1, imp2, args.copy )
+        draw ( imp1, imp2, args.copy )
+
+    writeMDPage( args.copy )
+
+    cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit' ; git push"
+    o = ""
+    if args.push:
+        o = subprocess.getoutput ( cmd )
+    print ( "[plotRatio] cmd %s: %s" % (cmd, o ) )
 
 main()

@@ -131,6 +131,7 @@ def writeBestSRs( push = False ):
     with open ( "%sbestSRs.md" % Dir, "wt" ) as g:
         g.write ( "# plots of best expected signal regions\n" )
         g.write ( "as of %s\n" % time.asctime() )
+        g.write ( "checkout also the [ratio plots](README.md)\n" )
         tsorted = list(topos)
         tsorted.sort() ## why???
         for topo in tsorted:
