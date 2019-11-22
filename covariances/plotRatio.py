@@ -281,7 +281,9 @@ def writeMDPage( copy ):
         f.write ( "as of %s\n" % time.asctime() )
         f.write ( "see also [best signal regions](bestSRs)\n\n" )
         f.write ( "| topo | topo |\n" )
-        for ctr,i in enumerate(glob.glob("ratio_*.png" )):
+        files = glob.glob("ratio_*.png" )
+        files.sort()
+        for ctr,i in enumerate( files ):
             src = "https://smodels.github.io/ratioplots/%s" % i
             f.write ( '| <img src="%s" /> ' % src )
             if ctr % 2 == 1:
