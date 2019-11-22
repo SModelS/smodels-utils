@@ -197,21 +197,19 @@ class ProtoModel:
         #if hasattr ( self, "predictor" ):
         #    del self.predictor
 
-    def predict ( self, strategy = "aggressive", nevents = 2000,
+    def predict ( self, strategy = "aggressive", nevents = 10000,
                   check_thresholds = True ):
         """ compute best combo, llhd, and significance 
         :param rthres 
         :returns: False, if not prediction (e.g. because the model is excluded), 
                   True if prediction was possible
         """
-        self.log ( "predict" )
+        if predictor[0] == None:
+            self.initializePredictor()
         # if not os.path.exists ( self.currentSLHA ):
         self.createSLHAFile( nevents = nevents )
         # get the predictions that determine whether model is excluded:
         # best results only, also non-likelihood results
-        self.log ( "check if excluded" )
-        if predictor[0] == None:
-            self.initializePredictor()
         #if not hasattr ( self, "predictor" ):
         #    self.predictor = Predictor ( self.walkerid, dbpath = self.dbpath )
         # bestpreds = self.predictor.predict ( self.currentSLHA, allpreds=False,
@@ -467,7 +465,7 @@ class ProtoModel:
             particles.append ( "%s: %d" % (  helpers.getParticleName ( pid ), m ) )
         print ( ", ".join ( particles ) )
 
-    def createSLHAFile ( self, outputSLHA=None, nevents=2000 ):
+    def createSLHAFile ( self, outputSLHA=None, nevents=10000 ):
         """ from the template.slha file, create the slha file of the current
             model.
         :param outputSLHA: if not None, write into that file. else, write into
@@ -509,7 +507,7 @@ class ProtoModel:
         return { "masses": self.masses, "ssmultipliers": self.ssmultipliers,
                  "decays": self.decays }
 
-    def computeXSecs ( self, nevents=2000 ):
+    def computeXSecs ( self, nevents=10000 ):
         """ compute xsecs for current.slha """
         self.log ( "computing xsecs" )
         # print ( "[walk] computing xsecs for %s" % self.currentSLHA )

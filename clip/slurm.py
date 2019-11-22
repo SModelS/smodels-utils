@@ -60,6 +60,9 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time ):
     if 8 < time <= 48:
         qos = "c_medium"
     cmd += [ "--qos", qos ]
+    # cmd += [ "-n", str(jmax - jmin) ]
+    cmd += [ "--threads-per-core", str(jmax - jmin) ]
+    # cmd += [ "-N", str(jmax - jmin) ]
     cmd += [ "--mem", "%dG" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
     print ( " ".join ( cmd ) )
     if not dry_run:

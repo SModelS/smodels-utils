@@ -44,13 +44,16 @@ if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(description="walkers run on a worker")
     argparser.add_argument ( '--nmin', nargs='?', help='minimum worker id [0]',
-                        type=int, default=0 )
+                        type=int, default=40 )
     argparser.add_argument ( '--nmax', nargs='?', help='maximum worker id [10]',
-                        type=int, default=10 )
+                        type=int, default=90 )
     argparser.add_argument ( '-f', '--cont', help='continue with saved states [""]',
-                        type=str, default="" )
+                        type=str, default="default" )
     args=argparser.parse_args()
     cont = args.cont
     if cont == "default":
+        import os
         cont = "/mnt/hephy/pheno/ww/rundir/states.pcl"
+        if not os.path.exists ( cont ):
+            cont = ""
     main( args.nmin, args.nmax, cont )
