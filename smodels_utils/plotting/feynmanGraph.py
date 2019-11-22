@@ -35,7 +35,7 @@ def printParticle_ ( label, jet ):
     label = str ( label )
     if not jet and label=="jet": label=r"q"
     if jet and label=="jet": label=r"jet"
-    if label in [ "gamma", "photon" ]: return "$\Pgamma$"
+    if label in [ "gamma", "photon" ]: return r"\gamma" # r"\Pgamma"
     if label in [ "hi", "higgs" ]: label="H"
     if label in [ "f" ]: return r"\Pfermion"
     if label in [ "b" ]: return r"b"
@@ -376,7 +376,7 @@ if __name__ == "__main__":
             mergefiles, delfiles = "", ""
             if "]+[" in constraint:
                 constraints = constraint.split("]+[")
-                print ( "[feynmanGraph] sum of elements" )
+                # print ( "[feynmanGraph] sum of elements" )
                 for i,c in enumerate(constraints):
                     out = outdir + "/" + outfile.replace(".","%d." % i ).replace(".png",".pdf")
                     df = outdir + "/"+  outfile.replace(".","%d." % i )
