@@ -83,7 +83,7 @@ N.B.: Each "()" group corresponds to a branch
         for l in lengths:
             self.f.write ( "| "+"-"*l+ " " )
         self.f.write ( "|\n" )
-        
+
 
     def cleanUp ( self, txname ):
         constr = txname.constraint
@@ -177,7 +177,7 @@ N.B.: Each "()" group corresponds to a branch
             lastc = len(constraint)
             if ";" in constraint:
                 lastc=constraint.find(";")
-            #print ( "constraint %s " % constraint, "p7", p7, "lastc", lastc, "p", p )
+            # print ( "constraint %s " % constraint, "p7", p7, "lastc", lastc, "p", p )
             # print ( "fs",constraint[p7:lastc] )
             fstate = eval ( constraint[p7:lastc].replace("(","['").replace(")","']").replace(",","','") )
         feynfile="../feyn/"+txname+".png"
@@ -219,12 +219,11 @@ N.B.: Each "()" group corresponds to a branch
         constraint = constraint[constraint.find("["):]
         constraint = constraint.replace( " ", "" )
         constraint = constraint.replace ( "jet", "q" )
-        #constraint = constraint.replace ( "photon", "y" )
-        #constraint = constraint.replace ( "higgs", "h" )
-        # if constraint[-1]==")": constraint = constraint[:-1]
         if self.drawFeyn:
             for txname in txnames:
                 self.createFeynGraph ( txname, constraint )
+        constraint = constraint.replace ( "photon", "y" )
+        constraint = constraint.replace ( "higgs", "h" )
         constraint = constraint.replace ( "]+[", "]+`<BR>`[" )
         constraint = constraint.replace ( ";",";`<BR>`" )
         constraint = "`" + constraint + "`"
