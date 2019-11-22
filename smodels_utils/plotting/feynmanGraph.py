@@ -15,6 +15,9 @@ import math, random, os
 logger = logging.getLogger(__name__)
 import sys, copy
 import subprocess
+import pyx
+if not hasattr ( pyx.text, "defaulttextrunner" ):
+        pyx.text.defaulttexrunner = pyx.text.LatexEngine()
 
 from pyfeyn.user import color
 
