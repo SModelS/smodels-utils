@@ -17,7 +17,8 @@ import sys, copy
 import subprocess
 import pyx
 if not hasattr ( pyx.text, "defaulttextrunner" ):
-        pyx.text.defaulttexrunner = pyx.text.LatexEngine()
+    pyx.text.defaulttexrunner = pyx.text.LatexEngine()
+    pyx.text.set(pyx.text.LatexRunner)
 
 from pyfeyn.user import color
 
