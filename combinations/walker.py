@@ -183,13 +183,13 @@ class RandomWalker:
         self.log ( "now create slha file via predict" )
         if self.catch_exceptions: 
             try:
-                self.protomodel.predict( self.strategy )
+                self.protomodel.predict( self.strategy, nevents = 10000 )
             except Exception as e:
                 self.pprint ( "error ``%s'' (%s) encountered when trying to predict. lets revert" % (str(e),type(e) ) )
                 self.protomodel.restore()
                 return
         else:
-            self.protomodel.predict ( self.strategy )
+            self.protomodel.predict ( self.strategy, nevents = 10000 )
 
         self.log ( "found highest Z: %.2f" % self.protomodel.Z )
         
@@ -232,7 +232,7 @@ class RandomWalker:
         self.protomodel.backup()
         self.regressor.plusDeltaM ( self.protomodel, rate=.1 ) ## move!!
         try:
-            self.protomodel.predict ( self.strategy )
+            self.protomodel.predict ( self.strategy, nevents = 10000 )
         except Exception as e:
             self.pprint ( "could not get prediction for gradient ascended model. revert" )
             self.protomodel.restore()
