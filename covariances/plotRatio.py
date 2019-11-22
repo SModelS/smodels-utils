@@ -163,11 +163,19 @@ def draw ( imp1, imp2, copy ):
     col = points[::,2].tolist()
     x_ = numpy.arange ( min(x), max(x), ( max(x)-min(x)) / 1000. )
     y_ = numpy.arange ( min(y), max(y), ( max(y)-min(y)) / 1000. )
+    logScale = False
+    if max(y) < 1e-10 and min(y) > 1e-40:
+        logScale = True
+        y_ = numpy.logspace ( numpy.log10(.3*min(y)), numpy.log10(3.*max(y)), 1000 )
+    #print ( "y", y[:10] )
+    #print ( "x", x[:10] )
+    #print ( "y_", y_[:10] )
+    #print ( "x_", x_[:10] )
+    # yx = numpy.array(list(itertools.product( y ,x )) )
     yx = numpy.array(list(itertools.product(y_,x_)) )
     x = yx[::,1]
     y = yx[::,0]
-    col = griddata ( points[::,0:2], points[::,2], yx )
-    # print ( "col=", col )
+    col = griddata ( points[::,0:2], points[::,2], yx, rescale=True )
 
     if err_msgs > 0:
         print ( "[plotRatio] couldnt find data for %d/%d points" % (err_msgs, len( imp2.validationData ) ) )
@@ -175,15 +183,26 @@ def draw ( imp1, imp2, copy ):
     cm = plt.cm.get_cmap('jet')
     plt.rc('text', usetex=True)
     vmax = 1.5
-    vmax = max ( col )*1.1
+    vmax = numpy.nanmax ( col )*1.1
+    vmin = numpy.nanmin ( col )*0.9
     opts = { }
     if vmax > 5.:
         opts = { "norm": matplotlib.colors.LogNorm()  }
+    #print ( "vmax", vmax )
+    #if logScale:
+    #    vmin = 1e-5
+    #    vmax = 0.5
     scatter = plt.scatter ( x, y, s=0.25, c=col, marker="o", cmap=cm,
-                            vmin=0.5, vmax=vmax, **opts )
+                            vmin=vmin, vmax=vmax, **opts )
     ax = plt.gca()
+    if logScale:
+        ax.set_yscale("log")
+        ax.set_ylim ( min(y)*.2, max(y)*5. )
+        plt.ylabel ( "$\Gamma$ [GeV]", size=13 )
+        plt.xlabel ( "m [GeV]", size=13 )
     ax.set_xticklabels(map(int,ax.get_xticks()), { "fontweight": "normal", "fontsize": 14 } )
-    ax.set_yticklabels(map(int,ax.get_yticks()), { "fontweight": "normal", "fontsize": 14 } )
+    if not logScale:
+        ax.set_yticklabels(map(int,ax.get_yticks()), { "fontweight": "normal", "fontsize": 14 } )
     plt.rcParams.update({'font.size': 14})
     #plt.rcParams['xtick.labelsize'] = 14
     #plt.rcParams['ytick.labelsize'] = 14
@@ -197,13 +216,15 @@ def draw ( imp1, imp2, copy ):
 
     plt.title ( "$f$: %s, %s" % ( imp1.ana.replace("-andre",""), topo) )
     # plt.title ( "$f$: %s, %s %s" % ( s_ana1.replace("-andre",""), topo, stopo) )
-    plt.xlabel ( "m$_{mother}$ [GeV]", fontsize=13 )
+    if not logScale:
+        plt.xlabel ( "m$_{mother}$ [GeV]", fontsize=13 )
     plt.rc('text', usetex=True)
     label = "m$_{LSP}$ [GeV]"
     if "052" in analysis:
       # label = "$\Delta m$(mother, daughter) [GeV]"
       label = "m$_{mother}$ - m$_{daughter}$ [GeV]"
-    plt.ylabel ( label, fontsize=13 )
+    if not logScale:
+        plt.ylabel ( label, fontsize=13 )
 
     plt.colorbar()
     # plt.colorbar( format="%.1g" )
@@ -245,7 +266,10 @@ def draw ( imp1, imp2, copy ):
             a1 = label
         if ide in imp2.ana:
             a2 = label
-    plt.text ( max(x)+.30*(max(x)-min(x)), .2*max(y), "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 ), fontsize=13, rotation = 90)
+    ypos = .2*max(y)
+    if logScale:
+        ypos = min(y)*30.
+    plt.text ( max(x)+.30*(max(x)-min(x)), ypos, "$f$ = $\sigma_{95}$ (%s) / $\sigma_{95}$ (%s)" % ( a1, a2 ), fontsize=13, rotation = 90)
     print ( "[plotRatio] Saving to %s" % figname )
     if hasLegend:
         plt.legend()
@@ -322,7 +346,7 @@ def main():
 
     valfiles = [ args.validationfile1 ]
     if args.default:
-        valfiles = [ "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py" ] # "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM2b_*.py" ]
+        valfiles = [ "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py", "THSCPM1b_*.py", "THSCPM2b_*.py" ]
     for valfile1 in valfiles:
         valfile2 = args.validationfile2
         if valfile2 in [ "", "none", "None", None ]:

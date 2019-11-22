@@ -93,6 +93,7 @@ def draw( validationfile ):
     for i in noResults:
         noRx.append ( i[0] )
         noRy.append ( i[1] )
+    ax = plt.gca()
     for n in nrDict.keys():
         x,y=[],[]
         for x_,y_,z_ in nbsrs:
@@ -106,6 +107,12 @@ def draw( validationfile ):
     plt.legend( loc="upper right" )
     plt.xlabel ( "m$_{mother}$ [GeV]" )
     plt.ylabel ( "m$_{daughter}$ [GeV]" )
+    if min(y)>1e-30 and max(y)<1e-1:
+        # the y axis seems to be widths
+        ax.set_yscale('log')
+        ax.set_ylim ( min(y)*.2, max(y)*5. )
+        plt.ylabel ( "$\Gamma$ [GeV]" )
+        plt.xlabel ( "m [GeV]" )
     #plt.ylabel ( "$\\Delta$m [GeV]" )
     print ( "[drawBestSRs] plotting %s (%s)" % ( anaId, topo ) )
     andre=""
@@ -155,8 +162,8 @@ if __name__ == "__main__":
     argparser.add_argument ( "-d", "--dbpath", help="path to database [../../smodels-database/]", type=str,
                              default="../../smodels-database/" )
     argparser.add_argument ( "-a", "--analysis", 
-            help="analysis name, like the directory name [CMS-EXO-13-006-andre]", 
-            type=str, default="CMS-EXO-13-006-andre" )
+            help="analysis name, like the directory name [CMS-EXO-13-006-eff]", 
+            type=str, default="CMS-EXO-13-006-eff" )
     argparser.add_argument ( "-v", "--validationfile", 
             help="validation file [THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py]", 
             type=str, default="THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py" )
