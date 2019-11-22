@@ -154,10 +154,10 @@ if __name__ == "__main__":
     argparser.add_argument ( "-d", "--dbpath", help="path to database [../../smodels-database/]", type=str,
                              default="../../smodels-database/" )
     argparser.add_argument ( "-a", "--analysis", 
-            help="first analysis name, like the directory name [CMS-EXO-13-006-andre]", 
+            help="analysis name, like the directory name [CMS-EXO-13-006-andre]", 
             type=str, default="CMS-EXO-13-006-andre" )
     argparser.add_argument ( "-v", "--validationfile", 
-            help="first validation file [THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py]", 
+            help="validation file [THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py]", 
             type=str, default="THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py" )
     argparser.add_argument ( "-D", "--default", action="store_true", 
             help="default run on arguments. currently set to be the exo 13 006 plots" )
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     args = argparser.parse_args()
     if args.default:
         for a in [ "CMS-EXO-13-006-andre", "CMS-EXO-13-006-eff" ]:
-            for v in [ "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py" ]:
+            for v in [ "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py", "THSCPM2b_*.py" ]:
                 print ( "[drawBestSRs:default] now drawing %s:%s" % (a, v ) )
                 ipath = getPathName ( args.dbpath, a, v )
                 fname = draw( ipath )
