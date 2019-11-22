@@ -182,7 +182,7 @@ N.B.: Each "()" group corresponds to a branch
             fstate = eval ( constraint[p7:lastc].replace("(","['").replace(")","']").replace(",","','") )
         feynfile="../feyn/"+txname+".png"
         sfstate = str(fstate).replace(" ","").replace("'","")
-        print ( "[smsDictionary.py] draw",feynfile,"from",c,"with",sfstate,"(full constraint reads",fcon,")" )
+        print ( "[smsDictionary] draw",feynfile,"from",c,"with",sfstate,"(full constraint reads",fcon,")" )
         exe = "../smodels_utils/plotting/feynmanGraph.py -i "
         cmd = exe
         if writer.straight():
@@ -287,7 +287,7 @@ if __name__ == '__main__':
     writer = SmsDictWriter( database=args.database, drawFeyn = args.feynman,
             xkcd = args.xkcd, results = args.results, addVer = args.add_version,
             private = args.private, dryrun = args.dry_run  )
-    print ( "[smsDictionary.py] Database", writer.database.databaseVersion )
+    print ( "[smsDictionary] Database", writer.database.databaseVersion )
     writer.run()
     if args.copy:
         #import socket
