@@ -368,6 +368,9 @@ def main ( args ):
     if args.interactive:
         print ( "[hiscore] starting interactive session. Variables: %sprotomodels, trimmed%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
+        print ( "[hiscore]                                 Modules: %strimmer%s" % \
+                ( colorama.Fore.RED, colorama.Fore.RESET ) )
+        import trimmer
         import IPython
         IPython.embed()
 

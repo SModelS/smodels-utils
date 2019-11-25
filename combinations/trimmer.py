@@ -6,7 +6,7 @@ import time, colorama, copy, sys
 from smodels.tools import runtime
 runtime._experimental = True
 from combiner import Combiner
-from protomodel import ProtoModel
+from protomodel import ProtoModel, rthresholds
 import helpers
 
 class Trimmer:
@@ -141,7 +141,49 @@ class Trimmer:
         if trimbranchings:
             self.trimBranchings ( )
         self.protomodel.trimmedBranchings = trimbranchings
+        if hasattr ( self.protomodel, "checkSwaps" ):
+            self.pprint ( "Check if we should swap certain particles (eg ~b2 <-> ~b1)" )
+            self.protomodel.checkSwaps()
         self.protomodel.clean()
+
+    def trimBranchingsOf ( self, pid ):
+        """ trim the branchings of pid """
+        decays = self.protomodel.decays[pid]
+        ndiscardedBR = 0
+        for dpid,dbr in decays.items():
+            self.log ( "look at %s(%.1f) -> %s(%.1f) [br %.3f]" % (pid,self.protomodel.masses[pid],dpid,self.protomodel.masses[dpid],dbr) )
+            if not dpid in self.protomodel.masses:
+                self.protomodel.masses[dpid]=1e6
+            if dbr < 1e-5: ## small values set automatically to zero
+                self.protomodel.decays[pid][dpid]=0. ## correct for it.
+                S = sum ( self.protomodel.decays[pid].values() )
+                for k,v in self.protomodel.decays[pid].items():
+                    self.protomodel.decays[pid][k]=v/S
+                continue
+            if dbr > 1e-5 and (dbr < .15 or self.protomodel.masses[dpid]>self.protomodel.masses[pid]):
+                self.pprint ( "decay %s -> %s (br=%.2f) has small branching or is offshell. Try to take out." % (helpers.getParticleName(pid),helpers.getParticleName(dpid),dbr) )
+                oldZ = self.protomodel.Z
+                self.protomodel.backup()
+                self.protomodel.decays[pid][dpid]=0.
+                S = sum ( self.protomodel.decays[pid].values() )
+                for k,v in self.protomodel.decays[pid].items():
+                    self.protomodel.decays[pid][k]=v/S
+                self.protomodel.decays[pid][dpid]=0.
+                self.protomodel.predict ( self.strategy, nevents=10000 )
+                if self.protomodel.rmax > rthresholds[0]:
+                    self.pprint ( "running into exclusion if I try to take it out (rmax=%.1f). Leave in." % self.protomodel.rmax )
+                    self.protomodel.restore()
+                    continue
+
+                if self.protomodel.Z > (1. - self.maxloss)*oldZ:
+                    dbr = 0.
+                    ndiscardedBR+=1
+                    self.pprint ( "discarding small BR %s -> %s: %.2f: Z changed %.3f -> %.3f" % ( helpers.getParticleName(pid),helpers.getParticleName(dpid), dbr, oldZ, self.protomodel.Z ) )
+                else:
+                    self.pprint ( "not discarding small BR %s -> %s: %.2f Z changed %.3f -> %.3f" % ( helpers.getParticleName(pid), helpers.getParticleName(dpid), dbr, oldZ, self.protomodel.Z ) )
+                    self.protomodel.restore()
+        return ndiscardedBR
+
 
     def trimBranchings ( self ):
         """ now trim the branchings """
@@ -152,37 +194,6 @@ class Trimmer:
         self.pprint ( "now try to trim the branchings of %d particles" % len(unfrozen) )
         # unfrozen = [] ## turn it off
         for cpid,pid in enumerate(unfrozen):
-            decays = self.protomodel.decays[pid]
+            ndiscardedBR += self.trimBranchingsOf ( pid )
             self.highlight ( "info", "trying to trim branchings of %s [%d/%d]" % ( helpers.getParticleName(pid),(cpid+1),len(unfrozen) ) )
-            for dpid,dbr in decays.items():
-                if not dpid in self.protomodel.masses:
-                    self.protomodel.masses[dpid]=1e6
-                if dbr < 1e-5: ## small values set automatically to zero
-                    self.protomodel.decays[pid][dpid]=0. ## correct for it.
-                    S = sum ( self.protomodel.decays[pid].values() )
-                    for k,v in self.protomodel.decays[pid].items():
-                        self.protomodel.decays[pid][k]=v/S
-                    continue
-                if dbr > 1e-5 and (dbr < .01 or self.protomodel.masses[dpid]>self.protomodel.masses[pid]):
-                    self.pprint ( "decay %s -> %s (br=%.2f) has small branching or is offshell. Try to take out." % (helpers.getParticleName(pid),helpers.getParticleName(dpid),dbr) )
-                    oldZ = self.protomodel.Z
-                    self.protomodel.backup()
-                    self.protomodel.decays[pid][dpid]=0.
-                    S = sum ( self.protomodel.decays[pid].values() )
-                    for k,v in self.protomodel.decays[pid].items():
-                        self.protomodel.decays[pid][k]=v/S
-                    self.protomodel.predict ( self.strategy, nevents=10000 )
-                    if self.protomodel.rmax > 1.5:
-                        self.pprint ( "running into exclusion if I try to take it out (rmax=%.1f). Leave in." % self.protomodel.rmax )
-                        self.protomodel.restore()
-                        continue
-
-                    if self.protomodel.Z > (1. - self.maxloss)*oldZ:
-                        dbr = 0.
-                        ndiscardedBR+=1
-                        self.pprint ( "discarding small BR %s -> %s: %.2f: Z changed %.3f -> %.3f" % ( helpers.getParticleName(pid),helpers.getParticleName(dpid), dbr, oldZ, self.protomodel.Z ) )
-                    else:
-                        self.pprint ( "not discarding small BR %s -> %s: %.2f Z changed %.3f -> %.3f" % ( helpers.getParticleName(pid), helpers.getParticleName(dpid), dbr, oldZ, self.protomodel.Z ) )
-                        self.protomodel.restore()
-
         self.pprint ( "%d/%d particles are still unfrozen. discarded %d branchings." % ( len(self.protomodel.unFrozenParticles()),len(self.protomodel.masses),ndiscardedBR )  )

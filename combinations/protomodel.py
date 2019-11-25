@@ -149,6 +149,87 @@ class ProtoModel:
                 self.ssmultipliers[(1000001,1000001)]=1.0
         self.computePrior()
 
+    def checkSwaps ( self ):
+        """ check for the usual suspects for particle swaps """
+        ## the pairs to check. I put 1000023, 1000025 twice, 
+        ## so as to make it possible that chi40 eventually swaps with chi20
+        pairs = [ ( 1000006, 2000006 ), ( 1000005, 2000005 ),
+                  ( 1000023, 1000025 ), ( 1000024, 1000037 ),
+                  ( 1000025, 1000035 ), ( 1000023, 1000025 ) ]
+        for pids in pairs:
+            if not pids[1] in self.masses or not pids[0] in self.masses:
+                continue
+            if self.masses[pids[1]] > 9e4:
+                # we dont check for frozen particles
+                continue
+            #if self.masses[pids[0]] > 9e4:
+                # we dont check for frozen particles
+            #    continue
+            if self.masses[pids[0]] > self.masses[pids[1]]:
+                self.pprint ( "particle swap %d <-> %d" % ( pids[0], pids[1] ) )
+                self.swapParticles ( pids[0],pids[1] )
+
+    def swapParticles ( self, pid1, pid2 ):
+        """ swaps the two particle ids. The idea being that e.g. ~b1 should be
+            lighter than ~b2. If in the walk, ~b1 > ~b2, we just swap the roles 
+            of the two particles. """
+        ## swap in the masses dictionary
+        if pid1 in self.masses and pid2 in self.masses:
+            s = self.masses[pid1]
+            self.masses[pid1] = self.masses[pid2]
+            self.masses[pid2] = s
+        else:
+            self.highlight ( "error, i was asked to swap %d and %d. but one of them isnt in the mass tuple" % ( pid1, pid2 ) )
+            return
+        ## swap mothers in the decays dictionary
+        if pid1 in self.decays and pid2 in self.decays:
+            s = self.decays[pid1]
+            self.decays[pid1] = self.decays[pid2]
+            self.decays[pid2] = s
+        else:
+            self.highlight ( "error, i was asked to swap %d and %d. but one of them isnt in the decays tuple" % ( pid1, pid2 ) )
+            return
+
+        # swap the daughters in the decays dictionary
+        for mpid,decays in self.decays.items():
+            if pid1 in decays and pid2 in decays: ## a swap!
+                s = self.decays[mpid][pid1]
+                self.decays[mpid][pid1] = self.decays[mpid][pid2]
+                self.decays[mpid][pid2] = s
+                continue
+            if pid1 in decays and not pid2 in decays: ## just a rename
+                self.decays[mpid][pid2]=copy.deepcopy( self.decays[mpid][pid1] )
+                self.decays[mpid].pop(pid1)
+                continue
+            if pid2 in decays and not pid1 in decays: ## just a rename
+                self.decays[mpid][pid1]=copy.deepcopy( self.decays[mpid][pid2] )
+                self.decays[mpid].pop(pid2)
+        ## swap all provenances in the ss multiplier dictionary
+        newSSMultipliers = {}
+        for pids,ssm in self.ssmultipliers.items():
+            apids = list ( map ( abs, pids ) )
+            if not pid1 in apids and not pid2 in apids:
+                newSSMultipliers[pids]=ssm ## our swapping pids are not part
+                continue
+            npids = list ( pids )
+            for ctr,pid in enumerate(npids):
+                if pid == pid1:
+                    npids[ctr]=pid2
+                if pid == -pid1:
+                    npids[ctr]=-pid2
+                if pid == pid2:
+                    npids[ctr]=pid1
+                if pid == -pid2:
+                    npids[ctr]=-pid1
+            npids.sort()
+            newSSMultipliers[tuple(npids)]=ssm
+        self.ssmultipliers = newSSMultipliers
+
+
+        
+                
+
+
     def initializePredictor ( self ):
         """ initialize the predictor """
         self.pprint ( "initializing predictor #%d with database at %s" % ( self.walkerid, self.dbpath ) )
