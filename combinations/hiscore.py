@@ -310,6 +310,10 @@ def main ( args ):
             trimmed = pickle.load ( f )
             fcntl.flock( f, fcntl.LOCK_UN )
 
+    if protomodels[0] == None:
+        print ( "[hiscore] error, we have an empty hiscore list" )
+        return
+
     produceNewSLHAFileNames ( protomodels )
     produceNewSLHAFileNames ( trimmed )
 
