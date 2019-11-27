@@ -207,6 +207,10 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
 
     logger.info('-- Running validation...')
 
+    if "TGQ12" in txnames:
+        import smodels.experiment.datasetObj
+        smodels.experiment.datasetObj._complainAboutOverlappingConstraints = False
+
     #Select experimental results, txnames and datatypes:
     expResList = db.getExpResults( analysisIDs, datasetIDs, txnames,
                   dataTypes, useSuperseded=True, useNonValidated=True)
