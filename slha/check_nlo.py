@@ -15,7 +15,7 @@ def process ( files, pretend ):
     not_lo, not_nlo = 0, 0
     ssmultipliers = ""
     ## for thscpm6
-    if True:
+    if False:
         ## suppress everything but ( '*200000?', '*100000?' )
         D = { ('*1000015', '*'): 0., ('*1000022', '*' ): 0., ('*1000023', '*' ): 0.,
               ('*10000*', '*10000*' ): 0., ('*20000*', '*20000*' ): 0.,
