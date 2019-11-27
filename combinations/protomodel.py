@@ -149,6 +149,33 @@ class ProtoModel:
                 self.ssmultipliers[(1000001,1000001)]=1.0
         self.computePrior()
 
+    def checkForOffshell ( self ):
+        """ check for offshell decays
+        :returns: a list of tuples (motherpid, daughterpid) """
+        offshell = []
+        for pid,decays in self.decays.items():
+            mmother = self.masses[pid]
+            if mmother > 9e5:
+                continue
+            for dpid,dbr in decays.items():
+                mdaughter = 1e+6
+                if dpid in self.masses:
+                    mdaughter = self.masses[dpid]
+                if mdaughter > mmother and dbr > 1e-5:
+                    self.log ( "decay %d -> %d is offshell (%.3f)" % \
+                               ( pid, dpid, dbr ) )
+                    offshell.append ( ( pid, dpid ) )
+        return offshell
+
+    def removeAllOffshell ( self ):
+        """ remove all offshell decays, renormalize all branchings """
+        offshell = self.checkForOffshell()
+        for (mpid,dpid) in offshell:
+            assert ( mpid in self.decays )
+            assert ( dpid in self.decays[mpid] )
+            self.decays[mpid].pop ( dpid )
+        self.normalizeAllBranchings()
+
     def checkSwaps ( self ):
         """ check for the usual suspects for particle swaps """
         ## the pairs to check. I put 1000023, 1000025 twice, 
@@ -477,15 +504,12 @@ class ProtoModel:
 
     def normalizeBranchings ( self, pid ):
         """ normalize branchings of a particle, after freezing and unfreezing
-            particles """
+            particles. while we are at it, remove zero branchings also. """
         # unfrozen = self.unFrozenParticles( withLSP = False )
         S=0.
-        for dpid,br in self.decays[pid].items():
-            S+=br
-            #if dpid in unfrozen:
-            #    S+=br
-            #else:
-            #    self.decays[pid][dpid]=0.
+        if pid in self.decays:
+            for dpid,br in self.decays[pid].items():
+                S+=br
         if S == 0.:
             return ## happens when never been unfrozen, I think
             self.pprint ( "total sum of branchings for %d is %.2f!!" % (pid,S) )
@@ -493,17 +517,24 @@ class ProtoModel:
                 tmp = self.decays[pid][dpid]
                 self.decays[pid][dpid] = tmp / S
 
+        # while we are at, remove also the zeroes
+        for mpid,decays in self.decays.items():
+            newdecays = {}
+            for dpid,dbr in decays.items():
+                if dbr > 1e-10:
+                    newdecays[dpid]=dbr
+            self.decays[mpid] = newdecays
+
+        ## remove also mothers with no decays at all
+        newDecays = {}
+        for mpid,decays in self.decays.items():
+            if len(decays)>0:
+                newDecays[mpid] = decays
+        self.decays = newDecays
+
         ## adjust the signal strength multipliers to keep everything else
         ## as it was
-        """
-        if pidpairs in self.ssmultipliers.keys():
-            t = self.ssmultipliers[pidpairs]
-            if t == 0.:
-                self.pprint ( "huh, when normalizing we find ssmultipliers of 0? change to 1! S=%.4g" % S )
-                t=1.
-            self.ssmultipliers[pidpairs]=t*S
-        """
-        self.checkSSMultipliers()
+        ## self.checkSSMultipliers()
         for pidpair,ssm in self.ssmultipliers.items():
             if (pid in pidpair) or (-pid in pidpair):
                 if ssm == 0.:
@@ -513,11 +544,20 @@ class ProtoModel:
         self.checkSSMultipliers()
 
     def checkSSMultipliers ( self ):
-        """ only for debugging, try to find out why we have non-pairs as keys """
+        """ 
+        remove 1.0s from ss multipliers, they are redundant
+        in addition, and only for debugging, 
+        try to find out why we have non-pairs as keys 
+        """
         for k,v in self.ssmultipliers.items():
             if type(k) != tuple:
                 print ( "error, we have %s(%s) as key" % ( k, type(k) ) )
                 raise Exception ( "error, we have %s(%s) as key" % ( k, type(k) ) ) 
+        newssmults = {}
+        for pids,v in self.ssmultipliers.items():
+            if abs(v-1.)>1e-10:
+                newssmults[pids]=v
+        self.ssmultipliers = newssmults
 
     def normalizeAllBranchings ( self ):
         """ normalize all branchings, after freezing or unfreezing particles """

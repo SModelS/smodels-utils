@@ -122,7 +122,8 @@ class RandomWalker:
         for mpid,mdecays in self.protomodel.decays.items():
             if p in mdecays:
                 self.protomodel.decays[mpid][p]=0.
-        self.protomodel.normalizeAllBranchings() ## adjust everything
+        self.protomodel.removeAllOffshell() ## remove all offshell particles, normalize all branchings
+        # self.protomodel.normalizeAllBranchings() ## adjust everything
         self.log ( "Freezing %s (keep branchings)." % ( helpers.getParticleName(p) ) )
         return 1
 
@@ -358,6 +359,8 @@ class RandomWalker:
             if mchi20 > mchi30:
                 self.protomodel.masses[1000023] = mchi30
                 self.protomodel.masses[1000025] = mchi20
+        ## now remove all offshell decays, and normalize all branchings
+        self.protomodel.removeAllOffshell() 
 
     def unfreezeRandomParticle ( self ):
         """ unfreezes a random frozen particle """
@@ -366,15 +369,17 @@ class RandomWalker:
             return 0
         p = random.choice ( frozen )
         self.protomodel.masses[p]=random.uniform ( self.protomodel.masses[ProtoModel.LSP], self.protomodel.maxMass )
-        self.protomodel.normalizeAllBranchings() ## adjust everything
+        self.protomodel.removeAllOffshell() ## remove all offhsell stuff, normalize all branchings
+        # self.protomodel.normalizeAllBranchings() ## adjust everything
         self.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.protomodel.masses[p] ) )
         return 1
 
+    """
     def randomlyTamperWithTheseParticles ( self, pids, r ):
-        """ the critic gave us feedback, the culprits are the given
-            pids. So tamper only with these. r is our usual theoryprediction/ul
-            ratio, and can help us guide how strong a change we have to make.
-        """
+        # the critic gave us feedback, the culprits are the given
+        #    pids. So tamper only with these. r is our usual theoryprediction/ul
+        #    ratio, and can help us guide how strong a change we have to make.
+        #
         ## we can tamper with the masses, the signal strengths, or
         ## the decays, so which is it gonna be? 
         u = uniform.random ( 0., 1. )
@@ -388,6 +393,7 @@ class RandomWalker:
             #### ok, its the decays
             pass
         return
+    """
 
     def walk ( self ):
         """ Now perform the random walk """
