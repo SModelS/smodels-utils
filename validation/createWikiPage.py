@@ -18,6 +18,10 @@ from smodels.tools.smodelsLogging import setLogLevel, logger
 import subprocess
 setLogLevel("debug" )
 
+## TGQ12 should be possible
+import smodels.experiment.datasetObj
+smodels.experiment.datasetObj._complainAboutOverlappingConstraints = False
+
 try:
     import commands as C
 except ImportError:
