@@ -3,7 +3,7 @@
 import subprocess
 
 def main():
-    a= subprocess.getoutput ( "slurm q | grep QOSMax" )
+    a= subprocess.getoutput ( "slurm q | grep PENDING" )
     print ( "cancelling", end=" " )
     for line in a.split("\n" ):
         jobid = line[:8].strip()

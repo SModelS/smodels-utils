@@ -2,9 +2,6 @@
 
 ml --latest singularity
 
-# cd /users/wolfgan.waltenberger/git/projects/singularity/
+cd /mnt/hephy/pheno/ww/git/smodels-utils/clip
 
-## --nv for cuda
-singularity shell -c -B /tmp,/run,/scratch -s /mnt/hephy/pheno/ww/git/smodels-utils/combinations/walkingWorker.py -H /mnt/hephy/pheno/ww /mnt/hephy/pheno/current.simg
-
-###SBATCH --ntasks-per-node=40.
+singularity shell -c -B /tmp,/run,/scratch -s /mnt/hephy/pheno/ww/git/smodels-utils/clip/walkingWorker.py -H /mnt/hephy/pheno/ww /mnt/hephy/pheno/current.simg

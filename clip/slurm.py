@@ -53,7 +53,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time ):
             f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
     os.chmod( tf, 0o755 )
     ram = max ( 35, 2.0 * ( jmax - jmin ) )
-    cmd = [ "srun" ]
+    # cmd = [ "srun" ]
+    cmd = [ "sbatch" ]
     qos = "c_short"
     if time > 48:
         qos = "c_long"
@@ -61,8 +62,9 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time ):
         qos = "c_medium"
     cmd += [ "--qos", qos ]
     # cmd += [ "-n", str(jmax - jmin) ]
-    cmd += [ "--threads-per-core", str(jmax - jmin) ]
+    # cmd += [ "--threads-per-core", str(jmax - jmin) ]
     # cmd += [ "-N", str(jmax - jmin) ]
+    # cmd += [ "-k" ]
     cmd += [ "--mem", "%dG" % ram, "--time", "%s" % ( time*60-1 ), "%s" % tf ]
     print ( " ".join ( cmd ) )
     if not dry_run:
@@ -77,6 +79,7 @@ def runUpdater( dry_run, time ):
         qos = "c_long"
     if 8 < time <= 48:
         qos = "c_medium"
+    # cmd = [ "sbatch", "--qos", qos, "--time", "%s" % ( time*60-1 ), "--mem", "100G", "./run_hiscore_updater.sh" ]
     cmd = [ "srun", "--qos", qos, "--time", "%s" % ( time*60-1 ), "--mem", "100G", "./run_hiscore_updater.sh" ]
     print ( "updater: " + " ".join ( cmd ) )
     if dry_run:
