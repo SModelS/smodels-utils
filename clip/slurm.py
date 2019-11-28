@@ -69,9 +69,9 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time ):
     print ( " ".join ( cmd ) )
     if not dry_run:
         a=subprocess.run ( cmd )
-        print ( a )
-    remove ( tf, keep )
-    remove ( runner, keep )
+        print ( "returned: %s" % a )
+    #remove ( tf, keep )
+    #remove ( runner, keep )
             
 def runUpdater( dry_run, time ):
     qos = "c_short"
@@ -79,8 +79,8 @@ def runUpdater( dry_run, time ):
         qos = "c_long"
     if 8 < time <= 48:
         qos = "c_medium"
-    # cmd = [ "sbatch", "--qos", qos, "--time", "%s" % ( time*60-1 ), "--mem", "100G", "./run_hiscore_updater.sh" ]
-    cmd = [ "srun", "--qos", qos, "--time", "%s" % ( time*60-1 ), "--mem", "100G", "./run_hiscore_updater.sh" ]
+    # cmd = [ "srun", "--qos", qos, "--time", "%s" % ( time*60-1 ), "--mem", "100G", "./run_hiscore_updater.sh" ]
+    cmd = [ "srun", "--mem", "100G", "--pty", "bash", "./run_hiscore_updater.sh" ]
     print ( "updater: " + " ".join ( cmd ) )
     if dry_run:
         return
@@ -129,7 +129,7 @@ def main():
     with open("run_walker.sh","rt") as f:
         lines=f.readlines()
     nmin, nmax, cont = args.nmin, args.nmax, args.cont
-    nworkers = args.nmax - args.nmin + 1
+    nworkers = args.nmax - args.nmin # + 1 
     nprocesses = min ( args.nprocesses, nworkers )
     if nprocesses == 0:
         nprocesses = nworkers
@@ -141,11 +141,15 @@ def main():
                         args.keep, args.time )
         else:
             import multiprocessing
+            ## nwalkers is the number of jobs per process
             nwalkers = int ( math.ceil ( nworkers / nprocesses ) )
             jobs = []
+            #print ( "nworkers", nworkers )
+            #print ( "nproceses", nprocesses )
             for i in range(nprocesses):
-                imin = nmin + i*(nwalkers)
+                imin = nmin + i*nwalkers
                 imax = imin + nwalkers
+                #print ( "process", imin, imax )
                 p = multiprocessing.Process ( target = runOneJob, 
                         args = ( i, imin, imax, cont, args.dbpath, lines, args.dry_run,
                                  args.keep, args.time ) )
