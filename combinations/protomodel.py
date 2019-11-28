@@ -70,6 +70,7 @@ class ProtoModel:
             self.particles = [ 1000001, 1000002, 1000003, 1000004, 1000005, 1000006,
                       2000005, 2000006, 1000011, 1000012, 1000013, 1000014, 1000015,
                       1000016, 1000021, 1000022, 1000023, 1000025, 1000024, 1000037 ]
+            # self.templateSLHA = "template.slha"
             self.templateSLHA = "template_many.slha"
         self.templateSLHA = os.path.join ( os.path.dirname ( __file__ ), self.templateSLHA )
         self.possibledecays = {} ## list all possible decay channels
@@ -206,7 +207,7 @@ class ProtoModel:
             self.masses[pid1] = self.masses[pid2]
             self.masses[pid2] = s
         else:
-            self.highlight ( "error, i was asked to swap %d and %d. but one of them isnt in the mass tuple" % ( pid1, pid2 ) )
+            self.highlight ( "red", "error, i was asked to swap %d and %d. but one of them isnt in the mass tuple" % ( pid1, pid2 ) )
             return
         ## swap mothers in the decays dictionary
         if pid1 in self.decays and pid2 in self.decays:
@@ -214,7 +215,7 @@ class ProtoModel:
             self.decays[pid1] = self.decays[pid2]
             self.decays[pid2] = s
         else:
-            self.highlight ( "error, i was asked to swap %d and %d. but one of them isnt in the decays tuple" % ( pid1, pid2 ) )
+            self.highlight ( "red", "error, i was asked to swap %d and %d. but one of them isnt in the decays tuple" % ( pid1, pid2 ) )
             return
 
         # swap the daughters in the decays dictionary
@@ -270,8 +271,10 @@ class ProtoModel:
         col = colorama.Fore.GREEN
         if msgType.lower() in [ "error", "red" ]:
             col = colorama.Fore.RED
-        if msgType.lower() in [ "warn", "warning", "yellow" ]:
+        elif msgType.lower() in [ "warn", "warning", "yellow" ]:
             col = colorama.Fore.YELLOW
+        else:
+            self.highlight ( "red", "i think we called highlight without msg type" )
         print ( "%s[model:%d - %s] %s%s" % ( col, self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)), colorama.Fore.RESET ) )
 
     def pprint ( self, *args ):
@@ -606,7 +609,7 @@ class ProtoModel:
                 for m,v in self.masses.items():
                     line=line.replace("M%d" % m,"%.1f" % v )
                     if not m in self.decays:
-                        self.highlight ( "error: could not find %s in decays" % m )
+                        self.highlight ( "red", "could not find %s in decays" % m )
                         ## FIXME what is this???
                         self.decays[m]={ self.LSP: 1.0 }
                     for dpid,dbr in self.decays[m].items():
@@ -661,3 +664,7 @@ class ProtoModel:
             nunfrozen = 1
         self.prior = 1. / nunfrozen
 
+
+if __name__ == "__main__":
+    p = ProtoModel( 0 )
+    p.createSLHAFile()
