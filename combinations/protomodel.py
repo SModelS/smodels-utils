@@ -70,6 +70,7 @@ class ProtoModel:
             self.particles = [ 1000001, 1000002, 1000003, 1000004, 1000005, 1000006,
                       2000005, 2000006, 1000011, 1000012, 1000013, 1000014, 1000015,
                       1000016, 1000021, 1000022, 1000023, 1000025, 1000024, 1000037 ]
+            # self.templateSLHA = "template.slha"
             self.templateSLHA = "template_many.slha"
         self.templateSLHA = os.path.join ( os.path.dirname ( __file__ ), self.templateSLHA )
         self.possibledecays = {} ## list all possible decay channels
@@ -663,3 +664,7 @@ class ProtoModel:
             nunfrozen = 1
         self.prior = 1. / nunfrozen
 
+
+if __name__ == "__main__":
+    p = ProtoModel( 0 )
+    p.createSLHAFile()
