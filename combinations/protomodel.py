@@ -174,7 +174,8 @@ class ProtoModel:
         for (mpid,dpid) in offshell:
             assert ( mpid in self.decays )
             assert ( dpid in self.decays[mpid] )
-            self.decays[mpid].pop ( dpid )
+            self.decays[mpid][dpid]=0.
+            # self.decays[mpid].pop ( dpid ) dont pop, we need it!
         self.normalizeAllBranchings()
 
     def checkSwaps ( self ):
