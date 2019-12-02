@@ -288,9 +288,12 @@ def main ( args ):
         args.print = True
     if args.outfile.lower() in [ "none", "", "false" ]:
         args.outfile = None
-    if type(args.infile) is str and args.infile.lower() in [ "none", "" ]:
-        args.infile = None
-    if args.outfile == args.infile:
+    infile = args.infile
+    if type(infile) is str and infile.lower() in [ "none", "" ]:
+        infile = None
+    if infile == "default":
+        infile = "/mnt/hephy/pheno/ww/rundir/hiscore.pcl"
+    if args.outfile == infile:
         print ( "[hiscore] outputfile is same as input file. will assume that you do not want me to write out at all." )
         args.outfile = None
 
@@ -301,10 +304,10 @@ def main ( args ):
         out = subprocess.getoutput ( cmd )
         print ( out )
 
-    if args.infile is None:
+    if infile is None:
         protomodels,trimmed = compileList( args.nmax ) ## compile list from H<n>.pcl files
     else:
-        with open(args.infile,"rb+") as f:
+        with open(infile,"rb+") as f:
             fcntl.flock( f, fcntl.LOCK_EX )
             protomodels = pickle.load ( f )
             trimmed = pickle.load ( f )

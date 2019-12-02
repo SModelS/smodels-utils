@@ -181,12 +181,12 @@ class Combiner:
         :param mumax: maximum muhat before we run into exclusions
         """
         if len(combo)==0.:
-            return 0.
+            return 0.,0.
         muhat = self.findMuHat ( combo )
         if mumax is None:
             mumax = float("inf")
         if muhat is None:
-            return 0.
+            return 0.,0.
         if muhat > mumax:
             self.debug ( "muhat(%.2f) > mumax(%.2f). use mumax" % ( muhat, mumax ) )
             muhat = mumax
