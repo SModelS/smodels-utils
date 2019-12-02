@@ -1,0 +1,6 @@
+[
+    {
+        "op": "remove",
+        "path": "/channels/1"
+    }
+]
