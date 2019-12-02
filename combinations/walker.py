@@ -301,7 +301,7 @@ class RandomWalker:
         p = random.choice ( unfrozenparticles )
         openChannels = []
         if not p in self.protomodel.decays.keys():
-            logger.error ( "why is %d not in decays??" % ( p ) )
+            self.highlight ( "error", "why is %d not in decays?? %s" % ( p, self.protomodel.decays ) )
             # we dont know about this decay? we initialize with the default!
         for dpid,br in self.protomodel.decays[p].items():
             if dpid in self.protomodel.unFrozenParticles():

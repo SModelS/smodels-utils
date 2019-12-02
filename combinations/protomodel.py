@@ -522,12 +522,13 @@ class ProtoModel:
                 self.decays[pid][dpid] = tmp / S
 
         # while we are at, remove also the zeroes
-        for mpid,decays in self.decays.items():
-            newdecays = {}
-            for dpid,dbr in decays.items():
-                if dbr > 1e-10:
-                    newdecays[dpid]=dbr
-            self.decays[mpid] = newdecays
+        if False: # nah dont, we need the zeroes for bookkeeping!
+            for mpid,decays in self.decays.items():
+                newdecays = {}
+                for dpid,dbr in decays.items():
+                    if dbr > 1e-10:
+                        newdecays[dpid]=dbr
+                self.decays[mpid] = newdecays
 
         ## remove also mothers with no decays at all
         newDecays = {}
