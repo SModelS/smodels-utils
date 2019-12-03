@@ -19,7 +19,8 @@ def remove( fname, keep):
     except:
         pass
 
-def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time ):
+def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
+                rundir ):
     """ prepare everything for a single job 
     :params pid: process id, integer that idenfies the process
     :param jmin: id of first walker
@@ -30,9 +31,9 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time ):
     :param dry_run: dont act, just tell us what you would do
     :param keep: keep temporary files, for debugging
     :param time: time in hours
+    :param rundir: directory with all temp files, cwd of job
     """
     print ( "[runOneJob:%d] run walkers [%d,%d] " % ( pid, jmin, jmax ) )
-    rundir = "/mnt/hephy/pheno/ww/rundir/"
     codedir = "/mnt/hephy/pheno/ww/git/smodels-utils/combinations/"
     #runner = tempfile.mktemp(prefix="RUNNER",suffix=".py", dir="./" )
     runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
@@ -93,6 +94,14 @@ def runRegressor( dry_run ):
         return
     subprocess.run ( cmd )
 
+def clean_dirs( rundir, clean_all = False ):
+    cmd = "rm slurm*out"
+    o = subprocess.getoutput ( cmd )
+    cmd = "cd %s; rm -rf old*pcl .cur* RUN* walker*log" % rundir
+    if clean_all:
+        cmd = "cd %s; rm -rf *pcl .cur* RUN* walker*log training*gz" % rundir
+    o = subprocess.getoutput ( cmd )
+
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description="slurm-run a walker")
@@ -101,6 +110,10 @@ def main():
     argparser.add_argument ( '-k','--keep', help='keep calling scripts',
                              action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the updater',
+                             action="store_true" )
+    argparser.add_argument ( '--clean', help='clean up files from old runs',
+                             action="store_true" )
+    argparser.add_argument ( '--clean_all', help='clean up *all* files from old runs',
                              action="store_true" )
     argparser.add_argument ( '-R','--regressor', help='run the regressor',
                              action="store_true" )
@@ -120,6 +133,13 @@ def main():
     argparser.add_argument ( '-D', '--dbpath', help='path to database ["/mnt/hephy/pheno/ww/git/smodels-database/"]',
                         type=str, default="/mnt/hephy/pheno/ww/git/smodels-database/" )
     args=argparser.parse_args()
+    rundir = "/mnt/hephy/pheno/ww/rundir/"
+    if args.clean:
+        clean_dirs( rundir, clean_all = False )
+        return
+    if args.clean_all:
+        clean_dirs( rundir, clean_all = True )
+        return
     if args.updater:
         runUpdater( args.dry_run, args.time )
         return
@@ -138,7 +158,7 @@ def main():
     while True:
         if nprocesses == 1:
             runOneJob ( 0, nmin, nmax, cont, args.dbpath, lines, args.dry_run,
-                        args.keep, args.time )
+                        args.keep, args.time, rundir )
         else:
             import multiprocessing
             ## nwalkers is the number of jobs per process
