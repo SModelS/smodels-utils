@@ -172,7 +172,7 @@ def main():
                 #print ( "process", imin, imax )
                 p = multiprocessing.Process ( target = runOneJob, 
                         args = ( i, imin, imax, cont, args.dbpath, lines, args.dry_run,
-                                 args.keep, args.time ) )
+                                 args.keep, args.time, rundir ) )
                 jobs.append ( p )
                 p.start()
 
