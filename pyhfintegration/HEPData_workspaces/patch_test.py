@@ -1,9 +1,10 @@
 import json
 import pyhf
 
+lumi = 12.7 # fb
 efficiencies = [0.154, 0.628, 0.470]
-xsection = 1.0 # pb
-nsignals = [1.0, 2.0, 3.0]
+xsection = 0.2 # pb
+nsignals = [eff*xsection*lumi for eff in efficiencies]
 
 pdic = [{}]
 pdic[0]['op']='replace'

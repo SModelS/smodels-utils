@@ -15,15 +15,15 @@ msettings = {
     'histosys': {'interpcode': 'code4p'},
 }
 
-patches = [patch, BSMpatch] # list of patches that will be successively applied to the main worskpace file
+patches = [patch, BSMpatch] # list of patches that will be "successively" applied to the main worskpace file
 
 mdl = ws.model(measurement_name=None, patches=patches, modifiers_settings=msettings)
 
 test_poi = 1.0 # Value of the parameter of interest (POI) which here is the signal strength modifier
 
 result = pyhf.utils.hypotest(test_poi, ws.data(mdl), mdl, qtilde=True, return_expected_set = True)
-print("CLs_obs")
-print(result[0].tolist()[0])
 print("CLs_exp")
 for clsexp in result[1].tolist():
     print(clsexp[0])
+print("CLs_obs")
+print(result[0].tolist()[0])

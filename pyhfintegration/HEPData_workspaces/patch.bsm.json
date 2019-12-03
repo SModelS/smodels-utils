@@ -1,11 +1,11 @@
 [
     {
-        "op": "replace",
-        "path": "/channels/0/samples/0/data",
+        "path": "/channels/0/samples/0/data", 
         "value": [
-            1.0,
-            2.0,
-            3.0
-        ]
+            0.39116, 
+            1.59512, 
+            1.1938
+        ], 
+        "op": "replace"
     }
 ]
