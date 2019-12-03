@@ -70,8 +70,8 @@ class ProtoModel:
             self.particles = [ 1000001, 1000002, 1000003, 1000004, 1000005, 1000006,
                       2000005, 2000006, 1000011, 1000012, 1000013, 1000014, 1000015,
                       1000016, 1000021, 1000022, 1000023, 1000025, 1000024, 1000037 ]
-            # self.templateSLHA = "template.slha"
-            self.templateSLHA = "template_many.slha"
+            self.templateSLHA = "template.slha"
+            # self.templateSLHA = "template_many.slha"
         self.templateSLHA = os.path.join ( os.path.dirname ( __file__ ), self.templateSLHA )
         self.possibledecays = {} ## list all possible decay channels
         self.decays = {} ## the actual branchings
@@ -95,7 +95,9 @@ class ProtoModel:
                 if p > -1:
                     line = line[:p]
                 if "D" in line and not "DECAY" in line:
-                    slhalines.append ( line.strip().split(" ")[0] )
+                    slhaline = line.strip().split(" ")[0]
+                    # print ( "slhaline", slhaline )
+                    slhalines.append ( slhaline )
 
         for p in self.particles:
             self.masses[p]=1e6
@@ -112,12 +114,21 @@ class ProtoModel:
             self.decays[p]={}
             for line in slhalines:
                 if "D%s" % p in line:
-                    _ = line.find("_")+1
-                    dpid = int ( line[_:] )
-                    decays.append ( dpid )
-                    self.decays[p][dpid]=0.
-                    if dpid == ProtoModel.LSP:
-                        self.decays[p][dpid]=1.
+                    p1 = line.find("_")+1
+                    dpid = int ( line[p1:] )
+                    dpid2 = None
+                    if line.count("_")==2:
+                        p2 = line.rfind("_")
+                        dpid = int ( line[p1:p2] )
+                        dpid2 = int(line[p2+1:])
+                    dpd = dpid
+                    if dpid2 != None:
+                        dpd = (dpid,dpid2)
+                    decays.append ( dpd )
+                    self.decays[p][dpd]=0.
+                    # print ( "p", p, "dpid", dpid, "dpid2", dpid2, "line", line )
+                    if dpid == ProtoModel.LSP and sum(self.decays[p].values())<.5:
+                        self.decays[p][dpd]=1.
             self.possibledecays[p]=decays
 
         ## the LSP we need from the beginning
@@ -163,7 +174,7 @@ class ProtoModel:
                 if dpid in self.masses:
                     mdaughter = self.masses[dpid]
                 if mdaughter > mmother and dbr > 1e-5:
-                    self.log ( "decay %d -> %d is offshell (%.3f)" % \
+                    self.log ( "decay %d -> %s is offshell (%.3f)" % \
                                ( pid, dpid, dbr ) )
                     offshell.append ( ( pid, dpid ) )
         return offshell
@@ -611,11 +622,16 @@ class ProtoModel:
                 for m,v in self.masses.items():
                     line=line.replace("M%d" % m,"%.1f" % v )
                     if not m in self.decays:
-                        self.highlight ( "red", "could not find %s in decays" % m )
+                        if m != self.LSP:
+                            self.highlight ( "red", "could not find %s in decays. keys are %s." % ( m, list(self.decays.keys()) ) )
                         ## FIXME what is this???
                         self.decays[m]={ self.LSP: 1.0 }
                     for dpid,dbr in self.decays[m].items():
-                        line=line.replace("D%d_%d" % ( m, dpid), "%.5f" % dbr )
+                        if type(dpid)==tuple:
+                            line=line.replace("D%d_%d_%d" % ( m, dpid[0],dpid[1]), "%.5f" % dbr )
+                        else:
+                        # print ( "dpid", dpid )
+                            line=line.replace("D%d_%d" % ( m, dpid), "%.5f" % dbr )
                     D_ = "D%d_" % m
                     if D_ in line and not line[0]=="#":
                         p1= line.find(D_)

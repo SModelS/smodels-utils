@@ -219,7 +219,7 @@ class Combiner:
         """
         combinations.sort ( key=len, reverse=True ) ## sort them first be length
         # compute CLsb for all combinations
-        highestZ,highest,muhat=0.,"",0.
+        highestZ,highest,muhat=0.,"",1.
         alreadyDone = [] ## list of combos that have already been looked at.
         ## we will not look at combos that are subsets.
         for c in combinations:
@@ -311,6 +311,7 @@ class Combiner:
         bestCombo,Z,muhat = self._findLargestZ ( combinables, expected=expected, mumax = mumax )
         ## compute a likelihood equivalent for Z
         llhd = stats.norm.pdf(Z)
+        # self.pprint ( "bestCombo %s, %s, %s " % ( Z, llhd, muhat ) )
         return bestCombo,Z,llhd,muhat
 
     def removeDataFromBestCombo ( self, bestCombo ):
