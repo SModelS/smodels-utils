@@ -160,8 +160,9 @@ class Trimmer:
             if dbr < 1e-5: ## small values set automatically to zero
                 self.protomodel.decays[pid][dpid]=0. ## correct for it.
                 S = sum ( self.protomodel.decays[pid].values() )
-                for k,v in self.protomodel.decays[pid].items():
-                    self.protomodel.decays[pid][k]=v/S
+                if S > 0.:
+                    for k,v in self.protomodel.decays[pid].items():
+                        self.protomodel.decays[pid][k]=v/S
                 continue
             if dbr > 1e-5 and (dbr < .15 or self.protomodel.masses[dpid1]>self.protomodel.masses[pid]):
                 self.pprint ( "decay %s -> %s (br=%.2f) has small branching or is offshell. Try to take out." % (helpers.getParticleName(pid),helpers.getParticleName(dpid1),dbr) )
