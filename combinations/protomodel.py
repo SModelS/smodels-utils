@@ -685,4 +685,10 @@ class ProtoModel:
 
 if __name__ == "__main__":
     p = ProtoModel( 0 )
+    ndecays = 0
+    for k,v in p.decays.items():
+        ndecays += len(v)
+    # ndecays = len(p.decays)
+    nssms = len(p.ssmultipliers)
+    print ( "%d masses, %d decays, %d ss multipliers" % (len(p.masses), ndecays, nssms ) )
     p.createSLHAFile()

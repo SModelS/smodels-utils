@@ -151,17 +151,20 @@ class Trimmer:
         decays = self.protomodel.decays[pid]
         ndiscardedBR = 0
         for dpid,dbr in decays.items():
-            self.log ( "look at %s(%.1f) -> %s(%.1f) [br %.3f]" % (pid,self.protomodel.masses[pid],dpid,self.protomodel.masses[dpid],dbr) )
-            if not dpid in self.protomodel.masses:
-                self.protomodel.masses[dpid]=1e6
+            dpid1 = dpid
+            if type(dpid)==tuple:
+                dpid1 = dpid[0]
+            self.log ( "look at %s(%.1f) -> %s(%.1f) [br %.3f]" % (pid,self.protomodel.masses[pid],dpid1,self.protomodel.masses[dpid1],dbr) )
+            if not dpid1 in self.protomodel.masses:
+                self.protomodel.masses[dpid1]=1e6
             if dbr < 1e-5: ## small values set automatically to zero
                 self.protomodel.decays[pid][dpid]=0. ## correct for it.
                 S = sum ( self.protomodel.decays[pid].values() )
                 for k,v in self.protomodel.decays[pid].items():
                     self.protomodel.decays[pid][k]=v/S
                 continue
-            if dbr > 1e-5 and (dbr < .15 or self.protomodel.masses[dpid]>self.protomodel.masses[pid]):
-                self.pprint ( "decay %s -> %s (br=%.2f) has small branching or is offshell. Try to take out." % (helpers.getParticleName(pid),helpers.getParticleName(dpid),dbr) )
+            if dbr > 1e-5 and (dbr < .15 or self.protomodel.masses[dpid1]>self.protomodel.masses[pid]):
+                self.pprint ( "decay %s -> %s (br=%.2f) has small branching or is offshell. Try to take out." % (helpers.getParticleName(pid),helpers.getParticleName(dpid1),dbr) )
                 oldZ = self.protomodel.Z
                 self.protomodel.backup()
                 self.protomodel.decays[pid][dpid]=0.
