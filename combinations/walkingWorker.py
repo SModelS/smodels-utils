@@ -7,9 +7,14 @@ def main( nmin, nmax, cont, dbpath = "/mnt/hephy/pheno/ww/git/smodels-database/"
     sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels-utils/combinations/")
     os.chdir ( "/mnt/hephy/pheno/ww/rundir" )
     pfile, states = None, None
+    if cont == "default":
+        import os
+        cont = "/mnt/hephy/pheno/ww/rundir/states.pcl"
+        if not os.path.exists ( cont ):
+            cont = "default"
     if cont.lower() not in [ "none", "" ]:
         if not os.path.exists ( cont ):
-            print ( "error: supplied a save states file %s, but it doesnt exist" % cont )
+            print ( "error: supplied a save states file ,,%s'', but it doesnt exist" % cont )
         else:
             import pickle
             try:
@@ -50,10 +55,4 @@ if __name__ == "__main__":
     argparser.add_argument ( '-f', '--cont', help='continue with saved states [""]',
                         type=str, default="default" )
     args=argparser.parse_args()
-    cont = args.cont
-    if cont == "default":
-        import os
-        cont = "/mnt/hephy/pheno/ww/rundir/states.pcl"
-        if not os.path.exists ( cont ):
-            cont = ""
-    main( args.nmin, args.nmax, cont )
+    main( args.nmin, args.nmax, args.cont )
