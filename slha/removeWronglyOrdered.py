@@ -9,7 +9,16 @@ def main():
     pretend = False
     for f in files:
         tokens = f.split("_")
-        masses = list ( map ( int, tokens[1:4] ) )
+        masses = list ( map ( int, tokens[1:3] ) )
+        hasEquals = False
+        for ctr,m1 in enumerate(masses[:-1]):
+            if m1 == masses[ctr+1]:
+                print ( "%s has equals" % f )
+                if True:
+                    print ( "removing", masses )
+                    cmd = "rm %s" % f
+                    if not pretend:
+                        subprocess.getoutput ( cmd )
         smasses = copy.deepcopy( masses)
         smasses.sort ( reverse=True )
         issorted = (smasses == masses )
