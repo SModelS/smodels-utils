@@ -1,6 +1,6 @@
 # a folder for our work on integrating pyhf in SModelS
 
-we start working on [SUSY-2018-31](https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/SUSY-2018-31/)
+we start working on [SUSY-2018-31](https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/SUSY-2018-31/) with the likelihoods provided on [HEPData](https://www.hepdata.net/record/ins1748602?version=1)
 
 we start with the point (900,250,60) of region A (see HEPData_workspaces folder)
 The production cross section of sbottom pair production with m=900 GeV is 12.7 fb. 
