@@ -393,8 +393,8 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
     ## FIXME take into account axis
     return varsDict
 
-def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
-                weightedAgreementFactor=False ):
+def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
+                    weightedAgreementFactor=False ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate the "ugly" exclusion plot
@@ -597,9 +597,11 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     l0.SetTextSize(.025)
     l0.DrawLatex(.05,.905,subtitle)
     signal_factor = 1. # an additional factor that is multiplied with the signal cross section
-    weighted = weightedAgreementFactor # compute weighted agreement factor?
-    agreement = round(100.*validationPlot.computeAgreementFactor(
-                       signal_factor = signal_factor, weighted = weighted ))
+    agreement = 0.
+    if True:
+        weighted = weightedAgreementFactor # compute weighted agreement factor?
+        agreement = round(100.*validationPlot.computeAgreementFactor(
+                           signal_factor = signal_factor, weighted = weighted ))
     logger.info ( "\033[32mAgreement: %d%s\033[0m (with %d points)" % (agreement,"%",len(validationPlot.data)) )
     if extraInfo:
         lex=TLatex()

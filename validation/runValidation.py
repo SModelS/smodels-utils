@@ -202,6 +202,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         print ( "[runValidation] we have TGQ12, turning overlap check off" )
         import smodels.experiment.datasetObj
         smodels.experiment.datasetObj._complainAboutOverlappingConstraints = False
+        import smodels.experiment.txnameObj
+        txnameObj.TxNameData._keep_values = True
 
     try:
         db = Database(databasePath, subpickle = True )
