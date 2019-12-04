@@ -14,7 +14,7 @@ def main():
     if args.all:
         grp = ""
     if args.pending:
-        grp = "PENDING"
+        grp = "| grep PENDING"
     a= subprocess.getoutput ( "slurm q %s" % grp )
     print ( "cancelling", end=" " )
     for line in a.split("\n" ):
