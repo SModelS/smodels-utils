@@ -15,12 +15,13 @@ import math
 logger = logging.getLogger(__name__)
 from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,kWhite,gPad,
-                  TPolyLine3D,Double,TColor,gStyle,TH2D,TImage)
+                  TPolyLine3D,Double,TColor,gStyle,TH2D,TImage,kBlue )
 from smodels.tools.physicsUnits import fb, GeV, pb
 #from smodels.theory.auxiliaryFunctions import coordinateToWidth,withToCoordinate
 from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
+from smodels.theory.auxiliaryFunctions import removeUnits
 
 #Set nice ROOT color palette for temperature plots:
 stops = [0.00, 0.34, 0.61, 0.84, 1.00]
@@ -208,7 +209,7 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
     if excluded_border.GetN()>0: base.Add(excluded_border, "P")
     if cond_violated.GetN()>0: base.Add(cond_violated, "P")
     if official:
-        base.Add(official, "L")
+        baseiAdd(official, "L")
     title = what+"_"+validationPlot.expRes.globalInfo.id + "_" \
             + validationPlot.txName\
             + "_" + validationPlot.niceAxes
@@ -463,12 +464,13 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
 
     nErrors = 0
     # Get excluded and allowed points:
+    print ( "[plottingFuncs] checking validation points ", end="" )
     for ctPoints,pt in enumerate(validationPlot.data):
         if ctPoints % 10 == 0:
             print ( ".", end="", flush=True )
-        #if ctPoints == 100:
-        #    print ( "[plottingFuncs] emergency break" )
-        #    break
+        if ctPoints == 100:
+            print ( "[plottingFuncs] emergency break" )
+            break
         if "error" in pt.keys():
             vD = getXYFromSLHAFile ( pt["slhafile"], validationPlot )
             # print ( "vD", vD, pt["slhafile"], validationPlot.axes )
@@ -522,6 +524,15 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
             else:
                 allowed.SetPoint(allowed.GetN(), x, y)
 
+    print ( "done!" )
+
+    massPlane = MassPlane.fromString( validationPlot.txName, validationPlot.axes )
+    for ctr,pt in enumerate(origdata):
+        masses = removeUnits ( pt[0], standardUnits=GeV )
+        coords = massPlane.getXYValues(masses)
+        if coords != None:
+            gridpoints.SetPoint( gridpoints.GetN(), coords["x"], coords["y"] )
+
     if countPts == 0:
         logger.warning ( "no good points??" )
         return ( None, None )
@@ -541,11 +552,11 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     setOptions(allowed_border, Type='allowed_border')
     setOptions(excluded, Type='excluded')
     setOptions(excluded_border, Type='excluded_border')
-    setOptions(gridpoints, Type='gridpoints')
     setOptions(noresult, Type='noresult')
     if official:
         for i in official:
             setOptions( i, Type='official')
+    setOptions(gridpoints, Type='gridpoints')
     base = TMultiGraph()
     dx = .12 ## top, left
     nleg = 5
@@ -577,12 +588,23 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     if noresult.GetN()>0: 
         base.Add(noresult, "P")
         leg.AddEntry( noresult, "no result", "P" )
-    if gridpoints.GetN()>0: 
-        base.Add(gridpoints, "P")
-        leg.AddEntry(gridpoints, "gridpoints", "P")
     if official:
         for i in official:
             base.Add( i, "L")
+    if not official == None:
+        for ctr,i in enumerate(official):
+            completed = copy.deepcopy ( i )
+            validationPlot.completeGraph ( completed )
+            completed.SetLineColor( kGray )
+            completed.SetLineStyle( 3 ) # show also how plot is completed
+            completed.Draw("LP SAME" )
+            i.Draw("LP SAME" )
+            if ctr == 0:
+                leg.AddEntry ( i, "official exclusion", "L" )
+            base.completed = completed
+    if gridpoints.GetN()>0: 
+        base.Add(gridpoints, "P")
+        leg.AddEntry(gridpoints, "grid points", "P")
     title = validationPlot.expRes.globalInfo.id + "_" \
             + validationPlot.txName\
             + "_" + validationPlot.axes
@@ -610,17 +632,6 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
         plane.SetLogy()
     base.Draw("APsame")
     leg.Draw()
-    if not official == None:
-        for ctr,i in enumerate(official):
-            completed = copy.deepcopy ( i )
-            validationPlot.completeGraph ( completed )
-            completed.SetLineColor( kGray )
-            completed.SetLineStyle( 3 ) # show also how plot is completed
-            completed.Draw("LP SAME" )
-            i.Draw("LP SAME" )
-            if ctr == 0:
-                leg.AddEntry ( i, "official exclusion", "L" )
-            base.completed = completed
     #base.Draw("Psame")
     base.leg = leg
     base.SetTitle(title)
@@ -678,14 +689,6 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
         dxpnr = .12
     l3.DrawLatex( dxpnr,.87,"%d / %d points with no results" % \
                   (nErrors, len(validationPlot.data) ) )
-
-    massPlane = MassPlane.fromString( validationPlot.txName, validationPlot.axes )
-    for pt in origdata:
-        masses = pt[0]
-        #coords = massPlane.getXYValues(masses)
-        # coords = validationPlot.txNameDataObj.dataToCoordinates(masses)
-        # logger.error ( "pt %s %s" % ( masses, validationPlot.txNameDataObj.dataToCoordinates(masses) ) )
-        # gridpoints.SetPoint( gridpoints.GetN(), coords[0], coords[1] )
 
 
     #l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor)
@@ -1191,15 +1194,15 @@ def setOptions(obj,Type=None):
         obj.GetYaxis().SetLabelSize(0.055)
         obj.GetXaxis().SetLabelSize(0.06)
 
-
 #Type-specific settings:
     if not Type: return True
     elif Type == 'allowed':
         obj.SetMarkerStyle(20)
         obj.SetMarkerColor(kGreen)
     elif Type == 'gridpoints':
-        obj.SetMarkerStyle(43)
-        obj.SetMarkerColor(kBlack)
+        obj.SetMarkerStyle(28)
+        obj.SetMarkerSize(0.6)
+        obj.SetMarkerColor(kBlue)
     elif Type == 'noresult':
         obj.SetMarkerStyle(20)
         obj.SetMarkerSize(.5)
@@ -1221,7 +1224,7 @@ def setOptions(obj,Type=None):
         obj.SetMarkerStyle(20)
         obj.SetMarkerColor(kOrange+1)
     elif Type == 'official':
-        obj.SetLineWidth(4)
+        obj.SetLineWidth(3)
         obj.SetLineColor(kBlack)
     elif Type == 'smodels':
         obj.SetLineWidth(4)

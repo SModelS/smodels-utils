@@ -271,10 +271,10 @@ class MassPlane(object):
         else: {'x': x-value in GeV as float, 'y' : y-value in GeV as float, ..}
         """
         #print ( ">> widthArray", widthArray )
-        #print ( ">> massArray", massArray )
+        # print ( ">> massArray", massArray )
 
         if len(massArray) != len(self.branches):
-            logger.error("Mass array inconsistent with branches length")
+            logger.error("dimension of mass array (%d) inconsistent with branches length (%d)" % ( len(massArray), len(self.branches) ) )
             sys.exit()
         if widthArray != None and len(widthArray) != len(self.branches):
             logger.error("Width array inconsistent with branches length")
