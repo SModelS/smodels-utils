@@ -464,11 +464,16 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
 
     nErrors = 0
     # Get excluded and allowed points:
-    print ( "[plottingFuncs] checking validation points ", end="" )
+    nmax = len(validationPlot.data)
+    if False:
+        nmax = 20
+    dn = 50
+    print ( " "*int(44+nmax/dn), end="<\r" )
+    print ( "[plottingFuncs] checking validation points >", end="" )
     for ctPoints,pt in enumerate(validationPlot.data):
-        if ctPoints % 10 == 0:
+        if ctPoints % dn == 0:
             print ( ".", end="", flush=True )
-        if ctPoints == 100:
+        if ctPoints == nmax:
             print ( "[plottingFuncs] emergency break" )
             break
         if "error" in pt.keys():
@@ -583,8 +588,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
         leg.AddEntry(excluded_border, "excluded (but close)", "P")
     if cond_violated.GetN()>0: 
         base.Add(cond_violated, "P")
-        base.Add(noresult, "P")
-        leg.AddEntry( noresult, "condition violated", "P" )
+        leg.AddEntry( cond_violated, "condition violated", "P" )
     if noresult.GetN()>0: 
         base.Add(noresult, "P")
         leg.AddEntry( noresult, "no result", "P" )

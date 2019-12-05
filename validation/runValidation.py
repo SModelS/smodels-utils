@@ -232,6 +232,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     tval0 = time.time()
     run ( expResList, axis )
     logger.info("\n\n-- Finished validation in %.1f min." %((time.time()-tval0)/60.))
+    ROOT.gROOT.Clear()
 
 def _doGenerate ( parser ):
     """ determine if we do want to force generation of data (True),
