@@ -89,15 +89,15 @@ def weed ( dists, maxDistance, massgaps, verbose ):
     return ret
 
 def main():
-    ap = argparse.ArgumentParser(description="Weed out validation tarballs.")
+    ap = argparse.ArgumentParser(description="Weed out validation tarballs in smodels-utils/slha/.")
     ap.add_argument ( '-t', '--topo', 
             help='specify the topology to be thinned out [T5WW].',
             default = 'T5WW', type = str )
     ap.add_argument ( '-d', '--distance', 
-            help='max tolerated distance (GeV) from other point [24.]',
+            help='minimum tolerated distance (GeV) from other point [24.]',
             default = 24., type = float )
     ap.add_argument ( '-g', '--massgaps', 
-            help='require mass gaps, e.g. (0,80.). Auto means, guess from topo name. [auto]',
+            help='require mass gaps, e.g. (0,80.). Used to make sure that some particle is onshell. E.g. (0,80.) is to acertain that a W in the second cascade is onshell. Auto means, guess from topo name. [auto]',
             default = "auto", type = str )
     ap.add_argument ( '-v', '--verbose', help='be verbose', action='store_true' )
     args = ap.parse_args()
@@ -137,7 +137,7 @@ def main():
             subprocess.getoutput ( "rm %s/%s_%s.slha" % ( tempdir, args.topo, f ) )
     subprocess.getoutput ( "cd %s; tar czvf ../%s.tar.gz %s*slha" % ( tempdir, args.topo, args.topo ) )
     subprocess.getoutput ( "rm -rf %s" % tempdir )
-    print ( "To keep the changes: " )
+    print ( "To keep the changes (I wont do this automatically): " )
     cmd = "cp %s.tar.gz ../slha/" % args.topo
     print ( cmd )
     subprocess.getoutput ( "echo '%s' | xsel -i" % cmd )

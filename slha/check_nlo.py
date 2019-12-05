@@ -15,11 +15,9 @@ def process ( files, pretend ):
     not_lo, not_nlo = 0, 0
     ssmultipliers = ""
     ## for thscpm6
-    if False:
+    if True:
         ## suppress everything but ( '*200000?', '*100000?' )
-        D = { ('*1000015', '*'): 0., ('*1000022', '*' ): 0., ('*1000023', '*' ): 0.,
-              ('*10000*', '*10000*' ): 0., ('*20000*', '*20000*' ): 0.,
-              ('*100000?', '*200000?' ): 1. }
+        D = { ('*1000022', '*' ): 0., ('*1000023', '*' ): 0. }
         ssmultipliers = ' --ssmultipliers "%s" ' % str(D)
         # print ( "ssm", ssmultipliers )
     for f in files:
@@ -37,7 +35,7 @@ def process ( files, pretend ):
         if not has_nlo:
             if not has_lo:
                 print ( "%s has neither LO nor NLO" % f )
-                cmd = "~/git/smodels/smodelsTools.py xseccomputer -e 20000 -N -P -8 %s -f %s" % ( ssmultipliers, f )
+                cmd = "~/git/smodels/smodelsTools.py xseccomputer -e 50000 -N -P -8 %s -f %s" % ( ssmultipliers, f )
                 if pretend:
                     pass
                 else:
@@ -47,7 +45,7 @@ def process ( files, pretend ):
                 not_lo += 1
             else:
                 print  ("%s has only LO" % f )
-                cmd = "~/git/smodels/smodelsTools.py xseccomputer -N -P -8 -O -f %s" % f
+                cmd = "~/git/smodels/smodelsTools.py xseccomputer -e 50000 -N -P -8 -O -f %s" % f
                 if pretend:
                     pass
                 else:

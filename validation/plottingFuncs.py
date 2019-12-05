@@ -291,7 +291,6 @@ def createSpecialPlot(validationPlot,silentMode=True,looseness=1.2,what = "bestr
                     ul = ul.asNumber(pb)
                     lk.DrawLatex(x, y, "#color[4]{%.2f}" % ul )
 
-
     l2=TLatex()
     l2.SetNDC()
     l2.SetTextSize(.04)
@@ -393,8 +392,33 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
     ## FIXME take into account axis
     return varsDict
 
-def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
-                weightedAgreementFactor=False ):
+def getGridPoints ( validationPlot ):
+    """ retrieve the grid points of the upper limit / efficiency map.
+        currently only works for upper limit maps. """
+    if len(validationPlot.expRes.datasets)!=1:
+        logger.info ( "no grid points: n_datasets=%d" % len(validationPlot.expRes.datasets) )
+        return []
+    txNameObj = None
+    for ctr,txn in enumerate(validationPlot.expRes.datasets[0].txnameList):
+        if txn.txName == validationPlot.txName:
+            txNameObj = validationPlot.expRes.datasets[0].txnameList[ctr] 
+            break
+    if txNameObj == None:
+        logger.info ( "no grid points: did not find txName" )
+        return []
+    if not txNameObj.txnameData._keep_values:
+        logger.info ( "no grid points: _keep_values is set to False" )
+        return []
+    if not hasattr ( txNameObj.txnameData, "origdata"):
+        logger.info ( "no grid points: cannot find origdata" )
+        return []
+    origdata =eval( txNameObj.txnameData.origdata)
+    ## we will need this for .dataToCoordinates
+    validationPlot.txNameDataObj = txNameObj.txnameData
+    return origdata
+
+def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
+                    weightedAgreementFactor=False ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate the "ugly" exclusion plot
@@ -405,17 +429,26 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
                                     the area of their Voronoi cell
     :return: TCanvas object containing the plot
     """
+    #title = validationPlot.expRes.globalInfo.id + "_" \
+    #        + validationPlot.txName\
+    #        + "_" + validationPlot.axes
+    logger.info ( "now create ugly plot for %s, %s: %s" % \
+       ( validationPlot.expRes.globalInfo.id, validationPlot.txName, validationPlot.axes ) )
+    origdata = getGridPoints ( validationPlot )
+    # logger.error ( "origdata %s" % origdata[:3] )
     # validationPlot.axes="[[(x,y)], [(x,y)]]"
 
     # Check if data has been defined:
     xlabel, ylabel = 'x','y'
     excluded, allowed, excluded_border, allowed_border = TGraph(), TGraph(), TGraph(), TGraph()
+    gridpoints = TGraph()
     noresult = TGraph() ## queried but got no result
     excluded.SetName("excluded")
     allowed.SetName("allowed")
     noresult.SetName("noresult")
     excluded_border.SetName("excluded_border")
     allowed_border.SetName("allowed_border")
+    gridpoints.SetName ( "gridpoints" )
     cond_violated=TGraph()
     kfactor=None
     tavg = 0.
@@ -430,8 +463,12 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
 
     nErrors = 0
     # Get excluded and allowed points:
-    for pt in validationPlot.data:
-        # print ( "pt", pt )
+    for ctPoints,pt in enumerate(validationPlot.data):
+        if ctPoints % 10 == 0:
+            print ( ".", end="", flush=True )
+        #if ctPoints == 100:
+        #    print ( "[plottingFuncs] emergency break" )
+        #    break
         if "error" in pt.keys():
             vD = getXYFromSLHAFile ( pt["slhafile"], validationPlot )
             # print ( "vD", vD, pt["slhafile"], validationPlot.axes )
@@ -504,6 +541,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     setOptions(allowed_border, Type='allowed_border')
     setOptions(excluded, Type='excluded')
     setOptions(excluded_border, Type='excluded_border')
+    setOptions(gridpoints, Type='gridpoints')
     setOptions(noresult, Type='noresult')
     if official:
         for i in official:
@@ -539,6 +577,9 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     if noresult.GetN()>0: 
         base.Add(noresult, "P")
         leg.AddEntry( noresult, "no result", "P" )
+    if gridpoints.GetN()>0: 
+        base.Add(gridpoints, "P")
+        leg.AddEntry(gridpoints, "gridpoints", "P")
     if official:
         for i in official:
             base.Add( i, "L")
@@ -597,6 +638,7 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
     l0.SetTextSize(.025)
     l0.DrawLatex(.05,.905,subtitle)
     signal_factor = 1. # an additional factor that is multiplied with the signal cross section
+    agreement = 0.
     weighted = weightedAgreementFactor # compute weighted agreement factor?
     agreement = round(100.*validationPlot.computeAgreementFactor(
                        signal_factor = signal_factor, weighted = weighted ))
@@ -636,6 +678,15 @@ def createPlot(validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
         dxpnr = .12
     l3.DrawLatex( dxpnr,.87,"%d / %d points with no results" % \
                   (nErrors, len(validationPlot.data) ) )
+
+    massPlane = MassPlane.fromString( validationPlot.txName, validationPlot.axes )
+    for pt in origdata:
+        masses = pt[0]
+        #coords = massPlane.getXYValues(masses)
+        # coords = validationPlot.txNameDataObj.dataToCoordinates(masses)
+        # logger.error ( "pt %s %s" % ( masses, validationPlot.txNameDataObj.dataToCoordinates(masses) ) )
+        # gridpoints.SetPoint( gridpoints.GetN(), coords[0], coords[1] )
+
 
     #l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor)
     base.l2=l2
@@ -1146,6 +1197,9 @@ def setOptions(obj,Type=None):
     elif Type == 'allowed':
         obj.SetMarkerStyle(20)
         obj.SetMarkerColor(kGreen)
+    elif Type == 'gridpoints':
+        obj.SetMarkerStyle(43)
+        obj.SetMarkerColor(kBlack)
     elif Type == 'noresult':
         obj.SetMarkerStyle(20)
         obj.SetMarkerSize(.5)

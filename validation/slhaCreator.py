@@ -376,7 +376,7 @@ if __name__ == "__main__":
     argparser.add_argument( '-lz', '--logz', action='store_true',
         help="logarithmic scale for z axis (in which case dz is multiplicative)" )
     argparser.add_argument ( '-n', '--nevents', help='number of events to generate [10000]',
-        type=int, default=10000 )
+        type=int, default=20000 )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?', help='number of processes, -1 means one per CPU [-1].',
         type=int, default=-1 )
     argparser.add_argument('-c', '--clear', action='store_true',

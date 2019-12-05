@@ -198,6 +198,10 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     if not os.path.isdir(databasePath):
         logger.error('%s is not a folder' %databasePath)
 
+    ## to mark the points of the data grid
+    import smodels.experiment.txnameObj
+    smodels.experiment.txnameObj.TxNameData._keep_values = True
+
     if "TGQ12" in txnames:
         print ( "[runValidation] we have TGQ12, turning overlap check off" )
         import smodels.experiment.datasetObj

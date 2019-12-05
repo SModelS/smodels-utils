@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
 from smodels.tools import modelTester
 from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth,addUnit
-from plottingFuncs import createPlot, getExclusionCurvesFor, createPrettyPlot
+from plottingFuncs import createUglyPlot, getExclusionCurvesFor, createPrettyPlot
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels.experiment.exceptions import SModelSExperimentError as SModelSError              
@@ -669,7 +669,7 @@ class ValidationPlot():
         :param silentMode: If True the plot will not be shown on the screen
         """
 
-        self.plot,self.base = createPlot(self,silentMode=silentMode,
+        self.plot,self.base = createUglyPlot(self,silentMode=silentMode,
                 extraInfo=self.extraInfo,weightedAgreementFactor=self.weightedAF )
 
     def getPrettyPlot(self,silentMode=True):
