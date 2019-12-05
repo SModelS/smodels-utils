@@ -1,0 +1,4 @@
+About the second question:
+> For the BSM patch, I made a simple json patch like you described it in ATL-PHYS-PUB-2019-029 (Listing 16) to replace the data yields for reinterpration with other BSM models. What we are wondering is: Is it sufficient to replace the "/channels/0/samples/0/data" value or do we need to change the modifiers as well?
+
+I've noticed the modifiers data vary with respect to the masses by comparing two patches (say )

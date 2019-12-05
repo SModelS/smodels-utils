@@ -15,9 +15,9 @@ msettings = {
     'histosys': {'interpcode': 'code4p'},
 }
 
-patches = [patch, BSMpatch] # list of patches that will be "successively" applied to the main worskpace file
+patches = [patch] # list of patches that will be "successively" applied to the main worskpace file
 
-p = w.model(measurement_name=None, patches=patches, modifiers_settings=msettings)
+p = w.model(measurement_name=None, patches=patches, modifier_settings=msettings)
 
 test_poi = 1.0 # Value of the parameter of interest (POI) which here is the signal strength modifier
 
