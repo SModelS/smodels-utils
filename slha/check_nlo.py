@@ -12,7 +12,7 @@ import math
 
 def process ( files, pretend ):
     total = len (files)
-    not_lo, not_nlo = 0, 0
+    not_lo, not_nlo, not_13 = 0, 0, 0
     ssmultipliers = ""
     ## for thscpm6
     if True:
@@ -23,15 +23,18 @@ def process ( files, pretend ):
     for f in files:
         has_lo  = False
         has_nlo = False
+        has_13 = False
         p = pyslha.readSLHAFile ( f )
         for k,xsecs in p.xsections.items():
             for x in xsecs.xsecs:
+                sqrts = x.sqrts
                 order = x.qcd_order_str
+                if abs ( sqrts - 13000. ) < 1e-4:
+                    has_13 =True
                 if "LO" in order or "Born" in order: ## FIXME why??
                     has_lo = True
                 if "NL" in order:
                     has_nlo=True
-                    break
         if not has_nlo:
             if not has_lo:
                 print ( "%s has neither LO nor NLO" % f )
@@ -53,9 +56,20 @@ def process ( files, pretend ):
                     a = subprocess.getoutput ( cmd )
                     print ( a )
                 not_nlo += 1
+        if not has_13:
+            print ( "%s has not sqrts 13 " % f )
+            cmd = "~/git/smodels/smodelsTools.py xseccomputer -e 50000 -N -P -8 %s -f %s" % ( ssmultipliers, f )
+            if pretend:
+                pass
+            else:
+                print ( cmd )
+                a = subprocess.getoutput ( cmd )
+                print ( a )
+            not_13 += 1
 
     print ( "%d/%d with NLL." % ( total - not_lo - not_nlo, total ) )
     print ( "%d/%d with LO only." %  ( not_nlo, total ) )
+    print ( "%d/%d with no 13 TeV." %  ( not_13, total ) )
     print ( "%d/%d with no xsecs." % ( not_lo, total ) )
 
 def main():
