@@ -20,5 +20,4 @@ ulcomputer = PyhfUpperLimitComputer(data, 0.95)
 
 result = ulcomputer.ulSigma()
 print("mU95 = ", result)
-print("sigma95 = ", result*0.0145)
-
+print("sigma95 = ", result*0.887e-03)

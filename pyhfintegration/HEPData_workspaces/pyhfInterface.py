@@ -57,23 +57,23 @@ class PyhfUpperLimitComputer:
         """
         nsignals = self.nsignals
         patches = []
-        #for ws in self.inputJsons:
-            ## Need to read the number of SR/bins of each regions
-            ## in order to identify the corresponding ones in self.dat.nisgnals
-            #nSR = len(ws["channels"][0]["samples"][0]["data"])
-            #patch_dic = {}
-            #patch_dic["op"]    = "replace"
-            #patch_dic["path"]  = "/channels/0/samples/0/data"
-            #patch_dic["value"] = nsignals[:nSR]
-            #nsignals = nsignals[nSR:]
-            #patches.append([patch_dic]) # No need to declare a jsonpatch object with the jsonpatch.apply_patch() method
+        for ws in self.inputJsons:
+            # Need to read the number of SR/bins of each regions
+            # in order to identify the corresponding ones in self.nisgnals
+            nSR = len(ws["channels"][0]["samples"][0]["data"])
+            patch_dic = {}
+            patch_dic["op"]    = "replace"
+            patch_dic["path"]  = "/channels/0/samples/0/data"
+            patch_dic["value"] = nsignals[:nSR]
+            nsignals = nsignals[nSR:]
+            patches.append([patch_dic])
         # Replacing by our test point patch in order to test our upper limit calculator
-        with open("RegionA/patch.sbottom_1400_330_200.json", "r") as f:
-            patches.append(json.load(f))
-        with open("RegionB/patch.sbottom_1400_330_200.json", "r") as f:
-            patches.append(json.load(f))
-        with open("RegionC/patch.sbottom_1400_330_200.json", "r") as f:
-            patches.append(json.load(f))
+        #with open("RegionA/patch.sbottom_1300_950_60.json", "r") as f:
+            #patches.append(json.load(f))
+        #with open("RegionB/patch.sbottom_1300_950_60.json", "r") as f:
+            #patches.append(json.load(f))
+        #with open("RegionC/patch.sbottom_1300_950_60.json", "r") as f:
+            #patches.append(json.load(f))
         return patches
     
     def jsonMaker(self):
@@ -101,8 +101,8 @@ class PyhfUpperLimitComputer:
             result["measurements"] = jsonInputs[0]["measurements"]
             result["version"] = jsonInputs[0]["version"]
             # These two last are the same for all three regions
-            strresult = json.dumps(result)
-            return json.loads(strresult)
+            #strresult = json.dumps(result)
+            return result
 
     def ulSigma (self, expected=False):
         def root_func(mu):
