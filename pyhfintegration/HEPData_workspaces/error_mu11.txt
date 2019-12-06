@@ -1,0 +1,63 @@
+/home/alguero/.local/lib/python2.7/site-packages/pyhf/tensor/numpy_backend.py:252: RuntimeWarning: invalid value encountered in log
+  return n * np.log(lam) - lam - gammaln(n + 1.0)
+ERROR:pyhf.optimize.opt_scipy:     fun: 303.59238448039287
+     jac: array([-2.28881836e-05,  2.01393127e+00,  0.00000000e+00, -1.52587891e-05,
+        0.00000000e+00, -3.05175781e-05, -7.62939453e-06,  0.00000000e+00,
+       -7.62939453e-06, -7.62939453e-06, -1.90734863e-05,  7.62939453e-06,
+       -1.52587891e-05, -7.62939453e-06, -7.62939453e-06, -1.52587891e-05,
+       -7.62939453e-06,  0.00000000e+00, -1.52587891e-05,  0.00000000e+00,
+       -2.28881836e-05, -3.05175781e-05, -2.28881836e-05, -3.05175781e-05,
+       -1.90734863e-05,  0.00000000e+00,  1.14440918e-05,  0.00000000e+00,
+        0.00000000e+00, -1.52587891e-05, -7.62939453e-06,  2.28881836e-05,
+       -7.62939453e-06, -2.67028809e-05,  3.81469727e-06, -1.14440918e-05,
+       -7.62939453e-06, -3.43322754e-05, -1.52587891e-05, -7.62939453e-06,
+       -3.81469727e-06,  0.00000000e+00, -3.81469727e-05,  0.00000000e+00,
+        6.10351562e-05,  0.00000000e+00,  3.81469727e-06, -1.52587891e-05,
+       -3.81469727e-06, -1.52587891e-05,  0.00000000e+00,  2.40118790e+00,
+       -1.52587891e-05, -1.14440918e-05,  0.00000000e+00, -2.67028809e-05,
+        1.44335022e+01,  7.62939453e-06, -1.52587891e-05, -7.62939453e-06,
+       -7.62939453e-06, -1.52587891e-05,  0.00000000e+00,  0.00000000e+00])
+ message: 'Positive directional derivative for linesearch'
+    nfev: 43853
+     nit: 593
+    njev: 589
+  status: 8
+ success: False
+       x: array([ 3.11669984e-01, -5.00000000e+00,  7.72748255e-08,  1.12053487e-02,
+       -8.87703394e-02,  1.62973142e-01, -2.72571625e-01,  0.00000000e+00,
+       -1.17005517e-02, -6.39289291e-02, -1.66065608e-01, -2.99690750e-02,
+       -1.05306633e+00, -1.00205279e+00, -3.20633698e-01,  9.47773955e-01,
+        8.56191594e-01,  9.87406857e-01,  1.09614534e-01,  0.00000000e+00,
+        2.42173497e-02,  4.69908918e-01,  1.95285415e-03, -2.63379971e+00,
+       -1.77197103e-02,  0.00000000e+00,  1.93453535e+00,  4.62578590e-07,
+        9.26714292e-08,  1.00313203e+00,  9.90141495e-01,  1.01278214e+00,
+       -2.07274404e-01,  4.56632613e-02, -1.32280324e-02,  4.16495023e-02,
+        5.85850787e-03,  1.50631479e-02, -1.09039303e-02,  8.58783526e-02,
+       -5.79502245e-01,  5.11875970e-03,  8.40662596e-01, -3.56729836e-01,
+        9.79432992e-01,  1.74885230e-01,  2.98634565e-03, -1.04229551e+00,
+       -9.36086009e-03, -2.70847467e+00, -2.44682372e+00, -5.00000000e+00,
+        1.46270480e-01,  2.28730795e+00,  1.17292490e-07, -2.89822230e-02,
+        1.00000000e+01,  5.90091152e-02,  8.92930571e-01,  6.76684141e-02,
+       -2.60664909e-01,  3.61405442e-03,  2.58217235e-03,  0.00000000e+00])
+Traceback (most recent call last):
+  File "/home/alguero/.local/bin/pyhf", line 10, in <module>
+    sys.exit(pyhf())
+  File "/home/alguero/.local/lib/python2.7/site-packages/click/core.py", line 764, in __call__
+    return self.main(*args, **kwargs)
+  File "/home/alguero/.local/lib/python2.7/site-packages/click/core.py", line 717, in main
+    rv = self.invoke(ctx)
+  File "/home/alguero/.local/lib/python2.7/site-packages/click/core.py", line 1137, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+  File "/home/alguero/.local/lib/python2.7/site-packages/click/core.py", line 956, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/home/alguero/.local/lib/python2.7/site-packages/click/core.py", line 555, in invoke
+    return callback(*args, **kwargs)
+  File "/home/alguero/.local/lib/python2.7/site-packages/pyhf/commandline.py", line 259, in cls
+    result = hypotest(testpoi, w.data(p), p, qtilde=is_qtilde, return_expected_set=True)
+  File "/home/alguero/.local/lib/python2.7/site-packages/pyhf/utils.py", line 285, in hypotest
+    qmu(poi_test, data, pdf, init_pars, par_bounds), 0, max_value=None
+  File "/home/alguero/.local/lib/python2.7/site-packages/pyhf/utils.py", line 113, in qmu
+    loglambdav, mu, data, pdf, init_pars, par_bounds
+  File "/home/alguero/.local/lib/python2.7/site-packages/pyhf/optimize/opt_scipy.py", line 43, in constrained_bestfit
+    assert result.success
+AssertionError

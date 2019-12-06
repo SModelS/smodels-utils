@@ -16,6 +16,25 @@ Seems to work technically when running cls_test.py, no error is raised and the C
 Now cls_test.py returns the same results as the command line (thanks to the answer on the pyhf issues [thread](https://github.com/scikit-hep/pyhf/issues/620))
 
 # Testing the SModelS/pyhfInterface
-pyhfInterface.py is a copy of smodels/smodels/tools/pyhfInterface.py and pyhfTest.py is a simple code that executes the upper limit computation (upper limit on the signal strength modifier) using the onjects defined in pyhfInterface.py.  Upper limit computer works and returns a result.  Tried to find the same upper limit as the official analysis still for the point [900,250,60] (so without using any new BSM patch) but it gives ~30fb instead of 3fb (if mu95 is the mu upper limit at 95% CL, the cross section upper limit can be obtained by doing mu95*sigmaBSM where sigmaBSM is the BSM production cross section).
+pyhfInterface.py is a copy of smodels/smodels/tools/pyhfInterface.py and pyhfTest.py is a simple code that executes the upper limit computation (upper limit on the signal strength modifier) using the objects defined in pyhfInterface.py.  
+Upper limit computer works and returns a result. Tried to find the same upper limit as the official analysis still for the point [900,250,60] (so without using any new BSM patch) (if mu95 is the mu upper limit at 95% CL, the cross section upper limit can be obtained by doing mu95*sigmaBSM where sigmaBSM is the BSM production cross section, sbottom pair production cross section):  
+-official: 3 fb
+-with only Region A: 3.2 fb (for regions B and C, pyhf is crashing)  
+-by combining all three regions: 3.4 fb
 
-Another problem: pyhf seems to crash when mu (signal strength modifier) is greater than 10.0, we can't find the upper limit if it's greater than that.
+For [800,450,60]:  
+-official: 2 fb  
+-by combining: 2.O7 fb 1.8 with NLO  
+-region A:  1.98 fb 1.72 with NLO / region C: 1.72 fb 14.9 fb (region B is crashing)
+
+For [900,550,60]:  
+-official: 0.9 fb  
+-by combining: 0.99 fb 0.86 with NLO  
+-region A: 0.96 fb 0.84 with NLO / region C: 6.4 fb (region B is crashing)
+
+For [1300,950,60]:  
+-official: 0.3 fb  
+-by combining: 0.27 fb
+-region A: 0.30 fb / region C: 6.4 fb (region B is crashing)
+
+Another problem: pyhf seems to crash when mu (signal strength modifier) is greater than 10.0, so we can't find the upper limit if it's greater than that.
