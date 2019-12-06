@@ -467,7 +467,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     if False:
         nmax = 20
     dn = 50
-    print ( " "*int(44+nmax/dn), end="<\r" )
+    print ( " "*int(45+nmax/dn), end="<\r" )
     print ( "[plottingFuncs] checking validation points >", end="" )
     for ctPoints,pt in enumerate(validationPlot.data):
         if ctPoints % dn == 0:
