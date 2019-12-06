@@ -67,10 +67,11 @@ class PyhfUpperLimitComputer:
             #patch_dic["value"] = nsignals[:nSR]
             #nsignals = nsignals[nSR:]
             #patches.append([patch_dic]) # No need to declare a jsonpatch object with the jsonpatch.apply_patch() method
-        #with open("RegionA/patch.sbottom_900_250_60.json", "r") as f:
-            #patches.append(json.load(f))
-        with open("RegionB/patch.sbottom_900_250_60.json", "r") as f:
+        # Replacing by our test point patch in order to test our upper limit calculator
+        with open("RegionA/patch.sbottom_900_250_60.json", "r") as f:
             patches.append(json.load(f))
+        #with open("RegionB/patch.sbottom_900_250_60.json", "r") as f:
+            #patches.append(json.load(f))
         #with open("RegionC/patch.sbottom_900_250_60.json", "r") as f:
             #patches.append(json.load(f))
         return patches

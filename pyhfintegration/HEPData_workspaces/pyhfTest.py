@@ -3,10 +3,10 @@ from pyhfInterface import PyhfData
 from pyhfInterface import PyhfUpperLimitComputer
 
 jsoninputs = []
-#with open("RegionA/BkgOnly.json", "r") as f:
-    #jsoninputs.append(json.load(f))
-with open("RegionB/BkgOnly.json", "r") as f:
+with open("RegionA/BkgOnly.json", "r") as f:
     jsoninputs.append(json.load(f))
+#with open("RegionB/BkgOnly.json", "r") as f:
+    #jsoninputs.append(json.load(f))
 #with open("RegionC/BkgOnly.json", "r") as f:
     #jsoninputs.append(json.load(f))
 

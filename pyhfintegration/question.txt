@@ -1,4 +1,8 @@
 About the second question:
 > For the BSM patch, I made a simple json patch like you described it in ATL-PHYS-PUB-2019-029 (Listing 16) to replace the data yields for reinterpration with other BSM models. What we are wondering is: Is it sufficient to replace the "/channels/0/samples/0/data" value or do we need to change the modifiers as well?
 
-I've noticed the modifiers data vary with respect to the masses by comparing two patches (say )
+I've noticed the modifiers data vary with respect to the masses by comparing two patches (say "RegionA/patch.sbottom_1300_530_400.json" and "RegionA/patch.sbottom_1600_1595_60.json"). We'd like to be able to produce this kind of patch for BSM models for any mass point. In SModelS, to do so, the efficiency is interpolated from an efficieny map.
+
+I think we will first do the same and replace the signal yields by the BSM predictions (given the BSM cross section, the interpolated efficiency and the luminosity) whithout touching the associated modifiers.
+
+However, the question still remains ; how can we handle the modifiers and perform an mass interpolation?
