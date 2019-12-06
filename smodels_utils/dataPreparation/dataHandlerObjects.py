@@ -321,7 +321,7 @@ class DataHandler(object):
         :param scale: float to re-scale the data.
         """
 
-        if not os.path.isfile(path):
+        if type(path) not in [ tuple, list ] and not os.path.isfile(path):
             logger.error("File %s not found" %path)
             if type(self.dataUrl ) == str and os.path.basename(path) == os.path.basename ( self.dataUrl ):
                 logger.info( "But you supplied a dataUrl with same basename, so I try to fetch it" )
@@ -455,6 +455,36 @@ class DataHandler(object):
 
         :yield: list with values as foat, one float for every column
         """
+        paths = self.path
+        if type(self.path) not in [ list, tuple, set ]:
+            paths = [ paths ]
+        ret = 1.
+        npaths = []
+        keys = set()
+        for ctr,p in enumerate(paths):
+            path = {}
+            ret = list( self.csvForPath( p ) ) 
+            for point in ret:
+                key = tuple(point[:-1])
+                keys.add ( key )
+                path[key] = point[-1]
+            npaths.append ( path )
+        # print ( "paths", paths[:2] )
+        # print ( "keys", keys)
+        for k in keys:
+            ret = 1.
+            for p in npaths:
+                if not k in p.keys():
+                    logger.error ( "it seems that point %s is not in all paths?" % str(k) )
+                    break
+                ret = ret * p[k]
+            y = list(k)+[ret]
+            # print ( "we yield", y )
+            yield y
+
+
+    def csvForPath ( self, path ):
+        """ a csv file but giving the path """
         import csv
 
         waitFor = None
@@ -464,7 +494,8 @@ class DataHandler(object):
         has_waited = False
         if waitFor == None:
             has_waited = True
-        with open(self.path,'r') as csvfile:
+
+        with open( path,'r') as csvfile:
             reader = csv.reader(filter(lambda row: row[0]!='#', csvfile))
             for r in reader:
                 if len(r)<2:
