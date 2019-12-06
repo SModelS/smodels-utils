@@ -455,6 +455,52 @@ class DataHandler(object):
 
         :yield: list with values as foat, one float for every column
         """
+        import csv
+
+        waitFor = None
+        if hasattr ( self, "objectName" ) and self.objectName is not None:
+            print ( "[dataHandlerObjects] warning, object name %s supplied for an exclusion line. This is used to wait for a key word, not to give the object a name." % self.objectName )
+            waitFor = self.objectName
+        has_waited = False
+        if waitFor == None:
+            has_waited = True
+        with open(self.path,'r') as csvfile:
+            reader = csv.reader(filter(lambda row: row[0]!='#', csvfile))
+            for r in reader:
+                if len(r)<2:
+                    continue
+                #print ( "line >>%s<< hw=%s, waitFor=>>%s<<" % ( r, has_waited, waitFor ) )
+                if not has_waited:
+                    for i in r:
+                        if waitFor in i:
+                            has_waited=True
+                    continue
+                if r[0].startswith("'M(") or r[0].startswith("M("):
+                    if waitFor !=None and not waitFor in r[0]:
+                        #print ( "set back." )
+                        has_waited = False
+                    continue
+                fr = []
+                for i in r:
+                    try:
+                        fr.append ( float(i) )
+                    except:
+                        fr.append ( i )
+                if type ( self.unit) == tuple:
+                    if self.unit[1]=="X:60":
+                        frx = fr[0]*fr[1]+60.*( 1.-fr[1] )
+                        fr[1]=frx
+                yield fr
+            csvfile.close()
+
+    def mcsv(self):
+        """
+        iterable method
+        preprocessing csv-files
+        floats
+
+        :yield: list with values as foat, one float for every column
+        """
         if type(self.path) not in [ list, tuple, set ]:
             ret = list ( self.csvForPath ( self.path ) )
             for r in ret:
