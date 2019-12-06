@@ -68,12 +68,12 @@ class PyhfUpperLimitComputer:
             #nsignals = nsignals[nSR:]
             #patches.append([patch_dic]) # No need to declare a jsonpatch object with the jsonpatch.apply_patch() method
         # Replacing by our test point patch in order to test our upper limit calculator
-        with open("RegionA/patch.sbottom_900_250_60.json", "r") as f:
+        with open("RegionA/patch.sbottom_1400_330_200.json", "r") as f:
             patches.append(json.load(f))
-        #with open("RegionB/patch.sbottom_900_250_60.json", "r") as f:
-            #patches.append(json.load(f))
-        #with open("RegionC/patch.sbottom_900_250_60.json", "r") as f:
-            #patches.append(json.load(f))
+        with open("RegionB/patch.sbottom_1400_330_200.json", "r") as f:
+            patches.append(json.load(f))
+        with open("RegionC/patch.sbottom_1400_330_200.json", "r") as f:
+            patches.append(json.load(f))
         return patches
     
     def jsonMaker(self):
@@ -85,7 +85,7 @@ class PyhfUpperLimitComputer:
             return jsonpatch.apply_patch(self.inputJsons[0], self.patches[0])
         else:
             jsonInputs = []
-            for ws, patch in zip(self.inputJsons,self.patches):
+            for ws, patch in zip(self.inputJsons, self.patches):
                 # Open BkgOnly.json -> BkgOnly json oject
                 jsonInputs.append(jsonpatch.apply_patch(ws, patch))
             # Merging (jsonInputs) -> jsonInput
@@ -119,13 +119,13 @@ class PyhfUpperLimitComputer:
                 CLs = result[1].tolist()[2][0]
             else:
                 CLs = result[0].tolist()[0]
-            print("CLs : ", CLs)
+            print("1 - CLs : ", 1.0 - CLs)
             return 1.0 - self.cl - CLs
         # Finding the root (Brent bracketing part)
         lo_mu = 1.0
         hi_mu = 1.0
         while root_func(hi_mu) < 0.0:
-            hi_mu += 11
+            hi_mu += 10
         while root_func(lo_mu) > 0.0:
             lo_mu /=10
         ul = optimize.brentq(root_func, lo_mu, hi_mu, rtol=1e-3, xtol=1e-3)
