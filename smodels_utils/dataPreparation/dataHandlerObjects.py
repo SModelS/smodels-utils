@@ -107,11 +107,14 @@ class DataHandler(object):
             return
 
         if "fficienc" in self.name:
-            logger.error("Units should not be defined for efficiency maps" )
-            sys.exit()
+            if self.unit not in [ "%s", None, "perc", "percent", "percentage" ]:
+                logger.error("Units should not be defined for efficiency maps" )
+                sys.exit()
+        if unitString in [ "perc", "percent", "percentage" ]:
+            unitString = "%"
 
         if unitString:
-            units = ['fb','pb',('GeV','GeV'),('GeV','ns'),('ns','GeV'),('GeV','X:60')]
+            units = ['%','fb','pb',('GeV','GeV'),('GeV','ns'),('ns','GeV'),('GeV','X:60')]
             if not unitString in units:
                 logger.error("Units must be in %s, not %s" % (str(units),unitString) )
                 sys.exit()
@@ -483,13 +486,6 @@ class DataHandler(object):
                         fr.append ( float(i) )
                     except:
                         fr.append ( i )
-                #if type ( self.unit) == tuple:
-                    #if self.unit[1]=="ns":
-                    #    pass
-                        #print ( "ns to GeV", fr[1], hbar/fr[1] )
-                        # fr[1] = hbar / fr[1]
-                    #if self.unit[0]=="ns":
-                    #    fr[0] = hbar / fr[0]
                 if type ( self.unit) == tuple:
                     if self.unit[1]=="X:60":
                         frx = fr[0]*fr[1]+60.*( 1.-fr[1] )

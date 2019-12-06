@@ -803,7 +803,10 @@ class TxNameInput(Locker):
                 continue
             #Add units
             if hasattr(dataHandler, 'unit') and dataHandler.unit:
-                value = value*eval(dataHandler.unit,
+                if dataHandler.unit == "%":
+                    value = value / 100.
+                else:
+                    value = value*eval(dataHandler.unit,
                                    {'fb':fb,'pb': pb,'GeV': GeV,'TeV': TeV})
             if hasattr(dataHandler, 'massUnit') and dataHandler.massUnit:
                 for i,br in enumerate(massArray):
