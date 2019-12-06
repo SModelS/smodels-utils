@@ -528,7 +528,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
             else:
                 allowed.SetPoint(allowed.GetN(), x, y)
 
-    print ( "done!" )
+    print ( "< done!" )
 
     massPlane = MassPlane.fromString( validationPlot.txName, validationPlot.axes )
     for ctr,pt in enumerate(origdata):

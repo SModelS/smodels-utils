@@ -488,7 +488,8 @@ class DatabaseCreator(list):
             smsRoot.cd(dirname)
             fullname = "%s/%s" % (dirname, exclusion.GetName())
             if smsRoot.Get(fullname) == None:
-                self.timeStamp("add %s to sms.root" % fullname, "info")
+                self.timeStamp("add %s with %d points to sms.root" % \
+                        (fullname, exclusion.GetN()), "info")
                 exclusion.Write()
         smsRoot.Close()
 
