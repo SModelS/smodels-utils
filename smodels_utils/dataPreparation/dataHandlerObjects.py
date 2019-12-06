@@ -107,11 +107,14 @@ class DataHandler(object):
             return
 
         if "fficienc" in self.name:
-            logger.error("Units should not be defined for efficiency maps" )
-            sys.exit()
+            if self.unit not in [ "%s", None, "perc", "percent", "percentage" ]:
+                logger.error("Units should not be defined for efficiency maps" )
+                sys.exit()
+        if unitString in [ "perc", "percent", "percentage" ]:
+            unitString = "%"
 
         if unitString:
-            units = ['fb','pb',('GeV','GeV'),('GeV','ns'),('ns','GeV'),('GeV','X:60')]
+            units = ['%','fb','pb',('GeV','GeV'),('GeV','ns'),('ns','GeV'),('GeV','X:60')]
             if not unitString in units:
                 logger.error("Units must be in %s, not %s" % (str(units),unitString) )
                 sys.exit()
@@ -318,7 +321,7 @@ class DataHandler(object):
         :param scale: float to re-scale the data.
         """
 
-        if not os.path.isfile(path):
+        if type(path) not in [ tuple, list ] and not os.path.isfile(path):
             logger.error("File %s not found" %path)
             if type(self.dataUrl ) == str and os.path.basename(path) == os.path.basename ( self.dataUrl ):
                 logger.info( "But you supplied a dataUrl with same basename, so I try to fetch it" )
@@ -452,6 +455,36 @@ class DataHandler(object):
 
         :yield: list with values as foat, one float for every column
         """
+        paths = self.path
+        if type(self.path) not in [ list, tuple, set ]:
+            paths = [ paths ]
+        ret = 1.
+        npaths = []
+        keys = set()
+        for ctr,p in enumerate(paths):
+            path = {}
+            ret = list( self.csvForPath( p ) ) 
+            for point in ret:
+                key = tuple(point[:-1])
+                keys.add ( key )
+                path[key] = point[-1]
+            npaths.append ( path )
+        # print ( "paths", paths[:2] )
+        # print ( "keys", keys)
+        for k in keys:
+            ret = 1.
+            for p in npaths:
+                if not k in p.keys():
+                    logger.error ( "it seems that point %s is not in all paths?" % str(k) )
+                    break
+                ret = ret * p[k]
+            y = list(k)+[ret]
+            # print ( "we yield", y )
+            yield y
+
+
+    def csvForPath ( self, path ):
+        """ a csv file but giving the path """
         import csv
 
         waitFor = None
@@ -461,7 +494,8 @@ class DataHandler(object):
         has_waited = False
         if waitFor == None:
             has_waited = True
-        with open(self.path,'r') as csvfile:
+
+        with open( path,'r') as csvfile:
             reader = csv.reader(filter(lambda row: row[0]!='#', csvfile))
             for r in reader:
                 if len(r)<2:
@@ -483,13 +517,6 @@ class DataHandler(object):
                         fr.append ( float(i) )
                     except:
                         fr.append ( i )
-                #if type ( self.unit) == tuple:
-                    #if self.unit[1]=="ns":
-                    #    pass
-                        #print ( "ns to GeV", fr[1], hbar/fr[1] )
-                        # fr[1] = hbar / fr[1]
-                    #if self.unit[0]=="ns":
-                    #    fr[0] = hbar / fr[0]
                 if type ( self.unit) == tuple:
                     if self.unit[1]=="X:60":
                         frx = fr[0]*fr[1]+60.*( 1.-fr[1] )

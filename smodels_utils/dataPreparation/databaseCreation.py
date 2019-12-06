@@ -520,6 +520,16 @@ class DatabaseCreator(list):
             value = getattr(obj,attr)
             if value=="":
                 continue
+            if name == "dataInfo" and attr == "jsonfile":
+                # we copy the jsonfile and rewrite the value field
+                sourcefile = "%s/%s" % ( self.base, value )
+                if not os.path.exists ( sourcefile ):
+                    logger.error ( "jsonfile %s not found." % sourcefile )
+                    sys.exit(-3)
+                destfile = self.base + path
+                destfile = destfile.replace("dataInfo.txt", "BkgOnly.json" )
+                shutil.copy ( sourcefile, destfile )
+                value = "BkgOnly.json"
             content = '%s%s%s%s\n' % (content, attr,\
                                        self.assignmentOperator, value)
 
