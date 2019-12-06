@@ -415,7 +415,6 @@ def getGridPoints ( validationPlot ):
         return []
     origdata =eval( txNameObj.txnameData.origdata)
     ## we will need this for .dataToCoordinates
-    validationPlot.txNameDataObj = txNameObj.txnameData
     return origdata
 
 def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
