@@ -383,7 +383,7 @@ class DataSetInput(Locker):
 
 
     infoAttr = ['dataId','dataType','observedN','expectedBG','bgError',
-                'upperLimit', 'expectedUpperLimit', 'aggregated' ]
+                'upperLimit', 'expectedUpperLimit', 'aggregated', 'jsonfile' ]
     internalAttr = ['_name','_txnameList']
 
     requiredAttr = ['dataType', 'dataId']
@@ -439,6 +439,12 @@ class DataSetInput(Locker):
             logger.error('Luminosity must be defined in MetaInfo')
             sys.exit()
         elif not hasattr(self, 'observedN') or not hasattr(self, 'expectedBG') or not hasattr(self, 'bgError'):
+            if hasattr(self,"jsonfile"):
+                logger.error ( "pyhf result. for now I wont compute anything. FIXME probably should though." )
+                # self.upperLimit = str(ul)+'*fb'
+                # self.expectedUpperLimit = str(ulExpected)+'*fb'
+                return
+
             logger.error('observedN, expectedBG and bgError must be defined before computing statistics')
             sys.exit()
 
