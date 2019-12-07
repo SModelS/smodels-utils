@@ -208,7 +208,9 @@ def compileList( nmax ):
     print ( "Loading ", end="", flush=True )
     for ctr,fname in enumerate(files):
         s = "."
-        if ctr % 10 == 0:
+        if ctr % 100 == 0:
+            s = "o"
+        elif ctr % 10 == 0:
             s = "x"
         print ( s, end="", flush=True )
         try:
