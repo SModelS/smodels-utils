@@ -244,7 +244,10 @@ class SPhenoReader:
               rtotal+=r
           absdiff = abs ( rtotal - 1.0 )
           if absdiff > 0.03:
-            logger.error ( "[sphenoReader:warning] %s branchings add up to %.2f" % ( self.name ( mother ), rtotal ) )
+            mname = self.name ( mother )
+            mmass = self.masses[mother]
+            if mmass < 90000.:
+                logger.error ( "[sphenoReader:warning] %s branchings add up to %.2f, mass of %s is %s " % ( mname, rtotal, mname, self.masses[mother] ) )
             return
           if absdiff > 0.01:
             logger.warn ( "[sphenoReader:warning] %s branchings add up to %.2f" % ( self.name ( mother ), rtotal ) )

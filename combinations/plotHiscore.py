@@ -316,8 +316,8 @@ def main ():
     argparser.add_argument ( '-D', '--nodecays',
             help='do not produce decays plot',
             action="store_true" )
-    argparser.add_argument ( '-p', '--predictions',
-            help='list all predictions',
+    argparser.add_argument ( '-P', '--nopredictions',
+            help='do not list all predictions',
             action="store_true" )
     argparser.add_argument ( '-k', '--keep',
             help='keep latex files',
@@ -348,7 +348,7 @@ def main ():
         upload = None
 
     options = { "ruler": not args.noruler, "decays": not args.nodecays,
-                "predictions": args.predictions, "html": not args.nohtml,
+                "predictions": not args.nopredictions, "html": not args.nohtml,
                 "keep_tex": args.keep }
 
     plot ( args.number, args.verbosity, args.picklefile, options )

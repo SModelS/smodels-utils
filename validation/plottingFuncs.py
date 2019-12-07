@@ -397,7 +397,7 @@ def getGridPoints ( validationPlot ):
     """ retrieve the grid points of the upper limit / efficiency map.
         currently only works for upper limit maps. """
     if len(validationPlot.expRes.datasets)!=1:
-        logger.info ( "no grid points: n_datasets=%d" % len(validationPlot.expRes.datasets) )
+        logger.info ( "no grid points: n_datasets=%d != 1. dont know yet how to handle." % len(validationPlot.expRes.datasets) )
         return []
     txNameObj = None
     for ctr,txn in enumerate(validationPlot.expRes.datasets[0].txnameList):

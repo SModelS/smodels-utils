@@ -235,6 +235,10 @@ class DecayDrawer:
             if tsub in [ "1", "2", "3", "4", "5" ]: sub="_{%s}" % tsub
             return huge ( green ( math ( tilde ( "\\\\chi" ) + sup + sub ), color ) )
 
+        if name[:4]=="~tau": # stau
+            sub=""
+            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup 
+            return huge ( brown ( math ( tilde ( "\\\\tau" ) + sub ), color ) )
         squarks = [ "u", "d", "c", "s", "t", "b", "e" ]
         if first=="~" and second in squarks: # squarks and selectron
             sub=""
@@ -244,10 +248,6 @@ class DecayDrawer:
             sub=""
             if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup 
             return huge ( brown ( math ( tilde ( "\\\\mu" ) + sub ), color ) )
-        if name[:4]=="~tau": # stau
-            sub=""
-            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup 
-            return huge ( brown ( math ( tilde ( "\\\\tau" ) + sub ), color ) )
         if name=="~g": return huge ( red ( math ( tilde ( "g" ) ), color ) )
         if name[:3]=="~nu": # sneutrinos:
             flavor=name[3:-1]
