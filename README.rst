@@ -16,3 +16,4 @@ Among the tools in this repository you will find:
 * code to write bibtex files with all analysis results, visualise and plot simplified models, and SMS results, etc etc etc
 * code to train the neural networks for database compression
 * experimental code for possible new features of smodels proper
+* the artificial proto-modeller

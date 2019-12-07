@@ -113,6 +113,10 @@ class Trimmer:
                     self.protomodel.decays[dpid].pop(pid)
                     for dp_,dbr_ in self.protomodel.decays[dpid].items():
                         self.protomodel.decays[dpid][dp_] = self.protomodel.decays[dpid][dp_] / br
+            ## and signal strength multipliers, take them out also
+            for dpd,v in self.protomodel.ssmultipliers.items():
+                if dpid in dpd or -dpid in dpd:
+                    self.protomodel.ssmultipliers[dpd]=1. ## setting to 1 is taking out
             # self.createSLHAFile()
             ## when trimming we want to increase statistics
             self.protomodel.predict ( self.strategy, nevents = 10000 )

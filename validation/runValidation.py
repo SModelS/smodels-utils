@@ -85,6 +85,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
             if pngAlso:
                 valPlot.savePlot(fformat="png")
         valPlot = tmp # work around ROOT quirks
+    import ROOT
+    ROOT.gROOT.Clear()
     if pretty in [ False, "both" ]:
         valPlot.getPlot()
         valPlot.pretty = False
@@ -93,7 +95,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
             valPlot.saveData()
             if pngAlso:
                 valPlot.savePlot(fformat="png")
-
+    import ROOT
+    ROOT.gROOT.Clear()
     return True
 
 def run ( expResList, axis ):
@@ -232,8 +235,6 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     tval0 = time.time()
     run ( expResList, axis )
     logger.info("\n\n-- Finished validation in %.1f min." %((time.time()-tval0)/60.))
-    import ROOT
-    ROOT.gROOT.Clear()
 
 def _doGenerate ( parser ):
     """ determine if we do want to force generation of data (True),

@@ -293,8 +293,12 @@ def main ( args ):
     infile = args.infile
     if type(infile) is str and infile.lower() in [ "none", "" ]:
         infile = None
+    rundir = "/mnt/hephy/pheno/ww/rundir"
+    if os.path.exists ( "rundir.conf" ):
+        with open ( "rundir.conf", "rt" ) as f:
+            rundir = f.read()
     if infile == "default":
-        infile = "/mnt/hephy/pheno/ww/rundir/hiscore.pcl"
+        infile = "%s/hiscore.pcl" % rundir
     if args.outfile == infile:
         print ( "[hiscore] outputfile is same as input file. will assume that you do not want me to write out at all." )
         args.outfile = None

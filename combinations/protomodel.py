@@ -265,11 +265,6 @@ class ProtoModel:
             newSSMultipliers[tuple(npids)]=ssm
         self.ssmultipliers = newSSMultipliers
 
-
-        
-                
-
-
     def initializePredictor ( self ):
         """ initialize the predictor """
         self.pprint ( "initializing predictor #%d with database at %s" % ( self.walkerid, self.dbpath ) )
