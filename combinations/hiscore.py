@@ -322,6 +322,8 @@ def main ( args ):
     if protomodels[0] == None:
         print ( "[hiscore] error, we have an empty hiscore list" )
         return
+        
+    print ( "[hiscore] hiscore is at %.2f" % protomodels[0].Z ) 
 
     produceNewSLHAFileNames ( protomodels )
     produceNewSLHAFileNames ( trimmed )

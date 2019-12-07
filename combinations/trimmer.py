@@ -158,9 +158,11 @@ class Trimmer:
             dpid1 = dpid
             if type(dpid)==tuple:
                 dpid1 = dpid[0]
-            self.log ( "look at %s(%.1f) -> %s(%.1f) [br %.3f]" % (pid,self.protomodel.masses[pid],dpid1,self.protomodel.masses[dpid1],dbr) )
             if not dpid1 in self.protomodel.masses:
                 self.protomodel.masses[dpid1]=1e6
+            if not pid in self.protomodel.masses:
+                self.protomodel.masses[pid]=1e6
+            self.log ( "look at %s(%.1f) -> %s(%.1f) [br %.3f]" % (pid,self.protomodel.masses[pid],dpid1,self.protomodel.masses[dpid1],dbr) )
             if dbr < 1e-5: ## small values set automatically to zero
                 self.protomodel.decays[pid][dpid]=0. ## correct for it.
                 S = sum ( self.protomodel.decays[pid].values() )
