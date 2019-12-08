@@ -15,8 +15,6 @@ def prettyPrint ( myset ):
     curctr = 0
     seqs = []
     for i,el in enumerate ( myset ):
-        if el == curbeg:
-            continue
         if i == 0:
             curbeg = el
             curctr = el
@@ -27,18 +25,21 @@ def prettyPrint ( myset ):
         seqs.append ( (curbeg,curctr) )
         curbeg = el
         curctr = el
+    seqs.append ( (curbeg, curctr) )
     ret = ""
+    seqs.sort()
     for tseq in seqs:
         dt = tseq[1]-tseq[0]
         if dt == 0:
             ret += "%d," % tseq[0]
-            continue
-        if dt == 1:
+        elif dt == 1:
             ret += "%d,%d,"% ( tseq[0], tseq[1] )
-            continue
-        ret += "%d-%d," % ( tseq[0], tseq[1] )
+        else:
+            ret += "%d-%d," % ( tseq[0], tseq[1] )
     if len(ret)>1:
         ret = ret[:-1]
+    if len(ret)==0:
+        ret="none"
     return ret
 
 def main():
@@ -51,11 +52,17 @@ def main():
         dh = ds / 3600. # number of hours in the past
         walkerp = log.find("walker" )
         lognr =  int ( log[walkerp+6:-4] )
-        if dh < -2:
+        if ds < -900:
             pending.add ( lognr )
         else:
             running.add ( lognr )
-    print ( "pending", prettyPrint ( pending ) )
-    print ( "running", prettyPrint ( running ) )
+    all = range ( 0, max(running.union(pending)) )
+    notaccounted=set()
+    for i in all:
+        if not i in running and not i in pending:
+            notaccounted.add ( i )
+    print ( "    stuck:", prettyPrint ( pending ) )
+    print ( "  running:", prettyPrint ( running ) )
+    print ( "not found:", prettyPrint ( notaccounted ) )
 
 main()
