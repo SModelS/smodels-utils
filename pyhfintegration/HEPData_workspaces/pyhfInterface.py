@@ -61,12 +61,20 @@ class PyhfUpperLimitComputer:
             # Need to read the number of SR/bins of each regions
             # in order to identify the corresponding ones in self.nisgnals
             nSR = len(ws["channels"][0]["samples"][0]["data"])
-            patch_dic = {}
-            patch_dic["op"]    = "replace"
-            patch_dic["path"]  = "/channels/0/samples/0/data"
-            patch_dic["value"] = nsignals[:nSR]
+            patch = []
+            operator = {}
+            operator["op"]    = "add"
+            operator["path"]  = "/channels/0/samples/0"
+            value = {}
+            value["data"] = nsignals[:nSR]
             nsignals = nsignals[nSR:]
-            patches.append([patch_dic])
+            value["modifiers"] = [{"data": None, "type": "normfactor", "name": "mu_SIG"}]
+            value["name"] = "bsm"
+            operator["value"] = value
+            patch.append(operator)
+            patch.append({"op": "remove", "path": "/channels/1"})
+            print(json.dumps(patch, indent=4))
+            patches.append(patch)
         # Replacing by our test point patch in order to test our upper limit calculator
         #with open("RegionA/patch.sbottom_1300_950_60.json", "r") as f:
             #patches.append(json.load(f))
