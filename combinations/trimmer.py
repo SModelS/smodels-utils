@@ -79,6 +79,39 @@ class Trimmer:
         print ( "[trimmer] stored %d contributions" % len(contributions) )
         return self.protomodel
 
+    def pidsOfBestCombo ( self ):
+        """ obtain all pids that are relevant for best combo """
+        ret = set()
+        for theoryPred in self.protomodel.bestCombo:
+            for pids in theoryPred.PIDs:
+                for pidbranch in pids:
+                    for pid in pidbranch:
+                        ret.add ( abs(pid) )
+        return ret
+
+    def removeUnusedParticles ( self ):
+        """ particles that dont make it into the best combo
+            can safely be removed """
+        # print ( "bestcombo", self.protomodel.bestCombo )
+        bestComboPids = self.pidsOfBestCombo()
+        unfrozen = self.protomodel.unFrozenParticles( withLSP=False )
+        removed = []
+        for pid in unfrozen: ## of all unfrozen particles
+            if pid not in bestComboPids:
+                removed.append ( pid )
+                self.protomodel.masses[pid]=1e6
+        return removed
+
+    def removeUnusedSSMultipliers ( self ):
+        frozen = self.protomodel.frozenParticles( )
+        removed = []
+        for pids,v in self.protomodel.ssmultipliers.items():
+            for pid in pids:
+                if abs(pid) in frozen: ## ssmultiplier for a frozen particle?
+                    removed.append ( pids )
+                    self.protomodel.ssmultipliers[pids]=1. # set to 1!
+        return removed
+
     def trimParticles ( self ):
         """ this function checks if a particle can be taken out without
             significantly worsening Z """
