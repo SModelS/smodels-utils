@@ -297,6 +297,7 @@ def main ( args ):
     if os.path.exists ( "rundir.conf" ):
         with open ( "rundir.conf", "rt" ) as f:
             rundir = f.read()
+            rundir = rundir.strip()
     if infile == "default":
         infile = "%s/hiscore.pcl" % rundir
     if args.outfile == infile:

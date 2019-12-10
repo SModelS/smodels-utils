@@ -92,6 +92,8 @@ class Trimmer:
     def removeUnusedParticles ( self ):
         """ particles that dont make it into the best combo
             can safely be removed """
+        ## FIXME still have to check for decays!
+        return
         # print ( "bestcombo", self.protomodel.bestCombo )
         bestComboPids = self.pidsOfBestCombo()
         unfrozen = self.protomodel.unFrozenParticles( withLSP=False )
@@ -108,8 +110,9 @@ class Trimmer:
         for pids,v in self.protomodel.ssmultipliers.items():
             for pid in pids:
                 if abs(pid) in frozen: ## ssmultiplier for a frozen particle?
-                    removed.append ( pids )
-                    self.protomodel.ssmultipliers[pids]=1. # set to 1!
+                    if abs(v-1.)>1e-5:
+                        removed.append ( pids )
+                        self.protomodel.ssmultipliers[pids]=1. # set to 1!
         return removed
 
     def trimParticles ( self ):
@@ -180,7 +183,8 @@ class Trimmer:
         self.protomodel.trimmedBranchings = trimbranchings
         if hasattr ( self.protomodel, "checkSwaps" ):
             self.pprint ( "Check if we should swap certain particles (eg ~b2 <-> ~b1)" )
-            self.protomodel.checkSwaps()
+            self.protomodel.checkSwaps() ## check if e.g. N3 is lighter than N2
+        self.removeUnusedSSMultipliers() ## discard unneeded ss multipliers
         self.protomodel.clean()
 
     def trimBranchingsOf ( self, pid ):

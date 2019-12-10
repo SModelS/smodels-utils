@@ -25,7 +25,8 @@ def prettyPrint ( myset ):
         seqs.append ( (curbeg,curctr) )
         curbeg = el
         curctr = el
-    seqs.append ( (curbeg, curctr) )
+    if curctr > curbeg:
+        seqs.append ( (curbeg, curctr) )
     ret = ""
     seqs.sort()
     for tseq in seqs:
@@ -61,8 +62,8 @@ def main():
     for i in all:
         if not i in running and not i in pending:
             notaccounted.add ( i )
-    print ( "    stuck:", prettyPrint ( pending ) )
-    print ( "  running:", prettyPrint ( running ) )
-    print ( "not found:", prettyPrint ( notaccounted ) )
+    print ( "    stuck (%d):" % len(pending), prettyPrint ( pending ) )
+    print ( "  running (%d):" % len(running), prettyPrint ( running ) )
+    print ( "not found (%d):" % len(notaccounted), prettyPrint ( notaccounted ) )
 
 main()
