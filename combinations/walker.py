@@ -269,8 +269,19 @@ class RandomWalker:
         with open( "walker%d.log" % self.walkerid, "a" ) as f:
             f.write ( "[walk:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
+    def randomlyChangeSSOfOneParticle ( self ):
+        """ randomly change the SS consistently for one pid """
+        unfrozenparticles = self.protomodel.unFrozenParticles( withLSP=False )
+        p = random.choice ( unfrozenparticles )
+        f = random.uniform ( .8, 1.2 )
+        for dpd,v in self.protomodel.ssmultipliers.items():
+            if p in dpd or -p in dpd:
+                self.protomodel.ssmultipliers[dpd]=self.protomodel.ssmultipliers[dpd]*f
+
     def randomlyChangeSignalStrengths ( self ):
         """ randomly change one of the signal strengths """
+        if random.uniform(0.,1.)<.8:
+            self.randomlyChangeSSOfOneParticle()
         unfrozenparticles = self.protomodel.unFrozenParticles( withLSP=False )
         if len(unfrozenparticles)<2:
             self.pprint ( "not enough unfrozen particles to change random signal strength" )

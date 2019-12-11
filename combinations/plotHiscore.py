@@ -156,7 +156,7 @@ def writeIndexHtml ( protomodel, gotTrimmed ):
     f.write ( "<html>\n" )
     f.write ( "<body>\n" )
     f.write ( "<center>\n" )
-    f.write ( "<h1>Current best protomodel: Z=%.2f</h1>\n" % protomodel.Z )
+    f.write ( "<table><td><h1>Current best protomodel: Z=%.2f</h1><td><img height=60px src=../pics/banner.png></table>\n" % protomodel.Z )
     f.write ( "</center>\n" )
     dbver = "???"
     strategy = "aggressive"

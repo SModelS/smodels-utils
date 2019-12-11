@@ -96,12 +96,20 @@ class Trimmer:
         return
         # print ( "bestcombo", self.protomodel.bestCombo )
         bestComboPids = self.pidsOfBestCombo()
+        dontRemove = copy.deepcopy ( bestComboPids )
         unfrozen = self.protomodel.unFrozenParticles( withLSP=False )
+        for pid in unfrozen: # bestComboPids:
+            if pid in self.protomodel.decays:
+                # dont remove particles that appear in decay chains of any unfrozen particle
+                for dpid in self.protomodel.decays[pid].keys():
+                    dontRemove.add ( abs(dpid) )
+        print ( "dont removes", dontRemove )
         removed = []
         for pid in unfrozen: ## of all unfrozen particles
-            if pid not in bestComboPids:
+            if pid not in dontRemove:
                 removed.append ( pid )
                 self.protomodel.masses[pid]=1e6
+                ## FIXME now remove also from decays!
         return removed
 
     def removeUnusedSSMultipliers ( self ):
