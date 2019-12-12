@@ -417,8 +417,8 @@ if __name__ == "__main__":
             help='specify database to compare to (to flag "new analyses") [default: ""]',
             default = '', type = str )
     ap.add_argument('-d', '--database',
-            help='specify the location of the database [../../smodels-database]',
-            default = '../../smodels-database', type = str )
+            help='specify the location of the database [~/git/smodels-database]',
+            default = '~/git/smodels-database', type = str )
     args = ap.parse_args()
     setLogLevel ( args.verbose )
     creator = WikiPageCreator( args.ugly, args.database, args.add_version, 
