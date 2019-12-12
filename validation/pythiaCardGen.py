@@ -53,6 +53,12 @@ def getPythia8CardFor(momPDGs,filename=None):
 
     if len(momPDGs) == 1:
         momPDGs.append ( momPDGs[0] )
+    susyIdA = "SUSY:idA = %s" % momPDGs[0]
+    susyIdB = "SUSY:idB = %s" % momPDGs[1]
+    if len(momPDGs)>2:
+        pdgids = ",".join ( map ( str, momPDGs ) ) 
+        susyIdA = "SUSY:idVecA = %s" % pdgids
+        susyIdB = "SUSY:idVecB = %s" % pdgids
 #Define initial block:
     header = "! pythia8.cfg\n\
 ! This file contains commands to be read in for a Pythia8 run.\n\
@@ -81,15 +87,15 @@ SLHA:verbose = 0\n\
 \n\
 ! 5) Process selection\n\
 SUSY:all = on                   ! Switches on ALL (~400) SUSY processes\n\
-SUSY:idA = %s\n\
-SUSY:idB = %s\n\
+%s\n\
+%s\n\
 \n\
 ! 6) Settings for the event generation process in the Pythia8 library.\n\
 ProcessLevel:all = on\n\
 ProcessLevel:resonanceDecays = off\n\
 PartonLevel:all = on\n\
 HadronLevel:all = off\n\
-PhaseSpace:useBreitWigners = off" %(momPDGs[0],momPDGs[1])
+PhaseSpace:useBreitWigners = off" %(susyIdA,susyIdB)
 
     f.write(header)
     f.close()
