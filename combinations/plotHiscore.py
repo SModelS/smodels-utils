@@ -156,7 +156,7 @@ def writeIndexHtml ( protomodel, gotTrimmed ):
     f.write ( "<html>\n" )
     f.write ( "<body>\n" )
     f.write ( "<center>\n" )
-    f.write ( "<table><td><h1>Current best protomodel: Z=%.2f</h1><td><img height=60px src=../pics/banner.png></table>\n" % protomodel.Z )
+    f.write ( "<table><td><h1>Current best protomodel: Z=%.2f</h1><td><img height=60px src=https://smodels.github.io/pics/banner.png></table>\n" % protomodel.Z )
     f.write ( "</center>\n" )
     dbver = "???"
     strategy = "aggressive"
@@ -293,44 +293,7 @@ def plot ( number, verbosity, picklefile, options ):
     #if options["copy"]:
     #    copyFilesToGithub()
 
-def main ():
-    rundir = setup()
-    import argparse
-    argparser = argparse.ArgumentParser(
-            description='hiscore proto-model plotter')
-    argparser.add_argument ( '-n', '--number',
-            help='which hiscore to plot [0]',
-            type=int, default=0 )
-    argparser.add_argument ( '-f', '--picklefile',
-            help='pickle file to draw from [%shiscore.pcl]' % rundir,
-            type=str, default="%shiscore.pcl" % rundir )
-    argparser.add_argument ( '-v', '--verbosity',
-            help='verbosity -- debug, info, warn, err [info]',
-            type=str, default="info" )
-    argparser.add_argument ( '-H', '--nohtml',
-            help='do not produce index.html',
-            action="store_true" )
-    argparser.add_argument ( '-R', '--noruler',
-            help='do not produce ruler plot',
-            action="store_true" )
-    argparser.add_argument ( '-D', '--nodecays',
-            help='do not produce decays plot',
-            action="store_true" )
-    argparser.add_argument ( '-P', '--nopredictions',
-            help='do not list all predictions',
-            action="store_true" )
-    argparser.add_argument ( '-k', '--keep',
-            help='keep latex files',
-            action="store_true" )
-    argparser.add_argument ( '-u', '--upload',
-            help='upload to one of the following destinations: none, gpu, github, anomaly, interesting [none]. run --destinations to learn more', 
-            type=str, default="" )
-    argparser.add_argument ( '-c', '--commit',
-            help='also commit and push to smodels.github.io (works only with -u github, anomaly, or interesting)',
-            action="store_true" )
-    argparser.add_argument ( "--destinations", 
-            help="learn more about the upload destinations", action="store_true" )
-    args = argparser.parse_args()
+def runPlotting ( args ):
     if args.destinations:
         print ( "Upload destinations: " )
         print ( "      none: no upload" )
@@ -340,6 +303,8 @@ def main ():
         print ( "            Result can be seen at https://smodels.github.io/protomodels" )
         print ( "interesting: upload to github git directory, 'interesting' folder." )
         print ( "             Result can be seen at https://smodels.github.io/protomodels/interesting" )
+        print ( "latest: upload to github git directory, 'latest' folder." )
+        print ( "             Result can be seen at https://smodels.github.io/protomodels/latest" )
         print ( "anomaly: upload to github git directory, 'anomaly' folder." )
         print ( "             Result can be seen at https://smodels.github.io/protomodels/anomaly" )
         return
@@ -359,7 +324,7 @@ def main ():
     destdir = "%s/git" % os.environ["HOME"]
     if upload == "github":
         dest = "%s/smodels.github.io/protomodels/" % destdir
-    if upload in [ "interesting", "anomaly" ]:
+    if upload in [ "interesting", "anomaly", "latest" ]:
         dest = "%s/smodels.github.io/protomodels/%s/" % ( destdir, upload )
 
     if dest != "":
@@ -406,6 +371,46 @@ def main ():
             print ( "[plotHiscore.py] when uploading files: %s" % O )
         return
     print ( "error, dont know what to do with upload sink '%s'" % upload )
+
+def main ():
+    rundir = setup()
+    import argparse
+    argparser = argparse.ArgumentParser(
+            description='hiscore proto-model plotter')
+    argparser.add_argument ( '-n', '--number',
+            help='which hiscore to plot [0]',
+            type=int, default=0 )
+    argparser.add_argument ( '-f', '--picklefile',
+            help='pickle file to draw from [%shiscore.pcl]' % rundir,
+            type=str, default="%shiscore.pcl" % rundir )
+    argparser.add_argument ( '-v', '--verbosity',
+            help='verbosity -- debug, info, warn, err [info]',
+            type=str, default="info" )
+    argparser.add_argument ( '-H', '--nohtml',
+            help='do not produce index.html',
+            action="store_true" )
+    argparser.add_argument ( '-R', '--noruler',
+            help='do not produce ruler plot',
+            action="store_true" )
+    argparser.add_argument ( '-D', '--nodecays',
+            help='do not produce decays plot',
+            action="store_true" )
+    argparser.add_argument ( '-P', '--nopredictions',
+            help='do not list all predictions',
+            action="store_true" )
+    argparser.add_argument ( '-k', '--keep',
+            help='keep latex files',
+            action="store_true" )
+    argparser.add_argument ( '-u', '--upload',
+            help='upload to one of the following destinations: none, gpu, github, anomaly, latest, interesting [none]. run --destinations to learn more', 
+            type=str, default="" )
+    argparser.add_argument ( '-c', '--commit',
+            help='also commit and push to smodels.github.io (works only with -u github, anomaly, latest, or interesting)',
+            action="store_true" )
+    argparser.add_argument ( "--destinations", 
+            help="learn more about the upload destinations", action="store_true" )
+    args = argparser.parse_args()
+    runPlotting ( args )
 
 if __name__ == "__main__":
     main()
