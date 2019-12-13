@@ -118,9 +118,11 @@ class Hiscore:
         """ trim the first <n> protomodels in the list """
         if n == None or n < 0 or n > self.nkeep:
             n = self.nkeep
+        nevents = 10000
         for i in range(n):
             if self.hiscores[i]!=None:
-                trimmer = Trimmer( self.hiscores[i], "aggressive", maxloss )
+                trimmer = Trimmer( self.hiscores[i], "aggressive", maxloss,
+                                   nevents = nevents )
                 trimmer.trim( trimbranchings=trimbranchings )
                 while len(self.trimmed)<=i:
                     self.trimmed.append ( None )
@@ -330,9 +332,11 @@ def main ( args ):
     produceNewSLHAFileNames ( protomodels )
     produceNewSLHAFileNames ( trimmed )
 
+    nevents = 20000
+
     if args.trim:
         protomodel = protomodels[0]
-        tr = Trimmer ( protomodel, maxloss=args.maxloss )
+        tr = Trimmer ( protomodel, maxloss=args.maxloss, nevents = nevents )
         tr.trimParticles()
         trimmed[0] = tr.protomodel
 
@@ -340,12 +344,12 @@ def main ( args ):
         if len(trimmed)>0 and trimmed[0] is not None:
             ## already has a trimmed protomodel? trim only branchings
             protomodel = trimmed[0]
-            tr = Trimmer ( protomodel, maxloss = args.maxloss )
+            tr = Trimmer ( protomodel, maxloss = args.maxloss, nevents = nevents )
             tr.trimBranchings()
             trimmed[0] = tr.protomodel
         else:
             protomodel = protomodels[0]
-            tr = Trimmer ( protomodel )
+            tr = Trimmer ( protomodel, maxloss = args.maxloss, nevents = nevents )
             tr.trimParticles()
             tr.trimBranchings()
             if len(trimmed)==0:
@@ -358,7 +362,7 @@ def main ( args ):
         if len(trimmed)>0 and trimmed[0] is not None:
             useTrimmed = True
             protomodel = trimmed[0]
-        tr = Trimmer ( protomodel )
+        tr = Trimmer ( protomodel, maxloss = args.maxloss, nevents = nevents )
         protomodel = tr.computeAnalysisContributions ()
         if useTrimmed:
             trimmed[0] = protomodel
@@ -376,7 +380,7 @@ def main ( args ):
         protomodel = protomodels[0]
         if len(trimmed)>0 and trimmed[0] is not None:
             protomodel = trimmed[0]
-        tr = Trimmer ( protomodel )
+        tr = Trimmer ( protomodel, maxloss = args.maxloss, nevents = nevents )
         tr.checkZ()
 
     if args.print:

@@ -13,13 +13,15 @@ class Trimmer:
     """ Class that trims models down, to decrease free parameters,
         *after* an MCMC walk.
     """
-    def __init__ ( self, protomodel, strategy="aggressive", maxloss=.005 ):
+    def __init__ ( self, protomodel, strategy="aggressive", maxloss=.005,
+                   nevents = 10000 ):
         """
         :param maxloss: maximum loss that we allow, in relative numbers
         """
         self.protomodel = copy.deepcopy ( protomodel )
         self.strategy = strategy
         self.maxloss = maxloss
+        self.nevents = nevents
 
     def highlight ( self, msgType = "info", *args ):
         """ logging, hilit """
@@ -40,7 +42,7 @@ class Trimmer:
         print ( "[trimmer] Check significance Z ... " )
         origZ = self.protomodel.Z # to be sure
         self.protomodel.Z = -23.
-        self.protomodel.predict( strategy=self.strategy, nevents=10000 ) # , keep_meta = True )
+        self.protomodel.predict( strategy=self.strategy, nevents=self.nevents ) # , keep_meta = True )
         print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions, experimental=%d" % ( self.protomodel.Z, origZ, len(self.protomodel.bestCombo), runtime._experimental ) )
         return abs ( (origZ - self.protomodel.Z) / ( origZ +1e-10 ) ) < 1e-7
 
@@ -50,7 +52,7 @@ class Trimmer:
         print ( "[trimmer] step 1: recompute the full Z. Old one at %.2f." % self.protomodel.Z )
         origZ = self.protomodel.Z # to be sure
         self.protomodel.Z = -23.
-        hasPred = self.protomodel.predict( strategy=self.strategy, nevents=10000,
+        hasPred = self.protomodel.predict( strategy=self.strategy, nevents=self.nevents,
                                            check_thresholds = False )
         if not hasPred:
             print ( "[trimmer] I dont understand, why do I not get a pred anymore? r=%.2f" % ( self.protomodel.rmax ) )
@@ -163,7 +165,7 @@ class Trimmer:
                     self.protomodel.ssmultipliers[dpd]=1. ## setting to 1 is taking out
             # self.createSLHAFile()
             ## when trimming we want to increase statistics
-            self.protomodel.predict ( self.strategy, nevents = 10000 )
+            self.protomodel.predict ( self.strategy, nevents = self.nevents )
             self.pprint ( "when trying to remove %s, Z changed: %.3f -> %.3f" % ( helpers.getParticleName(pid), oldZ, self.protomodel.Z ) )
             if self.protomodel.Z > (1. - self.maxloss)*oldZ:
                 ## the Z is still good enough? discard!
@@ -193,6 +195,7 @@ class Trimmer:
             self.pprint ( "Check if we should swap certain particles (eg ~b2 <-> ~b1)" )
             self.protomodel.checkSwaps() ## check if e.g. N3 is lighter than N2
         self.removeUnusedSSMultipliers() ## discard unneeded ss multipliers
+        self.protomodel.trimloss = self.maxloss ## store the trim loss
         self.protomodel.clean()
 
     def trimBranchingsOf ( self, pid ):
@@ -224,7 +227,7 @@ class Trimmer:
                 for k,v in self.protomodel.decays[pid].items():
                     self.protomodel.decays[pid][k]=v/S
                 self.protomodel.decays[pid][dpid]=0.
-                self.protomodel.predict ( self.strategy, nevents=10000 )
+                self.protomodel.predict ( self.strategy, nevents=self.nevents )
                 if self.protomodel.rmax > rthresholds[0]:
                     self.pprint ( "running into exclusion if I try to take it out (rmax=%.1f). Leave in." % self.protomodel.rmax )
                     self.protomodel.restore()

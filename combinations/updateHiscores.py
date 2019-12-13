@@ -30,7 +30,7 @@ def updateHiscores():
     args.nmax = 1
     args.outfile = "hiscore.pcl"
     args.infile = None
-    args.maxloss = .005
+    args.maxloss = .02
     import hiscore
     print ( "[updateHiscores] now update the hiscore.pcl file" )
     hiscore.main ( args )
