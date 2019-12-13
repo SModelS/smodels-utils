@@ -521,8 +521,11 @@ class ProtoModel:
             for dpid,br in self.decays[pid].items():
                 S+=br
         if S == 0.:
-            return ## happens when never been unfrozen, I think
-            self.pprint ( "total sum of branchings for %d is %.2f!!" % (pid,S) )
+            for dpid,br in self.decays[pid].items():
+                br = random.uniform(0.,1.)
+                self.decays[pid][dpid]=br
+                S+=br
+            self.pprint ( "total sum of branchings for %d is %.2f!! Number of decay channels in dictionary %d" % (pid,S,len(self.decays[pid])) )
         for dpid,br in self.decays[pid].items():
                 tmp = self.decays[pid][dpid]
                 self.decays[pid][dpid] = tmp / S
