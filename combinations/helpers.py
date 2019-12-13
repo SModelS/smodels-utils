@@ -7,7 +7,8 @@ def getParticleName ( pid, addSign=False ):
         # a list of pids? latexify them individually and concatenate
         pids = []
         for p in pid:
-            pids.append ( getParticleName ( p, addSign ) )
+            pname = getParticleName ( p, addSign )
+            pids.append ( pname )
         return "(" + ",".join ( pids ) + ")"
     names = { 1000001: "~dL", 2000001: "~dR", 1000002: "~uL",
               2000002: "~uR", 1000003: "~sL", 2000003: "~sR",
@@ -35,6 +36,7 @@ def getParticleName ( pid, addSign=False ):
     if pid in names:
         ret = names[pid]
         return ret
+    return str(pid)
 
 def toLatex ( pid, addDollars=False, addM=False, addSign=False ):
     """ get the latex version of particle name 

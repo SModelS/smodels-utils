@@ -521,8 +521,10 @@ class ProtoModel:
             for dpid,br in self.decays[pid].items():
                 S+=br
         if S == 0.:
+            nitems = len ( self.decays[pid].items() )
             for dpid,br in self.decays[pid].items():
-                br = random.uniform(0.,1.)
+                br = random.gauss ( 1. / nitems, numpy.sqrt ( .5 / nitems )  )
+                br = min ( 0., br )
                 self.decays[pid][dpid]=br
                 S+=br
             self.pprint ( "total sum of branchings for %d is %.2f!! Number of decay channels in dictionary %d" % (pid,S,len(self.decays[pid])) )

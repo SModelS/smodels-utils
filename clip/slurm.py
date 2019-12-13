@@ -80,8 +80,8 @@ def runUpdater( dry_run, time ):
         qos = "c_long"
     if 8 < time <= 48:
         qos = "c_medium"
-    # cmd = [ "srun", "--qos", qos, "--time", "%s" % ( time*60-1 ), "--mem", "100G", "./run_hiscore_updater.sh" ]
-    cmd = [ "srun", "--mem", "100G", "--pty", "bash", "./run_hiscore_updater.sh" ]
+    cmd = [ "srun", "--qos", qos, "--time", "%s" % ( time*60-1 ), "--mem", "100G", "./run_hiscore_updater.sh" ]
+    # cmd = [ "srun", "--mem", "100G", "--pty", "bash", "./run_hiscore_updater.sh" ]
     print ( "updater: " + " ".join ( cmd ) )
     if dry_run:
         return
