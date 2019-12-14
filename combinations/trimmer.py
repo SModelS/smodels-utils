@@ -156,9 +156,10 @@ class Trimmer:
             for dpid,decays in self.protomodel.decays.items():
                 if pid in decays.keys():
                     br = 1. - decays[pid] ## need to correct for what we loose
-                    self.protomodel.decays[dpid].pop(pid)
-                    for dp_,dbr_ in self.protomodel.decays[dpid].items():
-                        self.protomodel.decays[dpid][dp_] = self.protomodel.decays[dpid][dp_] / br
+                    if br > 0.: # if the branching is only to this guy, we cannot take it out
+                        self.protomodel.decays[dpid].pop(pid)
+                        for dp_,dbr_ in self.protomodel.decays[dpid].items():
+                            self.protomodel.decays[dpid][dp_] = self.protomodel.decays[dpid][dp_] / br
             ## and signal strength multipliers, take them out also
             for dpd,v in self.protomodel.ssmultipliers.items():
                 if dpid in dpd or -dpid in dpd:
