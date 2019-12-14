@@ -23,6 +23,7 @@ def updateHiscores():
     args = types.SimpleNamespace()
     args.print = True
     args.interactive = False
+    args.detailed = False
     args.trim_branchings = True
     args.trim = True
     args.fetch = False
@@ -34,7 +35,7 @@ def updateHiscores():
     args.maxloss = .02
     import hiscore
     print ( "[updateHiscores] now update the hiscore.pcl file" )
-    hiscore.main ( args )
+    Z = hiscore.main ( args )
 
 def updateStates():
     args = types.SimpleNamespace()
@@ -57,11 +58,20 @@ def updateStates():
 def main():
     rundir = setup()
     i = 0
+    Z, Zold = 0., 0.
+    Zoldfile = "%s/Zold.conf" % rundir 
+    if os.path.exists ( Zoldfile ):
+        with open ( Zoldfile, "rt" ) as f:
+            Zold = float ( f.read() )
     while True:
         i+=1
-        #updateHiscores()
-        #updateStates()
-        if True:
+        Zold = Z
+        Z = updateHiscores()
+        updateStates()
+        if i % 10 == 0 and Z > Zold*1.0001:
+            with open ( Zoldfile, "wt" ) as f:
+                f.write ( "%s" % Z )
+                f.close()
             import plotHiscore
             from argparse import Namespace
             args = Namespace()

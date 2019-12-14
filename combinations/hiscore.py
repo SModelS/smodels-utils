@@ -288,6 +288,14 @@ def produceNewSLHAFileNames ( protomodels ):
             m.createNewSLHAFileName()
 
 def main ( args ):
+    """ the function that updates the hiscore.pcl file
+    :param args: detailed, outfile, infile, print,
+                 fetch, nmax, maxloss, trim, trim_branchings,
+                 analysis_contributions, check, interactive,
+                 see "if __main__" part below.
+    :returns: highest significance
+    """
+
     if args.detailed:
         args.print = True
     if args.outfile.lower() in [ "none", "", "false" ]:
@@ -325,7 +333,7 @@ def main ( args ):
 
     if protomodels[0] == None:
         print ( "[hiscore] error, we have an empty hiscore list" )
-        return
+        return 0.
         
     print ( "[hiscore] hiscore is at %.2f" % protomodels[0].Z ) 
 
@@ -394,6 +402,12 @@ def main ( args ):
         import trimmer
         import IPython
         IPython.embed()
+
+    if len(trimmed)>0 and trimmed[0] != None:
+        return trimmed[0].Z
+    if len(protomodels)>0 and protomodels[0] != None:
+        return protomodels[0].Z
+    return 0.
 
 if __name__ == "__main__":
     import argparse

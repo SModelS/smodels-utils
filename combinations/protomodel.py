@@ -426,7 +426,8 @@ class ProtoModel:
 
     def createNewSLHAFileName ( self ):
         """ create a new SLHA file name. Needed when e.g. unpickling """
-        self.currentSLHA = tempfile.mktemp(prefix=".cur",suffix=".slha",dir="./")
+        self.currentSLHA = tempfile.mktemp( prefix=".cur%s_" % self.walkerid,
+                                            suffix=".slha",dir="./")
 
     def checkTemplateSLHA ( self ):
         if not os.path.exists ( self.templateSLHA ):

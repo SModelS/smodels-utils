@@ -132,11 +132,11 @@ class RandomWalker:
         uBranch = random.uniform(0,1)
         if uBranch > .3: # do this about every third time
             self.log ( "randomly change branchings" )
-            nChanges += self.randomlyChangeBranchings()
+            nChanges += self.manipulator.randomlyChangeBranchings()
         uSSM = random.uniform(0,1)
         if uSSM > .75: # do this everytime else
             self.log ( "randomly change signal strengths" )
-            nChanges += self.randomlyChangeSignalStrengths()
+            nChanges += self.manipulator.randomlyChangeSignalStrengths()
 
         mu = .4 / (self.protomodel.Z+1.) ## make it more unlikely when Z is high
         uFreeze = random.gauss(mu,.5)
@@ -150,7 +150,7 @@ class RandomWalker:
                 nChanges+=self.manipulator.freezeRandomParticle()
         if nChanges == 0:
             self.log ( "take random mass step" )
-            self.takeRandomMassStep()
+            self.manipulator.takeRandomMassStep()
         self.log ( "now create slha file via predict" )
         if self.catch_exceptions: 
             try:
@@ -239,137 +239,24 @@ class RandomWalker:
         with open( "walker%d.log" % self.walkerid, "a" ) as f:
             f.write ( "[walk:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
-    def randomlyChangeSSOfOneParticle ( self ):
-        """ randomly change the SS consistently for one pid """
-        unfrozenparticles = self.protomodel.unFrozenParticles( withLSP=False )
-        p = random.choice ( unfrozenparticles )
-        f = random.uniform ( .8, 1.2 )
-        for dpd,v in self.protomodel.ssmultipliers.items():
-            if p in dpd or -p in dpd:
-                self.protomodel.ssmultipliers[dpd]=self.protomodel.ssmultipliers[dpd]*f
-
-    def randomlyChangeSignalStrengths ( self ):
-        """ randomly change one of the signal strengths """
-        if random.uniform(0.,1.)<.8:
-            self.randomlyChangeSSOfOneParticle()
-        unfrozenparticles = self.protomodel.unFrozenParticles( withLSP=False )
-        if len(unfrozenparticles)<2:
-            self.pprint ( "not enough unfrozen particles to change random signal strength" )
-            return 0
-        p = random.choice ( unfrozenparticles )
-        q = random.choice ( unfrozenparticles )
-        if self.protomodel.hasAntiParticle(p) and random.uniform(0,1)<.5:
-            p = -p
-        if self.protomodel.hasAntiParticle(q) and random.uniform(0,1)<.5:
-            q = -q
-        pair = self.protomodel.toTuple(p,q)
-        if not pair in self.protomodel.ssmultipliers:
-            self.protomodel.ssmultipliers[pair]=1.
-        newSSM=self.protomodel.ssmultipliers[pair]*random.gauss(1.,.1)
-        if newSSM == 0.:
-            self.pprint ( "Huh? ssmultiplier is 0?? Change to 1." )
-            newSSM = 1.
-        self.protomodel.ssmultipliers[pair]=newSSM
-        self.log ( "changing signal strength multiplier of %s,%s: %.2f." % (helpers.getParticleName(pair[0]), helpers.getParticleName(pair[1]), newSSM ) )
-        return 1
-
-    def randomlyChangeBranchings ( self ):
-        """ randomly change the branchings of a single particle """
-        unfrozenparticles = self.protomodel.unFrozenParticles( withLSP=False )
-        if len(unfrozenparticles)<2:
-            self.pprint ( "not enough unfrozen particles to change random branching" )
-            return 0
-        p = random.choice ( unfrozenparticles )
-        openChannels = []
-        if not p in self.protomodel.decays.keys():
-            self.highlight ( "error", "why is %d not in decays?? %s" % ( p, self.protomodel.decays.keys() ) )
-            # we dont know about this decay? we initialize with the default!
-        for dpid,br in self.protomodel.decays[p].items():
-            if not numpy.isfinite ( br ):
-                self.highlight ( "error", "br of %s/%s is %s. set to zero." % ( p, dpid, br ) )
-                self.protomodel.decays[p][dpid]=0.
-            if dpid in self.protomodel.unFrozenParticles():
-                openChannels.append ( dpid )
-        if len(openChannels) < 2:
-            # not enough channels open to tamper with branchings!
-            return 0
-        dx =.1/numpy.sqrt(len(openChannels)) ## maximum change per channel
-        S=0.
-        for i in self.protomodel.decays[p].keys(): ## openChannels[:-1]:
-            oldbr = self.protomodel.decays[p][i]
-            if not numpy.isfinite ( oldbr ):
-                self.highlight ( "error", "br of %s/%s is %s. set to zero." % ( p, i, oldbr ) )
-                oldbr = 0.
-            Min,Max = max(0.,oldbr-dx), min(oldbr+dx,1.)
-            br = random.uniform ( Min, Max )
-            self.protomodel.decays[p][i]=br
-            S+=br
-        if True: # S > 1.: ## correct for too large sums
-            for i,v in self.protomodel.decays[p].items():
-                self.protomodel.decays[p][i] = v / S
-            S = 1.
-        control = sum ( [  x for x in self.protomodel.decays[p].values() ] )
-        if abs ( control - 1.0 ) > 1e-5 or not numpy.isfinite ( control ):
-            self.pprint ( "ATTENTION control %s" % control )
-        #    sys.exit(-5)
-        brvec=[]
-        for x in self.protomodel.decays[p].values():
-            if x<1e-5:
-                brvec.append("")
-            else:
-                brvec.append("%.2f" % x )
-        self.log ( "changed branchings of %s: %s: s=%.2f" % (helpers.getParticleName(p), ",".join( brvec  ), control ) )
-        return 1
-
-    def takeRandomMassStep ( self ):
-        """ take a random step in mass space for all unfrozen particles """
-        dx = 40. / numpy.sqrt ( len(self.protomodel.unFrozenParticles() ) ) / ( self.protomodel.Z + 1. )
-        for i in self.protomodel.unFrozenParticles():
-            tmp = self.protomodel.masses[i]+random.uniform(-dx,dx)
-            if tmp > self.protomodel.maxMass:
-                tmp = self.protomodel.maxMass
-            if tmp < self.protomodel.masses[self.protomodel.LSP]: ## the LSP is the LSP.
-                tmp = self.protomodel.masses[self.protomodel.LSP]
-            self.protomodel.masses[i]=tmp
-        for squark in [ 1, 2, 3, 4, 5, 6 ]:
-            sq1,sq2=1000000+squark,2000000+squark
-            if not sq1 in self.protomodel.masses or not sq2 in self.protomodel.masses:
-                continue
-            msq1,msq2 = self.protomodel.masses[sq1], self.protomodel.masses[sq2]
-            if msq2 < msq1:
-            ### sq1 should always be lighter than sq2
-             self.protomodel.masses[sq2]=msq1
-             self.protomodel.masses[sq1]=msq2
-        if 1000023 in self.protomodel.masses and 1000025 in self.protomodel.masses:
-            mchi20 = self.protomodel.masses[1000023]
-            mchi30 = self.protomodel.masses[1000025]
-            if mchi20 > mchi30:
-                self.protomodel.masses[1000023] = mchi30
-                self.protomodel.masses[1000025] = mchi20
-        ## now remove all offshell decays, and normalize all branchings
-        self.manipulator.removeAllOffshell() 
-
-
-    """
-    def randomlyTamperWithTheseParticles ( self, pids, r ):
-        # the critic gave us feedback, the culprits are the given
-        #    pids. So tamper only with these. r is our usual theoryprediction/ul
-        #    ratio, and can help us guide how strong a change we have to make.
-        #
-        ## we can tamper with the masses, the signal strengths, or
-        ## the decays, so which is it gonna be? 
-        u = uniform.random ( 0., 1. )
-        if u <= 0.333:
-            ### so we change some masses
-            pass
-        if u > 0.333 and u <= 0.666:
-            #### so we tamper with some ss multipliers
-            pass
-        if u > 0.666:
-            #### ok, its the decays
-            pass
-        return
-    """
+    #def randomlyTamperWithTheseParticles ( self, pids, r ):
+    #    # the critic gave us feedback, the culprits are the given
+    #    #    pids. So tamper only with these. r is our usual theoryprediction/ul
+    #    #    ratio, and can help us guide how strong a change we have to make.
+    #    #
+    #    ## we can tamper with the masses, the signal strengths, or
+    #    ## the decays, so which is it gonna be? 
+    #    u = uniform.random ( 0., 1. )
+    #    if u <= 0.333:
+    #        ### so we change some masses
+    #        pass
+    #    if u > 0.333 and u <= 0.666:
+    #        #### so we tamper with some ss multipliers
+    #        pass
+    #    if u > 0.666:
+    #        #### ok, its the decays
+    #        pass
+    #    return
 
     def walk ( self ):
         """ Now perform the random walk """
@@ -391,7 +278,8 @@ class RandomWalker:
                 for point in extracted:
                     self.pprint ( "extracted: %s" % point )
                 with open("exceptions.log","a") as f:
-                    f.write ( "taking a step resulted in exception: %s, %s\n" % (type(e), e ) )
+                    f.write ( "%s: taking a step resulted in exception: %s, %s\n" % (time.asctime(), type(e), e ) )
+                    f.write ( "   `- exception occured in %s\n" % self.protomodel.walkerid )
                 sys.exit(-1)
             self.protomodel.computePrior()
             ratio = 1.

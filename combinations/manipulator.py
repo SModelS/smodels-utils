@@ -73,7 +73,7 @@ class Manipulator:
             self.M.masses[pid1] = self.M.masses[pid2]
             self.M.masses[pid2] = s
         else:
-            self.highlight ( "red", "error, i was asked to swap %d and %d. but one of them isnt in the mass tuple" % ( pid1, pid2 ) )
+            self.M.highlight ( "red", "error, i was asked to swap %d and %d. but one of them isnt in the mass tuple" % ( pid1, pid2 ) )
             return
         ## swap mothers in the decays dictionary
         if pid1 in self.M.decays and pid2 in self.M.decays:
@@ -81,7 +81,7 @@ class Manipulator:
             self.M.decays[pid1] = self.M.decays[pid2]
             self.M.decays[pid2] = s
         else:
-            self.highlight ( "red", "error, i was asked to swap %d and %d. but one of them isnt in the decays tuple" % ( pid1, pid2 ) )
+            self.M.highlight ( "red", "error, i was asked to swap %d and %d. but one of them isnt in the decays tuple" % ( pid1, pid2 ) )
             return
 
         # swap the daughters in the decays dictionary
@@ -138,14 +138,14 @@ class Manipulator:
         if pid in self.M.decays:
             for dpid,br in self.M.decays[pid].items():
                 S+=br
-        if S == 0.:
-            nitems = len ( self.M.decays[pid].items() )
+        nitems = len ( self.M.decays[pid].items() )
+        while S <= 0.:
             for dpid,br in self.M.decays[pid].items():
                 br = random.gauss ( 1. / nitems, numpy.sqrt ( .5 / nitems )  )
-                br = min ( 0., br )
+                br = max ( 0., br )
                 self.M.decays[pid][dpid]=br
                 S+=br
-            self.M.pprint ( "total sum of branchings for %d is %.2f!! Number of decay channels in dictionary %d" % (pid,S,len(self.M.decays[pid])) )
+            self.M.pprint ( "total sum of branchings for %d is %.2f!! Number of decay channels in dictionary %d" % (pid,S,nitems) )
         for dpid,br in self.M.decays[pid].items():
                 tmp = self.M.decays[pid][dpid]
                 self.M.decays[pid][dpid] = tmp / S
@@ -215,7 +215,119 @@ class Manipulator:
         self.M.log ( "Freezing most massive %s (%.1f)" % ( helpers.getParticleName(pid), minmass ) )
         return 1
 
+    def randomlyChangeSSOfOneParticle ( self ):
+        """ randomly change the SS consistently for one pid """
+        unfrozenparticles = self.M.unFrozenParticles( withLSP=False )
+        if len(unfrozenparticles)<2:
+            self.M.pprint ( "not enough unfrozen particles to change random signal strength" )
+            return 0
+        p = random.choice ( unfrozenparticles )
+        f = random.uniform ( .8, 1.2 )
+        for dpd,v in self.M.ssmultipliers.items():
+            if p in dpd or -p in dpd:
+                self.M.ssmultipliers[dpd]=self.M.ssmultipliers[dpd]*f
+        return 1
 
+    def randomlyChangeSignalStrengths ( self ):
+        """ randomly change one of the signal strengths """
+        if random.uniform(0.,1.)<.8:
+            return self.randomlyChangeSSOfOneParticle()
+        unfrozenparticles = self.M.unFrozenParticles( withLSP=False )
+        if len(unfrozenparticles)<2:
+            self.M.pprint ( "not enough unfrozen particles to change random signal strength" )
+            return 0
+        p = random.choice ( unfrozenparticles )
+        q = random.choice ( unfrozenparticles )
+        if self.M.hasAntiParticle(p) and random.uniform(0,1)<.5:
+            p = -p
+        if self.M.hasAntiParticle(q) and random.uniform(0,1)<.5:
+            q = -q
+        pair = self.M.toTuple(p,q)
+        if not pair in self.M.ssmultipliers:
+            self.M.ssmultipliers[pair]=1.
+        newSSM=self.M.ssmultipliers[pair]*random.gauss(1.,.1)
+        if newSSM == 0.:
+            self.M.pprint ( "Huh? ssmultiplier is 0?? Change to 1." )
+            newSSM = 1.
+        self.M.ssmultipliers[pair]=newSSM
+        self.M.log ( "changing signal strength multiplier of %s,%s: %.2f." % (helpers.getParticleName(pair[0]), helpers.getParticleName(pair[1]), newSSM ) )
+        return 1
+
+    def randomlyChangeBranchings ( self ):
+        """ randomly change the branchings of a single particle """
+        unfrozenparticles = self.M.unFrozenParticles( withLSP=False )
+        if len(unfrozenparticles)<2:
+            self.M.pprint ( "not enough unfrozen particles to change random branching" )
+            return 0
+        p = random.choice ( unfrozenparticles )
+        openChannels = []
+        if not p in self.M.decays.keys():
+            self.M.highlight ( "error", "why is %d not in decays?? %s" % ( p, self.M.decays.keys() ) )
+            # we dont know about this decay? we initialize with the default!
+        for dpid,br in self.M.decays[p].items():
+            if not numpy.isfinite ( br ):
+                self.M.highlight ( "error", "br of %s/%s is %s. set to zero." % ( p, dpid, br ) )
+                self.M.decays[p][dpid]=0.
+            if dpid in self.M.unFrozenParticles():
+                openChannels.append ( dpid )
+        if len(openChannels) < 2:
+            # not enough channels open to tamper with branchings!
+            return 0
+        dx =.1/numpy.sqrt(len(openChannels)) ## maximum change per channel
+        S=0.
+        for i in self.M.decays[p].keys(): ## openChannels[:-1]:
+            oldbr = self.M.decays[p][i]
+            if not numpy.isfinite ( oldbr ):
+                self.M.highlight ( "error", "br of %s/%s is %s. set to zero." % ( p, i, oldbr ) )
+                oldbr = 0.
+            Min,Max = max(0.,oldbr-dx), min(oldbr+dx,1.)
+            br = random.uniform ( Min, Max )
+            self.M.decays[p][i]=br
+            S+=br
+        if True: # S > 1.: ## correct for too large sums
+            for i,v in self.M.decays[p].items():
+                self.M.decays[p][i] = v / S
+            S = 1.
+        control = sum ( [  x for x in self.M.decays[p].values() ] )
+        if abs ( control - 1.0 ) > 1e-5 or not numpy.isfinite ( control ):
+            self.M.pprint ( "ATTENTION control %s" % control )
+        #    sys.exit(-5)
+        brvec=[]
+        for x in self.M.decays[p].values():
+            if x<1e-5:
+                brvec.append("")
+            else:
+                brvec.append("%.2f" % x )
+        self.M.log ( "changed branchings of %s: %s: s=%.2f" % (helpers.getParticleName(p), ",".join( brvec  ), control ) )
+        return 1
+
+    def takeRandomMassStep ( self ):
+        """ take a random step in mass space for all unfrozen particles """
+        dx = 40. / numpy.sqrt ( len(self.M.unFrozenParticles() ) ) / ( self.M.Z + 1. )
+        for i in self.M.unFrozenParticles():
+            tmp = self.M.masses[i]+random.uniform(-dx,dx)
+            if tmp > self.M.maxMass:
+                tmp = self.M.maxMass
+            if tmp < self.M.masses[self.M.LSP]: ## the LSP is the LSP.
+                tmp = self.M.masses[self.M.LSP]
+            self.M.masses[i]=tmp
+        for squark in [ 1, 2, 3, 4, 5, 6 ]:
+            sq1,sq2=1000000+squark,2000000+squark
+            if not sq1 in self.M.masses or not sq2 in self.M.masses:
+                continue
+            msq1,msq2 = self.M.masses[sq1], self.M.masses[sq2]
+            if msq2 < msq1:
+            ### sq1 should always be lighter than sq2
+             self.M.masses[sq2]=msq1
+             self.M.masses[sq1]=msq2
+        if 1000023 in self.M.masses and 1000025 in self.M.masses:
+            mchi20 = self.M.masses[1000023]
+            mchi30 = self.M.masses[1000025]
+            if mchi20 > mchi30:
+                self.M.masses[1000023] = mchi30
+                self.M.masses[1000025] = mchi20
+        ## now remove all offshell decays, and normalize all branchings
+        self.removeAllOffshell() 
 
 if __name__ == "__main__":
     import hiscore
