@@ -35,8 +35,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     """
     print ( "[runOneJob:%d] run walkers [%d,%d] " % ( pid, jmin, jmax ) )
     codedir = "/mnt/hephy/pheno/ww/git/smodels-utils/combinations/"
-    #runner = tempfile.mktemp(prefix="RUNNER",suffix=".py", dir="./" )
-    runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
+    # runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
+    runner = "%sRUNNER_%s.py" % ( rundir, pid )
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
@@ -46,9 +46,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s' )\n" % \
                   ( jmin, jmax, cont, dbpath ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
-
-    #tf = tempfile.mktemp(prefix="RUN_",suffix=".sh", dir="./" )
-    tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
+    # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
+    tf = "%sRUN_%s.sh" % ( rundir, pid )
     with open(tf,"wt") as f:
         for line in lines:
             f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
