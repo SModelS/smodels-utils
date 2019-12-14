@@ -5,12 +5,25 @@
     an algorithm-centric class """
 
 import protomodel
-import copy
+import helpers
+import copy, random, numpy
 
 class Manipulator:
     """ contains the protomodel manipulation algorithms. """
     def __init__ ( self, protomodel ):
         self.M = copy.copy ( protomodel  ) # shallow copy
+
+    def unfreezeRandomParticle ( self ):
+        """ unfreezes a random frozen particle """
+        frozen = self.M.frozenParticles()
+        if len(frozen)==0:
+            return 0
+        p = random.choice ( frozen )
+        self.M.masses[p]=random.uniform ( self.M.masses[self.M.LSP], self.M.maxMass )
+        self.removeAllOffshell() ## remove all offhsell stuff, normalize all branchings
+        # self.M.normalizeAllBranchings() ## adjust everything
+        self.M.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.M.masses[p] ) )
+        return 1
 
     def checkForOffshell ( self ):
         """ check for offshell decays
@@ -25,7 +38,7 @@ class Manipulator:
                 if dpid in self.M.masses:
                     mdaughter = self.M.masses[dpid]
                 if mdaughter > mmother and dbr > 1e-5:
-                    self.log ( "decay %d -> %s is offshell (%.3f)" % \
+                    self.M.log ( "decay %d -> %s is offshell (%.3f)" % \
                                ( pid, dpid, dbr ) )
                     offshell.append ( ( pid, dpid ) )
         return offshell
@@ -47,7 +60,7 @@ class Manipulator:
                 # we dont check for frozen particles
             #    continue
             if self.M.masses[pids[0]] > self.M.masses[pids[1]]:
-                self.pprint ( "particle swap %d <-> %d" % ( pids[0], pids[1] ) )
+                self.M.pprint ( "particle swap %d <-> %d" % ( pids[0], pids[1] ) )
                 self.swapParticles ( pids[0],pids[1] )
 
     def swapParticles ( self, pid1, pid2 ):
@@ -159,16 +172,32 @@ class Manipulator:
         for pidpair,ssm in self.M.ssmultipliers.items():
             if (pid in pidpair) or (-pid in pidpair):
                 if ssm == 0.:
-                    self.pprint ( "huh, when normalizing we find ssmultipliers of 0? change to 1! S=%.4g" % S )
+                    self.M.pprint ( "huh, when normalizing we find ssmultipliers of 0? change to 1! S=%.4g" % S )
                     ssm=1.
                 self.M.ssmultipliers[pidpair]=ssm*S
         self.M.checkSSMultipliers()
 
     def normalizeAllBranchings ( self ):
         """ normalize all branchings, after freezing or unfreezing particles """
-        for pid in self.protomodel.masses.keys():
-            if not pid == self.LSP:
+        for pid in self.M.masses.keys():
+            if not pid == self.M.LSP:
                 self.normalizeBranchings ( pid )
+
+    def freezeRandomParticle ( self ):
+        """ freezes a random unfrozen particle """
+        unfrozen = self.M.unFrozenParticles( withLSP = False )
+        if len(unfrozen)<2:
+            return 0 ## freeze only if at least 3 unfrozen particles exist
+        p = random.choice ( unfrozen )
+        self.M.masses[p]=1e6
+        ## take it out in all decays of other particles!
+        for mpid,mdecays in self.M.decays.items():
+            if p in mdecays:
+                self.M.decays[mpid][p]=0.
+        self.removeAllOffshell() ## remove all offshell particles, normalize all branchings
+        # self.M.normalizeAllBranchings() ## adjust everything
+        self.M.log ( "Freezing %s (keep branchings)." % ( helpers.getParticleName(p) ) )
+        return 1
 
     def freezeMostMassiveParticle ( self ):
         """ freezes the most massive unfrozen particle """
@@ -183,7 +212,7 @@ class Manipulator:
         # p = random.choice ( unfrozen )
         self.M.masses[pid]=1e6
         self.normalizeAllBranchings() ## adjust everything
-        self.log ( "Freezing most massive %s (%.1f)" % ( helpers.getParticleName(pid), minmass ) )
+        self.M.log ( "Freezing most massive %s (%.1f)" % ( helpers.getParticleName(pid), minmass ) )
         return 1
 
 

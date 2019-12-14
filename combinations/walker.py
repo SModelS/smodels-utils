@@ -113,22 +113,6 @@ class RandomWalker:
         print ( "[walk:%d:%s-%s] %s" % ( self.walkerid, self.hostname(), time.strftime("%H:%M:%S"), " ".join(map(str,args))) )
         self.log ( *args )
 
-    def freezeRandomParticle ( self ):
-        """ freezes a random unfrozen particle """
-        unfrozen = self.protomodel.unFrozenParticles( withLSP = False )
-        if len(unfrozen)<2:
-            return 0 ## freeze only if at least 3 unfrozen particles exist
-        p = random.choice ( unfrozen )
-        self.protomodel.masses[p]=1e6
-        ## take it out in all decays of other particles!
-        for mpid,mdecays in self.protomodel.decays.items():
-            if p in mdecays:
-                self.protomodel.decays[mpid][p]=0.
-        self.manipulator.removeAllOffshell() ## remove all offshell particles, normalize all branchings
-        # self.protomodel.normalizeAllBranchings() ## adjust everything
-        self.log ( "Freezing %s (keep branchings)." % ( helpers.getParticleName(p) ) )
-        return 1
-
     def onestep ( self ):
         self.protomodel.clean()
         self.protomodel.step+=1
@@ -144,7 +128,7 @@ class RandomWalker:
         if uUnfreeze > nUnfrozen/float(nTotal):
             # in every nth step unfreeze random particle
             self.log ( "unfreeze random particle" )
-            nChanges += self.unfreezeRandomParticle()
+            nChanges += self.manipulator.unfreezeRandomParticle()
         uBranch = random.uniform(0,1)
         if uBranch > .3: # do this about every third time
             self.log ( "randomly change branchings" )
@@ -160,10 +144,10 @@ class RandomWalker:
             # in every nth step freeze random particle
             if random.uniform(0,1)<.3:
                 self.log ( "freeze most massive particle" )
-                nChanges+=self.freezeMostMassiveParticle()
+                nChanges+=self.manipulator.freezeMostMassiveParticle()
             else:
                 self.log ( "freeze random particle" )
-                nChanges+=self.freezeRandomParticle()
+                nChanges+=self.manipulator.freezeRandomParticle()
         if nChanges == 0:
             self.log ( "take random mass step" )
             self.takeRandomMassStep()
@@ -365,17 +349,6 @@ class RandomWalker:
         ## now remove all offshell decays, and normalize all branchings
         self.manipulator.removeAllOffshell() 
 
-    def unfreezeRandomParticle ( self ):
-        """ unfreezes a random frozen particle """
-        frozen = self.protomodel.frozenParticles()
-        if len(frozen)==0:
-            return 0
-        p = random.choice ( frozen )
-        self.protomodel.masses[p]=random.uniform ( self.protomodel.masses[ProtoModel.LSP], self.protomodel.maxMass )
-        self.manipulator.removeAllOffshell() ## remove all offhsell stuff, normalize all branchings
-        # self.protomodel.normalizeAllBranchings() ## adjust everything
-        self.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.protomodel.masses[p] ) )
-        return 1
 
     """
     def randomlyTamperWithTheseParticles ( self, pids, r ):
@@ -400,7 +373,7 @@ class RandomWalker:
 
     def walk ( self ):
         """ Now perform the random walk """
-        self.unfreezeRandomParticle() ## start with unfreezing a random particle
+        self.manipulator.unfreezeRandomParticle() ## start with unfreezing a random particle
         while self.protomodel.step<self.maxsteps:
             # self.gradientAscent() # perform at begining
             ## only the first walker records history
