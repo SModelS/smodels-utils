@@ -15,6 +15,7 @@ def setup():
     if os.path.exists ( "./rundir.conf" ):
         with open ( "./rundir.conf" ) as f:
             rundir = f.read().strip()
+    rundir = rundir.replace ( "~", os.environ["HOME"] )
     os.chdir ( rundir )
 
 def updateHiscores():
@@ -54,10 +55,28 @@ def updateStates():
     hiscore.main ( args )
 
 def main():
-    setup()
+    rundir = setup()
+    i = 0
     while True:
+        i+=1
         updateHiscores()
         updateStates()
+        if True:
+            import plotHiscore
+            from argparse import Namespace
+            args = Namespace()
+            args.upload = "latest"
+            args.n = 0
+            args.destinations = False
+            args.picklefile = "%shiscore.pcl" % rundir 
+            args.verbosity = "info"
+            args.nohtml = False
+            args.noruler = False
+            args.nodecays = False
+            args.nopredictions = False
+            args.keep = False
+            args.commit = False
+            plotHiscore.runPlotting ( args )
         time.sleep(1200.)
 
 main()
