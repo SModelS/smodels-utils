@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import glob, stat, os, time
+import glob, stat, os, time, subprocess
 
 def getRundir():
     ret="/mnt/hephy/pheno/ww/rundir/"
@@ -43,7 +43,7 @@ def prettyPrint ( myset ):
         ret="none"
     return ret
 
-def main():
+def running_stats():
     rundir = getRundir()
     logs = glob.glob ( "%s/walker*log" % rundir )
     running, pending = set(), set()
@@ -66,4 +66,14 @@ def main():
     print ( "  running (%d):" % len(running), prettyPrint ( running ) )
     print ( "not found (%d):" % len(notaccounted), prettyPrint ( notaccounted ) )
 
-main()
+def count_jobs():
+    pend = subprocess.getoutput ( "slurm q | grep PEND | wc -l" )
+    print ( "pending", pend )
+    running = subprocess.getoutput ( "slurm q | grep RUNNING | wc -l" )
+    print ( "running", running )
+    remaining = subprocess.getoutput ( "slurm q | grep -v PEND | grep -v RUNNING | grep -v NODELIST | wc -l" )
+    if int(remaining)>0:
+        print ( "remaining", remaining )
+
+count_jobs()
+running_stats()
