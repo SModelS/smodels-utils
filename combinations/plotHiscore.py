@@ -28,8 +28,13 @@ def obtain ( number, picklefile ):
         print ( "[plotHiscore] hiscore.pcl does not exist. Trying to produce now with ./hiscore.py" )
         from argparse import Namespace
         args = Namespace()
+        args.detailed = False
+        args.print = False
+        args.outfile = "hiscore.pcl"
+        args.infile = picklefile
+        args.fetch = False
         import hiscore
-        hiscore.main ( *args )
+        hiscore.main ( args )
 
     with open( picklefile,"rb" ) as f:
         #fcntl.flock( f, fcntl.LOCK_EX )

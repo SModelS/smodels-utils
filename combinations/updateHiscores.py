@@ -17,11 +17,11 @@ def setup():
             rundir = f.read().strip()
     rundir = rundir.replace ( "~", os.environ["HOME"] )
     os.chdir ( rundir )
+    return rundir
 
 def updateHiscores():
     args = types.SimpleNamespace()
     args.print = True
-    args.detailed = False
     args.interactive = False
     args.trim_branchings = True
     args.trim = True
@@ -59,14 +59,15 @@ def main():
     i = 0
     while True:
         i+=1
-        updateHiscores()
-        updateStates()
+        #updateHiscores()
+        #updateStates()
         if True:
             import plotHiscore
             from argparse import Namespace
             args = Namespace()
             args.upload = "latest"
-            args.n = 0
+            args.number = 0
+            args.detailed = False
             args.destinations = False
             args.picklefile = "%shiscore.pcl" % rundir 
             args.verbosity = "info"
