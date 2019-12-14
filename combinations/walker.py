@@ -16,6 +16,7 @@ sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels-utils/combinations/")
 from smodels.tools.runtime import nCPUs
 from hiscore import Hiscore
 from protomodel import ProtoModel, rthresholds
+from manipulator import Manipulator
 from history import History
 import helpers
 from pympler.asizeof import asizeof
@@ -52,6 +53,7 @@ class RandomWalker:
         self.protomodel = ProtoModel( self.walkerid, cheat=cheat, dbpath = dbpath, 
                             expected = expected, select = select,
                             keep_meta = True )
+        self.manipulator = Manipulator ( self.protomodel )
         self.strategy = strategy
         self.catch_exceptions = catch_exceptions
         self.history = History ( walkerid )
@@ -122,25 +124,9 @@ class RandomWalker:
         for mpid,mdecays in self.protomodel.decays.items():
             if p in mdecays:
                 self.protomodel.decays[mpid][p]=0.
-        self.protomodel.removeAllOffshell() ## remove all offshell particles, normalize all branchings
+        self.manipulator.removeAllOffshell() ## remove all offshell particles, normalize all branchings
         # self.protomodel.normalizeAllBranchings() ## adjust everything
         self.log ( "Freezing %s (keep branchings)." % ( helpers.getParticleName(p) ) )
-        return 1
-
-    def freezeMostMassiveParticle ( self ):
-        """ freezes the most massive unfrozen particle """
-        unfrozen = self.protomodel.unFrozenParticles( withLSP=False )
-        if len(unfrozen)<2:
-            return 0 ## freeze only if at least 3 unfrozen particles exist
-        pid,minmass=0,0
-        for i in unfrozen:
-            if self.protomodel.masses[i]>minmass:
-                minmass = self.protomodel.masses[i]
-                pid = i
-        # p = random.choice ( unfrozen )
-        self.protomodel.masses[pid]=1e6
-        self.protomodel.normalizeAllBranchings() ## adjust everything
-        self.log ( "Freezing most massive %s (%.1f)" % ( helpers.getParticleName(pid), minmass ) )
         return 1
 
     def onestep ( self ):
@@ -315,6 +301,9 @@ class RandomWalker:
             self.highlight ( "error", "why is %d not in decays?? %s" % ( p, self.protomodel.decays.keys() ) )
             # we dont know about this decay? we initialize with the default!
         for dpid,br in self.protomodel.decays[p].items():
+            if not numpy.isfinite ( br ):
+                self.highlight ( "error", "br of %s/%s is %s. set to zero." % ( p, dpid, br ) )
+                self.protomodel.decays[p][dpid]=0.
             if dpid in self.protomodel.unFrozenParticles():
                 openChannels.append ( dpid )
         if len(openChannels) < 2:
@@ -324,11 +313,11 @@ class RandomWalker:
         S=0.
         for i in self.protomodel.decays[p].keys(): ## openChannels[:-1]:
             oldbr = self.protomodel.decays[p][i]
+            if not numpy.isfinite ( oldbr ):
+                self.highlight ( "error", "br of %s/%s is %s. set to zero." % ( p, i, oldbr ) )
+                oldbr = 0.
             Min,Max = max(0.,oldbr-dx), min(oldbr+dx,1.)
             br = random.uniform ( Min, Max )
-            #br = oldbr+random.uniform(-dx,dx)
-            #if br < 0.: br = 0.
-            #if br > 1.: br = 1.
             self.protomodel.decays[p][i]=br
             S+=br
         if True: # S > 1.: ## correct for too large sums
@@ -336,8 +325,8 @@ class RandomWalker:
                 self.protomodel.decays[p][i] = v / S
             S = 1.
         control = sum ( [  x for x in self.protomodel.decays[p].values() ] )
-        if abs ( control - 1.0 ) > 1e-5:
-            self.pprint ( "control %s" % control )
+        if abs ( control - 1.0 ) > 1e-5 or not numpy.isfinite ( control ):
+            self.pprint ( "ATTENTION control %s" % control )
         #    sys.exit(-5)
         brvec=[]
         for x in self.protomodel.decays[p].values():
@@ -374,7 +363,7 @@ class RandomWalker:
                 self.protomodel.masses[1000023] = mchi30
                 self.protomodel.masses[1000025] = mchi20
         ## now remove all offshell decays, and normalize all branchings
-        self.protomodel.removeAllOffshell() 
+        self.manipulator.removeAllOffshell() 
 
     def unfreezeRandomParticle ( self ):
         """ unfreezes a random frozen particle """
@@ -383,7 +372,7 @@ class RandomWalker:
             return 0
         p = random.choice ( frozen )
         self.protomodel.masses[p]=random.uniform ( self.protomodel.masses[ProtoModel.LSP], self.protomodel.maxMass )
-        self.protomodel.removeAllOffshell() ## remove all offhsell stuff, normalize all branchings
+        self.manipulator.removeAllOffshell() ## remove all offhsell stuff, normalize all branchings
         # self.protomodel.normalizeAllBranchings() ## adjust everything
         self.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.protomodel.masses[p] ) )
         return 1

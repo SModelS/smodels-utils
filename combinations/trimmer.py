@@ -7,6 +7,7 @@ from smodels.tools import runtime
 runtime._experimental = True
 from combiner import Combiner
 from protomodel import ProtoModel, rthresholds
+from manipulator import Manipulator
 import helpers
 
 class Trimmer:
@@ -19,6 +20,7 @@ class Trimmer:
         :param maxloss: maximum loss that we allow, in relative numbers
         """
         self.protomodel = copy.deepcopy ( protomodel )
+        self.manipulator = Manipulator ( self.protomodel )
         self.strategy = strategy
         self.maxloss = maxloss
         self.nevents = nevents
@@ -192,9 +194,8 @@ class Trimmer:
         if trimbranchings:
             self.trimBranchings ( )
         self.protomodel.trimmedBranchings = trimbranchings
-        if hasattr ( self.protomodel, "checkSwaps" ):
-            self.pprint ( "Check if we should swap certain particles (eg ~b2 <-> ~b1)" )
-            self.protomodel.checkSwaps() ## check if e.g. N3 is lighter than N2
+        self.pprint ( "Check if we should swap certain particles (eg ~b2 <-> ~b1)" )
+        self.manipulator.checkSwaps() ## check if e.g. N3 is lighter than N2
         self.removeUnusedSSMultipliers() ## discard unneeded ss multipliers
         self.protomodel.trimloss = self.maxloss ## store the trim loss
         self.protomodel.clean()
