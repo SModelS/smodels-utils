@@ -44,6 +44,9 @@ def prettyPrint ( myset ):
     return ret
 
 def running_stats():
+    print ( )
+    print ( "walker*log info:" )
+    print ( "================" )
     rundir = getRundir()
     logs = glob.glob ( "%s/walker*log" % rundir )
     running, pending = set(), set()
@@ -67,6 +70,8 @@ def running_stats():
     print ( "not found (%d):" % len(notaccounted), prettyPrint ( notaccounted ) )
 
 def count_jobs():
+    print ( "slurm q says:" )
+    print ( "=============" )
     pend = subprocess.getoutput ( "slurm q | grep PEND | wc -l" )
     print ( "pending", pend )
     running = subprocess.getoutput ( "slurm q | grep RUNNING | wc -l" )

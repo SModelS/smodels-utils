@@ -59,19 +59,15 @@ def main():
     rundir = setup()
     i = 0
     Z, Zold = 0., 0.
-    Zoldfile = "%s/Zold.conf" % rundir 
-    if os.path.exists ( Zoldfile ):
-        with open ( Zoldfile, "rt" ) as f:
+    Zfile = "%s/Zold.conf" % rundir 
+    if os.path.exists ( Zfile ):
+        with open ( Zfile, "rt" ) as f:
             Zold = float ( f.read() )
     while True:
         i+=1
-        Zold = Z
         Z = updateHiscores()
-        updateStates()
-        if i % 10 == 0 and Z > Zold*1.0001:
-            with open ( Zoldfile, "wt" ) as f:
-                f.write ( "%s" % Z )
-                f.close()
+        #updateStates()
+        if type(Z)==float and Z > Zold*1.0001:
             import plotHiscore
             from argparse import Namespace
             args = Namespace()
@@ -87,7 +83,13 @@ def main():
             args.nopredictions = False
             args.keep = False
             args.commit = False
+            if Z > 2.8:
+                args.commit = True
             plotHiscore.runPlotting ( args )
+            with open ( Zfile, "wt" ) as f:
+                f.write ( "%s" % str(Z) )
+                # f.close()
+            Zold = Z
         time.sleep(1200.)
 
 main()

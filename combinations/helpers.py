@@ -7,6 +7,8 @@ def getParticleName ( pid, addSign=False ):
         # a list of pids? latexify them individually and concatenate
         pids = []
         for p in pid:
+            if abs(p)<1000000: # skip the SM particles
+                continue
             pname = getParticleName ( p, addSign )
             pids.append ( pname )
         return "(" + ",".join ( pids ) + ")"
@@ -29,7 +31,7 @@ def getParticleName ( pid, addSign=False ):
               -1000015: "~tauLbar", -2000015: "~tauRbar", -1000016: "~nutaubar",
               -1000021: "~g", -1000022: "~chi10", -1000023: "~chi20",
               -1000025: "~chi30", -1000035: "~chi40", -1000024: "~chi1-",
-              -1000037: "~chi2-" 
+              -1000037: "~chi2-"
               }
     if not addSign:
         pid = abs(pid)

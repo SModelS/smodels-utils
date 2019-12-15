@@ -36,7 +36,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     print ( "[runOneJob:%d] run walkers [%d,%d] " % ( pid, jmin, jmax ) )
     codedir = "/mnt/hephy/pheno/ww/git/smodels-utils/combinations/"
     # runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
-    runner = "%sRUNNER_%s.py" % ( rundir, pid )
+    runner = "%sRUNNER_%s.py" % ( rundir, jmin )
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
@@ -47,7 +47,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
                   ( jmin, jmax, cont, dbpath ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
-    tf = "%sRUN_%s.sh" % ( rundir, pid )
+    tf = "%sRUN_%s.sh" % ( rundir, jmin )
     with open(tf,"wt") as f:
         for line in lines:
             f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
@@ -125,8 +125,8 @@ def main():
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [8]',
                         type=int, default=8 )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?', 
-            help='number of processes to split task up to, 0 means one per worker [1]',
-            type=int, default=1 )
+            help='number of processes to split task up to, 0 means one per worker [0]',
+            type=int, default=0 )
     argparser.add_argument ( '-f', '--cont', help='continue with saved states [""]',
                         type=str, default="" )
     argparser.add_argument ( '-D', '--dbpath', help='path to database ["/mnt/hephy/pheno/ww/git/smodels-database/"]',
