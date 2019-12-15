@@ -1,11 +1,29 @@
 #!/usr/bin/env python3
 
-def main( nmin, nmax, cont, dbpath = "/mnt/hephy/pheno/ww/git/smodels-database/" ):
+def setup():
+    codedir = "/mnt/hephy/pheno/ww/git/"
+    sys.path.insert(0,"%ssmodels/" % codedir )
+    sys.path.insert(0,"%ssmodels-utils/" % codedir )
+    sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
+    rundir = "/mnt/hephy/pheno/ww/rundir/"
+    # rundir = "./"
+    if os.path.exists ( "./rundir.conf" ):
+        with open ( "./rundir.conf" ) as f:
+            rundir = f.read().strip()
+    rundir = rundir.replace ( "~", os.environ["HOME"] )
+    os.chdir ( rundir )
+    return rundir
+
+def main( nmin, nmax, cont, dbpath = "/mnt/hephy/pheno/ww/git/smodels-database/",
+          cheatcode = 0 ):
+    """ a worker node to set up to run walkers 
+    :param nmin: the walker id of the first walker
+    :param nmax: the walker id of the last walker (?)
+    :param cont: start with protomodels given in the pickle file 'cont'
+    :param cheatcode: in case we wish to start from a cheat model
+    """
     import sys, os
-    sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels/")
-    sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels-utils/")
-    sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels-utils/combinations/")
-    os.chdir ( "/mnt/hephy/pheno/ww/rundir" )
+    rundir = setup()
     pfile, states = None, None
     if cont == "default":
         import os
@@ -33,7 +51,7 @@ def main( nmin, nmax, cont, dbpath = "/mnt/hephy/pheno/ww/git/smodels-database/"
         if pfile is None:
             print ( "[walkingWorker] from zero %d" % ( i ) )
             w = walker.RandomWalker( walkerid=i, dump_training = True, 
-                                     dbpath = dbpath  )
+                                     dbpath = dbpath, cheatcode = cheatcode  )
             walkers.append ( w )
         else:
             nstates = len(states )

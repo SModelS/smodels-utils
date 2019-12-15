@@ -36,6 +36,7 @@ def updateHiscores():
     import hiscore
     print ( "[updateHiscores] now update the hiscore.pcl file" )
     Z = hiscore.main ( args )
+    return Z
 
 def updateStates():
     args = types.SimpleNamespace()

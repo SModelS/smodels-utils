@@ -20,7 +20,7 @@ def remove( fname, keep):
         pass
 
 def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
-                rundir ):
+                rundir, cheatcode ):
     """ prepare everything for a single job 
     :params pid: process id, integer that idenfies the process
     :param jmin: id of first walker
@@ -32,6 +32,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     :param keep: keep temporary files, for debugging
     :param time: time in hours
     :param rundir: directory with all temp files, cwd of job
+    :param cheatcode: in case we wish to start with a cheat model
     """
     print ( "[runOneJob:%d] run walkers [%d,%d] " % ( pid, jmin, jmax ) )
     codedir = "/mnt/hephy/pheno/ww/git/smodels-utils/combinations/"
@@ -43,8 +44,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         f.write ( "sys.path.insert(0,'%s')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import walkingWorker\n" )
-        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s' )\n" % \
-                  ( jmin, jmax, cont, dbpath ) )
+        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d )\n" % \
+                  ( jmin, jmax, cont, dbpath, cheatcode ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
     tf = "%sRUN_%s.sh" % ( rundir, jmin )
@@ -120,6 +121,8 @@ def main():
                              type=int, default=0 )
     argparser.add_argument ( '-n', '--nmin', nargs='?', help='minimum worker id [0]',
                         type=int, default=0 )
+    argparser.add_argument ( '-C', '--cheatcode', nargs='?', help='use a cheat code [0]',
+                        type=int, default=0 )
     argparser.add_argument ( '-N', '--nmax', nargs='?', help='maximum worker id. Zero means nmin + 1. [0]',
                         type=int, default=0 )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [8]',
@@ -148,6 +151,7 @@ def main():
     with open("run_walker.sh","rt") as f:
         lines=f.readlines()
     nmin, nmax, cont = args.nmin, args.nmax, args.cont
+    cheatcode = args.cheatcode
     if nmax == 0:
         nmax = nmin + 1
     nworkers = args.nmax - args.nmin # + 1 
@@ -159,7 +163,7 @@ def main():
     while True:
         if nprocesses == 1:
             runOneJob ( 0, nmin, nmax, cont, args.dbpath, lines, args.dry_run,
-                        args.keep, args.time, rundir )
+                        args.keep, args.time, rundir, cheatcode )
         else:
             import multiprocessing
             ## nwalkers is the number of jobs per process
@@ -173,7 +177,7 @@ def main():
                 #print ( "process", imin, imax )
                 p = multiprocessing.Process ( target = runOneJob, 
                         args = ( i, imin, imax, cont, args.dbpath, lines, args.dry_run,
-                                 args.keep, args.time, rundir ) )
+                                 args.keep, args.time, rundir, cheatcode ) )
                 jobs.append ( p )
                 p.start()
 
