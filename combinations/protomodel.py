@@ -130,9 +130,10 @@ class ProtoModel:
                     if dpid == ProtoModel.LSP and sum(self.decays[p].values())<.5:
                         self.decays[p][dpd]=1.
             self.possibledecays[p]=decays
-        self.masses[ProtoModel.LSP]=random.uniform(200,500)
 
         ## the LSP we need from the beginning
+        self.masses[ProtoModel.LSP]=random.uniform(200,500)
+
         self.computePrior()
 
     def initializePredictor ( self ):
