@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-""" The pytorch-based regressor for Z. So we can walk along its gradient. """
+""" The pytorch-based accelerator for Z. So we can walk along its gradient. """
 
 import os, time, sys, gzip, time, copy, random, math, subprocess
 import numpy as np
@@ -173,7 +173,7 @@ class RegressionHelper:
 
     def trainOffline ( self, trainingfile, modelfile, verbosity ):
         from protomodel import ProtoModel
-        trainer = Regressor( torchmodel = modelfile, verbosity=verbosity, 
+        trainer = Accelerator( torchmodel = modelfile, verbosity=verbosity, 
                              rundir = rundir )
         with open( trainingfile, "rb" ) as f:
             import pickle
@@ -223,8 +223,8 @@ class RegressionHelper:
                 with open("regress.log","at") as f:
                     f.write ( "[%s] End of epoch %d: errs=%.5f+-%.5f\n" % ( time.asctime(), epoch, np.mean(errs),np.std(errs) ) )
 
-class Regressor:
-    """ this is our nice regressor """
+class Accelerator:
+    """ this is our nice accelerator """
     def __init__ ( self, variables=None, walkerid=0, torchmodel=None, 
                    device=None, dump_training = True,
                    is_trained = False, verbosity = "info", 
@@ -340,12 +340,12 @@ class Regressor:
 
     def pprint ( self, *args ):
         """ logging """
-        print ( "[regressor:%d] %s" % (self.walkerid, " ".join(map(str,args))) )
+        print ( "[accelerator:%d] %s" % (self.walkerid, " ".join(map(str,args))) )
 
     def log ( self, *args ):
         """ logging to file """
         with open( "regression%d.log" % self.walkerid, "a" ) as f:
-            f.write ( "[regressor:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
+            f.write ( "[accelerator:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def train ( self, protomodel, Z, rmax=None ):
         """ train y_label with x_data """
@@ -362,7 +362,7 @@ class Regressor:
         self.adam.zero_grad()
         loss.backward()
         self.adam.step()
-        # print ( "[regressor] storing grad %s" % type(x_data.grad) )
+        # print ( "[accelerator] storing grad %s" % type(x_data.grad) )
         self.grad = x_data.grad ## store the gradient!
 
     def clearScores ( self ):
@@ -395,7 +395,7 @@ class Regressor:
             Zpred = float(y_pred[i])
             Zsi = Zs[i]
             d = abs(Zpred - Zsi)
-            print ( "[regressor] i:%2d, Z_pred:%.2f Z_true:%.2f d:%.2f" % ( i, Zpred, Zsi, d ) )
+            print ( "[accelerator] i:%2d, Z_pred:%.2f Z_true:%.2f d:%.2f" % ( i, Zpred, Zsi, d ) )
         #t0 = time.time()
         loss = self.criterion ( y_pred, y_label )
         self.adam.zero_grad()
@@ -449,7 +449,7 @@ if __name__ == "__main__":
     rundir = setup()
     import argparse
     argparser = argparse.ArgumentParser(
-            description='regressor, used for training when called from command line ' )
+            description='accelerator, used for training when called from command line ' )
     argparser.add_argument ( '-f', '--picklefile',
             help='specify pickle file with training data [%s/training.pcl]' % rundir,
             type=str, default="%s/training.pcl" % rundir )
@@ -473,7 +473,7 @@ if __name__ == "__main__":
     if args.check:
         import pickle
         print ( "checking the torch model" )
-        regressor = Regressor ( torchmodel = args.modelfile, rundir = rundir )
+        accelerator = Accelerator ( torchmodel = args.modelfile, rundir = rundir )
         picklefile = args.checkfile
         print ( "fetching model from %s" % picklefile )
         with open( picklefile,"rb") as f:
@@ -485,7 +485,7 @@ if __name__ == "__main__":
             use="untrimmed"
             model = models[0]
         print ( "Taking %s model %.2f" % ( use, model.Z ) )
-        predictedZ = regressor.predict ( model )
+        predictedZ = accelerator.predict ( model )
         print ( " `- predicted value: %.2f" % predictedZ )
         sys.exit()
         

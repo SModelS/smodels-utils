@@ -89,6 +89,8 @@ def main():
             with open ( Zfile, "wt" ) as f:
                 f.write ( "%s" % str(Z) )
                 # f.close()
+            with open ( "%szhistory.txt" % rundir, "at" ) as f:
+                f.write ( "%s,%s\n" % ( time.asctime(), Z ) )
             Zold = Z
         time.sleep(1200.)
 

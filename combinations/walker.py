@@ -33,12 +33,12 @@ def cleanDirectory ():
 
 class RandomWalker:
     def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive", 
-                   dump_training = False, cheat = 0, 
+                   dump_training = False, cheatcode = 0, 
                    dbpath = "../../smodels-database/", expected = False,
                    select = "all", catch_exceptions = True ):
         """ initialise the walker
         :param nsteps: maximum number of steps to perform
-        :param cheat: cheat mode. 0 is no cheating, 1 is with ranges, 2
+        :param cheatcode: cheat mode. 0 is no cheating, 1 is with ranges, 2
                       is the Z323 model.
         :param expected: remove possible signals from database
         :param select: select only subset of results
@@ -50,20 +50,22 @@ class RandomWalker:
         self.walkerid = walkerid ## walker id, for parallel runs
         self.hiscoreList = Hiscore ( walkerid, True, "H%d.pcl" % walkerid )
         self.hiscoreList.nkeep = 1
-        self.protomodel = ProtoModel( self.walkerid, cheat=cheat, dbpath = dbpath, 
+        self.protomodel = ProtoModel( self.walkerid, dbpath = dbpath, 
                             expected = expected, select = select,
                             keep_meta = True )
         self.manipulator = Manipulator ( self.protomodel )
+        if cheatcode > 0:
+            self.manipulator.cheat ( cheatcode )
         self.strategy = strategy
         self.catch_exceptions = catch_exceptions
         self.history = History ( walkerid )
         self.record_history = False
         self.maxsteps = nsteps
-        self.regressor = None
+        self.accelerator = None
         if dump_training:
-            from regressor import Regressor
-            ## we use the regressor only to dump the training data
-            self.regressor = Regressor ( walkerid= walkerid, 
+            from accelerator import Accelerator
+            ## we use the accelerator only to dump the training data
+            self.accelerator = Accelerator ( walkerid= walkerid, 
                                 dump_training= True,
                                 is_trained = False  )
         self.takeStep() ## the first step should be considered as "taken"
@@ -75,19 +77,19 @@ class RandomWalker:
         self.walkerid = Id
         self.protomodel.walkerid = Id
         self.history.walkerid = Id
-        if self.regressor != None:
-            self.regressor.walkerid = Id
+        if self.accelerator != None:
+            self.accelerator.walkerid = Id
 
 
-    #def turnOnRegress ( self, regressor=None ):
-    #    self.regressor = regressor
+    #def turnOnRegress ( self, accelerator=None ):
+    #    self.accelerator = accelerator
 
     @classmethod
     def fromProtoModel( cls, protomodel, nsteps=10000, strategy="aggressive", 
                    walkerid=0, dump_training = False, 
                    dbpath="../../smodels-database/", expected = False, 
                    select = "all", catch_exceptions = True, keep_meta = True ):
-        ret = cls( walkerid, nsteps=nsteps, cheat = 0, dbpath = dbpath, 
+        ret = cls( walkerid, nsteps=nsteps, dbpath = dbpath, 
                    catch_exceptions = catch_exceptions )
                    # keep_meta = keep_meta )
         # ret = cls( walkerid, nsteps, strategy, dump_training, dbpath )
@@ -100,9 +102,9 @@ class RandomWalker:
         ret.protomodel.initializePredictor()
         ret.protomodel.backup()
         if dump_training:
-            ## we use the regressor only to dump the training data
-            from regressor import Regressor
-            ret.regressor = Regressor ( walkerid= walkerid, dump_training=True,
+            ## we use the accelerator only to dump the training data
+            from accelerator import Accelerator
+            ret.accelerator = Accelerator ( walkerid= walkerid, dump_training=True,
                                         is_trained = False )
         return ret
 
@@ -120,8 +122,8 @@ class RandomWalker:
         nTotal = len ( self.protomodel.masses.keys() )
         self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.protomodel.step, nUnfrozen, nTotal, ", ".join ( map ( helpers.getParticleName, self.protomodel.unFrozenParticles() ) ) ) )
         if False:
-            self.pprint ( "memory footprint (kb): walker %d, model %d, regressor %d, history %d" %\
-                    ( asizeof(self)/1024,asizeof(self.protomodel)/1024,asizeof(self.regressor)/1024, asizeof(self.history)/1024 ) )
+            self.pprint ( "memory footprint (kb): walker %d, model %d, accelerator %d, history %d" %\
+                    ( asizeof(self)/1024,asizeof(self.protomodel)/1024,asizeof(self.accelerator)/1024, asizeof(self.history)/1024 ) )
         nChanges = 0
         mu = 1. - .7 / (self.protomodel.Z+1.) ## make it more unlikely when Z is high
         uUnfreeze = random.gauss( mu ,.5)
@@ -175,33 +177,33 @@ class RandomWalker:
         self.log ( "step %d/%d finished." % ( self.protomodel.step, self.maxsteps ) )
 
     def train ( self ):
-        """ train the regressor """
+        """ train the accelerator """
         ## currently we dont train, we just dump the data
-        self.regressor.dumpTrainingData ( self.protomodel )
+        self.accelerator.dumpTrainingData ( self.protomodel )
         return # we dont train for now
 
     def gradientAscent ( self ):
         """ Z is big enough, the loss is small enough. use the gradient. """
-        if self.regressor.torchmodel == None or self.regressor.is_trained == False:
+        if self.accelerator.torchmodel == None or self.accelerator.is_trained == False:
             ## we dont have a (trained) model, we dont ascend
             self.pprint ( "gradient ascent? no!" )
             return
         self.pprint ( "gradient ascent? yes!" )
-        predictedZ = float ( self.regressor.predict ( self.protomodel ) )
+        predictedZ = float ( self.accelerator.predict ( self.protomodel ) )
         self.pprint ( "Gradient ascent predicted vs computed Z: %.5f <-> %.5f" % ( predictedZ, self.protomodel.Z ) )
-        self.regressor.train ( self.protomodel, self.protomodel.Z ) # only done to get gradient
-        if not hasattr ( self.regressor, "grad" ) or type(self.regressor.grad) == type(None):
-            self.pprint ( "regressor has no grad %d" % hasattr ( self.regressor, "grad" ) )
+        self.accelerator.train ( self.protomodel, self.protomodel.Z ) # only done to get gradient
+        if not hasattr ( self.accelerator, "grad" ) or type(self.accelerator.grad) == type(None):
+            self.pprint ( "accelerator has no grad %d" % hasattr ( self.accelerator, "grad" ) )
             sys.exit()
             return
         # self.log ( "shall we perform gradient ascent?" )
-        # self.log ( "attrs %s %s" % ( self.regressor.loss, self.regressor.torchmodel.last_ypred ) )
-        #if self.regressor.loss > 1. or ( hasattr ( self.regressor.torchmodel, "last_ypred" ) and self.regressor.torchmodel.last_ypred in [ float("nan"), None ] ):
-        #    return ## dont make gradient ascent when regressor loss is too high
+        # self.log ( "attrs %s %s" % ( self.accelerator.loss, self.accelerator.torchmodel.last_ypred ) )
+        #if self.accelerator.loss > 1. or ( hasattr ( self.accelerator.torchmodel, "last_ypred" ) and self.accelerator.torchmodel.last_ypred in [ float("nan"), None ] ):
+        #    return ## dont make gradient ascent when accelerator loss is too high
         self.pprint ( "performing a gradient ascent. Z before %.2f" % self.protomodel.Z )
         oldZ = self.protomodel.Z
         self.protomodel.backup()
-        self.regressor.plusDeltaM ( self.protomodel, rate=.1 ) ## move!!
+        self.accelerator.plusDeltaM ( self.protomodel, rate=.1 ) ## move!!
         try:
             self.protomodel.predict ( self.strategy, nevents = 10000 )
         except Exception as e:
@@ -217,8 +219,8 @@ class RandomWalker:
 
     def takeStep ( self ):
         """ take the step, save it as last step """
-        if self.regressor != None and hasattr ( self.regressor, "grad" ):
-            self.oldgrad = self.regressor.grad
+        if self.accelerator != None and hasattr ( self.accelerator, "grad" ):
+            self.oldgrad = self.accelerator.grad
         ## the muhat multiplier gets multiplied into the signal strengths
         self.protomodel.resolveMuhat()
         ## and backup!
@@ -285,23 +287,23 @@ class RandomWalker:
             ratio = 1.
             if self.protomodel.oldZ() > 0.:
                 ratio = self.protomodel.Z / self.protomodel.oldZ()
-            if self.protomodel.rmax > 1.5:
+            if self.protomodel.rmax > rthresholds[0]:
                 tp = self.protomodel.rvalues[0][2]
                 ana="%s(%s,%s)" % \
                      ( tp.analysisId(), ",".join( map ( str, tp.txnames ) ), tp.dataType(True) )
                 self.highlight ( "info", "rmax[%s]=%.2f > %.1f (r2=%.2f): revert." % \
                         ( ana, self.protomodel.rmax, rthresholds[0], self.protomodel.r2 ) )
                 self.protomodel.restore()
-                if hasattr ( self, "oldgrad" ) and self.regressor != None:
-                    self.regressor.grad = self.oldgrad
+                if hasattr ( self, "oldgrad" ) and self.accelerator != None:
+                    self.accelerator.grad = self.oldgrad
                 continue
             #if self.protomodel.oldZ() > 0. and self.protomodel.Z < 0.7 * self.protomodel.oldZ():
             # if self.oldmodel.Z > 0. and self.protomodel.Z < 0.7 * self.oldmodel.Z:
             #    ## no big steps taken here.
             #    self.highlight ( "info", "Z=%.2f -> %.2f. Revert." % ( self.protomodel.oldZ(), self.protomodel.Z ) )
             #    self.protomodel.restore()
-            #    if hasattr ( self, "oldgrad" ) and self.regressor != None:
-            #        self.regressor.grad = self.oldgrad
+            #    if hasattr ( self, "oldgrad" ) and self.accelerator != None:
+            #        self.accelerator.grad = self.oldgrad
             #    continue
 
             if ratio >= 1.:
@@ -315,8 +317,8 @@ class RandomWalker:
                 if u > ratio:
                     self.pprint ( "u=%.2f > %.2f; Z: %.2f -> %.2f: revert." % (u,ratio,self.protomodel.oldZ(), self.protomodel.Z) )
                     self.protomodel.restore()
-                    if hasattr ( self, "oldgrad" ) and self.regressor != None:
-                        self.regressor.grad = self.oldgrad
+                    if hasattr ( self, "oldgrad" ) and self.accelerator != None:
+                        self.accelerator.grad = self.oldgrad
                 else:
                     self.pprint ( "u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.protomodel.oldZ(),self.protomodel.Z) )
                     self.takeStep()
@@ -367,8 +369,8 @@ if __name__ == "__main__":
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug,info,warn,error [info]',
             type=str, default="info" )
-    argparser.add_argument ( '-r', '--regressor',
-            help='use regressor to perform gradient ascent, supply pickle file name [None]',
+    argparser.add_argument ( '-r', '--accelerator',
+            help='use accelerator to perform gradient ascent, supply pickle file name [None]',
             type=str, default="" )
     argparser.add_argument ( '-n', '--nsteps',
             help='number of steps [100000]',
@@ -421,7 +423,7 @@ if __name__ == "__main__":
                     # no state? start from scratch!
                     walker = RandomWalker( ctr+1, args.nsteps, args.strategy, 
                                            dump_training = dump_training, 
-                                           cheat = args.cheat, 
+                                           cheatcode = args.cheat, 
                                            dbpath = args.database, 
                                            expected = args.expected,
                                            select = select, 
@@ -445,17 +447,17 @@ if __name__ == "__main__":
             walkers.append ( RandomWalker( ctr+1, args.nsteps, 
                                     strategy = args.strategy, 
                                     dump_training = dump_training, 
-                                    cheat = args.cheat, 
+                                    cheatcode = args.cheat, 
                                     dbpath = args.database, 
                                     expected = args.expected, 
                                     select = select,
                                     catch_exceptions = catchem ) )
 
-    if args.regressor not in [ "", "none", "None" ]:
-        from regressor import Regressor
+    if args.accelerator not in [ "", "none", "None" ]:
+        from accelerator import Accelerator
         for walker in walkers:
-            walker.regressor = Regressor ( walkerid = walker.walkerid, 
-                                           torchmodel = args.regressor,
+            walker.accelerator = Accelerator ( walkerid = walker.walkerid, 
+                                           torchmodel = args.accelerator,
                                            dump_training = dump_training,
                                            is_trained = True )
     #print ( "[walk] loading hiscores" )

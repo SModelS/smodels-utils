@@ -13,6 +13,44 @@ class Manipulator:
     def __init__ ( self, protomodel ):
         self.M = copy.copy ( protomodel  ) # shallow copy
 
+    def cheat ( self, mode = 0 ):
+        ## cheating, i.e. starting with models that are known to work well
+        if mode == 1:
+            self.M.highlight ( "red", "cheat mode (1), start with stop, light but ss-suppresed gluino and sbottom" )
+            self.M.masses[1000006]=random.uniform(800,1050)
+            self.M.masses[1000005]=random.uniform(500,600)
+            self.M.masses[1000021]=random.uniform(500,600)
+            self.M.masses[self.M.LSP]=random.uniform(200,500)
+            # self.M.masses[1000002]=random.uniform(1400,1500)
+            pid = 1000021
+            S=0.
+            br=.001
+            for dpd,v in self.M.decays[pid].items():
+                self.M.decays[pid][dpd]=br
+                S+=br
+            self.M.decays[pid][ (1000022, 1) ] = 1.0 - S + br
+
+            S=0.
+            pid = 1000023
+            for dpd,v in self.M.decays[pid].items():
+                self.M.decays[pid][dpd]=br
+                S+=br
+            self.M.decays[pid][ (1000022, 23) ] = 1.0 - S + br
+
+            for dpd,v in self.M.ssmultipliers.items():
+                if 1000021 in dpd or -1000021 in dpd:
+                    r = -1.
+                    while r < 0.:
+                        r = random.gauss(.2, .1 )
+                    self.M.ssmultipliers[dpd]=r
+                if 1000005 in dpd or -1000005 in dpd:
+                    r = -1.
+                    while r < 0.:
+                        r = random.gauss(.2, .1 )
+                    self.M.ssmultipliers[dpd]=r
+            return
+        self.M.highlight ( "red", "cheat mode %d, not yet implemented" % mode )
+
     def unfreezeRandomParticle ( self ):
         """ unfreezes a random frozen particle """
         frozen = self.M.frozenParticles()
@@ -20,10 +58,13 @@ class Manipulator:
             return 0
         p = random.choice ( frozen )
         self.M.masses[p]=random.uniform ( self.M.masses[self.M.LSP], self.M.maxMass )
-        self.removeAllOffshell() ## remove all offhsell stuff, normalize all branchings
+        self.removeAllOffshell() ## remove all offshell stuff, normalize all branchings
         # self.M.normalizeAllBranchings() ## adjust everything
         self.M.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.M.masses[p] ) )
         return 1
+
+    def pprint ( self, args ):
+        return self.M.pprint ( args )
 
     def checkForOffshell ( self ):
         """ check for offshell decays
@@ -37,9 +78,11 @@ class Manipulator:
                 mdaughter = 1e+6
                 if dpid in self.M.masses:
                     mdaughter = self.M.masses[dpid]
+                if type(dpid) == tuple and dpid[0] in self.M.masses:
+                    mdaughter = self.M.masses[dpid[0]]
                 if mdaughter > mmother and dbr > 1e-5:
-                    self.M.log ( "decay %d -> %s is offshell (%.3f)" % \
-                               ( pid, dpid, dbr ) )
+                    self.M.log ( "decay %d(%d) -> %s(%d) is offshell (%.3f)" % \
+                               ( pid, mmother, dpid, mdaughter, dbr ) )
                     offshell.append ( ( pid, dpid ) )
         return offshell
 
@@ -134,18 +177,21 @@ class Manipulator:
         """ normalize branchings of a particle, after freezing and unfreezing
             particles. while we are at it, remove zero branchings also. """
         # unfrozen = self.unFrozenParticles( withLSP = False )
+        if not pid in self.M.decays:
+            self.M.pprint ( "when attempting to normalize: %d not in decays" % pid )
+            return
         S=0.
-        if pid in self.M.decays:
-            for dpid,br in self.M.decays[pid].items():
-                S+=br
+        for dpid,br in self.M.decays[pid].items():
+            S+=br
         nitems = len ( self.M.decays[pid].items() )
         while S <= 0.:
+            self.M.pprint ( "sum of branchings of %d was found to be %s: randomize them, while normalizing." % ( pid, S ) )
             for dpid,br in self.M.decays[pid].items():
                 br = random.gauss ( 1. / nitems, numpy.sqrt ( .5 / nitems )  )
                 br = max ( 0., br )
                 self.M.decays[pid][dpid]=br
                 S+=br
-            self.M.pprint ( "total sum of branchings for %d is %.2f!! Number of decay channels in dictionary %d" % (pid,S,nitems) )
+                # self.M.pprint ( "total sum of branchings for %d is %.2f!! Number of decay channels in dictionary %d" % (pid,S,nitems) )
         for dpid,br in self.M.decays[pid].items():
                 tmp = self.M.decays[pid][dpid]
                 self.M.decays[pid][dpid] = tmp / S

@@ -34,7 +34,7 @@ class ProtoModel:
         a.sort()
         return tuple(a)
 
-    def __init__ ( self, walkerid, cheat=0, dbpath="../../smodels-database/",
+    def __init__ ( self, walkerid, dbpath="../../smodels-database/",
                    expected = False, select = "all", keep_meta = True ):
         """
         :param expected: if True, run with observations drawn from expected values 
@@ -130,35 +130,9 @@ class ProtoModel:
                     if dpid == ProtoModel.LSP and sum(self.decays[p].values())<.5:
                         self.decays[p][dpd]=1.
             self.possibledecays[p]=decays
+        self.masses[ProtoModel.LSP]=random.uniform(200,500)
 
         ## the LSP we need from the beginning
-        self.masses[ProtoModel.LSP]=random.uniform(250,500)
-        if cheat>0: # True: # cheat, to get a head start
-            if cheat == 1:
-                self.highlight ( "red", "cheat mode (1), start with stop, sbottom, sup." )
-                self.masses[1000006]=random.uniform(700,900)
-                self.masses[1000005]=random.uniform(500,700)
-                self.masses[1000002]=random.uniform(800,1200)
-                # self.masses[1000024]=random.uniform(500,1000)
-            if cheat == 2:
-                self.highlight ( "red", "cheat mode (2), start with Z=2.82 point (roughly)." )
-                self.masses[1000005]=1100.
-                self.masses[1000001]=1070.
-                self.masses[1000002]=920.
-                self.masses[1000006]=830.
-                self.masses[1000004]=450.
-                self.masses[1000022]=410.
-                self.ssmultipliers[(1000005,1000005)]=1.
-                # self.masses[1000024]=random.uniform(500,1000)
-            if cheat == 3:
-                self.highlight ( "red", "cheat mode (3), start with Z=3.25 point (roughly)." )
-                self.masses[1000001]=1070.
-                self.masses[1000002]=920.
-                self.masses[1000006]=830.
-                self.masses[1000005]=600.
-                self.masses[1000004]=440.
-                self.masses[1000022]=375.
-                self.ssmultipliers[(1000001,1000001)]=1.0
         self.computePrior()
 
     def initializePredictor ( self ):
