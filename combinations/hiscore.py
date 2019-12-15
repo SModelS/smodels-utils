@@ -395,9 +395,13 @@ def main ( args ):
         printProtoModels ( trimmed, args.detailed, args.nmax )
 
     if args.interactive:
+        if len(protomodels)>0 and protomodels[0] != None:
+            tr = Trimmer ( protomodels[0], maxloss = args.maxloss, nevents = nevents )
         print ( "[hiscore] starting interactive session. Variables: %sprotomodels, trimmed%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
         print ( "[hiscore]                                 Modules: %strimmer%s" % \
+                ( colorama.Fore.RED, colorama.Fore.RESET ) )
+        print ( "[hiscore]                                   Algos: %str%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
         import trimmer
         import IPython

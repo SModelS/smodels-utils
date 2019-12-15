@@ -185,6 +185,15 @@ class Trimmer:
                 self.protomodel.restore()
         self.pprint ( "discarded %d/%d particles." % ( ndiscarded, len(pidsnmasses) ) )
 
+    def removeZeroDecays ( self ):
+        """ remove zero entries in all decays """
+        for pid,decay in self.protomodel.decays.items():
+            newdecay = {}
+            for dpd,br in decay.items():
+                if br > 0.:
+                    newdecay[dpd]=br
+            self.protomodel.decays[pid]=newdecay
+
     def trim ( self, trimbranchings=False ):
         """ see if you can trim the model, accept losses smaller than maxloss
         on Z.
@@ -197,6 +206,7 @@ class Trimmer:
         self.pprint ( "Check if we should swap certain particles (eg ~b2 <-> ~b1)" )
         self.manipulator.checkSwaps() ## check if e.g. N3 is lighter than N2
         self.removeUnusedSSMultipliers() ## discard unneeded ss multipliers
+        self.removeZeroDecays() ## remove decays with br of zero
         self.protomodel.trimloss = self.maxloss ## store the trim loss
         self.protomodel.clean()
 
