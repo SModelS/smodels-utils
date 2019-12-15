@@ -17,11 +17,9 @@ class Manipulator:
         ## cheating, i.e. starting with models that are known to work well
         if mode == 1:
             self.M.highlight ( "red", "cheat mode (1), start with stop, light but ss-suppresed gluino and sbottom" )
-            self.M.masses[1000006]=random.uniform(800,1050)
-            self.M.masses[1000005]=random.uniform(500,600)
-            self.M.masses[1000021]=random.uniform(500,600)
-            self.M.masses[self.M.LSP]=random.uniform(200,500)
-            # self.M.masses[1000002]=random.uniform(1400,1500)
+            self.M.masses[1000006]=700
+            self.M.masses[1000021]=520
+            self.M.masses[self.M.LSP]=330
             pid = 1000021
             S=0.
             br=.001
@@ -30,23 +28,16 @@ class Manipulator:
                 S+=br
             self.M.decays[pid][ (1000022, 1) ] = 1.0 - S + br
 
-            S=0.
-            pid = 1000023
-            for dpd,v in self.M.decays[pid].items():
-                self.M.decays[pid][dpd]=br
-                S+=br
-            self.M.decays[pid][ (1000022, 23) ] = 1.0 - S + br
-
             for dpd,v in self.M.ssmultipliers.items():
                 if 1000021 in dpd or -1000021 in dpd:
                     r = -1.
                     while r < 0.:
-                        r = random.gauss(.2, .1 )
+                        r = random.gauss( .1, .001 )
                     self.M.ssmultipliers[dpd]=r
-                if 1000005 in dpd or -1000005 in dpd:
+                if 1000006 in dpd or -1000006 in dpd:
                     r = -1.
                     while r < 0.:
-                        r = random.gauss(.2, .1 )
+                        r = random.gauss(.03, .002 )
                     self.M.ssmultipliers[dpd]=r
             return
         self.M.highlight ( "red", "cheat mode %d, not yet implemented" % mode )
