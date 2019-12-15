@@ -2,7 +2,7 @@
 
 """ Class that encapsulates a BSM model. """
 
-import random, numpy, tempfile, os, copy, time, sys, colorama
+import random, numpy, tempfile, os, copy, time, sys, colorama, subprocess
 from smodels.tools.xsecComputer import XSecComputer, LO
 from combiner import Combiner
 from predictor import Predictor
@@ -417,6 +417,9 @@ class ProtoModel:
             self.createNewSLHAFileName()
         if outputSLHA == None:
             outputSLHA = self.currentSLHA
+        if os.path.exists ( outputSLHA ):
+            cmd = "cp %s %s" % ( outputSLHA, outputSLHA.replace(".cur",".old" ) )
+            subprocess.getoutput ( cmd )
         self.log ( "create SLHA file at %s" % outputSLHA )
         self.pprint ( "create %s from %s" % (outputSLHA, self.templateSLHA ) )
         with open(outputSLHA,"w") as f:
@@ -451,6 +454,22 @@ class ProtoModel:
         return { "masses": self.masses, "ssmultipliers": self.ssmultipliers,
                  "decays": self.decays }
 
+    def relevantSSMultipliers ( self ):
+        """ of all the ss mulipliers, return only the relevant ones,
+            i.e. the ones for unfrozen particles and value != 1 """
+        ret = {}
+        frozen = self.frozenParticles()
+        for pids,v in self.ssmultipliers.items():
+            if abs ( v - 1. ) < 1e-5:
+                continue
+            isRelevant = True
+            for pid in pids:
+                if abs(pid) in frozen:
+                    isRelevant = False
+            if isRelevant:
+                ret[pids]=v
+        return ret
+
     def computeXSecs ( self, nevents=10000 ):
         """ compute xsecs for current.slha """
         self.log ( "computing xsecs" )
@@ -464,10 +483,14 @@ class ProtoModel:
             self.pprint ( "lets restore old state" )
             self.restore()
 
+        ## use a cleaned-up version of the ss multipliers, so the slha file
+        ## remains readable
+        ssmultipliers = self.relevantSSMultipliers()
+
         try:
             computer.computeForOneFile ( [8,13], self.currentSLHA,
                     unlink=True, lOfromSLHA=False, tofile=True,
-                    ssmultipliers  = self.ssmultipliers )
+                    ssmultipliers  = ssmultipliers )
             self.log ( "done computing xsecs, size of computer %d" % asizeof(computer) )
         except Exception as e:
             self.pprint ( "could not compute xsecs %s: %s" % ( self.currentSLHA, e ) )

@@ -42,7 +42,7 @@ class Manipulator:
                 if self.pidInList ( 2000005, dpd, signed=False ):
                     self.M.ssmultipliers[dpd]=.2
                 if self.pidInList ( 1000001, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.4
+                    self.M.ssmultipliers[dpd]=.36
                 if self.pidInList ( 1000024, dpd, signed=False ):
                     self.M.ssmultipliers[dpd]=.7
                 if self.pidInList ( 1000021, dpd, signed=False ):
