@@ -14,6 +14,7 @@ except:
     import setPath
 sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels-utils/combinations/")
 from smodels.tools.runtime import nCPUs
+from smodels.tools.physicsUnits import GeV
 from hiscore import Hiscore
 from protomodel import ProtoModel, rthresholds
 from manipulator import Manipulator
@@ -172,7 +173,6 @@ class RandomWalker:
             self.log ( "done check for result to go into hiscore list" )
         # self.hiqueue.put( [ hiscoreList ] )
         self.train ()
-        self.protomodel.computePrior()
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.protomodel.letters, self.protomodel.description, self.protomodel.Z ) )
         self.log ( "step %d/%d finished." % ( self.protomodel.step, self.maxsteps ) )
 
@@ -283,14 +283,18 @@ class RandomWalker:
                     f.write ( "%s: taking a step resulted in exception: %s, %s\n" % (time.asctime(), type(e), e ) )
                     f.write ( "   `- exception occured in %s\n" % self.protomodel.walkerid )
                 sys.exit(-1)
-            self.protomodel.computePrior()
             ratio = 1.
             if self.protomodel.oldZ() > 0.:
                 ratio = self.protomodel.Z / self.protomodel.oldZ()
             if self.protomodel.rmax > rthresholds[0]:
                 tp = self.protomodel.rvalues[0][2]
-                ana="%s(%s,%s)" % \
-                     ( tp.analysisId(), ",".join( map ( str, tp.txnames ) ), tp.dataType(True) )
+                masses = []
+                try:
+                    masses = [ int(y.asNumber(GeV)) for y in tp.mass[0] ]
+                except:
+                    pass
+                ana="%s(%s,%s,m=%s)" % \
+                     ( tp.analysisId(), ",".join( map ( str, tp.txnames ) ), tp.dataType(True), masses )
                 self.highlight ( "info", "rmax[%s]=%.2f > %.1f (r2=%.2f): revert." % \
                         ( ana, self.protomodel.rmax, rthresholds[0], self.protomodel.r2 ) )
                 self.protomodel.restore()

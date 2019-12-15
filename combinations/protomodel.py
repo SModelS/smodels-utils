@@ -3,7 +3,7 @@
 """ Class that encapsulates a BSM model. """
 
 import random, numpy, tempfile, os, copy, time, sys, colorama, subprocess
-from smodels.tools.xsecComputer import XSecComputer, LO
+from smodels.tools.xsecComputer import XSecComputer, LO, NLL
 from combiner import Combiner
 from predictor import Predictor
 import pyslha
@@ -38,6 +38,9 @@ class ProtoModel:
                    expected = False, select = "all", keep_meta = True ):
         """
         :param expected: if True, run with observations drawn from expected values 
+        :param select: select data types of results, e.g. "all", "em", "ul"
+        :param keep_meta: If True, keep also all the data in best combo (makes 
+                          this a heavyweight object)
         """
         self.walkerid = walkerid
         self.expected = expected
@@ -84,7 +87,6 @@ class ProtoModel:
         self.rmax = 0.
         self.letters = ""
         self.description = ""
-        self.prior = 0.
         self.bestCombo = None
 
         with open ( self.templateSLHA ) as slhaf:
@@ -134,7 +136,6 @@ class ProtoModel:
         ## the LSP we need from the beginning
         self.masses[ProtoModel.LSP]=random.uniform(200,500)
 
-        self.computePrior()
 
     def initializePredictor ( self ):
         """ initialize the predictor """
@@ -203,7 +204,7 @@ class ProtoModel:
         #    self.predictor = Predictor ( self.walkerid, dbpath = self.dbpath )
         # bestpreds = self.predictor.predict ( self.currentSLHA, allpreds=False,
         bestpreds = predictor[0].predict ( self.currentSLHA, allpreds=False,
-                                             llhdonly=False )
+                                           llhdonly=False )
         rs = self.checkForExcluded ( bestpreds )
         srs = "%s" % ", ".join ( [ "%.2f" % x for x in rs[:3] ] )
         self.log ( "received r values %s" % srs )
@@ -337,7 +338,7 @@ class ProtoModel:
     def backup ( self ):
         """ backup the current state """
         self._backup = { "llhd": self.llhd, "letters": self.letters, "Z": self.Z,
-                        "prior": self.prior, "description": self.description,
+                         "description": self.description,
                         "bestCombo": copy.deepcopy(self.bestCombo), 
                         "masses": copy.deepcopy(self.masses), 
                         "ssmultipliers": copy.deepcopy(self.ssmultipliers), 
@@ -356,20 +357,11 @@ class ProtoModel:
         for k,v in self._backup.items():
             setattr ( self, k, v )
 
-    def oldPriorTimesLlhd( self ):
-        if not hasattr ( self, "_backup" ):
-            self.pprint ( "asked for old prior times llhd, but no backup available" )
-            sys.exit(-1)
-        return self._backup["llhd"]*self._backup["prior"]
-
     def oldZ( self ):
         if not hasattr ( self, "_backup" ):
             self.pprint ( "asked for old Z, but no backup available" )
             sys.exit(-1)
         return self._backup["Z"]
-
-    def priorTimesLlhd( self ):
-        return self.prior * self.llhd
 
     def unFrozenParticles ( self, withLSP=True ):
         """ returns a list of all particles that can be regarded as unfrozen
@@ -474,7 +466,8 @@ class ProtoModel:
         """ compute xsecs for current.slha """
         self.log ( "computing xsecs" )
         # print ( "[walk] computing xsecs for %s" % self.currentSLHA )
-        computer = XSecComputer ( LO, nevents, 6 )
+        computer = XSecComputer ( NLL, nevents, 6 )
+        computer.countNoNLOXSecs = 4 ## quench the warnings about no NLL xsecs
         try:
             f = pyslha.readSLHAFile ( self.currentSLHA )
             m = f.blocks["MASS"]
@@ -496,15 +489,6 @@ class ProtoModel:
             self.pprint ( "could not compute xsecs %s: %s" % ( self.currentSLHA, e ) )
             self.pprint ( "lets restore old state" )
             self.restore()
-
-    def computePrior ( self ):
-        """ compute the prior for the current model.
-        """
-        nunfrozen = len(self.unFrozenParticles())
-        if nunfrozen==0:
-            self.pprint ( "weird. no unfrozen particles?? %s" % self.masses )
-            nunfrozen = 1
-        self.prior = 1. / nunfrozen
 
 if __name__ == "__main__":
     p = ProtoModel( 0 )

@@ -27,12 +27,15 @@ class Manipulator:
             self.M.highlight ( "red", "stops, light but ss-suppressed gluino and sbottoms" )
             self.M.masses[self.M.LSP]=343.
             self.M.masses[1000001]=780.
-            self.M.masses[1000021]=520.
+            self.M.masses[1000021]=535.
             self.M.masses[1000024]=566.
             self.M.masses[1000006]=640.
             self.M.masses[1000005]=830.
             self.M.masses[2000006]=900.
             self.M.masses[2000005]=1306.
+
+            self.M.decays[1000021][(1000022,1)]=1.
+            self.M.decays[1000021][(1000022,21)]=0.
 
             for dpd,v in self.M.ssmultipliers.items():
                 if self.pidInList ( 1000006, dpd, signed=False ):
@@ -41,12 +44,14 @@ class Manipulator:
                     self.M.ssmultipliers[dpd]=.06
                 if self.pidInList ( 2000005, dpd, signed=False ):
                     self.M.ssmultipliers[dpd]=.2
+                if self.pidInList ( 2000006, dpd, signed=False ):
+                    self.M.ssmultipliers[dpd]=.4
                 if self.pidInList ( 1000001, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.36
+                    self.M.ssmultipliers[dpd]=.4
                 if self.pidInList ( 1000024, dpd, signed=False ):
                     self.M.ssmultipliers[dpd]=.7
                 if self.pidInList ( 1000021, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.03
+                    self.M.ssmultipliers[dpd]=.02
             return
         self.M.highlight ( "red", "cheat mode %d, not yet implemented" % mode )
 
@@ -296,6 +301,49 @@ class Manipulator:
         self.M.log ( "changing signal strength multiplier of %s,%s: %.2f." % (helpers.getParticleName(pair[0]), helpers.getParticleName(pair[1]), newSSM ) )
         return 1
 
+    def randomlyChangeBranchingOfPid ( self, pid ):
+        """ randomly change the branching a particle pid """
+        openChannels = []
+        for dpid,br in self.M.decays[pid].items():
+            if not numpy.isfinite ( br ):
+                self.M.highlight ( "error", "br of %s/%s is %s. set to zero." % ( pid, dpid, br ) )
+                self.M.decays[p][dpid]=0.
+            if type(dpid) not in [ tuple, list] and dpid in self.M.unFrozenParticles():
+                openChannels.append ( dpid )
+            if type(dpid) in [ tuple, list ] and dpid[0] in self.M.unFrozenParticles():
+                openChannels.append ( dpid )
+        if len(openChannels) < 2:
+            self.M.highlight ( "error", "number of open channels is %d" % len(openChannels) )
+            # not enough channels open to tamper with branchings!
+            return 0
+        dx =.1/numpy.sqrt(len(openChannels)) ## maximum change per channel
+        S=0.
+        for i in self.M.decays[pid].keys(): ## openChannels[:-1]:
+            oldbr = self.M.decays[pid][i]
+            if not numpy.isfinite ( oldbr ):
+                self.M.highlight ( "error", "br of %s/%s is %s. set to zero." % ( pid, i, oldbr ) )
+                oldbr = 0.
+            Min,Max = max(0.,oldbr-dx), min(oldbr+dx,1.)
+            br = random.uniform ( Min, Max )
+            self.M.decays[pid][i]=br
+            S+=br
+        if True: # S > 1.: ## correct for too large sums
+            for i,v in self.M.decays[pid].items():
+                self.M.decays[pid][i] = v / S
+            S = 1.
+        control = sum ( [  x for x in self.M.decays[pid].values() ] )
+        if abs ( control - 1.0 ) > 1e-5 or not numpy.isfinite ( control ):
+            self.M.pprint ( "ATTENTION control %s" % control )
+        #    sys.exit(-5)
+        brvec=[]
+        for x in self.M.decays[pid].values():
+            if x<1e-5:
+                brvec.append("")
+            else:
+                brvec.append("%.2f" % x )
+        self.M.log ( "changed branchings of %s: %s: s=%.2f" % (helpers.getParticleName(pid), ",".join( brvec  ), control ) )
+        return 1
+
     def randomlyChangeBranchings ( self ):
         """ randomly change the branchings of a single particle """
         unfrozenparticles = self.M.unFrozenParticles( withLSP=False )
@@ -303,46 +351,10 @@ class Manipulator:
             self.M.pprint ( "not enough unfrozen particles to change random branching" )
             return 0
         p = random.choice ( unfrozenparticles )
-        openChannels = []
         if not p in self.M.decays.keys():
             self.M.highlight ( "error", "why is %d not in decays?? %s" % ( p, self.M.decays.keys() ) )
             # we dont know about this decay? we initialize with the default!
-        for dpid,br in self.M.decays[p].items():
-            if not numpy.isfinite ( br ):
-                self.M.highlight ( "error", "br of %s/%s is %s. set to zero." % ( p, dpid, br ) )
-                self.M.decays[p][dpid]=0.
-            if dpid in self.M.unFrozenParticles():
-                openChannels.append ( dpid )
-        if len(openChannels) < 2:
-            # not enough channels open to tamper with branchings!
-            return 0
-        dx =.1/numpy.sqrt(len(openChannels)) ## maximum change per channel
-        S=0.
-        for i in self.M.decays[p].keys(): ## openChannels[:-1]:
-            oldbr = self.M.decays[p][i]
-            if not numpy.isfinite ( oldbr ):
-                self.M.highlight ( "error", "br of %s/%s is %s. set to zero." % ( p, i, oldbr ) )
-                oldbr = 0.
-            Min,Max = max(0.,oldbr-dx), min(oldbr+dx,1.)
-            br = random.uniform ( Min, Max )
-            self.M.decays[p][i]=br
-            S+=br
-        if True: # S > 1.: ## correct for too large sums
-            for i,v in self.M.decays[p].items():
-                self.M.decays[p][i] = v / S
-            S = 1.
-        control = sum ( [  x for x in self.M.decays[p].values() ] )
-        if abs ( control - 1.0 ) > 1e-5 or not numpy.isfinite ( control ):
-            self.M.pprint ( "ATTENTION control %s" % control )
-        #    sys.exit(-5)
-        brvec=[]
-        for x in self.M.decays[p].values():
-            if x<1e-5:
-                brvec.append("")
-            else:
-                brvec.append("%.2f" % x )
-        self.M.log ( "changed branchings of %s: %s: s=%.2f" % (helpers.getParticleName(p), ",".join( brvec  ), control ) )
-        return 1
+        return self.randomlyChangeBranchingOfPid ( p )
 
     def takeRandomMassStep ( self ):
         """ take a random step in mass space for all unfrozen particles """

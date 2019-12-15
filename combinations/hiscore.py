@@ -399,11 +399,12 @@ def main ( args ):
             tr = Trimmer ( protomodels[0], maxloss = args.maxloss, nevents = nevents )
         print ( "[hiscore] starting interactive session. Variables: %sprotomodels, trimmed%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        print ( "[hiscore]                                 Modules: %strimmer%s" % \
+        print ( "[hiscore]                                 Modules: %strimmer, manipulator%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
         print ( "[hiscore]                                   Algos: %str%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
         import trimmer
+        import manipulator
         import IPython
         IPython.embed()
 
