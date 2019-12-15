@@ -119,13 +119,11 @@ class Trimmer:
     def removeSSM1s( self ):
         """ discard ss multipliers that are at 1.0 """
         removed = []
-        newssms = {}
-        for pids,v in self.protomodel.ssmultipliers.items():
+        ssms = copy.deepcopy ( self.protomodel.ssmultipliers )
+        for pids,v in ssms.items():
             if abs(v-1.)<1e-5:
                 removed.append ( pids )
-            else:
-                newssms[pids]=v
-        self.protomodel.ssmultipliers = newssms
+                self.protomodel.ssmultipliers.pop ( pids )
         return removed
 
     def trimParticles ( self ):
