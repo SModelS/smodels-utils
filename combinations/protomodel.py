@@ -381,23 +381,6 @@ class ProtoModel:
             ret.remove(self.LSP)
         return ret
 
-    def checkSSMultipliers ( self ):
-        """ 
-        remove 1.0s from ss multipliers, they are redundant
-        in addition, and only for debugging, 
-        try to find out why we have non-pairs as keys 
-        """
-        for k,v in self.ssmultipliers.items():
-            if type(k) != tuple:
-                print ( "error, we have %s(%s) as key" % ( k, type(k) ) )
-                raise Exception ( "error, we have %s(%s) as key" % ( k, type(k) ) ) 
-        newssmults = {}
-        for pids,v in self.ssmultipliers.items():
-            if abs(v-1.)>1e-10:
-                newssmults[pids]=v
-        self.ssmultipliers = newssmults
-
-
     def createNewSLHAFileName ( self ):
         """ create a new SLHA file name. Needed when e.g. unpickling """
         self.currentSLHA = tempfile.mktemp( prefix=".cur%s_" % self.walkerid,
@@ -481,7 +464,6 @@ class ProtoModel:
             self.restore()
 
         try:
-            self.checkSSMultipliers()
             computer.computeForOneFile ( [8,13], self.currentSLHA,
                     unlink=True, lOfromSLHA=False, tofile=True,
                     ssmultipliers  = self.ssmultipliers )

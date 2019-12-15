@@ -13,32 +13,40 @@ class Manipulator:
     def __init__ ( self, protomodel ):
         self.M = copy.copy ( protomodel  ) # shallow copy
 
+    def pidInList ( self, pid, lst, signed ):
+        """ is pid in lst """
+        if signed:
+            return pid in lst
+        return pid in lst or -pid in lst
+
     def cheat ( self, mode = 0 ):
         ## cheating, i.e. starting with models that are known to work well
+        if mode > 0:
+            self.M.highlight ( "red", "cheat mode: %d" % mode )
         if mode == 1:
-            self.M.highlight ( "red", "cheat mode (1), start with stop, light but ss-suppresed gluino and sbottom" )
-            self.M.masses[1000006]=700
-            self.M.masses[1000021]=520
-            self.M.masses[self.M.LSP]=330
-            pid = 1000021
-            S=0.
-            br=.001
-            for dpd,v in self.M.decays[pid].items():
-                self.M.decays[pid][dpd]=br
-                S+=br
-            self.M.decays[pid][ (1000022, 1) ] = 1.0 - S + br
+            self.M.highlight ( "red", "stops, light but ss-suppressed gluino and sbottoms" )
+            self.M.masses[self.M.LSP]=343.
+            self.M.masses[1000001]=780.
+            self.M.masses[1000021]=520.
+            self.M.masses[1000024]=566.
+            self.M.masses[1000006]=640.
+            self.M.masses[1000005]=830.
+            self.M.masses[2000006]=900.
+            self.M.masses[2000005]=1306.
 
             for dpd,v in self.M.ssmultipliers.items():
-                if 1000021 in dpd or -1000021 in dpd:
-                    r = -1.
-                    while r < 0.:
-                        r = random.gauss( .1, .001 )
-                    self.M.ssmultipliers[dpd]=r
-                if 1000006 in dpd or -1000006 in dpd:
-                    r = -1.
-                    while r < 0.:
-                        r = random.gauss(.03, .002 )
-                    self.M.ssmultipliers[dpd]=r
+                if self.pidInList ( 1000006, dpd, signed=False ):
+                    self.M.ssmultipliers[dpd]=.1
+                if self.pidInList ( 1000005, dpd, signed=False ):
+                    self.M.ssmultipliers[dpd]=.06
+                if self.pidInList ( 2000005, dpd, signed=False ):
+                    self.M.ssmultipliers[dpd]=.2
+                if self.pidInList ( 1000001, dpd, signed=False ):
+                    self.M.ssmultipliers[dpd]=.4
+                if self.pidInList ( 1000024, dpd, signed=False ):
+                    self.M.ssmultipliers[dpd]=.7
+                if self.pidInList ( 1000021, dpd, signed=False ):
+                    self.M.ssmultipliers[dpd]=.03
             return
         self.M.highlight ( "red", "cheat mode %d, not yet implemented" % mode )
 
@@ -49,7 +57,8 @@ class Manipulator:
             return 0
         p = random.choice ( frozen )
         self.M.masses[p]=random.uniform ( self.M.masses[self.M.LSP], self.M.maxMass )
-        self.removeAllOffshell() ## remove all offshell stuff, normalize all branchings
+        ## when unfreezing, nothing can go offshell, right?
+        # self.removeAllOffshell() ## remove all offshell stuff, normalize all branchings
         # self.M.normalizeAllBranchings() ## adjust everything
         self.M.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.M.masses[p] ) )
         return 1
@@ -163,7 +172,6 @@ class Manipulator:
             # self.M.decays[mpid].pop ( dpid ) dont pop, we need it!
         self.normalizeAllBranchings()
 
-
     def normalizeBranchings ( self, pid ):
         """ normalize branchings of a particle, after freezing and unfreezing
             particles. while we are at it, remove zero branchings also. """
@@ -205,14 +213,12 @@ class Manipulator:
 
         ## adjust the signal strength multipliers to keep everything else
         ## as it was
-        ## self.checkSSMultipliers()
         for pidpair,ssm in self.M.ssmultipliers.items():
             if (pid in pidpair) or (-pid in pidpair):
                 if ssm == 0.:
                     self.M.pprint ( "huh, when normalizing we find ssmultipliers of 0? change to 1! S=%.4g" % S )
                     ssm=1.
                 self.M.ssmultipliers[pidpair]=ssm*S
-        self.M.checkSSMultipliers()
 
     def normalizeAllBranchings ( self ):
         """ normalize all branchings, after freezing or unfreezing particles """
@@ -368,6 +374,10 @@ class Manipulator:
 
 if __name__ == "__main__":
     import hiscore
-    p = ProtoModel( 0 )
+    p = protomodel.ProtoModel( 0 )
     m = Manipulator ( p )
-    m.normalizeAllBranchings()
+    cheatcode = 1
+    m.cheat ( cheatcode )
+    m.M.predict()
+    print ( "[manipulator] cheat model %d: Z=%2f, rmax=%2f" % ( cheatcode, m.M.Z, m.M.rmax ) )
+    print ( "              `- %s" % m.M.description )

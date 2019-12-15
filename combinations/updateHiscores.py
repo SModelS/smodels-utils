@@ -66,7 +66,7 @@ def main():
     while True:
         i+=1
         Z = updateHiscores()
-        #updateStates()
+        updateStates()
         if type(Z)==float and Z > Zold*1.0001:
             import plotHiscore
             from argparse import Namespace
@@ -94,4 +94,5 @@ def main():
             Zold = Z
         time.sleep(1200.)
 
-main()
+if __name__ == "__main__":
+    main()
