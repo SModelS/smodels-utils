@@ -170,6 +170,7 @@ class Manipulator:
     def removeAllOffshell ( self ):
         """ remove all offshell decays, renormalize all branchings """
         offshell = self.checkForOffshell()
+        self.M.log ( "removing offshell particles %s" % offshell )
         for (mpid,dpid) in offshell:
             assert ( mpid in self.M.decays )
             assert ( dpid in self.M.decays[mpid] )
@@ -180,7 +181,6 @@ class Manipulator:
     def normalizeBranchings ( self, pid ):
         """ normalize branchings of a particle, after freezing and unfreezing
             particles. while we are at it, remove zero branchings also. """
-        # unfrozen = self.unFrozenParticles( withLSP = False )
         if not pid in self.M.decays:
             self.M.pprint ( "when attempting to normalize: %d not in decays" % pid )
             return
@@ -196,33 +196,21 @@ class Manipulator:
                 self.M.decays[pid][dpid]=br
                 S+=br
                 # self.M.pprint ( "total sum of branchings for %d is %.2f!! Number of decay channels in dictionary %d" % (pid,S,nitems) )
+        self.M.log( "normalize branchings of %d, S is %.2f" % ( pid, S ) )
         for dpid,br in self.M.decays[pid].items():
                 tmp = self.M.decays[pid][dpid]
                 self.M.decays[pid][dpid] = tmp / S
 
-        # while we are at, remove also the zeroes
-        if False: # nah dont, we need the zeroes for bookkeeping!
-            for mpid,decays in self.M.decays.items():
-                newdecays = {}
-                for dpid,dbr in decays.items():
-                    if dbr > 1e-10:
-                        newdecays[dpid]=dbr
-                self.M.decays[mpid] = newdecays
-
-        ## remove also mothers with no decays at all
-        newDecays = {}
-        for mpid,decays in self.M.decays.items():
-            if len(decays)>0:
-                newDecays[mpid] = decays
-        self.M.decays = newDecays
-
         ## adjust the signal strength multipliers to keep everything else
         ## as it was
         for pidpair,ssm in self.M.ssmultipliers.items():
+            if ssm == 0.:
+                self.M.pprint ( "huh, when normalizing we find ssmultipliers of 0? change to 1! S=%.4g" % S )
+                ssm=1.
+            if pidpair in [ (pid,pid),(-pid,-pid),(-pid,pid),(pid,-pid) ]:
+                self.M.ssmultipliers[pidpair]=ssm*S*S
+                continue
             if (pid in pidpair) or (-pid in pidpair):
-                if ssm == 0.:
-                    self.M.pprint ( "huh, when normalizing we find ssmultipliers of 0? change to 1! S=%.4g" % S )
-                    ssm=1.
                 self.M.ssmultipliers[pidpair]=ssm*S
 
     def normalizeAllBranchings ( self ):
@@ -244,7 +232,7 @@ class Manipulator:
                 self.M.decays[mpid][p]=0.
         self.removeAllOffshell() ## remove all offshell particles, normalize all branchings
         # self.M.normalizeAllBranchings() ## adjust everything
-        self.M.log ( "Freezing %s (keep branchings)." % ( helpers.getParticleName(p) ) )
+        self.M.log ( "Freezing %s (but keep its branchings)." % ( helpers.getParticleName(p) ) )
         return 1
 
     def freezeMostMassiveParticle ( self ):
