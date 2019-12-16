@@ -409,9 +409,9 @@ def main ( args ):
         IPython.embed()
 
     if len(trimmed)>0 and trimmed[0] != None:
-        return trimmed[0].Z
+        return float(trimmed[0].Z)
     if len(protomodels)>0 and protomodels[0] != None:
-        return protomodels[0].Z
+        return float(protomodels[0].Z)
     return 0.
 
 if __name__ == "__main__":
