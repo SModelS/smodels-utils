@@ -271,9 +271,11 @@ class Manipulator:
             return 0
         p = random.choice ( unfrozenparticles )
         f = random.uniform ( .8, 1.2 )
+        self.M.log ( "randomly changing ssms of %d by a factor of %.2f" % ( p, f ) )
         for dpd,v in self.M.ssmultipliers.items():
             if p in dpd or -p in dpd:
                 self.M.ssmultipliers[dpd]=self.M.ssmultipliers[dpd]*f
+                self.M.log ( " `- %d:%s is now %.2f" % ( p, dpd, self.M.ssmultipliers[dpd] ) )
         return 1
 
     def randomlyChangeSignalStrengths ( self ):
@@ -313,7 +315,7 @@ class Manipulator:
             if type(dpid) in [ tuple, list ] and dpid[0] in self.M.unFrozenParticles():
                 openChannels.append ( dpid )
         if len(openChannels) < 2:
-            self.M.highlight ( "error", "number of open channels is %d" % len(openChannels) )
+            self.M.highlight ( "error", "number of open channels of %d is %d" % (pid, len(openChannels) ) )
             # not enough channels open to tamper with branchings!
             return 0
         dx =.1/numpy.sqrt(len(openChannels)) ## maximum change per channel
