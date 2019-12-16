@@ -152,9 +152,12 @@ class ProtoModel:
             col = colorama.Fore.RED
         elif msgType.lower() in [ "warn", "warning", "yellow" ]:
             col = colorama.Fore.YELLOW
+        elif msgType.lower() in [ "green", "info" ]:
+            col = colorama.Fore.GREEN
         else:
             self.highlight ( "red", "i think we called highlight without msg type" )
         print ( "%s[model:%d - %s] %s%s" % ( col, self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)), colorama.Fore.RESET ) )
+        self.log ( *args )
 
     def pprint ( self, *args ):
         """ logging """
@@ -479,11 +482,12 @@ class ProtoModel:
         ## use a cleaned-up version of the ss multipliers, so the slha file
         ## remains readable
         ssmultipliers = self.relevantSSMultipliers()
+        comment = "produced at step %d" % ( self.step )
 
         try:
             computer.computeForOneFile ( [8,13], self.currentSLHA,
                     unlink=True, lOfromSLHA=False, tofile=True,
-                    ssmultipliers  = ssmultipliers )
+                    ssmultipliers  = ssmultipliers, comment = comment )
             self.log ( "done computing xsecs, size of computer %d" % asizeof(computer) )
         except Exception as e:
             self.pprint ( "could not compute xsecs %s: %s" % ( self.currentSLHA, e ) )

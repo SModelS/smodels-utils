@@ -13,6 +13,12 @@ class Manipulator:
     def __init__ ( self, protomodel ):
         self.M = copy.copy ( protomodel  ) # shallow copy
 
+    def writeDictFile ( self, outfile = "mymodel.py" ):
+        """ write out the dict file to outfile """
+        with open ( outfile, "wt" ) as f:
+            f.write ( "%s\n" % self.M.dict() )
+            f.close()
+
     def pidInList ( self, pid, lst, signed ):
         """ is pid in lst """
         if signed:
@@ -27,7 +33,7 @@ class Manipulator:
             self.M.highlight ( "red", "stops, light but ss-suppressed gluino and sbottoms" )
             self.M.masses[self.M.LSP]=343.
             self.M.masses[1000001]=780.
-            self.M.masses[1000021]=535.
+            self.M.masses[1000021]=520.
             self.M.masses[1000024]=566.
             self.M.masses[1000006]=640.
             self.M.masses[1000005]=830.
@@ -38,20 +44,62 @@ class Manipulator:
             self.M.decays[1000021][(1000022,21)]=0.
 
             for dpd,v in self.M.ssmultipliers.items():
+                ssm = self.M.ssmultipliers[dpd]
                 if self.pidInList ( 1000006, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.1
-                if self.pidInList ( 1000005, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.06
+                    ssm=.1
                 if self.pidInList ( 2000005, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.2
+                    ssm=.2
+                if self.pidInList ( 1000005, dpd, signed=False ):
+                    ssm=.2
                 if self.pidInList ( 2000006, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.4
+                    ssm=.4
                 if self.pidInList ( 1000001, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.4
+                    ssm=.4
                 if self.pidInList ( 1000024, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.7
+                    ssm=.7
                 if self.pidInList ( 1000021, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.02
+                    ssm=.03
+                if dpd == ( 1000021, 1000021 ):
+                    ssm = .11
+                if dpd in [ ( 1000006, 1000006 ), ( -1000006, 1000006 ) ]:
+                    ssm = .3
+                self.M.ssmultipliers[dpd]=ssm
+            return
+        if mode == 2:
+            self.M.highlight ( "red", "stops, light but ss-suppressed gluino and sbottoms" )
+            self.M.masses[self.M.LSP]=343.
+            self.M.masses[1000001]=780.
+            self.M.masses[1000021]=520.
+            self.M.masses[1000024]=566.
+            self.M.masses[1000006]=640.
+            self.M.masses[1000005]=830.
+            self.M.masses[2000006]=900.
+            self.M.masses[2000005]=1306.
+
+            self.M.decays[1000021][(1000022,1)]=1.
+            self.M.decays[1000021][(1000022,21)]=0.
+
+            for dpd,v in self.M.ssmultipliers.items():
+                ssm = self.M.ssmultipliers[dpd]
+                if self.pidInList ( 1000006, dpd, signed=False ):
+                    ssm=.1
+                if self.pidInList ( 2000005, dpd, signed=False ):
+                    ssm=.2
+                if self.pidInList ( 1000005, dpd, signed=False ):
+                    ssm=.2
+                if self.pidInList ( 2000006, dpd, signed=False ):
+                    ssm=.4
+                if self.pidInList ( 1000001, dpd, signed=False ):
+                    ssm=.4
+                if self.pidInList ( 1000024, dpd, signed=False ):
+                    ssm=.7
+                if self.pidInList ( 1000021, dpd, signed=False ):
+                    ssm=.03
+                if dpd == ( 1000021, 1000021 ):
+                    ssm = .1
+                if dpd in [ ( 1000006, 1000006 ), ( -1000006, 1000006 ) ]:
+                    ssm = .3
+                self.M.ssmultipliers[dpd]=ssm
             return
         self.M.highlight ( "red", "cheat mode %d, not yet implemented" % mode )
 
@@ -170,6 +218,7 @@ class Manipulator:
     def removeAllOffshell ( self ):
         """ remove all offshell decays, renormalize all branchings """
         offshell = self.checkForOffshell()
+        self.M.log ( "removing offshell particles %s" % offshell )
         for (mpid,dpid) in offshell:
             assert ( mpid in self.M.decays )
             assert ( dpid in self.M.decays[mpid] )
@@ -180,7 +229,6 @@ class Manipulator:
     def normalizeBranchings ( self, pid ):
         """ normalize branchings of a particle, after freezing and unfreezing
             particles. while we are at it, remove zero branchings also. """
-        # unfrozen = self.unFrozenParticles( withLSP = False )
         if not pid in self.M.decays:
             self.M.pprint ( "when attempting to normalize: %d not in decays" % pid )
             return
@@ -196,33 +244,21 @@ class Manipulator:
                 self.M.decays[pid][dpid]=br
                 S+=br
                 # self.M.pprint ( "total sum of branchings for %d is %.2f!! Number of decay channels in dictionary %d" % (pid,S,nitems) )
+        self.M.log( "normalize branchings of %d, S is %.2f" % ( pid, S ) )
         for dpid,br in self.M.decays[pid].items():
                 tmp = self.M.decays[pid][dpid]
                 self.M.decays[pid][dpid] = tmp / S
 
-        # while we are at, remove also the zeroes
-        if False: # nah dont, we need the zeroes for bookkeeping!
-            for mpid,decays in self.M.decays.items():
-                newdecays = {}
-                for dpid,dbr in decays.items():
-                    if dbr > 1e-10:
-                        newdecays[dpid]=dbr
-                self.M.decays[mpid] = newdecays
-
-        ## remove also mothers with no decays at all
-        newDecays = {}
-        for mpid,decays in self.M.decays.items():
-            if len(decays)>0:
-                newDecays[mpid] = decays
-        self.M.decays = newDecays
-
         ## adjust the signal strength multipliers to keep everything else
         ## as it was
         for pidpair,ssm in self.M.ssmultipliers.items():
+            if ssm == 0.:
+                self.M.pprint ( "huh, when normalizing we find ssmultipliers of 0? change to 1! S=%.4g" % S )
+                ssm=1.
+            if pidpair in [ (pid,pid),(-pid,-pid),(-pid,pid),(pid,-pid) ]:
+                self.M.ssmultipliers[pidpair]=ssm*S*S
+                continue
             if (pid in pidpair) or (-pid in pidpair):
-                if ssm == 0.:
-                    self.M.pprint ( "huh, when normalizing we find ssmultipliers of 0? change to 1! S=%.4g" % S )
-                    ssm=1.
                 self.M.ssmultipliers[pidpair]=ssm*S
 
     def normalizeAllBranchings ( self ):
@@ -244,7 +280,7 @@ class Manipulator:
                 self.M.decays[mpid][p]=0.
         self.removeAllOffshell() ## remove all offshell particles, normalize all branchings
         # self.M.normalizeAllBranchings() ## adjust everything
-        self.M.log ( "Freezing %s (keep branchings)." % ( helpers.getParticleName(p) ) )
+        self.M.log ( "Freezing %s (but keep its branchings)." % ( helpers.getParticleName(p) ) )
         return 1
 
     def freezeMostMassiveParticle ( self ):
@@ -271,9 +307,11 @@ class Manipulator:
             return 0
         p = random.choice ( unfrozenparticles )
         f = random.uniform ( .8, 1.2 )
+        self.M.log ( "randomly changing ssms of %d by a factor of %.2f" % ( p, f ) )
         for dpd,v in self.M.ssmultipliers.items():
             if p in dpd or -p in dpd:
                 self.M.ssmultipliers[dpd]=self.M.ssmultipliers[dpd]*f
+                self.M.log ( " `- %d:%s is now %.2f" % ( p, dpd, self.M.ssmultipliers[dpd] ) )
         return 1
 
     def randomlyChangeSignalStrengths ( self ):
@@ -313,7 +351,7 @@ class Manipulator:
             if type(dpid) in [ tuple, list ] and dpid[0] in self.M.unFrozenParticles():
                 openChannels.append ( dpid )
         if len(openChannels) < 2:
-            self.M.highlight ( "error", "number of open channels is %d" % len(openChannels) )
+            self.M.highlight ( "error", "number of open channels of %d is %d" % (pid, len(openChannels) ) )
             # not enough channels open to tamper with branchings!
             return 0
         dx =.1/numpy.sqrt(len(openChannels)) ## maximum change per channel
@@ -390,6 +428,6 @@ if __name__ == "__main__":
     m = Manipulator ( p )
     cheatcode = 1
     m.cheat ( cheatcode )
-    m.M.predict()
+    m.M.predict( nevents = 20000 )
     print ( "[manipulator] cheat model %d: Z=%2f, rmax=%2f" % ( cheatcode, m.M.Z, m.M.rmax ) )
     print ( "              `- %s" % m.M.description )

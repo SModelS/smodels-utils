@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import sys, os
+
 def setup():
     codedir = "/mnt/hephy/pheno/ww/git/"
     sys.path.insert(0,"%ssmodels/" % codedir )
@@ -66,11 +68,13 @@ def main( nmin, nmax, cont, dbpath = "/mnt/hephy/pheno/ww/git/smodels-database/"
 if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(description="walkers run on a worker")
-    argparser.add_argument ( '--nmin', nargs='?', help='minimum worker id [0]',
+    argparser.add_argument ( '-n', '--nmin', nargs='?', help='minimum worker id [0]',
                         type=int, default=40 )
-    argparser.add_argument ( '--nmax', nargs='?', help='maximum worker id [10]',
+    argparser.add_argument ( '-N', '--nmax', nargs='?', help='maximum worker id [10]',
                         type=int, default=90 )
+    argparser.add_argument ( '-C', '--cheat', nargs='?', help='cheat code [0]',
+                        type=int, default=0 )
     argparser.add_argument ( '-f', '--cont', help='continue with saved states [""]',
                         type=str, default="default" )
     args=argparser.parse_args()
-    main( args.nmin, args.nmax, args.cont )
+    main( args.nmin, args.nmax, args.cont, cheatcode = args.cheat )
