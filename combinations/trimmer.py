@@ -116,6 +116,20 @@ class Trimmer:
                 ## FIXME now remove also from decays!
         return removed
 
+    def removeFrozenSSMs( self ):
+        """ discard ss multipliers for frozen particles """
+        removed = []
+        ssms = copy.deepcopy ( self.protomodel.ssmultipliers )
+        for pids,v in ssms.items():
+            removeIt = False
+            for pid in pids:
+                if self.protomodel.masses[abs(pid)]>5e5:
+                    removeIt = True
+            if removeIt:
+                removed.append ( pids )
+                self.protomodel.ssmultipliers.pop ( pids )
+        return removed
+
     def removeSSM1s( self ):
         """ discard ss multipliers that are at 1.0 """
         removed = []
@@ -205,6 +219,7 @@ class Trimmer:
         self.pprint ( "Check if we should swap certain particles (eg ~b2 <-> ~b1)" )
         self.manipulator.checkSwaps() ## check if e.g. N3 is lighter than N2
         self.removeSSM1s() ## discard ss multipliers that are at 1.0
+        self.removeFrozenSSMs() ## discard ss multipliers for frozen particles
         self.removeZeroDecays() ## remove decays with br of zero
         self.protomodel.trimloss = self.maxloss ## store the trim loss
         self.protomodel.clean()
