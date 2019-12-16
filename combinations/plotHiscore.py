@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import pickle, os, sys, subprocess, time, fcntl
-from protomodel import ProtoModel # RandomWalker
+from protomodel import ProtoModel
+from manipulator import Manipulator
 from smodels.tools.physicsUnits import GeV
 sys.path.insert(0,"../" )
 import smodels_utils.helper.sparticleNames
@@ -219,7 +220,7 @@ def writeIndexHtml ( protomodel, gotTrimmed ):
 
 def copyFilesToGithub():
     files = [ "hiscore.slha", "index.html", "matrix_aggressive.png", "decays.png", 
-              "ruler.png", "texdoc.png" ]
+              "ruler.png", "texdoc.png", "mymodel.py" ]
     for f in files:
         if not os.path.exists ( f ):
             continue
@@ -277,8 +278,11 @@ def plot ( number, verbosity, picklefile, options ):
     ## plot hiscore number "number"
     protomodel, trimmed = obtain ( number, picklefile )
     # print ( "[plotHiscore] create slha file" )
-    fname = protomodel.createSLHAFile ()
-    subprocess.getoutput ( "cp %s hiscore.slha" % fname )
+    protoslha = protomodel.createSLHAFile ()
+    subprocess.getoutput ( "cp %s hiscore.slha" % protoslha )
+    m = Manipulator ( protomodel )
+    print ( "[plotHiscore] now write mymodel.py" )
+    m.writeDictFile()
     opts = [ "ruler", "decays", "predictions", "copy", "html" ]
     for i in opts:
         if not i in options:

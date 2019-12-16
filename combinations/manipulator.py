@@ -13,6 +13,12 @@ class Manipulator:
     def __init__ ( self, protomodel ):
         self.M = copy.copy ( protomodel  ) # shallow copy
 
+    def writeDictFile ( self, outfile = "mymodel.py" ):
+        """ write out the dict file to outfile """
+        with open ( outfile, "wt" ) as f:
+            f.write ( "%s\n" % self.M.dict() )
+            f.close()
+
     def pidInList ( self, pid, lst, signed ):
         """ is pid in lst """
         if signed:
@@ -27,7 +33,7 @@ class Manipulator:
             self.M.highlight ( "red", "stops, light but ss-suppressed gluino and sbottoms" )
             self.M.masses[self.M.LSP]=343.
             self.M.masses[1000001]=780.
-            self.M.masses[1000021]=535.
+            self.M.masses[1000021]=520.
             self.M.masses[1000024]=566.
             self.M.masses[1000006]=640.
             self.M.masses[1000005]=830.
@@ -38,20 +44,62 @@ class Manipulator:
             self.M.decays[1000021][(1000022,21)]=0.
 
             for dpd,v in self.M.ssmultipliers.items():
+                ssm = self.M.ssmultipliers[dpd]
                 if self.pidInList ( 1000006, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.1
-                if self.pidInList ( 1000005, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.06
+                    ssm=.1
                 if self.pidInList ( 2000005, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.2
+                    ssm=.2
+                if self.pidInList ( 1000005, dpd, signed=False ):
+                    ssm=.2
                 if self.pidInList ( 2000006, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.4
+                    ssm=.4
                 if self.pidInList ( 1000001, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.4
+                    ssm=.4
                 if self.pidInList ( 1000024, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.7
+                    ssm=.7
                 if self.pidInList ( 1000021, dpd, signed=False ):
-                    self.M.ssmultipliers[dpd]=.02
+                    ssm=.03
+                if dpd == ( 1000021, 1000021 ):
+                    ssm = .11
+                if dpd in [ ( 1000006, 1000006 ), ( -1000006, 1000006 ) ]:
+                    ssm = .3
+                self.M.ssmultipliers[dpd]=ssm
+            return
+        if mode == 2:
+            self.M.highlight ( "red", "stops, light but ss-suppressed gluino and sbottoms" )
+            self.M.masses[self.M.LSP]=343.
+            self.M.masses[1000001]=780.
+            self.M.masses[1000021]=520.
+            self.M.masses[1000024]=566.
+            self.M.masses[1000006]=640.
+            self.M.masses[1000005]=830.
+            self.M.masses[2000006]=900.
+            self.M.masses[2000005]=1306.
+
+            self.M.decays[1000021][(1000022,1)]=1.
+            self.M.decays[1000021][(1000022,21)]=0.
+
+            for dpd,v in self.M.ssmultipliers.items():
+                ssm = self.M.ssmultipliers[dpd]
+                if self.pidInList ( 1000006, dpd, signed=False ):
+                    ssm=.1
+                if self.pidInList ( 2000005, dpd, signed=False ):
+                    ssm=.2
+                if self.pidInList ( 1000005, dpd, signed=False ):
+                    ssm=.2
+                if self.pidInList ( 2000006, dpd, signed=False ):
+                    ssm=.4
+                if self.pidInList ( 1000001, dpd, signed=False ):
+                    ssm=.4
+                if self.pidInList ( 1000024, dpd, signed=False ):
+                    ssm=.7
+                if self.pidInList ( 1000021, dpd, signed=False ):
+                    ssm=.03
+                if dpd == ( 1000021, 1000021 ):
+                    ssm = .1
+                if dpd in [ ( 1000006, 1000006 ), ( -1000006, 1000006 ) ]:
+                    ssm = .3
+                self.M.ssmultipliers[dpd]=ssm
             return
         self.M.highlight ( "red", "cheat mode %d, not yet implemented" % mode )
 
@@ -380,6 +428,6 @@ if __name__ == "__main__":
     m = Manipulator ( p )
     cheatcode = 1
     m.cheat ( cheatcode )
-    m.M.predict()
+    m.M.predict( nevents = 20000 )
     print ( "[manipulator] cheat model %d: Z=%2f, rmax=%2f" % ( cheatcode, m.M.Z, m.M.rmax ) )
     print ( "              `- %s" % m.M.description )
