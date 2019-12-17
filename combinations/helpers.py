@@ -2,12 +2,16 @@
 
 """ helper functions """
 
-def getParticleName ( pid, addSign=False ):
+def getParticleName ( pid, addSign=False, addSMParticles=False ):
+    """ get the particle name of pid 
+    :param addSign: add sign info in name
+    :param addSMParticles: if True, then print also SM particle names
+    """
     if type ( pid ) in [ list, tuple ]:
         # a list of pids? latexify them individually and concatenate
         pids = []
         for p in pid:
-            if abs(p)<1000000: # skip the SM particles
+            if not addSMParticles and abs(p)<1000000: # skip the SM particles
                 continue
             pname = getParticleName ( p, addSign )
             pids.append ( pname )
@@ -33,6 +37,18 @@ def getParticleName ( pid, addSign=False ):
               -1000025: "~chi30", -1000035: "~chi40", -1000024: "~chi1-",
               -1000037: "~chi2-"
               }
+    if addSMParticles:
+        SMnames = { 1: "d", 2: "u", 3: "s", 4: "c", 5: "b", 6: "t",
+                    11: "e", 13: "mu", 15: "tau", 12: "nue", 14: "numu",
+                    16: "nutau", 21: "g", 22: "photon", 23: "Z", 25: "higgs",
+                    24: "W" }
+        import copy
+        cp = copy.deepcopy ( SMnames )
+        for k,v in cp.items():
+            SMnames[-k]=v+"-"
+            if k in [1,2,3,4,5,6,12,14,16]:
+                SMnames[-k]=v+"bar"
+        
     if not addSign:
         pid = abs(pid)
     if pid in names:

@@ -128,14 +128,17 @@ class Manipulator:
             if mmother > 9e5:
                 continue
             for dpid,dbr in decays.items():
-                mdaughter = 1e+6
+                mdaughter = -1.
                 if dpid in self.M.masses:
                     mdaughter = self.M.masses[dpid]
                 if type(dpid) == tuple and dpid[0] in self.M.masses:
                     mdaughter = self.M.masses[dpid[0]]
+                if mdaughter < 0.:
+                    self.M.log ( "this is weird, cannot get mass for dpid %s?" % dpid )
                 if mdaughter > mmother and dbr > 1e-5:
-                    self.M.log ( "decay %d(%d) -> %s(%d) is offshell (%.3f)" % \
-                               ( pid, mmother, dpid, mdaughter, dbr ) )
+                    self.M.log ( "decay %s(%d) -> %s(%d) is offshell (%.3f)" % \
+                               ( helpers.getParticleName( pid ), mmother, 
+                                 helpers.getParticleName ( dpid ), mdaughter, dbr ) )
                     offshell.append ( ( pid, dpid ) )
         return offshell
 
@@ -218,13 +221,27 @@ class Manipulator:
     def removeAllOffshell ( self ):
         """ remove all offshell decays, renormalize all branchings """
         offshell = self.checkForOffshell()
-        self.M.log ( "removing offshell particles %s" % offshell )
+        for dpd in offshell:
+            self.M.log ( "removing offshell decay %s" % helpers.getParticleName ( dpd ) )
         for (mpid,dpid) in offshell:
             assert ( mpid in self.M.decays )
             assert ( dpid in self.M.decays[mpid] )
             self.M.decays[mpid][dpid]=0.
             # self.M.decays[mpid].pop ( dpid ) dont pop, we need it!
         self.normalizeAllBranchings()
+
+    #def logBranchings ( self, pid ):
+    #    """ discuss the decay channels of pid in log file """
+    #    brs = []
+    #    for dpid,br in self.M.decays[pid].items():
+    #            tmp = self.M.decays[pid][dpid] / S
+    #            self.M.decays[pid][dpid] = tmp
+    #            if tmp < .99999:
+    #                brs.append ( tmp )
+    #    if numpy.std ( brs ) > 0.001:
+    #        self.M.log( "branchings of %s are at %.2f +/- %.2f" % \
+    #                    ( helpers.getParticleName ( pid ), numpy.mean ( brs ), numpy.std ( brs )  ) )
+
 
     def normalizeBranchings ( self, pid ):
         """ normalize branchings of a particle, after freezing and unfreezing
@@ -245,10 +262,12 @@ class Manipulator:
                 S+=br
         brs = []
         for dpid,br in self.M.decays[pid].items():
-                tmp = self.M.decays[pid][dpid]
-                brs.append ( tmp / S )
-                self.M.decays[pid][dpid] = tmp / S
-        self.M.log( "normalize branchings of %d, they are at %.2f +/- %.2f" % ( pid, numpy.mean ( brs ), numpy.std ( brs )  ) )
+                tmp = self.M.decays[pid][dpid] / S
+                self.M.decays[pid][dpid] = tmp
+                if tmp < .99999:
+                    brs.append ( tmp )
+        if numpy.std ( brs ) > 0.001:
+            self.M.log( "normalize branchings of %s, they are at %.2f +/- %.2f" % ( helpers.getParticleName ( pid ), numpy.mean ( brs ), numpy.std ( brs )  ) )
 
         ## adjust the signal strength multipliers to keep everything else
         ## as it was
@@ -268,20 +287,29 @@ class Manipulator:
             if not pid == self.M.LSP:
                 self.normalizeBranchings ( pid )
 
+    def isInPids ( self, p, dpid ):
+        """ is p in dpid, or p equals to dpid? """
+        if type(dpid) == tuple:
+            return p in dpid
+        return p == dpid
+
     def freezeRandomParticle ( self ):
         """ freezes a random unfrozen particle """
         unfrozen = self.M.unFrozenParticles( withLSP = False )
         if len(unfrozen)<2:
+            self.M.log ( "only two particles are unfrozen, so dont freeze anything" )
             return 0 ## freeze only if at least 3 unfrozen particles exist
         p = random.choice ( unfrozen )
+        self.M.log ( "Freezing %s (but keep its branchings)." % ( helpers.getParticleName(p) ) )
         self.M.masses[p]=1e6
         ## take it out in all decays of other particles!
-        for mpid,mdecays in self.M.decays.items():
-            if p in mdecays:
-                self.M.decays[mpid][p]=0.
+        for mpid,mdecays in self.M.decays.items(): # FIXME wrong!
+            for dpid,br in mdecays.items():
+                if self.isInPids ( p, dpid ):
+                    self.M.log ( " `- take out decay channel %s -> %s" % ( helpers.getParticleName ( mpid ), helpers.getParticleName ( dpid, addSMParticles=True ) ) )
+                    self.M.decays[mpid][dpid]=0.
         self.removeAllOffshell() ## remove all offshell particles, normalize all branchings
         # self.M.normalizeAllBranchings() ## adjust everything
-        self.M.log ( "Freezing %s (but keep its branchings)." % ( helpers.getParticleName(p) ) )
         return 1
 
     def freezeMostMassiveParticle ( self ):
@@ -308,14 +336,15 @@ class Manipulator:
             return 0
         p = random.choice ( unfrozenparticles )
         f = random.uniform ( .8, 1.2 )
-        self.M.log ( "randomly changing ssms of %d by a factor of %.2f" % ( p, f ) )
+        self.M.log ( "randomly changing ssms of %s by a factor of %.2f" % \
+                     ( helpers.getParticleName ( p ), f ) )
         ssms = []
         for dpd,v in self.M.ssmultipliers.items():
             if p in dpd or -p in dpd:
                 newssm = self.M.ssmultipliers[dpd]*f
                 self.M.ssmultipliers[dpd]= newssm
                 ssms.append ( newssm )
-        self.M.log ( " `- %d:%s ssms are now %.2f+/-%.2f" % ( p, dpd, numpy.mean ( ssms ), numpy.std ( ssms) ) )
+        self.M.log ( " `- %s: ssms are now %.2f+/-%.2f" % ( helpers.getParticleName(p), numpy.mean ( ssms ), numpy.std ( ssms) ) )
         return 1
 
     def randomlyChangeSignalStrengths ( self ):
@@ -355,7 +384,7 @@ class Manipulator:
             if type(dpid) in [ tuple, list ] and dpid[0] in self.M.unFrozenParticles():
                 openChannels.append ( dpid )
         if len(openChannels) < 2:
-            self.M.highlight ( "error", "number of open channels of %d is %d" % (pid, len(openChannels) ) )
+            self.M.pprint ( "number of open channels of %d is %d: cannot change branchings." % (pid, len(openChannels) ) )
             # not enough channels open to tamper with branchings!
             return 0
         dx =.1/numpy.sqrt(len(openChannels)) ## maximum change per channel

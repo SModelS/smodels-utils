@@ -483,10 +483,11 @@ class ProtoModel:
         ## remains readable
         ssmultipliers = self.relevantSSMultipliers()
         comment = "produced at step %d" % ( self.step )
+        tofile = "all"
 
         try:
             nXsecs = computer.computeForOneFile ( [8,13], self.currentSLHA,
-                    unlink=True, lOfromSLHA=False, tofile=True,
+                    unlink=True, lOfromSLHA=False, tofile=tofile,
                     ssmultipliers  = ssmultipliers, comment = comment )
             self.log ( "done computing %d xsecs" % nXsecs )
         except Exception as e:

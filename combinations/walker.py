@@ -95,11 +95,11 @@ class RandomWalker:
                    # keep_meta = keep_meta )
         # ret = cls( walkerid, nsteps, strategy, dump_training, dbpath )
         ret.protomodel = protomodel
-        ret.protomodel.createNewSLHAFileName()
+        ret.protomodel.walkerid = walkerid
         ret.protomodel.expected = expected
         ret.protomodel.select = select
-        ret.protomodel.walkerid = walkerid
         ret.protomodel.dbpath = dbpath
+        ret.protomodel.createNewSLHAFileName()
         ret.protomodel.initializePredictor()
         ret.protomodel.backup()
         if dump_training:
