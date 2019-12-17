@@ -243,11 +243,12 @@ class Manipulator:
                 br = max ( 0., br )
                 self.M.decays[pid][dpid]=br
                 S+=br
-                # self.M.pprint ( "total sum of branchings for %d is %.2f!! Number of decay channels in dictionary %d" % (pid,S,nitems) )
-        self.M.log( "normalize branchings of %d, S is %.2f" % ( pid, S ) )
+        brs = []
         for dpid,br in self.M.decays[pid].items():
                 tmp = self.M.decays[pid][dpid]
+                brs.append ( tmp / S )
                 self.M.decays[pid][dpid] = tmp / S
+        self.M.log( "normalize branchings of %d, they are at %.2f +/- %.2f" % ( pid, numpy.mean ( brs ), numpy.std ( brs )  ) )
 
         ## adjust the signal strength multipliers to keep everything else
         ## as it was
@@ -308,10 +309,13 @@ class Manipulator:
         p = random.choice ( unfrozenparticles )
         f = random.uniform ( .8, 1.2 )
         self.M.log ( "randomly changing ssms of %d by a factor of %.2f" % ( p, f ) )
+        ssms = []
         for dpd,v in self.M.ssmultipliers.items():
             if p in dpd or -p in dpd:
-                self.M.ssmultipliers[dpd]=self.M.ssmultipliers[dpd]*f
-                self.M.log ( " `- %d:%s is now %.2f" % ( p, dpd, self.M.ssmultipliers[dpd] ) )
+                newssm = self.M.ssmultipliers[dpd]*f
+                self.M.ssmultipliers[dpd]= newssm
+                ssms.append ( newssm )
+        self.M.log ( " `- %d:%s ssms are now %.2f+/-%.2f" % ( p, dpd, numpy.mean ( ssms ), numpy.std ( ssms) ) )
         return 1
 
     def randomlyChangeSignalStrengths ( self ):

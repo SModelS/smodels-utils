@@ -485,10 +485,10 @@ class ProtoModel:
         comment = "produced at step %d" % ( self.step )
 
         try:
-            computer.computeForOneFile ( [8,13], self.currentSLHA,
+            nXsecs = computer.computeForOneFile ( [8,13], self.currentSLHA,
                     unlink=True, lOfromSLHA=False, tofile=True,
                     ssmultipliers  = ssmultipliers, comment = comment )
-            self.log ( "done computing xsecs, size of computer %d" % asizeof(computer) )
+            self.log ( "done computing %d xsecs" % nXsecs )
         except Exception as e:
             self.pprint ( "could not compute xsecs %s: %s" % ( self.currentSLHA, e ) )
             self.pprint ( "lets restore old state" )
