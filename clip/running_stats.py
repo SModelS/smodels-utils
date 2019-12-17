@@ -60,7 +60,10 @@ def running_stats():
             pending.add ( lognr )
         else:
             running.add ( lognr )
-    all = range ( 0, max(running.union(pending)) )
+    un = running.union(pending)
+    all = []
+    if len(un)>0:
+        all = range ( 0, max(un) )
     notaccounted=set()
     for i in all:
         if not i in running and not i in pending:

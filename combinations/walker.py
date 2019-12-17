@@ -222,7 +222,7 @@ class RandomWalker:
         if self.accelerator != None and hasattr ( self.accelerator, "grad" ):
             self.oldgrad = self.accelerator.grad
         ## the muhat multiplier gets multiplied into the signal strengths
-        self.protomodel.resolveMuhat()
+        self.manipulator.resolveMuhat()
         ## and backup!
         self.protomodel.backup()
 

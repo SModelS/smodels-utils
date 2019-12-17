@@ -287,6 +287,20 @@ class Manipulator:
             if not pid == self.M.LSP:
                 self.normalizeBranchings ( pid )
 
+    def resolveMuhat ( self ):
+        """ multiply the signal strength multipliers with muhat, then set muhat to 1. """
+        if not hasattr ( self.M, "muhat" ):
+            return
+        if self.M.muhat == 0.:
+            self.M.pprint ( "muhat is exactly zero??? set to one." )
+            self.M.muhat = 1.
+        if abs ( self.M.muhat - 1.0 ) < 1e-5:
+            return
+        self.M.log ( "resolve a muhat of %.2f" % self.M.muhat )
+        for k,v in self.M.ssmultipliers.items():
+            v = v * self.M.muhat
+        self.M.muhat = 1.
+
     def isInPids ( self, p, dpid ):
         """ is p in dpid, or p equals to dpid? """
         if type(dpid) == tuple:

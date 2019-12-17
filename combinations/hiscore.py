@@ -29,32 +29,34 @@ class Hiscore:
 
     def addResult ( self, protomodel ):
         """ add a result to the list """
-        protomodel.resolveMuhat() ## add only with resolved muhats
-        if protomodel.Z <= self.currentMinZ():
+        import manipulator
+        m = manipulator.Manipulator ( protomodel )
+        m.resolveMuhat() ## add only with resolved muhats
+        if m.M.Z <= self.currentMinZ():
             return ## doesnt pass minimum requirement
-        if protomodel.Z == 0.:
+        if m.M.Z == 0.:
             return ## just to be sure, should be taken care of above, though
-        if protomodel.Z > 2.5:
+        if m.M.Z > 2.5:
             ## for values > 2.5 we now predict again with larger statistics.
-            protomodel.predict ( nevents = 10000 )
+            m.M.predict ( nevents = 10000 )
 
         for i,mi in enumerate(self.hiscores):
-            if mi!=None and mi.almostSameAs ( protomodel ):
-                ### this protomodel is essentially the protomodel in hiscorelist.
+            if mi!=None and mi.almostSameAs ( m.M ):
+                ### this m.M is essentially the m.M in hiscorelist.
                 ### Skip!
                 self.pprint ( "the protomodel seems to be already in highscore list. skip" )
                 return
-            if mi!=None and abs ( protomodel.Z - mi.Z ) / protomodel.Z < 1e-6:
+            if mi!=None and abs ( m.M.Z - mi.Z ) / m.M.Z < 1e-6:
                 ## pretty much exactly same score? number of particles wins!!
-                if len ( protomodel.unFrozenParticles() ) < len ( mi.unFrozenParticles() ):
+                if len ( m.M.unFrozenParticles() ) < len ( mi.unFrozenParticles() ):
                     self.demote ( i )
-                    self.hiscores[i] = copy.deepcopy ( protomodel )
+                    self.hiscores[i] = copy.deepcopy ( m.M )
                     self.hiscores[i].clean( all=True )
                     self.trimmed[i] = None
                     break
-            if mi==None or protomodel.Z > mi.Z: ## ok, <i>th best result!
+            if mi==None or m.M.Z > mi.Z: ## ok, <i>th best result!
                 self.demote ( i )
-                self.hiscores[i] = copy.deepcopy ( protomodel )
+                self.hiscores[i] = copy.deepcopy ( m.M )
                 self.hiscores[i].clean( all=True )
                 self.trimmed[i] = None
                 break
@@ -131,10 +133,12 @@ class Hiscore:
     def clean ( self ):
         """ clean hiscore list, i.e. remove cruft from protomodels.
             leave first one as it is """
-        for h in self.hiscores[1:]:
+        for ctr,h in enumerate(self.hiscores[1:]):
             if h != None:
-                h.resolveMuhat()
-                h.clean( all=True )
+                m=Manipulator ( h )
+                m.resolveMuhat()
+                m.M.clean ( all=True )
+                self.hiscores[ctr]=m.M
 
     def save ( self ):
         """ compatibility thing """

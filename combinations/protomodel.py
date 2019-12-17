@@ -249,20 +249,6 @@ class ProtoModel:
         self.clean()
         return True
 
-    def resolveMuhat ( self ):
-        """ multiply the signal strength multipliers with muhat, then set muhat to 1. """
-        if not hasattr ( self, "muhat" ):
-            return
-        if self.muhat == 0.:
-            self.pprint ( "muhat is exactly zero??? set to one." )
-            self.muhat = 1.
-        if abs ( self.muhat - 1.0 ) < 1e-5:
-            return
-        self.pprint ( "resolve the muhat of %.2f" % self.muhat )
-        for k,v in self.ssmultipliers.items():
-            v = v * self.muhat
-        self.muhat = 1.
-
     def checkForExcluded ( self, predictions ):
         """ check if any of the predictions excludes the point """
         self.log ( "checking %d predictions for exlusion" % len(predictions) )

@@ -11,9 +11,9 @@ def getParticleName ( pid, addSign=False, addSMParticles=False ):
         # a list of pids? latexify them individually and concatenate
         pids = []
         for p in pid:
-            if not addSMParticles and abs(p)<1000000: # skip the SM particles
+            if not addSMParticles and type(p) not in [ list, tuple ] and abs(p)<1000000: # skip the SM particles
                 continue
-            pname = getParticleName ( p, addSign )
+            pname = getParticleName ( p, addSign, addSMParticles )
             pids.append ( pname )
         return "(" + ",".join ( pids ) + ")"
     names = { 1000001: "~dL", 2000001: "~dR", 1000002: "~uL",
