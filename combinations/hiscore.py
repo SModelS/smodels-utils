@@ -135,6 +135,7 @@ class Hiscore:
             leave first one as it is """
         for ctr,h in enumerate(self.hiscores[1:]):
             if h != None:
+                from manipulator import Manipulator
                 m=Manipulator ( h )
                 m.resolveMuhat()
                 m.M.clean ( all=True )
