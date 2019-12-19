@@ -29,7 +29,7 @@ def main( nmin, nmax, cont, dbpath = "/mnt/hephy/pheno/ww/git/smodels-database/"
     pfile, states = None, None
     if cont == "default":
         import os
-        cont = "/mnt/hephy/pheno/ww/rundir/states.pcl"
+        cont = "%s/states.pcl" % rundir
         if not os.path.exists ( cont ):
             cont = "default"
     if cont.lower() not in [ "none", "" ]:

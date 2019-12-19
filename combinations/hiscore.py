@@ -204,7 +204,9 @@ class Hiscore:
 
     def log ( self, *args ):
         """ logging to file """
-        with open( "walker%d.log" % self.walkerid, "a" ) as f:
+        # logfile = "walker%d.log" % self.walkerid
+        logfile = "hiscore.log"
+        with open( logfile, "a" ) as f:
             f.write ( "[hiscore:%d - %s] %s\n" % ( self.walkerid, time.asctime(), " ".join(map(str,args)) ) )
 
 def compileList( nmax ):
@@ -287,10 +289,10 @@ def printProtoModels ( protomodels, detailed, nmax=10 ):
         else:
             discuss ( protomodel, sc )
 
-def produceNewSLHAFileNames ( protomodels ):
+def produceNewSLHAFileNames ( protomodels, prefix = "cur" ):
     for m in protomodels:
         if m is not None:
-            m.createNewSLHAFileName()
+            m.createNewSLHAFileName( prefix = prefix )
 
 def main ( args ):
     """ the function that updates the hiscore.pcl file
@@ -339,11 +341,19 @@ def main ( args ):
     if protomodels[0] == None:
         print ( "[hiscore] error, we have an empty hiscore list" )
         return 0.
+
+    triZ=0.
+    if trimmed[0] != None:
+        triZ = trimmed[0].Z
         
-    print ( "[hiscore] hiscore is at %.2f" % protomodels[0].Z ) 
+    sin = infile
+    if sin == None:
+        sin = "H*pcl"
+    print ( "[hiscore] untrimmed hiscore from %s is at %.2f, trimmed hiscore is at %.2f" % \
+            ( sin, protomodels[0].Z, triZ ) ) 
 
     produceNewSLHAFileNames ( protomodels )
-    produceNewSLHAFileNames ( trimmed )
+    produceNewSLHAFileNames ( trimmed, prefix="tri" )
 
     nevents = 20000
 

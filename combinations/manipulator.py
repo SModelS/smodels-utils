@@ -159,6 +159,36 @@ class Manipulator:
                 self.M.pprint ( "particle swap %d <-> %d" % ( pids[0], pids[1] ) )
                 self.swapParticles ( pids[0],pids[1] )
 
+    def get ( self ):
+        """ since the shallowcopy business does not work as expected,
+        here is a trivial way to overwrite the original protomodel. 
+        use as: protomodel = manipulator.get() 
+        """
+        return self.M
+
+    #def randomlyTamperWithTheseParticles ( self, pids, r ):
+    #    # the critic gave us feedback, the culprits are the given
+    #    #    pids. So tamper only with these. r is our usual theoryprediction/ul
+    #    #    ratio, and can help us guide how strong a change we have to make.
+    #    #
+    #    ## we can tamper with the masses, the signal strengths, or
+    #    ## the decays, so which is it gonna be? 
+    #    u = uniform.random ( 0., 1. )
+    #    if u <= 0.333:
+    #        ### so we change some masses
+    #        pass
+    #    if u > 0.333 and u <= 0.666:
+    #        #### so we tamper with some ss multipliers
+    #        pass
+    #    if u > 0.666:
+    #        #### ok, its the decays
+    #        pass
+    #    return
+
+    def setWalkerId ( self, Id ):
+        """ set the walker id of protomodel """
+        self.M.walkerid = Id
+
     def swapParticles ( self, pid1, pid2 ):
         """ swaps the two particle ids. The idea being that e.g. ~b1 should be
             lighter than ~b2. If in the walk, ~b1 > ~b2, we just swap the roles 
@@ -213,7 +243,7 @@ class Manipulator:
                     npids[ctr]=-pid1
             npids.sort()
             newSSMultipliers[tuple(npids)]=ssm
-        self.M.ssmultipliers = newSSMultipliers
+        self.M.ssmultipliers = copy.deepcopy ( newSSMultipliers )
 
     def removeAllOffshell ( self ):
         """ remove all offshell decays, renormalize all branchings """

@@ -38,7 +38,9 @@ class Trimmer:
 
     def log ( self, *args ):
         """ logging to file """
-        with open( "walker%d.log" % self.protomodel.walkerid, "a" ) as f:
+        # logfile = "walker%d.log" % self.protomodel.walkerid
+        logfile = "hiscore.log"
+        with open( logfile, "a" ) as f:
             f.write ( "[trimmer:%d - %s] %s\n" % ( self.protomodel.walkerid, time.asctime(), " ".join(map(str,args)) ) )
 
     def checkZ ( self ):
@@ -119,6 +121,7 @@ class Trimmer:
 
     def removeFrozenSSMs( self ):
         """ discard ss multipliers for frozen particles """
+        self.log ( "remove frozen SSMs" )
         removed = []
         ssms = copy.deepcopy ( self.protomodel.ssmultipliers )
         for pids,v in ssms.items():
@@ -133,6 +136,7 @@ class Trimmer:
 
     def removeSSM1s( self ):
         """ discard ss multipliers that are at 1.0 """
+        self.log ( "try to discard ss multipliers that are 1" )
         removed = []
         ssms = copy.deepcopy ( self.protomodel.ssmultipliers )
         for pids,v in ssms.items():
@@ -219,6 +223,7 @@ class Trimmer:
         self.protomodel.trimmedBranchings = trimbranchings
         self.pprint ( "Check if we should swap certain particles (eg ~b2 <-> ~b1)" )
         self.manipulator.checkSwaps() ## check if e.g. N3 is lighter than N2
+        self.protomodel = self.manipulator.get() ## to be sure
         self.removeSSM1s() ## discard ss multipliers that are at 1.0
         self.removeFrozenSSMs() ## discard ss multipliers for frozen particles
         self.removeZeroDecays() ## remove decays with br of zero

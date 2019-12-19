@@ -51,10 +51,10 @@ class RandomWalker:
         self.walkerid = walkerid ## walker id, for parallel runs
         self.hiscoreList = Hiscore ( walkerid, True, "H%d.pcl" % walkerid )
         self.hiscoreList.nkeep = 1
-        self.protomodel = ProtoModel( self.walkerid, dbpath = dbpath, 
+        protomodel = ProtoModel( self.walkerid, dbpath = dbpath, 
                             expected = expected, select = select,
                             keep_meta = True )
-        self.manipulator = Manipulator ( self.protomodel )
+        self.manipulator = Manipulator ( protomodel )
         if cheatcode > 0:
             self.manipulator.cheat ( cheatcode )
         self.strategy = strategy
@@ -76,7 +76,7 @@ class RandomWalker:
 
     def setWalkerId ( self, Id ):
         self.walkerid = Id
-        self.protomodel.walkerid = Id
+        self.manipulator.setWalkerId ( Id )
         self.history.walkerid = Id
         if self.accelerator != None:
             self.accelerator.walkerid = Id
@@ -94,8 +94,8 @@ class RandomWalker:
                    catch_exceptions = catch_exceptions )
                    # keep_meta = keep_meta )
         # ret = cls( walkerid, nsteps, strategy, dump_training, dbpath )
-        ret.protomodel = protomodel
-        ret.protomodel.walkerid = walkerid
+        ret.manipulator.M = protomodel
+        ret.manipulator.setWalkerId ( walkerid )
         ret.protomodel.expected = expected
         ret.protomodel.select = select
         ret.protomodel.dbpath = dbpath
@@ -115,6 +115,16 @@ class RandomWalker:
             self.walkerid=-1
         print ( "[walk:%d:%s-%s] %s" % ( self.walkerid, self.hostname(), time.strftime("%H:%M:%S"), " ".join(map(str,args))) )
         self.log ( *args )
+
+    # lets start doing everything via the manipulator,
+    # not talking to the protomodel directly.
+    @property
+    def protomodel(self):
+        return self.manipulator.M
+
+    @protomodel.setter
+    def protomodel(self, protomodel):
+        self.manipulator.M = protomodel
 
     def onestep ( self ):
         self.protomodel.clean()
@@ -154,11 +164,6 @@ class RandomWalker:
         if nChanges == 0:
             self.log ( "take random mass step" )
             self.manipulator.takeRandomMassStep()
-        self.protomodel = self.manipulator.M
-        if self.protomodel != self.manipulator.M:
-            self.highlight ( "error", "protomodel and model in manipulator have diverged!!!" )
-            self.highlight ( "error", "are they similar? %d" % ( self.protomodel.almostSameAs ( self.manipulator.M ) ) )
-            raise Exception ( "protomodel and model in manipulator have diverged!!!" )
         nevents = 10000
         if self.protomodel.Z > 2.5:
             nevents = 20000
@@ -249,25 +254,6 @@ class RandomWalker:
         with open( "walker%d.log" % self.walkerid, "a" ) as f:
             f.write ( "[walk:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
-    #def randomlyTamperWithTheseParticles ( self, pids, r ):
-    #    # the critic gave us feedback, the culprits are the given
-    #    #    pids. So tamper only with these. r is our usual theoryprediction/ul
-    #    #    ratio, and can help us guide how strong a change we have to make.
-    #    #
-    #    ## we can tamper with the masses, the signal strengths, or
-    #    ## the decays, so which is it gonna be? 
-    #    u = uniform.random ( 0., 1. )
-    #    if u <= 0.333:
-    #        ### so we change some masses
-    #        pass
-    #    if u > 0.333 and u <= 0.666:
-    #        #### so we tamper with some ss multipliers
-    #        pass
-    #    if u > 0.666:
-    #        #### ok, its the decays
-    #        pass
-    #    return
-
     def walk ( self ):
         """ Now perform the random walk """
         self.manipulator.unfreezeRandomParticle() ## start with unfreezing a random particle
@@ -309,14 +295,6 @@ class RandomWalker:
                 if hasattr ( self, "oldgrad" ) and self.accelerator != None:
                     self.accelerator.grad = self.oldgrad
                 continue
-            #if self.protomodel.oldZ() > 0. and self.protomodel.Z < 0.7 * self.protomodel.oldZ():
-            # if self.oldmodel.Z > 0. and self.protomodel.Z < 0.7 * self.oldmodel.Z:
-            #    ## no big steps taken here.
-            #    self.highlight ( "info", "Z=%.2f -> %.2f. Revert." % ( self.protomodel.oldZ(), self.protomodel.Z ) )
-            #    self.protomodel.restore()
-            #    if hasattr ( self, "oldgrad" ) and self.accelerator != None:
-            #        self.accelerator.grad = self.oldgrad
-            #    continue
 
             if ratio >= 1.:
                 self.highlight ( "info", "Z: %.3f -> %.3f: take the step" % ( self.protomodel.oldZ(), self.protomodel.Z ) )
@@ -422,9 +400,18 @@ if __name__ == "__main__":
         ncpus = nCPUs() + ncpus + 1
     walkers = []
 
-    if args.cont!="" and os.path.exists ( args.cont ) and \
-                   os.stat( args.cont ).st_size > 100:
-        with open( args.cont, "rb" ) as f:
+    contfile = args.cont
+    if contfile == "default":
+        contfile = "./states.pcl"
+    if contfile!="" and not(os.path.exists ( contfile )):
+        print ( "[walker] ERROR contfile %s supplied but does not exist" % contfile )
+        sys.exit()
+    if contfile!="" and os.stat( contfile ).st_size <= 100:
+        print ( "[walker] ERROR contfile %s supplied but seems empty" % contfile )
+        sys.exit()
+    if contfile!="" and os.path.exists ( contfile ) and \
+                   os.stat( contfile ).st_size > 100:
+        with open( contfile, "rb" ) as f:
             states = pickle.load ( f )
         ctr=0
         while len(walkers)<ncpus:
