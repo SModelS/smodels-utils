@@ -20,6 +20,7 @@ class Trimmer:
         :param maxloss: maximum loss that we allow, in relative numbers
         """
         self.protomodel = copy.deepcopy ( protomodel )
+        self.protomodel.createNewSLHAFileName ( prefix="tri" )
         self.manipulator = Manipulator ( self.protomodel )
         self.strategy = strategy
         self.maxloss = maxloss

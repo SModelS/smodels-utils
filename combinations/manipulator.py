@@ -152,12 +152,9 @@ class Manipulator:
         for pids in pairs:
             if not pids[1] in self.M.masses or not pids[0] in self.M.masses:
                 continue
-            if self.M.masses[pids[1]] > 9e4:
-                # we dont check for frozen particles
+            if self.M.masses[pids[1]] > 5e5:
+                # we dont check for frozen particles, if they are second
                 continue
-            #if self.M.masses[pids[0]] > 9e4:
-                # we dont check for frozen particles
-            #    continue
             if self.M.masses[pids[0]] > self.M.masses[pids[1]]:
                 self.M.pprint ( "particle swap %d <-> %d" % ( pids[0], pids[1] ) )
                 self.swapParticles ( pids[0],pids[1] )

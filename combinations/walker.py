@@ -154,16 +154,24 @@ class RandomWalker:
         if nChanges == 0:
             self.log ( "take random mass step" )
             self.manipulator.takeRandomMassStep()
-        self.log ( "now create slha file via predict" )
+        self.protomodel = self.manipulator.M
+        if self.protomodel != self.manipulator.M:
+            self.highlight ( "error", "protomodel and model in manipulator have diverged!!!" )
+            self.highlight ( "error", "are they similar? %d" % ( self.protomodel.almostSameAs ( self.manipulator.M ) ) )
+            raise Exception ( "protomodel and model in manipulator have diverged!!!" )
+        nevents = 10000
+        if self.protomodel.Z > 2.5:
+            nevents = 20000
+        self.log ( "now create slha file via predict with %d events" % nevents )
         if self.catch_exceptions: 
             try:
-                self.protomodel.predict( self.strategy, nevents = 10000 )
+                self.protomodel.predict( self.strategy, nevents = nevents )
             except Exception as e:
                 self.pprint ( "error ``%s'' (%s) encountered when trying to predict. lets revert" % (str(e),type(e) ) )
                 self.protomodel.restore()
                 return
         else:
-            self.protomodel.predict ( self.strategy, nevents = 10000 )
+            self.protomodel.predict ( self.strategy, nevents = nevents )
 
         self.log ( "found highest Z: %.2f" % self.protomodel.Z )
         

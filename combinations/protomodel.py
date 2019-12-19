@@ -349,7 +349,7 @@ class ProtoModel:
     def oldZ( self ):
         if not hasattr ( self, "_backup" ):
             self.pprint ( "asked for old Z, but no backup available" )
-            sys.exit(-1)
+            return -.1
         return self._backup["Z"]
 
     def unFrozenParticles ( self, withLSP=True ):
@@ -363,9 +363,9 @@ class ProtoModel:
             ret.remove(self.LSP)
         return ret
 
-    def createNewSLHAFileName ( self ):
+    def createNewSLHAFileName ( self, prefix = "cur" ):
         """ create a new SLHA file name. Needed when e.g. unpickling """
-        self.currentSLHA = tempfile.mktemp( prefix=".cur%s_" % self.walkerid,
+        self.currentSLHA = tempfile.mktemp( prefix=".%s%s_" % ( prefix, self.walkerid ),
                                             suffix=".slha",dir="./")
 
     def checkTemplateSLHA ( self ):
