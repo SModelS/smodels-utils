@@ -181,7 +181,8 @@ class Hiscore:
         """ see if new result makes it into hiscore list. If yes, then add.
         """
         # self.pprint ( "New result with Z=%.2f, %s" % (protomodel.Z, self.save_hiscores ) )
-        self.log("lets see if it is above threshold" )
+        self.log( "is the new result of walker %d is above threshold: %s > %s?" % \
+                  ( protomodel.walkerid, protomodel.Z, self.currentMinZ() ) )
         if not self.save_hiscores:
             return
         if protomodel.Z <= self.currentMinZ():
