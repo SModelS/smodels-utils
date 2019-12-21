@@ -181,7 +181,7 @@ class Hiscore:
         """ see if new result makes it into hiscore list. If yes, then add.
         """
         # self.pprint ( "New result with Z=%.2f, %s" % (protomodel.Z, self.save_hiscores ) )
-        self.log( "is the new result of walker %d is above threshold: %s > %s?" % \
+        self.log( "is the new result of walker %d above threshold: %s > %s?" % \
                   ( protomodel.walkerid, protomodel.Z, self.currentMinZ() ) )
         if not self.save_hiscores:
             return
@@ -343,15 +343,18 @@ def main ( args ):
         print ( "[hiscore] error, we have an empty hiscore list" )
         return 0.
 
-    triZ=0.
+    triZ=-.0001
     if trimmed[0] != None:
         triZ = trimmed[0].Z
         
     sin = infile
     if sin == None:
         sin = "H*pcl"
-    print ( "[hiscore] untrimmed hiscore from %s is at %.2f, trimmed hiscore is at %.2f" % \
-            ( sin, protomodels[0].Z, triZ ) ) 
+    triHS = "no trimmed hiscores found in files."
+    if triZ > 0.:
+        triHS = "trimmed hiscore is at %.2f." % triZ
+    print ( "[hiscore] untrimmed hiscore from %s is at %.2f, %s" % \
+            ( sin, protomodels[0].Z, triHS ) ) 
 
     produceNewSLHAFileNames ( protomodels )
     produceNewSLHAFileNames ( trimmed, prefix="tri" )
