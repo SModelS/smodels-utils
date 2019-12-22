@@ -217,6 +217,7 @@ class Trimmer:
         on Z.
         :param trimbranchings: if true, also trim branchings
         """
+        oldZ = self.protomodel.Z
         self.trimParticles ( )
         if trimbranchings:
             self.trimBranchings ( )
@@ -228,7 +229,9 @@ class Trimmer:
         self.removeFrozenSSMs() ## discard ss multipliers for frozen particles
         self.removeZeroDecays() ## remove decays with br of zero
         self.protomodel.trimloss = self.maxloss ## store the trim loss
+        self.protomodel.predict ( nevents = self.nevents ) ## a final predict!
         self.protomodel.clean()
+        self.pprint ( "trimming changed the score from %.2f to %.2f" % ( oldZ, self.protomodel.Z ) )
 
     def trimBranchingsOf ( self, pid ):
         """ trim the branchings of pid """

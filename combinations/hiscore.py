@@ -361,7 +361,7 @@ def main ( args ):
 
     nevents = 20000
     
-    if args._trim_branchings and not args.trim:
+    if args.trim_branchings and not args.trim:
         self.pprint ( "'trim branchings' is on, but 'trim' is off?" )
 
     if args.trim:
