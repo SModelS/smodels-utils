@@ -360,28 +360,15 @@ def main ( args ):
     produceNewSLHAFileNames ( trimmed, prefix="tri" )
 
     nevents = 20000
+    
+    if args._trim_branchings and not args.trim:
+        self.pprint ( "'trim branchings' is on, but 'trim' is off?" )
 
     if args.trim:
         protomodel = protomodels[0]
         tr = Trimmer ( protomodel, maxloss=args.maxloss, nevents = nevents )
-        tr.trimParticles()
+        tr.trim( args.trim_branchings )
         trimmed[0] = tr.protomodel
-
-    if args.trim_branchings:
-        if len(trimmed)>0 and trimmed[0] is not None:
-            ## already has a trimmed protomodel? trim only branchings
-            protomodel = trimmed[0]
-            tr = Trimmer ( protomodel, maxloss = args.maxloss, nevents = nevents )
-            tr.trimBranchings()
-            trimmed[0] = tr.protomodel
-        else:
-            protomodel = protomodels[0]
-            tr = Trimmer ( protomodel, maxloss = args.maxloss, nevents = nevents )
-            tr.trimParticles()
-            tr.trimBranchings()
-            if len(trimmed)==0:
-                trimmed = [ None ]
-            trimmed[0] = tr.protomodel
 
     if args.analysis_contributions:
         protomodel = protomodels[0]
