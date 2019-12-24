@@ -15,7 +15,7 @@ class Trimmer:
         *after* an MCMC walk.
     """
     def __init__ ( self, protomodel, strategy="aggressive", maxloss=.005,
-                   nevents = 10000 ):
+                   nevents = 20000 ):
         """
         :param maxloss: maximum loss that we allow, in relative numbers
         """
@@ -218,6 +218,8 @@ class Trimmer:
         :param trimbranchings: if true, also trim branchings
         """
         oldZ = self.protomodel.Z
+        self.protomodel.predict ( nevents = self.nevents ) ## a final predict!
+        self.pprint ( "before trimming we check again: from %.2f to %.2f" % ( oldZ, self.protomodel.Z ) )
         self.trimParticles ( )
         if trimbranchings:
             self.trimBranchings ( )
@@ -226,6 +228,8 @@ class Trimmer:
         self.manipulator.checkSwaps() ## check if e.g. N3 is lighter than N2
         self.protomodel = self.manipulator.get() ## to be sure
         self.removeSSM1s() ## discard ss multipliers that are at 1.0
+        self.protomodel.predict ( nevents = self.nevents ) ## a final predict!
+        self.pprint ( "after removeSSM1s() it moved from %.2f to %.2f" % ( oldZ, self.protomodel.Z ) )
         self.removeFrozenSSMs() ## discard ss multipliers for frozen particles
         self.removeZeroDecays() ## remove decays with br of zero
         self.protomodel.trimloss = self.maxloss ## store the trim loss

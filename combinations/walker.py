@@ -54,10 +54,9 @@ class RandomWalker:
         protomodel = ProtoModel( self.walkerid, dbpath = dbpath, 
                             expected = expected, select = select,
                             keep_meta = True )
-        self.manipulator = Manipulator ( protomodel )
+        self.manipulator = Manipulator ( protomodel, strategy )
         if cheatcode > 0:
             self.manipulator.cheat ( cheatcode )
-        self.strategy = strategy
         self.catch_exceptions = catch_exceptions
         self.history = History ( walkerid )
         self.record_history = False
@@ -164,19 +163,15 @@ class RandomWalker:
         if nChanges == 0:
             self.log ( "take random mass step" )
             self.manipulator.takeRandomMassStep()
-        nevents = 10000
-        if self.protomodel.Z > 2.5:
-            nevents = 20000
-        self.log ( "now create slha file via predict with %d events" % nevents )
         if self.catch_exceptions: 
             try:
-                self.protomodel.predict( self.strategy, nevents = nevents )
+                self.manipulator.predict()
             except Exception as e:
                 self.pprint ( "error ``%s'' (%s) encountered when trying to predict. lets revert" % (str(e),type(e) ) )
                 self.protomodel.restore()
                 return
         else:
-            self.protomodel.predict ( self.strategy, nevents = nevents )
+            self.manipulator.predict ()
 
         self.log ( "found highest Z: %.2f" % self.protomodel.Z )
         
@@ -186,7 +181,7 @@ class RandomWalker:
             self.log ( "done check for result to go into hiscore list" )
         # self.hiqueue.put( [ hiscoreList ] )
         self.train ()
-        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.strategy, self.protomodel.letters, self.protomodel.description, self.protomodel.Z ) )
+        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.manipulator.strategy, self.protomodel.letters, self.protomodel.description, self.protomodel.Z ) )
         self.log ( "step %d/%d finished." % ( self.protomodel.step, self.maxsteps ) )
 
     def train ( self ):
@@ -194,6 +189,9 @@ class RandomWalker:
         ## currently we dont train, we just dump the data
         self.accelerator.dumpTrainingData ( self.protomodel )
         return # we dont train for now
+
+    def predict ( self ):
+        """ call predict with good # events """
 
     def gradientAscent ( self ):
         """ Z is big enough, the loss is small enough. use the gradient. """
@@ -218,7 +216,7 @@ class RandomWalker:
         self.protomodel.backup()
         self.accelerator.plusDeltaM ( self.protomodel, rate=.1 ) ## move!!
         try:
-            self.protomodel.predict ( self.strategy, nevents = 10000 )
+            self.manipulator.predict ()
         except Exception as e:
             self.pprint ( "could not get prediction for gradient ascended model. revert" )
             self.protomodel.restore()

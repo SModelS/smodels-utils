@@ -10,8 +10,22 @@ import copy, random, numpy
 
 class Manipulator:
     """ contains the protomodel manipulation algorithms. """
-    def __init__ ( self, protomodel ):
+    def __init__ ( self, protomodel, strategy = "aggressive" ):
         self.M = copy.copy ( protomodel  ) # shallow copy
+        self.strategy = strategy
+
+    def predict ( self ):
+        nevents = 20000
+        if self.M.Z > 2.5:
+            nevents = 50000
+        if self.M.Z > 2.8:
+            nevents = 100000
+        self.M.log ( "now create slha file via predict with %d events" % nevents )
+        self.M.predict ( self.strategy, nevents = nevents )
+        if self.M.Z > 2.8 and nevents < 25000:
+            # redo in extreme cases
+            nevents = 100000
+            self.M.predict ( self.strategy, nevents = nevents )
 
     def writeDictFile ( self, outfile = "mymodel.py" ):
         """ write out the dict file to outfile """

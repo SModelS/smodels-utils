@@ -359,7 +359,7 @@ def main ( args ):
     produceNewSLHAFileNames ( protomodels )
     produceNewSLHAFileNames ( trimmed, prefix="tri" )
 
-    nevents = 20000
+    nevents = 100000
     
     if args.trim_branchings and not args.trim:
         self.pprint ( "'trim branchings' is on, but 'trim' is off?" )
