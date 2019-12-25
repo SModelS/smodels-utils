@@ -36,9 +36,9 @@ class Hiscore:
             return ## doesnt pass minimum requirement
         if m.M.Z == 0.:
             return ## just to be sure, should be taken care of above, though
-        if m.M.Z > 2.5:
+        if m.M.Z > 2.8:
             ## for values > 2.5 we now predict again with larger statistics.
-            m.M.predict ( nevents = 10000 )
+            m.predict ()
 
         for i,mi in enumerate(self.hiscores):
             if mi!=None and mi.almostSameAs ( m.M ):
@@ -181,7 +181,7 @@ class Hiscore:
         """ see if new result makes it into hiscore list. If yes, then add.
         """
         # self.pprint ( "New result with Z=%.2f, %s" % (protomodel.Z, self.save_hiscores ) )
-        self.log( "is the new result of walker %d above threshold: %s > %s?" % \
+        self.log( "is the new result of walker %d above threshold: %.2f > %.2f?" % \
                   ( protomodel.walkerid, protomodel.Z, self.currentMinZ() ) )
         if not self.save_hiscores:
             return
@@ -295,6 +295,12 @@ def produceNewSLHAFileNames ( protomodels, prefix = "cur" ):
         if m is not None:
             m.createNewSLHAFileName( prefix = prefix )
 
+def pprintEvs ( protomodel ):
+    """ pretty print number of events """
+    if protomodel.nevents > 1000:
+        return "%dK evts" % ( protomodel.nevents/1000 )
+    return str(protomodel.nevents)+ " evts"
+
 def main ( args ):
     """ the function that updates the hiscore.pcl file
     :param args: detailed, outfile, infile, print,
@@ -353,8 +359,8 @@ def main ( args ):
     triHS = "no trimmed hiscores found in files."
     if triZ > 0.:
         triHS = "trimmed hiscore is at %.2f." % triZ
-    print ( "[hiscore] untrimmed hiscore from %s is at %.2f, %s" % \
-            ( sin, protomodels[0].Z, triHS ) ) 
+    print ( "[hiscore] untrimmed hiscore from %s is at %.2f (%s), %s" % \
+            ( sin, protomodels[0].Z, pprintEvs ( protomodels[0] ), triHS ) ) 
 
     produceNewSLHAFileNames ( protomodels )
     produceNewSLHAFileNames ( trimmed, prefix="tri" )
