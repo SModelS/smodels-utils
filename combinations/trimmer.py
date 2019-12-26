@@ -219,14 +219,20 @@ class Trimmer:
         """
         oldZ = self.protomodel.Z
         self.protomodel.predict ( nevents = self.nevents ) ## a final predict!
-        self.pprint ( "before trimming we check again: from %.2f to %.2f" % ( oldZ, self.protomodel.Z ) )
+        newZ = self.protomodel.Z
+        dZ = abs(newZ - oldZ )
+        err = "error!!!!"
+        if dZ < .1:
+            err = "ok!"
+        self.pprint ( "before trimming we check again: from %.2f to %.2f: %s" % \
+                      ( oldZ, newZ, err ) )
+        self.pprint ( "Check if we should swap certain particles (eg ~b2 <-> ~b1)" )
+        self.manipulator.checkSwaps() ## check if e.g. N3 is lighter than N2
+        self.protomodel = self.manipulator.get() ## to be sure
         self.trimParticles ( )
         if trimbranchings:
             self.trimBranchings ( )
         self.protomodel.trimmedBranchings = trimbranchings
-        self.pprint ( "Check if we should swap certain particles (eg ~b2 <-> ~b1)" )
-        self.manipulator.checkSwaps() ## check if e.g. N3 is lighter than N2
-        self.protomodel = self.manipulator.get() ## to be sure
         self.removeSSM1s() ## discard ss multipliers that are at 1.0
         self.protomodel.predict ( nevents = self.nevents ) ## a final predict!
         self.pprint ( "after removeSSM1s() it moved from %.2f to %.2f" % ( oldZ, self.protomodel.Z ) )

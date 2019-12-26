@@ -26,7 +26,7 @@ def setup():
 def obtain ( number, picklefile ):
     """ obtain hiscore number <number> """
     if not os.path.exists ( picklefile ):
-        print ( "[plotHiscore] hiscore.pcl does not exist. Trying to produce now with ./hiscore.py" )
+        print ( "[plotHiscore] %s does not exist. Trying to produce now with ./hiscore.py" % picklefile )
         from argparse import Namespace
         args = Namespace()
         args.detailed = False
@@ -390,8 +390,8 @@ def main ():
             help='which hiscore to plot [0]',
             type=int, default=0 )
     argparser.add_argument ( '-f', '--picklefile',
-            help='pickle file to draw from [%shiscore.pcl]' % rundir,
-            type=str, default="%shiscore.pcl" % rundir )
+            help='pickle file to draw from [%s/hiscore.pcl]' % rundir,
+            type=str, default="%s/hiscore.pcl" % rundir )
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug, info, warn, err [info]',
             type=str, default="info" )
