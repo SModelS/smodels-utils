@@ -172,7 +172,7 @@ def writeIndexHtml ( protomodel, gotTrimmed ):
     trimmed="Untrimmed"
     if gotTrimmed:
         trimmed = "Trimmed"
-    f.write ( "%s <b><a href=./hiscore.slha>ProtoModel</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d</b><br>\n" % \
+    f.write ( "%s <b><a href=./hiscore.slha>ProtoModel</a> <a href=./mymodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d</b><br>\n" % \
             ( trimmed, dotlessv, dbver, strategy, strategy, protomodel.step ) )
     f.write ( "<table width=80%>\n<tr><td>\n" )
     if hasattr ( protomodel, "rvalues" ):
@@ -328,7 +328,7 @@ def runPlotting ( args ):
     plot ( args.number, args.verbosity, args.picklefile, options )
     if upload is None:
         return
-    F = "*.png hiscore.slha index.html"
+    F = "*.png mymodel.py hiscore.slha index.html"
     dest = ""
     destdir = "%s/git" % os.environ["HOME"]
     if upload == "github":

@@ -187,7 +187,10 @@ class Trimmer:
             # self.createSLHAFile()
             ## when trimming we want to increase statistics
             self.protomodel.predict ( self.strategy, nevents = self.nevents )
-            self.pprint ( "when trying to remove %s, Z changed: %.3f -> %.3f" % ( helpers.getParticleName(pid), oldZ, self.protomodel.Z ) )
+            perc = 0.
+            if oldZ > 0.:
+                perc = ( self.protomodel.Z - oldZ ) / oldZ
+            self.pprint ( "when trying to remove %s, Z changed: %.3f -> %.3f (%.1f%s)" % ( helpers.getParticleName(pid), oldZ, self.protomodel.Z, 100.*perc, "%" ) )
             if self.protomodel.Z > (1. - self.maxloss)*oldZ:
                 ## the Z is still good enough? discard!
                 ndiscarded+=1
@@ -195,6 +198,7 @@ class Trimmer:
                 if pid in self.protomodel.ssmultipliers:
                     #popping from multipliers also
                     self.protomodel.ssmultipliers.pop(pid)
+                oldZ = self.protomodel.Z
             else:
                 self.protomodel.whatif[pid]=self.protomodel.Z
                 self.pprint ( "keeping %s" % helpers.getParticleName(pid) )

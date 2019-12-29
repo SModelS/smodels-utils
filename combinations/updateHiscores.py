@@ -32,7 +32,7 @@ def updateHiscores():
     args.nmax = 1
     args.outfile = "hiscore.pcl"
     args.infile = None
-    args.maxloss = .02
+    args.maxloss = .01
     import hiscore
     print ( "[updateHiscores] now update the hiscore.pcl file" )
     Z = hiscore.main ( args )
@@ -51,7 +51,7 @@ def updateStates():
     args.nmax = 20
     args.outfile = "states.pcl"
     args.infile = None
-    args.maxloss = .005
+    args.maxloss = .003
     import hiscore
     print ( "[updateHiscores] now update the states.pcl file" )
     hiscore.main ( args )
