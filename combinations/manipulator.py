@@ -259,6 +259,22 @@ class Manipulator:
             newSSMultipliers[tuple(npids)]=ssm
         self.M.ssmultipliers = copy.deepcopy ( newSSMultipliers )
 
+        ## finally swap in bestCombo
+        if not hasattr ( self.M, "bestCombo" ):
+            return
+        for c,combo in enumerate(self.M.bestCombo):
+            for i,prod in enumerate(combo.PIDs):
+                for b,branch in enumerate(prod):
+                    for p,pid in enumerate(branch):
+                       if pid == pid1:
+                            self.M.bestCombo[c].PIDs[i][b][p] = pid2 
+                       elif pid == -pid1:
+                            self.M.bestCombo[c].PIDs[i][b][p] = -pid2 
+                       if pid == pid2:
+                            self.M.bestCombo[c].PIDs[i][b][p] = pid1 
+                       elif pid == -pid2:
+                            self.M.bestCombo[c].PIDs[i][b][p] = -pid1 
+
     def removeAllOffshell ( self ):
         """ remove all offshell decays, renormalize all branchings """
         offshell = self.checkForOffshell()

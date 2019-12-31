@@ -260,7 +260,6 @@ def plotRuler( protomodel ):
     for pid,values in resultsForPIDs.items():
         resultsFor[ protomodel.masses[pid] ] = values
 
-    print ( "[plotHiscore] now draw ruler.png" )
     rulerPlotter.draw ( protomodel.currentSLHA, "ruler.png", Range=(None,None),
                         mergesquark = False,
                         hasResultsFor = resultsFor )

@@ -123,7 +123,7 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
            hasResultsFor = None ):
     """ entry point: draw the masses
       :param inputfile: the inputfilename, must contain a simple dictionary. If
-                        the filename ends with .slha, create the ditionary on the fly.
+                        the filename ends with .slha, create the dictionary on the fly.
       :param output: the output filename, without the extension.
       :param Range:  the range of the ruler, (min,max), given in GeV. -1 and None are for automatic mode (the script decides by itself).
       :param formats: the formats, as a dictionary. Supported are: eps, pdf, png.
@@ -132,6 +132,7 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
       :param hasResultsFor: a dictionary of what results exist for what mother 
            masses, e.g. { 504.4: {'ATLAS-SUSY-2015-02', 'ATLAS-SUSY-2015-03'} }
     """
+    # print ( "[rulerPlotter] starting with %s" % hasResultsFor )
     if outputfile.endswith ( ".png" ):
         outputfile = outputfile.replace(".png","")
         formats["png"]=True
@@ -207,7 +208,6 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
         sortedmasses.append((m,name))
     sortedmasses.sort()
 
-    # onTheLeft=False
     for ctr,(m,name) in enumerate(sortedmasses):
         y=(abs(m)-minvalue)/(maxvalue-minvalue)
         col=_color (name )
@@ -232,11 +232,15 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
             x = xtext - .25
         else:
             dx = .1
+        """
+        # this was meant as some kind of crash resolution
+        # mechanism, i think
         for coord in written:
-            if math.fabs(coord[0]-y)<0.02:
+            # print ( "coord0", coord[0]-y )
+            if False: # math.fabs(coord[0]-y)<0.02:
                 x=coord[1]+offset
                 xm=coord[2]+2*offset
-        # print ( "ctr,x",ctr,x )
+        """
         t.SetTextColor(col)
         label = _pprint(name)
         t.DrawLatex(x+dx,y-.01,label )
@@ -245,9 +249,9 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
         if hasResultsFor != None:
             for mana,analyses in hasResultsFor.items():
                 # print ( "m,mana",m,mana )
-                if abs(m-mana)<10.:
-                    if abs(m-mana)>.1:
-                        print ( "WARNING: clustering particles. hope its ok. check it." )
+                if abs(m-mana)<.1: ## max mass gap
+                    if abs(m-mana)>1e-2:
+                        print ( "WARNING: clustering particle masses %.2f and %.2f. hope its ok. check it." % ( m, mana )  )
                     keys.append ( mana )
                     for ana in analyses:
                         t2 = ROOT.TLatex()
@@ -257,7 +261,9 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
                             t2.SetTextAlign(31)
                         t2.SetTextColor(col)
                         t2.SetTextSize(.025)
-                        t2.DrawLatex(x-.07+ddx,y-.037-.016*lctr,ana.replace("201","1") )
+                        y_ = y-.037-.016*lctr
+                        x_ = x-.07+ddx
+                        t2.DrawLatex(x_,y_,ana.replace("201","1") )
                         lctr+=1
         for k in keys:
             hasResultsFor.pop ( k ) ## dont print them several times
