@@ -3,10 +3,24 @@
 """ A class that centralizes access to the hiscore list over multiple threads.
 """
 
-import random, copy, pickle, os, fcntl, time, subprocess, colorama
+import random, copy, pickle, os, fcntl, time, subprocess, colorama, sys
 import setPath
 from trimmer import Trimmer
 from scipy import stats
+
+def setup():
+    codedir = "/mnt/hephy/pheno/ww/git/"
+    sys.path.insert(0,"%ssmodels/" % codedir )
+    sys.path.insert(0,"%ssmodels-utils/" % codedir )
+    sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
+    rundir = "/mnt/hephy/pheno/ww/rundir/"
+    # rundir = "./"
+    if os.path.exists ( "./rundir.conf" ):
+        with open ( "./rundir.conf" ) as f:
+            rundir = f.read().strip()
+    rundir = rundir.replace ( "~", os.environ["HOME"] )
+    os.chdir ( rundir )
+    return rundir
 
 class Hiscore:
     """ encapsulates the hiscore list. """
@@ -317,12 +331,7 @@ def main ( args ):
     infile = args.infile
     if type(infile) is str and infile.lower() in [ "none", "" ]:
         infile = None
-    rundir = "/mnt/hephy/pheno/ww/rundir"
-    if os.path.exists ( "rundir.conf" ):
-        with open ( "rundir.conf", "rt" ) as f:
-            rundir = f.read()
-            rundir = rundir.strip()
-            rundir = rundir.replace("~",os.environ["HOME"] )
+    rundir = setup()
     if infile == "default":
         infile = "%s/hiscore.pcl" % rundir
     if args.outfile == infile:
