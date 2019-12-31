@@ -27,10 +27,26 @@ class Manipulator:
             nevents = 100000
             self.M.predict ( self.strategy, nevents = nevents )
 
-    def writeDictFile ( self, outfile = "mymodel.py" ):
-        """ write out the dict file to outfile """
+    def writeDictFile ( self, outfile = "mymodel.py", cleanOut=True ):
+        """ write out the dict file to outfile
+        :param cleanOut: clean the dictionary from defaults
+        """
+        D = copy.deepcopy ( self.M.dict() )
+        if cleanOut:
+            origMasses = self.M.dict()["masses"]
+            ## but with a bit of cleaning!
+            for k,v in origMasses.items():
+                if v > 5e5:
+                    D["masses"].pop(k)
+            for k,decays in self.M.dict()["decays"].items():
+                for i,v in decays.items():
+                    if v < 1e-7:
+                        D["decays"][k].pop(i)
+            for k,v in self.M.dict()["ssmultipliers"].items():
+                if abs ( v - 1.) < 1e-5:
+                    D["ssmultipliers"].pop(k)
         with open ( outfile, "wt" ) as f:
-            f.write ( "%s\n" % self.M.dict() )
+            f.write ( "%s\n" % D )
             f.close()
 
     def pidInList ( self, pid, lst, signed ):
