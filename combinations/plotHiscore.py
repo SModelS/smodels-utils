@@ -19,6 +19,7 @@ def setup():
     if os.path.exists ( "./rundir.conf" ):
         with open ( "./rundir.conf" ) as f:
             rundir = f.read().strip()
+            rundir = rundir.replace ( "~", os.environ["HOME"] )
             os.chdir ( rundir )
         return rundir
     return ""

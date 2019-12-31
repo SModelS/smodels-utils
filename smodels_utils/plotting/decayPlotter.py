@@ -76,7 +76,8 @@ def draw( slhafile, outfile, options, offset=0.,
                 tmp.append ("~%s%s" % ( i, c) )
 
     if options["weakinos"]:
-        map ( tmp.append, [ "~chi_1+", "~chi_2+", "~chi_20", "~chi_30" ] )
+        for p_ in [ "~chi1+", "~chi2+", "~chi20", "~chi30" ]:
+            tmp.append ( p_ )
 
     starters=[]
 
@@ -87,7 +88,6 @@ def draw( slhafile, outfile, options, offset=0.,
                 starters.append ( i )
         else:
             # add all else
-            # print i,reader.getMass(i)
             starters.append ( i )
 
     colorizer=decayPlots.ByNameColorizer ( )
