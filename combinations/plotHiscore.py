@@ -80,14 +80,21 @@ def getExtremeSSMs ( ssm, largest ):
     keys.sort( reverse=largest )
     nm= 7
     s = ""
-    for k in keys[:nm]:
-        s += ssm[k] + "=%.2f" % k + ", "
+    lastk = keys[0]
+    for ctr,k in enumerate(keys[:nm]):
+        if ("%.2f" %  k) !=  ("%.2f" % lastk ): ## different number
+            s += "=%.2f, " % lastk
+        elif ctr > 0:
+            s += "="
+        s += ssm[k]
+        lastk = k
+    s += "=%.2f; " % lastk
     if len(s)>2:
         s = s[:-2]
     extreme = "smallest"
     if largest:
         extreme = "largest"
-    ret = "%d %s signal strength multipliers: $%s$" % ( nm, extreme, s )
+    ret = "%s signal strength multipliers: $%s$" % ( extreme, s )
     return ret
 
 def writeTex ( protomodel, keep_tex ):
