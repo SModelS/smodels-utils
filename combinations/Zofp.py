@@ -3,7 +3,6 @@
 """ draw Z as a function of a model parameter """
 
 import numpy, sys, os
-from matplotlib import pyplot as plt
 
 def setup():
     codedir = "/mnt/hephy/pheno/ww/git/"
@@ -26,25 +25,28 @@ def produce():
     picklefile =rundir + "hiscore.pcl" 
     hi = hiscore.Hiscore( 0, False, picklefile = picklefile )
     pid = 1000022
-    nevents = 1000
+    nevents = 100000
     model = hi.trimmed[0]
     mass = model.masses[pid]
     Zs = {}
-    for m in numpy.arange ( .6*mass, 1.3*mass, .1*mass ):
+    for m in numpy.arange ( .6*mass, 1.3*mass, .02*mass ):
         print ( "mass at", m )
         model.masses[pid] = m
         Z = model.predict ( nevents = nevents )
         Zs[m]=Z
+    import pickle
     with open ( "scan.pcl", "wb" ) as f:
         pickle.dump ( Zs, f )
-        pickle.close()
+        f.close()
 
 def draw():
+    from matplotlib import pyplot as plt
     with open ( "saved.pcl", "rb" ) as f:
         Zs = pickle.load( f )
     plt.plot ( Zs.keys(), Zs.values() )
     plt.savefig ( "irst.png" )
 
 if __name__ == "__main__":
+    import argparse
     produce()
-    draw()
+    # draw()
