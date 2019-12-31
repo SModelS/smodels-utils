@@ -32,8 +32,8 @@ def produce():
     for m in numpy.arange ( .6*mass, 1.3*mass, .02*mass ):
         print ( "mass at", m )
         model.masses[pid] = m
-        Z = model.predict ( nevents = nevents )
-        Zs[m]=Z
+        model.predict ( nevents = nevents )
+        Zs[m]=model.Z
     import pickle
     with open ( "scan.pcl", "wb" ) as f:
         pickle.dump ( Zs, f )
@@ -41,6 +41,7 @@ def produce():
 
 def draw():
     from matplotlib import pyplot as plt
+    import pickle
     with open ( "saved.pcl", "rb" ) as f:
         Zs = pickle.load( f )
     plt.plot ( Zs.keys(), Zs.values() )
