@@ -69,6 +69,27 @@ def discussPredictions ( protomodel ):
         print ( "theory pred: %s:%s" % ( pred.expResult.globalInfo.id, ",".join ( map ( str, pred.txnames ) ) ) )
         # print ( "     `- ", pred.expResult.globalInfo.id, "ana", pred.analysis, "masses", pred.mass, "txnames", pred.txnames, "type", pred.dataType() )
 
+def getExtremeSSMs ( ssm, largest ):
+    """ get latex code describing the most extreme signal strength multipliers.
+    :param largest: if true, describe the largest, else the smallest.
+    :returns: latex code
+    """
+    if len(ssm) == 0:
+        ssm = { 0: "\\mathrm{none}" }
+    keys = list ( ssm.keys() )
+    keys.sort( reverse=largest )
+    nm= 7
+    s = ""
+    for k in keys[:nm]:
+        s += ssm[k] + "=%.2f" % k + ", "
+    if len(s)>2:
+        s = s[:-2]
+    extreme = "smallest"
+    if largest:
+        extreme = "largest"
+    ret = "%d %s signal strength multipliers: $%s$" % ( nm, extreme, s )
+    return ret
+
 def writeTex ( protomodel, keep_tex ):
     """ write the comment about ss multipliers and contributions, in tex 
     :param keep_tex: keep tex source of texdoc.png
@@ -78,10 +99,10 @@ def writeTex ( protomodel, keep_tex ):
         if abs(v-1.)<1e-3:
             continue
         pname = helpers.toLatex ( pids, addSign = True )
-        token = "%s = %.2f" % ( pname, v )
+        # token = "%s = %.2f" % ( pname, v )
         if v in ssm.keys():
             v+=1e-10
-        ssm[v] = token
+        ssm[v] = pname
 
     whatifs = ""
     if hasattr ( protomodel, "whatif" ):
@@ -109,32 +130,10 @@ def writeTex ( protomodel, keep_tex ):
         print ( "[plotHiscore] protomodel has no ``whatif'' defined (did you use an untrimmed protomodel?)" )
 
     import tex2png
-    if len(ssm) == 0:
-        ssm = { 0: "\\mathrm{none}" }
-    sssm = ""
-    keys = list ( ssm.keys() )
-    keys.sort( reverse=True )
-    # keys.sort( key = lambda x: abs(x-1.), reverse=True )
-    nm= 7
-    for k in keys[:nm]:
-        # print ( "k", k, "v", ssm[k][:10] )
-        sssm += ssm[k] + ", "
-    if len(sssm)>2:
-        sssm = sssm[:-2]
-    src = "%d largest signal strength multipliers: $" % nm + sssm + "$" # + whatifs
-    # src = "%d most extreme signal strength multipliers: $" % nm + sssm + "$" + whatifs
-    # print ( "[plotHiscore] texdoc source in src=>>>>%s<<<<" % src )
-    sssm = ""
-
-    keys.sort( key = lambda x: abs(x-1.), reverse=True )
-    for k in keys[:nm]:
-        # print ( "k", k, "v", ssm[k][:10] )
-        sssm += ssm[k] + ", "
-    if len(sssm)>2:
-        sssm = sssm[:-2]
-    # src = "5 largest signal strength multipliers: $" + sssm + "$" + whatifs
+    src = getExtremeSSMs ( ssm, largest=True )
     src += "\\\\"
-    src += "\n%d smallest signal strength multipliers: $" % nm + sssm + "$" + whatifs
+    src += getExtremeSSMs ( ssm, largest=False )
+    src += whatifs
     if keep_tex:
         with open("texdoc.tex","wt") as f:
             f.write ( src+"\n" )
