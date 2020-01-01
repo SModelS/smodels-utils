@@ -38,7 +38,7 @@ def getParticleName ( pid, addSign=False, addSMParticles=False ):
               -1000021: "~g", -1000022: "~chi10", -1000023: "~chi20",
               -1000025: "~chi30", -1000035: "~chi40", -1000024: "~chi1-",
               -1000037: "~chi2-", "+-2000006": "~t2^{(*)}",
-              "+-1000006": "~t1^{(*)}",
+              "+-1000006": "~t1^{(*)}", "+-?000006": "~t_{i}^{(*)}",
               "+-1000024": "~chi1^{\pm}",
               }
     if addSMParticles:
@@ -63,9 +63,20 @@ def getParticleName ( pid, addSign=False, addSMParticles=False ):
         sys.exit()
     return str(pid)
 
+def lrEquiv ( l, r ):
+    """ check if the two strings are equivalent up to L vs R """
+    if type(l) != str:
+        return False
+    if type(r) != str:
+        return False
+    if l.startswith("+-") and r.startswith("+-"):
+        l=l.replace("+-","")
+        r=r.replace("+-","")
+    return l[1:] == r[1:]
+
 def simplifyList ( modes ):
     """ simplify a given list of production modes """
-    # print ( "need to simplify", modes )
+    # print ( "reducing", modes )
     import itertools
     ret = copy.deepcopy ( modes )
     for combo in itertools.combinations ( modes, 2 ):
@@ -74,29 +85,64 @@ def simplifyList ( modes ):
                 ret.remove ( combo[0] )
                 ret.remove ( combo[1] )
                 ret.append ( ( combo[0][0], "+-%s" % abs(combo[1][1]) ) )
-            except:
+            except ValueError:
                 pass
         if combo[0][0] == combo[1][1] and combo[0][1] == -combo[1][0]:
             try:
                 ret.remove ( combo[0] )
                 ret.remove ( combo[1] )
                 ret.append ( ( combo[0][0], "+-%s" % abs(combo[1][0]) ) )
-            except:
+            except ValueError:
+                pass
+        if combo[0][1] == combo[1][1] and combo[0][0] == -combo[1][0]:
+            try:
+                ret.remove ( combo[0] )
+                ret.remove ( combo[1] )
+                ret.append ( ( combo[0][1], "+-%s" % abs(combo[1][0]) ) )
+            except ValueError:
                 pass
         if combo[0][0] == -combo[1][0] and combo[0][1] == -combo[1][1]:
             try:
                 ret.remove ( combo[0] )
                 ret.remove ( combo[1] )
                 ret.append ( ( "+-%s" % abs(combo[0][0]), "+-%s" % abs(combo[1][0]) ) )
-            except:
+            except ValueError:
                 pass
         if combo[0][0] == -combo[1][1] and combo[0][1] == -combo[1][0]:
             try:
                 ret.remove ( combo[0] )
                 ret.remove ( combo[1] )
                 ret.append ( ( "+-%s" % abs(combo[0][0]), "+-%s" % abs(combo[1][0]) ) )
-            except:
+            except ValueError:
                 pass
+    modes = copy.deepcopy ( ret )
+    for combo in itertools.combinations ( modes, 2 ):
+        if type(combo[0][1])==str and type(combo[1][1])==str:
+            if combo[0][1] == combo[1][1] and type(combo[0][0])==int and combo[0][0]==-combo[1][0]:
+                try:
+                    ret.remove ( combo[0] )
+                    ret.remove ( combo[1] )
+                    ret.append ( ( "+-%s" % abs(combo[0][0]), combo[0][1] ) )
+                except ValueError as e:
+                    pass
+        if type(combo[0][0])==int and type(combo[1][1])==str:
+            c00 = abs(combo[0][0])
+            if combo[0] == (-c00, -c00) and combo[1] == (c00, '+-%s' % c00 ):
+                try:
+                    ret.remove ( combo[0] )
+                    ret.remove ( combo[1] )
+                    ret.append ( ( "+-%s" % abs(combo[0][0]), combo[1][1] ) )
+                except ValueError as e:
+                    pass
+            if type(combo[0][1])==str and c00 == combo[1][0] and lrEquiv ( combo[0][1], combo[1][1] ):
+                ## (1000021, '+-2000006'), (1000021, '+-1000006')
+                try:
+                    ret.remove ( combo[0] )
+                    ret.remove ( combo[1] )
+                    c11 = combo[1][1].replace("+-1","+-?").replace("+-2","+-?")
+                    ret.append ( ( combo[0][0], c11 ) )
+                except ValueError as e:
+                    pass
     # print ( "reduced to", ret )
     return ret
 
