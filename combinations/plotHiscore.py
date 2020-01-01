@@ -80,15 +80,8 @@ def getExtremeSSMs ( ssm, largest ):
     keys.sort( reverse=largest )
     nm= 7
     s = ""
-    lastk = keys[0]
     for ctr,k in enumerate(keys[:nm]):
-        if ("%.2f" %  k) !=  ("%.2f" % lastk ): ## different number
-            s += "=%.2f, " % lastk
-        elif ctr > 0:
-            s += "="
-        s += ssm[k]
-        lastk = k
-    s += "=%.2f; " % lastk
+        s += "%s=%s; " % ( ssm[k], k )
     if len(s)>2:
         s = s[:-2]
     extreme = "smallest"
@@ -101,14 +94,18 @@ def writeTex ( protomodel, keep_tex ):
     """ write the comment about ss multipliers and contributions, in tex 
     :param keep_tex: keep tex source of texdoc.png
     """
-    ssm = {}
+    cpids = {}
     for pids,v in protomodel.ssmultipliers.items():
+        sv = "%.2f" % v
         if abs(v-1.)<1e-3:
             continue
+        if not sv in cpids:
+            cpids[sv]=[]
+        cpids[sv].append ( pids )
+
+    ssm = {}
+    for v,pids in cpids.items():
         pname = helpers.toLatex ( pids, addSign = True )
-        # token = "%s = %.2f" % ( pname, v )
-        if v in ssm.keys():
-            v+=1e-10
         ssm[v] = pname
 
     whatifs = ""

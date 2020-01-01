@@ -2,6 +2,8 @@
 
 """ helper functions """
 
+import copy, sys
+
 def getParticleName ( pid, addSign=False, addSMParticles=False ):
     """ get the particle name of pid 
     :param addSign: add sign info in name
@@ -35,7 +37,9 @@ def getParticleName ( pid, addSign=False, addSMParticles=False ):
               -1000015: "~tauLbar", -2000015: "~tauRbar", -1000016: "~nutaubar",
               -1000021: "~g", -1000022: "~chi10", -1000023: "~chi20",
               -1000025: "~chi30", -1000035: "~chi40", -1000024: "~chi1-",
-              -1000037: "~chi2-"
+              -1000037: "~chi2-", "+-2000006": "~t2^{(*)}",
+              "+-1000006": "~t1^{(*)}",
+              "+-1000024": "~chi1^{\pm}",
               }
     if addSMParticles:
         SMnames = { 1: "d", 2: "u", 3: "s", 4: "c", 5: "b", 6: "t",
@@ -54,7 +58,47 @@ def getParticleName ( pid, addSign=False, addSMParticles=False ):
     if pid in names:
         ret = names[pid]
         return ret
+    if True:
+        print ( "could not find", pid )
+        sys.exit()
     return str(pid)
+
+def simplifyList ( modes ):
+    """ simplify a given list of production modes """
+    # print ( "need to simplify", modes )
+    import itertools
+    ret = copy.deepcopy ( modes )
+    for combo in itertools.combinations ( modes, 2 ):
+        if combo[0][0] == combo[1][0] and combo[0][1] == -combo[1][1]:
+            try:
+                ret.remove ( combo[0] )
+                ret.remove ( combo[1] )
+                ret.append ( ( combo[0][0], "+-%s" % abs(combo[1][1]) ) )
+            except:
+                pass
+        if combo[0][0] == combo[1][1] and combo[0][1] == -combo[1][0]:
+            try:
+                ret.remove ( combo[0] )
+                ret.remove ( combo[1] )
+                ret.append ( ( combo[0][0], "+-%s" % abs(combo[1][0]) ) )
+            except:
+                pass
+        if combo[0][0] == -combo[1][0] and combo[0][1] == -combo[1][1]:
+            try:
+                ret.remove ( combo[0] )
+                ret.remove ( combo[1] )
+                ret.append ( ( "+-%s" % abs(combo[0][0]), "+-%s" % abs(combo[1][0]) ) )
+            except:
+                pass
+        if combo[0][0] == -combo[1][1] and combo[0][1] == -combo[1][0]:
+            try:
+                ret.remove ( combo[0] )
+                ret.remove ( combo[1] )
+                ret.append ( ( "+-%s" % abs(combo[0][0]), "+-%s" % abs(combo[1][0]) ) )
+            except:
+                pass
+    # print ( "reduced to", ret )
+    return ret
 
 def toLatex ( pid, addDollars=False, addM=False, addSign=False ):
     """ get the latex version of particle name 
@@ -62,16 +106,29 @@ def toLatex ( pid, addDollars=False, addM=False, addSign=False ):
     :param addM: make it m(particle)
     :param addSign: add a "-" sign for negative pids
     """
-    if type ( pid ) in [ list, tuple ]:
+    if type ( pid ) in [ list ]: ## several production modes are given in lists
+        pid = simplifyList ( pid )
+        ret = ""
+        for pids in pid:
+            ret += toLatex  ( pids, addDollars, addM, addSign )
+            ret += "="
+        if len(ret)>1:
+            ret = ret[:-1]
+        return ret
+            
+    if type ( pid ) in [ tuple ]: ## production mothers are given as tuples
         # a list of pids? latexify them individually and concatenate
         pids = []
         lpid = list ( pid )
-        lpid.sort()
+        try:
+            lpid.sort()
+        except:
+            pass
         for p in lpid:
             pids.append ( toLatex ( p, addDollars, addM, addSign ) )
         return "(" + ",".join ( pids ) + ")"
     pname = pid
-    if type(pid)==int:
+    if type(pid) in [ int, str ]:
         pname = getParticleName(pid,addSign)
     # oldp = pname
     rpls = { "~nutau": "\\tilde{\\nu}_{\\tau}", "L": "_{L}", "R": "_{R}", 
