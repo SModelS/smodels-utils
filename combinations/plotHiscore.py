@@ -24,8 +24,11 @@ def setup():
         return rundir
     return ""
 
-def obtain ( number, picklefile ):
-    """ obtain hiscore number <number> """
+def obtain ( number, picklefile, untrimmedOnly=False ):
+    """ obtain hiscore number <number> 
+    :param untrimmedOnly: if true, consider only untrimmed
+    :returns: model,flag flag is True if model is Trimmed
+    """
     if not os.path.exists ( picklefile ):
         print ( "[plotHiscore] %s does not exist. Trying to produce now with ./hiscore.py" % picklefile )
         from argparse import Namespace
@@ -43,7 +46,7 @@ def obtain ( number, picklefile ):
         hiscores = pickle.load ( f )
         trimmed = pickle.load ( f )
         #fcntl.flock( f, fcntl.LOCK_UN )
-    if number < len(trimmed) and trimmed[number] is not None:
+    if (not untrimmedOnly) and number < len(trimmed) and trimmed[number] is not None:
         Z = trimmed[number].Z
         print ( "[plotHiscore] obtaining trimmed protomodel #%d: Z=%.2f (%d particles)" % (number, Z, len ( trimmed[number].unFrozenParticles() ) ) )
         return trimmed[number],True
@@ -151,7 +154,7 @@ def writeTex ( protomodel, keep_tex ):
     except Exception as e:
         print ( "[plotHiscore] Exception when latexing: %s" % e )
 
-def writeIndexHtml ( protomodel, gotTrimmed ):
+def writeIndexHtml ( protomodel, gotTrimmed, untrimmedZ=0. ):
     """ write the index.html file, see e.g.
         https://smodels.github.io/protomodels/
     :param gotTrimmed: is the model a trimmed model?
@@ -176,8 +179,11 @@ def writeIndexHtml ( protomodel, gotTrimmed ):
     trimmed="Untrimmed"
     if gotTrimmed:
         trimmed = "Trimmed"
-    f.write ( "%s <b><a href=./hiscore.slha>ProtoModel</a> <a href=./mymodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d</b><br>\n" % \
+    f.write ( "%s <b><a href=./hiscore.slha>ProtoModel</a> <a href=./mymodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d.</b>" % \
             ( trimmed, dotlessv, dbver, strategy, strategy, protomodel.step ) )
+    if gotTrimmed and untrimmedZ > 0.:
+        f.write ( " Z(untrimmed)=%.2f." % untrimmedZ )
+    f.write ( "<br>\n" )
     f.write ( "<table width=80%>\n<tr><td>\n" )
     if hasattr ( protomodel, "rvalues" ):
         rvalues=protomodel.rvalues
@@ -301,7 +307,11 @@ def plot ( number, verbosity, picklefile, options ):
         discussPredictions ( protomodel )
     if options["html"]:
         writeTex ( protomodel, options["keep_tex"] )
-        writeIndexHtml ( protomodel, trimmed )
+        untrimmedZ = 0.
+        if trimmed:
+            untrimmed, _ = obtain ( number, picklefile, True )
+            untrimmedZ = untrimmed.Z
+        writeIndexHtml ( protomodel, trimmed, untrimmedZ )
     #if options["copy"]:
     #    copyFilesToGithub()
 
