@@ -87,13 +87,16 @@ if __name__ == "__main__":
             help='produce the plot',
             action="store_true" )
     args = argparser.parse_args()
-    pids = args.pid
+    allpids = [ 1000022, 1000021, 1000006, 2000006, 1000024 ]
     if args.produce:
-        if pids > 0:
-            produce( pids )
+        if args.pid > 0:
+            produce( args.pid )
         else:
-            pids = [ 1000022, 1000021, 1000006, 2000006, 1000024 ]
-            for pid in pids:
+            for pid in allpids:
                 produce ( pid )
     if args.draw:
-        draw( args.pid )
+        if args.pid > 0:
+            draw( args.pid )
+        else:
+            for pid in allpids:
+                draw( pid )
