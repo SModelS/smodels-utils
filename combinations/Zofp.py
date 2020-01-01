@@ -27,7 +27,8 @@ def produce( pid=1000022, nevents = 100000 ):
     model = hi.trimmed[0]
     mass = model.masses[pid]
     Zs = {}
-    for m in numpy.arange ( .6*mass, 1.3*mass, .02*mass ):
+    fm = .6
+    for m in numpy.arange ( mass * fm, mass / fm, .008*mass ):
         print ( "mass at", m )
         model.masses[pid] = m
         model.predict ( nevents = nevents )
@@ -51,10 +52,11 @@ def draw( pid= 1000022 ):
     y = list(Zs.values())
     pname = helpers.toLatex ( pid, addDollars=True )
     plt.plot ( x, y )
-    plt.plot ( [ cmass, cmass ], [ 0, 3.1 ] )
+    plt.plot ( [ cmass, cmass ], [ 0.9*min(y), 1.05*max(y) ] )
     plt.ylabel ( "Z" )
     plt.title ( "Significance Z=Z(%s)" % pname )
     plt.xlabel ( "m(%s) [GeV]" % pname )
+    plt.text ( .9*min(x)+.1*(max(x)-min(x)), 1.*max(y), "%d events" % nevents )
     plt.savefig ( "M%d.png" % pid )
 
 if __name__ == "__main__":
