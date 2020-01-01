@@ -45,10 +45,13 @@ def draw( pid= 1000022 ):
     import pickle
     with open ( "scanM%s.pcl" % pid, "rb" ) as f:
         Zs = pickle.load( f )
+        cmass = pickle.load ( f )
+        nevents = pickle.load ( f )
     x = list(Zs.keys())
     y = list(Zs.values())
     pname = helpers.toLatex ( pid, addDollars=True )
     plt.plot ( x, y )
+    plt.plot ( [ cmass, cmass ], [ 0, 3.1 ] )
     plt.ylabel ( "Z" )
     plt.title ( "Significance Z=Z(%s)" % pname )
     plt.xlabel ( "m(%s) [GeV]" % pname )
