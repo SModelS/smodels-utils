@@ -20,6 +20,7 @@ def setup():
 
 
 def produce( pid=1000022, nevents = 100000 ):
+    dryrun=False
     import hiscore
     rundir = setup()
     picklefile =rundir + "hiscore.pcl" 
@@ -27,14 +28,27 @@ def produce( pid=1000022, nevents = 100000 ):
     model = hi.trimmed[0]
     mass = model.masses[pid]
     Zs = {}
-    fm = .6
-    for m in numpy.arange ( mass * fm, mass / fm, .008*mass ):
-        print ( "mass at", m )
+    fm = .6 ## lower bound (relative) on mass
+    mrange = numpy.arange ( mass * fm, mass / fm, .008*mass )
+    mrange = [ mass ]
+    m1,m2 = mass, mass
+    dm = 1.003
+    while m1 > fm * mass:
+        m1 = mass/dm
+        m2 = mass*dm
+        mrange.append( m1 )
+        mrange.append( m2 )
+        dm = dm * 1.005
+    for m in mrange:
+        print ( "probe pid %d with mass of %.2f" % ( pid, m ) )
         model.masses[pid] = m
-        model.predict ( nevents = nevents )
+        if not dryrun:
+            model.predict ( nevents = nevents )
         Zs[m]=model.Z
+    if dryrun:
+        sys.exit()
     import pickle
-    with open ( "scan.pcl", "wb" ) as f:
+    with open ( "scanM%s.pcl" % pid, "wb" ) as f:
         pickle.dump ( Zs, f )
         pickle.dump ( mass, f )
         pickle.dump ( nevents, f )
