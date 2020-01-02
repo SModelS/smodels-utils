@@ -59,8 +59,8 @@ def getParticleName ( pid, addSign=False, addSMParticles=False ):
         ret = names[pid]
         return ret
     if True:
-        print ( "could not find", pid )
-        sys.exit()
+        print ( "[helpers] could not find pid %s" % pid )
+        # sys.exit()
     return str(pid)
 
 def lrEquiv ( l, r ):

@@ -54,11 +54,11 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False ):
         dm = dm * 1.005
     mrange.sort()
     for m in mrange:
-        print ( "probe pid %d with mass of %.2f" % ( pid, m ), end="." )
+        # print ( "probe pid %d with mass of %.2f" % ( pid, m ) )
         model.masses[pid] = m
         if not dryrun:
             model.predict ( nevents = nevents )
-        print ( "Z=%.2f" % model.Z )
+        print ( "probed pid %d with mass of %.2f, Z=%.2f" % ( pid, m, model.Z ) )
         Zs[m]=model.Z
     if dryrun:
         sys.exit()

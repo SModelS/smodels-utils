@@ -58,7 +58,8 @@ def gitCommit ( dest, wanted ):
     """ if wanted, then git commit and git push to smodels.githuib.io """
     if not wanted:
         return False
-    cmd = "cd %s ; git commit -am 'update'; git push " % dest
+    comment = "automated update by plotHiscore.py"
+    cmd = "cd %s; git pull; git commit -am '%s'; git push" % ( dest, comment )
     print ( "[plotHiscore] now git-commit: %s" % cmd )
     out = subprocess.getoutput ( cmd )
     if out != "":
