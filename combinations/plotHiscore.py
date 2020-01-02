@@ -72,24 +72,27 @@ def discussPredictions ( protomodel ):
         print ( "theory pred: %s:%s" % ( pred.expResult.globalInfo.id, ",".join ( map ( str, pred.txnames ) ) ) )
         # print ( "     `- ", pred.expResult.globalInfo.id, "ana", pred.analysis, "masses", pred.mass, "txnames", pred.txnames, "type", pred.dataType() )
 
-def getExtremeSSMs ( ssm, largest ):
+def getExtremeSSMs ( ssm, largest, nm = 7 ):
     """ get latex code describing the most extreme signal strength multipliers.
     :param largest: if true, describe the largest, else the smallest.
+    :param nm: number of ssms to describe. -1 means "all"
     :returns: latex code
     """
     if len(ssm) == 0:
         ssm = { 0: "\\mathrm{none}" }
     keys = list ( ssm.keys() )
     keys.sort( reverse=largest )
-    nm= 7
+    extreme = "smallest"
+    if largest:
+        extreme = "largest"
+    if nm == -1:
+        extreme = ""
+        nm = len(keys)
     s = ""
     for ctr,k in enumerate(keys[:nm]):
         s += "%s=%s; " % ( ssm[k], k )
     if len(s)>2:
         s = s[:-2]
-    extreme = "smallest"
-    if largest:
-        extreme = "largest"
     ret = "%s signal strength multipliers: $%s$" % ( extreme, s )
     return ret
 
@@ -137,9 +140,11 @@ def writeTex ( protomodel, keep_tex ):
         print ( "[plotHiscore] protomodel has no ``whatif'' defined (did you use an untrimmed protomodel?)" )
 
     import tex2png
-    src = getExtremeSSMs ( ssm, largest=True )
+    src = getExtremeSSMs ( ssm, largest=True, nm = 7 )
     src += "\\\\"
-    src += getExtremeSSMs ( ssm, largest=False )
+    nsmallest = min( 7, len(ssm)-7 )
+    if nsmallest>0:
+        src += getExtremeSSMs ( ssm, largest=False, nm = nsmallest )
     src += whatifs
     if keep_tex:
         with open("texdoc.tex","wt") as f:

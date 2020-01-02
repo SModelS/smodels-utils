@@ -18,15 +18,28 @@ def setup():
     os.chdir ( rundir )
     return rundir
 
-
-def produce( pid=1000022, nevents = 100000 ):
-    dryrun=False
+def getHiscore():
     import hiscore
     rundir = setup()
-    picklefile =rundir + "hiscore.pcl" 
-    hi = hiscore.Hiscore( 0, False, picklefile = picklefile )
+    picklefile =rundir + "scanHiscore.pcl"
+    if not os.path.exists ( picklefile ):
+        cmd = "cp %s %s" % ( rundir+"hiscore.pcl", picklefile )
+        import subprocess
+        subprocess.getoutput ( cmd )
+    print ( "retrieving hiscore object %s .... " % picklefile )
+    hi = hiscore.Hiscore( walkerid=0, save_hiscores=False, 
+                          picklefile = picklefile )
+    print ( "done retrieving hiscore object!" )
+    return hi
+
+def produce( hi, pid=1000022, nevents = 100000, dryrun=False ):
+    """ produce pickle files for pid, with nevents
+    :param hi: hiscore list object
+    """
     model = hi.trimmed[0]
     mass = model.masses[pid]
+    model.createNewSLHAFileName ( prefix = "scan%s" % pid )
+    print ( "start probing pid %d with central mass of %.1f" % ( pid, mass ) )
     Zs = {}
     fm = .6 ## lower bound (relative) on mass
     mrange = numpy.arange ( mass * fm, mass / fm, .008*mass )
@@ -39,11 +52,13 @@ def produce( pid=1000022, nevents = 100000 ):
         mrange.append( m1 )
         mrange.append( m2 )
         dm = dm * 1.005
+    mrange.sort()
     for m in mrange:
-        print ( "probe pid %d with mass of %.2f" % ( pid, m ) )
+        print ( "probe pid %d with mass of %.2f" % ( pid, m ), end="." )
         model.masses[pid] = m
         if not dryrun:
             model.predict ( nevents = nevents )
+        print ( "Z=%.2f" % model.Z )
         Zs[m]=model.Z
     if dryrun:
         sys.exit()
@@ -87,13 +102,20 @@ if __name__ == "__main__":
             help='produce the plot',
             action="store_true" )
     args = argparser.parse_args()
-    allpids = [ 1000022, 1000021, 1000006, 2000006, 1000024 ]
+    allpids = [ 1000021, 1000006, 2000006, 1000024, 1000022 ]
     if args.produce:
+        hi = getHiscore()
         if args.pid > 0:
-            produce( args.pid )
+            produce( hi, args.pid )
         else:
+            import multiprocessing
+            ps = []
             for pid in allpids:
-                produce ( pid )
+                p = multiprocessing.Process(target=produce,args=(hi,pid) )
+                p.start()
+                ps.append ( p )
+            for p in ps:
+                p.join()
     if args.draw:
         if args.pid > 0:
             draw( args.pid )
