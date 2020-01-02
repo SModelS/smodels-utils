@@ -77,8 +77,12 @@ def draw( pid= 1000022 ):
         Zs = pickle.load( f )
         cmass = pickle.load ( f )
         nevents = pickle.load ( f )
+    # print ( "Zs", Zs )
     x = list(Zs.keys())
-    y = list(Zs.values())
+    x.sort()
+    y = []
+    for i in x:
+        y.append ( Zs[i] )
     pname = helpers.toLatex ( pid, addDollars=True )
     plt.plot ( x, y )
     plt.plot ( [ cmass, cmass ], [ 0.9*min(y), 1.05*max(y) ] )
