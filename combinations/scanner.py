@@ -119,7 +119,9 @@ def draw( pid= 1000022 ):
     plt.title ( "Significance Z=Z(%s)" % pname )
     plt.xlabel ( "m(%s) [GeV]" % pname )
     plt.text ( .9*min(x)+.1*(max(x)-min(x)), 1.*max(y), "%d events" % nevents )
-    plt.savefig ( "M%d.png" % pid )
+    figname = "M%d.png" % pid 
+    print ( "[scanner] creating %s" % figname )
+    plt.savefig ( figname )
 
 if __name__ == "__main__":
     import argparse
