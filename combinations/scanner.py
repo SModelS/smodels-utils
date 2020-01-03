@@ -2,7 +2,7 @@
 
 """ draw Z as a function of a model parameter """
 
-import numpy, sys, os
+import numpy, sys, os, copy
 
 def setup():
     codedir = "/mnt/hephy/pheno/ww/git/"
@@ -22,46 +22,75 @@ def getHiscore():
     import hiscore
     rundir = setup()
     picklefile =rundir + "scanHiscore.pcl"
-    if not os.path.exists ( picklefile ):
+    ## do this always
+    if True: # not os.path.exists ( picklefile ):
         cmd = "cp %s %s" % ( rundir+"hiscore.pcl", picklefile )
         import subprocess
         subprocess.getoutput ( cmd )
-    print ( "retrieving hiscore object %s .... " % picklefile )
+    print ( "[scanner] retrieving hiscore object %s .... " % picklefile )
     hi = hiscore.Hiscore( walkerid=0, save_hiscores=False, 
                           picklefile = picklefile )
-    print ( "done retrieving hiscore object!" )
+    print ( "[scanner] done retrieving hiscore object!" )
     return hi
 
-def produce( hi, pid=1000022, nevents = 100000, dryrun=False ):
+def predProcess ( args ):
+    """ one thread that computes predictions for masses given in mrange 
+    """
+    model = args["model"]
+    pid = args["pid"]
+    i = args["i"]
+    print ( "[scanner:%d] starting thread" % ( i ) )
+    model.createNewSLHAFileName ( prefix = "s%dp%d" % ( i, pid ) )
+    nevents = args["nevents"]
+    mrange = args["mrange"]
+    ret = {}
+    for m in mrange:
+        model.masses[pid]=m
+        print ( "[scanner:%d] start with m=%.1f" % ( i, m ) )
+        model.predict ( nevents = nevents )
+        ret[m]=model.Z
+    return ret
+
+
+def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
+             nproc=40, fac = 1.005 ):
     """ produce pickle files for pid, with nevents
     :param hi: hiscore list object
+    :param nproc: number of processes
+    :param fac: factor with which to multiply interval
     """
     model = hi.trimmed[0]
     mass = model.masses[pid]
-    model.createNewSLHAFileName ( prefix = "scan%s" % pid )
-    print ( "start probing pid %d with central mass of %.1f" % ( pid, mass ) )
+    if mass > 9e5:
+        print ( "mass %d too high. Wont produce." % mass ) 
+        return
+    #model.createNewSLHAFileName ( prefix = "scan%s" % pid )
     Zs = {}
     fm = .6 ## lower bound (relative) on mass
     mrange = numpy.arange ( mass * fm, mass / fm, .008*mass )
-    mrange = [ mass ]
+    mrangetot = [ mass ]
     m1,m2 = mass, mass
     dm = 1.003
     while m1 > fm * mass:
         m1 = mass/dm
         m2 = mass*dm
-        mrange.append( m1 )
-        mrange.append( m2 )
-        dm = dm * 1.005
-    mrange.sort()
-    for m in mrange:
-        # print ( "probe pid %d with mass of %.2f" % ( pid, m ) )
-        model.masses[pid] = m
-        if not dryrun:
-            model.predict ( nevents = nevents )
-        print ( "probed pid %d with mass of %.2f, Z=%.2f" % ( pid, m, model.Z ) )
-        Zs[m]=model.Z
+        mrangetot.append( m1 )
+        mrangetot.append( m2 )
+        dm = dm * fac
+    mrangetot.sort()
+    mranges = [ mrangetot[i::nproc] for i in range(nproc) ]
+    print ( "[scanner] start scanning with m(%d)=%.1f with %d procs, %d mass points, %d events" % \
+            ( pid, mass, nproc, len(mrangetot), nevents ) )
+    import multiprocessing
+    pool = multiprocessing.Pool ( processes = len(mranges) )
+    args = [ { "model": copy.deepcopy(model), "pid": pid, "nevents": nevents, 
+               "i": i, "mrange": x } for i,x in enumerate(mranges) ]
+    Zs={}
+    tmp = pool.map ( predProcess, args )
+    for r in tmp:
+        Zs.update(r)
     if dryrun:
-        sys.exit()
+        return
     import pickle
     with open ( "scanM%s.pcl" % pid, "wb" ) as f:
         pickle.dump ( Zs, f )
@@ -99,8 +128,20 @@ if __name__ == "__main__":
     argparser.add_argument ( '-p', '--pid',
             help='pid to consider. If zero, then consider a predefined list [1000022]',
             type=int, default=1000022 )
+    argparser.add_argument ( '-n', '--nproc',
+            help='number of processes [40]',
+            type=int, default=40 )
+    argparser.add_argument ( '-f', '--factor',
+            help='multiplication factor [1.005]',
+            type=float, default=1.005 )
+    argparser.add_argument ( '-e', '--nevents',
+            help='number of events [100000]',
+            type=int, default=100000 )
     argparser.add_argument ( '-P', '--produce',
             help='produce the pickle file',
+            action="store_true" )
+    argparser.add_argument ( '-D', '--dry_run',
+            help='dry_run, dont produce',
             action="store_true" )
     argparser.add_argument ( '-d', '--draw',
             help='produce the plot',
@@ -110,16 +151,7 @@ if __name__ == "__main__":
     if args.produce:
         hi = getHiscore()
         if args.pid > 0:
-            produce( hi, args.pid )
-        else:
-            import multiprocessing
-            ps = []
-            for pid in allpids:
-                p = multiprocessing.Process(target=produce,args=(hi,pid) )
-                p.start()
-                ps.append ( p )
-            for p in ps:
-                p.join()
+            produce( hi, args.pid, args.nevents, args.dry_run, args.nproc, args.factor )
     if args.draw:
         if args.pid > 0:
             draw( args.pid )
