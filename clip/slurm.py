@@ -74,7 +74,25 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     #remove ( tf, keep )
     #remove ( runner, keep )
             
+def runScanner( dry_run, time ):
+    """ run the scanner on the current hiscore """
+    qos = "c_short"
+    if time > 48:
+        qos = "c_long"
+    if 8 < time <= 48:
+        qos = "c_medium"
+    cmd = [ "sbatch" ]
+    cmd += [ "--qos", qos ]
+    cmd += [ "--time", "%s" % ( time*60-1 ), "run_scanner.sh" ]
+    if dry_run:
+        return
+    print ( "cmd", cmd )
+    subprocess.run ( cmd )
+
 def runUpdater( dry_run, time ):
+    """ thats the hiscore updater 
+    :param time: time, given in minutes(?)
+    """
     qos = "c_short"
     if time > 48:
         qos = "c_long"
@@ -111,6 +129,8 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the updater',
                              action="store_true" )
+    argparser.add_argument ( '-S','--scanner', help='run the scanner',
+                             action="store_true" )
     argparser.add_argument ( '--clean', help='clean up files from old runs',
                              action="store_true" )
     argparser.add_argument ( '--clean_all', help='clean up *all* files from old runs',
@@ -144,6 +164,9 @@ def main():
         return
     if args.updater:
         runUpdater( args.dry_run, args.time )
+        return
+    if args.scanner:
+        runScanner ( args.dry_run, args.time )
         return
     if args.regressor:
         runRegressor ( args.dry_run )
