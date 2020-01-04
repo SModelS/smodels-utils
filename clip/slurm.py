@@ -81,13 +81,19 @@ def runScanner( dry_run, time ):
         qos = "c_long"
     if 8 < time <= 48:
         qos = "c_medium"
-    cmd = [ "sbatch" ]
-    cmd += [ "--qos", qos ]
-    cmd += [ "--time", "%s" % ( time*60-1 ), "run_scanner.sh" ]
+    # cmd = [ "sbatch" ]
+    cmd = [ "srun" ]
+    # cmd += [ "--qos", qos ]
+    cmd += [ "--mem", "40G" ]
+    cmd += [ "--ntasks-per-node", "10" ]
+    cmd += [ "--pty", "bash" ]
+    # cmd += [ "--time", "%s" % ( time*60-1 ) ]
+    cmd += [ "./run_scanner.sh" ]
     if dry_run:
         return
     print ( "cmd", cmd )
-    subprocess.run ( cmd )
+    a = subprocess.run ( cmd )
+    print ( ">>", a )
 
 def runUpdater( dry_run, time ):
     """ thats the hiscore updater 

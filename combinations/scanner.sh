@@ -1,3 +1,3 @@
 #!/bin/sh
 
-scanner.py -P -e 100000 -n 40 -f 1.005 -p 0
+/mnt/hephy/pheno/ww/git/smodels-utils/combinations/scanner.py -P -p 1000024 

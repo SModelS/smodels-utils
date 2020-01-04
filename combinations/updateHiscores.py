@@ -34,7 +34,9 @@ def updateHiscores():
     args.infile = None
     args.maxloss = .01
     import hiscore
-    print ( "[updateHiscores] now update the hiscore.pcl file" )
+    import socket
+    hostname = socket.gethostname().replace(".cbe.vbc.ac.at","")
+    print ( "[updateHiscores] now update the hiscore.pcl file on %s" % hostname )
     Z = hiscore.main ( args )
     return Z
 
