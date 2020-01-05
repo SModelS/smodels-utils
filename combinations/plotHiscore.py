@@ -38,6 +38,9 @@ def obtain ( number, picklefile, untrimmedOnly=False ):
         args.outfile = "hiscore.pcl"
         args.infile = picklefile
         args.fetch = False
+        args.trim_branchings = True
+        args.trim = True
+        args.maxloss = 0.005
         import hiscore
         hiscore.main ( args )
 
@@ -438,6 +441,8 @@ def main ():
     argparser.add_argument ( "--destinations", 
             help="learn more about the upload destinations", action="store_true" )
     args = argparser.parse_args()
+    if args.picklefile == "default":
+        args.picklefile = "%s/hiscore.pcl" % rundir
     runPlotting ( args )
 
 if __name__ == "__main__":

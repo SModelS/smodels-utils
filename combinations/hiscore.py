@@ -445,8 +445,8 @@ if __name__ == "__main__":
             help='Specify the input pickle file to start with. If none, start with H<n>.pcl. [None]',
             type=str, default=None )
     argparser.add_argument ( '-o', '--outfile',
-            help='pickle file with hiscores. If none, dont pickle. [hiscore.pcl]',
-            type=str, default="hiscore.pcl" )
+            help='pickle file with hiscores. If none, dont pickle. [none]',
+            type=str, default="none" )
     argparser.add_argument ( '-n', '--nmax',
             help='maximum number of entries to store [10]',
             type=int, default=10 )
@@ -474,5 +474,4 @@ if __name__ == "__main__":
     argparser.add_argument ( '-I', '--interactive', help='start interactive session',
                              action="store_true" )
     args = argparser.parse_args()
-
     main ( args )

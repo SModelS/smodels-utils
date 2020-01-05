@@ -339,7 +339,7 @@ class Manipulator:
                 self.M.decays[pid][dpid] = tmp
                 if tmp < .99999:
                     brs.append ( tmp )
-        if numpy.std ( brs ) > 0.001:
+        if len(brs)>0 and numpy.std ( brs ) > 0.001:
             self.M.log( "normalize branchings of %s, they are at %.2f +/- %.2f" % ( helpers.getParticleName ( pid ), numpy.mean ( brs ), numpy.std ( brs )  ) )
 
         ## adjust the signal strength multipliers to keep everything else

@@ -98,7 +98,7 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
         pickle.dump ( nevents, f )
         f.close()
 
-def draw( pid= 1000022 ):
+def draw( pid= 1000022, interactive=False ):
     from matplotlib import pyplot as plt
     import helpers
     import pickle
@@ -122,6 +122,9 @@ def draw( pid= 1000022 ):
     figname = "M%d.png" % pid 
     print ( "[scanner] creating %s" % figname )
     plt.savefig ( figname )
+    if interactive:
+        import IPython
+        IPython.embed()
 
 if __name__ == "__main__":
     import argparse
@@ -148,6 +151,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-d', '--draw',
             help='produce the plot',
             action="store_true" )
+    argparser.add_argument ( '-I', '--interactive',
+            help='interactive mode, starts ipython (only works with -d, and not in bulk mode)',
+            action="store_true" )
     args = argparser.parse_args()
     allpids = [ 1000021, 1000006, 2000006, 1000024, 1000022 ]
     if args.produce:
@@ -156,7 +162,7 @@ if __name__ == "__main__":
             produce( hi, args.pid, args.nevents, args.dry_run, args.nproc, args.factor )
     if args.draw:
         if args.pid > 0:
-            draw( args.pid )
+            draw( args.pid, args.interactive )
         else:
             for pid in allpids:
                 draw( pid )
