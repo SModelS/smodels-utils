@@ -2,7 +2,7 @@
 
 """ draw Z as a function of a model parameter """
 
-import numpy, sys, os, copy
+import numpy, sys, os, copy, time
 
 def setup():
     codedir = "/mnt/hephy/pheno/ww/git/"
@@ -18,16 +18,24 @@ def setup():
     os.chdir ( rundir )
     return rundir
 
-def getHiscore():
+def getHiscore( force_copy = False, pids="" ):
+    """ get the hiscore from the picklefile
+    :param force_copy: if True, force a cp command on the pickle file
+    """
     import hiscore
     rundir = setup()
-    picklefile =rundir + "scanHiscore.pcl"
+    spids = str(pids).replace("[","").replace("]","").replace(" ","").replace(",","").replace("0","")
+    picklefile =rundir + "scanHiscore%s.pcl" % spids
     ## do this always
-    if True: # not os.path.exists ( picklefile ):
+    if force_copy or (not os.path.exists ( picklefile )):
         cmd = "cp %s %s" % ( rundir+"hiscore.pcl", picklefile )
         import subprocess
-        subprocess.getoutput ( cmd )
-    print ( "[scanner] retrieving hiscore object %s .... " % picklefile )
+        o = subprocess.getoutput ( cmd )
+        print ( "[scanner] %s: %s" % ( cmd, o ) )
+    import socket
+    hostname = socket.gethostname().replace(".cbe.vbc.ac.at","")
+    print ( "[scanner] retrieving hiscore object %s on %s .... " % \
+             ( picklefile, hostname ) )
     hi = hiscore.Hiscore( walkerid=0, save_hiscores=False, 
                           picklefile = picklefile )
     print ( "[scanner] done retrieving hiscore object!" )
@@ -36,29 +44,38 @@ def getHiscore():
 def predProcess ( args ):
     """ one thread that computes predictions for masses given in mrange 
     """
-    model = args["model"]
-    pid = args["pid"]
     i = args["i"]
+    import time
+    # time.sleep(5*i) ## would that help??
     print ( "[scanner:%d] starting thread" % ( i ) )
-    model.createNewSLHAFileName ( prefix = "s%dp%d" % ( i, pid ) )
+    model = args["model"]
+    model.walkerid = 100000+10000*i + model.walkerid
+    pid = args["pid"]
     nevents = args["nevents"]
     mrange = args["mrange"]
     ret = {}
-    for m in mrange:
+    for ctr,m in enumerate(mrange):
+        model.createNewSLHAFileName ( prefix = "s%dp%d%.2f" % ( i, pid, m ) )
         model.masses[pid]=m
-        print ( "[scanner:%d] start with m=%.1f" % ( i, m ) )
+        ts = time.strftime("%H:%M:%S" )
+        print ( "[scanner:%d-%s] start with %d/%d, m=%.1f (%d events)" % \
+                ( i, ts, ctr, len(mrange), m, nevents ) )
         model.predict ( nevents = nevents )
         ret[m]=model.Z
     return ret
 
 
 def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
-             nproc=40, fac = 1.005 ):
+             nproc=5, fac = 1.005 ):
     """ produce pickle files for pid, with nevents
     :param hi: hiscore list object
     :param nproc: number of processes
     :param fac: factor with which to multiply interval
     """
+    if type(pid) in [ list, tuple ]:
+        for p in pid:
+            produce ( hi, p, nevents, dryrun, nproc, fac )
+        return
     model = hi.trimmed[0]
     mass = model.masses[pid]
     if mass > 9e5:
@@ -83,8 +100,10 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
             ( pid, mass, nproc, len(mrangetot), nevents ) )
     import multiprocessing
     pool = multiprocessing.Pool ( processes = len(mranges) )
-    args = [ { "model": copy.deepcopy(model), "pid": pid, "nevents": nevents, 
+    args = [ { "model": model, "pid": pid, "nevents": nevents, 
                "i": i, "mrange": x } for i,x in enumerate(mranges) ]
+    #args = [ { "model": copy.deepcopy(model), "pid": pid, "nevents": nevents, 
+    #           "i": i, "mrange": x } for i,x in enumerate(mranges) ]
     Zs={}
     tmp = pool.map ( predProcess, args )
     for r in tmp:
@@ -134,8 +153,8 @@ if __name__ == "__main__":
             help='pid to consider. If zero, then consider a predefined list [1000022]',
             type=int, default=1000022 )
     argparser.add_argument ( '-n', '--nproc',
-            help='number of processes [40]',
-            type=int, default=40 )
+            help='number of processes [5]',
+            type=int, default=5 )
     argparser.add_argument ( '-f', '--factor',
             help='multiplication factor [1.005]',
             type=float, default=1.005 )
@@ -154,15 +173,20 @@ if __name__ == "__main__":
     argparser.add_argument ( '-I', '--interactive',
             help='interactive mode, starts ipython (only works with -d, and not in bulk mode)',
             action="store_true" )
+    argparser.add_argument ( '-F', '--force_copy',
+            help='force copying the hiscore.pcl file',
+            action="store_true" )
     args = argparser.parse_args()
     allpids = [ 1000021, 1000006, 2000006, 1000024, 1000022 ]
+    pids = args.pid
+    if pids == 0:
+        pids = allpids
     if args.produce:
-        hi = getHiscore()
-        if args.pid > 0:
-            produce( hi, args.pid, args.nevents, args.dry_run, args.nproc, args.factor )
+        hi = getHiscore( args.force_copy, pids )
+        produce( hi, pids, args.nevents, args.dry_run, args.nproc, args.factor )
     if args.draw:
         if args.pid > 0:
-            draw( args.pid, args.interactive )
+            draw( pids, args.interactive )
         else:
             for pid in allpids:
                 draw( pid )

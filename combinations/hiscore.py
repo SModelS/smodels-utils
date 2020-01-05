@@ -103,10 +103,15 @@ class Hiscore:
 
         try:
             with open( self.pickleFile,"rb+") as f:
-                fcntl.flock ( f, fcntl.LOCK_EX )
-                self.hiscores = pickle.load ( f )
-                self.trimmed = pickle.load ( f )
-                fcntl.flock ( f, fcntl.LOCK_UN )
+                try:
+                    fcntl.flock ( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
+                    self.hiscores = pickle.load ( f )
+                    self.trimmed = pickle.load ( f )
+                    fcntl.flock ( f, fcntl.LOCK_UN )
+                except (BlockingIOError,OSError) as e:
+                    ## make sure we dont block!
+                    fcntl.flock( f, fcntl.LOCK_UN )
+                    raise e
             self.mtime = mtime
             nhs, ntr = 0, 0
             for i in self.hiscores:
@@ -195,8 +200,8 @@ class Hiscore:
         """ see if new result makes it into hiscore list. If yes, then add.
         """
         # self.pprint ( "New result with Z=%.2f, %s" % (protomodel.Z, self.save_hiscores ) )
-        self.log( "is the new result of walker %d above threshold: %.2f > %.2f?" % \
-                  ( protomodel.walkerid, protomodel.Z, self.currentMinZ() ) )
+        # self.log( "is the new result of walker %d above threshold: %.2f > %.2f?" % \
+        #           ( protomodel.walkerid, protomodel.Z, self.currentMinZ() ) )
         if not self.save_hiscores:
             return
         if protomodel.Z <= self.currentMinZ():
@@ -239,7 +244,7 @@ def compileList( nmax ):
         print ( s, end="", flush=True )
         try:
             with open( fname,"rb+") as f:
-                fcntl.flock( f, fcntl.LOCK_EX )
+                fcntl.flock( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
                 protomodels = pickle.load ( f )
                 trimmed = pickle.load ( f )
                 fcntl.flock( f, fcntl.LOCK_UN )
@@ -349,9 +354,15 @@ def main ( args ):
         protomodels,trimmed = compileList( args.nmax ) ## compile list from H<n>.pcl files
     else:
         with open(infile,"rb+") as f:
-            fcntl.flock( f, fcntl.LOCK_EX )
-            protomodels = pickle.load ( f )
-            trimmed = pickle.load ( f )
+            try:
+                fcntl.flock( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
+                protomodels = pickle.load ( f )
+                trimmed = pickle.load ( f )
+            except (BlockingIOError,OSError) as e:
+                print ( "file handling error on %s: %s" % ( infile, e ) )
+                ## make sure we dont block!
+                fcntl.flock( f, fcntl.LOCK_UN )
+                raise e
             fcntl.flock( f, fcntl.LOCK_UN )
 
     if protomodels[0] == None:
