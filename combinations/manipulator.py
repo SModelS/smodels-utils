@@ -141,7 +141,7 @@ class Manipulator:
         p = random.choice ( frozen )
         self.M.masses[p]=random.uniform ( self.M.masses[self.M.LSP], self.M.maxMass )
         ## when unfreezing, nothing can go offshell, right?
-        # self.removeAllOffshell() ## remove all offshell stuff, normalize all branchings
+        self.removeAllOffshell() ## remove all offshell stuff, normalize all branchings
         # self.M.normalizeAllBranchings() ## adjust everything
         self.M.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.M.masses[p] ) )
         return 1
@@ -524,21 +524,7 @@ class Manipulator:
             if tmp < self.M.masses[self.M.LSP]: ## the LSP is the LSP.
                 tmp = self.M.masses[self.M.LSP]
             self.M.masses[i]=tmp
-        for squark in [ 1, 2, 3, 4, 5, 6 ]:
-            sq1,sq2=1000000+squark,2000000+squark
-            if not sq1 in self.M.masses or not sq2 in self.M.masses:
-                continue
-            msq1,msq2 = self.M.masses[sq1], self.M.masses[sq2]
-            if msq2 < msq1:
-            ### sq1 should always be lighter than sq2
-             self.M.masses[sq2]=msq1
-             self.M.masses[sq1]=msq2
-        if 1000023 in self.M.masses and 1000025 in self.M.masses:
-            mchi20 = self.M.masses[1000023]
-            mchi30 = self.M.masses[1000025]
-            if mchi20 > mchi30:
-                self.M.masses[1000023] = mchi30
-                self.M.masses[1000025] = mchi20
+        self.checkSwaps() ## should we really do this here?
         ## now remove all offshell decays, and normalize all branchings
         self.removeAllOffshell() 
 

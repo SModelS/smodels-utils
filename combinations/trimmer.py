@@ -228,9 +228,10 @@ class Trimmer:
         err = "error!!!!"
         if dZ < .1:
             err = "ok!"
-        self.pprint ( "before trimming we check again: from %.2f to %.2f: %s" % \
-                      ( oldZ, newZ, err ) )
+        self.pprint ( "before trimming we check again: from %.2f to %.2f (%d evts): %s" % \
+                      ( oldZ, newZ, self.nevents, err ) )
         self.pprint ( "Check if we should swap certain particles (eg ~b2 <-> ~b1)" )
+        self.manipulator.removeAllOffshell() ## just to be sure!
         self.manipulator.checkSwaps() ## check if e.g. N3 is lighter than N2
         self.protomodel = self.manipulator.get() ## to be sure
         self.trimParticles ( )
