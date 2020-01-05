@@ -452,7 +452,7 @@ class ProtoModel:
 
     def computeXSecs ( self, nevents=10000 ):
         """ compute xsecs for current.slha """
-        self.log ( "computing xsecs" )
+        self.log ( "computing xsecs with %d events" % nevents )
         # print ( "[walk] computing xsecs for %s" % self.currentSLHA )
         computer = XSecComputer ( NLL, nevents, 6 )
         computer.countNoNLOXSecs = 4 ## quench the warnings about no NLL xsecs

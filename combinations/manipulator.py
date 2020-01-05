@@ -388,15 +388,7 @@ class Manipulator:
             return 0 ## freeze only if at least 3 unfrozen particles exist
         p = random.choice ( unfrozen )
         self.M.log ( "Freezing %s (but keep its branchings)." % ( helpers.getParticleName(p) ) )
-        self.M.masses[p]=1e6
-        ## take it out in all decays of other particles!
-        for mpid,mdecays in self.M.decays.items(): # FIXME wrong!
-            for dpid,br in mdecays.items():
-                if self.isInPids ( p, dpid ):
-                    self.M.log ( " `- take out decay channel %s -> %s" % ( helpers.getParticleName ( mpid ), helpers.getParticleName ( dpid, addSMParticles=True ) ) )
-                    self.M.decays[mpid][dpid]=0.
-        self.removeAllOffshell() ## remove all offshell particles, normalize all branchings
-        # self.M.normalizeAllBranchings() ## adjust everything
+        self.freezeParticle ( p )
         return 1
 
     def freezeMostMassiveParticle ( self ):
@@ -410,10 +402,16 @@ class Manipulator:
                 minmass = self.M.masses[i]
                 pid = i
         # p = random.choice ( unfrozen )
-        self.M.masses[pid]=1e6
-        self.normalizeAllBranchings() ## adjust everything
         self.M.log ( "Freezing most massive %s (%.1f)" % ( helpers.getParticleName(pid), minmass ) )
+        self.freezeParticle ( pid )
         return 1
+
+    def freezeParticle ( self, pid ):
+        """ freeze particle pid, take care of offshell removal, and
+            branching normalization """
+        self.M.masses[pid]=1e6
+        self.normalizeAllBranchings()
+        self.removeAllOffshell()
 
     def randomlyChangeSSOfOneParticle ( self ):
         """ randomly change the SS consistently for one pid """
