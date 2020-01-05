@@ -401,7 +401,6 @@ class ProtoModel:
         if os.path.exists ( outputSLHA ):
             cmd = "cp %s %s" % ( outputSLHA, outputSLHA.replace(".cur",".old" ) )
             subprocess.getoutput ( cmd )
-        self.log ( "create SLHA file at %s" % outputSLHA )
         self.pprint ( "create %s from %s" % (outputSLHA, self.templateSLHA ) )
         with open(outputSLHA,"w") as f:
             for line in lines:
