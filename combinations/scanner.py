@@ -133,7 +133,7 @@ def draw( pid= 1000022, interactive=False ):
         y.append ( Zs[i] )
     pname = helpers.toLatex ( pid, addDollars=True )
     plt.plot ( x, y )
-    plt.plot ( [ cmass, cmass ], [ 0.9*min(y), 1.05*max(y) ] )
+    plt.plot ( [ cmass, cmass ], [ 0.98*min(y), 1.03*max(y) ] )
     plt.ylabel ( "Z" )
     plt.title ( "Significance Z=Z(%s)" % pname )
     plt.xlabel ( "m(%s) [GeV]" % pname )
@@ -144,6 +144,7 @@ def draw( pid= 1000022, interactive=False ):
     if interactive:
         import IPython
         IPython.embed()
+    plt.clf()
 
 if __name__ == "__main__":
     import argparse
