@@ -163,6 +163,74 @@ def writeTex ( protomodel, keep_tex ):
     except Exception as e:
         print ( "[plotHiscore] Exception when latexing: %s" % e )
 
+def writeIndexTex ( protomodel, gotTrimmed, untrimmedZ=0. ):
+    """ write the index.tex file, see e.g.
+        https://smodels.github.io/protomodels/
+    :param gotTrimmed: is the model a trimmed model?
+    :param keep_tex: keep tex files
+    """
+    ssm = []
+    for k,v in protomodel.ssmultipliers.items():
+        if abs(v-1.)<1e-3:
+            continue
+        ssm.append ( "%s: %.2f" % (helpers.getParticleName(k,addSign=True),v) )
+    f=open("index.tex","w")
+    f.write ( "Current best protomodel: Z=%.2f\\\\\\n" % protomodel.Z )
+    dbver = "???"
+    strategy = "aggressive"
+    if hasattr ( protomodel, "dbversion" ):
+        dbver = protomodel.dbversion
+        dotlessv = dbver.replace(".","")
+    trimmed="Untrimmed"
+    if gotTrimmed:
+        trimmed = "Trimmed"
+    f.write ( "%s ProtoModel produced with database v%s, combination strategy %s in step %d." % \
+            ( trimmed, dotlessv, strategy, protomodel.step ) )
+    if gotTrimmed and untrimmedZ > 0.:
+        f.write ( " Z(untrimmed)=%.2f." % untrimmedZ )
+    f.write ( "\n" )
+    f.write ( "<table width=80%>\n<tr><td>\n" )
+    if hasattr ( protomodel, "rvalues" ):
+        rvalues=protomodel.rvalues
+        rvalues.sort(key=lambda x: x[0],reverse=True )
+        f.write ( "<br><b>%d predictions available. Highest r values are:</b><br><ul>\n" % len(rvalues) )
+        for rv in rvalues[:5]:
+            srv="N/A"
+            if type(rv[1])==float:
+                srv="%.2f" % rv[1]
+            f.write ( "<li>%s:%s r=%.2f, r<sub>exp</sub>=%s<br>\n" % ( rv[2].analysisId(), ",".join ( map(str,rv[2].txnames) ), rv[0], srv ) )
+        f.write("</ul>\n")
+    else:
+        print ( "[plotHiscore] protomodel has no r values!" )
+
+    if hasattr ( protomodel, "contributions" ):
+        print ( "[plotHiscore] contributions-per-analysis are defined" )
+        f.write ( "Contributions per analysis:\n\\begin{itemize}\n" )
+        conts = []
+        for k,v in protomodel.contributions.items():
+            conts.append ( ( v, k ) )
+        conts.sort( reverse=True )
+        for v,k in conts:
+            f.write ( "\item %s: %s%s\n" % ( k, int(round(100.*v)), "%" ) )
+        f.write ( "\end{itemize}\n" )
+    else:
+        print ( "[plotHiscore] contributions are not defined" )
+
+    height = 32*int((len(ssm)+3)/4)
+    if ssm == []:
+        height = 32
+    if hasattr ( protomodel, "whatif" ):
+        height += 32
+    f.write ( "<td><img width=600px src=./texdoc.png>\n" ) #  % height )
+    f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
+    f.write ( "</table>" )
+    f.write ( '<table style="width:80%">\n' )
+    f.write ( "<td width=45%><img height=650px src=./ruler.png><td width=55%><img height=650px src=./decays.png>\n" )
+    f.write ( "\end{table}\n" )
+    f.close()
+    print ( "[plotHiscore] Wrote index.tex" )
+
+
 def writeIndexHtml ( protomodel, gotTrimmed, untrimmedZ=0. ):
     """ write the index.html file, see e.g.
         https://smodels.github.io/protomodels/
@@ -314,15 +382,16 @@ def plot ( number, verbosity, picklefile, options ):
         plotDecays ( protomodel )
     if options["predictions"]:
         discussPredictions ( protomodel )
-    if options["html"]:
+    if options["html"] or options["tex"]:
         writeTex ( protomodel, options["keep_tex"] )
         untrimmedZ = 0.
         if trimmed:
             untrimmed, _ = obtain ( number, picklefile, True )
             untrimmedZ = untrimmed.Z
-        writeIndexHtml ( protomodel, trimmed, untrimmedZ )
-    #if options["copy"]:
-    #    copyFilesToGithub()
+        if options["html"]:
+            writeIndexHtml ( protomodel, trimmed, untrimmedZ )
+        if options["tex"]:
+            writeIndexTex( protomodel, trimmed, untrimmedZ )
 
 def runPlotting ( args ):
     if args.destinations:
@@ -345,7 +414,7 @@ def runPlotting ( args ):
 
     options = { "ruler": not args.noruler, "decays": not args.nodecays,
                 "predictions": not args.nopredictions, "html": not args.nohtml,
-                "keep_tex": args.keep }
+                "keep_tex": args.keep, "tex": not args.notex }
 
     plot ( args.number, args.verbosity, args.picklefile, options )
     if upload is None:
@@ -428,6 +497,9 @@ def main ():
             action="store_true" )
     argparser.add_argument ( '-P', '--nopredictions',
             help='do not list all predictions',
+            action="store_true" )
+    argparser.add_argument ( '-T', '--notex',
+            help='do not produce the latex version',
             action="store_true" )
     argparser.add_argument ( '-k', '--keep',
             help='keep latex files',
