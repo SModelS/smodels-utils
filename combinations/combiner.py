@@ -16,6 +16,54 @@ class Combiner:
     def __init__ ( self, walkerid=0 ):
         self.walkerid = walkerid
 
+    def getAllPidsOfCombo ( self, combo ):
+        """ get all PIDs that make it into one combo """
+        pids = set()
+        for theoryPred in combo:
+            pids = pids.union ( self.getAllPidsOfTheoryPred ( theoryPred ) )
+        return pids
+
+    def getAnaIdsWithPids ( self, combo, pids ):
+        """ from best combo, retrieve all ana ids that contain *all* pids """
+        anaIds = set()
+        for theoryPred in combo:
+            tpids = self.getAllPidsOfTheoryPred ( theoryPred )
+            hasAllPids=True
+            for pid in pids:
+                if not pid in tpids:
+                    hasAllPids=False
+                    break
+            if hasAllPids:
+                anaIds.add ( theoryPred.analysisId() )
+        return anaIds
+
+    def getAllPidsOfTheoryPred ( self, pred ):
+        """ get all pids that make it into a theory prediction """
+        pids = set()
+        for prod in pred.PIDs:
+            for branch in prod:
+                for pid in branch:
+                    if type(pid) == list:
+                        for p in pid:
+                            pids.add ( abs(p) )
+                    else:
+                        pids.add ( abs(pid) )
+        return pids
+
+    def getTheoryPredsWithPids ( self, combo, pids ):
+        """ from best combo, retrieve all theory preds that contain *all* pids """
+        tpreds = set()
+        for theoryPred in combo:
+            tpids = self.getAllPidsOfTheoryPred ( theoryPred )
+            hasAllPids=True
+            for pid in pids:
+                if not pid in tpids:
+                    hasAllPids=False
+                    break
+            if hasAllPids:
+                tpreds.add ( theoryPred )
+        return tpreds
+
     def findCompatibles ( self, predA, predictions, strategy ):
         """ return list of all elements in predictions
             combinable with predA, under the given strategy """
@@ -49,7 +97,6 @@ class Combiner:
         self.pprint ( "removed %s, %d/%d remain" % \
                      ( dataType, len(tmp), len(predictions) ) )
         return tmp
-
 
     def findCombinations ( self, predictions, strategy ):
         """ finds all allowed combinations of predictions, for
@@ -349,23 +396,6 @@ class Combiner:
                     del tx.txnameDataExp
         return theorypred
 
-    """
-    def findStrongestExclusion ( self, predictions, strategy ):
-        # for the given list of predictions and employing the given strategy,
-        # find the combo with strongest exclusion
-        self.letters = getLetters ( predictions )
-        self.pprint ( "Find the strongest exclusion using strategy: %s" % strategy )
-        combinables = self.findCombinations ( predictions, strategy )
-        singlepreds = [ [x] for x in predictions ]
-        ## optionally, add individual predictions
-        combinables = singlepreds + combinables
-        discussCombinations ( combinables )
-        bestCombo,ulexp = findBestCombo ( combinables )
-        ulobs = get95CL ( bestCombo, expected=False )
-        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [ul_obs=%.2f, ul_exp=%.2f]" % ( strategy, self.getLetterCode(bestCombo), self.getComboDescription(bestCombo), ulobs, ulexp ) )
-        return bestCombo,ulexp,ulobs
-    """
-
 if __name__ == "__main__":
     from smodels.tools import runtime
     runtime._experimental = True
@@ -419,7 +449,6 @@ if __name__ == "__main__":
             continue
         for pred in preds:
             allps.append ( pred )
-    #print ( "allpreds", allps )
     combo,globalZ,llhd,muhat = combiner.findHighestSignificance ( allps, "aggressive", expected=args.expected )
     print ( "[combiner] global Z is %.2f: %s (muhat=%.2f)" % (globalZ, combiner.getComboDescription(combo),muhat ) )
     for expRes in listOfExpRes:
