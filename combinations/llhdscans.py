@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import pickle, os, sys
+import pickle, os, sys, multiprocessing
 sys.path.insert(0,"./")
 from csetup import setup
 from combiner import Combiner
@@ -13,7 +13,8 @@ def getLikelihoods ( bestcombo ):
         llhds[ tp.analysisId() ] = tp.getLikelihood ( 1. ) 
     return llhds
 
-def plotLikelihoodFor ( protomodel, pid1, pid2 ):
+def plotLikelihoodFor ( protomodel, pid1, pid2, 
+                        fmin, fmax, df, nevents ):
     """ plot the likelihoods as a function of pid1 and pid2 """
     import numpy
     c = Combiner()
@@ -42,14 +43,6 @@ def plotLikelihoodFor ( protomodel, pid1, pid2 ):
     pickle.dump ( masspoints, f )
     f.close()
 
-def plotTopologyLikelihoods ( protomodel ):
-    """ plot the likelihoods of the topologies """
-    print ( "[plotHiscore] plotting per topology likelihoods" )
-    c = Combiner()
-    pids = c.getAllPidsOfCombo ( protomodel.bestCombo )
-    print ( "all pids", pids )
-    plotLikelihoodFor ( protomodel, 1000021, 1000022 )
-
 def main ():
     rundir = setup()
     import argparse
@@ -58,7 +51,25 @@ def main ():
     argparser.add_argument ( '-n', '--number',
             help='which hiscore to plot [0]',
             type=int, default=0 )
-    argparser.add_argument ( '-f', '--picklefile',
+    argparser.add_argument ( '-1', '--pid1',
+            help='pid1 [1000021]',
+            type=int, default=1000021 )
+    argparser.add_argument ( '-2', '--pid2',
+            help='pid2 [1000022]',
+            type=int, default=1000022 )
+    argparser.add_argument ( '-f', '--fmin',
+            help='minimum factor to scan [.6]',
+            type=float, default=.6 )
+    argparser.add_argument ( '-F', '--fmax',
+            help='maximum factor to scan [1.3]',
+            type=float, default=.6 )
+    argparser.add_argument ( '-d', '--df',
+            help='delta_f [.1]',
+            type=float, default=.1 )
+    argparser.add_argument ( '-e', '--nevents',
+            help='number of events [1000]',
+            type=int, default=1000 )
+    argparser.add_argument ( '-p', '--picklefile',
             help='pickle file to draw from [%s/hiscore.pcl]' % rundir,
             type=str, default="%s/hiscore.pcl" % rundir )
     argparser.add_argument ( '-v', '--verbosity',
@@ -68,7 +79,8 @@ def main ():
     if args.picklefile == "default":
         args.picklefile = "%s/hiscore.pcl" % rundir
     protomodel, trimmed = obtain ( args.number, args.picklefile )
-    plotTopologyLikelihoods ( protomodel )
+    plotLikelihoodFor ( protomodel, args.pid1, args.pid2, args.fmin, args.fmax, \
+                        args.df, args.nevents )
 
 if __name__ == "__main__":
     main()
