@@ -178,7 +178,7 @@ if __name__ == "__main__":
             help='force copying the hiscore.pcl file',
             action="store_true" )
     args = argparser.parse_args()
-    allpids = [ 1000021, 1000006, 2000006, 1000024, 1000022 ]
+    allpids = [ 1000021, 1000006, 2000006, 1000024, 1000022, 1000005 ]
     pids = args.pid
     if pids == 0:
         pids = allpids
