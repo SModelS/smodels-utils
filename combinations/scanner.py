@@ -87,7 +87,7 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
     mrange = numpy.arange ( mass * fm, mass / fm, .008*mass )
     mrangetot = [ mass ]
     m1,m2 = mass, mass
-    dm = 1.003
+    dm = fac
     while m1 > fm * mass:
         m1 = mass/dm
         m2 = mass*dm
@@ -102,8 +102,6 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
     pool = multiprocessing.Pool ( processes = len(mranges) )
     args = [ { "model": model, "pid": pid, "nevents": nevents, 
                "i": i, "mrange": x } for i,x in enumerate(mranges) ]
-    #args = [ { "model": copy.deepcopy(model), "pid": pid, "nevents": nevents, 
-    #           "i": i, "mrange": x } for i,x in enumerate(mranges) ]
     Zs={}
     tmp = pool.map ( predProcess, args )
     for r in tmp:
@@ -154,8 +152,8 @@ if __name__ == "__main__":
             help='pid to consider. If zero, then consider a predefined list [1000022]',
             type=int, default=1000022 )
     argparser.add_argument ( '-n', '--nproc',
-            help='number of processes [5]',
-            type=int, default=5 )
+            help='number of processes [10]',
+            type=int, default=10 )
     argparser.add_argument ( '-f', '--factor',
             help='multiplication factor [1.005]',
             type=float, default=1.005 )
