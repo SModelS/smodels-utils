@@ -190,7 +190,8 @@ class Trimmer:
             perc = 0.
             if oldZ > 0.:
                 perc = ( self.protomodel.Z - oldZ ) / oldZ
-            self.pprint ( "when trying to remove %s, Z changed: %.3f -> %.3f (%.1f%s)" % ( helpers.getParticleName(pid), oldZ, self.protomodel.Z, 100.*perc, "%" ) )
+            self.pprint ( "when trying to remove %s, Z changed: %.3f -> %.3f (%d evts, %.1f%s)" % \
+                    ( helpers.getParticleName(pid), oldZ, self.protomodel.Z, self.nevents, 100.*perc, "%" ) )
             if self.protomodel.Z > (1. - self.maxloss)*oldZ:
                 ## the Z is still good enough? discard!
                 ndiscarded+=1
@@ -222,6 +223,9 @@ class Trimmer:
         :param trimbranchings: if true, also trim branchings
         """
         oldZ = self.protomodel.Z
+        self.manipulator.removeAllOffshell() ## just to be sure!
+        self.manipulator.checkSwaps() ## check if e.g. N3 is lighter than N2
+        self.protomodel = self.manipulator.get() ## to be sure
         self.protomodel.predict ( nevents = self.nevents ) ## a final predict!
         newZ = self.protomodel.Z
         dZ = abs(newZ - oldZ )
@@ -231,9 +235,6 @@ class Trimmer:
         self.pprint ( "before trimming we check again: from %.2f to %.2f (%d evts): %s" % \
                       ( oldZ, newZ, self.nevents, err ) )
         self.pprint ( "Check if we should swap certain particles (eg ~b2 <-> ~b1)" )
-        self.manipulator.removeAllOffshell() ## just to be sure!
-        self.manipulator.checkSwaps() ## check if e.g. N3 is lighter than N2
-        self.protomodel = self.manipulator.get() ## to be sure
         self.trimParticles ( )
         if trimbranchings:
             self.trimBranchings ( )
