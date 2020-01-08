@@ -22,8 +22,7 @@ def plotLikelihoodFor ( protomodel, pid1, pid2,
     ## mass range for pid1
     mpid1 = protomodel.masses[pid1]
     mpid2 = protomodel.masses[pid2]
-    fmin,fmax,df=.8,1.2,.1
-    fmin,fmax,df=.9,1.01,.1
+    print ( "f",fmin,fmax,df )
     rpid1 = numpy.arange ( fmin*mpid1, fmax*mpid1, df*mpid1 )
     rpid2 = numpy.arange ( fmin*mpid2, fmax*mpid2, df*mpid2 )
     masspoints = []
@@ -33,13 +32,13 @@ def plotLikelihoodFor ( protomodel, pid1, pid2,
         protomodel.masses[pid1]=m1
         for m2 in rpid2:
             protomodel.masses[pid2]=m2
-            protomodel.predict( nevents = 100 )
+            protomodel.predict( nevents = nevents )
             llhds = getLikelihoods ( protomodel.bestCombo )
             print ( "m1,m2,llhds", m1, m2, llhds )
             masspoints.append ( (m1,m2,llhds) )
     print ( "mass points", masspoints )
     import pickle
-    f=open("masspoints.pcl","wb" )
+    f=open("mp%d%d.pcl" % ( pid1, pid2 ) ,"wb" )
     pickle.dump ( masspoints, f )
     f.close()
 
@@ -62,7 +61,7 @@ def main ():
             type=float, default=.6 )
     argparser.add_argument ( '-F', '--fmax',
             help='maximum factor to scan [1.3]',
-            type=float, default=.6 )
+            type=float, default=1.3 )
     argparser.add_argument ( '-d', '--df',
             help='delta_f [.1]',
             type=float, default=.1 )

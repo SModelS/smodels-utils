@@ -74,6 +74,34 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     #remove ( tf, keep )
     #remove ( runner, keep )
             
+def runLLHDScanner( pid, dry_run, time ):
+    """ run the llhd scanner for pid, on the current hiscore """
+    qos = "c_short"
+    if time > 48:
+        qos = "c_long"
+    if 8 < time <= 48:
+        qos = "c_medium"
+    cmd = [ "sbatch" ]
+    # cmd = [ "srun" ]
+    cmd += [ "--qos", qos ]
+    cmd += [ "--mem", "40G" ]
+    cmd += [ "--ntasks-per-node", "5" ]
+    # cmd += [ "--pty", "bash" ]
+    cmd += [ "--time", "%s" % ( time*60-1 ) ]
+    with  open ( "run_scanner_template.sh", "rt" ) as f:
+        lines=f.readlines()
+        f.close()
+    with open ( "run_scanner%s.sh" % pid, "wt" ) as f:
+        for line in lines:
+            f.write ( line.replace("@@PID@@",str(pid) ) )
+        f.close()
+    cmd += [ "./run_scanner%s.sh" % pid ]
+    if dry_run:
+        return
+    print ( "cmd", cmd )
+    a = subprocess.run ( cmd )
+    print ( ">>", a )
+
 def runScanner( pid, dry_run, time ):
     """ run the scanner for pid, on the current hiscore """
     print ( "FIXME, use pid" )
@@ -145,6 +173,9 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-S', '--scan', nargs="?", 
                     help='run the scanner on pid, -1 means dont run', type=int, default=-1 )
+    argparser.add_argument ( '-L', '--llhdscan', nargs="?", 
+                    help='run the llhd scanner on pid/1000022, -1 means dont run', 
+                    type=int, default=-1 )
     argparser.add_argument ( '--clean', help='clean up files from old runs',
                              action="store_true" )
     argparser.add_argument ( '--clean_all', help='clean up *all* files from old runs',
@@ -181,6 +212,9 @@ def main():
         return
     if args.scan > -1:
         runScanner ( args.scan, args.dry_run, args.time )
+        return
+    if args.llhdscan > -1:
+        runLLHDScanner ( args.scan, args.dry_run, args.time )
         return
     if args.regressor:
         runRegressor ( args.dry_run )
