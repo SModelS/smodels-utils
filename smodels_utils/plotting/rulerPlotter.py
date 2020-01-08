@@ -58,9 +58,9 @@ def _squarkname ( Type, postfix ):
 def _color ( name ):
     """ different colors for different particle types """
     from ROOT import kGreen,kOrange,kRed,kBlue,kBlack
-    Dict={ "~chi":kGreen+2,"~tau":kOrange+2,"~mu":kOrange+2,"~nu":kOrange+2,
-        "~g":kRed+2,"~q":kBlue+2,"~u":kBlue+2,"~d":kBlue+2,"~c":kBlue+2,
-        "~s":kBlue+2,"~t":kBlue+1,"~b":kBlue+1,"~e":kOrange+2,"~l":kOrange+2 }
+    Dict={ "~chi":kGreen+3,"~tau":kOrange+2,"~mu":kOrange+2,"~nu":kOrange+2,
+        "~g":kRed+2,"~q":kBlue+3,"~u":kBlue+3,"~d":kBlue+3,"~c":kBlue+3,
+        "~s":kBlue+3,"~t":kBlue+2,"~b":kBlue+2,"~e":kOrange+2,"~l":kOrange+2 }
     for (mname,color) in Dict.items():
         if name.find(mname)==0: return color
     return kBlack
