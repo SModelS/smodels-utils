@@ -182,7 +182,7 @@ class DecayDrawer:
 
     def simpleName ( self, name ):
         """ simple names for slha names """
-        reps = { "~g":"G", "~chi_10":"N", "~chi1+":"C", "~t_2":"T", "~t_1":"T", 
+        reps = { "~g":"G", "~chi_10":"N", "~chi1+":"C", "~t_2":"T", "~t_1":"T",
                  "~b_2":"B", "~b_1":"B", "~nu_muL":"xx {dot m}", "~nu":"NU",
                  "~d_R":"DR", "~s_R": "SR", "~chi2+":"C2", "~chi40":"C4",
                  "~chi2+":"C2", "~chi10":"C1", "~chi30":"C3" }
@@ -206,19 +206,19 @@ class DecayDrawer:
         def large(x):
             return "\\\\large{%s}" % x
         def math(x): return "$%s$" % x
-        def green(x,usecol): 
+        def green(x,usecol):
             if not usecol:
                 return x
             return "\\color[rgb]{0,.5,0}%s" % x
-        def blue(x,usecol): 
+        def blue(x,usecol):
             if not usecol:
                 return x
             return "\\color[rgb]{0,0,.5}%s" % x
-        def brown(x,usecol): 
+        def brown(x,usecol):
             if not usecol:
                 return x
             return "\\color{brown}%s" % x
-        def red(x,usecol): 
+        def red(x,usecol):
             if not usecol:
                 return x
             return "\\color[rgb]{.5,0,0}%s" % x
@@ -237,16 +237,16 @@ class DecayDrawer:
 
         if name[:4]=="~tau": # stau
             sub=""
-            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup 
+            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
             return huge ( brown ( math ( tilde ( "\\\\tau" ) + sub ), color ) )
         squarks = [ "u", "d", "c", "s", "t", "b", "e" ]
         if first=="~" and second in squarks: # squarks and selectron
             sub=""
-            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup 
+            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
             return huge ( blue ( math ( tilde ( second ) + sub ), color ) )
         if name[:3]=="~mu": # smuon
             sub=""
-            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup 
+            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
             return huge ( brown ( math ( tilde ( "\\\\mu" ) + sub ), color ) )
         if name=="~g": return huge ( red ( math ( tilde ( "g" ) ), color ) )
         if name[:3]=="~nu": # sneutrinos:
@@ -254,7 +254,7 @@ class DecayDrawer:
             if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
             if flavor in [ "mu", "tau" ]: sub="_{\\\\%s%s}" % (flavor,sub)
             if flavor in [ "e" ]: sub="_{%s%s}" % (flavor,sub)
-            return huge ( brown ( math ( tilde ( "\\\\nu" ) + sub ), color ) ) 
+            return huge ( brown ( math ( tilde ( "\\\\nu" ) + sub ), color ) )
         if first=="~": return huge ( math ( tilde ( name[1:] ) ) )
         if name=="gamma": return large ( math ( "\gamma" ) )
         if name=="nu": return large ( math ( "\\\\nu" ) )
@@ -271,12 +271,12 @@ class DecayDrawer:
 
     def htmlName ( self, name ):
         ### name=name.replace ( "+", "" )
-        reps= { "chi10":"chi&#8321;&#8304;", "chi1+":"chi&#8321;+", 
+        reps= { "chi10":"chi&#8321;&#8304;", "chi1+":"chi&#8321;+",
            "chi2+":"chi&#8322;+", "chi3+":"chi&#8323;+", "chi20":"chi&#8322;&#8304;",
-           "chi30":"chi&#8323;&#8304;", "chi40":"chi&#8324;&#8304;", 
-           "t_1":"t&#8321;", "t_2":"t&#8322;", "b_1":"b&#8321;", "b_2":"b&#8322;", 
-           "t1":"t&#8321;", "t2":"t&#8322;", "b1":"b&#8321;", "b2":"b&#8322;", 
-           "chi":"&Chi;", "gamma":"&gamma;", "nu":"&nu;", 
+           "chi30":"chi&#8323;&#8304;", "chi40":"chi&#8324;&#8304;",
+           "t_1":"t&#8321;", "t_2":"t&#8322;", "b_1":"b&#8321;", "b_2":"b&#8322;",
+           "t1":"t&#8321;", "t2":"t&#8322;", "b1":"b&#8321;", "b2":"b&#8322;",
+           "chi":"&Chi;", "gamma":"&gamma;", "nu":"&nu;",
            "mu":"&mu;", "tau":"&tau;", "h1":"h", "h2":"H", "a0": "A",
            "a1": "A<sup>1</sup>" }
         for (From,To) in reps.items(): name=name.replace(From,To)
@@ -312,6 +312,11 @@ class DecayDrawer:
     def dot2tex ( self, out ):
         # import os
         import subprocess, os
+        cmd="which dot2tex"
+        a = subprocess.getoutput ( cmd )
+        if not "dot2tex" in a:
+            self.logger.error ( "dot2tex not found! (maybe you need to install it?)" )
+            print ( "sudo apt install dot2tex" )
         self.logger.debug ( "calling dot2tex now" )
         #    if self.html: print "<br>"
         cmd="dot2tex --autosize --nominsize --crop %s.dot -traw -o %s.tex" % (out, out )
@@ -324,7 +329,7 @@ class DecayDrawer:
         self.logger.debug ( "out=%s" % output )
         self.logger.debug ( "now meddle with tex file" )
         self.meddleWithTexFile(out)
-        outdir=os.path.dirname ( out ) 
+        outdir=os.path.dirname ( out )
         if outdir=="":
             outdir="./"
         pdfcmd="pdflatex -interaction nonstopmode -output-directory %s %s.tex " % \
