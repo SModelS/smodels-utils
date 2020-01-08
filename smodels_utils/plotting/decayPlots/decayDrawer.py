@@ -140,7 +140,14 @@ class DecayDrawer:
     def addOneEdge ( self, name, daughter, percentage, label, rmin = 0. ):
         if percentage < rmin:
             return
-        l=label
+        l=""
+        try:
+            l=self.G.get_edge ( name, daughter ).attr["label"]
+            if len(l)>0:
+                l+=", "
+        except:
+            pass
+        l+=label
         if percentage < 0.9 and not self.options["nopercentage"]:
             if self.tex:
                 l+=" "+str(int(100*percentage))+"\\\\%" ## trino
@@ -152,23 +159,19 @@ class DecayDrawer:
 
     def addEdges ( self, name, decs, rmin = 0.0 ):
         for (daughter,right) in decs.items():
-            label=""
-            first=True
-            percentage=0
+            labels = []
             for (radiator,r) in right.items():
                 if list (self.ps).count ( name ) and list(self.ps).count ( daughter ):
                     if r < rmin:
                         continue
-                    if not first:
-                        label+=","
                     rname=self.prettyName(radiator).replace(" ","")
                     if rname in self.extra.keys ( ):
                         rname += "->" + self.extra[rname]
-                    percentage+=r
-                    label+=rname
-                    first=False
-                    # print ( "adding", name, daughter, percentage )
-                    self.addOneEdge ( name, daughter, percentage, label, rmin )
+                    labels.append ( (r,rname) )
+            labels.sort( key=lambda x: x[0], reverse=True )
+            for l in labels:
+                r,rname = l[0],l[1]
+                self.addOneEdge ( name, daughter, r, rname, rmin )
 
     def addMassScale ( self ):
         """ add a ruler that lists the masses """
