@@ -16,6 +16,8 @@ def getLikelihoods ( bestcombo ):
 def plotLikelihoodFor ( protomodel, pid1, pid2, 
                         fmin, fmax, df, nevents ):
     """ plot the likelihoods as a function of pid1 and pid2 """
+    if pid2 != protomodel.LSP:
+        print ("[llhdscans] we currently assume pid2 to be the LSP, but it is %d" % pid2 )
     import numpy
     c = Combiner()
     anaIds = c.getAnaIdsWithPids ( protomodel.bestCombo, [ pid1, pid2 ] )
@@ -30,9 +32,9 @@ def plotLikelihoodFor ( protomodel, pid1, pid2,
     print ( "range for pid2", pid2, rpid2 )
     for m1 in rpid1:
         protomodel.masses[pid1]=m1
-        for m2 in rpid2:
+        for i2,m2 in enumerate(rpid2):
             protomodel.masses[pid2]=m2
-            protomodel.predict( nevents = nevents )
+            protomodel.predict( nevents = nevents, create_slha = (i2==0) )
             llhds = getLikelihoods ( protomodel.bestCombo )
             print ( "m1,m2,llhds", m1, m2, llhds )
             masspoints.append ( (m1,m2,llhds) )

@@ -191,16 +191,20 @@ class ProtoModel:
         #    del self.predictor
 
     def predict ( self, strategy = "aggressive", nevents = 10000,
-                  check_thresholds = True ):
+                  check_thresholds = True, create_slha = True ):
         """ compute best combo, llhd, and significance 
-        :param rthres 
+        :param check_thresholds: if true, check if we run into an exclusion.
+        :param create_slha: if true, create slha file, compute xsecs.
+                            if false, we assume that these steps have already been
+                                      taken care of
         :returns: False, if not prediction (e.g. because the model is excluded), 
                   True if prediction was possible
         """
         if predictor[0] == None:
             self.initializePredictor()
         # if not os.path.exists ( self.currentSLHA ):
-        self.createSLHAFile( nevents = nevents )
+        if create_slha:
+            self.createSLHAFile( nevents = nevents )
         # get the predictions that determine whether model is excluded:
         # best results only, also non-likelihood results
         #if not hasattr ( self, "predictor" ):
