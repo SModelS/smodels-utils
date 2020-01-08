@@ -1,8 +1,4 @@
--) when trimming the Z can increase. This should be propagated back to the untrimmed list.
-
--) 2016-07, T6WWoffleft, z=60. pretty plot is misleading, ugly plot is ok
--) for rmax-rejected points, use the detailed information to do sth smarter in the walk
--) replace the nested hypothesis test for a simple hypothesis test,
-   and/or try to jump to mu_max
--) write out rmax in training.gz
--) analyse the learned weights in the network
+-) move xsec computation to the manipulator
+-) add gluino -> squark, and squark -> gluino chains
+-) llhd plots. useful ones.
+-) cheat mode with mymodel.py dicts

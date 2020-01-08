@@ -191,20 +191,17 @@ class ProtoModel:
         #    del self.predictor
 
     def predict ( self, strategy = "aggressive", nevents = 10000,
-                  check_thresholds = True, create_slha = True ):
+                  check_thresholds = True, recycle_xsecs = False ):
         """ compute best combo, llhd, and significance 
         :param check_thresholds: if true, check if we run into an exclusion.
-        :param create_slha: if true, create slha file, compute xsecs.
-                            if false, we assume that these steps have already been
-                                      taken care of
+        :param recycle_xsecs: if False, always compute xsecs. If True, 
+                              reuse them, shall they exist.
         :returns: False, if not prediction (e.g. because the model is excluded), 
                   True if prediction was possible
         """
         if predictor[0] == None:
             self.initializePredictor()
-        # if not os.path.exists ( self.currentSLHA ):
-        if create_slha:
-            self.createSLHAFile( nevents = nevents )
+        self.createSLHAFile( nevents = nevents, recycle_xsecs = recycle_xsecs )
         # get the predictions that determine whether model is excluded:
         # best results only, also non-likelihood results
         #if not hasattr ( self, "predictor" ):
@@ -389,11 +386,14 @@ class ProtoModel:
             particles.append ( "%s: %d" % (  helpers.getParticleName ( pid ), m ) )
         print ( ", ".join ( particles ) )
 
-    def createSLHAFile ( self, outputSLHA=None, nevents=10000 ):
+    def createSLHAFile ( self, outputSLHA=None, nevents=10000,
+                               recycle_xsecs = False ):
         """ from the template.slha file, create the slha file of the current
             model.
         :param outputSLHA: if not None, write into that file. else, write into
             currentSLHA file.
+        :param recycle_xsecs: if False, compute xsecs from scratch,
+                              if True, recycle them, if possible.
         """
         self.checkTemplateSLHA()
         with open( self.templateSLHA ) as f:
@@ -430,7 +430,7 @@ class ProtoModel:
                                     line[p1:p1+p2+1] )
                         line=line.replace( line[p1:p1+p2+1], "0." )
                 f.write ( line )
-        self.computeXSecs( nevents )
+        self.computeXSecs( nevents, recycle = recycle_xsecs )
         return outputSLHA
 
     def dict ( self ):
@@ -454,11 +454,22 @@ class ProtoModel:
                 ret[pids]=v
         return ret
 
-    def computeXSecs ( self, nevents=10000 ):
-        """ compute xsecs for current.slha """
+    def computeXSecs ( self, nevents=10000, recycle=False ):
+        """ compute xsecs for current.slha 
+        :param recycle: if False, dont store xsecs, always recompute.
+                        if True, recycle the xsecs if they exist, store them.
+        """
         self.log ( "computing xsecs with %d events" % nevents )
         # print ( "[walk] computing xsecs for %s" % self.currentSLHA )
         computer = XSecComputer ( NLL, nevents, 6 )
+        ssmultipliers = self.relevantSSMultipliers()
+        if recycle and hasattr ( self, "stored_xsecs" ):
+            self.pprint ( "found %d old xsecs, will recycle them!!" % len(self.stored_xsecs[0]) )
+            computer.addXSecToFile( self.stored_xsecs[0], self.currentSLHA, self.stored_xsecs[1] )
+            computer.addMultipliersToFile ( ssmultipliers, self.currentSLHA )
+            return
+        if recycle:
+            self.pprint ( "recycling is on, but no xsecs were found. compute." )
         computer.countNoNLOXSecs = 4 ## quench the warnings about no NLL xsecs
         try:
             f = pyslha.readSLHAFile ( self.currentSLHA )
@@ -470,7 +481,6 @@ class ProtoModel:
 
         ## use a cleaned-up version of the ss multipliers, so the slha file
         ## remains readable
-        ssmultipliers = self.relevantSSMultipliers()
         comment = "produced at step %d" % ( self.step )
         tofile = "all"
 
@@ -478,6 +488,8 @@ class ProtoModel:
             nXsecs = computer.computeForOneFile ( [8,13], self.currentSLHA,
                     unlink=True, lOfromSLHA=False, tofile=tofile,
                     ssmultipliers  = ssmultipliers, comment = comment )
+            if recycle: ## store them
+                self.stored_xsecs = ( computer.xsecs, comment )
             self.log ( "done computing %d xsecs" % nXsecs )
         except Exception as e:
             self.pprint ( "could not compute xsecs %s: %s" % ( self.currentSLHA, e ) )

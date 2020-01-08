@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+""" script used to produce the likelihood scans """
+
 import pickle, os, sys, multiprocessing
 sys.path.insert(0,"./")
 from csetup import setup
@@ -32,9 +34,13 @@ def plotLikelihoodFor ( protomodel, pid1, pid2,
     print ( "range for pid2", pid2, rpid2 )
     for m1 in rpid1:
         protomodel.masses[pid1]=m1
+        if hasattr ( protomodel, "stored_xsecs" ):
+            del protomodel.stored_xsecs ## make sure we compute
         for i2,m2 in enumerate(rpid2):
+            if m2 > m1: ## we assume pid2 to be the daughter
+                continue
             protomodel.masses[pid2]=m2
-            protomodel.predict( nevents = nevents, create_slha = (i2==0) )
+            protomodel.predict( nevents = nevents, recycle_xsecs = True )
             llhds = getLikelihoods ( protomodel.bestCombo )
             print ( "m1,m2,llhds", m1, m2, llhds )
             masspoints.append ( (m1,m2,llhds) )
@@ -42,6 +48,8 @@ def plotLikelihoodFor ( protomodel, pid1, pid2,
     import pickle
     f=open("mp%d%d.pcl" % ( pid1, pid2 ) ,"wb" )
     pickle.dump ( masspoints, f )
+    pickle.dump ( mpid1, f )
+    pickle.dump ( mpid2, f )
     f.close()
 
 def main ():
