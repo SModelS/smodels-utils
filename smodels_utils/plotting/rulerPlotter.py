@@ -59,7 +59,7 @@ def _color ( name ):
     """ different colors for different particle types """
     from ROOT import kGreen,kOrange,kRed,kBlue,kBlack
     Dict={ "~chi":kGreen+2,"~tau":kOrange+2,"~mu":kOrange+2,"~nu":kOrange+2,
-        "~g":kRed,"~q":kBlue+2,"~u":kBlue+2,"~d":kBlue+2,"~c":kBlue+2,
+        "~g":kRed+2,"~q":kBlue+2,"~u":kBlue+2,"~d":kBlue+2,"~c":kBlue+2,
         "~s":kBlue+2,"~t":kBlue+1,"~b":kBlue+1,"~e":kOrange+2,"~l":kOrange+2 }
     for (mname,color) in Dict.items():
         if name.find(mname)==0: return color
