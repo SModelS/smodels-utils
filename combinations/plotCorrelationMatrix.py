@@ -53,7 +53,9 @@ def draw( strategy, databasepath, trianglePlot=True ):
     ROOT.gStyle.SetOptStat(0000)
 
     ROOT.gROOT.SetBatch()
-    cols = [ ROOT.kRed, ROOT.kWhite, ROOT.kGreen, ROOT.kGray, ROOT.kBlack ]
+    gray = 42 ## thats gold
+    gray = 18
+    cols = [ ROOT.kRed, ROOT.kWhite, ROOT.kGreen, gray, ROOT.kBlack ]
     ROOT.gStyle.SetPalette(len(cols), (ctypes.c_int * len(cols))(*cols) )
     ROOT.gStyle.SetNumberContours(len(cols))
 
