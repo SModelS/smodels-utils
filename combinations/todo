@@ -2,3 +2,5 @@
 -) add gluino -> squark, and squark -> gluino chains
 -) llhd plots. useful ones.
 -) cheat mode with mymodel.py dicts
+-) use the xsec recycler also in the walker
+-) use the xsec recycler also with changed ss multipliers
