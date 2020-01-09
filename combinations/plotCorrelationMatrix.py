@@ -45,11 +45,17 @@ def sortOutDupes ( results ):
             ret.append ( res )
     return ret
 
-def draw( strategy, databasepath ):
+def draw( strategy, databasepath, trianglePlot=True ):
+    """
+    :param trianglePlot: if True, then only plot the upper triangle of this
+                         symmetrical matrix
+    """
     ROOT.gStyle.SetOptStat(0000)
 
     ROOT.gROOT.SetBatch()
-    cols = [ ROOT.kRed, ROOT.kWhite, ROOT.kGreen, ROOT.kGray ]
+    gray = 42 ## thats gold
+    gray = 18
+    cols = [ ROOT.kRed, ROOT.kWhite, ROOT.kGreen, gray, ROOT.kBlack ]
     ROOT.gStyle.SetPalette(len(cols), (ctypes.c_int * len(cols))(*cols) )
     ROOT.gStyle.SetNumberContours(len(cols))
 
@@ -100,22 +106,24 @@ def draw( strategy, databasepath ):
         xaxis.SetBinLabel(x+1, label )
         yaxis.SetBinLabel(x+1, label )
         for y,f in enumerate(results):
+            if trianglePlot and y<x:
+                continue
             isUn = analysisCombiner.canCombine ( e.globalInfo, f.globalInfo, strategy )
             # isUn = e.isUncorrelatedWith ( f )
             if isUn:
                 h.SetBinContent ( x+1, y+1, 1. )
             else:
                 h.SetBinContent ( x+1, y+1, -1. )
-            if y==x:
-                h.SetBinContent ( x+1, y+1, 2. )
             if not hasLikelihood or not hasLLHD ( f ): ## has no llhd? cannot be combined
-                h.SetBinContent ( x+1, y+1, 0. )
+                h.SetBinContent ( x+1, y+1, 2. )
+            if y==x:
+                h.SetBinContent ( x+1, y+1, 3. )
 
     h.Draw("col")
     ROOT.tl=ROOT.TLatex()
     ROOT.tl.SetNDC()
     ROOT.tl.SetTextSize(.02)
-    ROOT.tl.DrawLatex(.1,.92,"green: uncorrelated, red: correlated, white: no likelihood" )
+    ROOT.tl.DrawLatex(.1,.92,"green: uncorrelated, red: correlated, gray: no likelihood" )
     ROOT.gPad.SetGrid()
     print ( "Plotting to matrix_%s.png" % strategy )
     ROOT.c1.Print("matrix_%s.png" % strategy )
