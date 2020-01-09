@@ -32,6 +32,7 @@ def plotLikelihoodFor ( protomodel, pid1, pid2,
     masspoints = []
     print ( "range for pid1", pid1, rpid1 )
     print ( "range for pid2", pid2, rpid2 )
+    protomodel.createNewSLHAFileName ( prefix="llhd" )
     for m1 in rpid1:
         protomodel.masses[pid1]=m1
         if hasattr ( protomodel, "stored_xsecs" ):
@@ -70,13 +71,13 @@ def main ():
             help='minimum factor to scan [.6]',
             type=float, default=.6 )
     argparser.add_argument ( '-F', '--fmax',
-            help='maximum factor to scan [1.3]',
+            help='maximum factor to scan [1.67]',
             type=float, default=1.3 )
     argparser.add_argument ( '-d', '--df',
-            help='delta_f [.1]',
+            help='delta_f [.03]',
             type=float, default=.1 )
     argparser.add_argument ( '-e', '--nevents',
-            help='number of events [1000]',
+            help='number of events [20000]',
             type=int, default=1000 )
     argparser.add_argument ( '-p', '--picklefile',
             help='pickle file to draw from [%s/hiscore.pcl]' % rundir,
