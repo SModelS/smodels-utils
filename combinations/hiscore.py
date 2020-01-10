@@ -210,12 +210,12 @@ class Hiscore:
         ctr = 0
         while not ret:
             self.addResult ( protomodel )
-            self.log ( "now save list" )
+            # self.log ( "now save list" )
             ret = self.save() ## and write it
             ctr+=1
             if ctr > 5:
                 break
-        self.log ( "done saving list" )
+        # self.log ( "done saving list" )
 
     def pprint ( self, *args ):
         """ logging """

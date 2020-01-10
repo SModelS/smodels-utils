@@ -27,12 +27,12 @@ def plotLikelihoodFor ( protomodel, pid1, pid2,
     mpid1 = protomodel.masses[pid1]
     mpid2 = protomodel.masses[pid2]
     print ( "f",fmin,fmax,df )
-    rpid1 = numpy.arange ( fmin*mpid1, fmax*mpid1, df*mpid1 )
-    rpid2 = numpy.arange ( fmin*mpid2, fmax*mpid2, df*mpid2 )
+    rpid1 = numpy.arange ( fmin*mpid1, (fmax+1e-8)*mpid1, df*mpid1 )
+    rpid2 = numpy.arange ( fmin*mpid2, (fmax+1e-8)*mpid2, df*mpid2 )
     masspoints = []
     print ( "range for pid1", pid1, rpid1 )
     print ( "range for pid2", pid2, rpid2 )
-    protomodel.createNewSLHAFileName ( prefix="llhd" )
+    protomodel.createNewSLHAFileName ( prefix="llhd%d" % pid1 )
     for m1 in rpid1:
         protomodel.masses[pid1]=m1
         if hasattr ( protomodel, "stored_xsecs" ):
@@ -41,7 +41,8 @@ def plotLikelihoodFor ( protomodel, pid1, pid2,
             if m2 > m1: ## we assume pid2 to be the daughter
                 continue
             protomodel.masses[pid2]=m2
-            protomodel.predict( nevents = nevents, recycle_xsecs = True )
+            protomodel.predict( nevents = nevents, check_thresholds=False, \
+                                recycle_xsecs = True )
             llhds = getLikelihoods ( protomodel.bestCombo )
             print ( "m1,m2,llhds", m1, m2, llhds )
             masspoints.append ( (m1,m2,llhds) )
@@ -68,17 +69,17 @@ def main ():
             help='pid2 [1000022]',
             type=int, default=1000022 )
     argparser.add_argument ( '-f', '--fmin',
-            help='minimum factor to scan [.6]',
-            type=float, default=.6 )
+            help='minimum factor to scan [.5]',
+            type=float, default=.5 )
     argparser.add_argument ( '-F', '--fmax',
-            help='maximum factor to scan [1.67]',
-            type=float, default=1.3 )
+            help='maximum factor to scan [2.0]',
+            type=float, default=2.0 )
     argparser.add_argument ( '-d', '--df',
             help='delta_f [.03]',
-            type=float, default=.1 )
+            type=float, default=.03 )
     argparser.add_argument ( '-e', '--nevents',
             help='number of events [20000]',
-            type=int, default=1000 )
+            type=int, default=20000 )
     argparser.add_argument ( '-p', '--picklefile',
             help='pickle file to draw from [%s/hiscore.pcl]' % rundir,
             type=str, default="%s/hiscore.pcl" % rundir )

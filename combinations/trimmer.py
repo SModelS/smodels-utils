@@ -238,6 +238,7 @@ class Trimmer:
         self.trimParticles ( )
         if trimbranchings:
             self.trimBranchings ( )
+            # self.trimSSMs ( ) ## dont do this now
         self.protomodel.trimmedBranchings = trimbranchings
         self.removeSSM1s() ## discard ss multipliers that are at 1.0
         self.protomodel.predict ( nevents = self.nevents ) ## a final predict!
@@ -248,6 +249,19 @@ class Trimmer:
         self.protomodel.predict ( nevents = self.nevents ) ## a final predict!
         self.protomodel.clean()
         self.pprint ( "trimming changed the score from %.2f to %.2f" % ( oldZ, self.protomodel.Z ) )
+
+    def trimSSMs ( self ):
+        """ try to take out the signal strength multipliers """
+        oldZ = self.protomodel.Z
+        for pids,ssm in self.protomodel.ssmultipliers.items():
+            self.pprint ( "trying to take out ssm for %s" % str(pids) )
+            self.protomodel.ssmultipliers[pids]=1. ## try!
+            self.protomodel.predict ( nevents = self.nevents )
+            if self.protomodel.Z > (1. - self.maxloss)*oldZ:
+                self.pprint ( "Z changed from %.2f to %.2f. discarding %s" % ( oldZ, self.protomodel.Z, str(pids) ) )
+            else:
+                self.pprint ( "Z changed from %.2f to %.2f. keeping %s" % ( oldZ, self.protomodel.Z, str(pids) ) )
+                self.protomodel.ssmultipliers[pids]=ssm
 
     def trimBranchingsOf ( self, pid ):
         """ trim the branchings of pid """
@@ -278,7 +292,7 @@ class Trimmer:
                 for k,v in self.protomodel.decays[pid].items():
                     self.protomodel.decays[pid][k]=v/S
                 self.protomodel.decays[pid][dpid]=0.
-                self.protomodel.predict ( self.strategy, nevents=self.nevents )
+                self.protomodel.predict ( self.strategy, nevents=self.nevents, recycle_xsecs = True )
                 if self.protomodel.rmax > rthresholds[0]:
                     self.pprint ( "running into exclusion if I try to take it out (rmax=%.1f). Leave in." % self.protomodel.rmax )
                     self.protomodel.restore()

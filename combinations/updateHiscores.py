@@ -72,6 +72,7 @@ def plot( Z, rundir ):
     args.noruler = False
     args.nodecays = False
     args.nopredictions = False
+    args.notex = True
     args.keep = False
     args.commit = False
     if Z > 2.8:
