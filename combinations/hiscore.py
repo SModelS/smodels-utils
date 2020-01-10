@@ -394,7 +394,7 @@ def main ( args ):
         protomodel = protomodels[0]
         tr = Trimmer ( protomodel, maxloss=args.maxloss, nevents = nevents )
         tr.trim( args.trim_branchings )
-        trimmed[0] = tr.protomodel
+        trimmed[0] = tr.M
 
     if args.analysis_contributions:
         protomodel = protomodels[0]
