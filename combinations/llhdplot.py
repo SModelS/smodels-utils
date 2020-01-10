@@ -60,6 +60,7 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my ):
         x.add ( m1 )
         y.add ( m2 )
         zt = float("nan")
+        zt = 0.
         if ana in llhds:
             zt = - np.log(llhds[ana] )
             if zt < minXY[2]:
