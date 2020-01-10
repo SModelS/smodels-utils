@@ -54,8 +54,8 @@ def draw( strategy, databasepath, trianglePlot=True ):
 
     ROOT.gROOT.SetBatch()
     gray = 42 ## thats gold
-    gray = 18
-    cols = [ ROOT.kRed, ROOT.kWhite, ROOT.kGreen, gray, ROOT.kBlack ]
+    gray = 17
+    cols = [ ROOT.kRed+1, ROOT.kWhite, ROOT.kGreen+1, gray, ROOT.kBlack ]
     ROOT.gStyle.SetPalette(len(cols), (ctypes.c_int * len(cols))(*cols) )
     ROOT.gStyle.SetNumberContours(len(cols))
 
@@ -82,48 +82,99 @@ def draw( strategy, databasepath, trianglePlot=True ):
     ROOT.c1.SetTopMargin(0.09)
     ROOT.c1.SetRightMargin(0.015)
 
-    h=ROOT.TH2F ( "Correlations", 
-                  "Correlations between analyses, combination strategy: ,,%s''" % strategy, 
+    h=ROOT.TH2F ( "Correlations", "",
                   nres, 0., nres, nres, 0., nres )
     xaxis = h.GetXaxis()
     yaxis = h.GetYaxis()
     xaxis.SetLabelSize(.014)
     yaxis.SetLabelSize(.014)
 
+    bins= { "CMS": { 8: [999,0], 13:[999,0] }, 
+            "ATLAS": { 8: [999,0], 13: [999,0] } }
+
     for x,e in enumerate(results):
         label = e.globalInfo.id
         hasLikelihood = hasLLHD ( e )
         ana = analysisCombiner.getExperimentName ( e.globalInfo )
-        if not hasLikelihood:
-            print ( "no likelihood: %s" % label )
-        sqrts = e.globalInfo.sqrts.asNumber(TeV)
+        #if not hasLikelihood:
+        #    print ( "no likelihood: %s" % label )
+        sqrts = int(e.globalInfo.sqrts.asNumber(TeV))
         color = ROOT.kCyan+2
+        ymax=0
         if ana == "ATLAS":
             color = ROOT.kBlue+1
         if sqrts > 10.:
             color += 2
+        if x < bins[ana][sqrts][0]:
+            bins[ana][sqrts][0]=x
+        if x > bins[ana][sqrts][1]:
+            bins[ana][sqrts][1]=x
+            ymax=x
+        color = ROOT.kGray+2
+        n = len(results )
         label = "#color[%d]{%s}" % (color, label )
-        xaxis.SetBinLabel(x+1, label )
+        xaxis.SetBinLabel(n-x, label )
         yaxis.SetBinLabel(x+1, label )
         for y,f in enumerate(results):
-            if trianglePlot and y<x:
+            if trianglePlot and y>x:
                 continue
             isUn = analysisCombiner.canCombine ( e.globalInfo, f.globalInfo, strategy )
             # isUn = e.isUncorrelatedWith ( f )
             if isUn:
-                h.SetBinContent ( x+1, y+1, 1. )
+                h.SetBinContent ( n-x, y+1, 1. )
             else:
-                h.SetBinContent ( x+1, y+1, -1. )
+                h.SetBinContent ( n-x, y+1, -1. )
             if not hasLikelihood or not hasLLHD ( f ): ## has no llhd? cannot be combined
-                h.SetBinContent ( x+1, y+1, 2. )
+                h.SetBinContent ( n-x, y+1, 2. )
             if y==x:
-                h.SetBinContent ( x+1, y+1, 3. )
+                h.SetBinContent ( n-x, y+1, 3. )
 
     h.Draw("col")
+    ROOT.bins, ROOT.xbins, ROOT.lines = {}, {}, []
+    for ana in [ "CMS", "ATLAS" ]:
+        for sqrts in [ 8, 13 ]:
+            name= "%s%d" % ( ana, sqrts )
+            ROOT.bins[name] = ROOT.TLatex()
+            ROOT.bins[name].SetTextColorAlpha(ROOT.kBlack,.7)
+            ROOT.bins[name].SetTextSize(.025)
+            ROOT.bins[name].SetTextAngle(90.)
+            ROOT.xbins[name] = ROOT.TLatex()
+            ROOT.xbins[name].SetTextColorAlpha(ROOT.kBlack,.7)
+            ROOT.xbins[name].SetTextSize(.025)
+            xcoord = .5 * ( bins[ana][sqrts][0] + bins[ana][sqrts][1] ) 
+            ycoord = n- .5 * ( bins[ana][sqrts][0] + bins[ana][sqrts][1] )
+            ycoord = ycoord - .7 * ( bins[ana][sqrts][1] - bins[ana][sqrts][0] ) + 6
+            ycoord = n - bins[ana][sqrts][1]
+            if ycoord < 3:
+                ycoord=3
+            ROOT.bins[name].DrawLatex(-4,xcoord-3,"#splitline{%s}{%d TeV}" % ( ana, sqrts ) )
+            ROOT.xbins[name].DrawLatex(ycoord,-5,"#splitline{%s}{%d TeV}" % ( ana, sqrts ) )
+            yt = bins[ana][sqrts][1] +1 
+            line = ROOT.TLine ( -1, yt, n-yt, yt )
+            line.SetLineWidth(2)
+            line.Draw()
+            xline = ROOT.TLine ( yt, n-yt, yt, -1 )
+            xline.SetLineWidth(2)
+            xline.Draw()
+            ROOT.lines.append ( line )
+            ROOT.lines.append ( xline )
+    for i in range(n+1):
+        wline = ROOT.TLine ( n, i, n-i, i )
+        wline.SetLineColor ( ROOT.kWhite )
+        wline.Draw ()
+        ROOT.lines.append ( wline )
+        vline = ROOT.TLine ( i, n-i, i, n )
+        vline.SetLineColor ( ROOT.kWhite )
+        vline.Draw ()
+        ROOT.lines.append ( vline )
+    ROOT.title = ROOT.TLatex()
+    ROOT.title.SetNDC()
+    ROOT.title.SetTextSize(.025 )
+    ROOT.title.DrawLatex(.30,.89, "#font[0]{Correlations between analyses, combination strategy: ,,%s''}" % strategy )
     ROOT.tl=ROOT.TLatex()
     ROOT.tl.SetNDC()
-    ROOT.tl.SetTextSize(.02)
-    ROOT.tl.DrawLatex(.1,.92,"green: uncorrelated, red: correlated, gray: no likelihood" )
+    ROOT.tl.SetTextSize(.022)
+    ROOT.tl.DrawLatex(.82,.82,"#splitline{#splitline{#color[417]{#bullet uncorrelated}}{#color[633]{#bullet correlated}}}{#color[16]{#bullet no likelihood}}" )
     ROOT.gPad.SetGrid()
     print ( "Plotting to matrix_%s.png" % strategy )
     ROOT.c1.Print("matrix_%s.png" % strategy )
