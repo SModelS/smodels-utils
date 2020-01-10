@@ -1,6 +1,8 @@
--) move xsec computation to the manipulator
--) add gluino -> squark, and squark -> gluino chains
 -) llhd plots. useful ones.
--) cheat mode with mymodel.py dicts
 -) use the xsec recycler also in the walker
 -) use the xsec recycler also with changed ss multipliers
+
+-) move xsec computation to the manipulator (maybe not as we then need to move .predict and .newSLHA?)
+
+.) add gluino -> squark, and squark -> gluino chains
+.) cheat mode with mymodel.py dicts

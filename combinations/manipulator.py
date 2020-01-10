@@ -144,8 +144,11 @@ class Manipulator:
                 self.M.masses[k]=v
             for k,v in m["ssmultipliers"].items():
                 self.M.ssmultipliers[k]=v
-            for k,v in m["decays"].items():
-                self.M.decays[k]=v
+            for mpid,decays in m["decays"].items():
+                if not mpid in self.M.decays:
+                    self.M.decays[mpid]={}
+                for dpid,v in decays.items():
+                    self.M.decays[mpid][dpid]=v
             return
         self.M.highlight ( "red", "cheat mode %d, not yet implemented" % mode )
 
