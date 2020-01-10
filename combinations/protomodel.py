@@ -470,7 +470,7 @@ class ProtoModel:
             computer.addCommentToFile ( self.stored_xsecs[1], self.currentSLHA )
             return
         if recycle:
-            self.pprint ( "recycling is on, but no xsecs were found. compute." )
+            self.pprint ( "recycling is on, but no xsecs were found. compute with %d events." % nevents )
         computer.countNoNLOXSecs = 4 ## quench the warnings about no NLL xsecs
         try:
             f = pyslha.readSLHAFile ( self.currentSLHA )

@@ -26,3 +26,5 @@ history_old.py
 hiscore.slha
 ruler_direct.png
 training_*.gz
+plt*
+.llhd*slha
