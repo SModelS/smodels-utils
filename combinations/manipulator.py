@@ -131,6 +131,22 @@ class Manipulator:
                     ssm = .3
                 self.M.ssmultipliers[dpd]=ssm
             return
+        if mode >= 3:
+            import os, sys
+            filename = "model%d.py" % mode
+            if not os.path.exists ( filename ):
+                self.M.highlight ( "red", "cheat mode %d started, but no %s/%s found" % ( mode, os.getcwd(), filename ) )
+                sys.exit(-1)
+            self.M.highlight ( "green", "starting with %s/%s" % ( os.getcwd(), filename ) )
+            with open ( filename, "rt" ) as f:
+                m = eval ( f.read() )
+            for k,v in m["masses"].items():
+                self.M.masses[k]=v
+            for k,v in m["ssmultipliers"].items():
+                self.M.ssmultipliers[k]=v
+            for k,v in m["decays"].items():
+                self.M.decays[k]=v
+            return
         self.M.highlight ( "red", "cheat mode %d, not yet implemented" % mode )
 
     def unfreezeRandomParticle ( self ):
