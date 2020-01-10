@@ -54,7 +54,7 @@ def draw( strategy, databasepath, trianglePlot=True ):
 
     ROOT.gROOT.SetBatch()
     gray = 42 ## thats gold
-    gray = 17
+    # gray = ROOT.kYellow-9
     cols = [ ROOT.kRed+1, ROOT.kWhite, ROOT.kGreen+1, gray, ROOT.kBlack ]
     ROOT.gStyle.SetPalette(len(cols), (ctypes.c_int * len(cols))(*cols) )
     ROOT.gStyle.SetNumberContours(len(cols))
@@ -166,7 +166,7 @@ def draw( strategy, databasepath, trianglePlot=True ):
     ROOT.title = ROOT.TLatex()
     ROOT.title.SetNDC()
     ROOT.title.SetTextSize(.025 )
-    ROOT.title.DrawLatex(.28,.89, "#font[0]{Correlations between analyses, combination strategy: ,,%s''}" % strategy )
+    ROOT.title.DrawLatex(.28,.89, "#font[132]{Correlations between analyses, combination strategy: ,,%s''}" % strategy )
     ROOT.boxes = []
     for i,b in enumerate ( [ "pair is uncorrelated", "pair is correlated", "likelihood is missing" ] ):
         bx = 51
@@ -180,8 +180,8 @@ def draw( strategy, databasepath, trianglePlot=True ):
         ROOT.boxes.append ( box )
         l = ROOT.TLatex()
         l.SetTextSize(.022)
-        if i == 2:
-            c = 16
+        #if i == 2:
+        #    c = 16
         l.SetTextColor ( c )
         l.DrawLatex ( bx+2, by, b )
         ROOT.boxes.append ( l )
