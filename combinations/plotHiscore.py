@@ -225,7 +225,7 @@ def writeIndexTex ( protomodel, gotTrimmed, untrimmedZ=0. ):
     f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
     f.write ( "</table>" )
     f.write ( '<table style="width:80%">\n' )
-    f.write ( "<td width=45%><img height=650px src=./ruler.png><td width=55%><img height=650px src=./decays.png>\n" )
+    f.write ( "<td width=45%><img height=650px src=./ruler.png><td width=55%><img width=100% src=./decays.png>\n" )
     f.write ( "\end{table}\n" )
     f.close()
     print ( "[plotHiscore] Wrote index.tex" )

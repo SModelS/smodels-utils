@@ -142,18 +142,14 @@ def draw( strategy, databasepath, trianglePlot=True ):
             ROOT.xbins[name].SetTextColorAlpha(ROOT.kBlack,.7)
             ROOT.xbins[name].SetTextSize(.025)
             xcoord = .5 * ( bins[ana][sqrts][0] + bins[ana][sqrts][1] ) 
-            ycoord = n- .5 * ( bins[ana][sqrts][0] + bins[ana][sqrts][1] )
-            ycoord = ycoord - .7 * ( bins[ana][sqrts][1] - bins[ana][sqrts][0] ) + 6
-            ycoord = n - bins[ana][sqrts][1]
-            if ycoord < 3:
-                ycoord=3
+            ycoord = n- .5 * ( bins[ana][sqrts][0] + bins[ana][sqrts][1] ) -3
             ROOT.bins[name].DrawLatex(-4,xcoord-3,"#splitline{%s}{%d TeV}" % ( ana, sqrts ) )
             ROOT.xbins[name].DrawLatex(ycoord,-5,"#splitline{%s}{%d TeV}" % ( ana, sqrts ) )
             yt = bins[ana][sqrts][1] +1 
             line = ROOT.TLine ( -1, yt, n-yt, yt )
             line.SetLineWidth(2)
             line.Draw()
-            xline = ROOT.TLine ( yt, n-yt, yt, -1 )
+            xline = ROOT.TLine ( n-yt, yt, n-yt, -1 )
             xline.SetLineWidth(2)
             xline.Draw()
             ROOT.lines.append ( line )
@@ -170,11 +166,25 @@ def draw( strategy, databasepath, trianglePlot=True ):
     ROOT.title = ROOT.TLatex()
     ROOT.title.SetNDC()
     ROOT.title.SetTextSize(.025 )
-    ROOT.title.DrawLatex(.30,.89, "#font[0]{Correlations between analyses, combination strategy: ,,%s''}" % strategy )
-    ROOT.tl=ROOT.TLatex()
-    ROOT.tl.SetNDC()
-    ROOT.tl.SetTextSize(.022)
-    ROOT.tl.DrawLatex(.82,.82,"#splitline{#splitline{#color[417]{#bullet uncorrelated}}{#color[633]{#bullet correlated}}}{#color[16]{#bullet no likelihood}}" )
+    ROOT.title.DrawLatex(.28,.89, "#font[0]{Correlations between analyses, combination strategy: ,,%s''}" % strategy )
+    ROOT.boxes = []
+    for i,b in enumerate ( [ "pair is uncorrelated", "pair is correlated", "likelihood is missing" ] ):
+        bx = 51
+        by = 68 - 3*i 
+        box = ROOT.TBox(bx,by,bx+1,by+1)
+        c = cols[i]
+        if i > 0:
+            c = cols[i+1]
+        box.SetFillColor ( c )
+        box.Draw()
+        ROOT.boxes.append ( box )
+        l = ROOT.TLatex()
+        l.SetTextSize(.022)
+        if i == 2:
+            c = 16
+        l.SetTextColor ( c )
+        l.DrawLatex ( bx+2, by, b )
+        ROOT.boxes.append ( l )
     ROOT.gPad.SetGrid()
     print ( "Plotting to matrix_%s.png" % strategy )
     ROOT.c1.Print("matrix_%s.png" % strategy )

@@ -19,9 +19,9 @@ class Trimmer:
         """
         :param maxloss: maximum loss that we allow, in relative numbers
         """
-        self.protomodel = copy.deepcopy ( protomodel )
-        self.protomodel.createNewSLHAFileName ( prefix="tri" )
-        self.manipulator = Manipulator ( self.protomodel )
+        self.M = copy.deepcopy ( protomodel )
+        self.M.createNewSLHAFileName ( prefix="tri" )
+        self.manipulator = Manipulator ( self.M )
         self.strategy = strategy
         self.maxloss = maxloss
         self.nevents = nevents
@@ -29,45 +29,45 @@ class Trimmer:
     def highlight ( self, msgType = "info", *args ):
         """ logging, hilit """
         col = colorama.Fore.GREEN
-        print ( "%s[trimmer:%d - %s] %s%s" % ( col, self.protomodel.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)), colorama.Fore.RESET ) )
+        print ( "%s[trimmer:%d - %s] %s%s" % ( col, self.M.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)), colorama.Fore.RESET ) )
 
     def pprint ( self, *args ):
         """ logging """
-        print ( "[trimmer:%d] %s" % (self.protomodel.walkerid, " ".join(map(str,args))) )
+        print ( "[trimmer:%d] %s" % (self.M.walkerid, " ".join(map(str,args))) )
         self.log ( *args )
 
     def log ( self, *args ):
         """ logging to file """
-        # logfile = "walker%d.log" % self.protomodel.walkerid
+        # logfile = "walker%d.log" % self.M.walkerid
         logfile = "hiscore.log"
         with open( logfile, "a" ) as f:
-            f.write ( "[trimmer:%d - %s] %s\n" % ( self.protomodel.walkerid, time.asctime(), " ".join(map(str,args)) ) )
+            f.write ( "[trimmer:%d - %s] %s\n" % ( self.M.walkerid, time.asctime(), " ".join(map(str,args)) ) )
 
     def checkZ ( self ):
         print ( "[trimmer] Check significance Z ... " )
-        origZ = self.protomodel.Z # to be sure
-        self.protomodel.Z = -23.
-        self.protomodel.predict( strategy=self.strategy, nevents=self.nevents ) # , keep_meta = True )
-        print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions, experimental=%d" % ( self.protomodel.Z, origZ, len(self.protomodel.bestCombo), runtime._experimental ) )
-        return abs ( (origZ - self.protomodel.Z) / ( origZ +1e-10 ) ) < 1e-7
+        origZ = self.M.Z # to be sure
+        self.M.Z = -23.
+        self.M.predict( strategy=self.strategy, nevents=self.nevents ) # , keep_meta = True )
+        print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions, experimental=%d" % ( self.M.Z, origZ, len(self.M.bestCombo), runtime._experimental ) )
+        return abs ( (origZ - self.M.Z) / ( origZ +1e-10 ) ) < 1e-7
 
     def computeAnalysisContributions ( self ):
         """ compute the contributions to Z of the individual analyses """
         print ( "[trimmer] now computing analysis contributions" )
-        print ( "[trimmer] step 1: recompute the full Z. Old one at %.2f." % self.protomodel.Z )
-        origZ = self.protomodel.Z # to be sure
-        self.protomodel.Z = -23.
-        hasPred = self.protomodel.predict( strategy=self.strategy, nevents=self.nevents,
+        print ( "[trimmer] step 1: recompute the full Z. Old one at %.2f." % self.M.Z )
+        origZ = self.M.Z # to be sure
+        self.M.Z = -23.
+        hasPred = self.M.predict( strategy=self.strategy, nevents=self.nevents,
                                            check_thresholds = False )
         if not hasPred:
-            print ( "[trimmer] I dont understand, why do I not get a pred anymore? r=%.2f" % ( self.protomodel.rmax ) )
-        print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions, has a pred? %d, experimental=%d" % ( self.protomodel.Z, origZ, len(self.protomodel.bestCombo), hasPred, runtime._experimental ) )
-        if origZ > 0. and abs ( origZ - self.protomodel.Z ) / origZ > 0.001:
+            print ( "[trimmer] I dont understand, why do I not get a pred anymore? r=%.2f" % ( self.M.rmax ) )
+        print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions, has a pred? %d, experimental=%d" % ( self.M.Z, origZ, len(self.M.bestCombo), hasPred, runtime._experimental ) )
+        if origZ > 0. and abs ( origZ - self.M.Z ) / origZ > 0.001:
             print  ( "[trimmer] error!! Zs do not match! Should not save" )
         contributions = {}
         combiner = Combiner()
         dZtot = 0.
-        bestCombo = copy.deepcopy ( self.protomodel.bestCombo )
+        bestCombo = copy.deepcopy ( self.M.bestCombo )
         for ctr,pred in enumerate(bestCombo):
             combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:] 
             Z, muhat_ = combiner.getSignificance ( combo )
@@ -77,19 +77,19 @@ class Trimmer:
             # contributions[ ctr ] = Z
         for k,v in contributions.items():
             perc = (origZ-v) / dZtot
-            print ( "[trimmer] without %s(%s) we get %.3f (%d%s)" % ( self.protomodel.bestCombo[k].analysisId(), self.protomodel.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
+            print ( "[trimmer] without %s(%s) we get %.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
             contributions[ k ] = perc
         contrsWithNames = {}
         for k,v in contributions.items():
-            contrsWithNames [ self.protomodel.bestCombo[k].analysisId() ] = v
-        self.protomodel.contributions = contrsWithNames
+            contrsWithNames [ self.M.bestCombo[k].analysisId() ] = v
+        self.M.contributions = contrsWithNames
         print ( "[trimmer] stored %d contributions" % len(contributions) )
-        return self.protomodel
+        return self.M
 
     def pidsOfBestCombo ( self ):
         """ obtain all pids that are relevant for best combo """
         ret = set()
-        for theoryPred in self.protomodel.bestCombo:
+        for theoryPred in self.M.bestCombo:
             for pids in theoryPred.PIDs:
                 for pidbranch in pids:
                     for pid in pidbranch:
@@ -101,21 +101,21 @@ class Trimmer:
             can safely be removed """
         ## FIXME still have to check for decays!
         return
-        # print ( "bestcombo", self.protomodel.bestCombo )
+        # print ( "bestcombo", self.M.bestCombo )
         bestComboPids = self.pidsOfBestCombo()
         dontRemove = copy.deepcopy ( bestComboPids )
-        unfrozen = self.protomodel.unFrozenParticles( withLSP=False )
+        unfrozen = self.M.unFrozenParticles( withLSP=False )
         for pid in unfrozen: # bestComboPids:
-            if pid in self.protomodel.decays:
+            if pid in self.M.decays:
                 # dont remove particles that appear in decay chains of any unfrozen particle
-                for dpid in self.protomodel.decays[pid].keys():
+                for dpid in self.M.decays[pid].keys():
                     dontRemove.add ( abs(dpid) )
         print ( "dont removes", dontRemove )
         removed = []
         for pid in unfrozen: ## of all unfrozen particles
             if pid not in dontRemove:
                 removed.append ( pid )
-                self.protomodel.masses[pid]=1e6
+                self.M.masses[pid]=1e6
                 ## FIXME now remove also from decays!
         return removed
 
@@ -123,26 +123,26 @@ class Trimmer:
         """ discard ss multipliers for frozen particles """
         self.log ( "remove frozen SSMs" )
         removed = []
-        ssms = copy.deepcopy ( self.protomodel.ssmultipliers )
+        ssms = copy.deepcopy ( self.M.ssmultipliers )
         for pids,v in ssms.items():
             removeIt = False
             for pid in pids:
-                if self.protomodel.masses[abs(pid)]>5e5:
+                if self.M.masses[abs(pid)]>5e5:
                     removeIt = True
             if removeIt:
                 removed.append ( pids )
-                self.protomodel.ssmultipliers.pop ( pids )
+                self.M.ssmultipliers.pop ( pids )
         return removed
 
     def removeSSM1s( self ):
         """ discard ss multipliers that are at 1.0 """
         self.log ( "try to discard ss multipliers that are 1" )
         removed = []
-        ssms = copy.deepcopy ( self.protomodel.ssmultipliers )
+        ssms = copy.deepcopy ( self.M.ssmultipliers )
         for pids,v in ssms.items():
             if abs(v-1.)<1e-5:
                 removed.append ( pids )
-                self.protomodel.ssmultipliers.pop ( pids )
+                self.M.ssmultipliers.pop ( pids )
         return removed
 
     def trimParticles ( self ):
@@ -150,84 +150,84 @@ class Trimmer:
             significantly worsening Z """
         from smodels.tools import runtime
         runtime._experimental = True
-        unfrozen = self.protomodel.unFrozenParticles( withLSP=False )
+        unfrozen = self.M.unFrozenParticles( withLSP=False )
         ndiscarded=0
-        oldZ = self.protomodel.Z
-        self.protomodel.whatif = {} ## save the scores for the non-discarded particles.
+        oldZ = self.M.Z
+        self.M.whatif = {} ## save the scores for the non-discarded particles.
         ## aka: what would happen to the score if I removed particle X?
-        frozen = self.protomodel.frozenParticles()
+        frozen = self.M.frozenParticles()
         for pid in frozen:
             ## remove ssmultipliers for frozen particles
-            if pid in self.protomodel.ssmultipliers:
-                self.protomodel.ssmultipliers.pop(pid)
-            self.protomodel.masses[pid]=1e6 ## renormalize
+            if pid in self.M.ssmultipliers:
+                self.M.ssmultipliers.pop(pid)
+            self.M.masses[pid]=1e6 ## renormalize
         # unfrozen = [] ## FIXME was only needed for checking branching trimmer
-        pidsnmasses = [ (x,self.protomodel.masses[x]) for x in unfrozen ]
+        pidsnmasses = [ (x,self.M.masses[x]) for x in unfrozen ]
         pidsnmasses.sort ( key=lambda x: x[1], reverse=True )
         for cpid,(pid,mass) in enumerate(pidsnmasses):
-            self.protomodel.backup()
+            self.M.backup()
             self.highlight ( "info", "trying to freeze %s (%.1f): [%d/%d]" % \
                    ( helpers.getParticleName(pid,addSign=False),
-                     self.protomodel.masses[pid],(cpid+1),len(unfrozen) ) )
-            oldmass = self.protomodel.masses[pid]
-            self.protomodel.masses[pid]=1e6
+                     self.M.masses[pid],(cpid+1),len(unfrozen) ) )
+            oldmass = self.M.masses[pid]
+            self.M.masses[pid]=1e6
             ## also branchings need to be taken out.
-            olddecays = copy.deepcopy ( self.protomodel.decays ) ## keep a copy of all, is easier
-            for dpid,decays in self.protomodel.decays.items():
+            olddecays = copy.deepcopy ( self.M.decays ) ## keep a copy of all, is easier
+            for dpid,decays in self.M.decays.items():
                 if pid in decays.keys():
                     br = 1. - decays[pid] ## need to correct for what we loose
                     if br > 0.: # if the branching is only to this guy, we cannot take it out
-                        self.protomodel.decays[dpid].pop(pid)
-                        for dp_,dbr_ in self.protomodel.decays[dpid].items():
-                            self.protomodel.decays[dpid][dp_] = self.protomodel.decays[dpid][dp_] / br
+                        self.M.decays[dpid].pop(pid)
+                        for dp_,dbr_ in self.M.decays[dpid].items():
+                            self.M.decays[dpid][dp_] = self.M.decays[dpid][dp_] / br
             ## and signal strength multipliers, take them out also
-            for dpd,v in self.protomodel.ssmultipliers.items():
+            for dpd,v in self.M.ssmultipliers.items():
                 if dpid in dpd or -dpid in dpd:
-                    self.protomodel.ssmultipliers[dpd]=1. ## setting to 1 is taking out
+                    self.M.ssmultipliers[dpd]=1. ## setting to 1 is taking out
             # self.createSLHAFile()
             ## when trimming we want to increase statistics
-            self.protomodel.predict ( self.strategy, nevents = self.nevents )
+            self.M.predict ( self.strategy, nevents = self.nevents )
             perc = 0.
             if oldZ > 0.:
-                perc = ( self.protomodel.Z - oldZ ) / oldZ
+                perc = ( self.M.Z - oldZ ) / oldZ
             self.pprint ( "when trying to remove %s, Z changed: %.3f -> %.3f (%d evts, %.1f%s)" % \
-                    ( helpers.getParticleName(pid), oldZ, self.protomodel.Z, self.nevents, 100.*perc, "%" ) )
-            if self.protomodel.Z > (1. - self.maxloss)*oldZ:
+                    ( helpers.getParticleName(pid), oldZ, self.M.Z, self.nevents, 100.*perc, "%" ) )
+            if self.M.Z > (1. - self.maxloss)*oldZ:
                 ## the Z is still good enough? discard!
                 ndiscarded+=1
                 self.pprint ( "discarding #%d: %s" % ( ndiscarded, helpers.getParticleName(pid) ) )
-                if pid in self.protomodel.ssmultipliers:
+                if pid in self.M.ssmultipliers:
                     #popping from multipliers also
-                    self.protomodel.ssmultipliers.pop(pid)
-                oldZ = self.protomodel.Z
+                    self.M.ssmultipliers.pop(pid)
+                oldZ = self.M.Z
             else:
-                self.protomodel.whatif[pid]=self.protomodel.Z
+                self.M.whatif[pid]=self.M.Z
                 self.pprint ( "keeping %s" % helpers.getParticleName(pid) )
-                self.protomodel.masses[pid]=oldmass
-                self.protomodel.decays = olddecays
-                self.protomodel.restore()
+                self.M.masses[pid]=oldmass
+                self.M.decays = olddecays
+                self.M.restore()
         self.pprint ( "discarded %d/%d particles." % ( ndiscarded, len(pidsnmasses) ) )
 
     def removeZeroDecays ( self ):
         """ remove zero entries in all decays """
-        for pid,decay in self.protomodel.decays.items():
+        for pid,decay in self.M.decays.items():
             newdecay = {}
             for dpd,br in decay.items():
                 if br > 0.:
                     newdecay[dpd]=br
-            self.protomodel.decays[pid]=newdecay
+            self.M.decays[pid]=newdecay
 
     def trim ( self, trimbranchings=False ):
         """ see if you can trim the model, accept losses smaller than maxloss
         on Z.
         :param trimbranchings: if true, also trim branchings
         """
-        oldZ = self.protomodel.Z
+        oldZ = self.M.Z
         self.manipulator.removeAllOffshell() ## just to be sure!
         self.manipulator.checkSwaps() ## check if e.g. N3 is lighter than N2
-        self.protomodel = self.manipulator.get() ## to be sure
-        self.protomodel.predict ( nevents = self.nevents ) ## a final predict!
-        newZ = self.protomodel.Z
+        self.M = self.manipulator.get() ## to be sure
+        self.M.predict ( nevents = self.nevents ) ## a final predict!
+        newZ = self.M.Z
         dZ = abs(newZ - oldZ )
         err = "error!!!!"
         if dZ < .1:
@@ -239,72 +239,72 @@ class Trimmer:
         if trimbranchings:
             self.trimBranchings ( )
             # self.trimSSMs ( ) ## dont do this now
-        self.protomodel.trimmedBranchings = trimbranchings
+        self.M.trimmedBranchings = trimbranchings
         self.removeSSM1s() ## discard ss multipliers that are at 1.0
-        self.protomodel.predict ( nevents = self.nevents ) ## a final predict!
-        self.pprint ( "after removeSSM1s() it moved from %.2f to %.2f" % ( oldZ, self.protomodel.Z ) )
+        self.M.predict ( nevents = self.nevents ) ## a final predict!
+        self.pprint ( "after removeSSM1s() it moved from %.2f to %.2f" % ( oldZ, self.M.Z ) )
         self.removeFrozenSSMs() ## discard ss multipliers for frozen particles
         self.removeZeroDecays() ## remove decays with br of zero
-        self.protomodel.trimloss = self.maxloss ## store the trim loss
-        self.protomodel.predict ( nevents = self.nevents ) ## a final predict!
-        self.protomodel.clean()
-        self.pprint ( "trimming changed the score from %.2f to %.2f" % ( oldZ, self.protomodel.Z ) )
+        self.M.trimloss = self.maxloss ## store the trim loss
+        self.M.predict ( nevents = self.nevents ) ## a final predict!
+        self.M.clean()
+        self.pprint ( "trimming changed the score from %.2f to %.2f" % ( oldZ, self.M.Z ) )
 
     def trimSSMs ( self ):
         """ try to take out the signal strength multipliers """
-        oldZ = self.protomodel.Z
-        for pids,ssm in self.protomodel.ssmultipliers.items():
+        oldZ = self.M.Z
+        for pids,ssm in self.M.ssmultipliers.items():
             self.pprint ( "trying to take out ssm for %s" % str(pids) )
-            self.protomodel.ssmultipliers[pids]=1. ## try!
-            self.protomodel.predict ( nevents = self.nevents )
-            if self.protomodel.Z > (1. - self.maxloss)*oldZ:
-                self.pprint ( "Z changed from %.2f to %.2f. discarding %s" % ( oldZ, self.protomodel.Z, str(pids) ) )
+            self.M.ssmultipliers[pids]=1. ## try!
+            self.M.predict ( nevents = self.nevents )
+            if self.M.Z > (1. - self.maxloss)*oldZ:
+                self.pprint ( "Z changed from %.2f to %.2f. discarding %s" % ( oldZ, self.M.Z, str(pids) ) )
             else:
-                self.pprint ( "Z changed from %.2f to %.2f. keeping %s" % ( oldZ, self.protomodel.Z, str(pids) ) )
-                self.protomodel.ssmultipliers[pids]=ssm
+                self.pprint ( "Z changed from %.2f to %.2f. keeping %s" % ( oldZ, self.M.Z, str(pids) ) )
+                self.M.ssmultipliers[pids]=ssm
 
     def trimBranchingsOf ( self, pid ):
         """ trim the branchings of pid """
-        decays = self.protomodel.decays[pid]
+        decays = self.M.decays[pid]
         ndiscardedBR = 0
         for dpid,dbr in decays.items():
             dpid1 = dpid
             if type(dpid)==tuple:
                 dpid1 = dpid[0]
-            if not dpid1 in self.protomodel.masses:
-                self.protomodel.masses[dpid1]=1e6
-            if not pid in self.protomodel.masses:
-                self.protomodel.masses[pid]=1e6
-            self.log ( "look at %s(%.1f) -> %s(%.1f) [br %.3f]" % (pid,self.protomodel.masses[pid],dpid1,self.protomodel.masses[dpid1],dbr) )
+            if not dpid1 in self.M.masses:
+                self.M.masses[dpid1]=1e6
+            if not pid in self.M.masses:
+                self.M.masses[pid]=1e6
+            self.log ( "look at %s(%.1f) -> %s(%.1f) [br %.3f]" % (pid,self.M.masses[pid],dpid1,self.M.masses[dpid1],dbr) )
             if dbr < 1e-5: ## small values set automatically to zero
-                self.protomodel.decays[pid][dpid]=0. ## correct for it.
-                S = sum ( self.protomodel.decays[pid].values() )
+                self.M.decays[pid][dpid]=0. ## correct for it.
+                S = sum ( self.M.decays[pid].values() )
                 if S > 0.:
-                    for k,v in self.protomodel.decays[pid].items():
-                        self.protomodel.decays[pid][k]=v/S
+                    for k,v in self.M.decays[pid].items():
+                        self.M.decays[pid][k]=v/S
                 continue
-            if dbr > 1e-5 and (dbr < .15 or self.protomodel.masses[dpid1]>self.protomodel.masses[pid]):
+            if dbr > 1e-5 and (dbr < .15 or self.M.masses[dpid1]>self.M.masses[pid]):
                 self.pprint ( "decay %s -> %s (br=%.2f) has small branching or is offshell. Try to take out." % (helpers.getParticleName(pid),helpers.getParticleName(dpid1),dbr) )
-                oldZ = self.protomodel.Z
-                self.protomodel.backup()
-                self.protomodel.decays[pid][dpid]=0.
-                S = sum ( self.protomodel.decays[pid].values() )
-                for k,v in self.protomodel.decays[pid].items():
-                    self.protomodel.decays[pid][k]=v/S
-                self.protomodel.decays[pid][dpid]=0.
-                self.protomodel.predict ( self.strategy, nevents=self.nevents, recycle_xsecs = True )
-                if self.protomodel.rmax > rthresholds[0]:
-                    self.pprint ( "running into exclusion if I try to take it out (rmax=%.1f). Leave in." % self.protomodel.rmax )
-                    self.protomodel.restore()
+                oldZ = self.M.Z
+                self.M.backup()
+                self.M.decays[pid][dpid]=0.
+                S = sum ( self.M.decays[pid].values() )
+                for k,v in self.M.decays[pid].items():
+                    self.M.decays[pid][k]=v/S
+                self.M.decays[pid][dpid]=0.
+                self.M.predict ( self.strategy, nevents=self.nevents, recycle_xsecs = True )
+                if self.M.rmax > rthresholds[0]:
+                    self.pprint ( "running into exclusion if I try to take it out (rmax=%.1f). Leave in." % self.M.rmax )
+                    self.M.restore()
                     continue
 
-                if self.protomodel.Z > (1. - self.maxloss)*oldZ:
+                if self.M.Z > (1. - self.maxloss)*oldZ:
                     dbr = 0.
                     ndiscardedBR+=1
-                    self.pprint ( "discarding small BR %s -> %s: %.2f: Z changed %.3f -> %.3f" % ( helpers.getParticleName(pid),helpers.getParticleName(dpid), dbr, oldZ, self.protomodel.Z ) )
+                    self.pprint ( "discarding small BR %s -> %s: %.2f: Z changed %.3f -> %.3f" % ( helpers.getParticleName(pid),helpers.getParticleName(dpid), dbr, oldZ, self.M.Z ) )
                 else:
-                    self.pprint ( "not discarding small BR %s -> %s: %.2f Z changed %.3f -> %.3f" % ( helpers.getParticleName(pid), helpers.getParticleName(dpid), dbr, oldZ, self.protomodel.Z ) )
-                    self.protomodel.restore()
+                    self.pprint ( "not discarding small BR %s -> %s: %.2f Z changed %.3f -> %.3f" % ( helpers.getParticleName(pid), helpers.getParticleName(dpid), dbr, oldZ, self.M.Z ) )
+                    self.M.restore()
         return ndiscardedBR
 
 
@@ -312,11 +312,11 @@ class Trimmer:
         """ now trim the branchings """
         from smodels.tools import runtime
         runtime._experimental = True
-        unfrozen = self.protomodel.unFrozenParticles( withLSP=False )
+        unfrozen = self.M.unFrozenParticles( withLSP=False )
         ndiscardedBR=0
         self.pprint ( "now try to trim the branchings of %d particles" % len(unfrozen) )
         # unfrozen = [] ## turn it off
         for cpid,pid in enumerate(unfrozen):
             ndiscardedBR += self.trimBranchingsOf ( pid )
             self.highlight ( "info", "trying to trim branchings of %s [%d/%d]" % ( helpers.getParticleName(pid),(cpid+1),len(unfrozen) ) )
-        self.pprint ( "%d/%d particles are still unfrozen. discarded %d branchings." % ( len(self.protomodel.unFrozenParticles()),len(self.protomodel.masses),ndiscardedBR )  )
+        self.pprint ( "%d/%d particles are still unfrozen. discarded %d branchings." % ( len(self.M.unFrozenParticles()),len(self.M.masses),ndiscardedBR )  )

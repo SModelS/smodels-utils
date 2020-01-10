@@ -147,7 +147,7 @@ class Hiscore:
                 trimmer.trim( trimbranchings=trimbranchings )
                 while len(self.trimmed)<=i:
                     self.trimmed.append ( None )
-                self.trimmed[i] = trimmer.protomodel
+                self.trimmed[i] = trimmer.M
 
     def clean ( self ):
         """ clean hiscore list, i.e. remove cruft from protomodels.
