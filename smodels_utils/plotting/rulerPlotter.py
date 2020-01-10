@@ -243,6 +243,7 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
         """
         t.SetTextColor(col)
         label = _pprint(name)
+        label = "#font[32]{%s}" % label
         t.DrawLatex(x+dx,y-.01,label )
         lctr=0
         keys = []
