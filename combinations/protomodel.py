@@ -465,8 +465,9 @@ class ProtoModel:
         ssmultipliers = self.relevantSSMultipliers()
         if recycle and hasattr ( self, "stored_xsecs" ):
             self.pprint ( "found %d old xsecs, will recycle them!!" % len(self.stored_xsecs[0]) )
-            computer.addXSecToFile( self.stored_xsecs[0], self.currentSLHA, self.stored_xsecs[1] )
+            computer.addXSecToFile( self.stored_xsecs[0], self.currentSLHA, "recycled" )
             computer.addMultipliersToFile ( ssmultipliers, self.currentSLHA )
+            computer.addCommentToFile ( self.stored_xsecs[1], self.currentSLHA )
             return
         if recycle:
             self.pprint ( "recycling is on, but no xsecs were found. compute." )
@@ -485,11 +486,15 @@ class ProtoModel:
         tofile = "all"
 
         try:
-            nXsecs = computer.computeForOneFile ( [8,13], self.currentSLHA,
-                    unlink=True, lOfromSLHA=False, tofile=tofile,
-                    ssmultipliers  = ssmultipliers, comment = comment )
+            xsecs, nXsecs = [], 0
+            for sqrts in [8, 13]:
+                nXsecs += computer.computeForOneFile ( [sqrts], self.currentSLHA,
+                        unlink=True, lOfromSLHA=False, tofile=tofile,
+                        ssmultipliers  = ssmultipliers, comment = comment )
+                for x in computer.xsecs:
+                    xsecs.append ( x )
             if recycle: ## store them
-                self.stored_xsecs = ( computer.xsecs, comment )
+                self.stored_xsecs = ( xsecs, comment )
             self.log ( "done computing %d xsecs" % nXsecs )
         except Exception as e:
             self.pprint ( "could not compute xsecs %s: %s" % ( self.currentSLHA, e ) )

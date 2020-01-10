@@ -85,7 +85,11 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my ):
     ax.scatter(Xs, Ys, marker="+", s=1, color="black" )
     print ( "minXY", minXY )
     ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=12, color="red", label="$\hat{l}$ (ml estimate, %.2f)" % minXY[2] )
-    ax.scatter( [ mx ], [ my ], marker="*", s=15, color="black", label="proto-model (%.2f)" % L[getHash(mx,my)] )
+    s=""
+    h = getHash(mx,my)
+    if h in L:
+        s=" (%.2f)" % L[h]
+    ax.scatter( [ mx ], [ my ], marker="*", s=15, color="black", label="proto-model%s" % s )
     plt.title ( "-ln L, %s" % ana )
     plt.xlabel ( "%s" % pid1 )
     plt.ylabel ( "%s" % pid2 )

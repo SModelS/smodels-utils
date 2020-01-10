@@ -24,8 +24,20 @@ class Predictor:
         force_load = None
         if dbpath.endswith ( ".pcl" ):
             force_load = "pcl"
-        self.database=Database( dbpath, force_load = force_load ) 
+        self.database=Database( dbpath, force_load = force_load )
         self.fetchResults()
+
+    def filterForAnaIds ( self, anaIds ):
+        """ filter the list of expRes, keep only anaIds """
+        keepExpRes = []
+        nbefore = len(self.listOfExpRes)
+        for er in self.listOfExpRes:
+            eid = er.globalInfo.id
+            if eid in anaIds:
+                keepExpRes.append ( er )
+        self.pprint ( "filtered, keeping %d/%d expRes" % \
+                      ( len(keepExpRes), nbefore) )
+        self.listOfExpRes = keepExpRes
 
     def fetchResults ( self ):
         """ fetch the list of results, perform all selecting
@@ -59,7 +71,7 @@ class Predictor:
             f.write ( "[predict:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def predict ( self, inputFile, allpreds=False, llhdonly=True ):
-        """ taken an slha input file, return theory predictions 
+        """ taken an slha input file, return theory predictions
         :param allpreds: return all predictions, not just best + combined
         :param llhdonly: return only predictions with llhds
         :returns: list of predictions
@@ -87,13 +99,13 @@ class Predictor:
         from smodels.tools import runtime
         runtime._experimental = True
         for expRes in self.listOfExpRes:
-            predictions = theoryPredictionsFor ( expRes, topos, 
+            predictions = theoryPredictionsFor ( expRes, topos,
                                                  useBestDataset=bestDataSet,
                                                  combinedResults=combinedRes )
             if predictions == None:
                 predictions = []
             if allpreds:
-                combpreds = theoryPredictionsFor ( expRes, topos, 
+                combpreds = theoryPredictionsFor ( expRes, topos,
                                                    useBestDataset=False,
                                                    combinedResults=True )
                 if combpreds != None:

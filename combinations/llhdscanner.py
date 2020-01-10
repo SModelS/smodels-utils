@@ -6,6 +6,8 @@ import pickle, os, sys, multiprocessing
 sys.path.insert(0,"./")
 from csetup import setup
 from combiner import Combiner
+from manipulator import Manipulator
+from protomodel import predictor as P
 from plotHiscore import obtain
 
 def getLikelihoods ( bestcombo ):
@@ -15,8 +17,8 @@ def getLikelihoods ( bestcombo ):
         llhds[ tp.analysisId() ] = tp.getLikelihood ( 1. ) 
     return llhds
 
-def plotLikelihoodFor ( protomodel, pid1, pid2, 
-                        fmin, fmax, df, nevents ):
+def plotLikelihoodFor ( protomodel, pid1, pid2, min1, max1, dm1,
+                        min2, max2, dm2, nevents ):
     """ plot the likelihoods as a function of pid1 and pid2 """
     if pid2 != protomodel.LSP:
         print ("[llhdscans] we currently assume pid2 to be the LSP, but it is %d" % pid2 )
@@ -26,13 +28,15 @@ def plotLikelihoodFor ( protomodel, pid1, pid2,
     ## mass range for pid1
     mpid1 = protomodel.masses[pid1]
     mpid2 = protomodel.masses[pid2]
-    print ( "f",fmin,fmax,df )
-    rpid1 = numpy.arange ( fmin*mpid1, (fmax+1e-8)*mpid1, df*mpid1 )
-    rpid2 = numpy.arange ( fmin*mpid2, (fmax+1e-8)*mpid2, df*mpid2 )
+    rpid1 = numpy.arange ( min1, max1+1e-8, dm1 )
+    rpid2 = numpy.arange ( min2, max2+1e-8, dm2 )
     masspoints = []
     print ( "range for pid1", pid1, rpid1 )
     print ( "range for pid2", pid2, rpid2 )
     protomodel.createNewSLHAFileName ( prefix="llhd%d" % pid1 )
+    protomodel.initializePredictor()
+    # print ( "P", P[0] )
+    P[0].filterForAnaIds ( anaIds )
     for m1 in rpid1:
         protomodel.masses[pid1]=m1
         if hasattr ( protomodel, "stored_xsecs" ):
@@ -44,7 +48,9 @@ def plotLikelihoodFor ( protomodel, pid1, pid2,
             protomodel.predict( nevents = nevents, check_thresholds=False, \
                                 recycle_xsecs = True )
             llhds = getLikelihoods ( protomodel.bestCombo )
-            print ( "m1,m2,llhds", m1, m2, llhds )
+            # del protomodel.stored_xsecs ## make sure we compute
+            print ( "m1,m2,llhds", m1, m2, llhds, len(protomodel.bestCombo) )
+            print ( )
             masspoints.append ( (m1,m2,llhds) )
     print ( "mass points", masspoints )
     import pickle
@@ -68,15 +74,24 @@ def main ():
     argparser.add_argument ( '-2', '--pid2',
             help='pid2 [1000022]',
             type=int, default=1000022 )
-    argparser.add_argument ( '-f', '--fmin',
-            help='minimum factor to scan [.5]',
-            type=float, default=.5 )
-    argparser.add_argument ( '-F', '--fmax',
-            help='maximum factor to scan [2.0]',
-            type=float, default=2.0 )
-    argparser.add_argument ( '-d', '--df',
-            help='delta_f [.03]',
-            type=float, default=.03 )
+    argparser.add_argument ( '-m1', '--min1',
+            help='minimum mass of pid1 [200.]',
+            type=float, default=200. )
+    argparser.add_argument ( '-M1', '--max1',
+            help='maximum mass of pid1 [2200.]',
+            type=float, default=2200. )
+    argparser.add_argument ( '-d1', '--deltam1',
+            help='delta m of pid1 [100.]',
+            type=float, default=50. )
+    argparser.add_argument ( '-m2', '--min2',
+            help='minimum mass of pid2 [50.]',
+            type=float, default=50. )
+    argparser.add_argument ( '-M2', '--max2',
+            help='maximum mass of pid1 [1800.]',
+            type=float, default=1800. )
+    argparser.add_argument ( '-d2', '--deltam2',
+            help='delta m of pid1 [50.]',
+            type=float, default=50. )
     argparser.add_argument ( '-e', '--nevents',
             help='number of events [20000]',
             type=int, default=20000 )
@@ -90,8 +105,9 @@ def main ():
     if args.picklefile == "default":
         args.picklefile = "%s/hiscore.pcl" % rundir
     protomodel, trimmed = obtain ( args.number, args.picklefile )
-    plotLikelihoodFor ( protomodel, args.pid1, args.pid2, args.fmin, args.fmax, \
-                        args.df, args.nevents )
+    plotLikelihoodFor ( protomodel, args.pid1, args.pid2, args.min1, args.max1, \
+                        args.deltam1, args.min2, args.max2, args.deltam2, \
+                        args.nevents )
 
 if __name__ == "__main__":
     main()

@@ -101,7 +101,7 @@ def main():
             plot ( Z, rundir )
             Zold = Z
         updateStates()
-        time.sleep(1200.)
+        time.sleep(60.)
 
 if __name__ == "__main__":
     main()

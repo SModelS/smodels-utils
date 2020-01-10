@@ -250,18 +250,25 @@ class Trimmer:
         self.M.clean()
         self.pprint ( "trimming changed the score from %.2f to %.2f" % ( oldZ, self.M.Z ) )
 
-    def trimSSMs ( self ):
-        """ try to take out the signal strength multipliers """
+    def trimSSMs ( self, trimTo=1. ):
+        """ try to take out the signal strength multipliers 
+        :param trimTo: parameter to try to trim ssm to, 1 or 0 makes sense. If 0,
+                       you must make sure that the ones havent been taken out yet!
+        """
+        if abs(trimTo)<1e-5:
+            self.pprint ( "FIXME need to make sure the ssms=1. are still in!!" )
         oldZ = self.M.Z
-        for pids,ssm in self.M.ssmultipliers.items():
-            self.pprint ( "trying to take out ssm for %s" % str(pids) )
-            self.M.ssmultipliers[pids]=1. ## try!
+        n = len(self.M.ssmultipliers)
+        for i,(pids,ssm) in enumerate(self.M.ssmultipliers.items()):
+            self.pprint ( "trying to take out [%d/%d] ssm(%.2f) for %s" % (i+1,n,ssm,str(pids) ) )
+            self.M.ssmultipliers[pids]=trimTo ## try!
             self.M.predict ( nevents = self.nevents )
             if self.M.Z > (1. - self.maxloss)*oldZ:
                 self.pprint ( "Z changed from %.2f to %.2f. discarding %s" % ( oldZ, self.M.Z, str(pids) ) )
             else:
                 self.pprint ( "Z changed from %.2f to %.2f. keeping %s" % ( oldZ, self.M.Z, str(pids) ) )
                 self.M.ssmultipliers[pids]=ssm
+        self.removeSSM1s() ## discard ss multipliers that are at 1.0
 
     def trimBranchingsOf ( self, pid ):
         """ trim the branchings of pid """
