@@ -28,3 +28,9 @@ ruler_direct.png
 training_*.gz
 plt*
 .llhd*slha
+.tri*slha
+.old*slha
+M*.png
+hiscore.log
+texdoc.tex
+mymodel.py
