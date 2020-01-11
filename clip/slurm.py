@@ -88,14 +88,14 @@ def runLLHDScanner( pid, dry_run, time ):
     cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
-    with  open ( "run_scanner_template.sh", "rt" ) as f:
+    with  open ( "run_llhd_scanner_template.sh", "rt" ) as f:
         lines=f.readlines()
         f.close()
-    with open ( "run_scanner%s.sh" % pid, "wt" ) as f:
+    with open ( "run_llhd_scanner%s.sh" % pid, "wt" ) as f:
         for line in lines:
             f.write ( line.replace("@@PID@@",str(pid) ) )
         f.close()
-    cmd += [ "./run_scanner%s.sh" % pid ]
+    cmd += [ "./run_llhd_scanner%s.sh" % pid ]
     if dry_run:
         return
     print ( "cmd", cmd )
@@ -214,7 +214,7 @@ def main():
         runScanner ( args.scan, args.dry_run, args.time )
         return
     if args.llhdscan > -1:
-        runLLHDScanner ( args.scan, args.dry_run, args.time )
+        runLLHDScanner ( args.llhdscan, args.dry_run, args.time )
         return
     if args.regressor:
         runRegressor ( args.dry_run )

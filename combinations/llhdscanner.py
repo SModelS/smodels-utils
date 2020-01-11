@@ -31,8 +31,9 @@ def plotLikelihoodFor ( protomodel, pid1, pid2, min1, max1, dm1,
     rpid1 = numpy.arange ( min1, max1+1e-8, dm1 )
     rpid2 = numpy.arange ( min2, max2+1e-8, dm2 )
     masspoints = []
-    print ( "[llhdscanner] range for %d: %d - %d" % ( pid1, rpid1[0], rpid1[-1] ) )
-    print ( "[llhdscanner] range for %d: %d - %d" % ( pid2, rpid2[0], rpid2[-1] ) )
+    print ( "[llhdscanner] range for %d: %d,%d ... %d" % ( pid1, rpid1[0], rpid1[1], rpid1[-1] ) )
+    print ( "[llhdscanner] range for %d: %d,%d ... %d" % ( pid2, rpid2[0], rpid2[1], rpid2[-1] ) )
+    print ( "[llhdscanner] total %d points, %d events" % ( len(rpid1)*len(rpid2), nevents ) )
     protomodel.createNewSLHAFileName ( prefix="llhd%d" % pid1 )
     protomodel.initializePredictor()
     P[0].filterForAnaIds ( anaIds )
@@ -46,12 +47,16 @@ def plotLikelihoodFor ( protomodel, pid1, pid2, min1, max1, dm1,
 
     for m1 in rpid1:
         protomodel.masses[pid1]=m1
+        protomodel.masses[pid2]=mpid2 ## reset LSP mass
         if hasattr ( protomodel, "stored_xsecs" ):
             del protomodel.stored_xsecs ## make sure we compute
         for i2,m2 in enumerate(rpid2):
             if m2 > m1: ## we assume pid2 to be the daughter
                 continue
             protomodel.masses[pid2]=m2
+            for pid_,m_ in protomodel.masses.items():
+                if pid_ != pid2 and m_ < m2: ## make sure LSP remains the LSP
+                    protomodel.masses[pid_]=m2 + 1.
             protomodel.predict( nevents = nevents, check_thresholds=False, \
                                 recycle_xsecs = True )
             llhds = getLikelihoods ( protomodel.bestCombo )
@@ -67,6 +72,27 @@ def plotLikelihoodFor ( protomodel, pid1, pid2, min1, max1, dm1,
     pickle.dump ( mpid1, f )
     pickle.dump ( mpid2, f )
     f.close()
+
+def overrideWithDefaults ( args ):
+    if not args.defaults:
+        return args
+    mins = { 1000006:  100., 2000006:  100., 1000021:  200. }
+    maxs = { 1000006: 1210., 2000006: 1200., 1000021: 2400. }
+    dm   = { 1000006:   50., 2000006:   50., 1000021:   70. }
+    ### make the LSP scan depend on the mother
+    LSPmins = { 1000006:   5., 2000006:    5., 1000021:    5. }
+    LSPmaxs = { 1000006: 800., 2000006:  800., 1000021: 2200. }
+    LSPdm   = { 1000006:  50., 2000006:   50., 1000021:   70. }
+    if not args.pid1 in mins:
+        print ( "[llhdscanner] asked for defaults for %d, but none defined." % args.pid1 )
+        return args
+    args.min1 = mins[args.pid1]
+    args.max1 = maxs[args.pid1]
+    args.deltam1 = dm[args.pid1]
+    args.min2 = LSPmins[args.pid1]
+    args.max2 = LSPmaxs[args.pid1]
+    args.deltam2 = LSPdm[args.pid1]
+    return args
 
 def main ():
     rundir = setup()
@@ -109,10 +135,14 @@ def main ():
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug, info, warn, err [info]',
             type=str, default="info" )
+    argparser.add_argument ( '-d', '--defaults',
+            help='use the default ranges for these pids1, overrides min1, max2, etc',
+            action="store_true" )
     args = argparser.parse_args()
     if args.picklefile == "default":
         args.picklefile = "%s/hiscore.pcl" % rundir
     protomodel, trimmed = obtain ( args.number, args.picklefile )
+    args = overrideWithDefaults ( args )
     plotLikelihoodFor ( protomodel, args.pid1, args.pid2, args.min1, args.max1, \
                         args.deltam1, args.min2, args.max2, args.deltam2, \
                         args.nevents )
