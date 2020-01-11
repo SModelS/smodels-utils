@@ -53,14 +53,19 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my ):
     x,y=set(),set()
     L = {}
     minXY=0.,0.,float("inf")
-    for masspoint in masspoints:
+    s=""
+    if ana in masspoints[0][2]:
+        s="(%.2f)" % (-np.log(masspoints[0][2][ana]))
+    for masspoint in masspoints[1:]:
         m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
+        if ana in llhds:
+            print ( "m", m1,m2,-np.log(llhds[ana]) )
         if m2 > m1:
             print ( "m2,m1 mass inversion?",m1,m2 )
         x.add ( m1 )
         y.add ( m2 )
         zt = float("nan")
-        zt = 0.
+        # zt = 0.
         if ana in llhds:
             zt = - np.log(llhds[ana] )
             if zt < minXY[2]:
@@ -68,36 +73,39 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my ):
         h = getHash(m1,m2)
         L[h]=zt
     x,y=list(x),list(y)
+    x.sort(); y.sort()
     X, Y = np.meshgrid ( x, y )
     Z = float("nan")*X
+    print ( "x", x )
     for irow,row in enumerate(Z):
         for icol,col in enumerate(row):
             h = getHash(x[icol],y[irow])
             if h in L:
                 Z[irow,icol]=L[h]
-    cont = plt.contourf ( X, Y, Z )
+    cont = plt.contourf ( X, Y, Z, levels=50 )
     ### the altitude of the alpha quantile is l(nuhat) - .5 chi^2_(1-alpha);ndf 
     ### so for alpha=0.05%, ndf=1 the dl is .5 * 3.841 = 1.9207
     ### for ndf=2 the dl is ln(alpha) = .5 * 5.99146 = 2.995732
     ### folien slide 317
-    cbar = plt.colorbar( cont ) # , ticks=lvls, format="%.4f")
+    cbar = plt.colorbar( cont, format="%.2f" )
+    cbar.set_label ( "-ln L" )
     ax = cont.ax
+    # Xs,Ys=X,Y
     Xs,Ys = filterSmaller ( X, Y )
-    ax.scatter(Xs, Ys, marker="+", s=1, color="black" )
+    ax.scatter(Xs, Ys, marker=".", s=1, color="gray", label="points probed" )
     print ( "minXY", minXY )
     ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=12, color="red", label="$\hat{l}$ (ml estimate, %.2f)" % minXY[2] )
-    s=""
     h = getHash(mx,my)
     if h in L:
         s=" (%.2f)" % L[h]
     ax.scatter( [ mx ], [ my ], marker="*", s=15, color="black", label="proto-model%s" % s )
-    plt.title ( "-ln L, %s" % ana )
+    plt.title ( "$-\ln L(m_i)$, %s" % ana )
     plt.xlabel ( "%s" % pid1 )
     plt.ylabel ( "%s" % pid2 )
     plt.legend()
     # plt.contour ( X, Y, Z )
     figname = "plt%d%s.png" % ( pid1, ana )
-    print ( "[llhdplot] saving to %s" % figname )
+    print ( "[plotLlhds] saving to %s" % figname )
     plt.savefig ( figname )
     if interactive:
         IPython.embed()

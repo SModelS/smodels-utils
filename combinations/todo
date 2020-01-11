@@ -1,9 +1,7 @@
--) llhd plots. useful ones.
+-) llhd plots. useful ones. Next steps: look at dataType and topo
+-) trim also ssms
+-) write index.tex
+-) rename llhdplot to plotLlhd
+-) better representation of ssms
 -) use the xsec recycler also in the walker
 -) use the xsec recycler also with changed ss multipliers
--) trim also ssms
-
--) move xsec computation to the manipulator (maybe not as we then need to move .predict and .newSLHA?)
-
-.) add gluino -> squark, and squark -> gluino chains
-.) cheat mode with mymodel.py dicts
