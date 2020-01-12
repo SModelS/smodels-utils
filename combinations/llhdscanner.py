@@ -2,7 +2,7 @@
 
 """ script used to produce the likelihood scans """
 
-import pickle, os, sys, multiprocessing
+import pickle, os, sys, multiprocessing, time
 sys.path.insert(0,"./")
 from csetup import setup
 from combiner import Combiner
@@ -16,6 +16,11 @@ def getLikelihoods ( bestcombo ):
     for tp in bestcombo:
         llhds[ tp.analysisId() ] = tp.getLikelihood ( 1. ) 
     return llhds
+
+def pprint ( *args ):
+    """ pretty print """
+    t = time.strftime("%H:%M:%S")
+    print ( "[llhdscanner:%s] %s" % ( t, " ".join(map(str,args)))  )
 
 def plotLikelihoodFor ( protomodel, pid1, pid2, min1, max1, dm1,
                         min2, max2, dm2, nevents ):
@@ -61,7 +66,7 @@ def plotLikelihoodFor ( protomodel, pid1, pid2, min1, max1, dm1,
                                 recycle_xsecs = True )
             llhds = getLikelihoods ( protomodel.bestCombo )
             # del protomodel.stored_xsecs ## make sure we compute
-            print ( "[llhdscanner] m1,m2,llhds", m1, m2, llhds, len(protomodel.bestCombo) )
+            pprint ( "m1,m2,llhds:", m1, m2, llhds, len(protomodel.bestCombo) )
             # print ( )
             masspoints.append ( (m1,m2,llhds) )
     import pickle
