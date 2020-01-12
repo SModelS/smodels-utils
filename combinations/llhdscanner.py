@@ -24,7 +24,7 @@ def pprint ( *args ):
     print ( "[llhdscanner:%s] %s" % ( t, " ".join(map(str,args)))  )
 
 def scanLikelihoodFor ( protomodel, pid1, pid2, min1, max1, dm1,
-                        min2, max2, dm2, nevents ):
+                        min2, max2, dm2, nevents, topo ):
     """ plot the likelihoods as a function of pid1 and pid2 """
     if pid2 != protomodel.LSP:
         print ("[llhdscanner] we currently assume pid2 to be the LSP, but it is %d" % pid2 )
@@ -42,7 +42,7 @@ def scanLikelihoodFor ( protomodel, pid1, pid2, min1, max1, dm1,
     print ( "[llhdscanner] total %d points, %d events" % ( len(rpid1)*len(rpid2), nevents ) )
     protomodel.createNewSLHAFileName ( prefix="llhd%d" % pid1 )
     protomodel.initializePredictor()
-    P[0].filterForAnaIds ( anaIds )
+    P[0].filterForAnaIdsTopos ( anaIds, topo )
     
     ## first add proto-model point
     protomodel.predict( nevents = nevents, check_thresholds=False, \
@@ -87,6 +87,7 @@ def overrideWithDefaults ( args ):
     mins = { 1000005:  100., 1000006:  100., 2000006:  100., 1000021:  200. }
     maxs = { 1000005: 1500., 1000006: 1260., 2000006: 1260., 1000021: 2400. }
     dm   = { 1000005:   50., 1000006:   40., 2000006:   40., 1000021:   50. }
+    topo = { 1000005: "T2bb", 1000006: "T2tt", 2000006: "T2tt", 1000021: "T1" }
     ### make the LSP scan depend on the mother
     LSPmins = { 1000005:   5., 1000006:   5., 2000006:    5., 1000021:    5. }
     LSPmaxs = { 1000005: 800., 1000006: 800., 2000006:  800., 1000021: 2200. }
@@ -100,6 +101,7 @@ def overrideWithDefaults ( args ):
     args.min2 = LSPmins[args.pid1]
     args.max2 = LSPmaxs[args.pid1]
     args.deltam2 = LSPdm[args.pid1]
+    args.topo = topo[args.pid1]
     return args
 
 def main ():
@@ -143,6 +145,9 @@ def main ():
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug, info, warn, err [info]',
             type=str, default="info" )
+    argparser.add_argument ( '-t', '--topo',
+            help='topology [T2tt]',
+            type=str, default="info" )
     argparser.add_argument ( '-d', '--defaults',
             help='use the default ranges for these pids1, overrides min1, max2, etc',
             action="store_true" )
@@ -153,7 +158,7 @@ def main ():
     args = overrideWithDefaults ( args )
     scanLikelihoodFor ( protomodel, args.pid1, args.pid2, args.min1, args.max1, \
                         args.deltam1, args.min2, args.max2, args.deltam2, \
-                        args.nevents )
+                        args.nevents, args.topo )
 
 if __name__ == "__main__":
     main()

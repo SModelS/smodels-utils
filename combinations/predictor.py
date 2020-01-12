@@ -27,13 +27,14 @@ class Predictor:
         self.database=Database( dbpath, force_load = force_load )
         self.fetchResults()
 
-    def filterForAnaIds ( self, anaIds ):
+    def filterForAnaIdsTopos ( self, anaIds, topo ):
         """ filter the list of expRes, keep only anaIds """
         keepExpRes = []
         nbefore = len(self.listOfExpRes)
         for er in self.listOfExpRes:
             eid = er.globalInfo.id
-            if eid in anaIds:
+            txnames = [ x.txName for x in er.getTxNames() ]
+            if eid in anaIds and topo in txnames:
                 keepExpRes.append ( er )
         self.pprint ( "filtered, keeping %d/%d expRes" % \
                       ( len(keepExpRes), nbefore) )
