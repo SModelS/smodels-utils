@@ -13,8 +13,9 @@ def load ( picklefile ):
     llhds = pickle.load ( f )
     mx = pickle.load ( f )
     my = pickle.load ( f )
+    nevents = pickle.load ( f )
     f.close()
-    return llhds,mx,my
+    return llhds,mx,my,nevents
 
 def integrateLlhds ( Z ):
     """ compute the integral of the likelihood over all points """
@@ -111,7 +112,7 @@ def resultFor ( ana, topo, llhds ):
     return ret,sr
 
 def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my, 
-                 topo ):
+                 topo, nevents ):
     """ plot for one analysis """
     x,y=set(),set()
     L = {}
@@ -147,7 +148,7 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my,
             h = getHash(x[icol],y[irow])
             if h in L:
                 Z[irow,icol]=L[h]
-    contf = plt.contourf ( X, Y, Z, levels=50 )
+    contf = plt.contourf ( X, Y, Z, levels=100 )
     hldZ50 = computeHLD ( Z, .5 )
     cont50 = plt.contour ( X, Y, hldZ50, levels=0, colors = [ "red" ] )
     plt.clabel ( cont50, fmt="50%.0s" )
@@ -172,7 +173,7 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my,
     ax.scatter( [ mx ], [ my ], marker="*", s=25, color="black", label="proto-model%s" % s )
     if sr == None:
         sr = "UL"
-    plt.title ( "$-\ln L(m_i)$, %s: %s,%s" % ( ana, topo, sr ) )
+    plt.title ( "$-\ln L(m_i)$, %s: %s,%s [%d events]" % ( ana, topo, sr, nevents ) )
     plt.xlabel ( "%s" % pid1 )
     plt.ylabel ( "%s" % pid2 )
     plt.legend()
@@ -187,13 +188,14 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my,
 def plot ( pid1, pid2, analysis, interactive, topo ):
     """ do your plotting """
     picklefile = "mp%d%d.pcl" % ( pid1, pid2 )
-    masspoints,mx,my = load ( picklefile )
+    masspoints,mx,my,nevents = load ( picklefile )
     stats = getAnaStats( masspoints, topo )
-    plotOneAna ( masspoints, analysis, interactive, pid1, pid2, mx, my, topo )
+    plotOneAna ( masspoints, analysis, interactive, pid1, pid2, mx, my, topo,
+                 nevents )
 
 def listAnalyses( pid1, pid2, topo ):
     picklefile = "mp%d%d.pcl" % ( pid1, pid2 )
-    masspoints,mx,my = load ( picklefile )
+    masspoints,mx,my,nevents = load ( picklefile )
     stats = getAnaStats( masspoints, topo )
     print ( "%d masspoints with %s" % ( len(masspoints), topo ) )
     for k,v in stats.items():
