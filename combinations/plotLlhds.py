@@ -48,24 +48,32 @@ def computeHLD ( Z, alpha = .9 ):
         for y,_ in enumerate(row):
             n += 1
             newZ[x][y] = 0.
+    ctr = 0
     while S < alpha: ## as long as we dont have enough area
         x,y,m = findMin(oldZ)
+        ctr+= 1
         S += np.exp ( -m)/I ## add up
         oldZ[x][y]=float("nan") ## kill this one
-        newZ[x][y]=1.
+        newZ[x][y]=1 # +1/ctr
     print ( "%d/%d points in 50%s HLD" % ( sum(sum(newZ)), n, "%" ) )
     return newZ
 
-def getAnaStats ( D ):
+def getAnaStats ( D, topo, integrateSRs=True, integrateTopos=True ):
     """ given the likelihood dictionaries D, get
         stats of which analysis occurs how often """
     anas = {}
     for masspoint in D:
         m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
         for k,v in llhds.items():
-            if not k in anas.keys():
-                anas[k]=0
-            anas[k]=anas[k]+1
+            tokens = k.split(":")
+            if not integrateTopos and topo not in tokens[2]:
+                continue
+            name = tokens[0]
+            if not integrateTopos:
+                name = tokens[0]+tokens[1]
+            if not name in anas.keys():
+                anas[name]=0
+            anas[name]=anas[name]+1
     return anas
 
 def getHash ( m1, m2 ):
@@ -88,14 +96,30 @@ def filterSmaller ( X, Y ):
         Ys.append ( yt )
     return np.array(Xs), np.array(Ys)
 
-def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my ):
+def resultFor ( ana, topo, llhds ):
+    """ return result for ana/topo pair """
+    ret,sr = None,None
+    for k,v in llhds.items():
+        tokens = k.split(":")
+        if ana != tokens[0]:
+            continue
+        if topo not in tokens[2]:
+            continue
+        if ret == None or v > ret:
+            ret = v
+            sr = tokens[1]
+    return ret,sr
+
+def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my, 
+                 topo ):
     """ plot for one analysis """
     x,y=set(),set()
     L = {}
     minXY=0.,0.,float("inf")
     s=""
-    if ana in masspoints[0][2]:
-        s="(%.2f)" % (-np.log(masspoints[0][2][ana]))
+    r,sr = resultFor ( ana, topo, masspoints[0][2] )
+    if r:
+        s="(%.2f)" % (-np.log(r))
     for masspoint in masspoints[1:]:
         m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
         #if ana in llhds:
@@ -106,8 +130,9 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my ):
         y.add ( m2 )
         zt = float("nan")
         # zt = 0.
-        if ana in llhds:
-            zt = - np.log(llhds[ana] )
+        result,sr = resultFor ( ana, topo, llhds )
+        if result:
+            zt = - np.log( result )
             if zt < minXY[2]:
                 minXY=(m1,m2,zt)
         h = getHash(m1,m2)
@@ -122,9 +147,13 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my ):
             h = getHash(x[icol],y[irow])
             if h in L:
                 Z[irow,icol]=L[h]
-    hldZ = computeHLD ( Z, .9 )
     contf = plt.contourf ( X, Y, Z, levels=50 )
-    cont = plt.contour ( X, Y, hldZ, levels=0, colors = [ "red" ] )
+    hldZ50 = computeHLD ( Z, .5 )
+    cont50 = plt.contour ( X, Y, hldZ50, levels=0, colors = [ "red" ] )
+    plt.clabel ( cont50, fmt="50%.0s" )
+    hldZ95 = computeHLD ( Z, .95 )
+    cont95 = plt.contour ( X, Y, hldZ95, levels=0, colors = [ "orange" ] )
+    plt.clabel ( cont95, fmt="95%.0s" )
     ### the altitude of the alpha quantile is l(nuhat) - .5 chi^2_(1-alpha);ndf 
     ### so for alpha=0.05%, ndf=1 the dl is .5 * 3.841 = 1.9207
     ### for ndf=2 the dl is ln(alpha) = .5 * 5.99146 = 2.995732
@@ -136,12 +165,14 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my ):
     Xs,Ys = filterSmaller ( X, Y )
     ax.scatter(Xs, Ys, marker=".", s=1, color="gray", label="points probed" )
     print ( "minXY", minXY )
-    ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=12, color="red", label="$\hat{l}$ (ml estimate, %.2f)" % minXY[2] )
+    ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=25, color="red", label="$\hat{l}$ (ml estimate, %.2f)" % minXY[2] )
     h = getHash(mx,my)
     if h in L:
         s=" (%.2f)" % L[h]
-    ax.scatter( [ mx ], [ my ], marker="*", s=15, color="black", label="proto-model%s" % s )
-    plt.title ( "$-\ln L(m_i)$, %s" % ana )
+    ax.scatter( [ mx ], [ my ], marker="*", s=25, color="black", label="proto-model%s" % s )
+    if sr == None:
+        sr = "UL"
+    plt.title ( "$-\ln L(m_i)$, %s: %s,%s" % ( ana, topo, sr ) )
     plt.xlabel ( "%s" % pid1 )
     plt.ylabel ( "%s" % pid2 )
     plt.legend()
@@ -153,17 +184,18 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my ):
         IPython.embed()
     plt.close()
 
-def plot ( pid1, pid2, analysis, interactive ):
+def plot ( pid1, pid2, analysis, interactive, topo ):
     """ do your plotting """
     picklefile = "mp%d%d.pcl" % ( pid1, pid2 )
     masspoints,mx,my = load ( picklefile )
-    stats = getAnaStats( masspoints )
-    plotOneAna ( masspoints, analysis, interactive, pid1, pid2, mx, my )
+    stats = getAnaStats( masspoints, topo )
+    plotOneAna ( masspoints, analysis, interactive, pid1, pid2, mx, my, topo )
 
-def listAnalyses( pid1, pid2 ):
+def listAnalyses( pid1, pid2, topo ):
     picklefile = "mp%d%d.pcl" % ( pid1, pid2 )
     masspoints,mx,my = load ( picklefile )
-    stats = getAnaStats( masspoints )
+    stats = getAnaStats( masspoints, topo )
+    print ( "%d masspoints with %s" % ( len(masspoints), topo ) )
     for k,v in stats.items():
         print ( "%d: %s" % ( v, k ) )
 
@@ -171,6 +203,9 @@ if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(
             description='plot likelihoods scans')
+    argparser.add_argument ( '-t', '--topo',
+            help='topo [T2tt]',
+            type=str, default="T2tt" )
     argparser.add_argument ( '-1', '--pid1',
             help='pid1 [1000021]',
             type=int, default=1000021 )
@@ -188,6 +223,7 @@ if __name__ == "__main__":
             action="store_true" )
     args = argparser.parse_args()
     if args.list_analyses:
-        listAnalyses ( args.pid1, args.pid2 )
+        listAnalyses ( args.pid1, args.pid2, args.topo )
         sys.exit()
-    plot ( args.pid1, args.pid2, args.analysis, args.interactive )
+    plot ( args.pid1, args.pid2, args.analysis, args.interactive,
+           args.topo )

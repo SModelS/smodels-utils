@@ -1,4 +1,4 @@
--) llhd plots. useful ones. Next steps: look at dataType and topo
+-) llhd plots. useful ones. Next steps: write out *all* predictions for a given analysis, dont find bestCombo
 -) trim also ssms
 -) write index.tex
 -) rename llhdplot to plotLlhd
