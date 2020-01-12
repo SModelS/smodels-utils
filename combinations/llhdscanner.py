@@ -78,6 +78,7 @@ def scanLikelihoodFor ( protomodel, pid1, pid2, min1, max1, dm1,
     pickle.dump ( masspoints, f )
     pickle.dump ( mpid1, f )
     pickle.dump ( mpid2, f )
+    pickle.dump ( nevents, f )
     f.close()
 
 def overrideWithDefaults ( args ):
