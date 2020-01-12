@@ -162,9 +162,16 @@ def clean_dirs( rundir, clean_all = False ):
         cmd = "cd %s; rm -rf *pcl .cur* RUN* walker*log training*gz" % rundir
     o = subprocess.getoutput ( cmd )
 
+def queryStats ( rundir ):
+    import running_stats
+    running_stats.count_jobs()
+    running_stats.running_stats()
+
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description="slurm-run a walker")
+    argparser.add_argument ( '-q','--query', help='query status, dont actually run',
+                             action="store_true" )
     argparser.add_argument ( '-d','--dry_run', help='dry-run, dont actually call srun',
                              action="store_true" )
     argparser.add_argument ( '-k','--keep', help='keep calling scripts',
@@ -201,6 +208,9 @@ def main():
                         type=str, default="/mnt/hephy/pheno/ww/git/smodels-database/" )
     args=argparser.parse_args()
     rundir = "/mnt/hephy/pheno/ww/rundir/"
+    if args.query:
+        queryStats ( rundir )
+        return
     if args.clean:
         clean_dirs( rundir, clean_all = False )
         return

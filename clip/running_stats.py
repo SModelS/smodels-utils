@@ -83,5 +83,6 @@ def count_jobs():
     if int(remaining)>0:
         print ( "remaining", remaining )
 
-count_jobs()
-running_stats()
+if __name__ == "__main__":
+    count_jobs()
+    running_stats()
