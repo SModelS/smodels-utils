@@ -2,7 +2,7 @@
 
 """ the plotting script for the llhd scans """
 
-import pickle, sys
+import pickle, sys, copy
 import IPython
 import numpy as np
 from matplotlib import pyplot as plt
@@ -16,11 +16,45 @@ def load ( picklefile ):
     f.close()
     return llhds,mx,my
 
+def integrateLlhds ( Z ):
+    """ compute the integral of the likelihood over all points """
+    I = 0.
+    for row in Z:
+        for nll in row:
+            if not np.isnan(nll):
+                I += np.exp ( - nll )
+    return I
+
+
+def findMin ( Z ):
+    """ find the minimum in Z """
+    x,y,m = 0., 0, float("inf")
+    for x_,row in enumerate(Z):
+        for y_,v in enumerate(row):
+            if v < m:
+                m,x,y = v,x_,y_
+    return x,y,m
+
 def computeHLD ( Z, alpha = .9 ):
     """ compute the regions of highest likelihood density to the alpha quantile 
     """
-    # print ( "Z", Z )
-    return Z
+    I = integrateLlhds ( Z )
+    S = 0.
+    points = []
+    oldZ = copy.deepcopy ( Z )
+    newZ = copy.deepcopy ( Z )
+    n = 0
+    for x,row in enumerate(newZ):
+        for y,_ in enumerate(row):
+            n += 1
+            newZ[x][y] = 0.
+    while S < alpha: ## as long as we dont have enough area
+        x,y,m = findMin(oldZ)
+        S += np.exp ( -m)/I ## add up
+        oldZ[x][y]=float("nan") ## kill this one
+        newZ[x][y]=1.
+    print ( "%d/%d points in 50%s HLD" % ( sum(sum(newZ)), n, "%" ) )
+    return newZ
 
 def getAnaStats ( D ):
     """ given the likelihood dictionaries D, get
@@ -64,8 +98,8 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my ):
         s="(%.2f)" % (-np.log(masspoints[0][2][ana]))
     for masspoint in masspoints[1:]:
         m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
-        if ana in llhds:
-            print ( "m", m1,m2,-np.log(llhds[ana]) )
+        #if ana in llhds:
+        #    print ( "m", m1,m2,-np.log(llhds[ana]) )
         if m2 > m1:
             print ( "m2,m1 mass inversion?",m1,m2 )
         x.add ( m1 )
@@ -88,15 +122,16 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my ):
             h = getHash(x[icol],y[irow])
             if h in L:
                 Z[irow,icol]=L[h]
-    hldZ = computeHLD ( Z, .5 )
-    cont = plt.contourf ( X, Y, Z, levels=50 )
+    hldZ = computeHLD ( Z, .9 )
+    contf = plt.contourf ( X, Y, Z, levels=50 )
+    cont = plt.contour ( X, Y, hldZ, levels=0, colors = [ "red" ] )
     ### the altitude of the alpha quantile is l(nuhat) - .5 chi^2_(1-alpha);ndf 
     ### so for alpha=0.05%, ndf=1 the dl is .5 * 3.841 = 1.9207
     ### for ndf=2 the dl is ln(alpha) = .5 * 5.99146 = 2.995732
     ### folien slide 317
-    cbar = plt.colorbar( cont, format="%.2f" )
+    cbar = plt.colorbar( contf, format="%.2f" )
     cbar.set_label ( "-ln L" )
-    ax = cont.ax
+    ax = contf.ax
     # Xs,Ys=X,Y
     Xs,Ys = filterSmaller ( X, Y )
     ax.scatter(Xs, Ys, marker=".", s=1, color="gray", label="points probed" )

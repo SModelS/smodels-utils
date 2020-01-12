@@ -157,7 +157,7 @@ class DecayDrawer:
                     l+="\\,"+str(int(100*percentage))+"\\\\%" ## trino
                 else:
                     l+="\\,"+str(int(100*percentage))+"%"
-            if ctr % 2 == 1:
+            if ctr % 2 == 1 and ctr != len(labels)-1:
                 l+=",\\,\\\\\\\\"
         if matrixMode: ## make a matrix
             l+="\\\\end{matrix}"
