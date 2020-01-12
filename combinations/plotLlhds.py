@@ -16,11 +16,38 @@ def load ( picklefile ):
     f.close()
     return llhds,mx,my
 
+def integrateLlhds ( Z ):
+    """ compute the integral of the likelihood over all points """
+    I = 0.
+    for row in Z:
+        for nll in row:
+            if not np.isnan(nll):
+                I += np.exp ( - nll )
+    return I
+
+
+def findMin ( Z ):
+    """ find the minimum in Z """
+    x,y,m = 0., 0, float("inf")
+    for x_,row in enumerate(Z):
+        for y_,v in enumerate(row):
+            if v < m:
+                m,x,y = v,x_,y_
+    return x,y,m
+
 def computeHLD ( Z, alpha = .9 ):
     """ compute the regions of highest likelihood density to the alpha quantile 
     """
-    # print ( "Z", Z )
-    return Z
+    I = integrateLlhds ( Z )
+    S = 0.
+    points = []
+    while S < alpha: ## as long as we dont have enough area
+        x,y,m = findMin (Z)
+        print ( "min", findMin(Z),"S",S )
+        S += np.exp ( -m)/I ## add up
+        Z[x][y]=float("nan") ## kill this one
+        points.append ( (x,y) )
+    return points
 
 def getAnaStats ( D ):
     """ given the likelihood dictionaries D, get
@@ -64,8 +91,8 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my ):
         s="(%.2f)" % (-np.log(masspoints[0][2][ana]))
     for masspoint in masspoints[1:]:
         m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
-        if ana in llhds:
-            print ( "m", m1,m2,-np.log(llhds[ana]) )
+        #if ana in llhds:
+        #    print ( "m", m1,m2,-np.log(llhds[ana]) )
         if m2 > m1:
             print ( "m2,m1 mass inversion?",m1,m2 )
         x.add ( m1 )
