@@ -12,7 +12,7 @@ import pygraphviz, sys, math
 class DecayDrawer:
     """ a class that encapsulates the decay plot drawing
     """
-    def __init__ ( self, options, ps, offset, extra={}, verbose="info", html=False ):
+    def __init__ ( self, options, ps, offset, extra={}, verbose="warn", html=False ):
         import logging
         self.logger = logging.getLogger(__name__)
         verbosity = verbose.lower()
@@ -323,11 +323,7 @@ class DecayDrawer:
         self.logger.debug ( "calling dot2tex now" )
         #    if self.html: print "<br>"
         cmd="dot2tex --autosize --nominsize --crop %s.dot -traw -o %s.tex" % (out, out )
-        # cmd="dot2tex -c -traw"
-        #cmd+=" --docpreamble '\\usepackage{scrextend}\n\\changefontsizes[12pt]{14pt}' "
-        #cmd+="    --figpreamble '\\begin{Large}' --figpostamble '\\end{Large}'"
-        #longcmd="%s --preproc %s.dot | %s -o %s.tex" % ( cmd, out, cmd, out )
-        self.logger.debug (  "cmd=%s " % cmd )
+        self.logger.info (  "%s" % cmd )
         output=subprocess.getoutput( cmd )
         self.logger.debug ( "out=%s" % output )
         self.logger.debug ( "now meddle with tex file" )
@@ -337,13 +333,14 @@ class DecayDrawer:
             outdir="./"
         pdfcmd="pdflatex -interaction nonstopmode -output-directory %s %s.tex " % \
                 ( outdir, out )
-        self.logger.debug (  "info, pdfcmd=%s" % pdfcmd )
+        self.logger.info (  "%s" % pdfcmd )
         output=subprocess.getoutput(pdfcmd )
         self.logger.debug ( output )
 
         if self.options["nopng"]==False:
             cmd='convert +profile "*" -antialias -density 300x300 %s.pdf %s.png' % ( out, out )
             import subprocess
+            self.logger.info ( cmd )
             o = subprocess.getoutput ( cmd )
             if len(o)>0:
                 self.logger.error ( "conversion output %s" % o )

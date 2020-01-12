@@ -7,7 +7,6 @@ from smodels.tools.physicsUnits import GeV
 sys.path.insert(0,"../" )
 import smodels_utils.helper.sparticleNames
 import smodels_utils.SModelSUtils
-import smodels_utils.plotting.decayPlots
 from smodels_utils.plotting import rulerPlotter, decayPlotter
 import helpers
 
@@ -350,7 +349,7 @@ def plotRuler( protomodel ):
                         mergesquark = False,
                         hasResultsFor = resultsFor )
 
-def plotDecays ( protomodel ):
+def plotDecays ( protomodel, verbosity ):
     print ( "[plotHiscore] now draw decays.png" )
     options = { "tex": True, "color": True, "dot": True, "squarks": True,
                 "weakinos": True, "sleptons": True, "neato": True,
@@ -358,6 +357,7 @@ def plotDecays ( protomodel ):
     options["rmin"] = 0.
     ## FIXME add cross sections.
     decayPlotter.draw ( protomodel.currentSLHA, "decays.png", options,
+                        verbosity = verbosity,
                         ssmultipliers = protomodel.ssmultipliers )
 
 def plot ( number, verbosity, picklefile, options ):
@@ -379,7 +379,7 @@ def plot ( number, verbosity, picklefile, options ):
         plotRuler ( protomodel )
     plotdecays = options["decays"]
     if plotdecays:
-        plotDecays ( protomodel )
+        plotDecays ( protomodel, verbosity )
     if options["predictions"]:
         discussPredictions ( protomodel )
     if options["html"] or options["tex"]:

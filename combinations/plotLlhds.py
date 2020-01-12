@@ -16,6 +16,12 @@ def load ( picklefile ):
     f.close()
     return llhds,mx,my
 
+def computeHLD ( Z, alpha = .9 ):
+    """ compute the regions of highest likelihood density to the alpha quantile 
+    """
+    # print ( "Z", Z )
+    return Z
+
 def getAnaStats ( D ):
     """ given the likelihood dictionaries D, get
         stats of which analysis occurs how often """
@@ -82,6 +88,7 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my ):
             h = getHash(x[icol],y[irow])
             if h in L:
                 Z[irow,icol]=L[h]
+    hldZ = computeHLD ( Z, .5 )
     cont = plt.contourf ( X, Y, Z, levels=50 )
     ### the altitude of the alpha quantile is l(nuhat) - .5 chi^2_(1-alpha);ndf 
     ### so for alpha=0.05%, ndf=1 the dl is .5 * 3.841 = 1.9207
