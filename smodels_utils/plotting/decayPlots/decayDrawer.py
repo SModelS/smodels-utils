@@ -137,23 +137,31 @@ class DecayDrawer:
         #    node.attr['shape']="box" # 'egg'
         node.attr['label']="%s" % label
 
-    def addOneEdge ( self, name, daughter, percentage, label, rmin = 0. ):
-        if percentage < rmin:
-            return
+    def addOneEdge ( self, name, daughter, rmin, labels ):
+        """ add one edge with labels, etc """
         l=""
-        try:
-            l=self.G.get_edge ( name, daughter ).attr["label"]
-            if len(l)>0:
-                l+=", "
-        except:
-            pass
-        l+=label
-        if percentage < 0.9 and not self.options["nopercentage"]:
-            if self.tex:
-                l+=" "+str(int(100*percentage))+"\\\\%" ## trino
-            else:
-                l+=" "+str(int(100*percentage))+"%"
-        self.G.add_edge ( name, daughter )
+        matrixMode = (len(labels)>2)
+        if matrixMode: ## make a matrix
+            l="\\\\begin{matrix}"
+        for ctr,L in enumerate(labels):
+            percentage,label = L[0], L[1]
+            if percentage < rmin:
+                continue
+            if ctr>0 and ctr % 2 != 0:
+                l+=",\\,"
+            if matrixMode:
+                label="$"+label+"$"
+            l+=label
+            if percentage < 0.9 and not self.options["nopercentage"]:
+                if self.tex:
+                    l+="\\,"+str(int(100*percentage))+"\\\\%" ## trino
+                else:
+                    l+="\\,"+str(int(100*percentage))+"%"
+            if ctr % 2 == 1:
+                l+=",\\,\\\\\\\\"
+        if matrixMode: ## make a matrix
+            l+="\\\\end{matrix}"
+        t = self.G.add_edge ( name, daughter )
         edge=self.G.get_edge ( name, daughter )
         edge.attr['label']=l
 
@@ -169,9 +177,7 @@ class DecayDrawer:
                         rname += "->" + self.extra[rname]
                     labels.append ( (r,rname) )
             labels.sort( key=lambda x: x[0], reverse=True )
-            for l in labels:
-                r,rname = l[0],l[1]
-                self.addOneEdge ( name, daughter, r, rname, rmin )
+            self.addOneEdge ( name, daughter, rmin, labels )
 
     def addMassScale ( self ):
         """ add a ruler that lists the masses """
