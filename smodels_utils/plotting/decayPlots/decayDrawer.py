@@ -226,7 +226,8 @@ class DecayDrawer:
                 return x
             return "\\color[rgb]{.5,0,0}%s" % x
         def tilde(x): ## x is in tilde
-            return "\\\\tilde{\\\\mathrm{%s}}" % (x)
+            return "\\\\tilde{%s}" % (x)
+            # return "\\\\tilde{\\\\mathrm{%s}}" % (x)
         name=name.replace("_","")
         tsup=name[-1:]
         tsub=name[-2:-1]
@@ -294,7 +295,7 @@ class DecayDrawer:
             return self.simpleName ( name )
         if self.tex:
             # return self.simpleName ( name )
-            ret = self.texName ( name, self.options["color"] )
+            ret = "$" + self.texName ( name, self.options["color"] ) + "$"
             # print ( "ret", name, ret )
             return ret
         return self.htmlName ( name )
