@@ -10,11 +10,12 @@ from manipulator import Manipulator
 from protomodel import predictor as P
 from plotHiscore import obtain
 
-def getLikelihoods ( bestcombo ):
+def getLikelihoods ( bestcombo, mu = 1. ):
     """ return dictionary with the likelihoods per analysis """
     llhds= {}
     for tp in bestcombo:
-        llhds[ tp.analysisId() ] = tp.getLikelihood ( 1. ) 
+        name = "%s:%s:%s" % ( tp.analysisId(), tp.dataId(), ",".join ( [ i.txName for i in tp.txnames ] ) )
+        llhds[ name ] = tp.getLikelihood ( mu ) 
     return llhds
 
 def pprint ( *args ):
@@ -22,7 +23,7 @@ def pprint ( *args ):
     t = time.strftime("%H:%M:%S")
     print ( "[llhdscanner:%s] %s" % ( t, " ".join(map(str,args)))  )
 
-def plotLikelihoodFor ( protomodel, pid1, pid2, min1, max1, dm1,
+def scanLikelihoodFor ( protomodel, pid1, pid2, min1, max1, dm1,
                         min2, max2, dm2, nevents ):
     """ plot the likelihoods as a function of pid1 and pid2 """
     if pid2 != protomodel.LSP:
@@ -46,7 +47,8 @@ def plotLikelihoodFor ( protomodel, pid1, pid2, min1, max1, dm1,
     ## first add proto-model point
     protomodel.predict( nevents = nevents, check_thresholds=False, \
                         recycle_xsecs = False )
-    llhds = getLikelihoods ( protomodel.bestCombo )
+    mu = 1.
+    llhds = getLikelihoods ( protomodel.bestCombo, mu=mu )
     print ( "[llhdscanner] protomodel point: m1,m2,llhds", mpid1, mpid2, llhds, len(protomodel.bestCombo) )
     masspoints.append ( (mpid1,mpid2,llhds) )
 
@@ -64,7 +66,7 @@ def plotLikelihoodFor ( protomodel, pid1, pid2, min1, max1, dm1,
                     protomodel.masses[pid_]=m2 + 1.
             protomodel.predict( nevents = nevents, check_thresholds=False, \
                                 recycle_xsecs = True )
-            llhds = getLikelihoods ( protomodel.bestCombo )
+            llhds = getLikelihoods ( protomodel.bestCombo, mu=mu )
             # del protomodel.stored_xsecs ## make sure we compute
             pprint ( "m1,m2,llhds:", m1, m2, llhds, len(protomodel.bestCombo) )
             # print ( )
@@ -81,13 +83,13 @@ def plotLikelihoodFor ( protomodel, pid1, pid2, min1, max1, dm1,
 def overrideWithDefaults ( args ):
     if not args.defaults:
         return args
-    mins = { 1000006:  100., 2000006:  100., 1000021:  200. }
-    maxs = { 1000006: 1210., 2000006: 1200., 1000021: 2400. }
-    dm   = { 1000006:   50., 2000006:   50., 1000021:   70. }
+    mins = { 1000005:  100., 1000006:  100., 2000006:  100., 1000021:  200. }
+    maxs = { 1000005: 1500., 1000006: 1260., 2000006: 1260., 1000021: 2400. }
+    dm   = { 1000005:   60., 1000006:   50., 2000006:   50., 1000021:   70. }
     ### make the LSP scan depend on the mother
-    LSPmins = { 1000006:   5., 2000006:    5., 1000021:    5. }
-    LSPmaxs = { 1000006: 800., 2000006:  800., 1000021: 2200. }
-    LSPdm   = { 1000006:  50., 2000006:   50., 1000021:   70. }
+    LSPmins = { 1000005:   5., 1000006:   5., 2000006:    5., 1000021:    5. }
+    LSPmaxs = { 1000005: 800., 1000006: 800., 2000006:  800., 1000021: 2200. }
+    LSPdm   = { 1000005:  50., 1000006:  50., 2000006:   50., 1000021:   70. }
     if not args.pid1 in mins:
         print ( "[llhdscanner] asked for defaults for %d, but none defined." % args.pid1 )
         return args
@@ -148,7 +150,7 @@ def main ():
         args.picklefile = "%s/hiscore.pcl" % rundir
     protomodel, trimmed = obtain ( args.number, args.picklefile )
     args = overrideWithDefaults ( args )
-    plotLikelihoodFor ( protomodel, args.pid1, args.pid2, args.min1, args.max1, \
+    scanLikelihoodFor ( protomodel, args.pid1, args.pid2, args.min1, args.max1, \
                         args.deltam1, args.min2, args.max2, args.deltam2, \
                         args.nevents )
 
