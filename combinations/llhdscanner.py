@@ -13,15 +13,15 @@ from plotHiscore import obtain
 class Scanner:
     def __init__ ( self, protomodel, pid1, pid2 ):
         self.rundir = setup()
-        self.protomodel = protomodel
+        self.M = protomodel
         self.pid1 = pid1
         self.pid2 = pid2
 
     def getPredictions ( self, recycle_xsecs = True ):
         """ get predictions, return likelihoods """
-        self.protomodel.createSLHAFile( nevents = self.nevents, 
+        self.M.createSLHAFile( nevents = self.nevents, 
                 recycle_xsecs = recycle_xsecs )
-        predictions = P[0].predict ( self.protomodel.currentSLHA, 
+        predictions = P[0].predict ( self.M.currentSLHA, 
                                      allpreds=False, llhdonly=True )
         ## first add proto-model point
         mu = 1.
@@ -62,22 +62,22 @@ class Scanner:
         self.nevents = nevents
         pid1 = self.pid1
         pid2 = self.pid2
-        if pid2 != self.protomodel.LSP:
+        if pid2 != self.M.LSP:
             print ("[llhdscanner] we currently assume pid2 to be the LSP, but it is %d" % pid2 )
         import numpy
         c = Combiner()
-        anaIds = c.getAnaIdsWithPids ( self.protomodel.bestCombo, [ pid1, pid2 ] )
+        anaIds = c.getAnaIdsWithPids ( self.M.bestCombo, [ pid1, pid2 ] )
         ## mass range for pid1
-        mpid1 = self.protomodel.masses[pid1]
-        mpid2 = self.protomodel.masses[pid2]
+        mpid1 = self.M.masses[pid1]
+        mpid2 = self.M.masses[pid2]
         rpid1 = numpy.arange ( min1, max1+1e-8, dm1 )
         rpid2 = numpy.arange ( min2, max2+1e-8, dm2 )
         masspoints = []
         print ( "[llhdscanner] range for %d: %s" % ( pid1, self.describeRange( rpid1 ) ) )
         print ( "[llhdscanner] range for %d: %s" % ( pid2, self.describeRange( rpid2 ) ) )
         print ( "[llhdscanner] total %d points, %d events, trimming for %s" % ( len(rpid1)*len(rpid2), nevents, topo ) )
-        self.protomodel.createNewSLHAFileName ( prefix="llhd%d" % pid1 )
-        self.protomodel.initializePredictor()
+        self.M.createNewSLHAFileName ( prefix="llhd%d" % pid1 )
+        self.M.initializePredictor()
         P[0].filterForTopos ( topo )
         
         llhds = self.getPredictions ( False )
@@ -88,28 +88,28 @@ class Scanner:
 
         if True:
             ## freeze out all other particles
-            for pid_,m_ in self.protomodel.masses.items():
+            for pid_,m_ in self.M.masses.items():
                 if pid_ not in [ pid1, pid2 ]:
-                    self.protomodel.masses[pid_]=1e6
+                    self.M.masses[pid_]=1e6
 
         for m1 in rpid1:
-            self.protomodel.masses[pid1]=m1
-            self.protomodel.masses[pid2]=mpid2 ## reset LSP mass
+            self.M.masses[pid1]=m1
+            self.M.masses[pid2]=mpid2 ## reset LSP mass
             for k,v in oldmasses.items():
                 self.pprint ( "WARNING: setting mass of %d back to %d" % ( k, v ) )
-                self.protomodel.masses[k]=v
+                self.M.masses[k]=v
             oldmasses={}
-            if hasattr ( self.protomodel, "stored_xsecs" ):
-                del self.protomodel.stored_xsecs ## make sure we compute
+            if hasattr ( self.M, "stored_xsecs" ):
+                del self.M.stored_xsecs ## make sure we compute
             for i2,m2 in enumerate(rpid2):
                 if m2 > m1: ## we assume pid2 to be the daughter
                     continue
-                self.protomodel.masses[pid2]=m2
-                for pid_,m_ in self.protomodel.masses.items():
+                self.M.masses[pid2]=m2
+                for pid_,m_ in self.M.masses.items():
                     if pid_ != pid2 and m_ < m2: ## make sure LSP remains the LSP
                         self.pprint ( "WARNING: have to raise %d from %d to %d" % ( pid_, m_, m2+1. ) )
                         oldmasses[pid_]=m_
-                        self.protomodel.masses[pid_]=m2 + 1.
+                        self.M.masses[pid_]=m2 + 1.
                 llhds = self.getPredictions ( True )
                 # del protomodel.stored_xsecs ## make sure we compute
                 self.pprint ( "m1 %d, m2 %d, %d llhds." % \
@@ -135,7 +135,7 @@ class Scanner:
         ### make the LSP scan depend on the mother
         LSPmins = { 1000005:   5., 1000006:   5., 2000006:    5., 1000021:    5. }
         LSPmaxs = { 1000005: 800., 1000006: 800., 2000006:  800., 1000021: 2200. }
-        LSPdm   = { 1000005:  40., 1000006:  40., 2000006:   40., 1000021:   60. }
+        LSPdm   = { 1000005:  15., 1000006:  15., 2000006:   15., 1000021:   15. }
         if not args.pid1 in mins:
             print ( "[llhdscanner] asked for defaults for %d, but none defined." % args.pid1 )
             return args

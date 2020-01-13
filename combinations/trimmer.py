@@ -250,11 +250,36 @@ class Trimmer:
         self.M.clean()
         self.pprint ( "trimming changed the score from %.2f to %.2f" % ( oldZ, self.M.Z ) )
 
-    def trimSSMs ( self, trimTo=1. ):
+    def getAllPidsOfXsecs ( self ):
+        if not hasattr ( self.M, "stored_xsecs" ):
+            self.pprint ( "couldnt find any xsecs, recompute!" )
+            self.M.backup()
+            self.M.computeXSecs ( nevents=self.nevents, 
+                                  recycle = True )
+        pids = set()
+        for xsec in self.M.stored_xsecs[0]:
+            pids.add ( xsec.pid )
+        return pids
+
+    def trimSSMs ( self ):
+        """ try to take out the signal strength multipliers 
+        """
+        xsecpids = self.getAllPidsOfXsecs()
+        nbefore = len(self.M.ssmultipliers)
+        for i,(pids,ssm) in enumerate(self.M.ssmultipliers.items()):
+            if not pids in xsecpids:
+                # self.pprint ( "taking out ssm(%.2f) for %s" % (ssm,str(pids) ) )
+                self.M.ssmultipliers[pids]=1.
+        self.removeSSM1s() ## discard ss multipliers that are at 1.0
+        nafter = len(self.M.ssmultipliers)
+        self.pprint ( "kept %d of %d ss multipliers" % ( nafter, nbefore ) )
+
+    def _trimSSMsEvenMore_ ( self, trimTo=1. ):
         """ try to take out the signal strength multipliers 
         :param trimTo: parameter to try to trim ssm to, 1 or 0 makes sense. If 0,
                        you must make sure that the ones havent been taken out yet!
         """
+        self.trimSSMs()
         if abs(trimTo)<1e-5:
             self.pprint ( "FIXME need to make sure the ssms=1. are still in!!" )
         oldZ = self.M.Z
@@ -269,6 +294,7 @@ class Trimmer:
                 self.pprint ( "Z changed from %.2f to %.2f. keeping %s" % ( oldZ, self.M.Z, str(pids) ) )
                 self.M.ssmultipliers[pids]=ssm
         self.removeSSM1s() ## discard ss multipliers that are at 1.0
+
 
     def trimBranchingsOf ( self, pid ):
         """ trim the branchings of pid """
