@@ -10,100 +10,138 @@ from manipulator import Manipulator
 from protomodel import predictor as P
 from plotHiscore import obtain
 
-def getLikelihoods ( bestcombo, mu = 1. ):
-    """ return dictionary with the likelihoods per analysis """
-    llhds= {}
-    for tp in bestcombo:
-        name = "%s:%s:%s" % ( tp.analysisId(), tp.dataId(), ",".join ( [ i.txName for i in tp.txnames ] ) )
-        llhds[ name ] = tp.getLikelihood ( mu ) 
-    return llhds
+class Scanner:
+    def __init__ ( self, protomodel, pid1, pid2 ):
+        self.rundir = setup()
+        self.protomodel = protomodel
+        self.pid1 = pid1
+        self.pid2 = pid2
 
-def pprint ( *args ):
-    """ pretty print """
-    t = time.strftime("%H:%M:%S")
-    print ( "[llhdscanner:%s] %s" % ( t, " ".join(map(str,args)))  )
+    def getLikelihoods ( self, bestcombo, mu = 1. ):
+        """ return dictionary with the likelihoods per analysis """
+        llhds= {}
+        for tp in bestcombo:
+            name = "%s:%s:%s" % ( tp.analysisId(), tp.dataId(), ",".join ( [ i.txName for i in tp.txnames ] ) )
+            llhds[ name ] = tp.getLikelihood ( mu ) 
+        return llhds
 
-def scanLikelihoodFor ( protomodel, pid1, pid2, min1, max1, dm1,
-                        min2, max2, dm2, nevents, topo ):
-    """ plot the likelihoods as a function of pid1 and pid2 """
-    if pid2 != protomodel.LSP:
-        print ("[llhdscanner] we currently assume pid2 to be the LSP, but it is %d" % pid2 )
-    import numpy
-    c = Combiner()
-    anaIds = c.getAnaIdsWithPids ( protomodel.bestCombo, [ pid1, pid2 ] )
-    ## mass range for pid1
-    mpid1 = protomodel.masses[pid1]
-    mpid2 = protomodel.masses[pid2]
-    rpid1 = numpy.arange ( min1, max1+1e-8, dm1 )
-    rpid2 = numpy.arange ( min2, max2+1e-8, dm2 )
-    masspoints = []
-    print ( "[llhdscanner] range for %d: %d,%d ... %d" % ( pid1, rpid1[0], rpid1[1], rpid1[-1] ) )
-    print ( "[llhdscanner] range for %d: %d,%d ... %d" % ( pid2, rpid2[0], rpid2[1], rpid2[-1] ) )
-    print ( "[llhdscanner] total %d points, %d events" % ( len(rpid1)*len(rpid2), nevents ) )
-    protomodel.createNewSLHAFileName ( prefix="llhd%d" % pid1 )
-    protomodel.initializePredictor()
-    P[0].filterForAnaIdsTopos ( anaIds, topo )
-    
-    ## first add proto-model point
-    protomodel.predict( nevents = nevents, check_thresholds=False, \
-                        recycle_xsecs = False )
-    mu = 1.
-    llhds = getLikelihoods ( protomodel.bestCombo, mu=mu )
-    print ( "[llhdscanner] protomodel point: m1,m2,llhds", mpid1, mpid2, llhds, len(protomodel.bestCombo) )
-    masspoints.append ( (mpid1,mpid2,llhds) )
+    def pprint ( self, *args ):
+        """ pretty print """
+        t = time.strftime("%H:%M:%S")
+        line = "[llhdscanner:%s] %s" % ( t, " ".join(map(str,args)))
+        print ( line )
+        with open ( "llhdscan%d.log" % self.pid1, "at" ) as f:
+            f.write ( line+"\n" )
 
-    for m1 in rpid1:
-        protomodel.masses[pid1]=m1
-        protomodel.masses[pid2]=mpid2 ## reset LSP mass
-        if hasattr ( protomodel, "stored_xsecs" ):
-            del protomodel.stored_xsecs ## make sure we compute
-        for i2,m2 in enumerate(rpid2):
-            if m2 > m1: ## we assume pid2 to be the daughter
-                continue
-            protomodel.masses[pid2]=m2
-            for pid_,m_ in protomodel.masses.items():
-                if pid_ != pid2 and m_ < m2: ## make sure LSP remains the LSP
-                    protomodel.masses[pid_]=m2 + 1.
-            protomodel.predict( nevents = nevents, check_thresholds=False, \
-                                recycle_xsecs = True )
-            llhds = getLikelihoods ( protomodel.bestCombo, mu=mu )
-            # del protomodel.stored_xsecs ## make sure we compute
-            pprint ( "m1,m2,llhds:", m1, m2, llhds, len(protomodel.bestCombo) )
-            # print ( )
-            masspoints.append ( (m1,m2,llhds) )
-    import pickle
-    picklefile = "mp%d%d.pcl" % ( pid1, pid2 )
-    print ( "[llhdscanner] now saving to %s" % picklefile )
-    f=open( picklefile ,"wb" )
-    pickle.dump ( masspoints, f )
-    pickle.dump ( mpid1, f )
-    pickle.dump ( mpid2, f )
-    pickle.dump ( nevents, f )
-    pickle.dump ( topo, f )
-    f.close()
+    def describeRange ( self, r ):
+        """ describe range r in a string """
+        if len(r)==0:
+            return ""
+        if len(r)==1:
+            return "%d" % r[0]
+        if len(r)==2:
+            return "%d,%d" % ( r[0], r[1] )
+        return "%d,%d ... %d" % ( r[0], r[1], r[-1] )
 
-def overrideWithDefaults ( args ):
-    if not args.defaults:
+    def scanLikelihoodFor ( self, min1, max1, dm1, min2, max2, dm2, 
+                            nevents, topo, output ):
+        """ plot the likelihoods as a function of pid1 and pid2 
+        :param output: prefix for output file [mp]
+        """
+        pid1 = self.pid1
+        pid2 = self.pid2
+        if pid2 != self.protomodel.LSP:
+            print ("[llhdscanner] we currently assume pid2 to be the LSP, but it is %d" % pid2 )
+        import numpy
+        c = Combiner()
+        anaIds = c.getAnaIdsWithPids ( self.protomodel.bestCombo, [ pid1, pid2 ] )
+        ## mass range for pid1
+        mpid1 = self.protomodel.masses[pid1]
+        mpid2 = self.protomodel.masses[pid2]
+        rpid1 = numpy.arange ( min1, max1+1e-8, dm1 )
+        rpid2 = numpy.arange ( min2, max2+1e-8, dm2 )
+        masspoints = []
+        print ( "[llhdscanner] range for %d: %s" % ( pid1, self.describeRange( rpid1 ) ) )
+        print ( "[llhdscanner] range for %d: %s" % ( pid2, self.describeRange( rpid2 ) ) )
+        print ( "[llhdscanner] total %d points, %d events" % ( len(rpid1)*len(rpid2), nevents ) )
+        self.protomodel.createNewSLHAFileName ( prefix="llhd%d" % pid1 )
+        self.protomodel.initializePredictor()
+        P[0].filterForAnaIdsTopos ( anaIds, topo )
+        
+        ## first add proto-model point
+        self.protomodel.predict( nevents = nevents, check_thresholds=False, \
+                            recycle_xsecs = False )
+        mu = 1.
+        llhds = self.getLikelihoods ( self.protomodel.bestCombo, mu=mu )
+        print ( "[llhdscanner] protomodel point: m1,m2,llhds", mpid1, mpid2, llhds, len(self.protomodel.bestCombo) )
+        masspoints.append ( (mpid1,mpid2,llhds) )
+        oldmasses = {}
+
+        if True:
+            ## freeze out all other particles
+            for pid_,m_ in self.protomodel.masses.items():
+                if pid_ not in [ pid1, pid2 ]:
+                    self.protomodel.masses[pid_]=1e6
+
+        for m1 in rpid1:
+            self.protomodel.masses[pid1]=m1
+            self.protomodel.masses[pid2]=mpid2 ## reset LSP mass
+            for k,v in oldmasses.items():
+                self.pprint ( "WARNING: setting mass of %d back to %d" % ( k, v ) )
+                self.protomodel.masses[k]=v
+            oldmasses={}
+            if hasattr ( self.protomodel, "stored_xsecs" ):
+                del self.protomodel.stored_xsecs ## make sure we compute
+            for i2,m2 in enumerate(rpid2):
+                if m2 > m1: ## we assume pid2 to be the daughter
+                    continue
+                self.protomodel.masses[pid2]=m2
+                for pid_,m_ in self.protomodel.masses.items():
+                    if pid_ != pid2 and m_ < m2: ## make sure LSP remains the LSP
+                        self.pprint ( "WARNING: have to raise %d from %d to %d" % ( pid_, m_, m2+1. ) )
+                        oldmasses[pid_]=m_
+                        self.protomodel.masses[pid_]=m2 + 1.
+                self.protomodel.predict( nevents = nevents, check_thresholds=False, \
+                                    recycle_xsecs = True )
+                llhds = self.getLikelihoods ( self.protomodel.bestCombo, mu=mu )
+                # del protomodel.stored_xsecs ## make sure we compute
+                self.pprint ( "m1,m2,llhds:", m1, m2, llhds, len(self.protomodel.bestCombo) )
+                # print ( )
+                masspoints.append ( (m1,m2,llhds) )
+        import pickle
+        picklefile = "%s%d%d.pcl" % ( output, pid1, pid2 )
+        print ( "[llhdscanner] now saving to %s" % picklefile )
+        f=open( picklefile ,"wb" )
+        pickle.dump ( masspoints, f )
+        pickle.dump ( mpid1, f )
+        pickle.dump ( mpid2, f )
+        pickle.dump ( nevents, f )
+        pickle.dump ( topo, f )
+        pickle.dump ( time.asctime(), f )
+        f.close()
+
+    def overrideWithDefaults ( self, args ):
+        if not args.defaults:
+            return args
+        mins = { 1000005:  100., 1000006:  100., 2000006:  100., 1000021:  200. }
+        maxs = { 1000005: 1500., 1000006: 1260., 2000006: 1260., 1000021: 2400. }
+        dm   = { 1000005:   50., 1000006:   40., 2000006:   40., 1000021:   50. }
+        topo = { 1000005: "T2bb", 1000006: "T2tt", 2000006: "T2tt", 1000021: "T1" }
+        ### make the LSP scan depend on the mother
+        LSPmins = { 1000005:   5., 1000006:   5., 2000006:    5., 1000021:    5. }
+        LSPmaxs = { 1000005: 800., 1000006: 800., 2000006:  800., 1000021: 2200. }
+        LSPdm   = { 1000005:  40., 1000006:  40., 2000006:   40., 1000021:   60. }
+        if not args.pid1 in mins:
+            print ( "[llhdscanner] asked for defaults for %d, but none defined." % args.pid1 )
+            return args
+        args.min1 = mins[args.pid1]
+        args.max1 = maxs[args.pid1]
+        args.deltam1 = dm[args.pid1]
+        args.min2 = LSPmins[args.pid1]
+        args.max2 = LSPmaxs[args.pid1]
+        args.deltam2 = LSPdm[args.pid1]
+        args.topo = topo[args.pid1]
         return args
-    mins = { 1000005:  100., 1000006:  100., 2000006:  100., 1000021:  200. }
-    maxs = { 1000005: 1500., 1000006: 1260., 2000006: 1260., 1000021: 2400. }
-    dm   = { 1000005:   50., 1000006:   40., 2000006:   40., 1000021:   50. }
-    topo = { 1000005: "T2bb", 1000006: "T2tt", 2000006: "T2tt", 1000021: "T1" }
-    ### make the LSP scan depend on the mother
-    LSPmins = { 1000005:   5., 1000006:   5., 2000006:    5., 1000021:    5. }
-    LSPmaxs = { 1000005: 800., 1000006: 800., 2000006:  800., 1000021: 2200. }
-    LSPdm   = { 1000005:  40., 1000006:  40., 2000006:   40., 1000021:   60. }
-    if not args.pid1 in mins:
-        print ( "[llhdscanner] asked for defaults for %d, but none defined." % args.pid1 )
-        return args
-    args.min1 = mins[args.pid1]
-    args.max1 = maxs[args.pid1]
-    args.deltam1 = dm[args.pid1]
-    args.min2 = LSPmins[args.pid1]
-    args.max2 = LSPmaxs[args.pid1]
-    args.deltam2 = LSPdm[args.pid1]
-    args.topo = topo[args.pid1]
-    return args
 
 def main ():
     rundir = setup()
@@ -146,6 +184,9 @@ def main ():
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug, info, warn, err [info]',
             type=str, default="info" )
+    argparser.add_argument ( '-o', '--output',
+            help="prefix for output file [mp]",
+            type=str, default="mp" )
     argparser.add_argument ( '-t', '--topo',
             help='topology [T2tt]',
             type=str, default="info" )
@@ -156,10 +197,11 @@ def main ():
     if args.picklefile == "default":
         args.picklefile = "%s/hiscore.pcl" % rundir
     protomodel, trimmed = obtain ( args.number, args.picklefile )
-    args = overrideWithDefaults ( args )
-    scanLikelihoodFor ( protomodel, args.pid1, args.pid2, args.min1, args.max1, \
-                        args.deltam1, args.min2, args.max2, args.deltam2, \
-                        args.nevents, args.topo )
+    scanner = Scanner( protomodel, args.pid1, args.pid2 )
+    args = scanner.overrideWithDefaults ( args )
+    scanner.scanLikelihoodFor ( args.min1, args.max1, args.deltam1, 
+                                args.min2, args.max2, args.deltam2, \
+                                args.nevents, args.topo, args.output )
 
 if __name__ == "__main__":
     main()
