@@ -238,13 +238,13 @@ class Trimmer:
         self.trimParticles ( )
         if trimbranchings:
             self.trimBranchings ( )
-            # self.trimSSMs ( ) ## dont do this now
         self.M.trimmedBranchings = trimbranchings
         self.removeSSM1s() ## discard ss multipliers that are at 1.0
         self.M.predict ( nevents = self.nevents ) ## a final predict!
         self.pprint ( "after removeSSM1s() it moved from %.2f to %.2f" % ( oldZ, self.M.Z ) )
         self.removeFrozenSSMs() ## discard ss multipliers for frozen particles
         self.removeZeroDecays() ## remove decays with br of zero
+        self.M.trimSSMs() ## now also remove all the ssms that dont do nothing
         self.M.trimloss = self.maxloss ## store the trim loss
         self.M.predict ( nevents = self.nevents ) ## a final predict!
         self.M.clean()
