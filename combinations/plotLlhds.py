@@ -9,13 +9,19 @@ from matplotlib import pyplot as plt
 
 def load ( picklefile ):
     """ load dictionary from picklefile """
-    f = open ( picklefile, "rb" )
-    llhds = pickle.load ( f )
-    mx = pickle.load ( f )
-    my = pickle.load ( f )
-    nevents = pickle.load ( f )
-    f.close()
-    return llhds,mx,my,nevents
+    topo, timestamp = "?", "?"
+    with open ( picklefile, "rb" ) as f:
+        try:
+            llhds = pickle.load ( f )
+            mx = pickle.load ( f )
+            my = pickle.load ( f )
+            nevents = pickle.load ( f )
+            topo = pickle.load ( f )
+            timestamp = pickle.load ( f )
+        except EOFError as e:
+            pass
+        f.close()
+    return llhds,mx,my,nevents,topo,timestamp
 
 def integrateLlhds ( Z ):
     """ compute the integral of the likelihood over all points """
@@ -55,8 +61,8 @@ def computeHLD ( Z, alpha = .9 ):
         ctr+= 1
         S += np.exp ( -m)/I ## add up
         oldZ[x][y]=float("nan") ## kill this one
-        newZ[x][y]=1 # +1/ctr
-    print ( "%d/%d points in 50%s HLD" % ( sum(sum(newZ)), n, "%" ) )
+        newZ[x][y]=1 +1./ctr
+    print ( "%d/%d points in %d%s HLD" % ( sum(sum(newZ)), n, int(alpha*100), "%" ) )
     return newZ
 
 def getAnaStats ( D, topo, integrateSRs=True, integrateTopos=True ):
@@ -111,8 +117,8 @@ def resultFor ( ana, topo, llhds ):
             sr = tokens[1]
     return ret,sr
 
-def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my, 
-                 topo, nevents ):
+def plotOneAna ( masspoints, ana, pid1, pid2, mx, my, 
+                 topo, nevents, timestamp ):
     """ plot for one analysis """
     x,y=set(),set()
     L = {}
@@ -123,8 +129,6 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my,
         s="(%.2f)" % (-np.log(r))
     for masspoint in masspoints[1:]:
         m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
-        #if ana in llhds:
-        #    print ( "m", m1,m2,-np.log(llhds[ana]) )
         if m2 > m1:
             print ( "m2,m1 mass inversion?",m1,m2 )
         x.add ( m1 )
@@ -142,19 +146,21 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my,
     x.sort(); y.sort()
     X, Y = np.meshgrid ( x, y )
     Z = float("nan")*X
-    print ( "x", x )
+    # print ( "x", x )
     for irow,row in enumerate(Z):
         for icol,col in enumerate(row):
             h = getHash(x[icol],y[irow])
             if h in L:
                 Z[irow,icol]=L[h]
     contf = plt.contourf ( X, Y, Z, levels=100 )
-    hldZ50 = computeHLD ( Z, .5 )
-    cont50 = plt.contour ( X, Y, hldZ50, levels=0, colors = [ "red" ] )
-    plt.clabel ( cont50, fmt="50%.0s" )
     hldZ95 = computeHLD ( Z, .95 )
-    cont95 = plt.contour ( X, Y, hldZ95, levels=0, colors = [ "orange" ] )
+    cont95 = plt.contour ( X, Y, hldZ95, levels=[0.5], colors = [ "orange" ] )
     plt.clabel ( cont95, fmt="95%.0s" )
+    hldZ50 = computeHLD ( Z, .5 )
+    cont50 = plt.contour ( X, Y, hldZ50, levels=[1.0], colors = [ "red" ] )
+    plt.clabel ( cont50, fmt="50%.0s" )
+    print ( "timestamp:", timestamp, topo, max(x) )
+    plt.text( max(x)-300,min(y)-130,timestamp, c="gray" )
     ### the altitude of the alpha quantile is l(nuhat) - .5 chi^2_(1-alpha);ndf 
     ### so for alpha=0.05%, ndf=1 the dl is .5 * 3.841 = 1.9207
     ### for ndf=2 the dl is ln(alpha) = .5 * 5.99146 = 2.995732
@@ -165,12 +171,13 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my,
     # Xs,Ys=X,Y
     Xs,Ys = filterSmaller ( X, Y )
     ax.scatter(Xs, Ys, marker=".", s=1, color="gray", label="points probed" )
-    print ( "minXY", minXY )
-    ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=25, color="red", label="$\hat{l}$ (ml estimate, %.2f)" % minXY[2] )
+    ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=60, color="black" ) 
+    ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=35, color="red", label="$\hat{l}$ (ml estimate, %.2f)" % minXY[2] )
     h = getHash(mx,my)
     if h in L:
         s=" (%.2f)" % L[h]
-    ax.scatter( [ mx ], [ my ], marker="*", s=25, color="black", label="proto-model%s" % s )
+    ax.scatter( [ mx ], [ my ], marker="*", s=60, color="white" )
+    ax.scatter( [ mx ], [ my ], marker="*", s=35, color="black", label="proto-model%s" % s )
     if sr == None:
         sr = "UL"
     plt.title ( "$-\ln L(m_i)$, %s: %s,%s [%d events]" % ( ana, topo, sr, nevents ) )
@@ -181,21 +188,23 @@ def plotOneAna ( masspoints, ana, interactive, pid1, pid2, mx, my,
     figname = "plt%d%s.png" % ( pid1, ana )
     print ( "[plotLlhds] saving to %s" % figname )
     plt.savefig ( figname )
-    if interactive:
-        IPython.embed()
     plt.close()
 
-def plot ( pid1, pid2, analysis, interactive, topo ):
+def plot ( pid1, pid2, analysis ):
     """ do your plotting """
-    picklefile = "mp%d%d.pcl" % ( pid1, pid2 )
-    masspoints,mx,my,nevents = load ( picklefile )
+    masspoints,mx,my,nevents,topo,timestamp = load ( getPickleFile ( pid1, pid2 ) )
     stats = getAnaStats( masspoints, topo )
-    plotOneAna ( masspoints, analysis, interactive, pid1, pid2, mx, my, topo,
-                 nevents )
+    plotOneAna ( masspoints, analysis, pid1, pid2, mx, my, topo,
+                 nevents,timestamp )
+
+def getPickleFile ( pid1, pid2 ):
+    picklefile = "mp%d%d.pcl" % ( pid1, pid2 )
+    return picklefile
 
 def listAnalyses( pid1, pid2, topo ):
-    picklefile = "mp%d%d.pcl" % ( pid1, pid2 )
-    masspoints,mx,my,nevents = load ( picklefile )
+    masspoints,mx,my,nevents,ntopo,timestamp = load ( getPickleFile(pid1,pid2) )
+    if topo == "?":
+        topo = ntopo
     stats = getAnaStats( masspoints, topo )
     print ( "%d masspoints with %s" % ( len(masspoints), topo ) )
     for k,v in stats.items():
@@ -206,8 +215,8 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(
             description='plot likelihoods scans')
     argparser.add_argument ( '-t', '--topo',
-            help='topo [T2tt]',
-            type=str, default="T2tt" )
+            help='topo [?]',
+            type=str, default="?" )
     argparser.add_argument ( '-1', '--pid1',
             help='pid1 [1000021]',
             type=int, default=1000021 )
@@ -220,12 +229,25 @@ if __name__ == "__main__":
     argparser.add_argument ( '-l', '--list_analyses',
             help='list all analyses for these pids',
             action="store_true" )
+    argparser.add_argument ( '-A', '--all',
+            help='plot for all analyses',
+            action="store_true" )
     argparser.add_argument ( '-i', '--interactive',
             help='interactive mode',
             action="store_true" )
     args = argparser.parse_args()
+    if args.all:
+        masspoints,mx,my,nevents,topo,timestamp = load ( getPickleFile ( args.pid1, args.pid2 ) )
+        stats = getAnaStats( masspoints, topo )
+        for ana,v in stats.items():
+            plot ( args.pid1, args.pid2, ana )
+        sys.exit()
+            
     if args.list_analyses:
         listAnalyses ( args.pid1, args.pid2, args.topo )
-        sys.exit()
-    plot ( args.pid1, args.pid2, args.analysis, args.interactive,
-           args.topo )
+    else:
+        plot ( args.pid1, args.pid2, args.analysis )
+    if args.interactive:
+        masspoints,mx,my,nevents,topo,timestamp = load ( getPickleFile ( args.pid1, args.pid2 ) )
+        import IPython
+        IPython.embed()
