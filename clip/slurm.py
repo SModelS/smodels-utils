@@ -73,9 +73,32 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         print ( "returned: %s" % a )
     #remove ( tf, keep )
     #remove ( runner, keep )
+
+def produceLLHDScanScript ( pid1, pid2, force_rewrite ):
+    rundir = "/mnt/hephy/pheno/ww/rundir"
+    fname = "%s/llhdscanner%d.sh" % ( rundir, pid1 )
+    if force_rewrite or not os.path.exists ( fname ):
+        with open ( fname, "wt" ) as f:
+            f.write ("#!/bin/sh\n\n"  )
+            f.write ("/mnt/hephy/pheno/ww/git/smodels-utils/combinations/llhdscanner.py --pid1 %d --pid2 %d\n" % ( pid1, pid2 ) ) 
+            f.close()
+        os.chmod ( fname, 0o775 )
+
+def produceScanScript ( pid, force_rewrite ):
+    rundir = "/mnt/hephy/pheno/ww/rundir"
+    fname = "%s/scanner%d.sh" % ( rundir, pid )
+    if force_rewrite or not os.path.exists ( fname ):
+        with open ( fname, "wt" ) as f:
+            f.write ("#!/bin/sh\n\n"  )
+            f.write ("/mnt/hephy/pheno/ww/git/smodels-utils/combinations/scanner.py -P -p %d\n" % ( pid) ) 
+            f.close()
+        os.chmod ( fname, 0o775 )
             
-def runLLHDScanner( pid, dry_run, time ):
-    """ run the llhd scanner for pid, on the current hiscore """
+def runLLHDScanner( pid, dry_run, time, rewrite ):
+    """ run the llhd scanner for pid, on the current hiscore 
+    :param dry_run: do not execute, just say what you do
+    :param rewrite: force rewrite of scan script
+    """
     qos = "c_short"
     if time > 48:
         qos = "c_long"
@@ -95,16 +118,19 @@ def runLLHDScanner( pid, dry_run, time ):
         for line in lines:
             f.write ( line.replace("@@PID@@",str(pid) ) )
         f.close()
+    produceLLHDScanScript ( pid, 1000022, rewrite )
     cmd += [ "./run_llhd_scanner%s.sh" % pid ]
+    print ( "cmd", cmd )
     if dry_run:
         return
-    print ( "cmd", cmd )
     a = subprocess.run ( cmd )
     print ( ">>", a )
 
-def runScanner( pid, dry_run, time ):
-    """ run the scanner for pid, on the current hiscore """
-    print ( "FIXME, use pid" )
+def runScanner( pid, dry_run, time, rewrite ):
+    """ run the scanner for pid, on the current hiscore
+    :param dry_run: do not execute, just say what you do
+    :param rewrite: force rewrite of scan script
+    """
     qos = "c_short"
     if time > 48:
         qos = "c_long"
@@ -125,9 +151,10 @@ def runScanner( pid, dry_run, time ):
             f.write ( line.replace("@@PID@@",str(pid) ) )
         f.close()
     cmd += [ "./run_scanner%s.sh" % pid ]
+    produceScanScript ( pid, rewrite )
+    print ( "cmd", cmd )
     if dry_run:
         return
-    print ( "cmd", cmd )
     a = subprocess.run ( cmd )
     print ( ">>", a )
 
@@ -191,6 +218,8 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-r','--restart', help='restart worker jobs n times [0]',
                              type=int, default=0 )
+    argparser.add_argument ( '--rewrite', help='force rewrite of scan scripts',
+                             action="store_true" )
     argparser.add_argument ( '-n', '--nmin', nargs='?', help='minimum worker id [0]',
                         type=int, default=0 )
     argparser.add_argument ( '-C', '--cheatcode', nargs='?', help='use a cheat code [0]',
@@ -221,10 +250,10 @@ def main():
         runUpdater( args.dry_run, args.time )
         return
     if args.scan > -1:
-        runScanner ( args.scan, args.dry_run, args.time )
+        runScanner ( args.scan, args.dry_run, args.time, args.rewrite )
         return
     if args.llhdscan > -1:
-        runLLHDScanner ( args.llhdscan, args.dry_run, args.time )
+        runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite )
         return
     if args.regressor:
         runRegressor ( args.dry_run )
