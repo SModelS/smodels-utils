@@ -17,10 +17,21 @@ class Scanner:
         self.pid1 = pid1
         self.pid2 = pid2
 
-    def getLikelihoods ( self, bestcombo, mu = 1. ):
+    def getPredictions ( self, recycle_xsecs = True ):
+        """ get predictions, return likelihoods """
+        self.protomodel.createSLHAFile( nevents = self.nevents, 
+                recycle_xsecs = recycle_xsecs )
+        predictions = P[0].predict ( self.protomodel.currentSLHA, 
+                                     allpreds=False, llhdonly=True )
+        ## first add proto-model point
+        mu = 1.
+        llhds = self.getLikelihoods ( predictions, mu=mu )
+        return llhds
+
+    def getLikelihoods ( self, predictions, mu = 1. ):
         """ return dictionary with the likelihoods per analysis """
         llhds= {}
-        for tp in bestcombo:
+        for tp in predictions:
             name = "%s:%s:%s" % ( tp.analysisId(), tp.dataId(), ",".join ( [ i.txName for i in tp.txnames ] ) )
             llhds[ name ] = tp.getLikelihood ( mu ) 
         return llhds
@@ -48,6 +59,7 @@ class Scanner:
         """ plot the likelihoods as a function of pid1 and pid2 
         :param output: prefix for output file [mp]
         """
+        self.nevents = nevents
         pid1 = self.pid1
         pid2 = self.pid2
         if pid2 != self.protomodel.LSP:
@@ -63,17 +75,14 @@ class Scanner:
         masspoints = []
         print ( "[llhdscanner] range for %d: %s" % ( pid1, self.describeRange( rpid1 ) ) )
         print ( "[llhdscanner] range for %d: %s" % ( pid2, self.describeRange( rpid2 ) ) )
-        print ( "[llhdscanner] total %d points, %d events" % ( len(rpid1)*len(rpid2), nevents ) )
+        print ( "[llhdscanner] total %d points, %d events, trimming for %s" % ( len(rpid1)*len(rpid2), nevents, topo ) )
         self.protomodel.createNewSLHAFileName ( prefix="llhd%d" % pid1 )
         self.protomodel.initializePredictor()
-        P[0].filterForAnaIdsTopos ( anaIds, topo )
+        P[0].filterForTopos ( topo )
         
-        ## first add proto-model point
-        self.protomodel.predict( nevents = nevents, check_thresholds=False, \
-                            recycle_xsecs = False )
-        mu = 1.
-        llhds = self.getLikelihoods ( self.protomodel.bestCombo, mu=mu )
-        print ( "[llhdscanner] protomodel point: m1,m2,llhds", mpid1, mpid2, llhds, len(self.protomodel.bestCombo) )
+        llhds = self.getPredictions ( False )
+        self.pprint ( "protomodel point: m1 %d, m2 %d, %d llhds" % \
+                      ( mpid1, mpid2, len(llhds) ) )
         masspoints.append ( (mpid1,mpid2,llhds) )
         oldmasses = {}
 
@@ -101,12 +110,10 @@ class Scanner:
                         self.pprint ( "WARNING: have to raise %d from %d to %d" % ( pid_, m_, m2+1. ) )
                         oldmasses[pid_]=m_
                         self.protomodel.masses[pid_]=m2 + 1.
-                self.protomodel.predict( nevents = nevents, check_thresholds=False, \
-                                    recycle_xsecs = True )
-                llhds = self.getLikelihoods ( self.protomodel.bestCombo, mu=mu )
+                llhds = self.getPredictions ( True )
                 # del protomodel.stored_xsecs ## make sure we compute
-                self.pprint ( "m1,m2,llhds:", m1, m2, llhds, len(self.protomodel.bestCombo) )
-                # print ( )
+                self.pprint ( "m1 %d, m2 %d, %d llhds." % \
+                              ( m1, m2, len(llhds) ) )
                 masspoints.append ( (m1,m2,llhds) )
         import pickle
         picklefile = "%s%d%d.pcl" % ( output, pid1, pid2 )
@@ -121,8 +128,6 @@ class Scanner:
         f.close()
 
     def overrideWithDefaults ( self, args ):
-        if not args.defaults:
-            return args
         mins = { 1000005:  100., 1000006:  100., 2000006:  100., 1000021:  200. }
         maxs = { 1000005: 1500., 1000006: 1260., 2000006: 1260., 1000021: 2400. }
         dm   = { 1000005:   50., 1000006:   40., 2000006:   40., 1000021:   50. }
@@ -134,13 +139,20 @@ class Scanner:
         if not args.pid1 in mins:
             print ( "[llhdscanner] asked for defaults for %d, but none defined." % args.pid1 )
             return args
-        args.min1 = mins[args.pid1]
-        args.max1 = maxs[args.pid1]
-        args.deltam1 = dm[args.pid1]
-        args.min2 = LSPmins[args.pid1]
-        args.max2 = LSPmaxs[args.pid1]
-        args.deltam2 = LSPdm[args.pid1]
-        args.topo = topo[args.pid1]
+        if args.min1 == None:
+            args.min1 = mins[args.pid1]
+        if args.max1 == None:
+            args.max1 = maxs[args.pid1]
+        if args.deltam1 == None:
+            args.deltam1 = dm[args.pid1]
+        if args.min2 == None:
+            args.min2 = LSPmins[args.pid1]
+        if args.max2 == None:
+            args.max2 = LSPmaxs[args.pid1]
+        if args.deltam2 == None:
+            args.deltam2 = LSPdm[args.pid1]
+        if args.topo == None:
+            args.topo = topo[args.pid1]
         return args
 
 def main ():
@@ -158,23 +170,26 @@ def main ():
             help='pid2 [1000022]',
             type=int, default=1000022 )
     argparser.add_argument ( '-m1', '--min1',
-            help='minimum mass of pid1 [200.]',
-            type=float, default=200. )
+            help='minimum mass of pid1',
+            type=float, default=None )
     argparser.add_argument ( '-M1', '--max1',
             help='maximum mass of pid1 [2200.]',
-            type=float, default=2200. )
+            type=float, default=None )
     argparser.add_argument ( '-d1', '--deltam1',
-            help='delta m of pid1 [100.]',
-            type=float, default=50. )
+            help='delta m of pid1',
+            type=float, default=None )
     argparser.add_argument ( '-m2', '--min2',
-            help='minimum mass of pid2 [5.]',
-            type=float, default=5. )
+            help='minimum mass of pid2',
+            type=float, default=None )
     argparser.add_argument ( '-M2', '--max2',
-            help='maximum mass of pid2 [1800.]',
-            type=float, default=1800. )
+            help='maximum mass of pid2',
+            type=float, default=None )
     argparser.add_argument ( '-d2', '--deltam2',
-            help='delta m of pid1 [50.]',
-            type=float, default=50. )
+            help='delta m of pid1',
+            type=float, default=None )
+    argparser.add_argument ( '-t', '--topo',
+            help='topology',
+            type=str, default=None )
     argparser.add_argument ( '-e', '--nevents',
             help='number of events [50000]',
             type=int, default=50000 )
@@ -187,12 +202,6 @@ def main ():
     argparser.add_argument ( '-o', '--output',
             help="prefix for output file [mp]",
             type=str, default="mp" )
-    argparser.add_argument ( '-t', '--topo',
-            help='topology [T2tt]',
-            type=str, default="info" )
-    argparser.add_argument ( '-d', '--defaults',
-            help='use the default ranges for these pids1, overrides min1, max2, etc',
-            action="store_true" )
     args = argparser.parse_args()
     if args.picklefile == "default":
         args.picklefile = "%s/hiscore.pcl" % rundir

@@ -33,11 +33,52 @@ class Predictor:
         nbefore = len(self.listOfExpRes)
         for er in self.listOfExpRes:
             eid = er.globalInfo.id
+            if not eid in anaIds:
+                continue
             txnames = [ x.txName for x in er.getTxNames() ]
-            if eid in anaIds and topo in txnames:
+            if not topo in txnames: ## can safely skip
+                continue
+            newDS = []
+            for dataset in er.datasets:
+                newTxNames = []
+                for txName in dataset.txnameList:
+                    if txName.txName != topo:
+                        continue
+                    newTxNames.append ( txName )
+                if len(newTxNames)>0:
+                    dataset.txnameList = newTxNames
+                    newDS.append ( dataset )
+            if len(newDS)>0:
+                er.datasets = newDS
                 keepExpRes.append ( er )
-        self.pprint ( "filtered, keeping %d/%d expRes" % \
-                      ( len(keepExpRes), nbefore) )
+        self.pprint ( "filtered for %s, keeping %d/%d expRes" % \
+                      ( topo, len(keepExpRes), nbefore) )
+        self.listOfExpRes = keepExpRes
+
+    def filterForTopos ( self, topo ):
+        """ filter the list of expRes, keep only the ones for topo """
+        keepExpRes = []
+        nbefore = len(self.listOfExpRes)
+        for er in self.listOfExpRes:
+            eid = er.globalInfo.id
+            txnames = [ x.txName for x in er.getTxNames() ]
+            if not topo in txnames: ## can safely skip
+                continue
+            newDS = []
+            for dataset in er.datasets:
+                newTxNames = []
+                for txName in dataset.txnameList:
+                    if txName.txName != topo:
+                        continue
+                    newTxNames.append ( txName )
+                if len(newTxNames)>0:
+                    dataset.txnameList = newTxNames
+                    newDS.append ( dataset )
+            if len(newDS)>0:
+                er.datasets = newDS
+                keepExpRes.append ( er )
+        self.pprint ( "filtered for %s, keeping %d/%d expRes" % \
+                      ( topo, len(keepExpRes), nbefore) )
         self.listOfExpRes = keepExpRes
 
     def fetchResults ( self ):
