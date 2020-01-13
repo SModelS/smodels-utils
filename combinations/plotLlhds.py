@@ -120,6 +120,7 @@ def resultFor ( ana, topo, llhds ):
 def plotOneAna ( masspoints, ana, pid1, pid2, mx, my, 
                  topo, nevents, timestamp ):
     """ plot for one analysis """
+    print ( "[plotLlhds] now plotting %s" % ana )
     x,y=set(),set()
     L = {}
     minXY=0.,0.,float("inf")
@@ -127,6 +128,7 @@ def plotOneAna ( masspoints, ana, pid1, pid2, mx, my,
     r,sr = resultFor ( ana, topo, masspoints[0][2] )
     if r:
         s="(%.2f)" % (-np.log(r))
+    cresults = 0
     for masspoint in masspoints[1:]:
         m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
         if m2 > m1:
@@ -138,10 +140,14 @@ def plotOneAna ( masspoints, ana, pid1, pid2, mx, my,
         result,sr = resultFor ( ana, topo, llhds )
         if result:
             zt = - np.log( result )
+            cresults += 1
             if zt < minXY[2]:
                 minXY=(m1,m2,zt)
         h = getHash(m1,m2)
         L[h]=zt
+    if cresults == 0:
+        print ( "[plotLlhds] warning: found no results for %s. skip" % ana )
+        return
     x,y=list(x),list(y)
     x.sort(); y.sort()
     X, Y = np.meshgrid ( x, y )
@@ -159,7 +165,7 @@ def plotOneAna ( masspoints, ana, pid1, pid2, mx, my,
     hldZ50 = computeHLD ( Z, .5 )
     cont50 = plt.contour ( X, Y, hldZ50, levels=[1.0], colors = [ "red" ] )
     plt.clabel ( cont50, fmt="50%.0s" )
-    print ( "timestamp:", timestamp, topo, max(x) )
+    # print ( "timestamp:", timestamp, topo, max(x) )
     plt.text( max(x)-300,min(y)-130,timestamp, c="gray" )
     ### the altitude of the alpha quantile is l(nuhat) - .5 chi^2_(1-alpha);ndf 
     ### so for alpha=0.05%, ndf=1 the dl is .5 * 3.841 = 1.9207
