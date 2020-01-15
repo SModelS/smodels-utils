@@ -503,10 +503,13 @@ class ProtoModel:
 
 if __name__ == "__main__":
     p = ProtoModel( 0 )
-    ndecays = 0
+    ndecays,nd = 0, 0
     for k,v in p.decays.items():
+        if k == ProtoModel.LSP: ## dont count LSP
+            continue
         ndecays += len(v)
-    # ndecays = len(p.decays)
+        nd += 1
     nssms = len(p.ssmultipliers)
-    print ( "%d masses, %d decays, %d ss multipliers" % (len(p.masses), ndecays, nssms ) )
+    print ( "%d masses, %d[%d] decays, %d ss multipliers" % \
+            (len(p.masses), ndecays, nd, nssms ) )
     p.createSLHAFile()

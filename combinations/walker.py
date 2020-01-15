@@ -57,6 +57,8 @@ class RandomWalker:
         self.manipulator = Manipulator ( protomodel, strategy )
         if cheatcode > 0:
             self.manipulator.cheat ( cheatcode )
+            self.manipulator.predict()
+            self.pprint ( "Cheat model gets Z=%.2f" % self.manipulator.M.Z )
         self.catch_exceptions = catch_exceptions
         self.history = History ( walkerid )
         self.record_history = False
