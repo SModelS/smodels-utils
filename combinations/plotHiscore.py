@@ -85,9 +85,11 @@ def getExtremeSSMs ( ssm, largest, nm = 7 ):
         ssm = { 0: "\\mathrm{none}" }
     keys = list ( ssm.keys() )
     keys.sort( reverse=largest )
-    extreme = "smallest"
+    extreme = "smallest "
     if largest:
-        extreme = "largest"
+        extreme = "largest "
+    if len(ssm)<8:
+        extreme = ""
     if nm == -1:
         extreme = ""
         nm = len(keys)
@@ -96,7 +98,7 @@ def getExtremeSSMs ( ssm, largest, nm = 7 ):
         s += "%s=%s; " % ( ssm[k], k )
     if len(s)>2:
         s = s[:-2]
-    ret = "%s signal strength multipliers: $%s$" % ( extreme, s )
+    ret = "%ssignal strength multipliers: $%s$" % ( extreme, s )
     return ret
 
 def writeTex ( protomodel, keep_tex ):
@@ -161,12 +163,13 @@ def writeTex ( protomodel, keep_tex ):
         f.close()
     except Exception as e:
         print ( "[plotHiscore] Exception when latexing: %s" % e )
+    return src
 
-def writeIndexTex ( protomodel, gotTrimmed, untrimmedZ=0. ):
-    """ write the index.tex file, see e.g.
-        https://smodels.github.io/protomodels/
+def writeIndexTex ( protomodel, gotTrimmed, untrimmedZ, texdoc ):
+    """ write the index.tex file
     :param gotTrimmed: is the model a trimmed model?
-    :param keep_tex: keep tex files
+    :param untrimmedZ: if got trimmed, list also the untrimmed Z
+    :param texdoc: the source that goes into texdoc.png
     """
     ssm = []
     for k,v in protomodel.ssmultipliers.items():
@@ -174,7 +177,7 @@ def writeIndexTex ( protomodel, gotTrimmed, untrimmedZ=0. ):
             continue
         ssm.append ( "%s: %.2f" % (helpers.getParticleName(k,addSign=True),v) )
     f=open("index.tex","w")
-    f.write ( "Current best protomodel: Z=%.2f\\\\\\n" % protomodel.Z )
+    f.write ( "Our currently winning \\protomodel has a score of Z=%.2f, " % protomodel.Z )
     dbver = "???"
     strategy = "aggressive"
     if hasattr ( protomodel, "dbversion" ):
@@ -183,34 +186,34 @@ def writeIndexTex ( protomodel, gotTrimmed, untrimmedZ=0. ):
     trimmed="Untrimmed"
     if gotTrimmed:
         trimmed = "Trimmed"
-    f.write ( "%s ProtoModel produced with database v%s, combination strategy %s in step %d." % \
-            ( trimmed, dotlessv, strategy, protomodel.step ) )
+    f.write ( " it was produced with database v%s, combination strategy %s in step %d." % \
+            ( dotlessv, strategy, protomodel.step ) )
     if gotTrimmed and untrimmedZ > 0.:
-        f.write ( " Z(untrimmed)=%.2f." % untrimmedZ )
+        f.write ( " Z of the untrimmed \\protomodel was %.2f." % untrimmedZ )
     f.write ( "\n" )
-    f.write ( "<table width=80%>\n<tr><td>\n" )
     if hasattr ( protomodel, "rvalues" ):
         rvalues=protomodel.rvalues
         rvalues.sort(key=lambda x: x[0],reverse=True )
-        f.write ( "<br><b>%d predictions available. Highest r values are:</b><br><ul>\n" % len(rvalues) )
+        f.write ( "%d predictions applied. Highest r values are:\n" % len(rvalues) )
+        f.write ( "\\begin{itemize}[noitemsep]\n" )
         for rv in rvalues[:5]:
             srv="N/A"
             if type(rv[1])==float:
                 srv="%.2f" % rv[1]
-            f.write ( "<li>%s:%s r=%.2f, r<sub>exp</sub>=%s<br>\n" % ( rv[2].analysisId(), ",".join ( map(str,rv[2].txnames) ), rv[0], srv ) )
-        f.write("</ul>\n")
+            f.write ( "\item %s:%s r=%.2f, r$_{exp}$=%s\n" % ( rv[2].analysisId(), ",".join ( map(str,rv[2].txnames) ), rv[0], srv ) )
+        f.write("\end{itemize}\n")
     else:
         print ( "[plotHiscore] protomodel has no r values!" )
 
     if hasattr ( protomodel, "contributions" ):
         print ( "[plotHiscore] contributions-per-analysis are defined" )
-        f.write ( "Contributions per analysis:\n\\begin{itemize}\n" )
+        f.write ( "Contributions per analysis:\n\\begin{itemize}[noitemsep,nolistsep]\n" )
         conts = []
         for k,v in protomodel.contributions.items():
             conts.append ( ( v, k ) )
         conts.sort( reverse=True )
         for v,k in conts:
-            f.write ( "\item %s: %s%s\n" % ( k, int(round(100.*v)), "%" ) )
+            f.write ( "\item %s: %s%s\n" % ( k, int(round(100.*v)), "\\%" ) )
         f.write ( "\end{itemize}\n" )
     else:
         print ( "[plotHiscore] contributions are not defined" )
@@ -220,12 +223,10 @@ def writeIndexTex ( protomodel, gotTrimmed, untrimmedZ=0. ):
         height = 32
     if hasattr ( protomodel, "whatif" ):
         height += 32
-    f.write ( "<td><img width=600px src=./texdoc.png>\n" ) #  % height )
-    f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
-    f.write ( "</table>" )
-    f.write ( '<table style="width:80%">\n' )
-    f.write ( "<td width=45%><img height=650px src=./ruler.png><td width=55%><img width=100% src=./decays.png>\n" )
-    f.write ( "\end{table}\n" )
+    # f.write ( "<td><img width=600px src=./texdoc.png>\n" ) #  % height )
+    # f.write ( "\small{Last updated: %s}\n" % time.asctime() )
+    # f.write ( "% include decays.png\n" )
+    f.write ( "\n" + texdoc + "\n" )
     f.close()
     print ( "[plotHiscore] Wrote index.tex" )
 
@@ -363,8 +364,13 @@ def plotDecays ( protomodel, verbosity ):
 def plot ( number, verbosity, picklefile, options ):
     ## plot hiscore number "number"
     protomodel, trimmed = obtain ( number, picklefile )
-    # print ( "[plotHiscore] create slha file" )
-    protoslha = protomodel.createSLHAFile ()
+    #print ( "[plotHiscore] create slha file. trimmed? ", trimmed )
+    #print ( "[plotHiscore] masses", protomodel.masses )
+    if hasattr ( protomodel, "currentSLHA" ):
+        del protomodel.currentSLHA 
+    # protoslha = protomodel.createSLHAFile ( nevents=100000 )
+    protoslha = protomodel.createSLHAFile ( recycle_xsecs = True )
+    # print ( "wrote", protoslha )
     subprocess.getoutput ( "cp %s hiscore.slha" % protoslha )
     m = Manipulator ( protomodel )
     print ( "[plotHiscore] now write mymodel.py" )
@@ -383,7 +389,7 @@ def plot ( number, verbosity, picklefile, options ):
     if options["predictions"]:
         discussPredictions ( protomodel )
     if options["html"] or options["tex"]:
-        writeTex ( protomodel, options["keep_tex"] )
+        texdoc = writeTex ( protomodel, options["keep_tex"] )
         untrimmedZ = 0.
         if trimmed:
             untrimmed, _ = obtain ( number, picklefile, True )
@@ -391,7 +397,7 @@ def plot ( number, verbosity, picklefile, options ):
         if options["html"]:
             writeIndexHtml ( protomodel, trimmed, untrimmedZ )
         if options["tex"]:
-            writeIndexTex( protomodel, trimmed, untrimmedZ )
+            writeIndexTex( protomodel, trimmed, untrimmedZ, texdoc )
 
 def runPlotting ( args ):
     if args.destinations:
@@ -485,7 +491,7 @@ def main ():
             type=str, default="%s/hiscore.pcl" % rundir )
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug, info, warn, err [info]',
-            type=str, default="info" )
+            type=str, default="warn" )
     argparser.add_argument ( '-H', '--nohtml',
             help='do not produce index.html',
             action="store_true" )

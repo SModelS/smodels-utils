@@ -38,9 +38,11 @@ class Manipulator:
             for k,v in origMasses.items():
                 if v > 5e5:
                     D["masses"].pop(k)
+                    if k in D["decays"]:
+                        D["decays"].pop(k)
             for k,decays in self.M.dict()["decays"].items():
                 for i,v in decays.items():
-                    if v < 1e-7:
+                    if v < 1e-7 and k in D["decays"] and i in D["decays"][k]:
                         D["decays"][k].pop(i)
             for k,v in self.M.dict()["ssmultipliers"].items():
                 if abs ( v - 1.) < 1e-5:

@@ -1,7 +1,12 @@
--) llhd plots. useful ones. Next steps: write out *all* predictions for a given analysis, dont find bestCombo
--) trim also ssms
--) write index.tex
--) rename llhdplot to plotLlhd
--) better representation of ssms
+-) llhd contour-only plots
+-) improve index.tex
 -) use the xsec recycler also in the walker
 -) use the xsec recycler also with changed ss multipliers
+-) llhd plots. useful ones. Next steps: write out *all* predictions for a given analysis, dont find bestCombo
+-) llhd plots with signal strengths instead of LSP mass
+-) llhd scanner, separate maybe ul from eff plots?
+
+.) better representation of ssms
+.) fix hiscore.slha
+.) remove unneccessary decays from mymodel.py
+.) trim also ssms

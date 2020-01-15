@@ -428,9 +428,9 @@ def main ( args ):
 
     if args.interactive:
         import manipulator
-        if len(protomodels)>0 and protomodels[0] != None:
+        if len(trimmed)>0 and trimmed[0] != None:
             tr = Trimmer ( trimmed[0], maxloss = args.maxloss, nevents = nevents )
-            ma = manipulator.Manipulator ( protomodels[0] )
+            ma = manipulator.Manipulator ( trimmed[0] )
         print ( "[hiscore] starting interactive session. Variables: %sprotomodels, trimmed%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
         print ( "[hiscore]                                 Modules: %strimmer, manipulator, hiscore%s" % \

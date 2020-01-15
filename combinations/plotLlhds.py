@@ -12,7 +12,7 @@ def load ( picklefile ):
     topo, timestamp = "?", "?"
     with open ( picklefile, "rb" ) as f:
         try:
-            llhds = pickle.load ( f )
+            allhds = pickle.load ( f )
             mx = pickle.load ( f )
             my = pickle.load ( f )
             nevents = pickle.load ( f )
@@ -21,6 +21,15 @@ def load ( picklefile ):
         except EOFError as e:
             pass
         f.close()
+    llhds=[]
+    def getMu1 ( L ):
+        for k,v in L.items():
+            if abs(k-1.)<1e-9:
+                return v
+        print ( "couldnt find anything" )
+        return None
+    for llhd in allhds:
+        llhds.append ( (llhd[0],llhd[1],getMu1(llhd[2])) )
     return llhds,mx,my,nevents,topo,timestamp
 
 def integrateLlhds ( Z ):
@@ -92,6 +101,10 @@ def filterSmaller ( X, Y ):
     for irow,row in enumerate ( zip ( X, Y ) ):
         xt = []
         yt = []
+        if irow % 3 == 1:
+            continue
+        if irow % 3 == 2:
+            continue
         for icol,col in enumerate ( zip ( row[0], row[1] ) ):
             if col[0]>col[1]: ## all is good
                 xt.append ( float(col[0]) )
@@ -166,7 +179,7 @@ def plotOneAna ( masspoints, ana, pid1, pid2, mx, my,
     cont50 = plt.contour ( X, Y, hldZ50, levels=[1.0], colors = [ "red" ] )
     plt.clabel ( cont50, fmt="50%.0s" )
     # print ( "timestamp:", timestamp, topo, max(x) )
-    plt.text( max(x)-300,min(y)-130,timestamp, c="gray" )
+    plt.text( max(x)-300,min(y)-350,timestamp, c="gray" )
     ### the altitude of the alpha quantile is l(nuhat) - .5 chi^2_(1-alpha);ndf 
     ### so for alpha=0.05%, ndf=1 the dl is .5 * 3.841 = 1.9207
     ### for ndf=2 the dl is ln(alpha) = .5 * 5.99146 = 2.995732
@@ -176,7 +189,7 @@ def plotOneAna ( masspoints, ana, pid1, pid2, mx, my,
     ax = contf.ax
     # Xs,Ys=X,Y
     Xs,Ys = filterSmaller ( X, Y )
-    ax.scatter(Xs, Ys, marker=".", s=1, color="gray", label="points probed" )
+    ax.scatter(Xs, Ys, marker=".", s=.2, color="gray", label="points probed" )
     ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=60, color="black" ) 
     ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=35, color="red", label="$\hat{l}$ (ml estimate, %.2f)" % minXY[2] )
     h = getHash(mx,my)
