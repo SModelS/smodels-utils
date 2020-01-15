@@ -27,9 +27,11 @@ class Manipulator:
             nevents = 100000
             self.M.predict ( self.strategy, nevents = nevents )
 
-    def writeDictFile ( self, outfile = "pmodel.py", cleanOut=True ):
+    def writeDictFile ( self, outfile = "pmodel.py", cleanOut=True,
+                        comment = "" ):
         """ write out the dict file to outfile
         :param cleanOut: clean the dictionary from defaults
+        :param comment: add a comment field
         """
         D = copy.deepcopy ( self.M.dict() )
         if cleanOut:
@@ -47,6 +49,11 @@ class Manipulator:
             for k,v in self.M.dict()["ssmultipliers"].items():
                 if abs ( v - 1.) < 1e-5:
                     D["ssmultipliers"].pop(k)
+        import time
+        D["timestamp"]=time.asctime()
+        D["Z"]=self.M.Z
+        if len(comment)>0:
+            D["comment"]=comment
         with open ( outfile, "wt" ) as f:
             f.write ( "%s\n" % D )
             f.close()

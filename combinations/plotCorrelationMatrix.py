@@ -183,6 +183,7 @@ def draw( strategy, databasepath, trianglePlot=True ):
         #if i == 2:
         #    c = 16
         l.SetTextColor ( c )
+        b="#font[132]{%s}" % b ## add font
         l.DrawLatex ( bx+2, by, b )
         ROOT.boxes.append ( l )
     ROOT.gPad.SetGrid()
