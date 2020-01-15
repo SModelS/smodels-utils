@@ -134,9 +134,14 @@ def draw( pid= 1000022, interactive=False ):
         y.append ( Zs[i] )
     pname = helpers.toLatex ( pid, addDollars=True )
     plt.plot ( x, y )
-    plt.plot ( [ cmass, cmass ], [ 0.98*min(y), 1.03*max(y) ] )
+    ymax = max(y)
+    imax = y.index ( ymax )
+    xmax = x[imax]
+    plt.plot ( [ cmass, cmass ], [ 0.98*ymax, 1.01*ymax ], label="protomodel, Z(%d GeV)=%.2f" % (cmass, Zs[cmass] ) )
+    plt.plot ( [ xmax, xmax ], [ 0.98*ymax, 1.01*ymax ], label="max(x), Z(%d GeV)=%.2f" % (xmax, ymax ) )
     plt.ylabel ( "Z" )
     plt.title ( "Significance Z=Z(%s)" % pname )
+    plt.legend()
     plt.xlabel ( "m(%s) [GeV]" % pname )
     plt.text ( .9*min(x)+.1*(max(x)-min(x)), 1.*max(y), "%d events" % nevents )
     figname = "M%d.png" % pid 
