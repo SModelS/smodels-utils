@@ -42,16 +42,26 @@ class Manipulator:
                     D["masses"].pop(k)
                     if k in D["decays"]:
                         D["decays"].pop(k)
+                else:
+                    D["masses"][k]=round(v,3)
             for k,decays in self.M.dict()["decays"].items():
                 for i,v in decays.items():
-                    if v < 1e-7 and k in D["decays"] and i in D["decays"][k]:
+                    if not k in D["decays"]:
+                        continue
+                    if not i  in D["decays"][k]:
+                        continue
+                    if v < 1e-7:
                         D["decays"][k].pop(i)
+                    else:
+                        D["decays"][k][i]=round(v,3)
             for k,v in self.M.dict()["ssmultipliers"].items():
                 if abs ( v - 1.) < 1e-5:
                     D["ssmultipliers"].pop(k)
+                else:
+                    D["ssmultipliers"][k]=round(v,3)
         import time
         D["timestamp"]=time.asctime()
-        D["Z"]=self.M.Z
+        D["Z"]=round(self.M.Z,3)
         if len(comment)>0:
             D["comment"]=comment
         with open ( outfile, "wt" ) as f:
