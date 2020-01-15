@@ -38,7 +38,7 @@ class RandomWalker:
                    dbpath = "../../smodels-database/", expected = False,
                    select = "all", catch_exceptions = True ):
         """ initialise the walker
-        :param nsteps: maximum number of steps to perform
+        :param nsteps: maximum number of steps to perform, negative is infinity
         :param cheatcode: cheat mode. 0 is no cheating, 1 is with ranges, 2
                       is the Z323 model.
         :param expected: remove possible signals from database
@@ -96,6 +96,7 @@ class RandomWalker:
         ret.manipulator.M = protomodel
         ret.manipulator.setWalkerId ( walkerid )
         ret.protomodel.expected = expected
+        ret.protomodel.step = protomodel.step
         ret.protomodel.select = select
         ret.protomodel.dbpath = dbpath
         ret.protomodel.createNewSLHAFileName()
@@ -182,7 +183,10 @@ class RandomWalker:
         # self.hiqueue.put( [ hiscoreList ] )
         self.train ()
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.manipulator.strategy, self.protomodel.letters, self.protomodel.description, self.protomodel.Z ) )
-        self.log ( "step %d/%d finished." % ( self.protomodel.step, self.maxsteps ) )
+        smaxstp = "%s" % self.maxsteps
+        if self.maxsteps < 0:
+            smaxstp = "inf"
+        self.log ( "step %d/%s finished." % ( self.protomodel.step, smaxstp ) )
 
     def train ( self ):
         """ train the accelerator """
@@ -255,7 +259,7 @@ class RandomWalker:
     def walk ( self ):
         """ Now perform the random walk """
         self.manipulator.unfreezeRandomParticle() ## start with unfreezing a random particle
-        while self.protomodel.step<self.maxsteps:
+        while self.maxsteps < 0 or self.protomodel.step<self.maxsteps:
             # self.gradientAscent() # perform at begining
             ## only the first walker records history
             if self.record_history:
@@ -361,8 +365,8 @@ if __name__ == "__main__":
             help='use accelerator to perform gradient ascent, supply pickle file name [None]',
             type=str, default="" )
     argparser.add_argument ( '-n', '--nsteps',
-            help='number of steps [100000]',
-            type=int, default=100000 )
+            help='number of steps, negative means infinity [-1]',
+            type=int, default=-1 )
     argparser.add_argument ( '-p', '--ncpus',
             help='number of CPUs. -1 means all. [1]',
             type=int, default=1 )
