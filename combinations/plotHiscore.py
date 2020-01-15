@@ -256,7 +256,7 @@ def writeIndexHtml ( protomodel, gotTrimmed, untrimmedZ=0. ):
     trimmed="Untrimmed"
     if gotTrimmed:
         trimmed = "Trimmed"
-    f.write ( "%s <b><a href=./hiscore.slha>ProtoModel</a> <a href=./mymodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d.</b>" % \
+    f.write ( "%s <b><a href=./hiscore.slha>ProtoModel</a> <a href=./protomodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d.</b>" % \
             ( trimmed, dotlessv, dbver, strategy, strategy, protomodel.step ) )
     if gotTrimmed and untrimmedZ > 0.:
         f.write ( " Z(untrimmed)=%.2f." % untrimmedZ )
@@ -307,7 +307,7 @@ def writeIndexHtml ( protomodel, gotTrimmed, untrimmedZ=0. ):
 
 def copyFilesToGithub():
     files = [ "hiscore.slha", "index.html", "matrix_aggressive.png", "decays.png", 
-              "ruler.png", "texdoc.png", "mymodel.py" ]
+              "ruler.png", "texdoc.png", "protomodel.py" ]
     for f in files:
         if not os.path.exists ( f ):
             continue
@@ -373,7 +373,7 @@ def plot ( number, verbosity, picklefile, options ):
     # print ( "wrote", protoslha )
     subprocess.getoutput ( "cp %s hiscore.slha" % protoslha )
     m = Manipulator ( protomodel )
-    print ( "[plotHiscore] now write mymodel.py" )
+    print ( "[plotHiscore] now write protomodel.py" )
     m.writeDictFile()
     opts = [ "ruler", "decays", "predictions", "copy", "html" ]
     for i in opts:
@@ -425,7 +425,7 @@ def runPlotting ( args ):
     plot ( args.number, args.verbosity, args.picklefile, options )
     if upload is None:
         return
-    F = "*.png mymodel.py hiscore.slha index.html"
+    F = "*.png protomodel.py hiscore.slha index.html"
     dest = ""
     destdir = "%s/git" % os.environ["HOME"]
     if upload == "github":
