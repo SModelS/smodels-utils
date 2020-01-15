@@ -59,100 +59,29 @@ class Manipulator:
 
     def cheat ( self, mode = 0 ):
         ## cheating, i.e. starting with models that are known to work well
-        if mode > 0:
-            self.M.highlight ( "red", "cheat mode: %d" % mode )
-        if mode == 1:
-            self.M.highlight ( "red", "stops, light but ss-suppressed gluino and sbottoms" )
-            self.M.masses[self.M.LSP]=343.
-            self.M.masses[1000001]=780.
-            self.M.masses[1000021]=520.
-            self.M.masses[1000024]=566.
-            self.M.masses[1000006]=640.
-            self.M.masses[1000005]=830.
-            self.M.masses[2000006]=900.
-            self.M.masses[2000005]=1306.
-
-            self.M.decays[1000021][(1000022,1)]=1.
-            self.M.decays[1000021][(1000022,21)]=0.
-
-            for dpd,v in self.M.ssmultipliers.items():
-                ssm = self.M.ssmultipliers[dpd]
-                if self.pidInList ( 1000006, dpd, signed=False ):
-                    ssm=.1
-                if self.pidInList ( 2000005, dpd, signed=False ):
-                    ssm=.2
-                if self.pidInList ( 1000005, dpd, signed=False ):
-                    ssm=.2
-                if self.pidInList ( 2000006, dpd, signed=False ):
-                    ssm=.4
-                if self.pidInList ( 1000001, dpd, signed=False ):
-                    ssm=.4
-                if self.pidInList ( 1000024, dpd, signed=False ):
-                    ssm=.7
-                if self.pidInList ( 1000021, dpd, signed=False ):
-                    ssm=.03
-                if dpd == ( 1000021, 1000021 ):
-                    ssm = .11
-                if dpd in [ ( 1000006, 1000006 ), ( -1000006, 1000006 ) ]:
-                    ssm = .3
-                self.M.ssmultipliers[dpd]=ssm
+        if mode == 0: ## no cheating
             return
-        if mode == 2:
-            self.M.highlight ( "red", "stops, light but ss-suppressed gluino and sbottoms" )
-            self.M.masses[self.M.LSP]=343.
-            self.M.masses[1000001]=780.
-            self.M.masses[1000021]=520.
-            self.M.masses[1000024]=566.
-            self.M.masses[1000006]=640.
-            self.M.masses[1000005]=830.
-            self.M.masses[2000006]=900.
-            self.M.masses[2000005]=1306.
-
-            self.M.decays[1000021][(1000022,1)]=1.
-            self.M.decays[1000021][(1000022,21)]=0.
-
-            for dpd,v in self.M.ssmultipliers.items():
-                ssm = self.M.ssmultipliers[dpd]
-                if self.pidInList ( 1000006, dpd, signed=False ):
-                    ssm=.1
-                if self.pidInList ( 2000005, dpd, signed=False ):
-                    ssm=.2
-                if self.pidInList ( 1000005, dpd, signed=False ):
-                    ssm=.2
-                if self.pidInList ( 2000006, dpd, signed=False ):
-                    ssm=.4
-                if self.pidInList ( 1000001, dpd, signed=False ):
-                    ssm=.4
-                if self.pidInList ( 1000024, dpd, signed=False ):
-                    ssm=.7
-                if self.pidInList ( 1000021, dpd, signed=False ):
-                    ssm=.03
-                if dpd == ( 1000021, 1000021 ):
-                    ssm = .1
-                if dpd in [ ( 1000006, 1000006 ), ( -1000006, 1000006 ) ]:
-                    ssm = .3
-                self.M.ssmultipliers[dpd]=ssm
-            return
-        if mode >= 3:
-            import os, sys
-            filename = "model%d.py" % mode
-            if not os.path.exists ( filename ):
-                self.M.highlight ( "red", "cheat mode %d started, but no %s/%s found" % ( mode, os.getcwd(), filename ) )
-                sys.exit(-1)
-            self.M.highlight ( "green", "starting with %s/%s" % ( os.getcwd(), filename ) )
-            with open ( filename, "rt" ) as f:
-                m = eval ( f.read() )
-            for k,v in m["masses"].items():
-                self.M.masses[k]=v
-            for k,v in m["ssmultipliers"].items():
-                self.M.ssmultipliers[k]=v
-            for mpid,decays in m["decays"].items():
-                if not mpid in self.M.decays:
-                    self.M.decays[mpid]={}
-                for dpid,v in decays.items():
-                    self.M.decays[mpid][dpid]=v
-            return
-        self.M.highlight ( "red", "cheat mode %d, not yet implemented" % mode )
+        import os, sys
+        filename = "model%d.py" % mode
+        if not os.path.exists ( filename ):
+            self.M.highlight ( "red", "cheat mode %d started, but no %s/%s found" % ( mode, os.getcwd(), filename ) )
+            sys.exit(-1)
+        scom = ""
+        with open ( filename, "rt" ) as f:
+            m = eval ( f.read() )
+        if "comment" in m:
+                scom = ": " + m["comment"]
+        self.M.highlight ( "green", "starting with %s/%s%s" % ( os.getcwd(), filename, scom ) )
+        for k,v in m["masses"].items():
+            self.M.masses[k]=v
+        for k,v in m["ssmultipliers"].items():
+            self.M.ssmultipliers[k]=v
+        for mpid,decays in m["decays"].items():
+            if not mpid in self.M.decays:
+                self.M.decays[mpid]={}
+            for dpid,v in decays.items():
+                self.M.decays[mpid][dpid]=v
+        return
 
     def unfreezeRandomParticle ( self ):
         """ unfreezes a random frozen particle """
