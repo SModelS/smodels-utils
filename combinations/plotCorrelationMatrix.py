@@ -146,10 +146,11 @@ def draw( strategy, databasepath, trianglePlot=True ):
             ROOT.bins[name].DrawLatex(-4,xcoord-3,"#splitline{%s}{%d TeV}" % ( ana, sqrts ) )
             ROOT.xbins[name].DrawLatex(ycoord,-5,"#splitline{%s}{%d TeV}" % ( ana, sqrts ) )
             yt = bins[ana][sqrts][1] +1 
-            line = ROOT.TLine ( -1, yt, n-yt, yt )
+            extrudes = 3 # how far does the line extrude into tick labels?
+            line = ROOT.TLine ( -extrudes, yt, n-yt, yt )
             line.SetLineWidth(2)
             line.Draw()
-            xline = ROOT.TLine ( n-yt, yt, n-yt, -1 )
+            xline = ROOT.TLine ( n-yt, yt, n-yt, -extrudes )
             xline.SetLineWidth(2)
             xline.Draw()
             ROOT.lines.append ( line )
