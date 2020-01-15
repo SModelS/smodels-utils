@@ -3,7 +3,9 @@
 """ draw Z as a function of a model parameter """
 
 import numpy, sys, os, copy, time
+from csetup import setup
 
+"""
 def setup():
     codedir = "/mnt/hephy/pheno/ww/git/"
     sys.path.insert(0,"%ssmodels/" % codedir )
@@ -17,6 +19,7 @@ def setup():
     rundir = rundir.replace ( "~", os.environ["HOME"] )
     os.chdir ( rundir )
     return rundir
+"""
 
 def getHiscore( force_copy = False, pids="" ):
     """ get the hiscore from the picklefile
@@ -25,7 +28,7 @@ def getHiscore( force_copy = False, pids="" ):
     import hiscore
     rundir = setup()
     spids = str(pids).replace("[","").replace("]","").replace(" ","").replace(",","").replace("0","")
-    picklefile =rundir + "scanHiscore%s.pcl" % spids
+    picklefile =rundir + "hiscoreCopy.pcl" # % spids
     ## do this always
     if force_copy or (not os.path.exists ( picklefile )):
         cmd = "cp %s %s" % ( rundir+"hiscore.pcl", picklefile )

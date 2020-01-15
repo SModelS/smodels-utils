@@ -24,8 +24,12 @@ class Scanner:
         predictions = P[0].predict ( self.M.currentSLHA, 
                                      allpreds=False, llhdonly=True )
         ## first add proto-model point
-        mu = 1.
-        llhds = self.getLikelihoods ( predictions, mu=mu )
+        #mu = 1.
+        #llhds = self.getLikelihoods ( predictions, mu=mu )
+        llhds={}
+        import numpy
+            for mu in numpy.arange(.4,1.8,.05):
+            llhds[float(mu)] = self.getLikelihoods ( predictions, mu=mu )
         return llhds
 
     def getLikelihoods ( self, predictions, mu = 1. ):
@@ -112,7 +116,7 @@ class Scanner:
                         self.M.masses[pid_]=m2 + 1.
                 llhds = self.getPredictions ( True )
                 # del protomodel.stored_xsecs ## make sure we compute
-                self.pprint ( "m1 %d, m2 %d, %d llhds." % \
+                self.pprint ( "m1 %d, m2 %d, %d mu's." % \
                               ( m1, m2, len(llhds) ) )
                 masspoints.append ( (m1,m2,llhds) )
         import pickle
