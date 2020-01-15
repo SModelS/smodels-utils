@@ -27,7 +27,7 @@ class Manipulator:
             nevents = 100000
             self.M.predict ( self.strategy, nevents = nevents )
 
-    def writeDictFile ( self, outfile = "protomodel.py", cleanOut=True ):
+    def writeDictFile ( self, outfile = "pmodel.py", cleanOut=True ):
         """ write out the dict file to outfile
         :param cleanOut: clean the dictionary from defaults
         """
@@ -62,7 +62,7 @@ class Manipulator:
         if mode == 0: ## no cheating
             return
         import os, sys
-        filename = "protomodel%d.py" % mode
+        filename = "pmodel%d.py" % mode
         if not os.path.exists ( filename ):
             self.M.highlight ( "red", "cheat mode %d started, but no %s/%s found" % ( mode, os.getcwd(), filename ) )
             sys.exit(-1)

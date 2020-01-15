@@ -137,7 +137,7 @@ def draw( pid= 1000022, interactive=False ):
     ymax = max(y)
     imax = y.index ( ymax )
     xmax = x[imax]
-    plt.scatter ( [ xmax ], [ ymax ], label="max(x), Z(%d GeV)=%.2f" % (xmax, ymax ), s=100, c="g", marker="+", zorder=1 )
+    plt.scatter ( [ xmax ], [ ymax ], label="max(x), Z(%d GeV)=%.2f" % (xmax, ymax ), s=100, c="k", marker="+", zorder=1 )
     plt.scatter ( [ cmass ], [ Zs[cmass] ], label="protomodel, Z(%d GeV)=%.2f" % (cmass, Zs[cmass] ), marker="*", s=100, c="r", zorder=2 )
     plt.ylabel ( "Z" )
     plt.title ( "Significance Z=Z(%s)" % pname )

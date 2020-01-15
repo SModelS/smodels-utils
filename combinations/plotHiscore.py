@@ -256,7 +256,7 @@ def writeIndexHtml ( protomodel, gotTrimmed, untrimmedZ=0. ):
     trimmed="Untrimmed"
     if gotTrimmed:
         trimmed = "Trimmed"
-    f.write ( "%s <b><a href=./hiscore.slha>ProtoModel</a> <a href=./protomodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d.</b>" % \
+    f.write ( "%s <b><a href=./hiscore.slha>ProtoModel</a> <a href=./pmodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d.</b>" % \
             ( trimmed, dotlessv, dbver, strategy, strategy, protomodel.step ) )
     if gotTrimmed and untrimmedZ > 0.:
         f.write ( " Z(untrimmed)=%.2f." % untrimmedZ )
@@ -307,7 +307,7 @@ def writeIndexHtml ( protomodel, gotTrimmed, untrimmedZ=0. ):
 
 def copyFilesToGithub():
     files = [ "hiscore.slha", "index.html", "matrix_aggressive.png", "decays.png", 
-              "ruler.png", "texdoc.png", "protomodel.py" ]
+              "ruler.png", "texdoc.png", "pmodel.py" ]
     for f in files:
         if not os.path.exists ( f ):
             continue
@@ -350,14 +350,14 @@ def plotRuler( protomodel ):
                         mergesquark = False,
                         hasResultsFor = resultsFor )
 
-def plotDecays ( protomodel, verbosity ):
-    print ( "[plotHiscore] now draw decays.png" )
+def plotDecays ( protomodel, verbosity, outfile="decays.png" ):
+    print ( "[plotHiscore] now draw %s" % outfile )
     options = { "tex": True, "color": True, "dot": True, "squarks": True,
                 "weakinos": True, "sleptons": True, "neato": True,
                 "integratesquarks": False, "leptons": True }
     options["rmin"] = 0.
     ## FIXME add cross sections.
-    decayPlotter.draw ( protomodel.currentSLHA, "decays.png", options,
+    decayPlotter.draw ( protomodel.currentSLHA, outfile, options,
                         verbosity = verbosity,
                         ssmultipliers = protomodel.ssmultipliers )
 
@@ -373,7 +373,7 @@ def plot ( number, verbosity, picklefile, options ):
     # print ( "wrote", protoslha )
     subprocess.getoutput ( "cp %s hiscore.slha" % protoslha )
     m = Manipulator ( protomodel )
-    print ( "[plotHiscore] now write protomodel.py" )
+    print ( "[plotHiscore] now write pmodel.py" )
     m.writeDictFile()
     opts = [ "ruler", "decays", "predictions", "copy", "html" ]
     for i in opts:
@@ -386,6 +386,11 @@ def plot ( number, verbosity, picklefile, options ):
     plotdecays = options["decays"]
     if plotdecays:
         plotDecays ( protomodel, verbosity )
+
+    if plotdecays and options["plot_untrimmed"]:
+        untrimmed, _ = obtain ( number, picklefile, untrimmedOnly=True )
+        plotDecays ( untrimmed, verbosity, outfile="untrimmed_decays.png" )
+
     if options["predictions"]:
         discussPredictions ( protomodel )
     if options["html"] or options["tex"]:
@@ -420,12 +425,15 @@ def runPlotting ( args ):
 
     options = { "ruler": not args.noruler, "decays": not args.nodecays,
                 "predictions": not args.nopredictions, "html": not args.nohtml,
-                "keep_tex": args.keep, "tex": not args.notex }
+                "keep_tex": args.keep, "tex": not args.notex, "plot_untrimmed": False }
+    
+    if hasattr ( args, "plot_untrimmed" ):
+        options["plot_untrimmed"] = args.plot_untrimmed
 
     plot ( args.number, args.verbosity, args.picklefile, options )
     if upload is None:
         return
-    F = "*.png protomodel.py hiscore.slha index.html"
+    F = "*.png pmodel.py hiscore.slha index.html"
     dest = ""
     destdir = "%s/git" % os.environ["HOME"]
     if upload == "github":
@@ -509,6 +517,9 @@ def main ():
             action="store_true" )
     argparser.add_argument ( '-k', '--keep',
             help='keep latex files',
+            action="store_true" )
+    argparser.add_argument ( '-U', '--plot_untrimmed',
+            help='plot untrimmed also',
             action="store_true" )
     argparser.add_argument ( '-u', '--upload',
             help='upload to one of the following destinations: none, gpu, github, anomaly, latest, interesting [none]. run --destinations to learn more', 
