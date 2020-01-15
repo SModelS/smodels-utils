@@ -279,7 +279,7 @@ class RandomWalker:
                     self.pprint ( "extracted: %s" % point )
                 with open("exceptions.log","a") as f:
                     f.write ( "%s: taking a step resulted in exception: %s, %s\n" % (time.asctime(), type(e), e ) )
-                    f.write ( "   `- exception occured in %s\n" % self.protomodel.walkerid )
+                    f.write ( "   `- exception occured in walker #%s\n" % self.protomodel.walkerid )
                 sys.exit(-1)
             ratio = 1.
             if self.protomodel.oldZ() > 0.:
