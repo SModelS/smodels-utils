@@ -389,6 +389,7 @@ def plot ( number, verbosity, picklefile, options ):
 
     if plotdecays and options["plot_untrimmed"]:
         untrimmed, _ = obtain ( number, picklefile, untrimmedOnly=True )
+        untrimmed.createSLHAFile()
         plotDecays ( untrimmed, verbosity, outfile="untrimmed_decays.png" )
 
     if options["predictions"]:
@@ -518,7 +519,7 @@ def main ():
     argparser.add_argument ( '-k', '--keep',
             help='keep latex files',
             action="store_true" )
-    argparser.add_argument ( '-U', '--plot_untrimmed',
+    argparser.add_argument ( '--plot_untrimmed',
             help='plot untrimmed also',
             action="store_true" )
     argparser.add_argument ( '-u', '--upload',
