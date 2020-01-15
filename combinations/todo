@@ -2,12 +2,12 @@
 -) understand plt1000021ATLAS-CONF-2013-062.png
 -) llhd contour-only plots
 -) improve index.tex
--) for bestCombo, write out the raw numbers 
 -) use the xsec recycler also in the walker
 -) use the xsec recycler also with changed ss multipliers
 -) llhd plots with signal strengths instead of LSP mass
--) llhd scanner, separate maybe ul from eff plots?
+-) llhd plots, separate ul plots and eff plots
 
+.) for bestCombo, write out the raw numbers 
 .) in cheat mode: first run without any random step
 .) write out *all* predictions for a given analysis, dont just find bestCombo
 .) better representation of ssms

@@ -3,7 +3,7 @@
 import pickle, os, sys, subprocess, time, fcntl
 from protomodel import ProtoModel
 from manipulator import Manipulator
-from smodels.tools.physicsUnits import GeV
+from smodels.tools.physicsUnits import GeV, fb
 sys.path.insert(0,"../" )
 import smodels_utils.helper.sparticleNames
 import smodels_utils.SModelSUtils
@@ -85,21 +85,56 @@ def getExtremeSSMs ( ssm, largest, nm = 7 ):
         ssm = { 0: "\\mathrm{none}" }
     keys = list ( ssm.keys() )
     keys.sort( reverse=largest )
-    extreme = "smallest "
+    extreme = "smallest s"
     if largest:
-        extreme = "largest "
+        extreme = "largest s"
     if len(ssm)<8:
-        extreme = ""
+        extreme = "S"
     if nm == -1:
-        extreme = ""
+        extreme = "S"
         nm = len(keys)
     s = ""
     for ctr,k in enumerate(keys[:nm]):
         s += "%s=%s; " % ( ssm[k], k )
     if len(s)>2:
         s = s[:-2]
-    ret = "%ssignal strength multipliers: $%s$" % ( extreme, s )
+    ret = "%signal strength multipliers: $%s$" % ( extreme, s )
     return ret
+
+def writeRawNumbers ( protomodel ):
+    """ write out the raw numbers of the excess """
+    print ( "raw numbers of excess" )
+    print ( "=====================" )
+    f=open("rawnumbers.tex","wt")
+    f.write("\\begin{tabular}{l|c|c|r|r}\n" )
+    f.write("\\bf{Analysis Name} & \\bf{Type} & \\bf{Dataset} & \\bf{Observed} & \\bf{Expected} \\\\\n" )
+    f.write("\\hline\n" )
+    for tp in protomodel.bestCombo:
+        anaId = tp.analysisId()
+        dtype = tp.dataType()
+        print ( "item %s (%s)" % ( anaId, dtype ) )
+        dt = { "upperLimit": "ul", "efficiencyMap": "em" }
+        f.write ( "%s & %s & " % ( anaId, dt[dtype] ) )
+        if dtype == "efficiencyMap":
+            dI = tp.dataset.dataInfo
+            print ( "  `- %s: observedN %s, bg %s +/- %s" % \
+                    ( dI.dataId, dI.observedN, dI.expectedBG, dI.bgError ) )
+            did = dI.dataId.replace("_","\_")
+            if len(did)>9:
+                did=did[:6]+" ..."
+            eBG = dI.expectedBG
+            if eBG == int(eBG):
+                eBG=int(eBG)
+            bgErr = dI.bgError
+            if bgErr == int(bgErr):
+                bgErr=int(bgErr)
+            f.write ( "%s & %s & %s +/- %s \\\\ \n" % \
+                      ( did, dI.observedN, eBG, bgErr ) )
+        if dtype == "upperLimit":
+            print ( "  `- observed %s, expected %s" % ( tp.upperLimit, tp.expectedUL ) )
+            f.write ( " & %.1f fb & %.1f fb \\\\ \n" % ( tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb) ) )
+    f.write("\end{tabular}\n" )
+    f.close()
 
 def writeTex ( protomodel, keep_tex ):
     """ write the comment about ss multipliers and contributions, in tex 
@@ -194,27 +229,42 @@ def writeIndexTex ( protomodel, gotTrimmed, untrimmedZ, texdoc ):
     if hasattr ( protomodel, "rvalues" ):
         rvalues=protomodel.rvalues
         rvalues.sort(key=lambda x: x[0],reverse=True )
-        f.write ( "%d predictions applied. Highest r values are:\n" % len(rvalues) )
-        f.write ( "\\begin{itemize}[noitemsep]\n" )
+        g=open("rvalues.tex","wt")
+        g.write ( "\\begin{tabular}{l|c|r|r}\n" )
+        g.write ( "\\bf{Analysis Name} & \\bf{Topo} & $r_{\mathrm{obs}}$ & $r_{\mathrm{exp}}$ \\\\\n" )
+        g.write ( "\\hline\n" )
         for rv in rvalues[:5]:
             srv="N/A"
             if type(rv[1])==float:
                 srv="%.2f" % rv[1]
-            f.write ( "\item %s:%s r=%.2f, r$_{exp}$=%s\n" % ( rv[2].analysisId(), ",".join ( map(str,rv[2].txnames) ), rv[0], srv ) )
-        f.write("\end{itemize}\n")
+            g.write ( "%s & %s & %.2f & %s\\\\\n" % ( rv[2].analysisId(), ",".join ( map(str,rv[2].txnames) ), rv[0], srv ) )
+        g.write ( "\\end{tabular}\n" )
+        g.close()
     else:
         print ( "[plotHiscore] protomodel has no r values!" )
 
     if hasattr ( protomodel, "contributions" ):
         print ( "[plotHiscore] contributions-per-analysis are defined" )
-        f.write ( "Contributions per analysis:\n\\begin{itemize}[noitemsep,nolistsep]\n" )
+        # f.write ( "Contributions per analysis:\n\\begin{itemize}[noitemsep,nolistsep]\n" )
+        f.write ( "Contributions per analysis:\n" )
+        f.write ( "\\begin{table}\n" )
+        f.write ( "\\begin{center}\n" )
+        f.write ( "\\begin{tabular}{l|c}\n" )
+        f.write ( "\\bf{Analysis Name} & \\bf{Contribution} \\\\\n" )
+        f.write ( "\\hline\n" )
         conts = []
         for k,v in protomodel.contributions.items():
             conts.append ( ( v, k ) )
         conts.sort( reverse=True )
         for v,k in conts:
-            f.write ( "\item %s: %s%s\n" % ( k, int(round(100.*v)), "\\%" ) )
-        f.write ( "\end{itemize}\n" )
+            f.write ( "%s & %s%s \\\\ \n" % ( k, int(round(100.*v)), "\\%" ) )
+            # f.write ( "\item %s: %s%s\n" % ( k, int(round(100.*v)), "\\%" ) )
+        # f.write ( "\end{itemize}\n" )
+        f.write ( "\\end{tabular}\n" )
+        f.write ( "\\end{center}\n" )
+        f.write ( "\\caption{Contributions to the significance Z.}\n" )
+        f.write ( "\\label{tab:contribution}\n" )
+        f.write ( "\\end{table}\n" )
     else:
         print ( "[plotHiscore] contributions are not defined" )
 
@@ -404,6 +454,7 @@ def plot ( number, verbosity, picklefile, options ):
             writeIndexHtml ( protomodel, trimmed, untrimmedZ )
         if options["tex"]:
             writeIndexTex( protomodel, trimmed, untrimmedZ, texdoc )
+    writeRawNumbers ( protomodel )
 
 def runPlotting ( args ):
     if args.destinations:
