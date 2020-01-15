@@ -112,7 +112,8 @@ class Predictor:
         with open( "walker%d.log" % self.walkerid, "a" ) as f:
             f.write ( "[predict:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
-    def predict ( self, inputFile, allpreds=False, llhdonly=True ):
+    def predict ( self, inputFile, allpreds=False, llhdonly=True,
+                  sigmacut = 0.02*fb ):
         """ taken an slha input file, return theory predictions
         :param allpreds: return all predictions, not just best + combined
         :param llhdonly: return only predictions with llhds
@@ -122,7 +123,6 @@ class Predictor:
         model.updateParticles ( inputFile=inputFile )
 
         mingap=10*GeV
-        sigmacut=0.02*fb
 
         self.log ( "Now decomposing" )
         topos = decomposer.decompose ( model, sigmacut, minmassgap=mingap )

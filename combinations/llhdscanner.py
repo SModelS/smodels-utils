@@ -4,6 +4,7 @@
 
 import pickle, os, sys, multiprocessing, time
 sys.path.insert(0,"./")
+from smodels.tools.physicsUnits import fb
 from csetup import setup
 from combiner import Combiner
 from manipulator import Manipulator
@@ -21,14 +22,21 @@ class Scanner:
         """ get predictions, return likelihoods """
         self.M.createSLHAFile( nevents = self.nevents, 
                 recycle_xsecs = recycle_xsecs )
-        predictions = P[0].predict ( self.M.currentSLHA, 
-                                     allpreds=False, llhdonly=True )
+        sigmacut=.02*fb
+        if max(self.M.masses)>1600:
+            sigmacut=.01*fb
+        if max(self.M.masses)>1800:
+            sigmacut=.003*fb
+        if max(self.M.masses)>2000:
+            sigmacut=.001*fb
+        predictions = P[0].predict ( self.M.currentSLHA, allpreds=False, 
+                                     llhdonly=True, sigmacut=sigmacut )
         ## first add proto-model point
         #mu = 1.
         #llhds = self.getLikelihoods ( predictions, mu=mu )
         llhds={}
         import numpy
-            for mu in numpy.arange(.4,1.8,.05):
+        for mu in numpy.arange(.4,1.8,.05):
             llhds[float(mu)] = self.getLikelihoods ( predictions, mu=mu )
         return llhds
 
@@ -115,9 +123,12 @@ class Scanner:
                         oldmasses[pid_]=m_
                         self.M.masses[pid_]=m2 + 1.
                 llhds = self.getPredictions ( True )
+                nllhds,nnonzeroes=0,0
+                for mu,llhd in llhds.items():
+                    nllhds+=len(llhd)
                 # del protomodel.stored_xsecs ## make sure we compute
-                self.pprint ( "m1 %d, m2 %d, %d mu's." % \
-                              ( m1, m2, len(llhds) ) )
+                self.pprint ( "m1 %d, m2 %d, %d mu's, %d llhds." % \
+                              ( m1, m2, len(llhds), nllhds ) )
                 masspoints.append ( (m1,m2,llhds) )
         import pickle
         picklefile = "%s%d%d.pcl" % ( output, pid1, pid2 )
@@ -132,14 +143,14 @@ class Scanner:
         f.close()
 
     def overrideWithDefaults ( self, args ):
-        mins = { 1000005:  100., 1000006:  100., 2000006:  100., 1000021:  200. }
-        maxs = { 1000005: 1500., 1000006: 1260., 2000006: 1260., 1000021: 2400. }
+        mins = { 1000005:  100., 1000006:  100., 2000006:  100., 1000021:  300. }
+        maxs = { 1000005: 1500., 1000006: 1260., 2000006: 1260., 1000021: 2351. }
         dm   = { 1000005:   50., 1000006:   40., 2000006:   40., 1000021:   50. }
         topo = { 1000005: "T2bb", 1000006: "T2tt", 2000006: "T2tt", 1000021: "T1" }
         ### make the LSP scan depend on the mother
         LSPmins = { 1000005:   5., 1000006:   5., 2000006:    5., 1000021:    5. }
-        LSPmaxs = { 1000005: 800., 1000006: 800., 2000006:  800., 1000021: 2200. }
-        LSPdm   = { 1000005:  15., 1000006:  15., 2000006:   15., 1000021:   15. }
+        LSPmaxs = { 1000005: 800., 1000006: 800., 2000006:  800., 1000021: 1800. }
+        LSPdm   = { 1000005:  25., 1000006:  25., 2000006:   25., 1000021:   25. }
         if not args.pid1 in mins:
             print ( "[llhdscanner] asked for defaults for %d, but none defined." % args.pid1 )
             return args
