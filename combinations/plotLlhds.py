@@ -22,9 +22,10 @@ def load ( picklefile ):
             pass
         f.close()
     llhds=[]
+    mu = 1.
     def getMu1 ( L ):
         for k,v in L.items():
-            if abs(k-1.)<1e-9:
+            if abs(k-mu)<1e-9:
                 return v
         print ( "couldnt find anything" )
         return None
@@ -251,7 +252,7 @@ if __name__ == "__main__":
     argparser.add_argument ( '-A', '--all',
             help='plot for all analyses',
             action="store_true" )
-    argparser.add_argument ( '-i', '--interactive',
+    argparser.add_argument ( '-I', '--interactive',
             help='interactive mode',
             action="store_true" )
     args = argparser.parse_args()

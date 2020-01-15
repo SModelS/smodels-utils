@@ -2,10 +2,12 @@
 -) improve index.tex
 -) use the xsec recycler also in the walker
 -) use the xsec recycler also with changed ss multipliers
--) llhd plots. useful ones. Next steps: write out *all* predictions for a given analysis, dont find bestCombo
 -) llhd plots with signal strengths instead of LSP mass
 -) llhd scanner, separate maybe ul from eff plots?
+-) in cheat mode: first run without any random step
+-) understand plt1000021ATLAS-CONF-2013-062.png
 
+.) write out *all* predictions for a given analysis, dont just find bestCombo
 .) better representation of ssms
 .) fix hiscore.slha
 .) remove unneccessary decays from mymodel.py

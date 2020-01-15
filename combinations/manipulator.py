@@ -62,6 +62,7 @@ class Manipulator:
         import time
         D["timestamp"]=time.asctime()
         D["Z"]=round(self.M.Z,3)
+        D["step"]=self.M.step
         if len(comment)>0:
             D["comment"]=comment
         with open ( outfile, "wt" ) as f:
@@ -98,6 +99,8 @@ class Manipulator:
                 self.M.decays[mpid]={}
             for dpid,v in decays.items():
                 self.M.decays[mpid][dpid]=v
+        if "step" in m: ## keep track of number of steps
+            self.M.step = m["step"]
         return
 
     def unfreezeRandomParticle ( self ):
