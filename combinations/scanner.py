@@ -5,22 +5,6 @@
 import numpy, sys, os, copy, time
 from csetup import setup
 
-"""
-def setup():
-    codedir = "/mnt/hephy/pheno/ww/git/"
-    sys.path.insert(0,"%ssmodels/" % codedir )
-    sys.path.insert(0,"%ssmodels-utils/" % codedir )
-    sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
-    rundir = "/mnt/hephy/pheno/ww/rundir/"
-    # rundir = "./"
-    if os.path.exists ( "./rundir.conf" ):
-        with open ( "./rundir.conf" ) as f:
-            rundir = f.read().strip()
-    rundir = rundir.replace ( "~", os.environ["HOME"] )
-    os.chdir ( rundir )
-    return rundir
-"""
-
 def getHiscore( force_copy = False, pids="" ):
     """ get the hiscore from the picklefile
     :param force_copy: if True, force a cp command on the pickle file
@@ -137,7 +121,7 @@ def draw( pid= 1000022, interactive=False ):
     ymax = max(y)
     imax = y.index ( ymax )
     xmax = x[imax]
-    plt.scatter ( [ xmax ], [ ymax ], label="max(x), Z(%d GeV)=%.2f" % (xmax, ymax ), s=100, c="k", marker="+", zorder=1 )
+    plt.scatter ( [ xmax ], [ ymax ], label="maximum Z, Z(%d GeV)=%.2f" % (xmax, ymax ), s=100, c="k", marker="+", zorder=1 )
     plt.scatter ( [ cmass ], [ Zs[cmass] ], label="protomodel, Z(%d GeV)=%.2f" % (cmass, Zs[cmass] ), marker="*", s=100, c="r", zorder=2 )
     plt.ylabel ( "Z" )
     plt.title ( "Significance Z=Z(%s)" % pname )

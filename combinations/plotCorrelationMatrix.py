@@ -45,17 +45,18 @@ def sortOutDupes ( results ):
             ret.append ( res )
     return ret
 
-def draw( strategy, databasepath, trianglePlot=True ):
+def draw( strategy, databasepath, trianglePlot, miscol=42,
+          diagcol = 0 ):
     """
     :param trianglePlot: if True, then only plot the upper triangle of this
                          symmetrical matrix
+    :param miscol: color to use when likelihood is missing
+    :param diagcol: color to use for diagonal
     """
     ROOT.gStyle.SetOptStat(0000)
 
     ROOT.gROOT.SetBatch()
-    gray = 42 ## thats gold
-    # gray = ROOT.kYellow-9
-    cols = [ ROOT.kRed+1, ROOT.kWhite, ROOT.kGreen+1, gray, ROOT.kBlack ]
+    cols = [ ROOT.kRed+1, ROOT.kWhite, ROOT.kGreen+1, miscol, diagcol ]
     ROOT.gStyle.SetPalette(len(cols), (ctypes.c_int * len(cols))(*cols) )
     ROOT.gStyle.SetNumberContours(len(cols))
 
@@ -147,46 +148,54 @@ def draw( strategy, databasepath, trianglePlot=True ):
             ROOT.xbins[name].DrawLatex(ycoord,-5,"#splitline{%s}{%d TeV}" % ( ana, sqrts ) )
             yt = bins[ana][sqrts][1] +1 
             extrudes = 3 # how far does the line extrude into tick labels?
-            line = ROOT.TLine ( -extrudes, yt, n-yt, yt )
+            xmax = n
+            if trianglePlot:
+                xmax = n-yt
+            line = ROOT.TLine ( -extrudes, yt, xmax, yt )
             line.SetLineWidth(2)
             line.Draw()
-            xline = ROOT.TLine ( n-yt, yt, n-yt, -extrudes )
+            ymax = n
+            if trianglePlot:
+                ymax = yt
+            xline = ROOT.TLine ( n-yt, ymax, n-yt, -extrudes )
             xline.SetLineWidth(2)
             xline.Draw()
             ROOT.lines.append ( line )
             ROOT.lines.append ( xline )
-    for i in range(n+1):
-        wline = ROOT.TLine ( n, i, n-i, i )
-        wline.SetLineColor ( ROOT.kWhite )
-        wline.Draw ()
-        ROOT.lines.append ( wline )
-        vline = ROOT.TLine ( i, n-i, i, n )
-        vline.SetLineColor ( ROOT.kWhite )
-        vline.Draw ()
+    if trianglePlot:
+        for i in range(n+1):
+            wline = ROOT.TLine ( n, i, n-i, i )
+            wline.SetLineColor ( ROOT.kWhite )
+            wline.Draw ()
+            ROOT.lines.append ( wline )
+            vline = ROOT.TLine ( i, n-i, i, n )
+            vline.SetLineColor ( ROOT.kWhite )
+            vline.Draw ()
         ROOT.lines.append ( vline )
-    ROOT.title = ROOT.TLatex()
-    ROOT.title.SetNDC()
-    ROOT.title.SetTextSize(.025 )
-    ROOT.title.DrawLatex(.28,.89, "#font[132]{Correlations between analyses, combination strategy: ,,%s''}" % strategy )
+        ROOT.title = ROOT.TLatex()
+        ROOT.title.SetNDC()
+        ROOT.title.SetTextSize(.025 )
+        ROOT.title.DrawLatex(.28,.89, "#font[132]{Correlations between analyses, combination strategy: ,,%s''}" % strategy )
     ROOT.boxes = []
-    for i,b in enumerate ( [ "pair is uncorrelated", "pair is correlated", "likelihood is missing" ] ):
-        bx = 51
-        by = 68 - 3*i 
-        box = ROOT.TBox(bx,by,bx+1,by+1)
-        c = cols[i]
-        if i > 0:
-            c = cols[i+1]
-        box.SetFillColor ( c )
-        box.Draw()
-        ROOT.boxes.append ( box )
-        l = ROOT.TLatex()
-        l.SetTextSize(.022)
-        #if i == 2:
-        #    c = 16
-        l.SetTextColor ( c )
-        b="#font[132]{%s}" % b ## add font
-        l.DrawLatex ( bx+2, by, b )
-        ROOT.boxes.append ( l )
+    if trianglePlot:
+        for i,b in enumerate ( [ "pair is uncorrelated", "pair is correlated", "likelihood is missing" ] ):
+            bx = 51
+            by = 68 - 3*i 
+            box = ROOT.TBox(bx,by,bx+1,by+1)
+            c = cols[i]
+            if i > 0:
+                c = cols[i+1]
+            box.SetFillColor ( c )
+            box.Draw()
+            ROOT.boxes.append ( box )
+            l = ROOT.TLatex()
+            l.SetTextSize(.022)
+            #if i == 2:
+            #    c = 16
+            l.SetTextColor ( c )
+            b="#font[132]{%s}" % b ## add font
+            l.DrawLatex ( bx+2, by, b )
+            ROOT.boxes.append ( l )
     ROOT.gPad.SetGrid()
     print ( "Plotting to matrix_%s.png" % strategy )
     ROOT.c1.Print("matrix_%s.png" % strategy )
@@ -200,5 +209,12 @@ if __name__ == "__main__":
     argparser.add_argument ( '-d', '--database', nargs='?', 
             help='path to database [../../smodels-database]',
             type=str, default='../../smodels-database' )
+    argparser.add_argument ( '-t', '--triangular',
+            help='plot as lower triangle matrix?',
+            action="store_true" )
     args=argparser.parse_args()
-    draw( args.strategy, args.database )
+    miscol = 42 ## missing likelihood color, golden
+    miscol = ROOT.kWhite ## missing likelihood color, white
+    diagcol = ROOT.kBlack
+    diagcol = ROOT.kGray
+    draw( args.strategy, args.database, args.triangular, miscol, diagcol )
