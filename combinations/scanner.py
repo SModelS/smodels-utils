@@ -276,7 +276,7 @@ if __name__ == "__main__":
         else:
             produce( hi, pids, args.nevents, args.dry_run, args.nproc, args.factor )
     if args.draw:
-        if args.pid > 0:
+        if args.pid != 0:
             draw( pids, args.interactive, args.pid2 )
         else:
             for pid in allpids:
