@@ -52,7 +52,7 @@ def predProcess ( args ):
     return ret
 
 def ssmProcess ( args ):
-    """ one thread that computes predictions for ssms given in mrange 
+    """ one thread that computes predictions for ssms given in ssmrange 
     """
     i = args["i"]
     import time
@@ -65,11 +65,11 @@ def ssmProcess ( args ):
     ssmrange = args["ssmrange"]
     ret = {}
     for ctr,m in enumerate(ssmrange):
-        model.createNewSLHAFileName ( prefix = "ssm%dp%d%.2f" % ( i, pid, m ) )
+        model.createNewSLHAFileName ( prefix = "ssm%dp%d%d%.2f" % ( i, pids[0], pids[1], m ) )
         model.ssmultipliers[pids]=m
         ts = time.strftime("%H:%M:%S" )
         print ( "[scanner:%d-%s] start with %d/%d, m=%.1f (%d events)" % \
-                ( i, ts, ctr, len(mrange), m, nevents ) )
+                ( i, ts, ctr, len(ssmrange), m, nevents ) )
         model.predict ( nevents = nevents )
         ret[m]=model.Z
     return ret
@@ -154,6 +154,8 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
         ssmrangetot.append( ssm2 )
         dssm = dssm * fac
     ssmrangetot.sort()
+    if nproc > len(ssmrangetot):
+        nproc = len(ssmrangetot)
     ssmranges = [ ssmrangetot[i::nproc] for i in range(nproc) ]
     print ( "[scanner] start scanning with ssm(%d,%d)=%.2f with %d procs, %d ssm points, %d events" % \
             ( pid1, pid2, ssm, nproc, len(ssmrangetot), nevents ) )
@@ -161,7 +163,6 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
     pool = multiprocessing.Pool ( processes = len(ssmranges) )
     args = [ { "model": model, "pids": pids, "nevents": nevents, 
                "i": i, "ssmrange": x } for i,x in enumerate(ssmranges) ]
-    return
     Zs={}
     tmp = pool.map ( ssmProcess, args )
     for r in tmp:
@@ -169,9 +170,9 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
     if dryrun:
         return
     import pickle
-    with open ( "scanM%s.pcl" % pid, "wb" ) as f:
+    with open ( "ssm%d%d.pcl" % (pids[0],pids[1]) , "wb" ) as f:
         pickle.dump ( Zs, f )
-        pickle.dump ( mass, f )
+        pickle.dump ( pids, f )
         pickle.dump ( nevents, f )
         f.close()
 
