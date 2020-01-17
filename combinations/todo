@@ -7,6 +7,8 @@
 -) use the xsec recycler also with changed ss multipliers
 -) llhd plots with signal strengths instead of LSP mass
 -) llhd plots, separate ul plots and eff plots
+-) think of particle merging strategy in case two particles are too similar to
+   each other
 -) produce and add CMS-SUS-16-036 eff maps
 
 .) plt1000021CMS-SUS-16-033, why cut of at around 1800?

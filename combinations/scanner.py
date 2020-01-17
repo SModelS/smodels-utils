@@ -181,33 +181,45 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
         pickle.dump ( nevents, f )
         f.close()
 
-def draw( pid= 1000022, interactive=False ):
+def draw( pid= 1000022, interactive=False, pid2=0 ):
     from matplotlib import pyplot as plt
     import helpers
     import pickle
-    with open ( "scanM%s.pcl" % pid, "rb" ) as f:
+    picklefile = "scanM%s.pcl" % pid
+    if pid2 > 0:
+        picklefile = "ssm%s%d.pcl" % ( pid, pid2 )
+    with open ( picklefile, "rb" ) as f:
         Zs = pickle.load( f )
-        cmass = pickle.load ( f )
+        cmass = pickle.load ( f ) ## cmass is pids
         nevents = pickle.load ( f )
-    # print ( "Zs", Zs )
     x = list(Zs.keys())
     x.sort()
     y = []
     for i in x:
         y.append ( Zs[i] )
     pname = helpers.toLatex ( pid, addDollars=True )
+    if pid2>0:
+        pname = helpers.toLatex ( pid, addDollars=True )+","+\
+                helpers.toLatex ( pid2, addDollars=True )
     plt.plot ( x, y, label="Z(%s), %d events" % ( pname, nevents ) )
     ymax = max(y)
     imax = y.index ( ymax )
     xmax = x[imax]
     plt.scatter ( [ xmax ], [ ymax ], label="maximum Z, Z(%d GeV)=%.2f" % (xmax, ymax ), s=100, c="k", marker="+", zorder=1 )
+    if type(cmass)==tuple:
+        cmass = x[int(len(x)/2)]
     plt.scatter ( [ cmass ], [ Zs[cmass] ], label="protomodel, Z(%d GeV)=%.2f" % (cmass, Zs[cmass] ), marker="*", s=100, c="r", zorder=2 )
     plt.ylabel ( "Z" )
     plt.title ( "Significance Z=Z(%s)" % pname )
     plt.legend()
     plt.xlabel ( "m(%s) [GeV]" % pname )
+    if pid2>0:
+        plt.xlabel ( "ssm(%s) [GeV]" % pname )
+
     # plt.text ( .9*min(x)+.1*(max(x)-min(x)), 1.*max(y), "%d events" % nevents )
     figname = "M%d.png" % pid 
+    if pid2>0:
+        figname = "ssm%d%d.png" % ( pid, pid2 )
     print ( "[scanner] creating %s" % figname )
     plt.savefig ( figname )
     if interactive:
@@ -262,7 +274,7 @@ if __name__ == "__main__":
             produce( hi, pids, args.nevents, args.dry_run, args.nproc, args.factor )
     if args.draw:
         if args.pid > 0:
-            draw( pids, args.interactive )
+            draw( pids, args.interactive, args.pid2 )
         else:
             for pid in allpids:
                 draw( pid )
