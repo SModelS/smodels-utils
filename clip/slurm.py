@@ -84,13 +84,19 @@ def produceLLHDScanScript ( pid1, pid2, force_rewrite ):
             f.close()
         os.chmod ( fname, 0o775 )
 
-def produceScanScript ( pid, force_rewrite ):
+def produceScanScript ( pid, force_rewrite, pid2 ):
     rundir = "/mnt/hephy/pheno/ww/rundir"
-    fname = "%s/scanner%d.sh" % ( rundir, pid )
+    spid2=""
+    if pid2!=0:
+        spid2=str(pid2)
+    fname = "%s/scanner%d%s.sh" % ( rundir, pid, spid2 )
     if force_rewrite or not os.path.exists ( fname ):
+        argpid2=""
+        if pid2!=0:
+            argpid2 = " --pid2 %d" % pid2
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("/mnt/hephy/pheno/ww/git/smodels-utils/combinations/scanner.py -P -p %d\n" % ( pid) ) 
+            f.write ("/mnt/hephy/pheno/ww/git/smodels-utils/combinations/scanner.py -P -p %d %s\n" % ( pid,argpid2) ) 
             f.close()
         os.chmod ( fname, 0o775 )
             
@@ -126,10 +132,12 @@ def runLLHDScanner( pid, dry_run, time, rewrite ):
     a = subprocess.run ( cmd )
     print ( ">>", a )
 
-def runScanner( pid, dry_run, time, rewrite ):
+def runScanner( pid, dry_run, time, rewrite, pid2 ):
     """ run the scanner for pid, on the current hiscore
     :param dry_run: do not execute, just say what you do
     :param rewrite: force rewrite of scan script
+    :param pid2: if not zero, scan for ss multipliers (pid,pid2), 
+                 instead of scanning for masses
     """
     qos = "c_short"
     if time > 48:
@@ -146,12 +154,15 @@ def runScanner( pid, dry_run, time, rewrite ):
     with  open ( "run_scanner_template.sh", "rt" ) as f:
         lines=f.readlines()
         f.close()
-    with open ( "run_scanner%s.sh" % pid, "wt" ) as f:
+    spid2 = ""
+    if pid2 != 0:
+        spid2 = "%d" % pid2
+    with open ( "_scan%s.sh" % pid, "wt" ) as f:
         for line in lines:
-            f.write ( line.replace("@@PID@@",str(pid) ) )
+            f.write ( line.replace("@@PID@@",str(pid)).replace("xxPID2xx",spid2)  )
         f.close()
-    cmd += [ "./run_scanner%s.sh" % pid ]
-    produceScanScript ( pid, rewrite )
+    cmd += [ "./_scan%s.sh" % pid ]
+    produceScanScript ( pid, rewrite, pid2 )
     print ( "cmd", cmd )
     if dry_run:
         return
@@ -207,6 +218,9 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-S', '--scan', nargs="?", 
                     help='run the scanner on pid, -1 means dont run', type=int, default=-1 )
+    argparser.add_argument ( '--pid2', nargs="?", 
+                    help='run the scanner for ss multipliers (pid,pid2), 0 means ignore', 
+                    type=int, default=0 )
     argparser.add_argument ( '-L', '--llhdscan', nargs="?", 
                     help='run the llhd scanner on pid/1000022, -1 means dont run', 
                     type=int, default=-1 )
@@ -249,10 +263,10 @@ def main():
     if args.updater:
         runUpdater( args.dry_run, args.time )
         return
-    if args.scan > -1:
-        runScanner ( args.scan, args.dry_run, args.time, args.rewrite )
+    if args.scan != -1:
+        runScanner ( args.scan, args.dry_run, args.time, args.rewrite, args.pid2 )
         return
-    if args.llhdscan > -1:
+    if args.llhdscan != -1:
         runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite )
         return
     if args.regressor:

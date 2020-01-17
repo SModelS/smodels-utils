@@ -68,15 +68,15 @@ def ssmProcess ( args ):
     for ctr,m in enumerate(ssmrange):
         model.createNewSLHAFileName ( prefix = "ssm%dp%d%d%.2f" % ( i, pids[0], pids[1], m ) )
         if not pids in model.ssmultipliers:
-            print ( "[scanner] error cannot find pids %s" % str(pids) )
+            print ( "[scanner:%d] error cannot find pids %s" % (i, str(pids) ) )
             return
         mold = model.ssmultipliers[pids]
-        print ( "[scanner] we change the ssm from %.2f to %.2f" % ( mold, m ) )
+        print ( "[scanner:%d] we change the ssm from %.3f to %.3f" % ( i, mold, m ) )
         ma = Manipulator ( model )
         ma.changeSSM ( pids, m )
         model = ma.M
         ts = time.strftime("%H:%M:%S" )
-        print ( "[scanner:%d-%s] start with %d/%d, m=%.1f (%d events)" % \
+        print ( "[scanner:%d-%s] start with %d/%d, m=%.2f (%d events)" % \
                 ( i, ts, ctr, len(ssmrange), m, nevents ) )
         model.predict ( nevents = nevents, recycle_xsecs = True )
         ret[m]=model.Z

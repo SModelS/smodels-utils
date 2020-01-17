@@ -7,6 +7,6 @@ ml --latest singularity
 
 # cd /users/wolfgan.waltenberger/git/projects/singularity/
 
-singularity shell -c -B /tmp,/run,/scratch -s /mnt/hephy/pheno/ww/rundir/scanner@@PID@@.sh -H /mnt/hephy/pheno/ww/ /mnt/hephy/pheno/current.simg
+singularity shell -c -B /tmp,/run,/scratch -s /mnt/hephy/pheno/ww/rundir/scanner@@PID@@xxPID2xx.sh -H /mnt/hephy/pheno/ww/ /mnt/hephy/pheno/current.simg
 
 ###SBATCH --ntasks-per-node=20.
