@@ -66,6 +66,11 @@ def ssmProcess ( args ):
     ret = {}
     for ctr,m in enumerate(ssmrange):
         model.createNewSLHAFileName ( prefix = "ssm%dp%d%d%.2f" % ( i, pids[0], pids[1], m ) )
+        if not pids in model.ssmultipliers:
+            print ( "[scanner] error cannot find pids %s" % str(pids) )
+            return
+        mold = model.ssmultipliers[pids]
+        print ( "[scanner] we change the ssm from %s to %s" % ( mold, m ) )
         model.ssmultipliers[pids]=m
         ts = time.strftime("%H:%M:%S" )
         print ( "[scanner:%d-%s] start with %d/%d, m=%.1f (%d events)" % \
@@ -172,7 +177,7 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
     import pickle
     with open ( "ssm%d%d.pcl" % (pids[0],pids[1]) , "wb" ) as f:
         pickle.dump ( Zs, f )
-        pickle.dump ( pids, f )
+        pickle.dump ( ssm, f )
         pickle.dump ( nevents, f )
         f.close()
 
@@ -214,10 +219,10 @@ if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(
             description='script that takes care of the Z(m) plots' )
-    argparser.add_argument ( '-p', '-1', '--pid',
+    argparser.add_argument ( '-p', '--pid',
             help='pid to consider. If zero, then consider a predefined list [1000022]',
             type=int, default=1000022 )
-    argparser.add_argument ( '-2', '--pid2',
+    argparser.add_argument ( '--pid2',
             help='pid 2. if 0, then scan masses, if not zero scan ssms [0]',
             type=int, default=0 )
     argparser.add_argument ( '-n', '--nproc',

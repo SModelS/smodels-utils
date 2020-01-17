@@ -454,6 +454,18 @@ class ProtoModel:
                 ret[pids]=v
         return ret
 
+    def describe ( self ):
+        """ describe a bit the protomodel """
+        ndecays,nd = 0, 0
+        for k,v in p.decays.items():
+            if k == ProtoModel.LSP: ## dont count LSP
+                continue
+            ndecays += len(v)
+            nd += 1
+        nssms = len(p.ssmultipliers)
+        print ( "%d masses, %d[%d] decays, %d ss multipliers" % \
+                (len(p.masses), ndecays, nd, nssms ) )
+
     def computeXSecs ( self, nevents=10000, recycle=False ):
         """ compute xsecs for current.slha 
         :param recycle: if False, dont store xsecs, always recompute.
@@ -503,13 +515,4 @@ class ProtoModel:
 
 if __name__ == "__main__":
     p = ProtoModel( 0 )
-    ndecays,nd = 0, 0
-    for k,v in p.decays.items():
-        if k == ProtoModel.LSP: ## dont count LSP
-            continue
-        ndecays += len(v)
-        nd += 1
-    nssms = len(p.ssmultipliers)
-    print ( "%d masses, %d[%d] decays, %d ss multipliers" % \
-            (len(p.masses), ndecays, nd, nssms ) )
-    p.createSLHAFile()
+    p.describe()

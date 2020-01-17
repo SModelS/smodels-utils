@@ -484,6 +484,40 @@ class Manipulator:
             # we dont know about this decay? we initialize with the default!
         return self.randomlyChangeBranchingOfPid ( p )
 
+    def changeSSM ( self, pids, newssm ):
+        """ change the signal strength multiplier of pids to newssm,
+            if we have stored xsecs, we correct them, also """
+        if type(pids) != tuple:
+            self.M.highlight ( "error", "when changing SSMs, need to supply PIDs as a tuple!" )
+            return
+        if len(pids)!= 2:
+            self.M.highlight ( "error", "when changing SSMs, need to supply PIDs as a tuple of two pids!" )
+            return
+        if pids[1] < pids[0]:
+            self.M.highlight ( "warn", "when changing SSMs, pids are wrongly ordered. Reverting them." )
+            pids = ( pids[1], pids[0] )
+
+        if not pids in self.M.ssmultipliers:
+            self.M.highlight ( "warn", "when changing SSMs, cannot find %s. not changing anything." % str(pids) )
+            return
+        oldssm = self.M.ssmultipliers[pids]
+        self.M.ssmultipliers[pids]=newssm
+        self.M.highlight ( "info", "changing ssm of %s from %s to %s" % \
+                                   ( str(pids), oldssm, newssm ) )
+        r = newssm / oldssm
+        if not hasattr ( self.M, "stored_xsecs" ):
+            self.M.highlight ( "info", "when changing SSMs, no stored xsecs found. not rescaling." % str(pids) )
+            return
+        for ctr,xsec in enumerate(self.M.stored_xsecs[0]):
+            if pids == xsec.pid: ## ok, lets go!
+               self.M.stored_xsecs[0][ctr].value = xsec.value * r
+        """
+        if False:
+            for ctr,xsec in enumerate(self.M.stored_xsecs[0]):
+                print ( "new xsec", xsec, "pid", xsec.pid )
+        """
+
+
     def takeRandomMassStep ( self ):
         """ take a random step in mass space for all unfrozen particles """
         dx = 40. / numpy.sqrt ( len(self.M.unFrozenParticles() ) ) / ( self.M.Z + 1. )
@@ -504,6 +538,18 @@ if __name__ == "__main__":
     m = Manipulator ( p )
     cheatcode = 1
     m.cheat ( cheatcode )
+    m.M.createNewSLHAFileName( prefix="old" )
+    m.M.createSLHAFile( recycle_xsecs = True )
+    m.M.computeXSecs ( nevents = 100, recycle = True )
+    #print ( "ssm", m.M.ssmultipliers[(1000005,1000005)] )
+    #for xsec in m.M.stored_xsecs[0]:
+    #    print ( "xsec", xsec.info, xsec.value, xsec.pid )
+    m.changeSSM ( (-1000005,1000005), 1.0 ) 
+    m.M.createNewSLHAFileName ( prefix="new" )
+    m.M.createSLHAFile( recycle_xsecs = True )
+
+    """
     m.M.predict( nevents = 20000 )
     print ( "[manipulator] cheat model %d: Z=%2f, rmax=%2f" % ( cheatcode, m.M.Z, m.M.rmax ) )
     print ( "              `- %s" % m.M.description )
+    """
