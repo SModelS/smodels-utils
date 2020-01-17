@@ -502,7 +502,7 @@ class Manipulator:
             return
         oldssm = self.M.ssmultipliers[pids]
         self.M.ssmultipliers[pids]=newssm
-        self.M.highlight ( "info", "changing ssm of %s from %s to %s" % \
+        self.M.highlight ( "info", "changing ssm of %s from %.2f to %.2f" % \
                                    ( str(pids), oldssm, newssm ) )
         r = newssm / oldssm
         if not hasattr ( self.M, "stored_xsecs" ):

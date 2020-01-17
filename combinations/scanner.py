@@ -4,6 +4,7 @@
 
 import numpy, sys, os, copy, time
 from csetup import setup
+from manipulator import Manipulator
 
 def getHiscore( force_copy = False, pids="" ):
     """ get the hiscore from the picklefile
@@ -70,12 +71,14 @@ def ssmProcess ( args ):
             print ( "[scanner] error cannot find pids %s" % str(pids) )
             return
         mold = model.ssmultipliers[pids]
-        print ( "[scanner] we change the ssm from %s to %s" % ( mold, m ) )
-        model.ssmultipliers[pids]=m
+        print ( "[scanner] we change the ssm from %.2f to %.2f" % ( mold, m ) )
+        ma = Manipulator ( model )
+        ma.changeSSM ( pids, m )
+        model = ma.M
         ts = time.strftime("%H:%M:%S" )
         print ( "[scanner:%d-%s] start with %d/%d, m=%.1f (%d events)" % \
                 ( i, ts, ctr, len(ssmrange), m, nevents ) )
-        model.predict ( nevents = nevents )
+        model.predict ( nevents = nevents, recycle_xsecs = True )
         ret[m]=model.Z
     return ret
 
@@ -231,10 +234,10 @@ if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(
             description='script that takes care of the Z(m) plots' )
-    argparser.add_argument ( '-p', '--pid',
+    argparser.add_argument ( '-p', '--pid', '--pid1',
             help='pid to consider. If zero, then consider a predefined list [1000022]',
             type=int, default=1000022 )
-    argparser.add_argument ( '--pid2',
+    argparser.add_argument ( '-q', '--pid2',
             help='pid 2. if 0, then scan masses, if not zero scan ssms [0]',
             type=int, default=0 )
     argparser.add_argument ( '-n', '--nproc',
