@@ -51,6 +51,28 @@ def predProcess ( args ):
         ret[m]=model.Z
     return ret
 
+def ssmProcess ( args ):
+    """ one thread that computes predictions for ssms given in mrange 
+    """
+    i = args["i"]
+    import time
+    # time.sleep(5*i) ## would that help??
+    print ( "[scanner:%d] starting thread" % ( i ) )
+    model = args["model"]
+    model.walkerid = 200000+10000*i + model.walkerid
+    pids = args["pids"]
+    nevents = args["nevents"]
+    ssmrange = args["ssmrange"]
+    ret = {}
+    for ctr,m in enumerate(ssmrange):
+        model.createNewSLHAFileName ( prefix = "ssm%dp%d%.2f" % ( i, pid, m ) )
+        model.ssmultipliers[pids]=m
+        ts = time.strftime("%H:%M:%S" )
+        print ( "[scanner:%d-%s] start with %d/%d, m=%.1f (%d events)" % \
+                ( i, ts, ctr, len(mrange), m, nevents ) )
+        model.predict ( nevents = nevents )
+        ret[m]=model.Z
+    return ret
 
 def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
              nproc=5, fac = 1.005 ):
@@ -102,6 +124,57 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
         pickle.dump ( nevents, f )
         f.close()
 
+def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
+             nproc=5, fac = 1.005 ):
+    """ produce pickle files for ssm scan, for (pid1,pid2), with nevents
+    :param hi: hiscore list object
+    :param nproc: number of processes
+    :param fac: factor with which to multiply interval
+    """
+    model = hi.trimmed[0]
+    pids = ( pid1, pid2 )
+    if pid2 < pid1:
+        pids = ( pid2, pid1 )
+    if not pids in model.ssmultipliers:
+        print ( "[scanner] could not find pids %s in multipliers" % ( str(pids) ) )
+        print ( "only", model.ssmultipliers )
+        return
+    ssm = model.ssmultipliers[pids]
+    # print ( "[scanner] starting with %s: %.2f" % ( pids, ssm ) )
+    Zs = {}
+    fm = .6 ## lower bound (relative) on mass
+    mrange = numpy.arange ( ssm * fm, ssm / fm, .008*ssm )
+    ssmrangetot = [ ssm ]
+    ssm1,ssm2 = ssm, ssm
+    dssm = fac
+    while ssm1 > fm * ssm:
+        ssm1 = ssm/dssm
+        ssm2 = ssm*dssm
+        ssmrangetot.append( ssm1 )
+        ssmrangetot.append( ssm2 )
+        dssm = dssm * fac
+    ssmrangetot.sort()
+    ssmranges = [ ssmrangetot[i::nproc] for i in range(nproc) ]
+    print ( "[scanner] start scanning with ssm(%d,%d)=%.2f with %d procs, %d ssm points, %d events" % \
+            ( pid1, pid2, ssm, nproc, len(ssmrangetot), nevents ) )
+    import multiprocessing
+    pool = multiprocessing.Pool ( processes = len(ssmranges) )
+    args = [ { "model": model, "pids": pids, "nevents": nevents, 
+               "i": i, "ssmrange": x } for i,x in enumerate(ssmranges) ]
+    return
+    Zs={}
+    tmp = pool.map ( ssmProcess, args )
+    for r in tmp:
+        Zs.update(r)
+    if dryrun:
+        return
+    import pickle
+    with open ( "scanM%s.pcl" % pid, "wb" ) as f:
+        pickle.dump ( Zs, f )
+        pickle.dump ( mass, f )
+        pickle.dump ( nevents, f )
+        f.close()
+
 def draw( pid= 1000022, interactive=False ):
     from matplotlib import pyplot as plt
     import helpers
@@ -140,9 +213,12 @@ if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(
             description='script that takes care of the Z(m) plots' )
-    argparser.add_argument ( '-p', '--pid',
+    argparser.add_argument ( '-p', '-1', '--pid',
             help='pid to consider. If zero, then consider a predefined list [1000022]',
             type=int, default=1000022 )
+    argparser.add_argument ( '-2', '--pid2',
+            help='pid 2. if 0, then scan masses, if not zero scan ssms [0]',
+            type=int, default=0 )
     argparser.add_argument ( '-n', '--nproc',
             help='number of processes [10]',
             type=int, default=10 )
@@ -174,7 +250,10 @@ if __name__ == "__main__":
         pids = allpids
     if args.produce:
         hi = getHiscore( args.force_copy, pids )
-        produce( hi, pids, args.nevents, args.dry_run, args.nproc, args.factor )
+        if args.pid2 > 0:
+            produceSSMs( hi, args.pid, args.pid2, args.nevents, args.dry_run, args.nproc, args.factor )
+        else:
+            produce( hi, pids, args.nevents, args.dry_run, args.nproc, args.factor )
     if args.draw:
         if args.pid > 0:
             draw( pids, args.interactive )

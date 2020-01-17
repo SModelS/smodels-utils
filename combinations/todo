@@ -1,12 +1,15 @@
--) plt1000021CMS-SUS-16-033, why cut of at around 1800?
+-) add second gluino and third stop
 -) understand plt1000021ATLAS-CONF-2013-062.png
 -) llhd contour-only plots
+-) Z plots as function of ssms
 -) improve index.tex
 -) use the xsec recycler also in the walker
 -) use the xsec recycler also with changed ss multipliers
 -) llhd plots with signal strengths instead of LSP mass
 -) llhd plots, separate ul plots and eff plots
+-) produce and add CMS-SUS-16-036 eff maps
 
+.) plt1000021CMS-SUS-16-033, why cut of at around 1800?
 .) for bestCombo, write out the raw numbers 
 .) in cheat mode: first run without any random step
 .) write out *all* predictions for a given analysis, dont just find bestCombo
