@@ -226,7 +226,6 @@ class Manipulator:
                 self.M.decays[mpid].pop(pid2)
         ## swap all provenances in the ss multiplier dictionary
         newSSMultipliers = {}
-        self.M.log ( "seems like we need to debug this. ssms=%s" % self.M.ssmultipliers )
         for pids,ssm in self.M.ssmultipliers.items():
             apids = list ( map ( abs, pids ) )
             if not pid1 in apids and not pid2 in apids:
@@ -244,11 +243,12 @@ class Manipulator:
                     npids[ctr]=-pid1
             npids.sort()
             newSSMultipliers[tuple(npids)]=ssm
-        self.M.log ( "we are done here" )
         self.M.ssmultipliers = copy.deepcopy ( newSSMultipliers )
 
         ## finally swap in bestCombo
         if not hasattr ( self.M, "bestCombo" ):
+            return
+        if self.M.bestCombo == None:
             return
         for c,combo in enumerate(self.M.bestCombo):
             for i,prod in enumerate(combo.PIDs):
