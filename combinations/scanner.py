@@ -208,10 +208,16 @@ def draw( pid= 1000022, interactive=False, pid2=0 ):
     ymax = max(y)
     imax = y.index ( ymax )
     xmax = x[imax]
-    plt.scatter ( [ xmax ], [ ymax ], label="maximum Z, Z(%d GeV)=%.2f" % (xmax, ymax ), s=100, c="k", marker="+", zorder=1 )
+    param="%d GeV" % xmax
+    if pid2>0:
+        param="%.3f" % xmax
+    plt.scatter ( [ xmax ], [ ymax ], label="maximum Z, Z(%s)=%.2f" % (param, ymax ), s=100, c="k", marker="+", zorder=1 )
     if type(cmass)==tuple:
         cmass = x[int(len(x)/2)]
-    plt.scatter ( [ cmass ], [ Zs[cmass] ], label="protomodel, Z(%d GeV)=%.2f" % (cmass, Zs[cmass] ), marker="*", s=100, c="r", zorder=2 )
+    param = "%d GeV" % cmass
+    if pid2>0:
+        param="%.3f" % cmass
+    plt.scatter ( [ cmass ], [ Zs[cmass] ], label="protomodel, Z(%s)=%.2f" % (param, Zs[cmass] ), marker="*", s=100, c="r", zorder=2 )
     plt.ylabel ( "Z" )
     plt.title ( "Significance Z=Z(%s)" % pname )
     plt.legend()
