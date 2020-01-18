@@ -107,6 +107,11 @@ class Hiscore:
                     fcntl.flock ( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
                     self.hiscores = pickle.load ( f )
                     self.trimmed = pickle.load ( f )
+                    self.timestamp = "?"
+                    try:
+                        self.timestamp = pickle.load ( f )
+                    except EOFError as e:
+                        pass
                     fcntl.flock ( f, fcntl.LOCK_UN )
                 except (BlockingIOError,OSError) as e:
                     ## make sure we dont block!
@@ -184,6 +189,7 @@ class Hiscore:
                 fcntl.flock ( f, fcntl.LOCK_EX )
                 pickle.dump ( self.hiscores, f )
                 pickle.dump ( self.trimmed, f )
+                pickle.dump ( time.asctime(), f )
                 fcntl.flock ( f, fcntl.LOCK_UN )
             self.mtime = os.stat ( self.pickleFile ).st_mtime
             self.fileAttempts=0
@@ -247,6 +253,11 @@ def compileList( nmax ):
                 fcntl.flock( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
                 protomodels = pickle.load ( f )
                 trimmed = pickle.load ( f )
+                timestamp = "?"
+                try:
+                    timestamp = pickle.load(f)
+                except EOFError as e:
+                    pass
                 fcntl.flock( f, fcntl.LOCK_UN )
                 ## add protomodels, but without the Nones
                 allprotomodels += list ( filter ( None.__ne__, protomodels ) )
@@ -358,6 +369,11 @@ def main ( args ):
                 fcntl.flock( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
                 protomodels = pickle.load ( f )
                 trimmed = pickle.load ( f )
+                timestamp="?"
+                try:
+                    timestamp = pickle.load ( f )
+                except EOFError as e:
+                    pass
             except (BlockingIOError,OSError) as e:
                 print ( "file handling error on %s: %s" % ( infile, e ) )
                 ## make sure we dont block!
