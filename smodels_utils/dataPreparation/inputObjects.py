@@ -811,6 +811,8 @@ class TxNameInput(Locker):
             if hasattr(dataHandler, 'unit') and dataHandler.unit:
                 if dataHandler.unit == "%":
                     value = value / 100.
+                elif dataHandler.unit == "/10000":
+                    value = value / 10000.
                 else:
                     value = value*eval(dataHandler.unit,
                                    {'fb':fb,'pb': pb,'GeV': GeV,'TeV': TeV})
