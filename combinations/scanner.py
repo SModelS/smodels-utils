@@ -26,7 +26,10 @@ def getHiscore( force_copy = False, pids="" ):
              ( picklefile, hostname ) )
     hi = hiscore.Hiscore( walkerid=0, save_hiscores=False, 
                           picklefile = picklefile )
-    print ( "[scanner] done retrieving hiscore object!" )
+    Z=0.
+    if len(hi.trimmed)>0 and hi.trimmed[0] != None:
+        Z=hi.trimmed[0].Z
+    print ( "[scanner] done retrieving hiscore object, highest at %.2f" % Z )
     return hi
 
 def predProcess ( args ):
@@ -60,26 +63,34 @@ def ssmProcess ( args ):
     # time.sleep(5*i) ## would that help??
     print ( "[scanner:%d] starting thread" % ( i ) )
     model = args["model"]
-    model.walkerid = 200000+10000*i + model.walkerid
     pids = args["pids"]
     nevents = args["nevents"]
     ssmrange = args["ssmrange"]
+    ssm = args["ssm"]
+    model.walkerid = 200000+10000*i + model.walkerid
+    model.createNewSLHAFileName ( prefix = "ssm%dp%d%d%.2f" % ( i, pids[0], pids[1], ssm ) )
+    if not pids in model.ssmultipliers:
+        print ( "[scanner:%d] error cannot find pids %s" % (i, str(pids) ) )
+        return
     ret = {}
-    for ctr,m in enumerate(ssmrange):
-        model.createNewSLHAFileName ( prefix = "ssm%dp%d%d%.2f" % ( i, pids[0], pids[1], m ) )
-        if not pids in model.ssmultipliers:
-            print ( "[scanner:%d] error cannot find pids %s" % (i, str(pids) ) )
-            return
-        mold = model.ssmultipliers[pids]
-        print ( "[scanner:%d] we change the ssm from %.3f to %.3f" % ( i, mold, m ) )
+    ts = time.strftime("%H:%M:%S" )
+    model.delXSecs()
+    model.predict ( nevents = nevents, recycle_xsecs = True )
+    print ( "[scanner:%d-%s] before we begin, Z is %.3f" % ( i, ts, model.Z ) )
+    
+    for ctr,ssm in enumerate(ssmrange):
+        ssmold = model.ssmultipliers[pids]
+        print ( "[scanner:%d] we change the ssm from %.3f to %.3f" % \
+                ( i, ssmold, ssm ) )
         ma = Manipulator ( model )
-        ma.changeSSM ( pids, m )
+        ma.changeSSM ( pids, ssm )
         model = ma.M
         ts = time.strftime("%H:%M:%S" )
-        print ( "[scanner:%d-%s] start with %d/%d, m=%.2f (%d events)" % \
-                ( i, ts, ctr, len(ssmrange), m, nevents ) )
+        print ( "[scanner:%d-%s] start with %d/%d, ssm=%.2f (%d events)" % \
+                ( i, ts, ctr, len(ssmrange), ssm, nevents ) )
         model.predict ( nevents = nevents, recycle_xsecs = True )
-        ret[m]=model.Z
+        print ( "[scanner:%d-%s]   `- Z=%.3f" % ( i, ts, model.Z ) )
+        ret[ssm]=model.Z
     return ret
 
 def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
@@ -169,7 +180,7 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
             ( pid1, pid2, ssm, nproc, len(ssmrangetot), nevents ) )
     import multiprocessing
     pool = multiprocessing.Pool ( processes = len(ssmranges) )
-    args = [ { "model": model, "pids": pids, "nevents": nevents, 
+    args = [ { "model": model, "pids": pids, "nevents": nevents, "ssm": ssm,
                "i": i, "ssmrange": x } for i,x in enumerate(ssmranges) ]
     Zs={}
     tmp = pool.map ( ssmProcess, args )

@@ -465,6 +465,12 @@ class ProtoModel:
         nssms = len(p.ssmultipliers)
         print ( "%d masses, %d[%d] decays, %d ss multipliers" % \
                 (len(p.masses), ndecays, nd, nssms ) )
+            
+    def delXSecs ( self ):
+        """ delete stored cross section, if they exist """
+        if not hasattr ( self, "stored_xsecs" ):
+            return
+        del self.stored_xsecs
 
     def computeXSecs ( self, nevents=10000, recycle=False ):
         """ compute xsecs for current.slha 

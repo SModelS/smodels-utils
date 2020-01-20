@@ -232,7 +232,7 @@ class Trimmer:
         err = "error!!!!"
         if dZ < .1:
             err = "ok!"
-        self.pprint ( "before trimming we check again: from %.2f to %.2f (%d evts): %s" % \
+        self.pprint ( "before trimming we check again: from %.3f to %.3f (%d evts): %s" % \
                       ( oldZ, newZ, self.nevents, err ) )
         self.pprint ( "Check if we should swap certain particles (eg ~b2 <-> ~b1)" )
         self.trimParticles ( )
