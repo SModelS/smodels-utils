@@ -3,7 +3,8 @@
 import ROOT
 
 def main():
-    f=ROOT.TFile("razorboost_results.root")
+    anas = { "CMS-SUS-16-007": "razorboost_results.root" }
+    f=ROOT.TFile( anas["CMS-SUS-16-007"] )
     regions=f.Get("regions")
     n=regions.GetEntries()
     # counts=f.Get("counts")
