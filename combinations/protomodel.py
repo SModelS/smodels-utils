@@ -509,6 +509,8 @@ class ProtoModel:
                 nXsecs += computer.computeForOneFile ( [sqrts], self.currentSLHA,
                         unlink=True, lOfromSLHA=False, tofile=tofile,
                         ssmultipliers  = ssmultipliers, comment = comment )
+                for x in computer.loXsecs:
+                    xsecs.append ( x )
                 for x in computer.xsecs:
                     xsecs.append ( x )
             if recycle: ## store them

@@ -506,7 +506,7 @@ class Manipulator:
                                    ( str(pids), oldssm, newssm ) )
         r = newssm / oldssm
         if not hasattr ( self.M, "stored_xsecs" ):
-            self.M.highlight ( "info", "when changing SSMs, no stored xsecs found. not rescaling." % str(pids) )
+            self.M.highlight ( "info", "when changing SSMs, no stored xsecs found. not rescaling %s." % str(pids) )
             return
         for ctr,xsec in enumerate(self.M.stored_xsecs[0]):
             if pids == xsec.pid: ## ok, lets go!
