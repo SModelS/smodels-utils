@@ -24,7 +24,7 @@ def getHiscore( force_copy = False, pids="" ):
     hostname = socket.gethostname().replace(".cbe.vbc.ac.at","")
     print ( "[scanner] retrieving hiscore object %s on %s .... " % \
              ( picklefile, hostname ) )
-    hi = hiscore.Hiscore( walkerid=0, save_hiscores=False, 
+    hi = hiscore.Hiscore( walkerid=0, save_hiscores=False,
                           picklefile = picklefile )
     Z=0.
     if len(hi.trimmed)>0 and hi.trimmed[0] != None:
@@ -33,7 +33,7 @@ def getHiscore( force_copy = False, pids="" ):
     return hi
 
 def predProcess ( args ):
-    """ one thread that computes predictions for masses given in mrange 
+    """ one thread that computes predictions for masses given in mrange
     """
     i = args["i"]
     import time
@@ -55,8 +55,36 @@ def predProcess ( args ):
         ret[m]=model.Z
     return ret
 
+def printCombo ( combo, comment="" ):
+    """ pretty print a theory pred combo """
+    print ( "combination %s" % comment )
+    for tp in combo:
+        print( " `- %s" % tp.analysisId() )
+
+def printXSecs ( xsecs, comment="" ):
+    """ pretty print the list of xsecs """
+    print ( "xsecs %s" % comment )
+    for xsec in xsecs:
+        print ( " `- %s, %s [%.30s]" % ( xsec.info, xsec.value, xsec.pid ) )
+
+def printModel ( model, comment="" ):
+    print ( "model %s" % comment )
+    txt=""
+    for pid,m in model.masses.items():
+        if m>5e5:
+            continue
+        txt+="%d:%d, " % ( pid, m )
+    print ( " `- m %s" % txt[:-2] )
+    txt=""
+    for pids,ssm in model.ssmultipliers.items():
+        if abs(ssm-1)<1e-2:
+            continue
+        txt+="%s:%.2f, " % ( pids, ssm )
+    print ( " `- ssm %s" % txt[:-2] )
+
+
 def ssmProcess ( args ):
-    """ one thread that computes predictions for ssms given in ssmrange 
+    """ one thread that computes predictions for ssms given in ssmrange
     """
     i = args["i"]
     import time
@@ -77,7 +105,7 @@ def ssmProcess ( args ):
     model.delXSecs()
     model.predict ( nevents = nevents, recycle_xsecs = True )
     print ( "[scanner:%d-%s] before we begin, Z is %.3f" % ( i, ts, model.Z ) )
-    
+
     for ctr,ssm in enumerate(ssmrange):
         ssmold = model.ssmultipliers[pids]
         print ( "[scanner:%d] we change the ssm from %.3f to %.3f" % \
@@ -107,7 +135,7 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
     model = hi.trimmed[0]
     mass = model.masses[pid]
     if mass > 9e5:
-        print ( "mass %d too high. Wont produce." % mass ) 
+        print ( "mass %d too high. Wont produce." % mass )
         return
     #model.createNewSLHAFileName ( prefix = "scan%s" % pid )
     Zs = {}
@@ -128,7 +156,7 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
             ( pid, mass, nproc, len(mrangetot), nevents ) )
     import multiprocessing
     pool = multiprocessing.Pool ( processes = len(mranges) )
-    args = [ { "model": model, "pid": pid, "nevents": nevents, 
+    args = [ { "model": model, "pid": pid, "nevents": nevents,
                "i": i, "mrange": x } for i,x in enumerate(mranges) ]
     Zs={}
     tmp = pool.map ( predProcess, args )
@@ -237,7 +265,7 @@ def draw( pid= 1000022, interactive=False, pid2=0 ):
         plt.xlabel ( "ssm(%s) [GeV]" % pname )
 
     # plt.text ( .9*min(x)+.1*(max(x)-min(x)), 1.*max(y), "%d events" % nevents )
-    figname = "M%d.png" % pid 
+    figname = "M%d.png" % pid
     if pid2>0:
         figname = "ssm%d%d.png" % ( pid, pid2 )
     print ( "[scanner] creating %s" % figname )
