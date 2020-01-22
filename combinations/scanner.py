@@ -292,7 +292,7 @@ def draw( pid= 1000022, interactive=False, pid2=0 ):
     if interactive:
         import IPython
         IPython.embed()
-    plt.clf()
+    plt.close()
 
 if __name__ == "__main__":
     import argparse
