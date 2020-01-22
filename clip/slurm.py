@@ -120,12 +120,13 @@ def runLLHDScanner( pid, dry_run, time, rewrite ):
     with  open ( "run_llhd_scanner_template.sh", "rt" ) as f:
         lines=f.readlines()
         f.close()
-    with open ( "run_llhd_scanner%s.sh" % pid, "wt" ) as f:
+    script = "_L%s.sh" % pid 
+    with open ( script, "wt" ) as f:
         for line in lines:
             f.write ( line.replace("@@PID@@",str(pid) ) )
         f.close()
     produceLLHDScanScript ( pid, 1000022, rewrite )
-    cmd += [ "./run_llhd_scanner%s.sh" % pid ]
+    cmd += [ script ]
     print ( "cmd", cmd )
     if dry_run:
         return
@@ -157,11 +158,12 @@ def runScanner( pid, dry_run, time, rewrite, pid2 ):
     spid2 = ""
     if pid2 != 0:
         spid2 = "%d" % pid2
-    with open ( "_scan%s.sh" % pid, "wt" ) as f:
+    script = "_S%s%s.sh" % ( pid, spid2 )
+    with open ( script, "wt" ) as f:
         for line in lines:
             f.write ( line.replace("@@PID@@",str(pid)).replace("xxPID2xx",spid2)  )
         f.close()
-    cmd += [ "./_scan%s.sh" % pid ]
+    cmd += [ script ]
     produceScanScript ( pid, rewrite, pid2 )
     print ( "cmd", cmd )
     if dry_run:
