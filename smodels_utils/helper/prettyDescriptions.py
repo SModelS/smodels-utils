@@ -226,7 +226,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
 	"T5Gamma" :	"gluino --> neutralino_1 quark antiquark, neutralino_1 --> gravitino y",
 	"T5ZGamma" : "gluino --> neutralino_1 quark antiquark, neutralino_1 --> gravitino Z/y",
 	"T6Gamma" :	"squark --> quark neutralino_1, neutralino_1 --> gravitino",
-	"TChipChimGamma": "chargino^pm_1 chargino^mp_1/neutralino_2 --> W neutralino_1 W/Z neutralino_1, neutralino1 --> gravitino y",
+	"TChipChimGamma": "chargino^pm_1 chargino^mp_1/neutralino_2 --> W neutralino_1 W/Z neutralino_1, neutralino_1 --> gravitino y",
 	'TSlepSlepAll':'slepton  --> lepton lsp ',
 	'TChiChipmSlep':'neutralino_2 chargino^pm_1  --> lepton slepton ( neutrino sneutrino ) lepton sneutrino ( neutrino slepton ), slepton --> lepton lsp, sneutrino --> neutrino lsp',
 	'TChipChimSlepSlepAll': 'chargino^pm_1 chargino^pm_1 --> lepton slepton lepton slepton, slepton --> lepton lsp'
@@ -399,11 +399,13 @@ def latexfy(instr):
                           key=lambda pair: len(pair[0]), reverse=True):
         if ' '+key in outstr:
             outstr = outstr.replace(' '+key,' '+rep)
+        if '/'+key in outstr:
+            outstr = outstr.replace('/'+key,'/'+rep)
+            
 
     outstr = outstr.replace('-->','#rightarrow')
-
-
-    return outstr.lstrip().rstrip()
+    outstr = outstr.lstrip().rstrip()
+    return outstr
 
 def getMothers(txname):
     """
@@ -438,7 +440,8 @@ def getIntermediates(txname):
     #(sanity check)
     for particle in inter:
         if not particle in first_decay:
-            logging.error('Unknown decay format: %s' %str(decays))
+            logging.error('When searching for %s: Unknown decay format: %s' % \
+                           ( inter, str(decays) ) )
 
     return inter
 
