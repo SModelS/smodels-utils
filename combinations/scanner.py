@@ -237,29 +237,48 @@ def draw( pid= 1000022, interactive=False, pid2=0 ):
     x = list(Zs.keys())
     x.sort()
     y = []
+    rs = []
     for i in x:
-        y.append ( Zs[i] )
+        y_ = Zs[i]
+        if type(y_)==tuple:
+            rs.append ( y_[1] )
+            y_ = y_[0]
+        y.append ( y_ )
     pname = helpers.toLatex ( pid, addDollars=True )
     if pid2>0:
         pname = helpers.toLatex ( pid, addDollars=True )+","+\
                 helpers.toLatex ( pid2, addDollars=True )
-    plt.plot ( x, y, label="Z(%s), %d events" % ( pname, nevents ) )
+    fig,ax1 = plt.subplots()
+    plt.plot ( x, y, label="Z(%s), %d events" % ( pname, nevents ), c="tab:blue" )
+    ax1.tick_params ( axis="y", labelcolor="tab:blue", labelleft=True )
+    ax1.set_ylabel ( "Z", c="tab:blue" )
+    ax1.set_xlabel ( "m [GeV]" )
+    if len(rs) == len(x):
+        ax2 = ax1.twinx()
+        ax1.plot ([], [], label="$r_\mathrm{max}$", c="tab:green" )
+        ax2.plot ( x, rs, label="$r_\mathrm{max}$", c="tab:green" )
+        ax2.tick_params ( axis="y", labelcolor="tab:green" )
+        ax2.set_ylim ( bottom=0., top = 1.5 )
+        ax2.set_ylabel ( "$r_\mathrm{max}$", c="tab:green" )
     ymax = max(y)
     imax = y.index ( ymax )
     xmax = x[imax]
     param="%d GeV" % xmax
     if pid2>0:
         param="%.3f" % xmax
-    plt.scatter ( [ xmax ], [ ymax ], label="maximum Z, Z(%s)=%.2f" % (param, ymax ), s=100, c="k", marker="+", zorder=1 )
+    ax1.scatter ( [ xmax ], [ ymax ], label="maximum Z, Z(%s)=%.2f" % (param, ymax ), s=100, c="k", marker="+", zorder=1 )
     if type(cmass)==tuple:
         cmass = x[int(len(x)/2)]
     param = "%d GeV" % cmass
     if pid2>0:
         param="%.3f" % cmass
-    plt.scatter ( [ cmass ], [ Zs[cmass] ], label="protomodel, Z(%s)=%.2f" % (param, Zs[cmass] ), marker="*", s=100, c="r", zorder=2 )
-    plt.ylabel ( "Z" )
+    Zmax = Zs[cmass]
+    if type(Zmax)==tuple:
+        Zmax=Zmax[0]
+    ax1.scatter ( [ cmass ], [ Zmax ], label="protomodel, Z(%s)=%.2f" % (param, Zmax ), marker="*", s=100, c="r", zorder=2 )
+    # plt.ylabel ( "Z" )
     plt.title ( "Significance Z=Z(%s)" % pname )
-    plt.legend()
+    ax1.legend()
     plt.xlabel ( "m(%s) [GeV]" % pname )
     if pid2>0:
         plt.xlabel ( "ssm(%s) [GeV]" % pname )
