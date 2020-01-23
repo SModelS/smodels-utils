@@ -224,11 +224,24 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
         f.close()
 
 def draw( pid= 1000022, interactive=False, pid2=0 ):
+    if pid2 == 0: ## means all
+        for pids in [ ( 1000021, 1000021), (1000005, 1000005), (-1000005,1000005),
+                      ( -1000006,1000006), (-2000006, 2000006 ) ]:
+            try:
+                draw ( pids[0], interactive, pids[1] )
+            except Exception as e:
+                print ( "[scanner] %s" % e )
+        return
+
+    def isSSMPlot():
+        ## is this an ssm or a mass plot
+        return pid2!=-1
+        
     from matplotlib import pyplot as plt
     import helpers
     import pickle
     picklefile = "scanM%s.pcl" % pid
-    if pid2 > 0:
+    if isSSMPlot():
         picklefile = "ssm%s%d.pcl" % ( pid, pid2 )
     with open ( picklefile, "rb" ) as f:
         Zs = pickle.load( f )
@@ -245,9 +258,9 @@ def draw( pid= 1000022, interactive=False, pid2=0 ):
             y_ = y_[0]
         y.append ( y_ )
     pname = helpers.toLatex ( pid, addDollars=True )
-    if pid2>0:
-        pname = helpers.toLatex ( pid, addDollars=True )+","+\
-                helpers.toLatex ( pid2, addDollars=True )
+    if isSSMPlot():
+        pname = helpers.toLatex ( pid, addDollars=True, addSign=True )+","+\
+                helpers.toLatex ( pid2, addDollars=True, addSign=True )
     fig,ax1 = plt.subplots()
     plt.plot ( x, y, label="Z(%s), %d events" % ( pname, nevents ), c="tab:blue" )
     ax1.tick_params ( axis="y", labelcolor="tab:blue", labelleft=True )
@@ -264,13 +277,13 @@ def draw( pid= 1000022, interactive=False, pid2=0 ):
     imax = y.index ( ymax )
     xmax = x[imax]
     param="%d GeV" % xmax
-    if pid2>0:
+    if isSSMPlot():
         param="%.3f" % xmax
     ax1.scatter ( [ xmax ], [ ymax ], label="maximum Z, Z(%s)=%.2f" % (param, ymax ), s=100, c="k", marker="+", zorder=1 )
     if type(cmass)==tuple:
         cmass = x[int(len(x)/2)]
     param = "%d GeV" % cmass
-    if pid2>0:
+    if isSSMPlot():
         param="%.3f" % cmass
     Zmax = Zs[cmass]
     if type(Zmax)==tuple:
@@ -279,13 +292,15 @@ def draw( pid= 1000022, interactive=False, pid2=0 ):
     # plt.ylabel ( "Z" )
     plt.title ( "Significance Z=Z(%s)" % pname )
     ax1.legend()
-    plt.xlabel ( "m(%s) [GeV]" % pname )
-    if pid2>0:
+    if isSSMPlot():
         plt.xlabel ( "ssm(%s) [GeV]" % pname )
+        ax1.set_xlabel ( "ssm(%s) [GeV]" % pname )
+    else:
+        plt.xlabel ( "m(%s) [GeV]" % pname )
 
     # plt.text ( .9*min(x)+.1*(max(x)-min(x)), 1.*max(y), "%d events" % nevents )
     figname = "M%d.png" % pid
-    if pid2>0:
+    if isSSMPlot():
         figname = "ssm%d%d.png" % ( pid, pid2 )
     print ( "[scanner] creating %s" % figname )
     plt.savefig ( figname )
@@ -302,8 +317,8 @@ if __name__ == "__main__":
             help='pid to consider. If zero, then consider a predefined list [1000022]',
             type=int, default=1000022 )
     argparser.add_argument ( '-q', '--pid2',
-            help='pid 2. if 0, then scan masses, if not zero scan ssms [0]',
-            type=int, default=0 )
+            help='pid 2. if -1, then scan masses, if not scan ssms, zero, then scan all ssms [-1]',
+            type=int, default=-1 )
     argparser.add_argument ( '-n', '--nproc',
             help='number of processes [10]',
             type=int, default=10 )
