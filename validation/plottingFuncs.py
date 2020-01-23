@@ -126,7 +126,7 @@ def getFigureUrl(validationPlot ):
     pos = [i for i,x in enumerate(txaxes) if x==validationPlot.axes ]
 
     if len(pos)!=1:
-        logger.error("found axes %d times" % len(pos))
+        logger.error("found axes %d times. Did you declare several maps for the same analysis/dataset/topology combo? Will exit, please fix!" % len(pos))
         sys.exit()
     return txurl[pos[0]]
 
