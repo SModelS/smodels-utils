@@ -13,7 +13,7 @@ with open("RegionB/BkgOnly.json", "r") as f:
 with open("RegionC/BkgOnly.json", "r") as f:
     jsoninputs.append(json.load(f))
 # Input efficiencies
-efficiencies = [0.154, 0.628, 0.470, 0.2, 0.3]
+efficiencies = [0.154, 0.628, 0.470, 0.2, 0.3, 0.5, 0.3, 0.2]
 
 data = PyhfData(efficiencies,
                 0.2,

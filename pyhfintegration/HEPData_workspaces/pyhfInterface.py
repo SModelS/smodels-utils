@@ -56,15 +56,29 @@ class PyhfUpperLimitComputer:
         It seems we need to include the change of the "modifiers" in the patches as well
         """
         nsignals = self.nsignals
-        patches = []
+        # Identifying the path of the SR and VR channels in the main workspace files
+        ChannelsInfo = [] # workspace specifications
         for ws in self.inputJsons:
+            wsChannelsInfo = {}
+            wsChannelsInfo["CRVR"] = []
+            for i_ch, ch in enumerate(ws['channels']):
+                if 'SR' in ch['name']:
+                    wsChannelsInfo['SR'] = {'path':'/channels/'+str(i_ch)+'/samples/0', # Path of the new sample to add (signal prediction)
+                                            'size':len(ch['samples'][0]['data'])} # Number of bins
+                if 'VR' in ch['name'] or 'CR' in ch['name']:
+                    wsChannelsInfo['CRVR'].append('/channels/'+str(i_ch))
+            wsChannelsInfo["CRVR"].sort(key=lambda path: path.split('/')[-1], reverse=True) # Need to sort correctly the paths to the channels to be removed
+            ChannelsInfo.append(wsChannelsInfo)
+        # Constructing the patches to be applied on the main workspace files
+        patches = []
+        for ws, info in zip(self.inputJsons, ChannelsInfo):
             # Need to read the number of SR/bins of each regions
             # in order to identify the corresponding ones in self.nisgnals
-            nSR = len(ws["channels"][0]["samples"][0]["data"])
+            nSR = info['SR']['size']
             patch = []
             operator = {}
-            operator["op"]    = "add"
-            operator["path"]  = "/channels/0/samples/0"
+            operator["op"] = "add"
+            operator["path"] = info['SR']['path']
             value = {}
             value["data"] = nsignals[:nSR]
             nsignals = nsignals[nSR:]
@@ -72,7 +86,8 @@ class PyhfUpperLimitComputer:
             value["name"] = "bsm"
             operator["value"] = value
             patch.append(operator)
-            patch.append({"op": "remove", "path": "/channels/1"})
+            for path in info['CRVR']:
+                patch.append({'op':'remove', 'path':path})
             print(json.dumps(patch, indent=4))
             patches.append(patch)
         # Replacing by our test point patch in order to test our upper limit calculator
@@ -95,8 +110,11 @@ class PyhfUpperLimitComputer:
             jsonInputs = []
             for ws, patch in zip(self.inputJsons, self.patches):
                 # Open BkgOnly.json -> BkgOnly json oject
+                for ch in ws['channels']:
+                    print(ch['name'])
+                print('call to apply patch')
                 jsonInputs.append(jsonpatch.apply_patch(ws, patch))
-            # Merging (jsonInputs) -> jsonInput
+            # Merging jsonInputs into result (TODO : use the new combine method coded by pyhf developers)
             result = {}
             result["channels"] = []
             for inpt in jsonInputs:
@@ -120,7 +138,9 @@ class PyhfUpperLimitComputer:
             w = pyhf.Workspace(wspec)
             # Same modifiers_settings as those use when running the 'pyhf cls' command line
             msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
-            p = w.model(measurement_name=None, patches=[], modifier_settings=msettings)
+            bounds = m.config.suggested_bounds()
+            bounds[m.config.poi_index] = [0,30]
+            p = w.model(modifier_settings=msettings, bounds=bounds)
             test_poi = mu
             result = pyhf.utils.hypotest(test_poi, w.data(p), p, qtilde=True, return_expected_set = True)
             if expected:
