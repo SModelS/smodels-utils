@@ -77,13 +77,14 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
             generatedData=True
     if pretty in [ True, "both" ]:
         tmp = copy.deepcopy ( valPlot ) # work around ROOT quirks
-        valPlot.getPrettyPlot()
-        valPlot.pretty = True
-        valPlot.savePlot()
+        tmp2 = copy.deepcopy ( valPlot ) # work around ROOT quirks
+        tmp2.getPrettyPlot()
+        tmp2.pretty = True
+        tmp2.savePlot()
         if generatedData:
-            valPlot.saveData()
+            tmp2.saveData()
             if pngAlso:
-                valPlot.savePlot(fformat="png")
+                tmp2.savePlot(fformat="png")
         valPlot = tmp # work around ROOT quirks
     import ROOT
     ROOT.gROOT.Clear()
