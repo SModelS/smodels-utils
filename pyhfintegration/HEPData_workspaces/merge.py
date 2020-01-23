@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import json
 
 with open("sbottomA_900_250_60.json", 'r') as f1:
