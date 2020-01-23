@@ -162,6 +162,14 @@ def draw( strategy, databasepath, trianglePlot, miscol=42,
             xline.Draw()
             ROOT.lines.append ( line )
             ROOT.lines.append ( xline )
+    line = ROOT.TLine ( -extrudes, 0, xmax, 0 )
+    line.SetLineWidth(2)
+    line.Draw()
+    xline = ROOT.TLine ( n, ymax, n, -extrudes )
+    xline.SetLineWidth(2)
+    xline.Draw()
+    ROOT.lines.append ( line )
+    ROOT.lines.append ( xline )
     if trianglePlot:
         for i in range(n+1):
             wline = ROOT.TLine ( n, i, n-i, i )
