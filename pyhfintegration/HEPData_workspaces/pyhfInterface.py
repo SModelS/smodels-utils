@@ -42,7 +42,7 @@ class PyhfData:
         self.inputJsons = inputJsons
 
 class PyhfUpperLimitComputer:
-    def __init__ ( self, data, cl):
+    def __init__ ( self, data, cl=0.95):
         self.data = data
         self.nsignals = [self.data.xsection*self.data.lumi/1000.0*eff for eff in self.data.efficiencies]
         self.cl = cl
@@ -55,46 +55,46 @@ class PyhfUpperLimitComputer:
         Method to create the patches to apply to the BkgOnly.json workspaces, one for each region
         It seems we need to include the change of the "modifiers" in the patches as well
         """
-        nsignals = self.nsignals
-        # Identifying the path of the SR and VR channels in the main workspace files
-        ChannelsInfo = [] # workspace specifications
-        for ws in self.inputJsons:
-            wsChannelsInfo = {}
-            wsChannelsInfo["CRVR"] = []
-            for i_ch, ch in enumerate(ws['channels']):
-                if 'SR' in ch['name']:
-                    wsChannelsInfo['SR'] = {'path':'/channels/'+str(i_ch)+'/samples/0', # Path of the new sample to add (signal prediction)
-                                            'size':len(ch['samples'][0]['data'])} # Number of bins
-                if 'VR' in ch['name'] or 'CR' in ch['name']:
-                    wsChannelsInfo['CRVR'].append('/channels/'+str(i_ch))
-            wsChannelsInfo["CRVR"].sort(key=lambda path: path.split('/')[-1], reverse=True) # Need to sort correctly the paths to the channels to be removed
-            ChannelsInfo.append(wsChannelsInfo)
-        # Constructing the patches to be applied on the main workspace files
+        #nsignals = self.nsignals
+        ## Identifying the path of the SR and VR channels in the main workspace files
+        #ChannelsInfo = [] # workspace specifications
+        #for ws in self.inputJsons:
+            #wsChannelsInfo = {}
+            #wsChannelsInfo["CRVR"] = []
+            #for i_ch, ch in enumerate(ws['channels']):
+                #if 'SR' in ch['name']:
+                    #wsChannelsInfo['SR'] = {'path':'/channels/'+str(i_ch)+'/samples/0', # Path of the new sample to add (signal prediction)
+                                            #'size':len(ch['samples'][0]['data'])} # Number of bins
+                #if 'VR' in ch['name'] or 'CR' in ch['name']:
+                    #wsChannelsInfo['CRVR'].append('/channels/'+str(i_ch))
+            #wsChannelsInfo["CRVR"].sort(key=lambda path: path.split('/')[-1], reverse=True) # Need to sort correctly the paths to the channels to be removed
+            #ChannelsInfo.append(wsChannelsInfo)
+        ## Constructing the patches to be applied on the main workspace files
         patches = []
-        for ws, info in zip(self.inputJsons, ChannelsInfo):
-            # Need to read the number of SR/bins of each regions
-            # in order to identify the corresponding ones in self.nisgnals
-            nSR = info['SR']['size']
-            patch = []
-            operator = {}
-            operator["op"] = "add"
-            operator["path"] = info['SR']['path']
-            value = {}
-            value["data"] = nsignals[:nSR]
-            nsignals = nsignals[nSR:]
-            value["modifiers"] = [{"data": None, "type": "normfactor", "name": "mu_SIG"}]
-            value["name"] = "bsm"
-            operator["value"] = value
-            patch.append(operator)
-            for path in info['CRVR']:
-                patch.append({'op':'remove', 'path':path})
-            print(json.dumps(patch, indent=4))
-            patches.append(patch)
+        #for ws, info in zip(self.inputJsons, ChannelsInfo):
+            ## Need to read the number of SR/bins of each regions
+            ## in order to identify the corresponding ones in self.nisgnals
+            #nSR = info['SR']['size']
+            #patch = []
+            #operator = {}
+            #operator["op"] = "add"
+            #operator["path"] = info['SR']['path']
+            #value = {}
+            #value["data"] = nsignals[:nSR]
+            #nsignals = nsignals[nSR:]
+            #value["modifiers"] = [{"data": None, "type": "normfactor", "name": "mu_SIG"}]
+            #value["name"] = "bsm"
+            #operator["value"] = value
+            #patch.append(operator)
+            #for path in info['CRVR']:
+                #patch.append({'op':'remove', 'path':path})
+            #print(json.dumps(patch, indent=4))
+            #patches.append(patch)
         # Replacing by our test point patch in order to test our upper limit calculator
         #with open("RegionA/patch.sbottom_1300_950_60.json", "r") as f:
             #patches.append(json.load(f))
-        #with open("RegionB/patch.sbottom_1300_950_60.json", "r") as f:
-            #patches.append(json.load(f))
+        with open("RegionB/patch.sbottom_1300_950_60.json", "r") as f:
+            patches.append(json.load(f))
         #with open("RegionC/patch.sbottom_1300_950_60.json", "r") as f:
             #patches.append(json.load(f))
         return patches
@@ -130,19 +130,22 @@ class PyhfUpperLimitComputer:
             #strresult = json.dumps(result)
             return result
 
-    def ulSigma (self, expected=False):
+    def ulSigma (self, expected=False, mu_bound = 10.0):
+        self.mu_bound = mu_bound
         def root_func(mu):
             print("New call of root_func() with mu = ", mu)
             # Opening main workspace file of region A
             wspec = self.jsonInput
-            w = pyhf.Workspace(wspec)
+            ws = pyhf.Workspace(wspec)
             # Same modifiers_settings as those use when running the 'pyhf cls' command line
             msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
-            bounds = m.config.suggested_bounds()
-            bounds[m.config.poi_index] = [0,30]
-            p = w.model(modifier_settings=msettings, bounds=bounds)
+            model = ws.model(modifier_settings=msettings)
+            bounds = model.config.suggested_bounds()
+            if mu > self.mu_bound:
+                self.mu_bound += 10.0
+            bounds[model.config.poi_index] = [0,self.mu_bound]
             test_poi = mu
-            result = pyhf.utils.hypotest(test_poi, w.data(p), p, qtilde=True, return_expected_set = True)
+            result = pyhf.infer.hypotest(test_poi, ws.data(model), model, par_bounds=bounds, qtilde=True, return_expected_set = True)
             if expected:
                 CLs = result[1].tolist()[2][0]
             else:
