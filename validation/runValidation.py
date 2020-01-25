@@ -89,7 +89,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     import ROOT
     ROOT.gROOT.Clear()
     if pretty in [ False, "both" ]:
-        valPlot.getPlot()
+        valPlot.getUglyPlot()
         valPlot.pretty = False
         valPlot.savePlot()
         if generatedData:
