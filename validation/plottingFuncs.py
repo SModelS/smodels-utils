@@ -557,11 +557,11 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     setOptions(excluded, Type='excluded')
     setOptions(excluded_border, Type='excluded_border')
     setOptions(noresult, Type='noresult')
+    base = TMultiGraph()
     if official:
         for i in official:
             setOptions( i, Type='official')
     setOptions(gridpoints, Type='gridpoints')
-    base = TMultiGraph()
     dx = .12 ## top, left
     nleg = 5
     from sympy import var
@@ -601,10 +601,9 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
             completed.SetLineColor( kGray )
             completed.SetLineStyle( 3 ) # show also how plot is completed
             completed.Draw("LP SAME" )
-            i.Draw("LP SAME" )
+            #i.Draw("LP SAME" )
             if ctr == 0:
-                leg.AddEntry ( i, "official exclusion", "L" )
-            base.completed = completed
+                leg.AddEntry ( completed, "official exclusion", "L" )
     if gridpoints.GetN()>0: 
         base.Add(gridpoints, "P")
         leg.AddEntry(gridpoints, "grid points", "P")
@@ -651,6 +650,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     l0.SetNDC()
     l0.SetTextSize(.025)
     l0.DrawLatex(.05,.905,subtitle)
+    base.l0=l0
     signal_factor = 1. # an additional factor that is multiplied with the signal cross section
     agreement = 0.
     weighted = weightedAgreementFactor # compute weighted agreement factor?
@@ -669,7 +669,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
             hn = hn[:phn]
         lex.DrawLatex(.59,.12,"agreement: %d%s, t~%.1fs [%s]" % (agreement, "%", tavg, hn ) )
         base.lex=lex
-    base.l0=l0
+
     if figureUrl:
         l1=TLatex()
         l1.SetNDC()
@@ -682,6 +682,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     l2.SetTextAngle(90.)
     l2.SetTextColor( kGray )
     l2.DrawLatex(.93,.15,"k-factor %.2f" % kfactor)
+    base.l2=l2
 
     l3=TLatex()
     l3.SetNDC()
@@ -692,11 +693,8 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
         dxpnr = .12
     l3.DrawLatex( dxpnr,.87,"%d / %d points with no results" % \
                   (nErrors, len(validationPlot.data) ) )
-
-
-    #l2.DrawLatex(.15,.75,"k-factor %.2f" % kfactor)
-    base.l2=l2
     base.l3=l3
+
     if extraInfo: ## a timestamp, on the right border
         import time
         l9=TLatex()
@@ -1137,7 +1135,6 @@ def createTempPlot( validationPlot, silentMode=True, what = "R", nthpoint =1,
     return plane
 
 
-
 def setOptions(obj,Type=None):
     """
     Define global options for the plotting object according to its type.
@@ -1145,7 +1142,7 @@ def setOptions(obj,Type=None):
     :param type: a string defining the object (allowed, excluded, official,...)
     """
 
-#Defaul settings:
+    #Defaul settings:
     if isinstance(obj,TCanvas):
         obj.SetLeftMargin(0.1097891)
         obj.SetRightMargin(0.02700422)
