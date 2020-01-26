@@ -396,26 +396,32 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
 def getGridPoints ( validationPlot ):
     """ retrieve the grid points of the upper limit / efficiency map.
         currently only works for upper limit maps. """
-    if len(validationPlot.expRes.datasets)!=1:
-        logger.info ( "will not plot grid points: n_datasets=%d != 1. dont know yet how to handle." % len(validationPlot.expRes.datasets) )
-        return []
-    txNameObj = None
-    for ctr,txn in enumerate(validationPlot.expRes.datasets[0].txnameList):
-        if txn.txName == validationPlot.txName:
-            txNameObj = validationPlot.expRes.datasets[0].txnameList[ctr] 
-            break
-    if txNameObj == None:
-        logger.info ( "no grid points: did not find txName" )
-        return []
-    if not txNameObj.txnameData._keep_values:
-        logger.info ( "no grid points: _keep_values is set to False" )
-        return []
-    if not hasattr ( txNameObj.txnameData, "origdata"):
-        logger.info ( "no grid points: cannot find origdata" )
-        return []
-    origdata =eval( txNameObj.txnameData.origdata)
+    #if len(validationPlot.expRes.datasets)!=1:
+    #    logger.info ( "will not plot grid points: n_datasets=%d != 1. will show first dataset only." % len(validationPlot.expRes.datasets) )
+        # return []
+    ret = []
+    for dataset in validationPlot.expRes.datasets:
+        txNameObj = None
+        for ctr,txn in enumerate(dataset.txnameList):
+            if txn.txName == validationPlot.txName:
+                txNameObj = dataset.txnameList[ctr] 
+                break
+        if txNameObj == None:
+            logger.info ( "no grid points: did not find txName" )
+            return []
+        if not txNameObj.txnameData._keep_values:
+            logger.info ( "no grid points: _keep_values is set to False" )
+            return []
+        if not hasattr ( txNameObj.txnameData, "origdata"):
+            logger.info ( "no grid points: cannot find origdata" )
+            return []
+        origdata =eval( txNameObj.txnameData.origdata)
+        for pt in origdata:
+            if not pt in ret:
+                ret.append ( pt )
+    logger.info ( "found %d gridpoints" % len(ret) )
     ## we will need this for .dataToCoordinates
-    return origdata
+    return ret
 
 def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
                     weightedAgreementFactor=False ):
