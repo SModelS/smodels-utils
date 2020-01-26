@@ -75,20 +75,15 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
             logger.info ( "data generation on demand was specified (generateData=None) and no data found. Lets generate!" )
             valPlot.getDataFromPlanes()
             generatedData=True
-    if pretty in [ True, "both" ]:
-        tmp = copy.deepcopy ( valPlot ) # work around ROOT quirks
-        tmp2 = copy.deepcopy ( valPlot ) # work around ROOT quirks
-        tmp2.getPrettyPlot()
-        tmp2.pretty = True
-        tmp2.savePlot()
+    if pretty in [ True ]:
+        valPlot.getPrettyPlot()
+        valPlot.pretty = True
+        valPlot.savePlot()
         if generatedData:
-            tmp2.saveData()
+            valPlot.saveData()
             if pngAlso:
-                tmp2.savePlot(fformat="png")
-        valPlot = tmp # work around ROOT quirks
-    import ROOT
-    ROOT.gROOT.Clear()
-    if pretty in [ False, "both" ]:
+                valPlot.savePlot(fformat="png")
+    if pretty in [ False ]:
         valPlot.getUglyPlot()
         valPlot.pretty = False
         valPlot.savePlot()
@@ -96,14 +91,15 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
             valPlot.saveData()
             if pngAlso:
                 valPlot.savePlot(fformat="png")
-    import ROOT
-    ROOT.gROOT.Clear()
     return True
 
-def run ( expResList, axis ):
+def run ( expResList, axis, pretty, generateData ):
     """
     Loop over experimental results and validate plots
     :param axis: Plot only for these axes. If none, get axes from sms.root
+    :param pretty: if true, then make pretty plot, else make ugly plot
+    :param generateData: if true, generate dpy dict file, if "ondemand" only generate
+                         if needed.
     """
     for expRes in expResList:
         expt0 = time.time()
@@ -122,6 +118,9 @@ def run ( expResList, axis ):
         if not txnames:
             logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
             continue
+        prettyorugly = [ pretty ]
+        if pretty=="both":
+            prettyorugly = [ True, False ]
         for itx,txname in enumerate(txnames):
             txnameStr = txname.txName
             txt0 = time.time()
@@ -149,16 +148,20 @@ def run ( expResList, axis ):
                 axes = txname.axes     
             if axis is None:
                 for ax in axes:
-                    validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,
-                                 generateData,limitPoints,extraInfo,combine,pngAlso,
-                                 weightedAgreementFactor, model )
+                    for p in prettyorugly:
+                        validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
+                                     generateData,limitPoints,extraInfo,combine,pngAlso,
+                                     weightedAgreementFactor, model )
+                        generateData = False
             else:
                 from sympy import var
                 x,y,z = var("x y z")
                 ax = str(eval(axis)) ## standardize the string
-                validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,
-                             generateData,limitPoints,extraInfo,combine,pngAlso,
-                             weightedAgreementFactor, model )
+                for p in prettyorugly:
+                    validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
+                                 generateData,limitPoints,extraInfo,combine,pngAlso,
+                                 weightedAgreementFactor, model )
+                    generateData = False
             logger.info("------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
 
@@ -234,7 +237,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     # logger.info ( "ncpus=%d, n(expRes)=%d, genData=%d" % ( ncpus, len(expResList), generateData ) )
 
     tval0 = time.time()
-    run ( expResList, axis )
+    run ( expResList, axis, pretty, generateData )
     logger.info("\n\n-- Finished validation in %.1f min." %((time.time()-tval0)/60.))
 
 def _doGenerate ( parser ):

@@ -603,7 +603,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
             completed.Draw("LP SAME" )
             #i.Draw("LP SAME" )
             if ctr == 0:
-                leg.AddEntry ( completed, "official exclusion", "L" )
+                leg.AddEntry ( i, "official exclusion", "L" )
     if gridpoints.GetN()>0: 
         base.Add(gridpoints, "P")
         leg.AddEntry(gridpoints, "grid points", "P")
