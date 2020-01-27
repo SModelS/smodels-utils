@@ -191,6 +191,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         txnames = expRes.getTxNames()
         ltxn = 0 ## len(txnames)
         txns_discussed=[]
+        txnames.sort()
         for txname in txnames:
             validated = txname.getInfo('validated')
             if not self.ignore_validated and validated != True: 
@@ -252,6 +253,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 for i in tmp:
                     if not "pretty" in i:
                         files.append ( i )
+            files.sort()
             for fig in files:
                 pngname = fig.replace(".pdf",".png" )
                 figName = pngname.replace(valDir+"/","").replace ( \
@@ -311,6 +313,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 if not anaId in self.topos.keys():
                     self.topos[anaId]=[]
                 topos = r.getTxNames()
+                topos.sort()
                 Type = "-ul"
                 if len(r.datasets) > 1 or r.datasets[0].dataInfo.dataId != None:
                     Type = "-eff"
@@ -334,9 +337,12 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         stype=tpe.replace(" ","")
         nres = 0
         nexpRes = 0
+        expResList.sort()
         for expRes in expResList:
             txnames=[]
-            for tn in expRes.getTxNames():
+            tnamess = expRes.getTxNames()
+            tnamess.sort()
+            for tn in tnamess:
                 name = tn.txName
                 if name in txnames:
                     continue
