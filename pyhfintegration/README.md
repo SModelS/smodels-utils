@@ -35,6 +35,11 @@ For [900,550,60]:
 For [1300,950,60]:  
 -official: 0.3 fb  
 -by combining: 0.27 fb
--region A: 0.30 fb / region C: 6.4 fb (region B is crashing)
+-region A: 0.30 fb / region C: 6.4 fb (region B is crashing, solved : now gives 23fb)
 
-Another problem: pyhf seems to crash when mu (signal strength modifier) is greater than 10.0, so we can't find the upper limit if it's greater than that.
+mu bounds problem solved (that was why region B was crashing) : now the upper mu bound grows dynamically if needed.
+
+# Replace the data yields with new BSM predictions
+
+Tried to combine regions A, B and C but doesn't work, keeping that for later
+

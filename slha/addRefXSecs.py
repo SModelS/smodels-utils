@@ -1,0 +1,143 @@
+#!/usr/bin/env python3
+
+""" python script to add the reference cross sections to slha files.
+The cross sections have been scraped off from 
+https://twiki.cern.ch/twiki/bin/view/LHCPhysics/SUSYCrossSections
+and stored in the xsec*.txt files. """
+
+import os, subprocess
+
+def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run ):
+    """ add to file F cross sections for pid1, pid2 """
+    tokens = F.split("_")
+    mass = float(tokens[1])
+    xsec = interpolate ( mass, xsecs )
+    print ( "[addRefXSecs] adding %d/%d:%.4f to %s" % ( pid1, pid2, xsec, F ) )
+    f=open(F,"rt")
+    lines=f.readlines()
+    f.close()
+    if dry_run:
+        return
+    cmd = "cp %s old%s" % ( F, F )
+    subprocess.getoutput ( cmd )
+    f=open( F, "wt" )
+    isInXSec=False
+    ssqrt = "%1.3G" % (sqrts*1000)
+    ssqrt = ssqrt.replace("E","0E")
+    for line in lines:
+        if "XSECTION" in line and str(pid1) in line and str(pid2) in line and ssqrt in line:
+            #f.write ( "# %s ## replaced\n" % line.strip() )
+            isInXSec=True
+            continue
+        if isInXSec:
+            #f.write ( "# %s ## replaced\n" % line.strip() )
+            isInXSec=False
+            continue
+        f.write ( line )
+    f.write ( "XSECTION  %s  2212 2212 2 %d %d # reference cross section [pb]\n" % \
+              ( ssqrt, pid1, pid2 ) )
+    f.write ( "  0  0  0  0  0  0    %.6G AddRefXSecsv1.0\n" %  xsec )
+    f.write ( "\n" )
+    f.close()
+
+def clean ( F ):
+    """ clean up F, if needed. remove double newlines, and ssm line """
+    f=open(F,"rt")
+    lines=f.readlines()
+    f.close()
+    f=open(F,"wt")
+    newline = False
+    for line in lines:
+        if "Signal strength multipliers" in line:
+            continue
+        if newline and line == "\n":
+            continue
+        if line == "\n":
+            newline = True
+        else:
+            newline = False
+        f.write ( line )
+    f.close()
+
+def interpolate ( mass, xsecs ):
+    """ interpolate between masses """
+    if mass in xsecs:
+        return xsecs[mass]
+    from scipy.interpolate import interp1d
+    return interp1d ( list(xsecs.keys()), list(xsecs.values()) )( mass )
+
+def getXSecsFrom ( filename ):
+    """ retrieve xsecs from filename """
+    ret = {}
+    if not os.path.exists ( filename ):
+        print ( "[addRefXSecs] could not find %s" % filename )
+        return ret
+    f = open ( filename, "rt" )
+    lines=f.readlines()
+    f.close()
+    for line in lines:
+        if line.find("#")>-1:
+            line = line[line.find("#")]
+        if "mass [GeV]" in line: ## skip
+            continue
+        tokens = line.split (" " )
+        if len(tokens)<2:
+            continue
+        ret[float(tokens[0])] = float(tokens[1])
+    return ret
+
+def getXSecsFor ( pid1, pid2, sqrts ):
+    """ get the xsec dictionary for pid1/pid2, sqrts """
+    filename=None
+    if pid1 in [ -1000015 ] and pid2 == -pid1:
+        ## left handed slep- slep+ production.
+        filename = "xsecslepLslepL%d.txt" % sqrts
+    if pid1 in [ -2000015 ] and pid2 == -pid1:
+        filename = "xsecslepRslepR%d.txt" % sqrts
+    if filename == None:
+        print ( "[addRefXSecs] could not identify filename for xsecs" )
+        return {}
+    xsecs = getXSecsFrom ( filename )
+    return xsecs
+
+def zipThem ( files ):
+    """ zip them up """
+    topo = files[0][:files[0].find("_")]
+    cmd = "tar czvf %s.tar.gz %s*slha" % ( topo, topo )
+    print ( cmd )
+    subprocess.getoutput ( cmd )
+
+def main():
+    import argparse, glob
+    argparser = argparse.ArgumentParser( description = "add reference cross sections to slha files" )
+    argparser.add_argument('-f', '--files', 
+                           help = 'file pattern to glob [T*.slha]',
+                           type=str,default = "T*.slha" )
+    argparser.add_argument('-p', '--pid1', help="first particle id [-1000015]",
+                           type=int, default = -1000015 )
+    argparser.add_argument('-q', '--pid2', help="first particle id [1000015]",
+                           type=int, default = 1000015 )
+    argparser.add_argument('-s', '--sqrts', help="sqrts [13]",
+                           type=int, default = 13 )
+    argparser.add_argument('-d', '--dry_run', help="just pretend",
+                            action = "store_true" )
+    argparser.add_argument('-c', '--clean', help="perform cleanup step",
+                            action = "store_true" )
+    argparser.add_argument('-z', '--zip', help="zip them up at the end",
+                            action = "store_true" )
+    args = argparser.parse_args()
+    files = glob.glob ( args.files )
+    if args.pid2 < args.pid1:
+        print ( "[addRefXSecs] will swap pids %d and %d" % ( args.pid1, args.pid2) )
+        args.pid1, args.pid2 = args.pid2, args.pid1
+    xsecs = getXSecsFor ( args.pid1, args.pid2, args.sqrts )
+    # print ( "xsecs", xsecs )
+    for F in files: # [:3]:
+        addToFile ( F, args.pid1, args.pid2, xsecs, args.sqrts, args.dry_run )
+        if args.clean:
+            clean ( F )
+    if args.zip:
+        zipThem ( files )
+
+if __name__ == "__main__":
+    main()

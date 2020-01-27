@@ -16,11 +16,11 @@ with open("RegionC/BkgOnly.json", "r") as f:
 efficiencies = [0.154, 0.628, 0.470, 0.2, 0.3, 0.5, 0.3, 0.2]
 
 data = PyhfData(efficiencies,
-                0.2,
+                10.0,
                 12.7,
                 jsoninputs)
 ulcomputer = PyhfUpperLimitComputer(data, 0.95)
 
-result = ulcomputer.ulSigma()
+result = ulcomputer.bestUL()
 print("mU95 = ", result)
 print("sigma95 = ", result*0.2)

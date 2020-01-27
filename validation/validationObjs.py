@@ -662,7 +662,7 @@ class ValidationPlot():
             self.data[ipt] = pt
             self.data[ipt]['kfactor'] = self.kfactor
 
-    def getPlot(self,silentMode=True):
+    def getUglyPlot(self,silentMode=True):
         """
         Uses the data in self.data and the official exclusion curve
         in self.officialCurves to generate the exclusion plot
