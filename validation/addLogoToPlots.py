@@ -33,7 +33,10 @@ def addLogo(filename,logo = None ):
         if not os.path.exists ( "watermark.pdf" ):
             c = canvas.Canvas('watermark.pdf')
             #Draw logo watermark
-            c.drawImage(logo, 87, 645, width=35,height=80)
+            #x, y = 87, 645
+            #x, y = 525, 30
+            y, x = 380, 260
+            c.drawImage(logo, y, x, width=35,height=80)
             c.save()            
         # Get the watermark file you just created
         watermark = PdfFileReader(open("watermark.pdf", "rb"))
@@ -77,7 +80,8 @@ def addLogo(filename,logo = None ):
         os.rename( tmpF, filename)
         
 if __name__ == '__main__':
-    
+    addLogo( "tmp.pdf" )
+    import sys; sys.exit()
     files = glob.glob('../../smodels-database/*/*/*/validation/*_pretty.*')
     if not files:
         print ( 'No files found' )
