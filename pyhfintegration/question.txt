@@ -1,5 +1,0 @@
-We need to compute the upper limit on the signal strength modifier mu_SIG. For that we have made a code that varies mu until the CLs reaches 0.05. However, in some cases mu becomes greater than 10.0 and pyhf raises an error.
-
-I then tried to do the following command line:
-`pyhf cls --testpoi 11.0 RegionA/BkgOnly.json -p RegionA/patch.sbottom_900_250_60.json`
-and I get the following error (attachment)
