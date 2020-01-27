@@ -102,9 +102,14 @@ N.B.: Each "()" group corresponds to a branch
         topos = {}
         expresults = self.database.getExpResults( useSuperseded=True )
         #expresults = self.database.expResultList ## also non-validated
+        expresults.sort()
         for expRes in expresults:
-            for dataset in expRes.datasets:
-                for txname in dataset.txnameList:
+            datasets = expRes.datasets
+            datasets.sort( key = lambda x: str(x) )
+            for dataset in datasets:
+                txnames = dataset.txnameList
+                txnames.sort()
+                for txname in txnames:
                     stxname = str ( txname )
                     if txname in topos:
                         if txname.constraint != topos[stxname]:
