@@ -83,6 +83,9 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
             valPlot.saveData()
             if pngAlso:
                 valPlot.savePlot(fformat="png")
+    import ROOT
+    for i in ROOT.gROOT.GetListOfCanvases():
+        i.Destructor()
     if pretty in [ False ]:
         valPlot.getUglyPlot()
         valPlot.pretty = False
@@ -91,9 +94,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
             valPlot.saveData()
             if pngAlso:
                 valPlot.savePlot(fformat="png")
-    import ROOT
-    ROOT.gROOT.Clear()
-    ROOT.gROOT.Reset()
+    for i in ROOT.gROOT.GetListOfCanvases():
+        i.Destructor()
     return True
 
 def run ( expResList, axis, pretty, generateData ):
