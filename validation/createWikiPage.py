@@ -278,7 +278,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 commentPath = dirPath+"/"+txname.txName+".comment"
                 txtPath = commentPath.replace(".comment", ".txt" )
                 githubRepo = "../../smodels.github.io"
-                mvCmd = "mv %s/%s %s/%s" % ( githubRepo, commentPath, githubRepo, txtPath )
+                mvCmd = "cp %s/%s %s/%s" % ( githubRepo, commentPath, githubRepo, txtPath )
                 subprocess.getoutput ( mvCmd )
                 line += "[comment](https://smodels.github.io"+txtPath+\
                         ") |\n"
