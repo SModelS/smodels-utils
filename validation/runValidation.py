@@ -91,6 +91,9 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
             valPlot.saveData()
             if pngAlso:
                 valPlot.savePlot(fformat="png")
+    import ROOT
+    ROOT.gROOT.Clear()
+    ROOT.gROOT.Reset()
     return True
 
 def run ( expResList, axis, pretty, generateData ):

@@ -372,7 +372,6 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
         masses = tmpmasses
     else:
         masses = [ masses[:nM], masses[nM:] ]
-    # print ( "[plottingFuncs] massPlane", massPlane, "txname", vPlot.txName, "axes", vPlot.axes, "masses", masses, "tokens", tokens, "m1", masses, "m2", masses[nM:], "nM", nM, "widths", widths )
     if vPlot.txName in [ "THSCPM6" ]:
         masses = [ list(map(float,tokens[1:4 ] ) ) ] * 2
         widths = [ list(map(float,[ tokens[5] ] ) ) ] * 2
@@ -396,10 +395,8 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
 def getGridPoints ( validationPlot ):
     """ retrieve the grid points of the upper limit / efficiency map.
         currently only works for upper limit maps. """
-    #if len(validationPlot.expRes.datasets)!=1:
-    #    logger.info ( "will not plot grid points: n_datasets=%d != 1. will show first dataset only." % len(validationPlot.expRes.datasets) )
-        # return []
     ret = []
+    massPlane = MassPlane.fromString( validationPlot.txName, validationPlot.axes )
     for dataset in validationPlot.expRes.datasets:
         txNameObj = None
         for ctr,txn in enumerate(dataset.txnameList):
@@ -416,9 +413,11 @@ def getGridPoints ( validationPlot ):
             logger.info ( "no grid points: cannot find origdata" )
             return []
         origdata =eval( txNameObj.txnameData.origdata)
-        for pt in origdata:
-            if not pt in ret:
-                ret.append ( pt )
+    for ctr,pt in enumerate(origdata):
+        masses = removeUnits ( pt[0], standardUnits=GeV )
+        coords = massPlane.getXYValues(masses)
+        if not coords == None and not coords in ret:
+            ret.append ( coords )
     logger.info ( "found %d gridpoints" % len(ret) )
     ## we will need this for .dataToCoordinates
     return ret
@@ -441,7 +440,6 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     logger.info ( "now create ugly plot for %s, %s: %s" % \
        ( validationPlot.expRes.globalInfo.id, validationPlot.txName, validationPlot.axes ) )
     origdata = getGridPoints ( validationPlot )
-    # logger.error ( "origdata %s" % origdata[:3] )
     # validationPlot.axes="[[(x,y)], [(x,y)]]"
 
     # Check if data has been defined:
@@ -537,9 +535,9 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     print ( "< done!" )
 
     massPlane = MassPlane.fromString( validationPlot.txName, validationPlot.axes )
-    for ctr,pt in enumerate(origdata):
-        masses = removeUnits ( pt[0], standardUnits=GeV )
-        coords = massPlane.getXYValues(masses)
+    for ctr,coords in enumerate(origdata):
+        #masses = removeUnits ( pt[0], standardUnits=GeV )
+        #coords = massPlane.getXYValues(masses)
         if coords != None:
             gridpoints.SetPoint( gridpoints.GetN(), coords["x"], coords["y"] )
 
@@ -612,7 +610,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
                 leg.AddEntry ( i, "official exclusion", "L" )
     if gridpoints.GetN()>0: 
         base.Add(gridpoints, "P")
-        leg.AddEntry(gridpoints, "grid points", "P")
+        leg.AddEntry(gridpoints, "SModelS grid points", "P")
     title = validationPlot.expRes.globalInfo.id + "_" \
             + validationPlot.txName\
             + "_" + validationPlot.axes
@@ -764,6 +762,8 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             ## try to get axes from slha file
             pt["axes"] = getXYFromSLHAFile ( pt["slhafile"], validationPlot ) 
         xvals = pt['axes']
+        if xvals == None: ## happens when not on the plane I think
+            continue
         if (not "UL" in pt.keys() or pt["UL"]==None) and (not "error" in pt.keys()):
             logger.warning( "no UL for %s" % xvals )
         r = 0.

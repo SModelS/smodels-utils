@@ -7,11 +7,17 @@ and stored in the xsec*.txt files. """
 
 import os, subprocess
 
-def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run ):
-    """ add to file F cross sections for pid1, pid2 """
+def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run, order ):
+    """ add to file F cross sections for pid1, pid2 
+    :param order: perturbation order that we should claim this to be
+                  (LO=0, NLO=1, NLL=2, ... )
+    """
     tokens = F.split("_")
     mass = float(tokens[1])
     xsec = interpolate ( mass, xsecs )
+    if xsec == None:
+        print ( "[addRefXSecs] skipping %d" % mass )
+        return
     print ( "[addRefXSecs] adding %d/%d:%.4f to %s" % ( pid1, pid2, xsec, F ) )
     f=open(F,"rt")
     lines=f.readlines()
@@ -36,7 +42,7 @@ def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run ):
         f.write ( line )
     f.write ( "XSECTION  %s  2212 2212 2 %d %d # reference cross section [pb]\n" % \
               ( ssqrt, pid1, pid2 ) )
-    f.write ( "  0  0  0  0  0  0    %.6G AddRefXSecsv1.0\n" %  xsec )
+    f.write ( "  0  %d  0  0  0  0    %.6G AddRefXSecsv1.0\n" % ( order, xsec ) )
     f.write ( "\n" )
     f.close()
 
@@ -63,6 +69,12 @@ def interpolate ( mass, xsecs ):
     """ interpolate between masses """
     if mass in xsecs:
         return xsecs[mass]
+    if mass < min(xsecs.keys()):
+        print ( "[addRefXSecs] mass %d<%d too low to interpolate, leave it as is."  % ( mass, min(xsecs.keys() ) ) )
+        return None
+    if mass > max(xsecs.keys()):
+        print ( "[addRefXSecs] mass %d>%d too high to interpolate, leave it as is." % ( mass, max(xsecs.keys() ) ) )
+        return None
     from scipy.interpolate import interp1d
     return interp1d ( list(xsecs.keys()), list(xsecs.values()) )( mass )
 
@@ -83,22 +95,30 @@ def getXSecsFrom ( filename ):
         tokens = line.split (" " )
         if len(tokens)<2:
             continue
-        ret[float(tokens[0])] = float(tokens[1])
+        mass = float(tokens[0])
+        xsec = float(tokens[1].replace("GeV\t","") )
+        ret[ mass ] = xsec
     return ret
 
 def getXSecsFor ( pid1, pid2, sqrts ):
     """ get the xsec dictionary for pid1/pid2, sqrts """
     filename=None
+    order = 0
+    if pid1 in [ 1000021 ] and pid2 == pid1:
+        filename = "xsecgluino%d.txt" % sqrts
+        order = 4
     if pid1 in [ -1000015 ] and pid2 == -pid1:
         ## left handed slep- slep+ production.
         filename = "xsecslepLslepL%d.txt" % sqrts
+        order = 3
     if pid1 in [ -2000015 ] and pid2 == -pid1:
         filename = "xsecslepRslepR%d.txt" % sqrts
+        order = 3
     if filename == None:
         print ( "[addRefXSecs] could not identify filename for xsecs" )
         return {}
     xsecs = getXSecsFrom ( filename )
-    return xsecs
+    return xsecs,order
 
 def zipThem ( files ):
     """ zip them up """
@@ -130,10 +150,10 @@ def main():
     if args.pid2 < args.pid1:
         print ( "[addRefXSecs] will swap pids %d and %d" % ( args.pid1, args.pid2) )
         args.pid1, args.pid2 = args.pid2, args.pid1
-    xsecs = getXSecsFor ( args.pid1, args.pid2, args.sqrts )
+    xsecs,order = getXSecsFor ( args.pid1, args.pid2, args.sqrts )
     # print ( "xsecs", xsecs )
     for F in files: # [:3]:
-        addToFile ( F, args.pid1, args.pid2, xsecs, args.sqrts, args.dry_run )
+        addToFile ( F, args.pid1, args.pid2, xsecs, args.sqrts, args.dry_run, order )
         if args.clean:
             clean ( F )
     if args.zip:
