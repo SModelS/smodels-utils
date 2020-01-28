@@ -1,0 +1,175 @@
+Hi,
+
+I'm having a problem that seems close to this [one](https://github.com/scikit-hep/pyhf/issues/743). Again by varying the POI to find an upper limit, I got an assertion error as if the bounds were crossed. However, I am dynamically changing the bounds in order to avoid that and it seems to happen only for some values (in my case poi_test = 730.5244681411203).
+Here's the error:
+```
+New call of root_func() with mu =  10.0
+mu bound : 10.0
+/home/alguero/.local/lib/python3.7/site-packages/pyhf/tensor/numpy_backend.py:253: RuntimeWarning: invalid value encountered in log
+  return n * np.log(lam) - lam - gammaln(n + 1.0)
+1 - CLs :  0.00012986812926452096
+New call of root_func() with mu =  100.0
+mu bound : 110
+1 - CLs :  0.0006741038592970039
+New call of root_func() with mu =  1000.0
+mu bound : 1010
+/home/alguero/.local/lib/python3.7/site-packages/pyhf/infer/utils.py:62: RuntimeWarning: invalid value encountered in double_scalars
+  CLs = CLsb / CLb
+1 - CLs :  1.0
+New call of root_func() with mu =  100.0
+mu bound : 1010
+1 - CLs :  0.0006741038592970039
+New call of root_func() with mu =  1000.0
+mu bound : 1010
+1 - CLs :  1.0
+New call of root_func() with mu =  954.9696448638172
+mu bound : 1010
+1 - CLs :  1.0
+New call of root_func() with mu =  527.4848224319086
+mu bound : 1010
+1 - CLs :  0.0014617666746911118
+New call of root_func() with mu =  933.5641138503321
+mu bound : 1010
+1 - CLs :  1.0
+New call of root_func() with mu =  730.5244681411203
+mu bound : 1010
+ERROR:pyhf.optimize.opt_scipy:     fun: 2986.526676809377
+     jac: array([-7.16552734e-02,  5.91941284e+02,  8.48580734e+03,  2.30274030e+06,
+        2.19260705e+06, -2.93857990e+03,  0.00000000e+00, -2.40975037e+01,
+       -1.72453613e+01, -1.14001465e+01,  0.00000000e+00, -1.04228210e+01,
+        6.62438965e+00,  3.21028137e+01, -4.53353271e+01,  1.60440979e+01,
+        2.33179321e+01,  3.30068970e+01,  0.00000000e+00,  0.00000000e+00,
+       -6.26562500e+00, -1.19011230e+01, -1.05806885e+01, -1.32884521e+01,
+       -4.59234619e+00, -1.98895264e+00, -7.32672119e+00, -9.78619385e+00,
+       -2.97113037e+00,  1.85223389e+01, -3.97662354e+00, -1.02069702e+01,
+        4.51583862e+00,  6.55146484e+01, -1.39204498e+02, -1.03129944e+02,
+       -3.29564209e+01, -9.12549133e+01, -1.04159912e+02, -9.63010254e+01,
+       -6.70816040e+00, -6.37317505e+01, -1.82036133e+01, -5.55774536e+01,
+       -7.46965027e+01,  1.07088623e+01, -9.97900391e+00,  3.25897217e+00,
+        1.35561523e+01,  1.20184326e+01,  2.34369507e+01,  0.00000000e+00,
+       -7.70129395e+00,  2.62848511e+01,  1.57736206e+01,  1.01738892e+01,
+        1.16876282e+02,  1.44717712e+01, -1.00000000e+01,  2.86949158e+01,
+        2.27081299e+01,  2.40907593e+01,  9.81768799e+00])
+ message: 'Inequality constraints incompatible'
+    nfev: 402
+     nit: 6
+    njev: 6
+  status: 4
+ success: False
+       x: array([ 7.30524468e+02,  1.08499895e+00,  1.60346257e-01,  5.10802609e-06,
+        3.97761941e-06,  1.67331703e-03,  0.00000000e+00, -5.00000000e+00,
+       -5.00000000e+00, -5.00000000e+00,  0.00000000e+00, -5.00000000e+00,
+        5.00000000e+00,  5.00000000e+00, -5.00000000e+00,  5.00000000e+00,
+        5.00000000e+00, -5.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+       -2.97551620e+00, -5.00000000e+00, -5.00000000e+00, -5.00000000e+00,
+       -2.16508958e+00, -9.35125626e-01, -3.54906218e+00, -4.74335636e+00,
+       -5.00000000e+00,  5.00000000e+00, -1.92641886e+00, -5.00000000e+00,
+        2.11530614e+00,  5.00000000e+00, -5.00000000e+00, -5.00000000e+00,
+       -5.00000000e+00, -5.00000000e+00, -5.00000000e+00, -5.00000000e+00,
+        5.00000000e+00, -5.00000000e+00,  5.00000000e+00, -5.00000000e+00,
+       -5.00000000e+00,  5.00000000e+00, -5.00000000e+00,  5.00000000e+00,
+        5.00000000e+00,  5.00000000e+00,  5.00000000e+00,  0.00000000e+00,
+       -3.80049578e+00,  1.00000000e+01,  5.00000000e+00,  5.00000000e+00,
+        1.00000000e+01,  5.00000000e+00, -5.00000000e+00,  5.00000000e+00,
+        5.00000000e+00,  5.00000000e+00,  5.00000000e+00])
+Traceback (most recent call last):
+  File "pyhfTest.py", line 26, in <module>
+    result = ulcomputer.ulSigma(ulcomputer.workspaces[2], expected=True)
+  File "/home/alguero/Work/smodels-utils/pyhfintegration/HEPData_workspaces/pyhfInterface.py", line 142, in ulSigma
+    ul = optimize.brentq(root_func, lo_mu, hi_mu, rtol=1e-3, xtol=1e-3)
+  File "/home/alguero/.local/lib/python3.7/site-packages/scipy/optimize/zeros.py", line 780, in brentq
+    r = _zeros._brentq(f, a, b, xtol, rtol, maxiter, args, full_output, disp)
+  File "/home/alguero/Work/smodels-utils/pyhfintegration/HEPData_workspaces/pyhfInterface.py", line 128, in root_func
+    result = pyhf.infer.hypotest(test_poi, workspace.data(model), model, par_bounds=bounds, qtilde=True, return_expected = expected)
+  File "/home/alguero/.local/lib/python3.7/site-packages/pyhf/infer/__init__.py", line 84, in hypotest
+    qmu_v = qmu(poi_test, data, pdf, init_pars, par_bounds)
+  File "/home/alguero/.local/lib/python3.7/site-packages/pyhf/infer/test_statistics.py", line 34, in qmu
+    mu, data, pdf, init_pars, par_bounds, return_fitted_val=True
+  File "/home/alguero/.local/lib/python3.7/site-packages/pyhf/infer/mle.py", line 62, in fixed_poi_fit
+    **kwargs,
+  File "/home/alguero/.local/lib/python3.7/site-packages/pyhf/optimize/opt_scipy.py", line 47, in minimize
+    assert result.success
+AssertionError
+```
+
+I tried to just run `pyhf.infer.hypotest` with poi_test = 730.5244681411203 and it crashes in the same way but it doesn't crash if e.g., I change the last digit (like 730.524468141120**2**).
+
+Here's my code if needed:
+```
+def ulSigma (self, workspace, expected=False, mu_bound = 10.0):
+        self.mu_bound = mu_bound
+        def root_func(mu):
+            print("New call of root_func() with mu = ", mu)
+            # Opening main workspace file of region A
+            # Same modifiers_settings as those use when running the 'pyhf cls' command line
+            msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
+            model = workspace.model(modifier_settings=msettings)
+            bounds = model.config.suggested_bounds()
+            if mu > self.mu_bound:
+                self.mu_bound = int(mu/10)*10 + 10
+            print('mu bound :', self.mu_bound)
+            bounds[model.config.poi_index] = [0,self.mu_bound]
+            test_poi = mu
+            result = pyhf.infer.hypotest(test_poi, workspace.data(model), model, par_bounds=bounds, qtilde=True, return_expected = expected)
+            if expected:
+                CLs = result[1].tolist()[0]
+            else:
+                CLs = result[0]
+            print("1 - CLs : ", 1.0 - CLs)
+            return 1.0 - self.cl - CLs
+        hi_mu = 10.0
+        lo_mu = 1.0
+        while root_func(hi_mu) < 0.0:
+            hi_mu *= 10
+            lo_mu *= 10
+        ul = optimize.brentq(root_func, lo_mu, hi_mu, rtol=1e-3, xtol=1e-3)
+        return ul
+```
+The `workspace` for which this error appears is built with RegionC/BkgOnly.json from [HEPData sbottom search](https://www.hepdata.net/record/ins1748602) and the following patch:
+```
+[
+  {
+    "op": "add",
+    "path": "/channels/1/samples/0",
+    "value": {
+      "data": [
+        5.2466267379e-05,
+        3.3087303267000003e-05,
+        7.391427164999999e-06,
+        0.0
+      ],
+      "modifiers": [
+        {
+          "data": null,
+          "type": "normfactor",
+          "name": "mu_SIG"
+        }
+      ],
+      "name": "bsm"
+    }
+  },
+  {
+    "op": "remove",
+    "path": "/channels/5"
+  },
+  {
+    "op": "remove",
+    "path": "/channels/4"
+  },
+  {
+    "op": "remove",
+    "path": "/channels/3"
+  },
+  {
+    "op": "remove",
+    "path": "/channels/2"
+  },
+  {
+    "op": "remove",
+    "path": "/channels/0"
+  }
+]
+```
+Thanks in advance for your help,
+
+Gaël

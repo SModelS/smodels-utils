@@ -37,8 +37,8 @@ logger=getLogger()
 class PyhfData:
     def __init__ (self, efficiencies, xsection, lumi, inputJsons):
         self.efficiencies = efficiencies
-        self.xsection = xsection
-        self.lumi = lumi
+        self.xsection = xsection # pb
+        self.lumi = lumi # fb
         self.inputJsons = inputJsons
 
 class PyhfUpperLimitComputer:
@@ -48,11 +48,11 @@ class PyhfUpperLimitComputer:
         self.cl = cl
         self.inputJsons = self.data.inputJsons
         self.patches = self.patchMaker()
-        self.regionProfiles = self.jsonMaker() # list of individual region profiles and profile of the combinations of all regions
+        self.workspaces = self.wsMaker()
         
     def patchMaker(self):
         """
-        Method to create the patches to apply to the BkgOnly.json workspaces, one for each region
+        Method that creates the patches to be applied to the BkgOnly.json workspaces, one for each region
         It seems we need to include the change of the "modifiers" in the patches as well
         """
         nsignals = self.nsignals
@@ -88,7 +88,6 @@ class PyhfUpperLimitComputer:
             patch.append(operator)
             for path in info['CRVR']:
                 patch.append({'op':'remove', 'path':path})
-            print(json.dumps(patch, indent=4))
             patches.append(patch)
         # Replacing by our test point patch in order to test our upper limit calculator
         #with open("RegionA/patch.sbottom_1300_950_60.json", "r") as f:
@@ -99,38 +98,18 @@ class PyhfUpperLimitComputer:
             #patches.append(json.load(f))
         return patches
     
-    def jsonMaker(self):
+    def wsMaker(self):
         """
-        Apply each region patch to his associated worspace (RegionN/BkgOnly.json)
-        and merge resulting jsons into a single one containing the informations for the full combined likelihood
+        Apply each region patch to his associated json (RegionN/BkgOnly.json) to obtain the complete workspaces
         """
         if len(self.inputJsons) == 1:
             return jsonpatch.apply_patch(self.inputJsons[0], self.patches[0])
         else:
-            regionProfiles = []
-            for ws, patch in zip(self.inputJsons, self.patches):
-                print('call to apply patch')
-                pr = pyhf.Workspace(jsonpatch.apply_patch(ws, patch))
-                regionProfiles.append(pr)
-            # Combining region profiles using the combine method coded by pyhf developpers
-            #cbProfile = regionProfiles[0]
-            #for i_pr in range(1, len(regionProfiles)):
-                #cbProfile = pyhf.Workspace.combine(cbProfile, regionProfiles[i_pr])
-            ## Old method:
-            #result = {}
-            #result["channels"] = []
-            #for inpt in regionProfiles:
-                #for channel in inpt["channels"]:
-                    #result["channels"].append(channel)
-            #result["observations"] = []
-            #for inpt in regionProfiles:
-                #for observation in inpt["observations"]:
-                    #result["observations"].append(observation)
-            #result["measurements"] = regionProfiles[0]["measurements"]
-            #result["version"] = regionProfiles[0]["version"]
-            # These two last are the same for all three regions
-            #strresult = json.dumps(result)
-            return regionProfiles#, cbProfile
+            workspaces = []
+            for json, patch in zip(self.inputJsons, self.patches):
+                ws = pyhf.Workspace(jsonpatch.apply_patch(json, patch))
+                workspaces.append(ws)
+            return workspaces
 
     def ulSigma (self, workspace, expected=False, mu_bound = 10.0):
         self.mu_bound = mu_bound
@@ -142,40 +121,68 @@ class PyhfUpperLimitComputer:
             model = workspace.model(modifier_settings=msettings)
             bounds = model.config.suggested_bounds()
             if mu > self.mu_bound:
-                self.mu_bound += 10.0
+                self.mu_bound = int(mu/10)*10 + 10
+            print('mu bound :', self.mu_bound)
             bounds[model.config.poi_index] = [0,self.mu_bound]
             test_poi = mu
-            result = pyhf.infer.hypotest(test_poi, workspace.data(model), model, par_bounds=bounds, qtilde=True, return_expected_set = True)
+            result = pyhf.infer.hypotest(test_poi, workspace.data(model), model, par_bounds=bounds, qtilde=True, return_expected = expected)
             if expected:
-                CLs = result[1].tolist()[2][0]
+                CLs = result[1].tolist()[0]
             else:
-                CLs = result[0].tolist()[0]
+                CLs = result[0]
             print("1 - CLs : ", 1.0 - CLs)
             return 1.0 - self.cl - CLs
+        # Just a test
+        root_func(730.5244681411209)
         # Finding the root (Brent bracketing part)
         hi_mu = 10.0
-        lo_mu = 0.0
+        lo_mu = 1.0
+        # Gross limits
         while root_func(hi_mu) < 0.0:
-            hi_mu += 10
-            lo_mu += 10
+            hi_mu *= 10
+            lo_mu *= 10
         ul = optimize.brentq(root_func, lo_mu, hi_mu, rtol=1e-3, xtol=1e-3)
         return ul
 
     def bestUL(self):
         """
-        Computing the upper on the signa strength modifier in the expected hypothesis for each profile/region
+        Computing the upper on the signal strength modifier in the expected hypothesis for each profile/region
         Picking the most sensitive, i.e., the one having the biggest r-value in the expected case (r-value = 1/mu)
-        Computing the UL in the observed case for the so called most sensitive profile
+        Computing the UL in the observed case for the so called most sensitive workspace
         """
-        print('starting bestCLs')
         rMax = 0.0
-        for pr in self.regionProfiles:
+        for pr in self.workspaces:
             r = 1/self.ulSigma(pr, expected=True)
             if r > rMax:
                 rMax = r
                 best = pr
-        print('best region', self.regionProfiles.index(best))
+        print('best region', self.workspaces.index(best))
         return self.ulSigma(best, expected=False)
+        
+    def cbUL(self, workspaces):
+        """
+        Method that combines the workspaces contained from the workspaces list into a single workspace
+        and compute the upper limit on the signal strength modifier given the new combined likelihood
+        """
+         # Combining region profiles using the combine method coded by pyhf developpers (doesn't work)
+        cbWS = workspaces[0]
+        for i_pr in range(1, len(workspaces)):
+            cbWS = pyhf.Workspace.combine(cbWS, workspaces[i_pr])
+        ## Old method:
+        #result = {}
+        #result["channels"] = []
+        #for inpt in workspaces:
+            #for channel in inpt["channels"]:
+                #result["channels"].append(channel)
+        #result["observations"] = []
+        #for inpt in workspaces:
+            #for observation in inpt["observations"]:
+                #result["observations"].append(observation)
+        #result["measurements"] = workspaces[0]["measurements"]
+        #result["version"] = workspaces[0]["version"]
+        # These two last are the same for all three regions
+        #strresult = json.dumps(result)
+        return self.ulSigma(cbWS, expected=False)
 
 if __name__ == "__main__":
     C = [ 18774.2, -2866.97, -5807.3, -4460.52, -2777.25, -1572.97, -846.653, -442.531,
