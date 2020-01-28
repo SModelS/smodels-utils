@@ -78,8 +78,10 @@ def interpolate ( mass, xsecs ):
     from scipy.interpolate import interp1d
     return interp1d ( list(xsecs.keys()), list(xsecs.values()) )( mass )
 
-def getXSecsFrom ( filename ):
-    """ retrieve xsecs from filename """
+def getXSecsFrom ( filename, pb = True ):
+    """ retrieve xsecs from filename
+    :param pb: xsecs given in pb
+    """
     ret = {}
     if not os.path.exists ( filename ):
         print ( "[addRefXSecs] could not find %s" % filename )
@@ -89,14 +91,16 @@ def getXSecsFrom ( filename ):
     f.close()
     for line in lines:
         if line.find("#")>-1:
-            line = line[line.find("#")]
+            line = line[:line.find("#")]
         if "mass [GeV]" in line: ## skip
             continue
-        tokens = line.split (" " )
+        tokens = line.split ()
         if len(tokens)<2:
             continue
         mass = float(tokens[0])
         xsec = float(tokens[1].replace("GeV\t","") )
+        if not pb:
+            xsec = xsec / 1000.
         ret[ mass ] = xsec
     return ret
 
@@ -104,9 +108,15 @@ def getXSecsFor ( pid1, pid2, sqrts ):
     """ get the xsec dictionary for pid1/pid2, sqrts """
     filename=None
     order = 0
+    pb = True
     if pid1 in [ 1000021 ] and pid2 == pid1:
         filename = "xsecgluino%d.txt" % sqrts
         order = 2 # 4
+    if pid1 in [ -1000024 ] and pid2 == -pid1:
+        ## left handed slep- slep+ production.
+        filename = "xsecC1C1%d.txt" % sqrts
+        order = 2 #3
+        pb = False
     if pid1 in [ -1000011, -1000013, -1000015 ] and pid2 == -pid1:
         ## left handed slep- slep+ production.
         filename = "xsecslepLslepL%d.txt" % sqrts
@@ -117,7 +127,7 @@ def getXSecsFor ( pid1, pid2, sqrts ):
     if filename == None:
         print ( "[addRefXSecs] could not identify filename for xsecs" )
         return {}
-    xsecs = getXSecsFrom ( filename )
+    xsecs = getXSecsFrom ( filename, pb )
     return xsecs,order
 
 def zipThem ( files ):
