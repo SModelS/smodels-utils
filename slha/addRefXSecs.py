@@ -107,11 +107,11 @@ def getXSecsFor ( pid1, pid2, sqrts ):
     if pid1 in [ 1000021 ] and pid2 == pid1:
         filename = "xsecgluino%d.txt" % sqrts
         order = 4
-    if pid1 in [ -1000015 ] and pid2 == -pid1:
+    if pid1 in [ -1000011, -1000013, -1000015 ] and pid2 == -pid1:
         ## left handed slep- slep+ production.
         filename = "xsecslepLslepL%d.txt" % sqrts
         order = 3
-    if pid1 in [ -2000015 ] and pid2 == -pid1:
+    if pid1 in [ -2000011, -2000013, -2000015 ] and pid2 == -pid1:
         filename = "xsecslepRslepR%d.txt" % sqrts
         order = 3
     if filename == None:
