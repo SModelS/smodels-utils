@@ -31,7 +31,7 @@ def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run, order ):
     ssqrt = "%1.3G" % (sqrts*1000)
     ssqrt = ssqrt.replace("E","0E")
     for line in lines:
-        if "XSECTION" in line and str(pid1) in line and str(pid2) in line and ssqrt in line:
+        if "XSECTION" in line and " "+str(pid1) in line and " "+str(pid2) in line and ssqrt in line:
             #f.write ( "# %s ## replaced\n" % line.strip() )
             isInXSec=True
             continue

@@ -30,15 +30,20 @@ def getSqrtsString ( sqrts ):
     print ( "[removeXSecs] sqrts is %s, dont know how to handle" % sqrts )
     return None
 
-def removeForPid ( fl, pid, sqrts ):
+def removeForPid ( fl, pid, sqrts, pid2 ):
     """ remove only for a single pid and sqrts """
     f = open ( fl, "rt" )
     lines = f.readlines()
     f.close()
     g = open ( fl, "wt" )
     isInXsec = False
+    spid2 = ""
+    if pid2 != 0:
+        spid2 = " %s" % str(pid2)
     for line in lines:
-        if "XSECTION" in line and str(pid) in line and getSqrtsString ( sqrts ) in line:
+        p1 = line.find ( " "+str(pid) )
+        p2 = line.find ( spid2 )
+        if "XSECTION" in line and " "+str(pid) in line and getSqrtsString ( sqrts ) in line and spid2 in line and p2 != p1:
             isInXsec = True
             continue
         if isInXsec == True:
@@ -67,6 +72,9 @@ def main():
     argparser.add_argument ( '-p', '--pid', nargs='?', 
                     help='remove xsecs only for pid, if zero remove for all [0]',
                     type=int, default=0 )
+    argparser.add_argument ( '-q', '--pid2', nargs='?', 
+                    help='remove xsecs only for pid/pid2, if zero, ignore [0]',
+                    type=int, default=0 )
     argparser.add_argument ( '-s', '--sqrts', nargs='?', 
                     help='remove xsecs only for certain sqrts, if zero remove for all [0]',
                     type=int, default=0 )
@@ -80,6 +88,6 @@ def main():
         if args.pid == 0:
             removeAll ( fl, args.sqrts )
         else:
-            removeForPid ( fl, args.pid, args.sqrts )
+            removeForPid ( fl, args.pid, args.sqrts, args.pid2 )
 
 main()
