@@ -787,7 +787,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             if condV == 5:
                 logger.warning("Condition violated for more points (not shown)")
         else:
-            if not math.isnan ( r ):
+            if not "error" in pt.keys():
                 tgr.SetPoint(tgr.GetN(), x, y, r)
 
     if tgr.GetN() < 4:
