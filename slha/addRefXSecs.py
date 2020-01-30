@@ -18,13 +18,13 @@ def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run, order ):
     if xsec == None:
         print ( "[addRefXSecs] skipping %d" % mass )
         return
-    print ( "[addRefXSecs] adding %d/%d:%.4f to %s" % ( pid1, pid2, xsec, F ) )
+    # print ( "[addRefXSecs] adding %d/%d:%.4f to %s" % ( pid1, pid2, xsec, F ) )
     f=open(F,"rt")
     lines=f.readlines()
     f.close()
     if dry_run:
         return
-    cmd = "cp %s old%s" % ( F, F )
+    cmd = "cp %s /tmp/old%s" % ( F, F )
     subprocess.getoutput ( cmd )
     f=open( F, "wt" )
     isInXSec=False
@@ -86,6 +86,7 @@ def getXSecsFrom ( filename, pb = True ):
     if not os.path.exists ( filename ):
         print ( "[addRefXSecs] could not find %s" % filename )
         return ret
+    print ( "getting xsecs from %s" % filename )
     f = open ( filename, "rt" )
     lines=f.readlines()
     f.close()
@@ -112,6 +113,14 @@ def getXSecsFor ( pid1, pid2, sqrts ):
     if pid1 in [ 1000021 ] and pid2 == pid1:
         filename = "xsecgluino%d.txt" % sqrts
         order = 2 # 4
+    if pid1 in [ -1000024 ] and pid2 in [ 1000023 ]:
+        filename = "xsecN2C1m13.txt"
+        order = 2
+        pb = False
+    if pid1 in [ 1000023 ] and pid2 in [ 1000024 ]:
+        filename = "xsecN2C1p13.txt"
+        order = 2
+        pb = False
     if pid1 in [ -1000024 ] and pid2 == -pid1:
         ## left handed slep- slep+ production.
         filename = "xsecC1C1%d.txt" % sqrts
