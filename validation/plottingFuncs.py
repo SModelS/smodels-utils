@@ -410,7 +410,7 @@ def getGridPoints ( validationPlot ):
             logger.info ( "no grid points: _keep_values is set to False" )
             return []
         if not hasattr ( txNameObj.txnameData, "origdata"):
-            logger.info ( "no grid points: cannot find origdata" )
+            logger.info ( "no grid points: cannot find origdata (maybe try a forced rebuild of the database via runValidation.py -f)" )
             return []
         origdata =eval( txNameObj.txnameData.origdata)
     for ctr,pt in enumerate(origdata):

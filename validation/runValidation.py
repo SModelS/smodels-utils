@@ -174,7 +174,8 @@ def run ( expResList, axis, pretty, generateData ):
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
         tarfiles=None,ncpus=-1,verbosity='error',pretty=False,generateData=True,
         limitPoints=None,extraInfo=False,combine=False,pngAlso=False,
-        weightedAgreementFactor=True, model = "default", axis=None ):
+        weightedAgreementFactor=True, model = "default", axis=None,
+        force_load = None ):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -205,6 +206,8 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param pngAlso: save also pngs
     :param model: the model to use (mssm, nmssm, idm, ... )
     :param axis: specify the axes, if None get them from sms.root
+    :param force_load: force loading the text database ("txt"), or the
+           binary database ("pcl"), dont force anything if None
     """
 
     if not os.path.isdir(databasePath):
@@ -220,7 +223,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         smodels.experiment.datasetObj._complainAboutOverlappingConstraints = False
 
     try:
-        db = Database(databasePath, subpickle = True )
+        db = Database(databasePath, force_load, subpickle = True )
     except Exception as e:
         logger.error("Error loading database at %s" %databasePath)
         logger.error("Error: %s" % str(e) )
@@ -271,6 +274,8 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Produces validation plots and data for the selected results")
     ap.add_argument('-p', '--parfile',
             help='parameter file specifying the validation options [validation_parameters.ini]', default='./validation_parameters.ini')
+    ap.add_argument('-f', '--force_build', 
+            help='force building of database pickle file (you may want to do this for the grid datapoints in the ugly plots)' )
     ap.add_argument('-v', '--verbose',
             help='specifying the level of verbosity (error, warning, info, debug) [info]',
             default = 'info', type = str)
@@ -310,6 +315,10 @@ if __name__ == "__main__":
     analyses = [ x.strip() for x in analyses ]
     txnames = parser.get("database", "txnames").split(",")
     txnames = [ x.strip() for x in txnames ]
+    force_load = None
+    if args.force_build:
+        force_load = "txt"
+            
     combine=False
     if parser.get("database", "dataselector") == "efficiencyMap":
         dataTypes = ['efficiencyMap']
@@ -386,4 +395,5 @@ if __name__ == "__main__":
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
          tarfiles,ncpus,args.verbose.lower(),pretty,generateData,limitPoints,
-         extraInfo,combine,pngAlso,weightedAgreementFactor, model, axis )
+         extraInfo,combine,pngAlso,weightedAgreementFactor, model, axis,
+         force_load )
