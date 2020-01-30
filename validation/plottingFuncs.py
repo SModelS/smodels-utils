@@ -766,7 +766,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             continue
         if (not "UL" in pt.keys() or pt["UL"]==None) and (not "error" in pt.keys()):
             logger.warning( "no UL for %s" % xvals )
-        r = 0.
+        r = float("nan")
         if not "error" in pt.keys():
             r = pt['signal']/pt ['UL']
         if isinstance(xvals,dict):
@@ -787,7 +787,8 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             if condV == 5:
                 logger.warning("Condition violated for more points (not shown)")
         else:
-            tgr.SetPoint(tgr.GetN(), x, y, r)
+            if not math.isnan ( r ):
+                tgr.SetPoint(tgr.GetN(), x, y, r)
 
     if tgr.GetN() < 4:
         logger.error("No good points for validation plot.")
