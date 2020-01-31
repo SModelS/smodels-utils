@@ -26,6 +26,7 @@ def install_plugins():
     os.unlink ( "install.txt" )
 
 def install():
+    checkDependencies()
     if os.path.exists ( "bin/ma5" ):
         return
     print ( "installing ma5 ..." )
@@ -46,6 +47,24 @@ def install():
         print ( "something went wrong with the install. please check manually" )
         sys.exit()
     install_plugins()
+
+def isInstalled ( library ):
+    """ is library installed (deb) """
+    cmd = "dpkg -l %s | tail -n 1" % library
+    o = subprocess.getoutput ( cmd )
+    if o.startswith ( "ii" ):
+        return True
+    if o.startswith ( "un" ):
+        return False
+    print ( "cannot decipher dpkg output %s" % o )
+    return False
+
+def checkDependencies():
+    """ check the dependencies on deb packages """
+    fj = isInstalled ( "libfastjet-dev" )
+    if not fj:
+        print ( "libfastjet-dev not installed" )
+        sys.exit()
 
 def clean():
     import glob
