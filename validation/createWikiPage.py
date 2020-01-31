@@ -184,6 +184,12 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                         self.file.write ( " * [%s %s](#%s%s%d): %d analyses, %d results\n" % \
                                       ( exp, tpe, exp, stpe, sqrts, nexpres, nres ) )
 
+    def isOneDimensional( self, txname ):
+        """ simple method that tells us if its a 1d map. In this case, we dont
+            do "pretty", we use ugly plots for pretty. """
+        r = not ( "y" in str(txname.axes) )
+        return r
+
     def writeExpRes( self, expRes, tpe ):
         valDir = os.path.join(expRes.path,'validation').replace("\n","")
         if not os.path.isdir(valDir): return
@@ -247,7 +253,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 vDir = vDir[1:]
             dirPath =  os.path.join( self.urldir, vDir )
             files = glob.glob(valDir+"/"+txname.txName+"_*_pretty.png")
-            if self.ugly:
+            if self.ugly or self.isOneDimensional ( txname ):
                 tmp = glob.glob(valDir+"/"+txname.txName+"_*.png")
                 files = []
                 for i in tmp:
