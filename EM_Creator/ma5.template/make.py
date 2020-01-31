@@ -29,7 +29,7 @@ def install():
     if os.path.exists ( "bin/ma5" ):
         return
     print ( "installing ma5 ..." )
-    url="http://smodels.hephy.at/downloads/tarballs/"
+    url="https://smodels.github.io/downloads/tarballs/"
     tarball = "ma5_v%s.tgz" % ver
     if not os.path.exists ( tarball ):
         cmd = "wget %s/%s" % ( url, tarball )

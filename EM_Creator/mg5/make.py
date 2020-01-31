@@ -35,11 +35,14 @@ def install( plugins = True ):
         return
     print ( "installing mg5 ..." )
     verdot = ver.replace("_",".")
-    url="http://smodels.hephy.at/downloads/tarballs/"
+    url="https://smodels.github.io/downloads/tarballs/"
     tarball = "MG5_aMC_v%s.tar.gz" % verdot
     if not os.path.exists ( tarball ):
         cmd = "wget %s/%s" % ( url, tarball )
-        subprocess.getoutput ( cmd )
+        a = subprocess.getoutput ( cmd )
+        if not os.path.exists ( tarball ):
+            print ( "download failed: %s" % a )
+            sys.exit()
     cmd = "tar xzvf %s" % tarball
     subprocess.getoutput ( cmd )
     cmd = "mv MG5_aMC_v%s/* ."  % ver
