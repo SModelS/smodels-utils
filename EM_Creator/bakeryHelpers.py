@@ -27,7 +27,10 @@ def parseMasses ( massstring, filterOrder=True ):
         masses = eval ( massstring )
     except NameError as e:
         masses = ""
-    if type(masses) != tuple or len(masses)<2:
+    #print ( "massstring", massstring )
+    #print ( "masses", masses )
+    #print ( "type", type(masses) )
+    if type(masses) not in [ list, tuple ] or len(masses)<2:
         mdefault = "(500,510,10),(100,110,10)"
         print ( "Error: masses need to be given as e.g. %s (you will need to put it under parentheses)" % mdefault )
         sys.exit()
@@ -78,6 +81,7 @@ def parseMasses ( massstring, filterOrder=True ):
                     if filterOrder and lists[2][z] > lists[1][y]:
                         continue
                     ret.append ( (int(lists[0][x]),int(lists[1][y]),int(lists[2][z])) )
+    print ( "masses", ret )
     return ret
 
 def nJobs ( nproc, npoints ):

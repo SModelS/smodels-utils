@@ -246,7 +246,7 @@ def main():
     argparser.add_argument ( '-r', '--rerun', help='force rerun, even if there is a summary file already',
                              action="store_true" )
     mdefault = "(2000,1000,10),(2000,1000,10)"
-    argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted. Keyword "half" is accepted for intermediate masses. [%s]' % mdefault,
+    argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_lowest, m_highest, delta_m). m_highest and delta_m may be omitted. Keyword "half" (add quotes) is accepted for intermediate masses. [%s]' % mdefault,
                              type=str, default=mdefault )
     args = argparser.parse_args()
     if args.show:
@@ -305,7 +305,7 @@ def main():
         from types import SimpleNamespace
         analyses = "atlas_susy_2016_07"
         args = SimpleNamespace ( masses=args.masses, topo=args.topo, njets=args.njets, \
-                analyses = analyses, copy=args.copy )
+                analyses = analyses, copy=args.copy, verbose=False )
         run ( args )
     with open("baking.log","a") as f:
         cmd = ""
