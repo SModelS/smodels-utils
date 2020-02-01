@@ -9,7 +9,7 @@
 
 from __future__ import print_function
 #Import basic functions (this file must be run under the installation folder)
-import sys,os,glob,time
+import sys,os,glob,time,copy
 import tempfile
 sys.path.insert(0,"../../smodels")
 from smodels.experiment.databaseObj import Database
@@ -197,6 +197,13 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         txnames = expRes.getTxNames()
         ltxn = 0 ## len(txnames)
         txns_discussed=[]
+        if id in [ "ATLAS-SUSY-2016-07" ]:
+            for txn in txnames:
+                if txn.txName == "TGQ":
+                    txn2 = copy.deepcopy ( txn )
+                    txn2.txName = "TGQ12"
+                    txnames.append ( txn2 )
+                #print ( id, txn.txName )
         txnames.sort()
         for txname in txnames:
             validated = txname.getInfo('validated')
