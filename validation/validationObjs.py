@@ -158,35 +158,6 @@ class ValidationPlot():
             curve.SetPoint ( n, 0., ty2 )
         curve.SetPoint ( n+1, 0., 0. )
 
-    def completeGraphOld ( self, curve ):
-        """ complete the given graph at the ends to cross the axes,
-            old version """
-        import ROOT
-        x0=ROOT.Double()
-        y0=ROOT.Double()
-        x=ROOT.Double()
-        y=ROOT.Double()
-        curve.GetPoint ( 0, x0, y0 ) ## get the last point
-        curve.GetPoint ( curve.GetN()-1, x, y ) ## get the last point
-        closeWithXAxis=True ## close with x-axis (y=0) or y-axis (x=0)
-        if self.txName in [ "T2bbffff" ]: ## these tend to close with y-axis
-            closeWithXAxis = False
-        if self.txName in [ "T5Disp" ]:
-            closeWithXAxis = False
-            if "6.5821" in self.axes:
-                self.addPointInFront ( curve, 0., y0 )
-                self.addPointInFront ( curve, 0., 0. )
-                curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
-                closeWithXAxis = None
-
-        if closeWithXAxis == True:
-            curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
-            curve.SetPoint ( curve.GetN(), x0, 0. )  ## extend to first point
-        if closeWithXAxis == False:
-            curve.SetPoint ( curve.GetN(), 0., y )  ## extend to x=0
-            curve.SetPoint ( curve.GetN(), 0., y0 )  ## extend to first point
-
-
     def addPointInFront ( self, curve, x, y ):
         """ add a point at position 0 in tgraph """
         import ROOT
@@ -471,18 +442,30 @@ class ValidationPlot():
         ret = [ masses[:n], masses[n:] ]
         return ret
 
+    def topologyHasWidths ( self ):
+        """ is this a topology with a width-dependency? """
+        if "THSCP" in self.txName:
+            return True
+        return False
+
     def getXYFromSLHAFileName ( self, filename ):
         """ get the 'axes' from the slha file name. uses .getMassesFromSLHAFileName.
         Meant as fallback for when no ExptRes is available.
         """
         masses = self.getMassesFromSLHAFileName ( filename )
+        ret = [ masses[0][0], masses[0][1] ]
+        massPlane = MassPlane.fromString(self.txName,self.axes)
+        if not self.topologyHasWidths():
+            varsDict = massPlane.getXYValues(masses,None)
+            if varsDict != None and "y" in varsDict:
+                ret = [ varsDict["x"], varsDict["y"] ]
         if "TGQ12" in filename:
-            return [ masses[0][0], masses[1][0] ]
+            ret = [ masses[0][0], masses[1][0] ]
         if "THSCPM6" in filename:
-            return [ masses[0][0], masses[0][2] ]
+            ret = [ masses[0][0], masses[0][2] ]
         if "THSCPM1b" in filename:
-            return [ masses[0][0], masses[1][0] ]
-        return [ masses[0][0], masses[0][1] ]
+            ret = [ masses[0][0], masses[1][0] ]
+        return ret
 
     def getDataFromPlanes(self):
         """
