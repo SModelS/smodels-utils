@@ -453,12 +453,19 @@ class ValidationPlot():
         Meant as fallback for when no ExptRes is available.
         """
         masses = self.getMassesFromSLHAFileName ( filename )
+        if ".5" in self.axes:
+            if len(masses[0])>2 and abs(masses[0][0]+masses[0][2]-2*masses[0][1])<1.:
+                masses[0][1] = (masses[0][0]+masses[0][2])/2. ## fix rounding in file name
+            if len(masses[1])>2 and abs(masses[1][0]+masses[1][2]-2*masses[1][1])<1.:
+                masses[1][1] = (masses[1][0]+masses[1][2])/2. ## fix rounding in file name
         ret = [ masses[0][0], masses[0][1] ]
         massPlane = MassPlane.fromString(self.txName,self.axes)
         if not self.topologyHasWidths():
             varsDict = massPlane.getXYValues(masses,None)
             if varsDict != None and "y" in varsDict:
                 ret = [ varsDict["x"], varsDict["y"] ]
+            if varsDict == None: ## not on this plane!!!
+                ret = None
         if "TGQ12" in filename:
             ret = [ masses[0][0], masses[1][0] ]
         if "THSCPM6" in filename:
@@ -540,8 +547,10 @@ class ValidationPlot():
                 ## still get the masses from the slhafile name
                 xy = self.getXYFromSLHAFileName ( slhafile )
                 ## log also the errors in the py file
-                axes = { 'x': xy[0], 'y': xy[1] }
-                Dict = { 'slhafile': slhafile, 'error': 'no results', 'axes': axes }
+                Dict = { 'slhafile': slhafile, 'error': 'no results' }
+                if xy !=None:
+                    axes = { 'x': xy[0], 'y': xy[1] }
+                    Dict['axes'] = axes
                 self.data.append ( Dict )
                 continue
             res = smodelsOutput['ExptRes']
