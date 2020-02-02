@@ -454,9 +454,9 @@ class ValidationPlot():
         """
         masses = self.getMassesFromSLHAFileName ( filename )
         if ".5" in self.axes:
-            if len(masses[0])>2 and abs(masses[0][0]+masses[0][2]-2*masses[0][1])<1.:
+            if len(masses[0])>2 and abs(masses[0][0]+masses[0][2]-2*masses[0][1])<1.1:
                 masses[0][1] = (masses[0][0]+masses[0][2])/2. ## fix rounding in file name
-            if len(masses[1])>2 and abs(masses[1][0]+masses[1][2]-2*masses[1][1])<1.:
+            if len(masses[1])>2 and abs(masses[1][0]+masses[1][2]-2*masses[1][1])<1.1:
                 masses[1][1] = (masses[1][0]+masses[1][2])/2. ## fix rounding in file name
         ret = [ masses[0][0], masses[0][1] ]
         massPlane = MassPlane.fromString(self.txName,self.axes)
