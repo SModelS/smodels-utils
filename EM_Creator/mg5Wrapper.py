@@ -275,7 +275,7 @@ def main():
     with open("baking.log","a") as f:
         cmd = ""
         for i,a in enumerate(sys.argv):
-            if i>0 and sys.argv[i-1] == "-m":
+            if i>0 and sys.argv[i-1] in [ "-m", "--masses" ]:
                 a='"%s"' % a
             cmd += a + " "
         cmd = cmd[:-1]
@@ -319,7 +319,7 @@ def main():
     with open("baking.log","a") as f:
         cmd = ""
         for i,a in enumerate(sys.argv):
-            if i>0 and sys.argv[i-1] == "-m":
+            if i>0 and sys.argv[i-1] in [ "-m", "--masses" ]:
                 a='"%s"' % a
             cmd += a + " "
         cmd = cmd[:-1]

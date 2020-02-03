@@ -52,7 +52,6 @@ class emCreator:
         return ret
 
     def getNEvents ( self, masses ):
-        print ( "get number of events for %s" % str(masses) )
         smass = "_".join ( map ( str, masses ) )
         fname = "ma5/ANA_%s_%djet.%s/Output/defaultset/defaultset.saf" % ( self.topo, self.njets, smass ) 
         if not os.path.exists ( fname ):
