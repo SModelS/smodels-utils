@@ -26,7 +26,7 @@ def install_plugins():
     os.unlink ( "install.txt" )
 
 def install():
-    checkDependencies()
+    # checkDependencies()
     if os.path.exists ( "bin/ma5" ):
         return
     print ( "installing ma5 ..." )

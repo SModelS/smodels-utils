@@ -245,7 +245,8 @@ def main():
                              type=str, default="atlas_susy_2016_07" )
     argparser.add_argument ( '-r', '--rerun', help='force rerun, even if there is a summary file already',
                              action="store_true" )
-    mdefault = "(2000,1000,10),(2000,1000,10)"
+    #mdefault = "(2000,1000,10),(2000,1000,10)"
+    mdefault = "(1000,2000,50),'half',(1000,2000,50)"
     argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_lowest, m_highest, delta_m). m_highest and delta_m may be omitted. Keyword "half" (add quotes) is accepted for intermediate masses. [%s]' % mdefault,
                              type=str, default=mdefault )
     args = argparser.parse_args()

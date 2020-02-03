@@ -6,7 +6,8 @@
 
 import subprocess, os, sys
     
-ver="2_6_5"
+# ver="2_6_5"
+ver="2_7_0"
 
 def install_plugins():
     ## use modified installer script
@@ -32,6 +33,8 @@ def install( plugins = True ):
         ## seems like we have an install
         if not os.path.exists ( "HEPTools" ):
             install_plugins()
+        else:
+            print ( "everything seems to be installed. Remove HEPTools or bin/mg5_aMC if you wish to trigger a reinstall" )
         return
     print ( "installing mg5 ..." )
     verdot = ver.replace("_",".")
