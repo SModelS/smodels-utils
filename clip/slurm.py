@@ -194,6 +194,40 @@ def runRegressor( dry_run ):
         return
     subprocess.run ( cmd )
 
+def bake ( recipe, mass, dry_run ):
+    """ bake with the given recipe 
+    :param dry_run: dont do anything, just produce script
+    """
+    with open ( "/mnt/hephy/pheno/ww/git/smodels-utils/clip/bake_template.sh", "rt" ) as f:
+        lines = f.readlines()
+        f.close()
+    with open ( "/mnt/hephy/pheno/ww/git/smodels-utils/clip/bake.sh", "wt" ) as f:
+        for line in lines:
+            args = recipe.replace("@","-")
+            args += ' -m "%s"' % mass
+            f.write ( line.replace("@@ARGS@@", args ) )
+        f.close()
+    with open ( "run_bakery_template.sh", "rt" ) as f:
+        lines = f.readlines()
+        f.close()
+    tmpfile = tempfile.mktemp(prefix="B", suffix=".sh",dir="./" )
+    with open ( tmpfile, "wt" ) as f:
+        for line in lines:
+            f.write ( line.replace ( "@@SCRIPT@@", "bake.sh" ) )
+        f.close()
+    os.chmod( tmpfile, 0o755 ) # 1877 is 0o755
+    cmd = [ "sbatch" ]
+    cmd += [ "--ntasks-per-node", "20" ]
+    cmd += [ tmpfile ]
+    # cmd += [ "./run_bakery.sh" ]
+    print ("[slurm.py] baking %s" % " ".join ( cmd ) )
+    if not dry_run:
+        a=subprocess.run ( cmd )
+        print ( "returned: %s" % a )
+    #cmd = "rm %s" % tmpfile
+    #o = subprocess.getoutput ( cmd )
+    #print ( "[slurm.py] %s %s" % ( cmd, o ) )
+
 def clean_dirs( rundir, clean_all = False ):
     cmd = "rm slurm*out"
     o = subprocess.getoutput ( cmd )
@@ -219,7 +253,14 @@ def main():
     argparser.add_argument ( '-U','--updater', help='run the updater',
                              action="store_true" )
     argparser.add_argument ( '-S', '--scan', nargs="?", 
-                    help='run the scanner on pid, -1 means dont run', type=int, default=-1 )
+                    help='run the scanner on pid, -1 means dont run', 
+                    type=int, default=-1 )
+    argparser.add_argument ( '-b', '--bake', nargs="?", 
+                    help='bake, with the given arguments', 
+                    type=str, default="" )
+    argparser.add_argument ( '-m', '--mass', nargs="?", 
+                    help='bake, mass specification, for baking only', 
+                    type=str, default="" )
     argparser.add_argument ( '--pid2', nargs="?", 
                     help='run the scanner for ss multipliers (pid,pid2), 0 means ignore', 
                     type=int, default=0 )
@@ -256,6 +297,12 @@ def main():
     if args.query:
         queryStats ( rundir )
         return
+    if args.bake != "":
+        if args.bake == "default":
+            args.bake = "@p 20 @t T6WW @b @@copy @n 50000 @a @@maxgap2 80."
+        if args.mass == "default":
+            args.mass = "[(300,1099,25),'half',(200,999,25)]"
+        bake ( args.bake, args.mass, args.dry_run ) 
     if args.clean:
         clean_dirs( rundir, clean_all = False )
         return
@@ -293,7 +340,9 @@ def main():
         else:
             import multiprocessing
             ## nwalkers is the number of jobs per process
-            nwalkers = int ( math.ceil ( nworkers / nprocesses ) )
+            nwalkers = 0
+            if nprocesses > 0:
+                nwalkers = int ( math.ceil ( nworkers / nprocesses ) )
             jobs = []
             #print ( "nworkers", nworkers )
             #print ( "nproceses", nprocesses )
