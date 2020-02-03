@@ -9,7 +9,7 @@ import subprocess, os, sys
 ver="1.7"
 
 def install_plugins():
-    print ( "installing plugins (tail -f /tmp/ma5.install to monitor) ... " )
+    print ( "[make.py] installing plugins (tail -f /tmp/ma5.install to monitor) ... " )
     f=open("install.script","r")
     lines=f.readlines()
     f.close()
@@ -28,6 +28,7 @@ def install_plugins():
 def install():
     # checkDependencies()
     if os.path.exists ( "bin/ma5" ):
+        print ( "[make.py] not installing ma5: bin/ma5 exists" )
         return
     print ( "installing ma5 ..." )
     url="https://smodels.github.io/downloads/tarballs/"
@@ -84,3 +85,4 @@ if __name__ == "__main__":
         install_plugins()
         sys.exit()
     install()
+    install_plugins()

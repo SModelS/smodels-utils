@@ -34,7 +34,7 @@ def install( plugins = True ):
         if not os.path.exists ( "HEPTools" ):
             install_plugins()
         else:
-            print ( "everything seems to be installed. Remove HEPTools or bin/mg5_aMC if you wish to trigger a reinstall" )
+            print ( "[make.py] everything seems to be installed. Remove HEPTools or bin/mg5_aMC if you wish to trigger a reinstall" )
         return
     print ( "installing mg5 ..." )
     verdot = ver.replace("_",".")

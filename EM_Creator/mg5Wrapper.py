@@ -261,7 +261,7 @@ def main():
         print ( "Cleaned temporary files." )
         sys.exit()
     if args.clean_all:
-        subprocess.getoutput ( "rm -rf mg5cmd* mg5proc* tmp*slha T*jet* run*card ma5/ANA_T*" )
+        subprocess.getoutput ( "rm -rf mg5cmd* mg5proc* tmp*slha T*jet* run*card ma5/ANA_T* ma5_T* ma5.template/recast* ma5.template/ma5cmd*" )
         print ( "Cleaned temporary files." )
         sys.exit()
     hname = socket.gethostname()
@@ -271,7 +271,7 @@ def main():
         cmd = ""
         for i,a in enumerate(sys.argv):
             if i>0 and sys.argv[i-1] == "-m":
-                a="'%s'" % a
+                a='"%s"' % a
             cmd += a + " "
         cmd = cmd[:-1]
         f.write ( "[%s] %s: started: %s\n" % ( hname, time.asctime(), cmd ) )
@@ -315,7 +315,7 @@ def main():
         cmd = ""
         for i,a in enumerate(sys.argv):
             if i>0 and sys.argv[i-1] == "-m":
-                a="'%s'" % a
+                a='"%s"' % a
             cmd += a + " "
         cmd = cmd[:-1]
         f.write ( "[%s] %s: ended: %s\n" % ( hname, time.asctime(), cmd ) )
