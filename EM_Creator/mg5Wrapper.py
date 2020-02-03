@@ -243,6 +243,8 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '--analyses', help='analyses, comma separated [atlas_sus_2016_07]',
                              type=str, default="atlas_susy_2016_07" )
+    argparser.add_argument ( '--maxgap2', help='maximum mass gap between second and third, to force offshell [None]',
+                             type=float, default=None )
     argparser.add_argument ( '-r', '--rerun', help='force rerun, even if there is a summary file already',
                              action="store_true" )
     #mdefault = "(2000,1000,10),(2000,1000,10)"
@@ -259,7 +261,7 @@ def main():
         print ( "Cleaned temporary files." )
         sys.exit()
     if args.clean_all:
-        subprocess.getoutput ( "rm -rf mg5cmd* mg5proc* tmp*slha T*jet* run*card" )
+        subprocess.getoutput ( "rm -rf mg5cmd* mg5proc* tmp*slha T*jet* run*card ma5/ANA_T*" )
         print ( "Cleaned temporary files." )
         sys.exit()
     hname = socket.gethostname()
@@ -277,7 +279,8 @@ def main():
     keepOrder=True
     if args.topo == "TGQ":
         keepOrder=False
-    masses = bakeryHelpers.parseMasses ( args.masses, filterOrder=keepOrder )
+    masses = bakeryHelpers.parseMasses ( args.masses, filterOrder=keepOrder, 
+                                         maxgap2=args.maxgap2 )
     nm = len(masses)
     if nReqM != len(masses[0]):
         print ( "Error: you gave %d masses, but %d are required for %s." % \

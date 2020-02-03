@@ -16,11 +16,13 @@ def dirName ( process, masses ):
     """ the name of the directory of one process + masses """
     return process + "." + "_".join(map(str,masses))
 
-def parseMasses ( massstring, filterOrder=True ):
+def parseMasses ( massstring, filterOrder=True, maxgap2=None ):
     """ parse the mass string, e.g. (500,510,10),(100,110,10). keywords like "half" are
         accepted.
     :param filterOrder: if true, discard vectors with daughters more massive than their
                            mothers.
+    :param maxgap2: max mass gap between second and third particle, ignore if None.
+                    this is meant to force offshellness
     :returns: a list of all model points. E.g. [ (500,100),(510,100),(500,110),(510,110)].
     """
     try:
@@ -81,7 +83,21 @@ def parseMasses ( massstring, filterOrder=True ):
                     if filterOrder and lists[2][z] > lists[1][y]:
                         continue
                     ret.append ( (int(lists[0][x]),int(lists[1][y]),int(lists[2][z])) )
+    ret = filterForMaxgap ( ret, maxgap2 )
     print ( "masses", ret )
+    return ret
+
+def filterForMaxgap ( masses, maxgap2 ):
+    """ filter out tuples for which maxgap2 is exceeded betwen second and third particle
+    """
+    if maxgap2 == None:
+        return masses
+    if len(masses[0])<3:
+        return masses
+    ret = []
+    for t in masses:
+        if t[1] < t[2]+maxgap2:
+            ret.append ( t )
     return ret
 
 def nJobs ( nproc, npoints ):
