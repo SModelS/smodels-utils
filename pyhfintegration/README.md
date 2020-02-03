@@ -42,4 +42,3 @@ mu bounds problem solved (that was why region B was crashing) : now the upper mu
 # Replace the data yields with new BSM predictions
 
 Tried to combine regions A, B and C but doesn't work, keeping that for later
-
