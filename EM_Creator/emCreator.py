@@ -125,10 +125,14 @@ class emCreator:
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
 
 def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
+    if masses == "all":
+        masses = bakeryHelpers.getListOfMasses ( topo, njets, postMA5=True )
+    else:
+        masses = bakeryHelpers.parseMasses ( masses )
     creator = emCreator( analyses, topo, njets )
     effs={}
     if verbose:
-        print ( "%d mass points considered" % len(masses) )
+        print ( "[emCreator] topo %s: %d mass points considered" % ( topo, len(masses) ) )
     for m in masses:
         eff = creator.extract( m )
         for k,v in eff.items():
