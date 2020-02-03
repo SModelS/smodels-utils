@@ -124,14 +124,10 @@ class emCreator:
             return
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
 
-def run ( args ):
-    if args.masses == "all":
-        masses = bakeryHelpers.getListOfMasses ( args.topo, args.njets, postMA5=True )
-    else:
-        masses = bakeryHelpers.parseMasses ( args.masses )
-    creator = emCreator( args.analyses, args.topo, args.njets )
+def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
+    creator = emCreator( analyses, topo, njets )
     effs={}
-    if args.verbose:
+    if verbose:
         print ( "%d mass points considered" % len(masses) )
     for m in masses:
         eff = creator.extract( m )
@@ -146,7 +142,7 @@ def run ( args ):
     for ana,values in effs.items():
         if len(values.keys()) == 0:
             continue
-        fname = "%s.%s.embaked" % (ana, args.topo )
+        fname = "%s.%s.embaked" % (ana, topo )
         print ( "baking %s: %d points." % ( fname, len(values) ) )
         SRs = set()
         for k,v in values.items():
@@ -173,8 +169,8 @@ def run ( args ):
         # print ( "Statistics for", ana, ":", stats )
         print ( "Obtained statistics for", ana, "in", fname )
 
-        if args.copy and os.path.exists (Dirname):
-            dest = "%s/%s.embaked" % ( Dirname, args.topo )
+        if copy and os.path.exists (Dirname):
+            dest = "%s/%s.embaked" % ( Dirname, topo )
             prevN = 0
             if os.path.exists (dest ):
                 f=open(dest,"r")
@@ -191,13 +187,31 @@ def run ( args ):
             f.close()
             print ( "Wrote stats to %s" % statsfile )
 
+def getAllTopos ( ):
+    import glob
+    files = glob.glob ( "T*jet.*" )
+    ret = set()
+    for f in files:
+        tokens = f.split("_")
+        ret.add( tokens[0] )
+    return ret
+
+def run ( args ):
+    if args.topo == "all":
+        for topo in getAllTopos():
+            runForTopo ( topo, args.njets, args.masses, args.analyses, args.verbose,
+                         args.copy )
+    else:
+        runForTopo ( args.topo, args.njets, args.masses, args.analyses, args.verbose,
+                     args.copy )
+
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description='efficiency map extractor.')
     argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
                              type=int, default=1 )
-    argparser.add_argument ( '-t', '--topo', help='topology [T2]',
-                             type=str, default="T2" )
+    argparser.add_argument ( '-t', '--topo', help='topology, all means all you can find [all]',
+                             type=str, default="all" )
     argparser.add_argument ( '-v', '--verbose', help='be verbose',
                              action="store_true" )
     argparser.add_argument ( '-c', '--copy', help='copy embaked file to smodels-database',
