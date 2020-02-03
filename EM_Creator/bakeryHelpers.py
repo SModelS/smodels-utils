@@ -97,6 +97,15 @@ def filterForMaxgap ( masses, maxgap2 ):
             ret.append ( t )
     return ret
 
+def listAnalyses ( ):
+    """ list the analyses that are available in MA5 """
+    import glob
+    dname = "ma5/tools/PAD/Build/"
+    files = glob.glob ( "%s*.saf" % dname )
+    print ( "List of analyses:" )
+    for f in files:
+        print  ( "  %s" % f.replace(".saf","").replace(dname,"") )
+
 def nJobs ( nproc, npoints ):
     """ determine the number of jobs we should run, given nproc is
         the user's input for number of processes, and npoints is the number

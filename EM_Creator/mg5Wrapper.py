@@ -241,6 +241,8 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '--copy', help='copy embaked file to smodels-database',
                              action="store_true" )
+    argparser.add_argument ( '-l', '--list_analyses', help='print a list of MA5 analyses, then quit',
+                             action="store_true" )
     argparser.add_argument ( '--analyses', help='analyses, comma separated [atlas_sus_2016_07]',
                              type=str, default="atlas_susy_2016_07" )
     argparser.add_argument ( '--maxgap2', help='maximum mass gap between second and third, to force offshell [None]',
@@ -252,6 +254,9 @@ def main():
     argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_lowest, m_highest, delta_m). m_highest and delta_m may be omitted. Keyword "half" (add quotes) is accepted for intermediate masses. [%s]' % mdefault,
                              type=str, default=mdefault )
     args = argparser.parse_args()
+    if args.list_analyses:
+        bakeryHelpers.listAnalyses()
+        sys.exit()
     if args.show:
         import printProdStats
         printProdStats.main()
