@@ -51,7 +51,30 @@ class emCreator:
             ret[Id]=signal
         return ret
 
+    def getNEvents ( self, masses ):
+        print ( "get number of events for %s" % str(masses) )
+        smass = "_".join ( map ( str, masses ) )
+        fname = "ma5/ANA_%s_%djet.%s/Output/defaultset/defaultset.saf" % ( self.topo, self.njets, smass ) 
+        if not os.path.exists ( fname ):
+            print ( "[emCreator.py] %s does not exist, cannot report correct number of events" % fname )
+            return -2
+        with open ( fname, "rt" ) as f:
+            lines=f.readlines()
+            f.close()
+
+        for ctr,line in enumerate(lines):
+            if "nevents" in line:
+                tokens = lines[ctr+1].split()
+                if len(tokens)<3:
+                    print ( "[emCreator.py] I get confused with %s, cannot report correct number of events" % fname )
+                    return -3
+                return int(tokens[2])
+
+        # ma5/ANA_T6WW_1jet.400_375_350/Output/
+        return -1
+
     def extract ( self, masses ):
+        """ extract the efficiencies from MA5 """
         topo = self.topo
         njets = self.njets
         process = "%s_%djet" % ( topo, njets )
@@ -133,6 +156,8 @@ def run ( args ):
         # f.write ( "%s\n" % values )
         f.write ( "{" )
         for k,v in values.items():
+            v["__t__"]=time.asctime()
+            v["__nevents__"]=creator.getNEvents ( k )
             f.write ( "%s: %s, \n" % ( k,v ) )
         f.write ( "}\n" )
         f.close()
