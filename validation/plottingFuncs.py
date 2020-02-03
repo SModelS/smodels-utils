@@ -1208,7 +1208,7 @@ def setOptions(obj,Type=None):
         obj.SetMarkerColor(kGreen)
     elif Type == 'gridpoints':
         obj.SetMarkerStyle(28)
-        obj.SetMarkerSize(0.6)
+        obj.SetMarkerSize(0.15)
         obj.SetMarkerColor(kBlue)
     elif Type == 'noresult':
         obj.SetMarkerStyle(20)
