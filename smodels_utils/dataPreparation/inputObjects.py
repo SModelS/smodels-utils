@@ -47,7 +47,8 @@ def getSignalRegionsEMBaked ( filename ):
     f.close()
     for v in values:
         for k in v:
-            ret.add(k)
+            if not k.startswith("__"):
+                ret.add(k)
     return ret
 
 def getStatsEMBaked ( ):
