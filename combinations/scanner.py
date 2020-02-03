@@ -6,14 +6,15 @@ import numpy, sys, os, copy, time
 from csetup import setup
 from manipulator import Manipulator
 
-def getHiscore( force_copy = False, pids="" ):
+def getHiscore( force_copy = False ):
     """ get the hiscore from the picklefile
     :param force_copy: if True, force a cp command on the pickle file
     """
     import hiscore
     rundir = setup()
-    spids = str(pids).replace("[","").replace("]","").replace(" ","").replace(",","").replace("0","")
-    picklefile =rundir + "hiscoreCopy.pcl" # % spids
+    # spids = str(pids).replace("[","").replace("]","").replace(" ","").replace(",","").replace("0","")
+    picklefile =rundir + "hiscore2.pcl" # % spids
+    # picklefile =rundir + "hiscore.pcl" # % spids
     ## do this always
     if force_copy or (not os.path.exists ( picklefile )):
         cmd = "cp %s %s" % ( rundir+"hiscore.pcl", picklefile )
@@ -169,6 +170,7 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
         pickle.dump ( Zs, f )
         pickle.dump ( mass, f )
         pickle.dump ( nevents, f )
+        pickle.dump ( time.asctime(), f )
         f.close()
 
 def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
@@ -221,6 +223,7 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
         pickle.dump ( Zs, f )
         pickle.dump ( ssm, f )
         pickle.dump ( nevents, f )
+        pickle.dump ( time.asctime(), f )
         f.close()
 
 def draw( pid= 1000022, interactive=False, pid2=0 ):
@@ -349,7 +352,7 @@ if __name__ == "__main__":
     if pids == 0:
         pids = allpids
     if args.produce:
-        hi = getHiscore( args.force_copy, pids )
+        hi = getHiscore( args.force_copy )
         if args.pid2 > 0:
             produceSSMs( hi, args.pid, args.pid2, args.nevents, args.dry_run, args.nproc, args.factor )
         else:

@@ -43,7 +43,7 @@ class MA5Wrapper:
         print ( "[ma5Wrapper] %s" % " ".join ( msg ) )
 
     def error ( self, *msg ):
-        print ( "%s[ma5Wrapper] %s%s" % ( colorama.Fore.RED, " ".join ( msg ), \
+        print ( "%s[ma5Wrapper] Error: %s%s" % ( colorama.Fore.RED, " ".join ( msg ), \
                    colorama.Fore.RESET ) )
         sys.exit()
 
@@ -97,9 +97,9 @@ class MA5Wrapper:
         hepmcfile = "%s/Events/run_01/tag_1_pythia8_events.hepmc.gz" % Dir
         hepmcfile = os.path.abspath ( hepmcfile )
         if not os.path.exists ( hepmcfile ):
-            print ( "Error cannot find hepmc file at %s" % hepmcfile )
+            self.error ( "cannot find hepmc file at %s" % hepmcfile )
             sys.exit()
-        print ( "Found hepmcfile at", hepmcfile )
+        self.msg ( "Found hepmcfile at", hepmcfile )
         self.writeCommandFile( hepmcfile, process, masses )
         tempdir = "ma5_%s" % Dir
         a=subprocess.getoutput ( "mkdir %s" % tempdir )

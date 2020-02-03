@@ -24,7 +24,7 @@ class ProtoModel:
         """ for a given pid, do i also have to consider its antiparticle
             -pid in the signal strength multipliers? """
         if pid in [ 1000021, 1000022, 1000023, 1000025, 1000035, 1000012, 
-                    1000014, 1000016, 2000012, 2000014, 2000016 ]:
+                    1000014, 1000016, 2000012, 2000014, 2000016, 2000021 ]:
             return False
         return True
 
@@ -74,6 +74,10 @@ class ProtoModel:
                       2000005, 2000006, 1000011, 1000012, 1000013, 1000014, 1000015,
                       1000016, 1000021, 1000022, 1000023, 1000025, 1000024, 1000037 ]
             self.templateSLHA = "template.slha"
+            if False:
+                self.particles.append ( 2000021 )
+                self.particles.append ( 3000006 )
+                self.templateSLHA = "template2g.slha"
             # self.templateSLHA = "template_many.slha"
         self.templateSLHA = os.path.join ( os.path.dirname ( __file__ ), self.templateSLHA )
         self.possibledecays = {} ## list all possible decay channels

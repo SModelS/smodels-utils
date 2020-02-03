@@ -139,7 +139,10 @@ def run ( args ):
             if not k in effs:
                 effs[k]={}
             effs[k][m]=v
-    print ( "I have efficiencies for %s" % ",".join(list(effs.keys())) )
+    seffs = ",".join(list(effs.keys()))
+    if seffs == "":
+        seffs = "none"
+    print ( "[emCreator] I have efficiencies for %s" % seffs )
     for ana,values in effs.items():
         if len(values.keys()) == 0:
             continue

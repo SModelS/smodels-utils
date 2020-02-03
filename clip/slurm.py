@@ -217,7 +217,7 @@ def bake ( recipe, mass, dry_run ):
         f.close()
     os.chmod( tmpfile, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch" ]
-    cmd += [ "--ntasks-per-node", "20" ]
+    cmd += [ "--ntasks-per-node", "10" ]
     cmd += [ tmpfile ]
     # cmd += [ "./run_bakery.sh" ]
     print ("[slurm.py] baking %s" % " ".join ( cmd ) )
@@ -299,7 +299,7 @@ def main():
         return
     if args.bake != "":
         if args.bake == "default":
-            args.bake = "@p 20 @t T6WW @b @@copy @n 50000 @a @@maxgap2 80."
+            args.bake = "@p 10 @t T6WW @b @@copy @n 50000 @a @@maxgap2 80."
         if args.mass == "default":
             args.mass = "[(300,1099,25),'half',(200,999,25)]"
         bake ( args.bake, args.mass, args.dry_run ) 

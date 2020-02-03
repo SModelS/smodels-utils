@@ -104,7 +104,7 @@ class Hiscore:
         try:
             with open( self.pickleFile,"rb+") as f:
                 try:
-                    fcntl.flock ( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
+                    #fcntl.flock ( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
                     self.hiscores = pickle.load ( f )
                     self.trimmed = pickle.load ( f )
                     self.timestamp = "?"
@@ -112,10 +112,11 @@ class Hiscore:
                         self.timestamp = pickle.load ( f )
                     except EOFError as e:
                         pass
-                    fcntl.flock ( f, fcntl.LOCK_UN )
+                    #fcntl.flock ( f, fcntl.LOCK_UN )
+                    f.close()
                 except (BlockingIOError,OSError) as e:
                     ## make sure we dont block!
-                    fcntl.flock( f, fcntl.LOCK_UN )
+                    #fcntl.flock( f, fcntl.LOCK_UN )
                     raise e
             self.mtime = mtime
             nhs, ntr = 0, 0
@@ -191,6 +192,7 @@ class Hiscore:
                 pickle.dump ( self.trimmed, f )
                 pickle.dump ( time.asctime(), f )
                 fcntl.flock ( f, fcntl.LOCK_UN )
+                f.close()
             self.mtime = os.stat ( self.pickleFile ).st_mtime
             self.fileAttempts=0
             return True
@@ -250,7 +252,7 @@ def compileList( nmax ):
         print ( s, end="", flush=True )
         try:
             with open( fname,"rb+") as f:
-                fcntl.flock( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
+                #fcntl.flock( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
                 protomodels = pickle.load ( f )
                 trimmed = pickle.load ( f )
                 timestamp = "?"
@@ -258,8 +260,9 @@ def compileList( nmax ):
                     timestamp = pickle.load(f)
                 except EOFError as e:
                     pass
-                fcntl.flock( f, fcntl.LOCK_UN )
+                #fcntl.flock( f, fcntl.LOCK_UN )
                 ## add protomodels, but without the Nones
+                f.close()
                 allprotomodels += list ( filter ( None.__ne__, protomodels ) )
                 alltrimmed += list ( filter ( None.__ne__, trimmed ) )
                 allprotomodels = sortByZ ( allprotomodels )
@@ -366,7 +369,7 @@ def main ( args ):
     else:
         with open(infile,"rb+") as f:
             try:
-                fcntl.flock( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
+                #fcntl.flock( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
                 protomodels = pickle.load ( f )
                 trimmed = pickle.load ( f )
                 timestamp="?"
@@ -374,12 +377,13 @@ def main ( args ):
                     timestamp = pickle.load ( f )
                 except EOFError as e:
                     pass
+                f.close()
             except (BlockingIOError,OSError) as e:
                 print ( "file handling error on %s: %s" % ( infile, e ) )
                 ## make sure we dont block!
-                fcntl.flock( f, fcntl.LOCK_UN )
+                #fcntl.flock( f, fcntl.LOCK_UN )
                 raise e
-            fcntl.flock( f, fcntl.LOCK_UN )
+            #fcntl.flock( f, fcntl.LOCK_UN )
 
     if protomodels[0] == None:
         print ( "[hiscore] error, we have an empty hiscore list" )
