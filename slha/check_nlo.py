@@ -10,15 +10,20 @@ import pyslha
 import IPython
 import math
 
-def process ( files, pretend ):
+def process ( files, pretend, ssmultipliers, pythia ):
+    """ process the files, i.e. compute xsecs for them 
+    :param ssmultipliers: filter on signal strength multipliers
+                          used mostly to turn off certain production channels
+    :param pythia: pythia version to use (6 or 8)
+    """
     total = len (files)
     not_lo, not_nlo, not_13 = 0, 0, 0
-    ssmultipliers = ""
+    ssms = ""
     ## for thscpm6
-    if True:
+    if ssmultipliers not in [ None, "", "None", "none" ]:
         ## suppress everything but ( '*200000?', '*100000?' )
-        D = { ('*1000022', '*' ): 0., ('*1000023', '*' ): 0. }
-        ssmultipliers = ' --ssmultipliers "%s" ' % str(D)
+        # D = { ('*1000022', '*' ): 0., ('*1000023', '*' ): 0. }
+        ssms = ' --ssmultipliers "%s" ' % str(ssmultipliers)
         # print ( "ssm", ssmultipliers )
     for f in files:
         has_lo  = False
@@ -35,10 +40,11 @@ def process ( files, pretend ):
                     has_lo = True
                 if "NL" in order:
                     has_nlo=True
+        xsecc = "~/git/smodels/smodelsTools.py xseccomputer"
         if not has_nlo:
             if not has_lo:
                 print ( "%s has neither LO nor NLO" % f )
-                cmd = "~/git/smodels/smodelsTools.py xseccomputer -e 50000 -N -P -8 %s -f %s" % ( ssmultipliers, f )
+                cmd = "%s -e 50000 -N -P -%d %s -f %s" % ( xsecc, pythia, ssms, f )
                 if pretend:
                     pass
                 else:
@@ -48,7 +54,7 @@ def process ( files, pretend ):
                 not_lo += 1
             else:
                 print  ("%s has only LO" % f )
-                cmd = "~/git/smodels/smodelsTools.py xseccomputer -e 50000 -N -P -8 -O -f %s" % f
+                cmd = "%s -e 50000 -N -P -%d -O -f %s" % ( xsecc, pythia, f )
                 if pretend:
                     pass
                 else:
@@ -58,7 +64,7 @@ def process ( files, pretend ):
                 not_nlo += 1
         if not has_13:
             print ( "%s has not sqrts 13 " % f )
-            cmd = "~/git/smodels/smodelsTools.py xseccomputer -e 50000 -N -P -8 %s -f %s" % ( ssmultipliers, f )
+            cmd = "%s -e 50000 -N -P -%d %s -f %s" % ( xsecc, pythia, ssms, f )
             if pretend:
                 pass
             else:
@@ -75,15 +81,29 @@ def process ( files, pretend ):
 def main():
     import argparse, multiprocessing
     argparser = argparse.ArgumentParser()
-
     argparser.add_argument('-f', '--files', 
                            help = 'file pattern to glob [T*.slha]',
                            type=str,default = "T*.slha" )
+    argparser.add_argument('-P', '--pythia', 
+                           help = 'pythia version to use [6]',
+                           type=int, default = 6 )
+    argparser.add_argument('-s', '--ssmultipliers', 
+                           help = 'supply a filter for signal strengths [None]',
+                           type=str, default = None )
     argparser.add_argument('-p', '--pretend', help="pretend, dry-run",
+                           action="store_true" )
+    argparser.add_argument('-l', '--list_ssms', help="list useful ssm filters, then quit",
                            action="store_true" )
     argparser.add_argument('-n', '--nprocesses', help="number of processes [1]",
                            type=int, default = 1 )
     args = argparser.parse_args()
+    if args.list_ssms:
+        print ( "Some sensible -s arguments" )
+        print ( "No neutralino production" )
+        print ( "{ ('*1000022', '*' ): 0., ('*1000023', '*' ): 0. }" )
+        print ( "No weakino production" )
+        print ( "{ ('*100002?', '*' ): 0. }" )
+        sys.exit()
     pretend = False
     pat = "T*slha"
     pretend = args.pretend
@@ -94,14 +114,14 @@ def main():
     random.shuffle ( files )
 
     if args.nprocesses == 1: ## multiprocess
-        process ( files, pretend )
+        process ( files, pretend, args.ssmultipliers, args.pythia )
         return
     p = multiprocessing.Pool ( args.nprocesses )
     ps = []
     delta = int(math.ceil(len(files)/args.nprocesses))
     for i in range(args.nprocesses):
         chunk = files[delta*i:delta*(i+1)]
-        p=multiprocessing.Process(target=process, args=(chunk,pretend) )
+        p=multiprocessing.Process(target=process, args=(chunk,pretend,args.ssmultipliers,args.pythia) )
         p.start()
         ps.append ( p )
     for p in ps:
