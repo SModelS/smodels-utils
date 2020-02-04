@@ -1,7 +1,7 @@
 all: .PHONY
 
 install_mg5:
-	wget https://smodels.github.io/downloads/tarballs/mg5.tar.gz
+	wget http://www.hephy.at/user/wwaltenberger/dist/mg5.tar.gz
 	rm -rf mg5.old
 	mv -f mg5 mg5.old
 	tar xzvf mg5.tar.gz 

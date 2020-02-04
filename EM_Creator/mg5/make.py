@@ -47,13 +47,17 @@ def install( plugins = True ):
             print ( "download failed: %s" % a )
             sys.exit()
     cmd = "tar xzvf %s" % tarball
-    subprocess.getoutput ( cmd )
-    cmd = "mv MG5_aMC_v%s/* ."  % ver
-    subprocess.getoutput ( cmd )
-    cmd = "rmdir MG5_aMC_v%s" % ver
-    subprocess.getoutput ( cmd )
+    print ( "[make.py] %s" % cmd )
+    out = subprocess.getoutput ( cmd )
+    cmd = "cp -r MG5_aMC_v%s/* ." % ver
+    print ( "[make.py] %s" % cmd )
+    out = subprocess.getoutput ( cmd )
+    cmd = "rm -r MG5_aMC_v%s" % ver
+    print ( "[make.py] %s" % cmd )
+    out =subprocess.getoutput ( cmd )
+    print ( "[make.py] %s" % out )
     if not os.path.exists ( "bin/mg5_aMC" ):
-        print ( "something went wrong with the install. please check manually" )
+        print ( "something went wrong with the install, there is no bin/mg5_aMC. please check manually" )
         sys.exit()
     if plugins:
         install_plugins()
