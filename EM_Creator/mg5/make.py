@@ -6,7 +6,7 @@
 
 import subprocess, os, sys
     
-# ver="2_6_5"
+ver="2_6_5"
 ver="2_7_0"
 
 def install_plugins():

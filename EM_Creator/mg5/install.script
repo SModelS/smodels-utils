@@ -1,6 +1,6 @@
 # install zlib
 install hepmc
-install lhapdf5
+install lhapdf6
 install boost
 install pythia8
 #install Delphes
