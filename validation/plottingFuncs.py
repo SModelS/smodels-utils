@@ -1221,7 +1221,7 @@ def setOptions(obj,Type=None):
         if ngpoints < 50:
             markersize = .9
         obj.SetMarkerSize(markersize)
-        obj.SetMarkerColor(kBlue)
+        obj.SetMarkerColorAlpha(kBlue,.5)
     elif Type == 'noresult':
         obj.SetMarkerStyle(20)
         obj.SetMarkerSize(.5)
