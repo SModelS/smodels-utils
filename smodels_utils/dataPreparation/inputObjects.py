@@ -737,7 +737,7 @@ class TxNameInput(Locker):
                         hasNone = True
                 if hasNone and len(myInfoList)==0:
                     myInfoList = [ "None" ]
-                infoStr = ";".join(myInfoList) ## old version
+                infoStr = ";".join(set(myInfoList)) ## old version
                 setattr(self,infoAttr,infoStr)
 
         if not hasattr(self,'validated'):
