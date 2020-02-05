@@ -538,7 +538,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     for ctr,coords in enumerate(origdata):
         #masses = removeUnits ( pt[0], standardUnits=GeV )
         #coords = massPlane.getXYValues(masses)
-        if coords != None:
+        if coords != None and "y" in coords:
             gridpoints.SetPoint( gridpoints.GetN(), coords["x"], coords["y"] )
 
     if countPts == 0:
