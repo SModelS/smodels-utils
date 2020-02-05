@@ -1208,12 +1208,14 @@ def setOptions(obj,Type=None):
         obj.SetMarkerColor(kGreen)
     elif Type == 'gridpoints':
         obj.SetMarkerStyle(28)
-        markersize=.15 ## super small for > 1000
+        markersize=.1 ## super small for > 155555
         ngpoints = obj.GetN()
+        if ngpoints < 1500:
+            markersize = .15
         if ngpoints < 1000:
-            markersize = .3
+            markersize = .25
         if ngpoints < 500:
-            markersize = .5
+            markersize = .45
         if ngpoints < 150:
             markersize = .7
         if ngpoints < 50:
