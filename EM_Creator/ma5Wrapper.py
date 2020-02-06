@@ -13,12 +13,13 @@ import multiprocessing
 import bakeryHelpers
 
 class MA5Wrapper:
-    def __init__ ( self, topo, njets, rerun, ver="1.7" ):
+    def __init__ ( self, topo, njets, rerun, analyses, ver="1.7" ):
         """
         :param ver: version of ma5
         """
         self.topo = topo
         self.njets = njets
+        self.analyses = analyses
         self.rerun = rerun
         self.ma5results = "./ma5/"
         self.ma5install = "./ma5.template/"
@@ -59,6 +60,16 @@ class MA5Wrapper:
             self.error ( "cannot find %s" % templatefile )
         ## for now simply copy the recasting card
         shutil.copy ( templatefile, filename )
+        f = open ( filename, "at" )
+        recastcard = { "atlas_susy_2016_07": "delphes_card_atlas_exot_2015_03" }
+        recastcard["cms_sus_16_033"] = "delphes_card_cms_sus_16_033"
+        anas = set(self.analyses.split(","))
+        versions = { "atlas_susy_2016_07": "1.7", 
+                     "cms_sus_16_033": "1.7" }
+        for i in anas:
+            print ( "[ma5Wrapper] writing %s in recast card %s" % ( i, templatefile ) )
+            f.write ( "%s v%s        on    %s.tcl\n" % ( i, versions[i], recastcard[i] ) )
+        f.close()
         self.info ( "wrote recasting card %s" % filename )
 
     def unlink ( self, f ):
@@ -170,11 +181,11 @@ if __name__ == "__main__":
                              action="store_true" )
     args = argparser.parse_args()
     if args.clean:
-        ma5 = MA5Wrapper( args.topo, args.njets, args.rerun )
+        ma5 = MA5Wrapper( args.topo, args.njets, args.rerun, args.analyses )
         ma5.clean()
         sys.exit()
     if args.clean_all:
-        ma5 = MA5Wrapper( args.topo, args.njets, args.rerun )
+        ma5 = MA5Wrapper( args.topo, args.njets, args.rerun, args.analyses )
         ma5.clean_all()
         sys.exit()
     if args.masses == "all":
@@ -183,7 +194,7 @@ if __name__ == "__main__":
         masses = bakeryHelpers.parseMasses ( args.masses )
     nm = len(masses)
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
-    ma5 = MA5Wrapper( args.topo, args.njets, args.rerun )
+    ma5 = MA5Wrapper( args.topo, args.njets, args.rerun, args.analyses )
     # ma5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
     djobs = int(len(masses)/nprocesses)
 

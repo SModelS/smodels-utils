@@ -105,7 +105,7 @@ class MG5Wrapper:
             f.write ( line )
         f.close()
 
-    def run( self, masses, pid=None ):
+    def run( self, masses, analyses, pid=None ):
         """ Run MG5 for topo, with njets additional ISR jets, giving
         also the masses as a list.
         """
@@ -120,14 +120,14 @@ class MG5Wrapper:
         # then run madgraph5
         self.execute ( self.slhafile, masses )
         self.unlink ( self.slhafile )
-        self.runMA5 ( masses )
+        self.runMA5 ( masses, analyses )
 
-    def runMA5 ( self, masses ):
+    def runMA5 ( self, masses, analyses ):
         """ run ma5, if desired """
         if not self.ma5:
             return
         from ma5Wrapper import MA5Wrapper
-        ma5 = MA5Wrapper ( self.topo, self.njets, self.rerun )
+        ma5 = MA5Wrapper ( self.topo, self.njets, self.rerun, analyses )
         print ( "[mg5Wrapper] now call ma5Wrapper" )
         ma5.run ( masses )
 
@@ -298,7 +298,7 @@ def main():
 
     def runChunk ( chunk, pid ):
         for c in chunk:
-            mg5.run ( c, pid )
+            mg5.run ( c, args.analyses, pid )
 
     jobs=[]
     for i in range(nprocesses):
@@ -310,12 +310,13 @@ def main():
         p.start()
     # mg5.run( [ 500, 100 ] )
     if args.bake:
-        from emCreator import run
+        import emCreator
         from types import SimpleNamespace
-        analyses = "atlas_susy_2016_07"
+        # analyses = "atlas_susy_2016_07"
+        analyses = args.analyses
         args = SimpleNamespace ( masses=args.masses, topo=args.topo, njets=args.njets, \
                 analyses = analyses, copy=args.copy, verbose=False )
-        run ( args )
+        emCreator.run ( args )
     with open("baking.log","a") as f:
         cmd = ""
         for i,a in enumerate(sys.argv):
