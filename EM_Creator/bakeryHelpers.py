@@ -100,11 +100,14 @@ def filterForMaxgap ( masses, maxgap2 ):
 def listAnalyses ( ):
     """ list the analyses that are available in MA5 """
     import glob
-    dname = "ma5/tools/PAD/Build/"
-    files = glob.glob ( "%s*.saf" % dname )
+    # dname = "ma5/tools/PAD/Build/"
+    dname = "ma5/tools/PAD/Build/SampleAnalyzer/User/Analyzer/"
+    print ( "[bakeryHelpers] searching for analyses in %s" % dname )
+    files = glob.glob ( "%s/*.cpp" % dname )
+    # files = glob.glob ( "%s*.saf" % dname )
     print ( "List of analyses:" )
     for f in files:
-        print  ( "  %s" % f.replace(".saf","").replace(dname,"") )
+        print  ( "  %s" % f.replace(".saf","").replace(dname,"").replace(".cpp","") )
 
 def nJobs ( nproc, npoints ):
     """ determine the number of jobs we should run, given nproc is
