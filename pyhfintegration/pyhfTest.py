@@ -31,7 +31,7 @@ dir = "/home/alguero/Work/smodels-database"
 d=Database( dir, discard_zeroes = True )
 # print(d)
 results=d.getExpResults()
-massvec = [[220*GeV,1*GeV], [220*GeV,1*GeV]]
+massvec = [[160*GeV,100*GeV], [160*GeV,100*GeV]]
 effs = []
 for e in results:
     # print ( e.globalInfo.id )
@@ -47,5 +47,5 @@ data = PyhfData(effs,
                             lumi,
                             jsoninputs)
 ulcomputer = PyhfUpperLimitComputer(data)
-result = ulcomputer.ulSigma()
+result = ulcomputer.bestUL()
 print("sigma95 = ", result)

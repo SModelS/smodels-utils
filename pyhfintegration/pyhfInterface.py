@@ -9,7 +9,7 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
-
+# [[SRA_L, SRA_M, SRA_H], [SRB], [SRC_22, SRC_24, SRC_26, SRC_28]]
 from __future__ import print_function
 import json
 import jsonpatch
@@ -56,6 +56,12 @@ class PyhfUpperLimitComputer:
         self.scaling = 1.
         
     def rescale(self, scale):
+        """
+        Rescales the signal predictions (self.signals) and processes again the patches and workspaces
+        No return
+        Result:
+            updated list of patches and workspaces (self.patches and self.workspaces)
+        """
         self.nsignals = [sig*scale for sig in self.nsignals]
         self.scaling *= scale 
         logger.debug("Signals : {}".format(self.nsignals))
@@ -66,6 +72,8 @@ class PyhfUpperLimitComputer:
         """
         Method that creates the patches to be applied to the BkgOnly.json workspaces, one for each region
         It seems we need to include the change of the "modifiers" in the patches as well
+        Returns:
+            the list of patches, one for each workspace
         """
         nsignals = self.nsignals
         # Identifying the path of the SR and VR channels in the main workspace files
@@ -111,6 +119,8 @@ class PyhfUpperLimitComputer:
     def wsMaker(self):
         """
         Apply each region patch to his associated json (RegionN/BkgOnly.json) to obtain the complete workspaces
+        Returns:
+            the list of patched workspaces
         """
         if len(self.inputJsons) == 1:
             return [pyhf.Workspace(jsonpatch.apply_patch(self.inputJsons[0], self.patches[0]))]
@@ -124,8 +134,18 @@ class PyhfUpperLimitComputer:
     
     # Trying a new method for upper limit computation : 
     # re-scaling the signal predictions so that mu falls in [0, 10] instead of looking for mu bounds
-    def ulSigma (self, expected=False):
-        workspace = self.cbWorkspace()
+    def ulSigma (self, expected=False, workspace_index=None):
+        """
+        Compute the upper limit on the signal strength modifier with:
+            - by default, the combination of the workspaces contained into self.workspaces
+            - if workspace_index is specified, self.workspace[workspace_index] (useful for computation of the best upper limit)
+        Returns:
+            the upper limit at `self.cl` level (0.95 by default)
+        """
+        if workspace_index != None:
+            workspace = self.workspaces[workspace_index]
+        else:
+            workspace = self.cbWorkspace()
         scaling = 1.
         def root_func(mu):
             logger.info("New call of root_func() with mu = {}".format(mu))
@@ -141,18 +161,20 @@ class PyhfUpperLimitComputer:
             logger.info("1 - CLs : {}".format(1.0 - CLs))
             return 1.0 - self.cl - CLs
         # Scaling the signal prediction
-        def scale_up(cl):
-            # Boolean indicating if the signals need to be scaled up
-            return cl < 0.0 or np.isnan(cl)
-        def scale_dn(cl):
-            # Boolean indicating if the signals need to be scaled down
-            return cl > 0.0 or np.isnan(cl)
-        while scale_up(root_func(10.)):
+        while root_func(10.) < 0.0:
+            # Scaling up the signals and updating the workspace
             self.rescale(10.)
-            workspace = self.cbWorkspace()
-        while scale_dn(root_func(1.)):
+            if workspace_index != None:
+                workspace = self.workspaces[workspace_index]
+            else:
+                workspace = self.cbWorkspace()
+        while root_func(1.) > 0.0:
+            # Scaling down the signals and updating the workspace
             self.rescale(0.1)
-            workspace = self.cbWorkspace()
+            if workspace_index != None:
+                workspace = self.workspaces[workspace_index]
+            else:
+                workspace = self.cbWorkspace()
         # Finding the root (Brent bracketing part)
         logger.info("Final scaling : {}".format(scaling))
         hi_mu = 10.
@@ -193,19 +215,19 @@ class PyhfUpperLimitComputer:
         # ul = optimize.brentq(root_func, lo_mu, hi_mu, rtol=1e-3, xtol=1e-3)
         # return ul
 
-    def bestExpWorkspace(self):
+    def bestUL(self):
         """
         Computing the upper limit on the signal strength modifier in the expected hypothesis for each workspace
         Picking the most sensitive, i.e., the one having the biggest r-value in the expected case (r-value = 1/mu)
         """
         rMax = 0.0
-        for ws in self.workspaces:
-            r = 1/self.ulSigma(ws, expected=True)
+        for i_ws in range(len(self.workspaces)):
+            r = 1/self.ulSigma(expected=True, workspace_index=i_ws)
             if r > rMax:
                 rMax = r
-                best = ws
-        logger.info('best region : {}'.format(self.workspaces.index(best)))
-        return best
+                i_best = i_ws
+        logger.info('best region : {}'.format(i_best))
+        return self.ulSigma(workspace_index=i_best)
         
     def cbWorkspace(self):
         """
