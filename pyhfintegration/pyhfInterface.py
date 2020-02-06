@@ -15,6 +15,7 @@ import json
 import jsonpatch
 import pyhf
 from scipy import optimize
+import numpy as np
 
 def getLogger():
     """
@@ -24,31 +25,38 @@ def getLogger():
     
     import logging
     
-    logger = logging.getLogger("SL")
-    formatter = logging.Formatter('%(module)s - %(levelname)s: %(message)s')
-    ch = logging.StreamHandler()
-    ch.setFormatter(formatter)
-    ch.setLevel(logging.DEBUG)
-    logger.addHandler(ch)
+    logger = logging.getLogger("pyhfInterface")
+    # formatter = logging.Formatter('%(module)s - %(levelname)s: %(message)s')
+    # ch = logging.StreamHandler()
+    # ch.setFormatter(formatter)
+    # ch.setLevel(logging.DEBUG)
+    # logger.addHandler(ch)
+    logger.setLevel(logging.DEBUG)
     return logger
 
 logger=getLogger()
 
 class PyhfData:
-    def __init__ (self, efficiencies, xsection, lumi, inputJsons):
+    def __init__ (self, efficiencies, lumi, inputJsons):
         self.efficiencies = efficiencies
-        self.xsection = xsection # pb
+        logger.debug("Efficiencies : {}".format(efficiencies))
         self.lumi = lumi # fb
         self.inputJsons = inputJsons
 
 class PyhfUpperLimitComputer:
     def __init__ ( self, data, cl=0.95):
         self.data = data
-        self.nsignals = [self.data.xsection*self.data.lumi/1000.0*eff for eff in self.data.efficiencies]
-        self.cl = cl
+        self.nsignals = [self.data.lumi*1E3*eff for eff in self.data.efficiencies] # 1E3 rescaling so that mu matches a cross-section upper limit in pb
+        self.nsignals = [round(s*1E4)/1E4 for s in self.nsignals] # Rounding at 4 decimals
+        logger.debug("Signals : {}".format(self.nsignals))
         self.inputJsons = self.data.inputJsons
         self.patches = self.patchMaker()
         self.workspaces = self.wsMaker()
+        self.cl = cl
+        # with open('WS0.json' ,'w') as ws0:
+            # json.dump(self.workspaces[0], ws0, indent=2)
+        # with open('WS1.json' ,'w') as ws1:
+            # json.dump(self.workspaces[1], ws1, indent=2)
         
     def patchMaker(self):
         """
@@ -82,7 +90,9 @@ class PyhfUpperLimitComputer:
             value = {}
             value["data"] = nsignals[:nSR]
             nsignals = nsignals[nSR:]
-            value["modifiers"] = [{"data": None, "type": "normfactor", "name": "mu_SIG"}]
+            value["modifiers"] = []
+            value["modifiers"] .append({"data": None, "type": "normfactor", "name": "mu_SIG"})
+            value["modifiers"] .append({"data": None, "type": "lumi", "name": "lumi"})
             value["name"] = "bsm"
             operator["value"] = value
             patch.append(operator)
@@ -90,12 +100,8 @@ class PyhfUpperLimitComputer:
                 patch.append({'op':'remove', 'path':path})
             patches.append(patch)
         # Replacing by our test point patch in order to test our upper limit calculator
-        #with open("RegionA/patch.sbottom_1300_950_60.json", "r") as f:
-            #patches.append(json.load(f))
-        #with open("RegionB/patch.sbottom_1300_950_60.json", "r") as f:
-            #patches.append(json.load(f))
-        #with open("RegionC/patch.sbottom_1300_950_60.json", "r") as f:
-            #patches.append(json.load(f))
+        # with open("SUSY-2018-04_likelihoods/Region-lowMass/patch.DS_200_120_Staus.json", "r") as f:
+            # patches.append(json.load(f))
         return patches
     
     def wsMaker(self):
@@ -103,86 +109,133 @@ class PyhfUpperLimitComputer:
         Apply each region patch to his associated json (RegionN/BkgOnly.json) to obtain the complete workspaces
         """
         if len(self.inputJsons) == 1:
-            return jsonpatch.apply_patch(self.inputJsons[0], self.patches[0])
+            return [pyhf.Workspace(jsonpatch.apply_patch(self.inputJsons[0], self.patches[0]))]
         else:
             workspaces = []
             for json, patch in zip(self.inputJsons, self.patches):
-                ws = pyhf.Workspace(jsonpatch.apply_patch(json, patch))
+                wsDict = jsonpatch.apply_patch(json, patch)
+                ws = pyhf.Workspace(wsDict)
                 workspaces.append(ws)
             return workspaces
-
-    def ulSigma (self, workspace, expected=False, mu_bound = 10.0):
-        self.mu_bound = mu_bound
+    
+    # Trying a new method for upper limit computation : 
+    # re-scaling the signal predictions so that mu falls in [0, 10] instead of looking for mu bounds
+    def ulSigma (self, expected=False):
+        workspace = self.cbWorkspace()
+        scaling = 1.
         def root_func(mu):
-            print("New call of root_func() with mu = ", mu)
-            # Opening main workspace file of region A
+            logger.info("New call of root_func() with mu = {}".format(mu))
             # Same modifiers_settings as those use when running the 'pyhf cls' command line
             msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
             model = workspace.model(modifier_settings=msettings)
             bounds = model.config.suggested_bounds()
-            if mu > self.mu_bound:
-                self.mu_bound = int(mu/10)*10 + 10
-            print('mu bound :', self.mu_bound)
-            bounds[model.config.poi_index] = [0,self.mu_bound]
             test_poi = mu
             result = pyhf.infer.hypotest(test_poi, workspace.data(model), model, par_bounds=bounds, qtilde=True, return_expected = expected)
             if expected:
                 CLs = result[1].tolist()[0]
             else:
                 CLs = result[0]
-            print("1 - CLs : ", 1.0 - CLs)
+            logger.info("1 - CLs : {}".format(1.0 - CLs))
             return 1.0 - self.cl - CLs
-        # Just a test
-        root_func(730.5244681411209)
+        # Scaling the signal prediction
+        def scale_up(cl):
+            return cl < 0.0 or np.isnan(cl)
+        def scale_dn(cl):
+            return cl > 0.0 or np.isnan(cl)
+        while scale_up(root_func(10.)):
+            self.nsignals = (np.array(self.nsignals)*10.).tolist()
+            scaling *= 10. 
+            logger.debug("Signals : {}".format(self.nsignals))
+            self.patches = self.patchMaker()
+            self.workspaces = self.wsMaker()
+            workspace = self.cbWorkspace()
+        while scale_dn(root_func(1.)):
+            self.nsignals = (np.array(self.nsignals)*0.1).tolist()
+            scaling *= 0.1 
+            logger.debug("Signals : {}".format(self.nsignals))
+            self.inputJsons = self.data.inputJsons
+            self.patches = self.patchMaker()
+            self.workspaces = self.wsMaker()
+            workspace = self.cbWorkspace()
         # Finding the root (Brent bracketing part)
-        hi_mu = 10.0
-        lo_mu = 1.0
-        # Gross limits
-        while root_func(hi_mu) < 0.0:
-            hi_mu *= 10
-            lo_mu *= 10
+        logger.info("Final scaling : {}".format(scaling))
+        hi_mu = 10.
+        lo_mu = 1.
+        logger.info("Starting brent bracketing")
         ul = optimize.brentq(root_func, lo_mu, hi_mu, rtol=1e-3, xtol=1e-3)
-        return ul
+        return ul*scaling
 
-    def bestUL(self):
+    # def ulSigma (self, workspace, expected=False, mu_bound = 10.0):
+        # self.mu_bound = mu_bound
+        # def root_func(mu):
+            # logger.info("New call of root_func() with mu = {}".format(mu))
+            # # Same modifiers_settings as those use when running the 'pyhf cls' command line
+            # msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
+            # model = workspace.model(modifier_settings=msettings)
+            # bounds = model.config.suggested_bounds()
+            # if mu > self.mu_bound:
+                # self.mu_bound = int(mu/10)*10 + 10
+            # logger.info('mu bound : {}'.format(self.mu_bound))
+            # bounds[model.config.poi_index] = [0,self.mu_bound]
+            # test_poi = mu
+            # result = pyhf.infer.hypotest(test_poi, workspace.data(model), model, par_bounds=bounds, qtilde=True, return_expected = expected)
+            # if expected:
+                # CLs = result[1].tolist()[0]
+            # else:
+                # CLs = result[0]
+            # logger.info("1 - CLs : {}".format(1.0 - CLs))
+            # return 1.0 - self.cl - CLs
+        # # Just a test
+        # # Finding the root (Brent bracketing part)
+        # hi_mu = 1.
+        # lo_mu = 1.
+        # # Gross limits
+        # while root_func(hi_mu) < 0.0:
+            # hi_mu *= 10.
+        # while root_func(lo_mu) > 0.0:
+            # lo_mu *= 0.1
+        # ul = optimize.brentq(root_func, lo_mu, hi_mu, rtol=1e-3, xtol=1e-3)
+        # return ul
+
+    def bestExpWorkspace(self):
         """
         Computing the upper on the signal strength modifier in the expected hypothesis for each profile/region
         Picking the most sensitive, i.e., the one having the biggest r-value in the expected case (r-value = 1/mu)
-        Computing the UL in the observed case for the so called most sensitive workspace
         """
         rMax = 0.0
-        for pr in self.workspaces:
-            r = 1/self.ulSigma(pr, expected=True)
+        for ws in self.workspaces:
+            r = 1/self.ulSigma(ws, expected=True)
             if r > rMax:
                 rMax = r
-                best = pr
-        print('best region', self.workspaces.index(best))
-        return self.ulSigma(best, expected=False)
+                best = ws
+        logger.info('best region : {}'.format(self.workspaces.index(best)))
+        return best
         
-    def cbUL(self, workspaces):
+    def cbWorkspace(self):
         """
-        Method that combines the workspaces contained from the workspaces list into a single workspace
-        and compute the upper limit on the signal strength modifier given the new combined likelihood
+        Method that combines the workspaces contained in the workspaces list into a single workspace
         """
-         # Combining region profiles using the combine method coded by pyhf developpers (doesn't work)
+        # Performing combination using pyhf.workspace.combine method, a bit modified to solve the multiple parameter configuration problem
+        workspaces = self.workspaces
+        if len(workspaces) == 1:
+            cbWS = workspaces[0]
         cbWS = workspaces[0]
-        for i_pr in range(1, len(workspaces)):
-            cbWS = pyhf.Workspace.combine(cbWS, workspaces[i_pr])
-        ## Old method:
-        #result = {}
-        #result["channels"] = []
-        #for inpt in workspaces:
-            #for channel in inpt["channels"]:
-                #result["channels"].append(channel)
-        #result["observations"] = []
-        #for inpt in workspaces:
-            #for observation in inpt["observations"]:
-                #result["observations"].append(observation)
-        #result["measurements"] = workspaces[0]["measurements"]
-        #result["version"] = workspaces[0]["version"]
-        # These two last are the same for all three regions
-        #strresult = json.dumps(result)
-        return self.ulSigma(cbWS, expected=False)
+        for i_ws in range(1, len(workspaces)):
+            cbWS = pyhf.Workspace.combine(cbWS, workspaces[i_ws])
+        # Home made method, should do the same but no sanity checks and the first measurement is taken:
+        # cbWS = {}
+        # cbWS["channels"] = []
+        # for inpt in workspaces:
+            # for channel in inpt["channels"]:
+                # cbWS["channels"].append(channel)
+        # cbWS["observations"] = []
+        # for inpt in workspaces:
+            # for observation in inpt["observations"]:
+                # cbWS["observations"].append(observation)
+        # cbWS["measurements"] = workspaces[0]["measurements"]
+        # cbWS["version"] = workspaces[0]["version"]
+        # These two last are assumed to be the same for all three regions
+        return cbWS
 
 if __name__ == "__main__":
     C = [ 18774.2, -2866.97, -5807.3, -4460.52, -2777.25, -1572.97, -846.653, -442.531,
