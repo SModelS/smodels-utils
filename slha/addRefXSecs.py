@@ -121,6 +121,14 @@ def getXSecsFor ( pid1, pid2, sqrts ):
         filename = "xsecN2C1p13.txt"
         order = 2
         pb = False
+    if pid1 in [ 1000024 ] and pid2 in [ 1000025 ]:
+        filename = "xsecN2C1p13.txt"
+        order = 2
+        pb = False
+    if pid1 in [ -1000024 ] and pid2 in [ 1000025 ]:
+        filename = "xsecN2C1m13.txt"
+        order = 2
+        pb = False
     if pid1 in [ -1000024 ] and pid2 == -pid1:
         ## left handed slep- slep+ production.
         filename = "xsecC1C1%d.txt" % sqrts
