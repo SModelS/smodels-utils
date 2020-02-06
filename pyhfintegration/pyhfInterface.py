@@ -14,6 +14,7 @@ from __future__ import print_function
 import json
 import jsonpatch
 import pyhf
+pyhf.set_backend(b"pytorch")
 from scipy import optimize
 import numpy as np
 
@@ -47,16 +48,19 @@ class PyhfUpperLimitComputer:
     def __init__ ( self, data, cl=0.95):
         self.data = data
         self.nsignals = [self.data.lumi*1E3*eff for eff in self.data.efficiencies] # 1E3 rescaling so that mu matches a cross-section upper limit in pb
-        self.nsignals = [round(s*1E4)/1E4 for s in self.nsignals] # Rounding at 4 decimals
         logger.debug("Signals : {}".format(self.nsignals))
         self.inputJsons = self.data.inputJsons
         self.patches = self.patchMaker()
         self.workspaces = self.wsMaker()
         self.cl = cl
-        # with open('WS0.json' ,'w') as ws0:
-            # json.dump(self.workspaces[0], ws0, indent=2)
-        # with open('WS1.json' ,'w') as ws1:
-            # json.dump(self.workspaces[1], ws1, indent=2)
+        self.scaling = 1.
+        
+    def rescale(self, scale):
+        self.nsignals = [sig*scale for sig in self.nsignals]
+        self.scaling *= scale 
+        logger.debug("Signals : {}".format(self.nsignals))
+        self.patches = self.patchMaker()
+        self.workspaces = self.wsMaker()
         
     def patchMaker(self):
         """
@@ -81,7 +85,7 @@ class PyhfUpperLimitComputer:
         patches = []
         for ws, info in zip(self.inputJsons, ChannelsInfo):
             # Need to read the number of SR/bins of each regions
-            # in order to identify the corresponding ones in self.nisgnals
+            # in order to identify the corresponding ones in self.nsignals
             nSR = info['SR']['size']
             patch = []
             operator = {}
@@ -128,9 +132,8 @@ class PyhfUpperLimitComputer:
             # Same modifiers_settings as those use when running the 'pyhf cls' command line
             msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
             model = workspace.model(modifier_settings=msettings)
-            bounds = model.config.suggested_bounds()
             test_poi = mu
-            result = pyhf.infer.hypotest(test_poi, workspace.data(model), model, par_bounds=bounds, qtilde=True, return_expected = expected)
+            result = pyhf.infer.hypotest(test_poi, workspace.data(model), model, qtilde=True, return_expected = expected)
             if expected:
                 CLs = result[1].tolist()[0]
             else:
@@ -139,23 +142,16 @@ class PyhfUpperLimitComputer:
             return 1.0 - self.cl - CLs
         # Scaling the signal prediction
         def scale_up(cl):
+            # Boolean indicating if the signals need to be scaled up
             return cl < 0.0 or np.isnan(cl)
         def scale_dn(cl):
+            # Boolean indicating if the signals need to be scaled down
             return cl > 0.0 or np.isnan(cl)
         while scale_up(root_func(10.)):
-            self.nsignals = (np.array(self.nsignals)*10.).tolist()
-            scaling *= 10. 
-            logger.debug("Signals : {}".format(self.nsignals))
-            self.patches = self.patchMaker()
-            self.workspaces = self.wsMaker()
+            self.rescale(10.)
             workspace = self.cbWorkspace()
         while scale_dn(root_func(1.)):
-            self.nsignals = (np.array(self.nsignals)*0.1).tolist()
-            scaling *= 0.1 
-            logger.debug("Signals : {}".format(self.nsignals))
-            self.inputJsons = self.data.inputJsons
-            self.patches = self.patchMaker()
-            self.workspaces = self.wsMaker()
+            self.rescale(0.1)
             workspace = self.cbWorkspace()
         # Finding the root (Brent bracketing part)
         logger.info("Final scaling : {}".format(scaling))
@@ -163,7 +159,7 @@ class PyhfUpperLimitComputer:
         lo_mu = 1.
         logger.info("Starting brent bracketing")
         ul = optimize.brentq(root_func, lo_mu, hi_mu, rtol=1e-3, xtol=1e-3)
-        return ul*scaling
+        return ul*self.scaling
 
     # def ulSigma (self, workspace, expected=False, mu_bound = 10.0):
         # self.mu_bound = mu_bound
@@ -199,7 +195,7 @@ class PyhfUpperLimitComputer:
 
     def bestExpWorkspace(self):
         """
-        Computing the upper on the signal strength modifier in the expected hypothesis for each profile/region
+        Computing the upper limit on the signal strength modifier in the expected hypothesis for each workspace
         Picking the most sensitive, i.e., the one having the biggest r-value in the expected case (r-value = 1/mu)
         """
         rMax = 0.0
