@@ -439,7 +439,7 @@ if __name__ == "__main__":
             help='specify the location of the database [~/git/smodels-database]',
             default = '~/git/smodels-database', type = str )
     args = ap.parse_args()
-    if not os.path.exists(args.database): args.database = "~/tools/smodels-database/"
+    if not os.path.exists(os.path.expanduser(args.database)): args.database = "~/tools/smodels-database/"
     setLogLevel ( args.verbose )
     creator = WikiPageCreator( args.ugly, args.database, args.add_version, 
                                args.private, args.force_upload,

@@ -36,9 +36,11 @@ def main():
     argparser.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
     A = argparser.parse_args()
     db = "~/git/smodels-database/"
-    if not os.path.exists(db): db = "~/tools/smodels-database/"
+    db = os.path.expanduser(db)
+    if not os.path.exists(db):
+        db = "~/tools/smodels-database/"
+        db = os.path.expanduser(db)
     ref_db = "~/git/smodels-database-release/"
-    db = os.path.expanduser( db )
     ref_db = os.path.expanduser( ref_db )
     ## list of analyses, with and without superseded
     gprint ( "\nCreate list of analyses" )
