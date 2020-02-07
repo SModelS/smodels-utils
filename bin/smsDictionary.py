@@ -240,7 +240,8 @@ N.B.: Each "()" group corresponds to a branch
         if self.xkcd:
             style = "xkcd"
         ## now "Graph" column
-        self.f.write ( ' | ![%s](../feyn/%s/%s.png)' % ( txname, style, txname ) )
+        # self.f.write ( ' | ![%s](../feyn/%s/%s.png)' % ( txname, style, txname ) )
+        self.f.write ( ' | <img alt="%s" src="../feyn/%s/%s.png" height="130">' % ( txname, style, txname ) )
         ## now "Appears in" column
         if self.hasResultsColumn:
             self.f.write ( " | " )
