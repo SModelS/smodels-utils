@@ -78,9 +78,10 @@ def interpolate ( mass, xsecs ):
     from scipy.interpolate import interp1d
     return interp1d ( list(xsecs.keys()), list(xsecs.values()) )( mass )
 
-def getXSecsFrom ( filename, pb = True ):
+def getXSecsFrom ( filename, pb = True, columns={"mass":0,"xsec":1 } ):
     """ retrieve xsecs from filename
     :param pb: xsecs given in pb
+    :param indices: the indices of the columns in the table, for mass and xsec
     """
     ret = {}
     if not os.path.exists ( filename ):
@@ -98,8 +99,8 @@ def getXSecsFrom ( filename, pb = True ):
         tokens = line.split ()
         if len(tokens)<2:
             continue
-        mass = float(tokens[0])
-        xsec = float(tokens[1].replace("GeV\t","") )
+        mass = float(tokens[ columns["mass"] ])
+        xsec = float(tokens[ columns["xsec"] ].replace("GeV","") )
         if not pb:
             xsec = xsec / 1000.
         ret[ mass ] = xsec
@@ -110,8 +111,10 @@ def getXSecsFor ( pid1, pid2, sqrts ):
     filename=None
     order = 0
     pb = True
+    columns = { "mass": 0, "xsec": 1 }
     if pid1 in [ 1000021 ] and pid2 == pid1:
         filename = "xsecgluino%d.txt" % sqrts
+        columns["xsec"]=2
         order = 2 # 4
     if pid1 in [ -1000024 ] and pid2 in [ 1000023 ]:
         filename = "xsecN2C1m13.txt"
@@ -144,7 +147,7 @@ def getXSecsFor ( pid1, pid2, sqrts ):
     if filename == None:
         print ( "[addRefXSecs] could not identify filename for xsecs" )
         return {}
-    xsecs = getXSecsFrom ( filename, pb )
+    xsecs = getXSecsFrom ( filename, pb, columns )
     return xsecs,order
 
 def zipThem ( files ):

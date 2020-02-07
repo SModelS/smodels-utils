@@ -966,7 +966,7 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             if "error" in x.keys():
                 continue
             break
-        if "dataset" in validationPlot.data[ctr].keys() and "combined" in validationPlot.data[ctr]["dataset"]:
+        if validationPlot.data != None and validationPlot.data[ctr] != None and "dataset" in validationPlot.data[ctr].keys() and validationPlot.data[ctr]["dataset"]!=None and "combined" in validationPlot.data[ctr]["dataset"]:
             logger.warning ( "asked for an efficiencyMap-type plot, but the cached validationData is for a combined plot. Will label it as 'combined'." )
         else:
             subtitle = "best SR"
