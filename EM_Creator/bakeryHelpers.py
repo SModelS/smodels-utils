@@ -97,11 +97,21 @@ def filterForMaxgap ( masses, maxgap2 ):
             ret.append ( t )
     return ret
 
+def ma5AnaNameToSModelSName ( name ):
+    """ translate an analysis name from MA5 naming to
+        SModelS naming (atlas -> ATLAS, etc) """
+    name = name.replace("atlas","ATLAS")
+    name = name.replace("cms","CMS")
+    name = name.replace("susy","SUSY")
+    name = name.replace("sus","SUS")
+    name = name.replace("_","-")
+    return name
+
 def listAnalyses ( ):
     """ list the analyses that are available in MA5 """
     import glob
     # dname = "ma5/tools/PAD/Build/"
-    dname = "ma5/tools/PAD/Build/SampleAnalyzer/User/Analyzer/"
+    dname = "ma5.template/tools/PAD/Build/SampleAnalyzer/User/Analyzer/"
     print ( "[bakeryHelpers] searching for analyses in %s" % dname )
     files = glob.glob ( "%s/*.cpp" % dname )
     # files = glob.glob ( "%s*.saf" % dname )

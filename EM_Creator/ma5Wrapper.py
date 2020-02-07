@@ -64,11 +64,11 @@ class MA5Wrapper:
         recastcard = { "atlas_susy_2016_07": "delphes_card_atlas_exot_2015_03" }
         recastcard["cms_sus_16_033"] = "delphes_card_cms_sus_16_033"
         anas = set(self.analyses.split(","))
-        versions = { "atlas_susy_2016_07": "1.7", 
-                     "cms_sus_16_033": "1.7" }
+        versions = { "atlas_susy_2016_07": "1.2", 
+                     "cms_sus_16_033": "1.2" }
         for i in anas:
-            print ( "[ma5Wrapper] writing %s in recast card %s" % ( i, templatefile ) )
-            f.write ( "%s v%s        on    %s.tcl\n" % ( i, versions[i], recastcard[i] ) )
+            print ( "[ma5Wrapper] writing %s in recast card %s" % ( i, filename ) )
+            f.write ( "%s         v%s        on    %s.tcl\n" % ( i, versions[i], recastcard[i] ) )
         f.close()
         self.info ( "wrote recasting card %s" % filename )
 

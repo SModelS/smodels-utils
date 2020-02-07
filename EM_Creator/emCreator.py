@@ -141,8 +141,9 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
             effs[k][m]=v
     seffs = ",".join(list(effs.keys()))
     if seffs == "":
-        seffs = "none"
-    print ( "[emCreator] I have efficiencies for %s" % seffs )
+        seffs = "no analysis"
+    print ( "[emCreator] For %s I have efficiencies for: %s" % \
+             ( topo, seffs ) )
     for ana,values in effs.items():
         if len(values.keys()) == 0:
             continue
@@ -167,12 +168,14 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
         experiment = "CMS"
         if "atlas" in ana.lower():
             experiment = "ATLAS"
-        sana = ana.replace("_","-").replace("atlas","ATLAS").replace("susy","SUSY")
+        sana = bakeryHelpers.ma5AnaNameToSModelSName ( ana )
         Dirname = "../../smodels-database/%dTeV/%s/%s-eff/orig/" % ( sqrts, experiment, sana )
         stats = creator.getStatistics ( ana )
         # print ( "Statistics for", ana, ":", stats )
-        print ( "Obtained statistics for", ana, "in", fname )
+        print ( "[emCreator] obtained statistics for", ana, "in", fname )
 
+        if copy and not os.path.exists (Dirname):
+            print ( "[emCreator] asked to copy but %s does not exist" % Dirname )
         if copy and os.path.exists (Dirname):
             dest = "%s/%s.embaked" % ( Dirname, topo )
             prevN = 0
@@ -181,15 +184,15 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
                 g=eval(f.read())
                 f.close()
                 prevN=len(g.keys())
-            print ( "Previous number of data points: %d" % prevN )
-            print ( "Copying embaked to %s" % dest )
+            print ( "[emCreator] previous number of data points: %d" % prevN )
+            print ( "[emCreator] copying embaked to %s" % dest )
             cmd = "cp %s %s" % ( fname, dest )
             subprocess.getoutput ( cmd )
             statsfile = "%s/statsEM.py" % (Dirname )
             f = open ( statsfile, "w" )
             f.write ( "%s\n" % stats )
             f.close()
-            print ( "Wrote stats to %s" % statsfile )
+            print ( "[emCreator] wrote stats to %s" % statsfile )
 
 def getAllTopos ( ):
     import glob

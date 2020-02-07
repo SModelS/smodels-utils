@@ -53,11 +53,21 @@ def mg5():
         goodkeys.append ( k[:p] )
     return goodkeys
 
-def inDatabase( topos_c ):
-    """ whats in the database, but print only topos_c topologies """
-    print ("In database" )
+def inDatabase( topos_c, analysis ):
+    """ whats in the database, but print only topos_c topologies 
+    :param analysis: print only for analysis
+    """
+    if type ( analysis ) in [ tuple, list ]:
+        for x in analysis:
+            inDatabase ( topos_c, x )
+        return
+    collab = "ATLAS"
+    if "CMS" in analysis:
+        collab = "CMS"
+    dbpath = "../../smodels-database/13TeV/%s/%s-eff/orig" % ( collab, analysis )
+    print ("[printProdStats] in database [...%s...]" % dbpath.replace("orig/","")[-40:] )
     # print ( topos_c )
-    dbFiles=glob.glob ("../../smodels-database/13TeV/ATLAS/ATLAS-SUSY-2016-07-eff/orig/T*embaked" )
+    dbFiles=glob.glob ("%s/T*embaked" % dbpath )
     stats={}
     for i in dbFiles:
         f=open(i)
@@ -76,10 +86,10 @@ def inDatabase( topos_c ):
         pprint ( "%s - %s: %d points --> now %d %s" % ( beg, k, stats[k], topos_c[k], end ) )
 
 
-def main():
+def main( analysis ):
     mg5()
     topos = ma5()
-    inDatabase( topos )
+    inDatabase( topos, analysis )
 
 if __name__ == "__main__":
     main()
