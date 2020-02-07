@@ -137,7 +137,7 @@ def getXSecsFor ( pid1, pid2, sqrts ):
         filename = "xsecstop%d.txt" % sqrts
         order = 2 #3
         columns["xsec"]=2
-        pb = False
+        pb = True
     if pid1 in [ -1000024 ] and pid2 == -pid1:
         ## left handed slep- slep+ production.
         filename = "xsecC1C1%d.txt" % sqrts
@@ -182,6 +182,13 @@ def main():
     argparser.add_argument('-z', '--zip', help="zip them up at the end",
                             action = "store_true" )
     args = argparser.parse_args()
+    if args.files.endswith(".tar.gz"):
+        ## remove cruft slha files, unpack tarball
+        cmd = "rm -rf T*slha" 
+        subprocess.getoutput ( cmd )
+        cmd = "tar xzvf %s" % args.files:
+        subprocess.getoutput ( cmd )
+        args.files = "T*slha"
     files = glob.glob ( args.files )
     if args.pid2 < args.pid1:
         print ( "[addRefXSecs] will swap pids %d and %d" % ( args.pid1, args.pid2) )
