@@ -223,8 +223,11 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-c', '--copy', help='copy embaked file to smodels-database',
                              action="store_true" )
-    argparser.add_argument ( '-a', '--analyses', help='analyses, comma separated [atlas_sus_2016_07]',
-                             type=str, default="atlas_susy_2016_07" )
+    defaultana = "atlas_susy_2016_07"
+    defaultana = "cms_sus_16_033"
+    argparser.add_argument ( '-a', '--analyses', 
+            help='analyses, comma separated [%s]' % defaultana,
+                             type=str, default=defaultana )
     mdefault = "all"
     argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted. "all" means, try to find out yourself [%s]' % mdefault,
                              type=str, default=mdefault )

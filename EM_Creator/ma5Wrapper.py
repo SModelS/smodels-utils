@@ -109,7 +109,10 @@ class MA5Wrapper:
         hepmcfile = os.path.abspath ( hepmcfile )
         if not os.path.exists ( hepmcfile ):
             self.error ( "cannot find hepmc file at %s" % hepmcfile )
-            sys.exit()
+            p = hepmcfile.find("Events")
+            self.error ( "consider deleting the folder: rm -r %s" % hepmcfile[:p] )
+            return
+            # sys.exit()
         self.msg ( "Found hepmcfile at", hepmcfile )
         self.writeCommandFile( hepmcfile, process, masses )
         tempdir = "ma5_%s" % Dir
