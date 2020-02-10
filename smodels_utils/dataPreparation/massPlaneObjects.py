@@ -95,6 +95,9 @@ class MassPlane(object):
                       (e.g. [[x,y],[x,y]])
         """
 
+        if string == "":
+            logger.error ( "cannot build mass plane from empty string!" )
+            return None
         massArray = eval(string)
         massPlane = MassPlane(txname,massArray)
 
