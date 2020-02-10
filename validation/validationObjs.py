@@ -436,8 +436,8 @@ class ValidationPlot():
             if "THSCPM7" in filename:
                 n+=1 # for THSCPM7 we have [M1,M2,(M3,W3)],[M1,(M3,W3) ]
                 ## so all works out if we just slice at one after the half
-            else:
-                print ( "mass vector %s is asymmetrical. dont know what to do" % masses )
+            elif not "T3GQ" in filename:
+                print ( "[validationObjs] mass vector %s is asymmetrical. dont know what to do" % masses )
             # sys.exit(-1)
         ret = [ masses[:n], masses[n:] ]
         return ret
@@ -460,12 +460,15 @@ class ValidationPlot():
                 masses[1][1] = (masses[1][0]+masses[1][2])/2. ## fix rounding in file name
         ret = [ masses[0][0], masses[0][1] ]
         massPlane = MassPlane.fromString(self.txName,self.axes)
+            
         if not self.topologyHasWidths():
             varsDict = massPlane.getXYValues(masses,None)
             if varsDict != None and "y" in varsDict:
                 ret = [ varsDict["x"], varsDict["y"] ]
             if varsDict == None: ## not on this plane!!!
                 ret = None
+        if "T3GQ" in filename: ## fixme we sure?
+            ret = [ masses[1][0], masses[1][1] ]
         if "TGQ12" in filename:
             ret = [ masses[0][0], masses[1][0] ]
         if "THSCPM6" in filename:
@@ -518,6 +521,9 @@ class ValidationPlot():
 
         #Define original plot
         massPlane = MassPlane.fromString(self.txName,self.axes)
+        if massPlane == None:
+            logger.error ( "no mass plane!" )
+            return False
         #Now read the output and collect the necessary data
         self.data = []
         slhafiles= os.listdir(slhaDir)
