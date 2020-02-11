@@ -5,7 +5,7 @@ The cross sections have been scraped off from
 https://twiki.cern.ch/twiki/bin/view/LHCPhysics/SUSYCrossSections
 and stored in the xsec*.txt files. """
 
-import os, subprocess
+import os, subprocess, sys
 
 def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run, order ):
     """ add to file F cross sections for pid1, pid2 
@@ -167,7 +167,7 @@ def main():
     import argparse, glob
     argparser = argparse.ArgumentParser( description = "add reference cross sections to slha files" )
     argparser.add_argument('-f', '--files', 
-                           help = 'file pattern to glob [T*.slha]',
+                           help = 'file pattern to glob, if tarball given, then unpack [T*.slha]',
                            type=str,default = "T*.slha" )
     argparser.add_argument('-p', '--pid1', help="first particle id [-1000015]",
                            type=int, default = -1000015 )
@@ -183,6 +183,10 @@ def main():
                             action = "store_true" )
     args = argparser.parse_args()
     if args.files.endswith(".tar.gz"):
+        files = glob.glob("T*slha")
+        if len(files)>0:
+            print ( "[check_nlo] error, you ask me to unpack a tarball but there are slha files in the directory." )
+            sys.exit()
         ## remove cruft slha files, unpack tarball
         cmd = "rm -rf T*slha" 
         subprocess.getoutput ( cmd )
