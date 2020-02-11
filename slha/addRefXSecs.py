@@ -186,7 +186,7 @@ def main():
         ## remove cruft slha files, unpack tarball
         cmd = "rm -rf T*slha" 
         subprocess.getoutput ( cmd )
-        cmd = "tar xzvf %s" % args.files:
+        cmd = "tar xzvf %s" % args.files
         subprocess.getoutput ( cmd )
         args.files = "T*slha"
     files = glob.glob ( args.files )
