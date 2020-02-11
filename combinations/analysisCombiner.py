@@ -13,11 +13,32 @@ def getExperimentName ( globI ):
         return "ATLAS"
     return "???"
 
-def canCombine ( predA, predB, strategy="conservative" ):
+def getInfoFromAnaId ( anaId, results ):
+    """ given the analysis id as a string, get the globalInfo object """
+    ret = None
+    for i in results:
+        if i.globalInfo.id == anaId:
+            ret = i.globalInfo
+            break
+    if type(ret) == type(None):
+        print ( "[analysisCombiner] supplied an analysis id string (%s), but couldnt find such an analysis in the database!" % anaId )
+    return ret
+
+def canCombine ( predA, predB, strategy="conservative", results = None ):
     """ can we combine predA and predB? predA and predB can be
         individual predictions, or lists of predictions.
+    :param predA: lists of predictions, or single predictions (given either
+                  as a TheoryPrediction or a GlobalInfo object)
     :param strategy: combination strategy, can be conservative, moderate, aggressive
+    :param results: optionally supply a list of results. In this case, predA
+                    and predB can be the analysis ids as strings
     """
+    if type(predA) == str:
+        predA = getInfoFromAnaId ( predA, results )
+    if type(predB) == str:
+        predB = getInfoFromAnaId ( predB, results )
+    if type(predA) == type(None) or type(predB) == type(None):
+        return False
     if type(predA) == list:
         for pA in predA:
             ret = canCombine ( pA, predB, strategy )
@@ -177,9 +198,16 @@ def canCombineConservative ( globA, globB, elA, elB ):
 
 if __name__ == "__main__":
     from smodels.experiment.databaseObj import Database
-    db = Database ( "official" )
+    # dbpath = "official"
+    dbpath = "../../smodels-database"
+    print ( "[analysisCombiner] checking %s" % dbpath )
+    db = Database ( dbpath )
     results = db.getExpResults()
     strategy="aggressive"
+    ana1 = "CMS-SUS-16-042"
+    ana2 = "CMS-SUS-16-033"
+    canC = canCombine ( ana1, ana2, strategy, results )
+    print ( "[analysisCombiner] can combine %s with %s: %s" % ( ana1, ana2, str(canC) ) )
     ctr,combinable=0,0
     for x,e in enumerate(results):
         for y,f in enumerate(results):
@@ -188,4 +216,4 @@ if __name__ == "__main__":
             ctr += 1
             isUn = canCombine ( e.globalInfo, f.globalInfo, strategy )
             combinable+=isUn
-    print ( "Can combine %d/%d results" % ( combinable, ctr ) )
+    print ( "[analysisCombiner] can combine %d/%d pairs of results" % ( combinable, ctr ) )
