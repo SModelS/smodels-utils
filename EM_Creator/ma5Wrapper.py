@@ -133,23 +133,30 @@ class MA5Wrapper:
         source = "ANA_%s" % Dir
         dest = "../ma5/%s" % source
         if os.path.exists ( dest ):
-            print ( "Destination %s exists. I remove it." % dest )
+            print ( "[ma5Wrapper] Destination %s exists. I remove it." % dest )
             subprocess.getoutput ( "rm -rf %s" % dest )
         if not os.path.exists ( source ):
-            print ( "Source dir %s does not exist." % source )
+            print ( "[ma5Wrapper] Source dir %s does not exist." % source )
         shutil.move ( "ANA_%s" % Dir, "../ma5/" )
         os.chdir ( "../" )
-        a = subprocess.getoutput ( "rm ma5/ma5cmd*" )
-        a = subprocess.getoutput ( "rm ma5/recast*" )
-        a = subprocess.getoutput ( "rm -r %s" % tempdir )
+        self.exe ( "rm -rf %s/ma5cmd*" % self.ma5install )
+        self.exe ( "rm -rf %s/recast*" % self.ma5install )
+        self.exe ( "rm -rf %s" % tempdir )
+        # a = subprocess.getoutput ( "rm -rf %s/ma5cmd*" % delf.ma5install )
+        # a = subprocess.getoutput ( "rm -rf %s/recast*" % self.ma5install )
+        # a = subprocess.getoutput ( "rm -r %s" % tempdir )
 
-    def exe ( self, cmd ):
-        self.msg ( "now execute: %s/%s" % (os.getcwd(), cmd ) )
+    def exe ( self, cmd, maxLength=100 ):
+        """ execute cmd in shell
+        :param maxLength: maximum length of output to be printed
+        """
+        self.msg ( "exec: %s/%s" % (os.getcwd(), cmd ) )
         ret = subprocess.getoutput ( cmd )
+        ret = ret.strip()
         if len(ret)==0:
             return
         # maxLength=60
-        maxLength=560
+        # maxLength=560
         if len(ret)<maxLength:
             self.msg ( " `- %s" % ret )
             return

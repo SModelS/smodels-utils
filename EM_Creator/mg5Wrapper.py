@@ -23,6 +23,9 @@ class MG5Wrapper:
         self.ma5 = ma5
         self.njets = njets
         self.mg5install = "./mg5"
+        self.logfile = None
+        self.logfile2 = None
+        self.tempf = None
         self.ver = ver
         if not os.path.isdir ( self.mg5install ):
             self.error ( "mg5 install is missing??" )
@@ -135,6 +138,8 @@ class MG5Wrapper:
         """ remove a file, if keep is not true """
         if self.keep:
             return
+        if f == None:
+            return
         if os.path.exists ( f ):
             subprocess.getoutput ( "rm -rf %s" % f )
 
@@ -163,8 +168,8 @@ class MG5Wrapper:
         f=open(templatefile,"r")
         lines=f.readlines()
         f.close()
-        tempf = tempfile.mktemp(prefix="mg5proc",dir="./")
-        f=open(tempf,"w")
+        self.tempf = tempfile.mktemp(prefix="mg5proc",dir="./")
+        f=open(self.tempf,"w")
         f.write ( "import model_v4 mssm\n" )
         for line in lines:
             f.write ( line )
@@ -189,22 +194,29 @@ class MG5Wrapper:
         f.close()
         if os.path.exists ( Dir ):
             subprocess.getoutput ( "rm -rf %s" % Dir )
-        self.info ( "run mg5 for %s" % tempf )
-        logfile = tempfile.mktemp ()
-        cmd = "python2 %s %s 2>&1 | tee %s" % ( self.executable, tempf, logfile )
+        self.info ( "run mg5 for %s" % self.tempf )
+        self.logfile = tempfile.mktemp ()
+        cmd = "python2 %s %s 2>&1 | tee %s" % ( self.executable, self.tempf, self.logfile )
         self.exe ( cmd )
         ## copy slha file
         shutil.move(slhaFile, Dir+'/Cards/param_card.dat' )
         shutil.move(self.runcard, Dir+'/Cards/run_card.dat' )
         if (os.path.isdir(Dir+'/Events/run_01')):
             shutil.rmtree(Dir+'/Events/run_01')
-        logfile2 = tempfile.mktemp ()
-        cmd = "python2 %s %s 2>&1 | tee %s" % ( self.executable, self.commandfile, logfile2 )
+        self.logfile2 = tempfile.mktemp ()
+        cmd = "python2 %s %s 2>&1 | tee %s" % ( self.executable, self.commandfile, 
+                                                self.logfile2 )
         self.exe ( cmd )
+        self.clean()
+
+    def clean ( self ):
+        """ clean up temporary files """
+        self.info ( "cleaning up %s, %s, %s, %s" % \
+                ( self.commandfile, self.tempf, self.logfile, self.logfile2 ) )
         self.unlink ( self.commandfile )
-        self.unlink ( tempf )
-        self.unlink ( logfile )
-        self.unlink ( logfile2 )
+        self.unlink ( self.tempf )
+        self.unlink ( self.logfile )
+        self.unlink ( self.logfile2 )
 
     def hasHEPMC ( self, masses ):
         """ does it have a valid HEPMC file? if yes, then skip the point """
