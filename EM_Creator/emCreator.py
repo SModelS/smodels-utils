@@ -102,6 +102,9 @@ class emCreator:
             line = line.replace("control region","control_region" )
             line = line.replace("150-1","150 -1")
             tokens=line.split()
+            if len(tokens)!=10:
+                print ( "cannot parse %s. skip it" % line )
+                continue
             dsname,ananame,sr,sig95exp,sig95obs,pp,eff,statunc,systunc,totunc=tokens
             eff=float(eff)
             #if eff == 0.:
