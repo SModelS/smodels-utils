@@ -1,5 +1,8 @@
 all: .PHONY
 
+du-h:
+	du -h --max-depth=1 | tee du-h
+
 install_mg5:
 	wget http://www.hephy.at/user/wwaltenberger/dist/mg5.tar.gz
 	rm -rf mg5.old
