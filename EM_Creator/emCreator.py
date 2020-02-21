@@ -81,6 +81,10 @@ class emCreator:
         summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
         if not os.path.exists ( summaryfile):
             self.info ( "could not find ma5 summary file %s. Skipping." % summaryfile )
+            rmfile = summaryfile[:summaryfile.find("/Output")]
+            cmd = "rm -rf %s" % rmfile 
+            self.info ( "should I %s?" % cmd )
+            subprocess.getoutput ( cmd )
             ret = {}
             return ret
         f=open(summaryfile,"r")
