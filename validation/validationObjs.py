@@ -440,6 +440,8 @@ class ValidationPlot():
                 print ( "[validationObjs] mass vector %s is asymmetrical. dont know what to do" % masses )
             # sys.exit(-1)
         ret = [ masses[:n], masses[n:] ]
+        if "T5GQ" in filename:
+            ret = [ masses[:n+1], masses[n+1:] ]
         return ret
 
     def topologyHasWidths ( self ):
