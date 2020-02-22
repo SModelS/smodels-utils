@@ -129,6 +129,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T4bnutaubnutau': 'stop --> b nu stau, stau --> tau lsp',
     'T5Chi': 'gluino --> quark antiquark neutralino_2, neutralino_2 --> photon neutralino_1',
     'T5':'gluino  --> quark squark, squark --> quark lsp',
+    'T5GQ' : 'gluino --> quark quark, squark --> quark gluino',
     'T5Disp':'gluino  --> quark quark lsp',
     'T5gg':'gluino --> quark lsp',
     'T6gg':' squark --> quark lsp',
@@ -353,6 +354,7 @@ motherDict = {"T1" :  "gluino",
     "TChipChimStauSnu" :  "chargino^pm_1 chargino^pm_1",
     "T3GQ": "gluino squark",
     "T3GQon": "gluino squark",
+    "T5GQ": "gluino squark",
     "TGQ" :  "gluino squark",
     "TGQ12" :  "gluino squark",
     "TGQbbq" :  "gluino",
@@ -598,6 +600,10 @@ def prettyAxes(txname,axes):
     if txname == 'T3GQ':
         ret = ['m_{#tilde{g}} = %s, m_{#tilde{q}} = x' % str(axes[1][0]),
                'm_{#tilde{#chi}_{1}^{0}} = y']
+        return ret
+    if txname == 'T5GQ':
+        ret = ['m_{#tilde{g}} = x, m_{#tilde{q}} = y',
+               'm_{#tilde{#chi}_{1}^{0}} = %s' % str(axes[1][1]) ]
         return ret
     if txname == 'TChiChiSlepSlep':
         return ['m_{#tilde{#chi}_{3}^{0}} = x+80.0, m_{#tilde{#chi}_{2}^{0}} = x+75.0',
