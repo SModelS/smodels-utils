@@ -153,11 +153,12 @@ def run ( expResList, axis, pretty, generateData ):
                 axes = txname.axes     
             if axis is None:
                 for ax in axes:
+                    doGenerate = generateData # local flag
                     for p in prettyorugly:
                         validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
-                                     generateData,limitPoints,extraInfo,combine,pngAlso,
+                                     doGenerate,limitPoints,extraInfo,combine,pngAlso,
                                      weightedAgreementFactor, model )
-                        generateData = False
+                        doGenerate = False
             else:
                 from sympy import var
                 x,y,z = var("x y z")
