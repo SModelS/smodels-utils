@@ -68,16 +68,16 @@ def parseMasses ( massstring, filterOrder=True, maxgap2=None ):
     if len(lists)==2:
         for x in range ( len(lists[0] ) ):
             for y in range ( len(lists[1]) ):
-                if filterOrder and lists[1][y] > lists[0][x]:
+                if filterOrder and lists[1][y] >= lists[0][x]:
                     continue
                 ret.append ( (int(lists[0][x]),int(lists[1][y])) )
     if len(lists)==3:
         for x in range ( len(lists[0] ) ):
             for y in range ( len(lists[1]) ):
-                if filterOrder and lists[1][y] > lists[0][x]:
+                if filterOrder and lists[1][y] >= lists[0][x]:
                     continue
                 for z in range ( len(lists[2]) ):
-                    if filterOrder and lists[2][z] > lists[1][y]:
+                    if filterOrder and lists[2][z] >= lists[1][y]:
                         continue
                     ret.append ( (int(lists[0][x]),int(lists[1][y]),int(lists[2][z])) )
     ret = filterForMaxgap ( ret, maxgap2 )
