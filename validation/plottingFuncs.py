@@ -342,6 +342,8 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
     # print ( "masses after listifying", masses )
     massPlane = MassPlane.fromString( vPlot.txName, vPlot.axes )
     nM = int ( len(masses)/2 ) ## number of masses per branch
+    if vPlot.txName in [ "T5GQ" ]:
+        nM+=1
     if len(masses) % 2 != 0:
         logger.debug("asymmetrical branch. Dont know how to handle" )
     #if masses[:nM] != masses[nM:]: ## actually seems to work
@@ -385,10 +387,11 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
     if vPlot.txName in [ "THSCPM8", "THSCPM3" ]:
         masses = [ list(map(float,tokens[1:3 ] ) ) ] * 2
         widths = [ list(map(float,[ tokens[3] ] ) ) ] * 2
-    #print ( "-> masses", masses )
-    #print ( "-> widths", widths )
+    # print ( "[plottingFuncs] slhafile", slhafile )
+    # print ( "[plottingFuncs] masses", masses )
+    # print ( "[plottingFuncs] widths", widths )
     varsDict = massPlane.getXYValues( masses, widths ) 
-    #print ( "-> vars", varsDict )
+    # print ( "[plottingFuncs] -> vars", varsDict )
     ## FIXME take into account axis
     return varsDict
 
