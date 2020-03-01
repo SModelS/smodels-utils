@@ -303,6 +303,8 @@ def main():
         keepOrder=False
     masses = bakeryHelpers.parseMasses ( args.masses, filterOrder=keepOrder, 
                                          maxgap2=args.maxgap2 )
+    import random
+    random.shuffle ( masses )
     nm = len(masses)
     if nReqM != len(masses[0]):
         print ( "Error: you gave %d masses, but %d are required for %s." % \

@@ -102,20 +102,21 @@ class MA5Wrapper:
             if not self.rerun:
                 print ( "Skip it." )
                 return
-        self.writeRecastingCard ()
-        # then write command file
         Dir = bakeryHelpers.dirName ( process, masses )
         hepmcfile = "%s/Events/run_01/tag_1_pythia8_events.hepmc.gz" % Dir
         hepmcfile = os.path.abspath ( hepmcfile )
         if not os.path.exists ( hepmcfile ):
-            self.error ( "cannot find hepmc file at %s" % hepmcfile )
+            self.error ( "cannot find hepmc file @ %s" % hepmcfile )
             p = hepmcfile.find("Events")
             cmd = "rm -rf %s" % hepmcfile[:p]
-            self.error ( "consider deleting the folder: %s" % cmd )
-            subprocess.getoutput ( cmd )
+            o = subprocess.getoutput ( cmd )
+            self.error ( "deleting the folder %s: %s" % ( cmd, o ) )
+            self.unlink ( self.recastfile )
             return
             # sys.exit()
+        # now write recasting card
         self.msg ( "Found hepmcfile at", hepmcfile )
+        self.writeRecastingCard ()
         self.writeCommandFile( hepmcfile, process, masses )
         tempdir = "ma5_%s" % Dir
         a=subprocess.getoutput ( "mkdir %s" % tempdir )

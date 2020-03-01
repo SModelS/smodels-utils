@@ -83,8 +83,8 @@ class emCreator:
             self.info ( "could not find ma5 summary file %s. Skipping." % summaryfile )
             rmfile = summaryfile[:summaryfile.find("/Output")]
             cmd = "rm -rf %s" % rmfile 
-            self.info ( "should I %s?" % cmd )
-            subprocess.getoutput ( cmd )
+            o = subprocess.getoutput ( cmd )
+            self.info ( "running %s: %s" % ( cmd, o ) )
             ret = {}
             return ret
         f=open(summaryfile,"r")
@@ -107,7 +107,7 @@ class emCreator:
             line = line.replace("150-1","150 -1")
             tokens=line.split()
             if len(tokens)!=10:
-                print ( "cannot parse %s. skip it" % line )
+                print ( "In file %s: cannot parse ``%s'': skip it" % ( summaryfile, line[:50] ) )
                 continue
             dsname,ananame,sr,sig95exp,sig95obs,pp,eff,statunc,systunc,totunc=tokens
             eff=float(eff)
@@ -188,9 +188,12 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
             prevN = 0
             if os.path.exists (dest ):
                 f=open(dest,"r")
-                g=eval(f.read())
-                f.close()
-                prevN=len(g.keys())
+                try:
+                    g=eval(f.read())
+                    f.close()
+                    prevN=len(g.keys())
+                except:
+                    pass
             print ( "[emCreator] previous number of data points: %d" % prevN )
             print ( "[emCreator] copying embaked to %s" % dest )
             cmd = "cp %s %s" % ( fname, dest )
