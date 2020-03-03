@@ -52,7 +52,6 @@ class MG5Wrapper:
     def error ( self, *msg ):
         print ( "%s[mg5Wrapper] %s%s" % ( colorama.Fore.RED, " ".join ( msg ), \
                    colorama.Fore.RESET ) )
-        sys.exit()
 
     def writePythiaCard ( self, process="" ):
         """ this method writes the pythia card for within mg5.
@@ -64,6 +63,7 @@ class MG5Wrapper:
         templatefile = self.templateDir+'/template_run_card.dat'
         if not os.path.exists ( templatefile ):
             self.error ( "cannot find %s" % templatefile )
+            sys.exit()
         tfile = open( templatefile,'r')
         lines = tfile.readlines()
         tfile.close()
@@ -144,12 +144,12 @@ class MG5Wrapper:
             subprocess.getoutput ( "rm -rf %s" % f )
 
     def exe ( self, cmd ):
-        self.msg ( "now execute: %s" % cmd )
+        self.msg ( "now execute: %s" % cmd[:70] )
         ret = subprocess.getoutput ( cmd )
         if len(ret)==0:
             return
-        # maxLength=60
-        maxLength=560
+        maxLength=60
+        # maxLength=560
         if len(ret)<maxLength:
             self.msg ( " `- %s" % ret )
             return
@@ -165,6 +165,7 @@ class MG5Wrapper:
         templatefile = self.templateDir + '/MG5_Process_Cards/'+self.topo+'.txt'
         if not os.path.isfile( templatefile ):
             self.error ( "The process card %s does not exist." % templatefile )
+            sys.exit()
         f=open(templatefile,"r")
         lines=f.readlines()
         f.close()
@@ -199,6 +200,11 @@ class MG5Wrapper:
         cmd = "python2 %s %s 2>&1 | tee %s" % ( self.executable, self.tempf, self.logfile )
         self.exe ( cmd )
         ## copy slha file
+        if not os.path.exists ( Dir+"/Cards" ):
+            self.error ( "%s/Cards does not exist! Skipping!" % Dir )
+            cmd = "rm -rf %s" % Dir 
+            o = subprocess.getoutput ( cmd )
+            return
         shutil.move(slhaFile, Dir+'/Cards/param_card.dat' )
         shutil.move(self.runcard, Dir+'/Cards/run_card.dat' )
         if (os.path.isdir(Dir+'/Events/run_01')):

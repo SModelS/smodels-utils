@@ -26,6 +26,7 @@ class MA5Wrapper:
         self.ver = ver
         if not os.path.isdir ( self.ma5install ):
             self.error ( "ma5 install is missing??" )
+            sys.exit()
         self.executable = "bin/ma5"
         if not os.path.exists ( self.ma5install + self.executable ):
             self.info ( "cannot find ma5 installation at %s" % self.ma5install )
@@ -46,7 +47,6 @@ class MA5Wrapper:
     def error ( self, *msg ):
         print ( "%s[ma5Wrapper] Error: %s%s" % ( colorama.Fore.RED, " ".join ( msg ), \
                    colorama.Fore.RESET ) )
-        sys.exit()
 
     def writeRecastingCard ( self ):
         """ this method writes the recasting card, which defines which analyses
@@ -58,6 +58,7 @@ class MA5Wrapper:
         templatefile = self.templateDir+'/recasting_card.dat'
         if not os.path.exists ( templatefile ):
             self.error ( "cannot find %s" % templatefile )
+            sys.exit()
         ## for now simply copy the recasting card
         shutil.copy ( templatefile, filename )
         f = open ( filename, "at" )
@@ -98,20 +99,30 @@ class MA5Wrapper:
         dirname = bakeryHelpers.dirName ( process, masses )
         summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
         if os.path.exists ( summaryfile ) and os.stat(summaryfile).st_size>10:
-            print ( "It seems like there is already a summary file %s" % summaryfile )
-            if not self.rerun:
-                print ( "Skip it." )
+            self.msg ( "It seems like there is already a summary file %s" % summaryfile )
+            f=open(summaryfile,"rt")
+            lines=f.readlines()
+            f.close()
+            anaIsIn = False
+            for line in lines:
+                if self.analyses in line:
+                    anaIsIn = True
+            self.msg ( "is %s in the summary? %d!" % ( self.analyses, anaIsIn ) )
+            if anaIsIn and (not self.rerun):
+                self.msg ( "Skip it." )
                 return
+            if not anaIsIn:
+                self.msg ( "ana not in, rerun!" )
         Dir = bakeryHelpers.dirName ( process, masses )
         hepmcfile = "%s/Events/run_01/tag_1_pythia8_events.hepmc.gz" % Dir
         hepmcfile = os.path.abspath ( hepmcfile )
         if not os.path.exists ( hepmcfile ):
-            self.error ( "cannot find hepmc file @ %s" % hepmcfile )
+            self.error ( "cannot find hepmc file %s" % hepmcfile )
             p = hepmcfile.find("Events")
+            self.error ( "cmd %s" % p )
             cmd = "rm -rf %s" % hepmcfile[:p]
             o = subprocess.getoutput ( cmd )
             self.error ( "deleting the folder %s: %s" % ( cmd, o ) )
-            self.unlink ( self.recastfile )
             return
             # sys.exit()
         # now write recasting card
