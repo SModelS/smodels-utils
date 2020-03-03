@@ -7,10 +7,11 @@ and stored in the xsec*.txt files. """
 
 import os, subprocess, sys
 
-def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run, order ):
+def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run, order, comment ):
     """ add to file F cross sections for pid1, pid2 
     :param order: perturbation order that we should claim this to be
                   (LO=0, NLO=1, NLL=2, ... )
+    :param comment: comment to be added to xsec line
     """
     tokens = F.split("_")
     mass = float(tokens[1])
@@ -42,7 +43,7 @@ def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run, order ):
         f.write ( line )
     f.write ( "XSECTION  %s  2212 2212 2 %d %d # reference cross section [pb]\n" % \
               ( ssqrt, pid1, pid2 ) )
-    f.write ( "  0  %d  0  0  0  0    %.6G AddRefXSecsv1.0\n" % ( order, xsec ) )
+    f.write ( "  0  %d  0  0  0  0    %.6G AddRefXSecsv1.0%s\n" % ( order, xsec, comment ) )
     f.write ( "\n" )
     f.close()
 
@@ -106,31 +107,40 @@ def getXSecsFrom ( filename, pb = True, columns={"mass":0,"xsec":1 } ):
         ret[ mass ] = xsec
     return ret
 
-def getXSecsFor ( pid1, pid2, sqrts ):
-    """ get the xsec dictionary for pid1/pid2, sqrts """
+def getXSecsFor ( pid1, pid2, sqrts, ewk ):
+    """ get the xsec dictionary for pid1/pid2, sqrts 
+    :param ewk: specify the ewkino process (hino, or wino)
+    """
     filename=None
     order = 0
     pb = True
     columns = { "mass": 0, "xsec": 1 }
+    isEWK=False
+    comment=""
     if pid1 in [ 1000021 ] and pid2 == pid1:
         filename = "xsecgluino%d.txt" % sqrts
         columns["xsec"]=2
+        isEWK=True
         order = 2 # 4
     if pid1 in [ -1000024 ] and pid2 in [ 1000023 ]:
         filename = "xsecN2C1m13.txt"
         order = 2
+        isEWK=True
         pb = False
     if pid1 in [ 1000023 ] and pid2 in [ 1000024 ]:
         filename = "xsecN2C1p13.txt"
         order = 2
         pb = False
+        isEWK=True
     if pid1 in [ 1000024 ] and pid2 in [ 1000025 ]:
         filename = "xsecN2C1p13.txt"
         order = 2
         pb = False
+        isEWK=True
     if pid1 in [ -1000024 ] and pid2 in [ 1000025 ]:
         filename = "xsecN2C1m13.txt"
         order = 2
+        isEWK=True
         pb = False
     if pid1 in [ -1000005, -1000006 ] and pid2 == -pid1:
         ## left handed slep- slep+ production.
@@ -153,8 +163,12 @@ def getXSecsFor ( pid1, pid2, sqrts ):
     if filename == None:
         print ( "[addRefXSecs] could not identify filename for xsecs" )
         return {}
+    if ewk == "hino":
+        filename = filename.replace(".txt","hino.txt" )
+    if isEWK:
+        comment = " (%s)" % ewk
     xsecs = getXSecsFrom ( filename, pb, columns )
-    return xsecs,order
+    return xsecs,order,comment
 
 def zipThem ( files ):
     """ zip them up """
@@ -175,6 +189,8 @@ def main():
                            type=int, default = 1000015 )
     argparser.add_argument('-s', '--sqrts', help="sqrts [13]",
                            type=int, default = 13 )
+    argparser.add_argument('-e', '--ewk', help="specify the ewkino process, hino or wino [wino]",
+                           type=str, default = "wino" )
     argparser.add_argument('-d', '--dry_run', help="just pretend",
                             action = "store_true" )
     argparser.add_argument('-c', '--clean', help="perform cleanup step",
@@ -182,10 +198,13 @@ def main():
     argparser.add_argument('-z', '--zip', help="zip them up at the end",
                             action = "store_true" )
     args = argparser.parse_args()
+    if args.ewk not in [ "hino", "wino" ]:
+        print ( "[addRefXSecs] error ewk %s not recognised" % args.ewk )
+        sys.exit()
     if args.files.endswith(".tar.gz"):
         files = glob.glob("T*slha")
         if len(files)>0:
-            print ( "[check_nlo] error, you ask me to unpack a tarball but there are slha files in the directory." )
+            print ( "[addRefXSecs] error, you ask me to unpack a tarball but there are slha files in the directory." )
             sys.exit()
         ## remove cruft slha files, unpack tarball
         cmd = "rm -rf T*slha" 
@@ -197,10 +216,10 @@ def main():
     if args.pid2 < args.pid1:
         print ( "[addRefXSecs] will swap pids %d and %d" % ( args.pid1, args.pid2) )
         args.pid1, args.pid2 = args.pid2, args.pid1
-    xsecs,order = getXSecsFor ( args.pid1, args.pid2, args.sqrts )
+    xsecs,order,comment = getXSecsFor ( args.pid1, args.pid2, args.sqrts, args.ewk )
     # print ( "xsecs", xsecs )
     for F in files: # [:3]:
-        addToFile ( F, args.pid1, args.pid2, xsecs, args.sqrts, args.dry_run, order )
+        addToFile ( F, args.pid1, args.pid2, xsecs, args.sqrts, args.dry_run, order, comment )
         if args.clean:
             clean ( F )
     if args.zip:

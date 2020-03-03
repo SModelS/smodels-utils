@@ -21,6 +21,12 @@ def exec(cmd):
 def gprint ( line ):
     print ( "%s%s%s" % ( colorama.Fore.GREEN, line, colorama.Fore.RESET ) )
 
+def gitPush():
+    cmd = "cd ../../smodels.github.io/; git commit -am 'automated update'; git push"
+    print ( "[updateAllWikiPages.py] %s" % cmd )
+    o = subprocess.getoutput ( cmd )
+    print ( "[updateAllWikiPages.py] %s" % o )
+
 def main():
     import argparse
     argparser = argparse.ArgumentParser(
@@ -32,6 +38,9 @@ def main():
                              action='store_true' )
     argparser.add_argument ( '-P', '--no_pickle', 
             help='Skip creation of pickle files',
+            action='store_true' )
+    argparser.add_argument ( '-c', '--commit', 
+            help='git-commit and git-push to smodels.github.io',
             action='store_true' )
     argparser.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
     A = argparser.parse_args()
@@ -82,7 +91,8 @@ def main():
     if A.non_versioned:
         exec ( cmd + [ "-s", "-f" ] )
         exec ( cmd + [ "-u" ] )
-
+    if A.commit:
+        gitPush()
 
 if __name__ == "__main__":
     main()
