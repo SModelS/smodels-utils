@@ -339,8 +339,10 @@ def main():
         from types import SimpleNamespace
         # analyses = "atlas_susy_2016_07"
         analyses = args.analyses
-        args = SimpleNamespace ( masses=args.masses, topo=args.topo, njets=args.njets, \
+        args = SimpleNamespace ( masses="all", topo=args.topo, njets=args.njets, \
                 analyses = analyses, copy=args.copy, verbose=False )
+        #args = SimpleNamespace ( masses=args.masses, topo=args.topo, njets=args.njets, \
+        #        analyses = analyses, copy=args.copy, verbose=False )
         emCreator.run ( args )
     with open("baking.log","a") as f:
         cmd = ""

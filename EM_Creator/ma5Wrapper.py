@@ -119,7 +119,6 @@ class MA5Wrapper:
         if not os.path.exists ( hepmcfile ):
             self.error ( "cannot find hepmc file %s" % hepmcfile )
             p = hepmcfile.find("Events")
-            self.error ( "cmd %s" % p )
             cmd = "rm -rf %s" % hepmcfile[:p]
             o = subprocess.getoutput ( cmd )
             self.error ( "deleting the folder %s: %s" % ( cmd, o ) )
