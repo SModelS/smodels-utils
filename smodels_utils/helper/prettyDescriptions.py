@@ -600,11 +600,11 @@ def prettyAxes(txname,axes):
         return ['m_{#tilde{g}} = x, m_{#tilde{q}} = 0.96*x',
                     'm_{#tilde{#chi}_{1}^{0}} = y']
     if txname == 'T3GQ':
-        ret = ['m_{#tilde{g}} = %s, m_{#tilde{q}} = x' % str(axes[1][0]),
-               'm_{#tilde{#chi}_{1}^{0}} = y']
+        ret = ['m_{#tilde{g}} = x, m_{#tilde{q}} = y',
+               'm_{#tilde{#chi}_{1}^{0}} = %s' % str(axes[0][1]) ]
         return ret
     if txname == 'T5GQ':
-        ret = ['m_{#tilde{g}} = x, m_{#tilde{q}} = y',
+        ret = ['m_{#tilde{q}} = x, m_{#tilde{g}} = y',
                'm_{#tilde{#chi}_{1}^{0}} = %s' % str(axes[1][1]) ]
         return ret
     if txname == 'TChiChiSlepSlep':
