@@ -159,6 +159,7 @@ class MG5Wrapper:
         """ if 'generate' or 'add process' line, then append n jets to file f """
         for line in lines:
             if "generate" in line or "add process" in line:
+                line = line.strip()
                 line = line.replace ( "generate ", "add process " )
                 if "$" in line and not " $" in line:
                    self.error ( "found a line with dollar and no space %s" % line )
@@ -168,7 +169,7 @@ class MG5Wrapper:
                     line = line.replace(" $"," j"*njets+" $" )
                 else:
                     line = line + " j"*njets
-                line = line.strip() + "\n"
+                line = line + "\n"
                 f.write ( line )
 
     def execute ( self, slhaFile, masses ):
@@ -205,9 +206,10 @@ class MG5Wrapper:
         self.exe ( cmd )
         ## copy slha file
         if not os.path.exists ( Dir+"/Cards" ):
-            self.error ( "%s/Cards does not exist! Skipping!" % Dir )
             cmd = "rm -rf %s" % Dir 
             o = subprocess.getoutput ( cmd )
+            self.error ( "%s/Cards does not exist! Skipping! %s" % ( Dir, o ) )
+            self.exe ( cmd )
             return
         shutil.move(slhaFile, Dir+'/Cards/param_card.dat' )
         shutil.move(self.runcard, Dir+'/Cards/run_card.dat' )
@@ -304,9 +306,11 @@ def main():
         for i,a in enumerate(sys.argv):
             if i>0 and sys.argv[i-1] in [ "-m", "--masses" ]:
                 a='"%s"' % a
+            if i>0 and sys.argv[i-1] in [ "--analyses" ]:
+                a='"%s"' % a
             cmd += a + " "
         cmd = cmd[:-1]
-        f.write ( "[%s] %s: started: %s\n" % ( hname, time.asctime(), cmd ) )
+        f.write ( "[%s] %s:\n%s\n" % ( hname, time.asctime(), cmd ) )
     nReqM = bakeryHelpers.nRequiredMasses ( args.topo )
     keepOrder=True
     if args.topo == "TGQ":
@@ -355,7 +359,7 @@ def main():
                 a='"%s"' % a
             cmd += a + " "
         cmd = cmd[:-1]
-        f.write ( "[%s] %s: ended: %s\n" % ( hname, time.asctime(), cmd ) )
+        # f.write ( "[%s] %s: ended: %s\n" % ( hname, time.asctime(), cmd ) )
 
 if __name__ == "__main__":
     main()
