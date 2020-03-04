@@ -155,7 +155,7 @@ class MG5Wrapper:
             return
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
 
-    def addJet ( lines, njets, f ):
+    def addJet ( self, lines, njets, f ):
         """ if 'generate' or 'add process' line, then append n jets to file f """
         for line in lines:
             if "generate" in line or "add process" in line:

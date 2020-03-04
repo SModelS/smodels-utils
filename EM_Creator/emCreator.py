@@ -9,6 +9,7 @@
 """
 
 import os, sys, colorama, subprocess, shutil, time
+from datetime import datetime
 import bakeryHelpers
 
 class emCreator:
@@ -87,6 +88,7 @@ class emCreator:
             self.info ( "running %s: %s" % ( cmd, o ) )
             ret = {}
             return ret
+        timestamp = os.stat ( summaryfile ).st_mtime
         f=open(summaryfile,"r")
         lines=f.readlines()
         f.close()
@@ -117,7 +119,7 @@ class emCreator:
             if not ananame in effs:
                 effs[ananame]={}
             effs[ananame][sr]=eff
-        return effs
+        return effs,timestamp
 
     def exe ( self, cmd ):
         self.msg ( "now execute: %s" % cmd )
@@ -137,15 +139,17 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
     else:
         masses = bakeryHelpers.parseMasses ( masses )
     creator = emCreator( analyses, topo, njets )
-    effs={}
+    effs,tstamps={},{}
     if verbose:
         print ( "[emCreator] topo %s: %d mass points considered" % ( topo, len(masses) ) )
     for m in masses:
-        eff = creator.extract( m )
+        eff,t = creator.extract( m )
         for k,v in eff.items():
             if not k in effs:
                 effs[k]={}
+                tstamps[k]={}
             effs[k][m]=v
+            tstamps[k][m]=t
     seffs = ",".join(list(effs.keys()))
     if seffs == "":
         seffs = "no analysis"
@@ -154,6 +158,9 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
     for ana,values in effs.items():
         if len(values.keys()) == 0:
             continue
+        ts = {}
+        if ana in tstamps:
+            ts = tstamps[ana]
         fname = "%s.%s.embaked" % (ana, topo )
         print ( "baking %s: %d points." % ( fname, len(values) ) )
         SRs = set()
@@ -166,7 +173,13 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
         # f.write ( "%s\n" % values )
         f.write ( "{" )
         for k,v in values.items():
-            v["__t__"]=time.asctime()
+            t=0
+            if k in ts:
+                t = ts[k]
+            if t > 0:
+                v["__t__"]=datetime.fromtimestamp(t).strftime('%Y-%m-%d_%H:%M:%S')
+            else:
+                v["__t__"]="?"
             v["__nevents__"]=creator.getNEvents ( k )
             f.write ( "%s: %s, \n" % ( k,v ) )
         f.write ( "}\n" )
