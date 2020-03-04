@@ -155,6 +155,22 @@ class MG5Wrapper:
             return
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
 
+    def addJet ( lines, njets, f ):
+        """ if 'generate' or 'add process' line, then append n jets to file f """
+        for line in lines:
+            if "generate" in line or "add process" in line:
+                line = line.replace ( "generate ", "add process " )
+                if "$" in line and not " $" in line:
+                   self.error ( "found a line with dollar and no space %s" % line )
+                   self.error ( "please add a space before the dollar" )
+                   sys.exit()
+                if " $" in line:
+                    line = line.replace(" $"," j"*njets+" $" )
+                else:
+                    line = line + " j"*njets
+                line = line.strip() + "\n"
+                f.write ( line )
+
     def execute ( self, slhaFile, masses ):
         if self.hasHEPMC ( masses ):
             if not self.rerun:
@@ -174,21 +190,9 @@ class MG5Wrapper:
         f.write ( "import model_v4 mssm\n" )
         for line in lines:
             f.write ( line )
-        if self.njets > 0:
-            for line in lines:
-                if "generate" in line or "add process" in line:
-                    line = line.replace ( "generate ", "add process " )
-                    f.write ( line.strip() + " j\n" )
-        if self.njets > 1:
-            for line in lines:
-                if "generate" in line or "add process" in line:
-                    line = line.replace ( "generate ", "add process " )
-                    f.write ( line.strip() + " j j\n" )
-        if self.njets > 2:
-            for line in lines:
-                if "generate" in line or "add process" in line:
-                    line = line.replace ( "generate ", "add process " )
-                    f.write ( line.strip() + " j j j\n" )
+        for i in [ 1, 2, 3 ]:
+            if self.njets >= i:
+                self.addJet ( lines, i, f )
 
         Dir = bakeryHelpers.dirName ( self.process, masses )
         f.write ( "output %s\n" % Dir )
