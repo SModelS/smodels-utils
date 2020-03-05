@@ -107,12 +107,11 @@ class MA5Wrapper:
             for line in lines:
                 if self.analyses in line:
                     anaIsIn = True
-            self.msg ( "is %s in the summary? %d!" % ( self.analyses, anaIsIn ) )
             if anaIsIn and (not self.rerun):
-                self.msg ( "Skip it." )
+                self.msg ( "%s is in the summary file for %s: skip it." % ( self.analyses, str(masses) ) )
                 return
             if not anaIsIn:
-                self.msg ( "ana not in, rerun!" )
+                self.msg ( "%s not in summary file: rerun!" % self.analyses )
         Dir = bakeryHelpers.dirName ( process, masses )
         hepmcfile = "%s/Events/run_01/tag_1_pythia8_events.hepmc.gz" % Dir
         hepmcfile = os.path.abspath ( hepmcfile )

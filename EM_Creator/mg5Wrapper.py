@@ -112,8 +112,16 @@ class MG5Wrapper:
         """ Run MG5 for topo, with njets additional ISR jets, giving
         also the masses as a list.
         """
-        self.info ( "running on %s in job #%s" % (masses, pid ) )
         self.process = "%s_%djet" % ( self.topo, self.njets )
+        if self.hasHEPMC ( masses ):
+            if not self.rerun:
+                self.info ( "hepmc file for %s exists. go directly to MA5." % \
+                            str(masses) )
+                self.runMA5 ( masses, analyses )
+                return
+            else:
+                self.info ( "hepmc file for %s exists, but rerun requested." % str(masses) )
+        self.info ( "running on %s in job #%s" % (masses, pid ) )
         slhaTemplate = "slha/%s_template.slha" % self.topo
         self.pluginMasses( slhaTemplate, masses )
         # first write pythia card
@@ -131,7 +139,7 @@ class MG5Wrapper:
             return
         from ma5Wrapper import MA5Wrapper
         ma5 = MA5Wrapper ( self.topo, self.njets, self.rerun, analyses )
-        print ( "[mg5Wrapper] now call ma5Wrapper" )
+        self.debug ( "now call ma5Wrapper" )
         ma5.run ( masses )
 
     def unlink ( self, f ):
@@ -173,12 +181,6 @@ class MG5Wrapper:
                 f.write ( line )
 
     def execute ( self, slhaFile, masses ):
-        if self.hasHEPMC ( masses ):
-            if not self.rerun:
-                self.info ( "hepmc file for %s exists. skipping." % str(masses) )
-                return
-            else:
-                self.info ( "hepmc file for %s exists, but rerun requested." % str(masses) )
         templatefile = self.templateDir + '/MG5_Process_Cards/'+self.topo+'.txt'
         if not os.path.isfile( templatefile ):
             self.error ( "The process card %s does not exist." % templatefile )
@@ -332,6 +334,8 @@ def main():
     def runChunk ( chunk, pid ):
         for c in chunk:
             mg5.run ( c, args.analyses, pid )
+        print ( "%s[runChunk] finished chunk #%d%s" % \
+                ( colorama.Fore.GREEN, pid, colorama.Fore.RESET ) )
 
     jobs=[]
     for i in range(nprocesses):
@@ -341,7 +345,6 @@ def main():
         p = multiprocessing.Process(target=runChunk, args=(chunk,i))
         jobs.append ( p )
         p.start()
-    # mg5.run( [ 500, 100 ] )
     if args.bake:
         import emCreator
         from types import SimpleNamespace
@@ -349,8 +352,6 @@ def main():
         analyses = args.analyses
         args = SimpleNamespace ( masses="all", topo=args.topo, njets=args.njets, \
                 analyses = analyses, copy=args.copy, verbose=False )
-        #args = SimpleNamespace ( masses=args.masses, topo=args.topo, njets=args.njets, \
-        #        analyses = analyses, copy=args.copy, verbose=False )
         emCreator.run ( args )
     with open("baking.log","a") as f:
         cmd = ""
