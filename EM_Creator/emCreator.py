@@ -87,7 +87,7 @@ class emCreator:
             o = subprocess.getoutput ( cmd )
             self.info ( "running %s: %s" % ( cmd, o ) )
             ret = {}
-            return ret
+            return ret,0.
         timestamp = os.stat ( summaryfile ).st_mtime
         f=open(summaryfile,"r")
         lines=f.readlines()
