@@ -265,6 +265,8 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-C', '--clean_all', help='clean all temporary files, even Tx directories, then quit',
                              action="store_true" )
+    argparser.add_argument ( '-A', '--adl', help='use ADL/cutlang instead of MA5',
+                             action="store_true" )
     argparser.add_argument ( '--copy', help='copy embaked file to smodels-database',
                              action="store_true" )
     argparser.add_argument ( '-l', '--list_analyses', help='print a list of MA5 analyses, then quit',
