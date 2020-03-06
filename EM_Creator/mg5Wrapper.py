@@ -279,6 +279,8 @@ def main():
                              type=float, default=None )
     argparser.add_argument ( '--mingap1', help='minimum mass gap between first and second, to force onshell [None]',
                              type=float, default=None )
+    argparser.add_argument ( '--maxgap1', help='maximum mass gap between first and second, to force offshell [None]',
+                             type=float, default=None )
     argparser.add_argument ( '-r', '--rerun', help='force rerun, even if there is a summary file already',
                              action="store_true" )
     #mdefault = "(2000,1000,10),(2000,1000,10)"
@@ -322,7 +324,8 @@ def main():
     if args.topo == "TGQ":
         keepOrder=False
     masses = bakeryHelpers.parseMasses ( args.masses, filterOrder=keepOrder, 
-                                         mingap1=args.mingap1, maxgap2=args.maxgap2 )
+                                         mingap1=args.mingap1, maxgap1=args.maxgap1,
+                                         maxgap2=args.maxgap2 )
     import random
     random.shuffle ( masses )
     nm = len(masses)

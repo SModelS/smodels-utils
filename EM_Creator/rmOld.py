@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import glob, os, time, pickle, subprocess
+import glob, os, time, pickle, subprocess, argparse
 
 def daysFromNow ( timestamp ):
     """ compute how many days in the past from now """
@@ -46,8 +46,10 @@ def loadPickle():
     f.close()
     return sdirs
 
-def rmOlderThan( sdirs, days ):
-    """ remove all older than <days> days """
+def rmOlderThan( sdirs, days, dry_run ):
+    """ remove all older than <days> days 
+    :dry_run: just pretend, if true
+    """
     keys = list(sdirs.keys())
     keys.sort()
     for k in keys[:20]:
@@ -55,19 +57,31 @@ def rmOlderThan( sdirs, days ):
         if d > days:
             print ( "removing %s: %.1f days old." % ( sdirs[k], d ) )
             cmd = "rm -rf %s" % sdirs[k]
-            o = subprocess.getoutput ( cmd )
+            o = "dry_run"
+            if not dry_run:
+                o = subprocess.getoutput ( cmd )
             print ( "   %s: %s" % ( cmd, o ) )
             cmd = "rm -rf ma5/ANA_%s" % sdirs[k] 
-            o = subprocess.getoutput ( cmd )
+            if not dry_run:
+                o = subprocess.getoutput ( cmd )
             print ( "   %s: %s" % ( cmd, o ) )
 
 def main():
-    if os.path.exists ( "stats.pcl" ):
+    argparser = argparse.ArgumentParser(description='remove old directories.')
+    argparser.add_argument ( '-t', '--days', help='number of days the dir has to be old [30]',
+                             type=int, default=30 )
+    argparser.add_argument ( '-f', '--force_rebuild', help='force rebuilding pickle file',
+                             action="store_true" )
+    argparser.add_argument ( '-d', '--dry_run', help='dry_run, dont remove',
+                             action="store_true" )
+    args = argparser.parse_args()
+    if os.path.exists ( "stats.pcl" ) and not args.force_rebuild:
         sdirs = loadPickle()
     else:
         sdirs = createStats()
         savePickle ( sdirs )
     pprint ( sdirs )
-    rmOlderThan ( sdirs, 30. )
+    dry_run = True
+    rmOlderThan ( sdirs, args.days, args.dry_run )
 
 main()
