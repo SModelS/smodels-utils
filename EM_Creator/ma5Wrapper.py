@@ -128,12 +128,12 @@ class MA5Wrapper:
         self.writeRecastingCard ()
         self.writeCommandFile( hepmcfile, process, masses )
         tempdir = "ma5_%s" % Dir
-        a=subprocess.getoutput ( "mkdir %s" % tempdir )
+        a = subprocess.getoutput ( "mkdir %s" % tempdir )
         a = subprocess.getoutput ( "cp -r ma5.template/bin ma5.template/madanalysis ma5.template/tools %s" % tempdir )
         a = subprocess.getoutput ( "cp -r %s %s" % ( self.recastfile, tempdir ) )
         a = subprocess.getoutput ( "cp -r ma5.template/%s %s" % ( self.commandfile, tempdir ) )
 
-        # then run madgraph5
+        # then run MadAnalysis
         os.chdir ( tempdir )
         cmd = "%s -R -s %s 2>&1 | tee %s" % (self.executable, \
                 self.commandfile, self.teefile )

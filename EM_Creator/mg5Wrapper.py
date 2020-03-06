@@ -265,7 +265,7 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-C', '--clean_all', help='clean all temporary files, even Tx directories, then quit',
                              action="store_true" )
-    argparser.add_argument ( '-A', '--adl', help='use ADL/cutlang instead of MA5',
+    argparser.add_argument ( '--cutlang', help='use cutlang instead of MA5',
                              action="store_true" )
     argparser.add_argument ( '--copy', help='copy embaked file to smodels-database',
                              action="store_true" )
@@ -276,6 +276,8 @@ def main():
     argparser.add_argument ( '--analyses', help='analyses, comma separated [%s]' % anadef,
                              type=str, default=anadef )
     argparser.add_argument ( '--maxgap2', help='maximum mass gap between second and third, to force offshell [None]',
+                             type=float, default=None )
+    argparser.add_argument ( '--mingap1', help='minimum mass gap between first and second, to force onshell [None]',
                              type=float, default=None )
     argparser.add_argument ( '-r', '--rerun', help='force rerun, even if there is a summary file already',
                              action="store_true" )
@@ -320,7 +322,7 @@ def main():
     if args.topo == "TGQ":
         keepOrder=False
     masses = bakeryHelpers.parseMasses ( args.masses, filterOrder=keepOrder, 
-                                         maxgap2=args.maxgap2 )
+                                         mingap1=args.mingap1, maxgap2=args.maxgap2 )
     import random
     random.shuffle ( masses )
     nm = len(masses)

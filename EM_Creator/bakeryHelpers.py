@@ -16,11 +16,13 @@ def dirName ( process, masses ):
     """ the name of the directory of one process + masses """
     return process + "." + "_".join(map(str,masses))
 
-def parseMasses ( massstring, filterOrder=True, maxgap2=None ):
+def parseMasses ( massstring, filterOrder=True, mingap1=None, maxgap2=None ):
     """ parse the mass string, e.g. (500,510,10),(100,110,10). keywords like "half" are
         accepted.
     :param filterOrder: if true, discard vectors with daughters more massive than their
                            mothers.
+    :param mingap1: min mass gap between second and third particle, ignore if None.
+                    this is meant to force onshellness
     :param maxgap2: max mass gap between second and third particle, ignore if None.
                     this is meant to force offshellness
     :returns: a list of all model points. E.g. [ (500,100),(510,100),(500,110),(510,110)].
@@ -80,12 +82,28 @@ def parseMasses ( massstring, filterOrder=True, maxgap2=None ):
                     if filterOrder and lists[2][z] >= lists[1][y]:
                         continue
                     ret.append ( (int(lists[0][x]),int(lists[1][y]),int(lists[2][z])) )
-    ret = filterForMaxgap ( ret, maxgap2 )
+    ret = filterForMaxgap2 ( ret, maxgap2 )
+    ret = filterForMingap1 ( ret, mingap1 )
     # print ( "[bakeryHelpers] mass vectors: %s" % ret )
     return ret
 
-def filterForMaxgap ( masses, maxgap2 ):
-    """ filter out tuples for which maxgap2 is exceeded betwen second and third particle
+def filterForMingap1 ( masses, mingap1 ):
+    """ filter out tuples for which mingap1 is not met 
+        between first and second particle
+    """
+    if mingap1 == None:
+        return masses
+    if len(masses[0])<3:
+        return masses
+    ret = []
+    for t in masses:
+        if t[0] > t[1]+mingap1:
+            ret.append ( t )
+    return ret
+
+def filterForMaxgap2 ( masses, maxgap2 ):
+    """ filter out tuples for which maxgap2 is exceeded between second and third
+        particle
     """
     if maxgap2 == None:
         return masses

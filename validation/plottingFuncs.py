@@ -613,7 +613,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
                 leg.AddEntry ( i, "official exclusion", "L" )
     if gridpoints.GetN()>0: 
         base.Add(gridpoints, "P")
-        leg.AddEntry(gridpoints, "SModelS grid points", "P")
+        leg.AddEntry(gridpoints, "%d SModelS grid points" % gridpoints.GetN(), "P")
     title = validationPlot.expRes.globalInfo.id + "_" \
             + validationPlot.txName\
             + "_" + validationPlot.axes
