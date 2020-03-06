@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import glob, os, time, pickle
+import glob, os, time, pickle, subprocess
 
 def daysFromNow ( timestamp ):
     """ compute how many days in the past from now """
@@ -24,13 +24,19 @@ def savePickle ( sdirs ):
 def createStats():
     """ produce the stats from scratch """
     t0=time.time()
-    files = glob.glob("T*")
     sdirs = {}
+    files = glob.glob("T*")
     for f in files:
         if "TODO" in f:
             continue
         ms = os.stat ( f ).st_mtime
         sdirs[ms]=f
+    """
+    files = glob.glob("ma5/ANA_T*")
+    for f in files:
+        ms = os.stat ( f ).st_mtime
+        sdirs[ms]=f
+    """
     return sdirs
 
 def loadPickle():
@@ -48,6 +54,12 @@ def rmOlderThan( sdirs, days ):
         d = daysFromNow(k)
         if d > days:
             print ( "removing %s: %.1f days old." % ( sdirs[k], d ) )
+            cmd = "rm -rf %s" % sdirs[k]
+            o = subprocess.getoutput ( cmd )
+            print ( "   %s: %s" % ( cmd, o ) )
+            cmd = "rm -rf ma5/ANA_%s" % sdirs[k] 
+            o = subprocess.getoutput ( cmd )
+            print ( "   %s: %s" % ( cmd, o ) )
 
 def main():
     if os.path.exists ( "stats.pcl" ):
@@ -56,5 +68,6 @@ def main():
         sdirs = createStats()
         savePickle ( sdirs )
     pprint ( sdirs )
+    rmOlderThan ( sdirs, 30. )
 
 main()
