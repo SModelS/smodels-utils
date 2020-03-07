@@ -1,4 +1,4 @@
 #!/bin/sh
 
 cd /mnt/hephy/pheno/ww/git/smodels-utils/EM_Creator
-./bake.py -p 30 -t T3GQ --analyses cms_sus_16_033 -n 10000 -a -m "[(50,4600,100),(50,4600,100),(0.)]"
+./bake.py -p 10 -t TGQ -n 10000 -a --analyses "cms_sus_16_033,atlas_susy_2016_07" -m "[(50,4500,200),(50,4500,200),(0.)]"
