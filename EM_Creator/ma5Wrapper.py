@@ -71,7 +71,7 @@ class MA5Wrapper:
             print ( "[ma5Wrapper] writing %s in recast card %s" % ( i, filename ) )
             f.write ( "%s         v%s        on    %s.tcl\n" % ( i, versions[i], recastcard[i] ) )
         f.close()
-        self.info ( "%s: wrote recasting card %s" % ( time.asctime(), filename ) )
+        self.info ( "%s: wrote recasting card %s in %s" % ( time.asctime(), filename, os.getcwd() ) )
 
     def unlink ( self, f ):
         if os.path.exists ( f ):
@@ -140,7 +140,7 @@ class MA5Wrapper:
 
         # then run MadAnalysis
         os.chdir ( tempdir )
-        cmd = "%s -R -s %s 2>&1 | tee %s" % (self.executable, \
+        cmd = "python2 %s -R -s %s 2>&1 | tee %s" % (self.executable, \
                 self.commandfile, self.teefile )
         self.exe ( cmd )
         self.unlink ( self.recastfile )

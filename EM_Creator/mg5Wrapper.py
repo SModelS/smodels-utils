@@ -161,7 +161,7 @@ class MG5Wrapper:
         if len(ret)<maxLength:
             self.msg ( " `- %s" % ret )
             return
-        self.msg ( " `- %s" % ( ret[-maxLength:] ) )
+        self.msg ( " `- %s ..." % ( ret[:maxLength] ) )
 
     def addJet ( self, lines, njets, f ):
         """ if 'generate' or 'add process' line, then append n jets to file f """
@@ -221,16 +221,22 @@ class MG5Wrapper:
         cmd = "python2 %s %s 2>&1 | tee %s" % ( self.executable, self.commandfile, 
                                                 self.logfile2 )
         self.exe ( cmd )
-        self.clean()
+        self.clean( Dir )
 
-    def clean ( self ):
-        """ clean up temporary files """
+    def clean ( self, Dir=None ):
+        """ clean up temporary files 
+        :param Dir: if given, then assume its the runtime directory, and remove "Source", "lib", "SubProcesses" and other subdirs
+        """
         self.info ( "cleaning up %s, %s, %s, %s" % \
                 ( self.commandfile, self.tempf, self.logfile, self.logfile2 ) )
         self.unlink ( self.commandfile )
         self.unlink ( self.tempf )
         self.unlink ( self.logfile )
         self.unlink ( self.logfile2 )
+        if Dir != None:
+            cmd = "rm -rf %s/HTML %s/SubProcesses %s/Source %s/bin %s/Cards %s/lib %s/madevent.tar.gz %s/Events/run_01/tag_1_pythia8.log %s/Events/run_01/unweighted_events.lhe.gz" % ( tuple([Dir]*9) ) 
+            o = subprocess.getoutput ( cmd )
+            self.info ( "clean up %s: %s" % ( cmd, o ) )
 
     def hasHEPMC ( self, masses ):
         """ does it have a valid HEPMC file? if yes, then skip the point """

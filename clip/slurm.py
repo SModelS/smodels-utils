@@ -208,7 +208,7 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc ):
         f.close()
 
     filename = "bake.sh"
-    filename = tempfile.mktemp(prefix="bake",suffix=".sh",dir="")
+    filename = tempfile.mktemp(prefix="_B",suffix=".sh",dir="")
     Dir = "/mnt/hephy/pheno/ww/git/smodels-utils/clip/"
     print ( "creating script at %s/%s" % ( Dir, filename ) )
     with open ( "%s/%s" % ( Dir, filename ), "wt" ) as f:
@@ -233,6 +233,8 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc ):
     cmd = [ "sbatch" ]
     cmd += [ "--ntasks-per-node", str(nproc) ]
     cmd += [ tmpfile ]
+    ram = 2
+    cmd += [ "--mem", "%dG" % ram ]
     # cmd += [ "./run_bakery.sh" ]
     print ("[slurm.py] baking %s" % " ".join ( cmd ) )
     if not dry_run:
