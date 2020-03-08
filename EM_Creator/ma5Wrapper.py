@@ -71,7 +71,7 @@ class MA5Wrapper:
             print ( "[ma5Wrapper] writing %s in recast card %s" % ( i, filename ) )
             f.write ( "%s         v%s        on    %s.tcl\n" % ( i, versions[i], recastcard[i] ) )
         f.close()
-        self.info ( "wrote recasting card %s" % filename )
+        self.info ( "%s: wrote recasting card %s" % ( time.asctime(), filename ) )
 
     def unlink ( self, f ):
         if os.path.exists ( f ):
@@ -103,14 +103,19 @@ class MA5Wrapper:
             f=open(summaryfile,"rt")
             lines=f.readlines()
             f.close()
-            anaIsIn = False
+            anaIsIn = {}
+            analyses = self.analyses.split(",")
+            for ana in analyses:
+                anaIsIn[ana]=False
             for line in lines:
-                if self.analyses in line:
-                    anaIsIn = True
-            if anaIsIn and (not self.rerun):
-                self.msg ( "%s is in the summary file for %s: skip it." % ( self.analyses, str(masses) ) )
+                for ana in analyses:
+                    if ana in line:
+                        anaIsIn[ana]=True
+            allAnasIn = sum ( anaIsIn.values() ) == len(anaIsIn)
+            if allAnasIn and (not self.rerun):
+                self.msg ( "%s are in the summary file for %s: skip it." % ( self.analyses, str(masses) ) )
                 return
-            if not anaIsIn:
+            if not allAnasIn:
                 self.msg ( "%s not in summary file: rerun!" % self.analyses )
         Dir = bakeryHelpers.dirName ( process, masses )
         hepmcfile = "%s/Events/run_01/tag_1_pythia8_events.hepmc.gz" % Dir
