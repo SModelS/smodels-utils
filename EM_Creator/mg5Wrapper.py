@@ -139,7 +139,7 @@ class MG5Wrapper:
     def unlock ( self, masses ):
         """ unlock for topo and masses, to make sure processes dont
             overwrite each other """
-        filename = ".lock%s%s" % ( str(masses), self.topo )
+        filename = ".lock%s%s" % ( str(masses).replace(" ","").replace("(","").replace(")","").replace(",","_"), self.topo )
         __locks__.remove ( filename )
         if os.path.exists ( filename ):
             cmd = "rm -f %s" % filename
