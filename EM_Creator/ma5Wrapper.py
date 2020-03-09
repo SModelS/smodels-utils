@@ -96,7 +96,7 @@ class MA5Wrapper:
         process = "%s_%djet" % ( self.topo, self.njets )
         dirname = bakeryHelpers.dirName ( process, masses )
         summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
-        if not os.path.exists ( summaryfile ) or os.stat(summaryfile).st_size>10:
+        if not os.path.exists ( summaryfile ) or os.stat(summaryfile).st_size<10:
             self.msg ( "No summary file %s found. Run analyses!" % summaryfile )
             return False
         self.msg ( "It seems like there is already a summary file %s" % summaryfile )
