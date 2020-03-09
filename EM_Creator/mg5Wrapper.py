@@ -193,7 +193,7 @@ class MG5Wrapper:
         ma5 = MA5Wrapper ( self.topo, self.njets, self.rerun, analyses )
         self.debug ( "now call ma5Wrapper" )
         ma5.run ( masses )
-        self.announce ( "%s[%s] finished at %s" % ( str(masses), self.topo, time.asctime() ) )
+        self.announce ( "finished MG5+MA5 for %s[%s] at %s%s" % ( str(masses), self.topo, time.asctime(), spid ) )
 
     def unlink ( self, f ):
         """ remove a file, if keep is not true """
