@@ -67,8 +67,8 @@ class MA5Wrapper:
         anas = set(self.analyses.split(","))
         versions = { "atlas_susy_2016_07": "1.2", 
                      "cms_sus_16_033": "1.2" }
+        self.info ( "adding %s to recast card %s" % ( self.analyses, filename ) )
         for i in anas:
-            print ( "[ma5Wrapper] writing %s in recast card %s" % ( i, filename ) )
             f.write ( "%s         v%s        on    %s.tcl\n" % ( i, versions[i], recastcard[i] ) )
         f.close()
         self.info ( "%s: wrote recasting card %s in %s" % ( time.asctime(), filename, os.getcwd() ) )
@@ -89,47 +89,64 @@ class MA5Wrapper:
         f.write('submit ANA_%s\n' % bakeryHelpers.dirName(process,masses)  )
         f.close()
 
+    def checkForSummaryFile ( self, masses ):
+        """ given the process, and the masses, check summary file 
+        :returns: True, if there is a usable summary file, with all needed analyses
+        """
+        process = "%s_%djet" % ( self.topo, self.njets )
+        dirname = bakeryHelpers.dirName ( process, masses )
+        summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
+        if not os.path.exists ( summaryfile ) or os.stat(summaryfile).st_size>10:
+            self.msg ( "No summary file %s found. Run analyses!" % summaryfile )
+            return False
+        self.msg ( "It seems like there is already a summary file %s" % summaryfile )
+        f=open(summaryfile,"rt")
+        lines=f.readlines()
+        f.close()
+        anaIsIn = {}
+        analyses = self.analyses.split(",")
+        for ana in analyses:
+            anaIsIn[ana]=False
+        for line in lines:
+            for ana in analyses:
+                if ana in line:
+                    anaIsIn[ana]=True
+        allAnasIn = sum ( anaIsIn.values() ) == len(anaIsIn)
+        if allAnasIn and (not self.rerun):
+            self.msg ( "%s are in the summary file for %s: skip it." % ( self.analyses, str(masses) ) )
+            return True
+        if not allAnasIn:
+            self.msg ( "%s not in summary file: rerun!" % self.analyses )
+        return False
+
     def run( self, masses, pid=None ):
         """ Run MA5 over an hepmcfile, specifying the process """
         #if pid!=None:
         #    time.sleep(pid*30) ## all the compiling ...
+        spid = ""
+        if pid != None:
+            spid = "[%d]" % pid
         self.commandfile = tempfile.mktemp ( prefix="ma5cmd", dir="./" )
         self.teefile = tempfile.mktemp ( prefix="ma5", suffix=".run", dir="/tmp" )
         process = "%s_%djet" % ( self.topo, self.njets )
-        dirname = bakeryHelpers.dirName ( process, masses )
-        summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
-        if os.path.exists ( summaryfile ) and os.stat(summaryfile).st_size>10:
-            self.msg ( "It seems like there is already a summary file %s" % summaryfile )
-            f=open(summaryfile,"rt")
-            lines=f.readlines()
-            f.close()
-            anaIsIn = {}
-            analyses = self.analyses.split(",")
-            for ana in analyses:
-                anaIsIn[ana]=False
-            for line in lines:
-                for ana in analyses:
-                    if ana in line:
-                        anaIsIn[ana]=True
-            allAnasIn = sum ( anaIsIn.values() ) == len(anaIsIn)
-            if allAnasIn and (not self.rerun):
-                self.msg ( "%s are in the summary file for %s: skip it." % ( self.analyses, str(masses) ) )
-                return
-            if not allAnasIn:
-                self.msg ( "%s not in summary file: rerun!" % self.analyses )
+        #dirname = bakeryHelpers.dirName ( process, masses )
+        hasAllInfo = self.checkForSummaryFile ( masses )
+        if hasAllInfo:
+            return
+        # summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
         Dir = bakeryHelpers.dirName ( process, masses )
         hepmcfile = "%s/Events/run_01/tag_1_pythia8_events.hepmc.gz" % Dir
         hepmcfile = os.path.abspath ( hepmcfile )
         if not os.path.exists ( hepmcfile ):
-            self.error ( "cannot find hepmc file %s" % hepmcfile )
+            self.error ( "%scannot find hepmc file %s" % ( spid, hepmcfile ) )
             p = hepmcfile.find("Events")
             cmd = "rm -rf %s" % hepmcfile[:p]
             o = subprocess.getoutput ( cmd )
-            self.error ( "deleting the folder %s: %s" % ( cmd, o ) )
+            self.error ( "%sdeleting the folder %s: %s" % ( spid, cmd, o ) )
             return
             # sys.exit()
         # now write recasting card
-        self.msg ( "Found hepmcfile at", hepmcfile )
+        self.msg ( "%sFound hepmcfile at %s" % ( spid, hepmcfile ) )
         self.writeRecastingCard ()
         self.writeCommandFile( hepmcfile, process, masses )
         tempdir = "ma5_%s" % Dir
@@ -150,11 +167,17 @@ class MA5Wrapper:
         source = "ANA_%s" % Dir
         dest = "../ma5/%s" % source
         if os.path.exists ( dest ):
-            print ( "[ma5Wrapper] Destination %s exists. I remove it." % dest )
+            self.info ( "Destination %s exists. Let me check for summary file." % dest )
+            hasSummary = self.checkForSummaryFile ( masses )
+            if hasSummary:
+                self.info ( "Summary file for %s found. skip analysis run" % dest )
+                return
+            self.info ( "No Summary file for %s found. remove folder." % dest )
             subprocess.getoutput ( "rm -rf %s" % dest )
         if not os.path.exists ( source ):
-            print ( "[ma5Wrapper] Source dir %s does not exist." % source )
-        shutil.move ( "ANA_%s" % Dir, "../ma5/" )
+            print ( "[ma5Wrapper] Source dir [%s] %s does not exist. I skip it." % ( os.getcwd(), source ) )
+            return
+        shutil.move ( source, "../ma5/" )
         os.chdir ( "../" )
         self.exe ( "rm -rf %s/ma5cmd*" % self.ma5install )
         self.exe ( "rm -rf %s/recast*" % self.ma5install )
@@ -167,7 +190,7 @@ class MA5Wrapper:
         """ execute cmd in shell
         :param maxLength: maximum length of output to be printed
         """
-        self.msg ( "exec: %s/%s" % (os.getcwd(), cmd ) )
+        self.msg ( "exec: [%s] %s" % (os.getcwd(), cmd ) )
         ret = subprocess.getoutput ( cmd )
         ret = ret.strip()
         if len(ret)==0:
