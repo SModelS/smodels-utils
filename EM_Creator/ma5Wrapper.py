@@ -120,9 +120,11 @@ class MA5Wrapper:
         return False
 
     def run( self, masses, pid=None ):
-        """ Run MA5 over an hepmcfile, specifying the process """
-        #if pid!=None:
-        #    time.sleep(pid*30) ## all the compiling ...
+        """ Run MA5 over an hepmcfile, specifying the process 
+        :param pid: process id, for debugging
+        :returns: -1 if problem occured, 0 if all went smoothly, 
+                   1 if nothing needed to be done.
+        """
         spid = ""
         if pid != None:
             spid = "[%d]" % pid
@@ -132,7 +134,7 @@ class MA5Wrapper:
         #dirname = bakeryHelpers.dirName ( process, masses )
         hasAllInfo = self.checkForSummaryFile ( masses )
         if hasAllInfo:
-            return
+            return 1
         # summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
         Dir = bakeryHelpers.dirName ( process, masses )
         hepmcfile = "%s/Events/run_01/tag_1_pythia8_events.hepmc.gz" % Dir
@@ -143,7 +145,7 @@ class MA5Wrapper:
             cmd = "rm -rf %s" % hepmcfile[:p]
             o = subprocess.getoutput ( cmd )
             self.error ( "%sdeleting the folder %s: %s" % ( spid, cmd, o ) )
-            return
+            return -1
             # sys.exit()
         # now write recasting card
         self.msg ( "%sFound hepmcfile at %s" % ( spid, hepmcfile ) )
@@ -171,17 +173,18 @@ class MA5Wrapper:
             hasSummary = self.checkForSummaryFile ( masses )
             if hasSummary:
                 self.info ( "Summary file for %s found. skip analysis run" % dest )
-                return
+                return 1
             self.info ( "No Summary file for %s found. remove folder." % dest )
             subprocess.getoutput ( "rm -rf %s" % dest )
         if not os.path.exists ( source ):
             print ( "[ma5Wrapper] Source dir [%s] %s does not exist. I skip it." % ( os.getcwd(), source ) )
-            return
+            return -1
         shutil.move ( source, "../ma5/" )
         os.chdir ( "../" )
         self.exe ( "rm -rf %s/ma5cmd*" % self.ma5install )
         self.exe ( "rm -rf %s/recast*" % self.ma5install )
         self.exe ( "rm -rf %s" % tempdir )
+        return 0
         # a = subprocess.getoutput ( "rm -rf %s/ma5cmd*" % delf.ma5install )
         # a = subprocess.getoutput ( "rm -rf %s/recast*" % self.ma5install )
         # a = subprocess.getoutput ( "rm -r %s" % tempdir )
