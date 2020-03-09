@@ -56,6 +56,10 @@ class MG5Wrapper:
         print ( "%s[mg5Wrapper] %s%s" % ( colorama.Fore.YELLOW, " ".join ( msg ), \
                    colorama.Fore.RESET ) )
 
+    def announce ( self, *msg ):
+        print ( "%s[mg5Wrapper] %s%s" % ( colorama.Fore.GREEN, " ".join ( msg ), \
+                   colorama.Fore.RESET ) )
+
     def debug( self, *msg ):
         pass
 
@@ -158,12 +162,12 @@ class MG5Wrapper:
             if not self.rerun:
                 self.info ( "hepmc file for %s[%s] exists. go directly to MA5." % \
                             ( str(masses), self.topo ) )
-                self.runMA5 ( masses, analyses )
+                self.runMA5 ( masses, analyses, pid )
                 self.unlock ( masses )
                 return
             else:
                 self.info ( "hepmc file for %s exists, but rerun requested." % str(masses) )
-        self.info ( "running on %s[%s] in job #%s" % (masses, self.topo, pid ) )
+        self.announce ( "starting MG5 on %s[%s] at %s in job #%s" % (masses, self.topo, time.asctime(), pid ) )
         slhaTemplate = "slha/%s_template.slha" % self.topo
         self.pluginMasses( slhaTemplate, masses )
         # first write pythia card
@@ -174,17 +178,22 @@ class MG5Wrapper:
         r=self.execute ( self.slhafile, masses )
         self.unlink ( self.slhafile )
         if r:
-            self.runMA5 ( masses, analyses )
+            self.runMA5 ( masses, analyses, pid )
         self.unlock ( masses )
 
-    def runMA5 ( self, masses, analyses ):
+    def runMA5 ( self, masses, analyses, pid ):
         """ run ma5, if desired """
         if not self.ma5:
             return
+        spid=""
+        if pid != None:
+            spid = " in job #%d" % pid
+        self.announce ( "starting MA5 on %s[%s] at %s%s" % ( str(masses), self.topo, time.asctime(), spid ) )
         from ma5Wrapper import MA5Wrapper
         ma5 = MA5Wrapper ( self.topo, self.njets, self.rerun, analyses )
         self.debug ( "now call ma5Wrapper" )
         ma5.run ( masses )
+        self.announce ( "%s[%s] finished at %s" % ( str(masses), self.topo, time.asctime() ) )
 
     def unlink ( self, f ):
         """ remove a file, if keep is not true """
@@ -214,12 +223,12 @@ class MG5Wrapper:
         ret = subprocess.getoutput ( cmd )
         if len(ret)==0:
             return
-        maxLength=60
+        maxLength=100
         # maxLength=560
         if len(ret)<maxLength:
             self.msg ( " `- %s" % ret )
             return
-        offset = 100
+        offset = 200
         self.msg ( " `- %s ..." % ( ret[-maxLength-offset:-offset] ) )
 
     def addJet ( self, lines, njets, f ):

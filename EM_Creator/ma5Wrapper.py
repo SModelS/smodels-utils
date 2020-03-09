@@ -71,7 +71,7 @@ class MA5Wrapper:
         for i in anas:
             f.write ( "%s         v%s        on    %s.tcl\n" % ( i, versions[i], recastcard[i] ) )
         f.close()
-        self.info ( "%s: wrote recasting card %s in %s" % ( time.asctime(), filename, os.getcwd() ) )
+        self.debug ( "wrote recasting card %s in %s" % ( filename, os.getcwd() ) )
 
     def unlink ( self, f ):
         if os.path.exists ( f ):
