@@ -3,8 +3,8 @@
 import glob, os, sys, subprocess, time
 
 def main():
-    # topo = "TGQ"
-    topo = "T3GQ"
+    topo = "TGQ"
+    # topo = "T3GQ"
     dirs = glob.glob( "%s_1jet.*" % topo )
     for i,d in enumerate(dirs):
         print ( "%d/%d: %s" % ( i, len(dirs), d ) )
