@@ -36,9 +36,10 @@ for ds in dsets:
     for e in results:
         eff = e.getEfficiencyFor ( topo, massvec, ds )
         # if eff == None: continue
-        print(ds)
     if eff == None:
         eff = 0
+    else:
+        print(ds)
     effs.append ( eff )
 # SUSY-2018-04
 # jsoninputs = []

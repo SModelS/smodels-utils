@@ -185,10 +185,11 @@ class PyhfUpperLimitComputer:
             # self.rescale(0.5)
             # workspace = updateWorkspace()
         # Trying a more advanced method for rescaling
-        factor = 100.
+        factor = 10.
         wereBothLarge = False
         wereBothTiny = False
         while "mu is not in [0,10]":
+            # Computing CL(1) - 0.95 and CL(10) - 0.95 once and for all
             rt1 = root_func(1.)
             rt10 = root_func(10.)
             if rt1 < 0. and 0. < rt10: # Here's the real while condition    
@@ -201,20 +202,16 @@ class PyhfUpperLimitComputer:
                 self.rescale(1/factor)
                 workspace = updateWorkspace()
                 continue
-            if rt10 < 0 and rt1 < 0:
-                if wereBothLarge:
-                    factor = factor/2
-                    logger.info("Diminishing rescaling factor")
-                wereBothTiny = True
-            else:
-                wereBothTiny = False
-            if rt10 > 0 and rt1 > 0:
-                if wereBothTiny:
-                    factor = factor/2
-                    logger.info("Diminishing rescaling factor")
-                wereBothLarge = True
-            else:
-                wereBothLarge = False
+            # Analyzing previous values of wereBoth***
+            if rt10 < 0 and rt1 < 0 and wereBothLarge:
+                factor = factor/2
+                logger.info("Diminishing rescaling factor")
+            if rt10 > 0 and rt1 > 0 and wereBothTiny:
+                factor = factor/2
+                logger.info("Diminishing rescaling factor")
+            # Preparing next values of wereBoth***
+            wereBothTiny = rt10 < 0 and rt1 < 0
+            wereBothLarge = rt10 > 0 and rt1 > 0
             if rt10 < 0.:
                 self.rescale(factor)
                 workspace = updateWorkspace()
