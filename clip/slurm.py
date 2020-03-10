@@ -35,7 +35,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     :param cheatcode: in case we wish to start with a cheat model
     """
     print ( "[runOneJob:%d] run walkers [%d,%d] " % ( pid, jmin, jmax ) )
-    codedir = "/mnt/hephy/pheno/ww/git/smodels-utils/combinations/"
+    # codedir = "/mnt/hephy/pheno/ww/git/smodels-utils/combinations/"
+    codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/combinations/"
     # runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
     runner = "%sRUNNER_%s.py" % ( rundir, jmin )
     with open ( runner, "wt" ) as f:
@@ -203,13 +204,15 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc ):
     :param dry_run: dont do anything, just produce script
     :param nproc: number of processes, typically 5
     """
-    with open ( "/mnt/hephy/pheno/ww/git/smodels-utils/clip/bake_template.sh", "rt" ) as f:
+    # codedir = "/mnt/hephy/pheno/ww/git/smodels-utils/"
+    codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/"
+    with open ( "%sclip/bake_template.sh" % codedir, "rt" ) as f:
         lines = f.readlines()
         f.close()
 
     filename = "bake.sh"
     filename = tempfile.mktemp(prefix="_B",suffix=".sh",dir="")
-    Dir = "/mnt/hephy/pheno/ww/git/smodels-utils/clip/"
+    Dir = "%sclip/" % codedir
     print ( "creating script at %s/%s" % ( Dir, filename ) )
     with open ( "%s/%s" % ( Dir, filename ), "wt" ) as f:
         for line in lines:
@@ -313,7 +316,8 @@ def main():
     argparser.add_argument ( '-D', '--dbpath', help='path to database ["/mnt/hephy/pheno/ww/git/smodels-database/"]',
                         type=str, default="/mnt/hephy/pheno/ww/git/smodels-database/" )
     args=argparser.parse_args()
-    rundir = "/mnt/hephy/pheno/ww/rundir/"
+    # rundir = "/mnt/hephy/pheno/ww/rundir/"
+    rundir = "/scratch-cbe/users/wolfgan.waltenberger/rundir/"
     if args.query:
         queryStats ( rundir )
         return
