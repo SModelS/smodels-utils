@@ -120,7 +120,7 @@ def getXSecsFor ( pid1, pid2, sqrts, ewk ):
     if pid1 in [ 1000021 ] and pid2 == pid1:
         filename = "xsecgluino%d.txt" % sqrts
         columns["xsec"]=2
-        isEWK=True
+        isEWK=False
         order = 2 # 4
     if pid1 in [ -1000024 ] and pid2 in [ 1000023 ]:
         filename = "xsecN2C1m13.txt"
