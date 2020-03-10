@@ -53,7 +53,7 @@ class PyhfUpperLimitComputer:
         self.patches = self.patchMaker()
         self.workspaces = self.wsMaker()
         self.cl = cl
-        self.scaling = 1.
+        self.scale = 1.
         
     def rescale(self, scale):
         """
@@ -63,7 +63,7 @@ class PyhfUpperLimitComputer:
             updated list of patches and workspaces (self.patches and self.workspaces)
         """
         self.nsignals = [sig*scale for sig in self.nsignals]
-        self.scaling *= scale 
+        self.scale *= scale 
         logger.debug("Signals : {}".format(self.nsignals))
         self.patches = self.patchMaker()
         self.workspaces = self.wsMaker()
@@ -78,42 +78,48 @@ class PyhfUpperLimitComputer:
         nsignals = self.nsignals
         # Identifying the path of the SR and VR channels in the main workspace files
         ChannelsInfo = [] # workspace specifications
+        self.zeroSignalsFlag = [] # One flag for each workspace
         for ws in self.inputJsons:
+            self.zeroSignalsFlag.append(False)
             wsChannelsInfo = {}
+            wsChannelsInfo["SR"] = []
             wsChannelsInfo["CRVR"] = []
             for i_ch, ch in enumerate(ws['channels']):
                 if 'SR' in ch['name']:
-                    wsChannelsInfo['SR'] = {'path':'/channels/'+str(i_ch)+'/samples/0', # Path of the new sample to add (signal prediction)
-                                            'size':len(ch['samples'][0]['data'])} # Number of bins
+                    logger.debug("SR channel name : %s" % ch['name'])
+                    wsChannelsInfo['SR'].append({'path':'/channels/'+str(i_ch)+'/samples/0', # Path of the new sample to add (signal prediction)
+                                                                         'size':len(ch['samples'][0]['data'])}) # Number of bins
                 if 'VR' in ch['name'] or 'CR' in ch['name']:
                     wsChannelsInfo['CRVR'].append('/channels/'+str(i_ch))
             wsChannelsInfo["CRVR"].sort(key=lambda path: path.split('/')[-1], reverse=True) # Need to sort correctly the paths to the channels to be removed
             ChannelsInfo.append(wsChannelsInfo)
         # Constructing the patches to be applied on the main workspace files
+        i_ws = 0
         patches = []
         for ws, info in zip(self.inputJsons, ChannelsInfo):
             # Need to read the number of SR/bins of each regions
             # in order to identify the corresponding ones in self.nsignals
-            nSR = info['SR']['size']
             patch = []
-            operator = {}
-            operator["op"] = "add"
-            operator["path"] = info['SR']['path']
-            value = {}
-            value["data"] = nsignals[:nSR]
-            nsignals = nsignals[nSR:]
-            value["modifiers"] = []
-            value["modifiers"] .append({"data": None, "type": "normfactor", "name": "mu_SIG"})
-            value["modifiers"] .append({"data": None, "type": "lumi", "name": "lumi"})
-            value["name"] = "bsm"
-            operator["value"] = value
-            patch.append(operator)
+            for sr in info['SR']:
+                nSR = sr['size']
+                operator = {}
+                operator["op"] = "add"
+                operator["path"] = sr['path']
+                value = {}
+                value["data"] = nsignals[:nSR]
+                if value["data"] == [0 for x in range(nSR)]:
+                    self.zeroSignalsFlag[i_ws] = True
+                nsignals = nsignals[nSR:]
+                value["modifiers"] = []
+                value["modifiers"] .append({"data": None, "type": "normfactor", "name": "mu_SIG"})
+                value["modifiers"] .append({"data": None, "type": "lumi", "name": "lumi"})
+                value["name"] = "bsm"
+                operator["value"] = value
+                patch.append(operator)
             for path in info['CRVR']:
                 patch.append({'op':'remove', 'path':path})
             patches.append(patch)
-        # Replacing by our test point patch in order to test our upper limit calculator
-        # with open("SUSY-2018-04_likelihoods/Region-lowMass/patch.DS_200_120_Staus.json", "r") as f:
-            # patches.append(json.load(f))
+            i_ws += 1
         return patches
     
     def wsMaker(self):
@@ -134,6 +140,7 @@ class PyhfUpperLimitComputer:
     
     # Trying a new method for upper limit computation : 
     # re-scaling the signal predictions so that mu falls in [0, 10] instead of looking for mu bounds
+    # Usage of the index allows for rescaling
     def ulSigma (self, expected=False, workspace_index=None):
         """
         Compute the upper limit on the signal strength modifier with:
@@ -142,13 +149,17 @@ class PyhfUpperLimitComputer:
         Returns:
             the upper limit at `self.cl` level (0.95 by default)
         """
-        if workspace_index != None:
-            workspace = self.workspaces[workspace_index]
-        else:
-            workspace = self.cbWorkspace()
-        scaling = 1.
+        if workspace_index != None and self.zeroSignalsFlag[workspace_index] == True:
+            logger.warning("Workspace number %d has zero signals" % workspace_index)
+            return -1
+        def updateWorkspace():
+            if workspace_index != None:
+                return self.workspaces[workspace_index]
+            else:
+                return self.cbWorkspace()
+        workspace = updateWorkspace()
+        scale = 1.
         def root_func(mu):
-            logger.info("New call of root_func() with mu = {}".format(mu))
             # Same modifiers_settings as those use when running the 'pyhf cls' command line
             msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
             model = workspace.model(modifier_settings=msettings)
@@ -158,75 +169,83 @@ class PyhfUpperLimitComputer:
                 CLs = result[1].tolist()[0]
             else:
                 CLs = result[0]
-            logger.info("1 - CLs : {}".format(1.0 - CLs))
+            logger.info("Call of root_func(%f) -> %f" % (mu, 1.0 - CLs))
             return 1.0 - self.cl - CLs
-        # Scaling the signal prediction
-        while root_func(10.) < 0.0:
-            # Scaling up the signals and updating the workspace
-            self.rescale(10.)
-            if workspace_index != None:
-                workspace = self.workspaces[workspace_index]
+        # Checking if the lower limit gives a nan, in which case the signal needs to be scaled up
+        # while np.isnan(root_func(1.)):
+            # self.rescale(2.)
+            # workspace = updateWorkspace()
+        # # Scaling the signal prediction
+        # while root_func(10.) < 0.0:
+            # # Scaling up the signals and updating the workspace
+            # self.rescale(2.)
+            # workspace = updateWorkspace()
+        # while root_func(1.) > 0.0:
+            # # Scaling down the signals and updating the workspace
+            # self.rescale(0.5)
+            # workspace = updateWorkspace()
+        # Trying a more advanced method for rescaling
+        factor = 100.
+        wereBothLarge = False
+        wereBothTiny = False
+        while "mu is not in [0,10]":
+            rt1 = root_func(1.)
+            rt10 = root_func(10.)
+            if rt1 < 0. and 0. < rt10: # Here's the real while condition    
+                break
+            if np.isnan(rt1):
+                self.rescale(factor)
+                workspace = updateWorkspace()
+                continue
+            if np.isnan(rt10):
+                self.rescale(1/factor)
+                workspace = updateWorkspace()
+                continue
+            if rt10 < 0 and rt1 < 0:
+                if wereBothLarge:
+                    factor = factor/2
+                    logger.info("Diminishing rescaling factor")
+                wereBothTiny = True
             else:
-                workspace = self.cbWorkspace()
-        while root_func(1.) > 0.0:
-            # Scaling down the signals and updating the workspace
-            self.rescale(0.1)
-            if workspace_index != None:
-                workspace = self.workspaces[workspace_index]
+                wereBothTiny = False
+            if rt10 > 0 and rt1 > 0:
+                if wereBothTiny:
+                    factor = factor/2
+                    logger.info("Diminishing rescaling factor")
+                wereBothLarge = True
             else:
-                workspace = self.cbWorkspace()
+                wereBothLarge = False
+            if rt10 < 0.:
+                self.rescale(factor)
+                workspace = updateWorkspace()
+                continue
+            if rt1 > 0.:
+                self.rescale(1/factor)
+                workspace = updateWorkspace()
+                continue
         # Finding the root (Brent bracketing part)
-        logger.info("Final scaling : {}".format(scaling))
+        logger.info("Final scale : %f" % self.scale)
         hi_mu = 10.
         lo_mu = 1.
         logger.info("Starting brent bracketing")
         ul = optimize.brentq(root_func, lo_mu, hi_mu, rtol=1e-3, xtol=1e-3)
-        return ul*self.scaling
-
-    # def ulSigma (self, workspace, expected=False, mu_bound = 10.0):
-        # self.mu_bound = mu_bound
-        # def root_func(mu):
-            # logger.info("New call of root_func() with mu = {}".format(mu))
-            # # Same modifiers_settings as those use when running the 'pyhf cls' command line
-            # msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
-            # model = workspace.model(modifier_settings=msettings)
-            # bounds = model.config.suggested_bounds()
-            # if mu > self.mu_bound:
-                # self.mu_bound = int(mu/10)*10 + 10
-            # logger.info('mu bound : {}'.format(self.mu_bound))
-            # bounds[model.config.poi_index] = [0,self.mu_bound]
-            # test_poi = mu
-            # result = pyhf.infer.hypotest(test_poi, workspace.data(model), model, par_bounds=bounds, qtilde=True, return_expected = expected)
-            # if expected:
-                # CLs = result[1].tolist()[0]
-            # else:
-                # CLs = result[0]
-            # logger.info("1 - CLs : {}".format(1.0 - CLs))
-            # return 1.0 - self.cl - CLs
-        # # Just a test
-        # # Finding the root (Brent bracketing part)
-        # hi_mu = 1.
-        # lo_mu = 1.
-        # # Gross limits
-        # while root_func(hi_mu) < 0.0:
-            # hi_mu *= 10.
-        # while root_func(lo_mu) > 0.0:
-            # lo_mu *= 0.1
-        # ul = optimize.brentq(root_func, lo_mu, hi_mu, rtol=1e-3, xtol=1e-3)
-        # return ul
+        return ul*self.scale # self.scale has been updated whithin self.rescale() method
 
     def bestUL(self):
         """
         Computing the upper limit on the signal strength modifier in the expected hypothesis for each workspace
         Picking the most sensitive, i.e., the one having the biggest r-value in the expected case (r-value = 1/mu)
         """
+        if len(self.workspaces) == 1:
+            return self.ulSigma(workspace_index=0)
         rMax = 0.0
         for i_ws in range(len(self.workspaces)):
+            logger.info("Looking for best expected combination")
             r = 1/self.ulSigma(expected=True, workspace_index=i_ws)
             if r > rMax:
                 rMax = r
                 i_best = i_ws
-        logger.info('best region : {}'.format(i_best))
+        logger.info('Best combination : %d' % i_best)
         return self.ulSigma(workspace_index=i_best)
         
     def cbWorkspace(self):
@@ -237,8 +256,13 @@ class PyhfUpperLimitComputer:
         workspaces = self.workspaces
         if len(workspaces) == 1:
             cbWS = workspaces[0]
-        cbWS = workspaces[0]
+        for i_ws in range(len(workspaces)):
+            if self.zeroSignalsFlag[i_ws] == False:
+                cbWS = workspaces[i_ws]
+                break
         for i_ws in range(1, len(workspaces)):
+            if self.zeroSignalsFlag[i_ws] == True: # Ignore workspaces having zero signals
+                continue
             cbWS = pyhf.Workspace.combine(cbWS, workspaces[i_ws])
         # Home made method, should do the same but no sanity checks and the first measurement is taken:
         # cbWS = {}

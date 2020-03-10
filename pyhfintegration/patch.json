@@ -1,0 +1,34 @@
+[
+  {
+    "op": "add",
+    "path": "/channels/0/samples/0",
+    "value": {
+      "data": [
+        0.295705125,
+        1.4246631250000004,
+        1.7475774999999998
+      ],
+      "modifiers": [
+        {
+          "data": null,
+          "type": "normfactor",
+          "name": "mu_SIG"
+        },
+        {
+          "data": null,
+          "type": "lumi",
+          "name": "lumi"
+        }
+      ],
+      "name": "bsm"
+    }
+  },
+  {
+    "op": "remove",
+    "path": "/channels/2"
+  },
+  {
+    "op": "remove",
+    "path": "/channels/1"
+  }
+]
