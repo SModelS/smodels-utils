@@ -1,59 +1,60 @@
 #!/usr/bin/env python3
 
 """
-.. module:: adlWrapper
-        :synopsis: code that wraps around MadAnalysis5. Produces the data cards,
-                   and runs the adl executable.
+.. module:: cutlangWrapper
+        :synopsis: code that wraps around cutlang. Produces the data cards,
+                   and runs the cutlang executable.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
+.. moduleauthor:: Jan Mrozek <jmrozek@protonmail.ch>
 """
 
 import os, sys, colorama, subprocess, shutil, tempfile, time
 import multiprocessing
 import bakeryHelpers
 
-class adlWrapper:
+class cutlangWrapper:
     def __init__ ( self, topo, njets, rerun, analyses, ver="1.7" ):
         """
-        :param ver: version of adl
+        :param ver: version of cutlang
         """
         self.topo = topo
         self.njets = njets
         self.analyses = analyses
         self.rerun = rerun
-        self.adlresults = "./adl/"
-        self.adlinstall = "./adl.template/"
+        self.cutlangresults = "./cutlang/"
+        self.cutlanginstall = "./cutlang.template/"
         self.ver = ver
-        if not os.path.isdir ( self.adlinstall ):
-            self.error ( "adl install is missing??" )
+        if not os.path.isdir ( self.cutlanginstall ):
+            self.error ( "cutlang install is missing??" )
             sys.exit()
-        self.executable = "bin/adl"
-        if not os.path.exists ( self.adlinstall + self.executable ):
-            self.info ( "cannot find adl installation at %s" % self.adlinstall )
-            self.exe ( "adl/make.py" )
+        self.executable = "bin/cutlang"
+        if not os.path.exists ( self.cutlanginstall + self.executable ):
+            self.info ( "cannot find cutlang installation at %s" % self.cutlanginstall )
+            self.exe ( "cutlang/make.py" )
         self.templateDir = "templates/"
         # self.info ( "initialised" )
 
     def info ( self, *msg ):
-        print ( "%s[adlWrapper] %s%s" % ( colorama.Fore.YELLOW, " ".join ( msg ), \
+        print ( "%s[cutlangWrapper] %s%s" % ( colorama.Fore.YELLOW, " ".join ( msg ), \
                    colorama.Fore.RESET ) )
 
     def debug( self, *msg ):
         pass
 
     def msg ( self, *msg):
-        print ( "[adlWrapper] %s" % " ".join ( msg ) )
+        print ( "[cutlangWrapper] %s" % " ".join ( msg ) )
 
     def error ( self, *msg ):
-        print ( "%s[adlWrapper] Error: %s%s" % ( colorama.Fore.RED, " ".join ( msg ), \
+        print ( "%s[cutlangWrapper] Error: %s%s" % ( colorama.Fore.RED, " ".join ( msg ), \
                    colorama.Fore.RESET ) )
 
     def writeRecastingCard ( self ):
         """ this method writes the recasting card, which defines which analyses
         are being recast. """
-        self.recastfile = tempfile.mktemp ( dir=self.adlinstall, prefix="recast" )
+        self.recastfile = tempfile.mktemp ( dir=self.cutlanginstall, prefix="recast" )
         filename = self.recastfile
-        # filename = self.adlinstall + "recasting.dat"
+        # filename = self.cutlanginstall + "recasting.dat"
         self.debug ( "writing recasting card %s" % filename )
         templatefile = self.templateDir+'/recasting_card.dat'
         if not os.path.exists ( templatefile ):
@@ -68,7 +69,7 @@ class adlWrapper:
         versions = { "atlas_susy_2016_07": "1.2", 
                      "cms_sus_16_033": "1.2" }
         for i in anas:
-            print ( "[adlWrapper] writing %s in recast card %s" % ( i, filename ) )
+            print ( "[cutlangWrapper] writing %s in recast card %s" % ( i, filename ) )
             f.write ( "%s         v%s        on    %s.tcl\n" % ( i, versions[i], recastcard[i] ) )
         f.close()
         self.info ( "wrote recasting card %s" % filename )
@@ -78,30 +79,30 @@ class adlWrapper:
             subprocess.getoutput ( "rm -rf %s" % f )
 
     def writeCommandFile ( self, hepmcfile, process, masses ):
-        """ this method writes the commands file for adl.
+        """ this method writes the commands file for cutlang.
         :param hepmcfile: I think thats the input events
         """
-        f = open(self.adlinstall + "/" + self.commandfile,'w')
+        f = open(self.cutlanginstall + "/" + self.commandfile,'w')
         f.write('set main.recast = on\n')
-        filename = self.recastfile.replace(self.adlinstall,"./")
+        filename = self.recastfile.replace(self.cutlanginstall,"./")
         f.write('set main.recast.card_path = %s\n' % filename )
         f.write('import '+hepmcfile+'\n')
         f.write('submit ANA_%s\n' % bakeryHelpers.dirName(process,masses)  )
         f.close()
 
     def run( self, masses, pid=None ):
-        """ Run adl over an hepmcfile, specifying the process """
+        """ Run cutlang over an hepmcfile, specifying the process """
         #if pid!=None:
         #    time.sleep(pid*30) ## all the compiling ...
-        self.commandfile = tempfile.mktemp ( prefix="adlcmd", dir="./" )
-        self.teefile = tempfile.mktemp ( prefix="adl", suffix=".run", dir="/tmp" )
+        self.commandfile = tempfile.mktemp ( prefix="cutlangcmd", dir="./" )
+        self.teefile = tempfile.mktemp ( prefix="cutlang", suffix=".run", dir="/tmp" )
         process = "%s_%djet" % ( self.topo, self.njets )
         dirname = bakeryHelpers.dirName ( process, masses )
-        summaryfile = "adl/ANA_%s/Output/CLs_output_summary.dat" % dirname
+        summaryfile = "cutlang/ANA_%s/Output/CLs_output_summary.dat" % dirname
         if os.path.exists ( summaryfile ) and os.stat(summaryfile).st_size>10:
             self.msg ( "It seems like there is already a summary file %s" % summaryfile )
             f=open(summaryfile,"rt")
-            lines=f.readlines()
+            lines=f.recutlangines()
             f.close()
             anaIsIn = False
             for line in lines:
@@ -127,11 +128,11 @@ class adlWrapper:
         self.msg ( "Found hepmcfile at", hepmcfile )
         self.writeRecastingCard ()
         self.writeCommandFile( hepmcfile, process, masses )
-        tempdir = "adl_%s" % Dir
+        tempdir = "cutlang_%s" % Dir
         a=subprocess.getoutput ( "mkdir %s" % tempdir )
-        a = subprocess.getoutput ( "cp -r adl.template/bin adl.template/madanalysis adl.template/tools %s" % tempdir )
+        a = subprocess.getoutput ( "cp -r cutlang.template/bin cutlang.template/madanalysis cutlang.template/tools %s" % tempdir )
         a = subprocess.getoutput ( "cp -r %s %s" % ( self.recastfile, tempdir ) )
-        a = subprocess.getoutput ( "cp -r adl.template/%s %s" % ( self.commandfile, tempdir ) )
+        a = subprocess.getoutput ( "cp -r cutlang.template/%s %s" % ( self.commandfile, tempdir ) )
 
         # then run madgraph5
         os.chdir ( tempdir )
@@ -139,23 +140,23 @@ class adlWrapper:
                 self.commandfile, self.teefile )
         self.exe ( cmd )
         self.unlink ( self.recastfile )
-        self.unlink ( "adl.template/%s" % self.commandfile )
+        self.unlink ( "cutlang.template/%s" % self.commandfile )
         self.unlink ( self.commandfile )
         self.unlink ( self.teefile )
         source = "ANA_%s" % Dir
-        dest = "../adl/%s" % source
+        dest = "../cutlang/%s" % source
         if os.path.exists ( dest ):
-            print ( "[adlWrapper] Destination %s exists. I remove it." % dest )
+            print ( "[cutlangWrapper] Destination %s exists. I remove it." % dest )
             subprocess.getoutput ( "rm -rf %s" % dest )
         if not os.path.exists ( source ):
-            print ( "[adlWrapper] Source dir %s does not exist." % source )
-        shutil.move ( "ANA_%s" % Dir, "../adl/" )
+            print ( "[cutlangWrapper] Source dir %s does not exist." % source )
+        shutil.move ( "ANA_%s" % Dir, "../cutlang/" )
         os.chdir ( "../" )
-        self.exe ( "rm -rf %s/adlcmd*" % self.adlinstall )
-        self.exe ( "rm -rf %s/recast*" % self.adlinstall )
+        self.exe ( "rm -rf %s/cutlangcmd*" % self.cutlanginstall )
+        self.exe ( "rm -rf %s/recast*" % self.cutlanginstall )
         self.exe ( "rm -rf %s" % tempdir )
-        # a = subprocess.getoutput ( "rm -rf %s/adlcmd*" % delf.adlinstall )
-        # a = subprocess.getoutput ( "rm -rf %s/recast*" % self.adlinstall )
+        # a = subprocess.getoutput ( "rm -rf %s/cutlangcmd*" % delf.cutlanginstall )
+        # a = subprocess.getoutput ( "rm -rf %s/recast*" % self.cutlanginstall )
         # a = subprocess.getoutput ( "rm -r %s" % tempdir )
 
     def exe ( self, cmd, maxLength=100 ):
@@ -175,15 +176,15 @@ class adlWrapper:
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
 
     def clean ( self ):
-        subprocess.getoutput ( "rm -rf adl.template/recast*" )
-        subprocess.getoutput ( "rm -rf adl.template/adlcmd*" )
+        subprocess.getoutput ( "rm -rf cutlang.template/recast*" )
+        subprocess.getoutput ( "rm -rf cutlang.template/cutlangcmd*" )
     def clean_all ( self ):
         self.clean()
-        subprocess.getoutput ( "rm -rf adl/ANA*" )
+        subprocess.getoutput ( "rm -rf cutlang/ANA*" )
 
 if __name__ == "__main__":
     import argparse
-    argparser = argparse.ArgumentParser(description='adl runner.')
+    argparser = argparse.ArgumentParser(description='cutlang runner.')
     argparser.add_argument ( '-a', '--analyses', help='analyses, comma separated [atlas_sus_2016_07]',
                              type=str, default="atlas_susy_2016_07" )
     argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
@@ -203,12 +204,12 @@ if __name__ == "__main__":
                              action="store_true" )
     args = argparser.parse_args()
     if args.clean:
-        adl = adlWrapper( args.topo, args.njets, args.rerun, args.analyses )
-        adl.clean()
+        cutlang = cutlangWrapper( args.topo, args.njets, args.rerun, args.analyses )
+        cutlang.clean()
         sys.exit()
     if args.clean_all:
-        adl = adlWrapper( args.topo, args.njets, args.rerun, args.analyses )
-        adl.clean_all()
+        cutlang = cutlangWrapper( args.topo, args.njets, args.rerun, args.analyses )
+        cutlang.clean_all()
         sys.exit()
     if args.masses == "all":
         masses = bakeryHelpers.getListOfMasses ( args.topo, args.njets )
@@ -216,13 +217,13 @@ if __name__ == "__main__":
         masses = bakeryHelpers.parseMasses ( args.masses )
     nm = len(masses)
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
-    adl = adlWrapper( args.topo, args.njets, args.rerun, args.analyses )
-    # adl.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
+    cutlang = cutlangWrapper( args.topo, args.njets, args.rerun, args.analyses )
+    # cutlang.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
     djobs = int(len(masses)/nprocesses)
 
     def runChunk ( chunk, pid ):
         for c in chunk:
-            adl.run ( c, pid )
+            cutlang.run ( c, pid )
 
     jobs=[]
     for i in range(nprocesses):

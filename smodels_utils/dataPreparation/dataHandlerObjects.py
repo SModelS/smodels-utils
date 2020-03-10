@@ -43,7 +43,7 @@ class DataHandler(object):
 
         """
         initialize data-source attributes with None
-        and allowNegativValues with False
+        and allowNegativeValues with False
         :param name: name as string
         :param dimensions: Dimensions of the data (e.g., for x,y,value, dimensions=2).
         :param coordinateMap: A dictionary mapping the index of the variables
@@ -63,7 +63,7 @@ class DataHandler(object):
         self.objectName = None
         self.dataUrl = None
         self.index = None
-        self.allowNegativValues = False
+        self.allowNegativeValues = False
         self.dataset=None
         self._massUnit = 'GeV'
         self._unit = None  #Default unit
@@ -131,17 +131,19 @@ class DataHandler(object):
 
         #Load data
         self.data = []
+        strictlyPositive = False
+        if self._unit in [ "fb", "pb" ]:
+            strictlyPositive = True
         for point in getattr(self,self.fileType)():
             ptDict = self.mapPoint(point) #Convert point to dictionary
-            if self.allowNegativValues:
+            if self.allowNegativeValues:
                 self.data.append(ptDict)
             #Check if the upper limit value is positive:
             else:
                 #Just check floats in the point elements which are not variables
                 values = [value for xv,value in ptDict.items() if not xv in self.xvars]
-                if self._positivValues(values):
+                if self._positiveValues(values, strictlyPositive = strictlyPositive ):
                     self.data.append(ptDict)
-
 
     def __nonzero__(self):
 
@@ -396,18 +398,23 @@ class DataHandler(object):
     #            sys.exit()
     #        self._lifetimeUnit = unitString
 
-    def _positivValues(self, values):
+    def _positiveValues(self, values, strictlyPositive = False ):
 
         """checks if values greater then zero
         :param value: float or integer
-        :return: True if value >= 0 or allowNegativValues == True
+        :param strictlyPositive: if true, then dont allow zeroes either
+        :return: True if value greater (or equals) 0 or allowNegativeValues == True
         """
 
-        if self.allowNegativValues: return True
+        if self.allowNegativeValues: 
+            return True
         for value in values:
 
             if value < 0.0:
                 logger.warning("Negative value %s in %s will be ignored"%(value,self.path))
+                return False
+            if value == 0.0 and strictlyPositive:
+                logger.warning("Zero value %s in %s will be ignored"%(value,self.path))
                 return False
         return True
 

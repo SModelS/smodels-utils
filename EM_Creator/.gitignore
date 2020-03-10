@@ -9,6 +9,7 @@ ma5/ma5cmd*
 ma5.template/recast*
 ma5.template/ma5cmd*
 baking.log
+.lock*
 .mg5
 logs/prod*
 run*card
