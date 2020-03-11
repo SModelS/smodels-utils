@@ -558,8 +558,8 @@ class Axes(object):
         xValues = {}
         #Get the function for each x,y,.. variable and compute its value
         for l in [ "A", "B", "C" ]:
-            #if not "Mass%s" % l in massInput.keys():
-            #    massInput["Mass%s" % l] = None
+            if not "Mass%s" % l in massInput.keys():
+                massInput["Mass%s" % l] = None
             if "Mass%s" % l in massInput.keys() and \
                 not "Width%s" % l in massInput.keys(): ## FIXME why is this needed???
                 massInput["Width%s" % l ]=None
@@ -589,7 +589,7 @@ class Axes(object):
                 d+= ( xi-yi)**2
             return sqrt ( d)
 
-        for im,m in enumerate(newMass):
+        for im,m in enumerate(newMass[:len(massArray)]):
             ma=massArray[im]
             d = distance(m,ma )
             if d > 0.11: #Masses differ
