@@ -22,7 +22,7 @@ def gprint ( line ):
     print ( "%s%s%s" % ( colorama.Fore.GREEN, line, colorama.Fore.RESET ) )
 
 def gitPush():
-    cmd = "cd ../../smodels.github.io/; git commit -am 'automated update'; git push"
+    cmd = "cd ../../smodels.github.io/; git pull; git commit -am 'automated update'; git push"
     print ( "[updateAllWikiPages.py] %s" % cmd )
     o = subprocess.getoutput ( cmd )
     print ( "[updateAllWikiPages.py] %s" % o )
