@@ -557,14 +557,15 @@ class Axes(object):
         #massInput = dict([[str(self._massVars[im]),mass] for im,mass in enumerate(massArray)])
         xValues = {}
         #Get the function for each x,y,.. variable and compute its value
-        for l in [ "A", "B", "C" ]:
+        for l in [ "A", "B", "C" ][:len(massArray)]:
             if not "Mass%s" % l in massInput.keys():
                 massInput["Mass%s" % l] = None
             if "Mass%s" % l in massInput.keys() and \
                 not "Width%s" % l in massInput.keys(): ## FIXME why is this needed???
                 massInput["Width%s" % l ]=None
         #print ( "[getXYValues] massInput", massInput )
-        #print ( "[getXYValues] xyFunc", self._xyFunction )
+        #print ( "[getXYValues] xyFunc", self._xyFunction, str(self._xyFunction) )
+        #print ( "massArray", massArray )
         for xv,xfunc in self._xyFunction.items():
             #print ( ". xv", xv, "func", xfunc.expr )
             xValues[str(xv)] = xfunc(**massInput)
