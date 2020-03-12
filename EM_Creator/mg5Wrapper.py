@@ -49,7 +49,7 @@ class MG5Wrapper:
         self.mgParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
                           'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5',
                           'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } #, 'qcut': '90' }
-        self.rmLocksOlderThan ( 8 ) ## remove old locks
+        self.rmLocksOlderThan ( 2 ) ## remove locks older than 2 hours
         self.info ( "initialised" )
 
     def info ( self, *msg ):
@@ -363,7 +363,13 @@ def main():
                              type=str, default=anadef )
     argparser.add_argument ( '--maxgap2', help='maximum mass gap between second and third, to force offshell [None]',
                              type=float, default=None )
-    argparser.add_argument ( '--mingap1', help='minimum mass gap between first and second, to force onshell [None]',
+    argparser.add_argument ( '--mingap1', help='minimum mass gap between first and second, to force onshell or a mass hierarchy [None]',
+                             type=float, default=None )
+    argparser.add_argument ( '--mingap2', help='minimum mass gap between second and third, to force onshell or a mass hierarchy [0.]',
+                             type=float, default=0. )
+    argparser.add_argument ( '--mingap13', help='minimum mass gap between first and third, to force onshell or a mass hierarchy [0.]',
+                             type=float, default=None )
+    argparser.add_argument ( '--maxgap13', help='maximum mass gap between first and third, to force offshell [None]',
                              type=float, default=None )
     argparser.add_argument ( '--maxgap1', help='maximum mass gap between first and second, to force offshell [None]',
                              type=float, default=None )
@@ -409,9 +415,10 @@ def main():
     keepOrder=True
     if args.topo == "TGQ":
         keepOrder=False
-    masses = bakeryHelpers.parseMasses ( args.masses, filterOrder=keepOrder,
+    masses = bakeryHelpers.parseMasses ( args.masses,
                                          mingap1=args.mingap1, maxgap1=args.maxgap1,
-                                         maxgap2=args.maxgap2 )
+                                         mingap2=args.mingap2, maxgap2=args.maxgap2, 
+                                         mingap13=args.mingap13, maxgap13=args.maxgap13 )
     import random
     random.shuffle ( masses )
     nm = len(masses)

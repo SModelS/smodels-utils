@@ -16,17 +16,21 @@ def dirName ( process, masses ):
     """ the name of the directory of one process + masses """
     return process + "." + "_".join(map(str,masses))
 
-def parseMasses ( massstring, filterOrder=True, mingap1=None, maxgap1=None,
-                  maxgap2=None ):
+def parseMasses ( massstring, mingap1=None, maxgap1=None,
+                  mingap2=None, maxgap2=None, mingap13=None, maxgap13=None ):
     """ parse the mass string, e.g. (500,510,10),(100,110,10). keywords like "half" are
         accepted.
-    :param filterOrder: if true, discard vectors with daughters more massive than their
-                           mothers.
-    :param mingap1: min mass gap between second and third particle, ignore if None.
-                    this is meant to force onshellness
+    :param mingap1: min mass gap between first and second particle, ignore if None.
+                    this is meant to force onshellness or a mass hierarchy
     :param maxgap1: max mass gap between second and third particle, ignore if None.
                     this is meant to force offshellness
+    :param mingap2: min mass gap between second and third particle, ignore if None.
+                    this is meant to force onshellness or a mass hierarchy
     :param maxgap2: max mass gap between second and third particle, ignore if None.
+                    this is meant to force offshellness
+    :param mingap13: min mass gap between second and third particle, ignore if None.
+                    this is meant to force onshellness or a mass hierarchy
+    :param maxgap2: max mass gap between first and third particle, ignore if None.
                     this is meant to force offshellness
     :returns: a list of all model points. E.g. [ (500,100),(510,100),(500,110),(510,110)].
     """
@@ -73,63 +77,35 @@ def parseMasses ( massstring, filterOrder=True, mingap1=None, maxgap1=None,
     if len(lists)==2:
         for x in range ( len(lists[0] ) ):
             for y in range ( len(lists[1]) ):
-                if filterOrder and lists[1][y] >= lists[0][x]:
-                    continue
                 ret.append ( (int(lists[0][x]),int(lists[1][y])) )
     if len(lists)==3:
         for x in range ( len(lists[0] ) ):
             for y in range ( len(lists[1]) ):
-                if filterOrder and lists[1][y] >= lists[0][x]:
-                    continue
                 for z in range ( len(lists[2]) ):
-                    if filterOrder and lists[2][z] >= lists[1][y]:
-                        continue
                     ret.append ( (int(lists[0][x]),int(lists[1][y]),int(lists[2][z])) )
-    ret = filterForMingap1 ( ret, mingap1 )
-    ret = filterForMaxgap1 ( ret, maxgap1 )
-    ret = filterForMaxgap2 ( ret, maxgap2 )
-    # print ( "[bakeryHelpers] mass vectors: %s" % ret )
+    ret = filterForGap ( ret, mingap1, True, [0,1] )
+    ret = filterForGap ( ret, mingap2, True, [1,2] )
+    ret = filterForGap ( ret, mingap13, True, [0,2] )
+    ret = filterForGap ( ret, maxgap1, False, [0,1] )
+    ret = filterForGap ( ret, maxgap2, False, [1,2] )
+    ret = filterForGap ( ret, maxgap13, True, [0,2] )
     return ret
 
-def filterForMingap1 ( masses, mingap1 ):
-    """ filter out tuples for which mingap1 is not met 
-        between first and second particle
+def filterForGap ( masses, gap, isMin=True, indices=[0,1] ):
+    """ filter out tuples for which gap is not met 
+        between <indices> particles
+    :param isMin: if True, filter out too low gaps, if False,
+                  filter out too high gaps
     """
-    if mingap1 == None:
+    if gap == None:
         return masses
-    if len(masses[0])<2:
+    if len(masses[0])<=max(indices): ## not enough masses
         return masses
     ret = []
     for t in masses:
-        if t[0] > t[1]+mingap1:
+        if isMin and t[ indices[0] ] > t[ indices[1] ]+  gap:
             ret.append ( t )
-    return ret
-
-def filterForMaxgap1 ( masses, maxgap1 ):
-    """ filter out tuples for which maxgap1 is not met 
-        between first and second particle
-    """
-    if maxgap1 == None:
-        return masses
-    if len(masses[0])<2:
-        return masses
-    ret = []
-    for t in masses:
-        if t[0] < t[1]+maxgap1:
-            ret.append ( t )
-    return ret
-
-def filterForMaxgap2 ( masses, maxgap2 ):
-    """ filter out tuples for which maxgap2 is exceeded between second and third
-        particle
-    """
-    if maxgap2 == None:
-        return masses
-    if len(masses[0])<3:
-        return masses
-    ret = []
-    for t in masses:
-        if t[1] < t[2]+maxgap2:
+        if not isMin and t[ indices[0] ] < t[ indices[1] ]+ gap:
             ret.append ( t )
     return ret
 
@@ -197,7 +173,7 @@ def nRequiredMasses(topo):
     return len(M)
 
 if __name__ == "__main__":
-    ms = "[(200,500.,50),(10.,440.,50)]"
-    masses = parseMasses ( ms, filterOrder=True, mingap1=170. )
+    ms = "[(200,400,50.),(200,400.,50),(150.,440.,50)]"
+    masses = parseMasses ( ms, mingap13=0., mingap2=0. )
     print ( "masses", masses )
     print ( nRequiredMasses("T5ZZ") )
