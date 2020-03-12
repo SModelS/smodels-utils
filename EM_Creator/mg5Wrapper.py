@@ -49,7 +49,7 @@ class MG5Wrapper:
         self.mgParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
                           'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5',
                           'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } #, 'qcut': '90' }
-        self.rmLocksOlderThan ( 2 ) ## remove locks older than 2 hours
+        self.rmLocksOlderThan ( 1 ) ## remove locks older than 1 hour
         self.info ( "initialised" )
 
     def info ( self, *msg ):
@@ -136,7 +136,7 @@ class MG5Wrapper:
         if os.path.exists ( filename ):
             return True
         with open ( filename, "wt" ) as f:
-            f.write ( time.asctime()+"\n" )
+            f.write ( time.asctime()+","+socket.gethostname()+"\n" )
             f.close()
         return False
 

@@ -177,7 +177,10 @@ class MA5Wrapper:
             self.info ( "No Summary file for %s found. remove folder." % dest )
             subprocess.getoutput ( "rm -rf %s" % dest )
         if not os.path.exists ( source ):
-            print ( "[ma5Wrapper] Source dir [%s] %s does not exist. I skip it." % ( os.getcwd(), source ) )
+            try:
+                print ( "[ma5Wrapper] Source dir [%s] %s does not exist. I skip it." % ( os.getcwd(), source ) )
+            except:
+                pass
             return -1
         shutil.move ( source, "../ma5/" )
         os.chdir ( "../" )
