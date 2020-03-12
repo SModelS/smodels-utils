@@ -162,7 +162,8 @@ def getXSecsFor ( pid1, pid2, sqrts, ewk ):
         order = 2 # 3
     if filename == None:
         print ( "[addRefXSecs] could not identify filename for xsecs" )
-        return {}
+        print ( "              seems like we dont have ref xsecs for the pids %d/%d?" % ( pid1, pid2 ) )
+        sys.exit()
     if ewk == "hino":
         filename = filename.replace(".txt","hino.txt" )
     if isEWK:
