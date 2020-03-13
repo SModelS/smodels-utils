@@ -287,6 +287,8 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
             ## add comments
             if self.isNewAnaID ( id, txname.txName, tpe ):
                 line += ' <img src="https://smodels.github.io/pics/new.png" /> in %s! ' % ( self.db.databaseVersion )
+            elif self.anaHasChanged ( id, txname.txName, tpe ):
+                line += ' <img src="https://smodels.github.io/pics/updated.png" /> in %s! ' % ( self.db.databaseVersion )
             ## from comments file
             cFile = valDir+"/"+txname.txName+".comment"
             if os.path.isfile(cFile):
@@ -311,8 +313,49 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         self.nlines += 1
         logger.debug ( "add %s with %d figs" % ( id, nfigs ) )
 
+    def anaHasChanged ( self, id, txname, tpe ):
+        """ has analysis id <id> changed? 
+        :param id: analysis id, e.g. ATLAS-SUSY-2013-02  (str)
+        :param txname: topology name, e.g. T1 (str)
+        :param tpe: type of result, e.g. "upper limits" (str)
+        """
+        if self.comparison_db == None:
+            # no comparison database given. So nothing is new.
+            return False
+        dataTypes = []
+        if tpe in [ "upper limits" ]:
+            dataTypes.append ( "upperLimit" )
+        if tpe in [ "efficiency maps" ]:
+            dataTypes.append ( "efficiencyMap" )
+        newR = self.db.getExpResults( analysisIDs = [ id ], 
+                    txnames = [ txname ], dataTypes = dataTypes,
+                    useSuperseded = True, useNonValidated = self.ignore_validated )
+        oldR = self.comparison_db.getExpResults( analysisIDs = [ id ], 
+                    txnames = [ txname ], dataTypes = dataTypes,
+                    useSuperseded = True, useNonValidated = self.ignore_validated )
+        if len(newR) == 0 or len(oldR) == 0:
+            return False
+        #print ( "has %s changed?" % id )
+        #print ( "new version of the result", len(newR[0].datasets) )
+        #print ( "old version of the result", len(oldR[0].datasets) )
+        if len(newR[0].datasets) != len(oldR[0].datasets):
+            return True
+        for od,nd in zip ( oldR[0].datasets, newR[0].datasets ):
+            if len ( od.txnameList ) != len ( nd.txnameList ):
+                return True
+            for otxn,ntxn in zip ( od.txnameList, nd.txnameList ):
+                if otxn.txnameDataExp == None and ntxn.txnameDataExp != None:
+                    return True
+                if ntxn.txnameDataExp == None and otxn.txnameDataExp != None:
+                    return True
+        return False
+
     def isNewAnaID ( self, id, txname, tpe ):
-        """ is analysis id <id> new? """
+        """ is analysis id <id> new?
+        :param id: analysis id, e.g. ATLAS-SUSY-2013-02  (str)
+        :param txname: topology name, e.g. T1 (str)
+        :param tpe: type of result, e.g. "upper limits" (str)
+        """
         if self.comparison_db == None:
             # no comparison database given. So nothing is new.
             return False
