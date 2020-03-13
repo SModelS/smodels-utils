@@ -15,6 +15,10 @@ moreComments = { ## collect a few more comments on analyses
     "CMS-SUS-16-046": "photon pt > 25",
     "CMS-SUS-18-002": "photon pt > 100",
     "CMS-SUS-17-005": "one lepton",
+    "CMS-SUS-17-010": "2 OS leptons",
+    "CMS-SUS-17-009": "2 OS leptons",
+    "CMS-SUS-16-039": "3+ leptons",
+    "CMS-SUS-16-041": "3+ leptons",
 }
 
 def getExperimentName ( globI ):
@@ -172,7 +176,7 @@ def canCombineAggressive ( globA, globB, elA, elB ):
         "CMS-SUS-17-005": [ "CMS-SUS-17-009", "CMS-PAS-EXO-16-036", "CMS-SUS-16-051", "CMS-SUS-17-001", "CMS-SUS-16-042", "CMS-SUS-16-041", "CMS-SUS-16-039", "CMS-SUS-16-037", "CMS-SUS-16-035", "CMS-SUS-16-034"  ], # multijets + Etmiss, top tagging
         "CMS-SUS-17-006": [ "CMS-SUS-17-009", "CMS-PAS-EXO-16-036", "CMS-SUS-16-051", "CMS-SUS-17-001", "CMS-SUS-16-042", "CMS-SUS-16-041", "CMS-SUS-16-039", "CMS-SUS-16-037", "CMS-SUS-16-035", "CMS-SUS-16-034" ], # High momentum Higgs Boson+ Etmiss, no leptons in SR
         "CMS-SUS-17-009": [ "CMS-SUS-16-009", "CMS-SUS-17-005", "CMS-SUS-17-006", "CMS-SUS-17-010", "CMS-SUS-18-002", "CMS-SUS-16-033", "CMS-SUS-16-036", "CMS-SUS-16-032", "CMS-SUS-16-045", "CMS-SUS-16-046", "CMS-SUS-16-047", "CMS-SUS-16-049", "CMS-SUS-16-050" ], # leptons + Etmiss
-        "CMS-SUS-17-010": [ "CMS-SUS-17-009", "CMS-PAS-EXO-16-036", "CMS-SUS-16-051", "CMS-SUS-17-001", "CMS-SUS-16-042", "CMS-SUS-16-041", "CMS-SUS-16-039", "CMS-SUS-16-037", "CMS-SUS-16-035", "CMS-SUS-16-034" ], # hadronic stop
+        "CMS-SUS-17-010": [ "CMS-SUS-16-049", "CMS-PAS-EXO-16-036", "CMS-SUS-16-051", "CMS-SUS-16-042", "CMS-SUS-16-041", "CMS-SUS-16-039", "CMS-SUS-16-037", "CMS-SUS-16-035", "CMS-SUS-16-036", "CMS-SUS-17-005", "CMS-SUS-16-032", "CMS-SUS-18-002", "CMS-SUS-16-046", "CMS-SUS-19-006", "CMS-PAS-SUS-17-004", "CMS-SUS-16-009", "CMS-SUS-16-043", "CMS-SUS-16-047", "CMS-PAS-SUS-16-022", "CMS-SUS-17-006" ], # hadronic stop, 2 OS leptons
         "CMS-SUS-18-002": [ "CMS-SUS-17-009", "CMS-PAS-EXO-16-036", "CMS-SUS-16-051", "CMS-SUS-17-001", "CMS-SUS-16-042", "CMS-SUS-16-041", "CMS-SUS-16-039", "CMS-SUS-16-037", "CMS-SUS-16-035", "CMS-SUS-16-034" ], # photon, jets, b-jets+ Etmiss, top tagging, lepton veto
         "CMS-SUS-19-006": [ "CMS-SUS-17-009", "CMS-PAS-EXO-16-036", "CMS-SUS-16-051", "CMS-SUS-17-001", "CMS-SUS-16-042", "CMS-SUS-16-041", "CMS-SUS-16-039", "CMS-SUS-16-037", "CMS-SUS-16-035", "CMS-SUS-16-034", "CMS-PAS-SUS-16-022", "CMS-PAS-SUS-17-004", "CMS-SUS-16-043", "CMS-SUS-18-002", "CMS-SUS-17-005" ], # 0L + multijets with MHT
         "CMS-PAS-EXO-16-036": [ "CMS-PAS-SUS-*", "CMS-SUS-*" ], # hscp search
