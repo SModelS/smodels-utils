@@ -13,6 +13,13 @@ import ROOT
 import IPython
 import ctypes
 
+def sortBySqrts ( results, sqrts ):
+    ret = []
+    for res in results:
+        if abs (res.globalInfo.sqrts.asNumber(TeV) - sqrts ) < 0.1:
+            ret.append ( res )
+    return ret
+
 def sortOutDupes ( results ):
     """ If an analysis id appears more than once in the list,
     keep only the one with likelihoods. """
@@ -45,13 +52,15 @@ def sortOutDupes ( results ):
             ret.append ( res )
     return ret
 
-def draw( strategy, databasepath, trianglePlot, miscol=42,
-          diagcol = 0 ):
+def draw( strategy, databasepath, trianglePlot, miscol,
+          diagcol, experiment, S ):
     """
     :param trianglePlot: if True, then only plot the upper triangle of this
                          symmetrical matrix
     :param miscol: color to use when likelihood is missing
     :param diagcol: color to use for diagonal
+    :param experiment: draw only for specific experiment ("CMS", "ATLAS", "all" )
+    :param S: draw only for specific sqrts ( "8", "13", "all" )
     """
     ROOT.gStyle.SetOptStat(0000)
 
@@ -69,8 +78,13 @@ def draw( strategy, databasepath, trianglePlot, miscol=42,
     dir = databasepath
     d=Database( dir, discard_zeroes = True )
     print(d)
-    results = d.getExpResults()
+    analysisIds = [ "all" ]
+    if experiment in [ "CMS", "ATLAS" ]:
+		    analysisIds = [ experiment ]
+    results = d.getExpResults( analysisIDs = analysisIds )
     results = sortOutDupes ( results )
+    if S in [ "8", "13" ]:
+        results = sortBySqrts ( results, int(S) )
 
     #results.sort()
     nres = len ( results )
@@ -90,7 +104,7 @@ def draw( strategy, databasepath, trianglePlot, miscol=42,
     xaxis.SetLabelSize(.014)
     yaxis.SetLabelSize(.014)
 
-    bins= { "CMS": { 8: [999,0], 13:[999,0] }, 
+    bins= { "CMS": { 8: [999,0], 13:[999,0] },
             "ATLAS": { 8: [999,0], 13: [999,0] } }
 
     for x,e in enumerate(results):
@@ -142,11 +156,11 @@ def draw( strategy, databasepath, trianglePlot, miscol=42,
             ROOT.xbins[name] = ROOT.TLatex()
             ROOT.xbins[name].SetTextColorAlpha(ROOT.kBlack,.7)
             ROOT.xbins[name].SetTextSize(.025)
-            xcoord = .5 * ( bins[ana][sqrts][0] + bins[ana][sqrts][1] ) 
+            xcoord = .5 * ( bins[ana][sqrts][0] + bins[ana][sqrts][1] )
             ycoord = n- .5 * ( bins[ana][sqrts][0] + bins[ana][sqrts][1] ) -3
             ROOT.bins[name].DrawLatex(-4,xcoord-3,"#splitline{%s}{%d TeV}" % ( ana, sqrts ) )
             ROOT.xbins[name].DrawLatex(ycoord,-5,"#splitline{%s}{%d TeV}" % ( ana, sqrts ) )
-            yt = bins[ana][sqrts][1] +1 
+            yt = bins[ana][sqrts][1] +1
             extrudes = 3 # how far does the line extrude into tick labels?
             xmax = n
             if trianglePlot:
@@ -188,7 +202,7 @@ def draw( strategy, databasepath, trianglePlot, miscol=42,
     if trianglePlot:
         for i,b in enumerate ( [ "pair is uncorrelated", "pair is correlated", "likelihood is missing" ] ):
             bx = 51
-            by = 68 - 3*i 
+            by = 68 - 3*i
             box = ROOT.TBox(bx,by,bx+1,by+1)
             c = cols[i]
             if i > 0:
@@ -212,11 +226,17 @@ def draw( strategy, databasepath, trianglePlot, miscol=42,
 if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(description="correlation/combination matrix plotter")
-    argparser.add_argument ( '-s', '--strategy', nargs='?', 
+    argparser.add_argument ( '-S', '--strategy', nargs='?',
             help='combination strategy [aggressive]', type=str, default='aggressive' )
-    argparser.add_argument ( '-d', '--database', nargs='?', 
+    argparser.add_argument ( '-d', '--database', nargs='?',
             help='path to database [../../smodels-database]',
             type=str, default='../../smodels-database' )
+    argparser.add_argument ( '-e', '--experiment', nargs='?',
+            help='plot only specific experiment CMS,ATLAS,all [all]',
+            type=str, default='all' )
+    argparser.add_argument ( '-s', '--sqrts', nargs='?',
+            help='plot only specific sqrts 8,13,all [all]',
+            type=str, default='all' )
     argparser.add_argument ( '-t', '--triangular',
             help='plot as lower triangle matrix?',
             action="store_true" )
@@ -225,4 +245,5 @@ if __name__ == "__main__":
     miscol = ROOT.kWhite ## missing likelihood color, white
     diagcol = ROOT.kBlack
     diagcol = ROOT.kGray
-    draw( args.strategy, args.database, args.triangular, miscol, diagcol )
+    draw( args.strategy, args.database, args.triangular, miscol, diagcol,
+          args.experiment, args.sqrts )
