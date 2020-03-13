@@ -85,7 +85,7 @@ def draw( strategy, databasepath, trianglePlot, miscol,
     analysisIds = [ "all" ]
     exps = [ "CMS", "ATLAS" ]
     if experiment in [ "CMS", "ATLAS" ]:
-        analysisIds = [ experiment ]
+        analysisIds = [ experiment+"*" ]
         exps = [ experiment ]
     results = d.getExpResults( analysisIDs = analysisIds )
     results = sortOutDupes ( results )
