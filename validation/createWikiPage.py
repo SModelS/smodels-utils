@@ -30,13 +30,14 @@ except ImportError:
 class WikiPageCreator:
     ### starting to write a creator class
     def __init__ ( self, ugly, database, add_version, private, force_upload,
-                   comparison_database, ignore_superseded, ignore ):
+                   comparison_database, ignore_superseded, ignore, moveFile ):
         self.ugly = ugly ## ugly mode
         self.databasePath = database.replace ( "~", os.path.expanduser("~") )
         self.db = Database( self.databasePath )
-        self.comparison_dbPath = comparison_database
+        self.comparison_dbPath = comparison_database.replace ( "~", os.path.expanduser("~") )
         self.ignore_superseded = ignore_superseded
         self.ignore_validated = ignore
+        self.moveFile = moveFile
         if ugly: ## in ugly mode we always ignore validated, and superseded
             self.ignore_validated = True
             self.ignore_validated = True
@@ -104,9 +105,10 @@ class WikiPageCreator:
         print ( 'Done.\n' )
         self.file.write ( "\nThis page was created %s\n" % time.asctime() )
         self.file.close()
-        cmd = "mv %s ../../smodels.github.io/docs/%s.md" % ( self.fName, self.fName )
-        print ( cmd )
-        C.getoutput ( cmd )
+        if self.moveFile:
+            cmd = "mv %s ../../smodels.github.io/docs/%s.md" % ( self.fName, self.fName )
+            print ( cmd )
+            C.getoutput ( cmd )
 
     def writeHeader ( self ):
         print ( 'Creating wiki file (%s)....' % self.fName )
@@ -287,8 +289,12 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
             ## add comments
             if self.isNewAnaID ( id, txname.txName, tpe ):
                 line += ' <img src="https://smodels.github.io/pics/new.png" /> in %s! ' % ( self.db.databaseVersion )
-            elif self.anaHasChanged ( id, txname.txName, tpe ):
-                line += ' <img src="https://smodels.github.io/pics/updated.png" /> in %s! ' % ( self.db.databaseVersion )
+            else:
+                hasChanged = self.anaHasChanged ( id, txname.txName, tpe )
+                if hasChanged == "cov":
+                    line += ' <img src="https://smodels.github.io/pics/updated.png" /> added covariances in %s! ' % ( self.db.databaseVersion )
+                if hasChanged == "eUL":
+                    line += ' <img src="https://smodels.github.io/pics/updated.png" /> added expected UL in %s! ' % ( self.db.databaseVersion )
             ## from comments file
             cFile = valDir+"/"+txname.txName+".comment"
             if os.path.isfile(cFile):
@@ -335,19 +341,14 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                     useSuperseded = True, useNonValidated = self.ignore_validated )
         if len(newR) == 0 or len(oldR) == 0:
             return False
-        #print ( "has %s changed?" % id )
-        #print ( "new version of the result", len(newR[0].datasets) )
-        #print ( "old version of the result", len(oldR[0].datasets) )
-        if len(newR[0].datasets) != len(oldR[0].datasets):
-            return True
-        for od,nd in zip ( oldR[0].datasets, newR[0].datasets ):
-            if len ( od.txnameList ) != len ( nd.txnameList ):
-                return True
+        oldDS = oldR[0].datasets
+        newDS = newR[0].datasets
+        if newR[0].hasCovarianceMatrix() and not oldR[0].hasCovarianceMatrix():
+            return "cov"
+        for od,nd in zip ( oldDS, newDS ):
             for otxn,ntxn in zip ( od.txnameList, nd.txnameList ):
-                if otxn.txnameDataExp == None and ntxn.txnameDataExp != None:
-                    return True
-                if ntxn.txnameDataExp == None and otxn.txnameDataExp != None:
-                    return True
+                if otxn.hasLikelihood() != ntxn.hasLikelihood():
+                    return "eUL"
         return False
 
     def isNewAnaID ( self, id, txname, tpe ):
@@ -464,6 +465,8 @@ if __name__ == "__main__":
                 ' plots everything, uses ugly plots)', action='store_true')
     ap.add_argument('-p', '--private', help='private mode',
                     action='store_true')
+    ap.add_argument('-M', '--dontmove', help='dont move file at the end',
+                    action='store_true')
     ap.add_argument('-f', '--force_upload', 
                     help='force upload of pics to ../../smodels.github.io.',
                     action='store_true')
@@ -476,16 +479,20 @@ if __name__ == "__main__":
             help='specifying the level of verbosity (error, warning, info, debug)'\
                  ' [info]', default = 'info', type = str)
     ap.add_argument('-c', '--comparison_database',
-            help='specify database to compare to (to flag "new analyses") [default: ""]',
-            default = '', type = str )
+            help='specify database to compare to (to flag "new analyses") [default: "~/git/smodels-database-release"]',
+            default = '~/git/smodels-database-release', type = str )
     ap.add_argument('-d', '--database',
             help='specify the location of the database [~/git/smodels-database]',
             default = '~/git/smodels-database', type = str )
     args = ap.parse_args()
-    if not os.path.exists(os.path.expanduser(args.database)): args.database = "~/tools/smodels-database/"
+    if not os.path.exists(os.path.expanduser(args.database)): 
+            args.database = "~/tools/smodels-database/"
+    if not os.path.exists(os.path.expanduser(args.comparison_database)): 
+        print ( "[createWikiPage] couldnt find comparison database %s, set to ''" % args._comparison_database )
+        args.comparison_database = ""
     setLogLevel ( args.verbose )
     creator = WikiPageCreator( args.ugly, args.database, args.add_version, 
                                args.private, args.force_upload,
                                args.comparison_database, args.ignore_superseded,
-                               args.ignore )
+                               args.ignore, not args.dontmove )
     creator.run()
