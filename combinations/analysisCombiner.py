@@ -163,12 +163,12 @@ def canCombineAggressive ( globA, globB, elA, elB ):
         "CMS-SUS-17-010": [ "CMS-SUS-17-009", "CMS-PAS-EXO-16-036", "CMS-SUS-16-051", "CMS-SUS-17-001", "CMS-SUS-16-042", "CMS-SUS-16-041", "CMS-SUS-16-039", "CMS-SUS-16-037", "CMS-SUS-16-035", "CMS-SUS-16-034" ], # hadronic stop
         "CMS-SUS-18-002": [ "CMS-SUS-17-009", "CMS-PAS-EXO-16-036", "CMS-SUS-16-051", "CMS-SUS-17-001", "CMS-SUS-16-042", "CMS-SUS-16-041", "CMS-SUS-16-039", "CMS-SUS-16-037", "CMS-SUS-16-035", "CMS-SUS-16-034" ], # photon, jets, b-jets+ Etmiss, top tagging, lepton veto
         "CMS-SUS-19-006": [ "CMS-SUS-17-009", "CMS-PAS-EXO-16-036", "CMS-SUS-16-051", "CMS-SUS-17-001", "CMS-SUS-16-042", "CMS-SUS-16-041", "CMS-SUS-16-039", "CMS-SUS-16-037", "CMS-SUS-16-035", "CMS-SUS-16-034" ], # 0L + multijets with MHT
-        "CMS-PAS-EXO-16-036": [ "CMS-PAS-SUS-*", "CMS-SUS-*" ],
-        "CMS-PAS-SUS-16-022": [ "CMS-PAS-EXO-16-036", "CMS-PAS-SUS-16-052", "CMS-SUS-16-032", "CMS-SUS-16-033", "CMS-SUS-16-034", "CMS-SUS-16-035", "CMS-SUS-16-036", "CMS-SUS-16-037", "CMS-SUS-16-042", "CMS-SUS-16-045", "CMS-SUS-16-046", "CMS-SUS-16-047", "CMS-SUS-16-049", "CMS-SUS-16-050", "CMS-SUS-16-051", "CMS-SUS-17-001" ],
-        "CMS-SUS-16-051": [ "CMS-PAS-EXO-16-036", "CMS-PAS-SUS-16-022", "CMS-PAS-SUS-16-052", "CMS-PAS-SUS-17-004", "CMS-SUS-16-032", "CMS-SUS-16-033", "CMS-SUS-16-034", "CMS-SUS-16-035", "CMS-SUS-16-036", "CMS-SUS-16-039", "CMS-SUS-16-041", "CMS-SUS-16-045", "CMS-SUS-16-046", "CMS-SUS-16-047", "CMS-SUS-16-049", "CMS-SUS-16-050", "CMS-SUS-17-001", "CMS-PAS-SUS-16-052-agg" ],
-        "CMS-SUS-16-050": [ "CMS-PAS-EXO-16-036", "CMS-PAS-SUS-16-022", "CMS-PAS-SUS-17-004", "CMS-SUS-16-034", "CMS-SUS-16-035", "CMS-SUS-16-037", "CMS-SUS-16-039", "CMS-SUS-16-041", "CMS-SUS-16-042", "CMS-SUS-16-051" ],
-        "CMS-SUS-16-049": [ "CMS-PAS-EXO-16-036", "CMS-PAS-SUS-16-022", "CMS-PAS-SUS-17-004", "CMS-SUS-16-034", "CMS-SUS-16-035", "CMS-SUS-16-037", "CMS-SUS-16-039", "CMS-SUS-16-041", "CMS-SUS-16-042", "CMS-SUS-16-051" ],
-        "CMS-SUS-16-036": [ "CMS-PAS-EXO-16-036", "CMS-PAS-SUS-16-022", "CMS-PAS-SUS-17-004", "CMS-SUS-16-034", "CMS-SUS-16-035", "CMS-SUS-16-037", "CMS-SUS-16-039", "CMS-SUS-16-041", "CMS-SUS-16-042", "CMS-SUS-16-051" ],
+        "CMS-PAS-EXO-16-036": [ "CMS-PAS-SUS-*", "CMS-SUS-*" ], # hscp search
+        "CMS-PAS-SUS-16-022": [ "CMS-PAS-EXO-16-036", "CMS-PAS-SUS-16-052", "CMS-SUS-16-032", "CMS-SUS-16-033", "CMS-SUS-16-034", "CMS-SUS-16-035", "CMS-SUS-16-036", "CMS-SUS-16-037", "CMS-SUS-16-042", "CMS-SUS-16-045", "CMS-SUS-16-046", "CMS-SUS-16-047", "CMS-SUS-16-049", "CMS-SUS-16-050", "CMS-SUS-16-051", "CMS-SUS-17-001" ], # >= 3 leptons + Etmiss
+        "CMS-SUS-16-051": [ "CMS-PAS-EXO-16-036", "CMS-PAS-SUS-16-022", "CMS-PAS-SUS-16-052", "CMS-PAS-SUS-17-004", "CMS-SUS-16-032", "CMS-SUS-16-033", "CMS-SUS-16-034", "CMS-SUS-16-035", "CMS-SUS-16-036", "CMS-SUS-16-039", "CMS-SUS-16-041", "CMS-SUS-16-045", "CMS-SUS-16-046", "CMS-SUS-16-047", "CMS-SUS-16-049", "CMS-SUS-16-050", "CMS-SUS-17-001", "CMS-PAS-SUS-16-052-agg" ], # 1L stop
+        "CMS-SUS-16-050": [ "CMS-PAS-EXO-16-036", "CMS-PAS-SUS-16-022", "CMS-PAS-SUS-17-004", "CMS-SUS-16-034", "CMS-SUS-16-035", "CMS-SUS-16-037", "CMS-SUS-16-039", "CMS-SUS-16-041", "CMS-SUS-16-042", "CMS-SUS-16-051" ], # 0L + top tag
+        "CMS-SUS-16-049": [ "CMS-PAS-EXO-16-036", "CMS-PAS-SUS-16-022", "CMS-PAS-SUS-17-004", "CMS-SUS-16-034", "CMS-SUS-16-035", "CMS-SUS-16-037", "CMS-SUS-16-039", "CMS-SUS-16-041", "CMS-SUS-16-042", "CMS-SUS-16-051" ], # All hadronic stop
+        "CMS-SUS-16-036": [ "CMS-PAS-EXO-16-036", "CMS-PAS-SUS-16-022", "CMS-PAS-SUS-17-004", "CMS-SUS-16-034", "CMS-SUS-16-035", "CMS-SUS-16-037", "CMS-SUS-16-039", "CMS-SUS-16-041", "CMS-SUS-16-042", "CMS-SUS-16-051" ], # 0L + jets + Etmiss (using MT2)
     }
     allowCombinationATLAS13TeV = {
         "ATLAS-SUSY-2016-15": [ "ATLAS-SUSY-2016-16", "ATLAS-SUSY-2016-24", "ATLAS-SUSY-2018-06", "ATLAS-SUSY-2018-32", "ATLAS-SUSY-2015-02", "ATLAS-SUSY-2015-09" ], # 0L stop
@@ -217,7 +217,7 @@ def canCombineConservative ( globA, globB, elA, elB ):
         return True
     return False
 
-if __name__ == "__main__":
+def getSummary():
     from smodels.experiment.databaseObj import Database
     # dbpath = "official"
     dbpath = "../../smodels-database"
@@ -238,3 +238,38 @@ if __name__ == "__main__":
             isUn = canCombine ( e.globalInfo, f.globalInfo, strategy )
             combinable+=isUn
     print ( "[analysisCombiner] can combine %d/%d pairs of results" % ( combinable, ctr ) )
+
+def checkOneAnalysis():
+    import argparse
+    import IPython
+    argparser = argparse.ArgumentParser(
+            description='print the correlations of one specific analysis')
+    argparser.add_argument ( '-d', '--dbpath',
+            help='specify path to database',
+            type=str, default="../../smodels-database" )
+    argparser.add_argument ( '-a', '--analysis',
+            help='print for <analysis>',
+            type=str, default="CMS-SUS-19-006" )
+    args = argparser.parse_args()
+    from smodels.experiment.databaseObj import Database
+    print ( "[analysisCombiner] checking %s" % args.dbpath )
+    db = Database ( args.dbpath )
+    results = db.getExpResults()
+    pred = getInfoFromAnaId ( args.analysis, results )
+    sqrts = pred.sqrts
+    collaboration = getExperimentName ( pred )
+    # IPython.embed()
+    print ( "correlations for %s: %s" % (  args.analysis, pred.prettyName ) )
+    for er in results:
+        if er.globalInfo.sqrts != sqrts:
+            continue
+        if getExperimentName (er.globalInfo ) != collaboration:
+            continue
+        Id = er.globalInfo.id
+        pname = er.globalInfo.prettyName
+        cc = canCombine ( pred, er.globalInfo )
+        print ( " `- %s: %s: %s" % ( Id, pname, cc ) )
+
+if __name__ == "__main__":
+    checkOneAnalysis()
+    # getSummary()
