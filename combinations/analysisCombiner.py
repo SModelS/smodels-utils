@@ -5,6 +5,18 @@
 from smodels.theory.theoryPrediction import TheoryPrediction
 import fnmatch
 
+
+moreComments = { ## collect a few more comments on analyses
+    "CMS-SUS-18-002": "lepton veto",
+    "ATLAS-SUSY-2018-31": "lepton veto",
+    "CMS-SUS-17-006": "lepton veto",
+    "CMS-SUS-19-006": "photon pt > 100 veto",
+    "CMS-SUS-16-043": "one lepton",
+    "CMS-SUS-16-046": "photon pt > 25",
+    "CMS-SUS-18-002": "photon pt > 100",
+    "CMS-SUS-17-005": "one lepton",
+}
+
 def getExperimentName ( globI ):
     """ returns name of experiment of exp result """
     if "CMS" in globI.id:
@@ -24,7 +36,7 @@ def getInfoFromAnaId ( anaId, results ):
         print ( "[analysisCombiner] supplied an analysis id string (%s), but couldnt find such an analysis in the database!" % anaId )
     return ret
 
-def canCombine ( predA, predB, strategy="conservative", results = None ):
+def canCombine ( predA, predB, strategy="aggressive", results = None ):
     """ can we combine predA and predB? predA and predB can be
         individual predictions, or lists of predictions.
     :param predA: lists of predictions, or single predictions (given either
@@ -162,7 +174,7 @@ def canCombineAggressive ( globA, globB, elA, elB ):
         "CMS-SUS-17-009": [ "CMS-SUS-16-009", "CMS-SUS-17-005", "CMS-SUS-17-006", "CMS-SUS-17-010", "CMS-SUS-18-002", "CMS-SUS-16-033", "CMS-SUS-16-036", "CMS-SUS-16-032", "CMS-SUS-16-045", "CMS-SUS-16-046", "CMS-SUS-16-047", "CMS-SUS-16-049", "CMS-SUS-16-050" ], # leptons + Etmiss
         "CMS-SUS-17-010": [ "CMS-SUS-17-009", "CMS-PAS-EXO-16-036", "CMS-SUS-16-051", "CMS-SUS-17-001", "CMS-SUS-16-042", "CMS-SUS-16-041", "CMS-SUS-16-039", "CMS-SUS-16-037", "CMS-SUS-16-035", "CMS-SUS-16-034" ], # hadronic stop
         "CMS-SUS-18-002": [ "CMS-SUS-17-009", "CMS-PAS-EXO-16-036", "CMS-SUS-16-051", "CMS-SUS-17-001", "CMS-SUS-16-042", "CMS-SUS-16-041", "CMS-SUS-16-039", "CMS-SUS-16-037", "CMS-SUS-16-035", "CMS-SUS-16-034" ], # photon, jets, b-jets+ Etmiss, top tagging, lepton veto
-        "CMS-SUS-19-006": [ "CMS-SUS-17-009", "CMS-PAS-EXO-16-036", "CMS-SUS-16-051", "CMS-SUS-17-001", "CMS-SUS-16-042", "CMS-SUS-16-041", "CMS-SUS-16-039", "CMS-SUS-16-037", "CMS-SUS-16-035", "CMS-SUS-16-034" ], # 0L + multijets with MHT
+        "CMS-SUS-19-006": [ "CMS-SUS-17-009", "CMS-PAS-EXO-16-036", "CMS-SUS-16-051", "CMS-SUS-17-001", "CMS-SUS-16-042", "CMS-SUS-16-041", "CMS-SUS-16-039", "CMS-SUS-16-037", "CMS-SUS-16-035", "CMS-SUS-16-034", "CMS-PAS-SUS-16-022", "CMS-PAS-SUS-17-004", "CMS-SUS-16-043", "CMS-SUS-18-002", "CMS-SUS-17-005" ], # 0L + multijets with MHT
         "CMS-PAS-EXO-16-036": [ "CMS-PAS-SUS-*", "CMS-SUS-*" ], # hscp search
         "CMS-PAS-SUS-16-022": [ "CMS-PAS-EXO-16-036", "CMS-PAS-SUS-16-052", "CMS-SUS-16-032", "CMS-SUS-16-033", "CMS-SUS-16-034", "CMS-SUS-16-035", "CMS-SUS-16-036", "CMS-SUS-16-037", "CMS-SUS-16-042", "CMS-SUS-16-045", "CMS-SUS-16-046", "CMS-SUS-16-047", "CMS-SUS-16-049", "CMS-SUS-16-050", "CMS-SUS-16-051", "CMS-SUS-17-001" ], # >= 3 leptons + Etmiss
         "CMS-SUS-16-051": [ "CMS-PAS-EXO-16-036", "CMS-PAS-SUS-16-022", "CMS-PAS-SUS-16-052", "CMS-PAS-SUS-17-004", "CMS-SUS-16-032", "CMS-SUS-16-033", "CMS-SUS-16-034", "CMS-SUS-16-035", "CMS-SUS-16-036", "CMS-SUS-16-039", "CMS-SUS-16-041", "CMS-SUS-16-045", "CMS-SUS-16-046", "CMS-SUS-16-047", "CMS-SUS-16-049", "CMS-SUS-16-050", "CMS-SUS-17-001", "CMS-PAS-SUS-16-052-agg" ], # 1L stop
@@ -255,20 +267,43 @@ def checkOneAnalysis():
     print ( "[analysisCombiner] checking %s" % args.dbpath )
     db = Database ( args.dbpath )
     results = db.getExpResults()
-    pred = getInfoFromAnaId ( args.analysis, results )
-    sqrts = pred.sqrts
-    collaboration = getExperimentName ( pred )
+    info = getInfoFromAnaId ( args.analysis, results )
+    sqrts = info.sqrts
+    collaboration = getExperimentName ( info )
+    prettyName = info.prettyName
+    if args.analysis in moreComments:
+        prettyName += " (%s)" % moreComments[args.analysis]
     # IPython.embed()
-    print ( "correlations for %s: %s" % (  args.analysis, pred.prettyName ) )
+    print ( "correlations for %s: %s" % (  args.analysis, prettyName ) )
+    combs, nocombs = set(), set()
+    pnames = {}
     for er in results:
         if er.globalInfo.sqrts != sqrts:
             continue
         if getExperimentName (er.globalInfo ) != collaboration:
             continue
         Id = er.globalInfo.id
+        Id = Id.replace("-eff","").replace("-agg","")
+        if Id == "CMS-SUS-19-006-2":
+            Id = "CMS-SUS-19-006"
         pname = er.globalInfo.prettyName
-        cc = canCombine ( pred, er.globalInfo )
-        print ( " `- %s: %s: %s" % ( Id, pname, cc ) )
+        if Id in moreComments:
+            pname += " (%s)" % moreComments[Id]
+        pnames[Id]=pname
+        cc = canCombine ( info, er.globalInfo, "aggressive" )
+        # cc = canCombine ( pred, er.globalInfo )
+        if cc:
+            combs.add ( Id )
+        else:
+            nocombs.add ( Id )
+    print ( "can combine with: " )
+    for Id in combs:
+        pname = pnames[Id]
+        print ( " `- %s: %s" % ( Id, pname ) )
+    print ( "cannot combine with: " )
+    for Id in nocombs:
+        pname = pnames[Id]
+        print ( " `- %s: %s" % ( Id, pname ) )
 
 if __name__ == "__main__":
     checkOneAnalysis()
