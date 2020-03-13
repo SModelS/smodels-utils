@@ -71,6 +71,10 @@ def draw( strategy, databasepath, trianglePlot, miscol,
 
     ROOT.gStyle.SetPadLeftMargin(.25)
 
+    sqrtses = [ 8, 13 ]
+    if S not in [ "all" ]:
+        sqrtses = [ int(S) ]
+
     colors.on = True
     setLogLevel ( "debug" )
 
@@ -79,8 +83,10 @@ def draw( strategy, databasepath, trianglePlot, miscol,
     d=Database( dir, discard_zeroes = True )
     print(d)
     analysisIds = [ "all" ]
+    exps = [ "CMS", "ATLAS" ]
     if experiment in [ "CMS", "ATLAS" ]:
-		    analysisIds = [ experiment ]
+        analysisIds = [ experiment ]
+        exps = [ experiment ]
     results = d.getExpResults( analysisIDs = analysisIds )
     results = sortOutDupes ( results )
     if S in [ "8", "13" ]:
@@ -107,6 +113,7 @@ def draw( strategy, databasepath, trianglePlot, miscol,
     bins= { "CMS": { 8: [999,0], 13:[999,0] },
             "ATLAS": { 8: [999,0], 13: [999,0] } }
 
+    n = len(results )
     for x,e in enumerate(results):
         label = e.globalInfo.id
         hasLikelihood = hasLLHD ( e )
@@ -126,7 +133,6 @@ def draw( strategy, databasepath, trianglePlot, miscol,
             bins[ana][sqrts][1]=x
             ymax=x
         color = ROOT.kGray+2
-        n = len(results )
         label = "#color[%d]{%s}" % (color, label )
         xaxis.SetBinLabel(n-x, label )
         yaxis.SetBinLabel(x+1, label )
@@ -146,8 +152,8 @@ def draw( strategy, databasepath, trianglePlot, miscol,
 
     h.Draw("col")
     ROOT.bins, ROOT.xbins, ROOT.lines = {}, {}, []
-    for ana in [ "CMS", "ATLAS" ]:
-        for sqrts in [ 8, 13 ]:
+    for ana in exps:
+        for sqrts in sqrtses:
             name= "%s%d" % ( ana, sqrts )
             ROOT.bins[name] = ROOT.TLatex()
             ROOT.bins[name].SetTextColorAlpha(ROOT.kBlack,.7)
