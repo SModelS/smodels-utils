@@ -23,13 +23,16 @@ moreComments = { ## collect a few more comments on analyses
     "CMS-SUS-16-009": "all hadronic, no photon veto",
     "CMS-SUS-16-041": "3+ leptons",
     "ATLAS-SUSY-2017-01": "all channels",
+    "ATLAS-SUSY-2016-26": "lepton veto",
     "ATLAS-SUSY-2016-27": "no lepton vetos",
     "ATLAS-SUSY-2016-28": "0 or 1 leptons",
+    "ATLAS-SUSY-2016-19": "different channels",
     "ATLAS-SUSY-2018-16": "2 low pt OS leptons",
     "ATLAS-SUSY-2017-02": "lepton veto, no photon veto",
     "ATLAS-SUSY-2016-07": "lepton veto, no photon veto",
     "ATLAS-SUSY-2016-15": "lepton veto, no photon veto",
     "ATLAS-SUSY-2018-04": "b-jet veto, no lepton veto",
+    "ATLAS-SUSY-2017-03": "2 or 3 leptons",
 }
 
 def getExperimentName ( globI ):
@@ -200,8 +203,9 @@ def canCombineAggressive ( globA, globB, elA, elB ):
     allowCombinationATLAS13TeV = {
         "ATLAS-SUSY-2016-15": [ "ATLAS-SUSY-2016-16", "ATLAS-SUSY-2016-24", "ATLAS-SUSY-2018-06", "ATLAS-SUSY-2018-32", "ATLAS-SUSY-2015-02", "ATLAS-SUSY-2015-09" ], # 0L stop
         "ATLAS-SUSY-2016-16": [ "ATLAS-SUSY-2016-15", "ATLAS-SUSY-2016-24", "ATLAS-SUSY-2017-02", "ATLAS-SUSY-2018-04", "ATLAS-SUSY-2018-06", "ATLAS-SUSY-2018-32", "ATLAS-SUSY-2015-01", "ATLAS-SUSY-2015-09", "ATLAS-SUSY-2016-07", "ATLAS-SUSY-2015-06" ], # 1L stop
-        "ATLAS-SUSY-2016-24": [ "ATLAS-SUSY-2016-15", "ATLAS-SUSY-2016-16", "ATLAS-SUSY-2016-28", "ATLAS-SUSY-2017-02", "ATLAS-SUSY-2018-04", "ATLAS-SUSY-2015-01", "ATLAS-SUSY-2015-02", "ATLAS-SUSY-2016-26", "ATLAS-SUSY-2015-02", "ATLAS-SUSY-2015-06", "ATLAS-SUSY-2016-07" ], # 2+ leptons (e,mu) + jets + Etmiss
+        "ATLAS-SUSY-2016-24": [  "ATLAS-SUSY-2016-15", "ATLAS-SUSY-2016-16", "ATLAS-SUSY-2016-28", "ATLAS-SUSY-2017-02", "ATLAS-SUSY-2018-04", "ATLAS-SUSY-2015-01", "ATLAS-SUSY-2015-02", "ATLAS-SUSY-2016-26", "ATLAS-SUSY-2015-02", "ATLAS-SUSY-2015-06", "ATLAS-SUSY-2016-07" ], # 2+ leptons (e,mu) + jets + Etmiss
         "ATLAS-SUSY-2016-27": [], #  "ATLAS-SUSY-2016-16", "ATLAS-SUSY-2016-24", "ATLAS-SUSY-2018-06", "ATLAS-SUSY-2018-32", "ATLAS-SUSY-2015-02", "ATLAS-SUSY-2015-09"  ], # jets + photon + Etmiss
+        "ATLAS-SUSY-2016-26": [ "ATLAS-SUSY-2019-08", "ATLAS-SUSY-2016-17", "ATLAS-SUSY-2016-33", "ATLAS-SUSY-2017-03", "ATLAS-SUSY-2016-16", "ATLAS-SUSY-2016-14" ], # >=2 c jets + MET, lepton veto
         "ATLAS-SUSY-2016-28": [ "ATLAS-SUSY-2016-24", "ATLAS-SUSY-2018-06", "ATLAS-SUSY-2018-32", "ATLAS-SUSY-2015-02", "ATLAS-SUSY-2015-09" ], # 2b
         "ATLAS-SUSY-2017-01": [], # EWK WH(bb) + Etmiss, all lepton multiplicities, with and without photon
         "ATLAS-SUSY-2017-02": [ "ATLAS-SUSY-2016-16", "ATLAS-SUSY-2016-24", "ATLAS-SUSY-2018-06", "ATLAS-SUSY-2018-32", "ATLAS-SUSY-2015-02", "ATLAS-SUSY-2015-09" ], # 0L + jets + Etmiss
