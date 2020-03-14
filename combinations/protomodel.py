@@ -73,8 +73,8 @@ class ProtoModel:
             self.particles = [ 1000001, 1000002, 1000003, 1000004, 1000005, 1000006,
                       2000005, 2000006, 1000011, 1000012, 1000013, 1000014, 1000015,
                       1000016, 1000021, 1000022, 1000023, 1000025, 1000024, 1000037 ]
-            self.templateSLHA = "template.slha"
-            if True:
+            self.templateSLHA = "template1g.slha"
+            if False:
                 self.particles.append ( 2000021 )
                 self.particles.append ( 3000006 )
                 self.templateSLHA = "template2g.slha"
