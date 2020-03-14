@@ -60,6 +60,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     ram = max ( 35, 2.0 * ( jmax - jmin ) )
     # cmd = [ "srun" ]
     cmd = [ "sbatch" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
     qos = "c_short"
     if time > 48:
         qos = "c_long"
@@ -275,7 +277,7 @@ def main():
                     type=int, default=-1 )
     argparser.add_argument ( '-b', '--bake', nargs="?", 
                     help='bake, with the given arguments, use "default" if unsure ["@n 10000 @a"]', 
-                    type=str, default="default" )
+                    type=str, default="" )
     argparser.add_argument ( '-m', '--mass', nargs="?", 
                     help='bake, mass specification, for baking only [(50,4500,200),(50,4500,200),(0.)]', 
                     type=str, default="default" )

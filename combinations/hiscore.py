@@ -270,7 +270,9 @@ def compileList( nmax ):
                 allprotomodels = sortByZ ( allprotomodels )
                 alltrimmed = sortByZ ( alltrimmed )
         except ( IOError, OSError, FileNotFoundError, EOFError, pickle.UnpicklingError ) as e:
-            print ( "[hiscore] could not open %s (%s). ignore." % ( fname, e ) )
+            cmd = "rm -f %s" % fname
+            print ( "[hiscore] could not open %s (%s). %s." % ( fname, e, cmd ) )
+            o = subprocess.getoutput ( cmd )
     print ( )
     if nmax > 0:
         while len(allprotomodels)<nmax:
