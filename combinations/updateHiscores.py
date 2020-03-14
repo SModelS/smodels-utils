@@ -6,11 +6,13 @@
 import time, types, sys, os
 
 def setup():
-    codedir = "/mnt/hephy/pheno/ww/git/"
+    # codedir = "/mnt/hephy/pheno/ww/git/"
+    codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/"
     sys.path.insert(0,"%ssmodels/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
-    rundir = "/mnt/hephy/pheno/ww/rundir/"
+    # rundir = "/mnt/hephy/pheno/ww/rundir/"
+    rundir = "/scratch-cbe/users/wolfgan.waltenberger/rundir/"
     # rundir = "./"
     if os.path.exists ( "./rundir.conf" ):
         with open ( "./rundir.conf" ) as f:

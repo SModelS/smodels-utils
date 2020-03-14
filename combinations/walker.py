@@ -12,7 +12,7 @@ try:
     import smodels
 except:
     import setPath
-sys.path.insert(0,"/mnt/hephy/pheno/ww/git/smodels-utils/combinations/")
+sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/combinations/")
 from smodels.tools.runtime import nCPUs
 from smodels.tools.physicsUnits import GeV
 from hiscore import Hiscore

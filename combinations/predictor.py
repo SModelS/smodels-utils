@@ -91,7 +91,8 @@ class Predictor:
         if self.select == "ul":
             dataTypes = [ "upperLimit" ]
 
-        listOfExpRes = self.database.getExpResults( dataTypes = dataTypes )
+        listOfExpRes = self.database.getExpResults( dataTypes = dataTypes, 
+                                                    useNonValidated=True )
         if self.modifier:
             listOfExpRes = self.modifier.modify ( listOfExpRes )
 

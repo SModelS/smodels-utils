@@ -3,7 +3,8 @@
 import glob, stat, os, time, subprocess
 
 def getRundir():
-    ret="/mnt/hephy/pheno/ww/rundir/"
+    # ret="/scratch-cbe/users/wolfgan.waltenbergerrundir/"
+    ret="/scratch-cbe/users/wolfgan.waltenberger/rundir/"
     if os.path.exists ( "rundir.conf" ):
         with open ( "rundir.conf" ) as f:
             ret = f.read()

@@ -18,9 +18,14 @@ def remove( fname, keep):
             os.unlink ( fname )
     except:
         pass
+    
+# codedir = "/scratch-cbe/users/wolfgan.waltenbergergit/smodels-utils/"
+codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/"
+# rundir = "/scratch-cbe/users/wolfgan.waltenbergerrundir"
+rundir = "/scratch-cbe/users/wolfgan.waltenberger/rundir/"
 
 def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
-                rundir, cheatcode ):
+                cheatcode ):
     """ prepare everything for a single job 
     :params pid: process id, integer that idenfies the process
     :param jmin: id of first walker
@@ -31,18 +36,16 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     :param dry_run: dont act, just tell us what you would do
     :param keep: keep temporary files, for debugging
     :param time: time in hours
-    :param rundir: directory with all temp files, cwd of job
     :param cheatcode: in case we wish to start with a cheat model
     """
     print ( "[runOneJob:%d] run walkers [%d,%d] " % ( pid, jmin, jmax ) )
-    # codedir = "/mnt/hephy/pheno/ww/git/smodels-utils/combinations/"
-    codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/combinations/"
     # runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
     runner = "%sRUNNER_%s.py" % ( rundir, jmin )
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
         f.write ( "sys.path.insert(0,'%s')\n" % codedir )
+        f.write ( "sys.path.insert(0,'%s/combinations')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import walkingWorker\n" )
         f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d )\n" % \
@@ -76,17 +79,15 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     #remove ( runner, keep )
 
 def produceLLHDScanScript ( pid1, pid2, force_rewrite ):
-    rundir = "/mnt/hephy/pheno/ww/rundir"
     fname = "%s/llhdscanner%d.sh" % ( rundir, pid1 )
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("/mnt/hephy/pheno/ww/git/smodels-utils/combinations/llhdscanner.py --pid1 %d --pid2 %d\n" % ( pid1, pid2 ) ) 
+            f.write ("%s/combinations/llhdscanner.py --pid1 %d --pid2 %d\n" % ( codedir, pid1, pid2 ) ) 
             f.close()
         os.chmod ( fname, 0o775 )
 
 def produceScanScript ( pid, force_rewrite, pid2 ):
-    rundir = "/mnt/hephy/pheno/ww/rundir"
     spid2=""
     if pid2!=0:
         spid2=str(pid2)
@@ -97,7 +98,7 @@ def produceScanScript ( pid, force_rewrite, pid2 ):
             argpid2 = " --pid2 %d" % pid2
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("/mnt/hephy/pheno/ww/git/smodels-utils/combinations/scanner.py -P -p %d %s\n" % ( pid,argpid2) ) 
+            f.write ("%s/combinations/scanner.py -P -p %d %s\n" % ( codedir,pid,argpid2) ) 
             f.close()
         os.chmod ( fname, 0o775 )
             
@@ -204,8 +205,6 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc ):
     :param dry_run: dont do anything, just produce script
     :param nproc: number of processes, typically 5
     """
-    # codedir = "/mnt/hephy/pheno/ww/git/smodels-utils/"
-    codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/"
     with open ( "%sclip/bake_template.sh" % codedir, "rt" ) as f:
         lines = f.readlines()
         f.close()
@@ -247,7 +246,7 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc ):
     #o = subprocess.getoutput ( cmd )
     #print ( "[slurm.py] %s %s" % ( cmd, o ) )
 
-def clean_dirs( rundir, clean_all = False ):
+def clean_dirs( clean_all = False ):
     cmd = "rm slurm*out"
     o = subprocess.getoutput ( cmd )
     cmd = "cd %s; rm -rf old*pcl .cur* RUN* walker*log" % rundir
@@ -255,7 +254,7 @@ def clean_dirs( rundir, clean_all = False ):
         cmd = "cd %s; rm -rf *pcl .cur* RUN* walker*log training*gz" % rundir
     o = subprocess.getoutput ( cmd )
 
-def queryStats ( rundir ):
+def queryStats ( ):
     import running_stats
     running_stats.count_jobs()
     running_stats.running_stats()
@@ -269,7 +268,7 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-k','--keep', help='keep calling scripts',
                              action="store_true" )
-    argparser.add_argument ( '-U','--updater', help='run the updater',
+    argparser.add_argument ( '-U','--updater', help='run the hiscore updater',
                              action="store_true" )
     argparser.add_argument ( '-S', '--scan', nargs="?", 
                     help='run the scanner on pid, -1 means dont run', 
@@ -313,13 +312,11 @@ def main():
                         type=str, default="cms_sus_16_033,atlas_susy_2016_07" )
     argparser.add_argument ( '-T', '--topo', help='topology considered in baking ["T3GQ"]',
                         type=str, default="T3GQ" )
-    argparser.add_argument ( '-D', '--dbpath', help='path to database ["/mnt/hephy/pheno/ww/git/smodels-database/"]',
-                        type=str, default="/mnt/hephy/pheno/ww/git/smodels-database/" )
+    argparser.add_argument ( '-D', '--dbpath', help='path to database ["/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database"]',
+                        type=str, default="/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database" )
     args=argparser.parse_args()
-    # rundir = "/mnt/hephy/pheno/ww/rundir/"
-    rundir = "/scratch-cbe/users/wolfgan.waltenberger/rundir/"
     if args.query:
-        queryStats ( rundir )
+        queryStats ( )
         return
     if args.bake != "":
         if args.bake == "default":
@@ -330,10 +327,10 @@ def main():
         bake ( args.bake, args.analyses, args.mass, args.topo, args.dry_run, 
                args.nprocesses ) 
     if args.clean:
-        clean_dirs( rundir, clean_all = False )
+        clean_dirs( clean_all = False )
         return
     if args.clean_all:
-        clean_dirs( rundir, clean_all = True )
+        clean_dirs( clean_all = True )
         return
     if args.updater:
         runUpdater( args.dry_run, args.time )
@@ -362,7 +359,7 @@ def main():
     while True:
         if nprocesses == 1:
             runOneJob ( 0, nmin, nmax, cont, args.dbpath, lines, args.dry_run,
-                        args.keep, args.time, rundir, cheatcode )
+                        args.keep, args.time, cheatcode )
         else:
             import multiprocessing
             ## nwalkers is the number of jobs per process
@@ -378,7 +375,7 @@ def main():
                 #print ( "process", imin, imax )
                 p = multiprocessing.Process ( target = runOneJob, 
                         args = ( i, imin, imax, cont, args.dbpath, lines, args.dry_run,
-                                 args.keep, args.time, rundir, cheatcode ) )
+                                 args.keep, args.time, cheatcode ) )
                 jobs.append ( p )
                 p.start()
 

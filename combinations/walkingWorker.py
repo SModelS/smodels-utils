@@ -3,11 +3,13 @@
 import sys, os
 
 def setup():
-    codedir = "/mnt/hephy/pheno/ww/git/"
+    # codedir = "/mnt/hephy/pheno/ww/git/"
+    codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/"
     sys.path.insert(0,"%ssmodels/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
-    rundir = "/mnt/hephy/pheno/ww/rundir/"
+    rundir = "/scratch-cbe/users/wolfgan.waltenberger/rundir/"
+    # rundir = "/mnt/hephy/pheno/ww/rundir/"
     # rundir = "./"
     if os.path.exists ( "./rundir.conf" ):
         with open ( "./rundir.conf" ) as f:
@@ -16,7 +18,7 @@ def setup():
     os.chdir ( rundir )
     return rundir
 
-def main( nmin, nmax, cont, dbpath = "/mnt/hephy/pheno/ww/git/smodels-database/",
+def main( nmin, nmax, cont, dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database/",
           cheatcode = 0 ):
     """ a worker node to set up to run walkers 
     :param nmin: the walker id of the first walker

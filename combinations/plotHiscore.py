@@ -11,7 +11,8 @@ from smodels_utils.plotting import rulerPlotter, decayPlotter
 import helpers
 
 def setup():
-    codedir = "/mnt/hephy/pheno/ww/git/"
+    # codedir = "/mnt/hephy/pheno/ww/git/"
+    codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/"
     sys.path.insert(0,"%ssmodels/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )

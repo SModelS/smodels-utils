@@ -10,7 +10,7 @@ if len(sys.argv)>1 and "copy" in sys.argv[1]:
 if len(sys.argv)>1 and "ssm" in sys.argv[1]:
 	f= [ "ssm\*.pcl" ]
 for i in f:
-    cmd="scp wolfgan.waltenberger@clip-login-1:/mnt/hephy/pheno/ww/rundir/%s ." % i
+    cmd="scp wolfgan.waltenberger@clip-login-1:/scratch-cbe/users/wolfgan.waltenberger/rundir/%s ." % i
     print ( cmd )
     out = subprocess.getoutput ( cmd )
     print ( out )

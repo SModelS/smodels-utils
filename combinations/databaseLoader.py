@@ -14,7 +14,7 @@ sys.path.insert(0,"../")
 from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
 setLogLevel("info")
-database = Database("../../smodels-database/", discard_zeroes = True )
+database = Database("../../smodels-database/", useNonValidated=True, discard_zeroes = True )
 
 if __name__ == "__main__":
     print ( database )

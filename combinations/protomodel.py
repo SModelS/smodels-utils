@@ -74,7 +74,7 @@ class ProtoModel:
                       2000005, 2000006, 1000011, 1000012, 1000013, 1000014, 1000015,
                       1000016, 1000021, 1000022, 1000023, 1000025, 1000024, 1000037 ]
             self.templateSLHA = "template.slha"
-            if False:
+            if True:
                 self.particles.append ( 2000021 )
                 self.particles.append ( 3000006 )
                 self.templateSLHA = "template2g.slha"
@@ -376,7 +376,7 @@ class ProtoModel:
     def checkTemplateSLHA ( self ):
         if not os.path.exists ( self.templateSLHA ):
             if "/mnt/hephy/" in self.templateSLHA:
-                trySLHA = self.templateSLHA.replace("/mnt/hephy/pheno/ww/git/smodels-utils/combinations/","./" )
+                trySLHA = self.templateSLHA.replace("/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/combinations/","./" )
                 if os.path.exists ( trySLHA ):
                     self.templateSLHA = trySLHA
                     return
