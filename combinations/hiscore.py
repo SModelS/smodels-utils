@@ -344,7 +344,7 @@ def main ( args ):
                  fetch, nmax, maxloss, trim, trim_branchings,
                  analysis_contributions, check, interactive,
                  see "if __main__" part below.
-    :returns: highest significance
+    :returns: ( highest significance, step )
     """
 
     if args.detailed:
@@ -391,7 +391,7 @@ def main ( args ):
 
     if protomodels[0] == None:
         print ( "[hiscore] error, we have an empty hiscore list" )
-        return 0.
+        return 0.,0
 
     triZ=-.0001
     if trimmed[0] != None:
@@ -467,10 +467,10 @@ def main ( args ):
         IPython.embed()
 
     if len(trimmed)>0 and trimmed[0] != None:
-        return float(trimmed[0].Z)
+        return float(trimmed[0].Z),trimmed[0].step
     if len(protomodels)>0 and protomodels[0] != None:
-        return float(protomodels[0].Z)
-    return 0.
+        return float(protomodels[0].Z),protomodels[0].step
+    return 0.,0
 
 if __name__ == "__main__":
     import argparse

@@ -1,4 +1,6 @@
 -) add second gluino and third stop
+-) add nstep to zhistory
+
 -) understand plt1000021ATLAS-CONF-2013-062.png
 -) llhd contour-only plots
 -) Z plots as function of ssms
@@ -9,13 +11,3 @@
 -) llhd plots, separate ul plots and eff plots
 -) think of particle merging strategy in case two particles are too similar to
    each other
--) produce and add CMS-SUS-16-036 eff maps
-
-.) plt1000021CMS-SUS-16-033, why cut of at around 1800?
-.) for bestCombo, write out the raw numbers 
-.) in cheat mode: first run without any random step
-.) write out *all* predictions for a given analysis, dont just find bestCombo
-.) better representation of ssms
-.) fix hiscore.slha
-.) remove unneccessary decays from mymodel.py
-.) trim also ssms

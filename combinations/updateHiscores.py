@@ -39,8 +39,8 @@ def updateHiscores():
     import socket
     hostname = socket.gethostname().replace(".cbe.vbc.ac.at","")
     print ( "[updateHiscores] now update the hiscore.pcl file on %s" % hostname )
-    Z = hiscore.main ( args )
-    return Z
+    Z,step = hiscore.main ( args )
+    return Z,step
 
 def updateStates():
     args = types.SimpleNamespace()
@@ -85,20 +85,20 @@ def main():
     """ eternal loop that updates hiscore.pcl and states.pcl """
     rundir = setup()
     i = 0
-    Z, Zold = 0., 0.
+    Z, Zold, step = 0., 0., 0
     Zfile = "%s/Zold.conf" % rundir 
     if os.path.exists ( Zfile ):
         with open ( Zfile, "rt" ) as f:
             Zold = float ( f.read().strip() )
     while True:
         i+=1
-        Z = updateHiscores()
+        Z,step = updateHiscores()
         if Z > Zold*1.0001:
             with open ( Zfile, "wt" ) as f:
                 f.write ( "%s\n" % str(Z) )
                 f.close()
             with open ( "%szhistory.txt" % rundir, "at" ) as f:
-                f.write ( "%s,%s\n" % ( time.asctime(), Z ) )
+                f.write ( "%s,%d,%s\n" % ( time.asctime(),step,Z ) )
                 f.close()
             plot ( Z, rundir )
             Zold = Z
