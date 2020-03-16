@@ -67,7 +67,7 @@ class Manipulator:
         if len(comment)>0:
             D["comment"]=comment
         fname = outfile.replace("%t", str(int(time.time())) )
-        self.M.pprint ( "writing model to %s" % f )
+        self.M.pprint ( "writing model to %s" % fname )
         with open ( fname, "wt" ) as f:
             f.write ( "%s\n" % D )
             f.close()
