@@ -268,7 +268,7 @@ class ProtoModel:
             rexp = theorypred.getRValue(expected=True)
             robs.append ( r )
             self.rvalues.append ( (r, rexp, combiner.removeDataFromTheoryPred ( theorypred ) ) )
-        self.rvalues.sort ( reverse = True )
+        self.rvalues.sort ( key = lambda x: x[0], reverse = True )
         robs.sort(reverse=True)
         return robs
 
