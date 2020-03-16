@@ -1,7 +1,7 @@
 -) add second gluino and third stop
 -) add nstep to zhistory
+-) do the trimming in the walkers, not in the hiscore updater (it just takes too long there)
 
--) understand plt1000021ATLAS-CONF-2013-062.png
 -) llhd contour-only plots
 -) Z plots as function of ssms
 -) improve index.tex
@@ -11,3 +11,5 @@
 -) llhd plots, separate ul plots and eff plots
 -) think of particle merging strategy in case two particles are too similar to
    each other
+
+.) understand plt1000021ATLAS-CONF-2013-062.png
