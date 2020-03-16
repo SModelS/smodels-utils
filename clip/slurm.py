@@ -179,15 +179,16 @@ def runUpdater( dry_run, time ):
     """ thats the hiscore updater 
     :param time: time, given in minutes(?)
     """
+    # cmd = [ "srun", "--qos", qos, "--mem", "100G", "./run_hiscore_updater.sh" ]
+    cmd = [ "srun", "--mem", "50G" ]
+    cmd += [ "--time", "%s" % ( time*60-1 ) ]
     qos = "c_short"
     if time > 48:
         qos = "c_long"
+        cmd += [ "--qos", qos ]
     if 8 < time <= 48:
         qos = "c_medium"
-    # cmd = [ "srun", "--qos", qos, "--mem", "100G", "./run_hiscore_updater.sh" ]
-    cmd = [ "srun", "--mem", "50G" ]
-    # cmd += [ "--qos", qos ]
-    cmd += [ "--time", "%s" % ( time*60-1 ) ]
+        cmd += [ "--qos", qos ]
     cmd += [ "--pty", "bash", "./run_hiscore_updater.sh" ] 
     print ( "updater: " + " ".join ( cmd ) )
     if dry_run:

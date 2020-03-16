@@ -35,12 +35,13 @@ def updateHiscores():
     args.outfile = "hiscore.pcl"
     args.infile = None
     args.maxloss = .01
+    args.nevents = 50000
     import hiscore
     import socket
     hostname = socket.gethostname().replace(".cbe.vbc.ac.at","")
     print ( "[updateHiscores] now update the hiscore.pcl file on %s" % hostname )
-    Z,step = hiscore.main ( args )
-    return Z,step
+    Z,step,model = hiscore.main ( args )
+    return Z,step,model
 
 def updateStates():
     args = types.SimpleNamespace()
@@ -56,6 +57,7 @@ def updateStates():
     args.outfile = "states.pcl"
     args.infile = None
     args.maxloss = .003
+    args.nevents = 50000
     import hiscore
     print ( "[updateHiscores] now update the states.pcl file" )
     hiscore.main ( args )
@@ -92,8 +94,11 @@ def main():
             Zold = float ( f.read().strip() )
     while True:
         i+=1
-        Z,step = updateHiscores()
+        Z,step,model = updateHiscores( )
         if Z > Zold*1.0001:
+            from manipulator import Manipulator
+            m = Manipulator ( model )
+            m.writeDictFile ( "pmodel-%t.py", comment="history keeper" )
             with open ( Zfile, "wt" ) as f:
                 f.write ( "%s\n" % str(Z) )
                 f.close()

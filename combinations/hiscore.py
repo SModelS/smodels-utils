@@ -343,8 +343,9 @@ def main ( args ):
     :param args: detailed, outfile, infile, print,
                  fetch, nmax, maxloss, trim, trim_branchings,
                  analysis_contributions, check, interactive,
+                 nevents
                  see "if __main__" part below.
-    :returns: ( highest significance, step )
+    :returns: ( highest significance, step, model )
     """
 
     if args.detailed:
@@ -391,7 +392,7 @@ def main ( args ):
 
     if protomodels[0] == None:
         print ( "[hiscore] error, we have an empty hiscore list" )
-        return 0.,0
+        return 0.,0,None
 
     triZ=-.0001
     if trimmed[0] != None:
@@ -409,7 +410,7 @@ def main ( args ):
     produceNewSLHAFileNames ( protomodels )
     produceNewSLHAFileNames ( trimmed, prefix="tri" )
 
-    nevents = 100000
+    nevents = args.nevents
     
     if args.trim_branchings and not args.trim:
         self.pprint ( "'trim branchings' is on, but 'trim' is off?" )
@@ -467,10 +468,10 @@ def main ( args ):
         IPython.embed()
 
     if len(trimmed)>0 and trimmed[0] != None:
-        return float(trimmed[0].Z),trimmed[0].step
+        return float(trimmed[0].Z),trimmed[0].step,trimmed[0]
     if len(protomodels)>0 and protomodels[0] != None:
-        return float(protomodels[0].Z),protomodels[0].step
-    return 0.,0
+        return float(protomodels[0].Z),protomodels[0].step,protomodels[0]
+    return 0.,0,None
 
 if __name__ == "__main__":
     import argparse
@@ -486,6 +487,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-n', '--nmax',
             help='maximum number of entries to store [10]',
             type=int, default=10 )
+    argparser.add_argument ( '-e', '--nevents',
+            help='maximum number of entries to store [50000]',
+            type=int, default=50000 )
     argparser.add_argument ( '-m', '--maxloss',
             help='maximum loss as a fraction that we allow in trimming [.005]',
             type=float, default=.005 )

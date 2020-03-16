@@ -6,7 +6,7 @@
 
 import protomodel
 import helpers
-import copy, random, numpy
+import copy, random, numpy, time
 
 class Manipulator:
     """ contains the protomodel manipulation algorithms. """
@@ -30,6 +30,7 @@ class Manipulator:
     def writeDictFile ( self, outfile = "pmodel.py", cleanOut=True,
                         comment = "" ):
         """ write out the dict file to outfile
+        :param outfile: output file, but replacing %t with int(time.time())
         :param cleanOut: clean the dictionary from defaults
         :param comment: add a comment field
         """
@@ -65,7 +66,9 @@ class Manipulator:
         D["step"]=self.M.step
         if len(comment)>0:
             D["comment"]=comment
-        with open ( outfile, "wt" ) as f:
+        fname = outfile.replace("%t", str(int(time.time())) )
+        self.M.pprint ( "writing model to %s" % f )
+        with open ( fname, "wt" ) as f:
             f.write ( "%s\n" % D )
             f.close()
 
