@@ -43,6 +43,21 @@ class Hiscore:
             return 0.
         return self.hiscores[-1].Z
 
+    def globalMaxZ ( self ):
+        """ globally (across all walkers), the highest Z """
+        ret = 0.
+        if self.hiscores[0] != None:
+            if self.hiscores[0].Z > ret:
+                ret = self.hiscores[0].Z
+        Zoldfile = "Zold.conf"
+        if os.path.exists ( Zoldfile ):
+            with open ( Zoldfile, "rt" ) as f:
+                lines = f.readlines()
+                if len(lines)>0:
+                    ret = float(lines[0])
+                f.close()
+        return ret
+
     def addResult ( self, protomodel ):
         """ add a result to the list """
         import manipulator
@@ -56,6 +71,16 @@ class Hiscore:
             ## for values > 2.5 we now predict again with larger statistics.
             m.predict ()
 
+        Zold = self.globalMaxZ()
+        trimmed = None
+        if m.M.Z > Zold and m.M.Z > 3.:
+            self.pprint ( "New model with Z=%.2f exceeds global Z=%.2f, invoke trimmer!" % ( m.M.Z, Zold ) )
+            maxloss=.01
+            nevents=50000
+            trimmer = Trimmer( m.M, "aggressive", maxloss, nevents = nevents )
+            trimmer.trim ( trimbranchings = True )
+            trimmed = trimmer.M
+
         for i,mi in enumerate(self.hiscores):
             if mi!=None and mi.almostSameAs ( m.M ):
                 ### this m.M is essentially the m.M in hiscorelist.
@@ -68,13 +93,13 @@ class Hiscore:
                     self.demote ( i )
                     self.hiscores[i] = copy.deepcopy ( m.M )
                     self.hiscores[i].clean( all=True )
-                    self.trimmed[i] = None
+                    self.trimmed[i] = trimmed
                     break
             if mi==None or m.M.Z > mi.Z: ## ok, <i>th best result!
                 self.demote ( i )
                 self.hiscores[i] = copy.deepcopy ( m.M )
                 self.hiscores[i].clean( all=True )
-                self.trimmed[i] = None
+                self.trimmed[i] = trimmed
                 break
 
     def demote ( self, i ):
@@ -209,9 +234,7 @@ class Hiscore:
     def newResult ( self, protomodel ):
         """ see if new result makes it into hiscore list. If yes, then add.
         """
-        # self.pprint ( "New result with Z=%.2f, %s" % (protomodel.Z, self.save_hiscores ) )
-        # self.log( "is the new result of walker %d above threshold: %.2f > %.2f?" % \
-        #           ( protomodel.walkerid, protomodel.Z, self.currentMinZ() ) )
+        self.pprint ( "New result with Z=%.2f, needs to pass %.2f, saving: %s" % (protomodel.Z, self.currentMinZ(), "yes" if self.save_hiscores else "no" ) )
         if not self.save_hiscores:
             return
         if protomodel.Z <= self.currentMinZ():
@@ -225,7 +248,7 @@ class Hiscore:
             ctr+=1
             if ctr > 5:
                 break
-        # self.log ( "done saving list" )
+        self.log ( "done saving list" )
 
     def pprint ( self, *args ):
         """ logging """

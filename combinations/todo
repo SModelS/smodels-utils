@@ -1,5 +1,4 @@
 -) add second gluino and third stop
--) add nstep to zhistory
 -) do the trimming in the walkers, not in the hiscore updater (it just takes too long there)
 
 -) llhd contour-only plots
@@ -13,3 +12,5 @@
    each other
 
 .) understand plt1000021ATLAS-CONF-2013-062.png
+.) add nstep to zhistory
+.) check that the historical models work

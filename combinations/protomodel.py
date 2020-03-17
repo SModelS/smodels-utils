@@ -483,7 +483,7 @@ class ProtoModel:
         """
         self.log ( "computing xsecs with %d events" % nevents )
         # print ( "[walk] computing xsecs for %s" % self.currentSLHA )
-        computer = XSecComputer ( NLL, nevents, 6 )
+        computer = XSecComputer ( NLL, nevents, 8 )
         ssmultipliers = self.relevantSSMultipliers()
         if recycle and hasattr ( self, "stored_xsecs" ):
             self.pprint ( "found %d old xsecs, will recycle them!!" % len(self.stored_xsecs[0]) )
