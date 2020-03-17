@@ -102,8 +102,39 @@ def getExtremeSSMs ( ssm, largest, nm = 7 ):
     ret = "%signal strength multipliers: $%s$" % ( extreme, s )
     return ret
 
-def writeRawNumbers ( protomodel ):
-    """ write out the raw numbers of the excess """
+def writeRawNumbersHtml ( protomodel ):
+    """ write out the raw numbers of the excess, as html """
+    f=open("rawnumbers.html","wt")
+    f.write("<table>\n" )
+    f.write("<tr><th>Analysis Name</th><th>Type</th><th>Dataset</th><th>Observed</th><th>Expected</th>\n" )
+    f.write("</tr>\n" )
+    for tp in protomodel.bestCombo:
+        anaId = tp.analysisId()
+        dtype = tp.dataType()
+        dt = { "upperLimit": "ul", "efficiencyMap": "em" }
+        f.write ( "<tr><td>%s</td><td>%s</td> " % ( anaId, dt[dtype] ) )
+        if dtype == "efficiencyMap":
+            dI = tp.dataset.dataInfo
+            did = dI.dataId # .replace("_","\_")
+            maxLen=9
+            maxLen=18
+            if len(did)>maxLen:
+                did=did[:maxLen-3]+" ..."
+            eBG = dI.expectedBG
+            if eBG == int(eBG):
+                eBG=int(eBG)
+            bgErr = dI.bgError
+            if bgErr == int(bgErr):
+                bgErr=int(bgErr)
+            f.write ( "<td>%s</td><td>%s</td><td>%s +/- %s</td></tr>\n" % \
+                      ( did, dI.observedN, eBG, bgErr ) )
+        if dtype == "upperLimit":
+            f.write ( "<td> %.1f fb </td><td> %.1f fb <td></td></tr>\n" % ( tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb) ) )
+    f.write("</table>\n" )
+    f.close()
+
+def writeRawNumbersLatex ( protomodel ):
+    """ write out the raw numbers of the excess, in latex """
     print ( "raw numbers of excess" )
     print ( "=====================" )
     f=open("rawnumbers.tex","wt")
@@ -348,7 +379,8 @@ def writeIndexHtml ( protomodel, gotTrimmed, untrimmedZ=0. ):
     f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
     f.write ( "</table>" )
     f.write ( '<table style="width:80%">\n' )
-    f.write ( "<td width=45%><img height=600px src=./ruler.png><td width=55%><img height=650px src=./decays.png>\n" )
+    f.write ( "<td width=45%><img height=600px src=./ruler.png><td width=55%><img height=400px src=./decays.png>\n" )
+    f.write ( '<font size=-3><iframe type="text/html" height="200px" width="100%" frameborder="0" src="rawnumbers.html"></iframe></font>\n' )
     f.write ( "</table>\n" )
     # f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
     f.write ( "</body>\n" )
@@ -358,7 +390,7 @@ def writeIndexHtml ( protomodel, gotTrimmed, untrimmedZ=0. ):
 
 def copyFilesToGithub():
     files = [ "hiscore.slha", "index.html", "matrix_aggressive.png", "decays.png", 
-              "ruler.png", "texdoc.png", "pmodel.py" ]
+              "ruler.png", "texdoc.png", "pmodel.py", "rawnumbers.html" ]
     for f in files:
         if not os.path.exists ( f ):
             continue
@@ -455,7 +487,8 @@ def plot ( number, verbosity, picklefile, options ):
             writeIndexHtml ( protomodel, trimmed, untrimmedZ )
         if options["tex"]:
             writeIndexTex( protomodel, trimmed, untrimmedZ, texdoc )
-    writeRawNumbers ( protomodel )
+    writeRawNumbersLatex ( protomodel )
+    writeRawNumbersHtml ( protomodel )
 
 def runPlotting ( args ):
     if args.destinations:
