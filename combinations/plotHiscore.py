@@ -519,7 +519,7 @@ def runPlotting ( args ):
     plot ( args.number, args.verbosity, args.picklefile, options )
     if upload is None:
         return
-    F = "*.png pmodel.py hiscore.slha index.html"
+    F = "*.png pmodel.py hiscore.slha index.html rawnumbers.html"
     dest = ""
     destdir = "%s/git" % os.environ["HOME"]
     if upload == "github":
