@@ -115,6 +115,8 @@ def runLLHDScanner( pid, dry_run, time, rewrite ):
     if 8 < time <= 48:
         qos = "c_medium"
     cmd = [ "sbatch" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
     cmd += [ "--mem", "40G" ]
@@ -138,7 +140,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite ):
     print ( ">>", a )
 
 def runScanner( pid, dry_run, time, rewrite, pid2 ):
-    """ run the scanner for pid, on the current hiscore
+    """ run the Z scanner for pid, on the current hiscore
     :param dry_run: do not execute, just say what you do
     :param rewrite: force rewrite of scan script
     :param pid2: if not zero, scan for ss multipliers (pid,pid2), 
@@ -150,6 +152,8 @@ def runScanner( pid, dry_run, time, rewrite, pid2 ):
     if 8 < time <= 48:
         qos = "c_medium"
     cmd = [ "sbatch" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
     cmd += [ "--mem", "40G" ]
@@ -163,6 +167,7 @@ def runScanner( pid, dry_run, time, rewrite, pid2 ):
     if pid2 != 0:
         spid2 = "%d" % pid2
     script = "_S%s%s.sh" % ( pid, spid2 )
+    os.chmod( script, 0o755 ) # 1877 is 0o755
     with open ( script, "wt" ) as f:
         for line in lines:
             f.write ( line.replace("@@PID@@",str(pid)).replace("xxPID2xx",spid2)  )
@@ -278,7 +283,7 @@ def main():
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater',
                              action="store_true" )
     argparser.add_argument ( '-S', '--scan', nargs="?", 
-                    help='run the scanner on pid, -1 means dont run', 
+                    help='run the Z scanner on pid [SCAN], -1 means dont run', 
                     type=int, default=-1 )
     argparser.add_argument ( '-b', '--bake', nargs="?", 
                     help='bake, with the given arguments, use "default" if unsure ["@n 10000 @a"]', 
