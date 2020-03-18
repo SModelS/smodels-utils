@@ -53,6 +53,7 @@ Such combination will bring small complications. We'v decided we'd rather try ge
 We  compute the results of our pyhf interface by feeding the efficiencies of the SModelS database entry for this analysis into our pyhf interface, and compare them with the official results on the [HEPData page](https://www.hepdata.net/record/ins1765529). The value of interest here is the cross section upper limit that we compare with the upper limit of the table `X-section U.L 1` on the HEPData page, giving the upper limit for pair production of combined stau_L and stau_R.
 
 | m(stau) [GeV] | m(neutralino1) [GeV] | official 95% CL UL [pb] | pyhf 95% CL UL [pb] |
+|---|---|---|---|
 | 160 | 80 | 0.19953 | 0.21382 |
 | 120 | 1 | 0.19548 | 0.24424 |
 | 180 | 40 | 0.02668 | 0.03223 |
