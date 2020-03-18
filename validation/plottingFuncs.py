@@ -416,11 +416,11 @@ def getGridPoints ( validationPlot ):
             logger.info ( "no grid points: cannot find origdata (maybe try a forced rebuild of the database via runValidation.py -f)" )
             return []
         origdata =eval( txNameObj.txnameData.origdata)
-    for ctr,pt in enumerate(origdata):
-        masses = removeUnits ( pt[0], standardUnits=GeV )
-        coords = massPlane.getXYValues(masses)
-        if not coords == None and not coords in ret:
-            ret.append ( coords )
+        for ctr,pt in enumerate(origdata):
+            masses = removeUnits ( pt[0], standardUnits=GeV )
+            coords = massPlane.getXYValues(masses)
+            if not coords == None and not coords in ret:
+                ret.append ( coords )
     logger.info ( "found %d gridpoints" % len(ret) )
     ## we will need this for .dataToCoordinates
     return ret
