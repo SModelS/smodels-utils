@@ -1,12 +1,32 @@
 [
   {
     "op": "add",
-    "path": "/channels/0/samples/0",
+    "path": "/channels/2/samples/0",
     "value": {
       "data": [
-        0.09462564000000001,
-        0.45589220000000014,
-        0.5592248
+        7.361578999999999
+      ],
+      "modifiers": [
+        {
+          "data": null,
+          "type": "normfactor",
+          "name": "mu_SIG"
+        },
+        {
+          "data": null,
+          "type": "lumi",
+          "name": "lumi"
+        }
+      ],
+      "name": "bsm"
+    }
+  },
+  {
+    "op": "add",
+    "path": "/channels/3/samples/0",
+    "value": {
+      "data": [
+        10.879807999999999
       ],
       "modifiers": [
         {
@@ -25,10 +45,14 @@
   },
   {
     "op": "remove",
-    "path": "/channels/2"
+    "path": "/channels/4"
   },
   {
     "op": "remove",
     "path": "/channels/1"
+  },
+  {
+    "op": "remove",
+    "path": "/channels/0"
   }
 ]

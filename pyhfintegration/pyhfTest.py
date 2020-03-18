@@ -8,65 +8,70 @@ from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import pb, fb, GeV
 
 # SUSY-2018-31
-jsoninputs = []
-with open("SUSY-2018-31_likelihoods/RegionA/BkgOnly.json", "r") as f:
-    jsoninputs.append(json.load(f))
-with open("SUSY-2018-31_likelihoods/RegionB/BkgOnly.json", "r") as f:
-    jsoninputs.append(json.load(f))
-with open("SUSY-2018-31_likelihoods/RegionC/BkgOnly.json", "r") as f:
-    jsoninputs.append(json.load(f))
-
-lumi = 139
-# Fetching the efficiencies from the database
-dir = "/home/alguero/Work/smodels-database"
-d=Database( dir, discard_zeroes = True )
-# print(d)
-results=d.getExpResults()
-x, y = (1300, 530)
-massvec = 2*[[x*GeV,y*GeV,(y - 130)*GeV]]
-effs = []
-print("Efficiencies were found for the following SRs :")
-dsets = ["SRA_L", "SRA_M","SRA_H",
-               "SRB",
-               "SRC_22","SRC_24","SRC_26","SRC_28"
-                    ]
-for ds in dsets:
-    # print ( e.globalInfo.id )
-    topo = "T6bbHH"
-    for e in results:
-        eff = e.getEfficiencyFor ( topo, massvec, ds )
-        # if eff == None: continue
-    if eff == None:
-        eff = 0
-    else:
-        print(ds)
-    effs.append ( eff )
-# SUSY-2018-04
 # jsoninputs = []
-# with open("SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json", "r") as f:
+# with open("SUSY-2018-31_likelihoods/RegionA/BkgOnly.json", "r") as f:
     # jsoninputs.append(json.load(f))
-# # with open("SUSY-2018-04_likelihoods/Region-highMass/BkgOnly.json", "r") as f:
-    # # jsoninputs.append(json.load(f))
-# lumi = 139 # fb
+# with open("SUSY-2018-31_likelihoods/RegionB/BkgOnly.json", "r") as f:
+    # jsoninputs.append(json.load(f))
+# with open("SUSY-2018-31_likelihoods/RegionC/BkgOnly.json", "r") as f:
+    # jsoninputs.append(json.load(f))
+
+# lumi = 139
 # # Fetching the efficiencies from the database
 # dir = "/home/alguero/Work/smodels-database"
 # d=Database( dir, discard_zeroes = True )
 # # print(d)
 # results=d.getExpResults()
-# massvec = [[280*GeV,200*GeV], [280*GeV,200*GeV]]
+# x, y = (1300, 530)
+# massvec = 2*[[x*GeV,y*GeV,(y - 130)*GeV]]
 # effs = []
 # print("Efficiencies were found for the following SRs :")
-# dsets = ["SRlow" ,"SRhigh"]
+# topo = "T6bbHH"
+# dsets = ["SRA_L", "SRA_M","SRA_H",
+               # "SRB",
+               # "SRC_22","SRC_24","SRC_26","SRC_28"
+                    # ]
 # for ds in dsets:
     # # print ( e.globalInfo.id )
-    # topo = "TStauStau"
     # for e in results:
         # eff = e.getEfficiencyFor ( topo, massvec, ds )
         # # if eff == None: continue
-        # print(ds)
-    # if eff == None:
-        # eff = 0
-    # effs.append ( eff )
+        # if eff != None:
+            # print(ds)
+            # break
+    # if eff:
+        # effs.append ( eff )
+    # else:
+        # effs.append(0)
+# SUSY-2018-04
+jsoninputs = []
+with open("SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json", "r") as f:
+    jsoninputs.append(json.load(f))
+# with open("SUSY-2018-04_likelihoods/Region-highMass/BkgOnly.json", "r") as f:
+    # jsoninputs.append(json.load(f))
+lumi = 139 # fb
+# Fetching the efficiencies from the database
+dir = "/home/alguero/Work/smodels-database"
+d=Database( dir, discard_zeroes = True )
+# print(d)
+results=d.getExpResults()
+massvec = 2*[[240*GeV,40*GeV]]
+effs = []
+print("Efficiencies were found for the following SRs :")
+topo = "TStauStau"
+dsets = ["SRlow" ,"SRhigh"]
+for ds in dsets:
+    # print ( e.globalInfo.id )
+    for e in results:
+        eff = e.getEfficiencyFor ( topo, massvec, ds )
+        # if eff == None: continue
+        if eff != None:
+            print(ds)
+            break
+    if eff:
+        effs.append ( eff )
+    else:
+        effs.append(0)
 # Upper limit calculation
 data = PyhfData(effs,
                             lumi,
