@@ -577,7 +577,6 @@ class DatabaseCreator(list):
             #Leave data for last
             if attr in dataLabels:
                 continue
-                value = self._formatData(value)
 
             if attr == "axes":
                 ## remove full 3d entries
@@ -593,6 +592,13 @@ class DatabaseCreator(list):
                     if "z" in value:
                         logger.error ( "Attempt at removal was not successful. Please fix in convert.py." )
                         sys.exit()
+                if ";" in value: ## order canonically
+                    tokens = value.split(";")
+                    tokens = [ x.strip() for x in tokens ]
+                    tokens.sort()
+                    value = "; ".join( tokens )
+                    while value.find("  ")>-1:
+                        value = value.replace( "  ", " " )
             content = '%s%s%s%s\n' % (content, attr,\
                                        self.assignmentOperator, value)
         for attr in obj.infoAttr:
