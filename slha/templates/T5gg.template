@@ -1,7 +1,7 @@
 BLOCK SPINFO
  1   MRENNA
  2   1.0.1
- 
+
 BLOCK MODSEL
  1   1
 
@@ -165,12 +165,13 @@ DECAY   1000016     0.00000000E+00   # snu_tauL decays
 #         PDG            Width
 DECAY   1000021     1.00000000E+00   # gluino decays
 #           BR         NDA      ID1       ID2       ID3
-      1.00000000e+00    3     1000023        -2    2   # BR(~gl -> N2  u ubar)                 
+      0.50000000e+00    3     1000023        -1    1   # BR(~gl -> N2  u ubar)
+      0.50000000e+00    3     1000023        -2    2   # BR(~gl -> N2  u ubar)
 
 DECAY   1000024     0.00000000E+00   # chargino1+ decays
 DECAY   1000023     1.00000000E+00   # neutralino2 decays
 #           BR         NDA      ID1       ID2       ID3
-      1.00000000E+00    2      22    1000022           # BR(~N2 -> N1 gamma)   
+      1.00000000E+00    2      22    1000022           # BR(~N2 -> N1 gamma)
 ########################################################################
 
 
