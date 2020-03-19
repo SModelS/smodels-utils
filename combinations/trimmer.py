@@ -15,7 +15,7 @@ class Trimmer:
         *after* an MCMC walk.
     """
     def __init__ ( self, protomodel, strategy="aggressive", maxloss=.005,
-                   nevents = 20000 ):
+                   nevents = 100000 ):
         """
         :param maxloss: maximum loss that we allow, in relative numbers
         """

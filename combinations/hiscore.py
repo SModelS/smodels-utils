@@ -76,9 +76,10 @@ class Hiscore:
         if m.M.Z > Zold and m.M.Z > 3.:
             self.pprint ( "New model with Z=%.2f exceeds global Z=%.2f, invoke trimmer!" % ( m.M.Z, Zold ) )
             maxloss=.01
-            nevents=50000
+            nevents=100000
             trimmer = Trimmer( m.M, "aggressive", maxloss, nevents = nevents )
             trimmer.trim ( trimbranchings = True )
+            trimmer.computeAnalysisContributions()
             trimmed = trimmer.M
 
         for i,mi in enumerate(self.hiscores):
@@ -425,24 +426,27 @@ def main ( args ):
     if sin == None:
         sin = "H*pcl"
     triHS = "no trimmed hiscores found in files."
-    if triZ > 0.:
+    hasTrimmedModel = ( triZ > 0.)
+    if hasTrimmedModel:
         triHS = "trimmed hiscore is at %.2f." % triZ
     print ( "[hiscore] untrimmed hiscore from %s is at %.2f (%s), %s" % \
             ( sin, protomodels[0].Z, pprintEvs ( protomodels[0] ), triHS ) ) 
 
-    produceNewSLHAFileNames ( protomodels )
-    produceNewSLHAFileNames ( trimmed, prefix="tri" )
-
     nevents = args.nevents
-    
-    if args.trim_branchings and not args.trim:
-        self.pprint ( "'trim branchings' is on, but 'trim' is off?" )
 
-    if args.trim:
-        protomodel = protomodels[0]
-        tr = Trimmer ( protomodel, maxloss=args.maxloss, nevents = nevents )
-        tr.trim( args.trim_branchings )
-        trimmed[0] = tr.M
+    if not hasTrimmedModel:
+        print ( "[hiscore] need to trim now" )
+        produceNewSLHAFileNames ( protomodels )
+        produceNewSLHAFileNames ( trimmed, prefix="tri" )
+        
+        if args.trim_branchings and not args.trim:
+            print ( "[hiscore] 'trim branchings' is on, but 'trim' is off?" )
+
+        if args.trim:
+            protomodel = protomodels[0]
+            tr = Trimmer ( protomodel, maxloss=args.maxloss, nevents = nevents )
+            tr.trim( args.trim_branchings )
+            trimmed[0] = tr.M
 
     if args.analysis_contributions:
         protomodel = protomodels[0]
@@ -450,12 +454,13 @@ def main ( args ):
         if len(trimmed)>0 and trimmed[0] is not None:
             useTrimmed = True
             protomodel = trimmed[0]
-        tr = Trimmer ( protomodel, maxloss = args.maxloss, nevents = nevents )
-        protomodel = tr.computeAnalysisContributions ()
-        if useTrimmed:
-            trimmed[0] = protomodel
-        else:
-            protomodels[0] = protomodel
+        if not hasattr ( protomodel, "contributions" ):
+            tr = Trimmer ( protomodel, maxloss = args.maxloss, nevents = nevents )
+            protomodel = tr.computeAnalysisContributions ()
+            if useTrimmed:
+                trimmed[0] = protomodel
+            else:
+                protomodels[0] = protomodel
 
     if args.nmax > 0:
         protomodels = protomodels[:args.nmax]
