@@ -15,7 +15,7 @@ cls\_test.py computes the CLs using the previous patch
 Seems to work technically when running cls_test.py, no error is raised and the CLs are returned.
 Now cls_test.py returns the same results as the command line (thanks to the answer on the pyhf issues [thread](https://github.com/scikit-hep/pyhf/issues/620))
 
-# Testing the SModelS/pyhfInterface with ATLAS-SUSY-2018-31
+# Testing pyhfInterface with ATLAS-SUSY-2018-31 offical patches
 pyhfInterface.py is a copy of smodels/smodels/tools/pyhfInterface.py and pyhfTest.py is a simple code that executes the upper limit computation (upper limit on the signal strength modifier) using the objects defined in pyhfInterface.py.  
 Upper limit computer works and returns a result. Tried to find the same upper limit as the official analysis still for the point [900,250,60] (so without using any new BSM patch) (if mu95 is the mu upper limit at 95% CL, the cross section upper limit can be obtained by doing mu95*sigmaBSM where sigmaBSM is the BSM production cross section, sbottom pair production cross section):  
 -official: 3 fb
