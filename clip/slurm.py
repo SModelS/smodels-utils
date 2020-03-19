@@ -167,11 +167,11 @@ def runScanner( pid, dry_run, time, rewrite, pid2 ):
     if pid2 != 0:
         spid2 = "%d" % pid2
     script = "_S%s%s.sh" % ( pid, spid2 )
-    os.chmod( script, 0o755 ) # 1877 is 0o755
     with open ( script, "wt" ) as f:
         for line in lines:
             f.write ( line.replace("@@PID@@",str(pid)).replace("xxPID2xx",spid2)  )
         f.close()
+    os.chmod( script, 0o755 ) # 1877 is 0o755
     cmd += [ script ]
     produceScanScript ( pid, rewrite, pid2 )
     print ( "cmd", cmd )
