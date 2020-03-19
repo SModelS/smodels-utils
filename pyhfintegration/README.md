@@ -37,7 +37,7 @@ If the results is not shown, it's because it was crashing due to the mu bounds p
 
 The pyhf.workspace.combine method was raising errors : measurements were defined twice in the resulting workspace. I changed a small bit and corrected that problem. This might have been solved by developers in the new release of 4 March 2020.
 
-- [ ] try the new pyhf.workspace.combine method of the 0.4.1 pyhf release
+- [x] try the new pyhf.workspace.combine method of the 0.4.1 pyhf release : doesn't work
 
 # Poor person's combination (ATLAS-SUSY-2018-31)
 
