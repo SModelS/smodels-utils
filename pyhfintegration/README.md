@@ -22,20 +22,14 @@ Upper limit computer works and returns a result. Tried to find the same upper li
 -with only Region A: 3.2 fb (for regions B and C, pyhf is crashing)  
 -by combining all three regions: 3.4 fb
 
-For [800,450,60]:  
--official: 2 fb  
--by combining: 2.O7 fb 1.8 with NLO  
--region A:  1.98 fb 1.72 with NLO / region C: 1.72 fb 14.9 fb (region B is crashing)
+| masses(sbottom, chi2, chi1) [GeV]| official 95% CL UL [fb] | pyhf combined 95% CL UL [fb] | inclusive 95% CL UL [fb] |
+|---|---|---|---|
+|900,250,60|3|3.2|A : 3.2|
+|800,450,60|2|2.07|A : 1.98, C : 1.72|
+|900,550,60|0.9|0.99|A : 0.96, C : 6.4|
+|1300,950,60|0.3|0.27|A : 0.30, C : 6.4|
 
-For [900,550,60]:  
--official: 0.9 fb  
--by combining: 0.99 fb 0.86 with NLO  
--region A: 0.96 fb 0.84 with NLO / region C: 6.4 fb (region B is crashing)
-
-For [1300,950,60]:  
--official: 0.3 fb  
--by combining: 0.27 fb
--region A: 0.30 fb / region C: 6.4 fb (region B is crashing, solved : now gives 23fb)
+If the results is not shown, it's because it was crashing due to the mu bounds problem that is now solved.
 
 - [x] mu bounds problem solved (that was why region B was crashing) : now the upper mu bound grows dynamically if needed.
 
@@ -43,7 +37,7 @@ For [1300,950,60]:
 
 The pyhf.workspace.combine method was raising errors : measurements were defined twice in the resulting workspace. I changed a small bit and corrected that problem. This might have been solved by developers in the new release of 4 March 2020.
 
-- [ ] try the new pyhf.workspace.combine method of the 0.4.1 release
+- [ ] try the new pyhf.workspace.combine method of the 0.4.1 pyhf release
 
 # Poor person's combination (ATLAS-SUSY-2018-31)
 
