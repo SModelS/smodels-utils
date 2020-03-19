@@ -45,10 +45,10 @@ from smodels.tools.physicsUnits import pb, fb, GeV
         # effs.append(0)
 # SUSY-2018-04
 jsoninputs = []
-with open("SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json", "r") as f:
+with open("SUSY-2018-04_likelihoods/Region-lowMass/BkgOnly.json", "r") as f:
     jsoninputs.append(json.load(f))
-# with open("SUSY-2018-04_likelihoods/Region-highMass/BkgOnly.json", "r") as f:
-    # jsoninputs.append(json.load(f))
+with open("SUSY-2018-04_likelihoods/Region-highMass/BkgOnly.json", "r") as f:
+    jsoninputs.append(json.load(f))
 lumi = 139 # fb
 # Fetching the efficiencies from the database
 dir = "/home/alguero/Work/smodels-database"

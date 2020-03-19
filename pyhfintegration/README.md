@@ -58,3 +58,15 @@ We  compute the results of our pyhf interface by feeding the efficiencies of the
 | 240 | 40 | 0.0075375 | 0.010142 |
 
 A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyhf developers, this could be due to the efficiencies provided for this analysis, which are at truth-level, instead of the reco-level that are used in the offocial analysis.
+
+# To do list
+
+- [ ] perform a mass scan over all mass points of ATLAS-SUSY-2018-04 for comparison
+- [ ] create a SModelS "pyhf" branch off the "develop" branch
+- [ ] we add pyhf into smodels/share/requirements.txt
+- [ ] in theoryPrediction.py:getLikelihood, we already have two ways of computing the likelihood.
+One way is via the simplified likelihoods, the other is via truncated Gaussians from upper limits. We would add a third 
+way, interfacing to your code.
+- [ ] put your code into smodels/tools. 
+- [ ] need to add some code that picks up the json files in smodels/experiment/txnameObj.py 
+- [ ] add a unit test
