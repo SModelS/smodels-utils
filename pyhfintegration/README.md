@@ -15,7 +15,7 @@ cls\_test.py computes the CLs using the previous patch
 Seems to work technically when running cls_test.py, no error is raised and the CLs are returned.
 Now cls_test.py returns the same results as the command line (thanks to the answer on the pyhf issues [thread](https://github.com/scikit-hep/pyhf/issues/620))
 
-# Testing the SModelS/pyhfInterface
+# Testing the SModelS/pyhfInterface with ATLAS-SUSY-2018-31
 pyhfInterface.py is a copy of smodels/smodels/tools/pyhfInterface.py and pyhfTest.py is a simple code that executes the upper limit computation (upper limit on the signal strength modifier) using the objects defined in pyhfInterface.py.  
 Upper limit computer works and returns a result. Tried to find the same upper limit as the official analysis still for the point [900,250,60] (so without using any new BSM patch) (if mu95 is the mu upper limit at 95% CL, the cross section upper limit can be obtained by doing mu95*sigmaBSM where sigmaBSM is the BSM production cross section, sbottom pair production cross section):  
 -official: 3 fb
@@ -37,16 +37,20 @@ For [1300,950,60]:
 -by combining: 0.27 fb
 -region A: 0.30 fb / region C: 6.4 fb (region B is crashing, solved : now gives 23fb)
 
-mu bounds problem solved (that was why region B was crashing) : now the upper mu bound grows dynamically if needed.
+- [x] mu bounds problem solved (that was why region B was crashing) : now the upper mu bound grows dynamically if needed.
 
-# Replace the data yields with new BSM predictions
+# Combination of workspaces
 
 The pyhf.workspace.combine method was raising errors : measurements were defined twice in the resulting workspace. I changed a small bit and corrected that problem. This might have been solved by developers in the new release of 4 March 2020.
+
+- [ ] try the new pyhf.workspace.combine method of the 0.4.1 release
 
 # Poor person's combination (ATLAS-SUSY-2018-31)
 
 It appears that ATLAS-SUSY-2018-31 is performing a poor person's combination, i.e., all three regions (A, B and C) have subregions. These subregions then get combined into three seperate "inclusive" likelihoods, amongst which the inclusive regions giving the best expected limit is picked to compute the observed limit.
 Such combination will bring small complications. We'v decided we'd rather try getting the pyhf interface to work with ATLAS-SUSY-2018-04 first which doesn't have this kind of poor person's combination.
+
+- [ ] think about a way to perform this poor person's combination
 
 # Testing ATLAS-SUSY-2018-04
 
@@ -58,3 +62,5 @@ We  compute the results of our pyhf interface by feeding the efficiencies of the
 | 120 | 1 | 0.19548 | 0.24424 |
 | 180 | 40 | 0.02668 | 0.03223 |
 | 240 | 40 | 0.0075375 | 0.010142 |
+
+A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyhf developers, this could be due to the efficiencies provided for this analysis, which are at truth-level, instead of the reco-level that are used in the offocial analysis.
