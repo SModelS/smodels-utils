@@ -53,11 +53,13 @@ def running_stats():
     running, pending = set(), set()
     t0 = time.time()
     for log in logs:
-        ds = os.stat ( log ).st_mtime - t0 # no of seconds in the past
+        ds = t0 - os.stat ( log ).st_mtime # no of seconds in the past
         dh = ds / 3600. # number of hours in the past
         walkerp = log.find("walker" )
         lognr =  int ( log[walkerp+6:-4] )
-        if ds < -900:
+        if lognr > 1000:
+            continue
+        if ds/60. > 60: ## in minutes
             pending.add ( lognr )
         else:
             running.add ( lognr )
