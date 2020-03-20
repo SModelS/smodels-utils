@@ -134,6 +134,8 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
             produce ( hi, p, nevents, dryrun, nproc, fac )
         return
     model = hi.trimmed[0]
+    if model == None:
+        print ( "[scanner] cannot find a trimmed model in %s" % hi.pickleFile )
     mass = model.masses[pid]
     if mass > 9e5:
         print ( "mass %d too high. Wont produce." % mass )
@@ -240,12 +242,17 @@ def draw( pid= 1000022, interactive=False, pid2=0 ):
         ## is this an ssm or a mass plot
         return pid2!=-1
         
+    import matplotlib
+    matplotlib.use("Agg")
     from matplotlib import pyplot as plt
     import helpers
     import pickle
-    picklefile = "scanM%s.pcl" % pid
+    rundir = setup()
+    if False:
+        rundir = ""
+    picklefile = "%sscanM%s.pcl" % (rundir, pid )
     if isSSMPlot():
-        picklefile = "ssm%s%d.pcl" % ( pid, pid2 )
+        picklefile = "%sssm%s%d.pcl" % ( rundir, pid, pid2 )
     with open ( picklefile, "rb" ) as f:
         Zs = pickle.load( f )
         cmass = pickle.load ( f ) ## cmass is pids
