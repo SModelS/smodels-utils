@@ -5,6 +5,9 @@
 import pickle, sys, copy
 import IPython
 import numpy as np
+from csetup import setup
+import matplotlib
+matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 
 def load ( picklefile ):
@@ -218,7 +221,8 @@ def plot ( pid1, pid2, analysis ):
                  nevents,timestamp )
 
 def getPickleFile ( pid1, pid2 ):
-    picklefile = "mp%d%d.pcl" % ( pid1, pid2 )
+    rundir = setup()
+    picklefile = "%smp%d%d.pcl" % ( rundir, pid1, pid2 )
     return picklefile
 
 def listAnalyses( pid1, pid2, topo ):

@@ -7,6 +7,6 @@ ml --latest singularity
 
 # cd /users/wolfgan.waltenberger/git/projects/singularity/
 
-singularity shell -c -B /tmp,/run,/scratch -s /mnt/hephy/pheno/ww/rundir/llhdscanner@@PID@@.sh -H /mnt/hephy/pheno/ww/ /scratch-cbe/users/wolfgan.waltenberger/container/current.simg
+singularity shell -c -B /tmp,/run,/scratch -s /scratch-cbe/users/wolfgan.waltenberger/rundir/llhdscanner@@PID@@.sh -H /scratch-cbe/users/wolfgan.waltenberger /scratch-cbe/users/wolfgan.waltenberger/container/current.simg
 
 ###SBATCH --ntasks-per-node=20.
