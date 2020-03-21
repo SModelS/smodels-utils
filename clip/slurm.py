@@ -57,7 +57,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         for line in lines:
             f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
     os.chmod( tf, 0o755 )
-    ram = max ( 22, 2.0 * ( jmax - jmin ) )
+    ram = max ( 25, 2.0 * ( jmax - jmin ) )
     # cmd = [ "srun" ]
     cmd = [ "sbatch" ]
     cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
@@ -185,7 +185,7 @@ def runUpdater( dry_run, time ):
     :param time: time, given in minutes(?)
     """
     # cmd = [ "srun", "--qos", qos, "--mem", "100G", "./run_hiscore_updater.sh" ]
-    cmd = [ "srun", "--mem", "35G" ]
+    cmd = [ "srun", "--mem", "50G" ]
     # cmd = [ "srun", "--mem", "50G" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
     qos = "c_short"
