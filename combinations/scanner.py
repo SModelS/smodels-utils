@@ -14,10 +14,16 @@ def getHiscore( force_copy = False ):
     rundir = setup()
     # spids = str(pids).replace("[","").replace("]","").replace(" ","").replace(",","").replace("0","")
     picklefile =rundir + "hiscore2.pcl" # % spids
+    backupfile = rundir+"hiscore.pcl"
     # picklefile =rundir + "hiscore.pcl" # % spids
     ## do this always
     if force_copy or (not os.path.exists ( picklefile )):
-        cmd = "cp %s %s" % ( rundir+"hiscore.pcl", picklefile )
+        cmd = "cp %s %s" % ( backupfile, picklefile )
+        import subprocess
+        o = subprocess.getoutput ( cmd )
+        print ( "[scanner] %s: %s" % ( cmd, o ) )
+    elif os.stat ( picklefile ).st_size + 1025 < os.stat ( backupfile ).st_size:
+        cmd = "cp %s %s" % ( backupfile, picklefile )
         import subprocess
         o = subprocess.getoutput ( cmd )
         print ( "[scanner] %s: %s" % ( cmd, o ) )
