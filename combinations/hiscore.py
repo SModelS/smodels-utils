@@ -263,8 +263,10 @@ class Hiscore:
         with open( logfile, "a" ) as f:
             f.write ( "[hiscore:%d - %s] %s\n" % ( self.walkerid, time.asctime(), " ".join(map(str,args)) ) )
 
-def compileList( nmax ):
-    """ compile the list from individual hi*pcl """
+def compileList( nmax, trimmedAlso ):
+    """ compile the list from individual hi*pcl 
+    :param trimmedAlso: if True, then compile also list with trimmed models
+    """
     import glob
     files = glob.glob ( "H*.pcl" )
     allprotomodels,alltrimmed=[],[]
@@ -280,7 +282,9 @@ def compileList( nmax ):
             with open( fname,"rb+") as f:
                 #fcntl.flock( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
                 protomodels = pickle.load ( f )
-                trimmed = pickle.load ( f )
+                trimmed = [ None ] *len(protomodels)
+                if trimmedAlso:
+                    trimmed = pickle.load ( f )
                 timestamp = "?"
                 try:
                     timestamp = pickle.load(f)
@@ -394,7 +398,7 @@ def main ( args ):
         print ( out )
 
     if infile is None:
-        protomodels,trimmed = compileList( args.nmax ) ## compile list from H<n>.pcl files
+        protomodels,trimmed = compileList( args.nmax, args.trim ) ## compile list from H<n>.pcl files
     else:
         with open(infile,"rb+") as f:
             try:
@@ -447,6 +451,7 @@ def main ( args ):
             tr = Trimmer ( protomodel, maxloss=args.maxloss, nevents = nevents )
             tr.trim( args.trim_branchings )
             trimmed[0] = tr.M
+
 
     if args.analysis_contributions:
         protomodel = protomodels[0]
