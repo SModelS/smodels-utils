@@ -2,7 +2,7 @@
 
 """ the plotting script for the llhd scans """
 
-import pickle, sys, copy
+import pickle, sys, copy, subprocess
 import IPython
 import numpy as np
 from csetup import setup
@@ -145,8 +145,10 @@ def resultFor ( ana, topo, llhds ):
     return ret,sr
 
 def plotOneAna ( masspoints, ana, pid1, pid2, mx, my,
-                 topo, nevents, timestamp ):
-    """ plot for one analysis """
+                 topo, nevents, timestamp, copy ):
+    """ plot for one analysis
+    :param copy: copy plot to ../../smodels.github.io/protomodels/latest
+    """
     print ( "[plotLlhds] now plotting %s" % ana )
     x,y=set(),set()
     L = {}
@@ -230,8 +232,10 @@ def getAlpha ( color ):
         return .6
     return .4
 
-def plotSummary ( pid1, pid2 ):
-    """ a summary plot, overlaying all contributing analyses """
+def plotSummary ( pid1, pid2, copy ):
+    """ a summary plot, overlaying all contributing analyses 
+    :param copy: copy plot to ../../smodels.github.io/protomodels/latest
+    """
     masspoints,mx,my,nevents,topo,timestamp = load ( getPickleFile ( pid1, pid2 ) )
     resultsForPIDs = {}
     from plotHiscore import getPIDsOfTPred, obtain
@@ -343,17 +347,22 @@ def plotSummary ( pid1, pid2 ):
     print ( "[plotLlhds] saving to %s" % figname )
     plt.savefig ( figname )
     plt.close()
+    if copy:
+        cmd = "cp %s ../../smodels.github.io/protomodels/latest/" % figname
+        subprocess.getoutput ( cmd )
     return
 
-def plot ( pid1, pid2, analysis ):
-    """ do your plotting """
+def plot ( pid1, pid2, analysis, copy ):
+    """ do your plotting 
+    :param copy: copy plot to ../../smodels.github.io/protomodels/latest
+    """
     if analysis in [ "*", "all", "summary" ]:
-        plotSummary ( pid1, pid2 )
+        plotSummary ( pid1, pid2, copy )
         return
     masspoints,mx,my,nevents,topo,timestamp = load ( getPickleFile ( pid1, pid2 ) )
     stats = getAnaStats( masspoints, topo )
     plotOneAna ( masspoints, analysis, pid1, pid2, mx, my, topo,
-                 nevents,timestamp )
+                 nevents,timestamp, copy )
 
 def getPickleFile ( pid1, pid2 ):
     rundir = setup()
@@ -388,6 +397,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-l', '--list_analyses',
             help='list all analyses for these pids',
             action="store_true" )
+    argparser.add_argument ( '-c', '--copy',
+            help='copy plots to ../../smodels.github.io/protomodels/latest',
+            action="store_true" )
     argparser.add_argument ( '-A', '--all',
             help='plot for all analyses',
             action="store_true" )
@@ -399,7 +411,7 @@ if __name__ == "__main__":
         masspoints,mx,my,nevents,topo,timestamp = load ( getPickleFile ( args.pid1, args.pid2 ) )
         stats = getAnaStats( masspoints, topo )
         for ana,v in stats.items():
-            plot ( args.pid1, args.pid2, ana )
+            plot ( args.pid1, args.pid2, ana, args.copy )
         sys.exit()
 
     pids1 = [ args.pid1 ]
@@ -412,7 +424,7 @@ if __name__ == "__main__":
     else:
         for pid1 in pids1:
             try:
-                plot ( pid1, args.pid2, args.analysis )
+                plot ( pid1, args.pid2, args.analysis, args.copy )
             except FileNotFoundError:
                 pass
 

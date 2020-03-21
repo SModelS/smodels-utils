@@ -2,7 +2,7 @@
 
 """ draw Z as a function of a model parameter """
 
-import numpy, sys, os, copy, time
+import numpy, sys, os, copy, time, subprocess
 from csetup import setup
 from manipulator import Manipulator
 
@@ -228,7 +228,10 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
         pickle.dump ( time.asctime(), f )
         f.close()
 
-def draw( pid= 1000022, interactive=False, pid2=0 ):
+def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
+    """ draw plots
+    :param copy: copy final plots to ../../smodels.github.io/protomodels/latest
+    """
     if pid2 == 0: ## means all
         for pids in [ ( 1000021, 1000021), (1000005, 1000005), (-1000005,1000005),
                       ( -1000006,1000006), (-2000006, 2000006 ) ]:
@@ -318,6 +321,9 @@ def draw( pid= 1000022, interactive=False, pid2=0 ):
         import IPython
         IPython.embed()
     plt.close()
+    if copy:
+        cmd = "cp %s ../../smodels.github.io/protomodels/latest/" % figname
+        subprocess.getoutput ( cmd )
 
 if __name__ == "__main__":
     import argparse
@@ -353,6 +359,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-F', '--force_copy',
             help='force copying the hiscore.pcl file',
             action="store_true" )
+    argparser.add_argument ( '-c', '--copy',
+            help='copy plots to ../../smodels.github.io/protomodels/latest/',
+            action="store_true" )
     args = argparser.parse_args()
     allpids = [ 1000021, 1000006, 2000006, 1000024, 1000022, 1000005 ]
     pids = args.pid
@@ -366,7 +375,7 @@ if __name__ == "__main__":
             produce( hi, pids, args.nevents, args.dry_run, args.nproc, args.factor )
     if args.draw:
         if args.pid != 0:
-            draw( pids, args.interactive, args.pid2 )
+            draw( pids, args.interactive, args.pid2, args.copy )
         else:
             for pid in allpids:
-                draw( pid )
+                draw( pid, args.interactive, args.pid2, args.copy )
