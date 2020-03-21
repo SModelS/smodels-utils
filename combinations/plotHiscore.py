@@ -341,14 +341,22 @@ def writeIndexHtml ( protomodel, gotTrimmed, untrimmedZ=0. ):
     f.write ( "%s <b><a href=./hiscore.slha>ProtoModel</a> <a href=./pmodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d.</b>" % \
             ( trimmed, dotlessv, dbver, strategy, strategy, protomodel.step ) )
     if gotTrimmed and untrimmedZ > 0.:
-        f.write ( " Z(untrimmed)=%.2f." % untrimmedZ )
+        f.write ( " Z(untrimmed)=%.2f.<br>\n" % untrimmedZ )
     if hasattr ( protomodel, "whatif" ):
         f.write ( "Z plots for: " )
+        first=True
         for k,v in protomodel.whatif.items():
-            f.write ( "<a href=./M%d.png>%s</a>" % ( k, helpers.toLatex(k) ) )
-        f.write ( "llhd plots for: " )
+            if not first:
+                f.write ( ", " )
+            f.write ( "<a href=./M%d.png>%s</a>" % ( k, helpers.toHtml(k) ) )
+            first = False
+        f.write ( ". HPD plots for: " )
+        first = True
         for k,v in protomodel.whatif.items():
-            f.write ( "<a href=./llhd%d.png>%s</a>" % ( k, helpers.toLatex(k) ) )
+            if not first:
+                f.write ( ", " )
+            f.write ( "<a href=./llhd%d.png>%s</a>" % ( k, helpers.toHtml(k) ) )
+            first = False
     f.write ( "<br>\n" )
     f.write ( "<table width=80%>\n<tr><td>\n" )
     if hasattr ( protomodel, "rvalues" ):

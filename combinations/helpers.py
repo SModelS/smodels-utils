@@ -157,6 +157,72 @@ def simplifyList ( modes ):
     # print ( "reduced to", ret )
     return ret
 
+def toHtml ( pid, addM=False, addSign=False ):
+    """ get the HTML version of particle name 
+    :param addM: make it m(particle)
+    :param addSign: add a "-" sign for negative pids
+    """
+    if type ( pid ) in [ list ]: ## several production modes are given in lists
+        pid = simplifyList ( pid )
+        ret = ""
+        for pids in pid:
+            ret += toHtml ( pids, addM, addSign )
+            ret += "="
+        if len(ret)>1:
+            ret = ret[:-1]
+        return ret
+            
+    if type ( pid ) in [ tuple ]: ## production mothers are given as tuples
+        # a list of pids? latexify them individually and concatenate
+        pids = []
+        lpid = list ( pid )
+        try:
+            lpid.sort()
+        except:
+            pass
+        for p in lpid:
+            pids.append ( toLatex ( p, addDollars, addM, addSign ) )
+        return "(" + ",".join ( pids ) + ")"
+    pname = pid
+    if type(pid) in [ int, str ]:
+        pname = getParticleName(pid,addSign)
+    pname = pname.replace("1","<sub>1</sub>" )
+    pname = pname.replace("2","<sub>2</sub>" )
+    pname = pname.replace("L","<sub>L</sub>" )
+    pname = pname.replace("R","<sub>R</sub>" )
+    # pname = pname.replace("~g","&gtilde;" )
+    return pname
+    """
+    # oldp = pname
+    rpls = { "~nutau": "\\tilde{\\nu}_{\\tau}", "L": "_{L}", "R": "_{R}", 
+             "1": "_{1}", "2": "_{2}", "~nu": "\\tilde{\\nu}", 
+             "~nue": "\\tilde{\\nu}_{e}", "~tauL": "\\tilde{\\tau}L",
+             "~numu": "\\tilde{\\nu}_{\\mu}",
+             "bar": "^{*}",
+             "~chi": "\\tilde{\\chi}", "~mu": "\\tilde{\\mu}", "+": "^{+}", 
+             "3": "_{3}", "0": "^{0}", "-": "^{-}" }
+    keys = list ( rpls.keys() )
+    keys.sort(key=len,reverse=True)
+    for kr in keys:
+        vr=rpls[kr]
+        pname = pname.replace(kr,vr)
+    if False and pname.find("~")==0 and pname.find("bar")>0:
+        p1,p2=1,2
+        pname = pname.replace("bar","")
+        pname="\\tilde{"+pname[p1:p2]+"}^{*}"+pname[p2:]
+    if pname.find("~")==0:
+        p1,p2=1,2
+        pname="\\tilde{"+pname[p1:p2]+"}"+pname[p2:]
+    if addM:
+        pname = "m(" + pname + ")"
+    if addDollars:
+        pname = "$" + pname + "$"
+    # print ( "tolatex", pid, pname, oldp )
+    return pname
+
+    return str(pid)
+    """
+
 def toLatex ( pid, addDollars=False, addM=False, addSign=False ):
     """ get the latex version of particle name 
     :param addDollars: add dollars before and after
