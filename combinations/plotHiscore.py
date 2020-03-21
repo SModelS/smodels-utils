@@ -342,6 +342,13 @@ def writeIndexHtml ( protomodel, gotTrimmed, untrimmedZ=0. ):
             ( trimmed, dotlessv, dbver, strategy, strategy, protomodel.step ) )
     if gotTrimmed and untrimmedZ > 0.:
         f.write ( " Z(untrimmed)=%.2f." % untrimmedZ )
+    if hasattr ( protomodel, "whatif" ):
+        f.write ( "Z plots for: " )
+        for k,v in protomodel.whatif.items():
+            f.write ( "<a href=./M%d.png>%s</a>" % ( k, helpers.toLatex(k) ) )
+        f.write ( "llhd plots for: " )
+        for k,v in protomodel.whatif.items():
+            f.write ( "<a href=./llhd%d.png>%s</a>" % ( k, helpers.toLatex(k) ) )
     f.write ( "<br>\n" )
     f.write ( "<table width=80%>\n<tr><td>\n" )
     if hasattr ( protomodel, "rvalues" ):
