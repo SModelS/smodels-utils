@@ -134,6 +134,9 @@ def run ( expResList, axis, pretty, generateData ):
                 tarfile = txnameStr+".tar.gz"
             else:
                 tarfile = os.path.basename(tarfiles[itx])
+            if hasattr ( txname, "validationTarball" ):
+                tarfile = txname.validationTarball
+                logger.info("Database entry specifies a validation tarball: %s. Will use it." % tarfile )
             tarfile = os.path.join(slhadir,tarfile)
 
             if not os.path.isfile(tarfile) and generateData != False:

@@ -188,6 +188,7 @@ def fetchDatabase(tag,dirname):
 
 
 def clearGlobalInfo(filename):
+    print ( "checking", filename )
     f=open(filename)
     lines=f.readlines()
     f.close()
@@ -412,7 +413,7 @@ def create(output,tag):
 def main():
     ap = argparse.ArgumentParser( description="makes a database tarball for public release" )
     ap.add_argument('-o', '--output', help='name of tarball filename [database]', default="database" )
-    ap.add_argument('-t', '--tag', help='database version [1.2.2]', default='1.2.2')
+    ap.add_argument('-t', '--tag', help='database version [1.2.3]', default='1.2.3')
     ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default='../../smodels')
 
     args = ap.parse_args()
