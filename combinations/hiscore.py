@@ -439,19 +439,15 @@ def main ( args ):
 
     nevents = args.nevents
 
-    if not hasTrimmedModel:
+    if not hasTrimmedModel and args.trim:
         print ( "[hiscore] need to trim now" )
         produceNewSLHAFileNames ( protomodels )
         produceNewSLHAFileNames ( trimmed, prefix="tri" )
         
-        if args.trim_branchings and not args.trim:
-            print ( "[hiscore] 'trim branchings' is on, but 'trim' is off?" )
-
-        if args.trim:
-            protomodel = protomodels[0]
-            tr = Trimmer ( protomodel, maxloss=args.maxloss, nevents = nevents )
-            tr.trim( args.trim_branchings )
-            trimmed[0] = tr.M
+        protomodel = protomodels[0]
+        tr = Trimmer ( protomodel, maxloss=args.maxloss, nevents = nevents )
+        tr.trim( args.trim_branchings )
+        trimmed[0] = tr.M
 
 
     if args.analysis_contributions:
