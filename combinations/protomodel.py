@@ -4,9 +4,9 @@
 
 import random, numpy, tempfile, os, copy, time, sys, colorama, subprocess
 from smodels.tools.xsecComputer import XSecComputer, LO, NLL
+from protoxsecs import ProtoModelXSecs
 from combiner import Combiner
 from predictor import Predictor
-import pyslha
 import helpers
 from pympler.asizeof import asizeof
 
@@ -23,7 +23,7 @@ class ProtoModel:
     def hasAntiParticle ( self, pid ):
         """ for a given pid, do i also have to consider its antiparticle
             -pid in the signal strength multipliers? """
-        if pid in [ 1000021, 1000022, 1000023, 1000025, 1000035, 1000012, 
+        if pid in [ 1000021, 1000022, 1000023, 1000025, 1000035, 1000012,
                     1000014, 1000016, 2000012, 2000014, 2000016, 2000021 ]:
             return False
         return True
@@ -37,9 +37,9 @@ class ProtoModel:
     def __init__ ( self, walkerid, dbpath="../../smodels-database/",
                    expected = False, select = "all", keep_meta = True ):
         """
-        :param expected: if True, run with observations drawn from expected values 
+        :param expected: if True, run with observations drawn from expected values
         :param select: select data types of results, e.g. "all", "em", "ul"
-        :param keep_meta: If True, keep also all the data in best combo (makes 
+        :param keep_meta: If True, keep also all the data in best combo (makes
                           this a heavyweight object)
         """
         self.walkerid = walkerid
@@ -145,7 +145,7 @@ class ProtoModel:
         """ initialize the predictor """
         self.pprint ( "initializing predictor #%d with database at %s" % ( self.walkerid, self.dbpath ) )
         if predictor [ 0 ] == None:
-            predictor[0] = Predictor( self.walkerid, dbpath=self.dbpath, 
+            predictor[0] = Predictor( self.walkerid, dbpath=self.dbpath,
                                     expected=self.expected, select=self.select )
         self.dbversion = predictor[0].database.databaseVersion
 
@@ -196,11 +196,11 @@ class ProtoModel:
 
     def predict ( self, strategy = "aggressive", nevents = 10000,
                   check_thresholds = True, recycle_xsecs = False ):
-        """ compute best combo, llhd, and significance 
+        """ compute best combo, llhd, and significance
         :param check_thresholds: if true, check if we run into an exclusion.
-        :param recycle_xsecs: if False, always compute xsecs. If True, 
+        :param recycle_xsecs: if False, always compute xsecs. If True,
                               reuse them, shall they exist.
-        :returns: False, if not prediction (e.g. because the model is excluded), 
+        :returns: False, if not prediction (e.g. because the model is excluded),
                   True if prediction was possible
         """
         if predictor[0] == None:
@@ -333,9 +333,9 @@ class ProtoModel:
         """ backup the current state """
         self._backup = { "llhd": self.llhd, "letters": self.letters, "Z": self.Z,
                          "description": self.description,
-                        "bestCombo": copy.deepcopy(self.bestCombo), 
-                        "masses": copy.deepcopy(self.masses), 
-                        "ssmultipliers": copy.deepcopy(self.ssmultipliers), 
+                        "bestCombo": copy.deepcopy(self.bestCombo),
+                        "masses": copy.deepcopy(self.masses),
+                        "ssmultipliers": copy.deepcopy(self.ssmultipliers),
                         "decays": copy.deepcopy(self.decays),
                         "rvalues": copy.deepcopy(self.rvalues) }
         if hasattr ( self, "muhat" ):
@@ -469,7 +469,7 @@ class ProtoModel:
         nssms = len(p.ssmultipliers)
         print ( "%d masses, %d[%d] decays, %d ss multipliers" % \
                 (len(p.masses), ndecays, nd, nssms ) )
-            
+
     def delXSecs ( self ):
         """ delete stored cross section, if they exist """
         if not hasattr ( self, "stored_xsecs" ):
@@ -477,54 +477,31 @@ class ProtoModel:
         del self.stored_xsecs
 
     def computeXSecs ( self, nevents=10000, recycle=False ):
-        """ compute xsecs for current.slha 
+        """ compute xsecs for current.slha
         :param recycle: if False, dont store xsecs, always recompute.
                         if True, recycle the xsecs if they exist, store them.
         """
-        self.log ( "computing xsecs with %d events" % nevents )
-        # print ( "[walk] computing xsecs for %s" % self.currentSLHA )
-        computer = XSecComputer ( NLL, nevents, 8 )
-        ssmultipliers = self.relevantSSMultipliers()
+        computer = ProtoModelXSecs ( self.walkerid, nevents, self.currentSLHA,
+                                     self.relevantSSMultipliers(), self.step )
         if recycle and hasattr ( self, "stored_xsecs" ):
-            self.pprint ( "found %d old xsecs, will recycle them!!" % len(self.stored_xsecs[0]) )
-            computer.addXSecToFile( self.stored_xsecs[0], self.currentSLHA, "recycled" )
-            computer.addMultipliersToFile ( ssmultipliers, self.currentSLHA )
-            computer.addCommentToFile ( self.stored_xsecs[1], self.currentSLHA )
+            self.pprint ( "found %d old xsecs, will recycle them!!" % \
+                          len(self.stored_xsecs[0]) )
+            computer.addInfoToFile ( self.stored_xsecs )
             return
         if recycle:
             self.pprint ( "recycling is on, but no xsecs were found. compute with %d events." % nevents )
-        computer.countNoNLOXSecs = 4 ## quench the warnings about no NLL xsecs
         try:
-            f = pyslha.readSLHAFile ( self.currentSLHA )
-            m = f.blocks["MASS"]
+            computer.checkIfReadable()
         except Exception as e:
-            self.pprint ( "could not read SLHA file %s: %s" % ( self.currentSLHA, e ) )
-            self.pprint ( "lets restore old state" )
             self.restore()
-
-        ## use a cleaned-up version of the ss multipliers, so the slha file
-        ## remains readable
-        comment = "produced at step %d" % ( self.step )
-        tofile = "all"
-
         try:
-            xsecs, nXsecs = [], 0
-            for sqrts in [8, 13]:
-                nXsecs += computer.computeForOneFile ( [sqrts], self.currentSLHA,
-                        unlink=True, lOfromSLHA=False, tofile=tofile,
-                        ssmultipliers  = ssmultipliers, comment = comment )
-                for x in computer.loXsecs:
-                    xsecs.append ( x )
-                for x in computer.xsecs:
-                    xsecs.append ( x )
+            xsecs,comment = computer.compute()
             if recycle: ## store them
                 self.stored_xsecs = ( xsecs, comment )
-            self.log ( "done computing %d xsecs" % nXsecs )
         except Exception as e:
-            self.pprint ( "could not compute xsecs %s: %s" % ( self.currentSLHA, e ) )
-            self.pprint ( "lets restore old state" )
             self.restore()
 
 if __name__ == "__main__":
-    p = ProtoModel( 0 )
-    p.describe()
+    p = ProtoModel( 1 )
+    p.createSLHAFile()
+    p.computeXSecs()
