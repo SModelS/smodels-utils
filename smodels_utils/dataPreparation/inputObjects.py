@@ -567,7 +567,7 @@ class TxNameInput(Locker):
 
     infoAttr = ['txName','constraint', 'condition','conditionDescription',
                 'susyProcess','checked','figureUrl','dataUrl','source',
-                'validated','axes','upperLimits',
+                'validated','axes','upperLimits', 'validationTarball',
                 'efficiencyMap','expectedUpperLimits']
     internalAttr = ['_name', 'name', '_txDecay','_planes','_goodPlanes',
                     '_branchcondition', 'onShell', 'offShell', 'constraint',
