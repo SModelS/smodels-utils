@@ -428,13 +428,14 @@ def main ( args ):
         
     sin = infile
     if sin == None:
-        sin = "H*pcl"
+        sin = "H*.pcl"
     triHS = "no trimmed hiscores found in files."
     hasTrimmedModel = ( triZ > 0.)
     if hasTrimmedModel:
-        triHS = "trimmed hiscore is at %.2f." % triZ
-    print ( "[hiscore] untrimmed hiscore from %s is at %.2f (%s), %s" % \
-            ( sin, protomodels[0].Z, pprintEvs ( protomodels[0] ), triHS ) ) 
+        triHS = "trimmed hiscore is at %.3f." % triZ
+    pevs = pprintEvs ( protomodels[0] )
+    print ( "[hiscore] untrimmed hiscore from %s[%d] is at %.3f (%s), %s" % \
+            ( sin, protomodels[0].walkerid, protomodels[0].Z, pevs, triHS ) ) 
 
     nevents = args.nevents
 

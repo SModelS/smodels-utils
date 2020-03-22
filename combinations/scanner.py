@@ -328,8 +328,10 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
         IPython.embed()
     plt.close()
     if copy:
-        cmd = "cp %s ../../smodels.github.io/protomodels/latest/" % figname
-        subprocess.getoutput ( cmd )
+        dest = os.path.expanduser ( "~/git/smodels.github.io" )
+        cmd = "cp %s/%s %s/protomodels/latest/" % ( rundir,figname, dest )
+        o = subprocess.getoutput ( cmd )
+        print ( "[scanner] %s: %s" % ( cmd, o ) )
 
 if __name__ == "__main__":
     import argparse
@@ -366,7 +368,7 @@ if __name__ == "__main__":
             help='force copying the hiscore.pcl file',
             action="store_true" )
     argparser.add_argument ( '-c', '--copy',
-            help='copy plots to ../../smodels.github.io/protomodels/latest/',
+            help='copy plots to ~/git/smodels.github.io/protomodels/latest/',
             action="store_true" )
     args = argparser.parse_args()
     allpids = [ 1000021, 1000006, 2000006, 1000024, 1000022, 1000005 ]
@@ -384,4 +386,7 @@ if __name__ == "__main__":
             draw( pids, args.interactive, args.pid2, args.copy )
         else:
             for pid in allpids:
-                draw( pid, args.interactive, args.pid2, args.copy )
+                try:
+                    draw( pid, args.interactive, args.pid2, args.copy )
+                except Exception as e:
+                    print ( "[scanner] skipping %d: %s" % ( pid, e ) )

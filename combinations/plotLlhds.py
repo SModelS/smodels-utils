@@ -2,7 +2,7 @@
 
 """ the plotting script for the llhd scans """
 
-import pickle, sys, copy, subprocess
+import pickle, sys, copy, subprocess, os
 import IPython
 import numpy as np
 from csetup import setup
@@ -348,13 +348,16 @@ def plotSummary ( pid1, pid2, copy ):
     plt.savefig ( figname )
     plt.close()
     if copy:
-        cmd = "cp %s ../../smodels.github.io/protomodels/latest/" % figname
-        subprocess.getoutput ( cmd )
+        rundir = setup()
+        dest = os.path.expanduser ( "~/git/smodels.github.io" )
+        cmd = "cp %s/%s %s/protomodels/latest/" % ( rundir, figname, dest )
+        o = subprocess.getoutput ( cmd )
+        print ( "[plotLlhds] %s: %s" % ( cmd, o ) )
     return
 
 def plot ( pid1, pid2, analysis, copy ):
     """ do your plotting 
-    :param copy: copy plot to ../../smodels.github.io/protomodels/latest
+    :param copy: copy plot to ~/git/smodels.github.io/protomodels/latest
     """
     if analysis in [ "*", "all", "summary" ]:
         plotSummary ( pid1, pid2, copy )
@@ -398,7 +401,7 @@ if __name__ == "__main__":
             help='list all analyses for these pids',
             action="store_true" )
     argparser.add_argument ( '-c', '--copy',
-            help='copy plots to ../../smodels.github.io/protomodels/latest',
+            help='copy plots to ~/git/smodels.github.io/protomodels/latest',
             action="store_true" )
     argparser.add_argument ( '-A', '--all',
             help='plot for all analyses',
