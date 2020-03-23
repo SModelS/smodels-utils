@@ -67,7 +67,7 @@ A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyh
 
 # To do list
 
-- [ ] perform a mass scan over all mass points of ATLAS-SUSY-2018-04 for comparison
+- [x] perform a mass scan over all mass points of ATLAS-SUSY-2018-04 for comparison (see output.py)
 - [ ] create a SModelS "pyhf" branch off the "develop" branch
 - [ ] we add pyhf into smodels/share/requirements.txt
 - [ ] in theoryPrediction.py:getLikelihood, we already have two ways of computing the likelihood.

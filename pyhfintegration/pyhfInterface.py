@@ -32,7 +32,7 @@ def getLogger():
     # ch.setFormatter(formatter)
     # ch.setLevel(logging.DEBUG)
     # logger.addHandler(ch)
-    logger.setLevel(logging.DEBUG)
+    # logger.setLevel(logging.DEBUG)
     return logger
 
 logger=getLogger()

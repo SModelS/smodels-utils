@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import sys
-sys.path.insert(0,"/home/alguero/Work/smodels")
+sys.path.insert(0,"../../smodels")
 import json
 from pyhfInterface import PyhfData
 from pyhfInterface import PyhfUpperLimitComputer
@@ -51,7 +51,7 @@ with open("SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json", "r") as f:
     # jsoninputs.append(json.load(f))
 lumi = 139 # fb
 # Fetching the efficiencies from the database
-dir = "/home/alguero/Work/smodels-database"
+dir = "../../smodels-database"
 d=Database( dir, discard_zeroes = True)
 # print(d)
 results=d.getExpResults()
@@ -99,7 +99,6 @@ for d in data:
     outputEntry["officialUL"] = ul
     outputEntry["discrepancy"] = (result - ul)/(ul)
     outputDataDict.append(outputEntry)
-    print(outputDataDict)
     
 outputFile = open("output.py", "w")
 outputFile.write("outputDataDict="+str(outputDataDict)+"\n")
