@@ -13,6 +13,8 @@ if len(sys.argv)>1:
 	    f= [ "hiscoreCopy.pcl" ]
     if "ssm" in sys.argv[1]:
 	    f= [ "ssm\*.pcl" ]
+    if "pmodel" in sys.argv[1]:
+	    f= [ "pmodel\?.py" ]
     if f == oldf:
         print ( "[fetch_hiscore] do not understand what you mean with '%s'. I only know of 'scan', 'states', 'copy', 'ssm'." % sys.argv[1] )
         sys.exit()
