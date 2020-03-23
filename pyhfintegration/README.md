@@ -39,6 +39,12 @@ The pyhf.workspace.combine method was raising errors : measurements were defined
 
 - [x] try the new pyhf.workspace.combine method of the 0.4.1 pyhf release : doesn't work
 
+# Rescaling
+
+Infinite loop with mass point [[100*GeV, 1*GeV]] and initial rescaling factor of 10 (changing initial factor to 5 for now)
+
+- [ ] need to decrease the rescaling factor when a nan appears during rescaling
+
 # Poor person's combination (ATLAS-SUSY-2018-31)
 
 It appears that ATLAS-SUSY-2018-31 is performing a poor person's combination, i.e., all three regions (A, B and C) have subregions. These subregions then get combined into three seperate "inclusive" likelihoods, amongst which the inclusive regions giving the best expected limit is picked to compute the observed limit.
