@@ -774,8 +774,6 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             r = pt['signal']/pt ['UL']
         if r > 3.:
             r=3.
-        if xvals["x"] > 400 and xvals["x"]<600. and xvals["y"]>200.:
-            print ( "x,r", xvals, r )
         if isinstance(xvals,dict):
             if len(xvals) == 1:
                 x,y = xvals['x'],r
