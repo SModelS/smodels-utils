@@ -373,8 +373,11 @@ def main ( args ):
                  analysis_contributions, check, interactive,
                  nevents
                  see "if __main__" part below.
-    :returns: ( highest significance, step, model )
+    :returns: { "Z": highest significance, "Zuntrimmed": highest untrimmed significance,
+                "step": step, "model": model  }
     """
+
+    ret =  { "Z": 0., "Zuntrimmed": 0., "step": 0, "model": None }
 
     if args.detailed:
         args.print = True
@@ -420,7 +423,7 @@ def main ( args ):
 
     if protomodels[0] == None:
         print ( "[hiscore] error, we have an empty hiscore list" )
-        return 0.,0,None
+        return ret
 
     triZ=-.0001
     if trimmed[0] != None:
@@ -498,10 +501,21 @@ def main ( args ):
         IPython.embed()
 
     if len(trimmed)>0 and trimmed[0] != None:
-        return float(trimmed[0].Z),trimmed[0].step,trimmed[0]
+        ret["Z"]=trimmed[0].Z
+        if len(protomodels)>0 and protomodels[0] != None:
+            ret["Zuntrimmed"]=protomodels[0].Z
+        ret["step"]=trimmed[0].step
+        ret["model"]=trimmed[0]
+        return ret
+        # return float(trimmed[0].Z),trimmed[0].step,trimmed[0]
     if len(protomodels)>0 and protomodels[0] != None:
-        return float(protomodels[0].Z),protomodels[0].step,protomodels[0]
-    return 0.,0,None
+        ret["Z"]=protomodels[0].Z
+        ret["Zuntrimmed"]=protomodels[0].Z
+        ret["step"]=protomodels[0].step
+        ret["model"]=protomodels[0]
+        return ret
+        # eturn float(protomodels[0].Z),protomodels[0].step,protomodels[0]
+    return ret
 
 if __name__ == "__main__":
     import argparse

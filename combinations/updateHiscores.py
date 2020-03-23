@@ -40,8 +40,10 @@ def updateHiscores():
     import socket
     hostname = socket.gethostname().replace(".cbe.vbc.ac.at","")
     print ( "[updateHiscores] now update the hiscore.pcl file on %s" % hostname )
-    Z,step,model = hiscore.main ( args )
-    return Z,step,model
+    D = hiscore.main ( args )
+    return D
+    #step,model = hiscore.main ( args )
+    # return Z,step,model
 
 def updateStates():
     args = types.SimpleNamespace()
@@ -94,16 +96,19 @@ def main():
             Zold = float ( f.read().strip() )
     while True:
         i+=1
-        Z,step,model = updateHiscores( )
+        # Z,step,model = updateHiscores( )
+        D = updateHiscores( )
+        Z,Zuntrimmed,step,model = D["Z"],D["Zuntrimmed"],D["step"],D["model"]
         if Z > Zold*1.0001:
             from manipulator import Manipulator
-            m = Manipulator ( model )
-            m.writeDictFile ( "pmodel-%t.py", comment="history keeper" )
             with open ( Zfile, "wt" ) as f:
                 f.write ( "%s\n" % str(Z) )
                 f.close()
+            m = Manipulator ( model )
+            T=str(int(time.time()))
+            m.writeDictFile ( "pmodel-%s.py" % T, comment="history keeper" )
             with open ( "%szhistory.txt" % rundir, "at" ) as f:
-                f.write ( "%s,%d,%s\n" % ( time.asctime(),step,Z ) )
+                f.write ( "%s,%d,%s,%s,%s\n" % ( time.asctime(),step,Z,Zuntrimmed,T) )
                 f.close()
             plot ( Z, rundir )
             Zold = Z
