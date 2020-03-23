@@ -142,17 +142,18 @@ class DecayDrawer:
         l=""
         matrixMode = (len(labels)>2)
         if matrixMode: ## make a matrix
-            l="\\\\begin{matrix}"
+            l="$\\\\begin{matrix}"
         for ctr,L in enumerate(labels):
             percentage,label = L[0], L[1]
+            # print ( "perc", percentage, name, daughter, label, ctr, len(labels) )
             if percentage < rmin:
                 continue
             if ctr>0 and ctr % 2 != 0:
                 l+=",\\,"
-            if matrixMode:
-                label="$"+label+"$"
+            #if matrixMode:
+            #    label="$"+label+"$"
             l+=label
-            if percentage < 0.9 and not self.options["nopercentage"]:
+            if (percentage < 0.9 or len(labels)>1) and not self.options["nopercentage"]:
                 if self.tex:
                     l+="\\,"+str(int(100*percentage))+"\\\\%" ## trino
                 else:
@@ -160,7 +161,7 @@ class DecayDrawer:
             if ctr % 2 == 1 and ctr != len(labels)-1:
                 l+=",\\,\\\\\\\\"
         if matrixMode: ## make a matrix
-            l+="\\\\end{matrix}"
+            l+="\\\\end{matrix}$"
         t = self.G.add_edge ( name, daughter )
         edge=self.G.get_edge ( name, daughter )
         edge.attr['label']=l
@@ -200,9 +201,10 @@ class DecayDrawer:
         # print name,"->",nname
         return nname
 
-    def texName ( self, name, color = False ):
+    def texName ( self, name, color = False, dollars = True ):
         """ map slha particle names to latex names
         :param color: add color tag
+        :param dollars: need dollars for math mode
         """
         if name.find(" ")>-1:
             names=name.split()
@@ -211,10 +213,15 @@ class DecayDrawer:
                 texed.append ( self.texName ( n, color ) )
             return " ".join ( texed )
         def huge(x):
-            return "\\\\Huge{\\\\textbf{%s}}" % x
+            return x
+            #return "\\\\Huge{\\\\textbf{%s}}" % x
         def large(x):
-            return "\\\\large{%s}" % x
-        def math(x): return "$%s$" % x
+            return x
+            #return "\\\\large{%s}" % x
+        def math(x): 
+            if dollars:
+                return "$%s$" % x
+            return x
         def green(x,usecol):
             if not usecol:
                 return x
@@ -301,7 +308,7 @@ class DecayDrawer:
             return self.simpleName ( name )
         if self.tex:
             # return self.simpleName ( name )
-            ret = "$" + self.texName ( name, self.options["color"] ) + "$"
+            ret = "$" + self.texName ( name, self.options["color"], dollars=False ) + "$"
             # print ( "ret", name, ret )
             return ret
         return self.htmlName ( name )

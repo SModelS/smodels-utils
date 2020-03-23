@@ -453,7 +453,7 @@ def plotDecays ( protomodel, verbosity, outfile="decays.png" ):
     options = { "tex": True, "color": True, "dot": True, "squarks": True,
                 "weakinos": True, "sleptons": True, "neato": True,
                 "integratesquarks": False, "leptons": True }
-    options["rmin"] = 0.
+    options["rmin"] = 0.005
     ## FIXME add cross sections.
     decayPlotter.draw ( protomodel.currentSLHA, outfile, options,
                         verbosity = verbosity,
