@@ -3,8 +3,7 @@
 """ Class that takes care of xsec computations of protomodels """
 
 from smodels.tools.xsecComputer import XSecComputer, LO, NLL
-import pyslha
-import time
+import pyslha, time, subprocess
 
 class ProtoModelXSecs:
     """ codes that takes care of the cross section computations
@@ -22,8 +21,38 @@ class ProtoModelXSecs:
         with open( "walker%d.log" % self.walkerid, "a" ) as f:
             f.write ( "[model:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
+    def hasPID ( self, pid, frozen_counts=False ):
+        """ check if a certain PID appears in the file
+        :param frozen_counts: it also counts if the particle is in fact frozen
+        """
+        f = pyslha.readSLHAFile ( self.slhafile )
+        m = f.blocks["MASS"]
+        pid=abs(pid)
+        if not pid in m:
+            return False
+        if frozen_counts:
+            return True
+        if m[pid]<8e4:
+            return True
+        return False
+
+    def backup ( self ):
+        """ backup the current SLHA file """
+        self.backupfile = self.slhafile.replace(".slha",".bu.slha")
+        cmd = "cp %s %s" % ( self.slhafile, self.backupfile )
+        o = subprocess.getoutput ( cmd )
+
+    def restore ( self ):
+        """ restore the SLHA file from the backup """
+        if self.backupfile == None:
+            self.pprint ( "was asked to restore SLHA file but no backup exists" )
+            return
+        cmd = "cp %s %s" % ( self.backupfile, self.slhafile )
+        o = subprocess.getoutput ( cmd )
+
     def __init__ ( self, walkerid, nevents, slhafile, ssmultipliers, step ):
         self.walkerid = walkerid
+        self.backupfile = None
         self.computer = XSecComputer ( NLL, nevents, 8 )
         self.nevents = nevents
         self.computer.countNoNLOXSecs = 4
@@ -77,4 +106,11 @@ class ProtoModelXSecs:
 
 
 if __name__ == "__main__":
-    p = ProtoModelXSecs( 0, 10000, "bla.slha", {}, 1 )
+    import subprocess
+    subprocess.getoutput ( "cp empty.slha test.slha" )
+    ssms = { (1000002, 1000002):0.1841, (-1000002, 1000002):0.1841, (1000002, 1000003):0.8651, (-1000003, 1000002):0.8651, (1000002, 1000021):0.09084, (1000002, 1000022):0.4196, (-1000002, -1000002):0.1841, (-1000002, 1000003):0.8651, (-1000003, -1000002):0.8651, (-1000002, 1000021):0.09084, (-1000002, 1000022):0.4196, (-1000006, 1000006):0.299, (-2000006, 1000006):0.359, (-1000006, 2000006):0.359, (-2000006, 2000006):0.346, (1000021, 1000021):0.064, (1000021, 1000022):0.217 }
+    p = ProtoModelXSecs( 0, 10000, "test.slha", ssms, step=1 )
+    print ( "has 1000021", p.hasPID ( 1000021 ) )
+    print ( "has 2000021", p.hasPID ( 2000021 ) )
+    D = p.compute()
+    # print ( D )
