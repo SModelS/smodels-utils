@@ -190,7 +190,8 @@ def toHtml ( pid, addM=False, addSign=False ):
     pname = pname.replace("2","<sub>2</sub>" )
     pname = pname.replace("L","<sub>L</sub>" )
     pname = pname.replace("R","<sub>R</sub>" )
-    # pname = pname.replace("~g","&gtilde;" )
+    pname = pname.replace("chi","&chi;" )
+    pname = pname.replace("0","<sup>0</sup>" )
     return pname
     """
     # oldp = pname

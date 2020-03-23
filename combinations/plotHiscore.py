@@ -343,13 +343,10 @@ def writeIndexHtml ( protomodel, gotTrimmed, untrimmedZ=0. ):
     if gotTrimmed and untrimmedZ > 0.:
         f.write ( " Z(untrimmed)=%.2f.<br>\n" % untrimmedZ )
     if hasattr ( protomodel, "whatif" ):
-        f.write ( "Z plots for: " )
-        first=True
+        f.write ( "Z plots for: <a href=./M1000022.png>%s</a>" % helpers.toHtml(1000022) )
         for k,v in protomodel.whatif.items():
-            if not first:
-                f.write ( ", " )
+            f.write ( ", " )
             f.write ( "<a href=./M%d.png>%s</a>" % ( k, helpers.toHtml(k) ) )
-            first = False
         f.write ( ". HPD plots for: " )
         first = True
         for k,v in protomodel.whatif.items():
