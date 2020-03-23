@@ -185,7 +185,7 @@ class PyhfUpperLimitComputer:
             # self.rescale(0.5)
             # workspace = updateWorkspace()
         # Trying a more advanced method for rescaling
-        factor = 10.
+        factor = 5.
         wereBothLarge = False
         wereBothTiny = False
         while "mu is not in [0,10]":
