@@ -2,6 +2,8 @@
 
 """ helper functions """
 
+rthresholds = (1.7,) ## threshold for rmax
+
 import copy, sys
 
 def getParticleName ( pid, addSign=False, addSMParticles=False ):

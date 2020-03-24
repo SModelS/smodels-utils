@@ -313,8 +313,8 @@ def main():
                         type=int, default=0 )
     argparser.add_argument ( '-N', '--nmax', nargs='?', help='maximum worker id. Zero means nmin + 1. [0]',
                         type=int, default=0 )
-    argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [8]',
-                        type=int, default=8 )
+    argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [48]',
+                        type=int, default=48 )
     argparser.add_argument ( '-p', '--nprocesses', nargs='?', 
             help='number of processes to split task up to, 0 means one per worker [0]',
             type=int, default=0 )

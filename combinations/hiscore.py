@@ -6,6 +6,7 @@
 import random, copy, pickle, os, fcntl, time, subprocess, colorama, sys
 import setPath
 from trimmer import Trimmer
+from helpers import rthresholds
 from scipy import stats
 
 def setup():
@@ -235,6 +236,8 @@ class Hiscore:
     def newResult ( self, protomodel ):
         """ see if new result makes it into hiscore list. If yes, then add.
         """
+        if protomodel.rmax > rthresholds[0]: # we only take the ones that passed the critic
+            return
         self.pprint ( "New result with Z=%.2f, needs to pass %.2f, saving: %s" % (protomodel.Z, self.currentMinZ(), "yes" if self.save_hiscores else "no" ) )
         if not self.save_hiscores:
             return
