@@ -11,6 +11,8 @@ if len(sys.argv)>1:
 	    f= [ "states.pcl" ]
     if "copy" in sys.argv[1]:
 	    f= [ "hiscoreCopy.pcl" ]
+    if "2" in sys.argv[1]:
+	    f= [ "hiscore2.pcl" ]
     if "ssm" in sys.argv[1]:
 	    f= [ "ssm\*.pcl" ]
     if "pmodel" in sys.argv[1]:
