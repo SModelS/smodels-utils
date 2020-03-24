@@ -93,11 +93,11 @@ for d in data:
                                                                                              str((result-ul)/ul)
                                                                                              ))
     outputEntry = {}
-    outputEntry["m(stau)"] = massvec[0][0]
-    outputEntry["m(chi1)"] = massvec[0][1]
-    outputEntry["pyhfUL"] = result
-    outputEntry["officialUL"] = ul
-    outputEntry["discrepancy"] = (result - ul)/(ul)
+    outputEntry["m(stau)"] = massvec[0][0].asNumber()
+    outputEntry["m(chi1)"] = massvec[0][1].asNumber()
+    outputEntry["pyhfUL"] = result.asNumber()
+    outputEntry["officialUL"] = ul.asNumber()
+    outputEntry["discrepancy"] = ((result - ul)/ul).asNumber()
     outputDataDict.append(outputEntry)
     
 outputFile = open("output.py", "w")
