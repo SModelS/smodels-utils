@@ -116,7 +116,7 @@ We  compute the results of our pyhf interface by feeding the efficiencies of the
 |320            |200            |0.0140                |0.0145            |3.0               |
 |360            |200            |0.0055                |0.0047            |-13.5             |
 
-A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyhf developers, this could be due to the efficiencies provided for this analysis, which are at truth-level, instead of the reco-level that are used in the offocial analysis.
+A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyhf developers, this could be due to the efficiencies provided for this analysis, which are at truth-level, instead of the reco-level that are used in the official analysis.
 
 # To do list
 

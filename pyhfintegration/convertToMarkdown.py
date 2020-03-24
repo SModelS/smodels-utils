@@ -1,5 +1,9 @@
 from outputGridScan import outputDataDict
+import sys
+sys.path.insert(0,"../../smodels")
+from smodels.tools.physicsUnits import pb, fb, GeV
 # Keys definition
+m = 3.0 [GeV]
 stau = "m(stau)"
 chi = "m(chi1)"
 off = "officialUL"
