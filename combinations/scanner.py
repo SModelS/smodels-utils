@@ -310,6 +310,9 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
     ax1.scatter ( [ cmass ], [ Zmax ], label="protomodel, Z(%s)=%.2f" % (param, Zmax ), marker="*", s=100, c="r", zorder=2 )
     # plt.ylabel ( "Z" )
     plt.title ( "Significance Z=Z(%s)" % pname )
+    plt.text ( .8 * max(x),-.17,time.asctime() )
+    #import IPython
+    #IPython.embed()
     ax1.legend()
     if isSSMPlot():
         plt.xlabel ( "ssm(%s) [GeV]" % pname )
