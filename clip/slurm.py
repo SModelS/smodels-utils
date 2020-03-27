@@ -263,7 +263,7 @@ def clean_dirs( clean_all = False ):
     o = subprocess.getoutput ( cmd )
     cmd = "cd %s; rm -rf old*pcl .cur* RUN* walker*log" % rundir
     if clean_all:
-        cmd = "cd %s; rm -rf *pcl .cur* RUN* walker*log training*gz" % rundir
+        cmd = "cd %s; rm -rf *pcl .cur* RUN* walker*log training*gz Zold.conf" % rundir
     o = subprocess.getoutput ( cmd )
 
 def queryStats ( ):
