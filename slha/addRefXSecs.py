@@ -41,6 +41,7 @@ def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run, order, comment ):
             isInXSec=False
             continue
         f.write ( line )
+    f.write ( "\n" )
     f.write ( "XSECTION  %s  2212 2212 2 %d %d # reference cross section [pb]\n" % \
               ( ssqrt, pid1, pid2 ) )
     f.write ( "  0  %d  0  0  0  0    %.6G AddRefXSecsv1.0%s\n" % ( order, xsec, comment ) )
