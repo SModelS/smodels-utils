@@ -395,7 +395,7 @@ class Trimmer:
                 self.M.decays[p1][pids] = self.M.decays[p1][pids] + br
             else:
                 self.M.decays[p1][pids] = br
-        print ( "ssms1000006", self.M.ssmultipliers[(-1000006, 1000006)] )
+        # print ( "ssms1000006", self.M.ssmultipliers[(-1000006, 1000006)] )
         self.manipulator.normalizeBranchings ( p1, fixSSMs = False )
 
         ## decays *into* pid2 need to be remapped to pid1
@@ -412,7 +412,7 @@ class Trimmer:
                     self.M.decays[mpid][tuple(newpids)]=br
 
         ## clean up, remove all decays with pid2
-        self.M.decays.pop ( p2 )
+        # self.M.decays.pop ( p2 )
 
         # print ( "ssms1000006", self.M.ssmultipliers[(-1000006, 1000006)] )
         ## ssmultipliers get added up, too
