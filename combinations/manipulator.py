@@ -291,9 +291,11 @@ class Manipulator:
     #                    ( helpers.getParticleName ( pid ), numpy.mean ( brs ), numpy.std ( brs )  ) )
 
 
-    def normalizeBranchings ( self, pid ):
+    def normalizeBranchings ( self, pid, fixSSMs=True ):
         """ normalize branchings of a particle, after freezing and unfreezing
-            particles. while we are at it, remove zero branchings also. """
+            particles. while we are at it, remove zero branchings also. 
+        :param fixSSMs: if True, adapt also signal strength multipliers
+        """
         if not pid in self.M.decays:
             self.M.pprint ( "when attempting to normalize: %d not in decays" % pid )
             return
@@ -319,6 +321,8 @@ class Manipulator:
 
         ## adjust the signal strength multipliers to keep everything else
         ## as it was
+        if not fixSSMs:
+            return
         for pidpair,ssm in self.M.ssmultipliers.items():
             if ssm == 0.:
                 self.M.pprint ( "huh, when normalizing we find ssmultipliers of 0? change to 1! S=%.4g" % S )

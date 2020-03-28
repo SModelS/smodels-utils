@@ -2,8 +2,9 @@
 
 """ Class that trims models down """
 
-import time, colorama, copy, sys
+import time, colorama, copy, sys, math
 from smodels.tools import runtime
+from smodels.tools.physicsUnits import fb
 runtime._experimental = True
 from combiner import Combiner
 from protomodel import ProtoModel, rthresholds
@@ -345,6 +346,123 @@ class Trimmer:
                     self.M.restore()
         return ndiscardedBR
 
+    def checkForMergers ( self ): 
+        """ compile a list of potential PID mergers, then check """
+        candpairs = [ (1000001, 1000002, 1000003, 1000004 ), ( 1000005, 2000005 ),
+                       (1000006, 2000006), ( 1000024, 1000037 ), ( 1000023, 1000025 )  ]
+        unfrozen = self.M.unFrozenParticles( withLSP=False )
+        for candidates in candpairs:
+            pids = set()
+            for cand in candidates:
+                if cand in unfrozen:
+                    pids.add ( cand )
+            if len(pids)>1:
+                self.checkForMergerOf ( pids )
+
+    def checkForMergerOf ( self, pids ):
+        """ check if PIDs can be merged """
+        self.log ( "checking if %s can be merged" % str(pids) )
+        if not hasattr ( self.M, "stored_xsecs" ) or self.M.stored_xsecs == None:
+            self.pprint ( "model has no stored xsecs?" )
+            self.M.computeXSecs( nevents = 100000 )
+        self.log ( "found %d stored xsecs" % len(self.M.stored_xsecs) )
+        cpair,dmin = self.getClosestPair ( pids )
+        self.log ( "closest pair is %s: dm=%.1f" % (str(cpair),dmin ) )
+        if dmin < 50.:
+            self.merge ( cpair )
+
+    def isIn ( self, pid, pids ):
+        """ is pid in pids (in case pids is tuple),
+            is pid equal to pids (in case pids is int) """
+        if type(pids) in [ int, float ]:
+            return pid == pids
+        return pid in pids
+
+    def merge ( self, pair ):
+        """ merge two particles, pids given in pair """
+        pair = list(pair)
+        pair.sort()
+        p1,p2 = pair[0], pair[1]
+        self.pprint ( "merge %d and %d" % ( p1, p2 ) )
+        avgM = self.computeAvgMass ( pair )
+        self.log ( "avg mass for %s is %.1f" % ( str(pair), avgM ) )
+        self.M.backup() ## in case it doesnt work out!
+        self.M.masses[ p2 ] = 1e5 ## freeze that one!
+
+        ## add the decays from pid2 to pid1
+        for pids,br in self.M.decays [ p2 ].items():
+            if pids in self.M.decays[p1]:
+                self.M.decays[p1][pids] = self.M.decays[p1][pids] + br
+            else:
+                self.M.decays[p1][pids] = br
+        print ( "ssms1000006", self.M.ssmultipliers[(-1000006, 1000006)] )
+        self.manipulator.normalizeBranchings ( p1, fixSSMs = False )
+
+        ## decays *into* pid2 need to be remapped to pid1
+        for mpid,decays in self.M.decays.items():
+            for dpids,br in decays.items():
+                if self.isIn ( p2, dpids ):
+                    newpids = []
+                    for dpid in dpids:
+                        if dpid == p2:
+                            newpids.append ( p1 )
+                        else:
+                            newpids.append ( dpid )
+                    self.M.decays[mpid].pop ( dpids )
+                    self.M.decays[mpid][tuple(newpids)]=br
+
+        ## clean up, remove all decays with pid2
+        self.M.decays.pop ( p2 )
+
+        # print ( "ssms1000006", self.M.ssmultipliers[(-1000006, 1000006)] )
+        ## ssmultipliers get added up, too
+        newssms = copy.deepcopy ( self.M.ssmultipliers )
+        for pids, ssm in self.M.ssmultipliers.items():
+            if not p2 in pids and not -p2 in pids:
+                continue
+            newpids = []
+            for pid in pids:
+                if pid in [ p2, -p2 ]:
+                    newpids.append ( int ( math.copysign ( p1, pid ) ) )
+                else:
+                    newpids.append ( pid )
+            newpids = tuple(newpids)
+            # print ( "adding", ssm, "for",pids,"to",newpids )
+            if newpids in self.M.ssmultipliers:
+                newssms[newpids]=newssms[newpids]+ssm
+            else:
+                newssms[newpids]=ssm
+        self.M.ssmultipliers = newssms
+
+        ## clean up, remove all pid2 ssms
+        newms={}
+        for pids,ssm in self.M.ssmultipliers.items():
+            if not p2 in pids and not -p2 in pids:
+                newms[pids]=ssm
+        self.M.ssmultipliers = newms
+
+    def getClosestPair ( self, pids ):
+        """ of <n> PIDs, identify the two that are closest in mass """
+        if len(pids)<2:
+            return None
+        dmin = float("inf")
+        pair = (0,0)
+        for pid1 in pids:
+            for pid2 in pids:
+                if pid1 == pid2:
+                    continue
+                dm = abs ( self.M.masses[pid2] - self.M.masses[pid1] )
+                if dm < dmin:
+                    dmin = dm
+                    pair = ( pid1, pid2 )
+        return pair,dmin
+
+    def computeAvgMass ( self, pids ):
+        """ compute the average mass """
+        ret=0.
+        for pid in pids:
+            ret+=self.M.masses[pid]
+        return ret / len(pids)
 
     def trimBranchings ( self ):
         """ now trim the branchings """
