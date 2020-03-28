@@ -194,7 +194,7 @@ def plotOneAna ( masspoints, ana, pid1, pid2, mx, my,
     hldZ50 = computeHLD ( Z, .5 )
     cont50 = plt.contour ( X, Y, hldZ50, levels=[1.0], colors = [ "red" ] )
     plt.clabel ( cont50, fmt="50%.0s" )
-    # print ( "timestamp:", timestamp, topo, max(x) )
+    print ( "timestamp:", timestamp, topo, max(x) )
     plt.text( max(x)-300,min(y)-350,timestamp, c="gray" )
     ### the altitude of the alpha quantile is l(nuhat) - .5 chi^2_(1-alpha);ndf
     ### so for alpha=0.05%, ndf=1 the dl is .5 * 3.841 = 1.9207
@@ -322,8 +322,9 @@ def plotSummary ( pid1, pid2, copy ):
         ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=180, color="black" )
         ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=110, color=color, label=ana, alpha=1. )
 
-    # print ( "timestamp:", timestamp, topo, max(x) )
-    plt.text( max(x)-300,min(y)-350,timestamp, c="gray" )
+    print ( "[plotLlhds] timestamp:", timestamp, topo, max(x) )
+    dx,dy = max(x)-min(x),max(y)-min(y)
+    plt.text( max(x)-.37*dx,min(y)-.11*dy,timestamp, c="gray" )
     ### the altitude of the alpha quantile is l(nuhat) - .5 chi^2_(1-alpha);ndf
     ### so for alpha=0.05%, ndf=1 the dl is .5 * 3.841 = 1.9207
     ### for ndf=2 the dl is ln(alpha) = .5 * 5.99146 = 2.995732
