@@ -368,7 +368,7 @@ class Trimmer:
         self.log ( "found %d stored xsecs" % len(self.M.stored_xsecs) )
         cpair,dmin = self.getClosestPair ( pids )
         self.log ( "closest pair is %s: dm=%.1f" % (str(cpair),dmin ) )
-        if dmin < 50.:
+        if dmin < 100.:
             self.merge ( cpair )
 
     def isIn ( self, pid, pids ):
@@ -383,11 +383,11 @@ class Trimmer:
         pair = list(pair)
         pair.sort()
         p1,p2 = pair[0], pair[1]
-        self.pprint ( "merge %d and %d" % ( p1, p2 ) )
+        self.pprint ( "attempt to merge %d and %d" % ( p1, p2 ) )
         avgM = self.computeAvgMass ( pair )
         self.log ( "avg mass for %s is %.1f" % ( str(pair), avgM ) )
         self.M.backup() ## in case it doesnt work out!
-        self.M.masses[ p2 ] = 1e5 ## freeze that one!
+        self.M.masses[ p2 ] = 1e6 ## freeze that one!
 
         ## add the decays from pid2 to pid1
         for pids,br in self.M.decays [ p2 ].items():
@@ -432,7 +432,7 @@ class Trimmer:
                 newssms[newpids]=newssms[newpids]+ssm
             else:
                 newssms[newpids]=ssm
-        self.M.ssmultipliers = newssms
+        # self.M.ssmultipliers = newssms
 
         ## clean up, remove all pid2 ssms
         newms={}
@@ -440,6 +440,17 @@ class Trimmer:
             if not p2 in pids and not -p2 in pids:
                 newms[pids]=ssm
         self.M.ssmultipliers = newms
+
+        oldZ,oldrmax = self.M.Z, self.M.rmax
+        self.M.predict ( nevents = 100000, recycle_xsecs = False )
+        if self.M.rmax > rthresholds[0]:
+            self.pprint ( "trying to merge %d and %d lead to an rmax of %.2f. reverting" % \
+                          ( p1, p2, self.M.rmax ) ) 
+            self.M.restore()
+        if self.M.Z < oldZ *.999:
+            self.pprint ( "trying to merge %d and %d lead to a Z of %.3f < %.3f. reverting" % \
+                          ( p1, p2, self.M.Z, oldZ *.999 ) ) 
+            self.M.restore()
 
     def getClosestPair ( self, pids ):
         """ of <n> PIDs, identify the two that are closest in mass """
