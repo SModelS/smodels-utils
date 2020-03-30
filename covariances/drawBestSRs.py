@@ -83,10 +83,28 @@ def draw( validationfile ):
         nbsrs[ctr][0] = x[0]
         nbsrs[ctr][1] = x[1]
         nbsrs[ctr][2] = srDict[x[2]]
-    colors = [ "r", "g", "b", "c", "m", "y", "k" ]
+    colorCounts,cCounts={},{}
+    for i in range(int(1+max(nbsrs[::,2]) ) ):
+        colorCounts[i]=list(map(int,nbsrs[::,2])).count(i)
+    for k,v in colorCounts.items():
+        if not v in cCounts:
+            cCounts[v]=[]
+        cCounts[v].append(k)
+    occs = list ( cCounts.keys() )
+    occs.sort( reverse=True )
+    ctr = 0
+    origcolors = [ "r", "g", "b", "c", "m", "y", "#ffa500", '#115f6a', "#A52A2A", "k" ]
+    colors = copy.deepcopy ( origcolors )
+    for occ in occs:
+        if occ == 0:
+            break
+        for nr in cCounts[occ]:
+            colors[nr]=origcolors[ctr]
+            ctr+=1
     ctr = 0
     while len(nrDict.keys()) > len(colors):
-        print ( "ERROR: not enough colors defined!!" )
+        print ( "ERROR: not enough colors defined (%d needed, %d defined)!!" % \
+                ( len(nrDict.keys()), len(colors) ) )
         colors.append ( list(C.cnames.keys())[ctr] )
         ctr += 1
     noRx, noRy = [], []
@@ -174,6 +192,8 @@ if __name__ == "__main__":
     argparser.add_argument ( "-p", "--push", action="store_true", 
             help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
     args = argparser.parse_args()
+    if not args.default and not args.analysis.endswith("-eff"):
+        print ( "[drawBestSRs] warning, analysis name does not end with -eff, might an error" )
     if args.default:
         for a in [ "CMS-EXO-13-006-andre", "CMS-EXO-13-006-eff" ]:
             for v in [ "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py", "THSCPM2b_*.py" ]:
