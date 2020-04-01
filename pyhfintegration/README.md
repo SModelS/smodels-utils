@@ -117,6 +117,7 @@ We  compute the results of our pyhf interface by feeding the efficiencies of the
 |360            |200            |0.00547               |0.00473           |-13.5             |
 
 A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyhf developers, this could be due to the efficiencies provided for this analysis, which are at truth-level, instead of the reco-level that are used in the official analysis.
+- [ ] add another column with best excepted upper limit
 
 # To do list
 
@@ -124,8 +125,10 @@ A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyh
 - [x] create a SModelS "pyhf" branch off the "develop" branch
 - [x] add pyhf into smodels/share/requirements.txt
 - [ ] in theoryPrediction.py:getLikelihood, we already have two ways of computing the likelihood.
-One way is via the simplified likelihoods, the other is via truncated Gaussians from upper limits. We would add a third 
+One way is via the simplified likelihoods, the other is via truncated Gaussians from upper limits. We would add a third
 way, interfacing to the pyhf interface code.
-- [ ] put the code into smodels/tools. 
-- [ ] need to add some code that picks up the json files in smodels/experiment/txnameObj.py 
+- [ ] change the globalInfo.txt in the database
+- [ ] put the code into smodels/tools.
+- [ ] need to add some code that picks up the json files in smodels/experiment/txnameObj.py
+- [ ] change datasetObj.py:getCombinedPyhf()
 - [ ] add a unit test
