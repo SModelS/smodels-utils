@@ -118,6 +118,7 @@ We  compute the results of our pyhf interface by feeding the efficiencies of the
 
 A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyhf developers, this could be due to the efficiencies provided for this analysis, which are at truth-level, instead of the reco-level that are used in the official analysis.
 - [ ] add another column with best excepted upper limit
+- [ ] try using expected backgrounds of [aux. table 02](https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/SUSY-2018-04/tabaux_02.png)
 
 # To do list
 
