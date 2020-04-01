@@ -303,15 +303,17 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 githubRepo = "../../smodels.github.io"
                 mvCmd = "cp %s/%s %s/%s" % ( githubRepo, commentPath, githubRepo, txtPath )
                 subprocess.getoutput ( mvCmd )
-                line += "[comment](https://smodels.github.io"+txtPath+\
-                        ") |\n"
-                #f = open ( cFile, "r" )
-                #line += ", ". join ( f.readlines() ).replace("\n","")
-                #f.close()
-                #line += " |\n" # close it
-            else:
-                line += " |\n" #In case there are no comments
-                #line += " ||\n" #In case there are no comments
+                line += "[comment](https://smodels.github.io"+txtPath+ ")"
+            srplot = valDir + "/bestSR_%s.png" % ( txname.txName )
+            if os.path.isfile( srplot ):
+                srPath = dirPath+"/bestSR_"+txname.txName+".png"
+                githubRepo = "../../smodels.github.io"
+                mvCmd = "cp %s/%s %s/%s" % ( githubRepo, srPath, githubRepo, srPath )
+                subprocess.getoutput ( mvCmd )
+                addl = " <br>[SR plot](https://smodels.github.io"+srPath+ ")"
+                line += addl
+                # print ( "[createWikiPage] adding srplot", srplot, addl )
+            line += " |\n" # End the line
         if not hadTxname: return
         if "XXX#778899" in line: self.none_lines.append(line)
         elif "#FF0000" in line: self.false_lines.append(line)
