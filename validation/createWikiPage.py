@@ -305,7 +305,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 subprocess.getoutput ( mvCmd )
                 line += "[comment](https://smodels.github.io"+txtPath+ ")"
             srplot = valDir + "/bestSR_%s.png" % ( txname.txName )
-            if os.path.isfile( srplot ):
+            if os.path.isfile( srplot ) and self.ugly:
                 srPath = dirPath+"/bestSR_"+txname.txName+".png"
                 githubRepo = "../../smodels.github.io"
                 mvCmd = "cp %s/%s %s/%s" % ( githubRepo, srPath, githubRepo, srPath )
