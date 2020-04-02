@@ -85,6 +85,7 @@ class Writer:
             lines[0] = "\\hline\n"
         ananr=""
         anaid = ana.globalInfo.id
+        anaid = anaid.replace("-agg","")
         if anaid != self.last_ana: 
             self.n_anas += 1
             self.last_ana = anaid
