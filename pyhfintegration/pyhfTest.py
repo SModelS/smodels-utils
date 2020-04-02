@@ -89,8 +89,8 @@ for d in data:
     ulcomputer = PyhfUpperLimitComputer(data)
     result = ulcomputer.ulSigma()*pb
     print("pyhf = %s, official = %s, discrepancy = %s" % (str(result),
-                                                                                             str(ul),
-                                                                                             str((result-ul)/ul)
+                                                          str(ul),
+                                                          str((result-ul)/ul)
                                                                                              ))
     outputEntry = {}
     outputEntry["m(stau)"] = massvec[0][0].asNumber()
