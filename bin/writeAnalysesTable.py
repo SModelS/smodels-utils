@@ -77,6 +77,13 @@ class Writer:
         if longtable:
             self.table = "longtable"
 
+    def sameAnaIds ( self, ana1, ana2 ):
+        ana1n = ana1.globalInfo.id
+        ana2n = ana2.globalInfo.id
+        ana1n = ana1n.replace("-agg","" )
+        ana2n = ana2n.replace("-agg","" )
+        return ana1n == ana2n
+
     def writeSingleAna ( self, ana, nextIsSame ):
         """ write the entry of a single analysis """
         lines= [ "" ]
@@ -123,7 +130,7 @@ class Writer:
         if nextIsSame:
             dt = "ul, eff"
         # ref = "\\href{%s}{[%d]}" % ( ana.globalInfo.url, nr )
-        gi_id = ana.globalInfo.id.replace("/data-cut","").replace("-eff","").replace("/","")
+        gi_id = ana.globalInfo.id.replace("/data-cut","").replace("-eff","").replace("/","").replace("-agg","")
         Url = ana.globalInfo.url
         if " " in Url: Url = Url[:Url.find(" ")]
         #if "ATLAS-CONF-2013-093" in Url:
@@ -220,7 +227,8 @@ class Writer:
                 nextIsSame = False
                 continue
             if ctr+1 < len(self.listOfAnalyses):
-                if self.listOfAnalyses[ctr+1].globalInfo.id == ana.globalInfo.id:
+                # if self.listOfAnalyses[ctr+1].globalInfo.id == ana.globalInfo.id:
+                if self.sameAnaIds ( self.listOfAnalyses[ctr+1], ana ):
                     nextIsSame = True
             if self.experimentIsMet ( ana.globalInfo.id ):
                 if self.sqrtsIsMet ( ana.globalInfo.sqrts ):
