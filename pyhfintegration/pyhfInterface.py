@@ -213,11 +213,11 @@ class PyhfUpperLimitComputer:
             wereBothTiny = rt10 < 0 and rt1 < 0
             wereBothLarge = rt10 > 0 and rt1 > 0
             if rt10 < 0.:
-                self.rescale(factor)
+                self.rescale(1+factor)
                 workspace = updateWorkspace()
                 continue
             if rt1 > 0.:
-                self.rescale(1/factor)
+                self.rescale(1-factor)
                 workspace = updateWorkspace()
                 continue
         # Finding the root (Brent bracketing part)
