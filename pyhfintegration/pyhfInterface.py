@@ -23,9 +23,9 @@ def getLogger():
     Configure the logging facility. Maybe adapted to fit into
     your framework.
     """
-    
+
     import logging
-    
+
     logger = logging.getLogger("pyhfInterface")
     # formatter = logging.Formatter('%(module)s - %(levelname)s: %(message)s')
     # ch = logging.StreamHandler()
@@ -54,7 +54,7 @@ class PyhfUpperLimitComputer:
         self.workspaces = self.wsMaker()
         self.cl = cl
         self.scale = 1.
-        
+
     def rescale(self, scale):
         """
         Rescales the signal predictions (self.signals) and processes again the patches and workspaces
@@ -63,11 +63,11 @@ class PyhfUpperLimitComputer:
             updated list of patches and workspaces (self.patches and self.workspaces)
         """
         self.nsignals = [sig*scale for sig in self.nsignals]
-        self.scale *= scale 
+        self.scale *= scale
         logger.debug("Signals : {}".format(self.nsignals))
         self.patches = self.patchMaker()
         self.workspaces = self.wsMaker()
-        
+
     def patchMaker(self):
         """
         Method that creates the patches to be applied to the BkgOnly.json workspaces, one for each region
@@ -121,7 +121,7 @@ class PyhfUpperLimitComputer:
             patches.append(patch)
             i_ws += 1
         return patches
-    
+
     def wsMaker(self):
         """
         Apply each region patch to his associated json (RegionN/BkgOnly.json) to obtain the complete workspaces
@@ -137,8 +137,8 @@ class PyhfUpperLimitComputer:
                 ws = pyhf.Workspace(wsDict)
                 workspaces.append(ws)
             return workspaces
-    
-    # Trying a new method for upper limit computation : 
+
+    # Trying a new method for upper limit computation :
     # re-scaling the signal predictions so that mu falls in [0, 10] instead of looking for mu bounds
     # Usage of the index allows for rescaling
     def ulSigma (self, expected=False, workspace_index=None):
@@ -185,21 +185,21 @@ class PyhfUpperLimitComputer:
             # self.rescale(0.5)
             # workspace = updateWorkspace()
         # Trying a more advanced method for rescaling
-        factor = 5.
+        factor = .2
         wereBothLarge = False
         wereBothTiny = False
         while "mu is not in [0,10]":
             # Computing CL(1) - 0.95 and CL(10) - 0.95 once and for all
             rt1 = root_func(1.)
             rt10 = root_func(10.)
-            if rt1 < 0. and 0. < rt10: # Here's the real while condition    
+            if rt1 < 0. and 0. < rt10: # Here's the real while condition
                 break
             if np.isnan(rt1):
-                self.rescale(factor)
+                self.rescale(1+factor)
                 workspace = updateWorkspace()
                 continue
             if np.isnan(rt10):
-                self.rescale(1/factor)
+                self.rescale(1-factor)
                 workspace = updateWorkspace()
                 continue
             # Analyzing previous values of wereBoth***
@@ -244,7 +244,7 @@ class PyhfUpperLimitComputer:
                 i_best = i_ws
         logger.info('Best combination : %d' % i_best)
         return self.ulSigma(workspace_index=i_best)
-        
+
     def cbWorkspace(self):
         """
         Method that combines the workspaces contained in the workspaces list into a single workspace

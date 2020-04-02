@@ -45,7 +45,7 @@ from smodels.tools.physicsUnits import pb, fb, GeV
         # effs.append(0)
 # SUSY-2018-04
 jsoninputs = []
-with open("SUSY-2018-04_likelihoods/Region-combined/BkgOnly.json", "r") as f:
+with open("SUSY-2018-04_likelihoods/SR-combined-aux.json", "r") as f:
     jsoninputs.append(json.load(f))
 # with open("SUSY-2018-04_likelihoods/Region-highMass/BkgOnly.json", "r") as f:
     # jsoninputs.append(json.load(f))
@@ -99,7 +99,7 @@ for d in data:
     outputEntry["officialUL"] = ul.asNumber()
     outputEntry["discrepancy"] = ((result - ul)/ul).asNumber()
     outputDataDict.append(outputEntry)
-    
+
 outputFile = open("output.py", "w")
 outputFile.write("outputDataDict="+str(outputDataDict)+"\n")
 outputFile.close()
