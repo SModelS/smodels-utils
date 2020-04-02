@@ -206,6 +206,13 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                     txn2.txName = "TGQ12"
                     txnames.append ( txn2 )
                 #print ( id, txn.txName )
+        if id in [ "ATLAS-SUSY-2016-24" ]:
+            for txn in txnames:
+                if txn.txName == "TSelSel":
+                    txn2 = copy.deepcopy ( txn )
+                    txn2.txName = "TSlepSlep"
+                    txnames.append ( txn2 )
+                #print ( id, txn.txName )
         txnames.sort()
         for txname in txnames:
             validated = txname.getInfo('validated')
