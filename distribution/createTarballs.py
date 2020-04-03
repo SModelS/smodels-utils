@@ -362,7 +362,7 @@ def createDBRelease(output,tag):
 
     dirname = output
     if os.path.isdir(dirname):
-        comment('Folder %s already exists. Remove it before creating the tarball %s.tgz' %(output,output))
+        comment("Folder ``%s'' already exists. Remove it (rm -r %s) before creating the tarball %s.tgz" %(output,output,output))
         return False
     
     isDummy()
