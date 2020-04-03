@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 """ makes a database pickle file publically available.
 The script is deliberately run with python2. That way we get
