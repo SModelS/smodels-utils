@@ -45,7 +45,7 @@ def run( cmd ):
     print( "%scmd: %s%s" %(GREEN,cmd,RESET) )
     f=open("create.log","a")
     f.write( "cmd: %s\n" %(cmd) )
-    print('CMD=',cmd)
+    # print('CMD=',cmd)
     o=subprocess.check_output( cmd, shell=True )
     if len(o)>0:
         print(o)
@@ -75,14 +75,14 @@ def removeNonValidated(dirname):
                     if txn.validated in [ False ]:
                         comment( "%s/%s/%s is not validated. Delete it." % \
                                  ( er, dataset, txn ) )
-                        cmd="rm %s" % txn.path
+                        cmd="rm '%s'" % txn.path
                         run( cmd )
                     else:
                         hasTxNames=True
                 if not hasTxNames:
                         comment( "%s/%s has no validated txnames. remove folder." %\
                                  (er, dataset ) )
-                        cmd = "rm -rf %s" % dataset.path
+                        cmd = "rm -r '%s'" % dataset.path
                         run( cmd )
                 if hasTxNames:
                     hasDataSets=True
@@ -188,7 +188,7 @@ def fetchDatabase(tag,dirname):
 
 
 def clearGlobalInfo(filename):
-    print ( "checking", filename )
+    print ( "[createTarballs] checking", filename )
     f=open(filename)
     lines=f.readlines()
     f.close()
