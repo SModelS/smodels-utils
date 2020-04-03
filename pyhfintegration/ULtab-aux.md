@@ -1,3 +1,5 @@
+# Upper limits obtained with the backgrounds number of [aux. table 02](https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/SUSY-2018-04/tabaux_02.png)
+
 | m(stau) [GeV] | m(chi1) [GeV] | official 95% UL [pb] | pyhf 95% UL [pb] | discrepancy [%] |
 |---------------|---------------|----------------------|------------------|-----------------|
 | 80            | 1             | 24.44300             | 14.46105         | -40.8           |
