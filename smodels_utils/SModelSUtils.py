@@ -22,12 +22,9 @@ def installDirectory():
 def addInstallDirectory():
     """ add this directory to search path """
     import sys
-    import inspect
-    import os
-    fname=inspect.getabsfile(addInstallDirectory)
-    base=os.path.dirname ( os.path.realpath ( fname ) )
-    sys.path.append ( base )
-    return base
+    iDir = installDirectory()
+    sys.path.append ( iDir )
+    return iDir
 
 def version(astuple=False):
     """
