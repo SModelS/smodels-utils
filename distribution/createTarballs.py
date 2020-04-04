@@ -48,7 +48,7 @@ def run( cmd ):
     # print('CMD=',cmd)
     o=subprocess.check_output( cmd, shell=True )
     if len(o)>0:
-        print("[createTarballs] %100s" % o )
+        print("[createTarballs] %.80s" % o )
         f.write( str(o) + "\n" )
     f.close()
     return str(o)
