@@ -242,7 +242,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
         for pids in [ ( 1000021, 1000021), (1000005, 1000005), (-1000005,1000005),
                       ( -1000006,1000006), (-2000006, 2000006 ) ]:
             try:
-                draw ( pids[0], interactive, pids[1] )
+                draw ( pids[0], interactive, pids[1], copy )
             except Exception as e:
                 print ( "[scanner] %s" % e )
         return
@@ -345,7 +345,7 @@ if __name__ == "__main__":
             help='pid to consider. If zero, then consider a predefined list [0]',
             type=int, default=0 )
     argparser.add_argument ( '-q', '--pid2',
-            help='pid 2. if -1, then scan masses, if not scan ssms, zero, then scan all ssms [-1]',
+            help='pid 2. if -1, then scan masses, If not, then scan signal strength multipliers. If zero, then scan all ssms [-1]',
             type=int, default=-1 )
     argparser.add_argument ( '-n', '--nproc',
             help='number of processes [10]',
