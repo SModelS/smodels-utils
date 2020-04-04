@@ -15,7 +15,8 @@ def configure():
     ret="../../" ## fallback, if no smodels-utils is found
     if p > -1:
         ret = curpath[:p+14]
-    sys.path.append ( ret )
+    if os.path.isdir ( ret ):
+        sys.path.append ( ret )
     from smodels_utils import SModelSUtils
     SModelSUtils.addInstallDirectory()
     SModelSUtils.addSModelSPath()
