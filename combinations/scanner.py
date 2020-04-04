@@ -324,7 +324,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
     # plt.text ( .9*min(x)+.1*(max(x)-min(x)), 1.*max(y), "%d events" % nevents )
     figname = "M%d.png" % pid
     if isSSMPlot():
-        figname = "ssm%d%d.png" % ( pid, pid2 )
+        figname = "ssm_%d_%d.png" % ( pid, pid2 )
     print ( "[scanner] creating %s" % figname )
     plt.savefig ( figname )
     if interactive:

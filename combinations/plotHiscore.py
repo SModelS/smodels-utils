@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import pickle, os, sys, subprocess, time, fcntl
+import pickle, os, sys, subprocess, time, fcntl, glob
 from protomodel import ProtoModel
 from manipulator import Manipulator
 from smodels.tools.physicsUnits import GeV, fb
@@ -355,13 +355,18 @@ def writeIndexHtml ( protomodel, gotTrimmed, untrimmedZ=0. ):
             f.write ( "<a href=./llhd%d.png>%s</a>" % ( k, helpers.toHtml(k) ) )
             first = False
     # fixme replace with some autodetection mechanism
-    ssms = [ (-1000006,1000006), (1000021,1000021), (-2000006,2000006) ]
+    ssms = { (-1000006,1000006), (1000021,1000021), (-2000006,2000006) }
+    for fname in glob.glob("ssm_*_*.png" ):
+        pids = fname.replace("ssm_","").replace(".png","")
+        pids = tuple ( map ( int, pids.split("_") ) )
+        # print ( "pids", pids )
+        ssms.add ( pids )
     f.write ( ". SSM plots for: " )
     first = True
     for pids in ssms:
         if not first:
             f.write ( ", " )
-        f.write ( "<a href=./ssm%d%d.png>(%s,%s)</a>" % \
+        f.write ( "<a href=./ssm_%d_%d.png>(%s,%s)</a>" % \
                   ( pids[0],pids[1], helpers.toHtml(pids[0],addSign=True), 
                     helpers.toHtml(pids[1],addSign=True) ) )
         first = False
