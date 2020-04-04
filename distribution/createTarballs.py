@@ -48,7 +48,7 @@ def run( cmd ):
     # print('CMD=',cmd)
     o=subprocess.check_output( cmd, shell=True )
     if len(o)>0:
-        print(o)
+        print("[createTarballs] %100s" % o )
         f.write( str(o) + "\n" )
     f.close()
     return str(o)
@@ -194,7 +194,7 @@ def clearGlobalInfo(filename):
     f.close()
     g=open("/tmp/tmp.txt","w")
     skip = [ "publishedData", "comment", "private", "checked", \
-             "prettyName", "susyProcess", "dataUrl" ]
+             "prettyName", "susyProcess", "dataUrl", "validationTarball" ]
     #skip.append( "validated" )
     #skip.append( "axes" )
     for line in lines:
@@ -362,7 +362,7 @@ def createDBRelease(output,tag):
 
     dirname = output
     if os.path.isdir(dirname):
-        comment("Folder ``%s'' already exists. Remove it (rm -r %s) before creating the tarball %s.tgz" %(output,output,output))
+        comment("Folder ``%s'' already exists. Remove it (i.e. run with -c) before creating the tarball %s.tgz" %(output,output))
         return False
     
     isDummy()
@@ -412,11 +412,19 @@ def create(output,tag):
 
 def main():
     ap = argparse.ArgumentParser( description="makes a database tarball for public release" )
-    ap.add_argument('-o', '--output', help='name of tarball filename [database]', default="database" )
+    ap.add_argument('-o', '--output', help='name of tarball filename [database]', 
+                    default="database" )
+    ap.add_argument('-c', '--clear', help='remove output from previous run', 
+                    action="store_true" )
     ap.add_argument('-t', '--tag', help='database version [1.2.3]', default='1.2.3')
-    ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default='../../smodels')
+    ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', 
+                    default='../../smodels')
 
     args = ap.parse_args()
+    if args.clear:
+        cmd = "rm -rf database"
+        o = subprocess.getoutput ( cmd )
+        print ( "[createTarballs] %s: %s" % ( cmd, o ) )
     sys.path.insert(0,os.path.abspath(args.smodelsPath))
     createDBRelease(args.output,args.tag)
 
