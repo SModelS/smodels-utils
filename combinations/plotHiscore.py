@@ -357,10 +357,14 @@ def writeIndexHtml ( protomodel, gotTrimmed, untrimmedZ=0. ):
     # fixme replace with some autodetection mechanism
     ssms = [ (-1000006,1000006), (1000021,1000021), (-2000006,2000006) ]
     f.write ( ". SSM plots for: " )
+    first = True
     for pids in ssms:
+        if not first:
+            f.write ( ", " )
         f.write ( "<a href=./ssm%d%d.png>(%s,%s)</a>" % \
                   ( pids[0],pids[1], helpers.toHtml(pids[0],addSign=True), 
                     helpers.toHtml(pids[1],addSign=True) ) )
+        first = False
     f.write ( "<br>\n" )
     f.write ( "<table width=80%>\n<tr><td>\n" )
     if hasattr ( protomodel, "rvalues" ):
