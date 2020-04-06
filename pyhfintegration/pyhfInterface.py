@@ -54,19 +54,29 @@ class PyhfUpperLimitComputer:
         self.workspaces = self.wsMaker()
         self.cl = cl
         self.scale = 1.
+        self.alreadyBeenThere = False # boolean to detect wether self.signals has returned to an older value
 
-    def rescale(self, scale):
+    def rescale(self, factor):
         """
         Rescales the signal predictions (self.signals) and processes again the patches and workspaces
         No return
         Result:
             updated list of patches and workspaces (self.patches and self.workspaces)
         """
-        self.nsignals = [sig*scale for sig in self.nsignals]
-        self.scale *= scale
+        self.nsignals = [sig*factor for sig in self.nsignals]
+        try:
+            self.alreadyBeenThere = self.nsignals == self.nsignals_2
+        except AttributeError:
+            pass
+        self.scale *= factor
         logger.debug("Signals : {}".format(self.nsignals))
         self.patches = self.patchMaker()
         self.workspaces = self.wsMaker()
+        try:
+            self.nsignals_2 = self.nsignals_1.copy() # nsignals at previous-to-previous loop
+        except AttributeError:
+            pass
+        self.nsignals_1 = self.nsignals.copy() # nsignals at previous loop
 
     def patchMaker(self):
         """
@@ -158,7 +168,6 @@ class PyhfUpperLimitComputer:
             else:
                 return self.cbWorkspace()
         workspace = updateWorkspace()
-        scale = 1.
         def root_func(mu):
             # Same modifiers_settings as those use when running the 'pyhf cls' command line
             msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
@@ -185,7 +194,7 @@ class PyhfUpperLimitComputer:
             # self.rescale(0.5)
             # workspace = updateWorkspace()
         # Trying a more advanced method for rescaling
-        factor = .2
+        factor = 10.
         wereBothLarge = False
         wereBothTiny = False
         while "mu is not in [0,10]":
@@ -194,30 +203,34 @@ class PyhfUpperLimitComputer:
             rt10 = root_func(10.)
             if rt1 < 0. and 0. < rt10: # Here's the real while condition
                 break
+            if self.alreadyBeenThere:
+                factor = 1 + (factor-1)/2
+                logger.info("Diminishing rescaling factor")
             if np.isnan(rt1):
-                self.rescale(1+factor)
+                self.rescale(factor)
                 workspace = updateWorkspace()
                 continue
             if np.isnan(rt10):
-                self.rescale(1-factor)
+                self.rescale(1/factor)
                 workspace = updateWorkspace()
                 continue
             # Analyzing previous values of wereBoth***
             if rt10 < 0 and rt1 < 0 and wereBothLarge:
-                factor = factor/2
+                factor = 1 + (factor-1)/2
                 logger.info("Diminishing rescaling factor")
             if rt10 > 0 and rt1 > 0 and wereBothTiny:
-                factor = factor/2
+                factor = 1 + (factor-1)/2
                 logger.info("Diminishing rescaling factor")
             # Preparing next values of wereBoth***
             wereBothTiny = rt10 < 0 and rt1 < 0
             wereBothLarge = rt10 > 0 and rt1 > 0
+            # Main rescaling code
             if rt10 < 0.:
-                self.rescale(1+factor)
+                self.rescale(factor)
                 workspace = updateWorkspace()
                 continue
             if rt1 > 0.:
-                self.rescale(1-factor)
+                self.rescale(1/factor)
                 workspace = updateWorkspace()
                 continue
         # Finding the root (Brent bracketing part)
@@ -243,6 +256,7 @@ class PyhfUpperLimitComputer:
                 rMax = r
                 i_best = i_ws
         logger.info('Best combination : %d' % i_best)
+        self.i_best = i_best
         return self.ulSigma(workspace_index=i_best)
 
     def cbWorkspace(self):

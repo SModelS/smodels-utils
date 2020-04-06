@@ -5,6 +5,8 @@ import json
 from pyhfInterface import PyhfData
 from pyhfInterface import PyhfUpperLimitComputer
 from smodels.experiment.databaseObj import Database
+import smodels.experiment.txnameObj
+smodels.experiment.txnameObj.TxNameData._keep_values = True
 from smodels.tools.physicsUnits import pb, fb, GeV
 
 # SUSY-2018-31
@@ -44,11 +46,14 @@ from smodels.tools.physicsUnits import pb, fb, GeV
     # else:
         # effs.append(0)
 # SUSY-2018-04
-jsoninputs = []
+cbJson = []
 with open("SUSY-2018-04_likelihoods/SRcombined-aux.json", "r") as f:
-    jsoninputs.append(json.load(f))
-# with open("SUSY-2018-04_likelihoods/Region-highMass/BkgOnly.json", "r") as f:
-    # jsoninputs.append(json.load(f))
+    cbJson.append(json.load(f))
+bestJsons = []
+with open("SUSY-2018-04_likelihoods/Region-lowMass/BkgOnly.json", "r") as f:
+    bestJsons.append(json.load(f))
+with open("SUSY-2018-04_likelihoods/Region-highMass/BkgOnly.json", "r") as f:
+    bestJsons.append(json.load(f))
 lumi = 139 # fb
 # Fetching the efficiencies from the database
 dir = "../../smodels-database"
@@ -82,22 +87,27 @@ for d in data:
             effs.append ( eff )
         else:
             effs.append(0)
-    # Upper limit calculation
-    data = PyhfData(effs,
-                                lumi,
-                                jsoninputs)
+    # Upper limit calculation for combined
+    data = PyhfData(effs, lumi, cbJson)
     ulcomputer = PyhfUpperLimitComputer(data)
     result = ulcomputer.ulSigma()*pb
-    print("pyhf = %s, official = %s, discrepancy = %s" % (str(result),
+    # Upper limit calculation for best expected
+    data = PyhfData(effs, lumi, bestJsons)
+    ulcomputer = PyhfUpperLimitComputer(data)
+    best = ulcomputer.bestUL()*pb
+    i_best = ulcomputer.i_best
+    print("pyhf = %s, official = %s, discrepancy = %s, best = %s" % (str(result),
                                                           str(ul),
-                                                          str((result-ul)/ul)
-                                                                                             ))
+                                                          str((result-ul)/ul),
+                                                          str(best)))
     outputEntry = {}
     outputEntry["m(stau)"] = massvec[0][0].asNumber()
     outputEntry["m(chi1)"] = massvec[0][1].asNumber()
     outputEntry["pyhfUL"] = result.asNumber()
     outputEntry["officialUL"] = ul.asNumber()
     outputEntry["discrepancy"] = ((result - ul)/ul).asNumber()
+    outputEntry["bestExpUL"] = best.asNumber()
+    outputEntry["bestSR"] = "SRlow" if i_best == 0 else "SRhigh"
     outputDataDict.append(outputEntry)
 
 outputFile = open("output.py", "w")
