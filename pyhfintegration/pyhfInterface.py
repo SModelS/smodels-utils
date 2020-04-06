@@ -38,6 +38,12 @@ def getLogger():
 logger=getLogger()
 
 class PyhfData:
+    """
+    Holds data for use in pyhf
+    :ivar efficiencies: list of efficiencies for each signal subregions
+    :ivar lumi: luminosity of the given signals
+    :ivar inputJsons: list of json instances
+    """
     def __init__ (self, efficiencies, lumi, inputJsons):
         self.efficiencies = efficiencies
         logger.debug("Efficiencies : {}".format(efficiencies))
@@ -45,9 +51,25 @@ class PyhfData:
         self.inputJsons = inputJsons
 
 class PyhfUpperLimitComputer:
+    """
+    Class that computes the upper limit using the jsons files and signal informations in the `data` instance of `PyhfData`
+    """
     def __init__ ( self, data, cl=0.95):
+        """
+        :param: data: instance of `PyhfData` holding the signals information
+        :param cl: confdence level at which the upper limit is desired to be computed
+
+        :ivar data: created from :param data:
+        :ivar nsignals: signal predictions up to the value of the cross-section so that the mu upper limit matches a cross-section in pb
+        :ivar inputJsons: list of input json files as python json instances
+        :ivar patches: list of patches to be applied to the inputJsons as python dictionary instances
+        :ivar workspaces: list of workspaces resulting from the patched inputJsons
+        :ivar cl: created from :param cl:
+        :ivar scale: scale that is applied to the signal predictions, dynamically changes throughout the upper limit calculation
+        :ivar alreadyBeenThere: boolean flag that identifies when the :ivar nsignals: accidentally passes twice at two identical values
+        """
         self.data = data
-        self.nsignals = [self.data.lumi*1E3*eff for eff in self.data.efficiencies] # 1E3 rescaling so that mu matches a cross-section upper limit in pb
+        self.nsignals = [self.data.lumi*1E3*eff for eff in self.data.efficiencies]
         logger.debug("Signals : {}".format(self.nsignals))
         self.inputJsons = self.data.inputJsons
         self.patches = self.patchMaker()
@@ -60,8 +82,8 @@ class PyhfUpperLimitComputer:
         """
         Rescales the signal predictions (self.signals) and processes again the patches and workspaces
         No return
-        Result:
-            updated list of patches and workspaces (self.patches and self.workspaces)
+
+        :reurn: updated list of patches and workspaces (self.patches and self.workspaces)
         """
         self.nsignals = [sig*factor for sig in self.nsignals]
         try:
@@ -80,10 +102,10 @@ class PyhfUpperLimitComputer:
 
     def patchMaker(self):
         """
-        Method that creates the patches to be applied to the BkgOnly.json workspaces, one for each region
-        It seems we need to include the change of the "modifiers" in the patches as well
-        Returns:
-            the list of patches, one for each workspace
+        Method that creates the list of patches to be applied to the `self.inputJsons` workspaces, one for each region given the `self.nsignals` and the content of the `self.inputJsons`
+        NB: It seems we need to include the change of the "modifiers" in the patches as well
+
+        :return: the list of patches, one for each workspace
         """
         nsignals = self.nsignals
         # Identifying the path of the SR and VR channels in the main workspace files
@@ -134,9 +156,9 @@ class PyhfUpperLimitComputer:
 
     def wsMaker(self):
         """
-        Apply each region patch to his associated json (RegionN/BkgOnly.json) to obtain the complete workspaces
-        Returns:
-            the list of patched workspaces
+        Apply each region patch (self.patches) to his associated json (self.inputJsons) to obtain the complete workspaces
+
+        :returns: the list of patched workspaces
         """
         if len(self.inputJsons) == 1:
             return [pyhf.Workspace(jsonpatch.apply_patch(self.inputJsons[0], self.patches[0]))]
@@ -156,8 +178,12 @@ class PyhfUpperLimitComputer:
         Compute the upper limit on the signal strength modifier with:
             - by default, the combination of the workspaces contained into self.workspaces
             - if workspace_index is specified, self.workspace[workspace_index] (useful for computation of the best upper limit)
-        Returns:
-            the upper limit at `self.cl` level (0.95 by default)
+
+        :param expected:  - if set to `True`: uses expected SM backgrounds as signals
+                          - else: uses `self.nsignals`
+        :param workspace_index: - if different from `None`: index of the workspace to use for upper limit
+                          - else: all workspaces are combined
+        :return: the upper limit at `self.cl` level (0.95 by default)
         """
         if workspace_index != None and self.zeroSignalsFlag[workspace_index] == True:
             logger.warning("Workspace number %d has zero signals" % workspace_index)
@@ -243,8 +269,10 @@ class PyhfUpperLimitComputer:
 
     def bestUL(self):
         """
-        Computing the upper limit on the signal strength modifier in the expected hypothesis for each workspace
+        Computes the upper limit on the signal strength using a poor person's combination
         Picking the most sensitive, i.e., the one having the biggest r-value in the expected case (r-value = 1/mu)
+
+        :return: upper limit in `pb`
         """
         if len(self.workspaces) == 1:
             return self.ulSigma(workspace_index=0)
@@ -261,7 +289,10 @@ class PyhfUpperLimitComputer:
 
     def cbWorkspace(self):
         """
-        Method that combines the workspaces contained in the workspaces list into a single workspace
+        Method that combines the workspaces contained into `self.workspaces` into a single workspace
+        This method is currently not functional, waiting for pyhf developers to finalize the `pyhf.workspace.combine` methods
+
+        :return: a json instance of the combined instance
         """
         # Performing combination using pyhf.workspace.combine method, a bit modified to solve the multiple parameter configuration problem
         workspaces = self.workspaces

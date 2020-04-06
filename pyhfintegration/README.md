@@ -128,8 +128,8 @@ A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyh
 - [ ] in smodels/tools/theoryPrediction.py:{getLikelihood and computeStatistics), we already have two ways of computing the likelihood.
 One way is via the simplified likelihoods, the other is via truncated Gaussians from upper limits. We would add a third
 way, interfacing to the pyhf interface code.
-- [ ] change the globalInfo.txt in the database by hand first : add a `jsonFiles` key
-- [ ] put the code into smodels/tools.
+- [x] change the globalInfo.txt in the database by hand first : add a `jsonFiles` key
+- [x] put the code into smodels/tools.
 - [ ] add some code that picks up the json files in smodels/experiment/txnameObj.py
 - [ ] change datasetObj.py:getCombinedPyhf()
 - [ ] add a unit test
