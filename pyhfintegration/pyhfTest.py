@@ -86,8 +86,8 @@ for d in data:
             effs.append ( eff )
         else:
             effs.append(0)
-    lumi = 139*fb
-    nsig = [(lumi*eff).asNumber(pb) for eff in effs]
+    lumi = 139/fb
+    nsig = [(lumi*eff).asNumber(1/pb) for eff in effs]
     # Upper limit calculation for combined
     data = PyhfData(nsig, cbJson)
     ulcomputer = PyhfUpperLimitComputer(data)

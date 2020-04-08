@@ -45,7 +45,6 @@ class PyhfData:
     :ivar inputJsons: list of json instances
     """
     def __init__ (self, nsignals, inputJsons):
-        logger.debug("Efficiencies : {}".format(efficiencies))
         self.nsignals = nsignals # fb
         self.inputJsons = inputJsons
 
