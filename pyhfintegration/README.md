@@ -41,16 +41,18 @@ The pyhf.workspace.combine method was raising errors : measurements were defined
 
 # Rescaling
 
-Infinite loop with mass point [[100*GeV, 1*GeV]] and initial rescaling factor of 10 (changing initial factor to 5 for now)
-
+Infinite loop with some mass points and initial rescaling factor of 10 (changing initial factor to 5 for now)
+- [[100*GeV, 1*GeV]]
+- [[440*GeV, 120*GeV]]
 - [ ] need to decrease the rescaling factor when a nan appears during rescaling
+- [x] detect when the signals come back to a previous identical state
 
 # Poor person's combination (ATLAS-SUSY-2018-31)
 
 It appears that ATLAS-SUSY-2018-31 is performing a poor person's combination, i.e., all three regions (A, B and C) have subregions. These subregions then get combined into three seperate "inclusive" likelihoods, amongst which the inclusive regions giving the best expected limit is picked to compute the observed limit.
 Such combination will bring small complications. We'v decided we'd rather try getting the pyhf interface to work with ATLAS-SUSY-2018-04 first which doesn't have this kind of poor person's combination.
 
-- [ ] think about a way to perform this poor person's combination
+- [ ] think about a way to perform this poor person's combination (outside of pyhfInterface.py)
 
 # Testing ATLAS-SUSY-2018-04
 
@@ -117,7 +119,7 @@ We  compute the results of our pyhf interface by feeding the efficiencies of the
 | 360           | 200           | 0.00547              | 0.00473          | -13.5           |
 
 A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyhf developers, this could be due to the efficiencies provided for this analysis, which are at truth-level, instead of the reco-level that are used in the official analysis.
-- [ ] add another column with best excepted upper limit
+- [ ] add another column with best excepted upper limit (problem with nan upper limits)
 - [x] try using expected backgrounds of [aux. table 02](https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/SUSY-2018-04/tabaux_02.png) : see [ULtab-aux.md](https://github.com/SModelS/smodels-utils/blob/develop/pyhfintegration/ULtab-aux.md)
 
 # To do list
@@ -125,11 +127,11 @@ A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyh
 - [x] perform a mass scan over all mass points of ATLAS-SUSY-2018-04 for comparison
 - [x] create a SModelS "pyhf" branch off the "develop" branch
 - [x] add pyhf into smodels/share/requirements.txt
-- [ ] in smodels/tools/theoryPrediction.py:{getLikelihood and computeStatistics), we already have two ways of computing the likelihood.
+- [ ] in smodels/tools/theoryPrediction.py:computeStatistics, we already have two ways of computing the likelihood.
 One way is via the simplified likelihoods, the other is via truncated Gaussians from upper limits. We would add a third
 way, interfacing to the pyhf interface code.
-- [x] change the globalInfo.txt in the database by hand first : add a `jsonFiles` key
+- [x] change the globalInfo.txt in the database by hand first : add a `jsonFiles` key (and datasetOrder?)
 - [x] put the code into smodels/tools.
 - [ ] add some code that picks up the json files in smodels/experiment/txnameObj.py
-- [ ] change datasetObj.py:getCombinedPyhf()
+- [ ] change datasetObj.py:getCombinedUpperLimitFor
 - [ ] add a unit test
