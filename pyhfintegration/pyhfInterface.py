@@ -9,7 +9,6 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
-# [[SRA_L, SRA_M, SRA_H], [SRB], [SRC_22, SRC_24, SRC_26, SRC_28]]
 from __future__ import print_function
 import json
 import jsonpatch
@@ -290,7 +289,7 @@ class PyhfUpperLimitComputer:
         Method that combines the workspaces contained into `self.workspaces` into a single workspace
         This method is currently not functional, waiting for pyhf developers to finalize the `pyhf.workspace.combine` methods
 
-        :return: a json instance of the combined instance
+        :return: a json instance of the combined workspaces
         """
         # Performing combination using pyhf.workspace.combine method, a bit modified to solve the multiple parameter configuration problem
         workspaces = self.workspaces
