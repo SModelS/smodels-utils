@@ -9,7 +9,6 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
-# [[SRA_L, SRA_M, SRA_H], [SRB], [SRC_22, SRC_24, SRC_26, SRC_28]]
 from __future__ import print_function
 import json
 import jsonpatch
@@ -43,12 +42,62 @@ class PyhfData:
     :ivar efficiencies: list of efficiencies for each signal subregions
     :ivar lumi: luminosity of the given signals
     :ivar inputJsons: list of json instances
+    :ivar nSR: number of signal regions
+    :ivar nWS: number of workspaces = number of json files
     """
-    def __init__ (self, efficiencies, lumi, inputJsons):
-        self.efficiencies = efficiencies
-        logger.debug("Efficiencies : {}".format(efficiencies))
-        self.lumi = lumi # fb
+    def __init__ (self, nsignals, inputJsons):
+        self.nsignals = nsignals # fb
         self.inputJsons = inputJsons
+        self.nSR = len(nsignals)
+        self.nWS = len(inputJsons)
+        self.getWSInfo()
+        self.checkConsistency()
+
+    def getWSInfo(self):
+        """
+        Getting informations from the json files
+
+        :ivar channelsInfo: info about the json files content
+        """
+        # Identifying the path to the SR and VR channels in the main workspace files
+        self.channelsInfo = [] # workspace specifications
+        for ws in self.inputJsons:
+            wsChannelsInfo = {}
+            wsChannelsInfo['signalRegions'] = []
+            wsChannelsInfo['otherRegions'] = []
+            for i_ch, ch in enumerate(ws['channels']):
+                if 'SR' in ch['name']:
+                    logger.debug("SR channel name : %s" % ch['name'])
+                    wsChannelsInfo['signalRegions'].append({'path':'/channels/'+str(i_ch)+'/samples/0', # Path of the new sample to add (signal prediction)
+                                                            'size':len(ch['samples'][0]['data'])}) # Number of bins
+                if 'VR' in ch['name'] or 'CR' in ch['name']:
+                    wsChannelsInfo['otherRegions'].append('/channels/'+str(i_ch))
+            wsChannelsInfo['otherRegions'].sort(key=lambda path: path.split('/')[-1], reverse=True) # Need to sort correctly the paths to the channels to be removed
+            self.channelsInfo.append(wsChannelsInfo)
+        logger.debug("WSInfo: self.channelsInfo: {}".format(self.channelsInfo))
+
+    def checkConsistency(self):
+        """
+        Check various inconsistencies of the PyhfData attributes
+
+        :ivar zeroSignalsFlag: boolean identifying if all SRs of a single json are empty
+        """
+        nsignals = self.nsignals
+        nJson = 0
+        self.zeroSignalsFlag = list()
+        for wsInfo in self.channelsInfo:
+            for sr in wsInfo['signalRegions']:
+                nBins = sr["size"]
+                nJson += nBins
+                data = nsignals[:nBins]
+                logger.debug("Consistency check: data: {}".format(data))
+                allZero = all([sig == 0 for sig in nsignals])
+                # Checking if all signals matching this json are zero
+                self.zeroSignalsFlag.append(allZero)
+                nsignals = nsignals[nBins:]
+        # Checking if the cumulative number of bins in the jsons match the number of signal bins
+        if nJson != self.nSR:
+            logger.warning("The number of signal regions provided (%d) doesn't match the number of bins in the jsons (%d)" % (self.nSR, nJson))
 
 class PyhfUpperLimitComputer:
     """
@@ -62,6 +111,10 @@ class PyhfUpperLimitComputer:
         :ivar data: created from :param data:
         :ivar nsignals: signal predictions up to the value of the cross-section so that the mu upper limit matches a cross-section in pb
         :ivar inputJsons: list of input json files as python json instances
+        :ivar channelsInfo: list of channels information for the json files
+        :ivar zeroSignalsFlag: list boolean flags in case all signals are zero for a specific json
+        :ivar nSR: number of signalregions
+        :ivar nWS: number of workspaces = number of json files
         :ivar patches: list of patches to be applied to the inputJsons as python dictionary instances
         :ivar workspaces: list of workspaces resulting from the patched inputJsons
         :ivar cl: created from :param cl:
@@ -69,9 +122,13 @@ class PyhfUpperLimitComputer:
         :ivar alreadyBeenThere: boolean flag that identifies when the :ivar nsignals: accidentally passes twice at two identical values
         """
         self.data = data
-        self.nsignals = [self.data.lumi*1E3*eff for eff in self.data.efficiencies]
+        self.nsignals = self.data.nsignals
         logger.debug("Signals : {}".format(self.nsignals))
         self.inputJsons = self.data.inputJsons
+        self.channelsInfo = self.data.channelsInfo
+        self.zeroSignalsFlag = self.data.zeroSignalsFlag
+        self.nSR = self.data.nSR
+        self.nWS = self.data.nWS
         self.patches = self.patchMaker()
         self.workspaces = self.wsMaker()
         self.cl = cl
@@ -83,7 +140,7 @@ class PyhfUpperLimitComputer:
         Rescales the signal predictions (self.signals) and processes again the patches and workspaces
         No return
 
-        :reurn: updated list of patches and workspaces (self.patches and self.workspaces)
+        :return: updated list of patches and workspaces (self.patches and self.workspaces)
         """
         self.nsignals = [sig*factor for sig in self.nsignals]
         try:
@@ -108,47 +165,28 @@ class PyhfUpperLimitComputer:
         :return: the list of patches, one for each workspace
         """
         nsignals = self.nsignals
-        # Identifying the path of the SR and VR channels in the main workspace files
-        ChannelsInfo = [] # workspace specifications
-        self.zeroSignalsFlag = [] # One flag for each workspace
-        for ws in self.inputJsons:
-            self.zeroSignalsFlag.append(False)
-            wsChannelsInfo = {}
-            wsChannelsInfo["SR"] = []
-            wsChannelsInfo["CRVR"] = []
-            for i_ch, ch in enumerate(ws['channels']):
-                if 'SR' in ch['name']:
-                    logger.debug("SR channel name : %s" % ch['name'])
-                    wsChannelsInfo['SR'].append({'path':'/channels/'+str(i_ch)+'/samples/0', # Path of the new sample to add (signal prediction)
-                                                                         'size':len(ch['samples'][0]['data'])}) # Number of bins
-                if 'VR' in ch['name'] or 'CR' in ch['name']:
-                    wsChannelsInfo['CRVR'].append('/channels/'+str(i_ch))
-            wsChannelsInfo["CRVR"].sort(key=lambda path: path.split('/')[-1], reverse=True) # Need to sort correctly the paths to the channels to be removed
-            ChannelsInfo.append(wsChannelsInfo)
         # Constructing the patches to be applied on the main workspace files
         i_ws = 0
         patches = []
-        for ws, info in zip(self.inputJsons, ChannelsInfo):
+        for ws, info in zip(self.inputJsons, self.channelsInfo):
             # Need to read the number of SR/bins of each regions
             # in order to identify the corresponding ones in self.nsignals
             patch = []
-            for sr in info['SR']:
-                nSR = sr['size']
+            for sr in info['signalRegions']:
+                nBins = sr['size']
                 operator = {}
                 operator["op"] = "add"
                 operator["path"] = sr['path']
                 value = {}
-                value["data"] = nsignals[:nSR]
-                if value["data"] == [0 for x in range(nSR)]:
-                    self.zeroSignalsFlag[i_ws] = True
-                nsignals = nsignals[nSR:]
+                value["data"] = nsignals[:nBins]
+                nsignals = nsignals[nBins:]
                 value["modifiers"] = []
-                value["modifiers"] .append({"data": None, "type": "normfactor", "name": "mu_SIG"})
-                value["modifiers"] .append({"data": None, "type": "lumi", "name": "lumi"})
+                value["modifiers"].append({"data": None, "type": "normfactor", "name": "mu_SIG"})
+                value["modifiers"].append({"data": None, "type": "lumi", "name": "lumi"})
                 value["name"] = "bsm"
                 operator["value"] = value
                 patch.append(operator)
-            for path in info['CRVR']:
+            for path in info['otherRegions']:
                 patch.append({'op':'remove', 'path':path})
             patches.append(patch)
             i_ws += 1
@@ -160,7 +198,7 @@ class PyhfUpperLimitComputer:
 
         :returns: the list of patched workspaces
         """
-        if len(self.inputJsons) == 1:
+        if self.nWS == 1:
             return [pyhf.Workspace(jsonpatch.apply_patch(self.inputJsons[0], self.patches[0]))]
         else:
             workspaces = []
@@ -292,17 +330,17 @@ class PyhfUpperLimitComputer:
         Method that combines the workspaces contained into `self.workspaces` into a single workspace
         This method is currently not functional, waiting for pyhf developers to finalize the `pyhf.workspace.combine` methods
 
-        :return: a json instance of the combined instance
+        :return: a json instance of the combined workspaces
         """
         # Performing combination using pyhf.workspace.combine method, a bit modified to solve the multiple parameter configuration problem
         workspaces = self.workspaces
-        if len(workspaces) == 1:
+        if self.nWS == 1:
             cbWS = workspaces[0]
-        for i_ws in range(len(workspaces)):
+        for i_ws in range(self.nWS):
             if self.zeroSignalsFlag[i_ws] == False:
                 cbWS = workspaces[i_ws]
                 break
-        for i_ws in range(1, len(workspaces)):
+        for i_ws in range(1, self.nWS):
             if self.zeroSignalsFlag[i_ws] == True: # Ignore workspaces having zero signals
                 continue
             cbWS = pyhf.Workspace.combine(cbWS, workspaces[i_ws])

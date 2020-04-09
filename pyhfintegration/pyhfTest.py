@@ -54,7 +54,6 @@ with open("SUSY-2018-04_likelihoods/Region-lowMass/BkgOnly.json", "r") as f:
     bestJsons.append(json.load(f))
 with open("SUSY-2018-04_likelihoods/Region-highMass/BkgOnly.json", "r") as f:
     bestJsons.append(json.load(f))
-lumi = 139 # fb
 # Fetching the efficiencies from the database
 dir = "../../smodels-database"
 d=Database( dir, discard_zeroes = True)
@@ -87,12 +86,14 @@ for d in data:
             effs.append ( eff )
         else:
             effs.append(0)
+    lumi = 139/fb
+    nsig = [(lumi*eff).asNumber(1/pb) for eff in effs]
     # Upper limit calculation for combined
-    data = PyhfData(effs, lumi, cbJson)
+    data = PyhfData(nsig, cbJson)
     ulcomputer = PyhfUpperLimitComputer(data)
     result = ulcomputer.ulSigma()*pb
     # Upper limit calculation for best expected
-    data = PyhfData(effs, lumi, bestJsons)
+    data = PyhfData(nsig, bestJsons)
     ulcomputer = PyhfUpperLimitComputer(data)
     best = ulcomputer.bestUL()*pb
     i_best = ulcomputer.i_best
