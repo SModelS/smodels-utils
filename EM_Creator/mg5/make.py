@@ -6,8 +6,7 @@
 
 import subprocess, os, sys
     
-ver="2_6_5"
-ver="2_7_0"
+ver="2_7_2"
 
 def install_plugins():
     ## use modified installer script
@@ -23,7 +22,7 @@ def install_plugins():
         f=open("install.txt","w")
         f.write(line)
         f.close()
-        cmd = "python2 bin/mg5_aMC -f install.txt 2>&1 | tee /tmp/mg5.install"
+        cmd = "python3 bin/mg5_aMC -f install.txt 2>&1 | tee /tmp/mg5.install"
         subprocess.getoutput ( cmd )
     if os.path.exists ( "install.txt" ):
         os.unlink ( "install.txt" )
@@ -39,7 +38,7 @@ def install( plugins = True ):
     print ( "installing mg5 ..." )
     verdot = ver.replace("_",".")
     url="https://smodels.github.io/downloads/tarballs/"
-    tarball = "MG5_aMC_v%s.tar.gz" % verdot
+    tarball = "MG5_aMC_v%s.py3.tar.gz" % verdot
     if not os.path.exists ( tarball ):
         cmd = "wget %s/%s" % ( url, tarball )
         a = subprocess.getoutput ( cmd )
@@ -48,9 +47,9 @@ def install( plugins = True ):
             sys.exit()
     cmd = "tar xzvf %s" % tarball
     subprocess.getoutput ( cmd )
-    cmd = "mv MG5_aMC_v%s/* ."  % ver
+    cmd = "mv MG5_aMC_v%s_py3/* ."  % ver
     subprocess.getoutput ( cmd )
-    cmd = "rmdir MG5_aMC_v%s" % ver
+    cmd = "rmdir MG5_aMC_v%s_py3" % ver
     subprocess.getoutput ( cmd )
     if not os.path.exists ( "bin/mg5_aMC" ):
         print ( "something went wrong with the install. please check manually" )
