@@ -40,7 +40,7 @@ class WikiPageCreator:
         self.moveFile = moveFile
         if ugly: ## in ugly mode we always ignore validated, and superseded
             self.ignore_validated = True
-            self.ignore_validated = True
+            self.ignore_superseded = True
         self.comparison_db = None
         if self.comparison_dbPath:
             self.comparison_db = Database ( self.comparison_dbPath )
