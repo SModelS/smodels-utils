@@ -157,6 +157,16 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
             run=1
             if sqrts == 13: run = 2
             self.file.write ( "\n### Run %d - %d TeV\n" % ( run, sqrts ) )
+            nResults = { "ATLAS": set(), "CMS": set() }
+            for exp in [ "ATLAS", "CMS" ]:
+                for tpe in [ "upper limits", "efficiency maps" ]:
+                    expResList = self.getExpList ( sqrts, exp, tpe )
+                    for expRes in expResList:
+                        Id = expRes.globalInfo.id
+                        Id = Id.replace("-agg","")
+                        Id = Id.replace("-eff","")
+                        nResults[exp].add(Id)
+            print ( "[createWikiPage] results at %d TeV: %d CMS, %d ATLAS" % ( sqrts, len(nResults["CMS"]), len(nResults["ATLAS"]) ))
             for exp in [ "ATLAS", "CMS" ]:
                 for tpe in [ "upper limits", "efficiency maps" ]:
                     expResList = self.getExpList ( sqrts, exp, tpe )
