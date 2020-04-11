@@ -49,6 +49,7 @@ class MG5Wrapper:
         self.mgParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
                           'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5',
                           'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } # , 'qcut': '90' }
+        ## qcut: SysCalc:qCutList in mg5/Template/LO/Cards/pythia8_card_default.dat
         self.rmLocksOlderThan ( 1 ) ## remove locks older than 1 hour
         self.info ( "initialised" )
 
@@ -234,8 +235,8 @@ class MG5Wrapper:
         ret = subprocess.getoutput ( cmd )
         if len(ret)==0:
             return
-        maxLength=100
-        maxLength=100000
+        maxLength=200
+        # maxLength=100000
         if len(ret)<maxLength:
             self.msg ( " `- %s" % ret )
             return
@@ -283,7 +284,7 @@ class MG5Wrapper:
             subprocess.getoutput ( "rm -rf %s" % Dir )
         self.info ( "run mg5 for %s[%s]: %s" % ( masses, self.topo, self.tempf ) )
         self.logfile = tempfile.mktemp ()
-        cmd = "python3 %s %s 2>&1 | tee %s" % ( self.executable, self.tempf, self.logfile )
+        cmd = "python2 %s %s 2>&1 | tee %s" % ( self.executable, self.tempf, self.logfile )
         self.exe ( cmd, masses )
         ## copy slha file
         if not os.path.exists ( Dir+"/Cards" ):
@@ -298,7 +299,7 @@ class MG5Wrapper:
         if (os.path.isdir(Dir+'/Events/run_01')):
             shutil.rmtree(Dir+'/Events/run_01')
         self.logfile2 = tempfile.mktemp ()
-        cmd = "python3 %s %s 2>&1 | tee %s" % ( self.executable, self.commandfile,
+        cmd = "python2 %s %s 2>&1 | tee %s" % ( self.executable, self.commandfile,
                                                 self.logfile2 )
         self.exe ( cmd, masses )
         self.clean( Dir )
