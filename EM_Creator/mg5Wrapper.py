@@ -107,6 +107,8 @@ class MG5Wrapper:
         #f.write('detector=Delphes\n')
         #f.write('pythia=ON\n')
         #f.write('madspin=OFF\n')
+        # f.write('order=LO\n')
+        # f.write('reweight=ON\n')
         f.write('0\n')
         f.write('0\n')
         f.close()
@@ -233,7 +235,7 @@ class MG5Wrapper:
         if len(ret)==0:
             return
         maxLength=100
-        # maxLength=560
+        maxLength=100000
         if len(ret)<maxLength:
             self.msg ( " `- %s" % ret )
             return
