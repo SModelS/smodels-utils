@@ -281,7 +281,7 @@ class MG5Wrapper:
             subprocess.getoutput ( "rm -rf %s" % Dir )
         self.info ( "run mg5 for %s[%s]: %s" % ( masses, self.topo, self.tempf ) )
         self.logfile = tempfile.mktemp ()
-        cmd = "python2 %s %s 2>&1 | tee %s" % ( self.executable, self.tempf, self.logfile )
+        cmd = "python3 %s %s 2>&1 | tee %s" % ( self.executable, self.tempf, self.logfile )
         self.exe ( cmd, masses )
         ## copy slha file
         if not os.path.exists ( Dir+"/Cards" ):
@@ -296,7 +296,7 @@ class MG5Wrapper:
         if (os.path.isdir(Dir+'/Events/run_01')):
             shutil.rmtree(Dir+'/Events/run_01')
         self.logfile2 = tempfile.mktemp ()
-        cmd = "python2 %s %s 2>&1 | tee %s" % ( self.executable, self.commandfile,
+        cmd = "python3 %s %s 2>&1 | tee %s" % ( self.executable, self.commandfile,
                                                 self.logfile2 )
         self.exe ( cmd, masses )
         self.clean( Dir )
