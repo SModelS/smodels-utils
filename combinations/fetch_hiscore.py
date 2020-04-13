@@ -23,5 +23,6 @@ if len(sys.argv)>1:
 for i in f:
     cmd="scp wolfgan.waltenberger@clip-login-1:/scratch-cbe/users/wolfgan.waltenberger/rundir/%s ." % i
     print ( cmd )
-    out = subprocess.getoutput ( cmd )
-    print ( out )
+    subprocess.run(cmd.split(" "), stderr=sys.stderr, stdout=sys.stdout)
+    #out = subprocess.getoutput ( cmd )
+    #print ( out )
