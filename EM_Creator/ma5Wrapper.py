@@ -13,7 +13,7 @@ import multiprocessing
 import bakeryHelpers
 
 class MA5Wrapper:
-    def __init__ ( self, topo, njets, rerun, analyses, ver="1.7" ):
+    def __init__ ( self, topo, njets, rerun, analyses, keep=False, ver="1.7" ):
         """
         :param ver: version of ma5
         """
@@ -21,6 +21,7 @@ class MA5Wrapper:
         self.njets = njets
         self.analyses = analyses
         self.rerun = rerun
+        self.keep = keep
         self.ma5results = "./ma5/"
         self.ma5install = "./ma5.template/"
         self.ver = ver
@@ -142,9 +143,10 @@ class MA5Wrapper:
         if not os.path.exists ( hepmcfile ):
             self.error ( "%scannot find hepmc file %s" % ( spid, hepmcfile ) )
             p = hepmcfile.find("Events")
-            cmd = "rm -rf %s" % hepmcfile[:p]
-            o = subprocess.getoutput ( cmd )
-            self.error ( "%sdeleting the folder %s: %s" % ( spid, cmd, o ) )
+            if not self.keep:
+                cmd = "rm -rf %s" % hepmcfile[:p]
+                o = subprocess.getoutput ( cmd )
+                self.error ( "%sdeleting the folder %s: %s" % ( spid, cmd, o ) )
             return -1
             # sys.exit()
         # now write recasting card
@@ -224,6 +226,8 @@ if __name__ == "__main__":
                              type=int, default=1 )
     argparser.add_argument ( '-t', '--topo', help='topology [T2]',
                              type=str, default="T2" )
+    argparser.add_argument ( '-k', '--keep', help='keep temporary files',
+                             action="store_true" )
     argparser.add_argument ( '-c', '--clean', help='clean all temporary files, then quit',
                              action="store_true" )
     argparser.add_argument ( '-C', '--clean_all', help='clean all temporary files, even results directories, then quit',
@@ -250,7 +254,7 @@ if __name__ == "__main__":
         masses = bakeryHelpers.parseMasses ( args.masses )
     nm = len(masses)
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
-    ma5 = MA5Wrapper( args.topo, args.njets, args.rerun, args.analyses )
+    ma5 = MA5Wrapper( args.topo, args.njets, args.rerun, args.analyses, args.keep )
     # ma5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
     djobs = int(len(masses)/nprocesses)
 

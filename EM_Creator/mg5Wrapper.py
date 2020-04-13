@@ -48,7 +48,8 @@ class MG5Wrapper:
         self.templateDir = "templates/"
         self.mgParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
                           'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5',
-                          'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } #, 'qcut': '90' }
+                          'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } # , 'qcut': '90' }
+        ## qcut: SysCalc:qCutList in mg5/Template/LO/Cards/pythia8_card_default.dat
         self.rmLocksOlderThan ( 1 ) ## remove locks older than 1 hour
         self.info ( "initialised" )
 
@@ -107,6 +108,8 @@ class MG5Wrapper:
         #f.write('detector=Delphes\n')
         #f.write('pythia=ON\n')
         #f.write('madspin=OFF\n')
+        # f.write('order=LO\n')
+        # f.write('reweight=ON\n')
         f.write('0\n')
         f.write('0\n')
         f.close()
@@ -190,7 +193,7 @@ class MG5Wrapper:
             spid = " in job #%d" % pid
         self.announce ( "starting MA5 on %s[%s] at %s%s" % ( str(masses), self.topo, time.asctime(), spid ) )
         from ma5Wrapper import MA5Wrapper
-        ma5 = MA5Wrapper ( self.topo, self.njets, self.rerun, analyses )
+        ma5 = MA5Wrapper ( self.topo, self.njets, self.rerun, analyses, self.keep )
         self.debug ( "now call ma5Wrapper" )
         ret = ma5.run ( masses, pid )
         msg = "finished MG5+MA5"
@@ -232,8 +235,8 @@ class MG5Wrapper:
         ret = subprocess.getoutput ( cmd )
         if len(ret)==0:
             return
-        maxLength=100
-        # maxLength=560
+        maxLength=200
+        # maxLength=100000
         if len(ret)<maxLength:
             self.msg ( " `- %s" % ret )
             return
@@ -306,6 +309,8 @@ class MG5Wrapper:
         """ clean up temporary files
         :param Dir: if given, then assume its the runtime directory, and remove "Source", "lib", "SubProcesses" and other subdirs
         """
+        if self.keep:
+            return
         self.info ( "cleaning up %s, %s, %s, %s" % \
                 ( self.commandfile, self.tempf, self.logfile, self.logfile2 ) )
         self.unlink ( ".lock*" )
