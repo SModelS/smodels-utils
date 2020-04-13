@@ -378,8 +378,11 @@ class Trimmer:
             return pid == pids
         return pid in pids
 
-    def merge ( self, pair ):
-        """ merge two particles, pids given in pair """
+    def merge ( self, pair, force_merge=False ):
+        """ merge two particles, pids given in pair 
+        :param force_merge: if true, for the merger, even if Z gets much lower,
+            or we run into an exclusion.
+        """
         pair = list(pair)
         pair.sort()
         p1,p2 = pair[0], pair[1]
@@ -443,6 +446,9 @@ class Trimmer:
 
         oldZ,oldrmax = self.M.Z, self.M.rmax
         self.M.predict ( nevents = 100000, recycle_xsecs = False )
+        if force_merge:
+            self.pprint ( "forced merge, so not checking" )
+            return
         if self.M.rmax > rthresholds[0]:
             self.pprint ( "trying to merge %d and %d lead to an rmax of %.2f. reverting" % \
                           ( p1, p2, self.M.rmax ) ) 
