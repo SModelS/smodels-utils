@@ -311,7 +311,7 @@ class PyhfUpperLimitComputer:
         if len(self.workspaces) == 1:
             return self.ulSigma(workspace_index=0)
         rMax = 0.0
-        for i_ws in range(len(self.workspaces)):
+        for i_ws in range(self.nWS):
             logger.info("Looking for best expected combination")
             r = 1/self.ulSigma(expected=True, workspace_index=i_ws)
             if r > rMax:
