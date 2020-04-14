@@ -88,12 +88,14 @@ for d in data:
             effs.append(0)
     lumi = 139/fb
     nsig = [(lumi*eff).asNumber(1/pb) for eff in effs]
+    cbSig = [nsig]
+    bestSig = [[s] for s in nsig]
     # Upper limit calculation for combined
-    data = PyhfData(nsig, cbJson)
+    data = PyhfData(cbSig, cbJson)
     ulcomputer = PyhfUpperLimitComputer(data)
     result = ulcomputer.ulSigma()*pb
     # Upper limit calculation for best expected
-    data = PyhfData(nsig, bestJsons)
+    data = PyhfData(bestSig, bestJsons)
     ulcomputer = PyhfUpperLimitComputer(data)
     best = ulcomputer.bestUL()*pb
     i_best = ulcomputer.i_best
