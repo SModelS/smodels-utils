@@ -127,10 +127,9 @@ A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyh
 - [x] perform a mass scan over all mass points of ATLAS-SUSY-2018-04 for comparison
 - [x] create a SModelS "pyhf" branch off the "develop" branch
 - [x] add pyhf into smodels/share/requirements.txt
-- [ ] in smodels/tools/theoryPrediction.py:computeStatistics, we already have two ways of computing the likelihood.
-One way is via the simplified likelihoods, the other is via truncated Gaussians from upper limits. We would add a third
-way, interfacing to the pyhf interface code.
 - [x] change the globalInfo.txt in the database by hand first : add a `jsonFiles` key (and `datasetOrder`?)
 - [x] put the code into smodels/tools.
-- [ ] change datasetObj.py:getCombinedUpperLimitFor
+- [x] change datasetObj.py:getCombinedUpperLimitFor
+- [x] add best expected combination in datasetObj.py:getCombinedUpperLimitFor
+- [ ] change datasetObj.py:combinedLikelihood
 - [ ] add a unit test
