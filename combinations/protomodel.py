@@ -198,6 +198,7 @@ class ProtoModel:
                   check_thresholds = True, recycle_xsecs = False ):
         """ compute best combo, llhd, and significance
         :param check_thresholds: if true, check if we run into an exclusion.
+                                 in this case, Z becomes -1 for excluded models.
         :param recycle_xsecs: if False, always compute xsecs. If True,
                               reuse them, shall they exist.
         :returns: False, if not prediction (e.g. because the model is excluded),
@@ -226,6 +227,7 @@ class ProtoModel:
         excluded = self.rmax > rthresholds[0]
         self.log ( "model is excluded? %s" % str(excluded) )
         if check_thresholds and excluded:
+            self.Z = -1. ## set to negative
             return False
         if not check_thresholds  and excluded:
             self.pprint ( "we dont check thresholds, but the model would actually be excluded with rmax=%.2f" % self.rmax )
