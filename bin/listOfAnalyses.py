@@ -110,6 +110,7 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
                 
             for exp in [ "ATLAS", "CMS" ]:
                 for tpe in [ "upper limits", "efficiency maps" ]:
+                    nMaps = 0
                     stpe = tpe.replace(" ", "" )
                     a = self.selectAnalyses ( sqrts, exp, tpe )
                     a_fastlim = 0
@@ -127,6 +128,8 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
                                         nonMet = True
                                 if nonMet:
                                     nres_hscp.add ( _.txName )
+                        for ds in A.datasets:
+                            nMaps += len ( ds.txnameList )
                         nres+= len ( topos )
                         if hasattr ( A.globalInfo, "contact" ) and "fastlim" in \
                             A.globalInfo.contact:
@@ -138,12 +141,16 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
                     aflim=""
                     llp=""
                     if nfastlim:
-                        flim = "(of which %d FastLim)" % nfastlim
-                        aflim = "(of which %d FastLim)" % a_fastlim
+                        flim = " (of which %d FastLim)" % nfastlim
+                        aflim = " (of which %d FastLim)" % a_fastlim
                     if nres_hscp>0:
-                        llp="(of which %d LLP)" % nres_hscp
-                    self.f.write ( " * [%s %s](#%s%s%d): %d %s analyses, %s %s%s results\n" % \
-                              ( exp, tpe, exp, stpe, sqrts, len(a), aflim, nres, flim, llp ) )
+                        llp=" (of which %d LLP)" % nres_hscp
+                    mapsCountS = ""
+                    if "efficiency" in tpe:
+                        mapsCountS = ", %d individual maps" % nMaps
+
+                    self.f.write ( " * [%s %s](#%s%s%d): %d %s analyses, %s%s%s results%s\n" % \
+                              ( exp, tpe, exp, stpe, sqrts, len(a), aflim, nres, flim, llp, mapsCountS ) )
 
     def fields ( self ):
         ret = [ "ID", "short description", "L [1/fb]", "Tx names" ]
