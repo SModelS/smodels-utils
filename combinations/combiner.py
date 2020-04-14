@@ -135,6 +135,7 @@ class Combiner:
         pass # default is, do nothing
 
     def discussCombinations ( self, combinables ):
+        """ simple method that writes some stats about a combination to the log file """
         count={}
         for i in combinables:
             n =len(i)
@@ -339,6 +340,39 @@ class Combiner:
         for c in combination:
             ret += self.letters[c]
         return ret
+
+    def computePrior ( self, protomodel, verbose=False ):
+        """ compute the prior for protomodel, used to introduce regularization,
+            i.e. punishing for non-zero parameters, imposing sparsity.
+        :param verbose: print how you get the prior
+        """
+        cost = 0.
+        particles = protomodel.unFrozenParticles ( withLSP=False )
+        nparticles = len ( particles )
+        ## a new particle costs .05
+        cost += .05 * nparticles
+        ## branchings
+        nbr = 0
+        for mpid,decays in protomodel.decays.items():
+            if not mpid in particles:
+                continue ## frozen particles dont count
+            for dpid,br in decays.items():
+                if br > 1e-5 and br < .99999:
+                    nbr += 1
+        ## every non-trivial branching costs .01
+        cost += .01 * nbr
+        nssms = 0
+        for pids,ssm in protomodel.ssmultipliers.items():
+            if (abs(pids[0]) not in particles) or (abs(pids[1]) not in particles):
+                continue
+            ## every ssm > 0 costs a little, but only very little
+            if ssm > 1e-4:
+                nssms += 1
+        cost += .001 * nssms
+        if verbose:
+            self.pprint ( "Prior: 1 - .05 * %d - .01 * %d - .001 * %d = %.2f" % \
+                          ( nparticles, nbr, nssms, 1. - cost ) )
+        return ( 1. - cost )
 
     def findHighestSignificance ( self, predictions, strategy, expected=False, 
                                   mumax = None ):
