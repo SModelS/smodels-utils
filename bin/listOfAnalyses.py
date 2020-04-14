@@ -3,7 +3,7 @@
 """
 .. module:: listOfAnalyses
          :synopsis: Small script to produce the ListOfAnalyses wiki page,
-                    new markdown syntax
+                    markdown syntax.
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
@@ -16,7 +16,7 @@ try:
     import subprocess as C
 except:
     import commands as C
-import sys, os
+import sys, os, time
 from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
 from smodels.tools.physicsUnits import TeV
@@ -90,14 +90,24 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
         self.f.write ( "\n\n<a name='A1'>(1)</a> ''Home-grown'' result, i.e. produced by SModelS collaboration, using recasting tools like MadAnalysis5 or CheckMATE.\n\n" )
         self.f.write ( "<a name='A2'>(2)</a> Please note that by default we discard zeroes-only results from FastLim. To remain firmly conservative, we consider efficiencies with relative statistical uncertainties > 25% to be zero.\n\n" )
         self.f.write ( "<a name='A3'>(3)</a> Aggregated result; the results are the public ones, but aggregation is done by the SModelS collaboration.\n" )
+        self.f.write ( "\nThis page was created %s.\n" % ( time.asctime() ) )
         self.f.close()
 
     def listTables ( self ):
-        self.f.write ( "## Individual tables\n" )
+        self.f.write ( "\n## Individual tables\n" )
         for sqrts in [ 13, 8 ]:
             run = 1
             if sqrts == 13: run = 2
-            self.f.write ( "### Run %d - %d TeV\n" % ( run, sqrts ) )
+            self.f.write ( "\n### Run %d - %d TeV\n" % ( run, sqrts ) )
+            anas = { "CMS": set(), "ATLAS": set() }
+            for exp in [ "ATLAS", "CMS" ]:
+                for tpe in [ "upper limits", "efficiency maps" ]:
+                    stpe = tpe.replace(" ", "" )
+                    a = self.selectAnalyses ( sqrts, exp, tpe )
+                    for ana in a:
+                        anas[exp].add ( ana.globalInfo.id )
+            self.f.write ( "In total, we have results from %d ATLAS and %d CMS %d TeV searches.\n" % (len(anas["ATLAS"]), len(anas["CMS"]), sqrts ) )
+                
             for exp in [ "ATLAS", "CMS" ]:
                 for tpe in [ "upper limits", "efficiency maps" ]:
                     stpe = tpe.replace(" ", "" )
@@ -323,7 +333,7 @@ Results from FastLim are included. There is also an  [sms dictionary](SmsDiction
 
     def main( self ):
         import argparse
-        argparser = argparse.ArgumentParser(description='Create list of analyses in wiki format, see http://smodels.hephy.at/wiki/ListOfAnalyses')
+        argparser = argparse.ArgumentParser(description='Create list of analyses in wiki format, see https://smodels.github.io/docs/ListOfAnalyses')
         argparser.add_argument ( '-n', '--no_superseded', help='ignore superseded results', action='store_true' )
         argparser.add_argument ( '-d', '--database', help='path to database [../../smodels-database]',
                                  type=str, default='../../smodels-database' )
