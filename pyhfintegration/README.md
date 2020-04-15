@@ -131,5 +131,6 @@ A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyh
 - [x] put the code into smodels/tools.
 - [x] change datasetObj.py:getCombinedUpperLimitFor
 - [x] add best expected combination in datasetObj.py:getCombinedUpperLimitFor
-- [ ] change datasetObj.py:combinedLikelihood
+- [x] add pyhf in datasetObj.py:combinedLikelihood
+- [ ] add pyhf in datasetObj.py:totalChi2
 - [ ] add a unit test
