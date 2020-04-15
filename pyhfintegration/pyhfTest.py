@@ -94,23 +94,24 @@ for d in data:
     data = PyhfData(cbSig, cbJson)
     ulcomputer = PyhfUpperLimitComputer(data)
     result = ulcomputer.ulSigma()*pb
+    lh = ulcomputer.likelihood()
     # Upper limit calculation for best expected
-    data = PyhfData(bestSig, bestJsons)
-    ulcomputer = PyhfUpperLimitComputer(data)
-    best = ulcomputer.bestUL()*pb
-    i_best = ulcomputer.i_best
-    print("pyhf = %s, official = %s, discrepancy = %s, best = %s" % (str(result),
+    # data = PyhfData(bestSig, bestJsons)
+    # ulcomputer = PyhfUpperLimitComputer(data)
+    # best = ulcomputer.bestUL()*pb
+    # i_best = ulcomputer.i_best
+    print("pyhf = %s, official = %s, discrepancy = %s, lh = %s" % (str(result),
                                                           str(ul),
                                                           str((result-ul)/ul),
-                                                          str(best)))
+                                                          str(lh)))
     outputEntry = {}
     outputEntry["m(stau)"] = massvec[0][0].asNumber()
     outputEntry["m(chi1)"] = massvec[0][1].asNumber()
     outputEntry["pyhfUL"] = result.asNumber()
     outputEntry["officialUL"] = ul.asNumber()
     outputEntry["discrepancy"] = ((result - ul)/ul).asNumber()
-    outputEntry["bestExpUL"] = best.asNumber()
-    outputEntry["bestSR"] = "SRlow" if i_best == 0 else "SRhigh"
+    # outputEntry["bestExpUL"] = best.asNumber()
+    # outputEntry["bestSR"] = "SRlow" if i_best == 0 else "SRhigh"
     outputDataDict.append(outputEntry)
 
 outputFile = open("output.py", "w")

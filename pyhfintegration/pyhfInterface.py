@@ -204,6 +204,34 @@ class PyhfUpperLimitComputer:
                 workspaces.append(ws)
             return workspaces
 
+    def likelihood(self, expected=False, workspace_index=None):
+        """
+        Returns the value of the likelihood.
+        Inspired by the `pyhf.infer.mle` module but for non-log likelihood
+        """
+        if self.nWS == 1:
+            workspace = self.workspaces[0]
+        elif workspace_index != None:
+            if self.zeroSignalsFlag[workspace_index] == True:
+                logger.warning("Workspace number %d has zero signals" % workspace_index)
+                return -1
+            else:
+                workspace = self.workspaces[workspace_index]
+        else:
+            workspace = self.cbWorkspace()
+        # Same modifiers_settings as those use when running the 'pyhf cls' command line
+        msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
+        model = workspace.model(modifier_settings=msettings)
+        test_poi = 1.
+        _, nllh = pyhf.infer.mle.fixed_poi_fit(test_poi, workspace.data(model), model, return_fitted_val=True)
+        return np.exp(-nllh.tolist()[0]/2)
+
+    def chi2(self, expected=False, workspace_index=None):
+        """
+        Returns the chi square
+        """
+        pass
+
     # Trying a new method for upper limit computation :
     # re-scaling the signal predictions so that mu falls in [0, 10] instead of looking for mu bounds
     # Usage of the index allows for rescaling
@@ -223,7 +251,9 @@ class PyhfUpperLimitComputer:
             logger.warning("Workspace number %d has zero signals" % workspace_index)
             return -1
         def updateWorkspace():
-            if workspace_index != None:
+            if self.nWS == 1:
+                return self.workspaces[0]
+            elif workspace_index != None:
                 return self.workspaces[workspace_index]
             else:
                 return self.cbWorkspace()
@@ -330,8 +360,6 @@ class PyhfUpperLimitComputer:
         """
         # Performing combination using pyhf.workspace.combine method, a bit modified to solve the multiple parameter configuration problem
         workspaces = self.workspaces
-        if self.nWS == 1:
-            cbWS = workspaces[0]
         for i_ws in range(self.nWS):
             if self.zeroSignalsFlag[i_ws] == False:
                 cbWS = workspaces[i_ws]
