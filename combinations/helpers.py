@@ -131,7 +131,8 @@ def simplifyList ( modes ):
     modes = copy.deepcopy ( ret )
     for combo in itertools.combinations ( modes, 2 ):
         if type(combo[0][1])==str and type(combo[1][1])==str:
-            if combo[0][1] == combo[1][1] and type(combo[0][0])==int and combo[0][0]==-combo[1][0]:
+            if combo[0][1] == combo[1][1] and type(combo[0][0])==int and \
+                            type(combo[1][0])==int and combo[0][0]==-combo[1][0]:
                 try:
                     ret.remove ( combo[0] )
                     ret.remove ( combo[1] )
@@ -147,7 +148,8 @@ def simplifyList ( modes ):
                     ret.append ( ( "+-%s" % abs(combo[0][0]), combo[1][1] ) )
                 except ValueError as e:
                     pass
-            if type(combo[0][1])==str and c00 == combo[1][0] and lrEquiv ( combo[0][1], combo[1][1] ):
+            if type(combo[0][1])==str and c00 == combo[1][0] and \
+                     lrEquiv ( combo[0][1], combo[1][1] ):
                 ## (1000021, '+-2000006'), (1000021, '+-1000006')
                 try:
                     ret.remove ( combo[0] )
