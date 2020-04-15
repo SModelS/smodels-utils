@@ -18,7 +18,8 @@ def setup():
     os.chdir ( rundir )
     return rundir
 
-def main( nmin, nmax, cont, dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database/",
+def main( nmin, nmax, cont, 
+          dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database/",
           cheatcode = 0 ):
     """ a worker node to set up to run walkers 
     :param nmin: the walker id of the first walker
@@ -46,14 +47,14 @@ def main( nmin, nmax, cont, dbpath = "/scratch-cbe/users/wolfgan.waltenberger/gi
             except Exception as e:
                 print ( "error when trying to load pickle file %s: %s" % ( cont, e ) )
                 pfile = None
-    print ( "[walkingWorker] called main with '%s', pfile is '%s'" % ( cont, pfile ) )
+    # print ( "[walkingWorker] called main with cont='%s', pfile='%s'." % ( cont, pfile ) )
     import socket, copy
-    print ( "I am already inside the python script! Hostname is", socket.gethostname()  )
+    # print ( "[walkingWorker] I am already inside the python script! Hostname is", socket.gethostname()  )
     from combinations import walker
     walkers = []
     for i in range(nmin,nmax):
         if pfile is None:
-            print ( "[walkingWorker] from zero %d" % ( i ) )
+            print ( "[walkingWorker] starting %d with cheatcode %d" % ( i, cheatcode ) )
             w = walker.RandomWalker( walkerid=i, dump_training = True, 
                                      dbpath = dbpath, cheatcode = cheatcode  )
             walkers.append ( w )
