@@ -104,6 +104,8 @@ class Manipulator:
                 self.M.decays[mpid][dpid]=v
         if "step" in m: ## keep track of number of steps
             self.M.step = m["step"]
+        ## add also the unused SSMs, set them to 1.
+        self.M.initializeSSMs ( overwrite = False ) 
         return
 
     def unfreezeRandomParticle ( self ):
@@ -393,7 +395,7 @@ class Manipulator:
         self.removeAllOffshell()
 
     def randomlyChangeSSOfOneParticle ( self ):
-        """ randomly change the SS consistently for one pid """
+        """ randomly change the SS's consistently for one random pid """
         unfrozenparticles = self.M.unFrozenParticles( withLSP=False )
         if len(unfrozenparticles)<2:
             self.M.pprint ( "not enough unfrozen particles to change random signal strength" )
@@ -438,23 +440,28 @@ class Manipulator:
 
     def randomlyChangeBranchingOfPid ( self, pid ):
         """ randomly change the branching a particle pid """
-        openChannels = []
+        openChannels = set()
         for dpid,br in self.M.decays[pid].items():
             if not numpy.isfinite ( br ):
                 self.M.highlight ( "error", "br of %s/%s is %s. set to zero." % ( pid, dpid, br ) )
                 self.M.decays[p][dpid]=0.
             if type(dpid) not in [ tuple, list] and dpid in self.M.unFrozenParticles():
-                openChannels.append ( dpid )
+                openChannels.add ( dpid )
             if type(dpid) in [ tuple, list ] and dpid[0] in self.M.unFrozenParticles():
-                openChannels.append ( dpid )
+                openChannels.add ( dpid )
+        for dpid in self.M.possibledecays[pid]:
+            openChannels.add ( dpid )
+        # print ( "the open channels are", openChannels )
         if len(openChannels) < 2:
             self.M.pprint ( "number of open channels of %d is %d: cannot change branchings." % (pid, len(openChannels) ) )
             # not enough channels open to tamper with branchings!
             return 0
         dx =.1/numpy.sqrt(len(openChannels)) ## maximum change per channel
         S=0.
-        for i in self.M.decays[pid].keys(): ## openChannels[:-1]:
-            oldbr = self.M.decays[pid][i]
+        for i in openChannels:
+            oldbr = 0.
+            if i in self.M.decays[pid]:
+                oldbr = self.M.decays[pid][i]
             if not numpy.isfinite ( oldbr ):
                 self.M.highlight ( "error", "br of %s/%s is %s. set to zero." % ( pid, i, oldbr ) )
                 oldbr = 0.
