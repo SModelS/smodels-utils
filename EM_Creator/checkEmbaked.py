@@ -40,7 +40,7 @@ def check ( topo, overwrite, stats, remove_offshell  ):
        offhsell second decay and an LSP mass != 60. This is a hack 
        to attempt to fix T6WWoffleft 
     """
-    f=open("%s.embaked" % topo, "rt" )
+    f=open("embaked/%s.embaked" % topo, "rt" )
     lines=f.readlines()
     f.close()
     allms = set()
