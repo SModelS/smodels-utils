@@ -38,6 +38,9 @@ class MG5Wrapper:
         self.logfile = None
         self.logfile2 = None
         self.tempf = None
+        self.pyver = 2 ## python version
+        if "py3" in ver:
+            self.pyver = 3
         self.ver = ver
         if not os.path.isdir ( self.mg5install ):
             self.error ( "mg5 install is missing??" )
@@ -45,13 +48,60 @@ class MG5Wrapper:
         if not os.path.exists ( self.executable ):
             self.info ( "cannot find mg5 installation at %s" % self.mg5install )
             self.exe ( "mg5/make.py" )
+        self.determineMG5Version()
         self.templateDir = "templates/"
         self.mgParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
                           'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5',
                           'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } # , 'qcut': '90' }
-        ## qcut: SysCalc:qCutList in mg5/Template/LO/Cards/pythia8_card_default.dat
+        self.correctPythia8CfgFile()
         self.rmLocksOlderThan ( 1 ) ## remove locks older than 1 hour
         self.info ( "initialised" )
+
+    def determineMG5Version ( self ):
+        """ find out version of mg5, by peeking into mg5 directory """
+        files = glob.glob ( "mg5/MG5_aMC_v*.tar.gz" )
+        if len(files) != 1:
+            self.msg ( "I dont understand, I see %d MG5 tarballs" % len(files) )
+            return
+        ver = files[0].replace(".tar.gz","").replace("mg5/","")
+        ver = ver.replace ( "MG5_aMC_", "" ).replace(".","_")
+        if not ver.startswith ( "v" ):
+            self.msg ( "I dont understand the version id %s" % ver )
+            return
+        self.msg ( "determination of MG5 version says: %s" % ver )
+        if ver.startswith ( "v" ):
+            self.ver = ver
+        if "py3" in ver:
+            self.pyver = 3
+
+    def correctPythia8CfgFile ( self ):
+        """ a simple method intended to check if we have to add SysCalc:qCutList=90
+            to the pythia8 configuration """
+        ## qcut: SysCalc:qCutList in mg5/Template/LO/Cards/pythia8_card_default.dat
+        self.msg ( "now checking if pythia8 config needs correction" )
+        needsCorrection = True
+        cfgFile = "mg5/Template/LO/Cards/pythia8_card_default.dat"
+        f = open ( cfgFile, "rt" )
+        lines = f.readlines()
+        f.close()
+        for line in lines:
+            p = line.find("!")
+            if p > -1:
+                line = line[:p]
+            line = line.strip()
+            if line == "":
+                continue
+            if "SysCalc:qCutList" in line:
+                needsCorrection = False
+        if "2_6" in self.ver: # only needed for 2_7 i think
+            needsCorrection = False
+        if not needsCorrection:
+            self.msg ( "pythia8 config  does not need correction" )
+            return
+        self.msg ( "seems like pythia8 cfg needs qCutList added" )
+        f = open ( cfgFile, "at" )
+        f.write ( "SysCalc:qCutList = 90.\n" )
+        f.close()
 
     def info ( self, *msg ):
         print ( "%s[mg5Wrapper] %s%s" % ( colorama.Fore.YELLOW, " ".join ( msg ), \
@@ -284,7 +334,8 @@ class MG5Wrapper:
             subprocess.getoutput ( "rm -rf %s" % Dir )
         self.info ( "run mg5 for %s[%s]: %s" % ( masses, self.topo, self.tempf ) )
         self.logfile = tempfile.mktemp ()
-        cmd = "python2 %s %s 2>&1 | tee %s" % ( self.executable, self.tempf, self.logfile )
+        cmd = "python%d %s %s 2>&1 | tee %s" % \
+              ( self.pyver, self.executable, self.tempf, self.logfile )
         self.exe ( cmd, masses )
         ## copy slha file
         if not os.path.exists ( Dir+"/Cards" ):
@@ -299,7 +350,8 @@ class MG5Wrapper:
         if (os.path.isdir(Dir+'/Events/run_01')):
             shutil.rmtree(Dir+'/Events/run_01')
         self.logfile2 = tempfile.mktemp ()
-        cmd = "python2 %s %s 2>&1 | tee %s" % ( self.executable, self.commandfile,
+        cmd = "python%d %s %s 2>&1 | tee %s" % \
+               ( self.pyver, self.executable, self.commandfile,
                                                 self.logfile2 )
         self.exe ( cmd, masses )
         self.clean( Dir )
