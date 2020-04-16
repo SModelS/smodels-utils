@@ -53,6 +53,7 @@ class MG5Wrapper:
         self.mgParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
                           'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5',
                           'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } # , 'qcut': '90' }
+        self.mgParams["XQCUT"]="M[0]/4" ## xqcut for gluino-gluino production: mgluino/4
         self.correctPythia8CfgFile()
         self.rmLocksOlderThan ( 1 ) ## remove locks older than 1 hour
         self.info ( "initialised" )
@@ -139,6 +140,10 @@ class MG5Wrapper:
         for line in lines:
             for k,v in self.mgParams.items():
                 if k in line:
+                    vold = v
+                    if "M[0]" in v:
+                        v = v.replace("M[0]",str(masses[0]))
+                        v = str(eval (v ))
                     line = line.replace("@@%s@@" % k,v)
             g.write ( line )
         g.close()
