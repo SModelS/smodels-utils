@@ -390,6 +390,7 @@ class Trimmer:
         avgM = self.computeAvgMass ( pair )
         self.log ( "avg mass for %s is %.1f" % ( str(pair), avgM ) )
         self.M.backup() ## in case it doesnt work out!
+        self.M.masses[ p1 ] = avgM ## set this one to the avg mass
         self.M.masses[ p2 ] = 1e6 ## freeze that one!
 
         ## add the decays from pid2 to pid1
@@ -430,7 +431,7 @@ class Trimmer:
                 else:
                     newpids.append ( pid )
             newpids = tuple(newpids)
-            # print ( "adding", ssm, "for",pids,"to",newpids )
+            # self.pprint ( "adding", ssm, "for",pids,"to",newpids )
             if newpids in self.M.ssmultipliers:
                 newssms[newpids]=newssms[newpids]+ssm
             else:
@@ -439,13 +440,23 @@ class Trimmer:
 
         ## clean up, remove all pid2 ssms
         newms={}
-        for pids,ssm in self.M.ssmultipliers.items():
+        for pids,ssm in newssms.items(): # self.M.ssmultipliers.items():
             if not p2 in pids and not -p2 in pids:
                 newms[pids]=ssm
         self.M.ssmultipliers = newms
 
         oldZ,oldrmax = self.M.Z, self.M.rmax
-        self.M.predict ( nevents = 100000, recycle_xsecs = False )
+        passed = self.M.predict ( nevents = 100000, recycle_xsecs = False )
+        if passed == False: 
+            self.pprint ( "after merging, did not pass. rmax=%.2f. scale and retry." % self.M.rmax )
+            ## did not pass? Okay, we make it pass, by scaling the new ssms
+            f_sc = .999 * rthresholds[0] / self.M.rmax  ## we multiply with this factor
+            for pids,ssm in self.M.ssmultipliers.items(): 
+                if p1 in pids or -p1 in pids:
+                    self.M.ssmultipliers[pids] = self.M.ssmultipliers[pids] * f_sc
+            passed = self.M.predict ( nevents = 100000, recycle_xsecs = False )
+            self.pprint ( "after retrying we have: passed=%d, rmax=%.2f" % ( passed, self.M.rmax ) )
+            
         if force_merge:
             self.pprint ( "forced merge, so not checking" )
             return

@@ -150,7 +150,7 @@ def clone(dirname):
         cmd = "cp -a ../../smodels-v%s/* %s" %( version, dirname )
     run( cmd )
     for i in os.listdir( dirname ):
-        if i in [".git", ".gitignore", "distribution", "test" ]:
+        if i in [".git", ".gitignore", "distribution", "test" ] or i.endswith ( ".pcl" ):
             run( "rm -rf %s/%s" %(dirname,i) )
 
 def rmpyc(dirname):

@@ -161,7 +161,7 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
         ts = {}
         if ana in tstamps:
             ts = tstamps[ana]
-        fname = "%s.%s.embaked" % (ana, topo )
+        fname = "embaked/%s.%s.embaked" % (ana, topo )
         print ( "baking %s: %d points." % ( fname, len(values) ) )
         SRs = set()
         for k,v in values.items():

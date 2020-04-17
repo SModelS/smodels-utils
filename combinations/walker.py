@@ -102,6 +102,7 @@ class RandomWalker:
         ret.protomodel.select = select
         ret.protomodel.dbpath = dbpath
         ret.protomodel.createNewSLHAFileName()
+        ret.protomodel.initializeSSMs ( overwrite = False )
         ret.protomodel.initializePredictor()
         ret.protomodel.backup()
         if dump_training:

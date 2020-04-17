@@ -135,6 +135,7 @@ class Combiner:
         pass # default is, do nothing
 
     def discussCombinations ( self, combinables ):
+        """ simple method that writes some stats about a combination to the log file """
         count={}
         for i in combinables:
             n =len(i)
@@ -340,6 +341,51 @@ class Combiner:
             ret += self.letters[c]
         return ret
 
+    def priorForNDF ( self, nparticles, nbranchings, nssms, C = None, 
+                      verbose=False ):
+        """ get the prior for this and this many degrees of freedom
+            in the model.
+        :param nparticles: number of unfrozen particles
+        :param nbranchings: number of branchings > 0 and < 1
+        :param nssms: number of signal strength multipliers > 0
+        :param C: normalization constant C, to make the prior proper. If None,
+                  use the predefined one.
+        :param verbose: be verbose about computation
+        :returns: *proper* prior
+        """
+        improper = (1+nparticles)**(-2) * (1+nbranchings)**(-1) * (1+nssms)**(-.5)
+        # improper = 1. - .05 * nparticles - .01 * nbranchings - .001 * nssms
+        if C == None:
+            C = 0.039383
+        proper = C * improper
+        if verbose:
+            self.pprint ( "prior: %.2f * (1 - .05 * %d - .01 * %d - .001 * %d) = %.2f" % \
+                      ( C, nparticles, nbr, nssms, proper ) )
+        return proper
+
+    def computePrior ( self, protomodel, verbose=False ):
+        """ compute the prior for protomodel, used to introduce regularization,
+            i.e. punishing for non-zero parameters, imposing sparsity.
+        :param verbose: print how you get the prior
+        """
+        particles = protomodel.unFrozenParticles ( withLSP=False )
+        nparticles = len ( particles )
+        nbr, nssms = 0, 0
+        for mpid,decays in protomodel.decays.items():
+            if not mpid in particles:
+                continue ## frozen particles dont count
+            for dpid,br in decays.items():
+                if br > 1e-5 and br < .99999:
+                    nbr += 1
+        ## every non-trivial branching costs .01
+        for pids,ssm in protomodel.ssmultipliers.items():
+            if (abs(pids[0]) not in particles) or (abs(pids[1]) not in particles):
+                continue
+            ## every ssm > 0 costs a little, but only very little
+            if ssm > 1e-4:
+                nssms += 1
+        return self.priorForNDF ( nparticles, nbr, nssms, verbose )
+
     def findHighestSignificance ( self, predictions, strategy, expected=False, 
                                   mumax = None ):
         """ for the given list of predictions and employing the given strategy,
@@ -396,6 +442,23 @@ class Combiner:
                     del tx.txnameDataExp
         return theorypred
 
+def normalizePrior():
+    c = Combiner()
+    S=0.
+    ctr,nmod=0,30
+    for nparticles in range ( 1, 15 ):
+        for nbr in range ( 0, 7*nparticles ):
+            for nssms in range ( 1, 20*nparticles ):
+                t = c.priorForNDF ( nparticles, nbr, nssms, 1. )
+                ctr+=1
+                if ctr % nmod == 0:
+                    print ( "nparticles %d, nbr %d, nssms %d, improper prior %.5f" % \
+                            ( nparticles, nbr, nssms, t ) )
+                    nmod=nmod*2
+                S += t
+    print ( "The constant for normalizing the prior is %.6f" % (1./S) )
+    return 1./S
+
 if __name__ == "__main__":
     from smodels.tools import runtime
     runtime._experimental = True
@@ -414,7 +477,12 @@ if __name__ == "__main__":
             help='use only efficiency maps results', action='store_true' )
     argparser.add_argument ( '-E', '--expected',
             help='expected values, not observed', action='store_true' )
+    argparser.add_argument ( '-P', '--prior',
+            help='Compute normalization constant for prior, then quit', action='store_true' )
     args = argparser.parse_args()
+    if args.prior:
+        normalizePrior()
+        sys.exit()
     if args.upper_limits and args.efficiencyMaps:
         print ( "[combiner] -u and -e are mutually exclusive" )
         sys.exit()

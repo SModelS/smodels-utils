@@ -105,17 +105,9 @@ class ProtoModel:
                     # print ( "slhaline", slhaline )
                     slhalines.append ( slhaline )
 
+        self.initializeSSMs( overwrite = True )
         for p in self.particles:
             self.masses[p]=1e6
-            for q in self.particles:
-                self.ssmultipliers[ self.toTuple(p,q) ]=1. ## signal strength multipliers
-                if self.hasAntiParticle ( q ):
-                    self.ssmultipliers[ self.toTuple(p,-q) ]=1.
-            if self.hasAntiParticle ( p ):
-                for q in self.particles:
-                    self.ssmultipliers[ self.toTuple(-p,q) ]=1. ## signal strength multipliers
-                    if self.hasAntiParticle ( q ):
-                        self.ssmultipliers[ self.toTuple ( -p, -q ) ]=1.
             decays = []
             self.decays[p]={}
             for line in slhalines:
@@ -140,6 +132,30 @@ class ProtoModel:
         ## the LSP we need from the beginning
         self.masses[ProtoModel.LSP]=random.uniform(200,500)
 
+    def setSSM ( self, pids, value=1., overwrite=True ):
+        """ set the signal strength multiplier of pids to value.
+            if overwrite = false, then do this onle if ssm is not defined """
+        if overwrite:
+            self.ssmultipliers [ pids ] = value
+            return
+        if not pids in self.ssmultipliers:
+            self.ssmultipliers[pids] = value
+
+    def initializeSSMs ( self, overwrite ):
+        """ initialize signal strength multipliers, set them all to unity 
+        :param overwrite: if true, always set to one. if false, then initialize
+                          only if not yet defined.
+        """
+        for p in self.particles:
+            for q in self.particles:
+                self.setSSM ( self.toTuple(p,q), 1., overwrite )
+                if self.hasAntiParticle ( q ):
+                    self.setSSM ( self.toTuple(p,-q), 1., overwrite )
+            if self.hasAntiParticle ( p ):
+                for q in self.particles:
+                    self.setSSM ( self.toTuple(-p,q), 1., overwrite )
+                    if self.hasAntiParticle ( q ):
+                        self.setSSM ( self.toTuple ( -p, -q ), 1., overwrite )
 
     def initializePredictor ( self ):
         """ initialize the predictor """
@@ -198,6 +214,7 @@ class ProtoModel:
                   check_thresholds = True, recycle_xsecs = False ):
         """ compute best combo, llhd, and significance
         :param check_thresholds: if true, check if we run into an exclusion.
+                                 in this case, Z becomes -1 for excluded models.
         :param recycle_xsecs: if False, always compute xsecs. If True,
                               reuse them, shall they exist.
         :returns: False, if not prediction (e.g. because the model is excluded),
@@ -226,6 +243,7 @@ class ProtoModel:
         excluded = self.rmax > rthresholds[0]
         self.log ( "model is excluded? %s" % str(excluded) )
         if check_thresholds and excluded:
+            self.Z = -1. ## set to negative
             return False
         if not check_thresholds  and excluded:
             self.pprint ( "we dont check thresholds, but the model would actually be excluded with rmax=%.2f" % self.rmax )
