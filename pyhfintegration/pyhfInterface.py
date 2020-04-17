@@ -204,7 +204,7 @@ class PyhfUpperLimitComputer:
                 workspaces.append(ws)
             return workspaces
 
-    def likelihood(self, expected=False, workspace_index=None):
+    def likelihood(self, workspace_index=None):
         """
         Returns the value of the likelihood.
         Inspired by the `pyhf.infer.mle` module but for non-log likelihood
@@ -226,11 +226,11 @@ class PyhfUpperLimitComputer:
         _, nllh = pyhf.infer.mle.fixed_poi_fit(test_poi, workspace.data(model), model, return_fitted_val=True)
         return np.exp(-nllh.tolist()[0]/2)
 
-    def chi2(self, expected=False, workspace_index=None):
+    def chi2(self, workspace_index=None):
         """
         Returns the chi square
         """
-        pass
+        return -1
 
     # Trying a new method for upper limit computation :
     # re-scaling the signal predictions so that mu falls in [0, 10] instead of looking for mu bounds
