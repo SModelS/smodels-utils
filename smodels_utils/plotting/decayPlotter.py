@@ -12,6 +12,9 @@ from __future__ import print_function
 
 """
 
+import sys
+sys.path.append('../../')
+
 def draw( slhafile, outfile, options, offset=0.,
           verbosity="info", ssmultipliers = None ):
     """ draw a decay plot from an slhafile
