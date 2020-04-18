@@ -30,12 +30,18 @@ except ImportError:
 class WikiPageCreator:
     ### starting to write a creator class
     def __init__ ( self, ugly, database, add_version, private, force_upload,
-                   comparison_database, ignore_superseded, ignore, moveFile ):
+                   comparison_database, ignore_superseded, ignore, moveFile,
+                   include_fastlim ):
+        """
+        :param ugly: ugly mode, produces the ValidationUgly pages with more info
+        :param include_fastlim: include fastlim results
+        """
         self.ugly = ugly ## ugly mode
         self.databasePath = database.replace ( "~", os.path.expanduser("~") )
         self.db = Database( self.databasePath )
         self.comparison_dbPath = comparison_database.replace ( "~", os.path.expanduser("~") )
         self.ignore_superseded = ignore_superseded
+        self.include_fastlim = include_fastlim
         self.ignore_validated = ignore
         self.moveFile = moveFile
         if ugly: ## in ugly mode we always ignore validated, and superseded
@@ -113,8 +119,12 @@ class WikiPageCreator:
     def writeHeader ( self ):
         print ( 'Creating wiki file (%s)....' % self.fName )
         whatIsIncluded = "Superseded and Fastlim results are included"
+        if not self.include_fastlim:
+            whatIsIncluded = "Superseded results are listed; fastlim results are not"
         if self.ignore_superseded:
             whatIsIncluded = "Fastlim results are listed; superseded results have been skipped"
+            if not self.include_fastlim:
+                whatIsIncluded = "Neither superseded nor fastlim results are not listed in this table"
         self.file.write( """
 # Validation plots for SModelS-v%s 
 
@@ -203,6 +213,9 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         return r
 
     def writeExpRes( self, expRes, tpe ):
+        """ write the experimental result expRes 
+        :param tpe: data type (ul or em)
+        """
         valDir = os.path.join(expRes.path,'validation').replace("\n","")
         if not os.path.isdir(valDir): return
         id = expRes.globalInfo.id
@@ -312,6 +325,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                     line += ' <img src="https://smodels.github.io/pics/updated.png" /> added covariances in %s! ' % ( self.db.databaseVersion )
                 if hasChanged == "eUL":
                     line += ' <img src="https://smodels.github.io/pics/updated.png" /> added expected UL in %s! ' % ( self.db.databaseVersion )
+            line += "<br>source: %s<br>" % self.describeSource ( txname )
             ## from comments file
             cFile = valDir+"/"+txname.txName+".comment"
             if os.path.isfile(cFile):
@@ -337,6 +351,29 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         else: self.true_lines.append(line)
         self.nlines += 1
         logger.debug ( "add %s with %d figs" % ( id, nfigs ) )
+
+    """
+    def removeFastLim ( self, expRes ):
+        # remove fastlim results from list of results 
+        print ( "removing fastlim results", type(expRes) )
+        return expRes
+    """
+
+    def describeSource ( self, txname ):
+        """ describe the source of the data
+        :param txname: txname object
+        """
+        if not hasattr ( txname, "source" ):
+            return "unknown"
+        source = txname.source.lower()
+        if "cms" in source:
+            return "CMS"
+        if "atlas" in source:
+            return "ATLAS"
+        if "smodels" in source:
+            return "SModelS"
+        return "unknown2"
+
 
     def anaHasChanged ( self, id, txname, tpe ):
         """ has analysis id <id> changed? 
@@ -380,7 +417,8 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
             # no comparison database given. So nothing is new.
             return False
         if not hasattr ( self, "OldAnaIds" ):
-            expRs = self.comparison_db.getExpResults( useSuperseded = True, useNonValidated = self.ignore_validated )
+            expRs = self.comparison_db.getExpResults( useSuperseded = True, 
+                          useNonValidated = self.ignore_validated )
             anaIds = [ x.globalInfo.id for x in expRs ]
             self.OldAnaIds = set ( anaIds )
             self.topos = {}
@@ -410,6 +448,8 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         return False
 
     def writeExperimentType ( self, sqrts, exp, tpe, expResList ):
+        """ write the table for a specific sqrts, experiment, data Type 
+        """
         stype=tpe.replace(" ","")
         nres = 0
         nexpRes = 0
@@ -445,8 +485,11 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 continue
             self.writeExpRes ( expRes, tpe )
 
-
     def getExpList ( self, sqrts, exp, tpe ):
+        """ get the list of experimental results for given sqrts and
+            data type and experiment
+        :param exp: experiment, i.e. "CMS" or "ATLAS"
+        """
         dsids= [ None ]
         if tpe == "efficiency maps":
             dsids = [ 'all' ]
@@ -460,6 +503,11 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
             if not exp in i.globalInfo.id: continue
             xsqrts=int ( i.globalInfo.sqrts.asNumber(TeV) )
             if xsqrts != sqrts: continue
+            if not self.include_fastlim and hasattr ( i.globalInfo, "contact" ) and \
+                "fastlim" in i.globalInfo.contact.lower():
+                    # we do not include fastlim, the result has a contact field,
+                    # and "fastlim" is mentioned there: skip it
+                    continue
             expResList.append ( i )
         return expResList
 
@@ -489,6 +537,8 @@ if __name__ == "__main__":
     ap.add_argument('-f', '--force_upload', 
                     help='force upload of pics to ../../smodels.github.io.',
                     action='store_true')
+    ap.add_argument('-F', '--include_fastlim', help='include fastlim results',
+                    action='store_true')
     ap.add_argument('-a', '--add_version', help='add version labels in links', 
                     action='store_true')
     ap.add_argument('-s', '--ignore_superseded', help='ignore superseded results', 
@@ -513,5 +563,5 @@ if __name__ == "__main__":
     creator = WikiPageCreator( args.ugly, args.database, args.add_version, 
                                args.private, args.force_upload,
                                args.comparison_database, args.ignore_superseded,
-                               args.ignore, not args.dontmove )
+                               args.ignore, not args.dontmove, args.include_fastlim )
     creator.run()
