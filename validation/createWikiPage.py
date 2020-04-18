@@ -160,6 +160,12 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         ret=ret + ( "|\n" )
         self.true_lines.append ( ret )
 
+    def getNumber ( self, nr ):
+        """ just format an integral number nicely """
+        if nr == 0:
+            return "no"
+        return "%d" % nr
+
     def writeTableList ( self ):
         self.file.write ( "## Individual tables\n" )
 
@@ -182,16 +188,17 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                     expResList = self.getExpList ( sqrts, exp, tpe )
                     stpe = tpe.replace ( " ", "" )
 
-                    nres = 0
-                    nexpres = 0
+                    nres, nnewres, nexpres, nnewexpres = 0, 0, 0, 0
                     for expRes in expResList:
-                        hasTn=False
-                        txns = []
+                        hasTn,hasNewTn=False,False
+                        txns, newtxns = [], []
                         for tn in expRes.getTxNames():
                             validated = tn.getInfo('validated')
                             tname = tn.txName
                             if not self.ignore_validated and validated in [ "n/a" ]: 
                                 continue
+                            isNew = self.isNewAnaID ( expRes.globalInfo.id, tn.txName, tpe )
+                            hasChanged = self.anaHasChanged ( expRes.globalInfo.id, tn.txName, tpe )
                             if "efficiency" in tpe:
                                 dataset = self.getDatasetName ( tn )
                                 if dataset == "data": continue
@@ -200,11 +207,20 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                             txns.append ( tname )
                             hasTn=True
                             nres += 1
+                            if isNew or hasChanged:
+                                hasNewTn = True
+                                nnewres += 1
+                                newtxns.append ( tname )
                         if hasTn: nexpres += 1
+                        if hasNewTn: nnewexpres += 1
 
                     if nres > 0:
-                        self.file.write ( " * [%s %s](#%s%s%d): %d analyses, %d results\n" % \
-                                      ( exp, tpe, exp, stpe, sqrts, nexpres, nres ) )
+                        sanalyses = "%d analyses (%s new)" % \
+                                     ( nexpres, self.getNumber(nnewexpres) )
+                        sresults = "%d results (%s new)" % \
+                                     ( nres, self.getNumber(nnewres) )
+                        self.file.write ( " * [%s %s](#%s%s%d): %s, %s\n" % \
+                                      ( exp, tpe, exp, stpe, sqrts, sanalyses, sresults ) )
 
     def isOneDimensional( self, txname ):
         """ simple method that tells us if its a 1d map. In this case, we dont
@@ -409,7 +425,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
 
     def isNewAnaID ( self, id, txname, tpe ):
         """ is analysis id <id> new?
-        :param id: analysis id, e.g. ATLAS-SUSY-2013-02  (str)
+        :param id: analysis id, e.g. ATLAS-SUSY-2013-02 (str)
         :param txname: topology name, e.g. T1 (str)
         :param tpe: type of result, e.g. "upper limits" (str)
         """
