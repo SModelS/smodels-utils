@@ -13,7 +13,10 @@ import logging,os,sys,time,math,numpy
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
 from smodels.tools import modelTester
-from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth,addUnit
+try:
+    from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth,addUnit
+except:
+    pass
 from plottingFuncs import createUglyPlot, getExclusionCurvesFor, createPrettyPlot
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -587,7 +590,9 @@ class ValidationPlot():
             #Replaced rounded masses by original masses
             #(skip rounding to check if mass is in the plane)
             roundmass = expRes['Mass (GeV)']
-            width = expRes['Width (GeV)']
+            width = None
+            if "Width (GeV)" in expRes:
+                width = expRes['Width (GeV)']
             #print ( "roundmass", slhafile, roundmass )
             #print ( "expRes", expRes )
             if roundmass is None or "TGQ12" in slhafile:

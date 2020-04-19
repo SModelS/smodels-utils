@@ -18,10 +18,17 @@ from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TPolyLine3D,Double,TColor,gStyle,TH2D,TImage,kBlue )
 from smodels.tools.physicsUnits import fb, GeV, pb
 #from smodels.theory.auxiliaryFunctions import coordinateToWidth,withToCoordinate
-from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
 from smodels_utils.helper.prettyDescriptions import prettyTxname, prettyAxes
-from smodels.theory.auxiliaryFunctions import removeUnits
+try:
+    from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth
+except:
+    pass
+try:
+    from smodels.theory.auxiliaryFunctions import removeUnits
+except:
+    from backwardCompatibility import removeUnits
+    
 
 #Set nice ROOT color palette for temperature plots:
 stops = [0.00, 0.34, 0.61, 0.84, 1.00]
