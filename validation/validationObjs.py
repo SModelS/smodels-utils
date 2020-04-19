@@ -468,7 +468,10 @@ class ValidationPlot():
                 masses[0][1] = (masses[0][0]+masses[0][2])/2. ## fix rounding in file name
             if len(masses[1])>2 and abs(masses[1][0]+masses[1][2]-2*masses[1][1])<1.1:
                 masses[1][1] = (masses[1][0]+masses[1][2])/2. ## fix rounding in file name
-        ret = [ masses[0][0], masses[0][1] ]
+        if len(masses[0])>1:
+            ret = [ masses[0][0], masses[0][1] ]
+        else:
+            ret = [ masses[0][0], masses[1][0] ]
         massPlane = MassPlane.fromString(self.txName,self.axes)
             
         if not self.topologyHasWidths():
@@ -481,12 +484,12 @@ class ValidationPlot():
             ret = [ masses[1][0], masses[1][1] ]
         if "T5GQ" in filename: ## fixme we sure?
             ret = [ masses[0][0], masses[0][1] ]
-        if "TGQ12" in filename:
-            ret = [ masses[0][0], masses[1][0] ]
+        #if "TGQ12" in filename:
+        #    ret = [ masses[0][0], masses[1][0] ]
         if "THSCPM6" in filename:
             ret = [ masses[0][0], masses[0][2] ]
-        if "THSCPM1b" in filename:
-            ret = [ masses[0][0], masses[1][0] ]
+        #if "THSCPM1b" in filename:
+        #    ret = [ masses[0][0], masses[1][0] ]
         return ret
 
     def getDataFromPlanes(self):
