@@ -8,7 +8,7 @@
 
 """
 
-import logging,os,sys,time,math,numpy
+import logging,os,sys,time,math,numpy,copy
 
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
@@ -17,6 +17,11 @@ try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth,addUnit
 except:
     pass
+try:
+    from smodels.theory.auxiliaryFunctions import addUnit
+except:
+    from backwardCompatibility import addUnit
+
 from plottingFuncs import createUglyPlot, getExclusionCurvesFor, createPrettyPlot
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -590,6 +595,12 @@ class ValidationPlot():
             #Replaced rounded masses by original masses
             #(skip rounding to check if mass is in the plane)
             roundmass = expRes['Mass (GeV)']
+            """
+            width = copy.deepcopy ( roundmass )
+            for ib,br in enumerate(width):
+                for ic,w in enumerate(br):
+                    width[ib][ic]=None
+            """
             width = None
             if "Width (GeV)" in expRes:
                 width = expRes['Width (GeV)']
@@ -638,11 +649,14 @@ class ValidationPlot():
 
                 txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
                 mnw=[]
-                for bm,bw in zip(mass,width):
-                    br=[]
-                    for m,w in zip(bm,bw):
-                        br.append( (m,w) )
-                    mnw.append(br)
+                if width == None:
+                    mnw = mass
+                else:
+                    for bm,bw in zip(mass,width):
+                        br=[]
+                        for m,w in zip(bm,bw):
+                            br.append( (m,w) )
+                        mnw.append(br)
                 massGeV = addUnit ( mnw, GeV )
                 if not "efficiency" in Dict.keys():
                     try:

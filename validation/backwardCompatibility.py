@@ -12,6 +12,27 @@
 
 import unum
 
+def addUnit(obj,unit):
+    """
+    Add unit to object.
+    If the object is a nested list, adds the unit to all of its elements.
+
+    :param obj: Object without units (e.g. [[100,100.]])
+    :param unit: Unit to be added to the object (Unum object, e.g. GeV)
+    :return: Object with units (e.g. [[100*GeV,100*GeV]])
+    """
+
+    if isinstance(obj,list):
+        return [addUnit(x,unit) for x in obj]
+    elif isinstance(obj,tuple):
+        return tuple([addUnit(x,unit) for x in obj])
+    elif isinstance(obj,dict):
+        return dict([[addUnit(x,unit),addUnit(y,unit)] for x,y in obj.items()])
+    elif isinstance(obj,(float,int,unum.Unum)):
+        return obj*unit
+    else:
+        return obj
+
 def removeUnits(value,standardUnits):
     """
     Remove units from unum objects. Uses the units defined
