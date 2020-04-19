@@ -161,6 +161,8 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
         ts = {}
         if ana in tstamps:
             ts = tstamps[ana]
+        if not os.path.exists( "embaked/" ):
+            os.makedirs ( "embaked" )
         fname = "embaked/%s.%s.embaked" % (ana, topo )
         print ( "baking %s: %d points." % ( fname, len(values) ) )
         SRs = set()

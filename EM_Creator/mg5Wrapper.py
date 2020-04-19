@@ -29,12 +29,13 @@ class MG5Wrapper:
         """
         :param ver: version of mg5
         """
+        self.cwd = os.getcwd()+"/"
         self.topo = topo
         self.keep = keep
         self.rerun = rerun
         self.ma5 = ma5
         self.njets = njets
-        self.mg5install = "./mg5"
+        self.mg5install = "%s/mg5" % self.cwd
         self.logfile = None
         self.logfile2 = None
         self.tempf = None
@@ -49,7 +50,7 @@ class MG5Wrapper:
             self.info ( "cannot find mg5 installation at %s" % self.mg5install )
             self.exe ( "mg5/make.py" )
         self.determineMG5Version()
-        self.templateDir = "templates/"
+        self.templateDir = self.cwd + "templates/"
         self.mgParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
                           'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5',
                           'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } # , 'qcut': '90' }
@@ -172,7 +173,7 @@ class MG5Wrapper:
     def pluginMasses( self, slhaTemplate, masses ):
         """ take the template slha file and plug in
             masses """
-        f=open(slhaTemplate,"r")
+        f=open( self.cwd+slhaTemplate,"r")
         lines=f.readlines()
         f.close()
         self.slhafile = tempfile.mktemp(suffix=".slha",dir="./" )
