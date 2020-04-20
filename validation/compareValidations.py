@@ -8,7 +8,7 @@
 
 """
 
-import glob, os, sys, copy, subprocess, colorama
+import glob, os, sys, copy, subprocess, colorama, time
 
 
 def pprint ( *args ):
@@ -24,6 +24,11 @@ def error ( *args ):
     f.write ( " ".join(map(str,args)) )
     f.write ( "\n" )
     f.close()
+    f=open("errors.log","at")
+    print ( colorama.Fore.RED, *args, colorama.Fore.RESET )
+    f.write ( " ".join(map(str,args)) )
+    f.write ( "\n" )
+    f.close()
 
 def info ( *args ):
     f=open("comparison.log","at")
@@ -34,6 +39,11 @@ def info ( *args ):
 
 def warn ( *args ):
     f=open("comparison.log","at")
+    print ( colorama.Fore.YELLOW, *args, colorama.Fore.RESET )
+    f.write ( " ".join(map(str,args)) )
+    f.write ( "\n" )
+    f.close()
+    f=open("errors.log","at")
     print ( colorama.Fore.YELLOW, *args, colorama.Fore.RESET )
     f.write ( " ".join(map(str,args)) )
     f.write ( "\n" )
@@ -57,48 +67,65 @@ def compareDicts ( d1, d2 ):
         if k == "t":
             continue
         v2 = d2[k]
+        if type(v1) == float:
+            if v1 == 0. and v2 == 0.:
+                return True
+            dv = abs ( v2 - v1 ) / ( v1 + v2 )
+            if dv > 0.05:
+                print ( "Dicts: %s != %s, rel err is %.3f" % ( v1, v2, dv ) )
+                return "in %s: %s != %s" % ( k, v1, v2 )
+            return "ok"
+        if type(v2) == str and "Gamma" in v2:
+            v2 = v2.replace("Gamma","g" )
         if v1 != v2:
-            print ( "Dicts: %s != %s" % ( v1, v2 ) )
-            return False
-    return True
+            print ( "Dicts: %s != %s" % ( v1, v2) )
+            return "in %s: %s != %s" % ( k, v1, v2 )
+    return "ok"
 
 def compareDetails ( D1, D2, f ):
     lD1, lD2 = len(D1), len(D2)
-    if lD1 != lD2:
-        pprint ( "different number of validation points! %d versus %d" % ( lD1, lD2 ) )
-        return False
+    if lD1 < lD2:
+        error ( "number of validation points decreased! %d versus %d" % ( lD1, lD2 ) )
+        return "number of validation points decreased! %d versus %d" % ( lD1, lD2 )
+    if lD1 > lD2:
+        pprint ( "number of validation points increased! %d versus %d" % ( lD1, lD2 ) )
+        return "number of validation points increased! %d versus %d" % ( lD1, lD2 )
     for d1,d2 in zip ( D1, D2 ):
-        if not compareDicts ( d1, d2 ):
-            error ( "%s != %s" % ( d1, d2 ) )
-            return False
-    return True
+        r = compareDicts ( d1, d2 )
+        if r!="ok":
+            error ( "%s !=\n%s" % ( d1, d2 ) )
+            return r
+    return "ok"
 
 def compareValidation ( db1, db2, f ):
     pprint ( "compare validations %s" % getAnaTopo ( f ) )
+    timestamp = os.stat ( db1 + f ).st_mtime
     f1 = open ( db1 + f, "rt" )
     lines = f1.read()
     f1.close()
     if "<<< HEAD" in lines:
         error ( " ERROR: git conflict in %s%s" % ( db1, f ) )
-        return False
+        return "git conflict"
     vd1 = eval ( lines.replace ( "validationData =", "" ) )
     f2 = open ( db2 + f, "rt" )
     lines = f2.read()
     f2.close()
     if "<<< HEAD" in lines:
         error ( " ERROR: git conflict in %s%s" % ( db2, f ) )
-        return False
+        return "git conflict"
     vd2 = eval ( lines.replace ( "validationData =", "" ) )
     if vd1 == vd2:
         info ( "%s: exactly the same" % getAnaTopo ( f ) )
-        return True
+        return "ok"
     else:
-        warn ( "%s: differences. check details" % getAnaTopo ( f ) )
+        # warn ( "%s: differences. check details" % getAnaTopo ( f ) )
+        # warn ( "timestamp of first reads %s" % time.ctime ( timestamp ) )
         return compareDetails ( vd1, vd2, f )
 
 def compareDatabases ( db1, db2 ):
     print ( "compare databases: %s with %s" % ( db1, db2 ) )
     subprocess.getoutput ( "mv comparison.log comparison.old" )
+    subprocess.getoutput ( "mv errors.log errors.old" )
     g1 = glob.glob ( "%s/*TeV/*/*/validation/T*.py" % db1 )
     g2 = glob.glob ( "%s/*TeV/*/*/validation/T*.py" % db2 )
     valFilesInBoth = set()
@@ -121,7 +148,7 @@ def compareDatabases ( db1, db2 ):
     npassed,ntot=0,len(valFilesInBoth)
     for f in valFilesInBoth:
         res = compareValidation ( db1, db2, f )
-        if res:
+        if res == "ok":
             npassed+=1
     print ( "%d/%d validation objects are ok" % ( npassed, ntot ) )
 
