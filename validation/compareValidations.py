@@ -25,7 +25,6 @@ def error ( *args ):
     f.write ( "\n" )
     f.close()
     f=open("errors.log","at")
-    print ( colorama.Fore.RED, *args, colorama.Fore.RESET )
     f.write ( " ".join(map(str,args)) )
     f.write ( "\n" )
     f.close()
@@ -44,7 +43,6 @@ def warn ( *args ):
     f.write ( "\n" )
     f.close()
     f=open("errors.log","at")
-    print ( colorama.Fore.YELLOW, *args, colorama.Fore.RESET )
     f.write ( " ".join(map(str,args)) )
     f.write ( "\n" )
     f.close()
@@ -72,13 +70,13 @@ def compareDicts ( d1, d2 ):
                 return True
             dv = abs ( v2 - v1 ) / ( v1 + v2 )
             if dv > 0.05:
-                print ( "Dicts: %s != %s, rel err is %.3f" % ( v1, v2, dv ) )
+                error ( "Dicts: %s != %s, rel err is %.3f" % ( v1, v2, dv ) )
                 return "in %s: %s != %s" % ( k, v1, v2 )
             return "ok"
         if type(v2) == str and "Gamma" in v2:
             v2 = v2.replace("Gamma","g" )
         if v1 != v2:
-            print ( "Dicts: %s != %s" % ( v1, v2) )
+            error ( "Dicts: %s != %s" % ( v1, v2) )
             return "in %s: %s != %s" % ( k, v1, v2 )
     return "ok"
 
@@ -118,8 +116,6 @@ def compareValidation ( db1, db2, f ):
         info ( "%s: exactly the same" % getAnaTopo ( f ) )
         return "ok"
     else:
-        # warn ( "%s: differences. check details" % getAnaTopo ( f ) )
-        # warn ( "timestamp of first reads %s" % time.ctime ( timestamp ) )
         return compareDetails ( vd1, vd2, f )
 
 def compareDatabases ( db1, db2 ):
