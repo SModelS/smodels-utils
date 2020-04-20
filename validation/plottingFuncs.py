@@ -346,7 +346,6 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
         ## give one branch in the slha file names
         tokens = tokens[:5] + [ tokens[5] ]*2 + [ tokens [ 6 ] ] * 2
     masses = list ( map ( float, tokens[1:] ) )
-    # print ( "masses after listifying", masses )
     massPlane = MassPlane.fromString( vPlot.txName, vPlot.axes )
     nM = int ( len(masses)/2 ) ## number of masses per branch
     if vPlot.txName in [ "T5GQ" ]:
@@ -483,6 +482,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     dn = 50
     print ( " "*int(45+nmax/dn), end="<\r" )
     print ( "[plottingFuncs] checking validation points >", end="" )
+    hasIssued1dErrorMsg = False ## error msg to appear only once
     for ctPoints,pt in enumerate(validationPlot.data):
         if ctPoints % dn == 0:
             print ( ".", end="", flush=True )
@@ -498,7 +498,9 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
                 if "y" in vD.keys():
                     y_ = copy.deepcopy ( vD["y"] )
                 if y_ is None:
-                    logger.error ( "the data is 1d. FIXME cannot handle" )
+                    if not hasIssued1dErrorMsg:
+                        logger.error ( "the data is 1d. FIXME cannot handle" )
+                        hasIssued1dErrorMsg = True
                     y_ = 0.
                 noresult.SetPoint(noresult.GetN(), x_, y_ )
             nErrors += 1

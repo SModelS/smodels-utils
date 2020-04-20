@@ -52,7 +52,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     :param weightedAgreementFactor: when computing the agreement factor,
                                     weight points by the area of their Voronoi cell
     :param model: the model to use (e.g. mssm, nmssm, idm)
-    :return: True
+    :return: True on success
     """
 
     logger.info("Generating validation plot for " + expRes.globalInfo.id
@@ -61,6 +61,9 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                     limitPoints=limitPoints,extraInfo=extraInfo,combine=combine,
                     weightedAgreementFactor = weightedAgreementFactor,
                     model = model )
+    if valPlot.niceAxes == None:
+        logger.info ( "valPlot.niceAxes is None. Skip this." )
+        return False
     if generateData != False:
         valPlot.setSLHAdir(slhadir)
     valPlot.ncpus = ncpus

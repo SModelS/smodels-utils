@@ -838,8 +838,8 @@ class ValidationPlot():
 
         x,y,z = var('x y z')
         if axesStr == "":
-            print ( "Wait: why is the axes field empty? Cannot validate!" )
-            return
+            logger.error ( "Axes field is empty: cannot validate." )
+            return None
         axes = eval(axesStr,{'x' : x, 'y' : y, 'z': z})
 
         eqList = []
