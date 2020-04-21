@@ -50,12 +50,12 @@ def clean ( obj ):
     x, y = ctypes.c_double(), ctypes.c_double()
     for i in range(n):
         ret.GetPoint(i,x,y)
-        if x < 0.:
-            print ( "[plottingFuncs] ERROR: x value %s of exclusion line smaller than zero? do you really want this? Will set to zero." % x )
-            ret.SetPoint ( i, 0., y )
-        if y < 0.:
-            print ( "[plottingFuncs] ERROR: y value %s of exclusion line smaller than zero? do you really want this? Will set to zero." % y )
-            ret.SetPoint ( i, x, 0. )
+        if x.value < 0.:
+            print ( "[plottingFuncs] ERROR: x value %s of exclusion line smaller than zero? do you really want this? Will set to zero." % x.value )
+            ret.SetPoint ( i, 0., y.value )
+        if y.value < 0.:
+            print ( "[plottingFuncs] ERROR: y value %s of exclusion line smaller than zero? do you really want this? Will set to zero." % y.value )
+            ret.SetPoint ( i, x.value, 0. )
     return ret
 
 def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):

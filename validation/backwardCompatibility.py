@@ -11,6 +11,8 @@
 """
 
 import unum
+import numpy as np
+from smodels.tools.physicsUnits import GeV
 
 def addUnit(obj,unit):
     """
@@ -68,3 +70,44 @@ def removeUnits(value,standardUnits):
                        %(str(value),str(standardUnits)))
     else:
         return value
+
+def rescaleWidth(width):
+    """ 
+    The function that is applied to all widths to 
+    map it into a better variable for interpolation.
+    It grows logarithmically from zero (for width=0.)
+    to a large number (machine dependent) for width = infinity.
+
+    :param width: Width value (in GeV) with or without units
+
+    :return x: Coordinate value (float)
+    """
+
+    if isinstance(width,unum.Unum):
+        w = width.asNumber(GeV)
+    else:
+        w = width
+
+    minWidth = 1e-30 #Any width below this can be safely considered to be zero
+    maxWidth = 1e50 #Any width above this can be safely considered to be infinity
+    w = (min(w,maxWidth)/minWidth) #Normalize the width and convert it to some finite number (if not finite)
+    return np.log(1+w)
+
+def unscaleWidth(x):
+    """
+    Maps a coordinate value back to width (with GeV unit).
+    The mapping is such that x=0->width=0 and x=very large -> width = inf.
+
+    :param x: Coordinate value (float)
+
+    :return width: Width value (in GeV) with unit
+    """
+
+    minWidth = 1e-30 #Any width below this can be safely considered to be zero
+    maxWidth = 1e50 #Any width above this can be safely considered to be infinity
+    with np.errstate(over='ignore'): #Temporarily disable overflow error message
+        #The small increase in x is required to enforce unscaleWidth(widthToCoordinae(np.inf)) = np.inf
+        width = minWidth*(np.exp(x)-1)
+        if width > maxWidth:
+            width = np.inf
+    return width*GeV

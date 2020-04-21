@@ -16,11 +16,7 @@ from smodels.tools import modelTester
 try:
     from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth,addUnit
 except:
-    pass
-try:
-    from smodels.theory.auxiliaryFunctions import addUnit
-except:
-    from backwardCompatibility import addUnit
+    from backwardCompatibility import addUnit,rescaleWidth
 
 from plottingFuncs import createUglyPlot, getExclusionCurvesFor, createPrettyPlot
 import tempfile,tarfile,shutil,copy
@@ -124,14 +120,17 @@ class ValidationPlot():
         curve.GetPoint ( 0, x1, y1 ) ## get first point
         curve.GetPoint ( 2, x2, y2 ) ## get third point
         curve.GetPoint ( curve.GetN()-1, xl, yl ) ## get last point
-        if (( x1 - xl )**2 + ( y1 - yl ) ** 2 ) < 50.:
+        if (( x1.value - xl.value )**2 + ( y1.value - yl.value ) ** 2 ) < 50.:
             ## need not completion
             return
         logY=False
-        ax1, ay1 = copy.deepcopy(x1), copy.deepcopy(y1)
-        ax2, ay2 = copy.deepcopy(x2), copy.deepcopy(y2)
-        tx1, ty1 = copy.deepcopy(x1), copy.deepcopy(y1)
-        if max(abs(y2),abs(y1))<1e-6:
+        #ax1, ay1 = copy.deepcopy(x1), copy.deepcopy(y1)
+        #ax2, ay2 = copy.deepcopy(x2), copy.deepcopy(y2)
+        #tx1, ty1 = copy.deepcopy(x1), copy.deepcopy(y1)
+        ax1, ay1 = x1.value, y1.value
+        ax2, ay2 = x2.value, y2.value
+        tx1, ty1 = x1.value, y1.value
+        if max(abs(ay2),abs(ay1))<1e-6:
             logY=True
             ay2 = rescaleWidth(ay2)
             ay1 = rescaleWidth(ay1)
@@ -151,16 +150,18 @@ class ValidationPlot():
         n = curve.GetN()
         curve.GetPoint ( n-3, x1, y1 ) ## get third last point
         curve.GetPoint ( n-1, x2, y2 ) ## get last point
-        tx1, ty1 = copy.deepcopy(x1), copy.deepcopy(y1)
-        tx2, ty2 = copy.deepcopy(x2), copy.deepcopy(y2)
+        #tx1, ty1 = copy.deepcopy(x1), copy.deepcopy(y1)
+        #tx2, ty2 = copy.deepcopy(x2), copy.deepcopy(y2)
+        tx1, ty1 = x1.value, y1.value
+        tx2, ty2 = x2.value, y2.value
         if logY:
-            y2 = rescaleWidth(y2)
-            y1 = rescaleWidth(y1)
-        if x2 == x1:
-            x2 = x1 + 1e-16
+            ty2 = rescaleWidth(ty2)
+            ty1 = rescaleWidth(ty1)
+        if tx2 == tx1:
+            tx2 = tx1 + 1e-16
         k = 99999.
-        if x2 != x1:
-            k = (y2 - y1) / ( x2 - x1 )
+        if tx2 != tx1:
+            k = (ty2 - ty1) / ( tx2 - tx1 )
         if k > 1 or k < -1:
             ## the curve is more vertical -- close with the x-axis (y=0)
             curve.SetPoint ( n, tx2, 0. )
@@ -179,12 +180,15 @@ class ValidationPlot():
         #xt,yt=ROOT.Double(),ROOT.Double()
         #xtn,ytn=ROOT.Double(),ROOT.Double()
         xt,yt=ctypes.c_double(),ctypes.c_double()
-        xtn,ytn=ctypes.c_double(),ctypes.c_double()
-        xtn,ytn=copy.deepcopy(x),copy.deepcopy(y)
+        # xtn,ytn=ctypes.c_double(),ctypes.c_double()
+        # xtn,ytn=x.value,y.value
+        xtn,ytn=x,y
+        #xtn,ytn=copy.deepcopy(x),copy.deepcopy(y)
         for i in range(n):
             curve.GetPoint(i,xt,yt)
             curve.SetPoint(i,xtn,ytn)
-            xtn,ytn=copy.deepcopy(xt),copy.deepcopy(yt)
+            xtn,ytn=xt.value,yt.value
+            # xtn,ytn=copy.deepcopy(xt),copy.deepcopy(yt)
 
     def printCurve ( self, curve ):
         import ROOT
