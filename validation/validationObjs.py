@@ -109,7 +109,10 @@ class ValidationPlot():
 
     def completeGraph ( self, curve ):
         """ complete the given graph at the ends to cross the axes """
-        assert ( curve.GetN() > 3 )
+        if not ( curve.GetN() > 3 ):
+            print ( "problem, i am trying to complete a graph with %d points" % ( curve.GetN() ) )
+        if curve.GetN() <= 3:
+            return
         import ROOT
         x1,y1=ROOT.Double(),ROOT.Double()
         x2,y2=ROOT.Double(),ROOT.Double()
