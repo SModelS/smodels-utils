@@ -80,6 +80,30 @@ def compareDicts ( d1, d2 ):
             return "in %s: %s != %s" % ( k, v1, v2 )
     return "ok"
 
+def getValidationStatus ( f, db ):
+    """ get the status for a given validation file f
+        (eg 13TeV/ATLAS/ATLAS-SUSY-2015-02/validation/T2tt_2EqMassAx_EqMassBy.py) """
+    tokens = f.split("/")
+    anaId = tokens[2]
+    topo = tokens[4]
+    p = topo.find("_")
+    topo = topo[:p]
+    # dtype = "ul" # efficiencyMap or upperLimit
+    dtype = "upperLimit"
+    if "-eff" in anaId:
+        # dtype="em"
+        dtype="efficiencyMap"
+        anaId = anaId.replace("-eff","")
+    # print ( "get val stat for %s:%s[%s]" % ( anaId, topo, dtype ) )
+    er = db.getExpResults ( analysisIDs = [ anaId ], txnames = [ topo ], 
+                            dataTypes = [ dtype ], useSuperseded = True, 
+                            useNonValidated = True )
+    if len(er)==0:
+        return "could not find"
+    if len(er)>1:
+        return "more than one result"
+    return str(er[0].datasets[0].txnameList[0].validated)
+
 def compareDetails ( D1, D2, f ):
     lD1, lD2 = len(D1), len(D2)
     if lD1 < lD2:
@@ -118,7 +142,7 @@ def compareValidation ( db1, db2, f ):
     else:
         return compareDetails ( vd1, vd2, f )
 
-def compareDatabases ( db1, db2 ):
+def compareDatabases ( db1, db2, db ):
     print ( "compare databases: %s with %s" % ( db1, db2 ) )
     subprocess.getoutput ( "mv comparison.log comparison.old" )
     subprocess.getoutput ( "mv errors.log errors.old" )
@@ -141,14 +165,27 @@ def compareDatabases ( db1, db2 ):
     print ( "%d validation files found in both databases." % ( len(valFilesInBoth) ) )
     print ( "%d validation files found missing in either database." % \
             ( len(valFilesMissing) ) )
-    npassed,ntot=0,len(valFilesInBoth)
-    for f in valFilesInBoth:
+    npassed,ntot=0,0
+    vl = list(valFilesInBoth)
+    vl.sort()
+    for f in vl:
+        vstatus = getValidationStatus ( f, db )
+        if vstatus != "True":
+            pprint ( "skipping %s: %s" % ( getAnaTopo(f), vstatus ) )
+            continue
         res = compareValidation ( db1, db2, f )
         if res == "ok":
             npassed+=1
+        ntot+=1
     print ( "%d/%d validation objects are ok" % ( npassed, ntot ) )
 
+def loadDatabase():
+    from smodels.experiment.databaseObj import Database
+    db  = Database ( "../../smodels-database/" )
+    return db
+
 if __name__ == "__main__":
+    db = loadDatabase()
     db1 = "../../smodels-database/"
     db2 = "../../smodels-database-123/"
-    compareDatabases ( db1, db2 )
+    compareDatabases ( db1, db2, db )
