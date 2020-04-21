@@ -70,7 +70,7 @@ def compareDicts ( d1, d2 ):
                 return True
             dv = abs ( v2 - v1 ) / ( v1 + v2 )
             if dv > 0.05:
-                error ( "Dicts: %s != %s, rel err is %.3f" % ( v1, v2, dv ) )
+                error ( "Dicts: %s: %s != %s, rel err is %.3f" % ( k, v1, v2, dv ) )
                 return "in %s: %s != %s" % ( k, v1, v2 )
             return "ok"
         if type(v2) == str and "Gamma" in v2:
@@ -83,15 +83,15 @@ def compareDicts ( d1, d2 ):
 def compareDetails ( D1, D2, f ):
     lD1, lD2 = len(D1), len(D2)
     if lD1 < lD2:
-        error ( "number of validation points decreased! %d versus %d" % ( lD1, lD2 ) )
+        error ( "%s: number of validation points decreased! %d versus %d" % ( f, lD1, lD2 ) )
         return "number of validation points decreased! %d versus %d" % ( lD1, lD2 )
     if lD1 > lD2:
-        pprint ( "number of validation points increased! %d versus %d" % ( lD1, lD2 ) )
+        pprint ( "%s: number of validation points increased! %d versus %d" % ( f, lD1, lD2 ) )
         return "number of validation points increased! %d versus %d" % ( lD1, lD2 )
     for d1,d2 in zip ( D1, D2 ):
         r = compareDicts ( d1, d2 )
         if r!="ok":
-            error ( "%s !=\n%s" % ( d1, d2 ) )
+            error ( "%s: %s !=\n%s" % ( f, d1, d2 ) )
             return r
     return "ok"
 

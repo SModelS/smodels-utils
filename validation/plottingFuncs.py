@@ -11,11 +11,11 @@
 import logging,os,sys,numpy,random,copy
 sys.path.append('../')
 from array import array
-import math
+import math, ctypes
 logger = logging.getLogger(__name__)
 from ROOT import (TFile,TGraph,TGraph2D,gROOT,TMultiGraph,TCanvas,TLatex,
                   TLegend,kGreen,kRed,kOrange,kBlack,kGray,TPad,kWhite,gPad,
-                  TPolyLine3D,Double,TColor,gStyle,TH2D,TImage,kBlue )
+                  TPolyLine3D,TColor,gStyle,TH2D,TImage,kBlue )
 from smodels.tools.physicsUnits import fb, GeV, pb
 #from smodels.theory.auxiliaryFunctions import coordinateToWidth,withToCoordinate
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -46,7 +46,8 @@ def clean ( obj ):
     """ check for some issues with the exclusion line """
     ret = obj.ReadObj()
     n = ret.GetN()
-    x, y = Double(), Double()
+    # x, y = Double(), Double()
+    x, y = ctypes.c_double(), ctypes.c_double()
     for i in range(n):
         ret.GetPoint(i,x,y)
         if x < 0.:
@@ -851,7 +852,8 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
             logger.error("could not find any exclusion lines for %s" % validationPlot.txName )
             official = []
         for contour in official:
-            x, y = Double(), Double()
+            # x, y = Double(), Double()
+            x, y = ctypes.c_double(), ctypes.c_double()
             n = contour.GetN()
             for i in range(n):
                 contour.GetPoint(i,x,y)
@@ -1334,11 +1336,13 @@ def getEnvelope(excludedGraph):
     envelop.SetName("envelope")
     curve = TGraph(excludedGraph)
     curve.Sort()
-    x1, y1 = Double(), Double()
+    # x1, y1 = Double(), Double()
+    x1, y1 = ctypes.c_double(), ctypes.c_double()
     curve.GetPoint(0, x1, y1)
     yline = []
     for ipt in range(curve.GetN() + 1):
-        x, y = Double(), Double()
+        # x, y = Double(), Double()
+        x, y = ctypes.c_double(), ctypes.c_double()
         dmin = 0.
         if ipt < curve.GetN(): curve.GetPoint(ipt, x, y)
         if ipt != curve.GetN() and x == x1: yline.append(y)
@@ -1360,7 +1364,8 @@ def getEnvelope(excludedGraph):
             x1 = x
             yline = [y]
 
-    x2, y2 = Double(), Double()
+    # x2, y2 = Double(), Double()
+    x2, y2 = ctypes.c_double(), ctypes.c_double()
     envelop.GetPoint(envelop.GetN() - 1, x2, y2)
     envelop.SetPoint(envelop.GetN(), x2, 0.)  #Close exclusion curve at zero
     return envelop

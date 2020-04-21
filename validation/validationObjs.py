@@ -8,7 +8,7 @@
 
 """
 
-import logging,os,sys,time,math,numpy,copy
+import logging,os,sys,time,math,numpy,copy,ctypes
 
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
@@ -114,9 +114,12 @@ class ValidationPlot():
         if curve.GetN() <= 3:
             return
         import ROOT
-        x1,y1=ROOT.Double(),ROOT.Double()
-        x2,y2=ROOT.Double(),ROOT.Double()
-        xl,yl=ROOT.Double(),ROOT.Double()
+        #x1,y1=ROOT.Double(),ROOT.Double()
+        #x2,y2=ROOT.Double(),ROOT.Double()
+        #xl,yl=ROOT.Double(),ROOT.Double()
+        x1,y1=ctypes.c_double(),ctypes.c_double()
+        x2,y2=ctypes.c_double(),ctypes.c_double()
+        xl,yl=ctypes.c_double(),ctypes.c_double()
         # first compute k of the first three points
         curve.GetPoint ( 0, x1, y1 ) ## get first point
         curve.GetPoint ( 2, x2, y2 ) ## get third point
@@ -173,8 +176,10 @@ class ValidationPlot():
         """ add a point at position 0 in tgraph """
         import ROOT
         n=curve.GetN()+1
-        xt,yt=ROOT.Double(),ROOT.Double()
-        xtn,ytn=ROOT.Double(),ROOT.Double()
+        #xt,yt=ROOT.Double(),ROOT.Double()
+        #xtn,ytn=ROOT.Double(),ROOT.Double()
+        xt,yt=ctypes.c_double(),ctypes.c_double()
+        xtn,ytn=ctypes.c_double(),ctypes.c_double()
         xtn,ytn=copy.deepcopy(x),copy.deepcopy(y)
         for i in range(n):
             curve.GetPoint(i,xt,yt)
@@ -184,7 +189,8 @@ class ValidationPlot():
     def printCurve ( self, curve ):
         import ROOT
         n=curve.GetN()
-        xt,yt=ROOT.Double(),ROOT.Double()
+        # xt,yt=ROOT.Double(),ROOT.Double()
+        xt,yt=ctypes.c_double(),ctypes.c_double()
         #indices = list(range(n))
         indices = list(range(3))+list(range(n-3,n))
         for i in indices:

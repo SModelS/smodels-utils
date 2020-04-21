@@ -14,6 +14,7 @@ import ROOT
 import numpy
 import unum
 import sys
+import ctypes
 from smodels.experiment.txnameObj import TxNameData
 sys.path.insert(0,"../")
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
@@ -34,7 +35,8 @@ def getMinMax ( tgraph ):
     xpts,ypts=[],[]
     n=tgraph.GetN()
     for i in range(n):
-        x,y=ROOT.Double(),ROOT.Double()
+        # x,y=ROOT.Double(),ROOT.Double()
+        x,y=ctypes.c_double(),ctypes.c_double()
         tgraph.GetPoint(i,x,y)
         xpts.append ( x )
         ypts.append ( y )
