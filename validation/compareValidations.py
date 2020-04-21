@@ -59,6 +59,12 @@ def getAnaTopo ( f ):
     ret = ret[:p]
     return ret
 
+def addToOk ( name ):
+    f=open("ok.log","at" )
+    f.write ( getAnaTopo(name) )
+    f.close()
+
+
 def compareDicts ( d1, d2 ):
     """ compare two dictionaries """
     for k,v1 in d1.items():
@@ -146,6 +152,7 @@ def compareDatabases ( db1, db2, db ):
     print ( "compare databases: %s with %s" % ( db1, db2 ) )
     subprocess.getoutput ( "mv comparison.log comparison.old" )
     subprocess.getoutput ( "mv errors.log errors.old" )
+    subprocess.getoutput ( "mv ok.log ok.old" )
     g1 = glob.glob ( "%s/*TeV/*/*/validation/T*.py" % db1 )
     g2 = glob.glob ( "%s/*TeV/*/*/validation/T*.py" % db2 )
     valFilesInBoth = set()
@@ -175,6 +182,7 @@ def compareDatabases ( db1, db2, db ):
             continue
         res = compareValidation ( db1, db2, f )
         if res == "ok":
+            addToOk ( f )
             npassed+=1
         ntot+=1
     print ( "%d/%d validation objects are ok" % ( npassed, ntot ) )
