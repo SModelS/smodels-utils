@@ -41,29 +41,50 @@ def isIn ( i, txnames ):
 
 
 class Writer:
-    def __init__ ( self, db, experiment, keep, caption, numbers, prettyNames,
-                         superseded ):
+    def __init__ ( self, db, experiment, sqrts, keep, caption, numbers, prettyNames,
+                         superseded, topos, showsqrts, longtable = False ):
         """ writer class
+        :param experiment: select on experiment, e.g. CMS, ATLAS, or both
+        :param sqrts: select on sqrts (str)
         :param caption: write figure caption (bool)
         :param keep: keep latex files (bool)
         :param numbers: enumerate analysis (bool)
         :param description: add column for descriptions (bool)
+        :param topos: add column for list of topologies (bool)
+        :param showsqrts: show sqrts column (bool)
+        :param longtable: longtable or tabular latex environment
         """
         from smodels.experiment.databaseObj import Database
         database = Database ( args.database )
         #Creat analyses list:
         self.listOfAnalyses = database.getExpResults( useSuperseded=superseded )
         self.experiment = experiment 
+        self.sqrts = sqrts.lower()
+        self.sqrts = self.sqrts.replace("*","").replace("tev","").replace("both","all").replace("none","all")
+        if self.sqrts == "":
+            self.sqrts = "all"
         self.keep = keep
+        self.topos = topos
         self.caption = caption
         self.numbers = numbers
         self.prettyNames = prettyNames
+        self.showsqrts = showsqrts
         self.n_anas = 0 ## counter for analyses
         self.n_topos = 0 ## counter fo topologies
         self.lasts = None ## last sqrt-s (for hline )
         self.last_ana = None ## last ana id ( for counting )
+        self.table = "tabular"
+        if longtable:
+            self.table = "longtable"
 
-    def writeSingleAna ( self, ana ):
+    def sameAnaIds ( self, ana1, ana2 ):
+        ana1n = ana1.globalInfo.id
+        ana2n = ana2.globalInfo.id
+        ana1n = ana1n.replace("-agg","" )
+        ana2n = ana2n.replace("-agg","" )
+        return ana1n == ana2n
+
+    def writeSingleAna ( self, ana, nextIsSame ):
         """ write the entry of a single analysis """
         lines= [ "" ]
         sqrts = int ( ana.globalInfo.sqrts.asNumber(TeV) ) 
@@ -71,6 +92,7 @@ class Writer:
             lines[0] = "\\hline\n"
         ananr=""
         anaid = ana.globalInfo.id
+        anaid = anaid.replace("-agg","")
         if anaid != self.last_ana: 
             self.n_anas += 1
             self.last_ana = anaid
@@ -105,8 +127,10 @@ class Writer:
         prettyName = ana.globalInfo.prettyName
         dataType = ana.datasets[0].dataInfo.dataType
         dt = "eff" if dataType == "efficiencyMap" else "ul"
+        if nextIsSame:
+            dt = "ul, eff"
         # ref = "\\href{%s}{[%d]}" % ( ana.globalInfo.url, nr )
-        gi_id = ana.globalInfo.id.replace("/data-cut","").replace("-eff","").replace("/","")
+        gi_id = ana.globalInfo.id.replace("/data-cut","").replace("-eff","").replace("/","").replace("-agg","")
         Url = ana.globalInfo.url
         if " " in Url: Url = Url[:Url.find(" ")]
         #if "ATLAS-CONF-2013-093" in Url:
@@ -142,48 +166,81 @@ class Writer:
             pn = pn.replace("MET","$\\not{\!\!E}_T$")
             pn = pn.replace("M_CT","M$_CT$" )
             pn = pn.replace("alpha_T","$\\alpha_T$" )
-            if pn[-1]==")":
+            if len(pn)>0 and pn[-1]==")":
                 pos = pn.rfind ( "(" )
                 pn = pn[:pos]
             # pn = prettyName[:30]
             lines[0] += "%s &" % pn
-        lines[0] += "%s & %s & %s & %s \\\\\n" % \
-                     ( alltxes, dt, ana.globalInfo.lumi.asNumber(1/fb), 
-                       sqrts )
+        if self.topos:
+            lines[0] += "%s &" % ( alltxes )
+        lines[0] += "%s & %s " % ( dt, ana.globalInfo.lumi.asNumber(1/fb) )
+        if self.showsqrts:
+            lines[0] += "& %s " % ( sqrts )
+        lines[0] += " \\\\\n"
         self.lasts = sqrts
         self.n_topos += len(txnames)
         return "\\n".join ( lines ), len(txnames)
 
-    def generateAnalysisTable(self ):
+    def sqrtsIsMet ( self, sqrts ):
+        """ the sqrts criterion is met, either because it is "all", or because
+            the center of mass energy is correct """
+        if self.sqrts == "all":
+            return True
+        if abs(int(self.sqrts)-sqrts.asNumber(TeV))<1e-5:
+            return True
+        return False
+
+    def experimentIsMet ( self, anaid ):
+        if self.experiment in [ "both", "all" ]:
+            return True
+        if self.experiment in anaid:
+            return True
+        return False
+
+    def generateAnalysisTable( self, texfile ):
         """ Generates a raw latex table with all the analyses in listOfAnalyses,
-        writes it to texfile (if not None), and returns it as its return value. """
-        texfile = "tab.tex"
+        writes it to texfile (if not None), and returns it as its return value. 
+        :param texfile: where the tex gets written to, e.g. tab.tex
+        """
         frmt = "|l|l|c|c|c|"
         if self.prettyNames:
             frmt = "|l|l|l|c|c|c|"
         if self.numbers:
             frmt = "|r" + frmt
-        toprint = "\\begin{longtable}{%s}\n\hline\n" % frmt
+        toprint = "\\begin{%s}{%s}\n\hline\n" % ( self.table, frmt )
         if self.numbers:
             toprint +="{\\bf \#} &"
         toprint += "{\\bf ID} & "
         if self.prettyNames:
             toprint += "{\\bf Pretty Name} & "
             
-
-        toprint += "{\\bf Topologies} & {\\bf Type} & {\\bf $\\mathcal{L}$ [fb$^{-1}$] } & {\\bf $\\sqrt s$ }"
+        if self.topos:
+            toprint += "{\\bf Topologies} &"
+        toprint += "{\\bf Type} & {\\bf $\\mathcal{L}$ [fb$^{-1}$] } "
+        if self.showsqrts:
+            toprint += "& {\\bf $\\sqrt s$ } "
         toprint += "\\\\\n\hline\n"
-        for ana in self.listOfAnalyses:
-            if self.experiment == "both" or self.experiment in ana.globalInfo.id:
-                tp, n_topos = self.writeSingleAna ( ana )
-                toprint += tp
+        nextIsSame = False ## in case the next is the same, just "eff" not "ul"
+        for ctr,ana in enumerate(self.listOfAnalyses):
+            if nextIsSame:
+                ## skip!
+                nextIsSame = False
+                continue
+            if ctr+1 < len(self.listOfAnalyses):
+                # if self.listOfAnalyses[ctr+1].globalInfo.id == ana.globalInfo.id:
+                if self.sameAnaIds ( self.listOfAnalyses[ctr+1], ana ):
+                    nextIsSame = True
+            if self.experimentIsMet ( ana.globalInfo.id ):
+                if self.sqrtsIsMet ( ana.globalInfo.sqrts ):
+                    tp, n_topos = self.writeSingleAna ( ana, nextIsSame )
+                    toprint += tp
         toprint += "\\hline\n"
         if self.caption:
             caption = "\\caption{SModelS database"
             if self.experiment != "both": caption += " (%s)" % self.experiment
             toprint += "%s}\n" % caption
             toprint += "\\label{tab:SModelS database}\n"
-        toprint += "\\end{longtable}\n"
+        toprint += "\\end{%s}\n" % self.table
 
         if texfile:
             outfile = open(texfile,"w")
@@ -192,7 +249,7 @@ class Writer:
 
         self.createLatexDocument ( texfile )
         print ( "Number of analyses",self.n_anas )
-        print ( "Number of topos",self.n_topos )
+        print ( "Number of topo/ana pairs",self.n_topos )
         return toprint
 
     def createPdfFile ( self ):
@@ -242,10 +299,17 @@ if __name__ == "__main__":
         argparser.add_argument ( '-d', '--database', nargs='?', 
                             help='path to database [%s]' % dbpath, type=str, 
                             default=dbpath )
+        outfile = "tab.tex"
+        argparser.add_argument ( '-o', '--output', nargs='?', 
+                            help='output file [%s]' % outfile, type=str, 
+                            default=outfile )
         argparser.add_argument('-k', '--keep', help='keep tex files', 
                             action='store_true' )
         argparser.add_argument ( '-e', '--experiment', nargs='?', 
                             help='experiment [both]', type=str, default='both')
+        argparser.add_argument ( '-S', '--sqrts', nargs='?', 
+                            help="show only certain runs, e.g. 8, 13, or 'all' ['all']", 
+                            type=str, default='all' )
         argparser.add_argument('-p', '--pdf', help='produce pdf file', 
                             action='store_true' )
         argparser.add_argument('-P', '--png', help='produce png file', 
@@ -256,16 +320,24 @@ if __name__ == "__main__":
                             action='store_true' )
         argparser.add_argument('-n', '--enumerate', help='enumerate analyses', 
                             action='store_true' )
+        argparser.add_argument('-t', '--topologies', help='add topologies', 
+                            action='store_true' )
+        argparser.add_argument('-l', '--longtable', help='use longtable not tabular', 
+                            action='store_true' )
+        argparser.add_argument('--show_sqrts', help='show sqrts column', 
+                            action='store_true' )
         argparser.add_argument('-N', '--prettyNames', 
                             help='add column for description of analyses', 
                             action='store_true' )
         args=argparser.parse_args()
         writer = Writer( db = args.database, experiment=args.experiment,
+                         sqrts = args.sqrts,
                          keep = args.keep, caption = args.caption,
                          numbers = args.enumerate, prettyNames=args.prettyNames,
-                         superseded = args.superseded )
+                         superseded = args.superseded, topos = args.topologies,
+                         showsqrts=args.show_sqrts, longtable = args.longtable )
         #Generate table:
-        writer.generateAnalysisTable()
+        writer.generateAnalysisTable( args.output )
         # create pdf
         if args.pdf or args.png: 
             writer.createPdfFile()

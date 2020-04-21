@@ -23,9 +23,11 @@ except:
     import subprocess as C
 
 class SmsDictWriter:
-    def __init__ ( self, database, drawFeyn, xkcd, results, addVer, private ):
+    def __init__ ( self, database, drawFeyn, xkcd, results, addVer, private,
+                   dryrun ):
         self.databasePath = database
         self.drawFeyn = drawFeyn
+        self.dryrun =  dryrun
         self.xkcd = xkcd
         self.database = Database ( database )
         self.ver=self.database.databaseVersion.replace(".","")
@@ -81,7 +83,7 @@ N.B.: Each "()" group corresponds to a branch
         for l in lengths:
             self.f.write ( "| "+"-"*l+ " " )
         self.f.write ( "|\n" )
-        
+
 
     def cleanUp ( self, txname ):
         constr = txname.constraint
@@ -100,9 +102,14 @@ N.B.: Each "()" group corresponds to a branch
         topos = {}
         expresults = self.database.getExpResults( useSuperseded=True )
         #expresults = self.database.expResultList ## also non-validated
+        expresults.sort()
         for expRes in expresults:
-            for dataset in expRes.datasets:
-                for txname in dataset.txnameList:
+            datasets = expRes.datasets
+            datasets.sort( key = lambda x: str(x) )
+            for dataset in datasets:
+                txnames = dataset.txnameList
+                txnames.sort()
+                for txname in txnames:
                     stxname = str ( txname )
                     if txname in topos:
                         if txname.constraint != topos[stxname]:
@@ -156,27 +163,31 @@ N.B.: Each "()" group corresponds to a branch
 
 
     def createFeynGraph ( self, txname, constraint ):
-        from smodels_utils.plotting import feynmanGraph
         fcon = constraint
         constrs = fcon.split ( ";" )
         fstate=["MET","MET"]
-        # print ( "constrs=", constrs )
+        print ( "[smsDictionary] createFeynGraph", txname, fstate, constraint )
         c = constrs[0]
         for i in constrs:
             if len(i)<len(c):
                 c=i
-        print ( "[smsDictionary] shortest constraint for",txname,"is",c )
-        #p=constraint.find(";")
-        #if p>-1:
-        #    constraint=constraint[:p]
-        #c=constraint
-        p=c.find("<<BR>>" )
+        # print ( "[smsDictionary] shortest constraint for",txname,"is",c )
+        p=constraint.find("<<BR>>" )
+        p7=p+7
+        if p == -1:
+            p=constraint.find("<BR>" )
+            p7 = p + 5
         if p>-1:
             c=c[:p]
-            fstate = eval ( constraint[p+7:].replace("(","['").replace(")","']").replace(",","','") )
+            lastc = len(constraint)
+            if ";" in constraint:
+                lastc=constraint.find(";")
+            # print ( "constraint %s " % constraint, "p7", p7, "lastc", lastc, "p", p )
+            # print ( "fs",constraint[p7:lastc] )
+            fstate = eval ( constraint[p7:lastc].replace("(","['").replace(")","']").replace(",","','") )
         feynfile="../feyn/"+txname+".png"
         sfstate = str(fstate).replace(" ","").replace("'","")
-        print ( "[smsDictionary.py] draw",feynfile,"from",c,"with",sfstate,"(full constraint reads",fcon,")" )
+        print ( "[smsDictionary] draw",feynfile,"from",c,"with",sfstate,"(full constraint reads",fcon,")" )
         exe = "../smodels_utils/plotting/feynmanGraph.py -i "
         cmd = exe
         if writer.straight():
@@ -184,11 +195,14 @@ N.B.: Each "()" group corresponds to a branch
         br = c.find("<BR")
         constr = c[:br].replace("`","")
         cmd += ' -c "%s"' % constr
+        if txname == "T5Disp":
+            cmd += ' -L "[[0],[0]]"'
         cmd += " -f '%s'" % str(fstate).replace("[","(").replace("]",")").replace("'",'"')
         cmd += " -o %s" % feynfile
         print ( "[smsDictionary]", cmd )
-        a = C.getoutput ( cmd )
-        print ( "  `-",a )
+        if not self.dryrun:
+            a = C.getoutput ( cmd )
+            print ( "  `-",a )
 
     def writeTopo ( self, nr, txnames, constraint, first ):
         """ :param first: is this the first time I write a topo? """
@@ -210,12 +224,11 @@ N.B.: Each "()" group corresponds to a branch
         constraint = constraint[constraint.find("["):]
         constraint = constraint.replace( " ", "" )
         constraint = constraint.replace ( "jet", "q" )
-        constraint = constraint.replace ( "photon", "y" )
-        constraint = constraint.replace ( "higgs", "h" )
-        # if constraint[-1]==")": constraint = constraint[:-1]
         if self.drawFeyn:
             for txname in txnames:
                 self.createFeynGraph ( txname, constraint )
+        constraint = constraint.replace ( "photon", "y" )
+        constraint = constraint.replace ( "higgs", "h" )
         constraint = constraint.replace ( "]+[", "]+`<BR>`[" )
         constraint = constraint.replace ( ";",";`<BR>`" )
         constraint = "`" + constraint + "`"
@@ -227,7 +240,8 @@ N.B.: Each "()" group corresponds to a branch
         if self.xkcd:
             style = "xkcd"
         ## now "Graph" column
-        self.f.write ( ' | ![%s](../feyn/%s/%s.png)' % ( txname, style, txname ) )
+        # self.f.write ( ' | ![%s](../feyn/%s/%s.png)' % ( txname, style, txname ) )
+        self.f.write ( ' | <img alt="%s" src="../feyn/%s/%s.png" height="130">' % ( txname, style, txname ) )
         ## now "Appears in" column
         if self.hasResultsColumn:
             self.f.write ( " | " )
@@ -262,6 +276,8 @@ if __name__ == '__main__':
                              action='store_true' )
     argparser.add_argument ( '-x', '--xkcd', help='draw xkcd style (implies -f)',
                              action='store_true' )
+    argparser.add_argument ( '-D', '--dry_run', help='dry run, dont actually draw',
+                             action='store_true' )
     argparser.add_argument ( '-c', '--copy', help='copy Feynman graphs to ../../smodels.github.io/feyn/straight/ (implies -f)',
                              action='store_true' )
     argparser.add_argument ( '-p', '--private', help='declare as private (add wiki acl line on top)', action='store_true' )
@@ -276,8 +292,8 @@ if __name__ == '__main__':
         args.feynman = True
     writer = SmsDictWriter( database=args.database, drawFeyn = args.feynman,
             xkcd = args.xkcd, results = args.results, addVer = args.add_version,
-            private = args.private  )
-    print ( "[smsDictionary.py] Database", writer.database.databaseVersion )
+            private = args.private, dryrun = args.dry_run  )
+    print ( "[smsDictionary] Database", writer.database.databaseVersion )
     writer.run()
     if args.copy:
         #import socket

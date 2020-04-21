@@ -5,7 +5,7 @@
 from __future__ import print_function
 from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
-import urllib
+import urllib, colorama
 import os, sys
 import bibtexparser
 
@@ -143,6 +143,9 @@ class BibtexWriter:
     def bibtexFromInspire ( self, url, label=None ):
         """ get the bibtex entry from an inspire record """
         self.log ( " * fetching from Inspire: %s" % url )
+        ## hack for now, this solution wont work in the future
+        self.warn ( "for now we are using the old.inspirehep.net hack. This wont work in the long run!" )
+        url =  url.replace( "inspirehep.net", "old.inspirehep.net" )
         fullurl =  url+"/export/hx"
         # return fullurl
         f=urlopen (fullurl)
@@ -237,6 +240,10 @@ class BibtexWriter:
     def log ( self, line ):
         if self.verbose in [ "debug", "info" ]:
             print ( line )
+        self.g.write ( line + "\n" )
+
+    def warn ( self, line ):
+        print ( "%sWARN %s%s" % ( colorama.Fore.RED, line, colorama.Fore.RESET ) )
         self.g.write ( line + "\n" )
 
     def test( self ):

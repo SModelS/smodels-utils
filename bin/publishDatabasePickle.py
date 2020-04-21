@@ -1,11 +1,11 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
-""" makes a database pickle file publically available. 
-The script is deliberately run with python2. That way we get 
+""" makes a database pickle file publically available.
+The script is deliberately run with python2. That way we get
 a pickle file that should work with both python2 and python3. """
 
 from __future__ import print_function
-import pickle, os, sys, argparse
+import pickle, os, sys, argparse, time
 import colorama
 if sys.version[0]=="2":
     import commands as CMD
@@ -13,11 +13,11 @@ else:
     print ( "you sure you want to run this with python3?" )
     import subprocess as CMD
 
-def sizeof_fmt(num, suffix='B'):                                              
-    for unit in [ '','K','M','G','T','P' ]:                                   
-        if abs(num) < 1024.:                                                  
-            return "%3.1f%s%s" % (num, unit, suffix)                          
-        num /= 1024.0                                                         
+def sizeof_fmt(num, suffix='B'):
+    for unit in [ '','K','M','G','T','P' ]:
+        if abs(num) < 1024.:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
 eosdir = "/eos/project/s/smodels/www/database/"
@@ -52,7 +52,7 @@ def removeFastLim ( db ):
             if ctr == 4:
                 print ( "(removing more ... )" )
         else:
-                
+
             filteredList.append ( e )
     db.expResultList = filteredList
     print ( "after removal",len(db.getExpResults()),"results" )
@@ -103,7 +103,7 @@ def main():
     fastlim = meta.hasFastLim
     print ( meta )
     print ( "[publishDatabasePickle] database size", sizeof_fmt ( os.stat(dbname).st_size ) )
-    ver = meta.databaseVersion.replace(".","") 
+    ver = meta.databaseVersion.replace(".","")
     p.close()
     sfastlim=""
     if fastlim:
@@ -119,10 +119,11 @@ def main():
             smodels_ver = ver.replace("unittest","")
             infofile = "unittest%s" % smodels_ver
             pclfilename = "%s.pcl" % infofile
-            
+
     f=open ( infofile, "w" )
-    # Dict = { "lastchanged": meta.mtime, "size": os.stat(dbname).st_size, "url": "http://smodels.hephy.at/database/%s" % pclfilename }
-    Dict = { "lastchanged": meta.mtime, "size": os.stat(dbname).st_size, "url": "https://smodels.web.cern.ch/smodels/database/%s" % pclfilename }
+    mtime = time.asctime(time.localtime(meta.mtime))
+    Dict = { "lastchanged": meta.mtime, "mtime": mtime, "size": os.stat(dbname).st_size,
+             "url": "https://smodels.web.cern.ch/smodels/database/%s" % pclfilename }
     f.write ( "%s\n" % str(Dict).replace ( "'", '"' ) )
     f.close()
     if has_nonValidated:
@@ -147,6 +148,8 @@ def main():
             print ( "[publishDatabasePickle] %s" % a )
     cmd = "mv %s ../../smodels.github.io/database/%s" % ( infofile, infofile )
     print ( "[publishDatabasePickle] %s %s" % ( sexec, cmd ) )
+    print("\n\t -----> The json file has to be updated in the smodels.github.io:master/database repository.\n")
+    print("\n\t -----> The .pcl file can be uploaded through https://cernbox.cern.ch/index.php/s/jt7xJCepuXTRWPL\n\n")
     if not args.dry_run:
         a=CMD.getoutput ( cmd )
         print ( a )

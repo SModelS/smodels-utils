@@ -9,13 +9,20 @@ import pygraphviz, sys, math
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 
 """
-import logging
-logger = logging.getLogger(__name__)
-
 class DecayDrawer:
     """ a class that encapsulates the decay plot drawing
     """
-    def __init__ ( self, options, ps, offset, extra={}, verbose=False, html=False ):
+    def __init__ ( self, options, ps, offset, extra={}, verbose="warn", html=False ):
+        import logging
+        self.logger = logging.getLogger(__name__)
+        verbosity = verbose.lower()
+        levels = { "err": logging.ERROR, "warn": logging.WARN, "info": logging.INFO,
+                   "debug": logging.DEBUG }
+        logLevel = 0
+        for k,v in levels.items():
+            if k in verbosity:
+                logLevel = v
+                self.logger.setLevel ( logLevel )
         self.options=options
         self.maxmass = 10000.
         self.minmass = 0.
@@ -50,14 +57,14 @@ class DecayDrawer:
         # print "wout=",wout,"dprog=",dprog,"args=",dargs
         if self.options["nopng"]==False:
             self.G.draw(wout,prog=dprog,args=dargs)
-            logger.debug ( "%s created with %s." % ( wout, prog ) )
+            self.logger.debug ( "%s created with %s." % ( wout, prog ) )
 
         if self.options["dot"]:
             # wout=out+".dot"
             wout=out+".dot"
             # print "[drawer.py] write to",wout
             self.G.write(wout)
-            logger.debug ( "%s created with dot." % ( wout ) )
+            self.logger.debug ( "%s created with dot." % ( wout ) )
 
         #if not self.options["nopng"]:
             ## wout=out+".dot.png"
@@ -67,8 +74,7 @@ class DecayDrawer:
             wout=out+".pdf"
 
             self.G.draw(wout,prog='dot')
-            if self.verbose:
-                logger.log ( "%s created with dot." % ( wout ) )
+            self.logger.log ( "%s created with dot." % ( wout ) )
 
     def xvalue ( self, mass, ctr, n_relevant, name ):
         """ where on the axis should particle with mass <mass> go? """
@@ -131,37 +137,48 @@ class DecayDrawer:
         #    node.attr['shape']="box" # 'egg'
         node.attr['label']="%s" % label
 
-    def addOneEdge ( self, name, daughter, percentage, label ):
-        if percentage < 0.1:
-            return
-        l=label
-        if percentage < 0.9 and not self.options["nopercentage"]:
-            if self.tex:
-                l+=" "+str(int(100*percentage))+"\\\\%" ## trino
-            else:
-                l+=" "+str(int(100*percentage))+"%"
-        self.G.add_edge ( name, daughter )
+    def addOneEdge ( self, name, daughter, rmin, labels ):
+        """ add one edge with labels, etc """
+        l=""
+        matrixMode = (len(labels)>2)
+        if matrixMode: ## make a matrix
+            l="$\\\\begin{matrix}"
+        for ctr,L in enumerate(labels):
+            percentage,label = L[0], L[1]
+            # print ( "perc", percentage, name, daughter, label, ctr, len(labels) )
+            if percentage < rmin:
+                continue
+            if ctr>0 and ctr % 2 != 0:
+                l+=",\\,"
+            #if matrixMode:
+            #    label="$"+label+"$"
+            l+=label
+            if (percentage < 0.9 or len(labels)>1) and not self.options["nopercentage"]:
+                if self.tex:
+                    l+="\\,"+str(int(100*percentage))+"\\\\%" ## trino
+                else:
+                    l+="\\,"+str(int(100*percentage))+"%"
+            if ctr % 2 == 1 and ctr != len(labels)-1:
+                l+=",\\,\\\\\\\\"
+        if matrixMode: ## make a matrix
+            l+="\\\\end{matrix}$"
+        t = self.G.add_edge ( name, daughter )
         edge=self.G.get_edge ( name, daughter )
         edge.attr['label']=l
 
-    def addEdges ( self, name, decs ):
+    def addEdges ( self, name, decs, rmin = 0.0 ):
         for (daughter,right) in decs.items():
-            label=""
-            first=True
-            percentage=0
+            labels = []
             for (radiator,r) in right.items():
-                if self.ps.count ( name ) and self.ps.count ( daughter ):
-                    if r < 0.01:
+                if list (self.ps).count ( name ) and list(self.ps).count ( daughter ):
+                    if r < rmin:
                         continue
-                    if not first:
-                        label+=","
                     rname=self.prettyName(radiator).replace(" ","")
-                    if self.extra.has_key ( rname ):
+                    if rname in self.extra.keys ( ):
                         rname += "->" + self.extra[rname]
-                    percentage+=r
-                    label+=rname
-                    first=False
-            self.addOneEdge ( name, daughter, percentage, label )
+                    labels.append ( (r,rname) )
+            labels.sort( key=lambda x: x[0], reverse=True )
+            self.addOneEdge ( name, daughter, rmin, labels )
 
     def addMassScale ( self ):
         """ add a ruler that lists the masses """
@@ -175,7 +192,7 @@ class DecayDrawer:
 
     def simpleName ( self, name ):
         """ simple names for slha names """
-        reps = { "~g":"G", "~chi_10":"N", "~chi1+":"C", "~t_2":"T", "~t_1":"T", 
+        reps = { "~g":"G", "~chi_10":"N", "~chi1+":"C", "~t_2":"T", "~t_1":"T",
                  "~b_2":"B", "~b_1":"B", "~nu_muL":"xx {dot m}", "~nu":"NU",
                  "~d_R":"DR", "~s_R": "SR", "~chi2+":"C2", "~chi40":"C4",
                  "~chi2+":"C2", "~chi10":"C1", "~chi30":"C3" }
@@ -184,21 +201,46 @@ class DecayDrawer:
         # print name,"->",nname
         return nname
 
-    def texName ( self, name ):
-        """ map slha particle names to latex names """
+    def texName ( self, name, color = False, dollars = True ):
+        """ map slha particle names to latex names
+        :param color: add color tag
+        :param dollars: need dollars for math mode
+        """
         if name.find(" ")>-1:
             names=name.split()
             texed=[]
             for n in names:
-                texed.append ( self.texName ( n ) )
+                texed.append ( self.texName ( n, color ) )
             return " ".join ( texed )
         def huge(x):
-            return "\\\\Huge{\\\\textbf{%s}}" % x
+            return x
+            #return "\\\\Huge{\\\\textbf{%s}}" % x
         def large(x):
-            return "\\\\large{%s}" % x
-        def math(x): return "$%s$" % x
+            return x
+            #return "\\\\large{%s}" % x
+        def math(x): 
+            if dollars:
+                return "$%s$" % x
+            return x
+        def green(x,usecol):
+            if not usecol:
+                return x
+            return "\\color[rgb]{0,.5,0}%s" % x
+        def blue(x,usecol):
+            if not usecol:
+                return x
+            return "\\color[rgb]{0,0,.5}%s" % x
+        def brown(x,usecol):
+            if not usecol:
+                return x
+            return "\\color{brown}%s" % x
+        def red(x,usecol):
+            if not usecol:
+                return x
+            return "\\color[rgb]{.5,0,0}%s" % x
         def tilde(x): ## x is in tilde
-            return "\\\\tilde{\\\\mathrm{%s}}" % (x)
+            return "\\\\tilde{%s}" % (x)
+            # return "\\\\tilde{\\\\mathrm{%s}}" % (x)
         name=name.replace("_","")
         tsup=name[-1:]
         tsub=name[-2:-1]
@@ -208,31 +250,33 @@ class DecayDrawer:
             sup,sub="",""
             if tsup in [ "+", "-", "0" ]: sup="^{%s}" % tsup
             if tsub in [ "1", "2", "3", "4", "5" ]: sub="_{%s}" % tsub
-            return huge ( math ( tilde ( "\\\\chi" ) + sup + sub )  )
+            return huge ( green ( math ( tilde ( "\\\\chi" ) + sup + sub ), color ) )
 
+        if name[:4]=="~tau": # stau
+            sub=""
+            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
+            return huge ( brown ( math ( tilde ( "\\\\tau" ) + sub ), color ) )
         squarks = [ "u", "d", "c", "s", "t", "b", "e" ]
         if first=="~" and second in squarks: # squarks and selectron
             sub=""
-            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup 
-            return huge ( math ( tilde ( second ) + sub ) )
+            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
+            return huge ( blue ( math ( tilde ( second ) + sub ), color ) )
         if name[:3]=="~mu": # smuon
             sub=""
-            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup 
-            return huge ( math ( tilde ( "\\\\mu" ) + sub ) )
-        if name[:4]=="~tau": # stau
-            sub=""
-            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup 
-            return huge ( math ( tilde ( "\\\\tau" ) + sub ) )
-        if name=="~g": return huge ( math ( tilde ( "g" ) ) )
+            if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
+            return huge ( brown ( math ( tilde ( "\\\\mu" ) + sub ), color ) )
+        if name=="~g": return huge ( red ( math ( tilde ( "g" ) ), color ) )
         if name[:3]=="~nu": # sneutrinos:
             flavor=name[3:-1]
             if tsup in [ "1" , "2", "L", "R" ]: sub="_{%s}" % tsup
             if flavor in [ "mu", "tau" ]: sub="_{\\\\%s%s}" % (flavor,sub)
             if flavor in [ "e" ]: sub="_{%s%s}" % (flavor,sub)
-            return huge ( math ( tilde ( "\\\\nu" ) + sub ) ) 
+            return huge ( brown ( math ( tilde ( "\\\\nu" ) + sub ), color ) )
         if first=="~": return huge ( math ( tilde ( name[1:] ) ) )
         if name=="gamma": return large ( math ( "\gamma" ) )
         if name=="nu": return large ( math ( "\\\\nu" ) )
+        if name=="mu": return large ( math ( "\\\\mu" ) )
+        if name=="tau": return large ( math ( "\\\\tau" ) )
         if name=="h1": return large ( "h" )
         if name=="h2": return large ( "H" )
         if name=="a0": return large ( math("A") )
@@ -244,12 +288,12 @@ class DecayDrawer:
 
     def htmlName ( self, name ):
         ### name=name.replace ( "+", "" )
-        reps= { "chi10":"chi&#8321;&#8304;", "chi1+":"chi&#8321;+", 
+        reps= { "chi10":"chi&#8321;&#8304;", "chi1+":"chi&#8321;+",
            "chi2+":"chi&#8322;+", "chi3+":"chi&#8323;+", "chi20":"chi&#8322;&#8304;",
-           "chi30":"chi&#8323;&#8304;", "chi40":"chi&#8324;&#8304;", 
-           "t_1":"t&#8321;", "t_2":"t&#8322;", "b_1":"b&#8321;", "b_2":"b&#8322;", 
-           "t1":"t&#8321;", "t2":"t&#8322;", "b1":"b&#8321;", "b2":"b&#8322;", 
-           "chi":"&Chi;", "gamma":"&gamma;", "nu":"&nu;", 
+           "chi30":"chi&#8323;&#8304;", "chi40":"chi&#8324;&#8304;",
+           "t_1":"t&#8321;", "t_2":"t&#8322;", "b_1":"b&#8321;", "b_2":"b&#8322;",
+           "t1":"t&#8321;", "t2":"t&#8322;", "b1":"b&#8321;", "b2":"b&#8322;",
+           "chi":"&Chi;", "gamma":"&gamma;", "nu":"&nu;",
            "mu":"&mu;", "tau":"&tau;", "h1":"h", "h2":"H", "a0": "A",
            "a1": "A<sup>1</sup>" }
         for (From,To) in reps.items(): name=name.replace(From,To)
@@ -264,12 +308,14 @@ class DecayDrawer:
             return self.simpleName ( name )
         if self.tex:
             # return self.simpleName ( name )
-            return self.texName ( name )
+            ret = "$" + self.texName ( name, self.options["color"], dollars=False ) + "$"
+            # print ( "ret", name, ret )
+            return ret
         return self.htmlName ( name )
 
     def meddleWithTexFile ( self,out ):
         """ this changes the tex file! """
-        logger.debug ( "[meddleWithTexFile] rewriting tex file!" )
+        self.logger.debug ( "[meddleWithTexFile] rewriting tex file!" )
         f=open("%s.tex"%out)
         lines=f.readlines()
         f.close()
@@ -282,27 +328,33 @@ class DecayDrawer:
 
     def dot2tex ( self, out ):
         # import os
-        import commands, os
-        logger.debug ( "calling dot2tex now" )
+        import subprocess, os
+        cmd="which dot2tex"
+        a = subprocess.getoutput ( cmd )
+        if not "dot2tex" in a:
+            self.logger.error ( "dot2tex not found! (maybe you need to install it?)" )
+            print ( "sudo apt install dot2tex" )
+        self.logger.debug ( "calling dot2tex now" )
         #    if self.html: print "<br>"
         cmd="dot2tex --autosize --nominsize --crop %s.dot -traw -o %s.tex" % (out, out )
-        # cmd="dot2tex -c -traw"
-        #cmd+=" --docpreamble '\\usepackage{scrextend}\n\\changefontsizes[12pt]{14pt}' "
-        #cmd+="    --figpreamble '\\begin{Large}' --figpostamble '\\end{Large}'"
-        #longcmd="%s --preproc %s.dot | %s -o %s.tex" % ( cmd, out, cmd, out )
-        logger.debug (  "cmd=%s " % cmd )
-        output=commands.getoutput( cmd )
-        logger.debug ( output )
-        logger.debug ( "now meddle with tex file" )
+        self.logger.info (  "%s" % cmd )
+        output=subprocess.getoutput( cmd )
+        self.logger.debug ( "out=%s" % output )
+        self.logger.debug ( "now meddle with tex file" )
         self.meddleWithTexFile(out)
-        outdir=os.path.dirname ( out ) 
+        outdir=os.path.dirname ( out )
+        if outdir=="":
+            outdir="./"
         pdfcmd="pdflatex -interaction nonstopmode -output-directory %s %s.tex " % \
                 ( outdir, out )
-        logger.debug (  "pdfcmd=%s" % pdfcmd )
-        output=commands.getoutput(pdfcmd )
-        logger.debug ( output )
+        self.logger.info (  "%s" % pdfcmd )
+        output=subprocess.getoutput(pdfcmd )
+        self.logger.debug ( output )
 
         if self.options["nopng"]==False:
-            cmd="convert -antialias -density 300x300 %s.pdf %s.png" % ( out, out )
-            import commands
-            commands.getoutput ( cmd )
+            cmd='convert +profile "*" -antialias -density 300x300 %s.pdf %s.png' % ( out, out )
+            import subprocess
+            self.logger.info ( cmd )
+            o = subprocess.getoutput ( cmd )
+            if len(o)>0:
+                self.logger.error ( "conversion output %s" % o )

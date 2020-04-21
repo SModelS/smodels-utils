@@ -21,13 +21,11 @@ def installDirectory():
 
 def addInstallDirectory():
     """ add this directory to search path """
-    import sys
-    import inspect
-    import os
-    fname=inspect.getabsfile(addInstallDirectory)
-    base=os.path.dirname ( os.path.realpath ( fname ) )
-    sys.path.append ( base )
-    return base
+    import sys, os
+    iDir = installDirectory()
+    if os.path.isdir ( iDir ):
+        sys.path.append ( iDir )
+    return iDir
 
 def version(astuple=False):
     """
@@ -54,6 +52,10 @@ def addSModelSPath():
     if os.path.isdir(smodelsDir):
         sys.path.append(smodelsDir)
         return smodelsDir
+    smodelsDir = os.path.join(home,'git','smodels')
+    if os.path.isdir(smodelsDir):
+        sys.path.append(smodelsDir)
+        return smodelsDir
             
     try:
         from smodels import SModelS
@@ -61,7 +63,8 @@ def addSModelSPath():
         J=SModelS.pythonDirectory()
         import sys
         # sys.path.append ( I )
-        sys.path.append ( J )
+        if os.path.isdir ( J ):
+            sys.path.append ( J )
         return J
     except ImportError as e:
         pass

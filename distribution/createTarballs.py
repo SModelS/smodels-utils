@@ -45,10 +45,10 @@ def run( cmd ):
     print( "%scmd: %s%s" %(GREEN,cmd,RESET) )
     f=open("create.log","a")
     f.write( "cmd: %s\n" %(cmd) )
-    print('CMD=',cmd)
+    # print('CMD=',cmd)
     o=subprocess.check_output( cmd, shell=True )
     if len(o)>0:
-        print(o)
+        print("[createTarballs] %.80s" % o )
         f.write( str(o) + "\n" )
     f.close()
     return str(o)
@@ -75,14 +75,14 @@ def removeNonValidated(dirname):
                     if txn.validated in [ False ]:
                         comment( "%s/%s/%s is not validated. Delete it." % \
                                  ( er, dataset, txn ) )
-                        cmd="rm %s" % txn.path
+                        cmd="rm '%s'" % txn.path
                         run( cmd )
                     else:
                         hasTxNames=True
                 if not hasTxNames:
                         comment( "%s/%s has no validated txnames. remove folder." %\
                                  (er, dataset ) )
-                        cmd = "rm -rf %s" % dataset.path
+                        cmd = "rm -r '%s'" % dataset.path
                         run( cmd )
                 if hasTxNames:
                     hasDataSets=True
@@ -150,7 +150,7 @@ def clone(dirname):
         cmd = "cp -a ../../smodels-v%s/* %s" %( version, dirname )
     run( cmd )
     for i in os.listdir( dirname ):
-        if i in [".git", ".gitignore", "distribution", "test" ]:
+        if i in [".git", ".gitignore", "distribution", "test" ] or i.endswith ( ".pcl" ):
             run( "rm -rf %s/%s" %(dirname,i) )
 
 def rmpyc(dirname):
@@ -188,12 +188,13 @@ def fetchDatabase(tag,dirname):
 
 
 def clearGlobalInfo(filename):
+    print ( "[createTarballs] checking", filename )
     f=open(filename)
     lines=f.readlines()
     f.close()
     g=open("/tmp/tmp.txt","w")
     skip = [ "publishedData", "comment", "private", "checked", \
-             "prettyName", "susyProcess", "dataUrl" ]
+             "prettyName", "susyProcess", "dataUrl", "validationTarball" ]
     #skip.append( "validated" )
     #skip.append( "axes" )
     for line in lines:
@@ -361,7 +362,7 @@ def createDBRelease(output,tag):
 
     dirname = output
     if os.path.isdir(dirname):
-        comment('Folder %s already exists. Remove it before creating the tarball %s.tgz' %(output,output))
+        comment("Folder ``%s'' already exists. Remove it (i.e. run with -c) before creating the tarball %s.tgz" %(output,output))
         return False
     
     isDummy()
@@ -411,11 +412,19 @@ def create(output,tag):
 
 def main():
     ap = argparse.ArgumentParser( description="makes a database tarball for public release" )
-    ap.add_argument('-o', '--output', help='name of tarball filename [database]', default="database" )
-    ap.add_argument('-t', '--tag', help='database version [1.2.2]', default='1.2.2')
-    ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', default='../../smodels')
+    ap.add_argument('-o', '--output', help='name of tarball filename [database]', 
+                    default="database" )
+    ap.add_argument('-c', '--clear', help='remove output from previous run', 
+                    action="store_true" )
+    ap.add_argument('-t', '--tag', help='database version [1.2.3]', default='1.2.3')
+    ap.add_argument('-P', '--smodelsPath', help='path to the SModelS folder [None]', 
+                    default='../../smodels')
 
     args = ap.parse_args()
+    if args.clear:
+        cmd = "rm -rf database"
+        o = subprocess.getoutput ( cmd )
+        print ( "[createTarballs] %s: %s" % ( cmd, o ) )
     sys.path.insert(0,os.path.abspath(args.smodelsPath))
     createDBRelease(args.output,args.tag)
 

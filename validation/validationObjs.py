@@ -8,21 +8,28 @@
 
 """
 
-import logging,os,sys,time
+import logging,os,sys,time,math,numpy,copy,ctypes
 
 logger = logging.getLogger(__name__)
 from smodels.tools.physicsUnits import GeV
 from smodels.tools import modelTester
-from plottingFuncs import createPlot, getExclusionCurvesFor, createPrettyPlot
+try:
+    from smodels.theory.auxiliaryFunctions import unscaleWidth,rescaleWidth,addUnit
+except:
+    from backwardCompatibility import addUnit,rescaleWidth
+
+from plottingFuncs import createUglyPlot, getExclusionCurvesFor, createPrettyPlot
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
+from smodels.experiment.exceptions import SModelSExperimentError as SModelSError              
 from sympy import var
 import pyslha
 import string
 
 logger.setLevel(level=logging.ERROR)
 
-
+def point_in_hull(point, hull, tolerance=1e-12):
+    return all( (numpy.dot(eq[:-1], point) + eq[-1] <= tolerance) for eq in hull.equations)
 
 class ValidationPlot():
     """
@@ -35,25 +42,32 @@ class ValidationPlot():
     :ivar databasePath: path to the database folder. If not defined, the path from ExptRes.path will be
                         used to extract the database path.
     :ivar kfactor: Common kfactor to be applied to all theory cross-sections (float)
-    :ivar limitPoints: limits tested model points to n randomly chosen ones. 
+    :ivar limitPoints: limits tested model points to n randomly chosen ones.
                    If None or negative, take all points.
     :ivar extraInfo: add additional info to plot: agreement factor, time spent,
                       time stamp, hostname
     """
 
     def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
-                 kfactor = 1., limitPoints=None, extraInfo=False, combine=False ):
+                 kfactor = 1., limitPoints=None, extraInfo=False, combine=False,
+                 weightedAgreementFactor=True, model="default" ):
+        """
+        :param weightedAgreementFactor: when computing the agreement factor,
+            weight points by the area of their Voronoi cell
+        """
 
         self.expRes = copy.deepcopy(ExptRes)
+        self.model = model
         self.txName = TxNameStr
-        self.axes = Axes
-        self.niceAxes = self.getNiceAxes(Axes)
+        self.axes = Axes.strip()
+        self.niceAxes = self.getNiceAxes(Axes.strip())
         self.slhaDir = None
         self.data = None
         self.officialCurves = self.getOfficialCurve( get_all = True )
         self.kfactor = kfactor
         self.limitPoints = limitPoints
         self.extraInfo = extraInfo
+        self.weightedAF = weightedAgreementFactor
         self.combine = combine
 
         #Select the desired txname and corresponding datasets in the experimental result:
@@ -70,7 +84,7 @@ class ValidationPlot():
                 sys.exit()
         #Try to guess the path:
         else:
-            anaID = ExptRes.getValuesFor('id')[0]
+            anaID = ExptRes.globalInfo.id
             self.databasePath = ExptRes.path[:ExptRes.path.find('/'+anaID)]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')]
             self.databasePath = self.databasePath[:self.databasePath.rfind('/')+1]
@@ -84,61 +98,212 @@ class ValidationPlot():
     def __str__(self):
 
         vstr = "Validation plot for\n"
-        vstr += 'id: %s\n' % self.expRes.getValuesFor('id')[0]
+        vstr += 'id: %s\n' % self.expRes.globalInfo.id
         vstr += 'TxName: '+self.txName+'\n'
         vstr += 'Axes: '+self.niceAxes
         return vstr
 
-    def computeAgreementFactor ( self, looseness=1.2, signal_factor=1.0 ):
-        """ computes how much the plot agrees with the official exclusion curve
-            by counting the points that are inside/outside the official
-            exclusion curve, and comparing against the points' r values
-            ( upper limit / predict theory cross section )
-            :param looseness: how much do we loosen the criterion? I.e. by what factor do we
-            change the cross sections in favor of getting the right assignment?
-            :param signal_factor: an additional factor that is multiplied with the signal cross section,
-        """
+    def completeGraph ( self, curve ):
+        """ complete the given graph at the ends to cross the axes """
+        if not ( curve.GetN() > 3 ):
+            print ( "problem, i am trying to complete a graph with %d points" % ( curve.GetN() ) )
+        if curve.GetN() <= 3:
+            return
         import ROOT
-        curve = self.getOfficialCurve( get_all = False )        
-        if not curve:
-            logger.error( "could not get official tgraph curve for %s %s %s" % ( self.expRes,self.txName,self.axes  ) )
-            return 1.0
-        elif isinstance(curve,list):
-            for c in curve:                
-                objName = c.GetName()
-                if 'exclusion_' in objName:
-                    curve = c
-                    break
-        x0=ROOT.Double()
-        y0=ROOT.Double()
-        x=ROOT.Double()
-        y=ROOT.Double()
-        curve.GetPoint ( 0, x0, y0 ) ## get the last point
-        curve.GetPoint ( curve.GetN()-1, x, y ) ## get the last point
-        closeWithXAxis=True ## close with x-axis (y=0) or y-axis (x=0)
-        if self.txName in [ "T2bbffff" ]: ## T2bbffff tends to close with y-axis
-            closeWithXAxis = False
-
-        if closeWithXAxis:
-            curve.SetPoint ( curve.GetN(), x, 0. )  ## extend to y=0
-            curve.SetPoint ( curve.GetN(), x0, 0. )  ## extend to first point
+        #x1,y1=ROOT.Double(),ROOT.Double()
+        #x2,y2=ROOT.Double(),ROOT.Double()
+        #xl,yl=ROOT.Double(),ROOT.Double()
+        x1,y1=ctypes.c_double(),ctypes.c_double()
+        x2,y2=ctypes.c_double(),ctypes.c_double()
+        xl,yl=ctypes.c_double(),ctypes.c_double()
+        # first compute k of the first three points
+        curve.GetPoint ( 0, x1, y1 ) ## get first point
+        curve.GetPoint ( 2, x2, y2 ) ## get third point
+        curve.GetPoint ( curve.GetN()-1, xl, yl ) ## get last point
+        if (( x1.value - xl.value )**2 + ( y1.value - yl.value ) ** 2 ) < 50.:
+            ## need not completion
+            return
+        logY=False
+        #ax1, ay1 = copy.deepcopy(x1), copy.deepcopy(y1)
+        #ax2, ay2 = copy.deepcopy(x2), copy.deepcopy(y2)
+        #tx1, ty1 = copy.deepcopy(x1), copy.deepcopy(y1)
+        ax1, ay1 = x1.value, y1.value
+        ax2, ay2 = x2.value, y2.value
+        tx1, ty1 = x1.value, y1.value
+        if max(abs(ay2),abs(ay1))<1e-6:
+            logY=True
+            ay2 = rescaleWidth(ay2)
+            ay1 = rescaleWidth(ay1)
+        if ax2 == ax1:
+            ax2 = ax1 + 1e-16
+        dx = ax2 - ax1
+        if dx == 0.:
+            dx=1e-6
+        k = (ay2 - ay1) / dx
+        if abs(k) > 1:
+            ## the curve is more vertical -- close with the x-axis (y=0)
+            self.addPointInFront ( curve, tx1, 0. )
         else:
-            curve.SetPoint ( curve.GetN(), 0., y )  ## extend to x=0
-            curve.SetPoint ( curve.GetN(), 0., y0 )  ## extend to first point
+            ## the curve is more horizontal -- close with the y-axis (x=0)
+            self.addPointInFront ( curve, 0., ty1 )
 
-        pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0, "not_excluded_inside": 0,
-               "not_excluded_outside": 0, "wrong" : 0 }
+        n = curve.GetN()
+        curve.GetPoint ( n-3, x1, y1 ) ## get third last point
+        curve.GetPoint ( n-1, x2, y2 ) ## get last point
+        #tx1, ty1 = copy.deepcopy(x1), copy.deepcopy(y1)
+        #tx2, ty2 = copy.deepcopy(x2), copy.deepcopy(y2)
+        tx1, ty1 = x1.value, y1.value
+        tx2, ty2 = x2.value, y2.value
+        if logY:
+            ty2 = rescaleWidth(ty2)
+            ty1 = rescaleWidth(ty1)
+        if tx2 == tx1:
+            tx2 = tx1 + 1e-16
+        k = 99999.
+        if tx2 != tx1:
+            k = (ty2 - ty1) / ( tx2 - tx1 )
+        if k > 1 or k < -1:
+            ## the curve is more vertical -- close with the x-axis (y=0)
+            curve.SetPoint ( n, tx2, 0. )
+        elif k < 0:
+            ## the curve is more horizontal -- close with the y-axis (x=0)
+            curve.SetPoint ( n, tx2, 0. )
+        else:
+            ## the curve is more horizontal -- close with the y-axis (x=0)
+            curve.SetPoint ( n, 0., ty2 )
+        curve.SetPoint ( n+1, 0., 0. )
+
+    def addPointInFront ( self, curve, x, y ):
+        """ add a point at position 0 in tgraph """
+        import ROOT
+        n=curve.GetN()+1
+        #xt,yt=ROOT.Double(),ROOT.Double()
+        #xtn,ytn=ROOT.Double(),ROOT.Double()
+        xt,yt=ctypes.c_double(),ctypes.c_double()
+        # xtn,ytn=ctypes.c_double(),ctypes.c_double()
+        # xtn,ytn=x.value,y.value
+        xtn,ytn=x,y
+        #xtn,ytn=copy.deepcopy(x),copy.deepcopy(y)
+        for i in range(n):
+            curve.GetPoint(i,xt,yt)
+            curve.SetPoint(i,xtn,ytn)
+            xtn,ytn=xt.value,yt.value
+            # xtn,ytn=copy.deepcopy(xt),copy.deepcopy(yt)
+
+    def printCurve ( self, curve ):
+        import ROOT
+        n=curve.GetN()
+        # xt,yt=ROOT.Double(),ROOT.Double()
+        xt,yt=ctypes.c_double(),ctypes.c_double()
+        #indices = list(range(n))
+        indices = list(range(3))+list(range(n-3,n))
+        for i in indices:
+            curve.GetPoint(i,xt,yt)
+            y = copy.deepcopy(yt)
+            if y < 0.:
+                y = unscaleWidth(y)
+            #if 0. < y < 1e-6:
+            #    y = unscaleWidth(y)
+            # print ( "%d: %f,%f" % ( i, xt, y ) )
+            print ( "%d: %f,%g" % ( i, xt, y ) )
+
+    def computeHulls ( self ):
+        """ compute the convex hulls from the Voronoi
+            partition, so we can later weight points with the areas of the
+            Voronoi cell """
+        if not self.weightedAF:
+            return
+        # we could weight the point with the area of its voronoi partition
+        points = []
         for point in self.data:
             try: ## we seem to have two different ways of writing the x,y values
                 x,y=point["axes"]['x'],point["axes"]['y']
             except Exception as e:
                 x,y=point["axes"][0],point["axes"][1]
+            points.append ( [x,y] )
+        xy=numpy.array ( points )
+        logY=False
+        if max ( xy[::,1] ) < 1e-6:
+            logY=True
+            points = [ [ x,rescaleWidth(y) ] for x,y in points ]
+
+        from scipy.spatial import Voronoi, ConvexHull
+        vor = Voronoi ( points )
+        ## FIXME now get the bounding box of a point, then
+        ## get the area of the bounding box. weight the points with that area.
+        # now check for [ 1700. -15. ]
+        self.hulls = []
+        self.volumes = []
+        totalarea = 0.
+        n_points = 0
+        for i, reg_num in enumerate(vor.point_region):
+            indices = vor.regions[reg_num]
+            if not (-1 in indices): # s me regions can be opened
+                hull = ConvexHull(vor.vertices[indices])
+                n_points += 1
+                self.hulls.append ( hull )
+                vol = hull.volume
+                self.volumes.append ( vol )
+                totalarea += vol
+        self.average_area = totalarea / n_points
+
+    def computeWeight ( self, point ):
+        """ compute the weight of a point by computing the area of its voronoi cell """
+        if 0.<point[1]<1e-6:
+            point[1]=rescaleWidth( point[1] )
+        for i,hull in enumerate(self.hulls):
+            if point_in_hull ( point, hull ):
+                return self.volumes[i]
+        return self.average_area
+
+    def computeAgreementFactor ( self, looseness=1.2, signal_factor=1.0,
+                                 weighted = False ):
+        """ computes how much the plot agrees with the official exclusion curve
+            by counting the points that are inside/outside the official
+            exclusion curve, and comparing against the points' r values
+            ( upper limit / predict theory cross section )
+            :param looseness: how much do we loosen the criterion? I.e. by what factor do we
+                   change the cross sections in favor of getting the right assignment?
+            :param signal_factor: an additional factor that is multiplied with
+                   the signal cross section,
+            :param weighted: weight the points with the areas of their Voronoi cells
+
+        """
+        import ROOT
+        curve = self.getOfficialCurve( get_all = False )
+        if not curve:
+            logger.error( "could not get official tgraph curve for %s %s %s" % ( self.expRes,self.txName,self.axes  ) )
+            return 1.0
+        elif isinstance(curve,list):
+            for c in curve:
+                objName = c.GetName()
+                if 'exclusion_' in objName:
+                    curve = c
+                    break
+
+        self.completeGraph ( curve )
+
+        pts= { "total": 0, "excluded_inside": 0, "excluded_outside": 0,
+               "not_excluded_inside": 0, "not_excluded_outside": 0, "wrong" : 0 }
+
+        self.computeHulls()
+
+        for point in self.data:
+            if "error" in point.keys():
+                continue
+            try: ## we seem to have two different ways of writing the x,y values
+                x,y=point["axes"]['x'],point["axes"]['y']
+            except Exception as e:
+                x,y=point["axes"][0],point["axes"][1]
+            w = 1.
+            if weighted:
+                w = self.computeWeight ( [x,y] )
             if y==0: y=1.5 ## to avoid points sitting on the line
             excluded = point["UL"] < point["signal"]
             really_excluded = looseness * point["UL"] < point["signal"] * signal_factor
             really_not_excluded = point["UL"] > looseness * point["signal"] * signal_factor
             inside = curve.IsInside ( x,y )
-            pts["total"]+=1
+            pts["total"]+=w
             s=""
             if excluded:
                 s="excluded"
@@ -148,13 +313,11 @@ class ValidationPlot():
                 s+="_inside"
             else:
                 s+="_outside"
-            pts[s]+=1
+            pts[s]+=w
             if really_excluded and not inside:
-                pts["wrong"]+=1
+                pts["wrong"]+=w
             if really_not_excluded and inside:
-                pts["wrong"]+=1
-        #logger.debug ( "points in categories %s" % str(pts) )
-        #print ( "[validationObjs] points in categories %s" % str(pts) )
+                pts["wrong"]+=w
         if pts["total"]==0:
             return float("nan")
         return 1.0 - float(pts["wrong"]) / float(pts["total"])
@@ -241,14 +404,20 @@ class ValidationPlot():
 
         if tempdir is None: tempdir = os.getcwd()
         pf, parFile = tempfile.mkstemp(dir=tempdir,prefix='parameter_',suffix='.ini', text=True )
-        combine = "False"  
+        combine = "False"
         if self.combine:
             combine = "True"
+        model = self.model
+        if model == "default":
+            ## FIXME here we could define different defaults for eg T5Gamma
+            model = "mssm"
         with open ( parFile, "w" ) as f:
             f.write("[options]\ninputType = SLHA\ncheckInput = True\ndoInvisible = True\ndoCompress = True\ncomputeStatistics = True\ntestCoverage = False\ncombineSRs = %s\n" % combine )
             f.write("[parameters]\nsigmacut = 0.000000001\nminmassgap = 2.0\nmaxcond = 1.\nncpus = %i\n" %self.ncpus)
             f.write("[database]\npath = %s\nanalyses = %s\ntxnames = %s\ndataselector = all\n" % (self.databasePath,expId,txname))
             f.write("[printer]\noutputType = python\n")
+            f.write("[particles]\nmodel=share.models.%s\npromptWidth=1.1\n" % \
+                     model )
             f.write("[python-printer]\naddElementList = False\n")
             f.close()
         os.close(pf)
@@ -271,6 +440,71 @@ class ValidationPlot():
         self.data = eval(f.read().replace("validationData = ",""))
         f.close()
 
+    def getMassesFromSLHAFileName ( self, filename ):
+        """ try to guess the mass vector from the SLHA file name """
+        tokens = filename.replace(".slha","").split("_")
+        if not tokens[0].startswith ( "T" ):
+            print ( "why does token 0 not start with a T??? %s" % tokens[0] )
+            sys.exit(-1)
+        masses = list ( map ( float, tokens[1:] ) )
+        for m in masses:
+            if m>0. and m<1e-10:
+                pass
+                # print ( "[validationObjs] it seems there are widths in the vector. make sure we use them correctly." )
+                # sys.exit()
+        n=int(len(masses)/2)
+        if len(masses) % 2 != 0:
+            if "THSCPM7" in filename:
+                n+=1 # for THSCPM7 we have [M1,M2,(M3,W3)],[M1,(M3,W3) ]
+                ## so all works out if we just slice at one after the half
+            elif not "T3GQ" in filename and not "T5GQ" in filename:
+                print ( "[validationObjs] mass vector %s is asymmetrical. dont know what to do" % masses )
+            # sys.exit(-1)
+        ret = [ masses[:n], masses[n:] ]
+        if "T5GQ" in filename:
+            ret = [ masses[:n+1], masses[n+1:] ]
+        return ret
+
+    def topologyHasWidths ( self ):
+        """ is this a topology with a width-dependency? """
+        if "THSCP" in self.txName:
+            return True
+        return False
+
+    def getXYFromSLHAFileName ( self, filename ):
+        """ get the 'axes' from the slha file name. uses .getMassesFromSLHAFileName.
+        Meant as fallback for when no ExptRes is available.
+        """
+        masses = self.getMassesFromSLHAFileName ( filename )
+        if ".5" in self.axes:
+            if len(masses[0])>2 and abs(masses[0][0]+masses[0][2]-2*masses[0][1])<1.1:
+                masses[0][1] = (masses[0][0]+masses[0][2])/2. ## fix rounding in file name
+            if len(masses[1])>2 and abs(masses[1][0]+masses[1][2]-2*masses[1][1])<1.1:
+                masses[1][1] = (masses[1][0]+masses[1][2])/2. ## fix rounding in file name
+        if len(masses[0])>1:
+            ret = [ masses[0][0], masses[0][1] ]
+        else:
+            ret = [ masses[0][0], masses[1][0] ]
+        massPlane = MassPlane.fromString(self.txName,self.axes)
+            
+        if not self.topologyHasWidths():
+            varsDict = massPlane.getXYValues(masses,None)
+            if varsDict != None and "y" in varsDict:
+                ret = [ varsDict["x"], varsDict["y"] ]
+            if varsDict == None: ## not on this plane!!!
+                ret = None
+        if "T3GQ" in filename: ## fixme we sure?
+            ret = [ masses[1][0], masses[1][1] ]
+        if "T5GQ" in filename: ## fixme we sure?
+            ret = [ masses[0][0], masses[0][1] ]
+        #if "TGQ12" in filename:
+        #    ret = [ masses[0][0], masses[1][0] ]
+        if "THSCPM6" in filename:
+            ret = [ masses[0][0], masses[0][2] ]
+        #if "THSCPM1b" in filename:
+        #    ret = [ masses[0][0], masses[1][0] ]
+        return ret
+
     def getDataFromPlanes(self):
         """
         Runs SModelS on the SLHA files from self.slhaDir and store
@@ -291,7 +525,7 @@ class ValidationPlot():
         except Exception: ## old version?
             fileList = modelTester.getAllInputFiles(slhaDir)
             inDir = slhaDir
-            
+
 
         #Set temporary outputdir:
         outputDir = tempfile.mkdtemp(dir=slhaDir,prefix='results_')
@@ -299,6 +533,7 @@ class ValidationPlot():
         #Get parameter file:
         parameterFile = self.getParameterFile(tempdir=outputDir)
         logger.debug("Parameter file: %s" %parameterFile)
+        print ("Parameter file: %s" %parameterFile)
 
         #Read and check parameter file, exit parameterFile does not exist
         parser = modelTester.getParameters(parameterFile)
@@ -314,14 +549,17 @@ class ValidationPlot():
 
         #Define original plot
         massPlane = MassPlane.fromString(self.txName,self.axes)
+        if massPlane == None:
+            logger.error ( "no mass plane!" )
+            return False
         #Now read the output and collect the necessary data
         self.data = []
         slhafiles= os.listdir(slhaDir)
         ct_nooutput=0
+        slhafiles.sort() ## make sure we also go in the same order
         for slhafile in slhafiles:
             if not os.path.isfile(os.path.join(slhaDir,slhafile)):  #Exclude the results folder
                 continue
-            # print ( "slhafile", slhafile )
             fout = os.path.join(outputDir,slhafile + '.py')
             if not os.path.isfile(fout):
                 if ct_nooutput>4:
@@ -340,6 +578,14 @@ class ValidationPlot():
             ff.close()
             if not 'ExptRes' in smodelsOutput:
                 logger.debug("No results for %s " %slhafile)
+                ## still get the masses from the slhafile name
+                xy = self.getXYFromSLHAFileName ( slhafile )
+                ## log also the errors in the py file
+                Dict = { 'slhafile': slhafile, 'error': 'no results' }
+                if xy !=None:
+                    axes = { 'x': xy[0], 'y': xy[1] }
+                    Dict['axes'] = axes
+                self.data.append ( Dict )
                 continue
             res = smodelsOutput['ExptRes']
             expRes = res[0]
@@ -365,6 +611,27 @@ class ValidationPlot():
             #Replaced rounded masses by original masses
             #(skip rounding to check if mass is in the plane)
             roundmass = expRes['Mass (GeV)']
+            """
+            width = copy.deepcopy ( roundmass )
+            for ib,br in enumerate(width):
+                for ic,w in enumerate(br):
+                    width[ib][ic]=None
+            """
+            width = None
+            if "Width (GeV)" in expRes:
+                width = expRes['Width (GeV)']
+            #print ( "roundmass", slhafile, roundmass )
+            #print ( "expRes", expRes )
+            if roundmass is None or "TGQ12" in slhafile:
+                ## FIXME, for TGQ12 why cant i use exptres?
+                import inspect
+                frame = inspect.currentframe()
+                line = frame.f_lineno
+                #print ( "roundmass is not given in validationObjs.py:%s" % line )
+                #print ( "we try to extract the info from the slha file name %s" % \
+                #        slhafile )
+                roundmass = self.getMassesFromSLHAFileName ( slhafile )
+            # print ( "after", slhafile, roundmass )
             mass = [br[:] for br in roundmass]
             slhadata = pyslha.readSLHAFile(os.path.join(slhaDir,slhafile))
             origmasses = list(set(slhadata.blocks['MASS'].values()))
@@ -374,12 +641,14 @@ class ValidationPlot():
                         if round(omass,1) == m:
                             mass[i][im] = omass
                             break
-                                  
-            varsDict = massPlane.getXYValues(mass)
-            if varsDict is None:                
+
+            #print ( "get xy", mass, width )
+            varsDict = massPlane.getXYValues(mass,width)
+            #print ( "varsdict", varsDict )
+            if varsDict is None:
                 logger.debug( "dropping %s, doesnt fall into the plane of %s." % \
                                (slhafile, massPlane ) )
-                continue            
+                continue
             Dict = {'slhafile' : slhafile, 'axes' : varsDict, 't': dt,
                     'signal': expRes['theory prediction (fb)'],
                     'UL': expRes['upper limit (fb)'], 'condition': expRes['maxcond'],
@@ -395,11 +664,25 @@ class ValidationPlot():
                     dataset = self.expRes.datasets[0]
 
                 txname = [tx for tx in dataset.txnameList if tx.txName == expRes['TxNames'][0]][0]
-                massGeV = [[m*GeV for m in mbr] for mbr in mass]
+                mnw=[]
+                if width == None:
+                    mnw = mass
+                else:
+                    for bm,bw in zip(mass,width):
+                        br=[]
+                        for m,w in zip(bm,bw):
+                            br.append( (m,w) )
+                        mnw.append(br)
+                massGeV = addUnit ( mnw, GeV )
                 if not "efficiency" in Dict.keys():
-                    Dict['efficiency'] = txname.txnameData.getValueFor(massGeV)
+                    try:
+                        Dict['efficiency'] = txname.txnameData.getValueFor(massGeV)
+                    except SModelSError as e:
+                        logger.error ( "could not handle %s: %s" % ( slhafile, e ) )
+                        Dict=None
 
-            self.data.append(Dict)
+            if Dict:
+                self.data.append(Dict)
 
         #Remove temporary folder
         if slhaDir != self.slhaDir: shutil.rmtree(slhaDir)
@@ -410,18 +693,21 @@ class ValidationPlot():
 
         #Apply k-factors to theory prediction (default is 1)
         for ipt,pt in enumerate(self.data):
+            if "error" in pt.keys():
+                continue
             pt['signal'] *= self.kfactor
             self.data[ipt] = pt
             self.data[ipt]['kfactor'] = self.kfactor
 
-    def getPlot(self,silentMode=True):
+    def getUglyPlot(self,silentMode=True):
         """
         Uses the data in self.data and the official exclusion curve
         in self.officialCurves to generate the exclusion plot
         :param silentMode: If True the plot will not be shown on the screen
         """
 
-        self.plot,self.base = createPlot(self,silentMode=silentMode,extraInfo=self.extraInfo)
+        self.plot,self.base = createUglyPlot(self,silentMode=silentMode,
+                extraInfo=self.extraInfo,weightedAgreementFactor=self.weightedAF )
 
     def getPrettyPlot(self,silentMode=True):
         """
@@ -543,11 +829,11 @@ class ValidationPlot():
         :return: name of the plot file
         """
 
-        filename = self.expRes.getValuesFor('id')[0] + "_" + self.txName + "_"
+        filename = self.expRes.globalInfo.id + "_" + self.txName + "_"
         filename += self.niceAxes.replace(",","").replace("(","").replace(")","")
         filename += '.'+fformat
 
-        filename = filename.replace(self.expRes.getValuesFor('id')[0]+"_","")
+        filename = filename.replace(self.expRes.globalInfo.id+"_","")
         filename = os.path.join(validationDir,filename)
         filename = filename.replace("*","").replace(",","").replace("(","").replace(")","")
 
@@ -564,18 +850,27 @@ class ValidationPlot():
         """
 
         x,y,z = var('x y z')
+        if axesStr == "":
+            logger.error ( "Axes field is empty: cannot validate." )
+            return None
         axes = eval(axesStr,{'x' : x, 'y' : y, 'z': z})
 
         eqList = []
         for ib,br in enumerate(axes):
             if ib == 0:
-                mStr = 'Mass'
+                mStr,wStr = 'Mass','Width'
             else:
-                mStr = 'mass'
+                mStr,wStr = 'mass','width'
             mList = []
             for im,eq in enumerate(br):
-                mList.append('Eq(%s,%s)'
-                               %(var(mStr+string.ascii_uppercase[im]),eq))
+                if type(eq)==tuple:
+                    mList.append('Eq(%s,%s)'
+                                   %(var(mStr+string.ascii_uppercase[im]),eq[0]))
+                    mList.append('Eq(%s,%s)'
+                                   %(var(wStr+string.ascii_uppercase[im]),eq[1]))
+                else:
+                    mList.append('Eq(%s,%s)'
+                                   %(var(mStr+string.ascii_uppercase[im]),eq))
             mStr = "_".join(mList)
             eqList.append(mStr)
 

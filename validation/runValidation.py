@@ -6,10 +6,9 @@
 
 """
 
-import sys,os
+import sys,os,copy
 import logging
 import argparse,time
-from smodels.tools import runtime
 
 try:
     from ConfigParser import SafeConfigParser
@@ -19,18 +18,17 @@ except ImportError as e:
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
 
-
-
 def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                   pretty=False,generateData=True,limitPoints=None,extraInfo=False,
-                  combine=False,pngAlso = False):
+                  combine=False,pngAlso = False, weightedAgreementFactor = True,
+                  model = "default" ):
     """
     Creates a validation plot and saves its output.
 
     :param expRes: a ExpResult object containing the result to be validated
     :param txnameStr: String describing the txname (e.g. T2tt)
     :param axes: the axes string describing the plane to be validated
-     (i.e.  2*Eq(mother,x),Eq(lsp,y))
+                 (e.g.  2*[[x,y]])
     :param slhadir: folder containing the SLHA files corresponding to txname
     or the .tar.gz file containing the SLHA files.
     :param kfactor: optional global k-factor value to re-scale
@@ -51,13 +49,21 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                       time stamp, hostname
     :param combine: combine signal regions, or use best signal region
     :param pngAlso: save also pngs
-    :return: True
+    :param weightedAgreementFactor: when computing the agreement factor,
+                                    weight points by the area of their Voronoi cell
+    :param model: the model to use (e.g. mssm, nmssm, idm)
+    :return: True on success
     """
 
-    logger.info("Generating validation plot for " + expRes.getValuesFor('id')[0]
+    logger.info("Generating validation plot for " + expRes.globalInfo.id
                 +", "+txnameStr+", "+axes)
     valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor,
-                    limitPoints=limitPoints,extraInfo=extraInfo,combine=combine)
+                    limitPoints=limitPoints,extraInfo=extraInfo,combine=combine,
+                    weightedAgreementFactor = weightedAgreementFactor,
+                    model = model )
+    if valPlot.niceAxes == None:
+        logger.info ( "valPlot.niceAxes is None. Skip this." )
+        return False
     if generateData != False:
         valPlot.setSLHAdir(slhadir)
     valPlot.ncpus = ncpus
@@ -72,7 +78,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
             logger.info ( "data generation on demand was specified (generateData=None) and no data found. Lets generate!" )
             valPlot.getDataFromPlanes()
             generatedData=True
-    if pretty in [ True, "both" ]:
+    if pretty in [ True ]:
         valPlot.getPrettyPlot()
         valPlot.pretty = True
         valPlot.savePlot()
@@ -80,19 +86,29 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
             valPlot.saveData()
             if pngAlso:
                 valPlot.savePlot(fformat="png")
-    if pretty in [ False, "both" ]:
-        valPlot.getPlot()
+    import ROOT
+    for i in ROOT.gROOT.GetListOfCanvases():
+        i.Destructor()
+    if pretty in [ False ]:
+        valPlot.getUglyPlot()
         valPlot.pretty = False
         valPlot.savePlot()
         if generatedData:
             valPlot.saveData()
             if pngAlso:
                 valPlot.savePlot(fformat="png")
-
+    for i in ROOT.gROOT.GetListOfCanvases():
+        i.Destructor()
     return True
 
-def run ( expResList ):
-    #Loop over experimental results and validate plots
+def run ( expResList, axis, pretty, generateData ):
+    """
+    Loop over experimental results and validate plots
+    :param axis: Plot only for these axes. If none, get axes from sms.root
+    :param pretty: if true, then make pretty plot, else make ugly plot
+    :param generateData: if true, generate dpy dict file, if "ondemand" only generate
+                         if needed.
+    """
     for expRes in expResList:
         expt0 = time.time()
         logger.info("--- \033[32m validating  %s \033[0m" %expRes.globalInfo.id)
@@ -110,6 +126,9 @@ def run ( expResList ):
         if not txnames:
             logger.warning("No valid txnames found for %s (not assigned constraints?)" %str(expRes))
             continue
+        prettyorugly = [ pretty ]
+        if pretty=="both":
+            prettyorugly = [ True, False ]
         for itx,txname in enumerate(txnames):
             txnameStr = txname.txName
             txt0 = time.time()
@@ -118,6 +137,9 @@ def run ( expResList ):
                 tarfile = txnameStr+".tar.gz"
             else:
                 tarfile = os.path.basename(tarfiles[itx])
+            if hasattr ( txname, "validationTarball" ):
+                tarfile = txname.validationTarball
+                logger.info("Database entry specifies a validation tarball: %s. Will use it." % tarfile )
             tarfile = os.path.join(slhadir,tarfile)
 
             if not os.path.isfile(tarfile) and generateData != False:
@@ -135,16 +157,32 @@ def run ( expResList ):
                 axes = [txname.axes]
             else:
                 axes = txname.axes     
-            for ax in axes:
-                validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,pretty,
-                             generateData,limitPoints,extraInfo,combine,pngAlso)
+            if axis is None:
+                for ax in axes:
+                    doGenerate = generateData # local flag
+                    for p in prettyorugly:
+                        validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
+                                     doGenerate,limitPoints,extraInfo,combine,pngAlso,
+                                     weightedAgreementFactor, model )
+                        doGenerate = False
+            else:
+                from sympy import var
+                x,y,z = var("x y z")
+                ax = str(eval(axis)) ## standardize the string
+                for p in prettyorugly:
+                    validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
+                                 generateData,limitPoints,extraInfo,combine,pngAlso,
+                                 weightedAgreementFactor, model )
+                    generateData = False
             logger.info("------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
 
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
         tarfiles=None,ncpus=-1,verbosity='error',pretty=False,generateData=True,
-        limitPoints=None,extraInfo=False,combine=False,pngAlso=False):
+        limitPoints=None,extraInfo=False,combine=False,pngAlso=False,
+        weightedAgreementFactor=True, model = "default", axis=None,
+        force_load = None ):
     """
     Generates validation plots for all the analyses containing the Txname.
 
@@ -173,20 +211,33 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
 
     :param combine: combine signal regions, or use best signal region
     :param pngAlso: save also pngs
+    :param model: the model to use (mssm, nmssm, idm, ... )
+    :param axis: specify the axes, if None get them from sms.root
+    :param force_load: force loading the text database ("txt"), or the
+           binary database ("pcl"), dont force anything if None
     """
 
     if not os.path.isdir(databasePath):
         logger.error('%s is not a folder' %databasePath)
 
+    ## to mark the points of the data grid
+    import smodels.experiment.txnameObj
+    smodels.experiment.txnameObj.TxNameData._keep_values = True
+
+    if "TGQ12" in txnames:
+        print ( "[runValidation] we have TGQ12, turning overlap check off" )
+        import smodels.experiment.datasetObj
+        smodels.experiment.datasetObj._complainAboutOverlappingConstraints = False
+
     try:
-        db = Database(databasePath, subpickle = True )
+        db = Database(databasePath, force_load, subpickle = True )
     except Exception as e:
         logger.error("Error loading database at %s" %databasePath)
         logger.error("Error: %s" % str(e) )
         sys.exit()
 
-
     logger.info('-- Running validation...')
+
 
     #Select experimental results, txnames and datatypes:
     expResList = db.getExpResults( analysisIDs, datasetIDs, txnames,
@@ -196,11 +247,12 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
         logger.error("No experimental results found.")
 
     if ncpus < 0: 
+        from smodels.tools import runtime
         ncpus = runtime.nCPUs() + ncpus + 1
     # logger.info ( "ncpus=%d, n(expRes)=%d, genData=%d" % ( ncpus, len(expResList), generateData ) )
 
     tval0 = time.time()
-    run ( expResList )
+    run ( expResList, axis, pretty, generateData )
     logger.info("\n\n-- Finished validation in %.1f min." %((time.time()-tval0)/60.))
 
 def _doGenerate ( parser ):
@@ -229,6 +281,8 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Produces validation plots and data for the selected results")
     ap.add_argument('-p', '--parfile',
             help='parameter file specifying the validation options [validation_parameters.ini]', default='./validation_parameters.ini')
+    ap.add_argument('-f', '--force_build', action="store_true",
+            help='force building of database pickle file (you may want to do this for the grid datapoints in the ugly plots)' )
     ap.add_argument('-v', '--verbose',
             help='specifying the level of verbosity (error, warning, info, debug) [info]',
             default = 'info', type = str)
@@ -265,7 +319,13 @@ if __name__ == "__main__":
 
     #Selected plots for validation:
     analyses = parser.get("database", "analyses").split(",")
+    analyses = [ x.strip() for x in analyses ]
     txnames = parser.get("database", "txnames").split(",")
+    txnames = [ x.strip() for x in txnames ]
+    force_load = None
+    if args.force_build:
+        force_load = "txt"
+            
     combine=False
     if parser.get("database", "dataselector") == "efficiencyMap":
         dataTypes = ['efficiencyMap']
@@ -294,26 +354,38 @@ if __name__ == "__main__":
         else:
             tarfiles = tarfiles.split(',')
 
-    ncpus = -1
-    if parser.has_section("options") and parser.has_option("options","ncpus"):
-        ncpus = parser.getint("options","ncpus")
-    pngAlso = False
-    if parser.has_section("options") and parser.has_option("options","pngPlots"):
-        pngAlso = parser.getboolean("options", "pngPlots" )
-
-    pretty = False
-    if parser.has_section("options") and parser.has_option("options","prettyPlots"):
-        spretty = parser.get("options", "prettyPlots" ).lower()
-        if spretty in [ "true", "yes", "1" ]:
-            pretty = True
-        if spretty in [ "*", "all", "both" ]:
-            pretty = "both"
-    limitPoints=None
-    if parser.has_section("options") and parser.has_option("options","limitPoints"):
-        limitPoints = parser.getint("options","limitPoints")
-    extraInfo = False
-    if parser.has_section("options") and parser.has_option("options","extraInfo"):
-        extraInfo = parser.getboolean("options", "extraInfo")
+    ncpus = -1 ## number of processes, if negative, subtract that number from number of cores on the machine minus one.
+    pngAlso = False ## only pdf plots?
+    axis = None ## the axes to plot. If not given, take from sms.root
+    pretty = False ## only pretty plots, only ugly plots, or both
+    limitPoints=None ## limit the number of points to run on
+    extraInfo = False ## add extra info to the plot?
+    weightedAgreementFactor = False ## do we weight the points for the agreement factor?
+    model = "default" ## which model to use (default = mssm)
+    if parser.has_section("options"):
+        if parser.has_option("options","ncpus"):
+            ncpus = parser.getint("options","ncpus")
+        if parser.has_option("options","pngPlots"):
+            pngAlso = parser.getboolean("options", "pngPlots" )
+        if parser.has_option("options","axis"):
+            axis = parser.get("options","axis" )
+        if parser.has_option("options","prettyPlots"):
+            spretty = parser.get("options", "prettyPlots" ).lower()
+            if spretty in [ "true", "yes", "1" ]:
+                pretty = True
+            if spretty in [ "*", "all", "both" ]:
+                pretty = "both"
+            if pretty == False and spretty not in [ "false", "0", "no" ]:
+                logger.error ( "prettyPlots %s unknown" % spretty )
+                sys.exit()
+        if parser.has_option("options","limitPoints"):
+            limitPoints = parser.getint("options","limitPoints")
+        if parser.has_option("options","extraInfo"):
+            extraInfo = parser.getboolean("options", "extraInfo")
+        if parser.has_option("options","weightedAgreementFactor"):
+            weightedAgreementFactor = parser.getboolean("options", "weightedAgreementFactor")
+        if parser.has_option("options","model" ):
+            model = parser.get("options","model")
     generateData = _doGenerate ( parser )
 
 #    try:
@@ -330,5 +402,5 @@ if __name__ == "__main__":
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
          tarfiles,ncpus,args.verbose.lower(),pretty,generateData,limitPoints,
-         extraInfo,combine,pngAlso)
-
+         extraInfo,combine,pngAlso,weightedAgreementFactor, model, axis,
+         force_load )

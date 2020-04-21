@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 import ROOT
 import logging
 import subprocess
+from scipy.interpolate import griddata
+import itertools
+from smodels_utils.helper import prettyDescriptions
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +102,12 @@ def main():
             help="scp to smodels server, as it appears in http://smodels.hephy.at/wiki/CombinationComparisons" )
     args = argparser.parse_args()
     analysis, topo, srs = args.analysis, args.topo, args.sr
+    s_ana = analysis
+    s_ana = s_ana.replace("agg"," (agg)" )
+    try:
+        s_ana = __import__ ( "%s" % ( analysis ) ).analysis
+    except:
+        pass
     # analysis, topo, srs = "CMS16050", "T2tt", "all"
     FromUl = __import__ ( "%s.%s_ul" % ( analysis, topo), fromlist="%s_ul" % topo )
     FromEff = __import__ ( "%s.%s_%s" % ( analysis, topo, srs ),
@@ -108,9 +117,9 @@ def main():
     try:
         t = __import__ ( "%s" % ( analysis ) ).nSRs
         if t == "best": 
-            nsr = t
+            nsr = t + " signal region"
         else:
-            nsr = "%s SRs" % ( t )
+            nsr = "%s signal regions" % ( t )
     except Exception as e:
         print ( str(e) )
 
@@ -145,10 +154,12 @@ def main():
         uls[ h ] = point["UL" ] / point["signal"]
 
 
-    x,y,col=[],[],[]
     err_msgs = 0
 
-    for point in FromEff.validationData:
+    ipoints = FromEff.validationData
+    points = []
+
+    for point in ipoints:
         axes = convertNewAxes ( point["axes"] )
         h = axisHash ( axes )
         ul = None
@@ -158,37 +169,52 @@ def main():
             ul_eff = point["UL"] / point["signal"] ##  point["efficiency"]
             # ratio = ul_eff / ul
             ratio = ul / ul_eff
-            # ratio = math.log10 ( ul )
-            x.append ( axes[1] )
-            y.append ( axes[0] )
-            col.append ( ratio )
+            points.append ( (axes[0],axes[1],ratio ) )
         else:
             err_msgs += 1
             #if err_msgs < 5:
             #    print ( "cannot find data for point", point["slhafile"] )
+
+    points.sort()
+    points = numpy.array ( points )
+    x = points[::,1].tolist()
+    y = points[::,0].tolist()
+    col = points[::,2].tolist()
+    x_ = numpy.arange ( min(x), max(x), ( max(x)-min(x)) / 1000. )
+    y_ = numpy.arange ( min(y), max(y), ( max(y)-min(y)) / 1000. )
+    yx = numpy.array(list(itertools.product(y_,x_)) )
+    x = yx[::,1]
+    y = yx[::,0]
+    col = griddata ( points[::,0:2], points[::,2], yx )
+    # print ( "col=", col )
+
     if err_msgs > 0:
         print ( "couldnt find data for %d/%d points" % (err_msgs, len( FromEff.validationData ) ) )
 
     cm = plt.cm.get_cmap('jet')
-    # cm = plt.cm.get_cmap('RdYlGn')
-    scatter = plt.scatter ( x, y, s=35., c=col, cmap=cm, vmin=0.5, vmax=1.5 )
     plt.rc('text', usetex=True)
+    scatter = plt.scatter ( x, y, s=0.25, c=col, marker="o", cmap=cm, vmin=0.5, vmax=1.5 )
+    ax = plt.gca()
+    ax.set_xticklabels(map(int,ax.get_xticks()), { "fontweight": "normal", "fontsize": 14 } )
+    ax.set_yticklabels(map(int,ax.get_yticks()), { "fontweight": "normal", "fontsize": 14 } )
+    plt.rcParams.update({'font.size': 14})
+    #plt.rcParams['xtick.labelsize'] = 14
+    #plt.rcParams['ytick.labelsize'] = 14
     slhafile=FromEff.validationData[0]["slhafile"]
     Dir=os.path.dirname ( FromEff.__file__ )
     analysis=Dir[ Dir.rfind("/")+1: ]
     topo=slhafile[:slhafile.find("_")]
     line = getExclusionsFrom ( "%s/sms.root" % analysis, topo )
-
-
-    s_ana = analysis
-    s_ana = s_ana.replace("agg"," (agg)" )
-    plt.title ( "UL(official) / UL(SModelS), %s, %s" % ( s_ana, topo) )
-    # plt.title ( "Ratio UL(SModelS) / UL(official), %s, %s" % ( analysis, topo) )
-    plt.xlabel ( "m$_{mother}$ [GeV]" )
+    stopo = prettyDescriptions.prettyTxname ( topo, outputtype="latex" ).replace("*","^{*}" )
+    
+    plt.title ( "$f_{UL}$: %s, %s" % ( s_ana, stopo) )
+    plt.xlabel ( "m$_{mother}$ [GeV]", fontsize=13 )
+    plt.rc('text', usetex=True)
     label = "m$_{LSP}$ [GeV]"
     if "052" in analysis:
-      label = "$\Delta m$(mother, daughter) [GeV]"
-    plt.ylabel ( label )
+      # label = "$\Delta m$(mother, daughter) [GeV]"
+      label = "m$_{mother}$ - m$_{daughter}$ [GeV]"
+    plt.ylabel ( label, fontsize=13 )
 
     plt.colorbar()
     el = getExclusionLine ( line )
@@ -213,12 +239,11 @@ def main():
     if abs ( maxy - 80. ) < 3.:
         maxy = 79.9
     if nsr != "":
-        # plt.text ( .98*max(x_v), 1.0*min(y_v)-.27*(max(y_v)-min(y_v)), "%s" % ( nsr) , fontsize=12 )
-        plt.text ( .97*maxx, miny-.17*(maxy-miny), "%s" % ( nsr) , fontsize=12 )
+        plt.text ( .90*maxx, miny-.19*(maxy-miny), "%s" % ( nsr) , fontsize=14 )
     figname = "%s_%s.png" % ( analysis, topo )
     if srs !="all":
         figname = "%s_%s_%s.png" % ( analysis, topo, srs )
-    plt.text ( min(x)+.70*(max(x)-min(x)), max(y), "f$_{UL}$: %.2f +/- %.2f" % ( numpy.mean(col), numpy.std(col)  ), fontsize=11)
+    plt.text ( max(x)+.30*(max(x)-min(x)), .9*max(y), "$f_{UL}$ = $\sigma_{95}$ (CMS) / $\sigma_{95}$ (SModelS)", fontsize=13, rotation = 90)
     print ( "Saving to %s" % figname )
     plt.legend()
     plt.savefig ( figname )
@@ -226,7 +251,6 @@ def main():
       cmd="scp %s smodels.hephy.at:/var/www/images/combination/" % ( figname )
       print ( cmd )
       subprocess.getoutput ( cmd )
-    print ( "ratio=%.2f +/- %.2f" % ( numpy.mean(col), numpy.std(col) ) )
-    # plt.show()
+    print ( "ratio=%.2f +/- %.2f" % ( numpy.nanmean(col), numpy.nanstd(col) ) )
 
 main()

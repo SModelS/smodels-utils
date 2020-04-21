@@ -17,7 +17,10 @@ FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
-hbar = 4.135667662e-15 # in GeV * ns
+from sympy import var
+x,y,z = var('x y z')
+# h = 4.135667662e-15 # in GeV * ns
+hbar = 6.582119514e-16 # in GeV * ns
 
 def _Hash ( lst ): ## simple hash function for our masses
     ret=0.
@@ -25,6 +28,7 @@ def _Hash ( lst ): ## simple hash function for our masses
         ret=100000*ret+l
     return ret
 
+allowTrimming=True ## allow big grids to be trimmed down
 
 class DataHandler(object):
 
@@ -39,7 +43,7 @@ class DataHandler(object):
 
         """
         initialize data-source attributes with None
-        and allowNegativValues with False
+        and allowNegativeValues with False
         :param name: name as string
         :param dimensions: Dimensions of the data (e.g., for x,y,value, dimensions=2).
         :param coordinateMap: A dictionary mapping the index of the variables
@@ -59,10 +63,9 @@ class DataHandler(object):
         self.objectName = None
         self.dataUrl = None
         self.index = None
-        self.allowNegativValues = False
+        self.allowNegativeValues = False
         self.dataset=None
         self._massUnit = 'GeV'
-        # self._lifetimeUnit = 'ns'
         self._unit = None  #Default unit
         self._rescaleFactors = None
 
@@ -77,6 +80,8 @@ class DataHandler(object):
         for xv in self.xvars:
             if not xv in coordinateMap:
                 logger.error("Coordinate %s has not been defined in coordinateMap" %xv)
+                if xv in [ x, y, z ]:
+                    logger.error ( "Maybe you wrote '%s' instead of %s (i.e. a string instead of a sympy Symbol?)" % ( xv, xv ) )
                 sys.exit()
 
 
@@ -102,11 +107,14 @@ class DataHandler(object):
             return
 
         if "fficienc" in self.name:
-            logger.error("Units should not be defined for efficiency maps" )
-            sys.exit()
+            if self.unit not in [ "%s", None, "perc", "percent", "percentage" ]:
+                logger.error("Units should not be defined for efficiency maps" )
+                sys.exit()
+        if unitString in [ "perc", "percent", "percentage" ]:
+            unitString = "%"
 
         if unitString:
-            units = ['fb','pb',('GeV','GeV'),('GeV','ns'),('ns','GeV')]
+            units = ['/10000','%','fb','pb',('GeV','GeV'),('GeV','ns'),('ns','GeV'),('GeV','X:60')]
             if not unitString in units:
                 logger.error("Units must be in %s, not %s" % (str(units),unitString) )
                 sys.exit()
@@ -123,17 +131,19 @@ class DataHandler(object):
 
         #Load data
         self.data = []
+        strictlyPositive = False
+        if self._unit in [ "fb", "pb" ]:
+            strictlyPositive = True
         for point in getattr(self,self.fileType)():
             ptDict = self.mapPoint(point) #Convert point to dictionary
-            if self.allowNegativValues:
+            if self.allowNegativeValues:
                 self.data.append(ptDict)
             #Check if the upper limit value is positive:
             else:
                 #Just check floats in the point elements which are not variables
                 values = [value for xv,value in ptDict.items() if not xv in self.xvars]
-                if self._positivValues(values):
+                if self._positiveValues(values, strictlyPositive = strictlyPositive ):
                     self.data.append(ptDict)
-
 
     def __nonzero__(self):
 
@@ -313,7 +323,7 @@ class DataHandler(object):
         :param scale: float to re-scale the data.
         """
 
-        if not os.path.isfile(path):
+        if type(path) not in [ tuple, list ] and not os.path.isfile(path):
             logger.error("File %s not found" %path)
             if type(self.dataUrl ) == str and os.path.basename(path) == os.path.basename ( self.dataUrl ):
                 logger.info( "But you supplied a dataUrl with same basename, so I try to fetch it" )
@@ -388,18 +398,23 @@ class DataHandler(object):
     #            sys.exit()
     #        self._lifetimeUnit = unitString
 
-    def _positivValues(self, values):
+    def _positiveValues(self, values, strictlyPositive = False ):
 
         """checks if values greater then zero
         :param value: float or integer
-        :return: True if value >= 0 or allowNegativValues == True
+        :param strictlyPositive: if true, then dont allow zeroes either
+        :return: True if value greater (or equals) 0 or allowNegativeValues == True
         """
 
-        if self.allowNegativValues: return True
+        if self.allowNegativeValues: 
+            return True
         for value in values:
 
             if value < 0.0:
                 logger.warning("Negative value %s in %s will be ignored"%(value,self.path))
+                return False
+            if value == 0.0 and strictlyPositive:
+                logger.warning("Zero value %s in %s will be ignored"%(value,self.path))
                 return False
         return True
 
@@ -450,7 +465,8 @@ class DataHandler(object):
         import csv
 
         waitFor = None
-        if hasattr ( self, "objectName" ):
+        if hasattr ( self, "objectName" ) and self.objectName is not None:
+            print ( "[dataHandlerObjects] warning, object name %s supplied for an exclusion line. This is used to wait for a key word, not to give the object a name." % self.objectName )
             waitFor = self.objectName
         has_waited = False
         if waitFor == None:
@@ -466,8 +482,7 @@ class DataHandler(object):
                         if waitFor in i:
                             has_waited=True
                     continue
-                #print ( "li 2 >>%s<< hw=%s, waitFor=>>%s<<" % ( r, has_waited, waitFor ) )
-                if r[0].startswith("'M("):
+                if r[0].startswith("'M(") or r[0].startswith("M("):
                     if waitFor !=None and not waitFor in r[0]:
                         #print ( "set back." )
                         has_waited = False
@@ -479,13 +494,104 @@ class DataHandler(object):
                     except:
                         fr.append ( i )
                 if type ( self.unit) == tuple:
-                    if self.unit[1]=="ns":
-                        fr[1] = hbar / fr[1]
-                    if self.unit[0]=="ns":
-                        fr[0] = hbar / fr[0]
+                    if self.unit[1]=="X:60":
+                        frx = fr[0]*fr[1]+60.*( 1.-fr[1] )
+                        fr[1]=frx
                 yield fr
             csvfile.close()
 
+    def mcsv(self):
+        """
+        iterable method
+        preprocessing multiple csv-files, and multiplying the last values
+        floats
+
+        :yield: list with values as foat, one float for every column
+        """
+        ret = 1.
+        npaths = []
+        keys = set()
+        for ctr,p in enumerate(self.path):
+            path = {}
+            ret = list( self.csvForPath( p ) ) 
+            for point in ret:
+                key = tuple(point[:-1])
+                keys.add ( key )
+                path[key] = point[-1]
+            npaths.append ( path )
+        # print ( "paths", paths[:2] )
+        # print ( "keys", keys)
+        for k in keys:
+            ret = 1.
+            for p in npaths:
+                if not k in p.keys():
+                    logger.error ( "it seems that point %s is not in all paths?" % str(k) )
+                    break
+                ret = ret * p[k]
+            y = list(k)+[ret]
+            yield y
+
+
+    def csvForPath ( self, path ):
+        """ a csv file but giving the path """
+        import csv
+
+        waitFor = None
+        if hasattr ( self, "objectName" ) and self.objectName is not None:
+            print ( "[dataHandlerObjects] warning, object name %s supplied for an exclusion line. This is used to wait for a key word, not to give the object a name." % self.objectName )
+            waitFor = self.objectName
+        has_waited = False
+        if waitFor == None:
+            has_waited = True
+
+        with open( path,'r') as csvfile:
+            reader = csv.reader(filter(lambda row: row[0]!='#', csvfile))
+            for r in reader:
+                if len(r)<2:
+                    continue
+                #print ( "line >>%s<< hw=%s, waitFor=>>%s<<" % ( r, has_waited, waitFor ) )
+                if not has_waited:
+                    for i in r:
+                        if waitFor in i:
+                            has_waited=True
+                    continue
+                if r[0].startswith("'M(") or r[0].startswith("M("):
+                    if waitFor !=None and not waitFor in r[0]:
+                        #print ( "set back." )
+                        has_waited = False
+                    continue
+                fr = []
+                for i in r:
+                    try:
+                        fr.append ( float(i) )
+                    except:
+                        fr.append ( i )
+                if type ( self.unit) == tuple:
+                    if self.unit[1]=="X:60":
+                        frx = fr[0]*fr[1]+60.*( 1.-fr[1] )
+                        fr[1]=frx
+                yield fr
+            csvfile.close()
+
+    def embaked(self):
+        """
+        iterable method
+        preprocessing python dictionaries as defined by the em bakery
+        floats
+
+        :yield: list with values as foat, one float for every column
+        """
+        SR = self.objectName
+        with open(self.path) as f:
+            D=eval(f.read())
+        for pt,values in D.items():
+            ret = list(pt)
+            eff = 0.
+            if SR in values.keys():
+                eff = values[SR]
+            ret += [ eff ]
+            yield ret
+        
 
     def effi(self):
 
@@ -527,6 +633,7 @@ class DataHandler(object):
                 logger.debug("Small efficiency value %s +- %s. Setting to zero." %(values[-2],values[-1]))
                 values[-2]= 0.0
 
+            print ( "value", values )
             yield values
 
     def root(self):
@@ -696,19 +803,30 @@ class DataHandler(object):
             n_bins=n_bins * len(zRange )
             if len ( n_bins ) > max_nbins:
                 if len(zRange)>100:
-                    logger.warning ( "Too large map (nbins=%d). Will trim z axis." % n_bins )
-                    n_bins = n_bins / len(zRange)
-                    zRange = range(1,zAxis.GetNbins() + 1,2)
-                    n_bins = n_bins * len(zRange)
+                    if allowTrimming:
+                        logger.warning ( "Too large map (nbins=%d). Will trim z axis." % n_bins )
+                        n_bins = n_bins / len(zRange)
+                        zRange = range(1,zAxis.GetNbins() + 1,2)
+                        n_bins = n_bins * len(zRange)
+                    else:
+                        logger.warning ( "Very large map (nbins in z is %d), but trimming turned off." % n_bins )
         if self.dimensions > 1 and n_bins > max_nbins:
             if len(yRange)>200:
+                if allowTrimming:
                     logger.warning ( "Too large map (nbins=%d). Will trim y axis." % n_bins )
                     n_bins = n_bins / len(yRange)
                     yRange = range(1,yAxis.GetNbins() + 1,2 )
                     n_bins = n_bins * len(yRange)
+                else:
+                    logger.warning ( "Very large map (nbins in y is %d), but trimming turned off." % n_bins )
         if n_bins > max_nbins:
-            logger.warning ( "Too large map (nbins=%d). Will trim x axis." % n_bins )
-            xRange = range(1,xAxis.GetNbins() + 1, 2)
+            if allowTrimming:
+                logger.warning ( "Too large map (nbins=%d). Will trim x axis." % n_bins )
+
+                xRange = range(1,xAxis.GetNbins() + 1, 2)
+            else:
+                logger.warning ( "Very large map (nbins in x is %d), but trimming turned off." % n_bins )
+                
 
 
 
@@ -814,7 +932,12 @@ class ExclusionHandler(DataHandler):
         if self.reverse:
             points = reversed(points)
         for point in points:
-            yield self.mapPoint(point)
+            ret = self.mapPoint(point)
+            if type(self.unit)==tuple:
+                assert ( self.unit[0] == "GeV" )
+                if self.unit[1]=="ns":
+                    ret[y]=hbar/ret[y]
+            yield ret
 
     def svg(self):
 

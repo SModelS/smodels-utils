@@ -15,19 +15,16 @@ import math, random, os
 logger = logging.getLogger(__name__)
 import sys, copy
 import subprocess
+import pyx
+if not hasattr ( pyx.text, "defaulttextrunner" ):
+    pyx.text.defaulttexrunner = pyx.text.LatexEngine()
+    pyx.text.set(pyx.text.LatexRunner)
 
 from pyfeyn.user import color
-
 
 def cleanConstraint ( inp ):
     """ cleanup constraint string """
     c = inp
-    #p=c.find("]+")
-    #if p>-1:
-    #    c=c[:p+1]
-    #p=c.find("] +")
-    #if p>-1:
-    #    c=c[:p+1]
     c=c.replace("71.*","").replace("(","").replace(")","").replace("`","")
     if c != inp:
         print ( "[feynmanGraph] modified", inp, "->", c )
@@ -37,18 +34,12 @@ def printParticle_ ( label, jet ):
     """ very simple method to rename a few particles for the asciidraw
             routine, do not call directly """
     label = str ( label )
-    ## print "label=",label
     if not jet and label=="jet": label=r"q"
     if jet and label=="jet": label=r"jet"
-    # if label == "*": label=r"$\\mathrm{any}$"
-    if label in [ "gamma", "photon" ]: return "$\Pgamma$"
+    if label in [ "gamma", "photon" ]: return r"\gamma" # r"\Pgamma"
     if label in [ "hi", "higgs" ]: label="H"
-    # if label in [ "nu" ]: label="$\\nu$"
-    # if label in [ "f" ]: label = r"\Pelectron"
     if label in [ "f" ]: return r"\Pfermion"
-    # if label in [ "f" ]: return r"f"
     if label in [ "b" ]: return r"b"
-    # if label in [ "b" ]: return r"\Pbeauty"
     label=label+"     "
     return label[:3]
 
@@ -64,8 +55,6 @@ def zero_ ():
     c1=Vertex(1.0,0., mark=CIRCLE, fill=[ BLUE ] ) ## , radius=.01)
     c1=Vertex(0.,1., mark=CIRCLE, fill=[ BLUE ] ) ## , radius=.01)
 
-
-
 class Drawer:
     def __init__ ( self, element, verbose ):
         self.element = element
@@ -75,18 +64,17 @@ class Drawer:
 
     def connect_ ( self, p1, p2, label=None, spin="fermion", bend=True,\
                    nspec=None, displace=None, col=color.rgb.black ):
-        """ simple: draw a line from p1 to p2
+        """ draw a line from p1 to p2
+        :param canvas: the pyx canvas to draw on
+        :param p1: starting point
+        :param p2: end point
+        :param label: add a label?
+        :param nspec: specify the number of segment_s,
+                      None is draw the number randomly
+        :param displace: displace at fixed distance?
+        :param color: color of line
 
-                :param canvas: the pyx canvas to draw on
-                :param p1: starting point
-                :param p2: end point
-                :param label: add a label?
-                :param nspec: specify the number of segment_s,
-                              None is draw the number randomly
-                :param displace: displace at fixed distance?
-                :param color: color of line
-
-                :returns: array of all line segment_s
+        :returns: array of all line segment_s
         """
         from smodels_utils import SModelSUtils
         from pyfeyn.user import NamedLine, Fermion
@@ -266,15 +254,20 @@ class Drawer:
                 # p1 = Point(0, ct)
                 lastVertex=vtx1
                 nvtx=0
-                for ( nvtx,insertions) in enumerate(branch.particles):
+                for ( nvtx,(insertions,oddptcl)) in enumerate(zip(branch.evenParticles,branch.oddParticles)):
                     mark=None
                     if len(insertions)>0:
                         mark=CIRCLE
                     # mark=None
                     v1=Vertex ( f*(nvtx+1),f*ct,mark=mark)
+                    col = color.rgb.black
+                    if oddptcl.label in [ "longlived" ]:
+                        col = color.rgb.red
+                        #from pyfeyn.user import BLUE
+                        #col = BLUE
                     # f1 = Scalar    ( lastVertex,v1) ## .addLabel ( "x")
                     f1 = self.connect_ ( lastVertex,v1, spin="scalar",
-                                         bend=True, nspec=3 )
+                                         bend=True, nspec=3, col=col )
                     if straight:
                         if nvtx==0:
                             b=.10
@@ -302,6 +295,8 @@ class Drawer:
                 fState = "MET"
                 if hasattr ( branch, "finalState" ):
                     fState = branch.finalState
+                if hasattr ( element, "getFinalStates" ):
+                    fState = str ( element.getFinalStates()[ct] )
                 c = color.rgb.black
                 s = "scalar"
                 colors = { "MET": color.rgb.black, "HSCP": color.rgb.red, "RHadronG": color.rgb.red,
@@ -349,6 +344,9 @@ if __name__ == "__main__":
         argparser.add_argument ( '-f', '--final_state', nargs='?',
                       help='specify final state ("MET","MET"). Used only in combination with -c.',
                       type=str, default='("MET","MET")' )
+        argparser.add_argument ( '-L', '--long_lived', nargs='?',
+                      help='specify which BSM particle is long lived (if any), e.g [[0],[0]]. Used only in combination with -c.',
+                      type=str, default='' )
         argparser.add_argument ( '-o', '--output', nargs='?',
                 help= 'output file, can be pdf or eps or png (via convert)',
                 type=str, default='out.pdf' )
@@ -364,7 +362,7 @@ if __name__ == "__main__":
                                  action='store_true' )
         args=argparser.parse_args()
 
-        from smodels.theory import lheReader, lheDecomposer, crossSection, element
+        from smodels.theory import crossSection, element
         from smodels_utils import SModelSUtils
         import sys
 
@@ -379,7 +377,7 @@ if __name__ == "__main__":
             mergefiles, delfiles = "", ""
             if "]+[" in constraint:
                 constraints = constraint.split("]+[")
-                print ( "[feynmanGraph] sum of elements" )
+                # print ( "[feynmanGraph] sum of elements" )
                 for i,c in enumerate(constraints):
                     out = outdir + "/" + outfile.replace(".","%d." % i ).replace(".png",".pdf")
                     df = outdir + "/"+  outfile.replace(".","%d." % i )
@@ -391,7 +389,6 @@ if __name__ == "__main__":
                     if i > 0:
                         c="["+c
                     cc = cleanConstraint ( c ) 
-                    print ( "element",i,cc, out )
                     E = element.Element ( cc )
                     drawer = Drawer ( E, args.verbose )
                     drawer.draw ( out, straight=strt, inparts=args.incoming,
@@ -428,15 +425,29 @@ if __name__ == "__main__":
                 sys.exit()
             constraint = cleanConstraint ( args.constraint )
             E=element.Element ( constraint, fs )
+            if args.long_lived:
+                if not args.long_lived.count("[")==3 or not args.long_lived.count("]")==3:
+                    print ( "error: syntax for long lived: [[i,j],[k,l]]. Give the indices of the long lived particles for each branch." )
+                    sys.exit()
+                ll = eval ( args.long_lived )
+                for ctrb,b in enumerate(E.branches):
+                    for ctrp,op in enumerate(b.oddParticles):
+                        if ctrp in ll[ctrb]:
+                            b.oddParticles[0].label="longlived"
+
             drawer = Drawer ( E, args.verbose )
             drawer.draw ( args.output, straight=strt, inparts=args.incoming,
                           italic=args.italic )
-            del drawer ## no fucking clue why this is needed
+            #del drawer ## no fucking clue why this is needed
             sys.exit()
 
+        print ( "LHE mode currently not working." )
+        """
         filename="%s/lhe/%s_1.lhe" % (SModelSUtils.installDirectory(), args.T )
         if args.lhe!="": filename=args.lhe
 
+        from smodels.theory import lheReader
+        import lheDecomposer
         reader = lheReader.LheReader( filename )
         Event = reader.next()
         E = lheDecomposer.elementFromEvent( Event, crossSection.XSectionList() )
@@ -444,3 +455,4 @@ if __name__ == "__main__":
         drawer.draw ( args.output, straight=args.straight, inparts=args.incoming,
                       italic=args.italic, jet=args.jet )
         del drawer ## no fucking clue why this is needed
+        """

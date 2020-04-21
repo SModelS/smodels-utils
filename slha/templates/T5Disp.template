@@ -80,7 +80,7 @@ BLOCK MASS  # Mass Spectrum
    2000015     1.00000000E+05   # ~tau_2
    1000016     1.00000000E+05   # ~nu_tauL
    1000021     M0    #    ~g
-   1000022     M2    #    ~chi_10
+   1000022     M1    #    ~chi_10
    1000023     1.00000000E+05   # ~chi_20
    1000025     1.00000000E+05   # ~chi_30
    1000035     1.00000000E+05   # ~chi_40
@@ -198,43 +198,6 @@ BLOCK MSOFT Q=  2.90528802E+02  # The soft SUSY breaking masses at the scale Q
 # - The SUSY decays of the top quark are included.
 
 #         PDG            Width
-DECAY   1000021     M1 # ~g + decays
+DECAY   1000021     W0 # ~g + decays
 #           BR         NDA      ID1       ID2       ID3
-      2.50000000e-01   2    1000001   -1
-      2.50000000e-01   2    1000002   -2
-      2.50000000e-01   2    1000003   -3
-      2.50000000e-01   2    1000004   -4
-
-#         PDG            Width
-DECAY   1000001     1.00000000E+00   # sdown_L decays
-#          BR         NDA      ID1       ID2
-     1.00000000E+00    2     1000022         1   # BR(~d_L -> ~chi_10 d)
-#         PDG            Width
-DECAY   1000002     1.00000000E+00   # sup_L decays
-#          BR         NDA      ID1       ID2
-     1.00000000E+00    2     1000022         2   # BR(~u_L -> ~chi_10 d)
-#         PDG            Width
-DECAY   1000003     1.00000000E+00   # sstrange_L decays
-#          BR         NDA      ID1       ID2
-     1.00000000E+00    2     1000022         3   # BR(~s_L -> ~chi_10 s)
-#         PDG            Width
-DECAY   1000004     1.00000000E+00   # scharm_L decays
-#          BR         NDA      ID1       ID2
-     1.00000000E+00    2     1000022         4   # BR(~c_L -> ~chi_10 c)
-#         PDG            Width
-DECAY   2000001     1.00000000E+00   # sdown_L decays
-#          BR         NDA      ID1       ID2
-     1.00000000E+00    2     1000022         1   # BR(~d_R -> ~chi_10 d)
-#         PDG            Width
-DECAY   2000002     1.00000000E+00   # sup_L decays
-#          BR         NDA      ID1       ID2
-     1.00000000E+00    2     1000022         2   # BR(~u_R -> ~chi_10 d)
-#         PDG            Width
-DECAY   2000003     1.00000000E+00   # sstrange_L decays
-#          BR         NDA      ID1       ID2
-     1.00000000E+00    2     1000022         3   # BR(~s_R -> ~chi_10 s)
-#         PDG            Width
-DECAY   2000004     1.00000000E+00   # scharm_L decays
-#          BR         NDA      ID1       ID2
-     1.00000000E+00    2     1000022         4   # BR(~c_R -> ~chi_10 c)
-
+      1.0              3    1000022   -1 1

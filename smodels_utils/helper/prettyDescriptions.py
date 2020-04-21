@@ -11,6 +11,7 @@
 '''
 import logging
 from sympy import var
+from math import floor, log10
 #For evaluating axes expressions in prettyAxes:
 x,y,z = var('x y z')
 
@@ -48,10 +49,10 @@ prettySUSYParticle = {
     'lsp' : '#tilde{#chi}^{0}_{1}',  # lightesd SUSY particle
     'neutralino' : '#tilde{#chi}^{0}',      #neutralino
     'chargino' : '#tilde{#chi}',            #Chargino
+    'chargino^pm_1' : '#tilde{#chi}^{#pm}_{0}',            #Chargino
     'gravitino':'#tilde{G}',              #gravitino
     'gluino': '#tilde{g}',        #gluino
     'higgsino' : '#tilde{H}',       #higgsino
-
     'squark': '#tilde{q}',  #squark
     'sup': '#tilde{u}',  #sup
     'sdown': '#tilde{d}',  #sdown
@@ -64,7 +65,7 @@ prettySUSYParticle = {
     'selectron' : '#tilde{e}',      #selectron
     'smuon' : '#tilde{#mu}',   #smuon
     'stau' : '#tilde{#tau}', #stau
-
+    'stau_1' : '#tilde{#tau}_{1}', #stau
     'sneutrino' : '#tilde{#nu}',            #sneutrino
     'electron-sneutrino' : '#tilde{#nu}_{e}',      #electron-sneutrino
     'muon-sneutrino' : '#tilde{#nu}_{#mu}',   #muon-sneutrino
@@ -106,6 +107,7 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T1ttttoff': 'gluino  --> top^* antitop^* lsp ',
     'T1ttofftt': 'gluino  --> top^* antitop^* lsp ',
     'T2':'squark  --> quark lsp ',
+    'T2onesquark':'squark  --> q lsp ',
     'T2bb':'sbottom  --> bottom lsp ',
     'T2bbWW':'stop  --> bottom W lsp ',
     'T2bbWWoff':'stop  --> bottom W^* lsp ',
@@ -118,13 +120,16 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T2ttC': 'stop -->  b f fbar lsp',
     'T2bWC': 'stop -->  b chargino, chargino --> f fbar lsp',
     'T2ttoff': 'stop  --> top^* lsp ',
+    'T2bbll': 'stop  --> top^* lsp ',
     'T3GQ' : 'gluino --> squark quark, squark --> quark LSP',
     'T3GQon' : 'gluino --> squark quark, squark --> quark LSP',
     'T4bbWW':'stop --> bottom chargino^pm_1, chargino^pm_1 --> W lsp',
     'T4bbWWoff':'stop --> bottom chargino^pm_1, chargino^pm_1 --> W^* lsp',
     'T4bbffff':'stop --> bottom chargino^pm_1, chargino^pm_1 --> f f lsp',
     'T4bnutaubnutau': 'stop --> b nu stau, stau --> tau lsp',
+    'T5Chi': 'gluino --> quark antiquark neutralino_2, neutralino_2 --> photon neutralino_1',
     'T5':'gluino  --> quark squark, squark --> quark lsp',
+    'T5GQ' : 'gluino --> quark quark, squark --> quark gluino',
     'T5Disp':'gluino  --> quark quark lsp',
     'T5gg':'gluino --> quark lsp',
     'T6gg':' squark --> quark lsp',
@@ -132,10 +137,20 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T5WWoff':'gluino  --> quark antiquark  chargino^pm_1, chargino^pm_1 --> W^* lsp',
     'T5ttbbWW':'gluino  --> top bottom chargino^pm_1, chargino^pm_1 --> W lsp',
     'T5ttbbWWoff':'gluino  --> top bottom chargino^pm_1, chargino^pm_1 --> W^* lsp',
+    'T5WZ':'gluino  --> quark quark antiquark antiquark chargino^pm_1 neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z lsp',
+    'T5WZh':'gluino  --> quark quark antiquark antiquark chargino^pm_1 neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z|h lsp',
     'T5ZZ':'gluino  --> quark antiquark neutralino_2, neutralino_2 --> Z lsp',
+    'T5HH':'gluino  --> quark antiquark neutralino_2, neutralino_2 --> H lsp',
+    'T5HZ':'gluino  --> quark antiquark neutralino_2, neutralino_2 --> H|Z lsp',
     'T5ZZG':'gluino  --> quark antiquark neutralino_1, neutralino_1 --> Z gravitino',
     'T5ZZoff':'gluino  --> quark antiquark neutralino_2, neutralino_2 --> Z^* lsp',
     'T5bbbb':'gluino  --> bottom sbottom, sbottom --> bottom lsp',
+    'T5bbbbZGamma':'gluino  --> bottom sbottom, sbottom --> bottom neutralino_2 --> Z/photon neutralino_1',
+    'T5bbbbZg':'gluino  --> bottom sbottom, sbottom --> bottom neutralino_2 --> Z/photon neutralino_1',
+    'T5ttttZGamma':'gluino  --> bottom sbottom, sbottom --> bottom neutralino_2 --> Z/photon neutralino_1',
+    'T5ttttZg':'gluino  --> bottom sbottom, sbottom --> bottom neutralino_2 --> Z/photon neutralino_1',
+    'T6ttZGamma':'stop  --> top neutralino_2 --> --> Z/photon neutralino_1',
+    'T6ttZg':'stop  --> top neutralino_2 --> --> Z/photon neutralino_1',
     'T5bbbt':'gluino gluino --> bottom sbottom bottom sbottom, sbottom --> bottom lsp, sbottom --> top lsp',
     'T5btbt':'gluino --> bottom sbottom, sbottom --> top lsp',
     'T5tbtb':'gluino --> top stop, stop --> bottom lsp',
@@ -148,15 +163,25 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T5ttcc':'gluino --> antitop stop, stop --> charm lsp',
     'T5ttttoff':'gluino  --> antitop^* stop, stop --> top^* lsp',
     'T5ttofftt':'gluino --> antitop^* stop, stop --> top lsp',
+    'T5ZGamma': 'gluino --> quark antiquark neutralino_2, neutralino_2 --> Z/photon neutralino_1',
+    'T5HGamma': 'gluino --> quark antiquark neutralino_2, neutralino_2 --> H neutralino_1',
+    'T5Zg': 'gluino --> quark antiquark neutralino_2, neutralino_2 --> Z/photon neutralino_1',
+    'T5Hg': 'gluino --> quark antiquark neutralino_2, neutralino_2 --> H neutralino_1',
+  'T6Chi': 'squark --> quark neutralino_2, neutralino_2 --> photon neutralino_1',
     'T6gg':' squark --> quark lsp',
-    'T6WW': 'squark  --> quark chargino^pm_1, chargino^pm_1 --> W lsp',
+    'T6WW': 'squark --> quark chargino^pm_1, chargino^pm_1 --> W lsp',
+    'T6WWleft': 'squark_{L} --> quark chargino^pm_1, chargino^pm_1 --> W lsp',
+  'T6WZ': 'squark  --> quark antiquark chargino^pm_1 neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z lsp',
+  'T6WZh': 'squark  --> quark antiquark chargino^pm_1 neutralino_2, chargino^pm_1 --> W lsp, neutralino_2 --> Z|h lsp',
     'T6ZZ': 'squark  --> quark neutralino_2, neutralino_2 --> Z lsp',
     'T6WWoff': 'squark  --> quark chargino^pm_1, chargino^pm_1 --> W^* lsp',
+    'T6WWoffleft': 'squark_{L}  --> quark chargino^pm_1, chargino^pm_1 --> W^* lsp',
     'T6ZZtt': 'stop_2  --> Z stop_1, stop_1 --> top lsp',
     'T6ZZofftt': 'stop_2  --> Z^* stop_1, stop_1 --> top lsp',
     'T6HHtt': 'stop_2  --> H stop_1, stop_1 --> top lsp',
     'T6bbWW':'stop  --> bottom chargino_1^pm, chargino_1^pm --> W lsp',
     'T6bbHH':'sbottom  --> bottom neutralino_2, neutralino_2 --> h lsp',
+    'T6bbHHoff':'sbottom  --> bottom neutralino_2, neutralino_2 --> h^* lsp',
     'T6bbWWoff':'stop  --> bottom chargino_1^pm, chargino_1^pm --> W^* lsp',
     'T6bbWWoffSemiLep':'stop  --> bottom chargino_1^pm, chargino_1^pm --> W^* lsp; W^* --> l neutrino',
     'T6ttWW':'sbottom  --> top chargino_1^pm, chargino_1^pm --> W lsp',
@@ -171,34 +196,64 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'T6ttWW':'sbottom  --> top chargino_1^pm, chargino_1^pm --> W lsp',
     'T6ttWWoff':'sbottom  --> top chargino_1^pm, chargino_1^pm --> W^* lsp',
     'T6ttoffWW':'sbottom  --> top^* chargino_1^pm, chargino_1^pm --> W lsp',
+    'TChipChimGamma': 'chargino^pm_2 chargino^mp_2/neutralino_3 --> W neutralino_2 W/Z/h neutralino_2, neutralino_2 --> photon neutralino_1',
+    'TChipChimg': 'chargino^pm_2 chargino^mp_2/neutralino_3 --> W neutralino_2 W/Z/h neutralino_2, neutralino_2 --> photon neutralino_1',
+    'TChipChimgg': 'chargino^pm_2 chargino^mp_2/neutralino_3 --> W neutralino_2 W/Z/h neutralino_2, neutralino_2 --> photon neutralino_1',
     'TChiChiSlepSlep':'neutralino_3 neutralino_2  --> lepton slepton lepton slepton, slepton --> lepton lsp',
     'TChiChipmSlepL':'neutralino_2 chargino^pm_1  --> lepton slepton ( neutrino sneutrino ) lepton sneutrino ( neutrino slepton ), slepton --> lepton lsp, sneutrino --> neutrino lsp',
+    'TChiChipmSlepSlep':'neutralino_2 chargino^pm_1  --> lepton slepton ( neutrino sneutrino ) lepton sneutrino ( neutrino slepton ), slepton --> lepton lsp, sneutrino --> neutrino lsp',
+    'TChiChipmSlepLNoTau':'neutralino_2 chargino^pm_1  --> lepton slepton ( neutrino sneutrino ) lepton sneutrino ( neutrino slepton ), slepton --> lepton lsp, sneutrino --> neutrino lsp',
     'TChiChipmSlepStau':'neutralino_2 chargino^pm_1  --> lepton slepton neutrino stau, slepton --> lepton lsp, stau --> tau lsp',
     'TChiChipmStauL':'neutralino_2 chargino^pm_1  --> tau stau ( neutrino sneutrino ) tau sneutrino ( neutrino stau ), stau --> tau lsp, sneutrino --> neutrino lsp',
     'TChiChipmStauStau':'neutralino_2 chargino^pm_1  --> tau stau neutrino stau, stau --> tau lsp',
     'TChiWH':'neutralino_2 chargino^pm_1 --> H W lsp lsp ',
     'TChiWW':'chargino^pm_1 --> W lsp lsp ',
+      'TChiH': 'neutralino_1 --> Z/h gravitino',
     'TChiZZ':'neutralino_2 --> Z lsp lsp ',
     'TChiWWoff':'chargino^pm_1 --> W^* lsp lsp ',
     'TChiWZ':'neutralino_2 chargino^pm_1 --> Z W lsp lsp ',
     'TChiWZoff':'neutralino_2 chargino^pm_1 --> Z^* W^* lsp lsp ',
+    'TChiWZoffqq':'neutralino_2 chargino^pm_1 --> Z^* W^* lsp lsp ',
     'TChipChimSlepSnu':'chargino^pm_1 --> neutrino slepton ( lepton sneutrino ), slepton --> lepton lsp, sneutrino --> neutrino lsp ',
     'TChipChimStauSnu':'chargino^pm_1 --> neutrino stau ( tau sneutrino ), stau --> tau lsp, sneutrino --> neutrino lsp ',
     'TGQ':'gluino squark --> quark quark antiquark lsp lsp ',
+    'TGQ12':'T1+T2+TGQ',
     'TGN':'gluino lsp --> quark quark lsp lsp',
     'TGQbbq':'gluino gluino --> bottom antibottom gluon lsp lsp ',
     'TGQbtq':'gluino gluino --> bottom top gluon lsp lsp ',
     'TGQqtt':'gluino gluino --> gluon top antitop lsp lsp ',
     'TScharm':'scharm  --> charm lsp ',
     'TSlepSlep':'slepton  --> lepton lsp ',
-    'THSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 'THSCPM3' : 'squark --> quark chargino_1', 'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau_1',
-    'THSCPM7' : 'lsp chargino^pm_2 --> tau stau_1 chargino^pm_1, chargino^pm_1 --> nu stau_1',
-    'THSCPM8' : 'squark --> quark quark stau_1', 'THSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp', 'THSCPM2b' : 'stau lsp --> stau lsp',
-    'THSCPM4' : 'squark --> quark chargino_1 (quark lsp)',
-    'THSCPM6' : 'squark squark --> quark quark lsp lsp, lsp --> tau tau_1',
+    'TSelSel':'selectron --> electron lsp ',
+    'TSmuSmu':'smuon --> muon lsp ',
+    'TStauStau':'stau  --> tau lsp ',
+    'THSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 
     'THSCPM1b' : 'stau stau --> stau stau',
+    'THSCPM1Disp' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1',
+    'THSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp', 
+    'THSCPM2b' : 'stau lsp --> stau lsp',
+    'THSCPM3' : 'squark --> quark chargino^pm_1', 
+    'THSCPM4' : 'squark --> quark chargino^pm_1, squark --> quark lsp',
+    'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau',
+    'THSCPM6' : 'squark squark --> quark quark lsp lsp, lsp --> tau stau_1',
+    'THSCPM7' : 'squark --> quark chargino_1 | quark neutralino_1, neutralino_1 --> W chargino_1',
+    'THSCPM8' : 'squark --> quark quark stau_1', 
     'TRHadGM1' : 'gluino gluino --> gluino gluino',
-    'TRHadQM1' : 'stop stop --> stop stop'
+    'TRHadQM1' : 'stop stop --> stop stop',
+    "T5Gamma" :    "gluino --> neutralino_1 quark antiquark, neutralino_1 --> gravitino y",
+    "T5ZGamma" : "gluino --> neutralino_1 quark antiquark, neutralino_1 --> gravitino Z/y",
+    "T5HGamma" : "gluino --> neutralino_1 quark antiquark, neutralino_1 --> gravitino H/y",
+    "T6Gamma" :    "squark --> quark neutralino_1, neutralino_1 --> gravitino",
+    "TChipChimGamma": "chargino^pm_1 chargino^mp_1/neutralino_2 --> W neutralino_1 W/Z neutralino_1, neutralino_1 --> gravitino y",
+    "T5g" :    "gluino --> neutralino_1 quark antiquark, neutralino_1 --> gravitino y",
+    "T5Zg" : "gluino --> neutralino_1 quark antiquark, neutralino_1 --> gravitino Z/y",
+    "T5Hg" : "gluino --> neutralino_1 quark antiquark, neutralino_1 --> gravitino H/y",
+    "T6g" :    "squark --> quark neutralino_1, neutralino_1 --> gravitino",
+    "TChipChimg": "chargino^pm_1 chargino^mp_1/neutralino_2 --> W neutralino_1 W/Z neutralino_1, neutralino_1 --> gravitino y",
+    'TSlepSlepAll':'slepton  --> lepton lsp ',
+    'TChiChipmSlep':'neutralino_2 chargino^pm_1  --> lepton slepton ( neutrino sneutrino ) lepton sneutrino ( neutrino slepton ), slepton --> lepton lsp, sneutrino --> neutrino lsp',
+    'TChipChimSlepSlepAll': 'chargino^pm_1 chargino^pm_1 --> lepton slepton lepton slepton, slepton --> lepton lsp',
+    'TChipChimSlepSlep': 'chargino^pm_1 chargino^pm_1 --> lepton slepton lepton slepton, slepton --> lepton lsp'
 }
 
 #Name of mother particles
@@ -216,6 +271,7 @@ motherDict = {"T1" :  "gluino",
     "T1ttttoff" :  "gluino",
     "T1ttofftt" :  "gluino",
     "T2" :  "squark",
+    "T2onesquark" :  "sup_{L}, sdown_{L}",
     "T2bb" :  "sbottom",
     "T2bbWW" :  "stop",
     "T2bbffff" :  "stop",
@@ -228,6 +284,7 @@ motherDict = {"T1" :  "gluino",
     "T2ttC": "stop",
     "T2bWC": "stop",
     "T2ttoff" :  "stop",
+    "T2bbll" :  "stop",
     "T4bbffff" :  "stop",
     "T4bbWW" :  "stop",
     "T4bbWWoff" :  "stop",
@@ -238,13 +295,22 @@ motherDict = {"T1" :  "gluino",
     "T5ttbbWW" :  "gluino",
     "T5ttbbWWoff" :  "gluino",
     "T5ZZ" :  "gluino",
+    "T5HH" :  "gluino",
+    "T5HZ" :  "gluino",
     "T5ZZG" :  "gluino",
     "T5" :  "gluino",
     "T5tctc" :  "gluino",
     "T5gg": "gluino",
     "T6gg":"squark",
+  "T5Chi": "gluino",
     "T5ZZoff" :  "gluino",
     "T5bbbb" :  "gluino",
+    "T5bbbbZGamma" :  "gluino",
+    "T5ttttZGamma" :  "gluino",
+    "T5bbbbZg" :  "gluino",
+    "T5ttttZg" :  "gluino",
+    "T6ttZGamma" :  "stop",
+    "T6ttZg" :  "stop",
     "T5bbbt" :  "gluino",
     "T5btbt" :  "gluino",
     "T5tbtb" :  "gluino",
@@ -257,14 +323,26 @@ motherDict = {"T1" :  "gluino",
     "T5tttt" :  "gluino",
     "T5ttttoff" :  "gluino",
     "T5ttofftt" : "gluino",
+    "T5WZ" :  "gluino",
+    "T5WZh" :  "gluino",
+    "T5ZGamma" :  "gluino",
+    "T5HGamma" :  "gluino",
+    "T5Zg" :  "gluino",
+    "T5Hg" :  "gluino",
+    "T6Chi" :  "squark",
     "T6WW" :  "squark",
+    "T6WWleft" :  "squark_{L}",
+    "T6WZ" :  "squark",
+    "T6WZh" :  "squark",
     "T6ZZ" :  "squark",
     "T6WWoff" :  "squark",
+    "T6WWoffleft" :  "squark_{L}",
     "T6ZZtt" :  "stop_2",
     "T6ZZofftt" :  "stop_2",
     "T6HHtt" :  "stop_2",
     "T6bbWW" :  "stop",
     "T6bbHH" :  "sbottom",
+    "T6bbHHoff" :  "sbottom",
     "T6bbWWoff" :  "stop",
     "T6bbWWoffSemiLep" :  "stop",
     "T6ttWW" :  "sbottom",
@@ -282,40 +360,68 @@ motherDict = {"T1" :  "gluino",
     "T6ZZtt": 'stop_2',
     "T6ZZofftt": 'stop_2',
     "T6ZZttoff": 'stop_2',
+    "TChipChimGamma" :  "chargino^pm_2 chargino^mp_2/neutralino_3",
+    "TChipChimg" :  "chargino^pm_2 chargino^mp_2/neutralino_3",
+    "TChipChimgg" :  "chargino^pm_2 chargino^mp_2/neutralino_3",
     "TChiChiSlepSlep" :  "neutralino_3 neutralino_2",
     "TChiChipmSlepL" :  "neutralino_2 chargino^pm_1",
+    "TChiChipmSlepSlep" :  "neutralino_2 chargino^pm_1",
+    "TChiChipmSlepLNoTau" :  "neutralino_2 chargino^pm_1",
     "TChiChipmSlepStau" :   "neutralino_2 chargino^pm_1",
     "TChiChipmStauL" :  "neutralino_2 chargino^pm_1",
     "TChiChipmStauStau" :  "neutralino_2 chargino^pm_1",
     "TChiWH" :  "neutralino_2 chargino^pm_1",
-    "TChiWW" :  "chargino^+_1 chargino^-_1",
+    "TChiWW" :  "chargino^pm_1 chargino^mp_1",
     "TChiWWoff" :  "chargino^+_1 chargino^-_1",
     "TChiWZ" :  "neutralino_2 chargino^pm_1",
+    "TChiH" :  "neutralino_1",
     "TChiZZ" :  "neutralino_2",
     "TChiWZoff" :  "neutralino_2 chargino^pm_1",
+    "TChiWZoffqq" :  "neutralino_2 chargino^pm_1",
     "TChipChimSlepSnu" :   "chargino^pm_1 chargino^pm_1",
     "TChipChimStauSnu" :  "chargino^pm_1 chargino^pm_1",
     "T3GQ": "gluino squark",
     "T3GQon": "gluino squark",
+    "T5GQ": "gluino squark",
     "TGQ" :  "gluino squark",
+    "TGQ12" :  "gluino squark",
     "TGQbbq" :  "gluino",
     "TGQbtq" :  "gluino",
     "TGQqtt" :  "gluino",
     "TGN":'gluino lsp',
     "TScharm" :  "scharm",
     "TSlepSlep" : "slepton",
+    "TSelSel" : "selectron",
+    "TSmuSmu" : "smuon",
+    "TStauStau" : "stau",
     "THSCPM1" : "chargino^pm_1",
+    "THSCPM1Disp" : "chargino^pm_1",
     "THSCPM1b" : "stau",
-    "THSCPM3" : "squark",
-    "THSCPM5" : "squark",
-    "THSCPM7" : "lsp chargino^pm_2",
-    "THSCPM8" : "squark",
     "THSCPM2" : "lsp chargino^pm_1",
     "THSCPM2b" : "lsp stau",
+    "THSCPM3" : "squark",
     "THSCPM4" : "squark",
+    "THSCPM5" : "squark",
     "THSCPM6" : "squark",
+    "THSCPM7" : "squark",
+    "THSCPM8" : "squark",
     'TRHadGM1' : 'gluino',
-    'TRHadQM1' : 'stop'
+    'TRHadQM1' : 'stop',
+    "T5Gamma" : "gluino",
+    "T5ZGamma" : "gluino",
+    "T5HGamma" : "gluino",
+    "T6Gamma" :    "squark",
+    "TChipChimGamma" :  "chargino^pm_1 chargino^mp_1/neutralino_2",
+    "T5g" : "gluino",
+    "T5Zg" : "gluino",
+    "T5Hg" : "gluino",
+    "T6g" :    "squark",
+    "TChipChimg" :  "chargino^pm_1 chargino^mp_1/neutralino_2",
+    "TChipChimgg" :  "chargino^pm_1 chargino^mp_1/neutralino_2",
+    "TSlepSlepAll" : "slepton",
+    "TChipChimSlepSlepAll" :  "chargino^pm_1",
+    "TChipChimSlepSlep" :  "chargino^pm_1",
+    "TChiChipmSlep" :  "neutralino_2 chargino^pm_1"
 }
 
 
@@ -342,11 +448,13 @@ def latexfy(instr):
                           key=lambda pair: len(pair[0]), reverse=True):
         if ' '+key in outstr:
             outstr = outstr.replace(' '+key,' '+rep)
+        if '/'+key in outstr:
+            outstr = outstr.replace('/'+key,'/'+rep)
+            
 
     outstr = outstr.replace('-->','#rightarrow')
-
-
-    return outstr.lstrip().rstrip()
+    outstr = outstr.lstrip().rstrip()
+    return outstr
 
 def getMothers(txname):
     """
@@ -381,7 +489,8 @@ def getIntermediates(txname):
     #(sanity check)
     for particle in inter:
         if not particle in first_decay:
-            logging.error('Unknown decay format: %s' %str(decays))
+            logging.error('When searching for %s: Unknown decay format: %s' % \
+                           ( inter, str(decays) ) )
 
     return inter
 
@@ -506,22 +615,41 @@ def prettyAxes(txname,axes):
              (e.g. {'x' : m_{#tilde{g}}, 'y' : m_{#tilde{#chi}_{1}^{0}}
              'constraints' : [m_{#tilde{l}} = 0.05*m_{#tilde{g}} + 0.95*m_{#tilde{#chi}_{1}^{0}}]})
     """
-    # print ( "pretty axes txname=", txname, type(txname) )
-    # print ( "pretty axes axes=", axes, type(axes) )
 
     #Build axes object (depending on symmetric or asymmetric branches:
     axes = eval(axes)
+    if txname == 'THSCPM2b':
+        return ['m_{#tilde{#tau}} = (x,y)', ]
+    if txname == 'THSCPM4':
+        return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{#pm}} = (y,1e-22)', ]
+    if txname == 'THSCPM5':
+        return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
+                'm_{#tilde{#tau}} = (y,1e-22)' ]
+    if txname == 'THSCPM7':
+        return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
+                'm_{#tilde{#chi}_{1}^{#pm}} = (y,1e-22)' ]
+    if txname == 'THSCPM6':
+        return ['m_{#tilde{q}} = x, m_{#tilde{#chi}_{1}^{0}} = x-100',
+                'm_{#tilde{#tau}} = (y,1e-22)' ]
     if txname == 'TGQ':
         return ['m_{#tilde{g}} = x, m_{#tilde{q}} = 0.96*x',
                     'm_{#tilde{#chi}_{1}^{0}} = y']
     if txname == 'T3GQ':
-        ret = ['m_{#tilde{g}} = %s, m_{#tilde{q}} = x' % str(axes[1][0]),
-               'm_{#tilde{#chi}_{1}^{0}} = y']
+        ret = ['m_{#tilde{g}} = x, m_{#tilde{q}} = y',
+               'm_{#tilde{#chi}_{1}^{0}} = %s' % str(axes[0][1]) ]
+        return ret
+    if txname == 'T5GQ':
+        ret = ['m_{#tilde{q}} = x, m_{#tilde{g}} = y',
+               'm_{#tilde{#chi}_{1}^{0}} = %s' % str(axes[1][1]) ]
         return ret
     if txname == 'TChiChiSlepSlep':
         return ['m_{#tilde{#chi}_{3}^{0}} = x+80.0, m_{#tilde{#chi}_{2}^{0}} = x+75.0',
                     'm_{#tilde{#l}} = x-y+80.0',
                     'm_{#tilde{#chi}_{1}^{0}} = x']
+    if txname in [ "TGQ12" ] and axes[0][1] == axes[1][1]:
+        ret = ['m_{#tilde{g}} = x, m_{#tilde{q}} = y',
+               'm_{#tilde{#chi}_{1}^{0}} = %s' % str(axes[0][1]) ]
+        return ret
     if axes[0] != axes[1]:
         logging.error('Asymmetric branches are not yet automatized.')
         return "N/A"
@@ -557,10 +685,22 @@ def prettyAxes(txname,axes):
         massStrings = [motherStr,interStr,daughterStr]
 
     niceAxes = []
+    def roundme ( x ):
+        if type(x) == float:
+            if x != 0.:
+              round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1))
+              r = round_to_n(x,2)
+            else:
+              r = x
+            return r
+        if type(x) == tuple:
+            tmp = [ roundme(i) for i in x ]
+            return tuple(tmp)
+        return x
+
     for i,eq in enumerate(ax):
+        eq = roundme(eq )
         axStr = massStrings[i].strip()+'='+str(eq)
         niceAxes.append(axStr.replace("'",""))
 
-    # print ( "return=", niceAxes )
     return niceAxes
-

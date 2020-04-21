@@ -1,4 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
+from __future__ import print_function
+
 import os,sys,copy
 from ROOT import TTree,TColor,TCanvas,TF1,TGraph,Double,TFile,gDirectory,TNamed
 from scipy import interpolate
@@ -11,16 +14,16 @@ Var_dic.update({"SSWW" : "#xi#xi #rightarrow W^{+} W^{-}", "SSWpWm" : "#xi#xi #r
            "SSAA" : "#xi#xi #rightarrow #gamma #gamma","SSbb" : "#xi#xi #rightarrow b #bar{b}",
            "SScc" : "#xi#xi #rightarrow c #bar{c}", "SStt" : "#xi#xi #rightarrow t #bar{t}",
            "SSHH" : "#xi#xi #rightarrow h h",
-           "H0H0bb" : "H^{0}H^{0} #rightarrow b #bar{b}", "H0HpAWp" : "H^{0}H^{+} #rightarrow #gamma W^{+}", 
-           "H0H0cc" : "H^{0}H^{0} #rightarrow c #bar{c}", "H0A0ss" : "H^{0}A^{0} #rightarrow s #bar{s}", 
-           "H0H0WpWm" : "H^{0}H^{0} #rightarrow W^{+} W^{-}", "H0H0ZZ" : "H^{0}H^{0} #rightarrow Z Z", 
-           "H0A0dd" : "H^{0}A^{0} #rightarrow d #bar{d}", "H0H0tt" : "H^{0}H^{0} #rightarrow t #bar{t}", 
-           "A0A0WpWm" : "A^{0}A^{0} #rightarrow W^{+} W^{-}", "H0H0HH" : "H^{0}H^{0} #rightarrow h h", 
-           "A0A0bb" : "A^{0}A^{0} #rightarrow b #bar{b}", "HpHmtt" : "H^{+}H^{-} #rightarrow t #bar{t}", 
+           "H0H0bb" : "H^{0}H^{0} #rightarrow b #bar{b}", "H0HpAWp" : "H^{0}H^{+} #rightarrow #gamma W^{+}",
+           "H0H0cc" : "H^{0}H^{0} #rightarrow c #bar{c}", "H0A0ss" : "H^{0}A^{0} #rightarrow s #bar{s}",
+           "H0H0WpWm" : "H^{0}H^{0} #rightarrow W^{+} W^{-}", "H0H0ZZ" : "H^{0}H^{0} #rightarrow Z Z",
+           "H0A0dd" : "H^{0}A^{0} #rightarrow d #bar{d}", "H0H0tt" : "H^{0}H^{0} #rightarrow t #bar{t}",
+           "A0A0WpWm" : "A^{0}A^{0} #rightarrow W^{+} W^{-}", "H0H0HH" : "H^{0}H^{0} #rightarrow h h",
+           "A0A0bb" : "A^{0}A^{0} #rightarrow b #bar{b}", "HpHmtt" : "H^{+}H^{-} #rightarrow t #bar{t}",
            "H0A0bb" : "H^{0}A^{0} #rightarrow b #bar{b}",
-           "T0T0bb" : "T^{0}T^{0} #rightarrow b #bar{b}", "T0HpAWp" : "T^{0}T^{+} #rightarrow #gamma W^{+}", 
-           "T0T0cc" : "T^{0}T^{0} #rightarrow c #bar{c}", "T0T0WpWm" : "T^{0}T^{0} #rightarrow W^{+} W^{-}", "T0T0ZZ" : "T^{0}T^{0} #rightarrow Z Z", 
-           "T0T0tt" : "T^{0}T^{0} #rightarrow t #bar{t}", "T0T0HH" : "T^{0}T^{0} #rightarrow h h", 
+           "T0T0bb" : "T^{0}T^{0} #rightarrow b #bar{b}", "T0HpAWp" : "T^{0}T^{+} #rightarrow #gamma W^{+}",
+           "T0T0cc" : "T^{0}T^{0} #rightarrow c #bar{c}", "T0T0WpWm" : "T^{0}T^{0} #rightarrow W^{+} W^{-}", "T0T0ZZ" : "T^{0}T^{0} #rightarrow Z Z",
+           "T0T0tt" : "T^{0}T^{0} #rightarrow t #bar{t}", "T0T0HH" : "T^{0}T^{0} #rightarrow h h",
            "TpTmtt" : "T^{+}T^{-} #rightarrow t #bar{t}", "TpTpWpWp" : "T^{+}T^{+} #rightarrow W^{+} W^{+}",
            "TpTmWpWm" : "T^{+}T^{-} #rightarrow W^{+} W^{-}", "T0TpZWp" : "T^{0}T^{+} #rightarrow Z W^{+}",
            "leff" : "#lambda_{#xih}^{RD}","lbar" : "#bar{#lambda}", "|lbar|" : "|#bar{#lambda}|",
@@ -59,13 +62,13 @@ def infiles(argv):
   if len(argv) > 2:
     friends = argv[2:]
   else: friends = []
-  
+
   goodfriends = []
   for friend in friends:
     if os.path.isfile(friend): goodfriends.append(friend)
     elif os.path.isdir(friend):
       dirfiles = os.listdir(friend)
-      for f in dirfiles:        
+      for f in dirfiles:
         fname = friend+f
         if not os.path.isfile(fname): continue
         if fname[-5:] == '.root' and fname != filename: goodfriends.append(fname)
@@ -73,7 +76,7 @@ def infiles(argv):
   return filename,goodfriends
 
 def getTree(gDirectory,friends=[],verbose=False):
-    
+
 #Get Trees:
   objs =  gDirectory.GetListOfKeys()
   trees = []
@@ -83,7 +86,7 @@ def getTree(gDirectory,friends=[],verbose=False):
       trees.append(Tob)
 
   if len(trees) <= 0:
-    print "No trees found in file"
+    print ( "No trees found in file" )
     sys.exit()
   elif len(trees) > 1:
     pstr = "More than one tree found, specify which one to use ("
@@ -94,29 +97,29 @@ def getTree(gDirectory,friends=[],verbose=False):
     tree = gDirectory.Get(usetree)
   else:
     tree = trees[0]
-  
+
   for ifriend,friend in enumerate(friends):
-    print "Adding friend",friend
+    print ( "Adding friend",friend )
     tree.AddFriend("friend"+str(ifriend)+" = "+str(tree.GetName()),friend)
-    
+
 #Get Branches and Leaves (variables):
   branches = tree.GetListOfBranches()
   leaves = tree.GetListOfLeaves()
   lnames = [leaf.GetName() for leaf in leaves]
-  
+
 #Get Input parameters:
   inputpars = {}
-  for br in branches:  
+  for br in branches:
     if br.GetName().lower() != "input": continue
     for leaf in br.GetListOfLeaves():
       lname = leaf.GetName()
       inputpars.update({lname : [tree.GetMinimum(lname),tree.GetMaximum(lname)]})
-      
-  if verbose:      
-    print "Nevts = ",tree.GetEntries()
-    print "Input parameters and range:"
+
+  if verbose:
+    print ( "Nevts = ",tree.GetEntries() )
+    print ( "Input parameters and range:" )
     for key in inputpars.keys():
-      print key,inputpars[key]      
+      print ( key,inputpars[key] )
 
   return tree,lnames,inputpars
 
@@ -132,7 +135,7 @@ def GetVarNames(allvars,useDic=None):
       varnames.update({vname : dic[vname]})
     else:
       varnames.update({vname : vname})
-    
+
   return varnames
 
 #Check if variables in AllowedRange.keys() have their values in the allowed range
@@ -148,10 +151,10 @@ def GetExcluded(AllowedRange,tree,model='singlet'):
         excluded[exc] = True
     except:
       pass
-  
-  return excluded  
-    
-    
+
+  return excluded
+
+
 def GetValue(tree,x,model='singlet'):
 
   if hasattr(tree,x): return getattr(tree,x)
@@ -160,13 +163,13 @@ def GetValue(tree,x,model='singlet'):
     exp = exp.replace("TREENAME","tree")
     return eval(exp)
   else:
-    print "[GetValue]: Unknown variable",x
+    print ( "[GetValue]: Unknown variable",x )
     sys.exit()
-  
-  
-    
+
+
+
 def Default(obj,Type):
-  
+
   if Type == "TCanvas":
     obj.SetLeftMargin(0.1097891)
     obj.SetRightMargin(0.02700422)
@@ -218,16 +221,16 @@ def Print(canvas,prefix,hasSMS):
   canvas.Print(filename)
 
 def printInput(tree,inputpars):
-  
+
   for key in inputpars.keys():
-    print key,getattr(tree,key)    
-    
-    
+    print ( key,getattr(tree,key) )
+
+
 def set_palette(gStyle,name="none", ncontours=999):
     """Set a color palette from a given RGB list
     stops, red, green and blue should all be lists of the same length
     see set_decent_colors for an example"""
-    
+
     from array import array
 
     if name == "gray" or name == "grayscale":
@@ -268,7 +271,7 @@ def getContours(gROOT,vals,hist,fit=None):
         contLevel = conts.At(ival)
         res[val] = contLevel.First()
         for cont in contLevel:
-            if cont.GetN() > res[val].GetN(): res[val] = cont   #Get the contour wiht highest number of points 
+            if cont.GetN() > res[val].GetN(): res[val] = cont   #Get the contour wiht highest number of points
 
     if fit:
         f1 = TF1("f1",fit,0.,1000.)
@@ -295,14 +298,14 @@ def getData(fname,Rmax=1.,condmax=0.001):
   exc = TGraph()
   allow = TGraph()
   not_cond = TGraph()
-  
+
   xv = []
   yv = []
   limv = []
   condv = []
   resv = []
   for pt in pts:
-    x,y,res,lim,cond,tot = pt.split()    
+    x,y,res,lim,cond,tot = pt.split()
     R = float(eval(res))/float(eval(lim))
     if eval(res) < 0.: continue
     if cond == 'None': cond = '0.'
@@ -324,10 +327,10 @@ def getData(fname,Rmax=1.,condmax=0.001):
     elif R < Rmax:
       allow.SetPoint(allow.GetN(),x,y)
     else:
-      print 'Unknown R value',R
+      print ( 'Unknown R value',R )
       sys.exit()
-      
-  infile.close()      
+
+  infile.close()
   return {'exc' : exc, 'not_tested' : not_tested, 'not_cond' : not_cond, 'allow' : allow, 'xv' : xv, 'yv' : yv, 'resv' : resv, 'limv' : limv, 'condv' : condv}
 
 def getEnvelope(excluded,consecutive_bins=3):
@@ -338,7 +341,7 @@ def getEnvelope(excluded,consecutive_bins=3):
   x1,y1 = Double(), Double()
   exc.GetPoint(0,x1,y1)
   yline = []
-  for ipt in range(exc.GetN()+1): 
+  for ipt in range(exc.GetN()+1):
     x,y = Double(), Double()
     dmin = 0.
     if ipt < exc.GetN(): exc.GetPoint(ipt,x,y)
@@ -350,7 +353,7 @@ def getEnvelope(excluded,consecutive_bins=3):
         newy = max(yline)
         if len(dy) > 2: dmin = min([abs(yline[i]-yline[i+1]) for i in range(len(yline)-1)])
       else:
-        newy = max(yline)     
+        newy = max(yline)
 #        dmin = min(dy)
         dmin = sum(dy)/float(len(dy))
         for iD in range(len(dy)-1):
@@ -386,7 +389,7 @@ def getMetadata(filename,tags):
   return metadata
 
 
-def getRootPlots(metadata):  
+def getRootPlots(metadata):
   plots = {}
   if metadata['Root file'] and os.path.isfile(metadata['Root file'][0]):
     rootfile = TFile(metadata['Root file'][0],"read")
@@ -405,11 +408,11 @@ def getRootPlots(metadata):
       if add:
         if type(add) == type([]): add = add[1]
         plots[add] = copy.deepcopy(Tob)
-        
+
   return plots
 
 def convertLabels(indic,use_dic=None,exclusive=False):
-  
+
   outdic = {}
   if use_dic:
     myLabels = globals()[use_dic]
@@ -421,12 +424,12 @@ def convertLabels(indic,use_dic=None,exclusive=False):
   for key in indic.keys():
     if str(key) in myLabels: outdic[myLabels[str(key)]] = indic[key]
     elif not exclusive: outdic[str(key)] = indic[key]
-    
+
   return outdic
 
 
 def getAnalysesOptions(analyses):
- 
+
   markers = [20,21,22,23,29]
   colorsA = ['kGreen+1','kMagenta','kMagenta+2','kAzure-6','kMagenta+3','kAzure+2', 'kMagenta-4','kAzure+10','kMagenta-9','kAzure+1','kAzure-7','kAzure-2','kAzure-5']
   colorsB = ['kRed+2','kOrange+1','kPink-2','kRed-5','kOrange-3','kRed-6','kRed-4', 'kOrange+4']
@@ -440,26 +443,26 @@ def getAnalysesOptions(analyses):
     else: usecolors = colorsA
     while [usecolors[icolor],markers[imarker]] in allopts:
       if icolor == len(usecolors)-1 and imarker == len(markers)-1:
-        print 'getAnalysesOptions: Number of analyses exceeded number of possible options'
-        print len(analyses),len(markers)*len(colorsA),len(markers)*len(colorsB)
-        print f
+        print ( 'getAnalysesOptions: Number of analyses exceeded number of possible options' )
+        print ( len(analyses),len(markers)*len(colorsA),len(markers)*len(colorsB) )
+        print ( f )
         sys.exit()
-        
+
       icolor += 1
       if icolor >= len(usecolors):
         icolor = 0
         imarker += 1
-     
+
     Mstyle = markers[imarker]
     Mcolor = usecolors[icolor]
     analyses_opts[f] = {"MarkerStyle" : Mstyle, "MarkerColor" : Mcolor}
     allopts.append([Mcolor,Mstyle])
-    
+
   return analyses_opts
 
 
 def checkOrderBy(variable,tree,friends):
-  
+
   if len(friends) == 0: return True
   varlist = []
   nevts = tree.GetEntries()
@@ -468,30 +471,30 @@ def checkOrderBy(variable,tree,friends):
     var = GetValue(tree,variable)
     if 'file' in variable.lower():
       var = str(var)
-      var = var[:var.rfind('.')]      
-    varlist.append(var)  
+      var = var[:var.rfind('.')]
+    varlist.append(var)
   for ifriend,friend in enumerate(friends):
     ffriend = TFile(friend)
     tfriend = ffriend.Get(tree.GetName())
     if tfriend.GetEntries() != nevts:
-      print friend,'and tree number of entries do not match'
+      print ( friend,'and tree number of entries do not match' )
       return False
     for iev in range(nevts):
       tfriend.GetEntry(iev)
       var = GetValue(tfriend,variable)
       if 'file' in variable.lower():
         var = str(var)
-        var = var[:var.rfind('.')]  
+        var = var[:var.rfind('.')]
       if var != varlist[iev]:
-        print friend,'and tree',variable,'do not match at event',iev
-        return False  
+        print ( friend,'and tree',variable,'do not match at event',iev )
+        return False
     tfriend.Delete()
     ffriend.Close()
-      
+
   return True
-  
+
 def getBestAnalysis(ana_list,sqrts=8.):
-  
+
   R_best_Good = 0.
   Th_best_Good = 0.
   Cond_best_Good = 0.
@@ -515,40 +518,40 @@ def getBestAnalysis(ana_list,sqrts=8.):
        Th_best_Bad = ana['tval']
        Cond_best_Bad = ana['maxcond']
        Ana_best_Bad = ana['AnalysisName']+':'+ana['AnalysisTopo']
-      
+
   best_dic = {"R_best_Good" : R_best_Good, "Th_best_Good" : Th_best_Good, "Cond_best_Good" : Cond_best_Good, "Ana_best_Good" : Ana_best_Good, "R_best_Bad" : R_best_Bad, "Th_best_Bad" : Th_best_Bad, "Cond_best_Bad" : Cond_best_Bad, "Ana_best_Bad" : Ana_best_Bad}
-    
-  return best_dic  
-    
+
+  return best_dic
+
 def GetCurve(datafile,kind='linear',fillvalue=0.):
-    """ Reads data file with x,y values and returns the interpolation function""" 
-    
+    """ Reads data file with x,y values and returns the interpolation function"""
+
     fdata = open(datafile,'r')
     xdata,ydata = [],[]
     for l in fdata.readlines():
         l = l.split()
         if len(l) != 2:
-            print "Error reading",datafile,"in line",l
+            print ( "Error reading",datafile,"in line",l )
             sys.exit()
         xdata.append(eval(l[0]))
         ydata.append(eval(l[1]))
-    
+
     data = [[xdata[ipt],ydata[ipt]] for ipt,pt in enumerate(xdata)]
     data = sorted(data)
     xdata = [x[0] for x in data]
     ydata = [x[1] for x in data]
-    
+
     fdata.close()
     func = interpolate.interp1d(xdata,ydata,kind,fill_value=fillvalue)
-    return func 
+    return func
 
 def GetLambdas(tree,model):
     """Compute the effective lambda  couplings depending on the model"""
-    
+
     v = 246.2
     fval =  GetValue(tree,"Lamf")
     if model == 'singlet':
-        MScal = GetValue(tree,"MScal") 
+        MScal = GetValue(tree,"MScal")
         lam3 = GetValue(tree,"lam3")
         l3p = GetValue(tree,"l3p")
         lbar = lam3*(1. + l3p*v**2/fval**2)
@@ -570,22 +573,22 @@ def GetLambdas(tree,model):
         leff = lbar/2.
         leff += -(MH0**2/fval**2)*(GetValue(tree,"ad1")+2.*GetValue(tree,"ad2")+2.*GetValue(tree,"ad3"))
     elif model == 'triplet':
-        MT0 = GetValue(tree,"MT0") 
+        MT0 = GetValue(tree,"MT0")
         lam3 = GetValue(tree,"l3")
         l5 = GetValue(tree,"l5")
         l3p = GetValue(tree,"lam3p")
         lbar = lam3*(1. + l3p*v**2/fval**2) + 4.*l5*v**2/fval**2
         leff = lbar/2. - GetValue(tree,"ad1")*MT0**2/fval**2
         lbar2 = lbar
-        
+
     return lbar,leff,lbar2
 
-    
+
 def smallPars(tree,model):
     """Checks if the effective parameters suppressed by 1/F^2 are always
     smaller than 1.
     """
-    
+
     #Higgs constraints:
     a2H = GetValue(tree,'a2H')
     lamH6 = GetValue(tree,'lamH6')
@@ -597,7 +600,7 @@ def smallPars(tree,model):
     lam1 = v**(-2)*ren**(-2)*(MH**2 - 2.*lamH6*v**4/fval**2)/2.
     if abs(lam1*lamH6) > 1.: return False
     if abs(c4) > 1.: return False
-    
+
     #Singlet constraints:
     if model == 'singlet':
         l3p = GetValue(tree,'l3p')
@@ -620,7 +623,7 @@ def smallPars(tree,model):
         ad4 = GetValue(tree,'ad4')
         d4 = GetValue(tree,'d4')
         d6 = GetValue(tree,'d6')
-        if abs(lam3p) > 1.: return False        
+        if abs(lam3p) > 1.: return False
         if abs(lam4p) > 1.: return False
         if abs(lam5p) > 1.: return False
         if abs(ad1) > 1.: return False
@@ -630,18 +633,18 @@ def smallPars(tree,model):
         if abs(d4) > 1.: return False
         if abs(d6) > 1.: return False
     elif model == 'triplet':
-        l3p = GetValue(tree,'lam3p')        
+        l3p = GetValue(tree,'lam3p')
         l4 = GetValue(tree,'l4')
         l5 = GetValue(tree,'l5')
         ad1 = GetValue(tree,'ad1')
         ad4 = GetValue(tree,'ad4')
         d4 = GetValue(tree,'d4')
-        if abs(l3p) > 1.: return False        
+        if abs(l3p) > 1.: return False
         if abs(l4) > 1.: return False
         if abs(l5) > 1.: return False
         if abs(ad1) > 1.: return False
         if abs(ad4) > 1.: return False
         if abs(d4) > 1.: return False
-        
+
     return True
-        
+

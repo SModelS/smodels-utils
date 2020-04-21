@@ -1,0 +1,5 @@
+import model mssm
+generate p p > x1+ n2
+add process p p  > x1- n2
+add process p p > x1- n2 j
+add process p p > x1+ n2 j

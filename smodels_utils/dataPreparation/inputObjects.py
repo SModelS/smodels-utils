@@ -9,6 +9,7 @@
 """
 
 import sys
+import os
 import string
 from smodels_utils.helper.txDecays import TxDecay
 from smodels_utils.dataPreparation.databaseCreation import databaseCreator,round_list
@@ -34,6 +35,32 @@ hscp=False ## central switch for smodels v1.1 versus smodels v1.2
 if version()[:3]=="1.2" or version()[0]=="2":
     hscp=True
 ## smodels v1.2 has final states for hscp patch
+
+quenchNegativeMasses = False ## set to true, if you wish to 
+# quench the warning about negative masses
+
+def getSignalRegionsEMBaked ( filename ):
+    """ from an emBaked file, retrieve the names of the signal regions """
+    ret = set()
+    f=open( filename,"r")
+    values=list(eval(f.read()).values())
+    f.close()
+    for v in values:
+        for k in v:
+            if not k.startswith("__"):
+                ret.add(k)
+    return ret
+
+def getStatsEMBaked ( ):
+    """ retrieve the stats from an emBaked stats file """
+    statsfile = "orig/statsEM.py"
+    if not os.path.exists ( statsfile ):
+        print ( "ERROR: cannot find %s" % statsfile )
+        return None
+    f=open( statsfile )
+    g=eval(f.read())
+    f.close()
+    return g
                             
 class Locker(object):
 
@@ -357,7 +384,7 @@ class DataSetInput(Locker):
 
 
     infoAttr = ['dataId','dataType','observedN','expectedBG','bgError',
-                'upperLimit', 'expectedUpperLimit', 'aggregated' ]
+                'upperLimit', 'expectedUpperLimit', 'aggregated', 'jsonfile' ]
     internalAttr = ['_name','_txnameList']
 
     requiredAttr = ['dataType', 'dataId']
@@ -369,7 +396,7 @@ class DataSetInput(Locker):
         """initialize the dataset
         :param name: name of dataset (used as folder name)
         """
-        if type(name)!=str or len(name)<1 or name[0] not in string.ascii_letters:
+        if type(name)!=str or len(name)<1: ## or name[0] not in string.ascii_letters:
             logger.error ( "Illegal dataset name: ``%s''. Make sure it starts with a letter." % name )
             sys.exit()
 
@@ -413,6 +440,12 @@ class DataSetInput(Locker):
             logger.error('Luminosity must be defined in MetaInfo')
             sys.exit()
         elif not hasattr(self, 'observedN') or not hasattr(self, 'expectedBG') or not hasattr(self, 'bgError'):
+            if hasattr(self,"jsonfile"):
+                logger.error ( "pyhf result. for now I wont compute anything. FIXME probably should though." )
+                # self.upperLimit = str(ul)+'*fb'
+                # self.expectedUpperLimit = str(ulExpected)+'*fb'
+                return
+
             logger.error('observedN, expectedBG and bgError must be defined before computing statistics')
             sys.exit()
 
@@ -516,7 +549,10 @@ class DataSetInput(Locker):
                 if jel <= iel:
                     continue
 
-                if elA.particlesMatch(elB):
+                if hasattr ( elA, "particlesMatch" ) and elA.particlesMatch(elB):
+                        logger.error("Constraints (%s <-> %s) appearing in dataset %s overlap (may result in double counting)" %(elA,elB,self))
+                        return False
+                if elA == elB:
                     logger.error("Constraints (%s <-> %s) appearing in dataset %s overlap (may result in double counting)" %(elA,elB,self))
                     return False
 
@@ -531,7 +567,7 @@ class TxNameInput(Locker):
 
     infoAttr = ['txName','constraint', 'condition','conditionDescription',
                 'susyProcess','checked','figureUrl','dataUrl','source',
-                'validated','axes','upperLimits',
+                'validated','axes','upperLimits', 'validationTarball',
                 'efficiencyMap','expectedUpperLimits']
     internalAttr = ['_name', 'name', '_txDecay','_planes','_goodPlanes',
                     '_branchcondition', 'onShell', 'offShell', 'constraint',
@@ -618,7 +654,7 @@ class TxNameInput(Locker):
             if str(br) == '[*]':  #Ignore wildcard branches
                 continue
             if len(massArray[ibr]) != br.vertnumb+1:
-                logger.error("Mass array definition (%d-dim) is not consistent with the txname constraint (%d-dim)" % ( len(massArray[ibr]), br.vertnumb+1 ))
+                logger.error("Mass array definition (%d-dim) is not consistent with the txname constraint (%d-dim) in %s [%s]" % ( len(massArray[ibr]), br.vertnumb+1, self._txDecay, plane ))
                 sys.exit()
         #Create mass plane for new input
         massPlane = MassPlane(self._txDecay,massArray)
@@ -650,8 +686,10 @@ class TxNameInput(Locker):
                             self._goodPlanes.append(plane)
             elif dataType == 'efficiencyMap':
                 if not hasattr(plane,'efficiencyMap'):
-                    logger.error('%s source not defined for plane %s' %(dataType,plane))
-                    sys.exit()
+                    logger.warning('%s source not defined for plane %s' %(dataType,plane))
+                    if not plane in self._goodPlanes:
+                        self._goodPlanes.append(plane)
+                    # sys.exit()
                 else:
                     if self.addDataFrom(plane,'efficiencyMap'):
                         self._dataLabels.append('efficiencyMap')
@@ -690,15 +728,16 @@ class TxNameInput(Locker):
             if planeHasInfo:
                 # infoStr = " ".join(infoList) ## new version
                 myInfoList = []
-                hasNone = False
+                hasNone = False 
+                ## remove Nones, but only if there are other values.
                 for i in infoList:
                     if i not in [ None, "None" ]:
                         myInfoList.append ( i )
-                        continue
-                    if not hasNone: ## only one None
-                        myInfoList.append ( i )
-                        hasNone=True
-                infoStr = ";".join(myInfoList) ## old version
+                    else:
+                        hasNone = True
+                if hasNone and len(myInfoList)==0:
+                    myInfoList = [ "None" ]
+                infoStr = ";".join(set(myInfoList)) ## old version
                 setattr(self,infoAttr,infoStr)
 
         if not hasattr(self,'validated'):
@@ -719,7 +758,7 @@ class TxNameInput(Locker):
 
         #Get dimension of the plot:
         nvars = len(plane.xvars)
-        if nvars < 1 or nvars > 3:
+        if nvars < 1 or nvars > 4:
             logger.error('Can not deal with %i variables' %nvars)
             sys.exit()
 
@@ -756,7 +795,8 @@ class TxNameInput(Locker):
                 for M in br:
             #Check if the massArray is positive and value is positive:
                     if (type(M) == float and M<0.) or type(M) == tuple and M[0]<0.:
-                        logger.warning("Negative mass value found for %s. Point %s will be ignored." %(self,massArray))
+                        if not quenchNegativeMasses:
+                            logger.warning("Negative mass value found for %s. Point %s will be ignored." %(self,massArray))
                         continue
                     if type(M) == tuple and M[1]<0.:
                         logger.warning("Negative lifetime found for %s. Point %s will be ignored." %(self,massArray))
@@ -770,7 +810,12 @@ class TxNameInput(Locker):
                 continue
             #Add units
             if hasattr(dataHandler, 'unit') and dataHandler.unit:
-                value = value*eval(dataHandler.unit,
+                if dataHandler.unit == "%":
+                    value = value / 100.
+                elif dataHandler.unit == "/10000":
+                    value = value / 10000.
+                else:
+                    value = value*eval(dataHandler.unit,
                                    {'fb':fb,'pb': pb,'GeV': GeV,'TeV': TeV})
             if hasattr(dataHandler, 'massUnit') and dataHandler.massUnit:
                 for i,br in enumerate(massArray):
@@ -785,7 +830,8 @@ class TxNameInput(Locker):
                             # M[1] is in ATLAS-SUSY_2016-08 given in [ns], 
                             # m1 = M[1]*eval(dataHandler.lifetimeUnit,{'ns': ns})
                             # lets convert it to a width [GeV]
-                            m1 = hbar / M[1] * GeV ## width in GeV
+                            m1 = M[1] * GeV ## width in GeV
+                            # m1 = hbar / M[1] * GeV ## width in GeV
                             # m1 = 4.3135
                             M = ( m0, m1 )
                         if isinstance(M,(float,int)):

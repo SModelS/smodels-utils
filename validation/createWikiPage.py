@@ -9,7 +9,7 @@
 
 from __future__ import print_function
 #Import basic functions (this file must be run under the installation folder)
-import sys,os,glob,time
+import sys,os,glob,time,copy
 import tempfile
 sys.path.insert(0,"../../smodels")
 from smodels.experiment.databaseObj import Database
@@ -17,6 +17,10 @@ from smodels.tools.physicsUnits import TeV, fb
 from smodels.tools.smodelsLogging import setLogLevel, logger
 import subprocess
 setLogLevel("debug" )
+
+## TGQ12 should be possible
+import smodels.experiment.datasetObj
+smodels.experiment.datasetObj._complainAboutOverlappingConstraints = False
 
 try:
     import commands as C
@@ -26,24 +30,30 @@ except ImportError:
 class WikiPageCreator:
     ### starting to write a creator class
     def __init__ ( self, ugly, database, add_version, private, force_upload,
-                   comparison_database, ignore_superseded ):
+                   comparison_database, ignore_superseded, ignore, moveFile,
+                   include_fastlim ):
+        """
+        :param ugly: ugly mode, produces the ValidationUgly pages with more info
+        :param include_fastlim: include fastlim results
+        """
         self.ugly = ugly ## ugly mode
         self.databasePath = database.replace ( "~", os.path.expanduser("~") )
         self.db = Database( self.databasePath )
-        self.comparison_dbPath = comparison_database
+        self.comparison_dbPath = comparison_database.replace ( "~", os.path.expanduser("~") )
         self.ignore_superseded = ignore_superseded
+        self.include_fastlim = include_fastlim
+        self.ignore_validated = ignore
+        self.moveFile = moveFile
+        if ugly: ## in ugly mode we always ignore validated, and superseded
+            self.ignore_validated = True
+            self.ignore_superseded = True
         self.comparison_db = None
         if self.comparison_dbPath:
             self.comparison_db = Database ( self.comparison_dbPath )
         self.force_upload = force_upload
-        self.private = private
-        if self.ugly: ## ugly mode is always private mode
-            self.private = True
         self.dotlessv = ""
         if add_version:
             self.dotlessv = self.db.databaseVersion.replace(".","" )
-        #self.localdir = "/var/www/validation_v%s" % \
-        #                 self.db.databaseVersion.replace(".","" )
         self.localdir = "../../smodels.github.io/validation/%s" %self.db.databaseVersion.replace(".","" )
         has_uploaded = False
         if not os.path.exists ( self.localdir ) and self.force_upload:
@@ -77,9 +87,9 @@ class WikiPageCreator:
             self.fName = 'ValidationUgly%s' % self.dotlessv
         self.file = open ( self.fName, 'w' )
         self.nlines = 0
-        print ( "\n" )
-        if not has_uploaded:
-            print ( 'MAKE SURE THE VALIDATION PLOTS IN %s ARE UPDATED\n' % self.localdir  )
+        print ( )
+        #if not has_uploaded:
+        #    print ( 'MAKE SURE THE VALIDATION PLOTS IN %s ARE UPDATED\n' % self.localdir  )
         self.true_lines = []
         self.false_lines = []
         self.none_lines = []
@@ -101,15 +111,20 @@ class WikiPageCreator:
         print ( 'Done.\n' )
         self.file.write ( "\nThis page was created %s\n" % time.asctime() )
         self.file.close()
-        cmd = "mv %s ../../smodels.github.io/docs/%s.md" % ( self.fName, self.fName )
-        print ( cmd )
-        C.getoutput ( cmd )
+        if self.moveFile:
+            cmd = "mv %s ../../smodels.github.io/docs/%s.md" % ( self.fName, self.fName )
+            print ( cmd )
+            C.getoutput ( cmd )
 
     def writeHeader ( self ):
         print ( 'Creating wiki file (%s)....' % self.fName )
         whatIsIncluded = "Superseded and Fastlim results are included"
+        if not self.include_fastlim:
+            whatIsIncluded = "Superseded results are listed; fastlim results are not"
         if self.ignore_superseded:
             whatIsIncluded = "Fastlim results are listed; superseded results have been skipped"
+            if not self.include_fastlim:
+                whatIsIncluded = "Neither superseded nor fastlim results are not listed in this table"
         self.file.write( """
 # Validation plots for SModelS-v%s 
 
@@ -120,7 +135,7 @@ database version %s, including the Fastlim tarball that is shipped separately.
 There is also a [list of all analyses](ListOfAnalyses%s), and
 a list of [all SMS topologies](SmsDictionary%s).
 
-The validation procedure for upper limit maps used here is explained in [arXiv:1312.4175](http://arxiv.org/abs/1312.4175),  [EPJC May 2014, 74:2868](http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5), section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. The experimental upper limits are compared with the theoretical predictions for that signal region.
+The validation procedure for upper limit maps used here is explained in [arXiv:1312.4175](http://arxiv.org/abs/1312.4175),  [EPJC May 2014, 74:2868](http://link.springer.com/article/10.1140/epjc/s10052-014-2868-5), section 4. For validating efficiency maps, a very similar procedure is followed. For every input point, the best signal region is chosen. If a covariance matrix has been published, we present the combined limit of all signal regions. The experimental upper limits are compared with the theoretical predictions for that signal region.
 
 """ % ( self.db.databaseVersion, whatIsIncluded, self.db.databaseVersion, 
         self.dotlessv, self.dotlessv ) )
@@ -145,6 +160,12 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         ret=ret + ( "|\n" )
         self.true_lines.append ( ret )
 
+    def getNumber ( self, nr ):
+        """ just format an integral number nicely """
+        if nr == 0:
+            return "no"
+        return "%d" % nr
+
     def writeTableList ( self ):
         self.file.write ( "## Individual tables\n" )
 
@@ -152,23 +173,32 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
             run=1
             if sqrts == 13: run = 2
             self.file.write ( "\n### Run %d - %d TeV\n" % ( run, sqrts ) )
+            nResults = { "ATLAS": set(), "CMS": set() }
+            for exp in [ "ATLAS", "CMS" ]:
+                for tpe in [ "upper limits", "efficiency maps" ]:
+                    expResList = self.getExpList ( sqrts, exp, tpe )
+                    for expRes in expResList:
+                        Id = expRes.globalInfo.id
+                        Id = Id.replace("-agg","")
+                        Id = Id.replace("-eff","")
+                        nResults[exp].add(Id)
+            print ( "[createWikiPage] results at %d TeV: %d CMS, %d ATLAS" % ( sqrts, len(nResults["CMS"]), len(nResults["ATLAS"]) ))
             for exp in [ "ATLAS", "CMS" ]:
                 for tpe in [ "upper limits", "efficiency maps" ]:
                     expResList = self.getExpList ( sqrts, exp, tpe )
                     stpe = tpe.replace ( " ", "" )
 
-                    nres = 0
-                    nexpres = 0
+                    nres, nnewres, nexpres, nnewexpres = 0, 0, 0, 0
                     for expRes in expResList:
-                        hasTn=False
-                        txns = []
+                        hasTn,hasNewTn=False,False
+                        txns, newtxns = [], []
                         for tn in expRes.getTxNames():
                             validated = tn.getInfo('validated')
                             tname = tn.txName
-                            #if "2015-0" in expRes.globalInfo.id:
-                            #    print ( "tname=",tname,"validated=",validated,"path=",tn.path, "tpe=",tpe )
-                            #    print ( "   `- info",tn._infoObj.dataType ) 
-                            if validated in [ "n/a" ]: continue
+                            if not self.ignore_validated and validated in [ "n/a" ]: 
+                                continue
+                            isNew = self.isNewAnaID ( expRes.globalInfo.id, tn.txName, tpe )
+                            hasChanged = self.anaHasChanged ( expRes.globalInfo.id, tn.txName, tpe )
                             if "efficiency" in tpe:
                                 dataset = self.getDatasetName ( tn )
                                 if dataset == "data": continue
@@ -177,22 +207,56 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                             txns.append ( tname )
                             hasTn=True
                             nres += 1
+                            if isNew or hasChanged:
+                                hasNewTn = True
+                                nnewres += 1
+                                newtxns.append ( tname )
                         if hasTn: nexpres += 1
+                        if hasNewTn: nnewexpres += 1
 
                     if nres > 0:
-                        self.file.write ( " * [%s %s](#%s%s%d): %d analyses, %d results\n" % \
-                                      ( exp, tpe, exp, stpe, sqrts, nexpres, nres ) )
+                        sanalyses = "%d analyses (%s new)" % \
+                                     ( nexpres, self.getNumber(nnewexpres) )
+                        sresults = "%d results (%s new)" % \
+                                     ( nres, self.getNumber(nnewres) )
+                        self.file.write ( " * [%s %s](#%s%s%d): %s, %s\n" % \
+                                      ( exp, tpe, exp, stpe, sqrts, sanalyses, sresults ) )
+
+    def isOneDimensional( self, txname ):
+        """ simple method that tells us if its a 1d map. In this case, we dont
+            do "pretty", we use ugly plots for pretty. """
+        r = not ( "y" in str(txname.axes) )
+        return r
 
     def writeExpRes( self, expRes, tpe ):
+        """ write the experimental result expRes 
+        :param tpe: data type (ul or em)
+        """
         valDir = os.path.join(expRes.path,'validation').replace("\n","")
         if not os.path.isdir(valDir): return
-        id = expRes.getValuesFor('id')[0]
+        id = expRes.globalInfo.id
         txnames = expRes.getTxNames()
         ltxn = 0 ## len(txnames)
         txns_discussed=[]
+        if id in [ "ATLAS-SUSY-2016-07" ]:
+            for txn in txnames:
+                if txn.txName == "TGQ":
+                    txn2 = copy.deepcopy ( txn )
+                    txn2.txName = "TGQ12"
+                    txnames.append ( txn2 )
+                #print ( id, txn.txName )
+        if id in [ "ATLAS-SUSY-2016-24" ]:
+            for txn in txnames:
+                if txn.txName == "TSelSel":
+                    txn2 = copy.deepcopy ( txn )
+                    txn2.txName = "TSlepSlep"
+                    txnames.append ( txn2 )
+                #print ( id, txn.txName )
+        txnames.sort()
         for txname in txnames:
             validated = txname.getInfo('validated')
-            if not self.ugly and validated != True: continue
+            if not self.ignore_validated and validated != True: 
+                continue
             # if validated == "n/a": continue
             txn = txname.txName
             if txn in txns_discussed:
@@ -210,7 +274,8 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 continue
             txns_discussed.append ( txn )
             validated = txname.getInfo('validated')
-            if not self.ugly and validated != True: continue
+            if not self.ignore_validated and validated != True: 
+                continue
             #if validated == "n/a": continue
             color=""
             if validated is True: color = "#32CD32"
@@ -224,14 +289,10 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 dataset = self.getDatasetName ( txname )
                 if dataset == "data":
                     continue
-                # print ( "txname=", dataset )
-                # line += "|| %s " % dataset
             if hadTxname: ## not the first txname for this expres?
                 line += "| "
             hadTxname = True
-            # line += '||[[SmsDictionary%s#%s|%s]]' % ( self.dotlessv, txn, txnbrs )
             line += '| [%s](SmsDictionary%s#%s)' % ( txnbrs, self.dotlessv, txn )
-            #line += "||%.1f" % txname.globalInfo.lumi.asNumber(1/fb)
             line += "| %.1f" % txname.globalInfo.lumi.asNumber(1/fb)
             if self.ugly:
                 line += '| %s ' % ( sval )
@@ -247,12 +308,13 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 vDir = vDir[1:]
             dirPath =  os.path.join( self.urldir, vDir )
             files = glob.glob(valDir+"/"+txname.txName+"_*_pretty.png")
-            if self.ugly:
+            if self.ugly or self.isOneDimensional ( txname ):
                 tmp = glob.glob(valDir+"/"+txname.txName+"_*.png")
                 files = []
                 for i in tmp:
                     if not "pretty" in i:
                         files.append ( i )
+            files.sort()
             for fig in files:
                 pngname = fig.replace(".pdf",".png" )
                 figName = pngname.replace(valDir+"/","").replace ( \
@@ -273,23 +335,32 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
             ## add comments
             if self.isNewAnaID ( id, txname.txName, tpe ):
                 line += ' <img src="https://smodels.github.io/pics/new.png" /> in %s! ' % ( self.db.databaseVersion )
+            else:
+                hasChanged = self.anaHasChanged ( id, txname.txName, tpe )
+                if hasChanged == "cov":
+                    line += ' <img src="https://smodels.github.io/pics/updated.png" /> added covariances in %s! ' % ( self.db.databaseVersion )
+                if hasChanged == "eUL":
+                    line += ' <img src="https://smodels.github.io/pics/updated.png" /> added expected UL in %s! ' % ( self.db.databaseVersion )
+            line += "<br><font color='grey'>source: %s</font><br>" % self.describeSource ( txname )
             ## from comments file
             cFile = valDir+"/"+txname.txName+".comment"
             if os.path.isfile(cFile):
                 commentPath = dirPath+"/"+txname.txName+".comment"
                 txtPath = commentPath.replace(".comment", ".txt" )
                 githubRepo = "../../smodels.github.io"
-                mvCmd = "mv %s/%s %s/%s" % ( githubRepo, commentPath, githubRepo, txtPath )
+                mvCmd = "cp %s/%s %s/%s" % ( githubRepo, commentPath, githubRepo, txtPath )
                 subprocess.getoutput ( mvCmd )
-                line += "[comment](https://smodels.github.io"+txtPath+\
-                        ") |\n"
-                #f = open ( cFile, "r" )
-                #line += ", ". join ( f.readlines() ).replace("\n","")
-                #f.close()
-                #line += " |\n" # close it
-            else:
-                line += " |\n" #In case there are no comments
-                #line += " ||\n" #In case there are no comments
+                line += "[comment](https://smodels.github.io"+txtPath+ ")"
+            srplot = valDir + "/bestSR_%s.png" % ( txname.txName )
+            if os.path.isfile( srplot ) and self.ugly:
+                srPath = dirPath+"/bestSR_"+txname.txName+".png"
+                githubRepo = "../../smodels.github.io"
+                mvCmd = "cp %s/%s %s/%s" % ( githubRepo, srPath, githubRepo, srPath )
+                subprocess.getoutput ( mvCmd )
+                addl = " <br>[SR plot](https://smodels.github.io"+srPath+ ")"
+                line += addl
+                # print ( "[createWikiPage] adding srplot", srplot, addl )
+            line += " |\n" # End the line
         if not hadTxname: return
         if "XXX#778899" in line: self.none_lines.append(line)
         elif "#FF0000" in line: self.false_lines.append(line)
@@ -297,13 +368,73 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         self.nlines += 1
         logger.debug ( "add %s with %d figs" % ( id, nfigs ) )
 
+    """
+    def removeFastLim ( self, expRes ):
+        # remove fastlim results from list of results 
+        print ( "removing fastlim results", type(expRes) )
+        return expRes
+    """
+
+    def describeSource ( self, txname ):
+        """ describe the source of the data
+        :param txname: txname object
+        """
+        if not hasattr ( txname, "source" ):
+            return "unknown"
+        source = txname.source.lower()
+        if "cms" in source:
+            return "CMS"
+        if "atlas" in source:
+            return "ATLAS"
+        if "smodels" in source:
+            return "SModelS"
+        return "unknown2"
+
+
+    def anaHasChanged ( self, id, txname, tpe ):
+        """ has analysis id <id> changed? 
+        :param id: analysis id, e.g. ATLAS-SUSY-2013-02  (str)
+        :param txname: topology name, e.g. T1 (str)
+        :param tpe: type of result, e.g. "upper limits" (str)
+        """
+        if self.comparison_db == None:
+            # no comparison database given. So nothing is new.
+            return False
+        dataTypes = []
+        if tpe in [ "upper limits" ]:
+            dataTypes.append ( "upperLimit" )
+        if tpe in [ "efficiency maps" ]:
+            dataTypes.append ( "efficiencyMap" )
+        newR = self.db.getExpResults( analysisIDs = [ id ], 
+                    txnames = [ txname ], dataTypes = dataTypes,
+                    useSuperseded = True, useNonValidated = self.ignore_validated )
+        oldR = self.comparison_db.getExpResults( analysisIDs = [ id ], 
+                    txnames = [ txname ], dataTypes = dataTypes,
+                    useSuperseded = True, useNonValidated = self.ignore_validated )
+        if len(newR) == 0 or len(oldR) == 0:
+            return False
+        oldDS = oldR[0].datasets
+        newDS = newR[0].datasets
+        if newR[0].hasCovarianceMatrix() and not oldR[0].hasCovarianceMatrix():
+            return "cov"
+        for od,nd in zip ( oldDS, newDS ):
+            for otxn,ntxn in zip ( od.txnameList, nd.txnameList ):
+                if otxn.hasLikelihood() != ntxn.hasLikelihood():
+                    return "eUL"
+        return False
+
     def isNewAnaID ( self, id, txname, tpe ):
-        """ is analysis id <id> new? """
+        """ is analysis id <id> new?
+        :param id: analysis id, e.g. ATLAS-SUSY-2013-02 (str)
+        :param txname: topology name, e.g. T1 (str)
+        :param tpe: type of result, e.g. "upper limits" (str)
+        """
         if self.comparison_db == None:
             # no comparison database given. So nothing is new.
             return False
         if not hasattr ( self, "OldAnaIds" ):
-            expRs = self.comparison_db.getExpResults( useSuperseded = True, useNonValidated = self.ugly )
+            expRs = self.comparison_db.getExpResults( useSuperseded = True, 
+                          useNonValidated = self.ignore_validated )
             anaIds = [ x.globalInfo.id for x in expRs ]
             self.OldAnaIds = set ( anaIds )
             self.topos = {}
@@ -312,6 +443,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 if not anaId in self.topos.keys():
                     self.topos[anaId]=[]
                 topos = r.getTxNames()
+                topos.sort()
                 Type = "-ul"
                 if len(r.datasets) > 1 or r.datasets[0].dataInfo.dataId != None:
                     Type = "-eff"
@@ -332,17 +464,23 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         return False
 
     def writeExperimentType ( self, sqrts, exp, tpe, expResList ):
+        """ write the table for a specific sqrts, experiment, data Type 
+        """
         stype=tpe.replace(" ","")
         nres = 0
         nexpRes = 0
+        expResList.sort()
         for expRes in expResList:
             txnames=[]
-            for tn in expRes.getTxNames():
+            tnamess = expRes.getTxNames()
+            tnamess.sort()
+            for tn in tnamess:
                 name = tn.txName
                 if name in txnames:
                     continue
                 validated = tn.getInfo('validated')
-                if not self.ugly and validated != True: continue
+                if not self.ignore_validated and validated != True: 
+                    continue
                 # if validated in [ "n/a" ]: continue
                 if "efficiency" in tpe:
                     dataset = self.getDatasetName ( tn )
@@ -363,20 +501,29 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 continue
             self.writeExpRes ( expRes, tpe )
 
-
     def getExpList ( self, sqrts, exp, tpe ):
+        """ get the list of experimental results for given sqrts and
+            data type and experiment
+        :param exp: experiment, i.e. "CMS" or "ATLAS"
+        """
         dsids= [ None ]
         if tpe == "efficiency maps":
             dsids = [ 'all' ]
         T="upperLimit"
         if "efficiency" in tpe: T="efficiencyMap"
         tmpList = self.db.getExpResults( dataTypes=[ T ], 
-                         useNonValidated=self.ugly, useSuperseded=True )
+                         useNonValidated=self.ignore_validated, 
+                         useSuperseded=True )
         expResList = []
         for i in tmpList:
             if not exp in i.globalInfo.id: continue
             xsqrts=int ( i.globalInfo.sqrts.asNumber(TeV) )
             if xsqrts != sqrts: continue
+            if not self.include_fastlim and hasattr ( i.globalInfo, "contact" ) and \
+                "fastlim" in i.globalInfo.contact.lower():
+                    # we do not include fastlim, the result has a contact field,
+                    # and "fastlim" is mentioned there: skip it
+                    continue
             expResList.append ( i )
         return expResList
 
@@ -398,28 +545,39 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser( description= "creates validation wiki pages,"\
                 " see e.g. http://smodels.github.io/docs/Validation" )
     ap.add_argument('-u', '--ugly', help='ugly mode (gives more private info,'\
-                ' sets private mode, uses ugly plots)', action='store_true')
+                ' plots everything, uses ugly plots)', action='store_true')
     ap.add_argument('-p', '--private', help='private mode',
+                    action='store_true')
+    ap.add_argument('-M', '--dontmove', help='dont move file at the end',
                     action='store_true')
     ap.add_argument('-f', '--force_upload', 
                     help='force upload of pics to ../../smodels.github.io.',
                     action='store_true')
+    ap.add_argument('-F', '--include_fastlim', help='include fastlim results',
+                    action='store_true')
     ap.add_argument('-a', '--add_version', help='add version labels in links', 
                     action='store_true')
-    ap.add_argument('-i', '--ignore_superseded', help='ignore superseded results', 
+    ap.add_argument('-s', '--ignore_superseded', help='ignore superseded results', 
                     action='store_true')
+    ap.add_argument ( '-i', '--ignore', help='ignore the validation flags of analysis (i.e. also add non-validated results)', action='store_true' )
     ap.add_argument('-v', '--verbose',
             help='specifying the level of verbosity (error, warning, info, debug)'\
                  ' [info]', default = 'info', type = str)
     ap.add_argument('-c', '--comparison_database',
-            help='specify database to compare to (to flag "new analyses") [default: ""]',
-            default = '', type = str )
+            help='specify database to compare to (to flag "new analyses") [default: "~/git/smodels-database-release"]',
+            default = '~/git/smodels-database-release', type = str )
     ap.add_argument('-d', '--database',
             help='specify the location of the database [~/git/smodels-database]',
             default = '~/git/smodels-database', type = str )
     args = ap.parse_args()
+    if not os.path.exists(os.path.expanduser(args.database)): 
+            args.database = "~/tools/smodels-database/"
+    if not os.path.exists(os.path.expanduser(args.comparison_database)): 
+        print ( "[createWikiPage] couldnt find comparison database %s, set to ''" % args._comparison_database )
+        args.comparison_database = ""
     setLogLevel ( args.verbose )
     creator = WikiPageCreator( args.ugly, args.database, args.add_version, 
                                args.private, args.force_upload,
-                               args.comparison_database, args.ignore_superseded )
+                               args.comparison_database, args.ignore_superseded,
+                               args.ignore, not args.dontmove, args.include_fastlim )
     creator.run()

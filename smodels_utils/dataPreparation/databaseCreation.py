@@ -488,7 +488,8 @@ class DatabaseCreator(list):
             smsRoot.cd(dirname)
             fullname = "%s/%s" % (dirname, exclusion.GetName())
             if smsRoot.Get(fullname) == None:
-                self.timeStamp("add %s to sms.root" % fullname, "info")
+                self.timeStamp("add %s with %d points to sms.root" % \
+                        (fullname, exclusion.GetN()), "info")
                 exclusion.Write()
         smsRoot.Close()
 
@@ -520,6 +521,16 @@ class DatabaseCreator(list):
             value = getattr(obj,attr)
             if value=="":
                 continue
+            if name == "dataInfo" and attr == "jsonfile":
+                # we copy the jsonfile and rewrite the value field
+                sourcefile = "%s/%s" % ( self.base, value )
+                if not os.path.exists ( sourcefile ):
+                    logger.error ( "jsonfile %s not found." % sourcefile )
+                    sys.exit(-3)
+                destfile = self.base + path
+                destfile = destfile.replace("dataInfo.txt", "BkgOnly.json" )
+                shutil.copy ( sourcefile, destfile )
+                value = "BkgOnly.json"
             content = '%s%s%s%s\n' % (content, attr,\
                                        self.assignmentOperator, value)
 
@@ -566,8 +577,28 @@ class DatabaseCreator(list):
             #Leave data for last
             if attr in dataLabels:
                 continue
-                value = self._formatData(value)
 
+            if attr == "axes":
+                ## remove full 3d entries
+                if "z" in value:
+                    logger.warning ( "There is a 3d axis. Will try to remove it." )
+                    tokens = value.split(";")
+                    value=""
+                    for t in tokens:
+                        if not "z" in t:
+                            value+= t+"; "
+                    if value[-2:]=="; ":
+                        value=value[:-2]
+                    if "z" in value:
+                        logger.error ( "Attempt at removal was not successful. Please fix in convert.py." )
+                        sys.exit()
+                if ";" in value: ## order canonically
+                    tokens = value.split(";")
+                    tokens = [ x.strip() for x in tokens ]
+                    tokens.sort()
+                    value = "; ".join( tokens )
+                    while value.find("  ")>-1:
+                        value = value.replace( "  ", " " )
             content = '%s%s%s%s\n' % (content, attr,\
                                        self.assignmentOperator, value)
         for attr in obj.infoAttr:
@@ -669,7 +700,11 @@ def round_list(x, n ):
             return x
         unit = 1.
 
-    return round(x,-int(floor(log10(x))) + (n - 1))*unit
+    sgn=1.
+    if x<0.:
+        sgn = -1.
+        x = abs(x)
+    return sgn * ( round(x,-int(floor(log10(x))) + (n - 1))*unit )
 
 
 def removeRepeated(datalist,dataType=None):
