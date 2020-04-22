@@ -1,11 +1,13 @@
+.. image:: https://smodels.github.io/pics/banner.png
+
 =============
 smodels-utils
 =============
 
 **Welcome to the smodels-utils repository**
 
-This is a repository to store and preserve and code and data
-*around* smodels that are not actual part of smodels-proper.
+This is a repository to store and preserve code and data *around* smodels that
+are not actual part of smodels-proper.
 Among the tools in this repository you will find:
 
 * code to automatically produce many of the wiki pages on https://smodels.github.io in wiki syntax
