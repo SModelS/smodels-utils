@@ -12,7 +12,7 @@ Among the tools in this repository you will find:
 
 * code to automatically produce many of the wiki pages on https://smodels.github.io in wiki syntax
 * code to port fastlim results to smodels (fastlim_tools)
-* code to validate the smodels-database (validation, see https://smodels.github.io/docs/Validation/)
+* code to validate the smodels-database (validation, see https://smodels.github.io/docs/Validation)
 * code to facilitate adding new experimental results to the database (smodels_utils/dataPreparation)
 * code to create *home-grown* efficiency maps for smodels (EM_Creator)
 * code to write bibtex files with all analysis results, visualise and plot simplified models, and SMS results, etc etc etc (a few directories)

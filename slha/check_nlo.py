@@ -126,8 +126,8 @@ def main():
                            help = 'number of events [50000]',
                            type=int, default = 50000 )
     argparser.add_argument('-S', '--sqrts', 
-                           help = 'sqrts. if 0, then 8 and 13. [13]',
-                           type=int, default = 13 )
+                           help = 'sqrts: 0, 8, or 13. if 0, then 8 and 13. [0]',
+                           type=int, default = 0 )
     argparser.add_argument('-s', '--ssmultipliers', 
                            help = 'supply a filter for signal strengths [None]',
                            type=str, default = None )
