@@ -143,7 +143,7 @@ def getXSecsFor ( pid1, pid2, sqrts, ewk ):
         order = 2
         isEWK=True
         pb = False
-    if pid1 in [ -1000005, -1000006 ] and pid2 == -pid1:
+    if pid1 in [ -1000005, -1000006, -2000006 ] and pid2 == -pid1:
         ## left handed slep- slep+ production.
         filename = "xsecstop%d.txt" % sqrts
         order = 2 #3
