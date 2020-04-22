@@ -299,12 +299,20 @@ def createMassRanges ( args ):
                     sys.exit()
                 y = args.ymin
                 while y < args.ymax:
+                    if args.max_dxy != None and (x-y) > args.max_dxy:
+                        continue
+                    if args.min_dxy != None and (x-y) < args.min_dxy:
+                        continue
                     masses.append ( { "x": x, "y": y } )
                     y = y * args.dy
             else:
                 for y in numpy.arange(args.ymin,args.ymax+1,args.dy):
                     if excludeInvertedMasses and y > x:
                         break
+                    if args.max_dxy != None and (x-y) > args.max_dxy:
+                        continue
+                    if args.min_dxy != None and (x-y) < args.min_dxy:
+                        continue
                     masses.append ( { "x": x, "y": y } )
         return masses
     # x,y and z are given
@@ -315,6 +323,10 @@ def createMassRanges ( args ):
                 sys.exit()
             y = args.ymin
             while y < args.ymax:
+                if args.max_dxy != None and (x-y) > args.max_dxy:
+                    continue
+                if args.min_dxy != None and (x-y) < args.min_dxy:
+                    continue
                 if args.logz:
                     if args.dz < 1.:
                         logger.error ( "z axis is log scale, but dz < 1. Did you mean 1/dz?" )
@@ -329,6 +341,10 @@ def createMassRanges ( args ):
                 y = y * args.dy
         else: ## y is not log scale, so y should be below x, we assume
             for y in numpy.arange(args.ymin,args.ymax+1.,args.dy):
+                if args.max_dxy != None and (x-y) > args.max_dxy:
+                    continue
+                if args.min_dxy != None and (x-y) < args.min_dxy:
+                    continue
                 if excludeInvertedMasses and y > x:
                     break
                 if args.logz:
@@ -365,6 +381,10 @@ if __name__ == "__main__":
         type=float, default=300. )
     argparser.add_argument ( '--dy', nargs='?', help='binning in y [25]',
         type=float, default=25. )
+    argparser.add_argument ( '--max_dxy', nargs='?', help='maximum (x-y) [None]',
+        type=float, default=None )
+    argparser.add_argument ( '--min_dxy', nargs='?', help='minimum (x-y) [None]',
+        type=float, default=None )
     argparser.add_argument( '-ly', '--logy', action='store_true',
         help="logarithmic scale for y axis (in which case dy is multiplicative)" )
     argparser.add_argument ( '--zmin', nargs='?', help='minimum value for z [None]',
