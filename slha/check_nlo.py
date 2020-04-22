@@ -10,15 +10,17 @@ import pyslha
 import IPython
 import math
 
-def process ( files, pretend, ssmultipliers, pythia, nevents ):
+def process ( files, pretend, ssmultipliers, pythia, nevents, sqrtS ):
     """ process the files, i.e. compute xsecs for them 
+    :param pretend: pretend, just count, dont actually do anything
     :param ssmultipliers: filter on signal strength multipliers
                           used mostly to turn off certain production channels
     :param pythia: pythia version to use (6 or 8)
     :param nevents: number of events to produce
+    :param sqrtS: compute for sqrts (TeV)
     """
     total = len (files)
-    not_lo, not_nlo, not_13 = 0, 0, 0
+    not_lo, not_nlo, not_13, not_8 = 0, 0, 0, 0
     ssms = ""
     ## for thscpm6
     if ssmultipliers not in [ None, "", "None", "none" ]:
@@ -30,6 +32,7 @@ def process ( files, pretend, ssmultipliers, pythia, nevents ):
         has_lo  = False
         has_nlo = False
         has_13 = False
+        has_8 = False
         p = pyslha.readSLHAFile ( f )
         for k,xsecs in p.xsections.items():
             for x in xsecs.xsecs:
@@ -37,6 +40,8 @@ def process ( files, pretend, ssmultipliers, pythia, nevents ):
                 order = x.qcd_order_str
                 if abs ( sqrts - 13000. ) < 1e-4:
                     has_13 =True
+                if abs ( sqrts - 8000. ) < 1e-4:
+                    has_8 =True
                 if "LO" in order or "Born" in order: ## FIXME why??
                     has_lo = True
                 if "NL" in order:
@@ -65,7 +70,7 @@ def process ( files, pretend, ssmultipliers, pythia, nevents ):
                     a = subprocess.getoutput ( cmd )
                     print ( a )
                 not_nlo += 1
-        if not has_13:
+        if not has_13 and sqrtS in [ 0, 13 ]:
             print ( "%s has not sqrts 13 " % f )
             cmd = "%s -e %d -N -P -%d %s -f %s" % \
                    ( xsecc, nevents, pythia, ssms, f )
@@ -76,11 +81,29 @@ def process ( files, pretend, ssmultipliers, pythia, nevents ):
                 a = subprocess.getoutput ( cmd )
                 print ( a )
             not_13 += 1
+        # print ( "here sqrts", sqrts, "has8", has_8 )
+        if not has_8 and sqrtS in [ 0, 8 ]:
+            print ( "%s has not sqrts 8 " % f )
+            ms=" -s 8"
+            if sqrtS in [ 0 ]:
+                ms=""
+            cmd = "%s%s -e %d -N -P -%d %s -f %s" % \
+                   ( xsecc, ms, nevents, pythia, ssms, f )
+            if pretend:
+                pass
+            else:
+                print ( cmd )
+                a = subprocess.getoutput ( cmd )
+                print ( a )
+            not_8 += 1
 
     if pretend:
         print ( "%d/%d with NLL." % ( total - not_lo - not_nlo, total ) )
         print ( "%d/%d with LO only." %  ( not_nlo, total ) )
-        print ( "%d/%d with no 13 TeV." %  ( not_13, total ) )
+        if sqrtS in [ 0, 13 ]:
+            print ( "%d/%d with no 13 TeV." %  ( not_13, total ) )
+        if sqrtS in [ 0, 8 ]:
+            print ( "%d/%d with no  8 TeV." %  ( not_8, total ) )
         print ( "%d/%d with no xsecs." % ( not_lo, total ) )
 
 def zipThem ( files ):
@@ -102,6 +125,9 @@ def main():
     argparser.add_argument('-e', '--nevents', 
                            help = 'number of events [50000]',
                            type=int, default = 50000 )
+    argparser.add_argument('-S', '--sqrts', 
+                           help = 'sqrts. if 0, then 8 and 13. [13]',
+                           type=int, default = 13 )
     argparser.add_argument('-s', '--ssmultipliers', 
                            help = 'supply a filter for signal strengths [None]',
                            type=str, default = None )
@@ -142,14 +168,14 @@ def main():
     random.shuffle ( files )
 
     if args.nprocesses == 1: ## multiprocess
-        process ( files, pretend, args.ssmultipliers, args.pythia, args.nevents )
+        process ( files, pretend, args.ssmultipliers, args.pythia, args.nevents, args.sqrts )
         return
     p = multiprocessing.Pool ( args.nprocesses )
     ps = []
     delta = int(math.ceil(len(files)/args.nprocesses))
     for i in range(args.nprocesses):
         chunk = files[delta*i:delta*(i+1)]
-        p=multiprocessing.Process(target=process, args=(chunk,pretend,args.ssmultipliers,args.pythia,args.nevents) )
+        p=multiprocessing.Process(target=process, args=(chunk,pretend,args.ssmultipliers,args.pythia,args.nevents, args.sqrts) )
         p.start()
         ps.append ( p )
     for p in ps:
