@@ -57,9 +57,12 @@ def getAnaTopo ( f ):
 def scan():
     db = loadDatabase()
     dictfiles = glob.glob ( "../../smodels-database/*TeV/*/*/validation/T*.py")
+    topos = False
     if "13" in sys.argv:
         dictfiles = glob.glob ( "../../smodels-database/13TeV/*/*/validation/T*.py")
-    anas = set()
+    if "-t" in sys.argv:
+        topos = True
+    anas, anantopos = set(), set()
     for d in dictfiles:
         D = d.replace("../../smodels-database/","")
         m = os.stat ( d ).st_mtime
@@ -68,14 +71,18 @@ def scan():
         ana = D[:p]
         pr = ana.rfind("/")
         ana = ana[pr+1:]
+        anaNTopo = getAnaTopo ( D )
         vstat = getValidationStatus(d.replace("../../smodels-database/",""),db)
         if vstat != "True":
             continue
         # print ( "d",d, getValidationStatus(d.replace("../../smodels-database/",""),db) )
         if dt < 0.:
             anas.add ( ana )
+            anantopos.add ( anaNTopo )
     print ( ",".join ( anas ) )
     # print ( "\n".join ( anas ) )
+    if topos:
+        print ( "\n".join ( anantopos ) )
     print ( "%d analyses need to rerun" % ( len(anas) ) )
 
 if __name__ == "__main__":
