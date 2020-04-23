@@ -47,6 +47,12 @@ def process ( files, pretend, ssmultipliers, pythia, nevents, sqrtS ):
                 if "NL" in order:
                     has_nlo=True
         xsecc = "~/git/smodels/smodelsTools.py xseccomputer"
+        ms=""
+        if sqrtS in [ 8 ]:
+            ms=" -s 8"
+        if sqrtS in [ 13 ]:
+            ms=" -s 13"
+        xsecc = xsecc + ms
         if not has_nlo:
             if not has_lo:
                 print ( "%s has neither LO nor NLO" % f )
@@ -84,11 +90,8 @@ def process ( files, pretend, ssmultipliers, pythia, nevents, sqrtS ):
         # print ( "here sqrts", sqrts, "has8", has_8 )
         if not has_8 and sqrtS in [ 0, 8 ]:
             print ( "%s has not sqrts 8 " % f )
-            ms=" -s 8"
-            if sqrtS in [ 0 ]:
-                ms=""
-            cmd = "%s%s -e %d -N -P -%d %s -f %s" % \
-                   ( xsecc, ms, nevents, pythia, ssms, f )
+            cmd = "%s -e %d -N -P -%d %s -f %s" % \
+                   ( xsecc, nevents, pythia, ssms, f )
             if pretend:
                 pass
             else:

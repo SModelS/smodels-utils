@@ -124,22 +124,22 @@ def getXSecsFor ( pid1, pid2, sqrts, ewk ):
         isEWK=False
         order = 2 # 4
     if pid1 in [ -1000024 ] and pid2 in [ 1000023 ]:
-        filename = "xsecN2C1m13.txt"
+        filename = "xsecN2C1m%d.txt" % sqrts
         order = 2
         isEWK=True
         pb = False
     if pid1 in [ 1000023 ] and pid2 in [ 1000024 ]:
-        filename = "xsecN2C1p13.txt"
+        filename = "xsecN2C1p%d.txt" % sqrts
         order = 2
         pb = False
         isEWK=True
     if pid1 in [ 1000024 ] and pid2 in [ 1000025 ]:
-        filename = "xsecN2C1p13.txt"
+        filename = "xsecN2C1p%d.txt" % sqrts
         order = 2
         pb = False
         isEWK=True
     if pid1 in [ -1000024 ] and pid2 in [ 1000025 ]:
-        filename = "xsecN2C1m13.txt"
+        filename = "xsecN2C1m%d.txt" % sqrts
         order = 2
         isEWK=True
         pb = False
@@ -169,6 +169,9 @@ def getXSecsFor ( pid1, pid2, sqrts, ewk ):
         filename = filename.replace(".txt","hino.txt" )
     if isEWK:
         comment = " (%s)" % ewk
+    if not os.path.exists ( filename ):
+        print ( "[addRefXSecs] %s missing" % filename )
+        sys.exit()
     xsecs = getXSecsFrom ( filename, pb, columns )
     return xsecs,order,comment
 
@@ -218,12 +221,16 @@ def main():
     if args.pid2 < args.pid1:
         print ( "[addRefXSecs] will swap pids %d and %d" % ( args.pid1, args.pid2) )
         args.pid1, args.pid2 = args.pid2, args.pid1
-    xsecs,order,comment = getXSecsFor ( args.pid1, args.pid2, args.sqrts, args.ewk )
-    # print ( "xsecs", xsecs )
-    for F in files: # [:3]:
-        addToFile ( F, args.pid1, args.pid2, xsecs, args.sqrts, args.dry_run, order, comment )
-        if args.clean:
-            clean ( F )
+    sqrts = [ args.sqrts ]
+    if sqrts == [ 0 ]:
+        sqrts = [ 8, 13 ]
+    for s in sqrts:
+        xsecs,order,comment = getXSecsFor ( args.pid1, args.pid2, s, args.ewk )
+        # print ( "xsecs", xsecs )
+        for F in files: # [:3]:
+            addToFile ( F, args.pid1, args.pid2, xsecs, s, args.dry_run, order, comment )
+            if args.clean:
+                clean ( F )
     if args.zip:
         zipThem ( files )
 
