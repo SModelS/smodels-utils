@@ -404,8 +404,9 @@ class Combiner:
         bestCombo,Z,muhat = self._findLargestZ ( combinables, expected=expected, mumax = mumax )
         ## compute a likelihood equivalent for Z
         llhd = stats.norm.pdf(Z)
+        post = llhd * self.computePrior()
         # self.pprint ( "bestCombo %s, %s, %s " % ( Z, llhd, muhat ) )
-        return bestCombo,Z,llhd,muhat
+        return bestCombo,Z,llhd,muhat,post
 
     def removeDataFromBestCombo ( self, bestCombo ):
         """ remove the data from all theory predictions, we dont need them. """
