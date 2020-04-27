@@ -162,6 +162,8 @@ def main():
         print ( "%s[publishDatabasePickle] then do also manually:%s" % ( colorama.Fore.RED, colorama.Fore.RESET ) )
         print ( "ssh lxplus.cern.ch smodels/www/database/create.py" )
         print ( )
+        print ( "now point your browser to: " )
+        print ( "https://smodels.web.cern.ch/smodels/database/" )
 
 
 main()
