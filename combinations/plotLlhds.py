@@ -2,7 +2,7 @@
 
 """ the plotting script for the llhd scans """
 
-import pickle, sys, copy, subprocess, os, colorama
+import pickle, sys, copy, subprocess, os, colorama, time
 import IPython
 import numpy as np
 from csetup import setup
@@ -48,11 +48,20 @@ def integrateLlhds ( Z ):
 
 def findMin ( Z ):
     """ find the minimum in Z """
-    x,y,m = 0., 0, float("inf")
-    for x_,row in enumerate(Z):
-        for y_,v in enumerate(row):
-            if v < m:
-                m,x,y = v,x_,y_
+    #x,y,m = 0., 0, float("inf")
+    #for x_,row in enumerate(Z):
+    #    for y_,v in enumerate(row):
+    #        if v < m:
+    #            m,x,y = v,x_,y_
+    #print ( "findMin", Z.shape )
+    # print ( "Z", Z )
+    idx = np.nanargmin ( Z ) 
+    y = idx % Z.shape[1] 
+    x = int ( ( idx - y ) / Z.shape[1] )
+    m = Z[x][y]
+    #print ( "argmin", idx, x2 , y2, m2 )
+    #print ( "found at x,y,m",x,y,m )
+    #sys.exit()
     return x,y,m
 
 def computeHLD ( Z, alpha = .9, verbose = True ):
@@ -140,10 +149,25 @@ def filterSmaller ( X, Y ):
     return np.array(Xs), np.array(Ys)
 
 def resultFor ( ana, topo, llhds ):
-    """ return result for ana/topo pair """
+    """ return result for ana/topo pair 
+    :param ana: the analysis id. optionally a data type can be specificed, e.g.
+                as :em
+    :param topo: the topology
+    :param llhds: dictionary with ana ids as keys and llhds as values
+    :returns: results for this analysis (possibly data type) and topology
+    """
     ret,sr = None,None
+    dType = "any"
+    if ":" in ana:
+        ana,dType = ana.split(":")
+    #print ( "result for", ana, ",", dType )
+    #print ( "llhds", llhds )
     for k,v in llhds.items():
         tokens = k.split(":")
+        if dType == "ul" and tokens[1] != "None":
+            continue
+        if dType == "em" and tokens[1] == "None":
+            continue
         if ana != tokens[0]:
             continue
         if topo not in tokens[2]:
@@ -242,7 +266,7 @@ def getAlpha ( color ):
         return .6
     return .4
 
-def plotSummary ( pid1, pid2, copy, ulSeparately ):
+def plotSummary ( pid1, pid2, copy, ulSeparately, verbose ):
     """ a summary plot, overlaying all contributing analyses 
     :param copy: copy plot to ../../smodels.github.io/protomodels/latest
     :param ulSeparately: if true, then plot 
@@ -253,7 +277,7 @@ def plotSummary ( pid1, pid2, copy, ulSeparately ):
     picklefile = "hiscore.pcl"
     protomodel, trimmed = obtain ( 0, picklefile )
     for tpred in protomodel.bestCombo:
-        resultsForPIDs = getPIDsOfTPred ( tpred, resultsForPIDs )
+        resultsForPIDs = getPIDsOfTPred ( tpred, resultsForPIDs, integrateDataType=False )
     stats = getAnaStats( masspoints, topo, integrateDataType=False )
     anas = list(stats.keys())
     if pid1 in resultsForPIDs:
@@ -281,8 +305,9 @@ def plotSummary ( pid1, pid2, copy, ulSeparately ):
         color = colors[ctr]
         x,y=set(),set()
         L = {}
-        minXY=0.,0.,float("inf")
+        minXY=( 0.,0., float("inf") )
         s=""
+        # print ( "result for", ana )
         r,sr = resultFor ( ana, topo, masspoints[0][2] )
         if r:
             s="(%.2f)" % (-np.log(r))
@@ -306,6 +331,7 @@ def plotSummary ( pid1, pid2, copy, ulSeparately ):
                     minXY=(m1,m2,zt)
             h = getHash(m1,m2)
             L[h]=zt
+        print ( "\n[plotLlhds] min(xy) for %s is at m=(%d/%d): %.2f(%.2g)" % ( ana, minXY[0], minXY[1], minXY[2], np.exp(-minXY[2] ) ) )
         if cresults == 0:
             print ( "[plotLlhds] warning: found no results for %s. skip" % ana )
             return
@@ -335,9 +361,9 @@ def plotSummary ( pid1, pid2, copy, ulSeparately ):
         ax = cont50.ax
         # print ( "[plotLlhds] ana, min", ana, minXY )
         ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=180, color="black" )
-        ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=110, color=color, label=ana, alpha=1. )
+        ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=110, color=color, label=ana+" (%.2f)" % (minXY[2]), alpha=1. )
 
-    print ( "[plotLlhds] timestamp:", timestamp, topo, max(x) )
+    print ( "\n[plotLlhds] timestamp:", timestamp, topo, max(x) )
     dx,dy = max(x)-min(x),max(y)-min(y)
     plt.text( max(x)-.37*dx,min(y)-.11*dy,timestamp, c="gray" )
     ### the altitude of the alpha quantile is l(nuhat) - .5 chi^2_(1-alpha);ndf
@@ -355,7 +381,6 @@ def plotSummary ( pid1, pid2, copy, ulSeparately ):
     if sr == None:
         sr = "UL"
     plt.title ( "HPD intervals, %s [%s]" % ( toLatex(pid1,True), topo ) )
-    # plt.title ( "$-\ln L(m_i)$, %s" % ( topo ) )
     plt.xlabel ( "m(%s) [GeV]" % toLatex(pid1,True) )
     plt.ylabel ( "m(%s) [GeV]" % toLatex(pid2,True) )
     plt.legend( loc="upper left" )
@@ -377,7 +402,7 @@ def plot ( pid1, pid2, analysis, copy, verbose ):
     :param verbose: verbosity: debug, info, warn, or error
     """
     if analysis in [ "*", "all", "summary" ]:
-        plotSummary ( pid1, pid2, copy )
+        plotSummary ( pid1, pid2, copy, ulSeparately=True, verbose=verbose )
         return
     masspoints,mx,my,nevents,topo,timestamp = load ( getPickleFile ( pid1, pid2 ) )
     stats = getAnaStats( masspoints, topo )
@@ -417,8 +442,14 @@ class LlhdPlot:
         for m in masspoints:
             self.massdict[ (m[0],m[1]) ] = m [2]
 
-    def findClosestPoint ( self, m1, m2 ):
-        """ find the mass point closest to m1, m2 """
+    def findClosestPoint ( self, m1=None, m2=None, nll=False ):
+        """ find the mass point closest to m1, m2 
+        :param nll: if True, report nlls, not likelihoods
+        """
+        if m1 == None:
+            m1 = self.mx
+        if m2 == None:
+            m2 = self.my
         dm,point = float("inf"),None
         def distance ( m ):
             return (m[0]-m1)**2 + (m[1]-m2)**2
@@ -428,8 +459,13 @@ class LlhdPlot:
             if tmp < dm:
                 dm = tmp
                 point = m
-
-        return point
+        if not nll:
+            return point
+        # asked for NLLs
+        D = {}
+        for k,v in point[2].items():
+            D[k]=-np.log(v)
+        return ( point[0], point[1], D )
 
     def interact ( self ):
         import IPython

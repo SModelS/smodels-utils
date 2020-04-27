@@ -426,9 +426,20 @@ def copyFilesToGithub():
         if len(O)>0:
             print ( "[plotHiscore.py] when copying files: %s" % O )
 
-def getPIDsOfTPred ( tpred, ret ):
-    """ get the list of PIDs that the theory prediction should be assigned to """
+def getPIDsOfTPred ( tpred, ret, integrateDataType=True ):
+    """ get the list of PIDs that the theory prediction should be assigned to 
+    :param tpred: theory prediction
+    :param ret: results of a previous run of this function, so we can add iteratively
+    :param integrateDataType: if False, then use anaid:dtype (eg CMS-SUS-19-006:ul) as values
+    :returns: dictionary with pid as key and sets of ana ids as value
+    """
     LSP = 1000022
+    name = tpred.analysisId()
+    dType = "em"
+    if tpred.dataId() in [ "None", None ]:
+        dType = "ul"
+    if not integrateDataType:
+        name = name + ":" + dType
     for pids in tpred.PIDs:
         for br in pids:
             for pid in br:
@@ -438,13 +449,13 @@ def getPIDsOfTPred ( tpred, ret ):
                         if not apid in ret and not apid == LSP:
                             ret[apid]=set()
                         if not apid == LSP:
-                            ret[apid].add ( tpred.analysisId() )
+                            ret[apid].add ( name )
                 else:
                     apid = abs(pid)
                     if not apid in ret and not apid == LSP:
                         ret[apid]=set()
                     if not apid == LSP:
-                        ret[apid].add ( tpred.analysisId() )
+                        ret[apid].add ( name )
     return ret
 
 def plotRuler( protomodel ):
