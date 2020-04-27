@@ -258,13 +258,14 @@ class ProtoModel:
         mumax = float("inf")
         if self.rmax > 0.:
             mumax = rthresholds[0] / self.rmax
-        bestCombo,Z,llhd,muhat,post = combiner.findHighestSignificance ( predictions, strategy, expected=False, mumax = mumax )
+        bestCombo,Z,llhd,muhat = combiner.findHighestSignificance ( predictions, strategy, expected=False, mumax = mumax )
+        prior = combiner.computePrior ( self )
         if hasattr ( self, "keep_meta" ) and self.keep_meta:
             self.bestCombo = bestCombo
         else:
             self.bestCombo = combiner.removeDataFromBestCombo ( bestCombo )
         self.Z = Z
-        self.post = post
+        self.K = Z**2 + 2* math.log ( prior )
         self.llhd = llhd
         self.muhat = muhat
         self.letters = combiner.getLetterCode(self.bestCombo)
@@ -359,8 +360,8 @@ class ProtoModel:
                         "rvalues": copy.deepcopy(self.rvalues) }
         if hasattr ( self, "muhat" ):
             self._backup["muhat"]=self.muhat
-        if hasattr ( self, "post" ):
-            self._backup["post"]=self.post
+        if hasattr ( self, "K" ):
+            self._backup["K"]=self.K
         if hasattr ( self, "rmax" ):
             self._backup["rmax"]=self.rmax
         # self.pprint ( "backing up state" )

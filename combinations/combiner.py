@@ -363,7 +363,7 @@ class Combiner:
                       ( C, nparticles, nbr, nssms, proper ) )
         return proper
 
-    def computePrior ( self, protomodel, verbose=False ):
+    def computePrior ( self, protomodel, nll=False, verbose=False ):
         """ compute the prior for protomodel, used to introduce regularization,
             i.e. punishing for non-zero parameters, imposing sparsity.
         :param verbose: print how you get the prior
@@ -384,7 +384,10 @@ class Combiner:
             ## every ssm > 0 costs a little, but only very little
             if ssm > 1e-4:
                 nssms += 1
-        return self.priorForNDF ( nparticles, nbr, nssms, verbose )
+        ret = self.priorForNDF ( nparticles, nbr, nssms, verbose )
+        if nll:
+            return - math.log ( ret )
+        return ret
 
     def findHighestSignificance ( self, predictions, strategy, expected=False, 
                                   mumax = None ):
@@ -404,9 +407,8 @@ class Combiner:
         bestCombo,Z,muhat = self._findLargestZ ( combinables, expected=expected, mumax = mumax )
         ## compute a likelihood equivalent for Z
         llhd = stats.norm.pdf(Z)
-        post = llhd * self.computePrior()
         # self.pprint ( "bestCombo %s, %s, %s " % ( Z, llhd, muhat ) )
-        return bestCombo,Z,llhd,muhat,post
+        return bestCombo,Z,llhd,muhat
 
     def removeDataFromBestCombo ( self, bestCombo ):
         """ remove the data from all theory predictions, we dont need them. """
