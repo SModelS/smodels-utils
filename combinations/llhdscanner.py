@@ -192,22 +192,22 @@ def main ():
             help='pid2 [1000022]',
             type=int, default=1000022 )
     argparser.add_argument ( '-m1', '--min1',
-            help='minimum mass of pid1',
+            help='minimum mass of pid1 [None]',
             type=float, default=None )
     argparser.add_argument ( '-M1', '--max1',
             help='maximum mass of pid1 [2200.]',
             type=float, default=None )
     argparser.add_argument ( '-d1', '--deltam1',
-            help='delta m of pid1',
+            help='delta m of pid1 [None]',
             type=float, default=None )
     argparser.add_argument ( '-m2', '--min2',
-            help='minimum mass of pid2',
+            help='minimum mass of pid2 [None]',
             type=float, default=None )
     argparser.add_argument ( '-M2', '--max2',
-            help='maximum mass of pid2',
+            help='maximum mass of pid2 [None]',
             type=float, default=None )
     argparser.add_argument ( '-d2', '--deltam2',
-            help='delta m of pid1',
+            help='delta m of pid1 [None]',
             type=float, default=None )
     argparser.add_argument ( '-t', '--topo',
             help='topology',
