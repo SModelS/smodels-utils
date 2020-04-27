@@ -29,7 +29,7 @@ class Scanner:
             sigmacut=.003*fb
         if max(self.M.masses)>2000:
             sigmacut=.001*fb
-        predictions = P[0].predict ( self.M.currentSLHA, allpreds=False, 
+        predictions = P[0].predict ( self.M.currentSLHA, allpreds=True, 
                                      llhdonly=True, sigmacut=sigmacut )
         ## first add proto-model point
         #mu = 1.
