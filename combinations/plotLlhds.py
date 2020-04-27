@@ -2,7 +2,7 @@
 
 """ the plotting script for the llhd scans """
 
-import pickle, sys, copy, subprocess, os
+import pickle, sys, copy, subprocess, os, colorama
 import IPython
 import numpy as np
 from csetup import setup
@@ -46,7 +46,6 @@ def integrateLlhds ( Z ):
                 I += np.exp ( - nll )
     return I
 
-
 def findMin ( Z ):
     """ find the minimum in Z """
     x,y,m = 0., 0, float("inf")
@@ -88,9 +87,14 @@ def computeHLD ( Z, alpha = .9, verbose = True ):
         print ( "%d/%d points in %d%s HLD" % ( sum(sum(newZ)), n, int(alpha*100), "%" ) )
     return newZ
 
-def getAnaStats ( D, topo, integrateSRs=True, integrateTopos=True ):
+def getAnaStats ( D, topo, integrateSRs=True, integrateTopos=True,
+                  integrateDataType=True  ):
     """ given the likelihood dictionaries D, get
-        stats of which analysis occurs how often """
+        stats of which analysis occurs how often 
+    :param integrateTopos: sum over all topologies
+    :param integrateSRs: sum over all signal regions
+    :param integrateDataType: ignore data type
+    """
     anas = {}
     for masspoint in D:
         m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
@@ -98,7 +102,12 @@ def getAnaStats ( D, topo, integrateSRs=True, integrateTopos=True ):
             tokens = k.split(":")
             if not integrateTopos and topo not in tokens[2]:
                 continue
+            dType = ":em"
+            if tokens[1] in [ "None", None ]:
+                dType = ":ul"
             name = tokens[0]
+            if not integrateDataType:
+                name = name + dType
             if not integrateTopos:
                 name = tokens[0]+tokens[1]
             if not name in anas.keys():
@@ -187,6 +196,7 @@ def plotOneAna ( masspoints, ana, pid1, pid2, mx, my,
             h = getHash(x[icol],y[irow])
             if h in L:
                 Z[irow,icol]=L[h]
+    print ( "now getting HLDs" )
     contf = plt.contourf ( X, Y, Z, levels=100 )
     hldZ95 = computeHLD ( Z, .95 )
     cont95 = plt.contour ( X, Y, hldZ95, levels=[0.5], colors = [ "orange" ] )
@@ -232,9 +242,10 @@ def getAlpha ( color ):
         return .6
     return .4
 
-def plotSummary ( pid1, pid2, copy ):
+def plotSummary ( pid1, pid2, copy, ulSeparately ):
     """ a summary plot, overlaying all contributing analyses 
     :param copy: copy plot to ../../smodels.github.io/protomodels/latest
+    :param ulSeparately: if true, then plot 
     """
     masspoints,mx,my,nevents,topo,timestamp = load ( getPickleFile ( pid1, pid2 ) )
     resultsForPIDs = {}
@@ -243,8 +254,7 @@ def plotSummary ( pid1, pid2, copy ):
     protomodel, trimmed = obtain ( 0, picklefile )
     for tpred in protomodel.bestCombo:
         resultsForPIDs = getPIDsOfTPred ( tpred, resultsForPIDs )
-    # print ( "results", resultsForPIDs )
-    stats = getAnaStats( masspoints, topo )
+    stats = getAnaStats( masspoints, topo, integrateDataType=False )
     anas = list(stats.keys())
     if pid1 in resultsForPIDs:
         anas = list ( resultsForPIDs[pid1] )
@@ -266,6 +276,7 @@ def plotSummary ( pid1, pid2, copy ):
     print ( "[plotLlhds] range x [%d,%d] y [%d,%d]" % ( xmin, xmax, ymin, ymax ) )
     for ctr,ana in enumerate ( anas ): ## loop over the analyses
         if ctr > 2:
+            print ( "[plotLlhds] too many analyses. skip it" )
             break
         color = colors[ctr]
         x,y=set(),set()
@@ -276,7 +287,11 @@ def plotSummary ( pid1, pid2, copy ):
         if r:
             s="(%.2f)" % (-np.log(r))
         cresults = 0
-        for masspoint in masspoints[1:]:
+        for cm,masspoint in enumerate(masspoints[1:]):
+            #if cm % 10 != 0:
+            #    continue
+            if cm % 1000 == 0:
+                print ( ".", end="", flush=True )
             m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
             if m2 > m1:
                 print ( "m2,m1 mass inversion?",m1,m2 )
@@ -356,9 +371,10 @@ def plotSummary ( pid1, pid2, copy ):
         print ( "[plotLlhds] %s: %s" % ( cmd, o ) )
     return
 
-def plot ( pid1, pid2, analysis, copy ):
+def plot ( pid1, pid2, analysis, copy, verbose ):
     """ do your plotting 
     :param copy: copy plot to ~/git/smodels.github.io/protomodels/latest
+    :param verbose: verbosity: debug, info, warn, or error
     """
     if analysis in [ "*", "all", "summary" ]:
         plotSummary ( pid1, pid2, copy )
@@ -373,14 +389,58 @@ def getPickleFile ( pid1, pid2 ):
     picklefile = "%smp%d%d.pcl" % ( rundir, pid1, pid2 )
     return picklefile
 
-def listAnalyses( pid1, pid2, topo ):
+def listAnalyses( pid1, pid2, topo, verbose ):
+    """
+    :param verbose: verbosity: debug, info, warn, or error
+    """
     masspoints,mx,my,nevents,ntopo,timestamp = load ( getPickleFile(pid1,pid2) )
     if topo == "?":
         topo = ntopo
-    stats = getAnaStats( masspoints, topo )
-    print ( "%d masspoints with %s" % ( len(masspoints), topo ) )
+    stats = getAnaStats( masspoints, topo, integrateDataType=False )
+    print ( "%6d masspoints with %s" % ( len(masspoints), topo ) )
     for k,v in stats.items():
-        print ( "%d: %s" % ( v, k ) )
+        print ( "%6d: %s" % ( v, k ) )
+
+
+class LlhdPlot:
+    """ A simple class to make debugging the plots easier """
+    def __init__ ( self, picklefile ):
+        self.picklefile = picklefile
+        masspoints,mx,my,nevents,topo,timestamp = load ( picklefile )
+        self.masspoints = masspoints
+        self.mx = mx
+        self.my = my
+        self.nevents = nevents
+        self.topo = topo
+        self.timestamp = timestamp
+        self.massdict = {}
+        for m in masspoints:
+            self.massdict[ (m[0],m[1]) ] = m [2]
+
+    def findClosestPoint ( self, m1, m2 ):
+        """ find the mass point closest to m1, m2 """
+        dm,point = float("inf"),None
+        def distance ( m ):
+            return (m[0]-m1)**2 + (m[1]-m2)**2
+
+        for m in self.masspoints:
+            tmp = distance(m)
+            if tmp < dm:
+                dm = tmp
+                point = m
+
+        return point
+
+    def interact ( self ):
+        import IPython
+        varis = "plot"
+        print ( "%s[plot] interactive session. Available: %s.%s" % \
+                ( colorama.Fore.GREEN, varis, colorama.Fore.RESET ) )
+        IPython.embed()
+
+def findPointClosestTo ( m1, m2 ):
+    """ simple helper function, find the mass point closest to m1, m2 """
+
 
 if __name__ == "__main__":
     import argparse
@@ -389,6 +449,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-t', '--topo',
             help='topo [?]',
             type=str, default="?" )
+    argparser.add_argument ( '-v', '--verbose',
+            help='verbosity: debug, info, warn, or error [warn]',
+            type=str, default="warn" )
     argparser.add_argument ( '-1', '--pid1',
             help='pid1, if 0 then do predefined list [0]',
             type=int, default=0 )
@@ -422,17 +485,18 @@ if __name__ == "__main__":
     if pids1[0]==0:
         pids1 = [ 1000006, 1000021, 2000006, 1000002 ]
 
+    if args.interactive:
+        plot = LlhdPlot ( getPickleFile ( pids1[0], args.pid2 ) )
+        plot.interact()
+        sys.exit()
+
     if args.list_analyses:
         for pid1 in pids1:
-            listAnalyses ( pid1, args.pid2, args.topo )
+            listAnalyses ( pid1, args.pid2, args.topo, args.verbose )
     else:
         for pid1 in pids1:
             try:
-                plot ( pid1, args.pid2, args.analysis, args.copy )
+                plot ( pid1, args.pid2, args.analysis, args.copy, args.verbose )
             except FileNotFoundError:
                 pass
 
-    if args.interactive:
-        masspoints,mx,my,nevents,topo,timestamp = load ( getPickleFile ( pids1[0], args.pid2 ) )
-        import IPython
-        IPython.embed()
