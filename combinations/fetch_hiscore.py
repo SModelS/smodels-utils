@@ -6,7 +6,9 @@ f= [ "hiscore.pcl" ]
 if len(sys.argv)>1:
     oldf = copy.deepcopy(f)
     if "scan" in sys.argv[1]:
-	    f= [ "scanM\*.pcl", "mp\*.pcl", "ssm\*.pcl" ]
+	    f= [ "scanM*.pcl", "mp*.pcl", "ssm*.pcl" ]
+    if "mp" in sys.argv[1]:
+	    f= [ "mp*.pcl" ]
     if "states" in sys.argv[1]:
 	    f= [ "states.pcl" ]
     if "copy" in sys.argv[1]:
@@ -14,9 +16,9 @@ if len(sys.argv)>1:
     if "2" in sys.argv[1]:
 	    f= [ "hiscore2.pcl" ]
     if "ssm" in sys.argv[1]:
-	    f= [ "ssm\*.pcl" ]
+	    f= [ "ssm*.pcl" ]
     if "pmodel" in sys.argv[1]:
-	    f= [ "pmodel\?.py" ]
+	    f= [ "pmodel?.py" ]
     if f == oldf:
         print ( "[fetch_hiscore] do not understand what you mean with '%s'. I only know of 'scan', 'states', 'copy', 'ssm'." % sys.argv[1] )
         sys.exit()
