@@ -359,6 +359,8 @@ class ProtoModel:
                         "rvalues": copy.deepcopy(self.rvalues) }
         if hasattr ( self, "muhat" ):
             self._backup["muhat"]=self.muhat
+        if hasattr ( self, "post" ):
+            self._backup["post"]=self.post
         if hasattr ( self, "rmax" ):
             self._backup["rmax"]=self.rmax
         # self.pprint ( "backing up state" )
