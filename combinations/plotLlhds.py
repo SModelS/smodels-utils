@@ -316,6 +316,7 @@ class LlhdPlot:
                 ( len ( self.masspoints), self.picklefile, self.hiscorefile ) )
         print ( "Data members: plot.masspoints, plot.massdict, plot.timestamp, plot.mx, plot.my" )
         print ( "              plot.pid1, plot.pid2, plot.topo" )
+        print ( "Function members: plot.findClosestPoint()" )
 
     def plotSummary ( self, ulSeparately=True ):
         """ a summary plot, overlaying all contributing analyses 
@@ -488,8 +489,9 @@ class LlhdPlot:
             print ( "%6d: %s" % ( v, k ) )
 
     def findClosestPoint ( self, m1=None, m2=None, nll=False ):
-        """ find the mass point closest to m1, m2 
-        :param nll: if True, report nlls, not likelihoods
+        """ find the mass point closest to m1, m2. If not specified, 
+            return the hiscore point.
+        :param nll: if True, report nlls, else report likelihoods.
         """
         if m1 == None:
             m1 = self.mx
@@ -514,8 +516,8 @@ class LlhdPlot:
 
     def interact ( self ):
         import IPython
-        varis = "plot"
-        print ( "%s[plot] interactive session. Available: %s.%s" % \
+        varis = "plot.describe()"
+        print ( "%s[plot] interactive session. Try: %s%s" % \
                 ( colorama.Fore.GREEN, varis, colorama.Fore.RESET ) )
         IPython.embed()
 
