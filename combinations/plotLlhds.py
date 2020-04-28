@@ -11,32 +11,6 @@ from helpers import getParticleName, toLatex
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 
-def load ( picklefile ):
-    """ load dictionary from picklefile """
-    topo, timestamp = "?", "?"
-    with open ( picklefile, "rb" ) as f:
-        try:
-            allhds = pickle.load ( f )
-            mx = pickle.load ( f )
-            my = pickle.load ( f )
-            nevents = pickle.load ( f )
-            topo = pickle.load ( f )
-            timestamp = pickle.load ( f )
-        except EOFError as e:
-            pass
-        f.close()
-    llhds=[]
-    mu = 1.
-    def getMu1 ( L ):
-        for k,v in L.items():
-            if abs(k-mu)<1e-9:
-                return v
-        print ( "couldnt find anything" )
-        return None
-    for llhd in allhds:
-        llhds.append ( (llhd[0],llhd[1],getMu1(llhd[2])) )
-    return llhds,mx,my,nevents,topo,timestamp
-
 def integrateLlhds ( Z ):
     """ compute the integral of the likelihood over all points """
     I = 0.
@@ -96,37 +70,6 @@ def computeHLD ( Z, alpha = .9, verbose = True ):
         print ( "%d/%d points in %d%s HLD" % ( sum(sum(newZ)), n, int(alpha*100), "%" ) )
     return newZ
 
-def getAnaStats ( D, topo, integrateSRs=True, integrateTopos=True,
-                  integrateDataType=True  ):
-    """ given the likelihood dictionaries D, get
-        stats of which analysis occurs how often 
-    :param integrateTopos: sum over all topologies
-    :param integrateSRs: sum over all signal regions
-    :param integrateDataType: ignore data type
-    """
-    anas = {}
-    for masspoint in D:
-        m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
-        for k,v in llhds.items():
-            tokens = k.split(":")
-            if not integrateTopos and topo not in tokens[2]:
-                continue
-            dType = ":em"
-            if tokens[1] in [ "None", None ]:
-                dType = ":ul"
-            name = tokens[0]
-            if not integrateDataType:
-                name = name + dType
-            if not integrateTopos:
-                name = tokens[0]+tokens[1]
-            if not name in anas.keys():
-                anas[name]=0
-            anas[name]=anas[name]+1
-    return anas
-
-def getHash ( m1, m2 ):
-    return int(1e3*m1) + int(1e0*m2)
-
 def filterSmaller ( X, Y ):
     """ filter out whenever X < Y """
     Xs,Ys = [], []
@@ -148,117 +91,6 @@ def filterSmaller ( X, Y ):
         Ys.append ( yt )
     return np.array(Xs), np.array(Ys)
 
-def resultFor ( ana, topo, llhds ):
-    """ return result for ana/topo pair 
-    :param ana: the analysis id. optionally a data type can be specificed, e.g.
-                as :em
-    :param topo: the topology
-    :param llhds: dictionary with ana ids as keys and llhds as values
-    :returns: results for this analysis (possibly data type) and topology
-    """
-    ret,sr = None,None
-    dType = "any"
-    if ":" in ana:
-        ana,dType = ana.split(":")
-    #print ( "result for", ana, ",", dType )
-    #print ( "llhds", llhds )
-    for k,v in llhds.items():
-        tokens = k.split(":")
-        if dType == "ul" and tokens[1] != "None":
-            continue
-        if dType == "em" and tokens[1] == "None":
-            continue
-        if ana != tokens[0]:
-            continue
-        if topo not in tokens[2]:
-            continue
-        if ret == None or v > ret:
-            ret = v
-            sr = tokens[1]
-    return ret,sr
-
-def plotOneAna ( masspoints, ana, pid1, pid2, mx, my,
-                 topo, nevents, timestamp, copy ):
-    """ plot for one analysis
-    :param copy: copy plot to ../../smodels.github.io/protomodels/latest
-    """
-    print ( "[plotLlhds] now plotting %s" % ana )
-    x,y=set(),set()
-    L = {}
-    minXY=0.,0.,float("inf")
-    s=""
-    r,sr = resultFor ( ana, topo, masspoints[0][2] )
-    if r:
-        s="(%.2f)" % (-np.log(r))
-    cresults = 0
-    for masspoint in masspoints[1:]:
-        m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
-        if m2 > m1:
-            print ( "m2,m1 mass inversion?",m1,m2 )
-        x.add ( m1 )
-        y.add ( m2 )
-        zt = float("nan")
-        # zt = 0.
-        result,sr = resultFor ( ana, topo, llhds )
-        if result:
-            zt = - np.log( result )
-            cresults += 1
-            if zt < minXY[2]:
-                minXY=(m1,m2,zt)
-        h = getHash(m1,m2)
-        L[h]=zt
-    if cresults == 0:
-        print ( "[plotLlhds] warning: found no results for %s. skip" % ana )
-        return
-    x,y=list(x),list(y)
-    x.sort(); y.sort()
-    X, Y = np.meshgrid ( x, y )
-    Z = float("nan")*X
-    # print ( "x", x )
-    for irow,row in enumerate(Z):
-        for icol,col in enumerate(row):
-            h = getHash(x[icol],y[irow])
-            if h in L:
-                Z[irow,icol]=L[h]
-    print ( "now getting HLDs" )
-    contf = plt.contourf ( X, Y, Z, levels=100 )
-    hldZ95 = computeHLD ( Z, .95 )
-    cont95 = plt.contour ( X, Y, hldZ95, levels=[0.5], colors = [ "orange" ] )
-    plt.clabel ( cont95, fmt="95%.0s" )
-    hldZ50 = computeHLD ( Z, .5 )
-    cont50 = plt.contour ( X, Y, hldZ50, levels=[1.0], colors = [ "red" ] )
-    plt.clabel ( cont50, fmt="50%.0s" )
-    print ( "timestamp:", timestamp, topo, max(x) )
-    plt.text( max(x)-300,min(y)-350,timestamp, c="gray" )
-    ### the altitude of the alpha quantile is l(nuhat) - .5 chi^2_(1-alpha);ndf
-    ### so for alpha=0.05%, ndf=1 the dl is .5 * 3.841 = 1.9207
-    ### for ndf=2 the dl is ln(alpha) = .5 * 5.99146 = 2.995732
-    ### folien slide 317
-    cbar = plt.colorbar( contf, format="%.2f" )
-    cbar.set_label ( "-ln L" )
-    ax = contf.ax
-    # Xs,Ys=X,Y
-    Xs,Ys = filterSmaller ( X, Y )
-    ax.scatter(Xs, Ys, marker=".", s=.2, color="gray", label="points probed" )
-    ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=60, color="black" )
-    ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=35, color="red", label="$\hat{l}$ (ml estimate, %.2f)" % minXY[2] )
-    h = getHash(mx,my)
-    if h in L:
-        s=" (%.2f)" % L[h]
-    ax.scatter( [ mx ], [ my ], marker="*", s=60, color="white" )
-    ax.scatter( [ mx ], [ my ], marker="*", s=35, color="black", label="proto-model%s" % s )
-    if sr == None:
-        sr = "UL"
-    plt.title ( "$-\ln L(m_i)$, %s: %s,%s [%d events]" % ( ana, topo, sr, nevents ) )
-    plt.xlabel ( "%s" % pid1 )
-    plt.ylabel ( "%s" % pid2 )
-    plt.legend()
-    # plt.contour ( X, Y, Z )
-    figname = "plt%d%s.png" % ( pid1, ana )
-    print ( "[plotLlhds] saving to %s" % figname )
-    plt.savefig ( figname )
-    plt.close()
-
 def getAlpha ( color ):
     """ different alpha for different colors """
     return .3
@@ -266,172 +98,21 @@ def getAlpha ( color ):
         return .6
     return .4
 
-def plotSummary ( pid1, pid2, copy, ulSeparately, verbose ):
-    """ a summary plot, overlaying all contributing analyses 
-    :param copy: copy plot to ../../smodels.github.io/protomodels/latest
-    :param ulSeparately: if true, then plot 
-    """
-    masspoints,mx,my,nevents,topo,timestamp = load ( getPickleFile ( pid1, pid2 ) )
-    resultsForPIDs = {}
-    from plotHiscore import getPIDsOfTPred, obtain
-    picklefile = "hiscore.pcl"
-    protomodel, trimmed = obtain ( 0, picklefile )
-    for tpred in protomodel.bestCombo:
-        resultsForPIDs = getPIDsOfTPred ( tpred, resultsForPIDs, integrateDataType=False )
-    stats = getAnaStats( masspoints, topo, integrateDataType=False )
-    anas = list(stats.keys())
-    if pid1 in resultsForPIDs:
-        anas = list ( resultsForPIDs[pid1] )
-    anas.sort()
-    print ( "[plotLlhds] summary plot: %s" % ",".join ( anas ) )
-    # print ( stats.keys() )
-    colors = [ "red", "green", "blue", "orange", "cyan", "magenta", "grey", "brown",
-               "pink", "indigo", "olive", "orchid", "darkseagreen", "teal" ]
-    xmin,xmax,ymin,ymax=9000,0,9000,0
-    for m in masspoints:
-        if m[0] < xmin:
-            xmin = m[0]
-        if m[0] > xmax:
-            xmax = m[0]
-        if m[1] < ymin:
-            ymin = m[1]
-        if m[1] > ymax:
-            ymax = m[1]
-    print ( "[plotLlhds] range x [%d,%d] y [%d,%d]" % ( xmin, xmax, ymin, ymax ) )
-    for ctr,ana in enumerate ( anas ): ## loop over the analyses
-        if ctr > 2:
-            print ( "[plotLlhds] too many analyses. skip it" )
-            break
-        color = colors[ctr]
-        x,y=set(),set()
-        L = {}
-        minXY=( 0.,0., float("inf") )
-        s=""
-        # print ( "result for", ana )
-        r,sr = resultFor ( ana, topo, masspoints[0][2] )
-        if r:
-            s="(%.2f)" % (-np.log(r))
-        cresults = 0
-        for cm,masspoint in enumerate(masspoints[1:]):
-            #if cm % 10 != 0:
-            #    continue
-            if cm % 1000 == 0:
-                print ( ".", end="", flush=True )
-            m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
-            if m2 > m1:
-                print ( "m2,m1 mass inversion?",m1,m2 )
-            x.add ( m1 )
-            y.add ( m2 )
-            zt = float("nan")
-            result,sr = resultFor ( ana, topo, llhds )
-            if result:
-                zt = - np.log( result )
-                cresults += 1
-                if zt < minXY[2]:
-                    minXY=(m1,m2,zt)
-            h = getHash(m1,m2)
-            L[h]=zt
-        print ( "\n[plotLlhds] min(xy) for %s is at m=(%d/%d): %.2f(%.2g)" % ( ana, minXY[0], minXY[1], minXY[2], np.exp(-minXY[2] ) ) )
-        if cresults == 0:
-            print ( "[plotLlhds] warning: found no results for %s. skip" % ana )
-            return
-        x.add ( xmax*1.03 )
-        x.add ( xmin*.93 )
-        y.add ( ymax+50. )
-        y.add ( 0. )
-        x,y=list(x),list(y)
-        x.sort(); y.sort()
-        X, Y = np.meshgrid ( x, y )
-        Z = float("nan")*X
-        for irow,row in enumerate(Z):
-            for icol,col in enumerate(row):
-                h = getHash(x[icol],y[irow])
-                if h in L:
-                    Z[irow,icol]=L[h]
-        # contf = plt.contourf ( X, Y, Z, levels=100 )
-        hldZ100 = computeHLD ( Z, 1., False )
-        cont100 = plt.contour ( X, Y, hldZ100, levels=[0.25], colors = [ color ], linestyles = [ "dotted" ] )
-        #hldZ95 = computeHLD ( Z, .95, False )
-        #cont95 = plt.contour ( X, Y, hldZ95, levels=[0.5], colors = [ color ], linestyles = [ "dashed" ] )
-        #plt.clabel ( cont95, fmt="95%.0s" )
-        hldZ50 = computeHLD ( Z, .68, False )
-        cont50c = plt.contour ( X, Y, hldZ50, levels=[1.0], colors = [ color ] )
-        cont50 = plt.contourf ( X, Y, hldZ50, levels=[1.,10.], colors = [ color, color ], alpha=getAlpha( color ) )
-        plt.clabel ( cont50c, fmt="68%.0s" )
-        ax = cont50.ax
-        # print ( "[plotLlhds] ana, min", ana, minXY )
-        ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=180, color="black" )
-        ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=110, color=color, label=ana+" (%.2f)" % (minXY[2]), alpha=1. )
-
-    print ( "\n[plotLlhds] timestamp:", timestamp, topo, max(x) )
-    dx,dy = max(x)-min(x),max(y)-min(y)
-    plt.text( max(x)-.37*dx,min(y)-.11*dy,timestamp, c="gray" )
-    ### the altitude of the alpha quantile is l(nuhat) - .5 chi^2_(1-alpha);ndf
-    ### so for alpha=0.05%, ndf=1 the dl is .5 * 3.841 = 1.9207
-    ### for ndf=2 the dl is ln(alpha) = .5 * 5.99146 = 2.995732
-    ### folien slide 317
-    ax = cont50.ax
-    # Xs,Ys=X,Y
-    Xs,Ys = filterSmaller ( X, Y )
-    h = getHash(mx,my)
-    if h in L:
-        s=" (%.2f)" % L[h]
-    ax.scatter( [ mx ], [ my ], marker="*", s=200, color="white" )
-    ax.scatter( [ mx ], [ my ], marker="*", s=160, color="black", label="proto-model%s" % s )
-    if sr == None:
-        sr = "UL"
-    plt.title ( "HPD intervals, %s [%s]" % ( toLatex(pid1,True), topo ) )
-    plt.xlabel ( "m(%s) [GeV]" % toLatex(pid1,True) )
-    plt.ylabel ( "m(%s) [GeV]" % toLatex(pid2,True) )
-    plt.legend( loc="upper left" )
-    figname = "llhd%d.png" % ( pid1 )
-    print ( "[plotLlhds] saving to %s" % figname )
-    plt.savefig ( figname )
-    plt.close()
-    if copy:
-        rundir = setup()
-        dest = os.path.expanduser ( "~/git/smodels.github.io" )
-        cmd = "cp %s/%s %s/protomodels/latest/" % ( rundir, figname, dest )
-        o = subprocess.getoutput ( cmd )
-        print ( "[plotLlhds] %s: %s" % ( cmd, o ) )
-    return
-
-def plot ( pid1, pid2, analysis, copy, verbose ):
-    """ do your plotting 
-    :param copy: copy plot to ~/git/smodels.github.io/protomodels/latest
-    :param verbose: verbosity: debug, info, warn, or error
-    """
-    if analysis in [ "*", "all", "summary" ]:
-        plotSummary ( pid1, pid2, copy, ulSeparately=True, verbose=verbose )
-        return
-    masspoints,mx,my,nevents,topo,timestamp = load ( getPickleFile ( pid1, pid2 ) )
-    stats = getAnaStats( masspoints, topo )
-    plotOneAna ( masspoints, analysis, pid1, pid2, mx, my, topo,
-                 nevents,timestamp, copy )
-
-def getPickleFile ( pid1, pid2 ):
-    rundir = setup()
-    picklefile = "%smp%d%d.pcl" % ( rundir, pid1, pid2 )
-    return picklefile
-
-def listAnalyses( pid1, pid2, topo, verbose ):
-    """
-    :param verbose: verbosity: debug, info, warn, or error
-    """
-    masspoints,mx,my,nevents,ntopo,timestamp = load ( getPickleFile(pid1,pid2) )
-    if topo == "?":
-        topo = ntopo
-    stats = getAnaStats( masspoints, topo, integrateDataType=False )
-    print ( "%6d masspoints with %s" % ( len(masspoints), topo ) )
-    for k,v in stats.items():
-        print ( "%6d: %s" % ( v, k ) )
-
-
 class LlhdPlot:
     """ A simple class to make debugging the plots easier """
-    def __init__ ( self, picklefile ):
-        self.picklefile = picklefile
-        masspoints,mx,my,nevents,topo,timestamp = load ( picklefile )
+    def __init__ ( self, pid1, pid2, verbose, copy ):
+        """
+        :param copy: copy plot to ../../smodels.github.io/protomodels/latest
+        """
+        if pid1==0:
+            pid1 = [ 1000006, 1000021, 2000006, 1000002 ]
+        self.pid1 = pid1
+        self.pid2 = pid2
+        self.copy = copy
+        self.hiscorefile = "./hiscore.pcl"
+        self.verbose = verbose
+        self.setup()
+        masspoints,mx,my,nevents,topo,timestamp = self.loadPickleFile()
         self.masspoints = masspoints
         self.mx = mx
         self.my = my
@@ -441,6 +122,331 @@ class LlhdPlot:
         self.massdict = {}
         for m in masspoints:
             self.massdict[ (m[0],m[1]) ] = m [2]
+
+    def getHash ( self, m1=None, m2=None ):
+        """ get hash for point. if None, get hash for self.mx, self.my """
+        if m1 == None:
+            m1 = self.mx
+        if m2 == None:
+            m2 = self.my
+        return int(1e3*m1) + int(1e0*m2)
+
+    def resultFor ( self, ana, masspoint ):
+        """ return result for ana/topo pair 
+        :param ana: the analysis id. optionally a data type can be specificed, e.g.
+                    as :em
+        :param masspoint: a point from self.masspoints
+        :returns: results for this analysis (possibly data type) and topology
+        """
+        ret,sr = None,None
+        dType = "any"
+        if ":" in ana:
+            ana,dType = ana.split(":")
+        for k,v in masspoint.items():
+            tokens = k.split(":")
+            if dType == "ul" and tokens[1] != "None":
+                continue
+            if dType == "em" and tokens[1] == "None":
+                continue
+            if ana != tokens[0]:
+                continue
+            if self.topo not in tokens[2]:
+                continue
+            if ret == None or v > ret:
+                ret = v
+                sr = tokens[1]
+        return ret,sr
+
+    def plotOneAna ( self, ana ):
+        """ plot for one analysis
+        :param copy: copy plot to ../../smodels.github.io/protomodels/latest
+        """
+        print ( "[plotLlhds] now plotting %s" % ana )
+        x,y=set(),set()
+        L = {}
+        minXY=0.,0.,float("inf")
+        s=""
+        r,sr = self.resultFor ( ana, self.masspoints[0][2] )
+        if r:
+            s="(%.2f)" % (-np.log(r))
+        cresults = 0
+        for masspoint in self.masspoints[1:]:
+            m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
+            if m2 > m1:
+                print ( "m2,m1 mass inversion?",m1,m2 )
+            x.add ( m1 )
+            y.add ( m2 )
+            zt = float("nan")
+            # zt = 0.
+            result,sr = self.resultFor ( ana, llhds )
+            if result:
+                zt = - np.log( result )
+                cresults += 1
+                if zt < minXY[2]:
+                    minXY=(m1,m2,zt)
+            h = self.getHash(m1,m2)
+            L[h]=zt
+        if cresults == 0:
+            print ( "[plotLlhds] warning: found no results for %s. skip" % ana )
+            return
+        x,y=list(x),list(y)
+        x.sort(); y.sort()
+        X, Y = np.meshgrid ( x, y )
+        Z = float("nan")*X
+        # print ( "x", x )
+        for irow,row in enumerate(Z):
+            for icol,col in enumerate(row):
+                h = self.getHash(x[icol],y[irow])
+                if h in L:
+                    Z[irow,icol]=L[h]
+        print ( "now getting HLDs" )
+        contf = plt.contourf ( X, Y, Z, levels=100 )
+        hldZ95 = computeHLD ( Z, .95 )
+        cont95 = plt.contour ( X, Y, hldZ95, levels=[0.5], colors = [ "orange" ] )
+        plt.clabel ( cont95, fmt="95%.0s" )
+        hldZ50 = computeHLD ( Z, .5 )
+        cont50 = plt.contour ( X, Y, hldZ50, levels=[1.0], colors = [ "red" ] )
+        plt.clabel ( cont50, fmt="50%.0s" )
+        print ( "timestamp:", self.timestamp, self.topo, max(x) )
+        plt.text( max(x)-300,min(y)-350,self.timestamp, c="gray" )
+        ### the altitude of the alpha quantile is l(nuhat) - .5 chi^2_(1-alpha);ndf
+        ### so for alpha=0.05%, ndf=1 the dl is .5 * 3.841 = 1.9207
+        ### for ndf=2 the dl is ln(alpha) = .5 * 5.99146 = 2.995732
+        ### folien slide 317
+        cbar = plt.colorbar( contf, format="%.2f" )
+        cbar.set_label ( "-ln L" )
+        ax = contf.ax
+        # Xs,Ys=X,Y
+        Xs,Ys = filterSmaller ( X, Y )
+        ax.scatter(Xs, Ys, marker=".", s=.2, color="gray", label="points probed" )
+        ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=60, color="black" )
+        ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=35, color="red", label="$\hat{l}$ (ml estimate, %.2f)" % minXY[2] )
+        h = self.getHash()
+        if h in L:
+            s=" (%.2f)" % L[h]
+        ax.scatter( [ mx ], [ my ], marker="*", s=60, color="white" )
+        ax.scatter( [ mx ], [ my ], marker="*", s=35, color="black", label="proto-model%s" % s )
+        if sr == None:
+            sr = "UL"
+        plt.title ( "$-\ln L(m_i)$, %s: %s,%s [%d events]" % ( ana, topo, sr, nevents ) )
+        plt.xlabel ( "%s" % pid1 )
+        plt.ylabel ( "%s" % pid2 )
+        plt.legend()
+        # plt.contour ( X, Y, Z )
+        figname = "plt%d%s.png" % ( pid1, ana )
+        print ( "[plotLlhds] saving to %s" % figname )
+        plt.savefig ( figname )
+        plt.close()
+
+    def loadPickleFile ( self ):
+        """ load dictionary from picklefile """
+        topo, timestamp = "?", "?"
+        with open ( self.picklefile, "rb" ) as f:
+            try:
+                allhds = pickle.load ( f )
+                mx = pickle.load ( f )
+                my = pickle.load ( f )
+                nevents = pickle.load ( f )
+                topo = pickle.load ( f )
+                timestamp = pickle.load ( f )
+            except EOFError as e:
+                pass
+            f.close()
+        llhds=[]
+        mu = 1.
+        def getMu1 ( L ):
+            for k,v in L.items():
+                if abs(k-mu)<1e-9:
+                    return v
+            print ( "couldnt find anything" )
+            return None
+        for llhd in allhds:
+            llhds.append ( (llhd[0],llhd[1],getMu1(llhd[2])) )
+        return llhds,mx,my,nevents,topo,timestamp
+
+    def pprint ( self, *args ):
+        print ( "[plotLlhds] %s" % " ".join(map(str,args)) )  
+
+    def setup ( self ):
+        """ setup rundir, picklefile path and hiscore file path """
+        self.rundir = setup()
+        self.hiscorefile = self.rundir + "/hiscore.pcl"
+        if not os.path.exists ( self.hiscorefile ):
+            self.pprint ( "could not find hiscore file %s" % self.hiscorefile )
+
+        self.picklefile = "%smp%d%d.pcl" % ( self.rundir, self.pid1, self.pid2 )
+        if not os.path.exists ( self.picklefile ):
+            self.pprint ( "could not find pickle file %s" % self.picklefile )
+
+    def plotSummary ( self, ulSeparately=True ):
+        """ a summary plot, overlaying all contributing analyses 
+        :param ulSeparately: if true, then plot UL results on their own
+        """
+        resultsForPIDs = {}
+        from plotHiscore import getPIDsOfTPred, obtain
+        protomodel, trimmed = obtain ( 0, self.hiscorefile )
+        for tpred in protomodel.bestCombo:
+            resultsForPIDs = getPIDsOfTPred ( tpred, resultsForPIDs, integrateSRs=False )
+        stats = self.getAnaStats( integrateSRs=False )
+        anas = list(stats.keys())
+        if self.pid1 in resultsForPIDs:
+            anas = list ( resultsForPIDs[self.pid1] )
+        anas.sort()
+        print ( "[plotLlhds] summary plot: %s" % ",".join ( anas ) )
+        # print ( stats.keys() )
+        colors = [ "red", "green", "blue", "orange", "cyan", "magenta", "grey", "brown",
+                   "pink", "indigo", "olive", "orchid", "darkseagreen", "teal" ]
+        xmin,xmax,ymin,ymax=9000,0,9000,0
+        for m in self.masspoints:
+            if m[0] < xmin:
+                xmin = m[0]
+            if m[0] > xmax:
+                xmax = m[0]
+            if m[1] < ymin:
+                ymin = m[1]
+            if m[1] > ymax:
+                ymax = m[1]
+        print ( "[plotLlhds] range x [%d,%d] y [%d,%d]" % ( xmin, xmax, ymin, ymax ) )
+        for ctr,ana in enumerate ( anas ): ## loop over the analyses
+            if ctr > 2:
+                print ( "[plotLlhds] too many analyses. skip it" )
+                break
+            color = colors[ctr]
+            x,y=set(),set()
+            L = {}
+            minXY=( 0.,0., float("inf") )
+            s=""
+            # print ( "result for", ana )
+            r,sr = self.resultFor ( ana, self.masspoints[0][2] )
+            if r:
+                s="(%.2f)" % (-np.log(r))
+            cresults = 0
+            for cm,masspoint in enumerate(self.masspoints[1:]):
+                #if cm % 10 != 0:
+                #    continue
+                if cm % 1000 == 0:
+                    print ( ".", end="", flush=True )
+                m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
+                if m2 > m1:
+                    print ( "m2,m1 mass inversion?",m1,m2 )
+                x.add ( m1 )
+                y.add ( m2 )
+                zt = float("nan")
+                result,sr = self.resultFor ( ana, llhds )
+                if result:
+                    zt = - np.log( result )
+                    cresults += 1
+                    if zt < minXY[2]:
+                        minXY=(m1,m2,zt)
+                h = self.getHash(m1,m2)
+                L[h]=zt
+            print ( "\n[plotLlhds] min(xy) for %s is at m=(%d/%d): %.2f(%.2g)" % ( ana, minXY[0], minXY[1], minXY[2], np.exp(-minXY[2] ) ) )
+            if cresults == 0:
+                print ( "[plotLlhds] warning: found no results for %s. skip" % ana )
+                return
+            x.add ( xmax*1.03 )
+            x.add ( xmin*.93 )
+            y.add ( ymax+50. )
+            y.add ( 0. )
+            x,y=list(x),list(y)
+            x.sort(); y.sort()
+            X, Y = np.meshgrid ( x, y )
+            Z = float("nan")*X
+            for irow,row in enumerate(Z):
+                for icol,col in enumerate(row):
+                    h = self.getHash(x[icol],y[irow])
+                    if h in L:
+                        Z[irow,icol]=L[h]
+            # contf = plt.contourf ( X, Y, Z, levels=100 )
+            hldZ100 = computeHLD ( Z, 1., False )
+            cont100 = plt.contour ( X, Y, hldZ100, levels=[0.25], colors = [ color ], linestyles = [ "dotted" ] )
+            #hldZ95 = computeHLD ( Z, .95, False )
+            #cont95 = plt.contour ( X, Y, hldZ95, levels=[0.5], colors = [ color ], linestyles = [ "dashed" ] )
+            #plt.clabel ( cont95, fmt="95%.0s" )
+            hldZ50 = computeHLD ( Z, .68, False )
+            cont50c = plt.contour ( X, Y, hldZ50, levels=[1.0], colors = [ color ] )
+            cont50 = plt.contourf ( X, Y, hldZ50, levels=[1.,10.], colors = [ color, color ], alpha=getAlpha( color ) )
+            plt.clabel ( cont50c, fmt="68%.0s" )
+            ax = cont50.ax
+            # print ( "[plotLlhds] ana, min", ana, minXY )
+            ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=180, color="black" )
+            ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=110, color=color, label=ana+" (%.2f)" % (minXY[2]), alpha=1. )
+
+        print()
+        self.pprint ( "timestamp:", self.timestamp, self.topo, max(x) )
+        dx,dy = max(x)-min(x),max(y)-min(y)
+        plt.text( max(x)-.37*dx,min(y)-.11*dy,self.timestamp, c="gray" )
+        ### the altitude of the alpha quantile is l(nuhat) - .5 chi^2_(1-alpha);ndf
+        ### so for alpha=0.05%, ndf=1 the dl is .5 * 3.841 = 1.9207
+        ### for ndf=2 the dl is ln(alpha) = .5 * 5.99146 = 2.995732
+        ### folien slide 317
+        ax = cont50.ax
+        # Xs,Ys=X,Y
+        Xs,Ys = filterSmaller ( X, Y )
+        h = self.getHash()
+        if h in L:
+            s=" (%.2f)" % L[h]
+        ax.scatter( [ self.mx ], [ self.my ], marker="*", s=200, color="white" )
+        ax.scatter( [ self.mx ], [ self.my ], marker="*", s=160, color="black", 
+                      label="proto-model%s" % s )
+        if sr == None:
+            sr = "UL"
+        plt.title ( "HPD intervals, %s [%s]" % ( toLatex(self.pid1,True), self.topo ) )
+        plt.xlabel ( "m(%s) [GeV]" % toLatex(self.pid1,True) )
+        plt.ylabel ( "m(%s) [GeV]" % toLatex(self.pid2,True) )
+        plt.legend( loc="upper left" )
+        figname = "llhd%d.png" % ( self.pid1 )
+        self.pprint ( "saving to %s" % figname )
+        plt.savefig ( figname )
+        plt.close()
+        if self.copy:
+            self.copyFile ( figname )
+        return
+
+    def copyFile ( self, filename ):
+        """ copy filename to smodels.github.io/protomodels/latest/ """
+        dest = os.path.expanduser ( "~/git/smodels.github.io" )
+        cmd = "cp %s/%s %s/protomodels/latest/" % ( self.rundir, figname, dest )
+        o = subprocess.getoutput ( cmd )
+        pprint ( "%s: %s" % ( cmd, o ) )
+
+
+    def getAnaStats ( self, integrateSRs=True, integrateTopos=True,
+                      integrateDataType=True  ):
+        """ given the likelihood dictionaries D, get
+            stats of which analysis occurs how often 
+        :param integrateTopos: sum over all topologies
+        :param integrateSRs: sum over all signal regions
+        :param integrateDataType: ignore data type
+        """
+        anas = {}
+        for masspoint in self.masspoints:
+            m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
+            for k,v in llhds.items():
+                tokens = k.split(":")
+                if not integrateTopos and self.topo not in tokens[2]:
+                    continue
+                dType = ":em"
+                if tokens[1] in [ "None", None ]:
+                    dType = ":ul"
+                name = tokens[0]
+                if not integrateDataType:
+                    name = name + dType
+                if not integrateTopos:
+                    name = tokens[0]+tokens[1]
+                if not name in anas.keys():
+                    anas[name]=0
+                anas[name]=anas[name]+1
+        return anas
+
+    def listAnalyses( self ):
+        """
+        :param verbose: verbosity: debug, info, warn, or error
+        """
+        stats = self.getAnaStats( integrateDataType=False )
+        print ( "%6d masspoints with %s" % ( len(self.masspoints), self.topo ) )
+        for k,v in stats.items():
+            print ( "%6d: %s" % ( v, k ) )
 
     def findClosestPoint ( self, m1=None, m2=None, nll=False ):
         """ find the mass point closest to m1, m2 
@@ -474,17 +480,23 @@ class LlhdPlot:
                 ( colorama.Fore.GREEN, varis, colorama.Fore.RESET ) )
         IPython.embed()
 
-def findPointClosestTo ( m1, m2 ):
-    """ simple helper function, find the mass point closest to m1, m2 """
+    def plotAll ( self ):
+        """ """
+        stats = self.getAnaStats()
+        for ana,v in stats.items():
+            self.plot ( ana )
+        pass
 
 
 if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(
             description='plot likelihoods scans')
+    """
     argparser.add_argument ( '-t', '--topo',
             help='topo [?]',
             type=str, default="?" )
+    """
     argparser.add_argument ( '-v', '--verbose',
             help='verbosity: debug, info, warn, or error [warn]',
             type=str, default="warn" )
@@ -510,29 +522,19 @@ if __name__ == "__main__":
             help='interactive mode',
             action="store_true" )
     args = argparser.parse_args()
+
+    plot = LlhdPlot ( args.pid1, args.pid2, args.verbose, args.copy )
+
     if args.all:
-        masspoints,mx,my,nevents,topo,timestamp = load ( getPickleFile ( args.pid1, args.pid2 ) )
-        stats = getAnaStats( masspoints, topo )
-        for ana,v in stats.items():
-            plot ( args.pid1, args.pid2, ana, args.copy )
-        sys.exit()
-
-    pids1 = [ args.pid1 ]
-    if pids1[0]==0:
-        pids1 = [ 1000006, 1000021, 2000006, 1000002 ]
-
-    if args.interactive:
-        plot = LlhdPlot ( getPickleFile ( pids1[0], args.pid2 ) )
+        plot.plotAll ( )
+    elif args.interactive:
         plot.interact()
-        sys.exit()
-
-    if args.list_analyses:
-        for pid1 in pids1:
-            listAnalyses ( pid1, args.pid2, args.topo, args.verbose )
+    elif args.list_analyses:
+        plot.listAnalyses ( )
+    ## summary plot!
+    elif args.analysis in [ "*", "all", "summary" ]:
+        plot.plotSummary()
     else:
-        for pid1 in pids1:
-            try:
-                plot ( pid1, args.pid2, args.analysis, args.copy, args.verbose )
-            except FileNotFoundError:
-                pass
+        ## plot one specific analysis
+        plot.plotOneAna ( args.analysis )
 
