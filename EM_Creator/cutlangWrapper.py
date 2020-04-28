@@ -71,6 +71,10 @@ class cutlangWrapper:
         self.analyses = analyses
         self.rerun = rerun
 
+        # FIXME: Redo this:
+        if not os.path.isdir(self.OUTPUT_DIR):
+            os.makedirs(self.OUTPUT_DIR)
+
         # =====================
         #      Cutlang Init
         # =====================
@@ -96,6 +100,7 @@ class cutlangWrapper:
             self.info("Compiling CutLang...")
             args = ['make']
             self.exe(args, cwd = compile_path, exit_on_fail = True)
+        self.info("CutLang initialisation finished.")
 
         # ==============================
         #      ADL LHC Analyses Init
@@ -111,6 +116,7 @@ class cutlangWrapper:
             self.exe(args)
             args = ["git", "clone", "https://github.com/ADL4HEP/ADLLHCanalyses"]
             self.exe(args, cwd=os.path.dirname(self.adllhcanalyses), exit_on_fail=True)
+        self.info("ADLLHC Analyses initialisation finished.")
 
         # ====================
         #      Delphes Init
@@ -171,10 +177,10 @@ class cutlangWrapper:
         else:
             raise Exception(f"No analysis file found for analysis {a_name} found at: \n" + cla_path)
 
-    def extract_efficiencies(self, masses):
+    def extract_efficiencies(self, masses, filename):
         """ Extracts the efficiencies from CutLang output..."""
 
-        rootFile = ROOT.TFile(self.CLA_output)
+        rootFile = ROOT.TFile(filename)
         if rootFile == None:
             self.error("Cannot find CutLang results, exiting.")
             sys.exit()
@@ -201,6 +207,18 @@ class cutlangWrapper:
             f.write(f"'__nevents__':{nevents}")
             f.write("}")
             f.write("}")
+
+    def __get_cla_out_filename(self, inputname):
+        """ Returns the name of CLA output file"""
+        outfile = os.path.join(self.cutlang_run_dir,
+                               "histoOut-" + os.path.basename(inputname).split(".")[0] + ".root")
+        self.info(f"Searching for CLA output at:\n{outfile}")
+        if os.path.isfile(outfile):
+            return outfile
+        else:
+            self.error("Could not find CLA output file. Aborting.")
+            sys.exit()
+
 
     def run(self, masses, hepmcfile, pid=None):
         """ TODO: Write some commentary.
@@ -277,10 +295,8 @@ class cutlangWrapper:
         #  Postprocessing
         # ====================
 
-        if not os.path.isfile(self.CLA_output):
-            self.error("Cannot find CutLang output. Exiting.")
-            sys.exit()
-        self.extract_efficiencies(masses)
+        CLA_output = self.__get_cla_out_filename(cutlangfile)
+        self.extract_efficiencies(masses, CLA_output)
 
         # self.__delete_dir(self.recastfile)
         # self.__delete_dir("cutlang.template/%s" % self.cutlangfile)
