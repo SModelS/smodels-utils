@@ -283,8 +283,13 @@ class RandomWalker:
                     f.write ( "   `- exception occured in walker #%s\n" % self.protomodel.walkerid )
                 sys.exit(-1)
             ratio = 1.
-            if self.protomodel.oldZ() > 0.:
-                ratio = self.protomodel.Z / self.protomodel.oldZ()
+            #if self.protomodel.oldZ() > 0.:
+            #    ratio = self.protomodel.Z / self.protomodel.oldZ()
+            oldZ = self.protomodel.oldZ()
+            Z = self.protomodel.Z
+            if oldZ > 0. and Z < oldZ:
+                ratio = numpy.exp(.5*( (Z**2) - (oldZ**2) ) )
+                # ratio = self.protomodel.Z / self.protomodel.oldZ()
             if self.protomodel.rmax > rthresholds[0]:
                 tp = self.protomodel.rvalues[0][2]
                 masses = []

@@ -266,7 +266,7 @@ class ProtoModel:
         else:
             self.bestCombo = combiner.removeDataFromBestCombo ( bestCombo )
         self.Z = Z
-        self.K = Z**2 + 2* math.log ( prior )
+        self.K = Z**2 + 2* numpy.log ( prior )
         self.llhd = llhd
         self.muhat = muhat
         self.letters = combiner.getLetterCode(self.bestCombo)
