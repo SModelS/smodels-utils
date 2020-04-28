@@ -244,6 +244,7 @@ class ProtoModel:
         self.log ( "model is excluded? %s" % str(excluded) )
         if check_thresholds and excluded:
             self.Z = -1. ## set to negative
+            self.K = -20.
             return False
         if not check_thresholds  and excluded:
             self.pprint ( "we dont check thresholds, but the model would actually be excluded with rmax=%.2f" % self.rmax )
@@ -378,6 +379,12 @@ class ProtoModel:
             self.pprint ( "asked for old Z, but no backup available" )
             return -.1
         return self._backup["Z"]
+
+    def oldK( self ):
+        if not hasattr ( self, "_backup" ):
+            self.pprint ( "asked for old K, but no backup available" )
+            return -20.
+        return self._backup["K"]
 
     def unFrozenParticles ( self, withLSP=True ):
         """ returns a list of all particles that can be regarded as unfrozen

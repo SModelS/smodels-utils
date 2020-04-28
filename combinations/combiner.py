@@ -341,7 +341,7 @@ class Combiner:
             ret += self.letters[c]
         return ret
 
-    def priorForNDF ( self, nparticles, nbranchings, nssms, C = None, 
+    def priorForNDF ( self, nparticles, nbranchings, nssms, C = 1., 
                       verbose=False ):
         """ get the prior for this and this many degrees of freedom
             in the model.
@@ -384,7 +384,7 @@ class Combiner:
             ## every ssm > 0 costs a little, but only very little
             if ssm > 1e-4:
                 nssms += 1
-        ret = self.priorForNDF ( nparticles, nbr, nssms, verbose )
+        ret = self.priorForNDF ( nparticles, nbr, nssms, 1., verbose )
         if nll:
             return - math.log ( ret )
         return ret

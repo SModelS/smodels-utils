@@ -426,19 +426,24 @@ def copyFilesToGithub():
         if len(O)>0:
             print ( "[plotHiscore.py] when copying files: %s" % O )
 
-def getPIDsOfTPred ( tpred, ret, integrateDataType=True ):
+def getPIDsOfTPred ( tpred, ret, integrateDataType=True, integrateSRs=True ):
     """ get the list of PIDs that the theory prediction should be assigned to 
     :param tpred: theory prediction
     :param ret: results of a previous run of this function, so we can add iteratively
     :param integrateDataType: if False, then use anaid:dtype (eg CMS-SUS-19-006:ul) as values
+    :param integrateSRs: if False, then use anaid:SR (eg CMS-SUS-19-006:SRC) as values.
+                         takes precedence over integrateDataType
     :returns: dictionary with pid as key and sets of ana ids as value
     """
     LSP = 1000022
     name = tpred.analysisId()
-    dType = "em"
-    if tpred.dataId() in [ "None", None ]:
-        dType = "ul"
-    if not integrateDataType:
+    if not integrateSRs:
+        SR = tpred.dataId()
+        name = name + ":" + SR
+    elif not integrateDataType:
+        dType = "em"
+        if tpred.dataId() in [ "None", None ]:
+            dType = "ul"
         name = name + ":" + dType
     for pids in tpred.PIDs:
         for br in pids:
