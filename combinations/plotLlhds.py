@@ -106,11 +106,12 @@ class LlhdPlot:
         """
         if pid1==0:
             pid1 = [ 1000006, 1000021, 2000006, 1000002 ]
+        self.DEBUG, self.INFO = 40, 30
         self.pid1 = pid1
         self.pid2 = pid2
         self.copy = copy
         self.hiscorefile = "./hiscore.pcl"
-        self.verbose = verbose
+        self.setVerbosity ( verbose )
         self.setup()
         masspoints,mx,my,nevents,topo,timestamp = self.loadPickleFile()
         self.masspoints = masspoints
@@ -123,6 +124,25 @@ class LlhdPlot:
         for m in masspoints:
             self.massdict[ (m[0],m[1]) ] = m [2]
 
+    def setVerbosity ( self, verbose ):
+        self.verbose = verbose
+        if type(verbose)==str:
+            verbose = verbose.lower()
+            if "deb" in verbose:
+                self.verbose = 40
+                return
+            if "inf" in verbose:
+                self.verbose = 30
+                return
+            if "warn" in verbose:
+                self.verbose = 20
+                return
+            if "err" in verbose:
+                self.verbose = 10
+                return
+            self.pprint ( "I dont understand verbosity ``%s''. Setting to debug." % verbose )
+            self.verbose = 40
+
     def getHash ( self, m1=None, m2=None ):
         """ get hash for point. if None, get hash for self.mx, self.my """
         if m1 == None:
@@ -131,13 +151,15 @@ class LlhdPlot:
             m2 = self.my
         return int(1e3*m1) + int(1e0*m2)
 
-    def resultFor ( self, ana, masspoint ):
+    def getResultFor ( self, ana, masspoint ):
         """ return result for ana/topo pair 
         :param ana: the analysis id. optionally a data type can be specificed, e.g.
-                    as :em
+                    as :em. Alternatively, a signal region can be specified.
         :param masspoint: a point from self.masspoints
-        :returns: results for this analysis (possibly data type) and topology
+        :returns: results for this analysis (possibly data type, possibly signal region) 
+                  and topology
         """
+        #self.pprint ( "asking for %s" % ana )
         ret,sr = None,None
         dType = "any"
         if ":" in ana:
@@ -150,6 +172,12 @@ class LlhdPlot:
                 continue
             if ana != tokens[0]:
                 continue
+            # self.pprint ( "asking for %s, %s %s" % ( tokens[0], tokens[1], dType ) )
+            if tokens[1] != None and dType not in [ "any", "ul", "None" ]:
+                # if signal regions are given, they need to match
+                if tokens[1] != dType:
+                    continue
+                self.debug ( "found a match for", tokens[0], tokens[1], v )
             if self.topo not in tokens[2]:
                 continue
             if ret == None or v > ret:
@@ -166,7 +194,7 @@ class LlhdPlot:
         L = {}
         minXY=0.,0.,float("inf")
         s=""
-        r,sr = self.resultFor ( ana, self.masspoints[0][2] )
+        r,sr = self.getResultFor ( ana, self.masspoints[0][2] )
         if r:
             s="(%.2f)" % (-np.log(r))
         cresults = 0
@@ -178,7 +206,7 @@ class LlhdPlot:
             y.add ( m2 )
             zt = float("nan")
             # zt = 0.
-            result,sr = self.resultFor ( ana, llhds )
+            result,sr = self.getResultFor ( ana, llhds )
             if result:
                 zt = - np.log( result )
                 cresults += 1
@@ -267,6 +295,10 @@ class LlhdPlot:
     def pprint ( self, *args ):
         print ( "[plotLlhds] %s" % " ".join(map(str,args)) )  
 
+    def debug ( self, *args ):
+        if self.verbose >= self.DEBUG:
+            print ( "[plotLlhds] %s" % " ".join(map(str,args)) )  
+
     def setup ( self ):
         """ setup rundir, picklefile path and hiscore file path """
         self.rundir = setup()
@@ -277,6 +309,13 @@ class LlhdPlot:
         self.picklefile = "%smp%d%d.pcl" % ( self.rundir, self.pid1, self.pid2 )
         if not os.path.exists ( self.picklefile ):
             self.pprint ( "could not find pickle file %s" % self.picklefile )
+
+    def describe ( self ):
+        """ describe the situation """
+        print ( "%d masspoints obtained from %s, hiscore stored in %s" % \
+                ( len ( self.masspoints), self.picklefile, self.hiscorefile ) )
+        print ( "Data members: plot.masspoints, plot.massdict, plot.timestamp, plot.mx, plot.my" )
+        print ( "              plot.pid1, plot.pid2, plot.topo" )
 
     def plotSummary ( self, ulSeparately=True ):
         """ a summary plot, overlaying all contributing analyses 
@@ -290,9 +329,10 @@ class LlhdPlot:
         stats = self.getAnaStats( integrateSRs=False )
         anas = list(stats.keys())
         if self.pid1 in resultsForPIDs:
+            self.debug ( "results for PIDs %s" % ", ".join ( resultsForPIDs[self.pid1] ) )
             anas = list ( resultsForPIDs[self.pid1] )
         anas.sort()
-        print ( "[plotLlhds] summary plot: %s" % ",".join ( anas ) )
+        self.pprint ( "summary plot: %s" % ", ".join ( anas ) )
         # print ( stats.keys() )
         colors = [ "red", "green", "blue", "orange", "cyan", "magenta", "grey", "brown",
                    "pink", "indigo", "olive", "orchid", "darkseagreen", "teal" ]
@@ -316,8 +356,7 @@ class LlhdPlot:
             L = {}
             minXY=( 0.,0., float("inf") )
             s=""
-            # print ( "result for", ana )
-            r,sr = self.resultFor ( ana, self.masspoints[0][2] )
+            r,sr = self.getResultFor ( ana, self.masspoints[0][2] )
             if r:
                 s="(%.2f)" % (-np.log(r))
             cresults = 0
@@ -332,7 +371,7 @@ class LlhdPlot:
                 x.add ( m1 )
                 y.add ( m2 )
                 zt = float("nan")
-                result,sr = self.resultFor ( ana, llhds )
+                result,sr = self.getResultFor ( ana, llhds )
                 if result:
                     zt = - np.log( result )
                     cresults += 1
