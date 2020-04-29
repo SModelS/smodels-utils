@@ -61,6 +61,21 @@ class Hiscore:
                 f.close()
         return ret
 
+    def globalMaxK ( self ):
+        """ globally (across all walkers), the highest K """
+        ret = 0.
+        if self.hiscores[0] != None:
+            if self.hiscores[0].K > ret:
+                ret = self.hiscores[0].K
+        Koldfile = "Kold.conf"
+        if os.path.exists ( Koldfile ):
+            with open ( Koldfile, "rt" ) as f:
+                lines = f.readlines()
+                if len(lines)>0:
+                    ret = float(lines[0])
+                f.close()
+        return ret
+
     def addResult ( self, protomodel ):
         """ add a result to the list """
         import manipulator
@@ -75,6 +90,7 @@ class Hiscore:
             m.predict ()
 
         Zold = self.globalMaxZ()
+        Kold = self.globalMaxK()
         trimmed = None
         if m.M.Z > Zold and m.M.Z > 3.:
             self.pprint ( "New model with Z=%.2f exceeds global Z=%.2f, invoke trimmer!" % ( m.M.Z, Zold ) )
@@ -382,10 +398,10 @@ def main ( args ):
                  nevents
                  see "if __main__" part below.
     :returns: { "Z": highest significance, "Zuntrimmed": highest untrimmed significance,
-                "step": step, "model": model  }
+                "step": step, "model": model, "K": bayesian_K  }
     """
 
-    ret =  { "Z": 0., "Zuntrimmed": 0., "step": 0, "model": None }
+    ret =  { "Z": 0., "Zuntrimmed": 0., "step": 0, "model": None, "K": -100. }
 
     if args.detailed:
         args.print = True
@@ -510,14 +526,17 @@ def main ( args ):
 
     if len(trimmed)>0 and trimmed[0] != None:
         ret["Z"]=trimmed[0].Z
+        ret["K"]=trimmed[0].K
         if len(protomodels)>0 and protomodels[0] != None:
             ret["Zuntrimmed"]=protomodels[0].Z
+            ret["Kuntrimmed"]=protomodels[0].K
         ret["step"]=trimmed[0].step
         ret["model"]=trimmed[0]
         return ret
         # return float(trimmed[0].Z),trimmed[0].step,trimmed[0]
     if len(protomodels)>0 and protomodels[0] != None:
         ret["Z"]=protomodels[0].Z
+        ret["K"]=protomodels[0].K
         ret["Zuntrimmed"]=protomodels[0].Z
         ret["step"]=protomodels[0].step
         ret["model"]=protomodels[0]

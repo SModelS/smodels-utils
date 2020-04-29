@@ -98,7 +98,7 @@ def main():
         i+=1
         # Z,step,model = updateHiscores( )
         D = updateHiscores( )
-        Z,Zuntrimmed,step,model = D["Z"],D["Zuntrimmed"],D["step"],D["model"]
+        Z,Zuntrimmed,step,model,K = D["Z"],D["Zuntrimmed"],D["step"],D["model"],D["K"]
         if Z > Zold*1.0001:
             from manipulator import Manipulator
             with open ( Zfile, "wt" ) as f:
@@ -107,8 +107,8 @@ def main():
             m = Manipulator ( model )
             T=str(int(time.time()))
             m.writeDictFile ( "pmodel-%s.py" % T, comment="history keeper" )
-            with open ( "%szhistory.txt" % rundir, "at" ) as f:
-                f.write ( "%s,%d,%.4f,%.4f,%s\n" % ( time.asctime(),step,Z,Zuntrimmed,T) )
+            with open ( "%shistory.txt" % rundir, "at" ) as f:
+                f.write ( "%s,step=%d,Z=%.4f,Zuntrimmed=%.4f,K=%.4f,t=%s\n" % ( time.asctime(),step,Z,Zuntrimmed,K,T) )
                 f.close()
             plot ( Z, rundir )
             Zold = Z
