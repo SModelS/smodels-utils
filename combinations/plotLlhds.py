@@ -100,13 +100,18 @@ def getAlpha ( color ):
 
 class LlhdPlot:
     """ A simple class to make debugging the plots easier """
-    def __init__ ( self, pid1, pid2, verbose, copy ):
+    def __init__ ( self, pid1, pid2, verbose, copy, max_anas ):
         """
+        :param pid1: pid for x axis, possibly a range of pids
+        :param pid2: pid for y axis
+        :param verbose: verbosity (debug, info, warn, or error)
         :param copy: copy plot to ../../smodels.github.io/protomodels/latest
+        :param max_anas: maximum number of analyses on summary plot
         """
         if pid1==0:
             pid1 = [ 1000006, 1000021, 2000006, 1000002 ]
         self.DEBUG, self.INFO = 40, 30
+        self.max_anas = max_anas ## maximum number of analyses
         self.pid1 = pid1
         self.pid2 = pid2
         self.copy = copy
@@ -362,8 +367,10 @@ class LlhdPlot:
                 ymax = m[1]
         print ( "[plotLlhds] range x [%d,%d] y [%d,%d]" % ( xmin, xmax, ymin, ymax ) )
         for ctr,ana in enumerate ( anas ): ## loop over the analyses
-            if ctr > 2:
-                print ( "[plotLlhds] too many analyses. skip it" )
+            if ctr >= self.max_anas:
+                self.pprint ( "too many (%d > %d) analyses." % (len(anas),self.max_anas) )
+                for ana in anas[ctr:]:
+                    self.pprint ( "  - skipping %s" % ana )
                 break
             color = colors[ctr]
             x,y=set(),set()
@@ -557,6 +564,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-1', '--pid1',
             help='pid1, if 0 then do predefined list [0]',
             type=int, default=0 )
+    argparser.add_argument ( '-M', '--max_anas',
+            help='maximum number of analyses to appear on summary plot [3]',
+            type=int, default=3 )
     argparser.add_argument ( '-2', '--pid2',
             help='pid2 [1000022]',
             type=int, default=1000022 )
@@ -577,7 +587,7 @@ if __name__ == "__main__":
             action="store_true" )
     args = argparser.parse_args()
 
-    plot = LlhdPlot ( args.pid1, args.pid2, args.verbose, args.copy )
+    plot = LlhdPlot ( args.pid1, args.pid2, args.verbose, args.copy, args.max_anas )
 
     if args.all:
         plot.plotAll ( )
