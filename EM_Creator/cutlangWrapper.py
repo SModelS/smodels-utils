@@ -82,7 +82,7 @@ class cutlangWrapper:
         # General vars
         self.njets = njets
         self.topo = topo
-        self.analyses = __standardise_analysis(analyses)
+        self.analyses = self.__standardise_analysis(analyses)
         self.rerun = rerun
 
         # FIXME: Redo this:
@@ -291,8 +291,6 @@ class cutlangWrapper:
                     f.write(self.analyses + "\n")
         else:
             summary_dir = os.path.dirname(summaryfile)
-            if not os.path.exists(summary_dir):
-                os.makedirs(summary_dir)
             with open(summaryfile, "w") as f:
                 f.write(self.analyses + "\n")
 
