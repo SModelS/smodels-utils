@@ -185,7 +185,10 @@ class RandomWalker:
             self.log ( "done check for result to go into hiscore list" )
         # self.hiqueue.put( [ hiscoreList ] )
         self.train ()
-        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.manipulator.strategy, self.protomodel.letters, self.protomodel.description, self.protomodel.Z ) )
+        if self.doBayesian:
+            self.pprint ( "best combo for strategy ``%s'' is %s: %s: [K=%.2f,Z=%.2f]" % ( self.manipulator.strategy, self.protomodel.letters, self.protomodel.description, self.protomodel.K, self.protomodel.Z ) )
+        else:
+            self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.manipulator.strategy, self.protomodel.letters, self.protomodel.description, self.protomodel.Z ) )
         smaxstp = "%s" % self.maxsteps
         if self.maxsteps < 0:
             smaxstp = "inf"
@@ -272,7 +275,10 @@ class RandomWalker:
         else:
             u=random.uniform(0.,1.)
             if u > ratio:
-                self.pprint ( "u=%.2f > %.2f; Z: %.2f -> %.2f: revert." % (u,ratio,self.protomodel.oldZ(), self.protomodel.Z) )
+                if self.doBayesian:
+                    self.pprint ( "u=%.2f > %.2f; K: %.2f -> %.2f: revert." % (u,ratio,self.protomodel.oldK(), self.protomodel.K) )
+                else:
+                    self.pprint ( "u=%.2f > %.2f; Z: %.2f -> %.2f: revert." % (u,ratio,self.protomodel.oldZ(), self.protomodel.Z) )
                 self.protomodel.restore()
                 if hasattr ( self, "oldgrad" ) and self.accelerator != None:
                     self.accelerator.grad = self.oldgrad
@@ -286,7 +292,7 @@ class RandomWalker:
         if self.doBayesian:
             oldK = self.protomodel.oldK()
             K = self.protomodel.K
-            if oldK > 0. and K < oldK:
+            if oldK > -20. and K < oldK:
                 ratio = numpy.exp(.5*( K - oldK ) )
             return ratio
 

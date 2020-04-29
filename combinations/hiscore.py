@@ -515,11 +515,13 @@ def main ( args ):
             ma = manipulator.Manipulator ( trimmed[0] )
         print ( "[hiscore] starting interactive session. Variables: %sprotomodels, trimmed%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        print ( "[hiscore]                                 Modules: %strimmer, manipulator, hiscore%s" % \
+        print ( "[hiscore]                                 Modules: %strimmer, manipulator, hiscore, combiner%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        print ( "[hiscore]                          Instantiations: %str, ma%s" % \
+        print ( "[hiscore]                          Instantiations: %str, ma, co%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
         import trimmer
+        import combiner
+        co = combiner.Combiner()
         import hiscore
         import IPython
         IPython.embed()

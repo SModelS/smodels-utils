@@ -342,7 +342,7 @@ class Combiner:
         return ret
 
     def priorForNDF ( self, nparticles, nbranchings, nssms, C = 1., 
-                      verbose=False ):
+                      verbose=False, nll=False ):
         """ get the prior for this and this many degrees of freedom
             in the model.
         :param nparticles: number of unfrozen particles
@@ -351,16 +351,18 @@ class Combiner:
         :param C: normalization constant C, to make the prior proper. If None,
                   use the predefined one.
         :param verbose: be verbose about computation
+        :param nll: if true, compute nll of prior
         :returns: *proper* prior
         """
-        improper = (1+nparticles)**(-2) * (1+nbranchings)**(-1) * (1+nssms)**(-.5)
-        # improper = 1. - .05 * nparticles - .01 * nbranchings - .001 * nssms
+        improper = (1+nparticles)**(-1) * (1+nbranchings)**(-.5) * (1+nssms)**(-.25)
         if C == None:
             C = 0.039383
         proper = C * improper
         if verbose:
             self.pprint ( "prior: %.2f * (1 - .05 * %d - .01 * %d - .001 * %d) = %.2f" % \
                       ( C, nparticles, nbr, nssms, proper ) )
+        if nll:
+            return - numpy.log ( proper )
         return proper
 
     def computePrior ( self, protomodel, nll=False, verbose=False ):
