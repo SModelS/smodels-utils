@@ -7,23 +7,37 @@
 
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 .. moduleauthor:: Jan Mrozek <jmrozek@protonmail.ch>
+
+..directory structure::
+    EM_Creator --┬-CutLang---------┬-runs ~ folder with running script (CLA.sh)
+                 |                 +-CLA  ~ folder with executable (CLA.exe)
+                 |                 + ADLLHCAnalysis ~ contains adl files for analyses
+                 +-cutlang_wrapper-┬-ANA_*-┬-output-┬-efficiencies.embaked
+                 |                         |        +-detected.root
+                 |                         |        +-CL_output_summary.dat
+                 |                         |        +-log.txt
+                 |                         +-temp---┬-hepmcfile.hepmc ~ if it was gzipped
+                 +-Delphes--------+-
 """
 # TODO: Make separate Delphes wrapper?
 # TODO: Make nested class for directories that would check if it exists and is
 # dir: os.path.exists(dirName) and os.path.isdir(dirName) ?
 # TODO: Add exception mechanism to exe.
 # TODO: Remove the directory if makefile not present?
+# TODO: Finish directory structure picture...
+# FIXME: Instead of exiting, raise exceptions?
 
 # Standard library imports
 import os                  # For path
 import sys                 # For exit()
 import colorama            # For output colors (in msg, error, ...)
 import subprocess          # For Popen in exe method
-import shutil             # For move()
+import shutil              # For move(), FIXME: remove?
 import tempfile            # FIXME: Either remove or implement
 import  re                 # For delphes card picker
 from datetime import date  # For timestamp of embaked files
 import multiprocessing     # Used when run as __main__
+import gzip                # For decompression of hepmc file
 
 # 3 party imports
 import ROOT                # To parse CutLang output
@@ -32,14 +46,14 @@ import ROOT                # To parse CutLang output
 import bakeryHelpers       # For dirnames
 
 class cutlangWrapper:
-    OUTPUT_DIR  = "./cutlang_output"
-    OUTPUT_FILE = "./cutlang_output/CutLang_efficiencies.embaked"
+    OUTPUT_FILE = "efficiencies.embaked"
     CUTLANGINPUT = "./cutlang_output/analysis.root"
 
     CUTLANGRESULTS = "./CutLang/results"
     TEMPLATEDIR = "templates/"
     # CLA_output = "./CutLang/runs/histoOut-analysis.root"
     CLA_output = "./CutLang/runs/histoOut-CMS-SUS-19-007_CutLang.root"
+
 
     def __init__ ( self, topo, njets, rerun, analyses):
         """
@@ -208,7 +222,7 @@ class cutlangWrapper:
             f.write("}")
             f.write("}")
 
-    def __get_cla_out_filename(self, inputname):
+    def get_cla_out_filename(self, inputname):
         """ Returns the name of CLA output file"""
         outfile = os.path.join(self.cutlang_run_dir,
                                "histoOut-" + os.path.basename(inputname).split(".")[0] + ".root")
@@ -217,8 +231,20 @@ class cutlangWrapper:
             return outfile
         else:
             self.error("Could not find CLA output file. Aborting.")
-            sys.exit()
+            # sys.exit()
 
+    def __decompress(self, name, out_dir):
+        input = open(name, 'rb')
+        s = input.read()
+        input.close()
+
+        basename = ".".join(os.path.basename(name).split(".")[:-1])
+        out_name = os.path.join(out_dir, basename)
+        self.info(f"Decompressing {name} to {out_name} .")
+        output = gzip.GzipFile(out_name, 'wb')
+        output.write(s)
+        output.close()
+        return out_name
 
     def run(self, masses, hepmcfile, pid=None):
         """ TODO: Write some commentary.
@@ -230,15 +256,17 @@ class cutlangWrapper:
         # for stdout
         process = "%s_%djet" % (self.topo, self.njets)
         dirname = bakeryHelpers.dirName (process, masses)
+        out_dir = Directory(f"cutlang_wrapper/ANA_{dirname}", make = True)
+        if ".gz" in hepmcfile:
+            hepmcfile = self.__decompress(hepmcfile, out_dir.get())
 
         # For Analysis summary
-        summaryfile = f"ANA_{dirname}/Output/CLs_output_summary.dat"
+        summaryfile = os.path.join(out_dir.get(), "output/CL_output_summary.dat")
         if os.path.exists ( summaryfile ):
             if os.stat(summaryfile).st_size>10:
                 self.msg (f"It seems like there is already a summary file {summaryfile}")
-                f=open(summaryfile,"rt")
+                f=open(summaryfile,"w+")
                 lines=f.readlines()
-                f.close()
                 anaIsIn = False
                 for line in lines:
                     if self.analyses in line:
@@ -249,6 +277,7 @@ class cutlangWrapper:
                 if not anaIsIn:
                     self.msg ( "%s not in summary file: rerun!" % self.analyses )
                     f.write(self.analyses + "\n")
+                f.close()
             else:
                 with open(summaryfile, "w") as f:
                     f.write(self.analyses + "\n")
@@ -295,23 +324,23 @@ class cutlangWrapper:
         #  Postprocessing
         # ====================
 
-        CLA_output = self.__get_cla_out_filename(cutlangfile)
+        CLA_output = self.get_cla_out_filename(cutlangfile)
         self.extract_efficiencies(masses, CLA_output)
 
         # self.__delete_dir(self.recastfile)
         # self.__delete_dir("cutlang.template/%s" % self.cutlangfile)
         # self.__delete_dir(self.cutlangfile)
         # self.__delete_dir(self.teefile)
-        source = "ANA_%s" % dirname
-        dest = "../cutlang/%s" % source
-        if os.path.exists ( dest ):
-            print ( "[cutlangWrapper] Destination %s exists. I remove it." % dest )
-            subprocess.getoutput ( "rm -rf %s" % dest )
-        if not os.path.exists ( source ):
-            print ( "[cutlangWrapper] Source dir %s does not exist." % source )
+        # source = "ANA_%s" % dirname
+        # dest = "../cutlang/%s" % source
+        # if os.path.exists ( dest ):
+        #     print ( "[cutlangWrapper] Destination %s exists. I remove it." % dest )
+        #     subprocess.getoutput ( "rm -rf %s" % dest )
+        # if not os.path.exists ( source ):
+        #     print ( "[cutlangWrapper] Source dir %s does not exist." % source )
         # shutil.move ( f"ANA_{dirname}", "../cutlang/" )
-        self.exe("rm -rf %s/cutlangcmd*" % self.cutlanginstall )
-        self.exe("rm -rf %s/recast*" % self.cutlanginstall )
+        # self.exe("rm -rf %s/cutlangcmd*" % self.cutlanginstall )
+        # self.exe("rm -rf %s/recast*" % self.cutlanginstall )
         # self.exe("rm -rf %s" % tempdir )
         # a = subprocess.getoutput ( "rm -rf %s/cutlangcmd*" % self.cutlanginstall )
         # a = subprocess.getoutput ( "rm -rf %s/recast*" % self.cutlanginstall )
@@ -365,11 +394,28 @@ class cutlangWrapper:
     def __confirmation(self, text):
         return True
 
+
+
+class Directory:
+    def __init__(self, dirname, make = False):
+        self.dirname = dirname
+        if not os.path.exists(self.dirname):
+            if make == True:
+                os.makedirs(self.dirname)
+            else:
+                self.error(f"Directory {self.dirname} does not exits. Aborting.")
+                sys.exit()
+        elif not os.path.isdir(self.dirname):
+            self.error(f"Directory {self.dirname} is not a directory. Aborting.")
+            sys.exit()
+    def get(self):
+        return self.dirname
+
 if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(description='cutlang runner.')
-    argparser.add_argument ( '-a', '--analyses', help='analyses, comma separated [atlas_sus_2016_07]',
-                             type=str, default="atlas_susy_2016_07" )
+    argparser.add_argument ( '-a', '--analyses', help='analyses, comma separated [cms_sus_16_033]',
+                             type=str, default="cms_sus_16_033" )
     argparser.add_argument ( '-d', '--hepmcfile', help='hepmcfile to be used as input for Delphes',
                              type=str, default="input.hepmc" )
     argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
