@@ -46,14 +46,6 @@ import ROOT                # To parse CutLang output
 import bakeryHelpers       # For dirnames
 
 class cutlangWrapper:
-    OUTPUT_FILE = "efficiencies.embaked"
-    CUTLANGINPUT = "./cutlang_output/analysis.root"
-
-    CUTLANGRESULTS = "./CutLang/results"
-    TEMPLATEDIR = "templates/"
-    # CLA_output = "./CutLang/runs/histoOut-analysis.root"
-    CLA_output = "./CutLang/runs/histoOut-CMS-SUS-19-007_CutLang.root"
-
 
     def __init__ ( self, topo, njets, rerun, analyses):
         """
@@ -84,10 +76,6 @@ class cutlangWrapper:
         self.topo = topo
         self.analyses = self.__standardise_analysis(analyses)
         self.rerun = rerun
-
-        # FIXME: Redo this:
-        if not os.path.isdir(self.OUTPUT_DIR):
-            os.makedirs(self.OUTPUT_DIR)
 
         # =====================
         #      Cutlang Init
@@ -192,22 +180,32 @@ class cutlangWrapper:
         else:
             raise Exception(f"No analysis file found for analysis {a_name} found at: \n" + cla_path)
 
-    def extract_efficiencies(self, masses, filename):
-        """ Extracts the efficiencies from CutLang output..."""
+    def extract_efficiencies(self, masses, cla_file, out_file):
+        """ Extracts the efficiencies from CutLang output.
+            :param masses:    mass n-tuple
+            :param cla_file:  .root file output of CLA
+            :param out_file:  .embaked file to write the efficiencies in
+        """
 
-        rootFile = ROOT.TFile(filename)
+        # open the ROOT file
+        rootFile = ROOT.TFile(cla_file)
         if rootFile == None:
             self.error("Cannot find CutLang results, exiting.")
             sys.exit()
+        # temporary TH1D structure to write results in
         rootTmp  = ROOT.TH1D()
-        with open(self.OUTPUT_FILE, "w") as f:
+
+        with open(out_file, "w") as f:
             f.write("{" + str(masses) + ": {")
             nevents = 0
+            self.info("Objects found in CutLang results:")
             print([x.ReadObj().GetName() for x in rootFile.GetListOfKeys()])
+            # Traverse all keys in ROOT file
             for x in rootFile.GetListOfKeys():
+                if "cutflow" not in [x.ReadObj().GetName() for x in rootFile.GetListOfKeys()]:
+                    continue
                 x.ReadObj().GetObject("cutflow", rootTmp)
                 name = x.ReadObj().GetName()
-                print(name)
                 if name == 'baseline':
                     pass
                     # continue
@@ -254,6 +252,11 @@ class cutlangWrapper:
         analysis = analysis.replace("SUSY", "SUS")
         return analysis
 
+    def __get_embaked_name(self, analysis, topo):
+        retval = ".".join([analysis.lower().replace("-","_"), topo, "embaked"])
+        self.info(f"Embaked file will be saved : {retval}.")
+        return retval
+
     def run(self, masses, hepmcfile, pid=None):
         """ TODO: Write some commentary.
 
@@ -261,15 +264,21 @@ class cutlangWrapper:
             input.hepmc --> Delphes --> output.root --┬-> CutLang --> eff.embaked
                                         CutLang.edl --┘
         """
-        # for stdout
         process = "%s_%djet" % (self.topo, self.njets)
         dirname = bakeryHelpers.dirName (process, masses)
-        out_dir = Directory(f"cutlang_wrapper/ANA_{dirname}", make = True)
-        if ".gz" in hepmcfile:
-            hepmcfile = self.__decompress(hepmcfile, out_dir.get())
+        base_dir = Directory(f"cutlang_wrapper/ANA_{dirname}", make = True)
+        out_dir = Directory(os.path.join(base_dir.get(), "output"), make = True)
+        tmp_dir = Directory(os.path.join(base_dir.get(), "temp"), make = True)
 
-        # For Analysis summary
-        summaryfile = os.path.join(out_dir.get(), "output/CL_output_summary.dat")
+        self.info("Making output directory {base_dir.get()} .")
+        self.info(f"masses are {masses}")
+
+        # Decompress hepmcfile if necessary
+        if ".gz" in hepmcfile:
+            hepmcfile = self.__decompress(hepmcfile, tmp_dir.get())
+
+        # Check if the analysis has been done already
+        summaryfile = os.path.join(out_dir.get(), "CL_output_summary.dat")
         if os.path.exists ( summaryfile ):
             if os.stat(summaryfile).st_size>10:
                 self.msg (f"It seems like there is already a summary file {summaryfile}")
@@ -298,14 +307,25 @@ class cutlangWrapper:
         # ======================
         #        Delphes
         # ======================
+        # set input/output paths
         if not os.path.isfile(hepmcfile):
             self.error (f"cannot find hepmc file {hepmcfile}, exiting.")
             sys.exit()
         self.msg ("Found hepmcfile at", hepmcfile)
         delphes_card = self.__pick_delphes_card()
-        output_file = self.CUTLANGINPUT
+        # delph_out = os.path.join(tmp_dir.get(), "-".join([self.analyses, str(masses), "delphes-out"])+".root")
+        delph_out = os.path.join(tmp_dir.get(), "delphes_out.root")
+
+        # Remove output file if already exists
+        if os.path.exists(delph_out):
+            self.info(f"Removing {delph_out}.")
+            args = ["rm", delph_out]
+            self.exe(args)
+
+
+        # run delphes
         self.info("Running delphes.")
-        args = [self.delphes_exe, delphes_card, output_file, hepmcfile]
+        args = [self.delphes_exe, delphes_card, delph_out, hepmcfile]
         self.exe(args)
         self.info("Delphes finished.")
 
@@ -314,11 +334,12 @@ class cutlangWrapper:
         # ======================
         # FIXME: copy CutLang into temporary directory?
 
-        # FIXME: redo cutlang invocation, file passing...
-        cla_input = os.path.abspath(self.CUTLANGINPUT)
+        # Prepare input/output paths
+        cla_input = delph_out
         self.cutlang_script = os.path.abspath("./CutLang/runs/CLA.sh")
         cutlangfile = self.pickCutLangFile(self.analyses)
 
+        # run CutLang
         cmd = [self.cutlang_script, cla_input, "DELPHES", "-i", cutlangfile]
         self.info("Running CLA")
         self.exe(cmd, cwd=("/home/jan/prog/smodels-utils/EM_Creator/CutLang/runs/"))
@@ -330,29 +351,14 @@ class cutlangWrapper:
         #  Postprocessing
         # ====================
 
+        # efficiency file
+        effi_file = os.path.join(out_dir.get(), self.__get_embaked_name(self.analyses, self.topo))
+        # CLA results in .root file
         CLA_output = self.get_cla_out_filename(cutlangfile)
-        self.extract_efficiencies(masses, CLA_output)
+        # shutil.move(CLA_output,
+        self.extract_efficiencies(masses, CLA_output, effi_file)
 
-        # self.__delete_dir(self.recastfile)
-        # self.__delete_dir("cutlang.template/%s" % self.cutlangfile)
-        # self.__delete_dir(self.cutlangfile)
-        # self.__delete_dir(self.teefile)
-        # source = "ANA_%s" % dirname
-        # dest = "../cutlang/%s" % source
-        # if os.path.exists ( dest ):
-        #     print ( "[cutlangWrapper] Destination %s exists. I remove it." % dest )
-        #     subprocess.getoutput ( "rm -rf %s" % dest )
-        # if not os.path.exists ( source ):
-        #     print ( "[cutlangWrapper] Source dir %s does not exist." % source )
-        # shutil.move ( f"ANA_{dirname}", "../cutlang/" )
-        # self.exe("rm -rf %s/cutlangcmd*" % self.cutlanginstall )
-        # self.exe("rm -rf %s/recast*" % self.cutlanginstall )
-        # self.exe("rm -rf %s" % tempdir )
-        # a = subprocess.getoutput ( "rm -rf %s/cutlangcmd*" % self.cutlanginstall )
-        # a = subprocess.getoutput ( "rm -rf %s/recast*" % self.cutlanginstall )
-        # a = subprocess.getoutput ( "rm -r %s" % tempdir )
-
-    def exe ( self, cmd, maxLength=100, cwd=None, exit_on_fail=False):
+    def exe(self, cmd, maxLength=100, cwd=None, exit_on_fail=False):
         """ execute cmd in shell
         :param maxLength: maximum length of output to be printed,
                           if == -1 then all output will be printed
@@ -367,7 +373,9 @@ class cutlangWrapper:
         out, err = proc.communicate()
         print(out.decode('utf-8'))
         if not (err == None or err == 0):
-            self.error(f"Executed process: \n{' '.join(cmd)}\nin directory:\n{directory}\nproduced an error value {err}.")
+            self.error(f"Executed process: \n{' '.join(cmd)}\n\nin"
+                       f" directory:\n{directory}\n\nproduced an error\n\n"
+                       f"value {err.decode('utf-8')}.")
             if exit_on_fail == True:
                 pass
                 # sys.exit()
@@ -452,8 +460,7 @@ if __name__ == "__main__":
         masses = bakeryHelpers.getListOfMasses ( args.topo, args.njets )
     else:
         # FIXME: make parseMasses work
-        # masses = bakeryHelpers.parseMasses ( args.masses )
-        masses = (100, 110, 10)
+        masses = bakeryHelpers.parseMasses ( args.masses )
     # nm = len(masses)
     # nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
     cutlang = cutlangWrapper( args.topo, args.njets, args.rerun, args.analyses )
