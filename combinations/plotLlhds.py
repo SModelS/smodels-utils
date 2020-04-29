@@ -306,7 +306,10 @@ class LlhdPlot:
         if not os.path.exists ( self.hiscorefile ):
             self.pprint ( "could not find hiscore file %s" % self.hiscorefile )
 
-        self.picklefile = "%smp%d%d.pcl" % ( self.rundir, self.pid1, self.pid2 )
+        pid1 = self.pid1
+        if type(self.pid1) in [ tuple, list ]:
+            pid1 = self.pid1[0]
+        self.picklefile = "%smp%d%d.pcl" % ( self.rundir, pid1, self.pid2 )
         if not os.path.exists ( self.picklefile ):
             self.pprint ( "could not find pickle file %s" % self.picklefile )
 
@@ -318,10 +321,20 @@ class LlhdPlot:
         print ( "              plot.pid1, plot.pid2, plot.topo" )
         print ( "Function members: plot.findClosestPoint()" )
 
-    def plotSummary ( self, ulSeparately=True ):
+    def plotSummary ( self, ulSeparately=True, pid1=None ):
         """ a summary plot, overlaying all contributing analyses 
         :param ulSeparately: if true, then plot UL results on their own
         """
+        if pid1 == None and type(self.pid1) in [ list, tuple ]:
+            for p in self.pid1:
+                self.plotSummary ( ulSeparately, p )
+            return
+        if type(pid1) in [ tuple, list ]:
+            for p in pid1:
+                self.plotSummary ( ulSeparately, p )
+            return
+        if pid1 == None:
+            pid1 = self.pid1
         resultsForPIDs = {}
         from plotHiscore import getPIDsOfTPred, obtain
         protomodel, trimmed = obtain ( 0, self.hiscorefile )
@@ -329,9 +342,9 @@ class LlhdPlot:
             resultsForPIDs = getPIDsOfTPred ( tpred, resultsForPIDs, integrateSRs=False )
         stats = self.getAnaStats( integrateSRs=False )
         anas = list(stats.keys())
-        if self.pid1 in resultsForPIDs:
-            self.debug ( "results for PIDs %s" % ", ".join ( resultsForPIDs[self.pid1] ) )
-            anas = list ( resultsForPIDs[self.pid1] )
+        if pid1 in resultsForPIDs:
+            self.debug ( "results for PIDs %s" % ", ".join ( resultsForPIDs[pid1] ) )
+            anas = list ( resultsForPIDs[pid1] )
         anas.sort()
         self.pprint ( "summary plot: %s" % ", ".join ( anas ) )
         # print ( stats.keys() )
@@ -431,11 +444,11 @@ class LlhdPlot:
                       label="proto-model%s" % s )
         if sr == None:
             sr = "UL"
-        plt.title ( "HPD intervals, %s [%s]" % ( toLatex(self.pid1,True), self.topo ) )
-        plt.xlabel ( "m(%s) [GeV]" % toLatex(self.pid1,True) )
+        plt.title ( "HPD intervals, %s [%s]" % ( toLatex(pid1,True), self.topo ) )
+        plt.xlabel ( "m(%s) [GeV]" % toLatex(pid1,True) )
         plt.ylabel ( "m(%s) [GeV]" % toLatex(self.pid2,True) )
         plt.legend( loc="upper left" )
-        figname = "llhd%d.png" % ( self.pid1 )
+        figname = "llhd%d.png" % ( pid1 )
         self.pprint ( "saving to %s" % figname )
         plt.savefig ( figname )
         plt.close()
@@ -446,9 +459,9 @@ class LlhdPlot:
     def copyFile ( self, filename ):
         """ copy filename to smodels.github.io/protomodels/latest/ """
         dest = os.path.expanduser ( "~/git/smodels.github.io" )
-        cmd = "cp %s/%s %s/protomodels/latest/" % ( self.rundir, figname, dest )
+        cmd = "cp %s/%s %s/protomodels/latest/" % ( self.rundir, filename, dest )
         o = subprocess.getoutput ( cmd )
-        pprint ( "%s: %s" % ( cmd, o ) )
+        self.pprint ( "%s: %s" % ( cmd, o ) )
 
 
     def getAnaStats ( self, integrateSRs=True, integrateTopos=True,
