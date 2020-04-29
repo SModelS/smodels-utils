@@ -328,7 +328,7 @@ def writeIndexHtml ( protomodel, gotTrimmed, untrimmedZ=0. ):
     f.write ( "<html>\n" )
     f.write ( "<body>\n" )
     f.write ( "<center>\n" )
-    f.write ( "<table><td><h1>Current best protomodel: Z=%.2f</h1><td><img height=60px src=https://smodels.github.io/pics/banner.png></table>\n" % protomodel.Z )
+    f.write ( "<table><td><h1>Current best protomodel: K=%.2f, Z=%.2f</h1><td><img height=60px src=https://smodels.github.io/pics/banner.png></table>\n" % ( protomodel.K, protomodel.Z ) )
     f.write ( "</center>\n" )
     dbver = "???"
     strategy = "aggressive"
