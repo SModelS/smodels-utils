@@ -64,7 +64,7 @@ def updateStates():
     print ( "[updateHiscores] now update the states.pcl file" )
     hiscore.main ( args )
 
-def plot( Z, rundir ):
+def plot( Z, K, rundir ):
     import plotHiscore
     from argparse import Namespace
     args = Namespace()
@@ -89,20 +89,28 @@ def main():
     """ eternal loop that updates hiscore.pcl and states.pcl """
     rundir = setup()
     i = 0
-    Z, Zold, step = 0., 0., 0
+    Z, Zold, step, Kold = 0., 0., 0, -90.
     Zfile = "%s/Zold.conf" % rundir 
     if os.path.exists ( Zfile ):
         with open ( Zfile, "rt" ) as f:
             Zold = float ( f.read().strip() )
+    Kfile = "%s/Kold.conf" % rundir 
+    if os.path.exists ( Kfile ):
+        with open ( Kfile, "rt" ) as f:
+            Kold = float ( f.read().strip() )
     while True:
         i+=1
         # Z,step,model = updateHiscores( )
         D = updateHiscores( )
         Z,Zuntrimmed,step,model,K = D["Z"],D["Zuntrimmed"],D["step"],D["model"],D["K"]
-        if Z > Zold*1.0001:
+        if K > Kold*1.0001:
+        #if Z > Zold*1.0001:
             from manipulator import Manipulator
             with open ( Zfile, "wt" ) as f:
                 f.write ( "%s\n" % str(Z) )
+                f.close()
+            with open ( Kfile, "wt" ) as f:
+                f.write ( "%s\n" % str(K) )
                 f.close()
             m = Manipulator ( model )
             T=str(int(time.time()))
@@ -110,8 +118,9 @@ def main():
             with open ( "%shistory.txt" % rundir, "at" ) as f:
                 f.write ( "%s,step=%d,Z=%.4f,Zuntrimmed=%.4f,K=%.4f,t=%s\n" % ( time.asctime(),step,Z,Zuntrimmed,K,T) )
                 f.close()
-            plot ( Z, rundir )
+            plot ( Z, K, rundir )
             Zold = Z
+            Kold = K
         updateStates()
         time.sleep(60.)
 

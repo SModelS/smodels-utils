@@ -63,6 +63,7 @@ class Manipulator:
         import time
         D["timestamp"]=time.asctime()
         D["Z"]=round(self.M.Z,3)
+        D["K"]=round(self.M.K,3)
         D["step"]=self.M.step
         if len(comment)>0:
             D["comment"]=comment
