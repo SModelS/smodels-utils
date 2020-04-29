@@ -41,6 +41,7 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     print ( "[runOneJob:%d] run walkers [%d,%d] " % ( pid, jmin, jmax ) )
     # runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
     runner = "%sRUNNER_%s.py" % ( rundir, jmin )
+    dump_trainingdata = False
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
         f.write ( "import os, sys\n" )
@@ -48,8 +49,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         f.write ( "sys.path.insert(0,'%s/combinations')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import walkingWorker\n" )
-        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d )\n" % \
-                  ( jmin, jmax, cont, dbpath, cheatcode ) )
+        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training='%s' )\n" % \
+                  ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
     tf = "%sRUN_%s.sh" % ( rundir, jmin )
