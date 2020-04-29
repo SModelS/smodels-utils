@@ -233,14 +233,14 @@ class cutlangWrapper:
             # sys.exit()
 
     def __decompress(self, name, out_dir):
-        input = open(name, 'rb')
+        input = gzip.open(name, 'rb')
         s = input.read()
         input.close()
 
         basename = ".".join(os.path.basename(name).split(".")[:-1])
         out_name = os.path.join(out_dir, basename)
         self.info(f"Decompressing {name} to {out_name} .")
-        output = gzip.GzipFile(out_name, 'wb')
+        output = open(out_name, 'wb')
         output.write(s)
         output.close()
         return out_name
@@ -266,6 +266,7 @@ class cutlangWrapper:
         """
         process = "%s_%djet" % (self.topo, self.njets)
         dirname = bakeryHelpers.dirName (process, masses)
+        dirname = dirname.replace("(","").replace(")","").replace("]","-").replace("[","-").replace(" ","").replace(",","-")
         base_dir = Directory(f"cutlang_wrapper/ANA_{dirname}", make = True)
         out_dir = Directory(os.path.join(base_dir.get(), "output"), make = True)
         tmp_dir = Directory(os.path.join(base_dir.get(), "temp"), make = True)
@@ -314,6 +315,7 @@ class cutlangWrapper:
         self.msg ("Found hepmcfile at", hepmcfile)
         delphes_card = self.__pick_delphes_card()
         # delph_out = os.path.join(tmp_dir.get(), "-".join([self.analyses, str(masses), "delphes-out"])+".root")
+        # FIXME: put this to tmp_dir
         delph_out = os.path.join(tmp_dir.get(), "delphes_out.root")
 
         # Remove output file if already exists
@@ -335,7 +337,7 @@ class cutlangWrapper:
         # FIXME: copy CutLang into temporary directory?
 
         # Prepare input/output paths
-        cla_input = delph_out
+        cla_input = os.path.abspath(delph_out)
         self.cutlang_script = os.path.abspath("./CutLang/runs/CLA.sh")
         cutlangfile = self.pickCutLangFile(self.analyses)
 
