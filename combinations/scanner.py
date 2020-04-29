@@ -17,7 +17,11 @@ def getHiscore( force_copy = False ):
     backupfile = rundir+"hiscore.pcl"
     # picklefile =rundir + "hiscore.pcl" # % spids
     ## do this always
-    if force_copy or (not os.path.exists ( picklefile )):
+    h2Outdated = False
+    if os.path.exists ( picklefile ) and os.path.exists ( backupfile ):
+        if os.stat ( picklefile ).st_mtime < os.stat ( backupfile ).st_mtime:
+            h2Outdated = True
+    if force_copy or (not os.path.exists ( picklefile )) or h2Outdated:
         cmd = "cp %s %s" % ( backupfile, picklefile )
         import subprocess
         o = subprocess.getoutput ( cmd )
