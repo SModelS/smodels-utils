@@ -254,6 +254,43 @@ class RandomWalker:
         col = colorama.Fore.GREEN
         print ( "%s[walk:%d] %s%s" % ( col, self.walkerid, " ".join(map(str,args)), colorama.Fore.RESET ) )
 
+    def decideOnTakingStep ( self, ratio ):
+        """ depending on the ratio, decide on whether to take the step or not.
+            If ratio > 1., take the step, if < 1, let chance decide. """
+        if ratio >= 1.:
+            self.highlight ( "info", "Z: %.3f -> %.3f: take the step" % ( self.protomodel.oldZ(), self.protomodel.Z ) )
+            if self.protomodel.Z < 0.7 * self.protomodel.oldZ():
+                self.pprint ( " `- weird, though, Z decreases. Please check." )
+                sys.exit(-2)
+            self.takeStep()
+        else:
+            u=random.uniform(0.,1.)
+            if u > ratio:
+                self.pprint ( "u=%.2f > %.2f; Z: %.2f -> %.2f: revert." % (u,ratio,self.protomodel.oldZ(), self.protomodel.Z) )
+                self.protomodel.restore()
+                if hasattr ( self, "oldgrad" ) and self.accelerator != None:
+                    self.accelerator.grad = self.oldgrad
+            else:
+                self.pprint ( "u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.protomodel.oldZ(),self.protomodel.Z) )
+                self.takeStep()
+
+    def computeRatio ( self ):
+        """ get the ratio of posteriors/likelihoods """
+        ratio = 1.
+        doBayesian = False
+        if doBayesian:
+            oldK = self.protomodel.oldK()
+            K = self.protomodel.K
+            if oldK > 0. and K < oldK:
+                ratio = numpy.exp(.5*( K - oldK ) )
+            return ratio
+
+        oldZ = self.protomodel.oldZ()
+        Z = self.protomodel.Z
+        if oldZ > 0. and Z < oldZ:
+            ratio = numpy.exp(.5*( (Z**2) - (oldZ**2) ) )
+        return ratio
+
     def log ( self, *args ):
         """ logging to file """
         with open( "walker%d.log" % self.walkerid, "a" ) as f:
@@ -282,14 +319,6 @@ class RandomWalker:
                     f.write ( "%s: taking a step resulted in exception: %s, %s\n" % (time.asctime(), type(e), e ) )
                     f.write ( "   `- exception occured in walker #%s\n" % self.protomodel.walkerid )
                 sys.exit(-1)
-            ratio = 1.
-            #if self.protomodel.oldZ() > 0.:
-            #    ratio = self.protomodel.Z / self.protomodel.oldZ()
-            oldZ = self.protomodel.oldZ()
-            Z = self.protomodel.Z
-            if oldZ > 0. and Z < oldZ:
-                ratio = numpy.exp(.5*( (Z**2) - (oldZ**2) ) )
-                # ratio = self.protomodel.Z / self.protomodel.oldZ()
             if self.protomodel.rmax > rthresholds[0]:
                 tp = self.protomodel.rvalues[0][2]
                 masses = []
@@ -306,22 +335,9 @@ class RandomWalker:
                     self.accelerator.grad = self.oldgrad
                 continue
 
-            if ratio >= 1.:
-                self.highlight ( "info", "Z: %.3f -> %.3f: take the step" % ( self.protomodel.oldZ(), self.protomodel.Z ) )
-                if self.protomodel.Z < 0.7 * self.protomodel.oldZ():
-                    self.pprint ( " `- weird, though, Z decreases. Please check." )
-                    sys.exit(-2)
-                self.takeStep()
-            else:
-                u=random.uniform(0.,1.)
-                if u > ratio:
-                    self.pprint ( "u=%.2f > %.2f; Z: %.2f -> %.2f: revert." % (u,ratio,self.protomodel.oldZ(), self.protomodel.Z) )
-                    self.protomodel.restore()
-                    if hasattr ( self, "oldgrad" ) and self.accelerator != None:
-                        self.accelerator.grad = self.oldgrad
-                else:
-                    self.pprint ( "u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.protomodel.oldZ(),self.protomodel.Z) )
-                    self.takeStep()
+            # obtain the ratio of posteriors
+            ratio = self.computeRatio()
+            self.decideOnTakingStep ( ratio )
             # self.gradientAscent()
         self.saveState()
         self.pprint ( "Was asked to stop after %d steps" % self.maxsteps )

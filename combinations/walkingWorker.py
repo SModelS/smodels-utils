@@ -20,12 +20,14 @@ def setup():
 
 def main( nmin, nmax, cont, 
           dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database/",
-          cheatcode = 0 ):
+          cheatcode = 0,
+          dump_training = False ):
     """ a worker node to set up to run walkers 
     :param nmin: the walker id of the first walker
     :param nmax: the walker id of the last walker (?)
     :param cont: start with protomodels given in the pickle file 'cont'
     :param cheatcode: in case we wish to start from a cheat model
+    :param dump_training: dump training data for the NN
     """
     import sys, os
     rundir = setup()
@@ -55,7 +57,7 @@ def main( nmin, nmax, cont,
     for i in range(nmin,nmax):
         if pfile is None:
             print ( "[walkingWorker] starting %d with cheatcode %d" % ( i, cheatcode ) )
-            w = walker.RandomWalker( walkerid=i, dump_training = True, 
+            w = walker.RandomWalker( walkerid=i, dump_training = dump_training,
                                      dbpath = dbpath, cheatcode = cheatcode  )
             walkers.append ( w )
         else:
@@ -63,7 +65,7 @@ def main( nmin, nmax, cont,
             ctr = i % nstates
             print ( "[walkingWorker] fromModel %d: loading %d/%d" % ( i, ctr, nstates ) )
             w = walker.RandomWalker.fromProtoModel ( states[ctr], 100000, "aggressive", 
-                    walkerid = i, dump_training=True, expected = False,
+                    walkerid = i, dump_training=dump_training, expected = False,
                     dbpath = dbpath )
             walkers.append ( w )
     walker.startWalkers ( walkers )
