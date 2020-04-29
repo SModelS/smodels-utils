@@ -384,6 +384,8 @@ class ProtoModel:
         if not hasattr ( self, "_backup" ):
             self.pprint ( "asked for old K, but no backup available" )
             return -20.
+        if not "K" in self._backup:
+            return -20.
         return self._backup["K"]
 
     def unFrozenParticles ( self, withLSP=True ):

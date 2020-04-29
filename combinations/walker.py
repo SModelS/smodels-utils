@@ -258,10 +258,16 @@ class RandomWalker:
         """ depending on the ratio, decide on whether to take the step or not.
             If ratio > 1., take the step, if < 1, let chance decide. """
         if ratio >= 1.:
-            self.highlight ( "info", "Z: %.3f -> %.3f: take the step" % ( self.protomodel.oldZ(), self.protomodel.Z ) )
-            if self.protomodel.Z < 0.7 * self.protomodel.oldZ():
-                self.pprint ( " `- weird, though, Z decreases. Please check." )
-                sys.exit(-2)
+            if self.doBayesian:
+                self.highlight ( "info", "K: %.3f -> %.3f: r=%.4f, take the step" % ( self.protomodel.oldK(), self.protomodel.K, ratio ) )
+                if self.protomodel.K > 0. and self.protomodel.K < 0.7 * self.protomodel.oldK():
+                    self.pprint ( " `- weird, though, K decreases. Please check." )
+                    sys.exit(-2)
+            else:
+                self.highlight ( "info", "Z: %.3f -> %.3f: take the step" % ( self.protomodel.oldZ(), self.protomodel.Z ) )
+                if self.protomodel.Z < 0.7 * self.protomodel.oldZ():
+                    self.pprint ( " `- weird, though, Z decreases. Please check." )
+                    sys.exit(-2)
             self.takeStep()
         else:
             u=random.uniform(0.,1.)
