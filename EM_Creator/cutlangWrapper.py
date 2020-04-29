@@ -82,7 +82,7 @@ class cutlangWrapper:
         # General vars
         self.njets = njets
         self.topo = topo
-        self.analyses = analyses
+        self.analyses = __standardise_analysis(analyses)
         self.rerun = rerun
 
         # FIXME: Redo this:
@@ -158,6 +158,7 @@ class cutlangWrapper:
             args = ['make']
             self.exe(args, cwd = compile_path)
         self.info("initialised")
+
 
     def info ( self, *msg ):
         """Print yellow info message"""
@@ -245,6 +246,13 @@ class cutlangWrapper:
         output.write(s)
         output.close()
         return out_name
+
+    def __standardise_analysis(self, analysis):
+        """Takes analysis name and returns it in format like: CMS-SUS-13-024"""
+        analysis = analysis.replace("_", "-")
+        analysis = analysis.upper()
+        analysis = analysis.replace("SUSY", "SUS")
+        return analysis
 
     def run(self, masses, hepmcfile, pid=None):
         """ TODO: Write some commentary.
@@ -376,9 +384,9 @@ class cutlangWrapper:
         return err
 
     def __pick_delphes_card(self):
-        if not re.search("atlas", self.analyses) == None:
+        if not re.search("ATLAS", self.analyses) == None:
             return os.path.abspath("./delphes/cards/delphes_card_ATLAS.tcl")
-        elif not re.search("cms", self.analyses) == None:
+        elif not re.search("CMS", self.analyses) == None:
             return os.path.abspath("./delphes/cards/delphes_card_CMS.tcl")
         else:
             self.error(f"Could not find a suitable Delphes card for analysis {self.analyses}. Exiting.")
