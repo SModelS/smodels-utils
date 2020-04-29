@@ -565,8 +565,8 @@ if __name__ == "__main__":
             help='pid1, if 0 then do predefined list [0]',
             type=int, default=0 )
     argparser.add_argument ( '-M', '--max_anas',
-            help='maximum number of analyses to appear on summary plot [3]',
-            type=int, default=3 )
+            help='maximum number of analyses to appear on summary plot [4]',
+            type=int, default=4 )
     argparser.add_argument ( '-2', '--pid2',
             help='pid2 [1000022]',
             type=int, default=1000022 )
