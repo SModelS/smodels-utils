@@ -62,6 +62,7 @@ class RandomWalker:
             self.pprint ( "Cheat model gets Z=%.2f" % self.manipulator.M.Z )
         self.catch_exceptions = catch_exceptions
         self.history = History ( walkerid )
+        self.doBayesian = True ## bayesian or frequentist?
         self.record_history = False
         self.maxsteps = nsteps
         self.accelerator = None
@@ -94,8 +95,6 @@ class RandomWalker:
                    select = "all", catch_exceptions = True, keep_meta = True ):
         ret = cls( walkerid, nsteps=nsteps, dbpath = dbpath, 
                    catch_exceptions = catch_exceptions )
-                   # keep_meta = keep_meta )
-        # ret = cls( walkerid, nsteps, strategy, dump_training, dbpath )
         ret.manipulator.M = protomodel
         ret.manipulator.setWalkerId ( walkerid )
         ret.protomodel.expected = expected
@@ -278,8 +277,7 @@ class RandomWalker:
     def computeRatio ( self ):
         """ get the ratio of posteriors/likelihoods """
         ratio = 1.
-        doBayesian = False
-        if doBayesian:
+        if self.doBayesian:
             oldK = self.protomodel.oldK()
             K = self.protomodel.K
             if oldK > 0. and K < oldK:
