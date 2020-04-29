@@ -49,7 +49,8 @@ class RandomWalker:
             self.pprint ( "Wrong call of constructor: %s, %s, %s" % ( walkerid, nsteps, strategy ) )
             sys.exit(-2)
         self.walkerid = walkerid ## walker id, for parallel runs
-        self.hiscoreList = Hiscore ( walkerid, True, "H%d.pcl" % walkerid )
+        self.hiscoreList = Hiscore ( walkerid, True, "H%d.pcl" % walkerid,
+                                     backup=False )
         self.hiscoreList.nkeep = 1
         protomodel = ProtoModel( self.walkerid, dbpath = dbpath, 
                             expected = expected, select = select,

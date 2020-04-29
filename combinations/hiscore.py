@@ -27,9 +27,11 @@ def setup():
 
 class Hiscore:
     """ encapsulates the hiscore list. """
-    def __init__ ( self, walkerid, save_hiscores, picklefile="hiscore.pcl" ):
+    def __init__ ( self, walkerid, save_hiscores, picklefile="hiscore.pcl",
+                   backup=True ):
         self.walkerid = walkerid
         self.save_hiscores = save_hiscores
+        self.backup = backup ## backup hiscore lists?
         self.nkeep = 3 ## how many do we keep.
         self.trimmed = [ None ]*self.nkeep
         self.hiscores = [ None ]*self.nkeep
@@ -200,8 +202,10 @@ class Hiscore:
         return self.writeListToPickle()
 
     def writeListToPickle ( self, pickleFile=None ):
-        """ dump the list to the pickle file <pickleFile>.
-            If pickleFile is None, then self.pickleFile is used.
+        """ pickle the hiscore list.
+        :param pickleFile: write to pickleFile. If None, then self.pickleFile
+            is used.
+        :param backup: if True, backup old file to old_<picklefile>
         """
         if pickleFile==None:
             pickleFile = self.pickleFile
@@ -213,7 +217,8 @@ class Hiscore:
                 return False
         self.pprint ( "saving new hiscore list to %s" % pickleFile )
         try:
-            subprocess.getoutput ( "mv -f %s old_%s" % ( pickleFile, pickleFile ) )
+            if self.backup:
+                subprocess.getoutput ( "mv -f %s old_%s" % ( pickleFile, pickleFile ) )
             self.clean()
             with open( pickleFile, "wb" ) as f:
                 fcntl.flock ( f, fcntl.LOCK_EX )
@@ -318,7 +323,7 @@ def count ( protomodels ):
 def storeList ( protomodels, trimmed, savefile ):
     """ store the best protomodels in another hiscore file """
     from hiscore import Hiscore
-    h = Hiscore ( 0, True, savefile )
+    h = Hiscore ( 0, True, savefile, backup=True )
     h.hiscores = protomodels
     h.trimmed = trimmed
     print ( "[hiscore] saving %d protomodels and %d trimmed ones to %s" % \
