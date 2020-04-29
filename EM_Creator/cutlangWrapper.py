@@ -344,7 +344,7 @@ class cutlangWrapper:
         # run CutLang
         cmd = [self.cutlang_script, cla_input, "DELPHES", "-i", cutlangfile]
         self.info("Running CLA")
-        self.exe(cmd, cwd=("/home/jan/prog/smodels-utils/EM_Creator/CutLang/runs/"))
+        self.exe(cmd, cwd=self.cutlang_run_dir)
         self.info("CLA finished.")
 
 
