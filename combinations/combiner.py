@@ -358,7 +358,7 @@ class Combiner:
         # improper = numpy.exp ( -(1/10) * ( nparticles**2 + nbranchings**1 + nssms**(.5) ) ) 
         # improper = (1+nparticles)**(-1) * (1+nbranchings)**(-.5) * (1+nssms)**(-.25)
         if C == None:
-            C = 0.00126125
+            C = 0.00106962
         proper = C * improper
         if verbose:
             self.pprint ( "prior: %.2f * (1 - .05 * %d - .01 * %d - .001 * %d) = %.2f" % \
@@ -454,9 +454,9 @@ def normalizePrior():
     S=0.
     ctr,nmod=0,30
     control = 0
-    for nparticles in range ( 1, 16 ):
-        for nbr in range ( 0, 8*nparticles ):
-            for nssms in range ( 1, 22*nparticles ):
+    for nparticles in range ( 1, 18 ):
+        for nbr in range ( 0, 10*nparticles ):
+            for nssms in range ( 1, 25*nparticles ):
                 t = c.priorForNDF ( nparticles, nbr, nssms, 1. )
                 ctr+=1
                 control += c.priorForNDF ( nparticles, nbr, nssms, None )
