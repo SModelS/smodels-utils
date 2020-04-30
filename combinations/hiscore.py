@@ -357,8 +357,8 @@ def discuss ( protomodel, name ):
 def discussBest ( protomodel, detailed ):
     """ a detailed discussion of number 1 """
     p = 2. * ( 1. - stats.norm.cdf ( protomodel.Z ) ) ## two times because one-sided
-    print ( "Current           best: %.3f, p=%.2g [%d/%d unfrozen particles, %d predictions] (walker #%d)" % \
-            (protomodel.Z, p, len(protomodel.unFrozenParticles()),len(protomodel.masses.keys()),len(protomodel.bestCombo), protomodel.walkerid ) )
+    print ( "Current           best: K=%.3f, Z=%.3f, p=%.2g [%d/%d unfrozen particles, %d predictions] (walker #%d)" % \
+            ( protomodel.K, protomodel.Z, p, len(protomodel.unFrozenParticles()),len(protomodel.masses.keys()),len(protomodel.bestCombo), protomodel.walkerid ) )
     if detailed:
         print ( "Solution was found in step #%d" % protomodel.step )
         for i in protomodel.bestCombo:
@@ -450,8 +450,10 @@ def main ( args ):
         return ret
 
     triZ=-.0001
+    triK=-10.
     if trimmed[0] != None:
         triZ = trimmed[0].Z
+        triK = trimmed[0].K
         
     sin = infile
     if sin == None:
@@ -459,10 +461,10 @@ def main ( args ):
     triHS = "no trimmed hiscores found in files."
     hasTrimmedModel = ( triZ > 0.)
     if hasTrimmedModel:
-        triHS = "trimmed hiscore is at %.3f." % triZ
+        triHS = "trimmed hiscore is at K=%.3f, Z=%.3f." % ( triK, triZ )
     pevs = pprintEvs ( protomodels[0] )
-    print ( "[hiscore] untrimmed hiscore from %s[%d] is at %.3f (%s), %s" % \
-            ( sin, protomodels[0].walkerid, protomodels[0].Z, pevs, triHS ) ) 
+    print ( "[hiscore] untrimmed hiscore from %s[%d] is at K=%.3f,Z=%.3f (%s), %s" % \
+            ( sin, protomodels[0].walkerid, protomodels[0].K, protomodels[0].Z, pevs, triHS ) ) 
 
     nevents = args.nevents
 

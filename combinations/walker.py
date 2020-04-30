@@ -197,7 +197,8 @@ class RandomWalker:
     def train ( self ):
         """ train the accelerator """
         ## currently we dont train, we just dump the data
-        self.accelerator.dumpTrainingData ( self.protomodel )
+        if self.accelerator != None:
+            self.accelerator.dumpTrainingData ( self.protomodel )
         return # we dont train for now
 
     def predict ( self ):
