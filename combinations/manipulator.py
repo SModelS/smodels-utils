@@ -405,7 +405,7 @@ class Manipulator:
         a = random.uniform ( 0., 1. )
         if a > .8: ## sometimes, just knock out a random SSM
             randomProd = random.choice ( list ( self.M.ssmultipliers.keys() ) )
-            self.M.ssmultipliers[randomProd]=0.001
+            self.M.ssmultipliers[randomProd]=0.00001
             return 1
         f = random.uniform ( .8, 1.2 )
         self.M.log ( "randomly changing ssms of %s by a factor of %.2f" % \
