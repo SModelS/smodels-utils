@@ -133,7 +133,7 @@ def main():
     import argparse
     argparser = argparse.ArgumentParser( description=
                                          'Count analyses in different ways' )
-    argparser.add_argument ( '-s', '--superseded', help='show superseded results (yes/no/both)',
+    argparser.add_argument ( '-s', '--superseded', help='show superseded results (yes/no/both) [both]',
               type=str, default="both" )
     argparser.add_argument ( '-u', '--update', help='consider entries only after this date (yyyy/mm/dd)',
               type=str, default="" )
@@ -142,7 +142,7 @@ def main():
     argparser.add_argument ( '-S', '--sqrts', help='select sqrts (8/13/all) [all]',
               type=str, default="both" )
     argparser.add_argument ( '-v', '--verbose', help='be verbose', action='store_true' )
-    argparser.add_argument ( '-d', '--database', help='path to database [official_fastlim]',
+    argparser.add_argument ( '-d', '--database', help='path to (or name of) database [official_fastlim]',
               type=str,default='official_fastlim' )
     args = argparser.parse_args()
     db = Database ( args.database )
