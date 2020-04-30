@@ -354,9 +354,10 @@ class Combiner:
         :param nll: if true, compute nll of prior
         :returns: *proper* prior
         """
-        improper = (1+nparticles)**(-1) * (1+nbranchings)**(-.5) * (1+nssms)**(-.25)
+        improper = numpy.exp ( -(1/10) * ( nparticles**2 + nbranchings**1 + nssms**(.5) ) ) 
+        # improper = (1+nparticles)**(-1) * (1+nbranchings)**(-.5) * (1+nssms)**(-.25)
         if C == None:
-            C = 0.039383
+            C = 0.00179871
         proper = C * improper
         if verbose:
             self.pprint ( "prior: %.2f * (1 - .05 * %d - .01 * %d - .001 * %d) = %.2f" % \
@@ -451,17 +452,20 @@ def normalizePrior():
     c = Combiner()
     S=0.
     ctr,nmod=0,30
-    for nparticles in range ( 1, 15 ):
-        for nbr in range ( 0, 7*nparticles ):
-            for nssms in range ( 1, 20*nparticles ):
+    control = 0
+    for nparticles in range ( 1, 16 ):
+        for nbr in range ( 0, 8*nparticles ):
+            for nssms in range ( 1, 22*nparticles ):
                 t = c.priorForNDF ( nparticles, nbr, nssms, 1. )
                 ctr+=1
+                control += c.priorForNDF ( nparticles, nbr, nssms, None )
                 if ctr % nmod == 0:
                     print ( "nparticles %d, nbr %d, nssms %d, improper prior %.5f" % \
                             ( nparticles, nbr, nssms, t ) )
                     nmod=nmod*2
                 S += t
-    print ( "The constant for normalizing the prior is %.6f" % (1./S) )
+    print ( "The constant for normalizing the prior is %.8f" % (1./S) )
+    print ( "With the current normalization we get", control )
     return 1./S
 
 if __name__ == "__main__":
