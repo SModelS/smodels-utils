@@ -367,6 +367,14 @@ class Combiner:
             return - numpy.log ( proper )
         return proper
 
+    def noSuchBranching ( self, branchings, br ):
+        """ check if a branching ratio similar to br already exists 
+            in branchings """
+        for cbr in branchings:
+            if abs ( cbr - br ) / ( cbr + br ) < 0.025: ## 5 percent rule
+                return False
+        return True
+
     def computePrior ( self, protomodel, nll=False, verbose=False ):
         """ compute the prior for protomodel, used to introduce regularization,
             i.e. punishing for non-zero parameters, imposing sparsity.
@@ -378,9 +386,11 @@ class Combiner:
         for mpid,decays in protomodel.decays.items():
             if not mpid in particles:
                 continue ## frozen particles dont count
+            memBRs = set() ## memorize branchings, similar branchings count only once
             for dpid,br in decays.items():
-                if br > 1e-5 and br < .99999:
+                if br > 1e-5 and br < .99999 and self.noSuchBranching ( memBRs, br ): 
                     nbr += 1
+                    memBRs.add ( br )
         ## every non-trivial branching costs .01
         for pids,ssm in protomodel.ssmultipliers.items():
             if (abs(pids[0]) not in particles) or (abs(pids[1]) not in particles):
