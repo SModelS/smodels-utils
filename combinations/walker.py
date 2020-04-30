@@ -146,7 +146,7 @@ class RandomWalker:
             self.log ( "unfreeze random particle" )
             nChanges += self.manipulator.unfreezeRandomParticle()
         uBranch = random.uniform(0,1)
-        if uBranch > .3: # do this about every third time
+        if uBranch > .8: # do this about every third time
             self.log ( "randomly change branchings" )
             nChanges += self.manipulator.randomlyChangeBranchings()
         uSSM = random.uniform(0,1)
