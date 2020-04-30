@@ -22,12 +22,12 @@ Upper limit computer works and returns a result. Tried to find the same upper li
 -with only Region A: 3.2 fb (for regions B and C, pyhf is crashing)  
 -by combining all three regions: 3.4 fb
 
-| masses(sbottom, chi2, chi1) [GeV]| official 95% CL UL [fb] | pyhf combined 95% CL UL [fb] | inclusive 95% CL UL [fb] |
-|---|---|---|---|
-|900,250,60|3|3.2|A : 3.2|
-|800,450,60|2|2.07|A : 1.98, C : 1.72|
-|900,550,60|0.9|0.99|A : 0.96, C : 6.4|
-|1300,950,60|0.3|0.27|A : 0.30, C : 6.4|
+| masses(sbottom, chi2, chi1) [GeV] | official 95% CL UL [fb] | pyhf combined 95% CL UL [fb] | inclusive 95% CL UL [fb] |
+|-----------------------------------|-------------------------|------------------------------|--------------------------|
+| 900,250,60                        | 3                       | 3.2                          | A : 3.2                  |
+| 800,450,60                        | 2                       | 2.07                         | A : 1.98, C : 1.72       |
+| 900,550,60                        | 0.9                     | 0.99                         | A : 0.96, C : 6.4        |
+| 1300,950,60                       | 0.3                     | 0.27                         | A : 0.30, C : 6.4        |
 
 If the results is not shown, it's because it was crashing due to the mu bounds problem that is now solved.
 
@@ -55,6 +55,8 @@ Such combination will bring small complications. We'v decided we'd rather try ge
 - [ ] think about a way to perform this poor person's combination (outside of pyhfInterface.py)
 
 # Testing ATLAS-SUSY-2018-04
+
+## Comparing upper limits for the grid points
 
 We  compute the results of our pyhf interface by feeding the efficiencies of the SModelS database entry for this analysis into our pyhf interface, and compare them with the official results on the [HEPData page](https://www.hepdata.net/record/ins1765529). The value of interest here is the cross section upper limit that we compare with the upper limit of the table `X-section U.L 1` on the HEPData page, giving the upper limit for pair production of combined stau_L and stau_R.
 
@@ -121,6 +123,10 @@ We  compute the results of our pyhf interface by feeding the efficiencies of the
 A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyhf developers, this could be due to the efficiencies provided for this analysis, which are at truth-level, instead of the reco-level that are used in the official analysis.
 - [ ] add another column with best excepted upper limit (problem with nan upper limits)
 - [x] try using expected backgrounds of [aux. table 02](https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/SUSY-2018-04/tabaux_02.png) : see [ULtab-aux.md](https://github.com/SModelS/smodels-utils/blob/develop/pyhfintegration/ULtab-aux.md)
+
+## Running validation
+
+A first attempt of validation has been performed with pyhf combination. SModelS interface to pyhf is technically working but pyhf combination is over excluding as can be seen in the [validation folder](https://github.com/SModelS/smodels-database/blob/pyhf/13TeV/ATLAS/ATLAS-SUSY-2018-04-eff/validation/).
 
 # To do list
 
