@@ -402,6 +402,11 @@ class Manipulator:
             self.M.pprint ( "not enough unfrozen particles to change random signal strength" )
             return 0
         p = random.choice ( unfrozenparticles )
+        a = random.uniform ( 0., 1. )
+        if a > .8: ## sometimes, just knock out a random SSM
+            randomProd = random.choice ( list ( self.M.ssmultipliers.keys() ) )
+            self.M.ssmultipliers[randomProd]=0.001
+            return 1
         f = random.uniform ( .8, 1.2 )
         self.M.log ( "randomly changing ssms of %s by a factor of %.2f" % \
                      ( helpers.getParticleName ( p ), f ) )
@@ -459,7 +464,7 @@ class Manipulator:
             return 0
         dx =.1/numpy.sqrt(len(openChannels)) ## maximum change per channel
         S=0.
-        for i in openChannels:
+        for c_,i in enumerate(openChannels):
             oldbr = 0.
             if i in self.M.decays[pid]:
                 oldbr = self.M.decays[pid][i]
@@ -468,6 +473,13 @@ class Manipulator:
                 oldbr = 0.
             Min,Max = max(0.,oldbr-dx), min(oldbr+dx,1.)
             br = random.uniform ( Min, Max )
+            ## with some small chance set it simply to zero
+            a = random.uniform ( 0., 1. )
+            if a > 0.95:
+                br = 0.
+            ## with some small chance set it to equal another random br
+            if a < 0.05:
+                br = self.M.decays[pid][random.choice(list(openChannels))]
             self.M.decays[pid][i]=br
             S+=br
         if True: # S > 1.: ## correct for too large sums
