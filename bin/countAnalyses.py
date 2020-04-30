@@ -11,28 +11,27 @@
 
 from __future__ import print_function
 import setPath
-import sys
+import sys, colorama
 from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import TeV
 from smodels.tools.smodelsLogging import setLogLevel
 setLogLevel("debug")
 
-def discussExperiment ( anas, experiment, title ):
-    print ( title + experiment )
-    ianas = []
+def discussExperiment ( anas, experiment, title, verbose ):
+    print ( colorama.Fore.GREEN + title + experiment + ":" + colorama.Fore.RESET )
+    ianas = set()
     ul,em=0,0
     n_results = 0
     n_results_ul = 0
     n_results_em = 0
     for expRes in anas:
         Id = expRes.globalInfo.id
+        Id = Id.replace("-agg","")
         contact = ""
         if hasattr ( expRes.globalInfo, "contact" ):
             contact = expRes.globalInfo.contact
-        #if not "SModelS" in contact:
-        #    continue
-        if not Id in ianas:
-            ianas.append ( Id )
+        # print ( "id", Id )
+        ianas.add ( Id )
         topos = set()
         for dataset in expRes.datasets:
             for i in dataset.txnameList:
@@ -49,6 +48,8 @@ def discussExperiment ( anas, experiment, title ):
         n_results += len ( topos )
 
     print ( "%d analyses." % len(ianas) )
+    if verbose:
+        print ( "   `- %s" % ( ", ".join(ianas) ) )
     print ( "%d results total" % n_results )
     print ( "%d upper limits analyses" % ul )
     print ( "%d efficiency map analyses" % em )
@@ -63,7 +64,7 @@ def filterSqrts ( anas, sqrts ):
     for ana in anas:
         contact = ""
         anaS = int ( ana.globalInfo.sqrts.asNumber(TeV) )
-        if sqrts == anaS:
+        if sqrts != anaS:
             continue
         ret.append ( ana )
     return ret
@@ -88,17 +89,17 @@ def filterFastlim ( anas, really=True, update="" ):
         ret.append ( ana )
     return ret
 
-def discuss ( superseded, filter_fastlim, db, update, sqrts ):
+def discuss ( superseded, filter_fastlim, db, update, sqrts, verbose ):
     print ()
     print ( "---------------" )
     title = "Excluding superseded results, "
     if superseded:
         title = "Including superseded results, "
-    if filter_fastlim:
-        if sqrts != "13":
-            title += "without FastLim, " 
-    else:
-        title += "with FastLim, "
+    if sqrts != "13":
+        if filter_fastlim:
+                title += "without FastLim, " 
+        else:
+            title += "with FastLim, "
     anas = db.getExpResults( useSuperseded=superseded )
     if sqrts == "all":
         title += "all runs, "
@@ -112,8 +113,8 @@ def discuss ( superseded, filter_fastlim, db, update, sqrts ):
         Id=expRes.globalInfo.id
         if "CMS" in Id: cms.append ( expRes )
         if "ATLAS" in Id: atlas.append ( expRes )
-    discussExperiment ( cms, "CMS", title )
-    discussExperiment ( atlas, "ATLAS", title )
+    discussExperiment ( cms, "CMS", title, verbose )
+    discussExperiment ( atlas, "ATLAS", title, verbose )
 
 def countTopos ( superseded, filter_fastlim, db, update, verbose=True ):
     e = db.getExpResults( useSuperseded = superseded )
@@ -142,6 +143,7 @@ def main():
     argparser.add_argument ( '-S', '--sqrts', help='select sqrts (8/13/all) [all]',
               type=str, default="both" )
     argparser.add_argument ( '-v', '--verbose', help='be verbose', action='store_true' )
+    argparser.add_argument ( '-t', '--topologies', help='list topologies, also', action='store_true' )
     argparser.add_argument ( '-d', '--database', help='path to (or name of) database [official_fastlim]',
               type=str,default='official_fastlim' )
     args = argparser.parse_args()
@@ -156,9 +158,9 @@ def main():
     if args.fastlim.lower() in [ "yes", "true" ]: fl = [ False ]
     if args.fastlim.lower() in [ "no", "false" ]: fl = [ True ]
     for filter_fastlim in fl:
-        print ( "ss", ss )
         for superseded in ss:
-            discuss ( superseded, filter_fastlim, db, args.update, sqrts )
-            countTopos ( superseded, filter_fastlim, db, args.update, args.verbose )
+            discuss ( superseded, filter_fastlim, db, args.update, sqrts, args.verbose )
+            if args.topologies:
+                countTopos ( superseded, filter_fastlim, db, args.update, args.verbose )
 if __name__ == '__main__':
     main()
