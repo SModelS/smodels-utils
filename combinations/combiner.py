@@ -358,7 +358,7 @@ class Combiner:
         # improper = numpy.exp ( -(1/10) * ( nparticles**2 + nbranchings**1 + nssms**(.5) ) ) 
         # improper = (1+nparticles)**(-1) * (1+nbranchings)**(-.5) * (1+nssms)**(-.25)
         if C == None:
-            C = 0.00179871
+            C = 0.00126125
         proper = C * improper
         if verbose:
             self.pprint ( "prior: %.2f * (1 - .05 * %d - .01 * %d - .001 * %d) = %.2f" % \
