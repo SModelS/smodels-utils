@@ -81,7 +81,7 @@ def plot( Z, K, rundir ):
     args.notex = True
     args.keep = False
     args.commit = False
-    if Z > 2.8:
+    if K > 6.:
         args.commit = True
     plotHiscore.runPlotting ( args )
 
@@ -89,7 +89,7 @@ def main():
     """ eternal loop that updates hiscore.pcl and states.pcl """
     rundir = setup()
     i = 0
-    Z, Zold, step, Kold = 0., 0., 0, -90.
+    Z, Zold, step, K, Kold = 0., 0., 0, -90., -90.
     Zfile = "%s/Zold.conf" % rundir 
     if os.path.exists ( Zfile ):
         with open ( Zfile, "rt" ) as f:

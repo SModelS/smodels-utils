@@ -46,6 +46,12 @@ class Hiscore:
             return 0.
         return self.hiscores[-1].Z
 
+    def currentMinK ( self ):
+        """ the current minimum K to make it into the list. """
+        if self.hiscores[-1] == None:
+            return -30.
+        return self.hiscores[-1].K
+
     def globalMaxZ ( self ):
         """ globally (across all walkers), the highest Z """
         ret = 0.
@@ -78,6 +84,53 @@ class Hiscore:
 
     def addResult ( self, protomodel ):
         """ add a result to the list """
+        import manipulator
+        m = manipulator.Manipulator ( protomodel )
+        m.resolveMuhat() ## add only with resolved muhats
+        if m.M.K <= self.currentMinK():
+            return ## doesnt pass minimum requirement
+        if m.M.K == 0.:
+            return ## just to be sure, should be taken care of above, though
+        if m.M.K > 5.:
+            ## for values > 2.5 we now predict again with larger statistics.
+            m.predict ()
+
+        Zold = self.globalMaxZ()
+        Kold = self.globalMaxK()
+        trimmed = None
+        if m.M.K > Kold and m.M.K > 6.:
+            self.pprint ( "New model with K=%.2,Z=%.2f exceeds global K=%.2,Z=%.2f, invoke trimmer!" % ( m.M.K, m.M.Z, Kold, Zold ) )
+            maxloss=.01
+            nevents=100000
+            trimmer = Trimmer( m.M, "aggressive", maxloss, nevents = nevents )
+            trimmer.trim ( trimbranchings = True )
+            trimmer.computeAnalysisContributions()
+            trimmed = trimmer.M
+
+        for i,mi in enumerate(self.hiscores):
+            if mi!=None and mi.almostSameAs ( m.M ):
+                ### this m.M is essentially the m.M in hiscorelist.
+                ### Skip!
+                self.pprint ( "the protomodel seems to be already in highscore list. skip" )
+                return
+            if mi!=None and abs ( m.M.K - mi.K ) / m.M.K < 1e-6:
+                ## pretty much exactly same score? number of particles wins!!
+                if len ( m.M.unFrozenParticles() ) < len ( mi.unFrozenParticles() ):
+                    self.demote ( i )
+                    self.hiscores[i] = copy.deepcopy ( m.M )
+                    self.hiscores[i].clean( all=True )
+                    self.trimmed[i] = trimmed
+                    break
+            if mi==None or m.M.K > mi.K: ## ok, <i>th best result!
+                self.demote ( i )
+                self.hiscores[i] = copy.deepcopy ( m.M )
+                self.hiscores[i].clean( all=True )
+                self.trimmed[i] = trimmed
+                break
+
+    def addResultByZ ( self, protomodel ):
+        """ add a result to the list, old version, 
+            sort by Z """
         import manipulator
         m = manipulator.Manipulator ( protomodel )
         m.resolveMuhat() ## add only with resolved muhats
@@ -259,6 +312,28 @@ class Hiscore:
         """
         if protomodel.rmax > rthresholds[0]: # we only take the ones that passed the critic
             return
+        self.pprint ( "New result with K=%.2f, Z=%.2f, needs to pass K>%.2f, saving: %s" % ( protomodel.K, protomodel.Z, self.currentMinK(), "yes" if self.save_hiscores else "no" ) )
+        if not self.save_hiscores:
+            return
+        if protomodel.K <= self.currentMinK():
+            return ## clearly out
+        ret = False
+        ctr = 0
+        while not ret:
+            self.addResult ( protomodel )
+            # self.log ( "now save list" )
+            ret = self.save() ## and write it
+            ctr+=1
+            if ctr > 5:
+                break
+        self.log ( "done saving list" )
+
+    def newResultByZ ( self, protomodel ):
+        """ see if new result makes it into hiscore list. If yes, then add.
+            Old version, going by Z, not by K.
+        """
+        if protomodel.rmax > rthresholds[0]: # we only take the ones that passed the critic
+            return
         self.pprint ( "New result with Z=%.2f, needs to pass %.2f, saving: %s" % (protomodel.Z, self.currentMinZ(), "yes" if self.save_hiscores else "no" ) )
         if not self.save_hiscores:
             return
@@ -319,8 +394,10 @@ def compileList( nmax, trimmedAlso ):
                 f.close()
                 allprotomodels += list ( filter ( None.__ne__, protomodels ) )
                 alltrimmed += list ( filter ( None.__ne__, trimmed ) )
-                allprotomodels = sortByZ ( allprotomodels )
-                alltrimmed = sortByZ ( alltrimmed )
+                allprotomodels = sortByK ( allprotomodels )
+                alltrimmed = sortByK ( alltrimmed )
+                #allprotomodels = sortByZ ( allprotomodels )
+                #alltrimmed = sortByZ ( alltrimmed )
         except ( IOError, OSError, FileNotFoundError, EOFError, pickle.UnpicklingError ) as e:
             cmd = "rm -f %s" % fname
             print ( "[hiscore] could not open %s (%s). %s." % ( fname, e, cmd ) )
@@ -350,9 +427,13 @@ def sortByZ ( protomodels ):
     protomodels.sort ( reverse=True, key = lambda x: x.Z )
     return protomodels[:20] ## only 20
 
+def sortByK ( protomodels ):
+    protomodels.sort ( reverse=True, key = lambda x: x.K )
+    return protomodels[:20] ## only 20
+
 def discuss ( protomodel, name ):
-    print ( "Currently %7s Z is: %.3f [%d/%d unfrozen particles, %d predictions] (walker #%d)" % \
-            (name, protomodel.Z, len(protomodel.unFrozenParticles()),len(protomodel.masses.keys()),len(protomodel.bestCombo), protomodel.walkerid ) )
+    print ( "Currently %7s K=%.3f, Z=%.3f [%d/%d unfrozen particles, %d predictions] (walker #%d)" % \
+            (name, protomodel.K, protomodel.Z, len(protomodel.unFrozenParticles()),len(protomodel.masses.keys()),len(protomodel.bestCombo), protomodel.walkerid ) )
 
 def discussBest ( protomodel, detailed ):
     """ a detailed discussion of number 1 """
@@ -542,6 +623,7 @@ def main ( args ):
         ret["Z"]=protomodels[0].Z
         ret["K"]=protomodels[0].K
         ret["Zuntrimmed"]=protomodels[0].Z
+        ret["Kuntrimmed"]=protomodels[0].K
         ret["step"]=protomodels[0].step
         ret["model"]=protomodels[0]
         return ret
