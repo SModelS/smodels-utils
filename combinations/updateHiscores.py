@@ -123,6 +123,9 @@ def main():
             Kold = K
         updateStates()
         time.sleep(60.)
+        if os.path.exists ( Kfile ): ## so we can meddle from outside
+            with open ( Kfile, "rt" ) as f:
+                Kold = float ( f.read().strip() )
 
 if __name__ == "__main__":
     main()
