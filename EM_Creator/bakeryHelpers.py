@@ -13,7 +13,10 @@ sys.path.insert(0,"../../smodels" )
 from smodels.tools.runtime import nCPUs
 
 def dirName ( process, masses ):
-    """ the name of the directory of one process + masses """
+    """ the name of the directory of one process + masses 
+    :param process: e.g. T2_1jet
+    :param masses: tuple or list of masses, e.g. (1000, 800)
+    """
     return process + "." + "_".join(map(str,masses))
 
 def parseMasses ( massstring, mingap1=None, maxgap1=None,
