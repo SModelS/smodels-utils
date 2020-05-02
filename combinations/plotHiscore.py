@@ -47,7 +47,7 @@ def obtain ( number, picklefile ):
         #fcntl.flock( f, fcntl.LOCK_UN )
     Z = hiscores[number].Z
     K = hiscores[number].K
-    print ( "[plotHiscore] obtaining #%d: K=%.3,Z=%.2f" % (number, K, Z ) )
+    print ( "[plotHiscore] obtaining #%d: K=%.3f,Z=%.2f" % (number, K, Z ) )
     return hiscores[ number ]
 
 def gitCommit ( dest, wanted ):
