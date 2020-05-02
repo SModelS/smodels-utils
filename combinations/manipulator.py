@@ -541,7 +541,9 @@ class Manipulator:
                 br = 0.
             ## with some small chance set it to equal another random br
             if a < 0.05:
-                br = self.M.decays[pid][random.choice(list(openChannels))]
+                c = random.choice(list(openChannels))
+                if pid in self.M.decays and c in self.M.decays[pid]:
+                    br = self.M.decays[pid][c]
             self.M.decays[pid][i]=br
             S+=br
         if True: # S > 1.: ## correct for too large sums
