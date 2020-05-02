@@ -91,6 +91,7 @@ class Manipulator:
         :param comment: add a comment field
         """
         D = copy.deepcopy ( self.M.dict() )
+        frozen = self.M.frozenParticles()
         if cleanOut:
             origMasses = self.M.dict()["masses"]
             ## but with a bit of cleaning!
@@ -112,7 +113,12 @@ class Manipulator:
                     else:
                         D["decays"][k][i]=round(v,3)
             for k,v in self.M.dict()["ssmultipliers"].items():
-                if abs ( v - 1.) < 1e-5:
+                ## if any of the pids is frozen, we dont write out
+                hasFrozenPid = False
+                for pid in k:
+                    if abs(pid) in frozen:
+                        hasFrozenPid = True
+                if hasFrozenPid or abs ( v - 1.) < 1e-5:
                     D["ssmultipliers"].pop(k)
                 else:
                     D["ssmultipliers"][k]=round(v,3)
