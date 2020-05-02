@@ -87,7 +87,7 @@ class Scanner:
         masspoints = []
         print ( "[llhdscanner] range for %d: %s" % ( pid1, self.describeRange( rpid1 ) ) )
         print ( "[llhdscanner] range for %d: %s" % ( pid2, self.describeRange( rpid2 ) ) )
-        print ( "[llhdscanner] total %d points, %d events, trimming for %s" % ( len(rpid1)*len(rpid2), nevents, topo ) )
+        print ( "[llhdscanner] total %d points, %d events for %s" % ( len(rpid1)*len(rpid2), nevents, topo ) )
         self.M.createNewSLHAFileName ( prefix="llhd%d" % pid1 )
         self.M.initializePredictor()
         P[0].filterForTopos ( topo )
@@ -227,7 +227,7 @@ def main ():
     args = argparser.parse_args()
     if args.picklefile == "default":
         args.picklefile = "%s/hiscore.pcl" % rundir
-    protomodel, trimmed = obtain ( args.number, args.picklefile )
+    protomodel = obtain ( args.number, args.picklefile )
     scanner = Scanner( protomodel, args.pid1, args.pid2 )
     args = scanner.overrideWithDefaults ( args )
     scanner.scanLikelihoodFor ( args.min1, args.max1, args.deltam1, 

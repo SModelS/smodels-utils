@@ -480,12 +480,7 @@ if __name__ == "__main__":
         print ( "fetching model from %s" % picklefile )
         with open( picklefile,"rb") as f:
             models = pickle.load ( f )
-            trimmed = pickle.load ( f )
-        model = trimmed[0]
-        use="trimmed"
-        if model == None:
-            use="untrimmed"
-            model = models[0]
+        model = models[0]
         print ( "Taking %s model %.2f" % ( use, model.Z ) )
         predictedZ = accelerator.predict ( model )
         print ( " `- predicted value: %.2f" % predictedZ )

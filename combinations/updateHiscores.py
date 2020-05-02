@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """ simple script that perpetually updates hiscore list
-    from H<n>.pcl, and trims leading model """
+    from H<n>.pcl """
 
 import time, types, sys, os
 
@@ -26,8 +26,6 @@ def updateHiscores():
     args.print = True
     args.interactive = False
     args.detailed = False
-    args.trim_branchings = True
-    args.trim = True
     args.fetch = False
     args.analysis_contributions = True
     args.check = False
@@ -50,8 +48,6 @@ def updateStates():
     args.print = True
     args.detailed = False
     args.interactive = False
-    args.trim_branchings = False
-    args.trim = False
     args.fetch = False
     args.analysis_contributions = False
     args.check = False
@@ -100,9 +96,8 @@ def main():
             Kold = float ( f.read().strip() )
     while True:
         i+=1
-        # Z,step,model = updateHiscores( )
         D = updateHiscores( )
-        Z,Zuntrimmed,step,model,K = D["Z"],D["Zuntrimmed"],D["step"],D["model"],D["K"]
+        Z,step,model,K = D["Z"],D["step"],D["model"],D["K"]
         if K > Kold*1.0001:
         #if Z > Zold*1.0001:
             from manipulator import Manipulator
@@ -116,7 +111,7 @@ def main():
             T=str(int(time.time()))
             m.writeDictFile ( "pmodel-%s.py" % T, comment="history keeper" )
             with open ( "%shistory.txt" % rundir, "at" ) as f:
-                f.write ( "%s,step=%d,Z=%.4f,Zuntrimmed=%.4f,K=%.4f,t=%s\n" % ( time.asctime(),step,Z,Zuntrimmed,K,T) )
+                f.write ( "%s,step=%d,Z=%.4f,K=%.4f,t=%s\n" % ( time.asctime(),step,Z,K,T) )
                 f.close()
             plot ( Z, K, rundir )
             Zold = Z

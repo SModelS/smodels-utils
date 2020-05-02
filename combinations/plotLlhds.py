@@ -342,7 +342,7 @@ class LlhdPlot:
             pid1 = self.pid1
         resultsForPIDs = {}
         from plotHiscore import getPIDsOfTPred, obtain
-        protomodel, trimmed = obtain ( 0, self.hiscorefile )
+        protomodel = obtain ( 0, self.hiscorefile )
         for tpred in protomodel.bestCombo:
             resultsForPIDs = getPIDsOfTPred ( tpred, resultsForPIDs, integrateSRs=False )
         stats = self.getAnaStats( integrateSRs=False )

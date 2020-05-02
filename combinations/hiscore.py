@@ -5,7 +5,6 @@
 
 import random, copy, pickle, os, fcntl, time, subprocess, colorama, sys
 import setPath
-from trimmer import Trimmer
 from helpers import rthresholds
 from scipy import stats
 
@@ -33,7 +32,6 @@ class Hiscore:
         self.save_hiscores = save_hiscores
         self.backup = backup ## backup hiscore lists?
         self.nkeep = 3 ## how many do we keep.
-        self.trimmed = [ None ]*self.nkeep
         self.hiscores = [ None ]*self.nkeep
         self.fileAttempts = 0 ## unsucessful attempts at reading or writing
         self.pickleFile = picklefile
@@ -97,15 +95,6 @@ class Hiscore:
 
         Zold = self.globalMaxZ()
         Kold = self.globalMaxK()
-        trimmed = None
-        if m.M.K > Kold and m.M.K > 6.:
-            self.pprint ( "New model with K=%.2,Z=%.2f exceeds global K=%.2,Z=%.2f, invoke trimmer!" % ( m.M.K, m.M.Z, Kold, Zold ) )
-            maxloss=.01
-            nevents=100000
-            trimmer = Trimmer( m.M, "aggressive", maxloss, nevents = nevents )
-            trimmer.trim ( trimbranchings = True )
-            trimmer.computeAnalysisContributions()
-            trimmed = trimmer.M
 
         for i,mi in enumerate(self.hiscores):
             if mi!=None and mi.almostSameAs ( m.M ):
@@ -119,13 +108,11 @@ class Hiscore:
                     self.demote ( i )
                     self.hiscores[i] = copy.deepcopy ( m.M )
                     self.hiscores[i].clean( all=True )
-                    self.trimmed[i] = trimmed
                     break
             if mi==None or m.M.K > mi.K: ## ok, <i>th best result!
                 self.demote ( i )
                 self.hiscores[i] = copy.deepcopy ( m.M )
                 self.hiscores[i].clean( all=True )
-                self.trimmed[i] = trimmed
                 break
 
     def addResultByZ ( self, protomodel ):
@@ -144,15 +131,6 @@ class Hiscore:
 
         Zold = self.globalMaxZ()
         Kold = self.globalMaxK()
-        trimmed = None
-        if m.M.Z > Zold and m.M.Z > 3.:
-            self.pprint ( "New model with Z=%.2f exceeds global Z=%.2f, invoke trimmer!" % ( m.M.Z, Zold ) )
-            maxloss=.01
-            nevents=100000
-            trimmer = Trimmer( m.M, "aggressive", maxloss, nevents = nevents )
-            trimmer.trim ( trimbranchings = True )
-            trimmer.computeAnalysisContributions()
-            trimmed = trimmer.M
 
         for i,mi in enumerate(self.hiscores):
             if mi!=None and mi.almostSameAs ( m.M ):
@@ -166,13 +144,11 @@ class Hiscore:
                     self.demote ( i )
                     self.hiscores[i] = copy.deepcopy ( m.M )
                     self.hiscores[i].clean( all=True )
-                    self.trimmed[i] = trimmed
                     break
             if mi==None or m.M.Z > mi.Z: ## ok, <i>th best result!
                 self.demote ( i )
                 self.hiscores[i] = copy.deepcopy ( m.M )
                 self.hiscores[i].clean( all=True )
-                self.trimmed[i] = trimmed
                 break
 
     def demote ( self, i ):
@@ -181,15 +157,8 @@ class Hiscore:
         for j in range(self.nkeep-1,i,-1):
             m = copy.deepcopy ( self.hiscores[j-1] )
             self.hiscores[j]= m
-            while len(self.trimmed)<=j:
-                self.trimmed.append(None)
-            n = copy.deepcopy ( self.trimmed[j-1] )
-            self.trimmed[j]= n
         if len(self.hiscores)>self.nkeep:
             self.hiscores = self.hiscores[:self.nkeep]
-        if len(self.trimmed)>self.nkeep:
-            self.trimmed = self.trimmed[:self.nkeep]
-        # assert ( len(self.hiscores) == self.nkeep )
 
     def updateListFromPickle ( self ):
         """ fetch the list from the pickle file """
@@ -206,7 +175,6 @@ class Hiscore:
                 try:
                     #fcntl.flock ( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
                     self.hiscores = pickle.load ( f )
-                    self.trimmed = pickle.load ( f )
                     self.timestamp = "?"
                     try:
                         self.timestamp = pickle.load ( f )
@@ -219,15 +187,12 @@ class Hiscore:
                     #fcntl.flock( f, fcntl.LOCK_UN )
                     raise e
             self.mtime = mtime
-            nhs, ntr = 0, 0
+            nhs, = 0
             for i in self.hiscores:
                 if i != None:
                     nhs += 1
-            for v in self.trimmed:
-                if v != None:
-                    ntr += 1
-            self.pprint ( "loaded %d hiscores from %s, and %d trimmed ones." % \
-                          ( nhs, self.pickleFile, ntr ) )
+            self.pprint ( "loaded %d hiscores from %s." % \
+                          ( nhs, self.pickleFile ) )
             # assert ( len(self.hiscores) == self.nkeep )
             self.fileAttempts=0
         except Exception as e:
@@ -240,20 +205,6 @@ class Hiscore:
                 self.pprint ( "Loading hiscores worked this time" )
             else:
                 self.pprint ( "Timed out when try to get hiscores!" )
-
-    def trimprotomodels ( self, n=None, trimbranchings=False, maxloss=.01 ):
-        """ trim the first <n> protomodels in the list """
-        if n == None or n < 0 or n > self.nkeep:
-            n = self.nkeep
-        nevents = 10000
-        for i in range(n):
-            if self.hiscores[i]!=None:
-                trimmer = Trimmer( self.hiscores[i], "aggressive", maxloss,
-                                   nevents = nevents )
-                trimmer.trim( trimbranchings=trimbranchings )
-                while len(self.trimmed)<=i:
-                    self.trimmed.append ( None )
-                self.trimmed[i] = trimmer.M
 
     def clean ( self ):
         """ clean hiscore list, i.e. remove cruft from protomodels.
@@ -292,7 +243,6 @@ class Hiscore:
             with open( pickleFile, "wb" ) as f:
                 fcntl.flock ( f, fcntl.LOCK_EX )
                 pickle.dump ( self.hiscores, f )
-                pickle.dump ( self.trimmed, f )
                 pickle.dump ( time.asctime(), f )
                 fcntl.flock ( f, fcntl.LOCK_UN )
                 f.close()
@@ -362,13 +312,12 @@ class Hiscore:
         with open( logfile, "a" ) as f:
             f.write ( "[hiscore:%d - %s] %s\n" % ( self.walkerid, time.asctime(), " ".join(map(str,args)) ) )
 
-def compileList( nmax, trimmedAlso ):
+def compileList( nmax ):
     """ compile the list from individual hi*pcl 
-    :param trimmedAlso: if True, then compile also list with trimmed models
     """
     import glob
     files = glob.glob ( "H*.pcl" )
-    allprotomodels,alltrimmed=[],[]
+    allprotomodels=[]
     print ( "Loading ", end="", flush=True )
     for ctr,fname in enumerate(files):
         s = "."
@@ -381,9 +330,6 @@ def compileList( nmax, trimmedAlso ):
             with open( fname,"rb+") as f:
                 #fcntl.flock( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
                 protomodels = pickle.load ( f )
-                trimmed = [ None ] *len(protomodels)
-                if trimmedAlso:
-                    trimmed = pickle.load ( f )
                 timestamp = "?"
                 try:
                     timestamp = pickle.load(f)
@@ -393,11 +339,7 @@ def compileList( nmax, trimmedAlso ):
                 ## add protomodels, but without the Nones
                 f.close()
                 allprotomodels += list ( filter ( None.__ne__, protomodels ) )
-                alltrimmed += list ( filter ( None.__ne__, trimmed ) )
                 allprotomodels = sortByK ( allprotomodels )
-                alltrimmed = sortByK ( alltrimmed )
-                #allprotomodels = sortByZ ( allprotomodels )
-                #alltrimmed = sortByZ ( alltrimmed )
         except ( IOError, OSError, FileNotFoundError, EOFError, pickle.UnpicklingError ) as e:
             cmd = "rm -f %s" % fname
             print ( "[hiscore] could not open %s (%s). %s." % ( fname, e, cmd ) )
@@ -406,21 +348,18 @@ def compileList( nmax, trimmedAlso ):
     if nmax > 0:
         while len(allprotomodels)<nmax:
             allprotomodels.append ( None )
-        while len(alltrimmed)<nmax:
-            alltrimmed.append ( None )
-    return allprotomodels, alltrimmed
+    return allprotomodels
 
 def count ( protomodels ):
     return len(protomodels)-protomodels.count(None)
 
-def storeList ( protomodels, trimmed, savefile ):
+def storeList ( protomodels, savefile ):
     """ store the best protomodels in another hiscore file """
     from hiscore import Hiscore
     h = Hiscore ( 0, True, savefile, backup=True )
     h.hiscores = protomodels
-    h.trimmed = trimmed
-    print ( "[hiscore] saving %d protomodels and %d trimmed ones to %s" % \
-            ( count(protomodels),count(trimmed), savefile ) )
+    print ( "[hiscore] saving %d protomodels to %s" % \
+            ( count(protomodels), savefile ) )
     h.save()
 
 def sortByZ ( protomodels ):
@@ -474,15 +413,15 @@ def pprintEvs ( protomodel ):
 def main ( args ):
     """ the function that updates the hiscore.pcl file
     :param args: detailed, outfile, infile, print,
-                 fetch, nmax, maxloss, trim, trim_branchings,
+                 fetch, nmax, maxloss,
                  analysis_contributions, check, interactive,
                  nevents
                  see "if __main__" part below.
-    :returns: { "Z": highest significance, "Zuntrimmed": highest untrimmed significance,
+    :returns: { "Z": highest significance,
                 "step": step, "model": model, "K": bayesian_K  }
     """
 
-    ret =  { "Z": 0., "Zuntrimmed": 0., "step": 0, "model": None, "K": -100. }
+    ret =  { "Z": 0., "step": 0, "model": None, "K": -100. }
 
     if args.detailed:
         args.print = True
@@ -506,13 +445,12 @@ def main ( args ):
         print ( out )
 
     if infile is None:
-        protomodels,trimmed = compileList( args.nmax, args.trim ) ## compile list from H<n>.pcl files
+        protomodels = compileList( args.nmax ) ## compile list from H<n>.pcl files
     else:
         with open(infile,"rb+") as f:
             try:
                 #fcntl.flock( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
                 protomodels = pickle.load ( f )
-                trimmed = pickle.load ( f )
                 timestamp="?"
                 try:
                     timestamp = pickle.load ( f )
@@ -532,109 +470,66 @@ def main ( args ):
 
     triZ=-.0001
     triK=-10.
-    if trimmed[0] != None:
-        triZ = trimmed[0].Z
-        triK = trimmed[0].K
         
     sin = infile
     if sin == None:
         sin = "H*.pcl"
-    triHS = "no trimmed hiscores found in files."
-    hasTrimmedModel = ( triZ > 0.)
-    if hasTrimmedModel:
-        triHS = "trimmed hiscore is at K=%.3f, Z=%.3f." % ( triK, triZ )
     pevs = pprintEvs ( protomodels[0] )
-    print ( "[hiscore] untrimmed hiscore from %s[%d] is at K=%.3f,Z=%.3f (%s), %s" % \
-            ( sin, protomodels[0].walkerid, protomodels[0].K, protomodels[0].Z, pevs, triHS ) ) 
+    print ( "[hiscore] hiscore from %s[%d] is at K=%.3f,Z=%.3f (%s)" % \
+            ( sin, protomodels[0].walkerid, protomodels[0].K, protomodels[0].Z, pevs ) ) 
 
     nevents = args.nevents
 
-    if not hasTrimmedModel and args.trim:
-        print ( "[hiscore] need to trim now" )
-        produceNewSLHAFileNames ( protomodels )
-        produceNewSLHAFileNames ( trimmed, prefix="tri" )
-        
-        protomodel = protomodels[0]
-        tr = Trimmer ( protomodel, maxloss=args.maxloss, nevents = nevents )
-        tr.trim( args.trim_branchings )
-        trimmed[0] = tr.M
-
-
     if args.analysis_contributions:
         protomodel = protomodels[0]
-        useTrimmed = False
-        if len(trimmed)>0 and trimmed[0] is not None:
-            useTrimmed = True
-            protomodel = trimmed[0]
         if not hasattr ( protomodel, "contributions" ):
-            tr = Trimmer ( protomodel, maxloss = args.maxloss, nevents = nevents )
-            protomodel = tr.computeAnalysisContributions ()
-            if useTrimmed:
-                trimmed[0] = protomodel
-            else:
-                protomodels[0] = protomodel
+            from manipulator import Manipulator
+            ma = Manipulator ( protomodels[0] )
+            protomodel = ma.computeAnalysisContributions ()
+            protomodels[0] = protomodel
 
     if args.nmax > 0:
         protomodels = protomodels[:args.nmax]
-        trimmed = trimmed[:args.nmax]
 
     if args.outfile is not None:
-        storeList ( protomodels, trimmed, args.outfile )
+        storeList ( protomodels, args.outfile )
 
     if args.check:
         protomodel = protomodels[0]
-        if len(trimmed)>0 and trimmed[0] is not None:
-            protomodel = trimmed[0]
-        tr = Trimmer ( protomodel, maxloss = args.maxloss, nevents = nevents )
-        tr.checkZ()
+        protomodel.predict()
+        print ( "[hiscore] args.check, implement" )
 
     if args.print:
-        printProtoModels ( trimmed, args.detailed, args.nmax )
+        printProtoModels ( protomodels, args.detailed, args.nmax )
 
     if args.interactive:
         import manipulator
-        if len(trimmed)>0 and trimmed[0] != None:
-            tr = Trimmer ( trimmed[0], maxloss = args.maxloss, nevents = nevents )
-            ma = manipulator.Manipulator ( trimmed[0] )
-        print ( "[hiscore] starting interactive session. Variables: %sprotomodels, trimmed%s" % \
+        ma = manipulator.Manipulator ( protomodels[0] )
+        print ( "[hiscore] starting interactive session. Variables: %sprotomodels%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        print ( "[hiscore]                                 Modules: %strimmer, manipulator, hiscore, combiner%s" % \
+        print ( "[hiscore]                                 Modules: %smanipulator, hiscore, combiner%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        print ( "[hiscore]                          Instantiations: %str, ma, co%s" % \
+        print ( "[hiscore]                          Instantiations: %sma, co%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        import trimmer
         import combiner
         co = combiner.Combiner()
         import hiscore
         import IPython
         IPython.embed()
 
-    if len(trimmed)>0 and trimmed[0] != None:
-        ret["Z"]=trimmed[0].Z
-        ret["K"]=trimmed[0].K
-        if len(protomodels)>0 and protomodels[0] != None:
-            ret["Zuntrimmed"]=protomodels[0].Z
-            ret["Kuntrimmed"]=protomodels[0].K
-        ret["step"]=trimmed[0].step
-        ret["model"]=trimmed[0]
-        return ret
-        # return float(trimmed[0].Z),trimmed[0].step,trimmed[0]
     if len(protomodels)>0 and protomodels[0] != None:
         ret["Z"]=protomodels[0].Z
         ret["K"]=protomodels[0].K
-        ret["Zuntrimmed"]=protomodels[0].Z
-        ret["Kuntrimmed"]=protomodels[0].K
         ret["step"]=protomodels[0].step
         ret["model"]=protomodels[0]
         return ret
-        # eturn float(protomodels[0].Z),protomodels[0].step,protomodels[0]
     return ret
 
 if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(
             description='hiscore class. as a commandline tool it allows for '
-                        'merging, trimming, printing, and checking of hiscore list' )
+                        'merging, printing, and checking of hiscore list' )
     argparser.add_argument ( '-i', '--infile',
             help='Specify the input pickle file to start with. If none, start with H<n>.pcl. [None]',
             type=str, default=None )
@@ -647,9 +542,6 @@ if __name__ == "__main__":
     argparser.add_argument ( '-e', '--nevents',
             help='maximum number of entries to store [50000]',
             type=int, default=50000 )
-    argparser.add_argument ( '-m', '--maxloss',
-            help='maximum loss as a fraction that we allow in trimming [.005]',
-            type=float, default=.005 )
     argparser.add_argument ( '-c', '--check',
             help='check if we can reproduce Z value of first entry',
             action="store_true" )
@@ -658,11 +550,6 @@ if __name__ == "__main__":
             action="store_true" )
     argparser.add_argument ( '-f', '--fetch',
             help='fetch H<n>.pcl from gpu server',
-            action="store_true" )
-    argparser.add_argument ( '-t', '--trim',
-            help='trim leading protomodel, but only particles', action="store_true" )
-    argparser.add_argument ( '-T', '--trim_branchings',
-            help='trim leading protomodel, also branchings',
             action="store_true" )
     argparser.add_argument ( '-p', '--print',
             help='print list to stdout', action="store_true" )

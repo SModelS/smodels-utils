@@ -37,10 +37,10 @@ def getHiscore( force_copy = False ):
              ( picklefile, hostname ) )
     hi = hiscore.Hiscore( walkerid=0, save_hiscores=False,
                           picklefile = picklefile )
-    Z=0.
-    if len(hi.trimmed)>0 and hi.trimmed[0] != None:
-        Z=hi.trimmed[0].Z
-    print ( "[scanner] done retrieving hiscore object, highest at %.2f" % Z )
+    Z=hi.protomodels[0].Z
+    K=hi.protomodels[0].K
+    print ( "[scanner] done retrieving hiscore object, highest at K=%.2,Z=%.2f" % \
+             (K, Z ) )
     return hi
 
 def predProcess ( args ):
@@ -143,9 +143,9 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
         for p in pid:
             produce ( hi, p, nevents, dryrun, nproc, fac )
         return
-    model = hi.trimmed[0]
+    model = hi.protomodels[0]
     if model == None:
-        print ( "[scanner] cannot find a trimmed model in %s" % hi.pickleFile )
+        print ( "[scanner] cannot find a model in %s" % hi.pickleFile )
     mass = model.masses[pid]
     if mass > 9e5:
         print ( "mass %d too high. Wont produce." % mass )
@@ -192,7 +192,7 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
     :param nproc: number of processes
     :param fac: factor with which to multiply interval
     """
-    model = hi.trimmed[0]
+    model = hi.protomodels[0]
     pids = ( pid1, pid2 )
     if pid2 < pid1:
         pids = ( pid2, pid1 )

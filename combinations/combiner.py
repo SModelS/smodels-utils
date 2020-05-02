@@ -227,6 +227,7 @@ class Combiner:
         """ obtain the significance of this combo
         :param expected: get the expected significance, not observed
         :param mumax: maximum muhat before we run into exclusions
+        :returns: Z (significance) and muhat ( signal strength multiplier that maximizes Z)
         """
         if len(combo)==0.:
             return 0.,0.
@@ -249,15 +250,9 @@ class Combiner:
             self.error ( "likelihood for muhat was 0. Set to 1e-80, muhat was %s" % muhat )
             LH1 = 1e-80
         chi2 = 2 * ( math.log ( LH1 ) - math.log ( LH0 ) ) ## chi2 with one degree of freedom
-        # p = 1 - stats.chi2.cdf ( chi2, 1. )
-        # Z = stats.norm.ppf ( p )
         if chi2 < 0.:
             chi2 = 0.
         Z = numpy.sqrt ( chi2 )
-        # self.pprint ( "chi2,Z=", chi2, Z )
-        ## FIXME compute significance from chi2
-        #if Z > 29.:
-        # self.pprint ( "I just computed the significance. It is %.2f, muhat=%.2f. lh1=%g, lh0=%g" % (Z, muhat, LH1, LH0 ) )
         return Z, muhat
 
     def _findLargestZ ( self, combinations, expected=False, mumax=None ):
@@ -354,7 +349,8 @@ class Combiner:
         :param nll: if true, compute nll of prior
         :returns: *proper* prior
         """
-        improper = numpy.exp ( -(1/2) * ( (nparticles/2)**2 + (nbranchings/8)**2 + (nssms/32)**2/40 ) ) 
+        a,b,c = 2, 8, 32 ## the "sigmas" of the Gaussians. Higher values means less punishment
+        improper = numpy.exp ( -(1/2) * ( (nparticles/a)**2 + (nbranchings/b)**2 + (nssms/c)**2/40 ) ) 
         # improper = numpy.exp ( -(1/10) * ( nparticles**2 + nbranchings**1 + nssms**(.5) ) ) 
         # improper = (1+nparticles)**(-1) * (1+nbranchings)**(-.5) * (1+nssms)**(-.25)
         if C == None:
@@ -402,6 +398,10 @@ class Combiner:
         if nll:
             return - math.log ( ret )
         return ret
+
+    def computeK ( self, Z, prior ):
+        """ compute K from Z and prior (simple) """
+        return Z**2 + 2* numpy.log ( prior )
 
     def findHighestSignificance ( self, predictions, strategy, expected=False, 
                                   mumax = None ):

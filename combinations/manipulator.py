@@ -14,6 +14,62 @@ class Manipulator:
         self.M = copy.copy ( protomodel  ) # shallow copy
         self.strategy = strategy
 
+    def computeAnalysisContributions ( self ):
+        """ compute the contributions to Z of the individual analyses 
+        :returns: the model with the analysic constributions attached as
+                  .contributions
+        """
+        from smodels.tools import runtime
+        from combiner import Combiner
+        self.pprint ( "Now computing analysis contributions" )
+        self.pprint ( "step 1: Recompute the score. Old one at K=%.2f, Z=%.2f" % \
+                      ( self.M.K, self.M.Z ) )
+        self.M.createNewSLHAFileName ( prefix="acc" )
+        origZ = self.M.Z # to be sure
+        origK = self.M.K # to be sure
+        self.M.Z = -23.
+        self.M.K = -30.
+        hasPred = self.M.predict( strategy=self.strategy, nevents=self.M.nevents,
+                                  check_thresholds = False )
+        if not hasPred:
+            self.pprint ( "I dont understand, why do I not get a pred anymore? r=%.2f" % ( self.M.rmax ) )
+        self.pprint ( "K=%.2f, Z=%.2f, old Z=%.2f, %d predictions, has a pred? %d, experimental=%d" % ( self.M.K, self.M.Z, origZ, len(self.M.bestCombo), hasPred, runtime._experimental ) )
+        if origZ > 0. and abs ( origZ - self.M.Z ) / origZ > 0.001:
+            self.pprint  ( "error!! Zs do not match! Should not save" )
+        contributions = {}
+        contributionsK = {}
+        combiner = Combiner()
+        dZtot, dKtot = 0., 0.
+        bestCombo = copy.deepcopy ( self.M.bestCombo )
+        for ctr,pred in enumerate(bestCombo):
+            combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:] 
+            Z, muhat_ = combiner.getSignificance ( combo )
+            prior = combiner.computePrior ( self.M )
+            K = combiner.computeK ( Z, prior )
+            dZ = origZ - Z
+            dK = origK - K
+            dZtot += dZ
+            dKtot += dK
+            contributions[ ctr ] = Z
+            contributionsK [ ctr ] = K
+        for k,v in contributionsK.items():
+            perc = (origK-v) / dKtot
+            self.pprint ( "without %s(%s) we get K=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
+            contributionsK[ k ] = perc
+        """
+        for k,v in contributions.items():
+            perc = (origZ-v) / dZtot
+            self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
+            contributions[ k ] = perc
+        """
+        contrsWithNames = {}
+        #for k,v in contributions.items():
+        for k,v in contributionsK.items():
+            contrsWithNames [ self.M.bestCombo[k].analysisId() ] = v
+        self.M.contributions = contrsWithNames
+        self.pprint ( "stored %d contributions" % len(contributions) )
+        return self.M
+
     def predict ( self ):
         nevents = 20000
         if self.M.Z > 2.5:

@@ -24,10 +24,9 @@ def setup():
         return rundir
     return ""
 
-def obtain ( number, picklefile, untrimmedOnly=False ):
+def obtain ( number, picklefile ):
     """ obtain hiscore number <number> 
-    :param untrimmedOnly: if true, consider only untrimmed
-    :returns: model,flag flag is True if model is Trimmed
+    :returns: model
     """
     if not os.path.exists ( picklefile ):
         print ( "[plotHiscore] %s does not exist. Trying to produce now with ./hiscore.py" % picklefile )
@@ -38,8 +37,6 @@ def obtain ( number, picklefile, untrimmedOnly=False ):
         args.outfile = "hiscore.pcl"
         args.infile = picklefile
         args.fetch = False
-        args.trim_branchings = True
-        args.trim = True
         args.maxloss = 0.005
         import hiscore
         hiscore.main ( args )
@@ -47,15 +44,11 @@ def obtain ( number, picklefile, untrimmedOnly=False ):
     with open( picklefile,"rb" ) as f:
         #fcntl.flock( f, fcntl.LOCK_EX )
         hiscores = pickle.load ( f )
-        trimmed = pickle.load ( f )
         #fcntl.flock( f, fcntl.LOCK_UN )
-    if (not untrimmedOnly) and number < len(trimmed) and trimmed[number] is not None:
-        Z = trimmed[number].Z
-        print ( "[plotHiscore] obtaining trimmed protomodel #%d: Z=%.2f (%d particles)" % (number, Z, len ( trimmed[number].unFrozenParticles() ) ) )
-        return trimmed[number],True
     Z = hiscores[number].Z
-    print ( "[plotHiscore] obtaining untrimmed #%d: Z=%.2f" % (number, Z ) )
-    return hiscores[ number ],False
+    K = hiscores[number].K
+    print ( "[plotHiscore] obtaining #%d: K=%.3,Z=%.2f" % (number, K, Z ) )
+    return hiscores[ number ]
 
 def gitCommit ( dest, wanted ):
     """ if wanted, then git commit and git push to smodels.githuib.io """
@@ -209,7 +202,7 @@ def writeTex ( protomodel, keep_tex ):
         #whatifs+= ", ".join ( tok )
         whatifs+="$"
     else:
-        print ( "[plotHiscore] protomodel has no ``whatif'' defined (did you use an untrimmed protomodel?)" )
+        print ( "[plotHiscore] protomodel has no ``whatif'' defined." )
 
     import tex2png
     src = getExtremeSSMs ( ssm, largest=True, nm = 7 )
@@ -232,10 +225,8 @@ def writeTex ( protomodel, keep_tex ):
         print ( "[plotHiscore] Exception when latexing: %s" % e )
     return src
 
-def writeIndexTex ( protomodel, gotTrimmed, untrimmedZ, texdoc ):
+def writeIndexTex ( protomodel, texdoc ):
     """ write the index.tex file
-    :param gotTrimmed: is the model a trimmed model?
-    :param untrimmedZ: if got trimmed, list also the untrimmed Z
     :param texdoc: the source that goes into texdoc.png
     """
     ssm = []
@@ -250,13 +241,8 @@ def writeIndexTex ( protomodel, gotTrimmed, untrimmedZ, texdoc ):
     if hasattr ( protomodel, "dbversion" ):
         dbver = protomodel.dbversion
         dotlessv = dbver.replace(".","")
-    trimmed="Untrimmed"
-    if gotTrimmed:
-        trimmed = "Trimmed"
     f.write ( " it was produced with database v%s, combination strategy %s in step %d." % \
             ( dotlessv, strategy, protomodel.step ) )
-    if gotTrimmed and untrimmedZ > 0.:
-        f.write ( " Z of the untrimmed \\protomodel was %.2f." % untrimmedZ )
     f.write ( "\n" )
     if hasattr ( protomodel, "rvalues" ):
         rvalues=protomodel.rvalues
@@ -313,11 +299,9 @@ def writeIndexTex ( protomodel, gotTrimmed, untrimmedZ, texdoc ):
     print ( "[plotHiscore] Wrote index.tex" )
 
 
-def writeIndexHtml ( protomodel, gotTrimmed, untrimmedZ=0. ):
+def writeIndexHtml ( protomodel ):
     """ write the index.html file, see e.g.
         https://smodels.github.io/protomodels/
-    :param gotTrimmed: is the model a trimmed model?
-    :param keep_tex: keep tex files
     """
     ssm = []
     for k,v in protomodel.ssmultipliers.items():
@@ -335,13 +319,8 @@ def writeIndexHtml ( protomodel, gotTrimmed, untrimmedZ=0. ):
     if hasattr ( protomodel, "dbversion" ):
         dbver = protomodel.dbversion
         dotlessv = dbver.replace(".","")
-    trimmed="Untrimmed"
-    if gotTrimmed:
-        trimmed = "Trimmed"
-    f.write ( "%s <b><a href=./hiscore.slha>ProtoModel</a> <a href=./pmodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d.</b>" % \
-            ( trimmed, dotlessv, dbver, strategy, strategy, protomodel.step ) )
-    if gotTrimmed and untrimmedZ > 0.:
-        f.write ( " Z(untrimmed)=%.2f.<br>\n" % untrimmedZ )
+    f.write ( "<b><a href=./hiscore.slha>ProtoModel</a> <a href=./pmodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d.</b>" % \
+            ( dotlessv, dbver, strategy, strategy, protomodel.step ) )
     if hasattr ( protomodel, "whatif" ):
         f.write ( "Z plots for: <a href=./M1000022.png>%s</a>" % helpers.toHtml(1000022) )
         for k,v in protomodel.whatif.items():
@@ -490,9 +469,7 @@ def plotDecays ( protomodel, verbosity, outfile="decays.png" ):
 
 def plot ( number, verbosity, picklefile, options ):
     ## plot hiscore number "number"
-    protomodel, trimmed = obtain ( number, picklefile )
-    #print ( "[plotHiscore] create slha file. trimmed? ", trimmed )
-    #print ( "[plotHiscore] masses", protomodel.masses )
+    protomodel = obtain ( number, picklefile )
     if hasattr ( protomodel, "currentSLHA" ):
         del protomodel.currentSLHA 
     # protoslha = protomodel.createSLHAFile ( nevents=100000 )
@@ -514,23 +491,14 @@ def plot ( number, verbosity, picklefile, options ):
     if plotdecays:
         plotDecays ( protomodel, verbosity )
 
-    if plotdecays and options["plot_untrimmed"]:
-        untrimmed, _ = obtain ( number, picklefile, untrimmedOnly=True )
-        untrimmed.createSLHAFile()
-        plotDecays ( untrimmed, verbosity, outfile="untrimmed_decays.png" )
-
     if options["predictions"]:
         discussPredictions ( protomodel )
     if options["html"] or options["tex"]:
         texdoc = writeTex ( protomodel, options["keep_tex"] )
-        untrimmedZ = 0.
-        if trimmed:
-            untrimmed, _ = obtain ( number, picklefile, True )
-            untrimmedZ = untrimmed.Z
         if options["html"]:
-            writeIndexHtml ( protomodel, trimmed, untrimmedZ )
+            writeIndexHtml ( protomodel )
         if options["tex"]:
-            writeIndexTex( protomodel, trimmed, untrimmedZ, texdoc )
+            writeIndexTex( protomodel, texdoc )
     writeRawNumbersLatex ( protomodel )
     writeRawNumbersHtml ( protomodel )
 
@@ -555,11 +523,8 @@ def runPlotting ( args ):
 
     options = { "ruler": not args.noruler, "decays": not args.nodecays,
                 "predictions": not args.nopredictions, "html": not args.nohtml,
-                "keep_tex": args.keep, "tex": not args.notex, "plot_untrimmed": False }
+                "keep_tex": args.keep, "tex": not args.notex }
     
-    if hasattr ( args, "plot_untrimmed" ):
-        options["plot_untrimmed"] = args.plot_untrimmed
-
     plot ( args.number, args.verbosity, args.picklefile, options )
     if upload is None:
         return
@@ -647,9 +612,6 @@ def main ():
             action="store_true" )
     argparser.add_argument ( '-k', '--keep',
             help='keep latex files',
-            action="store_true" )
-    argparser.add_argument ( '--plot_untrimmed',
-            help='plot untrimmed also',
             action="store_true" )
     argparser.add_argument ( '-u', '--upload',
             help='upload to one of the following destinations: none, gpu, github, anomaly, latest, interesting [none]. run --destinations to learn more', 
