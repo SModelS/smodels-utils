@@ -77,7 +77,7 @@ def plot( Z, K, rundir ):
     args.notex = True
     args.keep = False
     args.commit = False
-    if K > 6.:
+    if K > 5.5:
         args.commit = True
     plotHiscore.runPlotting ( args )
 
