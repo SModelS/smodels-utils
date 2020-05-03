@@ -349,10 +349,11 @@ class Combiner:
         :param nll: if true, compute nll of prior
         :returns: *proper* prior
         """
-        a,b,c = 2, 8, 32 ## the "sigmas" of the Gaussians. Higher values means less punishment
-        improper = numpy.exp ( -(1/2) * ( (nparticles/a)**2 + (nbranchings/b)**2 + (nssms/c)**2/40 ) ) 
+        #a,b,c = 2, 8, 32 ## the "sigmas" of the Gaussians. Higher values means less punishment
+        #improper = numpy.exp ( -(1/2) * ( (nparticles/a)**2 + (nbranchings/b)**2 + (nssms/c)**2 ) ) 
+        a,b,c = 4, 16, 32
+        improper = numpy.exp ( -1 * ( nparticles/a + nbranchings/b + nssms/c ) ) 
         # improper = numpy.exp ( -(1/10) * ( nparticles**2 + nbranchings**1 + nssms**(.5) ) ) 
-        # improper = (1+nparticles)**(-1) * (1+nbranchings)**(-.5) * (1+nssms)**(-.25)
         if C == None:
             C = 0.00106962
         proper = C * improper
