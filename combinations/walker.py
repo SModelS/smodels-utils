@@ -192,6 +192,8 @@ class RandomWalker:
         smaxstp = "%s" % self.maxsteps
         if self.maxsteps < 0:
             smaxstp = "inf"
+        self.log ( "now check for swaps" )
+        self.manipulator.checkSwaps()
         self.log ( "step %d/%s finished." % ( self.protomodel.step, smaxstp ) )
 
     def train ( self ):
