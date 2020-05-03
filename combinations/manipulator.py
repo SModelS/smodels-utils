@@ -528,7 +528,7 @@ class Manipulator:
         pidsnmasses.sort ( key=lambda x: x[1], reverse=True )
         for cpid,(pid,mass) in enumerate(pidsnmasses):
             self.M.backup()
-            self.highlight ( "info", "trying to freeze %s (%.1f): [%d/%d]" % \
+            self.M.highlight ( "info", "computing contribution of %s (%.1f): [%d/%d]" % \
                    ( helpers.getParticleName(pid,addSign=False),
                      self.M.masses[pid],(cpid+1),len(unfrozen) ) )
             oldmass = self.M.masses[pid]
@@ -548,15 +548,14 @@ class Manipulator:
                     self.M.ssmultipliers[dpd]=1. ## setting to 1 is taking out
             # self.createSLHAFile()
             ## when trimming we want to increase statistics
-            self.M.predict ( self.strategy, nevents = self.nevents )
+            self.M.predict ( self.strategy, nevents = self.M.nevents )
             perc = 0.
             if oldZ > 0.:
                 percZ = ( self.M.Z - oldZ ) / oldZ
             if oldK > 0.:
                 percK = ( self.M.K - oldK ) / oldK
-            self.pprint ( "when removing %s, K changed: %.3f -> %.3f, Z changed: %.3f -> %.3f (%d evts, %.1f%s)" % \
-                    ( helpers.getParticleName(pid), oldK, self.M.K, oldZ, self.M.Z, self.nevents, 100.*percZ, "%" ) )
-            ## now restore old state
+            self.pprint ( "when removing %s, K changed: %.3f -> %.3f (%.1f%s), Z: %.3f -> %.3f (%d evts)" % \
+                    ( helpers.getParticleName(pid), oldK, self.M.K, 100.*percK, "%", oldZ, self.M.Z, self.M.nevents ) )
             self.M.whatif[pid]=self.M.K
             self.M.whatifZ[pid]=self.M.Z
             # self.pprint ( "keeping %s" % helpers.getParticleName(pid) )
