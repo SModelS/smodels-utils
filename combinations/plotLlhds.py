@@ -451,7 +451,7 @@ class LlhdPlot:
                       label="proto-model%s" % s )
         if sr == None:
             sr = "UL"
-        plt.title ( "HPD intervals, %s [%s]" % ( toLatex(pid1,True), self.topo ) )
+        plt.title ( "HPD regions, %s [%s]" % ( toLatex(pid1,True), self.topo ) )
         plt.xlabel ( "m(%s) [GeV]" % toLatex(pid1,True) )
         plt.ylabel ( "m(%s) [GeV]" % toLatex(self.pid2,True) )
         plt.legend( loc="upper left" )
