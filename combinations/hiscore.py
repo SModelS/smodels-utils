@@ -192,7 +192,7 @@ class Hiscore:
                     #fcntl.flock( f, fcntl.LOCK_UN )
                     raise e
             self.mtime = mtime
-            nhs, = 0
+            nhs = 0
             for i in self.hiscores:
                 if i != None:
                     nhs += 1
