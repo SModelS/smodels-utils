@@ -166,10 +166,10 @@ def writeTex ( protomodel, keep_tex ):
     :param keep_tex: keep tex source of texdoc.png
     """
     cpids = {}
-    for pids,v in protomodel.ssmultipliers.items():
+    frozen = protomodel.frozenParticles()
+    ssms = getUnfrozenSSMs ( protomodel.ssmultipliers, frozen, False )
+    for pids,v in ssms.items():
         sv = "%.2f" % v
-        if abs(v-1.)<1e-3:
-            continue
         if not sv in cpids:
             cpids[sv]=[]
         cpids[sv].append ( pids )
@@ -298,15 +298,35 @@ def writeIndexTex ( protomodel, texdoc ):
     f.close()
     print ( "[plotHiscore] Wrote index.tex" )
 
+def getUnfrozenSSMs ( ssms, frozen, includeOnes=False ):
+    """ of all SSMs, leave out the ones with frozen particles 
+    :param ssms: dictionary of SSMs
+    :param frozen: list of pids of frozen particles
+    :param includeOnes: if False, then also filter out values close to unity
+    :returns: dictionary of SSMs without frozen particles
+    """
+    D={}
+    for pids,v in ssms.items():
+        hasFrozenParticle = False
+        for pid in pids:
+            if pid in frozen:
+                hasFrozenParticle = True
+        if hasFrozenParticle:
+            continue
+        if not includeOnes and abs(v-1.)<1e-3:
+            continue
+        D[pids]=v
+    return D
+
 
 def writeIndexHtml ( protomodel ):
     """ write the index.html file, see e.g.
         https://smodels.github.io/protomodels/
     """
     ssm = []
-    for k,v in protomodel.ssmultipliers.items():
-        if abs(v-1.)<1e-3:
-            continue
+    frozen = protomodel.frozenParticles()
+    ssms = getUnfrozenSSMs ( protomodel.ssmultipliers, frozen, False )
+    for k,v in ssms.items():
         ssm.append ( "%s: %.2f" % (helpers.getParticleName(k,addSign=True),v) )
     f=open("index.html","w")
     f.write ( "<html>\n" )

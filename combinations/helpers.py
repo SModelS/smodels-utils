@@ -198,6 +198,7 @@ def toHtml ( pid, addM=False, addSign=False ):
     pname = pname.replace("R","<sub>R</sub>" )
     pname = pname.replace("chi","&chi;" )
     pname = pname.replace("mu","&mu;" )
+    pname = pname.replace("tau","&tau;" )
     pname = pname.replace("0","<sup>0</sup>" )
     pname = pname.replace("bar","<sup>*</sup>" )
     return pname
@@ -236,8 +237,8 @@ def toLatex ( pid, addDollars=False, addM=False, addSign=False ):
     rpls = { "~nutau": "\\tilde{\\nu}_{\\tau}", "L": "_{L}", "R": "_{R}", 
              "1": "_{1}", "2": "_{2}", "~nu": "\\tilde{\\nu}", 
              "~nue": "\\tilde{\\nu}_{e}", "~tauL": "\\tilde{\\tau}L",
-             "~numu": "\\tilde{\\nu}_{\\mu}",
-             "bar": "^{*}",
+             "~numu": "\\tilde{\\nu}_{\\mu}", "~tau1": "\\tilde{\\tau}1",
+             "bar": "^{*}", "~tau2": "\\tilde{\\tau}2",
              "~chi": "\\tilde{\\chi}", "~mu": "\\tilde{\\mu}", "+": "^{+}", 
              "3": "_{3}", "0": "^{0}", "-": "^{-}" }
     keys = list ( rpls.keys() )
