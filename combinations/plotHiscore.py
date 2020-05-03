@@ -309,7 +309,7 @@ def getUnfrozenSSMs ( ssms, frozen, includeOnes=False ):
     for pids,v in ssms.items():
         hasFrozenParticle = False
         for pid in pids:
-            if pid in frozen:
+            if pid in frozen or -pid in frozen:
                 hasFrozenParticle = True
         if hasFrozenParticle:
             continue
