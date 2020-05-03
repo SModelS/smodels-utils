@@ -604,7 +604,12 @@ class Manipulator:
                     br = self.M.decays[pid][c]
             self.M.decays[pid][i]=br
             S+=br
-        if True: # S > 1.: ## correct for too large sums
+        if S == 0.: ## all at zero?
+            c = random.choice(list(openChannels))
+            if pid in self.M.decays:
+                self.M.decays[pid][c] = 1.
+                S = 1.
+        if S > 0.: ## correct for too large sums
             for i,v in self.M.decays[pid].items():
                 self.M.decays[pid][i] = v / S
             S = 1.
