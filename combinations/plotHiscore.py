@@ -354,12 +354,24 @@ def writeIndexHtml ( protomodel ):
             f.write ( "<a href=./llhd%d.png>%s</a>" % ( k, helpers.toHtml(k) ) )
             first = False
     # fixme replace with some autodetection mechanism
-    ssms = { (-1000006,1000006), (1000021,1000021), (-2000006,2000006) }
+    ossms = { (-1000006,1000006), (1000021,1000021), (-2000006,2000006) }
     for fname in glob.glob("ssm_*_*.png" ):
         pids = fname.replace("ssm_","").replace(".png","")
         pids = tuple ( map ( int, pids.split("_") ) )
-        # print ( "pids", pids )
-        ssms.add ( pids )
+        ossms.add ( pids )
+    frozen = protomodel.frozenParticles()
+    # take out all frozen ssm plots
+    ssms = set()
+    for pids in ossms:
+        hasFrozenPid=False
+        for pid in pids:
+            if pid in frozen or -pid in frozen:
+                hasFrozenPid = True
+                break
+        if not hasFrozenPid:
+            ssms.add ( pids )
+            
+
     f.write ( ". SSM plots for: " )
     first = True
     for pids in ssms:
