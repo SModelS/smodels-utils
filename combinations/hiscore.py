@@ -176,7 +176,7 @@ class Hiscore:
             return
 
         try:
-            with open( self.pickleFile,"rb+") as f:
+            with open( self.pickleFile,"rb") as f:
                 try:
                     #fcntl.flock ( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
                     self.hiscores = pickle.load ( f )
@@ -204,7 +204,7 @@ class Hiscore:
         # except OSError or BlockingIOError or EOFError or pickle.UnpicklingError or TypeError as e:
             self.fileAttempts+=1
             if self.fileAttempts<20: # try again
-                self.pprint ( "Exception %s: Waiting for %s file, %d" % (str(e),self.pickleFile,self.fileAttempts) )
+                self.pprint ( "Exception[X] %s: type(%s), Waiting for %s file, %d" % (str(e),type(e),self.pickleFile,self.fileAttempts) )
                 time.sleep ( (.2 + random.uniform(0.,1.))*self.fileAttempts )
                 self.updateListFromPickle()
                 self.pprint ( "Loading hiscores worked this time" )
@@ -418,7 +418,7 @@ def pprintEvs ( protomodel ):
 def main ( args ):
     """ the function that updates the hiscore.pcl file
     :param args: detailed, outfile, infile, print,
-                 fetch, nmax, maxloss,
+                 fetch, nmax,
                  analysis_contributions, check, interactive,
                  nevents
                  see "if __main__" part below.
@@ -452,9 +452,8 @@ def main ( args ):
     if infile is None:
         protomodels = compileList( args.nmax ) ## compile list from H<n>.pcl files
     else:
-        with open(infile,"rb+") as f:
+        with open(infile,"rb") as f:
             try:
-                #fcntl.flock( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
                 protomodels = pickle.load ( f )
                 timestamp="?"
                 try:
@@ -465,9 +464,7 @@ def main ( args ):
             except (BlockingIOError,OSError) as e:
                 print ( "file handling error on %s: %s" % ( infile, e ) )
                 ## make sure we dont block!
-                #fcntl.flock( f, fcntl.LOCK_UN )
                 raise e
-            #fcntl.flock( f, fcntl.LOCK_UN )
 
     if protomodels[0] == None:
         print ( "[hiscore] error, we have an empty hiscore list" )

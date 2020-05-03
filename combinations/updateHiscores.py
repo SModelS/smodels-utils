@@ -32,7 +32,7 @@ def updateHiscores():
     args.nmax = 1
     args.outfile = "hiscore.pcl"
     args.infile = None
-    args.maxloss = .01
+    # args.maxloss = .01
     args.nevents = 50000
     import hiscore
     import socket
@@ -54,7 +54,7 @@ def updateStates():
     args.nmax = 20
     args.outfile = "states.pcl"
     args.infile = None
-    args.maxloss = .003
+    # args.maxloss = .003
     args.nevents = 50000
     import hiscore
     print ( "[updateHiscores] now update the states.pcl file" )
@@ -124,3 +124,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    #updateStates()
