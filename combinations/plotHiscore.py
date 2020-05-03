@@ -122,7 +122,7 @@ def writeRawNumbersHtml ( protomodel ):
             f.write ( "<td>%s</td><td>%s</td><td>%s +/- %s</td></tr>\n" % \
                       ( did, dI.observedN, eBG, bgErr ) )
         if dtype == "upperLimit":
-            f.write ( "<td> %.1f fb </td><td> %.1f fb <td></td></tr>\n" % ( tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb) ) )
+            f.write ( "<td>-</td><td> %.1f fb </td><td> %.1f fb <td></td></tr>\n" % ( tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb) ) )
     f.write("</table>\n" )
     f.close()
 
