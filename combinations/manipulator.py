@@ -506,6 +506,65 @@ class Manipulator:
         self.M.log ( "changing signal strength multiplier of %s,%s: %.2f." % (helpers.getParticleName(pair[0]), helpers.getParticleName(pair[1]), newSSM ) )
         return 1
 
+    def computeWhatifs ( self ):
+        """ this function sequentially removes all particles to compute
+            their contributions to K """
+        from smodels.tools import runtime
+        runtime._experimental = True
+        unfrozen = self.M.unFrozenParticles( withLSP=False )
+        ndiscarded=0
+        oldZ = self.M.Z
+        oldK = self.M.K
+        self.M.whatif = {} ## save the scores for the non-discarded particles.
+        self.M.whatifZ = {} ## save the scores for the non-discarded particles, Zs
+        ## aka: what would happen to the score if I removed particle X?
+        frozen = self.M.frozenParticles()
+        for pid in frozen:
+            ## remove ssmultipliers for frozen particles
+            if pid in self.M.ssmultipliers:
+                self.M.ssmultipliers.pop(pid)
+            self.M.masses[pid]=1e6 ## renormalize
+        pidsnmasses = [ (x,self.M.masses[x]) for x in unfrozen ]
+        pidsnmasses.sort ( key=lambda x: x[1], reverse=True )
+        for cpid,(pid,mass) in enumerate(pidsnmasses):
+            self.M.backup()
+            self.highlight ( "info", "trying to freeze %s (%.1f): [%d/%d]" % \
+                   ( helpers.getParticleName(pid,addSign=False),
+                     self.M.masses[pid],(cpid+1),len(unfrozen) ) )
+            oldmass = self.M.masses[pid]
+            self.M.masses[pid]=1e6
+            ## also branchings need to be taken out.
+            olddecays = copy.deepcopy ( self.M.decays ) ## keep a copy of all, is easier
+            for dpid,decays in self.M.decays.items():
+                if pid in decays.keys():
+                    br = 1. - decays[pid] ## need to correct for what we loose
+                    if br > 0.: # if the branching is only to this guy, we cannot take it out
+                        self.M.decays[dpid].pop(pid)
+                        for dp_,dbr_ in self.M.decays[dpid].items():
+                            self.M.decays[dpid][dp_] = self.M.decays[dpid][dp_] / br
+            ## and signal strength multipliers, take them out also
+            for dpd,v in self.M.ssmultipliers.items():
+                if dpid in dpd or -dpid in dpd:
+                    self.M.ssmultipliers[dpd]=1. ## setting to 1 is taking out
+            # self.createSLHAFile()
+            ## when trimming we want to increase statistics
+            self.M.predict ( self.strategy, nevents = self.nevents )
+            perc = 0.
+            if oldZ > 0.:
+                percZ = ( self.M.Z - oldZ ) / oldZ
+            if oldK > 0.:
+                percK = ( self.M.K - oldK ) / oldK
+            self.pprint ( "when removing %s, K changed: %.3f -> %.3f, Z changed: %.3f -> %.3f (%d evts, %.1f%s)" % \
+                    ( helpers.getParticleName(pid), oldK, self.M.K, oldZ, self.M.Z, self.nevents, 100.*percZ, "%" ) )
+            ## now restore old state
+            self.M.whatif[pid]=self.M.K
+            self.M.whatifZ[pid]=self.M.Z
+            # self.pprint ( "keeping %s" % helpers.getParticleName(pid) )
+            self.M.masses[pid]=oldmass
+            self.M.decays = olddecays
+            self.M.restore()
+        # self.pprint ( "discarded %d/%d particles." % ( ndiscarded, len(pidsnmasses) ) )
+
     def randomlyChangeBranchingOfPid ( self, pid ):
         """ randomly change the branching a particle pid """
         openChannels = set()

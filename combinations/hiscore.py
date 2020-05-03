@@ -96,6 +96,11 @@ class Hiscore:
         Zold = self.globalMaxZ()
         Kold = self.globalMaxK()
 
+        if m.M.K > Kold:
+            ## we have a new hiscore?
+            ## compute the whatifs!
+            m.M.computeWhatifs()
+
         for i,mi in enumerate(self.hiscores):
             if mi!=None and mi.almostSameAs ( m.M ):
                 ### this m.M is essentially the m.M in hiscorelist.
@@ -116,7 +121,7 @@ class Hiscore:
                 break
 
     def addResultByZ ( self, protomodel ):
-        """ add a result to the list, old version, 
+        """ add a result to the list, old version,
             sort by Z """
         import manipulator
         m = manipulator.Manipulator ( protomodel )
@@ -313,7 +318,7 @@ class Hiscore:
             f.write ( "[hiscore:%d - %s] %s\n" % ( self.walkerid, time.asctime(), " ".join(map(str,args)) ) )
 
 def compileList( nmax ):
-    """ compile the list from individual hi*pcl 
+    """ compile the list from individual hi*pcl
     """
     import glob
     files = glob.glob ( "H*.pcl" )
@@ -470,13 +475,13 @@ def main ( args ):
 
     triZ=-.0001
     triK=-10.
-        
+
     sin = infile
     if sin == None:
         sin = "H*.pcl"
     pevs = pprintEvs ( protomodels[0] )
     print ( "[hiscore] hiscore from %s[%d] is at K=%.3f,Z=%.3f (%s)" % \
-            ( sin, protomodels[0].walkerid, protomodels[0].K, protomodels[0].Z, pevs ) ) 
+            ( sin, protomodels[0].walkerid, protomodels[0].K, protomodels[0].Z, pevs ) )
 
     nevents = args.nevents
 
