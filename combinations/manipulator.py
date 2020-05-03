@@ -549,7 +549,7 @@ class Manipulator:
             # self.createSLHAFile()
             ## when trimming we want to increase statistics
             self.M.predict ( self.strategy, nevents = self.M.nevents )
-            perc = 0.
+            percZ, percK = 0., 0.
             if oldZ > 0.:
                 percZ = ( self.M.Z - oldZ ) / oldZ
             if oldK > 0.:
