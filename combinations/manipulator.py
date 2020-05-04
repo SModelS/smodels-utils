@@ -64,7 +64,7 @@ class Manipulator:
         for k,v in contributionsZ.items():
             contrsWithNames [ self.M.bestCombo[k].analysisId() ] = v
         self.M.analysisContributions = contrsWithNames
-        self.pprint ( "stored %d contributions" % len(contributions) )
+        self.pprint ( "stored %d contributions" % len(contributionsZ) )
         return self.M
 
     def predict ( self ):
