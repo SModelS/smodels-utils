@@ -63,7 +63,7 @@ class Manipulator:
         contrsWithNames = {}
         for k,v in contributionsZ.items():
             contrsWithNames [ self.M.bestCombo[k].analysisId() ] = v
-        self.M.contributions = contrsWithNames
+        self.M.analysisContributions = contrsWithNames
         self.pprint ( "stored %d contributions" % len(contributions) )
         return self.M
 

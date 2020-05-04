@@ -261,7 +261,8 @@ def writeIndexTex ( protomodel, texdoc ):
     else:
         print ( "[plotHiscore] protomodel has no r values!" )
 
-    if hasattr ( protomodel, "contributions" ):
+    if hasattr ( protomodel, "contributions" ) or \
+            hasattr ( protomodel, "analysisContributions" ):
         print ( "[plotHiscore] contributions-per-analysis are defined" )
         # f.write ( "Contributions per analysis:\n\\begin{itemize}[noitemsep,nolistsep]\n" )
         f.write ( "Contributions per analysis:\n" )
@@ -271,7 +272,11 @@ def writeIndexTex ( protomodel, texdoc ):
         f.write ( "\\bf{Analysis Name} & \\bf{Contribution} \\\\\n" )
         f.write ( "\\hline\n" )
         conts = []
-        for k,v in protomodel.contributions.items():
+        if hasattr ( protomodel, "contributions" ):
+            contributions = protomodel.contributions.items()
+        else:
+            contributions = protomodel.analysisContributions.items()
+        for k,v in contributions:
             conts.append ( ( v, k ) )
         conts.sort( reverse=True )
         for v,k in conts:
