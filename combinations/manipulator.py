@@ -55,11 +55,11 @@ class Manipulator:
         for k,v in contributionsZ.items():
             percZ = (origZ-v) / dZtot
             self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*percZ,"%" ) )
-            contributionsZ[ k ] = perc
+            contributionsZ[ k ] = percZ
         for k,v in contributionsK.items():
             percK = (origK-v) / dKtot
             # self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
-            contributionsK[ k ] = perc
+            contributionsK[ k ] = percK
         contrsWithNames = {}
         for k,v in contributionsZ.items():
             contrsWithNames [ self.M.bestCombo[k].analysisId() ] = v
