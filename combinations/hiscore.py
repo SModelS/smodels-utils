@@ -98,8 +98,8 @@ class Hiscore:
 
         if m.M.K > Kold:
             ## we have a new hiscore?
-            ## compute the whatifs!
-            m.computeWhatifs()
+            ## compute the particle contributions
+            m.computeParticleContributions()
 
         for i,mi in enumerate(self.hiscores):
             if mi!=None and mi.almostSameAs ( m.M ):

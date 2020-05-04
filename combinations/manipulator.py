@@ -36,7 +36,7 @@ class Manipulator:
         self.pprint ( "K=%.2f, Z=%.2f, old Z=%.2f, %d predictions, has a pred? %d, experimental=%d" % ( self.M.K, self.M.Z, origZ, len(self.M.bestCombo), hasPred, runtime._experimental ) )
         if origZ > 0. and abs ( origZ - self.M.Z ) / origZ > 0.001:
             self.pprint  ( "error!! Zs do not match! Should not save" )
-        contributions = {}
+        contributionsZ = {}
         contributionsK = {}
         combiner = Combiner()
         dZtot, dKtot = 0., 0.
@@ -50,21 +50,18 @@ class Manipulator:
             dK = origK - K
             dZtot += dZ
             dKtot += dK
-            contributions[ ctr ] = Z
+            contributionsZ[ ctr ] = Z
             contributionsK [ ctr ] = K
+        for k,v in contributionsZ.items():
+            percZ = (origZ-v) / dZtot
+            self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*percZ,"%" ) )
+            contributionsZ[ k ] = perc
         for k,v in contributionsK.items():
-            perc = (origK-v) / dKtot
-            self.pprint ( "without %s(%s) we get K=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
+            percK = (origK-v) / dKtot
+            # self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
             contributionsK[ k ] = perc
-        """
-        for k,v in contributions.items():
-            perc = (origZ-v) / dZtot
-            self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
-            contributions[ k ] = perc
-        """
         contrsWithNames = {}
-        #for k,v in contributions.items():
-        for k,v in contributionsK.items():
+        for k,v in contributionsZ.items():
             contrsWithNames [ self.M.bestCombo[k].analysisId() ] = v
         self.M.contributions = contrsWithNames
         self.pprint ( "stored %d contributions" % len(contributions) )
@@ -457,13 +454,17 @@ class Manipulator:
         self.normalizeAllBranchings()
         self.removeAllOffshell()
 
-    def randomlyChangeSSOfOneParticle ( self ):
-        """ randomly change the SS's consistently for one random pid """
+    def randomlyChangeSSOfOneParticle ( self, pid = None ):
+        """ randomly change the SS's consistently for one pid
+        :param pid: change for this pid. If None, change of a random pid.
+        """
         unfrozenparticles = self.M.unFrozenParticles( withLSP=False )
         if len(unfrozenparticles)<2:
             self.M.pprint ( "not enough unfrozen particles to change random signal strength" )
             return 0
         p = random.choice ( unfrozenparticles )
+        if pid != None:
+            p = pid
         a = random.uniform ( 0., 1. )
         if a > .8: ## sometimes, just knock out a random SSM
             randomProd = random.choice ( list ( self.M.ssmultipliers.keys() ) )
@@ -506,7 +507,7 @@ class Manipulator:
         self.M.log ( "changing signal strength multiplier of %s,%s: %.2f." % (helpers.getParticleName(pair[0]), helpers.getParticleName(pair[1]), newSSM ) )
         return 1
 
-    def computeWhatifs ( self ):
+    def computeParticleContributions ( self ):
         """ this function sequentially removes all particles to compute
             their contributions to K """
         from smodels.tools import runtime
@@ -515,8 +516,8 @@ class Manipulator:
         ndiscarded=0
         oldZ = self.M.Z
         oldK = self.M.K
-        self.M.whatif = {} ## save the scores for the non-discarded particles.
-        self.M.whatifZ = {} ## save the scores for the non-discarded particles, Zs
+        self.M.particleContributions = {} ## save the scores for the non-discarded particles.
+        self.M.particleContributionsZ = {} ## save the scores for the non-discarded particles, Zs
         ## aka: what would happen to the score if I removed particle X?
         frozen = self.M.frozenParticles()
         for pid in frozen:
@@ -556,8 +557,8 @@ class Manipulator:
                 percK = ( self.M.K - oldK ) / oldK
             self.pprint ( "when removing %s, K changed: %.3f -> %.3f (%.1f%s), Z: %.3f -> %.3f (%d evts)" % \
                     ( helpers.getParticleName(pid), oldK, self.M.K, 100.*percK, "%", oldZ, self.M.Z, self.M.nevents ) )
-            self.M.whatif[pid]=self.M.K
-            self.M.whatifZ[pid]=self.M.Z
+            self.M.particleContributions[pid]=self.M.K
+            self.M.particleContributionsZ[pid]=self.M.Z
             # self.pprint ( "keeping %s" % helpers.getParticleName(pid) )
             self.M.masses[pid]=oldmass
             self.M.decays = olddecays

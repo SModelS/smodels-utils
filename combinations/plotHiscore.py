@@ -179,30 +179,30 @@ def writeTex ( protomodel, keep_tex ):
         pname = helpers.toLatex ( pids, addSign = True )
         ssm[v] = pname
 
-    whatifs = ""
-    if hasattr ( protomodel, "whatif" ):
+    particleContributionList = ""
+    if hasattr ( protomodel, "particleContributions" ):
         print ( "[plotHiscore] contributions-by-particle are defined" )
-        #whatifs+="\\\\Contributions by particles: $"
-        whatifs+="\\\\"
-        whatifs+="Contributions by particles: $"
+        #particleContributionList+="\\\\Contributions by particles: $"
+        particleContributionList+="\\\\"
+        particleContributionList+="Contributions by particles: $"
         totalcont = 0. ## to normalize contributions
-        for k,v in protomodel.whatif.items():
+        for k,v in protomodel.particleContributions.items():
             totalcont += (protomodel.Z - v)
         tok = {}
-        for k,v in protomodel.whatif.items():
+        for k,v in protomodel.particleContributions.items():
             if v in tok.keys():
                 v+=1e-6
             tok[v] = "%s = %d%s" % ( helpers.toLatex(k), round(100.*(protomodel.Z - v)/totalcont ), "\%" )
         keys = list ( tok.keys() )
         keys.sort()
         for v in keys:
-            whatifs+= tok[v] + ", "
+            particleContributionList+= tok[v] + ", "
         if len(keys)>0:
-            whatifs = whatifs[:-2]
-        #whatifs+= ", ".join ( tok )
-        whatifs+="$"
+            particleContributionList = particleContributionList[:-2]
+        #particleContributionList+= ", ".join ( tok )
+        particleContributionList+="$"
     else:
-        print ( "[plotHiscore] protomodel has no ``whatif'' defined." )
+        print ( "[plotHiscore] protomodel has no ``particleContributions'' defined." )
 
     import tex2png
     src = getExtremeSSMs ( ssm, largest=True, nm = 7 )
@@ -210,7 +210,7 @@ def writeTex ( protomodel, keep_tex ):
     nsmallest = min( 7, len(ssm)-7 )
     if nsmallest>0:
         src += getExtremeSSMs ( ssm, largest=False, nm = nsmallest )
-    src += whatifs
+    src += particleContributionList
     if keep_tex:
         with open("texdoc.tex","wt") as f:
             f.write ( src+"\n" )
@@ -289,7 +289,7 @@ def writeIndexTex ( protomodel, texdoc ):
     height = 32*int((len(ssm)+3)/4)
     if ssm == []:
         height = 32
-    if hasattr ( protomodel, "whatif" ):
+    if hasattr ( protomodel, "particleContributions" ):
         height += 32
     # f.write ( "<td><img width=600px src=./texdoc.png>\n" ) #  % height )
     # f.write ( "\small{Last updated: %s}\n" % time.asctime() )
@@ -341,14 +341,14 @@ def writeIndexHtml ( protomodel ):
         dotlessv = dbver.replace(".","")
     f.write ( "<b><a href=./hiscore.slha>ProtoModel</a> <a href=./pmodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d.</b>" % \
             ( dotlessv, dbver, strategy, strategy, protomodel.step ) )
-    if hasattr ( protomodel, "whatif" ):
+    if hasattr ( protomodel, "particleContributions" ):
         f.write ( "Z plots for: <a href=./M1000022.png>%s</a>" % helpers.toHtml(1000022) )
-        for k,v in protomodel.whatif.items():
+        for k,v in protomodel.particleContributions.items():
             f.write ( ", " )
             f.write ( "<a href=./M%d.png>%s</a>" % ( k, helpers.toHtml(k) ) )
         f.write ( ". HPD plots for: " )
         first = True
-        for k,v in protomodel.whatif.items():
+        for k,v in protomodel.particleContributions.items():
             if not first:
                 f.write ( ", " )
             f.write ( "<a href=./llhd%d.png>%s</a>" % ( k, helpers.toHtml(k) ) )
@@ -412,7 +412,7 @@ def writeIndexHtml ( protomodel ):
     height = 32*int((len(ssm)+3)/4)
     if ssm == []:
         height = 32
-    if hasattr ( protomodel, "whatif" ):
+    if hasattr ( protomodel, "particleContributions" ):
         height += 32
     f.write ( "<td><img width=600px src=./texdoc.png>\n" ) #  % height )
     f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
