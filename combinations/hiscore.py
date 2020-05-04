@@ -477,7 +477,7 @@ def main ( args ):
     if sin == None:
         sin = "H*.pcl"
     pevs = pprintEvs ( protomodels[0] )
-    print ( "[hiscore] hiscore from %s[%d] is at K=%.3f,Z=%.3f (%s)" % \
+    print ( "[hiscore] hiscore from %s[%d] is at K=%.3f, Z=%.3f (%s)" % \
             ( sin, protomodels[0].walkerid, protomodels[0].K, protomodels[0].Z, pevs ) )
 
     nevents = args.nevents
