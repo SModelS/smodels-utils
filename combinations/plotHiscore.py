@@ -187,7 +187,7 @@ def writeTex ( protomodel, keep_tex ):
         particleContributionList+="Contributions by particles: $"
         totalcont = 0. ## to normalize contributions
         for k,v in protomodel.particleContributions.items():
-            totalcont += (protomodel.Z - v)
+            totalcont += (protomodel.K - v)
         tok = {}
         for k,v in protomodel.particleContributions.items():
             if v in tok.keys():
