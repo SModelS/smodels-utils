@@ -187,6 +187,7 @@ def runUpdater( dry_run, time ):
     """
     # cmd = [ "srun", "--qos", qos, "--mem", "100G", "./run_hiscore_updater.sh" ]
     cmd = [ "srun", "--mem", "50G" ]
+    cmd += [ "--reservation", "interactive" ]
     # cmd = [ "srun", "--mem", "50G" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
     qos = "c_short"
