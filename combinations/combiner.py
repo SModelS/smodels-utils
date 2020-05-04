@@ -358,8 +358,8 @@ class Combiner:
             C = 0.00106962
         proper = C * improper
         if verbose:
-            self.pprint ( "prior: %.2f * (1 - .05 * %d - .01 * %d - .001 * %d) = %.2f" % \
-                      ( C, nparticles, nbr, nssms, proper ) )
+            self.pprint ( "prior: %d particles, %d branchings, %d unique ssms" % \
+                      ( nparticles, nbranchings, nssms ) )
         if nll:
             return - numpy.log ( proper )
         return proper
@@ -388,14 +388,16 @@ class Combiner:
                 if br > 1e-5 and br < .99999 and self.noSuchBranching ( memBRs, br ): 
                     nbr += 1
                     memBRs.add ( br )
-        ## every non-trivial branching costs .01
+        ## every non-trivial branching costs something
+        cssms = set()
         for pids,ssm in protomodel.ssmultipliers.items():
             if (abs(pids[0]) not in particles) or (abs(pids[1]) not in particles):
                 continue
-            ## every ssm > 0 costs a little, but only very little
-            if ssm > 1e-4:
+            ## every unique ssm > 0 and ssm!=1 costs a little, but only very little
+            if ssm > 1e-4 and abs ( ssm - 1. ) > .01:
+                cssms.add ( int ( 100. * ssm ) )
                 nssms += 1
-        ret = self.priorForNDF ( nparticles, nbr, nssms, 1., verbose )
+        ret = self.priorForNDF ( nparticles, nbr, len(cssms), 1., verbose )
         if nll:
             return - math.log ( ret )
         return ret
