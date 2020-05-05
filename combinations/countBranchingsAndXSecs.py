@@ -63,6 +63,41 @@ def count( path ):
 
 if __name__ == "__main__":
     count( "pmssm/" )
+    # Average number of branchings 3.68
+    # Average number of xsecs 5.7
+
     # Scanning over 323 files, 9044/9044 particles
     # Average number of branchings 3.11 +/- 2.68 
     # Average number of xsecs 1.74 +/- 3.89
+    results = [ ( 61370, 3.27, 6.04 ),
+                ( 42039, 3.16, 6.15 ),
+                ( 77981, 4.37, 4.91 ),
+                ( 48703, 4.23, 5.94 ),
+                ( 43680, 3.54, 5.55 ),
+                ( 61370, 3.23, 6.04 ) ]
+    """
+    Scanning over 43680 files, 1223040/1223040 particles
+    Average number of branchings 3.54 +/- 4.38
+    Average number of xsecs 5.55 +/- 8.16
+    /home/lessa/pMSSM/data/Wino_excluded_slha
+    Scanning over 36553 files, 1023484/1023484 particles
+    Average number of branchings 3.43 +/- 4.37
+    Average number of xsecs 5.14 +/- 8.43
+    /home/lessa/pMSSM/data/Bino_allowed_slha
+    Scanning over 61370 files, 1718360/1718360 particles
+    Average number of branchings 3.23 +/- 4.27
+    Average number of xsecs 6.04 +/- 8.98
+    /home/lessa/pMSSM/data/Bino_excluded_slha
+    Scanning over 42039 files, 1177092/1177092 particles
+    Average number of branchings 3.16 +/- 4.24
+    Average number of xsecs 6.15 +/- 9.54
+    /home/lessa/pMSSM/data/Higgsino_allowed_slha
+    Scanning over 77981 files, 2183468/2183468 particles
+    Average number of branchings 4.37 +/- 5.36
+    Average number of xsecs 4.91 +/- 7.56
+    /home/lessa/pMSSM/data/Higgsino_excluded_slha
+    Scanning over 48703 files, 1363684/1363684 particles
+    Average number of branchings 4.23 +/- 5.55
+    Average number of xsecs 5.94 +/- 9.00
+    /home/lessa/pMSSM/data/Wino_allowed_slha
+    """
