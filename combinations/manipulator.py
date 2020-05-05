@@ -328,12 +328,15 @@ class Manipulator:
                        elif pid == -pid2:
                             self.M.bestCombo[c].PIDs[i][b][p] = -pid1 
 
-    def printBestCombo ( self ):
-        """ pretty print the best combo """
+    def printCombo ( self, combo=None ):
+        """ pretty print prediction combos.
+            If None, print best combo """
         print ( "best combo:" )
-        for i in self.M.bestCombo:
-            print ( " `- %s:%s:%s [%s]" % \
-                    ( i.analysisId(), i.dataType(True), i.dataId(), str(i.PIDs) ) )
+        if combo == None:
+            combo = self.M.bestCombo
+        for i in combo:
+            print ( " `- %s:%s:%s %s" % \
+              ( i.analysisId(), i.dataType(True), i.dataId(), "; ".join(map(str,i.PIDs))))
 
     def removeAllOffshell ( self ):
         """ remove all offshell decays, renormalize all branchings """
