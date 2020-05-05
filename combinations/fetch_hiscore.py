@@ -21,8 +21,10 @@ if len(sys.argv)>1:
 	    f= [ "ssm*.pcl" ]
     if "pmodel" in sys.argv[1]:
 	    f= [ "pmodel?.py" ]
+    if "all" in sys.argv[1]:
+	    f= [ "scanM*.pcl", "mp*.pcl", "ssm*.pcl", "*png", "ssm*.pcl", "pmodel?.py"  ]
     if f == oldf:
-        print ( "[fetch_hiscore] do not understand what you mean with '%s'. I only know of 'scan', 'states', 'copy', 'ssm', 'png', 'pmodel'." % sys.argv[1] )
+        print ( "[fetch_hiscore] do not understand what you mean with '%s'. I only know of 'scan', 'states', 'copy', 'ssm', 'png', 'pmodel', 'all'." % sys.argv[1] )
         sys.exit()
 for i in f:
     cmd="scp wolfgan.waltenberger@clip-login-1:/scratch-cbe/users/wolfgan.waltenberger/rundir/%s ." % i

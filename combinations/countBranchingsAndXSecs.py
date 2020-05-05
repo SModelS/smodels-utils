@@ -29,7 +29,7 @@ def countPerFile ( f ):
     xsecs = getXsecFromSLHAFile ( f )
     for xsec in xsecs:
         weight = xsec.value.asNumber ( fb ) ## the weight in fb
-        if weight < 0.01: ## at least 0.01*fb
+        if weight < 0.001: ## at least 0.01*fb
             continue
         order = xsec.info.order
         if order > 0: ## no double count b/c of order
