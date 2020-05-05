@@ -18,7 +18,7 @@ def countPerFile ( f ):
         for decay in particle.decays:
             dpids = decay.ids
             br = decay.br
-            if br > 0. and br < 1.:
+            if br > 0.01 and br < 1.:
                 nbr+=1
         if nbr>0: ## have to add up to 1, so remove one!
             nbr -= 1
@@ -29,13 +29,15 @@ def countPerFile ( f ):
     xsecs = getXsecFromSLHAFile ( f )
     for xsec in xsecs:
         weight = xsec.value.asNumber ( fb ) ## the weight in fb
-        pids = xsec.pid
-        sqrts = xsec.info.sqrts.asNumber ( TeV )
+        if weight < 0.01: ## at least 0.01*fb
+            continue
         order = xsec.info.order
         if order > 0: ## no double count b/c of order
             continue
+        sqrts = xsec.info.sqrts.asNumber ( TeV )
         if abs(sqrts-13.) > 1e-5: # only look at 13 tev
             continue
+        pids = xsec.pid
         for pid in pids:
             if abs(pid) not in nxsecs:
                 continue
@@ -52,6 +54,8 @@ def count( path ):
             brstats.append ( n )
         for pid,n in nxsecs.items():
             xsecstats.append ( n )
+    print ( "Scanning over %d files, %d/%d particles" % \
+            ( len(files), len(brstats), len(xsecstats) ) )
     print ( "Average number of branchings %.2f +/- %.2f " % \
             ( numpy.mean ( brstats ), numpy.std ( brstats ) ) )
     print ( "Average number of xsecs %.2f +/- %.2f" % \
@@ -59,3 +63,6 @@ def count( path ):
 
 if __name__ == "__main__":
     count( "pmssm/" )
+    # Scanning over 323 files, 9044/9044 particles
+    # Average number of branchings 3.11 +/- 2.68 
+    # Average number of xsecs 1.74 +/- 3.89
