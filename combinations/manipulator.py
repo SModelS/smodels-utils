@@ -454,6 +454,19 @@ class Manipulator:
         self.normalizeAllBranchings()
         self.removeAllOffshell()
 
+    def simplifySSMs ( self ):
+        """ return only the SSMs != 1 and unfrozen """
+        ret = {}
+        frozen = self.M.frozenParticles()
+        for pids,v in self.M.ssmultipliers.items():
+            if abs(v-1.)<1e-5:
+                continue
+            for pid in pids:
+                if pid in frozen or -pid in frozen:
+                    continue
+            ret[pids]=v
+        return ret
+
     def randomlyChangeSSOfOneParticle ( self, pid = None ):
         """ randomly change the SS's consistently for one pid
         :param pid: change for this pid. If None, change of a random pid.

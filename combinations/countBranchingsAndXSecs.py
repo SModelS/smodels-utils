@@ -63,19 +63,15 @@ def count( path ):
 
 if __name__ == "__main__":
     count( "pmssm/" )
+    """
     # Average number of branchings 3.68
     # Average number of xsecs 5.7
-
-    # Scanning over 323 files, 9044/9044 particles
-    # Average number of branchings 3.11 +/- 2.68 
-    # Average number of xsecs 1.74 +/- 3.89
     results = [ ( 61370, 3.27, 6.04 ),
                 ( 42039, 3.16, 6.15 ),
                 ( 77981, 4.37, 4.91 ),
                 ( 48703, 4.23, 5.94 ),
                 ( 43680, 3.54, 5.55 ),
                 ( 61370, 3.23, 6.04 ) ]
-    """
     Scanning over 43680 files, 1223040/1223040 particles
     Average number of branchings 3.54 +/- 4.38
     Average number of xsecs 5.55 +/- 8.16

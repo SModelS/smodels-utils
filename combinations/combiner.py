@@ -336,33 +336,35 @@ class Combiner:
             ret += self.letters[c]
         return ret
 
-    def priorForNDF ( self, nparticles, nbranchings, nssms, C = 1., 
+    def priorForNDF ( self, nparticles, nbranchings, nssms, name="expo1", 
                       verbose=False, nll=False ):
         """ get the prior for this and this many degrees of freedom
             in the model.
         :param nparticles: number of unfrozen particles
         :param nbranchings: number of branchings > 0 and < 1
         :param nssms: number of signal strength multipliers > 0
-        :param C: normalization constant C, to make the prior proper. If None,
-                  use the predefined one.
+        :param name: name of the prior, cause I will be defining quite a few.
         :param verbose: be verbose about computation
         :param nll: if true, compute nll of prior
         :returns: *proper* prior
         """
-        #a,b,c = 2, 8, 32 ## the "sigmas" of the Gaussians. Higher values means less punishment
-        #improper = numpy.exp ( -(1/2) * ( (nparticles/a)**2 + (nbranchings/b)**2 + (nssms/c)**2 ) ) 
-        a,b,c = 4, 16, 32
-        improper = numpy.exp ( -1 * ( nparticles/a + nbranchings/b + nssms/c ) ) 
-        # improper = numpy.exp ( -(1/10) * ( nparticles**2 + nbranchings**1 + nssms**(.5) ) ) 
-        if C == None:
-            C = 0.00106962
-        proper = C * improper
+        if name == "flat":
+            prior = 1.
+        if name == "expo1":
+            a,b,c = 4, 16, 32
+            prior = numpy.exp ( -1 * ( nparticles/a + nbranchings/b + nssms/c ) ) 
+        if name == "expo2":
+            a,b,c = 1/3, 3.68/3, 5.7/3
+            prior = numpy.exp ( -1 * ( nparticles/a + nbranchings/b + nssms/c ) ) 
+        if name == "gauss1":
+            a,b,c = 2, 8, 32 ## the "sigmas" of the Gaussians. Higher values means less punishment
+            prior = numpy.exp ( -(1/2) * ( (nparticles/a)**2 + (nbranchings/b)**2 + (nssms/c)**2 ) ) 
         if verbose:
-            self.pprint ( "prior: %d particles, %d branchings, %d unique ssms" % \
-                      ( nparticles, nbranchings, nssms ) )
+            self.pprint ( "prior ``%s'': %d particles, %d branchings, %d unique ssms: %.2f" % \
+                      ( name, nparticles, nbranchings, nssms, prior ) )
         if nll:
-            return - numpy.log ( proper )
-        return proper
+            return - numpy.log ( prior )
+        return prior
 
     def noSuchBranching ( self, branchings, br ):
         """ check if a branching ratio similar to br already exists 
@@ -372,23 +374,28 @@ class Combiner:
                 return False
         return True
 
-    def computePrior ( self, protomodel, nll=False, verbose=False ):
+    def computePrior ( self, protomodel, nll=False, verbose=False, name="expo1" ):
         """ compute the prior for protomodel, used to introduce regularization,
             i.e. punishing for non-zero parameters, imposing sparsity.
-        :param verbose: print how you get the prior
+        :param nll: if True, return negative log likelihood
+        :param verbose: print how you get the prior.
+        :param name: name of prior (expo1, gauss1, etc). See self.priorForNDF.
         """
-        particles = protomodel.unFrozenParticles ( withLSP=False )
+        particles = protomodel.unFrozenParticles ( withLSP=True )
         nparticles = len ( particles )
-        nbr, nssms = 0, 0
+        nbr = 0
+        ## every non-trivial branching costs something
         for mpid,decays in protomodel.decays.items():
-            if not mpid in particles:
+            if not mpid in particles or mpid == protomodel.LSP:
                 continue ## frozen particles dont count
             memBRs = set() ## memorize branchings, similar branchings count only once
             for dpid,br in decays.items():
-                if br > 1e-5 and br < .99999 and self.noSuchBranching ( memBRs, br ): 
-                    nbr += 1
+                if br > 1e-5 and self.noSuchBranching ( memBRs, br ): 
                     memBRs.add ( br )
-        ## every non-trivial branching costs something
+            tmp = len ( memBRs ) - 1 ## subtract one cause they add up to 1.
+            nbr += tmp
+
+        ## every non-trivial signal strength multiplier costs something
         cssms = set()
         for pids,ssm in protomodel.ssmultipliers.items():
             if (abs(pids[0]) not in particles) or (abs(pids[1]) not in particles):
@@ -396,8 +403,9 @@ class Combiner:
             ## every unique ssm > 0 and ssm!=1 costs a little, but only very little
             if ssm > 1e-4 and abs ( ssm - 1. ) > .01:
                 cssms.add ( int ( 100. * ssm ) )
-                nssms += 1
-        ret = self.priorForNDF ( nparticles, nbr, len(cssms), 1., verbose )
+                # nssms += 1
+        # print ( "cssms", cssms )
+        ret = self.priorForNDF ( nparticles, nbr, len(cssms), name, verbose )
         if nll:
             return - math.log ( ret )
         return ret
