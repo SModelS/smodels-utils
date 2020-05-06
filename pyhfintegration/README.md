@@ -52,7 +52,7 @@ Infinite loop with some mass points and initial rescaling factor of 10 (changing
 It appears that ATLAS-SUSY-2018-31 is performing a poor person's combination, i.e., all three regions (A, B and C) have subregions. These subregions then get combined into three seperate "inclusive" likelihoods, amongst which the inclusive regions giving the best expected limit is picked to compute the observed limit.
 Such combination will bring small complications. We'v decided we'd rather try getting the pyhf interface to work with ATLAS-SUSY-2018-04 first which doesn't have this kind of poor person's combination.
 
-- [ ] think about a way to perform this poor person's combination (outside of pyhfInterface.py)
+- [x] think about a way to perform this poor person's combination (outside of pyhfInterface.py)
 
 # Testing ATLAS-SUSY-2018-04
 
@@ -140,3 +140,4 @@ A first attempt of validation has been performed with pyhf combination. SModelS 
 - [x] add pyhf in datasetObj.py:combinedLikelihood
 - [ ] add pyhf in datasetObj.py:totalChi2
 - [ ] add a unit test
+- [ ] check if simplified likelihood still works
