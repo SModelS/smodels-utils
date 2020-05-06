@@ -433,13 +433,16 @@ def getGridPoints ( validationPlot ):
     return ret
 
 def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=False,
-                    weightedAgreementFactor=False ):
+                    preliminary=False, weightedAgreementFactor=False ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate the "ugly" exclusion plot
 
     :param validationPlot: ValidationPlot object
     :param silentMode: If True the plot will not be shown on the screen
+    :param extraInfo: add additional info to plot: agreement factor, time spent,
+                      time stamp, hostname
+    :param preliminary: if true, write "preliminary" over the plot
     :param weightedAgreementFactor: weight points for the agreement factor with
                                     the area of their Voronoi cell
     :return: TCanvas object containing the plot
@@ -722,18 +725,34 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
         l9.DrawLatex ( .93, .65, time.strftime("%b %d, %Y, %H:%M") )
         base.l9 = l9
 
+    if preliminary:
+        ## preliminary label, ugly plot
+        tprel = TLatex()
+        tprel.SetNDC()
+        tprel.SetTextSize(0.055)
+        tprel.SetTextFont(42)
+        tprel.SetTextColor ( kBlue+3 )
+        tprel.SetTextAngle(-25.)
+        tprel.DrawLatex(.6,.85,"SModelS preliminary")
+        #tprel.SetTextAngle(25.)
+        #tprel.DrawLatex(.05,.7,"SModelS preliminary")
+        base.tprel = tprel
+
     if not silentMode:
         _ = raw_input("Hit any key to close\n")
 
     return plane,base
 
-def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
+def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
+                      looseness = 1.2 ):
     """
     Uses the data in validationPlot.data and the official exclusion curves
     in validationPlot.officialCurves to generate a pretty exclusion plot
 
     :param validationPlot: ValidationPlot object
     :param silentMode: If True the plot will not be shown on the screen
+    :param preliminary: if true, write "preliminary" over the plot
+    :param looseness: ?
     :return: TCanvas object containing the plot
     """
 
@@ -1034,6 +1053,16 @@ def createPrettyPlot(validationPlot,silentMode=True, looseness = 1.2 ):
     if hasExclLines:
         leg.Draw()
     tgr.leg = leg
+    if preliminary:
+        ## preliminary label, pretty plot
+        tprel = TLatex()
+        tprel.SetTextColor ( kBlue+3 )
+        tprel.SetNDC()
+        tprel.SetTextAngle(25.)
+        tprel.SetTextSize(0.055)
+        tprel.SetTextFont(42)
+        tprel.DrawLatex(.1,.7,"SModelS preliminary")
+        tgr.tprel = tprel
     plane.Update()
 
     if not silentMode:

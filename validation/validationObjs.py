@@ -46,11 +46,12 @@ class ValidationPlot():
                    If None or negative, take all points.
     :ivar extraInfo: add additional info to plot: agreement factor, time spent,
                       time stamp, hostname
+    :ivar preliminary: if true, write "preliminary" over the plot
     """
 
     def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
-                 kfactor = 1., limitPoints=None, extraInfo=False, combine=False,
-                 weightedAgreementFactor=True, model="default" ):
+                 kfactor = 1., limitPoints=None, extraInfo=False, preliminary=False, 
+                 combine=False, weightedAgreementFactor=True, model="default" ):
         """
         :param weightedAgreementFactor: when computing the agreement factor,
             weight points by the area of their Voronoi cell
@@ -67,6 +68,7 @@ class ValidationPlot():
         self.kfactor = kfactor
         self.limitPoints = limitPoints
         self.extraInfo = extraInfo
+        self.preliminary = preliminary
         self.weightedAF = weightedAgreementFactor
         self.combine = combine
 
@@ -707,7 +709,8 @@ class ValidationPlot():
         """
 
         self.plot,self.base = createUglyPlot(self,silentMode=silentMode,
-                extraInfo=self.extraInfo,weightedAgreementFactor=self.weightedAF )
+                extraInfo=self.extraInfo,preliminary=self.preliminary,
+                weightedAgreementFactor=self.weightedAF )
 
     def getPrettyPlot(self,silentMode=True):
         """
@@ -716,7 +719,8 @@ class ValidationPlot():
         :param silentMode: If True the plot will not be shown on the screen
         """
 
-        self.plot,self.base = createPrettyPlot(self,silentMode=silentMode)
+        self.plot,self.base = createPrettyPlot(self,silentMode=silentMode,
+                               preliminary=self.preliminary )
 
     def savePlot(self,validationDir=None,fformat='pdf'):
         """

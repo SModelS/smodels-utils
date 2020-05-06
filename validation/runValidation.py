@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 
 def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                   pretty=False,generateData=True,limitPoints=None,extraInfo=False,
-                  combine=False,pngAlso = False, weightedAgreementFactor = True,
-                  model = "default" ):
+                  preliminary=False, combine=False,pngAlso = False, 
+                  weightedAgreementFactor = True, model = "default" ):
     """
     Creates a validation plot and saves its output.
 
@@ -47,6 +47,7 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                         If None or negative, take all points.
     :param extraInfo: add additional info to plot: agreement factor, time spent,
                       time stamp, hostname
+    :param preliminary: if True, write a big "preliminary" label over the plot.
     :param combine: combine signal regions, or use best signal region
     :param pngAlso: save also pngs
     :param weightedAgreementFactor: when computing the agreement factor,
@@ -58,8 +59,8 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
     logger.info("Generating validation plot for " + expRes.globalInfo.id
                 +", "+txnameStr+", "+axes)
     valPlot = validationObjs.ValidationPlot(expRes,txnameStr,axes,kfactor=kfactor,
-                    limitPoints=limitPoints,extraInfo=extraInfo,combine=combine,
-                    weightedAgreementFactor = weightedAgreementFactor,
+                    limitPoints=limitPoints,extraInfo=extraInfo,preliminary=preliminary,
+                    combine=combine, weightedAgreementFactor = weightedAgreementFactor,
                     model = model )
     if valPlot.niceAxes == None:
         logger.info ( "valPlot.niceAxes is None. Skip this." )
@@ -162,8 +163,8 @@ def run ( expResList, axis, pretty, generateData ):
                     doGenerate = generateData # local flag
                     for p in prettyorugly:
                         validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
-                                     doGenerate,limitPoints,extraInfo,combine,pngAlso,
-                                     weightedAgreementFactor, model )
+                                     doGenerate,limitPoints,extraInfo,preliminary,
+                                     combine,pngAlso, weightedAgreementFactor, model )
                         doGenerate = False
             else:
                 from sympy import var
@@ -171,8 +172,8 @@ def run ( expResList, axis, pretty, generateData ):
                 ax = str(eval(axis)) ## standardize the string
                 for p in prettyorugly:
                     validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
-                                 generateData,limitPoints,extraInfo,combine,pngAlso,
-                                 weightedAgreementFactor, model )
+                                 generateData,limitPoints,extraInfo, preliminary, 
+                                 combine,pngAlso, weightedAgreementFactor, model )
                     generateData = False
             logger.info("------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
         logger.info("--- \033[32m %s validated in %.1f min \033[0m" %(expRes.globalInfo.id,(time.time()-expt0)/60.))
@@ -180,7 +181,7 @@ def run ( expResList, axis, pretty, generateData ):
 
 def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
         tarfiles=None,ncpus=-1,verbosity='error',pretty=False,generateData=True,
-        limitPoints=None,extraInfo=False,combine=False,pngAlso=False,
+        limitPoints=None,extraInfo=False,preliminary=False,combine=False,pngAlso=False,
         weightedAgreementFactor=True, model = "default", axis=None,
         force_load = None ):
     """
@@ -208,7 +209,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
               chosen points. If None or negative, test all points.
     :param extraInfo: add additional info to plot: agreement factor, time spent,
               time stamp, hostname
-
+    :param preliminary: if True, write a big "preliminary" label over the plot.
     :param combine: combine signal regions, or use best signal region
     :param pngAlso: save also pngs
     :param model: the model to use (mssm, nmssm, idm, ... )
@@ -360,6 +361,7 @@ if __name__ == "__main__":
     pretty = False ## only pretty plots, only ugly plots, or both
     limitPoints=None ## limit the number of points to run on
     extraInfo = False ## add extra info to the plot?
+    preliminary = False ## add preliminary to plot?
     weightedAgreementFactor = False ## do we weight the points for the agreement factor?
     model = "default" ## which model to use (default = mssm)
     if parser.has_section("options"):
@@ -382,6 +384,8 @@ if __name__ == "__main__":
             limitPoints = parser.getint("options","limitPoints")
         if parser.has_option("options","extraInfo"):
             extraInfo = parser.getboolean("options", "extraInfo")
+        if parser.has_option("options","preliminary"):
+            preliminary = parser.getboolean("options", "preliminary")
         if parser.has_option("options","weightedAgreementFactor"):
             weightedAgreementFactor = parser.getboolean("options", "weightedAgreementFactor")
         if parser.has_option("options","model" ):
@@ -402,5 +406,5 @@ if __name__ == "__main__":
     #Run validation:
     main(analyses,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePath,
          tarfiles,ncpus,args.verbose.lower(),pretty,generateData,limitPoints,
-         extraInfo,combine,pngAlso,weightedAgreementFactor, model, axis,
+         extraInfo,preliminary,combine,pngAlso,weightedAgreementFactor, model, axis,
          force_load )
