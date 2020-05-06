@@ -85,7 +85,7 @@ class Combiner:
         return ret
 
     def removeDataType ( self, predictions, dataType ):
-        """ remove from the predictions all the ones 
+        """ remove from the predictions all the ones
         that match dataType """
         if predictions is None:
             return predictions
@@ -260,12 +260,26 @@ class Combiner:
         :param expected: find the combo with the most significant expected deviation
         :param mumax: Maximum muhat to allow before we run into an exclusion
         """
-        combinations.sort ( key=len, reverse=True ) ## sort them first be length
+        combinations.sort ( key=len, reverse=True ) ## sort them first by length
         # compute CLsb for all combinations
         highestZ,highest,muhat=0.,"",1.
         alreadyDone = [] ## list of combos that have already been looked at.
         ## we will not look at combos that are subsets.
-        for c in combinations:
+        doProgress=True
+        try:
+            import progressbar
+        except ModuleNotFoundError:
+            doProgress=False
+        if doProgress:
+            import progressbar
+            pb = progressbar.ProgressBar(widgets=["combinations",progressbar.Percentage(),
+                  progressbar.Bar( marker=progressbar.RotatingMarker() ),
+                  progressbar.ETA()])
+            pb.maxval = len(combinations)
+            pb.start()
+        for ctr,c in enumerate(combinations):
+            if doProgress:
+                pb.update(ctr)
             if self.hasAlreadyDone ( c, alreadyDone ):
                 # self.pprint ( "%s is subset of bigger combo. skip." % getLetterCode(c) )
                 continue
@@ -278,6 +292,8 @@ class Combiner:
                 highest = c
                 muhat = muhat_
             alreadyDone.append ( c )
+        if doProgress:
+            pb.finish()
         return highest,highestZ,muhat
 
     def get95CL ( self, combination, expected ):
@@ -336,7 +352,7 @@ class Combiner:
             ret += self.letters[c]
         return ret
 
-    def priorForNDF ( self, nparticles, nbranchings, nssms, name="expo1", 
+    def priorForNDF ( self, nparticles, nbranchings, nssms, name="expo1",
                       verbose=False, nll=False ):
         """ get the prior for this and this many degrees of freedom
             in the model.
@@ -352,13 +368,13 @@ class Combiner:
             prior = 1.
         if name == "expo1":
             a,b,c = 4, 16, 32
-            prior = numpy.exp ( -1 * ( nparticles/a + nbranchings/b + nssms/c ) ) 
+            prior = numpy.exp ( -1 * ( nparticles/a + nbranchings/b + nssms/c ) )
         if name == "expo2":
             a,b,c = 3, 3.68*3, 5.7*3
-            prior = numpy.exp ( -1 * ( nparticles/a + nbranchings/b + nssms/c ) ) 
+            prior = numpy.exp ( -1 * ( nparticles/a + nbranchings/b + nssms/c ) )
         if name == "gauss1":
             a,b,c = 2, 8, 32 ## the "sigmas" of the Gaussians. Higher values means less punishment
-            prior = numpy.exp ( -(1/2) * ( (nparticles/a)**2 + (nbranchings/b)**2 + (nssms/c)**2 ) ) 
+            prior = numpy.exp ( -(1/2) * ( (nparticles/a)**2 + (nbranchings/b)**2 + (nssms/c)**2 ) )
         if verbose:
             self.pprint ( "prior ``%s'': %d particles, %d branchings, %d unique ssms: %.2f" % \
                       ( name, nparticles, nbranchings, nssms, prior ) )
@@ -367,7 +383,7 @@ class Combiner:
         return prior
 
     def noSuchBranching ( self, branchings, br ):
-        """ check if a branching ratio similar to br already exists 
+        """ check if a branching ratio similar to br already exists
             in branchings """
         for cbr in branchings:
             if abs ( cbr - br ) / ( cbr + br ) < 0.025: ## 5 percent rule
@@ -390,7 +406,7 @@ class Combiner:
                 continue ## frozen particles dont count
             memBRs = set() ## memorize branchings, similar branchings count only once
             for dpid,br in decays.items():
-                if br > 1e-5 and self.noSuchBranching ( memBRs, br ): 
+                if br > 1e-5 and self.noSuchBranching ( memBRs, br ):
                     memBRs.add ( br )
             tmp = len ( memBRs ) - 1 ## subtract one cause they add up to 1.
             nbr += tmp
@@ -414,15 +430,25 @@ class Combiner:
         """ compute K from Z and prior (simple) """
         return Z**2 + 2* numpy.log ( prior )
 
-    def findHighestSignificance ( self, predictions, strategy, expected=False, 
+    def sortMostSignificantSR ( self, predictions ):
+        """ given, the predictions, for any analysis and topology,
+            return the most significant SR only.
+        :param predictions: all predictions of all SRs
+        :returns: sorted predictions
+        """
+        print ( "FIXME need to sort predictions for most significant SR first" )
+        return predictions
+
+    def findHighestSignificance ( self, predictions, strategy, expected=False,
                                   mumax = None ):
         """ for the given list of predictions and employing the given strategy,
         find the combo with highest significance
         :param expected: find the highest expected significance, not observed
-        :param mumax: maximimal signal strength mu that is allowed before we run into an 
+        :param mumax: maximimal signal strength mu that is allowed before we run into an
                       exclusion
         :returns: best combination, significance, likelihood equivalent
         """
+        predictions = self.sortMostSignificantSR ( predictions )
         self.letters = self.getLetters ( predictions )
         combinables = self.findCombinations ( predictions, strategy )
         singlepreds = [ [x] for x in predictions ]
