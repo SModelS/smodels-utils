@@ -1,0 +1,5 @@
+loss: 0.062	{'optimizer': 'Adam', 'lossFunction': 'MSE', 'batchSize': 4, 'activationFunction': 'rel', 'epochNum': 120, 'learnRate': 0.0001, 'layer': 12, 'nodes': 128, 'shape': 'trap', 'rescaleMethod': 'standardScore'}
+loss: 0.06	{'optimizer': 'Adam', 'lossFunction': 'MSE', 'batchSize': 8, 'activationFunction': 'rel', 'epochNum': 120, 'learnRate': 0.0001, 'layer': 12, 'nodes': 128, 'shape': 'trap', 'rescaleMethod': 'standardScore'}
+loss: 0.067	{'optimizer': 'Adam', 'lossFunction': 'MSE', 'batchSize': 16, 'activationFunction': 'rel', 'epochNum': 120, 'learnRate': 0.0001, 'layer': 12, 'nodes': 128, 'shape': 'trap', 'rescaleMethod': 'standardScore'}
+loss: 0.079	{'optimizer': 'Adam', 'lossFunction': 'MSE', 'batchSize': 32, 'activationFunction': 'rel', 'epochNum': 120, 'learnRate': 0.0001, 'layer': 12, 'nodes': 128, 'shape': 'trap', 'rescaleMethod': 'standardScore'}
+loss: 0.156	{'optimizer': 'Adam', 'lossFunction': 'MSE', 'batchSize': 64, 'activationFunction': 'rel', 'epochNum': 120, 'learnRate': 0.0001, 'layer': 12, 'nodes': 128, 'shape': 'trap', 'rescaleMethod': 'standardScore'}

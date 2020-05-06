@@ -1,0 +1,12 @@
+loss: 0.029	{'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 8, 'activationFunction': 'prel', 'epochNum': 50, 'learnRate': 0.0001, 'layer': 6, 'nodes': 64, 'shape': 'lin', 'rescaleMethod': None}
+loss: 0.031	{'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 8, 'activationFunction': 'prel', 'epochNum': 50, 'learnRate': 0.0001, 'layer': 8, 'nodes': 64, 'shape': 'lin', 'rescaleMethod': None}
+loss: 0.034	{'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 8, 'activationFunction': 'prel', 'epochNum': 50, 'learnRate': 0.001, 'layer': 8, 'nodes': 32, 'shape': 'lin', 'rescaleMethod': None}
+loss: 0.037	{'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 8, 'activationFunction': 'prel', 'epochNum': 50, 'learnRate': 0.0001, 'layer': 8, 'nodes': 32, 'shape': 'lin', 'rescaleMethod': None}
+loss: 0.037	{'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 8, 'activationFunction': 'prel', 'epochNum': 50, 'learnRate': 0.001, 'layer': 8, 'nodes': 64, 'shape': 'lin', 'rescaleMethod': None}
+loss: 0.038	{'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 8, 'activationFunction': 'prel', 'epochNum': 50, 'learnRate': 0.001, 'layer': 6, 'nodes': 32, 'shape': 'lin', 'rescaleMethod': None}
+loss: 0.04	{'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 8, 'activationFunction': 'prel', 'epochNum': 50, 'learnRate': 0.001, 'layer': 4, 'nodes': 32, 'shape': 'lin', 'rescaleMethod': None}
+loss: 0.041	{'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 8, 'activationFunction': 'prel', 'epochNum': 50, 'learnRate': 0.001, 'layer': 6, 'nodes': 64, 'shape': 'lin', 'rescaleMethod': None}
+loss: 0.044	{'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 8, 'activationFunction': 'prel', 'epochNum': 50, 'learnRate': 0.001, 'layer': 4, 'nodes': 64, 'shape': 'lin', 'rescaleMethod': None}
+loss: 0.054	{'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 8, 'activationFunction': 'prel', 'epochNum': 50, 'learnRate': 0.0001, 'layer': 6, 'nodes': 32, 'shape': 'lin', 'rescaleMethod': None}
+loss: 0.073	{'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 8, 'activationFunction': 'prel', 'epochNum': 50, 'learnRate': 0.0001, 'layer': 4, 'nodes': 32, 'shape': 'lin', 'rescaleMethod': None}
+loss: 0.073	{'optimizer': 'Adam', 'lossFunction': 'BCE', 'batchSize': 8, 'activationFunction': 'prel', 'epochNum': 50, 'learnRate': 0.0001, 'layer': 4, 'nodes': 64, 'shape': 'lin', 'rescaleMethod': None}
