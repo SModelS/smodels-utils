@@ -632,6 +632,9 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
             + "_" + validationPlot.axes
             #+ "_" + validationPlot.niceAxes
     subtitle = "%d datasets: " % len(validationPlot.expRes.datasets)
+    if hasattr ( validationPlot.expRes.globalInfo, "jsonFiles" ):
+        ## pyhf combination
+        subtitle = "pyhf combining %d datasets: " % len(validationPlot.expRes.datasets)
     for dataset in validationPlot.expRes.datasets:
         ds_txnames = map ( str, dataset.txnameList )
         if not validationPlot.txName in ds_txnames:
