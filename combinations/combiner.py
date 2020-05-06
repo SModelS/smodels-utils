@@ -430,7 +430,7 @@ class Combiner:
         """ compute K from Z and prior (simple) """
         return Z**2 + 2* numpy.log ( prior )
 
-    def sortMostSignificantSR ( self, predictions ):
+    def selectMostSignificantSR ( self, predictions ):
         """ given, the predictions, for any analysis and topology,
             return the most significant SR only.
         :param predictions: all predictions of all SRs
@@ -448,7 +448,7 @@ class Combiner:
                       exclusion
         :returns: best combination, significance, likelihood equivalent
         """
-        predictions = self.sortMostSignificantSR ( predictions )
+        predictions = self.selectMostSignificantSR ( predictions )
         self.letters = self.getLetters ( predictions )
         combinables = self.findCombinations ( predictions, strategy )
         singlepreds = [ [x] for x in predictions ]
