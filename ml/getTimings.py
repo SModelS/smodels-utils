@@ -57,9 +57,6 @@ def getTimings(expres, topo):
 	model_reg = loadModel(expres, txName, "regression")
 	model_cla = loadModel(expres, txName, "classification")
 
-	#m1 = 300.
-	#m2 = 0.
-
 	masses_int = []
 	masses_pre = []
 	masses_int2 = []
@@ -67,34 +64,30 @@ def getTimings(expres, topo):
 
 	for n in range(300,1300):
 		m = random.random() * 0.5 * n
-		#r = random.random()
-		#q = random.random()
-		#mi = [[m1*r*GeV, m2*q*GeV], [m1*r*GeV, m2*q*GeV]]
 		mi = [[n*GeV, m*GeV], [n*GeV, m*GeV]]
 		mp = torch.tensor([n, m, n, m])
 		masses_int.append(mi)
 		masses_pre.append(mp)
 
+	#seed out None results
 	for n in range(len(masses_int)):
 		if type(expres.getUpperLimitFor(txname=topo, mass=masses_int[n])) == type(None):
 			masses_int2.append(masses_int[n])
 			masses_pre2.append(masses_pre[n])
 
-
-	plt.figure(5)
-	plt.scatter([m[0].item() for m in masses_pre2], [m[1].item() for m in masses_pre2])
-	plt.show()
+	#plt.figure(5)
+	#plt.scatter([m[0].item() for m in masses_pre2], [m[1].item() for m in masses_pre2])
+	#plt.show()
+	
 
 	t0 = time()
 	for m in masses_int2:
 		expres.getUpperLimitFor(txname=topo, mass=m)
 	print(time()-t0)
 
-	nx = 0
 	t0 = time()
 	for m in masses_pre2:
-		if model_cla(m) == 1.: model_reg(m)
-		else: nx += 1
+		model_reg(m)
 	print(time()-t0)
 
 	"""
