@@ -452,7 +452,7 @@ def getPIDsOfTPred ( tpred, ret, integrateDataType=True, integrateSRs=True ):
     name = tpred.analysisId()
     if not integrateSRs:
         SR = tpred.dataId()
-        name = name + ":" + SR
+        name = name + ":" + str(SR)
     elif not integrateDataType:
         dType = "em"
         if tpred.dataId() in [ "None", None ]:
