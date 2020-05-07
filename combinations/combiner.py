@@ -105,7 +105,6 @@ class Combiner:
         :returns: a list of combinations
         """
         combinables=[]
-        n=len(predictions)
         for iA,predA in enumerate(predictions):
             combo = [ predA ]
             nexti = iA + 1
@@ -175,7 +174,7 @@ class Combiner:
                 return False
         return True
 
-    def hasAlreadyDone ( self, small, combos ):
+    def isSubsetOf ( self, small, combos ):
         """ is the small combo already a subset of any of the
             combos in 'combos'? """
         for c in combos:
@@ -183,17 +182,34 @@ class Combiner:
                 return True
         return False
 
-    def findBestCombo ( self, combinations ):
-        """ find the best combo, by computing CLsb values """
+    def sortOutSubsets ( self, combinations ):
+        """ of all given combinations, sort out all those
+            that are subsets of larger combinations.
+        :returns: combinations without subsets
+        """
         combinations.sort ( key=len, reverse=True ) ## sort them first be length
-        # compute CLsb for all combinations
-        lowestv,lowest=float("inf"),""
-        alreadyDone = [] ## list of combos that have already been looked at.
-        ## we will not look at combos that are subsets.
+        ret = []
         for c in combinations:
-            if self.hasAlreadyDone ( c, alreadyDone ):
+            if self.isSubsetOf ( c, ret ):
                 # self.pprint ( "%s is subset of bigger combo. skip." % getLetterCode(c) )
                 continue
+            ret.append ( c )
+        self.pprint ( "sorting out subsets, reduced %d -> %d combinations." % \
+                      ( len(combinations), len(ret) ) )
+        return ret
+
+    def findBestCombo ( self, combinations ):
+        """ find the best combo, by computing CLsb values """
+        combinations = self.sortOutSubsets ( combinations )
+        # combinations.sort ( key=len, reverse=True ) ## sort them first be length
+        # compute CLsb for all combinations
+        lowestv,lowest=float("inf"),""
+        # alreadyDone = [] ## list of combos that have already been looked at.
+        ## we will not look at combos that are subsets.
+        for c in combinations:
+            #if self.isSubsetOf ( c, alreadyDone ):
+                # self.pprint ( "%s is subset of bigger combo. skip." % getLetterCode(c) )
+            #    continue
             cl_mu = self.get95CL ( c, expected=True )
             if cl_mu == None:
                 continue
@@ -201,7 +217,7 @@ class Combiner:
             if cl_mu < lowestv:
                 lowestv = cl_mu
                 lowest = c
-            alreadyDone.append ( c )
+            #alreadyDone.append ( c )
         return lowest,lowestv
 
     def getLetters( self, predictions ):
@@ -260,10 +276,10 @@ class Combiner:
         :param expected: find the combo with the most significant expected deviation
         :param mumax: Maximum muhat to allow before we run into an exclusion
         """
-        combinations.sort ( key=len, reverse=True ) ## sort them first by length
+        combinations = self.sortOutSubsets ( combinations )
+        # combinations.sort ( key=len, reverse=True ) ## sort them first by length
         # compute CLsb for all combinations
         highestZ,highest,muhat=0.,"",1.
-        alreadyDone = [] ## list of combos that have already been looked at.
         ## we will not look at combos that are subsets.
         doProgress=True
         try:
@@ -282,9 +298,6 @@ class Combiner:
         for ctr,c in enumerate(combinations):
             if doProgress:
                 pb.update(ctr)
-            if self.hasAlreadyDone ( c, alreadyDone ):
-                # self.pprint ( "%s is subset of bigger combo. skip." % getLetterCode(c) )
-                continue
             Z,muhat_ = self.getSignificance ( c, expected=expected, mumax=mumax )
             if Z == None:
                 continue
@@ -293,7 +306,6 @@ class Combiner:
                 highestZ = Z
                 highest = c
                 muhat = muhat_
-            alreadyDone.append ( c )
         if doProgress:
             pb.finish()
         return highest,highestZ,muhat
@@ -436,11 +448,11 @@ class Combiner:
         """ given, the predictions, for any analysis and topology,
             return the most significant SR only.
         :param predictions: all predictions of all SRs
-        :returns: sorted predictions
+        :returns: filtered predictions
         """
-        print ( "FIXME need to select %d predictions for most significant SR first" % \
-                ( len(predictions) ) )
-        return predictions
+        #print ( "FIXME need to select %d predictions for most significant SR first" % \
+        #        ( len(predictions) ) )
+        # return predictions
         sortByAnaId = {}
         for i in predictions:
             Id = i.analysisId()+":"+i.dataType(True)
@@ -450,21 +462,32 @@ class Combiner:
         ret = []
         for Id,preds in sortByAnaId.items():
             if "ul" in Id:
-                maxL, bestpred = -1., None
+                maxR, bestpred = 0., None
                 for pred in preds:
                     l = pred.getLikelihood( mu=1. )
-                    if l > maxL:
-                        maxL = l
+                    r = pred.getUpperLimit() / pred.getUpperLimit(expected=True) 
+                    if r > maxR:
+                        maxR = r
                         bestpred = pred
-                if maxL > 0.:
+                if maxR > 0.:
                     ret.append ( pred )
             else:
+                maxR, bestpred = 0., None
                 for pred in preds:
+                    r = pred.getUpperLimit() / pred.getUpperLimit(expected=True) 
+                    if r > maxR:
+                        maxR = r
+                        bestpred = pred
+                if maxR > 0.:
                     ret.append ( pred )
-        for i in ret:
-            print ( " `- %s:%s:%s %s: %s/%s" % \
-              ( i.analysisId(), i.dataType(True), i.dataId(), "; ".join(map(str,i.PIDs)),
-                i.getUpperLimit(), i.getUpperLimit(expected=True) ))
+        self.pprint ( "selected predictions down via SRs from %d to %d." % \
+                      ( len(predictions), len(ret) ) )
+        if False:
+            for ctr,i in enumerate(ret):
+                r = i.getUpperLimit() / i.getUpperLimit(expected=True) 
+                print ( " `- #%d %s:%s:%s %s: %s/%s r=%.2f" % \
+                  ( ctr, i.analysisId(), i.dataType(True), i.dataId(), "; ".join(map(str,i.PIDs)),
+                    i.getUpperLimit(), i.getUpperLimit(expected=True), r ) )
         return ret
 
     def findHighestSignificance ( self, predictions, strategy, expected=False,
@@ -480,10 +503,11 @@ class Combiner:
         self.letters = self.getLetters ( predictions )
         combinables = self.findCombinations ( predictions, strategy )
         singlepreds = [ [x] for x in predictions ]
-        ## optionally, add individual predictions
-        combinables = singlepreds + combinables
+        ## optionally, add individual predictions ... nah!!
+        ## combinables = singlepreds + combinables
         self.discussCombinations ( combinables )
-        bestCombo,Z,muhat = self._findLargestZ ( combinables, expected=expected, mumax = mumax )
+        bestCombo,Z,muhat = self._findLargestZ ( combinables, expected=expected, 
+                                                 mumax = mumax )
         ## compute a likelihood equivalent for Z
         llhd = stats.norm.pdf(Z)
         # self.pprint ( "bestCombo %s, %s, %s " % ( Z, llhd, muhat ) )

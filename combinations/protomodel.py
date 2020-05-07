@@ -250,8 +250,8 @@ class ProtoModel:
             self.pprint ( "we dont check thresholds, but the model would actually be excluded with rmax=%.2f" % self.rmax )
         # now get the predictions that determine the Z of the model. allpreds,
         # but need llhd
-        #predictions = self.predictor.predict ( self.currentSLHA, allpreds=False,
-        predictions = predictor[0].predict ( self.currentSLHA, allpreds=False,
+        allpreds = True ## lets try!
+        predictions = predictor[0].predict ( self.currentSLHA, allpreds=allpreds,
                                                llhdonly=True )
         combiner = Combiner( self.walkerid )
         self.log ( "now find highest significance for %d predictions" % len(predictions) )
