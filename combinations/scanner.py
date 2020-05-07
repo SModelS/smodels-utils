@@ -39,7 +39,7 @@ def getHiscore( force_copy = False ):
                           picklefile = picklefile )
     Z=hi.hiscores[0].Z
     K=hi.hiscores[0].K
-    print ( "[scanner] done retrieving hiscore object, highest at K=%.2,Z=%.2f" % \
+    print ( "[scanner] done retrieving hiscore object, highest at K=%.2f, Z=%.2f" % \
              (K, Z ) )
     return hi
 
