@@ -272,9 +272,11 @@ class Combiner:
             doProgress=False
         if doProgress:
             import progressbar
-            pb = progressbar.ProgressBar(widgets=["combinations",progressbar.Percentage(),
+            pb = progressbar.ProgressBar(widgets=["combination #",progressbar.Counter(),
+                  "/%d " % len(combinations),
+                  progressbar.Percentage(),
                   progressbar.Bar( marker=progressbar.RotatingMarker() ),
-                  progressbar.ETA()])
+                  progressbar.AdaptiveETA()])
             pb.maxval = len(combinations)
             pb.start()
         for ctr,c in enumerate(combinations):
@@ -436,8 +438,34 @@ class Combiner:
         :param predictions: all predictions of all SRs
         :returns: sorted predictions
         """
-        print ( "FIXME need to sort predictions for most significant SR first" )
+        print ( "FIXME need to select %d predictions for most significant SR first" % \
+                ( len(predictions) ) )
         return predictions
+        sortByAnaId = {}
+        for i in predictions:
+            Id = i.analysisId()+":"+i.dataType(True)
+            if not Id in sortByAnaId:
+                sortByAnaId[Id]=[]
+            sortByAnaId[Id].append ( i )
+        ret = []
+        for Id,preds in sortByAnaId.items():
+            if "ul" in Id:
+                maxL, bestpred = -1., None
+                for pred in preds:
+                    l = pred.getLikelihood( mu=1. )
+                    if l > maxL:
+                        maxL = l
+                        bestpred = pred
+                if maxL > 0.:
+                    ret.append ( pred )
+            else:
+                for pred in preds:
+                    ret.append ( pred )
+        for i in ret:
+            print ( " `- %s:%s:%s %s: %s/%s" % \
+              ( i.analysisId(), i.dataType(True), i.dataId(), "; ".join(map(str,i.PIDs)),
+                i.getUpperLimit(), i.getUpperLimit(expected=True) ))
+        return ret
 
     def findHighestSignificance ( self, predictions, strategy, expected=False,
                                   mumax = None ):
