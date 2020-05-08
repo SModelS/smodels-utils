@@ -478,8 +478,8 @@ class Combiner:
                     if r > maxR:
                         maxR = r
                         bestpred = pred
-                if maxR > 0.:
-                    ret.append ( pred )
+                if maxR > 0. and bestpred != None:
+                    ret.append ( bestpred )
         self.pprint ( "selected predictions down via SRs from %d to %d." % \
                       ( len(predictions), len(ret) ) )
         if False:
