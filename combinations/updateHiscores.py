@@ -111,7 +111,7 @@ def main():
             T=str(int(time.time()))
             m.writeDictFile ( "pmodel-%s.py" % T, comment="history keeper" )
             with open ( "%shistory.txt" % rundir, "at" ) as f:
-                f.write ( "%s,step=%d,Z=%.4f,K=%.4f,t=%s\n" % ( time.asctime(),step,Z,K,T) )
+                f.write ( "%s, step=%d, Z=%.4f, K=%.4f, t=%s\n" % ( time.asctime(),step,Z,K,T) )
                 f.close()
             plot ( Z, K, rundir )
             Zold = Z
