@@ -444,50 +444,61 @@ class Combiner:
         """ compute K from Z and prior (simple) """
         return Z**2 + 2* numpy.log ( prior )
 
+    def getPredictionID ( self, prediction ):
+        """ construct a unique id of a prediction from the analysis ID,
+            pids, data set name """
+        return "%s:%s:%s" % ( prediction.analysisId(), str(prediction.dataId()),
+                              "; ".join(map(str,prediction.PIDs) ) )
+
     def selectMostSignificantSR ( self, predictions ):
         """ given, the predictions, for any analysis and topology,
             return the most significant SR only.
         :param predictions: all predictions of all SRs
         :returns: filtered predictions
         """
-        #print ( "FIXME need to select %d predictions for most significant SR first" % \
-        #        ( len(predictions) ) )
-        # return predictions
-        sortByAnaId = {}
+        sortByAnaId = {} ## first sort all by ana id + data Type
         for i in predictions:
             Id = i.analysisId()+":"+i.dataType(True)
             if not Id in sortByAnaId:
                 sortByAnaId[Id]=[]
             sortByAnaId[Id].append ( i )
         ret = []
+        keptThese = [] ## log the ana ids that we kept, for debugging only.
         for Id,preds in sortByAnaId.items():
             if "ul" in Id:
                 maxR, bestpred = 0., None
                 for pred in preds:
-                    l = pred.getLikelihood( mu=1. )
-                    r = pred.getUpperLimit() / pred.getUpperLimit(expected=True) 
+                    # l = pred.getLikelihood( mu=1. )
+                    r = pred.getUpperLimit() / pred.getUpperLimit(expected=True)
                     if r > maxR:
                         maxR = r
                         bestpred = pred
                 if maxR > 0. and bestpred != None:
                     ret.append ( bestpred )
+                    keptThese.append ( self.getPredictionID ( bestpred ) )
             else:
                 maxR, bestpred = 0., None
                 for pred in preds:
-                    r = pred.getUpperLimit() / pred.getUpperLimit(expected=True) 
+                    r = pred.getUpperLimit() / pred.getUpperLimit(expected=True)
                     if r > maxR:
                         maxR = r
                         bestpred = pred
                 if maxR > 0. and bestpred != None:
                     ret.append ( bestpred )
+                    keptThese.append ( self.getPredictionID ( bestpred ) )
         self.pprint ( "selected predictions down via SRs from %d to %d." % \
                       ( len(predictions), len(ret) ) )
-        if False:
-            for ctr,i in enumerate(ret):
-                r = i.getUpperLimit() / i.getUpperLimit(expected=True) 
-                print ( " `- #%d %s:%s:%s %s: %s/%s r=%.2f" % \
-                  ( ctr, i.analysisId(), i.dataType(True), i.dataId(), "; ".join(map(str,i.PIDs)),
-                    i.getUpperLimit(), i.getUpperLimit(expected=True), r ) )
+        debug = False ## print the selections in debug mode
+        if debug:
+            for ctr,i in enumerate(predictions):
+                r = i.getUpperLimit() / i.getUpperLimit(expected=True)
+                didwhat = colorama.Fore.RED + "discarded"
+                pId = self.getPredictionID( i )
+                if pId in keptThese:
+                    didwhat = "kept     "
+                print ( " `- %s: #%d %s: %s/%s r=%.2f%s" % \
+                  ( didwhat, ctr, pId, i.getUpperLimit(), 
+                    i.getUpperLimit(expected=True), r, colorama.Fore.RESET ) )
         return ret
 
     def findHighestSignificance ( self, predictions, strategy, expected=False,
@@ -506,7 +517,7 @@ class Combiner:
         ## optionally, add individual predictions ... nah!!
         ## combinables = singlepreds + combinables
         self.discussCombinations ( combinables )
-        bestCombo,Z,muhat = self._findLargestZ ( combinables, expected=expected, 
+        bestCombo,Z,muhat = self._findLargestZ ( combinables, expected=expected,
                                                  mumax = mumax )
         ## compute a likelihood equivalent for Z
         llhd = stats.norm.pdf(Z)
