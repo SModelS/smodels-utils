@@ -340,7 +340,7 @@ def writeIndexHtml ( protomodel ):
     if hasattr ( protomodel, "dbversion" ):
         dbver = protomodel.dbversion
         dotlessv = dbver.replace(".","")
-    f.write ( "<b><a href=./hiscore.slha>ProtoModel</a> <a href=./pmodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d.</b>" % \
+    f.write ( "<b><a href=./hiscore.slha>ProtoModel</a> <a href=./pmodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d.</b> " % \
             ( dotlessv, dbver, strategy, strategy, protomodel.step ) )
     if hasattr ( protomodel, "particleContributions" ):
         f.write ( "Z plots for: <a href=./M1000022.png>%s</a>" % helpers.toHtml(1000022) )
