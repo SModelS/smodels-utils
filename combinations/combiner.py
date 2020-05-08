@@ -469,8 +469,8 @@ class Combiner:
                     if r > maxR:
                         maxR = r
                         bestpred = pred
-                if maxR > 0.:
-                    ret.append ( pred )
+                if maxR > 0. and bestpred != None:
+                    ret.append ( bestpred )
             else:
                 maxR, bestpred = 0., None
                 for pred in preds:
