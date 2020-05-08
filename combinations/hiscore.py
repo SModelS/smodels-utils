@@ -100,6 +100,8 @@ class Hiscore:
             ## we have a new hiscore?
             ## compute the particle contributions
             m.computeParticleContributions()
+            ## compute the analysis contributions
+            m.computeAnalysisContributions()
 
         for i,mi in enumerate(self.hiscores):
             if mi!=None and mi.almostSameAs ( m.M ):
@@ -484,7 +486,7 @@ def main ( args ):
 
     if args.analysis_contributions:
         protomodel = protomodels[0]
-        if not hasattr ( protomodel, "contributions" ):
+        if not hasattr ( protomodel, "analysisContributions" ):
             from manipulator import Manipulator
             ma = Manipulator ( protomodels[0] )
             protomodel = ma.computeAnalysisContributions ()

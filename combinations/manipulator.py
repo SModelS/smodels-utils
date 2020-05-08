@@ -17,7 +17,7 @@ class Manipulator:
     def computeAnalysisContributions ( self ):
         """ compute the contributions to Z of the individual analyses 
         :returns: the model with the analysic constributions attached as
-                  .contributions
+                  .analysisContributions
         """
         from smodels.tools import runtime
         from combiner import Combiner

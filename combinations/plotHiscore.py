@@ -25,7 +25,7 @@ def setup():
     return ""
 
 def obtain ( number, picklefile ):
-    """ obtain hiscore number <number> 
+    """ obtain hiscore number <number>
     :returns: model
     """
     if not os.path.exists ( picklefile ):
@@ -162,7 +162,7 @@ def writeRawNumbersLatex ( protomodel ):
     f.close()
 
 def writeTex ( protomodel, keep_tex ):
-    """ write the comment about ss multipliers and contributions, in tex 
+    """ write the comment about ss multipliers and particle contributions, in tex
     :param keep_tex: keep tex source of texdoc.png
     """
     cpids = {}
@@ -271,10 +271,9 @@ def writeIndexTex ( protomodel, texdoc ):
         f.write ( "\\bf{Analysis Name} & \\bf{Contribution} \\\\\n" )
         f.write ( "\\hline\n" )
         conts = []
-        if hasattr ( protomodel, "analysisContributions" ):
-            contributions = protomodel.analysisContributions.items()
-            for k,v in contributions:
-                conts.append ( ( v, k ) )
+        contributions = protomodel.analysisContributions.items()
+        for k,v in contributions:
+            conts.append ( ( v, k ) )
         conts.sort( reverse=True )
         for v,k in conts:
             f.write ( "%s & %s%s \\\\ \n" % ( k, int(round(100.*v)), "\\%" ) )
@@ -301,7 +300,7 @@ def writeIndexTex ( protomodel, texdoc ):
     print ( "[plotHiscore] Wrote index.tex" )
 
 def getUnfrozenSSMs ( ssms, frozen, includeOnes=False ):
-    """ of all SSMs, leave out the ones with frozen particles 
+    """ of all SSMs, leave out the ones with frozen particles
     :param ssms: dictionary of SSMs
     :param frozen: list of pids of frozen particles
     :param includeOnes: if False, then also filter out values close to unity
@@ -372,7 +371,7 @@ def writeIndexHtml ( protomodel ):
                 break
         if not hasFrozenPid:
             ssms.add ( pids )
-            
+
 
     f.write ( ". SSM plots for: " )
     first = True
@@ -380,7 +379,7 @@ def writeIndexHtml ( protomodel ):
         if not first:
             f.write ( ", " )
         f.write ( "<a href=./ssm_%d_%d.png>(%s,%s)</a>" % \
-                  ( pids[0],pids[1], helpers.toHtml(pids[0],addSign=True), 
+                  ( pids[0],pids[1], helpers.toHtml(pids[0],addSign=True),
                     helpers.toHtml(pids[1],addSign=True) ) )
         first = False
     f.write ( "<br>\n" )
@@ -409,7 +408,7 @@ def writeIndexHtml ( protomodel ):
             f.write ( "<li> %s: %s%s\n" % ( k, int(round(100.*v)), "%" ) )
         # f.write ( "</table>\n" )
     else:
-        print ( "[plotHiscore] contributions are not defined" )
+        print ( "[plotHiscore] analysis-contributions are not defined" )
 
     height = 32*int((len(ssm)+3)/4)
     if ssm == []:
@@ -430,7 +429,7 @@ def writeIndexHtml ( protomodel ):
     print ( "[plotHiscore] Wrote index.html" )
 
 def copyFilesToGithub():
-    files = [ "hiscore.slha", "index.html", "matrix_aggressive.png", "decays.png", 
+    files = [ "hiscore.slha", "index.html", "matrix_aggressive.png", "decays.png",
               "ruler.png", "texdoc.png", "pmodel.py", "rawnumbers.html" ]
     for f in files:
         if not os.path.exists ( f ):
@@ -440,7 +439,7 @@ def copyFilesToGithub():
             print ( "[plotHiscore.py] when copying files: %s" % O )
 
 def getPIDsOfTPred ( tpred, ret, integrateDataType=True, integrateSRs=True ):
-    """ get the list of PIDs that the theory prediction should be assigned to 
+    """ get the list of PIDs that the theory prediction should be assigned to
     :param tpred: theory prediction
     :param ret: results of a previous run of this function, so we can add iteratively
     :param integrateDataType: if False, then use anaid:dtype (eg CMS-SUS-19-006:ul) as values
@@ -505,7 +504,7 @@ def plot ( number, verbosity, picklefile, options ):
     ## plot hiscore number "number"
     protomodel = obtain ( number, picklefile )
     if hasattr ( protomodel, "currentSLHA" ):
-        del protomodel.currentSLHA 
+        del protomodel.currentSLHA
     # protoslha = protomodel.createSLHAFile ( nevents=100000 )
     protoslha = protomodel.createSLHAFile ( recycle_xsecs = True )
     # print ( "wrote", protoslha )
@@ -542,7 +541,7 @@ def runPlotting ( args ):
         print ( "      none: no upload" )
         print ( "       gpu: upload to GPU server, afs space." )
         print ( "            Result can be seen at http://www.hephy.at/user/wwaltenberger/protomodels/" )
-        print ( "    github: upload to github git directory." ) 
+        print ( "    github: upload to github git directory." )
         print ( "            Result can be seen at https://smodels.github.io/protomodels" )
         print ( "interesting: upload to github git directory, 'interesting' folder." )
         print ( "             Result can be seen at https://smodels.github.io/protomodels/interesting" )
@@ -558,7 +557,7 @@ def runPlotting ( args ):
     options = { "ruler": not args.noruler, "decays": not args.nodecays,
                 "predictions": not args.nopredictions, "html": not args.nohtml,
                 "keep_tex": args.keep, "tex": not args.notex }
-    
+
     plot ( args.number, args.verbosity, args.picklefile, options )
     if upload is None:
         return
@@ -648,12 +647,12 @@ def main ():
             help='keep latex files',
             action="store_true" )
     argparser.add_argument ( '-u', '--upload',
-            help='upload to one of the following destinations: none, gpu, github, anomaly, latest, interesting [none]. run --destinations to learn more', 
+            help='upload to one of the following destinations: none, gpu, github, anomaly, latest, interesting [none]. run --destinations to learn more',
             type=str, default="" )
     argparser.add_argument ( '-c', '--commit',
             help='also commit and push to smodels.github.io (works only with -u github, anomaly, latest, or interesting)',
             action="store_true" )
-    argparser.add_argument ( "--destinations", 
+    argparser.add_argument ( "--destinations",
             help="learn more about the upload destinations", action="store_true" )
     args = argparser.parse_args()
     if args.picklefile == "default":

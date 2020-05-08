@@ -52,41 +52,6 @@ class Trimmer:
         print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions, experimental=%d" % ( self.M.Z, origZ, len(self.M.bestCombo), runtime._experimental ) )
         return abs ( (origZ - self.M.Z) / ( origZ +1e-10 ) ) < 1e-7
 
-    def computeAnalysisContributions ( self ):
-        """ compute the contributions to Z of the individual analyses """
-        print ( "[trimmer] now computing analysis contributions" )
-        print ( "[trimmer] step 1: recompute the full Z. Old one at %.2f." % self.M.Z )
-        origZ = self.M.Z # to be sure
-        self.M.Z = -23.
-        hasPred = self.M.predict( strategy=self.strategy, nevents=self.nevents,
-                                           check_thresholds = False )
-        if not hasPred:
-            print ( "[trimmer] I dont understand, why do I not get a pred anymore? r=%.2f" % ( self.M.rmax ) )
-        print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions, has a pred? %d, experimental=%d" % ( self.M.Z, origZ, len(self.M.bestCombo), hasPred, runtime._experimental ) )
-        if origZ > 0. and abs ( origZ - self.M.Z ) / origZ > 0.001:
-            print  ( "[trimmer] error!! Zs do not match! Should not save" )
-        contributions = {}
-        combiner = Combiner()
-        dZtot = 0.
-        bestCombo = copy.deepcopy ( self.M.bestCombo )
-        for ctr,pred in enumerate(bestCombo):
-            combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:] 
-            Z, muhat_ = combiner.getSignificance ( combo )
-            dZ = origZ - Z
-            dZtot += dZ
-            contributions[ ctr ] = Z
-            # contributions[ ctr ] = Z
-        for k,v in contributions.items():
-            perc = (origZ-v) / dZtot
-            print ( "[trimmer] without %s(%s) we get %.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
-            contributions[ k ] = perc
-        contrsWithNames = {}
-        for k,v in contributions.items():
-            contrsWithNames [ self.M.bestCombo[k].analysisId() ] = v
-        self.M.contributions = contrsWithNames
-        print ( "[trimmer] stored %d contributions" % len(contributions) )
-        return self.M
-
     def pidsOfBestCombo ( self ):
         """ obtain all pids that are relevant for best combo """
         ret = set()
