@@ -2,10 +2,12 @@
 
 """ simple tool to fetch all sorts of files from clip """
 
-import subprocess, sys, copy, argparse
+import subprocess, sys, copy, argparse, colorama
 
 def fetch ( files ):
     """ fetch the files in list """
+    print ( colorama.Fore.GREEN + "fetching:",", ".join ( files ) )
+    print ( colorama.Fore.RESET )
     files = set ( files ) ## remove dupes
     for i in files:
         cmd="scp wolfgan.waltenberger@clip-login-1:/scratch-cbe/users/wolfgan.waltenberger/rundir/%s ." % i
@@ -27,23 +29,23 @@ def main():
     argparser.add_argument ( '-2', '--two', help='the second hiscore file', 
                              action="store_true" )
     args = argparser.parse_args()
-    files= [ "hiscore.pcl" ]
-    if args.scan:
-        files = [ "scanM*.pcl", "mp*.pcl", "ssm*.pcl" ]
-    if args.states:
-        files = [ "states.pcl" ]
-    if args.two:
-        files = [ "hiscore2.pcl" ]
-    if args.copy:
-        files = [ "hiscoreCopy.pcl" ]
-    if args.pmodels:
-        files = [ "pmodel?.py" ]
-    if args.png:
-        files = [ "*.png" ]
-    if args.ssms:
-        files = [ "ssm*.pcl" ]
-    if args.all:
-        files = [ "scanM*.pcl", "mp*.pcl", "ssm*.pcl", "*png", "ssm*.pcl", "pmodel?.py"  ]
+    # files= [ "hiscore.pcl" ]
+    files = set()
+    store = { "scan": [ "scanM*.pcl", "mp*.pcl", "ssm*.pcl" ], 
+              "states": [ "states.pcl" ],
+              "two": [ "hiscore2.pcl" ],
+              "copy": [ "hiscoreCopy.pcl" ],
+              "pmodels": [ "pmodel?.py" ],
+              "png": [ "*.png" ],
+              "ssms": [ "ssm*.pcl" ]
+    }
+    for k,v in args.__dict__.items():
+        if v == True or args.all:
+            if k in store:
+                for f in store[k]:
+                    files.add ( f )
+    if len(files) == 0 or args.all: ## the default
+        files.add ( "hiscore.pcl" )
     fetch ( files )
 
 if __name__ == "__main__":
