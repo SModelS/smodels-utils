@@ -150,7 +150,7 @@ def fetchUnfrozenSSMsFromDict():
             
 def runLLHDScanner( pid, dry_run, time, rewrite ):
     """ run the llhd scanner for pid, on the current hiscore 
-    :param pid: pid of particle on x axis. if zero, run on list of pids
+    :param pid: pid of particle on x axis. if zero, run all unfrozen pids of hiscore
     :param dry_run: do not execute, just say what you do
     :param rewrite: force rewrite of scan script
     """
@@ -345,7 +345,7 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-d','--dry_run', help='dry-run, dont actually call srun',
                              action="store_true" )
-    argparser.add_argument ( '-k','--keep', help='keep calling scripts',
+    argparser.add_argument ( '-k','--keep', help='keep the shell scripts that are being run, do not remove them afters',
                              action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater',
                              action="store_true" )
@@ -353,27 +353,29 @@ def main():
                     help='run the Z scanner on pid [SCAN], -1 means dont run, 0 means run on all unfrozen particles in hiscore.', 
                     type=int, default=-1 )
     argparser.add_argument ( '-b', '--bake', nargs="?", 
-                    help='bake, with the given arguments, use "default" if unsure ["@n 10000 @a"]', 
+                    help='bake EM maps, with the given arguments, use "default" if unsure ["@n 10000 @a"]', 
                     type=str, default="" )
     argparser.add_argument ( '-m', '--mass', nargs="?", 
-                    help='bake, mass specification, for baking only [(50,4500,200),(50,4500,200),(0.)]', 
+                    help='bake EM maps, mass specification, for baking only [(50,4500,200),(50,4500,200),(0.)]', 
                     type=str, default="default" )
     argparser.add_argument ( '--pid2', nargs="?", 
-                    help='run the scanner for ss multipliers (pid,pid2), -1 means ignore and run for mass scans instead. 0 means scan over all unfrozen ssms.', 
+                    help='run the scanner for ss multipliers (pid,pid2), -1 means ignore and run for mass scans instead. 0 means scan over all unfrozen ssms of hiscore.', 
                     type=int, default=-1 )
     argparser.add_argument ( '-L', '--llhdscan', nargs="?", 
-                    help='run the llhd scanner on pid/1000022, -1 means dont run', 
+                    help='run the llhd scanner on pid/1000022, -1 means dont run. 0 means run on all unfrozen pids of hiscore.', 
                     type=int, default=-1 )
     argparser.add_argument ( '--clean', help='clean up files from old runs',
                              action="store_true" )
     argparser.add_argument ( '--clean_all', help='clean up *all* files from old runs',
                              action="store_true" )
-    argparser.add_argument ( '-R','--regressor', help='run the regressor',
+    #argparser.add_argument ( '-R','--regressor', help='run the regressor',
+    #                         action="store_true" )
+    argparser.add_argument ( '--allscans', help='run all the scans: masses, llhds, and ssmses',
                              action="store_true" )
-    argparser.add_argument ( '-r','--restart', help='restart worker jobs n times [0]',
-                             type=int, default=0 )
-    argparser.add_argument ( '--rewrite', help='force rewrite of scan scripts',
-                             action="store_true" )
+    #argparser.add_argument ( '-r','--restart', help='restart worker jobs n times [0]',
+    #                         type=int, default=0 )
+    #argparser.add_argument ( '--rewrite', help='force rewrite of scan scripts',
+    #                         action="store_true" )
     argparser.add_argument ( '-n', '--nmin', nargs='?', help='minimum worker id [0]',
                         type=int, default=0 )
     argparser.add_argument ( '-C', '--cheatcode', nargs='?', help='use a cheat code [0]',
@@ -387,13 +389,18 @@ def main():
             type=int, default=0 )
     argparser.add_argument ( '-f', '--cont', help='continue with saved states [""]',
                         type=str, default="" )
-    argparser.add_argument ( '-a', '--analyses', help='analyses considered in baking ["cms_sus_16_033,atlas_susy_2016_07"]',
+    argparser.add_argument ( '-a', '--analyses', help='analyses considered in EM baking ["cms_sus_16_033,atlas_susy_2016_07"]',
                         type=str, default="cms_sus_16_033,atlas_susy_2016_07" )
-    argparser.add_argument ( '-T', '--topo', help='topology considered in baking ["T3GQ"]',
+    argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking ["T3GQ"]',
                         type=str, default="T3GQ" )
     argparser.add_argument ( '-D', '--dbpath', help='path to database ["/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database"]',
                         type=str, default="/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database" )
     args=argparser.parse_args()
+    if args.allscans:
+        subprocess.getoutput ( "./slurm.py -S 0" )
+        subprocess.getoutput ( "./slurm.py -S 0 --pid2 0" )
+        subprocess.getoutput ( "./slurm.py -L 0" )
+        return
     if args.query:
         queryStats ( )
         return
