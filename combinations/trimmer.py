@@ -16,9 +16,11 @@ class Trimmer:
         *after* an MCMC walk.
     """
     def __init__ ( self, protomodel, strategy="aggressive", maxloss=.005,
-                   nevents = 100000 ):
+                   nevents = 100000, verbose = True ):
         """
         :param maxloss: maximum loss that we allow, in relative numbers
+        :param nevents: number of events when computing xsecs
+        :param verbose: verbosity
         """
         self.M = copy.deepcopy ( protomodel )
         self.M.createNewSLHAFileName ( prefix="tri" )
@@ -26,6 +28,7 @@ class Trimmer:
         self.strategy = strategy
         self.maxloss = maxloss
         self.nevents = nevents
+        self.verbose = verbose
 
     def highlight ( self, msgType = "info", *args ):
         """ logging, hilit """
@@ -42,7 +45,11 @@ class Trimmer:
         # logfile = "walker%d.log" % self.M.walkerid
         logfile = "hiscore.log"
         with open( logfile, "a" ) as f:
-            f.write ( "[trimmer:%d - %s] %s\n" % ( self.M.walkerid, time.asctime(), " ".join(map(str,args)) ) )
+            line = "[trimmer:%d - %s] %s" % \
+                    ( self.M.walkerid, time.asctime(), " ".join(map(str,args)) )
+            f.write ( line + "\n" )
+            if self.verbose:
+                print ( line )
 
     def checkZ ( self ):
         print ( "[trimmer] Check significance Z ... " )
@@ -343,8 +350,10 @@ class Trimmer:
             return pid == pids
         return pid in pids
 
-    def merge ( self, pair, force_merge=False ):
+    def merge ( self, pair, merge_strategy="default", force_merge=False ):
         """ merge two particles, pids given in pair 
+        :param merge_strategy: I introduced this so we can try a few strategies
+                               and compare
         :param pair: pair of pids
         :param force_merge: if true, for the merger, even if Z gets much lower,
             or we run into an exclusion.
@@ -353,6 +362,8 @@ class Trimmer:
         pair.sort()
         p1,p2 = pair[0], pair[1]
         self.pprint ( "attempt to merge %d and %d" % ( p1, p2 ) )
+        self.log ( "masses before merger: %.2f, %.2f" % \
+                   ( self.M.masses[p1], self.M.masses[p2] ) )
         avgM = self.computeAvgMass ( pair )
         self.log ( "avg mass for %s is %.1f" % ( str(pair), avgM ) )
         self.M.backup() ## in case it doesnt work out!
@@ -362,10 +373,13 @@ class Trimmer:
         ## add the decays from pid2 to pid1
         for pids,br in self.M.decays [ p2 ].items():
             if pids in self.M.decays[p1]:
+                self.log ( "add to decays %s/%s: %.2f" % ( p1, pids, br ) )
                 self.M.decays[p1][pids] = self.M.decays[p1][pids] + br
             else:
+                self.log ( "set decays of %s/%s to %.2f" % ( p1, pids, br ) )
                 self.M.decays[p1][pids] = br
         # print ( "ssms1000006", self.M.ssmultipliers[(-1000006, 1000006)] )
+        self.log ( "now normalize branchings of %d" % p1 )
         self.manipulator.normalizeBranchings ( p1, fixSSMs = False )
 
         ## decays *into* pid2 need to be remapped to pid1
