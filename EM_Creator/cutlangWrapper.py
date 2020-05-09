@@ -26,18 +26,20 @@
 # TODO: Remove the directory if makefile not present?
 # TODO: Finish directory structure picture...
 # FIXME: Instead of exiting, raise exceptions?
+# FIXME: Add contracts for nevents. Add check of prev implementation.
+
 
 # Standard library imports
-import os                  # For path
-import sys                 # For exit()
-import colorama            # For output colors (in msg, error, ...)
-import subprocess          # For Popen in exe method
-import shutil              # For move(), FIXME: remove?
-import tempfile            # FIXME: Either remove or implement
-import  re                 # For delphes card picker
-from datetime import date  # For timestamp of embaked files
-import multiprocessing     # Used when run as __main__
-import gzip                # For decompression of hepmc file
+import os                      # For path
+import sys                     # For exit()
+import colorama                # For output colors (in msg, error, ...)
+import subprocess              # For Popen in exe method
+import shutil                  # For move(), FIXME: remove?
+import tempfile                # FIXME: Either remove or implement
+import  re                     # For delphes card picker
+import multiprocessing         # Used when run as __main__
+import gzip                    # For decompression of hepmc file
+from datetime import datetime  # For timestamp of embaked files
 
 # 3 party imports
 import ROOT                # To parse CutLang output
@@ -180,7 +182,7 @@ class cutlangWrapper:
         else:
             raise Exception(f"No analysis file found for analysis {a_name} found at: \n" + cla_path)
 
-    def extract_efficiencies(self, masses, cla_file, out_file):
+    def extract_efficiencies(self, cla_file):
         """ Extracts the efficiencies from CutLang output.
             :param masses:    mass n-tuple
             :param cla_file:  .root file output of CLA
@@ -195,31 +197,33 @@ class cutlangWrapper:
         # temporary TH1D structure to write results in
         rootTmp  = ROOT.TH1D()
 
-        with open(out_file, "w") as f:
-            f.write("{" + str(masses) + ": {")
-            nevents = 0
-            self.info("Objects found in CutLang results:")
-            print([x.ReadObj().GetName() for x in rootFile.GetListOfKeys()])
-            # Traverse all keys in ROOT file
-            for x in rootFile.GetListOfKeys():
-                if "cutflow" not in [x.ReadObj().GetName() for x in rootFile.GetListOfKeys()]:
-                    continue
-                x.ReadObj().GetObject("cutflow", rootTmp)
-                name = x.ReadObj().GetName()
-                if name == 'baseline':
-                    pass
-                    # continue
-                f.write("".join(["'", str(x.ReadObj().GetName()),"': "]))
-                s = rootTmp.GetNbinsX()
-                if rootTmp[2] == 0:
-                    f.write("NaN")
-                f.write(str(rootTmp[(s-1)]/rootTmp[2]) + ', ')
-                print(rootTmp[(s-1)]/rootTmp[2])
-                nevents = rootTmp[2]
-            f.write(f"'__t__':'{date.today().strftime('%Y-%m-%d_%H:%M:%S')}', ")
-            f.write(f"'__nevents__':{nevents}")
-            f.write("}")
-            f.write("}")
+        nevents = []
+        entries = ""
+        self.info("Objects found in CutLang results:")
+        print([x.ReadObj().GetName() for x in rootFile.GetListOfKeys()])
+        # Traverse all keys in ROOT file
+        for x in rootFile.GetListOfKeys():
+            print("In the loop")
+            print(x)
+            print(str([x.ReadObj().GetName() for x in rootFile.GetListOfKeys()]))
+            if "cutflow" not in [x.ReadObj().GetName() for x in rootFile.GetListOfKeys()]:
+                print("Cutflow not in objects.")
+            x.ReadObj().GetObject("cutflow", rootTmp)
+            name = x.ReadObj().GetName()
+            if name in {'baseline', 'presel'}:
+                pass
+                # continue
+            # entry ~ data point to write into efficiency map
+            entry = "".join(["'", name, "': "])
+            s = rootTmp.GetNbinsX()
+            if rootTmp[2] == 0:
+                entry += "NaN"
+            entry += str(rootTmp[(s-1)]/rootTmp[2]) + ', '
+            print(entry)
+            nevents.append(rootTmp[2])
+            entries += entry
+        return entries, nevents
+
 
     def get_cla_out_filename(self, inputname):
         """ Returns the name of CLA output file"""
@@ -355,10 +359,31 @@ class cutlangWrapper:
 
         # efficiency file
         effi_file = os.path.join(out_dir.get(), self.__get_embaked_name(self.analyses, self.topo))
-        # CLA results in .root file
+        # CLA results in .root filE
         CLA_output = self.get_cla_out_filename(cutlangfile)
         # shutil.move(CLA_output,
-        self.extract_efficiencies(masses, CLA_output, effi_file)
+        nevents = []
+        entries = ""
+        for filename in os.listdir(self.cutlang_run_dir):
+            if filename.startswith("histoOut-BP") and filename.endswith(".root"):
+                filename = os.path.join(self.cutlang_run_dir, filename)
+                tmp_entries, tmp_nevents = self.extract_efficiencies(filename)
+                nevents += tmp_nevents
+                entries += tmp_entries
+                shutil.move(filename, tmp_dir.get()+ os.path.basename(filename))
+        print(f"Nevents: {nevents}")
+        if len(set(nevents)) > 1:
+            self.error("Number of events before selection is not constant in all regions:")
+            self.error(f"Numbers of events: {nevents}")
+            self.error(f"Using the value: {nevents[0]}")
+        with open(effi_file, "w") as f:
+            f.write("{" + str(masses) + ": {")
+            f.write(entries)
+            f.write(f"'__t__':'{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}', ")
+            f.write(f"'__nevents__':{nevents[0]}")
+            f.write("}")
+            f.write("}")
+        # self.extract_efficiencies(masses, CLA_output, effi_file)
 
     def exe(self, cmd, maxLength=100, cwd=None, exit_on_fail=False):
         """ execute cmd in shell
@@ -371,13 +396,14 @@ class cutlangWrapper:
             directory = cwd
         self.msg ( f'exec: {directory} $$ {" ".join(cmd)}' )
         proc = subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        proc.wait()
         out, err = proc.communicate()
         print(out.decode('utf-8'))
-        if not (err == None or err == 0):
+        print(err.decode('utf-8'))
+        proc.wait()
+        if not (proc.returncode == 0):
             self.error(f"Executed process: \n{' '.join(cmd)}\n\nin"
                        f" directory:\n{directory}\n\nproduced an error\n\n"
-                       f"value {err.decode('utf-8')}.")
+                       f"value {proc.returncode}.")
             if exit_on_fail == True:
                 pass
                 # sys.exit()
