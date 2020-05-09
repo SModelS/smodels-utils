@@ -337,6 +337,11 @@ def queryStats ( ):
     import running_stats
     running_stats.count_jobs()
     running_stats.running_stats()
+    a = subprocess.getoutput ( "slurm q | tail -n 3" )
+    print ( )
+    print ( "oldest jobs:" )
+    print ( "============" )
+    print ( a )
 
 def main():
     import argparse
