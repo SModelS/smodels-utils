@@ -104,12 +104,63 @@ def produceScanScript ( pid, force_rewrite, pid2 ):
             f.write ("%s/combinations/scanner.py -P -p %d %s\n" % ( codedir,pid,argpid2) ) 
             f.close()
         os.chmod ( fname, 0o775 )
+
+def fetchUnfrozenFromDict():
+    """ fetch pids of unfrozenparticles from dictionary
+        in <rundir>/pmodel.py, if exists.
+    :returns: list of pids, or None.
+    """
+    if not os.path.exists ( "%s/pmodel.py" % rundir ):
+        print ( "[slurm.py] could not find pmodel.py file when trying to fetch unfrozen pids" )
+        return None
+    with open ( "%s/pmodel.py" % rundir, "rt" ) as f:
+        D = eval( f.read() )
+        M = D["masses"]
+        ret = []
+        for k,v in M.items():
+            if v < 90000:
+                ret.append(k)
+        return ret
+    return None
+
+def fetchUnfrozenSSMsFromDict():
+    """ fetch pid pairs of ssmultipliers from dictionary
+        in <rundir>/pmodel.py, if exists.
+    :returns: list of pid pairs, or None.
+    """
+    if not os.path.exists ( "%s/pmodel.py" % rundir ):
+        print ( "[slurm.py] could not find pmodel.py file when trying to fetch unfrozen ssms" )
+        return None
+    with open ( "%s/pmodel.py" % rundir, "rt" ) as f:
+        D = eval( f.read() )
+        M = D["masses"]
+        ssms = D["ssmultipliers"]
+        pids = []
+        for k,v in M.items():
+            if v < 90000:
+                pids.append(k)
+        ret = []
+        for ssmpids,ssm in ssms.items():
+            for ssmpid in ssmpids:
+                if abs(ssmpid) not in pids:
+                    continue
+            ret.append ( ssmpids )
+        return ret
+    return None
             
 def runLLHDScanner( pid, dry_run, time, rewrite ):
     """ run the llhd scanner for pid, on the current hiscore 
+    :param pid: pid of particle on x axis. if zero, run on list of pids
     :param dry_run: do not execute, just say what you do
     :param rewrite: force rewrite of scan script
     """
+    if pid == 0:
+        pids = fetchUnfrozenFromDict()
+        if pids == None:
+            pids = [ 1000001, 1000003, 1000006 ]
+        for i in pids:
+            runLLHDScanner ( i, dry_run, time, rewrite )
+        return
     qos = "c_short"
     if time > 48:
         qos = "c_long"
@@ -145,12 +196,20 @@ def runScanner( pid, dry_run, time, rewrite, pid2 ):
     :param pid: if 0, run on unfrozen particles in hiscore.
     :param dry_run: do not execute, just say what you do
     :param rewrite: force rewrite of scan script
-    :param pid2: if not zero, scan for ss multipliers (pid,pid2), 
-                 instead of scanning for masses
+    :param pid2: if >0, scan for ss multipliers (pid,pid2), 
+                 if 0, scan all ss multipliers, if < 0, scan masses, 
+                 not ssm multipliers.
     """
     if pid == 0:
-        print ( "FIXME current pids are fixed list. take from hiscore!" )
-        for i in [ 1000001, 1000003, 1000006, 10000022 ]:
+        if pid2 == 0:
+            pidpairs = fetchUnfrozenSSMsFromDict()
+            for pidpair in pidpairs:
+                runScanner ( pidpair[0], dry_run, time, rewrite, pidpair[1] )
+            return
+        pids = fetchUnfrozenFromDict()
+        if pids == None:
+            pids = [ 1000001, 1000003, 1000006, 10000022 ]
+        for i in pids:
             runScanner ( i, dry_run, time, rewrite, pid2 )
         return
     qos = "c_short"
@@ -171,7 +230,7 @@ def runScanner( pid, dry_run, time, rewrite, pid2 ):
         lines=f.readlines()
         f.close()
     spid2 = ""
-    if pid2 != 0:
+    if pid2 != -1:
         spid2 = "%d" % pid2
     script = "_S%s%s.sh" % ( pid, spid2 )
     with open ( script, "wt" ) as f:
@@ -300,8 +359,8 @@ def main():
                     help='bake, mass specification, for baking only [(50,4500,200),(50,4500,200),(0.)]', 
                     type=str, default="default" )
     argparser.add_argument ( '--pid2', nargs="?", 
-                    help='run the scanner for ss multipliers (pid,pid2), 0 means ignore', 
-                    type=int, default=0 )
+                    help='run the scanner for ss multipliers (pid,pid2), -1 means ignore and run for mass scans instead. 0 means scan over all unfrozen ssms.', 
+                    type=int, default=-1 )
     argparser.add_argument ( '-L', '--llhdscan', nargs="?", 
                     help='run the llhd scanner on pid/1000022, -1 means dont run', 
                     type=int, default=-1 )
