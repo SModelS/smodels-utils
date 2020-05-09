@@ -472,10 +472,11 @@ def main():
 
             for j in jobs:
                 j.join()
-        if args.restart < 1:
-            break
-        restartctr+=1
-        if restartctr>args.restart:
-            break
+        break
+        #if args.restart < 1:
+        #    break
+        #restartctr+=1
+        #if restartctr>args.restart:
+        #    break
 
 main()
