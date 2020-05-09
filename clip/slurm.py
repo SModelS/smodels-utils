@@ -142,11 +142,17 @@ def runLLHDScanner( pid, dry_run, time, rewrite ):
 
 def runScanner( pid, dry_run, time, rewrite, pid2 ):
     """ run the Z scanner for pid, on the current hiscore
+    :param pid: if 0, run on unfrozen particles in hiscore.
     :param dry_run: do not execute, just say what you do
     :param rewrite: force rewrite of scan script
     :param pid2: if not zero, scan for ss multipliers (pid,pid2), 
                  instead of scanning for masses
     """
+    if pid == 0:
+        print ( "FIXME current pids are fixed list. take from hiscore!" )
+        for i in [ 1000001, 1000003, 1000006, 10000022 ]:
+            runScanner ( i, dry_run, time, rewrite, pid2 )
+        return
     qos = "c_short"
     if time > 48:
         qos = "c_long"
@@ -285,7 +291,7 @@ def main():
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater',
                              action="store_true" )
     argparser.add_argument ( '-S', '--scan', nargs="?", 
-                    help='run the Z scanner on pid [SCAN], -1 means dont run', 
+                    help='run the Z scanner on pid [SCAN], -1 means dont run, 0 means run on all unfrozen particles in hiscore.', 
                     type=int, default=-1 )
     argparser.add_argument ( '-b', '--bake', nargs="?", 
                     help='bake, with the given arguments, use "default" if unsure ["@n 10000 @a"]', 
