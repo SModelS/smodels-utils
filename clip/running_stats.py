@@ -59,7 +59,7 @@ def running_stats():
         lognr =  int ( log[walkerp+6:-4] )
         if lognr > 1000:
             continue
-        if ds/60. > 60: ## in minutes
+        if ds/60. > 120: ## in minutes
             pending.add ( lognr )
         else:
             running.add ( lognr )
