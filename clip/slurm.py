@@ -339,8 +339,8 @@ def queryStats ( ):
     running_stats.running_stats()
     a = subprocess.getoutput ( "slurm q | tail -n 3" )
     print ( )
-    print ( "oldest jobs:" )
-    print ( "============" )
+    print ( "longest running jobs:" )
+    print ( "=====================" )
     print ( a )
 
 def main():
@@ -432,9 +432,9 @@ def main():
     if args.llhdscan != -1:
         runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite )
         return
-    if args.regressor:
-        runRegressor ( args.dry_run )
-        return
+    #if args.regressor:
+    #    runRegressor ( args.dry_run )
+    #    return
     with open("run_walker.sh","rt") as f:
         lines=f.readlines()
     nmin, nmax, cont = args.nmin, args.nmax, args.cont

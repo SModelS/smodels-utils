@@ -378,13 +378,13 @@ def sortByK ( protomodels ):
     return protomodels[:20] ## only 20
 
 def discuss ( protomodel, name ):
-    print ( "Currently %7s K=%.3f, Z=%.3f [%d/%d unfrozen particles, %d predictions] (walker #%d)" % \
+    print ( "Currently %7s K=%.3f, Z=%.3f [%d/%d particles, %d predictions] (walker #%d)" % \
             (name, protomodel.K, protomodel.Z, len(protomodel.unFrozenParticles()),len(protomodel.masses.keys()),len(protomodel.bestCombo), protomodel.walkerid ) )
 
 def discussBest ( protomodel, detailed ):
     """ a detailed discussion of number 1 """
     p = 2. * ( 1. - stats.norm.cdf ( protomodel.Z ) ) ## two times because one-sided
-    print ( "Current           best: K=%.3f, Z=%.3f, p=%.2g [%d/%d unfrozen particles, %d predictions] (walker #%d)" % \
+    print ( "Current      best: K=%.3f, Z=%.3f, p=%.2g [%d/%d particles, %d predictions] (walker #%d)" % \
             ( protomodel.K, protomodel.Z, p, len(protomodel.unFrozenParticles()),len(protomodel.masses.keys()),len(protomodel.bestCombo), protomodel.walkerid ) )
     if detailed:
         print ( "Solution was found in step #%d" % protomodel.step )
