@@ -364,7 +364,7 @@ class Trimmer:
         self.pprint ( "attempt to merge %d and %d" % ( p1, p2 ) )
         self.log ( "masses before merger: %.2f, %.2f" % \
                    ( self.M.masses[p1], self.M.masses[p2] ) )
-        avgM = self.computeAvgMass ( pair )
+        avgM = self.computeAvgMass ( pair, merge_strategy )
         self.log ( "avg mass for %s is %.1f" % ( str(pair), avgM ) )
         self.M.backup() ## in case it doesnt work out!
         self.M.masses[ p1 ] = avgM ## set this one to the avg mass
@@ -373,7 +373,8 @@ class Trimmer:
         ## add the decays from pid2 to pid1
         for pids,br in self.M.decays [ p2 ].items():
             if pids in self.M.decays[p1]:
-                self.log ( "add to decays %s/%s: %.2f" % ( p1, pids, br ) )
+                if br > 0.001:
+                    self.log ( "add to decays %s/%s: %.2f" % ( p1, pids, br ) )
                 self.M.decays[p1][pids] = self.M.decays[p1][pids] + br
             else:
                 self.log ( "set decays of %s/%s to %.2f" % ( p1, pids, br ) )
@@ -393,13 +394,17 @@ class Trimmer:
                             newpids.append ( p1 )
                         else:
                             newpids.append ( dpid )
+                    self.log ( "redirecting decay %d from %s to %s: br=%.2f" % \
+                               ( mpid, dpids, newpids, br ) )
                     self.M.decays[mpid].pop ( dpids )
                     self.M.decays[mpid][tuple(newpids)]=br
 
         ## clean up, remove all decays with pid2
         # self.M.decays.pop ( p2 )
 
-        # print ( "ssms1000006", self.M.ssmultipliers[(-1000006, 1000006)] )
+        ## dont add for the frozen particles
+        frozen = self.M.frozenParticles()
+
         ## ssmultipliers get added up, too
         newssms = copy.deepcopy ( self.M.ssmultipliers )
         for pids, ssm in self.M.ssmultipliers.items():
@@ -414,8 +419,11 @@ class Trimmer:
             newpids = tuple(newpids)
             # self.pprint ( "adding", ssm, "for",pids,"to",newpids )
             if newpids in self.M.ssmultipliers:
+                if ssm > 0.:
+                    self.log ( "adding to ssm of %s: %.2f" % ( newpids, ssm ) )
                 newssms[newpids]=newssms[newpids]+ssm
             else:
+                self.log ( "setting ssm of %s to %.2f" % ( newpids, ssm ) )
                 newssms[newpids]=ssm
         # self.M.ssmultipliers = newssms
 
@@ -426,6 +434,7 @@ class Trimmer:
                 newms[pids]=ssm
         self.M.ssmultipliers = newms
 
+        self.log ( "now predict. old rmax is at %.2f" % self.M.rmax )
         oldZ,oldrmax = self.M.Z, self.M.rmax
         passed = self.M.predict ( nevents = 100000, recycle_xsecs = False )
         if passed == False: 
@@ -466,8 +475,11 @@ class Trimmer:
                     pair = ( pid1, pid2 )
         return pair,dmin
 
-    def computeAvgMass ( self, pids ):
-        """ compute the average mass """
+    def computeAvgMass ( self, pids, merge_strategy ):
+        """ compute the average mass 
+        :param merge_strategy: allow for different ways to merge
+        :returns: mass, as scalar, in GeV
+        """
         ret=0.
         for pid in pids:
             ret+=self.M.masses[pid]

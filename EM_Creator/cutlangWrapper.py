@@ -9,14 +9,14 @@
 .. moduleauthor:: Jan Mrozek <jmrozek@protonmail.ch>
 
 ..directory structure::
-    EM_Creator --┬-CutLang---------┬-runs ~ folder with running script (CLA.sh)
+    EM_Creator --+-CutLang---------+-runs ~ folder with running script (CLA.sh)
                  |                 +-CLA  ~ folder with executable (CLA.exe)
                  |                 + ADLLHCAnalysis ~ contains adl files for analyses
-                 +-cutlang_wrapper-┬-ANA_*-┬-output-┬-efficiencies.embaked
+                 +-cutlang_wrapper-+-ANA_*-+-output-+-efficiencies.embaked
                  |                         |        +-detected.root
                  |                         |        +-CL_output_summary.dat
                  |                         |        +-log.txt
-                 |                         +-temp---┬-hepmcfile.hepmc ~ if it was gzipped
+                 |                         +-temp---+-hepmcfile.hepmc ~ if it was gzipped
                  +-Delphes--------+-
 """
 # TODO: Make separate Delphes wrapper?
