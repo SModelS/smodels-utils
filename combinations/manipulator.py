@@ -587,10 +587,10 @@ class Manipulator:
                     newxsec = addxsec + toxsec
                     if toxsec > 0.*fb:
                         newssm = oldssm * newxsec.asNumber(fb)/toxsec.asNumber(fb)
+                        self.log ( "adding ssm from %s to %s: ssm of addition is %.2f, ssm of keeper is %.2f, xsec of addition %s, xsec of keeper is %s. newssm is %.2f" % ( pids, newpids, ssm, oldssm, addxsec, toxsec, newssm ) )
                     ## FIXME what I didnt take into account here, is that the
                     ## xsec of the "to" particle is changing, also!
-                    self.log ( "adding ssm from %s to %s: ssm of addition is %.2f, ssm of keeper is %.2f, xsec of addition %s, xsec of keeper is %s. newssm is %.2f" % ( pids, newpids, ssm, oldssm, addxsec, toxsec, newssm ) )
-                newssms[newpids]=newssm
+                        newssms[newpids]=newssm
             else:
                 self.log ( "setting ssm of %s to %.2f" % ( newpids, ssm ) )
                 newssms[newpids]=ssm
@@ -659,7 +659,7 @@ class Manipulator:
         olddecays = copy.deepcopy ( self.M.decays )
         for mpid,decays in olddecays.items():
             for dpids,br in decays.items():
-                if self.isIn ( p2, dpids ):
+                if self.isIn ( p2, dpids ) and type(dpids) in [ list, tuple ]:
                     newpids = []
                     for dpid in dpids:
                         if dpid == p2:
