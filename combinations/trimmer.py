@@ -4,7 +4,7 @@
 
 import time, colorama, copy, sys, math
 from smodels.tools import runtime
-from smodels.tools.physicsUnits import fb
+from smodels.tools.physicsUnits import fb, TeV
 runtime._experimental = True
 from combiner import Combiner
 from protomodel import ProtoModel, rthresholds
@@ -229,7 +229,7 @@ class Trimmer:
         if not hasattr ( self.M, "stored_xsecs" ):
             self.pprint ( "couldnt find any xsecs, recompute!" )
             self.M.backup()
-            self.M.computeXSecs ( nevents=self.nevents, 
+            self.M.computeXSecs ( nevents=self.nevents,
                                   recycle = True )
         pids = set()
         self.log ( "getAllPidsOfXsecs: we have %d stored xsecs" % ( len(self.M.stored_xsecs[0]) ) )
@@ -238,7 +238,7 @@ class Trimmer:
         return pids
 
     def trimSSMs ( self ):
-        """ try to take out the signal strength multipliers 
+        """ try to take out the signal strength multipliers
         """
         xsecpids = self.getAllPidsOfXsecs()
         nbefore = len(self.M.ssmultipliers)
@@ -253,7 +253,7 @@ class Trimmer:
         self.pprint ( "kept %d of %d ss multipliers" % ( nafter, nbefore ) )
 
     def _trimSSMsEvenMore_ ( self, trimTo=1. ):
-        """ try to take out the signal strength multipliers 
+        """ try to take out the signal strength multipliers
         :param trimTo: parameter to try to trim ssm to, 1 or 0 makes sense. If 0,
                        you must make sure that the ones havent been taken out yet!
         """
@@ -318,7 +318,7 @@ class Trimmer:
                     self.M.restore()
         return ndiscardedBR
 
-    def checkForMergers ( self ): 
+    def checkForMergers ( self ):
         """ compile a list of potential PID mergers, then check """
         candpairs = [ (1000001, 1000002, 1000003, 1000004 ), ( 1000005, 2000005 ),
                        (1000006, 2000006), ( 1000024, 1000037 ), ( 1000023, 1000025 )  ]
@@ -350,8 +350,74 @@ class Trimmer:
             return pid == pids
         return pid in pids
 
+
+    def computeNewSSMs ( self, pair ):
+        """ compute the new ssms after the merger """
+        newssms = copy.deepcopy ( self.M.ssmultipliers )
+        p1, p2 = pair[0], pair[1]
+
+        ## dont add for the frozen particles
+        frozen = self.M.frozenParticles()
+
+        #for pids, ssm in self.M.ssmultipliers.items():
+        for sxsecs in self.M.stored_xsecs[0]:
+            if sxsecs.info.sqrts < 10.*TeV or sxsecs.info.order > 0:
+                continue
+            pids = sxsecs.pid
+            ssm = 1.0
+            if pids in self.M.ssmultipliers:
+                ssm = self.M.ssmultipliers[pids]
+            if not p2 in pids and not -p2 in pids:
+                continue
+            addxsec = 0. * fb
+            for xsec in self.M.stored_xsecs[0]:
+                if pids == xsec.pid:
+                    addxsec = xsec.value
+            self.log ( "xsecs of dissolving production %s: %s (ssm %s)" % \
+                       ( pids, addxsec, ssm ) )
+            if addxsec < 0.001 * fb:
+                continue
+            newpids = []
+            for pid in pids:
+                if pid in [ p2, -p2 ]:
+                    newpids.append ( int ( math.copysign ( p1, pid ) ) )
+                else:
+                    newpids.append ( pid )
+            newpids = tuple(newpids)
+            # self.pprint ( "adding", ssm, "for",pids,"to",newpids )
+            if newpids in self.M.ssmultipliers:
+                hasFrozenPid=False
+                for pid in newpids: ## skip the frozen stuff
+                    if abs(pid) in frozen:
+                        hasFrozenPid=True
+                if hasFrozenPid:
+                    continue
+                if ssm > 0.:
+                    toxsec = 0. * fb
+                    for xsec in self.M.stored_xsecs[0]:
+                        if newpids == xsec.pid:
+                            toxsec = xsec.value
+                    oldssm = newssms[newpids]
+                    self.log ( "xsec of to-be-kept production %s: %s, ssm=%s" % ( newpids, toxsec, oldssm ) )
+                    newxsec = addxsec + toxsec
+                    if toxsec > 0.*fb:
+                        newssm = oldssm * newxsec.asNumber(fb)/toxsec.asNumber(fb)
+                    ## FIXME what I didnt take into account here, is that the
+                    ## xsec of the "to" particle is changing, also!
+                    self.log ( "adding ssm from %s to %s: ssm of addition is %.2f, ssm of keeper is %.2f, xsec of addition %s, xsec of keeper is %s. newssm is %.2f" % ( pids, newpids, ssm, oldssm, addxsec, toxsec, newssm ) )
+                newssms[newpids]=newssm
+            else:
+                self.log ( "setting ssm of %s to %.2f" % ( newpids, ssm ) )
+                newssms[newpids]=ssm
+        ## clean up, remove all pid2 ssms
+        newms={}
+        for pids,ssm in newssms.items(): # self.M.ssmultipliers.items():
+            if not p2 in pids and not -p2 in pids:
+                newms[pids]=ssm
+        return newms
+
     def merge ( self, pair, merge_strategy="default", force_merge=False ):
-        """ merge two particles, pids given in pair 
+        """ merge two particles, pids given in pair
         :param merge_strategy: I introduced this so we can try a few strategies
                                and compare
         :param pair: pair of pids
@@ -367,6 +433,9 @@ class Trimmer:
         avgM = self.computeAvgMass ( pair, merge_strategy )
         self.log ( "avg mass for %s is %.1f" % ( str(pair), avgM ) )
         self.M.backup() ## in case it doesnt work out!
+        ## for the next step we need the cross sections
+        self.log ( "now compute the xsecs (if not cached), *before* taking out particle. so we can compute ssms" )
+        self.M.createSLHAFile ( nevents = self.nevents, recycle_xsecs = True )
         self.M.masses[ p1 ] = avgM ## set this one to the avg mass
         self.M.masses[ p2 ] = 1e6 ## freeze that one!
 
@@ -394,69 +463,42 @@ class Trimmer:
                             newpids.append ( p1 )
                         else:
                             newpids.append ( dpid )
-                    self.log ( "redirecting decay %d from %s to %s: br=%.2f" % \
-                               ( mpid, dpids, newpids, br ) )
+                    if br > 0.0001:
+                        self.log ( "redirecting decay of %d from %s to %s: br=%.2f" % \
+                                   ( mpid, dpids, newpids, br ) )
                     self.M.decays[mpid].pop ( dpids )
                     self.M.decays[mpid][tuple(newpids)]=br
 
         ## clean up, remove all decays with pid2
         # self.M.decays.pop ( p2 )
-
-        ## dont add for the frozen particles
-        frozen = self.M.frozenParticles()
-
         ## ssmultipliers get added up, too
-        newssms = copy.deepcopy ( self.M.ssmultipliers )
-        for pids, ssm in self.M.ssmultipliers.items():
-            if not p2 in pids and not -p2 in pids:
-                continue
-            newpids = []
-            for pid in pids:
-                if pid in [ p2, -p2 ]:
-                    newpids.append ( int ( math.copysign ( p1, pid ) ) )
-                else:
-                    newpids.append ( pid )
-            newpids = tuple(newpids)
-            # self.pprint ( "adding", ssm, "for",pids,"to",newpids )
-            if newpids in self.M.ssmultipliers:
-                if ssm > 0.:
-                    self.log ( "adding to ssm of %s: %.2f" % ( newpids, ssm ) )
-                newssms[newpids]=newssms[newpids]+ssm
-            else:
-                self.log ( "setting ssm of %s to %.2f" % ( newpids, ssm ) )
-                newssms[newpids]=ssm
-        # self.M.ssmultipliers = newssms
+        newssms = self.computeNewSSMs( pair )
 
-        ## clean up, remove all pid2 ssms
-        newms={}
-        for pids,ssm in newssms.items(): # self.M.ssmultipliers.items():
-            if not p2 in pids and not -p2 in pids:
-                newms[pids]=ssm
-        self.M.ssmultipliers = newms
+        self.M.ssmultipliers = newssms
 
         self.log ( "now predict. old rmax is at %.2f" % self.M.rmax )
         oldZ,oldrmax = self.M.Z, self.M.rmax
         passed = self.M.predict ( nevents = 100000, recycle_xsecs = False )
-        if passed == False: 
+        if passed == False:
             self.pprint ( "after merging, did not pass. rmax=%.2f. scale and retry." % self.M.rmax )
             ## did not pass? Okay, we make it pass, by scaling the new ssms
             f_sc = .999 * rthresholds[0] / self.M.rmax  ## we multiply with this factor
-            for pids,ssm in self.M.ssmultipliers.items(): 
+            for pids,ssm in self.M.ssmultipliers.items():
                 if p1 in pids or -p1 in pids:
                     self.M.ssmultipliers[pids] = self.M.ssmultipliers[pids] * f_sc
             passed = self.M.predict ( nevents = 100000, recycle_xsecs = False )
             self.pprint ( "after retrying we have: passed=%d, rmax=%.2f" % ( passed, self.M.rmax ) )
-            
+
         if force_merge:
             self.pprint ( "forced merge, so not checking" )
             return
         if self.M.rmax > rthresholds[0]:
             self.pprint ( "trying to merge %d and %d lead to an rmax of %.2f. reverting" % \
-                          ( p1, p2, self.M.rmax ) ) 
+                          ( p1, p2, self.M.rmax ) )
             self.M.restore()
         if self.M.Z < oldZ *.999:
             self.pprint ( "trying to merge %d and %d lead to a Z of %.3f < %.3f. reverting" % \
-                          ( p1, p2, self.M.Z, oldZ *.999 ) ) 
+                          ( p1, p2, self.M.Z, oldZ *.999 ) )
             self.M.restore()
 
     def getClosestPair ( self, pids ):
@@ -476,7 +518,7 @@ class Trimmer:
         return pair,dmin
 
     def computeAvgMass ( self, pids, merge_strategy ):
-        """ compute the average mass 
+        """ compute the average mass
         :param merge_strategy: allow for different ways to merge
         :returns: mass, as scalar, in GeV
         """
@@ -497,3 +539,14 @@ class Trimmer:
             ndiscardedBR += self.trimBranchingsOf ( pid )
             self.highlight ( "info", "trying to trim branchings of %s [%d/%d]" % ( helpers.getParticleName(pid),(cpid+1),len(unfrozen) ) )
         self.pprint ( "%d/%d particles are still unfrozen. discarded %d branchings." % ( len(self.M.unFrozenParticles()),len(self.M.masses),ndiscardedBR )  )
+
+if __name__ == "__main__":
+    import protomodel
+    import pickle
+    f=open("hiscore.pcl","rb" )
+    protomodels = pickle.load(f)
+    f.close()
+    tr = Trimmer ( protomodels[0], nevents=1000, verbose=True )
+    tr.merge ( ( 1000001, 1000003 ), force_merge = True )
+    import IPython
+    IPython.embed()
