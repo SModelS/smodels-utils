@@ -427,10 +427,10 @@ def main():
         runUpdater( args.dry_run, args.time )
         return
     if args.scan != -1:
-        runScanner ( args.scan, args.dry_run, args.time, args.rewrite, args.pid2 )
+        runScanner ( args.scan, args.dry_run, args.time, False, args.pid2 )
         return
     if args.llhdscan != -1:
-        runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite )
+        runLLHDScanner ( args.llhdscan, args.dry_run, args.time, False )
         return
     #if args.regressor:
     #    runRegressor ( args.dry_run )
