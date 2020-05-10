@@ -9,6 +9,7 @@
 """
 
 import protomodel
+from protomodel import rthresholds
 import helpers
 import copy, random, numpy, time, math
 from smodels.tools.physicsUnits import fb, TeV
