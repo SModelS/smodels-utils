@@ -286,6 +286,8 @@ class Combiner:
             import progressbar
         except ModuleNotFoundError:
             doProgress=False
+        if len(combinations)<10:
+            doProgress = False
         if doProgress:
             import progressbar
             pb = progressbar.ProgressBar(widgets=["combination #",progressbar.Counter(),
