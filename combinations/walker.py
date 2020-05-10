@@ -154,6 +154,12 @@ class RandomWalker:
             self.log ( "randomly change signal strengths" )
             nChanges += self.manipulator.randomlyChangeSignalStrengths()
 
+        ## randomly try a merger
+        uM = random.uniform(0,1)
+        if uM < .05:
+            self.log ( "randomly try merger" )
+            nChanges += self.manipulator.randomlyAttemptAMerger()
+
         mu = .4 / (self.protomodel.Z+1.) ## make it more unlikely when Z is high
         uFreeze = random.gauss(mu,.5)
         if uFreeze < nUnfrozen/float(nTotal):

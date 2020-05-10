@@ -13,7 +13,7 @@ from scipy import optimize, stats
 # import IPython
 
 class Combiner:
-    def __init__ ( self, walkerid=0 ):
+    def __init__ ( self, walkerid: int=0 ):
         self.walkerid = walkerid
 
     def getAllPidsOfCombo ( self, combo ):

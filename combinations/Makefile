@@ -16,4 +16,8 @@ hiscore_submit:
 run:
 	./walkingWorker.py --nmin 0 --nmax 10
 
+doc:
+	pyreverse *.py
+	dot -Tps classes.dot -o outfile.ps
+
 .PHONY:
