@@ -140,4 +140,4 @@ A first attempt of validation has been performed with pyhf combination. SModelS 
 - [x] add pyhf in datasetObj.py:combinedLikelihood
 - [ ] add pyhf in datasetObj.py:totalChi2
 - [ ] add a unit test
-- [ ] check if simplified likelihood still works
+- [x] check if simplified likelihood still works (see testSL.md)
