@@ -187,7 +187,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite ):
         f.close()
     produceLLHDScanScript ( pid, 1000022, rewrite )
     cmd += [ script ]
-    print ( "cmd", cmd )
+    print ( "[runLLHDScanner]", " ".join ( cmd ) )
     if dry_run:
         return
     a = subprocess.run ( cmd )
@@ -242,11 +242,11 @@ def runScanner( pid, dry_run, time, rewrite, pid2 ):
     os.chmod( script, 0o755 ) # 1877 is 0o755
     cmd += [ script ]
     produceScanScript ( pid, rewrite, pid2 )
-    print ( "cmd", cmd )
+    print ( "[runScanner]", " ".join ( cmd ) )
     if dry_run:
         return
     a = subprocess.run ( cmd )
-    print ( ">>", a )
+    print ( "[runScanner] >>", a )
 
 def runUpdater( dry_run, time ):
     """ thats the hiscore updater 
