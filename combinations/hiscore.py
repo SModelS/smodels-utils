@@ -395,7 +395,7 @@ def discuss ( protomodel, name ):
 def discussBest ( protomodel, detailed ):
     """ a detailed discussion of number 1 """
     p = 2. * ( 1. - stats.norm.cdf ( protomodel.Z ) ) ## two times because one-sided
-    print ( "Current      best: K=%.3f, Z=%.3f, p=%.2g [%d/%d particles, %d predictions] (walker #%d)" % \
+    print ( "Current      best K=%.3f, Z=%.3f, p=%.2g [%d/%d particles, %d predictions] (walker #%d)" % \
             ( protomodel.K, protomodel.Z, p, len(protomodel.unFrozenParticles()),len(protomodel.masses.keys()),len(protomodel.bestCombo), protomodel.walkerid ) )
     if detailed:
         print ( "Solution was found in step #%d" % protomodel.step )
