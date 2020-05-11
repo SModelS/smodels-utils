@@ -9,12 +9,16 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-a','--all', help='cancel all jobs',
                              action="store_true" )
+    argparser.add_argument ( '-r','--run', help='cancel all RUN jobs (ie the walkers only)',
+                             action="store_true" )
     args=argparser.parse_args()
     grp = "| grep QOSMax"
     if args.all:
         grp = ""
     if args.pending:
         grp = "| grep PENDING"
+    if args.run:
+        grp = "| grep RUN_"
     a= subprocess.getoutput ( "slurm q %s" % grp )
     print ( "cancelling", end=" " )
     for line in a.split("\n" ):

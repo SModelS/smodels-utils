@@ -235,6 +235,10 @@ class Hiscore:
                 m.M.clean ( all=True )
                 self.hiscores[ctr+1]=m.M
 
+    def save ( self ): 
+        """ later will do something smarter """
+        self.writeListToPickle()
+
     def writeListToDictFile ( self, dictFile=None ):
         """ write the models in append mode in a single dictFile.
         :param dictFile: write to dictFile. If None, then self.pickleFile

@@ -1,5 +1,6 @@
--) in state.pcl move to using dictionaries
+-) state.pcl: move to using dictionaries
 -) automate the plotting of the scans further
+-) maybe a few more tampering mechanisms, like swap similar particles
 
 -) llhd plots with signal strengths instead of LSP mass
 -) llhd plots, separate ul plots and eff plots
