@@ -672,7 +672,7 @@ class Manipulator:
                     self.M.decays[mpid].pop ( dpids )
                     self.M.decays[mpid][tuple(newpids)]=br
                 if self.isIn ( p2, dpids ) and type(dpids) in [ int ]:
-                    newpids = [ p1, dpid ]
+                    newpids = [ p1, dpids ]
                     if br > 0.0001:
                         self.log ( "redirecting decay of %d from %s to %s: br=%.2f" % \
                                    ( mpid, dpids, newpids, br ) )
