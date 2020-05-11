@@ -224,6 +224,12 @@ def draw( strategy, databasepath, trianglePlot, miscol,
             b="#font[132]{%s}" % b ## add font
             l.DrawLatex ( bx+2, by, b )
             ROOT.boxes.append ( l )
+    l = ROOT.TLatex()
+    l.SetNDC()
+    l.SetTextColor(ROOT.kGray+1)
+    l.SetTextSize(.015)
+    l.DrawLatex ( .01, .01, "plot produced %s from database v%s" % \
+                  ( time.strftime("%h %d %Y" ), d.databaseVersion ) )
     ROOT.gPad.SetGrid()
     print ( "Plotting to matrix_%s.png" % strategy )
     ROOT.c1.Print("matrix_%s.png" % strategy )
