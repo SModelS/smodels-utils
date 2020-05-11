@@ -504,7 +504,7 @@ def main ( args ):
         print ( "[hiscore] args.check, implement" )
 
     if args.print:
-        printProtoModels ( protomodels, args.detailed, args.nmax )
+        printProtoModels ( protomodels, args.detailed, min ( 10, args.nmax ) )
 
     if args.interactive:
         import manipulator
