@@ -27,7 +27,14 @@ def setup():
 class Hiscore:
     """ encapsulates the hiscore list. """
     def __init__ ( self, walkerid, save_hiscores, picklefile="hiscore.pcl",
-                   backup=True ):
+                   backup=True, hiscores=None ):
+        """ the constructor
+        :param save_hiscores: if true, then assume you want to save, not just read.
+        :param picklefile: path of pickle file name to connect hiscore list with
+        :param backup: if True, make a backup pickle file old_<name>.pcl
+        :param hiscores: if None, try to get them from file, if a list, 
+                         then these are the hiscore protomodels.
+        """
         self.walkerid = walkerid
         self.save_hiscores = save_hiscores
         self.backup = backup ## backup hiscore lists?
@@ -36,7 +43,11 @@ class Hiscore:
         self.fileAttempts = 0 ## unsucessful attempts at reading or writing
         self.pickleFile = picklefile
         self.mtime = 0 ## last modification time of current list
-        self.updateListFromPickle ( )
+        if hiscores == None:
+            self.updateListFromPickle ( )
+        else:
+            self.hiscores = hiscores
+            self.mtime = time.time()
 
     def currentMinZ ( self ):
         """ the current minimum Z to make it into the list. """
@@ -363,8 +374,7 @@ def count ( protomodels ):
 def storeList ( protomodels, savefile ):
     """ store the best protomodels in another hiscore file """
     from hiscore import Hiscore
-    h = Hiscore ( 0, True, savefile, backup=True )
-    h.hiscores = protomodels
+    h = Hiscore ( 0, True, savefile, backup=True, hiscores = protomodels )
     print ( "[hiscore] saving %d protomodels to %s" % \
             ( count(protomodels), savefile ) )
     h.save()
