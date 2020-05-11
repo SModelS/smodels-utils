@@ -142,6 +142,8 @@ def fetchUnfrozenSSMsFromDict():
         ret = []
         for ssmpids,ssm in ssms.items():
             for ssmpid in ssmpids:
+                #if abs(ssmpid) == 1000022:
+                #    continue
                 if abs(ssmpid) not in pids:
                     continue
             ret.append ( ssmpids )
