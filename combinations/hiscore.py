@@ -235,11 +235,30 @@ class Hiscore:
                 m.M.clean ( all=True )
                 self.hiscores[ctr+1]=m.M
 
+    def writeListToDictFile ( self, dictFile=None ):
+        """ write the models in append mode in a single dictFile.
+        :param dictFile: write to dictFile. If None, then self.pickleFile
+                         is used, but with ".dict" as extension.
+        """
+        if dictFile==None:
+            dictFile = self.pickleFile
+        if dictFile.endswith(".pcl"):
+            dictFile = dictFile[:-4]+".dict"
+        f=open(dictFile,"wt")
+        f.write("[")
+        f.close()
+        from manipulator import Manipulator
+        for protomodel in self.hiscores:
+            ma = Manipulator ( protomodel )
+            ma.writeDictFile ( outfile = dictFile, appendMode=True )
+        f=open(dictFile,"at")
+        f.write("]\n")
+        f.close()
+
     def writeListToPickle ( self, pickleFile=None, check=True ):
         """ pickle the hiscore list.
         :param pickleFile: write to pickleFile. If None, then self.pickleFile
             is used.
-        :param backup: if True, backup old file to old_<picklefile>
         :param check: perform a check whether the file has changed?
         """
         if pickleFile==None:
@@ -373,12 +392,12 @@ def storeList ( protomodels, savefile ):
     """ store the best protomodels in another hiscore file """
     from hiscore import Hiscore
     h = Hiscore ( 0, True, savefile, backup=True, hiscores = protomodels )
-    #print ( "debug C2", protomodels[0].K )
     h.hiscores = protomodels
     print ( "[hiscore] saving %d protomodels to %s" % \
             ( count(protomodels), savefile ) )
     h.writeListToPickle ( check=False )
-    #print ( "debug C3", protomodels[0].K )
+    if "states" in savefile: ## do both for the states
+        h.writeListToDictFile()
 
 def sortByZ ( protomodels ):
     protomodels.sort ( reverse=True, key = lambda x: x.Z )

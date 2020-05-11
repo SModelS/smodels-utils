@@ -150,11 +150,13 @@ class Manipulator:
         return False
 
     def writeDictFile ( self, outfile = "pmodel.py", cleanOut=True,
-                        comment = "" ):
+                        comment = "", appendMode=False ):
         """ write out the dict file to outfile
         :param outfile: output file, but replacing %t with int(time.time())
         :param cleanOut: clean the dictionary from defaults
         :param comment: add a comment field
+        :param appendMode: if true, append to file, and add comma after dictionary.
+                           if false, overwrite, and no comma at the end.
         """
         D = copy.deepcopy ( self.M.dict() )
         frozen = self.M.frozenParticles()
@@ -197,8 +199,11 @@ class Manipulator:
             D["comment"]=comment
         fname = outfile.replace("%t", str(int(time.time())) )
         self.M.pprint ( "writing model to %s" % fname )
-        with open ( fname, "wt" ) as f:
-            f.write ( "%s\n" % D )
+        mode,comma = "wt",""
+        if appendMode:
+            mode,comma = "at",","
+        with open ( fname, mode ) as f:
+            f.write ( "%s%s\n" % (D,comma) )
             f.close()
 
     def pidInList ( self, pid, lst, signed ):
