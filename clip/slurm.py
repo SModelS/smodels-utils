@@ -101,7 +101,7 @@ def produceScanScript ( pid, force_rewrite, pid2 ):
             argpid2 = " --pid2 %d" % pid2
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/combinations/scanner.py -P -p %d %s\n" % ( codedir,pid,argpid2) ) 
+            f.write ("%s/combinations/scanner.py -d -c -P -p %d %s\n" % ( codedir,pid,argpid2) ) 
             f.close()
         os.chmod ( fname, 0o775 )
 
@@ -381,8 +381,8 @@ def main():
                              action="store_true" )
     #argparser.add_argument ( '-r','--restart', help='restart worker jobs n times [0]',
     #                         type=int, default=0 )
-    #argparser.add_argument ( '--rewrite', help='force rewrite of scan scripts',
-    #                         action="store_true" )
+    argparser.add_argument ( '--rewrite', help='force rewrite of scan scripts',
+                             action="store_true" )
     argparser.add_argument ( '-n', '--nmin', nargs='?', help='minimum worker id [0]',
                         type=int, default=0 )
     argparser.add_argument ( '-C', '--cheatcode', nargs='?', help='use a cheat code [0]',
@@ -429,10 +429,10 @@ def main():
         runUpdater( args.dry_run, args.time )
         return
     if args.scan != -1:
-        runScanner ( args.scan, args.dry_run, args.time, False, args.pid2 )
+        runScanner ( args.scan, args.dry_run, args.time, args.rewrite, args.pid2 )
         return
     if args.llhdscan != -1:
-        runLLHDScanner ( args.llhdscan, args.dry_run, args.time, False )
+        runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite )
         return
     #if args.regressor:
     #    runRegressor ( args.dry_run )
