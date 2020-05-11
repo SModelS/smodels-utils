@@ -158,6 +158,9 @@ class Manipulator:
         :param appendMode: if true, append to file, and add comma after dictionary.
                            if false, overwrite, and no comma at the end.
         """
+        if type(self.M) == type(None):
+            ## there is nothing to write
+            return
         D = copy.deepcopy ( self.M.dict() )
         frozen = self.M.frozenParticles()
         if cleanOut:
