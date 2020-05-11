@@ -352,7 +352,9 @@ class DecayDrawer:
         self.logger.debug ( output )
 
         if self.options["nopng"]==False:
-            cmd='convert +profile "*" -antialias -density 300x300 %s.pdf %s.png' % ( out, out )
+            args = '+profile "*" -antialias -density 300x300'
+            args += ' -background white -flatten'
+            cmd='convert %s %s.pdf %s.png' % ( args, out, out )
             import subprocess
             self.logger.info ( cmd )
             o = subprocess.getoutput ( cmd )
