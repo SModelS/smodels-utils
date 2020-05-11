@@ -233,21 +233,18 @@ class Hiscore:
                 m=Manipulator ( h )
                 m.resolveMuhat()
                 m.M.clean ( all=True )
-                self.hiscores[ctr]=m.M
+                self.hiscores[ctr+1]=m.M
 
-    def save ( self ):
-        """ compatibility thing """
-        return self.writeListToPickle()
-
-    def writeListToPickle ( self, pickleFile=None ):
+    def writeListToPickle ( self, pickleFile=None, check=True ):
         """ pickle the hiscore list.
         :param pickleFile: write to pickleFile. If None, then self.pickleFile
             is used.
         :param backup: if True, backup old file to old_<picklefile>
+        :param check: perform a check whether the file has changed?
         """
         if pickleFile==None:
             pickleFile = self.pickleFile
-        if os.path.exists ( self.pickleFile ):
+        if check and os.path.exists ( self.pickleFile ):
             mtime = os.stat ( self.pickleFile ).st_mtime
             if mtime > self.mtime:
                 self.pprint ( "while writing to pickle file I see that it has changed" )
@@ -271,7 +268,7 @@ class Hiscore:
             self.fileAttempts+=1
             if self.fileAttempts<5: # try again
                 time.sleep ( .2 )
-                self.writeListToPickle( pickleFile )
+                self.writeListToPickle( pickleFile, check )
             return False
         return False
 
@@ -336,14 +333,15 @@ def compileList( nmax ):
     import glob
     files = glob.glob ( "H*.pcl" )
     allprotomodels=[]
-    print ( "Loading ", end="", flush=True )
+    import progressbar
+    pb = progressbar.ProgressBar(widgets=["file #",progressbar.Counter(),
+            "/%d " % len(files), progressbar.Percentage(),
+            progressbar.Bar( marker=progressbar.RotatingMarker() ),
+            progressbar.AdaptiveETA()])
+    pb.maxval = len(files)
+    pb.start()
     for ctr,fname in enumerate(files):
-        s = "."
-        if (ctr+1) % 100 == 0:
-            s = "o"
-        elif (ctr+1) % 10 == 0:
-            s = "x"
-        print ( s, end="", flush=True )
+        pb.update(ctr)
         try:
             with open( fname,"rb+") as f:
                 #fcntl.flock( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
@@ -362,7 +360,7 @@ def compileList( nmax ):
             cmd = "rm -f %s" % fname
             print ( "[hiscore] could not open %s (%s). %s." % ( fname, e, cmd ) )
             o = subprocess.getoutput ( cmd )
-    print ( )
+    pb.finish()
     if nmax > 0:
         while len(allprotomodels)<nmax:
             allprotomodels.append ( None )
@@ -375,9 +373,12 @@ def storeList ( protomodels, savefile ):
     """ store the best protomodels in another hiscore file """
     from hiscore import Hiscore
     h = Hiscore ( 0, True, savefile, backup=True, hiscores = protomodels )
+    #print ( "debug C2", protomodels[0].K )
+    h.hiscores = protomodels
     print ( "[hiscore] saving %d protomodels to %s" % \
             ( count(protomodels), savefile ) )
-    h.save()
+    h.writeListToPickle ( check=False )
+    #print ( "debug C3", protomodels[0].K )
 
 def sortByZ ( protomodels ):
     protomodels.sort ( reverse=True, key = lambda x: x.Z )
@@ -460,7 +461,7 @@ def main ( args ):
         print ( out )
 
     if infile is None:
-        print ( "hiscore] compiling list with %d protomodels" % args.nmax )
+        print ( "[hiscore] compiling list with %d protomodels" % args.nmax )
         protomodels = compileList( args.nmax ) ## compile list from H<n>.pcl files
     else:
         with open(infile,"rb") as f:
