@@ -75,6 +75,18 @@ def running_stats():
     print ( "  running (%d):" % len(running), prettyPrint ( running ) )
     print ( "not found (%d):" % len(notaccounted), prettyPrint ( notaccounted ) )
 
+    a = subprocess.getoutput ( "slurm q | head -n 3 | tail -n 2" )
+    print ( )
+    print ( "most recent jobs:" )
+    print ( "=====================" )
+    print ( a )
+
+    a = subprocess.getoutput ( "slurm q | tail -n 3" )
+    print ( )
+    print ( "longest running jobs:" )
+    print ( "=====================" )
+    print ( a )
+
 def count_jobs():
     print ( "slurm q says:" )
     print ( "=============" )
