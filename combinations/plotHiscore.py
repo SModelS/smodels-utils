@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import pickle, os, sys, subprocess, time, fcntl, glob
+import pickle, os, sys, subprocess, time, fcntl, glob, colorama
 from protomodel import ProtoModel
 from manipulator import Manipulator
 from smodels.tools.physicsUnits import GeV, fb
@@ -47,7 +47,7 @@ def obtain ( number, picklefile ):
         #fcntl.flock( f, fcntl.LOCK_UN )
     Z = hiscores[number].Z
     K = hiscores[number].K
-    print ( "[plotHiscore] obtaining #%d: K=%.3f,Z=%.2f" % (number, K, Z ) )
+    print ( "[plotHiscore] obtaining #%d: K=%.3f, Z=%.2f" % (number, K, Z ) )
     return hiscores[ number ]
 
 def gitCommit ( dest, wanted ):
@@ -493,9 +493,21 @@ def plotDecays ( protomodel, verbosity, outfile="decays.png" ):
     print ( "[plotHiscore] now draw %s" % outfile )
     options = { "tex": True, "color": True, "dot": True, "squarks": True,
                 "weakinos": True, "sleptons": True, "neato": True,
+                "separatecharm": True,
                 "integratesquarks": False, "leptons": True }
     options["rmin"] = 0.005
     ## FIXME add cross sections.
+    if verbosity == "debug":
+        soptions = ""
+        for k,v in options.items():
+            if v==True:
+                soptions += "--%s " % k
+        ma = Manipulator ( protomodel )
+        ssms = ma.simplifySSMs()
+        # soptions+=' --ssmultipliers "%s"' % ssms
+        print ( "%s../smodels_utils/plotting/decayPlotter.py -f %s -o %s %s%s" % \
+                ( colorama.Fore.GREEN, protomodel.currentSLHA, outfile, soptions,
+                  colorama.Fore.RESET ) )
     decayPlotter.draw ( protomodel.currentSLHA, outfile, options,
                         verbosity = verbosity,
                         ssmultipliers = protomodel.ssmultipliers )
