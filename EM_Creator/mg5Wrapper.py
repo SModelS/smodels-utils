@@ -127,7 +127,8 @@ class MG5Wrapper:
         """ this method writes the pythia card for within mg5.
         :param process: fixme (eg T2_1jet)
         """
-        self.runcard = tempfile.mktemp ( prefix="run", suffix=".card", dir="./" )
+        self.mkdir ( "temp" )
+        self.runcard = tempfile.mktemp ( prefix="run", suffix=".card", dir="temp/" )
         # filename = "%s/Cards/run_card.dat" % process
         self.debug ( "writing pythia run card %s" % self.runcard )
         templatefile = self.templateDir+'/template_run_card.dat'
@@ -155,7 +156,8 @@ class MG5Wrapper:
         """ this method writes the commands file for mg5.
         :param process: fixme (eg T2tt_1jet)
         """
-        self.commandfile = tempfile.mktemp ( prefix="mg5cmd", dir="./" )
+        self.mkdir ( "temp" )
+        self.commandfile = tempfile.mktemp ( prefix="mg5cmd", dir="temp/" )
         f = open(self.commandfile,'w')
         f.write('set automatic_html_opening False\n' )
         f.write('launch %s\n' % bakeryHelpers.dirName(process,masses))
@@ -176,7 +178,8 @@ class MG5Wrapper:
         f=open( self.cwd+slhaTemplate,"r")
         lines=f.readlines()
         f.close()
-        self.slhafile = tempfile.mktemp(suffix=".slha",dir="./" )
+        self.mkdir ( "temp" )
+        self.slhafile = tempfile.mktemp(suffix=".slha",dir="temp/" )
         f=open( self.slhafile,"w")
         n=len(masses)
         for line in lines:
@@ -316,6 +319,10 @@ class MG5Wrapper:
                 line = line + "\n"
                 f.write ( line )
 
+    def mkdir ( self, dirname ):
+        if not os.path.exists ( dirname ):
+            os.mkdir ( dirname )
+
     def execute ( self, slhaFile, masses ):
         templatefile = self.templateDir + '/MG5_Process_Cards/'+self.topo+'.txt'
         if not os.path.isfile( templatefile ):
@@ -324,7 +331,8 @@ class MG5Wrapper:
         f=open(templatefile,"r")
         lines=f.readlines()
         f.close()
-        self.tempf = tempfile.mktemp(prefix="mg5proc",dir="./")
+        self.mkdir("temp")
+        self.tempf = tempfile.mktemp(prefix="mg5proc",dir="temp/")
         f=open(self.tempf,"w")
         f.write ( "import model_v4 mssm\n" )
         for line in lines:
@@ -458,7 +466,7 @@ def main():
         print ( "Cleaned temporary files." )
         sys.exit()
     if args.clean_all:
-        subprocess.getoutput ( "rm -rf mg5cmd* mg5proc* tmp*slha T*jet* run*card ma5/ANA_T* ma5_T* ma5.template/recast* ma5.template/ma5cmd*" )
+        subprocess.getoutput ( "rm -rf temp/* mg5cmd* mg5proc* tmp*slha T*jet* run*card ma5/ANA_T* ma5_T* ma5.template/recast* ma5.template/ma5cmd*" )
         print ( "Cleaned temporary files." )
         sys.exit()
     hname = socket.gethostname()
