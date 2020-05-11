@@ -27,7 +27,7 @@ def updateHiscores():
     args.interactive = False
     args.detailed = False
     args.fetch = False
-    args.analysis_contributions = True
+    args.analysis_contributions = False
     args.check = False
     args.nmax = 1
     args.outfile = "hiscore.pcl"
@@ -57,8 +57,11 @@ def updateStates():
     # args.maxloss = .003
     args.nevents = 50000
     import hiscore
+    print ( )
     print ( "[updateHiscores] now update the states.pcl file" )
     hiscore.main ( args )
+    print ( "[updateHiscores] done updating the states.pcl file" )
+    print ( )
 
 def plot( Z, K, rundir ):
     import plotHiscore

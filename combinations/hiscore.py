@@ -419,10 +419,8 @@ def pprintEvs ( protomodel ):
 
 def main ( args ):
     """ the function that updates the hiscore.pcl file
-    :param args: detailed, outfile, infile, print,
-                 fetch, nmax,
-                 analysis_contributions, check, interactive,
-                 nevents
+    :param args: detailed, outfile, infile, print, fetch, nmax, 
+                 analysis_contributions, check, interactive, nevents.
                  see "if __main__" part below.
     :returns: { "Z": highest significance,
                 "step": step, "model": model, "K": bayesian_K  }
@@ -452,6 +450,7 @@ def main ( args ):
         print ( out )
 
     if infile is None:
+        print ( "hiscore] compiling list with %d protomodels" % args.nmax )
         protomodels = compileList( args.nmax ) ## compile list from H<n>.pcl files
     else:
         with open(infile,"rb") as f:
@@ -484,6 +483,7 @@ def main ( args ):
 
     nevents = args.nevents
 
+    """
     if args.analysis_contributions:
         protomodel = protomodels[0]
         if not hasattr ( protomodel, "analysisContributions" ):
@@ -491,6 +491,7 @@ def main ( args ):
             ma = Manipulator ( protomodels[0] )
             protomodel = ma.computeAnalysisContributions ()
             protomodels[0] = protomodel
+    """
 
     if args.nmax > 0:
         protomodels = protomodels[:args.nmax]
