@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import pickle, os, sys, subprocess, time, fcntl, glob, colorama
+import pickle, os, sys, subprocess, time, fcntl, glob, colorama, math
 from protomodel import ProtoModel
 from manipulator import Manipulator
 from smodels.tools.physicsUnits import GeV, fb
@@ -99,11 +99,12 @@ def writeRawNumbersHtml ( protomodel ):
     """ write out the raw numbers of the excess, as html """
     f=open("rawnumbers.html","wt")
     f.write("<table>\n" )
-    f.write("<tr><th>Analysis Name</th><th>Type</th><th>Dataset</th><th>Observed</th><th>Expected</th>\n" )
+    f.write("<tr><th>Analysis Name</th><th>Type</th><th>Dataset</th><th>Observed</th><th>Expected</th><th>Approx &sigma;</th>\n" )
     f.write("</tr>\n" )
     for tp in protomodel.bestCombo:
         anaId = tp.analysisId()
         dtype = tp.dataType()
+        S = "?"
         dt = { "upperLimit": "ul", "efficiencyMap": "em" }
         f.write ( "<tr><td>%s</td><td>%s</td> " % ( anaId, dt[dtype] ) )
         if dtype == "efficiencyMap":
@@ -119,10 +120,14 @@ def writeRawNumbersHtml ( protomodel ):
             bgErr = dI.bgError
             if bgErr == int(bgErr):
                 bgErr=int(bgErr)
-            f.write ( "<td>%s</td><td>%s</td><td>%s +/- %s</td></tr>\n" % \
-                      ( did, dI.observedN, eBG, bgErr ) )
+            toterr = math.sqrt ( bgErr**2 + eBG )
+            if toterr > 0.:
+                S = "%.1f &sigma;" % ( (dI.observedN - eBG ) / toterr )
+            f.write ( "<td>%s</td><td>%s</td><td>%s +/- %s</td><td>%s</td></tr>\n" % \
+                      ( did, dI.observedN, eBG, bgErr, S ) )
         if dtype == "upperLimit":
-            f.write ( "<td>-</td><td> %.1f fb </td><td> %.1f fb <td></td></tr>\n" % ( tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb) ) )
+            S = "?"
+            f.write ( "<td>-</td><td> %.1f fb </td><td> %.1f fb <td></td><td>%s</td></tr>\n" % ( tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb), S ) )
     f.write("</table>\n" )
     f.close()
 
