@@ -278,13 +278,14 @@ def writeIndexTex ( protomodel, texdoc ):
             continue
         ssm.append ( "%s: %.2f" % (helpers.getParticleName(k,addSign=True),v) )
     f=open("index.tex","w")
-    f.write ( "Our currently winning \\protomodel has a score of Z=%.2f, " % protomodel.Z )
+    f.write ( "Our current winner has a score of K=%.2f, Z=%.2f, " % \
+              ( protomodel.K, protomodel.Z ) )
     dbver = "???"
     strategy = "aggressive"
     if hasattr ( protomodel, "dbversion" ):
         dbver = protomodel.dbversion
         dotlessv = dbver.replace(".","")
-    f.write ( " it was produced with database v%s, combination strategy %s in step %d." % \
+    f.write ( " it was produced with database {\tt v%s}, combination strategy {\tt %s} in step %d." % \
             ( dotlessv, strategy, protomodel.step ) )
     f.write ( "\n" )
     if hasattr ( protomodel, "rvalues" ):

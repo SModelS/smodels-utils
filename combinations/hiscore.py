@@ -7,6 +7,7 @@ import random, copy, pickle, os, fcntl, time, subprocess, colorama, sys
 import setPath
 from helpers import rthresholds
 from scipy import stats
+from manipulator import Manipulator
 
 def setup():
     # codedir = "/mnt/hephy/pheno/ww/git/"
@@ -93,8 +94,7 @@ class Hiscore:
 
     def addResult ( self, protomodel ):
         """ add a result to the list """
-        import manipulator
-        m = manipulator.Manipulator ( protomodel )
+        m = Manipulator ( protomodel )
         m.resolveMuhat() ## add only with resolved muhats
         if m.M.K <= self.currentMinK():
             return ## doesnt pass minimum requirement
@@ -113,6 +113,7 @@ class Hiscore:
             m.computeParticleContributions()
             ## compute the analysis contributions
             m.computeAnalysisContributions()
+            protomodel = m.M
 
         for i,mi in enumerate(self.hiscores):
             if mi!=None and mi.almostSameAs ( m.M ):
@@ -120,6 +121,7 @@ class Hiscore:
                 ### Skip!
                 self.pprint ( "the protomodel seems to be already in highscore list. skip" )
                 return
+            """
             if mi!=None and abs ( m.M.K - mi.K ) / m.M.K < 1e-6:
                 ## pretty much exactly same score? number of particles wins!!
                 if len ( m.M.unFrozenParticles() ) < len ( mi.unFrozenParticles() ):
@@ -127,6 +129,7 @@ class Hiscore:
                     self.hiscores[i] = copy.deepcopy ( m.M )
                     self.hiscores[i].clean( all=True )
                     break
+            """
             if mi==None or m.M.K > mi.K: ## ok, <i>th best result!
                 self.demote ( i )
                 self.hiscores[i] = copy.deepcopy ( m.M )
@@ -136,8 +139,7 @@ class Hiscore:
     def addResultByZ ( self, protomodel ):
         """ add a result to the list, old version,
             sort by Z """
-        import manipulator
-        m = manipulator.Manipulator ( protomodel )
+        m = Manipulator ( protomodel )
         m.resolveMuhat() ## add only with resolved muhats
         if m.M.Z <= self.currentMinZ():
             return ## doesnt pass minimum requirement
@@ -229,7 +231,6 @@ class Hiscore:
             leave first one as it is """
         for ctr,h in enumerate(self.hiscores[1:]):
             if h != None:
-                from manipulator import Manipulator
                 m=Manipulator ( h )
                 m.resolveMuhat()
                 m.M.clean ( all=True )
@@ -251,7 +252,6 @@ class Hiscore:
         f=open(dictFile,"wt")
         f.write("[")
         f.close()
-        from manipulator import Manipulator
         for protomodel in self.hiscores:
             ma = Manipulator ( protomodel )
             ma.writeDictFile ( outfile = dictFile, appendMode=True )
@@ -277,7 +277,7 @@ class Hiscore:
         try:
             if self.backup:
                 subprocess.getoutput ( "mv -f %s old_%s" % ( pickleFile, pickleFile ) )
-            self.clean()
+            # self.clean()
             with open( pickleFile, "wb" ) as f:
                 fcntl.flock ( f, fcntl.LOCK_EX )
                 pickle.dump ( self.hiscores, f )
@@ -509,9 +509,6 @@ def main ( args ):
         print ( "[hiscore] error, we have an empty hiscore list" )
         return ret
 
-    triZ=-.0001
-    triK=-10.
-
     sin = infile
     if sin == None:
         sin = "H*.pcl"
@@ -523,6 +520,19 @@ def main ( args ):
 
     if args.nmax > 0:
         protomodels = protomodels[:args.nmax]
+
+    # print ( "we are here", args.outfile, hasattr ( protomodels[0], "analysisContributions" ) )
+    if ".pcl" in args.outfile:
+        if not hasattr ( protomodels[0], "analysisContributions" ):
+            print ( "[hiscore] why does the winner not have analysis contributions?" )
+            ma = Manipulator ( protomodels[0] )
+            ma.computeAnalysisContributions()
+            protomodels[0]=ma.M
+        if not hasattr ( protomodels[0], "particleContributions" ):
+            print ( "[hiscore] why does the winner not have particle contributions?" )
+            ma = Manipulator ( protomodels[0] )
+            ma.computeParticleContributions()
+            protomodels[0]=ma.M
 
     if args.outfile is not None:
         storeList ( protomodels, args.outfile )
@@ -536,9 +546,8 @@ def main ( args ):
         printProtoModels ( protomodels, args.detailed, min ( 10, args.nmax ) )
 
     if args.interactive:
-        import manipulator
         import trimmer
-        ma = manipulator.Manipulator ( protomodels[0] )
+        ma = Manipulator ( protomodels[0] )
         print ( "[hiscore] starting interactive session. Variables: %sprotomodels%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
         print ( "[hiscore]                                 Modules: %smanipulator, hiscore, combiner, trimmer%s" % \
