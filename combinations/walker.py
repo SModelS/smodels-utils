@@ -112,6 +112,32 @@ class RandomWalker:
                                         is_trained = False )
         return ret
 
+    @classmethod
+    def fromDictionary( cls, dictionary, nsteps=10000, strategy="aggressive", 
+                   walkerid=0, dump_training = False, 
+                   dbpath="../../smodels-database/", expected = False, 
+                   select = "all", catch_exceptions = True, keep_meta = True ):
+        ret = cls( walkerid, nsteps=nsteps, dbpath = dbpath, 
+                   catch_exceptions = catch_exceptions )
+        ret.manipulator.M = ProtoModel( walkerid, dbpath, expected, select, keep_meta )
+        ret.manipulator.initFromDict ( dictionary )
+        ret.manipulator.setWalkerId ( walkerid )
+        ret.protomodel = ret.manipulator.M
+        ret.protomodel.nevents = 100000
+        ret.protomodel.expected = expected
+        ret.protomodel.select = select
+        ret.protomodel.dbpath = dbpath
+        ret.protomodel.createNewSLHAFileName()
+        ret.protomodel.initializeSSMs ( overwrite = False )
+        ret.protomodel.initializePredictor()
+        ret.protomodel.backup()
+        if dump_training:
+            ## we use the accelerator only to dump the training data
+            from accelerator import Accelerator
+            ret.accelerator = Accelerator ( walkerid= walkerid, dump_training=True,
+                                        is_trained = False )
+        return ret
+
     def pprint ( self, *args ):
         """ logging """
         if not hasattr ( self, "walkerid" ):
@@ -448,7 +474,8 @@ if __name__ == "__main__":
 
     contfile = args.cont
     if contfile == "default":
-        contfile = "./states.pcl"
+        # contfile = "./states.pcl"
+        contfile = "./states.dict"
     if contfile!="" and not(os.path.exists ( contfile )):
         print ( "[walker] ERROR contfile %s supplied but does not exist" % contfile )
         sys.exit()
@@ -457,8 +484,13 @@ if __name__ == "__main__":
         sys.exit()
     if contfile!="" and os.path.exists ( contfile ) and \
                    os.stat( contfile ).st_size > 100:
-        with open( contfile, "rb" ) as f:
-            states = pickle.load ( f )
+        states = []
+        if contfile.endswith ( ".pcl" ):
+            with open( contfile, "rb" ) as f:
+                states = pickle.load ( f )
+        if contfile.endswith ( ".dict" ):
+            with open( contfile, "rt" ) as f:
+                states = eval ( f.read() )
         ctr=0
         while len(walkers)<ncpus:
             for v in states: # .items()):
@@ -476,14 +508,21 @@ if __name__ == "__main__":
                     walker.takeStep()
                     walkers.append ( walker )
                     continue
-                v2 = copy.deepcopy ( v )
-                v2.createNewSLHAFileName()
-                v2.walkerid = ctr+1
-                walkers.append ( RandomWalker.fromProtoModel ( v2, walkerid = ctr+1, 
-                            dump_training = dump_training, dbpath = args.database,
-                            expected = args.expected, select = select,
-                            catch_exceptions = catchem,
-                            keep_meta = True ) )
+                if type(v) == dict:
+                    walkers.append ( RandomWalker.fromDictionary ( v, walkerid = ctr+1, 
+                                dump_training = dump_training, dbpath = args.database,
+                                expected = args.expected, select = select,
+                                catch_exceptions = catchem,
+                                keep_meta = True ) )
+                else:
+                    v2 = copy.deepcopy ( v )
+                    v2.createNewSLHAFileName()
+                    v2.walkerid = ctr+1
+                    walkers.append ( RandomWalker.fromProtoModel ( v2, walkerid = ctr+1, 
+                                dump_training = dump_training, dbpath = args.database,
+                                expected = args.expected, select = select,
+                                catch_exceptions = catchem,
+                                keep_meta = True ) )
                 walkers[-1].setWalkerId ( ctr+1 )
                 walkers[-1].takeStep() # make last step a taken one
                 ctr+=1
