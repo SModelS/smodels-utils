@@ -2,10 +2,10 @@
 
 """ the plotting script for the llhd scans """
 
-import pickle, sys, copy, subprocess, os, colorama, time
+import pickle, sys, copy, subprocess, os, colorama, time, glob
 import IPython
 import numpy as np
-from csetup import setup
+from csetup import setup as gsetup
 import matplotlib
 from helpers import getParticleName, toLatex
 matplotlib.use("Agg")
@@ -108,12 +108,18 @@ class LlhdPlot:
         :param copy: copy plot to ../../smodels.github.io/protomodels/latest
         :param max_anas: maximum number of analyses on summary plot
         """
-        self.setup()
+        self.rundir = gsetup()
         if pid1==0:
             # pid1 = [ 1000006, 1000021, 2000006, 1000002 ]
             pid1 = { 1000003, 1000004, 1000006 }
             ## obtain pids from mp files
             files = glob.glob ( "%s/mp*pcl" % self.rundir )
+            for f in files:
+                t = f.replace(self.rundir,"")
+                t = t.replace("mp","")
+                t = t.replace(".pcl","")
+                t = t.replace("1000022","")
+                pid1.add ( int(t) )
             pid1 = list ( pid1 )
         self.DEBUG, self.INFO = 40, 30
         self.max_anas = max_anas ## maximum number of analyses
@@ -122,6 +128,7 @@ class LlhdPlot:
         self.copy = copy
         self.hiscorefile = "./hiscore.pcl"
         self.setVerbosity ( verbose )
+        self.setup()
         masspoints,mx,my,nevents,topo,timestamp = self.loadPickleFile()
         self.masspoints = masspoints
         self.mx = mx
@@ -310,7 +317,7 @@ class LlhdPlot:
 
     def setup ( self ):
         """ setup rundir, picklefile path and hiscore file path """
-        self.rundir = setup()
+        # self.rundir = setup() ## moved
         self.hiscorefile = self.rundir + "/hiscore.pcl"
         if not os.path.exists ( self.hiscorefile ):
             self.pprint ( "could not find hiscore file %s" % self.hiscorefile )
