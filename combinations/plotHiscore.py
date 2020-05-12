@@ -285,7 +285,7 @@ def writeIndexTex ( protomodel, texdoc ):
     if hasattr ( protomodel, "dbversion" ):
         dbver = protomodel.dbversion
         dotlessv = dbver.replace(".","")
-    f.write ( " it was produced with database {\tt v%s}, combination strategy {\tt %s} in step %d." % \
+    f.write ( " it was produced with database {\\tt v%s}, combination strategy {\\tt %s} in step %d." % \
             ( dotlessv, strategy, protomodel.step ) )
     f.write ( "\n" )
     if hasattr ( protomodel, "rvalues" ):
@@ -308,7 +308,7 @@ def writeIndexTex ( protomodel, texdoc ):
     if hasattr ( protomodel, "analysisContributions" ):
         print ( "[plotHiscore] contributions-per-analysis are defined" )
         # f.write ( "Contributions per analysis:\n\\begin{itemize}[noitemsep,nolistsep]\n" )
-        f.write ( "Contributions per analysis:\n" )
+        f.write ( "The contributions per analysis are given in Tab.~\\ref{tab:analysiscontributions}.\n" )
         f.write ( "\\begin{table}\n" )
         f.write ( "\\begin{center}\n" )
         f.write ( "\\begin{tabular}{l|c|c}\n" )
@@ -333,7 +333,7 @@ def writeIndexTex ( protomodel, texdoc ):
         f.write ( "\\end{tabular}\n" )
         f.write ( "\\end{center}\n" )
         f.write ( "\\caption{Contributions to the significance Z. Z(without) denotes the Z value obtained in absence of the particular analysis.}\n" )
-        f.write ( "\\label{tab:contribution}\n" )
+        f.write ( "\\label{tab:analysiscontributions}\n" )
         f.write ( "\\end{table}\n" )
     else:
         print ( "[plotHiscore] contributions are not defined" )
@@ -346,7 +346,10 @@ def writeIndexTex ( protomodel, texdoc ):
     # f.write ( "<td><img width=600px src=./texdoc.png>\n" ) #  % height )
     # f.write ( "\small{Last updated: %s}\n" % time.asctime() )
     # f.write ( "% include decays.png\n" )
-    f.write ( "\n" + texdoc + "\n" )
+    contrs = texdoc.replace(":"," read " ).replace("S","The s").replace(";",", " )
+    contrs = contrs.replace( "\\\\\\\\Contr", "; the contr" )
+    print ( "XXX", contrs )
+    f.write ( contrs + "\n" )
     f.close()
     print ( "[plotHiscore] Wrote index.tex" )
 
