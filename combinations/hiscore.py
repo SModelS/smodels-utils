@@ -488,7 +488,7 @@ def main ( args ):
         print ( out )
 
     if infile is None:
-        print ( "[hiscore] compiling list with %d protomodels" % args.nmax )
+        print ( "[hiscore] compiling a hiscore list with %d protomodels" % args.nmax )
         protomodels = compileList( args.nmax ) ## compile list from H<n>.pcl files
     else:
         with open(infile,"rb") as f:

@@ -108,8 +108,13 @@ class LlhdPlot:
         :param copy: copy plot to ../../smodels.github.io/protomodels/latest
         :param max_anas: maximum number of analyses on summary plot
         """
+        self.setup()
         if pid1==0:
-            pid1 = [ 1000006, 1000021, 2000006, 1000002 ]
+            # pid1 = [ 1000006, 1000021, 2000006, 1000002 ]
+            pid1 = { 1000003, 1000004, 1000006 }
+            ## obtain pids from mp files
+            files = glob.glob ( "%s/mp*pcl" % self.rundir )
+            pid1 = list ( pid1 )
         self.DEBUG, self.INFO = 40, 30
         self.max_anas = max_anas ## maximum number of analyses
         self.pid1 = pid1
@@ -117,7 +122,6 @@ class LlhdPlot:
         self.copy = copy
         self.hiscorefile = "./hiscore.pcl"
         self.setVerbosity ( verbose )
-        self.setup()
         masspoints,mx,my,nevents,topo,timestamp = self.loadPickleFile()
         self.masspoints = masspoints
         self.mx = mx

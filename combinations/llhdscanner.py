@@ -132,7 +132,7 @@ class Scanner:
                 masspoints.append ( (m1,m2,llhds) )
         import pickle
         picklefile = "%s%d%d.pcl" % ( output, pid1, pid2 )
-        print ( "[llhdscanner] now saving to %s" % picklefile )
+        self.pprint ( "now saving to %s" % picklefile )
         f=open( picklefile ,"wb" )
         pickle.dump ( masspoints, f )
         pickle.dump ( mpid1, f )

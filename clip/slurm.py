@@ -92,7 +92,7 @@ def produceLLHDScanScript ( pid1, pid2, force_rewrite ):
 
 def produceScanScript ( pid, force_rewrite, pid2 ):
     spid2=""
-    if pid2!=0:
+    if pid2!=-1:
         spid2=str(pid2)
     fname = "%s/scanner%d%s.sh" % ( rundir, pid, spid2 )
     if force_rewrite or not os.path.exists ( fname ):
