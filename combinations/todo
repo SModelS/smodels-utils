@@ -2,6 +2,8 @@
 -) automate the plotting of the scans further
 -) maybe a few more tampering mechanisms, like swap similar particles,
 	 or try susy xsec, or try ssms of other particles
+-) llhd1000003.png and llhd1000004.png look the same. why? fix!
+-) in llhd plots: plot forbidden regions (rmax > 1.7)
 
 -) llhd plots with signal strengths instead of LSP mass
 -) llhd plots, separate ul plots and eff plots
