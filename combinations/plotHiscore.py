@@ -348,7 +348,6 @@ def writeIndexTex ( protomodel, texdoc ):
     # f.write ( "% include decays.png\n" )
     contrs = texdoc.replace(":","are " ).replace("S","The s").replace(";",", " )
     contrs = contrs.replace( "\\\\\\\\Contr", "; the contr" )
-    print ( "XXX", contrs )
     f.write ( contrs + "\n" )
     f.close()
     print ( "[plotHiscore] Wrote index.tex" )
