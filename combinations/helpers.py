@@ -163,10 +163,11 @@ def simplifyList ( modes ):
     # print ( "reduced to", ret )
     return ret
 
-def toHtml ( pid, addM=False, addSign=False ):
+def toHtml ( pid, addM=False, addSign=False, addBrackets=True ):
     """ get the HTML version of particle name 
     :param addM: make it m(particle)
     :param addSign: add a "-" sign for negative pids
+    :param addBrackets: add brackets at beginning and end
     """
     if type ( pid ) in [ list ]: ## several production modes are given in lists
         pid = simplifyList ( pid )
@@ -178,7 +179,7 @@ def toHtml ( pid, addM=False, addSign=False ):
             ret = ret[:-1]
         return ret
             
-    if type ( pid ) in [ tuple ]: ## production mothers are given as tuples
+    if type ( pid ) in [ set, tuple ]: ## production mothers are given as tuples
         # a list of pids? latexify them individually and concatenate
         pids = []
         lpid = list ( pid )
@@ -187,8 +188,11 @@ def toHtml ( pid, addM=False, addSign=False ):
         except:
             pass
         for p in lpid:
-            pids.append ( toLatex ( p, addDollars, addM, addSign ) )
-        return "(" + ",".join ( pids ) + ")"
+            pids.append ( toHtml ( p, addM, addSign ) )
+        ret = ",".join ( pids ) 
+        if addBrackets:
+            ret = "(" + ret + ")"
+        return ret
     pname = pid
     if type(pid) in [ int, str ]:
         pname = getParticleName(pid,addSign)
@@ -203,12 +207,15 @@ def toHtml ( pid, addM=False, addSign=False ):
     pname = pname.replace("bar","<sup>*</sup>" )
     return pname
 
-def toLatex ( pid, addDollars=False, addM=False, addSign=False ):
+def toLatex ( pid, addDollars=False, addM=False, addSign=False,
+              addBrackets = True ):
     """ get the latex version of particle name 
     :param addDollars: add dollars before and after
     :param addM: make it m(particle)
     :param addSign: add a "-" sign for negative pids
+    :param addBrackets: add brackets at beginning and end
     """
+
     if type ( pid ) in [ list ]: ## several production modes are given in lists
         pid = simplifyList ( pid )
         ret = ""
@@ -219,7 +226,7 @@ def toLatex ( pid, addDollars=False, addM=False, addSign=False ):
             ret = ret[:-1]
         return ret
             
-    if type ( pid ) in [ tuple ]: ## production mothers are given as tuples
+    if type ( pid ) in [ set, tuple ]: ## production mothers are given as tuples
         # a list of pids? latexify them individually and concatenate
         pids = []
         lpid = list ( pid )
@@ -229,7 +236,10 @@ def toLatex ( pid, addDollars=False, addM=False, addSign=False ):
             pass
         for p in lpid:
             pids.append ( toLatex ( p, addDollars, addM, addSign ) )
-        return "(" + ",".join ( pids ) + ")"
+        ret = ",".join ( pids )
+        if addBrackets:
+            ret = "(" + ret + ")"
+        return ret
     pname = pid
     if type(pid) in [ int, str ]:
         pname = getParticleName(pid,addSign)

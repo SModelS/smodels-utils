@@ -2,9 +2,10 @@
 -) automate the plotting of the scans further
 -) maybe a few more tampering mechanisms, like swap similar particles,
 	 or try susy xsec, or try ssms of other particles
--) in rawnumbers, show also the particles that entered
 
 -) llhd plots with signal strengths instead of LSP mass
 -) llhd plots, separate ul plots and eff plots
 -) add second gluino and third stop
 -) use the xsec recycler also with changed ss multipliers
+
+.) in rawnumbers, show also the particles that entered

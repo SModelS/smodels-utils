@@ -99,7 +99,7 @@ def writeRawNumbersHtml ( protomodel ):
     """ write out the raw numbers of the excess, as html """
     f=open("rawnumbers.html","wt")
     f.write("<table>\n" )
-    f.write("<tr><th>Analysis Name</th><th>Type</th><th>Dataset</th><th>Observed</th><th>Expected</th><th>Approx &sigma;</th>\n" )
+    f.write("<tr><th>Analysis Name</th><th>Type</th><th>Dataset</th><th>Observed</th><th>Expected</th><th>Approx &sigma;</th><th>Particles</th>\n" )
     f.write("</tr>\n" )
     for tp in protomodel.bestCombo:
         anaId = tp.analysisId()
@@ -123,11 +123,21 @@ def writeRawNumbersHtml ( protomodel ):
             toterr = math.sqrt ( bgErr**2 + eBG )
             if toterr > 0.:
                 S = "%.1f &sigma;" % ( (dI.observedN - eBG ) / toterr )
-            f.write ( "<td>%s</td><td>%s</td><td>%s +/- %s</td><td>%s</td></tr>\n" % \
-                      ( did, dI.observedN, eBG, bgErr, S ) )
+            pids = set()
+            for prod in tp.PIDs:
+                for branch in prod:
+                    for pid in branch:
+                        if abs(pid)!=1000022:
+                            pids.add ( abs(pid) )
+            particles = helpers.toHtml ( pids, addSign = False,
+                                          addBrackets = False )
+            f.write ( '<td>%s</td><td>%s</td><td>%s +/- %s</td><td style="text-align:right">%s</td><td style="text-align:right">%s</td></tr>\n' % \
+                      ( did, dI.observedN, eBG, bgErr, S, particles ) )
         if dtype == "upperLimit":
             S = "?"
-            f.write ( "<td>-</td><td> %.1f fb </td><td> %.1f fb <td></td><td>%s</td></tr>\n" % ( tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb), S ) )
+            particles = "all"
+            f.write ( '<td>-</td><td> %.1f fb </td><td> %.1f fb <td></td><td style="text-align:right">%s</td><td>%s</td></tr>\n' % \
+                    ( tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb), S, particles ) )
     f.write("</table>\n" )
     f.close()
 
@@ -136,15 +146,16 @@ def writeRawNumbersLatex ( protomodel ):
     print ( "raw numbers of excess" )
     print ( "=====================" )
     f=open("rawnumbers.tex","wt")
-    f.write("\\begin{tabular}{l|c|c|r|r}\n" )
-    f.write("\\bf{Analysis Name} & \\bf{Type} & \\bf{Dataset} & \\bf{Observed} & \\bf{Expected} \\\\\n" )
+    f.write("\\begin{tabular}{l|c|r|r|c|r}\n" )
+    f.write("\\bf{Analysis Name} & \\bf{Dataset} & \\bf{Obs} & \\bf{Expected} & \\bf{Z} & \\bf{Particles}  \\\\\n" )
     f.write("\\hline\n" )
     for tp in protomodel.bestCombo:
         anaId = tp.analysisId()
         dtype = tp.dataType()
         print ( "item %s (%s)" % ( anaId, dtype ) )
         dt = { "upperLimit": "ul", "efficiencyMap": "em" }
-        f.write ( "%s & %s & " % ( anaId, dt[dtype] ) )
+        # f.write ( "%s & %s & " % ( anaId, dt[dtype] ) )
+        f.write ( "%s & " % ( anaId ) )
         if dtype == "efficiencyMap":
             dI = tp.dataset.dataInfo
             print ( "  `- %s: observedN %s, bg %s +/- %s" % \
@@ -158,11 +169,38 @@ def writeRawNumbersLatex ( protomodel ):
             bgErr = dI.bgError
             if bgErr == int(bgErr):
                 bgErr=int(bgErr)
-            f.write ( "%s & %s & %s +/- %s \\\\ \n" % \
-                      ( did, dI.observedN, eBG, bgErr ) )
+            toterr = math.sqrt ( bgErr**2 + eBG )
+            if toterr > 0.:
+                S = "%.1f $\sigma$" % ( (dI.observedN - eBG ) / toterr )
+            # pids = tp.PIDs
+            pids = set()
+            for prod in tp.PIDs:
+                for branch in prod:
+                    for pid in branch:
+                        if abs(pid)!=1000022:
+                            pids.add ( abs(pid) )
+            particles = helpers.toLatex ( pids, addDollars=True, addSign = False,
+                                          addBrackets = False )
+            obs = dI.observedN
+            if obs == 0.:
+                obs = 0
+            else:
+                if abs ( obs - int(obs) ) / obs < .001:
+                    obs = int ( obs )
+            f.write ( "%s & %s & %s +/- %s & %s & %s \\\\ \n" % \
+                      ( did, obs, eBG, bgErr, S, particles ) )
         if dtype == "upperLimit":
+            S = "?"
+            pids = set()
+            for prod in tp.PIDs:
+                for branch in prod:
+                    for pid in branch:
+                        if abs(pid)!=1000022:
+                            pids.add ( abs(pid) )
+            particles = helpers.toLatex ( pids, addDollars=True, addSign = False,
+                                          addBrackets = False )
             print ( "  `- observed %s, expected %s" % ( tp.upperLimit, tp.expectedUL ) )
-            f.write ( " & %.1f fb & %.1f fb \\\\ \n" % ( tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb) ) )
+            f.write ( " & %.1f fb & %.1f fb & %s & %s \\\\ \n" % ( tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb), S, particles  ) )
     f.write("\end{tabular}\n" )
     f.close()
 
@@ -631,6 +669,9 @@ def runPlotting ( args ):
         return
     print ( "error, dont know what to do with upload sink '%s'" % upload )
 
+def compileTestText():
+    subprocess.getoutput ( "pdflatex test.tex" )
+
 def main ():
     rundir = setup()
     import argparse
@@ -660,6 +701,9 @@ def main ():
     argparser.add_argument ( '-T', '--notex',
             help='do not produce the latex version',
             action="store_true" )
+    argparser.add_argument ( '-t', '--test',
+            help='produce test.pdf file',
+            action="store_true" )
     argparser.add_argument ( '-k', '--keep',
             help='keep latex files',
             action="store_true" )
@@ -675,6 +719,8 @@ def main ():
     if args.picklefile == "default":
         args.picklefile = "%s/hiscore.pcl" % rundir
     runPlotting ( args )
+    if args.test:
+        compileTestText()
 
 if __name__ == "__main__":
     main()
