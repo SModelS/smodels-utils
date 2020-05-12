@@ -310,16 +310,23 @@ def writeIndexTex ( protomodel, texdoc ):
         f.write ( "Contributions per analysis:\n" )
         f.write ( "\\begin{table}\n" )
         f.write ( "\\begin{center}\n" )
-        f.write ( "\\begin{tabular}{l|c}\n" )
-        f.write ( "\\bf{Analysis Name} & \\bf{Contribution} \\\\\n" )
+        f.write ( "\\begin{tabular}{l|c|c}\n" )
+        f.write ( "\\bf{Analysis Name} & \\bf{Z(without)} & \\bf{Contribution} \\\\\n" )
         f.write ( "\\hline\n" )
         conts = []
+        dZtot = 0.
         contributions = protomodel.analysisContributions.items()
         for k,v in contributions:
             conts.append ( ( v, k ) )
+            dZtot += v
+        dZtot = dZtot * protomodel.Z
+        Zs = {}
+        for k,v in contributions:
+            Zs[k] = ( protomodel.Z - dZtot * v)
         conts.sort( reverse=True )
         for v,k in conts:
-            f.write ( "%s & %s%s \\\\ \n" % ( k, int(round(100.*v)), "\\%" ) )
+            Zwithout= Zs[k]
+            f.write ( "%s & %.2f & %s%s \\\\ \n" % ( k, Zwithout, int(round(100.*v)), "\\%" ) )
             # f.write ( "\item %s: %s%s\n" % ( k, int(round(100.*v)), "\\%" ) )
         # f.write ( "\end{itemize}\n" )
         f.write ( "\\end{tabular}\n" )
