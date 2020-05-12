@@ -4,6 +4,7 @@ import pickle, os, sys, subprocess, time, fcntl, glob, colorama, math
 from protomodel import ProtoModel
 from manipulator import Manipulator
 from smodels.tools.physicsUnits import GeV, fb, TeV
+from smodels.theory.theoryPrediction import TheoryPrediction
 sys.path.insert(0,"../" )
 import smodels_utils.helper.sparticleNames
 import smodels_utils.SModelSUtils
@@ -103,10 +104,12 @@ def writeRawNumbersHtml ( protomodel ):
     f.write("</tr>\n" )
     for tp in protomodel.bestCombo:
         anaId = tp.analysisId()
+        idAndUrl = anaNameAndUrl ( tp )
         dtype = tp.dataType()
         S = "?"
         dt = { "upperLimit": "ul", "efficiencyMap": "em" }
-        f.write ( "<tr><td>%s</td><td>%s</td> " % ( anaId, dt[dtype] ) )
+        f.write ( "<tr><td>%s</td><td>%s</td> " % ( idAndUrl, dt[dtype] ) )
+        #f.write ( "<tr><td>%s</td><td>%s</td> " % ( anaId, dt[dtype] ) )
         if dtype == "efficiencyMap":
             dI = tp.dataset.dataInfo
             did = dI.dataId # .replace("_","\_")
@@ -288,6 +291,30 @@ def writeTex ( protomodel, keep_tex ):
         print ( "[plotHiscore] Exception when latexing: %s" % e )
     return src
 
+def anaNameAndUrl ( ana, forPdf=False, protomodel=None ):
+    """ given analysis, return analysis name and URL,
+    as html code or pdf hyperref 
+    :param ana: ExpRes or TheoryPred or str object
+    :param forPdf: if True, create for Pdf hyperref, else for html
+    :param protomodel: needed only if ana is str
+    """
+    if forPdf:
+        ## FIXME implement!
+        return ana.analysisId()
+    if type(ana)==str:
+        for i in protomodel.bestCombo:
+            url = ""
+            if i.analysisId() == ana:
+                url = i.dataset.globalInfo.url
+                break
+        return "<a href=%s>%s</a>" % \
+               ( url, ana )
+    if type(ana)==TheoryPrediction:
+        return "<a href=%s>%s</a>" % \
+               ( ana.dataset.globalInfo.url, ana.analysisId() )
+    return "<a href=%s>%s</a>" % \
+           ( ana.globalInfo.url, ana.analysisId() )
+
 def writeIndexTex ( protomodel, texdoc ):
     """ write the index.tex file
     :param texdoc: the source that goes into texdoc.png
@@ -465,7 +492,7 @@ def writeIndexHtml ( protomodel ):
             srv="N/A"
             if type(rv[1])==float:
                 srv="%.2f" % rv[1]
-            f.write ( "<li>%s:%s r=%.2f, r<sub>exp</sub>=%s<br>\n" % ( rv[2].analysisId(), ",".join ( map(str,rv[2].txnames) ), rv[0], srv ) )
+            f.write ( "<li>%s:%s r=%.2f, r<sub>exp</sub>=%s<br>\n" % ( anaNameAndUrl ( rv[2] ), ",".join ( map(str,rv[2].txnames) ), rv[0], srv ) )
         f.write("</ul>\n")
     else:
         print ( "[plotHiscore] protomodel has no r values!" )
@@ -478,7 +505,8 @@ def writeIndexHtml ( protomodel ):
             conts.append ( ( v, k ) )
         conts.sort( reverse=True )
         for v,k in conts:
-            f.write ( "<li> %s: %s%s\n" % ( k, int(round(100.*v)), "%" ) )
+            nameAndUrl = anaNameAndUrl ( k, protomodel=protomodel )
+            f.write ( "<li> %s: %s%s\n" % ( nameAndUrl, int(round(100.*v)), "%" ) )
         # f.write ( "</table>\n" )
     else:
         print ( "[plotHiscore] analysis-contributions are not defined" )
