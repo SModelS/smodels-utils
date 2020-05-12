@@ -772,9 +772,18 @@ class Manipulator:
         if pid != None:
             p = pid
         a = random.uniform ( 0., 1. )
-        if a > .8: ## sometimes, just knock out a random SSM
+        if a > .9: ## sometimes, just knock out a random SSM
             randomProd = random.choice ( list ( self.M.ssmultipliers.keys() ) )
             self.M.ssmultipliers[randomProd]=0.00001
+            return 1
+        if a < .1: ## sometimes, just try to set to 1.
+            randomProd = random.choice ( list ( self.M.ssmultipliers.keys() ) )
+            self.M.ssmultipliers[randomProd]=1.
+            return 1
+        if .1 < a < .2: ## sometimes, just try to set to ssm of differnt particle
+            randomProd = random.choice ( list ( self.M.ssmultipliers.keys() ) )
+            v = random.choice ( list ( self.M.ssmultipliers.values() ) )
+            self.M.ssmultipliers[randomProd]=v
             return 1
         f = random.uniform ( .8, 1.2 )
         self.M.log ( "randomly changing ssms of %s by a factor of %.2f" % \

@@ -9,7 +9,7 @@ from smodels.particlesLoader import BSMList
 from smodels.tools.physicsUnits import fb, GeV
 from smodels.experiment.databaseObj import Database
 from smodels.theory.model import Model
-import pickle, time
+import pickle, time, os
 
 class Predictor:
     def __init__ ( self, walkerid, dbpath = "../../smodels-database/",
@@ -120,6 +120,9 @@ class Predictor:
         :param llhdonly: return only predictions with llhds
         :returns: list of predictions
         """
+        if not os.path.exists ( inputFile ):
+            self.pprint ( "error, cannot find inputFile %s" % inputFile )
+            return []
         model = Model ( BSMList, SMList )
         model.updateParticles ( inputFile=inputFile )
 
@@ -163,7 +166,7 @@ class Predictor:
 
 if __name__ == "__main__":
     inputFile="gluino_squarks.slha"
-    p = Predictor ()
+    p = Predictor ( 0 )
     predictions = p.predict ( inputFile )
 
     with open("predictions.pcl", "wb" ) as f:
