@@ -56,9 +56,9 @@ def updateStates():
     # args.nevents = 50000
     import hiscore
     print ( )
-    print ( "[updateHiscores] now update the states.pcl file" )
+    print ( "[updateHiscores] now update the states.dict file" )
     hiscore.main ( args )
-    print ( "[updateHiscores] done updating the states.pcl file" )
+    print ( "[updateHiscores] done updating the states.dict file" )
     print ( )
 
 def plot( Z, K, rundir ):
@@ -83,7 +83,7 @@ def plot( Z, K, rundir ):
     plotHiscore.runPlotting ( args )
 
 def main():
-    """ eternal loop that updates hiscore.pcl and states.pcl """
+    """ eternal loop that updates hiscore.pcl and states.dict """
     rundir = setup()
     i = 0
     Z, Zold, step, K, Kold = 0., 0., 0, -90., -90.
