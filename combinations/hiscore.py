@@ -399,9 +399,13 @@ def storeList ( protomodels, savefile ):
     h.hiscores = protomodels
     print ( "[hiscore] saving %d protomodels to %s" % \
             ( count(protomodels), savefile ) )
-    h.writeListToPickle ( check=False )
-    if "states" in savefile: ## do both for the states
+    if savefile.endswith ( ".pcl" ):
+        h.writeListToPickle ( check=False )
+        if "states" in savefile: ## do both for the states
+            h.writeListToDictFile()
+    else: ## assume a dict file
         h.writeListToDictFile()
+
 
 def sortByZ ( protomodels ):
     protomodels.sort ( reverse=True, key = lambda x: x.Z )
@@ -515,7 +519,7 @@ def main ( args ):
     print ( "[hiscore] hiscore from %s[%d] is at K=%.3f, Z=%.3f (%s)" % \
             ( sin, protomodels[0].walkerid, protomodels[0].K, protomodels[0].Z, pevs ) )
 
-    nevents = args.nevents
+    # nevents = args.nevents
 
     if args.nmax > 0:
         protomodels = protomodels[:args.nmax]
@@ -570,9 +574,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-n', '--nmax',
             help='maximum number of entries to store [10]',
             type=int, default=10 )
-    argparser.add_argument ( '-e', '--nevents',
-            help='maximum number of entries to store [50000]',
-            type=int, default=50000 )
+    #argparser.add_argument ( '-e', '--nevents',
+    #        help='maximum number of entries to store [50000]',
+    #        type=int, default=50000 )
     argparser.add_argument ( '-c', '--check',
             help='check if we can reproduce Z value of first entry',
             action="store_true" )

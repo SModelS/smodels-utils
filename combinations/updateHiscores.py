@@ -32,7 +32,7 @@ def updateHiscores():
     args.outfile = "hiscore.pcl"
     args.infile = None
     # args.maxloss = .01
-    args.nevents = 50000
+    # args.nevents = 50000
     import hiscore
     import socket
     hostname = socket.gethostname().replace(".cbe.vbc.ac.at","")
@@ -50,10 +50,10 @@ def updateStates():
     args.fetch = False
     args.check = False
     args.nmax = 20
-    args.outfile = "states.pcl"
+    args.outfile = "states.dict"
     args.infile = None
     # args.maxloss = .003
-    args.nevents = 50000
+    # args.nevents = 50000
     import hiscore
     print ( )
     print ( "[updateHiscores] now update the states.pcl file" )
