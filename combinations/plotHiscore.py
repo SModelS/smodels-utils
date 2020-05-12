@@ -346,7 +346,7 @@ def writeIndexTex ( protomodel, texdoc ):
     # f.write ( "<td><img width=600px src=./texdoc.png>\n" ) #  % height )
     # f.write ( "\small{Last updated: %s}\n" % time.asctime() )
     # f.write ( "% include decays.png\n" )
-    contrs = texdoc.replace(":","are " ).replace("S","The s").replace(";",", " )
+    contrs = texdoc.replace(":"," are " ).replace("S","The s").replace(";",", " )
     contrs = contrs.replace( "\\\\\\\\Contr", "; the contr" )
     f.write ( contrs + "\n" )
     f.close()
