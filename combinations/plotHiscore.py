@@ -3,7 +3,7 @@
 import pickle, os, sys, subprocess, time, fcntl, glob, colorama, math
 from protomodel import ProtoModel
 from manipulator import Manipulator
-from smodels.tools.physicsUnits import GeV, fb
+from smodels.tools.physicsUnits import GeV, fb, TeV
 sys.path.insert(0,"../" )
 import smodels_utils.helper.sparticleNames
 import smodels_utils.SModelSUtils
@@ -204,14 +204,34 @@ def writeRawNumbersLatex ( protomodel ):
     f.write("\end{tabular}\n" )
     f.close()
 
+def findXSecOfPids ( xsecs, pids ):
+    """ find the cross sections for pids 
+    :returns: xsec, as unum object
+    """
+    for xsec in xsecs:
+        sqrts = xsec.info.sqrts.asNumber(TeV)
+        if sqrts < 10:
+            continue
+        order = xsec.info.order
+        if order > 0:
+            continue
+        if pids == xsec.pid:
+            return xsec.value
+    return 0.*fb
+
 def writeTex ( protomodel, keep_tex ):
-    """ write the comment about ss multipliers and particle contributions, in tex
+    """ write the comment about ss multipliers and particle contributions, in tex.
+    Creates texdoc.png.
     :param keep_tex: keep tex source of texdoc.png
     """
     cpids = {}
     frozen = protomodel.frozenParticles()
+    xsecs = protomodel.stored_xsecs[0]
     ssms = getUnfrozenSSMs ( protomodel.ssmultipliers, frozen, False )
     for pids,v in ssms.items():
+        xsec = findXSecOfPids ( xsecs, pids )
+        if xsec < 0.001 * fb: ## only for xsecs we care about
+            continue
         sv = "%.2f" % v
         if not sv in cpids:
             cpids[sv]=[]

@@ -271,17 +271,20 @@ class Manipulator:
         return
         """
 
-    def unfreezeRandomParticle ( self ):
-        """ unfreezes a random frozen particle """
-        frozen = self.M.frozenParticles()
-        if len(frozen)==0:
-            return 0
-        p = random.choice ( frozen )
-        self.M.masses[p]=random.uniform ( self.M.masses[self.M.LSP], self.M.maxMass )
+    def unfreezeRandomParticle ( self, pid=None ):
+        """ unfreezes a (random) frozen particle 
+        :param pid: if int, then unfreeze that particle, if None, unfreeze random particle
+        """
+        if pid == None:
+            frozen = self.M.frozenParticles()
+            if len(frozen)==0:
+                return 0
+            pid = random.choice ( frozen )
+        self.M.masses[pid]=random.uniform ( self.M.masses[self.M.LSP], self.M.maxMass )
         ## when unfreezing, nothing can go offshell, right?
         self.removeAllOffshell() ## remove all offshell stuff, normalize all branchings
         # self.M.normalizeAllBranchings() ## adjust everything
-        self.M.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(p), self.M.masses[p] ) )
+        self.M.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(pid), self.M.masses[pid] ) )
         return 1
 
     def pprint ( self, args ):

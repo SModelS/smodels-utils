@@ -522,7 +522,7 @@ def main ( args ):
         protomodels = protomodels[:args.nmax]
 
     # print ( "we are here", args.outfile, hasattr ( protomodels[0], "analysisContributions" ) )
-    if ".pcl" in args.outfile:
+    if type(args.outfile)==str and ".pcl" in args.outfile:
         if not hasattr ( protomodels[0], "analysisContributions" ):
             print ( "[hiscore] why does the winner not have analysis contributions?" )
             ma = Manipulator ( protomodels[0] )
