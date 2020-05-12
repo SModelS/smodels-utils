@@ -330,11 +330,18 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
     figname = "M%d.png" % pid
     if isSSMPlot():
         figname = "ssm_%d_%d.png" % ( pid, pid2 )
-    print ( "[scanner] creating %s" % figname )
-    plt.savefig ( figname )
+    stdvar =  numpy.std ( y )
+
     if interactive:
         import IPython
         IPython.embed()
+
+    if stdvar < 1e-10:
+        print ( "[scanner] standard deviation is a %.2f. Not plotting." % stdvar )
+        return
+
+    print ( "[scanner] creating %s" % figname )
+    plt.savefig ( figname )
     plt.close()
     if copy:
         dest = os.path.expanduser ( "~/git/smodels.github.io" )
