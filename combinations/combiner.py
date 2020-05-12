@@ -429,7 +429,7 @@ class Combiner:
 
         ## every non-trivial signal strength multiplier costs something
         cssms = {}
-        pun1 = 0, # punishment for ssm=1, we prefer zeroes!
+        pun1 = 0. # punishment for ssm=1, we prefer zeroes!
         for pids,ssm in protomodel.ssmultipliers.items():
             if (abs(pids[0]) not in particles) or (abs(pids[1]) not in particles):
                 continue
