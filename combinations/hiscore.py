@@ -454,7 +454,7 @@ def pprintEvs ( protomodel ):
 def main ( args ):
     """ the function that updates the hiscore.pcl file
     :param args: detailed, outfile, infile, print, fetch, nmax, 
-                 analysis_contributions, check, interactive, nevents.
+                 check, interactive, nevents.
                  see "if __main__" part below.
     :returns: { "Z": highest significance,
                 "step": step, "model": model, "K": bayesian_K  }
@@ -517,16 +517,6 @@ def main ( args ):
 
     nevents = args.nevents
 
-    """
-    if args.analysis_contributions:
-        protomodel = protomodels[0]
-        if not hasattr ( protomodel, "analysisContributions" ):
-            from manipulator import Manipulator
-            ma = Manipulator ( protomodels[0] )
-            protomodel = ma.computeAnalysisContributions ()
-            protomodels[0] = protomodel
-    """
-
     if args.nmax > 0:
         protomodels = protomodels[:args.nmax]
 
@@ -585,9 +575,6 @@ if __name__ == "__main__":
             type=int, default=50000 )
     argparser.add_argument ( '-c', '--check',
             help='check if we can reproduce Z value of first entry',
-            action="store_true" )
-    argparser.add_argument ( '-C', '--analysis_contributions',
-            help='compute analysis contributions',
             action="store_true" )
     argparser.add_argument ( '-f', '--fetch',
             help='fetch H<n>.pcl from gpu server',

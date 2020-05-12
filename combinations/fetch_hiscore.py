@@ -32,7 +32,7 @@ def main():
     # files= [ "hiscore.pcl" ]
     files = set()
     store = { "scan": [ "scanM*.pcl", "mp*.pcl", "ssm*.pcl" ], 
-              "states": [ "states.pcl" ],
+              "states": [ "states.dict", "states.pcl" ],
               "two": [ "hiscore2.pcl" ],
               "copy": [ "hiscoreCopy.pcl" ],
               "pmodels": [ "pmodel?.py" ],

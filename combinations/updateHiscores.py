@@ -27,7 +27,6 @@ def updateHiscores():
     args.interactive = False
     args.detailed = False
     args.fetch = False
-    args.analysis_contributions = False
     args.check = False
     args.nmax = 1
     args.outfile = "hiscore.pcl"
@@ -49,7 +48,6 @@ def updateStates():
     args.detailed = False
     args.interactive = False
     args.fetch = False
-    args.analysis_contributions = False
     args.check = False
     args.nmax = 20
     args.outfile = "states.pcl"
