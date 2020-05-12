@@ -201,7 +201,8 @@ class Manipulator:
         if len(comment)>0:
             D["comment"]=comment
         fname = outfile.replace("%t", str(int(time.time())) )
-        self.M.pprint ( "writing model to %s" % fname )
+        if not appendMode:
+            self.M.pprint ( "writing model to %s" % fname )
         mode,comma = "wt",""
         if appendMode:
             mode,comma = "at",","
@@ -215,6 +216,29 @@ class Manipulator:
             return pid in lst
         return pid in lst or -pid in lst
 
+    def initFromDict ( self, D, filename="" ):
+        """ setup the protomodel from dictionary D.
+        :param D: dictionary, as defined in pmodel*.py files.
+        :param filename: name of origin. not necessary, only for logging.
+        """
+        scom = ""
+        if "comment" in D:
+                scom = ": " + D["comment"]
+        self.M.highlight ( "green", "starting with %s/%s%s" % ( os.getcwd(), filename, scom ) )
+        for k,v in D["masses"].items():
+            self.M.masses[k]=v
+        for k,v in D["ssmultipliers"].items():
+            self.M.ssmultipliers[k]=v
+        for mpid,decays in D["decays"].items():
+            if not mpid in self.M.decays:
+                self.M.decays[mpid]={}
+            for dpid,v in decays.items():
+                self.M.decays[mpid][dpid]=v
+        if "step" in D: ## keep track of number of steps
+            self.M.step = D["step"]
+        ## add also the unused SSMs, set them to 1.
+        self.M.initializeSSMs ( overwrite = False ) 
+
     def cheat ( self, mode = 0 ):
         ## cheating, i.e. starting with models that are known to work well
         if mode == 0: ## no cheating
@@ -224,9 +248,11 @@ class Manipulator:
         if not os.path.exists ( filename ):
             self.M.highlight ( "red", "cheat mode %d started, but no %s/%s found" % ( mode, os.getcwd(), filename ) )
             sys.exit(-1)
-        scom = ""
+        # scom = ""
         with open ( filename, "rt" ) as f:
             m = eval ( f.read() )
+        self.initFromDict ( m )
+        """
         if "comment" in m:
                 scom = ": " + m["comment"]
         self.M.highlight ( "green", "starting with %s/%s%s" % ( os.getcwd(), filename, scom ) )
@@ -244,6 +270,7 @@ class Manipulator:
         ## add also the unused SSMs, set them to 1.
         self.M.initializeSSMs ( overwrite = False ) 
         return
+        """
 
     def unfreezeRandomParticle ( self ):
         """ unfreezes a random frozen particle """
