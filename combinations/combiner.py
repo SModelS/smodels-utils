@@ -429,6 +429,7 @@ class Combiner:
 
         ## every non-trivial signal strength multiplier costs something
         cssms = set()
+        pun1 = 0, # punishment for ssm=1, we prefer zeroes!
         for pids,ssm in protomodel.ssmultipliers.items():
             if (abs(pids[0]) not in particles) or (abs(pids[1]) not in particles):
                 continue
@@ -436,8 +437,10 @@ class Combiner:
             if ssm > 1e-4 and abs ( ssm - 1. ) > .01:
                 cssms.add ( int ( 100. * ssm ) )
                 # nssms += 1
+            if abs ( ssm - 1. ) < .01:
+                pun1 += .1 ## we prefer zeroes over ones, so we punish the ones
         # print ( "cssms", cssms )
-        ret = self.priorForNDF ( nparticles, nbr, len(cssms), name, verbose )
+        ret = self.priorForNDF ( nparticles, nbr, len(cssms)+pun1, name, verbose )
         if nll:
             return - math.log ( ret )
         return ret
