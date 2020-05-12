@@ -11,7 +11,7 @@
 import protomodel
 from protomodel import rthresholds
 import helpers
-import copy, random, numpy, time, math
+import copy, random, numpy, time, math, os, sys
 from smodels.tools.physicsUnits import fb, TeV
 
 class Manipulator:
@@ -243,7 +243,6 @@ class Manipulator:
         ## cheating, i.e. starting with models that are known to work well
         if mode == 0: ## no cheating
             return
-        import os, sys
         filename = "pmodel%d.py" % mode
         if not os.path.exists ( filename ):
             self.M.highlight ( "red", "cheat mode %d started, but no %s/%s found" % ( mode, os.getcwd(), filename ) )
@@ -251,7 +250,7 @@ class Manipulator:
         # scom = ""
         with open ( filename, "rt" ) as f:
             m = eval ( f.read() )
-        self.initFromDict ( m )
+        self.initFromDict ( m, filename )
         """
         if "comment" in m:
                 scom = ": " + m["comment"]
