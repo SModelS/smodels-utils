@@ -33,7 +33,7 @@ class Hiscore:
         :param save_hiscores: if true, then assume you want to save, not just read.
         :param picklefile: path of pickle file name to connect hiscore list with
         :param backup: if True, make a backup pickle file old_<name>.pcl
-        :param hiscores: if None, try to get them from file, if a list, 
+        :param hiscores: if None, try to get them from file, if a list,
                          then these are the hiscore protomodels.
         """
         self.walkerid = walkerid
@@ -240,7 +240,7 @@ class Hiscore:
                 m.M.clean ( all=True )
                 self.hiscores[ctr+1]=m.M
 
-    def save ( self ): 
+    def save ( self ):
         """ later will do something smarter """
         self.writeListToPickle()
 
@@ -461,7 +461,7 @@ def pprintEvs ( protomodel ):
 
 def main ( args ):
     """ the function that updates the hiscore.pcl file
-    :param args: detailed, outfile, infile, print, fetch, nmax, 
+    :param args: detailed, outfile, infile, print, fetch, nmax,
                  check, interactive, nevents.
                  see "if __main__" part below.
     :returns: { "Z": highest significance,
@@ -552,6 +552,7 @@ def main ( args ):
     if args.interactive:
         import trimmer
         from smodels.tools.physicsUnits import fb, pb, GeV, TeV
+        from smodels.theory.crossSection import LO, NLO, NLL
         ma = Manipulator ( protomodels[0] )
         print ( "[hiscore] starting interactive session. Variables: %sprotomodels%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
@@ -564,7 +565,7 @@ def main ( args ):
         tr = trimmer.Trimmer ( protomodels[0] )
         import hiscore
         import IPython
-        IPython.embed()
+        IPython.embed( using=False )
 
     if len(protomodels)>0 and protomodels[0] != None:
         ret["Z"]=protomodels[0].Z

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 """ Class that encapsulates the manipulations we perform on the protomodels,
-    so that the protomodel class is a data-centric class, and this one 
+    so that the protomodel class is a data-centric class, and this one
     an algorithm-centric class. """
 
-""" TODO: 
+""" TODO:
     -) merger, heed the changed particle mass when computing ssm.
 """
 
@@ -13,17 +13,18 @@ from protomodel import rthresholds
 import helpers
 import copy, random, numpy, time, math, os, sys
 from smodels.tools.physicsUnits import fb, TeV
+from smodels.theory.crossSection import LO, NLO, NLL
 
 class Manipulator:
     """ contains the protomodel manipulation algorithms. """
-    def __init__ ( self, protomodel, strategy: str = "aggressive", 
+    def __init__ ( self, protomodel, strategy: str = "aggressive",
                    verbose: bool = False ):
         self.M = copy.copy ( protomodel  ) # shallow copy
         self.strategy = strategy
         self.verbose = verbose
 
     def computeAnalysisContributions ( self ):
-        """ compute the contributions to Z of the individual analyses 
+        """ compute the contributions to Z of the individual analyses
         :returns: the model with the analysic constributions attached as
                   .analysisContributions
         """
@@ -50,7 +51,7 @@ class Manipulator:
         dZtot, dKtot = 0., 0.
         bestCombo = copy.deepcopy ( self.M.bestCombo )
         for ctr,pred in enumerate(bestCombo):
-            combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:] 
+            combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:]
             Z, muhat_ = combiner.getSignificance ( combo )
             prior = combiner.computePrior ( self.M )
             K = combiner.computeK ( Z, prior )
@@ -99,7 +100,7 @@ class Manipulator:
         return True
 
     def checkForMergers ( self, mergeIfPossible: bool = False ):
-        """ compile a list of potential PID mergers, then check 
+        """ compile a list of potential PID mergers, then check
         :param mergeIfPossible: if True, then perform possible mergers
         """
         candpairs = [ (1000001, 1000002, 1000003, 1000004 ), ( 1000005, 2000005 ),
@@ -143,7 +144,7 @@ class Manipulator:
         cpair,dmin = self.getClosestPair ( pids )
         self.log ( "closest pair is %s: dm=%.1f" % (str(cpair),dmin ) )
         max_dm = 200. ## maximum mass gap to consider a merger
-        if dmin < max_dm: 
+        if dmin < max_dm:
             if mergeIfPossible:
                 self.merge ( cpair )
             return True
@@ -237,7 +238,7 @@ class Manipulator:
         if "step" in D: ## keep track of number of steps
             self.M.step = D["step"]
         ## add also the unused SSMs, set them to 1.
-        self.M.initializeSSMs ( overwrite = False ) 
+        self.M.initializeSSMs ( overwrite = False )
 
     def cheat ( self, mode = 0 ):
         ## cheating, i.e. starting with models that are known to work well
@@ -253,7 +254,7 @@ class Manipulator:
         self.initFromDict ( m, filename )
 
     def unfreezeRandomParticle ( self, pid=None ):
-        """ unfreezes a (random) frozen particle 
+        """ unfreezes a (random) frozen particle
         :param pid: if int, then unfreeze that particle, if None, unfreeze random particle
         """
         if pid == None:
@@ -296,14 +297,14 @@ class Manipulator:
                     self.M.log ( "this is weird, cannot get mass for dpid %s?" % dpid )
                 if mdaughter > mmother and dbr > 1e-5:
                     self.M.log ( "decay %s(%d) -> %s(%d) is offshell (%.3f)" % \
-                               ( helpers.getParticleName( pid ), mmother, 
+                               ( helpers.getParticleName( pid ), mmother,
                                  helpers.getParticleName ( dpid ), mdaughter, dbr ) )
                     offshell.append ( ( pid, dpid ) )
         return offshell
 
     def checkSwaps ( self ):
         """ check for the usual suspects for particle swaps """
-        ## the pairs to check. I put 1000023, 1000025 twice, 
+        ## the pairs to check. I put 1000023, 1000025 twice,
         ## so as to make it possible that chi40 eventually swaps with chi20
         pairs = [ ( 1000006, 2000006 ), ( 1000005, 2000005 ),
                   ( 1000023, 1000025 ), ( 1000024, 1000037 ),
@@ -320,8 +321,8 @@ class Manipulator:
 
     def get ( self ):
         """ since the shallowcopy business does not work as expected,
-        here is a trivial way to overwrite the original protomodel. 
-        use as: protomodel = manipulator.get() 
+        here is a trivial way to overwrite the original protomodel.
+        use as: protomodel = manipulator.get()
         """
         return self.M
 
@@ -331,7 +332,7 @@ class Manipulator:
     #    #    ratio, and can help us guide how strong a change we have to make.
     #    #
     #    ## we can tamper with the masses, the signal strengths, or
-    #    ## the decays, so which is it gonna be? 
+    #    ## the decays, so which is it gonna be?
     #    u = uniform.random ( 0., 1. )
     #    if u <= 0.333:
     #        ### so we change some masses
@@ -350,7 +351,7 @@ class Manipulator:
 
     def swapParticles ( self, pid1, pid2 ):
         """ swaps the two particle ids. The idea being that e.g. ~b1 should be
-            lighter than ~b2. If in the walk, ~b1 > ~b2, we just swap the roles 
+            lighter than ~b2. If in the walk, ~b1 > ~b2, we just swap the roles
             of the two particles. """
         ## swap in the masses dictionary
         if pid1 in self.M.masses and pid2 in self.M.masses:
@@ -414,13 +415,13 @@ class Manipulator:
                 for b,branch in enumerate(prod):
                     for p,pid in enumerate(branch):
                        if pid == pid1:
-                            self.M.bestCombo[c].PIDs[i][b][p] = pid2 
+                            self.M.bestCombo[c].PIDs[i][b][p] = pid2
                        elif pid == -pid1:
-                            self.M.bestCombo[c].PIDs[i][b][p] = -pid2 
+                            self.M.bestCombo[c].PIDs[i][b][p] = -pid2
                        if pid == pid2:
-                            self.M.bestCombo[c].PIDs[i][b][p] = pid1 
+                            self.M.bestCombo[c].PIDs[i][b][p] = pid1
                        elif pid == -pid2:
-                            self.M.bestCombo[c].PIDs[i][b][p] = -pid1 
+                            self.M.bestCombo[c].PIDs[i][b][p] = -pid1
 
     def printCombo ( self, combo=None ):
         """ pretty print prediction combos.
@@ -459,7 +460,7 @@ class Manipulator:
 
     def normalizeBranchings ( self, pid, fixSSMs=True ):
         """ normalize branchings of a particle, after freezing and unfreezing
-            particles. while we are at it, remove zero branchings also. 
+            particles. while we are at it, remove zero branchings also.
         :param fixSSMs: if True, adapt also signal strength multipliers
         """
         if not pid in self.M.decays:
@@ -712,7 +713,7 @@ class Manipulator:
 
         self.log ( "now predict. old rmax is at %.2f" % self.M.rmax )
         oldZ,oldrmax = self.M.Z, self.M.rmax
-        
+
         passed = self.M.predict ( nevents = 100000, recycle_xsecs = False )
         if passed == False:
             self.pprint ( "after merging, did not pass. rmax=%.2f. scale and retry." % self.M.rmax )
@@ -736,13 +737,65 @@ class Manipulator:
                           ( p1, p2, self.M.Z, oldZ *.999 ) )
             self.M.restore()
 
+    def simplifyMasses ( self ):
+        """ return the masses only of the unfrozen particles """
+        ret ={}
+        unfrozen = self.M.unFrozenParticles()
+        for pid in unfrozen:
+            ret[pid]=self.M.masses[pid]
+        return ret
+
+    def simplifyDecays ( self ):
+        """ return the decays only of the unfrozen particles,
+            only != 0 """
+        ret ={}
+        unfrozen = self.M.unFrozenParticles()
+        for mpid,decays in self.M.decays.items():
+            if mpid not in unfrozen:
+                continue
+            d = {}
+            for dpid,dbr in decays.items():
+                if dbr > 1e-5:
+                    d[dpid]=dbr
+            ret[mpid]=d
+        return ret
+
+    def xsecsFor ( self, pids, sqrts=13*TeV, order=LO ):
+        """ return the cross sections for pids.
+        :param pids: tuple of two pids
+        :returns: cross section (that had the SSM applied), 
+                  and SSM that *was* applied.
+        """
+        self.assertXSecs()
+        ssm = 1.
+        if pids[1] < pids[0]:
+            pids = ( pids[1], pids[0] )
+        if pids in self.M.ssmultipliers:
+            ssm = self.M.ssmultipliers[pids]
+        xs = 0. * fb
+        for xsec in self.M.stored_xsecs[0]:
+            if xsec.info.order != order:
+                continue
+            if ( xsec.info.sqrts - sqrts ).asNumber(TeV) > .1:
+                continue
+            if xsec.pid != pids:
+                continue
+            xs = xsec.value
+        return xs,ssm
+
+    def assertXSecs ( self ):
+        """ make sure we have xsecs """
+        if hasattr ( self.M, "stored_xsecs" ):
+            return
+        self.pprint ( "did not find cross sections, compute now." )
+        self.M.computeXSecs ( nevents = 100000, recycle = True )
 
     def simplifySSMs ( self, removeOnes=False, removeZeroes=False,
-                       threshold=0.*fb, store = False ):
-        """ return only SSMs for unfrozen particles 
+                       threshold=0.001*fb, store = False ):
+        """ return only SSMs for unfrozen particles
         :param removeOnes: if True, remove ssms == 1.
         :param removeZeroes: if True, remove ssms == 0.
-        :param threshold: remove the SSMs for cross sections smaller 
+        :param threshold: remove the SSMs for cross sections smaller
                                           than the given threshold (13TeV, LO).
         :param store: if True, overwrite original ssms with ours
         :returns: dictionary of SSMs
@@ -757,21 +810,17 @@ class Manipulator:
                 continue
             if removeZeroes and v<1e-7:
                 continue
-            isTooSmall = False
+            xsecBigEnough = False
             if threshold > 0.*fb:
-                if not hasattr ( self.M, "stored_xsecs" ):
-                    self.pprint ( "threshold called, but no stored xsecs. compute." )
-                    self.M.computeXSecs ( nevents = 100000, recycle = True )
+                self.assertXSecs()
                 for xsec in self.M.stored_xsecs[0]:
-                    if xsec.info.order > 0:
-                        continue
                     if xsec.info.sqrts.asNumber(TeV)<10:
                         continue
-                    if pids == xsec.pid:
+                    if pids == xsec.pid: # they are always sorted
                         sigma = xsec.value
-                        if sigma < threshold:
-                            isTooSmall = True
-            if isTooSmall:
+                        if sigma > threshold:
+                            xsecBigEnough = True
+            if not xsecBigEnough:
                 continue
             isFrozen = False
             for pid in pids:
@@ -1032,7 +1081,7 @@ class Manipulator:
             self.M.masses[i]=tmp
         self.checkSwaps() ## should we really do this here?
         ## now remove all offshell decays, and normalize all branchings
-        self.removeAllOffshell() 
+        self.removeAllOffshell()
 
 if __name__ == "__main__":
     import protomodel
