@@ -52,11 +52,10 @@ def computeHPD ( Z, RMAX, alpha = .9, verbose = True ):
             if type(RMAX) != type(None):
                 rmax = RMAX[x][y]
             if rmax > 50.: ## kill the excluded areas
-                print ( "going to kick out", x, y, oldZ[x][y], rmax )
-                oldZ[x][y]=float("nan") # oldZ[x][y] # float("nan")
+                # print ( "going to kick out", x, y, oldZ[x][y], rmax )
+                oldZ[x][y]=oldZ[x][y] # float("nan") # oldZ[x][y] # float("nan")
             n += 1
             newZ[x][y] = 0.
-    print ( "we are left with", oldZ )
     ctr = 0
     while S < alpha: ## as long as we dont have enough area
         x,y,m = findMin(oldZ)

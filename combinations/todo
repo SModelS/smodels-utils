@@ -1,13 +1,13 @@
 -) automate the plotting of the scans further
--) llhd1000003.png and llhd1000004.png look the same. why? fix!
 -) in llhd plots: plot forbidden regions (rmax > 1.7)
 -) maybe a few more tampering mechanisms, like swap similar particles,
 -) CMS-SUS-19-006, why didnt we add eff map?
 
 -) llhd plots with signal strengths instead of LSP mass
--) llhd plots, separate ul plots and eff plots
--) add second gluino and third stop
 -) use the xsec recycler also with changed ss multipliers
+-) add second gluino and third stop
 
+.) llhd plots, separate ul plots and eff plots
 .) in rawnumbers, show also the particles that entered
 .) state.pcl: move to using dictionaries
+.) llhd1000003.png and llhd1000004.png look the same. why? fix!
