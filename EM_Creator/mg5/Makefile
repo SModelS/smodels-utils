@@ -1,14 +1,13 @@
 all: compile
 
 plugins:
-	make.py plugins
+	make.py --plugins
 
 compile:
 	./make.py
 
 noplugins:
-	./make.py noplugins
+	./make.py --noplugins
 
 clean:
-	./make.py clean
-
+	./make.py --clean

@@ -189,7 +189,7 @@ class Manipulator:
                 for pid in k:
                     if abs(pid) in frozen:
                         hasFrozenPid = True
-                if hasFrozenPid or abs ( v - 1.) < 1e-5:
+                if hasFrozenPid: #  or abs ( v - 1.) < 1e-5:
                     D["ssmultipliers"].pop(k)
                 else:
                     D["ssmultipliers"][k]=round(v,3)
@@ -251,25 +251,6 @@ class Manipulator:
         with open ( filename, "rt" ) as f:
             m = eval ( f.read() )
         self.initFromDict ( m, filename )
-        """
-        if "comment" in m:
-                scom = ": " + m["comment"]
-        self.M.highlight ( "green", "starting with %s/%s%s" % ( os.getcwd(), filename, scom ) )
-        for k,v in m["masses"].items():
-            self.M.masses[k]=v
-        for k,v in m["ssmultipliers"].items():
-            self.M.ssmultipliers[k]=v
-        for mpid,decays in m["decays"].items():
-            if not mpid in self.M.decays:
-                self.M.decays[mpid]={}
-            for dpid,v in decays.items():
-                self.M.decays[mpid][dpid]=v
-        if "step" in m: ## keep track of number of steps
-            self.M.step = m["step"]
-        ## add also the unused SSMs, set them to 1.
-        self.M.initializeSSMs ( overwrite = False ) 
-        return
-        """
 
     def unfreezeRandomParticle ( self, pid=None ):
         """ unfreezes a (random) frozen particle 
@@ -505,9 +486,11 @@ class Manipulator:
         if not fixSSMs:
             return
         for pidpair,ssm in self.M.ssmultipliers.items():
+            """ ## accept the zeroes!
             if ssm == 0.:
                 self.M.pprint ( "huh, when normalizing we find ssmultipliers of 0? change to 1! S=%.4g" % S )
                 ssm=1.
+            """
             if pidpair in [ (pid,pid),(-pid,-pid),(-pid,pid),(pid,-pid) ]:
                 self.M.ssmultipliers[pidpair]=ssm*S*S
                 continue
@@ -750,12 +733,37 @@ class Manipulator:
             self.M.restore()
 
 
-    def simplifySSMs ( self ):
-        """ return only the SSMs != 1 and unfrozen """
+    def simplifySSMs ( self, removeOnes=False, removeZeroes=False,
+                       removeForXSecsSmallerThan=0.*fb ):
+        """ return only SSMs for unfrozen particles 
+        :param removeOnes: if True, remove ssms == 1.
+        :param removeZeroes: if True, remove ssms == 0.
+        :param removeForXSecsSmallerThan: remove the SSMs for cross sections smaller 
+                                          than the given threshold (13TeV, LO).
+        :returns: dictionary of SSMs
+        """
         ret = {}
         frozen = self.M.frozenParticles()
         for pids,v in self.M.ssmultipliers.items():
-            if abs(v-1.)<1e-5:
+            if removeOnes and abs(v-1.)<1e-5:
+                continue
+            if removeZeroes and v<1e-7:
+                continue
+            isTooSmall = False
+            if removeForXSecsSmallerThan > 0.*fb:
+                if not hasattr ( self.M, "stored_xsecs" ):
+                    self.pprint ( "removeForXSecsSmallerThan called, but no stored xsecs" )
+                    continue
+                for xsec in self.M.stored_xsecs[0]:
+                    if xsec.info.order > 0:
+                        continue
+                    if xsec.info.sqrts.asNumber(TeV)<10:
+                        continue
+                    if pids == xsec.pid:
+                        sigma = xsec.value
+                        if sigma < removeForXSecsSmallerThan:
+                            isTooSmall = True
+            if isTooSmall:
                 continue
             for pid in pids:
                 if pid in frozen or -pid in frozen:
@@ -817,10 +825,18 @@ class Manipulator:
         pair = self.M.toTuple(p,q)
         if not pair in self.M.ssmultipliers:
             self.M.ssmultipliers[pair]=1.
-        newSSM=self.M.ssmultipliers[pair]*random.gauss(1.,.1)
+        """
+        if self.M.ssmultipliers[pair] == 0.: # take out the zeroes
+            self.M.ssmultipliers.pop(pair)
+        """
+        newSSM=self.M.ssmultipliers[pair]*random.gauss(1.,.1) + random.gauss(.1,.1)
+        if newSSM < 0.:
+            newSSM = 0.
+        """ # i guess the zeores are ok?
         if newSSM == 0.:
             self.M.pprint ( "Huh? ssmultiplier is 0?? Change to 1." )
             newSSM = 1.
+        """
         self.M.ssmultipliers[pair]=newSSM
         self.M.log ( "changing signal strength multiplier of %s,%s: %.2f." % (helpers.getParticleName(pair[0]), helpers.getParticleName(pair[1]), newSSM ) )
         return 1

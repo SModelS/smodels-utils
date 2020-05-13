@@ -34,17 +34,21 @@ def main( nmin, nmax, cont,
     pfile, states = None, None
     if cont == "default":
         import os
-        cont = "%s/states.pcl" % rundir
+        cont = "%s/states.dict" % rundir
         if not os.path.exists ( cont ):
             cont = "default"
     if cont.lower() not in [ "none", "" ]:
         if not os.path.exists ( cont ):
-            print ( "error: supplied a save states file ,,%s'', but it doesnt exist" % cont )
+            print ( "[walkingWorker] error: supplied a save states file ,,%s'', but it doesnt exist" % cont )
         else:
             import pickle
             try:
-                with open ( cont, "rb" ) as f:
-                    states = pickle.load ( f )
+                if cont.endswith ( ".dict" ):
+                    with open( cont, "rt" ) as f:
+                        states = eval ( f.read() )
+                else:
+                    with open ( cont, "rb" ) as f:
+                        states = pickle.load ( f )
                 pfile = cont
             except Exception as e:
                 print ( "error when trying to load pickle file %s: %s" % ( cont, e ) )
@@ -60,11 +64,19 @@ def main( nmin, nmax, cont,
             w = walker.RandomWalker( walkerid=i, dump_training = dump_training,
                                      dbpath = dbpath, cheatcode = cheatcode  )
             walkers.append ( w )
-        else:
+        elif pfile.endswith(".pcl"):
             nstates = len(states )
             ctr = i % nstates
             print ( "[walkingWorker] fromModel %d: loading %d/%d" % ( i, ctr, nstates ) )
             w = walker.RandomWalker.fromProtoModel ( states[ctr], 100000, "aggressive", 
+                    walkerid = i, dump_training=dump_training, expected = False,
+                    dbpath = dbpath )
+            walkers.append ( w )
+        else:
+            nstates = len(states )
+            ctr = i % nstates
+            print ( "[walkingWorker] fromDict %d: loading %d/%d" % ( i, ctr, nstates ) )
+            w = walker.RandomWalker.fromDictionary ( states[ctr], 100000, "aggressive", 
                     walkerid = i, dump_training=dump_training, expected = False,
                     dbpath = dbpath )
             walkers.append ( w )
