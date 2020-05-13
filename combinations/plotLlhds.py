@@ -10,6 +10,7 @@ import matplotlib
 from helpers import getParticleName, toLatex
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
+#matplotlib.rcParams['hatch.linewidth'] = 2.1  # previous svg hatch linewidth
 
 def integrateLlhds ( Z ):
     """ compute the integral of the likelihood over all points """
@@ -93,10 +94,10 @@ def filterSmaller ( X, Y ):
 
 def getAlpha ( color ):
     """ different alpha for different colors """
+    rets = { "red": .3, "gray": .1 }
+    if color in rets:
+        return rets[color]
     return .3
-    if color == "red":
-        return .6
-    return .4
 
 def getPidList( pid1 ):
     """ obtain the list of pids to produce plots for """
@@ -316,7 +317,7 @@ class LlhdPlot:
             print ( "couldnt find anything" )
             return None
         for llhd in allhds:
-            llhds.append ( (llhd[0],llhd[1],getMu1(llhd[2])) )
+            llhds.append ( (llhd[0],llhd[1],getMu1(llhd[2]),llhd[3]) )
         return llhds,mx,my,nevents,topo,timestamp
 
     def pprint ( self, *args ):
@@ -400,7 +401,7 @@ class LlhdPlot:
                 break
             color = colors[ctr]
             x,y=set(),set()
-            L = {}
+            L, R = {}, {}
             minXY=( 0.,0., float("inf") )
             s=""
             r,sr = self.getResultFor ( ana, self.masspoints[0][2] )
@@ -412,7 +413,10 @@ class LlhdPlot:
                 #    continue
                 if cm % 1000 == 0:
                     print ( ".", end="", flush=True )
-                m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
+                m1,m2,llhds,robs=masspoint[0],masspoint[1],masspoint[2],masspoint[3]
+                rmax=0.
+                if len(robs)>0:
+                    rmax=robs[0]
                 if m2 > m1:
                     print ( "m2,m1 mass inversion?",m1,m2 )
                 x.add ( m1 )
@@ -426,6 +430,7 @@ class LlhdPlot:
                         minXY=(m1,m2,zt)
                 h = self.getHash(m1,m2)
                 L[h]=zt
+                R[h]=rmax
             print ( "\n[plotLlhds] min(xy) for %s is at m=(%d/%d): %.2f(%.2g)" % ( ana, minXY[0], minXY[1], minXY[2], np.exp(-minXY[2] ) ) )
             if cresults == 0:
                 print ( "[plotLlhds] warning: found no results for %s. skip" % ana )
@@ -438,12 +443,15 @@ class LlhdPlot:
             x.sort(); y.sort()
             X, Y = np.meshgrid ( x, y )
             Z = float("nan")*X
+            RMAX = float("nan")*X
             for irow,row in enumerate(Z):
                 for icol,col in enumerate(row):
                     h = self.getHash(x[icol],y[irow])
                     if h in L:
                         Z[irow,icol]=L[h]
-            # contf = plt.contourf ( X, Y, Z, levels=100 )
+                        RMAX[irow,icol]=R[h]
+            contRMAX = plt.contour ( X, Y, RMAX, levels=[1.7], colors = [ "gray" ], linestyles = [ "dotted" ] )
+            contRMAXf = plt.contourf ( X, Y, RMAX, levels=[1.7,100.], colors = [ "gray" ], hatches = ['//'], alpha=getAlpha( "gray" ) )
             hldZ100 = computeHLD ( Z, 1., False )
             cont100 = plt.contour ( X, Y, hldZ100, levels=[0.25], colors = [ color ], linestyles = [ "dotted" ] )
             #hldZ95 = computeHLD ( Z, .95, False )
@@ -458,6 +466,7 @@ class LlhdPlot:
             ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=180, color="black" )
             ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=110, color=color, label=ana+" (%.2f)" % (minXY[2]), alpha=1. )
 
+        ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="s", s=110, color="gray", label="excluded", alpha=.3 )
         print()
         self.pprint ( "timestamp:", self.timestamp, self.topo, max(x) )
         dx,dy = max(x)-min(x),max(y)-min(y)
