@@ -417,7 +417,7 @@ def getUnfrozenSSMs ( protomodel, frozen, includeOnes=False ):
                 hasFrozenParticle = True
         if hasFrozenParticle:
             continue
-        if not includeOnes and abs(v-1.)<1e-3:
+        if not includeOnes and abs(v-1.)<1e-2:
             continue
         D[pids]=v
     return D
