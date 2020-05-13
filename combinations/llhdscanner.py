@@ -2,7 +2,7 @@
 
 """ script used to produce the likelihood scans """
 
-import pickle, os, sys, multiprocessing, time
+import pickle, os, sys, multiprocessing, time, numpy
 sys.path.insert(0,"./")
 from smodels.tools.physicsUnits import fb
 from csetup import setup
@@ -29,16 +29,18 @@ class Scanner:
             sigmacut=.003*fb
         if max(self.M.masses)>2000:
             sigmacut=.001*fb
+        ## first get rmax
+        predsforexcl = P[0].predict ( self.M.currentSLHA, allpreds=False,
+                                      llhdonly=False )
+        robs = self.M.checkForExcluded ( predsforexcl )
+
+        ## now get the likelihoods
+        llhds={}
         predictions = P[0].predict ( self.M.currentSLHA, allpreds=True, 
                                      llhdonly=True, sigmacut=sigmacut )
-        ## first add proto-model point
-        #mu = 1.
-        #llhds = self.getLikelihoods ( predictions, mu=mu )
-        llhds={}
-        import numpy
         for mu in numpy.arange(.4,1.8,.05):
             llhds[float(mu)] = self.getLikelihoods ( predictions, mu=mu )
-        return llhds
+        return llhds,robs[:3]
 
     def getLikelihoods ( self, predictions, mu = 1. ):
         """ return dictionary with the likelihoods per analysis """
@@ -92,10 +94,10 @@ class Scanner:
         self.M.initializePredictor()
         P[0].filterForTopos ( topo )
         
-        llhds = self.getPredictions ( False )
+        llhds,robs = self.getPredictions ( False )
         self.pprint ( "protomodel point: m1 %d, m2 %d, %d llhds" % \
                       ( mpid1, mpid2, len(llhds) ) )
-        masspoints.append ( (mpid1,mpid2,llhds) )
+        masspoints.append ( (mpid1,mpid2,llhds,robs) )
         oldmasses = {}
 
         if True:
@@ -122,14 +124,14 @@ class Scanner:
                         self.pprint ( "WARNING: have to raise %d from %d to %d" % ( pid_, m_, m2+1. ) )
                         oldmasses[pid_]=m_
                         self.M.masses[pid_]=m2 + 1.
-                llhds = self.getPredictions ( True )
+                llhds,robs = self.getPredictions ( True )
                 nllhds,nnonzeroes=0,0
                 for mu,llhd in llhds.items():
                     nllhds+=len(llhd)
                 # del protomodel.stored_xsecs ## make sure we compute
                 self.pprint ( "m1 %d, m2 %d, %d mu's, %d llhds." % \
                               ( m1, m2, len(llhds), nllhds ) )
-                masspoints.append ( (m1,m2,llhds) )
+                masspoints.append ( (m1,m2,llhds,robs) )
         import pickle
         picklefile = "%s%d%d.pcl" % ( output, pid1, pid2 )
         self.pprint ( "now saving to %s" % picklefile )
@@ -210,7 +212,7 @@ def main ():
             help='delta m of pid1 [None]',
             type=float, default=None )
     argparser.add_argument ( '-t', '--topo',
-            help='topology',
+            help='topology [None]',
             type=str, default=None )
     argparser.add_argument ( '-e', '--nevents',
             help='number of events [50000]',
@@ -222,8 +224,8 @@ def main ():
             help='verbosity -- debug, info, warn, err [info]',
             type=str, default="info" )
     argparser.add_argument ( '-o', '--output',
-            help="prefix for output file [mp]",
-            type=str, default="mp" )
+            help="prefix for output file [llhd]",
+            type=str, default="llhd" )
     args = argparser.parse_args()
     if args.picklefile == "default":
         args.picklefile = "%s/hiscore.pcl" % rundir

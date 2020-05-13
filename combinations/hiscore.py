@@ -547,6 +547,7 @@ def main ( args ):
 
     if args.interactive:
         import trimmer
+        from smodels.tools.physicsUnits import fb, pb, GeV, TeV
         ma = Manipulator ( protomodels[0] )
         print ( "[hiscore] starting interactive session. Variables: %sprotomodels%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )

@@ -115,7 +115,7 @@ class Combiner:
     def highlight ( self, msgType = "info", *args ):
         """ logging, hilit """
         col = colorama.Fore.GREEN
-        print ( "%s[walk:%d] %s%s" % ( col, self.walkerid, " ".join(map(str,args)), colorama.Fore.RESET ) )
+        print ( "%s[combine:%d] %s%s" % ( col, self.walkerid, " ".join(map(str,args)), colorama.Fore.RESET ) )
 
     def error ( self, *args ):
         self.highlight ( "error", *args )
@@ -123,7 +123,7 @@ class Combiner:
     def highlight( self, msgType = "info", *args ):
         """ logging, hilit """
         col = colorama.Fore.GREEN
-        print ( "%s[walk:%d] %s%s" % ( col, self.walkerid, " ".join(map(str,args)), colorama.Fore.RESET ) )
+        print ( "%s[combine:%d] %s%s" % ( col, self.walkerid, " ".join(map(str,args)), colorama.Fore.RESET ) )
 
     def pprint ( self, *args ):
         """ logging """

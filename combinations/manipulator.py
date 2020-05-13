@@ -2,7 +2,7 @@
 
 """ Class that encapsulates the manipulations we perform on the protomodels,
     so that the protomodel class is a data-centric class, and this one 
-    an algorithm-centric class """
+    an algorithm-centric class. """
 
 """ TODO: 
     -) merger, heed the changed particle mass when computing ssm.
@@ -268,11 +268,15 @@ class Manipulator:
         self.M.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(pid), self.M.masses[pid] ) )
         return 1
 
-    def pprint ( self, args ):
-        return self.M.pprint ( args )
+    def pprint ( self, *args ):
+        """ logging """
+        print ( "[manipulator:%d] %s" % (self.M.walkerid, " ".join(map(str,args))) )
+        self.log ( *args )
 
-    def log ( self, args ):
-        return self.M.log ( args )
+    def log ( self, *args ):
+        """ logging to file """
+        with open( "walker%d.log" % self.M.walkerid, "a" ) as f:
+            f.write ( "[manipulator:%d - %s] %s\n" % ( self.M.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def checkForOffshell ( self ):
         """ check for offshell decays
@@ -734,14 +738,17 @@ class Manipulator:
 
 
     def simplifySSMs ( self, removeOnes=False, removeZeroes=False,
-                       removeForXSecsSmallerThan=0.*fb ):
+                       threshold=0.*fb ):
         """ return only SSMs for unfrozen particles 
         :param removeOnes: if True, remove ssms == 1.
         :param removeZeroes: if True, remove ssms == 0.
-        :param removeForXSecsSmallerThan: remove the SSMs for cross sections smaller 
+        :param threshold: remove the SSMs for cross sections smaller 
                                           than the given threshold (13TeV, LO).
         :returns: dictionary of SSMs
         """
+        if type(threshold)==float and threshold>0.:
+            self.pprint ( "note: interpreting threshold as fb" )
+            threshold = threshold * fb
         ret = {}
         frozen = self.M.frozenParticles()
         for pids,v in self.M.ssmultipliers.items():
@@ -750,10 +757,10 @@ class Manipulator:
             if removeZeroes and v<1e-7:
                 continue
             isTooSmall = False
-            if removeForXSecsSmallerThan > 0.*fb:
+            if threshold > 0.*fb:
                 if not hasattr ( self.M, "stored_xsecs" ):
-                    self.pprint ( "removeForXSecsSmallerThan called, but no stored xsecs" )
-                    continue
+                    self.pprint ( "threshold called, but no stored xsecs. compute." )
+                    self.M.computeXSecs ( nevents = 100000, recycle = True )
                 for xsec in self.M.stored_xsecs[0]:
                     if xsec.info.order > 0:
                         continue
@@ -761,13 +768,16 @@ class Manipulator:
                         continue
                     if pids == xsec.pid:
                         sigma = xsec.value
-                        if sigma < removeForXSecsSmallerThan:
+                        if sigma < threshold:
                             isTooSmall = True
             if isTooSmall:
                 continue
+            isFrozen = False
             for pid in pids:
                 if pid in frozen or -pid in frozen:
-                    continue
+                    isFrozen = True
+            if isFrozen:
+                continue
             ret[pids]=v
         return ret
 

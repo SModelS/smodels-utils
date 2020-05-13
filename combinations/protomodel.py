@@ -276,7 +276,10 @@ class ProtoModel:
         return True
 
     def checkForExcluded ( self, predictions ):
-        """ check if any of the predictions excludes the point """
+        """ check if any of the predictions excludes the point
+        :param predictions: all theory predictions
+        :returns: all observed r values, sorted, highest value first
+        """
         self.log ( "checking %d predictions for exlusion" % len(predictions) )
         self.rvalues=[]
         combiner = Combiner( self.walkerid )

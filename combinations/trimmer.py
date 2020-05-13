@@ -53,11 +53,11 @@ class Trimmer:
                 print ( line )
 
     def checkZ ( self ):
-        print ( "[trimmer] Check significance Z ... " )
+        self.pprint ( "Check significance Z ... " )
         origZ = self.M.Z # to be sure
         self.M.Z = -23.
         self.M.predict( strategy=self.strategy, nevents=self.nevents ) # , keep_meta = True )
-        print ( "[trimmer] Z=%.2f, old=%.2f, %d predictions, experimental=%d" % ( self.M.Z, origZ, len(self.M.bestCombo), runtime._experimental ) )
+        self.pprint ( "Z=%.2f, old=%.2f, %d predictions, experimental=%d" % ( self.M.Z, origZ, len(self.M.bestCombo), runtime._experimental ) )
         return abs ( (origZ - self.M.Z) / ( origZ +1e-10 ) ) < 1e-7
 
     def pidsOfBestCombo ( self ):

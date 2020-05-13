@@ -110,17 +110,21 @@ class LlhdPlot:
         """
         self.rundir = gsetup()
         if pid1==0:
-            # pid1 = [ 1000006, 1000021, 2000006, 1000002 ]
-            pid1 = { 1000003, 1000004, 1000006 }
+            # pid1 = { 1000003, 1000004, 1000006 }
+            pid1 = set()
             ## obtain pids from mp files
             files = glob.glob ( "%s/mp*pcl" % self.rundir )
+            files += glob.glob ( "%s/llhd*pcl" % self.rundir )
             for f in files:
                 t = f.replace(self.rundir,"")
                 t = t.replace("mp","")
+                t = t.replace("llhd","")
+                t = t.replace(".pcl","")
                 t = t.replace(".pcl","")
                 t = t.replace("1000022","")
                 pid1.add ( int(t) )
             pid1 = list ( pid1 )
+            self.pprint ( "Creating for pids: %s" % ", ".join ( map(str,pid1) ) )
         self.DEBUG, self.INFO = 40, 30
         self.max_anas = max_anas ## maximum number of analyses
         self.pid1 = pid1
@@ -137,8 +141,11 @@ class LlhdPlot:
         self.topo = topo
         self.timestamp = timestamp
         self.massdict = {}
+        self.rdict = {}
         for m in masspoints:
-            self.massdict[ (m[0],m[1]) ] = m [2]
+            self.massdict[ (m[0],m[1]) ] = m[2]
+            if len(m)>3:
+                self.rdict[ (m[0],m[1]) ] = m[3]
 
     def setVerbosity ( self, verbose ):
         self.verbose = verbose
@@ -493,6 +500,8 @@ class LlhdPlot:
         anas = {}
         for masspoint in self.masspoints:
             m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
+            if len(masspoint)>3:
+                robs = masspoint[3]
             for k,v in llhds.items():
                 tokens = k.split(":")
                 if not integrateTopos and self.topo not in tokens[2]:
@@ -573,7 +582,7 @@ if __name__ == "__main__":
             help='verbosity: debug, info, warn, or error [warn]',
             type=str, default="warn" )
     argparser.add_argument ( '-1', '--pid1',
-            help='pid1, if 0 then do predefined list [0]',
+            help='pid1, if 0 then search for llhd*pcl files [0]',
             type=int, default=0 )
     argparser.add_argument ( '-M', '--max_anas',
             help='maximum number of analyses to appear on summary plot [4]',
