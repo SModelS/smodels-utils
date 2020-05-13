@@ -230,7 +230,7 @@ def writeTex ( protomodel, keep_tex ):
     cpids = {}
     frozen = protomodel.frozenParticles()
     xsecs = protomodel.stored_xsecs[0]
-    ssms = getUnfrozenSSMs ( protomodel.ssmultipliers, frozen, False )
+    ssms = getUnfrozenSSMs ( protomodel, frozen, False )
     for pids,v in ssms.items():
         xsec = findXSecOfPids ( xsecs, pids )
         if xsec < 0.001 * fb: ## only for xsecs we care about
@@ -399,13 +399,16 @@ def writeIndexTex ( protomodel, texdoc ):
     f.close()
     print ( "[plotHiscore] Wrote index.tex" )
 
-def getUnfrozenSSMs ( ssms, frozen, includeOnes=False ):
+def getUnfrozenSSMs ( protomodel, frozen, includeOnes=False ):
     """ of all SSMs, leave out the ones with frozen particles
-    :param ssms: dictionary of SSMs
+    :param protomodel: the, well, protomodel
     :param frozen: list of pids of frozen particles
     :param includeOnes: if False, then also filter out values close to unity
     :returns: dictionary of SSMs without frozen particles
     """
+    # ssms = protomodel.ssmultipliers
+    ma = Manipulator ( protomodel )
+    ssms = ma.simplifySSMs ( threshold = .01 * fb )
     D={}
     for pids,v in ssms.items():
         hasFrozenParticle = False
@@ -426,7 +429,7 @@ def writeIndexHtml ( protomodel ):
     """
     ssm = []
     frozen = protomodel.frozenParticles()
-    ssms = getUnfrozenSSMs ( protomodel.ssmultipliers, frozen, False )
+    ssms = getUnfrozenSSMs ( protomodel, frozen, False )
     for k,v in ssms.items():
         ssm.append ( "%s: %.2f" % (helpers.getParticleName(k,addSign=True),v) )
     f=open("index.html","w")
