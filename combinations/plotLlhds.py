@@ -21,26 +21,16 @@ def integrateLlhds ( Z ):
                 I += np.exp ( - nll )
     return I
 
-def findMin ( Z ):
+def findMin ( oldZ ):
     """ find the minimum in Z """
-    #x,y,m = 0., 0, float("inf")
-    #for x_,row in enumerate(Z):
-    #    for y_,v in enumerate(row):
-    #        if v < m:
-    #            m,x,y = v,x_,y_
-    #print ( "findMin", Z.shape )
-    # print ( "Z", Z )
-    idx = np.nanargmin ( Z ) 
-    y = idx % Z.shape[1] 
-    x = int ( ( idx - y ) / Z.shape[1] )
-    m = Z[x][y]
-    #print ( "argmin", idx, x2 , y2, m2 )
-    #print ( "found at x,y,m",x,y,m )
-    #sys.exit()
+    idx = np.nanargmin ( oldZ ) 
+    y = idx % oldZ.shape[1] 
+    x = int ( ( idx - y ) / oldZ.shape[1] )
+    m = oldZ[x][y]
     return x,y,m
 
-def computeHLD ( Z, alpha = .9, verbose = True ):
-    """ compute the regions of highest likelihood density to the alpha quantile
+def computeHPD ( Z, RMAX, alpha = .9, verbose = True ):
+    """ compute the regions of highest posterior density to the alpha quantile
     """
     newZ = copy.deepcopy ( Z )
     if alpha > .999999: # give all points with likelihoods
@@ -54,12 +44,19 @@ def computeHLD ( Z, alpha = .9, verbose = True ):
     I = integrateLlhds ( Z )
     S = 0.
     points = []
-    oldZ = copy.deepcopy ( Z )
     n = 0
+    oldZ = copy.deepcopy ( Z )
     for x,row in enumerate(newZ):
         for y,_ in enumerate(row):
+            rmax = 0.
+            if type(RMAX) != type(None):
+                rmax = RMAX[x][y]
+            if rmax > 50.: ## kill the excluded areas
+                print ( "going to kick out", x, y, oldZ[x][y], rmax )
+                oldZ[x][y]=float("nan") # oldZ[x][y] # float("nan")
             n += 1
             newZ[x][y] = 0.
+    print ( "we are left with", oldZ )
     ctr = 0
     while S < alpha: ## as long as we dont have enough area
         x,y,m = findMin(oldZ)
@@ -68,7 +65,7 @@ def computeHLD ( Z, alpha = .9, verbose = True ):
         oldZ[x][y]=float("nan") ## kill this one
         newZ[x][y]=1 +1./ctr
     if verbose:
-        print ( "%d/%d points in %d%s HLD" % ( sum(sum(newZ)), n, int(alpha*100), "%" ) )
+        print ( "%d/%d points in %d%s HPD" % ( sum(sum(newZ)), n, int(alpha*100), "%" ) )
     return newZ
 
 def filterSmaller ( X, Y ):
@@ -217,9 +214,10 @@ class LlhdPlot:
         """
         print ( "[plotOneAna] FIXME plotOneAna is broken!" )
         return
+        """
         print ( "[plotLlhds] now plotting %s" % ana )
         x,y=set(),set()
-        L = {}
+        L, R = {}, {}
         minXY=0.,0.,float("inf")
         s=""
         r,sr = self.getResultFor ( ana, self.masspoints[0][2] )
@@ -249,18 +247,19 @@ class LlhdPlot:
         x.sort(); y.sort()
         X, Y = np.meshgrid ( x, y )
         Z = float("nan")*X
+        R = float("nan")*X
         # print ( "x", x )
         for irow,row in enumerate(Z):
             for icol,col in enumerate(row):
                 h = self.getHash(x[icol],y[irow])
                 if h in L:
                     Z[irow,icol]=L[h]
-        print ( "now getting HLDs" )
+        print ( "now getting HPDs" )
         contf = plt.contourf ( X, Y, Z, levels=100 )
-        hldZ95 = computeHLD ( Z, .95 )
+        hldZ95 = computeHPD ( Z, R, .95 )
         cont95 = plt.contour ( X, Y, hldZ95, levels=[0.5], colors = [ "orange" ] )
         plt.clabel ( cont95, fmt="95%.0s" )
-        hldZ50 = computeHLD ( Z, .5 )
+        hldZ50 = computeHPD ( Z, R, .5 )
         cont50 = plt.contour ( X, Y, hldZ50, levels=[1.0], colors = [ "red" ] )
         plt.clabel ( cont50, fmt="50%.0s" )
         print ( "timestamp:", self.timestamp, self.topo, max(x) )
@@ -293,6 +292,7 @@ class LlhdPlot:
         print ( "[plotLlhds] saving to %s" % figname )
         plt.savefig ( figname )
         plt.close()
+        """
 
     def loadPickleFile ( self ):
         """ load dictionary from picklefile """
@@ -451,13 +451,13 @@ class LlhdPlot:
                         Z[irow,icol]=L[h]
                         RMAX[irow,icol]=R[h]
             contRMAX = plt.contour ( X, Y, RMAX, levels=[1.7], colors = [ "gray" ], linestyles = [ "dotted" ] )
-            contRMAXf = plt.contourf ( X, Y, RMAX, levels=[1.7,100.], colors = [ "gray" ], hatches = ['//'], alpha=getAlpha( "gray" ) )
-            hldZ100 = computeHLD ( Z, 1., False )
+            contRMAXf = plt.contourf ( X, Y, RMAX, levels=[1.7,100.], colors = [ "gray" ], hatches = ['///'], alpha=getAlpha( "gray" ) )
+            hldZ100 = computeHPD ( Z, None, 1., False )
             cont100 = plt.contour ( X, Y, hldZ100, levels=[0.25], colors = [ color ], linestyles = [ "dotted" ] )
-            #hldZ95 = computeHLD ( Z, .95, False )
+            #hldZ95 = computeHPD ( Z, .95, False )
             #cont95 = plt.contour ( X, Y, hldZ95, levels=[0.5], colors = [ color ], linestyles = [ "dashed" ] )
             #plt.clabel ( cont95, fmt="95%.0s" )
-            hldZ50 = computeHLD ( Z, .68, False )
+            hldZ50 = computeHPD ( Z, RMAX, .68, False )
             cont50c = plt.contour ( X, Y, hldZ50, levels=[1.0], colors = [ color ] )
             cont50 = plt.contourf ( X, Y, hldZ50, levels=[1.,10.], colors = [ color, color ], alpha=getAlpha( color ) )
             plt.clabel ( cont50c, fmt="68%.0s" )
