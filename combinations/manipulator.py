@@ -738,12 +738,13 @@ class Manipulator:
 
 
     def simplifySSMs ( self, removeOnes=False, removeZeroes=False,
-                       threshold=0.*fb ):
+                       threshold=0.*fb, store = False ):
         """ return only SSMs for unfrozen particles 
         :param removeOnes: if True, remove ssms == 1.
         :param removeZeroes: if True, remove ssms == 0.
         :param threshold: remove the SSMs for cross sections smaller 
                                           than the given threshold (13TeV, LO).
+        :param store: if True, overwrite original ssms with ours
         :returns: dictionary of SSMs
         """
         if type(threshold)==float and threshold>0.:
@@ -779,6 +780,8 @@ class Manipulator:
             if isFrozen:
                 continue
             ret[pids]=v
+        if store:
+            self.M.ssmultipliers = ret
         return ret
 
     def randomlyChangeSSOfOneParticle ( self, pid = None ):

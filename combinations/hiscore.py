@@ -110,9 +110,13 @@ class Hiscore:
         if m.M.K > Kold:
             ## we have a new hiscore?
             ## compute the particle contributions
-            m.computeParticleContributions()
+            if not hasattr ( m.M, "particleContributions" ):
+                self.pprint ( "particleContributions missing, compute them!" )
+                m.computeParticleContributions()
             ## compute the analysis contributions
-            m.computeAnalysisContributions()
+            if not hasattr ( m.M, "analysisContributions" ):
+                self.pprint ( "analysisContributions missing, compute them!" )
+                m.computeAnalysisContributions()
             protomodel = m.M
 
         for i,mi in enumerate(self.hiscores):
