@@ -24,6 +24,7 @@ def main():
     argparser.add_argument ( '--pmodels', help='the pmodels', action="store_true" )
     argparser.add_argument ( '--png', help='the png files', action="store_true" )
     argparser.add_argument ( '--ssms', help='the ssm files', action="store_true" )
+    argparser.add_argument ( '--llhd', help='the llhd files', action="store_true" )
     argparser.add_argument ( '--copy', help='the copy of the hiscore file', 
                              action="store_true" )
     argparser.add_argument ( '-2', '--two', help='the second hiscore file', 
@@ -31,8 +32,9 @@ def main():
     args = argparser.parse_args()
     # files= [ "hiscore.pcl" ]
     files = set()
-    store = { "scan": [ "scanM*.pcl", "mp*.pcl", "ssm*.pcl" ], 
+    store = { "scan": [ "scanM*.pcl", "ssm*.pcl" ], 
               "states": [ "states.dict" ],
+              "llhd": [ "llhd*pcl", "mp*pcl" ],
               "two": [ "hiscore2.pcl" ],
               "copy": [ "hiscoreCopy.pcl" ],
               "pmodels": [ "pmodel?.py" ],

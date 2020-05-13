@@ -98,6 +98,27 @@ def getAlpha ( color ):
         return .6
     return .4
 
+def getPidList( pid1 ):
+    """ obtain the list of pids to produce plots for """
+    if pid1 > 0:
+        return [ pid1 ]
+    rundir = gsetup()
+    pids = set()
+    ## obtain pids from mp files
+    files = glob.glob ( "%s/mp*pcl" % rundir )
+    files += glob.glob ( "%s/llhd*pcl" % rundir )
+    for f in files:
+        t = f.replace(rundir,"")
+        t = t.replace("mp","")
+        t = t.replace("llhd","")
+        t = t.replace(".pcl","")
+        t = t.replace(".pcl","")
+        t = t.replace("1000022","")
+        pids.add ( int(t) )
+    pids = list ( pids )
+    print ( "[plotLlhds] creating plots for pids: %s" % ", ".join ( map(str,pids) ) )
+    return pids
+
 class LlhdPlot:
     """ A simple class to make debugging the plots easier """
     def __init__ ( self, pid1, pid2, verbose, copy, max_anas ):
@@ -108,31 +129,12 @@ class LlhdPlot:
         :param copy: copy plot to ../../smodels.github.io/protomodels/latest
         :param max_anas: maximum number of analyses on summary plot
         """
-        self.rundir = gsetup()
-        if pid1==0:
-            # pid1 = { 1000003, 1000004, 1000006 }
-            pid1 = set()
-            ## obtain pids from mp files
-            files = glob.glob ( "%s/mp*pcl" % self.rundir )
-            files += glob.glob ( "%s/llhd*pcl" % self.rundir )
-            for f in files:
-                t = f.replace(self.rundir,"")
-                t = t.replace("mp","")
-                t = t.replace("llhd","")
-                t = t.replace(".pcl","")
-                t = t.replace(".pcl","")
-                t = t.replace("1000022","")
-                pid1.add ( int(t) )
-            pid1 = list ( pid1 )
-            self.pprint ( "Creating for pids: %s" % ", ".join ( map(str,pid1) ) )
+        self.setup( pid1, pid2 )
         self.DEBUG, self.INFO = 40, 30
         self.max_anas = max_anas ## maximum number of analyses
-        self.pid1 = pid1
-        self.pid2 = pid2
         self.copy = copy
         self.hiscorefile = "./hiscore.pcl"
         self.setVerbosity ( verbose )
-        self.setup()
         masspoints,mx,my,nevents,topo,timestamp = self.loadPickleFile()
         self.masspoints = masspoints
         self.mx = mx
@@ -212,6 +214,8 @@ class LlhdPlot:
         """ plot for one analysis
         :param copy: copy plot to ../../smodels.github.io/protomodels/latest
         """
+        print ( "[plotOneAna] FIXME plotOneAna is broken!" )
+        return
         print ( "[plotLlhds] now plotting %s" % ana )
         x,y=set(),set()
         L = {}
@@ -322,17 +326,20 @@ class LlhdPlot:
         if self.verbose >= self.DEBUG:
             print ( "[plotLlhds] %s" % " ".join(map(str,args)) )  
 
-    def setup ( self ):
+    def setup ( self, pid1, pid2 ):
         """ setup rundir, picklefile path and hiscore file path """
-        # self.rundir = setup() ## moved
+        self.rundir = gsetup()
         self.hiscorefile = self.rundir + "/hiscore.pcl"
         if not os.path.exists ( self.hiscorefile ):
             self.pprint ( "could not find hiscore file %s" % self.hiscorefile )
-
-        pid1 = self.pid1
+ 
+        self.pid1 = pid1
+        self.pid2 = pid2
         if type(self.pid1) in [ tuple, list ]:
             pid1 = self.pid1[0]
-        self.picklefile = "%smp%d%d.pcl" % ( self.rundir, pid1, self.pid2 )
+        self.picklefile = "%sllhd%d%d.pcl" % ( self.rundir, pid1, self.pid2 )
+        if not os.path.exists ( self.picklefile ):
+            self.picklefile = "%smp%d%d.pcl" % ( self.rundir, pid1, self.pid2 )
         if not os.path.exists ( self.picklefile ):
             self.pprint ( "could not find pickle file %s" % self.picklefile )
 
@@ -358,6 +365,7 @@ class LlhdPlot:
             return
         if pid1 == None:
             pid1 = self.pid1
+        self.pprint ( "plotting summary for %s, %s" % ( pid1, self.topo ) )
         resultsForPIDs = {}
         from plotHiscore import getPIDsOfTPred, obtain
         protomodel = obtain ( 0, self.hiscorefile )
@@ -559,10 +567,11 @@ class LlhdPlot:
         varis = "plot.describe()"
         print ( "%s[plot] interactive session. Try: %s%s" % \
                 ( colorama.Fore.GREEN, varis, colorama.Fore.RESET ) )
-        IPython.embed()
+        IPython.embed( using=False )
 
     def plotAll ( self ):
-        """ """
+        print ( "[plotLlhds] FIXME this is broken" )
+        return
         stats = self.getAnaStats()
         for ana,v in stats.items():
             self.plot ( ana )
@@ -607,18 +616,21 @@ if __name__ == "__main__":
             action="store_true" )
     args = argparser.parse_args()
 
-    plot = LlhdPlot ( args.pid1, args.pid2, args.verbose, args.copy, args.max_anas )
+    pids = getPidList ( args.pid1 )
 
-    if args.all:
-        plot.plotAll ( )
-    elif args.interactive:
-        plot.interact()
-    elif args.list_analyses:
-        plot.listAnalyses ( )
-    ## summary plot!
-    elif args.analysis in [ "*", "all", "summary" ]:
-        plot.plotSummary()
-    else:
-        ## plot one specific analysis
-        plot.plotOneAna ( args.analysis )
+    for pid1 in pids:
+        plot = LlhdPlot ( pid1, args.pid2, args.verbose, args.copy, args.max_anas )
+
+        if args.all:
+            plot.plotAll ( )
+        elif args.interactive:
+            plot.interact()
+        elif args.list_analyses:
+            plot.listAnalyses ( )
+        ## summary plot!
+        elif args.analysis in [ "*", "all", "summary" ]:
+            plot.plotSummary()
+        else:
+            ## plot one specific analysis
+            plot.plotOneAna ( args.analysis )
 
