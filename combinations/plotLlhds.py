@@ -618,6 +618,9 @@ if __name__ == "__main__":
 
     pids = getPidList ( args.pid1 )
 
+    if args.interactive and len(pids)>1:
+        print ( "[plotLlhds] interactive mode plus several plots. you sure?" )
+
     for pid1 in pids:
         plot = LlhdPlot ( pid1, args.pid2, args.verbose, args.copy, args.max_anas )
 
