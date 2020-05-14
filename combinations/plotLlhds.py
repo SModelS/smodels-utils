@@ -129,7 +129,7 @@ def getPidList( pid1 ):
 class LlhdPlot:
     """ A simple class to make debugging the plots easier """
     def __init__ ( self, pid1, pid2, verbose, copy, max_anas, 
-                   interactive ):
+                   interactive, drawtimestamp ):
         """
         :param pid1: pid for x axis, possibly a range of pids
         :param pid2: pid for y axis
@@ -137,9 +137,11 @@ class LlhdPlot:
         :param copy: copy plot to ../../smodels.github.io/protomodels/latest
         :param max_anas: maximum number of analyses on summary plot
         :param interactive: prepare for an interactive session?
+        :param drawtimestamp: if true, put a timestamp on plot
         """
         self.setup( pid1, pid2 )
         self.DEBUG, self.INFO = 40, 30
+        self.drawtimestamp = drawtimestamp
         self.max_anas = max_anas ## maximum number of analyses
         self.copy = copy
         self.rthreshold = 1.7
@@ -413,7 +415,8 @@ class LlhdPlot:
         print()
         self.pprint ( "timestamp:", self.timestamp, self.topo, max(x) )
         dx,dy = max(x)-min(x),max(y)-min(y)
-        plt.text( max(x)-.37*dx,min(y)-.11*dy,self.timestamp, c="gray" )
+        if self.drawtimestamp:
+            plt.text( max(x)-.37*dx,min(y)-.11*dy,self.timestamp, c="gray" )
         ### the altitude of the alpha quantile is l(nuhat) - .5 chi^2_(1-alpha);ndf
         ### so for alpha=0.05%, ndf=1 the dl is .5 * 3.841 = 1.9207
         ### for ndf=2 the dl is ln(alpha) = .5 * 5.99146 = 2.995732
@@ -545,6 +548,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-M', '--max_anas',
             help='maximum number of analyses [4]',
             type=int, default=4 )
+    argparser.add_argument ( '-N', '--notimestamp',
+            help='dont put a timestamp on it',
+            action="store_true" )
     argparser.add_argument ( '-2', '--pid2',
             help='pid2 [1000022]',
             type=int, default=1000022 )
@@ -561,6 +567,7 @@ if __name__ == "__main__":
             help='interactive mode',
             action="store_true" )
     args = argparser.parse_args()
+    drawtimestamp = not args.notimestamp
 
     pids = getPidList ( args.pid1 )
 
@@ -570,7 +577,7 @@ if __name__ == "__main__":
 
     for pid1 in pids:
         plot = LlhdPlot ( pid1, args.pid2, args.verbose, args.copy, args.max_anas,
-                          args.interactive )
+                          args.interactive, drawtimestamp )
 
         if args.list_analyses:
             plot.listAnalyses()

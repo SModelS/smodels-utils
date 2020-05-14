@@ -274,16 +274,18 @@ def findPids ( rundir ):
         ret.add ( int(s) )
     return ret
 
-def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
+def draw( pid= 1000022, interactive=False, pid2=0, copy=False, 
+          drawtimestamp = True ):
     """ draw plots
     :param copy: copy final plots to ../../smodels.github.io/protomodels/latest
+    :param drawtimestamp: if True, put a timestamp on it
     """
     rundir = setup()
     if pid2 == 0: ## means all
         pidpairs = findPidPairs( rundir )
         for pids in pidpairs:
             try:
-                draw ( pids[0], interactive, pids[1], copy )
+                draw ( pids[0], interactive, pids[1], copy, drawtimestamp )
             except Exception as e:
                 print ( "[scanner] %s" % e )
         return
@@ -366,8 +368,9 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
     ax1.scatter ( [ cmass ], [ Zmax ], label="protomodel, Z(%s)=%.2f" % (param, Zmax ), marker="*", s=130, c="g", zorder=10 )
     plt.title ( "Significance Z=Z(%s)" % pname )
     # plt.text ( .8 * max(x),-.21, timestamp )
-    plt.text ( .8 * max(x),.55*min(rs), timestamp, transform = ax1.transAxes )
-    plt.text ( .7, -.12, timestamp, transform = ax1.transAxes )
+    # plt.text ( .8 * max(x),.55*min(rs), timestamp, facecolor="gray", transform = ax1.transAxes )
+    if drawtimestamp:
+        plt.text ( .7, -.12, timestamp, c="gray", transform = ax1.transAxes )
     ax1.legend()
     if isSSMPlot():
         plt.xlabel ( "ssm(%s) [GeV]" % pname )
@@ -435,8 +438,11 @@ if __name__ == "__main__":
     argparser.add_argument ( '-c', '--copy',
             help='copy plots to ~/git/smodels.github.io/protomodels/latest/',
             action="store_true" )
+    argparser.add_argument ( '-N', '--notimestamp',
+            help='dont put a timestamp on it',
+            action="store_true" )
     args = argparser.parse_args()
-    # allpids = [ 1000001, 2000005, 1000021, 1000006, 2000006, 1000024, 1000022, 1000005, 1000002, 1000003 ]
+    drawtimestamp = not args.notimestamp
     rundir = setup()
     allpids = findPids( rundir )
     pids = args.pid
@@ -450,10 +456,10 @@ if __name__ == "__main__":
             produce( hi, pids, args.nevents, args.dry_run, args.nproc, args.factor )
     if args.draw:
         if args.pid != 0:
-            draw( pids, args.interactive, args.pid2, args.copy )
+            draw( pids, args.interactive, args.pid2, args.copy, drawtimestamp )
         else:
             for pid in allpids:
                 try:
-                    draw( pid, args.interactive, args.pid2, args.copy )
+                    draw( pid, args.interactive, args.pid2, args.copy, drawtimestamp )
                 except Exception as e:
                     print ( "[scanner] skipping %d: %s" % ( pid, e ) )
