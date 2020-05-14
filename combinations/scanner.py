@@ -2,9 +2,10 @@
 
 """ draw Z as a function of a model parameter """
 
-import numpy, sys, os, copy, time, subprocess
+import numpy, sys, os, copy, time, subprocess, glob
 from csetup import setup
 from manipulator import Manipulator
+from helpers import rthresholds
 
 def getHiscore( force_copy = False ):
     """ get the hiscore from the picklefile
@@ -241,14 +242,30 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
         pickle.dump ( time.asctime(), f )
         f.close()
 
+def findPidPairs ():
+    """ search for ssm*pcl files, report the corresponding pid pairs.
+    :returns: list of tuple of pids
+    """
+    ret = []
+    files = glob.glob("ssm*pcl")
+    for f in files:
+        p = f.find("ssm")
+        s = f[p+3:]
+        s = s.replace(".pcl","")
+        split = 7
+        if s[0]=="-":
+            split = 8
+        pids = ( ( int(s[:split]), int(s[split:]) ) )
+        ret.append ( pids )
+    return ret
+
 def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
     """ draw plots
     :param copy: copy final plots to ../../smodels.github.io/protomodels/latest
     """
     if pid2 == 0: ## means all
-        for pids in [ ( 1000021, 1000021), (1000005, 1000005), (-1000005,1000005),
-                      ( -1000001,1000001), (-1000003, 1000003 ), (-1000004,1000004),
-                      ( -1000006,1000006), (-2000006, 2000006 ) ]:
+        pidpairs = findPidPairs()
+        for pids in pidpairs:
             try:
                 draw ( pids[0], interactive, pids[1], copy )
             except Exception as e:
@@ -279,9 +296,14 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
     x.sort()
     y, yr = [], []
     rs = []
+    rsarea = []
     for i in x:
         y_ = Zs[i]
         if type(y_)==tuple:
+            if y_[1] > rthresholds[0]:
+                rsarea.append ( y_[1] )
+            else:
+                rsarea.append ( 0. )
             rs.append ( y_[1] )
             y_ = y_[0]
         y2_ = y_
@@ -298,7 +320,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
     ax1.tick_params ( axis="y", labelcolor="tab:blue", labelleft=True )
     ax1.set_ylabel ( "Z", c="tab:blue" )
     ax1.set_xlabel ( "m [GeV]" )
-    ax1.set_ylim ( bottom = 2. )
+    ax1.set_ylim ( bottom = 2., top=max(yr)*1.03 )
     if len(rs) == len(x):
         ax2 = ax1.twinx()
         ax1.plot ([], [], label="$r_\mathrm{max}$", c="tab:red", zorder=1 )
@@ -306,6 +328,9 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
         ax2.tick_params ( axis="y", labelcolor="tab:red" )
         ax2.set_ylim ( bottom=min(rs)*.7, top = 1.9 )
         ax2.set_ylabel ( "$r_\mathrm{max}$", c="tab:red" )
+    if len(rsarea) == len(x):
+        # ax3 = ax1.twinx()
+        ax2.fill ( x, rsarea, lw=0, edgecolor="white", alpha=.2, facecolor="tab:red", zorder=-1 )
     ymax = max(y)
     imax = y.index ( ymax )
     xmax = x[imax]
