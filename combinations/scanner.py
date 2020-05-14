@@ -277,30 +277,32 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
         timestamp = pickle.load ( f )
     x = list(Zs.keys())
     x.sort()
-    y = []
+    y, yr = [], []
     rs = []
     for i in x:
         y_ = Zs[i]
         if type(y_)==tuple:
             rs.append ( y_[1] )
             y_ = y_[0]
-        if y_ < 0.:
-            y_ = float("nan")
+        y2_ = y_
+        if y2_ < 0.:
+            y2_ = float("nan")
         y.append ( y_ )
+        yr.append ( y2_ )
     pname = helpers.toLatex ( pid, addDollars=True )
     if isSSMPlot():
         pname = helpers.toLatex ( pid, addDollars=True, addSign=True )+","+\
                 helpers.toLatex ( pid2, addDollars=True, addSign=True )
     fig,ax1 = plt.subplots()
-    plt.plot ( x, y, label="Z(%s), %d events" % ( pname, nevents ), c="tab:blue", zorder=2 )
+    plt.plot ( x, yr, label="Z(%s), %d events" % ( pname, nevents ), c="tab:blue", zorder=0 )
     ax1.tick_params ( axis="y", labelcolor="tab:blue", labelleft=True )
     ax1.set_ylabel ( "Z", c="tab:blue" )
     ax1.set_xlabel ( "m [GeV]" )
     ax1.set_ylim ( bottom = 2. )
     if len(rs) == len(x):
         ax2 = ax1.twinx()
-        ax1.plot ([], [], label="$r_\mathrm{max}$", c="tab:red", zorder=0 )
-        ax2.plot ( x, rs, label="$r_\mathrm{max}$", c="tab:red", zorder=1 )
+        ax1.plot ([], [], label="$r_\mathrm{max}$", c="tab:red", zorder=1 )
+        ax2.plot ( x, rs, label="$r_\mathrm{max}$", c="tab:red", zorder=2 )
         ax2.tick_params ( axis="y", labelcolor="tab:red" )
         ax2.set_ylim ( bottom=0., top = 1.9 )
         ax2.set_ylabel ( "$r_\mathrm{max}$", c="tab:red" )
