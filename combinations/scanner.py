@@ -260,6 +260,20 @@ def findPidPairs ( rundir ):
         ret.append ( pids )
     return ret
 
+def findPids ( rundir ):
+    """ search for scanM*pcl files, report the corresponding pids.
+    :returns: set of pids
+    """
+    ret = set()
+    files = glob.glob("scanM*pcl")
+    files += glob.glob("%s/scanM*pcl" % rundir )
+    for f in files:
+        p = f.find("scanM")
+        s = f[p+5:]
+        s = s.replace(".pcl","")
+        ret.add ( int(s) )
+    return ret
+
 def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
     """ draw plots
     :param copy: copy final plots to ../../smodels.github.io/protomodels/latest
@@ -422,7 +436,9 @@ if __name__ == "__main__":
             help='copy plots to ~/git/smodels.github.io/protomodels/latest/',
             action="store_true" )
     args = argparser.parse_args()
-    allpids = [ 1000001, 2000005, 1000021, 1000006, 2000006, 1000024, 1000022, 1000005, 1000002, 1000003 ]
+    # allpids = [ 1000001, 2000005, 1000021, 1000006, 2000006, 1000024, 1000022, 1000005, 1000002, 1000003 ]
+    rundir = setup()
+    allpids = findPids( rundir )
     pids = args.pid
     if pids == 0:
         pids = allpids
