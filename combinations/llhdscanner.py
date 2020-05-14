@@ -2,7 +2,7 @@
 
 """ script used to produce the likelihood scans """
 
-import pickle, os, sys, multiprocessing, time, numpy
+import pickle, os, sys, multiprocessing, time, numpy, subprocess
 sys.path.insert(0,"./")
 from smodels.tools.physicsUnits import fb
 from csetup import setup
@@ -134,6 +134,8 @@ class Scanner:
                 masspoints.append ( (m1,m2,llhds,robs) )
         import pickle
         picklefile = "%s%d%d.pcl" % ( output, pid1, pid2 )
+        if os.path.exists ( picklefile ):
+            subprocess.getoutput ( "cp %s %s.old" % ( picklefile, picklefile ) )
         self.pprint ( "now saving to %s" % picklefile )
         f=open( picklefile ,"wb" )
         pickle.dump ( masspoints, f )
@@ -147,19 +149,19 @@ class Scanner:
     def overrideWithDefaults ( self, args ):
         mins = { 1000005:  100., 1000006:  100., 2000006:  100., 1000021:  300., \
                  1000001:  250., 1000002: 250., 1000003: 250., 1000004: 250. }
-        maxs = { 1000005: 1500., 1000006: 1260., 2000006: 1260., 1000021: 2351., \
+        maxs = { 1000005: 1500., 1000006: 1460., 2000006: 1260., 1000021: 2351., \
                  1000001: 2051., 1000002: 2051., 1000003: 2051., 1000004: 2051. }
-        dm   = { 1000005:    8., 1000006:    8., 2000006:    8., 1000021:   12., \
-                 1000001:   10., 1000002:   10., 1000003:   10., 1000004: 10.  }
+        dm   = { 1000005:   10., 1000006:   11., 2000006:   10., 1000021:   12., \
+                 1000001:   12., 1000002:   12., 1000003:   12., 1000004: 12.  }
         topo = { 1000005: "T2bb",1000006: "T2tt", 2000006: "T2tt", 1000021: "T1", \
                  1000001: "T2",  1000002: "T2", 1000003: "T2", 1000004: "T2" }
         ### make the LSP scan depend on the mother
         LSPmins = { 1000005:    5., 1000006:   5., 2000006:    5., 1000021:    5., \
                     1000001:    5., 1000002: 5., 1000003: 5., 1000004: 5. }
-        LSPmaxs = { 1000005:  800., 1000006: 800., 2000006:  800., 1000021: 1800., \
+        LSPmaxs = { 1000005:  800., 1000006: 900., 2000006:  800., 1000021: 1800., \
                     1000001: 1700., 1000002: 1700., 1000003: 1700., 1000004: 1700. }
-        LSPdm   = { 1000005:    8., 1000006:  8., 2000006:   8., 1000021:    12., \
-                    1000001:    8., 1000002:   8., 1000003: 8., 1000004: 8. }
+        LSPdm   = { 1000005:   10., 1000006:  12., 2000006:  12., 1000021: 13., \
+                    1000001:   10., 1000002:  10., 1000003:  10., 1000004: 10. }
         if not args.pid1 in mins:
             print ( "[llhdscanner] asked for defaults for %d, but none defined." % args.pid1 )
             return args

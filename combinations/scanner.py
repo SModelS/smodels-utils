@@ -204,7 +204,7 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
     # print ( "[scanner] starting with %s: %.2f" % ( pids, ssm ) )
     Zs = {}
     fm = .6 ## lower bound (relative) on mass
-    mrange = numpy.arange ( ssm * fm, ssm / fm, .008*ssm )
+    mrange = numpy.arange ( ssm * fm, ssm / fm, .01*ssm )
     ssmrangetot = [ ssm ]
     ssm1,ssm2 = ssm, ssm
     dssm = fac
@@ -231,7 +231,10 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
     if dryrun:
         return
     import pickle
-    with open ( "ssm%d%d.pcl" % (pids[0],pids[1]) , "wb" ) as f:
+    filename = "ssm%d%d.pcl" % (pids[0],pids[1])
+    if os.path.exists ( filename ):
+        subprocess.getoutput ( "cp %s %sold" % ( filename, filename ) )
+    with open ( filename, "wb" ) as f:
         pickle.dump ( Zs, f )
         pickle.dump ( ssm, f )
         pickle.dump ( nevents, f )
@@ -363,8 +366,8 @@ if __name__ == "__main__":
             help='number of processes [10]',
             type=int, default=10 )
     argparser.add_argument ( '-f', '--factor',
-            help='multiplication factor [1.005]',
-            type=float, default=1.005 )
+            help='multiplication factor [1.007]',
+            type=float, default=1.007 )
     argparser.add_argument ( '-e', '--nevents',
             help='number of events [100000]',
             type=int, default=100000 )

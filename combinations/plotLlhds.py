@@ -316,7 +316,10 @@ class LlhdPlot:
             print ( "couldnt find anything" )
             return None
         for llhd in allhds:
-            llhds.append ( (llhd[0],llhd[1],getMu1(llhd[2]),llhd[3]) )
+            if len(llhd)==4:
+                llhds.append ( (llhd[0],llhd[1],getMu1(llhd[2]),llhd[3]) )
+            else:
+                llhds.append ( (llhd[0],llhd[1],getMu1(llhd[2]),[0.,0.,0.]) )
         return llhds,mx,my,nevents,topo,timestamp
 
     def pprint ( self, *args ):
