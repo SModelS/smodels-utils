@@ -304,7 +304,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
         ax1.plot ([], [], label="$r_\mathrm{max}$", c="tab:red", zorder=1 )
         ax2.plot ( x, rs, label="$r_\mathrm{max}$", c="tab:red", zorder=2 )
         ax2.tick_params ( axis="y", labelcolor="tab:red" )
-        ax2.set_ylim ( bottom=0., top = 1.9 )
+        ax2.set_ylim ( bottom=min(rs)*.7, top = 1.9 )
         ax2.set_ylabel ( "$r_\mathrm{max}$", c="tab:red" )
     ymax = max(y)
     imax = y.index ( ymax )
