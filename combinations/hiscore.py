@@ -117,6 +117,7 @@ class Hiscore:
             if not hasattr ( m.M, "analysisContributions" ):
                 self.pprint ( "analysisContributions missing, compute them!" )
                 m.computeAnalysisContributions()
+            m.assertXSecs()
             protomodel = m.M
 
         for i,mi in enumerate(self.hiscores):

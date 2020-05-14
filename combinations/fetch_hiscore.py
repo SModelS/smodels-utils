@@ -24,7 +24,7 @@ def main():
     argparser.add_argument ( '--pmodels', help='the pmodels', action="store_true" )
     argparser.add_argument ( '--png', help='the png files', action="store_true" )
     argparser.add_argument ( '--ssms', help='the ssm files', action="store_true" )
-    argparser.add_argument ( '--llhd', help='the llhd files', action="store_true" )
+    argparser.add_argument ( '--llhds', help='the llhd files', action="store_true" )
     argparser.add_argument ( '--copy', help='the copy of the hiscore file', 
                              action="store_true" )
     argparser.add_argument ( '-2', '--two', help='the second hiscore file', 

@@ -760,6 +760,29 @@ class Manipulator:
             ret[mpid]=d
         return ret
 
+    def allXSecsAbove ( self, threshold=.01*fb, sqrts=13*TeV, order=LO ):
+        """ return list of all cross sections above threshold.
+        :returns: list of tuples of pids, cross sections (that had the SSM applied), 
+                          and SSMs that *were* applied.
+        """
+        if type(threshold)==float and threshold>0.:
+            self.pprint ( "note: interpreting threshold as fb" )
+            threshold = threshold * fb
+        self.assertXSecs()
+        ret = []
+        for xsec in self.M.stored_xsecs[0]:
+            if xsec.info.order != order:
+                continue
+            if abs (( xsec.info.sqrts - sqrts ).asNumber(TeV)) > .1:
+                continue
+            xs = xsec.value
+            ssm = 1.
+            if xsec.pid in self.M.ssmultipliers:
+                ssm = self.M.ssmultipliers[xsec.pid]
+            ret.append ( (xsec.pid, xs, ssm) )
+        ret.sort( key = lambda x: x[1], reverse = True )
+        return ret
+
     def xsecsFor ( self, pids, sqrts=13*TeV, order=LO ):
         """ return the cross sections for pids.
         :param pids: tuple of two pids
@@ -776,7 +799,7 @@ class Manipulator:
         for xsec in self.M.stored_xsecs[0]:
             if xsec.info.order != order:
                 continue
-            if ( xsec.info.sqrts - sqrts ).asNumber(TeV) > .1:
+            if abs ( ( xsec.info.sqrts - sqrts ).asNumber(TeV) ) > .1:
                 continue
             if xsec.pid != pids:
                 continue
