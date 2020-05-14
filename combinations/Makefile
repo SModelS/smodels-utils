@@ -20,4 +20,7 @@ doc:
 	pyreverse *.py
 	dot -Tps classes.dot -o outfile.ps
 
+du-h: .PHONY
+	du -h --max-depth=1 | tee du-h
+
 .PHONY:
