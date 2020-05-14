@@ -53,7 +53,7 @@ def sortOutDupes ( results ):
     return ret
 
 def draw( strategy, databasepath, trianglePlot, miscol,
-          diagcol, experiment, S ):
+          diagcol, experiment, S, drawtimestamp ):
     """
     :param trianglePlot: if True, then only plot the upper triangle of this
                          symmetrical matrix
@@ -61,6 +61,7 @@ def draw( strategy, databasepath, trianglePlot, miscol,
     :param diagcol: color to use for diagonal
     :param experiment: draw only for specific experiment ("CMS", "ATLAS", "all" )
     :param S: draw only for specific sqrts ( "8", "13", "all" )
+    :param drawtimestamp: if true, put a timestamp on plot
     """
     ROOT.gStyle.SetOptStat(0000)
 
@@ -228,8 +229,9 @@ def draw( strategy, databasepath, trianglePlot, miscol,
     l.SetNDC()
     l.SetTextColor(ROOT.kGray+1)
     l.SetTextSize(.015)
-    l.DrawLatex ( .01, .01, "plot produced %s from database v%s" % \
-                  ( time.strftime("%h %d %Y" ), d.databaseVersion ) )
+    if drawtimestamp:
+        l.DrawLatex ( .01, .01, "plot produced %s from database v%s" % \
+                      ( time.strftime("%h %d %Y" ), d.databaseVersion ) )
     ROOT.gPad.SetGrid()
     print ( "Plotting to matrix_%s.png" % strategy )
     ROOT.c1.Print("matrix_%s.png" % strategy )
@@ -252,10 +254,14 @@ if __name__ == "__main__":
     argparser.add_argument ( '-t', '--triangular',
             help='plot as lower triangle matrix?',
             action="store_true" )
+    argparser.add_argument ( '-N', '--notimestamp',
+            help='dont put a timestamp on it',
+            action="store_true" )
     args=argparser.parse_args()
+    drawtimestamp = not args.notimestamp
     miscol = 42 ## missing likelihood color, golden
     miscol = ROOT.kWhite ## missing likelihood color, white
     diagcol = ROOT.kBlack
     diagcol = ROOT.kGray
     draw( args.strategy, args.database, args.triangular, miscol, diagcol,
-          args.experiment, args.sqrts )
+          args.experiment, args.sqrts, drawtimestamp )
