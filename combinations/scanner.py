@@ -320,7 +320,9 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
     ax1.tick_params ( axis="y", labelcolor="tab:blue", labelleft=True )
     ax1.set_ylabel ( "Z", c="tab:blue" )
     ax1.set_xlabel ( "m [GeV]" )
-    ax1.set_ylim ( bottom = 2., top=max(yr)*1.03 )
+    maxyr = numpy.nanmax(yr)
+    ax1.set_ylim ( bottom = 2., top=maxyr*1.03 )
+    rsarea[0]=0.
     if len(rs) == len(x):
         ax2 = ax1.twinx()
         ax1.plot ([], [], label="$r_\mathrm{max}$", c="tab:red", zorder=1 )
