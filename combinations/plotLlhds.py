@@ -89,6 +89,14 @@ def filterSmaller ( X, Y ):
         Xs.append ( xt )
         Ys.append ( yt )
     return np.array(Xs), np.array(Ys)
+            
+def isCloseToExisting ( minXY, existingPoints ):
+    """ is the point at minXY close to any existing Points? """
+    for ep in existingPoints:
+        d2 = (minXY[0] - ep[0])**2 + (minXY[1] - ep[1])**2
+        if d2 < 5.:
+            return True
+    return False
 
 def getAlpha ( color ):
     """ different alpha for different colors """
@@ -316,6 +324,7 @@ class LlhdPlot:
                 ymax = m[1]
         print ( "[plotLlhds] range x [%d,%d] y [%d,%d]" % ( xmin, xmax, ymin, ymax ) )
         handles = []
+        existingPoints = []
         for ctr,ana in enumerate ( anas ): ## loop over the analyses
             if ctr >= self.max_anas:
                 self.pprint ( "too many (%d > %d) analyses." % (len(anas),self.max_anas) )
@@ -393,9 +402,11 @@ class LlhdPlot:
             cont50 = plt.contourf ( X, Y, hldZ50, levels=[1.,10.], colors = [ color, color ], alpha=getAlpha( color ), zorder=10 )
             plt.clabel ( cont50c, fmt="68%.0s" )
             ax = cont50.ax
-            # print ( "[plotLlhds] ana, min", ana, minXY )
+            while isCloseToExisting ( minXY, existingPoints ):
+                minXY = ( minXY[0]+8., minXY[1]+8., minXY[2] )
             a = ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=180, color="black", zorder=20 )
             a = ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=110, color=color, label=ana+" (%.2f)" % (minXY[2]), alpha=1., zorder=20 )
+            existingPoints.append ( minXY )
             handles.append ( a )
 
         # ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="s", s=110, color="gray", label="excluded", alpha=.3, zorder=20 )
