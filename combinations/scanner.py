@@ -187,7 +187,7 @@ def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
         f.close()
 
 def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
-             nproc=5, fac = 1.005 ):
+             nproc=5, fac = 1.008 ):
     """ produce pickle files for ssm scan, for (pid1,pid2), with nevents
     :param hi: hiscore list object
     :param nproc: number of processes
@@ -242,12 +242,13 @@ def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
         pickle.dump ( time.asctime(), f )
         f.close()
 
-def findPidPairs ():
+def findPidPairs ( rundir ):
     """ search for ssm*pcl files, report the corresponding pid pairs.
     :returns: list of tuple of pids
     """
     ret = []
     files = glob.glob("ssm*pcl")
+    files += glob.glob("%s/ssm*pcl" % rundir )
     for f in files:
         p = f.find("ssm")
         s = f[p+3:]
@@ -263,8 +264,9 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
     """ draw plots
     :param copy: copy final plots to ../../smodels.github.io/protomodels/latest
     """
+    rundir = setup()
     if pid2 == 0: ## means all
-        pidpairs = findPidPairs()
+        pidpairs = findPidPairs( rundir )
         for pids in pidpairs:
             try:
                 draw ( pids[0], interactive, pids[1], copy )
@@ -281,7 +283,6 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
     from matplotlib import pyplot as plt
     import helpers
     import pickle
-    rundir = setup()
     if False:
         rundir = ""
     picklefile = "%sscanM%s.pcl" % (rundir, pid )
@@ -350,8 +351,9 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
         Zmax=Zmax[0]
     ax1.scatter ( [ cmass ], [ Zmax ], label="protomodel, Z(%s)=%.2f" % (param, Zmax ), marker="*", s=130, c="g", zorder=10 )
     plt.title ( "Significance Z=Z(%s)" % pname )
-    # plt.text ( .8 * max(x),-.17, timestamp )
-    plt.text ( .8 * max(x),-.21, timestamp )
+    # plt.text ( .8 * max(x),-.21, timestamp )
+    plt.text ( .8 * max(x),.55*min(rs), timestamp, transform = ax1.transAxes )
+    plt.text ( .7, -.12, timestamp, transform = ax1.transAxes )
     ax1.legend()
     if isSSMPlot():
         plt.xlabel ( "ssm(%s) [GeV]" % pname )
@@ -396,8 +398,8 @@ if __name__ == "__main__":
             help='number of processes [10]',
             type=int, default=10 )
     argparser.add_argument ( '-f', '--factor',
-            help='multiplication factor [1.007]',
-            type=float, default=1.007 )
+            help='multiplication factor [1.008]',
+            type=float, default=1.008 )
     argparser.add_argument ( '-e', '--nevents',
             help='number of events [100000]',
             type=int, default=100000 )
