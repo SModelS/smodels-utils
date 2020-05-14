@@ -322,11 +322,9 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False ):
     if type(Zmax)==tuple:
         Zmax=Zmax[0]
     ax1.scatter ( [ cmass ], [ Zmax ], label="protomodel, Z(%s)=%.2f" % (param, Zmax ), marker="*", s=130, c="g", zorder=10 )
-    # plt.ylabel ( "Z" )
     plt.title ( "Significance Z=Z(%s)" % pname )
-    plt.text ( .8 * max(x),-.17, timestamp )
-    #import IPython
-    #IPython.embed()
+    # plt.text ( .8 * max(x),-.17, timestamp )
+    plt.text ( .8 * max(x),-.21, timestamp )
     ax1.legend()
     if isSSMPlot():
         plt.xlabel ( "ssm(%s) [GeV]" % pname )
