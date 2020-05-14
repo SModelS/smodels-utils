@@ -34,7 +34,7 @@ def main():
     files = set()
     store = { "scan": [ "scanM*.pcl", "ssm*.pcl" ], 
               "states": [ "states.dict" ],
-              "llhd": [ "llhd*pcl", "mp*pcl" ],
+              "llhds": [ "llhd*pcl", "mp*pcl" ],
               "two": [ "hiscore2.pcl" ],
               "copy": [ "hiscoreCopy.pcl" ],
               "pmodels": [ "pmodel?.py" ],

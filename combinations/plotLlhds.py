@@ -6,17 +6,20 @@ import pickle, sys, copy, subprocess, os, colorama, time, glob
 import IPython
 import numpy as np
 from csetup import setup as gsetup
-import matplotlib
 from helpers import getParticleName, toLatex
+import matplotlib
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
-#matplotlib.rcParams['hatch.linewidth'] = 2.1  # previous svg hatch linewidth
+import matplotlib.patches as mpatches
+matplotlib.rcParams['hatch.linewidth'] = .5  # previous svg hatch linewidth
 
-def integrateLlhds ( Z ):
+def integrateLlhds ( Z, RMAX, rthreshold ):
     """ compute the integral of the likelihood over all points """
     I = 0.
-    for row in Z:
-        for nll in row:
+    for x,row in enumerate(Z):
+        for y,nll in enumerate(row):
+            if RMAX[x][y]>rthreshold:
+                continue
             if not np.isnan(nll):
                 I += np.exp ( - nll )
     return I
@@ -29,7 +32,7 @@ def findMin ( oldZ ):
     m = oldZ[x][y]
     return x,y,m
 
-def computeHPD ( Z, RMAX, alpha = .9, verbose = True ):
+def computeHPD ( Z, RMAX, alpha = .9, verbose = True, rthreshold=1.7 ):
     """ compute the regions of highest posterior density to the alpha quantile
     """
     newZ = copy.deepcopy ( Z )
@@ -41,7 +44,7 @@ def computeHPD ( Z, RMAX, alpha = .9, verbose = True ):
                 else:
                     newZ[x][y]=0.
         return newZ
-    I = integrateLlhds ( Z )
+    I = integrateLlhds ( Z, RMAX, rthreshold )
     S = 0.
     points = []
     n = 0
@@ -51,9 +54,8 @@ def computeHPD ( Z, RMAX, alpha = .9, verbose = True ):
             rmax = 0.
             if type(RMAX) != type(None):
                 rmax = RMAX[x][y]
-            if rmax > 50.: ## kill the excluded areas
-                # print ( "going to kick out", x, y, oldZ[x][y], rmax )
-                oldZ[x][y]=oldZ[x][y] # float("nan") # oldZ[x][y] # float("nan")
+            if rmax > rthreshold: ## kill the excluded areas
+                oldZ[x][y]= float("nan") # oldZ[x][y] # float("nan")
             n += 1
             newZ[x][y] = 0.
     ctr = 0
@@ -90,7 +92,7 @@ def filterSmaller ( X, Y ):
 
 def getAlpha ( color ):
     """ different alpha for different colors """
-    rets = { "red": .3, "gray": .1 }
+    rets = { "red": .3, "gray": .4 }
     if color in rets:
         return rets[color]
     return .3
@@ -118,18 +120,22 @@ def getPidList( pid1 ):
 
 class LlhdPlot:
     """ A simple class to make debugging the plots easier """
-    def __init__ ( self, pid1, pid2, verbose, copy, max_anas ):
+    def __init__ ( self, pid1, pid2, verbose, copy, max_anas, 
+                   interactive ):
         """
         :param pid1: pid for x axis, possibly a range of pids
         :param pid2: pid for y axis
         :param verbose: verbosity (debug, info, warn, or error)
         :param copy: copy plot to ../../smodels.github.io/protomodels/latest
         :param max_anas: maximum number of analyses on summary plot
+        :param interactive: prepare for an interactive session?
         """
         self.setup( pid1, pid2 )
         self.DEBUG, self.INFO = 40, 30
         self.max_anas = max_anas ## maximum number of analyses
         self.copy = copy
+        self.rthreshold = 1.7
+        self.interactive = interactive
         self.hiscorefile = "./hiscore.pcl"
         self.setVerbosity ( verbose )
         masspoints,mx,my,nevents,topo,timestamp = self.loadPickleFile()
@@ -182,7 +188,7 @@ class LlhdPlot:
                   and topology
         """
         #self.pprint ( "asking for %s" % ana )
-        ret,sr = None,None
+        ret,sr = None, None
         dType = "any"
         if ":" in ana:
             ana,dType = ana.split(":")
@@ -206,92 +212,6 @@ class LlhdPlot:
                 ret = v
                 sr = tokens[1]
         return ret,sr
-
-    def plotOneAna ( self, ana ):
-        """ plot for one analysis
-        :param copy: copy plot to ../../smodels.github.io/protomodels/latest
-        """
-        print ( "[plotOneAna] FIXME plotOneAna is broken!" )
-        return
-        """
-        print ( "[plotLlhds] now plotting %s" % ana )
-        x,y=set(),set()
-        L, R = {}, {}
-        minXY=0.,0.,float("inf")
-        s=""
-        r,sr = self.getResultFor ( ana, self.masspoints[0][2] )
-        if r:
-            s="(%.2f)" % (-np.log(r))
-        cresults = 0
-        for masspoint in self.masspoints[1:]:
-            m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
-            if m2 > m1:
-                print ( "m2,m1 mass inversion?",m1,m2 )
-            x.add ( m1 )
-            y.add ( m2 )
-            zt = float("nan")
-            # zt = 0.
-            result,sr = self.getResultFor ( ana, llhds )
-            if result:
-                zt = - np.log( result )
-                cresults += 1
-                if zt < minXY[2]:
-                    minXY=(m1,m2,zt)
-            h = self.getHash(m1,m2)
-            L[h]=zt
-        if cresults == 0:
-            print ( "[plotLlhds] warning: found no results for %s. skip" % ana )
-            return
-        x,y=list(x),list(y)
-        x.sort(); y.sort()
-        X, Y = np.meshgrid ( x, y )
-        Z = float("nan")*X
-        R = float("nan")*X
-        # print ( "x", x )
-        for irow,row in enumerate(Z):
-            for icol,col in enumerate(row):
-                h = self.getHash(x[icol],y[irow])
-                if h in L:
-                    Z[irow,icol]=L[h]
-        print ( "now getting HPDs" )
-        contf = plt.contourf ( X, Y, Z, levels=100 )
-        hldZ95 = computeHPD ( Z, R, .95 )
-        cont95 = plt.contour ( X, Y, hldZ95, levels=[0.5], colors = [ "orange" ] )
-        plt.clabel ( cont95, fmt="95%.0s" )
-        hldZ50 = computeHPD ( Z, R, .5 )
-        cont50 = plt.contour ( X, Y, hldZ50, levels=[1.0], colors = [ "red" ] )
-        plt.clabel ( cont50, fmt="50%.0s" )
-        print ( "timestamp:", self.timestamp, self.topo, max(x) )
-        plt.text( max(x)-300,min(y)-350,self.timestamp, c="gray" )
-        ### the altitude of the alpha quantile is l(nuhat) - .5 chi^2_(1-alpha);ndf
-        ### so for alpha=0.05%, ndf=1 the dl is .5 * 3.841 = 1.9207
-        ### for ndf=2 the dl is ln(alpha) = .5 * 5.99146 = 2.995732
-        ### folien slide 317
-        cbar = plt.colorbar( contf, format="%.2f" )
-        cbar.set_label ( "-ln L" )
-        ax = contf.ax
-        # Xs,Ys=X,Y
-        Xs,Ys = filterSmaller ( X, Y )
-        ax.scatter(Xs, Ys, marker=".", s=.2, color="gray", label="points probed" )
-        ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=60, color="black" )
-        ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=35, color="red", label="$\hat{l}$ (ml estimate, %.2f)" % minXY[2] )
-        h = self.getHash()
-        if h in L:
-            s=" (%.2f)" % L[h]
-        ax.scatter( [ mx ], [ my ], marker="*", s=60, color="white" )
-        ax.scatter( [ mx ], [ my ], marker="*", s=35, color="black", label="proto-model%s" % s )
-        if sr == None:
-            sr = "UL"
-        plt.title ( "$-\ln L(m_i)$, %s: %s,%s [%d events]" % ( ana, topo, sr, nevents ) )
-        plt.xlabel ( "%s" % pid1 )
-        plt.ylabel ( "%s" % pid2 )
-        plt.legend()
-        # plt.contour ( X, Y, Z )
-        figname = "plt%d%s.png" % ( pid1, ana )
-        print ( "[plotLlhds] saving to %s" % figname )
-        plt.savefig ( figname )
-        plt.close()
-        """
 
     def loadPickleFile ( self ):
         """ load dictionary from picklefile """
@@ -354,17 +274,17 @@ class LlhdPlot:
         print ( "              plot.pid1, plot.pid2, plot.topo" )
         print ( "Function members: plot.findClosestPoint()" )
 
-    def plotSummary ( self, ulSeparately=True, pid1=None ):
+    def plot ( self, ulSeparately=True, pid1=None ):
         """ a summary plot, overlaying all contributing analyses 
         :param ulSeparately: if true, then plot UL results on their own
         """
         if pid1 == None and type(self.pid1) in [ list, tuple ]:
             for p in self.pid1:
-                self.plotSummary ( ulSeparately, p )
+                self.plot ( ulSeparately, p )
             return
         if type(pid1) in [ tuple, list ]:
             for p in pid1:
-                self.plotSummary ( ulSeparately, p )
+                self.plot ( ulSeparately, p )
             return
         if pid1 == None:
             pid1 = self.pid1
@@ -395,6 +315,7 @@ class LlhdPlot:
             if m[1] > ymax:
                 ymax = m[1]
         print ( "[plotLlhds] range x [%d,%d] y [%d,%d]" % ( xmin, xmax, ymin, ymax ) )
+        handles = []
         for ctr,ana in enumerate ( anas ): ## loop over the analyses
             if ctr >= self.max_anas:
                 self.pprint ( "too many (%d > %d) analyses." % (len(anas),self.max_anas) )
@@ -416,7 +337,7 @@ class LlhdPlot:
                 if cm % 1000 == 0:
                     print ( ".", end="", flush=True )
                 m1,m2,llhds,robs=masspoint[0],masspoint[1],masspoint[2],masspoint[3]
-                rmax=0.
+                rmax=float("nan")
                 if len(robs)>0:
                     rmax=robs[0]
                 if m2 > m1:
@@ -428,7 +349,7 @@ class LlhdPlot:
                 if result:
                     zt = - np.log( result )
                     cresults += 1
-                    if zt < minXY[2]:
+                    if zt < minXY[2] and rmax<=self.rthreshold:
                         minXY=(m1,m2,zt)
                 h = self.getHash(m1,m2)
                 L[h]=zt
@@ -451,24 +372,33 @@ class LlhdPlot:
                     h = self.getHash(x[icol],y[irow])
                     if h in L:
                         Z[irow,icol]=L[h]
+                    if h in R:
                         RMAX[irow,icol]=R[h]
-            contRMAX = plt.contour ( X, Y, RMAX, levels=[1.7], colors = [ "gray" ], linestyles = [ "dotted" ] )
-            contRMAXf = plt.contourf ( X, Y, RMAX, levels=[1.7,100.], colors = [ "gray" ], hatches = ['///'], alpha=getAlpha( "gray" ) )
-            hldZ100 = computeHPD ( Z, None, 1., False )
-            cont100 = plt.contour ( X, Y, hldZ100, levels=[0.25], colors = [ color ], linestyles = [ "dotted" ] )
+            if self.interactive:
+                self.RMAX = RMAX
+                self.Z = Z
+                self.L = L
+                self.R = R
+                self.X = X
+                self.Y = Y
+            contRMAX = plt.contour ( X, Y, RMAX, levels=[self.rthreshold], colors = [ "gray" ], zorder=10 )
+            contRMAXf = plt.contourf ( X, Y, RMAX, levels=[self.rthreshold,float("inf")], colors = [ "gray" ], hatches = ['////'], alpha=getAlpha( "gray" ), zorder=10 )
+            hldZ100 = computeHPD ( Z, None, 1., False, rthreshold=self.rthreshold )
+            cont100 = plt.contour ( X, Y, hldZ100, levels=[0.25], colors = [ color ], linestyles = [ "dotted" ], zorder=10 )
             #hldZ95 = computeHPD ( Z, .95, False )
             #cont95 = plt.contour ( X, Y, hldZ95, levels=[0.5], colors = [ color ], linestyles = [ "dashed" ] )
             #plt.clabel ( cont95, fmt="95%.0s" )
-            hldZ50 = computeHPD ( Z, RMAX, .68, False )
-            cont50c = plt.contour ( X, Y, hldZ50, levels=[1.0], colors = [ color ] )
-            cont50 = plt.contourf ( X, Y, hldZ50, levels=[1.,10.], colors = [ color, color ], alpha=getAlpha( color ) )
+            hldZ50 = computeHPD ( Z, RMAX, .68, False, rthreshold=self.rthreshold )
+            cont50c = plt.contour ( X, Y, hldZ50, levels=[1.0], colors = [ color ], zorder=10 )
+            cont50 = plt.contourf ( X, Y, hldZ50, levels=[1.,10.], colors = [ color, color ], alpha=getAlpha( color ), zorder=10 )
             plt.clabel ( cont50c, fmt="68%.0s" )
             ax = cont50.ax
             # print ( "[plotLlhds] ana, min", ana, minXY )
-            ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=180, color="black" )
-            ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=110, color=color, label=ana+" (%.2f)" % (minXY[2]), alpha=1. )
+            a = ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=180, color="black", zorder=20 )
+            a = ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=110, color=color, label=ana+" (%.2f)" % (minXY[2]), alpha=1., zorder=20 )
+            handles.append ( a )
 
-        ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="s", s=110, color="gray", label="excluded", alpha=.3 )
+        # ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="s", s=110, color="gray", label="excluded", alpha=.3, zorder=20 )
         print()
         self.pprint ( "timestamp:", self.timestamp, self.topo, max(x) )
         dx,dy = max(x)-min(x),max(y)-min(y)
@@ -483,18 +413,24 @@ class LlhdPlot:
         h = self.getHash()
         if h in L:
             s=" (%.2f)" % L[h]
-        ax.scatter( [ self.mx ], [ self.my ], marker="*", s=200, color="white" )
-        ax.scatter( [ self.mx ], [ self.my ], marker="*", s=160, color="black", 
-                      label="proto-model%s" % s )
+        ax.scatter( [ self.mx ], [ self.my ], marker="*", s=200, color="white", zorder=20 )
+        c = ax.scatter( [ self.mx ], [ self.my ], marker="*", s=160, color="black", 
+                      label="proto-model%s" % s, zorder=20 )
+        handles.append ( c )
         if sr == None:
             sr = "UL"
         plt.title ( "HPD regions, %s [%s]" % ( toLatex(pid1,True), self.topo ) )
         plt.xlabel ( "m(%s) [GeV]" % toLatex(pid1,True) )
         plt.ylabel ( "m(%s) [GeV]" % toLatex(self.pid2,True) )
-        plt.legend( loc="upper left" )
+        circ1 = mpatches.Patch( facecolor="gray",alpha=getAlpha("gray"),hatch=r'////',label='excluded', edgecolor="black" )
+        handles.append ( circ1 )
+        plt.legend( handles=handles, loc="upper left" )
         figname = "llhd%d.png" % ( pid1 )
         self.pprint ( "saving to %s" % figname )
         plt.savefig ( figname )
+        if self.interactive:
+            self.ax = ax
+            self.plt = plt
         plt.close()
         if self.copy:
             self.copyFile ( figname )
@@ -580,15 +516,6 @@ class LlhdPlot:
                 ( colorama.Fore.GREEN, varis, colorama.Fore.RESET ) )
         IPython.embed( using=False )
 
-    def plotAll ( self ):
-        print ( "[plotLlhds] FIXME this is broken" )
-        return
-        stats = self.getAnaStats()
-        for ana,v in stats.items():
-            self.plot ( ana )
-        pass
-
-
 if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(
@@ -605,22 +532,19 @@ if __name__ == "__main__":
             help='pid1, if 0 then search for llhd*pcl files [0]',
             type=int, default=0 )
     argparser.add_argument ( '-M', '--max_anas',
-            help='maximum number of analyses to appear on summary plot [4]',
+            help='maximum number of analyses [4]',
             type=int, default=4 )
     argparser.add_argument ( '-2', '--pid2',
             help='pid2 [1000022]',
             type=int, default=1000022 )
-    argparser.add_argument ( '-a', '--analysis',
-            help="analysis. '*' means, overlay all analyses to a summary plot [*]",
+    argparser.add_argument ( '-a', '--analyses',
+            help="analyses, comma separated. '*' means all analyses [*]",
             type=str, default="*" )
     argparser.add_argument ( '-l', '--list_analyses',
             help='list all analyses for these pids',
             action="store_true" )
     argparser.add_argument ( '-c', '--copy',
             help='copy plots to ~/git/smodels.github.io/protomodels/latest',
-            action="store_true" )
-    argparser.add_argument ( '-A', '--all',
-            help='plot for all analyses',
             action="store_true" )
     argparser.add_argument ( '-I', '--interactive',
             help='interactive mode',
@@ -630,21 +554,18 @@ if __name__ == "__main__":
     pids = getPidList ( args.pid1 )
 
     if args.interactive and len(pids)>1:
-        print ( "[plotLlhds] interactive mode plus several plots. you sure?" )
+        print ( "[plotLlhds] interactive mode plus several plots. interactive is only for one plot." )
+        args.interactive = False
 
     for pid1 in pids:
-        plot = LlhdPlot ( pid1, args.pid2, args.verbose, args.copy, args.max_anas )
+        plot = LlhdPlot ( pid1, args.pid2, args.verbose, args.copy, args.max_anas,
+                          args.interactive )
 
-        if args.all:
-            plot.plotAll ( )
-        elif args.interactive:
+        if args.list_analyses:
+            plot.listAnalyses()
+
+        plot.plot()
+
+        if args.interactive:
             plot.interact()
-        elif args.list_analyses:
-            plot.listAnalyses ( )
-        ## summary plot!
-        elif args.analysis in [ "*", "all", "summary" ]:
-            plot.plotSummary()
-        else:
-            ## plot one specific analysis
-            plot.plotOneAna ( args.analysis )
 
