@@ -353,6 +353,8 @@ if __name__ == "__main__":
           help='maximum mass, -1 for automatic mode', type=int, default=-1 )
     argparser.add_argument ( '-o', '--output',
           help='output file name [ruler.png]', type=str, default='ruler.png' )
+    argparser.add_argument ( '-R', '--hasResultsFor',
+          help='hasResultsFor dictionary, given as string [""]', type=str, default='' )
     argparser.add_argument ( '-v', '--verbosity',
           help='verbosity -- debug, info, warning, error [info]', type=str, default='info' )
     argparser.add_argument ( '-p', '--pdf', help='produce pdf', action='store_true' )
@@ -379,4 +381,8 @@ if __name__ == "__main__":
             SModelSUtils.installDirectory()+"/etc/commandline.conf" )
     logger=logging.getLogger(__name__)
     setLogLevel ( logger, args.verbosity.lower() )
-    draw ( inputfile, args.output, Range, formats, args.masses, args.squark )
+    hasResultsFor = None
+    if args.hasResultsFor != "":
+        hasResultsFor = eval ( args.hasResultsFor )
+    draw ( inputfile, args.output, Range, formats, args.masses, args.squark, \
+           hasResultsFor )

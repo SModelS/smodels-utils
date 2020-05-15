@@ -579,7 +579,7 @@ def getPIDsOfTPred ( tpred, ret, integrateDataType=True, integrateSRs=True ):
                         ret[apid].add ( name )
     return ret
 
-def plotRuler( protomodel ):
+def plotRuler( protomodel, verbosity ):
     resultsForPIDs = {}
     for tpred in protomodel.bestCombo:
         resultsForPIDs =  getPIDsOfTPred ( tpred, resultsForPIDs )
@@ -588,6 +588,10 @@ def plotRuler( protomodel ):
     resultsFor = {}
     for pid,values in resultsForPIDs.items():
         resultsFor[ protomodel.masses[pid] ] = values
+
+    if verbosity == "debug":
+        print ( '[plotHiscore] ../smodels_utils/plotting/rulerPlotter.py -o ruler.png --hasResultsFor "%s" %s' % \
+                ( str(resultsFor), protomodel.currentSLHA ) )
 
     rulerPlotter.draw ( protomodel.currentSLHA, "ruler.png", Range=(None,None),
                         mergesquark = False,
@@ -635,7 +639,7 @@ def plot ( number, verbosity, picklefile, options ):
 
     plotruler = options["ruler"]
     if plotruler:
-        plotRuler ( protomodel )
+        plotRuler ( protomodel, verbosity )
     plotdecays = options["decays"]
     if plotdecays:
         plotDecays ( protomodel, verbosity )
