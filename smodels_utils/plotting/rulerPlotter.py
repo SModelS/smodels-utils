@@ -120,7 +120,7 @@ def createDictionaryFromSLHA ( inputfile ):
 
 def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
            formats={ "png": True }, printmass=False, mergesquark=True,
-           hasResultsFor = None ):
+           hasResultsFor = None, verbosity="info" ):
     """ entry point: draw the masses
       :param inputfile: the inputfilename, must contain a simple dictionary. If
                         the filename ends with .slha, create the dictionary on the fly.
@@ -169,6 +169,10 @@ def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
     ROOT.gROOT.SetStyle("Plain")
 
     c1=ROOT.TCanvas("c1","c1",600,1000)
+
+    tm = ROOT.TLatex()
+    tm.SetNDC()
+    tm.DrawLatex(.0,.03,"#splitline{  m}{[GeV]}" )
 
     lines=[]
 
