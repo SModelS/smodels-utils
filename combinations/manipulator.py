@@ -1103,7 +1103,7 @@ class Manipulator:
             tmp = self.M.maxMass
         if tmp < self.M.masses[self.M.LSP]: ## the LSP is the LSP.
             tmp = self.M.masses[self.M.LSP]
-        self.M.masses[i]=tmp
+        self.M.masses[pid]=tmp
 
     def randomlyChangeMasses ( self ):
         """ take a random step in mass space for all unfrozen particles """
