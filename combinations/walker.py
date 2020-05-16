@@ -170,7 +170,7 @@ class RandomWalker:
         if uUnfreeze > nUnfrozen/float(nTotal):
             # in every nth step unfreeze random particle
             self.log ( "unfreeze random particle" )
-            nChanges += self.manipulator.unfreezeRandomParticle()
+            nChanges += self.manipulator.randomlyUnfreezeParticle()
         uBranch = random.uniform(0,1)
         if uBranch > .8: # do this about every third time
             self.log ( "randomly change branchings" )
@@ -195,10 +195,10 @@ class RandomWalker:
                 nChanges+=self.manipulator.freezeMostMassiveParticle()
             else:
                 self.log ( "freeze random particle" )
-                nChanges+=self.manipulator.freezeRandomParticle()
+                nChanges+=self.manipulator.randomlyFreezeParticle()
         if nChanges == 0:
             self.log ( "take random mass step" )
-            self.manipulator.takeRandomMassStep()
+            self.manipulator.randomlyChangeMasses()
         if self.catch_exceptions: 
             try:
                 self.manipulator.predict()
@@ -344,7 +344,7 @@ class RandomWalker:
 
     def walk ( self ):
         """ Now perform the random walk """
-        self.manipulator.unfreezeRandomParticle() ## start with unfreezing a random particle
+        self.manipulator.randomlyUnfreezeParticle() ## start with unfreezing a random particle
         while self.maxsteps < 0 or self.protomodel.step<self.maxsteps:
             # self.gradientAscent() # perform at begining
             ## only the first walker records history

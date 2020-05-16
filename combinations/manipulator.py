@@ -253,7 +253,7 @@ class Manipulator:
             m = eval ( f.read() )
         self.initFromDict ( m, filename )
 
-    def unfreezeRandomParticle ( self, pid=None ):
+    def randomlyUnfreezeParticle ( self, pid=None ):
         """ unfreezes a (random) frozen particle
         :param pid: if int, then unfreeze that particle, if None, unfreeze random particle
         """
@@ -528,7 +528,7 @@ class Manipulator:
             return p in dpid
         return p == dpid
 
-    def freezeRandomParticle ( self ):
+    def randomlyFreezeParticle ( self ):
         """ freezes a random unfrozen particle """
         unfrozen = self.M.unFrozenParticles( withLSP = False )
         if len(unfrozen)<2:
@@ -1091,17 +1091,30 @@ class Manipulator:
                 print ( "new xsec", xsec, "pid", xsec.pid )
         """
 
+    def randomlyChangeMassOf ( self, pid, dx=None ):
+        """ randomly change the mass of pid
+        :param dx: the delta x to change. If none, then use a model-dependent
+                   default
+        """
+        if dx == None:
+            dx = 40. / numpy.sqrt ( len(self.M.unFrozenParticles() ) ) / ( self.M.Z + 1. )
+        tmp = self.M.masses[pid]+random.uniform(-dx,dx)
+        if tmp > self.M.maxMass:
+            tmp = self.M.maxMass
+        if tmp < self.M.masses[self.M.LSP]: ## the LSP is the LSP.
+            tmp = self.M.masses[self.M.LSP]
+        self.M.masses[i]=tmp
 
-    def takeRandomMassStep ( self ):
+    def randomlyChangeMasses ( self ):
         """ take a random step in mass space for all unfrozen particles """
-        dx = 40. / numpy.sqrt ( len(self.M.unFrozenParticles() ) ) / ( self.M.Z + 1. )
-        for i in self.M.unFrozenParticles():
-            tmp = self.M.masses[i]+random.uniform(-dx,dx)
-            if tmp > self.M.maxMass:
-                tmp = self.M.maxMass
-            if tmp < self.M.masses[self.M.LSP]: ## the LSP is the LSP.
-                tmp = self.M.masses[self.M.LSP]
-            self.M.masses[i]=tmp
+        a = random.uniform(0.,1.)
+        unfrozen = self.M.unFrozenParticles()
+        if a < .5: ## in 50% of the cases, only change one mass
+            pid = random.choice ( unfrozen )
+            self.randomlyChangeMassOf ( pid, dx=200. )
+            return
+        for i in unfrozen:
+            self.randomlyChangeMassOf ( i )
         self.checkSwaps() ## should we really do this here?
         ## now remove all offshell decays, and normalize all branchings
         self.removeAllOffshell()
