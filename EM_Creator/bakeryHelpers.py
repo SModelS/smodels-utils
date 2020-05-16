@@ -69,19 +69,17 @@ def parseMasses ( massstring, mingap1=None, maxgap1=None,
             tmp.append ( i )
         lists.append ( tuple(tmp) )
     # mesh = numpy.meshgrid ( *lists )
+    ret = []
     if lists[1][0]=="half":
-        ret = []
         for x  in lists[0]:
             for z in lists[2]:
                 y=int(.5*x+.5*z)
                 ret.append ( (int(x),y,int(z)) )
-        return ret
-    ret = []
-    if len(lists)==2:
+    elif len(lists)==2:
         for x in range ( len(lists[0] ) ):
             for y in range ( len(lists[1]) ):
                 ret.append ( (int(lists[0][x]),int(lists[1][y])) )
-    if len(lists)==3:
+    elif len(lists)==3:
         for x in range ( len(lists[0] ) ):
             for y in range ( len(lists[1]) ):
                 for z in range ( len(lists[2]) ):
