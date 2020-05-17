@@ -1,5 +1,6 @@
--) automate the plotting of the scans further
--) in llhd plots: plot forbidden regions (rmax > 1.7)
+-) plot 68% credibility region for combination
+-) get the distributions of K and Z by sampling the background
+-) automate the plotting of the scans further, i.e automatically plot llhd plots
 -) maybe a few more tampering mechanisms, like swap similar particles,
 -) CMS-SUS-19-006, why didnt we add eff map?
 
@@ -11,3 +12,4 @@
 .) in rawnumbers, show also the particles that entered
 .) state.pcl: move to using dictionaries
 .) llhd1000003.png and llhd1000004.png look the same. why? fix!
+.) in llhd plots: plot forbidden regions (rmax > 1.7)
