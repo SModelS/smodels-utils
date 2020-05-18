@@ -118,7 +118,99 @@ def createDictionaryFromSLHA ( inputfile ):
     print ( "creating dictionary" )
     sys.exit()
 
-def draw ( inputfile="masses.txt", outputfile="out", Range=(None,None),
+class RulerPlot:
+    """ a class that encapsulates a horizontal ruler plot """
+    def __init__ ( self, inputfile="masses.txt", outputfile="out", Range=(None,None),
+           formats={ "png": True }, printmass=False, mergesquark=True,
+           interactive = False, hasResultsFor = None, verbosity="info" ):
+        """
+        :param mergesquark: if True, merge squarks FIXME
+        """
+        self.inputfile = inputfile
+        self.outputfile = outputfile
+        self.range = Range
+        self.formats = formats
+        self.printmass = printmass
+        self.mergesquark = mergesquark
+        self.hasResultsFor = hasResultsFor 
+        self.verbosity = verbosity
+        self.logger=logging.getLogger("RulerPlot")
+        self.interactive = interactive
+
+    def getMasses ( self ):
+        """ obtain the masses from input file, remove > 3000 GeV """
+        if self.inputfile.endswith ( ".slha" ):
+            self.inputfile = convertSLHAFile ( self.inputfile, self.mergesquark )
+        f=open( self.inputfile )
+        pmasses=eval(f.readline())
+        f.close()
+
+        masses={}
+        # masses=pmasses
+        for (key,value) in pmasses.items():
+            if key.find("width")==-1:
+                masses[key]=abs(value)
+        ## cut off at 3 TeV
+        ret = [ m for m in masses.values() if m<3000. ]
+        self.masses = ret
+        self.logger.info ( "masses %s" % self.masses )
+        return ret
+
+    def getRange ( self ):
+        """ given self.masses, compute the range that we wish to plot. """
+        maxvalue=max (self.masses)*1.05
+        minvalue=min(self.masses)
+        if maxvalue>3100:
+            maxvalue=3100.
+        dm = maxvalue - minvalue
+        minvalue=minvalue - 0.05 * dm
+        if minvalue < 0.:
+            minvalue = 0.
+        if self.range[0] != None and self.range[0] >=0.:
+            minvalue=self.range[0]
+        if self.range[1] != None and self.range[1] >=0.:
+            maxvalue=self.range[1]
+        self.logger.info ( "range is [%d,%d]" % ( minvalue, maxvalue ) )
+        self.minmass = minvalue
+        self.maxmass = maxvalue
+
+    def plot ( self ):
+        # https://pythonprogramming.net/spines-hline-matplotlib-tutorial/
+        """ the matplotlib plotting function """
+        from matplotlib import pyplot as plt
+        import numpy
+        dm = self.maxmass - self.minmass
+        ticks = numpy.arange ( self.minmass, self.maxmass, .05*dm )
+        y = [ 0. ] * len(ticks)
+        fig = plt.figure()
+        ax1 = plt.subplot2grid((1,1), (0,0))
+        labels = []
+        for i,label in enumerate(ax1.xaxis.get_ticklabels()):
+                    label.set_rotation(45)
+                    labels.append ( label.get_label() ) #  " GeV" )
+        ax1.spines['right'].set_color('none')
+        ax1.spines['top'].set_color('none')
+        ax1.plot ( ticks, y, c="w" )
+        ax1.set_yticks([])
+        plt.xlabel ( "m [GeV]" )
+        plt.savefig ( "horizontal.png" )
+        self.ax1 = ax1
+        self.plt = plt
+
+    def interactiveShell( self ):
+        if self.interactive == False:
+            return
+        import IPython
+        IPython.embed()
+
+
+    def draw ( self ):
+        self.getMasses()
+        self.getRange()
+        self.plot()
+        self.interactiveShell()
+
+def drawVertical ( inputfile="masses.txt", outputfile="out", Range=(None,None),
            formats={ "png": True }, printmass=False, mergesquark=True,
            hasResultsFor = None, verbosity="info" ):
     """ entry point: draw the masses
@@ -364,6 +456,10 @@ if __name__ == "__main__":
     argparser.add_argument ( '-p', '--pdf', help='produce pdf', action='store_true' )
     argparser.add_argument ( '-e', '--eps', help='produce (=keep) eps',
                              action='store_true' )
+    argparser.add_argument ( '-H', '--horizontal', help='horizontal plot, not vertical',
+                             action='store_true' )
+    argparser.add_argument ( '-I', '--interactive', help='start interactive shell after plotting',
+                             action='store_true' )
     argparser.add_argument ( '-P', '--png', help='produce png', action='store_true' )
     argparser.add_argument ( '-mass', '--masses', help='write masses',
                              action='store_true' )
@@ -388,5 +484,10 @@ if __name__ == "__main__":
     hasResultsFor = None
     if args.hasResultsFor != "":
         hasResultsFor = eval ( args.hasResultsFor )
-    draw ( inputfile, args.output, Range, formats, args.masses, args.squark, \
-           hasResultsFor )
+    if args.horizontal:
+        plotter = RulerPlot ( inputfile, args.output, Range, formats, args.masses, \
+                              args.squark, args.interactive, hasResultsFor )
+        plotter.draw()
+    else:
+        draw ( inputfile, args.output, Range, formats, args.masses, args.squark, \
+               hasResultsFor )
