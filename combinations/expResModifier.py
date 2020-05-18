@@ -15,6 +15,10 @@ class ExpResModifier:
         IPython.embed()
 
     def fixUpperLimit ( self, dataset ):
+        for txname in dataset.txnameList:
+            if hasattr ( txname, "txnameDataExp" ):
+                print ( "[expResModifier] fixing UL result %s" % dataset.globalInfo.id )
+                txname.txnameData = txname.txnameDataExp
         return dataset
 
     def fixEfficiencyMap ( self, dataset ):
@@ -25,7 +29,8 @@ class ExpResModifier:
         if lmbda < 0.:
             lmbda = 0.
         obs = stats.poisson.rvs ( lmbda )
-        print ( "[expResModifier] replacing %.2f by %.2f" % ( orig, obs ) )
+        print ( "[expResModifier] effmap replacing nobs=%.2f by nobs=%.2f for %s" % \
+                ( orig, obs, dataset.globalInfo.id ) )
         dataset.dataInfo.observedN = obs
         dataset.dataInfo.origN = orig
         return dataset
@@ -50,7 +55,8 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(
                         description='experimental results modifier. used to take out potential signals from the database by setting all observations to values sampled from the background expectations' )
     argparser.add_argument ( '-d', '--database',
-            help='database to use [../../smodels-database]',
+            help='database to use [../../smodels/test/database]',
+            # help='database to use [../../smodels-database]',
             type=str, default="../../smodels/test/database" )
     argparser.add_argument ( '-v', '--verbose',
             help='print results to stdout', action='store_true' )
