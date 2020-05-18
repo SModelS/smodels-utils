@@ -137,6 +137,87 @@ class RulerPlot:
         self.logger=logging.getLogger("RulerPlot")
         self.interactive = interactive
 
+    def squarkname ( self, Type, postfix, withDollars ):
+        """ latex squark name """
+        ret="\\tilde{%s}" % Type
+        if len(postfix)>0:
+            ret+="_{%s}" % postfix
+        if withDollars:
+            ret = "$" + ret + "$"
+        return ret
+
+    def pprint ( self, name, withDollars=True ):
+        """ latex names for various common names used in
+          the comments in slha files  """
+        Dict={ "A0":"A", "A1":"A^{1}", "H+":"H^{\\pm}", "Hp":"H^{\\pm}",
+            "H2":"H^{2}", "H":"H", "h":"h", "~e":"\\tilde{e}",
+            "~g":"\\tilde{g}", "~mu":"\\tilde{\\mu}", "~mu_L":"\\tilde{\\mu}_{L}",
+            "~mu_R":"\\tilde{\\mu}_{R}", "~e_L":"\\tilde{e}_{L}","~e_R":"\\tilde{e}_{R}",
+            "~tau_L":"\\tilde{\\tau}_{L}","~tau_R":"\\tilde{\\tau}_{R}",
+            "~chi20":"\\tilde{\\chi}^{0}_{2}", "~chi30":"\\tilde{\\chi}^{0}_{3}",
+            "~chi40":"\\tilde{\\chi}^{0}_{4}", "~chi50":"\\tilde{\\chi}^{0}_{5}",
+            "~chi10":"\\tilde{\\chi}^{0}_{1}", "~chi1+":"\\tilde{\\chi}^{+}_{1}",
+            "~chi2+":"\\tilde{\\chi}^{+}_{2}", "~chi3+":"\\tilde{\\chi}^{+}_{3}",
+            "~chi4+":"\\tilde{\\chi}^{+}_{4}"
+        }
+
+        if name in Dict.keys (): 
+            ret = Dict[name]
+            if withDollars:
+                ret = "$" + ret + "$"
+            return ret
+        # allow curly brackets in name
+        rawname=name.replace("{","").replace("}","")
+        if rawname in Dict.keys (): 
+            ret = Dict[rawname]
+            if withDollars:
+                ret = "$" + ret + "$"
+            return ret
+
+        if name.find("~nu_e")==0: return "\\tilde{\\nu}_{e}"
+        if name.find("~nu_mu")==0: return "\\tilde{\\nu}_{\\mu}"
+        if name.find("~nu_tau")==0: return "\\tilde{\\nu}_{\\tau}"
+        if name.find("~d")==0: return self.squarkname("d",name[2:],withDollars)
+        if name.find("~u")==0: return self.squarkname("u",name[2:],withDollars)
+        if name.find("~s")==0: return self.squarkname("s",name[2:],withDollars)
+        if name.find("~c")==0: return self.squarkname("c",name[2:],withDollars)
+        if name.find("~t")==0: return self.squarkname("t",name[2:],withDollars)
+        if name.find("~b")==0: return self.squarkname("b",name[2:],withDollars)
+
+        if name.find("~")>-1:
+            w=name.replace("~","\\tilde{")
+            w=w.replace("chi40", "chi^{0}_{4}" )
+            w=w.replace("chi30", "chi^{0}_{3}" )
+            w=w.replace("chi20", "chi^{0}_{2}" )
+            w=w.replace("chi10", "chi^{0}_{1}" )
+            w=w.replace("chi1+", "chi^{+}_{1}" )
+            w=w.replace("chi2+", "chi^{+}_{2}" )
+            w=w.replace("L", "_{L}" )
+            w=w.replace("R", "_{R}" )
+            w=w.replace("1", "_{1}" )
+            w=w.replace("2", "_{2}" )
+            w=w.replace("chi", "\\chi" )
+            name=w+"}"
+        if withDollars:
+            name = "$" + name + "$"
+        return name
+
+    def getColor ( self, name, bold=False ):
+        """ different colors for different particle types """
+        Dict={ "~chi":"green","~tau":"orange","~mu":"orange","~nu":"orange",
+            "~g":"red","~q":"blue","~u":"blue","~d":"blue","~c":"blue",
+            "~s":"blue","~t":"blue","~b":"blue","~e": "orange", "~l": "orange" }
+        DictBold={ "~chi":"#006600","~tau":"#ffa500","~mu":"#ffa500","~nu":"#ffa500",
+            "~g":"#660000","~q":"#000066","~u":"#000066","~d":"#000066","~c":"#000066",
+            "~s":"#000066","~t":"#000066","~b":"#000066","~e": "#ffa500", "~l": "#ffa500" }
+        mydict = Dict
+        if bold:
+            mydict = DictBold
+        for (mname,color) in mydict.items():
+            if name.find(mname)==0: 
+                return color
+        return "black"
+
     def getMasses ( self ):
         """ obtain the masses from input file, remove > 3000 GeV """
         if self.inputfile.endswith ( ".slha" ):
@@ -151,6 +232,7 @@ class RulerPlot:
             if key.find("width")==-1:
                 masses[key]=abs(value)
         ## cut off at 3 TeV
+        self.massdict = masses
         ret = [ m for m in masses.values() if m<3000. ]
         self.masses = ret
         self.logger.info ( "masses %s" % self.masses )
@@ -174,25 +256,66 @@ class RulerPlot:
         self.minmass = minvalue
         self.maxmass = maxvalue
 
+    def getSortedMasses( self ):
+        sortedmasses = []
+        for (name,m) in self.massdict.items():
+            if name[:5]=="width":
+                continue
+            if m > 5000.:
+                continue
+            sortedmasses.append((m,name))
+        sortedmasses.sort()
+        return sortedmasses
+
     def plot ( self ):
         # https://pythonprogramming.net/spines-hline-matplotlib-tutorial/
         """ the matplotlib plotting function """
         from matplotlib import pyplot as plt
+        plt.rc("text",usetex=True)
         import numpy
         dm = self.maxmass - self.minmass
         ticks = numpy.arange ( self.minmass, self.maxmass, .05*dm )
         y = [ 0. ] * len(ticks)
-        fig = plt.figure()
-        ax1 = plt.subplot2grid((1,1), (0,0))
+        y[0]=1.
+        fig = plt.figure(figsize=(10,3))
+        ax1 = plt.subplot()
+        # ax1 = plt.subplot2grid((1,1), (0,0))
         labels = []
         for i,label in enumerate(ax1.xaxis.get_ticklabels()):
                     label.set_rotation(45)
                     labels.append ( label.get_label() ) #  " GeV" )
         ax1.spines['right'].set_color('none')
+        ax1.spines['left'].set_color('none')
         ax1.spines['top'].set_color('none')
         ax1.plot ( ticks, y, c="w" )
         ax1.set_yticks([])
-        plt.xlabel ( "m [GeV]" )
+        # plt.xlabel ( "m [GeV]" )
+        plt.text(self.maxmass+30.,-.12,"m [GeV]" )
+
+        sortedmasses = self.getSortedMasses()
+
+        for ctr,(m,name) in enumerate(sortedmasses):
+            y=(abs(m)-self.minmass)/(self.maxmass-self.minmass)
+            col=self.getColor (name )
+            coldark=self.getColor (name, True )
+            label = self.pprint(name)
+            yoff = 0. ## yoffset, put every second one halfway down
+            if ctr % 2 == 1:
+                yoff=.5
+            plt.text ( m, 1.-yoff, label, c = coldark, size=15, fontweight="bold" )
+            lctr=0
+            keys = []
+
+            if hasResultsFor != None:
+                for mana,analyses in hasResultsFor.items():
+                    # print ( "m,mana",m,mana )
+                    if abs(m-mana)<.1: ## max mass gap
+                        if abs(m-mana)>1e-2:
+                            print ( "WARNING: clustering particle masses %.2f and %.2f. hope its ok. check it." % ( m, mana )  )
+                        keys.append ( mana )
+                        for cana,ana in enumerate(analyses):
+                            plt.text ( m-50., .91-yoff-.07*cana, ana.replace("201","1" ), c=col )
+                            lctr+=1
         plt.savefig ( "horizontal.png" )
         self.ax1 = ax1
         self.plt = plt
@@ -489,5 +612,5 @@ if __name__ == "__main__":
                               args.squark, args.interactive, hasResultsFor )
         plotter.draw()
     else:
-        draw ( inputfile, args.output, Range, formats, args.masses, args.squark, \
+        drawVertical ( inputfile, args.output, Range, formats, args.masses, args.squark, \
                hasResultsFor )
