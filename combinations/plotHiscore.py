@@ -132,10 +132,13 @@ def writeRawNumbersHtml ( protomodel ):
                     for pid in branch:
                         if abs(pid)!=1000022:
                             pids.add ( abs(pid) )
+            obsN = dI.observedN
+            if ( obsN - int(obsN) ) < 1e-6:
+                obsN=int(obsN)
             particles = helpers.toHtml ( pids, addSign = False,
                                           addBrackets = False )
             f.write ( '<td>%s</td><td>%s</td><td>%s +/- %s</td><td style="text-align:right">%s</td><td style="text-align:right">%s</td></tr>\n' % \
-                      ( did, dI.observedN, eBG, bgErr, S, particles ) )
+                      ( did, obsN, eBG, bgErr, S, particles ) )
         if dtype == "upperLimit":
             S = "?"
             particles = "all"
@@ -161,8 +164,11 @@ def writeRawNumbersLatex ( protomodel ):
         f.write ( "%s & " % ( anaId ) )
         if dtype == "efficiencyMap":
             dI = tp.dataset.dataInfo
+            obsN = dI.observedN
+            if ( obsN - int(obsN) ) < 1e-6:
+                obsN=int(obsN)
             print ( "  `- %s: observedN %s, bg %s +/- %s" % \
-                    ( dI.dataId, dI.observedN, dI.expectedBG, dI.bgError ) )
+                    ( dI.dataId, obsN, dI.expectedBG, dI.bgError ) )
             did = dI.dataId.replace("_","\_")
             if len(did)>9:
                 did=did[:6]+" ..."
@@ -188,7 +194,7 @@ def writeRawNumbersLatex ( protomodel ):
             if obs == 0.:
                 obs = 0
             else:
-                if abs ( obs - int(obs) ) / obs < .001:
+                if abs ( obs - int(obs) ) / obs < 1e-6:
                     obs = int ( obs )
             f.write ( "%s & %s & %s +/- %s & %s & %s \\\\ \n" % \
                       ( did, obs, eBG, bgErr, S, particles ) )
