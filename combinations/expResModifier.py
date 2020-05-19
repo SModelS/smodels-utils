@@ -17,9 +17,10 @@ class ExpResModifier:
 
     def fixUpperLimit ( self, dataset ):
         for i,txname in enumerate(dataset.txnameList):
-            if hasattr ( txname, "txnameDataExp" ):
+            if hasattr ( txname, "txnameDataExp" ) and txname.txnameDataExp != None:
                 print ( "[expResModifier] fixing UL result %s" % dataset.globalInfo.id )
-                dataset.txnameList[i].txnameData = copy.deepcopy ( txname.txnameDataExp )
+                txnd = copy.deepcopy ( txname.txnameDataExp ) 
+                dataset.txnameList[i].txnameData = txnd
         return dataset
 
     def fixEfficiencyMap ( self, dataset ):
@@ -51,6 +52,20 @@ class ExpResModifier:
             ret.append ( expRes )
         return ret
 
+def check ( picklefile ):
+    """ check the picklefile """
+    print ( "now checking the modified database" )
+    db = Database ( picklefile )
+    listOfExpRes = db.getExpResults()
+    for er in listOfExpRes:
+        datasets = er.datasets
+        for ds in datasets:
+            txnl = ds.txnameList
+            for txn in txnl:
+                x = txn.txnameData.dataType
+    print ( "were good" )
+
+
 if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(
@@ -65,6 +80,8 @@ if __name__ == "__main__":
             help='print results to stdout', action='store_true' )
     argparser.add_argument ( '-i', '--interact',
             help='interactive mode', action='store_true' )
+    argparser.add_argument ( '-c', '--check',
+            help='check the pickle file <outfile>', action='store_true' )
     args = argparser.parse_args()
     from smodels.experiment.databaseObj import Database
     db = Database ( args.database )
@@ -76,6 +93,9 @@ if __name__ == "__main__":
             ( len(updatedListOfExpRes), len(listOfExpRes) ) )
     if args.outfile != "":
         db.createBinaryFile( args.outfile )
+
+    if args.check:
+        check ( args.outfile )
 
     if args.interact:
         modifier.interact ( listOfExpRes )
