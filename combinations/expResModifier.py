@@ -23,6 +23,22 @@ class ExpResModifier:
                 dataset.txnameList[i].txnameData = txnd
         return dataset
 
+    def modifyDatabase ( self, db, outfile="" ):
+        """ modify the database 
+        :param outfile: if not empty, write the database into file
+        """
+        listOfExpRes = db.getExpResults()
+        updatedListOfExpRes = self.modify ( listOfExpRes )
+        db.expResultList = updatedListOfExpRes
+        newver = db.databaseVersion + "bg"
+        db.txt_meta.databaseVersion = newver
+        db.pcl_meta.databaseVersion = newver
+        print ( "Modifier called. %d/%d results" % \
+                ( len(updatedListOfExpRes), len(listOfExpRes) ) )
+        if outfile != "":
+            db.createBinaryFile( outfile )
+        return db
+
     def fixEfficiencyMap ( self, dataset ):
         orig = dataset.dataInfo.observedN
         exp = dataset.dataInfo.expectedBG
@@ -63,7 +79,7 @@ def check ( picklefile ):
             txnl = ds.txnameList
             for txn in txnl:
                 x = txn.txnameData.dataType
-    print ( "were good" )
+    print ( "were good", db.databaseVersion )
 
 
 if __name__ == "__main__":
@@ -85,14 +101,8 @@ if __name__ == "__main__":
     args = argparser.parse_args()
     from smodels.experiment.databaseObj import Database
     db = Database ( args.database )
-    listOfExpRes = db.getExpResults()
     modifier = ExpResModifier()
-    updatedListOfExpRes = modifier.modify ( listOfExpRes )
-    db.expResultList = updatedListOfExpRes
-    print ( "Modifier called. %d/%d results" % \
-            ( len(updatedListOfExpRes), len(listOfExpRes) ) )
-    if args.outfile != "":
-        db.createBinaryFile( args.outfile )
+    modifier.modifyDatabase ( db, args.outfile )
 
     if args.check:
         check ( args.outfile )
