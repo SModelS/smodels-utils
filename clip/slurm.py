@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from __future__ import print_function
-import tempfile, argparse, stat, os, math
+import tempfile, argparse, stat, os, math, sys
 try:
     import commands as subprocess
 except:
@@ -340,14 +340,9 @@ def queryStats ( ):
     running_stats.count_jobs()
     running_stats.running_stats()
 
-def logCall ( args ):
-    import argunparse, sys
-    unparser = argunparse.ArgumentUnparser()
-    prefix = f'python3 {sys.argv[0]} '
-    kwargs = vars ( args )
-    arg_string = unparser.unparse(**kwargs)
+def logCall ():
     f=open("slurm.log","at")
-    f.write ("[slurm.py] %s\n" % ( prefix + arg_string) )
+    f.write ("[slurm.py] %s\n" % " ".join ( sys.argv ) )
     f.close()
     
 
@@ -409,7 +404,7 @@ def main():
     argparser.add_argument ( '-D', '--dbpath', help='path to database ["/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database"]',
                         type=str, default="/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database" )
     args=argparser.parse_args()
-    logCall ( args )
+    logCall ()
 
     if args.allscans:
         subprocess.getoutput ( "./slurm.py -S 0" )
