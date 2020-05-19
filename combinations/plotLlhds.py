@@ -332,6 +332,7 @@ class LlhdPlot:
         print ( "[plotLlhds] range x [%d,%d] y [%d,%d]" % ( xmin, xmax, ymin, ymax ) )
         handles = []
         existingPoints = []
+        combL = {}
         for ctr,ana in enumerate ( anas ): ## loop over the analyses
             if ctr >= self.max_anas:
                 self.pprint ( "too many (%d > %d) analyses." % (len(anas),self.max_anas) )
@@ -369,6 +370,12 @@ class LlhdPlot:
                         minXY=(m1,m2,zt)
                 h = self.getHash(m1,m2)
                 L[h]=zt
+                if not h in combL:
+                    combL[h]=0.
+                if np.isnan(zt):
+                    combL[h] = combL[h] + 100.
+                else:
+                    combL[h] = combL[h] + zt
                 R[h]=rmax
             print ( "\n[plotLlhds] min(xy) for %s is at m=(%d/%d): %.2f(%.2g)" % ( ana, minXY[0], minXY[1], minXY[2], np.exp(-minXY[2] ) ) )
             if cresults == 0:
@@ -392,13 +399,12 @@ class LlhdPlot:
                         RMAX[irow,icol]=R[h]
             if self.interactive:
                 self.RMAX = RMAX
+                self.ZCOMB = ZCOMB
                 self.Z = Z
                 self.L = L
                 self.R = R
                 self.X = X
                 self.Y = Y
-            contRMAX = plt.contour ( X, Y, RMAX, levels=[self.rthreshold], colors = [ "gray" ], zorder=10 )
-            contRMAXf = plt.contourf ( X, Y, RMAX, levels=[self.rthreshold,float("inf")], colors = [ "gray" ], hatches = ['////'], alpha=getAlpha( "gray" ), zorder=10 )
             hldZ100 = computeHPD ( Z, None, 1., False, rthreshold=self.rthreshold )
             cont100 = plt.contour ( X, Y, hldZ100, levels=[0.25], colors = [ color ], linestyles = [ "dotted" ], zorder=10 )
             #hldZ95 = computeHPD ( Z, .95, False )
@@ -415,6 +421,18 @@ class LlhdPlot:
             a = ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=110, color=color, label=ana+" (%.2f)" % (minXY[2]), alpha=1., zorder=20 )
             existingPoints.append ( minXY )
             handles.append ( a )
+        ZCOMB = float("nan")*X
+        for irow,row in enumerate(Z):
+            for icol,col in enumerate(row):
+                h = self.getHash(x[icol],y[irow])
+                if h in combL and not np.isnan(combL[h]):
+                    ZCOMB[irow,icol]=combL[h]
+                    if combL[h]==0.:
+                        ZCOMB[irow,icol]=float("nan")
+        hldZcomb68 = computeHPD ( ZCOMB, RMAX, .68, False, rthreshold=self.rthreshold )
+        contZCOMB = plt.contour ( X, Y, hldZcomb68, levels=[.25], colors = [ "black" ], zorder=10 )
+        contRMAX = plt.contour ( X, Y, RMAX, levels=[self.rthreshold], colors = [ "gray" ], zorder=10 )
+        contRMAXf = plt.contourf ( X, Y, RMAX, levels=[self.rthreshold,float("inf")], colors = [ "gray" ], hatches = ['////'], alpha=getAlpha( "gray" ), zorder=10 )
 
         # ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="s", s=110, color="gray", label="excluded", alpha=.3, zorder=20 )
         print()
