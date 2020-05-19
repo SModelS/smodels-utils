@@ -51,44 +51,97 @@ def getError(expres, topo):
 		elif ip != None and pd != None: print(round(abs(ip-pd)/ip, 3))
 		else: print("WRONG CLA")
 
-		
+
 def getTimings(expres, topo):
 
-	model_reg = loadModel(expres, txName, "regression")
-	model_cla = loadModel(expres, txName, "classification")
+	#model_reg = loadModel(expres, txName, "regression")
+	#model_cla = loadModel(expres, txName, "classification")
 
-	masses_int = []
-	masses_pre = []
-	masses_int2 = []
-	masses_pre2 = []
+	data = generateDataset(expres, topo, [0.,0.], 1000., "regression", "cpu")
 
-	for n in range(300,1300):
-		m = random.random() * 0.5 * n
-		mi = [[n*GeV, m*GeV], [n*GeV, m*GeV]]
-		mp = torch.tensor([n, m, n, m])
-		masses_int.append(mi)
-		masses_pre.append(mp)
+	data_i = []
+	data_p = []
+	for d in data:
+		#print(d)
+		m = [[d[0][0].item()*GeV, d[0][1].item()*GeV, d[0][2].item()*GeV], [d[0][3].item()*GeV, d[0][4].item()*GeV, d[0][5].item()*GeV]]
 
-	#seed out None results
-	for n in range(len(masses_int)):
-		if type(expres.getUpperLimitFor(txname=topo, mass=masses_int[n])) == type(None):
-			masses_int2.append(masses_int[n])
-			masses_pre2.append(masses_pre[n])
+		n = d[0]
+		data_i.append(m)
+		data_p.append(n)
 
 	#plt.figure(5)
 	#plt.scatter([m[0].item() for m in masses_pre2], [m[1].item() for m in masses_pre2])
 	#plt.show()
+
+	T = []
+	for n in range(5):
+		t0 = time()
+		for m in data_i:
+			expres.getUpperLimitFor(txname=topo, mass=m)
+		T.append(time()-t0)
+	print("interpolation: %s +/- %sms" % (round(1000*np.mean(T)/len(data), 5), round(1000*np.std(T)/len(data), 5)))
+	"""
+	T = []
+	for n in range(5):
+		t0 = time()
+		for m in data_p:
+			model_reg(m)
+		T.append(time()-t0)
+	print("prediction: %s +/- %sms" % (round(1000*np.mean(T)/len(data), 5), round(1000*np.std(T)/len(data), 5)))
+	"""
+
+def getPlot():
 	
+	hid_lay = [1, 2, 3, 4, 5, 6, 7]
+	P_mean = [0.05295, 0.07822, 0.1046, 0.13177, 0.16682, 0.18376, 0.22011]
+	P_std = [0.00285, 0.00442, 0.00285, 0.00265, 0.00813, 0.00432, 0.00519]
+	"""
+	plt.figure(44)
+	plt.title('prediction times for single mass points', fontsize=20) #comparison of interpolation vs model prediction times
+	plt.xlabel('number of hidden layers', fontsize=16)
+	plt.ylabel('average time [ms]', fontsize=16)
+	plt.errorbar(hid_lay, P_mean, yerr=P_std)
+	plt.show()
+	"""
 
-	t0 = time()
-	for m in masses_int2:
-		expres.getUpperLimitFor(txname=topo, mass=m)
-	print(time()-t0)
+	N = ["ATLAS-SUSY-2017-02 TChiH\n26 gridpoints", "CMS-SUS-17-009 TSmuSmu\n452 gridpoints", "CMS-SUS-19-006 T1ttttoff\n976 gridpoints", "CMS-SUS-16-009 T1tttt\n7685 gridpoints", "CMS-SUS-19-006 T1\n15425 gridpoints"]
+	I_mean = [0.1378, 0.13572, 0.13862, 0.15623, 0.18318]
+	I_std = [0.00893, 0.00309, 0.00184, 0.01052, 0.00651]
+	#P_mean = [0.05295, 0.05352, 0.0556]
+	#P_std = [0.00285, 0.00274, 0.00632]
 
-	t0 = time()
-	for m in masses_pre2:
-		model_reg(m)
-	print(time()-t0)
+	x = np.arange(len(N))  # the label locations
+	width = 0.7  # the width of the bars
+
+	fig, ax = plt.subplots()
+	rects1 = ax.bar(x, I_mean, width, yerr=I_std) # label='interpolation'
+	#rects2 = ax.bar(x + width/2, P_mean, width, label='prediction', yerr= P_std)
+
+	# Add some text for labels, title and custom x-axis tick labels, etc.
+	ax.set_ylabel('average time [ms]', fontsize=16)
+	ax.set_title('interpolation times for single mass points', fontsize=20)
+	ax.set_xticks(x)
+	ax.set_xticklabels(N)
+	ax.legend()
+
+
+	def autolabel(rects):
+		"""Attach a text label above each bar in *rects*, displaying its height."""
+		for rect in rects:
+		    height = rect.get_height()
+		    ax.annotate('{}'.format(height),
+		                xy=(rect.get_x() + rect.get_width() / 2, height),
+		                xytext=(0, 15),  # 15 points vertical offset
+		                textcoords="offset points",
+		                ha='center', va='bottom')
+
+
+	autolabel(rects1)
+	#autolabel(rects2)
+
+	fig.tight_layout()
+
+	plt.show()
 
 	"""
 	plt.figure(32)
@@ -148,3 +201,4 @@ if __name__=='__main__':
 	expres = expres.getExpResults(analysisIDs = analysisID, useSuperseded = True, useNonValidated = True)[0]
 
 	getTimings(expres, txName)
+	#getPlot()

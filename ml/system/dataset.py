@@ -175,6 +175,8 @@ def getExpresData(expres, txName):
 
 	expresData = []
 	for line in data:
+		if line[0:8] == "expected":
+			break
 		line = line.replace(',','')
 		line = line.replace('[[[','')
 		line = line.replace('][','')
@@ -231,7 +233,6 @@ def generateDataset(expres, topo, massRange, sampleSize, dataType, device, shuff
 		#if branches are symmetric, masses drawn for 1st branch are copied to 2nd
 		
 		while(samplesLeft>0):
-
 			if isSymmetric:
 				for n in range(inputDimensionHalf):
 					particles[n] = random.uniform(convexHullMin[n], convexHullMax[n])
