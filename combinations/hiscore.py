@@ -56,11 +56,18 @@ class Hiscore:
             return 0.
         return self.hiscores[-1].Z
 
-    def currentMinK ( self ):
-        """ the current minimum K to make it into the list. """
+    def currentMinK ( self, zeroIsMin=False ):
+        """ the current minimum K to make it into the list. 
+        :param zeroIsMin:  if false, min k can become negative
+        """
         if self.hiscores[-1] == None:
+            if zeroIsMin:
+                return 0.
             return -30.
-        return self.hiscores[-1].K
+        mk = self.hiscores[-1].K
+        if zeroIsMin:
+            return max ( mk, 0. )
+        return mk
 
     def globalMaxZ ( self ):
         """ globally (across all walkers), the highest Z """
@@ -96,7 +103,7 @@ class Hiscore:
         """ add a result to the list """
         m = Manipulator ( protomodel )
         m.resolveMuhat() ## add only with resolved muhats
-        if m.M.K <= self.currentMinK():
+        if m.M.K <= self.currentMinK( zeroIsMin = True ):
             return ## doesnt pass minimum requirement
         if m.M.K == 0.:
             return ## just to be sure, should be taken care of above, though
