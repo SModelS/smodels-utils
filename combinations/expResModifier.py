@@ -4,6 +4,7 @@
 Used to ``take out potential signals'' i.e. put all observations to values
 expected from background, by sampling the background model. """
 
+import copy
 from scipy import stats
 
 class ExpResModifier:
@@ -15,10 +16,10 @@ class ExpResModifier:
         IPython.embed()
 
     def fixUpperLimit ( self, dataset ):
-        for txname in dataset.txnameList:
+        for i,txname in enumerate(dataset.txnameList):
             if hasattr ( txname, "txnameDataExp" ):
                 print ( "[expResModifier] fixing UL result %s" % dataset.globalInfo.id )
-                txname.txnameData = txname.txnameDataExp
+                dataset.txnameList[i].txnameData = copy.deepcopy ( txname.txnameDataExp )
         return dataset
 
     def fixEfficiencyMap ( self, dataset ):
@@ -38,12 +39,12 @@ class ExpResModifier:
     def modify ( self, listOfExpRes ):
         ret = []
         for expRes in listOfExpRes:
-            for ids,dataset in enumerate(expRes.datasets):
+            for i,dataset in enumerate(expRes.datasets):
                 dt = dataset.dataInfo.dataType
                 if dt == "upperLimit":
-                    self.fixUpperLimit ( dataset )
+                    expRes.datasets[i] = self.fixUpperLimit ( dataset )
                 elif dt == "efficiencyMap":
-                    self.fixEfficiencyMap ( dataset )
+                    expRes.datasets[i] = self.fixEfficiencyMap ( dataset )
                 else:
                     print ( "[expResModifier] dataset type %s unknown" % dt )
                 
