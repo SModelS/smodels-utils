@@ -129,7 +129,7 @@ def getPidList( pid1 ):
 class LlhdPlot:
     """ A simple class to make debugging the plots easier """
     def __init__ ( self, pid1, pid2, verbose, copy, max_anas, 
-                   interactive, drawtimestamp ):
+                   interactive, drawtimestamp, compress ):
         """
         :param pid1: pid for x axis, possibly a range of pids
         :param pid2: pid for y axis
@@ -138,6 +138,7 @@ class LlhdPlot:
         :param max_anas: maximum number of analyses on summary plot
         :param interactive: prepare for an interactive session?
         :param drawtimestamp: if true, put a timestamp on plot
+        :param compress: prepare for compression
         """
         self.setup( pid1, pid2 )
         self.DEBUG, self.INFO = 40, 30
@@ -148,7 +149,7 @@ class LlhdPlot:
         self.interactive = interactive
         self.hiscorefile = "./hiscore.pcl"
         self.setVerbosity ( verbose )
-        masspoints,mx,my,nevents,topo,timestamp = self.loadPickleFile()
+        masspoints,mx,my,nevents,topo,timestamp = self.loadPickleFile( compress )
         self.masspoints = masspoints
         self.mx = mx
         self.my = my
@@ -223,8 +224,10 @@ class LlhdPlot:
                 sr = tokens[1]
         return ret,sr
 
-    def loadPickleFile ( self ):
-        """ load dictionary from picklefile """
+    def loadPickleFile ( self, returnAll=False ):
+        """ load dictionary from picklefile 
+        :param returnAll: return all likelihoods info
+        """
         topo, timestamp = "?", "?"
         with open ( self.picklefile, "rb" ) as f:
             try:
@@ -237,6 +240,8 @@ class LlhdPlot:
             except EOFError as e:
                 pass
             f.close()
+        if returnAll:
+            return allhds,mx,my,nevents,topo,timestamp
         llhds=[]
         mu = 1.
         def getMu1 ( L ):
@@ -270,9 +275,9 @@ class LlhdPlot:
         self.pid2 = pid2
         if type(self.pid1) in [ tuple, list ]:
             pid1 = self.pid1[0]
-        self.picklefile = "%sllhd%d%d.pcl" % ( self.rundir, pid1, self.pid2 )
+        self.picklefile = "%s/llhd%d%d.pcl" % ( self.rundir, pid1, self.pid2 )
         if not os.path.exists ( self.picklefile ):
-            self.picklefile = "%smp%d%d.pcl" % ( self.rundir, pid1, self.pid2 )
+            self.picklefile = "%s/mp%d%d.pcl" % ( self.rundir, pid1, self.pid2 )
         if not os.path.exists ( self.picklefile ):
             self.pprint ( "could not find pickle file %s" % self.picklefile )
 
@@ -497,6 +502,34 @@ class LlhdPlot:
         for k,v in stats.items():
             print ( "%6d: %s" % ( v, k ) )
 
+    def compress ( self ):
+        """ produce a pcl file with only a fraction of the points. 
+            good for testing and development """
+        backupfile = self.picklefile.replace(".pcl",".bu.pcl")
+        subprocess.getoutput ( "cp %s %s" % ( self.picklefile, backupfile ))
+        newfile = self.picklefile.replace(".pcl",".comp.pcl")
+        mx,my=set(),set()
+        for m in self.masspoints:
+            mx.add ( m[0] )
+            my.add ( m[1] )
+        mx=list(mx)
+        my=list(my)
+
+        with open ( newfile, "wb" ) as f:
+            mps = []
+            for i,m in enumerate(self.masspoints):
+                if mx.index (m[0] ) % 2 == 0 and \
+                   my.index (m[1] ) % 2 == 0:
+                # if i % 5 == 0:
+                    mps.append ( m )
+            pickle.dump ( mps, f )
+            pickle.dump ( self.mx, f )
+            pickle.dump ( self.my, f )
+            pickle.dump ( self.nevents, f )
+            pickle.dump ( self.topo, f )
+            pickle.dump ( self.timestamp, f )
+            f.close()
+
     def findClosestPoint ( self, m1=None, m2=None, nll=False ):
         """ find the mass point closest to m1, m2. If not specified, 
             return the hiscore point.
@@ -534,11 +567,6 @@ if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(
             description='plot likelihoods scans')
-    """
-    argparser.add_argument ( '-t', '--topo',
-            help='topo [?]',
-            type=str, default="?" )
-    """
     argparser.add_argument ( '-v', '--verbose',
             help='verbosity: debug, info, warn, or error [warn]',
             type=str, default="warn" )
@@ -560,6 +588,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-l', '--list_analyses',
             help='list all analyses for these pids',
             action="store_true" )
+    argparser.add_argument ( '-C', '--compress',
+            help='compress the pickle file so that things work on a laptop',
+            action="store_true" )
     argparser.add_argument ( '-c', '--copy',
             help='copy plots to ~/git/smodels.github.io/protomodels/latest',
             action="store_true" )
@@ -577,10 +608,14 @@ if __name__ == "__main__":
 
     for pid1 in pids:
         plot = LlhdPlot ( pid1, args.pid2, args.verbose, args.copy, args.max_anas,
-                          args.interactive, drawtimestamp )
+                          args.interactive, drawtimestamp, args.compress )
 
         if args.list_analyses:
             plot.listAnalyses()
+
+        if args.compress:
+            plot.compress()
+            sys.exit()
 
         plot.plot()
 
