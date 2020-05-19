@@ -75,35 +75,50 @@ class Performance():
 
 		binRange = 250.
 		#binRange = max(self.validationSet.labels).item() / binNum
-		errorBin = [0. for i in range(binNum)]
+		#errorBin = [0. for i in range(binNum)]
+		errorBin = [[] for i in range(binNum)]
 		errorBinNum = [0 for i in range(binNum)]
 
 		for i in range(len(self.error)):
 
 			for n in range(binNum):
 				if self.validationSet.labels[i] < binRange * (n+1) or n == binNum - 1:
-					errorBin[n] += self.error[i].item()
-					errorBinNum[n] += 1
+					#errorBin[n] += self.error[i].item()
+					errorBin[n].append(self.error[i].item())
+					#errorBinNum[n] += 1
 					break
 
+		#print(errorBin[:-1])
+		mean = []
+		std = []
 		for i in range(binNum):
-			if errorBinNum[i] != 0:
-				relE = errorBin[i] / errorBinNum[i]
-			else: relE = 0
-			errorBin[i] = relE
+			if len(errorBin[i]) != 0:
+				mean.append(np.mean(errorBin[i]))
+				std.append(np.std(errorBin[i]))
+			else:
+				mean.append(0)
+				std.append(0)
+
+		#print(mean)
+		#print(std)
+		#for i in range(binNum):
+		#	if errorBinNum[i] != 0:
+		#		relE = errorBin[i] / errorBinNum[i]
+		#	else: relE = 0
+		#	errorBin[i] = relE
 
 		labels = []
 		for n in range(binNum):
 			if n == binNum - 1: r = ">" + str(int(n*binRange)) + " fb"
 			else: r = str(int(n*binRange)) + "-" + str(int((n+1)*binRange)) + " fb"
-			labels.append("(" + r + ")" + " n=" + str(round(errorBinNum[n], 3)))
+			labels.append("(" + r + ")" + " n=" + str(len(errorBin[n])))
 
 		#labels = ["n=" + str(round(s, 3)) for s in sumBin]
 		x = np.arange(len(errorBin))  # the label locations
 		width = 0.5
 
 		fig, ax = plt.subplots()
-		rects = ax.bar(x, errorBin, width)
+		rects = ax.bar(x, mean, width, yerr=std)
 
 		ax.set_ylabel('mean error')
 		ax.set_title('mean error sorted by xsecs (n = %s)' % len(self.validationSet))
@@ -153,9 +168,7 @@ class Performance():
 		
 		X0 = [oP[0] for oP in origPoints]
 		Y0 = [oP[1] for oP in origPoints]
-		plt.scatter(X0,Y0, marker="x", c="black", s=32)
-
-		#plt.plot([1,2,3], marker=11)
+		#plt.scatter(X0,Y0, marker="x", c="black", s=32)
 
 
 	def validateClassification(self):
@@ -196,18 +209,21 @@ class Performance():
 		offHull_total = offHull_correct_total + offHull_wrong_total
 		samples_total = onHull_total + offHull_total
 
+		error = round(100.*(1. - (onHull_correct_total + offHull_correct_total)/samples_total), 3)
+		delim = round(self.model._delimiter, 3)
+
 		onShell  = "%s / %s (%s%%)" % (onHull_correct_total, onHull_total, round(100.*onHull_correct_total/onHull_total, 3))
 		offShell = "%s / %s (%s%%)" % (offHull_correct_total, offHull_total, round(100.*offHull_correct_total/offHull_total, 3))
-		total    = "%s / %s (%s%%)" % (onHull_correct_total + offHull_correct_total, samples_total, round(100.*(onHull_correct_total + offHull_correct_total)/samples_total, 3))
+		total    = "%s / %s (%s%%)" % (onHull_correct_total + offHull_correct_total, samples_total, error)
 
 		print("onShell:   %s" %onShell)
 		print("offShell:  %s" %offShell)
 		print("total:     %s" %total)
-		print("delimiter: %s" % (round(self.model._delimiter, 3)))
+		print("delimiter: %s" %delim)
 
 
 		plt.figure(0)
-		plt.title('id: {}, tx: {}  (classification) correct predictions: {}'.format(self.expres.globalInfo.getInfo('id'),self.txName, total), fontsize=14)
+		plt.title('id: {}, tx: {} error: {}% (delimiter: {})'.format(self.expres.globalInfo.getInfo('id'),self.txName, error, delim), fontsize=14)
 		plt.xlabel('mass mother [GeV]')
 		plt.ylabel('mass daughter [GeV]')
 		plt_cor_on = plt.scatter([oH[0].item() for oH in onHull_correct], [oH[1].item() for oH in onHull_correct], color = 'green')
@@ -215,6 +231,14 @@ class Performance():
 		plt_wrg_on = plt.scatter([oH[0].item() for oH in onHull_wrong], [oH[1].item() for oH in onHull_wrong], color = 'red')
 		plt_wrg_off = plt.scatter([oH[0].item() for oH in offHull_wrong], [oH[1].item() for oH in offHull_wrong], color = 'orange')
 		plt.legend((plt_cor_on, plt_cor_off, plt_wrg_on, plt_wrg_off), ('on hull correct', 'off hull correct', 'should be on hull', 'should be off hull'), scatterpoints=1, loc='upper right', ncol=1, fontsize=8)
+
+
+		origPoints = getExpresData(self.expres, self.txName)
+		
+		X0 = [oP[0] for oP in origPoints]
+		Y0 = [oP[1] for oP in origPoints]
+		#plt.scatter(X0,Y0, marker="x", c="black", s=32)
+
 		fileName = txName + "_classification_scatterPlot.eps"
 		if self.savePlots:plt.savefig(self.savePath + fileName)
 		plt.show()
@@ -257,7 +281,7 @@ if __name__=='__main__':
 	txName = parser.get("database", "txNames").split(",")[0]
 
 	#Configure dataset generated for training
-	sampleSize = 5000. #float(parser.get("dataset", "sampleSize"))
+	sampleSize = 4000. #float(parser.get("dataset", "sampleSize"))
 	massRange = parser.get("dataset", "massRange").split(",")
 	massRange = [float(mR) for mR in massRange]
 
