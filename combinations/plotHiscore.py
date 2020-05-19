@@ -599,7 +599,7 @@ def plotRuler( protomodel, verbosity ):
         print ( '[plotHiscore] ../smodels_utils/plotting/rulerPlotter.py -o ruler.png --hasResultsFor "%s" %s' % \
                 ( str(resultsFor), protomodel.currentSLHA ) )
 
-    rulerPlotter.draw ( protomodel.currentSLHA, "ruler.png", Range=(None,None),
+    rulerPlotter.drawVertical ( protomodel.currentSLHA, "ruler.png", Range=(None,None),
                         mergesquark = False,
                         hasResultsFor = resultsFor )
 

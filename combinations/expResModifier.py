@@ -55,8 +55,8 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(
                         description='experimental results modifier. used to take out potential signals from the database by setting all observations to values sampled from the background expectations' )
     argparser.add_argument ( '-d', '--database',
-            help='database to use [../../smodels/test/database]',
-            type=str, default="../../smodels/test/database" )
+            help='database to use [../../smodels-database]',
+            type=str, default="../../smodels-database" )
     argparser.add_argument ( '-o', '--outfile',
             help='file to write out database pickle [""]',
             type=str, default="" )
