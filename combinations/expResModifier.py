@@ -56,8 +56,10 @@ if __name__ == "__main__":
                         description='experimental results modifier. used to take out potential signals from the database by setting all observations to values sampled from the background expectations' )
     argparser.add_argument ( '-d', '--database',
             help='database to use [../../smodels/test/database]',
-            # help='database to use [../../smodels-database]',
             type=str, default="../../smodels/test/database" )
+    argparser.add_argument ( '-o', '--outfile',
+            help='file to write out database pickle [""]',
+            type=str, default="" )
     argparser.add_argument ( '-v', '--verbose',
             help='print results to stdout', action='store_true' )
     argparser.add_argument ( '-i', '--interact',
@@ -68,7 +70,11 @@ if __name__ == "__main__":
     listOfExpRes = db.getExpResults()
     modifier = ExpResModifier()
     updatedListOfExpRes = modifier.modify ( listOfExpRes )
+    db.expResultList = updatedListOfExpRes
     print ( "Modifier called. %d/%d results" % \
             ( len(updatedListOfExpRes), len(listOfExpRes) ) )
+    if args.outfile != "":
+        db.createBinaryFile( args.outfile )
+
     if args.interact:
         modifier.interact ( listOfExpRes )
