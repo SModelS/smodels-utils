@@ -49,7 +49,7 @@ import bakeryHelpers       # For dirnames
 
 class cutlangWrapper:
 
-    def __init__ ( self, topo, njets, rerun, analyses):
+    def __init__ ( self, topo, njets, rerun, analyses, auto_confirm = True):
         """
         If not already present, clones and builds Delphes, CutLang and ADLLHC Analyses.
         Prepares output directories.
@@ -78,6 +78,7 @@ class cutlangWrapper:
         self.topo = topo
         self.analyses = self.__standardise_analysis(analyses)
         self.rerun = rerun
+        self.auto_confirm = auto_confirm
 
         # =====================
         #      Cutlang Init
@@ -182,7 +183,7 @@ class cutlangWrapper:
         else:
             raise Exception(f"No analysis file found for analysis {a_name} found at: \n" + cla_path)
 
-    def extract_efficiencies(self, cla_file):
+    def extract_efficiencies(self, cla_out, cla_file):
         """ Extracts the efficiencies from CutLang output.
             :param masses:    mass n-tuple
             :param cla_file:  .root file output of CLA
@@ -190,7 +191,7 @@ class cutlangWrapper:
         """
 
         # open the ROOT file
-        rootFile = ROOT.TFile(cla_file)
+        rootFile = ROOT.TFile(cla_out)
         if rootFile == None:
             self.error("Cannot find CutLang results, exiting.")
             sys.exit()
@@ -199,30 +200,95 @@ class cutlangWrapper:
 
         nevents = []
         entries = ""
+        contains_eff = False
         self.info("Objects found in CutLang results:")
         print([x.ReadObj().GetName() for x in rootFile.GetListOfKeys()])
         # Traverse all keys in ROOT file
         for x in rootFile.GetListOfKeys():
-            print("In the loop")
-            print(x)
-            print(str([x.ReadObj().GetName() for x in rootFile.GetListOfKeys()]))
-            if "cutflow" not in [x.ReadObj().GetName() for x in rootFile.GetListOfKeys()]:
-                print("Cutflow not in objects.")
-            x.ReadObj().GetObject("cutflow", rootTmp)
-            name = x.ReadObj().GetName()
-            if name in {'baseline', 'presel'}:
-                pass
-                # continue
+            # FIXME: Try to remove continue from here (2x)
+            x = x.ReadObj()
+            if isinstance(x, ROOT.TDirectoryFile):
+                print(f"{x.GetName()} is of type {type(x)}")
+                keys = [y.ReadObj().GetName() for y in x.GetListOfKeys()]
+                print(keys)
+                if "cutflow" not in keys:
+                    self.info(f"Cutflow not in objects in {x.GetName()} in {cla_out}")
+                    continue
+                x.GetObject("cutflow", rootTmp)
+                name = x.GetName()
+                if name in {'baseline', 'presel'}:
+                    continue
+                entry = "".join(["'", name, "': "])
+                s = rootTmp.GetNbinsX()
+                if rootTmp[2] == 0:
+                    entries += "NaN"
+                    nevents.append(0)
+                    continue
+                # rootTmp[2] == number of all events
+                entry += str(rootTmp[(s-1)]/rootTmp[2]) + ', '
+                print(entry)
+                nevents.append(rootTmp[2])
+                entries += entry
+                contains_eff = True
+                if "bincounts" in keys:
+                    self.info(f"Found bins in {name} section.")
+                    x.GetObject("bincounts", rootTmp)
+                    nbins = rootTmp.GetNbinsX()
+                    bin_names = self.__get_bin_names(cla_file, name)
+                    if not len(bin_names) == nbins:
+                        print(bin_names)
+                        print(nbins)
+                        self.error("Found different number of bins in root file and in Cutlang file."
+                                   f" Will not write bins for {name}.")
+                    else:
+                        for i in range(nbins):
+                            entry = "".join(["'", bin_names[i], "': "])
+                            entry += str(rootTmp[i]/nevents[-1]) + ', '
+            else:
+                print(f"{x.GetName()} is not a Directory File.")
+                print(f"{x.GetName()} is of type {type(x)}")
             # entry ~ data point to write into efficiency map
-            entry = "".join(["'", name, "': "])
-            s = rootTmp.GetNbinsX()
-            if rootTmp[2] == 0:
-                entry += "NaN"
-            entry += str(rootTmp[(s-1)]/rootTmp[2]) + ', '
-            print(entry)
-            nevents.append(rootTmp[2])
-            entries += entry
+        if contains_eff == False:
+            self.error(f"No efficiencies found in file {cla_out}.")
         return entries, nevents
+
+    def __get_bin_names(self, cutlangfile, name):
+        bin_names = []
+        with open(cutlangfile, "r") as f:
+            lines = f.readlines()
+            indices = [i for i, elem in enumerate(lines) if (not re.search(f"^region +{name}", elem) == None)]
+            if len(indices) > 1:
+                self.error(f"Too many entries found for {name} in {cutlangfile}")
+                return []
+            if len(indices) < 1:
+                self.error(f"{name} not found in {cutlangfile}")
+                return []
+            print(f"indices : {indices}")
+            lines = lines[indices[0] + 1:]
+            print(lines[0])
+            while  not len(lines) == 0 and re.search("^region", lines[0]) == None:
+                if not re.search(" *bin", lines[0]) == None:
+                    print("MATCH")
+                    m = re.search(" +bin (?P<the_rest>.*)", lines[0])
+                    bname = m.group("the_rest")
+                    bname = bname.replace("[","").replace("[","")
+                    # bname = bname.replace("<","lt").replace(">","mt")
+                    bname = bname.replace("and","").replace("or","")
+                    bname = bname.replace("AND","").replace("OR","")
+                    bname = bname.replace("&&","").replace("||","")
+                    bname = bname.replace("  "," ").replace(" ","_")
+                    bname = bname.split('#')[0]
+                    bin_names.append("_".join([name, bname]))
+                lines.pop(0)
+        return bin_names
+
+
+
+
+
+
+
+
 
 
     def get_cla_out_filename(self, inputname):
@@ -367,7 +433,7 @@ class cutlangWrapper:
         for filename in os.listdir(self.cutlang_run_dir):
             if filename.startswith("histoOut-BP") and filename.endswith(".root"):
                 filename = os.path.join(self.cutlang_run_dir, filename)
-                tmp_entries, tmp_nevents = self.extract_efficiencies(filename)
+                tmp_entries, tmp_nevents = self.extract_efficiencies(filename, cutlangfile)
                 nevents += tmp_nevents
                 entries += tmp_entries
                 shutil.move(filename, tmp_dir.get()+ os.path.basename(filename))
@@ -434,7 +500,10 @@ class cutlangWrapper:
         self.clean()
         subprocess.getoutput ( "rm -rf cutlang/ANA*" )
     def __confirmation(self, text):
-        return True
+        if self.auto_confirm == True:
+            return True
+        else:
+            return False
 
 
 
