@@ -4,13 +4,15 @@
 
 import subprocess, sys, copy, argparse, colorama
 
-def fetch ( files ):
+def fetch ( files, rundir ):
     """ fetch the files in list """
     print ( colorama.Fore.GREEN + "fetching:",", ".join ( files ) )
     print ( colorama.Fore.RESET )
     files = set ( files ) ## remove dupes
+    basedir = "/scratch-cbe/users/wolfgan.waltenberger/"
     for i in files:
-        cmd="scp wolfgan.waltenberger@clip-login-1:/scratch-cbe/users/wolfgan.waltenberger/rundir/%s ." % i
+        cmd="scp wolfgan.waltenberger@clip-login-1:%s%s/%s ." % \
+            ( basedir, rundir, i )
         print ( cmd )
         ret = subprocess.run(cmd.split(" "), stderr=sys.stderr, stdout=sys.stdout)
 
@@ -29,6 +31,8 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-2', '--two', help='the second hiscore file', 
                              action="store_true" )
+    argparser.add_argument ( '-R', '--rundir', help='name of remote rundir folder [rundir]', 
+                             type=str, default="rundir" )
     args = argparser.parse_args()
     # files= [ "hiscore.pcl" ]
     files = set()
@@ -48,7 +52,7 @@ def main():
                     files.add ( f )
     if len(files) == 0 or args.all: ## the default
         files.add ( "hiscore.pcl" )
-    fetch ( files )
+    fetch ( files, args.rundir )
 
 if __name__ == "__main__":
     main()
