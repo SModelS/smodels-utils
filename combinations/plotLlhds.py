@@ -229,6 +229,7 @@ class LlhdPlot:
         :param returnAll: return all likelihoods info
         """
         topo, timestamp = "?", "?"
+        allhds = None
         with open ( self.picklefile, "rb" ) as f:
             try:
                 allhds = pickle.load ( f )
@@ -238,8 +239,12 @@ class LlhdPlot:
                 topo = pickle.load ( f )
                 timestamp = pickle.load ( f )
             except EOFError as e:
-                pass
+                print ( "[plotLlhds] EOF error %s, when reading %s" % \
+                        ( e, self.picklefile ) )
             f.close()
+        if allhds == None:
+            print ( "couldnt read llhds in %s" % self.picklefile )
+            return None,None,None,None,None,None
         if returnAll:
             return allhds,mx,my,nevents,topo,timestamp
         llhds=[]
