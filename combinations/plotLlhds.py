@@ -158,6 +158,8 @@ class LlhdPlot:
         self.timestamp = timestamp
         self.massdict = {}
         self.rdict = {}
+        if masspoints == None:
+            return
         for m in masspoints:
             self.massdict[ (m[0],m[1]) ] = m[2]
             if len(m)>3:
@@ -315,6 +317,8 @@ class LlhdPlot:
         for tpred in protomodel.bestCombo:
             resultsForPIDs = getPIDsOfTPred ( tpred, resultsForPIDs, integrateSRs=False )
         stats = self.getAnaStats( integrateSRs=False )
+        if stats == None:
+            return
         anas = list(stats.keys())
         if pid1 in resultsForPIDs:
             self.debug ( "results for PIDs %s" % ", ".join ( resultsForPIDs[pid1] ) )
@@ -495,6 +499,8 @@ class LlhdPlot:
         :param integrateDataType: ignore data type
         """
         anas = {}
+        if self.masspoints == None:
+            return None
         for masspoint in self.masspoints:
             m1,m2,llhds=masspoint[0],masspoint[1],masspoint[2]
             if len(masspoint)>3:
