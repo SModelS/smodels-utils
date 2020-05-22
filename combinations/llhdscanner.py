@@ -340,8 +340,8 @@ def main ():
             help='number of events [50000]',
             type=int, default=50000 )
     argparser.add_argument ( '-p', '--picklefile',
-            help='pickle file to draw from [%s/hiscore.pcl]' % rundir,
-            type=str, default="%s/hiscore.pcl" % rundir )
+            help='pickle file to draw from [<rundir>/hiscore.pcl]',
+            type=str, default="default" )
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug, info, warn, err [info]',
             type=str, default="info" )
@@ -349,6 +349,7 @@ def main ():
             help="prefix for output file [llhd]",
             type=str, default="llhd" )
     args = argparser.parse_args()
+    rundir = setup( args.rundir )
     nproc = args.nproc
     if nproc < 1:
         nproc = nCPUs() + nproc
