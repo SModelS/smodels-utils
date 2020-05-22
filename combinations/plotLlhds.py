@@ -105,15 +105,14 @@ def getAlpha ( color ):
         return rets[color]
     return .3
 
-def getPidList( pid1 ):
+def getPidList( pid1, rundir ):
     """ obtain the list of pids to produce plots for """
     if pid1 > 0:
         return [ pid1 ]
-    rundir = gsetup()
     pids = set()
     ## obtain pids from mp files
-    files = glob.glob ( "%s/mp*pcl" % rundir )
-    files += glob.glob ( "%s/llhd*pcl" % rundir )
+    # files = glob.glob ( "%s/mp*pcl" % rundir )
+    files = glob.glob ( "%s/llhd*pcl" % rundir )
     for f in files:
         t = f.replace(rundir,"")
         t = t.replace("mp","")
@@ -129,7 +128,7 @@ def getPidList( pid1 ):
 class LlhdPlot:
     """ A simple class to make debugging the plots easier """
     def __init__ ( self, pid1, pid2, verbose, copy, max_anas, 
-                   interactive, drawtimestamp, compress ):
+                   interactive, drawtimestamp, compress, rundir ):
         """
         :param pid1: pid for x axis, possibly a range of pids
         :param pid2: pid for y axis
@@ -140,6 +139,7 @@ class LlhdPlot:
         :param drawtimestamp: if true, put a timestamp on plot
         :param compress: prepare for compression
         """
+        self.rundir = rundir
         self.setup( pid1, pid2 )
         self.DEBUG, self.INFO = 40, 30
         self.drawtimestamp = drawtimestamp
@@ -273,7 +273,6 @@ class LlhdPlot:
 
     def setup ( self, pid1, pid2 ):
         """ setup rundir, picklefile path and hiscore file path """
-        self.rundir = gsetup()
         self.hiscorefile = self.rundir + "/hiscore.pcl"
         if not os.path.exists ( self.hiscorefile ):
             self.pprint ( "could not find hiscore file %s" % self.hiscorefile )
@@ -623,13 +622,17 @@ if __name__ == "__main__":
     argparser.add_argument ( '-c', '--copy',
             help='copy plots to ~/git/smodels.github.io/protomodels/latest',
             action="store_true" )
+    argparser.add_argument ( '-R', '--rundir',
+            help='override the default rundir [None]',
+            type=str, default=None )
     argparser.add_argument ( '-I', '--interactive',
             help='interactive mode',
             action="store_true" )
     args = argparser.parse_args()
     drawtimestamp = not args.notimestamp
 
-    pids = getPidList ( args.pid1 )
+    rundir = gsetup( args.rundir )
+    pids = getPidList ( args.pid1, rundir )
 
     if args.interactive and len(pids)>1:
         print ( "[plotLlhds] interactive mode plus several plots. interactive is only for one plot." )
@@ -637,7 +640,7 @@ if __name__ == "__main__":
 
     for pid1 in pids:
         plot = LlhdPlot ( pid1, args.pid2, args.verbose, args.copy, args.max_anas,
-                          args.interactive, drawtimestamp, args.compress )
+                          args.interactive, drawtimestamp, args.compress, rundir )
 
         if args.list_analyses:
             plot.listAnalyses()
