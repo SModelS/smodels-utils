@@ -186,8 +186,12 @@ def writeRawNumbersLatex ( protomodel ):
             for prod in tp.PIDs:
                 for branch in prod:
                     for pid in branch:
-                        if abs(pid)!=1000022:
+                        if type(pid) == int and abs(pid)!=1000022:
                             pids.add ( abs(pid) )
+                        if type(pid) in [ list, tuple ]:
+                            p = abs(pid[0])
+                            if p!=1000022:
+                                pids.add ( p )
             particles = helpers.toLatex ( pids, addDollars=True, addSign = False,
                                           addBrackets = False )
             obs = dI.observedN
