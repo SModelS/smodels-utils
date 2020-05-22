@@ -438,10 +438,10 @@ class LlhdPlot:
                     ZCOMB[irow,icol]=combL[h]
                     if combL[h]==0.:
                         ZCOMB[irow,icol]=float("nan")
-        hldZcomb68 = computeHPD ( ZCOMB, RMAX, .68, False, rthreshold=self.rthreshold )
-        contZCOMB = plt.contour ( X, Y, hldZcomb68, levels=[.25], colors = [ "black" ], zorder=10 )
         contRMAX = plt.contour ( X, Y, RMAX, levels=[self.rthreshold], colors = [ "gray" ], zorder=10 )
         contRMAXf = plt.contourf ( X, Y, RMAX, levels=[self.rthreshold,float("inf")], colors = [ "gray" ], hatches = ['////'], alpha=getAlpha( "gray" ), zorder=10 )
+        hldZcomb68 = computeHPD ( ZCOMB, RMAX, .68, False, rthreshold=self.rthreshold )
+        contZCOMB = plt.contour ( X, Y, hldZcomb68, levels=[.25], colors = [ "black" ], zorder=10 )
 
         # ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="s", s=110, color="gray", label="excluded", alpha=.3, zorder=20 )
         print()
