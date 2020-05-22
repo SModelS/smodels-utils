@@ -748,7 +748,6 @@ def compileTestText():
     subprocess.getoutput ( "pdflatex test.tex" )
 
 def main ():
-    rundir = setup()
     import argparse
     argparser = argparse.ArgumentParser(
             description='hiscore proto-model plotter')
@@ -756,8 +755,8 @@ def main ():
             help='which hiscore to plot [0]',
             type=int, default=0 )
     argparser.add_argument ( '-f', '--picklefile',
-            help='pickle file to draw from [%s/hiscore.pcl]' % rundir,
-            type=str, default="%s/hiscore.pcl" % rundir )
+            help='pickle file to draw from [<rundir>/hiscore.pcl]',
+            type=str, default="default"  )
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug, info, warn, err [info]',
             type=str, default="warn" )
@@ -788,9 +787,13 @@ def main ():
     argparser.add_argument ( '-c', '--commit',
             help='also commit and push to smodels.github.io (works only with -u github, anomaly, latest, or interesting)',
             action="store_true" )
+    argparser.add_argument ( '--rundir',
+            help='override the default rundir [None]',
+            type=str, default=None )
     argparser.add_argument ( "--destinations",
             help="learn more about the upload destinations", action="store_true" )
     args = argparser.parse_args()
+    rundir = setup( args.rundir )
     if args.picklefile == "default":
         args.picklefile = "%s/hiscore.pcl" % rundir
     runPlotting ( args )
