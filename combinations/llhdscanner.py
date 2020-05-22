@@ -125,13 +125,13 @@ class LlhdThread:
                 masspoints.append ( (m1,m2,llhds,robs) )
         return masspoints
 
-def runThread ( threadid, rundir, M, pid1, pid2, mpid1, mpid2, nevents, rpid1, rpid2,
-                return_dict ):
+def runThread ( threadid: int, rundir: str, M, pid1, pid2, mpid1, 
+                mpid2, nevents: int, rpid1, rpid2, return_dict ):
     """ the method needed for parallelization to work """
     thread = LlhdThread ( threadid, rundir, M, pid1, pid2, mpid1, mpid2, nevents )
     newpoints = thread.run ( rpid1, rpid2 )
     if return_dict != None:
-        return_dict[id]=newpoints
+        return_dict[threadid]=newpoints
     return newpoints
 
 class LlhdScanner:
@@ -176,7 +176,7 @@ class LlhdScanner:
         processes = []
         manager = multiprocessing.Manager()
         return_dict=manager.dict()
-        print ( "chunked", chunkedRPid1 )
+        # print ( "chunked", chunkedRPid1 )
         for ctr,chunk in enumerate(chunkedRPid1):
             p = multiprocessing.Process ( target = runThread, args = ( ctr, self.rundir, self.M, self.pid1, self.pid2, self.mpid1, self.mpid2, self.nevents, chunk, rpid2, return_dict ) )
             p.start()
@@ -185,16 +185,18 @@ class LlhdScanner:
         for p in processes:
             p.join()
         masspoints = []
-        hasStored=[]
+        hasStored=set()
         for k,v in return_dict.items():
+            # print ( "collecting from thread %s" % str(k) )
             for mp in v:
                 key=(mp[0],mp[1])
+                # print ( "key", key )
                 if key in hasStored:
                     continue
-                hasStored.append ( key )
+                hasStored.add ( key )
                 masspoints.append ( mp )
-        for m in masspoints:
-            print ( "mass point", m[0], ",", m[1], ": nres", len(m[2]) )
+        # for m in masspoints:
+        #    print ( "mass point", m[0], ",", m[1], ": nres", len(m[2]) )
         return masspoints
 
     def scanLikelihoodFor ( self, min1, max1, dm1, min2, max2, dm2, 
