@@ -5,6 +5,7 @@
 import pickle, os, sys, multiprocessing, time, numpy, subprocess
 sys.path.insert(0,"./")
 from smodels.tools.physicsUnits import fb
+from smodels.tools.runtime import nCPUs
 from csetup import setup
 from combiner import Combiner
 from manipulator import Manipulator
@@ -12,11 +13,12 @@ from protomodel import predictor as P
 from plotHiscore import obtain
 
 class Scanner:
-    def __init__ ( self, protomodel, pid1, pid2 ):
+    def __init__ ( self, protomodel, pid1, pid2, nproc ):
         self.rundir = setup()
         self.M = protomodel
         self.pid1 = pid1
         self.pid2 = pid2
+        self.nproc = nproc
 
     def getPredictions ( self, recycle_xsecs = True ):
         """ get predictions, return likelihoods """
@@ -195,6 +197,9 @@ def main ():
     argparser.add_argument ( '-2', '--pid2',
             help='pid2 [1000022]',
             type=int, default=1000022 )
+    argparser.add_argument ( '-P', '--nproc',
+            help='number of process to run in parallel. zero is autodetect. Negative numbers are added to autodetect [0]',
+            type=int, default=0 )
     argparser.add_argument ( '-m1', '--min1',
             help='minimum mass of pid1 [None]',
             type=float, default=None )
@@ -229,10 +234,13 @@ def main ():
             help="prefix for output file [llhd]",
             type=str, default="llhd" )
     args = argparser.parse_args()
+    nproc = args.nproc
+    if nproc < 1:
+        nproc = nCPUs() + nproc
     if args.picklefile == "default":
         args.picklefile = "%s/hiscore.pcl" % rundir
     protomodel = obtain ( args.number, args.picklefile )
-    scanner = Scanner( protomodel, args.pid1, args.pid2 )
+    scanner = Scanner( protomodel, args.pid1, args.pid2, nproc )
     args = scanner.overrideWithDefaults ( args )
     scanner.scanLikelihoodFor ( args.min1, args.max1, args.deltam1, 
                                 args.min2, args.max2, args.deltam2, \
