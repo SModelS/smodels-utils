@@ -14,9 +14,9 @@ from plotHiscore import obtain
 
 class LlhdThread:
     """ one thread of the sweep """
-    def __init__ ( self, threadnr, protomodel, pid1, pid2, mpid1, mpid2,
-                   nevents ):
-        self.rundir = setup()
+    def __init__ ( self, threadnr: int, rundir: str, 
+                   protomodel, pid1, pid2, mpid1, mpid2, nevents: int ):
+        self.rundir = setup( rundir )
         self.threadnr = threadnr
         self.M = protomodel
         self.pid1 = pid1 
@@ -97,8 +97,8 @@ class LlhdThread:
                 masspoints.append ( (m1,m2,llhds,robs) )
 
         for m1 in rpid1:
-            self.M.masses[pid1]=m1
-            self.M.masses[pid2]=mpid2 ## reset LSP mass
+            self.M.masses[self.pid1]=m1
+            self.M.masses[self.pid2]=self.mpid2 ## reset LSP mass
             for k,v in oldmasses.items():
                 self.pprint ( "WARNING: setting mass of %d back to %d" % ( k, v ) )
                 self.M.masses[k]=v
@@ -108,9 +108,9 @@ class LlhdThread:
             for i2,m2 in enumerate(rpid2):
                 if m2 > m1: ## we assume pid2 to be the daughter
                     continue
-                self.M.masses[pid2]=m2
+                self.M.masses[self.pid2]=m2
                 for pid_,m_ in self.M.masses.items():
-                    if pid_ != pid2 and m_ < m2: ## make sure LSP remains the LSP
+                    if pid_ != self.pid2 and m_ < m2: ## make sure LSP remains the LSP
                         self.pprint ( "WARNING: have to raise %d from %d to %d" % ( pid_, m_, m2+1. ) )
                         oldmasses[pid_]=m_
                         self.M.masses[pid_]=m2 + 1.
@@ -124,10 +124,16 @@ class LlhdThread:
                 masspoints.append ( (m1,m2,llhds,robs) )
         return masspoints
 
+def runThread ( id, rundir, M, pid1, pid2, mpid1, mpid2, nevents, rpid1, rpid2 ):
+    """ the method needed for parallelization to work """
+    thread = LlhdThread ( id, rundir, M, pid1, pid2, mpid1, mpid2, nevents )
+    return thread.run ( rpid1, rpid2 )
+
 class LlhdScanner:
     """ class that encapsulates a likelihood sweep """
-    def __init__ ( self, protomodel, pid1, pid2, nproc ):
-        self.rundir = setup()
+    def __init__ ( self, protomodel, pid1, pid2, nproc, rundir ):
+        self.rundirarg = rundir
+        self.rundir = setup( rundir )
         self.M = protomodel
         self.pid1 = pid1
         self.pid2 = pid2
@@ -157,9 +163,18 @@ class LlhdScanner:
         :param rpid2: list of masses for pid2
         :returns: masspoints
         """
-        thread = LlhdThread ( 0, self.M, self.pid1, self.pid2, self.mpid1, 
-                              self.mpid2, self.nevents )
-        return thread.run ( rpid1, rpid2 )
+        if self.nproc == 1:
+            return runThread ( 0, self.rundir, self.M, self.pid1, self.pid2, \
+                               self.mpid1, self.mpid2, self.nevents, rpid1, rpid2 )
+        # print ( "nproc", self.nproc, rpid1 )
+        chunkedRPid1 = [ list(rpid1[i::self.nproc]) for i in range(self.nproc) ]
+        # print ( "chunked", chunkedRPid1 )
+        masspoints = []
+        for chunk in chunkedRPid1:
+            newpoints = runThread ( 0, self.rundir, self.M, self.pid1, self.pid2, \
+                           self.mpid1, self.mpid2, self.nevents, chunk, rpid2 )
+            masspoints += newpoints
+        return masspoints
 
     def scanLikelihoodFor ( self, min1, max1, dm1, min2, max2, dm2, 
                             nevents, topo, output ):
@@ -186,7 +201,7 @@ class LlhdScanner:
         self.M.initializePredictor()
         P[0].filterForTopos ( topo )
         
-        thread0 = LlhdThread ( 0, self.M, self.pid1, self.pid2, \
+        thread0 = LlhdThread ( 0, self.rundir, self.M, self.pid1, self.pid2, \
                                self.mpid1, self.mpid2, self.nevents )
         llhds,robs = thread0.getPredictions ( False )
         self.pprint ( "protomodel point: m1 %d, m2 %d, %d llhds" % \
@@ -288,6 +303,9 @@ def main ():
     argparser.add_argument ( '-t', '--topo',
             help='topology [None]',
             type=str, default=None )
+    argparser.add_argument ( '-R', '--rundir',
+            help='override the default rundir [None]',
+            type=str, default=None )
     argparser.add_argument ( '-e', '--nevents',
             help='number of events [50000]',
             type=int, default=50000 )
@@ -307,7 +325,7 @@ def main ():
     if args.picklefile == "default":
         args.picklefile = "%s/hiscore.pcl" % rundir
     protomodel = obtain ( args.number, args.picklefile )
-    scanner = LlhdScanner( protomodel, args.pid1, args.pid2, nproc )
+    scanner = LlhdScanner( protomodel, args.pid1, args.pid2, nproc, args.rundir )
     args = scanner.overrideWithDefaults ( args )
     scanner.scanLikelihoodFor ( args.min1, args.max1, args.deltam1, 
                                 args.min2, args.max2, args.deltam2, \
