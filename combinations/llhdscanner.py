@@ -66,6 +66,11 @@ class LlhdThread:
             llhds[ name ] = tp.getLikelihood ( mu ) 
         return llhds
 
+    def clean ( self ):
+        """ clean up after the run """
+        cmd = "rm %s" % self.M.currentSLHA 
+        subprocess.getoutput ( cmd )
+
     def run ( self, rpid1, rpid2 ):
         """ run for the points given """
         oldmasses = {}
@@ -132,6 +137,7 @@ def runThread ( threadid: int, rundir: str, M, pid1, pid2, mpid1,
     newpoints = thread.run ( rpid1, rpid2 )
     if return_dict != None:
         return_dict[threadid]=newpoints
+    thread.clean()
     return newpoints
 
 class LlhdScanner:
