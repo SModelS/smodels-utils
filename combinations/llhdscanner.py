@@ -184,6 +184,7 @@ class LlhdScanner:
         return_dict=manager.dict()
         # print ( "chunked", chunkedRPid1 )
         for ctr,chunk in enumerate(chunkedRPid1):
+            self.M.walkerid = ctr
             p = multiprocessing.Process ( target = runThread, args = ( ctr, self.rundir, self.M, self.pid1, self.pid2, self.mpid1, self.mpid2, self.nevents, chunk, rpid2, return_dict ) )
             p.start()
             processes.append ( p )
@@ -229,6 +230,7 @@ class LlhdScanner:
         self.M.createNewSLHAFileName ( prefix="llhd%d" % pid1 )
         self.M.initializePredictor()
         P[0].filterForTopos ( topo )
+        self.M.walkerid = 0
         
         thread0 = LlhdThread ( 0, self.rundir, self.M, self.pid1, self.pid2, \
                                self.mpid1, self.mpid2, self.nevents )
