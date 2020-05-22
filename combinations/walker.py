@@ -196,7 +196,8 @@ class RandomWalker:
             else:
                 self.log ( "freeze random particle" )
                 nChanges+=self.manipulator.randomlyFreezeParticle()
-        if nChanges == 0:
+        uMass = random.uniform ( 0., 1. )
+        if nChanges == 0 or uMass > .95:
             self.log ( "take random mass step" )
             self.manipulator.randomlyChangeMasses()
         if self.catch_exceptions: 
