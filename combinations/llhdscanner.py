@@ -235,6 +235,7 @@ class LlhdScanner:
         thread0 = LlhdThread ( 0, self.rundir, self.M, self.pid1, self.pid2, \
                                self.mpid1, self.mpid2, self.nevents )
         llhds,robs = thread0.getPredictions ( False )
+        thread0.clean()
         self.pprint ( "protomodel point: m1 %d, m2 %d, %d llhds" % \
                       ( self.mpid1, self.mpid2, len(llhds) ) )
         masspoints = [ (self.mpid1,self.mpid2,llhds,robs) ]
@@ -311,8 +312,8 @@ def main ():
             help='pid2 [1000022]',
             type=int, default=1000022 )
     argparser.add_argument ( '-P', '--nproc',
-            help='number of process to run in parallel. zero is autodetect. Negative numbers are added to autodetect [1]',
-            type=int, default=1 )
+            help='number of process to run in parallel. zero is autodetect. Negative numbers are added to autodetect [0]',
+            type=int, default=0 )
     argparser.add_argument ( '-m1', '--min1',
             help='minimum mass of pid1 [None]',
             type=float, default=None )
@@ -341,8 +342,8 @@ def main ():
             help='number of events [50000]',
             type=int, default=50000 )
     argparser.add_argument ( '-p', '--picklefile',
-            help='pickle file to draw from [%s/hiscore.pcl]' % rundir,
-            type=str, default="%s/hiscore.pcl" % rundir )
+            help='pickle file to draw from [<rundir>/hiscore.pcl]',
+            type=str, default="default" )
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug, info, warn, err [info]',
             type=str, default="info" )
@@ -350,6 +351,7 @@ def main ():
             help="prefix for output file [llhd]",
             type=str, default="llhd" )
     args = argparser.parse_args()
+    rundir = setup( args.rundir )
     nproc = args.nproc
     if nproc < 1:
         nproc = nCPUs() + nproc
