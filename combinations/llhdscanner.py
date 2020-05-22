@@ -12,13 +12,26 @@ from manipulator import Manipulator
 from protomodel import predictor as P
 from plotHiscore import obtain
 
-class Scanner:
-    def __init__ ( self, protomodel, pid1, pid2, nproc ):
+class LlhdThread:
+    """ one thread of the sweep """
+    def __init__ ( self, threadnr, protomodel, pid1, pid2, mpid1, mpid2,
+                   nevents ):
         self.rundir = setup()
+        self.threadnr = threadnr
         self.M = protomodel
-        self.pid1 = pid1
+        self.pid1 = pid1 
         self.pid2 = pid2
-        self.nproc = nproc
+        self.mpid1 = mpid1
+        self.mpid2 = mpid2
+        self.nevents = nevents
+
+    def pprint ( self, *args ):
+        """ pretty print """
+        t = time.strftime("%H:%M:%S")
+        line = "[llhdthread:%s] %s" % ( t, " ".join(map(str,args)))
+        print ( line )
+        with open ( "llhdscan%d.log" % self.pid1, "at" ) as f:
+            f.write ( line+"\n" )
 
     def getPredictions ( self, recycle_xsecs = True ):
         """ get predictions, return likelihoods """
@@ -52,61 +65,36 @@ class Scanner:
             llhds[ name ] = tp.getLikelihood ( mu ) 
         return llhds
 
-    def pprint ( self, *args ):
-        """ pretty print """
-        t = time.strftime("%H:%M:%S")
-        line = "[llhdscanner:%s] %s" % ( t, " ".join(map(str,args)))
-        print ( line )
-        with open ( "llhdscan%d.log" % self.pid1, "at" ) as f:
-            f.write ( line+"\n" )
-
-    def describeRange ( self, r ):
-        """ describe range r in a string """
-        if len(r)==0:
-            return ""
-        if len(r)==1:
-            return "%d" % r[0]
-        if len(r)==2:
-            return "%d,%d" % ( r[0], r[1] )
-        return "%d,%d ... %d" % ( r[0], r[1], r[-1] )
-
-    def scanLikelihoodFor ( self, min1, max1, dm1, min2, max2, dm2, 
-                            nevents, topo, output ):
-        """ plot the likelihoods as a function of pid1 and pid2 
-        :param output: prefix for output file [mp]
-        """
-        self.nevents = nevents
-        pid1 = self.pid1
-        pid2 = self.pid2
-        if pid2 != self.M.LSP:
-            print ("[llhdscanner] we currently assume pid2 to be the LSP, but it is %d" % pid2 )
-        import numpy
-        c = Combiner()
-        anaIds = c.getAnaIdsWithPids ( self.M.bestCombo, [ pid1, pid2 ] )
-        ## mass range for pid1
-        mpid1 = self.M.masses[pid1]
-        mpid2 = self.M.masses[pid2]
-        rpid1 = numpy.arange ( min1, max1+1e-8, dm1 )
-        rpid2 = numpy.arange ( min2, max2+1e-8, dm2 )
-        masspoints = []
-        print ( "[llhdscanner] range for %d: %s" % ( pid1, self.describeRange( rpid1 ) ) )
-        print ( "[llhdscanner] range for %d: %s" % ( pid2, self.describeRange( rpid2 ) ) )
-        print ( "[llhdscanner] total %d points, %d events for %s" % ( len(rpid1)*len(rpid2), nevents, topo ) )
-        self.M.createNewSLHAFileName ( prefix="llhd%d" % pid1 )
-        self.M.initializePredictor()
-        P[0].filterForTopos ( topo )
-        
-        llhds,robs = self.getPredictions ( False )
-        self.pprint ( "protomodel point: m1 %d, m2 %d, %d llhds" % \
-                      ( mpid1, mpid2, len(llhds) ) )
-        masspoints.append ( (mpid1,mpid2,llhds,robs) )
+    def run ( self, rpid1, rpid2 ):
+        """ run for the points given """
         oldmasses = {}
-
-        if True:
-            ## freeze out all other particles
-            for pid_,m_ in self.M.masses.items():
-                if pid_ not in [ pid1, pid2 ]:
-                    self.M.masses[pid_]=1e6
+        masspoints=[]
+        for m1 in rpid1:
+            self.M.masses[self.pid1]=m1
+            self.M.masses[self.pid2]=self.mpid2 ## reset LSP mass
+            for k,v in oldmasses.items():
+                self.pprint ( "WARNING: setting mass of %d back to %d" % ( k, v ) )
+                self.M.masses[k]=v
+            oldmasses={}
+            if hasattr ( self.M, "stored_xsecs" ):
+                del self.M.stored_xsecs ## make sure we compute
+            for i2,m2 in enumerate(rpid2):
+                if m2 > m1: ## we assume pid2 to be the daughter
+                    continue
+                self.M.masses[self.pid2]=m2
+                for pid_,m_ in self.M.masses.items():
+                    if pid_ != self.pid2 and m_ < m2: ## make sure LSP remains the LSP
+                        self.pprint ( "WARNING: have to raise %d from %d to %d" % ( pid_, m_, m2+1. ) )
+                        oldmasses[pid_]=m_
+                        self.M.masses[pid_]=m2 + 1.
+                llhds,robs = self.getPredictions ( True )
+                nllhds,nnonzeroes=0,0
+                for mu,llhd in llhds.items():
+                    nllhds+=len(llhd)
+                # del protomodel.stored_xsecs ## make sure we compute
+                self.pprint ( "m1 %d, m2 %d, %d mu's, %d llhds." % \
+                              ( m1, m2, len(llhds), nllhds ) )
+                masspoints.append ( (m1,m2,llhds,robs) )
 
         for m1 in rpid1:
             self.M.masses[pid1]=m1
@@ -134,6 +122,85 @@ class Scanner:
                 self.pprint ( "m1 %d, m2 %d, %d mu's, %d llhds." % \
                               ( m1, m2, len(llhds), nllhds ) )
                 masspoints.append ( (m1,m2,llhds,robs) )
+        return masspoints
+
+class LlhdScanner:
+    """ class that encapsulates a likelihood sweep """
+    def __init__ ( self, protomodel, pid1, pid2, nproc ):
+        self.rundir = setup()
+        self.M = protomodel
+        self.pid1 = pid1
+        self.pid2 = pid2
+        self.nproc = nproc
+
+    def pprint ( self, *args ):
+        """ pretty print """
+        t = time.strftime("%H:%M:%S")
+        line = "[llhdscanner:%s] %s" % ( t, " ".join(map(str,args)))
+        print ( line )
+        with open ( "llhdscan%d.log" % self.pid1, "at" ) as f:
+            f.write ( line+"\n" )
+
+    def describeRange ( self, r ):
+        """ describe range r in a string """
+        if len(r)==0:
+            return ""
+        if len(r)==1:
+            return "%d" % r[0]
+        if len(r)==2:
+            return "%d,%d" % ( r[0], r[1] )
+        return "%d,%d ... %d" % ( r[0], r[1], r[-1] )
+
+    def getMassPoints ( self, rpid1, rpid2 ):
+        """ run for the given mass points 
+        :param rpid1: list of masses for pid1
+        :param rpid2: list of masses for pid2
+        :returns: masspoints
+        """
+        thread = LlhdThread ( 0, self.M, self.pid1, self.pid2, self.mpid1, 
+                              self.mpid2, self.nevents )
+        return thread.run ( rpid1, rpid2 )
+
+    def scanLikelihoodFor ( self, min1, max1, dm1, min2, max2, dm2, 
+                            nevents, topo, output ):
+        """ plot the likelihoods as a function of pid1 and pid2 
+        :param output: prefix for output file [mp]
+        """
+        self.nevents = nevents
+        pid1 = self.pid1
+        pid2 = self.pid2
+        if pid2 != self.M.LSP:
+            print ("[llhdscanner] we currently assume pid2 to be the LSP, but it is %d" % pid2 )
+        import numpy
+        c = Combiner()
+        anaIds = c.getAnaIdsWithPids ( self.M.bestCombo, [ pid1, pid2 ] )
+        ## mass range for pid1
+        self.mpid1 = self.M.masses[pid1]
+        self.mpid2 = self.M.masses[pid2]
+        rpid1 = numpy.arange ( min1, max1+1e-8, dm1 )
+        rpid2 = numpy.arange ( min2, max2+1e-8, dm2 )
+        print ( "[llhdscanner] range for %d: %s" % ( pid1, self.describeRange( rpid1 ) ) )
+        print ( "[llhdscanner] range for %d: %s" % ( pid2, self.describeRange( rpid2 ) ) )
+        print ( "[llhdscanner] total %d points, %d events for %s" % ( len(rpid1)*len(rpid2), nevents, topo ) )
+        self.M.createNewSLHAFileName ( prefix="llhd%d" % pid1 )
+        self.M.initializePredictor()
+        P[0].filterForTopos ( topo )
+        
+        thread0 = LlhdThread ( 0, self.M, self.pid1, self.pid2, \
+                               self.mpid1, self.mpid2, self.nevents )
+        llhds,robs = thread0.getPredictions ( False )
+        self.pprint ( "protomodel point: m1 %d, m2 %d, %d llhds" % \
+                      ( self.mpid1, self.mpid2, len(llhds) ) )
+        masspoints = [ (self.mpid1,self.mpid2,llhds,robs) ]
+
+        if True:
+            ## freeze out all other particles
+            for pid_,m_ in self.M.masses.items():
+                if pid_ not in [ self.pid1, self.pid2 ]:
+                    self.M.masses[pid_]=1e6
+
+        newpoints = self.getMassPoints ( rpid1, rpid2 )
+        masspoints += newpoints
         import pickle
         picklefile = "%s%d%d.pcl" % ( output, pid1, pid2 )
         if os.path.exists ( picklefile ):
@@ -141,8 +208,8 @@ class Scanner:
         self.pprint ( "now saving to %s" % picklefile )
         f=open( picklefile ,"wb" )
         pickle.dump ( masspoints, f )
-        pickle.dump ( mpid1, f )
-        pickle.dump ( mpid2, f )
+        pickle.dump ( self.mpid1, f )
+        pickle.dump ( self.mpid2, f )
         pickle.dump ( nevents, f )
         pickle.dump ( topo, f )
         pickle.dump ( time.asctime(), f )
@@ -240,7 +307,7 @@ def main ():
     if args.picklefile == "default":
         args.picklefile = "%s/hiscore.pcl" % rundir
     protomodel = obtain ( args.number, args.picklefile )
-    scanner = Scanner( protomodel, args.pid1, args.pid2, nproc )
+    scanner = LlhdScanner( protomodel, args.pid1, args.pid2, nproc )
     args = scanner.overrideWithDefaults ( args )
     scanner.scanLikelihoodFor ( args.min1, args.max1, args.deltam1, 
                                 args.min2, args.max2, args.deltam2, \
