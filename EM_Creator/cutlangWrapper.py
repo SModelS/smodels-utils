@@ -21,14 +21,17 @@
                  +-Delphes---------┬-DelphesHepMC ~ delphes executable
                                    +-cards ~ dir with delphes configuration cards
 """
+# TODO: Adapt for paralelisation.
 # TODO: Make separate Delphes wrapper?
 # TODO: Add exception mechanism to exe.
 # TODO: Finish directory structure picture...
 # TODO: Debug levels?
+# TODO: Maybe add same time to logs and embaked?
 # FIXME: Refactor postprocessing
 # FIXME: Remove the directory if makefile not present
 # FIXME: Print only last n lines of exe output.
 # FIXME: Instead of exiting, raise exceptions?
+# FIXME: Adapt the getmasses scheme to CLA wrapper
 
 
 # Standard library imports
@@ -71,8 +74,13 @@ class CutLangWrapper:
         self.rerun = rerun
         self.auto_confirm = auto_confirm
 
+
         # base output directory
         self.base_dir = Directory(f"cutlang_wrapper/{self.analyses}", make = True)
+        self.tmp_dir = Directory(os.path.join(self.base_dir.get(), "temp"), make = True)
+        time = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+        self.initlog = os.path.join(self.tmp_dir.get(), "log_" + time + ".txt")
+        self.__delete_dir(self.initlog)
 
         # Cutlang vars
         self.cutlanginstall = "./CutLang/"
@@ -94,7 +102,7 @@ class CutLangWrapper:
             self.__info( "cutlang directory missing, download from github?")
             if self.__confirmation("Download from github? (yes/no):"):
                 args = ['git', 'clone', 'https://github.com/unelg/CutLang']
-                self.exe(args, exit_on_fail=True, logfile = initlog)
+                self.exe(args, exit_on_fail=True, logfile = self.initlog)
             else:
                 self.__error("No CutLang dir. Exiting.")
                 sys.exit()
@@ -110,7 +118,7 @@ class CutLangWrapper:
                 sys.exit()
             self.__info("Compiling CutLang...")
             args = ['make']
-            self.exe(args, cwd = compile_path, exit_on_fail = True)
+            self.exe(args, cwd = compile_path, exit_on_fail = True, logfile = self.initlog)
         self.__info("CutLang initialisation finished.")
 
         # ==============================
@@ -126,7 +134,8 @@ class CutLangWrapper:
             args = ["rm", "-rf", self.adllhcanalyses]
             self.exe(args)
             args = ["git", "clone", "https://github.com/ADL4HEP/ADLLHCanalyses"]
-            self.exe(args, cwd=os.path.dirname(self.adllhcanalyses), exit_on_fail=True)
+            self.exe(args, cwd=os.path.dirname(self.adllhcanalyses),
+                     exit_on_fail=True, logfile = self.initlog)
         self.__info("ADLLHC Analyses initialisation finished.")
 
         # ====================
@@ -137,7 +146,7 @@ class CutLangWrapper:
             self.__info( "Delphes directory missing, download from github?")
             if self.__confirmation("Download from github? (yes/no):"):
                 args = ['git', 'clone', 'https://github.com/delphes/delphes']
-                self.exe(args, exit_on_fail = True)
+                self.exe(args, exit_on_fail = True, logfile = self.initlog)
             else:
                 self.__error("No Delphes dir. Exiting.")
         # if there is no executable, compile it
@@ -152,7 +161,7 @@ class CutLangWrapper:
                 sys.exit()
             self.__info("Compiling Delphes...")
             args = ['make']
-            self.exe(args, cwd = compile_path)
+            self.exe(args, cwd = compile_path, exit_on_fail = True, logfile = self.initlog)
         self.__info("Delphes initialised.")
         self.__info("Initialisation complete.")
 
@@ -245,7 +254,7 @@ class CutLangWrapper:
             self.__error("Could not find CLA output file. Aborting.")
             # sys.exit()
 
-    def run(self, masses, hepmcfile, pid=None):
+    def run(self, mass, hepmcfile, pid=None):
         """ TODO: Write some commentary.
 
 
@@ -256,9 +265,12 @@ class CutLangWrapper:
         ana_dir = Directory(os.path.join(self.base_dir.get(), f"ANA_{dirname}"), make = True)
         out_dir = Directory(os.path.join(ana_dir.get(), "output"), make = True)
         tmp_dir = Directory(os.path.join(ana_dir.get(), "temp"), make = True)
+        time = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+        logfile = os.path.join(tmp_dir.get(), "log_" + time + ".txt")
+        self.__delete_dir(logfile)
 
         self.__info(f"Writing output into directory {ana_dir.get()} .")
-        self.__info(f"Masses are {masses}")
+        self.__info(f"Masses are {mass}")
 
         # Decompress hepmcfile if necessary
         if ".gz" in hepmcfile:
@@ -276,7 +288,7 @@ class CutLangWrapper:
                     if self.analyses in line:
                         anaIsIn = True
                 if anaIsIn and (not self.rerun):
-                    self.__msg ( "%s is in the summary file for %s: skip it." % ( self.analyses, str(masses) ) )
+                    self.__msg ( "%s is in the summary file for %s: skip it." % ( self.analyses, str(mass) ) )
                     return
                 if not anaIsIn:
                     self.__msg ( "%s not in summary file: rerun!" % self.analyses )
@@ -300,7 +312,7 @@ class CutLangWrapper:
             sys.exit()
         self.__msg ("Found hepmcfile at", hepmcfile)
         delphes_card = self.__pick_delphes_card()
-        # delph_out = os.path.join(tmp_dir.get(), "-".join([self.analyses, str(masses), "delphes-out"])+".root")
+        # delph_out = os.path.join(tmp_dir.get(), "-".join([self.analyses, str(mass), "delphes-out"])+".root")
         # FIXME: put this to tmp_dir
         delph_out = os.path.join(tmp_dir.get(), "delphes_out.root")
 
@@ -308,13 +320,13 @@ class CutLangWrapper:
         if os.path.exists(delph_out):
             self.__info(f"Removing {delph_out}.")
             args = ["rm", delph_out]
-            self.exe(args)
+            self.exe(args, logfile = logfile)
 
 
         # run delphes
         self.__info("Running delphes.")
         args = [self.delphes_exe, delphes_card, delph_out, hepmcfile]
-        self.exe(args)
+        self.exe(args, logfile = logfile)
         self.__info("Delphes finished.")
 
         # ======================
@@ -328,7 +340,7 @@ class CutLangWrapper:
         # run CutLang
         cmd = [self.cutlang_script, cla_input, "DELPHES", "-i", cutlangfile]
         self.__info("Running CLA")
-        self.exe(cmd, cwd=self.cutlang_run_dir)
+        self.exe(cmd, cwd=self.cutlang_run_dir, logfile = logfile)
         self.__info("CLA finished.")
 
         # ====================
@@ -353,13 +365,12 @@ class CutLangWrapper:
             self.__error(f"Numbers of events: {nevents}")
             self.__error(f"Using the value: {nevents[0]}")
         with open(effi_file, "w") as f:
-            f.write("{" + str(masses) + ": {")
+            f.write("{" + str(mass) + ": {")
             f.write(entries)
             f.write(f"'__t__':'{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}', ")
             f.write(f"'__nevents__':{nevents[0]}")
             f.write("}")
             f.write("}")
-        # self.extract_efficiencies(masses, CLA_output, effi_file)
 
     def exe(self, cmd, logfile = None, maxLength=100, cwd=None, exit_on_fail=False):
         """ execute cmd in shell
@@ -532,44 +543,40 @@ class Directory:
 if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(description='cutlang runner.')
-    argparser.add_argument ( '-a', '--analyses', help='analyses, comma separated [cms_sus_16_033]',
-                             type=str, default="cms_sus_16_033" )
-    argparser.add_argument ( '-d', '--hepmcfile', help='hepmcfile to be used as input for Delphes',
-                             type=str, default="input.hepmc" )
-    argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
-                             type=int, default=1 )
-    argparser.add_argument ( '-t', '--topo', help='topology [T2]',
-                             type=str, default="T2" )
-    argparser.add_argument ( '-c', '--clean', help='clean all temporary files, then quit',
-                             action="store_true" )
-    argparser.add_argument ( '-C', '--clean_all', help='clean all temporary files, even results directories, then quit',
-                             action="store_true" )
-    mdefault = "all"
-    argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_first,m_last,delta_m). m_last and delta_m may be ommitted. "all" means: search for mg5 directories, and consider all. [%s]' % mdefault,
-                             type=str, default=mdefault )
-    argparser.add_argument ( '-p', '--nprocesses', help='number of process to run in parallel. 0 means 1 per CPU [1]',
-                             type=int, default=1 )
-    argparser.add_argument ( '-r', '--rerun', help='force rerun, even if there is a summary file already',
-                             action="store_true" )
+    argparser.add_argument('-a', '--analyses', help='analyses, comma separated [cms_sus_16_033]',
+                           type=str, default="cms_sus_16_033")
+    argparser.add_argument('-d', '--hepmcfile', help='hepmcfile to be used as input for Delphes',
+                           type=str, default="input.hepmc")
+    argparser.add_argument('-j', '--njets', help='number of ISR jets [1]',
+                           type=int, default=1)
+    argparser.add_argument('-t', '--topo', help='topology [T2]',
+                           type=str, default="T2")
+    argparser.add_argument('-c', '--clean', help='clean all temporary files, then quit',
+                           action="store_true")
+    argparser.add_argument('-C', '--clean_all', help='clean all temporary files, even results directories, then quit',
+                           action="store_true")
+    mdefault = "Masses not specified"
+    argparser.add_argument('-m', '--mass', help='mass range e.g."(100,110,10)"',
+                           type=str, default=mdefault)
+    argparser.add_argument('-p', '--nprocesses', help='number of process to run in parallel. 0 means 1 per CPU [1]',
+                           type=int, default=1)
+    argparser.add_argument('-r', '--rerun', help='force rerun, even if there is a summary file already',
+                           action="store_true")
     args = argparser.parse_args()
     if args.clean:
-        cutlang = CutLangWrapper( args.topo, args.njets, args.rerun, args.analyses )
+        cutlang = CutLangWrapper(args.topo, args.njets, args.rerun, args.analyses)
         cutlang.clean()
         sys.exit()
     if args.clean_all:
-        cutlang = CutLangWrapper( args.topo, args.njets, args.rerun, args.analyses )
+        cutlang = CutLangWrapper(args.topo, args.njets, args.rerun, args.analyses)
         cutlang.clean_all()
         sys.exit()
-    if args.masses == "all":
-        print("Computing all masses.")
-        masses = bakeryHelpers.getListOfMasses ( args.topo, args.njets )
-    else:
-        # FIXME: make parseMasses work
-        masses = bakeryHelpers.parseMasses ( args.masses )
-    nm = len(masses)
-    nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
-    cutlang = CutLangWrapper( args.topo, args.njets, args.rerun, args.analyses )
-    cutlang.run(masses, args.hepmcfile)
+    # if args.mass == "all":
+    #     mass = bakeryHelpers.getListOfMasses(args.topo, args.njets)
+    # else:
+    #     mass = bakeryHelpers.parseMasses(args.mass)
+    cutlang = CutLangWrapper(args.topo, args.njets, args.rerun, args.analyses)
+    cutlang.run(args.mass, args.hepmcfile)
     # cutlang.__info( "%d points to produce, in %d processes" % (nm,nprocesses) )
     #djobs = int(len(masses)/nprocesses)
 
