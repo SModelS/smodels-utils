@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-""" helper functions """
+""" various helper functions that do not fit in any of the more
+    specific modules """
 
 rthresholds = (1.7,) ## threshold for rmax
 
-import copy, sys
+import copy, sys, math
 
 def getParticleName ( pid, addSign=False, addSMParticles=False ):
     """ get the particle name of pid 
@@ -271,3 +272,39 @@ def toLatex ( pid, addDollars=False, addM=False, addSign=False,
     return pname
 
     return str(pid)
+
+def findLargestExcess ( db ):
+    """ find the largest excess in any efficiency map type result
+        in the given database 
+    :param db: a SModelS database object
+    :returns: the dataset object
+    """
+    results = db.getExpResults ( dataTypes = [ "efficiencyMap" ] )
+    excesses = {}
+    for expRes in results:
+        datasets = expRes.datasets
+        for dataset in datasets:
+            nobs = dataset.dataInfo.observedN
+            nbg = dataset.dataInfo.expectedBG
+            bgErr = dataset.dataInfo.bgError
+            S = 0.
+            toterr = math.sqrt ( bgErr**2 + nbg )
+            if toterr > 0.:
+                S = ( nobs - nbg ) / toterr
+            if S < 1.:
+                continue
+            if not S in excesses:
+                excesses[S]=[]
+            excesses[S].append ( dataset )
+    def pprint ( excesses ):
+        keys = list ( excesses.keys() )
+        keys.sort()
+        for k in keys[-5:]:
+            v = excesses[k]
+            if len(v)>1:
+                print ( "%.2f: %15s %20s" % ( k, v.globalInfo.id, v ) )
+            else:
+                print ( "%.2f: %15s %20s" % ( k, v[0].globalInfo.id, v[0] ) )
+    pprint ( excesses )
+    print ( "found %d results" % len(results) )
+    return excesses
