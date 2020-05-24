@@ -301,10 +301,14 @@ def findLargestExcess ( db ):
         keys.sort()
         for k in keys[-5:]:
             v = excesses[k]
-            if len(v)>1:
-                print ( "%.2f: %15s %20s" % ( k, v.globalInfo.id, v ) )
-            else:
-                print ( "%.2f: %15s %20s" % ( k, v[0].globalInfo.id, v[0] ) )
+            if len(v)!=1:
+                print ( "error cannot handle" )
+                continue
+            v = v[0]
+            obsN = v.dataInfo.observedN
+            eBG = v.dataInfo.expectedBG
+            print ( "%.2f: %15s %20s: %d/%.2f" % \
+                    ( k, v.globalInfo.id, v, obsN, eBG ) )
     pprint ( excesses )
     print ( "found %d results" % len(results) )
     return excesses
