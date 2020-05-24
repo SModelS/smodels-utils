@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import pickle, os, sys, subprocess, time, fcntl, glob, colorama, math
+from csetup import setup
 from protomodel import ProtoModel
 from manipulator import Manipulator
 from smodels.tools.physicsUnits import GeV, fb, TeV
@@ -11,6 +12,7 @@ import smodels_utils.SModelSUtils
 from smodels_utils.plotting import rulerPlotter, decayPlotter
 import helpers
 
+"""
 def setup():
     # codedir = "/mnt/hephy/pheno/ww/git/"
     codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/"
@@ -24,6 +26,7 @@ def setup():
             os.chdir ( rundir )
         return rundir
     return ""
+"""
 
 def obtain ( number, picklefile ):
     """ obtain hiscore number <number>
