@@ -23,14 +23,15 @@ class ExpResModifier:
                 dataset.txnameList[i].txnameData = txnd
         return dataset
 
-    def modifyDatabase ( self, db, outfile="" ):
+    def modifyDatabase ( self, db, outfile="", suffix="fake1" ):
         """ modify the database 
         :param outfile: if not empty, write the database into file
+        :param suffix: suffix to append to database version
         """
         listOfExpRes = db.getExpResults()
         updatedListOfExpRes = self.modify ( listOfExpRes )
         db.expResultList = updatedListOfExpRes
-        newver = db.databaseVersion + "bg"
+        newver = db.databaseVersion + suffix
         db.txt_meta.databaseVersion = newver
         db.pcl_meta.databaseVersion = newver
         print ( "Modifier called. %d/%d results" % \
@@ -92,6 +93,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-o', '--outfile',
             help='file to write out database pickle [""]',
             type=str, default="" )
+    argparser.add_argument ( '-s', '--suffix',
+            help='suffix for database version ["fake1"]',
+            type=str, default="fake1" )
     argparser.add_argument ( '-v', '--verbose',
             help='print results to stdout', action='store_true' )
     argparser.add_argument ( '-i', '--interact',
@@ -102,7 +106,7 @@ if __name__ == "__main__":
     from smodels.experiment.databaseObj import Database
     db = Database ( args.database )
     modifier = ExpResModifier()
-    modifier.modifyDatabase ( db, args.outfile )
+    modifier.modifyDatabase ( db, args.outfile, args.suffix )
 
     if args.check:
         check ( args.outfile )
