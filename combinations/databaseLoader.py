@@ -9,12 +9,16 @@
 
 """
 
-import sys
+import sys, math
 sys.path.insert(0,"../")
 from smodels.experiment.databaseObj import Database
 from smodels.tools.smodelsLogging import setLogLevel
+import helpers
 setLogLevel("info")
-database = Database("../../smodels-database/", discard_zeroes = True )
+dbpath = "../../smodels-database/"
+# dbpath = "./fake1.pcl"
+database = Database( dbpath )
 
 if __name__ == "__main__":
     print ( database )
+    # helpers.findLargestExcess ( database )
