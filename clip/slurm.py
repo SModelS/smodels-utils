@@ -38,6 +38,8 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     :param time: time in hours
     :param cheatcode: in case we wish to start with a cheat model
     """
+    if not "/" in dbpath: ## then assume its meant to be in rundir
+        dbpath = rundir + "/" + dbpath
     print ( "[runOneJob:%d] run walkers [%d,%d] " % ( pid, jmin, jmax ) )
     # runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
     runner = "%sRUNNER_%s.py" % ( rundir, jmin )
