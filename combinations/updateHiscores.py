@@ -99,7 +99,7 @@ def main():
         i+=1
         D = updateHiscores( )
         Z,step,model,K = D["Z"],D["step"],D["model"],D["K"]
-        if K > Kold*1.0001:
+        if K > Kold + .001:
         #if Z > Zold*1.0001:
             from manipulator import Manipulator
             with open ( Zfile, "wt" ) as f:
