@@ -56,8 +56,6 @@ Such combination will bring small complications. We'v decided we'd rather try ge
 
 # Testing ATLAS-SUSY-2018-04
 
-## Comparing upper limits for the grid points
-
 We  compute the results of our pyhf interface by feeding the efficiencies of the SModelS database entry for this analysis into our pyhf interface, and compare them with the official results on the [HEPData page](https://www.hepdata.net/record/ins1765529). The value of interest here is the cross section upper limit that we compare with the upper limit of the table `X-section U.L 1` on the HEPData page, giving the upper limit for pair production of combined stau_L and stau_R.
 
 | m(stau) [GeV] | m(chi1) [GeV] | official 95% UL [pb] | pyhf 95% UL [pb] | discrepancy [%] |
@@ -124,9 +122,10 @@ A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyh
 - [ ] add another column with best excepted upper limit (problem with nan upper limits)
 - [x] try using expected backgrounds of [aux. table 02](https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/SUSY-2018-04/tabaux_02.png) : see [ULtab-aux.md](https://github.com/SModelS/smodels-utils/blob/develop/pyhfintegration/ULtab-aux.md)
 
-## Running validation
+# Running validation
 
-A first attempt of validation has been performed with pyhf combination. SModelS interface to pyhf is technically working but pyhf combination is over excluding as can be seen in the [validation folder](https://github.com/SModelS/smodels-database/blob/pyhf/13TeV/ATLAS/ATLAS-SUSY-2018-04-eff/validation/).
+Validation plots can be found in [validation folder](https://github.com/SModelS/smodels-database/blob/pyhf/13TeV/ATLAS/ATLAS-SUSY-2018-04-eff/validation/) SModelS interface to pyhf is slightly over excluding for ATLAS-SUSY-2018-04.  
+Plots for ATLAS-SUSY-2018-31 are not complete yet but there is a slight under exclusion.
 
 # To do list
 

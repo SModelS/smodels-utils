@@ -16,6 +16,8 @@ import pyhf
 pyhf.set_backend(b"pytorch")
 from scipy import optimize
 import numpy as np
+from smodels.tools.smodelsLogging import logger
+import time
 
 def getLogger():
     """
@@ -34,7 +36,7 @@ def getLogger():
     logger.setLevel(logging.DEBUG)
     return logger
 
-logger=getLogger()
+#logger=getLogger()
 
 class PyhfData:
     """
@@ -66,14 +68,12 @@ class PyhfData:
             wsChannelsInfo['otherRegions'] = []
             for i_ch, ch in enumerate(ws['channels']):
                 if 'SR' in ch['name']:
-                    logger.debug("SR channel name : %s" % ch['name'])
                     wsChannelsInfo['signalRegions'].append({'path':'/channels/'+str(i_ch)+'/samples/0', # Path of the new sample to add (signal prediction)
                                                             'size':len(ch['samples'][0]['data'])}) # Number of bins
                 if 'VR' in ch['name'] or 'CR' in ch['name']:
                     wsChannelsInfo['otherRegions'].append('/channels/'+str(i_ch))
             wsChannelsInfo['otherRegions'].sort(key=lambda path: path.split('/')[-1], reverse=True) # Need to sort correctly the paths to the channels to be removed
             self.channelsInfo.append(wsChannelsInfo)
-        logger.debug("WSInfo: self.channelsInfo: {}".format(self.channelsInfo))
 
     def checkConsistency(self):
         """
@@ -91,7 +91,6 @@ class PyhfData:
                 nBinsJson += sr['size']
             if nBinsJson != len(subSig):
                 logger.error('The number of signals provided is different from the number of bins for json number {} and channel number {}'.format(self.channelsInfo.index(wsInfo), self.nsignals.index(subSig)))
-            logger.debug("Consistency check: subSig: {}".format(subSig))
             allZero = all([s == 0 for s in subSig])
             # Checking if all signals matching this json are zero
             self.zeroSignalsFlag.append(allZero)
@@ -143,7 +142,6 @@ class PyhfUpperLimitComputer:
         except AttributeError:
             pass
         self.scale *= factor
-        logger.debug("Signals : {}".format(self.nsignals))
         self.patches = self.patchMaker()
         self.workspaces = self.wsMaker()
         try:
@@ -174,7 +172,6 @@ class PyhfUpperLimitComputer:
                 operator["path"] = srInfo['path']
                 value = {}
                 value["data"] = subSig[:nBins]
-                logger.debug("patcheMake:value['data'] : {}".format(value['data']))
                 subSig = subSig[nBins:]
                 value["modifiers"] = []
                 value["modifiers"].append({"data": None, "type": "normfactor", "name": "mu_SIG"})
@@ -209,12 +206,14 @@ class PyhfUpperLimitComputer:
         Returns the value of the likelihood.
         Inspired by the `pyhf.infer.mle` module but for non-log likelihood
         """
+        logger.debug("Calling likelihood")
+        self.scale = 1.
         if self.nWS == 1:
             workspace = self.workspaces[0]
         elif workspace_index != None:
             if self.zeroSignalsFlag[workspace_index] == True:
                 logger.warning("Workspace number %d has zero signals" % workspace_index)
-                return -1
+                return None
             else:
                 workspace = self.workspaces[workspace_index]
         else:
@@ -230,7 +229,9 @@ class PyhfUpperLimitComputer:
         """
         Returns the chi square
         """
-        return -1
+        self.scale = 1.
+        logger.debug("Calling chi2")
+        return None
 
     # Trying a new method for upper limit computation :
     # re-scaling the signal predictions so that mu falls in [0, 10] instead of looking for mu bounds
@@ -247,43 +248,37 @@ class PyhfUpperLimitComputer:
                           - else: all workspaces are combined
         :return: the upper limit at `self.cl` level (0.95 by default)
         """
+        startUL = time.time()
+        logger.debug("Calling ulSigma")
         if workspace_index != None and self.zeroSignalsFlag[workspace_index] == True:
-            logger.warning("Workspace number %d has zero signals" % workspace_index)
-            return -1
+            logger.debug("Workspace number %d has zero signals" % workspace_index)
+            return float('+inf')
         def updateWorkspace():
             if self.nWS == 1:
+                if self.zeroSignalsFlag[0] == True:
+                    logger.warning("There is only one workspace but all signals are zeroes")
                 return self.workspaces[0]
-            elif workspace_index != None:
-                return self.workspaces[workspace_index]
             else:
-                return self.cbWorkspace()
+                if workspace_index != None:
+                    logger.error("There are several workspaces but no workspace index was provided")
+                return self.workspaces[workspace_index]
         workspace = updateWorkspace()
         def root_func(mu):
             # Same modifiers_settings as those use when running the 'pyhf cls' command line
             msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
             model = workspace.model(modifier_settings=msettings)
             test_poi = mu
+            start = time.time()
             result = pyhf.infer.hypotest(test_poi, workspace.data(model), model, qtilde=True, return_expected = expected)
+            end = time.time()
+            logger.debug("Hypotest elapsed time : %1.4f secs" % (end - start))
             if expected:
                 CLs = result[1].tolist()[0]
             else:
                 CLs = result[0]
-            logger.info("Call of root_func(%f) -> %f" % (mu, 1.0 - CLs))
+            # logger.debug("Call of root_func(%f) -> %f" % (mu, 1.0 - CLs))
             return 1.0 - self.cl - CLs
-        # Checking if the lower limit gives a nan, in which case the signal needs to be scaled up
-        # while np.isnan(root_func(1.)):
-            # self.rescale(2.)
-            # workspace = updateWorkspace()
-        # # Scaling the signal prediction
-        # while root_func(10.) < 0.0:
-            # # Scaling up the signals and updating the workspace
-            # self.rescale(2.)
-            # workspace = updateWorkspace()
-        # while root_func(1.) > 0.0:
-            # # Scaling down the signals and updating the workspace
-            # self.rescale(0.5)
-            # workspace = updateWorkspace()
-        # Trying a more advanced method for rescaling
+        # Rescaling singals so that mu is in [0, 10]
         factor = 10.
         wereBothLarge = False
         wereBothTiny = False
@@ -295,7 +290,7 @@ class PyhfUpperLimitComputer:
                 break
             if self.alreadyBeenThere:
                 factor = 1 + (factor-1)/2
-                logger.info("Diminishing rescaling factor")
+                logger.debug("Diminishing rescaling factor")
             if np.isnan(rt1):
                 self.rescale(factor)
                 workspace = updateWorkspace()
@@ -307,10 +302,10 @@ class PyhfUpperLimitComputer:
             # Analyzing previous values of wereBoth***
             if rt10 < 0 and rt1 < 0 and wereBothLarge:
                 factor = 1 + (factor-1)/2
-                logger.info("Diminishing rescaling factor")
+                logger.debug("Diminishing rescaling factor")
             if rt10 > 0 and rt1 > 0 and wereBothTiny:
                 factor = 1 + (factor-1)/2
-                logger.info("Diminishing rescaling factor")
+                logger.debug("Diminishing rescaling factor")
             # Preparing next values of wereBoth***
             wereBothTiny = rt10 < 0 and rt1 < 0
             wereBothLarge = rt10 > 0 and rt1 > 0
@@ -324,11 +319,13 @@ class PyhfUpperLimitComputer:
                 workspace = updateWorkspace()
                 continue
         # Finding the root (Brent bracketing part)
-        logger.info("Final scale : %f" % self.scale)
+        logger.debug("Final scale : %f" % self.scale)
         hi_mu = 10.
         lo_mu = 1.
-        logger.info("Starting brent bracketing")
+        logger.debug("Starting brent bracketing")
         ul = optimize.brentq(root_func, lo_mu, hi_mu, rtol=1e-3, xtol=1e-3)
+        endUL = time.time()
+        logger.debug("ulSigma elpased time : %1.4f secs" % (endUL - startUL))
         return ul*self.scale # self.scale has been updated whithin self.rescale() method
 
     def bestUL(self):
@@ -342,12 +339,12 @@ class PyhfUpperLimitComputer:
             return self.ulSigma(workspace_index=0)
         rMax = 0.0
         for i_ws in range(self.nWS):
-            logger.info("Looking for best expected combination")
+            logger.debug("Looking for best expected combination")
             r = 1/self.ulSigma(expected=True, workspace_index=i_ws)
             if r > rMax:
                 rMax = r
                 i_best = i_ws
-        logger.info('Best combination : %d' % i_best)
+        logger.debug('Best combination : %d' % i_best)
         self.i_best = i_best
         return self.ulSigma(workspace_index=i_best)
 
@@ -368,19 +365,6 @@ class PyhfUpperLimitComputer:
             if self.zeroSignalsFlag[i_ws] == True: # Ignore workspaces having zero signals
                 continue
             cbWS = pyhf.Workspace.combine(cbWS, workspaces[i_ws])
-        # Home made method, should do the same but no sanity checks and the first measurement is taken:
-        # cbWS = {}
-        # cbWS["channels"] = []
-        # for inpt in workspaces:
-            # for channel in inpt["channels"]:
-                # cbWS["channels"].append(channel)
-        # cbWS["observations"] = []
-        # for inpt in workspaces:
-            # for observation in inpt["observations"]:
-                # cbWS["observations"].append(observation)
-        # cbWS["measurements"] = workspaces[0]["measurements"]
-        # cbWS["version"] = workspaces[0]["version"]
-        # These two last are assumed to be the same for all three regions
         return cbWS
 
 if __name__ == "__main__":
