@@ -150,6 +150,31 @@ class Manipulator:
             return True
         return False
 
+    def teleportToHiscore ( self ):
+        """ without further ado, discard your current model and start
+            fresh with the hiscore model. """
+        fname = "states.dict"
+        if not os.path.exists ( fname ):
+            from csetup import setup
+            rundir = setup()
+            fname = rundir + "/states.dict" 
+            if not os.path.exists ( fname ):
+                self.pprint ( "could not find states.dict!!" )
+                return
+        with open ( fname, "rt" ) as f:
+            dicts = eval ( f.read() )
+            ith = 0
+            choices = []
+            f = 1
+            for i in range(len(dicts)-1,-1,-1):
+                choices += [i]*f
+                f=f*2
+            ith = random.choice ( choices )
+            self.pprint ( "teleporting, we have %d dicts" % len(dicts) )
+            self.pprint ( "choosing the %dth entry, it has a K of %.2f" % \
+                          ( ith, dicts[ith]["K"] ) )
+            self.initFromDict ( dicts[ith] )
+
     def writeDictFile ( self, outfile = "pmodel.py", cleanOut=True,
                         comment = "", appendMode=False ):
         """ write out the dict file to outfile

@@ -155,6 +155,22 @@ class RandomWalker:
     def protomodel(self, protomodel):
         self.manipulator.M = protomodel
 
+    def checkIfToTeleport ( self ):
+        """ check if we should teleport. If we should then also
+            perform the teleportation. """
+        bestK = self.hiscoreList.globalMaxK()
+        ourK = -2.
+        if hasattr ( self.manipulator.M, "K" ) and self.manipulator.M.K > -2:
+            ourK = self.manipulator.M.K
+        dK = ( bestK - ourK ) / 10.
+        prob = min ( 1., 1. - math.exp ( -dK )  )
+        prob = max ( 0., .1 * prob )
+        a = random.uniform ( 0., 1. )
+        self.log ( "check if to teleport, Kmax=%.2f, ours is=%.2f, p=%.2f, a=%.2f" % \
+                   ( bestK, ourK, prob, a ) )
+        if a < prob:
+            self.manipulator.teleportToHiscore()
+
     def onestep ( self ):
         self.protomodel.clean()
         self.protomodel.step+=1
@@ -225,6 +241,7 @@ class RandomWalker:
         smaxstp = "%s" % self.maxsteps
         if self.maxsteps < 0:
             smaxstp = "inf"
+        self.checkIfToTeleport()
         self.log ( "now check for swaps" )
         self.manipulator.checkSwaps()
         self.log ( "step %d/%s finished." % ( self.protomodel.step, smaxstp ) )
