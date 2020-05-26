@@ -298,7 +298,6 @@ class LlhdScanner:
         return args
 
 def main ():
-    rundir = setup()
     import argparse
     argparser = argparse.ArgumentParser(
             description='perform likelhood scans')
@@ -344,6 +343,9 @@ def main ():
     argparser.add_argument ( '-p', '--picklefile',
             help='pickle file to draw from [<rundir>/hiscore.pcl]',
             type=str, default="default" )
+    argparser.add_argument ( '-D', '--draw',
+            help='also perform the plotting, ie call plotLlhds',
+            action='store_true' )
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug, info, warn, err [info]',
             type=str, default="info" )
@@ -363,6 +365,17 @@ def main ():
     scanner.scanLikelihoodFor ( args.min1, args.max1, args.deltam1, 
                                 args.min2, args.max2, args.deltam2, \
                                 args.nevents, args.topo, args.output )
-
+    if args.draw:
+        import plotLlhds
+        verbose = args.verbosity
+        copy = True
+        max_anas = 5
+        interactive = False
+        drawtimestamp = True
+        compress = False
+        plot = plotLlhds.LlhdPlot ( args.pid1, args.pid2, verbose, copy, max_anas,
+                                   interactive, drawtimestamp, compress, rundir )
+        plot.plot()
+        
 if __name__ == "__main__":
     main()

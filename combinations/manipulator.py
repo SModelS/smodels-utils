@@ -88,6 +88,7 @@ class Manipulator:
             # redo in extreme cases
             nevents = 100000
             self.M.predict ( self.strategy, nevents = nevents )
+        self.resolveMuhat()
 
     def randomlyAttemptAMerger ( self ):
         """ randomly try to merge a mergable pair of particles
@@ -161,19 +162,23 @@ class Manipulator:
             if not os.path.exists ( fname ):
                 self.pprint ( "could not find states.dict!!" )
                 return
-        with open ( fname, "rt" ) as f:
-            dicts = eval ( f.read() )
-            ith = 0
-            choices = []
-            f = 1
-            for i in range(len(dicts)-1,-1,-1):
-                choices += [i]*f
-                f=f*2
-            ith = random.choice ( choices )
-            self.pprint ( "teleporting, we have %d dicts" % len(dicts) )
-            self.pprint ( "choosing the %dth entry, it has a K of %.2f" % \
-                          ( ith, dicts[ith]["K"] ) )
-            self.initFromDict ( dicts[ith] )
+        try:
+            with open ( fname, "rt" ) as f:
+                dicts = eval ( f.read() )
+        except (EOFError,SyntaxError) as e:
+            # can happen if it is just being written. in this case dont teleport
+            return
+        ith = 0
+        choices = []
+        f = 1
+        for i in range(len(dicts)-1,-1,-1):
+            choices += [i]*f
+            f=f*2
+        ith = random.choice ( choices )
+        self.pprint ( "teleporting, we have %d dicts" % len(dicts) )
+        self.pprint ( "choosing the %dth entry, it has a K of %.2f" % \
+                      ( ith, dicts[ith]["K"] ) )
+        self.initFromDict ( dicts[ith] )
 
     def writeDictFile ( self, outfile = "pmodel.py", cleanOut=True,
                         comment = "", appendMode=False ):
@@ -543,9 +548,12 @@ class Manipulator:
         if abs ( self.M.muhat - 1.0 ) < 1e-5:
             return
         self.M.log ( "resolve a muhat of %.2f" % self.M.muhat )
+        self.M.rmax = self.M.rmax * v
+        self.M.r2 = self.M.r2 * v
         for k,v in self.M.ssmultipliers.items():
-            v = v * self.M.muhat
+            self.M.ssmultipliers[k] = v * self.M.muhat
         self.M.muhat = 1.
+        # self.M.delXSecs()
 
     def isInPids ( self, p, dpid ):
         """ is p in dpid, or p equals to dpid? """

@@ -392,7 +392,7 @@ class Combiner:
             a,b,c = 2, 8, 32 ## the "sigmas" of the Gaussians. Higher values means less punishment
             prior = numpy.exp ( -(1/2) * ( (nparticles/a)**2 + (nbranchings/b)**2 + (nssms/c)**2 ) )
         if verbose:
-            self.pprint ( "prior ``%s'': %d particles, %d branchings, %d unique ssms: %.2f" % \
+            self.pprint ( "prior ``%s'': %d particles, %d branchings, %.1f equivalent unique ssms: %.2f" % \
                       ( name, nparticles, nbranchings, nssms, prior ) )
         if nll:
             return - numpy.log ( prior )
@@ -413,6 +413,9 @@ class Combiner:
         :param verbose: print how you get the prior.
         :param name: name of prior (expo1, gauss1, etc). See self.priorForNDF.
         """
+        if not hasattr ( protomodel, "stored_xsecs" ):
+            self.pprint ( "did not find cross sections, compute now." )
+            protomodel.computeXSecs ( nevents = 100000, recycle = True )
         particles = protomodel.unFrozenParticles ( withLSP=True )
         nparticles = len ( particles )
         nbr = 0
@@ -433,17 +436,28 @@ class Combiner:
         for pids,ssm in protomodel.ssmultipliers.items():
             if (abs(pids[0]) not in particles) or (abs(pids[1]) not in particles):
                 continue
-            ## every unique ssm > 0 and ssm!=1 costs a little, but only very little
+            ## ignore non-existant xsecs
+            hasXSec=False
+            xsecv = 0.*fb
+            for xsec in protomodel.stored_xsecs[0]:
+                if pids == xsec.pid:
+                    hasXSec = True
+                    xsecv = xsec.value
+            ## ignore all very small xsecs
+            if not hasXSec or xsecv < .001 * fb:
+                continue
+            ## every unique ssm > 0 costs a little, but only very little
             ssmkey = int ( 100. * ssm )
-            if ssm > 1e-4 and abs ( ssm - 1. ) > .01:
+            if ssm > 1e-4: # and abs ( ssm - 1. ) > .01: ssms of 1, are they special?
                 if not ssmkey in cssms:
                     cssms[ssmkey]=0
                 cssms[ssmkey]+=1
                 # nssms += 1
-            if abs ( ssm - 1. ) < .01:
-                pun1 += .1 ## we prefer zeroes over ones, so we punish the ones
+            ## if we treat ones a special, see above, then we need this
+            #if abs ( ssm - 1. ) < .01:
+            #    pun1 += .1 ## we prefer zeroes over ones, so we punish the ones
         # print ( "cssms", cssms )
-        pun1 += .1 * ( sum(cssms.values()) - len(cssms) ) ## small punishments for all non-zeros
+        pun1 += .1 * ( sum(cssms.values()) - len(cssms) ) ## small additional punishments for all non-zeros
         nssms = len( cssms )+pun1
         ret = self.priorForNDF ( nparticles, nbr, nssms, name, verbose )
         if nll:

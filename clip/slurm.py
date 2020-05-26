@@ -18,7 +18,7 @@ def remove( fname, keep):
             os.unlink ( fname )
     except:
         pass
-    
+
 # codedir = "/scratch-cbe/users/wolfgan.waltenbergergit/smodels-utils/"
 codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/"
 # rundir = "/scratch-cbe/users/wolfgan.waltenbergerrundir"
@@ -26,7 +26,7 @@ rundir = "/scratch-cbe/users/wolfgan.waltenberger/rundir/"
 
 def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
                 cheatcode ):
-    """ prepare everything for a single job 
+    """ prepare everything for a single job
     :params pid: process id, integer that idenfies the process
     :param jmin: id of first walker
     :param jmax: id of last walker
@@ -88,7 +88,7 @@ def produceLLHDScanScript ( pid1, pid2, force_rewrite ):
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/combinations/llhdscanner.py --pid1 %d --pid2 %d\n" % ( codedir, pid1, pid2 ) ) 
+            f.write ("%s/combinations/llhdscanner.py --draw --pid1 %d --pid2 %d\n" % ( codedir, pid1, pid2 ) )
             f.close()
         os.chmod ( fname, 0o775 )
 
@@ -103,7 +103,7 @@ def produceScanScript ( pid, force_rewrite, pid2 ):
             argpid2 = " --pid2 %d" % pid2
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/combinations/scanner.py -d -c -P -p %d %s\n" % ( codedir,pid,argpid2) ) 
+            f.write ("%s/combinations/scanner.py -d -c -P -p %d %s\n" % ( codedir,pid,argpid2) )
             f.close()
         os.chmod ( fname, 0o775 )
 
@@ -151,9 +151,9 @@ def fetchUnfrozenSSMsFromDict():
             ret.append ( ssmpids )
         return ret
     return None
-            
+
 def runLLHDScanner( pid, dry_run, time, rewrite ):
-    """ run the llhd scanner for pid, on the current hiscore 
+    """ run the llhd scanner for pid, on the current hiscore
     :param pid: pid of particle on x axis. if zero, run all unfrozen pids of hiscore
     :param dry_run: do not execute, just say what you do
     :param rewrite: force rewrite of scan script
@@ -182,7 +182,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite ):
     with  open ( "run_llhd_scanner_template.sh", "rt" ) as f:
         lines=f.readlines()
         f.close()
-    script = "_L%s.sh" % pid 
+    script = "_L%s.sh" % pid
     with open ( script, "wt" ) as f:
         for line in lines:
             f.write ( line.replace("@@PID@@",str(pid) ) )
@@ -200,8 +200,8 @@ def runScanner( pid, dry_run, time, rewrite, pid2 ):
     :param pid: if 0, run on unfrozen particles in hiscore.
     :param dry_run: do not execute, just say what you do
     :param rewrite: force rewrite of scan script
-    :param pid2: if >0, scan for ss multipliers (pid,pid2), 
-                 if 0, scan all ss multipliers, if < 0, scan masses, 
+    :param pid2: if >0, scan for ss multipliers (pid,pid2),
+                 if 0, scan all ss multipliers, if < 0, scan masses,
                  not ssm multipliers.
     """
     if pid == 0:
@@ -251,7 +251,7 @@ def runScanner( pid, dry_run, time, rewrite, pid2 ):
     print ( "[runScanner] >>", a )
 
 def runUpdater( dry_run, time ):
-    """ thats the hiscore updater 
+    """ thats the hiscore updater
     :param time: time, given in minutes(?)
     """
     # cmd = [ "srun", "--qos", qos, "--mem", "100G", "./run_hiscore_updater.sh" ]
@@ -266,7 +266,7 @@ def runUpdater( dry_run, time ):
     if 8 < time <= 48:
         qos = "c_medium"
         cmd += [ "--qos", qos ]
-    cmd += [ "--pty", "bash", "./run_hiscore_updater.sh" ] 
+    cmd += [ "--pty", "bash", "./run_hiscore_updater.sh" ]
     print ( "updater: " + " ".join ( cmd ) )
     if dry_run:
         return
@@ -280,7 +280,7 @@ def runRegressor( dry_run ):
     subprocess.run ( cmd )
 
 def bake ( recipe, analyses, mass, topo, dry_run, nproc ):
-    """ bake with the given recipe 
+    """ bake with the given recipe
     :param recipe: eg '@n 10000 @a', will turn into '-n 10000 -a'
     :param analyses: eg "cms_sus_16_033,atlas_susy_2016_07"
     :param topo: eg T3GQ
@@ -346,7 +346,7 @@ def logCall ():
     f=open("slurm.log","at")
     f.write ("[slurm.py] %s\n" % " ".join ( sys.argv ) )
     f.close()
-    
+
 
 def main():
     import argparse
@@ -359,20 +359,20 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-U','--updater', help='run the hiscore updater',
                              action="store_true" )
-    argparser.add_argument ( '-S', '--scan', nargs="?", 
-                    help='run the Z scanner on pid [SCAN], -1 means dont run, 0 means run on all unfrozen particles in hiscore.', 
+    argparser.add_argument ( '-S', '--scan', nargs="?",
+                    help='run the Z scanner on pid [SCAN], -1 means dont run, 0 means run on all unfrozen particles in hiscore.',
                     type=int, default=-1 )
-    argparser.add_argument ( '-b', '--bake', nargs="?", 
-                    help='bake EM maps, with the given arguments, use "default" if unsure ["@n 10000 @a"]', 
+    argparser.add_argument ( '-b', '--bake', nargs="?",
+                    help='bake EM maps, with the given arguments, use "default" if unsure ["@n 10000 @a"]',
                     type=str, default="" )
-    argparser.add_argument ( '-m', '--mass', nargs="?", 
-                    help='bake EM maps, mass specification, for baking only [(50,4500,200),(50,4500,200),(0.)]', 
+    argparser.add_argument ( '-m', '--mass', nargs="?",
+                    help='bake EM maps, mass specification, for baking only [(50,4500,200),(50,4500,200),(0.)]',
                     type=str, default="default" )
-    argparser.add_argument ( '--pid2', nargs="?", 
-                    help='run the scanner for ss multipliers (pid,pid2), -1 means ignore and run for mass scans instead. 0 means scan over all unfrozen ssms of hiscore.', 
+    argparser.add_argument ( '--pid2', nargs="?",
+                    help='run the scanner for ss multipliers (pid,pid2), -1 means ignore and run for mass scans instead. 0 means scan over all unfrozen ssms of hiscore.',
                     type=int, default=-1 )
-    argparser.add_argument ( '-L', '--llhdscan', nargs="?", 
-                    help='run the llhd scanner on pid/1000022, -1 means dont run. 0 means run on all unfrozen pids of hiscore.', 
+    argparser.add_argument ( '-L', '--llhdscan', nargs="?",
+                    help='run the llhd scanner on pid/1000022, -1 means dont run. 0 means run on all unfrozen pids of hiscore.',
                     type=int, default=-1 )
     argparser.add_argument ( '--clean', help='clean up files from old runs',
                              action="store_true" )
@@ -394,7 +394,7 @@ def main():
                         type=int, default=0 )
     argparser.add_argument ( '-t', '--time', nargs='?', help='time in hours [48]',
                         type=int, default=48 )
-    argparser.add_argument ( '-p', '--nprocesses', nargs='?', 
+    argparser.add_argument ( '-p', '--nprocesses', nargs='?',
             help='number of processes to split task up to, 0 means one per worker [0]',
             type=int, default=0 )
     argparser.add_argument ( '-f', '--cont', help='continue with saved states [""]',
@@ -431,8 +431,8 @@ def main():
         if args.mass == "default":
             # args.mass = "[(300,1099,25),'half',(200,999,25)]"
             args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
-        bake ( args.bake, args.analyses, args.mass, args.topo, args.dry_run, 
-               args.nprocesses ) 
+        bake ( args.bake, args.analyses, args.mass, args.topo, args.dry_run,
+               args.nprocesses )
     if args.clean:
         clean_dirs( clean_all = False )
         return
@@ -457,12 +457,12 @@ def main():
     cheatcode = args.cheatcode
     if nmax == 0:
         nmax = nmin + 1
-    nworkers = args.nmax - args.nmin # + 1 
+    nworkers = args.nmax - args.nmin # + 1
     nprocesses = min ( args.nprocesses, nworkers )
     if nprocesses == 0:
         nprocesses = nworkers
 
-    restartctr = 0 
+    restartctr = 0
     while True:
         if nprocesses == 1:
             runOneJob ( 0, nmin, nmax, cont, args.dbpath, lines, args.dry_run,
@@ -480,7 +480,7 @@ def main():
                 imin = nmin + i*nwalkers
                 imax = imin + nwalkers
                 #print ( "process", imin, imax )
-                p = multiprocessing.Process ( target = runOneJob, 
+                p = multiprocessing.Process ( target = runOneJob,
                         args = ( i, imin, imax, cont, args.dbpath, lines, args.dry_run,
                                  args.keep, args.time, cheatcode ) )
                 jobs.append ( p )
