@@ -1,5 +1,5 @@
--) understand the two stop enigma
--) add "teleport to hiscore" step
+-) understand the two stop enigma, more debugging tools
+-) resolve muhat, the prior needs to take it into account!
 -) get the distributions of K and Z by sampling the background
 -) add smart sampling from background for UL results
 -) automate the plotting of the scans further, i.e automatically plot llhd plots
@@ -12,6 +12,7 @@
 -) introduce a headstart mode, by scanning for the largest excesses and starting
 	 with appropriate particles
 
+.) add "teleport to hiscore" step
 .) parallelize llhdscanner
 .) plot 68% credibility region for combination
 .) plot horizontal ruler

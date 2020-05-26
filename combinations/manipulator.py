@@ -770,6 +770,26 @@ class Manipulator:
             ret[pid]=self.M.masses[pid]
         return ret
 
+    def printXSecs ( self ):
+        """ print the cross sections in a human-readable way """
+        self.assertXSecs()
+        xsecs={ 8:{}, 13:{} }
+        for xsec in self.M.stored_xsecs[0]:
+            if xsec.value < .001 * fb:
+                continue
+            sqrts = xsec.info.sqrts.asNumber(TeV)
+            if not xsec.pid in xsecs[sqrts]:
+                xsecs[sqrts][xsec.pid]=xsec
+            else:
+                if xsecs[sqrts][xsec.pid].info.order < xsec.info.order:
+                    xsecs[sqrts][xsec.pid]=xsec
+
+        for sqrts in xsecs.keys():
+            print ( "%d TeV:" % sqrts )
+            for pid,xsec in xsecs[sqrts].items():
+                print ( " %22s: %s" % \
+                        ( pid, xsec.value ) )
+
     def simplifyDecays ( self ):
         """ return the decays only of the unfrozen particles,
             only != 0 """

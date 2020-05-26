@@ -562,6 +562,7 @@ def main ( args ):
         from smodels.tools.physicsUnits import fb, pb, GeV, TeV
         from smodels.theory.crossSection import LO, NLO, NLL
         ma = Manipulator ( protomodels[0] )
+        ma.M.createNewSLHAFileName()
         print ( "[hiscore] starting interactive session. Variables: %sprotomodels%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
         print ( "[hiscore]                                 Modules: %smanipulator, hiscore, combiner, trimmer%s" % \
