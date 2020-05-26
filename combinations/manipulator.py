@@ -548,8 +548,8 @@ class Manipulator:
         if abs ( self.M.muhat - 1.0 ) < 1e-5:
             return
         self.M.log ( "resolve a muhat of %.2f" % self.M.muhat )
-        self.M.rmax = self.M.rmax * v
-        self.M.r2 = self.M.r2 * v
+        self.M.rmax = self.M.rmax * self.M.muhat
+        self.M.r2 = self.M.r2 * self.M.muhat
         for k,v in self.M.ssmultipliers.items():
             self.M.ssmultipliers[k] = v * self.M.muhat
         self.M.muhat = 1.
