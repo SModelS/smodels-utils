@@ -403,9 +403,18 @@ def main():
                         type=str, default="cms_sus_16_033,atlas_susy_2016_07" )
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking ["T3GQ"]',
                         type=str, default="T3GQ" )
-    argparser.add_argument ( '-D', '--dbpath', help='path to database ["/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database"]',
-                        type=str, default="/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database" )
+    argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
+                        type=str, default="none" )
     args=argparser.parse_args()
+    if args.nmax > 0 and args.dbpath == "none":
+        print ( "dbpath not specified. not starting. note, you can use 'real' or 'fake1' as dbpath" )
+        return
+    if args.dbpath == "real":
+        args.dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database"
+    if args.dbpath == "default":
+        args.dbpath = rundir + "/default.pcl"
+    if "fake" in args.dbpath and not args.dbpath.endswith(".pcl"):
+        args.dbpath = args.dbpath + ".pcl"
     logCall ()
 
     if args.allscans:
