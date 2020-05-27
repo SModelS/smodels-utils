@@ -227,7 +227,8 @@ def runScanner( pid, dry_run, time, rewrite, pid2 ):
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
     cmd += [ "--mem", "40G" ]
-    cmd += [ "--ntasks-per-node", "5" ]
+    cmd += [ "-c", "30" ]
+    # cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
     with  open ( "run_scanner_template.sh", "rt" ) as f:

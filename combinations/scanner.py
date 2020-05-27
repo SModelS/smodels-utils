@@ -6,6 +6,7 @@ import numpy, sys, os, copy, time, subprocess, glob
 from csetup import setup
 from manipulator import Manipulator
 from helpers import rthresholds
+from smodels.tools.runtime import nCPUs
 
 def getHiscore( force_copy = False, rundir = None ):
     """ get the hiscore from the picklefile
@@ -413,8 +414,8 @@ if __name__ == "__main__":
             help='pid 2. if -1, then scan masses, If not, then scan signal strength multipliers. If zero, then scan all ssms [-1]',
             type=int, default=-1 )
     argparser.add_argument ( '-n', '--nproc',
-            help='number of processes [10]',
-            type=int, default=10 )
+            help='number of processes, if zero then determine automatically [0]',
+            type=int, default=0 )
     argparser.add_argument ( '-f', '--factor',
             help='multiplication factor [1.008]',
             type=float, default=1.008 )
@@ -448,6 +449,9 @@ if __name__ == "__main__":
     args = argparser.parse_args()
     drawtimestamp = not args.notimestamp
     rundir = setup( args.rundir )
+    nproc = args.nproc
+    if nproc < 1:
+        nproc = nCPUs() + nproc
     allpids = findPids( rundir )
     pids = args.pid
     if pids == 0:
@@ -455,9 +459,9 @@ if __name__ == "__main__":
     if args.produce:
         hi = getHiscore( args.force_copy, rundir )
         if args.pid2 > 0:
-            produceSSMs( hi, args.pid, args.pid2, args.nevents, args.dry_run, args.nproc, args.factor )
+            produceSSMs( hi, args.pid, args.pid2, args.nevents, args.dry_run, nproc, args.factor )
         else:
-            produce( hi, pids, args.nevents, args.dry_run, args.nproc, args.factor )
+            produce( hi, pids, args.nevents, args.dry_run, nproc, args.factor )
     if args.draw:
         if args.pid != 0:
             draw( pids, args.interactive, args.pid2, args.copy, drawtimestamp, rundir )
