@@ -7,12 +7,11 @@ from csetup import setup
 from manipulator import Manipulator
 from helpers import rthresholds
 
-def getHiscore( force_copy = False ):
+def getHiscore( force_copy = False, rundir = None ):
     """ get the hiscore from the picklefile
     :param force_copy: if True, force a cp command on the pickle file
     """
     import hiscore
-    rundir = setup()
     # spids = str(pids).replace("[","").replace("]","").replace(" ","").replace(",","").replace("0","")
     picklefile =rundir + "hiscore2.pcl" # % spids
     backupfile = rundir+"hiscore.pcl"
@@ -63,8 +62,8 @@ def predProcess ( args ):
         ts = time.strftime("%H:%M:%S" )
         print ( "[scanner:%d-%s] start with %d/%d, m=%.1f (%d events)" % \
                 ( i, ts, ctr, len(mrange), m, nevents ) )
-        model.predict ( nevents = nevents )
-        ret[m]=(model.Z,model.rmax)
+        model.predict ( nevents = nevents, check_thresholds=False )
+        ret[m]=(model.Z,model.rmax,model.K)
     return ret
 
 def printCombo ( combo, comment="" ):
@@ -275,17 +274,16 @@ def findPids ( rundir ):
     return ret
 
 def draw( pid= 1000022, interactive=False, pid2=0, copy=False, 
-          drawtimestamp = True ):
+          drawtimestamp = True, rundir = None ):
     """ draw plots
     :param copy: copy final plots to ../../smodels.github.io/protomodels/latest
     :param drawtimestamp: if True, put a timestamp on it
     """
-    rundir = setup()
     if pid2 == 0: ## means all
         pidpairs = findPidPairs( rundir )
         for pids in pidpairs:
             try:
-                draw ( pids[0], interactive, pids[1], copy, drawtimestamp )
+                draw ( pids[0], interactive, pids[1], copy, drawtimestamp, rundir )
             except Exception as e:
                 print ( "[scanner] %s" % e )
         return
@@ -299,8 +297,8 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
     from matplotlib import pyplot as plt
     import helpers
     import pickle
-    if False:
-        rundir = ""
+    #if False:
+    #    rundir = ""
     picklefile = "%sscanM%s.pcl" % (rundir, pid )
     if isSSMPlot():
         picklefile = "%sssm%s%d.pcl" % ( rundir, pid, pid2 )
@@ -311,7 +309,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
         timestamp = pickle.load ( f )
     x = list(Zs.keys())
     x.sort()
-    y, yr = [], []
+    y, yr, ydashed = [], [], []
     rs = []
     rsarea = []
     for i in x:
@@ -323,6 +321,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
                 rsarea.append ( 0. )
             rs.append ( y_[1] )
             y_ = y_[0]
+            ydashed.append ( Zs[i][0] )
         y2_ = y_
         if y2_ < 0.:
             y2_ = float("nan")
@@ -333,6 +332,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
         pname = helpers.toLatex ( pid, addDollars=True, addSign=True )+","+\
                 helpers.toLatex ( pid2, addDollars=True, addSign=True )
     fig,ax1 = plt.subplots()
+    # plt.plot ( x, ydashed, linestyle="dotted", c="tab:blue", zorder=0 )
     plt.plot ( x, yr, label="Z(%s), %d events" % ( pname, nevents ), c="tab:blue", zorder=0 )
     ax1.tick_params ( axis="y", labelcolor="tab:blue", labelleft=True )
     ax1.set_ylabel ( "Z", c="tab:blue" )
@@ -340,6 +340,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
     maxyr = numpy.nanmax(yr)
     ax1.set_ylim ( bottom = 2., top=maxyr*1.03 )
     rsarea[0]=0.
+    rsarea[-1]=0.
     if len(rs) == len(x):
         ax2 = ax1.twinx()
         ax1.plot ([], [], label="$r_\mathrm{max}$", c="tab:red", zorder=1 )
@@ -386,7 +387,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
 
     if interactive:
         import IPython
-        IPython.embed()
+        IPython.embed( using=False )
 
     if stdvar < 1e-10:
         print ( "[scanner] standard deviation is a %.2f. Not plotting." % stdvar )
@@ -420,6 +421,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-e', '--nevents',
             help='number of events [100000]',
             type=int, default=100000 )
+    argparser.add_argument ( '-R', '--rundir',
+            help='override the default rundir [None]',
+            type=str, default=None )
     argparser.add_argument ( '-P', '--produce',
             help='produce the pickle file',
             action="store_true" )
@@ -443,20 +447,20 @@ if __name__ == "__main__":
             action="store_true" )
     args = argparser.parse_args()
     drawtimestamp = not args.notimestamp
-    rundir = setup()
+    rundir = setup( args.rundir )
     allpids = findPids( rundir )
     pids = args.pid
     if pids == 0:
         pids = allpids
     if args.produce:
-        hi = getHiscore( args.force_copy )
+        hi = getHiscore( args.force_copy, rundir )
         if args.pid2 > 0:
             produceSSMs( hi, args.pid, args.pid2, args.nevents, args.dry_run, args.nproc, args.factor )
         else:
             produce( hi, pids, args.nevents, args.dry_run, args.nproc, args.factor )
     if args.draw:
         if args.pid != 0:
-            draw( pids, args.interactive, args.pid2, args.copy, drawtimestamp )
+            draw( pids, args.interactive, args.pid2, args.copy, drawtimestamp, rundir )
         else:
             for pid in allpids:
                 try:
