@@ -176,7 +176,8 @@ def runLLHDScanner( pid, dry_run, time, rewrite ):
     # cmd = [ "srun" ]
     cmd += [ "--qos", qos ]
     cmd += [ "--mem", "40G" ]
-    cmd += [ "--ntasks-per-node", "5" ]
+    cmd += [ "-c", "30" ]
+    #cmd += [ "--ntasks-per-node", "5" ]
     # cmd += [ "--pty", "bash" ]
     cmd += [ "--time", "%s" % ( time*60-1 ) ]
     with  open ( "run_llhd_scanner_template.sh", "rt" ) as f:
