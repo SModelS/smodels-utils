@@ -337,6 +337,7 @@ class Manipulator:
         ## the pairs to check. I put 1000023, 1000025 twice,
         ## so as to make it possible that chi40 eventually swaps with chi20
         pairs = [ ( 1000006, 2000006 ), ( 1000005, 2000005 ),
+        #          ( 1000001, 1000003 ),
                   ( 1000023, 1000025 ), ( 1000024, 1000037 ),
                   ( 1000025, 1000035 ), ( 1000023, 1000025 ) ]
         for pids in pairs:
@@ -778,12 +779,12 @@ class Manipulator:
             ret[pid]=self.M.masses[pid]
         return ret
 
-    def printXSecs ( self ):
+    def printXSecs ( self, fbmin=.001*fb ):
         """ print the cross sections in a human-readable way """
         self.assertXSecs()
         xsecs={ 8:{}, 13:{} }
         for xsec in self.M.stored_xsecs[0]:
-            if xsec.value < .001 * fb:
+            if xsec.value < fbmin:
                 continue
             sqrts = xsec.info.sqrts.asNumber(TeV)
             if not xsec.pid in xsecs[sqrts]:
