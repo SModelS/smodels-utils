@@ -8,20 +8,28 @@ import copy, os, sys
 from scipy import stats
 from protomodel import ProtoModel
 from manipulator import Manipulator
+from smodels.tools.physicsUnits import fb, GeV
+from smodels.theory.model import Model
+from smodels.share.models.SMparticles import SMList
+from smodels.particlesLoader import BSMList
+from smodels.theory.theoryPrediction import theoryPredictionsFor
+from smodels.theory import decomposer
 
 class ExpResModifier:
     def __init__ ( self, modificationType = "expected" ):
         self.modificationType = modificationType
+        self.protomodel = None
 
     def interact ( self, listOfExpRes ):
         import IPython
-        IPython.embed()
+        IPython.embed( using=False )
 
-    def fixUpperLimit ( self, dataset ):
+    def bgUpperLimit ( self, dataset ):
+        """ fix the upper limits, use expected (if exists) as observed """
         for i,txname in enumerate(dataset.txnameList):
             if hasattr ( txname, "txnameDataExp" ) and txname.txnameDataExp != None:
                 print ( "[expResModifier] fixing UL result %s" % dataset.globalInfo.id )
-                txnd = copy.deepcopy ( txname.txnameDataExp ) 
+                txnd = copy.deepcopy ( txname.txnameDataExp )
                 dataset.txnameList[i].txnameData = txnd
         return dataset
 
@@ -50,9 +58,10 @@ class ExpResModifier:
         with open ( filename, "rt" ) as f:
             m = eval ( f.read() )
         ma.initFromDict ( m )
-        ma.M.computeXSecs(nevents=100000 )
+        ma.M.computeXSecs(nevents=10000 )
         ma.printXSecs()
-        return ret
+        self.protomodel = ma.M
+        return self.protomodel
 
     def modifyDatabase ( self, db, outfile="", suffix="fake1", pmodel="" ):
         """ modify the database, possibly write out to a pickle file
@@ -63,8 +72,9 @@ class ExpResModifier:
         :returns: the database
         """
         listOfExpRes = db.getExpResults()
-        protomodel = self.produceProtoModel ( pmodel )
-        updatedListOfExpRes = self.fakeABackground ( listOfExpRes )
+        self.produceProtoModel ( pmodel )
+        updatedListOfExpRes = self.fakeBackgrounds ( listOfExpRes )
+        updatedListOfExpRes = self.addSignals ( updatedListOfExpRes )
         db.expResultList = updatedListOfExpRes
         newver = db.databaseVersion + suffix
         db.txt_meta.databaseVersion = newver
@@ -75,7 +85,9 @@ class ExpResModifier:
             db.createBinaryFile( outfile )
         return db
 
-    def fixEfficiencyMap ( self, dataset ):
+    def sampleEfficiencyMap ( self, dataset ):
+        """ for the given dataset,
+        sample from background and put the value as observed """
         orig = dataset.dataInfo.observedN
         exp = dataset.dataInfo.expectedBG
         err = dataset.dataInfo.bgError
@@ -83,40 +95,92 @@ class ExpResModifier:
         if lmbda < 0.:
             lmbda = 0.
         obs = stats.poisson.rvs ( lmbda )
-        print ( "[expResModifier] effmap replacing nobs=%.2f (bg=%.2f) by nobs=%.2f for %s" % \
+        self.pprint ( "effmap replacing nobs=%.2f (bg=%.2f) by nobs=%.2f for %s" % \
                 ( orig, exp, obs, dataset.globalInfo.id ) )
         dataset.dataInfo.observedN = obs
         dataset.dataInfo.origN = orig
         return dataset
 
-    def fakeASignal ( self, listOfExpRes ):
-        """ thats the method that samples the backgrounds """
+    def addSignalForEfficiencyMap ( self, dataset, tpred, lumi ):
+        """ add a signal to this efficiency map. background sampling is
+            already taken care of """
+        self.pprint ( " `- add EM matching tpred %s/%s: %s" % \
+                ( tpred.analysisId(), tpred.dataId(), tpred.xsection.value ) )
+        orig = dataset.dataInfo.observedN
+        sigN = float ( tpred.xsection.value * lumi )
+        print ( "[expResModifier] effmap adding sigN=%.2f to %.2f" % \
+                ( sigN, orig ) )
+        dataset.dataInfo.observedN = orig + sigN
+        return dataset
+
+    def addSignalForULMap ( self, dataset, tpred, lumi ):
+        """ add a signal to this UL result. background sampling is
+            already taken care of """
+        self.pprint ( " `- add UL matching tpred %s/%s: %s" % \
+                ( tpred.analysisId(), tpred.dataId(), tpred.xsection.value ) )
+        sigmaN = tpred.xsection.value.asNumber(fb)
+        for i,txname in enumerate(dataset.txnameList):
+            txnd = txname.txnameData
+            for yi,y in enumerate(txnd.y_values):
+                txnd.y_values[yi]+=sigmaN
+            dataset.txnameList[i].txnameData = txnd
+        return dataset
+
+    def produceTopoList ( self ):
+        """ create smstopolist """
+        model = Model ( BSMList, SMList )
+        model.updateParticles ( inputFile=self.protomodel.currentSLHA )
+        mingap=10*GeV
+        sigmacut = 0.02*fb
+        self.topos = decomposer.decompose ( model, sigmacut, minmassgap=mingap )
+
+    def addSignals ( self, listOfExpRes ):
+        """ thats the method that adds a typical signal """
+        if self.protomodel == None:
+            return listOfExpRes
+        self.pprint ( "now adding the signals" )
         ret = []
+        self.produceTopoList()
         for expRes in listOfExpRes:
+            tpreds = theoryPredictionsFor ( expRes, self.topos )
+            if tpreds == None:
+                continue
+            lumi = expRes.globalInfo.lumi
+            #self.pprint ( "adding a signal for %s (lumi %s)" % \
+            #              ( expRes.id(), lumi ) )
             for i,dataset in enumerate(expRes.datasets):
                 dt = dataset.dataInfo.dataType
+                dsname = dataset.dataInfo.dataId
                 if dt == "upperLimit":
-                    expRes.datasets[i] = self.fixUpperLimit ( dataset )
+                    for tpred in tpreds:
+                        if tpred.dataId() == None:
+                            expRes.datasets[i] = self.addSignalForULMap ( dataset, tpred, lumi )
+                    ## expRes.datasets[i] = self.fixUpperLimit ( dataset )
                 elif dt == "efficiencyMap":
-                    expRes.datasets[i] = self.fixEfficiencyMap ( dataset )
+                    for tpred in tpreds:
+                        if dsname == tpred.dataId():
+                            expRes.datasets[i] = self.addSignalForEfficiencyMap ( dataset, tpred, lumi )
                 else:
                     print ( "[expResModifier] dataset type %s unknown" % dt )
             ret.append ( expRes )
+        self.pprint ( "done adding signals" )
         return ret
 
-    def fakeABackground ( self, listOfExpRes ):
+    def fakeBackgrounds ( self, listOfExpRes ):
         """ thats the method that samples the backgrounds """
         ret = []
+        self.pprint ( "now fake backgrounds" )
         for expRes in listOfExpRes:
             for i,dataset in enumerate(expRes.datasets):
                 dt = dataset.dataInfo.dataType
                 if dt == "upperLimit":
-                    expRes.datasets[i] = self.fixUpperLimit ( dataset )
+                    expRes.datasets[i] = self.bgUpperLimit ( dataset )
                 elif dt == "efficiencyMap":
-                    expRes.datasets[i] = self.fixEfficiencyMap ( dataset )
+                    expRes.datasets[i] = self.sampleEfficiencyMap ( dataset )
                 else:
                     print ( "[expResModifier] dataset type %s unknown" % dt )
             ret.append ( expRes )
+        self.pprint ( "done faking the backgrounds" )
         return ret
 
 def check ( picklefile ):
@@ -159,10 +223,10 @@ if __name__ == "__main__":
     from smodels.experiment.databaseObj import Database
     db = Database ( args.database )
     modifier = ExpResModifier()
-    modifier.modifyDatabase ( db, args.outfile, args.suffix, args.pmodel )
+    er = modifier.modifyDatabase ( db, args.outfile, args.suffix, args.pmodel )
 
     if args.check:
         check ( args.outfile )
 
     if args.interact:
-        modifier.interact ( listOfExpRes )
+        modifier.interact ( er )
