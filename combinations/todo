@@ -1,6 +1,7 @@
 -) get the distributions of K and Z by sampling the background
 -) expResModifier allow it also to inject signals
--) play with flavor changing changes
+-) play with flavor changers
+
 -) CMS-SUS-19-006, why didnt we add eff map?
 -) add smart sampling from background for UL results
 
