@@ -315,26 +315,28 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
     rsarea = []
     for i in x:
         y_ = Zs[i]
+        y0=y_
         if type(y_)==tuple:
+            y0 = y_[0]
             if y_[1] > rthresholds[0]:
                 rsarea.append ( y_[1] )
+                y0 = -1.
             else:
                 rsarea.append ( 0. )
             rs.append ( y_[1] )
-            y_ = y_[0]
             ydashed.append ( Zs[i][0] )
-        y2_ = y_
+        y2_ = y0
         if y2_ < 0.:
             y2_ = float("nan")
-        y.append ( y_ )
+        y.append ( y0 )
         yr.append ( y2_ )
     pname = helpers.toLatex ( pid, addDollars=True )
     if isSSMPlot():
         pname = helpers.toLatex ( pid, addDollars=True, addSign=True )+","+\
                 helpers.toLatex ( pid2, addDollars=True, addSign=True )
     fig,ax1 = plt.subplots()
-    # plt.plot ( x, ydashed, linestyle="dotted", c="tab:blue", zorder=0 )
-    plt.plot ( x, yr, label="Z(%s), %d events" % ( pname, nevents ), c="tab:blue", zorder=0 )
+    plt.plot ( x, ydashed, linewidth=.3, c="tab:blue", zorder=0 )
+    plt.plot ( x, yr, linewidth=2., label="Z(%s), %d events" % ( pname, nevents ), c="tab:blue", zorder=0 )
     ax1.tick_params ( axis="y", labelcolor="tab:blue", labelleft=True )
     ax1.set_ylabel ( "Z", c="tab:blue" )
     ax1.set_xlabel ( "m [GeV]" )

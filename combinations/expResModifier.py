@@ -4,8 +4,10 @@
 Used to ``take out potential signals'' i.e. put all observations to values
 expected from background, by sampling the background model. """
 
-import copy
+import copy, os, sys
 from scipy import stats
+from protomodel import ProtoModel
+from manipulator import Manipulator
 
 class ExpResModifier:
     def __init__ ( self, modificationType = "expected" ):
@@ -23,13 +25,46 @@ class ExpResModifier:
                 dataset.txnameList[i].txnameData = txnd
         return dataset
 
-    def modifyDatabase ( self, db, outfile="", suffix="fake1" ):
-        """ modify the database 
+    def pprint ( self, *args ):
+        """ logging """
+        print ( "[expResModifier] %s" % ( " ".join(map(str,args))) )
+
+    def produceProtoModel ( self, filename ):
+        """ try to produce a protomodel from pmodel
+        :param filename: filename of pmodel dictionary
+        :returns: none if not succesful, else protomodel object
+        """
+        if filename == "":
+            return None
+        if not os.path.exists ( filename ):
+            self.pprint ( "When trying to construct protomodel, %s does not exist" % filename )
+            return None
+        walkerid = 0
+        dbpath = "../../smodels-database/"
+        expected = False
+        select = "all"
+        keep_meta = True
+        M = ProtoModel ( walkerid, dbpath, expected, select, keep_meta )
+        M.createNewSLHAFileName ( prefix="erm" )
+        ma = Manipulator ( M )
+        with open ( filename, "rt" ) as f:
+            m = eval ( f.read() )
+        ma.initFromDict ( m )
+        ma.M.computeXSecs(nevents=100000 )
+        ma.printXSecs()
+        return ret
+
+    def modifyDatabase ( self, db, outfile="", suffix="fake1", pmodel="" ):
+        """ modify the database, possibly write out to a pickle file
         :param outfile: if not empty, write the database into file
         :param suffix: suffix to append to database version
+        :param pmodel: if not empty, then this is the file name of the signal
+                       model. in this case fake a signal
+        :returns: the database
         """
         listOfExpRes = db.getExpResults()
-        updatedListOfExpRes = self.modify ( listOfExpRes )
+        protomodel = self.produceProtoModel ( pmodel )
+        updatedListOfExpRes = self.fakeABackground ( listOfExpRes )
         db.expResultList = updatedListOfExpRes
         newver = db.databaseVersion + suffix
         db.txt_meta.databaseVersion = newver
@@ -48,13 +83,14 @@ class ExpResModifier:
         if lmbda < 0.:
             lmbda = 0.
         obs = stats.poisson.rvs ( lmbda )
-        print ( "[expResModifier] effmap replacing nobs=%.2f by nobs=%.2f for %s" % \
-                ( orig, obs, dataset.globalInfo.id ) )
+        print ( "[expResModifier] effmap replacing nobs=%.2f (bg=%.2f) by nobs=%.2f for %s" % \
+                ( orig, exp, obs, dataset.globalInfo.id ) )
         dataset.dataInfo.observedN = obs
         dataset.dataInfo.origN = orig
         return dataset
 
-    def modify ( self, listOfExpRes ):
+    def fakeASignal ( self, listOfExpRes ):
+        """ thats the method that samples the backgrounds """
         ret = []
         for expRes in listOfExpRes:
             for i,dataset in enumerate(expRes.datasets):
@@ -65,7 +101,21 @@ class ExpResModifier:
                     expRes.datasets[i] = self.fixEfficiencyMap ( dataset )
                 else:
                     print ( "[expResModifier] dataset type %s unknown" % dt )
-                
+            ret.append ( expRes )
+        return ret
+
+    def fakeABackground ( self, listOfExpRes ):
+        """ thats the method that samples the backgrounds """
+        ret = []
+        for expRes in listOfExpRes:
+            for i,dataset in enumerate(expRes.datasets):
+                dt = dataset.dataInfo.dataType
+                if dt == "upperLimit":
+                    expRes.datasets[i] = self.fixUpperLimit ( dataset )
+                elif dt == "efficiencyMap":
+                    expRes.datasets[i] = self.fixEfficiencyMap ( dataset )
+                else:
+                    print ( "[expResModifier] dataset type %s unknown" % dt )
             ret.append ( expRes )
         return ret
 
@@ -96,6 +146,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-s', '--suffix',
             help='suffix for database version ["fake1"]',
             type=str, default="fake1" )
+    argparser.add_argument ( '-P', '--pmodel',
+            help='supply filename of a pmodel, in which case create a signal-infused database [""]',
+            type=str, default="" )
     argparser.add_argument ( '-v', '--verbose',
             help='print results to stdout', action='store_true' )
     argparser.add_argument ( '-i', '--interact',
@@ -106,7 +159,7 @@ if __name__ == "__main__":
     from smodels.experiment.databaseObj import Database
     db = Database ( args.database )
     modifier = ExpResModifier()
-    modifier.modifyDatabase ( db, args.outfile, args.suffix )
+    modifier.modifyDatabase ( db, args.outfile, args.suffix, args.pmodel )
 
     if args.check:
         check ( args.outfile )

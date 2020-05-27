@@ -515,7 +515,7 @@ class ProtoModel:
         :param recycle: if False, dont store xsecs, always recompute.
                         if True, recycle the xsecs if they exist, store them.
         """
-        if not os.path.exists ( self.currentSLHA ):
+        if not hasattr ( self, "currentSLHA" ) or not os.path.exists ( self.currentSLHA ):
             self.pprint ( "compute xsecs called, but no slha file exists. I assume you meant to call createSLHAFile instead." )
             self.createSLHAFile( nevents =nevents, recycle_xsecs = recycle )
             return
