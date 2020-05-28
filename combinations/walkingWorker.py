@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import sys, os
-
+from csetup import setup
+"""
 def setup( rundir = None ):
     # codedir = "/mnt/hephy/pheno/ww/git/"
     codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/"
@@ -21,6 +22,7 @@ def setup( rundir = None ):
     rundir = rundir.replace ( "~", os.environ["HOME"] )
     os.chdir ( rundir )
     return rundir
+"""
 
 def main( nmin, nmax, cont,
           dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database/",

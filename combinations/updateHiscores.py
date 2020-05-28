@@ -5,14 +5,18 @@
 
 import time, types, sys, os
 
-def setup():
+def setup( rundir = None ):
     # codedir = "/mnt/hephy/pheno/ww/git/"
     codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/"
     sys.path.insert(0,"%ssmodels/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
-    # rundir = "/mnt/hephy/pheno/ww/rundir/"
+    if rundir != None:
+        rundir = rundir.replace ( "~", os.environ["HOME"] )
+        os.chdir ( rundir )
+        return rundir
     rundir = "/scratch-cbe/users/wolfgan.waltenberger/rundir/"
+    # rundir = "/mnt/hephy/pheno/ww/rundir/"
     # rundir = "./"
     if os.path.exists ( "./rundir.conf" ):
         with open ( "./rundir.conf" ) as f:
@@ -21,7 +25,8 @@ def setup():
     os.chdir ( rundir )
     return rundir
 
-def updateHiscores():
+
+def updateHiscores( rundir=None ):
     args = types.SimpleNamespace()
     args.print = True
     args.interactive = False
@@ -31,20 +36,21 @@ def updateHiscores():
     args.nmax = 1
     args.outfile = "hiscore.pcl"
     args.infile = None
+    args.rundir = rundir
     # args.maxloss = .01
     # args.nevents = 50000
     import hiscore
     import socket
     hostname = socket.gethostname().replace(".cbe.vbc.ac.at","")
-    print ( "[updateHiscores] now update the hiscore.pcl file on %s" % hostname )
+    print ( "[updateHiscores] now update the hiscore.pcl file on %s:%s" % \
+            ( hostname, rundir ) )
     D = hiscore.main ( args )
     return D
-    #step,model = hiscore.main ( args )
-    # return Z,step,model
 
-def updateStates():
+def updateStates( rundir=None):
     args = types.SimpleNamespace()
     args.print = True
+    args.rundir = rundir
     args.detailed = False
     args.interactive = False
     args.fetch = False
@@ -82,9 +88,9 @@ def plot( Z, K, rundir ):
         args.commit = True
     plotHiscore.runPlotting ( args )
 
-def main():
+def main( rundir = None ):
     """ eternal loop that updates hiscore.pcl and states.dict """
-    rundir = setup()
+    rundir = setup( rundir )
     i = 0
     Z, Zold, step, K, Kold = 0., 0., 0, -90., -90.
     Zfile = "%s/Zold.conf" % rundir 
@@ -97,7 +103,7 @@ def main():
             Kold = float ( f.read().strip() )
     while True:
         i+=1
-        D = updateHiscores( )
+        D = updateHiscores( rundir )
         Z,step,model,K = D["Z"],D["step"],D["model"],D["K"]
         if K > Kold + .001:
         #if Z > Zold*1.0001:
@@ -117,7 +123,7 @@ def main():
             plot ( Z, K, rundir )
             Zold = Z
             Kold = K
-        updateStates()
+        updateStates( rundir )
         time.sleep(60.)
         if os.path.exists ( Kfile ): ## so we can meddle from outside
             with open ( Kfile, "rt" ) as f:
@@ -125,4 +131,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    #updateStates()

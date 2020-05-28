@@ -251,7 +251,7 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
     a = subprocess.run ( cmd )
     print ( "[runScanner] >>", a )
 
-def runUpdater( dry_run, time, rundir ):
+def runUpdaterOld( dry_run, time, rundir ):
     """ thats the hiscore updater
     :param time: time, given in minutes(?)
     """
@@ -273,18 +273,29 @@ def runUpdater( dry_run, time, rundir ):
         return
     subprocess.run ( cmd )
 
-def runUpdaterNew( dry_run, time, rundir ):
+def runUpdater( dry_run, time, rundir ):
     """ thats the hiscore updater
     :param time: time, given in minutes(?)
     """
     with open ( "%sclip/hiscore_update_template.sh" % codedir, "rt" ) as f:
         lines = f.readlines()
         f.close()
-    tf = "%s/HISCORE_UPDATER_%s.sh" % ( rundir, jmin )
+    tf = "%s/HISCORE_UPDATER.sh" % ( rundir )
     with open(tf,"wt") as f:
         for line in lines:
             f.write ( line.replace("@@RUNDIR@@", rundir ) )
     os.chmod( tf, 0o755 )
+    runner = "%s/upHi.py" % ( rundir )
+    with open ( runner, "wt" ) as f:
+        f.write ( "#!/usr/bin/env python3\n\n" )
+        f.write ( "import os, sys\n" )
+        f.write ( "sys.path.insert(0,'%s')\n" % codedir )
+        f.write ( "sys.path.insert(0,'%s/combinations')\n" % codedir )
+        f.write ( "os.chdir('%s')\n" % rundir )
+        f.write ( "import updateHiscores\n" )
+        f.write ( "updateHiscores.main ( rundir='%s' )\n" % \
+                  ( rundir ) )
+    os.chmod( runner, 0o755 ) # 1877 is 0o755
     cmd = [ "srun", "--mem", "40G" ]
     cmd += [ "--reservation", "interactive" ]
     # cmd = [ "srun", "--mem", "50G" ]
