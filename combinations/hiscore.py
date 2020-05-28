@@ -64,7 +64,9 @@ class Hiscore:
             if zeroIsMin:
                 return 0.
             return -30.
-        mk = self.hiscores[-1].K
+        mk = -10.
+        if hasattr ( self.hiscores[-1], "K" ):
+            mk = self.hiscores[-1].K
         if zeroIsMin:
             return max ( mk, 0. )
         return mk

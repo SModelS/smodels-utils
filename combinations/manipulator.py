@@ -337,7 +337,6 @@ class Manipulator:
         ## the pairs to check. I put 1000023, 1000025 twice,
         ## so as to make it possible that chi40 eventually swaps with chi20
         pairs = [ ( 1000006, 2000006 ), ( 1000005, 2000005 ),
-        #          ( 1000001, 1000003 ),
                   ( 1000023, 1000025 ), ( 1000024, 1000037 ),
                   ( 1000025, 1000035 ), ( 1000023, 1000025 ) ]
         for pids in pairs:
@@ -350,31 +349,37 @@ class Manipulator:
                 self.M.pprint ( "particle swap %d <-> %d" % ( pids[0], pids[1] ) )
                 self.swapParticles ( pids[0],pids[1] )
 
+        ## now the same with pairs that actually need checking, e.g. 
+        ## because the xsecs could be affected, or b/c charm
+        cpairs = [ ( 1000001, 1000003 ), ( 1000002, 1000004 ), ( 1000001, 1000002 ) ]
+        for pids in cpairs:
+            if not pids[1] in self.M.masses or not pids[0] in self.M.masses:
+                continue
+            if self.M.masses[pids[1]] > 5e5:
+                # we dont check for frozen particles, if they are second
+                continue
+            if self.M.masses[pids[0]] < self.M.masses[pids[1]]:
+                continue
+            self.M.pprint ( "check if we can particle swap %d <-> %d" % ( pids[0], pids[1] ) )
+            oldK, oldrmax = self.M.K, self.M.rmax
+            self.M.backup()
+            self.swapParticles ( pids[0],pids[1] )
+            self.predict()
+            if self.M.K < oldK - 1e-3: ## score deteriorated?
+                self.M.pprint ( "new K is %.2f, old was %.2f. restore!" % \
+                                ( self.M.K, oldK ) )
+                self.M.restore()
+            if self.M.rmax > rthresholds[0]: ## score deteriorated?
+                self.M.pprint ( "new rmax is %.2f, old was %.2f. restore!" % \
+                                ( self.M.rmax, oldrmax ) )
+                self.M.restore()
+
     def get ( self ):
         """ since the shallowcopy business does not work as expected,
         here is a trivial way to overwrite the original protomodel.
         use as: protomodel = manipulator.get()
         """
         return self.M
-
-    #def randomlyTamperWithTheseParticles ( self, pids, r ):
-    #    # the critic gave us feedback, the culprits are the given
-    #    #    pids. So tamper only with these. r is our usual theoryprediction/ul
-    #    #    ratio, and can help us guide how strong a change we have to make.
-    #    #
-    #    ## we can tamper with the masses, the signal strengths, or
-    #    ## the decays, so which is it gonna be?
-    #    u = uniform.random ( 0., 1. )
-    #    if u <= 0.333:
-    #        ### so we change some masses
-    #        pass
-    #    if u > 0.333 and u <= 0.666:
-    #        #### so we tamper with some ss multipliers
-    #        pass
-    #    if u > 0.666:
-    #        #### ok, its the decays
-    #        pass
-    #    return
 
     def setWalkerId ( self, Id ):
         """ set the walker id of protomodel """
