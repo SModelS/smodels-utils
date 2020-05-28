@@ -341,7 +341,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
     ax1.set_ylabel ( "Z", c="tab:blue" )
     ax1.set_xlabel ( "m [GeV]" )
     maxyr = numpy.nanmax(ydashed)
-    print ( "ydashed", ydashed )
+    # print ( "ydashed", ydashed )
     ax1.set_ylim ( bottom = 2., top=maxyr*1.03 )
     rsarea[0]=0.
     rsarea[-1]=0.
