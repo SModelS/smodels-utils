@@ -19,13 +19,10 @@ def remove( fname, keep):
     except:
         pass
 
-# codedir = "/scratch-cbe/users/wolfgan.waltenbergergit/smodels-utils/"
 codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/"
-# rundir = "/scratch-cbe/users/wolfgan.waltenbergerrundir"
-rundir = "/scratch-cbe/users/wolfgan.waltenberger/rundir/"
 
 def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
-                cheatcode ):
+                cheatcode, rundir ):
     """ prepare everything for a single job
     :params pid: process id, integer that idenfies the process
     :param jmin: id of first walker
@@ -37,12 +34,13 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     :param keep: keep temporary files, for debugging
     :param time: time in hours
     :param cheatcode: in case we wish to start with a cheat model
+    :param rundir: the run directory
     """
     if not "/" in dbpath: ## then assume its meant to be in rundir
         dbpath = rundir + "/" + dbpath
     print ( "[runOneJob:%d] run walkers [%d,%d] " % ( pid, jmin, jmax ) )
     # runner = tempfile.mktemp(prefix="%sRUNNER" % rundir ,suffix=".py", dir="./" )
-    runner = "%sRUNNER_%s.py" % ( rundir, jmin )
+    runner = "%s/RUNNER_%s.py" % ( rundir, jmin )
     dump_trainingdata = False
     with open ( runner, "wt" ) as f:
         f.write ( "#!/usr/bin/env python3\n\n" )
@@ -51,11 +49,11 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
         f.write ( "sys.path.insert(0,'%s/combinations')\n" % codedir )
         f.write ( "os.chdir('%s')\n" % rundir )
         f.write ( "import walkingWorker\n" )
-        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s )\n" % \
-                  ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata ) )
+        f.write ( "walkingWorker.main ( %d, %d, '%s', dbpath='%s', cheatcode=%d, dump_training=%s, rundir='%s' )\n" % \
+                  ( jmin, jmax, cont, dbpath, cheatcode, dump_trainingdata, rundir ) )
     os.chmod( runner, 0o755 ) # 1877 is 0o755
     # tf = tempfile.mktemp(prefix="%sRUN_" % rundir,suffix=".sh", dir="./" )
-    tf = "%sRUN_%s.sh" % ( rundir, jmin )
+    tf = "%s/RUN_%s.sh" % ( rundir, jmin )
     with open(tf,"wt") as f:
         for line in lines:
             f.write ( line.replace("walkingWorker.py", runner.replace("./","") ) )
@@ -83,16 +81,16 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     #remove ( tf, keep )
     #remove ( runner, keep )
 
-def produceLLHDScanScript ( pid1, pid2, force_rewrite ):
+def produceLLHDScanScript ( pid1, pid2, force_rewrite, rundir ):
     fname = "%s/llhdscanner%d.sh" % ( rundir, pid1 )
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/combinations/llhdscanner.py --draw --pid1 %d --pid2 %d\n" % ( codedir, pid1, pid2 ) )
+            f.write ("%s/combinations/llhdscanner.py -R %s --draw --pid1 %d --pid2 %d\n" % ( rundir, codedir, pid1, pid2 ) )
             f.close()
         os.chmod ( fname, 0o775 )
 
-def produceScanScript ( pid, force_rewrite, pid2 ):
+def produceScanScript ( pid, force_rewrite, pid2, rundir ):
     spid2=""
     if pid2!=-1:
         spid2=str(pid2)
@@ -103,7 +101,8 @@ def produceScanScript ( pid, force_rewrite, pid2 ):
             argpid2 = " --pid2 %d" % pid2
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/combinations/scanner.py -d -c -P -p %d %s\n" % ( codedir,pid,argpid2) )
+            f.write ("%s/combinations/scanner.py -R %s -d -c -P -p %d %s\n" % \
+                     ( rundir, codedir,pid,argpid2) )
             f.close()
         os.chmod ( fname, 0o775 )
 
@@ -152,7 +151,7 @@ def fetchUnfrozenSSMsFromDict():
         return ret
     return None
 
-def runLLHDScanner( pid, dry_run, time, rewrite ):
+def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     """ run the llhd scanner for pid, on the current hiscore
     :param pid: pid of particle on x axis. if zero, run all unfrozen pids of hiscore
     :param dry_run: do not execute, just say what you do
@@ -163,7 +162,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite ):
         if pids == None:
             pids = [ 1000001, 1000003, 1000006 ]
         for i in pids:
-            runLLHDScanner ( i, dry_run, time, rewrite )
+            runLLHDScanner ( i, dry_run, time, rewrite, rundir )
         return
     qos = "c_short"
     if time > 48:
@@ -188,7 +187,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite ):
         for line in lines:
             f.write ( line.replace("@@PID@@",str(pid) ) )
         f.close()
-    produceLLHDScanScript ( pid, 1000022, rewrite )
+    produceLLHDScanScript ( pid, 1000022, rewrite, rundir )
     cmd += [ script ]
     print ( "[runLLHDScanner]", " ".join ( cmd ) )
     if dry_run:
@@ -196,7 +195,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite ):
     a = subprocess.run ( cmd )
     print ( ">>", a )
 
-def runScanner( pid, dry_run, time, rewrite, pid2 ):
+def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
     """ run the Z scanner for pid, on the current hiscore
     :param pid: if 0, run on unfrozen particles in hiscore.
     :param dry_run: do not execute, just say what you do
@@ -209,13 +208,13 @@ def runScanner( pid, dry_run, time, rewrite, pid2 ):
         if pid2 == 0:
             pidpairs = fetchUnfrozenSSMsFromDict()
             for pidpair in pidpairs:
-                runScanner ( pidpair[0], dry_run, time, rewrite, pidpair[1] )
+                runScanner ( pidpair[0], dry_run, time, rewrite, pidpair[1], rundir )
             return
         pids = fetchUnfrozenFromDict()
         if pids == None:
             pids = [ 1000001, 1000003, 1000006, 10000022 ]
         for i in pids:
-            runScanner ( i, dry_run, time, rewrite, pid2 )
+            runScanner ( i, dry_run, time, rewrite, pid2, rundir )
         return
     qos = "c_short"
     if time > 48:
@@ -245,14 +244,14 @@ def runScanner( pid, dry_run, time, rewrite, pid2 ):
         f.close()
     os.chmod( script, 0o755 ) # 1877 is 0o755
     cmd += [ script ]
-    produceScanScript ( pid, rewrite, pid2 )
+    produceScanScript ( pid, rewrite, pid2, rundir )
     print ( "[runScanner]", " ".join ( cmd ) )
     if dry_run:
         return
     a = subprocess.run ( cmd )
     print ( "[runScanner] >>", a )
 
-def runUpdater( dry_run, time ):
+def runUpdater( dry_run, time, rundir ):
     """ thats the hiscore updater
     :param time: time, given in minutes(?)
     """
@@ -274,14 +273,7 @@ def runUpdater( dry_run, time ):
         return
     subprocess.run ( cmd )
 
-def runRegressor( dry_run ):
-    cmd = [ "srun", "--mem", "120G", "./regressor.py" ]
-    print ( "regressor: " + " ".join ( cmd ) )
-    if dry_run:
-        return
-    subprocess.run ( cmd )
-
-def bake ( recipe, analyses, mass, topo, dry_run, nproc ):
+def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
     """ bake with the given recipe
     :param recipe: eg '@n 10000 @a', will turn into '-n 10000 -a'
     :param analyses: eg "cms_sus_16_033,atlas_susy_2016_07"
@@ -331,7 +323,7 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc ):
     #o = subprocess.getoutput ( cmd )
     #print ( "[slurm.py] %s %s" % ( cmd, o ) )
 
-def clean_dirs( clean_all = False ):
+def clean_dirs( rundir, clean_all = False ):
     cmd = "rm slurm*out"
     o = subprocess.getoutput ( cmd )
     cmd = "cd %s; rm -rf old*pcl .*slha H*pcl states.dict hiscore.pcl Kold.conf Zold.conf RUN* *log ../outputs/slurm-*.out" % rundir
@@ -403,6 +395,9 @@ def main():
                         type=str, default="" )
     argparser.add_argument ( '-a', '--analyses', help='analyses considered in EM baking ["cms_sus_16_033,atlas_susy_2016_07"]',
                         type=str, default="cms_sus_16_033,atlas_susy_2016_07" )
+    argparser.add_argument ( '-R', '--rundir', 
+                        help='override the default rundir [None]',
+                        type=str, default=None )
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking ["T3GQ"]',
                         type=str, default="T3GQ" )
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
@@ -411,6 +406,9 @@ def main():
     if args.nmax > 0 and args.dbpath == "none":
         print ( "dbpath not specified. not starting. note, you can use 'real' or 'fake1' as dbpath" )
         return
+    rundir = "/scratch-cbe/users/wolfgan.waltenberger/rundir/"
+    if args.rundir != None:
+        rundir = args.rundir
     if args.dbpath == "real":
         args.dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database"
     if args.dbpath == "default":
@@ -434,25 +432,23 @@ def main():
             # args.mass = "[(300,1099,25),'half',(200,999,25)]"
             args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
         bake ( args.bake, args.analyses, args.mass, args.topo, args.dry_run,
-               args.nprocesses )
+               args.nprocesses, rundir )
     if args.clean:
-        clean_dirs( clean_all = False )
+        clean_dirs( rundir, clean_all = False )
         return
     if args.clean_all:
-        clean_dirs( clean_all = True )
+        clean_dirs( rundir, clean_all = True )
         return
     if args.updater:
-        runUpdater( args.dry_run, args.time )
+        runUpdater( args.dry_run, args.time, rundir )
         return
     if args.scan != -1:
-        runScanner ( args.scan, args.dry_run, args.time, args.rewrite, args.pid2 )
+        runScanner ( args.scan, args.dry_run, args.time, args.rewrite, args.pid2, rundir )
         return
     if args.llhdscan != -1:
-        runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite )
+        runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir )
         return
-    #if args.regressor:
-    #    runRegressor ( args.dry_run )
-    #    return
+
     with open("run_walker.sh","rt") as f:
         lines=f.readlines()
     nmin, nmax, cont = args.nmin, args.nmax, args.cont
@@ -468,7 +464,7 @@ def main():
     while True:
         if nprocesses == 1:
             runOneJob ( 0, nmin, nmax, cont, args.dbpath, lines, args.dry_run,
-                        args.keep, args.time, cheatcode )
+                        args.keep, args.time, cheatcode, rundir )
         else:
             import multiprocessing
             ## nwalkers is the number of jobs per process
@@ -484,7 +480,7 @@ def main():
                 #print ( "process", imin, imax )
                 p = multiprocessing.Process ( target = runOneJob,
                         args = ( i, imin, imax, cont, args.dbpath, lines, args.dry_run,
-                                 args.keep, args.time, cheatcode ) )
+                                 args.keep, args.time, cheatcode, rundir ) )
                 jobs.append ( p )
                 p.start()
 

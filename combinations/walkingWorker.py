@@ -2,12 +2,16 @@
 
 import sys, os
 
-def setup():
+def setup( rundir = None ):
     # codedir = "/mnt/hephy/pheno/ww/git/"
     codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/"
     sys.path.insert(0,"%ssmodels/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/" % codedir )
     sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
+    if rundir != None:
+        rundir = rundir.replace ( "~", os.environ["HOME"] )
+        os.chdir ( rundir )
+        return rundir
     rundir = "/scratch-cbe/users/wolfgan.waltenberger/rundir/"
     # rundir = "/mnt/hephy/pheno/ww/rundir/"
     # rundir = "./"
@@ -18,19 +22,19 @@ def setup():
     os.chdir ( rundir )
     return rundir
 
-def main( nmin, nmax, cont, 
+def main( nmin, nmax, cont,
           dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database/",
-          cheatcode = 0,
-          dump_training = False ):
-    """ a worker node to set up to run walkers 
+          cheatcode = 0, dump_training = False, rundir=None ):
+    """ a worker node to set up to run walkers
     :param nmin: the walker id of the first walker
     :param nmax: the walker id of the last walker (?)
     :param cont: start with protomodels given in the pickle file 'cont'
     :param cheatcode: in case we wish to start from a cheat model
     :param dump_training: dump training data for the NN
+    :param rundir: overrride default rundir, if None use default
     """
     import sys, os
-    rundir = setup()
+    rundir = setup( rundir )
     pfile, states = None, None
     if cont == "default":
         import os
@@ -68,7 +72,7 @@ def main( nmin, nmax, cont,
             nstates = len(states )
             ctr = i % nstates
             print ( "[walkingWorker] fromModel %d: loading %d/%d" % ( i, ctr, nstates ) )
-            w = walker.RandomWalker.fromProtoModel ( states[ctr], 100000, "aggressive", 
+            w = walker.RandomWalker.fromProtoModel ( states[ctr], 100000, "aggressive",
                     walkerid = i, dump_training=dump_training, expected = False,
                     dbpath = dbpath )
             walkers.append ( w )
@@ -76,7 +80,7 @@ def main( nmin, nmax, cont,
             nstates = len(states )
             ctr = i % nstates
             print ( "[walkingWorker] fromDict %d: loading %d/%d" % ( i, ctr, nstates ) )
-            w = walker.RandomWalker.fromDictionary ( states[ctr], 100000, "aggressive", 
+            w = walker.RandomWalker.fromDictionary ( states[ctr], 100000, "aggressive",
                     walkerid = i, dump_training=dump_training, expected = False,
                     dbpath = dbpath )
             walkers.append ( w )
@@ -93,5 +97,8 @@ if __name__ == "__main__":
                         type=int, default=0 )
     argparser.add_argument ( '-f', '--cont', help='continue with saved states [""]',
                         type=str, default="default" )
+    argparser.add_argument ( '-R', '--rundir',
+                        help='override the default rundir [None]',
+                        type=str, default=None )
     args=argparser.parse_args()
-    main( args.nmin, args.nmax, args.cont, cheatcode = args.cheat )
+    main( args.nmin, args.nmax, args.cont, cheatcode = args.cheat, rundir = args.rundir )
