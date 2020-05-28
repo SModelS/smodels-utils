@@ -12,22 +12,6 @@ import smodels_utils.SModelSUtils
 from smodels_utils.plotting import rulerPlotter, decayPlotter
 import helpers
 
-"""
-def setup():
-    # codedir = "/mnt/hephy/pheno/ww/git/"
-    codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/"
-    sys.path.insert(0,"%ssmodels/" % codedir )
-    sys.path.insert(0,"%ssmodels-utils/" % codedir )
-    sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
-    if os.path.exists ( "./rundir.conf" ):
-        with open ( "./rundir.conf" ) as f:
-            rundir = f.read().strip()
-            rundir = rundir.replace ( "~", os.environ["HOME"] )
-            os.chdir ( rundir )
-        return rundir
-    return ""
-"""
-
 def obtain ( number, picklefile ):
     """ obtain hiscore number <number>
     :returns: model
@@ -49,6 +33,9 @@ def obtain ( number, picklefile ):
         #fcntl.flock( f, fcntl.LOCK_EX )
         hiscores = pickle.load ( f )
         #fcntl.flock( f, fcntl.LOCK_UN )
+    if len(hiscores)<number-1:
+        print ( "[plotHiscore] asked for hiscore %d, but I only have %d" % \
+                ( number, len(hiscores) ) )
     Z = hiscores[number].Z
     K = hiscores[number].K
     print ( "[plotHiscore] obtaining #%d: K=%.3f, Z=%.2f" % (number, K, Z ) )

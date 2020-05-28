@@ -443,7 +443,7 @@ class ProtoModel:
         if os.path.exists ( outputSLHA ):
             cmd = "cp %s %s" % ( outputSLHA, outputSLHA.replace(".cur",".old" ) )
             subprocess.getoutput ( cmd )
-        self.pprint ( "create %s from %s" % (outputSLHA, self.templateSLHA ) )
+        self.log ( "create %s from %s" % (outputSLHA, self.templateSLHA ) )
         with open(outputSLHA,"w") as f:
             for line in lines:
                 for m,v in self.masses.items():
@@ -522,8 +522,8 @@ class ProtoModel:
         computer = ProtoModelXSecs ( self.walkerid, nevents, self.currentSLHA,
                                      self.relevantSSMultipliers(), self.step )
         if recycle and hasattr ( self, "stored_xsecs" ):
-            self.pprint ( "found %d old xsecs, will recycle them!!" % \
-                          len(self.stored_xsecs[0]) )
+            self.log ( "found %d old xsecs, will recycle them!!" % \
+                       len(self.stored_xsecs[0]) )
             computer.addInfoToFile ( self.stored_xsecs )
             return
         if recycle:

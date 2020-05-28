@@ -75,7 +75,9 @@ class LlhdThread:
         """ run for the points given """
         oldmasses = {}
         masspoints=[]
-        for m1 in rpid1:
+        npid1s = len(rpid1)
+        for i1,m1 in enumerate(rpid1):
+            self.pprint ( "now starting with %d/%d" % ( i1, npid1s) )
             self.M.masses[self.pid1]=m1
             self.M.masses[self.pid2]=self.mpid2 ## reset LSP mass
             for k,v in oldmasses.items():
@@ -98,8 +100,8 @@ class LlhdThread:
                 for mu,llhd in llhds.items():
                     nllhds+=len(llhd)
                 # del protomodel.stored_xsecs ## make sure we compute
-                self.pprint ( "m1 %d, m2 %d, %d mu's, %d llhds." % \
-                              ( m1, m2, len(llhds), nllhds ) )
+                self.pprint ( "%d/%d: m1 %d, m2 %d, %d mu's, %d llhds." % \
+                              ( i1, npid1s, m1, m2, len(llhds), nllhds ) )
                 masspoints.append ( (m1,m2,llhds,robs) )
 
         for m1 in rpid1:
