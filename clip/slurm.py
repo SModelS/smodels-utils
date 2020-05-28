@@ -273,6 +273,35 @@ def runUpdater( dry_run, time, rundir ):
         return
     subprocess.run ( cmd )
 
+def runUpdaterNew( dry_run, time, rundir ):
+    """ thats the hiscore updater
+    :param time: time, given in minutes(?)
+    """
+    with open ( "%sclip/hiscore_update_template.sh" % codedir, "rt" ) as f:
+        lines = f.readlines()
+        f.close()
+    tf = "%s/HISCORE_UPDATER_%s.sh" % ( rundir, jmin )
+    with open(tf,"wt") as f:
+        for line in lines:
+            f.write ( line.replace("@@RUNDIR@@", rundir ) )
+    os.chmod( tf, 0o755 )
+    cmd = [ "srun", "--mem", "40G" ]
+    cmd += [ "--reservation", "interactive" ]
+    # cmd = [ "srun", "--mem", "50G" ]
+    cmd += [ "--time", "%s" % ( time*60-1 ) ]
+    qos = "c_short"
+    if time > 48:
+        qos = "c_long"
+        cmd += [ "--qos", qos ]
+    if 8 < time <= 48:
+        qos = "c_medium"
+        cmd += [ "--qos", qos ]
+    cmd += [ "--pty", "bash", tf ]
+    print ( "updater: " + " ".join ( cmd ) )
+    if dry_run:
+        return
+    subprocess.run ( cmd )
+
 def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
     """ bake with the given recipe
     :param recipe: eg '@n 10000 @a', will turn into '-n 10000 -a'
