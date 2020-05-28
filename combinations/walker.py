@@ -181,7 +181,10 @@ class RandomWalker:
             self.pprint ( "memory footprint (kb): walker %d, model %d, accelerator %d, history %d" %\
                     ( asizeof(self)/1024,asizeof(self.protomodel)/1024,asizeof(self.accelerator)/1024, asizeof(self.history)/1024 ) )
         nChanges = 0
-        mu = 1. - .7 / (self.protomodel.Z+1.) ## make it more unlikely when Z is high
+        denom = self.protomodel.Z+1.00001
+        if denom == 0.:
+            denom = 1e-5
+        mu = 1. - .7 / denom ## make it more unlikely when Z is high
         uUnfreeze = random.gauss( mu ,.5)
         if uUnfreeze > nUnfrozen/float(nTotal):
             # in every nth step unfreeze random particle

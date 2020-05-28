@@ -369,7 +369,8 @@ class Manipulator:
                 self.M.pprint ( "new K is %.2f, old was %.2f. restore!" % \
                                 ( self.M.K, oldK ) )
                 self.M.restore()
-            if self.M.rmax > rthresholds[0]: ## score deteriorated?
+            ## score deteriorated?
+            if self.M.rmax > rthresholds[0] and self.M.rmax > oldrmax+.0001:
                 self.M.pprint ( "new rmax is %.2f, old was %.2f. restore!" % \
                                 ( self.M.rmax, oldrmax ) )
                 self.M.restore()

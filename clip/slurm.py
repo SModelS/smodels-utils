@@ -185,7 +185,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     script = "_L%s.sh" % pid
     with open ( script, "wt" ) as f:
         for line in lines:
-            f.write ( line.replace("@@PID@@",str(pid) ) )
+            f.write ( line.replace("@@PID@@",str(pid) ).line.replace("@@RUNDIR@@",rundir ) )
         f.close()
     produceLLHDScanScript ( pid, 1000022, rewrite, rundir )
     cmd += [ script ]
@@ -240,7 +240,7 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
     script = "_S%s%s.sh" % ( pid, spid2 )
     with open ( script, "wt" ) as f:
         for line in lines:
-            f.write ( line.replace("@@PID@@",str(pid)).replace("xxPID2xx",spid2)  )
+            f.write ( line.replace("@@PID@@",str(pid)).replace("xxPID2xx",spid2).replace("@@RUNDIR@@",rundir)  )
         f.close()
     os.chmod( script, 0o755 ) # 1877 is 0o755
     cmd += [ script ]
@@ -438,6 +438,8 @@ def main():
     rundir = "/scratch-cbe/users/wolfgan.waltenberger/rundir/"
     if args.rundir != None:
         rundir = args.rundir
+        if not "/" in rundir:
+            rundir = "/scratch-cbe/users/wolfgan.waltenberger/" + rundir
     if args.dbpath == "real":
         args.dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database"
     if args.dbpath == "default":
