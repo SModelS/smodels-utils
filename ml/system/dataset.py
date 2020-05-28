@@ -160,18 +160,27 @@ class Data(Dataset):
 
 
 #quick hack to load datapoints from data/txName.txt file
-def getExpresData(expres, txName):
+def getExpresData(expres, txName, SR):
 
-	path = expres.path + '/data/' + txName + '.txt'
+	if SR == None:
+		path = expres.path + '/data/' + txName + '.txt'
+		key = 'upperLimits:'
+	else:
+		path = expres.path + '/' + SR + '/' + txName + '.txt'
+		key = 'efficiencyMap:'
+	keL = len(key)
 		
 	with open(path, "r") as file:
 		data = file.readlines()
 
 	for n in range(len(data)):
-		if data[n][0:11] == "upperLimits":
-			data[n] = data[n].replace("upperLimits:","")
+		if data[n][0:keL] == key:
+			data[n] = data[n].replace(key,"")
 			data = data[n:len(data)]
 			break
+
+	
+	vals = []
 
 	expresData = []
 	for line in data:
@@ -187,19 +196,27 @@ def getExpresData(expres, txName):
 		line = line.replace(' ','')
 		values = line.split('*GeV')
 		new = []
+		
+		vals.append(float(values[-1].replace("*fb", "").replace("*pb", "")))
+
+
 		for v in values[:-1]:
 			new.append(float(v))
-
 		expresData.append(new)
+
+	vals = sorted(vals)
+	m1 = np.mean(vals)
+	m2 = np.mean(vals[:int(-len(vals)*0.95)])
+	print(m1/m2)
 
 	expresData = np.array(expresData)
 	return expresData
 
 
 
-def generateDataset(expres, topo, massRange, sampleSize, dataType, device, shuffleData=True):
+def generateDataset(expres, topo, SR, massRange, sampleSize, dataType, device, shuffleData=True):
 
-	analysis = expres.getDataset(None)
+	analysis = expres.getDataset(SR)
 
 	for tx in analysis.txnameList: 
 		if tx == topo or tx.txName == topo:
@@ -207,7 +224,7 @@ def generateDataset(expres, topo, massRange, sampleSize, dataType, device, shuff
 			#gather information for topology we are training on
 			#so we can create an efficient dataset
 
-			expresData 			= getExpresData(expres, topo)
+			expresData 			= getExpresData(expres, topo, SR)
 			expresDataMean		= np.mean(expresData, axis = 0)
 			expresDataStd		= np.std(expresData, axis = 0)
 			inputDimension 		= tx.txnameData.full_dimensionality
@@ -243,13 +260,26 @@ def generateDataset(expres, topo, massRange, sampleSize, dataType, device, shuff
 					particles[n] = random.uniform(convexHullMin[n], convexHullMax[n])
 
 			masses = [[p*GeV for p in particles[0:inputDimensionHalf]], [p*GeV for p in particles[inputDimensionHalf:inputDimension]]]
-			ul	   = expres.getUpperLimitFor(txname=topo, mass=masses)
 
-			if type(ul) != type(None):
-				new = [p for p in particles]
-				new.append(ul.asNumber(fb))
-				dataset.append(new)
-				samplesLeft -= 1
+			if SR == None:
+
+				ul = expres.getUpperLimitFor(txname=topo, mass=masses)
+
+				if type(ul) != type(None):
+					new = [p for p in particles]
+					new.append(ul.asNumber(fb))
+					dataset.append(new)
+					samplesLeft -= 1
+
+			else:
+
+				eff = expres.getEfficiencyFor(txname=topo, mass=masses, dataset=SR)
+
+				if eff != 0.0:
+					new = [p for p in particles]
+					new.append(eff)
+					dataset.append(new)
+					samplesLeft -= 1
 
 	else:
 

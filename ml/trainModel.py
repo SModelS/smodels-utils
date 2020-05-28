@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+.. module:: trainModel.py
+   :synopsis: run gridsearch to train optimal neural networks for smodels-database maps
+.. moduleauthor:: Philipp Neuhuber <ph.neuhuber@gmail.com>
+
+"""
+
 import logging,sys,os
 #import subprocess
 import copy
@@ -29,7 +36,22 @@ logger = logging.getLogger(__name__)
 
 class Trainer():
 
-	def __init__(self, expres, txName, netType, hyperParameter, sampleSize, massRange, sampleSplit, device, saveLogfile, saveLossPlot, replaceExistingModel):
+	"""
+	Trainer object. Holds all information used during gridsearch for one specific map.
+
+	:ivar expres: current experiment result
+	:ivar txName: current topology
+	:ivar netType: current network architecture: regression or classification (string)
+	:ivar device: tells torch on which CPU or GPU to run (string)
+	:ivar savePath: main directory where all output will be stored (string)
+	:ivar inputDimension: number of SUSY particles of current topology (int)
+	:ivar fullDataset: main dataset used for training, split into training, testing and validation (Dataset object)
+					inputs and labels inside dataset are stored as torch tensors
+	:ivar hyperParameter: dict class that holds all permuations of gridsearch parameters (Hyperparameter object)
+
+	"""
+
+	def __init__(self, expres, txName, dataset, netType, hyperParameter, sampleSize, massRange, sampleSplit, device, saveLogfile, saveLossPlot, replaceExistingModel):
 
 		"""
 
@@ -40,6 +62,7 @@ class Trainer():
 		# global information
 		self.expres = expres
 		self.txName = txName
+		self.dataset = dataset
 		self.netType = netType
 		self.device = device
 		#self.savePath = expres.path
@@ -56,7 +79,7 @@ class Trainer():
 		# generate datasets
 		timestamp = time()
 		logger.info("Building Trainer - generating dataset..")
-		self.fullDataset = generateDataset(expres, txName, massRange, sampleSize, netType, device)
+		self.fullDataset = generateDataset(expres, txName, dataset, massRange, sampleSize, netType, device)
 		splitData = self.fullDataset.split(sampleSplit)
 		self.inputDimension = self.fullDataset.inputDimension
 		self.trainingSet = splitData[0]
@@ -174,8 +197,10 @@ class Trainer():
 	def _getWrongPredictionsSubset(self, tolerance = 0.05):
 
 		"""
+		If model performance is weak after training a subset of training data can be built consisting
+		of wrongly predicted points for a second training run.
 
-
+		:param tolerance: relative error threshold for which a given point is considered as wrongly predicted
 
 		"""
 
@@ -298,8 +323,11 @@ class Trainer():
 	def _findDelimiter(self, delimiter, predictions, labels):
 
 		"""
+		Method that converts float output of classification predictions into binary 0,1 values and
+		assigns an error value to the given dataset. Should not be used outside of the optimization process of
+		classification networks after training (therefore semi private).
 
-
+		:param delimiter: cutoff value to split float model predictions into 0s and 1s
 
 		"""
 
@@ -390,10 +418,11 @@ if __name__=='__main__':
 	#Select analysis and topologies for training
 	analysisID = parser.get("database", "analysis")
 	txNames = parser.get("database", "txNames").split(",")
+	dataselector = parser.get("database", "dataselector")
 
 
 	#Configure dataset generated for training
-	sampleSize = float(parser.get("dataset", "sampleSize"))
+	sampleSize = int(parser.get("dataset", "sampleSize"))
 	massRange = parser.get("dataset", "massRange").split(",")
 	massRange = [float(mR) for mR in massRange]
 	sampleSplit = parser.get("dataset", "sampleSplit").split(",")
@@ -430,8 +459,21 @@ if __name__=='__main__':
 	saveLossPlot = parser.getboolean("analysis", "lossPlot")
 	runPerformance = parser.getboolean("analysis", "runPerformance")
 	
-	expres = Database(databasePath)
-	expres = expres.getExpResults(analysisIDs = analysisID, useSuperseded = True, useNonValidated = True)[0]
+	db = Database(databasePath)
+	expres = db.getExpResults(analysisIDs = analysisID, txnames = txNames, dataTypes = dataselector, useSuperseded = True, useNonValidated = True)[0]
+
+	SR = None
+	if dataselector == "efficiencyMap":
+		IDS = [d.getID() for d in expres.datasets]
+		while SR not in IDS:
+			SR = input("available SR: %s\nselect which to train: " %expres.datasets)
+		#dataset = SR#expres.getDataset(SR)
+	#else: dataset = None
+
+
+	#expres_T2tt = Database(databasePath).getExpResults(txnames = txNames, dataTypes = "upperLimit", useSuperseded = True, useNonValidated = True)
+	#for e in expres_T2tt:
+	#	print(e)
 
 	for netType in whichNN:
 
@@ -468,7 +510,7 @@ if __name__=='__main__':
 		for txName in txNames:
 			if GetModel(expres, txName, netType) == None or overwrite != 'never':
 
-				modelTrainer = Trainer(expres, txName, netType, hyperParameter, sampleSize, massRange, sampleSplit, device, saveLogFile, saveLossPlot, overwrite)
+				modelTrainer = Trainer(expres, txName, SR, netType, hyperParameter, sampleSize, massRange, sampleSplit, device, saveLogFile, saveLossPlot, overwrite)
 				modelTrainer.findBestModel()
 
 				#if runPerformance:

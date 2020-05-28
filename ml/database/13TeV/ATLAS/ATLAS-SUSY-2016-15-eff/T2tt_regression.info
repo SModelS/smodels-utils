@@ -1,10 +1,10 @@
-created on:	28.05.2020-15:47:16
+created on:	27.05.2020-18:00:52
 implemented by:	Philipp Neuhuber
-relative error:	20.879%
+relative error:	1.056%
 
 Net_reg(
   (seq): Sequential(
-    (lin0): Linear(in_features=6, out_features=32, bias=True)
+    (lin0): Linear(in_features=4, out_features=32, bias=True)
     (rel0): PReLU(num_parameters=1)
     (lin1): Linear(in_features=32, out_features=64, bias=True)
     (rel1): PReLU(num_parameters=1)

@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class Performance():
 
-	def __init__(self, expres, txName, sampleSize, massRange, netType, showPlots = True, savePlots = True):
+	def __init__(self, expres, txName, SR, sampleSize, massRange, netType, showPlots = True, savePlots = True):
 
 		"""
 
@@ -24,6 +24,8 @@ class Performance():
 
 		self.expres = expres
 		self.txName = txName
+		#self.dataselector = dataselector
+		self.SR = SR
 		self.showPlots = showPlots
 		self.savePlots = savePlots
 		self.netType = netType
@@ -39,7 +41,7 @@ class Performance():
 		if not os.path.exists(self.savePath): os.makedirs(self.savePath)
 		# ---
 
-		self.validationSet = generateDataset(expres, txName, massRange, sampleSize, netType, "cpu")
+		self.validationSet = generateDataset(expres, txName, SR, massRange, sampleSize, netType, "cpu")
 
 
 	def evaluate(self):
@@ -149,8 +151,13 @@ class Performance():
 		predictions = self.model(self.validationSet.inputs)#.detach().tolist()
 		labels = self.validationSet.labels#.detach().tolist()
 
+		yaxis = 1
+		if self.validationSet.inputDimension > 4:
+			if max(self.validationSet.inputs[2]) - min(self.validationSet.inputs[2]) > 20:
+				yaxis = 2
+
 		X = [inputs[0].item() for inputs in self.validationSet.inputs]
-		Y = [inputs[1].item() for inputs in self.validationSet.inputs]
+		Y = [inputs[yaxis].item() for inputs in self.validationSet.inputs]
 		E = [e.item() for e in self.error]
 
 		plt.figure(2)
@@ -161,10 +168,10 @@ class Performance():
 		plt.colorbar()
 		plt.tight_layout()
 
-		fileName = txName + "_regression_scatterPlot.eps"
+		fileName = self.txName + "_regression_scatterPlot.eps"
 		if self.savePlots:plt.savefig(self.savePath + fileName)
 	
-		origPoints = getExpresData(self.expres, self.txName)
+		origPoints = getExpresData(self.expres, self.txName, self.SR)
 		
 		X0 = [oP[0] for oP in origPoints]
 		Y0 = [oP[1] for oP in origPoints]
@@ -278,10 +285,11 @@ if __name__=='__main__':
 
 	#Select analysis and topologies for training
 	analysisID = parser.get("database", "analysis")
-	txName = parser.get("database", "txNames").split(",")[0]
+	txNames = parser.get("database", "txNames").split(",")[0]
+	dataselector = parser.get("database", "dataselector")
 
 	#Configure dataset generated for training
-	sampleSize = 4000. #float(parser.get("dataset", "sampleSize"))
+	sampleSize = 4000 #int(parser.get("dataset", "sampleSize"))
 	massRange = parser.get("dataset", "massRange").split(",")
 	massRange = [float(mR) for mR in massRange]
 
@@ -303,9 +311,18 @@ if __name__=='__main__':
 	if not ( netType == "regression" or netType == "classification"):
 		logger.error("Parameter nettype: for performance, only 'regression' or 'classification' allowed")
 
-	expres = Database(databasePath, progressbar = True)
-	expres = expres.getExpResults(analysisIDs = analysisID, useSuperseded = True, useNonValidated = True)[0]
+	#expres = Database(databasePath, progressbar = True)
+	#expres = expres.getExpResults(analysisIDs = analysisID, useSuperseded = True, useNonValidated = True)[0]
 
-	validater = Performance(expres, txName, sampleSize, massRange, netType)
+	db = Database(databasePath)
+	expres = db.getExpResults(analysisIDs = analysisID, txnames = txNames, dataTypes = dataselector, useSuperseded = True, useNonValidated = True)[0]
+
+	SR = None
+	if dataselector == "efficiencyMap":
+		IDS = [d.getID() for d in expres.datasets]
+		while SR not in IDS:
+			SR = input("available SR: %s\nselect which to train: " %expres.datasets)
+
+	validater = Performance(expres, txNames, SR, sampleSize, massRange, netType)
 	validater.evaluate()
 
