@@ -318,7 +318,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
         y0=y_
         if type(y_)==tuple:
             y0 = y_[0]
-            if y_[1] > rthresholds[0]+.03:
+            if y_[1] > rthresholds[0]+.05:
                 rsarea.append ( y_[1] )
                 y0 = -1.
             else:
