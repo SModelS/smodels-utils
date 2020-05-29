@@ -77,6 +77,7 @@ class Manipulator:
         return self.M
 
     def predict ( self ):
+        # self.checkForNans()
         nevents = 20000
         if self.M.Z > 2.5:
             nevents = 50000
@@ -165,7 +166,8 @@ class Manipulator:
         try:
             with open ( fname, "rt" ) as f:
                 dicts = eval ( f.read() )
-        except (EOFError,SyntaxError) as e:
+        except (EOFError,SyntaxError,NameError) as e:
+            self.pprint ( "when trying to teleport, found %s. cancel teleportation." % e )
             # can happen if it is just being written. in this case dont teleport
             return
         ith = 0
@@ -336,6 +338,8 @@ class Manipulator:
         """ check for the usual suspects for particle swaps """
         ## the pairs to check. I put 1000023, 1000025 twice,
         ## so as to make it possible that chi40 eventually swaps with chi20
+        # self.pprint ( "checking for nan before swap" )
+        # self.checkForNans()
         pairs = [ ( 1000006, 2000006 ), ( 1000005, 2000005 ),
                   ( 1000023, 1000025 ), ( 1000024, 1000037 ),
                   ( 1000025, 1000035 ), ( 1000023, 1000025 ) ]
@@ -376,6 +380,14 @@ class Manipulator:
                 self.M.pprint ( "new rmax is %.2f, old was %.2f. restore!" % \
                                 ( self.M.rmax, oldrmax ) )
                 self.M.restore()
+        # self.pprint ( "checking for nan after swap" )
+        #self.checkForNans()
+
+    def checkForNans ( self ):
+        """ check protomodel for NaNs, for debugging only """
+        for pid,m in self.M.masses.items():
+            if numpy.isnan ( m ):
+                self.pprint ( "checking for nans: mass of %d is nan" % pid )
 
     def get ( self ):
         """ since the shallowcopy business does not work as expected,
@@ -523,7 +535,7 @@ class Manipulator:
                 if tmp < .99999:
                     brs.append ( tmp )
         if len(brs)>0 and numpy.std ( brs ) > 0.001:
-            self.M.log( "normalize branchings of %s, they are at %.2f +/- %.2f" % ( helpers.getParticleName ( pid ), numpy.mean ( brs ), numpy.std ( brs )  ) )
+            self.M.log( "normalize branchings of %s with=%.2f, they are at %.2f +/- %.2f" % ( helpers.getParticleName ( pid ), S, numpy.mean ( brs ), numpy.std ( brs )  ) )
 
         ## adjust the signal strength multipliers to keep everything else
         ## as it was
@@ -1159,7 +1171,10 @@ class Manipulator:
                    default
         """
         if dx == None:
-            dx = 40. / numpy.sqrt ( len(self.M.unFrozenParticles() ) ) / ( self.M.Z + 1. )
+            denom = self.M.Z + 1.
+            if denom < 1.:
+                denom = 1.
+            dx = 40. / numpy.sqrt ( len(self.M.unFrozenParticles() ) ) / denom
         tmp = self.M.masses[pid]+random.uniform(-dx,dx)
         if tmp > self.M.maxMass:
             tmp = self.M.maxMass
