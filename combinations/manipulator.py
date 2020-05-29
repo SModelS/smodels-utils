@@ -351,6 +351,8 @@ class Manipulator:
 
         ## now the same with pairs that actually need checking, e.g. 
         ## because the xsecs could be affected, or b/c charm
+        if not hasattr ( self.M, "K" ):
+            return
         cpairs = [ ( 1000001, 1000003 ), ( 1000002, 1000004 ), ( 1000001, 1000002 ) ]
         for pids in cpairs:
             if not pids[1] in self.M.masses or not pids[0] in self.M.masses:
