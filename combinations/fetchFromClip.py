@@ -41,7 +41,7 @@ def main():
               "states": [ "states.dict" ],
               "llhds": [ "llhd*pcl", "mp*pcl" ],
               "two": [ "hiscore2.pcl" ],
-              "fake": [ "fake*.pcl" ],
+              "fake": [ "fake*.pcl", "signal*.pcl" ],
               "copy": [ "hiscoreCopy.pcl" ],
               "pmodels": [ "pmodel?.py" ],
               "png": [ "*.png" ],
