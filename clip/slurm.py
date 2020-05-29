@@ -441,7 +441,7 @@ def main():
     argparser.add_argument ( '-T', '--topo', help='topology considered in EM baking ["T3GQ"]',
                         type=str, default="T3GQ" )
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
-                        type=str, default="none" )
+                        type=str, default="default" )
     args=argparser.parse_args()
     if args.nmax > 0 and args.dbpath == "none":
         print ( "dbpath not specified. not starting. note, you can use 'real' or 'fake1' as dbpath" )
@@ -450,7 +450,7 @@ def main():
     if args.rundir != None:
         rundir = args.rundir
         if not "/" in rundir:
-            rundir = "/scratch-cbe/users/wolfgan.waltenberger/" + rundir
+            rundir = "/scratch-cbe/users/wolfgan.waltenberger/" + rundir + "/"
     if args.dbpath == "real":
         args.dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database"
     if args.dbpath == "default":
