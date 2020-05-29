@@ -1164,20 +1164,23 @@ class Manipulator:
         if tmp < self.M.masses[self.M.LSP]: ## the LSP is the LSP.
             tmp = self.M.masses[self.M.LSP]
         self.M.masses[pid]=tmp
+        return 1
 
     def randomlyChangeMasses ( self ):
         """ take a random step in mass space for all unfrozen particles """
         a = random.uniform(0.,1.)
         unfrozen = self.M.unFrozenParticles()
+        if len(unfrozen)==0:
+            return 0
         if a < .5: ## in 50% of the cases, only change one mass
             pid = random.choice ( unfrozen )
-            self.randomlyChangeMassOf ( pid, dx=200. )
-            return
+            return self.randomlyChangeMassOf ( pid, dx=200. )
         for i in unfrozen:
-            self.randomlyChangeMassOf ( i )
+            ret = self.randomlyChangeMassOf ( i )
         self.checkSwaps() ## should we really do this here?
         ## now remove all offshell decays, and normalize all branchings
         self.removeAllOffshell()
+        return ret
 
 if __name__ == "__main__":
     import protomodel

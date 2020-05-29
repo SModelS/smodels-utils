@@ -218,7 +218,7 @@ class RandomWalker:
         uMass = random.uniform ( 0., 1. )
         if nChanges == 0 or uMass > .95:
             self.log ( "take random mass step" )
-            self.manipulator.randomlyChangeMasses()
+            nChanges+=self.manipulator.randomlyChangeMasses()
         if self.catch_exceptions: 
             try:
                 self.manipulator.predict()

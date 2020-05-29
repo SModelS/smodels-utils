@@ -368,7 +368,7 @@ def clean_dirs( rundir, clean_all = False ):
     o = subprocess.getoutput ( cmd )
     cmd = "cd %s; rm -rf old*pcl .*slha H*pcl states.dict hiscore.pcl Kold.conf Zold.conf RUN* *log ../outputs/slurm-*.out" % rundir
     if clean_all:
-        cmd = "cd %s; rm -rf *pcl .cur* .old* .tri* .*slha M*png llhd*png decays* *.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf ../outputs/slurm-*.out" % rundir
+        cmd = "cd %s; rm -rf old*pcl H*pcl hiscore*pcl .cur* .old* .tri* .*slha M*png llhd*png decays* *.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf ../outputs/slurm-*.out" % rundir
     o = subprocess.getoutput ( cmd )
 
 def queryStats ( ):
