@@ -44,8 +44,8 @@ def updateHiscores( rundir=None ):
     import hiscore
     import socket
     hostname = socket.gethostname().replace(".cbe.vbc.ac.at","")
-    print ( "[updateHiscores] now update the hiscore.pcl file on %s:%s" % \
-            ( hostname, rundir ) )
+    print ( "[updateHiscores] now update %s on %s:%s" % \
+            ( args.outfile, hostname, rundir ) )
     D = hiscore.main ( args )
     return D
 
@@ -66,9 +66,9 @@ def updateStates( rundir=None):
     # args.nevents = 50000
     import hiscore
     print ( )
-    print ( "[updateHiscores] now update the states.dict file" )
+    print ( "[updateHiscores] now update %s" % args.outfile )
     hiscore.main ( args )
-    print ( "[updateHiscores] done updating the states.dict file" )
+    print ( "[updateHiscores] done updating %s" % args.outfile )
     print ( )
 
 def plot( Z, K, rundir ):

@@ -264,6 +264,9 @@ class Hiscore:
             is used.
         :param check: perform a check whether the file has changed?
         """
+        if len ( self.hiscores ) == 0:
+            self.log ( "hiscore list is empty will not write out" )
+            return
         if pickleFile==None:
             pickleFile = self.pickleFile
         if check and os.path.exists ( self.pickleFile ):
