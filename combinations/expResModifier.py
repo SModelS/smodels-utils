@@ -4,7 +4,7 @@
 Used to ``take out potential signals'' i.e. put all observations to values
 expected from background, by sampling the background model. """
 
-import copy, os, sys
+import copy, os, sys, time, subprocess
 from scipy import stats
 from protomodel import ProtoModel
 from manipulator import Manipulator
@@ -19,6 +19,8 @@ class ExpResModifier:
     def __init__ ( self, modificationType = "expected" ):
         self.modificationType = modificationType
         self.protomodel = None
+        self.logfile = "modifier.log"
+        self.startLogger()
 
     def interact ( self, listOfExpRes ):
         import IPython
@@ -28,7 +30,7 @@ class ExpResModifier:
         """ fix the upper limits, use expected (if exists) as observed """
         for i,txname in enumerate(dataset.txnameList):
             if hasattr ( txname, "txnameDataExp" ) and txname.txnameDataExp != None:
-                print ( "[expResModifier] fixing UL result %s" % dataset.globalInfo.id )
+                self.log ( "fixing UL result %s" % dataset.globalInfo.id )
                 txnd = copy.deepcopy ( txname.txnameDataExp )
                 dataset.txnameList[i].txnameData = txnd
         return dataset
@@ -36,6 +38,17 @@ class ExpResModifier:
     def pprint ( self, *args ):
         """ logging """
         print ( "[expResModifier] %s" % ( " ".join(map(str,args))) )
+        with open( self.logfile, "a" ) as f:
+            f.write ( "[modifier] %s\n" % ( " ".join(map(str,args)) ) )
+
+    def startLogger ( self ):
+        subprocess.getoutput ( "mv %s modifier.old" % self.logfile )
+
+    def log ( self, *args ):
+        """ logging to file """
+        # logfile = "walker%d.log" % self.walkerid
+        with open( self.logfile, "a" ) as f:
+            f.write ( "[modifier] %s\n" % ( " ".join(map(str,args)) ) )
 
     def produceProtoModel ( self, filename ):
         """ try to produce a protomodel from pmodel
@@ -73,13 +86,16 @@ class ExpResModifier:
         """
         listOfExpRes = db.getExpResults()
         self.produceProtoModel ( pmodel )
+        self.log ( "%d results before faking bgs" % len(listOfExpRes) )
         updatedListOfExpRes = self.fakeBackgrounds ( listOfExpRes )
+        self.log ( "%d results after faking bgs" % len(updatedListOfExpRes) )
         updatedListOfExpRes = self.addSignals ( updatedListOfExpRes )
+        self.log ( "%d results after adding signals" % len(updatedListOfExpRes) )
         db.expResultList = updatedListOfExpRes
         newver = db.databaseVersion + suffix
         db.txt_meta.databaseVersion = newver
         db.pcl_meta.databaseVersion = newver
-        print ( "Modifier called. %d/%d results" % \
+        self.pprint ( "Constructed fake database with %d (of %d) results" % \
                 ( len(updatedListOfExpRes), len(listOfExpRes) ) )
         if outfile != "":
             db.createBinaryFile( outfile )
@@ -95,7 +111,7 @@ class ExpResModifier:
         if lmbda < 0.:
             lmbda = 0.
         obs = stats.poisson.rvs ( lmbda )
-        self.pprint ( "effmap replacing nobs=%.2f (bg=%.2f) by nobs=%.2f for %s" % \
+        self.log ( "effmap replacing nobs=%.2f (bg=%.2f) by nobs=%.2f for %s" % \
                 ( orig, exp, obs, dataset.globalInfo.id ) )
         dataset.dataInfo.observedN = obs
         dataset.dataInfo.origN = orig
@@ -104,19 +120,19 @@ class ExpResModifier:
     def addSignalForEfficiencyMap ( self, dataset, tpred, lumi ):
         """ add a signal to this efficiency map. background sampling is
             already taken care of """
-        self.pprint ( " `- add EM matching tpred %s/%s: %s" % \
+        self.log ( " `- add EM matching tpred %s/%s: %s" % \
                 ( tpred.analysisId(), tpred.dataId(), tpred.xsection.value ) )
         orig = dataset.dataInfo.observedN
         sigN = float ( tpred.xsection.value * lumi )
-        print ( "[expResModifier] effmap adding sigN=%.2f to %.2f" % \
-                ( sigN, orig ) )
+        self.log ( "effmap adding sigN=%.2f to %.2f" % \
+                   ( sigN, orig ) )
         dataset.dataInfo.observedN = orig + sigN
         return dataset
 
     def addSignalForULMap ( self, dataset, tpred, lumi ):
         """ add a signal to this UL result. background sampling is
             already taken care of """
-        self.pprint ( " `- add UL matching tpred %s/%s: %s" % \
+        self.log ( " `- add UL matching tpred %s/%s: %s" % \
                 ( tpred.analysisId(), tpred.dataId(), tpred.xsection.value ) )
         sigmaN = tpred.xsection.value.asNumber(fb)
         for i,txname in enumerate(dataset.txnameList):
@@ -138,12 +154,13 @@ class ExpResModifier:
         """ thats the method that adds a typical signal """
         if self.protomodel == None:
             return listOfExpRes
-        self.pprint ( "now adding the signals" )
+        self.log ( "now adding the signals" )
         ret = []
         self.produceTopoList()
         for expRes in listOfExpRes:
             tpreds = theoryPredictionsFor ( expRes, self.topos )
             if tpreds == None:
+                ret.append ( expRes )
                 continue
             lumi = expRes.globalInfo.lumi
             #self.pprint ( "adding a signal for %s (lumi %s)" % \
@@ -163,13 +180,13 @@ class ExpResModifier:
                 else:
                     print ( "[expResModifier] dataset type %s unknown" % dt )
             ret.append ( expRes )
-        self.pprint ( "done adding signals" )
+        self.log ( "done adding signals" )
         return ret
 
     def fakeBackgrounds ( self, listOfExpRes ):
         """ thats the method that samples the backgrounds """
         ret = []
-        self.pprint ( "now fake backgrounds" )
+        self.log ( "now fake backgrounds" )
         for expRes in listOfExpRes:
             for i,dataset in enumerate(expRes.datasets):
                 dt = dataset.dataInfo.dataType
@@ -180,7 +197,7 @@ class ExpResModifier:
                 else:
                     print ( "[expResModifier] dataset type %s unknown" % dt )
             ret.append ( expRes )
-        self.pprint ( "done faking the backgrounds" )
+        self.log ( "done faking the backgrounds" )
         return ret
 
 def check ( picklefile ):
