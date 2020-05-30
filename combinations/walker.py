@@ -36,7 +36,8 @@ class RandomWalker:
     def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive", 
                    dump_training = False, cheatcode = 0, 
                    dbpath = "../../smodels-database/", expected = False,
-                   select = "all", catch_exceptions = True ):
+                   select = "all", catch_exceptions = True,
+                   rundir = None ):
         """ initialise the walker
         :param nsteps: maximum number of steps to perform, negative is infinity
         :param cheatcode: cheat mode. 0 is no cheating, 1 is with ranges, 2
@@ -49,7 +50,8 @@ class RandomWalker:
             self.pprint ( "Wrong call of constructor: %s, %s, %s" % ( walkerid, nsteps, strategy ) )
             sys.exit(-2)
         self.walkerid = walkerid ## walker id, for parallel runs
-        self.hiscoreList = Hiscore ( walkerid, True, "H%d.pcl" % walkerid,
+        self.rundir = rundir
+        self.hiscoreList = Hiscore ( walkerid, True, "%s/H%d.pcl" % ( rundir, walkerid ),
                                      backup=False )
         self.hiscoreList.nkeep = 1
         protomodel = ProtoModel( self.walkerid, dbpath = dbpath, 
@@ -92,9 +94,10 @@ class RandomWalker:
     def fromProtoModel( cls, protomodel, nsteps=10000, strategy="aggressive", 
                    walkerid=0, dump_training = False, 
                    dbpath="../../smodels-database/", expected = False, 
-                   select = "all", catch_exceptions = True, keep_meta = True ):
+                   select = "all", catch_exceptions = True, keep_meta = True,
+                   rundir = None ):
         ret = cls( walkerid, nsteps=nsteps, dbpath = dbpath, 
-                   catch_exceptions = catch_exceptions )
+                   catch_exceptions = catch_exceptions, rundir = rundir )
         ret.manipulator.M = protomodel
         ret.manipulator.setWalkerId ( walkerid )
         ret.protomodel.expected = expected
@@ -116,9 +119,10 @@ class RandomWalker:
     def fromDictionary( cls, dictionary, nsteps=10000, strategy="aggressive", 
                    walkerid=0, dump_training = False, 
                    dbpath="../../smodels-database/", expected = False, 
-                   select = "all", catch_exceptions = True, keep_meta = True ):
+                   select = "all", catch_exceptions = True, keep_meta = True, 
+                   rundir = None ):
         ret = cls( walkerid, nsteps=nsteps, dbpath = dbpath, 
-                   catch_exceptions = catch_exceptions )
+                   catch_exceptions = catch_exceptions, rundir = rundir )
         ret.manipulator.M = ProtoModel( walkerid, dbpath, expected, select, keep_meta )
         ret.manipulator.initFromDict ( dictionary )
         ret.manipulator.setWalkerId ( walkerid )
@@ -382,7 +386,7 @@ class RandomWalker:
                 extracted = traceback.extract_tb(tb)
                 for point in extracted:
                     self.pprint ( "extracted: %s" % point )
-                with open("exceptions.log","a") as f:
+                with open("%s/exceptions.log" % self.rundir,"a") as f:
                     f.write ( "%s: taking a step resulted in exception: %s, %s\n" % (time.asctime(), type(e), e ) )
                     f.write ( "   `- exception occured in walker #%s\n" % self.protomodel.walkerid )
                 sys.exit(-1)

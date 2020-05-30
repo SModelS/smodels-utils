@@ -2,27 +2,6 @@
 
 import sys, os
 from csetup import setup
-"""
-def setup( rundir = None ):
-    # codedir = "/mnt/hephy/pheno/ww/git/"
-    codedir = "/scratch-cbe/users/wolfgan.waltenberger/git/"
-    sys.path.insert(0,"%ssmodels/" % codedir )
-    sys.path.insert(0,"%ssmodels-utils/" % codedir )
-    sys.path.insert(0,"%ssmodels-utils/combinations/" % codedir )
-    if rundir != None:
-        rundir = rundir.replace ( "~", os.environ["HOME"] )
-        os.chdir ( rundir )
-        return rundir
-    rundir = "/scratch-cbe/users/wolfgan.waltenberger/rundir/"
-    # rundir = "/mnt/hephy/pheno/ww/rundir/"
-    # rundir = "./"
-    if os.path.exists ( "./rundir.conf" ):
-        with open ( "./rundir.conf" ) as f:
-            rundir = f.read().strip()
-    rundir = rundir.replace ( "~", os.environ["HOME"] )
-    os.chdir ( rundir )
-    return rundir
-"""
 
 def main( nmin, nmax, cont,
           dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database/",
@@ -68,7 +47,7 @@ def main( nmin, nmax, cont,
         if pfile is None:
             print ( "[walkingWorker] starting %d with cheatcode %d" % ( i, cheatcode ) )
             w = walker.RandomWalker( walkerid=i, dump_training = dump_training,
-                                     dbpath = dbpath, cheatcode = cheatcode  )
+                                     dbpath = dbpath, cheatcode = cheatcode, rundir = rundir )
             walkers.append ( w )
         elif pfile.endswith(".pcl"):
             nstates = len(states )
@@ -76,7 +55,7 @@ def main( nmin, nmax, cont,
             print ( "[walkingWorker] fromModel %d: loading %d/%d" % ( i, ctr, nstates ) )
             w = walker.RandomWalker.fromProtoModel ( states[ctr], 100000, "aggressive",
                     walkerid = i, dump_training=dump_training, expected = False,
-                    dbpath = dbpath )
+                    dbpath = dbpath, rundir = rundir )
             walkers.append ( w )
         else:
             nstates = len(states )
@@ -84,7 +63,7 @@ def main( nmin, nmax, cont,
             print ( "[walkingWorker] fromDict %d: loading %d/%d" % ( i, ctr, nstates ) )
             w = walker.RandomWalker.fromDictionary ( states[ctr], 100000, "aggressive",
                     walkerid = i, dump_training=dump_training, expected = False,
-                    dbpath = dbpath )
+                    dbpath = dbpath, rundir = rundir )
             walkers.append ( w )
     walker.startWalkers ( walkers )
 
