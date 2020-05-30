@@ -310,5 +310,5 @@ def findLargestExcess ( db ):
             print ( "%.2f: %15s %20s: %d/%.2f" % \
                     ( k, v.globalInfo.id, v, obsN, eBG ) )
     pprint ( excesses )
-    print ( "found %d results" % len(results) )
+    print ( "[helpers.findLargestExcess] found %d eff maps" % len(results) )
     return excesses

@@ -28,4 +28,4 @@ if __name__ == "__main__":
     # dbpath = "./fake1.pcl"
     database = Database( dbpath )
     print ( database )
-    helpers.findLargestExcess ( database )
+    # helpers.findLargestExcess ( database )
