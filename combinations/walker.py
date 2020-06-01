@@ -61,7 +61,8 @@ class RandomWalker:
         if cheatcode > 0:
             self.manipulator.cheat ( cheatcode )
             self.manipulator.predict()
-            self.pprint ( "Cheat model gets Z=%.2f" % self.manipulator.M.Z )
+            self.pprint ( "Cheat model gets Z=%.2f, K=%.2f" % \
+                          ( self.manipulator.M.Z, self.manipulator.M.K ) )
         self.catch_exceptions = catch_exceptions
         self.history = History ( walkerid )
         self.doBayesian = True ## bayesian or frequentist?
@@ -163,6 +164,8 @@ class RandomWalker:
         """ check if we should teleport. If we should then also
             perform the teleportation. """
         bestK = self.hiscoreList.globalMaxK()
+        if bestK < 1.:
+            self.log ( "K is smaller than one. no teleporting." )
         ourK = -2.
         if hasattr ( self.manipulator.M, "K" ) and self.manipulator.M.K > -2:
             ourK = self.manipulator.M.K
@@ -170,9 +173,10 @@ class RandomWalker:
         prob = min ( 1., 1. - math.exp ( -dK )  )
         prob = max ( 0., .1 * prob )
         a = random.uniform ( 0., 1. )
-        self.log ( "check if to teleport, Kmax=%.2f, ours is=%.2f, p=%.2f, a=%.2f" % \
-                   ( bestK, ourK, prob, a ) )
-        if a < prob:
+        doTP = ( a < prob )
+        self.log ( "check if to teleport, Kmax=%.2f, ours is=%.2f, p=%.2f, a=%.2f: %s" % \
+                   ( bestK, ourK, prob, a, str(doTP) ) )
+        if doTP:
             self.manipulator.teleportToHiscore()
 
     def onestep ( self ):
@@ -241,10 +245,9 @@ class RandomWalker:
             self.log ( "done check for result to go into hiscore list" )
         # self.hiqueue.put( [ hiscoreList ] )
         self.train ()
-        if self.doBayesian:
-            self.pprint ( "best combo for strategy ``%s'' is %s: %s: [K=%.2f,Z=%.2f]" % ( self.manipulator.strategy, self.protomodel.letters, self.protomodel.description, self.protomodel.K, self.protomodel.Z ) )
-        else:
-            self.pprint ( "best combo for strategy ``%s'' is %s: %s: [Z=%.2f]" % ( self.manipulator.strategy, self.protomodel.letters, self.protomodel.description, self.protomodel.Z ) )
+        nUnfrozen = len ( self.protomodel.unFrozenParticles() )
+        self.pprint ( "best combo for strategy ``%s'' is %s: %s: [K=%.2f, Z=%.2f, %d unfrozen]" % \
+            ( self.manipulator.strategy, self.protomodel.letters, self.protomodel.description, self.protomodel.K, self.protomodel.Z, nUnfrozen ) )
         smaxstp = "%s" % self.maxsteps
         if self.maxsteps < 0:
             smaxstp = "inf"
@@ -364,7 +367,7 @@ class RandomWalker:
 
     def log ( self, *args ):
         """ logging to file """
-        with open( "walker%d.log" % self.walkerid, "a" ) as f:
+        with open( "%s/walker%d.log" % ( self.rundir, self.walkerid ), "a" ) as f:
             f.write ( "[walk:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def walk ( self ):

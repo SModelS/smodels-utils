@@ -123,7 +123,8 @@ class ExpResModifier:
         self.log ( " `- add EM matching tpred %s/%s: %s" % \
                 ( tpred.analysisId(), tpred.dataId(), tpred.xsection.value ) )
         orig = dataset.dataInfo.observedN
-        sigN = float ( tpred.xsection.value * lumi )
+        sigLambda = float ( tpred.xsection.value * lumi )
+        sigN = stats.poisson.rvs ( sigLambda )
         self.log ( "effmap adding sigN=%.2f to %.2f" % \
                    ( sigN, orig ) )
         dataset.dataInfo.observedN = orig + sigN

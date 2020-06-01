@@ -357,6 +357,8 @@ class Manipulator:
         ## because the xsecs could be affected, or b/c charm
         if not hasattr ( self.M, "K" ):
             return
+        #if True:
+        #    return
         cpairs = [ ( 1000001, 1000003 ), ( 1000002, 1000004 ), ( 1000001, 1000002 ) ]
         for pids in cpairs:
             if not pids[1] in self.M.masses or not pids[0] in self.M.masses:
@@ -1175,12 +1177,20 @@ class Manipulator:
             if denom < 1.:
                 denom = 1.
             dx = 40. / numpy.sqrt ( len(self.M.unFrozenParticles() ) ) / denom
-        tmp = self.M.masses[pid]+random.uniform(-dx,dx)
-        if tmp > self.M.maxMass:
-            tmp = self.M.maxMass
-        if tmp < self.M.masses[self.M.LSP]: ## the LSP is the LSP.
-            tmp = self.M.masses[self.M.LSP]
-        self.M.masses[pid]=tmp
+        tmpmass = self.M.masses[pid]+random.uniform(-dx,dx)
+        if tmpmass > self.M.maxMass:
+            tmpmass = self.M.maxMass
+        if tmpmass < self.M.masses[self.M.LSP]: ## the LSP is the LSP.
+            tmpmass = self.M.masses[self.M.LSP]+1.
+        self.M.masses[pid]=tmpmass
+        ### if we changed the mass of the LSP, we need to make sure it remains
+        ### the lightest particle
+        if pid == self.M.LSP:
+            for pid2,mass in self.M.masses.items():
+                if pid2 == pid:
+                    continue
+                if mass < tmpmass:
+                    self.M.masses[pid2] = tmpmass + 1.
         return 1
 
     def randomlyChangeMasses ( self ):
@@ -1189,11 +1199,12 @@ class Manipulator:
         unfrozen = self.M.unFrozenParticles()
         if len(unfrozen)==0:
             return 0
-        if a < .5: ## in 50% of the cases, only change one mass
-            pid = random.choice ( unfrozen )
-            return self.randomlyChangeMassOf ( pid, dx=200. )
-        for i in unfrozen:
-            ret = self.randomlyChangeMassOf ( i )
+        ## randomly changing all masses doesnt make sense any more
+        #if True: # a < .5: ## in 50% of the cases, only change one mass
+        pid = random.choice ( unfrozen )
+        ret = self.randomlyChangeMassOf ( pid, dx=200. )
+        #for i in unfrozen:
+        #    ret = self.randomlyChangeMassOf ( i )
         self.checkSwaps() ## should we really do this here?
         ## now remove all offshell decays, and normalize all branchings
         self.removeAllOffshell()
