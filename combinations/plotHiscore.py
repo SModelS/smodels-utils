@@ -519,11 +519,14 @@ def writeIndexHtml ( protomodel ):
         height = 32
     if hasattr ( protomodel, "particleContributions" ):
         height += 32
-    f.write ( "<td><img width=600px src=./texdoc.png>\n" ) #  % height )
+    t0 = int(time.time())
+    f.write ( "<td><img width=600px src=./texdoc.png?%d>\n" % ( t0 ) )
     f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
     f.write ( "</table>" )
     f.write ( '<table style="width:80%">\n' )
-    f.write ( "<td width=45%><img height=580px src=./ruler.png><td width=55%><img height=380px src=./decays.png>\n" )
+    f.write ( "<td width=45%>" )
+    f.write ( "<img height=580px src=./ruler.png?%d>" % ( t0 ) )
+    f.write ( "<td width=55%><img height=380px src=./decays.png?%d>\n" % ( t0 ) )
     f.write ( '<font size=-3><iframe type="text/html" height="220px" width="100%" frameborder="0" src="rawnumbers.html"></iframe></font>\n' )
     f.write ( "</table>\n" )
     # f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
