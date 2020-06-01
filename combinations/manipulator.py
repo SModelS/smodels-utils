@@ -550,10 +550,16 @@ class Manipulator:
                 ssm=1.
             """
             if pidpair in [ (pid,pid),(-pid,-pid),(-pid,pid),(pid,-pid) ]:
-                self.M.ssmultipliers[pidpair]=ssm*S*S
+                newssm = ssm*S*S
+                if newssm > 10000.:
+                    newssm = 10000.
+                self.M.ssmultipliers[pidpair]= newssm
                 continue
             if (pid in pidpair) or (-pid in pidpair):
-                self.M.ssmultipliers[pidpair]=ssm*S
+                newssm = ssm*S
+                if newssm > 10000.:
+                    newssm = 10000.
+                self.M.ssmultipliers[pidpair]=newssm
 
     def normalizeAllBranchings ( self ):
         """ normalize all branchings, after freezing or unfreezing particles """
@@ -964,6 +970,8 @@ class Manipulator:
         for dpd,v in self.M.ssmultipliers.items():
             if p in dpd or -p in dpd:
                 newssm = self.M.ssmultipliers[dpd]*f
+                if newssm > 10000.:
+                    newssm = 10000.
                 self.M.ssmultipliers[dpd]= newssm
                 ssms.append ( newssm )
         self.M.log ( " `- %s: ssms are now %.2f+/-%.2f" % ( helpers.getParticleName(p), numpy.mean ( ssms ), numpy.std ( ssms) ) )
@@ -1151,6 +1159,8 @@ class Manipulator:
             self.M.highlight ( "warn", "when changing SSMs, cannot find %s. not changing anything." % str(pids) )
             return
         oldssm = self.M.ssmultipliers[pids]
+        if newssm > 10000.:
+            newssm = 10000.
         self.M.ssmultipliers[pids]=newssm
         self.M.highlight ( "info", "changing ssm of %s from %.2f to %.2f" % \
                                    ( str(pids), oldssm, newssm ) )
