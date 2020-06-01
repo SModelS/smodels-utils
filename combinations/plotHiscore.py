@@ -580,6 +580,7 @@ def getPIDsOfTPred ( tpred, ret, integrateDataType=True, integrateSRs=True ):
     return ret
 
 def plotRuler( protomodel, verbosity ):
+    print ( "[plotHiscore] now draw ruler.png" )
     resultsForPIDs = {}
     for tpred in protomodel.bestCombo:
         resultsForPIDs =  getPIDsOfTPred ( tpred, resultsForPIDs )

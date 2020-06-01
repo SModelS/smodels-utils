@@ -128,7 +128,10 @@ def draw( slhafile, outfile, options, offset=0.,
         color="#000000"
         if options["color"]:
             color=colorizer.getColor ( name )
-        drawer.addNode ( reader.getMass ( name ), name, \
+        m = reader.getMass ( name )
+        if m > 9e5: ## skip frozen particles
+            continue
+        drawer.addNode ( m, name, \
                 options["masses"], color, reader.fermionic ( name ) )
         decs=reader.getDecays ( name, rmin=options["rmin"] )
         # print ( "decays for", name, options["rmin"], decs )
