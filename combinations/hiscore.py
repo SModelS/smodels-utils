@@ -267,6 +267,14 @@ class Hiscore:
         if len ( self.hiscores ) == 0:
             self.log ( "hiscore list is empty will not write out" )
             return
+        onlyNones = True
+        for i in self.hiscores:
+            if i != None:
+                onlyNones = False
+                break
+        if onlyNones:
+            self.log ( "hiscore list contains only nones" )
+            return
         if pickleFile==None:
             pickleFile = self.pickleFile
         if check and os.path.exists ( self.pickleFile ):

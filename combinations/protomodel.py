@@ -357,11 +357,11 @@ class ProtoModel:
         """ backup the current state """
         self._backup = { "llhd": self.llhd, "letters": self.letters, "Z": self.Z,
                          "description": self.description,
-                        "bestCombo": copy.deepcopy(self.bestCombo),
-                        "masses": copy.deepcopy(self.masses),
-                        "ssmultipliers": copy.deepcopy(self.ssmultipliers),
-                        "decays": copy.deepcopy(self.decays),
-                        "rvalues": copy.deepcopy(self.rvalues) }
+                         "bestCombo": copy.deepcopy(self.bestCombo),
+                         "masses": copy.deepcopy(self.masses),
+                         "ssmultipliers": copy.deepcopy(self.ssmultipliers),
+                         "decays": copy.deepcopy(self.decays),
+                         "rvalues": copy.deepcopy(self.rvalues) }
         if hasattr ( self, "muhat" ):
             self._backup["muhat"]=self.muhat
         if hasattr ( self, "K" ):
