@@ -377,14 +377,12 @@ def compileList( nmax ):
         pb.update(ctr)
         try:
             with open( fname,"rb+") as f:
-                #fcntl.flock( f, fcntl.LOCK_EX | fcntl.LOCK_NB )
                 protomodels = pickle.load ( f )
                 timestamp = "?"
                 try:
                     timestamp = pickle.load(f)
                 except EOFError as e:
                     pass
-                #fcntl.flock( f, fcntl.LOCK_UN )
                 ## add protomodels, but without the Nones
                 f.close()
                 allprotomodels += list ( filter ( None.__ne__, protomodels ) )
