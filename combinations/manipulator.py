@@ -159,7 +159,7 @@ class Manipulator:
         if not os.path.exists ( fname ):
             from csetup import setup
             rundir = setup()
-            fname = rundir + "/states.dict" 
+            fname = rundir + "/states.dict"
             if not os.path.exists ( fname ):
                 self.pprint ( "could not find states.dict!!" )
                 return
@@ -353,7 +353,7 @@ class Manipulator:
                 self.M.pprint ( "particle swap %d <-> %d" % ( pids[0], pids[1] ) )
                 self.swapParticles ( pids[0],pids[1] )
 
-        ## now the same with pairs that actually need checking, e.g. 
+        ## now the same with pairs that actually need checking, e.g.
         ## because the xsecs could be affected, or b/c charm
         if not hasattr ( self.M, "K" ):
             return
@@ -405,7 +405,9 @@ class Manipulator:
     def swapParticles ( self, pid1, pid2 ):
         """ swaps the two particle ids. The idea being that e.g. ~b1 should be
             lighter than ~b2. If in the walk, ~b1 > ~b2, we just swap the roles
-            of the two particles. """
+            of the two particles. Takes care of changing the pids in the ssms, decays,
+            and bestCombo.
+        """
         ## swap in the masses dictionary
         if pid1 in self.M.masses and pid2 in self.M.masses:
             s = self.M.masses[pid1]
@@ -498,23 +500,12 @@ class Manipulator:
             # self.M.decays[mpid].pop ( dpid ) dont pop, we need it!
         self.normalizeAllBranchings()
 
-    #def logBranchings ( self, pid ):
-    #    """ discuss the decay channels of pid in log file """
-    #    brs = []
-    #    for dpid,br in self.M.decays[pid].items():
-    #            tmp = self.M.decays[pid][dpid] / S
-    #            self.M.decays[pid][dpid] = tmp
-    #            if tmp < .99999:
-    #                brs.append ( tmp )
-    #    if numpy.std ( brs ) > 0.001:
-    #        self.M.log( "branchings of %s are at %.2f +/- %.2f" % \
-    #                    ( helpers.getParticleName ( pid ), numpy.mean ( brs ), numpy.std ( brs )  ) )
-
-
     def normalizeBranchings ( self, pid, fixSSMs=True ):
         """ normalize branchings of a particle, after freezing and unfreezing
             particles. while we are at it, remove zero branchings also.
-        :param fixSSMs: if True, adapt also signal strength multipliers
+        :param fixSSMs: if True, adapt also signal strength multipliers,
+                        i.e. multiply them with S < 0. so that sigma x br of
+                        the remaining channels stays the same.
         """
         if not pid in self.M.decays:
             self.M.pprint ( "when attempting to normalize: %d not in decays" % pid )
@@ -544,11 +535,6 @@ class Manipulator:
         if not fixSSMs:
             return
         for pidpair,ssm in self.M.ssmultipliers.items():
-            """ ## accept the zeroes!
-            if ssm == 0.:
-                self.M.pprint ( "huh, when normalizing we find ssmultipliers of 0? change to 1! S=%.4g" % S )
-                ssm=1.
-            """
             if pidpair in [ (pid,pid),(-pid,-pid),(-pid,pid),(pid,-pid) ]:
                 newssm = ssm*S*S
                 if newssm > 10000.:
@@ -844,7 +830,7 @@ class Manipulator:
 
     def allXSecsAbove ( self, threshold=.01*fb, sqrts=13*TeV, order=LO ):
         """ return list of all cross sections above threshold.
-        :returns: list of tuples of pids, cross sections (that had the SSM applied), 
+        :returns: list of tuples of pids, cross sections (that had the SSM applied),
                           and SSMs that *were* applied.
         """
         if type(threshold)==float and threshold>0.:
@@ -868,7 +854,7 @@ class Manipulator:
     def xsecsFor ( self, pids, sqrts=13*TeV, order=LO ):
         """ return the cross sections for pids.
         :param pids: tuple of two pids
-        :returns: cross section (that had the SSM applied), 
+        :returns: cross section (that had the SSM applied),
                   and SSM that *was* applied.
         """
         self.assertXSecs()
@@ -1220,6 +1206,25 @@ class Manipulator:
         self.removeAllOffshell()
         return ret
 
+    def getAllPidsOfBestCombo ( self ):
+        """ get all pids that appear in the best combo """
+        ret = set()
+        for tp in self.M.bestCombo:
+            for prod in tp.PIDs:
+                for branch in prod:
+                    for pid in branch:
+                        ret.add ( abs(pid) )
+        return ret
+
+    def freezePidsNotInBestCombo ( self ):
+        """ all pids that arent in best combo but have
+            unfrozen masses -- freeze them """
+        okPids = self.getAllPidsOfBestCombo()
+        unfrozen = self.M.unFrozenParticles( withLSP=False )
+        for pid in unfrozen:
+            if not pid in okPids:
+                self.freezeParticle ( pid )
+
 if __name__ == "__main__":
     import protomodel
     import pickle
@@ -1227,6 +1232,7 @@ if __name__ == "__main__":
     protomodels = pickle.load(f)
     f.close()
     ma = Manipulator ( protomodels[0], verbose=True )
-    ma.merge ( ( 1000001, 1000003 ), force_merge = True )
-    import IPython
-    IPython.embed()
+    print ( ma.getAllPidsOfBestCombo() )
+    #ma.merge ( ( 1000001, 1000003 ), force_merge = True )
+    #import IPython
+    #IPython.embed()

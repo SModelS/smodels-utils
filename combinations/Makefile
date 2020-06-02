@@ -17,8 +17,9 @@ run:
 	./walkingWorker.py --nmin 0 --nmax 10
 
 doc:
-	pyreverse *.py
-	dot -Tps classes.dot -o outfile.ps
+#pyreverse *.py
+#	dot -Tps classes.dot -o outfile.ps
+	pyreverse -my -A -o png -p manipulator manipulator.py
 
 du-h: .PHONY
 	du -h --max-depth=1 | tee du-h

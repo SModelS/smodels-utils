@@ -51,6 +51,8 @@ class RandomWalker:
             sys.exit(-2)
         self.walkerid = walkerid ## walker id, for parallel runs
         self.rundir = rundir
+        if rundir == None:
+            self.rundir = "./"
         self.hiscoreList = Hiscore ( walkerid, True, "%s/H%d.pcl" % ( rundir, walkerid ),
                                      backup=False )
         self.hiscoreList.nkeep = 1
@@ -173,11 +175,12 @@ class RandomWalker:
         prob = min ( 1., 1. - math.exp ( -dK )  )
         prob = max ( 0., .1 * prob )
         a = random.uniform ( 0., 1. )
-        doTP = ( a < prob )
+        doTP = ( a < prob ) ## do teleport, yes or no
         self.log ( "check if to teleport, Kmax=%.2f, ours is=%.2f, p=%.2f, a=%.2f: %s" % \
                    ( bestK, ourK, prob, a, str(doTP) ) )
         if doTP:
             self.manipulator.teleportToHiscore()
+        return doTP
 
     def onestep ( self ):
         self.protomodel.clean()
@@ -239,22 +242,26 @@ class RandomWalker:
 
         self.log ( "found highest Z: %.2f" % self.protomodel.Z )
         
-        if self.hiscoreList != None:
-            self.log ( "check if result goes into hiscore list" )
-            self.hiscoreList.newResult ( self.protomodel ) ## add to high score list
-            self.log ( "done check for result to go into hiscore list" )
-        # self.hiqueue.put( [ hiscoreList ] )
-        self.train ()
+        # self.train ()
         nUnfrozen = len ( self.protomodel.unFrozenParticles() )
         self.pprint ( "best combo for strategy ``%s'' is %s: %s: [K=%.2f, Z=%.2f, %d unfrozen]" % \
             ( self.manipulator.strategy, self.protomodel.letters, self.protomodel.description, self.protomodel.K, self.protomodel.Z, nUnfrozen ) )
         smaxstp = "%s" % self.maxsteps
         if self.maxsteps < 0:
             smaxstp = "inf"
-        self.checkIfToTeleport()
+        if self.checkIfToTeleport():
+            # if we teleport the rest becomes irrelevant
+            return
+        self.log ( "freeze pids that arent in best combo, we dont need them" )
+        self.manipulator.freezePidsNotInBestCombo()
         self.log ( "now check for swaps" )
         self.manipulator.checkSwaps()
         self.log ( "step %d/%s finished." % ( self.protomodel.step, smaxstp ) )
+
+        if self.hiscoreList != None:
+            self.log ( "check if result goes into hiscore list" )
+            self.hiscoreList.newResult ( self.protomodel ) ## add to high score list
+            self.log ( "done check for result to go into hiscore list" )
 
     def train ( self ):
         """ train the accelerator """
