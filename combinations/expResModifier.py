@@ -13,6 +13,7 @@ from smodels.theory.model import Model
 from smodels.share.models.SMparticles import SMList
 from smodels.particlesLoader import BSMList
 from smodels.theory.theoryPrediction import theoryPredictionsFor
+from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
 from smodels.theory import decomposer
 
 class ExpResModifier:
@@ -108,12 +109,14 @@ class ExpResModifier:
         exp = dataset.dataInfo.expectedBG
         err = dataset.dataInfo.bgError
         lmbda = stats.norm.rvs ( exp, err )
+        dataset.dataInfo.lmbda = lmbda
         if lmbda < 0.:
             lmbda = 0.
         obs = stats.poisson.rvs ( lmbda )
         self.log ( "effmap replacing nobs=%.2f (bg=%.2f) by nobs=%.2f for %s" % \
                 ( orig, exp, obs, dataset.globalInfo.id ) )
         dataset.dataInfo.observedN = obs
+        ## origN stores the n_observed of the original database
         dataset.dataInfo.origN = orig
         return dataset
 
@@ -125,9 +128,27 @@ class ExpResModifier:
         orig = dataset.dataInfo.observedN
         sigLambda = float ( tpred.xsection.value * lumi )
         sigN = stats.poisson.rvs ( sigLambda )
+        err = dataset.dataInfo.bgError
         self.log ( "effmap adding sigN=%.2f to %.2f" % \
                    ( sigN, orig ) )
+        dataset.dataInfo.trueBG = orig ## keep track of true bg
         dataset.dataInfo.observedN = orig + sigN
+        dataset.dataInfo.sigN = sigN ## keep track of signal
+
+        ## now recompute the limits!!
+        alpha = .05
+        if orig == 0.0: 
+            orig = 0.00001
+        computer = UpperLimitComputer(cl=1.-alpha )
+        m = Data( orig+sigN, orig, err**2, nsignal = 1. )
+        lumi = dataset.globalInfo.lumi# .asNumber(1./fb)
+        maxSignalXsec = computer.ulSigma(m, marginalize=True ) / lumi
+        dataset.dataInfo.origUpperLimit = dataset.dataInfo.upperLimit
+        dataset.dataInfo.origExpectedUpperLimit = dataset.dataInfo.expectedUpperLimit
+        dataset.dataInfo.upperLimit = maxSignalXsec
+        maxSignalXsec = computer.ulSigma(m, marginalize=True, expected=True ) / lumi
+        dataset.dataInfo.expectedUpperLimit = maxSignalXsec
+
         return dataset
 
     def addSignalForULMap ( self, dataset, tpred, lumi ):
@@ -159,7 +180,8 @@ class ExpResModifier:
         ret = []
         self.produceTopoList()
         for expRes in listOfExpRes:
-            tpreds = theoryPredictionsFor ( expRes, self.topos )
+            tpreds = theoryPredictionsFor ( expRes, self.topos, useBestDataset=False,
+                                            combinedResults=False )
             if tpreds == None:
                 ret.append ( expRes )
                 continue

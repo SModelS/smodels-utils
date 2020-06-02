@@ -462,7 +462,7 @@ class DataSetInput(Locker):
             ulExpected = comp.ulSigma ( m, marginalize=True, expected=True ) / lumi.asNumber ( 1. / fb )
         except ModuleNotFoundError as e:
             ## maybe smodels < 1.1.2?
-            logger.error ( "cannot import simplifiedLikelihoods module: %s. Maybe upgrade to smodels v1.1.3?" % e )
+            logger.error ( "cannot import simplifiedLikelihoods module: %s. Maybe upgrade to smodels >= v1.1.3?" % e )
             from smodels.tools import statistics
             ul = statistics.upperLimit(self.observedN, self.expectedBG,
                    self.bgError, lumi, alpha, self.ntoys ).asNumber(fb)
