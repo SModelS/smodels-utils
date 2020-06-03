@@ -5,6 +5,8 @@
    :synopsis: Holds objects used by convert.py.
 
 .. moduleauthor:: Michael Traub <michael.traub@gmx.at>
+.. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
+.. moduleauthor:: Andre Lessa <lessa.a.p@gmail.com>
 
 """
 
@@ -36,7 +38,7 @@ if version()[:3]=="1.2" or version()[0]=="2":
     hscp=True
 ## smodels v1.2 has final states for hscp patch
 
-quenchNegativeMasses = False ## set to true, if you wish to 
+quenchNegativeMasses = False ## set to true, if you wish to
 # quench the warning about negative masses
 
 def getSignalRegionsEMBaked ( filename ):
@@ -61,7 +63,7 @@ def getStatsEMBaked ( ):
     g=eval(f.read())
     f.close()
     return g
-                            
+
 class Locker(object):
 
     """Super-class to 'lock' a class.
@@ -539,10 +541,15 @@ class DataSetInput(Locker):
                     fs = tx.finalState
                 else:
                     fs = ['MET','MET']
-                if not hscp:
-                    newEl = Element(el)
-                else:
+                try:
                     newEl = Element(el,fs)
+                except:
+                    try:
+                        newEl = Element(el,fs,model=tx._particles)
+                    except:
+                        logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
+                        sys.exit()
+
                 datasetElements.append(newEl)
         for iel,elA in enumerate(datasetElements):
             for jel,elB in enumerate(datasetElements):
@@ -574,7 +581,7 @@ class TxNameInput(Locker):
                     'condition', 'conditionDescription','massConstraint',
                     'upperLimits','efficiencyMap','expectedUpperLimits',
                     'massConstraints', '_dataLabels', 'round_to',
-                    '_smallerThanError' ] # , '_countErrors' ]
+                    '_smallerThanError', '_particles' ] # , '_countErrors' ]
 
     requiredAttr = [ 'constraint','condition','txName','axes','dataUrl',
                      'source' ]
@@ -597,6 +604,7 @@ class TxNameInput(Locker):
         self.round_to = 5 ## number of digits to round to
         self._name = txName
         self._smallerThanError = 0
+        self._particles = None
 #        self._countErrors = 0
         self.txName = txName
         if hscp:
@@ -610,9 +618,33 @@ class TxNameInput(Locker):
         self._goodPlanes = []
         self._dataLabels = []
 
+
     def __str__(self):
 
         return self._name
+
+    def setParticlesFromFile(self,particlesFile):
+        """
+        Load the particles contained in the particlesFile. These are stored in self._getParticles
+        and used to build the txname elements.
+        """
+
+        pFile = os.path.abspath(particlesFile)
+        if not os.path.isfile(pFile):
+            logger.error("Could not find file %s" %pFile)
+            sys.exit()
+
+        from importlib import import_module
+        sys.path.append(os.path.dirname(pFile))
+        pF = os.path.basename(os.path.splitext(pFile)[0])
+        logger.debug("Loading database particles from: %s" %pFile)
+        modelFile = import_module(pF, package='smodels')
+        if not hasattr(modelFile,'finalStates'):
+            logger.error("Model definition (finalStates) not found in" % pFile)
+        else:
+            #set model name to file location:
+            modelFile.finalStates.label = os.path.basename(pFile)
+            self._particles = modelFile.finalStates
 
 
     def addMassPlane(self, plane):
@@ -621,14 +653,14 @@ class TxNameInput(Locker):
         add a MassPlane object with given axes to self.planes.
         Add new attributes to the MassPlane.
         :param txDecay: object of type TxDecay
-        :param plane: A MassPlane object or the full mass array containing 
-                      equations which relate the physical masses and the plane 
+        :param plane: A MassPlane object or the full mass array containing
+                      equations which relate the physical masses and the plane
                       coordinates, using the pre-defined 'x','y',.. symbols.
         (e.g. [[x,y],[x,y]]).
         :raise missingMassError: if one mass entry is missing
         :raise onlyOnePlaneError: if a second mass plane is given and the related mass space
         have only 2 dimensions
-        :raise interMediateParticleError: if a interMasses are given and the related 
+        :raise interMediateParticleError: if a interMasses are given and the related
                                           mass space
         have only 2 dimensions
         :return: MassPlane-object
@@ -643,8 +675,30 @@ class TxNameInput(Locker):
             logger.error("Input must be a MassPlane object or a mass array")
             sys.exit()
 
-        #Get element constraint structure/topology:
-        element = Element(elementsInStr(self.constraint,removeQuotes=False)[0])
+        #Make sure the database particles have been defined (only needed for v2.xx):
+        if not hasattr(self,'particles') or self.particles is None:
+            try:
+                from smodels.experiment.defaultFinalStates import finalStates
+                self._particles = finalStates
+            except:
+                pass
+
+        #Try to build element (for backward compatibility):
+        try:
+            #v1.xx:
+            element = Element(elementsInStr(self.constraint,removeQuotes=False)[0])
+        except:
+            try:
+                #v2.xx:
+                if not hasattr(self,'_particles') or self._particles is None:
+                    from smodels.experiment.defaultFinalStates import finalStates
+                    self._particles = finalStates
+                    logger.info("Using particle definitions from smodels.experiment.defaultFinalStates")
+                element = Element(elementsInStr(self.constraint,removeQuotes=False)[0], model = self._particles)
+            except:
+                logger.error("Error building elements. Are the versions of smodels-utils and smodels compatible?")
+                sys.exit()
+
         #Checks for new input
         if len(massArray) != len(element.branches):
             logger.error("Mass array definition %s is not consistent with the txname constraint %s"
@@ -728,7 +782,7 @@ class TxNameInput(Locker):
             if planeHasInfo:
                 # infoStr = " ".join(infoList) ## new version
                 myInfoList = []
-                hasNone = False 
+                hasNone = False
                 ## remove Nones, but only if there are other values.
                 for i in infoList:
                     if i not in [ None, "None" ]:
@@ -827,7 +881,7 @@ class TxNameInput(Locker):
 #                            self._countErrors += 1
 #                            if self._countErrors < 4:
 #                                logger.error ( "FIXME whats the units we are using for lifetime?" )
-                            # M[1] is in ATLAS-SUSY_2016-08 given in [ns], 
+                            # M[1] is in ATLAS-SUSY_2016-08 given in [ns],
                             # m1 = M[1]*eval(dataHandler.lifetimeUnit,{'ns': ns})
                             # lets convert it to a width [GeV]
                             m1 = M[1] * GeV ## width in GeV
@@ -986,4 +1040,3 @@ class TxNameInput(Locker):
                 return True
 
         return False
-

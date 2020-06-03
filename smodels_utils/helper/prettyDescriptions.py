@@ -227,17 +227,18 @@ decayDict = { 'T1': 'gluino  --> quark antiquark  lsp ' ,
     'TSelSel':'selectron --> electron lsp ',
     'TSmuSmu':'smuon --> muon lsp ',
     'TStauStau':'stau  --> tau lsp ',
-    'THSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1', 
+    'THSCPM1' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1',
     'THSCPM1b' : 'stau stau --> stau stau',
     'THSCPM1Disp' : 'chargino^pm_1 chargino^pm_1 --> chargino^pm_1 chargino^pm_1',
-    'THSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp', 
+    'THSCPM2' : 'chargino^pm_1 lsp --> chargino^pm_1 lsp',
     'THSCPM2b' : 'stau lsp --> stau lsp',
-    'THSCPM3' : 'squark --> quark chargino^pm_1', 
+    'THSCPM3' : 'squark --> quark chargino^pm_1',
     'THSCPM4' : 'squark --> quark chargino^pm_1, squark --> quark lsp',
     'THSCPM5' : 'squark --> quark lsp, lsp --> tau stau',
     'THSCPM6' : 'squark squark --> quark quark lsp lsp, lsp --> tau stau_1',
     'THSCPM7' : 'squark --> quark chargino_1 | quark neutralino_1, neutralino_1 --> W chargino_1',
-    'THSCPM8' : 'squark --> quark quark stau_1', 
+    'THSCPM8' : 'squark --> quark quark stau_1',
+    'THSCPM9' : 'squark --> quark quark stau_1, squark --> quark quark lsp',
     'TRHadGM1' : 'gluino gluino --> gluino gluino',
     'TRHadQM1' : 'stop stop --> stop stop',
     "T5Gamma" :    "gluino --> neutralino_1 quark antiquark, neutralino_1 --> gravitino y",
@@ -405,6 +406,7 @@ motherDict = {"T1" :  "gluino",
     "THSCPM6" : "squark",
     "THSCPM7" : "squark",
     "THSCPM8" : "squark",
+    "THSCPM9" : "squark",
     'TRHadGM1' : 'gluino',
     'TRHadQM1' : 'stop',
     "T5Gamma" : "gluino",
@@ -450,7 +452,7 @@ def latexfy(instr):
             outstr = outstr.replace(' '+key,' '+rep)
         if '/'+key in outstr:
             outstr = outstr.replace('/'+key,'/'+rep)
-            
+
 
     outstr = outstr.replace('-->','#rightarrow')
     outstr = outstr.lstrip().rstrip()
