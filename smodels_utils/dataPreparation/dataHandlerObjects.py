@@ -75,7 +75,7 @@ class DataHandler(object):
         #Consistency checks:
         if len(coordinateMap) != self.dimensions+1:
             logger.error("Coordinate map %s is not consistent with number of dimensions (%i)"
-                         %(coordinateMap,self.dimensions))
+                         %(coordinateMap,self.dimensions+1))
             sys.exit()
         for xv in self.xvars:
             if not xv in coordinateMap:
@@ -406,7 +406,7 @@ class DataHandler(object):
         :return: True if value greater (or equals) 0 or allowNegativeValues == True
         """
 
-        if self.allowNegativeValues: 
+        if self.allowNegativeValues:
             return True
         for value in values:
 
@@ -513,7 +513,7 @@ class DataHandler(object):
         keys = set()
         for ctr,p in enumerate(self.path):
             path = {}
-            ret = list( self.csvForPath( p ) ) 
+            ret = list( self.csvForPath( p ) )
             for point in ret:
                 key = tuple(point[:-1])
                 keys.add ( key )
@@ -591,7 +591,7 @@ class DataHandler(object):
                 eff = values[SR]
             ret += [ eff ]
             yield ret
-        
+
 
     def effi(self):
 
@@ -826,7 +826,7 @@ class DataHandler(object):
                 xRange = range(1,xAxis.GetNbins() + 1, 2)
             else:
                 logger.warning ( "Very large map (nbins in x is %d), but trimming turned off." % n_bins )
-                
+
 
 
 
@@ -900,7 +900,7 @@ class ExclusionHandler(DataHandler):
         """
         attributes 'sort' and 'reverse' are initialized with False
         :param name: name as string
-        :param coordinateMap: A dictionary mapping the index of the variables 
+        :param coordinateMap: A dictionary mapping the index of the variables
                in the data and the
                corresponding x,y,.. coordinates used to define the plane axes.
                (e.g. {x : 0, y : 1, 'ul value' : 2} for a 3-column data,

@@ -215,7 +215,7 @@ class MassPlane(object):
             #Define the default 1D coordinate mapping for exclusion curves
             if not coordinateMap:
                 coordinateMap = {x : 0, y : 1, 'value' : None}
-            dataObject = ExclusionHandler(dataLabel,coordinateMap,[x,y])
+            dataObject = ExclusionHandler(dataLabel,coordinateMap,self.xvars)
             self._exclusionCurves.append(dataObject)
 
         dataObject.dataUrl = self.dataUrl
@@ -266,7 +266,7 @@ class MassPlane(object):
         :param massArray: list containing two other lists. Each list contains floats,
         representing the masses of the particles of each branch in GeV
         :param widthArray: list containing two other lists. Each list contains floats,
-        representing the widths of the particles of each branch in GeV. If None, 
+        representing the widths of the particles of each branch in GeV. If None,
         we assume a width-independent plane.
         :raise massArrayLenError: if length of mass array is unequal 2
         :raise unequalXYValuesError: if the branches return different values for x or y
