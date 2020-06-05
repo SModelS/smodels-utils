@@ -1209,6 +1209,8 @@ class Manipulator:
     def getAllPidsOfBestCombo ( self ):
         """ get all pids that appear in the best combo """
         ret = set()
+        if type(self.M.bestCombo)==type(None):
+            return ret
         for tp in self.M.bestCombo:
             for prod in tp.PIDs:
                 for branch in prod:
