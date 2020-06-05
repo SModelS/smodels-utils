@@ -6,6 +6,7 @@ https://twiki.cern.ch/twiki/bin/view/LHCPhysics/SUSYCrossSections
 and stored in the xsec*.txt files. """
 
 import os, subprocess, sys
+import pyslha
 
 def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run, order, comment ):
     """ add to file F cross sections for pid1, pid2 
@@ -13,8 +14,16 @@ def addToFile ( F, pid1, pid2, xsecs, sqrts, dry_run, order, comment ):
                   (LO=0, NLO=1, NLL=2, ... )
     :param comment: comment to be added to xsec line
     """
+    
+    slhaData = pyslha.readSLHAFile(F)    
     tokens = F.split("_")
-    mass = float(tokens[1])
+    mass1 = slhaData.blocks['MASS'][abs(pid1)]
+    mass2 = slhaData.blocks['MASS'][abs(pid2)]
+    if abs(mass1-mass2) > 1.0:
+        print('[addRefXSecs] Can not compute xsecs for pair production of sparticles with distinct masses')
+        return
+    else:
+        mass = (mass1+mass2)/2.
     xsec = interpolate ( mass, xsecs )
     if xsec == None:
         print ( "[addRefXSecs] skipping %d" % mass )
