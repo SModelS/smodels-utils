@@ -581,7 +581,7 @@ class TxNameInput(Locker):
                     'condition', 'conditionDescription','massConstraint',
                     'upperLimits','efficiencyMap','expectedUpperLimits',
                     'massConstraints', '_dataLabels', 'round_to',
-                    '_smallerThanError', '_particles' ] # , '_countErrors' ]
+                    '_databaseParticles', '_smallerThanError', '_particles' ]
 
     requiredAttr = [ 'constraint','condition','txName','axes','dataUrl',
                      'source' ]

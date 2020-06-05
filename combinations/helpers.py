@@ -296,19 +296,21 @@ def findLargestExcess ( db ):
             if not S in excesses:
                 excesses[S]=[]
             excesses[S].append ( dataset )
+
     def pprint ( excesses ):
         keys = list ( excesses.keys() )
         keys.sort()
         for k in keys[-5:]:
-            v = excesses[k]
-            if len(v)!=1:
+            ds = excesses[k]
+            if len(ds)!=1:
                 print ( "error cannot handle" )
                 continue
-            v = v[0]
-            obsN = v.dataInfo.observedN
-            eBG = v.dataInfo.expectedBG
-            print ( "%.2f: %15s %20s: %d/%.2f" % \
-                    ( k, v.globalInfo.id, v, obsN, eBG ) )
+            ds = ds[0]
+            obsN = ds.dataInfo.observedN
+            eBG = ds.dataInfo.expectedBG
+            print ( "Z=%.2f: %15s, %s: %d/%.2f" % \
+                    ( k, ds.globalInfo.id, str(ds.dataInfo.dataId), obsN, eBG ) )
+
     pprint ( excesses )
     print ( "[helpers.findLargestExcess] found %d eff maps" % len(results) )
     return excesses

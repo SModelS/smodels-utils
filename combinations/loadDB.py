@@ -25,16 +25,20 @@ def main():
                              type=str, default=dbpath )
     argparser.add_argument ( '-I', '--interactive', help='start interactive shell',
                              action="store_true" )
+    argparser.add_argument ( '-e', '--excess', help='show largest excess',
+                             action="store_true" )
     args = argparser.parse_args()
     dbpath = args.dbpath
     # dbpath = "./fake1.pcl"
     database = Database( dbpath )
     print ( database )
+    if args.excess:
+        helpers.findLargestExcess ( database )
     if not args.interactive:
         return
     import IPython
+    print ( "Objects available: database" )
     IPython.embed ( using=False )
-    # helpers.findLargestExcess ( database )
 
 if __name__ == "__main__":
     main()
