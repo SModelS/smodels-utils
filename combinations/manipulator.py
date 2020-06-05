@@ -1213,7 +1213,11 @@ class Manipulator:
             for prod in tp.PIDs:
                 for branch in prod:
                     for pid in branch:
-                        ret.add ( abs(pid) )
+                        if type(pid) == int:
+                            ret.add ( abs(pid) )
+                        if type(pid) in [ tuple, list ] and len(pid)>0:
+                            ret.add ( abs(pid[0]) )
+                            
         return ret
 
     def freezePidsNotInBestCombo ( self ):
