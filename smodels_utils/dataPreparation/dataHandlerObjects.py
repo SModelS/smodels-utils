@@ -304,6 +304,10 @@ class DataHandler(object):
             #Skip variables without indices (relevant for exclusion curves)
             if i is None:
                 continue
+            if i >= len(point):
+                logger.error( "asking for %dth element of %s in %s" % \
+                              (i, point, self.path ) )
+                logger.error( "coordinate map is %s" % self.coordinateMap )
             ptDict[xvar] = point[i]
 
         return ptDict
