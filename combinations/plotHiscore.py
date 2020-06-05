@@ -120,8 +120,10 @@ def writeRawNumbersHtml ( protomodel ):
             for prod in tp.PIDs:
                 for branch in prod:
                     for pid in branch:
-                        if abs(pid)!=1000022:
+                        if type(pid) == int and abs(pid)!=1000022:
                             pids.add ( abs(pid) )
+                        if type(pid) in [ list, tuple ] and abs(pid[0])!=1000022:
+                            pids.add ( abs(pid[0]) )
             obsN = dI.observedN
             if ( obsN - int(obsN) ) < 1e-6:
                 obsN=int(obsN)
