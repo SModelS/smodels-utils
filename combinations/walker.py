@@ -65,6 +65,7 @@ class RandomWalker:
             self.manipulator.predict()
             self.pprint ( "Cheat model gets Z=%.2f, K=%.2f" % \
                           ( self.manipulator.M.Z, self.manipulator.M.K ) )
+            self.hiscoreList.newResult ( self.manipulator.M )
         self.catch_exceptions = catch_exceptions
         self.history = History ( walkerid )
         self.doBayesian = True ## bayesian or frequentist?

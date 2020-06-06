@@ -80,7 +80,10 @@ def getExtremeSSMs ( ssm, largest, nm = 7 ):
         nm = len(keys)
     s = ""
     for ctr,k in enumerate(keys[:nm]):
-        s += "%s=%s; " % ( ssm[k], k )
+        if k == 0 and ssm[k] == "\\mathrm{none}":
+            s += "\\mathrm{none}  "
+        else:
+            s += "%s=%s; " % ( ssm[k], k )
     if len(s)>2:
         s = s[:-2]
     ret = "%signal strength multipliers: $%s$" % ( extreme, s )
