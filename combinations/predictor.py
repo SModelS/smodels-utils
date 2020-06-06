@@ -12,7 +12,7 @@ from smodels.theory.model import Model
 import pickle, time, os
 
 class Predictor:
-    def __init__ ( self, walkerid, dbpath = "../../smodels-database/",
+    def __init__ ( self, walkerid, dbpath = "./default.pcl",
                    expected = False, select = "all" ):
         self.walkerid = walkerid
         self.modifier = None

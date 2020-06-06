@@ -4,6 +4,13 @@
 
 import os, sys
 
+def getDBPath ( dbpath, rundir ):
+    """ obtain the database path, resolve <rundir> """
+    if "<rundir>" in dbpath:
+        dbpath = dbpath.replace("<rundir>",rundir+"/")
+    dbpath = dbpath.replace("//","/")
+    return dbpath
+
 def setup( rundir = None, codedir = None ):
     """
     :param rundir: if not None, override the rundir defined per default

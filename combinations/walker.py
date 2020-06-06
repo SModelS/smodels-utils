@@ -35,7 +35,7 @@ def cleanDirectory ():
 class RandomWalker:
     def __init__ ( self, walkerid=0, nsteps=10000, strategy="aggressive", 
                    dump_training = False, cheatcode = 0, 
-                   dbpath = "../../smodels-database/", expected = False,
+                   dbpath = "<rundir>/database.pcl", expected = False,
                    select = "all", catch_exceptions = True,
                    rundir = None ):
         """ initialise the walker
@@ -68,7 +68,6 @@ class RandomWalker:
             self.hiscoreList.newResult ( self.manipulator.M )
         self.catch_exceptions = catch_exceptions
         self.history = History ( walkerid )
-        self.doBayesian = True ## bayesian or frequentist?
         self.record_history = False
         self.maxsteps = nsteps
         self.accelerator = None
@@ -97,7 +96,7 @@ class RandomWalker:
     @classmethod
     def fromProtoModel( cls, protomodel, nsteps=10000, strategy="aggressive", 
                    walkerid=0, dump_training = False, 
-                   dbpath="../../smodels-database/", expected = False, 
+                   dbpath="<rundir>/database.pcl", expected = False, 
                    select = "all", catch_exceptions = True, keep_meta = True,
                    rundir = None ):
         ret = cls( walkerid, nsteps=nsteps, dbpath = dbpath, 
@@ -122,7 +121,7 @@ class RandomWalker:
     @classmethod
     def fromDictionary( cls, dictionary, nsteps=10000, strategy="aggressive", 
                    walkerid=0, dump_training = False, 
-                   dbpath="../../smodels-database/", expected = False, 
+                   dbpath="<rundir>/database.pcl", expected = False, 
                    select = "all", catch_exceptions = True, keep_meta = True, 
                    rundir = None ):
         ret = cls( walkerid, nsteps=nsteps, dbpath = dbpath, 
@@ -332,24 +331,15 @@ class RandomWalker:
         """ depending on the ratio, decide on whether to take the step or not.
             If ratio > 1., take the step, if < 1, let chance decide. """
         if ratio >= 1.:
-            if self.doBayesian:
-                self.highlight ( "info", "K: %.3f -> %.3f: r=%.4f, take the step" % ( self.protomodel.oldK(), self.protomodel.K, ratio ) )
-                if self.protomodel.K > 0. and self.protomodel.K < 0.7 * self.protomodel.oldK():
-                    self.pprint ( " `- weird, though, K decreases. Please check." )
-                    sys.exit(-2)
-            else:
-                self.highlight ( "info", "Z: %.3f -> %.3f: take the step" % ( self.protomodel.oldZ(), self.protomodel.Z ) )
-                if self.protomodel.Z < 0.7 * self.protomodel.oldZ():
-                    self.pprint ( " `- weird, though, Z decreases. Please check." )
-                    sys.exit(-2)
+            self.highlight ( "info", "K: %.3f -> %.3f: r=%.4f, take the step" % ( self.protomodel.oldK(), self.protomodel.K, ratio ) )
+            if self.protomodel.K > 0. and self.protomodel.K < 0.7 * self.protomodel.oldK():
+                self.pprint ( " `- weird, though, K decreases. Please check." )
+                sys.exit(-2)
             self.takeStep()
         else:
             u=random.uniform(0.,1.)
             if u > ratio:
-                if self.doBayesian:
-                    self.pprint ( "u=%.2f > %.2f; K: %.2f -> %.2f: revert." % (u,ratio,self.protomodel.oldK(), self.protomodel.K) )
-                else:
-                    self.pprint ( "u=%.2f > %.2f; Z: %.2f -> %.2f: revert." % (u,ratio,self.protomodel.oldZ(), self.protomodel.Z) )
+                self.pprint ( "u=%.2f > %.2f; K: %.2f -> %.2f: revert." % (u,ratio,self.protomodel.oldK(), self.protomodel.K) )
                 self.protomodel.restore()
                 if hasattr ( self, "oldgrad" ) and self.accelerator != None:
                     self.accelerator.grad = self.oldgrad
@@ -360,17 +350,10 @@ class RandomWalker:
     def computeRatio ( self ):
         """ get the ratio of posteriors/likelihoods """
         ratio = 1.
-        if self.doBayesian:
-            oldK = self.protomodel.oldK()
-            K = self.protomodel.K
-            if oldK > -20. and K < oldK:
-                ratio = numpy.exp(.5*( K - oldK ) )
-            return ratio
-
-        oldZ = self.protomodel.oldZ()
-        Z = self.protomodel.Z
-        if oldZ > 0. and Z < oldZ:
-            ratio = numpy.exp(.5*( (Z**2) - (oldZ**2) ) )
+        oldK = self.protomodel.oldK()
+        K = self.protomodel.K
+        if oldK > -20. and K < oldK:
+            ratio = numpy.exp(.5*( K - oldK ) )
         return ratio
 
     def log ( self, *args ):
@@ -462,8 +445,8 @@ if __name__ == "__main__":
             help='select only a subset of results (all,ul,em) [all]',
             type=str, default="all" )
     argparser.add_argument ( '-d', '--database',
-            help='path to database [../../smodels-database]',
-            type=str, default="../../smodels-database" )
+            help='path to database [<rundir>/database.pcl]',
+            type=str, default="<rundir>/database.pcl" )
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug,info,warn,error [info]',
             type=str, default="info" )

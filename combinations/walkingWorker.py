@@ -4,7 +4,7 @@ import sys, os
 from csetup import setup
 
 def main( nmin, nmax, cont,
-          dbpath = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-database/",
+          dbpath = "<rundir>/database.pcl",
           cheatcode = 0, dump_training = False, rundir=None ):
     """ a worker node to set up to run walkers
     :param nmin: the walker id of the first walker
@@ -16,6 +16,8 @@ def main( nmin, nmax, cont,
     """
     import sys, os
     rundir = setup( rundir )
+    if rundir != None and "<rundir>" in dbpath:
+        dbpath=dbpath.replace("<rundir>","%s/" % rundir )
     pfile, states = None, None
     if cont == "default":
         import os

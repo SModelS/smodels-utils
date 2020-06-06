@@ -630,7 +630,7 @@ def plotDecays ( protomodel, verbosity, outfile="decays.png" ):
                         verbosity = verbosity,
                         ssmultipliers = protomodel.ssmultipliers )
 
-def plot ( number, verbosity, picklefile, options ):
+def plot ( number, verbosity, picklefile, options, dbpath ):
     ## plot hiscore number "number"
     protomodel = obtain ( number, picklefile )
     if hasattr ( protomodel, "currentSLHA" ):
@@ -688,7 +688,7 @@ def runPlotting ( args ):
                 "predictions": not args.nopredictions, "html": not args.nohtml,
                 "keep_tex": args.keep, "tex": not args.notex }
 
-    plot ( args.number, args.verbosity, args.picklefile, options )
+    plot ( args.number, args.verbosity, args.picklefile, options, args.dbpath )
     if upload is None:
         return
     F = "*.png pmodel.py hiscore.slha index.html rawnumbers.html"

@@ -34,7 +34,7 @@ class ProtoModel:
         a.sort()
         return tuple(a)
 
-    def __init__ ( self, walkerid, dbpath="../../smodels-database/",
+    def __init__ ( self, walkerid, dbpath="<rundir>/database.pcl",
                    expected = False, select = "all", keep_meta = True ):
         """
         :param expected: if True, run with observations drawn from expected values

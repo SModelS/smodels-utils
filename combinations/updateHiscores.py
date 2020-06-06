@@ -80,6 +80,7 @@ def plot( Z, K, rundir ):
     args.detailed = False
     args.destinations = False
     args.picklefile = "%shiscore.pcl" % rundir 
+    args.dbpath = "%s/database.pcl" % rundir
     args.verbosity = "info"
     args.nohtml = False
     args.noruler = False

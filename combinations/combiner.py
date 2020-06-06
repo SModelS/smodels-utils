@@ -613,8 +613,8 @@ if __name__ == "__main__":
             help='slha file to test [test.slha]',
             type=str, default="test.slha" )
     argparser.add_argument ( '-d', '--database',
-            help='path to database [../../smodels-database]',
-            type=str, default="../../smodels-database" )
+            help='path to database [<rundir>/database.pcl]',
+            type=str, default="<rundir>/database.pcl" )
     argparser.add_argument ( '-u', '--upper_limits',
             help='use only upper limits results', action='store_true' )
     argparser.add_argument ( '-e', '--efficiencyMaps',

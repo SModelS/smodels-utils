@@ -5,7 +5,6 @@
 from smodels.theory.theoryPrediction import TheoryPrediction
 import fnmatch
 
-
 moreComments = { ## collect a few more comments on analyses
     "CMS-SUS-18-002": "lepton veto",
     "ATLAS-SUSY-2018-31": "lepton veto",
@@ -254,7 +253,7 @@ def canCombineConservative ( globA, globB, elA, elB ):
 def getSummary():
     from smodels.experiment.databaseObj import Database
     # dbpath = "official"
-    dbpath = "../../smodels-database"
+    dbpath = "<rundir>/database.pcl"
     print ( "[analysisCombiner] checking %s" % dbpath )
     db = Database ( dbpath )
     results = db.getExpResults()
@@ -279,8 +278,8 @@ def checkOneAnalysis():
     argparser = argparse.ArgumentParser(
             description='print the correlations of one specific analysis')
     argparser.add_argument ( '-d', '--dbpath',
-            help='specify path to database',
-            type=str, default="../../smodels-database" )
+            help='specify path to database [<rundir>/database.pcl]',
+            type=str, default="<rundir>/database.pcl" )
     argparser.add_argument ( '-a', '--analysis',
             help='print for <analysis>',
             type=str, default="CMS-SUS-19-006" )

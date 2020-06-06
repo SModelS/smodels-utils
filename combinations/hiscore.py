@@ -387,7 +387,7 @@ def compileList( nmax ):
                 f.close()
                 allprotomodels += list ( filter ( None.__ne__, protomodels ) )
                 allprotomodels = sortByK ( allprotomodels )
-        except ( IOError, OSError, FileNotFoundError, EOFError, pickle.UnpicklingError ) as e:
+        except ( IOError, OSError, FileNotFoundError, EOFError, UnicodeDecodeError, pickle.UnpicklingError ) as e:
             cmd = "rm -f %s" % fname
             print ( "[hiscore] could not open %s (%s). %s." % ( fname, e, cmd ) )
             o = subprocess.getoutput ( cmd )
