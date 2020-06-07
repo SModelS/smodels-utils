@@ -136,8 +136,17 @@ def writeRawNumbersHtml ( protomodel ):
                       ( did, obsN, eBG, bgErr, S, particles ) )
         if dtype == "upperLimit":
             S = "?"
-            particles = "all"
-            f.write ( '<td>-</td><td> %.1f fb </td><td> %.1f fb <td></td><td style="text-align:right">%s</td><td>%s</td></tr>\n' % \
+            pids = set()
+            for prod in tp.PIDs:
+                for branch in prod:
+                    for pid in branch:
+                        if type(pid) == int and abs(pid)!=1000022:
+                            pids.add ( abs(pid) )
+                        if type(pid) in [ list, tuple ] and abs(pid[0])!=1000022:
+                            pids.add ( abs(pid[0]) )
+            particles = helpers.toHtml ( pids, addSign = False,
+                                          addBrackets = False )
+            f.write ( '<td>-</td><td> %.1f fb </td><td> %.1f fb</td><td style="text-align:right">%s</td><td style="text-align:right">%s</td></tr>\n' % \
                     ( tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb), S, particles ) )
     f.write("</table>\n" )
     f.close()
