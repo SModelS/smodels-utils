@@ -271,6 +271,7 @@ class Manipulator:
             self.M.step = D["step"]
         ## add also the unused SSMs, set them to 1.
         self.M.initializeSSMs ( overwrite = False )
+        self.M.delXSecs()
 
     def cheat ( self, mode = 0 ):
         ## cheating, i.e. starting with models that are known to work well
@@ -297,6 +298,7 @@ class Manipulator:
         self.M.masses[pid]=random.uniform ( self.M.masses[self.M.LSP], self.M.maxMass )
         ## when unfreezing, nothing can go offshell, right?
         self.removeAllOffshell() ## remove all offshell stuff, normalize all branchings
+        self.M.delXSecs() ## old xsecs dont count anymore
         # self.M.normalizeAllBranchings() ## adjust everything
         self.M.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(pid), self.M.masses[pid] ) )
         return 1
@@ -608,6 +610,7 @@ class Manipulator:
         self.M.masses[pid]=1e6
         self.normalizeAllBranchings()
         self.removeAllOffshell()
+        self.M.delXSecs()
 
     def computeNewSSMs ( self, pair ):
         """ compute the new ssms after the merger """
@@ -761,6 +764,7 @@ class Manipulator:
 
         self.log ( "now predict. old rmax is at %.2f" % self.M.rmax )
         oldZ,oldrmax = self.M.Z, self.M.rmax
+        self.M.delXSecs()
 
         passed = self.M.predict ( nevents = 100000, recycle_xsecs = False )
         if passed == False:
@@ -956,9 +960,10 @@ class Manipulator:
         for dpd,v in self.M.ssmultipliers.items():
             if p in dpd or -p in dpd:
                 newssm = self.M.ssmultipliers[dpd]*f
-                if newssm > 10000.:
-                    newssm = 10000.
-                self.M.ssmultipliers[dpd]= newssm
+                #if newssm > 10000.:
+                #    newssm = 10000.
+                # self.M.ssmultipliers[dpd]= newssm
+                self.changeSSM ( dpd, newssm )
                 ssms.append ( newssm )
         self.M.log ( " `- %s: ssms are now %.2f+/-%.2f" % ( helpers.getParticleName(p), numpy.mean ( ssms ), numpy.std ( ssms) ) )
         return 1
@@ -980,19 +985,11 @@ class Manipulator:
         pair = self.M.toTuple(p,q)
         if not pair in self.M.ssmultipliers:
             self.M.ssmultipliers[pair]=1.
-        """
-        if self.M.ssmultipliers[pair] == 0.: # take out the zeroes
-            self.M.ssmultipliers.pop(pair)
-        """
         newSSM=self.M.ssmultipliers[pair]*random.gauss(1.,.1) + random.gauss(.1,.1)
         if newSSM < 0.:
             newSSM = 0.
-        """ # i guess the zeores are ok?
-        if newSSM == 0.:
-            self.M.pprint ( "Huh? ssmultiplier is 0?? Change to 1." )
-            newSSM = 1.
-        """
-        self.M.ssmultipliers[pair]=newSSM
+        self.changeSSM(pair,newSSM)
+        # self.M.ssmultipliers[pair]=newSSM
         self.M.log ( "changing signal strength multiplier of %s,%s: %.2f." % (helpers.getParticleName(pair[0]), helpers.getParticleName(pair[1]), newSSM ) )
         return 1
 
@@ -1150,6 +1147,11 @@ class Manipulator:
         self.M.ssmultipliers[pids]=newssm
         self.M.highlight ( "info", "changing ssm of %s from %.2f to %.2f" % \
                                    ( str(pids), oldssm, newssm ) )
+        if oldssm == 0.:
+            self.M.highlight ( "info could not find ssms for %s. recompute xsecs." % str(pids) )
+            self.M.delXSecs()
+            return
+
         r = newssm / oldssm
         if not hasattr ( self.M, "stored_xsecs" ):
             self.M.highlight ( "info", "when changing SSMs, no stored xsecs found. not rescaling %s." % str(pids) )
@@ -1157,11 +1159,6 @@ class Manipulator:
         for ctr,xsec in enumerate(self.M.stored_xsecs[0]):
             if pids == xsec.pid: ## ok, lets go!
                self.M.stored_xsecs[0][ctr].value = xsec.value * r
-        """
-        if False:
-            for ctr,xsec in enumerate(self.M.stored_xsecs[0]):
-                print ( "new xsec", xsec, "pid", xsec.pid )
-        """
 
     def randomlyChangeMassOf ( self, pid, dx=None ):
         """ randomly change the mass of pid
@@ -1187,6 +1184,7 @@ class Manipulator:
                     continue
                 if mass < tmpmass:
                     self.M.masses[pid2] = tmpmass + 1.
+        self.M.delXSecs() ## delete xsecs
         return 1
 
     def randomlyChangeMasses ( self ):
