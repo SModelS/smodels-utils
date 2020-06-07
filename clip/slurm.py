@@ -102,7 +102,7 @@ def produceScanScript ( pid, force_rewrite, pid2, rundir ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
             f.write ("%s/combinations/scanner.py -R %s -d -c -P -p %d %s\n" % \
-                     ( rundir, codedir,pid,argpid2) )
+                     ( codedir, rundir,pid,argpid2) )
             f.close()
         os.chmod ( fname, 0o775 )
 
@@ -485,7 +485,8 @@ def main():
         runUpdater( args.dry_run, args.time, rundir )
         return
     if args.scan != -1:
-        runScanner ( args.scan, args.dry_run, args.time, args.rewrite, args.pid2, rundir )
+        rewrite = True # args.rewrite
+        runScanner ( args.scan, args.dry_run, args.time, rewrite, args.pid2, rundir )
         return
     if args.llhdscan != -1:
         runLLHDScanner ( args.llhdscan, args.dry_run, args.time, args.rewrite, rundir )
