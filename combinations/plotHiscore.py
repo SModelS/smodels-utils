@@ -790,6 +790,9 @@ def main ():
     argparser.add_argument ( '--rundir',
             help='override the default rundir [None]',
             type=str, default=None )
+    argparser.add_argument ( '--dbpath',
+            help='path to database [<rundir>/database.pcl]',
+            type=str, default="<rundir>/database.pcl" )
     argparser.add_argument ( "--destinations",
             help="learn more about the upload destinations", action="store_true" )
     args = argparser.parse_args()
