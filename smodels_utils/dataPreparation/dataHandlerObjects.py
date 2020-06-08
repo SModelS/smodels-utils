@@ -10,6 +10,7 @@
 """
 
 from __future__ import print_function
+import ctypes
 import sys
 import os
 import logging
@@ -881,14 +882,17 @@ class DataHandler(object):
             sys.exit()
 
 
-        x, y, z = ROOT.Double(0.),ROOT.Double(0.),ROOT.Double(0.)
+        x, y, z = ctypes.c_double(0.),ctypes.c_double(0.),ctypes.c_double(0.)
+        # x, y, z = ROOT.Double(0.),ROOT.Double(0.),ROOT.Double(0.)
         for i in range(0, graph.GetN()):
             if isinstance(graph,ROOT.TGraph):
                 graph.GetPoint(i, x, y)
-                yield [float(x), float(y)]
+                yield [ x.value, y.value ]
+                # yield [float(x), float(y)]
             elif isinstance(graph,ROOT.TGraph2D):
                 graph.GetPoint(i, x, y, z)
-                yield [float(x), float(y), float(z)]
+                yield [ x.value, y.value, z.value ]
+                # yield [float(x), float(y), float(z)]
 
 
 class ExclusionHandler(DataHandler):
