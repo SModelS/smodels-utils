@@ -270,11 +270,9 @@ class RandomWalker:
             self.accelerator.dumpTrainingData ( self.protomodel )
         return # we dont train for now
 
-    def predict ( self ):
-        """ call predict with good # events """
-
+    """
     def gradientAscent ( self ):
-        """ Z is big enough, the loss is small enough. use the gradient. """
+        # Z is big enough, the loss is small enough. use the gradient.
         if self.accelerator.torchmodel == None or self.accelerator.is_trained == False:
             ## we dont have a (trained) model, we dont ascend
             self.pprint ( "gradient ascent? no!" )
@@ -307,6 +305,7 @@ class RandomWalker:
             self.protomodel.restore()
         else:
             self.pprint ( "keep gradient ascended model" )
+    """
 
     def takeStep ( self ):
         """ take the step, save it as last step """

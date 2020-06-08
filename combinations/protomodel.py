@@ -210,8 +210,8 @@ class ProtoModel:
         #if hasattr ( self, "predictor" ):
         #    del self.predictor
 
-    def predict ( self, strategy = "aggressive", nevents = 10000,
-                  check_thresholds = True, recycle_xsecs = False ):
+    def predict ( self, strategy = "aggressive", nevents = 100000,
+                  check_thresholds = False, recycle_xsecs = False ):
         """ compute best combo, llhd, and significance
         :param check_thresholds: if true, check if we run into an exclusion.
                                  in this case, Z becomes -1 for excluded models.
@@ -259,6 +259,8 @@ class ProtoModel:
         mumax = float("inf")
         if self.rmax > 0.:
             mumax = rthresholds[0] / self.rmax
+        self.rmax = self.rmax * mumax
+        self.r2 = self.r2 * mumax
         bestCombo,Z,llhd,muhat = combiner.findHighestSignificance ( predictions, strategy, expected=False, mumax = mumax )
         prior = combiner.computePrior ( self )
         if hasattr ( self, "keep_meta" ) and self.keep_meta:
