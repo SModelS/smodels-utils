@@ -542,7 +542,7 @@ def writeIndexHtml ( protomodel ):
     f.write ( "<img height=580px src=./ruler.png?%d>" % ( t0 ) )
     f.write ( "<td width=55%>" )
     f.write ( "<img height=380px src=./decays.png?%d>\n" % ( t0 ) )
-    f.write ( '<font size=-3><iframe type="text/html" height="220px" width="100%" frameborder="0" src="rawnumbers.html"></iframe></font>\n' )
+    f.write ( '<font size=-3><iframe type="text/html" height="220px" width="100%s" frameborder="0" src="./rawnumbers.html?%d"></iframe></font>\n' % ( "%s", t0 ) )
     f.write ( "</table>\n" )
     # f.write ( "<br><font size=-1>Last updated: %s</font>\n" % time.asctime() )
     f.write ( "</body>\n" )
