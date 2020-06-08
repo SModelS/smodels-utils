@@ -43,7 +43,9 @@ TColor.CreateGradientColorTable(len(s), s, r, g, b, 999)
 gStyle.SetNumberContours(999)
 
 def clean ( obj ):
-    """ check for some issues with the exclusion line """
+    """ check for some issues with the exclusion line 
+    :param obj: the ROOT.TGraph
+    """
     ret = obj.ReadObj()
     n = ret.GetN()
     # x, y = Double(), Double()
@@ -66,7 +68,7 @@ def getExclusionCurvesFor(expResult,txname=None,axes=None, get_all=False ):
 
     :param expResult: an ExpResult object
     :param txname: the TxName in string format (i.e. T1tttt)
-    :param axes: the axes definition in string format (i.e. 2*Eq(mother,x)_Eq(lsp,y))
+    :param axes: the axes definition in string format (e.g. [x, y, 60.0], [x, y, 60.0]])
     :param get_all: Get also the +-1 sigma curves?
 
     :return: a dictionary, where the keys are the TxName strings
