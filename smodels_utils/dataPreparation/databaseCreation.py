@@ -271,17 +271,18 @@ class DatabaseCreator(list):
         #Remove lambda functions from objects
         #Required for storing datasets through parallel processing
         #(issue with pickling lambda functions)
-        for tx in dataset._txnameList:
-            for plane in tx._planes:
-                plane.branches = None
 
+        if self.ncpus > 1:
+            for tx in dataset._txnameList: ## to be able to pickle lambidy
+                for plane in tx._planes:
+                    plane.branches = None
 
         return dataset
 
     def getExclusionCurves(self):
         """
-        Get all exclusion curves defined. If there are multiple datasets,
-        does not include duplicated exclusion curves.
+        Gets all exclusion curves defined. If there are multiple datasets,
+        then it does not include duplicated exclusion curves.
 
         :return: list with exclusion curves (TGraph objects)
         """
@@ -311,6 +312,18 @@ class DatabaseCreator(list):
                             point = dict([[str(xv),v] for xv,v in pointDict.items()])
                             try:
                                 fx,fy = float(point['x']),float(point['y'])
+                                if plane.branches == None:
+                                    from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
+                                    plane = MassPlane.fromString ( plane._txDecay, str(plane.axes) )
+                                #    plane.branches = self.planebackups[str(txname)+str(plane)]
+                                masses = plane.getParticleMasses ( **point )
+                                meetsConstraints = txname.checkMassConstraints ( masses )
+                                #if hasattr ( self, "planebackups" ):
+                                #plane.branches = None ## needed to pickle lambdify
+                                if not meetsConstraints:
+                                    # print ( "masses", masses, meetsConstraints, "skip" )
+                                    continue
+                                # print ( "masses", masses, meetsConstraints )
                             except ValueError:
                                 logger.info ( "cannot convert to coordinates: %s" % point )
                                 continue

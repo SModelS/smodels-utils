@@ -226,6 +226,7 @@ class MassPlane(object):
         setattr(self,dataLabel,dataObject)
 
     def _removePoints_ ( self, points, obj ):
+        """ remove all points within an area spanned by <points> """
         hull = Delaunay ( points )
         newdata=[]
         for i in obj.data:
@@ -254,6 +255,8 @@ class MassPlane(object):
         the masses of the particles of each branch in GeV
         """
 
+        if self.branches == None:
+            return []
         massArray = [br.getParticleMasses(**xMass) for br in self.branches]
         return massArray
 
