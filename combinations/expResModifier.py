@@ -159,9 +159,15 @@ class ExpResModifier:
         ## so we simply add the theory predicted cross section to the limit
         sigmaN = tpred.xsection.value.asNumber(fb)
         for i,txname in enumerate(dataset.txnameList):
-            txnd = txname.txnameData ## fixme check for expectedTxNameData!!
+            txnd = txname.txnameData
+            etxnd = txname.txnameDataExp
             for yi,y in enumerate(txnd.y_values):
-                txnd.y_values[yi]+=sigmaN
+                oldv = txnd.y_values[yi]
+                if etxnd != None and len(txnd.y_values) == len(etxnd.y_values):
+                    dt = ( ( txnd.delta_x - etxnd.delta_x )**2 ).sum()
+                    if dt < 1e-2:
+                        oldv = etxnd.y_values[yi] ## FIXME more checks pls
+                txnd.y_values[yi]=oldv + sigmaN
             dataset.txnameList[i].txnameData = txnd
         return dataset
 
