@@ -797,8 +797,8 @@ class Manipulator:
             ret[pid]=self.M.masses[pid]
         return ret
 
-    def printXSecs ( self, fbmin=.001*fb ):
-        """ print the cross sections in a human-readable way """
+    def simplifyXSecs ( self, fbmin=.001*fb ):
+        """ return the xsecs above a threshold only """
         self.assertXSecs()
         xsecs={ 8:{}, 13:{} }
         for xsec in self.M.stored_xsecs[0]:
@@ -811,6 +811,11 @@ class Manipulator:
                 if xsecs[sqrts][xsec.pid].info.order < xsec.info.order:
                     xsecs[sqrts][xsec.pid]=xsec
 
+        return xsecs
+
+    def printXSecs ( self, fbmin=.001*fb ):
+        """ print the cross sections in a human-readable way """
+        xsecs = self.simplifyXSecs( fbmin )
         for sqrts in xsecs.keys():
             print ( "%d TeV:" % sqrts )
             for pid,xsec in xsecs[sqrts].items():

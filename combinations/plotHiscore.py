@@ -693,9 +693,9 @@ def runPlotting ( args ):
     if upload in [ "none", "" ]:
         upload = None
 
-    options = { "ruler": not args.noruler, "decays": not args.nodecays,
-                "predictions": not args.nopredictions, "html": not args.nohtml,
-                "keep_tex": args.keep, "tex": not args.notex }
+    options = { "ruler": args.ruler, "decays": args.decays,
+                "predictions": args.predictions, "html": args.html,
+                "keep_tex": args.keep, "tex": args.tex }
 
     plot ( args.number, args.verbosity, args.picklefile, options, args.dbpath )
     if upload is None:
@@ -769,20 +769,23 @@ def main ():
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug, info, warn, err [info]',
             type=str, default="warn" )
-    argparser.add_argument ( '-H', '--nohtml',
-            help='do not produce index.html',
+    argparser.add_argument ( '-H', '--html',
+            help='produce index.html',
             action="store_true" )
-    argparser.add_argument ( '-R', '--noruler',
-            help='do not produce ruler plot',
+    argparser.add_argument ( '-R', '--ruler',
+            help='produce ruler plot',
             action="store_true" )
-    argparser.add_argument ( '-D', '--nodecays',
-            help='do not produce decays plot',
+    argparser.add_argument ( '-D', '--decays',
+            help='produce decays plot',
             action="store_true" )
-    argparser.add_argument ( '-P', '--nopredictions',
-            help='do not list all predictions',
+    argparser.add_argument ( '-P', '--predictions',
+            help='list all predictions',
             action="store_true" )
-    argparser.add_argument ( '-T', '--notex',
-            help='do not produce the latex version',
+    argparser.add_argument ( '-T', '--tex',
+            help='produce the latex version',
+            action="store_true" )
+    argparser.add_argument ( '-A', '--all',
+            help='produce everything (equivalent to -H -R -D -P -T)',
             action="store_true" )
     argparser.add_argument ( '-t', '--test',
             help='produce test.pdf file',
@@ -806,6 +809,12 @@ def main ():
             help="learn more about the upload destinations", action="store_true" )
     args = argparser.parse_args()
     rundir = setup( args.rundir )
+    if args.all:
+        args.html = True
+        args.ruler = True
+        args.decays = True
+        args.predictions = True
+        args.tex = True
     if args.picklefile == "default":
         args.picklefile = "%s/hiscore.pcl" % rundir
     runPlotting ( args )

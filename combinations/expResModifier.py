@@ -156,9 +156,10 @@ class ExpResModifier:
             already taken care of """
         self.log ( " `- add UL matching tpred %s/%s: %s" % \
                 ( tpred.analysisId(), tpred.dataId(), tpred.xsection.value ) )
+        ## so we simply add the theory predicted cross section to the limit
         sigmaN = tpred.xsection.value.asNumber(fb)
         for i,txname in enumerate(dataset.txnameList):
-            txnd = txname.txnameData
+            txnd = txname.txnameData ## fixme check for expectedTxNameData!!
             for yi,y in enumerate(txnd.y_values):
                 txnd.y_values[yi]+=sigmaN
             dataset.txnameList[i].txnameData = txnd

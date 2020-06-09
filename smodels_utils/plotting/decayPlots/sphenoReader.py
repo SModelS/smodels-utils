@@ -138,7 +138,7 @@ class SPhenoReader:
         ret2id={}
         for mother in start:
             m=self.pdgId ( mother )
-            if len(self.getDecays(m))>0:
+            if len(self.getDecays(m,rmin))>0:
                 ret2[mother]=1
             if not m in self.decays.keys ( ):
                 continue

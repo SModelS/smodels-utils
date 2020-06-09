@@ -82,11 +82,11 @@ def plot( Z, K, rundir ):
     args.picklefile = "%shiscore.pcl" % rundir 
     args.dbpath = "%s/database.pcl" % rundir
     args.verbosity = "info"
-    args.nohtml = False
-    args.noruler = False
-    args.nodecays = False
-    args.nopredictions = False
-    args.notex = True
+    args.html = True
+    args.ruler = True
+    args.decays = True
+    args.predictions = True
+    args.tex = False
     args.keep = False
     args.commit = False
     if K > 5.0:
