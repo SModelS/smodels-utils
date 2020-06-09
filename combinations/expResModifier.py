@@ -137,7 +137,7 @@ class ExpResModifier:
 
         ## now recompute the limits!!
         alpha = .05
-        if orig == 0.0: 
+        if orig == 0.0:
             orig = 0.00001
         computer = UpperLimitComputer(cl=1.-alpha )
         m = Data( orig+sigN, orig, err**2, nsignal = 1. )
@@ -151,6 +151,16 @@ class ExpResModifier:
 
         return dataset
 
+    def txNameIsIn ( self, txname, tpred ):
+        """ check if txname is in tpred
+        :param txname: a txName object
+        :param tpred: a theoryPred object
+        """
+        for txn in tpred.txnames:
+            if txn.txName == txname.txName:
+                return True
+        return False
+
     def addSignalForULMap ( self, dataset, tpred, lumi ):
         """ add a signal to this UL result. background sampling is
             already taken care of """
@@ -159,6 +169,8 @@ class ExpResModifier:
         ## so we simply add the theory predicted cross section to the limit
         sigmaN = tpred.xsection.value.asNumber(fb)
         for i,txname in enumerate(dataset.txnameList):
+            if not self.txNameIsIn ( txname, tpred ):
+                continue
             txnd = txname.txnameData
             etxnd = txname.txnameDataExp
             for yi,y in enumerate(txnd.y_values):
@@ -169,6 +181,7 @@ class ExpResModifier:
                         oldv = etxnd.y_values[yi] ## FIXME more checks pls
                 txnd.y_values[yi]=oldv + sigmaN
             dataset.txnameList[i].txnameData = txnd
+            dataset.txnameList[i].sigmaN = sigmaN
         return dataset
 
     def produceTopoList ( self ):
