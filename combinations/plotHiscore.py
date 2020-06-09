@@ -160,9 +160,13 @@ def writeRawNumbersHtml ( protomodel ):
         if dtype == "upperLimit":
             S = "?"
             llhd,chi2 = tp.likelihoodFromLimits( expected=False, chi2also=True )
-            Z = math.sqrt ( chi2 )
-            # S = "%.1f &sigma;" % Z
-            S = "%.2g l" % llhd
+            eUL = tp.expectedUL.asNumber(fb)
+            oUL = tp.upperLimit.asNumber(fb)
+            sigma_exp = eUL / 1.96 # the expected scale, sigma
+            Z = ( oUL - eUL ) / sigma_exp
+            # Z = math.sqrt ( chi2 )
+            S = "%.1f &sigma;" % Z
+            # S = "%.2g l" % llhd
             # print ( "llhd,chi2,Z", llhd,chi2,Z )
             # p = 1. - scipy.stats.chi2.cdf ( chi2, df=1 )
             pids = set()
