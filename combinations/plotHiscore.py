@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import pickle, os, sys, subprocess, time, fcntl, glob, colorama, math
+import scipy.stats
 from csetup import setup
 from protomodel import ProtoModel
 from manipulator import Manipulator
@@ -9,8 +10,11 @@ from smodels.theory.theoryPrediction import TheoryPrediction
 sys.path.insert(0,"../" )
 import smodels_utils.helper.sparticleNames
 import smodels_utils.SModelSUtils
+from smodels.tools import runtime
 from smodels_utils.plotting import rulerPlotter, decayPlotter
 import helpers
+
+runtime._experimental = True
 
 def obtain ( number, picklefile ):
     """ obtain hiscore number <number>
@@ -89,12 +93,26 @@ def getExtremeSSMs ( ssm, largest, nm = 7 ):
     ret = "%signal strength multipliers: $%s$" % ( extreme, s )
     return ret
 
+def hasSignals ( protomodel ):
+    """ are there signals stored in the theory predictions? """
+    for tp in protomodel.bestCombo:
+        if hasattr(tp.dataset.dataInfo,"sigN" ):
+            return True
+        for txn in tp.dataset.txnameList:
+            if hasattr ( txn, "sigmaN" ):
+                return True
+    return False
+
 def writeRawNumbersHtml ( protomodel ):
     """ write out the raw numbers of the excess, as html """
     f=open("rawnumbers.html","wt")
     f.write("<table>\n" )
-    f.write("<tr><th>Analysis Name</th><th>Type</th><th>Dataset</th><th>Observed</th><th>Expected</th><th>Approx &sigma;</th><th>Particles</th>\n" )
-    f.write("</tr>\n" )
+    f.write("<tr><th>Analysis Name</th><th>Type</th><th>Dataset</th><th>Observed</th><th>Expected</th><th>Approx &sigma;</th><th>Particles</th>" )
+    hassigs = hasSignals ( protomodel )
+    print ( "[plotHiscore] protomodel has signals: %s" % hassigs )
+    if hassigs:
+        f.write("<th>Signal</th>" )
+    f.write("\n</tr>\n" )
     for tp in protomodel.bestCombo:
         anaId = tp.analysisId()
         idAndUrl = anaNameAndUrl ( tp )
@@ -132,10 +150,21 @@ def writeRawNumbersHtml ( protomodel ):
                 obsN=int(obsN)
             particles = helpers.toHtml ( pids, addSign = False,
                                           addBrackets = False )
-            f.write ( '<td>%s</td><td>%s</td><td>%s +/- %s</td><td style="text-align:right">%s</td><td style="text-align:right">%s</td></tr>\n' % \
+            f.write ( '<td>%s</td><td>%s</td><td>%s +/- %s</td><td style="text-align:right">%s</td><td style="text-align:right">%s</td>' % \
                       ( did, obsN, eBG, bgErr, S, particles ) )
+            if hassigs:
+                sig = "-"
+                if hasattr ( dI, "sigN" ):
+                    sig = "%s" % dI.sigN
+                f.write ( '<td style="text-align:right">%s</td>' % sig )
         if dtype == "upperLimit":
             S = "?"
+            llhd,chi2 = tp.likelihoodFromLimits( expected=False, chi2also=True )
+            Z = math.sqrt ( chi2 )
+            # S = "%.1f &sigma;" % Z
+            S = "%.2g l" % llhd
+            # print ( "llhd,chi2,Z", llhd,chi2,Z )
+            # p = 1. - scipy.stats.chi2.cdf ( chi2, df=1 )
             pids = set()
             for prod in tp.PIDs:
                 for branch in prod:
@@ -146,8 +175,15 @@ def writeRawNumbersHtml ( protomodel ):
                             pids.add ( abs(pid[0]) )
             particles = helpers.toHtml ( pids, addSign = False,
                                           addBrackets = False )
-            f.write ( '<td>-</td><td> %.1f fb </td><td> %.1f fb</td><td style="text-align:right">%s</td><td style="text-align:right">%s</td></tr>\n' % \
+            f.write ( '<td>-</td><td> %.1f fb </td><td> %.1f fb</td><td style="text-align:right">%s</td><td style="text-align:right">%s</td>' % \
                     ( tp.upperLimit.asNumber(fb), tp.expectedUL.asNumber(fb), S, particles ) )
+            if hassigs:
+                sig = "-"
+                for txn in tp.dataset.txnameList:
+                    if hasattr ( txn, "sigmaN" ):
+                        sig = "%.2f fb" % txn.sigmaN
+                f.write ( '<td style="text-align:right">%s</td>' % sig )
+        f.write ( '</tr>\n' )
     f.write("</table>\n" )
     f.close()
 
