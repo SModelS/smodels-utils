@@ -124,8 +124,10 @@ A discrepancy of about 10-20%, sometimes up to 40% is observed. According to pyh
 
 # Running validation
 
-Validation plots can be found in [validation folder](https://github.com/SModelS/smodels-database/blob/pyhf/13TeV/ATLAS/ATLAS-SUSY-2018-04-eff/validation/) SModelS interface to pyhf is slightly over excluding for ATLAS-SUSY-2018-04.  
-Plots for ATLAS-SUSY-2018-31 are not complete yet but there is a slight under exclusion.
+Validation plots can be found in [validation folder](https://github.com/SModelS/smodels-database/blob/pyhf/13TeV/ATLAS/ATLAS-SUSY-2018-04-eff/validation/) SModelS interface to pyhf is slightly over excluding for ATLAS-SUSY-2018-04 but it is much closer than for the EM vlaidation plot.
+For ATLAS-SUSY-2018-31, there are two cases :
+- the first mass plane is a bit better than EM but still under excluding
+- the second mass plane is worse than EM
 
 # To do list
 
@@ -136,7 +138,13 @@ Plots for ATLAS-SUSY-2018-31 are not complete yet but there is a slight under ex
 - [x] put the code into smodels/tools.
 - [x] change datasetObj.py:getCombinedUpperLimitFor
 - [x] add best expected combination in datasetObj.py:getCombinedUpperLimitFor
-- [x] add pyhf in datasetObj.py:combinedLikelihood
-- [ ] add pyhf in datasetObj.py:totalChi2
-- [ ] add a unit test
+- [x] implement the likelihood method and interface it to SModelS
+- [ ] implement the chi2 method and interface it to SModelS
+- [x] add a unit test
+- [x] integration test
+- [ ] some tests failed -> on hold for now
 - [x] check if simplified likelihood still works (see testSL.md)
+- [ ] use covariances/drawBestSRs.py to study the best expected combination  
+  - EM : `dataset` is the name of the SR/database entry (e.g. `SRA_H`)
+  - UL : `dataset` is `(UL)`
+  - combined : either pyhf or SL, `dataset` is `(combined)` -> should it be changed given the best expected combination?
