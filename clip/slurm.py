@@ -86,7 +86,7 @@ def produceLLHDScanScript ( pid1, pid2, force_rewrite, rundir ):
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/combinations/llhdscanner.py -R %s --draw --pid1 %d --pid2 %d\n" % ( rundir, codedir, pid1, pid2 ) )
+            f.write ("%s/combinations/llhdscanner.py -R %s --draw --pid1 %d --pid2 %d\n" % ( codedir, rundir, pid1, pid2 ) )
             f.close()
         os.chmod ( fname, 0o775 )
 
@@ -185,7 +185,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     script = "_L%s.sh" % pid
     with open ( script, "wt" ) as f:
         for line in lines:
-            f.write ( line.replace("@@PID@@",str(pid) ).line.replace("@@RUNDIR@@",rundir ) )
+            f.write ( line.replace("@@PID@@",str(pid)).replace("@@RUNDIR@@",rundir ) )
         f.close()
     produceLLHDScanScript ( pid, 1000022, rewrite, rundir )
     cmd += [ script ]
