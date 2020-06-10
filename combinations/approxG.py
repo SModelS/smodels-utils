@@ -6,10 +6,7 @@ from matplotlib import pyplot as plt
 import matplotlib.lines as mlines
 from smodels.tools import statistics
 
-def run():
-    nobs = 35
-    nb = 30
-    nsig = 3
+def run( nobs, nb, nsig ):
     mumax = ( nobs - nb ) / nsig
     sigmaobs = np.sqrt ( nobs ) / nsig
     sigmaexp_true = np.sqrt ( nb ) / nsig
@@ -41,10 +38,16 @@ def run():
         llhd = statistics.likelihoodFromLimits ( mu95obs, mu95exp, x )
         approxllhds[x]=llhd
 
-    plt.plot( list(truellhds.keys()), list(truellhds.values()) )
-    plt.plot ( [ 5./3., 5./3.], [ 0., .25 ] )
-    plt.plot( list(approxllhds.keys()), list(approxllhds.values()) )
+    plt.plot( list(truellhds.keys()), list(truellhds.values()), label="true LLHD" )
+    maxy = max ( list ( truellhds.values() ) + list ( approxllhds.values() ) )
+    plt.plot ( [ mumax, mumax ], [ 0., maxy ], label="$\mu_\mathrm{max}$" )
+    plt.plot( list(approxllhds.keys()), list(approxllhds.values()), label="approx." )
+    plt.legend()
     plt.savefig("test.png")
 
+def main():
+    nobs,nbg,nsig = 35.30,3
+    run( nobs, nb, nsig )
+
 if __name__ == "__main__":
-    run()
+    main()

@@ -747,6 +747,8 @@ def runPlotting ( args ):
         dest = "%s/smodels.github.io/protomodels/" % destdir
     if upload in [ "interesting", "anomaly", "latest" ]:
         dest = "%s/smodels.github.io/protomodels/%s/" % ( destdir, upload )
+    if "paper" in upload:
+        dest = "%s/smodels.github.io/protomodels/%s/" % ( destdir, upload )
 
     if dest != "":
         print ( "[plotHiscore] copying to %s" % dest )
