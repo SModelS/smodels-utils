@@ -290,6 +290,8 @@ def writeTex ( protomodel, keep_tex ):
         if xsec < 0.001 * fb: ## only for xsecs we care about
             continue
         sv = "%.2g" % v
+        if v < .1:
+            sv = "%.1g" % v
         if not sv in cpids:
             cpids[sv]=[]
         cpids[sv].append ( pids )
