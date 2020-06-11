@@ -289,7 +289,7 @@ def writeTex ( protomodel, keep_tex ):
         xsec = findXSecOfPids ( xsecs, pids )
         if xsec < 0.001 * fb: ## only for xsecs we care about
             continue
-        sv = "%.2f" % v
+        sv = "%.2g" % v
         if not sv in cpids:
             cpids[sv]=[]
         cpids[sv].append ( pids )
@@ -485,7 +485,7 @@ def writeIndexHtml ( protomodel ):
     frozen = protomodel.frozenParticles()
     ssms = getUnfrozenSSMs ( protomodel, frozen, False )
     for k,v in ssms.items():
-        ssm.append ( "%s: %.2f" % (helpers.getParticleName(k,addSign=True),v) )
+        ssm.append ( "%s: %.2g" % (helpers.getParticleName(k,addSign=True),v) )
     f=open("index.html","w")
     f.write ( "<html>\n" )
     f.write ( "<body>\n" )
