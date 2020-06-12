@@ -137,10 +137,10 @@ def writeMDPage( push = False ):
     with open ( "%sREADME.md" % Dir, "wt" ) as g:
         g.write ( "# plots of rel stat errs\n" )
         g.write ( "as of %s\n" % time.asctime() )
+        g.write ( "\n" )
         for f in files:
-            src=f
-            g.write ( '| <img src="%s" /> ' % ( src ) )
-            g.write ( "|\n" )
+            src=os.path.basename ( f )
+            g.write ( '| <img src="%s" /> |\n' % ( src ) )
         g.close()
     cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit' ; git push"
     o = ""
