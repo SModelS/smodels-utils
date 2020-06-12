@@ -13,10 +13,14 @@ from datetime import datetime
 import bakeryHelpers
 
 class emCreator:
-    def __init__ ( self, analyses, topo, njets ):
+    def __init__ ( self, analyses, topo, njets, keep ):
+        """ the efficiency map creator.
+        :param keep: if true, keep all files
+        """
         self.analyses = analyses
         self.topo = topo
         self.njets = njets
+        self.keep = keep
 
     def info ( self, *msg ):
         print ( "%s[emCreator] %s%s" % ( colorama.Fore.YELLOW, " ".join ( msg ), \
@@ -84,8 +88,9 @@ class emCreator:
             self.info ( "could not find ma5 summary file %s. Skipping." % summaryfile )
             rmfile = summaryfile[:summaryfile.find("/Output")]
             cmd = "rm -rf %s" % rmfile 
-            o = subprocess.getoutput ( cmd )
-            self.info ( "running %s: %s" % ( cmd, o ) )
+            if not self.keep:
+                o = subprocess.getoutput ( cmd )
+                self.info ( "running %s: %s" % ( cmd, o ) )
             ret = {}
             return ret,0.
         timestamp = os.stat ( summaryfile ).st_mtime
@@ -133,12 +138,15 @@ class emCreator:
             return
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
 
-def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
+def runForTopo ( topo, njets, masses, analyses, verbose, copy, keep ):
+    """
+    :param keep: keep the cruft files
+    """
     if masses == "all":
         masses = bakeryHelpers.getListOfMasses ( topo, njets, postMA5=True )
     else:
         masses = bakeryHelpers.parseMasses ( masses )
-    creator = emCreator( analyses, topo, njets )
+    creator = emCreator( analyses, topo, njets, keep )
     effs,tstamps={},{}
     if verbose:
         print ( "[emCreator] topo %s: %d mass points considered" % ( topo, len(masses) ) )
@@ -232,10 +240,10 @@ def run ( args ):
     if args.topo == "all":
         for topo in getAllTopos():
             runForTopo ( topo, args.njets, args.masses, args.analyses, args.verbose,
-                         args.copy )
+                         args.copy, args.keep )
     else:
         runForTopo ( args.topo, args.njets, args.masses, args.analyses, args.verbose,
-                     args.copy )
+                     args.copy, args.keep )
 
 def main():
     import argparse
@@ -247,6 +255,8 @@ def main():
     argparser.add_argument ( '-v', '--verbose', help='be verbose',
                              action="store_true" )
     argparser.add_argument ( '-c', '--copy', help='copy embaked file to smodels-database',
+                             action="store_true" )
+    argparser.add_argument ( '-k', '--keep', help='keep all cruft files',
                              action="store_true" )
     defaultana = "atlas_susy_2016_07"
     defaultana = "cms_sus_16_033"
