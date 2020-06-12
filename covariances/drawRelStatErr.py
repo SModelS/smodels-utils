@@ -4,6 +4,7 @@
 
 import matplotlib.pyplot as plt
 import copy
+import glob
 import os
 import numpy
 import importlib
@@ -40,7 +41,7 @@ def convertNewAxes ( newa ):
         if "z" in newa:
             axes.append ( newa["z"] )
         return axes[::-1]
-    print ( "cannot convert this axis" )
+    # print ( "cannot convert this axis" )
     return None
 
 def getNEvents ( nevents, eff ):
@@ -89,12 +90,13 @@ def draw( validationfile ):
             err = point["error"]
             if "axes" in point:
                 axes = convertNewAxes ( point["axes"] )
-                noResults.append ( ( axes[1], axes[0] ) )
+                if axes != None:
+                    noResults.append ( ( axes[1], axes[0] ) )
             continue
         axes = convertNewAxes ( point["axes"] )
         effs.append ( ( axes[1], axes[0], point["efficiency"] ) )
     if skipped > 0:
-        print ( "[drawBestSRs] skipped %d/%d points: %s" % ( skipped, len(validationData), err ) )
+        print ( "[drawRelStatEr] skipped %d/%d points: %s" % ( skipped, len(validationData), err ) )
     effs.sort()
     basedir = validationfile[:p3]
     nevents = getEmbakedDict ( basedir, topo )
@@ -118,41 +120,33 @@ def draw( validationfile ):
     plt.ylabel ( "m(LSP) [GeV]" )
     rse = {}
     fname = "relstaterr_%s_%s.png" % ( anaId, topo )
-    print ( "[drawBestSRs} saving to %s" % fname )
+    print ( "[drawRelStatEr} saving to %s" % fname )
     plt.savefig ( fname )
     plt.clf()
     return fname
 
-def writeBestSRs( push = False ):
-    import glob
-    Dir = "../../smodels.github.io/ratioplots/"
-    files = glob.glob("%sbestSR*png" % Dir )
+def writeMDPage( push = False ):
+    """ write the markdown page for smodels.github.io """
+
+    Dir = "../../smodels.github.io/relstaterr/"
+    path = "%srelstaterr_*.png" % Dir
+    files = glob.glob( path )
     files.sort()
-    topos = set()
-    for f in files:
-        p = f.rfind ( "_" )
-        topos.add ( f[p+1:-4] )
-    # print ( topos )
-    with open ( "%sbestSRs.md" % Dir, "wt" ) as g:
-        g.write ( "# plots of best expected signal regions\n" )
+    print ( "[drawRelStatErr] writing %sREADME.md" % Dir )
+    # print ( "[drawRelStatErr] files %s" % path )
+    with open ( "%sREADME.md" % Dir, "wt" ) as g:
+        g.write ( "# plots of rel stat errs\n" )
         g.write ( "as of %s\n" % time.asctime() )
-        g.write ( "checkout also the [ratio plots](README.md)\n" )
-        tsorted = list(topos)
-        tsorted.sort() ## why???
-        for topo in tsorted:
-            g.write ( "\n## Topology: %s\n\n" % topo )
-            g.write ( "| andre | suchi |\n" )
-            for f in files:
-                src = f.replace( Dir, "" )
-                if not topo in src:
-                    continue
-                g.write ( '| <img src="%s" /> ' % ( src ) )
+        for f in files:
+            src=f
+            g.write ( '| <img src="%s" /> ' % ( src ) )
             g.write ( "|\n" )
+        g.close()
     cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit' ; git push"
     o = ""
     if push:
         o = subprocess.getoutput ( cmd )
-    print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
+    print ( "[drawRelStatEr] cmd %s: %s" % (cmd, o ) )
     
 if __name__ == "__main__":
     import argparse
@@ -163,33 +157,44 @@ if __name__ == "__main__":
             help="analysis name, like the directory name [CMS-EXO-13-006-eff]", 
             type=str, default="CMS-EXO-13-006-eff" )
     argparser.add_argument ( "-v", "--validationfile", 
-            help="validation file [THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py]", 
-            type=str, default="THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py" )
+            help="validation file [T*py]", 
+            type=str, default="T*.py" )
     argparser.add_argument ( "-D", "--default", action="store_true", 
             help="default run on arguments. currently set to be the exo 13 006 plots" )
     argparser.add_argument ( "-c", "--copy", action="store_true", 
-            help="cp to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
+            help="cp to smodels.github.io, as it appears in https://smodels.github.io/relstaterr/" )
     argparser.add_argument ( "-p", "--push", action="store_true", 
-            help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/ratioplots/" )
+            help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/relstaterr/" )
     args = argparser.parse_args()
     if not args.default and not args.analysis.endswith("-eff"):
-        print ( "[drawBestSRs] warning, analysis name does not end with -eff, might an error" )
+        print ( "[drawRelStatEr] warning, analysis name does not end with -eff, might an error" )
     if args.default:
         for a in [ "CMS-EXO-13-006-andre", "CMS-EXO-13-006-eff" ]:
             for v in [ "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py", "THSCPM2b_*.py" ]:
-                print ( "[drawBestSRs:default] now drawing %s:%s" % (a, v ) )
+                print ( "[drawRelStatEr:default] now drawing %s:%s" % (a, v ) )
                 ipath = getPathName ( args.dbpath, a, v )
                 fname = draw( ipath )
                 if args.copy:
-                    cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
+                    cmd = "cp %s ../../smodels.github.io/relstaterr/" % fname
                     o = subprocess.getoutput ( cmd )
-                    print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
+                    print ( "[drawRelStatEr] cmd %s: %s" % (cmd, o ) )
     else:
-        ipath = getPathName ( args.dbpath, args.analysis, args.validationfile )
-        fname = draw( ipath )
-        if args.copy:
-            cmd = "cp %s ../../smodels.github.io/ratioplots/" % fname
-            o = subprocess.getoutput ( cmd )
-            print ( "[drawBestSRs] cmd %s: %s" % (cmd, o ) )
+        validationfiles = [ args.validationfile ]
+        if "*" in args.validationfile:
+            path = args.dbpath + "*/*/" + args.analysis + "/validation/" + args.validationfile 
+            print ( "searching", path )
+            tmp = glob.glob ( path )
+            validationfiles = []
+            for v in tmp:
+                p1 = v.find("validation/")
+                t = v[p1+11:]
+                validationfiles.append ( t )
+        for validationfile in validationfiles:
+            ipath = getPathName ( args.dbpath, args.analysis, validationfile )
+            fname = draw( ipath )
+            if args.copy:
+                cmd = "cp %s ../../smodels.github.io/relstaterr/" % fname
+                o = subprocess.getoutput ( cmd )
+                print ( "[drawRelStatEr] cmd %s: %s" % (cmd, o ) )
     if args.copy:
-        writeBestSRs( args.push )
+        writeMDPage( args.push )
