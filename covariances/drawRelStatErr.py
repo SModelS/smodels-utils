@@ -26,7 +26,7 @@ def getEmbakedDict ( basedir, topo ):
     ret={}
     for k,values in D.items():
         if not "__nevents__" in values:
-            ret[k]=0
+            ret[k]=5000
         else:
             ret[k]=values["__nevents__"]
     return ret
