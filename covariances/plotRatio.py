@@ -115,7 +115,7 @@ def getExclusionLine ( line ):
       y_v.append(copy.deepcopy(y))
     return [ { "x": x_v, "y": y_v } ]
 
-def draw ( imp1, imp2, copy ):
+def draw ( imp1, imp2, copy, label1, label2, dbpath ):
     uls={}
     nsr=""
     noaxes = 0
@@ -123,7 +123,9 @@ def draw ( imp1, imp2, copy ):
         if not "axes" in point:
             noaxes+=1
             if noaxes < 5:
-                print ( "no axes in", imp1.__file__, ",", point["slhafile"] )
+                f1 = imp1.__file__.replace(dbpath,"")
+                slhapoint = point["slhafile"].replace(".slha","")
+                print ( "INFO: no axes in %s:%s" % ( f1, slhapoint ) )
             if noaxes == 5:
                 print ( " ... (more error msgs like these) " )
             continue
@@ -239,7 +241,11 @@ def draw ( imp1, imp2, copy ):
         plt.plot ( E["x"], E["y"], color='k', linestyle='-', linewidth=4, label=label )
         label = ""
     smodels_root = "%s/%s.root" % ( analysis, topo )
-    smodels_line = getSModelSExclusion ( smodels_root )
+    if not os.path.exists ( smodels_root ):
+        print ( "[plotRatio] warn: %s does not exist. It is needed if you want to see the SModelS exclusion line." % smodels_root )
+        smodels_line = []
+    else:
+        smodels_line = getSModelSExclusion ( smodels_root )
     el2 = getExclusionLine ( smodels_line )
     print ( "[plotRatio] Found SModelS exclusion line with %d points." % ( len(el2) ) )
     label="SModelS exclsuion"
@@ -260,12 +266,15 @@ def draw ( imp1, imp2, copy ):
     figname = "%s_%s.png" % ( analysis.replace("validation","ratio" ), topo )
     #if srs1 !="all":
     #    figname = "%s_%s_%s.png" % ( analysis, topo, srs )
+    """
     a1, a2 = "$a_1$", "$a_2$"
     for ide,label in { "andre": "andre", "eff": "suchi" }.items():
         if ide in imp1.ana:
             a1 = label
         if ide in imp2.ana:
             a2 = label
+    """
+    a1, a2 = label1, label2
     ypos = .2*max(y)
     if logScale:
         ypos = min(y)*30.
@@ -334,6 +343,12 @@ def main():
     argparser.add_argument ( "-a2", "--analysis2",
             help="second analysis name, like the directory name [CMS-EXO-13-006-eff]",
             type=str, default="CMS-EXO-13-006-eff" )
+    argparser.add_argument ( "-l1", "--label1",
+            help="label in the legend for analysis1 [andre]",
+            type=str, default="andre" )
+    argparser.add_argument ( "-l2", "--label2",
+            help="label in the legend for analysis2 [suchi]",
+            type=str, default="suchi" )
     argparser.add_argument ( "-d", "--dbpath", help="path to database [../../smodels-database/]", type=str,
                              default="../../smodels-database/" )
     argparser.add_argument ( "-D", "--default", action="store_true",
@@ -354,14 +369,16 @@ def main():
         imp1 = getModule ( args.dbpath, args.analysis1, valfile1 )
         imp2 = getModule ( args.dbpath, args.analysis2, valfile2 )
 
-        draw ( imp1, imp2, args.copy )
+        draw ( imp1, imp2, args.copy, args.label1, args.label2, args.dbpath )
 
     writeMDPage( args.copy )
 
-    cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit' ; git push"
+    cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit'; git push"
     o = ""
     if args.push:
+        print ( "[plotRatio] now performing %s: %s" % (cmd, o ) )
         o = subprocess.getoutput ( cmd )
-    print ( "[plotRatio] cmd %s: %s" % (cmd, o ) )
+    else:
+        print ( "[plotRatio] now you could do:\n%s: %s" % (cmd, o ) )
 
 main()
