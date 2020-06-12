@@ -140,7 +140,7 @@ def writeMDPage( push = False ):
         g.write ( "\n" )
         for f in files:
             src=os.path.basename ( f )
-            g.write ( '| <img src="%s" /> |\n' % ( src ) )
+            g.write ( '| <img src="%s?%d" /> |\n' % ( src, int(time.time() ) ) )
         g.close()
     cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit' ; git push"
     o = ""
