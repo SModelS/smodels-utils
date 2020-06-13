@@ -290,7 +290,7 @@ class MG5Wrapper:
         sm = ""
         if masses != "":
             sm="[%s]" % str(masses)
-        self.msg ( "now execute for %s%s: %s" % (self.topo, sm, cmd[:70] ) )
+        self.msg ( "now execute for %s%s: %s" % (self.topo, sm, cmd[:] ) )
         ret = subprocess.getoutput ( cmd )
         if len(ret)==0:
             return

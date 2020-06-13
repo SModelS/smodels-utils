@@ -330,13 +330,14 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
     filename = tempfile.mktemp(prefix="_B",suffix=".sh",dir="")
     Dir = "%sclip/" % codedir
     print ( "creating script at %s/%s" % ( Dir, filename ) )
+    nprc = int ( math.ceil ( nproc * .5 ) )
     with open ( "%s/%s" % ( Dir, filename ), "wt" ) as f:
         for line in lines:
             args = recipe.replace("@","-")
             args += ' -m "%s"' % mass
             args += ' --analyses "%s"' % analyses
             args += ' -t %s' % topo
-            args += ' -p %d' % nproc
+            args += ' -p %d' % nprc
             f.write ( line.replace("@@ARGS@@", args ) )
         f.close()
     with open ( "run_bakery_template.sh", "rt" ) as f:
@@ -350,6 +351,8 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
     os.chmod( tmpfile, 0o755 ) # 1877 is 0o755
     os.chmod( Dir+filename, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
     cmd += [ "--ntasks-per-node", str(nproc) ]
     cmd += [ tmpfile ]
     ram = 2
@@ -378,7 +381,13 @@ def queryStats ( ):
 
 def logCall ():
     f=open("slurm.log","at")
-    f.write ("[slurm.py] %s\n" % " ".join ( sys.argv ) )
+    args = ""
+    for i in sys.argv:
+        if " " in i or "," in i:
+            i = '"%s"' % i
+        args += i + " "
+    f.write ("[slurm.py] %s\n" % args.strip() )
+    # f.write ("[slurm.py] %s\n" % " ".join ( sys.argv ) )
     f.close()
 
 
