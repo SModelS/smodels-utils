@@ -58,7 +58,7 @@ class emCreator:
 
     def getNEvents ( self, masses ):
         smass = "_".join ( map ( str, masses ) )
-        fname = "ma5/ANA_%s_%djet.%s/Output/defaultset/defaultset.saf" % ( self.topo, self.njets, smass ) 
+        fname = "ma5/ANA_%s_%djet.%s/Output/SAF/defaultset/defaultset.saf" % ( self.topo, self.njets, smass )
         if not os.path.exists ( fname ):
             print ( "[emCreator.py] %s does not exist, cannot report correct number of events" % fname )
             return -2
@@ -83,11 +83,12 @@ class emCreator:
         njets = self.njets
         process = "%s_%djet" % ( topo, njets )
         dirname = bakeryHelpers.dirName ( process, masses )
-        summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
+        # summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
+        summaryfile = "ma5/ANA_%s/Output/SAF/CLs_output_summary.dat" % dirname
         if not os.path.exists ( summaryfile):
             self.info ( "could not find ma5 summary file %s. Skipping." % summaryfile )
             rmfile = summaryfile[:summaryfile.find("/Output")]
-            cmd = "rm -rf %s" % rmfile 
+            cmd = "rm -rf %s" % rmfile
             if not self.keep:
                 o = subprocess.getoutput ( cmd )
                 self.info ( "running %s: %s" % ( cmd, o ) )
@@ -113,10 +114,15 @@ class emCreator:
             line = line.replace("control region","control_region" )
             line = line.replace("150-1","150 -1")
             tokens=line.split()
-            if len(tokens)!=10:
-                print ( "In file %s: cannot parse ``%s'': skip it" % ( summaryfile, line[:50] ) )
+            if len(tokens) not in [ 8, 10 ]:
+                print ( "In file %s: cannot parse ``%s'': got %d tokens, expected 8 o 8 orr 10. skip it" % ( summaryfile, line[:50], len(tokens) ) )
                 continue
-            dsname,ananame,sr,sig95exp,sig95obs,pp,eff,statunc,systunc,totunc=tokens
+            if len(tokens)==10:
+                dsname,ananame,sr,sig95exp,sig95obs,pp,eff,statunc,systunc,totunc=tokens
+            if len(tokens)==8:
+            # datasetname analysisname signalregion sig95(exp) sig95(obs) efficiency stat
+                dsname,ananame,sr,sig95exp,sig95obs,pp,eff,statunc=tokens
+
             eff=float(eff)
             #if eff == 0.:
                 # print ( "zero efficiency for", ananame,sr )
@@ -260,7 +266,7 @@ def main():
                              action="store_true" )
     defaultana = "atlas_susy_2016_07"
     defaultana = "cms_sus_16_033"
-    argparser.add_argument ( '-a', '--analyses', 
+    argparser.add_argument ( '-a', '--analyses',
             help='analyses, comma separated [%s]' % defaultana,
                              type=str, default=defaultana )
     mdefault = "all"

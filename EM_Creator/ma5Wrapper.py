@@ -8,7 +8,7 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 """
 
-import os, sys, colorama, subprocess, shutil, tempfile, time
+import os, sys, colorama, subprocess, shutil, tempfile, time, io
 import multiprocessing
 import bakeryHelpers
 
@@ -22,8 +22,9 @@ class MA5Wrapper:
         self.analyses = analyses
         self.rerun = rerun
         self.keep = keep
-        self.ma5results = "./ma5/"
-        self.ma5install = "./ma5.template/"
+        self.basedir = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/EM_Creator/"
+        self.ma5results = "%s/ma5/" % self.basedir
+        self.ma5install = "%s/ma5/" % self.basedir
         self.ver = ver
         if not os.path.isdir ( self.ma5install ):
             self.error ( "ma5 install is missing??" )
@@ -82,10 +83,16 @@ class MA5Wrapper:
         """ this method writes the commands file for ma5.
         :param hepmcfile: I think thats the input events
         """
-        f = open(self.ma5install + "/" + self.commandfile,'w')
+        self.info ( "writing commandfile %s" % self.commandfile )
+        f = open( self.commandfile,'wt')
+        #f.write('install delphesMA5tune\n')
+        #f.write('install PADForMA5tune\n')
+        #f.write('install delphes\n')
+        #f.write('install PAD\n')
         f.write('set main.recast = on\n')
-        filename = self.recastfile.replace(self.ma5install,"./")
-        f.write('set main.recast.card_path = %s\n' % filename )
+        #filename = self.recastfile.replace(self.ma5install,"./")
+        #f.write('set main.recast.card_path = %s\n' % filename )
+        f.write('set main.recast.card_path = ./recast\n' )
         f.write('import '+hepmcfile+'\n')
         f.write('submit ANA_%s\n' % bakeryHelpers.dirName(process,masses)  )
         f.close()
@@ -96,7 +103,8 @@ class MA5Wrapper:
         """
         process = "%s_%djet" % ( self.topo, self.njets )
         dirname = bakeryHelpers.dirName ( process, masses )
-        summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
+        summaryfile = "%s/ma5/ANA_%s/Output/CLs_output_summary.dat" % \
+                       ( self.basedir, dirname )
         if not os.path.exists ( summaryfile ) or os.stat(summaryfile).st_size<10:
             self.msg ( "No summary file %s found. Run analyses!" % summaryfile )
             return False
@@ -129,7 +137,7 @@ class MA5Wrapper:
         spid = ""
         if pid != None:
             spid = "[%d]" % pid
-        self.commandfile = tempfile.mktemp ( prefix="ma5cmd", dir="./" )
+        self.commandfile = tempfile.mktemp ( prefix="ma5cmd", dir=self.ma5install )
         self.teefile = tempfile.mktemp ( prefix="ma5", suffix=".run", dir="/tmp" )
         process = "%s_%djet" % ( self.topo, self.njets )
         #dirname = bakeryHelpers.dirName ( process, masses )
@@ -155,21 +163,23 @@ class MA5Wrapper:
         self.writeCommandFile( hepmcfile, process, masses )
         tempdir = "ma5_%s" % Dir
         a = subprocess.getoutput ( "mkdir %s" % tempdir )
-        a = subprocess.getoutput ( "cp -r ma5.template/bin ma5.template/madanalysis ma5.template/tools %s" % tempdir )
-        a = subprocess.getoutput ( "cp -r %s %s" % ( self.recastfile, tempdir ) )
-        a = subprocess.getoutput ( "cp -r ma5.template/%s %s" % ( self.commandfile, tempdir ) )
+        a = subprocess.getoutput ( "cp -r %s/ma5/bin %s/ma5/madanalysis %s/ma5/tools %s" % \
+                                   ( self.basedir, self.basedir, self.basedir, tempdir ) )
+        a = subprocess.getoutput ( "cp -r %s %s/recast" % ( self.recastfile, tempdir ) )
+        # a = subprocess.getoutput ( "cp -r %s %s" % ( self.recastfile, tempdir ) )
+        a = subprocess.getoutput ( "cp -r %s %s/ma5cmd" % \
+                                   ( self.commandfile, tempdir ) )
 
         # then run MadAnalysis
         os.chdir ( tempdir )
-        cmd = "python2 %s -R -s %s 2>&1 | tee %s" % (self.executable, \
-                self.commandfile, self.teefile )
-        self.exe ( cmd )
+        cmd = "python2 %s -b -R -s ./ma5cmd 2>&1 | tee %s" % (self.executable, \
+                self.teefile )
+        self.exe ( cmd, maxLength=None )
         self.unlink ( self.recastfile )
-        self.unlink ( "ma5.template/%s" % self.commandfile )
         self.unlink ( self.commandfile )
         self.unlink ( self.teefile )
         source = "ANA_%s" % Dir
-        dest = "../ma5/%s" % source
+        dest = "%s/ma5/%s" % ( self.basedir, source )
         if os.path.exists ( dest ):
             self.info ( "Destination %s exists. Let me check for summary file." % dest )
             hasSummary = self.checkForSummaryFile ( masses )
@@ -199,23 +209,37 @@ class MA5Wrapper:
         :param maxLength: maximum length of output to be printed
         """
         self.msg ( "exec: [%s] %s" % (os.getcwd(), cmd ) )
-        ret = subprocess.getoutput ( cmd )
+        myenv = dict(os.environ)
+        myenv["ROOTSYS"]="/mnt/hephy/pheno/opt/root6.20-py27-u20.04/"
+        myenv["PATH"]=".:/mnt/hephy/pheno/opt/root6.20-py27-u20.04/bin:/usr/bin:/bin:/usr/local/bin"
+        myenv["LD_LIBRARY_PATH"]="/mnt/hephy/pheno/opt/root6.20-py27-u20.04/lib:/.singularity.d/libs"
+        myenv["PYTHONPATH"]="/scratch-cbe/users/wolfgan.waltenberger/.local/lib/python2.7/:/scratch-cbe/users/wolfgan.waltenberger/.local/lib/python2.7/site-packages/:/mnt/hephy/pheno/opt/root6.20-py27-u20.04/lib:/users/wolfgan.waltenberger/git/smodels-utils"
+        pipe = subprocess.Popen ( cmd, env = myenv, shell=True, stdout=subprocess.PIPE, 
+                                  stderr=subprocess.PIPE )
+        ret=""
+        for line in io.TextIOWrapper(pipe.stdout, encoding="utf-8"):
+            ret+=line
+        for line in io.TextIOWrapper(pipe.stderr, encoding="utf-8"):
+            ret+=line
+        #ret = subprocess.getoutput ( cmd )
         ret = ret.strip()
         if len(ret)==0:
             return
         # maxLength=60
         # maxLength=560
+        if maxLength == None:
+            maxLength = len(ret)+1
         if len(ret)<maxLength:
             self.msg ( " `- %s" % ret )
             return
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
 
     def clean ( self ):
-        subprocess.getoutput ( "rm -rf ma5.template/recast*" )
-        subprocess.getoutput ( "rm -rf ma5.template/ma5cmd*" )
+        subprocess.getoutput ( "rm -rf %s/recast*" % self.ma5install )
+        subprocess.getoutput ( "rm -rf %s/ma5cmd*" % self.ma5install )
     def clean_all ( self ):
         self.clean()
-        subprocess.getoutput ( "rm -rf ma5/ANA*" )
+        subprocess.getoutput ( "rm -rf %s/ANA*" % self.ma5install )
 
 if __name__ == "__main__":
     import argparse

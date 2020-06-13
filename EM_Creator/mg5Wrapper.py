@@ -17,7 +17,7 @@ __locks__ = set()
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C, remove all locks!')
     for l in __locks__:
-        cmd = "rm -f %s" % l 
+        cmd = "rm -f %s" % l
         subprocess.getoutput ( cmd )
         print ( cmd )
     sys.exit(0)
@@ -25,11 +25,13 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 class MG5Wrapper:
-    def __init__ ( self, nevents, topo, njets, keep, rerun, ma5, ver="2_6_5" ):
+    def __init__ ( self, nevents, topo, njets, keep, rerun, ma5,
+                   ignore_locks, ver="2_6_5" ):
         """
         :param ver: version of mg5
         """
         self.cwd = os.getcwd()+"/"
+        self.ignore_locks = ignore_locks
         self.topo = topo
         self.keep = keep
         self.rerun = rerun
@@ -191,8 +193,10 @@ class MG5Wrapper:
     def lock ( self, masses ):
         """ lock for topo and masses, to make sure processes dont
             overwrite each other
-        :returns: False if there is already a lock on it
+        :returns: True if there is already a lock on it
         """
+        if self.ignore_locks:
+            return False
         filename = ".lock%s%s" % ( str(masses).replace(" ","").replace("(","").replace(")","").replace(",","_"), self.topo )
         __locks__.add ( filename )
         if os.path.exists ( filename ):
@@ -205,6 +209,8 @@ class MG5Wrapper:
     def unlock ( self, masses ):
         """ unlock for topo and masses, to make sure processes dont
             overwrite each other """
+        if self.ignore_locks:
+            return
         filename = ".lock%s%s" % ( str(masses).replace(" ","").replace("(","").replace(")","").replace(",","_"), self.topo )
         __locks__.remove ( filename )
         if os.path.exists ( filename ):
@@ -446,6 +452,8 @@ def main():
                              type=float, default=None )
     argparser.add_argument ( '-r', '--rerun', help='force rerun, even if there is a summary file already',
                              action="store_true" )
+    argparser.add_argument ( '--ignore_locks', help='ignore any locks. for debugging only.',
+                             action="store_true" )
     #mdefault = "(2000,1000,10),(2000,1000,10)"
     mdefault = "(1000,2000,50),'half',(1000,2000,50)"
     argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_lowest, m_highest, delta_m). m_highest and delta_m may be omitted. Keyword "half" (add quotes) is accepted for intermediate masses. [%s]' % mdefault,
@@ -488,7 +496,7 @@ def main():
         keepOrder=False
     masses = bakeryHelpers.parseMasses ( args.masses,
                                          mingap1=args.mingap1, maxgap1=args.maxgap1,
-                                         mingap2=args.mingap2, maxgap2=args.maxgap2, 
+                                         mingap2=args.mingap2, maxgap2=args.maxgap2,
                                          mingap13=args.mingap13, maxgap13=args.maxgap13 )
     import random
     random.shuffle ( masses )
@@ -498,7 +506,8 @@ def main():
                 ( len(masses[0]), nReqM, args.topo ) )
         sys.exit()
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
-    mg5 = MG5Wrapper( args.nevents, args.topo, args.njets, args.keep, args.rerun, args.ma5 )
+    mg5 = MG5Wrapper( args.nevents, args.topo, args.njets, args.keep, args.rerun, args.ma5,
+                      args.ignore_locks )
     # mg5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
     djobs = int(len(masses)/nprocesses)
 
