@@ -14,6 +14,11 @@ import time
 from matplotlib import colors as C
 from smodels_utils.helper.various import getPathName
 
+def getTopo ( validation ):
+    """ the the name of the topology from the validation file name """
+    tokens = validation.split("_")
+    return tokens[0]
+
 def getEmbakedDict ( basedir, topo ):
     """ get the embaked file """
     path = basedir+"orig/"+topo+".embaked"
@@ -58,7 +63,10 @@ def getNEvents ( nevents, eff ):
             ret = eff
     return ret
 
-def draw( validationfile ):
+def draw( validationfile, suffix ):
+    """
+    :param suffix: an index to count multiple planes, or None
+    """
     warnings.simplefilter("ignore")
     anaId = "???"
     coll = "CMS"
@@ -121,7 +129,10 @@ def draw( validationfile ):
     plt.xlabel ( "m(mother) [GeV]" )
     plt.ylabel ( "m(LSP) [GeV]" )
     rse = {}
-    fname = "relstaterr_%s_%s.png" % ( anaId, topo )
+    suff = ""
+    if suffix != None:
+        suff = "_" + str(suffix)
+    fname = "relstaterr_%s_%s%s.png" % ( anaId, topo, suff )
     print ( "[drawRelStatErr] saving to %s" % fname )
     plt.savefig ( fname )
     plt.clf()
@@ -136,12 +147,15 @@ def writeMDPage( push = False ):
     files.sort()
     stats = {}
     for f in files:
+        print ( "f", f )
         p1 = f.find("relstaterr/")
         f = f.replace(".png","")
         f = f[p1+22:]
         tokens = f.split("_")
         if not tokens[0] in stats:
             stats [ tokens[0] ] = []
+        if tokens[1] == "TGQ12":
+            continue
         stats [ tokens[0] ].append ( tokens[1] )
     print ( "[drawRelStatErr] writing %sREADME.md" % Dir )
     # print ( "[drawRelStatErr] files %s" % path )
@@ -152,10 +166,14 @@ def writeMDPage( push = False ):
         g.write ( "## stats\n" )
         for ana,topos in stats.items():
             g.write ( " * %s: " % ana )
+            prevtopo = ""
             for ctr,topo in enumerate(topos):
+                if prevtopo == topo:
+                    continue
                 if ctr > 0:
                     g.write ( ", " )
-                g.write ( "[%s](#%s)" % ( topo, f ) )
+                g.write ( "[%s](#%s)" % ( topo, ana+"_"+topo ) )
+                prevtopo = topo
             g.write ( "\n" )
         g.write ( "\n" )
         g.write ( "## plots\n" )
@@ -169,13 +187,11 @@ def writeMDPage( push = False ):
             f = f.replace(".png","")
             f = f[p1+22:]
             tokens = f.split("_")
-            if tokens[1] == "TGQ12":
+            if "TGQ12" in tokens[1]:
                 print ( "[drawRelStatErr] skipping TGQ12" )
                 continue
             t0 = int(time.time() )-1590000000
             img = '<img src="%s?%d" />' % ( src, t0 ) 
-            # img += " "*30
-            anchor = '[%s](README.md#%s)' % ( tokens[0]+tokens[1], tokens[0]+tokens[1] ) 
             anchor = '%s, %s<a name="%s"></a>' % ( tokens[0], tokens[1], f )
             g.write ( '| %s | %s |\n' % ( anchor, img ) )
         g.write ( "\n" )
@@ -195,7 +211,7 @@ if __name__ == "__main__":
             help="analysis name, like the directory name [CMS-EXO-13-006-eff]", 
             type=str, default="CMS-EXO-13-006-eff" )
     argparser.add_argument ( "-v", "--validationfile", 
-            help="validation file [T*py]", 
+            help="validation file, can use wildcards [T*py]", 
             type=str, default="T*.py" )
     argparser.add_argument ( "-D", "--default", action="store_true", 
             help="default run on arguments. currently set to be the exo 13 006 plots" )
@@ -226,9 +242,17 @@ if __name__ == "__main__":
                 validations.append ( t )
 
     for analysis in analyses:
-        for validationfile in validationfiles:
+        topos = {}
+        for validationfile in validations:
+            topo = getTopo ( validationfile )
+            suffix=None
+            if topo in topos:
+                suffix=len(topos[topo])
+                topos[topo].append ( validationfile )
+            else:
+                topos[topo]= [ validationfile ]
             ipath = getPathName ( args.dbpath, analysis, validationfile )
-            fname = draw( ipath )
+            fname = draw( ipath, suffix )
             if args.copy:
                 cmd = "cp %s ../../smodels.github.io/relstaterr/" % fname
                 o = subprocess.getoutput ( cmd )
