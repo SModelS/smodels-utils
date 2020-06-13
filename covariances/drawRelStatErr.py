@@ -48,7 +48,7 @@ def getNEvents ( nevents, eff ):
     key = ( int(eff[0]), int(eff[1]) )
     if key in nevents:
         return nevents[key]
-    dmax,ret=float("inf"),0.
+    dmax,ret=float("inf"),float("nan")
     def dist ( m1, m2 ):
         return (m1[0]-m2[0])**2 + (m1[1]-m2[1])**2
     for masses,eff in nevents.items():
@@ -96,7 +96,7 @@ def draw( validationfile ):
         axes = convertNewAxes ( point["axes"] )
         effs.append ( ( axes[1], axes[0], point["efficiency"] ) )
     if skipped > 0:
-        print ( "[drawRelStatEr] skipped %d/%d points: %s" % ( skipped, len(validationData), err ) )
+        print ( "[drawRelStatErr] skipped %d/%d points: %s" % ( skipped, len(validationData), err ) )
     effs.sort()
     basedir = validationfile[:p3]
     nevents = getEmbakedDict ( basedir, topo )
@@ -106,9 +106,11 @@ def draw( validationfile ):
         y.append ( eff[1] )
         nev = getNEvents( nevents, eff )
         if eff[2] == None:
-            rse = 0.
+            rse = float("nan")
         else:
             rse = 1. / numpy.sqrt(eff[2]*nev)
+        if eff[2] == 0.:
+            rse = float("nan")
         if rse > .35:
             rse = .35
         z.append ( 100. * rse )
@@ -120,7 +122,7 @@ def draw( validationfile ):
     plt.ylabel ( "m(LSP) [GeV]" )
     rse = {}
     fname = "relstaterr_%s_%s.png" % ( anaId, topo )
-    print ( "[drawRelStatEr} saving to %s" % fname )
+    print ( "[drawRelStatErr] saving to %s" % fname )
     plt.savefig ( fname )
     plt.clf()
     return fname
@@ -132,21 +134,57 @@ def writeMDPage( push = False ):
     path = "%srelstaterr_*.png" % Dir
     files = glob.glob( path )
     files.sort()
+    stats = {}
+    for f in files:
+        p1 = f.find("relstaterr/")
+        f = f.replace(".png","")
+        f = f[p1+22:]
+        tokens = f.split("_")
+        if not tokens[0] in stats:
+            stats [ tokens[0] ] = []
+        stats [ tokens[0] ].append ( tokens[1] )
     print ( "[drawRelStatErr] writing %sREADME.md" % Dir )
     # print ( "[drawRelStatErr] files %s" % path )
     with open ( "%sREADME.md" % Dir, "wt" ) as g:
-        g.write ( "# plots of rel stat errs\n" )
+        g.write ( "# Plots of relative statistical errors\n" )
         g.write ( "as of %s\n" % time.asctime() )
         g.write ( "\n" )
+        g.write ( "## stats\n" )
+        for ana,topos in stats.items():
+            g.write ( " * %s: " % ana )
+            for ctr,topo in enumerate(topos):
+                if ctr > 0:
+                    g.write ( ", " )
+                g.write ( "[%s](#%s)" % ( topo, f ) )
+            g.write ( "\n" )
+        g.write ( "\n" )
+        g.write ( "## plots\n" )
+        g.write ( "\n" )
+        g.write ( "| **topo** | **image** |\n" )
+        g.write ( "|----------|-----------|\n" )
+
         for f in files:
             src=os.path.basename ( f )
-            g.write ( '| <img src="%s?%d" /> |\n' % ( src, int(time.time() ) ) )
+            p1 = f.find("relstaterr/")
+            f = f.replace(".png","")
+            f = f[p1+22:]
+            tokens = f.split("_")
+            if tokens[1] == "TGQ12":
+                print ( "[drawRelStatErr] skipping TGQ12" )
+                continue
+            t0 = int(time.time() )-1590000000
+            img = '<img src="%s?%d" />' % ( src, t0 ) 
+            # img += " "*30
+            anchor = '[%s](README.md#%s)' % ( tokens[0]+tokens[1], tokens[0]+tokens[1] ) 
+            anchor = '%s, %s<a name="%s"></a>' % ( tokens[0], tokens[1], f )
+            g.write ( '| %s | %s |\n' % ( anchor, img ) )
+        g.write ( "\n" )
         g.close()
     cmd = "cd ../../smodels.github.io/; git commit -am 'automated commit' ; git push"
     o = ""
     if push:
         o = subprocess.getoutput ( cmd )
-    print ( "[drawRelStatEr] cmd %s: %s" % (cmd, o ) )
+    print ( "[drawRelStatErr] cmd %s: %s" % (cmd, o ) )
     
 if __name__ == "__main__":
     import argparse
@@ -166,35 +204,34 @@ if __name__ == "__main__":
     argparser.add_argument ( "-p", "--push", action="store_true", 
             help="commit and push to smodels.github.io, as it appears in https://smodels.github.io/relstaterr/" )
     args = argparser.parse_args()
-    if not args.default and not args.analysis.endswith("-eff"):
-        print ( "[drawRelStatEr] warning, analysis name does not end with -eff, might an error" )
+    if not args.default and not args.analysis.endswith("-eff") and not args.analysis in [ "", "None", "none", None ]:
+        print ( "[drawRelStatErr] warning, analysis name does not end with -eff, might be an error?" )
+        args.analysis += "-eff"
     if args.default:
-        for a in [ "CMS-EXO-13-006-andre", "CMS-EXO-13-006-eff" ]:
-            for v in [ "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py", "THSCPM2b_*.py" ]:
-                print ( "[drawRelStatEr:default] now drawing %s:%s" % (a, v ) )
-                ipath = getPathName ( args.dbpath, a, v )
-                fname = draw( ipath )
-                if args.copy:
-                    cmd = "cp %s ../../smodels.github.io/relstaterr/" % fname
-                    o = subprocess.getoutput ( cmd )
-                    print ( "[drawRelStatEr] cmd %s: %s" % (cmd, o ) )
+        analyses = [ "CMS-EXO-13-006-andre", "CMS-EXO-13-006-eff" ]
+        validations = [ "THSCPM1b_2EqMassAx_EqWidthAy.py", "THSCPM3_2EqMassAx_EqMassBy**.py", "THSCPM4_*.py", "THSCPM5_2EqMassAx_EqMassBx-100_EqMassCy*.py", "THSCPM6_EqMassA__EqmassAx_EqmassBx-100_Eqma*.py", "THSCPM8_2EqMassAx*.py", "THSCPM2b_*.py" ]
     else:
-        validationfiles = [ args.validationfile ]
+        analyses = [ args.analysis ]
+        if args.analysis in [ "None", "", "none", None ]:
+            analyses = []
+        validations = [ args.validationfile ]
         if "*" in args.validationfile:
             path = args.dbpath + "*/*/" + args.analysis + "/validation/" + args.validationfile 
             print ( "searching", path )
             tmp = glob.glob ( path )
-            validationfiles = []
+            validations = []
             for v in tmp:
                 p1 = v.find("validation/")
                 t = v[p1+11:]
-                validationfiles.append ( t )
+                validations.append ( t )
+
+    for analysis in analyses:
         for validationfile in validationfiles:
-            ipath = getPathName ( args.dbpath, args.analysis, validationfile )
+            ipath = getPathName ( args.dbpath, analysis, validationfile )
             fname = draw( ipath )
             if args.copy:
                 cmd = "cp %s ../../smodels.github.io/relstaterr/" % fname
                 o = subprocess.getoutput ( cmd )
-                print ( "[drawRelStatEr] cmd %s: %s" % (cmd, o ) )
+                print ( "[drawRelStatErr] cmd %s: %s" % (cmd, o ) )
     if args.copy:
         writeMDPage( args.push )
