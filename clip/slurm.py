@@ -405,6 +405,9 @@ def main():
     argparser.add_argument ( '-S', '--scan', nargs="?",
                     help='run the Z scanner on pid [SCAN], -1 means dont run, 0 means run on all unfrozen particles in hiscore.',
                     type=int, default=-1 )
+    argparser.add_argument ( '-B', '--nbakes', nargs="?",
+                    help='launch n identical jobs',
+                    type=int, default=1 )
     argparser.add_argument ( '-b', '--bake', nargs="?",
                     help='bake EM maps, with the given arguments, use "default" if unsure ["@n 10000 @a"]',
                     type=str, default="" )
@@ -482,8 +485,9 @@ def main():
         if args.mass == "default":
             # args.mass = "[(300,1099,25),'half',(200,999,25)]"
             args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
-        bake ( args.bake, args.analyses, args.mass, args.topo, args.dry_run,
-               args.nprocesses, rundir )
+        for i in range(args.nbakes):
+            bake ( args.bake, args.analyses, args.mass, args.topo, args.dry_run,
+                   args.nprocesses, rundir )
     if args.clean:
         clean_dirs( rundir, clean_all = False )
         return
