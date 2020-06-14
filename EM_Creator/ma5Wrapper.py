@@ -106,8 +106,8 @@ class MA5Wrapper:
         """
         process = "%s_%djet" % ( self.topo, self.njets )
         dirname = bakeryHelpers.dirName ( process, masses )
-        summaryfile = "%s/ma5/ANA_%s/Output/CLs_output_summary.dat" % \
-                       ( self.basedir, dirname )
+        summaryfile = "%s/ANA_%s/Output/SAF/CLs_output_summary.dat" % \
+                       ( self.ma5results, dirname )
         if not os.path.exists ( summaryfile ) or os.stat(summaryfile).st_size<10:
             self.msg ( "No summary file %s found. Run analyses!" % summaryfile )
             return False
@@ -213,10 +213,18 @@ class MA5Wrapper:
         """
         self.msg ( "exec: [%s] %s" % (os.getcwd(), cmd ) )
         myenv = dict(os.environ)
-        myenv["ROOTSYS"]="/mnt/hephy/pheno/opt/root6.20-py27-u20.04/"
-        myenv["PATH"]=".:/mnt/hephy/pheno/opt/root6.20-py27-u20.04/bin:/usr/bin:/bin:/usr/local/bin"
-        myenv["LD_LIBRARY_PATH"]="/mnt/hephy/pheno/opt/root6.20-py27-u20.04/lib:/.singularity.d/libs"
-        myenv["PYTHONPATH"]="/scratch-cbe/users/wolfgan.waltenberger/.local/lib/python2.7/:/scratch-cbe/users/wolfgan.waltenberger/.local/lib/python2.7/site-packages/:/mnt/hephy/pheno/opt/root6.20-py27-u20.04/lib:/users/wolfgan.waltenberger/git/smodels-utils"
+        home = "/scratch-cbe/users/wolfgan.waltenberger/"
+        home = os.environ["HOME"]
+        pylocaldir = "%s/.local/lib/python2.7/" % home
+        rootsys="/mnt/hephy/pheno/opt/root6.20-py27-u20.04/"
+        import socket
+        if socket.gethostname() == "two":
+            rootsys="/opt/root6.20-py27-u20.04/"
+        myenv["ROOTSYS"]=rootsys
+        myenv["PATH"]=".:%s/bin:/usr/bin:/bin:/usr/local/bin" % rootsys
+        myenv["LD_LIBRARY_PATH"]="%s/lib:/.singularity.d/libs" % rootsys
+        myenv["PYTHONPATH"]="%s:%s/site-packages/:%s/lib:/users/wolfgan.waltenberger/git/smodels-utils" % \
+            ( pylocaldir, pylocaldir, rootsys )
         pipe = subprocess.Popen ( cmd, env = myenv, shell=True, stdout=subprocess.PIPE, 
                                   stderr=subprocess.PIPE )
         ret=""

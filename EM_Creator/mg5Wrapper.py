@@ -198,7 +198,7 @@ class MG5Wrapper:
         """
         if self.ignore_locks:
             return False
-        filename = ".lock%s%s" % ( str(masses).replace(" ","").replace("(","").replace(")","").replace(",","_"), self.topo )
+        filename = "%s/.lock%s%s" % ( self.basedir, str(masses).replace(" ","").replace("(","").replace(")","").replace(",","_"), self.topo )
         __locks__.add ( filename )
         if os.path.exists ( filename ):
             return True
@@ -219,7 +219,8 @@ class MG5Wrapper:
             overwrite each other """
         if self.ignore_locks:
             return
-        filename = ".lock%s%s" % ( str(masses).replace(" ","").replace("(","").replace(")","").replace(",","_"), self.topo )
+        filename = "%s/.lock%s%s" % ( self.basedir, str(masses).replace(" ","").replace("(","").replace(")","").replace(",","_"), self.topo )
+        # self.msg ( "unlocking %s" % filename )
         if filename in __locks__:
             __locks__.remove ( filename )
         if os.path.exists ( filename ):
