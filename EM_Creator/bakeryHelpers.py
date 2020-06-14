@@ -9,8 +9,21 @@
 
 import numpy
 import sys
+import os
 sys.path.insert(0,"../../smodels" )
 from smodels.tools.runtime import nCPUs
+
+def baseDir ():
+    """ our basedir """
+    # ret = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/EM_Creator/"
+    ret = "~/git/smodels-utils/EM_Creator/"
+    conffile = "baking.conf" 
+    if os.path.exists ( conffile ):
+        with open ( conffile, "rt" ) as f:
+            ret = f.read()
+        ret = ret.strip()
+    ret = os.path.expanduser ( ret )
+    return ret
 
 def dirName ( process, masses ):
     """ the name of the directory of one process + masses 

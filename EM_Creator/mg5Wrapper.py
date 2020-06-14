@@ -30,7 +30,7 @@ class MG5Wrapper:
         """
         :param ver: version of mg5
         """
-        self.basedir = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/EM_Creator/"
+        self.basedir = bakeryHelpers.baseDir()
         os.chdir ( self.basedir )
         self.ignore_locks = ignore_locks
         self.topo = topo
@@ -59,7 +59,7 @@ class MG5Wrapper:
                           'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } # , 'qcut': '90' }
         self.mgParams["XQCUT"]="M[0]/4" ## xqcut for gluino-gluino production: mgluino/4
         self.correctPythia8CfgFile()
-        self.rmLocksOlderThan ( 1 ) ## remove locks older than 1 hour
+        self.rmLocksOlderThan ( 3 ) ## remove locks older than 3 hours
         self.info ( "initialised" )
 
     def determineMG5Version ( self ):

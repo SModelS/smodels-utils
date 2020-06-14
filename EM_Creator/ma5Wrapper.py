@@ -22,7 +22,7 @@ class MA5Wrapper:
         self.analyses = analyses
         self.rerun = rerun
         self.keep = keep
-        self.basedir = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/EM_Creator/"
+        self.basedir = bakeryHelpers.baseDir()
         os.chdir ( self.basedir )
         self.ma5results = "%s/results/" % self.basedir
         if not os.path.exists ( self.ma5results ):

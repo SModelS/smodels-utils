@@ -17,6 +17,7 @@ class emCreator:
         """ the efficiency map creator.
         :param keep: if true, keep all files
         """
+        self.basedir = bakeryHelpers.baseDir()
         self.analyses = analyses
         self.topo = topo
         self.njets = njets
@@ -84,12 +85,21 @@ class emCreator:
         process = "%s_%djet" % ( topo, njets )
         dirname = bakeryHelpers.dirName ( process, masses )
         # summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
-        summaryfile = "results/ANA_%s/Output/SAF/CLs_output_summary.dat" % dirname
+        summaryfile = "results/ANA_%s/Output/SAF/CLs_output_summary.dat" % \
+                    ( dirname )
+        path = "results/ANA_%s" % ( dirname )
         if not os.path.exists ( summaryfile):
             self.info ( "could not find ma5 summary file %s. Skipping." % summaryfile )
+            dt = 5.
+            if os.path.exists ( path ):
+                t0 = time.time()
+                mt = os.stat ( path ).st_mtime
+                dt = ( t0 - mt ) / 60. / 60.
+                self.info ( "directory %s is %.1f hours old" % ( path, dt ) )
             rmfile = summaryfile[:summaryfile.find("/Output")]
             cmd = "rm -rf %s" % rmfile
-            if not self.keep:
+            ## remove only stuff that is old
+            if not self.keep and dt > 3.:
                 o = subprocess.getoutput ( cmd )
                 self.info ( "running %s: %s" % ( cmd, o ) )
             ret = {}
@@ -185,7 +195,7 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy, keep ):
              ( topo, seffs ) )
     nmg5 = countMG5 ( topo, njets )
     nma5 = countMA5 ( topo, njets )
-    print ( "[emCreator] I see %d mg5 and %d running ma5 points." % ( nmg5, nma5 ) )
+    print ( "[emCreator] I see %d mg5 points and %d running ma5 jobs." % ( nmg5, nma5 ) )
     for ana,values in effs.items():
         if len(values.keys()) == 0:
             continue
@@ -195,7 +205,8 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy, keep ):
         if not os.path.exists( "embaked/" ):
             os.makedirs ( "embaked" )
         fname = "embaked/%s.%s.embaked" % (ana, topo )
-        print ( "[emCreator] baking %s: %d points." % ( fname, len(values) ) )
+        print ( "%s[emCreator] baking %s: %d points.%s" % \
+                ( colorama.Fore.GREEN, fname, len(values), colorama.Fore.RESET ) )
         SRs = set()
         for k,v in values.items():
             for sr in v.keys():
