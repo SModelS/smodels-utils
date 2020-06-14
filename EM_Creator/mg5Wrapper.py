@@ -538,6 +538,8 @@ def main():
         p = multiprocessing.Process(target=runChunk, args=(chunk,i))
         jobs.append ( p )
         p.start()
+    for j in jobs:
+        j.join()
     if args.bake:
         import emCreator
         from types import SimpleNamespace
