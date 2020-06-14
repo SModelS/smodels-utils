@@ -125,12 +125,17 @@ def listAnalyses ( ):
     import glob
     # dname = "ma5/tools/PAD/Build/"
     dname = "ma5.template/tools/PAD/Build/SampleAnalyzer/User/Analyzer/"
-    print ( "[bakeryHelpers] searching for analyses in %s" % dname )
+    dname2 = "ma5.template/tools/PADForMA5tune/Build/SampleAnalyzer/User/Analyzer/"
+    # print ( "[bakeryHelpers] searching for analyses in %s" % dname )
     files = glob.glob ( "%s/*.cpp" % dname )
-    # files = glob.glob ( "%s*.saf" % dname )
+    files += glob.glob ( "%s/*.cpp" % dname2 )
+    files = list ( set ( files ) )
+    files.sort()
     print ( "List of analyses:" )
+    print ( "=================" )
     for f in files:
-        print  ( "  %s" % f.replace(".saf","").replace(dname,"").replace(".cpp","") )
+        fil = f.replace(".saf","").replace(dname,"").replace(".cpp","").replace(dname2,"") 
+        print  ( "  %s" % fil )
 
 def nJobs ( nproc, npoints ):
     """ determine the number of jobs we should run, given nproc is

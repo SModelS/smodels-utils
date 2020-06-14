@@ -468,7 +468,7 @@ def main():
     argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_lowest, m_highest, delta_m). m_highest and delta_m may be omitted. Keyword "half" (add quotes) is accepted for intermediate masses. [%s]' % mdefault,
                              type=str, default=mdefault )
     args = argparser.parse_args()
-    if args.topo in [ "T1", "T2" ] and args.mingap1 == None:
+    if args.topo in [ "T1", "T2" ] and args.mingap1 == None and not args.list_analyses:
         print ( "[mg5Wrapper] for topo %s we set mingap1 to 1." % args.topo )
         args.mingap1 = 1.
     if args.list_analyses:

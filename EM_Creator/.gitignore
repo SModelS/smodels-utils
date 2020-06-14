@@ -8,6 +8,7 @@ tmp*slha
 mg5proc*
 mg5cmd*
 ma5_T*jet*
+results/
 ma5/recast*
 ma5/ma5cmd*
 ma5.template/recast*
