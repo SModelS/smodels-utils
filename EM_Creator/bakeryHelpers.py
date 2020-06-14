@@ -151,7 +151,7 @@ def getListOfMasses(topo, njets, postMA5=False ):
     ret=[]
     fname = "%s_%djet.*" % ( topo, njets )
     if postMA5:
-        fname="ma5/ANA_"+fname
+        fname="results/ANA_"+fname
     files = glob.glob( fname )
     for f in files:
         p=f.find("jet.")

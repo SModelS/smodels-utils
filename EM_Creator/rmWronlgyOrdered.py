@@ -14,7 +14,13 @@ def correctlyOrdered ( numbers ):
 
 def run():
     files = glob.glob ( "T*_*jet*" )
+    files += glob.glob ( "ma5_T*_*jet*" )
+    files += glob.glob ( "ma5/ANA_T*_*jet*" )
     for f in files:
+        if not "T1" in f and not "T2" in f:
+            continue
+        if "TGQ" in f or "T3GQ" in f or "T5GQ" in f:
+            continue
         p = f.find("jet")
         string = f[p+4:]
         numbers = list ( map ( int, string.split("_") ) )

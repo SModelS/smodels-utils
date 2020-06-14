@@ -8,7 +8,7 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 """
 
-import os, sys, colorama, subprocess, shutil, time
+import os, sys, colorama, subprocess, shutil, time, glob
 from datetime import datetime
 import bakeryHelpers
 
@@ -58,7 +58,7 @@ class emCreator:
 
     def getNEvents ( self, masses ):
         smass = "_".join ( map ( str, masses ) )
-        fname = "ma5/ANA_%s_%djet.%s/Output/SAF/defaultset/defaultset.saf" % ( self.topo, self.njets, smass )
+        fname = "results/ANA_%s_%djet.%s/Output/SAF/defaultset/defaultset.saf" % ( self.topo, self.njets, smass )
         if not os.path.exists ( fname ):
             print ( "[emCreator.py] %s does not exist, cannot report correct number of events" % fname )
             return -2
@@ -84,7 +84,7 @@ class emCreator:
         process = "%s_%djet" % ( topo, njets )
         dirname = bakeryHelpers.dirName ( process, masses )
         # summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
-        summaryfile = "ma5/ANA_%s/Output/SAF/CLs_output_summary.dat" % dirname
+        summaryfile = "results/ANA_%s/Output/SAF/CLs_output_summary.dat" % dirname
         if not os.path.exists ( summaryfile):
             self.info ( "could not find ma5 summary file %s. Skipping." % summaryfile )
             rmfile = summaryfile[:summaryfile.find("/Output")]
@@ -114,14 +114,18 @@ class emCreator:
             line = line.replace("control region","control_region" )
             line = line.replace("150-1","150 -1")
             tokens=line.split()
-            if len(tokens) not in [ 8, 10 ]:
-                print ( "In file %s: cannot parse ``%s'': got %d tokens, expected 8 o 8 orr 10. skip it" % ( summaryfile, line[:50], len(tokens) ) )
+            if len(tokens) not in [ 7, 8, 10 ]:
+                print ( "[emCreator] In file %s: cannot parse ``%s'': got %d tokens, expected 8 or 10. skip it" % ( summaryfile, line[:50], len(tokens) ) )
+                print ( "   - %s "  % str(tokens) )
                 continue
             if len(tokens)==10:
                 dsname,ananame,sr,sig95exp,sig95obs,pp,eff,statunc,systunc,totunc=tokens
             if len(tokens)==8:
             # datasetname analysisname signalregion sig95(exp) sig95(obs) efficiency stat
                 dsname,ananame,sr,sig95exp,sig95obs,pp,eff,statunc=tokens
+            if len(tokens)==7:
+            # datasetname analysisname signalregion sig95(exp) sig95(obs) efficiency stat
+                dsname,ananame,sr,sig95exp,pp,eff,statunc=tokens
 
             eff=float(eff)
             #if eff == 0.:
@@ -144,6 +148,16 @@ class emCreator:
             return
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
 
+def countMG5 ( topo, njets ):
+    """ count the number of mg5 directories """
+    files = glob.glob ( "%s_%djet.*" % ( topo, njets) )
+    return len(files)
+
+def countMA5 ( topo, njets ):
+    """ count the number of ma5 directories """
+    files = glob.glob ( "ma5_%s_%djet.*" % ( topo, njets) )
+    return len(files)
+
 def runForTopo ( topo, njets, masses, analyses, verbose, copy, keep ):
     """
     :param keep: keep the cruft files
@@ -164,11 +178,14 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy, keep ):
                 tstamps[k]={}
             effs[k][m]=v
             tstamps[k][m]=t
-    seffs = ",".join(list(effs.keys()))
+    seffs = ", ".join(list(effs.keys()))
     if seffs == "":
         seffs = "no analysis"
     print ( "[emCreator] For %s I have efficiencies for: %s" % \
              ( topo, seffs ) )
+    nmg5 = countMG5 ( topo, njets )
+    nma5 = countMA5 ( topo, njets )
+    print ( "[emCreator] I see %d mg5 and %d running ma5 points." % ( nmg5, nma5 ) )
     for ana,values in effs.items():
         if len(values.keys()) == 0:
             continue
@@ -178,7 +195,7 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy, keep ):
         if not os.path.exists( "embaked/" ):
             os.makedirs ( "embaked" )
         fname = "embaked/%s.%s.embaked" % (ana, topo )
-        print ( "baking %s: %d points." % ( fname, len(values) ) )
+        print ( "[emCreator] baking %s: %d points." % ( fname, len(values) ) )
         SRs = set()
         for k,v in values.items():
             for sr in v.keys():
@@ -240,6 +257,8 @@ def getAllTopos ( ):
     for f in files:
         tokens = f.split("_")
         ret.add( tokens[0] )
+    ret = list(ret)
+    ret.sort()
     return ret
 
 def run ( args ):

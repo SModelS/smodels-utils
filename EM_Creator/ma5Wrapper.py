@@ -23,7 +23,10 @@ class MA5Wrapper:
         self.rerun = rerun
         self.keep = keep
         self.basedir = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/EM_Creator/"
-        self.ma5results = "%s/ma5/" % self.basedir
+        os.chdir ( self.basedir )
+        self.ma5results = "%s/results/" % self.basedir
+        if not os.path.exists ( self.ma5results ):
+            subprocess.getoutput ( "mkdir %s" % self.ma5results )
         self.ma5install = "%s/ma5/" % self.basedir
         self.ver = ver
         if not os.path.isdir ( self.ma5install ):
@@ -33,7 +36,7 @@ class MA5Wrapper:
         if not os.path.exists ( self.ma5install + self.executable ):
             self.info ( "cannot find ma5 installation at %s" % self.ma5install )
             self.exe ( "ma5/make.py" )
-        self.templateDir = "templates/"
+        self.templateDir = "%s/templates/" % self.basedir
         # self.info ( "initialised" )
 
     def info ( self, *msg ):
@@ -179,7 +182,7 @@ class MA5Wrapper:
         self.unlink ( self.commandfile )
         self.unlink ( self.teefile )
         source = "ANA_%s" % Dir
-        dest = "%s/ma5/%s" % ( self.basedir, source )
+        dest = "%s/%s" % ( self.ma5results, source )
         if os.path.exists ( dest ):
             self.info ( "Destination %s exists. Let me check for summary file." % dest )
             hasSummary = self.checkForSummaryFile ( masses )
@@ -194,8 +197,8 @@ class MA5Wrapper:
             except:
                 pass
             return -1
-        shutil.move ( source, "../ma5/" )
-        os.chdir ( "../" )
+        shutil.move ( source, self.ma5results )
+        os.chdir ( self.basedir )
         self.exe ( "rm -rf %s/ma5cmd*" % self.ma5install )
         self.exe ( "rm -rf %s/recast*" % self.ma5install )
         self.exe ( "rm -rf %s" % tempdir )

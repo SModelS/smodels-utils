@@ -330,7 +330,7 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
     filename = tempfile.mktemp(prefix="_B",suffix=".sh",dir="")
     Dir = "%sclip/" % codedir
     print ( "creating script at %s/%s" % ( Dir, filename ) )
-    nprc = int ( math.ceil ( nproc * .5 ) )
+    nprc = int ( math.ceil ( nproc * .5  ) )
     with open ( "%s/%s" % ( Dir, filename ), "wt" ) as f:
         for line in lines:
             args = recipe.replace("@","-")

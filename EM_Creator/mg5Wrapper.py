@@ -8,7 +8,7 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 """
 
-import os, sys, colorama, subprocess, shutil, tempfile, time, socket
+import os, sys, colorama, subprocess, shutil, tempfile, time, socket, random
 import multiprocessing, signal, glob
 import bakeryHelpers
 
@@ -30,14 +30,15 @@ class MG5Wrapper:
         """
         :param ver: version of mg5
         """
-        self.cwd = os.getcwd()+"/"
+        self.basedir = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/EM_Creator/"
+        os.chdir ( self.basedir )
         self.ignore_locks = ignore_locks
         self.topo = topo
         self.keep = keep
         self.rerun = rerun
         self.ma5 = ma5
         self.njets = njets
-        self.mg5install = "%s/mg5" % self.cwd
+        self.mg5install = "%s/mg5" % self.basedir
         self.logfile = None
         self.logfile2 = None
         self.tempf = None
@@ -52,7 +53,7 @@ class MG5Wrapper:
             self.info ( "cannot find mg5 installation at %s" % self.mg5install )
             self.exe ( "mg5/make.py" )
         self.determineMG5Version()
-        self.templateDir = self.cwd + "templates/"
+        self.templateDir = self.basedir + "/templates/"
         self.mgParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
                           'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5',
                           'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } # , 'qcut': '90' }
@@ -177,7 +178,7 @@ class MG5Wrapper:
     def pluginMasses( self, slhaTemplate, masses ):
         """ take the template slha file and plug in
             masses """
-        f=open( self.cwd+slhaTemplate,"r")
+        f=open( self.basedir+"/"+slhaTemplate,"r")
         lines=f.readlines()
         f.close()
         self.mkdir ( "temp" )
@@ -201,10 +202,17 @@ class MG5Wrapper:
         __locks__.add ( filename )
         if os.path.exists ( filename ):
             return True
-        with open ( filename, "wt" ) as f:
-            f.write ( time.asctime()+","+socket.gethostname()+"\n" )
-            f.close()
-        return False
+        for i in range(5):
+            try:
+                with open ( filename, "wt" ) as f:
+                    f.write ( time.asctime()+","+socket.gethostname()+"\n" )
+                    f.close()
+                return False
+            except FileNotFoundError as e:
+                t0 = random.uniform(2.,4.*i)
+                self.msg ( "FileNotFoundError #%d %s. Sleep for %.1fs" % ( i, e, t0 ) )
+                time.sleep( t0 )
+        return True ## pretend there is a lock
 
     def unlock ( self, masses ):
         """ unlock for topo and masses, to make sure processes dont
@@ -212,7 +220,8 @@ class MG5Wrapper:
         if self.ignore_locks:
             return
         filename = ".lock%s%s" % ( str(masses).replace(" ","").replace("(","").replace(")","").replace(",","_"), self.topo )
-        __locks__.remove ( filename )
+        if filename in __locks__:
+            __locks__.remove ( filename )
         if os.path.exists ( filename ):
             cmd = "rm -f %s" % filename
             subprocess.getoutput ( cmd )
@@ -459,6 +468,9 @@ def main():
     argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_lowest, m_highest, delta_m). m_highest and delta_m may be omitted. Keyword "half" (add quotes) is accepted for intermediate masses. [%s]' % mdefault,
                              type=str, default=mdefault )
     args = argparser.parse_args()
+    if args.topo in [ "T1", "T2" ] and args.mingap1 == None:
+        print ( "[mg5Wrapper] for topo %s we set mingap1 to 1." % args.topo )
+        args.mingap1 = 1.
     if args.list_analyses:
         bakeryHelpers.listAnalyses()
         sys.exit()
