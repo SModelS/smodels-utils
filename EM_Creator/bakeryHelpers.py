@@ -267,6 +267,7 @@ def clean ():
     files += glob.glob ( "%s/.lock*" % b )
     files += glob.glob ( "%s/../clip/_B*sh" % b )
     files += glob.glob ( "/users/wolfgan.waltenberger/B*sh" )
+    files += glob.glob ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm*out" )
     cleaned = []
     for f in files:
         dt = getAge ( f )
@@ -287,17 +288,26 @@ def checkEventFiles():
         print ( f, dt )
 
 def cleanAll():
+    clean()
     b = baseDir()
     t = tempDir()
     files = []
     files += glob.glob ( "%s/*" % t )
     files += glob.glob ( "%s/T*jet*" % b )
     files += glob.glob ( "%s/ma5_T*jet*" % b )
+    for i in [ "mg5cmd*", "mg5proc*", "tmp*slha", "run*card" ]:
+        files += glob.glob ( "%s/%s" % ( t, i ) )
+    for i in [ "recast*", "ma5cmd*" ]:
+        files += glob.glob ( "%s/ma5/%s" % ( b, i ) )
+    files += glob.glob ( "%s/.lock*" % b )
+    files += glob.glob ( "%s/../clip/_B*sh" % b )
+    files += glob.glob ( "/users/wolfgan.waltenberger/B*sh" )
+    files += glob.glob ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm*out" )
     cleaned = []
     for f in files:
         dt = getAge ( f )
-        if dt < 3.:
-            continue
+        #if dt < 0.:
+        #    continue
         subprocess.getoutput ( "rm -rf %s" % f )
         cleaned.append ( f )
     print ( "Cleaned %d temporary files" % len(cleaned) )

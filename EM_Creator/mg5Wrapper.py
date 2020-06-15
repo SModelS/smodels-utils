@@ -62,7 +62,7 @@ class MG5Wrapper:
         ebeam = str(int(self.sqrts*1000/2))
         self.mgParams = { 'EBEAM': ebeam, # Single Beam Energy expressed in GeV
                           'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5',
-                          'PDFLABEL': 'cteq6l1', 'XQCUT': 'M[0]/4'
+                          'PDFLABEL': 'nn23lo1', 'XQCUT': 'M[0]/4'
                           ## xqcut for gluino-gluino production: mgluino/4
         }#,'qcut': '90'}
         # self.correctPythia8CfgFile()
@@ -540,14 +540,15 @@ def main():
             ana = bakeryHelpers.ma5AnaNameToSModelSName ( ana )
             printProdStats.main( ana )
         sys.exit()
-    if args.clean or args.clean_all:
-        bakeryHelpers.clean()
-        if not args.clean_all:
-            sys.exit()
 
     if args.clean_all:
         bakeryHelpers.cleanAll()
         sys.exit()
+
+    if args.clean:
+        bakeryHelpers.clean()
+        sys.exit()
+
 
     hname = socket.gethostname()
     if hname.find(".")>0:
