@@ -218,19 +218,20 @@ class MA5Wrapper:
         pylocaldir = "%s/.local/lib/python2.7/" % home
         rootsys="/mnt/hephy/pheno/opt/root6.20-py27-u20.04/"
         import socket
-        if socket.gethostname() == "two":
+        if socket.gethostname() in [ "two", "wnouc" ]:
             rootsys="/opt/root6.20-py27-u20.04/"
         myenv["ROOTSYS"]=rootsys
         myenv["PATH"]=".:%s/bin:/usr/bin:/bin:/usr/local/bin" % rootsys
         myenv["LD_LIBRARY_PATH"]="%s/lib:/.singularity.d/libs" % rootsys
         myenv["PYTHONPATH"]="%s:%s/site-packages/:%s/lib:/users/wolfgan.waltenberger/git/smodels-utils" % \
             ( pylocaldir, pylocaldir, rootsys )
-        pipe = subprocess.Popen ( cmd, env = myenv, shell=True, stdout=subprocess.PIPE, 
+        pipe = subprocess.Popen ( cmd, env = myenv, shell=True, 
+                                  stdout=subprocess.PIPE, 
                                   stderr=subprocess.PIPE )
         ret=""
-        for line in io.TextIOWrapper(pipe.stdout, encoding="utf-8"):
+        for line in io.TextIOWrapper(pipe.stdout, encoding="latin1"):
             ret+=line
-        for line in io.TextIOWrapper(pipe.stderr, encoding="utf-8"):
+        for line in io.TextIOWrapper(pipe.stderr, encoding="latin1"):
             ret+=line
         #ret = subprocess.getoutput ( cmd )
         ret = ret.strip()

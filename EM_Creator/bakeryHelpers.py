@@ -13,20 +13,43 @@ import os
 sys.path.insert(0,"../../smodels" )
 from smodels.tools.runtime import nCPUs
 
-def baseDir ():
+def isAssociateProduction ( topo ):
+    """ return true if topo is associate squark gluino production
+    :param topo: str, e.g. TGQ
+    """
+    if topo in [ "TGQ", "T3GQ", "T5GQ" ]:
+        return True
+    return False
+
+def baseDir():
     """ our basedir """
-    # ret = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/EM_Creator/"
-    ret = "~/git/smodels-utils/EM_Creator/"
-    conffile = "baking.conf" 
+    conffile = "baking.conf"
     if os.path.exists ( conffile ):
         with open ( conffile, "rt" ) as f:
             ret = f.read()
         ret = ret.strip()
+        return ret
+    # ret = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/EM_Creator/"
+    subdir = "git/smodels-utils/EM_Creator"
+    ret = "~/%s/" % subdir
     ret = os.path.expanduser ( ret )
+    if ret.count ( subdir ) == 2:
+        ret = ret.replace(subdir,"",1)
+    while ret.find("//")>0:
+        ret = ret.replace("//","/")
+    return ret
+
+def tempDir():
+    """ our temp dir """
+    ret = baseDir()+"/temp/"
+    while ret.find("//")>0:
+        ret = ret.replace("//","/")
+    if not os.path.exists ( ret ):
+        os.mkdir ( ret )
     return ret
 
 def dirName ( process, masses ):
-    """ the name of the directory of one process + masses 
+    """ the name of the directory of one process + masses
     :param process: e.g. T2_1jet
     :param masses: tuple or list of masses, e.g. (1000, 800)
     """
@@ -106,7 +129,7 @@ def parseMasses ( massstring, mingap1=None, maxgap1=None,
     return ret
 
 def filterForGap ( masses, gap, isMin=True, indices=[0,1] ):
-    """ filter out tuples for which gap is not met 
+    """ filter out tuples for which gap is not met
         between <indices> particles
     :param isMin: if True, filter out too low gaps, if False,
                   filter out too high gaps
@@ -147,7 +170,7 @@ def listAnalyses ( ):
     print ( "List of analyses:" )
     print ( "=================" )
     for f in files:
-        fil = f.replace(".saf","").replace(dname,"").replace(".cpp","").replace(dname2,"") 
+        fil = f.replace(".saf","").replace(dname,"").replace(".cpp","").replace(dname2,"")
         print  ( "  %s" % fil )
 
 def nJobs ( nproc, npoints ):
@@ -192,7 +215,10 @@ def nRequiredMasses(topo):
     return len(M)
 
 if __name__ == "__main__":
+    print ( tempDir() )
+    """
     ms = "[(200,400,50.),(200,400.,50),(150.,440.,50)]"
     masses = parseMasses ( ms, mingap13=0., mingap2=0. )
     print ( "masses", masses )
     print ( nRequiredMasses("T5ZZ") )
+    """

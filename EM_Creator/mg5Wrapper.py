@@ -9,7 +9,7 @@
 """
 
 import os, sys, colorama, subprocess, shutil, tempfile, time, socket, random
-import multiprocessing, signal, glob
+import multiprocessing, signal, glob, io
 import bakeryHelpers
 
 __locks__ = set()
@@ -32,6 +32,7 @@ class MG5Wrapper:
         """
         self.basedir = bakeryHelpers.baseDir()
         os.chdir ( self.basedir )
+        self.tempdir = bakeryHelpers.tempDir()
         self.ignore_locks = ignore_locks
         self.topo = topo
         self.keep = keep
@@ -131,8 +132,8 @@ class MG5Wrapper:
         """ this method writes the pythia card for within mg5.
         :param process: fixme (eg T2_1jet)
         """
-        self.mkdir ( "temp" )
-        self.runcard = tempfile.mktemp ( prefix="run", suffix=".card", dir="temp/" )
+        self.runcard = tempfile.mktemp ( prefix="run", suffix=".card", 
+                                         dir=self.tempdir )
         # filename = "%s/Cards/run_card.dat" % process
         self.debug ( "writing pythia run card %s" % self.runcard )
         templatefile = self.templateDir+'/template_run_card.dat'
@@ -148,7 +149,10 @@ class MG5Wrapper:
                 if k in line:
                     vold = v
                     if "M[0]" in v:
-                        v = v.replace("M[0]",str(masses[0]))
+                        m0 = masses[0]
+                        if bakeryHelpers.isAssociateProduction ( self.topo ):
+                            m0 = min( masses[0], masses[1] )
+                        v = v.replace("M[0]",str(m0))
                         v = str(eval (v ))
                     line = line.replace("@@%s@@" % k,v)
             g.write ( line )
@@ -160,8 +164,7 @@ class MG5Wrapper:
         """ this method writes the commands file for mg5.
         :param process: fixme (eg T2tt_1jet)
         """
-        self.mkdir ( "temp" )
-        self.commandfile = tempfile.mktemp ( prefix="mg5cmd", dir="temp/" )
+        self.commandfile = tempfile.mktemp ( prefix="mg5cmd", dir=self.tempdir )
         f = open(self.commandfile,'w')
         f.write('set automatic_html_opening False\n' )
         f.write('launch %s\n' % bakeryHelpers.dirName(process,masses))
@@ -182,8 +185,7 @@ class MG5Wrapper:
         f=open( self.basedir+"/"+slhaTemplate,"r")
         lines=f.readlines()
         f.close()
-        self.mkdir ( "temp" )
-        self.slhafile = tempfile.mktemp(suffix=".slha",dir="temp/" )
+        self.slhafile = tempfile.mktemp(suffix=".slha",dir=self.tempdir )
         f=open( self.slhafile,"w")
         n=len(masses)
         for line in lines:
@@ -308,7 +310,14 @@ class MG5Wrapper:
         if masses != "":
             sm="[%s]" % str(masses)
         self.msg ( "now execute for %s%s: %s" % (self.topo, sm, cmd[:] ) )
-        ret = subprocess.getoutput ( cmd )
+        pipe = subprocess.Popen ( cmd, shell=True,
+                                  stdout=subprocess.PIPE, 
+                                  stderr=subprocess.PIPE )
+        ret=""
+        for line in io.TextIOWrapper(pipe.stdout, encoding="latin1"):
+            ret+=line
+        for line in io.TextIOWrapper(pipe.stderr, encoding="latin1"):
+            ret+=line
         if len(ret)==0:
             return
         maxLength=200
@@ -348,8 +357,7 @@ class MG5Wrapper:
         f=open(templatefile,"r")
         lines=f.readlines()
         f.close()
-        self.mkdir("%s/temp/" % self.basedir )
-        self.tempf = tempfile.mktemp(prefix="mg5proc",dir="%s/temp/" % self.basedir )
+        self.tempf = tempfile.mktemp(prefix="mg5proc",dir=self.tempdir )
         f=open(self.tempf,"w")
         f.write ( "import model_v4 mssm\n" )
         for line in lines:
@@ -470,7 +478,7 @@ def main():
     argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_lowest, m_highest, delta_m). m_highest and delta_m may be omitted. Keyword "half" (add quotes) is accepted for intermediate masses. [%s]' % mdefault,
                              type=str, default=mdefault )
     args = argparser.parse_args()
-    if args.topo in [ "T1", "T2" ] and args.mingap1 == None and not args.list_analyses:
+    if args.topo in [ "T1", "T2" ] and args.mingap1 == None and not args.list_analyses and not args.clean and not args.clean_all:
         print ( "[mg5Wrapper] for topo %s we set mingap1 to 1." % args.topo )
         args.mingap1 = 1.
     if args.list_analyses:
@@ -483,13 +491,27 @@ def main():
             ana = bakeryHelpers.ma5AnaNameToSModelSName ( ana )
             printProdStats.main( ana )
         sys.exit()
-    if args.clean:
-        subprocess.getoutput ( "rm -rf mg5cmd* mg5proc* tmp*slha run*card" )
-        print ( "Cleaned temporary files." )
-        sys.exit()
+    if args.clean or args.clean_all:
+        t = bakeryHelpers.tempDir()
+        files = "%s/mg5cmd* %s/mg5proc* %s/tmp*slha %s/run*card" % \
+            ( t, t, t, t )
+        files = files.replace("//","/")
+        subprocess.getoutput ( "rm -rf %s" % files )
+        print ( "Cleaned temporary files: %s" % files )
+        if not args.clean_all:
+            sys.exit()
     if args.clean_all:
-        subprocess.getoutput ( "rm -rf temp/* mg5cmd* mg5proc* tmp*slha T*jet* run*card ma5/ANA_T* ma5_T* ma5.template/recast* ma5.template/ma5cmd*" )
-        print ( "Cleaned temporary files." )
+        b = bakeryHelpers.baseDir()
+        t = bakeryHelpers.tempDir()
+        files = t+"/*"
+        files += " %s/T*jet*" % b
+        files += " %s/ma5_T*" % b
+        files += " %s/ma5/ma5cmd*" % b
+        files += " %s/ma5/recast*" % b
+        files += " %s/.lock*" % b
+        files = files.replace("//","/")
+        subprocess.getoutput ( "rm -rf %s" % files )
+        print ( "Cleaned temporary files %s" % files )
         sys.exit()
     hname = socket.gethostname()
     if hname.find(".")>0:
