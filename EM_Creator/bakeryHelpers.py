@@ -275,6 +275,16 @@ def clean ():
         subprocess.getoutput ( "rm -rf %s" % f )
         cleaned.append ( f )
     print ( "Cleaned %d temporary files" % len(cleaned) )
+    checkEventFiles()
+
+def checkEventFiles():
+    """ look at the event files, remove all that are old and cannot be opened """
+    files = glob.glob("mg5results/T*hepmc.gz")
+    for f in files:
+        dt = getAge ( f )
+        if dt < 3.:
+            continue
+        print ( f, dt )
 
 def cleanAll():
     b = baseDir()
