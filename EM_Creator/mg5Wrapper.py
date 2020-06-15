@@ -26,7 +26,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 class MG5Wrapper:
     def __init__ ( self, nevents, topo, njets, keep, rerun, ma5,
-                   ignore_locks, ver="2_6_5" ):
+                   ignore_locks, sqrts=13, ver="2_6_5" ):
         """
         :param ver: version of mg5
         """
@@ -46,6 +46,7 @@ class MG5Wrapper:
         self.logfile = None
         self.logfile2 = None
         self.tempf = None
+        self.sqrts = sqrts
         self.pyver = 2 ## python version
         if "py3" in ver:
             self.pyver = 3
@@ -58,7 +59,8 @@ class MG5Wrapper:
             self.exe ( "mg5/make.py" )
         self.determineMG5Version()
         self.templateDir = self.basedir + "/templates/"
-        self.mgParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
+        ebeam = str(int(self.sqrts*1000/2))
+        self.mgParams = { 'EBEAM': ebeam, # Single Beam Energy expressed in GeV
                           'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5',
                           'PDFLABEL': 'cteq6l1', 'XQCUT': 'M[0]/4'
                           ## xqcut for gluino-gluino production: mgluino/4
@@ -199,6 +201,10 @@ class MG5Wrapper:
             f.write ( line )
         f.close()
 
+    def lockfile ( self, masses ):
+        ret = "%s/.lock%d_%s_%s" % ( self.basedir, self.sqrts, str(masses).replace(" ","").replace("(","").replace(")","").replace(",","_"), self.topo )
+        return ret
+
     def lock ( self, masses ):
         """ lock for topo and masses, to make sure processes dont
             overwrite each other
@@ -206,7 +212,7 @@ class MG5Wrapper:
         """
         if self.ignore_locks:
             return False
-        filename = "%s/.lock%s%s" % ( self.basedir, str(masses).replace(" ","").replace("(","").replace(")","").replace(",","_"), self.topo )
+        filename = self.lockfile( masses )
         __locks__.add ( filename )
         if os.path.exists ( filename ):
             return True
@@ -227,8 +233,7 @@ class MG5Wrapper:
             overwrite each other """
         if self.ignore_locks:
             return
-        filename = "%s/.lock%s%s" % ( self.basedir, str(masses).replace(" ","").replace("(","").replace(")","").replace(",","_"), self.topo )
-        # self.msg ( "unlocking %s" % filename )
+        filename = self.lockfile( masses )
         if filename in __locks__:
             __locks__.remove ( filename )
         if os.path.exists ( filename ):
@@ -239,8 +244,10 @@ class MG5Wrapper:
         """ Run MG5 for topo, with njets additional ISR jets, giving
         also the masses as a list.
         """
-        destsaffile = bakeryHelpers.safFile ( self.ma5results, self.topo, masses )
-        destdatfile = bakeryHelpers.datFile ( self.ma5results, self.topo, masses )
+        destsaffile = bakeryHelpers.safFile ( self.ma5results, self.topo, masses, 
+                                              self.sqrts )
+        destdatfile = bakeryHelpers.datFile ( self.ma5results, self.topo, masses, 
+                                              self.sqrts )
         if os.path.exists ( destsaffile ) and os.path.exists ( destdatfile ):
             self.info ( "summary files %s,%s exist. skip point." % \
                         ( destsaffile, destdatfile ) )
@@ -282,7 +289,8 @@ class MG5Wrapper:
             spid = " in job #%d" % pid
         self.announce ( "starting MA5 on %s[%s] at %s%s" % ( str(masses), self.topo, time.asctime(), spid ) )
         from ma5Wrapper import MA5Wrapper
-        ma5 = MA5Wrapper ( self.topo, self.njets, self.rerun, analyses, self.keep )
+        ma5 = MA5Wrapper ( self.topo, self.njets, self.rerun, analyses, self.keep,
+                           self.sqrts )
         self.debug ( "now call ma5Wrapper" )
         hepmcfile = self.hepmcFileName ( masses )
         ret = ma5.run ( masses, hepmcfile, pid )
@@ -439,8 +447,8 @@ class MG5Wrapper:
     def hepmcFileName ( self, masses ):
         """ return the hepmc file name at final destination """
         smasses = "_".join(map(str,masses))
-        dest = "%s/%s_%s.hepmc.gz" % \
-               ( self.resultsdir, self.topo, smasses )
+        dest = "%s/%s_%s.%d.hepmc.gz" % \
+               ( self.resultsdir, self.topo, smasses, self.sqrts )
         return dest
 
     def hasorigHEPMC ( self, masses ):
@@ -470,6 +478,8 @@ def main():
                              type=int, default=10000 )
     argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
                              type=int, default=1 )
+    argparser.add_argument ( '--sqrts', help='sqrts [13]',
+                             type=int, default=13 )
     argparser.add_argument ( '-p', '--nprocesses', help='number of process to run in parallel. 0 means 1 per CPU [1]',
                              type=int, default=1 )
     argparser.add_argument ( '-t', '--topo', help='topology [T2]',
@@ -581,8 +591,8 @@ def main():
                 ( len(masses[0]), nReqM, args.topo ) )
         sys.exit()
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
-    mg5 = MG5Wrapper( args.nevents, args.topo, args.njets, args.keep, args.rerun, args.ma5,
-                      args.ignore_locks )
+    mg5 = MG5Wrapper( args.nevents, args.topo, args.njets, args.keep, args.rerun, 
+                      args.ma5, args.ignore_locks, args.sqrts )
     # mg5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
     djobs = int(len(masses)/nprocesses)
 

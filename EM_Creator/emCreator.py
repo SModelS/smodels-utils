@@ -13,7 +13,7 @@ from datetime import datetime
 import bakeryHelpers
 
 class emCreator:
-    def __init__ ( self, analyses, topo, njets, keep ):
+    def __init__ ( self, analyses, topo, njets, keep, sqrts ):
         """ the efficiency map creator.
         :param keep: if true, keep all files
         """
@@ -23,6 +23,7 @@ class emCreator:
         self.topo = topo
         self.njets = njets
         self.keep = keep
+        self.sqrts = sqrts
 
     def info ( self, *msg ):
         print ( "%s[emCreator] %s%s" % ( colorama.Fore.YELLOW, " ".join ( msg ), \
@@ -59,10 +60,7 @@ class emCreator:
         return ret
 
     def getNEvents ( self, masses ):
-        smass = "_".join ( map ( str, masses ) )
-        fname = "%s/%s_%s.saf" % ( self.resultsdir, self.topo, smass )
-        #fname = "%s/results/ANA_%s_%djet.%s/Output/SAF/defaultset/defaultset.saf" % \
-        #         ( self.basedir, self.topo, self.njets, smass )
+        fname = bakeryHelpers.safFile ( self.resultsdir, self.topo, masses, self.sqrts )
         if not os.path.exists ( fname ):
             print ( "[emCreator.py] %s does not exist, cannot report correct number of events" % fname )
             return -2
@@ -87,24 +85,10 @@ class emCreator:
         njets = self.njets
         process = "%s_%djet" % ( topo, njets )
         dirname = bakeryHelpers.dirName ( process, masses )
-        #summaryfile = "%s/results/ANA_%s/Output/SAF/CLs_output_summary.dat" % \
-        #            ( self.basedir, dirname )
-        smass = "_".join ( map ( str, masses ) )
-        summaryfile = "%s/%s_%s.dat" % ( self.resultsdir, topo, smass )
+        summaryfile = bakeryHelpers.datFile ( self.resultsdir, topo, masses, \
+                                              self.sqrts )
         if not os.path.exists ( summaryfile):
-            self.info ( "could not find ma5 summary file %s. Skipping." % summaryfile )
-            dt = 5.
-            if os.path.exists ( path ):
-                t0 = time.time()
-                mt = os.stat ( path ).st_mtime
-                dt = ( t0 - mt ) / 60. / 60.
-                self.info ( "directory %s is %.1f hours old" % ( path, dt ) )
-            rmfile = summaryfile[:summaryfile.find("/Output")]
-            cmd = "rm -rf %s" % rmfile
-            ## remove only stuff that is old
-            if not self.keep and dt > 3.:
-                o = subprocess.getoutput ( cmd )
-                self.info ( "running %s: %s" % ( cmd, o ) )
+            # self.info ( "could not find ma5 summary file %s. Skipping." % summaryfile )
             ret = {}
             return ret,0.
         timestamp = os.stat ( summaryfile ).st_mtime
@@ -171,15 +155,15 @@ def countMA5 ( topo, njets ):
     files = glob.glob ( "ma5_%s_%djet.*" % ( topo, njets) )
     return len(files)
 
-def runForTopo ( topo, njets, masses, analyses, verbose, copy, keep ):
+def runForTopo ( topo, njets, masses, analyses, verbose, copy, keep, sqrts ):
     """
     :param keep: keep the cruft files
     """
     if masses == "all":
-        masses = bakeryHelpers.getListOfMasses ( topo, njets, postMA5=True )
+        masses = bakeryHelpers.getListOfMasses ( topo, True, sqrts )
     else:
         masses = bakeryHelpers.parseMasses ( masses )
-    creator = emCreator( analyses, topo, njets, keep )
+    creator = emCreator( analyses, topo, njets, keep, sqrts )
     effs,tstamps={},{}
     if verbose:
         print ( "[emCreator] topo %s: %d mass points considered" % ( topo, len(masses) ) )
@@ -291,16 +275,18 @@ def run ( args ):
     if args.topo == "all":
         for topo in getAllTopos():
             runForTopo ( topo, args.njets, args.masses, args.analyses, args.verbose,
-                         args.copy, args.keep )
+                         args.copy, args.keep, args.sqrts )
     else:
         runForTopo ( args.topo, args.njets, args.masses, args.analyses, args.verbose,
-                     args.copy, args.keep )
+                     args.copy, args.keep, args.sqrts )
 
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description='efficiency map extractor.')
     argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
                              type=int, default=1 )
+    argparser.add_argument ( '-s', '--sqrts', help='sqrts [13]',
+                             type=int, default=13 )
     argparser.add_argument ( '-t', '--topo', help='topology, all means all you can find [all]',
                              type=str, default="all" )
     argparser.add_argument ( '-v', '--verbose', help='be verbose',

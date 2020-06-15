@@ -13,11 +13,13 @@ import multiprocessing
 import bakeryHelpers
 
 class MA5Wrapper:
-    def __init__ ( self, topo, njets, rerun, analyses, keep=False, ver="1.7" ):
+    def __init__ ( self, topo, njets, rerun, analyses, keep=False, 
+                   sqrts=13, ver="1.8.44" ):
         """
         :param ver: version of ma5
         """
         self.topo = topo
+        self.sqrts = sqrts
         self.njets = njets
         self.analyses = analyses
         self.rerun = rerun
@@ -68,9 +70,11 @@ class MA5Wrapper:
         shutil.copy ( templatefile, filename )
         f = open ( filename, "at" )
         recastcard = { "atlas_susy_2016_07": "delphes_card_atlas_exot_2015_03" }
+        recastcard["atlas_susy_2013_02"] = "delphesma5tune_card_atlas_dileptonsusy"
         recastcard["cms_sus_16_033"] = "delphes_card_cms_sus_16_033"
         anas = set(self.analyses.split(","))
         versions = { "atlas_susy_2016_07": "1.2",
+                     "atlas_susy_2013_02": "1.2",
                      "cms_sus_16_033": "1.2" }
         self.info ( "adding %s to recast card %s" % ( self.analyses, filename ) )
         for i in anas:
@@ -182,44 +186,22 @@ class MA5Wrapper:
         self.unlink ( self.recastfile )
         self.unlink ( self.commandfile )
         self.unlink ( self.teefile )
-        source = "ANA_%s" % Dir
-        dest = "%s/%s" % ( self.ma5results, source )
-        if os.path.exists ( dest ):
-            self.info ( "Destination %s exists. Let me check for summary file." % dest )
-            hasSummary = self.checkForSummaryFile ( masses )
-            if hasSummary:
-                self.info ( "Summary file for %s found. skip analysis run" % dest )
-                return 1
-            self.info ( "No Summary file for %s found. remove folder." % dest )
-            subprocess.getoutput ( "rm -rf %s" % dest )
-        if not os.path.exists ( source ):
-            try:
-                print ( "[ma5Wrapper] Source dir [%s] %s does not exist. I skip it." % ( os.getcwd(), source ) )
-            except:
-                pass
-            return -1
         smass = "_".join ( map ( str, masses ) )
         origsaffile = "%s/ANA_%s_%djet.%s/Output/SAF/defaultset/defaultset.saf" % \
                        ( tempdir, self.topo, self.njets, smass )
         origsaffile = origsaffile.replace("//","/")
-        destsaffile = bakeryHelpers.safFile (self.ma5results, self.topo, masses )
-        #destsaffile = "%s/%s_%s.saf" % ( self.ma5results, self.topo, smass )
-        #destsaffile = destsaffile.replace("//","/")
+        destsaffile = bakeryHelpers.safFile (self.ma5results, self.topo, masses, self.sqrts )
         shutil.move ( origsaffile, destsaffile )
         dirname = bakeryHelpers.dirName ( process, masses )
         origdatfile = "%s/ANA_%s/Output/SAF/CLs_output_summary.dat" % \
                       ( tempdir, dirname )
-        destdatfile = bakeryHelpers.datFile (  self.ma5results, self.topo, masses )
-        # destdatfile = "%s/%s_%s.dat" % ( self.ma5results, self.topo, smass )
+        destdatfile = bakeryHelpers.datFile (  self.ma5results, self.topo, masses, self.sqrts )
         shutil.move ( origdatfile, destdatfile )
         os.chdir ( self.basedir )
         self.exe ( "rm -rf %s/ma5cmd*" % self.ma5install )
         self.exe ( "rm -rf %s/recast*" % self.ma5install )
         self.exe ( "rm -rf %s" % tempdir )
         return 0
-        # a = subprocess.getoutput ( "rm -rf %s/ma5cmd*" % delf.ma5install )
-        # a = subprocess.getoutput ( "rm -rf %s/recast*" % self.ma5install )
-        # a = subprocess.getoutput ( "rm -r %s" % tempdir )
 
     def exe ( self, cmd, maxLength=100 ):
         """ execute cmd in shell
@@ -274,6 +256,8 @@ if __name__ == "__main__":
                              type=str, default="atlas_susy_2016_07" )
     argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
                              type=int, default=1 )
+    argparser.add_argument ( '-s', '--sqrts', help='sqrts [13]',
+                             type=int, default=13 )
     argparser.add_argument ( '-t', '--topo', help='topology [T2]',
                              type=str, default="T2" )
     argparser.add_argument ( '-k', '--keep', help='keep temporary files',
@@ -299,12 +283,13 @@ if __name__ == "__main__":
         ma5.clean_all()
         sys.exit()
     if args.masses == "all":
-        masses = bakeryHelpers.getListOfMasses ( args.topo, args.njets )
+        masses = bakeryHelpers.getListOfMasses ( args.topo )
     else:
         masses = bakeryHelpers.parseMasses ( args.masses )
     nm = len(masses)
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
-    ma5 = MA5Wrapper( args.topo, args.njets, args.rerun, args.analyses, args.keep )
+    ma5 = MA5Wrapper( args.topo, args.njets, args.rerun, args.analyses, args.keep,
+                      args.sqrts )
     # ma5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
     djobs = int(len(masses)/nprocesses)
 
