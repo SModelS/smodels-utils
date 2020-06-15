@@ -206,6 +206,7 @@ class MA5Wrapper:
         if errFree: ## only move if we have both
             shutil.move ( origdatfile, destdatfile )
             shutil.move ( origsaffile, destsaffile )
+            self.exe ( "rm -rf %s" % hepmcfile )
         self.exe ( "rm -rf %s" % tempdir )
         os.chdir ( self.basedir )
         return 0
