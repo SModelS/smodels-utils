@@ -147,7 +147,7 @@ class emCreator:
 
 def countMG5 ( topo, njets ):
     """ count the number of mg5 directories """
-    files = glob.glob ( "%s_%djet.*" % ( topo, njets) )
+    files = glob.glob ( "mg5results/%s_*.hepmc.gz" % ( topo ) )
     return len(files)
 
 def countMA5 ( topo, njets ):

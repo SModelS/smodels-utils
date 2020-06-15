@@ -194,6 +194,7 @@ class MA5Wrapper:
         dirname = bakeryHelpers.dirName ( process, masses )
         origdatfile = "%s/ANA_%s/Output/SAF/CLs_output_summary.dat" % \
                       ( tempdir, dirname )
+        origdatfile = origdatfile.replace("//","/")
         errFree=True
         if not os.path.exists ( origdatfile ):
             errFree=False
