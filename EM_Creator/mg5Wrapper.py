@@ -541,27 +541,14 @@ def main():
             printProdStats.main( ana )
         sys.exit()
     if args.clean or args.clean_all:
-        t = bakeryHelpers.tempDir()
-        files = "%s/mg5cmd* %s/mg5proc* %s/tmp*slha %s/run*card" % \
-            ( t, t, t, t )
-        files = files.replace("//","/")
-        subprocess.getoutput ( "rm -rf %s" % files )
-        print ( "Cleaned temporary files: %s" % files )
+        bakeryHelpers.clean()
         if not args.clean_all:
             sys.exit()
+
     if args.clean_all:
-        b = bakeryHelpers.baseDir()
-        t = bakeryHelpers.tempDir()
-        files = t+"/*"
-        files += " %s/T*jet*" % b
-        files += " %s/ma5_T*" % b
-        files += " %s/ma5/ma5cmd*" % b
-        files += " %s/ma5/recast*" % b
-        files += " %s/.lock*" % b
-        files = files.replace("//","/")
-        subprocess.getoutput ( "rm -rf %s" % files )
-        print ( "Cleaned temporary files %s" % files )
+        bakeryHelpers.cleanAll()
         sys.exit()
+
     hname = socket.gethostname()
     if hname.find(".")>0:
         hname=hname[:hname.find(".")]

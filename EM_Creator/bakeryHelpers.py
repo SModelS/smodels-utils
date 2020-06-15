@@ -7,11 +7,18 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 """
 
-import numpy
-import sys
-import os
+import numpy, sys, os, time, subprocess, glob
 sys.path.insert(0,"../../smodels" )
 from smodels.tools.runtime import nCPUs
+
+def getAge ( f ):
+    """ get the age of file in hours. age goes by last modification """
+    if not os.path.exists ( f ):
+        return 0.
+    t0 = time.time()
+    mt = os.stat ( f ).st_mtime
+    dt = ( t0 - mt ) / 60. / 60. ## hours
+    return dt
 
 def safFile ( dirname, topo, masses, sqrts ):
     """ return saf file name """
@@ -185,7 +192,7 @@ def listAnalyses ( ):
     print ( "List of analyses:" )
     print ( "=================" )
     for f in files:
-        f = f.replace(".saf","").replace(".cpp","") 
+        f = f.replace(".saf","").replace(".cpp","")
         for d in dn:
             f = f.replace(d,"")
         print  ( "  %s" % f )
@@ -247,3 +254,41 @@ if __name__ == "__main__":
     print ( "masses", masses )
     print ( nRequiredMasses("T5ZZ") )
     """
+
+def clean ():
+    """ do the usual cleaning, but consider only files older than 2 hrs """
+    t = tempDir()
+    b = baseDir()
+    files = []
+    for i in [ "mg5cmd*", "mg5proc*", "tmp*slha", "run*card" ]:
+        files += glob.glob ( "%s/%s" % ( t, i ) )
+    for i in [ "recast*", "ma5cmd*" ]:
+        files += glob.glob ( "%s/ma5/%s" % ( b, i ) )
+    files += glob.glob ( "%s/.lock*" % b )
+    files += glob.glob ( "%s/../clip/_B*sh" % b )
+    files += glob.glob ( "/users/wolfgan.waltenberger/B*sh" )
+    cleaned = []
+    for f in files:
+        dt = getAge ( f )
+        if dt < 3.:
+            continue
+        subprocess.getoutput ( "rm -rf %s" % f )
+        cleaned.append ( f )
+    print ( "Cleaned %d temporary files" % len(cleaned) )
+
+def cleanAll():
+    b = baseDir()
+    t = tempDir()
+    files = []
+    files += glob.glob ( "%s/*" % t )
+    files += glob.glob ( "%s/T*jet*" % b )
+    files += glob.glob ( "%s/ma5_T*jet*" % b )
+    cleaned = []
+    for f in files:
+        dt = getAge ( f )
+        if dt < 3.:
+            continue
+        subprocess.getoutput ( "rm -rf %s" % f )
+        cleaned.append ( f )
+    print ( "Cleaned %d temporary files" % len(cleaned) )
+

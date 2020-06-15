@@ -180,7 +180,7 @@ class MA5Wrapper:
 
         # then run MadAnalysis
         os.chdir ( tempdir )
-        cmd = "python2 %s -b -R -s ./ma5cmd 2>&1 | tee %s" % (self.executable, \
+        cmd = "python2 %s -R -s ./ma5cmd 2>&1 | tee %s" % (self.executable, \
                 self.teefile )
         self.exe ( cmd, maxLength=None )
         self.unlink ( self.recastfile )
