@@ -150,7 +150,12 @@ def countMG5 ( topo, njets ):
     files = glob.glob ( "mg5results/%s_*.hepmc.gz" % ( topo ) )
     return len(files)
 
-def countMA5 ( topo, njets ):
+def countRunningMG5 ( topo, njets ):
+    """ count the number of mg5 directories """
+    files = glob.glob ( "%s_*jet*" % ( topo ) )
+    return len(files)
+
+def countRunningMA5 ( topo, njets ):
     """ count the number of ma5 directories """
     files = glob.glob ( "ma5_%s_%djet.*" % ( topo, njets) )
     return len(files)
@@ -180,9 +185,10 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy, keep, sqrts ):
         seffs = "no analysis"
     print ( "[emCreator] For %s I have efficiencies for: %s" % \
              ( topo, seffs ) )
+    nrmg5 = countRunningMG5 ( topo, njets )
     nmg5 = countMG5 ( topo, njets )
-    nma5 = countMA5 ( topo, njets )
-    print ( "[emCreator] I see %d mg5 points and %d running ma5 jobs." % ( nmg5, nma5 ) )
+    nrma5 = countRunningMA5 ( topo, njets )
+    print ( "[emCreator] I see %d mg5 points and %d running mg5 and %d running ma5 jobs." % ( nmg5, nrmg5, nrma5 ) )
     for ana,values in effs.items():
         if len(values.keys()) == 0:
             continue
