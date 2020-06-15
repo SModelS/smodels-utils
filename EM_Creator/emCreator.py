@@ -17,7 +17,7 @@ class emCreator:
         """ the efficiency map creator.
         :param keep: if true, keep all files
         """
-        self.basedir = bakeryHelpers.baseDir()
+        # self.basedir = bakeryHelpers.baseDir()
         self.analyses = analyses
         self.topo = topo
         self.njets = njets
