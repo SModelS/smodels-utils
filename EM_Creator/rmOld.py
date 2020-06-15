@@ -7,13 +7,20 @@ def daysFromNow ( timestamp ):
     t0=time.time()
     return ( t0 - timestamp ) / 60. / 60. / 24.
 
+def hoursFromNow ( timestamp ):
+    """ compute how many days in the past from now """
+    t0=time.time()
+    return ( t0 - timestamp ) / 60. / 60.
+
 def pprint( sdirs ):
     """ print oldest dirs """
     keys = list(sdirs.keys())
     keys.sort()
     for k in keys[:20]:
-        d = daysFromNow(k)
-        print ( "%25s: %.1f days old" % ( sdirs[k], d ) )
+        #d = daysFromNow(k)
+        #print ( "%25s: %.1f days old" % ( sdirs[k], d ) )
+        h = hoursFromNow(k)
+        print ( "%25s: %.1f hours old" % ( sdirs[k], h ) )
 
 def savePickle ( sdirs ):
     """ write to pickle """
