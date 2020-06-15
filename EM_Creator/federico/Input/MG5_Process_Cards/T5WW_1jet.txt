@@ -1,4 +1,0 @@
-import mssm
-generate p p > go go 
-add process p p > go go j 
-output T5WW_1jet
