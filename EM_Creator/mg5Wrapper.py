@@ -33,6 +33,9 @@ class MG5Wrapper:
         self.basedir = bakeryHelpers.baseDir()
         os.chdir ( self.basedir )
         self.tempdir = bakeryHelpers.tempDir()
+        self.resultsdir = self.basedir + "/mg5results"
+        self.ma5results = self.basedir + "/results"
+        self.mkdir ( self.resultsdir )
         self.ignore_locks = ignore_locks
         self.topo = topo
         self.keep = keep
@@ -60,7 +63,7 @@ class MG5Wrapper:
                           'PDFLABEL': 'cteq6l1', 'XQCUT': 'M[0]/4'
                           ## xqcut for gluino-gluino production: mgluino/4
         }#,'qcut': '90'}
-        self.correctPythia8CfgFile()
+        # self.correctPythia8CfgFile()
         self.rmLocksOlderThan ( 3 ) ## remove locks older than 3 hours
         self.info ( "initialised" )
 
@@ -85,6 +88,8 @@ class MG5Wrapper:
         """ a simple method intended to check if we have to add SysCalc:qCutList=90
             to the pythia8 configuration """
         ## qcut: SysCalc:qCutList in mg5/Template/LO/Cards/pythia8_card_default.dat
+        self.msg ( "FIXME we shouldnt be using this!" )
+        return
         self.msg ( "now checking if pythia8 config needs correction" )
         needsCorrection = True
         cfgFile = "mg5/Template/LO/Cards/pythia8_card_default.dat"
@@ -103,9 +108,9 @@ class MG5Wrapper:
         if "2_6" in self.ver: # only needed for 2_7 i think
             needsCorrection = False
         if not needsCorrection:
-            self.msg ( "pythia8 config  does not need correction" )
+            self.msg ( "%s does not need correction" % cfgFile )
             return
-        self.msg ( "seems like pythia8 cfg needs qCutList added" )
+        self.msg ( "seems like %s needs qCutList added" % cfgFile )
         f = open ( cfgFile, "at" )
         f.write ( "SysCalc:qCutList = 90.\n" )
         f.close()
@@ -132,7 +137,7 @@ class MG5Wrapper:
         """ this method writes the pythia card for within mg5.
         :param process: fixme (eg T2_1jet)
         """
-        self.runcard = tempfile.mktemp ( prefix="run", suffix=".card", 
+        self.runcard = tempfile.mktemp ( prefix="run", suffix=".card",
                                          dir=self.tempdir )
         # filename = "%s/Cards/run_card.dat" % process
         self.debug ( "writing pythia run card %s" % self.runcard )
@@ -234,6 +239,12 @@ class MG5Wrapper:
         """ Run MG5 for topo, with njets additional ISR jets, giving
         also the masses as a list.
         """
+        destsaffile = bakeryHelpers.safFile ( self.ma5results, self.topo, masses )
+        destdatfile = bakeryHelpers.datFile ( self.ma5results, self.topo, masses )
+        if os.path.exists ( destsaffile ) and os.path.exists ( destdatfile ):
+            self.info ( "summary files %s,%s exist. skip point." % \
+                        ( destsaffile, destdatfile ) )
+            return
         locked = self.lock ( masses )
         if locked:
             self.info ( "%s[%s] is locked. Skip it" % ( masses, self.topo ) )
@@ -273,7 +284,8 @@ class MG5Wrapper:
         from ma5Wrapper import MA5Wrapper
         ma5 = MA5Wrapper ( self.topo, self.njets, self.rerun, analyses, self.keep )
         self.debug ( "now call ma5Wrapper" )
-        ret = ma5.run ( masses, pid )
+        hepmcfile = self.hepmcFileName ( masses )
+        ret = ma5.run ( masses, hepmcfile, pid )
         msg = "finished MG5+MA5"
         if ret > 0:
             msg = "nothing needed to be done"
@@ -311,7 +323,7 @@ class MG5Wrapper:
             sm="[%s]" % str(masses)
         self.msg ( "now execute for %s%s: %s" % (self.topo, sm, cmd[:] ) )
         pipe = subprocess.Popen ( cmd, shell=True,
-                                  stdout=subprocess.PIPE, 
+                                  stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE )
         ret=""
         for line in io.TextIOWrapper(pipe.stdout, encoding="latin1"):
@@ -393,6 +405,11 @@ class MG5Wrapper:
                ( self.pyver, self.executable, self.commandfile,
                                                 self.logfile2 )
         self.exe ( cmd, masses )
+        hepmcfile = self.orighepmcFileName( masses )
+        if self.hasorigHEPMC ( masses ):
+            dest = self.hepmcFileName ( masses )
+            self.msg ( "moving", hepmcfile, "to", dest )
+            shutil.move ( hepmcfile, dest )
         self.clean( Dir )
         return True
 
@@ -410,13 +427,35 @@ class MG5Wrapper:
         self.unlink ( self.logfile )
         self.unlink ( self.logfile2 )
         if Dir != None:
-            cmd = "rm -rf %s/HTML %s/SubProcesses %s/Source %s/bin %s/lib %s/madevent.tar.gz %s/Events/run_01/tag_1_pythia8.log %s/Events/run_01/unweighted_events.lhe.gz" % ( tuple([Dir]*8) )
+            cmd = "rm -rf %s" % Dir
             o = subprocess.getoutput ( cmd )
             self.info ( "clean up %s: %s" % ( cmd, o ) )
 
+    def orighepmcFileName ( self, masses ):
+        """ return the hepmc file name *before* moving """
+        hepmcfile = bakeryHelpers.dirName(self.process,masses)+"/Events/run_01/tag_1_pythia8_events.hepmc.gz"
+        return hepmcfile
+
+    def hepmcFileName ( self, masses ):
+        """ return the hepmc file name at final destination """
+        smasses = "_".join(map(str,masses))
+        dest = "%s/%s_%s.hepmc.gz" % \
+               ( self.resultsdir, self.topo, smasses )
+        return dest
+
+    def hasorigHEPMC ( self, masses ):
+        """ does it have a valid HEPMC file? if yes, then skip the point """
+        hepmcfile = self.orighepmcFileName( masses )
+        if not os.path.exists ( hepmcfile ):
+            return False
+        if os.stat ( hepmcfile ).st_size < 100:
+            ## too small to be real
+            return False
+        return True
+
     def hasHEPMC ( self, masses ):
         """ does it have a valid HEPMC file? if yes, then skip the point """
-        hepmcfile = bakeryHelpers.dirName(self.process,masses)+"/Events/run_01/tag_1_pythia8_events.hepmc.gz"
+        hepmcfile = self.hepmcFileName( masses )
         if not os.path.exists ( hepmcfile ):
             return False
         if os.stat ( hepmcfile ).st_size < 100:

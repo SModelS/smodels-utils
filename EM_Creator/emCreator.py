@@ -17,7 +17,8 @@ class emCreator:
         """ the efficiency map creator.
         :param keep: if true, keep all files
         """
-        # self.basedir = bakeryHelpers.baseDir()
+        self.basedir = bakeryHelpers.baseDir()
+        self.resultsdir = ( self.basedir + "/results/" ).replace("//","/")
         self.analyses = analyses
         self.topo = topo
         self.njets = njets
@@ -59,7 +60,9 @@ class emCreator:
 
     def getNEvents ( self, masses ):
         smass = "_".join ( map ( str, masses ) )
-        fname = "results/ANA_%s_%djet.%s/Output/SAF/defaultset/defaultset.saf" % ( self.topo, self.njets, smass )
+        fname = "%s/%s_%s.saf" % ( self.resultsdir, self.topo, smass )
+        #fname = "%s/results/ANA_%s_%djet.%s/Output/SAF/defaultset/defaultset.saf" % \
+        #         ( self.basedir, self.topo, self.njets, smass )
         if not os.path.exists ( fname ):
             print ( "[emCreator.py] %s does not exist, cannot report correct number of events" % fname )
             return -2
@@ -84,10 +87,10 @@ class emCreator:
         njets = self.njets
         process = "%s_%djet" % ( topo, njets )
         dirname = bakeryHelpers.dirName ( process, masses )
-        # summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
-        summaryfile = "results/ANA_%s/Output/SAF/CLs_output_summary.dat" % \
-                    ( dirname )
-        path = "results/ANA_%s" % ( dirname )
+        #summaryfile = "%s/results/ANA_%s/Output/SAF/CLs_output_summary.dat" % \
+        #            ( self.basedir, dirname )
+        smass = "_".join ( map ( str, masses ) )
+        summaryfile = "%s/%s_%s.dat" % ( self.resultsdir, topo, smass )
         if not os.path.exists ( summaryfile):
             self.info ( "could not find ma5 summary file %s. Skipping." % summaryfile )
             dt = 5.
@@ -262,6 +265,18 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy, keep ):
             print ( "[emCreator] wrote stats to %s" % statsfile )
 
 def getAllTopos ( ):
+    import glob
+    dirname="results/"
+    files = glob.glob ( "%s/T*.dat" % dirname )
+    ret = set()
+    for f in files:
+        tokens = f.split("_")
+        ret.add( tokens[0].replace(dirname,"") )
+    ret = list(ret)
+    ret.sort()
+    return ret
+
+def getAllToposOld ( ):
     import glob
     files = glob.glob ( "T*jet.*" )
     ret = set()

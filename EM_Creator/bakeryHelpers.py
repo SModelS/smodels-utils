@@ -13,6 +13,20 @@ import os
 sys.path.insert(0,"../../smodels" )
 from smodels.tools.runtime import nCPUs
 
+def safFile ( dirname, topo, masses ):
+    """ return saf file name """
+    smass = "_".join ( map ( str, masses ) )
+    ret = "%s/%s_%s.saf" % ( dirname, topo, smass )
+    ret = ret.replace("//","/")
+    return ret
+
+def datFile ( dirname, topo, masses ):
+    """ return dat file name """
+    smass = "_".join ( map ( str, masses ) )
+    ret = "%s/%s_%s.dat" % ( dirname, topo, smass )
+    ret = ret.replace("//","/")
+    return ret
+
 def isAssociateProduction ( topo ):
     """ return true if topo is associate squark gluino production
     :param topo: str, e.g. TGQ
@@ -184,7 +198,7 @@ def nJobs ( nproc, npoints ):
         ret = npoints
     return ret
 
-def getListOfMasses(topo, njets, postMA5=False ):
+def getListOfMassesOld(topo, njets, postMA5=False ):
     """ get a list of the masses of an mg5 scan. to be used for e.g. ma5.
     :param postMA5: query the ma5 output, not mg5 output.
     """
@@ -197,6 +211,29 @@ def getListOfMasses(topo, njets, postMA5=False ):
     for f in files:
         p=f.find("jet.")
         masses = tuple(map(int,map(float,f[p+4:].split("_"))))
+        ret.append ( masses )
+    return ret
+
+
+def getListOfMasses(topo, njets=1, postMA5=False ):
+    """ get a list of the masses of an mg5 scan. to be used for e.g. ma5.
+    :param postMA5: query the ma5 output, not mg5 output.
+    """
+    import glob
+    ret=[]
+    # fname = "%s_%djet.*" % ( topo, njets )
+    dirname = "mg5results/"
+    extension = "hepmc.gz"
+    if postMA5:
+        dirname = "results/"
+        extension = "dat"
+    fname="%s/%s_*.%s" % ( dirname, topo, extension )
+    files = glob.glob( fname )
+    for f in files:
+        f = f.replace( dirname, "" )
+        f = f.replace( topo+"_", "" )
+        f = f.replace( extension, "" )
+        masses = tuple(map(int,map(float,f.split("_"))))
         ret.append ( masses )
     return ret
 
@@ -215,7 +252,7 @@ def nRequiredMasses(topo):
     return len(M)
 
 if __name__ == "__main__":
-    print ( tempDir() )
+    print ( getListOfMasses ( "T2tt", 1, True ) )
     """
     ms = "[(200,400,50.),(200,400.,50),(150.,440.,50)]"
     masses = parseMasses ( ms, mingap13=0., mingap2=0. )

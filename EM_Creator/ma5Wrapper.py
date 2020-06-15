@@ -70,7 +70,7 @@ class MA5Wrapper:
         recastcard = { "atlas_susy_2016_07": "delphes_card_atlas_exot_2015_03" }
         recastcard["cms_sus_16_033"] = "delphes_card_cms_sus_16_033"
         anas = set(self.analyses.split(","))
-        versions = { "atlas_susy_2016_07": "1.2", 
+        versions = { "atlas_susy_2016_07": "1.2",
                      "cms_sus_16_033": "1.2" }
         self.info ( "adding %s to recast card %s" % ( self.analyses, filename ) )
         for i in anas:
@@ -101,7 +101,7 @@ class MA5Wrapper:
         f.close()
 
     def checkForSummaryFile ( self, masses ):
-        """ given the process, and the masses, check summary file 
+        """ given the process, and the masses, check summary file
         :returns: True, if there is a usable summary file, with all needed analyses
         """
         process = "%s_%djet" % ( self.topo, self.njets )
@@ -131,10 +131,11 @@ class MA5Wrapper:
             self.msg ( "%s not in summary file: rerun!" % self.analyses )
         return False
 
-    def run( self, masses, pid=None ):
-        """ Run MA5 over an hepmcfile, specifying the process 
+    def run( self, masses, hepmcfile, pid=None ):
+        """ Run MA5 over an hepmcfile, specifying the process
         :param pid: process id, for debugging
-        :returns: -1 if problem occured, 0 if all went smoothly, 
+        :param hepmcfile: the hepcmfile name
+        :returns: -1 if problem occured, 0 if all went smoothly,
                    1 if nothing needed to be done.
         """
         spid = ""
@@ -148,9 +149,8 @@ class MA5Wrapper:
         if hasAllInfo:
             return 1
         # summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
-        Dir = bakeryHelpers.dirName ( process, masses )
-        hepmcfile = "%s/Events/run_01/tag_1_pythia8_events.hepmc.gz" % Dir
-        hepmcfile = os.path.abspath ( hepmcfile )
+        #hepmcfile = "%s/Events/run_01/tag_1_pythia8_events.hepmc.gz" % Dir
+        #hepmcfile = os.path.abspath ( hepmcfile )
         if not os.path.exists ( hepmcfile ):
             self.error ( "%scannot find hepmc file %s" % ( spid, hepmcfile ) )
             p = hepmcfile.find("Events")
@@ -164,7 +164,8 @@ class MA5Wrapper:
         self.msg ( "%sFound hepmcfile at %s" % ( spid, hepmcfile ) )
         self.writeRecastingCard ()
         self.writeCommandFile( hepmcfile, process, masses )
-        tempdir = "ma5_%s" % Dir
+        Dir = bakeryHelpers.dirName ( process, masses )
+        tempdir = "%s/ma5_%s" % ( self.basedir, Dir )
         a = subprocess.getoutput ( "mkdir %s" % tempdir )
         a = subprocess.getoutput ( "cp -r %s/ma5/bin %s/ma5/madanalysis %s/ma5/tools %s" % \
                                    ( self.basedir, self.basedir, self.basedir, tempdir ) )
@@ -197,7 +198,20 @@ class MA5Wrapper:
             except:
                 pass
             return -1
-        shutil.move ( source, self.ma5results )
+        smass = "_".join ( map ( str, masses ) )
+        origsaffile = "%s/ANA_%s_%djet.%s/Output/SAF/defaultset/defaultset.saf" % \
+                       ( tempdir, self.topo, self.njets, smass )
+        origsaffile = origsaffile.replace("//","/")
+        destsaffile = bakeryHelpers.safFile (self.ma5results, self.topo, masses )
+        #destsaffile = "%s/%s_%s.saf" % ( self.ma5results, self.topo, smass )
+        #destsaffile = destsaffile.replace("//","/")
+        shutil.move ( origsaffile, destsaffile )
+        dirname = bakeryHelpers.dirName ( process, masses )
+        origdatfile = "%s/ANA_%s/Output/SAF/CLs_output_summary.dat" % \
+                      ( tempdir, dirname )
+        destdatfile = bakeryHelpers.datFile (  self.ma5results, self.topo, masses )
+        # destdatfile = "%s/%s_%s.dat" % ( self.ma5results, self.topo, smass )
+        shutil.move ( origdatfile, destdatfile )
         os.chdir ( self.basedir )
         self.exe ( "rm -rf %s/ma5cmd*" % self.ma5install )
         self.exe ( "rm -rf %s/recast*" % self.ma5install )
@@ -225,8 +239,8 @@ class MA5Wrapper:
         myenv["LD_LIBRARY_PATH"]="%s/lib:/.singularity.d/libs" % rootsys
         myenv["PYTHONPATH"]="%s:%s/site-packages/:%s/lib:/users/wolfgan.waltenberger/git/smodels-utils" % \
             ( pylocaldir, pylocaldir, rootsys )
-        pipe = subprocess.Popen ( cmd, env = myenv, shell=True, 
-                                  stdout=subprocess.PIPE, 
+        pipe = subprocess.Popen ( cmd, env = myenv, shell=True,
+                                  stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE )
         ret=""
         for line in io.TextIOWrapper(pipe.stdout, encoding="latin1"):
@@ -294,9 +308,9 @@ if __name__ == "__main__":
     # ma5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
     djobs = int(len(masses)/nprocesses)
 
-    def runChunk ( chunk, pid ):
+    def runChunk ( chunk, hepmcfile, pid ):
         for c in chunk:
-            ma5.run ( c, pid )
+            ma5.run ( c, hepmcfile, pid )
 
     jobs=[]
     for i in range(nprocesses):
