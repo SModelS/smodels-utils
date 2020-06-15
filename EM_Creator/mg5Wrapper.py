@@ -56,8 +56,9 @@ class MG5Wrapper:
         self.templateDir = self.basedir + "/templates/"
         self.mgParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
                           'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5',
-                          'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } # , 'qcut': '90' }
-        self.mgParams["XQCUT"]="M[0]/4" ## xqcut for gluino-gluino production: mgluino/4
+                          'PDFLABEL': 'cteq6l1', 'XQCUT': 'M[0]/4'
+                          ## xqcut for gluino-gluino production: mgluino/4
+        }#,'qcut': '90'}
         self.correctPythia8CfgFile()
         self.rmLocksOlderThan ( 3 ) ## remove locks older than 3 hours
         self.info ( "initialised" )
@@ -347,8 +348,8 @@ class MG5Wrapper:
         f=open(templatefile,"r")
         lines=f.readlines()
         f.close()
-        self.mkdir("temp")
-        self.tempf = tempfile.mktemp(prefix="mg5proc",dir="temp/")
+        self.mkdir("%s/temp/" % self.basedir )
+        self.tempf = tempfile.mktemp(prefix="mg5proc",dir="%s/temp/" % self.basedir )
         f=open(self.tempf,"w")
         f.write ( "import model_v4 mssm\n" )
         for line in lines:
