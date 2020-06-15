@@ -420,8 +420,8 @@ if __name__ == "__main__":
             help='number of processes, if zero then determine automatically [0]',
             type=int, default=0 )
     argparser.add_argument ( '-f', '--factor',
-            help='multiplication factor [1.008]',
-            type=float, default=1.008 )
+            help='multiplication factor [1.01]',
+            type=float, default=1.01 )
     argparser.add_argument ( '-e', '--nevents',
             help='number of events [100000]',
             type=int, default=100000 )
