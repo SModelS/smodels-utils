@@ -191,21 +191,22 @@ class MA5Wrapper:
                        ( tempdir, self.topo, self.njets, smass )
         origsaffile = origsaffile.replace("//","/")
         destsaffile = bakeryHelpers.safFile (self.ma5results, self.topo, masses, self.sqrts )
-        shutil.move ( origsaffile, destsaffile )
         dirname = bakeryHelpers.dirName ( process, masses )
         origdatfile = "%s/ANA_%s/Output/SAF/CLs_output_summary.dat" % \
                       ( tempdir, dirname )
         errFree=True
         if not os.path.exists ( origdatfile ):
             errFree=False
-            self.error ( "data file %s does not exist!" % origdatfile )
+            self.error ( "dat file %s does not exist!" % origdatfile )
+        if not os.path.exists ( origsaffile ):
+            errFree=False
+            self.error ( "saf file %s does not exist!" % origsaffile )
         destdatfile = bakeryHelpers.datFile (  self.ma5results, self.topo, masses, self.sqrts )
-        shutil.move ( origdatfile, destdatfile )
+        if errFree: ## only move if we have both
+            shutil.move ( origdatfile, destdatfile )
+            shutil.move ( origsaffile, destsaffile )
+        self.exe ( "rm -rf %s" % tempdir )
         os.chdir ( self.basedir )
-        #self.exe ( "rm -rf %s/ma5cmd*" % self.ma5install )
-        #self.exe ( "rm -rf %s/recast*" % self.ma5install )
-        if errFree:
-            self.exe ( "rm -rf %s" % tempdir )
         return 0
 
     def exe ( self, cmd, maxLength=100 ):
