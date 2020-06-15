@@ -173,9 +173,9 @@ class MA5Wrapper:
         a = subprocess.getoutput ( "mkdir %s" % tempdir )
         a = subprocess.getoutput ( "cp -r %s/ma5/bin %s/ma5/madanalysis %s/ma5/tools %s" % \
                                    ( self.basedir, self.basedir, self.basedir, tempdir ) )
-        a = subprocess.getoutput ( "cp -r %s %s/recast" % ( self.recastfile, tempdir ) )
+        a = subprocess.getoutput ( "mv %s %s/recast" % ( self.recastfile, tempdir ) )
         # a = subprocess.getoutput ( "cp -r %s %s" % ( self.recastfile, tempdir ) )
-        a = subprocess.getoutput ( "cp -r %s %s/ma5cmd" % \
+        a = subprocess.getoutput ( "mv %s %s/ma5cmd" % \
                                    ( self.commandfile, tempdir ) )
 
         # then run MadAnalysis
@@ -183,8 +183,8 @@ class MA5Wrapper:
         cmd = "python2 %s -R -s ./ma5cmd 2>&1 | tee %s" % (self.executable, \
                 self.teefile )
         self.exe ( cmd, maxLength=None )
-        self.unlink ( self.recastfile )
-        self.unlink ( self.commandfile )
+        # self.unlink ( self.recastfile )
+        # self.unlink ( self.commandfile )
         self.unlink ( self.teefile )
         smass = "_".join ( map ( str, masses ) )
         origsaffile = "%s/ANA_%s_%djet.%s/Output/SAF/defaultset/defaultset.saf" % \
@@ -216,8 +216,9 @@ class MA5Wrapper:
         """
         self.msg ( "exec: [%s] %s" % (os.getcwd(), cmd ) )
         myenv = dict(os.environ)
-        home = "/scratch-cbe/users/wolfgan.waltenberger/"
+        # home = "/scratch-cbe/users/wolfgan.waltenberger/"
         home = os.environ["HOME"]
+        home = home.replace("git/smodels-utils/EM_Creator","")
         pylocaldir = "%s/.local/lib/python2.7/" % home
         rootsys="/mnt/hephy/pheno/opt/root6.20-py27-u20.04/"
         import socket

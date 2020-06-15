@@ -62,7 +62,7 @@ class MG5Wrapper:
         ebeam = str(int(self.sqrts*1000/2))
         self.mgParams = { 'EBEAM': ebeam, # Single Beam Energy expressed in GeV
                           'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5',
-                          'PDFLABEL': 'nn23lo1', 'XQCUT': 'M[0]/4'
+                          'PDFLABEL': "'nn23lo1'", 'XQCUT': 'M[0]/4'
                           ## xqcut for gluino-gluino production: mgluino/4
         }#,'qcut': '90'}
         # self.correctPythia8CfgFile()
