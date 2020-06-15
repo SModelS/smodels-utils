@@ -606,7 +606,8 @@ def main():
         # analyses = "atlas_susy_2016_07"
         analyses = args.analyses
         args = SimpleNamespace ( masses="all", topo=args.topo, njets=args.njets, \
-                analyses = analyses, copy=args.copy, keep=args.keep, verbose=False )
+                analyses = analyses, copy=args.copy, keep=args.keep, sqrts=args.sqrts, 
+                verbose=False )
         emCreator.run ( args )
     with open("baking.log","a") as f:
         cmd = ""
