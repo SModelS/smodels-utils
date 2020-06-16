@@ -135,6 +135,9 @@ class DataHandler(object):
         strictlyPositive = False
         if self._unit in [ "fb", "pb" ]:
             strictlyPositive = True
+        if not hasattr ( self, self.fileType ):
+            logger.error ( "Format type '%s' is not defined. Try either one of 'root', 'csv', 'txt', 'embaked', 'mscv', 'effi', 'cMacro', 'canvas', 'svg', 'pdf' instead. " % self.fileType )
+            sys.exit(-1)
         for point in getattr(self,self.fileType)():
             ptDict = self.mapPoint(point) #Convert point to dictionary
             if self.allowNegativeValues:
@@ -458,6 +461,17 @@ class DataHandler(object):
 
 
             yield values
+
+    def pdf(self):
+        """
+        iterable method
+        preprocessing pdf-files
+        floats
+
+        :yield: list with values as foat, one float for every column
+        """
+        logger.error ( "not yet implemented" )
+        sys.exit(-1)
 
     def csv(self):
         """
