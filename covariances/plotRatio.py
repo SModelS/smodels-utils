@@ -115,7 +115,7 @@ def getExclusionLine ( line ):
       y_v.append(copy.deepcopy(y))
     return [ { "x": x_v, "y": y_v } ]
 
-def draw ( imp1, imp2, copy, label1, label2, dbpath ):
+def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
     uls={}
     nsr=""
     noaxes = 0
@@ -148,9 +148,11 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath ):
         ul1 = None
         if h in uls.keys():
             ul1 = uls[h]
-        if ul1 and "UL" in point:
-            ul2 = point["UL"] / point["signal"] ##  point["efficiency"]
-            ratio = ul1 / ul2
+        if ul1 and ul1>0. and "UL" in point:
+            ul2 = point["UL"] / point["signal"]
+            ratio = float("nan")
+            if ul2 > 0.:
+                ratio = ul1 / ul2
             # print ( "ratio",axes[0],axes[1],ratio )
             points.append ( (axes[0],axes[1],ratio ) )
         else:
@@ -166,7 +168,7 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath ):
     x_ = numpy.arange ( min(x), max(x), ( max(x)-min(x)) / 1000. )
     y_ = numpy.arange ( min(y), max(y), ( max(y)-min(y)) / 1000. )
     logScale = False
-    if max(y) < 1e-10 and min(y) > 1e-40:
+    if False: # max(y) < 1e-10 and min(y) > 1e-40:
         logScale = True
         y_ = numpy.logspace ( numpy.log10(.3*min(y)), numpy.log10(3.*max(y)), 1000 )
     #print ( "y", y[:10] )
@@ -184,24 +186,26 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath ):
 
     cm = plt.cm.get_cmap('jet')
     plt.rc('text', usetex=True)
-    vmax = 1.5
-    vmax = numpy.nanmax ( col )*1.1
-    vmin = numpy.nanmin ( col )*0.9
+    vmin,vmax= .5, 1.7
+    if False:
+        vmax = numpy.nanmax ( col )*1.1
+        vmin = numpy.nanmin ( col )*0.9
     opts = { }
-    if vmax > 5.:
-        opts = { "norm": matplotlib.colors.LogNorm()  }
     #print ( "vmax", vmax )
     #if logScale:
     #    vmin = 1e-5
     #    vmax = 0.5
+    if vmax > 5.:
+        opts = { "norm": matplotlib.colors.LogNorm()  }
+        
     scatter = plt.scatter ( x, y, s=0.25, c=col, marker="o", cmap=cm,
                             vmin=vmin, vmax=vmax, **opts )
     ax = plt.gca()
+    plt.ylabel ( "$\Gamma$ [GeV]", size=13 )
+    plt.xlabel ( "m [GeV]", size=13 )
     if logScale:
         ax.set_yscale("log")
         ax.set_ylim ( min(y)*.2, max(y)*5. )
-        plt.ylabel ( "$\Gamma$ [GeV]", size=13 )
-        plt.xlabel ( "m [GeV]", size=13 )
     ax.set_xticklabels(map(int,ax.get_xticks()), { "fontweight": "normal", "fontsize": 14 } )
     if not logScale:
         ax.set_yticklabels(map(int,ax.get_yticks()), { "fontweight": "normal", "fontsize": 14 } )
@@ -264,6 +268,9 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath ):
     if nsr != "":
         plt.text ( .90*maxx, miny-.19*(maxy-miny), "%s" % ( nsr) , fontsize=14 )
     figname = "%s_%s.png" % ( analysis.replace("validation","ratio" ), topo )
+    if output != None:
+        # figname = output.replace("@t", topo ).replace("@a",analysis.replace("validation","") )
+        figname = output.replace("@t", topo )
     #if srs1 !="all":
     #    figname = "%s_%s_%s.png" % ( analysis, topo, srs )
     """
@@ -316,6 +323,7 @@ def writeMDPage( copy ):
         f.write ( "| ratio plots | ratio plots |\n" )
         files = glob.glob("ratio_*.png" )
         files.sort()
+        ctr = 0
         for ctr,i in enumerate( files ):
             src = "https://smodels.github.io/ratioplots/%s" % i
             f.write ( '| <img src="%s" /> ' % src )
@@ -346,6 +354,9 @@ def main():
     argparser.add_argument ( "-l1", "--label1",
             help="label in the legend for analysis1 [andre]",
             type=str, default="andre" )
+    argparser.add_argument ( "-o", "--output",
+            help="outputfile [None]",
+            type=str, default=None )
     argparser.add_argument ( "-l2", "--label2",
             help="label in the legend for analysis2 [suchi]",
             type=str, default="suchi" )
@@ -369,7 +380,7 @@ def main():
         imp1 = getModule ( args.dbpath, args.analysis1, valfile1 )
         imp2 = getModule ( args.dbpath, args.analysis2, valfile2 )
 
-        draw ( imp1, imp2, args.copy, args.label1, args.label2, args.dbpath )
+        draw ( imp1, imp2, args.copy, args.label1, args.label2, args.dbpath, args.output )
 
     writeMDPage( args.copy )
 
