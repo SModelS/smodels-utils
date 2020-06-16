@@ -69,12 +69,15 @@ def tempDir():
         os.mkdir ( ret )
     return ret
 
-def dirName ( process, masses ):
+def dirName ( process, masses, basedir=None ):
     """ the name of the directory of one process + masses
     :param process: e.g. T2_1jet
     :param masses: tuple or list of masses, e.g. (1000, 800)
     """
-    return process + "." + "_".join(map(str,masses))
+    filename = process + "." + "_".join(map(str,masses))
+    if basedir == None:
+        return filename
+    return basedir + "/" + filename
 
 def parseMasses ( massstring, mingap1=None, maxgap1=None,
                   mingap2=None, maxgap2=None, mingap13=None, maxgap13=None ):

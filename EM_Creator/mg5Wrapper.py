@@ -393,8 +393,10 @@ class MG5Wrapper:
             subprocess.getoutput ( "rm -rf %s" % Dir )
         self.info ( "run mg5 for %s[%s]: %s" % ( masses, self.topo, self.tempf ) )
         self.logfile = tempfile.mktemp ()
-        cmd = "python%d %s %s 2>&1 | tee %s" % \
-              ( self.pyver, self.executable, self.tempf, self.logfile )
+        os.mkdir ( Dir )
+        shutil.move ( self.tempf, Dir + "/mg5proc" )
+        cmd = "python%d %s %s/mg5proc 2>&1 | tee %s" % \
+              ( self.pyver, self.executable, Dir, self.logfile )
         self.exe ( cmd, masses )
         ## copy slha file
         if not os.path.exists ( Dir+"/Cards" ):
@@ -406,12 +408,12 @@ class MG5Wrapper:
             return False
         shutil.move(slhaFile, Dir+'/Cards/param_card.dat' )
         shutil.move(self.runcard, Dir+'/Cards/run_card.dat' )
+        shutil.move(self.commandfile, Dir+"/mg5cmd" )
         if (os.path.isdir(Dir+'/Events/run_01')):
             shutil.rmtree(Dir+'/Events/run_01')
         self.logfile2 = tempfile.mktemp ()
-        cmd = "python%d %s %s 2>&1 | tee %s" % \
-               ( self.pyver, self.executable, self.commandfile,
-                                                self.logfile2 )
+        cmd = "python%d %s %s/mg5cmd 2>&1 | tee %s" % \
+               ( self.pyver, self.executable, Dir, self.logfile2 )
         self.exe ( cmd, masses )
         hepmcfile = self.orighepmcFileName( masses )
         if self.hasorigHEPMC ( masses ):
@@ -430,8 +432,8 @@ class MG5Wrapper:
         self.info ( "cleaning up %s, %s, %s, %s" % \
                 ( self.commandfile, self.tempf, self.logfile, self.logfile2 ) )
         self.unlink ( ".lock*" )
-        self.unlink ( self.commandfile )
-        self.unlink ( self.tempf )
+        #self.unlink ( self.commandfile )
+        #self.unlink ( self.tempf )
         self.unlink ( self.logfile )
         self.unlink ( self.logfile2 )
         if Dir != None:
@@ -441,7 +443,8 @@ class MG5Wrapper:
 
     def orighepmcFileName ( self, masses ):
         """ return the hepmc file name *before* moving """
-        hepmcfile = bakeryHelpers.dirName(self.process,masses)+"/Events/run_01/tag_1_pythia8_events.hepmc.gz"
+        hepmcfile = bakeryHelpers.dirName( self.process,masses)+\
+                            "/Events/run_01/tag_1_pythia8_events.hepmc.gz"
         return hepmcfile
 
     def hepmcFileName ( self, masses ):
