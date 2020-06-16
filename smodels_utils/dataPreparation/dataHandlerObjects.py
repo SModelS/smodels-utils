@@ -277,13 +277,13 @@ class DataHandler(object):
                 pts = data.getPointsWith(**xvals)
                 if pts and len(pts)>1 and allowMultipleAcceptances:
                     logger.error("More than one point in reweighting data matches point %s" %xvals)
-                    logger.error("But allowMultipleAcceptances is set to true, so will work around it!" )
+                    logger.error("But allowMultipleAcceptances is set to true, so will choose first value!" )
                     pts = [ pts[0] ]
                 if not pts:
                     continue
                 elif len(pts) > 1:
-                    print ( "pts", pts )
                     logger.error("More than one point in reweighting data matches point %s" %xvals)
+                    logger.error("(If you want to allow for this happen, then set dataHandlerObjects.allowMultipleAcceptances = True)" )
                     sys.exit()
                 else:
                     pt = pts[0]
@@ -613,7 +613,10 @@ class DataHandler(object):
         SR = self.objectName
         with open(self.path) as f:
             D=eval(f.read())
-        for pt,values in D.items():
+        keys = list(D.keys() )
+        keys.sort()
+        for pt in keys:
+            values = D[pt]
             ret = list(pt)
             eff = 0.
             if SR in values.keys():
