@@ -183,8 +183,9 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy, keep, sqrts ):
     seffs = ", ".join(list(effs.keys()))
     if seffs == "":
         seffs = "no analysis"
-    print ( "[emCreator] For %s I have efficiencies for: %s" % \
-             ( topo, seffs ) )
+    print ( )
+    print ( "[emCreator] For %s%s%s I have efficiencies for: %s" % \
+             ( colorama.Fore.RED, topo, colorama.Fore.RESET, seffs ) )
     nrmg5 = countRunningMG5 ( topo, njets )
     nmg5 = countMG5 ( topo, njets )
     nrma5 = countRunningMA5 ( topo, njets )
