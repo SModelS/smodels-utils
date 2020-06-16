@@ -286,9 +286,10 @@ def checkEventFiles():
     files = glob.glob("mg5results/T*hepmc.gz")
     for f in files:
         dt = getAge ( f )
-        if dt < 3.:
+        if dt < 5.:
             continue
-        print ( f, dt )
+        subprocess.getoutput ( "rm %s" % f )
+        print ( "%s: %.2fh" % ( f, dt ) )
 
 def cleanAll():
     clean()

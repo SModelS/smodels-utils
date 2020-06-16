@@ -229,8 +229,7 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy, keep, sqrts ):
         sana = bakeryHelpers.ma5AnaNameToSModelSName ( ana )
         Dirname = "../../smodels-database/%dTeV/%s/%s-eff/orig/" % ( sqrts, experiment, sana )
         stats = creator.getStatistics ( ana )
-        # print ( "Statistics for", ana, ":", stats )
-        print ( "[emCreator] obtained statistics for", ana, "in", fname )
+        # print ( "[emCreator] obtained statistics for", ana, "in", fname )
 
         if copy and not os.path.exists (Dirname):
             print ( "[emCreator] asked to copy but %s does not exist" % Dirname )
