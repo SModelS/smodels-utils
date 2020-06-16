@@ -317,7 +317,8 @@ def getModule ( dbpath, analysis, validationfile ):
 def writeMDPage( copy ):
     """ write the markdown page that lists all plots """ 
     with open("ratioplots.md","wt") as f:
-        f.write ( "# ratio plots on the upper limits, andre / suchi \n" )
+        # f.write ( "# ratio plots on the upper limits, andre / suchi \n" )
+        f.write ( "# ratio plots on the upper limits\n" )
         f.write ( "as of %s\n" % time.asctime() )
         f.write ( "see also [best signal regions](bestSRs)\n\n" )
         f.write ( "| ratio plots | ratio plots |\n" )
