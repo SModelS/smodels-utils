@@ -67,14 +67,14 @@ class WikiPageCreator:
             subprocess.getoutput ( cmd )
         if os.path.exists ( self.localdir) and (not "version" in os.listdir( self.localdir )) and self.force_upload:
             print ( "Copying database from %s to %s." % (self.databasePath, self.localdir )  )
-            cmd = "rsync -a --prune-empty-dirs --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*orig\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
+            cmd = "rsync -a --prune-empty-dirs --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*\/orig\/\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
             a= C.getoutput ( cmd )
             print ( "%s: %s" % ( cmd, a ) )
             has_uploaded = True
         if self.force_upload and not has_uploaded:
             print ( "Copying database from %s to %s." % (self.databasePath, self.localdir )  )
             # cmd = "cp -r %s/* %s" % ( self.databasePath, self.localdir )
-            cmd = "rsync -a --prune-empty-dirs --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*orig\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
+            cmd = "rsync -a --prune-empty-dirs --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*\/orig\/\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
             a= C.getoutput ( cmd )
             print ( "%s: %s" % ( cmd, a ) )
             has_uploaded = True
@@ -315,13 +315,14 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                     if not "pretty" in i:
                         files.append ( i )
             files.sort()
+            t0=time.time()-159000000
             for fig in files:
                 pngname = fig.replace(".pdf",".png" )
                 figName = pngname.replace(valDir+"/","").replace ( \
                             self.databasePath, "" )
                 figPath = dirPath+"/"+figName
                 figC = "https://smodels.github.io"+figPath
-                line += '<a href="%s"><img src="%s" /></a>' % ( figC, figC )
+                line += '<a href="%s"><img src="%s?%d" /></a>' % ( figC, figC, t0 )
                 line += "<BR>"
                 hasFig=True
                 nfigs += 1
