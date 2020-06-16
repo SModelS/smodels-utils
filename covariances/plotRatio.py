@@ -322,6 +322,8 @@ def writeMDPage( copy ):
         f.write ( "see also [best signal regions](bestSRs)\n\n" )
         f.write ( "| ratio plots | ratio plots |\n" )
         files = glob.glob("ratio_*.png" )
+        files += glob.glob("atlas_*png" )
+        files += glob.glob("cms_*png" )
         files.sort()
         ctr = 0
         for ctr,i in enumerate( files ):

@@ -530,14 +530,14 @@ class DataHandler(object):
                 yields.append ( fr )
             csvfile.close()
             # sort upper limits and efficiencies but not points in exclusion lines.
-            if not "xclusion" in self.name:
-                yields.sort()
-            else:
+            if "xclusion" in self.name:
                 xs,ys=[],[]
                 for yr in yields:
                     xs.append ( yr[0] )
                     ys.append ( yr[1] )
                 yields.append ( [ min(xs), min(ys) ] )
+            else:
+                yields.sort()
             for yr in yields:
                 yield yr
 
