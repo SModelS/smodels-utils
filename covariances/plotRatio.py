@@ -171,11 +171,6 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
     if False: # max(y) < 1e-10 and min(y) > 1e-40:
         logScale = True
         y_ = numpy.logspace ( numpy.log10(.3*min(y)), numpy.log10(3.*max(y)), 1000 )
-    #print ( "y", y[:10] )
-    #print ( "x", x[:10] )
-    #print ( "y_", y_[:10] )
-    #print ( "x_", x_[:10] )
-    # yx = numpy.array(list(itertools.product( y ,x )) )
     yx = numpy.array(list(itertools.product(y_,x_)) )
     x = yx[::,1]
     y = yx[::,0]
