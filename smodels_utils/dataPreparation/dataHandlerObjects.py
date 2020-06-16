@@ -289,7 +289,7 @@ class DataHandler(object):
                     pt = pts[0]
                     oldpt = self.data[i]  #Old point
                     for key,val in oldpt.items():
-                        if key in xvals or not key in pt:
+                        if str(key) in xvals.keys() or not key in pt:
                             continue
                         factor = pt[key]
                         oldpt[key] = oldpt[key]*factor  #Rescale values which do not appear in xvals
@@ -500,6 +500,7 @@ class DataHandler(object):
         has_waited = False
         if waitFor == None:
             has_waited = True
+        yields = []
         with open(self.path,'r') as csvfile:
             reader = csv.reader(filter(lambda row: row[0]!='#', csvfile))
             for r in reader:
@@ -526,8 +527,11 @@ class DataHandler(object):
                     if self.unit[1]=="X:60":
                         frx = fr[0]*fr[1]+60.*( 1.-fr[1] )
                         fr[1]=frx
-                yield fr
+                yields.append ( fr )
             csvfile.close()
+            yields.sort()
+            for yr in yields:
+                yield yr
 
     def mcsv(self):
         """
