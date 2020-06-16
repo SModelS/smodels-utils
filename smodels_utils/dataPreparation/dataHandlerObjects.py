@@ -23,6 +23,11 @@ x,y,z = var('x y z')
 # h = 4.135667662e-15 # in GeV * ns
 hbar = 6.582119514e-16 # in GeV * ns
 
+## for debugging, if set to true, allow for the acceptance files
+## to have multiple entries for the same mass point. that is obviously a bug,
+## so use this feature with great care
+allowMultipleAcceptances = False
+
 def _Hash ( lst ): ## simple hash function for our masses
     ret=0.
     for l in lst:
@@ -270,9 +275,14 @@ class DataHandler(object):
             for i,xvals in enumerate(self.getX()):
                 #Get the point in the data which matches the one in self
                 pts = data.getPointsWith(**xvals)
+                if pts and len(pts)>1 and allowMultipleAcceptances:
+                    logger.error("More than one point in reweighting data matches point %s" %xvals)
+                    logger.error("But allowMultipleAcceptances is set to true, so will work around it!" )
+                    pts = [ pts[0] ]
                 if not pts:
                     continue
-                elif len(pts) > 1.:
+                elif len(pts) > 1:
+                    print ( "pts", pts )
                     logger.error("More than one point in reweighting data matches point %s" %xvals)
                     sys.exit()
                 else:
