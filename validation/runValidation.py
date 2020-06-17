@@ -11,16 +11,16 @@ import logging
 import argparse,time
 
 try:
-    from ConfigParser import SafeConfigParser
+    from ConfigParser import SafeConfigParser, NoOptionError
 except ImportError as e:
-    from configparser import ConfigParser
+    from configparser import ConfigParser, NoOptionError
 
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
 
 def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                   pretty=False,generateData=True,limitPoints=None,extraInfo=False,
-                  preliminary=False, combine=False,pngAlso = False, 
+                  preliminary=False, combine=False,pngAlso = False,
                   weightedAgreementFactor = True, model = "default" ):
     """
     Creates a validation plot and saves its output.
@@ -35,14 +35,14 @@ def validatePlot( expRes,txnameStr,axes,slhadir,kfactor=1.,ncpus=-1,
                     all theory prediction values
     :param ncpus: Number of jobs to submit. ncpus = -1 means all processors.
 
-    :param pretty: If True it will generate "pretty" plots, if "both", will 
+    :param pretty: If True it will generate "pretty" plots, if "both", will
                    generate pretty *and* non-pretty
 
     :param generateData: If True, run SModelS on the slha files.
                          If False, use the already existing *.py files in the
                          validation folder.  If None, run SModelS only if
                          needed.
-    :param limitPoints: Limit the total number of points to <n> (integer). 
+    :param limitPoints: Limit the total number of points to <n> (integer).
                         Points are chosen randomly.
                         If None or negative, take all points.
     :param extraInfo: add additional info to plot: agreement factor, time spent,
@@ -157,7 +157,7 @@ def run ( expResList, axis, pretty, generateData ):
             if not isinstance(txname.axes,list):
                 axes = [txname.axes]
             else:
-                axes = txname.axes     
+                axes = txname.axes
             if axis is None:
                 for ax in axes:
                     doGenerate = generateData # local flag
@@ -172,7 +172,7 @@ def run ( expResList, axis, pretty, generateData ):
                 ax = str(eval(axis)) ## standardize the string
                 for p in prettyorugly:
                     validatePlot(expRes,txnameStr,ax,tarfile,kfactor,ncpus,p,
-                                 generateData,limitPoints,extraInfo, preliminary, 
+                                 generateData,limitPoints,extraInfo, preliminary,
                                  combine,pngAlso, weightedAgreementFactor, model )
                     generateData = False
             logger.info("------ \033[31m %s validated in  %.1f min \033[0m" %(txnameStr,(time.time()-txt0)/60.))
@@ -205,7 +205,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     :param generateData: If True, run SModelS on the slha files.
               If False, use the already existing *.py files in the validation folder.
               None: generate them if needed.
-    :param limitPoints: Limit the number of tested model points to <n> randomly 
+    :param limitPoints: Limit the number of tested model points to <n> randomly
               chosen points. If None or negative, test all points.
     :param extraInfo: add additional info to plot: agreement factor, time spent,
               time stamp, hostname
@@ -247,7 +247,7 @@ def main(analysisIDs,datasetIDs,txnames,dataTypes,kfactorDict,slhadir,databasePa
     if not expResList:
         logger.error("No experimental results found.")
 
-    if ncpus < 0: 
+    if ncpus < 0:
         from smodels.tools import runtime
         ncpus = runtime.nCPUs() + ncpus + 1
     # logger.info ( "ncpus=%d, n(expRes)=%d, genData=%d" % ( ncpus, len(expResList), generateData ) )
@@ -326,22 +326,27 @@ if __name__ == "__main__":
     force_load = None
     if args.force_build:
         force_load = "txt"
-            
+
+    dataselector = "upperLimit"
+    try:
+        dataselector = parser.get("database", "dataselector")
+    except NoOptionError as e:
+        logger.warning ( "setting 'dataselector' in section 'database' to 'upperLimit'" )
     combine=False
-    if parser.get("database", "dataselector") == "efficiencyMap":
+    if dataselector == "efficiencyMap":
         dataTypes = ['efficiencyMap']
         datasetIDs = ['all']
-    elif parser.get("database", "dataselector") == "upperLimit":
+    elif dataselector == "upperLimit":
         dataTypes = ['upperLimit']
         datasetIDs = ['all']
-    elif parser.get("database", "dataselector") == "combined":
+    elif dataselector == "combined":
         dataTypes = ['efficiencyMap']
-        # datasetIDs = ['combined']
         datasetIDs = ['all']
         combine=True
     else:
-        dataTypes = ['all']
-        datasetIDs = parser.get("database", "dataselector").split(",")
+        #dataTypes = ['all']
+        dataTypes = ['efficiencyMap']
+        datasetIDs = dataselector.split(",")
 
     kfactorDict = dict(parser.items("kfactors"))
     slhadir = parser.get("path", "slhaPath")
