@@ -382,6 +382,8 @@ if __name__ == "__main__":
                 pretty = True
             if spretty in [ "*", "all", "both" ]:
                 pretty = "both"
+            if pretty == False and spretty in [ "none", "neither", "dontplot" ]:
+                pretty = None
             if pretty == False and spretty not in [ "false", "0", "no" ]:
                 logger.error ( "prettyPlots %s unknown" % spretty )
                 sys.exit()
