@@ -1,5 +1,7 @@
 #!/bin/sh
 
+rm -f ratios.txt
+
 ./plotRatio.py -a1 ATLAS-SUSY-2016-07-orig -a2 ATLAS-SUSY-2016-07-eff -v1 T1_2EqMassAx_EqMassBy.py -v2 T1_2EqMassAx_EqMassBy.py -l1 "orig" -l2 "high stat" -o atlas_susy_2016_07_orig_vs_high_T1.png -c
 
 ./plotRatio.py -a1 ATLAS-SUSY-2016-07-orig -a2 ATLAS-SUSY-2016-07-eff -v1 T2_2EqMassAx_EqMassBy.py -v2 T2_2EqMassAx_EqMassBy.py -l1 "orig" -l2 "high stat" -o atlas_susy_2016_07_orig_vs_high_T2.png -c

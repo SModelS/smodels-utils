@@ -21,6 +21,14 @@ warnings.filterwarnings("ignore")
 
 logger = logging.getLogger(__name__)
 
+def hasDebPkg():
+    """ do we have the package installed """
+    a = subprocess.getoutput ( "dpkg -l cm-super-minimal | tail -n 1" )
+    if a.startswith("ii"):
+        return True
+    print ( "error, you need cm-super-minimal installed! (apt install cm-super-minimal)" )
+    sys.exit(-1)
+
 def convertNewAxes ( newa ):
     """ convert new types of axes (dictionary) to old (lists) """
     axes = copy.deepcopy(newa)
@@ -38,7 +46,7 @@ def axisHash ( axes_ ):
     ret = 0
     axes = convertNewAxes ( axes_ )
     for ctr,a in enumerate(axes):
-        ret += 10**(3*ctr)*int(a)
+        ret += 10**(4*ctr)*int(a)
     return ret
 
 def getExclusionsFrom ( rootpath, txname, axes=None ):
@@ -116,10 +124,11 @@ def getExclusionLine ( line ):
     return [ { "x": x_v, "y": y_v } ]
 
 def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
+    hasDebPkg()
     uls={}
     nsr=""
     noaxes = 0
-    for point in imp1.validationData:
+    for ctr,point in enumerate(imp1.validationData):
         if not "axes" in point:
             noaxes+=1
             if noaxes < 5:
@@ -134,15 +143,16 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
         h = axisHash ( axes )
         if not "UL" in point:
             continue
+        if point["axes"]["x"]<point["axes"]["y"]:
+            print ( "axes", axes_, "list", axes, "hash", h, "ul", point["UL"], "sig", point["signal"] )
         uls[ h ] = point["UL" ] / point["signal"]
-
 
     err_msgs = 0
 
     ipoints = imp2.validationData
     points = []
 
-    for point in ipoints:
+    for ctr,point in enumerate(ipoints):
         axes = convertNewAxes ( point["axes"] )
         h = axisHash ( axes )
         ul1 = None
@@ -164,17 +174,23 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
     points = numpy.array ( points )
     x = points[::,1].tolist()
     y = points[::,0].tolist()
-    col = points[::,2].tolist()
-    x_ = numpy.arange ( min(x), max(x), ( max(x)-min(x)) / 1000. )
-    y_ = numpy.arange ( min(y), max(y), ( max(y)-min(y)) / 1000. )
+    # coll = points[::,2].tolist()
+    minx, maxx = min(x), max(x)
+    miny, maxy = min(y), max(y)
+    nx, ny = 250, 250
+    x_ = numpy.arange ( minx, maxx, ( maxx-minx) / nx )
+    y_ = numpy.arange ( miny, maxy, ( maxy-miny) / ny )
     logScale = False
     if False: # max(y) < 1e-10 and min(y) > 1e-40:
         logScale = True
-        y_ = numpy.logspace ( numpy.log10(.3*min(y)), numpy.log10(3.*max(y)), 1000 )
+        y_ = numpy.logspace ( numpy.log10(.3*min(y)), numpy.log10(3.*max(y)), ny )
     yx = numpy.array(list(itertools.product(y_,x_)) )
     x = yx[::,1]
     y = yx[::,0]
     col = griddata ( points[::,0:2], points[::,2], yx, rescale=True )
+    for i in range(len(x)):
+        if abs(x[i]-200.) < 10. and abs(y[i]-400.)< 20.:
+            print ( "pt", x[i], y[i], yx[i] )
 
     if err_msgs > 0:
         print ( "[plotRatio] couldnt find data for %d/%d points" % (err_msgs, len( imp2.validationData ) ) )
@@ -193,7 +209,7 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
     if vmax > 5.:
         opts = { "norm": matplotlib.colors.LogNorm()  }
         
-    scatter = plt.scatter ( x, y, s=0.25, c=col, marker="o", cmap=cm,
+    scatter = plt.scatter ( x, y, s=0.35, c=col, marker="o", cmap=cm,
                             vmin=vmin, vmax=vmax, **opts )
     ax = plt.gca()
     plt.ylabel ( "$\Gamma$ [GeV]", size=13 )
@@ -201,9 +217,9 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
     if logScale:
         ax.set_yscale("log")
         ax.set_ylim ( min(y)*.2, max(y)*5. )
-    ax.set_xticklabels(map(int,ax.get_xticks()), { "fontweight": "normal", "fontsize": 14 } )
-    if not logScale:
-        ax.set_yticklabels(map(int,ax.get_yticks()), { "fontweight": "normal", "fontsize": 14 } )
+    #ax.set_xticklabels(map(int,ax.get_xticks()), { "fontweight": "normal", "fontsize": 14 } )
+    #if not logScale:
+    #    ax.set_yticklabels(map(int,ax.get_yticks()), { "fontweight": "normal", "fontsize": 14 } )
     plt.rcParams.update({'font.size': 14})
     #plt.rcParams['xtick.labelsize'] = 14
     #plt.rcParams['ytick.labelsize'] = 14
@@ -215,7 +231,9 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
     # print ( "smsrootfile", smsrootfile )
     stopo = prettyDescriptions.prettyTxname ( topo, outputtype="latex" ).replace("*","^{*}" )
 
-    plt.title ( "$f$: %s, %s" % ( imp1.ana.replace("-andre",""), topo) )
+    anaId = imp1.ana.replace("-andre","")
+    anaId = anaId.replace("-orig","").replace("-old","").replace("-eff","")
+    plt.title ( "ratio: %s, %s" % ( anaId, topo) )
     # plt.title ( "$f$: %s, %s %s" % ( s_ana1.replace("-andre",""), topo, stopo) )
     if not logScale:
         plt.xlabel ( "m$_{mother}$ [GeV]", fontsize=13 )
@@ -287,9 +305,12 @@ def draw ( imp1, imp2, copy, label1, label2, dbpath, output ):
     plt.savefig ( figname )
     if copy:
       cmd="cp %s ../../smodels.github.io/ratioplots/" % ( figname )
-      print ( cmd )
+      print ( "plotRatio] %s" % cmd )
       subprocess.getoutput ( cmd )
-    print ( "[plotRatio] ratio=%.2f +/- %.2f" % ( numpy.nanmean(col), numpy.nanstd(col) ) )
+    rmean,rstd =  numpy.nanmean(col), numpy.nanstd(col)
+    with open ( "ratios.txt", "at") as f:
+        f.write ( "%s %.2f +/- %.2f\n" % ( figname, rmean, rstd ) )
+    print ( "[plotRatio] ratio=%.2f +/- %.2f" % ( rmean, rstd ) )
     plt.clf()
 
 def getModuleFromPath ( ipath, analysis ):
@@ -322,9 +343,10 @@ def writeMDPage( copy ):
         files += glob.glob("cms_*png" )
         files.sort()
         ctr = 0
+        t0=time.time()-1592000000
         for ctr,i in enumerate( files ):
             src = "https://smodels.github.io/ratioplots/%s" % i
-            f.write ( '| <img src="%s" /> ' % src )
+            f.write ( '| <img src="%s?%d" /> ' % ( src, t0 ) )
             if ctr % 2 == 1:
                 f.write ( "|\n" )
         if ctr % 2 == 0:
@@ -388,6 +410,7 @@ def main():
         print ( "[plotRatio] now performing %s: %s" % (cmd, o ) )
         o = subprocess.getoutput ( cmd )
     else:
-        print ( "[plotRatio] now you could do:\n%s: %s" % (cmd, o ) )
+        if args.copy:
+            print ( "[plotRatio] now you could do:\n%s: %s" % (cmd, o ) )
 
 main()
