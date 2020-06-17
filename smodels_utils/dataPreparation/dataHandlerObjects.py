@@ -535,7 +535,6 @@ class DataHandler(object):
                 for yr in yields:
                     xs.append ( yr[0] )
                     ys.append ( yr[1] )
-                yields.append ( [ min(xs), min(ys) ] )
             else:
                 yields.sort()
             for yr in yields:
