@@ -26,6 +26,7 @@ distribution/smodels-v*
 smodels_utils/plotting/T*pdf
 .project
 covariances/SL.root
+covariances/atlas*png
 .pydevproject
 validation/pythia_??????.card
 *~
@@ -45,3 +46,4 @@ bin/database.bib
 bin/failed.txt
 bin/log.txt
 bin/refs.bib
+

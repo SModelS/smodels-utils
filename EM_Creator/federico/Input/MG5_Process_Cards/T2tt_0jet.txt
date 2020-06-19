@@ -1,3 +1,0 @@
-import mssm
-generate p p > t1 t1~ 
-output T2tt_0jet

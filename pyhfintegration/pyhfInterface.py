@@ -49,6 +49,7 @@ class PyhfData:
         self.nsignals = nsignals # fb
         self.inputJsons = inputJsons
         self.nWS = len(inputJsons)
+        self.errorFlag = False
         self.getWSInfo()
         self.checkConsistency()
 
@@ -62,10 +63,18 @@ class PyhfData:
         """
         # Identifying the path to the SR and VR channels in the main workspace files
         self.channelsInfo = [] # workspace specifications
+        if not isinstance(self.inputJsons, list):
+            logger.error("The `inputJsons` parameter must be of type list")
+            self.errorFlag = True
+            return
         for ws in self.inputJsons:
             wsChannelsInfo = {}
             wsChannelsInfo['signalRegions'] = []
             wsChannelsInfo['otherRegions'] = []
+            if not 'channels' in ws.keys():
+                logger.error("Json file number {} is corrupted (channels are missing)".format(self.inputJsons.index(ws)))
+                self.channelsInfo = None
+                return
             for i_ch, ch in enumerate(ws['channels']):
                 if 'SR' in ch['name']:
                     wsChannelsInfo['signalRegions'].append({'path':'/channels/'+str(i_ch)+'/samples/0', # Path of the new sample to add (signal prediction)
@@ -81,16 +90,25 @@ class PyhfData:
 
         :ivar zeroSignalsFlag: boolean identifying if all SRs of a single json are empty
         """
+        if not isinstance(self.nsignals, list):
+            logger.error("The `nsignals` parameter must be of type list")
+            self.errorFlag = True
         if self.nWS != len(self.nsignals):
-            logger.error('The number of signals provided is different than the number of json files')
-        nsignals = self.nsignals
+            logger.error('The number of subsignals provided is different from the number of json files')
+            self.errorFlag = True
         self.zeroSignalsFlag = list()
+        if self.channelsInfo == None:
+            return
         for wsInfo, subSig in zip(self.channelsInfo, self.nsignals):
+            if not isinstance(subSig, list):
+                logger.error("The `nsignals` parameter must be a two dimensional list")
+                self.errorFlag = True
             nBinsJson = 0
             for sr in wsInfo['signalRegions']:
                 nBinsJson += sr['size']
             if nBinsJson != len(subSig):
                 logger.error('The number of signals provided is different from the number of bins for json number {} and channel number {}'.format(self.channelsInfo.index(wsInfo), self.nsignals.index(subSig)))
+                self.errorFlag = True
             allZero = all([s == 0 for s in subSig])
             # Checking if all signals matching this json are zero
             self.zeroSignalsFlag.append(allZero)
@@ -131,8 +149,7 @@ class PyhfUpperLimitComputer:
 
     def rescale(self, factor):
         """
-        Rescales the signal predictions (self.signals) and processes again the patches and workspaces
-        No return
+        Rescales the signal predictions (self.nsignals) and processes again the patches and workspaces
 
         :return: updated list of patches and workspaces (self.patches and self.workspaces)
         """
@@ -157,13 +174,12 @@ class PyhfUpperLimitComputer:
 
         :return: the list of patches, one for each workspace
         """
+        if self.channelsInfo == None:
+            return None
         nsignals = self.nsignals
         # Constructing the patches to be applied on the main workspace files
-        i_ws = 0
         patches = []
         for ws, info, subSig in zip(self.inputJsons, self.channelsInfo, self.nsignals):
-            # Need to read the number of SR/bins of each regions
-            # in order to identify the corresponding ones in self.nsignals
             patch = []
             for srInfo in info['signalRegions']:
                 nBins = srInfo['size']
@@ -182,7 +198,6 @@ class PyhfUpperLimitComputer:
             for path in info['otherRegions']:
                 patch.append({'op':'remove', 'path':path})
             patches.append(patch)
-            i_ws += 1
         return patches
 
     def wsMaker(self):
@@ -191,13 +206,23 @@ class PyhfUpperLimitComputer:
 
         :returns: the list of patched workspaces
         """
+        if self.patches == None:
+            return None
         if self.nWS == 1:
-            return [pyhf.Workspace(jsonpatch.apply_patch(self.inputJsons[0], self.patches[0]))]
+            try:
+                return [pyhf.Workspace(jsonpatch.apply_patch(self.inputJsons[0], self.patches[0]))]
+            except (pyhf.exceptions.InvalidSpecification, KeyError) as e:
+                logger.error("The json file is corrupted:\n{}".format(e))
+                return None
         else:
             workspaces = []
-            for json, patch in zip(self.inputJsons, self.patches):
-                wsDict = jsonpatch.apply_patch(json, patch)
-                ws = pyhf.Workspace(wsDict)
+            for js, patch in zip(self.inputJsons, self.patches):
+                wsDict = jsonpatch.apply_patch(js, patch)
+                try:
+                    ws = pyhf.Workspace(wsDict)
+                except (pyhf.exceptions.InvalidSpecification, KeyError) as e:
+                    logger.error("Json file number {} is corrupted:\n{}".format(self.inputJsons.index(json), e))
+                    return None
                 workspaces.append(ws)
             return workspaces
 
@@ -207,7 +232,7 @@ class PyhfUpperLimitComputer:
         Inspired by the `pyhf.infer.mle` module but for non-log likelihood
         """
         logger.debug("Calling likelihood")
-        self.scale = 1.
+        self.__init__(self.data)
         if self.nWS == 1:
             workspace = self.workspaces[0]
         elif workspace_index != None:
@@ -216,9 +241,7 @@ class PyhfUpperLimitComputer:
                 return None
             else:
                 workspace = self.workspaces[workspace_index]
-        else:
-            workspace = self.cbWorkspace()
-        # Same modifiers_settings as those use when running the 'pyhf cls' command line
+        # Same modifiers_settings as those used when running the 'pyhf cls' command line
         msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
         model = workspace.model(modifier_settings=msettings)
         test_poi = 1.
@@ -229,9 +252,45 @@ class PyhfUpperLimitComputer:
         """
         Returns the chi square
         """
-        self.scale = 1.
+        self.__init__(self.data)
         logger.debug("Calling chi2")
-        return None
+        if self.nWS == 1:
+            workspace = self.workspaces[0]
+        elif workspace_index != None:
+            if self.zeroSignalsFlag[workspace_index] == True:
+                logger.warning("Workspace number %d has zero signals" % workspace_index)
+                return None
+            else:
+                workspace = self.workspaces[workspace_index]
+        # Same modifiers_settings as those used when running the 'pyhf cls' command line
+        msettings = {'normsys': {'interpcode': 'code4'}, 'histosys': {'interpcode': 'code4p'}}
+        model = workspace.model(modifier_settings=msettings)
+        _, nllh = pyhf.infer.mle.fit(workspace.data(model), model, return_fitted_val=True)
+        logger.debug(workspace['channels'][0]['samples'][0])
+        logger.debug('nllh : {}'.format(nllh))
+        # Computing the background numbers and fetching the observations
+        for ch in workspace['channels']:
+            chName = ch['name']
+            # Backgrounds
+            for sp in ch['samples']:
+                if sp['name'] != 'bsm':
+                    try:
+                        bkg = [b + d for b, d in zip(bkg, sp['data'])]
+                    except NameError: # If bkg doesn't exit, intialize it
+                        bkg = sp['data']
+            # Observations
+            for observation in workspace['observations']:
+                if observation['name'] == chName:
+                    obs = observation['data']
+            dn = [ob - bk for ob, bk in zip(obs, bkg)]
+            # Feeding dn as signal input
+            for sp in ch['samples']:
+                if sp['name'] == 'bsm':
+                    sp['data'] = dn
+        logger.debug(workspace['channels'][0]['samples'][0])
+        _, maxNllh = pyhf.infer.mle.fixed_poi_fit(1., workspace.data(model), model, return_fitted_val=True)
+        logger.debug('maxNllh : {}'.format(maxNllh))
+        return (maxNllh - nllh).tolist()[0]
 
     # Trying a new method for upper limit computation :
     # re-scaling the signal predictions so that mu falls in [0, 10] instead of looking for mu bounds
@@ -250,17 +309,23 @@ class PyhfUpperLimitComputer:
         """
         startUL = time.time()
         logger.debug("Calling ulSigma")
-        if workspace_index != None and self.zeroSignalsFlag[workspace_index] == True:
-            logger.debug("Workspace number %d has zero signals" % workspace_index)
-            return float('+inf')
+        if self.data.errorFlag or self.workspaces == None: # For now, this flag can only be turned on by PyhfData.checkConsistency
+            return None
+        if self.nWS == 1:
+            if self.zeroSignalsFlag[0] == True:
+                logger.warning("There is only one workspace but all signals are zeroes")
+                return None
+        else:
+            if workspace_index == None:
+                logger.error("There are several workspaces but no workspace index was provided")
+                return None
+            elif self.zeroSignalsFlag[workspace_index] == True:
+                logger.debug("Workspace number %d has zero signals" % workspace_index)
+                return None
         def updateWorkspace():
             if self.nWS == 1:
-                if self.zeroSignalsFlag[0] == True:
-                    logger.warning("There is only one workspace but all signals are zeroes")
                 return self.workspaces[0]
             else:
-                if workspace_index != None:
-                    logger.error("There are several workspaces but no workspace index was provided")
                 return self.workspaces[workspace_index]
         workspace = updateWorkspace()
         def root_func(mu):
@@ -273,9 +338,11 @@ class PyhfUpperLimitComputer:
             end = time.time()
             logger.debug("Hypotest elapsed time : %1.4f secs" % (end - start))
             if expected:
-                CLs = result[1].tolist()[0]
+                logger.debug("expected = {}, mu = {}, result = {}".format(expected, mu, result))
+                CLs = float(result[1].tolist()[0])
             else:
-                CLs = result[0]
+                logger.debug("expected = {}, mu = {}, result = {}".format(expected, mu, result))
+                CLs = float(result[0])
             # logger.debug("Call of root_func(%f) -> %f" % (mu, 1.0 - CLs))
             return 1.0 - self.cl - CLs
         # Rescaling singals so that mu is in [0, 10]
@@ -327,45 +394,6 @@ class PyhfUpperLimitComputer:
         endUL = time.time()
         logger.debug("ulSigma elpased time : %1.4f secs" % (endUL - startUL))
         return ul*self.scale # self.scale has been updated whithin self.rescale() method
-
-    def bestUL(self):
-        """
-        Computes the upper limit on the signal strength using a poor person's combination
-        Picking the most sensitive, i.e., the one having the biggest r-value in the expected case (r-value = 1/mu)
-
-        :return: upper limit in `pb`
-        """
-        if len(self.workspaces) == 1:
-            return self.ulSigma(workspace_index=0)
-        rMax = 0.0
-        for i_ws in range(self.nWS):
-            logger.debug("Looking for best expected combination")
-            r = 1/self.ulSigma(expected=True, workspace_index=i_ws)
-            if r > rMax:
-                rMax = r
-                i_best = i_ws
-        logger.debug('Best combination : %d' % i_best)
-        self.i_best = i_best
-        return self.ulSigma(workspace_index=i_best)
-
-    def cbWorkspace(self):
-        """
-        Method that combines the workspaces contained into `self.workspaces` into a single workspace
-        This method is currently not functional, waiting for pyhf developers to finalize the `pyhf.workspace.combine` methods
-
-        :return: a json instance of the combined workspaces
-        """
-        # Performing combination using pyhf.workspace.combine method, a bit modified to solve the multiple parameter configuration problem
-        workspaces = self.workspaces
-        for i_ws in range(self.nWS):
-            if self.zeroSignalsFlag[i_ws] == False:
-                cbWS = workspaces[i_ws]
-                break
-        for i_ws in range(1, self.nWS):
-            if self.zeroSignalsFlag[i_ws] == True: # Ignore workspaces having zero signals
-                continue
-            cbWS = pyhf.Workspace.combine(cbWS, workspaces[i_ws])
-        return cbWS
 
 if __name__ == "__main__":
     C = [ 18774.2, -2866.97, -5807.3, -4460.52, -2777.25, -1572.97, -846.653, -442.531,

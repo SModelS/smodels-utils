@@ -9,12 +9,16 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '-a','--all', help='cancel all jobs',
                              action="store_true" )
+    argparser.add_argument ( '-b','--bake', help='cancel all baking jobs',
+                             action="store_true" )
     argparser.add_argument ( '-r','--run', help='cancel all RUN jobs (ie the walkers only)',
                              action="store_true" )
     args=argparser.parse_args()
     grp = "| grep QOSMax"
     if args.all:
         grp = ""
+    if args.bake:
+        grp = "| grep ' B'"
     if args.pending:
         grp = "| grep PENDING"
     if args.run:

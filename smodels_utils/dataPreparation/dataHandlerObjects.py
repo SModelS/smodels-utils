@@ -23,6 +23,11 @@ x,y,z = var('x y z')
 # h = 4.135667662e-15 # in GeV * ns
 hbar = 6.582119514e-16 # in GeV * ns
 
+## for debugging, if set to true, allow for the acceptance files
+## to have multiple entries for the same mass point. that is obviously a bug,
+## so use this feature with great care
+allowMultipleAcceptances = False
+
 def _Hash ( lst ): ## simple hash function for our masses
     ret=0.
     for l in lst:
@@ -135,6 +140,9 @@ class DataHandler(object):
         strictlyPositive = False
         if self._unit in [ "fb", "pb" ]:
             strictlyPositive = True
+        if not hasattr ( self, self.fileType ):
+            logger.error ( "Format type '%s' is not defined. Try either one of 'root', 'csv', 'txt', 'embaked', 'mscv', 'effi', 'cMacro', 'canvas', 'svg', 'pdf' instead. " % self.fileType )
+            sys.exit(-1)
         for point in getattr(self,self.fileType)():
             ptDict = self.mapPoint(point) #Convert point to dictionary
             if self.allowNegativeValues:
@@ -267,16 +275,21 @@ class DataHandler(object):
             for i,xvals in enumerate(self.getX()):
                 #Get the point in the data which matches the one in self
                 pts = data.getPointsWith(**xvals)
+                if pts and len(pts)>1 and allowMultipleAcceptances:
+                    logger.error("More than one point in reweighting data matches point %s" %xvals)
+                    logger.error("But allowMultipleAcceptances is set to true, so will choose first value!" )
+                    pts = [ pts[0] ]
                 if not pts:
                     continue
-                elif len(pts) > 1.:
+                elif len(pts) > 1:
                     logger.error("More than one point in reweighting data matches point %s" %xvals)
+                    logger.error("(If you want to allow for this happen, then set dataHandlerObjects.allowMultipleAcceptances = True)" )
                     sys.exit()
                 else:
                     pt = pts[0]
                     oldpt = self.data[i]  #Old point
                     for key,val in oldpt.items():
-                        if key in xvals or not key in pt:
+                        if str(key) in xvals.keys() or not key in pt:
                             continue
                         factor = pt[key]
                         oldpt[key] = oldpt[key]*factor  #Rescale values which do not appear in xvals
@@ -459,6 +472,17 @@ class DataHandler(object):
 
             yield values
 
+    def pdf(self):
+        """
+        iterable method
+        preprocessing pdf-files
+        floats
+
+        :yield: list with values as foat, one float for every column
+        """
+        logger.error ( "not yet implemented" )
+        sys.exit(-1)
+
     def csv(self):
         """
         iterable method
@@ -476,6 +500,7 @@ class DataHandler(object):
         has_waited = False
         if waitFor == None:
             has_waited = True
+        yields = []
         with open(self.path,'r') as csvfile:
             reader = csv.reader(filter(lambda row: row[0]!='#', csvfile))
             for r in reader:
@@ -502,8 +527,18 @@ class DataHandler(object):
                     if self.unit[1]=="X:60":
                         frx = fr[0]*fr[1]+60.*( 1.-fr[1] )
                         fr[1]=frx
-                yield fr
+                yields.append ( fr )
             csvfile.close()
+            # sort upper limits and efficiencies but not points in exclusion lines.
+            if "xclusion" in self.name:
+                xs,ys=[],[]
+                for yr in yields:
+                    xs.append ( yr[0] )
+                    ys.append ( yr[1] )
+            else:
+                yields.sort()
+            for yr in yields:
+                yield yr
 
     def mcsv(self):
         """
@@ -589,7 +624,10 @@ class DataHandler(object):
         SR = self.objectName
         with open(self.path) as f:
             D=eval(f.read())
-        for pt,values in D.items():
+        keys = list(D.keys() )
+        keys.sort()
+        for pt in keys:
+            values = D[pt]
             ret = list(pt)
             eff = 0.
             if SR in values.keys():

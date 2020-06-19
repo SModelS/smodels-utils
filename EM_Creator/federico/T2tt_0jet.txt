@@ -1,2 +1,0 @@
-import model_v4 mssm
-generate p p > t1 t1~ 

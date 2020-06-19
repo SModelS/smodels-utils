@@ -1,4 +1,0 @@
-import mssm
-generate p p > b1 b1~ 
-add process p p > b1 b1~ j 
-output T2bb_1jet

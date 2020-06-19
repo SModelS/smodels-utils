@@ -572,7 +572,7 @@ if __name__ == "__main__":
         cutlang.clean_all()
         sys.exit()
     # if args.mass == "all":
-    #     mass = bakeryHelpers.getListOfMasses(args.topo, args.njets)
+    #     mass = bakeryHelpers.getListOfMasses(args.topo)
     # else:
     #     mass = bakeryHelpers.parseMasses(args.mass)
     cutlang = CutLangWrapper(args.topo, args.njets, args.rerun, args.analyses)

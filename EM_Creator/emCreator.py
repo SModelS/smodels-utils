@@ -8,15 +8,22 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 """
 
-import os, sys, colorama, subprocess, shutil, time
+import os, sys, colorama, subprocess, shutil, time, glob
 from datetime import datetime
 import bakeryHelpers
 
 class emCreator:
-    def __init__ ( self, analyses, topo, njets ):
+    def __init__ ( self, analyses, topo, njets, keep, sqrts ):
+        """ the efficiency map creator.
+        :param keep: if true, keep all files
+        """
+        self.basedir = bakeryHelpers.baseDir()
+        self.resultsdir = ( self.basedir + "/results/" ).replace("//","/")
         self.analyses = analyses
         self.topo = topo
         self.njets = njets
+        self.keep = keep
+        self.sqrts = sqrts
 
     def info ( self, *msg ):
         print ( "%s[emCreator] %s%s" % ( colorama.Fore.YELLOW, " ".join ( msg ), \
@@ -53,8 +60,7 @@ class emCreator:
         return ret
 
     def getNEvents ( self, masses ):
-        smass = "_".join ( map ( str, masses ) )
-        fname = "ma5/ANA_%s_%djet.%s/Output/defaultset/defaultset.saf" % ( self.topo, self.njets, smass ) 
+        fname = bakeryHelpers.safFile ( self.resultsdir, self.topo, masses, self.sqrts )
         if not os.path.exists ( fname ):
             print ( "[emCreator.py] %s does not exist, cannot report correct number of events" % fname )
             return -2
@@ -79,13 +85,10 @@ class emCreator:
         njets = self.njets
         process = "%s_%djet" % ( topo, njets )
         dirname = bakeryHelpers.dirName ( process, masses )
-        summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
+        summaryfile = bakeryHelpers.datFile ( self.resultsdir, topo, masses, \
+                                              self.sqrts )
         if not os.path.exists ( summaryfile):
-            self.info ( "could not find ma5 summary file %s. Skipping." % summaryfile )
-            rmfile = summaryfile[:summaryfile.find("/Output")]
-            cmd = "rm -rf %s" % rmfile 
-            o = subprocess.getoutput ( cmd )
-            self.info ( "running %s: %s" % ( cmd, o ) )
+            # self.info ( "could not find ma5 summary file %s. Skipping." % summaryfile )
             ret = {}
             return ret,0.
         timestamp = os.stat ( summaryfile ).st_mtime
@@ -108,10 +111,19 @@ class emCreator:
             line = line.replace("control region","control_region" )
             line = line.replace("150-1","150 -1")
             tokens=line.split()
-            if len(tokens)!=10:
-                print ( "In file %s: cannot parse ``%s'': skip it" % ( summaryfile, line[:50] ) )
+            if len(tokens) not in [ 7, 8, 10 ]:
+                print ( "[emCreator] In file %s: cannot parse ``%s'': got %d tokens, expected 8 or 10. skip it" % ( summaryfile, line[:50], len(tokens) ) )
+                print ( "   - %s "  % str(tokens) )
                 continue
-            dsname,ananame,sr,sig95exp,sig95obs,pp,eff,statunc,systunc,totunc=tokens
+            if len(tokens)==10:
+                dsname,ananame,sr,sig95exp,sig95obs,pp,eff,statunc,systunc,totunc=tokens
+            if len(tokens)==8:
+            # datasetname analysisname signalregion sig95(exp) sig95(obs) efficiency stat
+                dsname,ananame,sr,sig95exp,sig95obs,pp,eff,statunc=tokens
+            if len(tokens)==7:
+            # datasetname analysisname signalregion sig95(exp) sig95(obs) efficiency stat
+                dsname,ananame,sr,sig95exp,pp,eff,statunc=tokens
+
             eff=float(eff)
             #if eff == 0.:
                 # print ( "zero efficiency for", ananame,sr )
@@ -133,12 +145,30 @@ class emCreator:
             return
         self.msg ( " `- %s" % ( ret[-maxLength:] ) )
 
-def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
+def countMG5 ( topo, njets ):
+    """ count the number of mg5 directories """
+    files = glob.glob ( "mg5results/%s_*.hepmc.gz" % ( topo ) )
+    return len(files)
+
+def countRunningMG5 ( topo, njets ):
+    """ count the number of mg5 directories """
+    files = glob.glob ( "%s_*jet*" % ( topo ) )
+    return len(files)
+
+def countRunningMA5 ( topo, njets ):
+    """ count the number of ma5 directories """
+    files = glob.glob ( "ma5_%s_%djet.*" % ( topo, njets) )
+    return len(files)
+
+def runForTopo ( topo, njets, masses, analyses, verbose, copy, keep, sqrts ):
+    """
+    :param keep: keep the cruft files
+    """
     if masses == "all":
-        masses = bakeryHelpers.getListOfMasses ( topo, njets, postMA5=True )
+        masses = bakeryHelpers.getListOfMasses ( topo, True, sqrts )
     else:
         masses = bakeryHelpers.parseMasses ( masses )
-    creator = emCreator( analyses, topo, njets )
+    creator = emCreator( analyses, topo, njets, keep, sqrts )
     effs,tstamps={},{}
     if verbose:
         print ( "[emCreator] topo %s: %d mass points considered" % ( topo, len(masses) ) )
@@ -150,11 +180,16 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
                 tstamps[k]={}
             effs[k][m]=v
             tstamps[k][m]=t
-    seffs = ",".join(list(effs.keys()))
+    seffs = ", ".join(list(effs.keys()))
     if seffs == "":
         seffs = "no analysis"
-    print ( "[emCreator] For %s I have efficiencies for: %s" % \
-             ( topo, seffs ) )
+    print ( )
+    print ( "[emCreator] For %s%s%s I have efficiencies for: %s" % \
+             ( colorama.Fore.RED, topo, colorama.Fore.RESET, seffs ) )
+    nrmg5 = countRunningMG5 ( topo, njets )
+    nmg5 = countMG5 ( topo, njets )
+    nrma5 = countRunningMA5 ( topo, njets )
+    print ( "[emCreator] I see %d mg5 points and %d running mg5 and %d running ma5 jobs." % ( nmg5, nrmg5, nrma5 ) )
     for ana,values in effs.items():
         if len(values.keys()) == 0:
             continue
@@ -164,7 +199,8 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
         if not os.path.exists( "embaked/" ):
             os.makedirs ( "embaked" )
         fname = "embaked/%s.%s.embaked" % (ana, topo )
-        print ( "baking %s: %d points." % ( fname, len(values) ) )
+        print ( "%s[emCreator] baking %s: %d points.%s" % \
+                ( colorama.Fore.GREEN, fname, len(values), colorama.Fore.RESET ) )
         SRs = set()
         for k,v in values.items():
             for sr in v.keys():
@@ -193,8 +229,7 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
         sana = bakeryHelpers.ma5AnaNameToSModelSName ( ana )
         Dirname = "../../smodels-database/%dTeV/%s/%s-eff/orig/" % ( sqrts, experiment, sana )
         stats = creator.getStatistics ( ana )
-        # print ( "Statistics for", ana, ":", stats )
-        print ( "[emCreator] obtained statistics for", ana, "in", fname )
+        # print ( "[emCreator] obtained statistics for", ana, "in", fname )
 
         if copy and not os.path.exists (Dirname):
             print ( "[emCreator] asked to copy but %s does not exist" % Dirname )
@@ -221,36 +256,54 @@ def runForTopo ( topo, njets, masses, analyses, verbose, copy ):
 
 def getAllTopos ( ):
     import glob
+    dirname="results/"
+    files = glob.glob ( "%s/T*.dat" % dirname )
+    ret = set()
+    for f in files:
+        tokens = f.split("_")
+        ret.add( tokens[0].replace(dirname,"") )
+    ret = list(ret)
+    ret.sort()
+    return ret
+
+def getAllToposOld ( ):
+    import glob
     files = glob.glob ( "T*jet.*" )
     ret = set()
     for f in files:
         tokens = f.split("_")
         ret.add( tokens[0] )
+    ret = list(ret)
+    ret.sort()
     return ret
 
 def run ( args ):
     if args.topo == "all":
         for topo in getAllTopos():
             runForTopo ( topo, args.njets, args.masses, args.analyses, args.verbose,
-                         args.copy )
+                         args.copy, args.keep, args.sqrts )
     else:
         runForTopo ( args.topo, args.njets, args.masses, args.analyses, args.verbose,
-                     args.copy )
+                     args.copy, args.keep, args.sqrts )
 
 def main():
     import argparse
     argparser = argparse.ArgumentParser(description='efficiency map extractor.')
     argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
                              type=int, default=1 )
+    argparser.add_argument ( '-s', '--sqrts', help='sqrts [13]',
+                             type=int, default=13 )
     argparser.add_argument ( '-t', '--topo', help='topology, all means all you can find [all]',
                              type=str, default="all" )
     argparser.add_argument ( '-v', '--verbose', help='be verbose',
                              action="store_true" )
     argparser.add_argument ( '-c', '--copy', help='copy embaked file to smodels-database',
                              action="store_true" )
+    argparser.add_argument ( '-k', '--keep', help='keep all cruft files',
+                             action="store_true" )
     defaultana = "atlas_susy_2016_07"
     defaultana = "cms_sus_16_033"
-    argparser.add_argument ( '-a', '--analyses', 
+    argparser.add_argument ( '-a', '--analyses',
             help='analyses, comma separated [%s]' % defaultana,
                              type=str, default=defaultana )
     mdefault = "all"

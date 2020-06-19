@@ -11,11 +11,12 @@ def pprint ( text ):
     f.close()
 
 def ma5():
-    ma5Files = glob.glob ( "ma5/ANA_T**/Output/CLs_output_summary.dat" )
+    dirname = "results/"
+    ma5Files = glob.glob ( "%s/*.dat" % dirname )
     ma5Stats={}
     for f in ma5Files:
-        p1,p2 = f.find("ANA_"),f.find("jet")
-        process = f[p1+4:p2]
+        f = f.replace(dirname,"")
+        process = f.split("_")[0]
         if not process in ma5Stats:
             ma5Stats[process]=0
         ma5Stats[process]+=1
@@ -32,12 +33,13 @@ def ma5():
     return goodkeys
 
 def mg5():
-    mg5Files = glob.glob ( "T*jet.*/Events/run_01/tag_1_pythia8_events.hepmc.gz" )
+    dirname="mg5results/"
+    mg5Files = glob.glob ( "%s/*.hepmc.gz" % dirname )
     mg5Stats={}
     for f in mg5Files:
-        p1,p2 = f.find("_"),f.find("jet")
-        process = f[:p2]
-        #topo,njets = f[:p1],f[p1+1:p2]
+        f = f.replace(dirname,"")
+        p1 = f.find("_")
+        process = f[:p1]
         if not process in mg5Stats:
             mg5Stats[process]=0
         mg5Stats[process]+=1
@@ -92,4 +94,4 @@ def main( analysis ):
     inDatabase( topos, analysis )
 
 if __name__ == "__main__":
-    main()
+    main( "cms_sus_16_033" )

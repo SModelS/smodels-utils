@@ -7,17 +7,77 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 """
 
-import numpy
-import sys
+import numpy, sys, os, time, subprocess, glob
 sys.path.insert(0,"../../smodels" )
 from smodels.tools.runtime import nCPUs
 
-def dirName ( process, masses ):
-    """ the name of the directory of one process + masses 
+def getAge ( f ):
+    """ get the age of file in hours. age goes by last modification """
+    if not os.path.exists ( f ):
+        return 0.
+    t0 = time.time()
+    mt = os.stat ( f ).st_mtime
+    dt = ( t0 - mt ) / 60. / 60. ## hours
+    return dt
+
+def safFile ( dirname, topo, masses, sqrts ):
+    """ return saf file name """
+    smass = "_".join ( map ( str, masses ) )
+    ret = "%s/%s_%s.%d.saf" % ( dirname, topo, smass, sqrts )
+    ret = ret.replace("//","/")
+    return ret
+
+def datFile ( dirname, topo, masses, sqrts ):
+    """ return dat file name """
+    smass = "_".join ( map ( str, masses ) )
+    ret = "%s/%s_%s.%d.dat" % ( dirname, topo, smass, sqrts )
+    ret = ret.replace("//","/")
+    return ret
+
+def isAssociateProduction ( topo ):
+    """ return true if topo is associate squark gluino production
+    :param topo: str, e.g. TGQ
+    """
+    if topo in [ "TGQ", "T3GQ", "T5GQ" ]:
+        return True
+    return False
+
+def baseDir():
+    """ our basedir """
+    conffile = "baking.conf"
+    if os.path.exists ( conffile ):
+        with open ( conffile, "rt" ) as f:
+            ret = f.read()
+        ret = ret.strip()
+        return ret
+    # ret = "/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/EM_Creator/"
+    subdir = "git/smodels-utils/EM_Creator"
+    ret = "~/%s/" % subdir
+    ret = os.path.expanduser ( ret )
+    if ret.count ( subdir ) == 2:
+        ret = ret.replace(subdir,"",1)
+    while ret.find("//")>0:
+        ret = ret.replace("//","/")
+    return ret
+
+def tempDir():
+    """ our temp dir """
+    ret = baseDir()+"/temp/"
+    while ret.find("//")>0:
+        ret = ret.replace("//","/")
+    if not os.path.exists ( ret ):
+        os.mkdir ( ret )
+    return ret
+
+def dirName ( process, masses, basedir=None ):
+    """ the name of the directory of one process + masses
     :param process: e.g. T2_1jet
     :param masses: tuple or list of masses, e.g. (1000, 800)
     """
-    return process + "." + "_".join(map(str,masses))
+    filename = process + "." + "_".join(map(str,masses))
+    if basedir == None:
+        return filename
+    return basedir + "/" + filename
 
 def parseMasses ( massstring, mingap1=None, maxgap1=None,
                   mingap2=None, maxgap2=None, mingap13=None, maxgap13=None ):
@@ -93,7 +153,7 @@ def parseMasses ( massstring, mingap1=None, maxgap1=None,
     return ret
 
 def filterForGap ( masses, gap, isMin=True, indices=[0,1] ):
-    """ filter out tuples for which gap is not met 
+    """ filter out tuples for which gap is not met
         between <indices> particles
     :param isMin: if True, filter out too low gaps, if False,
                   filter out too high gaps
@@ -124,13 +184,21 @@ def listAnalyses ( ):
     """ list the analyses that are available in MA5 """
     import glob
     # dname = "ma5/tools/PAD/Build/"
-    dname = "ma5.template/tools/PAD/Build/SampleAnalyzer/User/Analyzer/"
-    print ( "[bakeryHelpers] searching for analyses in %s" % dname )
-    files = glob.glob ( "%s/*.cpp" % dname )
-    # files = glob.glob ( "%s*.saf" % dname )
+    dn = [ "ma5/tools/PAD/Build/SampleAnalyzer/User/Analyzer/",
+           "ma5/tools/PADForMA5tune/Build/SampleAnalyzer/User/Analyzer/" ]
+    # print ( "[bakeryHelpers] searching for analyses in %s" % dname )
+    files = []
+    for d in dn:
+        files += glob.glob ( "%s/*.cpp" % d )
+    files = list ( set ( files ) )
+    files.sort()
     print ( "List of analyses:" )
+    print ( "=================" )
     for f in files:
-        print  ( "  %s" % f.replace(".saf","").replace(dname,"").replace(".cpp","") )
+        f = f.replace(".saf","").replace(".cpp","")
+        for d in dn:
+            f = f.replace(d,"")
+        print  ( "  %s" % f )
 
 def nJobs ( nproc, npoints ):
     """ determine the number of jobs we should run, given nproc is
@@ -143,19 +211,27 @@ def nJobs ( nproc, npoints ):
         ret = npoints
     return ret
 
-def getListOfMasses(topo, njets, postMA5=False ):
+def getListOfMasses(topo, postMA5=False, sqrts=13 ):
     """ get a list of the masses of an mg5 scan. to be used for e.g. ma5.
     :param postMA5: query the ma5 output, not mg5 output.
     """
     import glob
     ret=[]
-    fname = "%s_%djet.*" % ( topo, njets )
+    # fname = "%s_%djet.*" % ( topo, njets )
+    dirname = "mg5results/"
+    extension = "%d.hepmc.gz" % sqrts
     if postMA5:
-        fname="ma5/ANA_"+fname
+        dirname = "results/"
+        extension = "dat"
+    fname="%s/%s_*.%s" % ( dirname, topo, extension )
     files = glob.glob( fname )
     for f in files:
-        p=f.find("jet.")
-        masses = tuple(map(int,map(float,f[p+4:].split("_"))))
+        f = f.replace( dirname, "" )
+        f = f.replace( topo+"_", "" )
+        f = f.replace( "."+extension, "" )
+        p1 = f.find(".")
+        f = f[:p1]
+        masses = tuple(map(int,map(float,f.split("_"))))
         ret.append ( masses )
     return ret
 
@@ -174,7 +250,69 @@ def nRequiredMasses(topo):
     return len(M)
 
 if __name__ == "__main__":
+    print ( getListOfMasses ( "T2tt", True, 8 ) )
+    """
     ms = "[(200,400,50.),(200,400.,50),(150.,440.,50)]"
     masses = parseMasses ( ms, mingap13=0., mingap2=0. )
     print ( "masses", masses )
     print ( nRequiredMasses("T5ZZ") )
+    """
+
+def clean ():
+    """ do the usual cleaning, but consider only files older than 2 hrs """
+    t = tempDir()
+    b = baseDir()
+    files = []
+    for i in [ "mg5cmd*", "mg5proc*", "tmp*slha", "run*card" ]:
+        files += glob.glob ( "%s/%s" % ( t, i ) )
+    for i in [ "recast*", "ma5cmd*" ]:
+        files += glob.glob ( "%s/ma5/%s" % ( b, i ) )
+    files += glob.glob ( "%s/.lock*" % b )
+    files += glob.glob ( "%s/../clip/_B*sh" % b )
+    files += glob.glob ( "/users/wolfgan.waltenberger/B*sh" )
+    files += glob.glob ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm*out" )
+    cleaned = []
+    for f in files:
+        dt = getAge ( f )
+        if dt < 3.:
+            continue
+        subprocess.getoutput ( "rm -rf %s" % f )
+        cleaned.append ( f )
+    print ( "Cleaned %d temporary files" % len(cleaned) )
+    checkEventFiles()
+
+def checkEventFiles():
+    """ look at the event files, remove all that are old and cannot be opened """
+    files = glob.glob("mg5results/T*hepmc.gz")
+    for f in files:
+        dt = getAge ( f )
+        if dt < 5.:
+            continue
+        subprocess.getoutput ( "rm %s" % f )
+        print ( "%s: %.2fh" % ( f, dt ) )
+
+def cleanAll():
+    clean()
+    b = baseDir()
+    t = tempDir()
+    files = []
+    files += glob.glob ( "%s/*" % t )
+    files += glob.glob ( "%s/T*jet*" % b )
+    files += glob.glob ( "%s/ma5_T*jet*" % b )
+    for i in [ "mg5cmd*", "mg5proc*", "tmp*slha", "run*card" ]:
+        files += glob.glob ( "%s/%s" % ( t, i ) )
+    for i in [ "recast*", "ma5cmd*" ]:
+        files += glob.glob ( "%s/ma5/%s" % ( b, i ) )
+    files += glob.glob ( "%s/.lock*" % b )
+    files += glob.glob ( "%s/../clip/_B*sh" % b )
+    files += glob.glob ( "/users/wolfgan.waltenberger/B*sh" )
+    files += glob.glob ( "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm*out" )
+    cleaned = []
+    for f in files:
+        dt = getAge ( f )
+        #if dt < 0.:
+        #    continue
+        subprocess.getoutput ( "rm -rf %s" % f )
+        cleaned.append ( f )
+    print ( "Cleaned %d temporary files" % len(cleaned) )
+

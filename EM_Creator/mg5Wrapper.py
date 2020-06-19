@@ -8,8 +8,8 @@
 .. moduleauthor:: Wolfgang Waltenberger <wolfgang.waltenberger@gmail.com>
 """
 
-import os, sys, colorama, subprocess, shutil, tempfile, time, socket
-import multiprocessing, signal, glob
+import os, sys, colorama, subprocess, shutil, tempfile, time, socket, random
+import multiprocessing, signal, glob, io
 import bakeryHelpers
 
 __locks__ = set()
@@ -17,7 +17,7 @@ __locks__ = set()
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C, remove all locks!')
     for l in __locks__:
-        cmd = "rm -f %s" % l 
+        cmd = "rm -f %s" % l
         subprocess.getoutput ( cmd )
         print ( cmd )
     sys.exit(0)
@@ -25,20 +25,28 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 class MG5Wrapper:
-    def __init__ ( self, nevents, topo, njets, keep, rerun, ma5, ver="2_6_5" ):
+    def __init__ ( self, nevents, topo, njets, keep, rerun, ma5,
+                   ignore_locks, sqrts=13, ver="2_6_5" ):
         """
         :param ver: version of mg5
         """
-        self.cwd = os.getcwd()+"/"
+        self.basedir = bakeryHelpers.baseDir()
+        os.chdir ( self.basedir )
+        self.tempdir = bakeryHelpers.tempDir()
+        self.resultsdir = self.basedir + "/mg5results"
+        self.ma5results = self.basedir + "/results"
+        self.mkdir ( self.resultsdir )
+        self.ignore_locks = ignore_locks
         self.topo = topo
         self.keep = keep
         self.rerun = rerun
         self.ma5 = ma5
         self.njets = njets
-        self.mg5install = "%s/mg5" % self.cwd
+        self.mg5install = "%s/mg5" % self.basedir
         self.logfile = None
         self.logfile2 = None
         self.tempf = None
+        self.sqrts = sqrts
         self.pyver = 2 ## python version
         if "py3" in ver:
             self.pyver = 3
@@ -50,13 +58,15 @@ class MG5Wrapper:
             self.info ( "cannot find mg5 installation at %s" % self.mg5install )
             self.exe ( "mg5/make.py" )
         self.determineMG5Version()
-        self.templateDir = self.cwd + "templates/"
-        self.mgParams = { 'EBEAM': '6500', # Single Beam Energy expressed in GeV
+        self.templateDir = self.basedir + "/templates/"
+        ebeam = str(int(self.sqrts*1000/2))
+        self.mgParams = { 'EBEAM': ebeam, # Single Beam Energy expressed in GeV
                           'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5',
-                          'PDFLABEL': 'cteq6l1', 'XQCUT': '50' } # , 'qcut': '90' }
-        self.mgParams["XQCUT"]="M[0]/4" ## xqcut for gluino-gluino production: mgluino/4
-        self.correctPythia8CfgFile()
-        self.rmLocksOlderThan ( 1 ) ## remove locks older than 1 hour
+                          'PDFLABEL': "'nn23lo1'", 'XQCUT': 'M[0]/4'
+                          ## xqcut for gluino-gluino production: mgluino/4
+        }#,'qcut': '90'}
+        # self.correctPythia8CfgFile()
+        self.rmLocksOlderThan ( 3 ) ## remove locks older than 3 hours
         self.info ( "initialised" )
 
     def determineMG5Version ( self ):
@@ -80,6 +90,8 @@ class MG5Wrapper:
         """ a simple method intended to check if we have to add SysCalc:qCutList=90
             to the pythia8 configuration """
         ## qcut: SysCalc:qCutList in mg5/Template/LO/Cards/pythia8_card_default.dat
+        self.msg ( "FIXME we shouldnt be using this!" )
+        return
         self.msg ( "now checking if pythia8 config needs correction" )
         needsCorrection = True
         cfgFile = "mg5/Template/LO/Cards/pythia8_card_default.dat"
@@ -98,9 +110,9 @@ class MG5Wrapper:
         if "2_6" in self.ver: # only needed for 2_7 i think
             needsCorrection = False
         if not needsCorrection:
-            self.msg ( "pythia8 config  does not need correction" )
+            self.msg ( "%s does not need correction" % cfgFile )
             return
-        self.msg ( "seems like pythia8 cfg needs qCutList added" )
+        self.msg ( "seems like %s needs qCutList added" % cfgFile )
         f = open ( cfgFile, "at" )
         f.write ( "SysCalc:qCutList = 90.\n" )
         f.close()
@@ -127,8 +139,8 @@ class MG5Wrapper:
         """ this method writes the pythia card for within mg5.
         :param process: fixme (eg T2_1jet)
         """
-        self.mkdir ( "temp" )
-        self.runcard = tempfile.mktemp ( prefix="run", suffix=".card", dir="temp/" )
+        self.runcard = tempfile.mktemp ( prefix="run", suffix=".card",
+                                         dir=self.tempdir )
         # filename = "%s/Cards/run_card.dat" % process
         self.debug ( "writing pythia run card %s" % self.runcard )
         templatefile = self.templateDir+'/template_run_card.dat'
@@ -144,7 +156,10 @@ class MG5Wrapper:
                 if k in line:
                     vold = v
                     if "M[0]" in v:
-                        v = v.replace("M[0]",str(masses[0]))
+                        m0 = masses[0]
+                        if bakeryHelpers.isAssociateProduction ( self.topo ):
+                            m0 = min( masses[0], masses[1] )
+                        v = v.replace("M[0]",str(m0))
                         v = str(eval (v ))
                     line = line.replace("@@%s@@" % k,v)
             g.write ( line )
@@ -156,8 +171,7 @@ class MG5Wrapper:
         """ this method writes the commands file for mg5.
         :param process: fixme (eg T2tt_1jet)
         """
-        self.mkdir ( "temp" )
-        self.commandfile = tempfile.mktemp ( prefix="mg5cmd", dir="temp/" )
+        self.commandfile = tempfile.mktemp ( prefix="mg5cmd", dir=self.tempdir )
         f = open(self.commandfile,'w')
         f.write('set automatic_html_opening False\n' )
         f.write('launch %s\n' % bakeryHelpers.dirName(process,masses))
@@ -175,11 +189,10 @@ class MG5Wrapper:
     def pluginMasses( self, slhaTemplate, masses ):
         """ take the template slha file and plug in
             masses """
-        f=open( self.cwd+slhaTemplate,"r")
+        f=open( self.basedir+"/"+slhaTemplate,"r")
         lines=f.readlines()
         f.close()
-        self.mkdir ( "temp" )
-        self.slhafile = tempfile.mktemp(suffix=".slha",dir="temp/" )
+        self.slhafile = tempfile.mktemp(suffix=".slha",dir=self.tempdir )
         f=open( self.slhafile,"w")
         n=len(masses)
         for line in lines:
@@ -188,25 +201,41 @@ class MG5Wrapper:
             f.write ( line )
         f.close()
 
+    def lockfile ( self, masses ):
+        ret = "%s/.lock%d_%s_%s" % ( self.basedir, self.sqrts, str(masses).replace(" ","").replace("(","").replace(")","").replace(",","_"), self.topo )
+        return ret
+
     def lock ( self, masses ):
         """ lock for topo and masses, to make sure processes dont
             overwrite each other
-        :returns: False if there is already a lock on it
+        :returns: True if there is already a lock on it
         """
-        filename = ".lock%s%s" % ( str(masses).replace(" ","").replace("(","").replace(")","").replace(",","_"), self.topo )
+        if self.ignore_locks:
+            return False
+        filename = self.lockfile( masses )
         __locks__.add ( filename )
         if os.path.exists ( filename ):
             return True
-        with open ( filename, "wt" ) as f:
-            f.write ( time.asctime()+","+socket.gethostname()+"\n" )
-            f.close()
-        return False
+        for i in range(5):
+            try:
+                with open ( filename, "wt" ) as f:
+                    f.write ( time.asctime()+","+socket.gethostname()+"\n" )
+                    f.close()
+                return False
+            except FileNotFoundError as e:
+                t0 = random.uniform(2.,4.*i)
+                self.msg ( "FileNotFoundError #%d %s. Sleep for %.1fs" % ( i, e, t0 ) )
+                time.sleep( t0 )
+        return True ## pretend there is a lock
 
     def unlock ( self, masses ):
         """ unlock for topo and masses, to make sure processes dont
             overwrite each other """
-        filename = ".lock%s%s" % ( str(masses).replace(" ","").replace("(","").replace(")","").replace(",","_"), self.topo )
-        __locks__.remove ( filename )
+        if self.ignore_locks:
+            return
+        filename = self.lockfile( masses )
+        if filename in __locks__:
+            __locks__.remove ( filename )
         if os.path.exists ( filename ):
             cmd = "rm -f %s" % filename
             subprocess.getoutput ( cmd )
@@ -215,6 +244,14 @@ class MG5Wrapper:
         """ Run MG5 for topo, with njets additional ISR jets, giving
         also the masses as a list.
         """
+        destsaffile = bakeryHelpers.safFile ( self.ma5results, self.topo, masses, 
+                                              self.sqrts )
+        destdatfile = bakeryHelpers.datFile ( self.ma5results, self.topo, masses, 
+                                              self.sqrts )
+        if os.path.exists ( destsaffile ) and os.path.exists ( destdatfile ):
+            self.info ( "summary files %s,%s exist. skip point." % \
+                        ( destsaffile, destdatfile ) )
+            return
         locked = self.lock ( masses )
         if locked:
             self.info ( "%s[%s] is locked. Skip it" % ( masses, self.topo ) )
@@ -252,9 +289,11 @@ class MG5Wrapper:
             spid = " in job #%d" % pid
         self.announce ( "starting MA5 on %s[%s] at %s%s" % ( str(masses), self.topo, time.asctime(), spid ) )
         from ma5Wrapper import MA5Wrapper
-        ma5 = MA5Wrapper ( self.topo, self.njets, self.rerun, analyses, self.keep )
+        ma5 = MA5Wrapper ( self.topo, self.njets, self.rerun, analyses, self.keep,
+                           self.sqrts )
         self.debug ( "now call ma5Wrapper" )
-        ret = ma5.run ( masses, pid )
+        hepmcfile = self.hepmcFileName ( masses )
+        ret = ma5.run ( masses, hepmcfile, pid )
         msg = "finished MG5+MA5"
         if ret > 0:
             msg = "nothing needed to be done"
@@ -290,8 +329,15 @@ class MG5Wrapper:
         sm = ""
         if masses != "":
             sm="[%s]" % str(masses)
-        self.msg ( "now execute for %s%s: %s" % (self.topo, sm, cmd[:70] ) )
-        ret = subprocess.getoutput ( cmd )
+        self.msg ( "now execute for %s%s: %s" % (self.topo, sm, cmd[:] ) )
+        pipe = subprocess.Popen ( cmd, shell=True,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE )
+        ret=""
+        for line in io.TextIOWrapper(pipe.stdout, encoding="latin1"):
+            ret+=line
+        for line in io.TextIOWrapper(pipe.stderr, encoding="latin1"):
+            ret+=line
         if len(ret)==0:
             return
         maxLength=200
@@ -331,8 +377,7 @@ class MG5Wrapper:
         f=open(templatefile,"r")
         lines=f.readlines()
         f.close()
-        self.mkdir("temp")
-        self.tempf = tempfile.mktemp(prefix="mg5proc",dir="temp/")
+        self.tempf = tempfile.mktemp(prefix="mg5proc",dir=self.tempdir )
         f=open(self.tempf,"w")
         f.write ( "import model_v4 mssm\n" )
         for line in lines:
@@ -348,8 +393,10 @@ class MG5Wrapper:
             subprocess.getoutput ( "rm -rf %s" % Dir )
         self.info ( "run mg5 for %s[%s]: %s" % ( masses, self.topo, self.tempf ) )
         self.logfile = tempfile.mktemp ()
-        cmd = "python%d %s %s 2>&1 | tee %s" % \
-              ( self.pyver, self.executable, self.tempf, self.logfile )
+        os.mkdir ( Dir )
+        shutil.move ( self.tempf, Dir + "/mg5proc" )
+        cmd = "python%d %s %s/mg5proc 2>&1 | tee %s" % \
+              ( self.pyver, self.executable, Dir, self.logfile )
         self.exe ( cmd, masses )
         ## copy slha file
         if not os.path.exists ( Dir+"/Cards" ):
@@ -361,13 +408,18 @@ class MG5Wrapper:
             return False
         shutil.move(slhaFile, Dir+'/Cards/param_card.dat' )
         shutil.move(self.runcard, Dir+'/Cards/run_card.dat' )
+        shutil.move(self.commandfile, Dir+"/mg5cmd" )
         if (os.path.isdir(Dir+'/Events/run_01')):
             shutil.rmtree(Dir+'/Events/run_01')
         self.logfile2 = tempfile.mktemp ()
-        cmd = "python%d %s %s 2>&1 | tee %s" % \
-               ( self.pyver, self.executable, self.commandfile,
-                                                self.logfile2 )
+        cmd = "python%d %s %s/mg5cmd 2>&1 | tee %s" % \
+               ( self.pyver, self.executable, Dir, self.logfile2 )
         self.exe ( cmd, masses )
+        hepmcfile = self.orighepmcFileName( masses )
+        if self.hasorigHEPMC ( masses ):
+            dest = self.hepmcFileName ( masses )
+            self.msg ( "moving", hepmcfile, "to", dest )
+            shutil.move ( hepmcfile, dest )
         self.clean( Dir )
         return True
 
@@ -380,18 +432,41 @@ class MG5Wrapper:
         self.info ( "cleaning up %s, %s, %s, %s" % \
                 ( self.commandfile, self.tempf, self.logfile, self.logfile2 ) )
         self.unlink ( ".lock*" )
-        self.unlink ( self.commandfile )
-        self.unlink ( self.tempf )
+        #self.unlink ( self.commandfile )
+        #self.unlink ( self.tempf )
         self.unlink ( self.logfile )
         self.unlink ( self.logfile2 )
         if Dir != None:
-            cmd = "rm -rf %s/HTML %s/SubProcesses %s/Source %s/bin %s/lib %s/madevent.tar.gz %s/Events/run_01/tag_1_pythia8.log %s/Events/run_01/unweighted_events.lhe.gz" % ( tuple([Dir]*8) )
+            cmd = "rm -rf %s" % Dir
             o = subprocess.getoutput ( cmd )
             self.info ( "clean up %s: %s" % ( cmd, o ) )
 
+    def orighepmcFileName ( self, masses ):
+        """ return the hepmc file name *before* moving """
+        hepmcfile = bakeryHelpers.dirName( self.process,masses)+\
+                            "/Events/run_01/tag_1_pythia8_events.hepmc.gz"
+        return hepmcfile
+
+    def hepmcFileName ( self, masses ):
+        """ return the hepmc file name at final destination """
+        smasses = "_".join(map(str,masses))
+        dest = "%s/%s_%s.%d.hepmc.gz" % \
+               ( self.resultsdir, self.topo, smasses, self.sqrts )
+        return dest
+
+    def hasorigHEPMC ( self, masses ):
+        """ does it have a valid HEPMC file? if yes, then skip the point """
+        hepmcfile = self.orighepmcFileName( masses )
+        if not os.path.exists ( hepmcfile ):
+            return False
+        if os.stat ( hepmcfile ).st_size < 100:
+            ## too small to be real
+            return False
+        return True
+
     def hasHEPMC ( self, masses ):
         """ does it have a valid HEPMC file? if yes, then skip the point """
-        hepmcfile = bakeryHelpers.dirName(self.process,masses)+"/Events/run_01/tag_1_pythia8_events.hepmc.gz"
+        hepmcfile = self.hepmcFileName( masses )
         if not os.path.exists ( hepmcfile ):
             return False
         if os.stat ( hepmcfile ).st_size < 100:
@@ -406,6 +481,8 @@ def main():
                              type=int, default=10000 )
     argparser.add_argument ( '-j', '--njets', help='number of ISR jets [1]',
                              type=int, default=1 )
+    argparser.add_argument ( '--sqrts', help='sqrts [13]',
+                             type=int, default=13 )
     argparser.add_argument ( '-p', '--nprocesses', help='number of process to run in parallel. 0 means 1 per CPU [1]',
                              type=int, default=1 )
     argparser.add_argument ( '-t', '--topo', help='topology [T2]',
@@ -446,11 +523,16 @@ def main():
                              type=float, default=None )
     argparser.add_argument ( '-r', '--rerun', help='force rerun, even if there is a summary file already',
                              action="store_true" )
+    argparser.add_argument ( '--ignore_locks', help='ignore any locks. for debugging only.',
+                             action="store_true" )
     #mdefault = "(2000,1000,10),(2000,1000,10)"
     mdefault = "(1000,2000,50),'half',(1000,2000,50)"
     argparser.add_argument ( '-m', '--masses', help='mass ranges, comma separated list of tuples. One tuple gives the range for one mass parameter, as (m_lowest, m_highest, delta_m). m_highest and delta_m may be omitted. Keyword "half" (add quotes) is accepted for intermediate masses. [%s]' % mdefault,
                              type=str, default=mdefault )
     args = argparser.parse_args()
+    if args.topo in [ "T1", "T2" ] and args.mingap1 == None and not args.list_analyses and not args.clean and not args.clean_all:
+        print ( "[mg5Wrapper] for topo %s we set mingap1 to 1." % args.topo )
+        args.mingap1 = 1.
     if args.list_analyses:
         bakeryHelpers.listAnalyses()
         sys.exit()
@@ -461,14 +543,16 @@ def main():
             ana = bakeryHelpers.ma5AnaNameToSModelSName ( ana )
             printProdStats.main( ana )
         sys.exit()
-    if args.clean:
-        subprocess.getoutput ( "rm -rf mg5cmd* mg5proc* tmp*slha run*card" )
-        print ( "Cleaned temporary files." )
-        sys.exit()
+
     if args.clean_all:
-        subprocess.getoutput ( "rm -rf temp/* mg5cmd* mg5proc* tmp*slha T*jet* run*card ma5/ANA_T* ma5_T* ma5.template/recast* ma5.template/ma5cmd*" )
-        print ( "Cleaned temporary files." )
+        bakeryHelpers.cleanAll()
         sys.exit()
+
+    if args.clean:
+        bakeryHelpers.clean()
+        sys.exit()
+
+
     hname = socket.gethostname()
     if hname.find(".")>0:
         hname=hname[:hname.find(".")]
@@ -488,7 +572,7 @@ def main():
         keepOrder=False
     masses = bakeryHelpers.parseMasses ( args.masses,
                                          mingap1=args.mingap1, maxgap1=args.maxgap1,
-                                         mingap2=args.mingap2, maxgap2=args.maxgap2, 
+                                         mingap2=args.mingap2, maxgap2=args.maxgap2,
                                          mingap13=args.mingap13, maxgap13=args.maxgap13 )
     import random
     random.shuffle ( masses )
@@ -498,7 +582,8 @@ def main():
                 ( len(masses[0]), nReqM, args.topo ) )
         sys.exit()
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
-    mg5 = MG5Wrapper( args.nevents, args.topo, args.njets, args.keep, args.rerun, args.ma5 )
+    mg5 = MG5Wrapper( args.nevents, args.topo, args.njets, args.keep, args.rerun, 
+                      args.ma5, args.ignore_locks, args.sqrts )
     # mg5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
     djobs = int(len(masses)/nprocesses)
 
@@ -516,13 +601,16 @@ def main():
         p = multiprocessing.Process(target=runChunk, args=(chunk,i))
         jobs.append ( p )
         p.start()
+    for j in jobs:
+        j.join()
     if args.bake:
         import emCreator
         from types import SimpleNamespace
         # analyses = "atlas_susy_2016_07"
         analyses = args.analyses
         args = SimpleNamespace ( masses="all", topo=args.topo, njets=args.njets, \
-                analyses = analyses, copy=args.copy, verbose=False )
+                analyses = analyses, copy=args.copy, keep=args.keep, sqrts=args.sqrts, 
+                verbose=False )
         emCreator.run ( args )
     with open("baking.log","a") as f:
         cmd = ""

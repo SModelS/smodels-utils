@@ -86,7 +86,7 @@ def produceLLHDScanScript ( pid1, pid2, force_rewrite, rundir ):
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/combinations/llhdscanner.py -R %s --draw --pid1 %d --pid2 %d\n" % ( rundir, codedir, pid1, pid2 ) )
+            f.write ("%s/combinations/llhdscanner.py -R %s --draw --pid1 %d --pid2 %d\n" % ( codedir, rundir, pid1, pid2 ) )
             f.close()
         os.chmod ( fname, 0o775 )
 
@@ -185,7 +185,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     script = "_L%s.sh" % pid
     with open ( script, "wt" ) as f:
         for line in lines:
-            f.write ( line.replace("@@PID@@",str(pid) ).line.replace("@@RUNDIR@@",rundir ) )
+            f.write ( line.replace("@@PID@@",str(pid)).replace("@@RUNDIR@@",rundir ) )
         f.close()
     produceLLHDScanScript ( pid, 1000022, rewrite, rundir )
     cmd += [ script ]
@@ -330,13 +330,14 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
     filename = tempfile.mktemp(prefix="_B",suffix=".sh",dir="")
     Dir = "%sclip/" % codedir
     print ( "creating script at %s/%s" % ( Dir, filename ) )
+    nprc = int ( math.ceil ( nproc * .5  ) )
     with open ( "%s/%s" % ( Dir, filename ), "wt" ) as f:
         for line in lines:
             args = recipe.replace("@","-")
             args += ' -m "%s"' % mass
             args += ' --analyses "%s"' % analyses
             args += ' -t %s' % topo
-            args += ' -p %d' % nproc
+            args += ' -p %d' % nprc
             f.write ( line.replace("@@ARGS@@", args ) )
         f.close()
     with open ( "run_bakery_template.sh", "rt" ) as f:
@@ -350,6 +351,8 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
     os.chmod( tmpfile, 0o755 ) # 1877 is 0o755
     os.chmod( Dir+filename, 0o755 ) # 1877 is 0o755
     cmd = [ "sbatch" ]
+    cmd += [ "--error", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out",
+             "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
     cmd += [ "--ntasks-per-node", str(nproc) ]
     cmd += [ tmpfile ]
     ram = 2
@@ -378,7 +381,13 @@ def queryStats ( ):
 
 def logCall ():
     f=open("slurm.log","at")
-    f.write ("[slurm.py] %s\n" % " ".join ( sys.argv ) )
+    args = ""
+    for i in sys.argv:
+        if " " in i or "," in i:
+            i = '"%s"' % i
+        args += i + " "
+    f.write ("[slurm.py] %s\n" % args.strip() )
+    # f.write ("[slurm.py] %s\n" % " ".join ( sys.argv ) )
     f.close()
 
 
@@ -396,6 +405,9 @@ def main():
     argparser.add_argument ( '-S', '--scan', nargs="?",
                     help='run the Z scanner on pid [SCAN], -1 means dont run, 0 means run on all unfrozen particles in hiscore.',
                     type=int, default=-1 )
+    argparser.add_argument ( '-B', '--nbakes', nargs="?",
+                    help='launch n identical jobs',
+                    type=int, default=1 )
     argparser.add_argument ( '-b', '--bake', nargs="?",
                     help='bake EM maps, with the given arguments, use "default" if unsure ["@n 10000 @a"]',
                     type=str, default="" )
@@ -473,8 +485,9 @@ def main():
         if args.mass == "default":
             # args.mass = "[(300,1099,25),'half',(200,999,25)]"
             args.mass = "[(50,4500,200),(50,4500,200),(0.)]"
-        bake ( args.bake, args.analyses, args.mass, args.topo, args.dry_run,
-               args.nprocesses, rundir )
+        for i in range(args.nbakes):
+            bake ( args.bake, args.analyses, args.mass, args.topo, args.dry_run,
+                   args.nprocesses, rundir )
     if args.clean:
         clean_dirs( rundir, clean_all = False )
         return
