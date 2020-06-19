@@ -28,7 +28,7 @@ try:
     from smodels.theory.auxiliaryFunctions import removeUnits
 except:
     from backwardCompatibility import removeUnits
-    
+
 
 #Set nice ROOT color palette for temperature plots:
 stops = [0.00, 0.34, 0.61, 0.84, 1.00]
@@ -43,7 +43,7 @@ TColor.CreateGradientColorTable(len(s), s, r, g, b, 999)
 gStyle.SetNumberContours(999)
 
 def clean ( obj ):
-    """ check for some issues with the exclusion line 
+    """ check for some issues with the exclusion line
     :param obj: the ROOT.TGraph
     """
     ret = obj.ReadObj()
@@ -399,7 +399,7 @@ def getXYFromSLHAFile ( slhafile, vPlot ):
     # print ( "[plottingFuncs] slhafile", slhafile )
     # print ( "[plottingFuncs] masses", masses )
     # print ( "[plottingFuncs] widths", widths )
-    varsDict = massPlane.getXYValues( masses, widths ) 
+    varsDict = massPlane.getXYValues( masses, widths )
     # print ( "[plottingFuncs] -> vars", varsDict )
     ## FIXME take into account axis
     return varsDict
@@ -413,7 +413,7 @@ def getGridPoints ( validationPlot ):
         txNameObj = None
         for ctr,txn in enumerate(dataset.txnameList):
             if txn.txName == validationPlot.txName:
-                txNameObj = dataset.txnameList[ctr] 
+                txNameObj = dataset.txnameList[ctr]
                 break
         if txNameObj == None:
             logger.info ( "no grid points: did not find txName" )
@@ -595,22 +595,22 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
     leg = TLegend( dx,0.82-0.040*nleg,0.35+dx,0.88)
     setOptions(leg)
     leg.SetTextSize(0.04)
-    if allowed.GetN()>0: 
+    if allowed.GetN()>0:
         base.Add(allowed, "P")
         leg.AddEntry ( allowed, "allowed", "P" )
-    if excluded.GetN()>0: 
+    if excluded.GetN()>0:
         base.Add(excluded, "P")
         leg.AddEntry ( excluded, "excluded", "P" )
-    if allowed_border.GetN()>0: 
+    if allowed_border.GetN()>0:
         base.Add(allowed_border, "P")
         leg.AddEntry(allowed_border, "allowed (but close)", "P")
-    if excluded_border.GetN()>0: 
+    if excluded_border.GetN()>0:
         base.Add(excluded_border, "P")
         leg.AddEntry(excluded_border, "excluded (but close)", "P")
-    if cond_violated.GetN()>0: 
+    if cond_violated.GetN()>0:
         base.Add(cond_violated, "P")
         leg.AddEntry( cond_violated, "condition violated", "P" )
-    if noresult.GetN()>0: 
+    if noresult.GetN()>0:
         base.Add(noresult, "P")
         leg.AddEntry( noresult, "no result", "P" )
     if official:
@@ -626,7 +626,7 @@ def createUglyPlot( validationPlot,silentMode=True, looseness = 1.2, extraInfo=F
             #i.Draw("LP SAME" )
             if ctr == 0:
                 leg.AddEntry ( i, "official exclusion", "L" )
-    if gridpoints.GetN()>0: 
+    if gridpoints.GetN()>0:
         base.Add(gridpoints, "P")
         leg.AddEntry(gridpoints, "%d SModelS grid points" % gridpoints.GetN(), "P")
     title = validationPlot.expRes.globalInfo.id + "_" \
@@ -797,7 +797,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
         # IPython.embed()
         if not "axes" in pt:
             ## try to get axes from slha file
-            pt["axes"] = getXYFromSLHAFile ( pt["slhafile"], validationPlot ) 
+            pt["axes"] = getXYFromSLHAFile ( pt["slhafile"], validationPlot )
         xvals = pt['axes']
         if xvals == None: ## happens when not on the plane I think
             continue
@@ -886,7 +886,7 @@ def createPrettyPlot( validationPlot,silentMode=True, preliminary=False,
             for i in range(n):
                 contour.GetPoint(i,x,y)
                 # print ( "y",y,rescaleWidth(y) )
-                contour.SetPoint(i,x,rescaleWidth(y) )
+                contour.SetPoint(i,x.value,rescaleWidth(y.value) )
 
     if silentMode: gROOT.SetBatch()
     setOptions(tgr, Type='allowed')

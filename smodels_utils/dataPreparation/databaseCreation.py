@@ -783,5 +783,3 @@ def removeRepeated(datalist,dataType=None):
 
 
 databaseCreator = DatabaseCreator()
-
-
