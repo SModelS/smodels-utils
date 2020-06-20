@@ -14,13 +14,13 @@ from plotHiscore import obtain
 
 class LlhdThread:
     """ one thread of the sweep """
-    def __init__ ( self, threadnr: int, rundir: str, 
+    def __init__ ( self, threadnr: int, rundir: str,
                    protomodel, pid1, pid2, mpid1, mpid2, nevents: int ):
         self.rundir = setup( rundir )
         self.threadnr = threadnr
         self.M = copy.deepcopy ( protomodel )
         self.M.createNewSLHAFileName ( prefix="lthrd%d_%d" % (threadnr, pid1 ) )
-        self.pid1 = pid1 
+        self.pid1 = pid1
         self.pid2 = pid2
         self.mpid1 = mpid1
         self.mpid2 = mpid2
@@ -36,7 +36,7 @@ class LlhdThread:
 
     def getPredictions ( self, recycle_xsecs = True ):
         """ get predictions, return likelihoods """
-        self.M.createSLHAFile( nevents = self.nevents, 
+        self.M.createSLHAFile( nevents = self.nevents,
                 recycle_xsecs = recycle_xsecs )
         sigmacut=.02*fb
         if max(self.M.masses)>1600:
@@ -52,7 +52,7 @@ class LlhdThread:
 
         ## now get the likelihoods
         llhds={}
-        predictions = P[0].predict ( self.M.currentSLHA, allpreds=True, 
+        predictions = P[0].predict ( self.M.currentSLHA, allpreds=True,
                                      llhdonly=True, sigmacut=sigmacut )
         for mu in numpy.arange(.4,1.8,.05):
             llhds[float(mu)] = self.getLikelihoods ( predictions, mu=mu )
@@ -63,12 +63,12 @@ class LlhdThread:
         llhds= {}
         for tp in predictions:
             name = "%s:%s:%s" % ( tp.analysisId(), tp.dataId(), ",".join ( [ i.txName for i in tp.txnames ] ) )
-            llhds[ name ] = tp.getLikelihood ( mu ) 
+            llhds[ name ] = tp.getLikelihood ( mu )
         return llhds
 
     def clean ( self ):
         """ clean up after the run """
-        cmd = "rm %s" % self.M.currentSLHA 
+        cmd = "rm %s" % self.M.currentSLHA
         subprocess.getoutput ( cmd )
 
     def run ( self, rpid1, rpid2 ):
@@ -132,7 +132,7 @@ class LlhdThread:
                 masspoints.append ( (m1,m2,llhds,robs) )
         return masspoints
 
-def runThread ( threadid: int, rundir: str, M, pid1, pid2, mpid1, 
+def runThread ( threadid: int, rundir: str, M, pid1, pid2, mpid1,
                 mpid2, nevents: int, rpid1, rpid2, return_dict ):
     """ the method needed for parallelization to work """
     thread = LlhdThread ( threadid, rundir, M, pid1, pid2, mpid1, mpid2, nevents )
@@ -171,7 +171,7 @@ class LlhdScanner:
         return "%d,%d ... %d" % ( r[0], r[1], r[-1] )
 
     def getMassPoints ( self, rpid1, rpid2 ):
-        """ run for the given mass points 
+        """ run for the given mass points
         :param rpid1: list of masses for pid1
         :param rpid2: list of masses for pid2
         :returns: masspoints
@@ -190,7 +190,7 @@ class LlhdScanner:
             p = multiprocessing.Process ( target = runThread, args = ( ctr, self.rundir, self.M, self.pid1, self.pid2, self.mpid1, self.mpid2, self.nevents, chunk, rpid2, return_dict ) )
             p.start()
             processes.append ( p )
-        
+
         for p in processes:
             p.join()
         masspoints = []
@@ -208,9 +208,9 @@ class LlhdScanner:
         #    print ( "mass point", m[0], ",", m[1], ": nres", len(m[2]) )
         return masspoints
 
-    def scanLikelihoodFor ( self, min1, max1, dm1, min2, max2, dm2, 
+    def scanLikelihoodFor ( self, min1, max1, dm1, min2, max2, dm2,
                             nevents, topo, output ):
-        """ plot the likelihoods as a function of pid1 and pid2 
+        """ plot the likelihoods as a function of pid1 and pid2
         :param output: prefix for output file [mp]
         """
         self.nevents = nevents
@@ -233,7 +233,7 @@ class LlhdScanner:
         self.M.initializePredictor()
         P[0].filterForTopos ( topo )
         self.M.walkerid = 0
-        
+
         thread0 = LlhdThread ( 0, self.rundir, self.M, self.pid1, self.pid2, \
                                self.mpid1, self.mpid2, self.nevents )
         llhds,robs = thread0.getPredictions ( False )
@@ -269,8 +269,10 @@ class LlhdScanner:
                  1000001:  250., 1000002: 250., 1000003: 250., 1000004: 250. }
         maxs = { 1000005: 1500., 1000006: 1460., 2000006: 1260., 1000021: 2351., \
                  1000001: 2051., 1000002: 2051., 1000003: 2051., 1000004: 2051. }
-        dm   = { 1000005:   16., 1000006:   16., 2000006:   16., 1000021:  20., \
-                 1000001:   20., 1000002:   20., 1000003:   20., 1000004:  20.  }
+        #dm   = { 1000005:   16., 1000006:   16., 2000006:   16., 1000021:  20., \
+        #         1000001:   20., 1000002:   20., 1000003:   20., 1000004:  20.  }
+        dm   = { 1000005:   10., 1000006:   10., 2000006:   10., 1000021: 15., \
+                 1000001:   12., 1000002:   12., 1000003:   12., 1000004: 12.  }
         topo = { 1000005: "T2bb",1000006: "T2tt", 2000006: "T2tt", 1000021: "T1", \
                  1000001: "T2",  1000002: "T2", 1000003: "T2", 1000004: "T2" }
         ### make the LSP scan depend on the mother
@@ -278,8 +280,10 @@ class LlhdScanner:
                     1000001:    5., 1000002: 5., 1000003: 5., 1000004: 5. }
         LSPmaxs = { 1000005:  800., 1000006: 900., 2000006:  800., 1000021: 1800., \
                     1000001: 1700., 1000002: 1700., 1000003: 1700., 1000004: 1700. }
-        LSPdm   = { 1000005:   12., 1000006:  14., 2000006:  14., 1000021: 14., \
-                    1000001:   12., 1000002:  12., 1000003:  12., 1000004: 12. }
+        #LSPdm   = { 1000005:   12., 1000006:  14., 2000006:  14., 1000021: 14., \
+        #           1000001:   12., 1000002:  12., 1000003:  12., 1000004: 12. }
+        LSPdm   = { 1000005: 10., 1000006: 10., 2000006: 10., 1000021: 15., \
+                    1000001: 10., 1000002: 10., 1000003: 10., 1000004: 10. }
         if not args.pid1 in mins:
             print ( "[llhdscanner] asked for defaults for %d, but none defined." % args.pid1 )
             return args
@@ -340,8 +344,8 @@ def main ():
             help='override the default rundir [None]',
             type=str, default=None )
     argparser.add_argument ( '-e', '--nevents',
-            help='number of events [50000]',
-            type=int, default=50000 )
+            help='number of events [100000]',
+            type=int, default=100000 )
     argparser.add_argument ( '-p', '--picklefile',
             help='pickle file to draw from [<rundir>/hiscore.pcl]',
             type=str, default="default" )
@@ -364,7 +368,7 @@ def main ():
     protomodel = obtain ( args.number, args.picklefile )
     scanner = LlhdScanner( protomodel, args.pid1, args.pid2, nproc, args.rundir )
     args = scanner.overrideWithDefaults ( args )
-    scanner.scanLikelihoodFor ( args.min1, args.max1, args.deltam1, 
+    scanner.scanLikelihoodFor ( args.min1, args.max1, args.deltam1,
                                 args.min2, args.max2, args.deltam2, \
                                 args.nevents, args.topo, args.output )
     if args.draw:
@@ -378,6 +382,6 @@ def main ():
         plot = plotLlhds.LlhdPlot ( args.pid1, args.pid2, verbose, copy, max_anas,
                                    interactive, drawtimestamp, compress, rundir )
         plot.plot()
-        
+
 if __name__ == "__main__":
     main()

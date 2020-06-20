@@ -267,6 +267,10 @@ def clean ():
         files += glob.glob ( "%s/%s" % ( t, i ) )
     for i in [ "recast*", "ma5cmd*" ]:
         files += glob.glob ( "%s/ma5/%s" % ( b, i ) )
+    for i in [ "ma5_T*" ]:
+        files += glob.glob ( "%s/%s" % ( b, i ) )
+    for i in [ "T*jet.*" ]:
+        files += glob.glob ( "%s/%s" % ( b, i ) )
     files += glob.glob ( "%s/.lock*" % b )
     files += glob.glob ( "%s/../clip/_B*sh" % b )
     files += glob.glob ( "/users/wolfgan.waltenberger/B*sh" )
@@ -274,7 +278,7 @@ def clean ():
     cleaned = []
     for f in files:
         dt = getAge ( f )
-        if dt < 3.:
+        if dt < 5.:
             continue
         subprocess.getoutput ( "rm -rf %s" % f )
         cleaned.append ( f )
