@@ -639,8 +639,14 @@ def getPIDsOfTPred ( tpred, ret, integrateDataType=True, integrateSRs=True ):
                         ret[apid].add ( name )
     return ret
 
-def plotRuler( protomodel, verbosity ):
-    print ( "[plotHiscore] now draw ruler.png" )
+def plotRuler( protomodel, verbosity, horizontal ):
+    """ plot the ruler plot, given protomodel.
+    :param horizontal: plot horizontal ruler plot, if true. Else, vertical.
+    """
+    fname = "ruler.png"
+    if horizontal:
+        fname = "horizontal.png"
+    print ( "[plotHiscore] now draw %s" % fname )
     resultsForPIDs = {}
     for tpred in protomodel.bestCombo:
         resultsForPIDs =  getPIDsOfTPred ( tpred, resultsForPIDs )
@@ -654,9 +660,15 @@ def plotRuler( protomodel, verbosity ):
         print ( '[plotHiscore] ../smodels_utils/plotting/rulerPlotter.py -o ruler.png --hasResultsFor "%s" %s' % \
                 ( str(resultsFor), protomodel.currentSLHA ) )
 
-    rulerPlotter.drawVertical ( protomodel.currentSLHA, "ruler.png", Range=(None,None),
-                        mergesquark = False,
-                        hasResultsFor = resultsFor )
+    if horizontal:
+        plotter = rulerPlotter.RulerPlot ( protomodel.currentSLHA, fname, 
+                                           Range=(None, None), mergesquark = False,
+                                           interactive = False,
+                                           hasResultsFor = resultsFor )
+        plotter.draw()
+    else:
+        rulerPlotter.drawVertical ( protomodel.currentSLHA, fname, 
+                Range=(None,None), mergesquark = False, hasResultsFor = resultsFor )
 
 def plotDecays ( protomodel, verbosity, outfile="decays.png" ):
     print ( "[plotHiscore] now draw %s" % outfile )
@@ -699,8 +711,11 @@ def plot ( number, verbosity, picklefile, options, dbpath ):
             options[i]=True
 
     plotruler = options["ruler"]
+    horizontal = False
+    if "horizontal" in options and options["horizontal"]:
+        horizontal = True
     if plotruler:
-        plotRuler ( protomodel, verbosity )
+        plotRuler ( protomodel, verbosity, horizontal )
     plotdecays = options["decays"]
     if plotdecays:
         plotDecays ( protomodel, verbosity )
@@ -737,7 +752,8 @@ def runPlotting ( args ):
 
     options = { "ruler": args.ruler, "decays": args.decays,
                 "predictions": args.predictions, "html": args.html,
-                "keep_tex": args.keep, "tex": args.tex }
+                "keep_tex": args.keep, "tex": args.tex,
+                "horizontal": args.horizontal }
 
     plot ( args.number, args.verbosity, args.picklefile, options, args.dbpath )
     if upload is None:
@@ -836,6 +852,9 @@ def main ():
             action="store_true" )
     argparser.add_argument ( '-k', '--keep',
             help='keep latex files',
+            action="store_true" )
+    argparser.add_argument ( '--horizontal',
+            help='horizontal, not vertical ruler plot?',
             action="store_true" )
     argparser.add_argument ( '-u', '--upload',
             help='upload to one of the following destinations: none, gpu, github, anomaly, latest, interesting [none]. run --destinations to learn more',
