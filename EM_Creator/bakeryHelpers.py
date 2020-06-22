@@ -264,13 +264,17 @@ def clean ():
     b = baseDir()
     files = []
     for i in [ "mg5cmd*", "mg5proc*", "tmp*slha", "run*card" ]:
-        files += glob.glob ( "%s/%s" % ( t, i ) )
+        pattern = "%s/%s" % ( t, i ) 
+        files += glob.glob ( pattern )
     for i in [ "recast*", "ma5cmd*" ]:
-        files += glob.glob ( "%s/ma5/%s" % ( b, i ) )
+        pattern = "%s/ma5/%s" % ( b, i )
+        files += glob.glob ( pattern )
     for i in [ "ma5_T*" ]:
-        files += glob.glob ( "%s/%s" % ( b, i ) )
+        pattern = "%s/%s" % ( b, i )
+        files += glob.glob ( pattern )
     for i in [ "T*jet.*" ]:
-        files += glob.glob ( "%s/%s" % ( b, i ) )
+        pattern = "%s/%s" % ( b, i )
+        files += glob.glob ( pattern )
     files += glob.glob ( "%s/.lock*" % b )
     files += glob.glob ( "%s/../clip/_B*sh" % b )
     files += glob.glob ( "/users/wolfgan.waltenberger/B*sh" )

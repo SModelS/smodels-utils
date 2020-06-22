@@ -30,6 +30,8 @@ class MA5Wrapper:
         if not os.path.exists ( self.ma5results ):
             subprocess.getoutput ( "mkdir %s" % self.ma5results )
         self.ma5install = "%s/ma5/" % self.basedir
+        if abs ( sqrts - 8 ) < .1:
+            self.ma5install = "%s/ma5.8tev/" % self.basedir
         self.ver = ver
         if not os.path.isdir ( self.ma5install ):
             self.error ( "ma5 install is missing??" )
@@ -37,7 +39,7 @@ class MA5Wrapper:
         self.executable = "bin/ma5"
         if not os.path.exists ( self.ma5install + self.executable ):
             self.info ( "cannot find ma5 installation at %s" % self.ma5install )
-            self.exe ( "ma5/make.py" )
+            self.exe ( "%s/make.py" % self.ma5install )
         self.templateDir = "%s/templates/" % self.basedir
         # self.info ( "initialised" )
 
@@ -148,13 +150,9 @@ class MA5Wrapper:
         self.commandfile = tempfile.mktemp ( prefix="ma5cmd", dir=self.ma5install )
         self.teefile = tempfile.mktemp ( prefix="ma5", suffix=".run", dir="/tmp" )
         process = "%s_%djet" % ( self.topo, self.njets )
-        #dirname = bakeryHelpers.dirName ( process, masses )
         hasAllInfo = self.checkForSummaryFile ( masses )
         if hasAllInfo:
             return 1
-        # summaryfile = "ma5/ANA_%s/Output/CLs_output_summary.dat" % dirname
-        #hepmcfile = "%s/Events/run_01/tag_1_pythia8_events.hepmc.gz" % Dir
-        #hepmcfile = os.path.abspath ( hepmcfile )
         if not os.path.exists ( hepmcfile ):
             self.error ( "%scannot find hepmc file %s" % ( spid, hepmcfile ) )
             p = hepmcfile.find("Events")
@@ -171,8 +169,8 @@ class MA5Wrapper:
         Dir = bakeryHelpers.dirName ( process, masses )
         tempdir = "%s/ma5_%s" % ( self.basedir, Dir )
         a = subprocess.getoutput ( "mkdir %s" % tempdir )
-        a = subprocess.getoutput ( "cp -r %s/ma5/bin %s/ma5/madanalysis %s/ma5/tools %s" % \
-                                   ( self.basedir, self.basedir, self.basedir, tempdir ) )
+        a = subprocess.getoutput ( "cp -r %s/bin %s/madanalysis %s/tools %s" % \
+                                   ( self.ma5install, self.ma5install, self.ma5install, tempdir ) )
         a = subprocess.getoutput ( "mv %s %s/recast" % ( self.recastfile, tempdir ) )
         # a = subprocess.getoutput ( "cp -r %s %s" % ( self.recastfile, tempdir ) )
         a = subprocess.getoutput ( "mv %s %s/ma5cmd" % \
