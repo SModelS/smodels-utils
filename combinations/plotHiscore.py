@@ -248,6 +248,13 @@ def writeRawNumbersLatex ( protomodel ):
                       ( did, obs, eBG, bgErr, S, particles ) )
         if dtype == "upperLimit":
             S = "?"
+            llhd,chi2 = tp.likelihoodFromLimits( expected=False, chi2also=True )
+            eUL = tp.expectedUL.asNumber(fb)
+            oUL = tp.upperLimit.asNumber(fb)
+            sigma_exp = eUL / 1.96 # the expected scale, sigma
+            Z = ( oUL - eUL ) / sigma_exp
+            # Z = math.sqrt ( chi2 )
+            S = "%.1f $\sigma$" % Z
             pids = set()
             for prod in tp.PIDs:
                 for branch in prod:
