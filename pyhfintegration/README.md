@@ -139,12 +139,11 @@ For ATLAS-SUSY-2018-31, there are two cases :
 - [x] change datasetObj.py:getCombinedUpperLimitFor
 - [x] add best expected combination in datasetObj.py:getCombinedUpperLimitFor
 - [x] implement the likelihood method and interface it to SModelS
-- [ ] implement the chi2 method and interface it to SModelS
+- [x] implement the chi2 method and interface it to SModelS
 - [x] add a unit test
 - [x] integration test
 - [ ] some tests failed -> on hold for now
 - [x] check if simplified likelihood still works (see testSL.md)
-- [ ] use covariances/drawBestSRs.py to study the best expected combination  
-  - EM : `dataset` is the name of the SR/database entry (e.g. `SRA_H`)
-  - UL : `dataset` is `(UL)`
-  - combined : either pyhf or SL, `dataset` is `(combined)` -> should it be changed given the best expected combination?
+- [ ] "forked" covariances/drawBestSRs.py to drawBestCB.py that now takes `combination` instead of `dataset`
+  - combined : either pyhf or SL, `dataset` is `(combined)` -> should it be changed given the best expected combination? -> for now, added a `best combination` key in the python output
+- [ ] add the `best combination` to the `validationData` output

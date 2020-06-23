@@ -21,7 +21,7 @@ except:
 from plottingFuncs import createUglyPlot, getExclusionCurvesFor, createPrettyPlot
 import tempfile,tarfile,shutil,copy
 from smodels_utils.dataPreparation.massPlaneObjects import MassPlane
-from smodels.experiment.exceptions import SModelSExperimentError as SModelSError              
+from smodels.experiment.exceptions import SModelSExperimentError as SModelSError
 from sympy import var
 import pyslha
 import string
@@ -50,7 +50,7 @@ class ValidationPlot():
     """
 
     def __init__(self, ExptRes, TxNameStr, Axes, slhadir=None, databasePath=None,
-                 kfactor = 1., limitPoints=None, extraInfo=False, preliminary=False, 
+                 kfactor = 1., limitPoints=None, extraInfo=False, preliminary=False,
                  combine=False, weightedAgreementFactor=True, model="default" ):
         """
         :param weightedAgreementFactor: when computing the agreement factor,
@@ -488,7 +488,7 @@ class ValidationPlot():
         else:
             ret = [ masses[0][0], masses[1][0] ]
         massPlane = MassPlane.fromString(self.txName,self.axes)
-            
+
         if not self.topologyHasWidths():
             varsDict = massPlane.getXYValues(masses,None)
             if varsDict != None and "y" in varsDict:
@@ -682,6 +682,9 @@ class ValidationPlot():
                     except SModelSError as e:
                         logger.error ( "could not handle %s: %s" % ( slhafile, e ) )
                         Dict=None
+            logger.debug('expres keys : {}'.format(expRes.keys()))
+            if 'best combination' in expRes.keys():
+                Dict['best combination'] = expRes['best combination']
 
             if Dict:
                 self.data.append(Dict)
@@ -887,7 +890,3 @@ class ValidationPlot():
         eqStr = eqStr.replace(" ","")
 
         return eqStr
-
-
-
-
