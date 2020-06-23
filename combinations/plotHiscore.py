@@ -197,7 +197,7 @@ def writeRawNumbersLatex ( protomodel ):
     print ( "=====================" )
     f=open("rawnumbers.tex","wt")
     f.write("\\begin{tabular}{l|c|r|r|c|r}\n" )
-    f.write("\\bf{Analysis Name} & \\bf{Dataset} & \\bf{Obs} & \\bf{Expected} & \\bf{Z} & \\bf{P}  \\\\\n" )
+    f.write("\\bf{Analysis Name} & \\bf{Dataset} & \\bf{Obs} & \\bf{Expected} & \\bf{Z} & \\bf{Part}  \\\\\n" )
     f.write("\\hline\n" )
     for tp in protomodel.bestCombo:
         anaId = tp.analysisId()
