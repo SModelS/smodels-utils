@@ -100,8 +100,9 @@ class ProtoModelXSecs:
             self.log ( "done computing %d xsecs" % nXsecs )
             return xsecs, comment
         except Exception as e:
-            self.pprint ( "could not compute xsecs %s: %s" % ( self.slhafile, e ) )
-            self.pprint ( "lets restore old state" )
+            self.pprint ( "Could not compute xsecs %s: %s" % ( self.slhafile, e ) )
+            self.pprint ( "pythia version is %s" % self.computer.getPythia().srcPath )
+            # self.pprint ( "lets restore old state" )
             raise e
 
 

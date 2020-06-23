@@ -371,7 +371,7 @@ class ProtoModel:
         if hasattr ( self, "rmax" ):
             self._backup["rmax"]=self.rmax
         if hasattr ( self, "stored_xsecs" ):
-            self._backup["stored_xsecs"]=self.stored_xsecs
+            self._backup["stored_xsecs"]=copy.deepcopy(self.stored_xsecs)
 
         # self.pprint ( "backing up state" )
 
@@ -379,6 +379,7 @@ class ProtoModel:
         """ restore from the backup """
         if not hasattr ( self, "_backup" ):
             raise Exception ( "no backup available" )
+        self.delXSecs() ## make sure we dont keep the current xsecs
         for k,v in self._backup.items():
             setattr ( self, k, v )
 
