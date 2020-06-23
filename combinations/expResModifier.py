@@ -27,15 +27,28 @@ class ExpResModifier:
         import IPython
         IPython.embed( using=False )
 
+    def computeNewObserved ( self, expected ):
+        """ given expected upper limit, compute a fake observed limit
+            by sampling the non-truncated Gaussian likelihood """
+        ret = copy.deepcopy ( expected )
+        ## we only draw once for the entire UL map, equivalent to assuming
+        ## that we are dealing with only one signal region
+        ## second basic assumption: sigma_obs approx sigma_exp
+        x = stats.norm.rvs() # draw but once from standard-normal
+        for i,y in enumerate( ret.y_values ):
+            sigma_exp = y / 1.96 ## the sigma of the Gaussian
+            ## now lets shift, observed limit = expected limit + dx
+            obs = y + sigma_exp * x ## shift the expected by the random fake signal
+            ret.y_values[i] = obs ## now we simply shift
+        return ret
+
     def bgUpperLimit ( self, dataset ):
         """ fix the upper limits, use expected (if exists) as observed """
         ## FIXME wherever possible, we should sample from the non-truncated likelihood, take that as the signal strength and re-computed a likelihood with it.
-        ## We can however only do this if we have expected UL, observed UL, *and*
-        ## nobs, nbg, bgerror
         for i,txname in enumerate(dataset.txnameList):
             if hasattr ( txname, "txnameDataExp" ) and txname.txnameDataExp != None:
                 self.log ( "fixing UL result %s" % dataset.globalInfo.id )
-                txnd = copy.deepcopy ( txname.txnameDataExp )
+                txnd = self.computeNewObserved ( txname.txnameDataExp )
                 dataset.txnameList[i].txnameData = txnd
         return dataset
 
