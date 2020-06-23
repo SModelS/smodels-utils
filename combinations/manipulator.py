@@ -464,6 +464,7 @@ class Manipulator:
 
         ## finally swap in bestCombo
         self.swapPidsInBestCombo ( pid1, pid2 )
+        self.M.delXSecs() ## I dont trust the xsecs anymore now
 
     def swapPidsInBestCombo ( self, pid1, pid2 ):
         """ swap pid1 with pid2 in best combo """

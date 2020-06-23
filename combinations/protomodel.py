@@ -370,6 +370,9 @@ class ProtoModel:
             self._backup["K"]=self.K
         if hasattr ( self, "rmax" ):
             self._backup["rmax"]=self.rmax
+        if hasattr ( self, "stored_xsecs" ):
+            self._backup["stored_xsecs"]=self.stored_xsecs
+
         # self.pprint ( "backing up state" )
 
     def restore ( self ):
