@@ -197,7 +197,7 @@ def writeRawNumbersLatex ( protomodel ):
     print ( "=====================" )
     f=open("rawnumbers.tex","wt")
     f.write("\\begin{tabular}{l|c|r|r|c|r}\n" )
-    f.write("\\bf{Analysis Name} & \\bf{Dataset} & \\bf{Obs} & \\bf{Expected} & \\bf{Z} & \\bf{Particles}  \\\\\n" )
+    f.write("\\bf{Analysis Name} & \\bf{Dataset} & \\bf{Obs} & \\bf{Expected} & \\bf{Z} & \\bf{P}  \\\\\n" )
     f.write("\\hline\n" )
     for tp in protomodel.bestCombo:
         anaId = tp.analysisId()
@@ -244,7 +244,7 @@ def writeRawNumbersLatex ( protomodel ):
             else:
                 if abs ( obs - int(obs) ) / obs < 1e-6:
                     obs = int ( obs )
-            f.write ( "%s & %s & %s +/- %s & %s & %s \\\\ \n" % \
+            f.write ( "%s & %s & %s $\\pm$ %s & %s & %s \\\\ \n" % \
                       ( did, obs, eBG, bgErr, S, particles ) )
         if dtype == "upperLimit":
             S = "?"
@@ -254,6 +254,10 @@ def writeRawNumbersLatex ( protomodel ):
                     for pid in branch:
                         if type(pid)==int and abs(pid)!=1000022:
                             pids.add ( abs(pid) )
+                        if type(pid) in [ tuple, list ]:
+                            for p in pid:
+                                if type(p)==int and abs(p)!=1000022:
+                                    pids.add ( abs(p) )
             particles = helpers.toLatex ( pids, addDollars=True, addSign = False,
                                           addBrackets = False )
             print ( "  `- observed %s, expected %s" % ( tp.upperLimit, tp.expectedUL ) )
