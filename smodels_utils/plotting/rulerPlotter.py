@@ -306,8 +306,8 @@ class RulerPlot:
             lctr=0
             keys = []
 
-            if hasResultsFor != None:
-                for mana,analyses in hasResultsFor.items():
+            if self.hasResultsFor != None:
+                for mana,analyses in self.hasResultsFor.items():
                     # print ( "m,mana",m,mana )
                     if abs(m-mana)<.1: ## max mass gap
                         if abs(m-mana)>1e-2:
