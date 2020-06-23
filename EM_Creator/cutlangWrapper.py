@@ -24,7 +24,6 @@
 # TODO: Adapt for paralelisation.
 # TODO: Make separate Delphes wrapper?
 # TODO: Add exception mechanism to exe.
-# TODO: Finish directory structure picture...
 # TODO: Debug levels?
 # TODO: Maybe add same time to logs and embaked?
 # FIXME: Refactor postprocessing
@@ -63,9 +62,10 @@ class CutLangWrapper:
 
         :param topo:    string  SMS topology (see https://smodels.github.io/docs/SmsDictionary )
         :param njets:   int     Number of jets
-        :param rerun:   boo     True for rerunning the analyses already done
+        :param rerun:   bool    True for rerunning the analyses already done
         :param analyses list    List of analyses to be done
                            (specified as string, see https://smodels.github.io/docs/ListOfAnalyses)
+        :param auto_confirm bool Proceed with downloads without prompting
         """
         # General vars
         self.njets = njets
@@ -100,7 +100,7 @@ class CutLangWrapper:
         # Check if Cutlang dir is present and if not, attempt to clone it from github
         if not os.path.isdir ( self.cutlanginstall ):
             self.__info( "cutlang directory missing, download from github?")
-            if self.__confirmation("Download from github? (yes/no):"):
+            if self.__confirmation("Download from github?"):
                 args = ['git', 'clone', 'https://github.com/unelg/CutLang']
                 self.exe(args, exit_on_fail=True, logfile = self.initlog)
             else:
@@ -144,7 +144,7 @@ class CutLangWrapper:
         # Check if Delphes dir is present and if not, attempt to clone it from github
         if not os.path.isdir ( self.delphesinstall ):
             self.__info( "Delphes directory missing, download from github?")
-            if self.__confirmation("Download from github? (yes/no):"):
+            if self.__confirmation("Download from github?"):
                 args = ['git', 'clone', 'https://github.com/delphes/delphes']
                 self.exe(args, exit_on_fail = True, logfile = self.initlog)
             else:
@@ -167,7 +167,10 @@ class CutLangWrapper:
 
 
     def pickCutLangFile (self, a_name):
-        """ Returns absolute path to ADLLHC Analysis file. If not available raises error. """
+        """ Returns absolute path to ADLLHC Analysis file. If not available raises error.
+            :param a_name string Analysis name in standard format (see __standardise_analysis)
+                                 e.g. 'CMS_SUS_012_32'
+        """
         a_name = a_name.replace("_", "-")
         cla_path = os.path.join(self.adllhcanalyses, a_name.upper(), a_name.upper() + "_CutLang.adl")
         if os.path.isfile(cla_path):
@@ -178,7 +181,10 @@ class CutLangWrapper:
 
     def extract_efficiencies(self, cla_out, cla_file):
         """ Extracts the efficiencies from CutLang output.
-            :param masses:    mass n-tuple
+            returns:
+                entries, nevents tuple:
+                        entries -- String containing efficiencies extracted from the cla_out file
+                        nevents -- Tuple of numbers of events for each entry.
             :param cla_out:  .root file output of CLA
             :param cla_file:  .adl file specifying CutLang regions
         """
@@ -199,19 +205,23 @@ class CutLangWrapper:
 
         # Traverse all keys in ROOT file
         for x in rootFile.GetListOfKeys():
-            # FIXME: Try to remove continue from here (2x)
+
             x = x.ReadObj()
             if isinstance(x, ROOT.TDirectoryFile):
+                # if the region is in ignorelist, move onto another one
+                reg_name = x.GetName()
+                if reg_name in {'baseline', 'presel'}:
+                    continue
+
+                # if there is no cutflow defined in region, move onto another one
                 keys = [y.ReadObj().GetName() for y in x.GetListOfKeys()]
                 # cutflow ~ the event number histogram
                 if "cutflow" not in keys:
                     self.__info(f"Cutflow not in objects in {x.GetName()} in {cla_out}")
                     continue
+
                 x.GetObject("cutflow", rootTmp)
-                rname = x.GetName()
-                if rname in {'baseline', 'presel'}:
-                    continue
-                entry = "".join(["'", rname, "': "])
+                entry = "".join(["'", reg_name, "': "])
                 s = rootTmp.GetNbinsX()
                 if rootTmp[2] == 0:
                     entries += "NaN"
@@ -224,13 +234,13 @@ class CutLangWrapper:
                 entries += entry
                 contains_eff = True
                 if "bincounts" in keys:
-                    self.__info(f"Found bins in {rname} section.")
+                    self.__info(f"Found bins in {reg_name} section.")
                     x.GetObject("bincounts", rootTmp)
                     nbins = rootTmp.GetNbinsX()
                     for i in range(nbins):
                         bin_name = rootTmp.GetXaxis().GetBinLabel(i)
                         # bin_name = bin_name.replace("[","").replace("]","")
-                        bin_name = "_".join([rname, bin_name.replace(" ", "_")])
+                        bin_name = "_".join([reg_name, bin_name.replace(" ", "_")])
                         entry = "".join(["'", bin_name, "': "])
                         self.__debug(f"bin no {rootTmp[i]} nevents: {nevents[-1]}.")
                         entry += str(rootTmp[i]/nevents[-1]) + ', '
@@ -405,7 +415,6 @@ class CutLangWrapper:
         #     outurn
         # else:
         #     self.__msg ( " `- %s" % ( out[-maxLength:] ) )
-        return err
 
     def clean ( self ):
         """ Deletes the output directory
@@ -418,7 +427,7 @@ class CutLangWrapper:
         """
 
         if self.__confirmation("This will delete all directories created by running CutLangWrapper.\n"
-                               "Proceed? (y/n)"):
+                               "Proceed?"):
             self.clean()
             self.__delete_dir("./CutLang")
             self.__delete_dir("./delphes")
@@ -431,7 +440,12 @@ class CutLangWrapper:
         if self.auto_confirm == True:
             return True
         else:
-            return False
+            self.__msg("text")
+            confirm = input(text + " ('y'/'n')")
+            if confirm == "y" or confirm == "Y" or confirm == "Yes" or confirm == "yes":
+                return True
+            else:
+                return False
 
     def __decompress(self, name, out_dir):
         basename = ".".join(os.path.basename(name).split(".")[:-1])

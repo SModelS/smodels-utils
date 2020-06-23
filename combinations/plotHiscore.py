@@ -197,7 +197,7 @@ def writeRawNumbersLatex ( protomodel ):
     print ( "=====================" )
     f=open("rawnumbers.tex","wt")
     f.write("\\begin{tabular}{l|c|r|r|c|r}\n" )
-    f.write("\\bf{Analysis Name} & \\bf{Dataset} & \\bf{Obs} & \\bf{Expected} & \\bf{Z} & \\bf{Particles}  \\\\\n" )
+    f.write("\\bf{Analysis Name} & \\bf{Dataset} & \\bf{Obs} & \\bf{Expected} & \\bf{Z} & \\bf{Part}  \\\\\n" )
     f.write("\\hline\n" )
     for tp in protomodel.bestCombo:
         anaId = tp.analysisId()
@@ -244,16 +244,27 @@ def writeRawNumbersLatex ( protomodel ):
             else:
                 if abs ( obs - int(obs) ) / obs < 1e-6:
                     obs = int ( obs )
-            f.write ( "%s & %s & %s +/- %s & %s & %s \\\\ \n" % \
+            f.write ( "%s & %s & %s $\\pm$ %s & %s & %s \\\\ \n" % \
                       ( did, obs, eBG, bgErr, S, particles ) )
         if dtype == "upperLimit":
             S = "?"
+            llhd,chi2 = tp.likelihoodFromLimits( expected=False, chi2also=True )
+            eUL = tp.expectedUL.asNumber(fb)
+            oUL = tp.upperLimit.asNumber(fb)
+            sigma_exp = eUL / 1.96 # the expected scale, sigma
+            Z = ( oUL - eUL ) / sigma_exp
+            # Z = math.sqrt ( chi2 )
+            S = "%.1f $\sigma$" % Z
             pids = set()
             for prod in tp.PIDs:
                 for branch in prod:
                     for pid in branch:
                         if type(pid)==int and abs(pid)!=1000022:
                             pids.add ( abs(pid) )
+                        if type(pid) in [ tuple, list ]:
+                            for p in pid:
+                                if type(p)==int and abs(p)!=1000022:
+                                    pids.add ( abs(p) )
             particles = helpers.toLatex ( pids, addDollars=True, addSign = False,
                                           addBrackets = False )
             print ( "  `- observed %s, expected %s" % ( tp.upperLimit, tp.expectedUL ) )
@@ -639,8 +650,14 @@ def getPIDsOfTPred ( tpred, ret, integrateDataType=True, integrateSRs=True ):
                         ret[apid].add ( name )
     return ret
 
-def plotRuler( protomodel, verbosity ):
-    print ( "[plotHiscore] now draw ruler.png" )
+def plotRuler( protomodel, verbosity, horizontal ):
+    """ plot the ruler plot, given protomodel.
+    :param horizontal: plot horizontal ruler plot, if true. Else, vertical.
+    """
+    fname = "ruler.png"
+    if horizontal:
+        fname = "horizontal.png"
+    print ( "[plotHiscore] now draw %s" % fname )
     resultsForPIDs = {}
     for tpred in protomodel.bestCombo:
         resultsForPIDs =  getPIDsOfTPred ( tpred, resultsForPIDs )
@@ -654,9 +671,15 @@ def plotRuler( protomodel, verbosity ):
         print ( '[plotHiscore] ../smodels_utils/plotting/rulerPlotter.py -o ruler.png --hasResultsFor "%s" %s' % \
                 ( str(resultsFor), protomodel.currentSLHA ) )
 
-    rulerPlotter.drawVertical ( protomodel.currentSLHA, "ruler.png", Range=(None,None),
-                        mergesquark = False,
-                        hasResultsFor = resultsFor )
+    if horizontal:
+        plotter = rulerPlotter.RulerPlot ( protomodel.currentSLHA, fname, 
+                                           Range=(None, None), mergesquark = False,
+                                           interactive = False,
+                                           hasResultsFor = resultsFor )
+        plotter.draw()
+    else:
+        rulerPlotter.drawVertical ( protomodel.currentSLHA, fname, 
+                Range=(None,None), mergesquark = False, hasResultsFor = resultsFor )
 
 def plotDecays ( protomodel, verbosity, outfile="decays.png" ):
     print ( "[plotHiscore] now draw %s" % outfile )
@@ -699,8 +722,11 @@ def plot ( number, verbosity, picklefile, options, dbpath ):
             options[i]=True
 
     plotruler = options["ruler"]
+    horizontal = False
+    if "horizontal" in options and options["horizontal"]:
+        horizontal = True
     if plotruler:
-        plotRuler ( protomodel, verbosity )
+        plotRuler ( protomodel, verbosity, horizontal )
     plotdecays = options["decays"]
     if plotdecays:
         plotDecays ( protomodel, verbosity )
@@ -737,7 +763,8 @@ def runPlotting ( args ):
 
     options = { "ruler": args.ruler, "decays": args.decays,
                 "predictions": args.predictions, "html": args.html,
-                "keep_tex": args.keep, "tex": args.tex }
+                "keep_tex": args.keep, "tex": args.tex,
+                "horizontal": args.horizontal }
 
     plot ( args.number, args.verbosity, args.picklefile, options, args.dbpath )
     if upload is None:
@@ -836,6 +863,9 @@ def main ():
             action="store_true" )
     argparser.add_argument ( '-k', '--keep',
             help='keep latex files',
+            action="store_true" )
+    argparser.add_argument ( '--horizontal',
+            help='horizontal, not vertical ruler plot?',
             action="store_true" )
     argparser.add_argument ( '-u', '--upload',
             help='upload to one of the following destinations: none, gpu, github, anomaly, latest, interesting [none]. run --destinations to learn more',

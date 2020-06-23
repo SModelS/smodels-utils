@@ -133,8 +133,8 @@ def ssmProcess ( args ):
         ret[ssm]=(model.Z,model.rmax)
     return ret
 
-def produce( hi, pid=1000022, nevents = 50000, dryrun=False,
-             nproc=5, fac = 1.012 ):
+def produce( hi, pid=1000022, nevents = 100000, dryrun=False,
+             nproc=5, fac = 1.008 ):
     """ produce pickle files for pid, with nevents
     :param hi: hiscore list object
     :param nproc: number of processes
@@ -186,7 +186,7 @@ def produce( hi, pid=1000022, nevents = 50000, dryrun=False,
         pickle.dump ( time.asctime(), f )
         f.close()
 
-def produceSSMs( hi, pid1, pid2, nevents = 50000, dryrun=False,
+def produceSSMs( hi, pid1, pid2, nevents = 100000, dryrun=False,
              nproc=5, fac = 1.008 ):
     """ produce pickle files for ssm scan, for (pid1,pid2), with nevents
     :param hi: hiscore list object
@@ -420,11 +420,11 @@ if __name__ == "__main__":
             help='number of processes, if zero then determine automatically [0]',
             type=int, default=0 )
     argparser.add_argument ( '-f', '--factor',
-            help='multiplication factor [1.012]',
-            type=float, default=1.012 )
+            help='multiplication factor [1.008]',
+            type=float, default=1.008 )
     argparser.add_argument ( '-e', '--nevents',
-            help='number of events [50000]',
-            type=int, default=50000 )
+            help='number of events [100000]',
+            type=int, default=100000 )
     argparser.add_argument ( '-R', '--rundir',
             help='override the default rundir [None]',
             type=str, default=None )

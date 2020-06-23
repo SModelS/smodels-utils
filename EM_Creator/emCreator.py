@@ -45,7 +45,13 @@ class emCreator:
         ### ma5/tools/PAD/Build/SampleAnalyzer/User/Analyzer/atlas_susy_2016_07.info
         import xml.etree.ElementTree as ET
         Dir = "ma5.template/tools/PAD/Build/SampleAnalyzer/User/Analyzer/"
-        tree = ET.parse("%s/%s.info" % ( Dir, ana ) )
+        filename = "%s/%s.info" % ( Dir, ana )
+        if not os.path.exists ( filename ):
+            Dir = "ma5.template/tools/PADForMA5tune/Build/SampleAnalyzer/User/Analyzer/"
+            filename = "%s/%s.info" % ( Dir, ana )
+        if not os.path.exists ( filename ):
+            self.error ( "could not find statistics file for %s" % ana )
+        tree = ET.parse( filename )
         root = tree.getroot()
         ret = {}
         for child in root:

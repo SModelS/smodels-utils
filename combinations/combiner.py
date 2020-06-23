@@ -151,7 +151,7 @@ class Combiner:
         """ get the combined likelihood for a signal strength mu
         :param nll: compute the negative log likelihood
         """
-        llhds = numpy.array ( [ c.getLikelihood(mu,expected=expected) for c in combination ] )
+        llhds = numpy.array ( [ c.getLikelihood(mu,expected=expected) for c in combination ], dtype=object )
         ret = numpy.prod ( llhds[llhds!=None] )
         if nll:
             if ret <= 0.:
@@ -255,9 +255,9 @@ class Combiner:
         if muhat > mumax:
             self.debug ( "muhat(%.2f) > mumax(%.2f). use mumax" % ( muhat, mumax ) )
             muhat = mumax
-        l0 = numpy.array ( [ c.getLikelihood(0.,expected=expected) for c in combo ] )
+        l0 = numpy.array ( [ c.getLikelihood(0.,expected=expected) for c in combo ], dtype=object )
         LH0 = numpy.prod ( l0[l0!=None] )
-        l1 = numpy.array ( [ c.getLikelihood(muhat,expected=expected) for c in combo ] )
+        l1 = numpy.array ( [ c.getLikelihood(muhat,expected=expected) for c in combo ], dtype=object )
         LH1 = numpy.prod ( l1[l1!=None] )
         if LH0 <= 0.:
             self.error ( "likelihood for SM was 0. Set to 1e-80" )

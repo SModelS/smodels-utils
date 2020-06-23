@@ -81,16 +81,16 @@ def runOneJob ( pid, jmin, jmax, cont, dbpath, lines, dry_run, keep, time,
     #remove ( tf, keep )
     #remove ( runner, keep )
 
-def produceLLHDScanScript ( pid1, pid2, force_rewrite, rundir ):
+def produceLLHDScanScript ( pid1, pid2, force_rewrite, rundir, nprocs ):
     fname = "%s/llhdscanner%d.sh" % ( rundir, pid1 )
     if force_rewrite or not os.path.exists ( fname ):
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/combinations/llhdscanner.py -R %s --draw --pid1 %d --pid2 %d\n" % ( codedir, rundir, pid1, pid2 ) )
+            f.write ("%s/combinations/llhdscanner.py -R %s --draw --pid1 %d --pid2 %d --nproc %d\n" % ( codedir, rundir, pid1, pid2, nprocs ) )
             f.close()
         os.chmod ( fname, 0o775 )
 
-def produceScanScript ( pid, force_rewrite, pid2, rundir ):
+def produceScanScript ( pid, force_rewrite, pid2, rundir, nprocs ):
     spid2=""
     if pid2!=-1:
         spid2=str(pid2)
@@ -101,8 +101,8 @@ def produceScanScript ( pid, force_rewrite, pid2, rundir ):
             argpid2 = " --pid2 %d" % pid2
         with open ( fname, "wt" ) as f:
             f.write ("#!/bin/sh\n\n"  )
-            f.write ("%s/combinations/scanner.py -R %s -d -c -P -p %d %s\n" % \
-                     ( codedir, rundir,pid,argpid2) )
+            f.write ("%s/combinations/scanner.py --nproc %d -R %s -d -c -P -p %d %s\n" % \
+                     ( codedir, nprocs, rundir,pid,argpid2) )
             f.close()
         os.chmod ( fname, 0o775 )
 
@@ -187,7 +187,8 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
         for line in lines:
             f.write ( line.replace("@@PID@@",str(pid)).replace("@@RUNDIR@@",rundir ) )
         f.close()
-    produceLLHDScanScript ( pid, 1000022, rewrite, rundir )
+    nprcs = 15
+    produceLLHDScanScript ( pid, 1000022, rewrite, rundir, nprcs )
     cmd += [ script ]
     print ( "[runLLHDScanner]", " ".join ( cmd ) )
     if dry_run:
@@ -244,7 +245,8 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
         f.close()
     os.chmod( script, 0o755 ) # 1877 is 0o755
     cmd += [ script ]
-    produceScanScript ( pid, rewrite, pid2, rundir )
+    nprc = 15
+    produceScanScript ( pid, rewrite, pid2, rundir, nprc )
     print ( "[runScanner]", " ".join ( cmd ) )
     if dry_run:
         return
@@ -355,6 +357,15 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
              "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
     cmd += [ "--ntasks-per-node", str(nproc) ]
     cmd += [ tmpfile ]
+    if True:
+        time = 48
+        qos = "c_short"
+        if time > 48:
+            qos = "c_long"
+        if 8 < time <= 48:
+            qos = "c_medium"
+        cmd += [ "--qos", qos ]
+        cmd += [ "--time", "%s" % ( time*60-1 ) ]
     ram = 2
     cmd += [ "--mem", "%dG" % ram ]
     # cmd += [ "./run_bakery.sh" ]
@@ -455,6 +466,7 @@ def main():
     argparser.add_argument ( '-D', '--dbpath', help='path to database, or "fake1" or "real" or "default" ["none"]',
                         type=str, default="default" )
     args=argparser.parse_args()
+    args.rewrite = True
     if args.nmax > 0 and args.dbpath == "none":
         print ( "dbpath not specified. not starting. note, you can use 'real' or 'fake1' as dbpath" )
         return
