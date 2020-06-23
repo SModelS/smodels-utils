@@ -463,10 +463,15 @@ class Manipulator:
         self.M.ssmultipliers = copy.deepcopy ( newSSMultipliers )
 
         ## finally swap in bestCombo
+        self.swapPidsInBestCombo ( pid1, pid2 )
+
+    def swapPidsInBestCombo ( self, pid1, pid2 ):
+        """ swap pid1 with pid2 in best combo """
         if not hasattr ( self.M, "bestCombo" ):
             return
         if self.M.bestCombo == None:
             return
+
         for c,combo in enumerate(self.M.bestCombo):
             for i,prod in enumerate(combo.PIDs):
                 for b,branch in enumerate(prod):
