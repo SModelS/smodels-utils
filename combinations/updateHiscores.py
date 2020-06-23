@@ -82,6 +82,7 @@ def plot( Z, K, rundir ):
     args.picklefile = "%shiscore.pcl" % rundir 
     args.dbpath = "%s/database.pcl" % rundir
     args.verbosity = "info"
+    args.horizontal = False
     args.html = True
     args.ruler = True
     args.decays = True
