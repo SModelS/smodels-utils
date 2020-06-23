@@ -357,6 +357,15 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
              "--output", "/scratch-cbe/users/wolfgan.waltenberger/outputs/slurm-%j.out" ]
     cmd += [ "--ntasks-per-node", str(nproc) ]
     cmd += [ tmpfile ]
+    if True:
+        time = 48
+        qos = "c_short"
+        if time > 48:
+            qos = "c_long"
+        if 8 < time <= 48:
+            qos = "c_medium"
+        cmd += [ "--qos", qos ]
+        cmd += [ "--time", "%s" % ( time*60-1 ) ]
     ram = 2
     cmd += [ "--mem", "%dG" % ram ]
     # cmd += [ "./run_bakery.sh" ]
