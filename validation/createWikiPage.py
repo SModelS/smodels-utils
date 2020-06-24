@@ -263,8 +263,8 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 continue
             txns_discussed.append ( txn )
             ltxn += 1
-        #line = "||<|%i> [[%s|%s]]" %( ltxn, expRes.getValuesFor('url')[0], id )
-        line = "| [%s](%s)" %( id, expRes.getValuesFor('url')[0] )
+        # line = "| [%s](%s)" %( id, expRes.getValuesFor('url')[0] )
+        line = ""
         hadTxname = False
         txns_discussed=[]
         nfigs = 0
@@ -289,8 +289,10 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 dataset = self.getDatasetName ( txname )
                 if dataset == "data":
                     continue
-            if hadTxname: ## not the first txname for this expres?
-                line += "| "
+            #if hadTxname: ## not the first txname for this expres?
+            #    line += "| "
+            line += "| [%s](%s) " %( id, expRes.getValuesFor('url')[0] )
+
             hadTxname = True
             line += '| [%s](SmsDictionary%s#%s)' % ( txnbrs, self.dotlessv, txn )
             line += "| %.1f" % txname.globalInfo.lumi.asNumber(1/fb)
@@ -360,7 +362,6 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 subprocess.getoutput ( mvCmd )
                 addl = " <br>[SR plot](https://smodels.github.io"+srPath+ ")"
                 line += addl
-                # print ( "[createWikiPage] adding srplot", srplot, addl )
             line += " |\n" # End the line
         if not hadTxname: return
         if "XXX#778899" in line: self.none_lines.append(line)
@@ -368,13 +369,6 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         else: self.true_lines.append(line)
         self.nlines += 1
         logger.debug ( "add %s with %d figs" % ( id, nfigs ) )
-
-    """
-    def removeFastLim ( self, expRes ):
-        # remove fastlim results from list of results 
-        print ( "removing fastlim results", type(expRes) )
-        return expRes
-    """
 
     def describeSource ( self, txname ):
         """ describe the source of the data
