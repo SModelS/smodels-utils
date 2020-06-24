@@ -11,6 +11,8 @@ import warnings
 import subprocess
 import time
 from matplotlib import colors as C
+import sys
+sys.path.insert(0,"../")
 from smodels_utils.helper.various import getPathName
 
 def convertNewAxes ( newa ):
@@ -56,6 +58,8 @@ def draw( validationfile ):
             skipped += 1
             err = point["error"]
             if "axes" in point:
+                if point['axes'] is None:
+                    continue
                 axes = convertNewAxes ( point["axes"] )
                 noResults.append ( ( axes[1], axes[0] ) )
             continue
@@ -136,7 +140,7 @@ def draw( validationfile ):
     andre=""
     if "andre" in validationfile:
         andre="-andre"
-    plt.title ( "Best Signal Region, %s (%s)" % ( anaId+andre, topo ) )
+    plt.title ( "Best Combination, %s (%s)" % ( anaId+andre, topo ) )
     fname = "bestSR_%s%s_%s.png" % ( anaId, andre, topo )
     print ( "[drawBestSRs} saving to %s" % fname )
     plt.savefig ( fname )

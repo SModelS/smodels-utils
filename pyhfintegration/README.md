@@ -144,6 +144,6 @@ For ATLAS-SUSY-2018-31, there are two cases :
 - [x] integration test
 - [ ] some tests failed -> on hold for now
 - [x] check if simplified likelihood still works (see testSL.md)
-- [ ] "forked" covariances/drawBestSRs.py to drawBestCB.py that now takes `combination` instead of `dataset`
+- [x] "forked" covariances/drawBestSRs.py to drawBestCB.py that now takes `combination` instead of `dataset`
   - combined : either pyhf or SL, `dataset` is `(combined)` -> should it be changed given the best expected combination? -> for now, added a `best combination` key in the python output
-- [ ] add the `best combination` to the `validationData` output
+- [x] add the `best combination` to the `validationData` output
