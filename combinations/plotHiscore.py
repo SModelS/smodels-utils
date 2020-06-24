@@ -510,19 +510,21 @@ def writeIndexHtml ( protomodel ):
     if hasattr ( protomodel, "dbversion" ):
         dbver = protomodel.dbversion
         dotlessv = dbver.replace(".","")
+    dt = int ( time.time() - 1593000000 )
     f.write ( "<b><a href=./hiscore.slha>ProtoModel</a> <a href=./pmodel.py>(dict)</a> produced with <a href=https://smodels.github.io/docs/Validation%s>database v%s</a>, combination strategy <a href=./matrix_%s.png>%s</a> in step %d.</b> " % \
             ( dotlessv, dbver, strategy, strategy, protomodel.step ) )
     if hasattr ( protomodel, "particleContributions" ):
-        f.write ( "Z plots for: <a href=./M1000022.png>%s</a>" % helpers.toHtml(1000022) )
+        f.write ( "Z plots for: <a href=./M1000022.png?%d>%s</a>" % \
+                  ( dt, helpers.toHtml(1000022) ) )
         for k,v in protomodel.particleContributions.items():
             f.write ( ", " )
-            f.write ( "<a href=./M%d.png>%s</a>" % ( k, helpers.toHtml(k) ) )
+            f.write ( "<a href=./M%d.png?%d>%s</a>" % ( k, dt, helpers.toHtml(k) ) )
         f.write ( ". HPD plots for: " )
         first = True
         for k,v in protomodel.particleContributions.items():
             if not first:
                 f.write ( ", " )
-            f.write ( "<a href=./llhd%d.png>%s</a>" % ( k, helpers.toHtml(k) ) )
+            f.write ( "<a href=./llhd%d.png?%d>%s</a>" % ( k, dt, helpers.toHtml(k) ) )
             first = False
     # fixme replace with some autodetection mechanism
     ossms = { (-1000006,1000006), (1000021,1000021), (-2000006,2000006) }
@@ -548,8 +550,8 @@ def writeIndexHtml ( protomodel ):
     for pids in ssms:
         if not first:
             f.write ( ", " )
-        f.write ( "<a href=./ssm_%d_%d.png>(%s,%s)</a>" % \
-                  ( pids[0],pids[1], helpers.toHtml(pids[0],addSign=True),
+        f.write ( "<a href=./ssm_%d_%d.png?%d>(%s,%s)</a>" % \
+                  ( pids[0],pids[1], dt, helpers.toHtml(pids[0],addSign=True),
                     helpers.toHtml(pids[1],addSign=True) ) )
         first = False
     f.write ( "<br>\n" )
