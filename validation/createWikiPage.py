@@ -66,17 +66,17 @@ class WikiPageCreator:
             cmd = "mkdir %s" % self.localdir
             subprocess.getoutput ( cmd )
         if os.path.exists ( self.localdir) and (not "version" in os.listdir( self.localdir )) and self.force_upload:
-            print ( "Copying database from %s to %s." % (self.databasePath, self.localdir )  )
+            print ( "[createWikiPage] Copying database from %s to %s." % (self.databasePath, self.localdir )  )
             cmd = "rsync -a --prune-empty-dirs --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*\/orig\/\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
             a= C.getoutput ( cmd )
-            print ( "%s: %s" % ( cmd, a ) )
+            print ( "[createWikiPage] %s: %s" % ( cmd, a ) )
             has_uploaded = True
         if self.force_upload and not has_uploaded:
-            print ( "Copying database from %s to %s." % (self.databasePath, self.localdir )  )
+            print ( "[createWikiPage] Copying database from %s to %s." % (self.databasePath, self.localdir )  )
             # cmd = "cp -r %s/* %s" % ( self.databasePath, self.localdir )
             cmd = "rsync -a --prune-empty-dirs --exclude \\*.pdf --exclude \\*.pcl --exclude \\*.root --exclude \\*.py --exclude \\*.txt --exclude \\*.bib --exclude \\*\/orig\/\\* --exclude \\*data\\* --exclude \\*.sh --exclude README\\*  -r %s/* %s" % ( self.databasePath, self.localdir )
             a= C.getoutput ( cmd )
-            print ( "%s: %s" % ( cmd, a ) )
+            print ( "[createWikiPage] %s: %s" % ( cmd, a ) )
             has_uploaded = True
         else:
             print ( "Database seems already copied to %s. Good." % self.localdir )
@@ -117,7 +117,7 @@ class WikiPageCreator:
             C.getoutput ( cmd )
 
     def writeHeader ( self ):
-        print ( 'Creating wiki file (%s)....' % self.fName )
+        print ( '[createWikiPage] Creating wiki file (%s)....' % self.fName )
         whatIsIncluded = "Superseded and Fastlim results are included"
         if not self.include_fastlim:
             whatIsIncluded = "Superseded results are listed; fastlim results are not"
@@ -235,12 +235,12 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         valDir = os.path.join(expRes.path,'validation').replace("\n","")
         if not os.path.isdir(valDir): return
         id = expRes.globalInfo.id
+        print ( "[createWikiPage] `- adding %s" % id, flush=True, end=" " ) 
         txnames = expRes.getTxNames()
         ltxn = 0 ## len(txnames)
-        txns_discussed=[]
         if id in [ "ATLAS-SUSY-2016-07" ]:
             for txn in txnames:
-                if txn.txName == "TGQ":
+                if False: # txn.txName == "TGQ":
                     txn2 = copy.deepcopy ( txn )
                     txn2.txName = "TGQ12"
                     txnames.append ( txn2 )
@@ -253,6 +253,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                     txnames.append ( txn2 )
                 #print ( id, txn.txName )
         txnames.sort()
+        txns_discussed=set()
         for txname in txnames:
             validated = txname.getInfo('validated')
             if not self.ignore_validated and validated != True: 
@@ -261,18 +262,26 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
             txn = txname.txName
             if txn in txns_discussed:
                 continue
-            txns_discussed.append ( txn )
+            txns_discussed.add ( txn )
             ltxn += 1
         # line = "| [%s](%s)" %( id, expRes.getValuesFor('url')[0] )
         line = ""
         hadTxname = False
-        txns_discussed=[]
         nfigs = 0
+        # url = expRes.getValuesFor('url')[0]
+        url = expRes.globalInfo.url
+        if ";" in url:
+            url = url.split(";")[0]
+        print ( "%d txnames: " % len(txns_discussed), flush=True, end="" )
+        txns_discussed=set()
         for txname in txnames:
             txn = txname.txName
             if txn in txns_discussed:
                 continue
-            txns_discussed.append ( txn )
+            if hadTxname:
+                print ( ",", end="" )
+            print ( txn, flush=True, end= "" )
+            txns_discussed.add ( txn )
             validated = txname.getInfo('validated')
             if not self.ignore_validated and validated != True: 
                 continue
@@ -291,7 +300,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                     continue
             #if hadTxname: ## not the first txname for this expres?
             #    line += "| "
-            line += "| [%s](%s) " %( id, expRes.getValuesFor('url')[0] )
+            line += "| [%s](%s) " %( id, url )
 
             hadTxname = True
             line += '| [%s](SmsDictionary%s#%s)' % ( txnbrs, self.dotlessv, txn )
@@ -302,7 +311,6 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
             line += "|"
             #line += "||"
             hasFig=False
-            ## print ( "databasePath=",self.databasePath )
             vDir = valDir.replace ( self.databasePath,"")
             altpath = self.databasePath.replace ( "/home", "/nfsdata" )
             vDir = vDir.replace ( altpath, "" )
@@ -363,6 +371,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
                 addl = " <br>[SR plot](https://smodels.github.io"+srPath+ ")"
                 line += addl
             line += " |\n" # End the line
+        print ( )
         if not hadTxname: return
         if "XXX#778899" in line: self.none_lines.append(line)
         elif "#FF0000" in line: self.false_lines.append(line)
@@ -526,7 +535,7 @@ The validation procedure for upper limit maps used here is explained in [arXiv:1
         for sqrts in [ 13, 8 ]:
             for exp in [ "ATLAS", "CMS" ]:
                 for tpe in [ "upper limits", "efficiency maps" ]:
-                    print ( "Writing %s TeV, %s, %s" % ( sqrts, exp, tpe ) )
+                    print ( "[createWikiPage] Writing %s TeV, %s, %s" % ( sqrts, exp, tpe ) )
                     expResList = self.getExpList ( sqrts, exp, tpe )
                     self.writeExperimentType ( sqrts, exp, tpe, expResList )
 
