@@ -25,22 +25,24 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 class MG5Wrapper:
-    def __init__ ( self, nevents, topo, njets, keep, rerun, ma5,
-                   ignore_locks, sqrts=13, ver="2_6_5" ):
+    def __init__ ( self, nevents, topo, njets, keep, rerun, recast,
+                   ignore_locks, sqrts=13, cutlang=False, ver="2_6_5" ):
         """
         :param ver: version of mg5
+        :param recast: perform recasting (ma5 or cutlang)
         """
         self.basedir = bakeryHelpers.baseDir()
         os.chdir ( self.basedir )
         self.tempdir = bakeryHelpers.tempDir()
         self.resultsdir = self.basedir + "/mg5results"
         self.ma5results = self.basedir + "/results"
+        self.cutlang = cutlang
         self.mkdir ( self.resultsdir )
         self.ignore_locks = ignore_locks
         self.topo = topo
         self.keep = keep
         self.rerun = rerun
-        self.ma5 = ma5
+        self.recast = recast
         self.njets = njets
         self.mg5install = "%s/mg5" % self.basedir
         self.logfile = None
@@ -261,7 +263,7 @@ class MG5Wrapper:
             if not self.rerun:
                 self.info ( "hepmc file for %s[%s] exists. go directly to MA5." % \
                             ( str(masses), self.topo ) )
-                self.runMA5 ( masses, analyses, pid )
+                self.runRecasting ( masses, analyses, pid )
                 self.unlock ( masses )
                 return
             else:
@@ -277,13 +279,20 @@ class MG5Wrapper:
         r=self.execute ( self.slhafile, masses )
         self.unlink ( self.slhafile )
         if r:
-            self.runMA5 ( masses, analyses, pid )
+            self.runRecasting ( masses, analyses, pid )
         self.unlock ( masses )
+
+    def runRecasting ( self, masses, analyses, pid ):
+        """ run the recasting. cutlang or ma5 """
+        if not self.recast:
+            return
+        if self.cutlang:
+            self.runCutlang ( masses, analyses, pid )
+        else:
+            self.runMA5 ( masses, analyses, pid )
 
     def runMA5 ( self, masses, analyses, pid ):
         """ run ma5, if desired """
-        if not self.ma5:
-            return
         spid=""
         if pid != None:
             spid = " in job #%d" % pid
@@ -301,6 +310,27 @@ class MG5Wrapper:
             msg = "error encountered"
         self.announce ( "%s for %s[%s] at %s%s" % ( msg, str(masses), self.topo, time.asctime(), spid ) )
 
+    def runCutlang ( self, masses, analyses, pid ):
+        """ run cutlang, if desired """
+        spid=""
+        if pid != None:
+            spid = " in job #%d" % pid
+        self.announce ( "starting cutlang on %s[%s] at %s%s" % ( str(masses), self.topo, time.asctime(), spid ) )
+        from cutlangWrapper import CutLangWrapper
+        cl = CutLangWrapper ( self.topo, self.njets, self.rerun, analyses, 
+                               auto_confirm = True )
+        #                   self.sqrts )
+        self.debug ( "now call cutlangWrapper" )
+        hepmcfile = self.hepmcFileName ( masses )
+        ret = cl.run ( masses, hepmcfile, pid )
+        msg = "finished MG5+Cutlang"
+        """
+        if ret > 0:
+            msg = "nothing needed to be done"
+        if ret < 0:
+            msg = "error encountered"
+        """
+        self.announce ( "%s for %s[%s] at %s%s" % ( msg, str(masses), self.topo, time.asctime(), spid ) )
 
     def unlink ( self, f ):
         """ remove a file, if keep is not true """
@@ -491,7 +521,7 @@ def main():
                              action="store_true" )
     argparser.add_argument ( '--show', help='show production stats',
                              action="store_true" )
-    argparser.add_argument ( '-a', '--ma5', help='run also ma5 after producing the events',
+    argparser.add_argument ( '-a', '--recast', help='run also recasting after producing the events',
                              action="store_true" )
     argparser.add_argument ( '-c', '--clean', help='clean all temporary files, then quit',
                              action="store_true" )
@@ -583,7 +613,7 @@ def main():
         sys.exit()
     nprocesses = bakeryHelpers.nJobs ( args.nprocesses, nm )
     mg5 = MG5Wrapper( args.nevents, args.topo, args.njets, args.keep, args.rerun, 
-                      args.ma5, args.ignore_locks, args.sqrts )
+                      args.recast, args.ignore_locks, args.sqrts, args.cutlang )
     # mg5.info( "%d points to produce, in %d processes" % (nm,nprocesses) )
     djobs = int(len(masses)/nprocesses)
 
