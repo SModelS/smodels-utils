@@ -426,7 +426,8 @@ class LlhdPlot:
             while isCloseToExisting ( minXY, existingPoints ):
                 minXY = ( minXY[0]+8., minXY[1]+8., minXY[2] )
             a = ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=180, color="black", zorder=20 )
-            a = ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=110, color=color, label=ana+" (%.2f)" % (minXY[2]), alpha=1., zorder=20 )
+            anan = ana.replace(":None",":UL") + " (%.2f)" % (minXY[2])
+            a = ax.scatter( [ minXY[0] ], [ minXY[1] ], marker="*", s=110, color=color, label=anan, alpha=1., zorder=20 )
             existingPoints.append ( minXY )
             handles.append ( a )
         ZCOMB = float("nan")*X
