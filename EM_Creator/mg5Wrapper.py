@@ -242,10 +242,8 @@ class MG5Wrapper:
             cmd = "rm -f %s" % filename
             subprocess.getoutput ( cmd )
 
-    def run( self, masses, analyses, pid=None ):
-        """ Run MG5 for topo, with njets additional ISR jets, giving
-        also the masses as a list.
-        """
+    def hasMA5Files ( self, masses ):
+        """ check if all MA5 files are there """
         destsaffile = bakeryHelpers.safFile ( self.ma5results, self.topo, masses, 
                                               self.sqrts )
         destdatfile = bakeryHelpers.datFile ( self.ma5results, self.topo, masses, 
@@ -253,6 +251,22 @@ class MG5Wrapper:
         if os.path.exists ( destsaffile ) and os.path.exists ( destdatfile ):
             self.info ( "summary files %s,%s exist. skip point." % \
                         ( destsaffile, destdatfile ) )
+            return True
+        return False
+
+    def hasCutlangFiles ( self, masses ):
+        """ check if cutlang files for masses are lying around.
+            check also if they appear to be correct, complete,
+            and usable """
+        return False
+
+    def run( self, masses, analyses, pid=None ):
+        """ Run MG5 for topo, with njets additional ISR jets, giving
+        also the masses as a list.
+        """
+        if not self.cutlang and self.hasMA5Files ( masses ):
+            return
+        if self.cutlang and self.hasCutlangFiles ( masses ):
             return
         locked = self.lock ( masses )
         if locked:
