@@ -17,8 +17,11 @@ from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
 from smodels.theory import decomposer
 
 class ExpResModifier:
-    def __init__ ( self, modificationType = "expected" ):
-        self.modificationType = modificationType
+    def __init__ ( self, dbpath ):
+        """
+        :param dbpath: path to database
+        """
+        self.dbpath = dbpath
         self.protomodel = None
         self.logfile = "modifier.log"
         self.startLogger()
@@ -78,11 +81,10 @@ class ExpResModifier:
             self.pprint ( "When trying to construct protomodel, %s does not exist" % filename )
             return None
         walkerid = 0
-        dbpath = "../../smodels-database/"
         expected = False
         select = "all"
         keep_meta = True
-        M = ProtoModel ( walkerid, dbpath, expected, select, keep_meta )
+        M = ProtoModel ( walkerid, self.dbpath, expected, select, keep_meta )
         M.createNewSLHAFileName ( prefix="erm" )
         ma = Manipulator ( M )
         with open ( filename, "rt" ) as f:
@@ -93,7 +95,7 @@ class ExpResModifier:
         self.protomodel = ma.M
         return self.protomodel
 
-    def modifyDatabase ( self, db, outfile="", suffix="fake1", pmodel="" ):
+    def modifyDatabase ( self, outfile="", suffix="fake1", pmodel="" ):
         """ modify the database, possibly write out to a pickle file
         :param outfile: if not empty, write the database into file
         :param suffix: suffix to append to database version
@@ -101,6 +103,7 @@ class ExpResModifier:
                        model. in this case fake a signal
         :returns: the database
         """
+        db = Database ( self.dbpath )
         listOfExpRes = db.getExpResults()
         self.produceProtoModel ( pmodel )
         self.log ( "%d results before faking bgs" % len(listOfExpRes) )
@@ -297,9 +300,8 @@ if __name__ == "__main__":
             help='check the pickle file <outfile>', action='store_true' )
     args = argparser.parse_args()
     from smodels.experiment.databaseObj import Database
-    db = Database ( args.database )
-    modifier = ExpResModifier()
-    er = modifier.modifyDatabase ( db, args.outfile, args.suffix, args.pmodel )
+    modifier = ExpResModifier( args.database )
+    er = modifier.modifyDatabase ( args.outfile, args.suffix, args.pmodel )
 
     if args.check:
         check ( args.outfile )
