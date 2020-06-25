@@ -578,7 +578,7 @@ def main():
         print ( "[mg5Wrapper] for topo %s we set mingap1 to 1." % args.topo )
         args.mingap1 = 1.
     if args.list_analyses:
-        bakeryHelpers.listAnalyses()
+        bakeryHelpers.listAnalyses( args.cutlang )
         sys.exit()
     if args.show:
         import printProdStats
