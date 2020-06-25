@@ -29,6 +29,8 @@ class ExpResModifier:
         self.protomodel = None
         self.rundir = setup()
         self.logfile = "modifier.log"
+        if Zmax == None:
+            Zmax = float("inf")
         self.Zmax = Zmax
         self.startLogger()
 
@@ -321,8 +323,8 @@ if __name__ == "__main__":
             help='suffix for database version ["fake1"]',
             type=str, default="fake1" )
     argparser.add_argument ( '-M', '--max',
-            help='upper limit on significance of individual excess [3.8]',
-            type=float, default=3.8 )
+            help='upper limit on significance of individual excess [None]',
+            type=float, default=None )
     argparser.add_argument ( '-P', '--pmodel',
             help='supply filename of a pmodel, in which case create a signal-infused database [""]',
             type=str, default="" )
