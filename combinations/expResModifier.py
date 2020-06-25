@@ -4,7 +4,9 @@
 Used to ``take out potential signals'' i.e. put all observations to values
 expected from background, by sampling the background model. """
 
-import copy, os, sys, time, subprocess
+# https://link.springer.com/content/pdf/10.1007/JHEP02(2015)004.pdf
+
+import copy, os, sys, time, subprocess, math
 from scipy import stats
 from protomodel import ProtoModel
 from manipulator import Manipulator
@@ -15,34 +17,44 @@ from smodels.particlesLoader import BSMList
 from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
 from smodels.theory import decomposer
+from csetup import setup
 
 class ExpResModifier:
-    def __init__ ( self, dbpath ):
+    def __init__ ( self, dbpath, Zmax ):
         """
         :param dbpath: path to database
+        :param Zmax: upper limit on an individual excess
         """
         self.dbpath = dbpath
         self.protomodel = None
+        self.rundir = setup()
         self.logfile = "modifier.log"
+        self.Zmax = Zmax
         self.startLogger()
 
     def interact ( self, listOfExpRes ):
         import IPython
         IPython.embed( using=False )
 
-    def computeNewObserved ( self, expected ):
+    def computeNewObserved ( self, expected, globalInfo ):
         """ given expected upper limit, compute a fake observed limit
             by sampling the non-truncated Gaussian likelihood """
         ret = copy.deepcopy ( expected )
         ## we only draw once for the entire UL map, equivalent to assuming
         ## that we are dealing with only one signal region
         ## second basic assumption: sigma_obs approx sigma_exp
-        x = stats.norm.rvs() # draw but once from standard-normal
+        x = float("inf")
+        while x > self.Zmax:
+            x = stats.norm.rvs() # draw but once from standard-normal
         for i,y in enumerate( ret.y_values ):
             sigma_exp = y / 1.96 ## the sigma of the Gaussian
             ## now lets shift, observed limit = expected limit + dx
             obs = y + sigma_exp * x ## shift the expected by the random fake signal
             ret.y_values[i] = obs ## now we simply shift
+        self.log ( "fixing UL result %s: x=%.2f" % \
+                   ( globalInfo.id, x ) )
+        if x > 3.5:
+            self.log ( "WARNING high UL x=%.2f!!!" % x )
         return ret
 
     def bgUpperLimit ( self, dataset ):
@@ -50,8 +62,7 @@ class ExpResModifier:
         ## FIXME wherever possible, we should sample from the non-truncated likelihood, take that as the signal strength and re-computed a likelihood with it.
         for i,txname in enumerate(dataset.txnameList):
             if hasattr ( txname, "txnameDataExp" ) and txname.txnameDataExp != None:
-                self.log ( "fixing UL result %s" % dataset.globalInfo.id )
-                txnd = self.computeNewObserved ( txname.txnameDataExp )
+                txnd = self.computeNewObserved ( txname.txnameDataExp, dataset.globalInfo )
                 dataset.txnameList[i].txnameData = txnd
         return dataset
 
@@ -63,6 +74,7 @@ class ExpResModifier:
 
     def startLogger ( self ):
         subprocess.getoutput ( "mv %s modifier.old" % self.logfile )
+        self.log ( "starting at %s" % time.asctime() )
 
     def log ( self, *args ):
         """ logging to file """
@@ -127,13 +139,21 @@ class ExpResModifier:
         orig = dataset.dataInfo.observedN
         exp = dataset.dataInfo.expectedBG
         err = dataset.dataInfo.bgError
-        lmbda = stats.norm.rvs ( exp, err )
-        dataset.dataInfo.lmbda = lmbda
-        if lmbda < 0.:
-            lmbda = 0.
-        obs = stats.poisson.rvs ( lmbda )
-        self.log ( "effmap replacing nobs=%.2f (bg=%.2f) by nobs=%.2f for %s" % \
-                ( orig, exp, obs, dataset.globalInfo.id ) )
+        S = float("inf")
+        while S > self.Zmax:
+            lmbda = stats.norm.rvs ( exp, err )
+            dataset.dataInfo.lmbda = lmbda
+            if lmbda < 0.:
+                lmbda = 0.
+            obs = stats.poisson.rvs ( lmbda )
+            toterr = math.sqrt ( err**2 + exp )
+            S = 0.
+            if toterr > 0.:
+                S = ( obs - exp ) / toterr
+        self.log ( "effmap replacing nobs=%.2f (bg=%.2f, lmbda=%.2f, S=%.2f) by nobs=%.2f for %s" % \
+                    ( orig, exp, lmbda, S, obs, dataset.globalInfo.id ) )
+        if S > 3.5:
+            self.log ( "WARNING!!! high em S=%.2f!!!!" % S )
         dataset.dataInfo.observedN = obs
         ## origN stores the n_observed of the original database
         dataset.dataInfo.origN = orig
@@ -262,6 +282,17 @@ class ExpResModifier:
         self.log ( "done faking the backgrounds" )
         return ret
 
+    def upload( self ):
+        cmd = "cp %s ./modifier.log %s" % ( args.outfile, self.rundir )
+        a = subprocess.getoutput ( cmd )
+        print ( "[expResModifier]", cmd, a )
+        cmd = "rm %s/default.pcl" % self.rundir
+        a = subprocess.getoutput ( cmd )
+        print ( "[expResModifier]", cmd, a )
+        cmd = "ln -s %s/%s %s/default.pcl" % ( self.rundir, args.outfile, self.rundir )
+        a = subprocess.getoutput ( cmd )
+        print ( "[expResModifier]", cmd, a )
+
 def check ( picklefile ):
     """ check the picklefile """
     print ( "now checking the modified database" )
@@ -289,6 +320,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-s', '--suffix',
             help='suffix for database version ["fake1"]',
             type=str, default="fake1" )
+    argparser.add_argument ( '-M', '--max',
+            help='upper limit on significance of individual excess [3.8]',
+            type=float, default=3.8 )
     argparser.add_argument ( '-P', '--pmodel',
             help='supply filename of a pmodel, in which case create a signal-infused database [""]',
             type=str, default="" )
@@ -298,9 +332,13 @@ if __name__ == "__main__":
             help='interactive mode', action='store_true' )
     argparser.add_argument ( '-c', '--check',
             help='check the pickle file <outfile>', action='store_true' )
+    argparser.add_argument ( '-u', '--upload',
+            help='upload to $RUNDIR', action='store_true' )
     args = argparser.parse_args()
     from smodels.experiment.databaseObj import Database
-    modifier = ExpResModifier( args.database )
+    modifier = ExpResModifier( args.database, args.max )
+    if not args.outfile.endswith(".pcl"):
+        print ( "[expResModifier] warning, shouldnt the name of your outputfile ``%s'' end with .pcl?" % args.outfile )
     er = modifier.modifyDatabase ( args.outfile, args.suffix, args.pmodel )
 
     if args.check:
@@ -308,3 +346,6 @@ if __name__ == "__main__":
 
     if args.interact:
         modifier.interact ( er )
+
+    if args.upload:
+        modifier.upload()
