@@ -3,7 +3,9 @@ import torch.nn as nn
 import numpy as np
 import os
 
-def loadModel(expres, txName, netType):
+"""
+
+def loadModelX(expres, txName, netType):
 
 	#savePath = expres.path + "/models/"
 	
@@ -29,7 +31,95 @@ def loadModel(expres, txName, netType):
 
 	return model
 
+"""
 
+def loadModel(expres, txName):
+	
+	# TEMPORARY replace databasePath
+	dbPath = expres.path
+	for i in range(len(dbPath)):
+		if dbPath[i:i+8] == 'database':
+			dbPath = dbPath[i:]
+			break
+	savePath = os.getcwd() + "/" + dbPath + "/models/"
+	# ---
+
+	fileName = txName + '.pth'
+
+	try: 
+		#model = Net_reg()
+		#model.load_state_dict(torch.load(savePath + fileName))
+
+		model = torch.load(savePath + fileName)
+		model.eval()
+	except:
+		model = None
+
+	return model
+
+
+
+def listModels(db, analyses, txNames, dataselector, superseded, nonValidated):
+
+	#db = Database(databasePath)
+
+	dataselector = "upperLimit"
+
+	expres = db.getExpResults(analysisIDs = analyses, txnames = txNames, dataTypes = dataselector, useSuperseded = superseded, useNonValidated = nonValidated)
+
+
+	txnames = []
+	for e in expres:
+		for dataset in e.datasets:
+			for txname in dataset.txnameList:
+				tx = txname.txName
+				if not tx in txnames:
+					txnames.append(tx)
+
+	colLen = max(len(txname) for txname in txnames) + 2
+
+	for e in expres:
+
+		print("\n  " + e.id() + ":")
+
+		txnames = []
+		for dataset in e.datasets:
+			for txname in dataset.txnameList:
+				tx = txname.txName
+				if not tx in txnames:
+					txnames.append(tx)
+
+		
+
+
+		if isinstance(txnames, list):
+
+			for txname in txnames:
+
+				model = loadModel(e, txname)
+				if model != None:
+					lossReg = model.getValidationLoss("regression").item()
+					lossCla = model.getValidationLoss("classification").item()
+					speedFactor = 1. / model.getSpeedFactor()
+
+					performance = str(round(lossReg, 3)) + " / " + str(round(lossCla, 3)) + " / " + str(round(speedFactor, 3))
+				else: 
+					performance = "N/A"
+
+				print("  " + txname.ljust(colLen) + performance)
+
+
+	return
+
+	dbPath = expres.path
+	for i in range(len(dbPath)):
+		if dbPath[i:i+8] == 'database':
+			dbPath = dbPath[i:]
+			break
+	savePath = os.getcwd() + "/" + dbPath + "/models/"
+	# ---
+
+	fileName = txName + '.pth'
 
 
 
@@ -95,6 +185,45 @@ def getNodesPerLayer(shape, nodes, layer, inputNum):
 	return [net, nodes_total]
 
 
+class NN_combined(nn.Module):
+
+	def __init__(self, model_reg, model_cla):
+    	
+		super(NN_combined, self).__init__()
+		self["regression"] = model_reg
+		self["classification"] = model_cla
+
+	def __setitem__(self, netType, model):
+		self.__dict__[netType] = model
+
+	def __getitem__(self, netType):
+		return self.__dict__[netType]
+
+	def __repr__(self):
+		return repr(self.__dict__)
+
+	def __len__(self):
+		return len(self.__dict__)
+
+	def getValidationLoss(self, netType):
+		return self[netType].getValidationLoss()
+
+	def setSpeedFactor(self, factor):
+		self._speedFactor = factor
+
+	def getSpeedFactor(self):
+		return self._speedFactor
+
+	def forward(self, x):
+
+		onHull = self["classification"](x) == 1.
+
+		if onHull:
+			return self["regression"](x)
+
+		return 0.
+
+
 class Net_cla(nn.Module):
  
 	def __init__(self, netShape, activFunc, rescaleParameter):
@@ -127,11 +256,17 @@ class Net_cla(nn.Module):
 			#elif i == 0:
 				#self.seq.add_module('drp{}'.format(i), nn.Dropout(0.2))			
 
-		self.rescaleParameter = rescaleParameter
+		self._rescaleParameter = rescaleParameter
+
+	def setValidationLoss(self, meanError):
+		self._validationLoss = meanError
+
+	def getValidationLoss(self):
+		return self._validationLoss
 
 	def forward(self, x):#input_):
 
-		x = ( x - self.rescaleParameter["mean"] ) / self.rescaleParameter["std"]
+		x = ( x - self._rescaleParameter["mean"] ) / self._rescaleParameter["std"]
 		x = self.seq(x)
 		
 		if not self.training and self._delimiter != 0.:
@@ -158,15 +293,18 @@ class Net_reg(nn.Module):
 			self.seq.add_module('lin{}'.format(i), nn.Linear(nin,nout))
 
 			if activFunc == "rel" and i != lastLayer:
-				self.seq.add_module('rel{}'.format(i), nn.PReLU()) #nn.SELU() nn.BatchNorm1d(nout))
+				self.seq.add_module('rel{}'.format(i), nn.ReLU())
                     
-			if activFunc == "tah" and i != lastLayer:
-				self.seq.add_module('tah{}'.format(i), nn.Tanh())
+			if activFunc == "prel" and i != lastLayer:
+				self.seq.add_module('prel{}'.format(i), nn.PReLU())
 
-			if activFunc == "sig" and i != lastLayer:
-				self.seq.add_module('sig{}'.format(i), nn.Sigmoid())   
+			if activFunc == "sel" and i != lastLayer:
+				self.seq.add_module('sel{}'.format(i), nn.SELU())
+
+			if activFunc == "lrel" and i != lastLayer:
+				self.seq.add_module('lrel{}'.format(i), nn.LeakyReLU()) 
     	
-		self.rescaleParameter = rescaleParameter
+		self._rescaleParameter = rescaleParameter
 
 		for m in self.modules():
 			if isinstance(m, nn.Linear):
@@ -175,7 +313,12 @@ class Net_reg(nn.Module):
 				#nn.init.xavier_uniform(m.weight)
 				#nn.init.normal(m.weight, mean=0, std=0.01)
 				#nn.init.constant(m.bias, 0)
-    
+
+	def setValidationLoss(self, meanError):
+		self._validationLoss = meanError
+
+	def getValidationLoss(self):
+		return self._validationLoss
 
 	def forward(self, x):
 
@@ -184,8 +327,9 @@ class Net_reg(nn.Module):
 		#	std = self.rescaleParameter["parameter"]["std"]
 		#	x = ( x - mean ) / std
 
-		x = ( x - self.rescaleParameter["mean"] ) / self.rescaleParameter["std"]
+		x = ( x - self._rescaleParameter["mean"] ) / self._rescaleParameter["std"]
 		x = self.seq(x)
+
 		return x
 	
 

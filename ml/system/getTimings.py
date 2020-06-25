@@ -14,17 +14,11 @@ from time import time
 import matplotlib.pyplot as plt
 import random
 
-
 FORMAT = '%(levelname)s in %(module)s.%(funcName)s() in %(lineno)s: %(message)s'
 logger = logging.getLogger(__name__)
 
 
 
-def predict(masses, model_reg, model_cla):
-	if model_cla(masses).item() == 1:
-		return model_reg(masses).item()
-	else:
-		return None
 
 def interpolate(masses, topo):
 	ul = expres.getUpperLimitFor(txname=topo, mass=masses)
@@ -52,18 +46,81 @@ def getError(expres, topo):
 		else: print("WRONG CLA")
 
 
+def getInterpolTimeOnly(expres, topo):
+
+	T = []
+	for i in range(5):
+
+		sampleSize = 200
+		dataset = generateDataset(expres, topo, None, 0., 200, "regression", "cpu")
+
+		inputs = dataset.inputs.numpy()
+		dim = int(0.5*dataset.inputDimension)
+		masses = []
+
+		for i in inputs:
+			m = [[x*GeV for x in i[0:dim]], [x*GeV for x in i[dim:]]]
+			masses.append(m)
+	
+	
+		t0 = time()
+		for m in masses:
+			expres.getUpperLimitFor(txname=topo, mass=m)
+		t = time() - t0
+
+		T.append(1000.*t/sampleSize)
+
+	return np.mean(T), np.std(T)
+
+
+def getSpeed(model, expres, topo, dataset):
+
+	dsp = dataset.inputs[0:5000]
+	dsnp = dsp.numpy()
+	dsnpi = []
+
+	dim = int(0.5*len(dsnp[0]))
+
+	for d in dsnp:
+		i = [[x*GeV for x in d[0:dim]], [x*GeV for x in d[dim:]]]
+		dsnpi.append(i)
+
+
+	t0 = time()
+	for m in dsnpi:
+		expres.getUpperLimitFor(txname=topo, mass=m)
+	timei = time() - t0
+
+	t0 = time()
+	for m in dsp:
+		model(m)
+	timep = time() - t0
+
+	deltaT = timep / timei
+
+	return deltaT
+
+	
+
+
 def getTimings(expres, topo):
 
-	#model_reg = loadModel(expres, txName, "regression")
-	#model_cla = loadModel(expres, txName, "classification")
+	fp = os.getcwd() + "/model.pth"
 
-	data = generateDataset(expres, topo, [0.,0.], 1000., "regression", "cpu")
+	model = CumulativeModel(model_reg, model_cla)
+	torch.save(model, fp)
+
+	data = generateDataset(expres, topo, None, [0.,0.], 1000., "regression", "cpu")
+
+	model = torch.load(fp)
+	model.eval()
 
 	data_i = []
 	data_p = []
 	for d in data:
-		#print(d)
+
 		m = [[d[0][0].item()*GeV, d[0][1].item()*GeV, d[0][2].item()*GeV], [d[0][3].item()*GeV, d[0][4].item()*GeV, d[0][5].item()*GeV]]
+		#m= [[d[0][0].item()*GeV, d[0][1].item()*GeV], [d[0][2].item()*GeV, d[0][3].item()*GeV]]
 
 		n = d[0]
 		data_i.append(m)
@@ -77,18 +134,20 @@ def getTimings(expres, topo):
 	for n in range(5):
 		t0 = time()
 		for m in data_i:
-			expres.getUpperLimitFor(txname=topo, mass=m)
+			interpolate_GETTIMINGS(m, topo, expres)
+			#expres.getUpperLimitFor(txname=topo, mass=m)
 		T.append(time()-t0)
 	print("interpolation: %s +/- %sms" % (round(1000*np.mean(T)/len(data), 5), round(1000*np.std(T)/len(data), 5)))
-	"""
+	
 	T = []
 	for n in range(5):
 		t0 = time()
 		for m in data_p:
-			model_reg(m)
+			predict_GETTIMINGS(m, model)
+			#model_reg(m)
 		T.append(time()-t0)
 	print("prediction: %s +/- %sms" % (round(1000*np.mean(T)/len(data), 5), round(1000*np.std(T)/len(data), 5)))
-	"""
+	
 
 def getPlot():
 	

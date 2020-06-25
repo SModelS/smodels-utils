@@ -29,7 +29,10 @@ class Performance():
 		self.showPlots = showPlots
 		self.savePlots = savePlots
 		self.netType = netType
-		self.model = loadModel(expres, txName, netType)
+		self.model = loadModel(expres, txName)[netType]
+
+		print(loadModel(expres, txName)["regression"])
+		print(loadModel(expres, txName)["classification"])
 
 		# TEMPORARY replace databasePath
 		dbPath = expres.path
@@ -310,6 +313,7 @@ if __name__=='__main__':
 	netType = parser.get("options", "whichNN")
 	if not ( netType == "regression" or netType == "classification"):
 		logger.error("Parameter nettype: for performance, only 'regression' or 'classification' allowed")
+		netType = "regression" #"classification"
 
 	#expres = Database(databasePath, progressbar = True)
 	#expres = expres.getExpResults(analysisIDs = analysisID, useSuperseded = True, useNonValidated = True)[0]
@@ -322,6 +326,7 @@ if __name__=='__main__':
 		IDS = [d.getID() for d in expres.datasets]
 		while SR not in IDS:
 			SR = input("available SR: %s\nselect which to train: " %expres.datasets)
+
 
 	validater = Performance(expres, txNames, SR, sampleSize, massRange, netType)
 	validater.evaluate()

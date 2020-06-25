@@ -21,6 +21,8 @@ from torch.utils.data import DataLoader as DataLoader
 from system.dataset import *
 from system.initnet import *
 from getPerformance import *
+from system.getTimings import *
+from system.getInterpolationError import *
 from scipy.optimize import minimize
 #torch.multiprocessing.set_start_method("spawn")
 import numpy
@@ -51,7 +53,7 @@ class Trainer():
 
 	"""
 
-	def __init__(self, expres, txName, dataset, netType, hyperParameter, sampleSize, massRange, sampleSplit, device, saveLogfile, saveLossPlot, replaceExistingModel):
+	def __init__(self, expres, txName, dataset, hyperParameter, sampleSize, massRange, sampleSplit, device, saveLogfile, saveLossPlot, replaceExistingModel, netType):
 
 		"""
 
@@ -78,19 +80,27 @@ class Trainer():
 
 		# generate datasets
 		timestamp = time()
+
+		self.fullDataset = {}
 		logger.info("Building Trainer - generating dataset..")
-		self.fullDataset = generateDataset(expres, txName, dataset, massRange, sampleSize, netType, device)
+
+		
+		self.fullDataset = generateDataset(self.expres, self.txName, self.dataset, 0., sampleSize, self.netType, self.device)
 		splitData = self.fullDataset.split(sampleSplit)
 		self.inputDimension = self.fullDataset.inputDimension
 		self.trainingSet = splitData[0]
 		self.testSet = splitData[1]
 		self.validationSet = splitData[2]
+
 		logger.info("Done. (%ss)" % (round(time() - timestamp, 3)))
 
+		#self.heuristicData = getInterpolationError(expres, txName)
+
 		self.hyperParameter = hyperParameter
+		self.totalHyperParamCombinations = len(self.hyperParameter)
 		# current hyperparam configuration for each training run
 		self.currentHyperParamConfig = None
-		self.totalHyperParamCombinations = len(self.hyperParameter)
+
 		logger.info("%s Hyperparameter combinations have been loaded." % (self.totalHyperParamCombinations) )
 
 		self.saveLogfile  = saveLogFile
@@ -116,26 +126,26 @@ class Trainer():
 
 		logger.info("Starting grid search for %s: %s (%s)" % (self.expres.globalInfo.getInfo('id'), self.txName, self.netType) )
 
-		for n in range(len(self.hyperParameter)):
+		for n in range(self.totalHyperParamCombinations):
 			self.currentHyperParamConfig = self.hyperParameter[n]
 			self.runCurrentConfiguration()
 
-			if self.saveLossPlot:
-				self.createLossPlot()
+			#if self.saveLossPlot:
+			#	self.createLossPlot()
 
-		if self.saveLogfile:
-			self.saveResultsToLog()
+		#if self.saveLogfile:
+		#	self.saveResultsToLog()
 
-		if self.replaceExistingModel == "outperforming":
-			oldModel = loadModel(self.expres, self.txName, self.netType)
-			if oldModel == None: 
-				saveNewModel = True
-			else: 
-				saveNewModel = MSErel(oldModel(self.validationSet.inputs), self.validationSet.labels) > self.bestLossGlobal
-		else: saveNewModel = self.replaceExistingModel == "always"
+		#if self.replaceExistingModel == "outperforming":
+		#	oldModel = loadModel(self.expres, self.txName, self.netType)
+		#	if oldModel == None: 
+		#		saveNewModel = True
+		#	else: 
+		#		saveNewModel = MSErel(oldModel(self.validationSet.inputs), self.validationSet.labels) > self.bestLossGlobal
+		#else: saveNewModel = self.replaceExistingModel == "always"
 
-		if saveNewModel:
-			self.saveModel()
+		#if True: #saveNewModel:
+		#	self.saveModel()
 
 
 	def runCurrentConfiguration(self):
@@ -146,21 +156,22 @@ class Trainer():
 
 		"""
 
+
 		if self.currentHyperParamConfig == None:
 			logger.error("No hyperparameter configuration specified for training.")
 			return
 
 
-		logger.info("Training model %d/%d .." %(self.currentHyperParamConfig["index"]+1, self.totalHyperParamCombinations))
+		logger.info("Training model %d/%d .." %(self.currentHyperParamConfig["index"] + 1, self.totalHyperParamCombinations))
 
 		if self.saveLossPlot:
 			self.lossPerEpoch = {'training':[],'testing':[]}
 
-
 		self.model = createNet(self.currentHyperParamConfig, self.fullDataset, self.netType).to(device)
 		self.trainModel()
 
-		if netType == "regression":
+
+		if self.netType == "regression":
 
 			meanError = MSErel(self.model(self.validationSet.inputs), self.validationSet.labels)
 			logger.info("\rDone! Total relative error on validation set: %s" %round(meanError.item(), 3))
@@ -171,6 +182,8 @@ class Trainer():
 				logger.info("Rerunning training with new dataset: %s points" %len(newDataset))
 				trainingNew, testNew = newDataset.split([0.8,0.2])
 				optimizer = loadOptimizer(self.currentHyperParamConfig["optimizer"], self.model, self.currentHyperParamConfig["learnRate"]*0.1)
+
+
 				self.trainModel(optimizer, MSErel, epochNum = int(self.currentHyperParamConfig["epochNum"]*0.5), trainingSet = trainingNew, testSet = testNew)
 
 				meanError = MSErel(self.model(self.validationSet.inputs), self.validationSet.labels)
@@ -185,10 +198,13 @@ class Trainer():
 
 
 
+		
+		#if self.bestModelGlobal == None or meanError < self.bestModelGlobal[self.netType].getValidationError():
 		if meanError < self.bestLossGlobal:
-			self.bestLossGlobal  = meanError
-			self.bestModelGlobal = copy.deepcopy(self.model)
-			self.bestHyperParamConfig = self.currentHyperParamConfig
+			self.bestLossGlobal  		= meanError
+			self.bestModelGlobal 		= copy.deepcopy(self.model)
+			self.bestHyperParamConfig 	= self.currentHyperParamConfig
+			self.bestModelGlobal.setValidationLoss(meanError)
 
 		if self.saveLogfile:
 			self.logData.append([round(meanError.item(), 3), self.currentHyperParamConfig])
@@ -247,6 +263,7 @@ class Trainer():
 				loss = lossFunction(self.model(inputs), labels)
 				loss.backward()
 				optimizer.step()
+
 
 			self.model.eval()
 
@@ -343,25 +360,51 @@ class Trainer():
 		return float(wrong)/float(right+wrong)
 
 
+	def combineModel(otherReg, otherCla):
+
+		modelReg = otherReg.bestModelGlobal
+		modelCla = otherCla.bestModelGlobal
+
+		finalModel = NN_combined(modelReg, modelCla)
+
+		return finalModel
+
+
+	def saveModel(other, finalModel):
+
+		
+		path = other.savePath + "/models/"
+		fName = other.txName + ".pth"
+		if not os.path.exists(path): os.makedirs(path)
+		fullPath = path + fName
+
+
+		torch.save(finalModel, fullPath)
+		logger.info("Best performing model has been saved. (%s)" % fullPath)
+
+		return finalModel
 
 
 
-	def saveModel(self):
+	def saveModelX(self):
 
 		"""
 
 
 
 		"""
+
+		self.finalModel = NN_combined(self.bestModelGlobal["regression"], self.bestModelGlobal["classification"])
 
 		savePathModel = self.savePath + "/models/"
-		fileNameModel = self.txName + '_' + self.netType + '.pth'
+		fileNameModel = self.txName + '.pth'
 		if not os.path.exists(savePathModel): os.makedirs(savePathModel)
 
 		#torch.save(self.bestModelGlobal.state_dict(), savePathModel + fileNameModel)
-		torch.save(self.bestModelGlobal, savePathModel + fileNameModel)
+		torch.save(self.finalModel, savePathModel + fileNameModel)
 		logger.info("Best performing model has been saved. (%s)" %(savePathModel + fileNameModel))
 
+		"""
 		savePathInfo = self.savePath + "/"
 		fileNameInfo = self.txName + "_" + self.netType + ".info"
 		if not os.path.exists(savePathInfo): os.makedirs(savePathInfo)
@@ -378,7 +421,7 @@ class Trainer():
 			file.write("---")
 			
 		logger.info("Model.info file has been created. (%s)" %(savePathInfo + fileNameInfo))
-	
+		"""
 	
 					
 
@@ -420,6 +463,18 @@ if __name__=='__main__':
 	txNames = parser.get("database", "txNames").split(",")
 	dataselector = parser.get("database", "dataselector")
 
+	db = Database(databasePath)
+	expres = db.getExpResults(analysisIDs = analysisID, txnames = txNames, dataTypes = dataselector, useSuperseded = True, useNonValidated = True)[0]
+
+	signalRegion = None
+	if dataselector == "efficiencyMap":
+		signalRegion = parser.get("database", "signalRegion")
+
+		IDS = [d.getID() for d in expres.datasets]
+
+		while signalRegion not in IDS:
+			signalRegion = input("available SR: %s\nselect which to train: " % expres.datasets)
+
 
 	#Configure dataset generated for training
 	sampleSize = int(parser.get("dataset", "sampleSize"))
@@ -459,14 +514,7 @@ if __name__=='__main__':
 	saveLossPlot = parser.getboolean("analysis", "lossPlot")
 	runPerformance = parser.getboolean("analysis", "runPerformance")
 	
-	db = Database(databasePath)
-	expres = db.getExpResults(analysisIDs = analysisID, txnames = txNames, dataTypes = dataselector, useSuperseded = True, useNonValidated = True)[0]
-
-	SR = None
-	if dataselector == "efficiencyMap":
-		IDS = [d.getID() for d in expres.datasets]
-		while SR not in IDS:
-			SR = input("available SR: %s\nselect which to train: " %expres.datasets)
+	
 		#dataset = SR#expres.getDataset(SR)
 	#else: dataset = None
 
@@ -474,6 +522,11 @@ if __name__=='__main__':
 	#expres_T2tt = Database(databasePath).getExpResults(txnames = txNames, dataTypes = "upperLimit", useSuperseded = True, useNonValidated = True)
 	#for e in expres_T2tt:
 	#	print(e)
+
+	
+	#exit()
+
+	hyperParameter = {}
 
 	for netType in whichNN:
 
@@ -494,28 +547,43 @@ if __name__=='__main__':
 		try: rescaleMethods = parser.get(netType, "rescaleData").split(",")
 		except: rescaleMethods = [None]
 
-		hyperParameter = {}
-		hyperParameter["optimizer"] = optimizers
-		hyperParameter["lossFunction"] = lossFunctions
-		hyperParameter["batchSize"] = batchSizes
-		hyperParameter["activationFunction"] = activationFunctions
-		hyperParameter["epochNum"] = epochNums
-		hyperParameter["learnRate"] = learnRates
-		hyperParameter["layer"] = layers
-		hyperParameter["nodes"] = nodes
-		hyperParameter["shape"] = shapes
-		hyperParameter["rescaleMethod"] = rescaleMethods
-		hyperParameter = HyperParameter(hyperParameter)
+		hP = {}
+		hP["optimizer"] = optimizers
+		hP["lossFunction"] = lossFunctions
+		hP["batchSize"] = batchSizes
+		hP["activationFunction"] = activationFunctions
+		hP["epochNum"] = epochNums
+		hP["learnRate"] = learnRates
+		hP["layer"] = layers
+		hP["nodes"] = nodes
+		hP["shape"] = shapes
+		hP["rescaleMethod"] = rescaleMethods
+		hP = HyperParameter(hP)
+		hyperParameter[netType] = hP
 
-		for txName in txNames:
-			if GetModel(expres, txName, netType) == None or overwrite != 'never':
+	for txName in txNames:
+		#if GetModel(expres, txName, netType) == None or overwrite != 'never':
 
-				modelTrainer = Trainer(expres, txName, SR, netType, hyperParameter, sampleSize, massRange, sampleSplit, device, saveLogFile, saveLossPlot, overwrite)
-				modelTrainer.findBestModel()
+		trainerRegression = Trainer(expres, txName, signalRegion, hyperParameter["regression"], sampleSize, massRange, sampleSplit, device, saveLogFile, saveLossPlot, overwrite, "regression")
+		trainerRegression.findBestModel()
 
-				#if runPerformance:
-					#validateModel(model, expres, txName, massRange, sampleSize, netType, validationSet)
-							#getPerformanceOfModel()
+		trainerClassification = Trainer(expres, txName, signalRegion, hyperParameter["classification"], sampleSize, massRange, sampleSplit, device, saveLogFile, saveLossPlot, overwrite, "classification")
+		trainerClassification.findBestModel()
+
+		bestModel = Trainer.combineModel(trainerRegression, trainerClassification)
+
+		speedFactor = getSpeed(bestModel, expres, txName, trainerRegression.fullDataset)
+		bestModel.setSpeedFactor(speedFactor)
+
+		Trainer.saveModel(trainerRegression, bestModel)
+
+			
+
+			#bestModel[netType] = modelTrainer.bestModelGlobal
+
+			#if runPerformance:
+				#validateModel(model, expres, txName, massRange, sampleSize, netType, validationSet)
+				#getPerformanceOfModel()
 				
 				
 	

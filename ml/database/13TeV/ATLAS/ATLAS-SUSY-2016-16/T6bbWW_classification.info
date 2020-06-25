@@ -1,10 +1,10 @@
-created on:	29.05.2020-12:21:45
+created on:	29.05.2020-12:26:47
 implemented by:	Philipp Neuhuber
-relative error:	104.998%
+relative error:	364.729%
 
 Net_cla(
   (seq): Sequential(
-    (lin0): Linear(in_features=4, out_features=64, bias=True)
+    (lin0): Linear(in_features=6, out_features=64, bias=True)
     (prel0): PReLU(num_parameters=1)
     (lin1): Linear(in_features=64, out_features=1, bias=True)
     (sgm1): Sigmoid()

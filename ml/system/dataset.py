@@ -5,6 +5,7 @@
 import os, torch, unum, random, copy
 from smodels.experiment.databaseObj import Database
 from smodels.tools.physicsUnits import GeV, fb
+from smodels.tools.stringTools import concatenateLines
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 from torch import nn
@@ -15,6 +16,9 @@ from random import shuffle
 def MSErel(input, label, reduction = "mean"):
 	#loss = torch.abs((input-label)/label)
 	#if reduction == "mean": loss = torch.mean(loss)
+	#if label != 0.:
+	#	loss = ((input-label)/label)**2
+	#else: loss = input**2
 	loss = ((input-label)/label)**2
 	if reduction == "mean": loss = torch.sqrt(torch.mean(loss))
 	return loss
@@ -207,14 +211,77 @@ def getExpresData(expres, txName, SR):
 	vals = sorted(vals)
 	m1 = np.mean(vals)
 	m2 = np.mean(vals[:int(-len(vals)*0.95)])
-	print(m1/m2)
+	#print(m1/m2)
 
 	expresData = np.array(expresData)
 	return expresData
 
 
+def getAxesData(axes):
 
-def generateDataset(expres, topo, SR, massRange, sampleSize, dataType, device, shuffleData=True):
+	axes = axes.replace("[[","")
+	axes = axes.replace("]]","")
+	axes = axes.replace(" ","")
+	axes = axes.split("],[")
+
+	if axes[0] == axes[1]:
+		axes = axes[0]
+	
+	axes = axes.split(",")
+
+	
+	#read x and y from raw axes for mass dependancies
+	for n in range(len(axes)):
+
+		noX = axes[n].replace("x", "")
+		noY = axes[n].replace("y", "")
+
+		if noX == "": x = n
+		elif noY == "": y = n
+		
+
+	mod = []
+	dep = []
+
+	for axis in axes:
+
+		noX = axis.replace("x", "")
+		noY = axis.replace("y", "")
+
+		if noX == noY:
+			try: 
+				f = float(axis)
+				d = -1
+			except: print("unrecognized axis")
+
+		elif axis != noX and axis != noY:
+			# should be arithemtic mean, both x, y are present in axis
+			f = 0
+			d = [x,y]
+
+		elif axis == noY:
+			#only x present:
+			if noX == "":
+				f = 0
+				d = -1
+			else:
+				f = float(noX)
+				d = x
+		elif axis == noX:
+			if noY == "":
+				f = 0
+				d = -1
+			else:
+				f = float(noY)
+				d = y
+
+		mod.append({"dependancy": d, "offset": f})
+
+	#print(mod)
+	return mod
+
+
+def generateDataset(expres, topo, SR, massRange, sampleSize, netType, device, shuffleData=True):
 
 	analysis = expres.getDataset(SR)
 
@@ -232,6 +299,29 @@ def generateDataset(expres, topo, SR, massRange, sampleSize, dataType, device, s
 			convexHullMin 		= np.min(expresData, axis=0)
 			convexHullMax 		= np.max(expresData, axis=0)
 
+			txtFile = open(expres.path + "/data/" + topo + ".txt", "r")
+			txdata = txtFile.read()
+			txtFile.close()
+			content = concatenateLines(txdata.split("\n"))
+			
+			tags = [line.split(":", 1)[0].strip() for line in content]
+			#data = None
+			#dataType = None
+			for i,tag in enumerate(tags):
+				if not tag: continue
+				line = content[i]
+				value = line.split(':',1)[1].strip()
+				if ";" in value: value = value.split(";")
+				#if tag == "upperLimits":
+					#data = value
+					#dataType = "upperLimit"
+					#masses, uls, units = getExpresDataFormatted(data)
+				if tag == "axes":
+					axes = value
+					break
+
+			axesInfo = getAxesData(axes)
+
 			isSymmetric = True
 			for entry in expresData:
 				if not all(entry[0:inputDimensionHalf] == entry[inputDimensionHalf:inputDimension]):
@@ -243,13 +333,14 @@ def generateDataset(expres, topo, SR, massRange, sampleSize, dataType, device, s
 	dataset = []
 	particles = [0 for _ in range(inputDimension)]
 
-	if dataType == 'regression':
+	if netType == 'regression':
 
 		#create dataset for our regression network
 		#draw random number between convex hull minima and maxima for each axis
 		#if branches are symmetric, masses drawn for 1st branch are copied to 2nd
 		
 		while(samplesLeft>0):
+
 			if isSymmetric:
 				for n in range(inputDimensionHalf):
 					particles[n] = random.uniform(convexHullMin[n], convexHullMax[n])
@@ -259,8 +350,20 @@ def generateDataset(expres, topo, SR, massRange, sampleSize, dataType, device, s
 				for n in range(inputDimension):
 					particles[n] = random.uniform(convexHullMin[n], convexHullMax[n])
 
-			masses = [[p*GeV for p in particles[0:inputDimensionHalf]], [p*GeV for p in particles[inputDimensionHalf:inputDimension]]]
+			if isSymmetric:
+				for n in range(inputDimensionHalf):
 
+					dep = axesInfo[n]["dependancy"]
+					off = axesInfo[n]["offset"]
+
+					if type(dep) == list:
+						particles[n] = 0.5 * ( particles[dep[0]] + particles[dep[1]] )
+					elif dep > -1:
+						particles[n] = particles[dep] + off
+				
+			
+			masses = [[p*GeV for p in particles[0:inputDimensionHalf]], [p*GeV for p in particles[inputDimensionHalf:inputDimension]]]
+			
 			if SR == None:
 
 				ul = expres.getUpperLimitFor(txname=topo, mass=masses)
@@ -270,6 +373,7 @@ def generateDataset(expres, topo, SR, massRange, sampleSize, dataType, device, s
 					new.append(ul.asNumber(fb))
 					dataset.append(new)
 					samplesLeft -= 1
+				
 
 			else:
 
@@ -280,7 +384,6 @@ def generateDataset(expres, topo, SR, massRange, sampleSize, dataType, device, s
 					new.append(eff)
 					dataset.append(new)
 					samplesLeft -= 1
-
 	else:
 
 		#create dataset for our classification network
