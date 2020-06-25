@@ -30,7 +30,7 @@ class ExpResModifier:
         self.rundir = setup()
         self.logfile = "modifier.log"
         if Zmax == None:
-            Zmax = float("inf")
+            Zmax = 100
         self.Zmax = Zmax
         self.startLogger()
 
@@ -76,7 +76,8 @@ class ExpResModifier:
 
     def startLogger ( self ):
         subprocess.getoutput ( "mv %s modifier.old" % self.logfile )
-        self.log ( "starting at %s" % time.asctime() )
+        self.log ( "starting at %s with zmax of %s" % \
+                   ( time.asctime(), self.Zmax ) )
 
     def log ( self, *args ):
         """ logging to file """
@@ -152,11 +153,12 @@ class ExpResModifier:
             S = 0.
             if toterr > 0.:
                 S = ( obs - exp ) / toterr
-        self.log ( "effmap replacing nobs=%.2f (bg=%.2f, lmbda=%.2f, S=%.2f) by nobs=%.2f for %s" % \
+            if S < self.Zmax:
+                self.log ( "effmap replacing nobs=%.2f (bg=%.2f, lmbda=%.2f, S=%.2f) by nobs=%.2f for %s" % \
                     ( orig, exp, lmbda, S, obs, dataset.globalInfo.id ) )
+                dataset.dataInfo.observedN = obs
         if S > 3.5:
             self.log ( "WARNING!!! high em S=%.2f!!!!" % S )
-        dataset.dataInfo.observedN = obs
         ## origN stores the n_observed of the original database
         dataset.dataInfo.origN = orig
         return dataset
@@ -351,3 +353,5 @@ if __name__ == "__main__":
 
     if args.upload:
         modifier.upload()
+
+    # ./expResModifier.py -d /scratch-cbe/users/wolfgan.waltenberger/rundir/original.pcl -o ./signal1.pcl -P pmodel9.py -s signal1 -u
