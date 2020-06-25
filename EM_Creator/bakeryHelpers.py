@@ -180,7 +180,24 @@ def ma5AnaNameToSModelSName ( name ):
     name = name.replace("_","-")
     return name
 
-def listAnalyses ( ):
+def listAnalysesCutLang():
+    """ list the analyses that are available in cutlang """
+    dirname = "CutLang/ADLLHCanalyses/"
+    files = glob.glob ( "%s*" % dirname )
+    for f in files:
+        f = f.replace(dirname,"")
+        if "README" in f:
+            continue
+        print ( f )
+
+def listAnalyses ( cutlang ):
+    """ list the analyses that are available in MA5 or cutlang """
+    if cutlang:
+        listAnalysesCutLang()
+    else:
+        listAnalysesMA5()
+
+def listAnalysesMA5():
     """ list the analyses that are available in MA5 """
     import glob
     # dname = "ma5/tools/PAD/Build/"
