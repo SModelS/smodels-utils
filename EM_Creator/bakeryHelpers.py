@@ -341,3 +341,6 @@ def cleanAll():
         cleaned.append ( f )
     print ( "Cleaned %d temporary files" % len(cleaned) )
 
+
+if __name__ == "__main__":
+    print ( parseMasses ( "[(350,691,50),(0,2351,50)]", mingap1 = 1., maxgap1 = 360. ) )
