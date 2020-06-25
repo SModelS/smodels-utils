@@ -275,16 +275,18 @@ def findPids ( rundir ):
     return ret
 
 def draw( pid= 1000022, interactive=False, pid2=0, copy=False, 
-          drawtimestamp = True, rundir = None ):
+          drawtimestamp = True, rundir = None, plotrmax=False ):
     """ draw plots
     :param copy: copy final plots to ../../smodels.github.io/protomodels/latest
     :param drawtimestamp: if True, put a timestamp on it
+    :param plotrmax: if True, plot also rmax curve
     """
     if pid2 == 0: ## means all
         pidpairs = findPidPairs( rundir )
         for pids in pidpairs:
             try:
-                draw ( pids[0], interactive, pids[1], copy, drawtimestamp, rundir )
+                draw ( pids[0], interactive, pids[1], copy, drawtimestamp, \
+                       rundir, plotrmax )
             except Exception as e:
                 print ( "[scanner] %s" % e )
         return
@@ -318,7 +320,7 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
         y0=y_
         if type(y_)==tuple:
             y0 = y_[0]
-            if y_[1] > rthresholds[0]+.05:
+            if y_[1] > rthresholds[0]+.05 and plotrmax:
                 rsarea.append ( y_[1] )
                 y0 = -1.
             else:
@@ -345,14 +347,14 @@ def draw( pid= 1000022, interactive=False, pid2=0, copy=False,
     ax1.set_ylim ( bottom = 2., top=maxyr*1.03 )
     rsarea[0]=0.
     rsarea[-1]=0.
-    if len(rs) == len(x):
+    if len(rs) == len(x) and plotrmax:
         ax2 = ax1.twinx()
         ax1.plot ([], [], label="$r_\mathrm{max}$", c="tab:red", zorder=1 )
         ax2.plot ( x, rs, label="$r_\mathrm{max}$", c="tab:red", zorder=2 )
         ax2.tick_params ( axis="y", labelcolor="tab:red" )
         ax2.set_ylim ( bottom=min(rs)*.7, top = 1.9 )
         ax2.set_ylabel ( "$r_\mathrm{max}$", c="tab:red" )
-    if len(rsarea) == len(x):
+    if len(rsarea) == len(x) and plotrmax:
         # ax3 = ax1.twinx()
         ax2.fill ( x, rsarea, lw=0, edgecolor="white", alpha=.2, facecolor="tab:red", zorder=-1 )
     ymax = max(y)
