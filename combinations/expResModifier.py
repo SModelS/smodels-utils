@@ -41,18 +41,32 @@ class ExpResModifier:
     def computeNewObserved ( self, expected, globalInfo ):
         """ given expected upper limit, compute a fake observed limit
             by sampling the non-truncated Gaussian likelihood """
-        ret = copy.deepcopy ( expected )
         ## we only draw once for the entire UL map, equivalent to assuming
         ## that we are dealing with only one signal region
         ## second basic assumption: sigma_obs approx sigma_exp
+        allpositive = False
+        ctr = 0
         x = float("inf")
-        while x > self.Zmax:
-            x = stats.norm.rvs() # draw but once from standard-normal
-        for i,y in enumerate( ret.y_values ):
-            sigma_exp = y / 1.96 ## the sigma of the Gaussian
-            ## now lets shift, observed limit = expected limit + dx
-            obs = y + sigma_exp * x ## shift the expected by the random fake signal
-            ret.y_values[i] = obs ## now we simply shift
+        ## stop when all values are positive
+        while not allpositive:
+            ret = copy.deepcopy ( expected )
+            ctr += 1
+            x = float("inf")
+            while x > self.Zmax:
+                x = stats.norm.rvs() # draw but once from standard-normal
+            allpositive = True
+            for i,y in enumerate( ret.y_values ):
+                sigma_exp = y / 1.96 ## the sigma of the Gaussian
+                ## now lets shift, observed limit = expected limit + dx
+                obs = y + sigma_exp * x ## shift the expected by the random fake signal
+                if obs <= 0.:
+                    ## try again
+                    allpositive = False
+                ret.y_values[i] = obs ## now we simply shift
+            if ctr > 2:
+                self.log ( "WARNING seems like I am having a hard time getting all "\
+                        "values of %s positive." % globalInfo.id )
+
         self.log ( "fixing UL result %s: x=%.2f" % \
                    ( globalInfo.id, x ) )
         if x > 3.5:
@@ -78,6 +92,7 @@ class ExpResModifier:
         subprocess.getoutput ( "mv %s modifier.old" % self.logfile )
         self.log ( "starting at %s with zmax of %s" % \
                    ( time.asctime(), self.Zmax ) )
+        self.log ( "arguments were %s" % ( " ".join ( sys.argv ) ) )
 
     def log ( self, *args ):
         """ logging to file """
@@ -118,6 +133,8 @@ class ExpResModifier:
                        model. in this case fake a signal
         :returns: the database
         """
+        self.log ( "starting to create %s. suffix is %s protomodel is %s." % \
+                   ( outfile, suffix, pmodel ) )
         db = Database ( self.dbpath )
         listOfExpRes = db.getExpResults()
         self.produceProtoModel ( pmodel )
@@ -314,7 +331,8 @@ def check ( picklefile ):
 if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(
-                        description='experimental results modifier. used to take out potential signals from the database by setting all observations to values sampled from the background expectations' )
+                        description='experimental results modifier. used to take out potential signals from the database by setting all observations to values sampled from the background expectations. can insert signals, too.',
+                        epilog='./expResModifier.py -d $RUNDIR/original.pcl -o ./signal1.pcl -P pmodel9.py -s signal1' )
     argparser.add_argument ( '-d', '--database',
             help='database to use [../../smodels-database]',
             type=str, default="../../smodels-database" )
@@ -354,4 +372,3 @@ if __name__ == "__main__":
     if args.upload:
         modifier.upload()
 
-    # ./expResModifier.py -d /scratch-cbe/users/wolfgan.waltenberger/rundir/original.pcl -o ./signal1.pcl -P pmodel9.py -s signal1 -u
