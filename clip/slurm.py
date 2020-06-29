@@ -106,7 +106,7 @@ def produceScanScript ( pid, force_rewrite, pid2, rundir, nprocs ):
             f.close()
         os.chmod ( fname, 0o775 )
 
-def fetchUnfrozenFromDict():
+def fetchUnfrozenFromDict( rundir ):
     """ fetch pids of unfrozenparticles from dictionary
         in <rundir>/pmodel.py, if exists.
     :returns: list of pids, or None.
@@ -124,7 +124,7 @@ def fetchUnfrozenFromDict():
         return ret
     return None
 
-def fetchUnfrozenSSMsFromDict():
+def fetchUnfrozenSSMsFromDict( rundir ):
     """ fetch pid pairs of ssmultipliers from dictionary
         in <rundir>/pmodel.py, if exists.
     :returns: list of pid pairs, or None.
@@ -158,7 +158,7 @@ def runLLHDScanner( pid, dry_run, time, rewrite, rundir ):
     :param rewrite: force rewrite of scan script
     """
     if pid == 0:
-        pids = fetchUnfrozenFromDict()
+        pids = fetchUnfrozenFromDict( rundir )
         if pids == None:
             pids = [ 1000001, 1000003, 1000006 ]
         for i in pids:
@@ -207,11 +207,11 @@ def runScanner( pid, dry_run, time, rewrite, pid2, rundir ):
     """
     if pid == 0:
         if pid2 == 0:
-            pidpairs = fetchUnfrozenSSMsFromDict()
+            pidpairs = fetchUnfrozenSSMsFromDict( rundir )
             for pidpair in pidpairs:
                 runScanner ( pidpair[0], dry_run, time, rewrite, pidpair[1], rundir )
             return
-        pids = fetchUnfrozenFromDict()
+        pids = fetchUnfrozenFromDict( rundir )
         if pids == None:
             pids = [ 1000001, 1000003, 1000006, 10000022 ]
         for i in pids:
