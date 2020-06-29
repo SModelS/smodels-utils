@@ -18,6 +18,7 @@ from smodels.theory.theoryPrediction import theoryPredictionsFor
 from smodels.tools.simplifiedLikelihoods import Data, UpperLimitComputer
 from smodels.theory import decomposer
 from csetup import setup
+import IPython
 
 class ExpResModifier:
     def __init__ ( self, dbpath, Zmax ):
@@ -136,7 +137,8 @@ class ExpResModifier:
         self.log ( "starting to create %s. suffix is %s protomodel is %s." % \
                    ( outfile, suffix, pmodel ) )
         db = Database ( self.dbpath )
-        listOfExpRes = db.getExpResults()
+        # listOfExpRes = db.getExpResults( useSuperseded=True, useNonValidated=True )
+        listOfExpRes = db.expResultList ## seems to be the safest bet?
         self.produceProtoModel ( pmodel )
         self.log ( "%d results before faking bgs" % len(listOfExpRes) )
         updatedListOfExpRes = self.fakeBackgrounds ( listOfExpRes )
@@ -224,13 +226,20 @@ class ExpResModifier:
     def addSignalForULMap ( self, dataset, tpred, lumi ):
         """ add a signal to this UL result. background sampling is
             already taken care of """
-        self.log ( " `- add UL matching tpred %s/%s: %s" % \
-                ( tpred.analysisId(), tpred.dataId(), tpred.xsection.value ) )
+        self.log ( " `- add UL matching tpred %s/%s: %s[%s]" % \
+                ( tpred.analysisId(), tpred.dataId(), tpred.xsection.value, \
+                  tpred.PIDs ) )
+        #print ( " `- add UL matching tpred %s/%s: %s[%s]" % \
+        #        ( tpred.analysisId(), tpred.dataId(), tpred.xsection.value, \
+        #          tpred.PIDs ) )
         ## so we simply add the theory predicted cross section to the limit
         sigmaN = tpred.xsection.value.asNumber(fb)
+        ## sigmaN is the predicted production cross section of the signal,
+        ## in fb
         for i,txname in enumerate(dataset.txnameList):
             if not self.txNameIsIn ( txname, tpred ):
                 continue
+            # print ( "  `-- adding %s to %s" % ( sigmaN, txname ) )
             txnd = txname.txnameData
             etxnd = txname.txnameDataExp
             for yi,y in enumerate(txnd.y_values):
@@ -259,7 +268,7 @@ class ExpResModifier:
         self.log ( "now adding the signals" )
         ret = []
         self.produceTopoList()
-        for expRes in listOfExpRes:
+        for l,expRes in enumerate(listOfExpRes):
             tpreds = theoryPredictionsFor ( expRes, self.topos, useBestDataset=False,
                                             combinedResults=False )
             if tpreds == None:
@@ -274,17 +283,10 @@ class ExpResModifier:
                 if dt == "upperLimit":
                     for tpred in tpreds:
                         if tpred.dataId() == None:
-                            expRes.datasets[i] = self.addSignalForULMap ( dataset, tpred, lumi )
+                            # IPython.embed()
+                            listOfExpRes[l].datasets[i] = self.addSignalForULMap ( dataset, tpred, lumi )
                     ## expRes.datasets[i] = self.fixUpperLimit ( dataset )
-                elif dt == "efficiencyMap":
-                    for tpred in tpreds:
-                        if dsname == tpred.dataId():
-                            expRes.datasets[i] = self.addSignalForEfficiencyMap ( dataset, tpred, lumi )
-                else:
-                    print ( "[expResModifier] dataset type %s unknown" % dt )
-            ret.append ( expRes )
-        self.log ( "done adding signals" )
-        return ret
+        return listOfExpRes
 
     def fakeBackgrounds ( self, listOfExpRes ):
         """ thats the method that samples the backgrounds """
