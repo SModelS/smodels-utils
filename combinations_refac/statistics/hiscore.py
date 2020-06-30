@@ -556,9 +556,9 @@ def main ( args ):
         printProtoModels ( protomodels, args.detailed, min ( 10, args.nmax ) )
 
     if args.interactive:
-        import trimmer
-        from smodels.tools.physicsUnits import fb, pb, GeV, TeV
-        from smodels.theory.crossSection import LO, NLO, NLL
+        # from modelBuilder import trimmer
+        # from smodels.tools.physicsUnits import fb, pb, GeV, TeV
+        # from smodels.theory.crossSection import LO, NLO, NLL
         ma = Manipulator ( protomodels[0] )
         ma.M.createNewSLHAFileName()
         print ( "[hiscore] starting interactive session. Variables: %sprotomodels%s" % \
@@ -567,12 +567,12 @@ def main ( args ):
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
         print ( "[hiscore]                          Instantiations: %sma, co, tr%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        import combiner
-        co = combiner.Combiner()
-        tr = trimmer.Trimmer ( protomodels[0] )
-        import hiscore
-        # import IPython
-        # IPython.embed( using=False )
+        # import combiner
+        # co = combiner.Combiner()
+        # tr = trimmer.Trimmer ( protomodels[0] )
+        # import hiscore
+        import IPython
+        IPython.embed( using=False )
 
     if len(protomodels)>0 and protomodels[0] != None:
         ret["Z"]=protomodels[0].Z

@@ -6,7 +6,6 @@
 import time, colorama, copy
 from smodels.tools import runtime
 runtime._experimental = True
-from modelBuilder.protomodel import rthresholds
 from modelBuilder.manipulator import Manipulator
 import helpers
 
@@ -340,7 +339,6 @@ class Trimmer:
         self.log ( "closest pair is %s: dm=%.1f" % (str(cpair),dmin ) )
         if dmin < 100.:
             self.merge ( cpair )
-
 
     def trimBranchings ( self ):
         """ now trim the branchings """
