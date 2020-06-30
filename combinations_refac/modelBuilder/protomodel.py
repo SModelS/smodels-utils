@@ -226,9 +226,6 @@ class ProtoModel:
         self.createSLHAFile( recycle_xsecs = recycle_xsecs )
         # get the predictions that determine whether model is excluded:
         # best results only, also non-likelihood results
-        #if not hasattr ( self, "predictor" ):
-        #    self.predictor = Predictor ( self.walkerid, dbpath = self.dbpath )
-        # bestpreds = self.predictor.predict ( self.currentSLHA, allpreds=False,
         #Run SModelS (bestpred is a list of TheoryPrediction objects)
         bestpreds = predictor[0].predict ( self.currentSLHA, allpreds=False,
                                            llhdonly=False )

@@ -131,13 +131,13 @@ class Predictor:
         topos = decomposer.decompose ( model, sigmacut, minmassgap=mingap )
         self.log ( "decomposed model into %d topologies." % len(topos) )
 
-
-        bestDataSet=True
-        combinedRes=True
-
         if allpreds:
             bestDataSet=False
             combinedRes=False
+        else:
+            bestDataSet=True
+            combinedRes=True
+
 
         preds = []
         self.log ( "start getting preds" )
