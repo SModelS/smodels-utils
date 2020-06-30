@@ -19,6 +19,7 @@ from statistics.hiscore import Hiscore
 from modelBuilder.protomodel import ProtoModel, rthresholds
 from modelBuilder.manipulator import Manipulator
 from modelWalker.history import History
+from modelTester.predictor import Predictor
 from tools import helpers
 from pympler.asizeof import asizeof
 try:
@@ -54,17 +55,25 @@ class RandomWalker:
         self.rundir = rundir
         if rundir == None:
             self.rundir = "./"
+
+        #Initialize Hiscore
         self.hiscoreList = Hiscore ( walkerid, True, "%s/H%d.pcl" % ( rundir, walkerid ),
                                      backup=False )
         self.hiscoreList.nkeep = 1
-        protomodel = ProtoModel( self.walkerid, dbpath = dbpath,
-                            expected = expected, select = select,
+
+        #Initialize ProtoModel and Manipulator:
+        protomodel = ProtoModel( self.walkerid,
                             keep_meta = True, nevents = nevents)
 
         self.manipulator = Manipulator ( protomodel, strategy )
+
+        #Initialize Predictor
+        self.predictor =  Predictor( self.walkerid, dbpath=dbpath,
+                              expected=expected, select=select )
+
         if cheatcode > 0:
             self.manipulator.cheat ( cheatcode )
-            self.manipulator.predict()
+            self.predictor.predict()
             self.pprint ( "Cheat model gets Z=%.2f, K=%.2f" % \
                           ( self.manipulator.M.Z, self.manipulator.M.K ) )
             self.hiscoreList.newResult ( self.manipulator.M )
@@ -100,18 +109,13 @@ class RandomWalker:
                    dbpath="<rundir>/database.pcl", expected = False,
                    select = "all", catch_exceptions = True, keep_meta = True,
                    rundir = None):
-        ret = cls( walkerid, nsteps=nsteps, dbpath = dbpath,
+        ret = cls( walkerid, nsteps=nsteps, dbpath = dbpath, expected=expected, select=select,
                    catch_exceptions = catch_exceptions, rundir = rundir )
         ret.manipulator.M = protomodel
         ret.manipulator.setWalkerId ( walkerid )
-        ret.protomodel.expected = expected
-        ret.protomodel.step = protomodel.step
-        ret.protomodel.select = select
-        ret.protomodel.dbpath = dbpath
-        ret.protomodel.createNewSLHAFileName()
-        ret.protomodel.initializeSSMs ( overwrite = False )
-        ret.protomodel.initializePredictor()
-        ret.protomodel.backup()
+        ret.manipulator.M.createNewSLHAFileName()
+        ret.manipulator.M.initializeSSMs ( overwrite = False )
+        ret.manipulator.M.backup()
         if dump_training:
             ## we use the accelerator only to dump the training data
             from accelerator import Accelerator
@@ -125,19 +129,14 @@ class RandomWalker:
                    dbpath="<rundir>/database.pcl", expected = False,
                    select = "all", catch_exceptions = True, keep_meta = True,
                    rundir = None, nevents = 100000):
-        ret = cls( walkerid, nsteps=nsteps, dbpath = dbpath,
+        ret = cls( walkerid, nsteps=nsteps, dbpath = dbpath, expected=expected, select=select,
                    catch_exceptions = catch_exceptions, rundir = rundir, nevents = nevents )
-        ret.manipulator.M = ProtoModel( walkerid, dbpath, expected, select, keep_meta )
+        ret.manipulator.M = ProtoModel( walkerid, keep_meta )
         ret.manipulator.initFromDict ( dictionary )
         ret.manipulator.setWalkerId ( walkerid )
-        ret.protomodel = ret.manipulator.M
-        ret.protomodel.expected = expected
-        ret.protomodel.select = select
-        ret.protomodel.dbpath = dbpath
-        ret.protomodel.createNewSLHAFileName()
-        ret.protomodel.initializeSSMs ( overwrite = False )
-        ret.protomodel.initializePredictor()
-        ret.protomodel.backup()
+        ret.manipulator.M.createNewSLHAFileName()
+        ret.manipulator.M.initializeSSMs ( overwrite = False )
+        ret.manipulator.M.backup()
         if dump_training:
             ## we use the accelerator only to dump the training data
             from accelerator import Accelerator
@@ -173,28 +172,30 @@ class RandomWalker:
             self.pprint ( "memory footprint (kb): walker %d, model %d, accelerator %d, history %d" %\
                     ( asizeof(self)/1024,asizeof(self.protomodel)/1024,asizeof(self.accelerator)/1024, asizeof(self.history)/1024 ) )
 
-        nChanges = 0
-        nChanges += self.manipulator.randomlyUnfreezeParticle(sigma=0.5)
-        nChanges += self.manipulator.randomlyChangeBranchings(prob=0.2)
-        nChanges += self.manipulator.randomlyChangeSignalStrengths(prob = 0.25,
-                                                probSingle = 0.8, ssmSigma = 0.1)
-        nChanges += self.manipulator.randomlyAttemptAMerger(prob=0.05)
-        nChanges+=self.manipulator.randomlyFreezeParticle(sigma= 0.5, probMassive = 0.3)
-        if not nChanges: #If nothing has changed, force a random change of masses
-            nChanges+=self.manipulator.randomlyChangeMasses(prob=1.0, dx = 200.)
-        else: #Change masses with 5% probability
-            nChanges+=self.manipulator.randomlyChangeMasses(prob = 0.05, dx = 200.)
+        #Take a step in the model space:
+        self.manipulator.randomlyChangeModel()
 
-        #Compute predictions for new model:
         if self.catch_exceptions:
             try:
-                self.manipulator.predict()
+                self.predictor.predict(self.protomodel)
+                #Recompute predictions with higher accuracy for high score points:
+                if self.protomodel.Z > 2.7 and self.protomodel.nevents < 55000:
+                    self.protomodel.createSLHAFile()
+                    self.predictor.predict(self.protomodel)
+
             except Exception as e:
                 self.pprint ( "error ``%s'' (%s) encountered when trying to predict. lets revert" % (str(e),type(e) ) )
                 self.protomodel.restore()
                 return
         else:
-            self.manipulator.predict ()
+            self.predictor.predict(self.protomodel)
+            #Recompute predictions with higher accuracy for high score points:
+            if self.protomodel.Z > 2.7 and self.protomodel.nevents < 55000:
+                self.protomodel.createSLHAFile()
+                self.predictor.predict(self.protomodel)
+
+        #the muhat multiplier gets multiplied into the signal strengths
+        self.manipulator.resolveMuhat()
 
         self.log ( "found highest Z: %.2f" % self.protomodel.Z )
 
@@ -214,7 +215,7 @@ class RandomWalker:
         self.log ( "freeze pids that arent in best combo, we dont need them" )
         self.manipulator.freezePidsNotInBestCombo()
         self.log ( "now check for swaps" )
-        self.manipulator.checkSwaps()
+        self.manipulator.checkSwaps(self.predictor)
         self.log ( "step %d/%s finished." % ( self.protomodel.step, smaxstp ) )
 
         if self.hiscoreList != None:

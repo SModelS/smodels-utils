@@ -8,7 +8,6 @@
     -) merger, heed the changed particle mass when computing ssm.
 """
 
-from modelBuilder.protomodel import rthresholds
 from tools import helpers
 import copy, random, numpy, time, math, os, sys
 from smodels.tools.physicsUnits import fb, TeV
@@ -21,77 +20,6 @@ class Manipulator:
         self.M = copy.copy ( protomodel  ) # shallow copy
         self.strategy = strategy
         self.verbose = verbose
-
-    def computeAnalysisContributions ( self ):
-        """ compute the contributions to Z of the individual analyses
-        :returns: the model with the analysic constributions attached as
-                  .analysisContributions
-        """
-        from smodels.tools import runtime
-        from combiner import Combiner
-        self.pprint ( "Now computing analysis contributions" )
-        self.pprint ( "step 1: Recompute the score. Old one at K=%.2f, Z=%.2f" % \
-                      ( self.M.K, self.M.Z ) )
-        self.M.createNewSLHAFileName ( prefix="acc" )
-        origZ = self.M.Z # to be sure
-        origK = self.M.K # to be sure
-        self.M.Z = -23.
-        self.M.K = -30.
-        hasPred = self.M.predict( strategy=self.strategy, check_thresholds = False )
-        if not hasPred:
-            self.pprint ( "I dont understand, why do I not get a pred anymore? r=%.2f" % ( self.M.rmax ) )
-        self.pprint ( "K=%.2f, Z=%.2f, old Z=%.2f, %d predictions, has a pred? %d, experimental=%d" % ( self.M.K, self.M.Z, origZ, len(self.M.bestCombo), hasPred, runtime._experimental ) )
-        if origZ > 0. and abs ( origZ - self.M.Z ) / origZ > 0.001:
-            self.pprint  ( "error!! Zs do not match! Should not save" )
-        contributionsZ = {}
-        contributionsK = {}
-        combiner = Combiner()
-        dZtot, dKtot = 0., 0.
-        bestCombo = copy.deepcopy ( self.M.bestCombo )
-        for ctr,pred in enumerate(bestCombo):
-            combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:]
-            Z, muhat_ = combiner.getSignificance ( combo )
-            prior = combiner.computePrior ( self.M )
-            K = combiner.computeK ( Z, prior )
-            dZ = origZ - Z
-            dK = origK - K
-            dZtot += dZ
-            dKtot += dK
-            contributionsZ[ ctr ] = Z
-            contributionsK [ ctr ] = K
-        for k,v in contributionsZ.items():
-            percZ = (origZ-v) / dZtot
-            self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*percZ,"%" ) )
-            contributionsZ[ k ] = percZ
-        for k,v in contributionsK.items():
-            percK = (origK-v) / dKtot
-            # self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
-            contributionsK[ k ] = percK
-        contrsWithNames = {}
-        for k,v in contributionsZ.items():
-            contrsWithNames [ self.M.bestCombo[k].analysisId() ] = v
-        self.M.analysisContributions = contrsWithNames
-        self.pprint ( "stored %d contributions" % len(contributionsZ) )
-        return self.M
-
-    def predict ( self ):
-        """Compute the model prediction. The number of events for computing cross-sections
-        is chosen according to the model Z value.
-        """
-        # self.checkForNans()
-        modelNevt = self.M.nevents #store
-        if self.M.Z > 2.5:
-            self.M.nevents = 50000
-        if self.M.Z > 2.8:
-            self.M.nevents = 100000
-        self.M.log ( "now create slha file via predict with %d events" % self.M.nevents )
-        self.M.predict ( strategy = self.strategy)
-        if self.M.Z > 2.7 and self.M.nevents < 55000:
-            # redo in extreme cases
-            self.M.nevents = 100000
-            self.M.predict ( self.strategy)
-        self.resolveMuhat()
-        self.M.nevents = modelNevt #Restore original value
 
     def getClosestPair ( self, pids ):
         """ of <n> PIDs, identify the two that are closest in mass """
@@ -108,22 +36,6 @@ class Manipulator:
                     dmin = dm
                     pair = ( pid1, pid2 )
         return pair,dmin
-
-    def checkForMergerOf ( self, pids, mergeIfPossible: bool = False ):
-        """ check if PIDs can be merged """
-        self.log ( "checking if %s can be merged" % str(pids) )
-        #if not hasattr ( self.M, "stored_xsecs" ) or self.M.stored_xsecs == None:
-        #    self.pprint ( "model has no stored xsecs?" )
-        #    self.M.computeXSecs(  )
-        #self.log ( "found %d stored xsecs" % len(self.M.stored_xsecs) )
-        cpair,dmin = self.getClosestPair ( pids )
-        self.log ( "closest pair is %s: dm=%.1f" % (str(cpair),dmin ) )
-        max_dm = 200. ## maximum mass gap to consider a merger
-        if dmin < max_dm:
-            if mergeIfPossible:
-                self.merge ( cpair )
-            return True
-        return False
 
     def teleportToHiscore ( self ):
         """ without further ado, discard your current model and start
@@ -259,37 +171,6 @@ class Manipulator:
             m = eval ( f.read() )
         self.initFromDict ( m, filename )
 
-    def randomlyUnfreezeParticle ( self, sigma=0.5 ):
-        """ Unfreezes a (random) frozen particle according to gaussian distribution with width sigma.
-
-        :param sigma: Width of the gaussian distribution
-        """
-
-        nUnfrozen = len( self.M.unFrozenParticles() )
-        nTotal = len ( self.M.masses.keys() )
-        denom = self.M.Z+1.
-        if denom < 1.:
-            denom = 1.
-        mu = 1. - .7 / denom ## make it more unlikely when Z is high
-        uUnfreeze = random.gauss( mu ,sigma)
-        if uUnfreeze > nUnfrozen/float(nTotal):
-            # in every nth step unfreeze random particle
-            self.log ( "unfreeze random particle" )
-
-        #Randomly select the pid:
-        frozen = self.M.frozenParticles()
-        if len(frozen)==0:
-            return 0
-        pid = random.choice ( frozen )
-
-        #Randomly select mass of unfrozen particle:
-        self.M.masses[pid] = random.uniform ( self.M.masses[self.M.LSP], self.M.maxMass )
-        ## when unfreezing, nothing can go offshell, right?
-        self.removeAllOffshell() ## remove all offshell stuff, normalize all branchings
-        self.M.delXSecs() ## old xsecs dont count anymore
-        self.M.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(pid), self.M.masses[pid] ) )
-        return 1
-
     def pprint ( self, *args ):
         """ logging """
         print ( "[manipulator:%d] %s" % (self.M.walkerid, " ".join(map(str,args))) )
@@ -323,7 +204,7 @@ class Manipulator:
                     offshell.append ( ( pid, dpid ) )
         return offshell
 
-    def checkSwaps ( self ):
+    def checkSwaps ( self, predictor ):
         """ check for the usual suspects for particle swaps """
         ## the pairs to check. I put 1000023, 1000025 twice,
         ## so as to make it possible that chi40 eventually swaps with chi20
@@ -361,7 +242,7 @@ class Manipulator:
             oldK, oldrmax = self.M.K, self.M.rmax
             self.M.backup()
             self.swapParticles ( pids[0],pids[1] )
-            self.predict()
+            predictor.predict(protomodel=self.M)
             if self.M.K < oldK - 1e-3: ## score deteriorated?
                 self.M.pprint ( "new K is %.2f, old was %.2f. restore!" % \
                                 ( self.M.K, oldK ) )
@@ -571,6 +452,65 @@ class Manipulator:
             return p in dpid
         return p == dpid
 
+    def randomlyChangeModel(self,sigmaUnFreeze = 0.5, probBR = 0.2, probSS = 0.25,
+                                probSSingle=0.8, ssmSigma=0.1,
+                                probMerge = 0.05, sigmaFreeze = 0.5, probMassive = 0.3,
+                                probMass = 0.05, dx =200):
+        """Randomly modify the proto-model following the steps:
+        1) A random particle can be unfrozen (the probability is controlled by sigmaFreeze)
+        2) A random BR can be modified (with probability probBR)
+        3) A random signal strenght can be modified (the probability is controlled by probSS, probSSingle and ssmSigma)
+        4) Particles can be merged (with probability probMerge)
+        5) A random particle can be frozen (the probability is controlled by sigmaFreeze and probMassive)
+        6) A random mass can be changed by a maximum value of dx (with probability probMass)
+        """
+
+        nChanges = 0
+        nChanges += self.randomlyUnfreezeParticle(sigma=sigmaUnFreeze)
+        nChanges += self.randomlyChangeBranchings(prob=probBR)
+        nChanges += self.randomlyChangeSignalStrengths(prob = probSS,
+                                                probSingle = probSSingle, ssmSigma = ssmSigma)
+        nChanges += self.randomlyAttemptAMerger(self.predictor, prob=probMerge)
+        nChanges+=self.randomlyFreezeParticle(sigma= sigmaFreeze, probMassive = probMassive)
+        if not nChanges: #If nothing has changed, force a random change of masses
+            nChanges+=self.randomlyChangeMasses(self.predictor,prob=1.0, dx = dx)
+        else: #Change masses with 5% probability
+            nChanges+=self.randomlyChangeMasses(self.predictor,prob = probMass, dx = dx)
+
+        #Update the SLHA file
+        self.M.createSLHAFile()
+
+    def randomlyUnfreezeParticle ( self, sigma=0.5 ):
+        """ Unfreezes a (random) frozen particle according to gaussian distribution with width sigma.
+
+        :param sigma: Width of the gaussian distribution
+        """
+
+        nUnfrozen = len( self.M.unFrozenParticles() )
+        nTotal = len ( self.M.masses.keys() )
+        denom = self.M.Z+1.
+        if denom < 1.:
+            denom = 1.
+        mu = 1. - .7 / denom ## make it more unlikely when Z is high
+        uUnfreeze = random.gauss( mu ,sigma)
+        if uUnfreeze > nUnfrozen/float(nTotal):
+            # in every nth step unfreeze random particle
+            self.log ( "unfreeze random particle" )
+
+        #Randomly select the pid:
+        frozen = self.M.frozenParticles()
+        if len(frozen)==0:
+            return 0
+        pid = random.choice ( frozen )
+
+        #Randomly select mass of unfrozen particle:
+        self.M.masses[pid] = random.uniform ( self.M.masses[self.M.LSP], self.M.maxMass )
+        ## when unfreezing, nothing can go offshell, right?
+        self.removeAllOffshell() ## remove all offshell stuff, normalize all branchings
+        self.M.delXSecs() ## old xsecs dont count anymore
+        self.M.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(pid), self.M.masses[pid] ) )
+        return 1
+
     def randomlyChangeBranchings ( self, prob=0.2 ):
         """ randomly change the branchings of a single particle
 
@@ -731,7 +671,7 @@ class Manipulator:
         self.M.log ( " `- %s: ssms are now %.2f+/-%.2f" % ( helpers.getParticleName(p), numpy.mean ( ssms ), numpy.std ( ssms) ) )
         return 1
 
-    def randomlyAttemptAMerger ( self, prob = 0.05 ):
+    def randomlyAttemptAMerger ( self, predictor, prob = 0.05 ):
         """ randomly try to merge a mergable pair of particles
 
         :param prob: Probability for merging
@@ -744,13 +684,13 @@ class Manipulator:
             return False
 
         self.log ( "randomly try merger" )
-        possibles = self.checkForMergers ( mergeIfPossible = False )
+        possibles = self.checkForMergers ( predictor, mergeIfPossible = False )
         if len(possibles)==0:
             return False
         self.merge ( random.choice ( possibles ) )
         return True
 
-    def checkForMergers ( self, mergeIfPossible: bool = False ):
+    def checkForMergers ( self, predictor, mergeIfPossible = False ):
         """ compile a list of potential PID mergers, then check
         :param mergeIfPossible: if True, then perform possible mergers
         """
@@ -764,10 +704,120 @@ class Manipulator:
                 if cand in unfrozen:
                     pids.add ( cand )
             if len(pids)>1:
-                r = self.checkForMergerOf ( pids, mergeIfPossible )
+                r = self.checkForMergerOf ( predictor, pids, mergeIfPossible )
                 if r:
                     ret.append ( pids )
         return ret
+
+    def checkForMergerOf ( self, predictor, pids, mergeIfPossible: bool = False ):
+        """ check if PIDs can be merged """
+        self.log ( "checking if %s can be merged" % str(pids) )
+        #if not hasattr ( self.M, "stored_xsecs" ) or self.M.stored_xsecs == None:
+        #    self.pprint ( "model has no stored xsecs?" )
+        #    self.M.computeXSecs(  )
+        #self.log ( "found %d stored xsecs" % len(self.M.stored_xsecs) )
+        cpair,dmin = self.getClosestPair ( pids )
+        self.log ( "closest pair is %s: dm=%.1f" % (str(cpair),dmin ) )
+        max_dm = 200. ## maximum mass gap to consider a merger
+        if dmin < max_dm:
+            if mergeIfPossible:
+                self.merge ( predictor, cpair )
+            return True
+        return False
+
+    def merge ( self, predictor, pair, merge_strategy="default", force_merge=False ):
+        """ merge two particles, pids given in pair
+        :param merge_strategy: I introduced this so we can try a few strategies
+                               and compare
+        :param pair: pair of pids
+        :param force_merge: if true, for the merger, even if Z gets much lower,
+            or we run into an exclusion.
+        """
+        pair = list(pair)
+        pair.sort()
+        p1,p2 = pair[0], pair[1]
+        self.pprint ( "attempt to merge %d and %d" % ( p1, p2 ) )
+        self.log ( "masses before merger: %.2f, %.2f" % \
+                   ( self.M.masses[p1], self.M.masses[p2] ) )
+        avgM = self.computeAvgMass ( pair, merge_strategy )
+        self.log ( "avg mass for %s is %.1f" % ( str(pair), avgM ) )
+        self.M.backup() ## in case it doesnt work out!
+        ## for the next step we need the cross sections
+        self.log ( "now compute the xsecs (if not cached), *before* taking out particle. so we can compute ssms" )
+        self.M.createSLHAFile ( recycle_xsecs = True )
+        self.M.masses[ p1 ] = avgM ## set this one to the avg mass
+        self.M.masses[ p2 ] = 1e6 ## freeze that one!
+
+        ## add the decays from pid2 to pid1
+        for pids,br in self.M.decays [ p2 ].items():
+            if pids in self.M.decays[p1]:
+                if br > 0.001:
+                    self.log ( "add to decays %s/%s: %.2f" % ( p1, pids, br ) )
+                self.M.decays[p1][pids] = self.M.decays[p1][pids] + br
+            else:
+                self.log ( "set decays of %s/%s to %.2f" % ( p1, pids, br ) )
+                self.M.decays[p1][pids] = br
+        # print ( "ssms1000006", self.M.ssmultipliers[(-1000006, 1000006)] )
+        self.log ( "now normalize branchings of %d" % p1 )
+        self.normalizeBranchings ( p1, fixSSMs = False )
+
+        ## decays *into* pid2 need to be remapped to pid1
+        olddecays = copy.deepcopy ( self.M.decays )
+        for mpid,decays in olddecays.items():
+            for dpids,br in decays.items():
+                if self.isIn ( p2, dpids ) and type(dpids) in [ list, tuple ]:
+                    newpids = []
+                    for dpid in dpids:
+                        if dpid == p2:
+                            newpids.append ( p1 )
+                        else:
+                            newpids.append ( dpid )
+                    if br > 0.0001:
+                        self.log ( "redirecting decay of %d from %s to %s: br=%.2f" % \
+                                   ( mpid, dpids, newpids, br ) )
+                    self.M.decays[mpid].pop ( dpids )
+                    self.M.decays[mpid][tuple(newpids)]=br
+                if self.isIn ( p2, dpids ) and type(dpids) in [ int ]:
+                    newpids = [ p1, dpids ]
+                    if br > 0.0001:
+                        self.log ( "redirecting decay of %d from %s to %s: br=%.2f" % \
+                                   ( mpid, dpids, newpids, br ) )
+                    self.M.decays[mpid].pop ( dpids )
+                    self.M.decays[mpid][tuple(newpids)]=br
+
+        ## clean up, remove all decays with pid2
+        # self.M.decays.pop ( p2 )
+        ## ssmultipliers get added up, too
+        newssms = self.computeNewSSMs( pair )
+
+        self.M.ssmultipliers = newssms
+
+        self.log ( "now predict. old rmax is at %.2f" % self.M.rmax )
+        oldZ = self.M.Z
+        self.M.delXSecs()
+
+        passed = predictor.predict (protomodel=self.M)
+        if passed == False:
+            self.pprint ( "after merging, did not pass. rmax=%.2f. scale and retry." % self.M.rmax )
+            ## did not pass? Okay, we make it pass, by scaling the new ssms
+            f_sc = .999 * rthresholds[0] / self.M.rmax  ## we multiply with this factor
+            for pids,ssm in self.M.ssmultipliers.items():
+                if p1 in pids or -p1 in pids:
+                    self.M.ssmultipliers[pids] = self.M.ssmultipliers[pids] * f_sc
+            passed = predictor.predict ( protomodel=self.M )
+            self.pprint ( "after retrying we have: passed=%d, rmax=%.2f" % ( passed, self.M.rmax ) )
+
+        if force_merge:
+            self.pprint ( "forced merge, so not checking" )
+            return
+        if self.M.rmax > rthresholds[0]:
+            self.pprint ( "trying to merge %d and %d lead to an rmax of %.2f. reverting" % \
+                          ( p1, p2, self.M.rmax ) )
+            self.M.restore()
+        if self.M.Z < oldZ *.999:
+            self.pprint ( "trying to merge %d and %d lead to a Z of %.3f < %.3f. reverting" % \
+                          ( p1, p2, self.M.Z, oldZ *.999 ) )
+            self.M.restore()
 
     def randomlyFreezeParticle ( self, sigma= 0.5, probMassive = 0.3):
         """ freezes a random unfrozen particle according to gaussian distribution with width sigma.
@@ -824,7 +874,7 @@ class Manipulator:
         self.removeAllOffshell()
         self.M.delXSecs()
 
-    def randomlyChangeMasses ( self, prob = 0.05, dx = 200.0 ):
+    def randomlyChangeMasses ( self, predictor, prob = 0.05, dx = 200.0 ):
         """ take a random step in mass space for a single unfrozen particle
 
         :param prob: Probability for changing the mass
@@ -842,7 +892,7 @@ class Manipulator:
         ret = self.randomlyChangeMassOf ( pid, dx=dx )
         #for i in unfrozen:
         #    ret = self.randomlyChangeMassOf ( i )
-        self.checkSwaps() ## should we really do this here?
+        self.checkSwaps(predictor) ## should we really do this here?
         ## now remove all offshell decays, and normalize all branchings
         self.removeAllOffshell()
         return ret
@@ -929,99 +979,6 @@ class Manipulator:
             return pid == pids
         return pid in pids
 
-    def merge ( self, pair, merge_strategy="default", force_merge=False ):
-        """ merge two particles, pids given in pair
-        :param merge_strategy: I introduced this so we can try a few strategies
-                               and compare
-        :param pair: pair of pids
-        :param force_merge: if true, for the merger, even if Z gets much lower,
-            or we run into an exclusion.
-        """
-        pair = list(pair)
-        pair.sort()
-        p1,p2 = pair[0], pair[1]
-        self.pprint ( "attempt to merge %d and %d" % ( p1, p2 ) )
-        self.log ( "masses before merger: %.2f, %.2f" % \
-                   ( self.M.masses[p1], self.M.masses[p2] ) )
-        avgM = self.computeAvgMass ( pair, merge_strategy )
-        self.log ( "avg mass for %s is %.1f" % ( str(pair), avgM ) )
-        self.M.backup() ## in case it doesnt work out!
-        ## for the next step we need the cross sections
-        self.log ( "now compute the xsecs (if not cached), *before* taking out particle. so we can compute ssms" )
-        self.M.createSLHAFile ( recycle_xsecs = True )
-        self.M.masses[ p1 ] = avgM ## set this one to the avg mass
-        self.M.masses[ p2 ] = 1e6 ## freeze that one!
-
-        ## add the decays from pid2 to pid1
-        for pids,br in self.M.decays [ p2 ].items():
-            if pids in self.M.decays[p1]:
-                if br > 0.001:
-                    self.log ( "add to decays %s/%s: %.2f" % ( p1, pids, br ) )
-                self.M.decays[p1][pids] = self.M.decays[p1][pids] + br
-            else:
-                self.log ( "set decays of %s/%s to %.2f" % ( p1, pids, br ) )
-                self.M.decays[p1][pids] = br
-        # print ( "ssms1000006", self.M.ssmultipliers[(-1000006, 1000006)] )
-        self.log ( "now normalize branchings of %d" % p1 )
-        self.normalizeBranchings ( p1, fixSSMs = False )
-
-        ## decays *into* pid2 need to be remapped to pid1
-        olddecays = copy.deepcopy ( self.M.decays )
-        for mpid,decays in olddecays.items():
-            for dpids,br in decays.items():
-                if self.isIn ( p2, dpids ) and type(dpids) in [ list, tuple ]:
-                    newpids = []
-                    for dpid in dpids:
-                        if dpid == p2:
-                            newpids.append ( p1 )
-                        else:
-                            newpids.append ( dpid )
-                    if br > 0.0001:
-                        self.log ( "redirecting decay of %d from %s to %s: br=%.2f" % \
-                                   ( mpid, dpids, newpids, br ) )
-                    self.M.decays[mpid].pop ( dpids )
-                    self.M.decays[mpid][tuple(newpids)]=br
-                if self.isIn ( p2, dpids ) and type(dpids) in [ int ]:
-                    newpids = [ p1, dpids ]
-                    if br > 0.0001:
-                        self.log ( "redirecting decay of %d from %s to %s: br=%.2f" % \
-                                   ( mpid, dpids, newpids, br ) )
-                    self.M.decays[mpid].pop ( dpids )
-                    self.M.decays[mpid][tuple(newpids)]=br
-
-        ## clean up, remove all decays with pid2
-        # self.M.decays.pop ( p2 )
-        ## ssmultipliers get added up, too
-        newssms = self.computeNewSSMs( pair )
-
-        self.M.ssmultipliers = newssms
-
-        self.log ( "now predict. old rmax is at %.2f" % self.M.rmax )
-        oldZ,oldrmax = self.M.Z, self.M.rmax
-        self.M.delXSecs()
-
-        passed = self.M.predict ( recycle_xsecs = False )
-        if passed == False:
-            self.pprint ( "after merging, did not pass. rmax=%.2f. scale and retry." % self.M.rmax )
-            ## did not pass? Okay, we make it pass, by scaling the new ssms
-            f_sc = .999 * rthresholds[0] / self.M.rmax  ## we multiply with this factor
-            for pids,ssm in self.M.ssmultipliers.items():
-                if p1 in pids or -p1 in pids:
-                    self.M.ssmultipliers[pids] = self.M.ssmultipliers[pids] * f_sc
-            passed = self.M.predict ( recycle_xsecs = False )
-            self.pprint ( "after retrying we have: passed=%d, rmax=%.2f" % ( passed, self.M.rmax ) )
-
-        if force_merge:
-            self.pprint ( "forced merge, so not checking" )
-            return
-        if self.M.rmax > rthresholds[0]:
-            self.pprint ( "trying to merge %d and %d lead to an rmax of %.2f. reverting" % \
-                          ( p1, p2, self.M.rmax ) )
-            self.M.restore()
-        if self.M.Z < oldZ *.999:
-            self.pprint ( "trying to merge %d and %d lead to a Z of %.3f < %.3f. reverting" % \
-                          ( p1, p2, self.M.Z, oldZ *.999 ) )
-            self.M.restore()
 
     def simplifyMasses ( self ):
         """ return the masses only of the unfrozen particles """
@@ -1166,64 +1123,6 @@ class Manipulator:
         if store:
             self.M.ssmultipliers = ret
         return ret
-
-    def computeParticleContributions ( self ):
-        """ this function sequentially removes all particles to compute
-            their contributions to K """
-        from smodels.tools import runtime
-        runtime._experimental = True
-        unfrozen = self.M.unFrozenParticles( withLSP=False )
-        ndiscarded=0
-        oldZ = self.M.Z
-        oldK = self.M.K
-        self.M.particleContributions = {} ## save the scores for the non-discarded particles.
-        self.M.particleContributionsZ = {} ## save the scores for the non-discarded particles, Zs
-        ## aka: what would happen to the score if I removed particle X?
-        frozen = self.M.frozenParticles()
-        for pid in frozen:
-            ## remove ssmultipliers for frozen particles
-            if pid in self.M.ssmultipliers:
-                self.M.ssmultipliers.pop(pid)
-            self.M.masses[pid]=1e6 ## renormalize
-        pidsnmasses = [ (x,self.M.masses[x]) for x in unfrozen ]
-        pidsnmasses.sort ( key=lambda x: x[1], reverse=True )
-        for cpid,(pid,mass) in enumerate(pidsnmasses):
-            self.M.backup()
-            self.M.highlight ( "info", "computing contribution of %s (%.1f): [%d/%d]" % \
-                   ( helpers.getParticleName(pid,addSign=False),
-                     self.M.masses[pid],(cpid+1),len(unfrozen) ) )
-            oldmass = self.M.masses[pid]
-            self.M.masses[pid]=1e6
-            ## also branchings need to be taken out.
-            olddecays = copy.deepcopy ( self.M.decays ) ## keep a copy of all, is easier
-            for dpid,decays in self.M.decays.items():
-                if pid in decays.keys():
-                    br = 1. - decays[pid] ## need to correct for what we loose
-                    if br > 0.: # if the branching is only to this guy, we cannot take it out
-                        self.M.decays[dpid].pop(pid)
-                        for dp_,dbr_ in self.M.decays[dpid].items():
-                            self.M.decays[dpid][dp_] = self.M.decays[dpid][dp_] / br
-            ## and signal strength multipliers, take them out also
-            for dpd,v in self.M.ssmultipliers.items():
-                if dpid in dpd or -dpid in dpd:
-                    self.M.ssmultipliers[dpd]=1. ## setting to 1 is taking out
-            # self.createSLHAFile()
-            ## when trimming we want to increase statistics
-            self.M.predict ( self.strategy )
-            percZ, percK = 0., 0.
-            if oldZ > 0.:
-                percZ = ( self.M.Z - oldZ ) / oldZ
-            if oldK > 0.:
-                percK = ( self.M.K - oldK ) / oldK
-            self.pprint ( "when removing %s, K changed: %.3f -> %.3f (%.1f%s), Z: %.3f -> %.3f (%d evts)" % \
-                    ( helpers.getParticleName(pid), oldK, self.M.K, 100.*percK, "%", oldZ, self.M.Z, self.M.nevents ) )
-            self.M.particleContributions[pid]=self.M.K
-            self.M.particleContributionsZ[pid]=self.M.Z
-            # self.pprint ( "keeping %s" % helpers.getParticleName(pid) )
-            self.M.masses[pid]=oldmass
-            self.M.decays = olddecays
-            self.M.restore()
-        # self.pprint ( "discarded %d/%d particles." % ( ndiscarded, len(pidsnmasses) ) )
 
     def changeSSM ( self, pids, newssm ):
         """ change the signal strength multiplier of pids to newssm,

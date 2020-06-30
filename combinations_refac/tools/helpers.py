@@ -3,12 +3,10 @@
 """ various helper functions that do not fit in any of the more
     specific modules """
 
-rthresholds = (1.7,) ## threshold for rmax
-
-import copy, sys, math
+import copy, math
 
 def getParticleName ( pid, addSign=False, addSMParticles=False ):
-    """ get the particle name of pid 
+    """ get the particle name of pid
     :param addSign: add sign info in name
     :param addSMParticles: if True, then print also SM particle names
     """
@@ -68,7 +66,7 @@ def getParticleName ( pid, addSign=False, addSMParticles=False ):
             SMnames[-k]=v+"-"
             if k in [1,2,3,4,5,6,12,14,16]:
                 SMnames[-k]=v+"bar"
-        
+
     if not addSign:
         pid = abs(pid)
     if pid in names:
@@ -165,7 +163,7 @@ def simplifyList ( modes ):
     return ret
 
 def toHtml ( pid, addM=False, addSign=False, addBrackets=True ):
-    """ get the HTML version of particle name 
+    """ get the HTML version of particle name
     :param addM: make it m(particle)
     :param addSign: add a "-" sign for negative pids
     :param addBrackets: add brackets at beginning and end
@@ -179,7 +177,7 @@ def toHtml ( pid, addM=False, addSign=False, addBrackets=True ):
         if len(ret)>1:
             ret = ret[:-1]
         return ret
-            
+
     if type ( pid ) in [ set, tuple ]: ## production mothers are given as tuples
         # a list of pids? latexify them individually and concatenate
         pids = []
@@ -190,7 +188,7 @@ def toHtml ( pid, addM=False, addSign=False, addBrackets=True ):
             pass
         for p in lpid:
             pids.append ( toHtml ( p, addM, addSign ) )
-        ret = ",".join ( pids ) 
+        ret = ",".join ( pids )
         if addBrackets:
             ret = "(" + ret + ")"
         return ret
@@ -210,7 +208,7 @@ def toHtml ( pid, addM=False, addSign=False, addBrackets=True ):
 
 def toLatex ( pid, addDollars=False, addM=False, addSign=False,
               addBrackets = True ):
-    """ get the latex version of particle name 
+    """ get the latex version of particle name
     :param addDollars: add dollars before and after
     :param addM: make it m(particle)
     :param addSign: add a "-" sign for negative pids
@@ -226,7 +224,7 @@ def toLatex ( pid, addDollars=False, addM=False, addSign=False,
         if len(ret)>1:
             ret = ret[:-1]
         return ret
-            
+
     if type ( pid ) in [ set, tuple ]: ## production mothers are given as tuples
         # a list of pids? latexify them individually and concatenate
         pids = []
@@ -245,12 +243,12 @@ def toLatex ( pid, addDollars=False, addM=False, addSign=False,
     if type(pid) in [ int, str ]:
         pname = getParticleName(pid,addSign)
     # oldp = pname
-    rpls = { "~nutau": "\\tilde{\\nu}_{\\tau}", "L": "_{L}", "R": "_{R}", 
-             "1": "_{1}", "2": "_{2}", "~nu": "\\tilde{\\nu}", 
+    rpls = { "~nutau": "\\tilde{\\nu}_{\\tau}", "L": "_{L}", "R": "_{R}",
+             "1": "_{1}", "2": "_{2}", "~nu": "\\tilde{\\nu}",
              "~nue": "\\tilde{\\nu}_{e}", "~tauL": "\\tilde{\\tau}L",
              "~numu": "\\tilde{\\nu}_{\\mu}", "~tau1": "\\tilde{\\tau}1",
              "bar": "^{*}", "~tau2": "\\tilde{\\tau}2",
-             "~chi": "\\tilde{\\chi}", "~mu": "\\tilde{\\mu}", "+": "^{+}", 
+             "~chi": "\\tilde{\\chi}", "~mu": "\\tilde{\\mu}", "+": "^{+}",
              "3": "_{3}", "0": "^{0}", "-": "^{-}" }
     keys = list ( rpls.keys() )
     keys.sort(key=len,reverse=True)
@@ -275,7 +273,7 @@ def toLatex ( pid, addDollars=False, addM=False, addSign=False,
 
 def findLargestExcess ( db ):
     """ find the largest excess in any efficiency map type result
-        in the given database 
+        in the given database
     :param db: a SModelS database object
     :returns: the dataset object
     """

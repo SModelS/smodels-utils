@@ -29,6 +29,9 @@ tester_parameters.ini -> essentially the SModelS parameters.ini
 walker_parameters.ini -> number of steps,...
 
 
+12) resolveMuhat -> Should be applied after predict() AND in takeStep()???
+
+
 ---> Move predictor one layer up (just below RandomWalker). So Predictor has access to the protoModel, but not the other way around
         all the model testing related stuff goes up to predictor and moves away from ProtoModel
 

@@ -5,13 +5,8 @@
 import random, tempfile, os, copy, time, colorama, subprocess
 from modelBuilder.protoxsecs import ProtoModelXSecs
 from modelTester.combiner import Combiner
-from modelTester.predictor import Predictor
 from tools import helpers
 
-## the thresholds for exclusion
-from tools.helpers import rthresholds
-
-predictor = [ None ]
 
 class ProtoModel:
     """ encodes one theoretical model, i.e. the particles, their masses, their
@@ -32,24 +27,18 @@ class ProtoModel:
         a.sort()
         return tuple(a)
 
-    def __init__ ( self, walkerid, dbpath="<rundir>/database.pcl",
-                   expected = False, select = "all", keep_meta = True, nevents = 100000 ):
+    def __init__ ( self, walkerid, keep_meta = True, nevents = 10000 ):
         """
-        :param expected: if True, run with observations drawn from expected values
-        :param select: select data types of results, e.g. "all", "em", "ul"
         :param keep_meta: If True, keep also all the data in best combo (makes
                           this a heavyweight object)
-        :param nevents: number of MC events when computing cross-sections
+        :param nevents: minimum number of MC events when computing cross-sections
         """
         self.walkerid = walkerid
-        self.expected = expected
-        self.select = select
         self.keep_meta = keep_meta ## keep all meta info? big!
-        self.dbpath = dbpath
         self.version = 1 ## version of this class
         self.maxMass = 2400. ## maximum masses we consider
         self.initializePredictor()
-        self.nevents = nevents #Default number of events
+        self.minevents = nevents #Minimum number of events for computing xsecs
         self.step = 0 ## count the steps
         self.particles = [ 1000001, 2000001, 1000002, 2000002, 1000003, 2000003,
                   1000004, 2000004, 1000005, 2000005, 1000006, 2000006, 1000011,
@@ -157,14 +146,6 @@ class ProtoModel:
                     if self.hasAntiParticle ( q ):
                         self.setSSM ( self.toTuple ( -p, -q ), 1., overwrite )
 
-    def initializePredictor ( self ):
-        """ initialize the predictor """
-        self.pprint ( "initializing predictor #%d with database at %s" % ( self.walkerid, self.dbpath ) )
-        if predictor [ 0 ] == None:
-            predictor[0] = Predictor( self.walkerid, dbpath=self.dbpath,
-                                    expected=self.expected, select=self.select )
-        self.dbversion = predictor[0].database.databaseVersion
-
     def highlight ( self, msgType = "info", *args ):
         """ logging, hilit """
         col = colorama.Fore.GREEN
@@ -209,92 +190,6 @@ class ProtoModel:
             self.bestCombo = combiner.removeDataFromBestCombo ( self.bestCombo )
         #if hasattr ( self, "predictor" ):
         #    del self.predictor
-
-    def predict ( self, strategy = "aggressive",
-                  check_thresholds = False, recycle_xsecs = False ):
-        """ compute best combo, llhd, and significance
-        :param check_thresholds: if true, check if we run into an exclusion.
-                                 in this case, Z becomes -1 for excluded models.
-        :param recycle_xsecs: if False, always compute xsecs. If True,
-                              reuse them, shall they exist.
-        :returns: False, if not prediction (e.g. because the model is excluded),
-                  True if prediction was possible
-        """
-        if predictor[0] == None:
-            self.initializePredictor()
-
-        self.createSLHAFile( recycle_xsecs = recycle_xsecs )
-        # get the predictions that determine whether model is excluded:
-        # best results only, also non-likelihood results
-        #Run SModelS (bestpred is a list of TheoryPrediction objects)
-        bestpreds = predictor[0].predict ( self.currentSLHA, allpreds=False,
-                                           llhdonly=False )
-        rs = self.checkForExcluded ( bestpreds )
-        srs = "%s" % ", ".join ( [ "%.2f" % x for x in rs[:3] ] )
-        self.log ( "received r values %s" % srs )
-        self.rmax = 0.
-        self.r2 = 0.
-        if len(rs)>0:
-            self.rmax = rs[0]
-        if len(rs)>1:
-            self.r2 = rs[1]
-        excluded = self.rmax > rthresholds[0]
-        self.log ( "model is excluded? %s" % str(excluded) )
-        if check_thresholds and excluded:
-            self.Z = -1. ## set to negative
-            self.K = -20.
-            return False
-        if not check_thresholds  and excluded:
-            self.pprint ( "we dont check thresholds, but the model would actually be excluded with rmax=%.2f" % self.rmax )
-        # now get the predictions that determine the Z of the model. allpreds,
-        # but need llhd
-        allpreds = True ## lets try!
-        predictions = predictor[0].predict ( self.currentSLHA, allpreds=allpreds,
-                                               llhdonly=True )
-        combiner = Combiner( self.walkerid )
-        self.log ( "now find highest significance for %d predictions" % len(predictions) )
-        ## find highest observed significance
-        mumax = float("inf")
-        if self.rmax > 0.:
-            mumax = rthresholds[0] / self.rmax
-        self.rmax = self.rmax * mumax
-        self.r2 = self.r2 * mumax
-        bestCombo,Z,llhd,muhat = combiner.findHighestSignificance ( predictions, strategy, expected=False, mumax = mumax )
-        prior = combiner.computePrior ( self )
-        if hasattr ( self, "keep_meta" ) and self.keep_meta:
-            self.bestCombo = bestCombo
-        else:
-            self.bestCombo = combiner.removeDataFromBestCombo ( bestCombo )
-        self.Z = Z
-        self.K = combiner.computeK ( Z, prior )
-        self.llhd = llhd
-        self.muhat = muhat
-        self.letters = combiner.getLetterCode(self.bestCombo)
-        self.description = combiner.getComboDescription(self.bestCombo)
-        self.log ( "done with prediction. best Z=%.2f (muhat=%.2f)" % ( self.Z, muhat ) )
-        self.clean()
-        return True
-
-    def checkForExcluded ( self, predictions ):
-        """ check if any of the predictions excludes the point
-        :param predictions: all theory predictions
-        :returns: all observed r values, sorted, highest value first
-        """
-        self.log ( "checking %d predictions for exlusion" % len(predictions) )
-        self.rvalues=[]
-        combiner = Combiner( self.walkerid )
-        robs=[]
-        for theorypred in predictions:
-            r = theorypred.getRValue(expected=False)
-            if r == None:
-                self.pprint ( "I received %s as r. What do I do with this?" % r )
-                r = 23.
-            rexp = theorypred.getRValue(expected=True)
-            robs.append ( r )
-            self.rvalues.append ( (r, rexp, combiner.removeDataFromTheoryPred ( theorypred ) ) )
-        self.rvalues.sort ( key = lambda x: x[0], reverse = True )
-        robs.sort(reverse=True)
-        return robs
 
     def almostSameAs ( self, other ):
         """ check if a model is essentially the same as <other> """
@@ -428,14 +323,25 @@ class ProtoModel:
             particles.append ( "%s: %d" % (  helpers.getParticleName ( pid ), m ) )
         print ( ", ".join ( particles ) )
 
-    def createSLHAFile ( self, outputSLHA=None, recycle_xsecs = False ):
+    def createSLHAFile ( self, outputSLHA=None, recycle_xsecs = False, nevents = None ):
         """ from the template.slha file, create the slha file of the current
             model.
         :param outputSLHA: if not None, write into that file. else, write into
             currentSLHA file.
         :param recycle_xsecs: if False, compute xsecs from scratch,
                               if True, recycle them, if possible.
+        :param nevents: If defined, cross-sections will be computed with this number of MC events,
+                        if None, the value is chosen according to self.minevents and self.Z.
         """
+
+        #If number of events has not been specified, use Z value to estimate the
+        #required number and update self.nevents:
+        if not nevents:
+            if self.Z > 2.5:
+                self.nevents = max(self.minevents,50000)
+            elif self.Z > 2.7:
+                self.nevents = max(self.minevents,100000)
+
         self.checkTemplateSLHA()
         with open( self.templateSLHA ) as f:
             lines=f.readlines()
@@ -471,7 +377,7 @@ class ProtoModel:
                                     line[p1:p1+p2+1] )
                         line=line.replace( line[p1:p1+p2+1], "0." )
                 f.write ( line )
-        self.computeXSecs( recycle = recycle_xsecs )
+        self.computeXSecs( recycle = recycle_xsecs, nevents = nevents )
         return outputSLHA
 
     def dict ( self ):
@@ -513,16 +419,22 @@ class ProtoModel:
             return
         del self.stored_xsecs
 
-    def computeXSecs ( self, recycle=False ):
+    def computeXSecs ( self, recycle=False, nevents = None ):
         """ compute xsecs for current.slha
         :param recycle: if False, dont store xsecs, always recompute.
                         if True, recycle the xsecs if they exist, store them.
+        :param nevents: If defined, cross-sections will be computed with this number of MC events,
+                        if None, the value used is self.minevents.
+
         """
+
+        if not nevents:
+            nevents = self.minevents
         if not hasattr ( self, "currentSLHA" ) or not os.path.exists ( self.currentSLHA ):
             self.pprint ( "compute xsecs called, but no slha file exists. I assume you meant to call createSLHAFile instead." )
             self.createSLHAFile(recycle_xsecs = recycle )
             return
-        computer = ProtoModelXSecs( self.walkerid, self.nevents, self.currentSLHA,
+        computer = ProtoModelXSecs( self.walkerid, nevents, self.currentSLHA,
                                      self.relevantSSMultipliers(), self.step )
         if recycle and hasattr ( self, "stored_xsecs" ):
             self.log ( "found %d old xsecs, will recycle them!!" % \
@@ -530,7 +442,7 @@ class ProtoModel:
             computer.addInfoToFile ( self.stored_xsecs )
             return
         if recycle:
-            self.pprint ( "recycling is on, but no xsecs were found. compute with %d events." % self.nevents )
+            self.pprint ( "recycling is on, but no xsecs were found. compute with %d events." % nevents )
         try:
             computer.checkIfReadable()
         except Exception as e:
