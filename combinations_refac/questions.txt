@@ -33,6 +33,8 @@ walker_parameters.ini -> number of steps,...
 
 13) What is trimmer used for?
 
+14) We should never have only 1 unfrozen particle (LSP), since it would require mono-jet constraints, which we do not have.
+
 
 ---> Move predictor one layer up (just below RandomWalker). So Predictor has access to the protoModel, but not the other way around
         all the model testing related stuff goes up to predictor and moves away from ProtoModel

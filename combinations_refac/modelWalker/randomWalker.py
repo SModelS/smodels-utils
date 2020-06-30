@@ -16,7 +16,7 @@ sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/com
 from smodels.tools.runtime import nCPUs
 from smodels.tools.physicsUnits import GeV
 from statistics.hiscore import Hiscore
-from modelBuilder.protomodel import ProtoModel, rthresholds
+from modelBuilder.protomodel import ProtoModel
 from modelBuilder.manipulator import Manipulator
 from modelWalker.history import History
 from modelTester.predictor import Predictor
@@ -173,7 +173,7 @@ class RandomWalker:
                     ( asizeof(self)/1024,asizeof(self.protomodel)/1024,asizeof(self.accelerator)/1024, asizeof(self.history)/1024 ) )
 
         #Take a step in the model space:
-        self.manipulator.randomlyChangeModel()
+        self.manipulator.randomlyChangeModel(predictor=self.predictor)
 
         if self.catch_exceptions:
             try:
@@ -358,6 +358,7 @@ class RandomWalker:
             ## only the first walker records history
             if self.record_history:
                 self.history.add ( self.protomodel )
+
             try:
                 self.onestep()
             except Exception as e:
@@ -373,8 +374,8 @@ class RandomWalker:
                     f.write ( "%s: taking a step resulted in exception: %s, %s\n" % (time.asctime(), type(e), e ) )
                     f.write ( "   `- exception occured in walker #%s\n" % self.protomodel.walkerid )
                 sys.exit(-1)
-            if self.protomodel.rmax > rthresholds[0]:
-                tp = self.protomodel.rvalues[0][2]
+            if self.protomodel.excluded:
+                tp = self.protomodel.tpList[0][2]
                 masses = []
                 try:
                     masses = [ int(y.asNumber(GeV)) for y in tp.mass[0] ]
@@ -382,8 +383,8 @@ class RandomWalker:
                     pass
                 ana="%s(%s,%s,m=%s)" % \
                      ( tp.analysisId(), ",".join( map ( str, tp.txnames ) ), tp.dataType(True), masses )
-                self.highlight ( "info", "rmax[%s]=%.2f > %.1f (r2=%.2f): revert." % \
-                        ( ana, self.protomodel.rmax, rthresholds[0], self.protomodel.r2 ) )
+                self.highlight ( "info", "rmax[%s]=%.2f, excluded = %s (r2=%.2f): revert." % \
+                        ( ana, self.protomodel.rmax, self.protomodel.excluded, self.protomodel.r2 ) )
                 self.protomodel.restore()
                 if hasattr ( self, "oldgrad" ) and self.accelerator != None:
                     self.accelerator.grad = self.oldgrad

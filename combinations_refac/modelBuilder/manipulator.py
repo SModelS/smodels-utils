@@ -248,7 +248,7 @@ class Manipulator:
                                 ( self.M.K, oldK ) )
                 self.M.restore()
             ## score deteriorated?
-            if self.M.rmax > rthresholds[0] and self.M.rmax > oldrmax+.0001:
+            if self.M.excluded and self.M.rmax > oldrmax+.0001:
                 self.M.pprint ( "new rmax is %.2f, old was %.2f. restore!" % \
                                 ( self.M.rmax, oldrmax ) )
                 self.M.restore()
@@ -452,7 +452,7 @@ class Manipulator:
             return p in dpid
         return p == dpid
 
-    def randomlyChangeModel(self,sigmaUnFreeze = 0.5, probBR = 0.2, probSS = 0.25,
+    def randomlyChangeModel(self,predictor,sigmaUnFreeze = 0.5, probBR = 0.2, probSS = 0.25,
                                 probSSingle=0.8, ssmSigma=0.1,
                                 probMerge = 0.05, sigmaFreeze = 0.5, probMassive = 0.3,
                                 probMass = 0.05, dx =200):
@@ -470,12 +470,12 @@ class Manipulator:
         nChanges += self.randomlyChangeBranchings(prob=probBR)
         nChanges += self.randomlyChangeSignalStrengths(prob = probSS,
                                                 probSingle = probSSingle, ssmSigma = ssmSigma)
-        nChanges += self.randomlyAttemptAMerger(self.predictor, prob=probMerge)
+        nChanges += self.randomlyAttemptAMerger(predictor, prob=probMerge)
         nChanges+=self.randomlyFreezeParticle(sigma= sigmaFreeze, probMassive = probMassive)
         if not nChanges: #If nothing has changed, force a random change of masses
-            nChanges+=self.randomlyChangeMasses(self.predictor,prob=1.0, dx = dx)
+            nChanges+=self.randomlyChangeMasses(predictor,prob=1.0, dx = dx)
         else: #Change masses with 5% probability
-            nChanges+=self.randomlyChangeMasses(self.predictor,prob = probMass, dx = dx)
+            nChanges+=self.randomlyChangeMasses(predictor,prob = probMass, dx = dx)
 
         #Update the SLHA file
         self.M.createSLHAFile()
@@ -810,7 +810,7 @@ class Manipulator:
         if force_merge:
             self.pprint ( "forced merge, so not checking" )
             return
-        if self.M.rmax > rthresholds[0]:
+        if self.M.excluded:
             self.pprint ( "trying to merge %d and %d lead to an rmax of %.2f. reverting" % \
                           ( p1, p2, self.M.rmax ) )
             self.M.restore()
@@ -827,6 +827,8 @@ class Manipulator:
         """
 
         nUnfrozen = len( self.M.unFrozenParticles() )
+        if nUnfrozen <= 2: #Always keep at least 2 part
+            return 0
         nTotal = len ( self.M.masses.keys() )
         denom = self.M.Z+1.
         if denom < 1.:

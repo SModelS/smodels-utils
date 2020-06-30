@@ -9,6 +9,7 @@ from smodels.particlesLoader import BSMList
 from smodels.tools.physicsUnits import fb, GeV
 from smodels.experiment.databaseObj import Database
 from smodels.theory.model import Model
+from smodels.tools import runtime
 from modelTester.combiner import Combiner
 from tools import helpers
 import pickle, time, os, copy
@@ -116,7 +117,7 @@ class Predictor:
             f.write ( "[predict:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
     def predict ( self, protomodel, allpreds=False, llhdonly=True,
-                  sigmacut = 0.02*fb, recycle_xsecs = False,
+                  sigmacut = 0.02*fb,  recycle_xsecs = False,
                   strategy = "aggressive", check_thresholds = False):
         """ taken an slha input file, return theory predictions
         :param allpreds: return all predictions, not just best + combined
@@ -130,24 +131,23 @@ class Predictor:
         """
 
         protomodel.log ( "now create slha file via predict with %d events" % protomodel.nevents )
-        bestpreds = self.runSModelS( protomodel.currentSLHA, allpreds=allpreds,
+        bestpreds = self.runSModelS( protomodel.currentSLHA, sigmacut,  allpreds=allpreds,
                                            llhdonly=llhdonly )
 
         #Extract  the relevant prediction information and store in the protomodel:
         self.updateModelPredictions(protomodel,bestpreds)
-        excluded = protomodel.rmax > self.rthreshold
-        self.log ( "model is excluded? %s" % str(excluded) )
-        if check_thresholds and excluded:
+        self.log ( "model is excluded? %s" % str(protomodel.excluded) )
+        if check_thresholds and protomodel.excluded:
             protomodel.Z = -1. ## set to negative
             protomodel.K = -20.
             return False
 
-        if not check_thresholds  and excluded:
+        if not check_thresholds  and protomodel.excluded:
             self.pprint ( "we dont check thresholds, but the model would actually be excluded with rmax=%.2f"
                             %protomodel.rmax )
 
         # now use all prediction with likelihood values to compute the Z of the model
-        predictions = self.runSModelS( protomodel.currentSLHA, allpreds=True,
+        predictions = self.runSModelS( protomodel.currentSLHA, sigmacut, allpreds=True,
                                                llhdonly=True )
         # Compute significance and store in the model:
         self.computeSignificance( protomodel, predictions, strategy )
@@ -156,7 +156,7 @@ class Predictor:
 
         return True
 
-    def runSModelS(self, inputFile, sigmacut, mingap, allpreds, llhdonly):
+    def runSModelS(self, inputFile, sigmacut, allpreds, llhdonly):
 
         if not os.path.exists ( inputFile ):
             self.pprint ( "error, cannot find inputFile %s" % inputFile )
@@ -203,7 +203,7 @@ class Predictor:
 
         return preds
 
-    def updateModelPredictions(self, protomodel, bestpreds):
+    def updateModelPredictions(self, protomodel, predictions):
         """ Extract information from list of theory predictions and store in the protomodel.
         :param predictions: all theory predictions
         :returns: list of tuples with observed r values, r expected and
@@ -211,17 +211,24 @@ class Predictor:
         """
 
         rvalues = [0.0,0.0] #If there are no predictions set rmax and r2 to 0
+        tpList = []
+        combiner = Combiner( self.walkerid )
         for theorypred in predictions:
             r = theorypred.getRValue(expected=False)
             if r == None:
                 self.pprint ( "I received %s as r. What do I do with this?" % r )
                 r = 23.
+            rexp = theorypred.getRValue(expected=True)
+            tpList.append( (r, rexp, combiner.removeDataFromTheoryPred ( theorypred ) ) )
             rvalues.append(r)
         rvalues.sort(reverse = True )
-        srs = "%s" % ", ".join ( [ "%.2f" % x[0] for x in rvalues[:3] ] )
+        srs = "%s" % ", ".join ( [ "%.2f" % x for x in rvalues[:3] ] )
         self.log ( "received r values %s" % srs )
+        protomodel.rvalues = rvalues[:]
         protomodel.rmax = rvalues[0]
         protomodel.r2 = rvalues[1]
+        protomodel.excluded = protomodel.rmax > self.rthreshold
+        protomodel.tpList = tpList[:]
 
     def computeSignificance(self, protomodel, predictions, strategy):
 
@@ -235,7 +242,7 @@ class Predictor:
         protomodel.r2 = protomodel.r2 * mumax
         bestCombo,Z,llhd,muhat = combiner.findHighestSignificance ( predictions, strategy,
                                                 expected=False, mumax = mumax )
-        prior = combiner.computePrior ( self )
+        prior = combiner.computePrior ( protomodel )
         if hasattr ( protomodel, "keep_meta" ) and protomodel.keep_meta:
             protomodel.bestCombo = bestCombo
         else:
@@ -244,22 +251,20 @@ class Predictor:
         protomodel.K = combiner.computeK ( Z, prior )
         protomodel.llhd = llhd
         protomodel.muhat = muhat
-        protomodel.letters = combiner.getLetterCode(self.bestCombo)
-        protomodel.description = combiner.getComboDescription(self.bestCombo)
+        protomodel.letters = combiner.getLetterCode(protomodel.bestCombo)
+        protomodel.description = combiner.getComboDescription(protomodel.bestCombo)
 
     def computeAnalysisContributions( self, protomodel ):
         """ compute the contributions to Z of the individual analyses
         :returns: the model with the analysic constributions attached as
                   .analysisContributions
         """
-        from smodels.tools import runtime
-        from combiner import Combiner
         self.pprint ( "Now computing analysis contributions" )
         self.pprint ( "step 1: Recompute the score. Old one at K=%.2f, Z=%.2f" % \
-                      ( self.M.K, self.M.Z ) )
+                      ( protomodel.K, protomodel.Z ) )
         protomodel.createNewSLHAFileName ( prefix="acc" )
-        origZ = self.M.Z # to be sure
-        origK = self.M.K # to be sure
+        origZ = protomodel.Z # to be sure
+        origK = protomodel.K # to be sure
         protomodel.Z = -23.
         protomodel.K = -30.
         hasPred = self.predict(protomodel, strategy=self.strategy, check_thresholds = False )

@@ -4,7 +4,6 @@
 """
 
 import random, copy, pickle, os, fcntl, time, subprocess, colorama
-from tools.helpers import rthresholds
 from scipy import stats
 from modelBuilder.manipulator import Manipulator
 from tools.csetup import setup
@@ -307,7 +306,7 @@ class Hiscore:
     def newResult ( self, protomodel ):
         """ see if new result makes it into hiscore list. If yes, then add.
         """
-        if protomodel.rmax > rthresholds[0]: # we only take the ones that passed the critic
+        if protomodel.excluded: # we only take the ones that passed the critic
             return
         self.pprint ( "New result with K=%.2f, Z=%.2f, needs to pass K>%.2f, saving: %s" % ( protomodel.K, protomodel.Z, self.currentMinK(), "yes" if self.save_hiscores else "no" ) )
         if not self.save_hiscores:
@@ -329,7 +328,7 @@ class Hiscore:
         """ see if new result makes it into hiscore list. If yes, then add.
             Old version, going by Z, not by K.
         """
-        if protomodel.rmax > rthresholds[0]: # we only take the ones that passed the critic
+        if protomodel.excluded: # we only take the ones that passed the critic
             return
         self.pprint ( "New result with Z=%.2f, needs to pass %.2f, saving: %s" % (protomodel.Z, self.currentMinZ(), "yes" if self.save_hiscores else "no" ) )
         if not self.save_hiscores:

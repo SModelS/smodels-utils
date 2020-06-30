@@ -13,19 +13,6 @@ class ProtoModel:
         branchings, their signal strength modifiers.
     """
     LSP = 1000022 ## the LSP is hard coded
-    def hasAntiParticle ( self, pid ):
-        """ for a given pid, do i also have to consider its antiparticle
-            -pid in the signal strength multipliers? """
-        if pid in [ 1000021, 1000022, 1000023, 1000025, 1000035, 1000012,
-                    1000014, 1000016, 2000012, 2000014, 2000016, 2000021 ]:
-            return False
-        return True
-
-    def toTuple ( self, pid1, pid2 ):
-        """ turn pid1, pid2 into a sorted tuple """
-        a=[pid1,pid2]
-        a.sort()
-        return tuple(a)
 
     def __init__ ( self, walkerid, keep_meta = True, nevents = 10000 ):
         """
@@ -37,8 +24,8 @@ class ProtoModel:
         self.keep_meta = keep_meta ## keep all meta info? big!
         self.version = 1 ## version of this class
         self.maxMass = 2400. ## maximum masses we consider
-        self.initializePredictor()
         self.minevents = nevents #Minimum number of events for computing xsecs
+        self.nevents = nevents #Initial number of events for computing xsecs
         self.step = 0 ## count the steps
         self.particles = [ 1000001, 2000001, 1000002, 2000002, 1000003, 2000003,
                   1000004, 2000004, 1000005, 2000005, 1000006, 2000006, 1000011,
@@ -74,6 +61,7 @@ class ProtoModel:
         self.masses = {}
         self.ssmultipliers = {} ## signal strength multipliers
         self.rvalues = [] ## store the r values of the exclusion attempt
+        self.tpList = [] ## store information about the theory predictions
         self.llhd=0.
         self.muhat = 1.
         self.Z = 0.
@@ -120,6 +108,20 @@ class ProtoModel:
 
         ## the LSP we need from the beginning
         self.masses[ProtoModel.LSP]=random.uniform(200,500)
+
+    def hasAntiParticle ( self, pid ):
+        """ for a given pid, do i also have to consider its antiparticle
+            -pid in the signal strength multipliers? """
+        if pid in [ 1000021, 1000022, 1000023, 1000025, 1000035, 1000012,
+                    1000014, 1000016, 2000012, 2000014, 2000016, 2000021 ]:
+            return False
+        return True
+
+    def toTuple ( self, pid1, pid2 ):
+        """ turn pid1, pid2 into a sorted tuple """
+        a=[pid1,pid2]
+        a.sort()
+        return tuple(a)
 
     def setSSM ( self, pids, value=1., overwrite=True ):
         """ set the signal strength multiplier of pids to value.
@@ -424,12 +426,12 @@ class ProtoModel:
         :param recycle: if False, dont store xsecs, always recompute.
                         if True, recycle the xsecs if they exist, store them.
         :param nevents: If defined, cross-sections will be computed with this number of MC events,
-                        if None, the value used is self.minevents.
+                        if None, the value used is self.nevents.
 
         """
 
         if not nevents:
-            nevents = self.minevents
+            nevents = self.nevents
         if not hasattr ( self, "currentSLHA" ) or not os.path.exists ( self.currentSLHA ):
             self.pprint ( "compute xsecs called, but no slha file exists. I assume you meant to call createSLHAFile instead." )
             self.createSLHAFile(recycle_xsecs = recycle )

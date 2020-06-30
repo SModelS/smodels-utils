@@ -273,7 +273,7 @@ def writeRawNumbersLatex ( protomodel ):
     f.close()
 
 def findXSecOfPids ( xsecs, pids ):
-    """ find the cross sections for pids 
+    """ find the cross sections for pids
     :returns: xsec, as unum object
     """
     for xsec in xsecs:
@@ -360,7 +360,7 @@ def writeTex ( protomodel, keep_tex ):
 
 def anaNameAndUrl ( ana, forPdf=False, protomodel=None ):
     """ given analysis, return analysis name and URL,
-    as html code or pdf hyperref 
+    as html code or pdf hyperref
     :param ana: ExpRes or TheoryPred or str object
     :param forPdf: if True, create for Pdf hyperref, else for html
     :param protomodel: needed only if ana is str
@@ -403,7 +403,7 @@ def writeIndexTex ( protomodel, texdoc ):
             ( dotlessv, strategy, protomodel.step ) )
     f.write ( "\n" )
     if hasattr ( protomodel, "rvalues" ):
-        rvalues=protomodel.rvalues
+        rvalues=protomodel.tpList
         rvalues.sort(key=lambda x: x[0],reverse=True )
         g=open("rvalues.tex","wt")
         g.write ( "\\begin{tabular}{l|c|r|r}\n" )
@@ -674,13 +674,13 @@ def plotRuler( protomodel, verbosity, horizontal ):
                 ( str(resultsFor), protomodel.currentSLHA ) )
 
     if horizontal:
-        plotter = rulerPlotter.RulerPlot ( protomodel.currentSLHA, fname, 
+        plotter = rulerPlotter.RulerPlot ( protomodel.currentSLHA, fname,
                                            Range=(None, None), mergesquark = False,
                                            interactive = False,
                                            hasResultsFor = resultsFor )
         plotter.draw()
     else:
-        rulerPlotter.drawVertical ( protomodel.currentSLHA, fname, 
+        rulerPlotter.drawVertical ( protomodel.currentSLHA, fname,
                 Range=(None,None), mergesquark = False, hasResultsFor = resultsFor )
 
 def plotDecays ( protomodel, verbosity, outfile="decays.png" ):
