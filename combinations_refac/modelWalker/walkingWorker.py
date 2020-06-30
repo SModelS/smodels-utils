@@ -42,7 +42,7 @@ def main( nmin, nmax, cont,
     # print ( "[walkingWorker] called main with cont='%s', pfile='%s'." % ( cont, pfile ) )
 
     # print ( "[walkingWorker] I am already inside the python script! Hostname is", socket.gethostname()  )
-    from walker.randomWalker import RandomWalker,startWalkers
+    from modelWalker.randomWalker import RandomWalker,startWalkers
     walkers = []
     for i in range(nmin,nmax):
         if pfile is None:

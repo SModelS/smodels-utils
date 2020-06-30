@@ -6,7 +6,7 @@
 import random, copy, pickle, os, fcntl, time, subprocess, colorama
 from tools.helpers import rthresholds
 from scipy import stats
-from protomodel.manipulator import Manipulator
+from modelBuilder.manipulator import Manipulator
 from tools.csetup import setup
 
 class Hiscore:
