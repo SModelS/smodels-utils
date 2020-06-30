@@ -34,8 +34,8 @@ class MG5Wrapper:
         self.basedir = bakeryHelpers.baseDir()
         os.chdir ( self.basedir )
         self.tempdir = bakeryHelpers.tempDir()
-        self.resultsdir = self.basedir + "/mg5results"
-        self.ma5results = self.basedir + "/results"
+        self.resultsdir = os.path.join(self.basedir, "mg5results")
+        self.ma5results = os.path.join(self.basedir, "results")
         self.cutlang = cutlang
         self.mkdir ( self.resultsdir )
         self.ignore_locks = ignore_locks
@@ -44,7 +44,7 @@ class MG5Wrapper:
         self.rerun = rerun
         self.recast = recast
         self.njets = njets
-        self.mg5install = "%s/mg5" % self.basedir
+        self.mg5install = os.path.join(self.basedir, "mg5")
         self.logfile = None
         self.logfile2 = None
         self.tempf = None
@@ -55,12 +55,12 @@ class MG5Wrapper:
         self.ver = ver
         if not os.path.isdir ( self.mg5install ):
             self.error ( "mg5 install is missing??" )
-        self.executable = self.mg5install + "/bin/mg5_aMC"
+        self.executable = os.path.join(self.mg5install, "bin/mg5_aMC")
         if not os.path.exists ( self.executable ):
             self.info ( "cannot find mg5 installation at %s" % self.mg5install )
             self.exe ( "mg5/make.py" )
         self.determineMG5Version()
-        self.templateDir = self.basedir + "/templates/"
+        self.templateDir = os.path.join(self.basedir, "templates/")
         ebeam = str(int(self.sqrts*1000/2))
         self.mgParams = { 'EBEAM': ebeam, # Single Beam Energy expressed in GeV
                           'NEVENTS': str(nevents), 'MAXJETFLAVOR': '5',
