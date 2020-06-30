@@ -173,7 +173,7 @@ class RandomWalker:
             ourK = self.manipulator.M.K
         dK = ( bestK - ourK ) / 10.
         prob = min ( 1., 1. - math.exp ( -dK )  )
-        prob = max ( 0., .1 * prob )
+        prob = max ( 0., .5 * prob )
         a = random.uniform ( 0., 1. )
         doTP = ( a < prob ) ## do teleport, yes or no
         self.log ( "check if to teleport, Kmax=%.2f, ours is=%.2f, p=%.2f, a=%.2f: %s" % \
