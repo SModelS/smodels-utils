@@ -1,0 +1,28 @@
+1) modules in obsolete are used?
+
+2) Not sure what checkIfToTeleport does. Why does it use the highest K and not the one from the previous step?
+
+3) Moved some code from RandomWalker.one step to Manipulator.randomlyUnfreezeParticle (probability for unfreezing?)
+
+4) There is a lot of stuff going on in randomlyChangeSSOfOneParticle which is not very transparent
+
+5) Bug fix in randomlyChangeBranchingOfPid:
+                    self.M.decays[p][dpid]=0. -> self.M.decays[pid][dpid]=0.
+                    
+6) checkIfToTeleport -> set overall probability?
+
+7) If self.hiscoreList is None -> should always store model, no? (at the end of RandomWalker.onestep)
+
+8) checkIfToTeleport vs decideOnTakingStep?
+
+9) Should we move protomodel.restore() to manipulator (it is used when the step is not taken)? It is a bit awkward to have the model remembering about its past.
+
+
+10) Maybe ProtoModel should hold BSMlist and a Model obj? This way a freezing/unfreezing corresponding simply to removing/adding particles to the list and the predictor would
+be run directly on the Model object, without the need for creating a SLHA as an intermediate.
+Or even have ProtoModel being a derived class from Model? -> Don't know if we want the codes to be so tightly coupled though
+
+High complexity methods:
+
+Manipulator.randomlyChangeBranchingOfPid
+Manipulator.writeDictFile
