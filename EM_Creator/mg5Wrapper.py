@@ -275,8 +275,11 @@ class MG5Wrapper:
         self.process = "%s_%djet" % ( self.topo, self.njets )
         if self.hasHEPMC ( masses ):
             if not self.rerun:
-                self.info ( "hepmc file for %s[%s] exists. go directly to MA5." % \
-                            ( str(masses), self.topo ) )
+                which  = "MA5"
+                if self.cutlang:
+                    which = "cutlang"
+                self.info ( "hepmc file for %s[%s] exists. go directly to %s." % \
+                            ( str(masses), self.topo, which ) )
                 self.runRecasting ( masses, analyses, pid )
                 self.unlock ( masses )
                 return

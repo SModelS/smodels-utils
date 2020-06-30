@@ -374,13 +374,18 @@ class CutLangWrapper:
             self.__error("Number of events before selection is not constant in all regions:")
             self.__error(f"Numbers of events: {nevents}")
             self.__error(f"Using the value: {nevents[0]}")
-        with open(effi_file, "w") as f:
-            f.write("{" + str(mass) + ": {")
-            f.write(entries)
-            f.write(f"'__t__':'{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}', ")
-            f.write(f"'__nevents__':{nevents[0]}")
-            f.write("}")
-            f.write("}")
+        if not os.path.exists ( effi_file ):
+            with open(effi_file, "at") as f:
+                f.write("{ # EM-Baked %s.\n" % time )
+        if len(nevents)>0:
+            print ( "WRITING %s to %s" % ( str(mass), effi_file ) )
+            with open(effi_file, "at") as f:
+                f.write(str(mass) + ": {")
+                f.write(entries)
+                f.write(f"'__t__':'{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}', ")
+                f.write(f"'__nevents__':{nevents[0]}")
+                f.write("},\n")
+                # f.write("}")
 
     def exe(self, cmd, logfile = None, maxLength=100, cwd=None, exit_on_fail=False):
         """ execute cmd in shell
