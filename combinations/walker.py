@@ -477,13 +477,7 @@ if __name__ == "__main__":
                              action="store_true" )
     args = argparser.parse_args()
     if args.seed != None:
-        random.seed ( args.seed )
-        ## scipy takes random numbers from numpy.random, so
-        numpy.random.seed ( args.seed )
-        import scipy.stats as s
-        r = s.norm.rvs()
-        print ( "[walker] seeding the random number generators with %d. r=%.3f" % \
-                ( args.seed, r ) )
+        helpers.seedRandomNumbers ( args.seed )
         
     cleanDirectory()
     select = args.select.lower()
