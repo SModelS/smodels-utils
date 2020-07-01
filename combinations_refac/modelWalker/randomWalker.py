@@ -195,7 +195,7 @@ class RandomWalker:
                 self.predictor.predict(self.protomodel)
 
         #the muhat multiplier gets multiplied into the signal strengths
-        self.manipulator.resolveMuhat()
+        self.manipulator.rescaleByMuHat()
 
         self.log ( "found highest Z: %.2f" % self.protomodel.Z )
 
@@ -218,10 +218,9 @@ class RandomWalker:
         self.manipulator.checkSwaps(self.predictor)
         self.log ( "step %d/%s finished." % ( self.protomodel.step, smaxstp ) )
 
-        if self.hiscoreList != None:
-            self.log ( "check if result goes into hiscore list" )
-            self.hiscoreList.newResult ( self.protomodel ) ## add to high score list
-            self.log ( "done check for result to go into hiscore list" )
+        self.log ( "check if result goes into hiscore list" )
+        self.hiscoreList.newResult ( self.protomodel ) ## add to high score list
+        self.log ( "done check for result to go into hiscore list" )
 
     def checkIfToTeleport ( self, pmax=0.1, norm = 10.0 ):
         """ check if we should teleport to a high score model. If we should then also
@@ -253,56 +252,11 @@ class RandomWalker:
             self.manipulator.teleportToHiscore()
         return doTP
 
-    def train ( self ):
-        """ train the accelerator """
-        ## currently we dont train, we just dump the data
-        if self.accelerator != None:
-            self.accelerator.dumpTrainingData ( self.protomodel )
-        return # we dont train for now
-    """
-    def gradientAscent ( self ):
-        # Z is big enough, the loss is small enough. use the gradient.
-        if self.accelerator.torchmodel == None or self.accelerator.is_trained == False:
-            ## we dont have a (trained) model, we dont ascend
-            self.pprint ( "gradient ascent? no!" )
-            return
-        self.pprint ( "gradient ascent? yes!" )
-        predictedZ = float ( self.accelerator.predict ( self.protomodel ) )
-        self.pprint ( "Gradient ascent predicted vs computed Z: %.5f <-> %.5f" % ( predictedZ, self.protomodel.Z ) )
-        self.accelerator.train ( self.protomodel, self.protomodel.Z ) # only done to get gradient
-        if not hasattr ( self.accelerator, "grad" ) or type(self.accelerator.grad) == type(None):
-            self.pprint ( "accelerator has no grad %d" % hasattr ( self.accelerator, "grad" ) )
-            sys.exit()
-            return
-        # self.log ( "shall we perform gradient ascent?" )
-        # self.log ( "attrs %s %s" % ( self.accelerator.loss, self.accelerator.torchmodel.last_ypred ) )
-        #if self.accelerator.loss > 1. or ( hasattr ( self.accelerator.torchmodel, "last_ypred" ) and self.accelerator.torchmodel.last_ypred in [ float("nan"), None ] ):
-        #    return ## dont make gradient ascent when accelerator loss is too high
-        self.pprint ( "performing a gradient ascent. Z before %.2f" % self.protomodel.Z )
-        oldZ = self.protomodel.Z
-        self.protomodel.backup()
-        self.accelerator.plusDeltaM ( self.protomodel, rate=.1 ) ## move!!
-        try:
-            self.manipulator.predict ()
-        except Exception as e:
-            self.pprint ( "could not get prediction for gradient ascended model. revert" )
-            self.protomodel.restore()
-            return
-        self.pprint ( "Z after gradient ascent %.2f, before was %.2f" % ( self.protomodel.Z, oldZ ) )
-        if oldZ > self.protomodel.Z:
-            self.pprint ( "old value was better. revert" )
-            self.protomodel.restore()
-        else:
-            self.pprint ( "keep gradient ascended model" )
-    """
-
     def takeStep ( self ):
         """ take the step, save it as last step """
         if self.accelerator != None and hasattr ( self.accelerator, "grad" ):
             self.oldgrad = self.accelerator.grad
-        ## the muhat multiplier gets multiplied into the signal strengths
-        self.manipulator.resolveMuhat()
-        ## and backup!
+        ## Backup model
         self.protomodel.backup()
 
     def saveState ( self ):
@@ -386,8 +340,6 @@ class RandomWalker:
                 self.highlight ( "info", "rmax[%s]=%.2f, excluded = %s (r2=%.2f): revert." % \
                         ( ana, self.protomodel.rmax, self.protomodel.excluded, self.protomodel.r2 ) )
                 self.protomodel.restore()
-                if hasattr ( self, "oldgrad" ) and self.accelerator != None:
-                    self.accelerator.grad = self.oldgrad
                 continue
 
             # obtain the ratio of posteriors

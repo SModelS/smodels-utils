@@ -412,7 +412,6 @@ def storeList ( protomodels, savefile ):
     else: ## assume a dict file
         h.writeListToDictFile()
 
-
 def sortByZ ( protomodels ):
     protomodels.sort ( reverse=True, key = lambda x: x.Z )
     return protomodels[:20] ## only 20
@@ -566,10 +565,10 @@ def main ( args ):
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
         print ( "[hiscore]                          Instantiations: %sma, co, tr%s" % \
                 ( colorama.Fore.RED, colorama.Fore.RESET ) )
-        # import combiner
-        # co = combiner.Combiner()
+        import combiner
+        co = combiner.Combiner()
         # tr = trimmer.Trimmer ( protomodels[0] )
-        # import hiscore
+        import hiscore #Keep it for convenience
         import IPython
         IPython.embed( using=False )
 

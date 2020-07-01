@@ -116,34 +116,22 @@ class Predictor:
         with open( "walker%d.log" % self.walkerid, "a" ) as f:
             f.write ( "[predict:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
-    def predict ( self, protomodel, allpreds=False, llhdonly=True,
-                  sigmacut = 0.02*fb,  recycle_xsecs = False,
-                  strategy = "aggressive", check_thresholds = False):
-        """ taken an slha input file, return theory predictions
-        :param allpreds: return all predictions, not just best + combined
-        :param llhdonly: return only predictions with llhds
-        :param check_thresholds: if true, check if we run into an exclusion.
-                                 in this case, Z becomes -1 for excluded models.
-        :param recycle_xsecs: if False, always compute xsecs. If True,
-                              reuse them, shall they exist.
+    def predict ( self, protomodel, sigmacut = 0.02*fb,  recycle_xsecs = False,
+                  strategy = "aggressive"):
+        """ Compute the predictions and test statistic variables.
 
-        :returns: list of predictions
+        :returns: True
         """
 
-        bestpreds = self.runSModelS( protomodel.currentSLHA, sigmacut,  allpreds=allpreds,
-                                           llhdonly=llhdonly )
-
+        #First run SModelS using all results and considering only the best signal region.
+        bestpreds = self.runSModelS( protomodel.currentSLHA, sigmacut,  allpreds=False,
+                                           llhdonly=False )
         #Extract  the relevant prediction information and store in the protomodel:
         self.updateModelPredictions(protomodel,bestpreds)
         self.log ( "model is excluded? %s" % str(protomodel.excluded) )
-        if check_thresholds and protomodel.excluded:
-            protomodel.Z = -1. ## set to negative
-            protomodel.K = -20.
-            return False
 
-        if not check_thresholds  and protomodel.excluded:
-            self.pprint ( "we dont check thresholds, but the model would actually be excluded with rmax=%.2f"
-                            %protomodel.rmax )
+        #Compute the maximum allowed (global) mu value given the r-values stored in protomodel
+        protomodel.mumax = self.getMaxAllowedMu(protomodel,bestpreds)
 
         # now use all prediction with likelihood values to compute the Z of the model
         predictions = self.runSModelS( protomodel.currentSLHA, sigmacut, allpreds=True,
@@ -229,14 +217,23 @@ class Predictor:
         protomodel.excluded = protomodel.rmax > self.rthreshold
         protomodel.tpList = tpList[:]
 
+    def getMaxAllowedMu(self, protomodel):
+        """ Compute the maximum (global) signal strength normalization
+            given the predictions.
+        """
+
+        mumax = float("inf")
+        if protomodel.rmax > 0.:
+            mumax = self.rthreshold / protomodel.rmax
+
+        return mumax
+
     def computeSignificance(self, protomodel, predictions, strategy):
 
         combiner = Combiner( self.walkerid )
         self.log ( "now find highest significance for %d predictions" % len(predictions) )
         ## find highest observed significance
-        mumax = float("inf")
-        if protomodel.rmax > 0.:
-            mumax = self.rthreshold / protomodel.rmax
+        mumax = protomodel.mumax
         protomodel.rmax = protomodel.rmax * mumax
         protomodel.r2 = protomodel.r2 * mumax
         bestCombo,Z,llhd,muhat = combiner.findHighestSignificance ( predictions, strategy,

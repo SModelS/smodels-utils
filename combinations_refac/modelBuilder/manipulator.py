@@ -429,8 +429,8 @@ class Manipulator:
             if not pid == self.M.LSP:
                 self.normalizeBranchings ( pid )
 
-    def resolveMuhat ( self ):
-        """ multiply the signal strength multipliers with muhat, then set muhat to 1. """
+    def rescaleByMuHat ( self ):
+        """ multiply the signal strength multipliers with muhat"""
         if not hasattr ( self.M, "muhat" ):
             return
         if self.M.muhat == 0.:

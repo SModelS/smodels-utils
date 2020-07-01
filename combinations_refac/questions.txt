@@ -25,8 +25,6 @@ walker_parameters.ini -> number of steps,...
 
 12) resolveMuhat -> Should be applied after predict() AND in takeStep()???
 
-13) What is trimmer used for?
-
 14) We should never have only 1 unfrozen particle (LSP), since it would require mono-jet constraints, which we do not have.
 
 15) Could the "merge particles" be treated as the other random changes in the model? So it always happens independent of
@@ -40,6 +38,8 @@ the resulting Z value? The decision to take the step would still be taken accord
 
 ---> Move predictor one layer up (just below RandomWalker). So Predictor has access to the protoModel, but not the other way around
         all the model testing related stuff goes up to predictor and moves away from ProtoModel
+        
+18) Use xsec estimates?
 
 High complexity methods:
 
