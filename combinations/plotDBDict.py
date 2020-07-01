@@ -69,6 +69,8 @@ class Plotter:
         title = f"meta stats, real observations, database v{dbname}"
         if not "orig" in variable:
             title = f"meta stats, fake observations, database v{dbname}"
+        if abs ( self.meta["fudge"] - 1. ) > 1e-3:
+            title += " f=%.2f" % self.meta["fudge"]
         plt.title ( title )
         plt.xlabel ( "reduced distances $( n_\mathrm{obs} - n_\mathrm{bg} ) / \sqrt{ \mathrm{stat}^2 + \mathrm{sys}^2 } $" )
         plt.savefig ( f"{variable}.png" )
@@ -85,4 +87,5 @@ def main():
     plotter.plot( "origS" )
     plotter.plot( "S" )
 
-main()
+if __name__ == "__main__":
+    main()

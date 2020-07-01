@@ -28,6 +28,7 @@ def main():
     argparser.add_argument ( '--ssms', help='the ssm files', action="store_true" )
     argparser.add_argument ( '--llhds', help='the llhd files', action="store_true" )
     argparser.add_argument ( '--dbdict', help='the database dict', action="store_true" )
+    argparser.add_argument ( '--database', help='the database', action="store_true" )
     argparser.add_argument ( '--fake', help='the fake* databases', action="store_true" )
     argparser.add_argument ( '--copy', help='the copy of the hiscore file', 
                              action="store_true" )
@@ -47,6 +48,7 @@ def main():
               "pmodels": [ "pmodel?.py" ],
               "png": [ "*.png" ],
               "dbdict": [ "database.dict" ],
+              "database": [ "default.pcl" ],
               "ssms": [ "ssm*.pcl" ]
     }
     for k,v in args.__dict__.items():

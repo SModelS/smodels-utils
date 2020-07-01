@@ -21,12 +21,13 @@ from csetup import setup
 import IPython
 
 class ExpResModifier:
-    def __init__ ( self, dbpath, Zmax ):
+    def __init__ ( self, dbpath, Zmax, fudge ):
         """
         :param dbpath: path to database
         :param Zmax: upper limit on an individual excess
         """
         self.dbpath = dbpath
+        self.fudge = fudge
         self.protomodel = None
         self.rundir = setup()
         self.logfile = "modifier.log"
@@ -42,7 +43,7 @@ class ExpResModifier:
         filename = "%s/database.dict" % self.rundir
         self.log ( f"saving stats to {filename}" ) 
         meta = { "dbpath": self.dbpath, "Zmax": self.Zmax, 
-                 "database": self.dbversion,
+                 "database": self.dbversion, "fudge": self.fudge,
                  "protomodel": self.protomodel, "timestamp": time.asctime() }
         with open ( filename,"wt" ) as f:
             f.write ( str(meta)+"\n" )
@@ -190,7 +191,7 @@ class ExpResModifier:
         sample from background and put the value as observed """
         orig = dataset.dataInfo.observedN
         exp = dataset.dataInfo.expectedBG
-        err = dataset.dataInfo.bgError
+        err = dataset.dataInfo.bgError * self.fudge
         D = { "origN": orig, "expectedBG": exp, "bgError": err }
         S, origS = float("inf"), float("nan")
         while S > self.Zmax:
@@ -383,6 +384,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-d', '--database',
             help='database to use [../../smodels-database]',
             type=str, default="../../smodels-database" )
+    argparser.add_argument ( '-f', '--fudge',
+            help='fudge factor for bgerr [1.0]',
+            type=float, default=1.0 )
     argparser.add_argument ( '-o', '--outfile',
             help='file to write out database pickle [""]',
             type=str, default="" )
@@ -401,11 +405,13 @@ if __name__ == "__main__":
             help='interactive mode', action='store_true' )
     argparser.add_argument ( '-c', '--check',
             help='check the pickle file <outfile>', action='store_true' )
+    argparser.add_argument ( '-D', '--draw',
+            help='also draw plots', action='store_true' )
     argparser.add_argument ( '-u', '--upload',
             help='upload to $RUNDIR', action='store_true' )
     args = argparser.parse_args()
     from smodels.experiment.databaseObj import Database
-    modifier = ExpResModifier( args.database, args.max )
+    modifier = ExpResModifier( args.database, args.max, args.fudge )
     if not args.outfile.endswith(".pcl"):
         print ( "[expResModifier] warning, shouldnt the name of your outputfile ``%s'' end with .pcl?" % args.outfile )
     er = modifier.modifyDatabase ( args.outfile, args.suffix, args.pmodel )
@@ -421,3 +427,6 @@ if __name__ == "__main__":
     if args.upload:
         modifier.upload()
 
+    if args.draw:
+        import plotDBDict
+        plotDBDict.main()
