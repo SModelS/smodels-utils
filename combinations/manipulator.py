@@ -1202,7 +1202,7 @@ class Manipulator:
 
     def randomlyChangeMasses ( self ):
         """ take a random step in mass space for all unfrozen particles """
-        a = random.uniform(0.,1.)
+        #a = random.uniform(0.,1.)
         unfrozen = self.M.unFrozenParticles()
         if len(unfrozen)==0:
             return 0

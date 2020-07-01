@@ -131,7 +131,7 @@ class Predictor:
         self.log ( "model is excluded? %s" % str(protomodel.excluded) )
 
         #Compute the maximum allowed (global) mu value given the r-values stored in protomodel
-        protomodel.mumax = self.getMaxAllowedMu(protomodel,bestpreds)
+        protomodel.mumax = self.getMaxAllowedMu(protomodel)
 
         # now use all prediction with likelihood values to compute the Z of the model
         predictions = self.runSModelS( protomodel.currentSLHA, sigmacut, allpreds=True,

@@ -242,6 +242,8 @@ class Manipulator:
             oldK, oldrmax = self.M.K, self.M.rmax
             self.M.backup()
             self.swapParticles ( pids[0],pids[1] )
+
+            self.M.createSLHAFile()
             predictor.predict(protomodel=self.M)
             if self.M.K < oldK - 1e-3: ## score deteriorated?
                 self.M.pprint ( "new K is %.2f, old was %.2f. restore!" % \
@@ -438,7 +440,7 @@ class Manipulator:
             self.M.muhat = 1.
         if abs ( self.M.muhat - 1.0 ) < 1e-5:
             return
-        self.M.log ( "resolve a muhat of %.2f" % self.M.muhat )
+        self.M.log ( "rescaling signal by muhat of %.2f" % self.M.muhat )
         self.M.rmax = self.M.rmax * self.M.muhat
         self.M.r2 = self.M.r2 * self.M.muhat
         for k,v in self.M.ssmultipliers.items():
@@ -477,7 +479,7 @@ class Manipulator:
             nChanges+=self.randomlyChangeMasses(predictor,prob = probMass, dx = dx)
 
         #Update the SLHA file
-        self.M.createSLHAFile(nevents = 20000)
+        self.M.createSLHAFile()
 
     def randomlyUnfreezeParticle ( self, sigma=0.5, force = False ):
         """ Unfreezes a (random) frozen particle according to gaussian distribution with width sigma.
@@ -520,7 +522,7 @@ class Manipulator:
         """
 
         uBranch = random.uniform(0,1)
-        if uBranch > prob:
+        if uBranch < (1-prob):
             return 0
 
         self.log ( "randomly change branchings" )
@@ -605,7 +607,7 @@ class Manipulator:
         """
 
         uSSM = random.uniform(0,1)
-        if not (uSSM > 1-prob):
+        if uSSM < (1-prob):
             return 0
 
         self.log ( "randomly change signal strengths" )
@@ -798,14 +800,16 @@ class Manipulator:
         oldZ = self.M.Z
         self.M.delXSecs()
 
+        self.M.createSLHAFile()
         passed = predictor.predict (protomodel=self.M)
         if passed == False:
             self.pprint ( "after merging, did not pass. rmax=%.2f. scale and retry." % self.M.rmax )
             ## did not pass? Okay, we make it pass, by scaling the new ssms
-            f_sc = .999 * rthresholds[0] / self.M.rmax  ## we multiply with this factor
+            f_sc = .999 * predictor.rthresholds / self.M.rmax  ## we multiply with this factor
             for pids,ssm in self.M.ssmultipliers.items():
                 if p1 in pids or -p1 in pids:
                     self.M.ssmultipliers[pids] = self.M.ssmultipliers[pids] * f_sc
+            self.M.createSLHAFile()
             passed = predictor.predict ( protomodel=self.M )
             self.pprint ( "after retrying we have: passed=%d, rmax=%.2f" % ( passed, self.M.rmax ) )
 
@@ -890,8 +894,8 @@ class Manipulator:
         unfrozen = self.M.unFrozenParticles()
         if len(unfrozen)==0:
             return 0
-        pid = random.choice ( unfrozen )
 
+        pid = random.choice ( unfrozen )
         ret = self.randomlyChangeMassOf ( pid, dx=dx )
         #for i in unfrozen:
         #    ret = self.randomlyChangeMassOf ( i )

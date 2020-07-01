@@ -87,7 +87,7 @@ class Hiscore:
     def addResult ( self, protomodel ):
         """ add a result to the list """
         m = Manipulator ( protomodel )
-        m.resolveMuhat() ## add only with resolved muhats
+        m.rescaleByMuHat() ## add only with resolved muhats
         if m.M.K <= self.currentMinK( zeroIsMin = True ):
             return ## doesnt pass minimum requirement
         if m.M.K == 0.:
@@ -96,9 +96,7 @@ class Hiscore:
             ## for values > 2.5 we now predict again with larger statistics.
             m.predict ()
 
-        Zold = self.globalMaxZ()
         Kold = self.globalMaxK()
-
         if m.M.K > Kold:
             ## we have a new hiscore?
             ## compute the particle contributions

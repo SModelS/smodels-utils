@@ -15,10 +15,9 @@ except:
 sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/combinations/")
 from smodels.tools.runtime import nCPUs
 from smodels.tools.physicsUnits import GeV
-from statistics.hiscore import Hiscore
+from modelWalker.hiscore import Hiscore
 from modelBuilder.protomodel import ProtoModel
 from modelBuilder.manipulator import Manipulator
-from modelWalker.history import History
 from modelTester.predictor import Predictor
 from tools import helpers
 from pympler.asizeof import asizeof
@@ -78,8 +77,6 @@ class RandomWalker:
                           ( self.manipulator.M.Z, self.manipulator.M.K ) )
             self.hiscoreList.newResult ( self.manipulator.M )
         self.catch_exceptions = catch_exceptions
-        self.history = History ( walkerid )
-        self.record_history = False
         self.maxsteps = nsteps
         self.accelerator = None
         if dump_training:
@@ -96,7 +93,6 @@ class RandomWalker:
     def setWalkerId ( self, Id ):
         self.walkerid = Id
         self.manipulator.setWalkerId ( Id )
-        self.history.walkerid = Id
         if self.accelerator != None:
             self.accelerator.walkerid = Id
 
@@ -169,8 +165,8 @@ class RandomWalker:
         self.pprint ( "Step %d has %d/%d unfrozen particles: %s" % ( self.protomodel.step, nUnfrozen, nTotal, ", ".join ( map ( helpers.getParticleName, self.protomodel.unFrozenParticles() ) ) ) )
         printMemUsage = False
         if printMemUsage:
-            self.pprint ( "memory footprint (kb): walker %d, model %d, accelerator %d, history %d" %\
-                    ( asizeof(self)/1024,asizeof(self.protomodel)/1024,asizeof(self.accelerator)/1024, asizeof(self.history)/1024 ) )
+            self.pprint ( "memory footprint (kb): walker %d, model %d, accelerator %d" %\
+                    ( asizeof(self)/1024,asizeof(self.protomodel)/1024,asizeof(self.accelerator)/1024 ))
 
         #Take a step in the model space:
         self.manipulator.randomlyChangeModel(predictor=self.predictor)
@@ -307,12 +303,6 @@ class RandomWalker:
         """ Now perform the random walk """
         self.manipulator.randomlyUnfreezeParticle(force = True) ## start with unfreezing a random particle
         while self.maxsteps < 0 or self.protomodel.step<self.maxsteps:
-            self.pprint ( "Taking step %i of %i" % (self.protomodel.step,self.maxsteps))
-            # self.gradientAscent() # perform at begining
-            ## only the first walker records history
-            if self.record_history:
-                self.history.add ( self.protomodel )
-
             try:
                 self.onestep()
             except Exception as e:
@@ -395,9 +385,6 @@ if __name__ == "__main__":
     argparser.add_argument ( '-v', '--verbosity',
             help='verbosity -- debug,info,warn,error [info]',
             type=str, default="info" )
-    argparser.add_argument ( '-r', '--accelerator',
-            help='use accelerator to perform gradient ascent, supply pickle file name [None]',
-            type=str, default="" )
     argparser.add_argument ( '-n', '--nsteps',
             help='number of steps, negative means infinity [-1]',
             type=int, default=-1 )
@@ -416,8 +403,6 @@ if __name__ == "__main__":
     argparser.add_argument ( '-f', '-c', '--cont',
             help='continue with saved states [""]',
             type=str, default="" )
-    argparser.add_argument ( '-H', '--history', help='record history',
-                             action="store_true" )
     args = argparser.parse_args()
     if args.seed != None:
         helpers.seedRandomNumbers ( args.seed )
@@ -503,20 +488,6 @@ if __name__ == "__main__":
                                     expected = args.expected,
                                     select = select,
                                     catch_exceptions = catchem ) )
-
-    if args.accelerator not in [ "", "none", "None" ]:
-        from accelerator import Accelerator
-        for walker in walkers:
-            walker.accelerator = Accelerator ( walkerid = walker.walkerid,
-                                           torchmodel = args.accelerator,
-                                           dump_training = dump_training,
-                                           is_trained = True )
-    #print ( "[walk] loading hiscores" )
-    onoff="off"
-    if args.history:
-        onoff="on"
-        walkers[0].record_history = True
-    print ( "[walk] history recording is %s" % onoff )
 
     print ( "[walk] starting %d walkers" % len(walkers) )
     startWalkers ( walkers )
