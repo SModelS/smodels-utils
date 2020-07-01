@@ -9,7 +9,7 @@
 """
 
 import protomodel
-from protomodel import rthresholds
+from protomodel import rthresholds, maxevents
 import helpers
 import copy, random, numpy, time, math, os, sys
 from smodels.tools.physicsUnits import fb, TeV
@@ -38,7 +38,7 @@ class Manipulator:
         origK = self.M.K # to be sure
         self.M.Z = -23.
         self.M.K = -30.
-        hasPred = self.M.predict( strategy=self.strategy, nevents=self.M.nevents,
+        hasPred = self.M.predict( strategy=self.strategy, nevents=min ( maxevents[0], self.M.nevents ),
                                   check_thresholds = False )
         if not hasPred:
             self.pprint ( "I dont understand, why do I not get a pred anymore? r=%.2f" % ( self.M.rmax ) )
@@ -83,11 +83,12 @@ class Manipulator:
             nevents = 50000
         if self.M.Z > 2.8:
             nevents = 100000
+        nevents = min ( maxevents[0], nevents )
         self.M.log ( "now create slha file via predict with %d events" % nevents )
         self.M.predict ( self.strategy, nevents = nevents )
         if self.M.Z > 2.7 and nevents < 55000:
             # redo in extreme cases
-            nevents = 100000
+            nevents = maxevents[0]
             self.M.predict ( self.strategy, nevents = nevents )
         self.resolveMuhat()
 
@@ -771,8 +772,9 @@ class Manipulator:
         self.log ( "now predict. old rmax is at %.2f" % self.M.rmax )
         oldZ,oldrmax = self.M.Z, self.M.rmax
         self.M.delXSecs()
-
-        passed = self.M.predict ( nevents = 100000, recycle_xsecs = False )
+        
+        nevents = min ( maxevents[0], 100000 )
+        passed = self.M.predict ( nevents = nevents, recycle_xsecs = False )
         if passed == False:
             self.pprint ( "after merging, did not pass. rmax=%.2f. scale and retry." % self.M.rmax )
             ## did not pass? Okay, we make it pass, by scaling the new ssms
@@ -780,7 +782,7 @@ class Manipulator:
             for pids,ssm in self.M.ssmultipliers.items():
                 if p1 in pids or -p1 in pids:
                     self.M.ssmultipliers[pids] = self.M.ssmultipliers[pids] * f_sc
-            passed = self.M.predict ( nevents = 100000, recycle_xsecs = False )
+            passed = self.M.predict ( nevents = nevents, recycle_xsecs = False )
             self.pprint ( "after retrying we have: passed=%d, rmax=%.2f" % ( passed, self.M.rmax ) )
 
         if force_merge:
@@ -894,7 +896,7 @@ class Manipulator:
         if hasattr ( self.M, "stored_xsecs" ):
             return
         self.pprint ( "did not find cross sections, compute now." )
-        self.M.computeXSecs ( nevents = 100000, recycle = True )
+        self.M.computeXSecs ( nevents = min ( 100000, maxevents[0] ), recycle = True )
 
     def simplifySSMs ( self, removeOnes=False, removeZeroes=False,
                        threshold=0.001*fb, store = False ):
@@ -1046,7 +1048,7 @@ class Manipulator:
                     self.M.ssmultipliers[dpd]=1. ## setting to 1 is taking out
             # self.createSLHAFile()
             ## when trimming we want to increase statistics
-            self.M.predict ( self.strategy, nevents = self.M.nevents )
+            self.M.predict ( self.strategy, nevents = min ( maxevents[0], self.M.nevents ) )
             percZ, percK = 0., 0.
             if oldZ > 0.:
                 percZ = ( self.M.Z - oldZ ) / oldZ
