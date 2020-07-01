@@ -351,7 +351,7 @@ class RandomWalker:
 
     def walk ( self ):
         """ Now perform the random walk """
-        self.manipulator.randomlyUnfreezeParticle() ## start with unfreezing a random particle
+        self.manipulator.randomlyUnfreezeParticle(force = True) ## start with unfreezing a random particle
         while self.maxsteps < 0 or self.protomodel.step<self.maxsteps:
             self.pprint ( "Taking step %i of %i" % (self.protomodel.step,self.maxsteps))
             # self.gradientAscent() # perform at begining
@@ -469,7 +469,7 @@ if __name__ == "__main__":
     args = argparser.parse_args()
     if args.seed != None:
         helpers.seedRandomNumbers ( args.seed )
-        
+
     cleanDirectory()
     select = args.select.lower()
     catchem = not args.no_catch ## catch exceptions?

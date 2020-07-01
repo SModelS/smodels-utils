@@ -12,8 +12,8 @@
 import sys
 sys.path.insert(0,"../")
 import unittest
-from walker import RandomWalker
-import helpers
+from modelWalker.randomWalker import RandomWalker
+from tools import helpers
 import scipy.stats
 
 class VerticalTest(unittest.TestCase):

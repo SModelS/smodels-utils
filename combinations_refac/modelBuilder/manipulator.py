@@ -477,25 +477,28 @@ class Manipulator:
             nChanges+=self.randomlyChangeMasses(predictor,prob = probMass, dx = dx)
 
         #Update the SLHA file
-        self.M.createSLHAFile()
+        self.M.createSLHAFile(nevents = 20000)
 
-    def randomlyUnfreezeParticle ( self, sigma=0.5 ):
+    def randomlyUnfreezeParticle ( self, sigma=0.5, force = False ):
         """ Unfreezes a (random) frozen particle according to gaussian distribution with width sigma.
 
         :param sigma: Width of the gaussian distribution
+        :param force: If True force the unfreezing.
         """
 
-        nUnfrozen = len( self.M.unFrozenParticles() )
-        nTotal = len ( self.M.masses.keys() )
-        denom = self.M.Z+1.
-        if denom < 1.:
-            denom = 1.
-        mu = 1. - .7 / denom ## make it more unlikely when Z is high
-        uUnfreeze = random.gauss( mu ,sigma)
-        if uUnfreeze > nUnfrozen/float(nTotal):
-            # in every nth step unfreeze random particle
-            self.log ( "unfreeze random particle" )
+        #Decide whether to unfreeze according to the number of active particles
+        if not force:
+            nUnfrozen = len( self.M.unFrozenParticles() )
+            nTotal = len ( self.M.masses.keys() )
+            denom = self.M.Z+1.
+            if denom < 1.:
+                denom = 1.
+            mu = 1. - .7 / denom ## make it more unlikely when Z is high
+            uUnfreeze = random.gauss( mu ,sigma)
+            if uUnfreeze < nUnfrozen/float(nTotal):
+                return 0
 
+        self.log ( "unfreeze random particle" )
         #Randomly select the pid:
         frozen = self.M.frozenParticles()
         if len(frozen)==0:
@@ -602,7 +605,7 @@ class Manipulator:
         """
 
         uSSM = random.uniform(0,1)
-        if uSSM > prob:
+        if not (uSSM > 1-prob):
             return 0
 
         self.log ( "randomly change signal strengths" )
@@ -826,8 +829,6 @@ class Manipulator:
         """
 
         nUnfrozen = len( self.M.unFrozenParticles() )
-        if nUnfrozen <= 2: #Always keep at least 2 part
-            return 0
         nTotal = len ( self.M.masses.keys() )
         denom = self.M.Z+1.
         if denom < 1.:
@@ -882,7 +883,7 @@ class Manipulator:
         :param dx: Defines the interval for selecting the delta m (-dx,dx) """
 
         uMass = random.uniform ( 0., 1. )
-        if uMass > prob:
+        if uMass < (1-prob):
             return 0
 
         self.log ( "take random mass step" )
@@ -890,6 +891,7 @@ class Manipulator:
         if len(unfrozen)==0:
             return 0
         pid = random.choice ( unfrozen )
+
         ret = self.randomlyChangeMassOf ( pid, dx=dx )
         #for i in unfrozen:
         #    ret = self.randomlyChangeMassOf ( i )
@@ -979,7 +981,6 @@ class Manipulator:
         if type(pids) in [ int, float ]:
             return pid == pids
         return pid in pids
-
 
     def simplifyMasses ( self ):
         """ return the masses only of the unfrozen particles """

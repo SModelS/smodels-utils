@@ -130,7 +130,6 @@ class Predictor:
         :returns: list of predictions
         """
 
-        protomodel.log ( "now create slha file via predict with %d events" % protomodel.nevents )
         bestpreds = self.runSModelS( protomodel.currentSLHA, sigmacut,  allpreds=allpreds,
                                            llhdonly=llhdonly )
 

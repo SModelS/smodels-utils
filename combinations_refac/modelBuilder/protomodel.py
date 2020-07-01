@@ -343,7 +343,10 @@ class ProtoModel:
                 self.nevents = max(self.minevents,50000)
             elif self.Z > 2.7:
                 self.nevents = max(self.minevents,100000)
+        else:
+            self.nevents = nevents
 
+        self.log ( "now create slha file via with %d events" % self.nevents )
         self.checkTemplateSLHA()
         with open( self.templateSLHA ) as f:
             lines=f.readlines()
@@ -379,7 +382,7 @@ class ProtoModel:
                                     line[p1:p1+p2+1] )
                         line=line.replace( line[p1:p1+p2+1], "0." )
                 f.write ( line )
-        self.computeXSecs( recycle = recycle_xsecs, nevents = nevents )
+        self.computeXSecs( recycle = recycle_xsecs, nevents = self.nevents )
         return outputSLHA
 
     def dict ( self ):
