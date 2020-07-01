@@ -10,7 +10,7 @@ from smodels.tools.physicsUnits import fb, GeV
 from smodels.experiment.databaseObj import Database
 from smodels.theory.model import Model
 from smodels.tools import runtime
-from modelTester.combiner import Combiner
+from tester.combiner import Combiner
 from tools import helpers
 import pickle, time, os, copy
 

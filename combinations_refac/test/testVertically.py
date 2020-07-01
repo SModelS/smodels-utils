@@ -12,7 +12,7 @@
 import sys
 sys.path.insert(0,"../")
 import unittest
-from modelWalker.randomWalker import RandomWalker
+from walker.randomWalker import RandomWalker
 from tools import helpers
 import scipy.stats
 

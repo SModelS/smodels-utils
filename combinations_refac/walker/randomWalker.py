@@ -15,10 +15,10 @@ except:
 sys.path.insert(0,"/scratch-cbe/users/wolfgan.waltenberger/git/smodels-utils/combinations/")
 from smodels.tools.runtime import nCPUs
 from smodels.tools.physicsUnits import GeV
-from modelWalker.hiscore import Hiscore
-from modelBuilder.protomodel import ProtoModel
-from modelBuilder.manipulator import Manipulator
-from modelTester.predictor import Predictor
+from walker.hiscore import Hiscore
+from builder.protomodel import ProtoModel
+from builder.manipulator import Manipulator
+from tester.predictor import Predictor
 from tools import helpers
 from pympler.asizeof import asizeof
 try:

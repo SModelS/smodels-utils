@@ -5,7 +5,7 @@
 
 import random, copy, pickle, os, fcntl, time, subprocess, colorama
 from scipy import stats
-from modelBuilder.manipulator import Manipulator
+from builder.manipulator import Manipulator
 from tools.csetup import setup
 
 class Hiscore:
@@ -552,7 +552,7 @@ def main ( args ):
         printProtoModels ( protomodels, args.detailed, min ( 10, args.nmax ) )
 
     if args.interactive:
-        # from modelBuilder import trimmer
+        # from builder import trimmer
         # from smodels.tools.physicsUnits import fb, pb, GeV, TeV
         # from smodels.theory.crossSection import LO, NLO, NLL
         ma = Manipulator ( protomodels[0] )

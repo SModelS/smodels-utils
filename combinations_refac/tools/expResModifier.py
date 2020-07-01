@@ -8,8 +8,8 @@ expected from background, by sampling the background model. """
 
 import copy, os, sys, time, subprocess, math
 from scipy import stats
-from modelBuilder.protomodel import ProtoModel
-from modelBuilder.manipulator import Manipulator
+from builder.protomodel import ProtoModel
+from builder.manipulator import Manipulator
 from smodels.tools.physicsUnits import fb, GeV
 from smodels.theory.model import Model
 from smodels.share.models.SMparticles import SMList

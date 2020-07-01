@@ -4,7 +4,7 @@
 Main code for submitting a walk
 """
 
-from modelWalker.walkingWorker import main
+from walker.walkingWorker import main
 
 if __name__ == "__main__":
     import argparse

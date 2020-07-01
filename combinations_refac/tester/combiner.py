@@ -7,7 +7,7 @@ from smodels.share.models.SMparticles import SMList
 from smodels.particlesLoader import BSMList
 from smodels.tools.physicsUnits import fb
 from smodels.theory.model import Model
-from modelTester import analysisCombiner
+from tester import analysisCombiner
 import numpy, math, colorama, copy, sys
 from scipy import optimize, stats
 # import IPython
