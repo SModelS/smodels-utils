@@ -1,8 +1,6 @@
 1) modules in obsolete are used?
 
-2) Not sure what checkIfToTeleport does. Why does it use the highest K and not the one from the previous step?
-
-3) Moved some code from RandomWalker.one step to Manipulator.randomlyUnfreezeParticle (probability for unfreezing?)
+3) Moved some code from RandomWalker.one step to Manipulator
 
 4) There is a lot of stuff going on in randomlyChangeSSOfOneParticle which is not very transparent
 
@@ -13,10 +11,7 @@
 
 7) If self.hiscoreList is None -> should always store model, no? (at the end of RandomWalker.onestep)
 
-8) checkIfToTeleport vs decideOnTakingStep?
-
 9) Should we move protomodel.restore() to manipulator (it is used when the step is not taken)? It is a bit awkward to have the model remembering about its past.
-
 
 10) Maybe ProtoModel should hold BSMlist and a Model obj? This way a freezing/unfreezing corresponding simply to removing/adding particles to the list and the predictor would
 be run directly on the Model object, without the need for creating a SLHA as an intermediate.
@@ -27,7 +22,6 @@ Or even have ProtoModel being a derived class from Model? -> Don't know if we wa
 builder_parameters.ini -> Parameters for computing xsecs (nevents), randomly changing the model (probabilities, sigmas...)
 tester_parameters.ini -> essentially the SModelS parameters.ini
 walker_parameters.ini -> number of steps,...
-
 
 12) resolveMuhat -> Should be applied after predict() AND in takeStep()???
 
@@ -41,6 +35,8 @@ the resulting Z value? The decision to take the step would still be taken accord
 
 16) How can particle swaps change the Z-value? I'm not sure why this is checked for.
 
+
+17) Replace merge particles and swap by "simplify model" as a "parallel step"? And keep the one with highest score?
 
 ---> Move predictor one layer up (just below RandomWalker). So Predictor has access to the protoModel, but not the other way around
         all the model testing related stuff goes up to predictor and moves away from ProtoModel
