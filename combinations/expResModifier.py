@@ -34,20 +34,38 @@ class ExpResModifier:
             Zmax = 100
         self.Zmax = Zmax
         self.startLogger()
+        self.stats = {}
+
+    def saveStats ( self ):
+        """ write out the collected stats, so we can discuss experimentalists'
+            conservativeness """
+        filename = "%s/database.dict" % self.rundir
+        self.log ( f"saving stats to {filename}" ) 
+        meta = { "dbpath": self.dbpath, "Zmax": self.Zmax, 
+                 "database": self.dbversion,
+                 "protomodel": self.protomodel, "timestamp": time.asctime() }
+        with open ( filename,"wt" ) as f:
+            f.write ( str(meta)+"\n" )
+            f.write ( str(self.stats)+"\n" )
+            f.close()
 
     def interact ( self, listOfExpRes ):
         import IPython
         IPython.embed( using=False )
 
-    def computeNewObserved ( self, expected, globalInfo ):
+    def computeNewObserved ( self, txname, globalInfo ):
         """ given expected upper limit, compute a fake observed limit
-            by sampling the non-truncated Gaussian likelihood """
+            by sampling the non-truncated Gaussian likelihood 
+        """
+        expected = txname.txnameDataExp
+        observed = txname.txnameData
         ## we only draw once for the entire UL map, equivalent to assuming
         ## that we are dealing with only one signal region
         ## second basic assumption: sigma_obs approx sigma_exp
         allpositive = False
         ctr = 0
         x = float("inf")
+        D = {}
         ## stop when all values are positive
         while not allpositive:
             ret = copy.deepcopy ( expected )
@@ -55,11 +73,20 @@ class ExpResModifier:
             x = float("inf")
             while x > self.Zmax:
                 x = stats.norm.rvs() # draw but once from standard-normal
+                D["x"] = x
             allpositive = True
+            # print ( "lens", len(ret.y_values), len(observed.y_values))
             for i,y in enumerate( ret.y_values ):
                 sigma_exp = y / 1.96 ## the sigma of the Gaussian
+                D["yexp"]= y
+                D["yobs"]= float("nan") 
+                if len(ret.y_values) == len(observed.y_values):
+                    D["yobs"]=observed.y_values[i]
+                D["sigma_exp"]= sigma_exp
+
                 ## now lets shift, observed limit = expected limit + dx
                 obs = y + sigma_exp * x ## shift the expected by the random fake signal
+                D["y"]= obs ## we keep only last entry, but thats ok
                 if obs <= 0.:
                     ## try again
                     allpositive = False
@@ -68,6 +95,8 @@ class ExpResModifier:
                 self.log ( "WARNING seems like I am having a hard time getting all "\
                         "values of %s positive." % globalInfo.id )
 
+        label = globalInfo.id + ":ul"
+        self.stats[label]=D
         self.log ( "fixing UL result %s: x=%.2f" % \
                    ( globalInfo.id, x ) )
         if x > 3.5:
@@ -79,7 +108,7 @@ class ExpResModifier:
         ## FIXME wherever possible, we should sample from the non-truncated likelihood, take that as the signal strength and re-computed a likelihood with it.
         for i,txname in enumerate(dataset.txnameList):
             if hasattr ( txname, "txnameDataExp" ) and txname.txnameDataExp != None:
-                txnd = self.computeNewObserved ( txname.txnameDataExp, dataset.globalInfo )
+                txnd = self.computeNewObserved ( txname, dataset.globalInfo )
                 dataset.txnameList[i].txnameData = txnd
         return dataset
 
@@ -137,6 +166,7 @@ class ExpResModifier:
         self.log ( "starting to create %s. suffix is %s protomodel is %s." % \
                    ( outfile, suffix, pmodel ) )
         db = Database ( self.dbpath )
+        self.dbversion = db.databaseVersion
         # listOfExpRes = db.getExpResults( useSuperseded=True, useNonValidated=True )
         listOfExpRes = db.expResultList ## seems to be the safest bet?
         self.produceProtoModel ( pmodel )
@@ -161,7 +191,8 @@ class ExpResModifier:
         orig = dataset.dataInfo.observedN
         exp = dataset.dataInfo.expectedBG
         err = dataset.dataInfo.bgError
-        S = float("inf")
+        D = { "origN": orig, "expectedBG": exp, "bgError": err }
+        S, origS = float("inf"), float("nan")
         while S > self.Zmax:
             lmbda = stats.norm.rvs ( exp, err )
             dataset.dataInfo.lmbda = lmbda
@@ -169,17 +200,25 @@ class ExpResModifier:
                 lmbda = 0.
             obs = stats.poisson.rvs ( lmbda )
             toterr = math.sqrt ( err**2 + exp )
-            S = 0.
+            S, origS = 0., 0.
             if toterr > 0.:
                 S = ( obs - exp ) / toterr
+                origS = ( orig - exp ) / toterr
             if S < self.Zmax:
                 self.log ( "effmap replacing nobs=%.2f (bg=%.2f, lmbda=%.2f, S=%.2f) by nobs=%.2f for %s" % \
                     ( orig, exp, lmbda, S, obs, dataset.globalInfo.id ) )
                 dataset.dataInfo.observedN = obs
         if S > 3.5:
             self.log ( "WARNING!!! high em S=%.2f!!!!" % S )
+        D["S"]=S
+        D["origS"]=origS
+        D["lmbda"]=lmbda
+        D["newObs"]=obs
+        D["toterr"]=toterr
         ## origN stores the n_observed of the original database
         dataset.dataInfo.origN = orig
+        label = dataset.globalInfo.id + ":" + dataset.dataInfo.dataId
+        self.stats[ label ] = D
         return dataset
 
     def addSignalForEfficiencyMap ( self, dataset, tpred, lumi ):
@@ -187,9 +226,15 @@ class ExpResModifier:
             already taken care of """
         self.log ( " `- add EM matching tpred %s/%s: %s" % \
                 ( tpred.analysisId(), tpred.dataId(), tpred.xsection.value ) )
+        label = dataset.globalInfo.id + ":" + dataset.dataInfo.id
+        if not label in self.stats:
+            self.stats[ label ]= {}
+
         orig = dataset.dataInfo.observedN
         sigLambda = float ( tpred.xsection.value * lumi )
+        self.stats[label]["sigLambda"]=sigLambda
         sigN = stats.poisson.rvs ( sigLambda )
+        self.stats[label]["sigN"]=sigN
         err = dataset.dataInfo.bgError
         self.log ( "effmap adding sigN=%.2f to %.2f" % \
                    ( sigN, orig ) )
@@ -334,7 +379,7 @@ if __name__ == "__main__":
     import argparse
     argparser = argparse.ArgumentParser(
                         description='experimental results modifier. used to take out potential signals from the database by setting all observations to values sampled from the background expectations. can insert signals, too.',
-                        epilog='./expResModifier.py -d $RUNDIR/original.pcl -o ./signal1.pcl -P pmodel9.py -s signal1' )
+                        epilog='./expResModifier.py -d $RUNDIR/original.pcl -o ./signal1.pcl -s signal1 -P pmodel1.py' )
     argparser.add_argument ( '-d', '--database',
             help='database to use [../../smodels-database]',
             type=str, default="../../smodels-database" )
@@ -364,6 +409,8 @@ if __name__ == "__main__":
     if not args.outfile.endswith(".pcl"):
         print ( "[expResModifier] warning, shouldnt the name of your outputfile ``%s'' end with .pcl?" % args.outfile )
     er = modifier.modifyDatabase ( args.outfile, args.suffix, args.pmodel )
+
+    modifier.saveStats()
 
     if args.check:
         check ( args.outfile )
