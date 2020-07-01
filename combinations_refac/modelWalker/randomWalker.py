@@ -208,7 +208,7 @@ class RandomWalker:
             smaxstp = "inf"
 
         #For low scoring models, teleport to a high score model:
-        if self.checkIfToTeleport( pmax=0.1, norm = 10.0 ):
+        if self.checkIfToTeleport( pmax=0.5, norm = 10.0 ):
             # if we teleport the rest becomes irrelevant
             return
 
@@ -431,6 +431,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-s', '--strategy',
             help='combination strategy [aggressive]',
             type=str, default="aggressive" )
+    argparser.add_argument ( '--seed',
+            help='seed the random number generators [None]',
+            type=int, default=None )
     argparser.add_argument ( '-S', '--select',
             help='select only a subset of results (all,ul,em) [all]',
             type=str, default="all" )
@@ -464,6 +467,9 @@ if __name__ == "__main__":
     argparser.add_argument ( '-H', '--history', help='record history',
                              action="store_true" )
     args = argparser.parse_args()
+    if args.seed != None:
+        helpers.seedRandomNumbers ( args.seed )
+        
     cleanDirectory()
     select = args.select.lower()
     catchem = not args.no_catch ## catch exceptions?

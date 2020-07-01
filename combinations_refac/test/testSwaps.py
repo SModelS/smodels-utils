@@ -11,8 +11,8 @@
 import sys
 sys.path.insert(0,"../")
 import unittest
-from protomodel.protomodel import ProtoModel
-from protomodel.manipulator import Manipulator
+from protomodel import ProtoModel
+from manipulator import Manipulator
 
 class SwapTest(unittest.TestCase):
     def testSwaps(self):

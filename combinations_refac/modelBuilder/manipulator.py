@@ -444,7 +444,6 @@ class Manipulator:
         for k,v in self.M.ssmultipliers.items():
             self.M.ssmultipliers[k] = v * self.M.muhat
         self.M.muhat = 1.
-        # self.M.delXSecs()
 
     def isInPids ( self, p, dpid ):
         """ is p in dpid, or p equals to dpid? """
@@ -709,7 +708,7 @@ class Manipulator:
                     ret.append ( pids )
         return ret
 
-    def checkForMergerOf ( self, predictor, pids, mergeIfPossible: bool = False ):
+    def checkForMergerOf ( self, predictor, pids, mergeIfPossible = False ):
         """ check if PIDs can be merged """
         self.log ( "checking if %s can be merged" % str(pids) )
         #if not hasattr ( self.M, "stored_xsecs" ) or self.M.stored_xsecs == None:

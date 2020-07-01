@@ -537,7 +537,7 @@ class Combiner:
         predictions = self.selectMostSignificantSR ( predictions )
         self.letters = self.getLetters ( predictions )
         combinables = self.findCombinations ( predictions, strategy )
-        singlepreds = [ [x] for x in predictions ]
+        # singlepreds = [ [x] for x in predictions ]
         ## optionally, add individual predictions ... nah!!
         ## combinables = singlepreds + combinables
         self.discussCombinations ( combinables )

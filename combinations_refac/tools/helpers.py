@@ -5,6 +5,18 @@
 
 import copy, math
 
+def seedRandomNumbers ( seed ):
+    """ seed all random number generation """
+    import random, numpy
+    random.seed ( seed )
+    ## scipy takes random numbers from numpy.random, so
+    numpy.random.seed ( seed )
+    import scipy.stats as s
+    r = s.norm.rvs()
+    print ( "[helpers] seeding the random number generators with %d. r=%.3f" % \
+            ( seed, r ) )
+
+
 def getParticleName ( pid, addSign=False, addSMParticles=False ):
     """ get the particle name of pid
     :param addSign: add sign info in name
