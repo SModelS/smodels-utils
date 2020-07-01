@@ -236,7 +236,7 @@ class ExpResModifier:
         self.stats[label]["sigLambda"]=sigLambda
         sigN = stats.poisson.rvs ( sigLambda )
         self.stats[label]["sigN"]=sigN
-        err = dataset.dataInfo.bgError
+        err = dataset.dataInfo.bgError * self.fudge
         self.log ( "effmap adding sigN=%.2f to %.2f" % \
                    ( sigN, orig ) )
         dataset.dataInfo.trueBG = orig ## keep track of true bg
