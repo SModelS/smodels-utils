@@ -66,20 +66,22 @@ class Plotter:
         plt.plot(x,scipy.stats.norm.pdf(x,mean,std)*scale, label="%.2f $\pm$ %.2f" % ( mean, std ))
         plt.legend()
         dbname = os.path.basename ( self.meta["database"] )
-        title = f"meta stats, real observations, database v{dbname}"
+        title = "real"
         if not "orig" in variable:
-            title = f"meta stats, fake observations, database v{dbname}"
-        if abs ( self.meta["fudge"] - 1. ) > 1e-3:
-            title += " f=%.2f" % self.meta["fudge"]
+            title = "fake"
+        title += f" observations, database v{dbname}"
+        fudge = self.meta["fudge"]
+        if abs ( fudge - 1. ) > 1e-3:
+            title += ", fudge=%.2f" % fudge
         plt.title ( title )
         plt.xlabel ( "reduced distances $( n_\mathrm{obs} - n_\mathrm{bg} ) / \sqrt{ \mathrm{stat}^2 + \mathrm{sys}^2 } $" )
-        plt.savefig ( f"{variable}.png" )
+        plt.savefig ( f"{variable}{int(100*fudge)}.png" )
         plt.clf()
         plt.hist ( P, bins=10, label="%.2f $\pm$ %.2f" % ( np.mean(P), np.std(P) ) )
         plt.legend()
         plt.title  ( title )
         plt.xlabel ( "p values" )
-        plt.savefig ( f"H{variable}.png" )
+        plt.savefig ( f"H{variable}{int(100*fudge)}.png" )
         plt.clf()
 
 def main():
