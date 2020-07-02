@@ -16,7 +16,7 @@ from smodels.theory.crossSection import LO
 class Manipulator:
     """ contains the protomodel manipulation algorithms. """
     def __init__ ( self, protomodel, strategy: str = "aggressive",
-                   verbose: bool = False ):
+                   verbose = False ):
         self.M = copy.copy ( protomodel  ) # shallow copy
         self.strategy = strategy
         self.verbose = verbose
@@ -240,7 +240,7 @@ class Manipulator:
                 continue
             self.M.pprint ( "check if we can particle swap %d <-> %d" % ( pids[0], pids[1] ) )
             oldK, oldrmax = self.M.K, self.M.rmax
-            self.M.backup()
+            self.backupModel()
             self.swapParticles ( pids[0],pids[1] )
 
             self.M.createSLHAFile()
@@ -248,12 +248,12 @@ class Manipulator:
             if self.M.K < oldK - 1e-3: ## score deteriorated?
                 self.M.pprint ( "new K is %.2f, old was %.2f. restore!" % \
                                 ( self.M.K, oldK ) )
-                self.M.restore()
+                self.restoreModel()
             ## score deteriorated?
             if self.M.excluded and self.M.rmax > oldrmax+.0001:
                 self.M.pprint ( "new rmax is %.2f, old was %.2f. restore!" % \
                                 ( self.M.rmax, oldrmax ) )
-                self.M.restore()
+                self.restoreModel()
         # self.pprint ( "checking for nan after swap" )
         #self.checkForNans()
 
@@ -745,7 +745,7 @@ class Manipulator:
                    ( self.M.masses[p1], self.M.masses[p2] ) )
         avgM = self.computeAvgMass ( pair, merge_strategy )
         self.log ( "avg mass for %s is %.1f" % ( str(pair), avgM ) )
-        self.M.backup() ## in case it doesnt work out!
+        self.backupModel() ## in case it doesnt work out!
         ## for the next step we need the cross sections
         self.log ( "now compute the xsecs (if not cached), *before* taking out particle. so we can compute ssms" )
         self.M.createSLHAFile ( recycle_xsecs = True )
@@ -819,11 +819,11 @@ class Manipulator:
         if self.M.excluded:
             self.pprint ( "trying to merge %d and %d lead to an rmax of %.2f. reverting" % \
                           ( p1, p2, self.M.rmax ) )
-            self.M.restore()
+            self.restoreModel()
         if self.M.Z < oldZ *.999:
             self.pprint ( "trying to merge %d and %d lead to a Z of %.3f < %.3f. reverting" % \
                           ( p1, p2, self.M.Z, oldZ *.999 ) )
-            self.M.restore()
+            self.restoreModel()
 
     def randomlyFreezeParticle ( self, sigma= 0.5, probMassive = 0.3):
         """ freezes a random unfrozen particle according to gaussian distribution with width sigma.
@@ -1216,6 +1216,37 @@ class Manipulator:
         for pid in unfrozen:
             if not pid in okPids:
                 self.freezeParticle ( pid )
+
+    def backupModel ( self ):
+        """ backup the current state """
+        self._backup = { "llhd": self.M.llhd, "letters": self.M.letters, "Z": self.M.Z,
+                         "description": self.M.description,
+                         "bestCombo": copy.deepcopy(self.M.bestCombo),
+                         "masses": copy.deepcopy(self.M.masses),
+                         "ssmultipliers": copy.deepcopy(self.M.ssmultipliers),
+                         "decays": copy.deepcopy(self.M.decays),
+                         "rvalues": copy.deepcopy(self.M.rvalues) }
+        if hasattr ( self.M, "muhat" ):
+            self._backup["muhat"]=self.M.muhat
+        if hasattr ( self.M, "K" ):
+            self._backup["K"]=self.M.K
+        if hasattr ( self.M, "rmax" ):
+            self._backup["rmax"]=self.M.rmax
+        if hasattr ( self.M, "stored_xsecs" ):
+            self._backup["stored_xsecs"]=copy.deepcopy(self.M.stored_xsecs)
+
+    def restoreModel ( self ):
+        """ restore from the backup """
+        if not hasattr ( self, "_backup" ):
+            raise Exception ( "no backup available" )
+        self.M.delXSecs() ## make sure we dont keep the current xsecs
+        for k,v in self._backup.items():
+            setattr ( self.M, k, v )
+
+    def delBackup ( self ):
+        """ delete protomodel backup dictionary"""
+        if all and hasattr ( self, "_backup" ):
+            del self._backup
 
 if __name__ == "__main__":
     import pickle

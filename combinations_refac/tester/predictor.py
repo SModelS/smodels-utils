@@ -9,10 +9,8 @@ from smodels.particlesLoader import BSMList
 from smodels.tools.physicsUnits import fb, GeV
 from smodels.experiment.databaseObj import Database
 from smodels.theory.model import Model
-from smodels.tools import runtime
 from tester.combiner import Combiner
-from tools import helpers
-import pickle, time, os, copy
+import pickle, time, os
 
 class Predictor:
     def __init__ ( self, walkerid, dbpath = "./default.pcl",
@@ -139,7 +137,7 @@ class Predictor:
         # Compute significance and store in the model:
         self.computeSignificance( protomodel, predictions, strategy )
         self.log ( "done with prediction. best Z=%.2f (muhat=%.2f)" % ( protomodel.Z, protomodel.muhat ) )
-        protomodel.clean()
+        protomodel.cleanBestCombo()
 
         return True
 
@@ -249,111 +247,6 @@ class Predictor:
         protomodel.muhat = muhat
         protomodel.letters = combiner.getLetterCode(protomodel.bestCombo)
         protomodel.description = combiner.getComboDescription(protomodel.bestCombo)
-
-    def computeAnalysisContributions( self, protomodel ):
-        """ compute the contributions to Z of the individual analyses
-        :returns: the model with the analysic constributions attached as
-                  .analysisContributions
-        """
-        self.pprint ( "Now computing analysis contributions" )
-        self.pprint ( "step 1: Recompute the score. Old one at K=%.2f, Z=%.2f" % \
-                      ( protomodel.K, protomodel.Z ) )
-        protomodel.createNewSLHAFileName ( prefix="acc" )
-        origZ = protomodel.Z # to be sure
-        origK = protomodel.K # to be sure
-        protomodel.Z = -23.
-        protomodel.K = -30.
-        hasPred = self.predict(protomodel, strategy=self.strategy, check_thresholds = False )
-        if not hasPred:
-            self.pprint ( "I dont understand, why do I not get a pred anymore? r=%.2f" % ( protomodel.rmax ) )
-        self.pprint ( "K=%.2f, Z=%.2f, old Z=%.2f, %d predictions, has a pred? %d, experimental=%d" % ( protomodel.K, protomodel.Z, origZ, len(protomodel.bestCombo), hasPred, runtime._experimental ) )
-        if origZ > 0. and abs ( origZ - protomodel.Z ) / origZ > 0.001:
-            self.pprint  ( "error!! Zs do not match! Should not save" )
-        contributionsZ = {}
-        contributionsK = {}
-        combiner = Combiner()
-        dZtot, dKtot = 0., 0.
-        bestCombo = copy.deepcopy ( protomodel.bestCombo )
-        for ctr,pred in enumerate(bestCombo):
-            combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:]
-            Z, muhat_ = combiner.getSignificance ( combo )
-            prior = combiner.computePrior ( protomodel )
-            K = combiner.computeK ( Z, prior )
-            dZ = origZ - Z
-            dK = origK - K
-            dZtot += dZ
-            dKtot += dK
-            contributionsZ[ ctr ] = Z
-            contributionsK [ ctr ] = K
-        for k,v in contributionsZ.items():
-            percZ = (origZ-v) / dZtot
-            self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*percZ,"%" ) )
-            contributionsZ[ k ] = percZ
-        for k,v in contributionsK.items():
-            percK = (origK-v) / dKtot
-            # self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
-            contributionsK[ k ] = percK
-        contrsWithNames = {}
-        for k,v in contributionsZ.items():
-            contrsWithNames [ self.M.bestCombo[k].analysisId() ] = v
-        protomodel.analysisContributions = contrsWithNames
-        self.pprint ( "stored %d contributions" % len(contributionsZ) )
-        return protomodel
-
-    def computeParticleContributions ( self, protomodel ):
-        """ this function sequentially removes all particles to compute
-            their contributions to K """
-        from smodels.tools import runtime
-        runtime._experimental = True
-        unfrozen = protomodel.unFrozenParticles( withLSP=False )
-        oldZ = protomodel.Z
-        oldK = protomodel.K
-        protomodel.particleContributions = {} ## save the scores for the non-discarded particles.
-        protomodel.particleContributionsZ = {} ## save the scores for the non-discarded particles, Zs
-        ## aka: what would happen to the score if I removed particle X?
-        frozen = protomodel.frozenParticles()
-        for pid in frozen:
-            ## remove ssmultipliers for frozen particles
-            if pid in protomodel.ssmultipliers:
-                protomodel.ssmultipliers.pop(pid)
-            protomodel.masses[pid]=1e6 ## renormalize
-        pidsnmasses = [ (x,protomodel.masses[x]) for x in unfrozen ]
-        pidsnmasses.sort ( key=lambda x: x[1], reverse=True )
-        for cpid,(pid,mass) in enumerate(pidsnmasses):
-            protomodel.backup()
-            protomodel.highlight ( "info", "computing contribution of %s (%.1f): [%d/%d]" % \
-                   ( helpers.getParticleName(pid,addSign=False),
-                     protomodel.masses[pid],(cpid+1),len(unfrozen) ) )
-            oldmass = protomodel.masses[pid]
-            protomodel.masses[pid]=1e6
-            ## also branchings need to be taken out.
-            olddecays = copy.deepcopy ( protomodel.decays ) ## keep a copy of all, is easier
-            for dpid,decays in protomodel.decays.items():
-                if pid in decays.keys():
-                    br = 1. - decays[pid] ## need to correct for what we loose
-                    if br > 0.: # if the branching is only to this guy, we cannot take it out
-                        protomodel.decays[dpid].pop(pid)
-                        for dp_,dbr_ in protomodel.decays[dpid].items():
-                            protomodel.decays[dpid][dp_] = protomodel.decays[dpid][dp_] / br
-            ## and signal strength multipliers, take them out also
-            for dpd,v in protomodel.ssmultipliers.items():
-                if dpid in dpd or -dpid in dpd:
-                    protomodel.ssmultipliers[dpd]=1. ## setting to 1 is taking out
-            # self.createSLHAFile()
-            ## when trimming we want to increase statistics
-            protomodel.predict ( self.strategy )
-            percK = 0.
-            if oldK > 0.:
-                percK = ( protomodel.K - oldK ) / oldK
-            self.pprint ( "when removing %s, K changed: %.3f -> %.3f (%.1f%s), Z: %.3f -> %.3f (%d evts)" % \
-                    ( helpers.getParticleName(pid), oldK, protomodel.K, 100.*percK, "%", oldZ, protomodel.Z, protomodel.nevents ) )
-            protomodel.particleContributions[pid]=protomodel.K
-            protomodel.particleContributionsZ[pid]=protomodel.Z
-            # self.pprint ( "keeping %s" % helpers.getParticleName(pid) )
-            protomodel.masses[pid]=oldmass
-            protomodel.decays = olddecays
-            protomodel.restore()
-        # self.pprint ( "discarded %d/%d particles." % ( ndiscarded, len(pidsnmasses) ) )
 
 if __name__ == "__main__":
     inputFile="gluino_squarks.slha"

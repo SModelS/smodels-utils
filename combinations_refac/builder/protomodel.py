@@ -181,17 +181,13 @@ class ProtoModel:
                 ret.append(m)
         return ret
 
-    def clean ( self, all=False ):
+    def cleanBestCombo ( self ):
         """ remove unneeded stuff before storing """
-        if all and hasattr ( self, "_backup" ):
-            del self._backup
         if hasattr ( self, "keep_meta" ) and self.keep_meta:
             return ## dont remove best combo
         combiner = Combiner( self.walkerid )
         if hasattr ( self, "bestCombo" ) and self.bestCombo != None:
             self.bestCombo = combiner.removeDataFromBestCombo ( self.bestCombo )
-        #if hasattr ( self, "predictor" ):
-        #    del self.predictor
 
     def almostSameAs ( self, other ):
         """ check if a model is essentially the same as <other> """
@@ -249,34 +245,6 @@ class ProtoModel:
                 if abs ( sbr - obr ) / sbr > 1e-6:
                     return False
         return True
-
-    def backup ( self ):
-        """ backup the current state """
-        self._backup = { "llhd": self.llhd, "letters": self.letters, "Z": self.Z,
-                         "description": self.description,
-                         "bestCombo": copy.deepcopy(self.bestCombo),
-                         "masses": copy.deepcopy(self.masses),
-                         "ssmultipliers": copy.deepcopy(self.ssmultipliers),
-                         "decays": copy.deepcopy(self.decays),
-                         "rvalues": copy.deepcopy(self.rvalues) }
-        if hasattr ( self, "muhat" ):
-            self._backup["muhat"]=self.muhat
-        if hasattr ( self, "K" ):
-            self._backup["K"]=self.K
-        if hasattr ( self, "rmax" ):
-            self._backup["rmax"]=self.rmax
-        if hasattr ( self, "stored_xsecs" ):
-            self._backup["stored_xsecs"]=copy.deepcopy(self.stored_xsecs)
-
-        # self.pprint ( "backing up state" )
-
-    def restore ( self ):
-        """ restore from the backup """
-        if not hasattr ( self, "_backup" ):
-            raise Exception ( "no backup available" )
-        self.delXSecs() ## make sure we dont keep the current xsecs
-        for k,v in self._backup.items():
-            setattr ( self, k, v )
 
     def oldZ( self ):
         if not hasattr ( self, "_backup" ):
@@ -439,6 +407,7 @@ class ProtoModel:
             self.pprint ( "compute xsecs called, but no slha file exists. I assume you meant to call createSLHAFile instead." )
             self.createSLHAFile(recycle_xsecs = recycle )
             return
+
         computer = ProtoModelXSecs( self.walkerid, nevents, self.currentSLHA,
                                      self.relevantSSMultipliers(), self.step )
         if recycle and hasattr ( self, "stored_xsecs" ):
@@ -450,14 +419,14 @@ class ProtoModel:
             self.pprint ( "recycling is on, but no xsecs were found. compute with %d events." % nevents )
         try:
             computer.checkIfReadable()
-        except Exception as e:
-            self.restore()
+        except Exception:
+            pass
         try:
             xsecs,comment = computer.compute()
             if recycle: ## store them
                 self.stored_xsecs = ( xsecs, comment )
-        except Exception as e:
-            self.restore()
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     p = ProtoModel( 1 )

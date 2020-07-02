@@ -55,9 +55,13 @@ class RandomWalker:
         if rundir == None:
             self.rundir = "./"
 
-        #Initialize Hiscore
+        #Initialize Predictor
+        self.predictor =  Predictor( self.walkerid, dbpath=dbpath,
+                              expected=expected, select=select )
+
+        #Initialize Hiscore (with access to the predictor)
         self.hiscoreList = Hiscore ( walkerid, True, "%s/H%d.pcl" % ( rundir, walkerid ),
-                                     backup=False )
+                                     backup=False, predictor=self.predictor )
         self.hiscoreList.nkeep = 1
 
         #Initialize ProtoModel and Manipulator:
@@ -66,9 +70,6 @@ class RandomWalker:
 
         self.manipulator = Manipulator ( protomodel, strategy )
 
-        #Initialize Predictor
-        self.predictor =  Predictor( self.walkerid, dbpath=dbpath,
-                              expected=expected, select=select )
 
         if cheatcode > 0:
             self.manipulator.cheat ( cheatcode )
@@ -111,7 +112,7 @@ class RandomWalker:
         ret.manipulator.setWalkerId ( walkerid )
         ret.manipulator.M.createNewSLHAFileName()
         ret.manipulator.M.initializeSSMs ( overwrite = False )
-        ret.manipulator.M.backup()
+        ret.manipulator.backupModel()
         if dump_training:
             ## we use the accelerator only to dump the training data
             from accelerator import Accelerator
@@ -132,7 +133,7 @@ class RandomWalker:
         ret.manipulator.setWalkerId ( walkerid )
         ret.manipulator.M.createNewSLHAFileName()
         ret.manipulator.M.initializeSSMs ( overwrite = False )
-        ret.manipulator.M.backup()
+        ret.manipulator.backupModel()
         if dump_training:
             ## we use the accelerator only to dump the training data
             from accelerator import Accelerator
@@ -157,7 +158,7 @@ class RandomWalker:
 
     def onestep ( self ):
         #Remove data about best combo
-        self.protomodel.clean()
+        self.protomodel.cleanBestCombo()
         #Add one step
         self.protomodel.step+=1
         nUnfrozen = len( self.protomodel.unFrozenParticles() )
@@ -181,7 +182,7 @@ class RandomWalker:
 
             except Exception as e:
                 self.pprint ( "error ``%s'' (%s) encountered when trying to predict. lets revert" % (str(e),type(e) ) )
-                self.protomodel.restore()
+                self.manipulator.restoreModel()
                 return
         else:
             self.predictor.predict(self.protomodel)
@@ -253,7 +254,7 @@ class RandomWalker:
         if self.accelerator != None and hasattr ( self.accelerator, "grad" ):
             self.oldgrad = self.accelerator.grad
         ## Backup model
-        self.protomodel.backup()
+        self.manipulator.backupModel()
 
     def saveState ( self ):
         """ write out current state, for later retrieval """
@@ -278,7 +279,7 @@ class RandomWalker:
             u=random.uniform(0.,1.)
             if u > ratio:
                 self.pprint ( "u=%.2f > %.2f; K: %.2f -> %.2f: revert." % (u,ratio,self.protomodel.oldK(), self.protomodel.K) )
-                self.protomodel.restore()
+                self.manipulator.restoreModel()
                 if hasattr ( self, "oldgrad" ) and self.accelerator != None:
                     self.accelerator.grad = self.oldgrad
             else:
@@ -329,7 +330,7 @@ class RandomWalker:
                      ( tp.analysisId(), ",".join( map ( str, tp.txnames ) ), tp.dataType(True), masses )
                 self.highlight ( "info", "rmax[%s]=%.2f, excluded = %s (r2=%.2f): revert." % \
                         ( ana, self.protomodel.rmax, self.protomodel.excluded, self.protomodel.r2 ) )
-                self.protomodel.restore()
+                self.manipulator.restoreModel()
                 continue
 
             # obtain the ratio of posteriors

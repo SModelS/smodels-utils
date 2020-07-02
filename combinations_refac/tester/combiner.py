@@ -106,7 +106,6 @@ class Combiner:
         """
         combinables=[]
         for iA,predA in enumerate(predictions):
-            combo = [ predA ]
             nexti = iA + 1
             compatibles = self.findCompatibles ( predA, predictions[nexti:], strategy )
             combinables += compatibles
@@ -289,7 +288,6 @@ class Combiner:
         if len(combinations)<10:
             doProgress = False
         if doProgress:
-            import progressbar
             pb = progressbar.ProgressBar(widgets=["combination #",progressbar.Counter(),
                   "/%d " % len(combinations),
                   progressbar.Percentage(),
@@ -489,27 +487,15 @@ class Combiner:
         ret = []
         keptThese = [] ## log the ana ids that we kept, for debugging only.
         for Id,preds in sortByAnaId.items():
-            if "ul" in Id:
-                maxR, bestpred = 0., None
-                for pred in preds:
-                    # l = pred.getLikelihood( mu=1. )
-                    r = pred.getUpperLimit() / pred.getUpperLimit(expected=True)
-                    if r > maxR:
-                        maxR = r
-                        bestpred = pred
-                if maxR > 0. and bestpred != None:
-                    ret.append ( bestpred )
-                    keptThese.append ( self.getPredictionID ( bestpred ) )
-            else:
-                maxR, bestpred = 0., None
-                for pred in preds:
-                    r = pred.getUpperLimit() / pred.getUpperLimit(expected=True)
-                    if r > maxR:
-                        maxR = r
-                        bestpred = pred
-                if maxR > 0. and bestpred != None:
-                    ret.append ( bestpred )
-                    keptThese.append ( self.getPredictionID ( bestpred ) )
+            maxR, bestpred = 0., None
+            for pred in preds:
+                r = pred.getUpperLimit() / pred.getUpperLimit(expected=True)
+                if r > maxR:
+                    maxR = r
+                    bestpred = pred
+            if maxR > 0. and bestpred != None:
+                ret.append ( bestpred )
+                keptThese.append ( self.getPredictionID ( bestpred ) )
         self.pprint ( "selected predictions down via SRs from %d to %d." % \
                       ( len(predictions), len(ret) ) )
         debug = False ## print the selections in debug mode

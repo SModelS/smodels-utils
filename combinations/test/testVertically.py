@@ -31,8 +31,8 @@ class VerticalTest( unittest.TestCase ):
         walker = RandomWalker ( nsteps=10, dbpath="./testdb.pcl" )
         ret = walker.walk()
         self.assertAlmostEqual ( walker.protomodel.K, -0.666667, 3 )
-        self.assertAlmostEqual ( walker.protomodel.masses[1000024], 619.764, 3 )
-        self.assertAlmostEqual ( walker.protomodel.decays[1000023][(1000022, 23)], 0.922, 3 )
+        self.assertAlmostEqual ( walker.protomodel.masses[1000022], 285.28447, 3 )
+#        self.assertAlmostEqual ( walker.protomodel.decays[1000023][(1000022, 23)], 0.922, 3 )
 
 if __name__ == "__main__":
     unittest.main()

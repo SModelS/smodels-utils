@@ -6,12 +6,14 @@
 import random, copy, pickle, os, fcntl, time, subprocess, colorama
 from scipy import stats
 from builder.manipulator import Manipulator
+from tester.combiner import  Combiner
+from tools import helpers
 from tools.csetup import setup
 
 class Hiscore:
     """ encapsulates the hiscore list. """
     def __init__ ( self, walkerid, save_hiscores, picklefile="hiscore.pcl",
-                   backup=True, hiscores=None ):
+                   backup=True, hiscores=None, predictor = None ):
         """ the constructor
         :param save_hiscores: if true, then assume you want to save, not just read.
         :param picklefile: path of pickle file name to connect hiscore list with
@@ -24,6 +26,7 @@ class Hiscore:
         self.backup = backup ## backup hiscore lists?
         self.nkeep = 3 ## how many do we keep.
         self.hiscores = [ None ]*self.nkeep
+        self.predictor = predictor
         self.fileAttempts = 0 ## unsucessful attempts at reading or writing
         self.pickleFile = picklefile
         self.mtime = 0 ## last modification time of current list
@@ -102,11 +105,11 @@ class Hiscore:
             ## compute the particle contributions
             if not hasattr ( m.M, "particleContributions" ):
                 self.pprint ( "particleContributions missing, compute them!" )
-                m.computeParticleContributions()
+                self.computeParticleContributions(m)
             ## compute the analysis contributions
             if not hasattr ( m.M, "analysisContributions" ):
                 self.pprint ( "analysisContributions missing, compute them!" )
-                m.computeAnalysisContributions()
+                self.computeAnalysisContributions(m)
             m.assertXSecs()
             protomodel = m.M
 
@@ -122,20 +125,20 @@ class Hiscore:
                 if len ( m.M.unFrozenParticles() ) < len ( mi.unFrozenParticles() ):
                     self.demote ( i )
                     self.hiscores[i] = copy.deepcopy ( m.M )
-                    self.hiscores[i].clean( all=True )
+                    self.hiscores[i].clean(  )
                     break
             """
             if mi==None or m.M.K > mi.K: ## ok, <i>th best result!
                 self.demote ( i )
                 self.hiscores[i] = copy.deepcopy ( m.M )
-                self.hiscores[i].clean( all=True )
+                self.hiscores[i].clean( )
                 break
 
     def addResultByZ ( self, protomodel ):
         """ add a result to the list, old version,
             sort by Z """
         m = Manipulator ( protomodel )
-        m.resolveMuhat() ## add only with resolved muhats
+        m.rescaleByMuHat() ## add only with resolved muhats
         if m.M.Z <= self.currentMinZ():
             return ## doesnt pass minimum requirement
         if m.M.Z == 0.:
@@ -144,9 +147,8 @@ class Hiscore:
             ## for values > 2.5 we now predict again with larger statistics.
             m.predict ()
 
-        Zold = self.globalMaxZ()
-        Kold = self.globalMaxK()
-
+        # Zold = self.globalMaxZ()
+        # Kold = self.globalMaxK()
         for i,mi in enumerate(self.hiscores):
             if mi!=None and mi.almostSameAs ( m.M ):
                 ### this m.M is essentially the m.M in hiscorelist.
@@ -158,13 +160,112 @@ class Hiscore:
                 if len ( m.M.unFrozenParticles() ) < len ( mi.unFrozenParticles() ):
                     self.demote ( i )
                     self.hiscores[i] = copy.deepcopy ( m.M )
-                    self.hiscores[i].clean( all=True )
+                    self.hiscores[i].clean( )
                     break
             if mi==None or m.M.Z > mi.Z: ## ok, <i>th best result!
                 self.demote ( i )
                 self.hiscores[i] = copy.deepcopy ( m.M )
-                self.hiscores[i].clean( all=True )
+                self.hiscores[i].clean( )
                 break
+
+    def computeParticleContributions ( self, manipulator ):
+        """ this function sequentially removes all particles to compute
+            their contributions to K """
+        from smodels.tools import runtime
+        runtime._experimental = True
+
+        #Make sure the model is backep up
+        manipulator.backupModel()
+        protomodel = manipulator.M
+
+        unfrozen = protomodel.unFrozenParticles( withLSP=False )
+        oldZ = protomodel.Z
+        oldK = protomodel.K
+        protomodel.particleContributions = {} ## save the scores for the non-discarded particles.
+        protomodel.particleContributionsZ = {} ## save the scores for the non-discarded particles, Zs
+
+        #Make sure predictor is accesible
+        if not self.predictor:
+            self.pprint( "asked to compute particle contributions to score, but predictor has not been set")
+            return
+
+        ## aka: what would happen to the score if I removed particle X?
+        frozen = protomodel.frozenParticles()
+
+        for pid in frozen:
+            ## remove ssmultipliers for frozen particles
+            if pid in protomodel.ssmultipliers:
+                protomodel.ssmultipliers.pop(pid)
+            protomodel.masses[pid]=1e6 ## renormalize
+
+
+        pidsnmasses = [ (x,protomodel.masses[x]) for x in unfrozen ]
+        pidsnmasses.sort ( key=lambda x: x[1], reverse=True )
+        for cpid,(pid,mass) in enumerate(pidsnmasses):
+            protomodel.highlight ( "info", "computing contribution of %s (%.1f): [%d/%d]" % \
+                   ( helpers.getParticleName(pid,addSign=False),
+                     protomodel.masses[pid],(cpid+1),len(unfrozen) ) )
+
+            #Remove particle and recompute SLHA file:
+            manipulator.freezeParticle(pid)
+            protomodel.createSLHAFile()
+            self.predictor.predict( protomodel )
+            percK = 0.
+            if oldK > 0.:
+                percK = ( protomodel.K - oldK ) / oldK
+            self.pprint ( "when removing %s, K changed: %.3f -> %.3f (%.1f%s), Z: %.3f -> %.3f (%d evts)" % \
+                    ( helpers.getParticleName(pid), oldK, protomodel.K, 100.*percK, "%", oldZ,protomodel.Z, protomodel.nevents ) )
+
+            #Store the new Z and K values in the original model:
+            protomodel.particleContributions[pid]=manipulator.M.K
+            protomodel.particleContributionsZ[pid]=manipulator.M.Z
+            #Make sure to restore the model to its initial (full particle content) state
+            manipulator.restoreModel()
+
+        self.pprint ( "stored %d particl contributions" % len(protomodel.particleContributions) )
+
+    def computeAnalysisContributions( self, manipulator ):
+        """ compute the contributions to Z of the individual analyses
+        :returns: the model with the analysic constributions attached as
+                  .analysisContributions
+        """
+
+        #Make sure the protomodel is backed up
+        manipulator.backupModel()
+        protomodel = manipulator.M
+        self.pprint ( "Now computing analysis contributions" )
+        self.pprint ( "step 1: Recompute the score. Old one at K=%.2f, Z=%.2f" % \
+                      ( protomodel.K, protomodel.Z ) )
+        protomodel.createNewSLHAFileName ( prefix="acc" )
+        contributionsZ = {}
+        contributionsK = {}
+        combiner = Combiner()
+        dZtot, dKtot = 0., 0.
+        bestCombo = copy.deepcopy ( protomodel.bestCombo )
+        for ctr,pred in enumerate(bestCombo):
+            combo = copy.deepcopy ( bestCombo )[:ctr]+copy.deepcopy ( bestCombo)[ctr+1:]
+            Z, muhat_ = combiner.getSignificance ( combo )
+            prior = combiner.computePrior ( protomodel )
+            K = combiner.computeK ( Z, prior )
+            dZ = protomodel.Z - Z
+            dK = protomodel.K - K
+            dZtot += dZ
+            dKtot += dK
+            contributionsZ[ ctr ] = Z
+            contributionsK [ ctr ] = K
+        for k,v in contributionsZ.items():
+            percZ = (protomodel.Z-v) / dZtot
+            self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( protomodel.bestCombo[k].analysisId(), protomodel.bestCombo[k].dataType(short=True), v, 100.*percZ,"%" ) )
+            contributionsZ[ k ] = percZ
+        for k,v in contributionsK.items():
+            percK = (protomodel.K-v) / dKtot
+            # self.pprint ( "without %s(%s) we get Z=%.3f (%d%s)" % ( self.M.bestCombo[k].analysisId(), self.M.bestCombo[k].dataType(short=True), v, 100.*perc,"%" ) )
+            contributionsK[ k ] = percK
+        contrsWithNames = {}
+        for k,v in contributionsZ.items():
+            contrsWithNames [ protomodel.bestCombo[k].analysisId() ] = v
+        protomodel.analysisContributions = contrsWithNames
+        self.pprint ( "stored %d analyses contributions" % len(protomodel.analysisContributions) )
 
     def demote ( self, i ):
         """ demote everything from i+1 on,
@@ -227,8 +328,9 @@ class Hiscore:
         for ctr,h in enumerate(self.hiscores[1:]):
             if h != None:
                 m=Manipulator ( h )
-                m.resolveMuhat()
-                m.M.clean ( all=True )
+                m.rescaleByMuHat()
+                m.delBackup ( )
+                m.M.cleanBestCombo ()
                 self.hiscores[ctr+1]=m.M
 
     def save ( self ):
@@ -531,14 +633,14 @@ def main ( args ):
     if type(args.outfile)==str and ".pcl" in args.outfile:
         if not hasattr ( protomodels[0], "analysisContributions" ):
             print ( "[hiscore] why does the winner not have analysis contributions?" )
-            ma = Manipulator ( protomodels[0] )
-            ma.computeAnalysisContributions()
-            protomodels[0]=ma.M
+            # ma = Manipulator ( protomodels[0] )
+            # self.computeAnalysisContributions(ma)
+            # protomodels[0]=ma.M
         if not hasattr ( protomodels[0], "particleContributions" ):
             print ( "[hiscore] why does the winner not have particle contributions?" )
-            ma = Manipulator ( protomodels[0] )
-            ma.computeParticleContributions()
-            protomodels[0]=ma.M
+            # ma = Manipulator ( protomodels[0] )
+            # self.computeParticleContributions(ma)
+            # protomodels[0]=ma.M
 
     if args.outfile is not None:
         storeList ( protomodels, args.outfile )
