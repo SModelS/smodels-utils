@@ -1,0 +1,9 @@
+## install with
+## pip3 install --user -r requirements.txt
+
+minecart ## for pdf reader
+reportlab ## for addLogoToPlots
+pypdf2 ## for addLogoToPlots
+colorama
+matplotlib
+sympy
