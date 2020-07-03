@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-""" code by Robert Schoefbeck, 
+""" code by Robert Schoefbeck, modified and adapted by WW
     https://github.com/schoef/fun/blob/master/python/pdf-to-root/
 """
 
