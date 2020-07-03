@@ -478,10 +478,35 @@ class DataHandler(object):
         preprocessing pdf-files
         floats
 
-        :yield: list with values as foat, one float for every column
+        :yield: list with values as float, one float for every column
         """
-        logger.error ( "not yet implemented" )
-        sys.exit(-1)
+        from .PDFLimitReader import PDFLimitReader
+        xlimits = ( 150, 1200 )
+        ylimits = (   0, 600 )
+        zlimits = ( 10**-3, 10**2 )
+        data =  {
+            'name': self.path.replace(".pdf",""),
+            'x':{'limits': xlimits},
+            'y':{'limits': ylimits},
+            'z':{'limits': zlimits, 'log':True},
+            }
+        r = PDFLimitReader( data )
+        logger.error ( "This is just a prototype of a PDF reader!!" )
+        import numpy
+        data = []
+        lastz = float("inf")
+        for xi in numpy.arange ( xlimits[0], xlimits[1]+1e-6, 5. ):
+            for yi in numpy.arange ( ylimits[0], ylimits[1]+1e-6, 5. ):
+                z = r.get_limit ( xi, yi )
+                if z == None:
+                    continue
+                if z == lastz:
+                    continue
+                # print ( "xyz", xi, yi, z )
+                data.append ( ( xi, yi, z ) )
+                lastz = z
+        for d in data:
+            yield d
 
     def csv(self):
         """

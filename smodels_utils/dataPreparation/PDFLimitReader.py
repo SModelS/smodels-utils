@@ -79,10 +79,10 @@ class PDFLimitReader():
         # find closest:
         best_match = self.get_best_match( r, g, b )
         # throw some warnings so we know if the plot is strongly capped
-        if (r,g,b)==self.z_max_color:
-            print("Warning! This is the max color!")
-        if (r,g,b)==self.z_min_color:
-            print("Warning! This is the min color!")
+        #if (r,g,b)==self.z_max_color:
+        #    print("Warning! This is the max color!")
+        #if (r,g,b)==self.z_min_color:
+        #    print("Warning! This is the min color!")
         return exp( log(self.data['z']['limits'][0]) + (self.z_axis_dict[best_match]['ymin'] - self.z_axis_ymin)/(self.z_axis_ymax-self.z_axis_ymin) * ( log(self.data['z']['limits'][1])  - log(self.data['z']['limits'][0]) ) )
 
     def get_limit( self, x, y ):
@@ -107,7 +107,7 @@ class PDFLimitReader():
         for shape in self.main_shapes:
             if pdf_x>=min_x(shape) and pdf_x<max_x(shape) and pdf_y>=min_y(shape) and pdf_y<max_y(shape):
                 this_shape = shape
-                print ("Found")
+                # print ("Found")
                 #break
 
         if this_shape:
