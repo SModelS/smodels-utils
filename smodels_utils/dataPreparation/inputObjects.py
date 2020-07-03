@@ -1030,11 +1030,11 @@ class TxNameInput(Locker):
                         return False
                     #Evaluate the inequality replacing m by the mass difference:
                     check = eval(vertex,{'dm' : massDiff})
-                    if check is False:
+                    if check == False:
                         goodMasses = False
                         break
-                    elif not check is True:
-                        logger.error("Something went wrong evaluating the mass constraint %s" %vertex)
+                    if not check in [ False, True ]:
+                        logger.error("Something went wrong evaluating the mass constraint %s. Check was %s(%s), massDiff was %s" % ( vertex, check, type(check), massDiff ) )
                         return False
             if goodMasses:
                 return True

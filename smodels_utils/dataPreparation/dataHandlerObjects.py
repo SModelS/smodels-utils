@@ -443,7 +443,7 @@ class DataHandler(object):
         preprocessing txt-files containing only columns with
         floats
 
-        :yield: list with values as foat, one float for every column
+        :yield: list with values as float, one float for every column
         """
 
         txtFile = open(self.path,'r')
@@ -481,22 +481,41 @@ class DataHandler(object):
         :yield: list with values as float, one float for every column
         """
         from .PDFLimitReader import PDFLimitReader
-        xlimits = ( 150, 1200 )
-        ylimits = (   0, 600 )
-        zlimits = ( 10**-3, 10**2 )
+        tokens = self.index.split(";")
+        ## boundaries in the plot!
+        lim = { "x": ( 150, 1200 ), "y": ( 0, 600 ), "z": ( 10**-3, 10**2 ) }
+        logz = True ## are the colors in log scale?
+        for token in tokens:
+            axis = token[0]
+            lims = token[1:].replace("[","").replace("]","")
+            lims = lims.split(",")
+            if len(lims)>2:
+                if lims[2].lower() in [ "log", "true" ]:
+                    logz = True
+                elif lims[2].lower() in [ "false", "nolog" ]:
+                    logz = False
+                else:
+                    print ( "Error: do not understand %s. I expected log or nolog" % lims[2] )
+            lims = tuple ( map ( float, lims[:2] ) )
+            lim[axis]=lims
+        print("[dataHandlerObjects] limits %s" % lim )
+
         data =  {
             'name': self.path.replace(".pdf",""),
-            'x':{'limits': xlimits},
-            'y':{'limits': ylimits},
-            'z':{'limits': zlimits, 'log':True},
+            'x':{'limits': lim["x"]},
+            'y':{'limits': lim["y"]},
+            'z':{'limits': lim["z"], 'log':logz },
             }
         r = PDFLimitReader( data )
-        logger.error ( "This is just a prototype of a PDF reader!!" )
+        logger.warn ( "This is just a prototype of a PDF reader!" )
+        logger.warn ( f"{len(r.main_shapes)} shapes in pdf file." )
         import numpy
         data = []
         lastz = float("inf")
-        for xi in numpy.arange ( xlimits[0], xlimits[1]+1e-6, 5. ):
-            for yi in numpy.arange ( ylimits[0], ylimits[1]+1e-6, 5. ):
+        for xi in numpy.arange ( lim["x"][0], lim["x"][1]+1e-6, 25. ):
+            for yi in numpy.arange ( lim["y"][0], lim["y"][1]+1e-6, 25. ):
+                if yi > xi:
+                    continue
                 z = r.get_limit ( xi, yi )
                 if z == None:
                     continue
@@ -514,7 +533,7 @@ class DataHandler(object):
         preprocessing csv-files
         floats
 
-        :yield: list with values as foat, one float for every column
+        :yield: list with values as float, one float for every column
         """
         import csv
 
@@ -571,7 +590,7 @@ class DataHandler(object):
         preprocessing multiple csv-files, and multiplying the last values
         floats
 
-        :yield: list with values as foat, one float for every column
+        :yield: list with values as float, one float for every column
         """
         ret = 1.
         npaths = []
@@ -644,7 +663,7 @@ class DataHandler(object):
         preprocessing python dictionaries as defined by the em bakery
         floats
 
-        :yield: list with values as foat, one float for every column
+        :yield: list with values as float, one float for every column
         """
         SR = self.objectName
         with open(self.path) as f:
@@ -668,7 +687,7 @@ class DataHandler(object):
         preprocessing txt-files containing fastlim efficiency maps
         (only columns with floats)
 
-        :yield: list with values as foat, one float for every column
+        :yield: list with values as float, one float for every column
         """
 
         txtFile = open(self.path,'r')

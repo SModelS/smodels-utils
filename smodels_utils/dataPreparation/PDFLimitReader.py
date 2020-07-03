@@ -56,6 +56,12 @@ class PDFLimitReader():
         # These are the shapes (hopefully rectangular) of the main pad. 
         # I take all non-BW shapes with identical fill and stroke color whose max_x isn't the global maximum of such shapes
         self.main_shapes   = list(filter( lambda s: max_x(s)<max_x_global, colored_shapes ))
+        self.minx, self.maxx, self.miny, self.maxy = [], [], [], []
+        for i,ms in enumerate ( self.main_shapes ):
+            self.minx.append ( min_x ( ms ) )
+            self.maxx.append ( max_x ( ms ) )
+            self.miny.append ( min_y ( ms ) )
+            self.maxy.append ( max_y ( ms ) )
 
         # max/min of the coordinates of the shapes in the PDF
         self.main_x_max = max(map(max_x, self.main_shapes))
@@ -104,11 +110,13 @@ class PDFLimitReader():
 
         # this assumes rectangular shapes!
         this_shape = None
-        for shape in self.main_shapes:
-            if pdf_x>=min_x(shape) and pdf_x<max_x(shape) and pdf_y>=min_y(shape) and pdf_y<max_y(shape):
+        for i,shape in enumerate(self.main_shapes):
+            #if pdf_x>=min_x(shape) and pdf_x<max_x(shape) and pdf_y>=min_y(shape) and pdf_y<max_y(shape):
+            if pdf_x>=self.minx[i] and pdf_x<self.maxx[i] and pdf_y>=self.miny[i] and \
+               pdf_y<self.maxy[i]:
                 this_shape = shape
                 # print ("Found")
-                #break
+                break
 
         if this_shape:
             return self.get_z( *this_shape.fill.color.as_rgb() )
