@@ -15,11 +15,11 @@
   * moved computeParticleContributions and computeAnalysisContributions to hiscore.py. Tried to simplify  computeParticleContributions
   * added predictor to Hiscore.predictor (so it can recompute stuff)
   * renamed runWalk.py -> walk.py
-
+  * split hiscore code into: Hiscore class (builder/hiscore.py) and hiscore tools (tools/hiscoreTools.py)
 
 ## Refactoring ToDo:
 
-  * split hiscore code into: Hiscore class (held by RandomWalker) and hiscore methods to consolidate the results
+
   * simplify swap particles (move it to the end of Manipulator.randomlyChangeModel)
   * simplify merge particles (?)
   * simplify computeParticleContributions (?)

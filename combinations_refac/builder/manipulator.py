@@ -478,6 +478,8 @@ class Manipulator:
         else: #Change masses with 5% probability
             nChanges+=self.randomlyChangeMasses(predictor,prob = probMass, dx = dx)
 
+        #Canonically sort particles (mstop1 < mstop2, ...)
+        self.checkSwaps(predictor)
         #Update the SLHA file
         self.M.createSLHAFile()
 
@@ -899,8 +901,6 @@ class Manipulator:
         ret = self.randomlyChangeMassOf ( pid, dx=dx )
         #for i in unfrozen:
         #    ret = self.randomlyChangeMassOf ( i )
-        self.checkSwaps(predictor) ## should we really do this here?
-        ## now remove all offshell decays, and normalize all branchings
         self.removeAllOffshell()
         return ret
 
