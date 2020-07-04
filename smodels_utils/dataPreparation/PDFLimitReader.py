@@ -118,12 +118,24 @@ class PDFLimitReader():
         # I take all non-BW shapes with identical fill and stroke color whose max_x isn't the global maximum of such shapes
         self.main_shapes   = list(filter( lambda s: max_x(s)<max_x_global, colored_shapes ))
         self.minx, self.maxx, self.miny, self.maxy = [], [], [], []
+        deltax, deltay = [], []
         for i,ms in enumerate ( self.main_shapes ):
-            self.minx.append ( min_x ( ms ) )
-            self.maxx.append ( max_x ( ms ) )
-            self.miny.append ( min_y ( ms ) )
-            self.maxy.append ( max_y ( ms ) )
+            ix =  min_x ( ms )
+            ax =  max_x ( ms )
+            iy =  min_y ( ms )
+            ay =  max_y ( ms )
+            self.minx.append ( ix )
+            self.maxx.append ( ax )
+            self.miny.append ( iy )
+            self.maxy.append ( ay )
+            if ax-ix>0.:
+                deltax.append ( ax - ix )
+            if ay-iy>0.:
+                deltay.append ( ay - iy )
 
+        self.deltax = min ( deltax )
+        self.deltay = min ( deltay )
+        # print ( "deltas", self.deltax, self.deltay )
         # max/min of the coordinates of the shapes in the PDF
         self.main_x_max = max(map(max_x, self.main_shapes))
         self.main_y_max = max(map(max_y, self.main_shapes))
@@ -153,7 +165,7 @@ class PDFLimitReader():
         #    best_match = self.get_best_match( *ct )
         #    #print (shape.fill.color.as_rgb(), shape.path)
         #    #print ("best_match", best_match )
-        #    #print ("delta", delta(*ct, ct=best_match)) 
+        #    print ("delta", delta(*ct, ct=best_match)) 
         #    #print (self.get_z( *ct ))
 
     def get_best_match( self, r, g, b ):

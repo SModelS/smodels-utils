@@ -512,15 +512,21 @@ class DataHandler(object):
         import numpy
         data = []
         lastz = float("inf")
-        for xi in numpy.arange ( lim["x"][0], lim["x"][1]+1e-6, 25. ):
-            for yi in numpy.arange ( lim["y"][0], lim["y"][1]+1e-6, 25. ):
+        dx = r.deltax
+        while dx < 15.:
+            dx = 2*dx
+        dy = r.deltay
+        while dy < 15.:
+            dy = 2*dy
+        for xi in numpy.arange ( lim["x"][0]+.5*r.deltax, lim["x"][1]+1e-6, dx ):
+            for yi in numpy.arange ( lim["y"][0]+.5*r.deltay, lim["y"][1]+1e-6, dy ):
                 if yi > xi:
                     continue
                 z = r.get_limit ( xi, yi )
                 if z == None:
                     continue
-                if z == lastz:
-                    continue
+                #if z == lastz:
+                #    continue
                 # print ( "xyz", xi, yi, z )
                 data.append ( ( xi, yi, z ) )
                 lastz = z
