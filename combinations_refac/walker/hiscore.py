@@ -119,19 +119,11 @@ class Hiscore:
                 ### Skip!
                 self.pprint ( "the protomodel seems to be already in highscore list. skip" )
                 return
-            """
-            if mi!=None and abs ( m.M.K - mi.K ) / m.M.K < 1e-6:
-                ## pretty much exactly same score? number of particles wins!!
-                if len ( m.M.unFrozenParticles() ) < len ( mi.unFrozenParticles() ):
-                    self.demote ( i )
-                    self.hiscores[i] = copy.deepcopy ( m.M )
-                    self.hiscores[i].clean(  )
-                    break
-            """
+
             if mi==None or m.M.K > mi.K: ## ok, <i>th best result!
                 self.demote ( i )
                 self.hiscores[i] = copy.deepcopy ( m.M )
-                self.hiscores[i].clean( )
+                self.hiscores[i].cleanBestCombo( )
                 break
 
     def addResultByZ ( self, protomodel ):
@@ -160,12 +152,12 @@ class Hiscore:
                 if len ( m.M.unFrozenParticles() ) < len ( mi.unFrozenParticles() ):
                     self.demote ( i )
                     self.hiscores[i] = copy.deepcopy ( m.M )
-                    self.hiscores[i].clean( )
+                    self.hiscores[i].cleanBestCombo( )
                     break
             if mi==None or m.M.Z > mi.Z: ## ok, <i>th best result!
                 self.demote ( i )
                 self.hiscores[i] = copy.deepcopy ( m.M )
-                self.hiscores[i].clean( )
+                self.hiscores[i].cleanBestCombo( )
                 break
 
     def computeParticleContributions ( self, manipulator ):
