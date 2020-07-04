@@ -20,6 +20,31 @@ def min_y( shape ):
 
 class PDFLimitReader(): 
 
+    def fromPdfToReal ( self, pdf_x, pdf_y, xmin, xmax, ymin, ymax ):
+        r_x = ( pdf_x - self.main_x_min ) / (self.main_x_max-self.main_x_min)
+        r_y = ( pdf_y - self.main_y_min ) / (self.main_y_max-self.main_y_min)
+        x = r_x * (xmax-xmin) + xmin
+        y = r_y * (ymax-ymin) + ymin
+        return (x,y )
+
+    def processLines ( self, excllines ):
+        return
+        # print ( "excllines", excllines.stroke.linewith )
+        newl = []
+        xmin, xmax = self.data['x']['limits']
+        ymin, ymax = self.data['y']['limits']
+        for l in excllines:
+            print ( l.stroke.linewidth )
+            pdf_x = min_x ( l )
+            pdf_y = min_y ( l )
+            pdf_max_x = max_x ( l )
+            pdf_max_y = max_y ( l )
+            minx,miny = self.fromPdfToReal ( pdf_x, pdf_y, xmin,xmax,ymin,ymax )
+            maxx,maxy = self.fromPdfToReal ( pdf_max_x, pdf_max_y, xmin, xmax, ymin, ymax )
+            print ( "mx,my", minx, miny, "to", maxx, maxy )
+        import IPython
+        IPython.embed()
+
     def get_axis_dict( self ):
         import minecart
         # open pdf file
@@ -29,7 +54,10 @@ class PDFLimitReader():
 
         #Find colored box shapes that share the maximal x coordinate. That's the color legend (z_axis)
         colored_shapes = []
+        excllines = []
         for shape in page.shapes:
+            if shape.fill == None and shape.stroke.color.as_rgb() in [ (0,0,0) ]:
+                excllines.append ( shape )
             # these colored boxes have identical stroke and fill color and are neither black or white
             if shape.fill and shape.stroke and hasattr(shape.stroke, 'color') and shape.stroke.color.as_rgb()==shape.fill.color.as_rgb():
                 if shape.fill.color.as_rgb() in [(1,1,1), (0,0,0)]: continue
@@ -69,6 +97,7 @@ class PDFLimitReader():
         self.main_x_min = min(map(min_x, self.main_shapes))
         self.main_y_min = min(map(min_y, self.main_shapes))
 
+        self.processLines ( excllines )
         # for debugging
         #for shape in self.main_shapes:
         #    ct = shape.fill.color.as_rgb()        
