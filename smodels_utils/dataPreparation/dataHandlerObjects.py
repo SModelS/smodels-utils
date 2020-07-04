@@ -1101,3 +1101,42 @@ class ExclusionHandler(DataHandler):
                 x = (xorig-x0)/xGeV
                 y = (yorig-y0)/yGeV
                 yield [x,y]
+
+
+    def pdf(self):
+
+        """
+        iterable method for  processing files with coordinates in pdf format.
+        :yield: [x-value in GeV, y-value in GeV]
+        """
+        #print ( "[dataHandlerObjects] here!!", self.path  )
+        #print ( )
+        from .PDFLimitReader import PDFLimitReader
+        tokens = self.index.split(";")
+        ## boundaries in the plot!
+        lim = { "x": ( 150, 1200 ), "y": ( 0, 600 ), "z": ( 10**-3, 10**2 ) }
+        logz = True ## are the colors in log scale?
+        for token in tokens:
+            axis = token[0]
+            lims = token[1:].replace("[","").replace("]","")
+            lims = lims.split(",")
+            if len(lims)>2:
+                if lims[2].lower() in [ "log", "true" ]:
+                    logz = True
+                elif lims[2].lower() in [ "false", "nolog" ]:
+                    logz = False
+                else:
+                    print ( "Error: do not understand %s. I expected log or nolog" % lims[2] )
+            lims = tuple ( map ( float, lims[:2] ) )
+            lim[axis]=lims
+
+        data =  {
+            'name': self.path.replace(".pdf",""),
+            'x':{'limits': lim["x"]},
+            'y':{'limits': lim["y"]},
+            'z':{'limits': lim["z"], 'log':logz },
+            }
+        r = PDFLimitReader( data )
+        points = r.exclusions [ self.name ]
+        for p in points:
+            yield p
