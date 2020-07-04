@@ -24,7 +24,6 @@
 ## Refactoring ToDo:
 
 
-  * simplify swap particles (move it to the end of Manipulator.randomlyChangeModel)
   * simplify merge particles (?)
   * simplify computeParticleContributions (?)
   * replace xsecComputer with an interpolation based on the pMSSM scan (?)
