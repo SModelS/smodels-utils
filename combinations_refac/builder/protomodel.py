@@ -2,7 +2,7 @@
 
 """ Class that encapsulates a BSM model. """
 
-import random, tempfile, os, copy, time, colorama, subprocess
+import random, tempfile, os, time, colorama, subprocess
 from builder.protoxsecs import ProtoModelXSecs
 from tester.combiner import Combiner
 from tools import helpers

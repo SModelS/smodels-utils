@@ -211,8 +211,6 @@ class RandomWalker:
 
         self.log ( "freeze pids that arent in best combo, we dont need them" )
         self.manipulator.freezePidsNotInBestCombo()
-        self.log ( "now check for swaps" )
-        self.manipulator.checkSwaps(self.predictor)
         self.log ( "step %d/%s finished." % ( self.protomodel.step, smaxstp ) )
 
         self.log ( "check if result goes into hiscore list" )

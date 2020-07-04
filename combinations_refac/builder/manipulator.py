@@ -20,6 +20,12 @@ class Manipulator:
         self.M = copy.copy ( protomodel  ) # shallow copy
         self.strategy = strategy
         self.verbose = verbose
+        #Store a canonical order for the masses. So the ordering in each
+        #tuple is enforced
+        self.canonicalOrder =  [ ( 1000006, 2000006 ), ( 1000005, 2000005 ),
+                          ( 1000023, 1000025 ), ( 1000024, 1000037 ),
+                          ( 1000025, 1000035 ), ( 1000023, 1000025 ),
+                          ( 1000001, 1000002 ), (1000001, 1000003) ]
 
     def getClosestPair ( self, pids ):
         """ of <n> PIDs, identify the two that are closest in mass """
@@ -204,59 +210,6 @@ class Manipulator:
                     offshell.append ( ( pid, dpid ) )
         return offshell
 
-    def checkSwaps ( self, predictor ):
-        """ check for the usual suspects for particle swaps """
-        ## the pairs to check. I put 1000023, 1000025 twice,
-        ## so as to make it possible that chi40 eventually swaps with chi20
-        # self.pprint ( "checking for nan before swap" )
-        # self.checkForNans()
-        pairs = [ ( 1000006, 2000006 ), ( 1000005, 2000005 ),
-                  ( 1000023, 1000025 ), ( 1000024, 1000037 ),
-                  ( 1000025, 1000035 ), ( 1000023, 1000025 ) ]
-        for pids in pairs:
-            if not pids[1] in self.M.masses or not pids[0] in self.M.masses:
-                continue
-            if self.M.masses[pids[1]] > 5e5:
-                # we dont check for frozen particles, if they are second
-                continue
-            if self.M.masses[pids[0]] > self.M.masses[pids[1]]:
-                self.M.pprint ( "particle swap %d <-> %d" % ( pids[0], pids[1] ) )
-                self.swapParticles ( pids[0],pids[1] )
-
-        ## now the same with pairs that actually need checking, e.g.
-        ## because the xsecs could be affected, or b/c charm
-        if not hasattr ( self.M, "K" ):
-            return
-        #if True:
-        #    return
-        cpairs = [ ( 1000001, 1000003 ), ( 1000002, 1000004 ), ( 1000001, 1000002 ) ]
-        for pids in cpairs:
-            if not pids[1] in self.M.masses or not pids[0] in self.M.masses:
-                continue
-            if self.M.masses[pids[1]] > 5e5:
-                # we dont check for frozen particles, if they are second
-                continue
-            if self.M.masses[pids[0]] < self.M.masses[pids[1]]:
-                continue
-            self.M.pprint ( "check if we can particle swap %d <-> %d" % ( pids[0], pids[1] ) )
-            oldK, oldrmax = self.M.K, self.M.rmax
-            self.backupModel()
-            self.swapParticles ( pids[0],pids[1] )
-
-            self.M.createSLHAFile()
-            predictor.predict(protomodel=self.M)
-            if self.M.K < oldK - 1e-3: ## score deteriorated?
-                self.M.pprint ( "new K is %.2f, old was %.2f. restore!" % \
-                                ( self.M.K, oldK ) )
-                self.restoreModel()
-            ## score deteriorated?
-            if self.M.excluded and self.M.rmax > oldrmax+.0001:
-                self.M.pprint ( "new rmax is %.2f, old was %.2f. restore!" % \
-                                ( self.M.rmax, oldrmax ) )
-                self.restoreModel()
-        # self.pprint ( "checking for nan after swap" )
-        #self.checkForNans()
-
     def checkForNans ( self ):
         """ check protomodel for NaNs, for debugging only """
         for pid,m in self.M.masses.items():
@@ -273,88 +226,6 @@ class Manipulator:
     def setWalkerId ( self, Id ):
         """ set the walker id of protomodel """
         self.M.walkerid = Id
-
-    def swapParticles ( self, pid1, pid2 ):
-        """ swaps the two particle ids. The idea being that e.g. ~b1 should be
-            lighter than ~b2. If in the walk, ~b1 > ~b2, we just swap the roles
-            of the two particles. Takes care of changing the pids in the ssms, decays,
-            and bestCombo.
-        """
-        ## swap in the masses dictionary
-        if pid1 in self.M.masses and pid2 in self.M.masses:
-            s = self.M.masses[pid1]
-            self.M.masses[pid1] = self.M.masses[pid2]
-            self.M.masses[pid2] = s
-        else:
-            self.M.highlight ( "red", "error, i was asked to swap %d and %d. but one of them isnt in the mass tuple" % ( pid1, pid2 ) )
-            return
-        ## swap mothers in the decays dictionary
-        if pid1 in self.M.decays and pid2 in self.M.decays:
-            s = self.M.decays[pid1]
-            self.M.decays[pid1] = self.M.decays[pid2]
-            self.M.decays[pid2] = s
-        else:
-            self.M.highlight ( "red", "error, i was asked to swap %d and %d. but one of them isnt in the decays tuple" % ( pid1, pid2 ) )
-            return
-
-        # swap the daughters in the decays dictionary
-        for mpid,decays in self.M.decays.items():
-            if pid1 in decays and pid2 in decays: ## a swap!
-                s = self.M.decays[mpid][pid1]
-                self.M.decays[mpid][pid1] = self.M.decays[mpid][pid2]
-                self.M.decays[mpid][pid2] = s
-                continue
-            if pid1 in decays and not pid2 in decays: ## just a rename
-                self.M.decays[mpid][pid2]=copy.deepcopy( self.M.decays[mpid][pid1] )
-                self.M.decays[mpid].pop(pid1)
-                continue
-            if pid2 in decays and not pid1 in decays: ## just a rename
-                self.M.decays[mpid][pid1]=copy.deepcopy( self.M.decays[mpid][pid2] )
-                self.M.decays[mpid].pop(pid2)
-        ## swap all provenances in the ss multiplier dictionary
-        newSSMultipliers = {}
-        for pids,ssm in self.M.ssmultipliers.items():
-            apids = list ( map ( abs, pids ) )
-            if not pid1 in apids and not pid2 in apids:
-                newSSMultipliers[pids]=ssm ## our swapping pids are not part
-                continue
-            npids = list ( pids )
-            for ctr,pid in enumerate(npids):
-                if pid == pid1:
-                    npids[ctr]=pid2
-                if pid == -pid1:
-                    npids[ctr]=-pid2
-                if pid == pid2:
-                    npids[ctr]=pid1
-                if pid == -pid2:
-                    npids[ctr]=-pid1
-            npids.sort()
-            newSSMultipliers[tuple(npids)]=ssm
-        self.M.ssmultipliers = copy.deepcopy ( newSSMultipliers )
-
-        ## finally swap in bestCombo
-        self.swapPidsInBestCombo ( pid1, pid2 )
-        self.M.delXSecs() ## I dont trust the xsecs anymore now
-
-    def swapPidsInBestCombo ( self, pid1, pid2 ):
-        """ swap pid1 with pid2 in best combo """
-        if not hasattr ( self.M, "bestCombo" ):
-            return
-        if self.M.bestCombo == None:
-            return
-
-        for c,combo in enumerate(self.M.bestCombo):
-            for i,prod in enumerate(combo.PIDs):
-                for b,branch in enumerate(prod):
-                    for p,pid in enumerate(branch):
-                       if pid == pid1:
-                            self.M.bestCombo[c].PIDs[i][b][p] = pid2
-                       elif pid == -pid1:
-                            self.M.bestCombo[c].PIDs[i][b][p] = -pid2
-                       if pid == pid2:
-                            self.M.bestCombo[c].PIDs[i][b][p] = pid1
-                       elif pid == -pid2:
-                            self.M.bestCombo[c].PIDs[i][b][p] = -pid1
 
     def printCombo ( self, combo=None ):
         """ pretty print prediction combos.
@@ -478,8 +349,6 @@ class Manipulator:
         else: #Change masses with 5% probability
             nChanges+=self.randomlyChangeMasses(predictor,prob = probMass, dx = dx)
 
-        #Canonically sort particles (mstop1 < mstop2, ...)
-        self.checkSwaps(predictor)
         #Update the SLHA file
         self.M.createSLHAFile()
 
@@ -491,8 +360,9 @@ class Manipulator:
         """
 
         #Decide whether to unfreeze according to the number of active particles
-        if not force:
-            nUnfrozen = len( self.M.unFrozenParticles() )
+        #(always unfreeze if the model only has one particle)
+        nUnfrozen = len( self.M.unFrozenParticles() )
+        if (not force) and nUnfrozen > 1:
             nTotal = len ( self.M.masses.keys() )
             denom = self.M.Z+1.
             if denom < 1.:
@@ -509,8 +379,26 @@ class Manipulator:
             return 0
         pid = random.choice ( frozen )
 
+        #Check for canonical ordering.
+        #If pid matches the heavier state and the lighter state is frozen,
+        #unfreeze the lighter state instead
+        for pids in self.canonicalOrder:
+            if pid == pids[1] and pids[0] in frozen:
+                pid = pids[0] #Unfreeze the lighter state
+                break
+
+        #Absolute mass range:
+        maxMass = self.M.maxMass
+        minMass = self.M.masses[self.M.LSP]
+        #Redefine mass range if necessary to make sure the mass ordering is respected:
+        for pids in self.canonicalOrder:
+            if pid == pids[0] and (not pids[1] in frozen):
+                maxMass = self.M.masses[pids[1]] #Do not allow for masses above the heavier state
+            elif pid == pids[1]:
+                minMass = self.M.masses[pids[0]] #Do not allow for masses below the ligher state
+
         #Randomly select mass of unfrozen particle:
-        self.M.masses[pid] = random.uniform ( self.M.masses[self.M.LSP], self.M.maxMass )
+        self.M.masses[pid] = random.uniform ( minMass, maxMass )
         ## when unfreezing, nothing can go offshell, right?
         self.removeAllOffshell() ## remove all offshell stuff, normalize all branchings
         self.M.delXSecs() ## old xsecs dont count anymore
@@ -835,6 +723,10 @@ class Manipulator:
         """
 
         nUnfrozen = len( self.M.unFrozenParticles() )
+        #Always keep at least 2 particles
+        if nUnfrozen <= 2:
+            return 0
+
         nTotal = len ( self.M.masses.keys() )
         denom = self.M.Z+1.
         if denom < 1.:
@@ -854,9 +746,10 @@ class Manipulator:
         if len(unfrozen)<2:
             self.M.log ( "only two particles are unfrozen, so dont freeze anything" )
             return 0 ## freeze only if at least 3 unfrozen particles exist
-        p = random.choice ( unfrozen )
-        self.M.log ( "Freezing %s (but keep its branchings)." % ( helpers.getParticleName(p) ) )
-        self.freezeParticle ( p )
+        pid = random.choice ( unfrozen )
+
+        self.M.log ( "Freezing %s (but keep its branchings)." % ( helpers.getParticleName(pid) ) )
+        self.freezeParticle ( pid )
         return 1
 
     def freezeMostMassiveParticle ( self ):
@@ -874,9 +767,24 @@ class Manipulator:
         self.freezeParticle ( pid )
         return 1
 
-    def freezeParticle ( self, pid ):
+    def freezeParticle ( self, pid, force = False ):
         """ freeze particle pid, take care of offshell removal, and
-            branching normalization """
+            branching normalization
+
+        :param pid: PID to be frozen
+        :param force: If False, will only freeze the particle if it does not violate
+                      the canonical order (e.g. will not freeze stop1 if stop2 is unfrozen)
+        """
+
+#Check for canonical ordering.
+        if not force:
+            unfrozen = self.M.unFrozenParticles( withLSP=False )
+            #If pid matches the lighter state and the heavier state is unfrozen,
+            #do not freeze the particle
+            for pids in self.canonicalOrder:
+                if pid == pids[0] and pids[1] in unfrozen:
+                    return
+
         self.M.masses[pid]=1e6
         self.normalizeAllBranchings()
         self.removeAllOffshell()
@@ -898,9 +806,24 @@ class Manipulator:
             return 0
 
         pid = random.choice ( unfrozen )
-        ret = self.randomlyChangeMassOf ( pid, dx=dx )
-        #for i in unfrozen:
-        #    ret = self.randomlyChangeMassOf ( i )
+
+        #Define mass interval
+        maxMass = self.M.maxMass
+        minMass = self.M.masses[self.M.LSP]
+        #In case the pid corresponds to a lighter or heavier state of a pair of particles,
+        #make sure the mass ordering is respected:
+        for pids in self.canonicalOrder:
+            if pid == pids[0] and pids[1] in unfrozen:
+                maxMass = self.M.masses[pids[1]] #Do not allow for masses above the heavier state
+            elif pid == pids[1] and pids[0] in unfrozen:
+                minMass = self.M.masses[pids[0]] #Do not allow for masses below the ligher state
+
+        #If the particle is the LSP, make sure its mass remains the lightest:
+        if pid == self.M.LSP and len(unfrozen) > 1:
+            maxMass = min([self.M.masses[p] for p in unfrozen if p != self.M.LSP])
+
+        ret = self.randomlyChangeMassOf ( pid, dx=dx, minMass=minMass, maxMass=maxMass )
+
         self.removeAllOffshell()
         return ret
 
@@ -1165,30 +1088,31 @@ class Manipulator:
             if pids == xsec.pid: ## ok, lets go!
                self.M.stored_xsecs[0][ctr].value = xsec.value * r
 
-    def randomlyChangeMassOf ( self, pid, dx=None ):
+    def randomlyChangeMassOf ( self, pid, dx=None, minMass = None, maxMass = None ):
         """ randomly change the mass of pid
         :param dx: the delta x to change. If none, then use a model-dependent
                    default
+        :param minMass: minimum allowed mass for the particle. If not defined, use the LSP mass
+        :param maxMass: maximum allowed mass for the particle. If not defined, use the protomodel maxMass
         """
         if dx == None:
             denom = self.M.Z + 1.
             if denom < 1.:
                 denom = 1.
             dx = 40. / numpy.sqrt ( len(self.M.unFrozenParticles() ) ) / denom
+
+        if not minMass:
+            minMass = self.M.masses[self.M.LSP]
+        if not maxMass:
+            maxMass = self.M.maxMass
         tmpmass = self.M.masses[pid]+random.uniform(-dx,dx)
-        if tmpmass > self.M.maxMass:
-            tmpmass = self.M.maxMass
-        if tmpmass < self.M.masses[self.M.LSP]: ## the LSP is the LSP.
-            tmpmass = self.M.masses[self.M.LSP]+1.
+        #Enforce mass interval:
+        if tmpmass > maxMass:
+            tmpmass = maxMass-1.0
+        if tmpmass < minMass:
+            tmpmass = minMass+1.
         self.M.masses[pid]=tmpmass
-        ### if we changed the mass of the LSP, we need to make sure it remains
-        ### the lightest particle
-        if pid == self.M.LSP:
-            for pid2,mass in self.M.masses.items():
-                if pid2 == pid:
-                    continue
-                if mass < tmpmass:
-                    self.M.masses[pid2] = tmpmass + 1.
+
         self.M.delXSecs() ## delete xsecs
         return 1
 

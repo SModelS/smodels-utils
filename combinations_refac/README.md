@@ -17,6 +17,9 @@
   * renamed runWalk.py -> walk.py
   * split hiscore code into: Hiscore class (builder/hiscore.py) and hiscore tools (tools/hiscoreTools.py)
   * added loadHiscores.py
+  * make sure protomodel always has at least 2 particles
+  * remove swap particles. Canonical ordering is enforced when changing the model (change in behavior: when removing the particles not present in the best combination, the lighter state is no longer removed if the heavier state appears in the combination. Before the lighter state was removed and the heavy state was then swapped.)
+  * if the LSP mass is changed, make sure it is only allowed to change up to the next-to-lightest state (change in behavior: before all the masses smaller than the LSP were change to LSP mass + 1)
 
 ## Refactoring ToDo:
 
