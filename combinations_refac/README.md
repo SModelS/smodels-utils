@@ -14,6 +14,7 @@
   * renamed Manipulator.resolveMuhat to Manipulator.rescaleByMuHat
   * moved computeParticleContributions and computeAnalysisContributions to hiscore.py. Tried to simplify  computeParticleContributions
   * added predictor to Hiscore.predictor (so it can recompute stuff)
+  * renamed runWalk.py -> walk.py
 
 
 ## Refactoring ToDo:
@@ -22,5 +23,20 @@
   * simplify swap particles (move it to the end of Manipulator.randomlyChangeModel)
   * simplify merge particles (?)
   * simplify computeParticleContributions (?)
+  * replace xsecComputer with an interpolation based on the pMSSM scan (?)
 
 
+## Profiling:
+
+  * onestep (98%)
+    * predictor.predict (55%)
+      * computeSignificance (57%)
+        * combiner.computePrior (85%)      
+        * combiner.findHighestSignificance (15%)
+      * updateModelPredictions (22%)
+      * runSModelS (21%)
+    * manipulator.randomlyChangeModel (34%)
+      * protomodel.createSLHAFile (93%)
+      * randomlyChangeMasses (7%)
+    * manipulator.checkSwaps (11%)
+  * decideOnTakingStep (2%)
