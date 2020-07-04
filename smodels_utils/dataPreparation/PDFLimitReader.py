@@ -20,6 +20,63 @@ def min_y( shape ):
 
 class PDFLimitReader(): 
 
+    def fromPdfToReal ( self, pdf_x, pdf_y, xmin, xmax, ymin, ymax ):
+        r_x = ( pdf_x - self.main_x_min ) / (self.main_x_max-self.main_x_min)
+        r_y = ( pdf_y - self.main_y_min ) / (self.main_y_max-self.main_y_min)
+        x = r_x * (xmax-xmin) + xmin
+        y = r_y * (ymax-ymin) + ymin
+        return (x,y )
+
+
+    def processLines ( self, excllines, expected, pm ):
+        """ produce points for exclusion lines
+        :param excllines: container of shapes containing lines
+        :param expected: selected for expected or observed lines
+        :param pm: central value (0), or plus (1) or minus (1) one sigma line
+        """
+        def distance ( p1, p2 ):
+            return (p1[0]-p2[0])**2 + (p1[1]-p2[1])**2
+        xmin, xmax = self.data['x']['limits']
+        ymin, ymax = self.data['y']['limits']
+        points = []
+        scol = (0,0,0)
+        if expected:
+            scol = (1,0,0)
+        countUp = 0
+        for l in excllines:
+            lw = l.stroke.linewidth ## central value has linewidth 3, 
+            col = l.stroke.color.as_rgb()
+            if lw < 1.:
+                continue
+            if len(l.path)==3: ## legend lines
+                continue
+            # print ( "l", l, lw, col, len(l.path) )
+            if col != scol:
+                continue
+            if pm == 0 and abs ( lw - 3.) > 1e-2:
+                continue
+            if abs(pm) == 1 and abs ( lw - 1.5 ) > 1e-2:
+                continue
+            if pm < -.5 and countUp == 0:
+                countUp += 1
+                continue
+            if pm > .5 and countUp > 0:
+                continue
+            pdf_x = min_x ( l )
+            pdf_y = min_y ( l )
+            pdf_x = ([x[1] for x in l.path if x[0]!='h'])
+            pdf_y = ([x[2] for x in l.path if x[0]!='h'])
+            for px,py in zip ( pdf_x, pdf_y ):
+                x,y = self.fromPdfToReal ( px, py, xmin,xmax,ymin,ymax )
+                p = (x,y)
+                if len(points)==0:
+                    points.append ( (x,y) )
+                elif distance ( p, points[-1] ) > 1e-6:
+                    points.append ( (x,y) )
+            if len(points)>10: ## done
+                return points
+        return points
+
     def get_axis_dict( self ):
         import minecart
         # open pdf file
@@ -29,7 +86,11 @@ class PDFLimitReader():
 
         #Find colored box shapes that share the maximal x coordinate. That's the color legend (z_axis)
         colored_shapes = []
+        excllines = []
         for shape in page.shapes:
+            ## exclusion lines are red or black
+            if shape.fill == None and shape.stroke.color.as_rgb() in [ (1,0,0), (0,0,0) ]:
+                excllines.append ( shape )
             # these colored boxes have identical stroke and fill color and are neither black or white
             if shape.fill and shape.stroke and hasattr(shape.stroke, 'color') and shape.stroke.color.as_rgb()==shape.fill.color.as_rgb():
                 if shape.fill.color.as_rgb() in [(1,1,1), (0,0,0)]: continue
@@ -57,25 +118,54 @@ class PDFLimitReader():
         # I take all non-BW shapes with identical fill and stroke color whose max_x isn't the global maximum of such shapes
         self.main_shapes   = list(filter( lambda s: max_x(s)<max_x_global, colored_shapes ))
         self.minx, self.maxx, self.miny, self.maxy = [], [], [], []
+        deltax, deltay = [], []
         for i,ms in enumerate ( self.main_shapes ):
-            self.minx.append ( min_x ( ms ) )
-            self.maxx.append ( max_x ( ms ) )
-            self.miny.append ( min_y ( ms ) )
-            self.maxy.append ( max_y ( ms ) )
+            ix =  min_x ( ms )
+            ax =  max_x ( ms )
+            iy =  min_y ( ms )
+            ay =  max_y ( ms )
+            self.minx.append ( ix )
+            self.maxx.append ( ax )
+            self.miny.append ( iy )
+            self.maxy.append ( ay )
+            if ax-ix>0.:
+                deltax.append ( ax - ix )
+            if ay-iy>0.:
+                deltay.append ( ay - iy )
 
+        self.deltax = min ( deltax )
+        self.deltay = min ( deltay )
+        # print ( "deltas", self.deltax, self.deltay )
         # max/min of the coordinates of the shapes in the PDF
         self.main_x_max = max(map(max_x, self.main_shapes))
         self.main_y_max = max(map(max_y, self.main_shapes))
         self.main_x_min = min(map(min_x, self.main_shapes))
         self.main_y_min = min(map(min_y, self.main_shapes))
 
+        exc = {}
+        exts= { 0: "", 1: "P1", -1: "M1" }
+        for expected in [ False, True ]:
+            name = "obsExclusion"
+            if expected:
+                name = "expExclusion"
+            for pm in [ -1, 0, 1 ]:
+                exc[name+exts[pm]] = self.processLines ( excllines, expected=expected, pm=pm )
+        self.exclusions = exc
+        """
+        print ( "obs excl line", self.obsexcl[:3] )
+        print ( "exp excl line", self.expexcl[:3] )
+        print ( "obsp1 excl line", self.obsexclp1[:3] )
+        print ( "obsm1 excl line", self.obsexclm1[:3] )
+        print ( "expp1 excl line", self.expexclp1[:3] )
+        print ( "expm1 excl line", self.expexclm1[:3] )
+        """
         # for debugging
         #for shape in self.main_shapes:
         #    ct = shape.fill.color.as_rgb()        
         #    best_match = self.get_best_match( *ct )
         #    #print (shape.fill.color.as_rgb(), shape.path)
         #    #print ("best_match", best_match )
-        #    #print ("delta", delta(*ct, ct=best_match)) 
+        #    print ("delta", delta(*ct, ct=best_match)) 
         #    #print (self.get_z( *ct ))
 
     def get_best_match( self, r, g, b ):
@@ -122,8 +212,10 @@ class PDFLimitReader():
             return self.get_z( *this_shape.fill.color.as_rgb() )
         
     def __init__( self, limit_dict ): 
-
         self.data = limit_dict
+        self.exclusions = { "obsExclusion": [], "expExclusion": [], "obsExclusionP1": [],
+                            "obsExclusionM1": [], "expExclusionP1": [], "expExclusionM1": [] 
+        }
         self.get_axis_dict()
  
 if __name__ == "__main__":
