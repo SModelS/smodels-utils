@@ -16,6 +16,7 @@
   * added predictor to Hiscore.predictor (so it can recompute stuff)
   * renamed runWalk.py -> walk.py
   * split hiscore code into: Hiscore class (builder/hiscore.py) and hiscore tools (tools/hiscoreTools.py)
+  * added loadHiscores.py
 
 ## Refactoring ToDo:
 
