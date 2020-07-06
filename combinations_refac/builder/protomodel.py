@@ -2,7 +2,7 @@
 
 """ Class that encapsulates a BSM model. """
 
-import random, tempfile, os, time, colorama, subprocess
+import random, tempfile, os, time, colorama, subprocess, copy
 from builder.protoxsecs import ProtoModelXSecs
 from tester.combiner import Combiner
 from tools import helpers
@@ -427,6 +427,50 @@ class ProtoModel:
                 self.stored_xsecs = ( xsecs, comment )
         except Exception:
             pass
+
+    def copy(self, cp_predictions = False):
+        """
+        Create a copy of self. If cp_predictions the bestCombo and tpList attributes
+        is copied using deepcopy.
+
+        :returns: copy of protomodel
+        """
+
+        #Initialize empty model:
+        newmodel = self.__class__( self.walkerid )
+
+        #Copy information
+        newmodel.keep_meta = self.keep_meta
+        newmodel.maxMass = self.maxMass
+        newmodel.minevents = self.minevents
+        newmodel.nevents = self.nevents
+        newmodel.step = self.step
+        newmodel.particles = self.particles[:]
+        newmodel.onesquark = self.onesquark ## only one light squark
+        newmodel.twosquark = self.twosquark  ## a few squarks, but not all
+        newmodel.manysquark = self.manysquark ## many squarks
+        newmodel.templateSLHA = self.templateSLHA[:]
+        newmodel.possibledecays = dict([[key,val] for key,val in self.possibledecays.items()])
+        decayDict = {}
+        for pid,dec in self.decays.items():
+            decayDict[pid] = dict([[dpids,br] for dpids,br in dec.items()])
+        newmodel.decays = decayDict
+        newmodel.masses = dict([[pid,mass] for pid,mass in self.masses.items()])
+        newmodel.ssmultipliers = dict([[pidPair,mass] for pidPair,mass in self.ssmultipliers.items()])
+        newmodel.rvalues = self.rvalues[:]
+        newmodel.llhd = self.llhd
+        newmodel.muhat = self.muhat
+        newmodel.Z = self.Z
+        newmodel.rmax = self.rmax
+        newmodel.letters = self.letters[:]
+        newmodel.description = self.description[:]
+        if hasattr(self,'stored_xsecs'):
+            newmodel.stored_xsecs = self.stored_xsecs[:]
+        if cp_predictions:
+            newmodel.tpList = copy.deepcopy(self.tpList)
+            newmodel.bestCombo = copy.deepcopy(self.bestCombo)
+
+        return newmodel
 
 if __name__ == "__main__":
     p = ProtoModel( 1 )

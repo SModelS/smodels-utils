@@ -24,7 +24,7 @@ from pympler.asizeof import asizeof
 try:
     from torch import multiprocessing
 except:
-    import multiprocessing
+    import multiproc7essing
 
 def cleanDirectory ():
     subprocess.getoutput ( "mkdir -p tmp" )
@@ -170,26 +170,29 @@ class RandomWalker:
                     ( asizeof(self)/1024,asizeof(self.protomodel)/1024,asizeof(self.accelerator)/1024 ))
 
         #Take a step in the model space:
-        self.manipulator.randomlyChangeModel(predictor=self.predictor)
+        self.manipulator.randomlyChangeModel()
+
+        #Try to create a simpler model
+        #(merge pre-defined particles of their mass difference is below dm)
+        protomodelSimp = self.manipulator.simplifyModel(dm=200.0)
 
         if self.catch_exceptions:
             try:
-                self.predictor.predict(self.protomodel)
-                #Recompute predictions with higher accuracy for high score points:
-                if self.protomodel.Z > 2.7 and self.protomodel.nevents < 55000:
-                    self.protomodel.createSLHAFile()
-                    self.predictor.predict(self.protomodel)
-
+                self.predictor.predict(self.manipulator.M.protomodel)
+                if protomodelSimp:
+                    self.predictor.predict(protomodelSimp)
             except Exception as e:
                 self.pprint ( "error ``%s'' (%s) encountered when trying to predict. lets revert" % (str(e),type(e) ) )
                 self.manipulator.restoreModel()
                 return
         else:
-            self.predictor.predict(self.protomodel)
-            #Recompute predictions with higher accuracy for high score points:
-            if self.protomodel.Z > 2.7 and self.protomodel.nevents < 55000:
-                self.protomodel.createSLHAFile()
-                self.predictor.predict(self.protomodel)
+            self.predictor.predict(self.M.protomodel)
+            if protomodelSimp:
+                self.predictor.predict(protomodelSimp)
+
+        #Now keep the model with highest score:
+        if protomodelSimp.Z > self.manipulator.M.Z:
+            self.manipulator.M = protomodelSimp
 
         #the muhat multiplier gets multiplied into the signal strengths
         self.manipulator.rescaleByMuHat()

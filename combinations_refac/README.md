@@ -20,11 +20,16 @@
   * make sure protomodel always has at least 2 particles
   * remove swap particles. Canonical ordering is enforced when changing the model (change in behavior: when removing the particles not present in the best combination, the lighter state is no longer removed if the heavier state appears in the combination. Before the lighter state was removed and the heavy state was then swapped.)
   * if the LSP mass is changed, make sure it is only allowed to change up to the next-to-lightest state (change in behavior: before all the masses smaller than the LSP were change to LSP mass + 1)
+  * added a copy method in Protomodel to allow for a cheaper (deep) copy of the object
+  * changes in model merger:
+    * Now ther merger is always performed (before it was random) and all good candidates are merged
+    * The merger function was partially rewritten (it seems there was a bug before where only one sign of the PID to be replaced was looked for and a single decay {PID : BR} was being replaced by {PIDA,PIDB) : BR} -> Check!)
+    * The predictions are computed for the merged protomodel in RandomWalker.onestep (before it was inside Manipulator.merge)
+    * If the merged model has higher Z, it replaces the original protomodel (before the xsecs were rescaled by 1/rmax, but I don't think this is necessary, since, for computing Z, mu is a free parameter)
 
 ## Refactoring ToDo:
 
-
-  * simplify merge particles (?)
+  * FIX computeNewSSMs (called by merge particles). It requires stored_xsecs, but when were these stored before?
   * simplify computeParticleContributions (?)
   * replace xsecComputer with an interpolation based on the pMSSM scan (?)
 

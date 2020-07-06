@@ -116,7 +116,7 @@ class Predictor:
 
     def predict ( self, protomodel, sigmacut = 0.02*fb,  recycle_xsecs = False,
                   strategy = "aggressive"):
-        """ Compute the predictions and test statistic variables.
+        """ Compute the predictions and statistical variables.
 
         :returns: True
         """
@@ -138,6 +138,13 @@ class Predictor:
         self.computeSignificance( protomodel, predictions, strategy )
         self.log ( "done with prediction. best Z=%.2f (muhat=%.2f)" % ( protomodel.Z, protomodel.muhat ) )
         protomodel.cleanBestCombo()
+
+        #Recompute predictions with higher accuracy for high score models:
+        if protomodel.Z > 2.7 and protomodel.nevents < 55000:
+            protomodel.nevents = 100000
+            protomodel.createSLHAFile()
+            self.predict(protomodel,sigmacut=sigmacut,
+                    recycle_xsecs = recycle_xsecs, strategy= strategy)
 
         return True
 
