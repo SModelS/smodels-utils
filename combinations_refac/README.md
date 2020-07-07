@@ -26,15 +26,22 @@
     * The merger function was partially rewritten (it seems there was a bug before where only one sign of the PID to be replaced was looked for and a single decay {PID : BR} was being replaced by {PIDA,PIDB) : BR} -> Check!)
     * The predictions are computed for the merged protomodel in RandomWalker.onestep (before it was inside Manipulator.merge)
     * If the merged model has higher Z, it replaces the original protomodel (before the xsecs were rescaled by 1/rmax, but I don't think this is necessary, since, for computing Z, mu is a free parameter)
+    * Added getXsecs(), _stored_xsecs, _xsecMasses and _xsecSSMs to ProtoModel. Now all access to the cross-sections should be through ProtoModel.getXsecs()
+    * ProtoModel.computeXSecs now automatically stores the xsecs, masses and SSMs used in the ProtoModel attributes.
+    * Now RandomWalker keeps track of current (old) K and Z values (instead of ProtoModel)
 
 ## Refactoring ToDo:
 
-  * FIX computeNewSSMs (called by merge particles). It requires stored_xsecs, but when were these stored before?
-  * simplify computeParticleContributions (?)
+  * implement unit tests
+  * minimize deepcopies 
   * replace xsecComputer with an interpolation based on the pMSSM scan (?)
+  * change hiscore pickle file extension (to .hi?)
+
 
 
 ## Profiling:
+
+Fraction of time spent in each main method (running 300 steps with 10k events for xsec calculation):
 
   * onestep (98%)
     * predictor.predict (55%)

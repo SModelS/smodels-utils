@@ -168,7 +168,6 @@ class Manipulator:
             self.M.step = D["step"]
         ## add also the unused SSMs, set them to 1.
         self.M.initializeSSMs ( overwrite = False )
-        self.M.delXSecs()
 
     def cheat ( self, mode = 0 ):
         ## cheating, i.e. starting with models that are known to work well
@@ -403,7 +402,6 @@ class Manipulator:
         self.M.masses[pid] = random.uniform ( minMass, maxMass )
         ## when unfreezing, nothing can go offshell, right?
         self.removeAllOffshell() ## remove all offshell stuff, normalize all branchings
-        self.M.delXSecs() ## old xsecs dont count anymore
         self.M.log ( "Unfreezing %s: m=%f" % ( helpers.getParticleName(pid), self.M.masses[pid] ) )
         return 1
 
@@ -567,6 +565,29 @@ class Manipulator:
         self.M.log ( " `- %s: ssms are now %.2f+/-%.2f" % ( helpers.getParticleName(p), numpy.mean ( ssms ), numpy.std ( ssms) ) )
         return 1
 
+    def changeSSM ( self, pids, newssm ):
+        """ change the signal strength multiplier of pids to newssm,
+            if we have stored xsecs, we correct them, also """
+        if type(pids) != tuple:
+            self.M.highlight ( "error", "when changing SSMs, need to supply PIDs as a tuple!" )
+            return
+        if len(pids)!= 2:
+            self.M.highlight ( "error", "when changing SSMs, need to supply PIDs as a tuple of two pids!" )
+            return
+        if pids[1] < pids[0]:
+            self.M.highlight ( "warn", "when changing SSMs, pids are wrongly ordered. Reverting them." )
+            pids = ( pids[1], pids[0] )
+
+        if not pids in self.M.ssmultipliers:
+            self.M.highlight ( "warn", "when changing SSMs, cannot find %s. not changing anything." % str(pids) )
+            return
+        oldssm = self.M.ssmultipliers[pids]
+        if newssm > 10000.:
+            newssm = 10000.
+        self.M.ssmultipliers[pids]=newssm
+        self.M.highlight ( "info", "changing ssm of %s from %.2f to %.2f" % \
+                                   ( str(pids), oldssm, newssm ) )
+
     def randomlyFreezeParticle ( self, sigma= 0.5, probMassive = 0.3):
         """ freezes a random unfrozen particle according to gaussian distribution with width sigma.
 
@@ -640,7 +661,6 @@ class Manipulator:
         self.M.masses[pid]=1e6
         self.normalizeAllBranchings()
         self.removeAllOffshell()
-        self.M.delXSecs()
 
     def randomlyChangeMasses ( self, prob = 0.05, dx = 200.0 ):
         """ take a random step in mass space for a single unfrozen particle
@@ -679,84 +699,32 @@ class Manipulator:
         self.removeAllOffshell()
         return ret
 
-    def computeNewSSMs ( self, pair, protomodel=None ):
-        """ compute the new ssms after the merger """
-
-        if not protomodel:
-            protomodel = self.M
-
-        newssms = copy.deepcopy ( protomodel.ssmultipliers )
-        p1, p2 = pair[0], pair[1]
-
-        ## dont add for the frozen particles
-        frozen = protomodel.frozenParticles()
-
-        #for pids, ssm in protomodel.ssmultipliers.items():
-        for sxsecs in protomodel.stored_xsecs[0]:
-            if sxsecs.info.sqrts < 10.*TeV or sxsecs.info.order > 0:
-                continue
-            pids = sxsecs.pid
-            ssm = 1.0
-            if pids in protomodel.ssmultipliers:
-                ssm = protomodel.ssmultipliers[pids]
-            if not p2 in pids and not -p2 in pids:
-                continue
-            addxsec = 0. * fb
-            for xsec in protomodel.stored_xsecs[0]:
-                if pids == xsec.pid:
-                    addxsec = xsec.value
-            self.log ( "xsecs of dissolving production %s: %s (ssm %s)" % \
-                       ( pids, addxsec, ssm ) )
-            if addxsec < 0.001 * fb:
-                continue
-            newpids = []
-            for pid in pids:
-                if pid in [ p2, -p2 ]:
-                    newpids.append ( int ( math.copysign ( p1, pid ) ) )
-                else:
-                    newpids.append ( pid )
-            newpids = tuple(newpids)
-            # self.pprint ( "adding", ssm, "for",pids,"to",newpids )
-            if newpids in protomodel.ssmultipliers:
-                hasFrozenPid=False
-                for pid in newpids: ## skip the frozen stuff
-                    if abs(pid) in frozen:
-                        hasFrozenPid=True
-                if hasFrozenPid:
-                    continue
-                if ssm > 0.:
-                    toxsec = 0. * fb
-                    for xsec in protomodel.stored_xsecs[0]:
-                        if newpids == xsec.pid:
-                            toxsec = xsec.value
-                    oldssm = newssms[newpids]
-                    self.log ( "xsec of to-be-kept production %s: %s, ssm=%s" % ( newpids, toxsec, oldssm ) )
-                    newxsec = addxsec + toxsec
-                    if toxsec > 0.*fb:
-                        newssm = oldssm * newxsec.asNumber(fb)/toxsec.asNumber(fb)
-                        self.log ( "adding ssm from %s to %s: ssm of addition is %.2f, ssm of keeper is %.2f, xsec of addition %s, xsec of keeper is %s. newssm is %.2f" % ( pids, newpids, ssm, oldssm, addxsec, toxsec, newssm ) )
-                    ## FIXME what I didnt take into account here, is that the
-                    ## xsec of the "to" particle is changing, also!
-                        newssms[newpids]=newssm
-            else:
-                self.log ( "setting ssm of %s to %.2f" % ( newpids, ssm ) )
-                newssms[newpids]=ssm
-        ## clean up, remove all pid2 ssms
-        newms={}
-        for pids,ssm in newssms.items(): # protomodel.ssmultipliers.items():
-            if not p2 in pids and not -p2 in pids:
-                newms[pids]=ssm
-        return newms
-
-    def computeAvgMass ( self, pids ):
-        """ compute the average mass
-        :param merge_strategy: allow for different ways to merge
-        :returns: mass, as scalar, in GeV
+    def randomlyChangeMassOf ( self, pid, dx=None, minMass = None, maxMass = None ):
+        """ randomly change the mass of pid
+        :param dx: the delta x to change. If none, then use a model-dependent
+                   default
+        :param minMass: minimum allowed mass for the particle. If not defined, use the LSP mass
+        :param maxMass: maximum allowed mass for the particle. If not defined, use the protomodel maxMass
         """
-        ret=0.
-        for pid in pids:
-            ret+=self.M.masses[pid]
-        return ret / len(pids)
+        if dx == None:
+            denom = self.M.Z + 1.
+            if denom < 1.:
+                denom = 1.
+            dx = 40. / numpy.sqrt ( len(self.M.unFrozenParticles() ) ) / denom
+
+        if not minMass:
+            minMass = self.M.masses[self.M.LSP]
+        if not maxMass:
+            maxMass = self.M.maxMass
+        tmpmass = self.M.masses[pid]+random.uniform(-dx,dx)
+        #Enforce mass interval:
+        if tmpmass > maxMass:
+            tmpmass = maxMass-1.0
+        if tmpmass < minMass:
+            tmpmass = minMass+1.
+        self.M.masses[pid]=tmpmass
+
+        return 1
 
     def simplifyModel ( self, dm= 200. ):
         """ Try to simpĺify model, merging pair of candidate particles with similar masses.
@@ -779,7 +747,7 @@ class Manipulator:
             nMerges += merged #Count number of mergers
 
         if nMerges > 0:
-            #Re-compute cross-sections and update SLHA file
+            #Re-compute cross-sections (if needed) and update SLHA file
             newModel.createSLHAFile()
             return newModel
         else:
@@ -802,10 +770,13 @@ class Manipulator:
         pidB = None
         if not protomodel:
             protomodel = self.M
+        unfrozen = protomodel.unFrozenParticles()
         for pidGroup in self.mergerCandidates:
             pG = sorted(pidGroup) #Make sure the pids are ordered
             for pA,pB in itertools.product(pG,pG):
                 if pA >= pB: continue #Only need to check for unique pairings
+                if (not pA in unfrozen) or not (pB in unfrozen):
+                    continue #Only need to consider unfrozen particles
                 dmass = abs(protomodel.masses[pA]-protomodel.masses[pB])
                 if dmass < minDMass:
                     minDMass = dmass
@@ -879,8 +850,90 @@ class Manipulator:
         ## ssmultipliers get added up, too
         newssms = self.computeNewSSMs( pair, protomodel=protomodel )
         protomodel.ssmultipliers = newssms
+        # Make sure xsecs are re-computed:
+        protomodel.getXsecs()
 
         return protomodel
+
+    def computeAvgMass ( self, pids ):
+        """ compute the average mass
+        :param merge_strategy: allow for different ways to merge
+        :returns: mass, as scalar, in GeV
+        """
+        ret=0.
+        for pid in pids:
+            ret+=self.M.masses[pid]
+        return ret / len(pids)
+
+    def computeNewSSMs ( self, pair, protomodel=None ):
+        """ compute the new ssms after the merger """
+
+        if not protomodel:
+            protomodel = self.M
+
+        newssms = copy.deepcopy ( protomodel.ssmultipliers )
+        p1, p2 = pair[0], pair[1]
+
+        ## dont add for the frozen particles
+        frozen = protomodel.frozenParticles()
+
+        #for pids, ssm in protomodel.ssmultipliers.items():
+        modelXsecs = protomodel.getXsecs()[0]
+        for sxsecs in modelXsecs:
+            if sxsecs.info.sqrts < 10.*TeV or sxsecs.info.order > 0:
+                continue
+            pids = sxsecs.pid
+            ssm = 1.0
+            if pids in protomodel.ssmultipliers:
+                ssm = protomodel.ssmultipliers[pids]
+            if not p2 in pids and not -p2 in pids:
+                continue
+            addxsec = 0. * fb
+            for xsec in modelXsecs:
+                if pids == xsec.pid:
+                    addxsec = xsec.value
+            self.log ( "xsecs of dissolving production %s: %s (ssm %s)" % \
+                       ( pids, addxsec, ssm ) )
+            if addxsec < 0.001 * fb:
+                continue
+            newpids = []
+            for pid in pids:
+                if pid in [ p2, -p2 ]:
+                    newpids.append ( int ( math.copysign ( p1, pid ) ) )
+                else:
+                    newpids.append ( pid )
+            newpids = tuple(newpids)
+            # self.pprint ( "adding", ssm, "for",pids,"to",newpids )
+            if newpids in protomodel.ssmultipliers:
+                hasFrozenPid=False
+                for pid in newpids: ## skip the frozen stuff
+                    if abs(pid) in frozen:
+                        hasFrozenPid=True
+                if hasFrozenPid:
+                    continue
+                if ssm > 0.:
+                    toxsec = 0. * fb
+                    for xsec in modelXsecs:
+                        if newpids == xsec.pid:
+                            toxsec = xsec.value
+                    oldssm = newssms[newpids]
+                    self.log ( "xsec of to-be-kept production %s: %s, ssm=%s" % ( newpids, toxsec, oldssm ) )
+                    newxsec = addxsec + toxsec
+                    if toxsec > 0.*fb:
+                        newssm = oldssm * newxsec.asNumber(fb)/toxsec.asNumber(fb)
+                        self.log ( "adding ssm from %s to %s: ssm of addition is %.2f, ssm of keeper is %.2f, xsec of addition %s, xsec of keeper is %s. newssm is %.2f" % ( pids, newpids, ssm, oldssm, addxsec, toxsec, newssm ) )
+                    ## FIXME what I didnt take into account here, is that the
+                    ## xsec of the "to" particle is changing, also!
+                        newssms[newpids]=newssm
+            else:
+                self.log ( "setting ssm of %s to %.2f" % ( newpids, ssm ) )
+                newssms[newpids]=ssm
+        ## clean up, remove all pid2 ssms
+        newms={}
+        for pids,ssm in newssms.items():
+            if not p2 in pids and not -p2 in pids:
+                newms[pids]=ssm
+        return newms
 
     def simplifyMasses ( self ):
         """ return the masses only of the unfrozen particles """
@@ -892,9 +945,10 @@ class Manipulator:
 
     def simplifyXSecs ( self, fbmin=.001*fb ):
         """ return the xsecs above a threshold only """
-        self.assertXSecs()
+
         xsecs={ 8:{}, 13:{} }
-        for xsec in self.M.stored_xsecs[0]:
+        modelXSecs = self.M.getXsecs()[0]
+        for xsec in modelXSecs:
             if xsec.value < fbmin:
                 continue
             sqrts = xsec.info.sqrts.asNumber(TeV)
@@ -938,9 +992,9 @@ class Manipulator:
         if type(threshold)==float and threshold>0.:
             self.pprint ( "note: interpreting threshold as fb" )
             threshold = threshold * fb
-        self.assertXSecs()
         ret = []
-        for xsec in self.M.stored_xsecs[0]:
+        modelXSecs = self.M.getXsecs()[0]
+        for xsec in modelXSecs:
             if xsec.info.order != order:
                 continue
             if abs (( xsec.info.sqrts - sqrts ).asNumber(TeV)) > .1:
@@ -959,14 +1013,15 @@ class Manipulator:
         :returns: cross section (that had the SSM applied),
                   and SSM that *was* applied.
         """
-        self.assertXSecs()
+
         ssm = 1.
         if pids[1] < pids[0]:
             pids = ( pids[1], pids[0] )
         if pids in self.M.ssmultipliers:
             ssm = self.M.ssmultipliers[pids]
         xs = 0. * fb
-        for xsec in self.M.stored_xsecs[0]:
+        modelXSecs = self.M.getXsecs()[0]
+        for xsec in modelXSecs:
             if xsec.info.order != order:
                 continue
             if abs ( ( xsec.info.sqrts - sqrts ).asNumber(TeV) ) > .1:
@@ -975,13 +1030,6 @@ class Manipulator:
                 continue
             xs = xsec.value
         return xs,ssm
-
-    def assertXSecs ( self ):
-        """ make sure we have xsecs """
-        if hasattr ( self.M, "stored_xsecs" ):
-            return
-        self.pprint ( "did not find cross sections, compute now." )
-        self.M.computeXSecs (recycle = True )
 
     def simplifySSMs ( self, removeOnes=False, removeZeroes=False,
                        threshold=0.001*fb, store = False ):
@@ -998,6 +1046,7 @@ class Manipulator:
             threshold = threshold * fb
         ret = {}
         frozen = self.M.frozenParticles()
+        modelXSecs = self.M.getXsecs()[0]
         for pids,v in self.M.ssmultipliers.items():
             if removeOnes and abs(v-1.)<1e-5:
                 continue
@@ -1005,8 +1054,7 @@ class Manipulator:
                 continue
             xsecBigEnough = False
             if threshold > 0.*fb:
-                self.assertXSecs()
-                for xsec in self.M.stored_xsecs[0]:
+                for xsec in modelXSecs:
                     if xsec.info.sqrts.asNumber(TeV)<10:
                         continue
                     if pids == xsec.pid: # they are always sorted
@@ -1025,69 +1073,6 @@ class Manipulator:
         if store:
             self.M.ssmultipliers = ret
         return ret
-
-    def changeSSM ( self, pids, newssm ):
-        """ change the signal strength multiplier of pids to newssm,
-            if we have stored xsecs, we correct them, also """
-        if type(pids) != tuple:
-            self.M.highlight ( "error", "when changing SSMs, need to supply PIDs as a tuple!" )
-            return
-        if len(pids)!= 2:
-            self.M.highlight ( "error", "when changing SSMs, need to supply PIDs as a tuple of two pids!" )
-            return
-        if pids[1] < pids[0]:
-            self.M.highlight ( "warn", "when changing SSMs, pids are wrongly ordered. Reverting them." )
-            pids = ( pids[1], pids[0] )
-
-        if not pids in self.M.ssmultipliers:
-            self.M.highlight ( "warn", "when changing SSMs, cannot find %s. not changing anything." % str(pids) )
-            return
-        oldssm = self.M.ssmultipliers[pids]
-        if newssm > 10000.:
-            newssm = 10000.
-        self.M.ssmultipliers[pids]=newssm
-        self.M.highlight ( "info", "changing ssm of %s from %.2f to %.2f" % \
-                                   ( str(pids), oldssm, newssm ) )
-        if oldssm == 0.:
-            self.M.highlight ( "info could not find ssms for %s. recompute xsecs." % str(pids) )
-            self.M.delXSecs()
-            return
-
-        r = newssm / oldssm
-        if not hasattr ( self.M, "stored_xsecs" ):
-            self.M.highlight ( "info", "when changing SSMs, no stored xsecs found. not rescaling %s." % str(pids) )
-            return
-        for ctr,xsec in enumerate(self.M.stored_xsecs[0]):
-            if pids == xsec.pid: ## ok, lets go!
-               self.M.stored_xsecs[0][ctr].value = xsec.value * r
-
-    def randomlyChangeMassOf ( self, pid, dx=None, minMass = None, maxMass = None ):
-        """ randomly change the mass of pid
-        :param dx: the delta x to change. If none, then use a model-dependent
-                   default
-        :param minMass: minimum allowed mass for the particle. If not defined, use the LSP mass
-        :param maxMass: maximum allowed mass for the particle. If not defined, use the protomodel maxMass
-        """
-        if dx == None:
-            denom = self.M.Z + 1.
-            if denom < 1.:
-                denom = 1.
-            dx = 40. / numpy.sqrt ( len(self.M.unFrozenParticles() ) ) / denom
-
-        if not minMass:
-            minMass = self.M.masses[self.M.LSP]
-        if not maxMass:
-            maxMass = self.M.maxMass
-        tmpmass = self.M.masses[pid]+random.uniform(-dx,dx)
-        #Enforce mass interval:
-        if tmpmass > maxMass:
-            tmpmass = maxMass-1.0
-        if tmpmass < minMass:
-            tmpmass = minMass+1.
-        self.M.masses[pid]=tmpmass
-
-        self.M.delXSecs() ## delete xsecs
-        return 1
 
     def getAllPidsOfBestCombo ( self ):
         """ get all pids that appear in the best combo """
@@ -1116,27 +1101,29 @@ class Manipulator:
 
     def backupModel ( self ):
         """ backup the current state """
+
         self._backup = { "llhd": self.M.llhd, "letters": self.M.letters, "Z": self.M.Z,
                          "description": self.M.description,
                          "bestCombo": copy.deepcopy(self.M.bestCombo),
                          "masses": copy.deepcopy(self.M.masses),
                          "ssmultipliers": copy.deepcopy(self.M.ssmultipliers),
                          "decays": copy.deepcopy(self.M.decays),
-                         "rvalues": copy.deepcopy(self.M.rvalues) }
+                         "rvalues": copy.deepcopy(self.M.rvalues),
+                         "_stored_xsecs" : copy.deepcopy(self.M._stored_xsecs),
+                         "_xsecMasses" : copy.deepcopy(self.M._xsecMasses),
+                         "_xsecSSMs" : copy.deepcopy(self.M._xsecSSMs),
+                         }
         if hasattr ( self.M, "muhat" ):
             self._backup["muhat"]=self.M.muhat
         if hasattr ( self.M, "K" ):
             self._backup["K"]=self.M.K
         if hasattr ( self.M, "rmax" ):
             self._backup["rmax"]=self.M.rmax
-        if hasattr ( self.M, "stored_xsecs" ):
-            self._backup["stored_xsecs"]=copy.deepcopy(self.M.stored_xsecs)
 
     def restoreModel ( self ):
         """ restore from the backup """
         if not hasattr ( self, "_backup" ):
             raise Exception ( "no backup available" )
-        self.M.delXSecs() ## make sure we dont keep the current xsecs
         for k,v in self._backup.items():
             setattr ( self.M, k, v )
 

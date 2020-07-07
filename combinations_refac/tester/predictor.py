@@ -114,7 +114,7 @@ class Predictor:
         with open( "walker%d.log" % self.walkerid, "a" ) as f:
             f.write ( "[predict:%d - %s] %s\n" % ( self.walkerid, time.strftime("%H:%M:%S"), " ".join(map(str,args)) ) )
 
-    def predict ( self, protomodel, sigmacut = 0.02*fb,  recycle_xsecs = False,
+    def predict ( self, protomodel, sigmacut = 0.02*fb,
                   strategy = "aggressive"):
         """ Compute the predictions and statistical variables.
 
@@ -143,8 +143,7 @@ class Predictor:
         if protomodel.Z > 2.7 and protomodel.nevents < 55000:
             protomodel.nevents = 100000
             protomodel.createSLHAFile()
-            self.predict(protomodel,sigmacut=sigmacut,
-                    recycle_xsecs = recycle_xsecs, strategy= strategy)
+            self.predict(protomodel,sigmacut=sigmacut, strategy= strategy)
 
         return True
 

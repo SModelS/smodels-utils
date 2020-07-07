@@ -53,7 +53,7 @@ class RandomWalker:
         self.rundir = rundir
         if rundir == None:
             self.rundir = "./"
-        self.hiscoreList = Hiscore ( walkerid, True, "%s/H%d.pcl" % ( rundir, walkerid ),
+        self.hiscoreList = Hiscore ( walkerid, True, "%s/H%d.pcl" % ( self.rundir, walkerid ),
                                      backup=False )
         self.hiscoreList.nkeep = 1
         protomodel = ProtoModel( self.walkerid, dbpath = dbpath, 

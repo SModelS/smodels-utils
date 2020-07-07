@@ -59,12 +59,16 @@ class ProtoModel:
         self.possibledecays = {} ## list all possible decay channels
         self.decays = {} ## the actual branchings
         self.masses = {}
+        self._stored_xsecs = () #Store cross-sections. It should only be accesses through getXsecs()!
+        self._xsecMasses = {} #Store the masses used for computing the cross-sections
+        self._xsecSSMs = {} #Store the signal strenght multiplier used for computing the cross-sections
         self.ssmultipliers = {} ## signal strength multipliers
         self.rvalues = [] ## store the r values of the exclusion attempt
         self.tpList = [] ## store information about the theory predictions
         self.llhd=0.
         self.muhat = 1.
-        self.Z = 0.
+        self.Z = 0.0
+        self.K = None
         self.rmax = 0.
         self.letters = ""
         self.description = ""
@@ -122,6 +126,29 @@ class ProtoModel:
         a=[pid1,pid2]
         a.sort()
         return tuple(a)
+
+    def getXsecs(self):
+        """
+        Return the cross-sections.
+        If they have already been computed (and stored in self._stored_xsecs)
+        AND the masses and signal strength multipliers habe not been modified, return the stored value.
+        Otherwise, re-compute the cross-sections.
+
+        :return: list of cross-sections
+        """
+
+        #If xsecMasses has not been defined or differs from current masses,
+        #recompute xsecs
+        if self.masses == self._xsecMasses and self.ssmultipliers == self._xsecSSMs:
+            if self._stored_xsecs:
+                return self._stored_xsecs
+
+        #If something has changed, re-compute the cross-sections.
+        #Xsecs are computed, self._xsecMasses and self._xsecSSM are updated.
+        #The results are sored in the SLHA and self._stored_xsec.
+        self.computeXSecs(nevents = self.nevents)
+
+        return self._stored_xsecs
 
     def setSSM ( self, pids, value=1., overwrite=True ):
         """ set the signal strength multiplier of pids to value.
@@ -246,20 +273,6 @@ class ProtoModel:
                     return False
         return True
 
-    def oldZ( self ):
-        if not hasattr ( self, "_backup" ):
-            self.pprint ( "asked for old Z, but no backup available" )
-            return -.1
-        return self._backup["Z"]
-
-    def oldK( self ):
-        if not hasattr ( self, "_backup" ):
-            self.pprint ( "asked for old K, but no backup available" )
-            return -20.
-        if not "K" in self._backup:
-            return -20.
-        return self._backup["K"]
-
     def unFrozenParticles ( self, withLSP=True ):
         """ returns a list of all particles that can be regarded as unfrozen
             (ie mass less than 5e3 GeV) """
@@ -293,13 +306,9 @@ class ProtoModel:
             particles.append ( "%s: %d" % (  helpers.getParticleName ( pid ), m ) )
         print ( ", ".join ( particles ) )
 
-    def createSLHAFile ( self, outputSLHA=None, recycle_xsecs = False, nevents = None ):
+    def createSLHAFile ( self, nevents = None ):
         """ from the template.slha file, create the slha file of the current
             model.
-        :param outputSLHA: if not None, write into that file. else, write into
-            currentSLHA file.
-        :param recycle_xsecs: if False, compute xsecs from scratch,
-                              if True, recycle them, if possible.
         :param nevents: If defined, cross-sections will be computed with this number of MC events,
                         if None, the value is chosen according to self.minevents and self.Z.
         """
@@ -320,8 +329,8 @@ class ProtoModel:
             lines=f.readlines()
         if not hasattr ( self, "currentSLHA" ):
             self.createNewSLHAFileName()
-        if outputSLHA == None:
-            outputSLHA = self.currentSLHA
+
+        outputSLHA = self.currentSLHA
         if os.path.exists ( outputSLHA ):
             cmd = "cp %s %s" % ( outputSLHA, outputSLHA.replace(".cur",".old" ) )
             subprocess.getoutput ( cmd )
@@ -350,7 +359,10 @@ class ProtoModel:
                                     line[p1:p1+p2+1] )
                         line=line.replace( line[p1:p1+p2+1], "0." )
                 f.write ( line )
-        self.computeXSecs( recycle = recycle_xsecs, nevents = self.nevents )
+
+        #Compute the cross-sections (if necessary) and store them to the file:
+        self.getXsecs()
+
         return outputSLHA
 
     def dict ( self ):
@@ -388,14 +400,12 @@ class ProtoModel:
 
     def delXSecs ( self ):
         """ delete stored cross section, if they exist """
-        if not hasattr ( self, "stored_xsecs" ):
-            return
-        del self.stored_xsecs
+        self._stored_xsecs = ()
+        self._xsecMasses = {}
+        self._xsecSSMs = {}
 
-    def computeXSecs ( self, recycle=False, nevents = None ):
-        """ compute xsecs for current.slha
-        :param recycle: if False, dont store xsecs, always recompute.
-                        if True, recycle the xsecs if they exist, store them.
+    def computeXSecs ( self, nevents = None ):
+        """ compute xsecs for current.slha. The results are stored in the SLHA file and self._stored_xsecs.
         :param nevents: If defined, cross-sections will be computed with this number of MC events,
                         if None, the value used is self.nevents.
 
@@ -405,26 +415,20 @@ class ProtoModel:
             nevents = self.nevents
         if not hasattr ( self, "currentSLHA" ) or not os.path.exists ( self.currentSLHA ):
             self.pprint ( "compute xsecs called, but no slha file exists. I assume you meant to call createSLHAFile instead." )
-            self.createSLHAFile(recycle_xsecs = recycle )
+            self.createSLHAFile(nevents = nevents )
             return
 
         computer = ProtoModelXSecs( self.walkerid, nevents, self.currentSLHA,
                                      self.relevantSSMultipliers(), self.step )
-        if recycle and hasattr ( self, "stored_xsecs" ):
-            self.log ( "found %d old xsecs, will recycle them!!" % \
-                       len(self.stored_xsecs[0]) )
-            computer.addInfoToFile ( self.stored_xsecs )
-            return
-        if recycle:
-            self.pprint ( "recycling is on, but no xsecs were found. compute with %d events." % nevents )
         try:
             computer.checkIfReadable()
         except Exception:
             pass
         try:
             xsecs,comment = computer.compute()
-            if recycle: ## store them
-                self.stored_xsecs = ( xsecs, comment )
+            self._stored_xsecs = ( xsecs, comment )
+            self._xsecMasses = dict([[pid,m] for pid,m in self.masses.items()])
+            self._xsecSSMs = dict([[pid,ssm] for pid,ssm in self.ssmultipliers.items()])
         except Exception:
             pass
 
@@ -464,8 +468,9 @@ class ProtoModel:
         newmodel.rmax = self.rmax
         newmodel.letters = self.letters[:]
         newmodel.description = self.description[:]
-        if hasattr(self,'stored_xsecs'):
-            newmodel.stored_xsecs = self.stored_xsecs[:]
+        newmodel._stored_xsecs = copy.deepcopy(self._stored_xsecs)
+        newmodel._xsecSSMs = dict([[pid,ssm] for pid,ssm in self._xsecSSMs.items()])
+        newmodel._xsecMasses = dict([[pid,m] for pid,m in self._xsecMasses.items()])
         if cp_predictions:
             newmodel.tpList = copy.deepcopy(self.tpList)
             newmodel.bestCombo = copy.deepcopy(self.bestCombo)

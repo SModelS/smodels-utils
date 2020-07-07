@@ -110,8 +110,8 @@ class Hiscore:
             if not hasattr ( m.M, "analysisContributions" ):
                 self.pprint ( "analysisContributions missing, compute them!" )
                 self.computeAnalysisContributions(m)
-            m.assertXSecs()
             protomodel = m.M
+            protomodel.getXsecs() #Make sure cross-sections have been computed
 
         for i,mi in enumerate(self.hiscores):
             if mi!=None and mi.almostSameAs ( m.M ):

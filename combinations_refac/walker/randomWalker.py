@@ -24,7 +24,7 @@ from pympler.asizeof import asizeof
 try:
     from torch import multiprocessing
 except:
-    import multiproc7essing
+    import multiprocessing
 
 def cleanDirectory ():
     subprocess.getoutput ( "mkdir -p tmp" )
@@ -69,24 +69,30 @@ class RandomWalker:
                             keep_meta = True, nevents = nevents)
 
         self.manipulator = Manipulator ( protomodel, strategy )
+        self.catch_exceptions = catch_exceptions
+        self.maxsteps = nsteps
+        self.accelerator = None
 
-
-        if cheatcode > 0:
+        if cheatcode <= 0:
+            self.takeStep() # the first step should be considered as "taken"
+            #Set current Z and K values to threshold values
+            self.currentZ = -0.1
+            self.currentK = -20.0
+        else:
             self.manipulator.cheat ( cheatcode )
             self.predictor.predict()
             self.pprint ( "Cheat model gets Z=%.2f, K=%.2f" % \
                           ( self.manipulator.M.Z, self.manipulator.M.K ) )
+            self.manipulator.backupModel()
             self.hiscoreList.newResult ( self.manipulator.M )
-        self.catch_exceptions = catch_exceptions
-        self.maxsteps = nsteps
-        self.accelerator = None
+            self.currentK = self.manipulator.M.K
+            self.currentZ = self.manipulator.M.Z
         if dump_training:
             from accelerator import Accelerator
             ## we use the accelerator only to dump the training data
             self.accelerator = Accelerator ( walkerid= walkerid,
                                 dump_training= True,
                                 is_trained = False  )
-        self.takeStep() ## the first step should be considered as "taken"
 
     def hostname ( self ):
         return socket.gethostname()
@@ -178,7 +184,7 @@ class RandomWalker:
 
         if self.catch_exceptions:
             try:
-                self.predictor.predict(self.manipulator.M.protomodel)
+                self.predictor.predict(self.manipulator.M)
                 if protomodelSimp:
                     self.predictor.predict(protomodelSimp)
             except Exception as e:
@@ -186,12 +192,12 @@ class RandomWalker:
                 self.manipulator.restoreModel()
                 return
         else:
-            self.predictor.predict(self.M.protomodel)
+            self.predictor.predict(self.manipulator.M)
             if protomodelSimp:
                 self.predictor.predict(protomodelSimp)
 
         #Now keep the model with highest score:
-        if protomodelSimp.Z > self.manipulator.M.Z:
+        if protomodelSimp and (protomodelSimp.Z > self.manipulator.M.Z):
             self.manipulator.M = protomodelSimp
 
         #the muhat multiplier gets multiplied into the signal strengths
@@ -256,6 +262,9 @@ class RandomWalker:
             self.oldgrad = self.accelerator.grad
         ## Backup model
         self.manipulator.backupModel()
+        # Update current K and Z values
+        self.currentK = self.protomodel.K
+        self.currentZ = self.protomodel.Z
 
     def saveState ( self ):
         """ write out current state, for later retrieval """
@@ -267,34 +276,33 @@ class RandomWalker:
         col = colorama.Fore.GREEN
         print ( "%s[walk:%d] %s%s" % ( col, self.walkerid, " ".join(map(str,args)), colorama.Fore.RESET ) )
 
-    def decideOnTakingStep ( self, ratio ):
-        """ depending on the ratio, decide on whether to take the step or not.
+    def decideOnTakingStep ( self ):
+        """ depending on the ratio of K values, decide on whether to take the step or not.
             If ratio > 1., take the step, if < 1, let chance decide. """
+        ratio = 1.
+        K = self.currentK
+        newK = self.protomodel.K
+        if K > -20. and newK < K:
+            ratio = numpy.exp(.5*( newK - K))
+
         if ratio >= 1.:
-            self.highlight ( "info", "K: %.3f -> %.3f: r=%.4f, take the step" % ( self.protomodel.oldK(), self.protomodel.K, ratio ) )
-            if self.protomodel.K > 0. and self.protomodel.K < 0.7 * self.protomodel.oldK():
+            self.highlight ( "info", "K: %.3f -> %.3f: r=%.4f, take the step" % ( self.currentK,
+                        self.protomodel.K, ratio ) )
+            if self.protomodel.K > 0. and self.protomodel.K < 0.7 * self.currentK:
                 self.pprint ( " `- weird, though, K decreases. Please check." )
                 sys.exit(-2)
             self.takeStep()
         else:
             u=random.uniform(0.,1.)
             if u > ratio:
-                self.pprint ( "u=%.2f > %.2f; K: %.2f -> %.2f: revert." % (u,ratio,self.protomodel.oldK(), self.protomodel.K) )
+                self.pprint ( "u=%.2f > %.2f; K: %.2f -> %.2f: revert." % (u,ratio,self.currentK,
+                                self.protomodel.K) )
                 self.manipulator.restoreModel()
                 if hasattr ( self, "oldgrad" ) and self.accelerator != None:
                     self.accelerator.grad = self.oldgrad
             else:
-                self.pprint ( "u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.protomodel.oldZ(),self.protomodel.Z) )
+                self.pprint ( "u=%.2f <= %.2f ; %.2f -> %.2f: take the step, even though old is better." % (u, ratio,self.currentK,self.protomodel.Z) )
                 self.takeStep()
-
-    def computeRatio ( self ):
-        """ get the ratio of posteriors/likelihoods """
-        ratio = 1.
-        oldK = self.protomodel.oldK()
-        K = self.protomodel.K
-        if oldK > -20. and K < oldK:
-            ratio = numpy.exp(.5*( K - oldK ) )
-        return ratio
 
     def log ( self, *args ):
         """ logging to file """
@@ -305,6 +313,7 @@ class RandomWalker:
         """ Now perform the random walk """
         self.manipulator.randomlyUnfreezeParticle(force = True) ## start with unfreezing a random particle
         while self.maxsteps < 0 or self.protomodel.step<self.maxsteps:
+
             try:
                 self.onestep()
             except Exception as e:
@@ -335,8 +344,7 @@ class RandomWalker:
                 continue
 
             # obtain the ratio of posteriors
-            ratio = self.computeRatio()
-            self.decideOnTakingStep ( ratio )
+            self.decideOnTakingStep ()
             # self.gradientAscent()
         self.saveState()
         self.pprint ( "Was asked to stop after %d steps" % self.maxsteps )

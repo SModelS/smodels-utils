@@ -84,8 +84,7 @@ class LlhdThread:
                 self.pprint ( "WARNING: setting mass of %d back to %d" % ( k, v ) )
                 self.M.masses[k]=v
             oldmasses={}
-            if hasattr ( self.M, "stored_xsecs" ):
-                del self.M.stored_xsecs ## make sure we compute
+            self.M.delXSecs() ## make sure we compute
             for i2,m2 in enumerate(rpid2):
                 if m2 > m1: ## we assume pid2 to be the daughter
                     continue
@@ -99,7 +98,7 @@ class LlhdThread:
                 nllhds,nnonzeroes=0,0
                 for mu,llhd in llhds.items():
                     nllhds+=len(llhd)
-                # del protomodel.stored_xsecs ## make sure we compute
+
                 self.pprint ( "%d/%d: m1 %d, m2 %d, %d mu's, %d llhds." % \
                               ( i1, npid1s, m1, m2, len(llhds), nllhds ) )
                 masspoints.append ( (m1,m2,llhds,robs) )
@@ -111,8 +110,7 @@ class LlhdThread:
                 self.pprint ( "WARNING: setting mass of %d back to %d" % ( k, v ) )
                 self.M.masses[k]=v
             oldmasses={}
-            if hasattr ( self.M, "stored_xsecs" ):
-                del self.M.stored_xsecs ## make sure we compute
+            self.M.delXSecs() ## make sure we compute
             for i2,m2 in enumerate(rpid2):
                 if m2 > m1: ## we assume pid2 to be the daughter
                     continue
@@ -123,10 +121,10 @@ class LlhdThread:
                         oldmasses[pid_]=m_
                         self.M.masses[pid_]=m2 + 1.
                 llhds,robs = self.getPredictions ( True )
-                nllhds,nnonzeroes=0,0
+                nllhds = 0
                 for mu,llhd in llhds.items():
                     nllhds+=len(llhd)
-                # del protomodel.stored_xsecs ## make sure we compute
+
                 self.pprint ( "m1 %d, m2 %d, %d mu's, %d llhds." % \
                               ( m1, m2, len(llhds), nllhds ) )
                 masspoints.append ( (m1,m2,llhds,robs) )

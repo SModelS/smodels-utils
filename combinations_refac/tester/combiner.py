@@ -411,9 +411,7 @@ class Combiner:
         :param verbose: print how you get the prior.
         :param name: name of prior (expo1, gauss1, etc). See self.priorForNDF.
         """
-        if not hasattr ( protomodel, "stored_xsecs" ):
-            self.pprint ( "did not find cross sections, compute now." )
-            protomodel.computeXSecs ( recycle = True )
+
         particles = protomodel.unFrozenParticles ( withLSP=True )
         nparticles = len ( particles )
         nbr = 0
@@ -431,13 +429,14 @@ class Combiner:
         ## every non-trivial signal strength multiplier costs something
         cssms = {}
         pun1 = 0. # punishment for ssm=1, we prefer zeroes!
+        modelXSecs = protomodel.getXsecs()[0]
         for pids,ssm in protomodel.ssmultipliers.items():
             if (abs(pids[0]) not in particles) or (abs(pids[1]) not in particles):
                 continue
             ## ignore non-existant xsecs
             hasXSec=False
             xsecv = 0.*fb
-            for xsec in protomodel.stored_xsecs[0]:
+            for xsec in modelXSecs:
                 if pids == xsec.pid:
                     hasXSec = True
                     xsecv = xsec.value

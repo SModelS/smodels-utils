@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 
-import pickle, os, sys, subprocess, time, fcntl, glob, colorama, math
-import scipy.stats
+import pickle, os, sys, subprocess, time, glob, colorama, math
 from csetup import setup
-from protomodel.protomodel import ProtoModel
 from protomodel.manipulator import Manipulator
-from smodels.tools.physicsUnits import GeV, fb, TeV
+from smodels.tools.physicsUnits import fb, TeV
 from smodels.theory.theoryPrediction import TheoryPrediction
 sys.path.insert(0,"../" )
-import smodels_utils.helper.sparticleNames
-import smodels_utils.SModelSUtils
 from smodels.tools import runtime
 from smodels_utils.plotting import rulerPlotter, decayPlotter
 import helpers
@@ -294,7 +290,7 @@ def writeTex ( protomodel, keep_tex ):
     """
     cpids = {}
     frozen = protomodel.frozenParticles()
-    xsecs = protomodel.stored_xsecs[0]
+    xsecs = protomodel.getXsecs()[0]
     ssms = getUnfrozenSSMs ( protomodel, frozen, False )
     for pids,v in ssms.items():
         xsec = findXSecOfPids ( xsecs, pids )
@@ -712,7 +708,7 @@ def plot ( number, verbosity, picklefile, options, dbpath ):
     if hasattr ( protomodel, "currentSLHA" ):
         del protomodel.currentSLHA
     # protoslha = protomodel.createSLHAFile ( nevents=100000 )
-    protoslha = protomodel.createSLHAFile ( recycle_xsecs = True )
+    protoslha = protomodel.createSLHAFile ()
     # print ( "wrote", protoslha )
     subprocess.getoutput ( "cp %s hiscore.slha" % protoslha )
     m = Manipulator ( protomodel )
