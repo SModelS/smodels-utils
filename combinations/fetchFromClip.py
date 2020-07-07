@@ -10,6 +10,8 @@ def fetch ( files, rundir ):
     print ( colorama.Fore.RESET )
     files = set ( files ) ## remove dupes
     basedir = "/scratch-cbe/users/wolfgan.waltenberger/"
+    if rundir.startswith ( "/scratch-cbe/" ):
+        basedir=""
     for i in files:
         cmd="scp wolfgan.waltenberger@clip-login-1:%s%s/%s ." % \
             ( basedir, rundir, i )
