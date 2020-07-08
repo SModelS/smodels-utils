@@ -76,6 +76,8 @@ def plot( Z, K, rundir ):
     from argparse import Namespace
     args = Namespace()
     args.upload = "latest"
+    if "signal" in rundir:
+        args.upload = "latestsignal"
     args.number = 0
     args.detailed = False
     args.destinations = False

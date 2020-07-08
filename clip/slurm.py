@@ -380,7 +380,7 @@ def bake ( recipe, analyses, mass, topo, dry_run, nproc, rundir ):
 def clean_dirs( rundir, clean_all = False ):
     cmd = "rm slurm*out"
     o = subprocess.getoutput ( cmd )
-    cmd = "cd %s; rm -rf old*pcl .*slha H*pcl states.dict hiscore.pcl Kold.conf Zold.conf RUN* *log ../outputs/slurm-*.out" % rundir
+    cmd = "cd %s; rm -rf old*pcl .*slha H*pcl ssm*pcl *old *png decays* states.dict hiscore.pcl Kold.conf Zold.conf RUN* *log ../outputs/slurm-*.out" % rundir
     if clean_all:
         cmd = "cd %s; rm -rf old*pcl H*pcl hiscore*pcl .cur* .old* .tri* .*slha M*png llhd*png decays* *.sh ruler* rawnumb* *tex hiscore.log hiscore.slha *html *png *log RUN* walker*log training*gz Kold.conf Zold.conf ../outputs/slurm-*.out" % rundir
     o = subprocess.getoutput ( cmd )
@@ -481,7 +481,8 @@ def main():
         args.dbpath = rundir + "/default.pcl"
     if "fake" in args.dbpath and not args.dbpath.endswith(".pcl"):
         args.dbpath = args.dbpath + ".pcl"
-    logCall ()
+    if not args.query:
+        logCall ()
 
     if args.allscans:
         subprocess.getoutput ( "./slurm.py -S 0" )
